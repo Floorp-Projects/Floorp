@@ -9,39 +9,23 @@
 
 "use strict";
 
-addMessageListener("devtools:sw-test:register", function(msg) {
-  content.navigator.serviceWorker.register("serviceworker.js")
-    .then(swr => {
-      sendAsyncMessage("devtools:sw-test:register", {success: true});
-    }, error => {
-      sendAsyncMessage("devtools:sw-test:register", {success: false});
-    });
-});
-
-addMessageListener("devtools:sw-test:unregister", function(msg) {
-  content.navigator.serviceWorker.getRegistration().then(swr => {
-    swr.unregister().then(result => {
-      sendAsyncMessage("devtools:sw-test:unregister",
-                       {success: !!result});
-    });
+function addMessageForwarder(name) {
+  addMessageListener(name, function(_) {
+    var channel = new MessageChannel();
+    content.postMessage(name, "*", [channel.port2]);
+    channel.port1.onmessage = function(msg) {
+      sendAsyncMessage(name, msg.data);
+      channel.port1.close();
+    };
   });
-});
+}
 
-addMessageListener("devtools:sw-test:iframe:register-and-unregister", function(msg) {
-  var frame = content.document.createElement("iframe");
-  frame.addEventListener("load", function() {
-    frame.contentWindow.navigator.serviceWorker.register("serviceworker.js")
-      .then(swr => {
-        return swr.unregister();
-      }).then(_ => {
-        frame.remove();
-        sendAsyncMessage("devtools:sw-test:iframe:register-and-unregister",
-                         {success: true});
-      }).catch(error => {
-        sendAsyncMessage("devtools:sw-test:iframe:register-and-unregister",
-                         {success: false});
-      });
-  }, {once: true});
-  frame.src = "browser_toolbox_options_enabled_serviceworkers_testing.html";
-  content.document.body.appendChild(frame);
-});
+const messages = [
+  "devtools:sw-test:register",
+  "devtools:sw-test:unregister",
+  "devtools:sw-test:iframe:register-and-unregister"
+];
+
+for (var msg of messages) {
+  addMessageForwarder(msg);
+}
