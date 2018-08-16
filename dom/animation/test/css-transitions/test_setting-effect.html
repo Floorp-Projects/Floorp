@@ -8,7 +8,7 @@
 <script>
 'use strict';
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   var watcher = new EventWatcher(t, div, [ 'transitionend',
                                            'transitioncancel' ]);
@@ -19,7 +19,7 @@ promise_test(function(t) {
   div.style.left = '100px';
 
   var transition = div.getAnimations()[0];
-  return transition.ready.then(function() {
+  return transition.ready.then(() => {
     transition.currentTime = 50 * MS_PER_SEC;
     transition.effect = null;
     assert_equals(transition.transitionProperty, 'left');
@@ -29,7 +29,7 @@ promise_test(function(t) {
   });
 }, 'Test for removing a transition effect');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   var watcher = new EventWatcher(t, div, [ 'transitionend',
                                            'transitioncancel' ]);
@@ -40,7 +40,7 @@ promise_test(function(t) {
   div.style.left = '100px';
 
   var transition = div.getAnimations()[0];
-  return transition.ready.then(function() {
+  return transition.ready.then(() => {
     transition.currentTime = 50 * MS_PER_SEC;
     transition.effect = new KeyframeEffect(div,
                                            { marginLeft: [ '0px' , '100px'] },
@@ -52,7 +52,7 @@ promise_test(function(t) {
   });
 }, 'Test for replacing the transition effect by a new keyframe effect');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   var watcher = new EventWatcher(t, div, [ 'transitionend',
                                            'transitioncancel' ]);
@@ -64,7 +64,7 @@ promise_test(function(t) {
   div.style.left = '100px';
 
   var transition = div.getAnimations()[0];
-  return transition.ready.then(function() {
+  return transition.ready.then(() => {
     transition.currentTime = 50 * MS_PER_SEC;
     transition.effect = new KeyframeEffect(div,
                                            { marginLeft: [ '0px' , '100px'] },
@@ -73,7 +73,7 @@ promise_test(function(t) {
   });
 }, 'Test for setting a new keyframe effect with a shorter duration');
 
-promise_test(function(t) {
+promise_test(t => {
   var div = addDiv(t);
   var watcher = new EventWatcher(t, div, [ 'transitionend',
                                            'transitioncancel' ]);
@@ -93,7 +93,7 @@ promise_test(function(t) {
   assert_equals(transition.transitionProperty, 'left');
   assert_true(transition.pending);
 
-  return transition.ready.then(function() {
+  return transition.ready.then(() => {
     assert_false(transition.pending);
   });
 }, 'Test for setting a new keyframe effect to a pending transition');

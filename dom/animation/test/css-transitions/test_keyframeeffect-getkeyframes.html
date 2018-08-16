@@ -13,20 +13,20 @@
 <script>
 'use strict';
 
-function getKeyframes(e) {
+const getKeyframes = e => {
   return e.getAnimations()[0].effect.getKeyframes();
-}
+};
 
-function assert_frames_equal(a, b, name) {
+const assert_frames_equal = (a, b, name) => {
   assert_equals(Object.keys(a).sort().toString(),
                 Object.keys(b).sort().toString(),
                 "properties on " + name);
   for (var p in a) {
     assert_equals(a[p], b[p], "value for '" + p + "' on " + name);
   }
-}
+};
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
 
   div.style.left = '0px';
@@ -51,7 +51,7 @@ test(function(t) {
 }, 'KeyframeEffect.getKeyframes() returns expected frames for a simple'
    + ' transition');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
 
   div.style.left = '0px';
@@ -76,7 +76,7 @@ test(function(t) {
 }, 'KeyframeEffect.getKeyframes() returns expected frames for a simple'
    + ' transition with a non-default easing function');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
   div.style.left = '0px';
   getComputedStyle(div).transitionProperty;
