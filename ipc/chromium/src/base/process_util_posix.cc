@@ -121,7 +121,8 @@ class ScopedDIRClose {
 typedef mozilla::UniquePtr<DIR, ScopedDIRClose> ScopedDIR;
 
 
-void CloseSuperfluousFds(std::function<bool(int)>&& should_preserve) {
+void CloseSuperfluousFds(void* aCtx, bool (*aShouldPreserve)(void*, int))
+{
   // DANGER: no calls to malloc (or locks, etc.) are allowed from now on:
   // https://crbug.com/36678
   // Also, beware of STL iterators: https://crbug.com/331459
@@ -162,7 +163,7 @@ void CloseSuperfluousFds(std::function<bool(int)>&& should_preserve) {
     for (rlim_t i = 0; i < max_fds; ++i) {
       const int fd = static_cast<int>(i);
       if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO ||
-          should_preserve(fd)) {
+          aShouldPreserve(aCtx, fd)) {
         continue;
       }
 
@@ -188,7 +189,7 @@ void CloseSuperfluousFds(std::function<bool(int)>&& should_preserve) {
     if (fd == dir_fd)
       continue;
     if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO ||
-        should_preserve(fd)) {
+        aShouldPreserve(aCtx, fd)) {
       continue;
     }
 
