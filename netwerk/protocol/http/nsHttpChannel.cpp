@@ -701,12 +701,18 @@ nsHttpChannel::CheckFastBlocked()
     }
 
     TimeDuration duration = TimeStamp::NowLoRes() - timestamp;
-    if (duration.ToMilliseconds() < sFastBlockTimeout) {
-        return false;
+    bool isFastBlocking = duration.ToMilliseconds() >= sFastBlockTimeout;
+
+    if (mLoadInfo) {
+        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTracker(true));
+        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(isFastBlocking));
     }
 
-    LOG(("FastBlock timeout (%lf) [this=%p]\n", duration.ToMilliseconds(), this));
-    return true;
+    LOG(("FastBlock %s (%lf) [this=%p]\n",
+         isFastBlocking ? "timeout" : "passed",
+         duration.ToMilliseconds(),
+         this));
+    return isFastBlocking;
 }
 
 bool

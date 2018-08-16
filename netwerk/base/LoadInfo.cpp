@@ -87,6 +87,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
   , mServiceWorkerTaintingSynthesized(false)
+  , mIsTracker(false)
+  , mIsTrackerBlocked(false)
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -322,6 +324,8 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
   , mServiceWorkerTaintingSynthesized(false)
+  , mIsTracker(false)
+  , mIsTrackerBlocked(false)
 {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
@@ -419,6 +423,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal)
   // mServiceWorkerTaintingSynthesized must be handled specially during redirect
   , mServiceWorkerTaintingSynthesized(false)
+  , mIsTracker(rhs.mIsTracker)
+  , mIsTrackerBlocked(rhs.mIsTrackerBlocked)
 {
 }
 
@@ -506,6 +512,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsPreflight(aIsPreflight)
   , mLoadTriggeredFromExternal(aLoadTriggeredFromExternal)
   , mServiceWorkerTaintingSynthesized(aServiceWorkerTaintingSynthesized)
+  , mIsTracker(false)
+  , mIsTrackerBlocked(false)
 {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal || aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -1326,6 +1334,36 @@ LoadInfo::SynthesizeServiceWorkerTainting(LoadTainting aTainting)
 
   // Flag to prevent the tainting from being increased.
   mServiceWorkerTaintingSynthesized = true;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsTracker(bool *aIsTracker)
+{
+  MOZ_ASSERT(aIsTracker);
+  *aIsTracker = mIsTracker;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsTracker(bool aIsTracker)
+{
+  mIsTracker = aIsTracker;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsTrackerBlocked(bool *aIsTrackerBlocked)
+{
+  MOZ_ASSERT(aIsTrackerBlocked);
+  *aIsTrackerBlocked = mIsTrackerBlocked;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsTrackerBlocked(bool aIsTrackerBlocked)
+{
+  mIsTrackerBlocked = aIsTrackerBlocked;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
