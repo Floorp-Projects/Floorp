@@ -4400,7 +4400,7 @@ HTMLEditor::RemoveAttributeOrEquivalent(Element* aElement,
     RemoveAttributeWithTransaction(*aElement, *aAttribute);
 }
 
-nsresult
+NS_IMETHODIMP
 HTMLEditor::SetIsCSSEnabled(bool aIsCSSPrefChecked)
 {
   if (!mCSSEditUtils) {
