@@ -77,18 +77,17 @@ test(t => {
 }, 'CSS Transitions targetting (pseudo-)elements should have correct order ' +
    'after sorting');
 
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t, { style: 'left: 0px; transition: all 50ms' });
   flushComputedStyle(div);
 
   div.style.left = '100px';
   var animations = div.getAnimations();
   assert_equals(animations.length, 1, 'Got transition');
-  animations[0].finished.then(t.step_func(() => {
-    assert_equals(document.getAnimations().length, 0,
-                  'No animations returned');
-    t.done();
-  }));
+  await animations[0].finished;
+
+  assert_equals(document.getAnimations().length, 0,
+                'No animations returned');
 }, 'Transitions are not returned after they have finished');
 
 </script>

@@ -8,7 +8,7 @@
 <script>
 'use strict';
 
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
 
@@ -22,28 +22,29 @@ async_test(t => {
   var previousProgress = animation.effect.getComputedTiming().progress;
   assert_equals(previousProgress, 0, 'Initial value of progress is zero');
 
-  animation.ready.then(waitForNextFrame).then(t.step_func(() => {
-    assert_greater_than(animation.effect.getComputedTiming().progress,
-                        previousProgress,
-                        'Iteration progress is initially increasing');
-    animation.pause();
-    return animation.ready;
-  })).then(t.step_func(() => {
-    previousProgress = animation.effect.getComputedTiming().progress;
-    return waitForNextFrame();
-  })).then(t.step_func(() => {
-    assert_equals(animation.effect.getComputedTiming().progress,
-                  previousProgress,
-                  'Iteration progress does not increase after calling pause()');
-    previousProgress = animation.effect.getComputedTiming().progress;
-    animation.play();
-    return animation.ready.then(waitForNextFrame);
-  })).then(t.step_func(() => {
-    assert_greater_than(animation.effect.getComputedTiming().progress,
-                        previousProgress,
-                        'Iteration progress increases after calling play()');
-    t.done();
-  }));
+  await animation.ready;
+  await waitForNextFrame();
+
+  assert_greater_than(animation.effect.getComputedTiming().progress,
+                      previousProgress,
+                      'Iteration progress is initially increasing');
+  animation.pause();
+  await animation.ready;
+
+  previousProgress = animation.effect.getComputedTiming().progress;
+  await waitForNextFrame();
+
+  assert_equals(animation.effect.getComputedTiming().progress,
+                previousProgress,
+                'Iteration progress does not increase after calling pause()');
+  previousProgress = animation.effect.getComputedTiming().progress;
+  animation.play();
+  await animation.ready;
+  await waitForNextFrame();
+
+  assert_greater_than(animation.effect.getComputedTiming().progress,
+                      previousProgress,
+                      'Iteration progress increases after calling play()');
 }, 'pause() and play() a transition');
 
 </script>
