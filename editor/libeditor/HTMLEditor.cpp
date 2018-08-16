@@ -349,7 +349,8 @@ HTMLEditor::Init(nsIDocument& aDoc,
 
     if (!IsInteractionAllowed()) {
       // ignore any errors from this in case the file is missing
-      AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/EditorOverride.css"));
+      AddOverrideStyleSheetInternal(
+        NS_LITERAL_STRING("resource://gre/res/EditorOverride.css"));
     }
   }
   NS_ENSURE_SUCCESS(rulesRv, rulesRv);
@@ -3029,41 +3030,60 @@ HTMLEditor::GetLinkedObjects(nsIArray** aNodeList)
 NS_IMETHODIMP
 HTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
 {
+  nsresult rv = AddOverrideStyleSheetInternal(aURL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::AddOverrideStyleSheetInternal(const nsAString& aURL)
+{
   // Enable existing sheet if already loaded.
   if (EnableExistingStyleSheet(aURL)) {
     return NS_OK;
   }
 
   // Make sure the pres shell doesn't disappear during the load.
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   nsCOMPtr<nsIURI> uaURI;
   nsresult rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // We MUST ONLY load synchronous local files (no @import)
   // XXXbz Except this will actually try to load remote files
   // synchronously, of course..
   RefPtr<StyleSheet> sheet;
   // Editor override style sheets may want to style Gecko anonymous boxes
-  rv = ps->GetDocument()->CSSLoader()->
-    LoadSheetSync(uaURI, mozilla::css::eAgentSheetFeatures, true,
-                  &sheet);
+  rv = presShell->GetDocument()->CSSLoader()->
+    LoadSheetSync(uaURI, css::eAgentSheetFeatures, true, &sheet);
 
   // Synchronous loads should ALWAYS return completed
-  NS_ENSURE_TRUE(sheet, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!sheet)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Add the override style sheet
   // (This checks if already exists)
-  ps->AddOverrideStyleSheet(sheet);
-  ps->ApplicableStylesChanged();
+  presShell->AddOverrideStyleSheet(sheet);
+  presShell->ApplicableStylesChanged();
 
   // Save as the last-loaded sheet
   mLastOverrideStyleSheetURL = aURL;
 
   //Add URL and style sheet to our lists
-  return AddNewStyleSheetToList(aURL, sheet);
+  rv = AddNewStyleSheetToList(aURL, sheet);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3082,7 +3102,11 @@ HTMLEditor::ReplaceOverrideStyleSheet(const nsAString& aURL)
   if (!mLastOverrideStyleSheetURL.IsEmpty()) {
     RemoveOverrideStyleSheet(mLastOverrideStyleSheetURL);
   }
-  return AddOverrideStyleSheet(aURL);
+  nsresult rv = AddOverrideStyleSheetInternal(aURL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 // Do NOT use transaction system for override style sheets

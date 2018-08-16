@@ -984,6 +984,13 @@ protected: // Shouldn't be used by friend classes
   nsresult RemoveStyleSheetFromList(const nsAString &aURL);
 
   /**
+   * Add and apply the style sheet synchronously.
+   *
+   * @param aURL        URL to the style sheet.
+   */
+  nsresult AddOverrideStyleSheetInternal(const nsAString& aURL);
+
+  /**
    * MaybeCollapseSelectionAtFirstEditableNode() may collapse selection at
    * proper position to staring to edit.  If there is a non-editable node
    * before any editable text nodes or inline elements which can have text
