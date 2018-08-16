@@ -145,6 +145,9 @@ nsIConstraintValidation::ReportValidity()
     return false;
   }
 
+  AutoTArray<RefPtr<Element>, 1> invalidElements;
+  invalidElements.AppendElement(element);
+
   nsCOMPtr<nsIObserverService> service =
     mozilla::services::GetObserverService();
   if (!service) {
@@ -161,10 +164,6 @@ nsIConstraintValidation::ReportValidity()
 
   bool hasObserver = false;
   rv = theEnum->HasMoreElements(&hasObserver);
-
-  nsCOMPtr<nsIMutableArray> invalidElements =
-    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  invalidElements->AppendElement(element);
 
   NS_ENSURE_SUCCESS(rv, true);
   nsCOMPtr<nsISupports> inst;

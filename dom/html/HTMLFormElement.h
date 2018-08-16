@@ -517,7 +517,7 @@ protected:
    *
    * @return Whether the form is currently valid.
    */
-  bool CheckFormValidity(nsIMutableArray* aInvalidElements) const;
+  bool CheckFormValidity(nsTArray<RefPtr<Element>>* aInvalidElements) const;
 
   // Clear the mImageNameLookupTable and mImageElements.
   void Clear();

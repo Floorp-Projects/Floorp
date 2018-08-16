@@ -11,6 +11,7 @@ interface nsIURI;
 interface nsIArray;
 
 webidl HTMLFormElement;
+webidl Element;
 
 [scriptable, uuid(867cb7e7-835d-408b-9788-d2834d284e03)]
 interface nsIFormSubmitObserver: nsISupports
@@ -18,7 +19,7 @@ interface nsIFormSubmitObserver: nsISupports
   void notify(in HTMLFormElement formNode, in mozIDOMWindow window, in nsIURI actionURL, out boolean cancelSubmit);
 
   void notifyInvalidSubmit(in HTMLFormElement formNode,
-                           in nsIArray invalidElements);
+                           in Array<Element> invalidElements);
 };
 
 %{C++
