@@ -36,24 +36,15 @@ const ANIM_DUR_MS = 1000000; // 1000s
  * an animation that uses the above ANIM_DELAY_MS and ANIM_DUR_MS values into
  * the middle of various phases or points through the active duration.
  */
-function currentTimeForBeforePhase() {
-  return ANIM_DELAY_MS / 2;
-}
-function currentTimeForActivePhase() {
-  return ANIM_DELAY_MS + ANIM_DUR_MS / 2;
-}
-function currentTimeForAfterPhase() {
-  return ANIM_DELAY_MS + ANIM_DUR_MS + ANIM_DELAY_MS / 2;
-}
-function currentTimeForStartOfActiveInterval() {
+const currentTimeForStartOfActiveInterval = () => {
   return ANIM_DELAY_MS;
-}
-function currentTimeForFiftyPercentThroughActiveInterval() {
+};
+const currentTimeForFiftyPercentThroughActiveInterval = () => {
   return ANIM_DELAY_MS + ANIM_DUR_MS * 0.5;
-}
-function currentTimeForEndOfActiveInterval() {
+};
+const currentTimeForEndOfActiveInterval = () => {
   return ANIM_DELAY_MS + ANIM_DUR_MS;
-}
+};
 
 
 // Expected computed 'margin-left' values at points during the active interval:
@@ -74,29 +65,8 @@ const END_POSITION = 200;
 //
 //   http://drafts.csswg.org/web-animations/#animation-effect-phases-and-states
 
-// Called when currentTime is set to zero (the beginning of the start delay).
-function checkStateOnSettingCurrentTimeToZero(animation)
-{
-  // We don't test animation.currentTime since our caller just set it.
-
-  assert_equals(animation.playState, 'running',
-    'Animation.playState should be "running" at the start of ' +
-    'the start delay');
-
-  assert_equals(animation.effect.target.style.animationPlayState, 'running',
-    'Animation.effect.target.style.animationPlayState should be ' +
-    '"running" at the start of the start delay');
-
-  var div = animation.effect.target;
-  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_equals(marginLeft, UNANIMATED_POSITION,
-                'the computed value of margin-left should be unaffected ' +
-                'at the beginning of the start delay');
-}
-
 // Called when the ready Promise's callbacks should happen
-function checkStateOnReadyPromiseResolved(animation)
-{
+const checkStateOnReadyPromiseResolved = animation => {
   // the 0.0001 here is for rounding error
   assert_less_than_equal(animation.currentTime,
     animation.timeline.currentTime - animation.startTime + 0.0001,
@@ -113,11 +83,10 @@ function checkStateOnReadyPromiseResolved(animation)
   assert_equals(marginLeft, INITIAL_POSITION,
                 'the computed value of margin-left should be unaffected ' +
                 'by an animation with a delay on ready Promise resolve');
-}
+};
 
 // Called when currentTime is set to the time the active interval starts.
-function checkStateAtActiveIntervalStartTime(animation)
-{
+const checkStateAtActiveIntervalStartTime = animation => {
   // We don't test animation.currentTime since our caller just set it.
 
   assert_equals(animation.playState, 'running',
@@ -129,10 +98,9 @@ function checkStateAtActiveIntervalStartTime(animation)
   assert_between_inclusive(marginLeft, INITIAL_POSITION, TEN_PCT_POSITION,
     'the computed value of margin-left should be close to the value at the ' +
     'beginning of the animation');
-}
+};
 
-function checkStateAtFiftyPctOfActiveInterval(animation)
-{
+const checkStateAtFiftyPctOfActiveInterval = animation => {
   // We don't test animation.currentTime since our caller just set it.
 
   var div = animation.effect.target;
@@ -140,11 +108,10 @@ function checkStateAtFiftyPctOfActiveInterval(animation)
   assert_equals(marginLeft, FIFTY_PCT_POSITION,
     'the computed value of margin-left should be half way through the ' +
     'animation at the midpoint of the active interval');
-}
+};
 
 // Called when currentTime is set to the time the active interval ends.
-function checkStateAtActiveIntervalEndTime(animation)
-{
+const checkStateAtActiveIntervalEndTime = animation => {
   // We don't test animation.currentTime since our caller just set it.
 
   assert_equals(animation.playState, 'finished',
@@ -156,10 +123,9 @@ function checkStateAtActiveIntervalEndTime(animation)
   assert_equals(marginLeft, END_POSITION,
     'the computed value of margin-left should be the final transitioned-to ' +
     'value at the end of the active duration');
-}
+};
 
-test(function(t)
-{
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
@@ -168,9 +134,7 @@ test(function(t)
   assert_equals(animation.currentTime, 0, 'currentTime should be zero');
 }, 'currentTime of a newly created transition is zero');
 
-
-test(function(t)
-{
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
@@ -187,7 +151,7 @@ test(function(t)
    'currentTime');
 
 
-async_test(function(t) {
+async_test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, 'transitionend');
 
@@ -196,7 +160,7 @@ async_test(function(t) {
 
   var animation = div.getAnimations()[0];
 
-  animation.ready.then(t.step_func(function() {
+  animation.ready.then(t.step_func(() => {
     checkStateOnReadyPromiseResolved(animation);
 
     animation.currentTime = currentTimeForStartOfActiveInterval();
@@ -207,17 +171,17 @@ async_test(function(t) {
 
     animation.currentTime = currentTimeForEndOfActiveInterval();
     return eventWatcher.wait_for('transitionend');
-  })).then(t.step_func(function() {
+  })).then(t.step_func(() => {
     checkStateAtActiveIntervalEndTime(animation);
-  })).catch(t.step_func(function(reason) {
+  })).catch(t.step_func(reason => {
     assert_unreached(reason);
-  })).then(function() {
+  })).then(() => {
     t.done();
   });
 }, 'Skipping forward through transition');
 
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, 'transitionend');
 
@@ -231,7 +195,7 @@ test(function(t) {
   // changes to the Animation object no longer affect the element. For
   // this reason we only skip forwards as far as the 50% through point.
 
-  animation.ready.then(t.step_func(function() {
+  animation.ready.then(t.step_func(() => {
     animation.currentTime = currentTimeForFiftyPercentThroughActiveInterval();
     checkStateAtFiftyPctOfActiveInterval(animation);
 
@@ -245,7 +209,7 @@ test(function(t) {
     // causing computed style to be updated and the 'transitionend' event to
     // be dispatched synchronously. We need to call wait_for first
     // otherwise eventWatcher will assert that the event was unexpected.
-    eventWatcher.wait_for('transitionend').then(function() {
+    eventWatcher.wait_for('transitionend').then(() => {
       t.done();
     });
     checkStateAtActiveIntervalStartTime(animation);
@@ -253,14 +217,14 @@ test(function(t) {
 }, 'Skipping backwards through transition');
 
 
-async_test(function(t) {
+async_test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
   var animation = div.getAnimations()[0];
 
-  animation.ready.then(t.step_func(function() {
+  animation.ready.then(t.step_func(() => {
     var exception;
     try {
       animation.currentTime = null;
@@ -270,15 +234,15 @@ async_test(function(t) {
     assert_equals(exception.name, 'TypeError',
       'Expect TypeError exception on trying to set ' +
       'Animation.currentTime to null');
-  })).catch(t.step_func(function(reason) {
+  })).catch(t.step_func(reason => {
     assert_unreached(reason);
-  })).then(function() {
+  })).then(() => {
     t.done();
   });
 }, 'Setting currentTime to null');
 
 
-async_test(function(t) {
+async_test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
@@ -286,20 +250,20 @@ async_test(function(t) {
   var animation = div.getAnimations()[0];
   var pauseTime;
 
-  animation.ready.then(t.step_func(function() {
+  animation.ready.then(t.step_func(() => {
     assert_not_equals(animation.currentTime, null,
       'Animation.currentTime not null on ready Promise resolve');
     animation.pause();
     return animation.ready;
-  })).then(t.step_func(function() {
+  })).then(t.step_func(() => {
     pauseTime = animation.currentTime;
     return waitForFrame();
-  })).then(t.step_func(function() {
+  })).then(t.step_func(() => {
     assert_equals(animation.currentTime, pauseTime,
       'Animation.currentTime is unchanged after pausing');
-  })).catch(t.step_func(function(reason) {
+  })).catch(t.step_func(reason => {
     assert_unreached(reason);
-  })).then(function() {
+  })).then(() => {
     t.done();
   });
 }, 'Animation.currentTime after pausing');

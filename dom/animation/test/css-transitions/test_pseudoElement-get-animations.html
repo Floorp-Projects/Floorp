@@ -22,7 +22,7 @@
 <script>
 'use strict';
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { class: 'init' });
   flushComputedStyle(div);
   div.classList.add('change');

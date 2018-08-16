@@ -19,7 +19,8 @@
 // --------------------
 // delay
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
@@ -31,7 +32,7 @@ test(function(t) {
                 'Initial value of delay');
 }, 'delay of a new tranisition');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s 10s';
   flushComputedStyle(div);
@@ -42,7 +43,7 @@ test(function(t) {
                 'Initial value of delay');
 }, 'Positive delay of a new transition');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s -5s';
   flushComputedStyle(div);
@@ -57,7 +58,8 @@ test(function(t) {
 // --------------------
 // endDelay
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
@@ -72,7 +74,8 @@ test(function(t) {
 // --------------------
 // fill
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
@@ -87,7 +90,8 @@ test(function(t) {
 // --------------------
 // iterationStart
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
@@ -102,7 +106,8 @@ test(function(t) {
 // --------------------
 // iterations
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
@@ -117,7 +122,8 @@ test(function(t) {
 // --------------------
 // duration
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
@@ -132,7 +138,8 @@ test(function(t) {
 // --------------------
 // direction
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
@@ -147,7 +154,8 @@ test(function(t) {
 // --------------------
 // easing
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
@@ -163,7 +171,8 @@ test(function(t) {
 // endTime
 // = max(start delay + active duration + end delay, 0)
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 100s -5s';
   flushComputedStyle(div);
@@ -180,7 +189,8 @@ test(function(t) {
 // activeDuration
 // = iteration duration * iteration count(==1)
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 100s -5s';
   flushComputedStyle(div);
@@ -195,7 +205,8 @@ test(function(t) {
 // --------------------
 // localTime
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 100s';
   flushComputedStyle(div);
@@ -206,7 +217,7 @@ test(function(t) {
                 'Initial value of localTime');
 }, 'localTime of a new transition');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 100s';
   flushComputedStyle(div);
@@ -218,7 +229,7 @@ test(function(t) {
                 'current localTime after setting currentTime');
 }, 'localTime is always equal to currentTime');
 
-async_test(function(t) {
+async_test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 100s';
   flushComputedStyle(div);
@@ -227,11 +238,11 @@ async_test(function(t) {
   var anim = div.getAnimations()[0];
   anim.playbackRate = 2; // 2 times faster
 
-  anim.ready.then(t.step_func(function() {
+  anim.ready.then(t.step_func(() => {
     assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
                   'localTime is equal to currentTime');
     return waitForFrame();
-  })).then(t.step_func_done(function() {
+  })).then(t.step_func_done(() => {
     assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
                   'localTime is equal to currentTime');
   }));
@@ -241,7 +252,8 @@ async_test(function(t) {
 // --------------------
 // progress
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10.5s';
   flushComputedStyle(div);
@@ -252,7 +264,7 @@ test(function(t) {
                 'Initial value of progress');
 }, 'progress of a new transition');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10.5s 2s';
   flushComputedStyle(div);
@@ -263,7 +275,7 @@ test(function(t) {
                 'Initial value of progress');
 }, 'progress of a new transition with positive delay in before phase');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10.5s';
   flushComputedStyle(div);
@@ -279,7 +291,8 @@ test(function(t) {
 // --------------------
 // currentIteration
 // --------------------
-test(function(t) {
+
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);
@@ -290,7 +303,7 @@ test(function(t) {
                 'Initial value of currentIteration');
 }, 'currentIteration of a new transition');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s 2s';
   flushComputedStyle(div);
@@ -301,7 +314,7 @@ test(function(t) {
                 'Initial value of currentIteration');
 }, 'currentIteration of a new transition with positive delay in before phase');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 10s';
   flushComputedStyle(div);

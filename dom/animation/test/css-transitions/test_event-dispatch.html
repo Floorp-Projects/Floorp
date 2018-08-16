@@ -39,7 +39,7 @@ TransitionEventHandler.prototype.clear = () => {
   this.transitioncancel = undefined;
 };
 
-function setupTransition(t, transitionStyle) {
+const setupTransition = (t, transitionStyle) => {
   const div = addDiv(t, { style: 'transition: ' + transitionStyle });
   // Note that this TransitionEventHandler should be created before EventWatcher
   // to capture all events in the handler prior to the EventWatcher since
@@ -55,7 +55,7 @@ function setupTransition(t, transitionStyle) {
   const transition = div.getAnimations()[0];
 
   return { transition, watcher, div, handler };
-}
+};
 
 // On the next frame (i.e. when events are queued), whether or not the
 // transition is still pending depends on the implementation.
