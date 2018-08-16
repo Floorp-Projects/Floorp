@@ -9,8 +9,8 @@
 'use strict';
 
 promise_test(async t => {
-  var div = addDiv(t);
-  var cs = getComputedStyle(div);
+  const div = addDiv(t);
+  const cs = getComputedStyle(div);
 
   div.style.marginLeft = '0px';
   cs.marginLeft; // Flush style to set up transition start point
@@ -18,8 +18,8 @@ promise_test(async t => {
   div.style.marginLeft = '10000px';
   cs.marginLeft;
 
-  var animation = div.getAnimations()[0];
-  var previousProgress = animation.effect.getComputedTiming().progress;
+  const animation = div.getAnimations()[0];
+  let previousProgress = animation.effect.getComputedTiming().progress;
   assert_equals(previousProgress, 0, 'Initial value of progress is zero');
 
   await animation.ready;

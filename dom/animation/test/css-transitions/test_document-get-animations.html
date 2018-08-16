@@ -15,7 +15,7 @@ test(t => {
 }, 'getAnimations for non-animated content');
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
 
   // Add a couple of transitions
   div.style.left = '0px';
@@ -47,8 +47,8 @@ test(t => {
   //     ::after
   //        |
   //       child
-  var parent = addDiv(t);
-  var child = addDiv(t);
+  const parent = addDiv(t);
+  const child = addDiv(t);
   parent.appendChild(child);
 
   parent.style.left = '0px';
@@ -62,7 +62,7 @@ test(t => {
   parent.classList.add('change');
   child.style.left = '100px';
 
-  var anims = document.getAnimations();
+  const anims = document.getAnimations();
   assert_equals(anims.length, 4,
                 'CSS transition on both pseudo-elements and elements ' +
                 'are returned');
@@ -78,11 +78,11 @@ test(t => {
    'after sorting');
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'left: 0px; transition: all 50ms' });
+  const div = addDiv(t, { style: 'left: 0px; transition: all 50ms' });
   flushComputedStyle(div);
 
   div.style.left = '100px';
-  var animations = div.getAnimations();
+  const animations = div.getAnimations();
   assert_equals(animations.length, 1, 'Got transition');
   await animations[0].finished;
 

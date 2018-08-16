@@ -9,14 +9,14 @@
 'use strict';
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
 
   div.style.left = '0px';
   getComputedStyle(div).transitionProperty;
   div.style.transition = 'left 100s';
   div.style.left = '100px';
 
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   assert_equals(animation.effect.target, div,
     'Animation.target is the animatable div');
 }, 'Returned CSS transitions have the correct Animation.target');
@@ -25,11 +25,11 @@ test(t => {
   addStyle(t, { '.init::after': 'content: ""; width: 0px; height: 0px; ' +
                                 'transition: all 10s;',
                 '.change::after': 'width: 100px; height: 100px;' });
-  var div = addDiv(t, { class: 'init' });
+  const div = addDiv(t, { class: 'init' });
   flushComputedStyle(div);
   div.classList.add('change');
 
-  var anims = document.getAnimations();
+  const anims = document.getAnimations();
   assert_equals(anims.length, 2,
                 'Got transitions running on ::after pseudo element');
   assert_equals(anims[0].effect.target, anims[1].effect.target,
@@ -39,17 +39,17 @@ test(t => {
 test(t => {
   addStyle(t, { '.init::after': 'content: ""; width: 0px; transition: all 10s;',
                 '.change::after': 'width: 100px;' });
-  var div = addDiv(t, { class: 'init' });
+  const div = addDiv(t, { class: 'init' });
   flushComputedStyle(div);
   div.classList.add('change');
-  var pseudoTarget = document.getAnimations()[0].effect.target;
-  var effect = new KeyframeEffect(pseudoTarget,
-                                  { background: ["blue", "red"] },
-                                  3000);
-  var newAnim = new Animation(effect, document.timeline);
+  const pseudoTarget = document.getAnimations()[0].effect.target;
+  const effect = new KeyframeEffect(pseudoTarget,
+                                    { background: ["blue", "red"] },
+                                    3000);
+  const newAnim = new Animation(effect, document.timeline);
   newAnim.play();
 
-  var anims = document.getAnimations();
+  const anims = document.getAnimations();
   assert_equals(anims.length, 2,
                 'Got animations running on ::after pseudo element');
   assert_not_equals(anims[0], newAnim,
