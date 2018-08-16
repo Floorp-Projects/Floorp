@@ -2752,20 +2752,24 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
             }
             break;
 
+          case SRC_WHILE:
           case SRC_FOR_IN:
           case SRC_FOR_OF:
-            static_assert(unsigned(SrcNote::ForIn::BackJumpOffset) == unsigned(SrcNote::ForOf::BackJumpOffset),
-                          "SrcNote::{ForIn,ForOf}::BackJumpOffset should be same");
+            static_assert(unsigned(SrcNote::While::BackJumpOffset) == unsigned(SrcNote::ForIn::BackJumpOffset),
+                          "SrcNote::{While,ForIn,ForOf}::BackJumpOffset should be same");
+            static_assert(unsigned(SrcNote::While::BackJumpOffset) == unsigned(SrcNote::ForOf::BackJumpOffset),
+                          "SrcNote::{While,ForIn,ForOf}::BackJumpOffset should be same");
             if (!sp->jsprintf(" backjump %u",
-                              unsigned(GetSrcNoteOffset(sn, SrcNote::ForIn::BackJumpOffset))))
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::While::BackJumpOffset))))
             {
                 return false;
             }
             break;
 
-          case SRC_WHILE:
-            if (!sp->jsprintf(" offset %u",
-                              unsigned(GetSrcNoteOffset(sn, SrcNote::While::BackJumpOffset))))
+          case SRC_DO_WHILE:
+            if (!sp->jsprintf(" cond %u backjump %u",
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::DoWhile::CondOffset)),
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::DoWhile::BackJumpOffset))))
             {
                 return false;
             }
