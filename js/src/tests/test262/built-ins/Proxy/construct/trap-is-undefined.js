@@ -21,7 +21,7 @@ info: |
     ...
     3. If func is either undefined or null, return undefined.
     ...
-features: [new.target, Proxy, Reflect, Reflect.construct]
+features: [Reflect.construct]
 ---*/
 
 var calls = 0;

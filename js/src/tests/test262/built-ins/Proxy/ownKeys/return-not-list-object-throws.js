@@ -17,7 +17,7 @@ info: |
 
     2. If Type(obj) is not Object, throw a TypeError exception.
 
-features: [Proxy, Symbol]
+features: [Symbol]
 ---*/
 
 var target = {};

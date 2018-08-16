@@ -4,7 +4,7 @@
 es6id: 9.5.4
 description: >
     If boolean trap result if false, return false.
-features: [Proxy, Reflect]
+features: [Reflect]
 ---*/
 
 var target = {};

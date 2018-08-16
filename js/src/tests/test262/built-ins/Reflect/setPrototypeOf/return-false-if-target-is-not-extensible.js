@@ -15,7 +15,6 @@ info: |
   ...
   5. If extensible is false, return false.
   ...
-features: [Reflect, Reflect.setPrototypeOf]
 ---*/
 
 var o1 = {};

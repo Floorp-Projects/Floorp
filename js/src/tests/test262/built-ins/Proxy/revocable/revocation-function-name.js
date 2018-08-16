@@ -11,7 +11,6 @@ info: |
     Every built-in Function object, including constructors, that is not
     identified as an anonymous function has a name property whose value
     is a String.
-features: [Proxy]
 ---*/
 
 var revocationFunction = Proxy.revocable({}, {}).revoke;

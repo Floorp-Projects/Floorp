@@ -10,7 +10,7 @@ info: |
     ...
     12. If booleanTrapResult is false, return false.
     ...
-features: [Proxy, Reflect]
+features: [Reflect]
 ---*/
 
 var target = {};

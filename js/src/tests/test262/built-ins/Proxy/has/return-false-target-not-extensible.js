@@ -18,7 +18,6 @@ info: |
             ...
             iv. If extensibleTarget is false, throw a TypeError exception.
     ...
-features: [Proxy]
 ---*/
 
 var target = {};

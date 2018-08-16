@@ -13,7 +13,6 @@ info: |
         false and targetDesc.[[Writable]] is false, then
             i. If SameValue(V, targetDesc.[[Value]]) is false, throw a TypeError
             exception.
-features: [Proxy]
 ---*/
 
 var target = {};

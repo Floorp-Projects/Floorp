@@ -13,7 +13,6 @@ info: |
         ...
         f. Return undefined.
     ...
-features: [Proxy]
 ---*/
 
 var target = {

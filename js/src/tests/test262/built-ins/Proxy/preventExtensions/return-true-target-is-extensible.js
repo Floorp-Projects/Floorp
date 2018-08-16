@@ -14,7 +14,6 @@ info: |
         c. If targetIsExtensible is true, throw a TypeError exception.
     11. Return booleanTrapResult.
     ...
-features: [Proxy]
 ---*/
 
 var p = new Proxy({}, {

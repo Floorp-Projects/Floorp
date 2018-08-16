@@ -5,7 +5,7 @@ esid: sec-proxy-object-internal-methods-and-internal-slots
 description: >
   Enumerate trap was removed and it should not be triggered anymore.
 includes: [compareArray.js]
-features: [Proxy, Symbol, Symbol.iterator]
+features: [Symbol.iterator]
 ---*/
 
 var x;

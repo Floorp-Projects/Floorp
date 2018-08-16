@@ -10,7 +10,6 @@ info: |
     ...
     9. Let trapResultObj be Call(trap, handler, «target, P»).
     ...
-features: [Proxy]
 ---*/
 
 var _target, _handler, _prop;

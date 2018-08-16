@@ -12,7 +12,6 @@ info: |
     descObj»)).
     11. ReturnIfAbrupt(booleanTrapResult).
     ...
-features: [Proxy]
 ---*/
 
 var p = new Proxy({}, {

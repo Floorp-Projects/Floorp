@@ -12,7 +12,6 @@ info: |
   5. ReturnIfAbrupt(desc).
   6. Return FromPropertyDescriptor(desc).
 includes: [compareArray.js]
-features: [Reflect]
 ---*/
 
 var o1 = {

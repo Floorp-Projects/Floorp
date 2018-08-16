@@ -10,7 +10,6 @@ info: |
 
     ...
     20. If uncheckedResultKeys is not empty, throw a TypeError exception.
-features: [Proxy]
 ---*/
 
 var target = {

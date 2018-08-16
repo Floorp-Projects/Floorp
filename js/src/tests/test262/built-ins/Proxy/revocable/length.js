@@ -20,7 +20,6 @@ info: |
     object has the attributes { [[Writable]]: false, [[Enumerable]]: false,
     [[Configurable]]: true }.
 includes: [propertyHelper.js]
-features: [Proxy]
 ---*/
 
 assert.sameValue(Proxy.revocable.length, 2);
