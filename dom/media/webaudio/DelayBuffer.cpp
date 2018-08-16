@@ -128,7 +128,7 @@ DelayBuffer::ReadChannels(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
 
   for (unsigned i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
     float currentDelay = aPerFrameDelays[i];
-    MOZ_ASSERT(currentDelay >= 0.0);
+    MOZ_ASSERT(currentDelay >= 0.0f);
     MOZ_ASSERT(currentDelay <= (mChunks.Length() - 1) * WEBAUDIO_BLOCK_SIZE);
 
     // Interpolate two input frames in case the read position does not match
@@ -148,7 +148,7 @@ DelayBuffer::ReadChannels(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
       // considered for determining totalChannelCount.
       // mVolume is not set on default initialized chunks so also handle null
       // chunks specially.
-      if (interpolationFactor != 0.0 && !mChunks[readChunk].IsNull()) {
+      if (interpolationFactor != 0.0f && !mChunks[readChunk].IsNull()) {
         int readOffset = OffsetForPosition(positions[tick]);
         UpdateUpmixChannels(readChunk, totalChannelCount,
                             aChannelInterpretation);
@@ -160,7 +160,7 @@ DelayBuffer::ReadChannels(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
         }
       }
 
-      interpolationFactor = 1.0 - interpolationFactor;
+      interpolationFactor = 1.0f - interpolationFactor;
     }
   }
 }
