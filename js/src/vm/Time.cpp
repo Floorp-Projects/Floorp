@@ -261,7 +261,7 @@ PRMJ_InvalidParameterHandler(const wchar_t* expression,
 
 /* Format a time value into a buffer. Same semantics as strftime() */
 size_t
-PRMJ_FormatTime(char* buf, int buflen, const char* fmt, const PRMJTime* prtm,
+PRMJ_FormatTime(char* buf, size_t buflen, const char* fmt, const PRMJTime* prtm,
                 int timeZoneYear, int offsetInSeconds)
 {
     size_t result = 0;
@@ -387,7 +387,7 @@ PRMJ_FormatTime(char* buf, int buflen, const char* fmt, const PRMJTime* prtm,
         /* Replace the fake year in the result with the real year. */
         for (p = buf; (p = strstr(p, fake_year)); p += real_year_len) {
             size_t new_result = result + real_year_len - fake_year_len;
-            if ((int)new_result >= buflen) {
+            if (new_result >= buflen) {
                 return 0;
             }
             memmove(p + real_year_len, p + fake_year_len, strlen(p + fake_year_len));

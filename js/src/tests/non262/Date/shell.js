@@ -1,65 +1,153 @@
-
-var BUGNUMBER;
-var summary;
-
-
-/*
+/**
  * Date functions used by tests in Date suite
- *
  */
-var msPerDay =   86400000;
-var msPerHour =   3600000; // 1000 * 60 * 60
-var TZ_DIFF = getTimeZoneDiff();  // offset of tester's timezone from UTC
-var TZ_ADJUST = TZ_DIFF * msPerHour;
-var TIME_2000  = 946684800000;
-var TIME_1900  = -2208988800000;
-var UTC_29_FEB_2000 = TIME_2000 + 31*msPerDay + 28*msPerDay;
-var UTC_1_JAN_2005 = TIME_2000 + TimeInYear(2000) + TimeInYear(2001) +
-  TimeInYear(2002) + TimeInYear(2003) + TimeInYear(2004);
-var now = new Date();
-var TIME_NOW = now.valueOf();  //valueOf() is to accurate to the millisecond
-                               //Date.parse() is accurate only to the second
+(function(global) {
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const msPerHour = 1000 * 60 * 60;
+    global.msPerHour = msPerHour;
 
-/*
- * Originally, the test suite used a hard-coded value TZ_DIFF = -8.
- * But that was only valid for testers in the Pacific Standard Time Zone!
- * We calculate the proper number dynamically for any tester. We just
- * have to be careful not to use a date subject to Daylight Savings Time...
- */
-function getTimeZoneDiff()
-{
-  return -((new Date(2000, 1, 1)).getTimezoneOffset())/60;
-}
+    // Offset of tester's time zone from UTC.
+    const TZ_DIFF = GetRawTimezoneOffset();
+    global.TZ_ADJUST = TZ_DIFF * msPerHour;
 
-function DaysInYear( y ) {
-  if ( y % 4 != 0 ) {
-    return 365;
-  }
-  if ( (y % 4 == 0) && (y % 100 != 0) ) {
-    return 366;
-  }
-  if ( (y % 100 == 0) && (y % 400 != 0) ) {
-    return 365;
-  }
-  if ( (y % 400 == 0) ){
-    return 366;
-  } else {
-    return "ERROR: DaysInYear(" + y + ") case not covered";
-  }
-}
+    const UTC_01_JAN_1900 = -2208988800000;
+    const UTC_01_JAN_2000 = 946684800000;
+    const UTC_29_FEB_2000 = UTC_01_JAN_2000 + 31 * msPerDay + 28 * msPerDay;
+    const UTC_01_JAN_2005 = UTC_01_JAN_2000 + TimeInYear(2000) + TimeInYear(2001) +
+                            TimeInYear(2002) + TimeInYear(2003) + TimeInYear(2004);
+    global.UTC_01_JAN_1900 = UTC_01_JAN_1900;
+    global.UTC_01_JAN_2000 = UTC_01_JAN_2000;
+    global.UTC_29_FEB_2000 = UTC_29_FEB_2000;
+    global.UTC_01_JAN_2005 = UTC_01_JAN_2005;
 
-function TimeInYear( y ) {
-  return ( DaysInYear(y) * msPerDay );
-}
+    /*
+     * Originally, the test suite used a hard-coded value TZ_DIFF = -8.
+     * But that was only valid for testers in the Pacific Standard Time Zone!
+     * We calculate the proper number dynamically for any tester. We just
+     * have to be careful not to use a date subject to Daylight Savings Time...
+     */
+    function GetRawTimezoneOffset() {
+        let t1 = new Date(2000, 1, 1).getTimezoneOffset();
+        let t2 = new Date(2000, 1 + 6, 1).getTimezoneOffset();
+
+        // 1) Time zone without daylight saving time.
+        // 2) Northern hemisphere with daylight saving time.
+        if ((t1 - t2) >= 0)
+            return -t1 / 60;
+
+        // 3) Southern hemisphere with daylight saving time.
+        return -t2 / 60;
+    }
+
+    function DaysInYear(y) {
+        return y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0) ? 366 : 365;
+    }
+
+    function TimeInYear(y) {
+        return DaysInYear(y) * msPerDay;
+    }
+
+    function getDefaultTimeZone() {
+        var tz = getTimeZone();
+        switch (tz) {
+          case "EST":
+          case "EDT":
+            return "EST5EDT";
+
+          case "CST":
+          case "CDT":
+            return "CST6CDT";
+
+          case "MST":
+          case "MDT":
+            return "MST7MDT";
+
+          case "PST":
+          case "PDT":
+            return "PST8PDT";
+
+          default:
+            // Other time zones abbrevations are not supported.
+            return tz;
+        }
+    }
+
+    let defaultTimeZone = null;
+    let defaultLocale = null;
+
+    // Run the given test in the requested time zone.
+    function inTimeZone(tzname, fn) {
+        if (defaultTimeZone === null)
+            defaultTimeZone = getDefaultTimeZone();
+
+        setTimeZone(tzname);
+        try {
+            fn();
+        } finally {
+            setTimeZone(defaultTimeZone);
+        }
+    }
+    global.inTimeZone = inTimeZone;
+
+    const Month = {
+        January: 0,
+        February: 1,
+        March: 2,
+        April: 3,
+        May: 4,
+        June: 5,
+        July: 6,
+        August: 7,
+        September: 8,
+        October: 9,
+        November: 10,
+        December: 11,
+    };
+    global.Month = Month;
+
+    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].join("|");
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].join("|");
+    const datePart = String.raw `(?:${weekdays}) (?:${months}) \d{2}`;
+    const timePart = String.raw `\d{4,6} \d{2}:\d{2}:\d{2} GMT[+-]\d{4}`;
+    const dateTimeRE = new RegExp(String.raw `^(${datePart} ${timePart})(?: \((.+)\))?$`);
+
+    function assertDateTime(date, expected, ...alternativeTimeZones) {
+        let actual = date.toString();
+        assertEq(dateTimeRE.test(expected), true, `${expected}`);
+        assertEq(dateTimeRE.test(actual), true, `${actual}`);
+
+        let [, expectedDateTime, expectedTimeZone] = dateTimeRE.exec(expected);
+        let [, actualDateTime, actualTimeZone] = dateTimeRE.exec(actual);
+
+        assertEq(actualDateTime, expectedDateTime);
+
+        // The time zone identifier is optional, so only compare its value if
+        // it's present in |actual| and |expected|.
+        if (expectedTimeZone !== undefined && actualTimeZone !== undefined) {
+            // Test against the alternative time zone identifiers if necessary.
+            if (actualTimeZone !== expectedTimeZone) {
+                for (let alternativeTimeZone of alternativeTimeZones) {
+                    if (actualTimeZone === alternativeTimeZone) {
+                        expectedTimeZone = alternativeTimeZone;
+                        break;
+                    }
+                }
+            }
+            assertEq(actualTimeZone, expectedTimeZone);
+        }
+    }
+    global.assertDateTime = assertDateTime;
+})(this);
+
 
 function runDSTOffsetCachingTestsFraction(part, parts)
 {
-  BUGNUMBER = 563938;
-  summary = 'Cache DST offsets to improve SunSpider score';
+  var BUGNUMBER = 563938;
+  var summary = 'Cache DST offsets to improve SunSpider score';
 
   print(BUGNUMBER + ": " + summary);
 
-  var MAX_UNIX_TIMET = 2145859200;
+  var MAX_UNIX_TIMET = 2145859200; // "2037-12-31T08:00:00.000Z" (PST8PDT based!)
   var RANGE_EXPANSION_AMOUNT = 30 * 24 * 60 * 60;
 
   /**

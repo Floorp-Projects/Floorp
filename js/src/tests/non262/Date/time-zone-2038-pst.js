@@ -4,21 +4,6 @@
 
 assertEq(/^(PST|PDT)$/.test(getTimeZone()), true);
 
-const Month = {
-    January: 0,
-    February: 1,
-    March: 2,
-    April: 3,
-    May: 4,
-    June: 5,
-    July: 6,
-    August: 7,
-    September: 8,
-    October: 9,
-    November: 10,
-    December: 11,
-};
-
 // U.S. daylight saving rules changed in 2007, excerpt from tzdata's
 // northamerica file:
 // NAME  FROM  TO    IN   ON       AT    SAVE  LETTER/S   
@@ -40,19 +25,19 @@ const Month = {
 //       ever changes, the test needs to be updated accordingly.
 {
     let dt1 = new Date(2040, Month.March, 31);
-    assertEq(dt1.toString(), "Sat Mar 31 2040 00:00:00 GMT-0700 (PDT)");
+    assertDateTime(dt1, "Sat Mar 31 2040 00:00:00 GMT-0700 (PDT)");
 
     let dt2 = new Date(2040, Month.November, 1);
-    assertEq(dt2.toString(), "Thu Nov 01 2040 00:00:00 GMT-0700 (PDT)");
+    assertDateTime(dt2, "Thu Nov 01 2040 00:00:00 GMT-0700 (PDT)");
 }
 
 // 2038 is mapped to 2027 instead of 1971.
 {
     let dt1 = new Date(2038, Month.March, 31);
-    assertEq(dt1.toString(), "Wed Mar 31 2038 00:00:00 GMT-0700 (PDT)");
+    assertDateTime(dt1, "Wed Mar 31 2038 00:00:00 GMT-0700 (PDT)");
 
     let dt2 = new Date(2038, Month.November, 1);
-    assertEq(dt2.toString(), "Mon Nov 01 2038 00:00:00 GMT-0700 (PDT)");
+    assertDateTime(dt2, "Mon Nov 01 2038 00:00:00 GMT-0700 (PDT)");
 }
 
 if (typeof reportCompare === "function")
