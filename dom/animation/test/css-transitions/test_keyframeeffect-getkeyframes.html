@@ -18,11 +18,13 @@ const getKeyframes = e => {
 };
 
 const assert_frames_equal = (a, b, name) => {
-  assert_equals(Object.keys(a).sort().toString(),
-                Object.keys(b).sort().toString(),
-                "properties on " + name);
+  assert_equals(
+    Object.keys(a).sort().toString(),
+    Object.keys(b).sort().toString(),
+    `properties on ${name}`
+  );
   for (const p in a) {
-    assert_equals(a[p], b[p], "value for '" + p + "' on " + name);
+    assert_equals(a[p], b[p], `value for '${p}' on ${name}`);
   }
 };
 
@@ -36,17 +38,26 @@ test(t => {
 
   const frames = getKeyframes(div);
 
-  assert_equals(frames.length, 2, "number of frames");
+  assert_equals(frames.length, 2, 'number of frames');
 
   const expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", composite: "auto",
-      left: "0px" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "auto",
-      left: "100px" },
+    { offset: 0,
+      computedOffset: 0,
+      easing: 'ease',
+      composite: 'auto',
+      left: '0px',
+    },
+    {
+      offset: 1,
+      computedOffset: 1,
+      easing: 'linear',
+      composite: 'auto',
+      left: '100px',
+    },
   ];
 
   for (let i = 0; i < frames.length; i++) {
-    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+    assert_frames_equal(frames[i], expected[i], `ComputedKeyframe #${i}`);
   }
 }, 'KeyframeEffect.getKeyframes() returns expected frames for a simple'
    + ' transition');
@@ -61,17 +72,27 @@ test(t => {
 
   const frames = getKeyframes(div);
 
-  assert_equals(frames.length, 2, "number of frames");
+  assert_equals(frames.length, 2, 'number of frames');
 
   const expected = [
-    { offset: 0, computedOffset: 0, easing: "steps(2)", composite: "auto",
-      left: "0px" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "auto",
-      left: "100px" },
+    {
+      offset: 0,
+      computedOffset: 0,
+      easing: 'steps(2)',
+      composite: 'auto',
+      left: '0px',
+    },
+    {
+      offset: 1,
+      computedOffset: 1,
+      easing: 'linear',
+      composite: 'auto',
+      left: '100px',
+    },
   ];
 
   for (let i = 0; i < frames.length; i++) {
-    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+    assert_frames_equal(frames[i], expected[i], `ComputedKeyframe #${i}`);
   }
 }, 'KeyframeEffect.getKeyframes() returns expected frames for a simple'
    + ' transition with a non-default easing function');
@@ -88,13 +109,23 @@ test(t => {
   // CSS transition endpoints are based on the computed value so we
   // shouldn't see the variable reference
   const expected = [
-    { offset: 0, computedOffset: 0, easing: 'ease', composite: 'auto',
-      left: '0px' },
-    { offset: 1, computedOffset: 1, easing: 'linear', composite: 'auto',
-      left: '100px' },
+    {
+      offset: 0,
+      computedOffset: 0,
+      easing: 'ease',
+      composite: 'auto',
+      left: '0px',
+    },
+    {
+      offset: 1,
+      computedOffset: 1,
+      easing: 'linear',
+      composite: 'auto',
+      left: '100px',
+    },
   ];
   for (let i = 0; i < frames.length; i++) {
-    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+    assert_frames_equal(frames[i], expected[i], `ComputedKeyframe #${i}`);
   }
 }, 'KeyframeEffect.getKeyframes() returns expected frames for a'
    + ' transition with a CSS variable endpoint');
