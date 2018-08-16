@@ -2951,15 +2951,34 @@ public:
   static StorageAccess StorageAllowedForPrincipal(nsIPrincipal* aPrincipal);
 
   /*
+   * Returns true if this document should disable storages because of the anti-tracking feature.
+   */
+  static bool StorageDisabledByAntiTracking(nsIDocument* aDocument,
+                                            nsIURI* aURI)
+  {
+    // Note that GetChannel() below may return null, but that's OK, since the callee
+    // is able to deal with a null channel argument, and if passed null, will only fail
+    // to notify the UI in case storage gets blocked.
+    return StorageDisabledByAntiTracking(aDocument->GetInnerWindow(),
+                                         aDocument->GetChannel(),
+                                         aDocument->NodePrincipal(),
+                                         aURI);
+  }
+
+private:
+  /*
    * Returns true if this window/channel/aPrincipal should disable storages
    * because of the anti-tracking feature.
    * Note that either aWindow or aChannel may be null when calling this function.
+   * If the caller wants the UI to be notified when the storage gets disabled,
+   * it must pass a non-null channel object.
    */
   static bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                             nsIChannel* aChannel,
                                             nsIPrincipal* aPrincipal,
                                             nsIURI* aURI);
 
+public:
   /*
    * Returns true if this window/channel is a 3rd party context.
    */

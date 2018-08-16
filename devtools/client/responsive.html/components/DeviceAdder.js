@@ -6,13 +6,14 @@
 
 "use strict";
 
-const { PureComponent, createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const ViewportDimension = createFactory(require("./ViewportDimension.js"));
 
 const { getFormatStr, getStr } = require("../utils/l10n");
 const Types = require("../types");
-const ViewportDimension = createFactory(require("./ViewportDimension.js"));
 
 class DeviceAdder extends PureComponent {
   static get propTypes() {
@@ -25,7 +26,9 @@ class DeviceAdder extends PureComponent {
 
   constructor(props) {
     super(props);
+
     this.state = {};
+
     this.onChangeSize = this.onChangeSize.bind(this);
     this.onDeviceAdderShow = this.onDeviceAdderShow.bind(this);
     this.onDeviceAdderSave = this.onDeviceAdderSave.bind(this);
@@ -43,7 +46,7 @@ class DeviceAdder extends PureComponent {
     });
   }
 
-  onChangeSize(width, height) {
+  onChangeSize(_, width, height) {
     this.setState({
       width,
       height,
@@ -178,7 +181,7 @@ class DeviceAdder extends PureComponent {
                 width,
                 height,
               },
-              onChangeSize: this.onChangeSize,
+              onResizeViewport: this.onChangeSize,
               onRemoveDeviceAssociation: () => {},
             })
           ),

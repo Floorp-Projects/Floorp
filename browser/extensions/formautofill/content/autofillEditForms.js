@@ -114,19 +114,71 @@ class EditAddress extends EditAutofillForm {
   }
 
   /**
+   * `mailing-address` is a special attribute token to indicate mailing fields + country.
+   *
+   * @param {object[]} mailingFieldsOrder - `fieldsOrder` from `getFormFormat`
+   * @returns {object[]} in the same structure as `mailingFieldsOrder` but including non-mail fields
+   */
+  computeVisibleFields(mailingFieldsOrder) {
+    let addressFields = this._elements.form.dataset.addressFields;
+    if (addressFields) {
+      let requestedFieldClasses = addressFields.trim().split(/\s+/);
+      let fieldClasses = [];
+      if (requestedFieldClasses.includes("mailing-address")) {
+        fieldClasses = fieldClasses.concat(mailingFieldsOrder);
+        // `country` isn't part of the `mailingFieldsOrder` so add it when filling a mailing-address
+        requestedFieldClasses.splice(requestedFieldClasses.indexOf("mailing-address"), 1,
+                                     "country");
+      }
+
+      for (let fieldClassName of requestedFieldClasses) {
+        fieldClasses.push({
+          fieldId: fieldClassName,
+          newLine: fieldClassName == "name",
+        });
+      }
+      return fieldClasses;
+    }
+
+    // This is the default which is shown in the management interface and includes all fields.
+    return mailingFieldsOrder.concat([
+      {
+        fieldId: "country",
+      },
+      {
+        fieldId: "tel",
+      },
+      {
+        fieldId: "email",
+        newLine: true,
+      },
+    ]);
+  }
+
+  /**
    * Format the form based on country. The address-level1 and postal-code labels
    * should be specific to the given country.
    * @param  {string} country
    */
   formatForm(country) {
-    const {addressLevel1Label, postalCodeLabel, fieldsOrder, postalCodePattern} =
-      this.getFormFormat(country);
+    const {
+      addressLevel1Label,
+      postalCodeLabel,
+      fieldsOrder: mailingFieldsOrder,
+      postalCodePattern,
+    } = this.getFormFormat(country);
     this._elements.addressLevel1Label.dataset.localization = addressLevel1Label;
     this._elements.postalCodeLabel.dataset.localization = postalCodeLabel;
-    this.arrangeFields(fieldsOrder);
+    let fieldClasses = this.computeVisibleFields(mailingFieldsOrder);
+    this.arrangeFields(fieldClasses);
     this.updatePostalCodeValidation(postalCodePattern);
   }
 
+  /**
+   * Update address field visibility and order based on libaddressinput data.
+   *
+   * @param {object[]} fieldsOrder array of objects with `fieldId` and optional `newLine` properties
+   */
   arrangeFields(fieldsOrder) {
     let fields = [
       "name",
@@ -135,6 +187,9 @@ class EditAddress extends EditAutofillForm {
       "address-level2",
       "address-level1",
       "postal-code",
+      "country",
+      "tel",
+      "email",
     ];
     let inputs = [];
     for (let i = 0; i < fieldsOrder.length; i++) {

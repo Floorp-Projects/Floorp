@@ -492,16 +492,6 @@ const KTableEntry nsCSSProps::kFontSmoothingKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kFontVariantAlternatesFuncsKTable[] = {
-  { eCSSKeyword_stylistic, NS_FONT_VARIANT_ALTERNATES_STYLISTIC },
-  { eCSSKeyword_styleset, NS_FONT_VARIANT_ALTERNATES_STYLESET },
-  { eCSSKeyword_character_variant, NS_FONT_VARIANT_ALTERNATES_CHARACTER_VARIANT },
-  { eCSSKeyword_swash, NS_FONT_VARIANT_ALTERNATES_SWASH },
-  { eCSSKeyword_ornaments, NS_FONT_VARIANT_ALTERNATES_ORNAMENTS },
-  { eCSSKeyword_annotation, NS_FONT_VARIANT_ALTERNATES_ANNOTATION },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kGridAutoFlowKTable[] = {
   { eCSSKeyword_row, NS_STYLE_GRID_AUTO_FLOW_ROW },
   { eCSSKeyword_column, NS_STYLE_GRID_AUTO_FLOW_COLUMN },

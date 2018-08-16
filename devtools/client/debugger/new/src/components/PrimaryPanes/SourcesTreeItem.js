@@ -4,9 +4,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
+
 var _react = require("devtools/client/shared/vendor/react");
 
 var _react2 = _interopRequireDefault(_react);
+
+var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
 var _classnames = require("devtools/client/debugger/new/dist/vendors").vendored["classnames"];
 
@@ -21,6 +25,12 @@ var _SourceIcon2 = _interopRequireDefault(_SourceIcon);
 var _Svg = require("devtools/client/debugger/new/dist/vendors").vendored["Svg"];
 
 var _Svg2 = _interopRequireDefault(_Svg);
+
+var _selectors = require("../../selectors/index");
+
+var _actions = require("../../actions/index");
+
+var _actions2 = _interopRequireDefault(_actions);
 
 var _sourcesTree = require("../../utils/sources-tree/index");
 
@@ -168,8 +178,12 @@ class SourceTreeItem extends _react.Component {
     });
   }
 
-  renderItemName(name) {
-    switch (name) {
+  renderItemName() {
+    const {
+      item
+    } = this.props;
+
+    switch (item.name) {
       case "ng://":
         return "Angular";
 
@@ -177,7 +191,7 @@ class SourceTreeItem extends _react.Component {
         return "Webpack";
 
       default:
-        return name;
+        return `${item.name}`;
     }
   }
 
@@ -185,8 +199,12 @@ class SourceTreeItem extends _react.Component {
     const {
       item,
       depth,
-      focused
+      focused,
+      hasMatchingGeneratedSource
     } = this.props;
+    const suffix = hasMatchingGeneratedSource ? _react2.default.createElement("span", {
+      className: "suffix"
+    }, "[sm]") : null;
     return _react2.default.createElement("div", {
       className: (0, _classnames2.default)("node", {
         focused
@@ -196,9 +214,30 @@ class SourceTreeItem extends _react.Component {
       onContextMenu: e => this.onContextMenu(e, item)
     }, this.renderItemArrow(), this.getIcon(item, depth), _react2.default.createElement("span", {
       className: "label"
-    }, " ", this.renderItemName(item.name), " "));
+    }, " ", this.renderItemName(), " ", suffix));
   }
 
 }
 
-exports.default = SourceTreeItem;
+function getHasMatchingGeneratedSource(state, source) {
+  if (!source) {
+    return false;
+  }
+
+  const sources = (0, _selectors.getSourcesByURL)(state, source.url);
+  return (0, _devtoolsSourceMap.isOriginalId)(source.id) && sources.length > 1;
+}
+
+const mapStateToProps = (state, props) => {
+  const {
+    source
+  } = props;
+  return {
+    hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source)
+  };
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  setProjectDirectoryRoot: _actions2.default.setProjectDirectoryRoot,
+  clearProjectDirectoryRoot: _actions2.default.clearProjectDirectoryRoot
+})(SourceTreeItem);

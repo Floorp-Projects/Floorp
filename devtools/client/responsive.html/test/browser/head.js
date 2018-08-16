@@ -31,14 +31,17 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/shared-head.js",
   this);
 
+const { _loadPreferredDevices } = require("devtools/client/responsive.html/actions/devices");
+const { getStr } = require("devtools/client/responsive.html/utils/l10n");
+const { getTopLevelWindow } = require("devtools/client/responsive.html/utils/window");
+const { addDevice, removeDevice, removeLocalDevices } = require("devtools/client/shared/devices");
+const asyncStorage = require("devtools/shared/async-storage");
+
+loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
+
 const E10S_MULTI_ENABLED = Services.prefs.getIntPref("dom.ipc.processCount") > 1;
 const TEST_URI_ROOT = "http://example.com/browser/devtools/client/responsive.html/test/browser/";
-const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
-
-const { _loadPreferredDevices } = require("devtools/client/responsive.html/actions/devices");
-const asyncStorage = require("devtools/shared/async-storage");
-const { addDevice, removeDevice, removeLocalDevices } = require("devtools/client/shared/devices");
 
 SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
@@ -52,6 +55,8 @@ Services.prefs.setCharPref("devtools.devices.url", TEST_URI_ROOT + "devices.json
 // The appearance of this notification causes intermittent behavior in some tests that
 // send mouse events, since it causes the content to shift when it appears.
 Services.prefs.setBoolPref("devtools.responsive.reloadNotification.enabled", false);
+// Don't show the setting onboarding tooltip in the test suites.
+Services.prefs.setBoolPref("devtools.responsive.show-setting-tooltip", false);
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("devtools.devices.url");
@@ -59,11 +64,10 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
   Services.prefs.clearUserPref("devtools.responsive.reloadConditions.touchSimulation");
   Services.prefs.clearUserPref("devtools.responsive.reloadConditions.userAgent");
+  Services.prefs.clearUserPref("devtools.responsive.show-setting-tooltip");
   await asyncStorage.removeItem("devtools.devices.url_cache");
   await removeLocalDevices();
 });
-
-loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 
 /**
  * Open responsive design mode for the given tab.
@@ -229,51 +233,78 @@ async function testViewportResize(ui, selector, moveBy,
     `The y move of ${selector} is as expected`);
 }
 
-function openDeviceModal({ toolWindow }) {
-  const { document } = toolWindow;
-  const { Simulate } = toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
-  const select = document.querySelector(".viewport-device-selector");
-  const modal = document.querySelector("#device-modal-wrapper");
+async function openDeviceModal(ui) {
+  const { document } = ui.toolWindow;
+  const modal = document.getElementById("device-modal-wrapper");
 
   info("Checking initial device modal state");
   ok(modal.classList.contains("closed") && !modal.classList.contains("opened"),
     "The device modal is closed by default.");
 
   info("Opening device modal through device selector.");
-  select.value = OPEN_DEVICE_MODAL_VALUE;
-  Simulate.change(select);
+  await selectMenuItem(ui, "#device-selector", getStr("responsive.editDeviceList2"));
+
   ok(modal.classList.contains("opened") && !modal.classList.contains("closed"),
     "The device modal is displayed.");
 }
 
-function changeSelectValue({ toolWindow }, selector, value) {
+async function selectMenuItem({ toolWindow }, selector, value) {
   const { document } = toolWindow;
-  const { Simulate } =
-    toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
+
+  const button = document.querySelector(selector);
+  isnot(button, null, `Selector "${selector}" should match an existing element.`);
 
   info(`Selecting ${value} in ${selector}.`);
 
-  const select = document.querySelector(selector);
-  isnot(select, null, `selector "${selector}" should match an existing element.`);
+  await testMenuItems(toolWindow, button, items => {
+    const menuItem = items.find(item => item.getAttribute("label") === value);
+    isnot(menuItem, undefined, `Value "${value}" should match an existing menu item.`);
+    menuItem.click();
+  });
+}
 
-  const option = [...select.options].find(o => o.value === String(value));
-  isnot(option, undefined, `value "${value}" should match an existing option.`);
+/**
+ * Runs the menu items from the button's context menu against a test function.
+ *
+ * @param  {Window} toolWindow
+ *         A window reference.
+ * @param  {Element} button
+ *         The button that will show a context menu when clicked.
+ * @param  {Function} testFn
+ *         A test function that will be ran with the found menu item in the context menu
+ *         as an argument.
+ */
+function testMenuItems(toolWindow, button, testFn) {
+  // The context menu appears only in the top level window, which is different from
+  // the inner toolWindow.
+  const win = getTopLevelWindow(toolWindow);
 
-  select.value = value;
-  Simulate.change(select);
+  return new Promise(resolve => {
+    win.document.addEventListener("popupshown", () => {
+      const popup = win.document.querySelector("menupopup[menu-api=\"true\"]");
+      const menuItems = [...popup.children];
+
+      testFn(menuItems);
+
+      popup.hidePopup();
+      resolve();
+    }, { once: true });
+
+    button.click();
+  });
 }
 
 const selectDevice = (ui, value) => Promise.all([
   once(ui, "device-changed"),
-  changeSelectValue(ui, ".viewport-device-selector", value)
+  selectMenuItem(ui, "#device-selector", value)
 ]);
 
 const selectDevicePixelRatio = (ui, value) =>
-  changeSelectValue(ui, "#global-device-pixel-ratio-selector", value);
+  selectMenuItem(ui, "#device-pixel-ratio-menu", `DPR: ${value}`);
 
 const selectNetworkThrottling = (ui, value) => Promise.all([
   once(ui, "network-throttling-changed"),
-  changeSelectValue(ui, "#global-network-throttling-selector", value)
+  selectMenuItem(ui, "#network-throttling-menu", value)
 ]);
 
 function getSessionHistory(browser) {
@@ -346,7 +377,7 @@ async function waitForClientClose(ui) {
 
 async function testTouchEventsOverride(ui, expected) {
   const { document } = ui.toolWindow;
-  const touchButton = document.querySelector("#global-touch-simulation-button");
+  const touchButton = document.getElementById("touch-simulation-button");
 
   const flag = await ui.emulationFront.getTouchEventsOverride();
   is(flag === Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED, expected,
@@ -355,17 +386,16 @@ async function testTouchEventsOverride(ui, expected) {
     `Touch simulation button should be ${expected ? "" : "in"}active.`);
 }
 
-function testViewportDeviceSelectLabel(ui, expected) {
+function testViewportDeviceMenuLabel(ui, expected) {
   info("Test viewport's device select label");
 
-  const select = ui.toolWindow.document.querySelector(".viewport-device-selector");
-  is(select.selectedOptions[0].textContent, expected,
-     `Device Select value should be: ${expected}`);
+  const label = ui.toolWindow.document.querySelector("#device-selector .title");
+  is(label.textContent, expected, `Device Select value should be: ${expected}`);
 }
 
 async function toggleTouchSimulation(ui) {
   const { document } = ui.toolWindow;
-  const touchButton = document.querySelector("#global-touch-simulation-button");
+  const touchButton = document.getElementById("touch-simulation-button");
   const changed = once(ui, "touch-simulation-changed");
   const loaded = waitForViewportLoad(ui);
   touchButton.click();

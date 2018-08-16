@@ -404,12 +404,21 @@ DocAccessibleParent::RecvVirtualCursorChangeEvent(const uint64_t& aID,
   ProxyAccessible* oldPosition = GetAccessible(aOldPositionID);
   ProxyAccessible* newPosition = GetAccessible(aNewPositionID);
 
+  if (!target) {
+    NS_ERROR("no proxy for event!");
+    return IPC_OK();
+  }
+
 #if defined(ANDROID)
   ProxyVirtualCursorChangeEvent(target,
                                 oldPosition, aOldStartOffset, aOldEndOffset,
                                 newPosition, aNewStartOffset, aNewEndOffset,
                                 aReason, aBoundaryType, aFromUser);
 #endif
+
+  if (!nsCoreUtils::AccEventObserversExist()) {
+    return IPC_OK();
+  }
 
   xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
   RefPtr<xpcAccVirtualCursorChangeEvent> event =
@@ -421,6 +430,41 @@ DocAccessibleParent::RecvVirtualCursorChangeEvent(const uint64_t& aID,
                                        GetXPCAccessible(newPosition),
                                        aNewStartOffset, aNewEndOffset,
                                        aBoundaryType, aReason);
+  nsCoreUtils::DispatchAccEvent(std::move(event));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+DocAccessibleParent::RecvScrollingEvent(const uint64_t& aID,
+                                        const uint64_t& aType,
+                                        const uint32_t& aScrollX,
+                                        const uint32_t& aScrollY,
+                                        const uint32_t& aMaxScrollX,
+                                        const uint32_t& aMaxScrollY)
+{
+  ProxyAccessible* target = GetAccessible(aID);
+
+  if (!target) {
+    NS_ERROR("no proxy for event!");
+    return IPC_OK();
+  }
+
+#if defined(ANDROID)
+  ProxyScrollingEvent(target, aScrollX, aScrollY, aMaxScrollX, aMaxScrollY);
+#endif
+
+  if (!nsCoreUtils::AccEventObserversExist()) {
+    return IPC_OK();
+  }
+
+  xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(target);
+  xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+  nsINode* node = nullptr;
+  bool fromUser = true; // XXX: Determine if this was from user input.
+  RefPtr<xpcAccScrollingEvent> event =
+    new xpcAccScrollingEvent(aType, xpcAcc, doc, node, fromUser, aScrollX,
+                             aScrollY, aMaxScrollX, aMaxScrollY);
   nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();

@@ -12,113 +12,12 @@
 #include <stdint.h>
 #include "nsCSSProps.h"
 
-class nsAtom;
-class nsIDocument;
-class nsCSSValue;
-class nsStaticAtom;
-
-struct nsCSSKeywordAndBoolTableEntry : public nsCSSKTableEntry {
-  constexpr nsCSSKeywordAndBoolTableEntry(nsCSSKeyword aKeyword, int16_t aValue)
-    : nsCSSKTableEntry(aKeyword, aValue)
-    , mValueInBooleanContext(true)
-  {
-  }
-
-  template<typename T,
-           typename = typename std::enable_if<std::is_enum<T>::value>::type>
-  constexpr nsCSSKeywordAndBoolTableEntry(
-      nsCSSKeyword aKeyword,
-      T aValue,
-      bool aValueInBooleanContext)
-    : nsCSSKTableEntry(aKeyword, aValue)
-    , mValueInBooleanContext(aValueInBooleanContext)
-  {
-  }
-
-  bool mValueInBooleanContext;
-};
-
-struct nsMediaFeature;
-typedef void (*nsMediaFeatureValueGetter)(nsIDocument* aDocument,
-                                          const nsMediaFeature* aFeature,
-                                          nsCSSValue& aResult);
-
-struct nsMediaFeature
-{
-  nsStaticAtom** mName; // extra indirection to point to nsGkAtoms members
-
-  enum RangeType { eMinMaxAllowed, eMinMaxNotAllowed };
-  RangeType mRangeType;
-
-  enum ValueType {
-    // All value types allow eCSSUnit_Null to indicate that no value
-    // was given (in addition to the types listed below).
-    eLength,         // values are eCSSUnit_Pixel
-    eInteger,        // values are eCSSUnit_Integer
-    eFloat,          // values are eCSSUnit_Number
-    eBoolInteger,    // values are eCSSUnit_Integer (0, -0, or 1 only)
-    eIntRatio,       // values are eCSSUnit_Array of two eCSSUnit_Integer
-    eResolution,     // values are in eCSSUnit_Inch (for dpi),
-                     //   eCSSUnit_Pixel (for dppx), or
-                     //   eCSSUnit_Centimeter (for dpcm)
-    eEnumerated,     // values are eCSSUnit_Enumerated (uses keyword table)
-    eBoolEnumerated, // values are eCSSUnit_Enumerated (uses keyword and boolean
-                     // pair table)
-    eIdent           // values are eCSSUnit_Ident
-    // Note that a number of pieces of code (both for parsing and
-    // for matching of valueless expressions) assume that all numeric
-    // value types cannot be negative.  The parsing code also does
-    // not allow zeros in eIntRatio types.
-  };
-  ValueType mValueType;
-
-  enum RequirementFlags : uint8_t {
-    // Bitfield of requirements that must be satisfied in order for this
-    // media feature to be active.
-    eNoRequirements = 0,
-    eHasWebkitPrefix = 1 << 0, // Feature name must start w/ "-webkit-", even
-                               // before any "min-"/"max-" qualifier.
-
-    // Feature is only supported if the pref
-    // "layout.css.prefixes.device-pixel-ratio-webkit" is enabled.
-    // (Should only be used for -webkit-device-pixel-ratio.)
-    eWebkitDevicePixelRatioPrefEnabled = 1 << 1,
-    // Feature is only usable from UA sheets and chrome:// urls.
-    eUserAgentAndChromeOnly = 1 << 2,
-  };
-  uint8_t mReqFlags;
-
-  union {
-    // In static arrays, it's the first member that's initialized.  We
-    // need that to be void* so we can initialize both other types.
-    // This member should never be accessed by name.
-    const void* mInitializer_;
-    // If mValueType == eEnumerated:  const int32_t*: keyword table in
-    //   the same format as the keyword tables in nsCSSProps.
-    const nsCSSKTableEntry* mKeywordTable;
-    // If mValueType == eBoolEnumerated:  similar to the above but having a
-    // boolean field representing the value in Boolean context.
-    const nsCSSKeywordAndBoolTableEntry* mKeywordAndBoolTable;
-    // If mGetter == GetSystemMetric (which implies mValueType ==
-    //   eBoolInteger): nsAtom * const *, for the system metric.
-    nsAtom * const * mMetric;
-  } mData;
-
-  // A function that returns the current value for this feature for a
-  // given presentation.  If it returns eCSSUnit_Null, the feature is
-  // not present.
-  nsMediaFeatureValueGetter mGetter;
-};
-
 class nsMediaFeatures
 {
 public:
   static void InitSystemMetrics();
   static void FreeSystemMetrics();
   static void Shutdown();
-
-  // Terminated with an entry whose mName is null.
-  static const nsMediaFeature features[];
 };
 
 #endif /* !defined(nsMediaFeatures_h_) */

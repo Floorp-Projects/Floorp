@@ -10,67 +10,20 @@
 #define nsCSSAnonBoxes_h___
 
 #include "nsAtom.h"
-#include "nsStaticAtom.h"
-
-// Trivial subclass of nsStaticAtom so that function signatures can require an
-// atom from this atom list.
-class nsICSSAnonBoxPseudo : public nsStaticAtom
-{
-public:
-  constexpr nsICSSAnonBoxPseudo(const char16_t* aStr, uint32_t aLength,
-                                uint32_t aStringOffset)
-    : nsStaticAtom(aStr, aLength, aStringOffset)
-  {}
-};
-
-namespace mozilla {
-namespace detail {
-
-struct CSSAnonBoxAtoms
-{
-  #define CSS_ANON_BOX(name_, value_) NS_STATIC_ATOM_DECL_STRING(name_, value_)
-  #include "nsCSSAnonBoxList.h"
-  #undef CSS_ANON_BOX
-
-  enum class Atoms {
-    #define CSS_ANON_BOX(name_, value_) \
-      NS_STATIC_ATOM_ENUM(name_)
-    #include "nsCSSAnonBoxList.h"
-    #undef CSS_ANON_BOX
-    AtomsCount
-  };
-
-  const nsICSSAnonBoxPseudo mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
-};
-
-} // namespace detail
-} // namespace mozilla
+#include "nsGkAtoms.h"
 
 class nsCSSAnonBoxes {
 public:
-
-  static void RegisterStaticAtoms();
-
   static bool IsAnonBox(nsAtom *aAtom);
 #ifdef MOZ_XUL
   static bool IsTreePseudoElement(nsAtom* aPseudo);
 #endif
   static bool IsNonElement(nsAtom* aPseudo)
   {
-    return aPseudo == mozText || aPseudo == oofPlaceholder ||
-           aPseudo == firstLetterContinuation;
+    return aPseudo == nsCSSAnonBoxes::mozText() ||
+           aPseudo == nsCSSAnonBoxes::oofPlaceholder() ||
+           aPseudo == nsCSSAnonBoxes::firstLetterContinuation();
   }
-
-private:
-  static const nsStaticAtom* const sAtoms;
-  static constexpr size_t sAtomsLen =
-    static_cast<size_t>(mozilla::detail::CSSAnonBoxAtoms::Atoms::AtomsCount);
-
-public:
-  #define CSS_ANON_BOX(name_, value_) \
-    NS_STATIC_ATOM_DECL_PTR(nsICSSAnonBoxPseudo, name_)
-  #include "nsCSSAnonBoxList.h"
-  #undef CSS_ANON_BOX
 
   typedef uint8_t NonInheritingBase;
   enum class NonInheriting : NonInheritingBase {
@@ -91,7 +44,8 @@ public:
   {
     return
 #define CSS_ANON_BOX(_name, _value) /* nothing */
-#define CSS_NON_INHERITING_ANON_BOX(_name, _value) _name == aPseudo ||
+#define CSS_NON_INHERITING_ANON_BOX(_name, _value) \
+      nsGkAtoms::AnonBox_##_name == aPseudo ||
 #include "nsCSSAnonBoxList.h"
 #undef CSS_NON_INHERITING_ANON_BOX
 #undef CSS_ANON_BOX
@@ -106,7 +60,7 @@ public:
   static bool IsInheritingAnonBox(nsAtom* aPseudo)
   {
     return
-#define CSS_ANON_BOX(_name, _value) _name == aPseudo ||
+#define CSS_ANON_BOX(_name, _value) nsGkAtoms::AnonBox_##_name == aPseudo ||
 #define CSS_NON_INHERITING_ANON_BOX(_name, _value) /* nothing */
 #include "nsCSSAnonBoxList.h"
 #undef CSS_NON_INHERITING_ANON_BOX
@@ -123,7 +77,7 @@ public:
     return aPseudo &&
       (
 #define CSS_ANON_BOX(_name, _value) /* nothing */
-#define CSS_WRAPPER_ANON_BOX(_name, _value) _name == aPseudo ||
+#define CSS_WRAPPER_ANON_BOX(_name, _value) nsGkAtoms::AnonBox_##_name == aPseudo ||
 #define CSS_NON_INHERITING_ANON_BOX(_name, _value) /* nothing */
 #include "nsCSSAnonBoxList.h"
 #undef CSS_NON_INHERITING_ANON_BOX
@@ -135,6 +89,21 @@ public:
   // Get the NonInheriting type for a given pseudo tag.  The pseudo tag must
   // test true for IsNonInheritingAnonBox.
   static NonInheriting NonInheritingTypeForPseudoTag(nsAtom* aPseudo);
+
+#ifdef DEBUG
+  static void AssertAtoms();
+#endif
+
+  // Alias nsCSSAnonBoxes::foo() to alias nsGkAtoms::AnonBox_foo.
+  // XXX Once nsGkAtoms::AnonBox_foo become constexpr variables, these can too.
+  // See bug 1449787.
+  #define CSS_ANON_BOX(name_, value_)                     \
+    static constexpr nsICSSAnonBoxPseudo* const& name_()  \
+    {                                                     \
+      return nsGkAtoms::AnonBox_##name_;                  \
+    }
+  #include "nsCSSAnonBoxList.h"
+  #undef CSS_ANON_BOX
 };
 
 #endif /* nsCSSAnonBoxes_h___ */

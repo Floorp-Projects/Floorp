@@ -339,7 +339,6 @@ public:
   static const KTableEntry kAutoCompletionAlignJustifyContent[];
   // ------------------------------------------------------------------
   static const KTableEntry kFontSmoothingKTable[];
-  static const KTableEntry kFontVariantAlternatesFuncsKTable[];
   static const KTableEntry kGridAutoFlowKTable[];
   static const KTableEntry kGridTrackBreadthKTable[];
   static const KTableEntry kLineHeightKTable[];

@@ -419,9 +419,14 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_TEXT_VALUE_CHANGE = 0x0057;
 
   /**
+   * An accessible's viewport is scrolling.
+   */
+  const unsigned long EVENT_SCROLLING = 0x0058;
+
+  /**
    * Help make sure event map does not get out-of-line.
    */
-  const unsigned long EVENT_LAST_ENTRY = 0x0058;
+  const unsigned long EVENT_LAST_ENTRY = 0x0059;
 
   /**
    * The type of event, based on the enumerated event values
