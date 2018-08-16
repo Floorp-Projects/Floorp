@@ -332,7 +332,11 @@ ToolSidebar.prototype = {
       return;
     }
 
+    currentToolId = this.getTelemetryPanelNameOrOther(currentToolId);
+
     if (previousToolId) {
+      previousToolId = this.getTelemetryPanelNameOrOther(previousToolId);
+
       this._telemetry.toolClosed(previousToolId);
 
       this._telemetry.recordEvent("devtools.main", "sidepanel_changed", "inspector", null,
@@ -344,6 +348,33 @@ ToolSidebar.prototype = {
       );
     }
     this._telemetry.toolOpened(currentToolId);
+  },
+
+  /**
+   * Returns a panel id in the case of built in panels or "other" in the case of
+   * third party panels. This is necessary due to limitations in addon id strings,
+   * the permitted length of event telemetry property values and what we actually
+   * want to see in our telemetry.
+   *
+   * @param {String} id
+   *        The panel id we would like to process.
+   */
+  getTelemetryPanelNameOrOther: function(id) {
+    if (!this._toolNames) {
+      // Get all built in tool ids. We identify third party tool ids by checking
+      // for a "-", which shows it originates from an addon.
+      const ids = this._tabbar.state.tabs.map(({ id: toolId }) => {
+        return toolId.includes("-") ? "other" : toolId;
+      });
+
+      this._toolNames = new Set(ids);
+    }
+
+    if (!this._toolNames.has(id)) {
+      return "other";
+    }
+
+    return id;
   },
 
   /**
