@@ -384,8 +384,7 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToFile(const nsAString& aIdentifier,
     }
   }
 
-  nsCOMPtr<nsICycleCollectorListener> logger =
-    do_CreateInstance("@mozilla.org/cycle-collector-logger;1");
+  nsCOMPtr<nsICycleCollectorListener> logger = nsCycleCollector_createLogger();
 
   if (aDumpAllTraces) {
     nsCOMPtr<nsICycleCollectorListener> allTracesLogger;
@@ -412,8 +411,7 @@ NS_IMETHODIMP
 nsMemoryInfoDumper::DumpGCAndCCLogsToSink(bool aDumpAllTraces,
                                           nsICycleCollectorLogSink* aSink)
 {
-  nsCOMPtr<nsICycleCollectorListener> logger =
-    do_CreateInstance("@mozilla.org/cycle-collector-logger;1");
+  nsCOMPtr<nsICycleCollectorListener> logger = nsCycleCollector_createLogger();
 
   if (aDumpAllTraces) {
     nsCOMPtr<nsICycleCollectorListener> allTracesLogger;

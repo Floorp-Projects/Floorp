@@ -32,6 +32,7 @@
 
 #include "nsDOMMutationObserver.h"
 #include "nsICycleCollectorListener.h"
+#include "nsCycleCollector.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsScriptSecurityManager.h"
@@ -1111,12 +1112,8 @@ DumpJSStack()
 MOZ_EXPORT void
 DumpCompleteHeap()
 {
-    nsCOMPtr<nsICycleCollectorListener> listener =
-      do_CreateInstance("@mozilla.org/cycle-collector-logger;1");
-    if (!listener) {
-      NS_WARNING("Failed to create CC logger");
-      return;
-    }
+    nsCOMPtr<nsICycleCollectorListener> listener = nsCycleCollector_createLogger();
+    MOZ_ASSERT(listener);
 
     nsCOMPtr<nsICycleCollectorListener> alltracesListener;
     listener->AllTraces(getter_AddRefs(alltracesListener));
