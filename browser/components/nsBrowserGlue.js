@@ -19,8 +19,8 @@ let ACTORS = {
       events: {
         "AboutReaderContentLoaded": {wantUntrusted: true},
         "DOMContentLoaded": {},
-        "pageshow": {},
-        "pagehide": {},
+        "pageshow": {mozSystemGroup: true},
+        "pagehide": {mozSystemGroup: true},
       },
       messages: [
         "Reader:ToggleReaderMode",

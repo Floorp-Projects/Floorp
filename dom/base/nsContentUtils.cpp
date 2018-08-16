@@ -8503,11 +8503,12 @@ nsContentUtils::SendMouseEvent(const nsCOMPtr<nsIPresShell>& aPresShell,
 /* static */
 void
 nsContentUtils::FirePageHideEvent(nsIDocShellTreeItem* aItem,
-                                  EventTarget* aChromeEventHandler)
+                                  EventTarget* aChromeEventHandler,
+                                  bool aOnlySystemGroup)
 {
   nsCOMPtr<nsIDocument> doc = aItem->GetDocument();
   NS_ASSERTION(doc, "What happened here?");
-  doc->OnPageHide(true, aChromeEventHandler);
+  doc->OnPageHide(true, aChromeEventHandler, aOnlySystemGroup);
 
   int32_t childCount = 0;
   aItem->GetChildCount(&childCount);
@@ -8519,7 +8520,7 @@ nsContentUtils::FirePageHideEvent(nsIDocShellTreeItem* aItem,
 
   for (uint32_t i = 0; i < kids.Length(); ++i) {
     if (kids[i]) {
-      FirePageHideEvent(kids[i], aChromeEventHandler);
+      FirePageHideEvent(kids[i], aChromeEventHandler, aOnlySystemGroup);
     }
   }
 }
@@ -8532,7 +8533,8 @@ nsContentUtils::FirePageHideEvent(nsIDocShellTreeItem* aItem,
 void
 nsContentUtils::FirePageShowEvent(nsIDocShellTreeItem* aItem,
                                   EventTarget* aChromeEventHandler,
-                                  bool aFireIfShowing)
+                                  bool aFireIfShowing,
+                                  bool aOnlySystemGroup)
 {
   int32_t childCount = 0;
   aItem->GetChildCount(&childCount);
@@ -8544,14 +8546,15 @@ nsContentUtils::FirePageShowEvent(nsIDocShellTreeItem* aItem,
 
   for (uint32_t i = 0; i < kids.Length(); ++i) {
     if (kids[i]) {
-      FirePageShowEvent(kids[i], aChromeEventHandler, aFireIfShowing);
+      FirePageShowEvent(kids[i], aChromeEventHandler, aFireIfShowing,
+                        aOnlySystemGroup);
     }
   }
 
   nsCOMPtr<nsIDocument> doc = aItem->GetDocument();
   NS_ASSERTION(doc, "What happened here?");
   if (doc->IsShowing() == aFireIfShowing) {
-    doc->OnPageShow(true, aChromeEventHandler);
+    doc->OnPageShow(true, aChromeEventHandler, aOnlySystemGroup);
   }
 }
 
