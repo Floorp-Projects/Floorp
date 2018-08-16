@@ -106,25 +106,39 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/no_suggestions_message" />
     </android.support.constraint.ConstraintLayout>
-    <TextView
-        android:id="@+id/searchView"
-        android:layout_width="match_parent"
-        android:layout_height="54dp"
-        android:background="@color/searchHintBackgroundColor"
-        android:drawableStart="@drawable/ic_search"
-        android:drawablePadding="16dp"
-        android:ellipsize="end"
-        android:gravity="center_vertical"
-        android:lines="1"
-        android:padding="16dp"
-        android:text="…"
-        android:textColor="@color/searchHintTextColor"
-        android:textSize="14sp" />
 
-    <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/suggestionList"
-        android:orientation="vertical"
-        android:background="@color/searchSuggestionsBackground"
+    <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/searchView"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:background="@color/searchHintBackgroundColor"
+                android:drawableStart="@drawable/ic_search"
+                android:drawablePadding="16dp"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:lines="1"
+                android:padding="16dp"
+                android:text="…"
+                android:textColor="@color/searchHintTextColor"
+                android:textSize="14sp" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/suggestionList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/searchSuggestionsBackground"
+                android:orientation="vertical"
+                android:nestedScrollingEnabled="false" />
+        </LinearLayout>
+    </android.support.v4.widget.NestedScrollView>
+
 </org.mozilla.focus.widget.ResizableKeyboardLinearLayout>
