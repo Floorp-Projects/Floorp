@@ -2541,17 +2541,6 @@ LIRGenerator::visitUnaryCache(MUnaryCache* ins)
 }
 
 void
-LIRGenerator::visitNullarySharedStub(MNullarySharedStub* ins)
-{
-    MOZ_ASSERT(ins->type() == MIRType::Value);
-
-    LNullarySharedStub* lir = new(alloc()) LNullarySharedStub();
-
-    defineSharedStubReturn(lir, ins);
-    assignSafepoint(lir, ins);
-}
-
-void
 LIRGenerator::visitClassConstructor(MClassConstructor* ins)
 {
     LClassConstructor* lir = new(alloc()) LClassConstructor();

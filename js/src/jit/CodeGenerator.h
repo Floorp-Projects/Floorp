@@ -113,7 +113,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitOutOfLineNewObject(OutOfLineNewObject* ool);
 
   private:
-    void emitSharedStub(ICStub::Kind kind, LInstruction* lir);
 
     void emitPostWriteBarrier(const LAllocation* obj);
     void emitPostWriteBarrier(Register objreg);

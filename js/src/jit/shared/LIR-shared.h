@@ -4844,20 +4844,6 @@ class LUnaryCache : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
     static const size_t Input = 0;
 };
 
-class LNullarySharedStub : public LCallInstructionHelper<BOX_PIECES, 0, 0>
-{
-  public:
-    LIR_HEADER(NullarySharedStub)
-
-    const MNullarySharedStub* mir() const {
-        return mir_->toNullarySharedStub();
-    }
-
-    LNullarySharedStub()
-      : LCallInstructionHelper(classOpcode)
-    {}
-};
-
 class LClassConstructor : public LCallInstructionHelper<1, 0, 0>
 {
   public:

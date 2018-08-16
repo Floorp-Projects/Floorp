@@ -2865,43 +2865,6 @@ CodeGenerator::visitStringReplace(LStringReplace* lir)
 }
 
 void
-CodeGenerator::emitSharedStub(ICStub::Kind kind, LInstruction* lir)
-{
-    JSScript* script = lir->mirRaw()->block()->info().script();
-    jsbytecode* pc = lir->mirRaw()->toInstruction()->resumePoint()->pc();
-
-#ifdef JS_USE_LINK_REGISTER
-    // Some architectures don't push the return address on the stack but
-    // use the link register. In that case the stack isn't aligned. Push
-    // to make sure we are aligned.
-    masm.Push(Imm32(0));
-#endif
-
-    // Create descriptor signifying end of Ion frame.
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
-                                              JitStubFrameLayout::Size());
-    masm.Push(Imm32(descriptor));
-
-    // Call into the stubcode.
-    CodeOffset patchOffset;
-    IonICEntry entry(script->pcToOffset(pc), ICEntry::Kind_Op, script);
-    EmitCallIC(&patchOffset, masm);
-    entry.setReturnOffset(CodeOffset(masm.currentOffset()));
-
-    SharedStub sharedStub(kind, entry, patchOffset);
-    masm.propagateOOM(sharedStubs_.append(sharedStub));
-
-    // Fix up upon return.
-    uint32_t callOffset = masm.currentOffset();
-#ifdef JS_USE_LINK_REGISTER
-    masm.freeStack(sizeof(intptr_t) * 2);
-#else
-    masm.freeStack(sizeof(intptr_t));
-#endif
-    markSafepointAt(callOffset, lir);
-}
-
-void
 CodeGenerator::visitBinaryCache(LBinaryCache* lir)
 {
     LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
@@ -2948,32 +2911,6 @@ CodeGenerator::visitUnaryCache(LUnaryCache* lir)
 
     IonUnaryArithIC ic(liveRegs, input, output);
     addIC(lir, allocateIC(ic));
-}
-
-void
-CodeGenerator::visitNullarySharedStub(LNullarySharedStub* lir)
-{
-    jsbytecode* pc = lir->mir()->resumePoint()->pc();
-    JSOp jsop = JSOp(*pc);
-    switch (jsop) {
-      case JSOP_NEWARRAY: {
-        uint32_t length = GET_UINT32(pc);
-        MOZ_ASSERT(length <= INT32_MAX,
-                   "the bytecode emitter must fail to compile code that would "
-                   "produce JSOP_NEWARRAY with a length exceeding int32_t range");
-
-        // Pass length in R0.
-        masm.move32(Imm32(AssertedCast<int32_t>(length)), R0.scratchReg());
-        emitSharedStub(ICStub::Kind::NewArray_Fallback, lir);
-        break;
-      }
-      case JSOP_NEWINIT:
-      case JSOP_NEWOBJECT:
-        emitSharedStub(ICStub::Kind::NewObject_Fallback, lir);
-        break;
-      default:
-        MOZ_CRASH("Unsupported jsop in shared stubs.");
-    }
 }
 
 typedef JSFunction* (*MakeDefaultConstructorFn)(JSContext*, HandleScript,

@@ -6489,10 +6489,7 @@ IonBuilder::initializeArrayElement(MDefinition* obj, size_t index, MDefinition* 
     if (needsPostBarrier(value))
         current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
-    if ((obj->isNewArray() && obj->toNewArray()->convertDoubleElements()) ||
-        (obj->isNullarySharedStub() &&
-         obj->resultTypeSet()->convertDoubleElements(constraints()) == TemporaryTypeSet::AlwaysConvertToDoubles))
-    {
+    if (obj->isNewArray() && obj->toNewArray()->convertDoubleElements()) {
         MInstruction* valueDouble = MToDouble::New(alloc(), value);
         current->add(valueDouble);
         value = valueDouble;
