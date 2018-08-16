@@ -28,8 +28,6 @@
 
 #include "vm/MutexIDs.h"
 
-using mozilla::UnspecifiedNaN;
-
 static bool
 ComputeLocalTime(time_t local, struct tm* ptm)
 {
@@ -145,7 +143,7 @@ UTCToLocalStandardOffsetSeconds()
 }
 
 void
-js::DateTimeInfo::internalUpdateTimeZoneAdjustment()
+js::DateTimeInfo::internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode)
 {
     /*
      * The difference between local standard time and UTC will never change for
@@ -154,7 +152,7 @@ js::DateTimeInfo::internalUpdateTimeZoneAdjustment()
     utcToLocalStandardOffsetSeconds = UTCToLocalStandardOffsetSeconds();
 
     double newTZA = utcToLocalStandardOffsetSeconds * msPerSecond;
-    if (newTZA == localTZA_)
+    if (mode == ResetTimeZoneMode::DontResetIfOffsetUnchanged && newTZA == localTZA_)
         return;
 
     localTZA_ = newTZA;
@@ -174,11 +172,7 @@ js::DateTimeInfo::internalUpdateTimeZoneAdjustment()
 
 js::DateTimeInfo::DateTimeInfo()
 {
-    // Set to an impossible TZA so that the comparison in
-    // |internalUpdateTimeZoneAdjustment()| initially fails, causing the
-    // remaining fields to be properly initialized at first adjustment.
-    localTZA_ = UnspecifiedNaN<double>();
-    internalUpdateTimeZoneAdjustment();
+    internalUpdateTimeZoneAdjustment(ResetTimeZoneMode::ResetEvenIfOffsetUnchaged);
 }
 
 int64_t
@@ -335,14 +329,21 @@ js::FinishDateTimeState()
     DateTimeInfo::instance = nullptr;
 }
 
+void
+js::ResetTimeZoneInternal(ResetTimeZoneMode mode)
+{
+    js::DateTimeInfo::updateTimeZoneAdjustment(mode);
+
+#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
+    auto guard = js::IcuTimeZoneState->lock();
+    guard.get() = js::IcuTimeZoneStatus::NeedsUpdate;
+#endif
+}
+
 JS_PUBLIC_API(void)
 JS::ResetTimeZone()
 {
-    js::DateTimeInfo::updateTimeZoneAdjustment();
-
-#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
-    js::IcuTimeZoneState->lock().get() = js::IcuTimeZoneStatus::NeedsUpdate;
-#endif
+    js::ResetTimeZoneInternal(js::ResetTimeZoneMode::ResetEvenIfOffsetUnchaged);
 }
 
 #if defined(XP_WIN)
