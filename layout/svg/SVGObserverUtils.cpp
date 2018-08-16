@@ -816,8 +816,8 @@ SVGObserverUtils::UpdateEffects(nsIFrame* aFrame)
   aFrame->DeleteProperty(FilterProperty());
   aFrame->DeleteProperty(MaskProperty());
   aFrame->DeleteProperty(ClipPathProperty());
-  aFrame->DeleteProperty(MarkerBeginProperty());
-  aFrame->DeleteProperty(MarkerMiddleProperty());
+  aFrame->DeleteProperty(MarkerStartProperty());
+  aFrame->DeleteProperty(MarkerMidProperty());
   aFrame->DeleteProperty(MarkerEndProperty());
   aFrame->DeleteProperty(FillProperty());
   aFrame->DeleteProperty(StrokeProperty());
@@ -833,9 +833,9 @@ SVGObserverUtils::UpdateEffects(nsIFrame* aFrame)
     // Set marker properties here to avoid reference loops
     RefPtr<URLAndReferrerInfo> markerURL =
       GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
-    GetMarkerProperty(markerURL, aFrame, MarkerBeginProperty());
+    GetMarkerProperty(markerURL, aFrame, MarkerStartProperty());
     markerURL = GetMarkerURI(aFrame, &nsStyleSVG::mMarkerMid);
-    GetMarkerProperty(markerURL, aFrame, MarkerMiddleProperty());
+    GetMarkerProperty(markerURL, aFrame, MarkerMidProperty());
     markerURL = GetMarkerURI(aFrame, &nsStyleSVG::mMarkerEnd);
     GetMarkerProperty(markerURL, aFrame, MarkerEndProperty());
   }

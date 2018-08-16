@@ -701,12 +701,12 @@ SVGGeometryFrame::GetMarkerProperties(SVGGeometryFrame *aFrame)
     SVGObserverUtils::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
   result.mMarkerStart =
     SVGObserverUtils::GetMarkerProperty(markerURL, aFrame,
-                                        SVGObserverUtils::MarkerBeginProperty());
+                                        SVGObserverUtils::MarkerStartProperty());
 
   markerURL = SVGObserverUtils::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerMid);
   result.mMarkerMid =
     SVGObserverUtils::GetMarkerProperty(markerURL, aFrame,
-                                        SVGObserverUtils::MarkerMiddleProperty());
+                                        SVGObserverUtils::MarkerMidProperty());
 
   markerURL = SVGObserverUtils::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerEnd);
   result.mMarkerEnd =
