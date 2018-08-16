@@ -448,7 +448,7 @@ var PaymentTestUtils = {
       organization: "World Wide Web Consortium",
       "street-address": "1 Pommes Frittes Place",
       "address-level2": "Berlin",
-      "address-level1": "BE",
+      // address-level1 isn't used in our forms for Germany
       "postal-code": "02138",
       country: "DE",
       tel: "+16172535702",

@@ -60,7 +60,7 @@ add_task(async function() {
   ]);
 
   info(`Test that you can not preview in another original file`);
-  await selectSource(dbg, "output");
+  await selectSpecificSource(dbg, "output");
   await hoverAtPos(dbg, { line: 2, ch: 16 });
   await assertNoTooltip(dbg);
 });

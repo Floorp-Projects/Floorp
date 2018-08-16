@@ -78,7 +78,7 @@ enum class StyleAppearance : uint8_t {
   Meterbar,
   // The meter bar's meter indicator.
   Meterchunk,
-  // The dropdown button(s) that open up a dropdown list.
+  // The "arrowed" part of the dropdown button that open up a dropdown list.
   MozMenulistButton,
   // For HTML's <input type=number>
   NumberInput,
@@ -303,6 +303,14 @@ enum class StyleDisplay : uint8_t {
   MozDeck,
   MozGroupbox,
   MozPopup,
+};
+
+// Values for the display-mode media feature.
+enum class StyleDisplayMode : uint8_t {
+  Browser = 0,
+  MinimalUi,
+  Standalone,
+  Fullscreen,
 };
 
 } // namespace mozilla

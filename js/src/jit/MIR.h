@@ -973,6 +973,18 @@ class MDefinition : public MNode
     }
 };
 
+static inline bool
+SimpleArithOperand(MDefinition* op)
+{
+    return !op->emptyResultTypeSet()
+        && !op->mightBeType(MIRType::Object)
+        && !op->mightBeType(MIRType::String)
+        && !op->mightBeType(MIRType::Symbol)
+        && !op->mightBeType(MIRType::MagicOptimizedArguments)
+        && !op->mightBeType(MIRType::MagicHole)
+        && !op->mightBeType(MIRType::MagicIsConstructing);
+}
+
 // An MUseDefIterator walks over uses in a definition, skipping any use that is
 // not a definition. Items from the use list must not be deleted during
 // iteration.

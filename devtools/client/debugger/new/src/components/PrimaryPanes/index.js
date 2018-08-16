@@ -120,7 +120,6 @@ const mapStateToProps = state => ({
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, {
   setPrimaryPaneTab: _actions2.default.setPrimaryPaneTab,
-  selectLocation: _actions2.default.selectLocation,
   setActiveSearch: _actions2.default.setActiveSearch,
   closeActiveSearch: _actions2.default.closeActiveSearch
 })(PrimaryPanes);

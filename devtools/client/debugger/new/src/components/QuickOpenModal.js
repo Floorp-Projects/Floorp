@@ -185,7 +185,7 @@ class QuickOpenModal extends _react.Component {
 
     this.onSelectResultItem = item => {
       const {
-        selectLocation,
+        selectSpecificLocation,
         selectedSource,
         highlightLineRange
       } = this.props;
@@ -196,7 +196,7 @@ class QuickOpenModal extends _react.Component {
 
       if (this.isVariableQuery()) {
         const line = item.location && item.location.start ? item.location.start.line : 0;
-        return selectLocation({
+        return selectSpecificLocation({
           sourceId: selectedSource.id,
           line
         });
@@ -232,14 +232,14 @@ class QuickOpenModal extends _react.Component {
 
     this.gotoLocation = location => {
       const {
-        selectLocation,
+        selectSpecificLocation,
         selectedSource
       } = this.props;
       const selectedSourceId = selectedSource ? selectedSource.id : "";
 
       if (location != null) {
         const sourceId = location.sourceId ? location.sourceId : selectedSourceId;
-        selectLocation({
+        selectSpecificLocation({
           sourceId,
           line: location.line,
           column: location.column
@@ -482,7 +482,7 @@ function mapStateToProps(state) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, {
   shortcutsModalEnabled: _actions2.default.shortcutsModalEnabled,
-  selectLocation: _actions2.default.selectLocation,
+  selectSpecificLocation: _actions2.default.selectSpecificLocation,
   setQuickOpenQuery: _actions2.default.setQuickOpenQuery,
   highlightLineRange: _actions2.default.highlightLineRange,
   closeQuickOpen: _actions2.default.closeQuickOpen,

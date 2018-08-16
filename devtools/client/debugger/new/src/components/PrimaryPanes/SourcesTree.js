@@ -312,14 +312,12 @@ var _initialiseProps = function () {
       depth: depth,
       focused: focused,
       expanded: expanded,
-      setExpanded: setExpanded,
       focusItem: this.focusItem,
       selectItem: this.selectItem,
       source: this.getSource(item),
       debuggeeUrl: debuggeeUrl,
       projectRoot: projectRoot,
-      clearProjectDirectoryRoot: this.props.clearProjectDirectoryRoot,
-      setProjectDirectoryRoot: this.props.setProjectDirectoryRoot
+      setExpanded: setExpanded
     });
   };
 };
@@ -349,6 +347,5 @@ const mapStateToProps = state => {
 exports.default = (0, _reactRedux.connect)(mapStateToProps, {
   selectSource: _actions2.default.selectSource,
   setExpandedState: _actions2.default.setExpandedState,
-  setProjectDirectoryRoot: _actions2.default.setProjectDirectoryRoot,
   clearProjectDirectoryRoot: _actions2.default.clearProjectDirectoryRoot
 })(SourcesTree);

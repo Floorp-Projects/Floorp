@@ -276,23 +276,42 @@ public:
 
   // PriorVisibleNode() returns the first piece of visible thing before aPoint.
   // If there is no visible ws qualifying it returns what is before the ws run.
+  // If outVisNode and/or outvisOffset is unused, callers can use nullptr.
   // Note that {outVisNode,outVisOffset} is set to just AFTER the visible
-  // object.
+  // object. Also outVisOffset might be invalid offset unless outVisNode is
+  // start reason node.
   template<typename PT, typename CT>
   void PriorVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
                         nsCOMPtr<nsINode>* outVisNode,
                         int32_t* outVisOffset,
-                        WSType* outType);
+                        WSType* outType) const;
+
+  template<typename PT, typename CT>
+  void PriorVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
+                        WSType* outType) const
+  {
+    PriorVisibleNode(aPoint, nullptr, nullptr, outType);
+  }
+
 
   // NextVisibleNode() returns the first piece of visible thing after aPoint.
   // If there is no visible ws qualifying it returns what is after the ws run.
+  // If outVisNode and/or outvisOffset is unused, callers can use nullptr.
   // Note that {outVisNode,outVisOffset} is set to just BEFORE the visible
-  // object.
+  // object. Also outVisOffset might be invalid offset unless outVisNode is
+  // end reason node.
   template<typename PT, typename CT>
   void NextVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
                        nsCOMPtr<nsINode>* outVisNode,
                        int32_t* outVisOffset,
-                       WSType* outType);
+                       WSType* outType) const;
+
+  template<typename PT, typename CT>
+  void NextVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
+                       WSType* outType) const
+  {
+    NextVisibleNode(aPoint, nullptr, nullptr, outType);
+  }
 
   // AdjustWhitespace examines the ws object for nbsp's that can
   // be safely converted to regular ascii space and converts them.
@@ -392,16 +411,16 @@ protected:
    * no character after aPoint, mTextNode is set to nullptr.
    */
   template<typename PT, typename CT>
-  WSPoint GetNextCharPoint(const EditorDOMPointBase<PT, CT>& aPoint);
-  WSPoint GetNextCharPoint(const WSPoint& aPoint);
+  WSPoint GetNextCharPoint(const EditorDOMPointBase<PT, CT>& aPoint) const;
+  WSPoint GetNextCharPoint(const WSPoint& aPoint) const;
 
   /**
    * GetPreviousCharPoint() returns previous character's point of of aPoint.
    * If there is no character before aPoint, mTextNode is set to nullptr.
    */
   template<typename PT, typename CT>
-  WSPoint GetPreviousCharPoint(const EditorDOMPointBase<PT, CT>& aPoint);
-  WSPoint GetPreviousCharPoint(const WSPoint& aPoint);
+  WSPoint GetPreviousCharPoint(const EditorDOMPointBase<PT, CT>& aPoint) const;
+  WSPoint GetPreviousCharPoint(const WSPoint& aPoint) const;
 
   /**
    * GetNextCharPointInternal() and GetPreviousCharPointInternal() are
@@ -413,10 +432,11 @@ protected:
    * GetPreviousCharPoint(const WSPoint&) and returns its result.
    */
   template<typename PT, typename CT>
-  WSPoint GetNextCharPointInternal(const EditorDOMPointBase<PT, CT>& aPoint);
+  WSPoint
+  GetNextCharPointInternal(const EditorDOMPointBase<PT, CT>& aPoint) const;
   template<typename PT, typename CT>
   WSPoint
-  GetPreviousCharPointInternal(const EditorDOMPointBase<PT, CT>& aPoint);
+  GetPreviousCharPointInternal(const EditorDOMPointBase<PT, CT>& aPoint) const;
 
   /**
    * InsertNBSPAndRemoveFollowingASCIIWhitespaces() inserts an NBSP first.
@@ -476,9 +496,9 @@ protected:
    */
   template<typename PT, typename CT>
   WSFragment* FindNearestRun(const EditorDOMPointBase<PT, CT>& aPoint,
-                             bool aForward);
+                             bool aForward) const;
 
-  char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset);
+  char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset) const;
   nsresult CheckTrailingNBSPOfRun(WSFragment *aRun);
 
   /**

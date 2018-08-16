@@ -143,10 +143,7 @@ ImageCacheKey::GetSpecialCaseDocumentToken(nsIDocument* aDocument, nsIURI* aURI)
 
   // If we must disable the storage, we want to create a unique cache key for
   // this image.
-  if (nsContentUtils::StorageDisabledByAntiTracking(aDocument->GetInnerWindow(),
-                                                    nullptr,
-                                                    aDocument->NodePrincipal(),
-                                                    aURI)) {
+  if (nsContentUtils::StorageDisabledByAntiTracking(aDocument, aURI)) {
     return aDocument;
   }
 

@@ -154,6 +154,20 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
+      // TODO: bug 1482808 - Clear setCustomValidity from merchant errors since
+      // they don't currently ever get cleared.
+      for (let field of content.document.querySelector("address-form form").elements) {
+        if (!field.validity.customError) {
+          continue;
+        }
+        field.setCustomValidity("");
+        todo(false, `Clearing custom validity on #${field.id}`);
+      }
+
+      Cu.waiveXrays(content.document.querySelector("address-form")).updateSaveButtonState();
+
+      // End bug 1482808 TODO
+
       info("saving corrections");
       content.document.querySelector("address-form .save-button").click();
 

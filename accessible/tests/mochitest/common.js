@@ -8,6 +8,8 @@ const nsIAccessibleStateChangeEvent =
   Ci.nsIAccessibleStateChangeEvent;
 const nsIAccessibleCaretMoveEvent =
   Ci.nsIAccessibleCaretMoveEvent;
+const nsIAccessibleScrollingEvent =
+  Ci.nsIAccessibleScrollingEvent;
 const nsIAccessibleTextChangeEvent =
   Ci.nsIAccessibleTextChangeEvent;
 const nsIAccessibleVirtualCursorChangeEvent =

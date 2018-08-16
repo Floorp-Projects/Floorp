@@ -1,7 +1,7 @@
 "use strict";
 
 /* exported asyncElementRendered, promiseStateChange, promiseContentToChromeMessage, deepClone,
-   PTU, registerConsoleFilter */
+   PTU, registerConsoleFilter, fillField */
 
 const PTU = SpecialPowers.Cu.import("resource://testing-common/PaymentTestUtils.jsm", {})
                             .PaymentTestUtils;
@@ -45,6 +45,30 @@ function promiseContentToChromeMessage(messageType) {
 
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
+}
+
+/**
+ * @param {HTMLElement} field
+ * @param {string} value
+ * @note This is async in case we need to make it async to handle focus in the future.
+ * @note Keep in sync with the copy in head.js
+ */
+async function fillField(field, value) {
+  field.focus();
+  if (field.localName == "select") {
+    if (field.value == value) {
+      // Do nothing
+      return;
+    }
+    field.value = value;
+    field.dispatchEvent(new Event("input"));
+    field.dispatchEvent(new Event("change"));
+    return;
+  }
+  while (field.value) {
+    sendKey("BACK_SPACE");
+  }
+  sendString(value);
 }
 
 /**

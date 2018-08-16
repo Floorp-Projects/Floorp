@@ -81,6 +81,9 @@ createEnum([
   // Indicates when the screenshot action ends.
   "TAKE_SCREENSHOT_END",
 
+  // Toggles the left alignment of the viewports.
+  "TOGGLE_LEFT_ALIGNMENT",
+
   // Update the device display state in the device selector.
   "UPDATE_DEVICE_DISPLAYED",
 

@@ -17,7 +17,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.loadableState.LOADED);
 
-  openDeviceModal(ui);
+  await openDeviceModal(ui);
 
   const preferredDevicesBefore = _loadPreferredDevices();
 
