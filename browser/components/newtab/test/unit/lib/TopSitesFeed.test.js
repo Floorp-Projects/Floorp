@@ -850,6 +850,12 @@ describe("Top Sites Feed", () => {
 
       assert.calledOnce(fakePageThumbs.removeExpirationFilter);
     });
+    it("should call updatePinnedSearchShortcuts on UPDATE_PINNED_SEARCH_SHORTCUTS action", async () => {
+      sinon.stub(feed, "updatePinnedSearchShortcuts");
+      const addedShortcuts = [{url: "https://google.com", searchVendor: "google", label: "google", searchTopSite: true}];
+      await feed.onAction({type: at.UPDATE_PINNED_SEARCH_SHORTCUTS, data: {addedShortcuts}});
+      assert.calledOnce(feed.updatePinnedSearchShortcuts);
+    });
   });
   describe("#add", () => {
     it("should pin site in first slot of empty pinned list", () => {
@@ -1397,6 +1403,49 @@ describe("Top Sites Feed", () => {
           type: "SET_PREF"
         });
       });
+    });
+  });
+
+  describe("updatePinnedSearchShortcuts", () => {
+    it("should unpin a shortcut in deletedShortcuts", () => {
+      const deletedShortcuts = [{url: "https://google.com", searchVendor: "google", label: "google", searchTopSite: true}];
+      const addedShortcuts = [];
+      fakeNewTabUtils.pinnedLinks.links = [null, null, {url: "https://amazon.com", searchVendor: "amazon", label: "amazon", searchTopSite: true}];
+      feed.updatePinnedSearchShortcuts({addedShortcuts, deletedShortcuts});
+      assert.notCalled(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.unpin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.unpin, {url: "https://google.com"});
+    });
+
+    it("should pin a shortcut in addedShortcuts", () => {
+      const addedShortcuts = [{url: "https://google.com", searchVendor: "google", label: "google", searchTopSite: true}];
+      const deletedShortcuts = [];
+      fakeNewTabUtils.pinnedLinks.links = [null, null, {url: "https://amazon.com", searchVendor: "amazon", label: "amazon", searchTopSite: true}];
+      feed.updatePinnedSearchShortcuts({addedShortcuts, deletedShortcuts});
+      assert.notCalled(fakeNewTabUtils.pinnedLinks.unpin);
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, {label: "google", searchTopSite: true, searchVendor: "google", url: "https://google.com"}, 0);
+    });
+
+    it("should pin and unpin in the same action", () => {
+      const addedShortcuts = [
+        {url: "https://google.com", searchVendor: "google", label: "google", searchTopSite: true},
+        {url: "https://ebay.com", searchVendor: "ebay", label: "ebay", searchTopSite: true}
+      ];
+      const deletedShortcuts = [{url: "https://amazon.com", searchVendor: "amazon", label: "amazon", searchTopSite: true}];
+      fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com"}, {url: "https://amazon.com", searchVendor: "amazon", label: "amazon", searchTopSite: true}];
+      feed.updatePinnedSearchShortcuts({addedShortcuts, deletedShortcuts});
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.unpin);
+      assert.calledTwice(fakeNewTabUtils.pinnedLinks.pin);
+    });
+
+    it("should pin a shortcut in addedShortcuts even if pinnedLinks is full", () => {
+      const addedShortcuts = [{url: "https://google.com", searchVendor: "google", label: "google", searchTopSite: true}];
+      const deletedShortcuts = [];
+      fakeNewTabUtils.pinnedLinks.links = FAKE_LINKS;
+      feed.updatePinnedSearchShortcuts({addedShortcuts, deletedShortcuts});
+      assert.notCalled(fakeNewTabUtils.pinnedLinks.unpin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, {label: "google", searchTopSite: true, url: "https://google.com"}, 0);
     });
   });
 });

@@ -163,6 +163,8 @@ public:
             !BasePrincipal::Cast(aDocumentPrincipal)->AddonPolicy());
   }
 
+  uint32_t GetOriginNoSuffixHash() const { return mOriginNoSuffix->hash(); }
+
 protected:
   virtual ~BasePrincipal();
 

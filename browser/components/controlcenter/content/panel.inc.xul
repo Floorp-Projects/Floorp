@@ -111,6 +111,10 @@
                   label="&trackingProtection.block5.label;"
                   accesskey="&trackingProtection.block5.accesskey;"
                   oncommand="ContentBlocking.enableForCurrentPage();" />
+          <label id="identity-popup-content-blocking-report-breakage"
+                 onclick="ContentBlocking.showReportBreakageSubview();"
+                 class="text-link subviewkeynav"
+                 flex="1">&contentBlocking.openBreakageReportView.label;</label>
         </vbox>
       </hbox>
 
@@ -232,6 +236,40 @@
                 oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
       </vbox>
 
+    </panelview>
+
+    <!-- Report Breakage SubView -->
+    <panelview id="identity-popup-breakageReportView"
+               title="&contentBlocking.breakageReportView.label;"
+               descriptionheightworkaround="true">
+        <vbox id="identity-popup-breakageReportView-heading">
+          <description>&contentBlocking.breakageReportView.description;</description>
+          <label id="identity-popup-breakageReportView-learn-more"
+                 class="text-link">&contentBlocking.breakageReportView.learnMore;</label>
+        </vbox>
+        <vbox id="identity-popup-breakageReportView-body" class="panel-view-body-unscrollable">
+          <vbox class="identity-popup-breakageReportView-collection-section">
+            <label class="identity-popup-breakageReportView-collection-label">&contentBlocking.breakageReportView.collection.url.label;</label>
+            <label id="identity-popup-breakageReportView-collection-url"/>
+          </vbox>
+          <vbox class="identity-popup-breakageReportView-collection-section">
+            <label class="identity-popup-breakageReportView-collection-label">&contentBlocking.breakageReportView.collection.userAgent.label;</label>
+            <label id="identity-popup-breakageReportView-collection-userAgent"/>
+          </vbox>
+          <vbox class="identity-popup-breakageReportView-collection-section">
+            <label class="identity-popup-breakageReportView-collection-label">&contentBlocking.breakageReportView.collection.comments.label;</label>
+            <textbox multiline="true" id="identity-popup-breakageReportView-collection-comments"/>
+          </vbox>
+        </vbox>
+        <vbox id="identity-popup-breakageReportView-footer" class="identity-popup-footer">
+          <button id="identity-popup-breakageReportView-cancel"
+                  label="&contentBlocking.breakageReportView.cancel.label;"
+                  oncommand="ContentBlocking.backToMainView();"/>
+          <button id="identity-popup-breakageReportView-submit"
+                  default="true"
+                  label="&contentBlocking.breakageReportView.sendReport.label;"
+                  oncommand="ContentBlocking.submitBreakageReport();"/>
+        </vbox>
     </panelview>
   </panelmultiview>
 </panel>

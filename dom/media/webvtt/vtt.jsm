@@ -1012,8 +1012,14 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
     var controlBar;
     var controlBarShown;
     if (controls) {
-      controlBar = controls.ownerDocument.getAnonymousElementByAttribute(
-        controls, "anonid", "controlBar");
+      if (controls.localName == "videocontrols") {
+        // controls is a NAC; The control bar is in a XBL binding.
+        controlBar = controls.ownerDocument.getAnonymousElementByAttribute(
+          controls, "anonid", "controlBar");
+      } else {
+        // controls is a <div> that is the children of the UA Widget Shadow Root.
+        controlBar = controls.parentNode.getElementById("controlBar");
+      }
       controlBarShown = controlBar ? !!controlBar.clientHeight : false;
     }
 
@@ -1381,7 +1387,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
         }
 
         if (self.state === "ID") {
-          // If there is no cue identifier, read the next line. 
+          // If there is no cue identifier, read the next line.
           if (line == "") {
             return;
           }

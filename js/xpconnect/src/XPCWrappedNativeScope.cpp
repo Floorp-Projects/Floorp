@@ -302,6 +302,32 @@ GetXBLScope(JSContext* cx, JSObject* contentScopeArg)
     return scope;
 }
 
+JSObject*
+GetUAWidgetScope(JSContext* cx, JSObject* contentScopeArg)
+{
+    JS::RootedObject contentScope(cx, contentScopeArg);
+    JSAutoRealm ar(cx, contentScope);
+    nsIPrincipal* principal =
+        nsJSPrincipals::get(JS_GetCompartmentPrincipals(js::GetObjectCompartment(contentScope)));
+
+    if (nsContentUtils::IsSystemPrincipal(principal)) {
+        return JS::GetNonCCWObjectGlobal(contentScope);
+    }
+
+    return GetUAWidgetScope(cx, principal);
+}
+
+JSObject*
+GetUAWidgetScope(JSContext* cx, nsIPrincipal* principal)
+{
+    RootedObject scope(cx, XPCJSRuntime::Get()->GetUAWidgetScope(cx, principal));
+    NS_ENSURE_TRUE(scope, nullptr); // See bug 858642.
+
+    scope = js::UncheckedUnwrap(scope);
+    JS::ExposeObjectToActiveJS(scope);
+    return scope;
+}
+
 bool
 AllowContentXBLScope(JS::Realm* realm)
 {

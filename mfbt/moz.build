@@ -42,6 +42,7 @@ EXPORTS.mozilla = [
     'FastBernoulliTrial.h',
     'FloatingPoint.h',
     'FStream.h',
+    'FunctionTypeTraits.h',
     'GuardObjects.h',
     'HashFunctions.h',
     'HashTable.h',
