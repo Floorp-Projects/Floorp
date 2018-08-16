@@ -26,7 +26,7 @@ test(t => {
                                 'transition: all 10s;',
                 '.change::after': 'width: 100px; height: 100px;' });
   const div = addDiv(t, { class: 'init' });
-  flushComputedStyle(div);
+  getComputedStyle(div).width;
   div.classList.add('change');
 
   const anims = document.getAnimations();
@@ -40,7 +40,7 @@ test(t => {
   addStyle(t, { '.init::after': 'content: ""; width: 0px; transition: all 10s;',
                 '.change::after': 'width: 100px;' });
   const div = addDiv(t, { class: 'init' });
-  flushComputedStyle(div);
+  getComputedStyle(div).width;
   div.classList.add('change');
   const pseudoTarget = document.getAnimations()[0].effect.target;
   const effect = new KeyframeEffect(pseudoTarget,

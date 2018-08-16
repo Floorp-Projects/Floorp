@@ -19,7 +19,7 @@
 
 promise_test(async t => {
   const div = addDiv(t, { class: 'animated-div' });
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '200px';
   const animation = div.getAnimations()[0];
 

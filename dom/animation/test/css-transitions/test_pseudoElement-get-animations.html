@@ -24,7 +24,7 @@
 
 test(t => {
   const div = addDiv(t, { class: 'init' });
-  flushComputedStyle(div);
+  getComputedStyle(div).width;
   div.classList.add('change');
 
   // Sanity checks
