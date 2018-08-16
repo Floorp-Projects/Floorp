@@ -371,7 +371,10 @@ HTMLEditor::PreDestroy(bool aDestroyingFrames)
   }
 
   while (!mStyleSheetURLs.IsEmpty()) {
-    RemoveOverrideStyleSheet(mStyleSheetURLs[0]);
+    DebugOnly<nsresult> rv =
+      RemoveOverrideStyleSheetInternal(mStyleSheetURLs[0]);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to remove an override style sheet");
   }
 
   // Clean up after our anonymous content -- we don't want these nodes to
@@ -3100,7 +3103,10 @@ HTMLEditor::ReplaceOverrideStyleSheet(const nsAString& aURL)
   }
   // Remove the previous sheet
   if (!mLastOverrideStyleSheetURL.IsEmpty()) {
-    RemoveOverrideStyleSheet(mLastOverrideStyleSheetURL);
+    DebugOnly<nsresult> rv =
+      RemoveOverrideStyleSheetInternal(mLastOverrideStyleSheetURL);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to remove the last override style sheet");
   }
   nsresult rv = AddOverrideStyleSheetInternal(aURL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3113,25 +3119,36 @@ HTMLEditor::ReplaceOverrideStyleSheet(const nsAString& aURL)
 NS_IMETHODIMP
 HTMLEditor::RemoveOverrideStyleSheet(const nsAString& aURL)
 {
-  RefPtr<StyleSheet> sheet = GetStyleSheetForURL(aURL);
+  nsresult rv = RemoveOverrideStyleSheetInternal(aURL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
 
-  // Make sure we remove the stylesheet from our internal list in all
-  // cases.
-  nsresult rv = RemoveStyleSheetFromList(aURL);
-
-  NS_ENSURE_TRUE(sheet, NS_OK); /// Don't fail if sheet not found
-
+nsresult
+HTMLEditor::RemoveOverrideStyleSheetInternal(const nsAString& aURL)
+{
   if (NS_WARN_IF(!IsInitialized())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
-  ps->RemoveOverrideStyleSheet(sheet);
-  ps->ApplicableStylesChanged();
+  // Make sure we remove the stylesheet from our internal list in all
+  // cases.
+  RefPtr<StyleSheet> sheet = RemoveStyleSheetFromList(aURL);
+  if (!sheet) {
+    return NS_OK; // It's okay even if not found.
+  }
 
-  // Remove it from our internal list
-  return rv;
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  presShell->RemoveOverrideStyleSheet(sheet);
+  presShell->ApplicableStylesChanged();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3187,21 +3204,23 @@ HTMLEditor::AddNewStyleSheetToList(const nsAString& aURL,
   return mStyleSheets.AppendElement(aStyleSheet) ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
-nsresult
+already_AddRefed<StyleSheet>
 HTMLEditor::RemoveStyleSheetFromList(const nsAString& aURL)
 {
   // is it already in the list?
-  size_t foundIndex;
-  foundIndex = mStyleSheetURLs.IndexOf(aURL);
+  size_t foundIndex = mStyleSheetURLs.IndexOf(aURL);
   if (foundIndex == mStyleSheetURLs.NoIndex) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
+
+  RefPtr<StyleSheet> removingStyleSheet = mStyleSheets[foundIndex];
+  MOZ_ASSERT(removingStyleSheet);
 
   // Attempt both removals; if one fails there's not much we can do.
   mStyleSheets.RemoveElementAt(foundIndex);
   mStyleSheetURLs.RemoveElementAt(foundIndex);
 
-  return NS_OK;
+  return removingStyleSheet.forget();
 }
 
 StyleSheet*
