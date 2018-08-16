@@ -15,7 +15,7 @@ import mozcrash
 import mozinfo
 import mozlog
 import moznetwork
-from mozdevice import ADBAndroid
+from mozdevice import ADBAndroid, ADBError
 from mozprofile import Profile, DEFAULT_PORTS
 from mozprofile.permissions import ServerLocations
 from runtests import MochitestDesktop, update_mozinfo
@@ -272,7 +272,14 @@ class JUnitTestRunner(MochitestDesktop):
             self.fail_count = 1
 
         if self.options.coverage:
-            self.device.pull(self.remote_coverage_output_path, self.options.coverage_output_path)
+            try:
+                self.device.pull(self.remote_coverage_output_path,
+                                 self.options.coverage_output_path)
+            except ADBError:
+                # Avoid a task retry in case the code coverage file is not found.
+                self.log.error("No code coverage file (%s) found on remote device" %
+                               self.remote_coverage_output_path)
+                return -1
 
         return 1 if self.fail_count else 0
 
