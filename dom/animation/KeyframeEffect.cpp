@@ -1099,8 +1099,7 @@ KeyframeEffect::GetKeyframes(JSContext*& aCx,
       keyframe.mTimingFunction.ref().AppendToString(keyframeDict.mEasing);
     } // else if null, leave easing as its default "linear".
 
-    keyframeDict.mComposite =
-      KeyframeUtils::ToCompositeOperationOrAuto(keyframe.mComposite);
+    keyframeDict.mComposite = keyframe.mComposite;
 
     JS::Rooted<JS::Value> keyframeJSValue(aCx);
     if (!ToJSValue(aCx, keyframeDict, &keyframeJSValue)) {

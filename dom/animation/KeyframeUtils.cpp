@@ -334,8 +334,12 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
       entry->mProperty = value.mProperty;
       entry->mValue = value.mValue;
       entry->mTimingFunction = frame.mTimingFunction;
+      // The following assumes that CompositeOperation is a strict subset of
+      // CompositeOperationOrAuto.
       entry->mComposite =
-        frame.mComposite ? frame.mComposite.value() : aEffectComposite;
+        frame.mComposite == dom::CompositeOperationOrAuto::Auto
+        ? aEffectComposite
+        : static_cast<dom::CompositeOperation>(frame.mComposite);
     }
   }
 
@@ -452,8 +456,7 @@ ConvertKeyframeSequence(JSContext* aCx,
     }
 
     if (StaticPrefs::dom_animations_api_compositing_enabled()) {
-      keyframe->mComposite =
-        KeyframeUtils::ToCompositeOperation(keyframeDict.mComposite);
+      keyframe->mComposite = keyframeDict.mComposite;
     }
 
     // Look for additional property-values pairs on the object.
@@ -1205,8 +1208,7 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
     if (compositeOps && !compositeOps->IsEmpty()) {
       size_t length = compositeOps->Length();
       for (size_t i = 0; i < aResult.Length(); i++) {
-        dom::CompositeOperationOrAuto op = compositeOps->ElementAt(i % length);
-        aResult[i].mComposite = KeyframeUtils::ToCompositeOperation(op);
+        aResult[i].mComposite = compositeOps->ElementAt(i % length);
       }
     }
   }
