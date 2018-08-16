@@ -9,6 +9,7 @@
 #include "nsAString.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -147,6 +148,27 @@ nsIConstraintValidation::ReportValidity()
 
   AutoTArray<RefPtr<Element>, 1> invalidElements;
   invalidElements.AppendElement(element);
+
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(element->GetOwnerGlobal())) {
+    return false;
+  }
+  JS::Rooted<JS::Value> detail(jsapi.cx());
+  if (!ToJSValue(jsapi.cx(), invalidElements, &detail)) {
+    return false;
+  }
+
+  RefPtr<CustomEvent> event = NS_NewDOMCustomEvent(element->OwnerDoc(),
+                                                   nullptr, nullptr);
+  event->InitCustomEvent(jsapi.cx(),
+                         NS_LITERAL_STRING("MozInvalidForm"),
+                         /* CanBubble */ true,
+                         /* Cancelable */ true,
+                         detail);
+  event->SetTrusted(true);
+  event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
+
+  element->DispatchEvent(*event);
 
   nsCOMPtr<nsIObserverService> service =
     mozilla::services::GetObserverService();
