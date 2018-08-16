@@ -342,7 +342,12 @@ public class GeckoView extends FrameLayout {
         if (!mSession.isOpen()) {
             mSession.open(mRuntime);
         }
-        mRuntime.orientationChanged();
+        // Temporary solution until we find out why mRuntime can end up as null here. It means we
+        // might miss an orientation change if we were background OOM-killed, but it's better than
+        // crashing. See bug 1484001.
+        if (mRuntime != null) {
+            mRuntime.orientationChanged();
+        }
 
         super.onAttachedToWindow();
     }
