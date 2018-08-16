@@ -37,7 +37,7 @@ namespace WebCore {
 
 // The value of 2 milliseconds is larger than the largest delay which exists in any HRTFKernel from the default HRTFDatabase (0.0136 seconds).
 // We ASSERT the delay values used in process() with this value.
-const float MaxDelayTimeSeconds = 0.002;
+const float MaxDelayTimeSeconds = 0.002f;
 
 const int UninitializedAzimuth = -1;
 const unsigned RenderingQuantum = WEBAUDIO_BLOCK_SIZE;
