@@ -79,18 +79,10 @@ FormSubmitObserver.prototype =
    */
 
   notifyInvalidSubmit(aFormElement, aInvalidElements) {
-    // We are going to handle invalid form submission attempt by focusing the
-    // first invalid element and show the corresponding validation message in a
-    // panel attached to the element.
-    if (!aInvalidElements.length) {
-      return;
-    }
-
     // Show a validation message on the first focusable element.
-    for (let i = 0; i < aInvalidElements.length; i++) {
+    for (let element of aInvalidElements) {
       // Insure that this is the FormSubmitObserver associated with the
       // element / window this notification is about.
-      let element = aInvalidElements.queryElementAt(i, Ci.nsISupports);
       if (this._content != element.ownerGlobal.top.document.defaultView) {
         return;
       }

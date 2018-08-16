@@ -1826,7 +1826,7 @@ HTMLFormElement::ForgetCurrentSubmission()
 }
 
 bool
-HTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
+HTMLFormElement::CheckFormValidity(nsTArray<RefPtr<Element>>* aInvalidElements) const
 {
   bool ret = true;
 
@@ -1854,7 +1854,7 @@ HTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
       // Add all unhandled invalid controls to aInvalidElements if the caller
       // requested them.
       if (defaultAction && aInvalidElements) {
-        aInvalidElements->AppendElement(ToSupports(sortedControls[i]));
+        aInvalidElements->AppendElement(sortedControls[i]);
       }
     }
   }
@@ -1903,12 +1903,9 @@ HTMLFormElement::CheckValidFormSubmission()
   // Do not check form validity if there is no observer for
   // NS_INVALIDFORMSUBMIT_SUBJECT.
   if (NS_SUCCEEDED(rv) && hasObserver) {
-    nsCOMPtr<nsIMutableArray> invalidElements =
-      do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-    // Return true on error here because that's what we always did
-    NS_ENSURE_SUCCESS(rv, true);
+    AutoTArray<RefPtr<Element>, 32> invalidElements;
 
-    if (!CheckFormValidity(invalidElements.get())) {
+    if (!CheckFormValidity(&invalidElements)) {
       // For the first invalid submission, we should update element states.
       // We have to do that _before_ calling the observers so we are sure they
       // will not interfere (like focusing the element).
@@ -1958,8 +1955,7 @@ HTMLFormElement::CheckValidFormSubmission()
         observer = do_QueryInterface(inst);
 
         if (observer) {
-          observer->NotifyInvalidSubmit(this,
-                                        static_cast<nsIArray*>(invalidElements));
+          observer->NotifyInvalidSubmit(this, invalidElements);
         }
       }
 
