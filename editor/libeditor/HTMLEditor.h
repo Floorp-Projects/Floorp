@@ -981,7 +981,16 @@ protected: // Shouldn't be used by friend classes
    */
   nsresult AddNewStyleSheetToList(const nsAString &aURL,
                                   StyleSheet* aStyleSheet);
-  nsresult RemoveStyleSheetFromList(const nsAString &aURL);
+
+  /**
+   * Removes style sheet from the internal lists.
+   *
+   * @param aURL        URL to the style sheet.
+   * @return            If the URL is in the internal list, returns the
+   *                    removed style sheet.  Otherwise, i.e., not found,
+   *                    nullptr.
+   */
+  already_AddRefed<StyleSheet> RemoveStyleSheetFromList(const nsAString& aURL);
 
   /**
    * Add and apply the style sheet synchronously.
@@ -989,6 +998,15 @@ protected: // Shouldn't be used by friend classes
    * @param aURL        URL to the style sheet.
    */
   nsresult AddOverrideStyleSheetInternal(const nsAString& aURL);
+
+  /**
+   * Remove the style sheet from this editor synchronously.
+   *
+   * @param aURL        URL to the style sheet.
+   * @return            Even if there is no specified style sheet in the
+   *                    internal lists, this returns NS_OK.
+   */
+  nsresult RemoveOverrideStyleSheetInternal(const nsAString& aURL);
 
   /**
    * MaybeCollapseSelectionAtFirstEditableNode() may collapse selection at
