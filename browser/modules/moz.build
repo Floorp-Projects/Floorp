@@ -61,9 +61,6 @@ with Files("ExtensionsUI.jsm"):
 with Files("LaterRun.jsm"):
     BUG_COMPONENT = ("Firefox", "Tours")
 
-with Files("LightweightThemeChildHelper.jsm"):
-    BUG_COMPONENT = ("WebExtensions", "Themes")
-
 with Files("OpenInTabsUtils.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
@@ -134,7 +131,6 @@ EXTRA_JS_MODULES += [
     'FormValidationHandler.jsm',
     'HomePage.jsm',
     'LaterRun.jsm',
-    'LightweightThemeChildHelper.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
     'PermissionUI.jsm',

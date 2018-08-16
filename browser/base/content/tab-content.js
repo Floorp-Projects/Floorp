@@ -22,22 +22,6 @@ ActorManagerChild.attach(this, "browsers");
 // TabChildGlobal
 var global = this;
 
-XPCOMUtils.defineLazyProxy(this, "LightweightThemeChildHelper",
-  "resource:///modules/LightweightThemeChildHelper.jsm");
-
-let themeablePagesWhitelist = new Set([
-  "about:home",
-  "about:newtab",
-  "about:welcome",
-]);
-
-addEventListener("pageshow", function({ originalTarget }) {
-  if (originalTarget.defaultView == content && themeablePagesWhitelist.has(content.document.documentURI)) {
-    LightweightThemeChildHelper.listen(themeablePagesWhitelist);
-    LightweightThemeChildHelper.update(chromeOuterWindowID, content);
-  }
-}, false, true);
-
 // Keep a reference to the translation content handler to avoid it it being GC'ed.
 var trHandler = null;
 if (Services.prefs.getBoolPref("browser.translation.detectLanguage")) {
