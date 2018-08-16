@@ -572,14 +572,37 @@ GetEffectProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
   return prop;
 }
 
-SVGMarkerObserver*
-SVGObserverUtils::GetMarkerProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-  const mozilla::FramePropertyDescriptor<SVGMarkerObserver>* aProperty)
+bool
+SVGObserverUtils::GetMarkerFrames(nsIFrame* aMarkedFrame,
+                                  nsSVGMarkerFrame*(*aFrames)[3])
 {
-  MOZ_ASSERT(aFrame->IsSVGGeometryFrame() &&
-             static_cast<SVGGeometryElement*>(aFrame->GetContent())->IsMarkable(),
+  MOZ_ASSERT(!aMarkedFrame->GetPrevContinuation() &&
+             aMarkedFrame->IsSVGGeometryFrame() &&
+             static_cast<SVGGeometryElement*>(aMarkedFrame->GetContent())->IsMarkable(),
              "Bad frame");
-  return GetEffectProperty(aURI, aFrame, aProperty);
+
+  bool foundMarker = false;
+  RefPtr<URLAndReferrerInfo> markerURL;
+  SVGMarkerObserver* observer;
+  nsIFrame* marker;
+
+#define GET_MARKER(type)                                                      \
+  markerURL = GetMarkerURI(aMarkedFrame, &nsStyleSVG::mMarker##type);         \
+  observer = GetEffectProperty(markerURL, aMarkedFrame,                       \
+                               SVGObserverUtils::Marker##type##Property());   \
+  marker = observer ?                                                         \
+           observer->GetReferencedFrame(LayoutFrameType::SVGMarker, nullptr) :\
+           nullptr;                                                           \
+  foundMarker = foundMarker || bool(marker);                                  \
+  (*aFrames)[nsSVGMark::e##type] = static_cast<nsSVGMarkerFrame*>(marker);
+
+  GET_MARKER(Start)
+  GET_MARKER(Mid)
+  GET_MARKER(End)
+
+#undef GET_MARKER
+
+  return foundMarker;
 }
 
 SVGGeometryElement*
@@ -833,11 +856,11 @@ SVGObserverUtils::UpdateEffects(nsIFrame* aFrame)
     // Set marker properties here to avoid reference loops
     RefPtr<URLAndReferrerInfo> markerURL =
       GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
-    GetMarkerProperty(markerURL, aFrame, MarkerStartProperty());
+    GetEffectProperty(markerURL, aFrame, MarkerStartProperty());
     markerURL = GetMarkerURI(aFrame, &nsStyleSVG::mMarkerMid);
-    GetMarkerProperty(markerURL, aFrame, MarkerMidProperty());
+    GetEffectProperty(markerURL, aFrame, MarkerMidProperty());
     markerURL = GetMarkerURI(aFrame, &nsStyleSVG::mMarkerEnd);
-    GetMarkerProperty(markerURL, aFrame, MarkerEndProperty());
+    GetEffectProperty(markerURL, aFrame, MarkerEndProperty());
   }
 }
 
