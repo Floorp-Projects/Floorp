@@ -3259,8 +3259,8 @@ DateMultipleArguments(JSContext* cx, const CallArgs& args)
     return ToDateString(cx, args, NowAsMillis(cx));
 }
 
-bool
-js::DateConstructor(JSContext* cx, unsigned argc, Value* vp)
+static bool
+DateConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
