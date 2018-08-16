@@ -8,7 +8,7 @@
 <script>
 'use strict';
 
-async_test(function(t) {
+async_test(t => {
   var div = addDiv(t);
 
   // FIXME: This test does too many things. It should be split up.
@@ -25,7 +25,7 @@ async_test(function(t) {
   var animations = div.getAnimations();
   assert_equals(animations.length, 2,
     'getAnimations() returns one Animation per transitioning property');
-  waitForAllAnimations(animations).then(t.step_func(function() {
+  waitForAllAnimations(animations).then(t.step_func(() => {
     var startTime = animations[0].startTime;
     assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
                 'CSS transitions have sensible start times');
@@ -33,13 +33,13 @@ async_test(function(t) {
       'CSS transitions started together have the same start time');
     // Wait a moment then add a third transition
     return waitForFrame();
-  })).then(t.step_func(function() {
+  })).then(t.step_func(() => {
     div.style.backgroundColor = 'green';
     animations = div.getAnimations();
     assert_equals(animations.length, 3,
       'getAnimations returns Animations for all running CSS Transitions');
     return waitForAllAnimations(animations);
-  })).then(t.step_func(function() {
+  })).then(t.step_func(() => {
     assert_less_than(animations[1].startTime, animations[2].startTime,
       'Animation for additional CSS transition starts after the original'
       + ' transitions and appears later in the list');
@@ -47,7 +47,7 @@ async_test(function(t) {
   }));
 }, 'getAnimations for CSS Transitions');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'left: 0px; transition: all 100s' });
 
   flushComputedStyle(div);
@@ -57,11 +57,11 @@ test(function(t) {
                       'Interface of returned animation is CSSTransition');
 }, 'getAnimations returns CSSTransition objects for CSS Transitions');
 
-async_test(function(t) {
+async_test(t => {
   var div = addDiv(t);
 
   // Set up event listener
-  div.addEventListener('transitionend', t.step_func(function() {
+  div.addEventListener('transitionend', t.step_func(() => {
     assert_equals(div.getAnimations().length, 0,
       'getAnimations does not return finished CSS Transitions');
     t.done();
@@ -76,7 +76,7 @@ async_test(function(t) {
   getComputedStyle(div).left;
 }, 'getAnimations for CSS Transitions that have finished');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
 
   // Try to transition non-animatable property animation-duration
@@ -91,7 +91,7 @@ test(function(t) {
     + ' of a non-animatable property');
 }, 'getAnimations for transition on non-animatable property');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t);
 
   div.style.setProperty('-vendor-unsupported', '0px', '');
@@ -104,7 +104,7 @@ test(function(t) {
     + ' of an unsupported property');
 }, 'getAnimations for transition on unsupported property');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'transform: translate(0px); ' +
                                'opacity: 0; ' +
                                'border-width: 0px; ' + // Shorthand
@@ -127,7 +127,7 @@ test(function(t) {
   assert_equals(animations[5].transitionProperty, 'transform');
 }, 'getAnimations sorts simultaneous transitions by name');
 
-test(function(t) {
+test(t => {
   var div = addDiv(t, { style: 'transform: translate(0px); ' +
                                'opacity: 0' });
   getComputedStyle(div).transform;

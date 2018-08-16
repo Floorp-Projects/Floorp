@@ -8,7 +8,7 @@
 <script>
 'use strict';
 
-async_test(function(t) {
+async_test(t => {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
 
@@ -22,23 +22,23 @@ async_test(function(t) {
   var previousProgress = animation.effect.getComputedTiming().progress;
   assert_equals(previousProgress, 0, 'Initial value of progress is zero');
 
-  animation.ready.then(waitForNextFrame).then(t.step_func(function() {
+  animation.ready.then(waitForNextFrame).then(t.step_func(() => {
     assert_greater_than(animation.effect.getComputedTiming().progress,
                         previousProgress,
                         'Iteration progress is initially increasing');
     animation.pause();
     return animation.ready;
-  })).then(t.step_func(function() {
+  })).then(t.step_func(() => {
     previousProgress = animation.effect.getComputedTiming().progress;
     return waitForNextFrame();
-  })).then(t.step_func(function() {
+  })).then(t.step_func(() => {
     assert_equals(animation.effect.getComputedTiming().progress,
                   previousProgress,
                   'Iteration progress does not increase after calling pause()');
     previousProgress = animation.effect.getComputedTiming().progress;
     animation.play();
     return animation.ready.then(waitForNextFrame);
-  })).then(t.step_func(function() {
+  })).then(t.step_func(() => {
     assert_greater_than(animation.effect.getComputedTiming().progress,
                         previousProgress,
                         'Iteration progress increases after calling play()');
