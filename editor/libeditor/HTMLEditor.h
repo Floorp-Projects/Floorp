@@ -970,11 +970,12 @@ protected: // Shouldn't be used by friend classes
   bool EnableExistingStyleSheet(const nsAString& aURL);
 
   /**
-   * Dealing with the internal style sheet lists.
+   * GetStyleSheetForURL() returns a pointer to StyleSheet which was added
+   * with AddOverrideStyleSheetInternal().  If it's not found, returns nullptr.
+   *
+   * @param aURL        URL to the style sheet.
    */
   StyleSheet* GetStyleSheetForURL(const nsAString& aURL);
-  void GetURLForStyleSheet(StyleSheet* aStyleSheet,
-                           nsAString& aURL);
 
   /**
    * Add a url + known style sheet to the internal lists.
