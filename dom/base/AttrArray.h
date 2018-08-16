@@ -181,6 +181,11 @@ private:
     nsAttrValue mValue;
   };
 
+#ifdef _MSC_VER
+// Disable MSVC warning 'nonstandard extension used: zero-sized array in struct/union'
+#pragma warning(push)
+#pragma warning(disable:4200)
+#endif
   class Impl
   {
   public:
@@ -213,6 +218,10 @@ private:
     // Allocated in the same buffer as `Impl`.
     InternalAttr mBuffer[0];
   };
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 
   mozilla::Span<InternalAttr> NonMappedAttrs()
   {

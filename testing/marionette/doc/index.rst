@@ -67,4 +67,4 @@ channel on irc.mozilla.org.  Don’t ask if you may ask a question; just go ahea
 and ask, and please wait for an answer as we might not be in your timezone.
 
 .. _subscribe: https://lists.mozilla.org/listinfo/tools-marionette
-.. _archive: https://groups.google.com/group/mozilla.tools.marionette
+.. _archive: https://lists.mozilla.org/pipermail/tools-marionette/

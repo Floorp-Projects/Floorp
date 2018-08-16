@@ -43,20 +43,3 @@ tab:first-of-type[visuallyselected="true"] {
   padding-right: 5px;
   padding-left: 5px;
 }
-
-/* ::::: tab-bottom ::::::::::
-   :: Tabs that are attached to the bottom of a panel, but not necessarily
-   :: a tabpanels.
-   ::::: */
-
-.tab-bottom {
-  margin-top: 0;
-  margin-bottom: 2px;
-  padding: 2px 4px 1px 4px;
-}
-
-.tab-bottom[visuallyselected="true"] {
-  margin-bottom: 0;
-  padding: 4px 6px 1px 6px;
-}
-

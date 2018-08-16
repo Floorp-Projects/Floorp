@@ -31,13 +31,12 @@ DoWhileEmitter::emitBody(const Maybe<uint32_t>& doPos, const Maybe<uint32_t>& bo
             return false;
     }
 
-    // Emit an annotated nop so IonBuilder can recognize the 'do' loop.
-    if (!bce_->newSrcNote(SRC_WHILE, &noteIndex_))
-        return false;
+    // We need a nop here to make it possible to set a breakpoint on `do`.
     if (!bce_->emit1(JSOP_NOP))
         return false;
 
-    if (!bce_->newSrcNote(SRC_WHILE, &noteIndex2_))
+    // Emit an annotated nop so IonBuilder can recognize the 'do' loop.
+    if (!bce_->newSrcNote3(SRC_DO_WHILE, 0, 0, &noteIndex_))
         return false;
 
     loopInfo_.emplace(bce_, StatementKind::DoLoop);
@@ -84,18 +83,13 @@ DoWhileEmitter::emitEnd()
 
     // Update the annotations with the update and back edge positions, for
     // IonBuilder.
-    //
-    // Be careful: We must set noteIndex2_ before_ noteIndex in case the
-    // noteIndex_ note gets bigger.  Otherwise noteIndex2_ can point wrong
-    // position.
-    if (!bce_->setSrcNoteOffset(noteIndex2_, SrcNote::DoWhile2::BackJumpOffset,
-                                loopInfo_->loopEndOffsetFromLoopHead()))
+    if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::DoWhile::CondOffset,
+                                loopInfo_->continueTargetOffsetFromLoopHead()))
     {
         return false;
     }
-    // +1 for NOP in emitBody.
-    if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::DoWhile1::CondOffset,
-                                loopInfo_->continueTargetOffsetFromLoopHead() + 1))
+    if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::DoWhile::BackJumpOffset,
+                                loopInfo_->loopEndOffsetFromLoopHead()))
     {
         return false;
     }

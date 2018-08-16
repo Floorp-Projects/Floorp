@@ -21,7 +21,6 @@ menucaption {
   -moz-appearance: menuitem;
   -moz-box-align: center;
   max-width: 42em;
-  color: MenuText;
   list-style-image: none;
   -moz-image-region: auto;
 }

@@ -20,7 +20,6 @@ menuitem,
 menucaption {
   -moz-appearance: menuitem;
   -moz-box-align: center;
-  color: MenuText;
   list-style-image: none;
   -moz-image-region: auto;
 }
