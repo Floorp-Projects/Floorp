@@ -13,7 +13,6 @@ info: |
         ...
         b. If settingConfigFalse is true, throw a TypeError exception.
     ...
-features: [Proxy]
 ---*/
 
 var target = {};

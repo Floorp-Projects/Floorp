@@ -7,7 +7,6 @@ description: >
 
     8. If trap is undefined, then Return target.[[Delete]](P).
 flags: [noStrict]
-features: [Proxy]
 ---*/
 
 var target = {

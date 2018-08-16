@@ -9,7 +9,6 @@ info: |
 
     ...
     7. Return undefined.
-features: [Proxy]
 ---*/
 
 var r = Proxy.revocable({}, {});

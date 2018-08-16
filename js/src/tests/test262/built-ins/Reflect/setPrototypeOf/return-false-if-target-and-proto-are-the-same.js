@@ -17,7 +17,6 @@ info: |
     a. If p is null, let done be true.
     b. Else, if SameValue(p, O) is true, return false.
   ...
-features: [Reflect, Reflect.setPrototypeOf]
 ---*/
 
 var o1 = {};

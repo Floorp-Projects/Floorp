@@ -6,7 +6,6 @@ description: >
     [[Delete]] (P)
 
     14. If targetDesc is undefined, return true.
-features: [Proxy]
 ---*/
 
 var p = new Proxy({}, {

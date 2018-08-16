@@ -378,34 +378,23 @@ skip script test262/language/expressions/prefix-decrement/target-cover-newtarget
 skip script test262/language/expressions/prefix-decrement/non-simple.js
 skip script test262/language/asi/S7.9_A5.7_T1.js
 
-# Dependent on evalInWorker, setSharedArrayBuffer, and getSharedArrayBuffer; plus:
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1349863 - Enable test262 agent tests in browser
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1470490 - Rename Atomics.wake to Atomics.notify
-skip include test262/built-ins/Atomics/notify/jstests.list
-skip script test262/built-ins/Atomics/wait/false-for-timeout-agent.js
-skip script test262/built-ins/Atomics/wait/nan-for-timeout.js
-skip script test262/built-ins/Atomics/wait/negative-timeout-agent.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-no-operation.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-add.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-and.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-compareExchange.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-exchange.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-or.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-store.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-sub.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-xor.js
-skip script test262/built-ins/Atomics/wait/null-for-timeout-agent.js
-skip script test262/built-ins/Atomics/wait/object-for-timeout-agent.js
-skip script test262/built-ins/Atomics/wait/poisoned-object-for-timeout-throws-agent.js
-skip script test262/built-ins/Atomics/wait/symbol-for-index-throws-agent.js
-skip script test262/built-ins/Atomics/wait/symbol-for-timeout-throws-agent.js
-skip script test262/built-ins/Atomics/wait/symbol-for-value-throws-agent.js
-skip script test262/built-ins/Atomics/wait/true-for-timeout-agent.js
-skip script test262/built-ins/Atomics/wait/undefined-for-timeout.js
-skip script test262/built-ins/Atomics/wait/undefined-index-defaults-to-zero.js
-skip script test262/built-ins/Atomics/wait/wait-index-value-not-equal.js
-skip script test262/built-ins/Atomics/wait/waiterlist-block-indexedposition-wake.js
-skip script test262/built-ins/Atomics/wait/waiterlist-order-of-operations-is-fifo.js
+# Dependent on evalInWorker, setSharedArrayBuffer, and
+# getSharedArrayBuffer, plus the test cases can't actually run in the
+# browser even if that were fixed, https://bugzil.la/1349863
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/negative-timeout.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/was-woken.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/did-timeout.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/good-views.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/no-spurious-wakeup.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/nan-timeout.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-all.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-zero.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-negative.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-nan.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-two.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-in-order.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-one.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-all-on-loc.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1346081
 skip script test262/intl402/NumberFormat/prototype/format/format-fraction-digits.js
@@ -447,59 +436,13 @@ skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1406171
 skip script test262/built-ins/Reflect/ownKeys/return-on-corresponding-order-large-index.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1469019
-skip script test262/built-ins/Object/fromEntries/to-property-key.js
-skip script test262/built-ins/Object/fromEntries/iterator-closed-for-string-entry.js.js
-skip script test262/built-ins/Object/fromEntries/supports-symbols.js
-skip script test262/built-ins/Object/fromEntries/evaluation-order.js
-skip script test262/built-ins/Object/fromEntries/length.js
-skip script test262/built-ins/Object/fromEntries/uses-keys-not-iterator.js
-skip script test262/built-ins/Object/fromEntries/iterator-not-closed-for-throwing-next.js
-skip script test262/built-ins/Object/fromEntries/uses-define-semantics.js
-skip script test262/built-ins/Object/fromEntries/key-order.js
-skip script test262/built-ins/Object/fromEntries/iterator-closed-for-null-entry.js.js
-skip script test262/built-ins/Object/fromEntries/simple-properties.js
-skip script test262/built-ins/Object/fromEntries/empty-iterable.js
-skip script test262/built-ins/Object/fromEntries/iterator-closed-for-throwing-entry-accessor.js
-skip script test262/built-ins/Object/fromEntries/string-entry-object-succeeds.js
-skip script test262/built-ins/Object/fromEntries/iterator-not-closed-for-throwing-done-accessor.js
-skip script test262/built-ins/Object/fromEntries/prototype.js
-skip script test262/built-ins/Object/fromEntries/iterator-closed-for-throwing-entry-key-tostring.js
-skip script test262/built-ins/Object/fromEntries/name.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1291407
-skip script test262/intl402/ListFormat/prototype/toStringTag/toString.js
-skip script test262/intl402/ListFormat/prototype/toStringTag/toStringTag.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473228
-skip script test262/intl402/RelativeTimeFormat/prototype/toStringTag/toString.js
 skip script test262/intl402/RelativeTimeFormat/prototype/toStringTag/toStringTag.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1473228
-skip script test262/intl402/Segmenter/prototype/toStringTag/toString.js
-skip script test262/intl402/Segmenter/prototype/toStringTag/toStringTag.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473229
-skip include test262/intl402/RelativeTimeFormat/prototype/formatToParts/jstests.list
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1483374
-skip script test262/intl402/NumberFormat/prototype/format/format-negative-numbers.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1483545
-skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-numeric-always.js
-skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-numeric-auto.js
-skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-style-short.js
-skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-long.js
-skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-narrow.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1473230
-skip script test262/intl402/RelativeTimeFormat/prototype/format/unit-plural.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1483547
-skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-short.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1483548
-skip script test262/intl402/RelativeTimeFormat/prototype/format/value-non-finite.js
+skip script test262/intl402/RelativeTimeFormat/prototype/formatToParts/length.js
+skip script test262/intl402/RelativeTimeFormat/prototype/formatToParts/name.js
+skip script test262/intl402/RelativeTimeFormat/prototype/formatToParts/prop-desc.js
 
 
 ###########################################################

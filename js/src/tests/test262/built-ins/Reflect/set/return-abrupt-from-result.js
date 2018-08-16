@@ -9,7 +9,6 @@ info: |
 
   ...
   5. Return target.[[Set]](key, V, receiver).
-features: [Reflect, Reflect.set]
 ---*/
 
 var o1 = {};

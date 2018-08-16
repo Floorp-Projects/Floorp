@@ -8,7 +8,6 @@ info: |
     [[Construct]] ( argumentsList, newTarget)
 
     11. If Type(newObj) is not Object, throw a TypeError exception.
-features: [Proxy]
 ---*/
 
 function Target() {

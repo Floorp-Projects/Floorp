@@ -6,7 +6,7 @@ description: >
     [[Set]] ( P, V, Receiver)
 
     11. If booleanTrapResult is false, return false.
-features: [Proxy, Reflect, Reflect.set]
+features: [Reflect]
 ---*/
 
 var target = {};

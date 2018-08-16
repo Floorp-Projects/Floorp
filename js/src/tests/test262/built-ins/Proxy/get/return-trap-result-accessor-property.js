@@ -6,7 +6,6 @@ description: >
     [[Get]] (P, Receiver)
 
     14. Return trapResult.
-features: [Proxy]
 ---*/
 
 var target = {};

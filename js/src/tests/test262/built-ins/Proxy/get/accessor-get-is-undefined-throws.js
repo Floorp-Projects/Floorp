@@ -13,7 +13,6 @@ info: |
         is false and targetDesc.[[Get]] is undefined, then
             i. If trapResult is not undefined, throw a TypeError exception.
 
-features: [Proxy]
 ---*/
 
 var target = {};

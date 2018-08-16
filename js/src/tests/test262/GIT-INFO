@@ -1,5 +1,7 @@
-commit 60b9467630a7b4899058e3ad74eb88c3ecb08a40
-Author: Kevin Gibbons <bakkot@gmail.com>
-Date:   Fri Aug 10 23:16:46 2018 -0700
+commit e9a5a7f918c0f9c4a9f1224d25a6d55147953225
+Author: test262-automation <40212386+test262-automation@users.noreply.github.com>
+Date:   Tue Jul 3 15:59:58 2018 -0400
 
-    Two more simple tests
+    [javascriptcore-test262-automation] changes from git@github.com:WebKit/webkit.git at sha 949e26452cfa153a7f4afe593da97e2fe9e1b706 on Tue Jul 03 2018 14:35:15 GMT-0400 (Eastern Daylight Time) (#1620)
+    
+    * [javascriptcore-test262-automation] changes from git@github.com:WebKit/webkit.git at sha 949e26452cfa153a7f4afe593da97e2fe9e1b706 on Tue Jul 03 2018 14:35:15 GMT-0400 (Eastern Daylight Time)

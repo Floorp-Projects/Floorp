@@ -11,7 +11,6 @@ info: |
     8. Let handlerProto be Call(trap, handler, «target»).
     ...
 
-features: [Proxy]
 ---*/
 
 var _handler, _target;

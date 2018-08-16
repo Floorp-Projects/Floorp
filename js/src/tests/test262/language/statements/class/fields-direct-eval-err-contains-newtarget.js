@@ -5,7 +5,7 @@
 /*---
 description: error if `new.target` in StatementList of eval (direct eval)
 esid: sec-performeval-rules-in-initializer
-features: [class, class-fields-public, new.target]
+features: [class, class-fields-public]
 flags: [generated]
 info: |
     Additional Early Error Rules for Eval Inside Initializer

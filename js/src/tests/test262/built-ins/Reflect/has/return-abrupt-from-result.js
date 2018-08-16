@@ -9,7 +9,7 @@ info: |
 
   ...
   4. Return target.[[HasProperty]](key).
-features: [Proxy, Reflect]
+features: [Proxy]
 ---*/
 
 var o = {};

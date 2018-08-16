@@ -15,7 +15,6 @@ info: |
             TypeError exception.
         ...
     14. Return trapResult.
-features: [Proxy]
 ---*/
 
 var target = {};

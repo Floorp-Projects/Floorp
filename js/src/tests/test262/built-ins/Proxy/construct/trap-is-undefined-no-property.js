@@ -10,7 +10,7 @@ info: |
 
     7. If trap is undefined, then
         b. Return Construct(target, argumentsList, newTarget).
-features: [new.target, Proxy, Reflect, Reflect.construct]
+features: [Reflect.construct]
 ---*/
 
 var calls = 0;

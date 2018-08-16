@@ -16,7 +16,6 @@ info: |
 
   2. Let func be ? GetV(V, P).
   3. If func is either undefined or null, return undefined.
-features: [Proxy]
 ---*/
 
 var proxy, called, value;

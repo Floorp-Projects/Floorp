@@ -10,7 +10,7 @@ info: |
   ...
   2. Return target.[[GetPrototypeOf]]().
   ...
-features: [Proxy, Reflect]
+features: [Proxy]
 ---*/
 
 var o1 = {};

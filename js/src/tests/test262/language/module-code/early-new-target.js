@@ -9,7 +9,6 @@ flags: [module]
 negative:
   phase: parse
   type: SyntaxError
-features: [new.target]
 ---*/
 
 throw "Test262: This statement should not be evaluated.";
