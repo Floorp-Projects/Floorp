@@ -474,9 +474,6 @@ skip script test262/intl402/Segmenter/prototype/toStringTag/toStringTag.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473229
 skip include test262/intl402/RelativeTimeFormat/prototype/formatToParts/jstests.list
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1483374
-skip script test262/intl402/NumberFormat/prototype/format/format-negative-numbers.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1483545
 skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-numeric-always.js
 skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-numeric-auto.js
