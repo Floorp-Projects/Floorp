@@ -9,13 +9,16 @@ import android.webkit.WebView
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.ktx.kotlin.toBundle
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.experimental.launch
 
 /**
  * WebView-based EngineSession implementation.
  */
+@Suppress("TooManyFunctions")
 class SystemEngineSession : EngineSession() {
     internal var view: WeakReference<SystemEngineView>? = null
     internal var scheduledLoad = ScheduledLoad(null)
+    internal var trackingProtectionEnabled = false
 
     /**
      * See [EngineSession.loadUrl]
@@ -28,6 +31,7 @@ class SystemEngineSession : EngineSession() {
             // this session gets linked to a WebView. See: EngineView.render(session).
             scheduledLoad = ScheduledLoad(url)
         } else {
+            view?.get()?.currentUrl = url
             internalView.loadUrl(url)
         }
     }
@@ -92,6 +96,32 @@ class SystemEngineSession : EngineSession() {
      */
     override fun restoreState(state: Map<String, Any>) {
         currentView()?.restoreState(state.toBundle())
+    }
+
+    /**
+     * See [EngineSession.enableTrackingProtection]
+     *
+     * Note that specifying tracking protection policies at run-time is
+     * not supported by [SystemEngine]. Tracking protection is always active
+     * for all URLs provided in domain_blacklist.json and domain_overrides.json,
+     * which both support specifying categories.
+     */
+    override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
+        currentView()?.let {
+            // Make sure Url matcher is preloaded now that tracking protection is enabled
+            launch { SystemEngineView.getOrCreateUrlMatcher(it.context) }
+        }
+
+        trackingProtectionEnabled = true
+        notifyObservers { onTrackerBlockingEnabledChange(true) }
+    }
+
+    /**
+     * See [EngineSession.disableTrackingProtection]
+     */
+    override fun disableTrackingProtection() {
+        trackingProtectionEnabled = false
+        notifyObservers { onTrackerBlockingEnabledChange(false) }
     }
 
     internal fun currentView(): WebView? {

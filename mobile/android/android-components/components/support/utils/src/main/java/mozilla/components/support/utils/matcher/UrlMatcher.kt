@@ -29,7 +29,7 @@ class UrlMatcher : SharedPreferences.OnSharedPreferenceChangeListener {
     private val previouslyUnmatched = HashSet<String>()
     private var blockWebfonts = true
 
-    internal constructor(patterns: Array<String>) {
+    constructor(patterns: Array<String>) {
         categoryPrefMap = mapOf("default" to "default")
         categories = HashMap()
         whiteList = null

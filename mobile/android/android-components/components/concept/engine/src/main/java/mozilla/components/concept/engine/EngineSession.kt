@@ -127,12 +127,12 @@ abstract class EngineSession(
      *
      * @param policy the tracking protection policy to use, defaults to blocking all trackers.
      */
-    open fun enableTrackingProtection(policy: TrackingProtectionPolicy = TrackingProtectionPolicy.all()) = Unit
+    abstract fun enableTrackingProtection(policy: TrackingProtectionPolicy = TrackingProtectionPolicy.all())
 
     /**
      * Disables tracking protection for this engine session.
      */
-    open fun disableTrackingProtection() = Unit
+    abstract fun disableTrackingProtection()
 
     /**
      * Close the session. This may free underlying objects. Call this when you are finished using

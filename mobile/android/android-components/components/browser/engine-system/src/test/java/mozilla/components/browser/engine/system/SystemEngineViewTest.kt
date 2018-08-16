@@ -4,17 +4,21 @@
 
 package mozilla.components.browser.engine.system
 
+import android.net.Uri
 import android.net.http.SslCertificate
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.utils.matcher.UrlMatcher
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
@@ -146,5 +150,47 @@ class SystemEngineViewTest {
             1337)
 
         assertTrue(observerNotified)
+    }
+
+    @Test
+    fun testWebViewClientTrackingProtection() {
+        SystemEngineView.URL_MATCHER = UrlMatcher(arrayOf("blocked.random"))
+
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.render(engineSession)
+
+        val webViewClient = engineView.currentWebView.webViewClient
+        val invalidRequest = mock(WebResourceRequest::class.java)
+        `when`(invalidRequest.isForMainFrame).thenReturn(false)
+        `when`(invalidRequest.url).thenReturn(Uri.parse("market://foo.bar/"))
+
+        var response = webViewClient.shouldInterceptRequest(engineView.currentWebView, invalidRequest)
+        assertNull(response)
+
+        engineSession.trackingProtectionEnabled = true
+        response = webViewClient.shouldInterceptRequest(engineView.currentWebView, invalidRequest)
+        assertNotNull(response)
+        assertNull(response.data)
+        assertNull(response.encoding)
+        assertNull(response.mimeType)
+
+        val faviconRequest = mock(WebResourceRequest::class.java)
+        `when`(faviconRequest.isForMainFrame).thenReturn(false)
+        `when`(faviconRequest.url).thenReturn(Uri.parse("http://foo/favicon.ico"))
+        response = webViewClient.shouldInterceptRequest(engineView.currentWebView, faviconRequest)
+        assertNotNull(response)
+        assertNull(response.data)
+        assertNull(response.encoding)
+        assertNull(response.mimeType)
+
+        val blockedRequest = mock(WebResourceRequest::class.java)
+        `when`(blockedRequest.isForMainFrame).thenReturn(false)
+        `when`(blockedRequest.url).thenReturn(Uri.parse("http://blocked.random"))
+        response = webViewClient.shouldInterceptRequest(engineView.currentWebView, blockedRequest)
+        assertNotNull(response)
+        assertNull(response.data)
+        assertNull(response.encoding)
+        assertNull(response.mimeType)
     }
 }

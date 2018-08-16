@@ -2,8 +2,13 @@ package mozilla.components.browser.engine.system
 
 import android.os.Bundle
 import android.webkit.WebView
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.support.utils.matcher.UrlMatcher
 import org.junit.Assert
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
@@ -28,11 +33,7 @@ class SystemEngineSessionTest {
 
         var observedProgress = 0
         engineSession.register(object : EngineSession.Observer {
-            override fun onLoadingStateChange(loading: Boolean) { }
-            override fun onLocationChange(url: String) { }
             override fun onProgress(progress: Int) { observedProgress = progress }
-            override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) { }
-            override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {}
         })
 
         engineView.currentWebView.webChromeClient.onProgressChanged(null, 100)
@@ -116,6 +117,20 @@ class SystemEngineSessionTest {
     }
 
     @Test
+    fun testGoForward() {
+        val engineSession = spy(SystemEngineSession())
+        val webView = mock(WebView::class.java)
+
+        engineSession.goForward()
+        verify(webView, never()).goForward()
+
+        `when`(engineSession.currentView()).thenReturn(webView)
+
+        engineSession.goForward()
+        verify(webView).goForward()
+    }
+
+    @Test
     fun testSaveState() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
@@ -141,5 +156,46 @@ class SystemEngineSessionTest {
 
         engineSession.restoreState(emptyMap())
         verify(webView).restoreState(any(Bundle::class.java))
+    }
+
+    @Test
+    fun testEnableTrackingProtection() {
+        SystemEngineView.URL_MATCHER = UrlMatcher(arrayOf(""))
+
+        val engineSession = spy(SystemEngineSession())
+        val webView = mock(WebView::class.java)
+        `when`(webView.context).thenReturn(RuntimeEnvironment.application)
+        `when`(engineSession.currentView()).thenReturn(webView)
+
+        var enabledObserved: Boolean? = null
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
+                enabledObserved = enabled
+            }
+        })
+
+        assertFalse(engineSession.trackingProtectionEnabled)
+        runBlocking { engineSession.enableTrackingProtection() }
+        assertTrue(engineSession.trackingProtectionEnabled)
+        assertNotNull(enabledObserved)
+        assertTrue(enabledObserved!!)
+    }
+
+    @Test
+    fun testDisableTrackingProtection() {
+        val engineSession = spy(SystemEngineSession())
+        var enabledObserved: Boolean? = null
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
+                enabledObserved = enabled
+            }
+        })
+
+        engineSession.trackingProtectionEnabled = true
+
+        engineSession.disableTrackingProtection()
+        assertFalse(engineSession.trackingProtectionEnabled)
+        assertNotNull(enabledObserved)
+        assertFalse(enabledObserved!!)
     }
 }

@@ -148,7 +148,7 @@ class EngineObserverTest {
         observer.onTrackerBlocked("tracker2")
         assertEquals(listOf("tracker1", "tracker2"), session.trackersBlocked)
 
-        observer.onLocationChange("https://getpocket.com")
+        observer.onLoadingStateChange(true)
         assertEquals(emptyList<String>(), session.trackersBlocked)
     }
 }

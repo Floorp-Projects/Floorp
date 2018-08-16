@@ -16,7 +16,6 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
         session.url = url
         session.searchTerms = ""
         session.title = ""
-        session.trackersBlocked = emptyList()
     }
 
     override fun onTitleChange(title: String) {
@@ -29,6 +28,9 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
 
     override fun onLoadingStateChange(loading: Boolean) {
         session.loading = loading
+        if (loading) {
+            session.trackersBlocked = emptyList()
+        }
     }
 
     override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) {
