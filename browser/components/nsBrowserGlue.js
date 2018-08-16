@@ -131,6 +131,16 @@ let ACTORS = {
     },
   },
 
+  LightweightTheme: {
+    child: {
+      module: "resource:///actors/LightweightThemeChild.jsm",
+      matches: ["about:home", "about:newtab", "about:welcome"],
+      events: {
+        "pageshow": {mozSystemGroup: true},
+      },
+    },
+  },
+
   LinkHandler: {
     child: {
       module: "resource:///actors/LinkHandlerChild.jsm",
