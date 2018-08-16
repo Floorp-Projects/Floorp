@@ -16,7 +16,7 @@ interface nsIFile;
 
 /**
  * A set of interfaces for recording the cycle collector's work. An instance
- * of @mozilla.org/cycle-collector-logger;1 can be configured to enable various
+ * of nsICycleCollectorListener can be configured to enable various
  * options, then passed to the cycle collector when it runs.
  * Note that additional logging options are available by setting environment
  * variables, as described at the top of nsCycleCollector.cpp.
@@ -24,7 +24,7 @@ interface nsIFile;
 
 /**
  * nsICycleCollectorHandler is the interface JS code should implement to
- * receive the results logged by a @mozilla.org/cycle-collector-logger;1
+ * receive the results logged by an nsICycleCollectorListener
  * instance. Pass an instance of this to the logger's 'processNext' method
  * after the collection has run. This will describe the objects the cycle
  * collector visited, the edges it found, and the conclusions it reached
@@ -98,8 +98,10 @@ interface nsICycleCollectorLogSink : nsISupports
  *
  * To analyze cycle collection data in JS:
  *
- * - Create an instance of @mozilla.org/cycle-collector-logger;1, which
- *   implements this interface.
+ * - Create an instance of nsICycleCollectorListener, which implements this
+ *   interface. In C++, this can be done by calling
+ *   nsCycleCollector_createLogger(). In JS, this can be done by calling
+ *   Components.utils.createCCLogger().
  *
  * - Set its |disableLog| property to true. This prevents the logger from
  *   printing messages about each method call to a temporary log file.

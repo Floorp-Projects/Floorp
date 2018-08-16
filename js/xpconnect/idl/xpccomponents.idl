@@ -297,6 +297,14 @@ interface nsIXPCComponents_Utils : nsISupports
     void forceCC([optional] in nsICycleCollectorListener aListener);
 
     /*
+     * To be called from JS only.  C++ callers should use the
+     * nsCycleCollector_createLogger() function instead.
+     *
+     * Create an instance of the built-in cycle collector logger object.
+     */
+    nsICycleCollectorListener createCCLogger();
+
+    /*
      * To be called from JS only.
      *
      * If any incremental CC is in progress, finish it. For testing.

@@ -2050,18 +2050,11 @@ private:
 
 NS_IMPL_ISUPPORTS(nsCycleCollectorLogger, nsICycleCollectorListener)
 
-nsresult
-nsCycleCollectorLoggerConstructor(nsISupports* aOuter,
-                                  const nsIID& aIID,
-                                  void** aInstancePtr)
+already_AddRefed<nsICycleCollectorListener>
+nsCycleCollector_createLogger()
 {
-  if (NS_WARN_IF(aOuter)) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
-  nsISupports* logger = new nsCycleCollectorLogger();
-
-  return logger->QueryInterface(aIID, aInstancePtr);
+  nsCOMPtr<nsICycleCollectorListener> logger = new nsCycleCollectorLogger();
+  return logger.forget();
 }
 
 static bool
