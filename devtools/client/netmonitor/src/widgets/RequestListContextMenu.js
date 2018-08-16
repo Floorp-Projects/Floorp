@@ -17,7 +17,7 @@ const {
 loader.lazyRequireGetter(this, "Curl", "devtools/client/shared/curl", true);
 loader.lazyRequireGetter(this, "saveAs", "devtools/client/shared/file-saver", true);
 loader.lazyRequireGetter(this, "copyString", "devtools/shared/platform/clipboard", true);
-loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
+loader.lazyRequireGetter(this, "showMenu", "devtools/client/netmonitor/src/utils/menu", true);
 loader.lazyRequireGetter(this, "openRequestInTab", "devtools/client/netmonitor/src/utils/firefox/open-request-in-tab", true);
 loader.lazyRequireGetter(this, "HarMenuUtils", "devtools/client/netmonitor/src/har/har-menu-utils", true);
 
