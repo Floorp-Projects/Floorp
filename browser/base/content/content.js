@@ -16,6 +16,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 var global = this;
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  ContentLinkHandler: "resource:///modules/ContentLinkHandler.jsm",
   ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
   LoginFormFactory: "resource://gre/modules/LoginManagerContent.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
@@ -59,6 +60,7 @@ addEventListener("DOMAutoComplete", function(event) {
   LoginManagerContent.onUsernameInput(event);
 });
 
+new ContentLinkHandler(this);
 ContentMetaHandler.init(this);
 
 // This is a temporary hack to prevent regressions (bug 1471327).
