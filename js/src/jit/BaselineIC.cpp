@@ -548,6 +548,28 @@ ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     return tailCallVM(DoToNumberFallbackInfo, masm);
 }
 
+static void
+StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub)
+{
+    // Before the new script properties analysis has been performed on a type,
+    // all instances of that type have the maximum number of fixed slots.
+    // Afterwards, the objects (even the preliminary ones) might be changed
+    // to reduce the number of fixed slots they have. If we generate stubs for
+    // both the old and new number of fixed slots, the stub will look
+    // polymorphic to IonBuilder when it is actually monomorphic. To avoid
+    // this, strip out any stubs for preliminary objects before attaching a new
+    // stub which isn't on a preliminary object.
+
+    for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
+        if (iter->isCacheIR_Regular() && iter->toCacheIR_Regular()->hasPreliminaryObject())
+            iter.unlink(cx);
+        else if (iter->isCacheIR_Monitored() && iter->toCacheIR_Monitored()->hasPreliminaryObject())
+            iter.unlink(cx);
+        else if (iter->isCacheIR_Updated() && iter->toCacheIR_Updated()->hasPreliminaryObject())
+            iter.unlink(cx);
+    }
+}
+
 //
 // GetElem_Fallback
 //
@@ -763,22 +785,6 @@ ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     pushStubPayload(masm, R0.scratchReg());
 
     return tailCallVM(DoGetElemFallbackInfo, masm);
-}
-
-void
-LoadTypedThingLength(MacroAssembler& masm, TypedThingLayout layout, Register obj, Register result)
-{
-    switch (layout) {
-      case Layout_TypedArray:
-        masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), result);
-        break;
-      case Layout_OutlineTypedObject:
-      case Layout_InlineTypedObject:
-        masm.loadTypedObjectLength(obj, result);
-        break;
-      default:
-        MOZ_CRASH();
-    }
 }
 
 static void
@@ -1432,28 +1438,6 @@ ICGetIntrinsic_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 //
 // GetProp_Fallback
 //
-
-void
-StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub)
-{
-    // Before the new script properties analysis has been performed on a type,
-    // all instances of that type have the maximum number of fixed slots.
-    // Afterwards, the objects (even the preliminary ones) might be changed
-    // to reduce the number of fixed slots they have. If we generate stubs for
-    // both the old and new number of fixed slots, the stub will look
-    // polymorphic to IonBuilder when it is actually monomorphic. To avoid
-    // this, strip out any stubs for preliminary objects before attaching a new
-    // stub which isn't on a preliminary object.
-
-    for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
-        if (iter->isCacheIR_Regular() && iter->toCacheIR_Regular()->hasPreliminaryObject())
-            iter.unlink(cx);
-        else if (iter->isCacheIR_Monitored() && iter->toCacheIR_Monitored()->hasPreliminaryObject())
-            iter.unlink(cx);
-        else if (iter->isCacheIR_Updated() && iter->toCacheIR_Updated()->hasPreliminaryObject())
-            iter.unlink(cx);
-    }
-}
 
 static bool
 ComputeGetPropResult(JSContext* cx, BaselineFrame* frame, JSOp op, HandlePropertyName name,
@@ -5192,10 +5176,8 @@ ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 // NewObject_Fallback
 //
 static bool
-DoNewObject(JSContext* cx, void* payload, ICNewObject_Fallback* stub, MutableHandleValue res)
+DoNewObject(JSContext* cx, BaselineFrame* frame, ICNewObject_Fallback* stub, MutableHandleValue res)
 {
-    SharedStubInfo info(cx, payload, stub->icEntry());
-
     FallbackICSpew(cx, stub, "NewObject");
 
     RootedObject obj(cx);
@@ -5205,8 +5187,8 @@ DoNewObject(JSContext* cx, void* payload, ICNewObject_Fallback* stub, MutableHan
         MOZ_ASSERT(!templateObject->group()->maybePreliminaryObjectsDontCheckGeneration());
         obj = NewObjectOperationWithTemplate(cx, templateObject);
     } else {
-        HandleScript script = info.script();
-        jsbytecode* pc = info.pc();
+        RootedScript script(cx, frame->script());
+        jsbytecode* pc = stub->icEntry()->pc(script);
         obj = NewObjectOperation(cx, script, pc);
 
         if (obj && !obj->isSingleton() &&
@@ -5218,7 +5200,6 @@ DoNewObject(JSContext* cx, void* payload, ICNewObject_Fallback* stub, MutableHan
 
             if (!JitOptions.disableCacheIR) {
                 bool attached = false;
-                RootedScript script(cx, info.outerScript(cx));
                 NewObjectIRGenerator gen(cx, script, pc, stub->state().mode(), JSOp(*pc), templateObject);
                 if (gen.tryAttachStub()) {
                     ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
@@ -5239,7 +5220,7 @@ DoNewObject(JSContext* cx, void* payload, ICNewObject_Fallback* stub, MutableHan
     return true;
 }
 
-typedef bool(*DoNewObjectFn)(JSContext*, void*, ICNewObject_Fallback*, MutableHandleValue);
+typedef bool(*DoNewObjectFn)(JSContext*, BaselineFrame*, ICNewObject_Fallback*, MutableHandleValue);
 static const VMFunction DoNewObjectInfo =
     FunctionInfo<DoNewObjectFn>(DoNewObject, "DoNewObject", TailCall);
 

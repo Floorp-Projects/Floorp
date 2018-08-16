@@ -4796,26 +4796,6 @@ class LStringReplace: public LCallInstructionHelper<1, 3, 0>
     }
 };
 
-class LBinarySharedStub : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
-{
-  public:
-    LIR_HEADER(BinarySharedStub)
-
-    LBinarySharedStub(const LBoxAllocation& lhs, const LBoxAllocation& rhs)
-      : LCallInstructionHelper(classOpcode)
-    {
-        setBoxOperand(LhsInput, lhs);
-        setBoxOperand(RhsInput, rhs);
-    }
-
-    const MBinarySharedStub* mir() const {
-        return mir_->toBinarySharedStub();
-    }
-
-    static const size_t LhsInput = 0;
-    static const size_t RhsInput = BOX_PIECES;
-};
-
 class LBinaryCache : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 2>
 {
   public:

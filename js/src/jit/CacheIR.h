@@ -422,6 +422,13 @@ enum class GuardClassKind : uint8_t
 // zone, which refer to the actual shape via a reserved slot.
 JSObject* NewWrapperWithObjectShape(JSContext* cx, HandleNativeObject obj);
 
+// Enum for stubs handling a combination of typed arrays and typed objects.
+enum TypedThingLayout {
+    Layout_TypedArray,
+    Layout_OutlineTypedObject,
+    Layout_InlineTypedObject
+};
+
 void LoadShapeWrapperContents(MacroAssembler& masm, Register obj, Register dst, Label* failure);
 
 // Class to record CacheIR + some additional metadata for code generation.
@@ -1975,6 +1982,35 @@ class MOZ_RAII NewObjectIRGenerator : public IRGenerator
 
     bool tryAttachStub();
 };
+
+static inline uint32_t
+SimpleTypeDescrKey(SimpleTypeDescr* descr)
+{
+    if (descr->is<ScalarTypeDescr>())
+        return uint32_t(descr->as<ScalarTypeDescr>().type()) << 1;
+    return (uint32_t(descr->as<ReferenceTypeDescr>().type()) << 1) | 1;
+}
+
+inline bool
+SimpleTypeDescrKeyIsScalar(uint32_t key)
+{
+    return !(key & 1);
+}
+
+inline ScalarTypeDescr::Type
+ScalarTypeFromSimpleTypeDescrKey(uint32_t key)
+{
+    MOZ_ASSERT(SimpleTypeDescrKeyIsScalar(key));
+    return ScalarTypeDescr::Type(key >> 1);
+}
+
+inline ReferenceType
+ReferenceTypeFromSimpleTypeDescrKey(uint32_t key)
+{
+    MOZ_ASSERT(!SimpleTypeDescrKeyIsScalar(key));
+    return ReferenceType(key >> 1);
+}
+
 
 } // namespace jit
 } // namespace js

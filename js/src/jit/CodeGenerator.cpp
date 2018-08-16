@@ -2940,34 +2940,6 @@ CodeGenerator::visitBinaryCache(LBinaryCache* lir)
 }
 
 void
-CodeGenerator::visitBinarySharedStub(LBinarySharedStub* lir)
-{
-    JSOp jsop = JSOp(*lir->mirRaw()->toInstruction()->resumePoint()->pc());
-    switch (jsop) {
-      case JSOP_ADD:
-      case JSOP_SUB:
-      case JSOP_MUL:
-      case JSOP_DIV:
-      case JSOP_MOD:
-      case JSOP_POW:
-        emitSharedStub(ICStub::Kind::BinaryArith_Fallback, lir);
-        break;
-      case JSOP_LT:
-      case JSOP_LE:
-      case JSOP_GT:
-      case JSOP_GE:
-      case JSOP_EQ:
-      case JSOP_NE:
-      case JSOP_STRICTEQ:
-      case JSOP_STRICTNE:
-        emitSharedStub(ICStub::Kind::Compare_Fallback, lir);
-        break;
-      default:
-        MOZ_CRASH("Unsupported jsop in shared stubs.");
-    }
-}
-
-void
 CodeGenerator::visitUnaryCache(LUnaryCache* lir)
 {
     LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
