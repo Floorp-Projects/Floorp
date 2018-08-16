@@ -49,7 +49,7 @@ add_task(async function() {
     const value = UNITS[unit];
 
     info(`Convert font-size from ${prevValue}${prevUnit} to ${unit}`);
-    const convertedValue = await view.convertUnits(prevValue, prevUnit, unit);
+    const convertedValue = await view.convertUnits(property, prevValue, prevUnit, unit);
     is(convertedValue, value, `Converting to ${unit} returns transformed value.`);
 
     // Store current unit and value to use in conversion on the next iteration.
@@ -58,14 +58,14 @@ add_task(async function() {
   }
 
   info(`Check that conversion from fake unit returns 1-to-1 mapping.`);
-  const valueFromFakeUnit = await view.convertUnits(1, "fake", "px");
+  const valueFromFakeUnit = await view.convertUnits(property, 1, "fake", "px");
   is(valueFromFakeUnit, 1, `Converting from fake unit returns same value.`);
 
   info(`Check that conversion to fake unit returns 1-to-1 mapping`);
-  const valueToFakeUnit = await view.convertUnits(1, "px", "fake");
+  const valueToFakeUnit = await view.convertUnits(property, 1, "px", "fake");
   is(valueToFakeUnit, 1, `Converting to fake unit returns same value.`);
 
   info(`Check that conversion between fake units returns 1-to-1 mapping.`);
-  const valueBetweenFakeUnit = await view.convertUnits(1, "bogus", "fake");
+  const valueBetweenFakeUnit = await view.convertUnits(property, 1, "bogus", "fake");
   is(valueBetweenFakeUnit, 1, `Converting between fake units returns same value.`);
 });
