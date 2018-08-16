@@ -28,6 +28,7 @@ class nsAtom;
 class nsIPresShell;
 class nsIURI;
 class nsSVGClipPathFrame;
+class nsSVGMarkerFrame;
 class nsSVGPaintServerFrame;
 class nsSVGFilterFrame;
 class nsSVGMaskFrame;
@@ -688,11 +689,12 @@ public:
                                                nsStyleSVGPaint nsStyleSVG::* aPaint);
 
   /**
-   * Get an SVGMarkerObserver for the frame, creating a fresh one if necessary
+   * Get the start/mid/end-markers for the given frame, and add the frame as
+   * an observer to those markers.  Returns true if at least one marker type is
+   * found, false otherwise.
    */
-  static SVGMarkerObserver *
-  GetMarkerProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-    const mozilla::FramePropertyDescriptor<SVGMarkerObserver>* aProperty);
+  static bool
+  GetMarkerFrames(nsIFrame* aMarkedFrame, nsSVGMarkerFrame*(*aFrames)[3]);
 
   /**
    * Get the SVGGeometryElement that is referenced by aTextPathFrame, and make
