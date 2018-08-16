@@ -379,11 +379,18 @@ var ContentBlocking = {
   },
 
   cancelAnimation() {
-    let iconAnimation = this.animatedIcon.getAnimations()[0];
-    if (iconAnimation && iconAnimation.currentTime) {
-      iconAnimation.cancel();
+    if (!this.iconBox.hasAttribute("animate")) {
+      return;
     }
-    this.iconBox.removeAttribute("animate");
+
+    window.promiseDocumentFlushed(() => {
+      return this.animatedIcon.getAnimations()[0];
+    }).then(iconAnimation => {
+      if (iconAnimation && iconAnimation.currentTime) {
+        iconAnimation.cancel();
+      }
+      this.iconBox.removeAttribute("animate");
+    });
   },
 
   onSecurityChange(state, webProgress, isSimulated) {
