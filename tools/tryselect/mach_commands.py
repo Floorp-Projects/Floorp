@@ -212,8 +212,8 @@ class TrySelect(MachCommandBase):
         the AUTOTRY_PLATFORM_HINT environment variable, if set.
 
         The command requires either its own mercurial extension ("push-to-try",
-        installable from mach mercurial-setup) or a git repo using git-cinnabar
-        (available at https://github.com/glandium/git-cinnabar).
+        installable from mach vcs-setup) or a git repo using git-cinnabar
+        (installable from mach vcs-setup --git).
 
         """
         from tryselect.selectors.syntax import AutoTry

@@ -99,8 +99,8 @@ Source code can be obtained by running
 
     hg clone https://hg.mozilla.org/mozilla-unified
 
-Or, if you prefer Git, you should install git-cinnabar, and follow the
-instruction here to clone from the Mercurial repository:
+Or, if you prefer Git, by following the instruction here to clone from the
+Mercurial repository:
 
     https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-workflow-for-Gecko-development
 
@@ -121,17 +121,26 @@ optimally configured?
 
 Please enter your reply: '''
 
-CLONE_MERCURIAL = '''
-If you would like to clone the mozilla-unified Mercurial repository, please
-enter the destination path below.
+CONFIGURE_GIT = '''
+Mozilla recommends using git-cinnabar to work with mozilla-central.
 
-(If you prefer to use Git, leave this blank.)
+Would you like to run a few configuration steps to ensure Git is
+optimally configured?
+
+  1. Yes
+  2. No
+
+Please enter your reply: '''
+
+CLONE_VCS = '''
+If you would like to clone the {} {} repository, please
+enter the destination path below.
 '''
 
-CLONE_MERCURIAL_PROMPT = '''
-Destination directory for Mercurial clone (leave empty to not clone): '''.lstrip()
+CLONE_VCS_PROMPT = '''
+Destination directory for {} clone (leave empty to not clone): '''.lstrip()
 
-CLONE_MERCURIAL_NOT_EMPTY = '''
+CLONE_VCS_NOT_EMPTY = '''
 ERROR! Destination directory '{}' is not empty.
 
 Would you like to clone to '{}'?
@@ -142,11 +151,11 @@ Would you like to clone to '{}'?
 
 Please enter your reply: '''.lstrip()
 
-CLONE_MERCURIAL_NOT_EMPTY_FALLBACK_FAILED = '''
+CLONE_VCS_NOT_EMPTY_FALLBACK_FAILED = '''
 ERROR! Destination directory '{}' is not empty.
 '''
 
-CLONE_MERCURIAL_NOT_DIR = '''
+CLONE_VCS_NOT_DIR = '''
 ERROR! Destination '{}' exists but is not a directory.
 '''
 
@@ -165,6 +174,16 @@ DEBIAN_DISTROS = (
     '"elementary OS"',
     '"elementary"'
 )
+
+ADD_GIT_TOOLS_PATH = '''
+To add git-cinnabar to the PATH, edit your shell initialization script, which
+may be called ~/.bashrc or ~/.bash_profile or ~/.profile, and add the following
+lines:
+
+    export PATH="{}:$PATH"
+
+Then restart your shell.
+'''
 
 
 class Bootstrapper(object):
@@ -231,11 +250,16 @@ class Bootstrapper(object):
 
         self.instance = cls(**args)
 
-    def input_clone_dest(self):
-        print(CLONE_MERCURIAL)
+    def input_clone_dest(self, with_hg=True):
+        repo_name = 'mozilla-unified'
+        vcs = 'Mercurial'
+        if not with_hg:
+            repo_name = 'gecko'
+            vcs = 'Git'
+        print(CLONE_VCS.format(repo_name, vcs))
 
         while True:
-            dest = raw_input(CLONE_MERCURIAL_PROMPT)
+            dest = raw_input(CLONE_VCS_PROMPT.format(vcs))
             dest = dest.strip()
             if not dest:
                 return ''
@@ -245,18 +269,18 @@ class Bootstrapper(object):
                 return dest
 
             if not os.path.isdir(dest):
-                print(CLONE_MERCURIAL_NOT_DIR.format(dest))
+                print(CLONE_VCS_NOT_DIR.format(dest))
                 continue
 
             if os.listdir(dest) == []:
                 return dest
 
-            newdest = os.path.join(dest, 'mozilla-unified')
+            newdest = os.path.join(dest, repo_name)
             if os.path.exists(newdest):
-                print(CLONE_MERCURIAL_NOT_EMPTY_FALLBACK_FAILED.format(dest))
+                print(CLONE_VCS_NOT_EMPTY_FALLBACK_FAILED.format(dest))
                 continue
 
-            choice = self.instance.prompt_int(prompt=CLONE_MERCURIAL_NOT_EMPTY.format(dest,
+            choice = self.instance.prompt_int(prompt=CLONE_VCS_NOT_EMPTY.format(dest,
                                               newdest), low=1, high=3)
             if choice == 1:
                 return newdest
@@ -360,7 +384,6 @@ class Bootstrapper(object):
         (checkout_type, checkout_root) = r
 
         # Possibly configure Mercurial, but not if the current checkout is Git.
-        # TODO offer to configure Git.
         if hg_installed and state_dir_available and checkout_type != 'git':
             configure_hg = False
             if not self.instance.no_interactive:
@@ -374,6 +397,21 @@ class Bootstrapper(object):
             if configure_hg:
                 configure_mercurial(self.instance.which('hg'), state_dir)
 
+        # Offer to configure Git, if the current checkout is Git.
+        elif self.instance.which('git') and checkout_type == 'git':
+            should_configure_git = False
+            if not self.instance.no_interactive:
+                choice = self.instance.prompt_int(prompt=CONFIGURE_GIT,
+                                                  low=1, high=2)
+                if choice == 1:
+                    should_configure_git = True
+            else:
+                # Assuming default configuration setting applies to all VCS.
+                should_configure_git = self.hg_configure
+
+            if should_configure_git:
+                configure_git(self.instance.which('git'), state_dir)
+
         # Offer to clone if we're not inside a clone.
         have_clone = False
 
@@ -382,7 +420,14 @@ class Bootstrapper(object):
         elif hg_installed and not self.instance.no_interactive:
             dest = self.input_clone_dest()
             if dest:
-                have_clone = clone_firefox(self.instance.which('hg'), dest)
+                have_clone = hg_clone_firefox(self.instance.which('hg'), dest)
+                checkout_root = dest
+        elif self.instance.which('git') and checkout_type == 'git':
+            dest = self.input_clone_dest(False)
+            if dest:
+                git = self.instance.which('git')
+                watchman = self.instance.which('watchman')
+                have_clone = git_clone_firefox(git, dest, watchman)
                 checkout_root = dest
 
         if not have_clone:
@@ -470,7 +515,7 @@ def update_mercurial_repo(hg, url, dest, revision):
         print('=' * 80)
 
 
-def clone_firefox(hg, dest):
+def hg_clone_firefox(hg, dest):
     """Clone the Firefox repository to a specified destination."""
     print('Cloning Firefox Mercurial repository to %s' % dest)
 
@@ -562,3 +607,90 @@ def current_firefox_checkout(check_output, env, hg=None):
             break
 
     return (None, None)
+
+
+def update_git_tools(git, root_state_dir):
+    """Ensure git-cinnabar is up to date."""
+    cinnabar_dir = os.path.join(root_state_dir, 'git-cinnabar')
+
+    # Ensure the latest revision of git-cinnabar is present.
+    update_git_repo(git, 'https://github.com/glandium/git-cinnabar.git',
+                    cinnabar_dir)
+
+    # Perform a download of cinnabar.
+    download_args = [git, 'cinnabar', 'download']
+
+    try:
+        subprocess.check_call(download_args, cwd=cinnabar_dir)
+    except subprocess.CalledProcessError as e:
+        print(e)
+    return cinnabar_dir
+
+
+def update_git_repo(git, url, dest):
+    """Perform a clone/pull + update of a Git repository."""
+    pull_args = [git]
+
+    if os.path.exists(dest):
+        pull_args.extend(['pull'])
+        cwd = dest
+    else:
+        pull_args.extend(['clone', '--no-checkout', url, dest])
+        cwd = '/'
+
+    update_args = [git, 'checkout']
+
+    print('=' * 80)
+    print('Ensuring %s is up to date at %s' % (url, dest))
+
+    try:
+        subprocess.check_call(pull_args, cwd=cwd)
+        subprocess.check_call(update_args, cwd=dest)
+    finally:
+        print('=' * 80)
+
+
+def configure_git(git, root_state_dir):
+    """Run the Git configuration steps."""
+    cinnabar_dir = update_git_tools(git, root_state_dir)
+
+    print(ADD_GIT_TOOLS_PATH.format(cinnabar_dir))
+
+
+def git_clone_firefox(git, dest, watchman=None):
+    """Clone the Firefox repository to a specified destination."""
+    print('Cloning Firefox repository to %s' % dest)
+
+    try:
+        # Configure git per the git-cinnabar requirements.
+        subprocess.check_call([git, 'clone', '-b', 'bookmarks/central',
+                               'hg::https://hg.mozilla.org/mozilla-unified', dest])
+        subprocess.check_call([git, 'remote', 'add', 'inbound',
+                               'hg::ssh://hg.mozilla.org/integration/mozilla-inbound'],
+                              cwd=dest)
+        subprocess.check_call([git, 'config', 'remote.inbound.skipDefaultUpdate',
+                               'true'], cwd=dest)
+        subprocess.check_call([git, 'config', 'remote.inbound.push',
+                               '+HEAD:refs/heads/branches/default/tip'], cwd=dest)
+        subprocess.check_call([git, 'config', 'fetch.prune', 'true'], cwd=dest)
+        subprocess.check_call([git, 'config', 'pull.ff', 'only'], cwd=dest)
+
+        watchman_sample = os.path.join(dest, '.git/hooks/fsmonitor-watchman.sample')
+        # Older versions of git didn't include fsmonitor-watchman.sample.
+        if watchman and watchman_sample:
+            print('Configuring watchman')
+            watchman_config = os.path.join(dest, '.git/hooks/query-watchman')
+            if not os.path.exists(watchman_config):
+                print('Copying %s to %s' % (watchman_sample, watchman_config))
+                copy_args = ['cp', '.git/hooks/fsmonitor-watchman.sample',
+                             '.git/hooks/query-watchman']
+                subprocess.check_call(copy_args, cwd=dest)
+
+            config_args = [git, 'config', 'core.fsmonitor', '.git/hooks/query-watchman']
+            subprocess.check_call(config_args, cwd=dest)
+    except Exception as e:
+        print(e)
+        return False
+
+    print('Firefox source code available at %s' % dest)
+    return True

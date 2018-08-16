@@ -11,7 +11,7 @@ var gStringBundle =
   Services.strings.createBundle("chrome://browser/locale/sitePermissions.properties");
 
 /**
- * A helper module to manage temporarily blocked permissions.
+ * A helper module to manage temporary permissions.
  *
  * Permissions are keyed by browser, so methods take a Browser
  * element to identify the corresponding permission set.
@@ -20,7 +20,7 @@ var gStringBundle =
  * automatically cleared once the browser stops existing
  * (once there are no other references to the browser object);
  */
-const TemporaryBlockedPermissions = {
+const TemporaryPermissions = {
   // This is a three level deep map with the following structure:
   //
   // Browser => {
@@ -38,20 +38,20 @@ const TemporaryBlockedPermissions = {
 
   // Private helper method that bundles some shared behavior for
   // get() and getAll(), e.g. deleting permissions when they have expired.
-  _get(entry, prePath, id, timeStamp) {
-    if (timeStamp == null) {
+  _get(entry, prePath, id, permission) {
+    if (permission == null || permission.timeStamp == null) {
       delete entry[prePath][id];
       return null;
     }
-    if (timeStamp + SitePermissions.temporaryPermissionExpireTime < Date.now()) {
+    if (permission.timeStamp + SitePermissions.temporaryPermissionExpireTime < Date.now()) {
       delete entry[prePath][id];
       return null;
     }
-    return {id, state: SitePermissions.BLOCK, scope: SitePermissions.SCOPE_TEMPORARY};
+    return {id, state: permission.state, scope: SitePermissions.SCOPE_TEMPORARY};
   },
 
   // Sets a new permission for the specified browser.
-  set(browser, id) {
+  set(browser, id, state) {
     if (!browser) {
       return;
     }
@@ -63,7 +63,7 @@ const TemporaryBlockedPermissions = {
     if (!entry[prePath]) {
       entry[prePath] = {};
     }
-    entry[prePath][id] = Date.now();
+    entry[prePath][id] = {timeStamp: Date.now(), state};
   },
 
   // Removes a permission with the specified id for the specified browser.
@@ -292,7 +292,7 @@ var SitePermissions = {
   getAllForBrowser(browser) {
     let permissions = {};
 
-    for (let permission of TemporaryBlockedPermissions.getAll(browser)) {
+    for (let permission of TemporaryPermissions.getAll(browser)) {
       permission.scope = this.SCOPE_TEMPORARY;
       permissions[permission.id] = permission;
     }
@@ -417,6 +417,23 @@ var SitePermissions = {
     return false;
   },
 
+  /*
+   * Return whether SitePermissions is permitted to store a TEMPORARY ALLOW
+   * state for a particular permission.
+   *
+   * @param {string} permissionID
+   *        The ID to get the state for.
+   *
+   * @return boolean Whether storing TEMPORARY ALLOW is permitted.
+   */
+  permitTemporaryAllow(permissionID) {
+    if (permissionID in gPermissionObject &&
+        gPermissionObject[permissionID].permitTemporaryAllow)
+      return gPermissionObject[permissionID].permitTemporaryAllow;
+
+    return false;
+  },
+
   /**
    * Returns the state and scope of a particular permission for a given URI.
    *
@@ -461,7 +478,7 @@ var SitePermissions = {
     if (result.state == defaultState) {
       // If there's no persistent permission saved, check if we have something
       // set temporarily.
-      let value = TemporaryBlockedPermissions.get(browser, permissionID);
+      let value = TemporaryPermissions.get(browser, permissionID);
 
       if (value) {
         result.state = value.state;
@@ -520,9 +537,9 @@ var SitePermissions = {
       // URI and only consider the current browser URI, to avoid notification spamming.
       //
       // If you ever consider removing this line, you likely want to implement
-      // a more fine-grained TemporaryBlockedPermissions that temporarily blocks for the
+      // a more fine-grained TemporaryPermissions that temporarily blocks for the
       // entire browser, but temporarily allows only for specific frames.
-      if (state != this.BLOCK) {
+      if (state != this.BLOCK && !this.permitTemporaryAllow(permissionID)) {
         throw "'Block' is the only permission we can save temporarily on a browser";
       }
 
@@ -530,7 +547,7 @@ var SitePermissions = {
         throw "TEMPORARY scoped permissions require a browser object";
       }
 
-      TemporaryBlockedPermissions.set(browser, permissionID);
+      TemporaryPermissions.set(browser, permissionID, state);
 
       browser.dispatchEvent(new browser.ownerGlobal
                                        .CustomEvent("PermissionStateChange"));
@@ -562,10 +579,10 @@ var SitePermissions = {
     if (this.isSupportedURI(uri))
       Services.perms.remove(uri, permissionID);
 
-    // TemporaryBlockedPermissions.get() deletes expired permissions automatically,
-    if (TemporaryBlockedPermissions.get(browser, permissionID)) {
+    // TemporaryPermissions.get() deletes expired permissions automatically,
+    if (TemporaryPermissions.get(browser, permissionID)) {
       // If it exists but has not expired, remove it explicitly.
-      TemporaryBlockedPermissions.remove(browser, permissionID);
+      TemporaryPermissions.remove(browser, permissionID);
       // Send a PermissionStateChange event only if the permission hasn't expired.
       browser.dispatchEvent(new browser.ownerGlobal
                                        .CustomEvent("PermissionStateChange"));
@@ -579,7 +596,7 @@ var SitePermissions = {
    *        The browser object to clear.
    */
   clearTemporaryPermissions(browser) {
-    TemporaryBlockedPermissions.clear(browser);
+    TemporaryPermissions.clear(browser);
   },
 
   /**
@@ -592,7 +609,7 @@ var SitePermissions = {
    *        The browser object to copy to.
    */
   copyTemporaryPermissions(browser, newBrowser) {
-    TemporaryBlockedPermissions.copy(browser, newBrowser);
+    TemporaryPermissions.copy(browser, newBrowser);
   },
 
   /**
@@ -702,6 +719,7 @@ var gPermissionObject = {
   "autoplay-media": {
     exactHostMatch: true,
     showGloballyBlocked: true,
+    permitTemporaryAllow: true,
     getDefault() {
       let state = Services.prefs.getIntPref("media.autoplay.default",
                                             Ci.nsIAutoplay.PROMPT);

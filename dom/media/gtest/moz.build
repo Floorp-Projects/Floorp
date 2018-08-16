@@ -16,7 +16,6 @@ UNIFIED_SOURCES += [
     'MockMediaResource.cpp',
     'TestAudioBuffers.cpp',
     'TestAudioCompactor.cpp',
-    'TestAudioDeviceEnumerator.cpp',
     'TestAudioMixer.cpp',
     'TestAudioPacketizer.cpp',
     'TestAudioSegment.cpp',
@@ -45,6 +44,11 @@ if CONFIG['MOZ_WEBM_ENCODER']:
     UNIFIED_SOURCES += [
         'TestVideoTrackEncoder.cpp',
         'TestWebMWriter.cpp',
+    ]
+
+if CONFIG['MOZ_WEBRTC']:
+    UNIFIED_SOURCES += [
+        'TestAudioDeviceEnumerator.cpp',
     ]
 
 TEST_HARNESS_FILES.gtest += [

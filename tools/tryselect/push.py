@@ -17,10 +17,9 @@ GIT_CINNABAR_NOT_FOUND = """
 Could not detect `git-cinnabar`.
 
 The `mach try` command requires git-cinnabar to be installed when
-pushing from git. For more information and installation instruction,
-please see:
+pushing from git. Please install it by running:
 
-    https://github.com/glandium/git-cinnabar
+    $ ./mach vcs-setup --git
 """.lstrip()
 
 HG_PUSH_TO_TRY_NOT_FOUND = """
@@ -29,7 +28,7 @@ Could not detect `push-to-try`.
 The `mach try` command requires the push-to-try extension enabled
 when pushing from hg. Please install it by running:
 
-    $ ./mach mercurial-setup
+    $ ./mach vcs-setup
 """.lstrip()
 
 VCS_NOT_FOUND = """

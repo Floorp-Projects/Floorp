@@ -96,7 +96,7 @@ Getting the code, running tests
          just calls code in runtests.py).
 
      * Configure Mercurial with helpful extensions for Mozilla
-       development by running `./mach mercurial-setup`.
+       development by running `./mach vcs-setup`.
 
        * It should install extensions like firefox-trees and set
          you up to be able to use MozReview, our code-review tool.

@@ -1,0 +1,41 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.single_dep:loader
+
+transforms:
+   - taskgraph.transforms.name_sanity:transforms
+   - taskgraph.transforms.beetmover_geckoview:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - build  # geckoview builds aren't signed
+
+only-for-attributes:
+   - nightly
+
+not-for-build-platforms:
+   - linux-nightly/opt
+   - linux64-nightly/opt
+   - macosx64-nightly/opt
+   - win32-nightly/opt
+   - win64-nightly/opt
+   - linux-devedition-nightly/opt
+   - linux64-devedition-nightly/opt
+   - macosx64-devedition-nightly/opt
+   - win32-devedition-nightly/opt
+   - win64-devedition-nightly/opt
+   - linux64-asan-reporter-nightly/opt
+   - win64-asan-reporter-nightly/opt
+
+job-template:
+   # Beetmoving geckoview makes it available to the official maven repo. So we want beetmover to
+   # act only when the release is greenlit.
+   shipping-phase: ship
+   bucket-scope:
+      by-project:
+         mozilla-central: 'project:releng:beetmover:bucket:maven-production'
+         mozilla-beta: 'project:releng:beetmover:bucket:maven-production'
+         mozilla-release: 'project:releng:beetmover:bucket:maven-production'
+         default: 'project:releng:beetmover:bucket:maven-staging'
