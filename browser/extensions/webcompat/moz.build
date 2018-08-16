@@ -21,7 +21,12 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['webextension']['injections
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['webextension']['injections']['js'] += [
-  'webextension/injections/js/bug0000000-dummy-js-injection.js'
+  'webextension/injections/js/bug0000000-dummy-js-injection.js',
+  'webextension/injections/js/bug1452707-window.controllers-shim-ib.absa.co.za.js',
+  'webextension/injections/js/bug1457335-histography.io-ua-change.js',
+  'webextension/injections/js/bug1472075-bankofamerica.com-ua-change.js',
+  'webextension/injections/js/bug1472081-election.gov.np-window.sidebar-shim.js',
+  'webextension/injections/js/bug1482066-portalminasnet.com-window.sidebar-shim.js'
 ]
 
 FINAL_TARGET_PP_FILES.features['webcompat@mozilla.org'] += [

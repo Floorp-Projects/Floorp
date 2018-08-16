@@ -2,11 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "UserAgentOverrides", "resource://gre/modules/UserAgentOverrides.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "eTLDService", "@mozilla.org/network/effective-tld-service;1", "nsIEffectiveTLDService");
 
 class UAOverrider {
   constructor(overrides) {
@@ -17,13 +14,15 @@ class UAOverrider {
   }
 
   initOverrides(overrides) {
-    // on xpcshell tests, there is no impleentation for nsIXULAppInfo, so this
+    // on xpcshell tests, there is no implementation for nsIXULAppInfo, so this
     // might fail there. To have all of our test cases running at all times,
     // assume they are on Desktop for now.
     let currentApplication = "firefox";
     try {
       currentApplication = Services.appinfo.name.toLowerCase();
-    } catch (_) {}
+    } catch (ex) {
+      console.warn("Getting appinfo.name failed, assuming we run on Desktop.", ex);
+    }
 
     for (let override of overrides) {
       // Firefox for Desktop is the default application for all overrides.
@@ -88,8 +87,9 @@ class UAOverrider {
    */
   getBaseDomainFromURI(uri) {
     try {
-      return eTLDService.getBaseDomain(uri);
-    } catch (_) {
+      return Services.eTLD.getBaseDomain(uri);
+    } catch (ex) {
+      console.error(`Could not getBaseDomain() for "${uri}"`, ex);
       return false;
     }
   }
