@@ -51,9 +51,6 @@ class Repackage(BaseScript):
             return self.abs_dirs
         abs_dirs = super(Repackage, self).query_abs_dirs()
         config = self.config
-        for directory in abs_dirs:
-            value = abs_dirs[directory]
-            abs_dirs[directory] = value
 
         dirs = {}
         dirs['abs_tools_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tools')

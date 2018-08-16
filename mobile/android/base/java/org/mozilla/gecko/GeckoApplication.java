@@ -334,6 +334,7 @@ public class GeckoApplication extends Application
         FilePicker.init(context);
         DownloadsIntegration.init();
         HomePanelsManager.getInstance().init(context);
+        AddonUICache.getInstance().init();
 
         GlobalPageMetadata.getInstance().init();
 

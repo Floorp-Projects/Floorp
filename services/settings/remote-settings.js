@@ -208,11 +208,12 @@ async function loadDumpFile(bucket, collection) {
 
 class RemoteSettingsClient {
 
-  constructor(collectionName, { bucketName, signerName, filterFunc = jexlFilterFunc, lastCheckTimePref }) {
+  constructor(collectionName, { bucketName, signerName, filterFunc = jexlFilterFunc, localFields = [], lastCheckTimePref }) {
     this.collectionName = collectionName;
     this.bucketName = bucketName;
     this.signerName = signerName;
     this.filterFunc = filterFunc;
+    this.localFields = localFields;
     this._lastCheckTimePref = lastCheckTimePref;
 
     this._listeners = new Map();
@@ -276,16 +277,25 @@ class RemoteSettingsClient {
 
   /**
    * Open the underlying Kinto collection, using the appropriate adapter and
-   * options. This acts as a context manager where the connection is closed
-   * once the specified `callback` has finished.
-   *
-   * @param {callback} function           the async function to execute with the open SQlite connection.
-   * @param {Object}   options            additional advanced options.
-   * @param {string}   options.hooks      hooks to execute on synchronization (see Kinto.js docs)
+   * options.
    */
-  async openCollection(options = {}) {
+  async openCollection() {
     if (!this._kinto) {
       this._kinto = new Kinto({ bucket: this.bucketName, adapter: Kinto.adapters.IDB });
+    }
+    const options = {
+      localFields: this.localFields,
+    };
+    // If there is a `signerName` and collection signing is enforced, add a
+    // hook for incoming changes that validates the signature.
+    const verifySignature = Services.prefs.getBoolPref(PREF_SETTINGS_VERIFY_SIGNATURE, true);
+    if (this.signerName && verifySignature) {
+      const remote = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
+      options.hooks = {
+        "incoming-changes": [(payload, collection) => {
+          return this._validateCollectionSignature(remote, payload, collection);
+        }]
+      };
     }
     return this._kinto.collection(this.collectionName, options);
   }
@@ -335,22 +345,10 @@ class RemoteSettingsClient {
   async maybeSync(lastModified, serverTime, options = { loadDump: true }) {
     const {loadDump} = options;
     const remote = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
-    const verifySignature = Services.prefs.getBoolPref(PREF_SETTINGS_VERIFY_SIGNATURE, true);
-
-    // if there is a signerName and collection signing is enforced, add a
-    // hook for incoming changes that validates the signature
-    const colOptions = {};
-    if (this.signerName && verifySignature) {
-      colOptions.hooks = {
-        "incoming-changes": [(payload, collection) => {
-          return this._validateCollectionSignature(remote, payload, collection);
-        }]
-      };
-    }
 
     let reportStatus = null;
     try {
-      const collection = await this.openCollection(colOptions);
+      const collection = await this.openCollection();
       // Synchronize remote data into a local Sqlite DB.
       let collectionLastModified = await collection.db.getLastModified();
 

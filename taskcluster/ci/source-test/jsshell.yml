@@ -25,7 +25,10 @@ job-defaults:
         command: >
             cd $GECKO_PATH &&
             ./mach jsshell-bench --perfherder={shell} --binary=$JSSHELL {test}
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-shell:
+            sm: ['mozilla-central', 'try', 'integration']
+            default: ['mozilla-central', 'try']
     fetches:
         build:
             - target.jsshell.zip

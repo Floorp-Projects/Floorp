@@ -220,7 +220,7 @@
                          enabled="false"
                          oncommand="ContentBlocking.onGlobalToggleCommand();" />
         </toolbaritem>
-        <toolbarseparator id="appMenu-tp-separator" hidden="true" />
+        <toolbarseparator id="appMenu-tp-separator"/>
         <toolbarbutton id="appMenu-new-window-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&newNavigatorCmd.label;"
