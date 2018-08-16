@@ -10296,51 +10296,6 @@ CodeGenerator::generate()
 }
 
 bool
-CodeGenerator::linkSharedStubs(JSContext* cx)
-{
-    for (uint32_t i = 0; i < sharedStubs_.length(); i++) {
-        ICStub *stub = nullptr;
-
-        switch (sharedStubs_[i].kind) {
-          case ICStub::Kind::Compare_Fallback: {
-            ICCompare_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
-            stub = stubCompiler.getStub(&stubSpace_);
-            break;
-          }
-          case ICStub::Kind::GetProp_Fallback: {
-            ICGetProp_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
-            stub = stubCompiler.getStub(&stubSpace_);
-            break;
-          }
-          case ICStub::Kind::NewArray_Fallback: {
-            JSScript* script = sharedStubs_[i].entry.script();
-            jsbytecode* pc = sharedStubs_[i].entry.pc(script);
-            ObjectGroup* group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
-            if (!group)
-                return false;
-
-            ICNewArray_Fallback::Compiler stubCompiler(cx, group, ICStubCompiler::Engine::IonSharedIC);
-            stub = stubCompiler.getStub(&stubSpace_);
-            break;
-          }
-          case ICStub::Kind::NewObject_Fallback: {
-            ICNewObject_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
-            stub = stubCompiler.getStub(&stubSpace_);
-            break;
-          }
-          default:
-            MOZ_CRASH("Unsupported shared stub.");
-        }
-
-        if (!stub)
-            return false;
-
-        sharedStubs_[i].entry.setFirstStub(stub);
-    }
-    return true;
-}
-
-bool
 CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 {
     // We cancel off-thread Ion compilations in a few places during GC, but if
@@ -10366,9 +10321,6 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     }
 
     if (scriptCounts_ && !script->hasScriptCounts() && !script->initScriptCounts(cx))
-        return false;
-
-    if (!linkSharedStubs(cx))
         return false;
 
     // Check to make sure we didn't have a mid-build invalidation. If so, we
@@ -10413,8 +10365,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
                        recovers_.size(), bailouts_.length(), graph.numConstants(),
                        safepointIndices_.length(), osiIndices_.length(),
                        icList_.length(), runtimeData_.length(),
-                       safepoints_.size(), sharedStubs_.length(),
-                       optimizationLevel);
+                       safepoints_.size(), optimizationLevel);
     if (!ionScript)
         return false;
     auto guardIonScript = mozilla::MakeScopeExit([&ionScript] {
@@ -10554,22 +10505,6 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
         }
     }
 #endif
-
-    // Patch shared stub IC loads using IC entries
-    for (size_t i = 0; i < sharedStubs_.length(); i++) {
-        CodeOffset label = sharedStubs_[i].label;
-
-        IonICEntry& entry = ionScript->sharedStubList()[i];
-        entry = sharedStubs_[i].entry;
-        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, label),
-                                           ImmPtr(&entry),
-                                           ImmPtr((void*)-1));
-
-        MOZ_ASSERT(entry.hasStub());
-        MOZ_ASSERT(entry.firstStub()->isFallback());
-
-        entry.firstStub()->toFallbackStub()->fixupICEntry(&entry);
-    }
 
     // for generating inline caches during the execution.
     if (runtimeData_.length())
