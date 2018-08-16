@@ -1,247 +1,84 @@
 <!doctype html>
-<html>
-  <head>
-    <meta charset=utf-8>
-    <title>CSSTransition.startTime</title>
-    <style>
-
-.animated-div {
-  margin-left: 100px;
-  transition: margin-left 1000s linear 1000s;
-}
-
-    </style>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <script src="../testcommon.js"></script>
-  </head>
-  <div id="log"></div>
-  <script type="text/javascript">
+<meta charset=utf-8>
+<title>CSSTransition.startTime</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<div id="log"></div>
+<script>
 
 'use strict';
 
-// TODO: Once the computedTiming property is implemented, add checks to the
-// checker helpers to ensure that computedTiming's properties are updated as
-// expected.
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=1108055
-
-
-const ANIM_DELAY_MS = 1000000; // 1000s
-const ANIM_DUR_MS = 1000000; // 1000s
-
-/**
- * These helpers get the value that the startTime needs to be set to, to put an
- * animation that uses the above ANIM_DELAY_MS and ANIM_DUR_MS values into the
- * middle of various phases or points through the active duration.
- */
-const startTimeForStartOfActiveInterval = timeline => {
-  return timeline.currentTime - ANIM_DELAY_MS;
-};
-const startTimeForFiftyPercentThroughActiveInterval = timeline => {
-  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.5;
-};
-const startTimeForEndOfActiveInterval = timeline => {
-  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS;
-};
-
-
-// Expected computed 'margin-left' values at points during the active interval:
-// When we assert_between_inclusive using these values we could in theory cause
-// intermittent failure due to very long delays between paints, but since the
-// active duration is 1000s long, a delay would need to be around 100s to cause
-// that. If that's happening then there are likely other issues that should be
-// fixed, so a failure to make us look into that seems like a good thing.
-const INITIAL_POSITION = 100;
-const TEN_PCT_POSITION = 110;
-const FIFTY_PCT_POSITION = 150;
-const END_POSITION = 200;
-
-// The terms used for the naming of the following helper functions refer to
-// terms used in the Web Animations specification for specific phases of an
-// animation. The terms can be found here:
-//
-//   https://drafts.csswg.org/web-animations/#animation-effect-phases-and-states
-//
-// Note the distinction between the "animation start time" which occurs before
-// the start delay and the start of the active interval which occurs after it.
-
-// Called when the ready Promise's callbacks should happen
-const checkStateOnReadyPromiseResolved = animation => {
-  assert_less_than_equal(animation.startTime, animation.timeline.currentTime,
-    'Animation.startTime should be less than the timeline\'s ' +
-    'currentTime on the first paint tick after animation creation');
-
-  assert_equals(animation.playState, 'running',
-    'Animation.playState should be "running" on the first paint ' +
-    'tick after animation creation');
-
-  const div = animation.effect.target;
-  const marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_equals(marginLeft, INITIAL_POSITION,
-                'the computed value of margin-left should be unaffected ' +
-                'by an animation with a delay on ready Promise resolve');
-};
-
-// Called when startTime is set to the time the active interval starts.
-const checkStateAtActiveIntervalStartTime = animation => {
-  // We don't test animation.startTime since our caller just set it.
-
-  assert_equals(animation.playState, 'running',
-    'Animation.playState should be "running" at the start of ' +
-    'the active interval');
-
-  const div = animation.effect.target;
-  const marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_between_inclusive(marginLeft, INITIAL_POSITION, TEN_PCT_POSITION,
-    'the computed value of margin-left should be close to the value at the ' +
-    'beginning of the animation');
-};
-
-const checkStateAtFiftyPctOfActiveInterval = animation => {
-  // We don't test animation.startTime since our caller just set it.
-
-  const div = animation.effect.target;
-  const marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_equals(marginLeft, FIFTY_PCT_POSITION,
-    'the computed value of margin-left should be half way through the ' +
-    'animation at the midpoint of the active interval');
-};
-
-// Called when startTime is set to the time the active interval ends.
-const checkStateAtActiveIntervalEndTime = animation => {
-  // We don't test animation.startTime since our caller just set it.
-
-  assert_equals(animation.playState, 'finished',
-    'Animation.playState should be "finished" at the end of ' +
-    'the active interval');
-
-  const div = animation.effect.target;
-  const marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_equals(marginLeft, END_POSITION,
-    'the computed value of margin-left should be the final transitioned-to ' +
-    'value at the end of the active duration');
-};
-
 test(t => {
-  const div = addDiv(t, {'class': 'animated-div'});
-  flushComputedStyle(div);
-  div.style.marginLeft = '200px'; // initiate transition
-
-  const animation = div.getAnimations()[0];
-  assert_equals(animation.startTime, null, 'startTime is unresolved');
-}, 'startTime of a newly created transition is unresolved');
-
-test(t => {
-  const div = addDiv(t, {'class': 'animated-div'});
-  flushComputedStyle(div);
-  div.style.marginLeft = '200px'; // initiate transition
-
-  const animation = div.getAnimations()[0];
-  const currentTime = animation.timeline.currentTime;
-  animation.startTime = currentTime;
-  assert_times_equal(animation.startTime, currentTime,
-    'Check setting of startTime actually works');
-}, 'Sanity test to check round-tripping assigning to new animation\'s ' +
-   'startTime');
-
-promise_test(async t => {
-  const div = addDiv(t, {'class': 'animated-div'});
-  const eventWatcher = new EventWatcher(t, div, 'transitionend');
-
-  flushComputedStyle(div);
-  div.style.marginLeft = '200px'; // initiate transition
-
-  const animation = div.getAnimations()[0];
-  await animation.ready;
-
-  checkStateOnReadyPromiseResolved(animation);
-
-  animation.startTime = startTimeForStartOfActiveInterval(animation.timeline);
-  checkStateAtActiveIntervalStartTime(animation);
-
-  animation.startTime =
-    startTimeForFiftyPercentThroughActiveInterval(animation.timeline);
-  checkStateAtFiftyPctOfActiveInterval(animation);
-
-  animation.startTime = startTimeForEndOfActiveInterval(animation.timeline);
-  await eventWatcher.wait_for('transitionend');
-
-  checkStateAtActiveIntervalEndTime(animation);
-}, 'Skipping forward through animation');
-
-test(t => {
-  const div = addDiv(t, {'class': 'animated-div'});
-  const eventWatcher = new EventWatcher(t, div, 'transitionend');
-
-  flushComputedStyle(div);
-  div.style.marginLeft = '200px'; // initiate transition
-
-  const animation = div.getAnimations()[0];
-
-  // Unlike in the case of CSS animations, we cannot skip to the end and skip
-  // backwards since when we reach the end the transition effect is removed and
-  // changes to the Animation object no longer affect the element. For
-  // this reason we only skip forwards as far as the 90% through point.
-
-  animation.startTime =
-    startTimeForFiftyPercentThroughActiveInterval(animation.timeline);
-  checkStateAtFiftyPctOfActiveInterval(animation);
-
-  animation.startTime = startTimeForStartOfActiveInterval(animation.timeline);
-
-  // Despite going backwards from being in the active interval to being before
-  // it, we now expect an 'animationend' event because the animation should go
-  // from being active to inactive.
-  //
-  // Calling checkStateAtActiveIntervalStartTime will check computed style,
-  // causing computed style to be updated and the 'transitionend' event to
-  // be dispatched synchronously. We need to call waitForEvent first
-  // otherwise eventWatcher will assert that the event was unexpected.
-  eventWatcher.wait_for('transitionend').then(() => {
-    t.done();
+  const div = addDiv(t, {
+    style: 'margin-left: 100px; transition: margin-left 100s linear 100s',
   });
-  checkStateAtActiveIntervalStartTime(animation);
-}, 'Skipping backwards through transition');
+  flushComputedStyle(div);
+  div.style.marginLeft = '200px';
+  const animation = div.getAnimations()[0];
+
+  assert_equals(animation.startTime, null, 'startTime is unresolved');
+}, 'The start time of a newly-created transition is unresolved');
+
+test(t => {
+  const div = addDiv(t, {
+    style: 'margin-left: 100px; transition: margin-left 100s linear 100s',
+  });
+  flushComputedStyle(div);
+  div.style.marginLeft = '200px';
+  const animation = div.getAnimations()[0];
+
+  const timelineTime = animation.timeline.currentTime;
+  animation.startTime = timelineTime;
+
+  assert_times_equal(
+    animation.startTime,
+    timelineTime,
+    'Check setting of startTime actually works'
+  );
+}, 'The start time of a transition can be set');
 
 promise_test(async t => {
-  const div = addDiv(t, {'class': 'animated-div'});
-
+  const div = addDiv(t, {
+    style: 'margin-left: 100px; transition: margin-left 100s linear 100s',
+  });
   flushComputedStyle(div);
-  div.style.marginLeft = '200px'; // initiate transition
-
+  div.style.marginLeft = '200px';
   const animation = div.getAnimations()[0];
 
   await animation.ready;
 
-  const storedCurrentTime = animation.currentTime;
-  animation.startTime = null;
-  await animation.ready;
+  const timelineTime = animation.timeline.currentTime;
+  const marginLeft = () => parseFloat(getComputedStyle(div).marginLeft);
 
-  assert_equals(animation.currentTime, storedCurrentTime,
-    'Test that hold time is correct');
-}, 'Setting startTime to null');
+  animation.startTime = timelineTime - 100 * MS_PER_SEC;
+  assert_equals(marginLeft(), 100);
+
+  animation.startTime = timelineTime - 150 * MS_PER_SEC;
+  assert_equals(marginLeft(), 150);
+}, 'The start time can be set to seek a transition');
 
 promise_test(async t => {
-  const div = addDiv(t, {'class': 'animated-div'});
-
+  const div = addDiv(t, {
+    style: 'margin-left: 100px; transition: margin-left 100s linear 100s',
+  });
+  const eventWatcher = new EventWatcher(t, div, [
+    'transitionstart',
+    'transitionend',
+  ]);
   flushComputedStyle(div);
-  div.style.marginLeft = '200px'; // initiate transition
-
+  div.style.marginLeft = '200px';
   const animation = div.getAnimations()[0];
+
   await animation.ready;
 
-  const savedStartTime = animation.startTime;
+  const timelineTime = animation.timeline.currentTime;
 
-  assert_not_equals(animation.startTime, null,
-    'Animation.startTime not null on ready Promise resolve');
+  animation.startTime = timelineTime - 100 * MS_PER_SEC;
+  await eventWatcher.wait_for('transitionstart');
 
-  animation.pause();
-  await animation.ready;
+  animation.startTime = timelineTime - 200 * MS_PER_SEC;
+  await eventWatcher.wait_for('transitionend');
+}, 'Seeking a transition using start time dispatches transition events');
 
-  assert_equals(animation.startTime, null,
-    'Animation.startTime is null after paused');
-  assert_equals(animation.playState, 'paused',
-    'Animation.playState is "paused" after pause() call');
-}, 'Animation.startTime after paused');
-  </script>
-</html>
+</script>
