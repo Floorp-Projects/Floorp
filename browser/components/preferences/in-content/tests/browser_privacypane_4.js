@@ -9,7 +9,7 @@ Services.scriptloader.loadSubScript(rootDir + "privacypane_tests_perwindow.js", 
 
 SpecialPowers.pushPrefEnv({"set":
   [["browser.contentblocking.cookies-site-data.ui.enabled", true],
-   ["browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", true]]
+   ["browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", false]]
 });
 
 run_test_subset([
