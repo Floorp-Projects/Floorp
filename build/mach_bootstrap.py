@@ -234,7 +234,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
     def should_skip_dispatch(context, handler):
         # The user is performing a maintenance command.
-        if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'mercurial-setup'):
+        if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'vcs-setup'):
             return True
 
         # We are running in automation.

@@ -30,6 +30,15 @@ if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
     ]
     SYMBOLS_FILE = '!symverscript'
 
+# Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
+# too old to support Python pretty-printers; if this changes, we could
+# make this 'ifdef GNU_CC'.
+if CONFIG['OS_ARCH'] == 'Linux':
+    # Create a GDB Python auto-load file alongside the libxul shared library
+    # in the build directory.
+    DEFINES['topsrcdir'] = TOPSRCDIR
+    OBJDIR_PP_FILES.toolkit.library.gtest += ['../libxul.so-gdb.py.in']
+
 # This needs to come after static:xul to avoid things like libfallible coming
 # before StaticXULComponentStart.
 Libxul('xul-gtest-real',

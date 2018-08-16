@@ -35,6 +35,7 @@
   --highlighter-bubble-arrow-size: 8px;
   --highlighter-font-family: message-box;
   --highlighter-font-size: 11px;
+  --highlighter-infobar-color: hsl(210, 30%, 85%);
   --highlighter-marker-color: #000;
 }
 
@@ -210,7 +211,7 @@
 }
 
 :-moz-native-anonymous [class$=infobar-dimensions] {
-  color: hsl(210, 30%, 85%);
+  color: var(--highlighter-infobar-color);
   border-inline-start: 1px solid #5a6169;
   margin-inline-start: 6px;
   padding-inline-start: 6px;
@@ -243,7 +244,7 @@
 }
 
 :-moz-native-anonymous .css-grid-line-infobar-names:not(:empty) {
-  color: hsl(210, 30%, 85%);
+  color: var(--highlighter-infobar-color);
   border-inline-start: 1px solid #5a6169;
   margin-inline-start: 6px;
   padding-inline-start: 6px;
@@ -644,4 +645,20 @@
 :-moz-native-anonymous .accessible-bounds {
   opacity: 0.6;
   fill: #6a5acd;
+}
+
+:-moz-native-anonymous .accessible-infobar-name {
+  color:var(--highlighter-infobar-color);
+  max-width: 90%;
+}
+
+:-moz-native-anonymous .accessible-infobar-name:not(:empty) {
+  color: var(--highlighter-infobar-color);
+  border-inline-start: 1px solid #5a6169;
+  margin-inline-start: 6px;
+  padding-inline-start: 6px;
+}
+
+:-moz-native-anonymous .accessible-infobar-role {
+  color: #9CDCFE;
 }

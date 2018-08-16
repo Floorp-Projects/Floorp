@@ -34,8 +34,6 @@ import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -56,7 +54,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
@@ -161,7 +158,6 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.MenuUtils;
-import org.mozilla.gecko.util.NetworkUtils;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ShortcutUtils;
 import org.mozilla.gecko.util.StringUtils;
@@ -179,7 +175,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -216,8 +211,6 @@ public class BrowserApp extends GeckoApp
     private static final String SWITCHBOARD_SERVER = "https://firefox.settings.services.mozilla.com/v1/buckets/fennec/collections/experiments/records";
 
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
-    private static final String STATE_ADDON_MENU_ITEM_CACHE = "menuitems_cache";
-    private static final String STATE_BROWSER_ACTION_ITEM_CACHE = "browseractions_cache";
 
     private static final String BROWSER_SEARCH_TAG = "browser_search";
 
@@ -261,9 +254,6 @@ public class BrowserApp extends GeckoApp
     private ActionModeCompat mActionMode;
     private TabHistoryController tabHistoryController;
 
-    private static final int GECKO_TOOLS_MENU = -1;
-    private static final int ADDON_MENU_OFFSET = 1000;
-    private static final int BROWSER_ACTION_MENU_OFFSET = 10000;
     public static final String TAB_HISTORY_FRAGMENT_TAG = "tabHistoryFragment";
 
     // When the static action bar is shown, only the real toolbar chrome should be
@@ -276,98 +266,12 @@ public class BrowserApp extends GeckoApp
     private Intent startingIntentAfterPip;
     private boolean isInAutomation;
 
-    private static class MenuItemInfo implements Parcelable {
-        public int id;
-        public String label;
-        public boolean checkable;
-        public boolean checked;
-        public boolean enabled = true;
-        public boolean visible = true;
-        public int parent;
-        public boolean added;   // So we can re-add after a locale change.
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeInt(id);
-            dest.writeString(label);
-            dest.writeInt(checkable ? 1 : 0);
-            dest.writeInt(checked ? 1 : 0);
-            dest.writeInt(enabled ? 1 : 0);
-            dest.writeInt(visible ? 1 : 0);
-            dest.writeInt(parent);
-            dest.writeInt(added ? 1 : 0);
-        }
-
-        public static final Parcelable.Creator<MenuItemInfo> CREATOR
-                = new Parcelable.Creator<MenuItemInfo>() {
-            @Override
-            public MenuItemInfo createFromParcel(Parcel source) {
-                return new MenuItemInfo(source);
-            }
-
-            @Override
-            public MenuItemInfo[] newArray(int size) {
-                return new MenuItemInfo[size];
-            }
-        };
-
-        private MenuItemInfo(Parcel source) {
-            id = source.readInt();
-            label = source.readString();
-            checkable = source.readInt() != 0;
-            checked = source.readInt() != 0;
-            enabled = source.readInt() != 0;
-            visible = source.readInt() != 0;
-            parent = source.readInt();
-            added = source.readInt() != 0;
-        }
-
-        public MenuItemInfo() { }
-    }
-
-    private static class BrowserActionItemInfo extends MenuItemInfo {
-        public String uuid;
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            super.writeToParcel(dest, flags);
-            dest.writeString(uuid);
-        }
-
-        public static final Parcelable.Creator<BrowserActionItemInfo> CREATOR
-                = new Parcelable.Creator<BrowserActionItemInfo>() {
-            @Override
-            public BrowserActionItemInfo createFromParcel(Parcel source) {
-                return new BrowserActionItemInfo(source);
-            }
-
-            @Override
-            public BrowserActionItemInfo[] newArray(int size) {
-                return new BrowserActionItemInfo[size];
-            }
-        };
-
-        private BrowserActionItemInfo(Parcel source) {
-            super(source);
-            uuid = source.readString();
-        }
-
-        public BrowserActionItemInfo() { }
-    }
-
     // The types of guest mode dialogs we show.
     public static enum GuestModeDialog {
         ENTERING,
         LEAVING
     }
 
-    private ArrayList<MenuItemInfo> mAddonMenuItemsCache;
-    private ArrayList<BrowserActionItemInfo> mBrowserActionItemsCache;
     private PropertyAnimator mMainLayoutAnimator;
 
     private static final Interpolator sTabsInterpolator = new Interpolator() {
@@ -774,14 +678,6 @@ public class BrowserApp extends GeckoApp
             }
         });
 
-        // If the activity is being restored, the add-ons menu item cache only needs restoring if
-        // Gecko is already running. Otherwise, we'll simply catch the corresponding events when
-        // Gecko and the add-ons are starting up.
-        if (savedInstanceState != null && mIsRestoringActivity) {
-            mAddonMenuItemsCache = savedInstanceState.getParcelableArrayList(STATE_ADDON_MENU_ITEM_CACHE);
-            mBrowserActionItemsCache = savedInstanceState.getParcelableArrayList(STATE_BROWSER_ACTION_ITEM_CACHE);
-        }
-
         app.getLightweightTheme().addListener(this);
 
         mProgressView = (AnimatedProgressBar) findViewById(R.id.page_progress);
@@ -883,12 +779,6 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().registerUiThreadListener(this,
             "GeckoView:AccessibilityEnabled",
             "Menu:Open",
-            "Menu:Update",
-            "Menu:Add",
-            "Menu:Remove",
-            "Menu:AddBrowserAction",
-            "Menu:RemoveBrowserAction",
-            "Menu:UpdateBrowserAction",
             "LightweightTheme:Update",
             "Tab:Added",
             "Video:Play",
@@ -1580,6 +1470,8 @@ public class BrowserApp extends GeckoApp
         final GeckoApplication app = (GeckoApplication) getApplication();
         app.getLightweightTheme().removeListener(this);
 
+        AddonUICache.getInstance().onDestroyOptionsMenu();
+
         if (mBrowserToolbar != null)
             mBrowserToolbar.onDestroy();
 
@@ -1622,12 +1514,6 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
             "GeckoView:AccessibilityEnabled",
             "Menu:Open",
-            "Menu:Update",
-            "Menu:Add",
-            "Menu:Remove",
-            "Menu:AddBrowserAction",
-            "Menu:RemoveBrowserAction",
-            "Menu:UpdateBrowserAction",
             "LightweightTheme:Update",
             "Tab:Added",
             "Video:Play",
@@ -1884,53 +1770,6 @@ public class BrowserApp extends GeckoApp
                     mBrowserToolbar.cancelEdit();
                 }
                 openOptionsMenu();
-                break;
-
-            case "Menu:Update":
-                updateAddonMenuItem(message.getInt("id") + ADDON_MENU_OFFSET,
-                                    message.getBundle("options"));
-                break;
-
-            case "Menu:Add":
-                final MenuItemInfo info = new MenuItemInfo();
-                info.label = message.getString("name");
-                if (info.label == null) {
-                    Log.e(LOGTAG, "Invalid menu item name");
-                    return;
-                }
-                info.id = message.getInt("id") + ADDON_MENU_OFFSET;
-                info.checked = message.getBoolean("checked", false);
-                info.enabled = message.getBoolean("enabled", true);
-                info.visible = message.getBoolean("visible", true);
-                info.checkable = message.getBoolean("checkable", false);
-                final int parent = message.getInt("parent", 0);
-                info.parent = parent <= 0 ? parent : parent + ADDON_MENU_OFFSET;
-                addAddonMenuItem(info);
-                break;
-
-            case "Menu:Remove":
-                removeAddonMenuItem(message.getInt("id") + ADDON_MENU_OFFSET);
-                break;
-
-            case "Menu:AddBrowserAction":
-                final BrowserActionItemInfo browserAction = new BrowserActionItemInfo();
-                browserAction.label = message.getString("name");
-                if (TextUtils.isEmpty(browserAction.label)) {
-                    Log.e(LOGTAG, "Invalid browser action name");
-                    return;
-                }
-                browserAction.id = message.getInt("id") + BROWSER_ACTION_MENU_OFFSET;
-                browserAction.uuid = message.getString("uuid");
-                addBrowserActionMenuItem(browserAction);
-                break;
-
-            case "Menu:RemoveBrowserAction":
-                removeBrowserActionMenuItem(message.getString("uuid"));
-                break;
-
-            case "Menu:UpdateBrowserAction":
-                updateBrowserActionMenuItem(message.getString("uuid"),
-                                            message.getBundle("options"));
                 break;
 
             case "LightweightTheme:Update":
@@ -2454,15 +2293,6 @@ public class BrowserApp extends GeckoApp
         super.onSaveInstanceState(outState);
         mDynamicToolbar.onSaveInstanceState(outState);
         outState.putInt(STATE_ABOUT_HOME_TOP_PADDING, mHomeScreenContainer.getPaddingTop());
-
-        // The various add-on UI item caches and event listeners should really live somewhere based
-        // on the Application, so that their lifetime more closely matches that of Gecko itself, as
-        // GeckoView-based activities can start Gecko (and therefore add-ons) while BrowserApp isn't
-        // even running.
-        // For now we'll only guard against the case where BrowserApp is destroyed and later re-
-        // created while Gecko keeps running throughout, and leave the full solution to bug 1414084.
-        outState.putParcelableArrayList(STATE_ADDON_MENU_ITEM_CACHE, mAddonMenuItemsCache);
-        outState.putParcelableArrayList(STATE_BROWSER_ACTION_ITEM_CACHE, mBrowserActionItemsCache);
     }
 
     /**
@@ -3213,244 +3043,6 @@ public class BrowserApp extends GeckoApp
         }
     }
 
-    private static Menu findParentMenu(Menu menu, MenuItem item) {
-        final int itemId = item.getItemId();
-
-        final int count = (menu != null) ? menu.size() : 0;
-        for (int i = 0; i < count; i++) {
-            MenuItem menuItem = menu.getItem(i);
-            if (menuItem.getItemId() == itemId) {
-                return menu;
-            }
-            if (menuItem.hasSubMenu()) {
-                Menu parent = findParentMenu(menuItem.getSubMenu(), item);
-                if (parent != null) {
-                    return parent;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Add the provided item to the provided menu, which should be
-     * the root (mMenu).
-     */
-    private void addAddonMenuItemToMenu(final Menu menu, final MenuItemInfo info) {
-        info.added = true;
-
-        final Menu destination;
-        if (info.parent == 0) {
-            destination = menu;
-        } else if (info.parent == GECKO_TOOLS_MENU) {
-            // The tools menu only exists in our -v11 resources.
-            final MenuItem tools = menu.findItem(R.id.tools);
-            destination = tools != null ? tools.getSubMenu() : menu;
-        } else {
-            final MenuItem parent = menu.findItem(info.parent);
-            if (parent == null) {
-                return;
-            }
-
-            Menu parentMenu = findParentMenu(menu, parent);
-
-            if (!parent.hasSubMenu()) {
-                parentMenu.removeItem(parent.getItemId());
-                destination = parentMenu.addSubMenu(Menu.NONE, parent.getItemId(), Menu.NONE, parent.getTitle());
-                if (parent.getIcon() != null) {
-                    ((SubMenu) destination).getItem().setIcon(parent.getIcon());
-                }
-            } else {
-                destination = parent.getSubMenu();
-            }
-        }
-
-        final MenuItem item = destination.add(Menu.NONE, info.id, Menu.NONE, info.label);
-
-        item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                final GeckoBundle data = new GeckoBundle(1);
-                data.putInt("item", info.id - ADDON_MENU_OFFSET);
-                EventDispatcher.getInstance().dispatch("Menu:Clicked", data);
-                return true;
-            }
-        });
-
-        item.setCheckable(info.checkable);
-        item.setChecked(info.checked);
-        item.setEnabled(info.enabled);
-        item.setVisible(info.visible);
-    }
-
-    private void addAddonMenuItem(final MenuItemInfo info) {
-        if (mAddonMenuItemsCache == null) {
-            mAddonMenuItemsCache = new ArrayList<MenuItemInfo>();
-        }
-
-        // Mark it as added if the menu was ready.
-        info.added = (mMenu != null);
-
-        // Always cache so we can rebuild after a locale switch.
-        mAddonMenuItemsCache.add(info);
-
-        if (mMenu == null) {
-            return;
-        }
-
-        addAddonMenuItemToMenu(mMenu, info);
-    }
-
-    private void removeAddonMenuItem(int id) {
-        // Remove add-on menu item from cache, if available.
-        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
-            for (MenuItemInfo item : mAddonMenuItemsCache) {
-                if (item.id == id) {
-                    mAddonMenuItemsCache.remove(item);
-                    break;
-                }
-            }
-        }
-
-        if (mMenu == null)
-            return;
-
-        final MenuItem menuItem = mMenu.findItem(id);
-        if (menuItem != null)
-            mMenu.removeItem(id);
-    }
-
-    private void updateAddonMenuItem(int id, final GeckoBundle options) {
-        // Set attribute for the menu item in cache, if available
-        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
-            for (MenuItemInfo item : mAddonMenuItemsCache) {
-                if (item.id == id) {
-                    item.label = options.getString("name", item.label);
-                    item.checkable = options.getBoolean("checkable", item.checkable);
-                    item.checked = options.getBoolean("checked", item.checked);
-                    item.enabled = options.getBoolean("enabled", item.enabled);
-                    item.visible = options.getBoolean("visible", item.visible);
-                    item.added = (mMenu != null);
-                    break;
-                }
-            }
-        }
-
-        if (mMenu == null) {
-            return;
-        }
-
-        final MenuItem menuItem = mMenu.findItem(id);
-        if (menuItem != null) {
-            menuItem.setTitle(options.getString("name", menuItem.getTitle().toString()));
-            menuItem.setCheckable(options.getBoolean("checkable", menuItem.isCheckable()));
-            menuItem.setChecked(options.getBoolean("checked", menuItem.isChecked()));
-            menuItem.setEnabled(options.getBoolean("enabled", menuItem.isEnabled()));
-            menuItem.setVisible(options.getBoolean("visible", menuItem.isVisible()));
-        }
-    }
-
-    /**
-     * Add the provided item to the provided menu, which should be
-     * the root (mMenu).
-     */
-    private void addBrowserActionMenuItemToMenu(final Menu menu, final BrowserActionItemInfo info) {
-        info.added = true;
-
-        final MenuItem item = menu.add(Menu.NONE, info.id, Menu.NONE, info.label);
-
-        item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                final GeckoBundle data = new GeckoBundle(1);
-                data.putString("item", info.uuid);
-                EventDispatcher.getInstance().dispatch("Menu:BrowserActionClicked", data);
-                return true;
-            }
-        });
-
-        item.setCheckable(info.checkable);
-        item.setChecked(info.checked);
-        item.setEnabled(info.enabled);
-        item.setVisible(info.visible);
-    }
-
-    /**
-     * Adds a WebExtension browser action to the menu.
-     */
-    private void addBrowserActionMenuItem(final BrowserActionItemInfo info) {
-        if (mBrowserActionItemsCache == null) {
-            mBrowserActionItemsCache = new ArrayList<BrowserActionItemInfo>();
-        }
-
-        // Mark it as added if the menu was ready.
-        info.added = (mMenu != null);
-
-        // Always cache so we can rebuild after a locale switch.
-        mBrowserActionItemsCache.add(info);
-
-        if (mMenu == null) {
-            return;
-        }
-
-        addBrowserActionMenuItemToMenu(mMenu, info);
-    }
-
-    /**
-     * Removes a WebExtension browser action from the menu by its UUID.
-     */
-    private void removeBrowserActionMenuItem(String uuid) {
-        int id = -1;
-
-        // Remove browser action menu item from cache, if available.
-        if (mBrowserActionItemsCache != null && !mBrowserActionItemsCache.isEmpty()) {
-            for (BrowserActionItemInfo item : mBrowserActionItemsCache) {
-                if (item.uuid.equals(uuid)) {
-                    id = item.id;
-                    mBrowserActionItemsCache.remove(item);
-                    break;
-                }
-            }
-        }
-
-        if (mMenu == null || id == -1) {
-            return;
-        }
-
-        final MenuItem menuItem = mMenu.findItem(id);
-        if (menuItem != null) {
-            mMenu.removeItem(id);
-        }
-    }
-
-    /**
-     * Updates the WebExtension browser action with the specified UUID.
-     */
-    private void updateBrowserActionMenuItem(String uuid, final GeckoBundle options) {
-        int id = -1;
-
-        // Set attribute for the menu item in cache, if available
-        if (mBrowserActionItemsCache != null && !mBrowserActionItemsCache.isEmpty()) {
-            for (BrowserActionItemInfo item : mBrowserActionItemsCache) {
-                if (item.uuid.equals(uuid)) {
-                    id = item.id;
-                    item.label = options.getString("name", item.label);
-                    break;
-                }
-            }
-        }
-
-        if (mMenu == null || id == -1) {
-            return;
-        }
-
-        final MenuItem menuItem = mMenu.findItem(id);
-        if (menuItem != null) {
-            menuItem.setTitle(options.getString("name", menuItem.getTitle().toString()));
-        }
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Sets mMenu = menu.
@@ -3465,19 +3057,9 @@ public class BrowserApp extends GeckoApp
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.browser_app_menu, mMenu);
 
-        // Add browser action menu items, if any exist.
-        if (mBrowserActionItemsCache != null && !mBrowserActionItemsCache.isEmpty()) {
-            for (BrowserActionItemInfo item : mBrowserActionItemsCache) {
-                addBrowserActionMenuItemToMenu(mMenu, item);
-            }
-        }
-
-        // Add add-on menu items, if any exist.
-        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
-            for (MenuItemInfo item : mAddonMenuItemsCache) {
-                addAddonMenuItemToMenu(mMenu, item);
-            }
-        }
+        // Let the AddonUICache handle adding (and removing again) any add-on/browser action
+        // menu items as required.
+        AddonUICache.getInstance().onCreateOptionsMenu(mMenu);
 
         // Action providers are available only ICS+.
         GeckoMenuItem share = (GeckoMenuItem) mMenu.findItem(R.id.share);

@@ -39,6 +39,12 @@ extern "C" {
   bool
   encoding_mem_is_utf16_latin1(char16_t const* buffer, size_t buffer_len);
 
+  size_t
+  encoding_mem_utf16_valid_up_to(char16_t const* buffer, size_t buffer_len);
+
+  void
+  encoding_mem_ensure_utf16_validity(char16_t* buffer, size_t buffer_len);
+
   void
   encoding_mem_convert_utf16_to_latin1_lossy(const char16_t* src,
                                              size_t src_len,
@@ -638,6 +644,45 @@ IsUTF8(mozilla::Span<const char> aString)
   }
   end:
   return length == encoding_utf8_valid_up_to(ptr, length);
+}
+
+/**
+ * Returns the index of the first unpaired surrogate or
+ * the length of the string if there are none.
+ */
+inline uint32_t
+UTF16ValidUpTo(mozilla::Span<const char16_t> aString)
+{
+  return encoding_mem_utf16_valid_up_to(aString.Elements(), aString.Length());
+}
+
+/**
+ * Replaces unpaired surrogates with U+FFFD in the argument.
+ */
+inline void
+EnsureUTF16ValiditySpan(mozilla::Span<char16_t> aString)
+{
+  encoding_mem_ensure_utf16_validity(aString.Elements(), aString.Length());
+}
+
+/**
+ * Replaces unpaired surrogates with U+FFFD in the argument.
+ *
+ * Copies a shared string buffer or an otherwise read-only
+ * buffer only if there are unpaired surrogates.
+ */
+inline void
+EnsureUTF16Validity(nsAString& aString)
+{
+  uint32_t upTo = UTF16ValidUpTo(aString);
+  uint32_t len = aString.Length();
+  if (upTo == len) {
+    return;
+  }
+  char16_t* ptr = aString.BeginWriting();
+  auto span = mozilla::MakeSpan(ptr, len);
+  span[upTo] = 0xFFFD;
+  EnsureUTF16ValiditySpan(span.From(upTo + 1));
 }
 
 bool ParseString(const nsACString& aAstring, char aDelimiter,

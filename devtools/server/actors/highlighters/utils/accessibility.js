@@ -4,7 +4,356 @@
 
 "use strict";
 
-const { getCurrentZoom } = require("devtools/shared/layout/utils");
+const { getCurrentZoom, getViewportDimensions } = require("devtools/shared/layout/utils");
+const { moveInfobar, createNode } = require("./markup");
+const { truncateString } = require("devtools/shared/inspector/utils");
+
+// Max string length for truncating accessible name values.
+const MAX_STRING_LENGTH = 50;
+
+/**
+ * The AccessibleInfobar is a class responsible for creating the markup for the
+ * accessible highlighter. It is also reponsible for updating content within the
+ * infobar such as role and name values.
+ */
+class Infobar {
+  constructor(highlighter) {
+    this.highlighter = highlighter;
+  }
+
+  get document() {
+    return this.highlighter.win.document;
+  }
+
+  get bounds() {
+    return this.highlighter._bounds;
+  }
+
+  get options() {
+    return this.highlighter.options;
+  }
+
+  get prefix() {
+    return this.highlighter.ID_CLASS_PREFIX;
+  }
+
+  get win() {
+    return this.highlighter.win;
+  }
+
+  /**
+   * Move the Infobar to the right place in the highlighter.
+   *
+   * @param  {Element} container
+   *         Container of infobar.
+   */
+  _moveInfobar(container) {
+    // Position the infobar using accessible's bounds
+    const { left: x, top: y, bottom, width } = this.bounds;
+    const infobarBounds = { x, y, bottom, width };
+
+    moveInfobar(container, infobarBounds, this.win);
+  }
+
+  /**
+   * Build markup for infobar.
+   *
+   * @param  {Element} root
+   *         Root element to build infobar with.
+   */
+  buildMarkup(root) {
+    const container = createNode(this.win, {
+      parent: root,
+      attributes: {
+        "class": "infobar-container",
+        "id": "infobar-container",
+        "aria-hidden": "true",
+        "hidden": "true"
+      },
+      prefix: this.prefix,
+    });
+
+    const infobar = createNode(this.win, {
+      parent: container,
+      attributes: {
+        "class": "infobar",
+        "id": "infobar",
+      },
+      prefix: this.prefix,
+    });
+
+    const infobarText = createNode(this.win, {
+      parent: infobar,
+      attributes: {
+        "class": "infobar-text",
+        "id": "infobar-text",
+      },
+      prefix: this.prefix,
+    });
+
+    createNode(this.win, {
+      nodeType: "span",
+      parent: infobarText,
+      attributes: {
+        "class": "infobar-role",
+        "id": "infobar-role",
+      },
+      prefix: this.prefix,
+    });
+
+    createNode(this.win, {
+      nodeType: "span",
+      parent: infobarText,
+      attributes: {
+        "class": "infobar-name",
+        "id": "infobar-name",
+      },
+      prefix: this.prefix,
+    });
+  }
+
+  /**
+   * Destroy the Infobar's highlighter.
+   */
+  destroy() {
+    this.highlighter = null;
+  }
+
+  /**
+   * Gets the element with the specified ID.
+   *
+   * @param  {String} id
+   *         Element ID.
+   * @return {Element} The element with specified ID.
+   */
+  getElement(id) {
+    return this.highlighter.getElement(id);
+  }
+
+  /**
+   * Gets the text content of element.
+   *
+   * @param  {String} id
+   *          Element ID to retrieve text content from.
+   * @return {String} The text content of the element.
+   */
+  getTextContent(id) {
+    const anonymousContent = this.highlighter.markup.content;
+    return anonymousContent.getTextContentForElement(`${this.prefix}${id}`);
+  }
+
+  /**
+   * Hide the accessible infobar.
+   */
+  hide() {
+    const container = this.getElement("infobar-container");
+    container.setAttribute("hidden", "true");
+  }
+
+  /**
+   * Show the accessible infobar highlighter.
+   */
+  show() {
+    const container = this.getElement("infobar-container");
+
+    // Remove accessible's infobar "hidden" attribute. We do this first to get the
+    // computed styles of the infobar container.
+    container.removeAttribute("hidden");
+
+    // Update the infobar's position and content.
+    this.update(container);
+  }
+
+  /**
+   * Update content of the infobar.
+   */
+  update(container) {
+    const { name, role } = this.options;
+
+    this.updateRole(role, this.getElement("infobar-role"));
+    this.updateName(name, this.getElement("infobar-name"));
+
+    // Position the infobar.
+    this._moveInfobar(container);
+  }
+
+  /**
+   * Sets the text content of the specified element.
+   *
+   * @param  {Element} el
+   *         Element to set text content on.
+   * @param  {String} text
+   *         Text for content.
+   */
+  setTextContent(el, text) {
+    el.setTextContent(text);
+  }
+
+  /**
+   * Show the accessible's name message.
+   *
+   * @param  {String} name
+   *         Accessible's name value.
+   * @param  {Element} el
+   *         Element to set text content on.
+   */
+  updateName(name, el) {
+    const nameText = name ? `"${truncateString(name, MAX_STRING_LENGTH)}"` : "";
+    this.setTextContent(el, nameText);
+  }
+
+  /**
+   * Show the accessible's role.
+   *
+   * @param  {String} role
+   *         Accessible's role value.
+   * @param  {Element} el
+   *         Element to set text content on.
+   */
+  updateRole(role, el) {
+    this.setTextContent(el, role);
+  }
+}
+
+/**
+ * The XULAccessibleInfobar handles building the XUL infobar markup where it isn't
+ * possible with the regular accessible highlighter.
+ */
+class XULWindowInfobar extends Infobar {
+  /**
+   * A helper function that calculates the positioning of a XUL accessible's infobar.
+   *
+   * @param  {Object} container
+   *         The infobar container.
+   */
+  _moveInfobar(container) {
+    const arrow = this.getElement("arrow");
+
+    // Show the container and arrow elements first.
+    container.removeAttribute("hidden");
+    arrow.removeAttribute("hidden");
+
+    // Set the left value of the infobar container in relation to
+    // highlighter's bounds position.
+    const {
+      left: boundsLeft,
+      right: boundsRight,
+      top: boundsTop,
+      bottom: boundsBottom
+    } = this.bounds;
+    const boundsMidPoint = (boundsLeft + boundsRight) / 2;
+    container.style.left = `${boundsMidPoint}px`;
+
+    const zoom = getCurrentZoom(this.win);
+    let {
+      width: viewportWidth,
+      height: viewportHeight,
+    } = getViewportDimensions(this.win);
+
+    const { width, height, left, } = container.getBoundingClientRect();
+
+    const containerHalfWidth = width / 2;
+    const containerHeight = height;
+    const margin = 100 * zoom;
+
+    viewportHeight *= zoom;
+    viewportWidth *= zoom;
+
+    // Determine viewport boundaries for infobar.
+    const topBoundary = margin;
+    const bottomBoundary = viewportHeight - containerHeight;
+    const leftBoundary = containerHalfWidth;
+    const rightBoundary = viewportWidth - containerHalfWidth;
+
+    // Determine if an infobar's position is offscreen.
+    const isOffScreenOnTop = boundsBottom < topBoundary;
+    const isOffScreenOnBottom = boundsBottom > bottomBoundary;
+    const isOffScreenOnLeft = left < leftBoundary;
+    const isOffScreenOnRight = left > rightBoundary;
+
+    // Check if infobar is offscreen on either left/right of viewport and position.
+    if (isOffScreenOnLeft) {
+      container.style.left = `${leftBoundary + boundsLeft}px`;
+      arrow.setAttribute("hidden", "true");
+    } else if (isOffScreenOnRight) {
+      const leftOffset = rightBoundary - boundsRight;
+      container.style.left = `${rightBoundary - leftOffset - containerHalfWidth}px`;
+      arrow.setAttribute("hidden", "true");
+    }
+
+    // Check if infobar is offscreen on either top/bottom of viewport and position.
+    const bubbleArrowSize = "var(--highlighter-bubble-arrow-size)";
+
+    if (isOffScreenOnTop) {
+      if (boundsTop < 0) {
+        container.style.top = bubbleArrowSize;
+      } else {
+        container.style.top = `calc(${boundsBottom}px + ${bubbleArrowSize})`;
+      }
+      arrow.setAttribute("class", "accessible-arrow top");
+    } else if (isOffScreenOnBottom) {
+      container.style.top = `calc(${bottomBoundary}px - ${bubbleArrowSize})`;
+      arrow.setAttribute("hidden", "true");
+    } else {
+      container.style.top = `calc(${boundsTop}px -
+        (${containerHeight}px + ${bubbleArrowSize}))`;
+      arrow.setAttribute("class", "accessible-arrow bottom");
+    }
+  }
+
+  /**
+   * Build markup for XUL window infobar.
+   *
+   * @param  {Element} root
+   *         Root element to build infobar with.
+   */
+  buildMarkup(root) {
+    super.buildMarkup(root, createNode);
+
+    createNode(this.win, {
+      parent: this.getElement("infobar"),
+      attributes: {
+        "class": "arrow",
+        "id": "arrow",
+      },
+      prefix: this.prefix,
+    });
+  }
+
+  /**
+   * Override of Infobar class's getTextContent method.
+   *
+   * @param  {String} id
+   *         Element ID to retrieve text content from.
+   * @return {String} Returns the text content of the element.
+   */
+  getTextContent(id) {
+    return this.getElement(id).textContent;
+  }
+
+  /**
+   * Override of Infobar class's getElement method.
+   *
+   * @param  {String} id
+   *         Element ID.
+   * @return {String} Returns the specified element.
+   */
+  getElement(id) {
+    return this.win.document.getElementById(`${this.prefix}${id}`);
+  }
+
+  /**
+   * Override of Infobar class's setTextContent method.
+   *
+   * @param  {Element} el
+   *         Element to set text content on.
+   * @param  {String} text
+   *         Text for content.
+   */
+  setTextContent(el, text) {
+    el.textContent = text;
+  }
+}
 
 /**
  * A helper function that calculate accessible object bounds and positioning to
@@ -30,7 +379,10 @@ const { getCurrentZoom } = require("devtools/shared/layout/utils");
 function getBounds(win, { x, y, w, h, zoom }) {
   let { mozInnerScreenX, mozInnerScreenY, scrollX, scrollY } = win;
   let zoomFactor = getCurrentZoom(win);
-  let left = x, right = x + w, top = y, bottom = y + h;
+  let left = x;
+  let right = x + w;
+  let top = y;
+  let bottom = y + h;
 
   // For a XUL accessible, normalize the top-level window with its current zoom level.
   // We need to do this because top-level browser content does not allow zooming.
@@ -58,4 +410,7 @@ function getBounds(win, { x, y, w, h, zoom }) {
   return { left, right, top, bottom, width, height };
 }
 
+exports.MAX_STRING_LENGTH = MAX_STRING_LENGTH;
 exports.getBounds = getBounds;
+exports.Infobar = Infobar;
+exports.XULWindowInfobar = XULWindowInfobar;
