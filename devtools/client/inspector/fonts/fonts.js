@@ -373,7 +373,7 @@ class FontInspector {
    *
    * @return {Object}
    */
-  getFontProperties() {
+  async getFontProperties() {
     const properties = {};
 
     // First, get all expected font properties from computed styles, if available.
@@ -383,6 +383,14 @@ class FontInspector {
           ? this.nodeComputedStyle[prop].value
           : "";
     }
+
+    // Convert computed value for line-height from pixels to unitless.
+    // If it is not overwritten by an explicit line-height CSS declaration,
+    // this will be the implicit value shown in the editor.
+
+    properties["line-height"] =
+      await this.convertUnits("line-height", parseFloat(properties["line-height"]),
+                              "px", "");
 
     // Then, replace with enabled font properties found on any of the rules that apply.
     for (const rule of this.ruleView.rules) {
@@ -953,7 +961,7 @@ class FontInspector {
     this.selectedRule =
       this.ruleView.rules.find(rule => rule.domRule.type === ELEMENT_STYLE);
 
-    const properties = this.getFontProperties();
+    const properties = await this.getFontProperties();
     const familiesDeclared =
       properties["font-family"].split(",")
       .map(font => font.replace(/["']+/g, "").trim());
