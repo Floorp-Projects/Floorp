@@ -1379,13 +1379,8 @@ pref("dom.ua_widget.enabled", true);
 pref("dom.ua_widget.enabled", false);
 #endif
 
-#ifdef NIGHTLY_BUILD
 pref("dom.webcomponents.shadowdom.enabled", true);
 pref("dom.webcomponents.customelements.enabled", true);
-#else
-pref("dom.webcomponents.shadowdom.enabled", false);
-pref("dom.webcomponents.customelements.enabled", false);
-#endif
 
 pref("javascript.enabled",                  true);
 pref("javascript.options.strict",           false);
