@@ -47,7 +47,7 @@ const HTTP_TEMPORARY_REDIRECT = 307;
  * @param nsIHttpChannel channel
  *        Request to check.
  * @param filters
- *        NetworkMonitor filters to match against.
+ *        NetworkObserver filters to match against.
  * @return boolean
  *         True if the network request should be logged, false otherwise.
  */
@@ -104,7 +104,7 @@ function matchRequest(channel, filters) {
 
 /**
  * The network response listener implements the nsIStreamListener and
- * nsIRequestObserver interfaces. This is used within the NetworkMonitor feature
+ * nsIRequestObserver interfaces. This is used within the NetworkObserver feature
  * to get the response body of the request.
  *
  * The code is mostly based on code listings from:
@@ -117,7 +117,7 @@ function matchRequest(channel, filters) {
  *        The response listener owner. This object needs to hold the
  *        |openResponses| object.
  * @param object httpActivity
- *        HttpActivity object associated with this request. See NetworkMonitor
+ *        HttpActivity object associated with this request. See NetworkObserver
  *        for more information.
  */
 function NetworkResponseListener(owner, httpActivity) {
@@ -174,7 +174,7 @@ NetworkResponseListener.prototype = {
   },
 
   /**
-   * This NetworkResponseListener tracks the NetworkMonitor.openResponses object
+   * This NetworkResponseListener tracks the NetworkObserver.openResponses object
    * to find the associated uncached headers.
    * @private
    */
@@ -426,8 +426,8 @@ NetworkResponseListener.prototype = {
 
   /**
    * Find the open response object associated to the current request. The
-   * NetworkMonitor._httpResponseExaminer() method saves the response headers in
-   * NetworkMonitor.openResponses. This method takes the data from the open
+   * NetworkObserver._httpResponseExaminer() method saves the response headers in
+   * NetworkObserver.openResponses. This method takes the data from the open
    * response object and puts it into the HTTP activity object, then sends it to
    * the remote Web Console instance.
    *
@@ -609,7 +609,7 @@ NetworkResponseListener.prototype = {
  *          onNetworkEvent() must return an object which holds several add*()
  *          methods which are used to add further network request/response information.
  */
-function NetworkMonitor(filters, owner) {
+function NetworkObserver(filters, owner) {
   this.filters = filters;
   this.owner = owner;
   this.openRequests = new Map();
@@ -623,9 +623,9 @@ function NetworkMonitor(filters, owner) {
   this._throttler = null;
 }
 
-exports.NetworkMonitor = NetworkMonitor;
+exports.NetworkObserver = NetworkObserver;
 
-NetworkMonitor.prototype = {
+NetworkObserver.prototype = {
   filters: null,
 
   httpTransactionCodes: {
