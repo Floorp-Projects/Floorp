@@ -133,7 +133,6 @@ test(t => {
   assert_equals(animation.startTime, null, 'startTime is unresolved');
 }, 'startTime of a newly created transition is unresolved');
 
-
 test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
   flushComputedStyle(div);
@@ -147,8 +146,7 @@ test(t => {
 }, 'Sanity test to check round-tripping assigning to new animation\'s ' +
    'startTime');
 
-
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, 'transitionend');
 
@@ -156,28 +154,22 @@ async_test(t => {
   div.style.marginLeft = '200px'; // initiate transition
 
   var animation = div.getAnimations()[0];
+  await animation.ready;
 
-  animation.ready.then(t.step_func(() => {
-    checkStateOnReadyPromiseResolved(animation);
+  checkStateOnReadyPromiseResolved(animation);
 
-    animation.startTime = startTimeForStartOfActiveInterval(animation.timeline);
-    checkStateAtActiveIntervalStartTime(animation);
+  animation.startTime = startTimeForStartOfActiveInterval(animation.timeline);
+  checkStateAtActiveIntervalStartTime(animation);
 
-    animation.startTime =
-      startTimeForFiftyPercentThroughActiveInterval(animation.timeline);
-    checkStateAtFiftyPctOfActiveInterval(animation);
+  animation.startTime =
+    startTimeForFiftyPercentThroughActiveInterval(animation.timeline);
+  checkStateAtFiftyPctOfActiveInterval(animation);
 
-    animation.startTime = startTimeForEndOfActiveInterval(animation.timeline);
-    return eventWatcher.wait_for('transitionend');
-  })).then(t.step_func(() => {
-    checkStateAtActiveIntervalEndTime(animation);
-  })).catch(t.step_func(reason => {
-    assert_unreached(reason);
-  })).then(() => {
-    t.done();
-  });
+  animation.startTime = startTimeForEndOfActiveInterval(animation.timeline);
+  await eventWatcher.wait_for('transitionend');
+
+  checkStateAtActiveIntervalEndTime(animation);
 }, 'Skipping forward through animation');
-
 
 test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
@@ -213,8 +205,7 @@ test(t => {
   checkStateAtActiveIntervalStartTime(animation);
 }, 'Skipping backwards through transition');
 
-
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t, {'class': 'animated-div'});
 
   flushComputedStyle(div);
@@ -222,50 +213,38 @@ async_test(t => {
 
   var animation = div.getAnimations()[0];
 
-  var storedCurrentTime;
+  await animation.ready;
 
-  animation.ready.then(t.step_func(() => {
-    storedCurrentTime = animation.currentTime;
-    animation.startTime = null;
-    return animation.ready;
-  })).catch(t.step_func(reason => {
-    assert_unreached(reason);
-  })).then(t.step_func(() => {
-    assert_equals(animation.currentTime, storedCurrentTime,
-      'Test that hold time is correct');
-    t.done();
-  }));
+  var storedCurrentTime = animation.currentTime;
+  animation.startTime = null;
+  await animation.ready;
+
+  assert_equals(animation.currentTime, storedCurrentTime,
+    'Test that hold time is correct');
 }, 'Setting startTime to null');
 
-
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t, {'class': 'animated-div'});
 
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
   var animation = div.getAnimations()[0];
+  await animation.ready;
 
-  animation.ready.then(t.step_func(() => {
-    var savedStartTime = animation.startTime;
+  var savedStartTime = animation.startTime;
 
-    assert_not_equals(animation.startTime, null,
-      'Animation.startTime not null on ready Promise resolve');
+  assert_not_equals(animation.startTime, null,
+    'Animation.startTime not null on ready Promise resolve');
 
-    animation.pause();
-    return animation.ready;
-  })).then(t.step_func(() => {
-    assert_equals(animation.startTime, null,
-      'Animation.startTime is null after paused');
-    assert_equals(animation.playState, 'paused',
-      'Animation.playState is "paused" after pause() call');
-  })).catch(t.step_func(reason => {
-    assert_unreached(reason);
-  })).then(() => {
-    t.done();
-  });
+  animation.pause();
+  await animation.ready;
+
+  assert_equals(animation.startTime, null,
+    'Animation.startTime is null after paused');
+  assert_equals(animation.playState, 'paused',
+    'Animation.playState is "paused" after pause() call');
 }, 'Animation.startTime after paused');
-
     </script>
   </body>
 </html>

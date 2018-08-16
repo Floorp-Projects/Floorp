@@ -8,7 +8,7 @@
 <script>
 'use strict';
 
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t);
 
   // FIXME: This test does too many things. It should be split up.
@@ -25,26 +25,26 @@ async_test(t => {
   var animations = div.getAnimations();
   assert_equals(animations.length, 2,
     'getAnimations() returns one Animation per transitioning property');
-  waitForAllAnimations(animations).then(t.step_func(() => {
-    var startTime = animations[0].startTime;
-    assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
-                'CSS transitions have sensible start times');
-    assert_equals(animations[0].startTime, animations[1].startTime,
-      'CSS transitions started together have the same start time');
-    // Wait a moment then add a third transition
-    return waitForFrame();
-  })).then(t.step_func(() => {
-    div.style.backgroundColor = 'green';
-    animations = div.getAnimations();
-    assert_equals(animations.length, 3,
-      'getAnimations returns Animations for all running CSS Transitions');
-    return waitForAllAnimations(animations);
-  })).then(t.step_func(() => {
-    assert_less_than(animations[1].startTime, animations[2].startTime,
-      'Animation for additional CSS transition starts after the original'
-      + ' transitions and appears later in the list');
-    t.done();
-  }));
+  await waitForAllAnimations(animations);
+
+  var startTime = animations[0].startTime;
+  assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
+              'CSS transitions have sensible start times');
+  assert_equals(animations[0].startTime, animations[1].startTime,
+    'CSS transitions started together have the same start time');
+
+  // Wait a moment then add a third transition
+  await waitForFrame();
+
+  div.style.backgroundColor = 'green';
+  animations = div.getAnimations();
+  assert_equals(animations.length, 3,
+    'getAnimations returns Animations for all running CSS Transitions');
+  await waitForAllAnimations(animations);
+
+  assert_less_than(animations[1].startTime, animations[2].startTime,
+    'Animation for additional CSS transition starts after the original'
+    + ' transitions and appears later in the list');
 }, 'getAnimations for CSS Transitions');
 
 test(t => {
