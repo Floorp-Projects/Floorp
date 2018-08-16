@@ -51,7 +51,11 @@ class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
     }
 
     private suspend fun getSuggestions(query: String) {
-        val suggestions = client?.getSuggestions(query) ?: listOf()
+        val suggestions = try {
+            client?.getSuggestions(query) ?: listOf()
+        } catch (ex: SearchSuggestionClient.ResponseParserException) {
+            listOf<String>()
+        }
 
         launch(UI) {
             _results.value = SuggestionResult(query, suggestions)
