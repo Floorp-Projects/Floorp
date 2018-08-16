@@ -121,6 +121,20 @@ static Atomic<JS::ReduceMicrosecondTimePrecisionCallback, Relaxed> sReduceMicros
  *     hashCode
  */
 
+// ES2019 draft rev 0ceb728a1adbffe42b26972a6541fd7f398b1557
+// 5.2.5 Mathematical Operations
+static inline double
+PositiveModulo(double dividend, double divisor)
+{
+    MOZ_ASSERT(divisor > 0);
+    MOZ_ASSERT(IsFinite(divisor));
+
+    double result = fmod(dividend, divisor);
+    if (result < 0)
+        result += divisor;
+    return result + (+0.0);
+}
+
 static inline double
 Day(double t)
 {
@@ -130,10 +144,7 @@ Day(double t)
 static double
 TimeWithinDay(double t)
 {
-    double result = fmod(t, msPerDay);
-    if (result < 0)
-        result += msPerDay;
-    return result;
+    return PositiveModulo(t, msPerDay);
 }
 
 /* ES5 15.9.1.3. */
@@ -340,9 +351,7 @@ MakeDay(double year, double month, double date)
     double ym = y + floor(m / 12);
 
     /* Step 6. */
-    int mn = int(fmod(m, 12.0));
-    if (mn < 0)
-        mn += 12;
+    int mn = int(PositiveModulo(m, 12));
 
     /* Steps 7-8. */
     bool leap = IsLeapYear(ym);
@@ -528,37 +537,25 @@ UTC(double t)
 static double
 HourFromTime(double t)
 {
-    double result = fmod(floor(t/msPerHour), HoursPerDay);
-    if (result < 0)
-        result += HoursPerDay;
-    return result;
+    return PositiveModulo(floor(t/msPerHour), HoursPerDay);
 }
 
 static double
 MinFromTime(double t)
 {
-    double result = fmod(floor(t / msPerMinute), MinutesPerHour);
-    if (result < 0)
-        result += MinutesPerHour;
-    return result;
+    return PositiveModulo(floor(t / msPerMinute), MinutesPerHour);
 }
 
 static double
 SecFromTime(double t)
 {
-    double result = fmod(floor(t / msPerSecond), SecondsPerMinute);
-    if (result < 0)
-        result += SecondsPerMinute;
-    return result;
+    return PositiveModulo(floor(t / msPerSecond), SecondsPerMinute);
 }
 
 static double
 msFromTime(double t)
 {
-    double result = fmod(t, msPerSecond);
-    if (result < 0)
-        result += msPerSecond;
-    return result;
+    return PositiveModulo(t, msPerSecond);
 }
 
 /* ES5 15.9.1.11. */
