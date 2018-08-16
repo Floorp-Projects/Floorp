@@ -1962,7 +1962,9 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator
 
 class MOZ_RAII NewObjectIRGenerator : public IRGenerator
 {
+#ifdef  JS_CACHEIR_SPEW
     JSOp op_;
+ #endif
     HandleObject templateObject_;
 
     void trackAttached(const char* name);
