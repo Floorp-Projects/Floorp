@@ -1141,8 +1141,10 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
     // this-compartment wrapper. This is what will be stored in the IC
     // keep the compartment alive.
     RootedObject wrappedTargetGlobal(cx_, &unwrapped->nonCCWGlobal());
-    if (!cx_->compartment()->wrap(cx_, &wrappedTargetGlobal))
+    if (!cx_->compartment()->wrap(cx_, &wrappedTargetGlobal)) {
+        cx_->clearPendingException();
         return false;
+    }
 
     bool isWindowProxy = false;
     RootedShape shape(cx_);
