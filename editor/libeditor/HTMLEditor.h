@@ -181,6 +181,22 @@ public:
   nsresult OnInputLineBreak();
 
   /**
+   * CreateElementWithDefaults() creates new element whose name is
+   * aTagName with some default attributes are set.  Note that this is a
+   * public utility method.  I.e., just creates element, not insert it
+   * into the DOM tree.
+   * NOTE: This is available for internal use too since this does not change
+   *       the DOM tree nor undo transactions, and does not refer Selection,
+   *       HTMLEditRules, etc.
+   *
+   * @param aTagName            The new element's tag name.  If the name is
+   *                            one of "href", "anchor" or "namedanchor",
+   *                            this creates an <a> element.
+   * @return                    Newly created element.
+   */
+  already_AddRefed<Element> CreateElementWithDefaults(const nsAtom& aTagName);
+
+  /**
    * Indent or outdent content around Selection.
    */
   nsresult IndentAsAction();
@@ -1477,10 +1493,7 @@ protected: // Shouldn't be used by friend classes
                                        const nsAString& aValue);
   typedef enum { eInserted, eAppended } InsertedOrAppended;
   void DoContentInserted(nsIContent* aChild, InsertedOrAppended);
-  // XXX Shouldn't this used by external classes instead of nsIHTMLEditor's
-  //     method?
-  already_AddRefed<Element> CreateElementWithDefaults(
-                              const nsAString& aTagName);
+
   /**
    * Returns an anonymous Element of type aTag,
    * child of aParentContent. If aIsCreatedHidden is true, the class

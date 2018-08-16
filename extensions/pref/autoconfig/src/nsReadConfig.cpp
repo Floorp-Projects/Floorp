@@ -10,7 +10,6 @@
 #include "nsIAppStartup.h"
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsIAutoConfig.h"
 #include "nsIComponentManager.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
@@ -233,14 +232,14 @@ nsresult nsReadConfig::readConfigFile()
     if (NS_SUCCEEDED(rv) && !urlName.IsEmpty()) {
 
         // Instantiating nsAutoConfig object if the pref is present
-        mAutoConfig = do_CreateInstance(NS_AUTOCONFIG_CONTRACTID, &rv);
-        if (NS_FAILED(rv))
-            return NS_ERROR_OUT_OF_MEMORY;
+        mAutoConfig = new nsAutoConfig();
 
-        rv = mAutoConfig->SetConfigURL(urlName.get());
-        if (NS_FAILED(rv))
-            return NS_ERROR_FAILURE;
+        rv = mAutoConfig->Init();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
 
+        mAutoConfig->SetConfigURL(urlName.get());
     }
 
     return NS_OK;

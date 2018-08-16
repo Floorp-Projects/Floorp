@@ -251,7 +251,9 @@ var NativeApp = class extends EventEmitter {
       // Set a timer to kill the process gracefully after one timeout
       // interval and kill it forcefully after two intervals.
       let timer = setTimeout(() => {
-        this.proc.kill(GRACEFUL_SHUTDOWN_TIME);
+        if (this.proc) {
+          this.proc.kill(GRACEFUL_SHUTDOWN_TIME);
+        }
       }, GRACEFUL_SHUTDOWN_TIME);
 
       let promise = Promise.all([
