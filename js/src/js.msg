@@ -461,6 +461,7 @@ MSG_DEF(JSMSG_DEBUG_BAD_REFERENT,      2, JSEXN_TYPEERR, "{0} does not refer to 
 MSG_DEF(JSMSG_DEBUG_BAD_RESUMPTION,    0, JSEXN_TYPEERR, "debugger resumption value must be undefined, {throw: val}, {return: val}, or null")
 MSG_DEF(JSMSG_DEBUG_BAD_YIELD,         0, JSEXN_TYPEERR, "generator yielded invalid value")
 MSG_DEF(JSMSG_DEBUG_CANT_DEBUG_GLOBAL, 0, JSEXN_TYPEERR, "passing non-debuggable global to addDebuggee")
+MSG_DEF(JSMSG_DEBUG_SAME_COMPARTMENT,  0, JSEXN_TYPEERR, "debugger and debuggee must be in different compartments")
 MSG_DEF(JSMSG_DEBUG_CCW_REQUIRED,      1, JSEXN_TYPEERR, "{0}: argument must be an object from a different compartment")
 MSG_DEF(JSMSG_DEBUG_COMPARTMENT_MISMATCH, 2, JSEXN_TYPEERR, "{0}: descriptor .{1} property is an object in a different compartment than the target object")
 MSG_DEF(JSMSG_DEBUG_LOOP,              0, JSEXN_TYPEERR, "cannot debug an object in same compartment as debugger or a compartment that is already debugging the debugger")
