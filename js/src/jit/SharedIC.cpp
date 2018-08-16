@@ -638,57 +638,7 @@ ICStubCompiler::PushStubPayload(MacroAssembler& masm, Register scratch)
     masm.adjustFrame(sizeof(intptr_t));
 }
 
-SharedStubInfo::SharedStubInfo(JSContext* cx, void* payload, ICEntry* icEntry)
-  : maybeFrame_(nullptr),
-    outerScript_(cx),
-    innerScript_(cx),
-    icEntry_(icEntry)
-{
-    if (payload) {
-        maybeFrame_ = (BaselineFrame*) payload;
-        outerScript_ = maybeFrame_->script();
-        innerScript_ = maybeFrame_->script();
-    } else {
-        IonICEntry* entry = (IonICEntry*) icEntry;
-        innerScript_ = entry->script();
-        // outerScript_ is initialized lazily.
-    }
-}
-
-HandleScript
-SharedStubInfo::outerScript(JSContext* cx)
-{
-    if (!outerScript_) {
-        js::jit::JitActivationIterator actIter(cx);
-        JSJitFrameIter it(actIter->asJit());
-        MOZ_ASSERT(it.isExitFrame());
-        ++it;
-        MOZ_ASSERT(it.isIonJS());
-        outerScript_ = it.script();
-        MOZ_ASSERT(!it.ionScript()->invalidated());
-    }
-    return outerScript_;
-}
-
 //
-void
-LoadTypedThingData(MacroAssembler& masm, TypedThingLayout layout, Register obj, Register result)
-{
-    switch (layout) {
-      case Layout_TypedArray:
-        masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), result);
-        break;
-      case Layout_OutlineTypedObject:
-        masm.loadPtr(Address(obj, OutlineTypedObject::offsetOfData()), result);
-        break;
-      case Layout_InlineTypedObject:
-        masm.computeEffectiveAddress(Address(obj, InlineTypedObject::offsetOfDataStart()), result);
-        break;
-      default:
-        MOZ_CRASH();
-    }
-}
-
 void
 BaselineScript::noteAccessedGetter(uint32_t pcOffset)
 {

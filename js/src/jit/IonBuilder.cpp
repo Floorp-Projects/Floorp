@@ -6114,9 +6114,8 @@ IonBuilder::compareTryBinaryStub(bool* emitted, MDefinition* left, MDefinition* 
 {
     MOZ_ASSERT(*emitted == false);
 
-    // Try to emit a shared stub cache.
-
-    if (JitOptions.disableSharedStubs)
+    // Try to emit a CacheIR Stub.
+    if (JitOptions.disableCacheIR)
         return Ok();
 
     if (JSOp(*pc) == JSOP_CASE || IsCallPC(pc))

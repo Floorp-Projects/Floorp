@@ -12,7 +12,6 @@
 #include "jit/BaselineJIT.h"
 #include "jit/ICState.h"
 #include "jit/MacroAssembler.h"
-#include "jit/SharedICList.h"
 #include "jit/SharedICRegisters.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
@@ -195,9 +194,9 @@ namespace jit {
 class ICStub;
 class ICFallbackStub;
 
+
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_BASELINE_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
-    IC_SHARED_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
 #undef FORWARD_DECLARE_STUBS
 
 #ifdef JS_JITSPEW
@@ -499,7 +498,6 @@ class ICStub
         INVALID = 0,
 #define DEF_ENUM_KIND(kindName) kindName,
         IC_BASELINE_STUB_KIND_LIST(DEF_ENUM_KIND)
-        IC_SHARED_STUB_KIND_LIST(DEF_ENUM_KIND)
 #undef DEF_ENUM_KIND
         LIMIT
     };
@@ -515,7 +513,6 @@ class ICStub
         switch(k) {
 #define DEF_KIND_STR(kindName) case kindName: return #kindName;
             IC_BASELINE_STUB_KIND_LIST(DEF_KIND_STR)
-            IC_SHARED_STUB_KIND_LIST(DEF_KIND_STR)
 #undef DEF_KIND_STR
           default:
             MOZ_CRASH("Invalid kind.");
@@ -659,7 +656,6 @@ class ICStub
         return reinterpret_cast<IC##kindName*>(this); \
     }
     IC_BASELINE_STUB_KIND_LIST(KIND_METHODS)
-    IC_SHARED_STUB_KIND_LIST(KIND_METHODS)
 #undef KIND_METHODS
 
     inline ICStub* next() const {
@@ -1082,11 +1078,6 @@ class ICStubCompiler
     void assumeStubFrame();
     void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
 
-    // Some stubs need to emit Gecko Profiler updates.  This emits the guarding
-    // jitcode for those stubs.  If profiling is not enabled, jumps to the
-    // given label.
-    void guardProfilingEnabled(MacroAssembler& masm, Register scratch, Label* skip);
-
   public:
     static inline AllocatableGeneralRegisterSet availableGeneralRegs(size_t numInputs) {
         AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
@@ -1151,56 +1142,6 @@ class ICStubCompiler
     }
 };
 
-class SharedStubInfo
-{
-    BaselineFrame* maybeFrame_;
-    RootedScript outerScript_;
-    RootedScript innerScript_;
-    ICEntry* icEntry_;
-
-  public:
-    SharedStubInfo(JSContext* cx, void* payload, ICEntry* entry);
-
-    ICStubCompiler::Engine engine() const {
-        return maybeFrame_
-               ? ICStubCompiler::Engine::Baseline
-               : ICStubCompiler::Engine::IonSharedIC;
-    }
-
-    HandleScript script() const {
-        MOZ_ASSERT(innerScript_);
-        return innerScript_;
-    }
-
-    HandleScript innerScript() const {
-        MOZ_ASSERT(innerScript_);
-        return innerScript_;
-    }
-
-    HandleScript outerScript(JSContext* cx);
-
-    jsbytecode* pc() const {
-        return icEntry()->pc(innerScript());
-    }
-
-    uint32_t pcOffset() const {
-        return script()->pcToOffset(pc());
-    }
-
-    BaselineFrame* frame() const {
-        MOZ_ASSERT(maybeFrame_);
-        return maybeFrame_;
-    }
-
-    BaselineFrame* maybeFrame() const {
-        return maybeFrame_;
-    }
-
-    ICEntry* icEntry() const {
-        return icEntry_;
-    }
-};
-
 // Monitored fallback stubs - as the name implies.
 class ICMonitoredFallbackStub : public ICFallbackStub
 {
@@ -1231,26 +1172,6 @@ class ICMonitoredFallbackStub : public ICFallbackStub
     static inline size_t offsetOfFallbackMonitorStub() {
         return offsetof(ICMonitoredFallbackStub, fallbackMonitorStub_);
     }
-};
-
-
-// Base class for stub compilers that can generate multiple stubcodes.
-// These compilers need access to the JSOp they are compiling for.
-class ICMultiStubCompiler : public ICStubCompiler
-{
-  protected:
-    JSOp op;
-
-    // Stub keys for multi-stub kinds are composed of both the kind
-    // and the op they are compiled for.
-    virtual int32_t getKey() const override {
-        return static_cast<int32_t>(engine_) |
-              (static_cast<int32_t>(kind) << 1) |
-              (static_cast<int32_t>(op) << 17);
-    }
-
-    ICMultiStubCompiler(JSContext* cx, ICStub::Kind kind, JSOp op, Engine engine)
-      : ICStubCompiler(cx, kind, engine), op(op) {}
 };
 
 // TypeCheckPrimitiveSetStub
@@ -1685,21 +1606,6 @@ class ICCompare_Fallback : public ICFallbackStub
     };
 };
 
-// Enum for stubs handling a combination of typed arrays and typed objects.
-enum TypedThingLayout {
-    Layout_TypedArray,
-    Layout_OutlineTypedObject,
-    Layout_InlineTypedObject
-};
-
-void
-StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub);
-
-void
-LoadTypedThingData(MacroAssembler& masm, TypedThingLayout layout, Register obj, Register result);
-
-void
-LoadTypedThingLength(MacroAssembler& masm, TypedThingLayout layout, Register obj, Register result);
 
 class ICGetProp_Fallback : public ICMonitoredFallbackStub
 {
@@ -1751,34 +1657,6 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
         }
     };
 };
-
-static inline uint32_t
-SimpleTypeDescrKey(SimpleTypeDescr* descr)
-{
-    if (descr->is<ScalarTypeDescr>())
-        return uint32_t(descr->as<ScalarTypeDescr>().type()) << 1;
-    return (uint32_t(descr->as<ReferenceTypeDescr>().type()) << 1) | 1;
-}
-
-inline bool
-SimpleTypeDescrKeyIsScalar(uint32_t key)
-{
-    return !(key & 1);
-}
-
-inline ScalarTypeDescr::Type
-ScalarTypeFromSimpleTypeDescrKey(uint32_t key)
-{
-    MOZ_ASSERT(SimpleTypeDescrKeyIsScalar(key));
-    return ScalarTypeDescr::Type(key >> 1);
-}
-
-inline ReferenceType
-ReferenceTypeFromSimpleTypeDescrKey(uint32_t key)
-{
-    MOZ_ASSERT(!SimpleTypeDescrKeyIsScalar(key));
-    return ReferenceType(key >> 1);
-}
 
 } // namespace jit
 } // namespace js
