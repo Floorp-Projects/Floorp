@@ -114,9 +114,16 @@ async function testInArea(area) {
             browser.test.log(`Call triggerAction. Expect click event.`);
             sendClick({expectEvent: true, expectPopup: null}, "trigger-action");
           },
-          () => {
-            browser.test.log(`Set popup to "a" and click browser action. Expect popup "a", and leave open.`);
-            browser.browserAction.setPopup({popup: "/popup-a.html"});
+          async () => {
+            browser.test.log(`Set window-specific popup to "b" and click browser action. Expect popup "b".`);
+            let {id} = await browser.windows.getCurrent();
+            browser.browserAction.setPopup({windowId: id, popup: "popup-b.html"});
+            sendClick({expectEvent: false, expectPopup: "b"});
+          },
+          async () => {
+            browser.test.log(`Set tab-specific popup to "a" and click browser action. Expect popup "a", and leave open.`);
+            let [{id}] = await browser.tabs.query({active: true, currentWindow: true});
+            browser.browserAction.setPopup({tabId: id, popup: "/popup-a.html"});
             sendClick({expectEvent: false, expectPopup: "a", closePopup: false,
                        containingPopupShouldClose: false});
           },

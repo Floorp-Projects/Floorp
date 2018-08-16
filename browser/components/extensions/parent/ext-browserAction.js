@@ -547,51 +547,57 @@ this.browserAction = class extends ExtensionAPI {
   }
 
   /**
-   * Gets the target object and its associated values corresponding to
-   * the `details` parameter of the various get* and set* API methods.
+   * Gets the target object corresponding to the `details` parameter of the various
+   * get* and set* API methods.
    *
    * @param {Object} details
    *        An object with optional `tabId` or `windowId` properties.
    * @throws if both `tabId` and `windowId` are specified, or if they are invalid.
-   * @returns {Object}
-   *        An object with two properties: `target` and `values`.
-   *        - If a `tabId` was specified, `target` will be the corresponding
-   *          XULElement tab. If a `windowId` was specified, `target` will be
-   *          the corresponding ChromeWindow. Otherwise it will be `null`.
-   *        - `values` will contain the icon, title, badge, etc. associated with
-   *          the target.
+   * @returns {XULElement|ChromeWindow|null}
+   *        If a `tabId` was specified, the corresponding XULElement tab.
+   *        If a `windowId` was specified, the corresponding ChromeWindow.
+   *        Otherwise, `null`.
    */
-  getContextData({tabId, windowId}) {
+  getTargetFromDetails({tabId, windowId}) {
     if (tabId != null && windowId != null) {
       throw new ExtensionError("Only one of tabId and windowId can be specified.");
     }
-    let target, values;
     if (tabId != null) {
-      target = tabTracker.getTab(tabId);
-      values = this.tabContext.get(target);
+      return tabTracker.getTab(tabId);
     } else if (windowId != null) {
-      target = windowTracker.getWindow(windowId);
-      values = this.tabContext.get(target);
-    } else {
-      target = null;
-      values = this.globals;
+      return windowTracker.getWindow(windowId);
     }
-    return {target, values};
+    return null;
+  }
+
+  /**
+   * Gets the data associated with a tab, window, or the global one.
+   *
+   * @param {XULElement|ChromeWindow|null} target
+   *        A XULElement tab, a ChromeWindow, or null for the global data.
+   * @returns {Object}
+   *        The icon, title, badge, etc. associated with the target.
+   */
+  getContextData(target) {
+    if (target) {
+      return this.tabContext.get(target);
+    }
+    return this.globals;
   }
 
   /**
    * Set a global, window specific or tab specific property.
    *
-   * @param {Object} details
-   *        An object with optional `tabId` or `windowId` properties.
+   * @param {XULElement|ChromeWindow|null} target
+   *        A XULElement tab, a ChromeWindow, or null for the global data.
    * @param {string} prop
    *        String property to set. Should should be one of "icon", "title",
    *        "badgeText", "popup", "badgeBackgroundColor" or "enabled".
    * @param {string} value
    *        Value for prop.
    */
-  setProperty(details, prop, value) {
-    let {target, values} = this.getContextData(details);
+  setProperty(target, prop, value) {
+    let values = this.getContextData(target);
     if (value === null) {
       delete values[prop];
     } else {
@@ -604,16 +610,24 @@ this.browserAction = class extends ExtensionAPI {
   /**
    * Retrieve the value of a global, window specific or tab specific property.
    *
-   * @param {Object} details
-   *        An object with optional `tabId` or `windowId` properties.
+   * @param {XULElement|ChromeWindow|null} target
+   *        A XULElement tab, a ChromeWindow, or null for the global data.
    * @param {string} prop
    *        String property to retrieve. Should should be one of "icon", "title",
    *        "badgeText", "popup", "badgeBackgroundColor" or "enabled".
    * @returns {string} value
    *          Value of prop.
    */
-  getProperty(details, prop) {
-    return this.getContextData(details).values[prop];
+  getProperty(target, prop) {
+    return this.getContextData(target)[prop];
+  }
+
+  setPropertyFromDetails(details, prop, value) {
+    return this.setProperty(this.getTargetFromDetails(details), prop, value);
+  }
+
+  getPropertyFromDetails(details, prop) {
+    return this.getProperty(this.getTargetFromDetails(details), prop);
   }
 
   getAPI(context) {
@@ -641,23 +655,23 @@ this.browserAction = class extends ExtensionAPI {
         }).api(),
 
         enable: function(tabId) {
-          browserAction.setProperty({tabId}, "enabled", true);
+          browserAction.setPropertyFromDetails({tabId}, "enabled", true);
         },
 
         disable: function(tabId) {
-          browserAction.setProperty({tabId}, "enabled", false);
+          browserAction.setPropertyFromDetails({tabId}, "enabled", false);
         },
 
         isEnabled: function(details) {
-          return browserAction.getProperty(details, "enabled");
+          return browserAction.getPropertyFromDetails(details, "enabled");
         },
 
         setTitle: function(details) {
-          browserAction.setProperty(details, "title", details.title);
+          browserAction.setPropertyFromDetails(details, "title", details.title);
         },
 
         getTitle: function(details) {
-          return browserAction.getProperty(details, "title");
+          return browserAction.getPropertyFromDetails(details, "title");
         },
 
         setIcon: function(details) {
@@ -667,15 +681,15 @@ this.browserAction = class extends ExtensionAPI {
           if (!Object.keys(icon).length) {
             icon = null;
           }
-          browserAction.setProperty(details, "icon", icon);
+          browserAction.setPropertyFromDetails(details, "icon", icon);
         },
 
         setBadgeText: function(details) {
-          browserAction.setProperty(details, "badgeText", details.text);
+          browserAction.setPropertyFromDetails(details, "badgeText", details.text);
         },
 
         getBadgeText: function(details) {
-          return browserAction.getProperty(details, "badgeText");
+          return browserAction.getPropertyFromDetails(details, "badgeText");
         },
 
         setPopup: function(details) {
@@ -688,11 +702,11 @@ this.browserAction = class extends ExtensionAPI {
           if (url && !context.checkLoadURL(url)) {
             return Promise.reject({message: `Access denied for URL ${url}`});
           }
-          browserAction.setProperty(details, "popup", url);
+          browserAction.setPropertyFromDetails(details, "popup", url);
         },
 
         getPopup: function(details) {
-          return browserAction.getProperty(details, "popup");
+          return browserAction.getPropertyFromDetails(details, "popup");
         },
 
         setBadgeBackgroundColor: function(details) {
@@ -704,11 +718,11 @@ this.browserAction = class extends ExtensionAPI {
             }
             color = col && [col.r, col.g, col.b, Math.round(col.a * 255)];
           }
-          browserAction.setProperty(details, "badgeBackgroundColor", color);
+          browserAction.setPropertyFromDetails(details, "badgeBackgroundColor", color);
         },
 
         getBadgeBackgroundColor: function(details, callback) {
-          let color = browserAction.getProperty(details, "badgeBackgroundColor");
+          let color = browserAction.getPropertyFromDetails(details, "badgeBackgroundColor");
           return color || [0xd9, 0, 0, 255];
         },
 
