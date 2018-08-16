@@ -251,7 +251,7 @@ android.applicationVariants.all { variant ->
             versionCode = versionCode + 2
         } else if (variant.flavorName.contains("Aarch64")) {
             versionCode = versionCode + 1
-        } else // variant.flavorName.contains("Arm")) use generated version code
+        }// else variant.flavorName.contains("Arm")) use generated version code
 
         variant.outputs.all { output ->
             setVersionCodeOverride(versionCode)
