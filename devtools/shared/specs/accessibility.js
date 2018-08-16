@@ -104,6 +104,10 @@ const accessibleWalkerSpec = generateActorSpec({
     },
     "picker-accessible-canceled": {
       type: "pickerAccessibleCanceled"
+    },
+    "highlighter-event": {
+      type: "highlighter-event",
+      data: Arg(0, "json")
     }
   },
 
