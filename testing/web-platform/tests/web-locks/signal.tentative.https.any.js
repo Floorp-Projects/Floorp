@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: AbortSignal integration</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="resources/helpers.js"></script>
-<script>
+// META: title=Web Locks API: AbortSignal integration
+// META: script=resources/helpers.js
+
 'use strict';
 
 function makePromiseAndResolveFunc() {
@@ -198,5 +193,3 @@ promise_test(async t => {
                 'Lock released promise should not reject');
 
 }, 'Abort signaled after lock released');
-
-</script>

@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: navigator.locks.request method</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="resources/helpers.js"></script>
-<script>
+// META: title=Web Locks API: navigator.locks.request method
+// META: script=resources/helpers.js
+
 'use strict';
 
 promise_test(async t => {
@@ -126,5 +121,3 @@ promise_test(async t => {
   assert_equals(Promise.resolve(p), p, 'request() result is a Promise');
   await promise_rejects(t, test_error, p, 'result should reject');
 }, 'Returned Promise rejects if callback throws asynchronously');
-
-</script>

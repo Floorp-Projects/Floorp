@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: steal option</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="resources/helpers.js"></script>
-<script>
+// META: title=Web Locks API: steal option
+// META: script=resources/helpers.js
+
 'use strict';
 
 const never_settled = new Promise(resolve => { /* never */ });
@@ -93,5 +88,3 @@ promise_test(async t => {
   assert_true(saw_abort, 'First steal should have aborted');
 
 }, 'Last caller wins');
-
-</script>

@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: Lock held until callback result resolves</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="resources/helpers.js"></script>
-<script>
+// META: title=Web Locks API: Lock held until callback result resolves
+// META: script=resources/helpers.js
+
 'use strict';
 
 // For uncaught rejections.
@@ -93,5 +88,3 @@ promise_test(async t => {
   });
   assert_true(callback_called, 'callback should have executed');
 }, 'held lock prevents the same client from acquiring it');
-
-</script>

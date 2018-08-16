@@ -1,10 +1,5 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>Web Locks API: Exclusive Mode</title>
-<link rel=help href="https://wicg.github.io/web-locks/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=Web Locks API: Exclusive Mode
+
 'use strict';
 
 promise_test(async t => {
@@ -36,5 +31,3 @@ promise_test(async t => {
   await inner_promise;
   assert_array_equals(granted, [2, 1]);
 }, 'Requests for distinct resources can be granted');
-
-</script>
