@@ -1855,12 +1855,17 @@ JSStructuredCloneWriter::write(HandleValue v)
     if (!startWrite(v))
         return false;
 
+    RootedObject obj(context());
+    RootedValue key(context());
+    RootedValue val(context());
+    RootedId id(context());
+
     while (!counts.empty()) {
-        RootedObject obj(context(), &objs.back().toObject());
+        obj = &objs.back().toObject();
         assertSameCompartment(context(), obj);
         if (counts.back()) {
             counts.back()--;
-            RootedValue key(context(), entries.back());
+            key = entries.back();
             entries.popBack();
             checkStack();
 
@@ -1870,7 +1875,7 @@ JSStructuredCloneWriter::write(HandleValue v)
 
             if (cls == ESClass::Map) {
                 counts.back()--;
-                RootedValue val(context(), entries.back());
+                val = entries.back();
                 entries.popBack();
                 checkStack();
 
@@ -1880,7 +1885,6 @@ JSStructuredCloneWriter::write(HandleValue v)
                 if (!startWrite(key))
                     return false;
             } else {
-                RootedId id(context());
                 if (!ValueToId<CanGC>(context(), key, &id))
                   return false;
                 MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id));
@@ -1893,7 +1897,6 @@ JSStructuredCloneWriter::write(HandleValue v)
                     return false;
 
                 if (found) {
-                    RootedValue val(context());
                     if (!startWrite(key) ||
                         !GetProperty(context(), obj, obj, id, &val) ||
                         !startWrite(val))
