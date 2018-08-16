@@ -4,7 +4,11 @@
 
 "use strict";
 
-const {FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
+let FormAutofillStorage;
+
+add_task(async function setup() {
+  ({FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {}));
+});
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 

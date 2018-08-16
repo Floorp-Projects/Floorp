@@ -8,6 +8,7 @@ DevToolsModules(
     'commands.js',
     'content-process-forward.js',
     'listeners.js',
+    'message-manager-mock.js',
     'screenshot.js',
     'utils.js',
     'worker-listeners.js',

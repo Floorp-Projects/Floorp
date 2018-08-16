@@ -4537,7 +4537,7 @@ EditorBase::ClearSelection()
 }
 
 already_AddRefed<Element>
-EditorBase::CreateHTMLContent(nsAtom* aTag)
+EditorBase::CreateHTMLContent(const nsAtom* aTag)
 {
   MOZ_ASSERT(aTag);
 
