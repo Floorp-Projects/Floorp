@@ -1611,61 +1611,80 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
         if (!GetBuiltinClass(context(), obj, &cls))
             return false;
 
-        if (cls == ESClass::RegExp) {
+        switch (cls) {
+          case ESClass::Object:
+          case ESClass::Array:
+            return traverseObject(obj);
+          case ESClass::Number: {
+            RootedValue unboxed(context());
+            if (!Unbox(context(), obj, &unboxed))
+                return false;
+            return out.writePair(SCTAG_NUMBER_OBJECT, 0) && out.writeDouble(unboxed.toNumber());
+          }
+          case ESClass::String: {
+            RootedValue unboxed(context());
+            if (!Unbox(context(), obj, &unboxed))
+                return false;
+            return writeString(SCTAG_STRING_OBJECT, unboxed.toString());
+          }
+          case ESClass::Boolean: {
+            RootedValue unboxed(context());
+            if (!Unbox(context(), obj, &unboxed))
+                return false;
+            return out.writePair(SCTAG_BOOLEAN_OBJECT, unboxed.toBoolean());
+          }
+          case ESClass::RegExp: {
             RegExpShared* re = RegExpToShared(context(), obj);
             if (!re)
                 return false;
             return out.writePair(SCTAG_REGEXP_OBJECT, re->getFlags()) &&
                    writeString(SCTAG_STRING, re->getSource());
-        } else if (cls == ESClass::Date) {
+          }
+          case ESClass::ArrayBuffer: {
+            if (JS_IsArrayBufferObject(obj) && JS_ArrayBufferHasData(obj))
+                return writeArrayBuffer(obj);
+            break;
+          }
+          case ESClass::SharedArrayBuffer:
+            if (JS_IsSharedArrayBufferObject(obj))
+                return writeSharedArrayBuffer(obj);
+            break;
+          case ESClass::Date: {
             RootedValue unboxed(context());
             if (!Unbox(context(), obj, &unboxed))
                 return false;
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(unboxed.toNumber());
-        } else if (JS_IsTypedArrayObject(obj)) {
-            return writeTypedArray(obj);
-        } else if (JS_IsDataViewObject(obj)) {
-            return writeDataView(obj);
-        } else if (JS_IsArrayBufferObject(obj) && JS_ArrayBufferHasData(obj)) {
-            return writeArrayBuffer(obj);
-        } else if (JS_IsSharedArrayBufferObject(obj)) {
-            return writeSharedArrayBuffer(obj);
-        } else if (wasm::IsSharedWasmMemoryObject(obj)) {
-            return writeSharedWasmMemory(obj);
-        } else if (cls == ESClass::Object) {
-            return traverseObject(obj);
-        } else if (cls == ESClass::Array) {
-            return traverseObject(obj);
-        } else if (cls == ESClass::Boolean) {
-            RootedValue unboxed(context());
-            if (!Unbox(context(), obj, &unboxed))
-                return false;
-            return out.writePair(SCTAG_BOOLEAN_OBJECT, unboxed.toBoolean());
-        } else if (cls == ESClass::Number) {
-            RootedValue unboxed(context());
-            if (!Unbox(context(), obj, &unboxed))
-                return false;
-            return out.writePair(SCTAG_NUMBER_OBJECT, 0) && out.writeDouble(unboxed.toNumber());
-        } else if (cls == ESClass::String) {
-            RootedValue unboxed(context());
-            if (!Unbox(context(), obj, &unboxed))
-                return false;
-            return writeString(SCTAG_STRING_OBJECT, unboxed.toString());
-        } else if (cls == ESClass::Map) {
-            return traverseMap(obj);
-        } else if (cls == ESClass::Set) {
+          }
+          case ESClass::Set:
             return traverseSet(obj);
-        }
+          case ESClass::Map:
+            return traverseMap(obj);
 #ifdef ENABLE_BIGINT
-        else if (cls == ESClass::BigInt) {
+          case ESClass::BigInt: {
             RootedValue unboxed(context());
             if (!Unbox(context(), obj, &unboxed))
                 return false;
             return writeBigInt(SCTAG_BIGINT_OBJECT, unboxed.toBigInt());
-        }
+          }
 #endif
-        else if (SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj)) {
-            return traverseSavedFrame(obj);
+          case ESClass::Promise:
+          case ESClass::MapIterator:
+          case ESClass::SetIterator:
+          case ESClass::Arguments:
+          case ESClass::Error:
+            break;
+
+          case ESClass::Other: {
+            if (JS_IsTypedArrayObject(obj))
+                return writeTypedArray(obj);
+            if (JS_IsDataViewObject(obj))
+                return writeDataView(obj);
+            if (wasm::IsSharedWasmMemoryObject(obj))
+                return writeSharedWasmMemory(obj);
+            if (SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj))
+                return traverseSavedFrame(obj);
+            break;
+          }
         }
 
         if (out.buf.callbacks_ && out.buf.callbacks_->write)
