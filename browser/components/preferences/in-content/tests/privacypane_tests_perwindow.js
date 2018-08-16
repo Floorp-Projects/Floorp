@@ -163,7 +163,11 @@ function test_dependent_cookie_elements(win) {
     expect_disabled(true, [keepUntil, keepCookiesUntil]);
     expect_disabled(false, [blockCookiesLabel, blockCookiesMenu]);
 
-    blockCookiesMenu.value = "trackers";
+    if (win.contentBlockingCookiesAndSiteDataRejectTrackersEnabled) {
+      blockCookiesMenu.value = "trackers";
+    } else {
+      blockCookiesMenu.value = "unvisited";
+    }
     controlChanged(blockCookiesMenu);
     expect_disabled(false);
   } else {
