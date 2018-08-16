@@ -177,6 +177,10 @@ PaymentRequestService::LaunchUIAction(const nsAString& aRequestId, uint32_t aAct
       rv = uiService->UpdatePayment(aRequestId);
       break;
     }
+    case nsIPaymentActionRequest::CLOSE_ACTION: {
+      rv = uiService->ClosePayment(aRequestId);
+      break;
+    }
     default : {
       return NS_ERROR_FAILURE;
     }
@@ -388,8 +392,11 @@ PaymentRequestService::RequestPayment(nsIPaymentActionRequest* aRequest)
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
+      rv = LaunchUIAction(requestId, type);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       if (mShowingRequest == payment) {
-        // might need to notify the PaymentRequest is cleanup
         mShowingRequest = nullptr;
       }
       mRequestQueue.RemoveElement(payment);
