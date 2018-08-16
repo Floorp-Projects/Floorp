@@ -66,8 +66,6 @@ registerCleanupFunction(async function() {
 var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 testDir = testDir.replace(/\/\//g, "/");
 testDir = testDir.replace("chrome:/mochitest", "chrome://mochitest");
-var helpersjs = testDir + "/../../../commandline/test/helpers.js";
-Services.scriptloader.loadSubScript(helpersjs, this);
 
 function addWindow(aUrl) {
   info("Adding window: " + aUrl);
@@ -669,7 +667,7 @@ AddonDebugger.prototype = {
         this.client.addListener("consoleAPICall", this._onConsoleAPICall);
         deferred.resolve();
       }, e => {
-        deferred.reject(e); 
+        deferred.reject(e);
       });
     return deferred.promise;
   },

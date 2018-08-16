@@ -41,7 +41,6 @@ registerCleanupFunction(() => {
  * @param {String} filePath The file path, relative to the current directory.
  *                 Examples:
  *                 - "helper_attributes_test_runner.js"
- *                 - "../../../commandline/test/helpers.js"
  */
 function loadHelperScript(filePath) {
   const testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));

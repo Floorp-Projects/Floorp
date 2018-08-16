@@ -85,6 +85,17 @@ add_task(async function test_records_obtained_from_server_are_stored_in_db() {
 });
 add_task(clear_state);
 
+add_task(async function test_records_can_have_local_fields() {
+  const c = RemoteSettings("password-fields", { localFields: ["accepted"] });
+  await c.maybeSync(2000, Date.now());
+
+  const col = await c.openCollection();
+  await col.update({ id: "9d500963-d80e-3a91-6e74-66f3811b99cc", accepted: true });
+
+  await c.maybeSync(2000, Date.now()); // Does not fail.
+});
+add_task(clear_state);
+
 add_task(async function test_current_server_time_is_saved_in_pref() {
   const serverTime = Date.now();
   await client.maybeSync(2000, serverTime);
