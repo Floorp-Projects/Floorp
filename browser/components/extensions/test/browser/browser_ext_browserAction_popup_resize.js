@@ -8,10 +8,6 @@ function openPanel(extension, win = window, awaitLoad = false) {
   return awaitExtensionPanel(extension, win, awaitLoad);
 }
 
-add_task(async function testSetup() {
-  Services.prefs.setBoolPref("toolkit.cosmeticAnimations.enabled", false);
-});
-
 add_task(async function testBrowserActionPopupResize() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -67,6 +63,10 @@ add_task(async function testBrowserActionPopupResize() {
 
 async function testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
   let docType = standardsMode ? "<!DOCTYPE html>" : "";
+  let overflowView = browserWin.document.getElementById("widget-overflow-mainView");
+  if (overflowView) {
+    overflowView.style.minHeight = "600px";
+  }
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -153,8 +153,6 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
   CustomizableUI.addWidgetToArea(widget.id, getCustomizableUIPanelID());
 
   let panel = browserWin.PanelUI.overflowPanel;
-  panel.setAttribute("animate", "false");
-
   let panelMultiView = panel.firstChild;
   let widgetId = makeWidgetId(extension.id);
   // The 'ViewShown' event is the only way to correctly determine when the extensions'
@@ -187,7 +185,6 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
   await awaitBrowserLoaded(browser);
   await shownPromise;
-
   // Wait long enough to make sure the initial resize debouncing timer has
   // expired.
   await delay(500);
@@ -272,6 +269,9 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
   await closeBrowserAction(extension, browserWin);
 
+  if (overflowView) {
+    overflowView.style.removeProperty("min-height");
+  }
   await extension.unload();
 }
 
@@ -315,8 +315,4 @@ add_task(async function testBrowserActionMenuResizeBottomArrow() {
   await testPopupSize(true, win, "bottom");
 
   await BrowserTestUtils.closeWindow(win);
-});
-
-add_task(async function testTeardown() {
-  Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
 });
