@@ -23,6 +23,8 @@ ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 const {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
   ENABLED_AUTOFILL_CREDITCARDS_PREF,
+} = FormAutofill;
+const {
   MANAGE_ADDRESSES_KEYWORDS,
   EDIT_ADDRESS_KEYWORDS,
   MANAGE_CREDITCARDS_KEYWORDS,

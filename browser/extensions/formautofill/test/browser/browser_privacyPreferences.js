@@ -66,11 +66,12 @@ add_task(async function test_openManageAutofillDialogs() {
   });
 });
 
-// Checkbox should be unchecked when form autofill addresses and credit cards are disabled.
-add_task(async function test_autofillDisabledCheckbox() {
-  SpecialPowers.pushPrefEnv({set: [[ENABLED_AUTOFILL_ADDRESSES_PREF, false]]});
-  SpecialPowers.pushPrefEnv({set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, false]]});
+
+add_task(async function test_autofillCheckboxes() {
+  await SpecialPowers.pushPrefEnv({set: [[ENABLED_AUTOFILL_ADDRESSES_PREF, false]]});
+  await SpecialPowers.pushPrefEnv({set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, false]]});
   let finalPrefPaneLoaded = TestUtils.topicObserved("sync-pane-loaded", () => true);
+  // Checkbox should be unchecked when form autofill addresses and credit cards are disabled.
   await BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, async function(browser) {
     await finalPrefPaneLoaded;
     await ContentTask.spawn(browser, SELECTORS, (selectors) => {
@@ -81,11 +82,20 @@ add_task(async function test_autofillDisabledCheckbox() {
       is(content.document.querySelector(selectors.creditCardAutofillCheckbox).checked, false,
         "Checkbox should be unchecked when Autofill Credit Cards is disabled");
     });
+
+    info("test toggling the checkboxes");
+    await BrowserTestUtils.synthesizeMouseAtCenter(SELECTORS.addressAutofillCheckbox, {}, browser);
+    is(Services.prefs.getBoolPref(ENABLED_AUTOFILL_ADDRESSES_PREF), true,
+       "Check address autofill is now enabled");
+
+    await BrowserTestUtils.synthesizeMouseAtCenter(SELECTORS.creditCardAutofillCheckbox, {}, browser);
+    is(Services.prefs.getBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF), true,
+       "Check credit card autofill is now enabled");
   });
 });
 
 add_task(async function test_creditCardNotAvailable() {
-  SpecialPowers.pushPrefEnv({set: [[AUTOFILL_CREDITCARDS_AVAILABLE_PREF, false]]});
+  await SpecialPowers.pushPrefEnv({set: [[AUTOFILL_CREDITCARDS_AVAILABLE_PREF, false]]});
   let finalPrefPaneLoaded = TestUtils.topicObserved("sync-pane-loaded", () => true);
   await BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, async function(browser) {
     await finalPrefPaneLoaded;
