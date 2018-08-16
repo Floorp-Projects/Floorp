@@ -10925,7 +10925,8 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
   *aCancel = false;
   *aHandled = true;
 
-  RefPtr<Element> focusElement = HTMLEditorRef().GetSelectionContainer();
+  RefPtr<Element> focusElement =
+    HTMLEditorRef().GetSelectionContainerElement(SelectionRef());
   if (focusElement && HTMLEditUtils::IsImage(focusElement)) {
     mNewBlock = focusElement;
     return NS_OK;

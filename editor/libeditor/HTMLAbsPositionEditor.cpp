@@ -80,9 +80,17 @@ HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
 already_AddRefed<Element>
 HTMLEditor::GetAbsolutelyPositionedSelectionContainer()
 {
-  nsAutoString positionStr;
-  RefPtr<Element> element = GetSelectionContainer();
+  RefPtr<Selection> selection = GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return nullptr;
+  }
 
+  RefPtr<Element> element = GetSelectionContainerElement(*selection);
+  if (NS_WARN_IF(!element)) {
+    return nullptr;
+  }
+
+  nsAutoString positionStr;
   while (element && !element->IsHTMLElement(nsGkAtoms::html)) {
     nsresult rv =
       CSSEditUtils::GetComputedProperty(*element, *nsGkAtoms::position,
