@@ -54,9 +54,9 @@ promise_test(async t => {
     assert_equals(err.name, 'AbortError',
                   'ready promise is rejected with AbortError');
     assert_equals(animation.playState, 'idle',
-                  'Animation is idle after transition was cancelled');
+                  'Animation is idle after transition was canceled');
   }
-}, 'ready promise is rejected when a transition is cancelled by updating'
+}, 'ready promise is rejected when a transition is canceled by updating'
    + ' transition-property');
 
 promise_test(async t => {
@@ -84,9 +84,9 @@ promise_test(async t => {
     assert_equals(err.name, 'AbortError',
                   'ready promise is rejected with AbortError');
     assert_equals(animation.playState, 'idle',
-                  'Animation is idle after transition was cancelled');
+                  'Animation is idle after transition was canceled');
   }
-}, 'ready promise is rejected when a transition is cancelled by changing'
+}, 'ready promise is rejected when a transition is canceled by changing'
    + ' the transition property to something not interpolable');
 
 </script>
