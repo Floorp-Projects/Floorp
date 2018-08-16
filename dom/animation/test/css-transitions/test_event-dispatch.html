@@ -48,7 +48,7 @@ const setupTransition = (t, transitionStyle) => {
                                              'transitionstart',
                                              'transitionend',
                                              'transitioncancel' ]);
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
 
   div.style.marginLeft = '100px';
   const transition = div.getAnimations()[0];
@@ -108,7 +108,7 @@ promise_test(async t => {
 
   // Make idle
   div.style.display = 'none';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   const evt = await watcher.wait_for('transitioncancel');
   assert_equals(evt.elapsedTime, 0.0);
 }, 'Before -> Idle (display: none)');
@@ -158,7 +158,7 @@ promise_test(async t => {
 
   // Make idle
   div.style.display = 'none';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   const evt = await watcher.wait_for('transitioncancel');
   assert_equals(evt.elapsedTime, 0.0);
 }, 'Active -> Idle, no delay (display: none)');
@@ -188,7 +188,7 @@ promise_test(async t => {
 
   // Make idle
   div.style.display = 'none';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   const evt = await watcher.wait_for('transitioncancel');
   assert_equals(evt.elapsedTime, 0.0);
 }, 'Active -> Idle, with positive delay (display: none)');
@@ -219,7 +219,7 @@ promise_test(async t => {
 
   // Make idle
   div.style.display = 'none';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   const evt = await watcher.wait_for('transitioncancel');
   assert_equals(evt.elapsedTime, 50.0);
 }, 'Active -> Idle, with negative delay (display: none)');
@@ -344,7 +344,7 @@ promise_test(async t => {
 
   // Make idle
   div.style.display = 'none';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   await watcher.wait_for('transitioncancel');
 
   transition.cancel();
@@ -373,7 +373,7 @@ promise_test(async t => {
 
   // Make idle
   div.style.display = 'none';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   transition.play();
   transition.cancel();
   await watcher.wait_for('transitioncancel');

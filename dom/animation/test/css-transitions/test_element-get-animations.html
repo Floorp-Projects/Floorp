@@ -25,7 +25,7 @@ promise_test(async t => {
 test(t => {
   const div = addDiv(t, { style: 'left: 0px; transition: all 100s' });
 
-  flushComputedStyle(div);
+  getComputedStyle(div).left;
   div.style.left = '100px';
 
   assert_class_string(div.getAnimations()[0], 'CSSTransition',

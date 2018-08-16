@@ -15,7 +15,7 @@ promise_test(async t => {
   const div = addDiv(t, {
     style: 'margin-left: 100px; transition: margin-left 100s linear 100s',
   });
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '200px';
 
   const animation = div.getAnimations()[0];
@@ -43,7 +43,7 @@ promise_test(async t => {
     style: 'margin-left: 100px; transition: margin-left 100s linear 100s',
   });
   const eventWatcher = new EventWatcher(t, div, 'transitionend');
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '200px';
 
   const animation = div.getAnimations()[0];
@@ -68,7 +68,7 @@ promise_test(async t => {
     style: 'margin-left: 100px; transition: margin-left 100s linear 100s',
   });
   const eventWatcher = new EventWatcher(t, div, 'transitionend');
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '200px';
 
   const animation = div.getAnimations()[0];
@@ -90,7 +90,7 @@ promise_test(async t => {
   const div = addDiv(t, {
     style: 'margin-left: 100px; transition: margin-left 100s linear 100s',
   });
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '200px';
   const animation = div.getAnimations()[0];
 

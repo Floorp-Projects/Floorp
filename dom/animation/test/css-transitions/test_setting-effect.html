@@ -13,7 +13,7 @@ test(t => {
   div.style.left = '0px';
 
   div.style.transition = 'left 100s';
-  flushComputedStyle(div);
+  getComputedStyle(div).left;
   div.style.left = '100px';
 
   const transition = div.getAnimations()[0];
@@ -29,7 +29,7 @@ promise_test(async t => {
   div.style.left = '0px';
 
   div.style.transition = 'left 100s';
-  flushComputedStyle(div);
+  getComputedStyle(div).left;
   div.style.left = '100px';
 
   const transition = div.getAnimations()[0];
@@ -44,7 +44,7 @@ promise_test(async t => {
   div.style.left = '0px';
 
   div.style.transition = 'left 100s';
-  flushComputedStyle(div);
+  getComputedStyle(div).left;
   div.style.left = '100px';
 
   const transition = div.getAnimations()[0];
@@ -60,7 +60,7 @@ promise_test(async t => {
   div.style.width = '0px';
 
   div.style.transition = 'left 100s';
-  flushComputedStyle(div);
+  getComputedStyle(div).left;
   div.style.left = '100px';
 
   const transition = div.getAnimations()[0];
@@ -81,7 +81,7 @@ promise_test(async t => {
   div.style.width = '0px';
 
   div.style.transition = 'left 100s';
-  flushComputedStyle(div);
+  getComputedStyle(div).left;
   div.style.left = '100px';
 
   const transition = div.getAnimations()[0];
@@ -98,7 +98,7 @@ promise_test(async t => {
   div.style.width = '0px';
 
   div.style.transition = 'left 100s';
-  flushComputedStyle(div);
+  getComputedStyle(div).left;
   div.style.left = '100px';
 
   const transition = div.getAnimations()[0];

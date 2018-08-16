@@ -24,7 +24,7 @@
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -34,7 +34,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s 10s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -45,7 +45,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s -5s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -61,7 +61,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -77,7 +77,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -92,7 +92,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -108,7 +108,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -124,7 +124,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -140,7 +140,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class : 'animated-div' });
   div.style.transition = 'margin-left 10s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -156,7 +156,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -173,7 +173,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 100s -5s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -191,7 +191,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 100s -5s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -207,7 +207,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 100s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -218,7 +218,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 100s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const anim = div.getAnimations()[0];
@@ -230,7 +230,7 @@ test(t => {
 promise_test(async t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 100s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const anim = div.getAnimations()[0];
@@ -254,7 +254,7 @@ promise_test(async t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10.5s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -265,7 +265,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10.5s 2s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -276,7 +276,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10.5s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const anim = div.getAnimations()[0];
@@ -293,7 +293,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -304,7 +304,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s 2s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const effect = div.getAnimations()[0].effect;
@@ -315,7 +315,7 @@ test(t => {
 test(t => {
   const div = addDiv(t, { class: 'animated-div' });
   div.style.transition = 'margin-left 10s';
-  flushComputedStyle(div);
+  getComputedStyle(div).marginLeft;
   div.style.marginLeft = '10px';
 
   const anim = div.getAnimations()[0];
