@@ -14,7 +14,7 @@ let gWhitelist = [{
     type: "single-quote"
   }, {
     file: "netError.dtd",
-    key: "certerror.introPara1",
+    key: "certerror.introPara2",
     type: "single-quote"
   }, {
     file: "netError.dtd",
