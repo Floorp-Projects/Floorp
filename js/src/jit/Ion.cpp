@@ -2087,6 +2087,7 @@ IonCompile(JSContext* cx, JSScript* script,
             const MIRGenerator::ObjectGroupVector& groups = builder->abortedPreliminaryGroups();
             for (size_t i = 0; i < groups.length(); i++) {
                 ObjectGroup* group = groups[i];
+                AutoRealm ar(cx, group);
                 AutoSweepObjectGroup sweep(group);
                 if (auto* newScript = group->newScript(sweep)) {
                     if (!newScript->maybeAnalyze(cx, group, nullptr, /* force = */ true))
