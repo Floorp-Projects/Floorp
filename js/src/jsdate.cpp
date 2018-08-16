@@ -500,7 +500,7 @@ DaylightSavingTA(double t)
     }
 
     int64_t utcMilliseconds = static_cast<int64_t>(t);
-    int64_t offsetMilliseconds = DateTimeInfo::getDSTOffsetMilliseconds(utcMilliseconds);
+    int32_t offsetMilliseconds = DateTimeInfo::getDSTOffsetMilliseconds(utcMilliseconds);
     return static_cast<double>(offsetMilliseconds);
 }
 
@@ -1374,15 +1374,17 @@ DateObject::setUTCTime(ClippedTime t, MutableHandleValue vp)
 void
 DateObject::fillLocalTimeSlots()
 {
+    const int32_t localTZA = DateTimeInfo::localTZA();
+
     /* Check if the cache is already populated. */
     if (!getReservedSlot(LOCAL_TIME_SLOT).isUndefined() &&
-        getReservedSlot(TZA_SLOT).toDouble() == DateTimeInfo::localTZA())
+        getReservedSlot(TZA_SLOT).toInt32() == localTZA)
     {
         return;
     }
 
     /* Remember time zone used to generate the local cache. */
-    setReservedSlot(TZA_SLOT, DoubleValue(DateTimeInfo::localTZA()));
+    setReservedSlot(TZA_SLOT, Int32Value(localTZA));
 
     double utcTime = UTCTime().toNumber();
 
@@ -2529,7 +2531,6 @@ date_setYear(JSContext* cx, unsigned argc, Value* vp)
 }
 
 /* constants for toString, toUTCString */
-static const char js_NaN_date_str[] = "Invalid Date";
 static const char * const days[] =
 {
    "Sun","Mon","Tue","Wed","Thu","Fri","Sat"
@@ -2544,26 +2545,25 @@ MOZ_ALWAYS_INLINE bool
 date_toGMTString_impl(JSContext* cx, const CallArgs& args)
 {
     double utctime = args.thisv().toObject().as<DateObject>().UTCTime().toNumber();
-
-    JSString* str;
     if (!IsFinite(utctime)) {
-        str = NewStringCopyZ<CanGC>(cx, js_NaN_date_str);
-    } else {
-        char buf[100];
-        SprintfLiteral(buf, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
-                       days[int(WeekDay(utctime))],
-                       int(DateFromTime(utctime)),
-                       months[int(MonthFromTime(utctime))],
-                       int(YearFromTime(utctime)),
-                       int(HourFromTime(utctime)),
-                       int(MinFromTime(utctime)),
-                       int(SecFromTime(utctime)));
-
-        str = NewStringCopyZ<CanGC>(cx, buf);
+        args.rval().setString(cx->names().InvalidDate);
+        return true;
     }
 
+    char buf[100];
+    SprintfLiteral(buf, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
+                   days[int(WeekDay(utctime))],
+                   int(DateFromTime(utctime)),
+                   months[int(MonthFromTime(utctime))],
+                   int(YearFromTime(utctime)),
+                   int(HourFromTime(utctime)),
+                   int(MinFromTime(utctime)),
+                   int(SecFromTime(utctime)));
+
+    JSString* str = NewStringCopyZ<CanGC>(cx, buf);
     if (!str)
         return false;
+
     args.rval().setString(str);
     return true;
 }
@@ -2681,7 +2681,7 @@ ToPRMJTime(double localTime, double utcTime)
 }
 
 static size_t
-FormatTime(char* buf, int buflen, const char* fmt, double utcTime, double localTime)
+FormatTime(char* buf, size_t buflen, const char* fmt, double utcTime, double localTime)
 {
     PRMJTime prtm = ToPRMJTime(localTime, utcTime);
 
@@ -2696,6 +2696,38 @@ FormatTime(char* buf, int buflen, const char* fmt, double utcTime, double localT
     return PRMJ_FormatTime(buf, buflen, fmt, &prtm, timeZoneYear, offsetInSeconds);
 }
 
+static JSString*
+TimeZoneComment(JSContext* cx, double utcTime, double localTime)
+{
+    char tzbuf[100];
+
+    size_t tzlen = FormatTime(tzbuf, sizeof tzbuf, " (%Z)", utcTime, localTime);
+    if (tzlen != 0) {
+        // Decide whether to use the resulting time zone string.
+        //
+        // Reject it if it contains any non-ASCII or non-printable characters.
+        // It's then likely in some other character encoding, and we probably
+        // won't display it correctly.
+        bool usetz = true;
+        for (size_t i = 0; i < tzlen; i++) {
+            char16_t c = tzbuf[i];
+            if (c > 127 || !isprint(c)) {
+                usetz = false;
+                break;
+            }
+        }
+
+        // Also reject it if it's not parenthesized or if it's ' ()'.
+        if (tzbuf[0] != ' ' || tzbuf[1] != '(' || tzbuf[2] == ')')
+            usetz = false;
+
+        if (usetz)
+            return NewStringCopyN<CanGC>(cx, tzbuf, tzlen);
+    }
+
+    return cx->names().empty;
+}
+
 enum class FormatSpec {
     DateTime,
     Date,
@@ -2705,104 +2737,82 @@ enum class FormatSpec {
 static bool
 FormatDate(JSContext* cx, double utcTime, FormatSpec format, MutableHandleValue rval)
 {
-    JSString* str;
     if (!IsFinite(utcTime)) {
-        str = NewStringCopyZ<CanGC>(cx, js_NaN_date_str);
-    } else {
-        MOZ_ASSERT(NumbersAreIdentical(TimeClip(utcTime).toDouble(), utcTime));
-
-        double localTime = LocalTime(utcTime);
-
-        int offset = 0;
-        char tzbuf[100];
-        bool usetz = false;
-        if (format == FormatSpec::DateTime || format == FormatSpec::Time) {
-            /*
-             * Offset from GMT in minutes.  The offset includes daylight
-             * savings, if it applies.
-             */
-            int minutes = (int) floor((localTime - utcTime) / msPerMinute);
-
-            /* Map 510 minutes to 0830 hours. */
-            offset = (minutes / 60) * 100 + minutes % 60;
-
-            /*
-             * Print as "Wed Nov 05 19:38:03 GMT-0800 (PST) 1997".
-             *
-             * The TZA is printed as 'GMT-0800' rather than as 'PST' to avoid
-             * operating-system dependence on strftime (which PRMJ_FormatTime
-             * calls, for %Z only.)  win32 prints PST as
-             * 'Pacific Standard Time.'  This way we always know what we're
-             * getting, and can parse it if we produce it.  The OS time zone
-             * string is included as a comment.
-             */
-
-            /* get a time zone string from the OS to include as a comment. */
-            size_t tzlen = FormatTime(tzbuf, sizeof tzbuf, "(%Z)", utcTime, localTime);
-            if (tzlen != 0) {
-                /*
-                 * Decide whether to use the resulting time zone string.
-                 *
-                 * Reject it if it contains any non-ASCII or non-printable
-                 * characters.  It's then likely in some other character
-                 * encoding, and we probably won't display it correctly.
-                 */
-                usetz = true;
-                for (size_t i = 0; i < tzlen; i++) {
-                    char16_t c = tzbuf[i];
-                    if (c > 127 || !isprint(c)) {
-                        usetz = false;
-                        break;
-                    }
-                }
-
-                /* Also reject it if it's not parenthesized or if it's '()'. */
-                if (tzbuf[0] != '(' || tzbuf[1] == ')')
-                    usetz = false;
-            }
-        }
-
-        char buf[100];
-        switch (format) {
-          case FormatSpec::DateTime:
-            /* Tue Oct 31 2000 09:41:40 GMT-0800 (PST) */
-            SprintfLiteral(buf, "%s %s %.2d %.4d %.2d:%.2d:%.2d GMT%+.4d%s%s",
-                           days[int(WeekDay(localTime))],
-                           months[int(MonthFromTime(localTime))],
-                           int(DateFromTime(localTime)),
-                           int(YearFromTime(localTime)),
-                           int(HourFromTime(localTime)),
-                           int(MinFromTime(localTime)),
-                           int(SecFromTime(localTime)),
-                           offset,
-                           usetz ? " " : "",
-                           usetz ? tzbuf : "");
-            break;
-          case FormatSpec::Date:
-            /* Tue Oct 31 2000 */
-            SprintfLiteral(buf, "%s %s %.2d %.4d",
-                           days[int(WeekDay(localTime))],
-                           months[int(MonthFromTime(localTime))],
-                           int(DateFromTime(localTime)),
-                           int(YearFromTime(localTime)));
-            break;
-          case FormatSpec::Time:
-            /* 09:41:40 GMT-0800 (PST) */
-            SprintfLiteral(buf, "%.2d:%.2d:%.2d GMT%+.4d%s%s",
-                           int(HourFromTime(localTime)),
-                           int(MinFromTime(localTime)),
-                           int(SecFromTime(localTime)),
-                           offset,
-                           usetz ? " " : "",
-                           usetz ? tzbuf : "");
-            break;
-        }
-
-        str = NewStringCopyZ<CanGC>(cx, buf);
+        rval.setString(cx->names().InvalidDate);
+        return true;
     }
 
+    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utcTime).toDouble(), utcTime));
+
+    double localTime = LocalTime(utcTime);
+
+    int offset = 0;
+    RootedString timeZoneComment(cx);
+    if (format == FormatSpec::DateTime || format == FormatSpec::Time) {
+        // Offset from GMT in minutes. The offset includes daylight savings,
+        // if it applies.
+        int minutes = (int) floor((localTime - utcTime) / msPerMinute);
+
+        // Map 510 minutes to 0830 hours.
+        offset = (minutes / 60) * 100 + minutes % 60;
+
+        // Print as "Wed Nov 05 1997 19:38:03 GMT-0800 (PST)".
+        //
+        // The TZA is printed as 'GMT-0800' rather than as 'PST' to avoid
+        // operating-system dependence on strftime (which PRMJ_FormatTime
+        // calls, for %Z only.) win32 prints PST as 'Pacific Standard Time.'
+        // This way we always know what we're getting, and can parse it if
+        // we produce it. The OS time zone string is included as a comment.
+
+        // Get a time zone string from the OS to include as a comment.
+        timeZoneComment = TimeZoneComment(cx, utcTime, localTime);
+        if (!timeZoneComment)
+            return false;
+    }
+
+    char buf[100];
+    switch (format) {
+      case FormatSpec::DateTime:
+        /* Tue Oct 31 2000 09:41:40 GMT-0800 */
+        SprintfLiteral(buf, "%s %s %.2d %.4d %.2d:%.2d:%.2d GMT%+.4d",
+                       days[int(WeekDay(localTime))],
+                       months[int(MonthFromTime(localTime))],
+                       int(DateFromTime(localTime)),
+                       int(YearFromTime(localTime)),
+                       int(HourFromTime(localTime)),
+                       int(MinFromTime(localTime)),
+                       int(SecFromTime(localTime)),
+                       offset);
+        break;
+      case FormatSpec::Date:
+        /* Tue Oct 31 2000 */
+        SprintfLiteral(buf, "%s %s %.2d %.4d",
+                       days[int(WeekDay(localTime))],
+                       months[int(MonthFromTime(localTime))],
+                       int(DateFromTime(localTime)),
+                       int(YearFromTime(localTime)));
+        break;
+      case FormatSpec::Time:
+        /* 09:41:40 GMT-0800 */
+        SprintfLiteral(buf, "%.2d:%.2d:%.2d GMT%+.4d",
+                       int(HourFromTime(localTime)),
+                       int(MinFromTime(localTime)),
+                       int(SecFromTime(localTime)),
+                       offset);
+        break;
+    }
+
+    RootedString str(cx, NewStringCopyZ<CanGC>(cx, buf));
     if (!str)
         return false;
+
+    // Append the time zone string if present.
+    if (timeZoneComment && !timeZoneComment->empty()) {
+        str = js::ConcatStrings<CanGC>(cx, str, timeZoneComment);
+        if (!str)
+            return false;
+    }
+
     rval.setString(str);
     return true;
 }
@@ -2815,7 +2825,7 @@ ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, Mutabl
 
     char buf[100];
     if (!IsFinite(utcTime)) {
-        strcpy(buf, js_NaN_date_str);
+        strcpy(buf, js_InvalidDate_str);
     } else {
         double localTime = LocalTime(utcTime);
 

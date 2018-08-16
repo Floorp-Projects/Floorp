@@ -42,53 +42,6 @@
 //
 // And remove any tests not matching one of the four time zones from above.
 
-const Month = {
-    January: 0,
-    February: 1,
-    March: 2,
-    April: 3,
-    May: 4,
-    June: 5,
-    July: 6,
-    August: 7,
-    September: 8,
-    October: 9,
-    November: 10,
-    December: 11,
-};
-
-function inTimeZone(tzname, fn) {
-    setTimeZone(tzname);
-    try {
-        fn();
-    } finally {
-        setTimeZone("PST8PDT");
-    }
-}
-
-const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].join("|");
-const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].join("|");
-const datePart = String.raw `(?:${weekdays}) (?:${months}) \d{2}`;
-const timePart = String.raw `\d{4,6} \d{2}:\d{2}:\d{2} GMT[+-]\d{4}`;
-const dateTimeRE = new RegExp(String.raw `^(${datePart} ${timePart})(?: \((.+)\))?$`);
-
-function assertDateTime(date, expected) {
-    let actual = date.toString();
-    assertEq(dateTimeRE.test(expected), true, `${expected}`);
-    assertEq(dateTimeRE.test(actual), true, `${actual}`);
-
-    let [, expectedDateTime, expectedTimeZone] = dateTimeRE.exec(expected);
-    let [, actualDateTime, actualTimeZone] = dateTimeRE.exec(actual);
-
-    assertEq(actualDateTime, expectedDateTime);
-
-    // The time zone identifier is optional, so only compare its value if it's
-    // present in |actual| and |expected|.
-    if (expectedTimeZone !== undefined && actualTimeZone !== undefined) {
-        assertEq(actualTimeZone, expectedTimeZone);
-    }
-}
-
 // bug 294908
 inTimeZone("EST5EDT", () => {
     let dt = new Date(2003, Month.April, 6, 2, 30, 00);

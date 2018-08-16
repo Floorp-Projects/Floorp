@@ -205,6 +205,7 @@
     macro(integer, integer, "integer") \
     macro(interface, interface, "interface") \
     macro(InterpretGeneratorResume, InterpretGeneratorResume, "InterpretGeneratorResume") \
+    macro(InvalidDate, InvalidDate, "Invalid Date") \
     macro(isEntryPoint, isEntryPoint, "isEntryPoint") \
     macro(isExtensible, isExtensible, "isExtensible") \
     macro(isFinite, isFinite, "isFinite") \
