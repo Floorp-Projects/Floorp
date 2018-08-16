@@ -27,10 +27,7 @@ async function test() {
 
   await stepOverToLine(client, 22);
   await stepOverToLine(client, 23);
-  // Line 13 seems like it should be the next stepping point, but the column
-  // numbers reported by the JS engine and required by the pause points do not
-  // match, and we don't stop here.
-  //await stepOverToLine(client, 13);
+  await stepOverToLine(client, 13);
   await stepOverToLine(client, 17);
   await stepOverToLine(client, 18);
 

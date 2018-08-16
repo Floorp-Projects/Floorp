@@ -582,6 +582,8 @@ protected:
    */
   static void ScrollTimerCallback(nsITimer* aTimer, void* aClosure);
 
+  void DispatchScrollingEvent(uint32_t aEventType);
+
 protected:
 
   /**
@@ -603,8 +605,9 @@ protected:
     mNodeToAccessibleMap;
 
   nsIDocument* mDocumentNode;
-    nsCOMPtr<nsITimer> mScrollWatchTimer;
-    uint16_t mScrollPositionChangedTicks; // Used for tracking scroll events
+  nsCOMPtr<nsITimer> mScrollWatchTimer;
+  uint16_t mScrollPositionChangedTicks; // Used for tracking scroll events
+  TimeStamp mLastScrollingDispatch;
 
   /**
    * Bit mask of document load states (@see LoadState).

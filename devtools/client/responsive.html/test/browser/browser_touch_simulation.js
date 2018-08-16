@@ -164,7 +164,7 @@ async function testWithMetaViewportDisabled(ui) {
 
 function testTouchButton(ui) {
   const { document } = ui.toolWindow;
-  const touchButton = document.querySelector("#global-touch-simulation-button");
+  const touchButton = document.getElementById("touch-simulation-button");
 
   ok(touchButton.classList.contains("checked"),
     "Touch simulation is active at end of test.");

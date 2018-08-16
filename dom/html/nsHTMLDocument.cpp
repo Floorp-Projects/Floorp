@@ -1106,8 +1106,7 @@ nsHTMLDocument::GetCookie(nsAString& aCookie, ErrorResult& rv)
     return;
   }
 
-  if (nsContentUtils::StorageDisabledByAntiTracking(GetInnerWindow(), nullptr,
-                                                    NodePrincipal(), nullptr)) {
+  if (nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {
     return;
   }
 
@@ -1161,8 +1160,7 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie, ErrorResult& rv)
     return;
   }
 
-  if (nsContentUtils::StorageDisabledByAntiTracking(GetInnerWindow(), nullptr,
-                                                    NodePrincipal(), nullptr)) {
+  if (nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {
     return;
   }
 

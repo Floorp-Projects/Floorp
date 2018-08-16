@@ -204,9 +204,9 @@
               # Windows, clang-cl build
               [ 'clang_cl == 1', {
                 'cflags_mozilla': [
-                    '-Wno-error', # workaround for bug 1090497
                     '-Xclang',
                     '-Wall',
+                    '-Xclang',
                     '-Wno-parentheses',
                     '-Wno-strict-prototypes',
                     '-Wmissing-prototypes',

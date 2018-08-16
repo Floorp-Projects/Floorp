@@ -917,7 +917,7 @@ impl Parameters for AddCookieParameters {
         }
 
         let data = try_opt!(body.find("cookie").and_then(|x| x.as_object()),
-                            ErrorStatus::UnableToSetCookie,
+                            ErrorStatus::InvalidArgument,
                             "Cookie parameter not found or not an object");
 
         let name = try_opt!(

@@ -83,7 +83,7 @@ class ProjectSearch extends _react.Component {
     this.isProjectSearchEnabled = () => this.props.activeSearch === "project";
 
     this.selectMatchItem = matchItem => {
-      this.props.selectLocation({ ...matchItem
+      this.props.selectSpecificLocation({ ...matchItem
       });
       this.props.doSearchForHighlight(this.state.inputValue, (0, _editor.getEditor)(), matchItem.line, matchItem.column);
     };
@@ -335,7 +335,7 @@ exports.default = (0, _reactRedux.connect)(mapStateToProps, {
   closeProjectSearch: _actions2.default.closeProjectSearch,
   searchSources: _actions2.default.searchSources,
   clearSearch: _actions2.default.clearSearch,
-  selectLocation: _actions2.default.selectLocation,
+  selectSpecificLocation: _actions2.default.selectSpecificLocation,
   setActiveSearch: _actions2.default.setActiveSearch,
   doSearchForHighlight: _actions2.default.doSearchForHighlight
 })(ProjectSearch);

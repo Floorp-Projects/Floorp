@@ -22,16 +22,17 @@ const TEST_URL = "data:text/html;charset=utf-8,";
 const Types = require("devtools/client/responsive.html/types");
 
 addRDMTask(TEST_URL, async function({ ui }) {
-  const { store, document } = ui.toolWindow;
-  const modal = document.querySelector("#device-modal-wrapper");
-  const select = document.querySelector(".viewport-device-selector");
-  const submitButton = document.querySelector("#device-submit-button");
+  const { toolWindow } = ui;
+  const { store, document } = toolWindow;
+  const deviceSelector = document.getElementById("device-selector");
+  const modal = document.getElementById("device-modal-wrapper");
+  const submitButton = document.getElementById("device-submit-button");
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.loadableState.LOADED);
 
-  openDeviceModal(ui);
+  await openDeviceModal(ui);
 
   info("Checking displayed device checkboxes are checked in the device modal.");
   const checkedCbs = [...document.querySelectorAll(".device-input-checkbox")]
@@ -69,14 +70,16 @@ addRDMTask(TEST_URL, async function({ ui }) {
   ok(preferredDevices.added.has(value), value + " in user added list.");
 
   info("Checking new device is added to the device selector.");
-  let options = [...select.options];
-  is(options.length - 2, featuredCount + 1,
-    "Got expected number of devices in device selector.");
-  ok(options.filter(o => o.value === value)[0],
-    value + " added to the device selector.");
+  await testMenuItems(toolWindow, deviceSelector, menuItems => {
+    is(menuItems.length - 2, featuredCount + 1,
+      "Got expected number of devices in device selector.");
+
+    const menuItem = menuItems.find(item => item.getAttribute("label") === name);
+    ok(menuItem, value + " added to the device selector.");
+  });
 
   info("Reopen device modal and check new device is correctly checked");
-  openDeviceModal(ui);
+  await openDeviceModal(ui);
   ok([...document.querySelectorAll(".device-input-checkbox")]
     .filter(cb => cb.checked && cb.value === value)[0],
     value + " is checked in the device modal.");
@@ -94,14 +97,16 @@ addRDMTask(TEST_URL, async function({ ui }) {
   ok(preferredDevices.removed.has(checkedVal), checkedVal + " in removed list");
 
   info("Checking that the device is not in the device selector.");
-  options = [...select.options];
-  is(options.length - 2, featuredCount,
-    "Got expected number of devices in device selector.");
-  ok(!options.filter(o => o.value === checkedVal)[0],
-    checkedVal + " removed from the device selector.");
+  await testMenuItems(toolWindow, deviceSelector, menuItems => {
+    is(menuItems.length - 2, featuredCount,
+      "Got expected number of devices in device selector.");
+
+    const menuItem = menuItems.find(item => item.getAttribute("label") === checkedVal);
+    ok(!menuItem, checkedVal + " removed from the device selector.");
+  });
 
   info("Reopen device modal and check device is correctly unchecked");
-  openDeviceModal(ui);
+  await openDeviceModal(ui);
   ok([...document.querySelectorAll(".device-input-checkbox")]
     .filter(cb => !cb.checked && cb.value === checkedVal)[0],
     checkedVal + " is unchecked in the device modal.");
@@ -111,14 +116,14 @@ addRDMTask(TEST_URL, async function({ ui }) {
 });
 
 addRDMTask(TEST_URL, async function({ ui }) {
-  const { store, document } = ui.toolWindow;
-  const select = document.querySelector(".viewport-device-selector");
+  const { toolWindow } = ui;
+  const { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.loadableState.LOADED);
 
-  openDeviceModal(ui);
+  await openDeviceModal(ui);
 
   const remoteList = await getDevices();
   const featuredCount = remoteList.TYPES.reduce((total, type) => {
@@ -130,17 +135,23 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   // Tests to prove that reloading the RDM didn't break our device list
   info("Checking new featured device appears in the device selector.");
-  const options = [...select.options];
-  is(options.length - 2, featuredCount
-    - preferredDevices.removed.size + preferredDevices.added.size,
-    "Got expected number of devices in device selector.");
+  const deviceSelector = document.getElementById("device-selector");
+  await testMenuItems(toolWindow, deviceSelector, items => {
+    is(items.length - 2, featuredCount
+      - preferredDevices.removed.size + preferredDevices.added.size,
+      "Got expected number of devices in device selector.");
 
-  ok(options.filter(o => o.value === addedDevice.name)[0],
-    "dummy device added to the device selector.");
+    const added = items.find(i => i.getAttribute("label") === addedDevice.name);
+    ok(added, "Dummy device added to the device selector.");
 
-  ok(options.filter(o => preferredDevices.added.has(o.value))[0],
-    "device added by user still in the device selector.");
+    for (const name of preferredDevices.added.keys()) {
+      const menuItem = items.find(item => item.getAttribute("label") === name);
+      ok(menuItem, "Device added by user still in the device selector.");
+    }
 
-  ok(!options.filter(o => preferredDevices.removed.has(o.value))[0],
-    "device removed by user not in the device selector.");
+    for (const name of preferredDevices.removed.keys()) {
+      const menuItem = items.find(item => item.getAttribute("label") === name);
+      ok(!menuItem, "Device removed by user not in the device selector.");
+    }
+  });
 });

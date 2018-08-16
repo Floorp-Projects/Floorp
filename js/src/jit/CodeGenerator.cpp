@@ -8372,10 +8372,6 @@ CodeGenerator::visitSameValueVM(LSameValueVM* lir)
     callVM(SameValueInfo, lir);
 }
 
-typedef JSString* (*ConcatStringsFn)(JSContext*, HandleString, HandleString);
-static const VMFunction ConcatStringsInfo =
-    FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>, "ConcatStrings");
-
 void
 CodeGenerator::emitConcat(LInstruction* lir, Register lhs, Register rhs, Register output)
 {

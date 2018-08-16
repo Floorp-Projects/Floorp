@@ -4,9 +4,10 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 // Tests changing viewport device pixel ratio
+
 const TEST_URL = "data:text/html;charset=utf-8,DevicePixelRatio list test";
 const DEFAULT_DPPX = window.devicePixelRatio;
-const VIEWPORT_DPPX = DEFAULT_DPPX + 2;
+const VIEWPORT_DPPX = DEFAULT_DPPX + 1;
 const Types = require("devtools/client/responsive.html/types");
 
 const testDevice = {
@@ -50,7 +51,7 @@ async function testDefaults(ui) {
     value: DEFAULT_DPPX,
     disabled: false,
   });
-  testViewportDeviceSelectLabel(ui, "no device selected");
+  testViewportDeviceMenuLabel(ui, "Responsive");
 }
 
 async function testChangingDevice(ui) {
@@ -64,7 +65,7 @@ async function testChangingDevice(ui) {
     value: testDevice.pixelRatio,
     disabled: true,
   });
-  testViewportDeviceSelectLabel(ui, testDevice.name);
+  testViewportDeviceMenuLabel(ui, testDevice.name);
 }
 
 async function testResetWhenResizingViewport(ui) {
@@ -82,7 +83,7 @@ async function testResetWhenResizingViewport(ui) {
     value: DEFAULT_DPPX,
     disabled: false,
   });
-  testViewportDeviceSelectLabel(ui, "no device selected");
+  testViewportDeviceMenuLabel(ui, "Responsive");
 }
 
 async function testChangingDevicePixelRatio(ui) {
@@ -95,17 +96,17 @@ async function testChangingDevicePixelRatio(ui) {
     value: VIEWPORT_DPPX,
     disabled: false,
   });
-  testViewportDeviceSelectLabel(ui, "no device selected");
+  testViewportDeviceMenuLabel(ui, "Responsive");
 }
 
 function testViewportDevicePixelRatioSelect(ui, expected) {
   info("Test viewport's DevicePixelRatio Select");
 
-  const select =
-    ui.toolWindow.document.querySelector("#global-device-pixel-ratio-selector");
-  is(select.value, expected.value,
+  const button = ui.toolWindow.document.getElementById("device-pixel-ratio-menu");
+  const title = ui.toolWindow.document.querySelector("#device-pixel-ratio-menu .title");
+  is(title.textContent, `DPR: ${expected.value}`,
      `DevicePixelRatio Select value should be: ${expected.value}`);
-  is(select.disabled, expected.disabled,
+  is(button.disabled, expected.disabled,
     `DevicePixelRatio Select should be ${expected.disabled ? "disabled" : "enabled"}.`);
 }
 

@@ -13,6 +13,8 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/Span.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
 
 #include "nscore.h"
@@ -27,24 +29,23 @@ class nsHTMLStyleSheet;
 class nsRuleWalker;
 class nsMappedAttributeElement;
 
-#define ATTRCHILD_ARRAY_GROWSIZE 8
-#define ATTRCHILD_ARRAY_LINEAR_THRESHOLD 32
-
-#define ATTRSIZE (sizeof(InternalAttr) / sizeof(void*))
-
 class AttrArray
 {
   typedef mozilla::dom::BorrowedAttrInfo BorrowedAttrInfo;
 public:
-  AttrArray();
-  ~AttrArray();
+  AttrArray() = default;
+  ~AttrArray() = default;
 
   bool HasAttrs() const
   {
-    return MappedAttrCount() || (AttrSlotCount() && AttrSlotIsTaken(0));
+    return NonMappedAttrCount() || MappedAttrCount();
   }
 
-  uint32_t AttrCount() const;
+  uint32_t AttrCount() const
+  {
+    return NonMappedAttrCount() + MappedAttrCount();
+  }
+
   const nsAttrValue* GetAttr(nsAtom* aLocalName,
                              int32_t aNamespaceID = kNameSpaceID_None) const;
   // As above but using a string attr name and always using
@@ -130,10 +131,17 @@ private:
   AttrArray(const AttrArray& aOther) = delete;
   AttrArray& operator=(const AttrArray& aOther) = delete;
 
-  void Clear();
+  uint32_t NonMappedAttrCount() const
+  {
+    return mImpl ? mImpl->mAttrCount : 0;
+  }
 
-  uint32_t NonMappedAttrCount() const;
-  uint32_t MappedAttrCount() const;
+  uint32_t MappedAttrCount() const
+  {
+    return mImpl && mImpl->mMappedAttrs ? DoGetMappedAttrCount() : 0;
+  }
+
+  uint32_t DoGetMappedAttrCount() const;
 
   // Returns a non-null zero-refcount object.
   nsMappedAttributes*
@@ -143,29 +151,19 @@ private:
                       int32_t aAttrCount = 1);
   nsresult MakeMappedUnique(nsMappedAttributes* aAttributes);
 
-  uint32_t AttrSlotsSize() const
-  {
-    return AttrSlotCount() * ATTRSIZE;
-  }
-
-  uint32_t AttrSlotCount() const
-  {
-    return mImpl ? mImpl->mAttrCount : 0;
-  }
-
-  bool AttrSlotIsTaken(uint32_t aSlot) const
-  {
-    MOZ_ASSERT(aSlot < AttrSlotCount(), "out-of-bounds");
-    return mImpl->mBuffer[aSlot * ATTRSIZE];
-  }
-
-  void SetAttrSlotCount(uint32_t aCount)
-  {
-    mImpl->mAttrCount = aCount;
-  }
-
   bool GrowBy(uint32_t aGrowSize);
-  bool AddAttrSlot();
+
+  struct InternalAttr;
+
+  // Tries to create an attribute, growing the buffer if needed, with the given
+  // name and value.
+  //
+  // The value is moved from the argument.
+  //
+  // `Name` can be anything you construct a `nsAttrName` with (either an atom or
+  // a NodeInfo pointer).
+  template<typename Name>
+  nsresult AddNewAttribute(Name*, nsAttrValue&);
 
   /**
    * Guts of SetMappedAttrStyleSheet for the rare case when we have mapped attrs
@@ -183,14 +181,50 @@ private:
     nsAttrValue mValue;
   };
 
-  struct Impl {
+  class Impl
+  {
+  public:
+
+    constexpr static size_t AllocationSizeForAttributes(uint32_t aAttrCount)
+    {
+      return sizeof(Impl) + aAttrCount * sizeof(InternalAttr);
+    }
+
+    mozilla::Span<const InternalAttr> NonMappedAttrs() const
+    {
+      return mozilla::MakeSpan(static_cast<const InternalAttr*>(mBuffer), mAttrCount);
+    }
+
+    mozilla::Span<InternalAttr> NonMappedAttrs()
+    {
+      return mozilla::MakeSpan(static_cast<InternalAttr*>(mBuffer), mAttrCount);
+    }
+
+    Impl(const Impl&) = delete;
+    Impl(Impl&&) = delete;
+    ~Impl();
+
     uint32_t mAttrCount;
-    uint32_t mBufferSize;
+    uint32_t mCapacity; // In number of InternalAttrs
+
+    // Manually refcounted.
     nsMappedAttributes* mMappedAttrs;
-    void* mBuffer[1];
+
+    // Allocated in the same buffer as `Impl`.
+    InternalAttr mBuffer[0];
   };
 
-  Impl* mImpl;
+  mozilla::Span<InternalAttr> NonMappedAttrs()
+  {
+    return mImpl ? mImpl->NonMappedAttrs() : mozilla::Span<InternalAttr>();
+  }
+
+  mozilla::Span<const InternalAttr> NonMappedAttrs() const
+  {
+    return mImpl ? mImpl->NonMappedAttrs() : mozilla::Span<const InternalAttr>();
+  }
+
+  mozilla::UniquePtr<Impl> mImpl;
 };
 
 #endif

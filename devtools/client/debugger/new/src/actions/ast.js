@@ -90,7 +90,7 @@ function setOutOfScopeLocations() {
     const source = (0, _selectors.getSourceFromId)(getState(), location.sourceId);
     let locations = null;
 
-    if (location.line && source && (0, _selectors.isPaused)(getState())) {
+    if (location.line && source && !source.isWasm && (0, _selectors.isPaused)(getState())) {
       locations = await (0, _parser.findOutOfScopeLocations)(source.id, location);
     }
 

@@ -104,6 +104,35 @@ public:
    * @return true if |aProperty| is animatable.
    */
   static bool IsAnimatableProperty(nsCSSPropertyID aProperty);
+
+  /*
+   * The spec defines two enums: CompositeOperation and
+   * CompositeOperationOrAuto.
+   *
+   * Internally, however, it's more convenient to always deal with
+   * CompositeOperation, represent the 'auto' case as a Nothing() value, and
+   * convert to and from CompositeOperationOrAuto at the API boundary.
+   *
+   * The following methods convert between these two representations and allow
+   * us to encapsulate the assumption that CompositeOperation is a strict subset
+   * of CompositeOperationOrAuto, in one location.
+   */
+
+  static dom::CompositeOperationOrAuto
+  ToCompositeOperationOrAuto(const Maybe<dom::CompositeOperation>& aComposite)
+  {
+    return aComposite
+           ? static_cast<dom::CompositeOperationOrAuto>(aComposite.value())
+           : dom::CompositeOperationOrAuto::Auto;
+  }
+
+  static Maybe<dom::CompositeOperation>
+  ToCompositeOperation(dom::CompositeOperationOrAuto aComposite)
+  {
+    return aComposite == dom::CompositeOperationOrAuto::Auto
+           ? Nothing()
+           : Some(static_cast<dom::CompositeOperation>(aComposite));
+  }
 };
 
 } // namespace mozilla

@@ -25337,8 +25337,10 @@ function onEnter(node, ancestors, state) {
   }
 
   if (isControlFlow(node)) {
-    addPoint(state, startLocation, isForStatement(node));
+    addStopPoint(state, startLocation);
 
+    // We want to pause at tests so that we can pause at each iteration
+    // e.g `while (i++ < 3) { }`
     const test = node.test || node.discriminant;
     if (test) {
       addStopPoint(state, test.loc.start);
@@ -25353,7 +25355,6 @@ function onEnter(node, ancestors, state) {
   if (isReturn(node)) {
     // We do not want to pause at the return if the
     // argument is a call on the same line e.g. return foo()
-
     return addPoint(state, startLocation, !isCall(node.argument) || getStartLine(node) != getStartLine(node.argument));
   }
 
@@ -25590,6 +25591,7 @@ const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
 const applySourceMap = dispatcher.task("applySourceMap");
 const clearSourceMaps = dispatcher.task("clearSourceMaps");
 const hasMappedSource = dispatcher.task("hasMappedSource");
+const getOriginalStackFrames = dispatcher.task("getOriginalStackFrames");
 
 module.exports = {
   originalToGeneratedId,
@@ -25607,6 +25609,7 @@ module.exports = {
   getOriginalSourceText,
   applySourceMap,
   clearSourceMaps,
+  getOriginalStackFrames,
   startSourceMapWorker: dispatcher.start.bind(dispatcher),
   stopSourceMapWorker: dispatcher.stop.bind(dispatcher)
 };

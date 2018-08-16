@@ -590,7 +590,9 @@ SandboxFork::StartChrootServer()
     MOZ_DIAGNOSTIC_ASSERT(false);
   }
 
-  base::CloseSuperfluousFds([this](int fd) { return fd == mChrootServer; });
+  base::CloseSuperfluousFds(this, [](void* aCtx, int aFd) {
+    return aFd == static_cast<decltype(this)>(aCtx)->mChrootServer;
+  });
 
   char msg;
   ssize_t msgLen = HANDLE_EINTR(read(mChrootServer, &msg, 1));

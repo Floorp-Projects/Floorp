@@ -5,8 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.paused = paused;
 
-var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
-
 var _selectors = require("../../selectors/index");
 
 var _ = require("./index");
@@ -87,9 +85,7 @@ function paused(pauseInfo) {
     const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
 
     if (selectedFrame) {
-      const visibleFrame = (0, _selectors.getVisibleSelectedFrame)(getState());
-      const location = visibleFrame && (0, _devtoolsSourceMap.isGeneratedId)(visibleFrame.location.sourceId) ? selectedFrame.generatedLocation : selectedFrame.location;
-      await dispatch((0, _sources.selectLocation)(location));
+      await dispatch((0, _sources.selectLocation)(selectedFrame.location));
     }
 
     dispatch((0, _ui.togglePaneCollapse)("end", false));

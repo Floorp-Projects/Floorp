@@ -952,6 +952,14 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
           break;
         }
 #endif
+        case nsIAccessibleEvent::EVENT_SCROLLING_END:
+        case nsIAccessibleEvent::EVENT_SCROLLING: {
+          AccScrollingEvent* scrollingEvent = downcast_accEvent(aEvent);
+          ipcDoc->SendScrollingEvent(id, aEvent->GetEventType(),
+            scrollingEvent->ScrollX(), scrollingEvent->ScrollY(),
+            scrollingEvent->MaxScrollX(), scrollingEvent->MaxScrollY());
+          break;
+        }
         default:
           ipcDoc->SendEvent(id, aEvent->GetEventType());
       }

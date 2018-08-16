@@ -24,7 +24,7 @@ add_task(async function() {
   ok(true, "Original sources exist");
   const mainSrc = findSource(dbg, "fib.c");
 
-  await selectSource(dbg, mainSrc);
+  await selectSpecificSource(dbg, mainSrc);
   await addBreakpoint(dbg, "fib.c", 10);
 
   resume(dbg);
