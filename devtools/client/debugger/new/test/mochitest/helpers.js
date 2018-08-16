@@ -602,6 +602,13 @@ async function selectSource(dbg, url, line) {
   return waitForSelectedSource(dbg, url);
 }
 
+async function selectSpecificSource(dbg, url, line) {
+  const source = findSource(dbg, url);
+  await dbg.actions.selectLocation({ sourceId: source.id, line }, {keepContext: false});
+  return waitForSelectedSource(dbg, url);
+}
+
+
 function closeTab(dbg, url) {
   const source = findSource(dbg, url);
   return dbg.actions.closeTab(source.url);

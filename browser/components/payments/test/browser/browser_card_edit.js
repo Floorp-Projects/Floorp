@@ -30,7 +30,7 @@ async function add_link(aOptions = {}) {
       checkboxSelector: "basic-card-form .persist-checkbox",
       expectPersist: aOptions.expectDefaultCardPersist,
     });
-    await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
+    await spawnPaymentDialogTask(frame, async function checkState(testArgs = {}) {
       let {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -58,7 +58,7 @@ async function add_link(aOptions = {}) {
 
     await verifyPersistCheckbox(frame, cardOptions);
 
-    await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
+    await spawnPaymentDialogTask(frame, async function checkBillingAddressPicker(testArgs = {}) {
       let billingAddressSelect = content.document.querySelector("#billingAddressGUID");
       ok(content.isVisible(billingAddressSelect),
          "The billing address selector should always be visible");
@@ -82,7 +82,7 @@ async function add_link(aOptions = {}) {
 
     await navigateToAddAddressPage(frame, addressOptions);
 
-    await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
+    await spawnPaymentDialogTask(frame, async function checkTask(testArgs = {}) {
       let {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -121,13 +121,13 @@ async function add_link(aOptions = {}) {
 
     await navigateToAddAddressPage(frame, addressOptions);
 
-    await fillInAddressForm(frame, PTU.Addresses.TimBL2, addressOptions);
+    await fillInBillingAddressForm(frame, PTU.Addresses.TimBL2, addressOptions);
 
     await verifyPersistCheckbox(frame, addressOptions);
 
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
 
-    await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
+    await spawnPaymentDialogTask(frame, async function checkCardPage(testArgs = {}) {
       let {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -168,7 +168,7 @@ async function add_link(aOptions = {}) {
 
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
 
-    await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
+    await spawnPaymentDialogTask(frame, async function waitForSummaryPage(testArgs = {}) {
       let {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -182,7 +182,7 @@ async function add_link(aOptions = {}) {
       securityCode: "123",
     });
 
-    await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
+    await spawnPaymentDialogTask(frame, async function checkCardState(testArgs = {}) {
       let {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -476,13 +476,15 @@ add_task(async function test_edit_link() {
       return state.page.id == "address-page" && state["address-page"].guid;
     }, "Check address page state (editing)");
 
-    info("filling address fields");
-    for (let [key, val] of Object.entries(PTU.Addresses.TimBL)) {
+    info("modify some address fields");
+    for (let key of ["given-name", "tel", "organization", "street-address"]) {
       let field = content.document.getElementById(key);
       if (!field) {
         ok(false, `${key} field not found`);
       }
-      field.value = val.slice(0, -1) + "7";
+      field.focus();
+      EventUtils.sendKey("BACK_SPACE", content.window);
+      EventUtils.sendString("7", content.window);
       ok(!field.disabled, `Field #${key} shouldn't be disabled`);
     }
 

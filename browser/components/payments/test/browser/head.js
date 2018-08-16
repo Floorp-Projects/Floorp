@@ -199,7 +199,7 @@ function checkPaymentAddressMatchesStorageAddress(paymentAddress, storageAddress
   is(paymentAddress.addressLine[0], addressLines[0], "Address line 1 should match");
   is(paymentAddress.addressLine[1], addressLines[1], "Address line 2 should match");
   is(paymentAddress.country, storageAddress.country, "Country should match");
-  is(paymentAddress.region, storageAddress["address-level1"], "Region should match");
+  is(paymentAddress.region, storageAddress["address-level1"] || "", "Region should match");
   is(paymentAddress.city, storageAddress["address-level2"], "City should match");
   is(paymentAddress.postalCode, storageAddress["postal-code"], "Zip code should match");
   is(paymentAddress.organization, storageAddress.organization, "Org should match");
@@ -266,6 +266,26 @@ async function setupPaymentDialog(browser, {methodData, details, options, mercha
       element.getBoundingClientRect().height;
     content.isHidden = (element) => elementHeight(element) == 0;
     content.isVisible = (element) => elementHeight(element) > 0;
+    content.fillField = async function fillField(field, value) {
+      // Keep in-sync with the copy in payments_common.js but with EventUtils methods called on a
+      // EventUtils object.
+      field.focus();
+      if (field.localName == "select") {
+        if (field.value == value) {
+          // Do nothing
+          return;
+        }
+        field.value = value;
+        field.dispatchEvent(new content.window.Event("input"));
+        field.dispatchEvent(new content.window.Event("change"));
+        return;
+      }
+      while (field.value) {
+        EventUtils.sendKey("BACK_SPACE", content.window);
+      }
+      EventUtils.sendString(value, content.window);
+    }
+;
   });
   await injectEventUtilsInContentTask(frame);
   info("helper functions injected into frame");
@@ -324,7 +344,7 @@ add_task(async function setup_head() {
       // Ignore unknown CSP error.
       return;
     }
-    if (msg.message.match(/docShell is null.*BrowserUtils.jsm/)) {
+    if (msg.message && msg.message.match(/docShell is null.*BrowserUtils.jsm/)) {
       // Bug 1478142 - Console spam from the Find Toolbar.
       return;
     }
@@ -352,7 +372,7 @@ async function selectPaymentDialogShippingAddressByCountry(frame, country) {
 }
 
 async function navigateToAddAddressPage(frame, aOptions = {
-  addLinkSelector: "address-picker a.add-link",
+  addLinkSelector: "address-picker[selected-state-key=\"selectedShippingAddress\"] a.add-link",
   initialPageId: "payment-summary",
 }) {
   await spawnPaymentDialogTask(frame, async (options) => {
@@ -378,24 +398,59 @@ async function navigateToAddAddressPage(frame, aOptions = {
   }, aOptions);
 }
 
+async function fillInBillingAddressForm(frame, aAddress) {
+  // For now billing and shipping address forms have the same fields but that may
+  // change so use separarate helpers.
+  return fillInShippingAddressForm(frame, aAddress);
+}
+
+async function fillInShippingAddressForm(frame, aAddress, aOptions) {
+  let address = Object.assign({}, aAddress);
+  // Email isn't used on address forms, only payer/contact ones.
+  delete address.email;
+  return fillInAddressForm(frame, address, aOptions);
+}
+
+async function fillInPayerAddressForm(frame, aAddress) {
+  let address = Object.assign({}, aAddress);
+  let payerFields = ["given-name", "additional-name", "family-name", "tel", "email"];
+  for (let fieldName of Object.keys(address)) {
+    if (payerFields.includes(fieldName)) {
+      continue;
+    }
+    delete address[fieldName];
+  }
+  return fillInAddressForm(frame, address);
+}
+
 async function fillInAddressForm(frame, aAddress, aOptions = {}) {
   await spawnPaymentDialogTask(frame, async (args) => {
     let {address, options = {}} = args;
 
+    if (typeof(address.country) != "undefined") {
+      // Set the country first so that the appropriate fields are visible.
+      let countryField = content.document.getElementById("country");
+      ok(!countryField.disabled, "Country Field shouldn't be disabled");
+      await content.fillField(countryField, address.country);
+      is(countryField.value, address.country, "country value is correct after fillField");
+    }
+
     // fill the form
-    info("manuallyAddAddress: fill the form with address: " + JSON.stringify(address));
+    info("fillInAddressForm: fill the form with address: " + JSON.stringify(address));
     for (let [key, val] of Object.entries(address)) {
       let field = content.document.getElementById(key);
       if (!field) {
         ok(false, `${key} field not found`);
       }
-      field.value = val;
+      ok(!field.disabled, `Field #${key} shouldn't be disabled`);
+      await content.fillField(field, val);
+      is(field.value, val, `${key} value is correct after fillField`);
     }
     let persistCheckbox = Cu.waiveXrays(
-        content.document.querySelector(options.checkboxSelector));
+        content.document.querySelector("#address-page .persist-checkbox"));
     // only touch the checked state if explicitly told to in the options
     if (options.hasOwnProperty("setPersistCheckedValue")) {
-      info("fillInCardForm: Manually setting the persist checkbox checkedness to: " +
+      info("fillInAddressForm: Manually setting the persist checkbox checkedness to: " +
             options.setPersistCheckedValue);
       Cu.waiveXrays(persistCheckbox).checked = options.setPersistCheckedValue;
     }
@@ -435,7 +490,7 @@ async function submitAddressForm(frame, aAddress, aOptions = {}) {
 
     let currState = await PaymentTestUtils.DialogContentUtils.waitForState(content, (state) => {
       return state.page.id == "payment-summary";
-    }, "Switched back to payment-summary");
+    }, "submitAddressForm: Switched back to payment-summary");
 
     let savedCount = Object.keys(currState.savedAddresses).length;
     let tempCount = Object.keys(currState.tempAddresses).length;
@@ -455,7 +510,7 @@ async function submitAddressForm(frame, aAddress, aOptions = {}) {
   }, {address: aAddress, options: aOptions});
 }
 
-async function manuallyAddAddress(frame, aAddress, aOptions = {}) {
+async function manuallyAddShippingAddress(frame, aAddress, aOptions = {}) {
   let options = Object.assign({
     expectPersist: true,
     isEditing: false,
@@ -463,9 +518,10 @@ async function manuallyAddAddress(frame, aAddress, aOptions = {}) {
     checkboxSelector: "#address-page .persist-checkbox",
   });
   await navigateToAddAddressPage(frame);
-  info("manuallyAddAddress, fill in address form with options: " + JSON.stringify(options));
-  await fillInAddressForm(frame, aAddress, options);
-  info("manuallyAddAddress, verifyPersistCheckbox with options: " + JSON.stringify(options));
+  info("manuallyAddShippingAddress, fill in address form with options: " + JSON.stringify(options));
+  await fillInShippingAddressForm(frame, aAddress, options);
+  info("manuallyAddShippingAddress, verifyPersistCheckbox with options: " +
+       JSON.stringify(options));
   await verifyPersistCheckbox(frame, options);
   await submitAddressForm(frame, aAddress, options);
 }

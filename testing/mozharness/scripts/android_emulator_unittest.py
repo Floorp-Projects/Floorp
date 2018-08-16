@@ -612,12 +612,17 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         if self.test_suite:
             return [(self.test_suite, self.test_suite)]
         # per-test mode: determine test suites to run
+
+        # For each test category, provide a list of supported sub-suites and a mapping
+        # between the per_test_base suite name and the android suite name.
         all = [('mochitest', {'plain': 'mochitest',
                               'chrome': 'mochitest-chrome',
+                              'mochitest-media': 'mochitest-media',
                               'plain-clipboard': 'mochitest-plain-clipboard',
                               'plain-gpu': 'mochitest-plain-gpu'}),
                ('reftest', {'reftest': 'reftest',
-                            'crashtest': 'crashtest'}),
+                            'crashtest': 'crashtest',
+                            'jsreftest': 'jsreftest'}),
                ('xpcshell', {'xpcshell': 'xpcshell'})]
         suites = []
         for (category, all_suites) in all:

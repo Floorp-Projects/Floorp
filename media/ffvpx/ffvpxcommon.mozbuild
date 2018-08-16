@@ -50,7 +50,7 @@ LOCAL_INCLUDES += ['/media/ffvpx']
 AllowCompilerWarnings()
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CFLAGS += [
         '-Wno-parentheses',
         '-Wno-pointer-sign',
@@ -61,22 +61,32 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         # XXX This does not seem to have any effect on some versions of GCC.
         '-Wno-deprecated-declarations',
     ]
-    if CONFIG['CC_TYPE'] == 'clang':
+    if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
         CFLAGS += [
-            '-Wno-incompatible-pointer-types-discards-qualifiers',
+            '-Wno-absolute-value',
+            '-Wno-incompatible-pointer-types',
             '-Wno-string-conversion',
             '-Wno-visibility',
-            # Workaround for https://bugs.llvm.org/show_bug.cgi?id=26828#c4 :
-            '-ffreestanding',
         ]
+        if CONFIG['CC_TYPE'] == 'clang-cl':
+            CFLAGS += [
+                '-Wno-inconsistent-dllimport',
+                '-Wno-macro-redefined', # 'WIN32_LEAN_AND_MEAN' macro redefined
+            ]
+        if CONFIG['CC_TYPE'] == 'clang':
+            CFLAGS += [
+                # Workaround for https://bugs.llvm.org/show_bug.cgi?id=26828#c4 :
+                '-ffreestanding',
+            ]
     else:
         CFLAGS += [
             '-Wno-discarded-qualifiers',
             '-Wno-maybe-uninitialized',
         ]
-    # Force visibility of cpu and av_log symbols.
-    CFLAGS += ['-include', 'libavutil_visibility.h']
-elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        # Force visibility of cpu and av_log symbols.
+        CFLAGS += ['-include', 'libavutil_visibility.h']
+elif CONFIG['CC_TYPE'] == 'msvc':
     CFLAGS += [
         '-wd4090', # 'return' : different 'const' qualifiers
         '-wd4018', # '>' : signed/unsigned mismatch
@@ -104,6 +114,7 @@ elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         '-wd4057', '-wd4204', '-wd4706', '-wd4305', '-wd4152', '-wd4324',
         '-we4013', '-wd4100', '-wd4214', '-wd4307', '-wd4273', '-wd4554',
     ]
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     LOCAL_INCLUDES += ['/media/ffvpx/compat/atomics/win32']
 DEFINES['HAVE_AV_CONFIG_H'] = True
 

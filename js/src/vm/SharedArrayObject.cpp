@@ -370,21 +370,21 @@ static const ClassOps SharedArrayBufferObjectClassOps = {
     nullptr, /* trace */
 };
 
-static const JSFunctionSpec static_functions[] = {
+static const JSFunctionSpec sharedarrray_functions[] = {
     JS_FS_END
 };
 
-static const JSPropertySpec static_properties[] = {
+static const JSPropertySpec sharedarrray_properties[] = {
     JS_SELF_HOSTED_SYM_GET(species, "SharedArrayBufferSpecies", 0),
     JS_PS_END
 };
 
-static const JSFunctionSpec prototype_functions[] = {
+static const JSFunctionSpec sharedarray_proto_functions[] = {
     JS_SELF_HOSTED_FN("slice", "SharedArrayBufferSlice", 2, 0),
     JS_FS_END
 };
 
-static const JSPropertySpec prototype_properties[] = {
+static const JSPropertySpec sharedarray_proto_properties[] = {
     JS_PSG("byteLength", SharedArrayBufferObject::byteLengthGetter, 0),
     JS_STRING_SYM_PS(toStringTag, "SharedArrayBuffer", JSPROP_READONLY),
     JS_PS_END
@@ -393,10 +393,10 @@ static const JSPropertySpec prototype_properties[] = {
 static const ClassSpec SharedArrayBufferObjectClassSpec = {
     GenericCreateConstructor<SharedArrayBufferObject::class_constructor, 1, gc::AllocKind::FUNCTION>,
     CreateSharedArrayBufferPrototype,
-    static_functions,
-    static_properties,
-    prototype_functions,
-    prototype_properties
+    sharedarrray_functions,
+    sharedarrray_properties,
+    sharedarray_proto_functions,
+    sharedarray_proto_properties
 };
 
 const Class SharedArrayBufferObject::class_ = {

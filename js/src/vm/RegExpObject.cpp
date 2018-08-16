@@ -324,13 +324,13 @@ RegExpObject::initAndZeroLastIndex(JSAtom* source, RegExpFlag flags, JSContext* 
 }
 
 static MOZ_ALWAYS_INLINE bool
-IsLineTerminator(const JS::Latin1Char c)
+IsRegExpLineTerminator(const JS::Latin1Char c)
 {
     return c == '\n' || c == '\r';
 }
 
 static MOZ_ALWAYS_INLINE bool
-IsLineTerminator(const char16_t c)
+IsRegExpLineTerminator(const char16_t c)
 {
     return c == '\n' || c == '\r' || c == 0x2028 || c == 0x2029;
 }
@@ -422,7 +422,7 @@ EscapeRegExpPattern(StringBuffer& sb, const CharT* oldChars, size_t oldLen)
             }
         }
 
-        if (IsLineTerminator(ch)) {
+        if (IsRegExpLineTerminator(ch)) {
             // There's LineTerminator that needs escaping.
             if (sb.empty()) {
                 // This is the first char we've seen that needs escaping,

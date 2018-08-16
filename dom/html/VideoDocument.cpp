@@ -78,14 +78,12 @@ VideoDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
   MediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
   if (aScriptGlobalObject && !InitialSetupHasBeenDone()) {
-    if (!GetRootElement()) {
-      // Create synthetic document
+    // Create synthetic document
 #ifdef DEBUG
-      nsresult rv =
+    nsresult rv =
 #endif
-        CreateSyntheticVideoDocument();
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic video document");
-    }
+      CreateSyntheticVideoDocument();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic video document");
 
     if (!nsContentUtils::IsChildOfSameType(this)) {
       LinkStylesheet(NS_LITERAL_STRING("resource://content-accessible/TopLevelVideoDocument.css"));

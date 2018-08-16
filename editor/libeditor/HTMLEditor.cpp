@@ -76,6 +76,17 @@ using namespace widget;
 
 const char16_t kNBSP = 160;
 
+static already_AddRefed<nsAtom>
+GetLowerCaseNameAtom(const nsAString& aTagName)
+{
+  if (aTagName.IsEmpty()) {
+    return nullptr;
+  }
+  nsAutoString lowerTagName;
+  nsContentUtils::ASCIIToLower(aTagName, lowerTagName);
+  return NS_Atomize(lowerTagName);
+}
+
 // Some utilities to handle overloading of "A" tag for link and named anchor.
 static bool
 IsLinkTag(const nsString& s)
@@ -84,9 +95,22 @@ IsLinkTag(const nsString& s)
 }
 
 static bool
+IsLinkTag(const nsAtom& aTagName)
+{
+  return aTagName.Equals(NS_LITERAL_STRING("href"));
+}
+
+static bool
 IsNamedAnchorTag(const nsString& s)
 {
   return s.EqualsIgnoreCase("anchor") || s.EqualsIgnoreCase("namedanchor");
+}
+
+static bool
+IsNamedAnchorTag(const nsAtom& aTagName)
+{
+  return aTagName.Equals(NS_LITERAL_STRING("anchor")) ||
+         aTagName.Equals(NS_LITERAL_STRING("namedanchor"));
 }
 
 template EditorDOMPoint
@@ -1033,11 +1057,8 @@ HTMLEditor::IsVisibleBRElement(nsINode* aNode)
   // Let's look after the break
   selOffset++;
   WSRunObject wsObj(this, selNode, selOffset);
-  nsCOMPtr<nsINode> unused;
-  int32_t visOffset = 0;
   WSType visType;
-  wsObj.NextVisibleNode(EditorRawDOMPoint(selNode, selOffset),
-                        address_of(unused), &visOffset, &visType);
+  wsObj.NextVisibleNode(EditorRawDOMPoint(selNode, selOffset), &visType);
   if (visType & WSType::block) {
     return false;
   }
@@ -1522,10 +1543,9 @@ HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
   // i.e., the insertion position is just before a visible line break <br>,
   // we want to skip to the position just after the line break (see bug 68767).
   nsCOMPtr<nsINode> nextVisibleNode;
-  int32_t nextVisibleOffset = 0;
   WSType nextVisibleType;
   wsObj.NextVisibleNode(pointToInsert, address_of(nextVisibleNode),
-                        &nextVisibleOffset, &nextVisibleType);
+                        nullptr, &nextVisibleType);
   // So, if the next visible node isn't a <br> element, we can insert the block
   // level element to the point.
   if (!nextVisibleNode ||
@@ -1538,10 +1558,9 @@ HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
   // would not insert the <br> at the caret position, but after the current
   // empty line.
   nsCOMPtr<nsINode> previousVisibleNode;
-  int32_t previousVisibleOffset = 0;
   WSType previousVisibleType;
   wsObj.PriorVisibleNode(pointToInsert, address_of(previousVisibleNode),
-                         &previousVisibleOffset, &previousVisibleType);
+                         nullptr, &previousVisibleType);
   // So, if there is no previous visible node,
   // or, if both nodes of the insertion point is <br> elements,
   // or, if the previous visible node is different block,
@@ -2611,60 +2630,77 @@ NS_IMETHODIMP
 HTMLEditor::GetSelectedElement(const nsAString& aTagName,
                                nsISupports** aReturn)
 {
-  NS_ENSURE_TRUE(aReturn , NS_ERROR_NULL_POINTER);
-
-  // default is null - no element found
+  if (NS_WARN_IF(!aReturn)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   *aReturn = nullptr;
 
-  // First look for a single element in selection
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  bool isCollapsed = selection->IsCollapsed();
+  ErrorResult error;
+  RefPtr<nsAtom> tagName = GetLowerCaseNameAtom(aTagName);
+  RefPtr<nsINode> selectedNode = GetSelectedElement(*selection, tagName, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  selectedNode.forget(aReturn);
+  return NS_OK;
+}
 
-  nsAutoString domTagName;
-  nsAutoString TagName(aTagName);
-  ToLowerCase(TagName);
-  // Empty string indicates we should match any element tag
-  bool anyTag = (TagName.IsEmpty());
-  bool isLinkTag = IsLinkTag(TagName);
-  bool isNamedAnchorTag = IsNamedAnchorTag(TagName);
+already_AddRefed<Element>
+HTMLEditor::GetSelectedElement(Selection& aSelection,
+                               const nsAtom* aTagName,
+                               ErrorResult& aRv)
+{
+  MOZ_ASSERT(!aRv.Failed());
 
-  RefPtr<nsRange> range = selection->GetRangeAt(0);
-  NS_ENSURE_STATE(range);
+  bool isLinkTag = aTagName && IsLinkTag(*aTagName);
+  bool isNamedAnchorTag = aTagName && IsNamedAnchorTag(*aTagName);
 
-  nsCOMPtr<nsINode> startContainer = range->GetStartContainer();
-  nsIContent* startNode = range->GetChildAtStartOffset();
+  RefPtr<nsRange> firstRange = aSelection.GetRangeAt(0);
+  if (NS_WARN_IF(!firstRange)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
-  nsCOMPtr<nsINode> endContainer = range->GetEndContainer();
-  nsIContent* endNode = range->GetChildAtEndOffset();
+  nsCOMPtr<nsINode> startContainer = firstRange->GetStartContainer();
+  nsIContent* startNode = firstRange->GetChildAtStartOffset();
+
+  nsCOMPtr<nsINode> endContainer = firstRange->GetEndContainer();
+  nsIContent* endNode = firstRange->GetChildAtEndOffset();
 
   // Optimization for a single selected element
   if (startContainer && startContainer == endContainer &&
       startNode && endNode && startNode->GetNextSibling() == endNode) {
-    nsCOMPtr<nsINode> selectedNode = startNode;
-    if (selectedNode) {
-      domTagName = selectedNode->NodeName();
-      ToLowerCase(domTagName);
-
-      // Test for appropriate node type requested
-      if (anyTag || (TagName == domTagName) ||
-          (isLinkTag && HTMLEditUtils::IsLink(selectedNode)) ||
-          (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(selectedNode))) {
-        selectedNode.forget(aReturn);
-        return NS_OK;
+    if (!aTagName) {
+      if (NS_WARN_IF(!startNode->IsElement())) {
+        // XXX Keep not returning error in this case, but perhaps, we should
+        //     look for element node.
+        return nullptr;
       }
+      RefPtr<Element> selectedElement = startNode->AsElement();
+      return selectedElement.forget();
+    }
+    // Test for appropriate node type requested
+    if (aTagName == startNode->NodeInfo()->NameAtom() ||
+        (isLinkTag && HTMLEditUtils::IsLink(startNode)) ||
+        (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(startNode))) {
+      MOZ_ASSERT(startNode->IsElement());
+      RefPtr<Element> selectedElement = startNode->AsElement();
+      return selectedElement.forget();
     }
   }
 
-  bool bNodeFound = false;
-  nsCOMPtr<Element> selectedElement;
+  RefPtr<Element> selectedElement;
   if (isLinkTag) {
     // Link tag is a special case - we return the anchor node
     //  found for any selection that is totally within a link,
     //  included a collapsed selection (just a caret in a link)
-    const RangeBoundary& anchor = selection->AnchorRef();
-    const RangeBoundary& focus = selection->FocusRef();
+    const RangeBoundary& anchor = aSelection.AnchorRef();
+    const RangeBoundary& focus = aSelection.FocusRef();
     // Link node must be the same for both ends of selection
     if (anchor.IsSet()) {
       RefPtr<Element> parentLinkOfAnchor =
@@ -2672,23 +2708,18 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
                                     anchor.Container());
       // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
       if (parentLinkOfAnchor) {
-        if (isCollapsed) {
-          // We have just a caret in the link
-          bNodeFound = true;
-        } else if (focus.IsSet()) {
+        if (aSelection.IsCollapsed()) {
+          // We have just a caret in the link.
+          return parentLinkOfAnchor.forget();
+        }
+        if (focus.IsSet()) {
           // Link node must be the same for both ends of selection.
           RefPtr<Element> parentLinkOfFocus =
             GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
                                         focus.Container());
           if (parentLinkOfFocus == parentLinkOfAnchor) {
-            bNodeFound = true;
+            return parentLinkOfAnchor.forget();
           }
-        }
-
-        // We found a link node parent
-        if (bNodeFound) {
-          parentLinkOfAnchor.forget(aReturn);
-          return NS_OK;
         }
       } else if (anchor.GetChildAtOffset() && focus.GetChildAtOffset()) {
         // Check if link node is the only thing selected
@@ -2696,82 +2727,81 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
             anchor.Container() == focus.Container() &&
             focus.GetChildAtOffset() ==
               anchor.GetChildAtOffset()->GetNextSibling()) {
-          selectedElement = do_QueryInterface(anchor.GetChildAtOffset());
-          bNodeFound = true;
+          selectedElement = Element::FromNodeOrNull(anchor.GetChildAtOffset());
         }
       }
     }
   }
 
-  if (!isCollapsed) {
-    RefPtr<nsRange> currange = selection->GetRangeAt(0);
-    if (currange) {
-      nsresult rv;
-      nsCOMPtr<nsIContentIterator> iter =
-        do_CreateInstance("@mozilla.org/content/post-content-iterator;1",
-                          &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      iter->Init(currange);
-      // loop through the content iterator for each content node
-      while (!iter->IsDone()) {
-        // Query interface to cast nsIContent to Element
-        //  then get tagType to compare to  aTagName
-        // Clone node of each desired type and append it to the aDomFrag
-        selectedElement = Element::FromNodeOrNull(iter->GetCurrentNode());
-        if (selectedElement) {
-          // If we already found a node, then we have another element,
-          //  thus there's not just one element selected
-          if (bNodeFound) {
-            bNodeFound = false;
-            break;
-          }
-
-          domTagName = selectedElement->NodeName();
-          ToLowerCase(domTagName);
-
-          if (anyTag) {
-            // Get name of first selected element
-            selectedElement->GetTagName(TagName);
-            ToLowerCase(TagName);
-            anyTag = false;
-          }
-
-          // The "A" tag is a pain,
-          //  used for both link(href is set) and "Named Anchor"
-          if ((isLinkTag &&
-               HTMLEditUtils::IsLink(selectedElement)) ||
-              (isNamedAnchorTag &&
-               HTMLEditUtils::IsNamedAnchor(selectedElement))) {
-            bNodeFound = true;
-          } else if (TagName == domTagName) { // All other tag names are handled here
-            bNodeFound = true;
-          }
-          if (!bNodeFound) {
-            // Check if node we have is really part of the selection???
-            break;
-          }
-        }
-        iter->Next();
-      }
-    } else {
-      // Should never get here?
-      isCollapsed = true;
-      NS_WARNING("isCollapsed was FALSE, but no elements found in selection\n");
-    }
+  if (aSelection.IsCollapsed()) {
+    return selectedElement.forget();
   }
 
-  selectedElement.forget(aReturn);
-  return NS_OK;
-}
+  nsresult rv;
+  nsCOMPtr<nsIContentIterator> iter =
+    do_CreateInstance("@mozilla.org/content/post-content-iterator;1",
+                      &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
 
-already_AddRefed<Element>
-HTMLEditor::GetSelectedElement(const nsAString& aTagName)
-{
-  nsCOMPtr<nsISupports> domElement;
-  GetSelectedElement(aTagName, getter_AddRefs(domElement));
-  nsCOMPtr<Element> element = do_QueryInterface(domElement);
-  return element.forget();
+  bool found = !!selectedElement;
+  const nsAtom* tagNameLookingFor = aTagName;
+  iter->Init(firstRange);
+  // loop through the content iterator for each content node
+  while (!iter->IsDone()) {
+    // Update selectedElement with new node.  If it's not an element node,
+    // clear it.
+    // XXX This is really odd since this means that the result depends on
+    //     what is the last node.  If the last node is an element node,
+    //     it may be returned even if it does not match with aTagName.
+    //     On the other hand, if last node is not an element, i.e., we have
+    //     not found proper element node, we return nullptr as this method
+    //     name explains.
+    selectedElement = Element::FromNodeOrNull(iter->GetCurrentNode());
+    if (selectedElement) {
+      // If we already found a node, then we have another element,
+      // thus there's not just one element selected.
+      // XXX Really odd.  The new element node may be different name element.
+      //     So, this means that we return any next element node if we find
+      //     proper element as first element in the range.
+      if (found) {
+        break;
+      }
+
+      if (!tagNameLookingFor) {
+        // Get name of first selected element
+        // XXX Looks like that this is necessary only for making the following
+        //     handler work as expected...  Why don't you check this below??
+        tagNameLookingFor = selectedElement->NodeInfo()->NameAtom();
+      }
+
+      // The "A" tag is a pain,
+      //  used for both link(href is set) and "Named Anchor"
+      if ((isLinkTag &&
+           HTMLEditUtils::IsLink(selectedElement)) ||
+          (isNamedAnchorTag &&
+           HTMLEditUtils::IsNamedAnchor(selectedElement))) {
+        found = true;
+      }
+      // All other tag names are handled here.
+      else if (tagNameLookingFor ==
+                 selectedElement->NodeInfo()->NameAtom()) {
+        found = true;
+      }
+
+      if (!found) {
+        // Check if node we have is really part of the selection???
+        // XXX This is odd.  This means that we return element node whose
+        //     tag name does not match with aTagName if we find such element
+        //     node first.
+        break;
+      }
+    }
+    iter->Next();
+  }
+  return selectedElement.forget();
 }
 
 already_AddRefed<Element>
@@ -4113,11 +4143,10 @@ HTMLEditor::IsVisibleTextNode(Text& aText)
 
   WSRunObject wsRunObj(this, &aText, 0);
   nsCOMPtr<nsINode> nextVisibleNode;
-  int32_t unused = 0;
   WSType visibleNodeType;
   wsRunObj.NextVisibleNode(EditorRawDOMPoint(&aText, 0),
                            address_of(nextVisibleNode),
-                           &unused, &visibleNodeType);
+                           nullptr, &visibleNodeType);
   return (visibleNodeType == WSType::normalWS ||
           visibleNodeType == WSType::text) &&
          &aText == nextVisibleNode;
@@ -4710,7 +4739,9 @@ HTMLEditor::GetSelectionContainer()
 
       if (startContainer == endContainer && startOffset + 1 == endOffset) {
         MOZ_ASSERT(!focusNode, "How did it get set already?");
-        focusNode = GetSelectedElement(EmptyString());
+        IgnoredErrorResult error;
+        focusNode = GetSelectedElement(*selection, nullptr, error);
+        NS_WARNING_ASSERTION(!error.Failed(), "Failed to get selected element");
       }
       if (!focusNode) {
         focusNode = range->GetCommonAncestor();

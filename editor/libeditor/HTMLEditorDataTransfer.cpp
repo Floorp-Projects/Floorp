@@ -620,11 +620,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
 
       // make sure we don't end up with selection collapsed after an invisible break node
       WSRunObject wsRunObj(this, selNode, selOffset);
-      nsCOMPtr<nsINode> visNode;
-      int32_t outVisOffset=0;
       WSType visType;
       wsRunObj.PriorVisibleNode(EditorRawDOMPoint(selNode, selOffset),
-                                address_of(visNode), &outVisOffset, &visType);
+                                &visType);
       if (visType == WSType::br) {
         // we are after a break.  Is it visible?  Despite the name,
         // PriorVisibleNode does not make that determination for breaks.
@@ -638,6 +636,8 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
           selOffset = atStartReasonNode.Offset();
           // we want to be inside any inline style prior to break
           WSRunObject wsRunObj(this, selNode, selOffset);
+          nsCOMPtr<nsINode> visNode;
+          int32_t outVisOffset;
           wsRunObj.PriorVisibleNode(EditorRawDOMPoint(selNode, selOffset),
                                     address_of(visNode),
                                     &outVisOffset, &visType);
