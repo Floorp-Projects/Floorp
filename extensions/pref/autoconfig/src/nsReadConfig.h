@@ -6,14 +6,14 @@
 #ifndef nsReadConfig_h
 #define nsReadConfig_h
 
-#include "nsCOMPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsIReadConfig.h"
-#include "nsIAutoConfig.h"
+#include "nsAutoConfig.h"
 #include "nsIObserver.h"
 
 
-class nsReadConfig : public nsIReadConfig,
-                     public nsIObserver
+class nsReadConfig final : public nsIReadConfig,
+                           public nsIObserver
 {
 
     public:
@@ -35,7 +35,7 @@ class nsReadConfig : public nsIReadConfig,
                                         bool isEncoded, bool isBinDir);
         bool mRead;
 private:
-        nsCOMPtr<nsIAutoConfig> mAutoConfig;
+        RefPtr<nsAutoConfig> mAutoConfig;
 };
 
 #endif

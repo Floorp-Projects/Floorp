@@ -35,10 +35,8 @@ class MOZ_STACK_CLASS DoWhileEmitter
 {
     BytecodeEmitter* bce_;
 
-    // The source note indices for 2 SRC_WHILE's.
-    // FIXME: Add SRC_DO_WHILE (bug 1477896).
+    // The source note index for SRC_DO_WHILE.
     unsigned noteIndex_ = 0;
-    unsigned noteIndex2_ = 0;
 
     mozilla::Maybe<LoopControl> loopInfo_;
 
