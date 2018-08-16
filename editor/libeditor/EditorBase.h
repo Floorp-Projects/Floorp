@@ -1505,9 +1505,12 @@ protected: // May be called by friends.
   bool ShouldHandleIMEComposition() const;
 
   /**
-   * From html rules code - migration in progress.
+   * AreNodesSameType() returns true if aNode1 and aNode2 are same type.
+   * If the instance is TextEditor, only their names are checked.
+   * If the instance is HTMLEditor in CSS mode and both of them are <span>
+   * element, their styles are also checked.
    */
-  virtual bool AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2);
+  bool AreNodesSameType(nsIContent& aNode1, nsIContent& aNode2) const;
 
   static bool IsTextNode(nsINode* aNode)
   {

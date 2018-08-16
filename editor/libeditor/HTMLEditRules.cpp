@@ -3031,7 +3031,7 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
 
         // MOOSE: this could conceivably screw up a table.. fix me.
         if (leftBlockParent == rightBlockParent &&
-            HTMLEditorRef().AreNodesSameType(leftParent, rightParent) &&
+            HTMLEditorRef().AreNodesSameType(*leftParent, *rightParent) &&
             // XXX What's special about these three types of block?
             (leftParent->IsHTMLElement(nsGkAtoms::p) ||
              HTMLEditUtils::IsListItem(leftParent) ||
@@ -9204,7 +9204,7 @@ HTMLEditRules::JoinNearestEditableNodesWithTransaction(
   }
 
   if (lastLeft && firstRight &&
-      HTMLEditorRef().AreNodesSameType(lastLeft, firstRight) &&
+      HTMLEditorRef().AreNodesSameType(*lastLeft, *firstRight) &&
       (lastLeft->GetAsText() ||
        (lastLeft->IsElement() && firstRight->IsElement() &&
         CSSEditUtils::ElementsSameStyle(lastLeft->AsElement(),
