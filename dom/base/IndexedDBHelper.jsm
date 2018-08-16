@@ -160,21 +160,21 @@ IndexedDBHelper.prototype = {
         stores = txn.objectStore(store_name);
       }
 
-      txn.oncomplete = function (event) {
+      txn.oncomplete = function () {
         if (DEBUG) debug("Transaction complete. Returning to callback.");
         if (successCb) {
-          successCb(txn.result);
+          if ("result" in txn) {
+            successCb(txn.result);
+          } else {
+            successCb();
+          }
         }
       };
 
-      txn.onabort = function (event) {
+      txn.onabort = function () {
         if (DEBUG) debug("Caught error on transaction");
-        /*
-         * event.target.error may be null
-         * if txn was aborted by calling txn.abort()
-         */
         if (failureCb) {
-          failureCb(getErrorName(event.target.error));
+          failureCb(getErrorName(txn.error));
         }
       };
       callback(txn, stores);
