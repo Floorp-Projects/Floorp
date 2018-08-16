@@ -19,10 +19,19 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  function runTests() {
+  async function runTests() {
     ok(MozXULElement, "MozXULElement defined on the window");
     testParseXULToFragment();
     testCustomInterface();
+
+    let htmlWin = await new Promise(resolve => {
+      let htmlIframe = document.createElement("iframe");
+      htmlIframe.src = "file_empty.xhtml";
+      htmlIframe.onload = () => resolve(htmlIframe.contentWindow);
+      document.documentElement.appendChild(htmlIframe);
+    });
+
+    ok(htmlWin.MozXULElement, "MozXULElement defined on a chrome HTML window");
     SimpleTest.finish();
   }
 

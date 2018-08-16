@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "nsStringBuffer.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Span.h"
 
 namespace mozilla {
 namespace dom {
@@ -69,12 +70,24 @@ struct FakeString {
 
   nsString::char_type* BeginWriting()
   {
+    MOZ_ASSERT(!(mDataFlags & nsString::DataFlags::REFCOUNTED) || 
+               !nsStringBuffer::FromData(mData)->IsReadonly());
     return mData;
   }
 
   nsString::size_type Length() const
   {
     return mLength;
+  }
+
+  operator mozilla::Span<const nsString::char_type>() const
+  {
+    return mozilla::MakeSpan(Data(), Length());
+  }
+
+  operator mozilla::Span<nsString::char_type>()
+  {
+    return mozilla::MakeSpan(BeginWriting(), Length());
   }
 
   // Reserve space to write aLength chars, not including null-terminator.

@@ -619,6 +619,16 @@ pub unsafe extern "C" fn encoding_mem_is_str_latin1(buffer: *const u8, len: usiz
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn encoding_mem_utf16_valid_up_to(buffer: *const u16, len: usize) -> usize {
+    encoding_rs::mem::utf16_valid_up_to(::std::slice::from_raw_parts(buffer, len))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_ensure_utf16_validity(buffer: *mut u16, len: usize) {
+    encoding_rs::mem::ensure_utf16_validity(::std::slice::from_raw_parts_mut(buffer, len));
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn encoding_mem_convert_utf16_to_latin1_lossy(
     src: *const u16,
     src_len: usize,
