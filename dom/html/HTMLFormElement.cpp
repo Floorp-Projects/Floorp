@@ -14,6 +14,7 @@
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
+#include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/HTMLFormControlsCollection.h"
 #include "mozilla/dom/HTMLFormElementBinding.h"
 #include "mozilla/Move.h"
@@ -1891,83 +1892,105 @@ HTMLFormElement::CheckValidFormSubmission()
     return true;
   }
 
+  AutoTArray<RefPtr<Element>, 32> invalidElements;
+  if (CheckFormValidity(&invalidElements)) {
+    return true;
+  }
+
+  // For the first invalid submission, we should update element states.
+  // We have to do that _before_ calling the observers so we are sure they
+  // will not interfere (like focusing the element).
+  if (!mEverTriedInvalidSubmit) {
+    mEverTriedInvalidSubmit = true;
+
+    /*
+     * We are going to call update states assuming elements want to
+     * be notified because we can't know.
+     * Submissions shouldn't happen during parsing so it _should_ be safe.
+     */
+
+    nsAutoScriptBlocker scriptBlocker;
+
+    for (uint32_t i = 0, length = mControls->mElements.Length();
+         i < length; ++i) {
+      // Input elements can trigger a form submission and we want to
+      // update the style in that case.
+      if (mControls->mElements[i]->IsHTMLElement(nsGkAtoms::input) &&
+          // We don't use nsContentUtils::IsFocusedContent here, because it
+          // doesn't really do what we want for number controls: it's true
+          // for the anonymous textnode inside, but not the number control
+          // itself.  We can use the focus state, though, because that gets
+          // synced to the number control by the anonymous text control.
+          mControls->mElements[i]->State().HasState(NS_EVENT_STATE_FOCUS)) {
+        static_cast<HTMLInputElement*>(mControls->mElements[i])
+          ->UpdateValidityUIBits(true);
+      }
+
+      mControls->mElements[i]->UpdateState(true);
+    }
+
+    // Because of backward compatibility, <input type='image'> is not in
+    // elements but can be invalid.
+    // TODO: should probably be removed when bug 606491 will be fixed.
+    for (uint32_t i = 0, length = mControls->mNotInElements.Length();
+         i < length; ++i) {
+      mControls->mNotInElements[i]->UpdateState(true);
+    }
+  }
+
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(GetOwnerGlobal())) {
+    return false;
+  }
+  JS::Rooted<JS::Value> detail(jsapi.cx());
+  if (!ToJSValue(jsapi.cx(), invalidElements, &detail)) {
+    return false;
+  }
+
+  RefPtr<CustomEvent> event = NS_NewDOMCustomEvent(OwnerDoc(),
+                                                   nullptr, nullptr);
+  event->InitCustomEvent(jsapi.cx(),
+                         NS_LITERAL_STRING("MozInvalidForm"),
+                         /* CanBubble */ true,
+                         /* Cancelable */ true,
+                         detail);
+  event->SetTrusted(true);
+  event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
+
+  DispatchEvent(*event);
+
+  bool result = !event->DefaultPrevented();
+
   nsCOMPtr<nsISimpleEnumerator> theEnum;
   nsresult rv = service->EnumerateObservers(NS_INVALIDFORMSUBMIT_SUBJECT,
                                             getter_AddRefs(theEnum));
-  // Return true on error here because that's what we always did
-  NS_ENSURE_SUCCESS(rv, true);
+  NS_ENSURE_SUCCESS(rv, result);
 
   bool hasObserver = false;
   rv = theEnum->HasMoreElements(&hasObserver);
 
-  // Do not check form validity if there is no observer for
-  // NS_INVALIDFORMSUBMIT_SUBJECT.
   if (NS_SUCCEEDED(rv) && hasObserver) {
-    AutoTArray<RefPtr<Element>, 32> invalidElements;
+    result = false;
 
-    if (!CheckFormValidity(&invalidElements)) {
-      // For the first invalid submission, we should update element states.
-      // We have to do that _before_ calling the observers so we are sure they
-      // will not interfere (like focusing the element).
-      if (!mEverTriedInvalidSubmit) {
-        mEverTriedInvalidSubmit = true;
+    nsCOMPtr<nsISupports> inst;
+    nsCOMPtr<nsIFormSubmitObserver> observer;
+    bool more = true;
+    while (NS_SUCCEEDED(theEnum->HasMoreElements(&more)) && more) {
+      theEnum->GetNext(getter_AddRefs(inst));
+      observer = do_QueryInterface(inst);
 
-        /*
-         * We are going to call update states assuming elements want to
-         * be notified because we can't know.
-         * Submissions shouldn't happen during parsing so it _should_ be safe.
-         */
-
-        nsAutoScriptBlocker scriptBlocker;
-
-        for (uint32_t i = 0, length = mControls->mElements.Length();
-             i < length; ++i) {
-          // Input elements can trigger a form submission and we want to
-          // update the style in that case.
-          if (mControls->mElements[i]->IsHTMLElement(nsGkAtoms::input) &&
-              // We don't use nsContentUtils::IsFocusedContent here, because it
-              // doesn't really do what we want for number controls: it's true
-              // for the anonymous textnode inside, but not the number control
-              // itself.  We can use the focus state, though, because that gets
-              // synced to the number control by the anonymous text control.
-              mControls->mElements[i]->State().HasState(NS_EVENT_STATE_FOCUS)) {
-            static_cast<HTMLInputElement*>(mControls->mElements[i])
-              ->UpdateValidityUIBits(true);
-          }
-
-          mControls->mElements[i]->UpdateState(true);
-        }
-
-        // Because of backward compatibility, <input type='image'> is not in
-        // elements but can be invalid.
-        // TODO: should probably be removed when bug 606491 will be fixed.
-        for (uint32_t i = 0, length = mControls->mNotInElements.Length();
-             i < length; ++i) {
-          mControls->mNotInElements[i]->UpdateState(true);
-        }
+      if (observer) {
+        observer->NotifyInvalidSubmit(this, invalidElements);
       }
-
-      nsCOMPtr<nsISupports> inst;
-      nsCOMPtr<nsIFormSubmitObserver> observer;
-      bool more = true;
-      while (NS_SUCCEEDED(theEnum->HasMoreElements(&more)) && more) {
-        theEnum->GetNext(getter_AddRefs(inst));
-        observer = do_QueryInterface(inst);
-
-        if (observer) {
-          observer->NotifyInvalidSubmit(this, invalidElements);
-        }
-      }
-
-      // The form is invalid. Observers have been alerted. Do not submit.
-      return false;
     }
-  } else {
+  }
+
+  if (result) {
     NS_WARNING("There is no observer for \"invalidformsubmit\". \
 One should be implemented!");
   }
 
-  return true;
+  return result;
 }
 
 bool
