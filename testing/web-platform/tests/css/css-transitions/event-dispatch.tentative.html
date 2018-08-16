@@ -9,41 +9,8 @@
 <script>
 'use strict';
 
-/**
- * Helper class to record the elapsedTime member of each event.
- * The EventWatcher class in testharness.js allows us to wait on
- * multiple events in a certain order but only records the event
- * parameters of the most recent event.
- */
-function TransitionEventHandler(target) {
-  this.target = target;
-  this.target.ontransitionrun = evt => {
-    this.transitionrun = evt.elapsedTime;
-  };
-  this.target.ontransitionstart = evt => {
-    this.transitionstart = evt.elapsedTime;
-  };
-  this.target.ontransitionend = evt => {
-    this.transitionend = evt.elapsedTime;
-  };
-  this.target.ontransitioncancel = evt => {
-    this.transitioncancel = evt.elapsedTime;
-  };
-}
-
-TransitionEventHandler.prototype.clear = () => {
-  this.transitionrun    = undefined;
-  this.transitionstart  = undefined;
-  this.transitionend    = undefined;
-  this.transitioncancel = undefined;
-};
-
 const setupTransition = (t, transitionStyle) => {
   const div = addDiv(t, { style: 'transition: ' + transitionStyle });
-  // Note that this TransitionEventHandler should be created before EventWatcher
-  // to capture all events in the handler prior to the EventWatcher since
-  // testharness.js proceeds when the EventWatcher received watching events.
-  const handler = new TransitionEventHandler(div);
   const watcher = new EventWatcher(t, div, [ 'transitionrun',
                                              'transitionstart',
                                              'transitionend',
@@ -53,7 +20,7 @@ const setupTransition = (t, transitionStyle) => {
   div.style.marginLeft = '100px';
   const transition = div.getAnimations()[0];
 
-  return { transition, watcher, div, handler };
+  return { transition, watcher, div };
 };
 
 // On the next frame (i.e. when events are queued), whether or not the
@@ -75,29 +42,32 @@ promise_test(async t => {
 }, 'Idle -> Before');
 
 promise_test(async t => {
-  const { transition, watcher, div, handler } =
-    setupTransition(t, 'margin-left 100s 100s');
+  const { transition, watcher } = setupTransition(t, 'margin-left 100s 100s');
 
   // Seek to Active phase.
   transition.currentTime = 100 * MS_PER_SEC;
   transition.pause();
-  await watcher.wait_for([ 'transitionrun', 'transitionstart' ]);
-  assert_equals(handler.transitionrun, 0.0);
-  assert_equals(handler.transitionstart, 0.0);
+  const events = await watcher.wait_for(['transitionrun', 'transitionstart'], {
+    record: 'all',
+  });
+  assert_equals(events[0].elapsedTime, 0.0);
+  assert_equals(events[1].elapsedTime, 0.0);
 }, 'Idle or Pending -> Active');
 
 promise_test(async t => {
-  const { transition, watcher, div, handler } =
-    setupTransition(t, 'margin-left 100s 100s');
+  const { transition, watcher } = setupTransition(t, 'margin-left 100s 100s');
 
   // Seek to After phase.
   transition.finish();
-  await watcher.wait_for([ 'transitionrun',
-                           'transitionstart',
-                           'transitionend' ]);
-  assert_equals(handler.transitionrun, 0.0);
-  assert_equals(handler.transitionstart, 0.0);
-  assert_equals(handler.transitionend, 100.0);
+  const events = await watcher.wait_for(
+    ['transitionrun', 'transitionstart', 'transitionend'],
+    {
+      record: 'all',
+    }
+  );
+  assert_equals(events[0].elapsedTime, 0.0);
+  assert_equals(events[1].elapsedTime, 0.0);
+  assert_equals(events[2].elapsedTime, 100.0);
 }, 'Idle or Pending -> After');
 
 promise_test(async t => {
@@ -137,16 +107,17 @@ promise_test(async t => {
 }, 'Before -> Active');
 
 promise_test(async t => {
-  const { transition, watcher, div, handler } =
-    setupTransition(t, 'margin-left 100s 100s');
+  const { transition, watcher } = setupTransition(t, 'margin-left 100s 100s');
 
   await Promise.all([ watcher.wait_for('transitionrun'), transition.ready ]);
   // Seek to After phase.
   transition.currentTime = 200 * MS_PER_SEC;
-  await watcher.wait_for([ 'transitionstart', 'transitionend' ]);
+  const events = await watcher.wait_for(['transitionstart', 'transitionend'], {
+    record: 'all',
+  });
 
-  assert_equals(handler.transitionstart, 0.0);
-  assert_equals(handler.transitionend, 100.0);
+  assert_equals(events[0].elapsedTime, 0.0);
+  assert_equals(events[1].elapsedTime, 100.0);
 }, 'Before -> After');
 
 promise_test(async t => {
@@ -263,8 +234,7 @@ promise_test(async t => {
 }, 'Active -> After');
 
 promise_test(async t => {
-  const { transition, watcher, div, handler } =
-    setupTransition(t, 'margin-left 100s 100s');
+  const { transition, watcher } = setupTransition(t, 'margin-left 100s 100s');
 
   // Seek to After phase.
   transition.finish();
@@ -274,10 +244,12 @@ promise_test(async t => {
 
   // Seek to Before phase.
   transition.currentTime = 0;
-  await watcher.wait_for([ 'transitionstart', 'transitionend' ]);
+  const events = await watcher.wait_for(['transitionstart', 'transitionend'], {
+    record: 'all',
+  });
 
-  assert_equals(handler.transitionstart, 100.0);
-  assert_equals(handler.transitionend, 0.0);
+  assert_equals(events[0].elapsedTime, 100.0);
+  assert_equals(events[1].elapsedTime, 0.0);
 }, 'After -> Before');
 
 promise_test(async t => {
@@ -296,14 +268,14 @@ promise_test(async t => {
 }, 'After -> Active');
 
 promise_test(async t => {
-  const { transition, watcher, div, handler } =
-    setupTransition(t, 'margin-left 100s -50s');
+  const { transition, watcher } = setupTransition(t, 'margin-left 100s -50s');
 
-  await watcher.wait_for([ 'transitionrun',
-                           'transitionstart' ]);
+  const events = await watcher.wait_for(['transitionrun', 'transitionstart'], {
+    record: 'all',
+  });
 
-  assert_equals(handler.transitionrun, 50.0);
-  assert_equals(handler.transitionstart, 50.0);
+  assert_equals(events[0].elapsedTime, 50.0);
+  assert_equals(events[1].elapsedTime, 50.0);
   transition.finish();
 
   const evt = await watcher.wait_for('transitionend');
@@ -311,24 +283,31 @@ promise_test(async t => {
 }, 'Calculating the interval start and end time with negative start delay.');
 
 promise_test(async t => {
-  const { transition, watcher, div, handler } =
-    setupTransition(t, 'margin-left 100s 100s');
+  const { transition, watcher, div } = setupTransition(
+    t,
+    'margin-left 100s 100s'
+  );
 
   await watcher.wait_for('transitionrun');
 
   // We can't set the end delay via generated effect timing
   // because mutating CSS transitions is not specced yet.
-  transition.effect = new KeyframeEffect(div,
-                                         { marginleft: [ '0px', '100px' ]},
-                                         { duration: 100 * MS_PER_SEC,
-                                           endDelay: -50 * MS_PER_SEC });
+  transition.effect = new KeyframeEffect(
+    div,
+    { marginleft: ['0px', '100px'] },
+    {
+      duration: 100 * MS_PER_SEC,
+      endDelay: -50 * MS_PER_SEC,
+    }
+  );
   // Seek to Before and play.
   transition.cancel();
   transition.play();
-  await watcher.wait_for([ 'transitioncancel',
-                           'transitionrun',
-                           'transitionstart' ]);
-  assert_equals(handler.transitionstart, 0.0);
+  const events = await watcher.wait_for(
+    ['transitioncancel', 'transitionrun', 'transitionstart'],
+    { record: 'all' }
+  );
+  assert_equals(events[2].elapsedTime, 0.0);
 
   // Seek to After phase.
   transition.finish();
