@@ -3097,7 +3097,7 @@ HTMLEditor::ReplaceOverrideStyleSheet(const nsAString& aURL)
     // Disable last sheet if not the same as new one
     if (!mLastOverrideStyleSheetURL.IsEmpty() &&
         !mLastOverrideStyleSheetURL.Equals(aURL)) {
-      return EnableStyleSheet(mLastOverrideStyleSheetURL, false);
+      EnableStyleSheetInternal(mLastOverrideStyleSheetURL, false);
     }
     return NS_OK;
   }
@@ -3152,10 +3152,21 @@ HTMLEditor::RemoveOverrideStyleSheetInternal(const nsAString& aURL)
 }
 
 NS_IMETHODIMP
-HTMLEditor::EnableStyleSheet(const nsAString& aURL, bool aEnable)
+HTMLEditor::EnableStyleSheet(const nsAString& aURL,
+                             bool aEnable)
+{
+  EnableStyleSheetInternal(aURL, aEnable);
+  return NS_OK;
+}
+
+void
+HTMLEditor::EnableStyleSheetInternal(const nsAString& aURL,
+                                     bool aEnable)
 {
   RefPtr<StyleSheet> sheet = GetStyleSheetForURL(aURL);
-  NS_ENSURE_TRUE(sheet, NS_OK); // Don't fail if sheet not found
+  if (!sheet) {
+    return;
+  }
 
   // Ensure the style sheet is owned by our document.
   nsCOMPtr<nsIDocument> document = GetDocument();
@@ -3163,7 +3174,6 @@ HTMLEditor::EnableStyleSheet(const nsAString& aURL, bool aEnable)
     document, StyleSheet::NotOwnedByDocumentOrShadowRoot);
 
   sheet->SetDisabled(!aEnable);
-  return NS_OK;
 }
 
 bool
