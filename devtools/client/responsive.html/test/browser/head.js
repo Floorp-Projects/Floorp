@@ -6,7 +6,6 @@
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ../../../shared/test/shared-head.js */
 /* import-globals-from ../../../shared/test/shared-redux-head.js */
-/* import-globals-from ../../../commandline/test/helpers.js */
 /* import-globals-from ../../../inspector/test/shared-head.js */
 
 Services.scriptloader.loadSubScript(
@@ -14,11 +13,6 @@ Services.scriptloader.loadSubScript(
   this);
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
-  this);
-
-// Import the GCLI test helper
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/commandline/test/helpers.js",
   this);
 
 // Import helpers registering the test-actor in remote targets
