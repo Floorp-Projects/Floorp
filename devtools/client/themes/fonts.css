@@ -262,7 +262,8 @@
   filter: invert(25%);
 }
 
-/* Do not show number stepper for font-size */
+/* Do not show number stepper for line height and font-size */
+.font-value-input[name=line-height],
 .font-value-input[name=font-size] {
   -moz-appearance: textfield;
   padding-right: 5px;
@@ -284,6 +285,7 @@
   -moz-appearance: none;
   box-shadow: none;
   padding: 1px 10px 1px 2px;
+  min-width: 3.8em;
 }
 
 .font-value-select:-moz-focusring {

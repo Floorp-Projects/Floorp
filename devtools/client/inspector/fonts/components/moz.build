@@ -16,4 +16,5 @@ DevToolsModules(
     'FontSize.js',
     'FontStyle.js',
     'FontWeight.js',
+    'LineHeight.js',
 )
