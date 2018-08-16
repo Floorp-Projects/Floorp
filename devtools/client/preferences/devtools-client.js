@@ -228,7 +228,7 @@ pref("devtools.scratchpad.enabled", false);
 pref("devtools.dom.enabled", false);
 
 // Make sure the Accessibility panel is hidden by default
-pref("devtools.accessibility.enabled", true);
+pref("devtools.accessibility.enabled", false);
 
 // Web Audio Editor Inspector Width should be a preference
 pref("devtools.webaudioeditor.inspectorWidth", 300);
