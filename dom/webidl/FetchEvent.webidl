@@ -12,7 +12,7 @@
  Exposed=(ServiceWorker)]
 interface FetchEvent : ExtendableEvent {
   [SameObject] readonly attribute Request request;
-  readonly attribute DOMString? clientId;
+  readonly attribute DOMString clientId;
   readonly attribute boolean isReload;
 
   [Throws]
@@ -21,6 +21,6 @@ interface FetchEvent : ExtendableEvent {
 
 dictionary FetchEventInit : EventInit {
   required Request request;
-  DOMString? clientId = null;
+  DOMString clientId = "";
   boolean isReload = false;
 };
