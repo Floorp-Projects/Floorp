@@ -9,7 +9,6 @@ info: |
 
     9. Let newObj be Call(trap, handler, «target, argArray, newTarget »).
     10. ReturnIfAbrupt(newObj).
-features: [Proxy]
 ---*/
 
 function Target() {}

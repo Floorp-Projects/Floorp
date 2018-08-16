@@ -21,7 +21,6 @@ info: |
   7.3.13 Construct (F [ , argumentsList [ , newTarget ]])
 
   1. If newTarget was not passed, let newTarget be F.
-features: [new.target]
 ---*/
 
 var newTarget = null;

@@ -9,7 +9,6 @@ info: |
 
   ...
   2. Return target.[[IsExtensible]]().
-features: [Reflect]
 ---*/
 
 var o = {};

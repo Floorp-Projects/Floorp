@@ -5,7 +5,6 @@ es6id: 26.1.1
 description: >
   Reflect.apply.length value and property descriptor
 includes: [propertyHelper.js]
-features: [Reflect]
 ---*/
 
 assert.sameValue(

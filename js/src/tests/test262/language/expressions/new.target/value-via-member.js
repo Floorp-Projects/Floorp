@@ -18,7 +18,6 @@ info: |
 
   1. Let exprRef be the result of evaluating Expression.
   2. Return ? GetValue(exprRef).
-features: [new.target]
 ---*/
 
 var newTarget = null;

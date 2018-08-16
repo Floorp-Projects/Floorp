@@ -11,7 +11,6 @@ info: |
   4. Let desc be ToPropertyDescriptor(attributes).
   5. ReturnIfAbrupt(desc).
   ...
-features: [Reflect]
 ---*/
 
 var attributes = {};

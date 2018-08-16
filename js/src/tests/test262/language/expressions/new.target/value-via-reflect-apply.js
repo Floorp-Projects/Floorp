@@ -7,7 +7,7 @@ description: Value when invoked via `Reflect.apply`
 info: |
   [...]
   5. Return ? Call(target, thisArgument, args).
-features: [new.target, Reflect]
+features: [Reflect]
 ---*/
 
 var newTarget = null;

@@ -11,7 +11,6 @@ description: >
     1. If NewTarget is undefined, throw a TypeError exception.
     ...
 
-features: [Proxy]
 ---*/
 
 assert.throws(TypeError, function() {

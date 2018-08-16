@@ -20,7 +20,6 @@ info: |
     ...
     3. If func is either undefined or null, return undefined.
     ...
-features: [Proxy]
 ---*/
 
 var calls = 0;

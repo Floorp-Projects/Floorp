@@ -12,7 +12,6 @@ info: |
         a. Return target.[[HasProperty]](P).
     ...
 flags: [noStrict]
-features: [Proxy]
 ---*/
 
 var target = Object.create(Array.prototype);
