@@ -29,6 +29,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingCookiesAndSiteDataUi
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingCookiesAndSiteDataRejectTrackersRecommended",
                                       "browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingCookiesAndSiteDataRejectTrackersEnabled",
+                                      "browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled");
+
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingEnabled",
                                       "browser.contentblocking.enabled");
 
@@ -529,6 +532,10 @@ var gPrivacyPane = {
       let blockCookiesFromTrackers = document.getElementById("blockCookiesFromTrackers");
       if (contentBlockingCookiesAndSiteDataRejectTrackersRecommended) {
         document.l10n.setAttributes(blockCookiesFromTrackers, "sitedata-block-trackers-option-recommended");
+      }
+      // Allow hiding the Reject Trackers option based on a pref
+      if (!contentBlockingCookiesAndSiteDataRejectTrackersEnabled) {
+        blockCookiesFromTrackers.remove();
       }
     }
   },
