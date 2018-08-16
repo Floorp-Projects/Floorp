@@ -382,7 +382,7 @@ PaymentRequestService::RequestPayment(nsIPaymentActionRequest* aRequest)
       }
       break;
     }
-    case nsIPaymentActionRequest::CLEANUP_ACTION: {
+    case nsIPaymentActionRequest::CLOSE_ACTION: {
       nsCOMPtr<nsIPaymentRequest> payment;
       rv = GetPaymentRequestById(requestId, getter_AddRefs(payment));
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -393,7 +393,6 @@ PaymentRequestService::RequestPayment(nsIPaymentActionRequest* aRequest)
         mShowingRequest = nullptr;
       }
       mRequestQueue.RemoveElement(payment);
-      //RemoveActionCallback(requestId);
       break;
     }
     default: {
@@ -415,6 +414,10 @@ PaymentRequestService::RespondPayment(nsIPaymentActionResponse* aResponse)
   rv = GetPaymentRequestById(requestId, getter_AddRefs(request));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  if (!request) {
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIPaymentActionCallback> callback;
