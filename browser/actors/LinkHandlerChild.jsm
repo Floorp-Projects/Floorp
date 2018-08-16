@@ -78,6 +78,8 @@ class LinkHandlerChild extends ActorChild {
     if (this._iconLoader) {
       this._iconLoader.onPageHide();
     }
+
+    this.seenTabIcon = false;
   }
 
   onLinkEvent(event) {

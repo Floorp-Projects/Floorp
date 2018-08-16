@@ -12,7 +12,6 @@ DIRS += [
     'accessibility',
     'application',
     'canvasdebugger',
-    'commandline',
     'debugger',
     'dom',
     'framework',

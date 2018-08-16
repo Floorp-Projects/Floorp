@@ -11,6 +11,8 @@ import shutil
 import subprocess
 import zipfile
 
+from zipfile import ZipFile
+
 import mozpack.path as mozpath
 
 from mozfile import TemporaryDirectory
@@ -432,7 +434,13 @@ class MachCommands(MachCommandBase):
             self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS'] + ["--continue"] + args,
             verbose=True)
 
-        return ret
+        if ret != 0:
+            return ret
+
+        # The zip archive is passed along in CI to ship geckoview onto a maven repo
+        _craft_maven_zip_archive(self.topobjdir)
+
+        return 0
 
     @SubCommand('android', 'geckoview-docs',
                 """Create GeckoView javadoc and optionally upload to Github""")
@@ -578,6 +586,26 @@ class MachCommands(MachCommandBase):
              conditions=[REMOVED])
     def gradle_install(self):
         pass
+
+
+def _get_maven_archive_abs_and_relative_paths(maven_folder):
+    for subdir, _, files in os.walk(maven_folder):
+        for file in files:
+            full_path = os.path.join(subdir, file)
+            relative_path = os.path.relpath(full_path, maven_folder)
+
+            # maven-metadata is intended to be generated on the real maven server
+            if 'maven-metadata.xml' not in relative_path:
+                yield full_path, relative_path
+
+
+def _craft_maven_zip_archive(topobjdir):
+    geckoview_folder = os.path.join(topobjdir, 'gradle/build/mobile/android/geckoview')
+    maven_folder = os.path.join(geckoview_folder, 'maven')
+
+    with ZipFile(os.path.join(geckoview_folder, 'target.maven.zip'), 'w') as target_zip:
+        for abs, rel in _get_maven_archive_abs_and_relative_paths(maven_folder):
+            target_zip.write(abs, arcname=rel)
 
 
 @CommandProvider
