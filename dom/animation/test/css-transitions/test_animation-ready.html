@@ -10,27 +10,6 @@
 
 promise_test(async t => {
   const div = addDiv(t);
-  div.style.transform = 'translate(0px)';
-  getComputedStyle(div).transform;
-  div.style.transition = 'transform 100s';
-  div.style.transform = 'translate(10px)';
-  getComputedStyle(div).transform;
-
-  const animation = div.getAnimations()[0];
-  const originalReadyPromise = animation.ready;
-
-  await animation.ready;
-
-  assert_equals(animation.ready, originalReadyPromise,
-                'Ready promise is the same object when playing completes');
-  animation.pause();
-  assert_not_equals(animation.ready, originalReadyPromise,
-                    'Ready promise object identity differs when pausing');
-}, 'A new ready promise is created each time play() is called'
-   + ' the animation property');
-
-promise_test(async t => {
-  const div = addDiv(t);
 
   // Set up pending transition
   div.style.transform = 'translate(0px)';
