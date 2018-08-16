@@ -8,6 +8,7 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.support.annotation.ColorInt
+import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -35,7 +36,7 @@ class TabCounter @JvmOverloads constructor(
     init {
 
         // Default TabCounter tint, could be override by the caller
-        @ColorInt val defaultTabCounterTint = context.resources.getColor(R.color.mozac_ui_tabcounter_default_tint)
+        @ColorInt val defaultTabCounterTint = ContextCompat.getColor(context, R.color.mozac_ui_tabcounter_default_tint)
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.TabCounter, defStyle, 0)
         @ColorInt val tabCounterTint = typedArray.getColor(R.styleable.TabCounter_drawableColor, defaultTabCounterTint)
         typedArray.recycle()
