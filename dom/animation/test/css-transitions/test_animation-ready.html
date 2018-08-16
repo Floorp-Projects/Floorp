@@ -8,7 +8,7 @@
 <script>
 'use strict';
 
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t);
   div.style.transform = 'translate(0px)';
   getComputedStyle(div).transform;
@@ -19,18 +19,17 @@ async_test(t => {
   var animation = div.getAnimations()[0];
   var originalReadyPromise = animation.ready;
 
-  animation.ready.then(t.step_func(() => {
-    assert_equals(animation.ready, originalReadyPromise,
-                  'Ready promise is the same object when playing completes');
-    animation.pause();
-    assert_not_equals(animation.ready, originalReadyPromise,
-                      'Ready promise object identity differs when pausing');
-    t.done();
-  }));
+  await animation.ready;
+
+  assert_equals(animation.ready, originalReadyPromise,
+                'Ready promise is the same object when playing completes');
+  animation.pause();
+  assert_not_equals(animation.ready, originalReadyPromise,
+                    'Ready promise object identity differs when pausing');
 }, 'A new ready promise is created each time play() is called'
    + ' the animation property');
 
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t);
 
   // Set up pending transition
@@ -42,27 +41,25 @@ async_test(t => {
 
   var animation = div.getAnimations()[0];
   assert_true(animation.pending, 'Animation is initially pending');
-
-  // Set up listeners on ready promise
-  animation.ready.then(t.step_func(() => {
-    assert_unreached('ready promise was fulfilled');
-  })).catch(t.step_func(err => {
-    assert_equals(err.name, 'AbortError',
-                  'ready promise is rejected with AbortError');
-    assert_equals(animation.playState, 'idle',
-                  'Animation is idle after transition was cancelled');
-  })).then(t.step_func(() => {
-    t.done();
-  }));
+  const readyPromise = animation.ready;
 
   // Now remove transform from transition-property and flush styles
   div.style.transitionProperty = 'none';
   getComputedStyle(div).transitionProperty;
 
+  try {
+    await readyPromise;
+    assert_unreached('ready promise was fulfilled');
+  } catch (err) {
+    assert_equals(err.name, 'AbortError',
+                  'ready promise is rejected with AbortError');
+    assert_equals(animation.playState, 'idle',
+                  'Animation is idle after transition was cancelled');
+  }
 }, 'ready promise is rejected when a transition is cancelled by updating'
    + ' transition-property');
 
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t);
 
   // Set up pending transition
@@ -74,23 +71,21 @@ async_test(t => {
 
   var animation = div.getAnimations()[0];
   assert_true(animation.pending, 'Animation is initially pending');
+  const readyPromise = animation.ready;
 
-  // Set up listeners on ready promise
-  animation.ready.then(t.step_func(() => {
+  // Update the transition to animate to something not-interpolable
+  div.style.marginLeft = 'auto';
+  getComputedStyle(div).marginLeft;
+
+  try {
+    await readyPromise;
     assert_unreached('ready promise was fulfilled');
-  })).catch(t.step_func(err => {
+  } catch (err) {
     assert_equals(err.name, 'AbortError',
                   'ready promise is rejected with AbortError');
     assert_equals(animation.playState, 'idle',
                   'Animation is idle after transition was cancelled');
-  })).then(t.step_func(() => {
-    t.done();
-  }));
-
-  // Now update the transition to animate to something not-interpolable
-  div.style.marginLeft = 'auto';
-  getComputedStyle(div).marginLeft;
-
+  }
 }, 'ready promise is rejected when a transition is cancelled by changing'
    + ' the transition property to something not interpolable');
 

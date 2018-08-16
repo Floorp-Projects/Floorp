@@ -229,7 +229,7 @@ test(t => {
                 'current localTime after setting currentTime');
 }, 'localTime is always equal to currentTime');
 
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.transition = 'margin-left 100s';
   flushComputedStyle(div);
@@ -238,14 +238,14 @@ async_test(t => {
   var anim = div.getAnimations()[0];
   anim.playbackRate = 2; // 2 times faster
 
-  anim.ready.then(t.step_func(() => {
-    assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
-                  'localTime is equal to currentTime');
-    return waitForFrame();
-  })).then(t.step_func_done(() => {
-    assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
-                  'localTime is equal to currentTime');
-  }));
+  await anim.ready;
+
+  assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
+                'localTime is equal to currentTime');
+  await waitForFrame();
+
+  assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
+                'localTime is equal to currentTime');
 }, 'localTime reflects playbackRate immediately');
 
 

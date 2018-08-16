@@ -150,8 +150,7 @@ test(t => {
 }, 'Sanity test to check round-tripping assigning to new animation\'s ' +
    'currentTime');
 
-
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, 'transitionend');
 
@@ -159,27 +158,21 @@ async_test(t => {
   div.style.marginLeft = '200px'; // initiate transition
 
   var animation = div.getAnimations()[0];
+  await animation.ready;
 
-  animation.ready.then(t.step_func(() => {
-    checkStateOnReadyPromiseResolved(animation);
+  checkStateOnReadyPromiseResolved(animation);
 
-    animation.currentTime = currentTimeForStartOfActiveInterval();
-    checkStateAtActiveIntervalStartTime(animation);
+  animation.currentTime = currentTimeForStartOfActiveInterval();
+  checkStateAtActiveIntervalStartTime(animation);
 
-    animation.currentTime = currentTimeForFiftyPercentThroughActiveInterval();
-    checkStateAtFiftyPctOfActiveInterval(animation);
+  animation.currentTime = currentTimeForFiftyPercentThroughActiveInterval();
+  checkStateAtFiftyPctOfActiveInterval(animation);
 
-    animation.currentTime = currentTimeForEndOfActiveInterval();
-    return eventWatcher.wait_for('transitionend');
-  })).then(t.step_func(() => {
-    checkStateAtActiveIntervalEndTime(animation);
-  })).catch(t.step_func(reason => {
-    assert_unreached(reason);
-  })).then(() => {
-    t.done();
-  });
+  animation.currentTime = currentTimeForEndOfActiveInterval();
+  await eventWatcher.wait_for('transitionend');
+
+  checkStateAtActiveIntervalEndTime(animation);
 }, 'Skipping forward through transition');
-
 
 test(t => {
   var div = addDiv(t, {'class': 'animated-div'});
@@ -216,58 +209,44 @@ test(t => {
   }));
 }, 'Skipping backwards through transition');
 
-
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t, {'class': 'animated-div'});
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
   var animation = div.getAnimations()[0];
 
-  animation.ready.then(t.step_func(() => {
-    var exception;
-    try {
-      animation.currentTime = null;
-    } catch (e) {
-      exception = e;
-    }
-    assert_equals(exception.name, 'TypeError',
-      'Expect TypeError exception on trying to set ' +
-      'Animation.currentTime to null');
-  })).catch(t.step_func(reason => {
-    assert_unreached(reason);
-  })).then(() => {
-    t.done();
-  });
+  await animation.ready;
+
+  assert_throws(
+    new TypeError(),
+    () => {
+      animation.currentTime = null
+    },
+    'Expect TypeError exception on trying to set Animation.currentTime to null'
+  );
 }, 'Setting currentTime to null');
 
-
-async_test(t => {
+promise_test(async t => {
   var div = addDiv(t, {'class': 'animated-div'});
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
   var animation = div.getAnimations()[0];
-  var pauseTime;
 
-  animation.ready.then(t.step_func(() => {
-    assert_not_equals(animation.currentTime, null,
-      'Animation.currentTime not null on ready Promise resolve');
-    animation.pause();
-    return animation.ready;
-  })).then(t.step_func(() => {
-    pauseTime = animation.currentTime;
-    return waitForFrame();
-  })).then(t.step_func(() => {
-    assert_equals(animation.currentTime, pauseTime,
-      'Animation.currentTime is unchanged after pausing');
-  })).catch(t.step_func(reason => {
-    assert_unreached(reason);
-  })).then(() => {
-    t.done();
-  });
+  await animation.ready;
+
+  assert_not_equals(animation.currentTime, null,
+    'Animation.currentTime not null on ready Promise resolve');
+  animation.pause();
+  await animation.ready;
+
+  var pauseTime = animation.currentTime;
+  await waitForFrame();
+
+  assert_equals(animation.currentTime, pauseTime,
+    'Animation.currentTime is unchanged after pausing');
 }, 'Animation.currentTime after pausing');
-
     </script>
   </body>
 </html>
