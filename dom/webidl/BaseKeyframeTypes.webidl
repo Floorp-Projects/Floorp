@@ -21,7 +21,7 @@ enum CompositeOperation { "replace", "add", "accumulate" };
 // that we can cast between the two types (provided the value is not "auto").
 //
 // If that assumption ceases to hold we will need to update the conversion
-// routines in KeyframeUtils.
+// in KeyframeUtils::GetAnimationPropertiesFromKeyframes.
 enum CompositeOperationOrAuto { "replace", "add", "accumulate", "auto" };
 
 // The following dictionary types are not referred to by other .webidl files,
