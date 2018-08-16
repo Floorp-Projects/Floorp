@@ -1094,7 +1094,7 @@ PaymentRequest::NotifyOwnerDocumentActivityChanged()
 
   if (!doc->IsCurrentActiveDocument()) {
     RefPtr<PaymentRequestManager> mgr = PaymentRequestManager::GetSingleton();
-    mgr->CleanupPayment(this);
+    mgr->ClosePayment(this);
   }
 }
 
