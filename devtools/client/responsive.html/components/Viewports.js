@@ -4,65 +4,89 @@
 
 "use strict";
 
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const ResizableViewport = createFactory(require("./ResizableViewport"));
 
 const Types = require("../types");
-const Viewport = createFactory(require("./Viewport"));
 
 class Viewports extends Component {
   static get propTypes() {
     return {
-      devices: PropTypes.shape(Types.devices).isRequired,
+      leftAlignmentEnabled: PropTypes.bool.isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
       onBrowserMounted: PropTypes.func.isRequired,
-      onChangeDevice: PropTypes.func.isRequired,
       onContentResize: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
       onResizeViewport: PropTypes.func.isRequired,
-      onRotateViewport: PropTypes.func.isRequired,
-      onUpdateDeviceModal: PropTypes.func.isRequired,
     };
   }
 
   render() {
     const {
-      devices,
+      leftAlignmentEnabled,
       screenshot,
       viewports,
       onBrowserMounted,
-      onChangeDevice,
       onContentResize,
       onRemoveDeviceAssociation,
       onResizeViewport,
-      onRotateViewport,
-      onUpdateDeviceModal,
     } = this.props;
 
-    return dom.div(
-      {
-        id: "viewports",
-      },
-      viewports.map((viewport, i) => {
-        return Viewport({
-          key: viewport.id,
-          devices,
-          screenshot,
-          swapAfterMount: i == 0,
-          viewport,
-          onBrowserMounted,
-          onChangeDevice,
-          onContentResize,
-          onRemoveDeviceAssociation,
-          onResizeViewport,
-          onRotateViewport,
-          onUpdateDeviceModal,
-        });
-      })
+    const viewportSize = window.getViewportSize();
+    // The viewport may not have been created yet. Default to justify-content: center
+    // for the container.
+    let justifyContent = "center";
+
+    // If the RDM viewport is bigger than the window's inner width, set the container's
+    // justify-content to start so that the left-most viewport is visible when there's
+    // horizontal overflow. That is when the horizontal space become smaller than the
+    // viewports and a scrollbar appears, then the first viewport will still be visible.
+    if (leftAlignmentEnabled ||
+        (viewportSize && viewportSize.width > window.innerWidth)) {
+      justifyContent = "start";
+    }
+
+    return (
+      dom.div(
+        {
+          id: "viewports-container",
+          style: {
+            justifyContent,
+          },
+        },
+        dom.div(
+          {
+            id: "viewports",
+            className: leftAlignmentEnabled ? "left-aligned" : "",
+          },
+          viewports.map((viewport, i) => {
+            return ResizableViewport({
+              key: viewport.id,
+              leftAlignmentEnabled,
+              screenshot,
+              swapAfterMount: i == 0,
+              viewport,
+              onBrowserMounted,
+              onContentResize,
+              onRemoveDeviceAssociation,
+              onResizeViewport,
+            });
+          })
+        )
+      )
     );
   }
 }
 
-module.exports = Viewports;
+const mapStateToProps = state => {
+  return {
+    leftAlignmentEnabled: state.ui.leftAlignmentEnabled,
+  };
+};
+
+module.exports = connect(mapStateToProps)(Viewports);

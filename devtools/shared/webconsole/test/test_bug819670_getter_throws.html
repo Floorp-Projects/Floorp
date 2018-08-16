@@ -50,14 +50,14 @@ function onInspect(aState, aResponse)
   ok(!aResponse.error, "no response error");
 
   let expectedProps = {
-    "addBroadcastListenerFor": { value: { type: "object" } },
+    "constructor": { value: { type: "object" } },
   };
 
   let props = aResponse.ownProperties;
   ok(props, "response properties available");
 
   if (props) {
-    ok(Object.keys(props).length > Object.keys(expectedProps).length,
+    ok(Object.keys(props).length == Object.keys(expectedProps).length,
        "number of enumerable properties");
     checkObject(props, expectedProps);
   }

@@ -86,7 +86,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
         getAddressLabel: PaymentDialogUtils.getAddressLabel,
       });
 
-      // The EditCreditCard constructor adds input event listeners on the same element,
+      // The EditCreditCard constructor adds `input` event listeners on the same element,
       // which update field validity. By adding our event listeners after this constructor,
       // validity will be updated before our handlers get the event
       form.addEventListener("input", this);

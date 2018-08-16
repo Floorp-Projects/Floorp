@@ -204,11 +204,7 @@ nsViewSourceChannel::BuildViewSourceURI(nsIURI * aURI, nsIURI ** aResult)
         return rv;
     }
 
-    return NS_NewURI(aResult,
-                     /* XXX Gross hack -- NS_NewURI goes into an infinite loop on
-                     non-flat specs.  See bug 136980 */
-                     nsAutoCString(NS_LITERAL_CSTRING("view-source:") + spec),
-                     nullptr);
+    return NS_NewURI(aResult, NS_LITERAL_CSTRING("view-source:") + spec);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

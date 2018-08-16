@@ -73,33 +73,13 @@
   background-image: var(--play-icon-url);
 }
 
-.devtools-button.devtools-har-button {
-  margin: 0 0 0 2px;
-  padding: 0;
-}
-
-/* style for dropdown button */
-.devtools-drop-down-button {
-  background-image: var(--select-arrow-image)  !important;
-  background-repeat: no-repeat !important;
-  margin-inline-start: 6px;
-  fill: var(--theme-toolbar-photon-icon-color);
-  -moz-context-properties: fill;
-}
-
-/* style for title holder inside a dropdown button */
-.devtools-drop-down-button .title {
-  padding-top: 0.15em;
-  text-align: center;
-  overflow: hidden;
-  display: inline-block;
-}
-
 /* HAR button */
 
 #devtools-har-button {
   width: 35px;
-  padding-right: 12px;
+  margin-inline-start: 2px;
+  padding-inline-start: 0;
+  padding-inline-end: 12px;
   background-position: right center;
 }
 
@@ -108,8 +88,10 @@
   width: 24px;
 }
 
-#devtools-har-button:not(:hover) {
-  background-color: transparent;
+/* Throttling Button */
+
+#network-throttling-menu {
+  margin-inline-start: 6px;
 }
 
 .devtools-checkbox {
@@ -130,24 +112,6 @@
 
 .devtools-checkbox-label.devtools-cache-checkbox {
   margin-inline-end: 7px;
-}
-
-/* Throttling Button */
-
-#global-network-throttling-selector:not(:hover) {
-  background-color: transparent;
-}
-
-#global-network-throttling-selector {
-  width: 92px;
-  background-position: right 4px center;
-  padding-left: 0;
-  overflow: hidden;
-}
-
-/* Make sure spacing between text and icon is uniform*/
-#global-network-throttling-selector .title{
-  width: 85%;
 }
 
 /* Filter input within the Toolbar */

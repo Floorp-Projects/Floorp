@@ -36,7 +36,7 @@ function inPopup(e) {
     return true;
   }
 
-  const pop = relatedTarget.closest(".popover") || relatedTarget.classList.contains("debug-expression");
+  const pop = relatedTarget.closest(".tooltip") || relatedTarget.closest(".popover") || relatedTarget.classList.contains("debug-expression");
   return pop;
 }
 

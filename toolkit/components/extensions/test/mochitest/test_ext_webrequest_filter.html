@@ -136,14 +136,6 @@ add_task(async function test_webRequest_filter_tab() {
     },
   };
 
-  if (AppConstants.platform != "android") {
-    expect["favicon.ico"] = {
-      optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders"],
-      type: "image",
-      origin: SimpleTest.getTestFileURL(img),
-    };
-  }
-
   let extension = makeExtension(events);
   await extension.startup();
   extension.sendMessage("set-expected", {expect, origin: location.href});

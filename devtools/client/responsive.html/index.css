@@ -5,21 +5,17 @@
  * CSS Variables specific to the responsive design mode
  */
 
-.theme-light {
+:root {
   --rdm-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
   --submit-button-active-background-color: rgba(0,0,0,0.12);
   --submit-button-active-color: var(--theme-body-color);
-  --viewport-color: #999797;
-  --viewport-hover-color: var(--theme-body-color);
   --viewport-active-color: #3b3b3b;
 }
 
-.theme-dark {
+:root.theme-dark {
   --rdm-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
   --submit-button-active-background-color: var(--theme-toolbar-hover-active);
   --submit-button-active-color: var(--theme-selection-color);
-  --viewport-color: #c6ccd0;
-  --viewport-hover-color: #dde1e4;
   --viewport-active-color: #fcfcfc;
 }
 
@@ -29,26 +25,27 @@
 
 :root,
 input,
-select,
 button {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 html,
 body,
 #root {
   height: 100%;
-  margin: 0;
+  overflow: hidden;
+}
+
+.theme-dark body,
+.theme-dark button,
+.theme-dark input {
+  color: var(--theme-toolbar-color);
 }
 
 #app {
-  /* Center the viewports container */
   display: flex;
-  align-items: center;
   flex-direction: column;
-  padding-top: 15px;
-  padding-bottom: 1%;
-  position: relative;
+  width: 100%;
   height: 100%;
 }
 
@@ -56,223 +53,102 @@ body,
  * Common styles for shared components
  */
 
-.container {
-  background-color: var(--theme-toolbar-background);
-  border: 1px solid var(--theme-splitter-color);
-}
-
-.toolbar-button {
-  margin: 0;
-  padding: 0;
-  border: none;
-  color: var(--viewport-color);
-}
-
-.toolbar-button:empty:hover:not(:disabled),
-.toolbar-button:empty:-moz-any(:hover:active, .checked):not(:disabled),
-.toolbar-button:not(:empty),
-.toolbar-button:hover:not(:empty):not(:disabled):not(.checked) {
-  /* Reset background from .devtools-button */
-  background: none;
-}
-
-.toolbar-button:active::before {
-  filter: var(--theme-icon-checked-filter);
-}
-
-.toolbar-button.selected {
-  color: var(--viewport-active-color);
-}
-
-.toolbar-button:not(:disabled):hover {
-  color: var(--viewport-hover-color);
-}
-
-select {
-  -moz-appearance: none;
-  color: var(--viewport-color);
-  border: none;
+.devtools-separator {
   height: 100%;
-  padding: 0 8px;
-  text-align: center;
-  text-overflow: ellipsis;
-}
-
-select.selected {
-  color: var(--viewport-active-color);
-}
-
-select:not(:disabled):hover {
-  color: var(--viewport-hover-color);
-}
-
-/* This is (believed to be?) separate from the identical select.selected rule
-   set so that it overrides select:hover because of file ordering once the
-   select is focused.  It's unclear whether the visual effect that results here
-   is intentional and desired. */
-select:focus {
-  color: var(--viewport-active-color);
-}
-
-select > option {
-  text-align: left;
-  padding: 5px 10px;
-}
-
-select > option,
-select > option:hover {
-  color: var(--viewport-active-color);
-}
-
-select > option.divider {
-  border-top: 1px solid var(--theme-splitter-color);
-  height: 0px;
-  padding: 0;
-  font-size: 0px;
+  margin: 0 1px;
 }
 
 /**
- * Toggle Menu
+ * Toolbar
  */
 
-.devtools-toggle-menu {
-  position: relative;
-}
-
-.devtools-toggle-menu .devtools-menu {
-  display: none;
-  flex-direction: column;
-  align-items: start;
-  position: absolute;
-  left: 0;
-  top: 100%;
-  z-index: 1;
-  padding: 5px;
-  border-radius: 2px;
-  background-color: var(--theme-toolbar-background);
-  box-shadow: var(--rdm-box-shadow);
-}
-
-.devtools-toggle-menu .devtools-menu.opened {
-  display: flex;
-}
-
-.devtools-toggle-menu .devtools-menu-item {
-  display: flex;
-  align-items: center;
-}
-
-/**
- * Common background for dropdowns like select and toggle menu
- */
-.toolbar-dropdown,
-.toolbar-dropdown.devtools-button,
-.toolbar-dropdown.devtools-button:hover:not(:empty):not(:disabled):not(.checked) {
-  background-color: var(--theme-toolbar-background);
-  background-image: var(--select-arrow-image);
-  background-position: 100% 50%;
-  background-repeat: no-repeat;
-  background-size: 7px;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-/**
- * Global Toolbar
- */
-
-#global-toolbar {
-  color: var(--theme-body-color-alt);
-  border-radius: 2px;
-  box-shadow: var(--rdm-box-shadow);
-  margin: 0 0 15px 0;
-  padding: 4px 5px;
-  display: inline-flex;
-  align-items: center;
+#toolbar {
+  background-color: var(--theme-tab-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  display: grid;
+  grid-template-columns: min-content auto min-content;
+  width: 100%;
+  min-height: 29px;
   -moz-user-select: none;
 }
 
-#global-toolbar > .title {
-  border-right: 1px solid var(--theme-splitter-color);
-  padding: 1px 6px 0 2px;
+#toolbar-center-controls,
+#toolbar-end-controls {
+  display: flex;
+  align-items: center;
 }
 
-#global-toolbar > .toolbar-button:first-of-type {
-  margin-inline-start: 8px;
+#toolbar-center-controls {
+  justify-self: center;
 }
 
-#global-toolbar > .toolbar-button::before {
-  width: 12px;
-  height: 12px;
-  background-size: cover;
+#rotate-button::before {
+  background-image: url("./images/rotate-viewport.svg");
 }
 
-#global-toolbar .toolbar-dropdown {
-  background-position-x: right 5px;
-  border-right: 1px solid var(--theme-splitter-color);
-  padding-right: 15px;
-  /* padding-left: 0; */
-}
-
-#global-touch-simulation-button::before {
+#touch-simulation-button::before {
   background-image: url("./images/touch-events.svg");
 }
 
-#global-screenshot-button::before {
+#screenshot-button::before {
   background-image: url("./images/screenshot.svg");
 }
 
-#global-exit-button::before {
+#settings-button::before {
+  background-image: url("chrome://devtools/skin/images/settings.svg");
+}
+
+#exit-button::before {
   background-image: url("chrome://devtools/skin/images/close.svg");
 }
 
-#global-screenshot-button:disabled {
+#screenshot-button:disabled {
   filter: var(--theme-icon-checked-filter);
   opacity: 1 !important;
 }
 
-#global-network-throttling-selector {
-  height: 15px;
+#device-selector {
+  align-self: center;
+  background-position: right 4px center;
+  margin-inline-start: 4px;
   padding-left: 0;
-  width: 103px;
+  width: 8em;
 }
 
-#global-device-pixel-ratio-selector {
-  -moz-user-select: none;
-  color: var(--viewport-color);
-  height: 15px;
+#device-selector .title {
+  width: 85%;
+}
+
+#device-pixel-ratio-menu {
+  width: 6em;
   /* `max-width` is here to keep the UI compact if the device pixel ratio changes to a
      repeating decimal value.  This can happen if you zoom the UI (Cmd + Plus / Minus on
      macOS for example). */
   max-width: 8em;
+  background-position: right 4px center;
+  padding-left: 0;
 }
 
-#global-device-pixel-ratio-selector.focused,
-#global-device-pixel-ratio-selector:not(.disabled):hover {
-  color: var(--viewport-hover-color);
+#viewports-container {
+  display: flex;
+  overflow: auto;
+  height: 100%;
+  width: 100%;
 }
 
-#global-device-pixel-ratio-selector:focus {
-  color: var(--viewport-active-color);
-}
-
-#global-device-pixel-ratio-selector.selected {
-  color: var(--viewport-active-color);
-}
-
-#global-device-pixel-ratio-selector > option {
-  padding: 5px;
+.theme-light #viewports-container {
+  background-color: #F5F5F6;
 }
 
 #viewports {
-  /* Make sure left-most viewport is visible when there's horizontal overflow.
-     That is, when the horizontal space become smaller than the viewports and a
-     scrollbar appears, then the first viewport will still be visible */
-  position: sticky;
-  left: 0;
   /* Individual viewports are inline elements, make sure they stay on a single
      line */
   white-space: nowrap;
+  margin-top: 16px;
+}
+
+#viewports.left-aligned {
+  margin-left: 16px;
 }
 
 /**
@@ -289,28 +165,6 @@ select > option.divider {
   border: 1px solid var(--theme-splitter-color);
   box-shadow: var(--rdm-box-shadow);
   position: relative;
-}
-
-/**
- * Viewport Toolbar
- */
-
-.viewport-toolbar {
-  border-width: 0;
-  border-bottom-width: 1px;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  height: 16px;
-}
-
-.viewport-rotate-button {
-  position: absolute;
-  right: 0;
-}
-
-.viewport-rotate-button::before {
-  background-image: url("./images/rotate-viewport.svg");
 }
 
 /**
@@ -376,48 +230,38 @@ select > option.divider {
 }
 
 /**
- * Viewport Dimension Label
+ * Viewport Dimension Input
  */
 
 .viewport-dimension {
   display: flex;
-  justify-content: center;
-  font: 10px sans-serif;
-  margin-bottom: 10px;
+  align-items: center;
+  margin: 1px;
 }
 
-.viewport-dimension-editable {
-  border-bottom: 1px solid transparent;
-}
-
-.viewport-dimension-editable,
 .viewport-dimension-input {
-  color: var(--theme-body-color-inactive);
-  transition: all 0.25s ease;
-}
-
-.viewport-dimension-editable.editing,
-.viewport-dimension-input.editing {
-  color: var(--viewport-active-color);
+  border: 1px solid var(--theme-splitter-color);
   outline: none;
-}
-
-.viewport-dimension-editable.editing {
-  border-bottom: 1px solid var(--theme-selection-background);
-}
-
-.viewport-dimension-editable.editing.invalid {
-  border-bottom: 1px solid #d92215;
-}
-
-.viewport-dimension-input {
-  background: transparent;
-  border: none;
   text-align: center;
+  width: 3em;
+}
+
+.viewport-dimension-input:focus {
+  border: 1px solid var(--theme-selection-background);
+  transition: all 0.2s ease-in-out;
+}
+
+.viewport-dimension-input.invalid:focus {
+  border: 1px solid #d92215;
+}
+
+.theme-dark .viewport-dimension-input {
+  background-color: var(--theme-tab-toolbar-background);
 }
 
 .viewport-dimension-separator {
   -moz-user-select: none;
+  padding: 0 0.3em;
 }
 
 /**
@@ -448,6 +292,8 @@ select > option.divider {
 }
 
 .device-modal {
+  background-color: var(--theme-toolbar-background);
+  border: 1px solid var(--theme-splitter-color);
   border-radius: 2px;
   box-shadow: var(--rdm-box-shadow);
   position: absolute;
@@ -491,18 +337,14 @@ select > option.divider {
   margin: 20px 20px 0;
 }
 
-#device-close-button,
-#device-close-button::before {
+#device-close-button {
   position: absolute;
   top: 5px;
   right: 2px;
-  width: 12px;
-  height: 12px;
 }
 
 #device-close-button::before {
   background-image: url("chrome://devtools/skin/images/close.svg");
-  margin: -6px 0 0 -6px;
 }
 
 .device-type {
@@ -518,6 +360,7 @@ select > option.divider {
 }
 
 .device-label {
+  color: var(--theme-body-color);
   padding-bottom: 3px;
   display: flex;
   align-items: center;
@@ -533,15 +376,8 @@ select > option.divider {
   flex: 1;
 }
 
-.device-remove-button,
-.device-remove-button:empty::before {
-  width: 12px;
-  height: 12px;
-}
-
 .device-remove-button:empty::before {
   background-image: url("chrome://devtools/skin/images/close.svg");
-  margin: -6px 0 0 -6px;
 }
 
 #device-submit-button {
@@ -607,6 +443,23 @@ select > option.divider {
 #device-adder label > .viewport-dimension {
   flex: 1;
   margin: 0;
+}
+
+#device-adder label > .viewport-dimension {
+  border-bottom: 1px solid transparent;
+  color: var(--theme-body-color-inactive);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+}
+
+#device-adder label > .viewport-dimension.editing {
+  border-bottom-color: var(--theme-selection-background);
+}
+
+#device-adder label > .viewport-dimension.editing.invalid {
+  border-bottom-color: #d92215;
 }
 
 #device-adder input {

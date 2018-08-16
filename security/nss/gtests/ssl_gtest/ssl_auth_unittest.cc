@@ -197,6 +197,81 @@ TEST_P(TlsConnectTls12, ClientAuthBigRsaCheckSigAlg) {
                  2048);
 }
 
+// Replaces the signature scheme in a CertificateVerify message.
+class TlsReplaceSignatureSchemeFilter : public TlsHandshakeFilter {
+ public:
+  TlsReplaceSignatureSchemeFilter(const std::shared_ptr<TlsAgent>& a,
+                                  SSLSignatureScheme scheme)
+      : TlsHandshakeFilter(a, {kTlsHandshakeCertificateVerify}),
+        scheme_(scheme) {
+    EnableDecryption();
+  }
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) {
+    *output = input;
+    output->Write(0, scheme_, 2);
+    return CHANGE;
+  }
+
+ private:
+  SSLSignatureScheme scheme_;
+};
+
+// Check if CertificateVerify signed with rsa_pss_rsae_* is properly
+// rejected when the certificate is RSA-PSS.
+//
+// This only works under TLS 1.2, because PSS doesn't work with TLS
+// 1.0 or TLS 1.1 and the TLS 1.3 1-RTT handshake is partially
+// successful at the client side.
+TEST_P(TlsConnectTls12, ClientAuthInconsistentRsaeSignatureScheme) {
+  static const SSLSignatureScheme kSignatureSchemePss[] = {
+      ssl_sig_rsa_pss_pss_sha256, ssl_sig_rsa_pss_rsae_sha256};
+
+  Reset(TlsAgent::kServerRsa, "rsa_pss");
+  client_->SetSignatureSchemes(kSignatureSchemePss,
+                               PR_ARRAY_SIZE(kSignatureSchemePss));
+  server_->SetSignatureSchemes(kSignatureSchemePss,
+                               PR_ARRAY_SIZE(kSignatureSchemePss));
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+
+  EnsureTlsSetup();
+
+  MakeTlsFilter<TlsReplaceSignatureSchemeFilter>(client_,
+                                                 ssl_sig_rsa_pss_rsae_sha256);
+
+  ConnectExpectAlert(server_, kTlsAlertIllegalParameter);
+}
+
+// Check if CertificateVerify signed with rsa_pss_pss_* is properly
+// rejected when the certificate is RSA.
+//
+// This only works under TLS 1.2, because PSS doesn't work with TLS
+// 1.0 or TLS 1.1 and the TLS 1.3 1-RTT handshake is partially
+// successful at the client side.
+TEST_P(TlsConnectTls12, ClientAuthInconsistentPssSignatureScheme) {
+  static const SSLSignatureScheme kSignatureSchemePss[] = {
+      ssl_sig_rsa_pss_rsae_sha256, ssl_sig_rsa_pss_pss_sha256};
+
+  Reset(TlsAgent::kServerRsa, "rsa");
+  client_->SetSignatureSchemes(kSignatureSchemePss,
+                               PR_ARRAY_SIZE(kSignatureSchemePss));
+  server_->SetSignatureSchemes(kSignatureSchemePss,
+                               PR_ARRAY_SIZE(kSignatureSchemePss));
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+
+  EnsureTlsSetup();
+
+  MakeTlsFilter<TlsReplaceSignatureSchemeFilter>(client_,
+                                                 ssl_sig_rsa_pss_pss_sha256);
+
+  ConnectExpectAlert(server_, kTlsAlertIllegalParameter);
+}
+
 class TlsZeroCertificateRequestSigAlgsFilter : public TlsHandshakeFilter {
  public:
   TlsZeroCertificateRequestSigAlgsFilter(const std::shared_ptr<TlsAgent>& a)
@@ -409,29 +484,6 @@ TEST_P(TlsConnectTls12, SignatureAlgorithmDrop) {
   client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
   server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
 }
-
-// Replaces the signature scheme in a TLS 1.3 CertificateVerify message.
-class TlsReplaceSignatureSchemeFilter : public TlsHandshakeFilter {
- public:
-  TlsReplaceSignatureSchemeFilter(const std::shared_ptr<TlsAgent>& a,
-                                  SSLSignatureScheme scheme)
-      : TlsHandshakeFilter(a, {kTlsHandshakeCertificateVerify}),
-        scheme_(scheme) {
-    EnableDecryption();
-  }
-
- protected:
-  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
-                                               const DataBuffer& input,
-                                               DataBuffer* output) {
-    *output = input;
-    output->Write(0, scheme_, 2);
-    return CHANGE;
-  }
-
- private:
-  SSLSignatureScheme scheme_;
-};
 
 TEST_P(TlsConnectTls13, UnsupportedSignatureSchemeAlert) {
   EnsureTlsSetup();

@@ -15,6 +15,15 @@
 
 enum CompositeOperation { "replace", "add", "accumulate" };
 
+// NOTE: The order of the values in this enum are important.
+//
+// We assume that CompositeOperation is a subset of CompositeOperationOrAuto so
+// that we can cast between the two types (provided the value is not "auto").
+//
+// If that assumption ceases to hold we will need to update the conversion
+// routines in KeyframeUtils.
+enum CompositeOperationOrAuto { "replace", "add", "accumulate", "auto" };
+
 // The following dictionary types are not referred to by other .webidl files,
 // but we use it for manual JS->IDL and IDL->JS conversions in KeyframeEffect's
 // implementation.
@@ -22,13 +31,13 @@ enum CompositeOperation { "replace", "add", "accumulate" };
 dictionary BasePropertyIndexedKeyframe {
   (double? or sequence<double?>) offset = [];
   (DOMString or sequence<DOMString>) easing = [];
-  (CompositeOperation? or sequence<CompositeOperation?>) composite = [];
+  (CompositeOperationOrAuto or sequence<CompositeOperationOrAuto>) composite = [];
 };
 
 dictionary BaseKeyframe {
   double? offset = null;
   DOMString easing = "linear";
-  CompositeOperation? composite = null;
+  CompositeOperationOrAuto composite = "auto";
 
   // Non-standard extensions
 

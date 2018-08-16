@@ -7,7 +7,6 @@
 DIRS += [
     'aushelper',
     'formautofill',
-    'fxmonitor',
     'onboarding',
     'pdfjs',
     'pocket',

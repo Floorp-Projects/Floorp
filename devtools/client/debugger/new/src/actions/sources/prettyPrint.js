@@ -24,9 +24,9 @@ var _source = require("../../utils/source");
 
 var _loadSourceText = require("./loadSourceText");
 
-var _sources = require("../sources/index");
-
 var _pause = require("../pause/index");
+
+var _sources = require("../sources/index");
 
 var _selectors = require("../../selectors/index");
 
@@ -125,7 +125,7 @@ function togglePrettyPrint(sourceId) {
 
     if (prettySource) {
       const _sourceId = prettySource.id;
-      return dispatch((0, _sources.selectLocation)({ ...options.location,
+      return dispatch((0, _sources.selectSpecificLocation)({ ...options.location,
         sourceId: _sourceId
       }));
     }
@@ -135,7 +135,7 @@ function togglePrettyPrint(sourceId) {
     await dispatch((0, _pause.mapFrames)());
     await dispatch((0, _ast.setPausePoints)(newPrettySource.id));
     await dispatch((0, _ast.setSymbols)(newPrettySource.id));
-    dispatch((0, _sources.selectLocation)({ ...options.location,
+    dispatch((0, _sources.selectSpecificLocation)({ ...options.location,
       sourceId: newPrettySource.id
     }));
     return newPrettySource;

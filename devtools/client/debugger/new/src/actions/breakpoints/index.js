@@ -17,6 +17,8 @@ exports.toggleBreakpointsAtLine = toggleBreakpointsAtLine;
 exports.addOrToggleDisabledBreakpoint = addOrToggleDisabledBreakpoint;
 exports.toggleDisabledBreakpoint = toggleDisabledBreakpoint;
 
+var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
+
 var _promise = require("../utils/middleware/promise");
 
 var _selectors = require("../../selectors/index");
@@ -263,7 +265,7 @@ function setBreakpointCondition(location, {
       bp.disabled = !bp.disabled;
     }
 
-    await client.setBreakpointCondition(bp.id, location, condition, sourceMaps.isOriginalId(bp.location.sourceId));
+    await client.setBreakpointCondition(bp.id, location, condition, (0, _devtoolsSourceMap.isOriginalId)(bp.location.sourceId));
     const newBreakpoint = { ...bp,
       condition
     };
