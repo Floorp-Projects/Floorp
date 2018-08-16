@@ -1009,6 +1009,17 @@ protected: // Shouldn't be used by friend classes
   nsresult RemoveOverrideStyleSheetInternal(const nsAString& aURL);
 
   /**
+   * Enable or disable the style sheet synchronously.
+   * aURL is just a key to specify a style sheet in the internal array.
+   * I.e., the style sheet has already been registered with
+   * AddOverrideStyleSheetInternal().
+   *
+   * @param aURL        URL to the style sheet.
+   * @param aEnable     true if enable the style sheet.  false if disable it.
+   */
+  void EnableStyleSheetInternal(const nsAString& aURL, bool aEnable);
+
+  /**
    * MaybeCollapseSelectionAtFirstEditableNode() may collapse selection at
    * proper position to staring to edit.  If there is a non-editable node
    * before any editable text nodes or inline elements which can have text
