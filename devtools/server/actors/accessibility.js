@@ -348,6 +348,12 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       return null;
     }
 
+    // Check if accessible bounds are invalid.
+    const left = x, right = x + w, top = y, bottom = y + h;
+    if (left === right || top === bottom) {
+      return null;
+    }
+
     return { x, y, w, h };
   },
 
@@ -386,9 +392,13 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     this.onPick = this.onPick.bind(this);
     this.onHovered = this.onHovered.bind(this);
     this.onKey = this.onKey.bind(this);
+    this.onHighlighterEvent = this.onHighlighterEvent.bind(this);
 
     this.highlighter = CustomHighlighterActor(this, isXUL(this.rootWin) ?
       "XULWindowAccessibleHighlighter" : "AccessibleHighlighter");
+
+    this.manage(this.highlighter);
+    this.highlighter.on("highlighter-event", this.onHighlighterEvent);
   },
 
   setA11yServiceGetter() {
@@ -441,7 +451,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
 
     this.reset();
 
-    this.highlighter.destroy();
+    this.highlighter.off("highlighter-event", this.onHighlighterEvent);
     this.highlighter = null;
 
     this.targetActor = null;
@@ -585,6 +595,10 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
       { accessible: parent, children: parent.children() }));
   },
 
+  onHighlighterEvent: function(data) {
+    this.emit("highlighter-event", data);
+  },
+
   /**
    * Accessible event observer function.
    *
@@ -700,13 +714,13 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    *         True if highlighter shows the accessible object.
    */
   highlightAccessible(accessible, options = {}) {
-    const bounds = accessible.bounds;
+    const { bounds, name, role } = accessible;
     if (!bounds) {
       return false;
     }
 
     return this.highlighter.show({ rawNode: accessible.rawAccessible.DOMNode },
-                                 { ...options, ...bounds });
+                                 { ...options, ...bounds, name, role });
   },
 
   /**
@@ -793,9 +807,13 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     }
 
     if (this._currentAccessible !== accessible) {
-      const { bounds } = accessible;
+      const { bounds, role, name } = accessible;
       if (bounds) {
-        this.highlighter.show({ rawNode: event.originalTarget || event.target }, bounds);
+        this.highlighter.show({ rawNode: event.originalTarget || event.target }, {
+          ...bounds,
+          role,
+          name
+        });
       }
 
       events.emit(this, "picker-accessible-hovered", accessible);

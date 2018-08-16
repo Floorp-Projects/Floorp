@@ -11,8 +11,8 @@ const {
   flashElementOn,
   flashElementOff,
   parseAttributeValues,
-  truncateString,
 } = require("devtools/client/inspector/markup/utils");
+const { truncateString } = require("devtools/shared/inspector/utils");
 const {editableField, InplaceEditor} =
       require("devtools/client/shared/inplace-editor");
 const {parseAttribute} =
