@@ -40,6 +40,7 @@
 #include "js/SliceBudget.h"
 #include "js/Wrapper.h"
 #include "util/Windows.h"
+#include "vm/DateTime.h"
 #include "vm/Debugger.h"
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
@@ -228,7 +229,7 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!InitRuntimeNumberState(this))
         return false;
 
-    JS::ResetTimeZone();
+    js::ResetTimeZoneInternal(ResetTimeZoneMode::DontResetIfOffsetUnchanged);
 
     jitSupportsFloatingPoint = js::jit::JitSupportsFloatingPoint();
     jitSupportsUnalignedAccesses = js::jit::JitSupportsUnalignedAccesses();

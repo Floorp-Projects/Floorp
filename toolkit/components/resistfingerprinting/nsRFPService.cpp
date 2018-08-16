@@ -834,6 +834,14 @@ nsRFPService::UpdateRFPPref()
     }
   }
 
+  // localtime_r (and other functions) may not call tzset, so do this here after
+  // changing TZ to ensure all <time.h> functions use the new time zone.
+#if defined(XP_WIN)
+  _tzset();
+#else
+  tzset();
+#endif
+
   nsJSUtils::ResetTimeZone();
 }
 

@@ -9,15 +9,9 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/FloatingPoint.h"
-#include "mozilla/MathAlgorithms.h"
 
 #include <stdint.h>
 
-#include "js/Conversions.h"
-#include "js/Date.h"
-#include "js/Initialization.h"
-#include "js/Value.h"
 #include "threading/ExclusiveData.h"
 
 namespace js {
@@ -50,6 +44,20 @@ InitDateTimeState();
 
 extern void
 FinishDateTimeState();
+
+enum class ResetTimeZoneMode : bool {
+  DontResetIfOffsetUnchanged,
+  ResetEvenIfOffsetUnchaged,
+};
+
+/**
+ * Engine-internal variant of JS::ResetTimeZone with an additional flag to
+ * control whether to forcibly reset all time zone data (this is the default
+ * behavior when calling JS::ResetTimeZone) or to try to reuse the previous
+ * time zone data.
+ */
+extern void
+ResetTimeZoneInternal(ResetTimeZoneMode mode);
 
 /*
  * Stores date/time information, particularly concerning the current local
@@ -133,12 +141,12 @@ class DateTimeInfo
     // We don't want anyone accidentally calling *only*
     // DateTimeInfo::updateTimeZoneAdjustment() to respond to a system time
     // zone change (missing the necessary poking of ICU as well), so ensure
-    // only JS::ResetTimeZone() can call this via access restrictions.
-    friend void JS::ResetTimeZone();
+    // only js::ResetTimeZoneInternal() can call this via access restrictions.
+    friend void js::ResetTimeZoneInternal(ResetTimeZoneMode);
 
-    static void updateTimeZoneAdjustment() {
+    static void updateTimeZoneAdjustment(ResetTimeZoneMode mode) {
         auto guard = instance->lock();
-        guard->internalUpdateTimeZoneAdjustment();
+        guard->internalUpdateTimeZoneAdjustment(mode);
     }
 
     /*
@@ -178,7 +186,7 @@ class DateTimeInfo
     static const int64_t RangeExpansionAmount = 30 * SecondsPerDay;
 
     int64_t internalGetDSTOffsetMilliseconds(int64_t utcMilliseconds);
-    void internalUpdateTimeZoneAdjustment();
+    void internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode);
 
     void sanityCheck();
 };

@@ -17,8 +17,6 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 
-#include "vm/DateTime.h"
-
 namespace js {
 
 /*
@@ -40,12 +38,7 @@ NewDateObjectMsec(JSContext* cx, JS::ClippedTime t, JS::HandleObject proto = nul
  * in 1995).
  */
 extern JS_FRIEND_API(JSObject*)
-NewDateObject(JSContext* cx, int year, int mon, int mday,
-              int hour, int min, int sec);
-
-/* Date constructor native. Exposed only so the JIT can know its address. */
-bool
-DateConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
+NewDateObject(JSContext* cx, int year, int mon, int mday, int hour, int min, int sec);
 
 /* Date methods exposed so they can be installed in the self-hosting global. */
 bool
