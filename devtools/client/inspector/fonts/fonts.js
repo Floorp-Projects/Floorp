@@ -815,9 +815,7 @@ class FontInspector {
    *        Example: { name: "font-size", value: "1em", rule: Object }
    */
   async onRulePropertyUpdated(eventData) {
-    if (!this.selectedRule ||
-        !this.selectedRule.matches({ rule: eventData.rule.domRule }) ||
-        !FONT_PROPERTIES.includes(eventData.property)) {
+    if (!this.selectedRule || !FONT_PROPERTIES.includes(eventData.property)) {
       return;
     }
 
