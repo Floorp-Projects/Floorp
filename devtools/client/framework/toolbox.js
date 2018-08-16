@@ -3385,6 +3385,15 @@ Toolbox.prototype = {
     return extInfo && Services.prefs.getBoolPref(extInfo.pref, false);
   },
 
+  /**
+   * Returns a panel id in the case of built in panels or "other" in the case of
+   * third party panels. This is necessary due to limitations in addon id strings,
+   * the permitted length of event telemetry property values and what we actually
+   * want to see in our telemetry.
+   *
+   * @param {String} id
+   *        The panel id we would like to process.
+   */
   getTelemetryPanelNameOrOther: function(id) {
     if (!this._toolNames) {
       const definitions = gDevTools.getToolDefinitionArray();
@@ -3392,9 +3401,11 @@ Toolbox.prototype = {
 
       this._toolNames = new Set(definitionIds);
     }
+
     if (!this._toolNames.has(id)) {
       return "other";
     }
+
     return id;
   },
 };
