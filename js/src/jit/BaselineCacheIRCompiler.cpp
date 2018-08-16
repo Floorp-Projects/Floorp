@@ -467,7 +467,7 @@ BaselineCacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto()
 
         // Unwrap the expando before checking its shape.
         masm.loadPtr(Address(scratch, ProxyObject::offsetOfReservedSlots()), scratch);
-        masm.unboxObject(Address(scratch, detail::ProxyReservedSlots::offsetOfPrivateSlot()), scratch);
+        masm.unboxObject(Address(scratch, js::detail::ProxyReservedSlots::offsetOfPrivateSlot()), scratch);
 
         masm.loadPtr(shapeWrapperAddress, scratch2.ref());
         LoadShapeWrapperContents(masm, scratch2.ref(), scratch2.ref(), failure->label());
@@ -651,10 +651,6 @@ BaselineCacheIRCompiler::emitCallNativeGetterResult()
     return true;
 }
 
-typedef bool (*ProxyGetPropertyFn)(JSContext*, HandleObject, HandleId, MutableHandleValue);
-static const VMFunction ProxyGetPropertyInfo =
-    FunctionInfo<ProxyGetPropertyFn>(ProxyGetProperty, "ProxyGetProperty");
-
 bool
 BaselineCacheIRCompiler::emitCallProxyGetResult()
 {
@@ -681,10 +677,6 @@ BaselineCacheIRCompiler::emitCallProxyGetResult()
     return true;
 }
 
-typedef bool (*ProxyGetPropertyByValueFn)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-static const VMFunction ProxyGetPropertyByValueInfo =
-    FunctionInfo<ProxyGetPropertyByValueFn>(ProxyGetPropertyByValue, "ProxyGetPropertyByValue");
-
 bool
 BaselineCacheIRCompiler::emitCallProxyGetByValueResult()
 {
@@ -707,12 +699,6 @@ BaselineCacheIRCompiler::emitCallProxyGetByValueResult()
     stubFrame.leave(masm);
     return true;
 }
-
-typedef bool (*ProxyHasFn)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-static const VMFunction ProxyHasInfo = FunctionInfo<ProxyHasFn>(ProxyHas, "ProxyHas");
-
-typedef bool (*ProxyHasOwnFn)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-static const VMFunction ProxyHasOwnInfo = FunctionInfo<ProxyHasOwnFn>(ProxyHasOwn, "ProxyHasOwn");
 
 bool
 BaselineCacheIRCompiler::emitCallProxyHasPropResult()
@@ -897,11 +883,6 @@ BaselineCacheIRCompiler::emitLoadStringResult()
     masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
     return true;
 }
-
-typedef bool (*StringSplitHelperFn)(JSContext*, HandleString, HandleString, HandleObjectGroup,
-                              uint32_t limit, MutableHandleValue);
-static const VMFunction StringSplitHelperInfo =
-    FunctionInfo<StringSplitHelperFn>(StringSplitHelper, "StringSplitHelper");
 
 bool
 BaselineCacheIRCompiler::emitCallStringSplitResult()
@@ -1795,10 +1776,6 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
     return true;
 }
 
-typedef bool (*SetArrayLengthFn)(JSContext*, HandleObject, HandleValue, bool);
-static const VMFunction SetArrayLengthInfo =
-    FunctionInfo<SetArrayLengthFn>(SetArrayLength, "SetArrayLength");
-
 bool
 BaselineCacheIRCompiler::emitCallSetArrayLength()
 {
@@ -1823,10 +1800,6 @@ BaselineCacheIRCompiler::emitCallSetArrayLength()
     stubFrame.leave(masm);
     return true;
 }
-
-typedef bool (*ProxySetPropertyFn)(JSContext*, HandleObject, HandleId, HandleValue, bool);
-static const VMFunction ProxySetPropertyInfo =
-    FunctionInfo<ProxySetPropertyFn>(ProxySetProperty, "ProxySetProperty");
 
 bool
 BaselineCacheIRCompiler::emitCallProxySet()
@@ -1857,10 +1830,6 @@ BaselineCacheIRCompiler::emitCallProxySet()
     stubFrame.leave(masm);
     return true;
 }
-
-typedef bool (*ProxySetPropertyByValueFn)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
-static const VMFunction ProxySetPropertyByValueInfo =
-    FunctionInfo<ProxySetPropertyByValueFn>(ProxySetPropertyByValue, "ProxySetPropertyByValue");
 
 bool
 BaselineCacheIRCompiler::emitCallProxySetByValue()
@@ -2047,7 +2016,7 @@ BaselineCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration()
         return false;
 
     masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch);
-    Address expandoAddr(scratch, detail::ProxyReservedSlots::offsetOfPrivateSlot());
+    Address expandoAddr(scratch, js::detail::ProxyReservedSlots::offsetOfPrivateSlot());
 
     // Load the ExpandoAndGeneration* in the output scratch register and guard
     // it matches the proxy's ExpandoAndGeneration.
@@ -2383,10 +2352,6 @@ ICCacheIR_Updated::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitor
     stubInfo->copyStubData(&other, res);
     return res;
 }
-
-typedef JSString* (*ConcatStringsFn)(JSContext*, HandleString, HandleString);
-static const VMFunction ConcatStringsInfo =
-    FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>, "ConcatStrings", NonTailCall);
 
 bool
 BaselineCacheIRCompiler::emitCallStringConcatResult()

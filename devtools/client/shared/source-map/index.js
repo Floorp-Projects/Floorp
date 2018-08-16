@@ -453,6 +453,7 @@ const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
 const applySourceMap = dispatcher.task("applySourceMap");
 const clearSourceMaps = dispatcher.task("clearSourceMaps");
 const hasMappedSource = dispatcher.task("hasMappedSource");
+const getOriginalStackFrames = dispatcher.task("getOriginalStackFrames");
 
 module.exports = {
   originalToGeneratedId,
@@ -470,6 +471,7 @@ module.exports = {
   getOriginalSourceText,
   applySourceMap,
   clearSourceMaps,
+  getOriginalStackFrames,
   startSourceMapWorker: dispatcher.start.bind(dispatcher),
   stopSourceMapWorker: dispatcher.stop.bind(dispatcher)
 };

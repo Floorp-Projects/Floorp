@@ -537,20 +537,27 @@ CoercingCompare(MCompare::CompareType type)
     return false;
 }
 
+
 static MCompare::CompareType
 CompatibleType(MCompare::CompareType first, MCompare::CompareType second)
 {
     // Caller should have dealt with this case.
     MOZ_ASSERT(first != second);
 
-    //Prefer the coercing types if they exist, otherwise just use first's type.
+    // Prefer the coercing types if they exist, otherwise, return Double,
+    // which is the general cover.
     if (CoercingCompare(first))
         return first;
 
     if (CoercingCompare(second))
         return second;
 
-    return first;
+    // At this point we expect a Double/Int32 pair, so we return Double.
+    MOZ_ASSERT(first == MCompare::Compare_Int32 || first == MCompare::Compare_Double);
+    MOZ_ASSERT(second == MCompare::Compare_Int32 || second == MCompare::Compare_Double);
+    MOZ_ASSERT(first != second);
+
+    return MCompare::Compare_Double;
 }
 
 MCompare::CompareType

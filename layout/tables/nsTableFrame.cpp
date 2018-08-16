@@ -675,7 +675,7 @@ nsTableFrame::CreateSyntheticColGroupFrame()
 
   RefPtr<ComputedStyle> colGroupStyle;
   colGroupStyle = shell->StyleSet()->
-    ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableColGroup);
+    ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableColGroup());
   // Create a col group frame
   nsTableColGroupFrame* newFrame =
     NS_NewTableColGroupFrame(shell, colGroupStyle);
@@ -734,7 +734,7 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     // col group
     nsIContent* iContent = aColGroupFrame->GetContent();
     RefPtr<ComputedStyle> computedStyle = shell->StyleSet()->
-      ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableCol);
+      ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableCol());
     // ASSERTION to check for bug 54454 sneaking back in...
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
 
@@ -8201,7 +8201,7 @@ nsTableFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
 {
   nsIFrame* wrapper = GetParent();
   MOZ_ASSERT(wrapper->Style()->GetPseudo() ==
-               nsCSSAnonBoxes::tableWrapper,
+               nsCSSAnonBoxes::tableWrapper(),
              "What happened to our parent?");
   aResult.AppendElement(
     OwnedAnonBox(wrapper, &UpdateStyleOfOwnedAnonBoxesForTableWrapper));
@@ -8214,12 +8214,12 @@ nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
   ServoRestyleState& aRestyleState)
 {
   MOZ_ASSERT(aWrapperFrame->Style()->GetPseudo() ==
-               nsCSSAnonBoxes::tableWrapper,
+               nsCSSAnonBoxes::tableWrapper(),
              "What happened to our parent?");
 
   RefPtr<ComputedStyle> newStyle =
     aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(
-      nsCSSAnonBoxes::tableWrapper, aOwningFrame->Style());
+      nsCSSAnonBoxes::tableWrapper(), aOwningFrame->Style());
 
   // Figure out whether we have an actual change.  It's important that we do
   // this, even though all the wrapper's changes are due to properties it

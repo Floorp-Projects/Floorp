@@ -51,14 +51,16 @@ add_task(async function test_add_link() {
       { setPersistCheckedValue: true, expectPersist: true },
       { setPersistCheckedValue: false, expectPersist: false },
     ];
-    let newAddress = PTU.Addresses.TimBL2;
+    let newAddress = Object.assign({}, PTU.Addresses.TimBL2);
+    // Emails aren't part of shipping addresses
+    delete newAddress.email;
 
     for (let options of testOptions) {
       let shippingAddressChangePromise = ContentTask.spawn(browser, {
         eventName: "shippingaddresschange",
       }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
 
-      await manuallyAddAddress(frame, newAddress, options);
+      await manuallyAddShippingAddress(frame, newAddress, options);
       await shippingAddressChangePromise;
       info("got shippingaddresschange event");
 
@@ -147,7 +149,7 @@ add_task(async function test_edit_link() {
       isEditing: true,
       expectPersist: true,
     };
-    await fillInAddressForm(frame, EXPECTED_ADDRESS, editOptions);
+    await fillInShippingAddressForm(frame, EXPECTED_ADDRESS, editOptions);
     await verifyPersistCheckbox(frame, editOptions);
     await submitAddressForm(frame, EXPECTED_ADDRESS, editOptions);
 
@@ -240,7 +242,7 @@ add_task(async function test_add_payer_contact_name_email_link() {
       }
     });
 
-    await fillInAddressForm(frame, EXPECTED_ADDRESS, addOptions);
+    await fillInPayerAddressForm(frame, EXPECTED_ADDRESS, addOptions);
     await verifyPersistCheckbox(frame, addOptions);
     await submitAddressForm(frame, EXPECTED_ADDRESS, addOptions);
 
@@ -397,7 +399,9 @@ add_task(async function test_private_persist_addresses() {
     );
     info("/setupPaymentDialog");
 
-    let addressToAdd = PTU.Addresses.Temp;
+    let addressToAdd = Object.assign({}, PTU.Addresses.Temp);
+    // Emails aren't part of shipping addresses
+    delete addressToAdd.email;
     const addOptions = {
       checkboxSelector: "#address-page .persist-checkbox",
       expectPersist: false,
@@ -422,7 +426,7 @@ add_task(async function test_private_persist_addresses() {
     is(initialAddresses.options.length, 1,
        "Got expected number of pre-filled shipping addresses");
 
-    await fillInAddressForm(frame, addressToAdd, addOptions);
+    await fillInShippingAddressForm(frame, addressToAdd, addOptions);
     await verifyPersistCheckbox(frame, addOptions);
     await submitAddressForm(frame, addressToAdd, addOptions);
 

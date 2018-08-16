@@ -4,5 +4,6 @@ include docs/*.rst
 include docs/Makefile
 include docs/make.bat
 include docs/conf.py
+include docs/_static/*
 include fabfile.py
 include tox.ini

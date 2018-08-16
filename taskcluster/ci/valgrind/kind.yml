@@ -31,6 +31,7 @@ jobs:
             max-run-time: 72000
             env:
                 PERFHERDER_EXTRA_OPTIONS: valgrind
+                FORCE_GCC: '1'
         run:
             using: mozharness
             actions: [get-secrets build valgrind-test]

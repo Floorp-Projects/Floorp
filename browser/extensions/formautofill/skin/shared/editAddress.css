@@ -21,7 +21,7 @@ select {
 #additional-name-container,
 #address-level1-container,
 #postal-code-container,
-#country-container,
+#country-label,
 #country-warning-message,
 #family-name-container,
 #organization-container,
@@ -36,6 +36,7 @@ select {
 
 #name-container,
 #street-address-container,
+#country-container,
 #email-container {
   flex: 0 1 100%;
 }

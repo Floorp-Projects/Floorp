@@ -187,3 +187,13 @@ class NotInInvalid(Invalid):
 
 class ExactSequenceInvalid(Invalid):
     pass
+
+
+class NotEnoughValid(Invalid):
+    """The value did not pass enough validations."""
+    pass
+
+
+class TooManyValid(Invalid):
+    """The value passed more than expected validations."""
+    pass

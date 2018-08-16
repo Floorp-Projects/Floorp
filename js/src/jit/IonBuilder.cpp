@@ -3455,18 +3455,6 @@ IonBuilder::powTrySpecialized(bool* emitted, MDefinition* base, MDefinition* pow
     return Ok();
 }
 
-static inline bool
-SimpleArithOperand(MDefinition* op)
-{
-    return !op->emptyResultTypeSet()
-        && !op->mightBeType(MIRType::Object)
-        && !op->mightBeType(MIRType::String)
-        && !op->mightBeType(MIRType::Symbol)
-        && !op->mightBeType(MIRType::MagicOptimizedArguments)
-        && !op->mightBeType(MIRType::MagicHole)
-        && !op->mightBeType(MIRType::MagicIsConstructing);
-}
-
 AbortReasonOr<Ok>
 IonBuilder::binaryArithTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDefinition* right)
 {

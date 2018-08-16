@@ -5203,7 +5203,7 @@ GetGeneratedContentOwner(nsIFrame* aFrame, bool* aIsBefore)
 {
   *aIsBefore = false;
   while (aFrame && (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT)) {
-    if (aFrame->Style()->GetPseudo() == nsCSSPseudoElements::before) {
+    if (aFrame->Style()->GetPseudo() == nsCSSPseudoElements::before()) {
       *aIsBefore = true;
     }
     aFrame = aFrame->GetParent();

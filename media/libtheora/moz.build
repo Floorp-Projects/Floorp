@@ -28,8 +28,9 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CFLAGS += ['-Wno-tautological-compare']
 if CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
+        '-Wno-parentheses',
         '-Wno-pointer-sign',
-        '-Wno-shift-op-parentheses',
+        '-Wno-shift-negative-value',
     ]
 
 UNIFIED_SOURCES += [

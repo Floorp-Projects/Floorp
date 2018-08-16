@@ -233,10 +233,9 @@ TabChildBase::DispatchMessageManagerMessage(const nsAString& aMessageName,
         }
     }
 
-    // Let the BrowserElementScrolling helper (if it exists) for this
-    // content manipulate the frame state.
-    RefPtr<nsFrameMessageManager> mm = mTabChildMessageManager->GetMessageManager();
-    mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildMessageManager), nullptr,
+    RefPtr<TabChildMessageManager> kungFuDeathGrip(mTabChildMessageManager);
+    RefPtr<nsFrameMessageManager> mm = kungFuDeathGrip->GetMessageManager();
+    mm->ReceiveMessage(static_cast<EventTarget*>(kungFuDeathGrip), nullptr,
                        aMessageName, false, &data, nullptr, nullptr, nullptr,
                        IgnoreErrors());
 }

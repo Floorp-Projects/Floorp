@@ -59,11 +59,7 @@ function checkAddressForm(customEl, expectedAddress) {
 }
 
 function sendStringAndCheckValidity(element, string, isValid) {
-  element.focus();
-  while (element.value) {
-    sendKey("BACK_SPACE");
-  }
-  sendString(string);
+  fillField(element, string);
   ok(element.checkValidity() == isValid,
      `${element.id} should be ${isValid ? "valid" : "invalid"} (${string})`);
 }
@@ -115,25 +111,26 @@ add_task(async function test_saveButton() {
   display.appendChild(form);
   await asyncElementRendered();
 
-  form.form.querySelector("#given-name").focus();
-  sendString("Jaws");
-  form.form.querySelector("#family-name").focus();
-  sendString("Swaj");
-  form.form.querySelector("#organization").focus();
-  sendString("Allizom");
-  form.form.querySelector("#street-address").focus();
-  sendString("404 Internet Super Highway");
-  form.form.querySelector("#address-level2").focus();
-  sendString("Firefoxity City");
-  form.form.querySelector("#address-level1").focus();
-  sendString("CA");
-  form.form.querySelector("#postal-code").focus();
-  sendString("00001");
-  form.form.querySelector("#country option[value='US']").selected = true;
-  form.form.querySelector("#email").focus();
-  sendString("test@example.com");
-  form.form.querySelector("#tel").focus();
-  sendString("+15555551212");
+  ok(form.saveButton.disabled, "Save button initially disabled");
+  fillField(form.form.querySelector("#given-name"), "Jaws");
+  fillField(form.form.querySelector("#family-name"), "Swaj");
+  fillField(form.form.querySelector("#organization"), "Allizom");
+  fillField(form.form.querySelector("#street-address"), "404 Internet Super Highway");
+  fillField(form.form.querySelector("#address-level2"), "Firefoxity City");
+  fillField(form.form.querySelector("#address-level1"), "CA");
+  fillField(form.form.querySelector("#postal-code"), "00001");
+  fillField(form.form.querySelector("#country"), "US");
+  fillField(form.form.querySelector("#email"), "test@example.com");
+  fillField(form.form.querySelector("#tel"), "+15555551212");
+
+  ok(!form.saveButton.disabled, "Save button is enabled after filling");
+
+  info("blanking the street-address");
+  fillField(form.form.querySelector("#street-address"), "");
+  ok(form.saveButton.disabled, "Save button is disabled after blanking street-address");
+
+  fillField(form.form.querySelector("#street-address"), "404 Internet Super Highway");
+  ok(!form.saveButton.disabled, "Save button is enabled after re-filling street-address");
 
   let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
   is(form.saveButton.textContent, "Add", "Check label");
@@ -158,7 +155,6 @@ add_task(async function test_saveButton() {
       "address-level1": "CA",
       "postal-code": "00001",
       "country": "US",
-      "email": "test@example.com",
       "tel": "+15555551212",
     },
   }, "Check event details for the message to chrome");
@@ -206,6 +202,8 @@ add_task(async function test_edit() {
   await asyncElementRendered();
   checkAddressForm(form, address1);
 
+  ok(!form.saveButton.disabled, "Save button should be enabled upon edit for a valid address");
+
   info("test change to minimal record");
   let minimalAddress = {
     "given-name": address1["given-name"],
@@ -225,6 +223,7 @@ add_task(async function test_edit() {
   await asyncElementRendered();
   is(form.saveButton.textContent, "Update", "Check label");
   checkAddressForm(form, minimalAddress);
+  ok(form.saveButton.disabled, "Save button should be disabled if only the name is filled");
 
   info("change to no selected address");
   await form.requestStore.setState({
@@ -235,6 +234,7 @@ add_task(async function test_edit() {
   });
   await asyncElementRendered();
   checkAddressForm(form, {});
+  ok(form.saveButton.disabled, "Save button should be disabled for an empty form");
 
   form.remove();
 });
@@ -245,8 +245,14 @@ add_task(async function test_restricted_address_fields() {
   form.dataset.errorGenericSave = "Generic error";
   await form.promiseReady;
   display.appendChild(form);
+  await form.requestStore.setState({
+    "address-page": {
+      addressFields: "name email tel",
+    },
+  });
   await asyncElementRendered();
-  form.setAttribute("address-fields", "name email tel");
+
+  ok(form.saveButton.disabled, "Save button should be disabled due to empty fields");
 
   ok(!isHidden(form.form.querySelector("#given-name")),
      "given-name should be visible");
@@ -271,7 +277,18 @@ add_task(async function test_restricted_address_fields() {
   ok(!isHidden(form.form.querySelector("#tel")),
      "tel should be visible");
 
+  fillField(form.form.querySelector("#given-name"), "John");
+  ok(form.saveButton.disabled, "Save button should be disabled due to empty fields");
+  fillField(form.form.querySelector("#email"), "john@example.com");
+  todo(form.saveButton.disabled,
+       "Save button should be disabled due to empty fields - Bug 1483412");
+  fillField(form.form.querySelector("#tel"), "+15555555555");
+  ok(!form.saveButton.disabled, "Save button should be enabled with all required fields filled");
+
   form.remove();
+  await form.requestStore.setState({
+    "address-page": {},
+  });
 });
 
 add_task(async function test_field_validation() {
@@ -298,8 +315,8 @@ add_task(async function test_field_validation() {
     countrySelect,
   ];
   for (let field of requiredFields) {
-    let container = field.closest("label");
-    ok(container.hasAttribute("required"), "Container should have required attribute");
+    let container = field.closest(`#${field.id}-container`);
+    ok(container.hasAttribute("required"), `#${field.id} container should have required attribute`);
     let span = container.querySelector("span");
     is(span.getAttribute("fieldRequiredSymbol"), "*",
        "span should have asterisk as fieldRequiredSymbol");
@@ -307,8 +324,9 @@ add_task(async function test_field_validation() {
        "Asterisk should be on " + field.id);
   }
 
-  countrySelect.selectedIndex = [...countrySelect.options].findIndex(o => o.value == "US");
-  countrySelect.dispatchEvent(new Event("change"));
+  ok(form.saveButton.disabled, "Save button should be disabled upon load");
+
+  fillField(countrySelect, "US");
 
   sendStringAndCheckValidity(addressLevel1Input, "MI", true);
   sendStringAndCheckValidity(addressLevel1Input, "", false);
@@ -320,8 +338,7 @@ add_task(async function test_field_validation() {
   sendStringAndCheckValidity(addressLevel1Input, "Nova Scotia", true);
   sendStringAndCheckValidity(postalCodeInput, "06390-0001", true);
 
-  countrySelect.selectedIndex = [...countrySelect.options].findIndex(o => o.value == "CA");
-  countrySelect.dispatchEvent(new Event("change"));
+  fillField(countrySelect, "CA");
 
   sendStringAndCheckValidity(postalCodeInput, "00001", false);
   sendStringAndCheckValidity(addressLevel1Input, "CA", true);
@@ -373,6 +390,8 @@ add_task(async function test_customValidity() {
        "Validation message should match for " + selector);
   }
 
+  ok(form.saveButton.disabled, "Save button should be disabled due to validation errors");
+
   checkValidationMessage("#street-address", "addressLine");
   checkValidationMessage("#address-level2", "city");
   checkValidationMessage("#country", "country");
@@ -381,6 +400,8 @@ add_task(async function test_customValidity() {
   checkValidationMessage("#postal-code", "postalCode");
   checkValidationMessage("#given-name", "recipient");
   checkValidationMessage("#address-level1", "region");
+
+  // TODO: bug 1482808 - the save button should be enabled after editing the fields
 
   form.remove();
 });
@@ -415,6 +436,8 @@ add_task(async function test_field_validation() {
   await form.requestStore.setState(state);
   display.appendChild(form);
   await asyncElementRendered();
+
+  ok(form.saveButton.disabled, "Save button should be disabled due to empty fields");
 
   let postalCodeInput = form.form.querySelector("#postal-code");
   let addressLevel1Input = form.form.querySelector("#address-level1");

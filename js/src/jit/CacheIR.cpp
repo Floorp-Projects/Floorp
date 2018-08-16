@@ -4928,6 +4928,58 @@ CompareIRGenerator::tryAttachNumberUndefined(ValOperandId lhsId, ValOperandId rh
     return true;
 }
 
+// Handle Primitive x {undefined,null} equality comparisons
+bool
+CompareIRGenerator::tryAttachPrimitiveUndefined(ValOperandId lhsId, ValOperandId rhsId)
+{
+    MOZ_ASSERT(IsEqualityOp(op_));
+
+    // The set of primitive cases we want to handle here (excluding null, undefined)
+    auto isPrimitive = [](HandleValue& x) {
+        return x.isString() || x.isSymbol() || x.isBoolean() || x.isNumber();
+    };
+
+    if (!(lhsVal_.isNullOrUndefined() && isPrimitive(rhsVal_)) &&
+        !(rhsVal_.isNullOrUndefined() && isPrimitive(lhsVal_)))
+    {
+        return false;
+    }
+
+    auto guardPrimitive = [&](HandleValue v, ValOperandId id) {
+        if (v.isNumber()) {
+            writer.guardIsNumber(id);
+            return;
+        }
+        switch (v.extractNonDoubleType()) {
+          case JSVAL_TYPE_BOOLEAN:
+            writer.guardIsBoolean(id);
+            return;
+          case JSVAL_TYPE_SYMBOL:
+            writer.guardIsSymbol(id);
+            return;
+          case JSVAL_TYPE_STRING:
+            writer.guardIsString(id);
+            return;
+          default:
+            MOZ_CRASH("unexpected type");
+            return;
+        }
+    };
+
+    isPrimitive(lhsVal_) ? guardPrimitive(lhsVal_, lhsId)
+                         : writer.guardIsNullOrUndefined(lhsId);
+    isPrimitive(rhsVal_) ? guardPrimitive(rhsVal_, rhsId)
+                         : writer.guardIsNullOrUndefined(rhsId);
+
+    // Comparing a primitive with undefined/null will always be true for NE/STRICTNE,
+    // and always be false for other compare ops.
+    writer.loadBooleanResult(op_ == JSOP_NE || op_ == JSOP_STRICTNE);
+    writer.returnFromIC();
+
+    trackAttached("PrimitiveUndefined");
+    return true;
+}
+
 // Handle {null/undefined} x {null,undefined} equality comparisons
 bool
 CompareIRGenerator::tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId)
@@ -4972,9 +5024,15 @@ CompareIRGenerator::tryAttachStub()
     static_assert(lhsIndex == 0 && rhsIndex == 1,
         "Indexes relied upon by baseline inspector");
 
-    ValOperandId lhsId(writer.setInputOperandId(0));
-    ValOperandId rhsId(writer.setInputOperandId(1));
+    ValOperandId lhsId(writer.setInputOperandId(lhsIndex));
+    ValOperandId rhsId(writer.setInputOperandId(rhsIndex));
 
+    // For sloppy equality ops, there are cases this IC does not handle:
+    // - {Symbol} x {Null, Undefined, String, Bool, Number}.
+    // - {String} x {Null, Undefined, Symbol, Bool, Number}. Bug 1467907 will add support
+    //   for {String} x {Int32}.
+    // - {Bool} x {Double}.
+    // - {Object} x {String, Symbol, Bool, Number}.
     if (IsEqualityOp(op_)) {
         if (tryAttachString(lhsId, rhsId))
             return true;
@@ -4982,13 +5040,22 @@ CompareIRGenerator::tryAttachStub()
             return true;
         if (tryAttachSymbol(lhsId, rhsId))
             return true;
+
+        // Handle the special case of Object compared to null/undefined.
+        // This is special due to the IsHTMLDDA internal slot semantic,
         if (tryAttachObjectUndefined(lhsId, rhsId))
             return true;
+
+        // This covers -strict- equality/inequality using a type tag check, so catches all
+        // different type pairs outside of Numbers, which cannot be checked on tags alone.
         if (tryAttachStrictDifferentTypes(lhsId, rhsId))
             return true;
 
-        // This should come after strictDifferent types to
-        // allow it to only handle sloppy equality.
+        // These checks should come after tryAttachStrictDifferentTypes since it handles
+        // strict inequality with a more generic IC.
+        if (tryAttachPrimitiveUndefined(lhsId, rhsId))
+            return true;
+
         if (tryAttachNullUndefined(lhsId, rhsId))
             return true;
     }

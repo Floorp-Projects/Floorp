@@ -7,6 +7,8 @@ exports.addHiddenBreakpoint = addHiddenBreakpoint;
 exports.enableBreakpoint = enableBreakpoint;
 exports.addBreakpoint = addBreakpoint;
 
+var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
+
 var _breakpoint = require("../../utils/breakpoint/index");
 
 var _promise = require("../utils/middleware/promise");
@@ -49,7 +51,7 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
     id,
     hitCount,
     actualLocation
-  } = await client.setBreakpoint(generatedLocation, breakpoint.condition, sourceMaps.isOriginalId(location.sourceId));
+  } = await client.setBreakpoint(generatedLocation, breakpoint.condition, (0, _devtoolsSourceMap.isOriginalId)(location.sourceId));
   const newGeneratedLocation = actualLocation || generatedLocation;
   const newLocation = await sourceMaps.getOriginalLocation(newGeneratedLocation);
   const symbols = (0, _selectors.getSymbols)(getState(), source);

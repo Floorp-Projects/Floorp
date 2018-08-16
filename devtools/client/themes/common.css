@@ -352,7 +352,7 @@ checkbox:-moz-focusring {
 .devtools-button:empty:not(:disabled):-moz-any(:hover:active,.checked),
 .devtools-toolbarbutton:not([label]):-moz-any([checked],[open],:hover:active),
 .devtools-button[aria-haspopup="menu"][aria-expanded="true"] {
-  background: var(--toolbarbutton-hover-background);
+  background-color: var(--toolbarbutton-hover-background);
   border-color: var(--toolbarbutton-hover-border-color);
 }
 

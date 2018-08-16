@@ -148,12 +148,7 @@ class Tab extends _react.PureComponent {
 
     function handleTabClick(e) {
       e.preventDefault();
-      e.stopPropagation(); // Accommodate middle click to close tab
-
-      if (e.button === 1) {
-        return closeTab(source.url);
-      }
-
+      e.stopPropagation();
       return selectSpecificSource(sourceId);
     }
 
@@ -165,7 +160,9 @@ class Tab extends _react.PureComponent {
     return _react2.default.createElement("div", {
       className: className,
       key: sourceId,
-      onClick: handleTabClick,
+      onClick: handleTabClick // Accommodate middle click to close tab
+      ,
+      onMouseUp: e => e.button === 1 && closeTab(source.url),
       onContextMenu: e => this.onTabContextMenu(e, sourceId),
       title: (0, _source.getFileURL)(source)
     }, _react2.default.createElement(_SourceIcon2.default, {

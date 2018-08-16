@@ -94,36 +94,6 @@ nsDirectoryService::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return gService->QueryInterface(aIID, aResult);
 }
 
-namespace mozilla {
-namespace detail {
-
-MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
-extern constexpr DirectoryAtoms gDirectoryAtoms = {
-  #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_INIT_STRING(value_)
-  #include "nsDirectoryServiceAtomList.h"
-  #undef DIR_ATOM
-  {
-    #define DIR_ATOM(name_, value_) \
-      NS_STATIC_ATOM_INIT_ATOM(nsStaticAtom, DirectoryAtoms, name_, value_)
-    #include "nsDirectoryServiceAtomList.h"
-    #undef DIR_ATOM
-  }
-};
-MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
-
-} // namespace detail
-} // namespace mozilla
-
-const nsStaticAtom* const nsDirectoryService::sAtoms =
-  mozilla::detail::gDirectoryAtoms.mAtoms;
-
-#define DIR_ATOM(name_, value_) \
-  NS_STATIC_ATOM_DEFN_PTR( \
-    nsStaticAtom, mozilla::detail::DirectoryAtoms, \
-    mozilla::detail::gDirectoryAtoms, nsDirectoryService, name_)
-#include "nsDirectoryServiceAtomList.h"
-#undef DIR_ATOM
-
 NS_IMETHODIMP
 nsDirectoryService::Init()
 {
@@ -138,8 +108,6 @@ nsDirectoryService::RealInit()
                "nsDirectoryService::RealInit Mustn't initialize twice!");
 
   gService = new nsDirectoryService();
-
-  NS_RegisterStaticAtoms(sAtoms, sAtomsLen);
 
   // Let the list hold the only reference to the provider.
   nsAppFileLocationProvider* defaultProvider = new nsAppFileLocationProvider;
@@ -419,91 +387,86 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
 
   RefPtr<nsAtom> inAtom = NS_Atomize(aProp);
 
-  // Check that nsGkAtoms::Home matches the value that sOS_HomeDirectory would
-  // have if it wasn't commented out to avoid static atom duplication.
-  MOZ_ASSERT(
-    NS_strcmp(nsGkAtoms::Home->GetUTF16String(), u"" NS_OS_HOME_DIR) == 0);
-
   // check to see if it is one of our defaults
 
-  if (inAtom == nsDirectoryService::sCurrentProcess ||
-      inAtom == nsDirectoryService::sOS_CurrentProcessDirectory) {
+  if (inAtom == nsGkAtoms::DirectoryService_CurrentProcess ||
+      inAtom == nsGkAtoms::DirectoryService_OS_CurrentProcessDirectory) {
     rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
   }
 
   // Unless otherwise set, the core pieces of the GRE exist
   // in the current process directory.
-  else if (inAtom == nsDirectoryService::sGRE_Directory ||
-           inAtom == nsDirectoryService::sGRE_BinDirectory) {
+  else if (inAtom == nsGkAtoms::DirectoryService_GRE_Directory ||
+           inAtom == nsGkAtoms::DirectoryService_GRE_BinDirectory) {
     rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sOS_TemporaryDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_OS_TemporaryDirectory) {
     rv = GetSpecialSystemDirectory(OS_TemporaryDirectory, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sOS_CurrentProcessDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_OS_CurrentProcessDirectory) {
     rv = GetSpecialSystemDirectory(OS_CurrentProcessDirectory, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sOS_CurrentWorkingDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_OS_CurrentWorkingDirectory) {
     rv = GetSpecialSystemDirectory(OS_CurrentWorkingDirectory, getter_AddRefs(localFile));
   }
 
 #if defined(MOZ_WIDGET_COCOA)
-  else if (inAtom == nsDirectoryService::sDirectory) {
+  else if (inAtom == nsGkAtoms::DirectoryService_SystemDirectory) {
     rv = GetOSXFolderType(kClassicDomain, kSystemFolderType, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sUserLibDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_UserLibDirectory) {
     rv = GetOSXFolderType(kUserDomain, kDomainLibraryFolderType, getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::Home) {
     rv = GetOSXFolderType(kUserDomain, kDomainTopLevelFolderType, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sDefaultDownloadDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_DefaultDownloadDirectory) {
     rv = GetOSXFolderType(kUserDomain, kDownloadsFolderType,
                           getter_AddRefs(localFile));
     if (NS_FAILED(rv)) {
       rv = GetOSXFolderType(kUserDomain, kDesktopFolderType,
                             getter_AddRefs(localFile));
     }
-  } else if (inAtom == nsDirectoryService::sOS_DesktopDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_OS_DesktopDirectory) {
     rv = GetOSXFolderType(kUserDomain, kDesktopFolderType, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sLocalApplicationsDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_LocalApplicationsDirectory) {
     rv = GetOSXFolderType(kLocalDomain, kApplicationsFolderType, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sUserPreferencesDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_UserPreferencesDirectory) {
     rv = GetOSXFolderType(kUserDomain, kPreferencesFolderType, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sPictureDocumentsDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_PictureDocumentsDirectory) {
     rv = GetOSXFolderType(kUserDomain, kPictureDocumentsFolderType, getter_AddRefs(localFile));
   }
 #elif defined (XP_WIN)
-  else if (inAtom == nsDirectoryService::sSystemDirectory) {
+  else if (inAtom == nsGkAtoms::DirectoryService_SystemDirectory) {
     rv = GetSpecialSystemDirectory(Win_SystemDirectory, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sWindowsDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_WindowsDirectory) {
     rv = GetSpecialSystemDirectory(Win_WindowsDirectory, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sWindowsProgramFiles) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_WindowsProgramFiles) {
     rv = GetSpecialSystemDirectory(Win_ProgramFiles, getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::Home) {
     rv = GetSpecialSystemDirectory(Win_HomeDirectory, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sPrograms) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_Programs) {
     rv = GetSpecialSystemDirectory(Win_Programs, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sFavorites) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_Favorites) {
     rv = GetSpecialSystemDirectory(Win_Favorites, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sOS_DesktopDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_OS_DesktopDirectory) {
     rv = GetSpecialSystemDirectory(Win_Desktopdirectory, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sAppdata) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_Appdata) {
     rv = GetSpecialSystemDirectory(Win_Appdata, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sLocalAppdata) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_LocalAppdata) {
     rv = GetSpecialSystemDirectory(Win_LocalAppdata, getter_AddRefs(localFile));
 #if defined(MOZ_CONTENT_SANDBOX)
-  } else if (inAtom == nsDirectoryService::sLocalAppdataLow) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_LocalAppdataLow) {
     rv = GetSpecialSystemDirectory(Win_LocalAppdataLow, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sLowIntegrityTempBase) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_LowIntegrityTempBase) {
     rv = GetLowIntegrityTempBase(getter_AddRefs(localFile));
 #endif
-  } else if (inAtom == nsDirectoryService::sWinCookiesDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_WinCookiesDirectory) {
     rv = GetSpecialSystemDirectory(Win_Cookies, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sDefaultDownloadDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_DefaultDownloadDirectory) {
     rv = GetSpecialSystemDirectory(Win_Downloads, getter_AddRefs(localFile));
   }
 #elif defined (XP_UNIX)
   else if (inAtom == nsGkAtoms::Home) {
     rv = GetSpecialSystemDirectory(Unix_HomeDirectory, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sOS_DesktopDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_OS_DesktopDirectory) {
     rv = GetSpecialSystemDirectory(Unix_XDG_Desktop, getter_AddRefs(localFile));
     *aPersistent = false;
-  } else if (inAtom == nsDirectoryService::sDefaultDownloadDirectory) {
+  } else if (inAtom == nsGkAtoms::DirectoryService_DefaultDownloadDirectory) {
     rv = GetSpecialSystemDirectory(Unix_XDG_Download, getter_AddRefs(localFile));
     *aPersistent = false;
   }

@@ -796,6 +796,43 @@ protected: // Shouldn't be used by friend classes
                                   Element& aElement);
 
   /**
+   * GetSelectedElement() returns an element node which is in first range of
+   * aSelection.  The rule is a little bit complicated and the rules do not
+   * make sense except in a few cases.  If you want to use this newly,
+   * you should create new method instead.  This needs to be here for
+   * comm-central.
+   * The rules are:
+   *   1. If Selection selects an element node, i.e., both containers are
+   *      same node and start offset and end offset is start offset + 1.
+   *      (XXX However, if last child is selected, this path is not used.)
+   *   2. If the argument is "href", look for anchor elements whose href
+   *      attribute is not empty from container of anchor/focus of Selection
+   *      to <body> element.  Then, both result are same one, returns the node.
+   *      (i.e., this allows collapsed selection.)
+   *   3. If the Selection is collapsed, returns null.
+   *   4. Otherwise, listing up all nodes with content iterator (post-order).
+   *     4-1. When first element node does *not* match with the argument,
+   *          *returns* the element.
+   *     4-2. When first element node matches with the argument, returns
+   *          *next* element node.
+   *
+   * @param aSelection          The Selection.
+   * @param aTagName            The atom of tag name in lower case.
+   *                            If nullptr, look for any element node.
+   *                            If nsGkAtoms::href, look for an <a> element
+   *                            which has non-empty href attribute.
+   *                            If nsGkAtoms::anchor or atomized "namedanchor",
+   *                            look for an <a> element which has non-empty
+   *                            name attribute.
+   * @param aRv                 Returns error code.
+   * @return                    An element in first range of aSelection.
+   */
+  already_AddRefed<Element>
+  GetSelectedElement(Selection& aSelection,
+                     const nsAtom* aTagName,
+                     ErrorResult& aRv);
+
+  /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.
@@ -1311,12 +1348,6 @@ protected: // Shouldn't be used by friend classes
   void SetSelectionAfterTableEdit(Element* aTable,
                                   int32_t aRow, int32_t aCol,
                                   int32_t aDirection, bool aSelected);
-
-  /**
-   * A more C++-friendly version of nsIHTMLEditor::GetSelectedElement
-   * that just returns null on errors.
-   */
-  already_AddRefed<dom::Element> GetSelectedElement(const nsAString& aTagName);
 
   void RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                   nsIDOMEventListener* aListener,

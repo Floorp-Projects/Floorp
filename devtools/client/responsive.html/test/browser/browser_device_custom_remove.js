@@ -34,10 +34,9 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.loadableState.LOADED);
 
-  const deviceSelector = document.querySelector(".viewport-device-selector");
-  const submitButton = document.querySelector("#device-submit-button");
+  const deviceSelector = document.getElementById("device-selector");
 
-  openDeviceModal(ui);
+  await openDeviceModal(ui);
 
   info("Reveal device adder form");
   let adderShow = document.querySelector("#device-adder-show");
@@ -54,6 +53,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await addDeviceInModal(ui, device2);
 
   info("Verify all custom devices default to enabled in modal");
+  const submitButton = document.getElementById("device-submit-button");
   const deviceCbs =
     [...document.querySelectorAll(".device-type-custom .device-input-checkbox")];
   is(deviceCbs.length, 2, "Both devices have a checkbox in modal");
@@ -62,15 +62,16 @@ addRDMTask(TEST_URL, async function({ ui }) {
   }
   submitButton.click();
 
-  info("Look for device 1 in device selector");
-  let deviceOption1 = [...deviceSelector.options].find(opt => opt.value == device1.name);
-  ok(deviceOption1, "Test device 1 option added to device selector");
+  info("Look for device 1 and 2 in device selector");
 
-  info("Look for device 2 in device selector");
-  let deviceOption2 = [...deviceSelector.options].find(opt => opt.value == device2.name);
-  ok(deviceOption2, "Test device 2 option added to device selector");
+  await testMenuItems(toolWindow, deviceSelector, menuItems => {
+    const deviceItem1 = menuItems.find(i => i.getAttribute("label") === device1.name);
+    const deviceItem2 = menuItems.find(i => i.getAttribute("label") === device2.name);
+    ok(deviceItem1, "Test device 1 menu item added to device selector");
+    ok(deviceItem2, "Test device 2 menu item added to device selector");
+  });
 
-  openDeviceModal(ui);
+  await openDeviceModal(ui);
 
   info("Remove device 2");
   const deviceRemoveButtons = [...document.querySelectorAll(".device-remove-button")];
@@ -80,13 +81,13 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await removed;
   submitButton.click();
 
-  info("Ensure device 1 is still in device selector");
-  deviceOption1 = [...deviceSelector.options].find(opt => opt.value == device1.name);
-  ok(deviceOption1, "Test device 1 option exists");
-
   info("Ensure device 2 is no longer in device selector");
-  deviceOption2 = [...deviceSelector.options].find(opt => opt.value == device2.name);
-  ok(!deviceOption2, "Test device 2 option removed");
+  await testMenuItems(toolWindow, deviceSelector, menuItems => {
+    const deviceItem1 = menuItems.find(i => i.getAttribute("label") === device1.name);
+    const deviceItem2 = menuItems.find(i => i.getAttribute("label") === device2.name);
+    ok(deviceItem1, "Test device 1 menu item exists");
+    ok(!deviceItem2, "Test device 2 menu item removed");
+  });
 });
 
 addRDMTask(TEST_URL, async function({ ui }) {
@@ -97,19 +98,17 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.loadableState.LOADED);
 
-  const deviceSelector = document.querySelector(".viewport-device-selector");
+  const deviceSelector = document.getElementById("device-selector");
 
   info("Ensure device 1 is still in device selector");
-  const deviceOption1 =
-    [...deviceSelector.options].find(opt => opt.value == device1.name);
-  ok(deviceOption1, "Test device 1 option exists");
+  await testMenuItems(toolWindow, deviceSelector, menuItems => {
+    const deviceItem1 = menuItems.find(i => i.getAttribute("label") === device1.name);
+    const deviceItem2 = menuItems.find(i => i.getAttribute("label") === device2.name);
+    ok(deviceItem1, "Test device 1 menu item exists");
+    ok(!deviceItem2, "Test device 2 option removed");
+  });
 
-  info("Ensure device 2 is no longer in device selector");
-  const deviceOption2 =
-    [...deviceSelector.options].find(opt => opt.value == device2.name);
-  ok(!deviceOption2, "Test device 2 option removed");
-
-  openDeviceModal(ui);
+  await openDeviceModal(ui);
 
   info("Ensure device 1 is still in device modal");
   const deviceCbs =

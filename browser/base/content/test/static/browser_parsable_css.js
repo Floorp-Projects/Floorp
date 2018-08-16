@@ -27,10 +27,6 @@ let whitelist = [
   {sourceName: /highlighters\.css$/i,
    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
    isFromDevTools: true},
-  // Responsive Design Mode CSS uses a UA-only pseudo-class, see Bug 1241714.
-  {sourceName: /responsive-ua\.css$/i,
-   errorMessage: /Unknown pseudo-class.*moz-dropdown-list/i,
-   isFromDevTools: true},
   // UA-only media features.
   {sourceName: /\b(autocomplete-item|svg)\.css$/,
    errorMessage: /Expected media feature name but found \u2018-moz.*/i,

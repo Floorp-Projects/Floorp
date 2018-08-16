@@ -26,11 +26,11 @@ To file a bug, create a [new issue](https://github.com/alecthomas/voluptuous/iss
 
 ## Documentation
 
-The documentation is provided [here] (http://alecthomas.github.io/voluptuous/). 
+The documentation is provided [here](http://alecthomas.github.io/voluptuous/).
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md).
+See [CHANGELOG.md](https://github.com/alecthomas/voluptuous/blob/master/CHANGELOG.md).
 
 ## Show me an example
 
@@ -38,7 +38,7 @@ Twitter's [user search API](https://dev.twitter.com/rest/reference/get/users/sea
 query URLs like:
 
 ```
-$ curl 'http://api.twitter.com/1.1/users/search.json?q=python&per_page=20&page=1'
+$ curl 'https://api.twitter.com/1.1/users/search.json?q=python&per_page=20&page=1'
 ```
 
 To validate this we might use a schema like:
@@ -234,7 +234,7 @@ contain anything, specify it as `list`:
 ...   raise AssertionError('MultipleInvalid not raised')
 ... except MultipleInvalid as e:
 ...   exc = e
->>> str(exc) == "not a valid value"
+>>> str(exc) == "not a valid value @ data[1]"
 True
 >>> schema([])
 []
@@ -243,6 +243,59 @@ True
 []
 >>> schema([1, 2])
 [1, 2]
+
+```
+
+### Sets and frozensets
+
+Sets and frozensets are treated as a set of valid values. Each element
+in the schema set is compared to each value in the input data:
+
+```pycon
+>>> schema = Schema({42})
+>>> schema({42}) == {42}
+True
+>>> try:
+...   schema({43})
+...   raise AssertionError('MultipleInvalid not raised')
+... except MultipleInvalid as e:
+...   exc = e
+>>> str(exc) == "invalid value in set"
+True
+>>> schema = Schema({int})
+>>> schema({1, 2, 3}) == {1, 2, 3}
+True
+>>> schema = Schema({int, str})
+>>> schema({1, 2, 'abc'}) == {1, 2, 'abc'}
+True
+>>> schema = Schema(frozenset([int]))
+>>> try:
+...   schema({3})
+...   raise AssertionError('Invalid not raised')
+... except Invalid as e:
+...   exc = e
+>>> str(exc) == 'expected a frozenset'
+True
+
+```
+
+However, an empty set (`set()`) is treated as is. If you want to specify a set
+that can contain anything, specify it as `set`:
+
+```pycon
+>>> schema = Schema(set())
+>>> try:
+...   schema({1})
+...   raise AssertionError('MultipleInvalid not raised')
+... except MultipleInvalid as e:
+...   exc = e
+>>> str(exc) == "invalid value in set"
+True
+>>> schema(set()) == set()
+True
+>>> schema = Schema(set)
+>>> schema({1, 2}) == {1, 2}
+True
 
 ```
 
@@ -368,28 +421,6 @@ token `extra` as a key:
 
 ```
 
-However, an empty dict (`{}`) is treated as is. If you want to specify a list that can
-contain anything, specify it as `dict`:
-
-```pycon
->>> schema = Schema({}, extra=ALLOW_EXTRA)  # don't do this
->>> try:
-...   schema({'extra': 1})
-...   raise AssertionError('MultipleInvalid not raised')
-... except MultipleInvalid as e:
-...   exc = e
->>> str(exc) == "not a valid value"
-True
->>> schema({})
-{}
->>> schema = Schema(dict)  # do this instead
->>> schema({})
-{}
->>> schema({'extra': 1})
-{'extra': 1}
-
-```
-
 #### Required dictionary keys
 
 By default, keys in the schema are not required to be in the data:
@@ -465,18 +496,15 @@ True
 
 ```
 
-### Recursive schema
+### Recursive / nested schema
 
-There is no syntax to have a recursive schema. The best way to do it is to have a wrapper like this:
+You can use `voluptuous.Self` to define a nested schema:
 
 ```pycon
->>> from voluptuous import Schema, Any
->>> def s2(v):
-...     return s1(v)
-...
->>> s1 = Schema({"key": Any(s2, "value")})
->>> s1({"key": {"key": "value"}})
-{'key': {'key': 'value'}}
+>>> from voluptuous import Schema, Self
+>>> recursive = Schema({"more": Self, "value": int})
+>>> recursive({"more": {"value": 42}, "value": 41}) == {'more': {'value': 42}, 'value': 41}
+True
 
 ```
 
@@ -609,6 +637,48 @@ to the second element in the schema, and succeed:
 
 ```
 
+## Multi-field validation
+
+Validation rules that involve multiple fields can be implemented as
+custom validators. It's recommended to use `All()` to do a two-pass
+validation - the first pass checking the basic structure of the data,
+and only after that, the second pass applying your cross-field
+validator:
+
+```python
+def passwords_must_match(passwords):
+    if passwords['password'] != passwords['password_again']:
+        raise Invalid('passwords must match')
+    return passwords
+
+s=Schema(All(
+    # First "pass" for field types
+    {'password':str, 'password_again':str},
+    # Follow up the first "pass" with your multi-field rules
+    passwords_must_match
+))
+
+# valid
+s({'password':'123', 'password_again':'123'})
+
+# raises MultipleInvalid: passwords must match
+s({'password':'123', 'password_again':'and now for something completely different'})
+
+```
+
+With this structure, your multi-field validator will run with
+pre-validated data from the first "pass" and so will not have to do
+its own type checking on its inputs.
+
+The flipside is that if the first "pass" of validation fails, your
+cross-field validator will not run:
+
+```
+# raises Invalid because password_again is not a string
+# passwords_must_match() will not run because first-pass validation already failed
+s({'password':'123', 'password_again': 1337})
+```
+
 ## Running tests.
 
 Voluptuous is using nosetests:
@@ -644,6 +714,10 @@ Voluptuous is heavily inspired by
 [Validino](http://code.google.com/p/validino/), and to a lesser extent,
 [jsonvalidator](http://code.google.com/p/jsonvalidator/) and
 [json\_schema](http://blog.sendapatch.se/category/json_schema.html).
+
+[pytest-voluptuous](https://github.com/F-Secure/pytest-voluptuous) is a
+[pytest](https://github.com/pytest-dev/pytest) plugin that helps in
+using voluptuous validators in `assert`s.
 
 I greatly prefer the light-weight style promoted by these libraries to
 the complexity of libraries like FormEncode.

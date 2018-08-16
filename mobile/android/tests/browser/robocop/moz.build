@@ -15,7 +15,6 @@ for var in ('MOZ_ANDROID_MIN_SDK_VERSION',
 
 TEST_HARNESS_FILES.testing.mochitest += [
     'robocop.ini',
-    'robocop_autophone2.ini',
 ]
 TEST_HARNESS_FILES.testing.mochitest.tests.robocop += [
     '*.html',

@@ -393,28 +393,31 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
     rv = aChannel->GetURI(getter_AddRefs(chanURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Third party checks don't work for chrome:// URIs in mochitests, so just
-    // default to isThirdParty = true. We check isThirdPartyWindow to expand
-    // the list of domains that are considered first party (e.g., if
-    // facebook.com includes an iframe from fatratgames.com, all subsources
-    // included in that iframe are considered third-party with
-    // isThirdPartyChannel, even if they are not third-party w.r.t.
-    // facebook.com), and isThirdPartyChannel to prevent top-level navigations
-    // from being detected as third-party.
-    bool isThirdPartyChannel = true;
-    bool isThirdPartyWindow = true;
-    thirdPartyUtil->IsThirdPartyURI(chanURI, topWinURI, &isThirdPartyWindow);
-    thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdPartyChannel);
-    if (!isThirdPartyWindow || !isThirdPartyChannel) {
-      *result = false;
-      if (LOG_ENABLED()) {
-        nsCString spec = chanURI->GetSpecOrDefault();
-        spec.Truncate(std::min(spec.Length(), sMaxSpecLength));
-        LOG(("nsChannelClassifier[%p]: Skipping tracking protection checks "
-             "for first party or top-level load channel[%p] with uri %s",
-             this, aChannel, spec.get()));
+    // Only perform third-party checks for tracking protection
+    if (!aAnnotationsOnly) {
+      // Third party checks don't work for chrome:// URIs in mochitests, so just
+      // default to isThirdParty = true. We check isThirdPartyWindow to expand
+      // the list of domains that are considered first party (e.g., if
+      // facebook.com includes an iframe from fatratgames.com, all subsources
+      // included in that iframe are considered third-party with
+      // isThirdPartyChannel, even if they are not third-party w.r.t.
+      // facebook.com), and isThirdPartyChannel to prevent top-level navigations
+      // from being detected as third-party.
+      bool isThirdPartyChannel = true;
+      bool isThirdPartyWindow = true;
+      thirdPartyUtil->IsThirdPartyURI(chanURI, topWinURI, &isThirdPartyWindow);
+      thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdPartyChannel);
+      if (!isThirdPartyWindow || !isThirdPartyChannel) {
+        *result = false;
+        if (LOG_ENABLED()) {
+          nsCString spec = chanURI->GetSpecOrDefault();
+          spec.Truncate(std::min(spec.Length(), sMaxSpecLength));
+          LOG(("nsChannelClassifier[%p]: Skipping tracking protection checks "
+               "for first party or top-level load channel[%p] with uri %s",
+               this, aChannel, spec.get()));
+        }
+        return NS_OK;
       }
-      return NS_OK;
     }
 
     if (AddonMayLoad(aChannel, chanURI)) {
@@ -951,9 +954,7 @@ TrackingURICallback::OnClassifyComplete(nsresult aErrorCode,
   const bool shouldEnableTrackingProtection =
     mChannelClassifier->ShouldEnableTrackingProtection();
   const bool shouldEnableTrackingAnnotation =
-    mChannelClassifier->ShouldEnableTrackingAnnotation() ||
-    StaticPrefs::network_cookie_cookieBehavior() ==
-      nsICookieService::BEHAVIOR_REJECT_TRACKER;
+    mChannelClassifier->ShouldEnableTrackingAnnotation();
   MOZ_ASSERT(shouldEnableTrackingProtection || shouldEnableTrackingAnnotation);
 
   LOG(("TrackingURICallback[%p]:OnClassifyComplete "
@@ -1200,9 +1201,7 @@ TrackingURICallback::OnTrackerFound(nsresult aErrorCode)
     channel->Cancel(aErrorCode);
   } else {
     MOZ_ASSERT(aErrorCode == NS_ERROR_TRACKING_ANNOTATION_URI);
-    MOZ_ASSERT(mChannelClassifier->ShouldEnableTrackingAnnotation() ||
-               StaticPrefs::network_cookie_cookieBehavior() ==
-                 nsICookieService::BEHAVIOR_REJECT_TRACKER);
+    MOZ_ASSERT(mChannelClassifier->ShouldEnableTrackingAnnotation());
 
     LOG(("TrackingURICallback[%p]::OnTrackerFound, annotating channel[%p]",
          mChannelClassifier.get(), channel.get()));
@@ -1424,8 +1423,7 @@ nsChannelClassifier::CheckIsTrackerWithLocalTable(std::function<void()>&& aCallb
   }
 
   const bool shouldEnableTrackingProtection = ShouldEnableTrackingProtection();
-  const bool shouldEnableTrackingAnnotation = ShouldEnableTrackingAnnotation() ||
-    StaticPrefs::network_cookie_cookieBehavior() == nsICookieService::BEHAVIOR_REJECT_TRACKER;
+  const bool shouldEnableTrackingAnnotation = ShouldEnableTrackingAnnotation();
   if (!shouldEnableTrackingProtection && !shouldEnableTrackingAnnotation) {
     return NS_ERROR_FAILURE;
   }

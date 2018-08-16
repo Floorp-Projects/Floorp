@@ -36,7 +36,7 @@ function createOriginalSource(originalUrl, generatedSource, sourceMaps) {
   return {
     url: originalUrl,
     relativeUrl: originalUrl,
-    id: sourceMaps.generatedToOriginalId(generatedSource.id, originalUrl),
+    id: (0, _devtoolsSourceMap.generatedToOriginalId)(generatedSource.id, originalUrl),
     isPrettyPrinted: false,
     isWasm: false,
     isBlackBoxed: false,
@@ -142,7 +142,7 @@ function checkPendingBreakpoints(sourceId) {
   }) => {
     // source may have been modified by selectLocation
     const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
-    const pendingBreakpoints = (0, _selectors.getPendingBreakpointsForSource)(getState(), source.url);
+    const pendingBreakpoints = (0, _selectors.getPendingBreakpointsForSource)(getState(), source);
 
     if (pendingBreakpoints.length === 0) {
       return;
@@ -201,14 +201,14 @@ function newSources(sources) {
       type: "ADD_SOURCES",
       sources: sources
     });
+    await dispatch(loadSourceMaps(sources));
 
     for (const source of sources) {
       dispatch(checkSelectedSource(source.id));
       dispatch(checkPendingBreakpoints(source.id));
-    }
-
-    await dispatch(loadSourceMaps(sources)); // We would like to restore the blackboxed state
+    } // We would like to restore the blackboxed state
     // after loading all states to make sure the correctness.
+
 
     await dispatch(restoreBlackBoxedSources(sources));
   };

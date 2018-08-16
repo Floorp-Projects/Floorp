@@ -1,5 +1,6 @@
 from __future__ import division, print_function, unicode_literals
 
+from collections import OrderedDict
 from decimal import Decimal
 from doctest import DocTestSuite
 from fractions import Fraction
@@ -112,6 +113,90 @@ class FirstTests(TestCase):
     def test_default(self):
         """It should return the provided default arg for empty iterables."""
         self.assertEqual(mi.first([], 'boo'), 'boo')
+
+
+class IterOnlyRange:
+    """User-defined iterable class which only support __iter__.
+
+    It is not specified to inherit ``object``, so indexing on a instance will
+    raise an ``AttributeError`` rather than ``TypeError`` in Python 2.
+
+    >>> r = IterOnlyRange(5)
+    >>> r[0]
+    AttributeError: IterOnlyRange instance has no attribute '__getitem__'
+
+    Note: In Python 3, ``TypeError`` will be raised because ``object`` is
+    inherited implicitly by default.
+
+    >>> r[0]
+    TypeError: 'IterOnlyRange' object does not support indexing
+    """
+    def __init__(self, n):
+        """Set the length of the range."""
+        self.n = n
+
+    def __iter__(self):
+        """Works same as range()."""
+        return iter(range(self.n))
+
+
+class LastTests(TestCase):
+    """Tests for ``last()``"""
+
+    def test_many_nonsliceable(self):
+        """Test that it works on many-item non-slice-able iterables."""
+        # Also try it on a generator expression to make sure it works on
+        # whatever those return, across Python versions.
+        self.assertEqual(mi.last(x for x in range(4)), 3)
+
+    def test_one_nonsliceable(self):
+        """Test that it doesn't raise StopIteration prematurely."""
+        self.assertEqual(mi.last(x for x in range(1)), 0)
+
+    def test_empty_stop_iteration_nonsliceable(self):
+        """It should raise ValueError for empty non-slice-able iterables."""
+        self.assertRaises(ValueError, lambda: mi.last(x for x in range(0)))
+
+    def test_default_nonsliceable(self):
+        """It should return the provided default arg for empty non-slice-able
+        iterables.
+        """
+        self.assertEqual(mi.last((x for x in range(0)), 'boo'), 'boo')
+
+    def test_many_sliceable(self):
+        """Test that it works on many-item slice-able iterables."""
+        self.assertEqual(mi.last([0, 1, 2, 3]), 3)
+
+    def test_one_sliceable(self):
+        """Test that it doesn't raise StopIteration prematurely."""
+        self.assertEqual(mi.last([3]), 3)
+
+    def test_empty_stop_iteration_sliceable(self):
+        """It should raise ValueError for empty slice-able iterables."""
+        self.assertRaises(ValueError, lambda: mi.last([]))
+
+    def test_default_sliceable(self):
+        """It should return the provided default arg for empty slice-able
+        iterables.
+        """
+        self.assertEqual(mi.last([], 'boo'), 'boo')
+
+    def test_dict(self):
+        """last(dic) and last(dic.keys()) should return same result."""
+        dic = {'a': 1, 'b': 2, 'c': 3}
+        self.assertEqual(mi.last(dic), mi.last(dic.keys()))
+
+    def test_ordereddict(self):
+        """last(dic) should return the last key."""
+        od = OrderedDict()
+        od['a'] = 1
+        od['b'] = 2
+        od['c'] = 3
+        self.assertEqual(mi.last(od), 'c')
+
+    def test_customrange(self):
+        """It should work on custom class where [] raises AttributeError."""
+        self.assertEqual(mi.last(IterOnlyRange(5)), 4)
 
 
 class PeekableTests(TestCase):
@@ -1462,6 +1547,26 @@ class LocateTests(TestCase):
         expected = [0, 3, 5, 6]
         self.assertEqual(actual, expected)
 
+    def test_window_size(self):
+        iterable = ['0', 1, 1, '0', 1, '0', '0']
+        pred = lambda *args: args == ('0', 1)
+        actual = list(mi.locate(iterable, pred, window_size=2))
+        expected = [0, 3]
+        self.assertEqual(actual, expected)
+
+    def test_window_size_large(self):
+        iterable = [1, 2, 3, 4]
+        pred = lambda a, b, c, d, e: True
+        actual = list(mi.locate(iterable, pred, window_size=5))
+        expected = [0]
+        self.assertEqual(actual, expected)
+
+    def test_window_size_zero(self):
+        iterable = [1, 2, 3, 4]
+        pred = lambda: True
+        with self.assertRaises(ValueError):
+            list(mi.locate(iterable, pred, window_size=0))
+
 
 class StripFunctionTests(TestCase):
     def test_hashable(self):
@@ -1846,3 +1951,124 @@ class MapReduceTests(TestCase):
         d = mi.map_reduce([1, 0, 2, 0, 1, 0], bool)
         self.assertEqual(d, {False: [0, 0, 0], True: [1, 2, 1]})
         self.assertRaises(KeyError, lambda: d[None].append(1))
+
+
+class RlocateTests(TestCase):
+    def test_default_pred(self):
+        iterable = [0, 1, 1, 0, 1, 0, 0]
+        for it in (iterable[:], iter(iterable)):
+            actual = list(mi.rlocate(it))
+            expected = [4, 2, 1]
+            self.assertEqual(actual, expected)
+
+    def test_no_matches(self):
+        iterable = [0, 0, 0]
+        for it in (iterable[:], iter(iterable)):
+            actual = list(mi.rlocate(it))
+            expected = []
+            self.assertEqual(actual, expected)
+
+    def test_custom_pred(self):
+        iterable = ['0', 1, 1, '0', 1, '0', '0']
+        pred = lambda x: x == '0'
+        for it in (iterable[:], iter(iterable)):
+            actual = list(mi.rlocate(it, pred))
+            expected = [6, 5, 3, 0]
+            self.assertEqual(actual, expected)
+
+    def test_efficient_reversal(self):
+        iterable = range(10 ** 10)  # Is efficiently reversible
+        target = 10 ** 10 - 2
+        pred = lambda x: x == target  # Find-able from the right
+        actual = next(mi.rlocate(iterable, pred))
+        self.assertEqual(actual, target)
+
+    def test_window_size(self):
+        iterable = ['0', 1, 1, '0', 1, '0', '0']
+        pred = lambda *args: args == ('0', 1)
+        for it in (iterable, iter(iterable)):
+            actual = list(mi.rlocate(it, pred, window_size=2))
+            expected = [3, 0]
+            self.assertEqual(actual, expected)
+
+    def test_window_size_large(self):
+        iterable = [1, 2, 3, 4]
+        pred = lambda a, b, c, d, e: True
+        for it in (iterable, iter(iterable)):
+            actual = list(mi.rlocate(iterable, pred, window_size=5))
+            expected = [0]
+            self.assertEqual(actual, expected)
+
+    def test_window_size_zero(self):
+        iterable = [1, 2, 3, 4]
+        pred = lambda: True
+        for it in (iterable, iter(iterable)):
+            with self.assertRaises(ValueError):
+                list(mi.locate(iterable, pred, window_size=0))
+
+
+class ReplaceTests(TestCase):
+    def test_basic(self):
+        iterable = range(10)
+        pred = lambda x: x % 2 == 0
+        substitutes = []
+        actual = list(mi.replace(iterable, pred, substitutes))
+        expected = [1, 3, 5, 7, 9]
+        self.assertEqual(actual, expected)
+
+    def test_count(self):
+        iterable = range(10)
+        pred = lambda x: x % 2 == 0
+        substitutes = []
+        actual = list(mi.replace(iterable, pred, substitutes, count=4))
+        expected = [1, 3, 5, 7, 8, 9]
+        self.assertEqual(actual, expected)
+
+    def test_window_size(self):
+        iterable = range(10)
+        pred = lambda *args: args == (0, 1, 2)
+        substitutes = []
+        actual = list(mi.replace(iterable, pred, substitutes, window_size=3))
+        expected = [3, 4, 5, 6, 7, 8, 9]
+        self.assertEqual(actual, expected)
+
+    def test_window_size_end(self):
+        iterable = range(10)
+        pred = lambda *args: args == (7, 8, 9)
+        substitutes = []
+        actual = list(mi.replace(iterable, pred, substitutes, window_size=3))
+        expected = [0, 1, 2, 3, 4, 5, 6]
+        self.assertEqual(actual, expected)
+
+    def test_window_size_count(self):
+        iterable = range(10)
+        pred = lambda *args: (args == (0, 1, 2)) or (args == (7, 8, 9))
+        substitutes = []
+        actual = list(
+            mi.replace(iterable, pred, substitutes, count=1, window_size=3)
+        )
+        expected = [3, 4, 5, 6, 7, 8, 9]
+        self.assertEqual(actual, expected)
+
+    def test_window_size_large(self):
+        iterable = range(4)
+        pred = lambda a, b, c, d, e: True
+        substitutes = [5, 6, 7]
+        actual = list(mi.replace(iterable, pred, substitutes, window_size=5))
+        expected = [5, 6, 7]
+        self.assertEqual(actual, expected)
+
+    def test_window_size_zero(self):
+        iterable = range(10)
+        pred = lambda *args: True
+        substitutes = []
+        with self.assertRaises(ValueError):
+            list(mi.replace(iterable, pred, substitutes, window_size=0))
+
+    def test_iterable_substitutes(self):
+        iterable = range(5)
+        pred = lambda x: x % 2 == 0
+        substitutes = iter('__')
+        actual = list(mi.replace(iterable, pred, substitutes))
+        expected = ['_', '_', 1, '_', '_', 3, '_', '_']
+        self.assertEqual(actual, expected)

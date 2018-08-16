@@ -17,7 +17,6 @@ const {
   getTypeFilteredRequests,
 } = require("../selectors/index");
 const { autocompleteProvider } = require("../utils/filter-autocomplete-provider");
-const { LocalizationHelper } = require("devtools/shared/l10n");
 const { L10N } = require("../utils/l10n");
 const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 
@@ -28,6 +27,7 @@ const {
 const LEARN_MORE_URL = getFilterBoxURL();
 
 // Components
+const NetworkThrottlingMenu = createFactory(require("devtools/client/shared/components/throttling/NetworkThrottlingMenu"));
 const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
 
 const { button, div, input, label, span } = dom;
@@ -51,17 +51,13 @@ const ENABLE_PERSISTENT_LOGS_LABEL =
   L10N.getStr("netmonitor.toolbar.enablePersistentLogs.label");
 const DISABLE_CACHE_TOOLTIP = L10N.getStr("netmonitor.toolbar.disableCache.tooltip");
 const DISABLE_CACHE_LABEL = L10N.getStr("netmonitor.toolbar.disableCache.label");
-const NO_THROTTLING_LABEL = new LocalizationHelper(
-  "devtools/client/locales/network-throttling.properties"
-  ).getStr("responsive.noThrottling");
 
 // Menu
-loader.lazyRequireGetter(this, "showMenu", "devtools/client/netmonitor/src/utils/menu", true);
+loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
 loader.lazyRequireGetter(this, "HarMenuUtils", "devtools/client/netmonitor/src/har/har-menu-utils", true);
 
 // Throttling
 const Types = require("devtools/client/shared/components/throttling/types");
-const throttlingProfiles = require("devtools/client/shared/components/throttling/profiles");
 const { changeNetworkThrottling } = require("devtools/client/shared/components/throttling/actions");
 
 /**
@@ -282,54 +278,18 @@ class Toolbar extends Component {
   }
 
   /**
-   * Render network throttling selector button.
+   * Render network throttling menu button.
    */
-  renderThrottlingSelector() {
-    const {
-      networkThrottling,
-    } = this.props;
-
-    const selectedProfile = networkThrottling.enabled ?
-      networkThrottling.profile : NO_THROTTLING_LABEL;
-    return button({
-      id: "global-network-throttling-selector",
-      title: selectedProfile,
-      className: "devtools-button devtools-drop-down-button",
-      onClick: evt => {
-        this.showThrottlingSelector(evt.target);
-      },
-    },
-    dom.span({className: "title"},
-      selectedProfile)
-    );
-  }
-
-  showThrottlingSelector(menuButton) {
+  renderThrottlingMenu() {
     const {
       networkThrottling,
       onChangeNetworkThrottling,
     } = this.props;
 
-    const menuItems = throttlingProfiles.map(profile => {
-      return {
-        label: profile.id,
-        type: "checkbox",
-        checked: networkThrottling.enabled &&
-          (profile.id == networkThrottling.profile),
-        click: () => onChangeNetworkThrottling(true, profile.id),
-      };
+    return NetworkThrottlingMenu({
+      networkThrottling,
+      onChangeNetworkThrottling,
     });
-
-    menuItems.unshift("-");
-
-    menuItems.unshift({
-      label: NO_THROTTLING_LABEL,
-      type: "checkbox",
-      checked: !networkThrottling.enabled,
-      click: () => onChangeNetworkThrottling(false, ""),
-    });
-
-    showMenu(menuItems, { button: menuButton });
   }
 
   /**
@@ -339,7 +299,7 @@ class Toolbar extends Component {
     return button({
       id: "devtools-har-button",
       title: TOOLBAR_HAR_BUTTON,
-      className: "devtools-button devtools-har-button devtools-drop-down-button",
+      className: "devtools-button devtools-dropdown-button",
       onClick: evt => {
         this.showHarMenu(evt.target);
       },
@@ -438,7 +398,7 @@ class Toolbar extends Component {
           this.renderPersistlogCheckbox(persistentLogsEnabled, togglePersistentLogs),
           this.renderCacheCheckbox(browserCacheDisabled, toggleBrowserCache),
           this.renderSeparator(),
-          this.renderThrottlingSelector(),
+          this.renderThrottlingMenu(),
           this.renderHarButton(),
         )
       )
@@ -454,7 +414,7 @@ class Toolbar extends Component {
           this.renderPersistlogCheckbox(persistentLogsEnabled, togglePersistentLogs),
           this.renderCacheCheckbox(browserCacheDisabled, toggleBrowserCache),
           this.renderSeparator(),
-          this.renderThrottlingSelector(),
+          this.renderThrottlingMenu(),
           this.renderHarButton(),
         ),
         span({ className: "devtools-toolbar-group devtools-toolbar-two-rows-2" },

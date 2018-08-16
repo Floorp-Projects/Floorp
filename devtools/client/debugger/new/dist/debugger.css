@@ -1377,6 +1377,7 @@ html .toggle-button.end.vertical svg {
   overflow-x: auto;
   overflow-y: auto;
   height: 100%;
+  padding: 4px 0;
 }
 
 .sources-list {
@@ -1677,7 +1678,7 @@ menuseparator {
 
 .outline-list {
   list-style-type: none;
-  padding: 10px 0;
+  padding: 4px 0;
   margin: 0;
   font-family: var(--monospace-font-family);
   overflow: auto;
