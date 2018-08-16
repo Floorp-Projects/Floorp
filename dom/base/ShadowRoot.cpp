@@ -64,6 +64,7 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
   , mMode(aMode)
   , mServoStyles(Servo_AuthorStyles_Create())
   , mIsComposedDocParticipant(false)
+  , mIsUAWidget(false)
 {
   SetHost(aElement);
 
@@ -117,6 +118,12 @@ ShadowRoot::SetIsComposedDocParticipant(bool aIsComposedDocParticipant)
   } else {
     doc->RemoveComposedDocShadowRoot(*this);
   }
+}
+
+void
+ShadowRoot::SetIsUAWidget(bool aIsUAWidget)
+{
+  mIsUAWidget = aIsUAWidget;
 }
 
 JSObject*
@@ -547,6 +554,51 @@ void
 ShadowRoot::SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError)
 {
   SetInnerHTMLInternal(aInnerHTML, aError);
+}
+
+nsINode*
+ShadowRoot::ImportNodeAndAppendChildAt(nsINode& aParentNode,
+                                       nsINode& aNode,
+                                       bool aDeep,
+                                       mozilla::ErrorResult& rv)
+{
+  MOZ_ASSERT(mIsUAWidget);
+  MOZ_ASSERT(OwnerDoc());
+
+  if (!aParentNode.IsInUAWidget()) {
+    rv.Throw(NS_ERROR_INVALID_ARG);
+    return nullptr;
+  }
+
+  RefPtr<nsINode> node = OwnerDoc()->ImportNode(aNode, aDeep, rv);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+
+  return aParentNode.AppendChild(*node, rv);
+}
+
+nsINode*
+ShadowRoot::CreateElementAndAppendChildAt(nsINode& aParentNode,
+                                          const nsAString& aTagName,
+                                          mozilla::ErrorResult& rv) {
+  MOZ_ASSERT(mIsUAWidget);
+  MOZ_ASSERT(OwnerDoc());
+
+  if (!aParentNode.IsInUAWidget()) {
+    rv.Throw(NS_ERROR_INVALID_ARG);
+    return nullptr;
+  }
+
+  // This option is not exposed to UA Widgets
+  ElementCreationOptionsOrString options;
+
+  RefPtr<nsINode> node = OwnerDoc()->CreateElement(aTagName, options, rv);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+
+  return aParentNode.AppendChild(*node, rv);
 }
 
 void

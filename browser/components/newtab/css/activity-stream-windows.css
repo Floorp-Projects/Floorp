@@ -775,7 +775,7 @@ main {
 
 .topsite-form [type='checkbox']:not(:checked),
 .topsite-form [type='checkbox']:checked {
-  left: -9999px;
+  inset-inline-start: -9999px;
   position: absolute; }
 
 .topsite-form [type='checkbox']:not(:checked) + label,

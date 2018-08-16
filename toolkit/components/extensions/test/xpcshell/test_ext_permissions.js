@@ -412,6 +412,7 @@ const GRANTED_WITHOUT_USER_PROMPT = [
   "mozillaAddons",
   "search",
   "storage",
+  "telemetry",
   "theme",
   "webRequest",
   "webRequestBlocking",

@@ -516,7 +516,7 @@ $half-base-gutter: $base-gutter / 2;
   // CSS styled checkbox
   [type='checkbox']:not(:checked),
   [type='checkbox']:checked {
-    left: -9999px;
+    inset-inline-start: -9999px;
     position: absolute;
   }
 

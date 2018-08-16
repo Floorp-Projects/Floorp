@@ -2177,6 +2177,20 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::GetUAWidgetScope(nsIPrincipal* principal,
+                                        JSContext* cx,
+                                        MutableHandleValue rval)
+{
+    rval.set(UndefinedValue());
+
+    JSObject* scope = xpc::GetUAWidgetScope(cx, principal);
+
+    rval.set(JS::ObjectValue(*scope));
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::GetSandboxMetadata(HandleValue sandboxVal,
                                           JSContext* cx, MutableHandleValue rval)
 {

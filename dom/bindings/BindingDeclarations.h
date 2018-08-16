@@ -521,32 +521,38 @@ GetWrapperCache(const SmartPtr<T>& aObject)
   return GetWrapperCache(aObject.get());
 }
 
+enum class ReflectionScope {
+  Content,
+  XBL,
+  UAWidget
+};
+
 struct MOZ_STACK_CLASS ParentObject {
   template<class T>
   MOZ_IMPLICIT ParentObject(T* aObject) :
     mObject(aObject),
     mWrapperCache(GetWrapperCache(aObject)),
-    mUseXBLScope(false)
+    mReflectionScope(ReflectionScope::Content)
   {}
 
   template<class T, template<typename> class SmartPtr>
   MOZ_IMPLICIT ParentObject(const SmartPtr<T>& aObject) :
     mObject(aObject.get()),
     mWrapperCache(GetWrapperCache(aObject.get())),
-    mUseXBLScope(false)
+    mReflectionScope(ReflectionScope::Content)
   {}
 
   ParentObject(nsISupports* aObject, nsWrapperCache* aCache) :
     mObject(aObject),
     mWrapperCache(aCache),
-    mUseXBLScope(false)
+    mReflectionScope(ReflectionScope::Content)
   {}
 
   // We don't want to make this an nsCOMPtr because of performance reasons, but
   // it's safe because ParentObject is a stack class.
   nsISupports* const MOZ_NON_OWNING_REF mObject;
   nsWrapperCache* const mWrapperCache;
-  bool mUseXBLScope;
+  ReflectionScope mReflectionScope;
 };
 
 namespace binding_detail {

@@ -74,6 +74,8 @@ public:
               const ReflowInput& aReflowInput,
               nsReflowStatus&    aStatus) override;
 
+  bool IsLeafDynamic() const override;
+
 #ifdef ACCESSIBILITY
   mozilla::a11y::AccType AccessibleType() override;
 #endif
@@ -95,8 +97,7 @@ public:
   bool ShouldDisplayPoster();
 
   nsIContent *GetCaptionOverlay() { return mCaptionDiv; }
-
-  nsIContent *GetVideoControls() { return mVideoControls; }
+  nsIContent *GetVideoControls();
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;

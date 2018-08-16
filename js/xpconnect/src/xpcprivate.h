@@ -92,6 +92,8 @@
 #include <string.h>
 
 #include "xpcpublic.h"
+#include "js/HashTable.h"
+#include "js/GCHashTable.h"
 #include "js/TracingAPI.h"
 #include "js/WeakMapPtr.h"
 #include "PLDHashTable.h"
@@ -572,6 +574,8 @@ public:
     void AddGCCallback(xpcGCCallback cb);
     void RemoveGCCallback(xpcGCCallback cb);
 
+    JSObject* GetUAWidgetScope(JSContext* cx, nsIPrincipal* principal);
+
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
     JSObject* UnprivilegedJunkScope() { return mUnprivilegedJunkScope; }
@@ -595,11 +599,35 @@ private:
     jsid mStrIDs[XPCJSContext::IDX_TOTAL_COUNT];
     JS::Value mStrJSVals[XPCJSContext::IDX_TOTAL_COUNT];
 
+    struct Hasher {
+        typedef RefPtr<mozilla::BasePrincipal> Key;
+        typedef Key Lookup;
+        static uint32_t hash(const Lookup& l) {
+            return l->GetOriginNoSuffixHash();
+        }
+        static bool match(const Key& k, const Lookup& l) {
+            return k->FastEquals(l);
+        }
+    };
+
+    struct SweepPolicy {
+        static bool needsSweep(RefPtr<mozilla::BasePrincipal>* /* unused */, JS::Heap<JSObject*>* value) {
+            return JS::GCPolicy<JS::Heap<JSObject*>>::needsSweep(value);
+        }
+    };
+
+    typedef JS::GCHashMap<RefPtr<mozilla::BasePrincipal>,
+                          JS::Heap<JSObject*>,
+                          Hasher,
+                          js::SystemAllocPolicy,
+                          SweepPolicy> Principal2JSObjectMap;
+
     JSObject2WrappedJSMap*   mWrappedJSMap;
     IID2WrappedJSClassMap*   mWrappedJSClassMap;
     IID2NativeInterfaceMap*  mIID2NativeInterfaceMap;
     ClassInfo2NativeSetMap*  mClassInfo2NativeSetMap;
     NativeSetMap*            mNativeSetMap;
+    Principal2JSObjectMap    mUAWidgetScopeMap;
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
     bool mGCIsRunning;
     nsTArray<nsISupports*> mNativesToReleaseArray;
@@ -2638,6 +2666,7 @@ public:
         , sameZoneAs(cx)
         , freshZone(false)
         , isContentXBLScope(false)
+        , isUAWidgetScope(false)
         , invisibleToDebugger(false)
         , discardSource(false)
         , metadata(cx)
@@ -2657,6 +2686,7 @@ public:
     JS::RootedObject sameZoneAs;
     bool freshZone;
     bool isContentXBLScope;
+    bool isUAWidgetScope;
     bool invisibleToDebugger;
     bool discardSource;
     GlobalProperties globalProperties;
@@ -2907,8 +2937,16 @@ public:
     // such a compartment is a content XBL scope.
     bool isContentXBLCompartment;
 
+    // True if this compartment is a UA widget compartment.
+    bool isUAWidgetCompartment;
+
     // True if this is a sandbox compartment. See xpc::CreateSandboxObject.
     bool isSandboxCompartment;
+
+    // True if EnsureAddonCompartment has been called for this compartment.
+    // Note that this is false for extensions that ship with the browser, like
+    // browser/extensions/activity-stream.
+    bool isAddonCompartment;
 
     // This is only ever set during mochitest runs when enablePrivilege is called.
     // It's intended as a temporary stopgap measure until we can finish ripping out

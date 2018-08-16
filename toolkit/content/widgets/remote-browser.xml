@@ -10,8 +10,7 @@
 
   <binding id="remote-browser" extends="chrome://global/content/bindings/browser.xml#browser">
 
-    <implementation type="application/javascript"
-                    implements="nsIObserver, nsIRemoteBrowser">
+    <implementation type="application/javascript">
 
       <field name="_securityUI">null</field>
 
@@ -542,7 +541,7 @@
         ]]></body>
       </method>
 
-      <method name="enableDisableCommands">
+      <method name="enableDisableCommandsRemoteOnly">
         <parameter name="aAction"/>
         <parameter name="aEnabledLength"/>
         <parameter name="aEnabledCommands"/>

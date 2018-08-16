@@ -4,6 +4,7 @@
   <title>Video controls test - iframe</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -17,8 +18,6 @@
 <pre id="test">
 <script clas="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
-
-  const InspectorUtils = SpecialPowers.InspectorUtils;
 
   const iframe1 = document.getElementById("ifr1");
   const iframe2 = document.getElementById("ifr2");
@@ -36,11 +35,7 @@
       video.src = "seek_with_sound.ogg";
       video.addEventListener("loadedmetadata", resolve);
     })).then(() => new Promise(resolve => {
-      const children = InspectorUtils.getChildrenForNode(video, true);
-      const videoControl = children[1];
-      const doc = SpecialPowers.wrap(video.ownerDocument);
-      const controlBar = doc.getAnonymousElementByAttribute(
-        videoControl, "class", "controlBar");
+      const controlBar = getElementWithinVideo(video, "controlBar");
 
       is(controlBar.getAttribute("fullscreen-unavailable") == "true", !available, "The controlbar should have an attribute marking whether fullscreen is available that corresponds to if the iframe has the allowfullscreen attribute.");
       resolve();

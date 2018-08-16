@@ -217,7 +217,8 @@ this.TopSitesFeed = class TopSitesFeed {
 
     // Get all frecent sites from history
     const frecent = (await this.frecentCache.request({
-      numItems,
+      // We need to overquery due to the top 5 alexa search + default search possibly being removed
+      numItems: numItems + SEARCH_FILTERS.length + 1,
       topsiteFrecency: FRECENCY_THRESHOLD
     }))
     .reduce((validLinks, link) => {
@@ -612,6 +613,32 @@ this.TopSitesFeed = class TopSitesFeed {
     this._broadcastPinnedSitesUpdated();
   }
 
+  updatePinnedSearchShortcuts({addedShortcuts, deletedShortcuts}) {
+    // Unpin the deletedShortcuts.
+    deletedShortcuts.forEach(({url}) => {
+      NewTabUtils.pinnedLinks.unpin({url});
+    });
+
+    // Pin the addedShortcuts.
+    const numberOfSlots = this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
+    addedShortcuts.forEach(shortcut => {
+      // Find first hole in pinnedLinks.
+      let index = NewTabUtils.pinnedLinks.links.findIndex(link => !link);
+      if (index < 0 && NewTabUtils.pinnedLinks.links.length + 1 < numberOfSlots) {
+        // pinnedLinks can have less slots than the total available.
+        index = NewTabUtils.pinnedLinks.links.length;
+      }
+      if (index >= 0) {
+        NewTabUtils.pinnedLinks.pin(shortcut, index);
+      } else {
+        // No slots available, we need to do an insert in first slot and push over other pinned links.
+        this._insertPin(shortcut, 0, numberOfSlots);
+      }
+    });
+
+    this._broadcastPinnedSitesUpdated();
+  }
+
   onAction(action) {
     switch (action.type) {
       case at.INIT:
@@ -675,6 +702,9 @@ this.TopSitesFeed = class TopSitesFeed {
         break;
       case at.PREVIEW_REQUEST:
         this.getScreenshotPreview(action.data.url, action.meta.fromTarget);
+        break;
+      case at.UPDATE_PINNED_SEARCH_SHORTCUTS:
+        this.updatePinnedSearchShortcuts(action.data);
         break;
       case at.UNINIT:
         this.uninit();
