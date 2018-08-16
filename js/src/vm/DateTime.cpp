@@ -6,6 +6,7 @@
 
 #include "vm/DateTime.h"
 
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 
 #if defined(XP_WIN)
@@ -151,25 +152,15 @@ js::DateTimeInfo::internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode)
      * The difference between local standard time and UTC will never change for
      * a given time zone.
      */
-    utcToLocalStandardOffsetSeconds = UTCToLocalStandardOffsetSeconds();
+    utcToLocalStandardOffsetSeconds_ = UTCToLocalStandardOffsetSeconds();
 
-    double newTZA = utcToLocalStandardOffsetSeconds * msPerSecond;
+    int32_t newTZA = utcToLocalStandardOffsetSeconds_ * msPerSecond;
     if (mode == ResetTimeZoneMode::DontResetIfOffsetUnchanged && newTZA == localTZA_)
         return false;
 
     localTZA_ = newTZA;
 
-    /*
-     * The initial range values are carefully chosen to result in a cache miss
-     * on first use given the range of possible values.  Be careful to keep
-     * these values and the caching algorithm in sync!
-     */
-    offsetMilliseconds = 0;
-    rangeStartSeconds = rangeEndSeconds = INT64_MIN;
-    oldOffsetMilliseconds = 0;
-    oldRangeStartSeconds = oldRangeEndSeconds = INT64_MIN;
-
-    sanityCheck();
+    dstRange_.reset();
 
     return true;
 }
@@ -180,10 +171,23 @@ js::DateTimeInfo::DateTimeInfo()
 }
 
 int64_t
+js::DateTimeInfo::toClampedSeconds(int64_t milliseconds)
+{
+    int64_t seconds = milliseconds / msPerSecond;
+    if (seconds > MaxTimeT) {
+        seconds = MaxTimeT;
+    } else if (seconds < MinTimeT) {
+        /* Go ahead a day to make localtime work (does not work with 0). */
+        seconds = SecondsPerDay;
+    }
+    return seconds;
+}
+
+int32_t
 js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t utcSeconds)
 {
-    MOZ_ASSERT(utcSeconds >= 0);
-    MOZ_ASSERT(utcSeconds <= MaxUnixTimeT);
+    MOZ_ASSERT(utcSeconds >= MinTimeT);
+    MOZ_ASSERT(utcSeconds <= MaxTimeT);
 
     struct tm tm;
     if (!ComputeLocalTime(static_cast<time_t>(utcSeconds), &tm))
@@ -191,7 +195,7 @@ js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t utcSeconds)
 
     // NB: The offset isn't computed correctly when the standard local offset
     //     at |utcSeconds| is different from |utcToLocalStandardOffsetSeconds|.
-    int32_t dayoff = int32_t((utcSeconds + utcToLocalStandardOffsetSeconds) % SecondsPerDay);
+    int32_t dayoff = int32_t((utcSeconds + utcToLocalStandardOffsetSeconds_) % SecondsPerDay);
     int32_t tmoff = tm.tm_sec + (tm.tm_min * SecondsPerMinute) + (tm.tm_hour * SecondsPerHour);
 
     int32_t diff = tmoff - dayoff;
@@ -204,93 +208,113 @@ js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t utcSeconds)
     return diff * msPerSecond;
 }
 
-int64_t
+int32_t
 js::DateTimeInfo::internalGetDSTOffsetMilliseconds(int64_t utcMilliseconds)
 {
-    sanityCheck();
+    int64_t utcSeconds = toClampedSeconds(utcMilliseconds);
+    return getOrComputeValue(dstRange_, utcSeconds, &DateTimeInfo::computeDSTOffsetMilliseconds);
+}
 
-    int64_t utcSeconds = utcMilliseconds / msPerSecond;
+int32_t
+js::DateTimeInfo::getOrComputeValue(RangeCache& range, int64_t seconds, ComputeFn compute)
+{
+    range.sanityCheck();
 
-    if (utcSeconds > MaxUnixTimeT) {
-        utcSeconds = MaxUnixTimeT;
-    } else if (utcSeconds < 0) {
-        /* Go ahead a day to make localtime work (does not work with 0). */
-        utcSeconds = SecondsPerDay;
-    }
+    auto checkSanity = mozilla::MakeScopeExit([&range]() {
+        range.sanityCheck();
+    });
 
-    /*
-     * NB: Be aware of the initial range values when making changes to this
-     *     code: the first call to this method, with those initial range
-     *     values, must result in a cache miss.
-     */
+    // NB: Be aware of the initial range values when making changes to this
+    //     code: the first call to this method, with those initial range
+    //     values, must result in a cache miss.
+    MOZ_ASSERT(seconds != INT64_MIN);
 
-    if (rangeStartSeconds <= utcSeconds && utcSeconds <= rangeEndSeconds)
-        return offsetMilliseconds;
+    if (range.startSeconds <= seconds && seconds <= range.endSeconds)
+        return range.offsetMilliseconds;
 
-    if (oldRangeStartSeconds <= utcSeconds && utcSeconds <= oldRangeEndSeconds)
-        return oldOffsetMilliseconds;
+    if (range.oldStartSeconds <= seconds && seconds <= range.oldEndSeconds)
+        return range.oldOffsetMilliseconds;
 
-    oldOffsetMilliseconds = offsetMilliseconds;
-    oldRangeStartSeconds = rangeStartSeconds;
-    oldRangeEndSeconds = rangeEndSeconds;
+    range.oldOffsetMilliseconds = range.offsetMilliseconds;
+    range.oldStartSeconds = range.startSeconds;
+    range.oldEndSeconds = range.endSeconds;
 
-    if (rangeStartSeconds <= utcSeconds) {
-        int64_t newEndSeconds = Min(rangeEndSeconds + RangeExpansionAmount, MaxUnixTimeT);
-        if (newEndSeconds >= utcSeconds) {
-            int64_t endOffsetMilliseconds = computeDSTOffsetMilliseconds(newEndSeconds);
-            if (endOffsetMilliseconds == offsetMilliseconds) {
-                rangeEndSeconds = newEndSeconds;
-                return offsetMilliseconds;
+    if (range.startSeconds <= seconds) {
+        int64_t newEndSeconds = Min(range.endSeconds + RangeExpansionAmount, MaxTimeT);
+        if (newEndSeconds >= seconds) {
+            int32_t endOffsetMilliseconds = (this->*compute)(newEndSeconds);
+            if (endOffsetMilliseconds == range.offsetMilliseconds) {
+                range.endSeconds = newEndSeconds;
+                return range.offsetMilliseconds;
             }
 
-            offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
-            if (offsetMilliseconds == endOffsetMilliseconds) {
-                rangeStartSeconds = utcSeconds;
-                rangeEndSeconds = newEndSeconds;
+            range.offsetMilliseconds = (this->*compute)(seconds);
+            if (range.offsetMilliseconds == endOffsetMilliseconds) {
+                range.startSeconds = seconds;
+                range.endSeconds = newEndSeconds;
             } else {
-                rangeEndSeconds = utcSeconds;
+                range.endSeconds = seconds;
             }
-            return offsetMilliseconds;
+            return range.offsetMilliseconds;
         }
 
-        offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
-        rangeStartSeconds = rangeEndSeconds = utcSeconds;
-        return offsetMilliseconds;
+        range.offsetMilliseconds = (this->*compute)(seconds);
+        range.startSeconds = range.endSeconds = seconds;
+        return range.offsetMilliseconds;
     }
 
-    int64_t newStartSeconds = Max<int64_t>(rangeStartSeconds - RangeExpansionAmount, 0);
-    if (newStartSeconds <= utcSeconds) {
-        int64_t startOffsetMilliseconds = computeDSTOffsetMilliseconds(newStartSeconds);
-        if (startOffsetMilliseconds == offsetMilliseconds) {
-            rangeStartSeconds = newStartSeconds;
-            return offsetMilliseconds;
+    int64_t newStartSeconds = Max<int64_t>(range.startSeconds - RangeExpansionAmount, MinTimeT);
+    if (newStartSeconds <= seconds) {
+        int32_t startOffsetMilliseconds = (this->*compute)(newStartSeconds);
+        if (startOffsetMilliseconds == range.offsetMilliseconds) {
+            range.startSeconds = newStartSeconds;
+            return range.offsetMilliseconds;
         }
 
-        offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
-        if (offsetMilliseconds == startOffsetMilliseconds) {
-            rangeStartSeconds = newStartSeconds;
-            rangeEndSeconds = utcSeconds;
+        range.offsetMilliseconds = (this->*compute)(seconds);
+        if (range.offsetMilliseconds == startOffsetMilliseconds) {
+            range.startSeconds = newStartSeconds;
+            range.endSeconds = seconds;
         } else {
-            rangeStartSeconds = utcSeconds;
+            range.startSeconds = seconds;
         }
-        return offsetMilliseconds;
+        return range.offsetMilliseconds;
     }
 
-    rangeStartSeconds = rangeEndSeconds = utcSeconds;
-    offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
-    return offsetMilliseconds;
+    range.startSeconds = range.endSeconds = seconds;
+    range.offsetMilliseconds = (this->*compute)(seconds);
+    return range.offsetMilliseconds;
 }
 
 void
-js::DateTimeInfo::sanityCheck()
+js::DateTimeInfo::RangeCache::reset()
 {
-    MOZ_ASSERT(rangeStartSeconds <= rangeEndSeconds);
-    MOZ_ASSERT_IF(rangeStartSeconds == INT64_MIN, rangeEndSeconds == INT64_MIN);
-    MOZ_ASSERT_IF(rangeEndSeconds == INT64_MIN, rangeStartSeconds == INT64_MIN);
-    MOZ_ASSERT_IF(rangeStartSeconds != INT64_MIN,
-                  rangeStartSeconds >= 0 && rangeEndSeconds >= 0);
-    MOZ_ASSERT_IF(rangeStartSeconds != INT64_MIN,
-                  rangeStartSeconds <= MaxUnixTimeT && rangeEndSeconds <= MaxUnixTimeT);
+    // The initial range values are carefully chosen to result in a cache miss
+    // on first use given the range of possible values. Be careful to keep
+    // these values and the caching algorithm in sync!
+    offsetMilliseconds = 0;
+    startSeconds = endSeconds = INT64_MIN;
+    oldOffsetMilliseconds = 0;
+    oldStartSeconds = oldEndSeconds = INT64_MIN;
+
+    sanityCheck();
+}
+
+void
+js::DateTimeInfo::RangeCache::sanityCheck()
+{
+    auto assertRange = [](int64_t start, int64_t end) {
+        MOZ_ASSERT(start <= end);
+        MOZ_ASSERT_IF(start == INT64_MIN, end == INT64_MIN);
+        MOZ_ASSERT_IF(end == INT64_MIN, start == INT64_MIN);
+        MOZ_ASSERT_IF(start != INT64_MIN,
+                      start >= MinTimeT && end >= MinTimeT);
+        MOZ_ASSERT_IF(start != INT64_MIN,
+                      start <= MaxTimeT && end <= MaxTimeT);
+    };
+
+    assertRange(startSeconds, endSeconds);
+    assertRange(oldStartSeconds, oldEndSeconds);
 }
 
 /* static */ js::ExclusiveData<js::DateTimeInfo>*

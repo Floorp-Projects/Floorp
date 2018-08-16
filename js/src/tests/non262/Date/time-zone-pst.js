@@ -6,20 +6,11 @@ assertEq(/^(PST|PDT)$/.test(getTimeZone()), true);
 
 const msPerMinute = 60 * 1000;
 
-const Month = {
-    January: 0,
-    February: 1,
-    March: 2,
-    April: 3,
-    May: 4,
-    June: 5,
-    July: 6,
-    August: 7,
-    September: 8,
-    October: 9,
-    November: 10,
-    December: 11,
-};
+function assertEqDate(dt, date, time) {
+    assertEq(dt.toString(), `${date} ${time}`);
+    assertEq(dt.toDateString(), date);
+    assertEq(dt.toTimeString(), time);
+}
 
 // PDT -> PST, using milliseconds from epoch.
 {
@@ -44,9 +35,7 @@ const Month = {
 
     for (let {offset, date, time} of tests) {
         let dt = new Date(midnight.getTime() + offset * msPerMinute);
-        assertEq(dt.toString(), `${date} ${time}`);
-        assertEq(dt.toDateString(), date);
-        assertEq(dt.toTimeString(), time);
+        assertEqDate(dt, date, time);
     }
 }
 
@@ -68,9 +57,7 @@ const Month = {
 
     for (let {offset, date, time} of tests) {
         let dt = new Date(2016, Month.November, 6, (offset / 60)|0, (offset % 60), 0, 0);
-        assertEq(dt.toString(), `${date} ${time}`);
-        assertEq(dt.toDateString(), date);
-        assertEq(dt.toTimeString(), time);
+        assertEqDate(dt, date, time);
     }
 }
 
@@ -98,9 +85,7 @@ const Month = {
 
     for (let {offset, date, time} of tests) {
         let dt = new Date(midnight.getTime() + offset * msPerMinute);
-        assertEq(dt.toString(), `${date} ${time}`);
-        assertEq(dt.toDateString(), date);
-        assertEq(dt.toTimeString(), time);
+        assertEqDate(dt, date, time);
     }
 }
 
@@ -122,9 +107,7 @@ const Month = {
 
     for (let {offset, date, time} of tests) {
         let dt = new Date(2016, Month.March, 13, (offset / 60)|0, (offset % 60), 0, 0);
-        assertEq(dt.toString(), `${date} ${time}`);
-        assertEq(dt.toDateString(), date);
-        assertEq(dt.toTimeString(), time);
+        assertEqDate(dt, date, time);
     }
 }
 

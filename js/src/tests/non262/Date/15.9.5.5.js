@@ -35,6 +35,8 @@ var expect = '';
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
+var now = new Date();
+
 // first, some generic tests -
 
 status = "typeof (now.toLocaleString())"; 
@@ -61,13 +63,13 @@ addDateTestCase(TZ_ADJUST);
 
   
 // 1900
-addDateTestCase(TIME_1900);
-addDateTestCase(TIME_1900 -TZ_ADJUST);
+addDateTestCase(UTC_01_JAN_1900);
+addDateTestCase(UTC_01_JAN_1900 -TZ_ADJUST);
 
   
 // 2000
-addDateTestCase(TIME_2000);
-addDateTestCase(TIME_2000 -TZ_ADJUST);
+addDateTestCase(UTC_01_JAN_2000);
+addDateTestCase(UTC_01_JAN_2000 -TZ_ADJUST);
 
    
 // 29 Feb 2000
@@ -77,9 +79,9 @@ addDateTestCase(UTC_29_FEB_2000 - TZ_ADJUST);
 
 
 // 2005
-addDateTestCase(UTC_1_JAN_2005);
-addDateTestCase(UTC_1_JAN_2005 - 1000);
-addDateTestCase(UTC_1_JAN_2005-TZ_ADJUST);
+addDateTestCase(UTC_01_JAN_2005);
+addDateTestCase(UTC_01_JAN_2005 - 1000);
+addDateTestCase(UTC_01_JAN_2005-TZ_ADJUST);
   
 
 
