@@ -9,8 +9,6 @@ dnl = Link Time Optimization (LTO)
 dnl ========================================================
 if test -n "$MOZ_LTO"; then
     AC_DEFINE(MOZ_LTO)
-    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
-
     CFLAGS="$CFLAGS $MOZ_LTO_CFLAGS"
     CPPFLAGS="$CPPFLAGS $MOZ_LTO_CFLAGS"
     CXXFLAGS="$CXXFLAGS $MOZ_LTO_CFLAGS"
