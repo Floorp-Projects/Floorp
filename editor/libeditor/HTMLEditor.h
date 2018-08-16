@@ -502,9 +502,6 @@ protected: // May be called by friends.
    */
   nsresult CollapseAdjacentTextNodes(nsRange* aRange);
 
-  virtual bool AreNodesSameType(nsIContent* aNode1,
-                                nsIContent* aNode2) override;
-
   /**
    * IsInVisibleTextFrames() returns true if all text in aText is in visible
    * text frames.  Callers have to guarantee that there is no pending reflow.
@@ -1678,6 +1675,7 @@ protected:
 
   friend class AutoSelectionSetterAfterTableEdit;
   friend class CSSEditUtils;
+  friend class EditorBase;
   friend class EmptyEditableFunctor;
   friend class HTMLEditRules;
   friend class TextEditor;
