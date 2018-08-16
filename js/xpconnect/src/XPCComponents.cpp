@@ -31,6 +31,7 @@
 #include "mozilla/Scheduler.h"
 #include "nsZipArchive.h"
 #include "nsWindowMemoryReporter.h"
+#include "nsICycleCollectorListener.h"
 #include "nsIException.h"
 #include "nsIScriptError.h"
 #include "nsISimpleEnumerator.h"
@@ -2314,6 +2315,16 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::ForceCC(nsICycleCollectorListener* listener)
 {
     nsJSContext::CycleCollectNow(listener);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreateCCLogger(nsICycleCollectorListener** aListener)
+{
+    NS_ENSURE_ARG_POINTER(aListener);
+    nsCOMPtr<nsICycleCollectorListener> logger =
+      nsCycleCollector_createLogger();
+    logger.forget(aListener);
     return NS_OK;
 }
 
