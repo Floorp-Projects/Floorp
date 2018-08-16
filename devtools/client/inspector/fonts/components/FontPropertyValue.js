@@ -256,7 +256,7 @@ class FontPropertyValue extends PureComponent {
 
     return dom.select(
       {
-        className: "font-unit-select",
+        className: "font-value-select",
         onChange: this.onUnitChange,
       },
       options.map(unit => {
