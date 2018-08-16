@@ -13,6 +13,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
  *
  * In browsers usually a session corresponds to a tab.
  */
+@Suppress("TooManyFunctions")
 abstract class EngineSession(
     private val delegate: Observable<EngineSession.Observer> = ObserverRegistry()
 ) : Observable<EngineSession.Observer> by delegate {
@@ -64,6 +65,11 @@ abstract class EngineSession(
      * Loads the given URL.
      */
     abstract fun loadUrl(url: String)
+
+    /**
+     * Loads the data with the given mimeType.
+     */
+    abstract fun loadData(data: String, mimeType: String = "text/html")
 
     /**
      * Stops loading the current session.

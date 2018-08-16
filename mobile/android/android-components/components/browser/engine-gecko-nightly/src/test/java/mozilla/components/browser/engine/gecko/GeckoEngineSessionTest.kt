@@ -142,6 +142,23 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun testLoadData() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        var loadUriReceived = false
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
+            BundleEventListener { _, _, _ -> loadUriReceived = true },
+            "GeckoView:LoadUri"
+        )
+
+        engineSession.loadData("<html><body>Hello!</body></html>")
+        assertTrue(loadUriReceived)
+
+        loadUriReceived = false
+        engineSession.loadData("Hello!", "text/plain")
+        assertTrue(loadUriReceived)
+    }
+
+    @Test
     fun testStopLoading() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var stopLoadingReceived = false

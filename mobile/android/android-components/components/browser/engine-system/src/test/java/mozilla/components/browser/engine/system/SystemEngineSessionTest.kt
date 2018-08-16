@@ -8,6 +8,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
@@ -50,6 +51,23 @@ class SystemEngineSessionTest {
 
         engineSession.loadUrl("http://mozilla.org")
         verify(webView).loadUrl("http://mozilla.org")
+    }
+
+    @Test
+    fun testLoadData() {
+        val engineSession = spy(SystemEngineSession())
+        val webView = mock(WebView::class.java)
+
+        engineSession.loadData("<html><body>Hello!</body></html>")
+        verify(webView, never()).loadData(anyString(), eq("text/html"), eq("UTF-8"))
+
+        `when`(engineSession.currentView()).thenReturn(webView)
+
+        engineSession.loadData("<html><body>Hello!</body></html>")
+        verify(webView).loadData(anyString(), eq("text/html"), eq("UTF-8"))
+
+        engineSession.loadData("Hello!", "text/plain")
+        verify(webView).loadData(anyString(), eq("text/plain"), eq("UTF-8"))
     }
 
     @Test

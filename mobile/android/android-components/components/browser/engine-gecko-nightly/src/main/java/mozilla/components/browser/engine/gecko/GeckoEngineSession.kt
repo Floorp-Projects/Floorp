@@ -42,6 +42,13 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.loadData]
+     */
+    override fun loadData(data: String, mimeType: String) {
+        geckoSession.loadString(data, mimeType)
+    }
+
+    /**
      * See [EngineSession.stopLoading]
      */
     override fun stopLoading() {

@@ -29,6 +29,12 @@ class EngineObserverTest {
                 return emptyMap()
             }
 
+            override fun loadData(data: String, mimeType: String) {
+                notifyObservers { onLocationChange(data) }
+                notifyObservers { onProgress(100) }
+                notifyObservers { onLoadingStateChange(true) }
+                notifyObservers { onNavigationStateChange(true, true) }
+            }
             override fun loadUrl(url: String) {
                 notifyObservers { onLocationChange(url) }
                 notifyObservers { onProgress(100) }
@@ -60,6 +66,10 @@ class EngineObserverTest {
             override fun disableTrackingProtection() {}
             override fun saveState(): Map<String, Any> {
                 return emptyMap()
+            }
+
+            override fun loadData(data: String, mimeType: String) {
+                // TODO: What do we do here?
             }
 
             override fun loadUrl(url: String) {
@@ -99,6 +109,7 @@ class EngineObserverTest {
             }
 
             override fun loadUrl(url: String) {}
+            override fun loadData(data: String, mimeType: String) {}
         }
         val observer = EngineObserver(session)
         engineSession.register(observer)
