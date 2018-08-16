@@ -365,52 +365,58 @@ PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
   }
 
   nsCOMPtr<nsIArray> displayItems;
-  nsCOMPtr<nsIMutableArray> items = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  MOZ_ASSERT(items);
-  for (const IPCPaymentItem& displayItem : aIPCDetails.displayItems()) {
-    nsCOMPtr<nsIPaymentItem> item;
-    rv = PaymentItem::Create(displayItem, getter_AddRefs(item));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+  if (aIPCDetails.displayItemsPassed()) {
+    nsCOMPtr<nsIMutableArray> items = do_CreateInstance(NS_ARRAY_CONTRACTID);
+    MOZ_ASSERT(items);
+    for (const IPCPaymentItem& displayItem : aIPCDetails.displayItems()) {
+      nsCOMPtr<nsIPaymentItem> item;
+      rv = PaymentItem::Create(displayItem, getter_AddRefs(item));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      rv = items->AppendElement(item);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
-    rv = items->AppendElement(item);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    displayItems = items.forget();
   }
-  displayItems = items.forget();
 
   nsCOMPtr<nsIArray> shippingOptions;
-  nsCOMPtr<nsIMutableArray> options = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  MOZ_ASSERT(options);
-  for (const IPCPaymentShippingOption& shippingOption : aIPCDetails.shippingOptions()) {
-    nsCOMPtr<nsIPaymentShippingOption> option;
-    rv = PaymentShippingOption::Create(shippingOption, getter_AddRefs(option));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+  if (aIPCDetails.shippingOptionsPassed()) {
+    nsCOMPtr<nsIMutableArray> options = do_CreateInstance(NS_ARRAY_CONTRACTID);
+    MOZ_ASSERT(options);
+    for (const IPCPaymentShippingOption& shippingOption : aIPCDetails.shippingOptions()) {
+      nsCOMPtr<nsIPaymentShippingOption> option;
+      rv = PaymentShippingOption::Create(shippingOption, getter_AddRefs(option));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      rv = options->AppendElement(option);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
-    rv = options->AppendElement(option);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    shippingOptions = options.forget();
   }
-  shippingOptions = options.forget();
 
   nsCOMPtr<nsIArray> modifiers;
-  nsCOMPtr<nsIMutableArray> detailsModifiers = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  MOZ_ASSERT(detailsModifiers);
-  for (const IPCPaymentDetailsModifier& modifier : aIPCDetails.modifiers()) {
-    nsCOMPtr<nsIPaymentDetailsModifier> detailsModifier;
-    rv = PaymentDetailsModifier::Create(modifier, getter_AddRefs(detailsModifier));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+  if (aIPCDetails.modifiersPassed()) {
+    nsCOMPtr<nsIMutableArray> detailsModifiers = do_CreateInstance(NS_ARRAY_CONTRACTID);
+    MOZ_ASSERT(detailsModifiers);
+    for (const IPCPaymentDetailsModifier& modifier : aIPCDetails.modifiers()) {
+      nsCOMPtr<nsIPaymentDetailsModifier> detailsModifier;
+      rv = PaymentDetailsModifier::Create(modifier, getter_AddRefs(detailsModifier));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      rv = detailsModifiers->AppendElement(detailsModifier);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
-    rv = detailsModifiers->AppendElement(detailsModifier);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    modifiers = detailsModifiers.forget();
   }
-  modifiers = detailsModifiers.forget();
 
   nsCOMPtr<nsIPaymentDetails> details =
     new PaymentDetails(aIPCDetails.id(), total, displayItems, shippingOptions,
