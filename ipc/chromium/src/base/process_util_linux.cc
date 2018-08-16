@@ -57,9 +57,9 @@ bool LaunchApp(const std::vector<std::string>& argv,
       }
     }
 
-    auto fdIsUsed = [&shuffle](int fd) { return shuffle.MapsTo(fd); };
-    // Constructing a std::function from a reference_wrapper won't allocate.
-    CloseSuperfluousFds(std::ref(fdIsUsed));
+    CloseSuperfluousFds(&shuffle, [](void* aCtx, int aFd) {
+      return static_cast<decltype(&shuffle)>(aCtx)->MapsTo(aFd);
+    });
 
     for (size_t i = 0; i < argv.size(); i++)
       argv_cstr[i] = const_cast<char*>(argv[i].c_str());
