@@ -4593,33 +4593,6 @@ HTMLEditor::SetBackgroundColor(const nsAString& aColor)
   return SetHTMLBackgroundColorWithTransaction(aColor);
 }
 
-/**
- * NodesSameType() does these nodes have the same tag?
- */
-bool
-HTMLEditor::AreNodesSameType(nsIContent* aNode1,
-                             nsIContent* aNode2)
-{
-  MOZ_ASSERT(aNode1);
-  MOZ_ASSERT(aNode2);
-
-  if (aNode1->NodeInfo()->NameAtom() != aNode2->NodeInfo()->NameAtom()) {
-    return false;
-  }
-
-  if (!IsCSSEnabled() || !aNode1->IsHTMLElement(nsGkAtoms::span)) {
-    return true;
-  }
-
-  if (!aNode1->IsElement() || !aNode2->IsElement()) {
-    return false;
-  }
-
-  // If CSS is enabled, we are stricter about span nodes.
-  return CSSEditUtils::ElementsSameStyle(aNode1->AsElement(),
-                                         aNode2->AsElement());
-}
-
 nsresult
 HTMLEditor::CopyLastEditableChildStylesWithTransaction(
               Element& aPreviousBlock,

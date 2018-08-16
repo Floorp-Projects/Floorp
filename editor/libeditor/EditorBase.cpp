@@ -28,6 +28,7 @@
 #include "TextEditUtils.h"              // for TextEditUtils
 #include "mozilla/CheckedInt.h"         // for CheckedInt
 #include "mozilla/ComputedStyle.h"      // for ComputedStyle
+#include "mozilla/CSSEditUtils.h"       // for CSSEditUtils
 #include "mozilla/EditAction.h"         // for EditSubAction
 #include "mozilla/EditorDOMPoint.h"     // for EditorDOMPoint
 #include "mozilla/EditorSpellCheck.h"   // for EditorSpellCheck
@@ -3866,13 +3867,27 @@ EditorBase::ResetModificationCount()
   return NS_OK;
 }
 
+// static
 bool
-EditorBase::AreNodesSameType(nsIContent* aNode1,
-                             nsIContent* aNode2)
+EditorBase::AreNodesSameType(nsIContent& aNode1,
+                             nsIContent& aNode2) const
 {
-  MOZ_ASSERT(aNode1);
-  MOZ_ASSERT(aNode2);
-  return aNode1->NodeInfo()->NameAtom() == aNode2->NodeInfo()->NameAtom();
+  if (aNode1.NodeInfo()->NameAtom() != aNode2.NodeInfo()->NameAtom()) {
+    return false;
+  }
+  if (!AsHTMLEditor() || !AsHTMLEditor()->IsCSSEnabled()) {
+    return true;
+  }
+  // If this is an HTMLEditor in CSS mode and they are <span> elements,
+  // let's check their styles.
+  if (!aNode1.IsHTMLElement(nsGkAtoms::span)) {
+    return true;
+  }
+  if (!aNode1.IsElement() || !aNode2.IsElement()) {
+    return false;
+  }
+  return CSSEditUtils::ElementsSameStyle(aNode1.AsElement(),
+                                         aNode2.AsElement());
 }
 
 // static
@@ -4086,7 +4101,7 @@ EditorBase::JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
 
   EditorDOMPoint ret;
   while (leftNodeToJoin && rightNodeToJoin && parentNode &&
-         AreNodesSameType(leftNodeToJoin, rightNodeToJoin)) {
+         AreNodesSameType(*leftNodeToJoin, *rightNodeToJoin)) {
     uint32_t length = leftNodeToJoin->Length();
 
     // Do the join
