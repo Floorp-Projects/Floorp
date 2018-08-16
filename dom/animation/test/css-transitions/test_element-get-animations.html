@@ -9,7 +9,7 @@
 'use strict';
 
 promise_test(async t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
 
   // FIXME: This test does too many things. It should be split up.
 
@@ -22,12 +22,12 @@ promise_test(async t => {
   div.style.left = '100px';
   div.style.top = '100px';
 
-  var animations = div.getAnimations();
+  let animations = div.getAnimations();
   assert_equals(animations.length, 2,
     'getAnimations() returns one Animation per transitioning property');
   await waitForAllAnimations(animations);
 
-  var startTime = animations[0].startTime;
+  const startTime = animations[0].startTime;
   assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
               'CSS transitions have sensible start times');
   assert_equals(animations[0].startTime, animations[1].startTime,
@@ -48,7 +48,7 @@ promise_test(async t => {
 }, 'getAnimations for CSS Transitions');
 
 test(t => {
-  var div = addDiv(t, { style: 'left: 0px; transition: all 100s' });
+  const div = addDiv(t, { style: 'left: 0px; transition: all 100s' });
 
   flushComputedStyle(div);
   div.style.left = '100px';
@@ -58,7 +58,7 @@ test(t => {
 }, 'getAnimations returns CSSTransition objects for CSS Transitions');
 
 async_test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
 
   // Set up event listener
   div.addEventListener('transitionend', t.step_func(() => {
@@ -77,7 +77,7 @@ async_test(t => {
 }, 'getAnimations for CSS Transitions that have finished');
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
 
   // Try to transition non-animatable property animation-duration
   div.style.animationDuration = '10s';
@@ -92,7 +92,7 @@ test(t => {
 }, 'getAnimations for transition on non-animatable property');
 
 test(t => {
-  var div = addDiv(t);
+  const div = addDiv(t);
 
   div.style.setProperty('-vendor-unsupported', '0px', '');
   getComputedStyle(div).transitionProperty;
@@ -105,10 +105,10 @@ test(t => {
 }, 'getAnimations for transition on unsupported property');
 
 test(t => {
-  var div = addDiv(t, { style: 'transform: translate(0px); ' +
-                               'opacity: 0; ' +
-                               'border-width: 0px; ' + // Shorthand
-                               'border-style: solid' });
+  const div = addDiv(t, { style: 'transform: translate(0px); ' +
+                                 'opacity: 0; ' +
+                                 'border-width: 0px; ' + // Shorthand
+                                 'border-style: solid' });
   getComputedStyle(div).transform;
 
   div.style.transition = 'all 100s';
@@ -116,7 +116,7 @@ test(t => {
   div.style.opacity = '1';
   div.style.borderWidth = '1px';
 
-  var animations = div.getAnimations();
+  const animations = div.getAnimations();
   assert_equals(animations.length, 6,
                 'Generated expected number of transitions');
   assert_equals(animations[0].transitionProperty, 'border-bottom-width');
@@ -128,8 +128,8 @@ test(t => {
 }, 'getAnimations sorts simultaneous transitions by name');
 
 test(t => {
-  var div = addDiv(t, { style: 'transform: translate(0px); ' +
-                               'opacity: 0' });
+  const div = addDiv(t, { style: 'transform: translate(0px); ' +
+                                 'opacity: 0' });
   getComputedStyle(div).transform;
 
   div.style.transition = 'all 100s';
@@ -140,7 +140,7 @@ test(t => {
   assert_equals(div.getAnimations().length, 2,
                 'Then a second (opacity) transition is added');
 
-  var animations = div.getAnimations();
+  const animations = div.getAnimations();
   assert_equals(animations[0].transitionProperty, 'transform');
   assert_equals(animations[1].transitionProperty, 'opacity');
 }, 'getAnimations sorts transitions by when they were generated');

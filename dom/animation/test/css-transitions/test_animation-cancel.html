@@ -9,13 +9,13 @@
 'use strict';
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
+  const div = addDiv(t, { style: 'margin-left: 0px' });
   flushComputedStyle(div);
 
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
   await waitForFrame();
 
@@ -27,13 +27,13 @@ promise_test(async t => {
 }, 'Animated style is cleared after cancelling a running CSS transition');
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
+  const div = addDiv(t, { style: 'margin-left: 0px' });
   flushComputedStyle(div);
 
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
 
   transition.cancel();
@@ -50,13 +50,13 @@ promise_test(async t => {
 }, 'After canceling a transition, it can still be re-used');
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
+  const div = addDiv(t, { style: 'margin-left: 0px' });
   flushComputedStyle(div);
 
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
 
   transition.finish();
@@ -74,13 +74,13 @@ promise_test(async t => {
 }, 'After cancelling a finished transition, it can still be re-used');
 
 test(t => {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
+  const div = addDiv(t, { style: 'margin-left: 0px' });
   flushComputedStyle(div);
 
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   transition.cancel();
   assert_equals(getComputedStyle(div).marginLeft, '1000px',
                 'margin-left style is not animated after cancelling');
@@ -98,13 +98,13 @@ test(t => {
    + ' it live again');
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
+  const div = addDiv(t, { style: 'margin-left: 0px' });
   flushComputedStyle(div);
 
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
 
   assert_equals(transition.playState, 'running');
@@ -117,8 +117,8 @@ promise_test(async t => {
 }, 'Setting display:none on an element cancels its transitions');
 
 promise_test(async t => {
-  var parentDiv = addDiv(t);
-  var childDiv = document.createElement('div');
+  const parentDiv = addDiv(t);
+  const childDiv = document.createElement('div');
   parentDiv.appendChild(childDiv);
   childDiv.setAttribute('style', 'margin-left: 0px');
 
@@ -127,7 +127,7 @@ promise_test(async t => {
   childDiv.style.transition = 'margin-left 100s';
   childDiv.style.marginLeft = '1000px';
 
-  var transition = childDiv.getAnimations()[0];
+  const transition = childDiv.getAnimations()[0];
   await transition.ready;
 
   assert_equals(transition.playState, 'running');
@@ -139,13 +139,13 @@ promise_test(async t => {
 }, 'Setting display:none cancels transitions on a child element');
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
+  const div = addDiv(t, { style: 'margin-left: 0px' });
   flushComputedStyle(div);
 
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
 
   assert_equals(transition.playState, 'running');
@@ -160,13 +160,13 @@ promise_test(async t => {
    'property');
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
+  const div = addDiv(t, { style: 'margin-left: 0px' });
   flushComputedStyle(div);
 
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
 
   assert_equals(transition.playState, 'running');
@@ -179,13 +179,13 @@ promise_test(async t => {
 }, 'Setting zero combined duration');
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
+  const div = addDiv(t, { style: 'margin-left: 0px' });
   flushComputedStyle(div);
 
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
 
   assert_equals(transition.playState, 'running');
@@ -198,13 +198,13 @@ promise_test(async t => {
    'transition');
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
+  const div = addDiv(t, { style: 'margin-left: 0px' });
   flushComputedStyle(div);
 
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
 
   assert_equals(transition.playState, 'running');
@@ -218,13 +218,13 @@ promise_test(async t => {
 }, 'An after-change style value can\'t be interpolated');
 
 promise_test(async t => {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
+  const div = addDiv(t, { style: 'margin-left: 0px' });
   flushComputedStyle(div);
 
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var transition = div.getAnimations()[0];
+  const transition = div.getAnimations()[0];
   await transition.ready;
 
   assert_equals(transition.playState, 'running');

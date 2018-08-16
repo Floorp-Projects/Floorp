@@ -21,11 +21,11 @@ const ANIM_DELAY_MS = 1000000; // 1000s
 const ANIM_DUR_MS = 1000000; // 1000s
 
 promise_test(async t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
 
   animation.finish();
   await animation.finished;
@@ -37,11 +37,11 @@ promise_test(async t => {
 }, 'Test restarting a finished transition');
 
 promise_test(async t => {
-  var div = addDiv(t, {'class': 'animated-div'});
+  const div = addDiv(t, {'class': 'animated-div'});
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
-  var animation = div.getAnimations()[0];
+  const animation = div.getAnimations()[0];
   await animation.ready;
 
   animation.playbackRate = -1;
