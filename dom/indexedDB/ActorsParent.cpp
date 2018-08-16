@@ -22642,17 +22642,25 @@ DeleteDatabaseOp::LoadPreviousVersion(nsIFile* aDatabaseFile)
 #ifdef DEBUG
   {
     nsCOMPtr<mozIStorageStatement> stmt;
-    MOZ_ALWAYS_SUCCEEDS(
-      connection->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT name "
-          "FROM database"
-        ), getter_AddRefs(stmt)));
+    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT name "
+      "FROM database"
+    ), getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
 
     bool hasResult;
-    MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
+    rv = stmt->ExecuteStep(&hasResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
 
     nsString databaseName;
-    MOZ_ALWAYS_SUCCEEDS(stmt->GetString(0, databaseName));
+    rv = stmt->GetString(0, databaseName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
 
     MOZ_ASSERT(mCommonParams.metadata().name() == databaseName);
   }

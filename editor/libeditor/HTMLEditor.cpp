@@ -1467,7 +1467,7 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
     }
 
     RefPtr<Element> divElement =
-      CreateElementWithDefaults(NS_LITERAL_STRING("div"));
+      CreateElementWithDefaults(*nsGkAtoms::div);
     if (NS_WARN_IF(!divElement)) {
       return NS_ERROR_FAILURE;
     }
@@ -2805,58 +2805,52 @@ HTMLEditor::GetSelectedElement(Selection& aSelection,
 }
 
 already_AddRefed<Element>
-HTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
+HTMLEditor::CreateElementWithDefaults(const nsAtom& aTagName)
 {
-  MOZ_ASSERT(!aTagName.IsEmpty());
+  // NOTE: Despite of public method, this can be called for internal use.
 
-  nsAutoString tagName(aTagName);
-  ToLowerCase(tagName);
-  nsAutoString realTagName;
+  const nsAtom* realTagName =
+    IsLinkTag(aTagName) || IsNamedAnchorTag(aTagName) ? nsGkAtoms::a :
+                                                        &aTagName;
 
-  if (IsLinkTag(tagName) || IsNamedAnchorTag(tagName)) {
-    realTagName.Assign('a');
-  } else {
-    realTagName = tagName;
-  }
   // We don't use editor's CreateElement because we don't want to go through
   // the transaction system
 
   // New call to use instead to get proper HTML element, bug 39919
-  RefPtr<nsAtom> realTagAtom = NS_Atomize(realTagName);
-  RefPtr<Element> newElement = CreateHTMLContent(realTagAtom);
+  RefPtr<Element> newElement = CreateHTMLContent(realTagName);
   if (!newElement) {
     return nullptr;
   }
 
   // Mark the new element dirty, so it will be formatted
-  ErrorResult rv;
+  // XXX Don't we need to check the error result of setting _moz_dirty attr?
+  IgnoredErrorResult rv;
   newElement->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), EmptyString(), rv);
 
   // Set default values for new elements
-  if (tagName.EqualsLiteral("table")) {
+  if (realTagName == nsGkAtoms::table) {
     newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),
                              NS_LITERAL_STRING("2"), rv);
     if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
       return nullptr;
     }
     newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),
                              NS_LITERAL_STRING("2"), rv);
     if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
       return nullptr;
     }
     newElement->SetAttribute(NS_LITERAL_STRING("border"),
                              NS_LITERAL_STRING("1"), rv);
     if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
       return nullptr;
     }
-  } else if (tagName.EqualsLiteral("td")) {
+  } else if (realTagName == nsGkAtoms::td) {
     nsresult rv =
       SetAttributeOrEquivalent(
         newElement, nsGkAtoms::valign, NS_LITERAL_STRING("top"), true);
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
   }
   // ADD OTHER TAGS HERE
 
@@ -2867,12 +2861,20 @@ NS_IMETHODIMP
 HTMLEditor::CreateElementWithDefaults(const nsAString& aTagName,
                                       Element** aReturn)
 {
-  NS_ENSURE_TRUE(!aTagName.IsEmpty() && aReturn, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(aTagName.IsEmpty()) || NS_WARN_IF(!aReturn)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   *aReturn = nullptr;
 
-  nsCOMPtr<Element> newElement = CreateElementWithDefaults(aTagName);
-  NS_ENSURE_TRUE(newElement, NS_ERROR_FAILURE);
-
+  RefPtr<nsAtom> tagName = GetLowerCaseNameAtom(aTagName);
+  if (NS_WARN_IF(!tagName)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  RefPtr<Element> newElement = CreateElementWithDefaults(*tagName);
+  if (NS_WARN_IF(!newElement)) {
+    return NS_ERROR_FAILURE;
+  }
   newElement.forget(aReturn);
   return NS_OK;
 }

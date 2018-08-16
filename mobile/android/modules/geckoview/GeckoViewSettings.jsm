@@ -7,17 +7,11 @@
 var EXPORTED_SYMBOLS = ["GeckoViewSettings"];
 
 ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
-ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Services: "resource://gre/modules/Services.jsm",
-});
-
-/* global SafeBrowsing:false */
-GeckoViewUtils.addLazyGetter(this, "SafeBrowsing", {
-  module: "resource://gre/modules/SafeBrowsing.jsm",
-  init: sb => sb.init(),
 });
 
 XPCOMUtils.defineLazyGetter(
@@ -42,6 +36,8 @@ class GeckoViewSettings extends GeckoViewModule {
   onInit() {
     this._useTrackingProtection = false;
     this._useDesktopMode = false;
+    // Required for safe browsing and tracking protection.
+    SafeBrowsing.init();
   }
 
   onSettingsUpdate() {
@@ -49,21 +45,11 @@ class GeckoViewSettings extends GeckoViewModule {
     debug `onSettingsUpdate: ${settings}`;
 
     this.displayMode = settings.displayMode;
-    this.useTrackingProtection = !!settings.useTrackingProtection;
     this.useDesktopMode = !!settings.useDesktopMode;
   }
 
   get useMultiprocess() {
     return this.browser.isRemoteBrowser;
-  }
-
-  get useTrackingProtection() {
-    return this._useTrackingProtection;
-  }
-
-  set useTrackingProtection(aUse) {
-    aUse && SafeBrowsing;
-    this._useTrackingProtection = aUse;
   }
 
   onUserAgentRequest(aSubject, aTopic, aData) {
