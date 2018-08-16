@@ -131,19 +131,6 @@ let ACTORS = {
     },
   },
 
-  LinkHandler: {
-    child: {
-      module: "resource:///actors/LinkHandlerChild.jsm",
-      events: {
-        "DOMHeadElementParsed": {},
-        "DOMLinkAdded": {},
-        "DOMLinkChanged": {},
-        "pageshow": {},
-        "pagehide": {},
-      },
-    },
-  },
-
   NetError: {
     child: {
       module: "resource:///actors/NetErrorChild.jsm",

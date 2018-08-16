@@ -4,13 +4,15 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["FaviconLoader"];
+const EXPORTED_SYMBOLS = ["ContentLinkHandler"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["Blob", "FileReader"]);
 
+ChromeUtils.defineModuleGetter(this, "Feeds",
+  "resource:///modules/Feeds.jsm");
 ChromeUtils.defineModuleGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm");
 ChromeUtils.defineModuleGetter(this, "PromiseUtils",
@@ -365,9 +367,26 @@ function selectIcons(iconInfos, preferredWidth) {
   };
 }
 
+function makeFaviconFromLink(aLink, aIsRichIcon) {
+  let iconUri = getLinkIconURI(aLink);
+  if (!iconUri)
+    return null;
+
+  // Extract the size type and width.
+  let width = extractIconSize(aLink.sizes);
+
+  return {
+    iconUri,
+    width,
+    isRichIcon: aIsRichIcon,
+    type: aLink.type,
+    node: aLink,
+  };
+}
+
 class IconLoader {
-  constructor(mm) {
-    this.mm = mm;
+  constructor(chromeGlobal) {
+    this.chromeGlobal = chromeGlobal;
   }
 
   async load(iconInfo) {
@@ -376,7 +395,7 @@ class IconLoader {
     }
 
     if (LOCAL_FAVICON_SCHEMES.includes(iconInfo.iconUri.scheme)) {
-      this.mm.sendAsyncMessage("Link:SetIcon", {
+      this.chromeGlobal.sendAsyncMessage("Link:SetIcon", {
         originalURL: iconInfo.iconUri.spec,
         canUseForTab: !iconInfo.isRichIcon,
         expiration: undefined,
@@ -389,18 +408,18 @@ class IconLoader {
       this._loader = new FaviconLoad(iconInfo);
       let { dataURL, expiration } = await this._loader.load();
 
-      this.mm.sendAsyncMessage("Link:SetIcon", {
+      this.chromeGlobal.sendAsyncMessage("Link:SetIcon", {
         originalURL: iconInfo.iconUri.spec,
         canUseForTab: !iconInfo.isRichIcon,
         expiration,
         iconURL: dataURL,
       });
     } catch (e) {
-      if (e.result != Cr.NS_BINDING_ABORTED) {
+      if (e.resultCode != Cr.NS_BINDING_ABORTED) {
         Cu.reportError(e);
 
         // Used mainly for tests currently.
-        this.mm.sendAsyncMessage("Link:SetFailedIcon", {
+        this.chromeGlobal.sendAsyncMessage("Link:SetFailedIcon", {
           originalURL: iconInfo.iconUri.spec,
           canUseForTab: !iconInfo.isRichIcon,
         });
@@ -420,21 +439,28 @@ class IconLoader {
   }
 }
 
-class FaviconLoader {
-  constructor(mm) {
-    this.mm = mm;
+class ContentLinkHandler {
+  constructor(chromeGlobal) {
+    this.chromeGlobal = chromeGlobal;
     this.iconInfos = [];
+    this.seenTabIcon = false;
+
+    chromeGlobal.addEventListener("DOMLinkAdded", this);
+    chromeGlobal.addEventListener("DOMLinkChanged", this);
+    chromeGlobal.addEventListener("pageshow", this);
+    chromeGlobal.addEventListener("pagehide", this);
+    chromeGlobal.addEventListener("DOMHeadElementParsed", this);
 
     // For every page we attempt to find a rich icon and a tab icon. These
     // objects take care of the load process for each.
-    this.richIconLoader = new IconLoader(mm);
-    this.tabIconLoader = new IconLoader(mm);
+    this.richIconLoader = new IconLoader(chromeGlobal);
+    this.tabIconLoader = new IconLoader(chromeGlobal);
 
     this.iconTask = new DeferredTask(() => this.loadIcons(), FAVICON_PARSING_TIMEOUT);
   }
 
   loadIcons() {
-    let preferredWidth = PREFERRED_WIDTH * Math.ceil(this.mm.content.devicePixelRatio);
+    let preferredWidth = PREFERRED_WIDTH * Math.ceil(this.chromeGlobal.content.devicePixelRatio);
     let { richIcon, tabIcon } = selectIcons(this.iconInfos, preferredWidth);
     this.iconInfos = [];
 
@@ -448,23 +474,53 @@ class FaviconLoader {
   }
 
   addIcon(iconInfo) {
+    if (!Services.prefs.getBoolPref("browser.chrome.site_icons", true)) {
+      return;
+    }
+
+    if (!iconInfo.isRichIcon) {
+      this.seenTabIcon = true;
+    }
     this.iconInfos.push(iconInfo);
     this.iconTask.arm();
   }
 
-  addDefaultIcon(baseURI) {
+  addRootIcon(document) {
+    // If we've already seen a tab icon or if root favicons are disabled then
+    // bail out.
+    if (this.seenTabIcon || !Services.prefs.getBoolPref("browser.chrome.guess_favicon", true)) {
+      return;
+    }
+
     // Currently ImageDocuments will just load the default favicon, see bug
     // 403651 for discussion.
-    this.addIcon({
-      iconUri: baseURI.mutate().setPathQueryRef("/favicon.ico").finalize(),
-      width: -1,
-      isRichIcon: false,
-      type: TYPE_ICO,
-      node: this.mm.content.document,
-    });
+
+    // Inject the default icon. Use documentURIObject so that we do the right
+    // thing with about:-style error pages. See bug 453442
+    let baseURI = document.documentURIObject;
+    if (baseURI.schemeIs("http") || baseURI.schemeIs("https")) {
+      let iconUri = baseURI.mutate().setPathQueryRef("/favicon.ico").finalize();
+      this.addIcon({
+        iconUri,
+        width: -1,
+        isRichIcon: false,
+        type: TYPE_ICO,
+        node: document,
+      });
+    }
   }
 
-  onPageShow() {
+  onHeadParsed(event) {
+    let document = this.chromeGlobal.content.document;
+    if (event.target.ownerDocument != document) {
+      return;
+    }
+
+    // Per spec icons are meant to be in the <head> tag so we should have seen
+    // all the icons now so add the root icon if no other tab icons have been
+    // seen.
+    this.addRootIcon(document);
+
     // We're likely done with icon parsing so load the pending icons now.
     if (this.iconTask.isArmed) {
       this.iconTask.disarm();
@@ -472,28 +528,130 @@ class FaviconLoader {
     }
   }
 
-  onPageHide() {
+  onPageShow(event) {
+    let document = this.chromeGlobal.content.document;
+    if (event.target != document) {
+      return;
+    }
+
+    // Add the root icon if it hasn't already been added. We encounter this case
+    // for documents that do not have a <head> tag.
+    this.addRootIcon(document);
+
+    // If we've seen any additional icons since the start of the body element
+    // load them now.
+    if (this.iconTask.isArmed) {
+      this.iconTask.disarm();
+      this.loadIcons();
+    }
+  }
+
+  onPageHide(event) {
+    if (event.target != this.chromeGlobal.content.document) {
+      return;
+    }
+
     this.richIconLoader.cancel();
     this.tabIconLoader.cancel();
 
     this.iconTask.disarm();
     this.iconInfos = [];
+    this.seenTabIcon = false;
   }
 
-  static makeFaviconFromLink(aLink, aIsRichIcon) {
-    let iconUri = getLinkIconURI(aLink);
-    if (!iconUri)
-      return null;
+  onLinkEvent(event) {
+    let link = event.target;
+    // Ignore sub-frames (bugs 305472, 479408).
+    if (link.ownerGlobal != this.chromeGlobal.content) {
+      return;
+    }
 
-    // Extract the size type and width.
-    let width = extractIconSize(aLink.sizes);
+    let rel = link.rel && link.rel.toLowerCase();
+    if (!rel || !link.href)
+      return;
 
-    return {
-      iconUri,
-      width,
-      isRichIcon: aIsRichIcon,
-      type: aLink.type,
-      node: aLink,
-    };
+    // Note: following booleans only work for the current link, not for the
+    // whole content
+    let feedAdded = false;
+    let iconAdded = false;
+    let searchAdded = false;
+    let rels = {};
+    for (let relString of rel.split(/\s+/))
+      rels[relString] = true;
+
+    for (let relVal in rels) {
+      let isRichIcon = true;
+
+      switch (relVal) {
+        case "feed":
+        case "alternate":
+          if (!feedAdded && event.type == "DOMLinkAdded") {
+            if (!rels.feed && rels.alternate && rels.stylesheet)
+              break;
+
+            if (Feeds.isValidFeed(link, link.ownerDocument.nodePrincipal, "feed" in rels)) {
+              this.chromeGlobal.sendAsyncMessage("Link:AddFeed", {
+                type: link.type,
+                href: link.href,
+                title: link.title,
+              });
+              feedAdded = true;
+            }
+          }
+          break;
+        case "icon":
+          isRichIcon = false;
+          // Fall through to rich icon handling
+        case "apple-touch-icon":
+        case "apple-touch-icon-precomposed":
+        case "fluid-icon":
+          if (iconAdded || link.hasAttribute("mask")) { // Masked icons are not supported yet.
+            break;
+          }
+
+          let iconInfo = makeFaviconFromLink(link, isRichIcon);
+          if (iconInfo) {
+            iconAdded = this.addIcon(iconInfo);
+          }
+          break;
+        case "search":
+          if (Services.policies && !Services.policies.isAllowed("installSearchEngine")) {
+            break;
+          }
+
+          if (!searchAdded && event.type == "DOMLinkAdded") {
+            let type = link.type && link.type.toLowerCase();
+            type = type.replace(/^\s+|\s*(?:;.*)?$/g, "");
+
+            let re = /^(?:https?|ftp):/i;
+            if (type == "application/opensearchdescription+xml" && link.title &&
+                re.test(link.href)) {
+              let engine = { title: link.title, href: link.href };
+              this.chromeGlobal.sendAsyncMessage("Link:AddSearch", {
+                engine,
+                url: link.ownerDocument.documentURI,
+              });
+              searchAdded = true;
+            }
+          }
+          break;
+      }
+    }
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "pageshow":
+        this.onPageShow(event);
+        break;
+      case "pagehide":
+        this.onPageHide(event);
+        break;
+      case "DOMHeadElementParsed":
+        this.onHeadParsed(event);
+        break;
+      default:
+        this.onLinkEvent(event);
+    }
   }
 }
