@@ -251,7 +251,7 @@ class AndroidPresentor {
     const currentAcc = currentContext.accessibleForBounds;
     if (Utils.isAliveAndVisible(currentAcc)) {
       return [{
-        eventType: AndroidEvents.WINDOW_STATE_CHANGED,
+        eventType: AndroidEvents.WINDOW_CONTENT_CHANGED,
         bounds: Utils.getBounds(currentAcc)
       }];
     }
