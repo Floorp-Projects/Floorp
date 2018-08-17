@@ -107,9 +107,11 @@ raptor-chrome:
 # so these need to be separate sets.
 raptor-fetch-firefox:
     - raptor-unity-webgl-firefox
+    - raptor-wasm-misc-firefox
 
 raptor-fetch-chrome:
     - raptor-unity-webgl-chrome
+    - raptor-wasm-misc-chrome
 
 awsy:
     - awsy

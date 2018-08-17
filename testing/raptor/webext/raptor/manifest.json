@@ -26,6 +26,7 @@
                   "*://*/SunSpider/*",
                   "*://*/webaudio/*",
                   "*://*/unity-webgl/index.html*",
+                  "*://*/wasm-misc/index.html*",
                   "*://*/assorted-dom/assorted/results.html*"],
       "js": ["benchmark-relay.js"]
     }
