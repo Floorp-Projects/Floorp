@@ -30,10 +30,6 @@ transforms = TransformSequence()
 task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
 
 
-def _by_platform(arg):
-    return optionally_keyed_by('build-platform', arg)
-
-
 # shortcut for a string where task references are allowed
 taskref_or_string = Any(
     basestring,
@@ -67,12 +63,12 @@ packaging_description_schema = Schema({
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
 
-    Required('package-formats'): _by_platform([basestring]),
+    Required('package-formats'): optionally_keyed_by('build-platform', 'project', [basestring]),
 
     # All l10n jobs use mozharness
     Required('mozharness'): {
         # Config files passed to the mozharness script
-        Required('config'): _by_platform([basestring]),
+        Required('config'): optionally_keyed_by('build-platform', [basestring]),
 
         # Additional paths to look for mozharness configs in. These should be
         # relative to the base of the source checkout
@@ -102,6 +98,14 @@ PACKAGE_FORMATS = {
             'mar': 'mar{executable_extension}',
         },
         'output': "target.complete.mar",
+    },
+    'mar-bz2': {
+        'args': ['mar', "--format", "bz2"],
+        'inputs': {
+            'input': 'target{archive_format}',
+            'mar': 'mar{executable_extension}',
+        },
+        'output': "target.bz2.complete.mar",
     },
     'dmg': {
         'args': ['dmg'],
@@ -166,7 +170,11 @@ def handle_keyed_by(config, jobs):
     for job in jobs:
         job = copy.deepcopy(job)  # don't overwrite dict values here
         for field in fields:
-            resolve_keyed_by(item=job, field=field, item_name="?")
+            resolve_keyed_by(
+                item=job, field=field,
+                project=config.params['project'],
+                item_name="?",
+            )
         yield job
 
 
