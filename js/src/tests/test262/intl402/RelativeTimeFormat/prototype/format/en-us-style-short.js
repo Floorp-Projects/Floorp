@@ -9,14 +9,14 @@ locale: [en-US]
 ---*/
 
 const units = {
-  "second": "sec.",
-  "minute": "min.",
-  "hour": "hr.",
-  "day": undefined,
-  "week": "wk.",
-  "month": "mo.",
-  "quarter": "qtr.",
-  "year": "yr.",
+  "second": ["sec."],
+  "minute": ["min."],
+  "hour": ["hr."],
+  "day": ["day", "days"],
+  "week": ["wk."],
+  "month": ["mo."],
+  "quarter": ["qtr.", "qtrs."],
+  "year": ["yr."],
 };
 
 const rtf = new Intl.RelativeTimeFormat("en-US", {
@@ -25,9 +25,8 @@ const rtf = new Intl.RelativeTimeFormat("en-US", {
 
 assert.sameValue(typeof rtf.format, "function", "format should be supported");
 
-for (const [unitArgument, unitString] of Object.entries(units)) {
-  const singular = unitString || `${unitArgument}`;
-  const plural = unitString || `${unitArgument}s`;
+for (const [unitArgument, unitStrings] of Object.entries(units)) {
+  const [singular, plural = singular] = unitStrings;
   assert.sameValue(rtf.format(1000, unitArgument), `in 1,000 ${plural}`);
   assert.sameValue(rtf.format(10, unitArgument), `in 10 ${plural}`);
   assert.sameValue(rtf.format(2, unitArgument), `in 2 ${plural}`);

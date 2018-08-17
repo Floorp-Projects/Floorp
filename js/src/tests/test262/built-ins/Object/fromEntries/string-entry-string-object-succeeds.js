@@ -2,20 +2,12 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+description: Succeeds when an entry object is a boxed string.
 esid: sec-object.fromentries
-description: Throws when called without an argument.
-info: |
-
-  Object.fromEntries ( iterable )
-
-  1. Perform ? RequireObjectCoercible(iterable).
-  ...
-
 features: [Object.fromEntries]
 ---*/
 
-assert.throws(TypeError, function() {
-  Object.fromEntries();
-});
+var result = Object.fromEntries([new String('ab')]);
+assert.sameValue(result['a'], 'b');
 
 reportCompare(0, 0);
