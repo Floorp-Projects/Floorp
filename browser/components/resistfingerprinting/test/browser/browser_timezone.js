@@ -22,7 +22,8 @@ add_task(async function test_timezone() {
       let dateObj = new Date();
       let dateString = dateObj.toString();
 
-      ok(dateString.endsWith("(UTC)"), "The date string is in UTC timezone.");
+      ok(dateString.endsWith("(Coordinated Universal Time)"),
+           "The date string is in UTC timezone.");
       is(dateObj.getFullYear(), dateObj.getUTCFullYear(),
            "The full year reports in UTC timezone.");
       is(dateObj.getMonth(), dateObj.getUTCMonth(), "The month reports in UTC timezone.");

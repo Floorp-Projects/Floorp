@@ -72,6 +72,16 @@
         }
     }
 
+    function getDefaultLocale() {
+        // If the default locale looks like a BCP-47 language tag, return it.
+        var locale = global.getDefaultLocale();
+        if (locale.match(/^[a-z][a-z0-9\-]+$/i))
+            return locale;
+
+        // Otherwise use undefined to reset to the default locale.
+        return undefined;
+    }
+
     let defaultTimeZone = null;
     let defaultLocale = null;
 
@@ -88,6 +98,20 @@
         }
     }
     global.inTimeZone = inTimeZone;
+
+    // Run the given test with the requested locale.
+    function withLocale(locale, fn) {
+        if (defaultLocale === null)
+            defaultLocale = getDefaultLocale();
+
+        setDefaultLocale(locale);
+        try {
+            fn();
+        } finally {
+            setDefaultLocale(defaultLocale);
+        }
+    }
+    global.withLocale = withLocale;
 
     const Month = {
         January: 0,
