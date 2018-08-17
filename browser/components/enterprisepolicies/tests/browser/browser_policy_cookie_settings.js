@@ -3,6 +3,7 @@
 "use strict";
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
+const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 XPCOMUtils.defineLazyServiceGetter(Services, "cookies",
                                    "@mozilla.org/cookieService;1",
                                    "nsICookieService");
@@ -37,6 +38,7 @@ async function test_cookie_settings({
                                       cookiesEnabled,
                                       thirdPartyCookiesEnabled,
                                       cookiesExpireAfterSession,
+                                      rejectTrackers,
                                       cookieSettingsLocked
                                     }) {
   let firstPartyURI = NetUtil.newURI("http://example.com/");
@@ -102,7 +104,40 @@ async function test_cookie_settings({
        "\"Keep Cookies Until\" Menu disabled status should match expected");
   });
   BrowserTestUtils.removeTab(tab);
+
+  if (rejectTrackers) {
+    tab = await BrowserTestUtils.addTab(gBrowser, "http://example.net/browser/browser/components/enterprisepolicies/tests/browser/page.html");
+    let browser = gBrowser.getBrowserForTab(tab);
+    await BrowserTestUtils.browserLoaded(browser);
+    await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+      // Load the script twice
+      {
+        let src = content.document.createElement("script");
+        let p = new content.Promise((resolve, reject) => { src.onload = resolve; src.onerror = reject; });
+        content.document.body.appendChild(src);
+        src.src = "https://tracking.example.org/browser/browser/components/enterprisepolicies/tests/browser/subResources.sjs?what=script";
+        await p;
+      }
+      {
+        let src = content.document.createElement("script");
+        let p = new content.Promise(resolve => { src.onload = resolve; });
+        content.document.body.appendChild(src);
+        src.src = "https://tracking.example.org/browser/browser/components/enterprisepolicies/tests/browser/subResources.sjs?what=script";
+        await p;
+      }
+    });
+    BrowserTestUtils.removeTab(tab);
+    await fetch("https://tracking.example.org/browser/browser/components/enterprisepolicies/tests/browser/subResources.sjs?result&what=script")
+      .then(r => r.text())
+      .then(text => {
+        is(text, 0, "\"Reject Tracker\" pref should match what is expected");
+      });
+  }
 }
+
+add_task(async function prepare_tracker_tables() {
+  await UrlClassifierTestUtils.addTestTrackers();
+});
 
 add_task(async function test_initial_state() {
   await test_cookie_settings({
@@ -241,6 +276,25 @@ add_task(async function test_cookie_expire() {
   restore_prefs();
 });
 
+add_task(async function test_cookie_reject_trackers() {
+  await setupPolicyEngineWithJson({
+    "policies": {
+      "Cookies": {
+        "RejectTracker": true
+      }
+    }
+  });
+
+  await test_cookie_settings({
+    cookiesEnabled: true,
+    thirdPartyCookiesEnabled: true,
+    cookiesExpireAfterSession: false,
+    rejectTrackers: true,
+    cookieSettingsLocked: false
+  });
+  restore_prefs();
+});
+
 add_task(async function test_cookie_expire_locked() {
   await setupPolicyEngineWithJson({
     "policies": {
@@ -279,4 +333,8 @@ add_task(async function test_disabled_cookie_expire_locked() {
     cookieSettingsLocked: true
   });
   restore_prefs();
+});
+
+add_task(async function prepare_tracker_tables() {
+  await UrlClassifierTestUtils.cleanupTestTrackers();
 });

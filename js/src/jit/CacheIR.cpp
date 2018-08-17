@@ -5670,7 +5670,9 @@ NewObjectIRGenerator::NewObjectIRGenerator(JSContext* cx, HandleScript script,
                                            jsbytecode* pc, ICState::Mode mode, JSOp op,
                                            HandleObject templateObj)
   : IRGenerator(cx, script, pc, CacheKind::NewObject, mode),
+#ifdef JS_CACHEIR_SPEW
     op_(op),
+#endif
     templateObject_(templateObj)
 {
     MOZ_ASSERT(templateObject_);
