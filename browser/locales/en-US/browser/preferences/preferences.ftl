@@ -759,6 +759,30 @@ sitedata-accept-third-party-visited-option =
 sitedata-accept-third-party-never-option =
     .label = Never
 
+sitedata-allow-cookies-option =
+    .label = Accept cookies and site data
+    .accesskey = A
+
+sitedata-disallow-cookies-option =
+    .label = Block cookies and site data
+    .accesskey = B
+
+# This label means 'type of content that is blocked', and is followed by a drop-down list with content types below.
+# The list items are the strings named sitedata-block-*-option*.
+sitedata-block-desc = Type blocked
+    .accesskey = T
+
+sitedata-block-trackers-option-recommended =
+    .label = Third party trackers (recommended)
+sitedata-block-trackers-option =
+    .label = Third party trackers
+sitedata-block-unvisited-option =
+    .label = Cookies from unvisited websites
+sitedata-block-all-third-parties-option =
+    .label = All third-party cookies
+sitedata-block-always-option =
+    .label = All cookies (may cause websites to break)
+
 sitedata-clear =
     .label = Clear Data…
     .accesskey = l
