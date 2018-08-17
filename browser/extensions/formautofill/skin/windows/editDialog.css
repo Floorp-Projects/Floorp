@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* The save button should be on the left and cancel on the right for Windows */
-#save {
+#controlsContainer > #save {
   order: 0;
 }
 
-#cancel {
+#controlsContainer > #cancel {
   order: 1;
 }
