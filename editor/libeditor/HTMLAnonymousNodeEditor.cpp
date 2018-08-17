@@ -282,6 +282,51 @@ HTMLEditor::DeleteRefToAnonymousNode(ManualNACPtr aContent,
   // The ManualNACPtr destructor will invoke UnbindFromTree.
 }
 
+void
+HTMLEditor::HideAnonymousEditingUIs()
+{
+  if (mAbsolutelyPositionedObject) {
+    HideGrabber();
+    NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
+  }
+  if (mInlineEditedCell) {
+    HideInlineTableEditingUI();
+    NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUI failed");
+  }
+  if (mResizedObject) {
+    DebugOnly<nsresult> rv = HideResizers();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HideResizers() failed");
+    NS_ASSERTION(!mResizedObject, "HideResizers failed");
+  }
+}
+
+void
+HTMLEditor::HideAnonymousEditingUIsIfUnnecessary()
+{
+  // XXX Perhaps, this is wrong approach to hide multiple UIs because
+  //     hiding one UI may causes overwriting existing UI with newly
+  //     created one.  In such case, we will leak ovewritten UI.
+  if (!IsAbsolutePositionEditorEnabled() && mAbsolutelyPositionedObject) {
+    // XXX If we're moving something, we need to cancel or commit the
+    //     operation now.
+    HideGrabber();
+    NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
+  }
+  if (!IsInlineTableEditorEnabled() && mInlineEditedCell) {
+    // XXX If we're resizing a table element, we need to cancel or commit the
+    //     operation now.
+    HideInlineTableEditingUI();
+    NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUI failed");
+  }
+  if (!IsObjectResizerEnabled() && mResizedObject) {
+    // XXX If we're resizing something, we need to cancel or commit the
+    //     operation now.
+    DebugOnly<nsresult> rv = HideResizers();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HideResizers() failed");
+    NS_ASSERTION(!mResizedObject, "HideResizers failed");
+  }
+}
+
 NS_IMETHODIMP
 HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
 {
@@ -298,6 +343,10 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
 nsresult
 HTMLEditor::RefereshEditingUI(Selection& aSelection)
 {
+  // First, we need to remove unnecessary editing UI now since some of them
+  // may be disabled while them are visible.
+  HideAnonymousEditingUIsIfUnnecessary();
+
   // early way out if all contextual UI extensions are disabled
   if (!IsObjectResizerEnabled() &&
       !IsAbsolutePositionEditorEnabled() &&
@@ -387,7 +436,7 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
     NS_ASSERTION(!mResizedObject, "HideResizers failed");
   }
 
-  if (mIsInlineTableEditingEnabled && mInlineEditedCell &&
+  if (IsInlineTableEditorEnabled() && mInlineEditedCell &&
       mInlineEditedCell != cellElement) {
     // XXX HideInlineTableEditingUI() won't return error.  Should be change it
     //     void later.
@@ -431,7 +480,7 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
     }
   }
 
-  if (mIsInlineTableEditingEnabled && cellElement &&
+  if (IsInlineTableEditorEnabled() && cellElement &&
       IsModifiableNode(*cellElement) && cellElement != hostContent) {
     if (mInlineEditedCell) {
       nsresult rv = RefreshInlineTableEditingUI();
