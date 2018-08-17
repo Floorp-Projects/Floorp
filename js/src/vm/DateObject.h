@@ -84,6 +84,7 @@ class DateObject : public NativeObject
     static MOZ_ALWAYS_INLINE bool getUTCHours_impl(JSContext* cx, const CallArgs& args);
     static MOZ_ALWAYS_INLINE bool getMinutes_impl(JSContext* cx, const CallArgs& args);
     static MOZ_ALWAYS_INLINE bool getUTCMinutes_impl(JSContext* cx, const CallArgs& args);
+    static MOZ_ALWAYS_INLINE bool getSeconds_impl(JSContext* cx, const CallArgs& args);
     static MOZ_ALWAYS_INLINE bool getUTCSeconds_impl(JSContext* cx, const CallArgs& args);
     static MOZ_ALWAYS_INLINE bool getUTCMilliseconds_impl(JSContext* cx, const CallArgs& args);
     static MOZ_ALWAYS_INLINE bool getTimezoneOffset_impl(JSContext* cx, const CallArgs& args);

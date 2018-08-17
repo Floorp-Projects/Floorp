@@ -42,7 +42,6 @@
   _(CacheIRSpewer,               500) \
   _(TraceLoggerThreadState,      500) \
   _(DateTimeInfoMutex,           500) \
-  _(IcuTimeZoneStateMutex,       500) \
   _(ProcessExecutableRegion,     500) \
   _(OffThreadPromiseState,       500) \
   _(BufferStreamState,           500) \
@@ -56,6 +55,7 @@
   _(WasmStreamStatus,            500) \
   _(WasmRuntimeInstances,        500) \
                                       \
+  _(IcuTimeZoneStateMutex,       600) \
   _(ThreadId,                    600) \
   _(WasmCodeSegmentMap,          600) \
   _(TraceLoggerGraphState,       600) \

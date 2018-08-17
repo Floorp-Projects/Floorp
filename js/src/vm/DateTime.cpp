@@ -9,12 +9,11 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 
+#include <algorithm>
 #if defined(XP_WIN)
-#include "mozilla/UniquePtr.h"
-
 #include <cstdlib>
-#include <cstring>
 #endif /* defined(XP_WIN) */
+#include <cstring>
 #include <time.h>
 
 #include "jsutil.h"
@@ -22,13 +21,17 @@
 #include "js/Date.h"
 #include "threading/ExclusiveData.h"
 
-#if ENABLE_INTL_API
-#include "unicode/timezone.h"
-#if defined(XP_WIN)
-#include "unicode/unistr.h"
-#endif
-#endif /* ENABLE_INTL_API */
+#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+#include "unicode/basictz.h"
+#include "unicode/locid.h"
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
+#if ENABLE_INTL_API && (!MOZ_SYSTEM_ICU || defined(ICU_TZ_HAS_RECREATE_DEFAULT))
+#include "unicode/timezone.h"
+#include "unicode/unistr.h"
+#endif /* ENABLE_INTL_API && (!MOZ_SYSTEM_ICU || defined(ICU_TZ_HAS_RECREATE_DEFAULT)) */
+
+#include "util/Text.h"
 #include "vm/MutexIDs.h"
 
 static bool
@@ -162,6 +165,22 @@ js::DateTimeInfo::internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode)
 
     dstRange_.reset();
 
+#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+    utcRange_.reset();
+    localRange_.reset();
+
+    {
+        // Tell the analysis the |pFree| function pointer called by uprv_free
+        // cannot GC.
+        JS::AutoSuppressGCAnalysis nogc;
+
+        timeZone_ = nullptr;
+    }
+
+    standardName_ = nullptr;
+    daylightSavingsName_ = nullptr;
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
+
     return true;
 }
 
@@ -169,6 +188,8 @@ js::DateTimeInfo::DateTimeInfo()
 {
     internalUpdateTimeZoneAdjustment(ResetTimeZoneMode::ResetEvenIfOffsetUnchaged);
 }
+
+js::DateTimeInfo::~DateTimeInfo() = default;
 
 int64_t
 js::DateTimeInfo::toClampedSeconds(int64_t milliseconds)
@@ -189,6 +210,18 @@ js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t utcSeconds)
     MOZ_ASSERT(utcSeconds >= MinTimeT);
     MOZ_ASSERT(utcSeconds <= MaxTimeT);
 
+#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+    UDate date = UDate(utcSeconds * msPerSecond);
+    constexpr bool dateIsLocalTime = false;
+    int32_t rawOffset, dstOffset;
+    UErrorCode status = U_ZERO_ERROR;
+
+    timeZone()->getOffset(date, dateIsLocalTime, rawOffset, dstOffset, status);
+    if (U_FAILURE(status))
+        return 0;
+
+    return dstOffset;
+#else
     struct tm tm;
     if (!ComputeLocalTime(static_cast<time_t>(utcSeconds), &tm))
         return 0;
@@ -206,6 +239,7 @@ js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t utcSeconds)
         diff -= SecondsPerDay;
 
     return diff * msPerSecond;
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 }
 
 int32_t
@@ -316,6 +350,137 @@ js::DateTimeInfo::RangeCache::sanityCheck()
     assertRange(startSeconds, endSeconds);
     assertRange(oldStartSeconds, oldEndSeconds);
 }
+
+#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+int32_t
+js::DateTimeInfo::computeUTCOffsetMilliseconds(int64_t localSeconds)
+{
+    MOZ_ASSERT(localSeconds >= MinTimeT);
+    MOZ_ASSERT(localSeconds <= MaxTimeT);
+
+    UDate date = UDate(localSeconds * msPerSecond);
+
+    // ES2019 draft rev 0ceb728a1adbffe42b26972a6541fd7f398b1557
+    //
+    // 20.3.1.7 LocalTZA
+    //
+    // If |localSeconds| represents either a skipped (at a positive time zone
+    // transition) or repeated (at a negative time zone transition) locale
+    // time, it must be interpreted as a time value before the transition.
+    constexpr int32_t skippedTime = icu::BasicTimeZone::kFormer;
+    constexpr int32_t repeatedTime = icu::BasicTimeZone::kFormer;
+
+    int32_t rawOffset, dstOffset;
+    UErrorCode status = U_ZERO_ERROR;
+
+    // All ICU TimeZone classes derive from BasicTimeZone, so we can safely
+    // perform the static_cast.
+    // Once <https://unicode-org.atlassian.net/browse/ICU-13705> is fixed we
+    // can remove this extra cast.
+    auto* basicTz = static_cast<icu::BasicTimeZone*>(timeZone());
+    basicTz->getOffsetFromLocal(date, skippedTime, repeatedTime, rawOffset, dstOffset, status);
+    if (U_FAILURE(status))
+        return 0;
+
+    return rawOffset + dstOffset;
+}
+
+int32_t
+js::DateTimeInfo::computeLocalOffsetMilliseconds(int64_t utcSeconds)
+{
+    MOZ_ASSERT(utcSeconds >= MinTimeT);
+    MOZ_ASSERT(utcSeconds <= MaxTimeT);
+
+    UDate date = UDate(utcSeconds * msPerSecond);
+    constexpr bool dateIsLocalTime = false;
+    int32_t rawOffset, dstOffset;
+    UErrorCode status = U_ZERO_ERROR;
+
+    timeZone()->getOffset(date, dateIsLocalTime, rawOffset, dstOffset, status);
+    if (U_FAILURE(status))
+        return 0;
+
+    return rawOffset + dstOffset;
+}
+
+int32_t
+js::DateTimeInfo::internalGetOffsetMilliseconds(int64_t milliseconds, TimeZoneOffset offset)
+{
+    int64_t seconds = toClampedSeconds(milliseconds);
+    return offset == TimeZoneOffset::UTC
+           ? getOrComputeValue(localRange_, seconds, &DateTimeInfo::computeLocalOffsetMilliseconds)
+           : getOrComputeValue(utcRange_, seconds, &DateTimeInfo::computeUTCOffsetMilliseconds);
+}
+
+bool
+js::DateTimeInfo::internalTimeZoneDisplayName(char16_t* buf, size_t buflen,
+                                              int64_t utcMilliseconds, const char* locale)
+{
+    MOZ_ASSERT(buf != nullptr);
+    MOZ_ASSERT(buflen > 0);
+    MOZ_ASSERT(locale != nullptr);
+
+    // Clear any previously cached names when the default locale changed.
+    if (!locale_ || std::strcmp(locale_.get(), locale) != 0) {
+        locale_ = DuplicateString(locale);
+        if (!locale_)
+            return false;
+
+        standardName_.reset();
+        daylightSavingsName_.reset();
+    }
+
+    bool daylightSavings = internalGetDSTOffsetMilliseconds(utcMilliseconds) != 0;
+
+    JS::UniqueTwoByteChars& cachedName = daylightSavings ? daylightSavingsName_ : standardName_;
+    if (!cachedName) {
+        // Retrieve the display name for the given locale.
+        icu::UnicodeString displayName;
+        timeZone()->getDisplayName(daylightSavings, icu::TimeZone::LONG, icu::Locale(locale),
+                                   displayName);
+
+        size_t capacity = displayName.length() + 1; // Null-terminate.
+        JS::UniqueTwoByteChars displayNameChars(js_pod_malloc<char16_t>(capacity));
+        if (!displayNameChars)
+            return false;
+
+        // Copy the display name. This operation always succeeds because the
+        // destination buffer is large enough to hold the complete string.
+        UErrorCode status = U_ZERO_ERROR;
+        displayName.extract(displayNameChars.get(), capacity, status);
+        MOZ_ASSERT(U_SUCCESS(status));
+        MOZ_ASSERT(displayNameChars[capacity - 1] == '\0');
+
+        cachedName = std::move(displayNameChars);
+    }
+
+    // Return an empty string if the display name doesn't fit into the buffer.
+    size_t length = js_strlen(cachedName.get());
+    if (length < buflen)
+        std::copy(cachedName.get(), cachedName.get() + length, buf);
+    else
+        length = 0;
+
+    buf[length] = '\0';
+    return true;
+}
+
+icu::TimeZone*
+js::DateTimeInfo::timeZone()
+{
+    if (!timeZone_) {
+        // The current default might be stale, because JS::ResetTimeZone()
+        // doesn't immediately update ICU's default time zone. So perform an
+        // update if needed.
+        js::ResyncICUDefaultTimeZone();
+
+        timeZone_.reset(icu::TimeZone::createDefault());
+        MOZ_ASSERT(timeZone_);
+    }
+
+    return timeZone_.get();
+}
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
 /* static */ js::ExclusiveData<js::DateTimeInfo>*
 js::DateTimeInfo::instance;

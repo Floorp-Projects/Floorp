@@ -71,7 +71,7 @@ def get_environment_overlay(js_shell):
         # Force Pacific time zone to avoid failures in Date tests.
         'TZ': 'PST8PDT',
         # Force date strings to English.
-        'LC_TIME': 'en_US.UTF-8',
+        'LC_ALL': 'en_US.UTF-8',
         # Tell the shell to disable crash dialogs on windows.
         'XRE_NO_WINDOWS_CRASH_DIALOG': '1',
     }

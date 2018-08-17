@@ -38,6 +38,7 @@
 #include "js/Date.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
@@ -435,6 +436,45 @@ JS::SetTimeResolutionUsec(uint32_t resolution, bool jitter)
     sJitter = jitter;
 }
 
+#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+// ES2019 draft rev 0ceb728a1adbffe42b26972a6541fd7f398b1557
+// 20.3.1.7 LocalTZA ( t, isUTC )
+static double
+LocalTZA(double t, DateTimeInfo::TimeZoneOffset offset)
+{
+    MOZ_ASSERT(IsFinite(t));
+
+    int64_t milliseconds = static_cast<int64_t>(t);
+    int32_t offsetMilliseconds = DateTimeInfo::getOffsetMilliseconds(milliseconds, offset);
+    return static_cast<double>(offsetMilliseconds);
+}
+
+// ES2019 draft rev 0ceb728a1adbffe42b26972a6541fd7f398b1557
+// 20.3.1.8 LocalTime ( t )
+static double
+LocalTime(double t)
+{
+    if (!IsFinite(t))
+        return GenericNaN();
+
+    MOZ_ASSERT(StartOfTime <= t && t <= EndOfTime);
+    return t + LocalTZA(t, DateTimeInfo::TimeZoneOffset::UTC);
+}
+
+// ES2019 draft rev 0ceb728a1adbffe42b26972a6541fd7f398b1557
+// 20.3.1.9 UTC ( t )
+static double
+UTC(double t)
+{
+    if (!IsFinite(t))
+        return GenericNaN();
+
+    if (t < (StartOfTime - msPerDay) || t > (EndOfTime + msPerDay))
+        return GenericNaN();
+
+    return t - LocalTZA(t, DateTimeInfo::TimeZoneOffset::Local);
+}
+#else
 /*
  * Find a year for which any given date will fall on the same weekday.
  *
@@ -532,6 +572,7 @@ UTC(double t)
 
     return t - AdjustTime(t - DateTimeInfo::localTZA() - msPerHour);
 }
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
 /* ES5 15.9.1.10. */
 static double
@@ -1774,20 +1815,8 @@ date_getUTCMinutes(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<IsDate, DateObject::getUTCMinutes_impl>(cx, args);
 }
 
-/*
- * Date.getSeconds is mapped to getUTCSeconds. As long as no supported time
- * zone has a fractional-minute component, the differences in their
- * specifications aren't observable.
- *
- * We'll have to split the implementations if a new time zone with a
- * fractional-minute component is introduced or once we implement ES6's
- * 20.3.1.7 Local Time Zone Adjustment: time zones with adjustments like that
- * did historically exist, e.g.
- * https://en.wikipedia.org/wiki/UTC%E2%88%9200:25:21
- */
-
 /* static */ MOZ_ALWAYS_INLINE bool
-DateObject::getUTCSeconds_impl(JSContext* cx, const CallArgs& args)
+DateObject::getSeconds_impl(JSContext* cx, const CallArgs& args)
 {
     DateObject* dateObj = &args.thisv().toObject().as<DateObject>();
     dateObj->fillLocalTimeSlots();
@@ -1805,17 +1834,39 @@ DateObject::getUTCSeconds_impl(JSContext* cx, const CallArgs& args)
 }
 
 static bool
+date_getSeconds(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsDate, DateObject::getSeconds_impl>(cx, args);
+}
+
+/* static */ MOZ_ALWAYS_INLINE bool
+DateObject::getUTCSeconds_impl(JSContext* cx, const CallArgs& args)
+{
+    double result = args.thisv().toObject().as<DateObject>().UTCTime().toNumber();
+    if (IsFinite(result))
+        result = SecFromTime(result);
+
+    args.rval().setNumber(result);
+    return true;
+}
+
+static bool
 date_getUTCSeconds(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsDate, DateObject::getUTCSeconds_impl>(cx, args);
 }
+
 /*
- * Date.getMilliseconds is mapped to getUTCMilliseconds for the same reasons
- * that getSeconds is mapped to getUTCSeconds (see above).  No known LocalTZA
- * has *ever* included a fractional-second component, however, so we can keep
- * this simplification even if we stop implementing ES5 local-time computation
- * semantics.
+ * Date.getMilliseconds is mapped to getUTCMilliseconds. As long as no
+ * supported time zone has a fractional-second component, the differences in
+ * their specifications aren't observable.
+ *
+ * The 'tz' database explicitly does not support fractional-second time zones.
+ * For example the Netherlands observed Amsterdam Mean Time, estimated to be
+ * UT +00:19:32.13, from 1909 to 1937, but in tzdata AMT is defined as exactly
+ * UT +00:19:32.
  */
 
 /* static */ MOZ_ALWAYS_INLINE bool
@@ -2659,6 +2710,41 @@ date_toJSON(JSContext* cx, unsigned argc, Value* vp)
     return Call(cx, toISO, obj, args.rval());
 }
 
+#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+static JSString*
+TimeZoneComment(JSContext* cx, double utcTime, double localTime)
+{
+    const char* locale = cx->runtime()->getDefaultLocale();
+    if (!locale) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEFAULT_LOCALE_ERROR);
+        return nullptr;
+    }
+
+    char16_t tzbuf[100];
+    tzbuf[0] = ' ';
+    tzbuf[1] = '(';
+
+    char16_t* timeZoneStart = tzbuf + 2;
+    constexpr size_t remainingSpace = mozilla::ArrayLength(tzbuf) - 2 - 1; // for the trailing ')'
+
+    int64_t utcMilliseconds = static_cast<int64_t>(utcTime);
+    if (!DateTimeInfo::timeZoneDisplayName(timeZoneStart, remainingSpace, utcMilliseconds, locale))
+    {
+        JS_ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    // Reject if the result string is empty.
+    size_t len = js_strlen(timeZoneStart);
+    if (len == 0)
+        return cx->names().empty;
+
+    // Parenthesize the returned display name.
+    timeZoneStart[len] = ')';
+
+    return NewStringCopyN<CanGC>(cx, tzbuf, 2 + len + 1);
+}
+#else
 /* Interface to PRMJTime date struct. */
 static PRMJTime
 ToPRMJTime(double localTime, double utcTime)
@@ -2727,6 +2813,7 @@ TimeZoneComment(JSContext* cx, double utcTime, double localTime)
 
     return cx->names().empty;
 }
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
 enum class FormatSpec {
     DateTime,
@@ -2751,7 +2838,7 @@ FormatDate(JSContext* cx, double utcTime, FormatSpec format, MutableHandleValue 
     if (format == FormatSpec::DateTime || format == FormatSpec::Time) {
         // Offset from GMT in minutes. The offset includes daylight savings,
         // if it applies.
-        int minutes = (int) floor((localTime - utcTime) / msPerMinute);
+        int minutes = (int) trunc((localTime - utcTime) / msPerMinute);
 
         // Map 510 minutes to 0830 hours.
         offset = (minutes / 60) * 100 + minutes % 60;
@@ -2763,8 +2850,14 @@ FormatDate(JSContext* cx, double utcTime, FormatSpec format, MutableHandleValue 
         // calls, for %Z only.) win32 prints PST as 'Pacific Standard Time.'
         // This way we always know what we're getting, and can parse it if
         // we produce it. The OS time zone string is included as a comment.
+        //
+        // When ICU is used to retrieve the time zone string, the localized
+        // 'long' name format from CLDR is used. For example when the default
+        // locale is "en-US", PST is displayed as 'Pacific Standard Time', but
+        // when it is "ru", 'Тихоокеанское стандартное время' is used. This
+        // also means the time zone string may not fit into Latin-1.
 
-        // Get a time zone string from the OS to include as a comment.
+        // Get a time zone string from the OS or ICU to include as a comment.
         timeZoneComment = TimeZoneComment(cx, utcTime, localTime);
         if (!timeZoneComment)
             return false;
@@ -3066,7 +3159,7 @@ static const JSFunctionSpec date_methods[] = {
     JS_FN("getUTCHours",         date_getUTCHours,        0,0),
     JS_FN("getMinutes",          date_getMinutes,         0,0),
     JS_FN("getUTCMinutes",       date_getUTCMinutes,      0,0),
-    JS_FN("getSeconds",          date_getUTCSeconds,      0,0),
+    JS_FN("getSeconds",          date_getSeconds,         0,0),
     JS_FN("getUTCSeconds",       date_getUTCSeconds,      0,0),
     JS_FN("getMilliseconds",     date_getUTCMilliseconds, 0,0),
     JS_FN("getUTCMilliseconds",  date_getUTCMilliseconds, 0,0),

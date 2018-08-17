@@ -1,3 +1,4 @@
+// |reftest| skip-if(this.hasOwnProperty("Intl")) -- Requires inaccurate historic time zone data.
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /*
  * Any copyright is dedicated to the Public Domain.
