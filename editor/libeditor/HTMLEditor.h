@@ -1619,7 +1619,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * Hide all inline table editing UI
    */
-  nsresult HideInlineTableEditingUI();
+  void HideInlineTableEditingUI();
 
   /**
    * IsEmptyTextNode() returns true if aNode is a text node and does not have
