@@ -7,6 +7,7 @@
 const { getBounds, XULWindowInfobar } = require("./utils/accessibility");
 const { createNode, isNodeValid } = require("./utils/markup");
 const { getCurrentZoom, loadSheet } = require("devtools/shared/layout/utils");
+const { TEXT_NODE } = require("devtools/shared/dom-node-constants");
 
 /**
  * Stylesheet used for highlighter styling of accessible objects in chrome. It
@@ -186,7 +187,7 @@ class XULWindowAccessibleHighlighter {
                                typeof options.y == "number" &&
                                typeof options.w == "number" &&
                                typeof options.h == "number";
-    if (!hasBounds || !isNodeValid(node) || isSameNode) {
+    if (!hasBounds || !this._isNodeValid(node) || isSameNode) {
       return false;
     }
 
@@ -263,6 +264,17 @@ class XULWindowAccessibleHighlighter {
 
     this.currentNode = null;
     this.options = null;
+  }
+
+  /**
+   * Check if node is a valid element or text node.
+   *
+   * @param  {DOMNode} node
+   *         The node to highlight.
+   * @return {Boolean} whether or not node is valid.
+   */
+  _isNodeValid(node) {
+    return isNodeValid(node) || isNodeValid(node, TEXT_NODE);
   }
 
   /**
