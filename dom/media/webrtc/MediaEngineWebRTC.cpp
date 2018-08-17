@@ -419,6 +419,7 @@ CubebDeviceEnumerator::EnumerateAudioInputDevices(nsTArray<RefPtr<AudioDeviceInf
                                                        410,
                                                        128);
     mDevices.AppendElement(info);
+    return;
   }
 #else
   if (mDevices.IsEmpty() || mManualInvalidation) {
