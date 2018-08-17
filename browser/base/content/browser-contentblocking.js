@@ -125,6 +125,31 @@ var TrackingProtection = {
   },
 };
 
+var ThirdPartyCookies = {
+  PREF_ENABLED: "network.cookie.cookieBehavior",
+  PREF_ENABLED_VALUE: Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+  PREF_UI_ENABLED: "browser.contentblocking.rejecttrackers.control-center.ui.enabled",
+
+  get categoryItem() {
+    delete this.categoryItem;
+    return this.categoryItem =
+      document.getElementById("identity-popup-content-blocking-category-3rdpartycookies");
+  },
+
+  init() {
+    XPCOMUtils.defineLazyPreferenceGetter(this, "behaviorPref", this.PREF_ENABLED,
+                                          Ci.nsICookieService.BEHAVIOR_ACCEPT);
+    XPCOMUtils.defineLazyPreferenceGetter(this, "uiPref", this.PREF_UI_ENABLED, false);
+
+    if (!this.uiPref) {
+      this.categoryItem.hidden = "true";
+    }
+  },
+  get enabled() {
+    return this.behaviorPref == this.PREF_ENABLED_VALUE;
+  },
+};
+
 
 var ContentBlocking = {
   // If the user ignores the doorhanger, we stop showing it after some time.
@@ -189,7 +214,7 @@ var ContentBlocking = {
   //
   // It may also contain an init() and uninit() function, which will be called
   // on ContentBlocking.init() and ContentBlocking.uninit().
-  blockers: [FastBlock, TrackingProtection],
+  blockers: [FastBlock, TrackingProtection, ThirdPartyCookies],
 
   get _baseURIForChannelClassifier() {
     // Convert document URI into the format used by
@@ -338,7 +363,8 @@ var ContentBlocking = {
     body += `urlclassifier.trackingTable: ${Services.prefs.getStringPref("urlclassifier.trackingTable")}\n`;
     body += `network.http.referer.defaultPolicy: ${Services.prefs.getIntPref("network.http.referer.defaultPolicy")}\n`;
     body += `network.http.referer.defaultPolicy.pbmode: ${Services.prefs.getIntPref("network.http.referer.defaultPolicy.pbmode")}\n`;
-    body += `network.cookie.cookieBehavior: ${Services.prefs.getIntPref("network.cookie.cookieBehavior")}\n`;
+    body += `${ThirdPartyCookies.PREF_UI_ENABLED}: ${Services.prefs.getBoolPref(ThirdPartyCookies.PREF_UI_ENABLED)}\n`;
+    body += `${ThirdPartyCookies.PREF_ENABLED}: ${Services.prefs.getIntPref(ThirdPartyCookies.PREF_ENABLED)}\n`;
     body += `network.cookie.lifetimePolicy: ${Services.prefs.getIntPref("network.cookie.lifetimePolicy")}\n`;
     body += `privacy.restrict3rdpartystorage.expiration: ${Services.prefs.getIntPref("privacy.restrict3rdpartystorage.expiration")}\n`;
     body += `${FastBlock.PREF_ENABLED}: ${Services.prefs.getBoolPref(FastBlock.PREF_ENABLED)}\n`;

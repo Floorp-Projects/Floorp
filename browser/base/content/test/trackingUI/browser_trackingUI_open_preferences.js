@@ -7,6 +7,8 @@ const CB_PREF = "browser.contentblocking.enabled";
 const CB_UI_PREF = "browser.contentblocking.ui.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const FB_PREF = "browser.fastblock.enabled";
+const TPC_PREF = "network.cookie.cookieBehavior";
+const RT_PREF = "browser.contentblocking.rejecttrackers.control-center.ui.enabled";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 
 async function waitAndAssertPreferencesShown() {
@@ -55,6 +57,8 @@ add_task(async function testOpenPreferencesFromAddBlockingButtons() {
     [CB_UI_PREF, true],
     [FB_PREF, false],
     [TP_PREF, false],
+    [TPC_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT],
+    [RT_PREF, true],
   ]});
 
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {

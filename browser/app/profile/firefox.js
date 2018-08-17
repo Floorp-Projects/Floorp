@@ -1492,9 +1492,11 @@ pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended",
 #ifdef NIGHTLY_BUILD
 pref("browser.contentblocking.ui.enabled", true);
 pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", true);
+pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
 #else
 pref("browser.contentblocking.ui.enabled", false);
 pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", false);
+pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", false);
 #endif
 #ifdef NIGHTLY_BUILD
 pref("browser.contentblocking.reportBreakage.enabled", true);
