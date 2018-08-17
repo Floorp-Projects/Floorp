@@ -140,3 +140,20 @@
 .tracking-protection-icon {
   list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
 }
+
+.reject-trackers-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
+}
+
+.reject-trackers-warning-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/warning.svg);
+  -moz-context-properties: fill, stroke;
+  fill: #d7b600;
+  stroke: white;
+  padding: 4px;
+}
+
+#contentBlockingChangeCookieSettings {
+  padding: 0.25em 0.75em;
+  margin: 4px 8px;
+}
