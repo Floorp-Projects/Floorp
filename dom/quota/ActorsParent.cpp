@@ -2031,52 +2031,6 @@ EnsureDirectory(nsIFile* aDirectory, bool* aCreated)
   return NS_OK;
 }
 
-nsresult
-EnsureOriginDirectory(nsIFile* aDirectory, bool* aCreated)
-{
-  AssertIsOnIOThread();
-
-  nsresult rv;
-
-#ifndef RELEASE_OR_BETA
-  bool exists;
-  rv = aDirectory->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!exists) {
-    nsString leafName;
-    nsresult rv = aDirectory->GetLeafName(leafName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!leafName.EqualsLiteral(kChromeOrigin)) {
-      nsCString spec;
-      OriginAttributes attrs;
-      OriginParser::ResultType result =
-        OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
-                                  spec,
-                                  &attrs);
-      if (NS_WARN_IF(result != OriginParser::ValidOrigin)) {
-        QM_WARNING("Preventing creation of a new origin directory which is not "
-                   "supported by our origin parser or is obsolete!");
-
-        return NS_ERROR_FAILURE;
-      }
-    }
-  }
-#endif
-
-  rv = EnsureDirectory(aDirectory, aCreated);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 enum FileFlag {
   kTruncateFileFlag,
   kUpdateFileFlag,
@@ -5477,6 +5431,43 @@ QuotaManager::EnsureTemporaryStorageIsInitialized()
   return rv;
 }
 
+nsresult
+QuotaManager::EnsureOriginDirectory(nsIFile* aDirectory,
+                                    bool* aCreated)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aDirectory);
+  MOZ_ASSERT(aCreated);
+
+  bool exists;
+  nsresult rv = aDirectory->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!exists) {
+    nsString leafName;
+    rv = aDirectory->GetLeafName(leafName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!leafName.EqualsLiteral(kChromeOrigin) &&
+        !IsSanitizedOriginValid(NS_ConvertUTF16toUTF8(leafName))) {
+      QM_WARNING("Preventing creation of a new origin directory which is not "
+                 "supported by our origin parser or is obsolete!");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  rv = EnsureDirectory(aDirectory, aCreated);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 void
 QuotaManager::OriginClearCompleted(PersistenceType aPersistenceType,
                                    const nsACString& aOrigin)
@@ -6033,6 +6024,29 @@ QuotaManager::GetDirectoryLockTable(PersistenceType aPersistenceType)
     default:
       MOZ_CRASH("Bad persistence type value!");
   }
+}
+
+bool
+QuotaManager::IsSanitizedOriginValid(const nsACString& aSanitizedOrigin)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!aSanitizedOrigin.Equals(kChromeOrigin));
+
+  bool valid;
+  if (auto entry = mValidOrigins.LookupForAdd(aSanitizedOrigin)) {
+    // We already parsed this sanitized origin string.
+    valid = entry.Data();
+  } else {
+    nsCString spec;
+    OriginAttributes attrs;
+    OriginParser::ResultType result =
+      OriginParser::ParseOrigin(aSanitizedOrigin, spec, &attrs);
+
+    valid = result == OriginParser::ValidOrigin;
+    entry.OrInsert([valid]() { return valid; });
+  }
+
+  return valid;
 }
 
 /*******************************************************************************
@@ -7937,7 +7951,7 @@ PersistOp::DoDirectoryWork(QuotaManager* aQuotaManager)
   }
 
   bool created;
-  rv = EnsureOriginDirectory(directory, &created);
+  rv = aQuotaManager->EnsureOriginDirectory(directory, &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

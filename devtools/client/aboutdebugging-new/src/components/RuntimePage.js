@@ -11,6 +11,8 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const DebugTargetPane = createFactory(require("./DebugTargetPane"));
 const RuntimeInfo = createFactory(require("./RuntimeInfo"));
+const TemporaryExtensionInstaller =
+  createFactory(require("./debugtarget/TemporaryExtensionInstaller"));
 
 const Services = require("Services");
 
@@ -36,6 +38,7 @@ class RuntimePage extends PureComponent {
         name: Services.appinfo.name,
         version: Services.appinfo.version,
       }),
+      TemporaryExtensionInstaller({ dispatch }),
       DebugTargetPane({
         dispatch,
         name: "Temporary Extensions",

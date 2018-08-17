@@ -33,7 +33,7 @@ class ExtensionDetail extends PureComponent {
 
   renderUUID() {
     const { target } = this.props;
-    const { manifestURL, uuid } = target;
+    const { manifestURL, uuid } = target.details;
 
     const value = [
       uuid,
@@ -52,7 +52,8 @@ class ExtensionDetail extends PureComponent {
 
   render() {
     const { target } = this.props;
-    const { id, location, uuid } = target;
+    const { id, details } = target;
+    const { location, uuid } = details;
 
     return dom.dl(
       {

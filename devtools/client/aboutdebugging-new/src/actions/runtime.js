@@ -4,8 +4,10 @@
 
 "use strict";
 
+const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const { BrowserToolboxProcess } =
   require("resource://devtools/client/framework/ToolboxProcess.jsm");
+const { Cc, Ci } = require("chrome");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 
@@ -87,6 +89,59 @@ function inspectDebugTarget(type, id) {
   return () => {};
 }
 
+function installTemporaryExtension() {
+  const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  fp.init(window, "Select Manifest File or Package (.xpi)", Ci.nsIFilePicker.modeOpen);
+  fp.open(async res => {
+    if (res == Ci.nsIFilePicker.returnCancel || !fp.file) {
+      return;
+    }
+
+    let file = fp.file;
+
+    // AddonManager.installTemporaryAddon accepts either
+    // addon directory or final xpi file.
+    if (!file.isDirectory() &&
+        !file.leafName.endsWith(".xpi") && !file.leafName.endsWith(".zip")) {
+      file = file.parent;
+    }
+
+    try {
+      await AddonManager.installTemporaryAddon(file);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  return () => {};
+}
+
+function reloadTemporaryExtension(actor) {
+  return async (_, getState) => {
+    const client = getState().runtime.client;
+
+    try {
+      await client.request({ to: actor, type: "reload" });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+}
+
+function removeTemporaryExtension(id) {
+  return async () => {
+    try {
+      const addon = await AddonManager.getAddonByID(id);
+
+      if (addon) {
+        await addon.uninstall();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+}
+
 function requestTabs() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_TABS_START });
@@ -130,6 +185,9 @@ module.exports = {
   connectRuntime,
   disconnectRuntime,
   inspectDebugTarget,
+  installTemporaryExtension,
+  reloadTemporaryExtension,
+  removeTemporaryExtension,
   requestTabs,
   requestExtensions,
 };
