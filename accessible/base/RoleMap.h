@@ -239,7 +239,7 @@ ROLE(TABLE,
      ROLE_SYSTEM_TABLE,
      ROLE_SYSTEM_TABLE,
      "android.widget.GridView",
-     eNoNameRule)
+     eNameFromSubtreeIfReqRule)
 
 ROLE(COLUMNHEADER,
      "columnheader",
