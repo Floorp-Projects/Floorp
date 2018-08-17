@@ -16,6 +16,7 @@ unset RUSTC
 unset CARGO
 unset RUSTDOC
 unset RUSTFMT
+unset CBINDGEN
 unset MAKECAB
 unset TOOLCHAIN_PREFIX
 unset BINDGEN_CFLAGS
