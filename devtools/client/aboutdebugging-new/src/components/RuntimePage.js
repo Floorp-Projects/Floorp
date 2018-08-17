@@ -9,7 +9,7 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const DebugTargetPane = createFactory(require("./DebugTargetPane"));
+const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
 const RuntimeInfo = createFactory(require("./RuntimeInfo"));
 const TemporaryExtensionInstaller =
   createFactory(require("./debugtarget/TemporaryExtensionInstaller"));
