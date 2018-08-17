@@ -4,7 +4,7 @@ async function checkTagsSelector(aAvailableTags, aCheckedTags) {
   let tags = await PlacesUtils.bookmarks.fetchTags();
   is(tags.length, aAvailableTags.length, "Check tags list");
   let tagsSelector = document.getElementById("editBMPanel_tagsSelector");
-  let children = tagsSelector.childNodes;
+  let children = tagsSelector.children;
   is(children.length, aAvailableTags.length,
       "Found expected number of tags in the tags selector");
 

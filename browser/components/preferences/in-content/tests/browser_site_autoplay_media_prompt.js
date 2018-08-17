@@ -49,7 +49,7 @@ add_task(async function enableBlockingAutoplay() {
     let doc = content.document;
     let autoplayMenu = doc.getElementById("autoplayMediaPolicyMenu");
     autoplayMenu.click();
-    let askMenuItem = autoplayMenu.childNodes[0].childNodes[1];
+    let askMenuItem = autoplayMenu.children[0].children[1];
     askMenuItem.click();
   });
 

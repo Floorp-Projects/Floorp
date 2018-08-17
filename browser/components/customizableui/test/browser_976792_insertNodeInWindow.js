@@ -34,7 +34,7 @@ add_task(async function() {
 
   is(btn.parentNode.id, kToolbarName, "New XUL widget should be placed inside new toolbar");
 
-  is(btn.previousSibling.id, toolbarNode.firstChild.id,
+  is(btn.previousElementSibling.id, toolbarNode.firstElementChild.id,
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
 
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));
@@ -78,9 +78,9 @@ add_task(async function() {
   CustomizableUI.ensureWidgetPlacedInWindow(testWidgetId, window);
 
   is(btn.parentNode.id, navbar.overflowable._list.id, "New XUL widget should be placed inside overflow of toolbar");
-  is(btn.previousSibling.id, kTestWidgetPrefix + 2,
+  is(btn.previousElementSibling.id, kTestWidgetPrefix + 2,
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
-  is(btn.nextSibling.id, kTestWidgetPrefix + 4,
+  is(btn.nextElementSibling.id, kTestWidgetPrefix + 4,
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
@@ -128,9 +128,9 @@ add_task(async function() {
   CustomizableUI.ensureWidgetPlacedInWindow(testWidgetId, window);
 
   is(btn.parentNode.id, navbar.overflowable._list.id, "New XUL widget should be placed inside overflow of toolbar");
-  is(btn.previousSibling.id, kTestWidgetPrefix + 1,
+  is(btn.previousElementSibling.id, kTestWidgetPrefix + 1,
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
-  is(btn.nextSibling.id, kTestWidgetPrefix + 4,
+  is(btn.nextElementSibling.id, kTestWidgetPrefix + 4,
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
@@ -179,9 +179,9 @@ add_task(async function() {
   CustomizableUI.ensureWidgetPlacedInWindow(testWidgetId, window);
 
   is(btn.parentNode.id, navbar.overflowable._list.id, "New XUL widget should be placed inside overflow of toolbar");
-  is(btn.previousSibling.id, kTestWidgetPrefix + 1,
+  is(btn.previousElementSibling.id, kTestWidgetPrefix + 1,
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
-  is(btn.nextSibling, null,
+  is(btn.nextElementSibling, null,
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
@@ -232,11 +232,11 @@ add_task(async function() {
   // navbar has "settled"
   await waitForCondition(() => {
     return navbar.hasAttribute("overflowing") &&
-      navbar.customizationTarget.lastChild.getAttribute("overflows") == "false";
+      navbar.customizationTarget.lastElementChild.getAttribute("overflows") == "false";
   });
 
   // Find last widget that doesn't allow overflowing
-  let nonOverflowing = navbar.customizationTarget.lastChild;
+  let nonOverflowing = navbar.customizationTarget.lastElementChild;
   is(nonOverflowing.getAttribute("overflows"), "false", "Last child is expected to not allow overflowing");
   isnot(nonOverflowing.getAttribute("skipintoolbarset"), "true", "Last child is expected to not be skipintoolbarset");
 
@@ -247,7 +247,7 @@ add_task(async function() {
   CustomizableUI.ensureWidgetPlacedInWindow(testWidgetId, window);
 
   is(btn.parentNode.id, navbar.overflowable._list.id, "New XUL widget should be placed inside overflow of toolbar");
-  is(btn.nextSibling.id, kTestWidgetPrefix + 11,
+  is(btn.nextElementSibling.id, kTestWidgetPrefix + 11,
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
@@ -302,9 +302,9 @@ add_task(async function() {
   CustomizableUI.ensureWidgetPlacedInWindow(btnId, window);
 
   is(btn.parentNode.id, kToolbarName + "-overflow-list", "New XUL widget should be placed inside new toolbar's overflow");
-  is(btn.previousSibling.id, kTestWidgetPrefix + 1,
+  is(btn.previousElementSibling.id, kTestWidgetPrefix + 1,
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
-  is(btn.nextSibling.id, kTestWidgetPrefix + 4,
+  is(btn.nextElementSibling.id, kTestWidgetPrefix + 4,
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
@@ -403,7 +403,7 @@ add_task(async function() {
   CustomizableUI.ensureWidgetPlacedInWindow(btnId, window);
 
   is(btn.parentNode.id, kToolbarName + "-target", "New XUL widget should be placed inside new toolbar");
-  is(btn.nextSibling, null,
+  is(btn.nextElementSibling, null,
      "insertNodeInWindow should have placed new XUL widget in correct place in DOM according to placements");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);

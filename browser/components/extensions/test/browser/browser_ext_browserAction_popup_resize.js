@@ -155,7 +155,7 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
   let panel = browserWin.PanelUI.overflowPanel;
   panel.setAttribute("animate", "false");
 
-  let panelMultiView = panel.firstChild;
+  let panelMultiView = panel.firstElementChild;
   let widgetId = makeWidgetId(extension.id);
   // The 'ViewShown' event is the only way to correctly determine when the extensions'
   // panelview has finished transitioning and is fully in view.

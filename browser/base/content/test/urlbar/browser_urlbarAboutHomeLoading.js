@@ -101,7 +101,7 @@ add_task(async function dontTemporarilyShowAboutHome() {
   if (win.gBrowser.visibleTabs.length < 2) {
     await BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
   }
-  let otherTab = win.gBrowser.selectedTab.previousSibling;
+  let otherTab = win.gBrowser.selectedTab.previousElementSibling;
   let tabLoaded = BrowserTestUtils.browserLoaded(otherTab.linkedBrowser, false, "about:home");
   await BrowserTestUtils.switchTab(win.gBrowser, otherTab);
   await tabLoaded;

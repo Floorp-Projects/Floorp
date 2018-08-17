@@ -56,7 +56,7 @@ async function checkToggleTarget(targetID) {
     let iframe = doc.createElement("iframe");
     iframe.setAttribute("id", "tracking-element");
     iframe.setAttribute("src", "https://tracking.example.com/");
-    doc.body.insertBefore(iframe, doc.body.firstChild);
+    doc.body.insertBefore(iframe, doc.body.firstElementChild);
   });
 
   await trackerOpened;

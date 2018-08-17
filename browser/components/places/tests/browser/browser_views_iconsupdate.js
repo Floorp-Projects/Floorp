@@ -93,7 +93,7 @@ add_task(async function() {
  * @returns DOM Node of the element.
  */
 function getNodeForToolbarItem(guid) {
-  return Array.from(document.getElementById("PlacesToolbarItems").childNodes)
+  return Array.from(document.getElementById("PlacesToolbarItems").children)
               .find(child => child._placesNode && child._placesNode.bookmarkGuid == guid);
 }
 

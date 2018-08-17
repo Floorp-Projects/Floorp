@@ -143,7 +143,7 @@ add_task(async function() {
     });
     let matchCount = URLBar.popup.matchCount;
     await BrowserTestUtils.waitForCondition(() => {
-      return URLBar.popup.richlistbox.childNodes.length == matchCount;
+      return URLBar.popup.richlistbox.children.length == matchCount;
     });
 
     URLBar.controller.stopSearch();

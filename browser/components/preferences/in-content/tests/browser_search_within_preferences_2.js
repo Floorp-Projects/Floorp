@@ -22,7 +22,7 @@ add_task(async function() {
   // is selected and displayed on the screen.
   let weavePrefsDeck = gBrowser.contentDocument.getElementById("weavePrefsDeck");
   is(weavePrefsDeck.selectedIndex, 0, "Should select the #noFxaAccount child node");
-  let noFxaSignUp = weavePrefsDeck.childNodes[0].querySelector("#noFxaSignUp");
+  let noFxaSignUp = weavePrefsDeck.children[0].querySelector("#noFxaSignUp");
   is(noFxaSignUp.textContent, "Don\u2019t have an account? Get started", "The Sign Up button should exist");
 
   // Performs search.
@@ -49,7 +49,7 @@ add_task(async function() {
   }
 
   // Ensure the "Remove Account" button exists in the hidden child of the <xul:deck>.
-  let unlinkFxaAccount = weavePrefsDeck.childNodes[1].querySelector("#unverifiedUnlinkFxaAccount");
+  let unlinkFxaAccount = weavePrefsDeck.children[1].querySelector("#unverifiedUnlinkFxaAccount");
   is(unlinkFxaAccount.label, "Remove Account", "The Remove Account button should exist");
 
   // Performs search.

@@ -21,12 +21,12 @@ var gTests = [
        "webRTC-shareDevices-notification-icon", "anchored to device icon");
     checkDeviceSelectors(true, true);
     let iconclass =
-      PopupNotifications.panel.firstChild.getAttribute("iconclass");
+      PopupNotifications.panel.firstElementChild.getAttribute("iconclass");
     ok(iconclass.includes("camera-icon"), "panel using devices icon");
 
     let indicator = promiseIndicatorWindow();
     await promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
+      PopupNotifications.panel.firstElementChild.button.click();
     });
     await expectObserverCalled("getUserMedia:response:allow");
     await expectObserverCalled("recording-device-events");
@@ -51,12 +51,12 @@ var gTests = [
        "webRTC-shareMicrophone-notification-icon", "anchored to mic icon");
     checkDeviceSelectors(true);
     let iconclass =
-      PopupNotifications.panel.firstChild.getAttribute("iconclass");
+      PopupNotifications.panel.firstElementChild.getAttribute("iconclass");
     ok(iconclass.includes("microphone-icon"), "panel using microphone icon");
 
     let indicator = promiseIndicatorWindow();
     await promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
+      PopupNotifications.panel.firstElementChild.button.click();
     });
     await expectObserverCalled("getUserMedia:response:allow");
     await expectObserverCalled("recording-device-events");
@@ -81,12 +81,12 @@ var gTests = [
        "webRTC-shareDevices-notification-icon", "anchored to device icon");
     checkDeviceSelectors(false, true);
     let iconclass =
-      PopupNotifications.panel.firstChild.getAttribute("iconclass");
+      PopupNotifications.panel.firstElementChild.getAttribute("iconclass");
     ok(iconclass.includes("camera-icon"), "panel using devices icon");
 
     let indicator = promiseIndicatorWindow();
     await promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
+      PopupNotifications.panel.firstElementChild.button.click();
     });
     await expectObserverCalled("getUserMedia:response:allow");
     await expectObserverCalled("recording-device-events");
@@ -157,7 +157,7 @@ var gTests = [
 
     let indicator = promiseIndicatorWindow();
     await promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
+      PopupNotifications.panel.firstElementChild.button.click();
     });
     await expectObserverCalled("getUserMedia:response:allow");
     await expectObserverCalled("recording-device-events");
@@ -203,7 +203,7 @@ var gTests = [
 
     let indicator = promiseIndicatorWindow();
     await promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
+      PopupNotifications.panel.firstElementChild.button.click();
     });
     await expectObserverCalled("getUserMedia:response:allow");
     await expectObserverCalled("recording-device-events");
@@ -496,7 +496,7 @@ var gTests = [
 
     let indicator = promiseIndicatorWindow();
     await promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
+      PopupNotifications.panel.firstElementChild.button.click();
     });
     await expectObserverCalled("getUserMedia:response:allow");
     await expectObserverCalled("recording-device-events");
@@ -549,7 +549,7 @@ var gTests = [
 
     // Ensure that checking the 'Remember this decision' checkbox disables
     // 'Allow'.
-    let notification = PopupNotifications.panel.firstChild;
+    let notification = PopupNotifications.panel.firstElementChild;
     let checkbox = notification.checkbox;
     ok(!!checkbox, "checkbox is present");
     ok(!checkbox.checked, "checkbox is not checked");

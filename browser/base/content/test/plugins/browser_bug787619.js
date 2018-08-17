@@ -52,9 +52,9 @@ add_task(async function() {
   ok(!pluginInfo.activated, "1b plugin should not be activated");
 
   let condition = () => !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
-    PopupNotifications.panel.firstChild;
+    PopupNotifications.panel.firstElementChild;
   await promiseForCondition(condition);
-  PopupNotifications.panel.firstChild.button.click();
+  PopupNotifications.panel.firstElementChild.button.click();
 
   // check plugin state
   pluginInfo = await promiseForPluginInfo("plugin");

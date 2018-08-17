@@ -245,7 +245,7 @@ async function testSelectColors(select, itemCount, options) {
   }
 
   is(selectPopup.parentNode.itemCount, itemCount, "Correct number of items");
-  let child = selectPopup.firstChild;
+  let child = selectPopup.firstElementChild;
   let idx = 1;
 
   if (!options.skipSelectColorTest) {
@@ -289,7 +289,7 @@ async function testSelectColors(select, itemCount, options) {
   while (child) {
     testOptionColors(idx, child, menulist);
     idx++;
-    child = child.nextSibling;
+    child = child.nextElementSibling;
   }
 
   if (!options.leaveOpen) {

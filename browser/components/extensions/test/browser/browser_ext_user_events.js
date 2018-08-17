@@ -19,7 +19,7 @@ function promisePopupNotificationShown(name) {
       ok(PopupNotifications.isPanelOpen, "notification panel open");
 
       PopupNotifications.panel.removeEventListener("popupshown", popupshown);
-      resolve(PopupNotifications.panel.firstChild);
+      resolve(PopupNotifications.panel.firstElementChild);
     }
 
     PopupNotifications.panel.addEventListener("popupshown", popupshown);

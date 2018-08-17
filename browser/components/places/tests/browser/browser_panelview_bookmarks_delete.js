@@ -31,7 +31,7 @@ add_task(async function test_panelview_bookmarks_delete() {
   await promise;
 
   let list = document.getElementById("panelMenu_bookmarksMenu");
-  let listItem = [...list.childNodes].find(node => node.label == TEST_URL);
+  let listItem = [...list.children].find(node => node.label == TEST_URL);
 
   let placesContext = document.getElementById("placesContext");
   promise = BrowserTestUtils.waitForEvent(placesContext, "popupshown");
