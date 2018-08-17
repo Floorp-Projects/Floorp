@@ -188,9 +188,6 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
         billingAddressSelect.value = Object.keys(addresses)[0];
       }
     }
-    // Need to recalculate the populated state since
-    // billingAddressSelect is updated after loadRecord.
-    this.formHandler.updatePopulatedState(billingAddressSelect);
 
     this.updateRequiredState();
     this.updateSaveButtonState();
