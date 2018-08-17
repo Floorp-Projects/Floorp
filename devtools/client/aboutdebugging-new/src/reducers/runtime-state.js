@@ -45,7 +45,7 @@ function runtimeReducer(state = RuntimeState(), action) {
     }
     case REQUEST_TABS_SUCCESS: {
       const { tabs } = action;
-      return Object.assign({}, state, { tabs: toTabComponentData(tabs) });
+      return Object.assign({}, state, { tabs });
     }
     case REQUEST_WORKERS_SUCCESS: {
       const { otherWorkers, serviceWorkers, sharedWorkers } = action;
@@ -98,27 +98,6 @@ function toExtensionComponentData(extensions) {
         location,
         manifestURL,
         uuid,
-      },
-    };
-  });
-}
-
-function toTabComponentData(tabs) {
-  return tabs.map(tab => {
-    const type = DEBUG_TARGETS.TAB;
-    const id = tab.outerWindowID;
-    const icon = tab.favicon
-      ? `data:image/png;base64,${ btoa(String.fromCharCode.apply(String, tab.favicon)) }`
-      : "chrome://devtools/skin/images/globe.svg";
-    const name = tab.title || tab.url;
-    const url = tab.url;
-    return {
-      name,
-      icon,
-      id,
-      type,
-      details: {
-        url,
       },
     };
   });
