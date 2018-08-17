@@ -19,7 +19,9 @@ from taskgraph.util.schema import (
 )
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.partners import check_if_partners_enabled
+from taskgraph.util.platforms import archive_format, executable_extension
 from taskgraph.transforms.task import task_description_schema
+from taskgraph.transforms.repackage import PACKAGE_FORMATS
 from voluptuous import Any, Required, Optional
 
 transforms = TransformSequence()
@@ -57,6 +59,8 @@ packaging_description_schema = Schema({
     # Shipping product and phase
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
+
+    Required('package-formats'): _by_platform([basestring]),
 
     # All l10n jobs use mozharness
     Required('mozharness'): {
@@ -100,6 +104,7 @@ def handle_keyed_by(config, jobs):
     """Resolve fields that can be keyed by platform, etc."""
     fields = [
         "mozharness.config",
+        'package-formats',
     ]
     for job in jobs:
         job = copy.deepcopy(job)  # don't overwrite dict values here
@@ -148,6 +153,19 @@ def make_job_description(config, jobs):
         level = config.params['level']
         repack_id = job['extra']['repack_id']
 
+        repackage_config = []
+        for format in job.get('package-formats'):
+            command = copy.deepcopy(PACKAGE_FORMATS[format])
+            substs = {
+                'archive_format': archive_format(build_platform),
+                'executable_extension': executable_extension(build_platform),
+            }
+            command['inputs'] = {
+                name: filename.format(**substs)
+                for name, filename in command['inputs'].items()
+            }
+            repackage_config.append(command)
+
         run = job.get('mozharness', {})
         run.update({
             'using': 'mozharness',
@@ -155,6 +173,9 @@ def make_job_description(config, jobs):
             'job-script': 'taskcluster/scripts/builder/repackage.sh',
             'actions': ['download_input', 'setup', 'repackage'],
             'extra-workspace-cache-key': 'repackage',
+            'extra-config': {
+                'repackage_config': repackage_config,
+            },
         })
 
         worker = {
@@ -162,12 +183,12 @@ def make_job_description(config, jobs):
             'chain-of-trust': True,
             'max-run-time': 7200 if build_platform.startswith('win') else 3600,
             'taskcluster-proxy': True if get_artifact_prefix(dep_job) else False,
-            'env': {},
+            'env': {
+                'REPACK_ID': repack_id,
+            },
             # Don't add generic artifact directory.
             'skip-artifacts': True,
         }
-
-        worker['env'].update(REPACK_ID=repack_id)
 
         if build_platform.startswith('win'):
             worker_type = 'aws-provisioner-v1/gecko-%s-b-win2012' % level
