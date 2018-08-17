@@ -70,8 +70,8 @@
   background-color: transparent;
   border-radius: 0;
   border-width: 0;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important /* override tabbox.css */;
+  padding: 0 !important /* override tabbox.css */;
   -moz-box-align: stretch;
 }
 
