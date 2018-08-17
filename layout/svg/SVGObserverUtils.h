@@ -239,6 +239,39 @@ private:
   nsIPresShell *mFramePresShell;
 };
 
+/**
+ * Used for gradient-to-gradient, pattern-to-pattern and filter-to-filter
+ * references to "template" elements (specified via the 'href' attributes).
+ *
+ * This is a special class for the case where we know we only want to call
+ * InvalidateDirectRenderingObservers (as opposed to
+ * InvalidateRenderingObservers).
+ *
+ * TODO(jwatt): If we added a new NS_FRAME_RENDERING_OBSERVER_CONTAINER state
+ * bit to clipPath, filter, gradients, marker, mask, pattern and symbol, and
+ * could have InvalidateRenderingObservers stop on reaching such an element,
+ * then we would no longer need this class (not to mention improving perf by
+ * significantly cutting down on ancestor traversal).
+ */
+class SVGTemplateElementObserver : public SVGIDRenderingObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  SVGTemplateElementObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
+                             bool aReferenceImage)
+    : SVGIDRenderingObserver(aURI, aFrame->GetContent(), aReferenceImage)
+    , mFrameReference(aFrame)
+  {}
+
+protected:
+  virtual ~SVGTemplateElementObserver() = default; // non-public
+
+  virtual void OnRenderingChange() override;
+
+  nsSVGFrameReferenceFromProperty mFrameReference;
+};
+
 class nsSVGRenderingObserverProperty : public SVGIDRenderingObserver
 {
 public:
@@ -522,6 +555,8 @@ public:
     aProp->Release();
   }
 
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefToTemplateProperty,
+                                       SVGTemplateElementObserver)
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(FilterProperty,
                                       SVGFilterObserverListForCSSProp,
                                       DestroyFilterProperty)
@@ -534,8 +569,6 @@ public:
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(StrokeProperty, nsSVGPaintingProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefAsTextPathProperty,
                                        SVGTextPathObserver)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefAsPaintingProperty,
-                                       nsSVGPaintingProperty)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(BackgroundImageProperty,
                                       URIObserverHashtable)
 
@@ -709,6 +742,10 @@ public:
    */
   static void
   RemoveTextPathObserver(nsIFrame* aTextPathFrame);
+
+  static SVGTemplateElementObserver*
+  GetTemplateElementObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
+      const mozilla::FramePropertyDescriptor<SVGTemplateElementObserver>* aProperty);
 
   /**
    * Get an nsSVGPaintingProperty for the frame, creating a fresh one if necessary

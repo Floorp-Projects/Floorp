@@ -117,10 +117,10 @@ nsSVGFilterFrame::GetReferencedFilter()
   if (mNoHRefURI)
     return nullptr;
 
-  nsSVGPaintingProperty *property =
-    GetProperty(SVGObserverUtils::HrefAsPaintingProperty());
+  SVGTemplateElementObserver* observer =
+    GetProperty(SVGObserverUtils::HrefToTemplateProperty());
 
-  if (!property) {
+  if (!observer) {
     // Fetch our Filter element's href or xlink:href attribute
     SVGFilterElement *filter = static_cast<SVGFilterElement *>(GetContent());
     nsAutoString href;
@@ -149,13 +149,14 @@ nsSVGFilterFrame::GetReferencedFilter()
       new URLAndReferrerInfo(targetURI,
                              mContent->OwnerDoc()->GetDocumentURI(),
                              mContent->OwnerDoc()->GetReferrerPolicy());
-    property = SVGObserverUtils::GetPaintingProperty(target, this,
-      SVGObserverUtils::HrefAsPaintingProperty());
-    if (!property)
+    observer = SVGObserverUtils::GetTemplateElementObserver(target, this,
+                 SVGObserverUtils::HrefToTemplateProperty());
+    if (!observer) {
       return nullptr;
+    }
   }
 
-  nsIFrame *result = property->GetReferencedFrame();
+  nsIFrame* result = observer->GetReferencedFrame();
   if (!result)
     return nullptr;
 
@@ -183,7 +184,7 @@ nsSVGFilterFrame::AttributeChanged(int32_t  aNameSpaceID,
               aNameSpaceID == kNameSpaceID_None) &&
              aAttribute == nsGkAtoms::href) {
     // Blow away our reference, if any
-    DeleteProperty(SVGObserverUtils::HrefAsPaintingProperty());
+    DeleteProperty(SVGObserverUtils::HrefToTemplateProperty());
     mNoHRefURI = false;
     // And update whoever references us
     SVGObserverUtils::InvalidateDirectRenderingObservers(this);
