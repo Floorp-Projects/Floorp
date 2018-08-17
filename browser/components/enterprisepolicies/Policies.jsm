@@ -152,13 +152,11 @@ var Policies = {
 
       if (param.Default !== undefined ||
           param.AcceptThirdParty !== undefined ||
-          param.RejectTracker !== undefined ||
           param.Locked) {
         const ACCEPT_COOKIES = 0;
         const REJECT_THIRD_PARTY_COOKIES = 1;
         const REJECT_ALL_COOKIES = 2;
         const REJECT_UNVISITED_THIRD_PARTY = 3;
-        const REJECT_TRACKER = 4;
 
         let newCookieBehavior = ACCEPT_COOKIES;
         if (param.Default !== undefined && !param.Default) {
@@ -169,8 +167,6 @@ var Policies = {
           } else if (param.AcceptThirdParty == "from-visited") {
             newCookieBehavior = REJECT_UNVISITED_THIRD_PARTY;
           }
-        } else if (param.RejectTracker !== undefined && param.RejectTracker) {
-          newCookieBehavior = REJECT_TRACKER;
         }
 
         if (param.Locked) {
