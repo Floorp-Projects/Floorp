@@ -19,7 +19,27 @@ class EditAutofillForm {
   loadRecord(record = {}) {
     for (let field of this._elements.form.elements) {
       let value = record[field.id];
-      field.value = typeof(value) == "undefined" ? "" : value;
+      value = typeof(value) == "undefined" ? "" : value;
+
+      if (record.guid) {
+        field.value = value;
+      } else if (field.localName == "select") {
+        this.setDefaultSelectedOptionByValue(field, value);
+      } else {
+        // Use .defaultValue instead of .value to avoid setting the `dirty` flag
+        // which triggers form validation UI.
+        field.defaultValue = value;
+      }
+    }
+    if (!record.guid) {
+      // Reset the dirty value flag and validity state.
+      this._elements.form.reset();
+    }
+  }
+
+  setDefaultSelectedOptionByValue(select, value) {
+    for (let option of select.options) {
+      option.defaultSelected = option.value == value;
     }
   }
 
@@ -282,6 +302,11 @@ class EditCreditCard extends EditAutofillForm {
       // Re-generating the years will reset the selected option.
       this.generateYears();
       super.loadRecord(record);
+
+      // Resetting the form in the super.loadRecord won't clear custom validity
+      // state so reset it here. Since the cc-number field is disabled upon editing
+      // we don't need to recaclulate its validity here.
+      this._elements.ccNumber.setCustomValidity("");
     }
   }
 
