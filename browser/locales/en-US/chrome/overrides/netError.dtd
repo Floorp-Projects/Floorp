@@ -10,7 +10,7 @@
 <!ENTITY returnToPreviousPage.label "Go Back">
 <!ENTITY returnToPreviousPage1.label "Go Back (Recommended)">
 <!ENTITY advanced.label "Advanced">
-<!ENTITY continue1.label "Continue…">
+<!ENTITY continue2.label "More…">
 <!ENTITY moreInformation.label "More Information">
 
 <!-- Specific error messages -->
