@@ -311,7 +311,10 @@ else
 ifneq ($(CC_TYPE),msvc)
 maybe_clobber_profiledbuild: clean
 ifneq (,$(findstring clang,$(CC_TYPE)))
+# 32-bit Windows PGO is currently blocked by bug 1479800
+ifneq ($(CC_TYPE)_$(CPU_ARCH),clang-cl_x86)
 	$(LLVM_PROFDATA) merge -o $(DEPTH)/merged.profdata $(DEPTH)/*.profraw
+endif
 endif
 else
 maybe_clobber_profiledbuild:
