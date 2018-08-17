@@ -37,13 +37,16 @@ class DevicePixelRatioMenu extends PureComponent {
     const {
       displayPixelRatio,
       onChangePixelRatio,
+      selectedPixelRatio,
     } = this.props;
 
     const menuItems = PIXEL_RATIO_PRESET.map(value => {
       return {
         label: getFormatStr("responsive.devicePixelRatioOption", value),
         type: "checkbox",
-        checked: displayPixelRatio === value,
+        checked: selectedPixelRatio.value > 0 ?
+          selectedPixelRatio.value === value :
+          displayPixelRatio === value,
         click: () => onChangePixelRatio(+value),
       };
     });

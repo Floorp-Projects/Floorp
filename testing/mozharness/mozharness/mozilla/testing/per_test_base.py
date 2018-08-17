@@ -120,7 +120,7 @@ class SingleTestMixin(object):
                 self.info("Per-test run (non-gpu) discarded gpu test %s (%s)" % (file, entry[1]))
                 continue
 
-            self.info("Per-test run found test %s (%s)" % (file, entry[0]))
+            self.info("Per-test run found test %s (%s/%s)" % (file, entry[0], entry[1]))
             subsuite_mapping = {
                 # Map (<suite>, <subsuite>): <full-suite>
                 #   <suite> is associated with a manifest, explicitly in code above
@@ -165,6 +165,7 @@ class SingleTestMixin(object):
         tests_root = os.path.join(dirs['abs_wpttest_dir'], "tests")
         man_path = os.path.join(dirs['abs_wpttest_dir'], "meta", "MANIFEST.json")
         man = wptmanifest.manifest.load(tests_root, man_path)
+        self.info("Per-test run updated with manifest %s" % man_path)
 
         repo_tests_path = os.path.join("testing", "web-platform", "tests")
         tests_path = os.path.join("tests", "web-platform", "tests")
@@ -334,9 +335,11 @@ class SingleTestMixin(object):
         if self.verify_enabled or self.per_test_coverage:
             if self.config.get('per_test_category') == "web-platform":
                 suites = self.suites.keys()
+                self.info("Per-test suites: %s" % suites)
             elif all_suites and self.tests_downloaded:
                 suites = dict((key, all_suites.get(key)) for key in
                               self.suites if key in all_suites.keys())
+                self.info("Per-test suites: %s" % suites)
             else:
                 # Until test zips are downloaded, manifests are not available,
                 # so it is not possible to determine which suites are active/

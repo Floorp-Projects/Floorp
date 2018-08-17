@@ -4,15 +4,11 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 const StdLog = ChromeUtils.import("resource://gre/modules/Log.jsm", {}).Log;
-
-const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.js", {});
 
 this.EXPORTED_SYMBOLS = ["Log"];
 
-const isChildProcess = Services.appinfo.processType ==
-    Services.appinfo.PROCESS_TYPE_CONTENT;
+const PREF_LOG_LEVEL = "marionette.log.level";
 
 /**
  * Shorthand for accessing the Marionette logging repository.
@@ -22,12 +18,9 @@ const isChildProcess = Services.appinfo.processType ==
  * appropriate stdout dumper and with the correct log level.
  *
  * Unlike `Log.jsm` this logger is E10s safe, meaning repository
- * configuration for appenders and logging levels are communicated
- * across processes.
- *
- * @name Log
+ * configuration is communicated across processes.
  */
-class MarionetteLog {
+class Log {
   /**
    * Obtain the `Marionette` logger.
    *
@@ -40,8 +33,8 @@ class MarionetteLog {
     let logger = StdLog.repository.getLogger("Marionette");
     if (logger.ownAppenders.length == 0) {
       logger.addAppender(new StdLog.DumpAppender());
+      logger.manageLevelFromPref(PREF_LOG_LEVEL);
     }
-    logger.level = MarionettePrefs.logLevel;
     return logger;
   }
 
@@ -50,7 +43,7 @@ class MarionetteLog {
    *
    * Unlike {@link LoggerRepository.getLoggerWithMessagePrefix()}
    * this function will ensure invoke {@link #get()} first to ensure
-   * the logger has been properly set up first.
+   * the logger has been properly set up.
    *
    * This returns a new object with a prototype chain that chains
    * up the original {@link Logger} instance.  The new prototype has
@@ -67,28 +60,4 @@ class MarionetteLog {
   }
 }
 
-class ParentProcessLog extends MarionetteLog {
-  static get() {
-    let logger = super.get();
-    Services.ppmm.initialProcessData["Marionette:Log"] = {level: logger.level};
-    return logger;
-  }
-}
-
-class ChildProcessLog extends MarionetteLog {
-  static get() {
-    let logger = super.get();
-
-    // Log.jsm is not e10s compatible (see https://bugzil.la/1411513)
-    // so loading it in a new child process will reset the repository config
-    logger.level = Services.cpmm.initialProcessData["Marionette:Log"] || StdLog.Level.Info;
-
-    return logger;
-  }
-}
-
-if (isChildProcess) {
-  this.Log = ChildProcessLog;
-} else {
-  this.Log = ParentProcessLog;
-}
+this.Log = Log;
