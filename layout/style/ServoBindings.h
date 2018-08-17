@@ -752,6 +752,7 @@ void Gecko_MediaFeatures_GetDeviceSize(nsIDocument*, nscoord* width, nscoord* he
 float Gecko_MediaFeatures_GetResolution(nsIDocument*);
 bool Gecko_MediaFeatures_PrefersReducedMotion(nsIDocument*);
 mozilla::PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(nsIDocument*);
+mozilla::PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(nsIDocument*);
 float Gecko_MediaFeatures_GetDevicePixelRatio(nsIDocument*);
 bool Gecko_MediaFeatures_HasSystemMetric(nsIDocument*,
                                          nsAtom* metric,
