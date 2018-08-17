@@ -56,16 +56,16 @@ test(t => {
     assert_equals(counter++, 3);
   }));
   child.addEventListener("hi", t.step_func(e => {
-    assert_equals(window.event, e);
+    assert_equals(window.event, undefined);
     assert_equals(counter++, 2);
   }));
   furtherChild.addEventListener("hi", t.step_func(e => {
     host.appendChild(child);
-    assert_equals(window.event, e);
+    assert_equals(window.event, undefined);
     assert_equals(counter++, 0);
   }));
   furtherChild.addEventListener("hi", t.step_func(e => {
-    assert_equals(window.event, e);
+    assert_equals(window.event, undefined);
     assert_equals(counter++, 1);
   }));
   furtherChild.dispatchEvent(new Event("hi", { composed: true, bubbles: true }));
