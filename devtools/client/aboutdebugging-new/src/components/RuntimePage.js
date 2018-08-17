@@ -65,19 +65,21 @@ class RuntimePage extends PureComponent {
         name: "Tabs",
         targets: tabs
       }),
-      // Temporary implementation
-      dom.ul(
-        {},
-        serviceWorkers.map(e => dom.li({}, e.name))
-      ),
-      dom.ul(
-        {},
-        sharedWorkers.map(e => dom.li({}, e.name))
-      ),
-      dom.ul(
-        {},
-        otherWorkers.map(e => dom.li({}, e.name))
-      ),
+      DebugTargetPane({
+        dispatch,
+        name: "Service Workers",
+        targets: serviceWorkers
+      }),
+      DebugTargetPane({
+        dispatch,
+        name: "Shared Workers",
+        targets: sharedWorkers
+      }),
+      DebugTargetPane({
+        dispatch,
+        name: "Other Workers",
+        targets: otherWorkers
+      }),
     );
   }
 }

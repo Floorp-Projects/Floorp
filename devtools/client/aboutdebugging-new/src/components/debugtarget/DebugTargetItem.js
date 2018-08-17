@@ -11,6 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ExtensionDetail = createFactory(require("./ExtensionDetail"));
 const TabDetail = createFactory(require("./TabDetail"));
 const TemporaryExtensionAction = createFactory(require("./TemporaryExtensionAction"));
+const WorkerDetail = createFactory(require("./WorkerDetail"));
 
 const Actions = require("../../actions/index");
 const { DEBUG_TARGETS } = require("../../constants");
@@ -56,6 +57,8 @@ class DebugTargetItem extends PureComponent {
         return ExtensionDetail({ target });
       case DEBUG_TARGETS.TAB:
         return TabDetail({ target });
+      case DEBUG_TARGETS.WORKER:
+        return WorkerDetail({ target });
 
       default:
         return null;
