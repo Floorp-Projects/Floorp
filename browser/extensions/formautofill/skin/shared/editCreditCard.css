@@ -2,32 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-html {
-  width: 500px;
-}
-
-form {
+.editCreditCardForm {
   justify-content: center;
 }
 
-form > label,
-form > div {
+.editCreditCardForm > label,
+.editCreditCardForm > div {
   flex: 1 0 100%;
   align-self: center;
   margin: 0 0 0.5em !important;
 }
 
-#billingAddressGUID,
-input {
+.editCreditCardForm #billingAddressGUID,
+.editCreditCardForm input {
   flex: 1 0 auto;
 }
 
-select {
+.editCreditCardForm select {
   margin: 0;
   margin-inline-end: 0.7em;
 }
 
-label > span,
-div > span {
+.editCreditCardForm label > span,
+.editCreditCardForm div > span {
   flex: 0 0 9.5em;
 }
