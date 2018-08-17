@@ -172,55 +172,6 @@
         <label id="siteDataLearnMoreLink"
           class="learnMore text-link" data-l10n-id="sitedata-learn-more"/>
       </description>
-      <radiogroup id="acceptCookies"
-                  preference="network.cookie.cookieBehavior"
-                  onsyncfrompreference="return gPrivacyPane.readAcceptCookies();"
-                  onsynctopreference="return gPrivacyPane.writeAcceptCookies();">
-        <hbox id="cookiesBox">
-          <radio value="0"
-                 data-l10n-id="sitedata-accept-cookies-option"
-                 flex="1" />
-        </hbox>
-        <hbox id="keepRow"
-              class="indent"
-              align="center">
-          <label id="keepUntil"
-                 control="keepCookiesUntil"
-                 data-l10n-id="sitedata-keep-until"/>
-          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-          <hbox>
-            <menulist id="keepCookiesUntil"
-                      onsyncfrompreference="return gPrivacyPane.readKeepCookiesUntil();"
-                      preference="network.cookie.lifetimePolicy">
-              <menupopup>
-                <menuitem data-l10n-id="sitedata-keep-until-expire" value="0"/>
-                <menuitem data-l10n-id="sitedata-keep-until-closed" value="2"/>
-              </menupopup>
-            </menulist>
-          </hbox>
-        </hbox>
-        <hbox id="acceptThirdPartyRow"
-              class="indent"
-              align="center">
-          <label id="acceptThirdPartyLabel" control="acceptThirdPartyMenu"
-                 data-l10n-id="sitedata-accept-third-party-desc"/>
-          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-          <hbox>
-            <menulist id="acceptThirdPartyMenu" preference="network.cookie.cookieBehavior"
-            onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
-            onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();">
-              <menupopup>
-                <menuitem data-l10n-id="sitedata-accept-third-party-always-option" value="always"/>
-                <menuitem data-l10n-id="sitedata-accept-third-party-visited-option" value="visited"/>
-                <menuitem data-l10n-id="sitedata-accept-third-party-never-option" value="never"/>
-              </menupopup>
-            </menulist>
-          </hbox>
-        </hbox>
-        <radio data-l10n-id="sitedata-block-cookies-option"
-               value="2"
-               flex="1" />
-      </radiogroup>
       <radiogroup id="blockCookies"
                   preference="network.cookie.cookieBehavior"
                   onsyncfrompreference="return gPrivacyPane.readBlockCookies();"
@@ -246,6 +197,23 @@
                 <menuitem data-l10n-id="sitedata-block-unvisited-option" value="unvisited"/>
                 <menuitem data-l10n-id="sitedata-block-all-third-parties-option" value="all-third-parties"/>
                 <menuitem data-l10n-id="sitedata-block-always-option" value="always"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </hbox>
+        <hbox id="keepRow"
+              align="center">
+          <label id="keepUntil"
+                 control="keepCookiesUntil"
+                 data-l10n-id="sitedata-keep-until"/>
+          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+          <hbox>
+            <menulist id="keepCookiesUntil"
+                      onsyncfrompreference="return gPrivacyPane.readKeepCookiesUntil();"
+                      preference="network.cookie.lifetimePolicy">
+              <menupopup>
+                <menuitem data-l10n-id="sitedata-keep-until-expire" value="0"/>
+                <menuitem data-l10n-id="sitedata-keep-until-closed" value="2"/>
               </menupopup>
             </menulist>
           </hbox>

@@ -88,20 +88,16 @@ async function test_cookie_settings({
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
   // eslint-disable-next-line no-shadow
   await ContentTask.spawn(tab.linkedBrowser, {cookiesEnabled, cookieSettingsLocked}, async function({cookiesEnabled, cookieSettingsLocked}) {
-    let acceptThirdPartyLabel = content.document.getElementById("acceptThirdPartyLabel");
-    let acceptThirdPartyMenu = content.document.getElementById("acceptThirdPartyMenu");
-    let keepUntilLabel = content.document.getElementById("keepUntil");
-    let keepUntilMenu = content.document.getElementById("keepCookiesUntil");
+    content.setTimeout(() => {
+      let keepUntilLabel = content.document.getElementById("keepUntil");
+      let keepUntilMenu = content.document.getElementById("keepCookiesUntil");
 
-    let expectControlsDisabled = !cookiesEnabled || cookieSettingsLocked;
-    is(acceptThirdPartyLabel.disabled, expectControlsDisabled,
-       "\"Accept Third Party Cookies\" Label disabled status should match expected");
-    is(acceptThirdPartyMenu.disabled, expectControlsDisabled,
-       "\"Accept Third Party Cookies\" Menu disabled status should match expected");
-    is(keepUntilLabel.disabled, expectControlsDisabled,
-       "\"Keep Cookies Until\" Label disabled status should match expected");
-    is(keepUntilMenu.disabled, expectControlsDisabled,
-       "\"Keep Cookies Until\" Menu disabled status should match expected");
+      let expectControlsDisabled = !cookiesEnabled || cookieSettingsLocked;
+      is(keepUntilLabel.disabled, expectControlsDisabled,
+         "\"Keep Cookies Until\" Label disabled status should match expected");
+      is(keepUntilMenu.disabled, expectControlsDisabled,
+         "\"Keep Cookies Until\" Menu disabled status should match expected");
+    }, 0);
   });
   BrowserTestUtils.removeTab(tab);
 
