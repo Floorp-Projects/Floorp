@@ -27,6 +27,7 @@ const actionTypes = {
 const DEBUG_TARGETS = {
   EXTENSION: "EXTENSION",
   TAB: "TAB",
+  WORKER: "WORKER",
 };
 
 const PAGES = {
@@ -34,8 +35,21 @@ const PAGES = {
   CONNECT: "connect",
 };
 
+const SERVICE_WORKER_FETCH_STATES = {
+  LISTENING: "LISTENING",
+  NOT_LISTENING: "NOT_LISTENING",
+};
+
+const SERVICE_WORKER_STATUSES = {
+  RUNNING: "RUNNING",
+  REGISTERING: "REGISTERING",
+  STOPPED: "STOPPED",
+};
+
 // flatten constants
 module.exports = Object.assign({}, {
   DEBUG_TARGETS,
   PAGES,
+  SERVICE_WORKER_FETCH_STATES,
+  SERVICE_WORKER_STATUSES,
 }, actionTypes);
