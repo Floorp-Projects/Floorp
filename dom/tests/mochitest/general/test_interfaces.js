@@ -518,7 +518,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "HTMLSelectElement", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "HTMLSlotElement", insecureContext: true, disabled: true},
+    {name: "HTMLSlotElement", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "HTMLSourceElement", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -872,7 +872,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "ScopedCredentialInfo", insecureContext: true, disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ShadowRoot", insecureContext: true, disabled: true},
+    {name: "ShadowRoot", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "SharedWorker", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!

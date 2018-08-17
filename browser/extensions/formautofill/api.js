@@ -6,7 +6,6 @@
 
 /* globals ExtensionAPI */
 
-const STYLESHEET_URI = "chrome://formautofill/content/formautofill.css";
 const CACHED_STYLESHEETS = new WeakMap();
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -44,7 +43,9 @@ function onMaybeOpenPopup(evt) {
     return;
   }
 
-  insertStyleSheet(domWindow, STYLESHEET_URI);
+  insertStyleSheet(domWindow, "chrome://formautofill/content/formautofill.css");
+  insertStyleSheet(domWindow, "resource://formautofill/autocomplete-item-shared.css");
+  insertStyleSheet(domWindow, "resource://formautofill/autocomplete-item.css");
 }
 
 function isAvailable() {
