@@ -5,7 +5,6 @@ CARGO="${TOOLTOOL_DIR}/rustc/bin/cargo"
 RUSTC="${TOOLTOOL_DIR}/rustc/bin/rustc"
 RUSTDOC="${TOOLTOOL_DIR}/rustc/bin/rustdoc"
 RUSTFMT="${TOOLTOOL_DIR}/rustc/bin/rustfmt"
-CBINDGEN="${TOOLTOOL_DIR}/cbindgen/cbindgen"
 
 export NODEJS="${TOOLTOOL_DIR}/node/bin/node"
 

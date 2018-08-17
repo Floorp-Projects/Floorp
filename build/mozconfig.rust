@@ -7,6 +7,5 @@ RUSTC="$TOOLTOOL_DIR/rustc/bin/rustc"
 CARGO="$TOOLTOOL_DIR/rustc/bin/cargo"
 RUSTDOC="$TOOLTOOL_DIR/rustc/bin/rustdoc"
 RUSTFMT="$TOOLTOOL_DIR/rustc/bin/rustfmt"
-CBINDGEN="$TOOLTOOL_DIR/cbindgen/cbindgen"
 
 ac_add_options --enable-rust-simd
