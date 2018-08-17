@@ -397,6 +397,64 @@
           </vbox>
         </hbox>
       </vbox>
+      <hbox class="content-blocking-category reject-trackers-ui">
+        <hbox flex="1">
+          <vbox class="content-blocking-category-icon">
+            <image class="reject-trackers-icon content-blocking-icon"/>
+          </vbox>
+          <vbox class="content-blocking-category-labels" flex="1">
+            <label data-l10n-id="content-blocking-reject-trackers-label"
+                   class="content-blocking-category-name"
+                   control="blockCookiesCB"/>
+            <deck id="blockCookiesCBDeck">
+              <description id="blockCookiesCBDesc"
+                           data-l10n-id="content-blocking-reject-trackers-description"
+                           class="content-blocking-category-description"/>
+              <hbox id="warningAllCookiesBlocked">
+                <image class="reject-trackers-warning-icon"/>
+                <description data-l10n-id="content-blocking-reject-trackers-warning-all-cookies-blocked"
+                             class="content-blocking-category-description"/>
+              </hbox>
+              <hbox id="warningFromVisitedCookiesBlocked">
+                <image class="reject-trackers-warning-icon"/>
+                <description data-l10n-id="content-blocking-reject-trackers-warning-from-unvisited-cookies-blocked"
+                             class="content-blocking-category-description"/>
+              </hbox>
+            </deck>
+          </vbox>
+        </hbox>
+        <vbox>
+          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+          <hbox>
+            <button id="contentBlockingChangeCookieSettings"
+                    class="accessory-button"
+                    flex="1"
+                    hidden="true"
+                    data-l10n-id="content-blocking-change-cookie-settings"/>
+          </hbox>
+        </vbox>
+      </hbox>
+      <hbox class="content-blocking-category reject-trackers-ui">
+        <hbox>
+          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+          <vbox class="indent">
+            <radiogroup id="blockCookiesCB"
+                        aria-labelledby="blockCookiesCBDesc"
+                        class="content-blocking-category-menu"
+                        preference="network.cookie.cookieBehavior"
+                        onsyncfrompreference="return gPrivacyPane.readBlockCookiesCB();"
+                        onsynctopreference="return gPrivacyPane.writeBlockCookiesCB();">
+              <radio value="trackers"
+                     id="blockCookiesFromTrackersCB"
+                     data-l10n-id="content-blocking-reject-trackers-block-trackers-option"
+                     flex="1" />
+              <radio value="all-third-parties"
+                     data-l10n-id="content-blocking-reject-trackers-all-third-parties-option"
+                     flex="1" />
+            </radiogroup>
+          </vbox>
+        </hbox>
+      </hbox>
     </vbox>
     <hbox id="trackingProtectionBox" hidden="true">
       <vbox flex="1">
