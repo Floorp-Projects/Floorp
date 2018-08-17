@@ -2741,14 +2741,7 @@ HTMLEditor::GetSelectedElement(Selection& aSelection,
     return selectedElement.forget();
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIContentIterator> iter =
-    do_CreateInstance("@mozilla.org/content/post-content-iterator;1",
-                      &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
 
   bool found = !!selectedElement;
   const nsAtom* tagNameLookingFor = aTagName;
@@ -3001,28 +2994,24 @@ HTMLEditor::GetLinkedObjects(nsIArray** aNodeList)
     return rv;
   }
 
-  nsCOMPtr<nsIContentIterator> iter =
-    do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
-  NS_ENSURE_TRUE(iter, NS_ERROR_NULL_POINTER);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDocument> doc = GetDocument();
-    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-    iter->Init(doc->GetRootElement());
+  iter->Init(doc->GetRootElement());
 
-    // loop through the content iterator for each content node
-    while (!iter->IsDone()) {
-      nsCOMPtr<nsINode> node = iter->GetCurrentNode();
-      if (node) {
-        // Let nsURIRefObject make the hard decisions:
-        nsCOMPtr<nsIURIRefObject> refObject;
-        rv = NS_NewHTMLURIRefObject(getter_AddRefs(refObject), node);
-        if (NS_SUCCEEDED(rv)) {
-          nodes->AppendElement(refObject);
-        }
+  // loop through the content iterator for each content node
+  while (!iter->IsDone()) {
+    nsCOMPtr<nsINode> node = iter->GetCurrentNode();
+    if (node) {
+      // Let nsURIRefObject make the hard decisions:
+      nsCOMPtr<nsIURIRefObject> refObject;
+      rv = NS_NewHTMLURIRefObject(getter_AddRefs(refObject), node);
+      if (NS_SUCCEEDED(rv)) {
+        nodes->AppendElement(refObject);
       }
-      iter->Next();
     }
+    iter->Next();
   }
 
   nodes.forget(aNodeList);
@@ -3260,14 +3249,7 @@ HTMLEditor::GetEmbeddedObjects(nsIArray** aNodeList)
     return rv;
   }
 
-  nsCOMPtr<nsIContentIterator> iter =
-    do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
-  if (NS_WARN_IF(!iter)) {
-    return NS_ERROR_FAILURE;
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
   if (NS_WARN_IF(!doc)) {
@@ -3787,10 +3769,7 @@ HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange)
 
 
   // build a list of editable text nodes
-  nsresult rv = NS_ERROR_UNEXPECTED;
-  nsCOMPtr<nsIContentIterator> iter =
-    do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
 
   iter->Init(aInRange);
 
@@ -3815,7 +3794,7 @@ HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange)
     // get the prev sibling of the right node, and see if its leftTextNode
     nsCOMPtr<nsINode> prevSibOfRightNode = rightTextNode->GetPreviousSibling();
     if (prevSibOfRightNode && prevSibOfRightNode == leftTextNode) {
-      rv = JoinNodesWithTransaction(*leftTextNode, *rightTextNode);
+      nsresult rv = JoinNodesWithTransaction(*leftTextNode, *rightTextNode);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
