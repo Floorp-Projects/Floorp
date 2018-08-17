@@ -13,6 +13,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 import logging
+import json
 import os
 
 from taskgraph.transforms.base import TransformSequence
@@ -80,7 +81,10 @@ job_description_schema = Schema({
 
     # A list of artifacts to install from 'fetch' tasks.
     Optional('fetches'): {
-        basestring: [basestring],
+        basestring: [basestring, {
+            Required('artifact'): basestring,
+            Optional('dest'): basestring,
+        }],
     },
 
     # A description of how to run this job.
@@ -182,19 +186,34 @@ def use_fetches(config, jobs):
 
                     dep = 'fetch-{}'.format(fetch)
                     dependencies[dep] = dep
-                    job_fetches.append('{path}@<{dep}>'.format(path=path, dep=dep))
+                    job_fetches.append({
+                        'artifact': path,
+                        'task': '<{dep}>'.format(dep=dep),
+                    })
 
             else:
                 if kind not in dependencies:
                     raise Exception("{name} can't fetch {kind} artifacts because "
                                     "it has no {kind} dependencies!".format(name=name, kind=kind))
 
-                for path in artifacts:
-                    job_fetches.append('{prefix}/{path}@<{dep}>'.format(
-                        prefix=prefix, path=path, dep=kind))
+                for artifact in artifacts:
+                    if isinstance(artifact, basestring):
+                        path = artifact
+                        dest = None
+                    else:
+                        path = artifact['artifact']
+                        dest = artifact.get('dest')
+
+                    fetch = {
+                        'artifact': '{prefix}/{path}'.format(prefix=prefix, path=path),
+                        'task': '<{dep}>'.format(dep=kind),
+                    }
+                    if dest is not None:
+                        fetch['dest'] = dest
+                    job_fetches.append(fetch)
 
         env = job.setdefault('worker', {}).setdefault('env', {})
-        env['MOZ_FETCHES'] = {'task-reference': ' '.join(job_fetches)}
+        env['MOZ_FETCHES'] = {'task-reference': json.dumps(job_fetches, sort_keys=True)}
 
         workdir = job['run'].get('workdir', '/builds/worker')
         env.setdefault('MOZ_FETCHES_DIR', '{}/fetches'.format(workdir))
