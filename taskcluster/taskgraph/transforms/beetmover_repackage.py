@@ -214,31 +214,23 @@ def make_task_description(config, jobs):
             )
         )
 
-        dependent_kind = str(dep_job.kind)
+        dependent_kind = dep_job.kind
+        if dependent_kind == 'repackage-signing-l10n':
+            dependent_kind = "repackage-signing"
         dependencies = {dependent_kind: dep_job.label}
 
         signing_name = "build-signing"
         if job.get('locale'):
             signing_name = "nightly-l10n-signing"
-        signing_dependencies = {signing_name:
-                                dep_job.dependencies[signing_name]
-                                }
-        dependencies.update(signing_dependencies)
+        dependencies['signing'] = dep_job.dependencies[signing_name]
 
         build_name = "build"
         if job.get('locale'):
             build_name = "unsigned-repack"
-        build_dependencies = {"build":
-                              dep_job.dependencies[build_name]
-                              }
-        dependencies.update(build_dependencies)
+        dependencies["build"] = dep_job.dependencies[build_name]
 
-        repackage_name = "repackage"
         # repackage-l10n actually uses the repackage depname here
-        repackage_dependencies = {"repackage":
-                                  dep_job.dependencies[repackage_name]
-                                  }
-        dependencies.update(repackage_dependencies)
+        dependencies["repackage"] = dep_job.dependencies["repackage"]
 
         # If this isn't a direct dependency, it won't be in there.
         if 'repackage-signing' not in dependencies and \
@@ -246,10 +238,7 @@ def make_task_description(config, jobs):
             repackage_signing_name = "repackage-signing"
             if job.get('locale'):
                 repackage_signing_name = "repackage-signing-l10n"
-            repackage_signing_deps = {"repackage-signing":
-                                      dep_job.dependencies[repackage_signing_name]
-                                      }
-            dependencies.update(repackage_signing_deps)
+            dependencies["repackage-signing"] = dep_job.dependencies[repackage_signing_name]
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         if job.get('locale'):
@@ -275,9 +264,7 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(job, build_task_ref, build_signing_task_ref,
-                                repackage_task_ref, repackage_signing_task_ref,
-                                platform, locale=None, project=None):
+def generate_upstream_artifacts(job, platform, locale=None, project=None):
 
     build_mapping = UPSTREAM_ARTIFACT_UNSIGNED_PATHS
     build_signing_mapping = UPSTREAM_ARTIFACT_SIGNED_PATHS
@@ -291,27 +278,19 @@ def generate_upstream_artifacts(job, build_task_ref, build_signing_task_ref,
 
     upstream_artifacts = []
 
-    task_refs = [
-        build_task_ref,
-        build_signing_task_ref,
-        repackage_task_ref,
-        repackage_signing_task_ref
-    ]
-    tasktypes = ['build', 'signing', 'repackage', 'repackage']
-    mapping = [
-        build_mapping,
-        build_signing_mapping,
-        repackage_mapping,
-        repackage_signing_mapping
-    ]
-
-    for ref, tasktype, mapping in zip(task_refs, tasktypes, mapping):
+    for task_type, cot_type, mapping in [
+        ("build", "build", build_mapping),
+        ("signing", "signing", build_signing_mapping),
+        ('repackage', 'repackage', repackage_mapping),
+        ('repackage-signing', 'repackage', repackage_signing_mapping),
+    ]:
         platform_was_previously_matched_by_regex = None
         for platform_regex, paths in mapping.iteritems():
             if platform_regex.match(platform) is not None:
                 _check_platform_matched_only_one_regex(
-                    tasktype, platform, platform_was_previously_matched_by_regex, platform_regex
+                    task_type, platform, platform_was_previously_matched_by_regex, platform_regex
                 )
+                platform_was_previously_matched_by_regex = platform_regex
                 if paths:
                     usable_paths = paths[:]
 
@@ -328,13 +307,12 @@ def generate_upstream_artifacts(job, build_task_ref, build_signing_task_ref,
                             # We may have removed our only path.
                             continue
                     upstream_artifacts.append({
-                        "taskId": {"task-reference": ref},
-                        "taskType": tasktype,
+                        "taskId": {"task-reference": "<{}>".format(task_type)},
+                        "taskType": cot_type,
                         "paths": ["{}/{}".format(artifact_prefix, path)
                                   for path in usable_paths],
                         "locale": locale or "en-US",
                     })
-                platform_was_previously_matched_by_regex = platform_regex
 
     return upstream_artifacts
 
@@ -391,35 +369,16 @@ def make_task_worker(config, jobs):
 
         locale = job["attributes"].get("locale")
         platform = job["attributes"]["build_platform"]
-        build_task = None
-        build_signing_task = None
-        repackage_task = None
-        repackage_signing_task = None
 
-        for dependency in job["dependencies"].keys():
-            if 'repackage-signing' in dependency:
-                repackage_signing_task = dependency
-            elif 'repackage' in dependency:
-                repackage_task = dependency
-            elif 'signing' in dependency:
-                # catches build-signing and nightly-l10n-signing
-                build_signing_task = dependency
-            else:
-                build_task = "build"
-
-        build_task_ref = "<" + str(build_task) + ">"
-        build_signing_task_ref = "<" + str(build_signing_task) + ">"
-        repackage_task_ref = "<" + str(repackage_task) + ">"
-        repackage_signing_task_ref = "<" + str(repackage_signing_task) + ">"
+        upstream_artifacts = generate_upstream_artifacts(
+            job, platform, locale,
+            project=config.params['project']
+        )
 
         worker = {
             'implementation': 'beetmover',
             'release-properties': craft_release_properties(config, job),
-            'upstream-artifacts': generate_upstream_artifacts(
-                job, build_task_ref, build_signing_task_ref, repackage_task_ref,
-                repackage_signing_task_ref, platform, locale,
-                project=config.params['project']
-            ),
+            'upstream-artifacts': upstream_artifacts,
         }
         if locale:
             worker["locale"] = locale
