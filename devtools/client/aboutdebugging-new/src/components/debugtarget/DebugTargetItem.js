@@ -8,13 +8,12 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
-const TabDetail = createFactory(require("./debugtarget/TabDetail"));
-const TemporaryExtensionAction =
-  createFactory(require("./debugtarget/TemporaryExtensionAction"));
+const ExtensionDetail = createFactory(require("./ExtensionDetail"));
+const TabDetail = createFactory(require("./TabDetail"));
+const TemporaryExtensionAction = createFactory(require("./TemporaryExtensionAction"));
 
-const Actions = require("../actions/index");
-const { DEBUG_TARGETS } = require("../constants");
+const Actions = require("../../actions/index");
+const { DEBUG_TARGETS } = require("../../constants");
 
 /**
  * This component displays debug target.
