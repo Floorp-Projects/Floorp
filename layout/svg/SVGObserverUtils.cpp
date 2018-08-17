@@ -224,6 +224,26 @@ nsSVGFrameReferenceFromProperty::Get()
   return mFrame;
 }
 
+
+NS_IMPL_ISUPPORTS(SVGTemplateElementObserver, nsIMutationObserver)
+
+void
+SVGTemplateElementObserver::OnRenderingChange()
+{
+  SVGIDRenderingObserver::OnRenderingChange();
+
+  if (nsIFrame* frame = mFrameReference.Get()) {
+    // We know that we don't need to walk the parent chain notifying rendering
+    // observers since changes to a gradient etc. do not affect ancestor
+    // elements.  So we only invalidate *direct* rendering observers here.
+    // Since we don't need to walk the parent chain, we don't need to worry
+    // about coalescing multiple invalidations by using a change hint as we do
+    // in nsSVGRenderingObserverProperty::OnRenderingChange.
+    SVGObserverUtils::InvalidateDirectRenderingObservers(frame);
+  }
+}
+
+
 NS_IMPL_ISUPPORTS(nsSVGRenderingObserverProperty, nsIMutationObserver)
 
 void
@@ -234,8 +254,11 @@ nsSVGRenderingObserverProperty::OnRenderingChange()
   nsIFrame* frame = mFrameReference.Get();
 
   if (frame && frame->HasAllStateBits(NS_FRAME_SVG_LAYOUT)) {
-    // Changes should propagate out to things that might be observing
-    // the referencing frame or its ancestors.
+    // We need to notify anything that is observing the referencing frame or
+    // any of its ancestors that the referencing frame has been invalidated.
+    // Since walking the parent chain checking for observers is expensive we
+    // do that using a change hint (multiple change hints of the same type are
+    // coalesced).
     nsLayoutUtils::PostRestyleEvent(
       frame->GetContent()->AsElement(), nsRestyleHint(0),
       nsChangeHint_InvalidateRenderingObservers);
@@ -647,6 +670,14 @@ void
 SVGObserverUtils::RemoveTextPathObserver(nsIFrame* aTextPathFrame)
 {
   aTextPathFrame->DeleteProperty(HrefAsTextPathProperty());
+}
+
+SVGTemplateElementObserver*
+SVGObserverUtils::GetTemplateElementObserver(URLAndReferrerInfo* aURI,
+  nsIFrame* aFrame,
+  const mozilla::FramePropertyDescriptor<SVGTemplateElementObserver>* aProperty)
+{
+  return GetEffectProperty(aURI, aFrame, aProperty);
 }
 
 nsSVGPaintingProperty*
