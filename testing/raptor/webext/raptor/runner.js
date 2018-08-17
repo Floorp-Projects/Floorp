@@ -1,3 +1,4 @@
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -105,7 +106,7 @@ function getTestSettings() {
         }
 
         // write options to storage that our content script needs to know
-        if (browserName === "firefox") {
+        if (["firefox", "geckoview"].includes(browserName)) {
           ext.storage.local.clear().then(function() {
             ext.storage.local.set({settings}).then(function() {
               console.log("wrote settings to ext local storage");
@@ -127,7 +128,7 @@ function getTestSettings() {
 
 function getBrowserInfo() {
   return new Promise(resolve => {
-    if (browserName === "firefox") {
+    if (["firefox", "geckoview"].includes(browserName)) {
       ext = browser;
       var gettingInfo = browser.runtime.getBrowserInfo();
       gettingInfo.then(function(bi) {
@@ -157,7 +158,7 @@ function testTabCreated(tab) {
 }
 
 async function testTabUpdated(tab) {
-  console.log("tab " + tab.id + " reloaded");
+  console.log("test tab updated");
   // wait for pageload test result from content
   await waitForResult();
   // move on to next cycle (or test complete)
@@ -215,7 +216,7 @@ function nextCycle() {
       } else if (testType == "benchmark") {
         isBenchmarkPending = true;
       }
-      // (re)load the test page
+      // update the test page - browse to our test URL
       ext.tabs.update(testTabID, {url: testURL}, testTabUpdated);
     }, pageCycleDelay);
   } else {
@@ -241,7 +242,7 @@ function setTimeoutAlarm(timeoutName, timeoutMS) {
 }
 
 function cancelTimeoutAlarm(timeoutName) {
-  if (browserName === "firefox") {
+  if (browserName === "firefox" || browserName === "geckoview") {
     var clearAlarm = ext.alarms.clear(timeoutName);
     clearAlarm.then(function(onCleared) {
       if (onCleared) {
@@ -359,6 +360,7 @@ function cleanUp() {
 }
 
 function runner() {
+  console.log("Welcome to Jurassic Park!");
   let config = getTestConfig();
   console.log("test name is: " + config.test_name);
   console.log("test settings url is: " + config.test_settings_url);
@@ -388,7 +390,13 @@ function runner() {
       // wait some time for the browser to settle before beginning
       var text = "* pausing " + postStartupDelay / 1000 + " seconds to let browser settle... *";
       postToControlServer("status", text);
-      setTimeout(function() { ext.tabs.create({url: "about:blank"}); }, postStartupDelay);
+
+      // on geckoview you can't create a new tab; only using existing tab - set it blank first
+      if (config.browser == "geckoview") {
+        setTimeout(function() { nextCycle(); }, postStartupDelay);
+      } else {
+        setTimeout(function() { ext.tabs.create({url: "about:blank"}); }, postStartupDelay);
+      }
     });
   });
 }

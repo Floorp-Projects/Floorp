@@ -17,7 +17,7 @@ def create_parser(mach_interface=False):
             help="name of raptor test to run")
     add_arg('--app', default='firefox', dest='app',
             help="name of the application we are testing (default: firefox)",
-            choices=['firefox', 'chrome'])
+            choices=['firefox', 'chrome', 'geckoview'])
     add_arg('-b', '--binary', dest='binary',
             help="path to the browser executable that we are testing")
     if not mach_interface:
@@ -39,8 +39,10 @@ def verify_options(parser, args):
     if args.binary is None:
         parser.error("--binary is required!")
 
-    if not os.path.isfile(args.binary):
-        parser.error("{binary} does not exist!".format(**ctx))
+    # if running on a desktop browser make sure the binary exists
+    if args.app != "geckoview":
+        if not os.path.isfile(args.binary):
+            parser.error("{binary} does not exist!".format(**ctx))
 
 
 def parse_args(argv=None):
