@@ -41,7 +41,7 @@ class ToolboxTab extends Component {
   render() {
     const {panelDefinition, currentToolId, highlightedTools, selectTool,
            focusedButton, focusButton} = this.props;
-    const {id, extensionId, tooltip, label, iconOnly, badge} = panelDefinition;
+    const {id, extensionId, tooltip, label, iconOnly} = panelDefinition;
     const isHighlighted = id === currentToolId;
 
     const className = [
@@ -81,15 +81,7 @@ class ToolboxTab extends Component {
           {
             className: "devtools-tab-label"
           },
-          label,
-          badge && !isHighlighted ?
-            span(
-              {
-                className: "devtools-tab-badge"
-              },
-              badge
-            ) :
-            null
+          label
         )
     );
   }
