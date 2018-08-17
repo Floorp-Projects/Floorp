@@ -69,6 +69,7 @@ mochitest:
             linux64-asan/opt: 10
             linux64-.*cov/opt: 10
             windows10-64-ccov/debug: 10
+            macosx64-ccov/debug: 10
             default: 5
     e10s:
         by-test-platform:
@@ -118,6 +119,7 @@ mochitest-browser-chrome:
         by-test-platform:
             linux64-.*cov/opt: 7200
             windows10-64-ccov/debug: 7200
+            macosx64-ccov/debug: 10800
             linux.*/debug: 5400
             default: 3600
     mozharness:
@@ -204,6 +206,7 @@ mochitest-clipboard:
     max-run-time:
         by-test-platform:
             windows10-64-ccov/debug: 7200
+            macosx64-ccov/debug: 7200
             default: 3600
     e10s:
         by-test-platform:
@@ -234,6 +237,7 @@ mochitest-devtools-chrome:
     max-run-time:
         by-test-platform:
             windows10-64-ccov/debug: 7200
+            macosx64-ccov/debug: 9000
             default: 5400
     run-on-projects:
         by-test-platform:
@@ -242,6 +246,7 @@ mochitest-devtools-chrome:
     chunks:
         by-test-platform:
             windows10-64-ccov/debug: 10
+            macosx64-ccov/debug: 15
             default: 8
     mozharness:
         mochitest-flavor: chrome
@@ -288,6 +293,7 @@ mochitest-media:
     max-run-time:
         by-test-platform:
             windows10-64-ccov/debug: 7200
+            macosx64-ccov/debug: 7200
             default: 5400
     run-on-projects: built-projects
     loopback-video: true
@@ -371,6 +377,7 @@ mochitest-webgl1-core:
     max-run-time:
         by-test-platform:
             windows.*: 5400
+            macosx64-ccov/debug: 7200
             default: 3600
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
