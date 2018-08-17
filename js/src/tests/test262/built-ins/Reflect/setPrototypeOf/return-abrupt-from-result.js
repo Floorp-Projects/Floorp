@@ -9,7 +9,7 @@ info: |
 
   ...
   3. Return target.[[SetPrototypeOf]](proto).
-features: [Proxy, Reflect, Reflect.setPrototypeOf]
+features: [Proxy]
 ---*/
 
 var target = {};

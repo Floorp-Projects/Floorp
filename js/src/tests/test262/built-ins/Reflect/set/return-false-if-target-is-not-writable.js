@@ -24,7 +24,6 @@ info: |
       i. If IsAccessorDescriptor(existingDescriptor) is true, return false.
       ii. If existingDescriptor.[[Writable]] is false, return false.
   ...
-features: [Reflect, Reflect.set]
 ---*/
 
 var o1 = {};

@@ -16,7 +16,7 @@ info: |
   1. Let current be O.[[GetOwnProperty]](P).
   2. ReturnIfAbrupt(current).
   ...
-features: [Proxy, Reflect]
+features: [Proxy]
 ---*/
 
 var o = {};

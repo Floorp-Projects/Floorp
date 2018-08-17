@@ -9,7 +9,6 @@ info: |
   [[SetPrototypeOf]] (V)
 
   12. Let targetProto be ? target.[[GetPrototypeOf]]().
-features: [Proxy]
 ---*/
 
 var target = new Proxy({}, {

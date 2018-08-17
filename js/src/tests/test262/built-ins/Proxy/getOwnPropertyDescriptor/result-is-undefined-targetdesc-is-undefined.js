@@ -12,7 +12,6 @@ info: |
     14. If trapResultObj is undefined, then
         a. If targetDesc is undefined, return undefined.
     ...
-features: [Proxy]
 ---*/
 
 var t = {};

@@ -15,7 +15,6 @@ info: |
   ...
   4. If SameValue(V, current), return true.
   ...
-features: [Reflect, Reflect.setPrototypeOf]
 ---*/
 
 var o1 = {};

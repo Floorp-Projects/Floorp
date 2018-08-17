@@ -9,7 +9,7 @@ info: |
 
   ...
   2. Return target.[[IsExtensible]]().
-features: [Proxy, Reflect]
+features: [Proxy]
 ---*/
 
 var o1 = {};

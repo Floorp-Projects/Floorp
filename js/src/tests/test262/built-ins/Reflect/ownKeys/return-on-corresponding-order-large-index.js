@@ -25,7 +25,7 @@ info: |
   order
     a. Add P as the last element of keys.
   5. Return keys.
-features: [computed-property-names, Reflect, Symbol]
+features: [Reflect,Symbol]
 ---*/
 
 var o1 = {

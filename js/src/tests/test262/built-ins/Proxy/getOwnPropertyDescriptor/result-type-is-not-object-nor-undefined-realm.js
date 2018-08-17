@@ -10,7 +10,7 @@ info: |
   [...]
   9. If Type(trapResultObj) is neither Object nor Undefined, throw a TypeError
      exception.
-features: [cross-realm, Proxy]
+features: [cross-realm]
 ---*/
 
 var OProxy = $262.createRealm().global.Proxy;

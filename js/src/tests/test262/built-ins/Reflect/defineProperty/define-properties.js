@@ -10,7 +10,6 @@ info: |
   ...
   6. Return target.[[DefineOwnProperty]](key, desc).
 includes: [propertyHelper.js]
-features: [Reflect]
 ---*/
 
 var o = {};

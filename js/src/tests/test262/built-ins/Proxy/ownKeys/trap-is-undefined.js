@@ -6,7 +6,6 @@ description: >
     [[OwnPropertyKeys]] ( )
 
     6. If trap is undefined, then Return target.[[OwnPropertyKeys]]()
-features: [Proxy]
 ---*/
 
 var target = {
