@@ -20,6 +20,7 @@ from taskgraph.util.schema import (
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.partners import check_if_partners_enabled
 from taskgraph.util.platforms import archive_format, executable_extension
+from taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.transforms.repackage import PACKAGE_FORMATS
 from voluptuous import Any, Required, Optional
@@ -179,7 +180,6 @@ def make_job_description(config, jobs):
         })
 
         worker = {
-            'artifacts': _generate_task_output_files(dep_job, build_platform, partner=repack_id),
             'chain-of-trust': True,
             'max-run-time': 7200 if build_platform.startswith('win') else 3600,
             'taskcluster-proxy': True if get_artifact_prefix(dep_job) else False,
@@ -203,6 +203,11 @@ def make_job_description(config, jobs):
 
             run['tooltool-downloads'] = 'internal'
             worker['docker-image'] = {"in-tree": "debian7-amd64-build"}
+
+        worker['artifacts'] = _generate_task_output_files(
+            dep_job, worker_type_implementation(worker_type),
+            repackage_config, partner=repack_id,
+        )
 
         description = (
             "Repackaging for repack_id '{repack_id}' for build '"
@@ -266,7 +271,7 @@ def _generate_download_config(task, build_platform, signing_task, partner=None,
     raise NotImplementedError('Unsupported build_platform: "{}"'.format(build_platform))
 
 
-def _generate_task_output_files(task, build_platform, partner):
+def _generate_task_output_files(task, worker_implementation, repackage_config, partner):
     """We carefully generate an explicit list here, but there's an artifacts directory
     too, courtesy of generic_worker_add_artifacts() (windows) or docker_worker_add_artifacts().
     Any errors here are likely masked by that.
@@ -274,22 +279,20 @@ def _generate_task_output_files(task, build_platform, partner):
     partner_output_path = '{}/'.format(partner)
     artifact_prefix = get_artifact_prefix(task)
 
-    if build_platform.startswith('macosx'):
-        output_files = [{
+    if worker_implementation == ('docker-worker', 'linux'):
+        local_prefix = '/builds/worker/workspace/'
+    elif worker_implementation == ('generic-worker', 'windows'):
+        local_prefix = ''
+    else:
+        raise NotImplementedError(
+            'Unsupported worker implementation: "{}"'.format(worker_implementation))
+
+    output_files = []
+    for config in repackage_config:
+        output_files.append({
             'type': 'file',
-            'path': '/builds/worker/workspace/build/outputs/{}target.dmg'
-                    .format(partner_output_path),
-            'name': '{}/{}target.dmg'.format(artifact_prefix, partner_output_path),
-        }]
-
-    elif build_platform.startswith('win'):
-        output_files = [{
-            'type': 'file',
-            'path': 'build/outputs/{}target.installer.exe'.format(partner_output_path),
-            'name': '{}/{}target.installer.exe'.format(artifact_prefix, partner_output_path),
-        }]
-
-    if output_files:
-        return output_files
-
-    raise NotImplementedError('Unsupported build_platform: "{}"'.format(build_platform))
+            'path': '{}build/outputs/{}{}'
+                    .format(local_prefix, partner_output_path, config['output']),
+            'name': '{}/{}{}'.format(artifact_prefix, partner_output_path, config['output']),
+        })
+    return output_files
