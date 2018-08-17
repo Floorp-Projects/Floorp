@@ -8,6 +8,7 @@ import bz2
 import concurrent.futures
 import gzip
 import hashlib
+import json
 import lzma
 import multiprocessing
 import os
@@ -280,19 +281,15 @@ def command_static_url(args):
 
 
 def command_task_artifacts(args):
+    fetches = json.loads(os.environ['MOZ_FETCHES'])
     downloads = []
-    for word in args.artifacts:
-        # Format is name[>dest]@task
-        artifact, task_id = word.split('@', 1)
+    for fetch in fetches:
         extdir = pathlib.Path(args.dest)
-
-        if '>' in artifact:
-            artifact, subdir = artifact.rsplit('>', 1)
-            extdir = extdir.joinpath(subdir)
-
+        if 'dest' in fetch:
+            extdir = extdir.joinpath(fetch['dest'])
         extdir.mkdir(parents=True, exist_ok=True)
-        url = ARTIFACT_URL.format(task=task_id,
-                                  artifact=artifact)
+        url = ARTIFACT_URL.format(task=fetch['task'],
+                                  artifact=fetch['artifact'])
         downloads.append((url, extdir))
 
     fetch_urls(downloads)
@@ -322,8 +319,6 @@ def main():
     artifacts.add_argument('-d', '--dest', default=os.environ.get('MOZ_FETCHES_DIR'),
                            help='Destination directory which will contain all '
                                 'artifacts (defaults to $MOZ_FETCHES_DIR)')
-    artifacts.add_argument('artifacts', nargs='+',
-                           help='Artifacts to fetch. Of form path@task_id')
 
     args = parser.parse_args()
 
