@@ -2,53 +2,66 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-form,
-label,
-div,
-p {
-  display: flex;
+:root {
+  --in-field-label-size: .8em;
+  /* Use the animation-easing-function that is defined in xul.css. */
+  --animation-easing-function: cubic-bezier(.07,.95,0,1);
 }
 
-form,
-div {
-  flex-wrap: wrap;
-}
-
-form {
+:root[subdialog] form {
   /* Add extra space to ensure invalid input box is displayed properly */
   padding: 2px;
 }
 
-form label,
-form > p {
+:root[subdialog] form label,
+:root[subdialog] form > p {
   margin: 0 0 0.5em !important;
 }
 
-label > span,
-div > span {
-  box-sizing: border-box;
-  padding-inline-end: 0.7em;
-  align-self: center;
-  text-align: end;
-  -moz-user-select: none;
+form input[type="email"],
+form input[type="tel"],
+form input[type="text"],
+form textarea,
+form select {
+  padding-top: calc(var(--in-field-label-size) + .4em);
 }
 
-option {
-  padding: 0.3em 0.5em;
-}
-
-textarea {
-  resize: none;
-}
-
-button {
-  padding-right: 10px;
-  padding-left: 10px;
-}
-
-input,
 select {
-  box-sizing: border-box;
+  margin: 0;
+  padding-bottom: 5px;
+}
+
+form :-moz-any(label, div) {
+  position: relative;
+  display: block;
+  line-height: 1em;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+form :-moz-any(label, div) > .label-text {
+  position: absolute;
+  color: GrayText;
+  pointer-events: none;
+  left: 10px;
+  top: .2em;
+  transition: top .2s var(--animation-easing-function),
+              font-size .2s var(--animation-easing-function);
+}
+
+form :-moz-any(label, div):focus-within > .label-text,
+form :-moz-any(label, div) > .label-text[field-populated] {
+  top: 0;
+  font-size: var(--in-field-label-size);
+}
+
+form :-moz-any(label, div):focus-within > .label-text {
+  color: var(--in-content-item-selected);
+}
+
+form div[required] > label > .label-text::after,
+form :-moz-any(label, div)[required] > .label-text::after {
+  content: attr(fieldRequiredSymbol);
 }
 
 #controls-container {

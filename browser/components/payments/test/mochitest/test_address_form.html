@@ -17,7 +17,7 @@ Test the address-form element
 
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/paymentRequest.css"/>
-  <link rel="stylesheet" type="text/css" href="../../res/containers/form.css"/>
+  <link rel="stylesheet" type="text/css" href="editDialog-shared.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/containers/address-form.css"/>
 </head>
 <body>
@@ -122,10 +122,9 @@ add_task(async function test_saveButton() {
   fillField(form.form.querySelector("#organization"), "Allizom");
   fillField(form.form.querySelector("#street-address"), "404 Internet Super Highway");
   fillField(form.form.querySelector("#address-level2"), "Firefoxity City");
+  fillField(form.form.querySelector("#country"), "US");
   fillField(form.form.querySelector("#address-level1"), "CA");
   fillField(form.form.querySelector("#postal-code"), "00001");
-  fillField(form.form.querySelector("#country"), "US");
-  fillField(form.form.querySelector("#email"), "test@example.com");
   fillField(form.form.querySelector("#tel"), "+15555551212");
 
   ok(!form.saveButton.disabled, "Save button is enabled after filling");
