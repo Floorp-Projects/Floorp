@@ -2523,17 +2523,19 @@ js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp)
 }
 
 bool
-js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp)
+js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp, bool* found)
 {
     PropertyResult prop;
     if (!LookupOwnPropertyPure(cx, obj, id, &prop))
         return false;
 
     if (!prop) {
+        *found = false;
         vp->setUndefined();
         return true;
     }
 
+    *found = true;
     return obj->isNative() && NativeGetPureInline(&obj->as<NativeObject>(), id, prop, vp);
 }
 
