@@ -6,6 +6,7 @@
 
 #include "MediaFormatReader.h"
 
+#include "AllocationPolicy.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "VideoFrameContainer.h"
@@ -22,9 +23,6 @@
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
-#ifdef MOZ_WIDGET_ANDROID
-#include "mozilla/jni/Utils.h"
-#endif
 
 #include <algorithm>
 #include <map>
@@ -136,162 +134,6 @@ private:
 std::map<MediaDecoderOwnerID, GPUProcessCrashTelemetryLogger::GPUCrashData>
 GPUProcessCrashTelemetryLogger::sGPUCrashDataMap;
 StaticMutex GPUProcessCrashTelemetryLogger::sGPUCrashMapMutex;
-
-/**
- * This is a singleton which controls the number of decoders that can be
- * created concurrently. Before calling PDMFactory::CreateDecoder(), Alloc()
- * must be called to get a token object as a permission to create a decoder.
- * The token should stay alive until Shutdown() is called on the decoder.
- * The destructor of the token will restore the decoder count so it is available
- * for next calls of Alloc().
- */
-class GlobalAllocPolicy
-{
-  using TrackType = TrackInfo::TrackType;
-
-public:
-  class Token
-  {
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Token)
-  protected:
-    virtual ~Token() {}
-  };
-
-  using Promise = MozPromise<RefPtr<Token>, bool, true>;
-
-  // Acquire a token for decoder creation. Thread-safe.
-  auto Alloc() -> RefPtr<Promise>;
-
-  // Called by ClearOnShutdown() to delete the singleton.
-  void operator=(decltype(nullptr));
-
-  // Get the singleton for the given track type. Thread-safe.
-  static GlobalAllocPolicy& Instance(TrackType aTrack);
-
-private:
-  class AutoDeallocToken;
-  using PromisePrivate = Promise::Private;
-  GlobalAllocPolicy();
-  ~GlobalAllocPolicy();
-  // Called by the destructor of TokenImpl to restore the decoder limit.
-  void Dealloc();
-  // Decrement the decoder limit and resolve a promise if available.
-  void ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock);
-
-  // Protect access to Instance().
-  static StaticMutex sMutex;
-
-  ReentrantMonitor mMonitor;
-  // The number of decoders available for creation.
-  int mDecoderLimit;
-  // Requests to acquire tokens.
-  std::queue<RefPtr<PromisePrivate>> mPromises;
-};
-
-StaticMutex GlobalAllocPolicy::sMutex;
-
-class GlobalAllocPolicy::AutoDeallocToken : public Token
-{
-public:
-  explicit AutoDeallocToken(GlobalAllocPolicy& aPolicy) : mPolicy(aPolicy) { }
-
-private:
-  ~AutoDeallocToken()
-  {
-    mPolicy.Dealloc();
-  }
-
-  GlobalAllocPolicy& mPolicy; // reference to a singleton object.
-};
-
-static int32_t
-MediaDecoderLimitDefault()
-{
-#ifdef MOZ_WIDGET_ANDROID
-  if (jni::GetAPIVersion() < 18) {
-    // Older Android versions have broken support for multiple simultaneous
-    // decoders, see bug 1278574.
-    return 1;
-  }
-#endif
-  // Otherwise, set no decoder limit.
-  return -1;
-}
-
-GlobalAllocPolicy::GlobalAllocPolicy()
-  : mMonitor("DecoderAllocPolicy::mMonitor")
-  , mDecoderLimit(MediaDecoderLimitDefault())
-{
-  SystemGroup::Dispatch(
-    TaskCategory::Other,
-    NS_NewRunnableFunction("GlobalAllocPolicy::GlobalAllocPolicy", [this]() {
-      ClearOnShutdown(this, ShutdownPhase::ShutdownThreads);
-    }));
-}
-
-GlobalAllocPolicy::~GlobalAllocPolicy()
-{
-  while (!mPromises.empty()) {
-    RefPtr<PromisePrivate> p = mPromises.front().forget();
-    mPromises.pop();
-    p->Reject(true, __func__);
-  }
-}
-
-GlobalAllocPolicy&
-GlobalAllocPolicy::Instance(TrackType aTrack)
-{
-  StaticMutexAutoLock lock(sMutex);
-  if (aTrack == TrackType::kAudioTrack) {
-    static auto sAudioPolicy = new GlobalAllocPolicy();
-    return *sAudioPolicy;
-  } else {
-    static auto sVideoPolicy = new GlobalAllocPolicy();
-    return *sVideoPolicy;
-  }
-}
-
-auto
-GlobalAllocPolicy::Alloc() -> RefPtr<Promise>
-{
-  // No decoder limit set.
-  if (mDecoderLimit < 0) {
-    return Promise::CreateAndResolve(new Token(), __func__);
-  }
-
-  ReentrantMonitorAutoEnter mon(mMonitor);
-  RefPtr<PromisePrivate> p = new PromisePrivate(__func__);
-  mPromises.push(p);
-  ResolvePromise(mon);
-  return p.forget();
-}
-
-void
-GlobalAllocPolicy::Dealloc()
-{
-  ReentrantMonitorAutoEnter mon(mMonitor);
-  ++mDecoderLimit;
-  ResolvePromise(mon);
-}
-
-void
-GlobalAllocPolicy::ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock)
-{
-  MOZ_ASSERT(mDecoderLimit >= 0);
-
-  if (mDecoderLimit > 0 && !mPromises.empty()) {
-    --mDecoderLimit;
-    RefPtr<PromisePrivate> p = mPromises.front().forget();
-    mPromises.pop();
-    p->Resolve(new AutoDeallocToken(*this), __func__);
-  }
-}
-
-void
-GlobalAllocPolicy::operator=(std::nullptr_t)
-{
-  delete this;
-}
 
 /**
  * This class addresses the concern of bug 1339310 comment 4 where the Widevine
@@ -621,8 +463,6 @@ public:
   }
 
 private:
-  class Wrapper;
-
   enum class Stage : int8_t
   {
     None,
@@ -662,72 +502,6 @@ MediaFormatReader::DecoderFactory::CreateDecoder(TrackType aTrack)
              aTrack == TrackInfo::kVideoTrack);
   RunStage(aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo);
 }
-
-class MediaFormatReader::DecoderFactory::Wrapper : public MediaDataDecoder
-{
-  using Token = GlobalAllocPolicy::Token;
-
-public:
-  Wrapper(already_AddRefed<MediaDataDecoder> aDecoder,
-          already_AddRefed<Token> aToken)
-    : mDecoder(aDecoder)
-    , mToken(aToken)
-  {
-    DecoderDoctorLogger::LogConstructionAndBase(
-      "MediaFormatReader::DecoderFactory::Wrapper",
-      this,
-      static_cast<const MediaDataDecoder*>(this));
-    DecoderDoctorLogger::LinkParentAndChild(
-      "MediaFormatReader::DecoderFactory::Wrapper",
-      this,
-      "decoder",
-      mDecoder.get());
-  }
-
-  ~Wrapper()
-  {
-    DecoderDoctorLogger::LogDestruction(
-      "MediaFormatReader::DecoderFactory::Wrapper", this);
-  }
-
-  RefPtr<InitPromise> Init() override { return mDecoder->Init(); }
-  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override
-  {
-    return mDecoder->Decode(aSample);
-  }
-  RefPtr<DecodePromise> Drain() override { return mDecoder->Drain(); }
-  RefPtr<FlushPromise> Flush() override { return mDecoder->Flush(); }
-  bool IsHardwareAccelerated(nsACString& aFailureReason) const override
-  {
-    return mDecoder->IsHardwareAccelerated(aFailureReason);
-  }
-  nsCString GetDescriptionName() const override
-  {
-    return mDecoder->GetDescriptionName();
-  }
-  void SetSeekThreshold(const TimeUnit& aTime) override
-  {
-    mDecoder->SetSeekThreshold(aTime);
-  }
-  bool SupportDecoderRecycling() const override
-  {
-    return mDecoder->SupportDecoderRecycling();
-  }
-  RefPtr<ShutdownPromise> Shutdown() override
-  {
-    RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
-    RefPtr<Token> token = mToken.forget();
-    return decoder->Shutdown()->Then(
-      AbstractThread::GetCurrent(), __func__,
-      [token]() {
-        return ShutdownPromise::CreateAndResolve(true, __func__);
-      });
-  }
-
-private:
-  RefPtr<MediaDataDecoder> mDecoder;
-  RefPtr<Token> mToken;
-};
 
 void
 MediaFormatReader::DecoderFactory::RunStage(Data& aData)
@@ -777,7 +551,8 @@ MediaFormatReader::DecoderFactory::RunStage(Data& aData)
         return;
       }
 
-      aData.mDecoder = new Wrapper(aData.mDecoder.forget(), aData.mToken.forget());
+      aData.mDecoder =
+        new AllocationWrapper(aData.mDecoder.forget(), aData.mToken.forget());
       DecoderDoctorLogger::LinkParentAndChild(
         aData.mDecoder.get(),
         "decoder",
