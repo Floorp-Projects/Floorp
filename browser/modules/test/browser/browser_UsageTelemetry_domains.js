@@ -114,7 +114,7 @@ add_task(async function test_URIAndDomainCounts() {
     let iframe = doc.createElement("iframe");
     let promiseIframeLoaded = ContentTaskUtils.waitForEvent(iframe, "load", false);
     iframe.src = "https://example.org/test";
-    doc.body.insertBefore(iframe, doc.body.firstChild);
+    doc.body.insertBefore(iframe, doc.body.firstElementChild);
     await promiseIframeLoaded;
   });
   checkCounts({totalURIs: 5, domainCount: 2, totalUnfilteredURIs: 5});

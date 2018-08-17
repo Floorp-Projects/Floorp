@@ -1514,7 +1514,9 @@ nsIDocument::nsIDocument()
     mCurrentOrientationType(OrientationType::Portrait_primary),
     mServoRestyleRootDirtyBits(0),
     mThrowOnDynamicMarkupInsertionCounter(0),
-    mIgnoreOpensDuringUnloadCounter(0)
+    mIgnoreOpensDuringUnloadCounter(0),
+    mNumTrackersFound(0),
+    mNumTrackersBlocked(0)
 {
   SetIsInDocument();
 }

@@ -79,11 +79,13 @@ jsreftest:
             linux64-qr/.*: 4
             linux32/debug: 5
             macosx.*: 2
+            macosx64-ccov/debug: 5
             default: 3
     max-run-time:
         by-test-platform:
             android-em.*: 7200
             windows10-64-ccov/debug: 7200
+            macosx64-ccov/debug: 7200
             default: 3600
 
 reftest:
@@ -106,6 +108,7 @@ reftest:
             android-em.*: 28
             macosx64.*/opt: 2
             macosx64.*/debug: 3
+            macosx64-ccov/debug: 6
             windows.*/opt: 2
             windows.*/debug: 4
             windows10-64-ccov/debug: 6
@@ -118,6 +121,7 @@ reftest:
         by-test-platform:
             android-em.*: 7200
             windows10-64-ccov/debug: 5400
+            macosx64-ccov/debug: 5400
             default: 3600
     mozharness:
         chunked:

@@ -204,8 +204,10 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
 
         final Bundle extras = GeckoThread.getActiveExtras();
-        final ParcelFileDescriptor prefsPfd = ParcelFileDescriptor.adoptFd(prefsFd);
-        final ParcelFileDescriptor prefMapPfd = ParcelFileDescriptor.adoptFd(prefMapFd);
+        final ParcelFileDescriptor prefsPfd =
+                (prefsFd >= 0) ? ParcelFileDescriptor.adoptFd(prefsFd) : null;
+        final ParcelFileDescriptor prefMapPfd =
+                (prefMapFd >= 0) ? ParcelFileDescriptor.adoptFd(prefMapFd) : null;
         final ParcelFileDescriptor ipcPfd = ParcelFileDescriptor.adoptFd(ipcFd);
         final ParcelFileDescriptor crashPfd =
                 (crashFd >= 0) ? ParcelFileDescriptor.adoptFd(crashFd) : null;
@@ -228,8 +230,12 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             crashPfd.detachFd();
         }
         ipcPfd.detachFd();
-        prefMapPfd.detachFd();
-        prefsPfd.detachFd();
+        if (prefMapPfd != null) {
+            prefMapPfd.detachFd();
+        }
+        if (prefsPfd != null) {
+            prefsPfd.detachFd();
+        }
 
         if (!started) {
             if (retry) {

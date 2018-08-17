@@ -56,9 +56,9 @@ add_task(async function menuInShadowDOM() {
   await testShadowMenu(() => {
     let doc = content.document;
     doc.body.innerHTML = `<div></div>`;
-    let host = doc.body.firstChild.attachShadow({mode: "open"});
+    let host = doc.body.firstElementChild.attachShadow({mode: "open"});
     host.innerHTML = `<a href="http://example.com/?shadowlink">Test open</a>`;
-    content.testTarget = host.firstChild;
+    content.testTarget = host.firstElementChild;
     return content.testTarget;
   });
 
@@ -66,9 +66,9 @@ add_task(async function menuInShadowDOM() {
   await testShadowMenu(() => {
     let doc = content.document;
     doc.body.innerHTML = `<div></div>`;
-    let host = doc.body.firstChild.attachShadow({mode: "closed"});
+    let host = doc.body.firstElementChild.attachShadow({mode: "closed"});
     host.innerHTML = `<a href="http://example.com/?shadowlink">Test closed</a>`;
-    content.testTarget = host.firstChild;
+    content.testTarget = host.firstElementChild;
     return content.testTarget;
   });
 
@@ -78,11 +78,11 @@ add_task(async function menuInShadowDOM() {
     let host;
     for (let container = doc.body, i = 0; i < 10; ++i) {
       container.innerHTML = `<div id="level"></div>`;
-      host = container.firstChild.attachShadow({mode: "open"});
+      host = container.firstElementChild.attachShadow({mode: "open"});
       container = host;
     }
     host.innerHTML = `<a href="http://example.com/?shadowlink">Test nested</a>`;
-    content.testTarget = host.firstChild;
+    content.testTarget = host.firstElementChild;
     return content.testTarget;
   });
 

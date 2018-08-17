@@ -322,8 +322,27 @@ public:
    */
   nsresult DoInlineTableEditingAction(const Element& aUIAnonymousElement);
 
-  already_AddRefed<Element>
-  GetElementOrParentByTagName(const nsAString& aTagName, nsINode* aNode);
+  /**
+   * GetElementOrParentByTagName() looks for an element node whose name matches
+   * aTagName from aNode or anchor node of Selection to <body> element.
+   *
+   * @param aTagName        The tag name which you want to look for.
+   *                        Must not be nsGkAtoms::_empty.
+   *                        If nsGkAtoms::list, the result may be <ul>, <ol> or
+   *                        <dl> element.
+   *                        If nsGkAtoms::td, the result may be <td> or <th>.
+   *                        If nsGkAtoms::href, the result may be <a> element
+   *                        which has "href" attribute with non-empty value.
+   *                        If nsGkAtoms::anchor, the result may be <a> which
+   *                        has "name" attribute with non-empty value.
+   * @param aNode           If non-nullptr, this starts to look for the result
+   *                        from it.  Otherwise, i.e., nullptr, starts from
+   *                        anchor node of Selection.
+   * @return                If an element which matches aTagName, returns
+   *                        an Element.  Otherwise, nullptr.
+   */
+  Element*
+  GetElementOrParentByTagName(const nsAtom& aTagName, nsINode* aNode);
 
   /**
     * Get an active editor's editing host in DOM window.  If this editor isn't
@@ -813,6 +832,48 @@ protected: // Shouldn't be used by friend classes
    */
   nsresult CollapseSelectionAfter(Selection& aSelection,
                                   Element& aElement);
+
+  /**
+   * GetElementOrParentByTagNameAtSelection() looks for an element node whose
+   * name matches aTagName from anchor node of Selection to <body> element.
+   *
+   * @param aSelection      The Selection for this editor.
+   * @param aTagName        The tag name which you want to look for.
+   *                        Must not be nsGkAtoms::_empty.
+   *                        If nsGkAtoms::list, the result may be <ul>, <ol> or
+   *                        <dl> element.
+   *                        If nsGkAtoms::td, the result may be <td> or <th>.
+   *                        If nsGkAtoms::href, the result may be <a> element
+   *                        which has "href" attribute with non-empty value.
+   *                        If nsGkAtoms::anchor, the result may be <a> which
+   *                        has "name" attribute with non-empty value.
+   * @return                If an element which matches aTagName, returns
+   *                        an Element.  Otherwise, nullptr.
+   */
+  Element*
+  GetElementOrParentByTagNameAtSelection(Selection& aSelection,
+                                         const nsAtom& aTagName);
+
+  /**
+   * GetElementOrParentByTagNameInternal() looks for an element node whose
+   * name matches aTagName from aNode to <body> element.
+   *
+   * @param aTagName        The tag name which you want to look for.
+   *                        Must not be nsGkAtoms::_empty.
+   *                        If nsGkAtoms::list, the result may be <ul>, <ol> or
+   *                        <dl> element.
+   *                        If nsGkAtoms::td, the result may be <td> or <th>.
+   *                        If nsGkAtoms::href, the result may be <a> element
+   *                        which has "href" attribute with non-empty value.
+   *                        If nsGkAtoms::anchor, the result may be <a> which
+   *                        has "name" attribute with non-empty value.
+   * @param aNode           Start node to look for the element.
+   * @return                If an element which matches aTagName, returns
+   *                        an Element.  Otherwise, nullptr.
+   */
+  Element*
+  GetElementOrParentByTagNameInternal(const nsAtom& aTagName,
+                                      nsINode& aNode);
 
   /**
    * GetSelectedElement() returns an element node which is in first range of

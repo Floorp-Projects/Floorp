@@ -42,29 +42,29 @@ add_task(async function setup() {
 add_task(async function test_overflow() {
   // Check that the overflow chevron is visible.
   Assert.ok(!gChevron.collapsed, "The overflow chevron should be visible");
-  Assert.ok(gToolbarContent.childNodes.length < BOOKMARKS_COUNT,
+  Assert.ok(gToolbarContent.children.length < BOOKMARKS_COUNT,
             "Not all the nodes should be built by default");
   let visibleNodes = [];
-  for (let node of gToolbarContent.childNodes) {
+  for (let node of gToolbarContent.children) {
     if (node.style.visibility == "visible")
       visibleNodes.push(node);
   }
-  Assert.ok(visibleNodes.length < gToolbarContent.childNodes.length,
-            `The number of visible nodes (${visibleNodes.length}) should be smaller than the number of built nodes (${gToolbarContent.childNodes.length})`);
+  Assert.ok(visibleNodes.length < gToolbarContent.children.length,
+            `The number of visible nodes (${visibleNodes.length}) should be smaller than the number of built nodes (${gToolbarContent.children.length})`);
 
   await test_index("Node at the last visible index", visibleNodes.length - 1, "visible");
   await test_index("Node at the first invisible index", visibleNodes.length, "hidden");
-  await test_index("First non-built node", gToolbarContent.childNodes.length, undefined);
-  await test_index("Later non-built node", gToolbarContent.childNodes.length + 1, undefined);
+  await test_index("First non-built node", gToolbarContent.children.length, undefined);
+  await test_index("Later non-built node", gToolbarContent.children.length + 1, undefined);
 
   await test_move_index("Move node from last visible to first hidden",
                         visibleNodes.length - 1, visibleNodes.length,
                         "visible", "hidden");
   await test_move_index("Move node from fist visible to last built",
-                        0, gToolbarContent.childNodes.length - 1,
+                        0, gToolbarContent.children.length - 1,
                         "visible", "hidden");
   await test_move_index("Move node from fist visible to first non built",
-                        0, gToolbarContent.childNodes.length,
+                        0, gToolbarContent.children.length,
                         "visible", undefined);
 });
 
@@ -84,7 +84,7 @@ add_task(async function test_separator_first() {
   await promiseSetToolbarVisibility(gToolbar, true);
   await promiseReady;
 
-  let children = gToolbarContent.childNodes;
+  let children = gToolbarContent.children;
   Assert.ok(children.length > 2, "Multiple elements are visible");
   Assert.equal(children[1]._placesNode.uri, "http://test.places.0/", "Found the first bookmark");
   Assert.equal(children[1].style.visibility, "visible", "The first bookmark is visible");
@@ -112,8 +112,8 @@ add_task(async function test_newWindow_noOverflow() {
     Assert.ok(!toolbar.collapsed, "The toolbar is not collapsed");
     let content = win.document.getElementById("PlacesToolbarItems");
     await BrowserTestUtils.waitForCondition(() => {
-      return content.childNodes.length == 1 &&
-             content.childNodes[0].hasAttribute("image");
+      return content.children.length == 1 &&
+             content.children[0].hasAttribute("image");
     });
     let chevron = win.document.getElementById("PlacesChevron");
     Assert.ok(chevron.collapsed, "The chevron should be collapsed");
@@ -124,7 +124,7 @@ add_task(async function test_newWindow_noOverflow() {
 
 async function test_index(desc, index, expected) {
   info(desc);
-  let children = gToolbarContent.childNodes;
+  let children = gToolbarContent.children;
   let originalLen = children.length;
   let nodeExisted = children.length > index;
   let previousNodeIsVisible = nodeExisted &&
@@ -172,7 +172,7 @@ async function test_index(desc, index, expected) {
 
 async function test_move_index(desc, fromIndex, toIndex, original, expected) {
   info(desc);
-  let children = gToolbarContent.childNodes;
+  let children = gToolbarContent.children;
   let originalLen = children.length;
   let movedGuid = children[fromIndex]._placesNode.bookmarkGuid;
   let existingGuid = children[toIndex] ?
@@ -258,7 +258,7 @@ add_task(async function test_separator_first() {
   await promiseSetToolbarVisibility(gToolbar, true);
   await promiseReady;
 
-  let children = gToolbarContent.childNodes;
+  let children = gToolbarContent.children;
   Assert.equal(children.length, 2, "The expected elements are visible");
   Assert.equal(children[0].style.visibility, "visible", "The first bookmark is visible");
   Assert.equal(children[1].style.visibility, "visible", "The second bookmark is visible");

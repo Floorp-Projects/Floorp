@@ -378,20 +378,12 @@ var ContentBlocking = {
     Services.telemetry.getHistogramById("TRACKING_PROTECTION_SHIELD").add(value);
   },
 
-  cancelAnimation() {
-    let iconAnimation = this.animatedIcon.getAnimations()[0];
-    if (iconAnimation && iconAnimation.currentTime) {
-      iconAnimation.cancel();
-    }
-    this.iconBox.removeAttribute("animate");
-  },
-
   onSecurityChange(state, webProgress, isSimulated) {
     let baseURI = this._baseURIForChannelClassifier;
 
     // Don't deal with about:, file: etc.
     if (!baseURI) {
-      this.cancelAnimation();
+      this.iconBox.removeAttribute("animate");
       this.iconBox.removeAttribute("active");
       this.iconBox.removeAttribute("hasException");
       return;
@@ -401,7 +393,7 @@ var ContentBlocking = {
     // finished. In this case, reset the animation to be able to
     // play it in full again and avoid choppiness.
     if (webProgress.isTopLevel) {
-      this.cancelAnimation();
+      this.iconBox.removeAttribute("animate");
     }
 
     let isBlocking = state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT;
@@ -435,7 +427,7 @@ var ContentBlocking = {
     this.iconBox.toggleAttribute("hasException", this.enabled && hasException);
 
     if (isSimulated) {
-      this.cancelAnimation();
+      this.iconBox.removeAttribute("animate");
     } else if (active && webProgress.isTopLevel) {
       this.iconBox.setAttribute("animate", "true");
 

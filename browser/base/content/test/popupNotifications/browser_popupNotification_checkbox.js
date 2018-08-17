@@ -46,7 +46,7 @@ var tests = [
     },
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      let notification = popup.childNodes[0];
+      let notification = popup.children[0];
       checkCheckbox(notification.checkbox, "This is a checkbox");
       triggerMainCommand(popup);
     },
@@ -65,7 +65,7 @@ var tests = [
     },
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      let notification = popup.childNodes[0];
+      let notification = popup.children[0];
       checkCheckbox(notification.checkbox, "Check this", true);
       triggerMainCommand(popup);
     },
@@ -84,7 +84,7 @@ var tests = [
     },
     async onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      let notification = popup.childNodes[0];
+      let notification = popup.children[0];
       let checkbox = notification.checkbox;
       checkCheckbox(checkbox, "This is a checkbox");
       await promiseElementVisible(checkbox);
@@ -113,7 +113,7 @@ var tests = [
     },
     async onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      let notification = popup.childNodes[0];
+      let notification = popup.children[0];
       let checkbox = notification.checkbox;
       checkCheckbox(checkbox, "This is a checkbox");
       await promiseElementVisible(checkbox);
@@ -141,7 +141,7 @@ var tests = [
     },
     async onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      let notification = popup.childNodes[0];
+      let notification = popup.children[0];
       let checkbox = notification.checkbox;
       checkCheckbox(checkbox, "This is a checkbox");
       await promiseElementVisible(checkbox);
@@ -153,7 +153,7 @@ var tests = [
       let shown = waitForNotificationPanel();
       EventUtils.synthesizeMouseAtCenter(icon, {});
       await shown;
-      let notification = popup.childNodes[0];
+      let notification = popup.children[0];
       let checkbox = notification.checkbox;
       checkCheckbox(checkbox, "This is a checkbox", true);
       checkMainAction(notification, true);
@@ -170,7 +170,7 @@ var tests = [
     },
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      let notification = popup.childNodes[0];
+      let notification = popup.children[0];
       checkCheckbox(notification.checkbox, "", false, true);
       checkMainAction(notification);
       triggerMainCommand(popup);
@@ -198,7 +198,7 @@ var tests = [
         },
         async onShown(popup) {
           checkPopup(popup, this.notifyObj);
-          let notification = popup.childNodes[0];
+          let notification = popup.children[0];
           let checkbox = notification.checkbox;
           let disabled = (state === "checkedState" && checked) ||
                          (state === "uncheckedState" && !checked);

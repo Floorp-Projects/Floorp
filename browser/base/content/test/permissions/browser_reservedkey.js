@@ -45,7 +45,7 @@ add_task(async function test_reserved_shortcuts() {
   container.appendChild(keyset);
   document.documentElement.appendChild(container);
 
-  const pageUrl = "data:text/html,<body onload='document.body.firstChild.focus();'><div onkeydown='event.preventDefault();' tabindex=0>Test</div></body>";
+  const pageUrl = "data:text/html,<body onload='document.body.firstElementChild.focus();'><div onkeydown='event.preventDefault();' tabindex=0>Test</div></body>";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
   EventUtils.sendString("OPQ");

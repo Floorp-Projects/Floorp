@@ -71,7 +71,7 @@ var tests = [
       anchor.focus();
       is(document.activeElement, anchor);
       EventUtils.sendString(" ");
-      is(document.activeElement, popup.childNodes[0].closebutton);
+      is(document.activeElement, popup.children[0].closebutton);
       this.notification.remove();
     },
     onHidden(popup) { }
@@ -116,7 +116,7 @@ var tests = [
       popup = await opened;
       checkPopup(popup, notifyObj1);
 
-      is(document.activeElement, popup.childNodes[0].checkbox);
+      is(document.activeElement, popup.children[0].checkbox);
 
       // Activate the anchor for notification 2 and wait until it's shown.
       anchor = document.getElementById(notifyObj2.anchorID);
@@ -127,7 +127,7 @@ var tests = [
       popup = await opened;
       checkPopup(popup, notifyObj2);
 
-      is(document.activeElement, popup.childNodes[0].closebutton);
+      is(document.activeElement, popup.children[0].closebutton);
 
       notification1.remove();
       notification2.remove();
@@ -152,7 +152,7 @@ var tests = [
       is(Services.focus.focusedElement, null);
 
       EventUtils.synthesizeKey("KEY_Tab");
-      is(Services.focus.focusedElement, popup.childNodes[0].closebutton);
+      is(Services.focus.focusedElement, popup.children[0].closebutton);
       dismissNotification(popup);
     },
     async onHidden() {

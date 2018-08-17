@@ -24,7 +24,7 @@ add_task(async function() {
   await popupShownPromise;
 
   let recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
-  let firstLWTheme = recommendedHeader.nextSibling;
+  let firstLWTheme = recommendedHeader.nextElementSibling;
   let firstLWThemeId = firstLWTheme.theme.id;
   let themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
   firstLWTheme.doCommand();

@@ -118,7 +118,7 @@ add_task(async function many() {
     let bodyID = viewID + "-body";
     let body = document.getElementById(bodyID);
     Assert.deepEqual(
-      Array.map(body.childNodes, n => n.label),
+      Array.map(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",
@@ -132,7 +132,7 @@ add_task(async function many() {
       promiseEngine("engine-added", "page_action_menu_add_search_engine_0");
     let hiddenPromise = promisePageActionPanelHidden();
     let feedbackPromise = promiseFeedbackPanelShownAndHidden();
-    EventUtils.synthesizeMouseAtCenter(body.childNodes[0], {});
+    EventUtils.synthesizeMouseAtCenter(body.children[0], {});
     await hiddenPromise;
     let engines = [];
     let engine = await enginePromise;
@@ -147,7 +147,7 @@ add_task(async function many() {
     EventUtils.synthesizeMouseAtCenter(button, {});
     await viewPromise;
     Assert.deepEqual(
-      Array.map(body.childNodes, n => n.label),
+      Array.map(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_1",
         "page_action_menu_add_search_engine_2",
@@ -160,7 +160,7 @@ add_task(async function many() {
       promiseEngine("engine-added", "page_action_menu_add_search_engine_1");
     hiddenPromise = promisePageActionPanelHidden();
     feedbackPromise = promiseFeedbackPanelShownAndHidden();
-    EventUtils.synthesizeMouseAtCenter(body.childNodes[0], {});
+    EventUtils.synthesizeMouseAtCenter(body.children[0], {});
     await hiddenPromise;
     engine = await enginePromise;
     engines.push(engine);
@@ -250,7 +250,7 @@ add_task(async function many() {
     await viewPromise;
     body = document.getElementById(bodyID);
     Assert.deepEqual(
-      Array.map(body.childNodes, n => n.label),
+      Array.map(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",
@@ -272,7 +272,7 @@ add_task(async function many() {
     EventUtils.synthesizeMouseAtCenter(button, {});
     await viewPromise;
     Assert.deepEqual(
-      Array.map(body.childNodes, n => n.label),
+      Array.map(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",
@@ -366,9 +366,9 @@ add_task(async function urlbarMany() {
     let viewID =
        BrowserPageActions._panelViewNodeIDForActionID("addSearchEngine", true);
     Assert.equal(view.id, viewID, "View ID");
-    let body = view.firstChild;
+    let body = view.firstElementChild;
     Assert.deepEqual(
-      Array.map(body.childNodes, n => n.label),
+      Array.map(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",
@@ -383,7 +383,7 @@ add_task(async function urlbarMany() {
     let hiddenPromise =
       promisePanelHidden(BrowserPageActions.activatedActionPanelNode);
     let feedbackPromise = promiseFeedbackPanelShownAndHidden();
-    EventUtils.synthesizeMouseAtCenter(body.childNodes[0], {});
+    EventUtils.synthesizeMouseAtCenter(body.children[0], {});
     await hiddenPromise;
     let engines = [];
     let engine = await enginePromise;
@@ -394,9 +394,9 @@ add_task(async function urlbarMany() {
     // Open the panel again.  The installed engine should be gone.
     EventUtils.synthesizeMouseAtCenter(button, {});
     view = await waitForActivatedActionPanel();
-    body = view.firstChild;
+    body = view.firstElementChild;
     Assert.deepEqual(
-      Array.map(body.childNodes, n => n.label),
+      Array.map(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_1",
         "page_action_menu_add_search_engine_2",
@@ -410,7 +410,7 @@ add_task(async function urlbarMany() {
     hiddenPromise =
       promisePanelHidden(BrowserPageActions.activatedActionPanelNode);
     feedbackPromise = promiseFeedbackPanelShownAndHidden();
-    EventUtils.synthesizeMouseAtCenter(body.childNodes[0], {});
+    EventUtils.synthesizeMouseAtCenter(body.children[0], {});
     await hiddenPromise;
     engine = await enginePromise;
     engines.push(engine);
@@ -459,9 +459,9 @@ add_task(async function urlbarMany() {
     // present now that there are two offered engines again.
     EventUtils.synthesizeMouseAtCenter(button, {});
     view = await waitForActivatedActionPanel();
-    body = view.firstChild;
+    body = view.firstElementChild;
     Assert.deepEqual(
-      Array.map(body.childNodes, n => n.label),
+      Array.map(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",
@@ -484,9 +484,9 @@ add_task(async function urlbarMany() {
     // Open the panel again and check the subview.
     EventUtils.synthesizeMouseAtCenter(button, {});
     view = await waitForActivatedActionPanel();
-    body = view.firstChild;
+    body = view.firstElementChild;
     Assert.deepEqual(
-      Array.map(body.childNodes, n => n.label),
+      Array.map(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",

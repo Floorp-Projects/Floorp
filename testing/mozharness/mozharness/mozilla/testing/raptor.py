@@ -55,7 +55,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
           }],
         [["--app"],
          {"default": "firefox",
-          "choices": ["firefox", "chrome"],
+          "choices": ["firefox", "chrome", "geckoview"],
           "dest": "app",
           "help": "name of the application we are testing (default: firefox)"
           }],
@@ -109,12 +109,16 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
         if self.run_local:
             # raptor initiated locally, get app from command line args
             # which are passed in from mach inside 'raptor_cmd_line_args'
+            # cmd line args can be in two formats depending on how user entered them
+            # i.e. "--app=geckoview" or separate as "--app", "geckoview" so we have to
+            # check each cmd line arg individually
             self.app = "firefox"
             if 'raptor_cmd_line_args' in self.config:
-                for next_arg in self.config['raptor_cmd_line_args']:
-                    if "chrome" in next_arg:
-                        self.app = "chrome"
-                        break
+                for app in ['chrome', 'geckoview']:
+                    for next_arg in self.config['raptor_cmd_line_args']:
+                        if app in next_arg:
+                            self.app = app
+                            break
         else:
             # raptor initiated in production via mozharness
             self.test = self.config['test']

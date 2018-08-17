@@ -630,22 +630,8 @@ nsHttpChannel::Connect()
     LOG(("nsHttpChannel %p tracking resource=%d, cos=%u",
           this, isTrackingResource, mClassOfService));
 
-    if (isTrackingResource) {
-        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-          services::GetThirdPartyUtil();
-        bool result = false;
-        if (thirdPartyUtil &&
-            NS_SUCCEEDED(thirdPartyUtil->IsThirdPartyChannel(this, nullptr,
-                                                             &result)) &&
-            result) {
-            if (CheckFastBlocked()) {
-                Unused << AsyncAbort(NS_ERROR_ABORT);
-                CloseCacheEntry(false);
-                return NS_OK;
-            }
-
-            AddClassFlags(nsIClassOfService::Tail);
-        }
+    if (isTrackingResource && IsThirdPartyChannel()) {
+        AddClassFlags(nsIClassOfService::Tail);
     }
 
     if (WaitingForTailUnblock()) {
@@ -699,6 +685,10 @@ nsHttpChannel::CheckFastBlocked()
         Preferences::AddUintVarCache(&sFastBlockTimeout, "browser.fastblock.timeout");
     }
 
+    if (!IsThirdPartyChannel()) {
+        return false;
+    }
+
     TimeStamp timestamp;
     if (NS_FAILED(GetNavigationStartTimeStamp(&timestamp))) {
         return false;
@@ -711,12 +701,41 @@ nsHttpChannel::CheckFastBlocked()
     }
 
     TimeDuration duration = TimeStamp::NowLoRes() - timestamp;
-    if (duration.ToMilliseconds() < sFastBlockTimeout) {
+    bool isFastBlocking = duration.ToMilliseconds() >= sFastBlockTimeout;
+
+    if (mLoadInfo) {
+        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTracker(true));
+        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(isFastBlocking));
+    }
+
+    LOG(("FastBlock %s (%lf) [this=%p]\n",
+         isFastBlocking ? "timeout" : "passed",
+         duration.ToMilliseconds(),
+         this));
+    return isFastBlocking;
+}
+
+bool
+nsHttpChannel::IsThirdPartyChannel()
+{
+    if (mIsThirdPartyChannel) {
+        return *mIsThirdPartyChannel;
+    }
+
+    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+    if (!thirdPartyUtil) {
         return false;
     }
 
-    LOG(("FastBlock timeout (%lf) [this=%p]\n", duration.ToMilliseconds(), this));
-    return true;
+    bool isThirdPartyChannel;
+    if (NS_FAILED(thirdPartyUtil->IsThirdPartyChannel(this,
+                                                      nullptr,
+                                                      &isThirdPartyChannel))) {
+        return false;
+    }
+
+    mIsThirdPartyChannel.emplace(isThirdPartyChannel);
+    return *mIsThirdPartyChannel;
 }
 
 nsresult
@@ -725,6 +744,13 @@ nsHttpChannel::ConnectOnTailUnblock()
     nsresult rv;
 
     LOG(("nsHttpChannel::ConnectOnTailUnblock [this=%p]\n", this));
+
+    bool isTrackingResource = mIsTrackingResource; // is atomic
+    if (isTrackingResource && CheckFastBlocked()) {
+        Unused << AsyncAbort(NS_ERROR_ABORT);
+        CloseCacheEntry(false);
+        return NS_OK;
+    }
 
     // Consider opening a TCP connection right away.
     SpeculativeConnect();
@@ -2315,13 +2341,8 @@ nsHttpChannel::ProcessResponse()
     // We consider top-level tracking resource as non-tracking if not in 3rd
     // party context.
     bool isThirdPartyAndTrackingResource = false;
-    if(mIsTrackingResource) {
-        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-          services::GetThirdPartyUtil();
-        if (thirdPartyUtil) {
-            thirdPartyUtil->IsThirdPartyChannel(this, nullptr,
-                                                &isThirdPartyAndTrackingResource);
-        }
+    if (mIsTrackingResource) {
+        isThirdPartyAndTrackingResource = IsThirdPartyChannel();
     }
 
     if (referrer) {

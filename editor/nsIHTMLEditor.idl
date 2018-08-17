@@ -302,24 +302,23 @@ interface nsIHTMLEditor : nsISupports
   void  align(in AString aAlign);
 
   /**
-   * Return the input node or a parent matching the given aTagName,
-   *   starting the search at the supplied node.
-   * An example of use is for testing if a node is in a table cell
-   *   given a selection anchor node.
+   * GetElementOrParentByTagName() looks for an element node whose name matches
+   * aTagName from aNode or anchor node of Selection to <body> element.
    *
-   * @param aTagName  The HTML tagname
-   *  Special input values:
-   *    Use "href" to get a link node
-   *      (an "A" tag with the "href" attribute set)
-   *    Use "anchor" or "namedanchor" to get a named anchor node
-   *      (an "A" tag with the "name" attribute set)
-   *    Use "list" to get an OL, UL, or DL list node
-   *    Use "td" to get either a TD or TH cell node
-   *
-   * @param aNode    The node in the document to start the search.
-   *     If it is null, the anchor node of the current selection is used.
-   * @return         NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-   *                 (passes NS_SUCCEEDED macro)
+   * @param aTagName        The tag name which you want to look for.
+   *                        Must not be empty string.
+   *                        If "list", the result may be <ul>, <ol> or <dl>
+   *                        element.
+   *                        If "td", the result may be <td> or <th>.
+   *                        If "href", the result may be <a> element
+   *                        which has "href" attribute with non-empty value.
+   *                        If "anchor", the result may be <a> which has
+   *                        "name" attribute with non-empty value.
+   * @param aNode           If non-null, this starts to look for the result
+   *                        from it.  Otherwise, i.e., null, starts from
+   *                        anchor node of Selection.
+   * @return                If an element which matches aTagName, returns
+   *                        an Element.  Otherwise, nullptr.
    */
   Element getElementOrParentByTagName(in AString aTagName,
                                       in Node aNode);

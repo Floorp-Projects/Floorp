@@ -38,12 +38,12 @@ async function test_opensearch(shouldWork) {
                                                                   "anonid",
                                                                   "add-engines");
   if (shouldWork) {
-    ok(engineListElement.firstChild,
+    ok(engineListElement.firstElementChild,
        "There should be search engines available to add");
     ok(searchBar.getAttribute("addengines"),
        "Search bar should have addengines attribute");
   } else {
-    is(engineListElement.firstChild, null,
+    is(engineListElement.firstElementChild, null,
        "There should be no search engines available to add");
     ok(!searchBar.getAttribute("addengines"),
        "Search bar should not have addengines attribute");

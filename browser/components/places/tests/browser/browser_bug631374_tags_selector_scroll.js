@@ -80,7 +80,7 @@ add_task(async function() {
     // Uncheck the tag.
     let promise = BrowserTestUtils.waitForEvent(tagsSelector,
                                                 "BookmarkTagsSelectorUpdated");
-    EventUtils.synthesizeMouseAtCenter(listItem.firstChild, {});
+    EventUtils.synthesizeMouseAtCenter(listItem.firstElementChild, {});
     await promise;
     is(scrollTop, tagsSelector.scrollTop, "Scroll position did not change");
 
@@ -93,7 +93,7 @@ add_task(async function() {
     // Check the tag.
     promise = BrowserTestUtils.waitForEvent(tagsSelector,
                                             "BookmarkTagsSelectorUpdated");
-    EventUtils.synthesizeMouseAtCenter(newItem.firstChild, {});
+    EventUtils.synthesizeMouseAtCenter(newItem.firstElementChild, {});
     await promise;
     is(scrollTop, tagsSelector.scrollTop, "Scroll position did not change");
   }
@@ -116,7 +116,7 @@ add_task(async function() {
     // Uncheck the tag.
     let promise = BrowserTestUtils.waitForEvent(tagsSelector,
                                                 "BookmarkTagsSelectorUpdated");
-    EventUtils.synthesizeMouseAtCenter(listItem.firstChild, {});
+    EventUtils.synthesizeMouseAtCenter(listItem.firstElementChild, {});
     await promise;
 
     // The listbox is rebuilt, so we have to get the new element.
