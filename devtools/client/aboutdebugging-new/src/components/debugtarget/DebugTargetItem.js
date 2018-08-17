@@ -9,11 +9,12 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const ExtensionDetail = createFactory(require("./ExtensionDetail"));
+const InspectAction = createFactory(require("./InspectAction"));
+const ServiceWorkerAction = createFactory(require("./ServiceWorkerAction"));
 const TabDetail = createFactory(require("./TabDetail"));
 const TemporaryExtensionAction = createFactory(require("./TemporaryExtensionAction"));
 const WorkerDetail = createFactory(require("./WorkerDetail"));
 
-const Actions = require("../../actions/index");
 const { DEBUG_TARGETS } = require("../../constants");
 
 /**
@@ -27,26 +28,16 @@ class DebugTargetItem extends PureComponent {
     };
   }
 
-  inspect() {
-    const { dispatch, target } = this.props;
-    dispatch(Actions.inspectDebugTarget(target.type, target.id));
-  }
-
   renderAction() {
     const { dispatch, target } = this.props;
 
-    return dom.div(
-      {},
-      dom.button(
-        {
-          onClick: e => this.inspect(),
-          className: "aboutdebugging-button",
-        },
-        "Inspect"
-      ),
-      target.details.temporarilyInstalled
-        ? TemporaryExtensionAction({ dispatch, target }) : null,
-    );
+    if (target.details.temporarilyInstalled) {
+      return TemporaryExtensionAction({ dispatch, target });
+    } else if (target.details.status) {
+      return ServiceWorkerAction({ dispatch, target });
+    }
+
+    return InspectAction({ dispatch, target });
   }
 
   renderDetail() {
