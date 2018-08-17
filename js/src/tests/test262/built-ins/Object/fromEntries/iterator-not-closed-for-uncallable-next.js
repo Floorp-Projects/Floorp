@@ -2,8 +2,26 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-description: Does not close iterators with an uncallable `next` property.
 esid: sec-object.fromentries
+description: Does not close iterators with an uncallable `next` property.
+info: |
+  Object.fromEntries ( iterable )
+
+  ...
+  4. Let stepsDefine be the algorithm steps defined in CreateDataPropertyOnObject Functions.
+  5. Let adder be CreateBuiltinFunction(stepsDefine, « »).
+  6. Return ? AddEntriesFromIterable(obj, iterable, adder).
+
+  AddEntriesFromIterable ( target, iterable, adder )
+
+  ...
+  4. Repeat,
+    a. Let next be ? IteratorStep(iteratorRecord).
+
+
+  IteratorStep ( iteratorRecord )
+
+  1. Let result be ? IteratorNext(iteratorRecord).
 features: [Symbol.iterator, Object.fromEntries]
 ---*/
 

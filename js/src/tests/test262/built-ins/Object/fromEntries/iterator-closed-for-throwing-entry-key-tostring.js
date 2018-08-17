@@ -2,8 +2,24 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-description: Closes iterators when toString on a key throws.
 esid: sec-object.fromentries
+description: Closes iterators when toString on a key throws.
+info: |
+  Object.fromEntries ( iterable )
+
+  ...
+  4. Let stepsDefine be the algorithm steps defined in CreateDataPropertyOnObject Functions.
+  5. Let adder be CreateBuiltinFunction(stepsDefine, « »).
+  6. Return ? AddEntriesFromIterable(obj, iterable, adder).
+
+  AddEntriesFromIterable ( target, iterable, adder )
+
+  ...
+  4. Repeat,
+    ...
+    e. Let k be Get(nextItem, "0").
+    f. If k is an abrupt completion, return ? IteratorClose(iteratorRecord, k).
+
 features: [Symbol.iterator, Object.fromEntries]
 ---*/
 

@@ -33,15 +33,10 @@ info: |
     The production CharacterClassEscape :: W evaluates as follows:
         Return the set of all characters not included in the set returned by CharacterClassEscape :: w.
 features: [String.fromCodePoint]
+includes: [regExpUtils.js]
 ---*/
 
-const chunks = [];
-const totalChunks = Math.ceil(0x10ffff / 0x10000);
-
-for (let codePoint = 0; codePoint < 0x10FFFF; codePoint++) {
-    // split strings to avoid a super long one;
-    chunks[codePoint % totalChunks] += String.fromCodePoint(codePoint);
-}
+const str = buildString({loneCodePoints: [], ranges: [[0, 0x10FFFF]]});
 
 const re = /\w+/ug;
 const matchingRange = /[0-9A-Z_a-z]+/ug;
@@ -52,16 +47,14 @@ function matching(str) {
     return str.replace(re, '') === str.replace(matchingRange, '');
 }
 
-for (const str of chunks) {
-    if (!matching(str)) {
-        // Error, let's find out where
-        for (const char of str) {
-            if (!matching(char)) {
-                errors.push('0x' + char.codePointAt(0).toString(16));
-            }
+if (!matching(str)) {
+    // Error, let's find out where
+    for (const char of str) {
+        if (!matching(char)) {
+            errors.push('0x' + char.codePointAt(0).toString(16));
         }
     }
-};
+}
 
 assert.sameValue(
     errors.length,
