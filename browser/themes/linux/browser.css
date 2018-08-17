@@ -149,19 +149,58 @@ menuitem.bookmark-item {
 %include ../shared/menupanel.inc.css
 
 /* Fullscreen window controls */
-#window-controls {
-  -moz-box-align: start;
-  margin-inline-start: 10px;
+
+#minimize-button,
+#restore-button,
+#close-button {
+  -moz-appearance: none;
+  border: none;
+  margin: 0 !important;
+  padding: 6px 12px;
+  -moz-context-properties: stroke;
+  stroke: currentColor;
+  color: inherit;
 }
 
 #minimize-button {
-  list-style-image: url("chrome://global/skin/icons/Minimize.gif");
+  list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
 }
+
 #restore-button {
-  list-style-image: url("chrome://global/skin/icons/Restore.gif");
+  list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
 }
+
+#minimize-button:hover,
+#restore-button:hover {
+  background-color: hsla(0,0%,0%,.12);
+}
+
+#minimize-button:hover:active,
+#restore-button:hover:active {
+  background-color: hsla(0,0%,0%,.22);
+}
+
+#TabsToolbar[brighttext] > #window-controls > #minimize-button:hover,
+#TabsToolbar[brighttext] > #window-controls > #restore-button:hover {
+  background-color: hsla(0,0%,100%,.12);
+}
+
+#TabsToolbar[brighttext] > #window-controls > #minimize-button:hover:active,
+#TabsToolbar[brighttext] > #window-controls > #restore-button:hover:active {
+  background-color: hsla(0,0%,100%,.22);
+}
+
 #close-button {
-  list-style-image: url("chrome://global/skin/icons/Close.gif");
+  list-style-image: url(chrome://browser/skin/window-controls/close.svg);
+}
+
+#close-button:hover {
+  background-color: hsl(355, 86%, 49%);
+  stroke: white;
+}
+
+#close-button:hover:active {
+  background-color: hsl(355, 82%, 69%);
 }
 
 /* Location bar */
