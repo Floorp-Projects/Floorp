@@ -143,3 +143,11 @@ pref("security.pki.distrust_ca_policy", 1);
 pref("security.pki.mitm_canary_issuer", "");
 // Pref to disable the MitM proxy checks.
 pref("security.pki.mitm_canary_issuer.enabled", true);
+
+// It is set to true when a non-built-in root certificate is detected on a
+// Firefox update service's connection.
+// This value is set automatically.
+// The difference between security.pki.mitm_canary_issuer and this pref is that
+// here the root is trusted but not a built-in, whereas for
+// security.pki.mitm_canary_issuer.enabled, the root is not trusted.
+pref("security.pki.mitm_detected", false);
