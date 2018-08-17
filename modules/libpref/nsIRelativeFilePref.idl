@@ -36,34 +36,3 @@ interface nsIRelativeFilePref : nsISupports
   attribute ACString relativeToKey;
 
 };
-
-%{C++
-
-#define NS_RELATIVEFILEPREF_CID                        \
-  { /* {2f977d4f-5485-11d4-87e2-0010a4e75ef2} */       \
-    0x2f977d4f,                                        \
-    0x5485,                                            \
-    0x11d4,                                            \
-    { 0x87, 0xe2, 0x00, 0x10, 0xa4, 0xe7, 0x5e, 0xf2 } \
-  }
-
-#define NS_RELATIVEFILEPREF_CONTRACTID "@mozilla.org/pref-relativefile;1"
-
-#include "nsComponentManagerUtils.h"
-
-inline nsresult
-NS_NewRelativeFilePref(nsIFile* aFile, const nsACString& relativeToKey, nsIRelativeFilePref** result)
-{
-    nsresult rv;
-    nsCOMPtr<nsIRelativeFilePref> local(do_CreateInstance(NS_RELATIVEFILEPREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-    
-    (void)local->SetFile(aFile);
-    (void)local->SetRelativeToKey(relativeToKey);
-
-    *result = local;
-    NS_ADDREF(*result);
-    return NS_OK;
-}
-
-%}
