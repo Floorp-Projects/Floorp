@@ -2506,6 +2506,25 @@ NativeGetPureInline(NativeObject* pobj, jsid id, PropertyResult prop, Value* vp)
     return true;
 }
 
+static inline bool
+UnboxedGetPureInline(JSObject* pobj, jsid id, PropertyResult prop, Value* vp)
+{
+    MOZ_ASSERT(prop.isNonNativeProperty());
+
+    // This might be a TypedObject.
+    if (!pobj->is<UnboxedPlainObject>())
+        return false;
+
+    const UnboxedLayout& layout = pobj->as<UnboxedPlainObject>().layout();
+    if (const UnboxedLayout::Property* property = layout.lookup(id)) {
+        *vp = pobj->as<UnboxedPlainObject>().getValue(*property);
+        return true;
+    }
+
+    // Don't bother supporting expandos for now.
+    return false;
+}
+
 bool
 js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp)
 {
@@ -2519,7 +2538,9 @@ js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp)
         return true;
     }
 
-    return pobj->isNative() && NativeGetPureInline(&pobj->as<NativeObject>(), id, prop, vp);
+    if (MOZ_LIKELY(pobj->isNative()))
+        return NativeGetPureInline(&pobj->as<NativeObject>(), id, prop, vp);
+    return UnboxedGetPureInline(pobj, id, prop, vp);
 }
 
 bool
@@ -2536,7 +2557,9 @@ js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp, bool* f
     }
 
     *found = true;
-    return obj->isNative() && NativeGetPureInline(&obj->as<NativeObject>(), id, prop, vp);
+    if (MOZ_LIKELY(obj->isNative()))
+        return NativeGetPureInline(&obj->as<NativeObject>(), id, prop, vp);
+    return UnboxedGetPureInline(obj, id, prop, vp);
 }
 
 static inline bool
