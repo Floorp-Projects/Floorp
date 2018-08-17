@@ -1375,25 +1375,89 @@ JSStructuredCloneWriter::startObject(HandleObject obj, bool* backref)
     return true;
 }
 
+static bool
+TryAppendNativeProperties(JSContext* cx, HandleObject obj, AutoValueVector& entries, size_t* properties,
+                          bool* optimized)
+{
+    *optimized = false;
+
+    if (!obj->isNative())
+        return true;
+
+    HandleNativeObject nobj = obj.as<NativeObject>();
+    if (nobj->isIndexed() ||
+        nobj->is<TypedArrayObject>() ||
+        nobj->getClass()->getNewEnumerate() ||
+        nobj->getClass()->getEnumerate())
+    {
+        return true;
+    }
+
+    *optimized = true;
+
+    size_t count = 0;
+    // We iterate from the last to the first shape, so the property names
+    // are already in reverse order.
+    RootedShape shape(cx, nobj->lastProperty());
+    for (Shape::Range<NoGC> r(shape); !r.empty(); r.popFront()) {
+        jsid id = r.front().propidRaw();
+
+        // Ignore symbols and non-enumerable properties.
+        if (!r.front().enumerable() || JSID_IS_SYMBOL(id))
+            continue;
+
+        MOZ_ASSERT(JSID_IS_STRING(id));
+        if (!entries.append(StringValue(JSID_TO_STRING(id))))
+            return false;
+
+        count++;
+    }
+
+    // Add dense element ids in reverse order.
+    for (uint32_t i = nobj->getDenseInitializedLength(); i > 0; --i) {
+        if (nobj->getDenseElement(i - 1).isMagic(JS_ELEMENTS_HOLE))
+            continue;
+
+        if (!entries.append(Int32Value(i - 1)))
+            return false;
+
+        count++;
+    }
+
+    *properties = count;
+    return true;
+}
+
 bool
 JSStructuredCloneWriter::traverseObject(HandleObject obj, ESClass cls)
 {
-    // Get enumerable property ids and put them in reverse order so that they
-    // will come off the stack in forward order.
-    AutoIdVector properties(context());
-    if (!GetPropertyKeys(context(), obj, JSITER_OWNONLY, &properties))
+    size_t count;
+    bool optimized = false;
+    if (!TryAppendNativeProperties(context(), obj, entries, &count, &optimized))
         return false;
 
-    for (size_t i = properties.length(); i > 0; --i) {
-        MOZ_ASSERT(JSID_IS_STRING(properties[i - 1]) || JSID_IS_INT(properties[i - 1]));
-        // JSStructuredCloneWriter::write relies on this.
-        RootedValue val(context(), IdToValue(properties[i - 1]));
-        if (!entries.append(val))
+    if (!optimized) {
+        // Get enumerable property ids and put them in reverse order so that they
+        // will come off the stack in forward order.
+        AutoIdVector properties(context());
+        if (!GetPropertyKeys(context(), obj, JSITER_OWNONLY, &properties))
             return false;
+
+        for (size_t i = properties.length(); i > 0; --i) {
+            MOZ_ASSERT(JSID_IS_STRING(properties[i - 1]) || JSID_IS_INT(properties[i - 1]));
+
+            // JSStructuredCloneWriter::write relies on this.
+            RootedValue val(context(), IdToValue(properties[i - 1]));
+            if (!entries.append(val))
+                return false;
+
+        }
+
+        count = properties.length();
     }
 
     // Push obj and count to the stack.
-    if (!objs.append(ObjectValue(*obj)) || !counts.append(properties.length()))
+    if (!objs.append(ObjectValue(*obj)) || !counts.append(count))
         return false;
 
     checkStack();
