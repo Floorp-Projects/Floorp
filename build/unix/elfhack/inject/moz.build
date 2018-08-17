@@ -38,7 +38,7 @@ for v in ('OS_CPPFLAGS', 'OS_CFLAGS', 'DEBUG', 'CLANG_PLUGIN', 'OPTIMIZE',
         idx += 1
     COMPILE_FLAGS[v] = flags
 
-COMPILE_FLAGS['OS_CFLAGS'] += ['-O2', '-fno-stack-protector']
+COMPILE_FLAGS['OS_CFLAGS'] += ['-O2', '-fno-stack-protector', '-fno-lto']
 
 AllowCompilerWarnings()
 NoVisibilityFlags()
