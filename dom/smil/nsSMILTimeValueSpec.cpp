@@ -105,7 +105,8 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
   RefPtr<Element> oldReferencedElement = mReferencedElement.get();
 
   if (mParams.mDependentElemID) {
-    mReferencedElement.ResetWithID(aContextNode, mParams.mDependentElemID);
+    mReferencedElement.ResetWithID(aContextNode,
+        nsDependentAtomString(mParams.mDependentElemID));
   } else if (mParams.mType == nsSMILTimeValueSpecParams::EVENT) {
     Element* target = mOwner->GetTargetElement();
     mReferencedElement.ResetWithElement(target);

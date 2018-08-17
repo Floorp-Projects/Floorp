@@ -4953,6 +4953,16 @@ nsIDocument::MozSetImageElement(const nsAString& aImageElementId,
   }
 }
 
+Element*
+nsIDocument::LookupImageElement(const nsAString& aId)
+{
+  if (aId.IsEmpty())
+    return nullptr;
+
+  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
+  return entry ? entry->GetImageIdElement() : nullptr;
+}
+
 void
 nsIDocument::DispatchContentLoadedEvents()
 {
