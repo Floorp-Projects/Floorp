@@ -211,14 +211,14 @@ default all::
 profiledbuild::
 	$(call BUILDSTATUS,TIERS pgo_profile_generate pgo_package pgo_profile pgo_clobber pgo_profile_use)
 	$(call BUILDSTATUS,TIER_START pgo_profile_generate)
-	$(MAKE) default MOZ_PROFILE_GENERATE=1 MOZ_PGO_INSTRUMENTED=1
+	$(MAKE) default MOZ_PROFILE_GENERATE=1
 	$(call BUILDSTATUS,TIER_FINISH pgo_profile_generate)
 	$(call BUILDSTATUS,TIER_START pgo_package)
-	$(MAKE) package MOZ_PGO_INSTRUMENTED=1 MOZ_INTERNAL_SIGNING_FORMAT= MOZ_EXTERNAL_SIGNING_FORMAT=
+	$(MAKE) package MOZ_INTERNAL_SIGNING_FORMAT= MOZ_EXTERNAL_SIGNING_FORMAT=
 	rm -f jarlog/en-US.log
 	$(call BUILDSTATUS,TIER_FINISH pgo_package)
 	$(call BUILDSTATUS,TIER_START pgo_profile)
-	MOZ_PGO_INSTRUMENTED=1 JARLOG_FILE=jarlog/en-US.log $(PYTHON) $(topsrcdir)/build/pgo/profileserver.py 10
+	JARLOG_FILE=jarlog/en-US.log $(PYTHON) $(topsrcdir)/build/pgo/profileserver.py 10
 	$(call BUILDSTATUS,TIER_FINISH pgo_profile)
 	$(call BUILDSTATUS,TIER_START pgo_clobber)
 	$(MAKE) maybe_clobber_profiledbuild
