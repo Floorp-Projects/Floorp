@@ -289,9 +289,7 @@ HTMLEditor::DeleteRefToAnonymousNode(ManualNACPtr aContent,
 NS_IMETHODIMP
 HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
 {
-  if (NS_WARN_IF(!aSelection)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  NS_ENSURE_ARG_POINTER(aSelection);
 
   // early way out if all contextual UI extensions are disabled
   NS_ENSURE_TRUE(mIsObjectResizingEnabled ||
@@ -328,8 +326,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
   if (mIsObjectResizingEnabled || mIsInlineTableEditingEnabled) {
     // Resizing or Inline Table Editing is enabled, we need to check if the
     // selection is contained in a table cell
-    cellElement =
-      GetElementOrParentByTagNameAtSelection(*aSelection, *nsGkAtoms::td);
+    cellElement = GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nullptr);
   }
 
   if (mIsObjectResizingEnabled && cellElement) {
