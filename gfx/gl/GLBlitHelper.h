@@ -71,7 +71,7 @@ class DrawBlitProg final
     const GLint mLoc_uTexMatrix0;
     const GLint mLoc_uTexMatrix1;
     const GLint mLoc_uColorMatrix;
-    GLenum mType_uColorMatrix;
+    GLenum mType_uColorMatrix = 0;
 
 public:
     struct Key final {
@@ -126,14 +126,14 @@ class GLBlitHelper final
     GLContext* const mGL;
     mutable std::map<DrawBlitProg::Key, const DrawBlitProg*> mDrawBlitProgs;
 
-    GLuint mQuadVAO;
-    GLuint mQuadVBO;
+    GLuint mQuadVAO = 0;
+    GLuint mQuadVBO = 0;
     nsCString mDrawBlitProg_VersionLine;
     const GLuint mDrawBlitProg_VertShader;
 
-    GLuint mYuvUploads[3];
-    gfx::IntSize mYuvUploads_YSize;
-    gfx::IntSize mYuvUploads_UVSize;
+    GLuint mYuvUploads[3] = {};
+    gfx::IntSize mYuvUploads_YSize = {0,0};
+    gfx::IntSize mYuvUploads_UVSize = {0,0};
 
 #ifdef XP_WIN
     mutable RefPtr<ID3D11Device> mD3D11;
