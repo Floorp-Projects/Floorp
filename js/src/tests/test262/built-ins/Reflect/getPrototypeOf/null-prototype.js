@@ -9,7 +9,6 @@ info: |
 
   ...
   2. Return target.[[GetPrototypeOf]]().
-features: [Reflect]
 ---*/
 
 var o = Object.create(null);

@@ -13,7 +13,6 @@ info: |
         a. If key is not an element of uncheckedResultKeys, throw a TypeError
         exception.
 
-features: [Proxy]
 ---*/
 
 var target = {

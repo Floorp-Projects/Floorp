@@ -18,7 +18,6 @@ info: |
   5. If IsDataDescriptor(ownDesc) is true, then
     a. If ownDesc.[[Writable]] is false, return false.
   ...
-features: [Reflect, Reflect.set]
 ---*/
 
 var o1 = {};

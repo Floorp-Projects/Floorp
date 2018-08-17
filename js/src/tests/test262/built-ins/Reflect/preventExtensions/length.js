@@ -5,7 +5,6 @@ es6id: 26.1.12
 description: >
   Reflect.preventExtensions.length value and property descriptor
 includes: [propertyHelper.js]
-features: [Reflect]
 ---*/
 
 assert.sameValue(

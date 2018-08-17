@@ -9,7 +9,6 @@ info: |
   [[SetPrototypeOf]] (V)
 
   6. Let trap be ? GetMethod(handler, "setPrototypeOf").
-features: [Proxy]
 ---*/
 
 var handler = Object.defineProperty({}, "setPrototypeOf", {

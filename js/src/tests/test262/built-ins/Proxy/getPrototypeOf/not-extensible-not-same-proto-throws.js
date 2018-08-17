@@ -23,7 +23,6 @@ info: |
     16. If SameValue(handlerProto, targetProto) is false, throw a TypeError
     exception.
     ...
-features: [Proxy]
 ---*/
 
 var target = Object.create({

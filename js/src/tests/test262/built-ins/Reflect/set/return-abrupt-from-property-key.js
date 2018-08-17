@@ -11,7 +11,6 @@ info: |
   2. Let key be ToPropertyKey(propertyKey).
   3. ReturnIfAbrupt(key).
   ...
-features: [Reflect, Reflect.set]
 ---*/
 
 var p = {

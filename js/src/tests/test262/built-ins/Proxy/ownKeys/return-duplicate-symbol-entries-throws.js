@@ -9,12 +9,12 @@ info: |
 
     ...
     9. If trapResult contains any duplicate entries, throw a TypeError exception.
-features: [Proxy, Symbol]
+features: [Symbol]
 ---*/
 
 var s = Symbol();
 var p = new Proxy({}, {
-  ownKeys: function() {
+  ownKeys() {
     return [s, s];
   }
 });

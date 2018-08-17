@@ -18,7 +18,7 @@ info: |
     a. Return key.
   ...
 includes: [compareArray.js]
-features: [Reflect, Symbol]
+features: [Symbol]
 ---*/
 
 var o = {};

@@ -6,7 +6,6 @@ description: >
     [[OwnPropertyKeys]] ( )
 
     8. Let trapResultArray be Call(trap, handler, «target»).
-features: [Proxy]
 ---*/
 
 var _target, _handler;

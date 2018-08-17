@@ -7,7 +7,7 @@ description: >
 
     Returns true if trap returns true and target property accessor is
     configurable and set is undefined.
-features: [Proxy, Reflect, Reflect.set]
+features: [Reflect]
 ---*/
 
 var target = {};
