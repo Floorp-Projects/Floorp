@@ -224,17 +224,16 @@ NS_IMETHODIMP
 HTMLEditor::GetFirstRow(Element* aTableElement,
                         nsINode** aRowNode)
 {
-  if (NS_WARN_IF(!aTableElement) || NS_WARN_IF(!aRowNode)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  NS_ENSURE_TRUE(aRowNode, NS_ERROR_NULL_POINTER);
 
   *aRowNode = nullptr;
 
-  Element* tableElement =
-    GetElementOrParentByTagNameInternal(*nsGkAtoms::table, *aTableElement);
-  if (NS_WARN_IF(!tableElement)) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsINode> tableElement = aTableElement;
+  NS_ENSURE_TRUE(tableElement, NS_ERROR_NULL_POINTER);
+
+  tableElement = GetElementOrParentByTagName(NS_LITERAL_STRING("table"),
+                                             tableElement);
+  NS_ENSURE_TRUE(tableElement, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIContent> tableChild = tableElement->GetFirstChild();
   while (tableChild) {
@@ -603,20 +602,19 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
   }
 
   if (cellsInRow > 0) {
-    if (NS_WARN_IF(!cellForRowParent)) {
-      return NS_ERROR_FAILURE;
-    }
-    Element* parentRow =
-      GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cellForRowParent);
-    if (NS_WARN_IF(!parentRow)) {
+
+    NS_NAMED_LITERAL_STRING(trStr, "tr");
+    if (!cellForRowParent) {
       return NS_ERROR_FAILURE;
     }
 
+    nsCOMPtr<Element> parentRow =
+      GetElementOrParentByTagName(trStr, cellForRowParent);
+    NS_ENSURE_TRUE(parentRow, NS_ERROR_NULL_POINTER);
+
     // The row parent and offset where we will insert new row
     nsCOMPtr<nsINode> parentOfRow = parentRow->GetParentNode();
-    if (NS_WARN_IF(!parentOfRow)) {
-      return NS_ERROR_FAILURE;
-    }
+    NS_ENSURE_TRUE(parentOfRow, NS_ERROR_NULL_POINTER);
     int32_t newRowOffset = parentOfRow->ComputeIndexOf(parentRow);
 
     // Adjust for when adding past the end
@@ -853,16 +851,12 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
                           &startRowIndex, &startColIndex);
       NS_ENSURE_SUCCESS(rv, rv);
       // Don't fail if no cell found
-      if (NS_WARN_IF(!cell)) {
-        return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-      }
+      NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
       if (GetNumberOfCellsInRow(table, startRowIndex) == 1) {
-        Element* parentRow =
-          GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cell);
-        if (NS_WARN_IF(!parentRow)) {
-          return NS_ERROR_FAILURE;
-        }
+        RefPtr<Element> parentRow =
+          GetElementOrParentByTagName(NS_LITERAL_STRING("tr"), cell);
+        NS_ENSURE_TRUE(parentRow, NS_ERROR_NULL_POINTER);
 
         // We should delete the row instead,
         //  but first check if its the only row left
@@ -1093,10 +1087,10 @@ HTMLEditor::DeleteColumn(Element* aTable,
         // Delete the cell
         if (GetNumberOfCellsInRow(aTable, rowIndex) == 1) {
           // Only 1 cell in row - delete the row
-          Element* parentRow =
-            GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cell);
-          if (NS_WARN_IF(!parentRow)) {
-            return NS_ERROR_FAILURE;
+          RefPtr<Element> parentRow =
+            GetElementOrParentByTagName(NS_LITERAL_STRING("tr"), cell);
+          if (!parentRow) {
+            return NS_ERROR_NULL_POINTER;
           }
 
           //  But first check if its the only row left
@@ -1310,13 +1304,12 @@ HTMLEditor::DeleteRow(Element* aTable,
   } while (cell);
 
   // Things are messed up if we didn't find a cell in the row!
-  if (NS_WARN_IF(!cellInDeleteRow)) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(cellInDeleteRow, NS_ERROR_FAILURE);
 
   // Delete the entire row
   RefPtr<Element> parentRow =
-    GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cellInDeleteRow);
+    GetElementOrParentByTagName(NS_LITERAL_STRING("tr"), cellInDeleteRow);
+
   if (parentRow) {
     rv = DeleteNodeWithTransaction(*parentRow);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1339,15 +1332,10 @@ HTMLEditor::DeleteRow(Element* aTable,
 NS_IMETHODIMP
 HTMLEditor::SelectTable()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_OK; // Don't fail if we didn't find a table.
-  }
   RefPtr<Element> table =
-    GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
-  if (NS_WARN_IF(!table)) {
-    return NS_OK; // Don't fail if we didn't find a table.
-  }
+    GetElementOrParentByTagName(NS_LITERAL_STRING("table"), nullptr);
+  // Don't fail if we didn't find a table
+  NS_ENSURE_TRUE(table, NS_OK);
 
   nsresult rv = ClearSelection();
   if (NS_FAILED(rv)) {
@@ -1359,15 +1347,9 @@ HTMLEditor::SelectTable()
 NS_IMETHODIMP
 HTMLEditor::SelectTableCell()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-  }
   RefPtr<Element> cell =
-    GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::td);
-  if (NS_WARN_IF(!cell)) {
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-  }
+    GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nullptr);
+  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   nsresult rv = ClearSelection();
   if (NS_FAILED(rv)) {
@@ -1380,26 +1362,17 @@ NS_IMETHODIMP
 HTMLEditor::SelectBlockOfCells(Element* aStartCell,
                                Element* aEndCell)
 {
-  if (NS_WARN_IF(!aStartCell) || NS_WARN_IF(!aEndCell)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  NS_ENSURE_TRUE(aStartCell && aEndCell, NS_ERROR_NULL_POINTER);
 
   RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  RefPtr<Element> table =
-    GetElementOrParentByTagNameInternal(*nsGkAtoms::table, *aStartCell);
-  if (NS_WARN_IF(!table)) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_NAMED_LITERAL_STRING(tableStr, "table");
+  RefPtr<Element> table = GetElementOrParentByTagName(tableStr, aStartCell);
+  NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
 
-  RefPtr<Element> endTable =
-    GetElementOrParentByTagNameInternal(*nsGkAtoms::table, *aEndCell);
-  if (NS_WARN_IF(!endTable)) {
-    return NS_ERROR_FAILURE;
-  }
+  RefPtr<Element> endTable = GetElementOrParentByTagName(tableStr, aEndCell);
+  NS_ENSURE_TRUE(endTable, NS_ERROR_FAILURE);
 
   // We can only select a block if within the same table,
   //  so do nothing if not within one table
@@ -1484,29 +1457,27 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
 NS_IMETHODIMP
 HTMLEditor::SelectAllTableCells()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-  }
   RefPtr<Element> cell =
-    GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::td);
-  if (NS_WARN_IF(!cell)) {
-    // Don't fail if we didn't find a cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-  }
+    GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nullptr);
+
+  // Don't fail if we didn't find a cell
+  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   RefPtr<Element> startCell = cell;
 
   // Get parent table
   RefPtr<Element> table =
-    GetElementOrParentByTagNameInternal(*nsGkAtoms::table, *cell);
-  if (NS_WARN_IF(!table)) {
-    return NS_ERROR_FAILURE;
+    GetElementOrParentByTagName(NS_LITERAL_STRING("table"), cell);
+  if (!table) {
+    return NS_ERROR_NULL_POINTER;
   }
 
   int32_t rowCount, colCount;
   nsresult rv = GetTableSize(table, &rowCount, &colCount);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   // Suppress nsISelectionListener notification
   //  until all selection changes are finished
@@ -1551,25 +1522,19 @@ HTMLEditor::SelectAllTableCells()
 NS_IMETHODIMP
 HTMLEditor::SelectTableRow()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    // Don't fail if we didn't find a cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-  }
   RefPtr<Element> cell =
-    GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::td);
-  if (NS_WARN_IF(!cell)) {
-    // Don't fail if we didn't find a cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-  }
+    GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nullptr);
 
+  // Don't fail if we didn't find a cell
+  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
   RefPtr<Element> startCell = cell;
 
   // Get table and location of cell:
+  RefPtr<Selection> selection;
   RefPtr<Element> table;
   int32_t startRowIndex, startColIndex;
 
-  nsresult rv = GetCellContext(nullptr,
+  nsresult rv = GetCellContext(getter_AddRefs(selection),
                                getter_AddRefs(table),
                                getter_AddRefs(cell),
                                nullptr, nullptr,
@@ -1625,25 +1590,20 @@ HTMLEditor::SelectTableRow()
 NS_IMETHODIMP
 HTMLEditor::SelectTableColumn()
 {
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    // Don't fail if we didn't find a cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-  }
   RefPtr<Element> cell =
-    GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::td);
-  if (NS_WARN_IF(!cell)) {
-    // Don't fail if we didn't find a cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-  }
+    GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nullptr);
+
+  // Don't fail if we didn't find a cell
+  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   RefPtr<Element> startCell = cell;
 
   // Get location of cell:
+  RefPtr<Selection> selection;
   RefPtr<Element> table;
   int32_t startRowIndex, startColIndex;
 
-  nsresult rv = GetCellContext(nullptr,
+  nsresult rv = GetCellContext(getter_AddRefs(selection),
                                getter_AddRefs(table),
                                getter_AddRefs(cell),
                                nullptr, nullptr,
@@ -2509,18 +2469,13 @@ NS_IMETHODIMP
 HTMLEditor::NormalizeTable(Element* aTable)
 {
   RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   RefPtr<Element> table =
-    aTable ?
-      GetElementOrParentByTagNameInternal(*nsGkAtoms::table, *aTable) :
-      GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
-  if (NS_WARN_IF(!table)) {
-    // Don't fail if we didn't find a table.
-    return NS_OK;
-  }
+    GetElementOrParentByTagName(NS_LITERAL_STRING("table"),
+                                aTable);
+  // Don't fail if we didn't find a table
+  NS_ENSURE_TRUE(table, NS_OK);
 
   int32_t rowCount, colCount, rowIndex, colIndex;
   nsresult rv = GetTableSize(table, &rowCount, &colCount);
@@ -2606,19 +2561,11 @@ HTMLEditor::GetCellIndexes(Element* aCell,
   *aColIndex=0; // initialize out params
   NS_ENSURE_ARG_POINTER(aColIndex);
   *aRowIndex=0;
-  // Needs to stay alive while we're using aCell, since it may be keeping it
-  // alive.
-  // XXX Looks like it's safe to use raw pointer here.  However, layout code
-  //     change won't be handled by editor developers so that it must be safe
-  //     to keep using RefPtr here.
-  RefPtr<Element> cell;
+  RefPtr<Element> cell; // Needs to stay alive while we're using
+                        // aCell, since it may be keeping it alive.
   if (!aCell) {
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
     // Get the selected cell or the cell enclosing the selection anchor
-    cell = GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::td);
+    cell = GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nullptr);
     if (!cell) {
       return NS_ERROR_FAILURE;
     }
@@ -2685,31 +2632,12 @@ HTMLEditor::GetTableSize(Element* aTable,
   *aRowCount = 0;
   *aColCount = 0;
   // Get the selected talbe or the table enclosing the selection anchor
-  // XXX Looks like it's safe to use raw pointer here.  However, layout code
-  //     change won't be handled by editor developers so that it must be safe
-  //     to keep using RefPtr here.
-  RefPtr<Element> table;
-  if (aTable) {
-    table = GetElementOrParentByTagNameInternal(*nsGkAtoms::table, *aTable);
-    if (NS_WARN_IF(!table)) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
-    table =
-      GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
-    if (NS_WARN_IF(!table)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
+  RefPtr<Element> table =
+    GetElementOrParentByTagName(NS_LITERAL_STRING("table"), aTable);
+  NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
 
   nsTableWrapperFrame* tableFrame = do_QueryFrame(table->GetPrimaryFrame());
-  if (NS_WARN_IF(!tableFrame)) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(tableFrame, NS_ERROR_FAILURE);
 
   *aRowCount = tableFrame->GetRowCount();
   *aColCount = tableFrame->GetColCount();
@@ -2749,19 +2677,10 @@ HTMLEditor::GetCellDataAt(Element* aTable,
 
   *aCell = nullptr;
 
-  // needs to live while we use aTable
-  // XXX Really? Looks like it's safe to use raw pointer here.
-  //     However, layout code change won't be handled by editor developers
-  //     so that it must be safe to keep using RefPtr here.
-  RefPtr<Element> table;
+  RefPtr<Element> table; // needs to live while we use aTable
   if (!aTable) {
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
-    // Get the selected table or the table enclosing the selection anchor.
-    table =
-      GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
+    // Get the selected table or the table enclosing the selection anchor
+    table = GetElementOrParentByTagName(NS_LITERAL_STRING("table"), nullptr);
     if (!table) {
       return NS_ERROR_FAILURE;
     }
@@ -2800,22 +2719,11 @@ HTMLEditor::GetCellAt(Element* aTable,
   NS_ENSURE_ARG_POINTER(aCell);
   *aCell = nullptr;
 
-  // Needs to live as long as we use aTable
-  // XXX Really? Looks like it's safe to use raw pointer here.
-  //     However, layout code change won't be handled by editor developers
-  //     so that it must be safe to keep using RefPtr here.
-  RefPtr<Element> table;
+  RefPtr<Element> table; // Needs to live as long as we use aTable
   if (!aTable) {
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
-    // Get the selected table or the table enclosing the selection anchor.
-    table =
-      GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
-    if (NS_WARN_IF(!table)) {
-      return NS_ERROR_FAILURE;
-    }
+    // Get the selected table or the table enclosing the selection anchor
+    table = GetElementOrParentByTagName(NS_LITERAL_STRING("table"), nullptr);
+    NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
     aTable = table;
   }
 
@@ -2883,9 +2791,7 @@ HTMLEditor::GetCellContext(Selection** aSelection,
   }
 
   RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   if (aSelection) {
     *aSelection = selection.get();
@@ -2923,7 +2829,6 @@ HTMLEditor::GetCellContext(Selection** aSelection,
     }
 
     // We found a cell
-    MOZ_ASSERT(cellOrTableElement);
     cell = cellOrTableElement;
   }
   if (aCell) {
@@ -2932,11 +2837,9 @@ HTMLEditor::GetCellContext(Selection** aSelection,
   }
 
   // Get containing table
-  table = GetElementOrParentByTagNameInternal(*nsGkAtoms::table, *cell);
-  if (NS_WARN_IF(!table)) {
-    // Cell must be in a table, so fail if not found
-    return NS_ERROR_FAILURE;
-  }
+  table = GetElementOrParentByTagName(NS_LITERAL_STRING("table"), cell);
+  // Cell must be in a table, so fail if not found
+  NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
   if (aTable) {
     table.forget(aTable);
   }
@@ -3254,11 +3157,13 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
                                      getter_AddRefs(tableOrCellElement));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  NS_NAMED_LITERAL_STRING(tdName, "td");
+
   if (tableOrCellElement) {
       // Each cell is in its own selection range,
       //  so count signals multiple-cell selection
       *aSelectedCount = selection->RangeCount();
-      aTagName = NS_LITERAL_STRING("td");
+      aTagName = tdName;
   } else {
     nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
     if (NS_WARN_IF(!anchorNode)) {
@@ -3271,7 +3176,7 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
       if (selectedNode) {
         if (selectedNode->IsHTMLElement(nsGkAtoms::td)) {
           tableOrCellElement = selectedNode->AsElement();
-          aTagName = NS_LITERAL_STRING("td");
+          aTagName = tdName;
           // Each cell is in its own selection range,
           //  so count signals multiple-cell selection
           *aSelectedCount = selection->RangeCount();
@@ -3288,10 +3193,9 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
     }
     if (!tableOrCellElement) {
       // Didn't find a table element -- find a cell parent
-      tableOrCellElement =
-        GetElementOrParentByTagNameInternal(*nsGkAtoms::td, *anchorNode);
+      tableOrCellElement = GetElementOrParentByTagName(tdName, anchorNode);
       if (tableOrCellElement) {
-        aTagName = NS_LITERAL_STRING("td");
+        aTagName = tdName;
       }
     }
   }
@@ -3310,20 +3214,8 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
 
   // Be sure we have a table element
   //  (if aElement is null, this uses selection's anchor node)
-  RefPtr<Element> table;
-  if (aElement) {
-    table = GetElementOrParentByTagNameInternal(*nsGkAtoms::table, *aElement);
-  } else {
-    RefPtr<Selection> selection = GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      // If there is no Selection, the following GetTableSize() will return
-      // nullptr if we set first argument to nullptr.  So, let's return error
-      // in this case.
-      return NS_ERROR_FAILURE;
-    }
-    table =
-      GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
-  }
+  RefPtr<Element> table =
+    GetElementOrParentByTagName(NS_LITERAL_STRING("table"), aElement);
 
   // table might be null at this point, but if so GetTableSize will fail.
   int32_t rowCount, colCount;
