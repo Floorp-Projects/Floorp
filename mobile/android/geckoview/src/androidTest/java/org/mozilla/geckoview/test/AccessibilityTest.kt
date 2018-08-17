@@ -75,7 +75,7 @@ class AccessibilityTest : BaseSessionTest() {
         fun onTextSelectionChanged(event: AccessibilityEvent) { }
         fun onTextChanged(event: AccessibilityEvent) { }
         fun onTextTraversal(event: AccessibilityEvent) { }
-        fun onWinStateChanged(event: AccessibilityEvent) { }
+        fun onWinContentChanged(event: AccessibilityEvent) { }
     }
 
     @Before fun setup() {
@@ -104,7 +104,7 @@ class AccessibilityTest : BaseSessionTest() {
                     AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED -> newDelegate.onTextSelectionChanged(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> newDelegate.onTextChanged(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY -> newDelegate.onTextTraversal(event)
-                    AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> newDelegate.onWinStateChanged(event)
+                    AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> newDelegate.onWinContentChanged(event)
                     else -> {}
                 }
                 return false
@@ -508,7 +508,7 @@ class AccessibilityTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [3])
-            override fun onWinStateChanged(event: AccessibilityEvent) {
+            override fun onWinContentChanged(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
                 assertThat("Focused node is onscreen", screenContainsNode(nodeId), equalTo(true))
             }
@@ -522,7 +522,7 @@ class AccessibilityTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onWinStateChanged(event: AccessibilityEvent) {
+            override fun onWinContentChanged(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
                 assertThat("Focused node is still onscreen", screenContainsNode(nodeId), equalTo(true))
             }
@@ -536,7 +536,7 @@ class AccessibilityTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onWinStateChanged(event: AccessibilityEvent) {
+            override fun onWinContentChanged(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
                 assertThat("Focused node is offscreen", screenContainsNode(nodeId), equalTo(false))
             }
@@ -556,7 +556,7 @@ class AccessibilityTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [3])
-            override fun onWinStateChanged(event: AccessibilityEvent) {
+            override fun onWinContentChanged(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
                 assertThat("Focused node is onscreen", screenContainsNode(nodeId), equalTo(true))
             }
