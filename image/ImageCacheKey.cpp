@@ -141,11 +141,10 @@ ImageCacheKey::GetSpecialCaseDocumentToken(nsIDocument* aDocument, nsIURI* aURI)
     return aDocument;
   }
 
-  // If the window is 3rd party resource, let's see if first-party storage
-  // access is granted for this image.
-  if (nsContentUtils::IsTrackingResourceWindow(aDocument->GetInnerWindow())) {
-    return nsContentUtils::StorageDisabledByAntiTracking(aDocument, aURI) ?
-             aDocument : nullptr;
+  // If we must disable the storage, we want to create a unique cache key for
+  // this image.
+  if (nsContentUtils::StorageDisabledByAntiTracking(aDocument, aURI)) {
+    return aDocument;
   }
 
   // Another scenario is if this image is a 3rd party resource loaded by a
