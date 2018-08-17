@@ -26,8 +26,8 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
 /* static*/ void
-nsCSSClipPathInstance::ApplyBasicShapeClip(gfxContext& aContext,
-                                           nsIFrame* aFrame)
+nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(gfxContext& aContext,
+                                                 nsIFrame* aFrame)
 {
   auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
 
@@ -48,8 +48,8 @@ nsCSSClipPathInstance::ApplyBasicShapeClip(gfxContext& aContext,
 }
 
 /* static*/ bool
-nsCSSClipPathInstance::HitTestBasicShapeClip(nsIFrame* aFrame,
-                                             const gfxPoint& aPoint)
+nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(nsIFrame* aFrame,
+                                                   const gfxPoint& aPoint)
 {
   auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
   StyleShapeSourceType type = clipPathStyle.GetType();
@@ -71,7 +71,7 @@ nsCSSClipPathInstance::HitTestBasicShapeClip(nsIFrame* aFrame,
 }
 
 /* static */ Rect
-nsCSSClipPathInstance::GetBoundingRectForBasicShapeClip(
+nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
   nsIFrame* aFrame,
   const StyleShapeSource& aClipPathStyle)
 {

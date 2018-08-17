@@ -524,11 +524,12 @@ nsSVGUtils::DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
     case StyleShapeSourceType::Shape:
     case StyleShapeSourceType::Box:
     case StyleShapeSourceType::Path:
-      aUsage.shouldApplyBasicShape = true;
+      aUsage.shouldApplyBasicShapeOrPath = true;
       break;
     case StyleShapeSourceType::None:
       MOZ_ASSERT(!aUsage.shouldGenerateClipMaskLayer &&
-                 !aUsage.shouldApplyClipPath && !aUsage.shouldApplyBasicShape);
+                 !aUsage.shouldApplyClipPath &&
+                 !aUsage.shouldApplyBasicShapeOrPath);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported clip-path type.");
@@ -808,11 +809,11 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so
    * we can just do normal painting and get it clipped appropriately.
    */
-  if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShape) {
+  if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShapeOrPath) {
     if (maskUsage.shouldApplyClipPath) {
       clipPathFrame->ApplyClipPath(aContext, aFrame, aTransform);
     } else {
-      nsCSSClipPathInstance::ApplyBasicShapeClip(aContext, aFrame);
+      nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(aContext, aFrame);
     }
   }
 
@@ -857,7 +858,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
      svgFrame->PaintSVG(*target, aTransform, aImgParams, aDirtyRect);
   }
 
-  if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShape) {
+  if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShapeOrPath) {
     aContext.PopClip();
   }
 
@@ -879,7 +880,7 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, const gfxPoint &aPoint)
   if (!props.mClipPath) {
     const nsStyleSVGReset *style = aFrame->StyleSVGReset();
     if (style->HasClipPath()) {
-      return nsCSSClipPathInstance::HitTestBasicShapeClip(aFrame, aPoint);
+      return nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(aFrame, aPoint);
     }
     return true;
   }
