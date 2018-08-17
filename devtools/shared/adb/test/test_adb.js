@@ -101,9 +101,7 @@ add_task(async function testNoAdbJSON() {
   await extension.unload();
 });
 
-add_task({
-  skip_if: () => mozinfo.os == "win" // bug 1482008
-}, async function testNoTargetBinaries() {
+add_task(async function testNoTargetBinaries() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       version: (extension_version++).toString(),
@@ -146,7 +144,7 @@ add_task(async function testExtract() {
   await extension.startup();
 
   const adbBinary = await getFileForBinary();
-  ok(await adbBinary.exists);
+  ok(await adbBinary.exists());
 
   await extension.unload();
 });

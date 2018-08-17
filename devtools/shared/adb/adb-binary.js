@@ -216,7 +216,12 @@ async function getFileForBinary() {
       !await extractFiles()) {
     return null;
   }
-  return new FileUtils.File(ADB_BINARY_PATH);
+
+  const file = new FileUtils.File(ADB_BINARY_PATH);
+  if (!file.exists()) {
+    return null;
+  }
+  return file;
 }
 
 exports.getFileForBinary = getFileForBinary;
