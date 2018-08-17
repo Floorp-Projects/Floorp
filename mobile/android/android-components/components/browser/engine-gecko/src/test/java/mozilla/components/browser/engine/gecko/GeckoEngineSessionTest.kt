@@ -14,8 +14,11 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.mozilla.gecko.util.BundleEventListener
 import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.GeckoResponse
@@ -120,6 +123,7 @@ class GeckoEngineSessionTest {
     @Test
     fun testLoadData() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+
         var loadUriReceived = false
         engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
             BundleEventListener { _, _, _ -> loadUriReceived = true },
@@ -130,8 +134,33 @@ class GeckoEngineSessionTest {
         assertTrue(loadUriReceived)
 
         loadUriReceived = false
-        engineSession.loadData("Hello!", "text/plain")
+        engineSession.loadData("Hello!", "text/plain", "UTF-8")
         assertTrue(loadUriReceived)
+
+        loadUriReceived = false
+        engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", "text/plain", "base64")
+        assertTrue(loadUriReceived)
+
+        loadUriReceived = false
+        engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", encoding = "base64")
+        assertTrue(loadUriReceived)
+    }
+
+    @Test
+    fun testLoadDataBase64() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        val geckoSession = mock(GeckoSession::class.java)
+
+        engineSession.geckoSession = geckoSession
+
+        engineSession.loadData("Hello!", "text/plain", "UTF-8")
+        verify(geckoSession).loadString(eq("Hello!"), anyString())
+
+        engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", "text/plain", "base64")
+        verify(geckoSession).loadData(eq("ahr0cdovl21vemlsbgeub3jn==".toByteArray()), eq("text/plain"))
+
+        engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", encoding = "base64")
+        verify(geckoSession).loadData(eq("ahr0cdovl21vemlsbgeub3jn==".toByteArray()), eq("text/plain"))
     }
 
     @Test

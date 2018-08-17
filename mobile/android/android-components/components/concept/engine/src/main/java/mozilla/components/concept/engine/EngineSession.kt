@@ -68,8 +68,22 @@ abstract class EngineSession(
 
     /**
      * Loads the data with the given mimeType.
+     * Example:
+     * ```
+     * engineSession.loadData("<html><body>Example HTML content here</body></html>", "text/html")
+     * ```
+     *
+     * If the data is base64 encoded, you can override the default encoding (UTF-8) with 'base64'.
+     * Example:
+     * ```
+     * engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", "text/plain", "base64")
+     * ```
+     *
+     * @param data The data that should be rendering.
+     * @param mimeType the data type needed by the engine to know how to render it.
+     * @param encoding specifies whether the data is base64 encoded; use 'base64' else defaults to "UTF-8".
      */
-    abstract fun loadData(data: String, mimeType: String = "text/html")
+    abstract fun loadData(data: String, mimeType: String = "text/html", encoding: String = "UTF-8")
 
     /**
      * Stops loading the current session.

@@ -14,9 +14,8 @@ import java.lang.ref.WeakReference
  * WebView-based EngineSession implementation.
  */
 class SystemEngineSession : EngineSession() {
-    internal var urlToLoad: String? = null
-    internal var mimeTypeToLoad: String? = null
     internal var view: WeakReference<SystemEngineView>? = null
+    internal var scheduledLoad = ScheduledLoad(null)
 
     /**
      * See [EngineSession.loadUrl]
@@ -27,7 +26,7 @@ class SystemEngineSession : EngineSession() {
         if (internalView == null) {
             // We can't load a URL without a WebView. So let's just remember the URL here until
             // this session gets linked to a WebView. See: EngineView.render(session).
-            urlToLoad = url
+            scheduledLoad = ScheduledLoad(url)
         } else {
             internalView.loadUrl(url)
         }
@@ -36,16 +35,15 @@ class SystemEngineSession : EngineSession() {
     /**
      * See [EngineSession.loadData]
      */
-    override fun loadData(data: String, mimeType: String) {
+    override fun loadData(data: String, mimeType: String, encoding: String) {
         val internalView = currentView()
 
         if (internalView == null) {
             // We remember the data that we want to load and when then session gets linked
-            // to a WebView we check for a mimeType and call loadData then.
-            urlToLoad = data
-            mimeTypeToLoad = mimeType
+            // to a WebView we call loadData then.
+            scheduledLoad = ScheduledLoad(data, mimeType)
         } else {
-            internalView.loadData(data, mimeType, "UTF-8")
+            internalView.loadData(data, mimeType, encoding)
         }
     }
 

@@ -64,10 +64,13 @@ class SystemEngineSessionTest {
         `when`(engineSession.currentView()).thenReturn(webView)
 
         engineSession.loadData("<html><body>Hello!</body></html>")
-        verify(webView).loadData(anyString(), eq("text/html"), eq("UTF-8"))
+        verify(webView).loadData(eq("<html><body>Hello!</body></html>"), eq("text/html"), eq("UTF-8"))
 
-        engineSession.loadData("Hello!", "text/plain")
-        verify(webView).loadData(anyString(), eq("text/plain"), eq("UTF-8"))
+        engineSession.loadData("Hello!", "text/plain", "UTF-8")
+        verify(webView).loadData(eq("Hello!"), eq("text/plain"), eq("UTF-8"))
+
+        engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", "text/plain", "base64")
+        verify(webView).loadData(eq("ahr0cdovl21vemlsbgeub3jn=="), eq("text/plain"), eq("base64"))
     }
 
     @Test

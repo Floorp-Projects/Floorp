@@ -29,7 +29,7 @@ class EngineObserverTest {
                 return emptyMap()
             }
 
-            override fun loadData(data: String, mimeType: String) {
+            override fun loadData(data: String, mimeType: String, encoding: String) {
                 notifyObservers { onLocationChange(data) }
                 notifyObservers { onProgress(100) }
                 notifyObservers { onLoadingStateChange(true) }
@@ -68,10 +68,7 @@ class EngineObserverTest {
                 return emptyMap()
             }
 
-            override fun loadData(data: String, mimeType: String) {
-                // TODO: What do we do here?
-            }
-
+            override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun loadUrl(url: String) {
                 if (url.startsWith("https://")) {
                     notifyObservers { onSecurityChange(true, "host", "issuer") }
@@ -109,7 +106,7 @@ class EngineObserverTest {
             }
 
             override fun loadUrl(url: String) {}
-            override fun loadData(data: String, mimeType: String) {}
+            override fun loadData(data: String, mimeType: String, encoding: String) {}
         }
         val observer = EngineObserver(session)
         engineSession.register(observer)

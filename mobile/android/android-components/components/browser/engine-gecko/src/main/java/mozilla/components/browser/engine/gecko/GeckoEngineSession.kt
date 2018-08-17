@@ -43,8 +43,11 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.loadData]
      */
-    override fun loadData(data: String, mimeType: String) {
-        geckoSession.loadString(data, mimeType)
+    override fun loadData(data: String, mimeType: String, encoding: String) {
+        when (encoding) {
+            "base64" -> geckoSession.loadData(data.toByteArray(), mimeType)
+            else -> geckoSession.loadString(data, mimeType)
+        }
     }
 
     /**
