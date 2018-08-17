@@ -183,6 +183,7 @@ add_task(async function testReportBreakage() {
           "urlclassifier.trackingTable",
           "network.http.referer.defaultPolicy",
           "network.http.referer.defaultPolicy.pbmode",
+          "browser.contentblocking.rejecttrackers.control-center.ui.enabled",
           "network.cookie.cookieBehavior",
           "network.cookie.lifetimePolicy",
           "privacy.restrict3rdpartystorage.expiration",

@@ -22,6 +22,8 @@
   skin/classic/browser/addons/addon-install-error.svg          (../shared/addons/addon-install-error.svg)
   skin/classic/browser/addons/addon-install-installed.svg      (../shared/addons/addon-install-installed.svg)
   skin/classic/browser/addons/addon-install-warning.svg        (../shared/addons/addon-install-warning.svg)
+  skin/classic/browser/controlcenter/3rdpartycookies.svg       (../shared/controlcenter/3rdpartycookies.svg)
+  skin/classic/browser/controlcenter/3rdpartycookies-disabled.svg (../shared/controlcenter/3rdpartycookies-disabled.svg)
   skin/classic/browser/controlcenter/conn-not-secure.svg       (../shared/controlcenter/conn-not-secure.svg)
   skin/classic/browser/controlcenter/connection.svg            (../shared/controlcenter/connection.svg)
   skin/classic/browser/controlcenter/mcb-disabled.svg          (../shared/controlcenter/mcb-disabled.svg)
