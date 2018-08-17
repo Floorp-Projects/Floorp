@@ -1262,10 +1262,9 @@ def pgo_flags(compiler, build_env, target):
     if compiler.type in ('clang-cl', 'clang'):
         profdata = os.path.join(topobjdir, 'merged.profdata')
         if compiler.type == 'clang-cl':
+            # 32-bit PGO is currently blocked by bug 1479800
             if target.cpu == 'x86_64':
                 gen_ldflags = ['clang_rt.profile-x86_64.lib']
-            elif target.cpu == 'x86':
-                gen_ldflags = ['clang_rt.profile-i386.lib']
             else:
                 gen_ldflags = None
         else:

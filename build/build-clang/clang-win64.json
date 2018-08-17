@@ -15,7 +15,6 @@
     "ml": "ml64.exe",
     "patches": [
       "loosen-msvc-detection.patch",
-      "r339636.patch",
-      "workaround-issue38586.patch"
+      "r339636.patch"
     ]
 }
