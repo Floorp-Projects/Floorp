@@ -134,7 +134,7 @@ add_task(async function() {
   // check that click "Allow" works with blocked plugins
   await promiseForNotificationShown(notification);
 
-  PopupNotifications.panel.firstChild.button.click();
+  PopupNotifications.panel.firstElementChild.button.click();
 
   pluginInfo = await promiseForPluginInfo("test");
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE,
@@ -224,7 +224,7 @@ add_task(async function() {
   // simulate "allow"
   await promiseForNotificationShown(notification);
 
-  PopupNotifications.panel.firstChild.button.click();
+  PopupNotifications.panel.firstElementChild.button.click();
 
   pluginInfo = await promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 24a, Plugin should be active.");
@@ -250,7 +250,7 @@ add_task(async function() {
   // simulate "allow"
   await promiseForNotificationShown(notification);
 
-  PopupNotifications.panel.firstChild.button.click();
+  PopupNotifications.panel.firstElementChild.button.click();
 
   pluginInfo = await promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 24b, Plugin should be active.");

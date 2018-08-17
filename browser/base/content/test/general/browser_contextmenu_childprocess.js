@@ -32,7 +32,7 @@ function checkItems(menuitem, arr) {
     } else if ("children" in details) {
       is(menuitem.localName, "menu", "submenu");
       is(menuitem.getAttribute("label"), str, str + " label");
-      checkItems(menuitem.firstChild.firstChild, details.children);
+      checkItems(menuitem.firstElementChild.firstElementChild, details.children);
     } else {
       is(menuitem.localName, "menuitem", str + " menuitem");
 
@@ -51,7 +51,7 @@ function checkItems(menuitem, arr) {
         ok(!menuitem.hasAttribute("disabled"), str + " disabled");
     }
 
-    menuitem = menuitem.nextSibling;
+    menuitem = menuitem.nextElementSibling;
   }
 }
 
@@ -76,5 +76,5 @@ function checkMenu(contextMenu) {
                    "---",                 null,
                    "Checkbox",           {type: "checkbox", icon: "", checked: false, disabled: false}] }
                ];
-  checkItems(contextMenu.childNodes[2], items);
+  checkItems(contextMenu.children[2], items);
 }

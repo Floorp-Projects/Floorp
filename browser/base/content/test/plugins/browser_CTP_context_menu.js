@@ -57,10 +57,10 @@ add_task(async function() {
   // Activate the plugin via the context menu
   EventUtils.synthesizeMouseAtCenter(actMenuItem, {});
 
-  await promiseForCondition(() => !PopupNotifications.panel.dismissed && PopupNotifications.panel.firstChild);
+  await promiseForCondition(() => !PopupNotifications.panel.dismissed && PopupNotifications.panel.firstElementChild);
 
   // Activate the plugin
-  PopupNotifications.panel.firstChild.button.click();
+  PopupNotifications.panel.firstElementChild.button.click();
 
   // check plugin state
   pluginInfo = await promiseForPluginInfo("test", gBrowser.selectedBrowser);

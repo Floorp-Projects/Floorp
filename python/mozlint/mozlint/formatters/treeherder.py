@@ -28,4 +28,6 @@ class TreeherderFormatter(object):
                 d['rule'] = d['rule'] or d['linter']
                 message.append(self.fmt.format(**d))
 
+        if not message:
+            message.append("No lint issues found.")
         return "\n".join(message)

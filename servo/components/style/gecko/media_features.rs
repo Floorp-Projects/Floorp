@@ -118,11 +118,8 @@ where
     };
 
     let size = get_size(device);
-    RangeOrOperator::evaluate(
-        range_or_operator,
-        Some(size.height.0 as u64 * query_value.0 as u64),
-        size.width.0 as u64 * query_value.1 as u64,
-    )
+    let value = AspectRatio(size.width.0 as u32, size.height.0 as u32);
+    RangeOrOperator::evaluate_with_query_value(range_or_operator, query_value, value)
 }
 
 /// https://drafts.csswg.org/mediaqueries-4/#aspect-ratio
@@ -401,7 +398,7 @@ fn eval_moz_touch_enabled(
     eval_system_metric(
         device,
         query_value,
-        atom!("touch-enabled"),
+        atom!("-moz-touch-enabled"),
         /* accessible_from_content = */ true,
     )
 }
@@ -424,7 +421,7 @@ fn eval_moz_os_version(
 }
 
 macro_rules! system_metric_feature {
-    ($feature_name:expr, $metric_name:expr) => {
+    ($feature_name:expr) => {
         {
             fn __eval(
                 device: &Device,
@@ -434,7 +431,7 @@ macro_rules! system_metric_feature {
                 eval_system_metric(
                     device,
                     query_value,
-                    $metric_name,
+                    $feature_name,
                     /* accessible_from_content = */ false,
                 )
             }
@@ -596,28 +593,26 @@ lazy_static! {
             Evaluator::Ident(eval_moz_os_version),
             ParsingRequirements::CHROME_AND_UA_ONLY,
         ),
-        // FIXME(emilio): make system metrics store the -moz- atom, and remove
-        // some duplication here.
-        system_metric_feature!(atom!("-moz-scrollbar-start-backward"), atom!("scrollbar-start-backward")),
-        system_metric_feature!(atom!("-moz-scrollbar-start-forward"), atom!("scrollbar-start-forward")),
-        system_metric_feature!(atom!("-moz-scrollbar-end-backward"), atom!("scrollbar-end-backward")),
-        system_metric_feature!(atom!("-moz-scrollbar-end-forward"), atom!("scrollbar-end-forward")),
-        system_metric_feature!(atom!("-moz-scrollbar-thumb-proportional"), atom!("scrollbar-thumb-proportional")),
-        system_metric_feature!(atom!("-moz-overlay-scrollbars"), atom!("overlay-scrollbars")),
-        system_metric_feature!(atom!("-moz-windows-default-theme"), atom!("windows-default-theme")),
-        system_metric_feature!(atom!("-moz-mac-graphite-theme"), atom!("mac-graphite-theme")),
-        system_metric_feature!(atom!("-moz-mac-yosemite-theme"), atom!("mac-yosemite-theme")),
-        system_metric_feature!(atom!("-moz-windows-accent-color-in-titlebar"), atom!("windows-accent-color-in-titlebar")),
-        system_metric_feature!(atom!("-moz-windows-compositor"), atom!("windows-compositor")),
-        system_metric_feature!(atom!("-moz-windows-classic"), atom!("windows-classic")),
-        system_metric_feature!(atom!("-moz-windows-glass"), atom!("windows-glass")),
-        system_metric_feature!(atom!("-moz-menubar-drag"), atom!("menubar-drag")),
-        system_metric_feature!(atom!("-moz-swipe-animation-enabled"), atom!("swipe-animation-enabled")),
-        system_metric_feature!(atom!("-moz-gtk-csd-available"), atom!("gtk-csd-available")),
-        system_metric_feature!(atom!("-moz-gtk-csd-minimize-button"), atom!("gtk-csd-minimize-button")),
-        system_metric_feature!(atom!("-moz-gtk-csd-maximize-button"), atom!("gtk-csd-maximize-button")),
-        system_metric_feature!(atom!("-moz-gtk-csd-close-button"), atom!("gtk-csd-close-button")),
-        system_metric_feature!(atom!("-moz-system-dark-theme"), atom!("system-dark-theme")),
+        system_metric_feature!(atom!("-moz-scrollbar-start-backward")),
+        system_metric_feature!(atom!("-moz-scrollbar-start-forward")),
+        system_metric_feature!(atom!("-moz-scrollbar-end-backward")),
+        system_metric_feature!(atom!("-moz-scrollbar-end-forward")),
+        system_metric_feature!(atom!("-moz-scrollbar-thumb-proportional")),
+        system_metric_feature!(atom!("-moz-overlay-scrollbars")),
+        system_metric_feature!(atom!("-moz-windows-default-theme")),
+        system_metric_feature!(atom!("-moz-mac-graphite-theme")),
+        system_metric_feature!(atom!("-moz-mac-yosemite-theme")),
+        system_metric_feature!(atom!("-moz-windows-accent-color-in-titlebar")),
+        system_metric_feature!(atom!("-moz-windows-compositor")),
+        system_metric_feature!(atom!("-moz-windows-classic")),
+        system_metric_feature!(atom!("-moz-windows-glass")),
+        system_metric_feature!(atom!("-moz-menubar-drag")),
+        system_metric_feature!(atom!("-moz-swipe-animation-enabled")),
+        system_metric_feature!(atom!("-moz-gtk-csd-available")),
+        system_metric_feature!(atom!("-moz-gtk-csd-minimize-button")),
+        system_metric_feature!(atom!("-moz-gtk-csd-maximize-button")),
+        system_metric_feature!(atom!("-moz-gtk-csd-close-button")),
+        system_metric_feature!(atom!("-moz-system-dark-theme")),
         // This is the only system-metric media feature that's accessible to
         // content as of today.
         // FIXME(emilio): Restrict (or remove?) when bug 1035774 lands.

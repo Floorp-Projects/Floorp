@@ -143,6 +143,10 @@ struct ParentLoadInfoForwarderArgs
   // by the service worker.
   bool serviceWorkerTaintingSynthesized;
 
+  // Tracker information, currently used by FastBlock
+  bool isTracker;
+  bool isTrackerBlocked;
+
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder
   // in BackgroundUtils.cpp/.h!

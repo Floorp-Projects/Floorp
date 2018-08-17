@@ -11,7 +11,6 @@ const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 // Milliseconds between auto-increment interval iterations.
 const AUTOINCREMENT_DELAY = 300;
-const UNITS = ["em", "rem", "%", "px", "vh", "vw"];
 
 class FontPropertyValue extends PureComponent {
   static get propTypes() {
@@ -24,10 +23,17 @@ class FontPropertyValue extends PureComponent {
       max: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
       name: PropTypes.string.isRequired,
       onChange: PropTypes.func.isRequired,
-      showUnit: PropTypes.bool,
       step: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
       unit: PropTypes.oneOfType([ PropTypes.string, null ]),
+      unitOptions: PropTypes.array,
       value: PropTypes.number,
+    };
+  }
+
+  static get defaultProps() {
+    return {
+      className: "",
+      unitOptions: []
     };
   }
 
@@ -236,6 +242,35 @@ class FontPropertyValue extends PureComponent {
     });
   }
 
+  renderUnitSelect() {
+    if (!this.props.unitOptions.length) {
+      return null;
+    }
+
+    // Ensure the select element has the current unit type even if we don't recognize it.
+    // The unit conversion function will use a 1-to-1 scale for unrecognized units.
+    const options = this.props.unitOptions.includes(this.props.unit) ?
+      this.props.unitOptions
+      :
+      this.props.unitOptions.concat([this.props.unit]);
+
+    return dom.select(
+      {
+        className: "font-value-select",
+        onChange: this.onUnitChange,
+      },
+      options.map(unit => {
+        return dom.option(
+          {
+            selected: unit === this.props.unit,
+            value: unit,
+          },
+          unit
+        );
+      })
+    );
+  }
+
   render() {
     // Guard against bad axis data.
     if (this.props.min === this.props.max) {
@@ -278,35 +313,9 @@ class FontPropertyValue extends PureComponent {
       }
     );
 
-    let unitDropdown = null;
-    if (this.props.showUnit) {
-      // Ensure the dropdown has the current unit type even if we don't recognize it.
-      // The unit conversion function will use a 1-to-1 scale for unrecognized units.
-      const options = UNITS.includes(this.props.unit) ?
-        UNITS
-        :
-        UNITS.concat([this.props.unit]);
-
-      unitDropdown = dom.select(
-        {
-          className: "font-value-select",
-          onChange: this.onUnitChange,
-        },
-        options.map(unit => {
-          return dom.option(
-            {
-              selected: unit === this.props.unit,
-              value: unit,
-            },
-            unit
-          );
-        })
-      );
-    }
-
     return dom.label(
       {
-        className: `font-control ${this.props.className || ""}`,
+        className: `font-control ${this.props.className}`,
       },
       dom.span(
         {
@@ -320,7 +329,7 @@ class FontPropertyValue extends PureComponent {
         },
         range,
         input,
-        this.props.showUnit && unitDropdown
+        this.renderUnitSelect()
       )
     );
   }

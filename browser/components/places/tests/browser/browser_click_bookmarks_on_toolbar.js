@@ -8,7 +8,7 @@ const TEST_PAGES = ["about:mozilla", "about:robots"];
 var gBookmarkElements = [];
 
 function getToolbarNodeForItemGuid(aItemGuid) {
-  var children = document.getElementById("PlacesToolbarItems").childNodes;
+  var children = document.getElementById("PlacesToolbarItems").children;
   for (let child of children) {
     if (aItemGuid == child._placesNode.bookmarkGuid) {
       return child;

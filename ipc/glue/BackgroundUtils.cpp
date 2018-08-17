@@ -630,6 +630,8 @@ LoadInfoToParentLoadInfoForwarder(nsILoadInfo* aLoadInfo,
   if (!aLoadInfo) {
     *aForwarderArgsOut = ParentLoadInfoForwarderArgs(false, void_t(),
                                                      nsILoadInfo::TAINTING_BASIC,
+                                                     false,
+                                                     false,
                                                      false);
     return;
   }
@@ -643,11 +645,18 @@ LoadInfoToParentLoadInfoForwarder(nsILoadInfo* aLoadInfo,
   uint32_t tainting = nsILoadInfo::TAINTING_BASIC;
   Unused << aLoadInfo->GetTainting(&tainting);
 
+  bool isTracker;
+  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetIsTracker(&isTracker));
+  bool isTrackerBlocked;
+  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetIsTrackerBlocked(&isTrackerBlocked));
+
   *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
     aLoadInfo->GetAllowInsecureRedirectToDataURI(),
     ipcController,
     tainting,
-    aLoadInfo->GetServiceWorkerTaintingSynthesized()
+    aLoadInfo->GetServiceWorkerTaintingSynthesized(),
+    isTracker,
+    isTrackerBlocked
   );
 }
 
@@ -678,6 +687,9 @@ MergeParentLoadInfoForwarder(ParentLoadInfoForwarderArgs const& aForwarderArgs,
   } else {
     aLoadInfo->MaybeIncreaseTainting(aForwarderArgs.tainting());
   }
+
+  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetIsTracker(aForwarderArgs.isTracker()));
+  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetIsTrackerBlocked(aForwarderArgs.isTrackerBlocked()));
 
   return NS_OK;
 }

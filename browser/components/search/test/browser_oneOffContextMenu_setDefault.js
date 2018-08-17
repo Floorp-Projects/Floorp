@@ -161,7 +161,7 @@ async function openPopupAndGetEngineButton(isSearch, popup, oneOffBinding, baseI
 
   // Get the one-off button for the test engine.
   let oneOffButton;
-  for (let node of oneOffButtons.childNodes) {
+  for (let node of oneOffButtons.children) {
     if (node.engine && node.engine.name == TEST_ENGINE_NAME) {
       oneOffButton = node;
       break;

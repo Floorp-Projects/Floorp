@@ -7,7 +7,7 @@ const TEST_URL = "about:buildconfig";
 const titleAfterFirstUpdate = "BookmarkStar title";
 
 function getToolbarNodeForItemGuid(aItemGuid) {
-  var children = document.getElementById("PlacesToolbarItems").childNodes;
+  var children = document.getElementById("PlacesToolbarItems").children;
   for (let child of children) {
     if (aItemGuid == child._placesNode.bookmarkGuid) {
       return child;

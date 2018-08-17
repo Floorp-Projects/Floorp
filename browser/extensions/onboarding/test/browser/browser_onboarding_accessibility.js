@@ -14,7 +14,7 @@ add_task(async function test_onboarding_overlay_button() {
   info("Test accessibility and semantics of the overlay button");
   await ContentTask.spawn(tab.linkedBrowser, {}, function() {
     let doc = content.document;
-    let button = doc.body.firstChild;
+    let button = doc.body.firstElementChild;
     is(button.id, "onboarding-overlay-button",
       "First child is an overlay button");
     ok(button.getAttribute("aria-label"),
@@ -23,7 +23,7 @@ add_task(async function test_onboarding_overlay_button() {
       "Onboarding button should indicate that it triggers a popup");
     is(button.getAttribute("aria-controls"), "onboarding-overlay-dialog",
       "Onboarding button semantically controls an overlay dialog");
-    is(button.firstChild.getAttribute("role"), "presentation",
+    is(button.firstElementChild.getAttribute("role"), "presentation",
       "Onboarding button icon should have presentation only semantics");
   });
 

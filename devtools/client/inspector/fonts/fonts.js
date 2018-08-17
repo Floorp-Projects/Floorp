@@ -44,6 +44,7 @@ const FONT_PROPERTIES = [
   "font-style",
   "font-variation-settings",
   "font-weight",
+  "line-height",
 ];
 const PREF_FONT_EDITOR = "devtools.inspector.fonteditor.enabled";
 const REGISTERED_AXES_TO_FONT_PROPERTIES = {
@@ -146,6 +147,9 @@ class FontInspector {
    * Conversion is done via pixels. If neither of the two given unit types is "px",
    * recursively get the value in pixels, then convert that result to the desired unit.
    *
+   * @param  {String} property
+   *         Property name for the converted value.
+   *         Assumed to be "font-size", but special case for "line-height".
    * @param  {Number} value
    *         Numeric value to convert.
    * @param  {String} fromUnit
@@ -155,7 +159,7 @@ class FontInspector {
    * @return {Number}
    *         Converted numeric value.
    */
-  async convertUnits(value, fromUnit, toUnit) {
+  async convertUnits(property, value, fromUnit, toUnit) {
     if (value !== parseFloat(value)) {
       throw TypeError(`Invalid value for conversion. Expected Number, got ${value}`);
     }
@@ -164,10 +168,16 @@ class FontInspector {
       return value;
     }
 
+    // Special case for line-height. Consider em and untiless to be equivalent.
+    if (property === "line-height" &&
+       (fromUnit === "" && toUnit === "em") || (fromUnit === "em" && toUnit === "")) {
+      return value;
+    }
+
     // If neither unit is in pixels, first convert the value to pixels.
     // Reassign input value and source CSS unit.
     if (toUnit !== "px" && fromUnit !== "px") {
-      value = await this.convertUnits(value, fromUnit, "px");
+      value = await this.convertUnits(property, value, fromUnit, "px");
       fromUnit = "px";
     }
 
@@ -177,6 +187,8 @@ class FontInspector {
     const unit = toUnit === "px" ? fromUnit : toUnit;
     // NodeFront instance of selected element.
     const node = this.inspector.selection.nodeFront;
+    // Reference node based on which to convert relative sizes like "em" and "%".
+    const referenceNode = (property === "line-height") ? node : node.parentNode();
     // Default output value to input value for a 1-to-1 conversion as a guard against
     // unrecognized CSS units. It will not be correct, but it will also not break.
     let out = value;
@@ -215,7 +227,7 @@ class FontInspector {
 
     if (unit === "%") {
       computedStyle =
-        await this.pageStyle.getComputed(node.parentNode()).catch(console.error);
+        await this.pageStyle.getComputed(referenceNode).catch(console.error);
 
       if (!computedStyle) {
         return value;
@@ -226,9 +238,10 @@ class FontInspector {
         : value / 100 * parseFloat(computedStyle["font-size"].value);
     }
 
-    if (unit === "em") {
+    // Special handling for unitless line-height.
+    if (unit === "em" || (unit === "" && property === "line-height")) {
       computedStyle =
-        await this.pageStyle.getComputed(node.parentNode()).catch(console.error);
+        await this.pageStyle.getComputed(referenceNode).catch(console.error);
 
       if (!computedStyle) {
         return value;
@@ -360,7 +373,7 @@ class FontInspector {
    *
    * @return {Object}
    */
-  getFontProperties() {
+  async getFontProperties() {
     const properties = {};
 
     // First, get all expected font properties from computed styles, if available.
@@ -370,6 +383,14 @@ class FontInspector {
           ? this.nodeComputedStyle[prop].value
           : "";
     }
+
+    // Convert computed value for line-height from pixels to unitless.
+    // If it is not overwritten by an explicit line-height CSS declaration,
+    // this will be the implicit value shown in the editor.
+
+    properties["line-height"] =
+      await this.convertUnits("line-height", parseFloat(properties["line-height"]),
+                              "px", "");
 
     // Then, replace with enabled font properties found on any of the rules that apply.
     for (const rule of this.ruleView.rules) {
@@ -397,6 +418,7 @@ class FontInspector {
    * - font-size
    * - font-weight
    * - font-stretch
+   * - line-height
    *
    * This list is used to filter out values when reading CSS font properties from rules.
    * Computed styles will be used instead of any of these values.
@@ -404,7 +426,12 @@ class FontInspector {
    * @return {Array}
    */
   getFontPropertyValueKeywords() {
-    return ["font-size", "font-weight", "font-stretch"].reduce((acc, property) => {
+    return [
+      "font-size",
+      "font-weight",
+      "font-stretch",
+      "line-height"
+    ].reduce((acc, property) => {
       return acc.concat(this.cssProperties.getValues(property));
     }, []);
   }
@@ -765,8 +792,9 @@ class FontInspector {
     if (FONT_PROPERTIES.includes(property)) {
       let unit = fromUnit;
 
-      if (toUnit && fromUnit) {
-        value = await this.convertUnits(value, fromUnit, toUnit);
+      // Strict checks because "line-height" value may be unitless (empty string).
+      if (toUnit !== undefined && fromUnit !== undefined) {
+        value = await this.convertUnits(property, value, fromUnit, toUnit);
         unit = toUnit;
       }
 
@@ -787,9 +815,7 @@ class FontInspector {
    *        Example: { name: "font-size", value: "1em", rule: Object }
    */
   async onRulePropertyUpdated(eventData) {
-    if (!this.selectedRule ||
-        !this.selectedRule.matches({ rule: eventData.rule.domRule }) ||
-        !FONT_PROPERTIES.includes(eventData.property)) {
+    if (!this.selectedRule || !FONT_PROPERTIES.includes(eventData.property)) {
       return;
     }
 
@@ -933,7 +959,7 @@ class FontInspector {
     this.selectedRule =
       this.ruleView.rules.find(rule => rule.domRule.type === ELEMENT_STYLE);
 
-    const properties = this.getFontProperties();
+    const properties = await this.getFontProperties();
     const familiesDeclared =
       properties["font-family"].split(",")
       .map(font => font.replace(/["']+/g, "").trim());

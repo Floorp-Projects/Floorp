@@ -163,7 +163,7 @@ add_task(async function searchWith() {
   await waitForAutocompleteResultAt(0);
   assertState(0, -1, typedValue);
 
-  let item = gURLBar.popup.richlistbox.firstChild;
+  let item = gURLBar.popup.richlistbox.firstElementChild;
   Assert.equal(item._actionText.textContent,
                "Search with " + Services.search.currentEngine.name,
                "Sanity check: first result's action text");

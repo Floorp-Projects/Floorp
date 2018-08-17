@@ -518,6 +518,13 @@ partial interface Document {
   readonly attribute FlashClassification documentFlashClassification;
 };
 
+// Extension to obtain the number of trackers are detected and blocked in the
+// Document (and it's corresponding docshell sub-tree)
+partial interface Document {
+  [ChromeOnly] readonly attribute unsigned long numTrackersFound;
+  [ChromeOnly] readonly attribute unsigned long numTrackersBlocked;
+};
+
 Document implements XPathEvaluator;
 Document implements GlobalEventHandlers;
 Document implements DocumentAndElementEventHandlers;

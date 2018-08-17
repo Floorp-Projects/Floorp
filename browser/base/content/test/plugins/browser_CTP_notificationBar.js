@@ -142,7 +142,7 @@ add_task(async function() {
   // simulate "always allow"
   await promiseForNotificationShown(notification);
 
-  PopupNotifications.panel.firstChild.button.click();
+  PopupNotifications.panel.firstElementChild.button.click();
 
   let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
   await promiseForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") === null);

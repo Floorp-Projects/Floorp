@@ -115,7 +115,7 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection) {
 }
 
 function getToolbarNodeForItemId(itemGuid) {
-  var children = document.getElementById("PlacesToolbarItems").childNodes;
+  var children = document.getElementById("PlacesToolbarItems").children;
   for (let child of children) {
     if (itemGuid == child._placesNode.bookmarkGuid) {
       return child;

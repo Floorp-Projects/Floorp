@@ -37,7 +37,7 @@ add_task(async function() {
   let newButtonNode = overflowList.querySelector("#" + kTestBtn1);
   ok(newButtonNode, "New button should be overflowing");
   ok(newButtonNode && newButtonNode.getAttribute("overflowedItem") == "true", "New button should have overflowedItem attribute");
-  let nextEl = newButtonNode && newButtonNode.nextSibling;
+  let nextEl = newButtonNode && newButtonNode.nextElementSibling;
   is(nextEl && nextEl.id, kSidebarBtn, "Test button should be next to sidebar button.");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);

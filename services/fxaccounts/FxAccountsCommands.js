@@ -67,12 +67,12 @@ class FxAccountsCommands {
     });
   }
 
-  fetchMissedRemoteCommands() {
+  async fetchMissedRemoteCommands() {
     if (!Services.prefs.getBoolPref("identity.fxaccounts.commands.enabled", true)) {
       return false;
     }
     log.info(`Consuming missed commands.`);
-    return this._fxAccounts._withCurrentAccountState(async (getUserData, updateUserData) => {
+    await this._fxAccounts._withCurrentAccountState(async (getUserData, updateUserData) => {
       const {device} = await getUserData(["device"]);
       if (!device) {
         throw new Error("No device registration.");
@@ -90,6 +90,7 @@ class FxAccountsCommands {
         await this._handleCommands(missedMessages);
       }
     });
+    return true;
   }
 
   async _fetchRemoteCommands(index, limit = null) {

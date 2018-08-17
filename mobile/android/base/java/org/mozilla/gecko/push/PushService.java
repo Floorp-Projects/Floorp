@@ -455,7 +455,18 @@ public class PushService implements BundleEventListener {
                 return;
             }
             if ("FxAccountsPush:ReceivedPushMessageToDecode:Response".equals(event)) {
-                FxAccountPushHandler.handleFxAPushMessage(context, message);
+                if (message.containsKey("error")) {
+                    // Something went wrong during decryption (maybe the subscription was borked) -
+                    // try to re-register the device.
+                    final AccountManager accountManager = AccountManager.get(context);
+                    final Account[] fxAccounts = accountManager.getAccountsByType(FxAccountConstants.ACCOUNT_TYPE);
+                    if (fxAccounts.length > 0) {
+                        final AndroidFxAccount fxAccount = new AndroidFxAccount(context, fxAccounts[0]);
+                        fxAccount.resetDeviceRegistrationVersion();
+                    }
+                } else {
+                    FxAccountPushHandler.handleFxAPushMessage(context, message);
+                }
                 return;
             }
             if ("History:GetPrePathLastVisitedTimeMilliseconds".equals(event)) {

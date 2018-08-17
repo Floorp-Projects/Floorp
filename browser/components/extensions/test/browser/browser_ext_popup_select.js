@@ -45,7 +45,7 @@ add_task(async function testPopupSelectPopup() {
 
   await extension.startup();
 
-  let selectPopup = document.getElementById("ContentSelectDropdown").firstChild;
+  let selectPopup = document.getElementById("ContentSelectDropdown").firstElementChild;
 
   async function testPanel(browser) {
     let popupPromise = promisePopupShown(selectPopup);

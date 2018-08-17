@@ -28,7 +28,7 @@ add_task(async function() {
   // Verify actual physical placements match those of the placement array:
   let placementCounter = 0;
   let placements = CustomizableUI.getWidgetIdsInArea(CustomizableUI.AREA_NAVBAR);
-  for (let node of navbar.customizationTarget.childNodes) {
+  for (let node of navbar.customizationTarget.children) {
     if (node.getAttribute("skipintoolbarset") == "true") {
       continue;
     }

@@ -525,17 +525,31 @@ Element::ClearStyleStateLocks()
   NotifyStyleStateChange(locks.mLocks);
 }
 
+static bool
+MayNeedToLoadXBLBinding(const nsIDocument& aDocument, const Element& aElement)
+{
+  // If we have a frame, the frame has already loaded the binding.
+  // Otherwise, don't do anything else here unless we're dealing with
+  // XUL or an HTML element that may have a plugin-related overlay
+  // (i.e. object or embed).
+  if (!aDocument.GetShell() || aElement.GetPrimaryFrame()) {
+    return false;
+  }
+
+  if (aElement.IsXULElement()) {
+    // We know dropmarkers don't have XBL bindings, and they get
+    // accessed while hidden when opening new windows. So skip
+    // looking up -moz-binding for performance reasons (bug 1478999).
+    return !aElement.IsXULElement(nsGkAtoms::dropMarker);
+  }
+
+  return aElement.IsAnyOfHTMLElements(nsGkAtoms::object, nsGkAtoms::embed);
+}
+
 bool
 Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
 {
-  // If we have a frame the frame has already loaded the binding.  And
-  // otherwise, don't do anything else here unless we're dealing with
-  // XUL or an HTML element that may have a plugin-related overlay
-  // (i.e. object or embed).
-  bool isXULorPluginElement = (IsXULElement() ||
-                               IsHTMLElement(nsGkAtoms::object) ||
-                               IsHTMLElement(nsGkAtoms::embed));
-  if (!aDocument->GetShell() || GetPrimaryFrame() || !isXULorPluginElement) {
+  if (!MayNeedToLoadXBLBinding(*aDocument, *this)) {
     *aResult = nullptr;
     return true;
   }

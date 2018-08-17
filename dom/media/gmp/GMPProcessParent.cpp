@@ -24,6 +24,8 @@ using std::string;
 using mozilla::gmp::GMPProcessParent;
 using mozilla::ipc::GeckoChildProcessHost;
 
+static const int kInvalidFd = -1;
+
 namespace mozilla {
 namespace gmp {
 
@@ -77,6 +79,12 @@ GMPProcessParent::Launch(int32_t aTimeoutMs)
   args.push_back(mGMPPath);
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+  // Add dummy values for pref and pref map to the file descriptors remapping
+  // table. See bug 1440207 and 1481139.
+  AddFdToRemap(kInvalidFd, kInvalidFd);
+  AddFdToRemap(kInvalidFd, kInvalidFd);
+#endif
   return SyncLaunch(args, aTimeoutMs);
 }
 

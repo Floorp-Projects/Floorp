@@ -14,7 +14,7 @@ var gTests = [
       await expectObserverCalled("getUserMedia:request");
 
       await promiseMessage("ok", () => {
-        PopupNotifications.panel.firstChild.button.click();
+        PopupNotifications.panel.firstElementChild.button.click();
       });
       await expectObserverCalled("getUserMedia:response:allow");
       await expectObserverCalled("recording-device-events");

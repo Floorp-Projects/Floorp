@@ -74,7 +74,7 @@ add_task(async function() {
 
   let elementPoint = left(scrollbox) - width(scrollbox);
   element = elementFromPoint(elementPoint);
-  element = element.nextSibling;
+  element = element.nextElementSibling;
 
   EventUtils.synthesizeMouseAtCenter(upButton, {clickCount: 2});
   await waitForNextFrame();

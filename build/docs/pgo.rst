@@ -23,8 +23,7 @@ Then::
 
 This is roughly equivalent to::
 
-#. Perform a build with *MOZ_PROFILE_GENERATE=1* and *MOZ_PGO_INSTRUMENTED=1*
-#. Package with *MOZ_PGO_INSTRUMENTED=1*
+#. Perform a build with *MOZ_PROFILE_GENERATE=1*
 #. Performing a run of the instrumented binaries
 #. $ make maybe_clobber_profiledbuild
 #. Perform a build with *MOZ_PROFILE_USE=1*

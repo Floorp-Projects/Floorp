@@ -172,7 +172,7 @@ add_task(async function simple() {
 
   // The action's panel button should have been created.
   let panelButtonNode =
-    BrowserPageActions.mainViewBodyNode.childNodes[indexInPanel];
+    BrowserPageActions.mainViewBodyNode.children[indexInPanel];
   Assert.notEqual(panelButtonNode, null, "panelButtonNode");
   Assert.equal(panelButtonNode.id, panelButtonID, "panelButtonID");
   Assert.equal(panelButtonNode.getAttribute("label"), action.getTitle(),
@@ -180,7 +180,7 @@ add_task(async function simple() {
 
   // The separator between the built-ins and non-built-ins should exist.
   let sepNode =
-    BrowserPageActions.mainViewBodyNode.childNodes[sepIndex];
+    BrowserPageActions.mainViewBodyNode.children[sepIndex];
   Assert.notEqual(sepNode, null, "sepNode");
   Assert.equal(
     sepNode.id,
@@ -211,9 +211,9 @@ add_task(async function simple() {
   Assert.notEqual(urlbarButtonNode, null, "urlbarButtonNode");
 
   // The button should have been inserted before the bookmark star.
-  Assert.notEqual(urlbarButtonNode.nextSibling, null, "Should be a next node");
+  Assert.notEqual(urlbarButtonNode.nextElementSibling, null, "Should be a next node");
   Assert.equal(
-    urlbarButtonNode.nextSibling.id,
+    urlbarButtonNode.nextElementSibling.id,
     PageActions.actionForID(PageActions.ACTION_ID_BOOKMARK).urlbarIDOverride,
     "Next node should be the bookmark star"
   );
@@ -286,7 +286,7 @@ add_task(async function simple() {
     // should be gone now, too.
     Assert.equal(separatorNode, null, "No separator");
     Assert.ok(!BrowserPageActions.mainViewBodyNode
-              .lastChild.localName.includes("separator"),
+              .lastElementChild.localName.includes("separator"),
               "Last child should not be separator");
   } else {
     // The separator should still be present.
@@ -397,9 +397,9 @@ add_task(async function withSubview() {
   Assert.notEqual(urlbarButtonNode, null, "urlbarButtonNode");
 
   // The button should have been inserted before the bookmark star.
-  Assert.notEqual(urlbarButtonNode.nextSibling, null, "Should be a next node");
+  Assert.notEqual(urlbarButtonNode.nextElementSibling, null, "Should be a next node");
   Assert.equal(
-    urlbarButtonNode.nextSibling.id,
+    urlbarButtonNode.nextElementSibling.id,
     PageActions.actionForID(PageActions.ACTION_ID_BOOKMARK).urlbarIDOverride,
     "Next node should be the bookmark star"
   );
@@ -510,9 +510,9 @@ add_task(async function withIframe() {
   Assert.notEqual(urlbarButtonNode, null, "urlbarButtonNode");
 
   // The button should have been inserted before the bookmark star.
-  Assert.notEqual(urlbarButtonNode.nextSibling, null, "Should be a next node");
+  Assert.notEqual(urlbarButtonNode.nextElementSibling, null, "Should be a next node");
   Assert.equal(
-    urlbarButtonNode.nextSibling.id,
+    urlbarButtonNode.nextElementSibling.id,
     PageActions.actionForID(PageActions.ACTION_ID_BOOKMARK).urlbarIDOverride,
     "Next node should be the bookmark star"
   );
@@ -631,14 +631,14 @@ add_task(async function insertBeforeActionID() {
   Assert.notEqual(panelButtonNode, null, "panelButtonNode");
 
   // The button's next sibling should be the bookmark separator.
-  Assert.notEqual(panelButtonNode.nextSibling, null,
-                  "panelButtonNode.nextSibling");
+  Assert.notEqual(panelButtonNode.nextElementSibling, null,
+                  "panelButtonNode.nextElementSibling");
   Assert.equal(
-    panelButtonNode.nextSibling.id,
+    panelButtonNode.nextElementSibling.id,
     BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BOOKMARK_SEPARATOR
     ),
-    "panelButtonNode.nextSibling.id"
+    "panelButtonNode.nextElementSibling.id"
   );
 
   // The separator between the built-in and non-built-in actions should not have
@@ -706,14 +706,14 @@ add_task(async function multipleNonBuiltInOrdering() {
     BrowserPageActions.panelButtonNodeIDForActionID(idPrefix + expectedIndex)
   );
   Assert.notEqual(buttonNode, null, "buttonNode");
-  Assert.notEqual(buttonNode.previousSibling, null,
-                  "buttonNode.previousSibling");
+  Assert.notEqual(buttonNode.previousElementSibling, null,
+                  "buttonNode.previousElementSibling");
   Assert.equal(
-    buttonNode.previousSibling.id,
+    buttonNode.previousElementSibling.id,
     BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR
     ),
-    "buttonNode.previousSibling.id"
+    "buttonNode.previousElementSibling.id"
   );
   for (let i = 0; i < actions.length; i++) {
     Assert.notEqual(buttonNode, null, "buttonNode at index: " + i);
@@ -722,7 +722,7 @@ add_task(async function multipleNonBuiltInOrdering() {
       BrowserPageActions.panelButtonNodeIDForActionID(idPrefix + expectedIndex),
       "buttonNode.id at index: " + i
     );
-    buttonNode = buttonNode.nextSibling;
+    buttonNode = buttonNode.nextElementSibling;
     expectedIndex++;
   }
   Assert.equal(buttonNode, null, "Nothing should come after the last button");
@@ -765,7 +765,7 @@ add_task(async function nonBuiltFirst() {
                    "PageActions._nonBuiltInActions should be empty");
 
   // Check the panel.
-  Assert.equal(BrowserPageActions.mainViewBodyNode.childNodes.length, 0,
+  Assert.equal(BrowserPageActions.mainViewBodyNode.children.length, 0,
                "All nodes should be gone");
 
   // Add a non-built-in action.
@@ -787,7 +787,7 @@ add_task(async function nonBuiltFirst() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     [BrowserPageActions.panelButtonNodeIDForActionID(action.id)],
     "Action should be in panel"
   );
@@ -829,7 +829,7 @@ add_task(async function nonBuiltFirst() {
     "All actions should be in PageActions.actionsInPanel()"
   );
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat(
       [PageActions.ACTION_ID_BUILT_IN_SEPARATOR],
       [action.id]
@@ -867,7 +867,7 @@ add_task(async function nonBuiltFirst() {
     "Action should no longer be in PageActions.actionsInPanel()"
   );
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => BrowserPageActions.panelButtonNodeIDForActionID(a.id)),
     "Action should no longer be in panel"
   );
@@ -937,9 +937,9 @@ add_task(async function urlbarOrderNewWindow() {
 
   // Collect its urlbar nodes.
   let actualUrlbarNodeIDs = [];
-  for (let node = win.BrowserPageActions.mainButtonNode.nextSibling;
+  for (let node = win.BrowserPageActions.mainButtonNode.nextElementSibling;
        node;
-       node = node.nextSibling) {
+       node = node.nextElementSibling) {
     actualUrlbarNodeIDs.push(node.id);
   }
 
@@ -1017,9 +1017,9 @@ add_task(async function migrate1() {
 
   // Collect its urlbar nodes.
   let actualUrlbarNodeIDs = [];
-  for (let node = win.BrowserPageActions.mainButtonNode.nextSibling;
+  for (let node = win.BrowserPageActions.mainButtonNode.nextElementSibling;
        node;
-       node = node.nextSibling) {
+       node = node.nextElementSibling) {
     actualUrlbarNodeIDs.push(node.id);
   }
 
@@ -1120,9 +1120,9 @@ add_task(async function perWindowState() {
 
   // Check the urlbar nodes for the old window.
   let actualUrlbarNodeIDs = [];
-  for (let node = BrowserPageActions.mainButtonNode.nextSibling;
+  for (let node = BrowserPageActions.mainButtonNode.nextElementSibling;
        node;
-       node = node.nextSibling) {
+       node = node.nextElementSibling) {
     actualUrlbarNodeIDs.push(node.id);
   }
   Assert.deepEqual(
@@ -1133,9 +1133,9 @@ add_task(async function perWindowState() {
 
   // Check the urlbar nodes for the new window.
   actualUrlbarNodeIDs = [];
-  for (let node = newWindow.BrowserPageActions.mainButtonNode.nextSibling;
+  for (let node = newWindow.BrowserPageActions.mainButtonNode.nextElementSibling;
        node;
-       node = node.nextSibling) {
+       node = node.nextElementSibling) {
     actualUrlbarNodeIDs.push(node.id);
   }
   Assert.deepEqual(
@@ -1187,9 +1187,9 @@ add_task(async function removeRetainState() {
 
   // Check the nodes in the urlbar.
   let actualUrlbarNodeIDs = [];
-  for (let node = BrowserPageActions.mainButtonNode.nextSibling;
+  for (let node = BrowserPageActions.mainButtonNode.nextElementSibling;
        node;
-       node = node.nextSibling) {
+       node = node.nextElementSibling) {
     actualUrlbarNodeIDs.push(node.id);
   }
   Assert.deepEqual(
@@ -1210,9 +1210,9 @@ add_task(async function removeRetainState() {
 
   // Check the nodes in the urlbar.
   actualUrlbarNodeIDs = [];
-  for (let node = BrowserPageActions.mainButtonNode.nextSibling;
+  for (let node = BrowserPageActions.mainButtonNode.nextElementSibling;
        node;
-       node = node.nextSibling) {
+       node = node.nextElementSibling) {
     actualUrlbarNodeIDs.push(node.id);
   }
   Assert.deepEqual(
@@ -1239,9 +1239,9 @@ add_task(async function removeRetainState() {
 
   // Check the nodes in the urlbar.
   actualUrlbarNodeIDs = [];
-  for (let node = BrowserPageActions.mainButtonNode.nextSibling;
+  for (let node = BrowserPageActions.mainButtonNode.nextElementSibling;
        node;
-       node = node.nextSibling) {
+       node = node.nextElementSibling) {
     actualUrlbarNodeIDs.push(node.id);
   }
   Assert.deepEqual(
@@ -1489,7 +1489,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat([
       PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
       action.id,
@@ -1516,7 +1516,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel
       .map(a => BrowserPageActions.panelButtonNodeIDForActionID(a.id)),
     "Actions in panel should be correct"
@@ -1539,7 +1539,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat([
       PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
       action.id,
@@ -1574,7 +1574,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat([
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
       otherAction.id,
@@ -1606,7 +1606,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat([
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
       otherAction.id,
@@ -1633,7 +1633,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat([
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
       otherAction.id,
@@ -1731,8 +1731,8 @@ function promisePageActionViewChildrenVisible(panelViewNode) {
   info("promisePageActionViewChildrenVisible waiting for a child node to be visible");
   let dwu = window.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
-    let bodyNode = panelViewNode.firstChild;
-    for (let childNode of bodyNode.childNodes) {
+    let bodyNode = panelViewNode.firstElementChild;
+    for (let childNode of bodyNode.children) {
       let bounds = dwu.getBoundsWithoutFlushing(childNode);
       if (bounds.width > 0 && bounds.height > 0) {
         return true;
@@ -1744,7 +1744,7 @@ function promisePageActionViewChildrenVisible(panelViewNode) {
 
 function collectContextMenuItems() {
   let contextMenu = document.getElementById("pageActionContextMenu");
-  return Array.filter(contextMenu.childNodes, node => {
+  return Array.filter(contextMenu.children, node => {
     return window.getComputedStyle(node).visibility == "visible";
   });
 }

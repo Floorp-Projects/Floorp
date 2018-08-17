@@ -87,7 +87,7 @@ add_task(async function test_actionContextMenus() {
     is(submenu.label, "parent", "Correct submenu title");
 
     const popup = await openSubmenu(submenu);
-    is(popup, submenu.firstChild, "Correct submenu opened");
+    is(popup, submenu.firstElementChild, "Correct submenu opened");
     is(popup.children.length, 2, "Correct number of submenu items");
 
     let idPrefix = `${makeWidgetId(extension.id)}-menuitem-_`;
@@ -100,7 +100,7 @@ add_task(async function test_actionContextMenus() {
     is(last.id, `${idPrefix}5`, "Last menu item id is correct");
     is(separator.tagName, "menuseparator", "Separator after last menu item");
 
-    await closeActionContextMenu(popup.firstChild, kind);
+    await closeActionContextMenu(popup.firstElementChild, kind);
     const {info, tab} = await extension.awaitMessage("click");
     is(info.pageUrl, "http://example.com/", "Click info pageUrl is correct");
     is(tab.id, tabId, "Click event tab ID is correct");
@@ -139,7 +139,7 @@ add_task(async function test_hiddenPageActionContextMenu() {
   await extension.awaitMessage("ready");
 
   const menu = await openContextMenuInPageActionPanel(extension);
-  const menuItems = Array.filter(menu.childNodes, node => {
+  const menuItems = Array.filter(menu.children, node => {
     return window.getComputedStyle(node).visibility == "visible";
   });
 
@@ -252,7 +252,7 @@ add_task(async function test_tabContextMenu() {
   is(gamma.label, "gamma", "Third menu item label is correct");
 
   const popup = await openSubmenu(submenu);
-  is(popup, submenu.firstChild, "Correct submenu opened");
+  is(popup, submenu.firstElementChild, "Correct submenu opened");
   is(popup.children.length, 2, "Correct number of submenu items");
 
   const [alpha, beta] = popup.children;
@@ -346,8 +346,8 @@ add_task(async function test_multiple_contexts_init() {
   is(items[0].tagName, "menu", "And it has children");
 
   const popup = await openSubmenu(items[0]);
-  is(popup.firstChild.label, "child", "Correct child menu item");
-  await closeExtensionContextMenu(popup.firstChild);
+  is(popup.firstElementChild.label, "child", "Correct child menu item");
+  await closeExtensionContextMenu(popup.firstElementChild);
 
   const info = await extension.awaitMessage("click");
   is(info.menuItemId, "child", "onClicked the correct item");
@@ -397,7 +397,7 @@ add_task(async function test_tools_menu() {
 
   is(submenu.tagName, "menu", "Correct submenu type");
   is(submenu.getAttribute("label"), "Generated extension", "Correct submenu title");
-  is(submenu.firstChild.children.length, 2, "Correct number of submenu items");
+  is(submenu.firstElementChild.children.length, 2, "Correct number of submenu items");
 
   is(gamma.tagName, "menuitem", "Third menu item type is correct");
   is(gamma.getAttribute("label"), "gamma", "Third menu item label is correct");

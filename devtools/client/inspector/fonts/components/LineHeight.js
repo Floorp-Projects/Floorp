@@ -12,7 +12,7 @@ const FontPropertyValue = createFactory(require("./FontPropertyValue"));
 const { getStr } = require("../utils/l10n");
 const { getUnitFromValue, getStepForUnit } = require("../utils/font-utils");
 
-class FontSize extends PureComponent {
+class LineHeight extends PureComponent {
   static get propTypes() {
     return {
       onChange: PropTypes.func.isRequired,
@@ -27,24 +27,27 @@ class FontSize extends PureComponent {
 
   render() {
     const value = parseFloat(this.props.value);
-    const unit = getUnitFromValue(this.props.value);
+    // When values for line-height are be unitless, getUnitFromValue() returns null.
+    // In that case, set the unit to an empty string for special treatment in conversion.
+    const unit = getUnitFromValue(this.props.value) || "";
     let max;
     switch (unit) {
+      case "":
       case "em":
       case "rem":
-        max = 4;
+        max = 2;
         break;
       case "vh":
       case "vw":
       case "vmin":
       case "vmax":
-        max = 10;
+        max = 15;
         break;
       case "%":
         max = 200;
         break;
       default:
-        max = 72;
+        max = 108;
         break;
     }
 
@@ -59,17 +62,17 @@ class FontSize extends PureComponent {
 
     return FontPropertyValue({
       allowAutoIncrement: true,
-      label: getStr("fontinspector.fontSizeLabel"),
+      label: getStr("fontinspector.lineHeightLabel"),
       min: 0,
       max: this.historicMax[unit],
-      name: "font-size",
+      name: "line-height",
       onChange: this.props.onChange,
       step: getStepForUnit(unit),
       unit,
-      unitOptions: ["em", "rem", "%", "px", "vh", "vw"],
+      unitOptions: ["", "em", "%", "px"],
       value,
     });
   }
 }
 
-module.exports = FontSize;
+module.exports = LineHeight;

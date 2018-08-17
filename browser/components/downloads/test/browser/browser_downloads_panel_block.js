@@ -17,7 +17,7 @@ add_task(async function mainTest() {
 
     // The current item is always the first one in the listbox since each
     // iteration of this loop removes the item at the end.
-    let item = DownloadsView.richListBox.firstChild;
+    let item = DownloadsView.richListBox.firstElementChild;
 
     // Open the panel and click the item to show the subview.
     let viewPromise = promiseViewShown(DownloadsBlockedSubview.subview);

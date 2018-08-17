@@ -88,6 +88,8 @@ class RaptorControlServer():
         self.results_handler = results_handler
         self.browser_proc = None
         self._finished = False
+        self.device = None
+        self.app_name = None
 
     def start(self):
         config_dir = os.path.join(here, 'tests')
@@ -112,7 +114,10 @@ class RaptorControlServer():
         self.server = httpd
 
     def shutdown_browser(self):
-        LOG.info("shutting down browser (pid: %d)" % self.browser_proc.pid)
+        if self.device is not None:
+            LOG.info("shutting down android app %s" % self.app_name)
+        else:
+            LOG.info("shutting down browser (pid: %d)" % self.browser_proc.pid)
         self.kill_thread = threading.Thread(target=self.wait_for_quit)
         self.kill_thread.daemon = True
         self.kill_thread.start()
@@ -121,9 +126,12 @@ class RaptorControlServer():
         """Wait timeout seconds for the process to exit. If it hasn't
         exited by then, kill it.
         """
-        self.browser_proc.wait(timeout)
-        if self.browser_proc.poll() is None:
-            self.browser_proc.kill()
+        if self.device is not None:
+            self.device.stop_application(self.app_name)
+        else:
+            self.browser_proc.wait(timeout)
+            if self.browser_proc.poll() is None:
+                self.browser_proc.kill()
         self._finished = True
 
     def stop(self):
