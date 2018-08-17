@@ -72,6 +72,11 @@ add_task(async function test_initialState() {
   display.appendChild(form);
   await asyncElementRendered();
   is(page.id, "payment-summary", "Check initial page after appending");
+
+  // :-moz-ui-invalid, unlike :invalid, only applies to fields showing the error outline.
+  let fieldsVisiblyInvalid = form.querySelectorAll(":-moz-ui-invalid");
+  is(fieldsVisiblyInvalid.length, 0, "Check no fields are visibly invalid on an empty 'add' form");
+
   form.remove();
 });
 
@@ -128,8 +133,13 @@ add_task(async function test_saveButton() {
   info("blanking the street-address");
   fillField(form.form.querySelector("#street-address"), "");
   ok(form.saveButton.disabled, "Save button is disabled after blanking street-address");
+  form.form.querySelector("#street-address").blur();
+  let fieldsVisiblyInvalid = form.querySelectorAll(":-moz-ui-invalid");
+  is(fieldsVisiblyInvalid.length, 1, "Check 1 field visibly invalid after blanking and blur");
+  is(fieldsVisiblyInvalid[0].id, "street-address", "Check #street-address is visibly invalid");
 
   fillField(form.form.querySelector("#street-address"), "404 Internet Super Highway");
+  is(form.querySelectorAll(":-moz-ui-invalid").length, 0, "Check no fields visibly invalid");
   ok(!form.saveButton.disabled, "Save button is enabled after re-filling street-address");
 
   let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
@@ -200,6 +210,8 @@ add_task(async function test_edit() {
     },
   });
   await asyncElementRendered();
+  is(form.querySelectorAll(":-moz-ui-invalid").length, 0,
+     "Check no fields are visibly invalid on an 'edit' form with a complete address");
   checkAddressForm(form, address1);
 
   ok(!form.saveButton.disabled, "Save button should be enabled upon edit for a valid address");
@@ -224,6 +236,10 @@ add_task(async function test_edit() {
   is(form.saveButton.textContent, "Update", "Check label");
   checkAddressForm(form, minimalAddress);
   ok(form.saveButton.disabled, "Save button should be disabled if only the name is filled");
+  ok(form.querySelectorAll(":-moz-ui-invalid").length > 3,
+     "Check fields are visibly invalid on an 'edit' form with only the given-name filled");
+  ok(form.querySelectorAll("#country:-moz-ui-invalid").length, 1,
+     "Check that the country `select` is marked as invalid");
 
   info("change to no selected address");
   await form.requestStore.setState({
@@ -233,6 +249,8 @@ add_task(async function test_edit() {
     "address-page": {},
   });
   await asyncElementRendered();
+  is(form.querySelectorAll(":-moz-ui-invalid").length, 0,
+     "Check no fields are visibly invalid on an empty 'add' form after being an edit form");
   checkAddressForm(form, {});
   ok(form.saveButton.disabled, "Save button should be disabled for an empty form");
 
@@ -355,7 +373,7 @@ add_task(async function test_field_validation() {
   form.remove();
 });
 
-add_task(async function test_customValidity() {
+add_task(async function test_customMerchantValidity() {
   let form = new AddressForm();
   await form.promiseReady;
   const state = {
@@ -404,6 +422,49 @@ add_task(async function test_customValidity() {
   // TODO: bug 1482808 - the save button should be enabled after editing the fields
 
   form.remove();
+});
+
+add_task(async function test_customMerchantValidity_reset() {
+  let form = new AddressForm();
+  await form.promiseReady;
+  const state = {
+    page: {
+      id: "address-page",
+    },
+    "address-page": {
+      title: "Sample page title",
+    },
+    request: {
+      paymentDetails: {
+        shippingAddressErrors: {
+          addressLine: "Street address needs to start with a D",
+          city: "City needs to start with a B",
+          country: "Country needs to start with a C",
+          organization: "organization needs to start with an A",
+          phone: "Telephone needs to start with a 9",
+          postalCode: "Postal code needs to start with a 0",
+          recipient: "Name needs to start with a Z",
+          region: "Region needs to start with a Y",
+        },
+      },
+    },
+  };
+  await form.requestStore.setState(state);
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  ok(form.querySelectorAll(":-moz-ui-invalid").length > 0, "Check fields are visibly invalid");
+  info("merchant cleared the errors");
+  await form.requestStore.setState({
+    request: {
+      paymentDetails: {
+        shippingAddressErrors: {},
+      },
+    },
+  });
+  await asyncElementRendered();
+  is(form.querySelectorAll(":-moz-ui-invalid").length, 0,
+     "Check fields are visibly valid - custom validity cleared");
 });
 
 add_task(async function test_field_validation() {
