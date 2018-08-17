@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0
+-->
+<html>
+<head>
+  <title>CSS Test: Testing for full height flex container in a button.</title>
+  <meta charset="utf-8">
+  <style>
+    .button {
+      display: inline-grid;
+      grid-template-columns: auto auto auto;
+      grid-template-rows: auto;
+      justify-content: space-between;
+      align-items: stretch;
+      width: 200px;
+      height: 200px;
+      vertical-align: top;
+      margin: 10px 20px 10px 0;
+      padding: 0;
+      border: solid 1px black;
+    }
+
+    .button>* {
+      border: solid 1px rgba(0, 0, 0, .5);
+      background-color: rgba(0, 0, 0, .1);
+      min-height: 10px;
+      min-width: 10px;
+    }
+
+    .vertical {
+      grid-template-columns: auto;
+      grid-template-rows: auto auto auto;
+    }
+
+    button.button {
+      background-color: lightblue;
+    }
+  </style>
+</head>
+<body>
+  <!-- 3 columns/1 row -->
+  <button class="button pseudo">
+    <div></div>
+    <div></div>
+    <div></div>
+  </button>
+  <!-- 1 column/3 rows -->
+  <button class="button pseudo vertical">
+    <div></div>
+    <div></div>
+    <div></div>
+  </button>
+</body>
+</html>
+

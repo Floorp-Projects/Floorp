@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0
+-->
+<html>
+<head>
+  <title>Reference: Testing for full height flex container in a button.</title>
+  <meta charset="utf-8">
+  <style>
+    button {
+      vertical-align: top;
+      margin: 10px 20px 10px 0;
+      padding: 0;
+      border: solid 1px black;
+      width: 200px;
+      height: 200px;
+    }
+
+    .button {
+      display: inline-grid;
+      justify-content: space-between;
+      align-items: stretch;
+      grid-template-columns: auto auto auto;
+      grid-template-rows: auto;
+      width: 100%;
+      height: 100%;
+    }
+
+    .button>* {
+      border: solid 1px rgba(0, 0, 0, .5);
+      background-color: rgba(0, 0, 0, .1);
+      min-height: 10px;
+      min-width: 10px;
+    }
+
+    .vertical {
+      grid-template-columns: auto;
+      grid-template-rows: auto auto auto;
+    }
+
+    .button {
+      background-color: lightblue;
+    }
+  </style>
+</head>
+<body>
+  <button>
+    <div class="button">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </button>
+  <button>
+    <div class="button vertical">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </button>
+</body>
+</html>
+
