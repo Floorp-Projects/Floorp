@@ -2844,6 +2844,15 @@ public:
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagNameNS;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByClassName;
 
+  /**
+   * Lookup an image element using its associated ID, which is usually provided
+   * by |-moz-element()|. Similar to GetElementById, with the difference that
+   * elements set using mozSetImageElement have higher priority.
+   * @param aId the ID associated the element we want to lookup
+   * @return the element associated with |aId|
+   */
+  Element* LookupImageElement(const nsAString& aElementId);
+
   mozilla::dom::DocumentTimeline* Timeline();
   mozilla::LinkedList<mozilla::dom::DocumentTimeline>& Timelines()
   {
