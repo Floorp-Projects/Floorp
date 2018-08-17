@@ -391,10 +391,7 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
       mInlineEditedCell != cellElement) {
     // XXX HideInlineTableEditingUI() won't return error.  Should be change it
     //     void later.
-    nsresult rv = HideInlineTableEditingUI();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    HideInlineTableEditingUI();
     NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUI failed");
   }
 
