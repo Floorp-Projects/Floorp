@@ -10,6 +10,8 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
 const TabDetail = createFactory(require("./debugtarget/TabDetail"));
+const TemporaryExtensionAction =
+  createFactory(require("./debugtarget/TemporaryExtensionAction"));
 
 const Actions = require("../actions/index");
 const { DEBUG_TARGETS } = require("../constants");
@@ -28,6 +30,23 @@ class DebugTargetItem extends PureComponent {
   inspect() {
     const { dispatch, target } = this.props;
     dispatch(Actions.inspectDebugTarget(target.type, target.id));
+  }
+
+  renderAction() {
+    const { dispatch, target } = this.props;
+
+    return dom.div(
+      {},
+      dom.button(
+        {
+          onClick: e => this.inspect(),
+          className: "aboutdebugging-button",
+        },
+        "Inspect"
+      ),
+      target.details.temporarilyInstalled
+        ? TemporaryExtensionAction({ dispatch, target }) : null,
+    );
   }
 
   renderDetail() {
@@ -69,16 +88,6 @@ class DebugTargetItem extends PureComponent {
     );
   }
 
-  renderInspectButton() {
-    return dom.button(
-      {
-        onClick: e => this.inspect(),
-        className: "aboutdebugging-button",
-      },
-      "Inspect"
-    );
-  }
-
   render() {
     return dom.li(
       {
@@ -86,7 +95,7 @@ class DebugTargetItem extends PureComponent {
       },
       this.renderIcon(),
       this.renderInfo(),
-      this.renderInspectButton(),
+      this.renderAction(),
     );
   }
 }
