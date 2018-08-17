@@ -15,7 +15,7 @@
     var same_origin_test = async_test("Same-Site -> Same-Origin redirect");
     same_origin_test.step(function () {
         key = "redirect-same-site-same-origin";
-        expected_same_origin = {"destination":"image", "target":"subresource", "site":"same-site"};
+        expected_same_origin = {"destination":"image", "site":"same-site"};
 
         //  Requests from the server the saved value of the Sec-Metadata header
         same_origin_xhr = new XMLHttpRequest();

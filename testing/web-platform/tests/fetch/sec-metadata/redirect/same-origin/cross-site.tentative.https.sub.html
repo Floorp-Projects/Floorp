@@ -14,7 +14,7 @@
     var cross_site_test = async_test("Same-Origin -> Cross-Site redirect");
     cross_site_test.step(function () {
         filename = "redirect-same-origin-cross-site";
-        expected_cross_site = {"destination":"image", "target":"subresource", "site":"same-origin"};
+        expected_cross_site = {"destination":"image", "site":"same-origin"};
 
         //  Requests from the server the saved value of the Sec-Metadata header
         cross_site_xhr = new XMLHttpRequest();

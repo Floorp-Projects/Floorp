@@ -5,77 +5,75 @@
 <script src=/resources/testharnessreport.js></script>
 <script src=/fetch/sec-metadata/resources/helper.js></script>
 <body>
-  <!-- Same-Origin request -->
-  <video src="/media/movie_5.mp4" controls>
-    <track default kind="captions" src="https://{{host}}:{{ports[https][0]}}/fetch/sec-metadata/resources/record-header.py?file=track-same-origin"
-    srclang="en" onload="test_same_origin()">
-  </video>
-
-  <!-- Same-Site request -->
-  <video src="/media/movie_5.mp4" controls crossorigin>
-    <track default kind="captions" src="https://{{hosts[][www]}}:{{ports[https][0]}}/fetch/sec-metadata/resources/record-header.py?file=track-same-site"
-    srclang="pl" onload="test_same_site()">
-  </video>
-
-  <!-- Cross-Site request -->
-  <video src="/media/movie_5.mp4" controls crossorigin>
-    <track default kind="captions" src="https://{{hosts[alt][www]}}:{{ports[https][0]}}/fetch/sec-metadata/resources/record-header.py?file=track-cross-site"
-    srclang="de" onload="test_cross_site()">
-  </video>
 </body>
-
 <script>
-  function test_same_origin(){
-    var same_origin_test = async_test("Same-Origin track");
-    same_origin_test.step(function () {
-        key = "track-same-origin";
-        expected_same_origin = {"destination":"track", "target":"subresource", "site":"same-origin"};
-
-        //  Requests from the server the saved value of the Sec-Metadata header
-        same_origin_xhr = new XMLHttpRequest();
-        same_origin_xhr.open("GET", "/fetch/sec-metadata/resources/record-header.py?retrieve=true&file=" + key);
-
-        // Async test step triggered when the response is loaded
-        same_origin_xhr.onreadystatechange = same_origin_test.step_func(function () {
-          verify_response(same_origin_xhr, same_origin_test, expected_same_origin)
-        });
-        same_origin_xhr.send();
-    });
+  function createVideoElement() {
+    let el = document.createElement('video');
+    el.src = "/media/movie_5.mp4";
+    el.setAttribute("controls", "");
+    el.setAttribute("crossorigin", "");
+    return el;
   }
 
-  function test_same_site(){
-    var same_site_test = async_test("Same-Site track");
-    same_site_test.step(function () {
-        key = "track-same-site";
-        expected_same_site = {"destination":"track", "target":"subresource", "site":"same-site"};
-
-        //  Requests from the server the saved value of the Sec-Metadata header
-        same_site_xhr = new XMLHttpRequest();
-        same_site_xhr.open("GET", "/fetch/sec-metadata/resources/record-header.py?retrieve=true&file=" + key);
-
-        // Async test step triggered when the response is loaded
-        same_site_xhr.onreadystatechange = same_site_test.step_func(function () {
-          verify_response(same_site_xhr, same_site_test, expected_same_site)
-        });
-        same_site_xhr.send();
-    });
+  function createTrack() {
+    let el = document.createElement("track");
+    el.setAttribute("default", "");
+    el.setAttribute("kind", "captions");
+    el.setAttribute("srclang", "en");
+    return el;
   }
 
-  function test_cross_site(){
-    var cross_site_test = async_test("Cross-Site track");
-    cross_site_test.step(function () {
-        key = "track-cross-site";
-        expected_cross_site = {"destination":"track", "target":"subresource", "site":"cross-site"};
-
-        //  Requests from the server the saved value of the Sec-Metadata header
-        cross_site_xhr = new XMLHttpRequest();
-        cross_site_xhr.open("GET", "/fetch/sec-metadata/resources/record-header.py?retrieve=true&file=" + key);
-
-        // Async test step triggered when the response is loaded
-        cross_site_xhr.onreadystatechange = cross_site_test.step_func(function () {
-          verify_response(cross_site_xhr, cross_site_test, expected_cross_site)
-        });
-        cross_site_xhr.send();
+  promise_test(t => {
+    return new Promise((resolve, reject) => {
+      let video = createVideoElement();
+      let el = createTrack();
+      el.src = "https://{{host}}:{{ports[https][0]}}/fetch/sec-metadata/resources/record-header.py?file=track-same-origin";
+      el.onload = t.step_func(_ => {
+        expected = {"destination":"track", "site":"same-origin"};
+        fetch("/fetch/sec-metadata/resources/record-header.py?retrieve=true&file=track-same-origin")
+            .then(response => response.text())
+            .then(text => assert_header_equals(text, expected))
+            .then(_ => resolve());
+      });
+      video.appendChild(el);
+      document.body.appendChild(video);
     });
-  }
+  }, "Same-Origin track");
+
+  promise_test(t => {
+    return new Promise((resolve, reject) => {
+      let video = createVideoElement();
+      let el = createTrack();
+      el.src = "https://{{hosts[][www]}}:{{ports[https][0]}}/fetch/sec-metadata/resources/record-header.py?file=track-same-site";
+      el.onload = t.step_func(_ => {
+        expected = {"destination":"track", "site":"same-site"};
+        fetch("/fetch/sec-metadata/resources/record-header.py?retrieve=true&file=track-same-site")
+            .then(response => response.text())
+            .then(text => assert_header_equals(text, expected))
+            .then(resolve)
+            .catch(reject);
+
+      });
+      video.appendChild(el);
+      document.body.appendChild(video);
+    });
+  }, "Same-Site track");
+
+  promise_test(t => {
+    return new Promise((resolve, reject) => {
+      let video = createVideoElement();
+      let el = createTrack();
+      el.src = "https://{{hosts[alt][www]}}:{{ports[https][0]}}/fetch/sec-metadata/resources/record-header.py?file=track-cross-site";
+      el.onload = t.step_func(_ => {
+        expected = {"destination":"track", "site":"cross-site"};
+        fetch("/fetch/sec-metadata/resources/record-header.py?retrieve=true&file=track-cross-site")
+            .then(response => response.text())
+            .then(text => assert_header_equals(text, expected))
+            .then(resolve)
+            .catch(reject);
+      });
+      video.appendChild(el);
+      document.body.appendChild(video);
+    });
+  }, "Cross-Site track");
 </script>

@@ -15,7 +15,7 @@
     var same_site_test = async_test("Same-Site -> Same-Site redirect");
     same_site_test.step(function () {
         key = "redirect-same-site-same-site";
-        expected_same_site = {"destination":"image", "target":"subresource", "site":"same-site"};
+        expected_same_site = {"destination":"image", "site":"same-site"};
 
         //  Requests from the server the saved value of the Sec-Metadata header
         same_site_xhr = new XMLHttpRequest();

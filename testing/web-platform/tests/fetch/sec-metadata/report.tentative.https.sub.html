@@ -11,21 +11,21 @@
     counter++;
     if (counter == 3) {
       promise_test(t => {
-        expected = {"destination":"report", "target":"subresource", "site":"same-origin"};
+        expected = {"destination":"report", "site":"same-origin"};
         return fetch("/fetch/sec-metadata/resources/record-header.py?retrieve=true&file=report-same-origin")
             .then(response => response.text())
             .then(text => assert_header_equals(text, expected));
       }, "Same-Origin report");
 
       promise_test(t => {
-        expected = {"destination":"report", "target":"subresource", "site":"same-site"};
+        expected = {"destination":"report", "site":"same-site"};
         return fetch("/fetch/sec-metadata/resources/record-header.py?retrieve=true&file=report-same-site")
             .then(response => response.text())
             .then(text => assert_header_equals(text, expected));
       }, "Same-site report");
 
       promise_test(t => {
-        expected = {"destination":"report", "target":"subresource", "site":"cross-site"};
+        expected = {"destination":"report", "site":"cross-site"};
         return fetch("/fetch/sec-metadata/resources/record-header.py?retrieve=true&file=report-cross-site")
             .then(response => response.text())
             .then(text => assert_header_equals(text, expected));
