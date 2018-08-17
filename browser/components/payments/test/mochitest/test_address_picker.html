@@ -122,9 +122,6 @@ add_task(async function test_update() {
   ok(options[1].textContent.includes("Mrs. Bar"), "Check that name is the same in second address");
   ok(options[1].getAttribute("street-address").includes("P.O. Box 123"),
      "Check second address is the same");
-  ok(options[2].textContent.includes("Mrs. Fields"),
-     "Check that name is the same in third address");
-  is(options[2].getAttribute("street-address"), null, "Check third address is missing");
 });
 
 add_task(async function test_change_selected_address() {

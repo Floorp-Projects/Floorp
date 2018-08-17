@@ -20,7 +20,6 @@ class EditAutofillForm {
     for (let field of this._elements.form.elements) {
       let value = record[field.id];
       field.value = typeof(value) == "undefined" ? "" : value;
-      this.updatePopulatedState(field);
     }
   }
 
@@ -44,24 +43,15 @@ class EditAutofillForm {
    */
   handleEvent(event) {
     switch (event.type) {
-      case "change": {
-        this.handleChange(event);
-        break;
-      }
       case "input": {
         this.handleInput(event);
         break;
       }
+      case "change": {
+        this.handleChange(event);
+        break;
+      }
     }
-  }
-
-  /**
-   * Handle change events
-   *
-   * @param  {DOMEvent} event
-   */
-  handleChange(event) {
-    this.updatePopulatedState(event.target);
   }
 
   /**
@@ -78,18 +68,8 @@ class EditAutofillForm {
     this._elements.form.addEventListener("input", this);
   }
 
-  /**
-   * Set the field-populated attribute if the field has a value.
-   *
-   * @param {DOMElement} field The field that will be checked for a value.
-   */
-  updatePopulatedState(field) {
-    let span = field.parentNode.querySelector(".label-text");
-    if (!span) {
-      return;
-    }
-    span.toggleAttribute("field-populated", !!field.value.trim());
-  }
+  // An interface to be inherited.
+  handleChange(event) {}
 }
 
 class EditAddress extends EditAutofillForm {
@@ -259,14 +239,11 @@ class EditAddress extends EditAutofillForm {
   }
 
   handleChange(event) {
-    if (event.target == this._elements.country) {
-      this.formatForm(event.target.value);
-    }
-    super.handleChange(event);
+    this.formatForm(event.target.value);
   }
 
   attachEventListeners() {
-    this._elements.form.addEventListener("change", this);
+    this._elements.country.addEventListener("change", this);
     super.attachEventListeners();
   }
 }
@@ -287,7 +264,6 @@ class EditCreditCard extends EditAutofillForm {
     Object.assign(this._elements, {
       ccNumber: this._elements.form.querySelector("#cc-number"),
       invalidCardNumberStringElement: this._elements.form.querySelector("#invalidCardNumberString"),
-      month: this._elements.form.querySelector("#cc-exp-month"),
       year: this._elements.form.querySelector("#cc-exp-year"),
       billingAddress: this._elements.form.querySelector("#billingAddressGUID"),
       billingAddressRow: this._elements.form.querySelector(".billingAddressRow"),
@@ -354,7 +330,7 @@ class EditCreditCard extends EditAutofillForm {
   }
 
   attachEventListeners() {
-    this._elements.form.addEventListener("change", this);
+    this._elements.ccNumber.addEventListener("change", this);
     super.attachEventListeners();
   }
 
