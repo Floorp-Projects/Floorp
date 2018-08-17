@@ -10,12 +10,16 @@ const {
   DISCONNECT_RUNTIME_SUCCESS,
   REQUEST_EXTENSIONS_SUCCESS,
   REQUEST_TABS_SUCCESS,
+  REQUEST_WORKERS_SUCCESS,
 } = require("../constants");
 
 function RuntimeState() {
   return {
     client: null,
     installedExtensions: [],
+    otherWorkers: [],
+    serviceWorkers: [],
+    sharedWorkers: [],
     tabs: [],
     temporaryExtensions: [],
   };
@@ -40,6 +44,14 @@ function runtimeReducer(state = RuntimeState(), action) {
     case REQUEST_TABS_SUCCESS: {
       const { tabs } = action;
       return Object.assign({}, state, { tabs: toTabComponentData(tabs) });
+    }
+    case REQUEST_WORKERS_SUCCESS: {
+      const { otherWorkers, serviceWorkers, sharedWorkers } = action;
+      return Object.assign({}, state, {
+        otherWorkers,
+        serviceWorkers,
+        sharedWorkers,
+      });
     }
 
     default:

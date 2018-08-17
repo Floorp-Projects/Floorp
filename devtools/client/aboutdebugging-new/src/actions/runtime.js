@@ -25,6 +25,9 @@ const {
   REQUEST_TABS_FAILURE,
   REQUEST_TABS_START,
   REQUEST_TABS_SUCCESS,
+  REQUEST_WORKERS_FAILURE,
+  REQUEST_WORKERS_START,
+  REQUEST_WORKERS_SUCCESS,
 } = require("../constants");
 
 let browserToolboxProcess = null;
@@ -43,6 +46,7 @@ function connectRuntime() {
       dispatch({ type: CONNECT_RUNTIME_SUCCESS, client });
       dispatch(requestExtensions());
       dispatch(requestTabs());
+      dispatch(requestWorkers());
     } catch (e) {
       dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e.message });
     }
@@ -181,6 +185,31 @@ function requestExtensions() {
   };
 }
 
+function requestWorkers() {
+  return async (dispatch, getState) => {
+    dispatch({ type: REQUEST_WORKERS_START });
+
+    const client = getState().runtime.client;
+
+    try {
+      const {
+        other: otherWorkers,
+        service: serviceWorkers,
+        shared: sharedWorkers,
+      } = await client.mainRoot.listAllWorkers();
+
+      dispatch({
+        type: REQUEST_WORKERS_SUCCESS,
+        otherWorkers,
+        serviceWorkers,
+        sharedWorkers,
+      });
+    } catch (e) {
+      dispatch({ type: REQUEST_WORKERS_FAILURE, error: e.message });
+    }
+  };
+}
+
 module.exports = {
   connectRuntime,
   disconnectRuntime,
@@ -190,4 +219,5 @@ module.exports = {
   removeTemporaryExtension,
   requestTabs,
   requestExtensions,
+  requestWorkers,
 };

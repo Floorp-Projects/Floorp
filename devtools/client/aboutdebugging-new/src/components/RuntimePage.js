@@ -21,13 +21,24 @@ class RuntimePage extends PureComponent {
     return {
       dispatch: PropTypes.func.isRequired,
       installedExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
+      otherWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
+      serviceWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
+      sharedWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
       temporaryExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
   }
 
   render() {
-    const { dispatch, installedExtensions, tabs, temporaryExtensions } = this.props;
+    const {
+      dispatch,
+      installedExtensions,
+      otherWorkers,
+      serviceWorkers,
+      sharedWorkers,
+      tabs,
+      temporaryExtensions,
+    } = this.props;
 
     return dom.article(
       {
@@ -54,6 +65,19 @@ class RuntimePage extends PureComponent {
         name: "Tabs",
         targets: tabs
       }),
+      // Temporary implementation
+      dom.ul(
+        {},
+        serviceWorkers.map(e => dom.li({}, e.name))
+      ),
+      dom.ul(
+        {},
+        sharedWorkers.map(e => dom.li({}, e.name))
+      ),
+      dom.ul(
+        {},
+        otherWorkers.map(e => dom.li({}, e.name))
+      ),
     );
   }
 }
@@ -61,6 +85,9 @@ class RuntimePage extends PureComponent {
 const mapStateToProps = state => {
   return {
     installedExtensions: state.runtime.installedExtensions,
+    otherWorkers: state.runtime.otherWorkers,
+    serviceWorkers: state.runtime.serviceWorkers,
+    sharedWorkers: state.runtime.sharedWorkers,
     tabs: state.runtime.tabs,
     temporaryExtensions: state.runtime.temporaryExtensions,
   };
