@@ -32,6 +32,7 @@
 #include "nsIRaceCacheWithNetwork.h"
 #include "mozilla/extensions/PStreamFilterParent.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Maybe.h"
 
 class nsDNSPrefetch;
 class nsICancelable;
@@ -659,6 +660,10 @@ private:
 
     // Check if current channel should be canceled by FastBlock rules.
     bool CheckFastBlocked();
+
+    // This caches the result of mozIThirdPartyUtil::IsThirdPartyChannel.
+    bool IsThirdPartyChannel();
+    Maybe<bool> mIsThirdPartyChannel;
 
     nsCString mUsername;
 
