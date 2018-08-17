@@ -58,19 +58,10 @@ void AfterEGLCall(const char* funcName);
 class GLLibraryEGL
 {
 protected:
-  ~GLLibraryEGL() {}
+    ~GLLibraryEGL() {}
 
 public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GLLibraryEGL)
-
-    GLLibraryEGL()
-        : mSymbols{nullptr}
-        , mInitialized(false)
-        , mEGLLibrary(nullptr)
-        , mEGLDisplay(EGL_NO_DISPLAY)
-        , mIsANGLE(false)
-        , mIsWARP(false)
-    { }
 
     void InitClientExtensions();
     void InitDisplayExtensions();
@@ -498,7 +489,7 @@ private:
                                                         const EGLAttrib* attrib_list);
         EGLBoolean (GLAPIENTRY * fReleaseDeviceANGLE) (EGLDeviceEXT device);
 
-    } mSymbols;
+    } mSymbols = {};
 
 private:
     bool DoEnsureInitialized(bool forceAccel, nsACString* const out_failureId);
@@ -506,13 +497,13 @@ private:
                              const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                              nsACString* const out_failureId);
 
-    bool mInitialized;
-    PRLibrary* mEGLLibrary;
-    EGLDisplay mEGLDisplay;
+    bool mInitialized = false;
+    PRLibrary* mEGLLibrary = nullptr;
+    EGLDisplay mEGLDisplay = EGL_NO_DISPLAY;
     RefPtr<GLContext> mReadbackGL;
 
-    bool mIsANGLE;
-    bool mIsWARP;
+    bool mIsANGLE = false;
+    bool mIsWARP = false;
     static StaticMutex sMutex;
     static StaticRefPtr<GLLibraryEGL> sEGLLibrary;
 };

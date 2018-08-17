@@ -65,10 +65,10 @@ public:
     }
 
 private:
-    GLuint mBackbufferRB;
-    GLuint mBackbufferFB;
+    GLuint mBackbufferRB = 0;
+    GLuint mBackbufferFB = 0;
 
-    void* mLayer;
+    void* mLayer = nullptr;
 
     bool RecreateRB();
 };

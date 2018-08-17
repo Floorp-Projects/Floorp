@@ -27,9 +27,6 @@ GLContextEAGL::GLContextEAGL(CreateContextFlags flags, const SurfaceCaps& caps,
                              bool isOffscreen)
     : GLContext(flags, caps, sharedContext, isOffscreen)
     , mContext(context)
-    , mBackbufferRB(0)
-    , mBackbufferFB(0)
-    , mLayer(nil)
 {
 }
 
