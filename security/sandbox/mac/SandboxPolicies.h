@@ -795,12 +795,14 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
   ; Tests revealed file-write-{data,create,flags} required for some encrypted
   ; video playback. Allowing file-write* to match system profiles.
   (allow file-read* file-write*
-      (cache-literal "/mds/mds.lock")
-      (cache-literal "/mds/mdsDirectory.db_")
-      (cache-literal "/mds/mdsDirectory.db_")
-      (cache-literal "/mds/mdsObject.db")
-      (cache-literal "/mds/mdsObject.db_")
-      (require-all (vnode-type REGULAR-FILE)))
+      (require-all
+          (vnode-type REGULAR-FILE)
+          (require-any
+              (cache-literal "/mds/mds.lock")
+              (cache-literal "/mds/mdsDirectory.db")
+              (cache-literal "/mds/mdsDirectory.db_")
+              (cache-literal "/mds/mdsObject.db")
+              (cache-literal "/mds/mdsObject.db_"))))
 
   (allow network-bind (local ip))
 
