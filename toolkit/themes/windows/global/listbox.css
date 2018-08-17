@@ -70,6 +70,24 @@ listheader[sortable="true"]:hover:active {
   margin: 0px !important;
 }
 
+@media (-moz-windows-classic) {
+  listheader {
+    border: 1px solid;
+    border-top-color: ThreeDHighlight;
+    border-inline-end-color: ThreeDShadow;
+    border-bottom-color: ThreeDShadow;
+    border-inline-start-color: ThreeDHighlight;
+    background-color: -moz-Dialog;
+  }
+
+  listheader[sortable="true"]:hover:active {
+    border-top-color: ThreeDShadow;
+    border-inline-end-color: ThreeDHighlight;
+    border-bottom-color: ThreeDHighlight;
+    border-inline-start-color: ThreeDShadow;
+  }
+}
+
 /* ..... sort direction icon ..... */
 
 .listheader-sortdirection {
