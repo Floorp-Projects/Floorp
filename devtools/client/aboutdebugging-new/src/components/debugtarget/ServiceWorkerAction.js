@@ -13,9 +13,9 @@ const InspectAction = createFactory(require("./InspectAction"));
 const Actions = require("../../actions/index");
 
 /**
- * This component provides components that inspect/reload/remove temporary extension.
+ * This component displays buttons for service worker.
  */
-class TemporaryExtensionAction extends PureComponent {
+class ServiceWorkerAction extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
@@ -23,38 +23,48 @@ class TemporaryExtensionAction extends PureComponent {
     };
   }
 
-  reload() {
+  push() {
     const { dispatch, target } = this.props;
-    dispatch(Actions.reloadTemporaryExtension(target.details.actor));
+    dispatch(Actions.pushServiceWorker(target.id));
   }
 
-  remove() {
+  start() {
     const { dispatch, target } = this.props;
-    dispatch(Actions.removeTemporaryExtension(target.id));
+    dispatch(Actions.startServiceWorker(target.details.registrationActor));
+  }
+
+  _renderAction() {
+    const { dispatch, target } = this.props;
+    const { isActive, isRunning } = target.details;
+
+    if (!isRunning) {
+      return this._renderButton("Start", this.start.bind(this));
+    }
+
+    if (!isActive) {
+      // Only debug button is available if the service worker is not active.
+      return InspectAction({ dispatch, target });
+    }
+
+    return [
+      this._renderButton("Push", this.push.bind(this)),
+      InspectAction({ dispatch, target }),
+    ];
+  }
+
+  _renderButton(label, onClick) {
+    return dom.button(
+      {
+        className: "aboutdebugging-button",
+        onClick: e => onClick(),
+      },
+      label,
+    );
   }
 
   render() {
-    const { dispatch, target } = this.props;
-
-    return dom.div(
-      {},
-      InspectAction({ dispatch, target }),
-      dom.button(
-        {
-          className: "aboutdebugging-button",
-          onClick: e => this.reload()
-        },
-        "Reload",
-      ),
-      dom.button(
-        {
-          className: "aboutdebugging-button",
-          onClick: e => this.remove()
-        },
-        "Remove",
-      ),
-    );
+    return dom.div({}, this._renderAction());
   }
 }
 
-module.exports = TemporaryExtensionAction;
+module.exports = ServiceWorkerAction;
