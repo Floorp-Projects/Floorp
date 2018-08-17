@@ -333,9 +333,8 @@ public:
    *                        If nsGkAtoms::td, the result may be <td> or <th>.
    *                        If nsGkAtoms::href, the result may be <a> element
    *                        which has "href" attribute with non-empty value.
-   *                        If nsGkAtoms::anchor or atom of "namedanchor", the
-   *                        result may be <a> which has "name" attribute with
-   *                        non-empty value.
+   *                        If nsGkAtoms::anchor, the result may be <a> which
+   *                        has "name" attribute with non-empty value.
    * @param aNode           If non-nullptr, this starts to look for the result
    *                        from it.  Otherwise, i.e., nullptr, starts from
    *                        anchor node of Selection.
@@ -846,9 +845,8 @@ protected: // Shouldn't be used by friend classes
    *                        If nsGkAtoms::td, the result may be <td> or <th>.
    *                        If nsGkAtoms::href, the result may be <a> element
    *                        which has "href" attribute with non-empty value.
-   *                        If nsGkAtoms::anchor or atom of "namedanchor", the
-   *                        result may be <a> which has "name" attribute with
-   *                        non-empty value.
+   *                        If nsGkAtoms::anchor, the result may be <a> which
+   *                        has "name" attribute with non-empty value.
    * @return                If an element which matches aTagName, returns
    *                        an Element.  Otherwise, nullptr.
    */
@@ -867,9 +865,8 @@ protected: // Shouldn't be used by friend classes
    *                        If nsGkAtoms::td, the result may be <td> or <th>.
    *                        If nsGkAtoms::href, the result may be <a> element
    *                        which has "href" attribute with non-empty value.
-   *                        If nsGkAtoms::anchor or atom of "namedanchor", the
-   *                        result may be <a> which has "name" attribute with
-   *                        non-empty value.
+   *                        If nsGkAtoms::anchor, the result may be <a> which
+   *                        has "name" attribute with non-empty value.
    * @param aNode           Start node to look for the element.
    * @return                If an element which matches aTagName, returns
    *                        an Element.  Otherwise, nullptr.
