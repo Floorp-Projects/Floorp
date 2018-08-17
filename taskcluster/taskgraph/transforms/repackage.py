@@ -19,6 +19,7 @@ from taskgraph.util.schema import (
 )
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.platforms import archive_format, executable_extension
+from taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
 
@@ -264,9 +265,6 @@ def make_job_description(config, jobs):
         })
 
         worker = {
-            'artifacts': _generate_task_output_files(dep_job, build_platform,
-                                                     locale=locale,
-                                                     project=config.params["project"]),
             'chain-of-trust': True,
             'max-run-time': 7200 if build_platform.startswith('win') else 3600,
             # Don't add generic artifact directory.
@@ -290,6 +288,12 @@ def make_job_description(config, jobs):
 
             run['tooltool-downloads'] = 'internal'
             worker['docker-image'] = {"in-tree": "debian7-amd64-build"}
+
+        worker['artifacts'] = _generate_task_output_files(
+            dep_job, worker_type_implementation(worker_type),
+            repackage_config=repackage_config,
+            locale=locale,
+        )
 
         description = (
             "Repackaging for locale '{locale}' for build '"
@@ -365,50 +369,24 @@ def _generate_download_config(task, build_platform, build_task, signing_task, lo
     raise NotImplementedError('Unsupported build_platform: "{}"'.format(build_platform))
 
 
-def _generate_task_output_files(task, build_platform, locale=None, project=None):
+def _generate_task_output_files(task, worker_implementation, repackage_config, locale=None):
     locale_output_path = '{}/'.format(locale) if locale else ''
     artifact_prefix = get_artifact_prefix(task)
 
-    if build_platform.startswith('linux') or build_platform.startswith('macosx'):
-        output_files = [{
+    if worker_implementation == ('docker-worker', 'linux'):
+        local_prefix = '/builds/worker/workspace/'
+    elif worker_implementation == ('generic-worker', 'windows'):
+        local_prefix = ''
+    else:
+        raise NotImplementedError(
+            'Unsupported worker implementation: "{}"'.format(worker_implementation))
+
+    output_files = []
+    for config in repackage_config:
+        output_files.append({
             'type': 'file',
-            'path': '/builds/worker/workspace/build/outputs/{}target.complete.mar'
-                    .format(locale_output_path),
-            'name': '{}/{}target.complete.mar'.format(artifact_prefix, locale_output_path),
-        }]
-
-        if build_platform.startswith('macosx'):
-            output_files.append({
-                'type': 'file',
-                'path': '/builds/worker/workspace/build/outputs/{}target.dmg'
-                        .format(locale_output_path),
-                'name': '{}/{}target.dmg'.format(artifact_prefix, locale_output_path),
-            })
-
-    elif build_platform.startswith('win'):
-        output_files = [{
-            'type': 'file',
-            'path': 'build/outputs/{}target.installer.exe'.format(locale_output_path),
-            'name': '{}/{}target.installer.exe'.format(artifact_prefix, locale_output_path),
-        }, {
-            'type': 'file',
-            'path': 'build/outputs/{}target.complete.mar'.format(locale_output_path),
-            'name': '{}/{}target.complete.mar'.format(artifact_prefix, locale_output_path),
-        }]
-
-        use_stub = task.attributes.get('stub-installer')
-        if use_stub:
-            output_files.append({
-                'type': 'file',
-                'path': 'build/outputs/{}target.stub-installer.exe'.format(
-                    locale_output_path
-                ),
-                'name': '{}/{}target.stub-installer.exe'.format(
-                    artifact_prefix, locale_output_path
-                ),
-            })
-
-    if output_files:
-        return output_files
-
-    raise NotImplementedError('Unsupported build_platform: "{}"'.format(build_platform))
+            'path': '{}build/outputs/{}{}'
+                    .format(local_prefix, locale_output_path, config['output']),
+            'name': '{}/{}{}'.format(artifact_prefix, locale_output_path, config['output']),
+        })
+    return output_files
