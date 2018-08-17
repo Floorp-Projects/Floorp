@@ -18,6 +18,7 @@ from taskgraph.util.schema import (
     Schema,
 )
 from taskgraph.util.taskcluster import get_artifact_prefix
+from taskgraph.util.platforms import archive_format, executable_extension
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
 
@@ -65,6 +66,8 @@ packaging_description_schema = Schema({
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
 
+    Required('package-formats'): _by_platform([basestring]),
+
     # All l10n jobs use mozharness
     Required('mozharness'): {
         # Config files passed to the mozharness script
@@ -79,6 +82,58 @@ packaging_description_schema = Schema({
         Required('comm-checkout', default=False): bool,
     }
 })
+
+# The configuration passed to the mozharness repackage script. This defines the
+# arguments passed to `mach repackage`
+# - `args` is interpolated by mozharness (`{installer-tag}`,
+#   `{stub-installer-tag}`, `{sfx-stub}`) with values from the mozharness
+#   config.
+# - `inputs` are passed as long-options, with the filename prefixed by
+#   `MOZ_FETCH_DIR`. The filename is interpolated by taskgraph
+#   (`{archive_format}`, `{executable_extension}`).
+# - `output` is passed to `--output`, with the filename prefixed by the output
+#   directory.
+PACKAGE_FORMATS = {
+    'mar': {
+        'args': ['mar'],
+        'inputs': {
+            'input': 'target{archive_format}',
+            'mar': 'mar{executable_extension}',
+        },
+        'output': "target.complete.mar",
+    },
+    'dmg': {
+        'args': ['dmg'],
+        'inputs': {
+            'input': 'target{archive_format}',
+        },
+        'output': "target.dmg",
+    },
+    'installer': {
+        'args': [
+            "installer",
+            "--package-name", "firefox",
+            "--tag", "{installer-tag}",
+            "--sfx-stub", "{sfx-stub}",
+        ],
+        'inputs': {
+            'package': 'target{archive_format}',
+            "setupexe": "setup.exe",
+        },
+        'output': "target.installer.exe",
+    },
+    'installer-stub': {
+        'args': [
+            "installer",
+            "--tag", "{stub-installer-tag}",
+            "--sfx-stub", "{sfx-stub}",
+        ],
+        'inputs': {
+            "setupexe": "setup-stub.exe",
+        },
+        'output': 'target.stub-installer.exe',
+    },
+}
 
 
 @transforms.add
@@ -104,7 +159,8 @@ def copy_in_useful_magic(config, jobs):
 def handle_keyed_by(config, jobs):
     """Resolve fields that can be keyed by platform, etc."""
     fields = [
-        "mozharness.config",
+        'mozharness.config',
+        'package-formats',
     ]
     for job in jobs:
         job = copy.deepcopy(job)  # don't overwrite dict values here
@@ -175,8 +231,26 @@ def make_job_description(config, jobs):
             attributes['locale'] = locale
 
         level = config.params['level']
-
         build_platform = attributes['build_platform']
+
+        use_stub = attributes.get('stub-installer')
+
+        repackage_config = []
+        package_formats = job.get('package-formats')
+        if use_stub:
+            package_formats += ['installer-stub']
+        for format in package_formats:
+            command = copy.deepcopy(PACKAGE_FORMATS[format])
+            substs = {
+                'archive_format': archive_format(build_platform),
+                'executable_extension': executable_extension(build_platform),
+            }
+            command['inputs'] = {
+                name: filename.format(**substs)
+                for name, filename in command['inputs'].items()
+            }
+            repackage_config.append(command)
+
         run = job.get('mozharness', {})
         run.update({
             'using': 'mozharness',
@@ -184,6 +258,9 @@ def make_job_description(config, jobs):
             'job-script': 'taskcluster/scripts/builder/repackage.sh',
             'actions': ['setup', 'repackage'],
             'extra-workspace-cache-key': 'repackage',
+            'extra-config': {
+                'repackage_config': repackage_config,
+            },
         })
 
         worker = {
@@ -199,10 +276,6 @@ def make_job_description(config, jobs):
         if locale:
             # Make sure we specify the locale-specific upload dir
             worker.setdefault('env', {}).update(LOCALE=locale)
-
-        use_stub = attributes.get('stub-installer')
-        if not use_stub:
-            worker.setdefault('env', {})['NO_STUB_INSTALLER'] = '1'
 
         if build_platform.startswith('win'):
             worker_type = 'aws-provisioner-v1/gecko-%s-b-win2012' % level
@@ -258,11 +331,10 @@ def _generate_download_config(task, build_platform, build_task, signing_task, lo
     locale_path = '{}/'.format(locale) if locale else ''
 
     if build_platform.startswith('linux') or build_platform.startswith('macosx'):
-        tarball_extension = 'bz2' if build_platform.startswith('linux') else 'gz'
         return {
             signing_task: [
                 {
-                    'artifact': '{}target.tar.{}'.format(locale_path, tarball_extension),
+                    'artifact': '{}target{}'.format(locale_path, archive_format(build_platform)),
                     'extract': False,
                 },
             ],
