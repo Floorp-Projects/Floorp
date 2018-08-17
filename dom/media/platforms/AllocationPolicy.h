@@ -100,6 +100,17 @@ public:
   }
   RefPtr<ShutdownPromise> Shutdown() override;
 
+  typedef MozPromise<RefPtr<MediaDataDecoder>,
+                     MediaResult,
+                     /* IsExclusive = */ true>
+    AllocateDecoderPromise;
+  // Will create a decoder has soon as one can be created according to the
+  // GlobalAllocPolicy.
+  // Warning: all aParams members must be valid until the promise has been
+  // resolved, as some contains raw pointers to objects.
+  static RefPtr<AllocateDecoderPromise> CreateDecoder(
+    const CreateDecoderParams& aParams);
+
 private:
   RefPtr<MediaDataDecoder> mDecoder;
   RefPtr<Token> mToken;
