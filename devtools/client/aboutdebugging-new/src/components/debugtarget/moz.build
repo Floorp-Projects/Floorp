@@ -13,4 +13,6 @@ DevToolsModules(
     'TabDetail.js',
     'TemporaryExtensionAction.js',
     'TemporaryExtensionInstaller.js',
+    'WorkerDetail.css',
+    'WorkerDetail.js',
 )

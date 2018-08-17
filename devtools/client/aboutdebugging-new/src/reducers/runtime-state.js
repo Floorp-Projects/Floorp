@@ -11,6 +11,8 @@ const {
   REQUEST_EXTENSIONS_SUCCESS,
   REQUEST_TABS_SUCCESS,
   REQUEST_WORKERS_SUCCESS,
+  SERVICE_WORKER_FETCH_STATES,
+  SERVICE_WORKER_STATUSES,
 } = require("../constants");
 
 function RuntimeState() {
@@ -48,9 +50,9 @@ function runtimeReducer(state = RuntimeState(), action) {
     case REQUEST_WORKERS_SUCCESS: {
       const { otherWorkers, serviceWorkers, sharedWorkers } = action;
       return Object.assign({}, state, {
-        otherWorkers,
-        serviceWorkers,
-        sharedWorkers,
+        otherWorkers: toWorkerComponentData(otherWorkers),
+        serviceWorkers: toWorkerComponentData(serviceWorkers, true),
+        sharedWorkers: toWorkerComponentData(sharedWorkers),
       });
     }
 
@@ -118,6 +120,44 @@ function toTabComponentData(tabs) {
       type,
       details: {
         url,
+      },
+    };
+  });
+}
+
+function getServiceWorkerStatus(worker) {
+  if (worker.active && !!worker.workerTargetActor) {
+    return SERVICE_WORKER_STATUSES.RUNNING;
+  } else if (worker.active) {
+    return SERVICE_WORKER_STATUSES.STOPPED;
+  }
+  // We cannot get service worker registrations unless the registration is in
+  // ACTIVE state. Unable to know the actual state ("installing", "waiting"), we
+  // display a custom state "registering" for now. See Bug 1153292.
+  return SERVICE_WORKER_STATUSES.REGISTERING;
+}
+
+function toWorkerComponentData(workers, isServiceWorker) {
+  return workers.map(worker => {
+    const type = DEBUG_TARGETS.WORKER;
+    const icon = "chrome://devtools/skin/images/debugging-workers.svg";
+    let { fetch, name, scope } = worker;
+    let status = null;
+
+    if (isServiceWorker) {
+      fetch = fetch ? SERVICE_WORKER_FETCH_STATES.LISTENING
+                    : SERVICE_WORKER_FETCH_STATES.NOT_LISTENING;
+      status = getServiceWorkerStatus(worker);
+    }
+
+    return {
+      name,
+      icon,
+      type,
+      details: {
+        fetch,
+        scope,
+        status,
       },
     };
   });
