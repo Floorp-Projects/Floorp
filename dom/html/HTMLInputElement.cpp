@@ -3979,14 +3979,15 @@ HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor)
 }
 
 /**
- * Return true if the input event should be ignore because of it's modifiers
+ * Return true if the input event should be ignored because of its modifiers.
+ * Control is treated specially, since sometimes we ignore it, and sometimes
+ * we don't (for webcompat reasons).
  */
 static bool
-IgnoreInputEventWithModifier(WidgetInputEvent* aEvent)
+IgnoreInputEventWithModifier(WidgetInputEvent* aEvent, bool ignoreControl)
 {
-  return aEvent->IsShift() || aEvent->IsControl() || aEvent->IsAlt() ||
-         aEvent->IsMeta() || aEvent->IsAltGraph() || aEvent->IsFn() ||
-         aEvent->IsOS();
+  return (ignoreControl && aEvent->IsControl()) || aEvent->IsAltGraph() ||
+         aEvent->IsFn() || aEvent->IsOS();
 }
 
 nsresult
@@ -4135,7 +4136,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         keyEvent && keyEvent->mMessage == eKeyPress &&
         aVisitor.mEvent->IsTrusted() &&
         (keyEvent->mKeyCode == NS_VK_UP || keyEvent->mKeyCode == NS_VK_DOWN) &&
-        !IgnoreInputEventWithModifier(keyEvent)) {
+        !IgnoreInputEventWithModifier(keyEvent, false)) {
       // We handle the up/down arrow keys specially for <input type=number>.
       // On some platforms the editor for the nested text control will
       // process these keys to send the cursor to the start/end of the text
@@ -4356,7 +4357,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           }
           if (mType == NS_FORM_INPUT_NUMBER && aVisitor.mEvent->IsTrusted()) {
             if (mouseEvent->button == WidgetMouseEvent::eLeftButton &&
-                !IgnoreInputEventWithModifier(mouseEvent)) {
+                !IgnoreInputEventWithModifier(mouseEvent, false)) {
               nsNumberControlFrame* numberControlFrame =
                 do_QueryFrame(GetPrimaryFrame());
               if (numberControlFrame) {
@@ -4519,7 +4520,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
         break; // don't start drag if someone else is already capturing
       }
       WidgetInputEvent* inputEvent = aVisitor.mEvent->AsInputEvent();
-      if (IgnoreInputEventWithModifier(inputEvent)) {
+      if (IgnoreInputEventWithModifier(inputEvent, true)) {
         break; // ignore
       }
       if (aVisitor.mEvent->mMessage == eMouseDown) {
