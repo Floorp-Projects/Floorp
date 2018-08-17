@@ -490,10 +490,16 @@ BackgroundFileSaver::ProcessStateChange()
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Now we can update the actual target file name.
-      mActualTarget = renamedTarget;
-      mActualTargetKeepPartial = renamedTargetKeepPartial;
+      // We should not only update the mActualTarget with renameTarget when
+      // they point to the different files.
+      // In this way, if mActualTarget and renamedTarget point to the same file
+      // with different addresses, "CheckCompletion()" will return false forever.
     }
+
+    // Update mActualTarget with renameTarget,
+    // even if they point to the same file.
+    mActualTarget = renamedTarget;
+    mActualTargetKeepPartial = renamedTargetKeepPartial;
   }
 
   // Notify if the target file name actually changed.
