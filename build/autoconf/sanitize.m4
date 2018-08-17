@@ -5,18 +5,6 @@ dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 AC_DEFUN([MOZ_CONFIG_SANITIZE], [
 
 dnl ========================================================
-dnl = Link Time Optimization (LTO)
-dnl ========================================================
-if test -n "$MOZ_LTO"; then
-    AC_DEFINE(MOZ_LTO)
-    CFLAGS="$CFLAGS $MOZ_LTO_CFLAGS"
-    CPPFLAGS="$CPPFLAGS $MOZ_LTO_CFLAGS"
-    CXXFLAGS="$CXXFLAGS $MOZ_LTO_CFLAGS"
-    LDFLAGS="$LDFLAGS $MOZ_LTO_LDFLAGS"
-fi
-AC_SUBST(MOZ_LTO)
-
-dnl ========================================================
 dnl = Use Address Sanitizer
 dnl ========================================================
 if test -n "$MOZ_ASAN"; then
