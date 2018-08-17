@@ -111,6 +111,9 @@ FxAccountsPush.prototype = {
       PushService.getSubscription(FXA_PUSH_SCOPE,
         Services.scriptSecurityManager.getSystemPrincipal(),
         (result, subscription) => {
+          if (!Components.isSuccessCode(result)) {
+            return reject(new Error(`Error getting subscription (${result})`));
+          }
           if (!subscription) {
             return reject(new Error("No subscription found"));
           }
@@ -131,6 +134,10 @@ FxAccountsPush.prototype = {
     })
     .catch(err => {
       Log.d("Error while decoding incoming message : " + err);
+      EventDispatcher.instance.sendRequest({
+        type: "FxAccountsPush:ReceivedPushMessageToDecode:Response",
+        error: err.message || ""
+      });
     });
   },
 
