@@ -12,13 +12,13 @@ const {
 } = require("../constants");
 const Actions = require("../actions/index");
 
-function debugTargetListenerMiddleware(state) {
+function debugTargetListenerMiddleware(store) {
   const onExtensionsUpdated = () => {
-    state.dispatch(Actions.requestExtensions());
+    store.dispatch(Actions.requestExtensions());
   };
 
   const onTabsUpdated = () => {
-    state.dispatch(Actions.requestTabs());
+    store.dispatch(Actions.requestTabs());
   };
 
   const extensionsListener = {
@@ -48,7 +48,7 @@ function debugTargetListenerMiddleware(state) {
   };
 
   const onWorkersUpdated = () => {
-    state.dispatch(Actions.requestWorkers());
+    store.dispatch(Actions.requestWorkers());
   };
 
   return next => action => {
@@ -65,7 +65,7 @@ function debugTargetListenerMiddleware(state) {
         break;
       }
       case DISCONNECT_RUNTIME_START: {
-        const { client } = state.getState().runtime;
+        const { client } = store.getState().runtime;
         client.removeListener("tabListChanged", onTabsUpdated);
         AddonManager.removeAddonListener(extensionsListener);
         client.removeListener("workerListChanged", onWorkersUpdated);
