@@ -179,8 +179,11 @@ nsVideoFrame::GetVideoControls()
     return mVideoControls;
   }
   if (mContent->GetShadowRoot()) {
-    // The video controls <div> is the only child of the UA Widget Shadow Root.
+    // The video controls <div> is the only child of the UA Widget Shadow Root
+    // if it is present. It is only lazily inserted into the DOM when
+    // the controls attribute is set.
     MOZ_ASSERT(mContent->GetShadowRoot()->IsUAWidget());
+    MOZ_ASSERT(1 >= mContent->GetShadowRoot()->GetChildCount());
     return mContent->GetShadowRoot()->GetFirstChild();
   }
   return nullptr;
