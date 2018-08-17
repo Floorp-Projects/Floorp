@@ -12,6 +12,8 @@ ChromeUtils.defineModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment",
+  "resource://gre/modules/TelemetryEnvironment.jsm");
 
 // ASRouterTargeting.isMatch
 add_task(async function should_do_correct_targeting() {
@@ -271,4 +273,21 @@ add_task(async function checkFrecentSites() {
   // Cleanup
   await clearHistoryAndBookmarks();
   TopFrecentSitesCache.expire();
+});
+
+add_task(async function check_browserSettings() {
+  is(await ASRouterTargeting.Environment.browserSettings.attribution, TelemetryEnvironment.currentEnvironment.settings.attribution,
+    "should return correct attribution info");
+
+  is(await JSON.stringify(ASRouterTargeting.Environment.browserSettings.update), JSON.stringify(TelemetryEnvironment.currentEnvironment.settings.update),
+      "should return correct update info");
+});
+
+add_task(async function check_sync() {
+  is(await ASRouterTargeting.Environment.sync.desktopDevices, Services.prefs.getIntPref("services.sync.clients.devices.desktop", 0),
+    "should return correct desktopDevices info");
+  is(await ASRouterTargeting.Environment.sync.mobileDevices, Services.prefs.getIntPref("services.sync.clients.devices.mobile", 0),
+    "should return correct mobileDevices info");
+  is(await ASRouterTargeting.Environment.sync.totalDevices, Services.prefs.getIntPref("services.sync.numClients", 0),
+    "should return correct mobileDevices info");
 });

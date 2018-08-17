@@ -1,5 +1,4 @@
 import React from "react";
-import {safeURI} from "../../template-utils";
 
 const ALLOWED_STYLE_TAGS = ["color", "backgroundColor"];
 
@@ -17,10 +16,9 @@ export const Button = props => {
     style.border = "0";
   }
 
-  return (<a href={safeURI(props.url)}
-    onClick={props.onClick}
+  return (<button onClick={props.onClick}
     className={props.className || "ASRouterButton"}
     style={style}>
     {props.children}
-  </a>);
+  </button>);
 };
