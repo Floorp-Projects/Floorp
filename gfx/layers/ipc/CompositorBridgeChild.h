@@ -372,6 +372,12 @@ private:
   // state below.
   Monitor mPaintLock;
 
+  // Contains the number of asynchronous paints that were queued since the
+  // beginning of the last async transaction, and the time stamp of when
+  // that was
+  size_t mTotalAsyncPaints;
+  TimeStamp mAsyncTransactionBegin;
+
   // Contains the number of outstanding asynchronous paints tied to a
   // PLayerTransaction on this bridge. This is R/W on both the main and paint
   // threads, and must be accessed within the paint lock.
