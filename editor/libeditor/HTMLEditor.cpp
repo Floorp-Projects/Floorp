@@ -97,8 +97,7 @@ IsLinkTag(const nsAtom& aTagName)
 static bool
 IsNamedAnchorTag(const nsAtom& aTagName)
 {
-  return aTagName.Equals(NS_LITERAL_STRING("anchor")) ||
-         aTagName.Equals(NS_LITERAL_STRING("namedanchor"));
+  return aTagName.Equals(NS_LITERAL_STRING("anchor");
 }
 
 template EditorDOMPoint
