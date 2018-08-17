@@ -13,7 +13,6 @@ info: |
         a. If IsCompatiblePropertyDescriptor(extensibleTarget, Desc ,
         targetDesc) is false, throw a TypeError exception.
     ...
-features: [Proxy]
 ---*/
 
 var target = {};

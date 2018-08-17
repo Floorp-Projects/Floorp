@@ -9,7 +9,6 @@ info: |
 
     9. Let trapResult be Call(trap, handler, «target, P, Receiver»).
     10. ReturnIfAbrupt(trapResult).
-features: [Proxy]
 ---*/
 
 var p = new Proxy({}, {

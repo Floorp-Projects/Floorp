@@ -20,7 +20,6 @@ info: |
     13. If extensibleTarget is true, return handlerProto.
     ...
 
-features: [Proxy]
 ---*/
 
 var prot = {

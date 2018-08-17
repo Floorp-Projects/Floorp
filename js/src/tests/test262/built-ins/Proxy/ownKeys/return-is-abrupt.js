@@ -11,7 +11,6 @@ info: |
     7. Let trapResultArray be ? Call(trap, handler, « target »).
     8. Let trapResult be ? CreateListFromArrayLike(trapResultArray, « String, Symbol »).
 
-features: [Proxy]
 ---*/
 
 var p = new Proxy({}, {

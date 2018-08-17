@@ -17,7 +17,6 @@ description: >
         ...
         10. Return P.
 
-features: [Proxy]
 ---*/
 
 var p1 = new Proxy({}, {});

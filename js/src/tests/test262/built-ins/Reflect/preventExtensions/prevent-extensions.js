@@ -14,7 +14,6 @@ info: |
 
   1. Set the value of the [[Extensible]] internal slot of O to false.
   ...
-features: [Reflect]
 ---*/
 
 var o = {};

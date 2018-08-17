@@ -9,7 +9,7 @@ info: |
 
   ...
   2. Return target.[[PreventExtensions]]().
-features: [Proxy, Reflect]
+features: [Proxy]
 ---*/
 
 var o1 = {};

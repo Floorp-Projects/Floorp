@@ -21,11 +21,10 @@ info: |
       ...
       d. If Type(next) is not an element of elementTypes,
           throw a TypeError exception.
-features: [Proxy]
 ---*/
 
 var p = new Proxy({}, {
-  ownKeys: function() {
+  ownKeys() {
     return [{}];
   }
 });

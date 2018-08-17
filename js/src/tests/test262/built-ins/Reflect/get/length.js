@@ -9,7 +9,6 @@ info: |
 
   The length property of the get function is 2.
 includes: [propertyHelper.js]
-features: [Reflect]
 ---*/
 
 assert.sameValue(

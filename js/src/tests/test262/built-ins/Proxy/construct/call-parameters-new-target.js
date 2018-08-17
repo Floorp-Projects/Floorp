@@ -11,7 +11,7 @@ info: |
     [[Construct]] (argumentsList, newTarget)
 
     9. Let newObj be Call(trap, handler, «target, argArray, newTarget»).
-features: [Proxy, Reflect, Reflect.construct]
+features: [Reflect.construct]
 ---*/
 
 function Target() {}

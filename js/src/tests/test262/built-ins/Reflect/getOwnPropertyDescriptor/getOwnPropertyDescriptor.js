@@ -10,7 +10,6 @@ info: |
   17 ECMAScript Standard Built-in Objects
 
 includes: [propertyHelper.js]
-features: [Reflect]
 ---*/
 
 verifyNotEnumerable(Reflect, 'getOwnPropertyDescriptor');

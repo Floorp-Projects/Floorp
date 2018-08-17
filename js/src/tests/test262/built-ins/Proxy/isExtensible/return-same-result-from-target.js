@@ -4,7 +4,6 @@
 es6id: 9.5.3
 description: >
     Return trap result.
-features: [Proxy]
 ---*/
 
 var target = {};

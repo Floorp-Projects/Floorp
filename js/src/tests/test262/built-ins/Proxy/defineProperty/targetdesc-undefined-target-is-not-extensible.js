@@ -12,7 +12,6 @@ info: |
     19. If targetDesc is undefined, then
         a. If extensibleTarget is false, throw a TypeError exception.
     ...
-features: [Proxy]
 ---*/
 
 var target = {};

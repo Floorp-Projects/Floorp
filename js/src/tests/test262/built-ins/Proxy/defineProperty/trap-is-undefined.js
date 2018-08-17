@@ -12,7 +12,6 @@ info: |
         a. Return target.[[DefineOwnProperty]](P, Desc).
     ...
 includes: [propertyHelper.js]
-features: [Proxy]
 ---*/
 
 var target = {};
