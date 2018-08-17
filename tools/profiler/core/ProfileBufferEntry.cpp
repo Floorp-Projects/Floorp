@@ -343,7 +343,6 @@ UniqueStacks::FrameKey::NormalFrameData::operator==(const NormalFrameData& aOthe
 {
   return mLocation == aOther.mLocation &&
          mLine == aOther.mLine &&
-         mColumn == aOther.mColumn &&
          mCategory == aOther.mCategory;
 }
 
@@ -366,9 +365,6 @@ UniqueStacks::FrameKey::Hash() const
     }
     if (data.mLine.isSome()) {
       hash = AddToHash(hash, *data.mLine);
-    }
-    if (data.mColumn.isSome()) {
-      hash = AddToHash(hash, *data.mColumn);
     }
     if (data.mCategory.isSome()) {
       hash = AddToHash(hash, *data.mCategory);
@@ -512,8 +508,7 @@ UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame)
     IMPLEMENTATION = 1,
     OPTIMIZATIONS = 2,
     LINE = 3,
-    COLUMN = 4,
-    CATEGORY = 5
+    CATEGORY = 4
   };
 
   AutoArraySchemaWriter writer(mFrameTableWriter, *mUniqueStrings);
@@ -522,9 +517,6 @@ UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame)
   writer.StringElement(LOCATION, data.mLocation.get());
   if (data.mLine.isSome()) {
     writer.IntElement(LINE, *data.mLine);
-  }
-  if (data.mColumn.isSome()) {
-    writer.IntElement(COLUMN, *data.mColumn);
   }
   if (data.mCategory.isSome()) {
     writer.IntElement(CATEGORY, *data.mCategory);
@@ -634,8 +626,7 @@ StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
     IMPLEMENTATION = 1,
     OPTIMIZATIONS = 2,
     LINE = 3,
-    COLUMN = 4,
-    CATEGORY = 5
+    CATEGORY = 4
   };
 
   AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
@@ -1028,12 +1019,6 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
           e.Next();
         }
 
-        Maybe<unsigned> column;
-        if (e.Has() && e.Get().IsColumnNumber()) {
-          column = Some(unsigned(e.Get().u.mInt));
-          e.Next();
-        }
-
         Maybe<unsigned> category;
         if (e.Has() && e.Get().IsCategory()) {
           category = Some(unsigned(e.Get().u.mInt));
@@ -1041,7 +1026,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
         }
 
         stack = aUniqueStacks.AppendFrame(
-          stack, UniqueStacks::FrameKey(strbuf.get(), line, column, category));
+          stack, UniqueStacks::FrameKey(strbuf.get(), line, category));
 
       } else if (e.Get().IsJitReturnAddr()) {
         numFrames++;
