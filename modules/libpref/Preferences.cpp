@@ -2668,11 +2668,9 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
       return rv;
     }
 
-    nsCOMPtr<nsIRelativeFilePref> relativePref;
-    rv = NS_NewRelativeFilePref(theFile, key, getter_AddRefs(relativePref));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    nsCOMPtr<nsIRelativeFilePref> relativePref = new nsRelativeFilePref();
+    Unused << relativePref->SetFile(theFile);
+    Unused << relativePref->SetRelativeToKey(key);
 
     relativePref.forget(reinterpret_cast<nsIRelativeFilePref**>(aRetVal));
     return NS_OK;
@@ -6085,11 +6083,9 @@ StaticPrefs::InitAll(bool aIsStartup)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Preferences,
                                          Preferences::GetInstanceForService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefLocalizedString, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsRelativeFilePref)
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREFSERVICE_CID);
 static NS_DEFINE_CID(kPrefLocalizedStringCID, NS_PREFLOCALIZEDSTRING_CID);
-static NS_DEFINE_CID(kRelativeFilePrefCID, NS_RELATIVEFILEPREF_CID);
 
 static mozilla::Module::CIDEntry kPrefCIDs[] = {
   { &kPrefServiceCID, true, nullptr, PreferencesConstructor },
@@ -6097,14 +6093,12 @@ static mozilla::Module::CIDEntry kPrefCIDs[] = {
     false,
     nullptr,
     nsPrefLocalizedStringConstructor },
-  { &kRelativeFilePrefCID, false, nullptr, nsRelativeFilePrefConstructor },
   { nullptr }
 };
 
 static mozilla::Module::ContractIDEntry kPrefContracts[] = {
   { NS_PREFSERVICE_CONTRACTID, &kPrefServiceCID },
   { NS_PREFLOCALIZEDSTRING_CONTRACTID, &kPrefLocalizedStringCID },
-  { NS_RELATIVEFILEPREF_CONTRACTID, &kRelativeFilePrefCID },
   { nullptr }
 };
 
