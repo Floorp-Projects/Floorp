@@ -14,7 +14,7 @@ add_task(async function testWrapUnwrap() {
   let wrapper = document.getElementById("wrapper-" + kTestWidget1);
   ok(elem, "There should be an item");
   ok(wrapper, "There should be a wrapper");
-  is(wrapper.firstChild.id, kTestWidget1, "Wrapper should have test widget");
+  is(wrapper.firstElementChild.id, kTestWidget1, "Wrapper should have test widget");
   is(wrapper.parentNode.id, "customization-palette", "Wrapper should be in palette");
   CustomizableUI.destroyWidget(kTestWidget1);
   wrapper = document.getElementById("wrapper-" + kTestWidget1);

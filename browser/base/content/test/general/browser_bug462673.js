@@ -2,11 +2,11 @@ add_task(async function() {
   var win = openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", "chrome,all,dialog=no");
   await SimpleTest.promiseFocus(win);
 
-  let tab = win.gBrowser.tabContainer.firstChild;
+  let tab = win.gBrowser.tabContainer.firstElementChild;
   await promiseTabLoadEvent(tab, getRootDirectory(gTestPath) + "test_bug462673.html");
 
   is(win.gBrowser.browsers.length, 2, "test_bug462673.html has opened a second tab");
-  is(win.gBrowser.selectedTab, tab.nextSibling, "dependent tab is selected");
+  is(win.gBrowser.selectedTab, tab.nextElementSibling, "dependent tab is selected");
   win.gBrowser.removeTab(tab);
 
   // Closing a tab will also close its parent chrome window, but async
@@ -17,7 +17,7 @@ add_task(async function() {
   var win = openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", "chrome,all,dialog=no");
   await SimpleTest.promiseFocus(win);
 
-  let tab = win.gBrowser.tabContainer.firstChild;
+  let tab = win.gBrowser.tabContainer.firstElementChild;
   await promiseTabLoadEvent(tab, getRootDirectory(gTestPath) + "test_bug462673.html");
 
   var newTab = BrowserTestUtils.addTab(win.gBrowser);

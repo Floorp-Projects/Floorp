@@ -14,7 +14,7 @@ var gTests = [
     await expectObserverCalled("getUserMedia:request");
 
     let promiseOK = promiseSpecificMessageReceived("ok", 2);
-    PopupNotifications.panel.firstChild.button.click();
+    PopupNotifications.panel.firstElementChild.button.click();
     await promiseOK;
 
     await promiseNoPopupNotification("webRTC-shareDevices");

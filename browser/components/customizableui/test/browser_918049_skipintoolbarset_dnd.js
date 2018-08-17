@@ -23,11 +23,11 @@ add_task(async function() {
   simulateItemDrag(skippedItem, libraryButton, "start");
   ok(CustomizableUI.inDefaultState, "Should still be in default state");
   let skippedItemWrapper = skippedItem.parentNode;
-  is(skippedItemWrapper.nextSibling && skippedItemWrapper.nextSibling.id,
+  is(skippedItemWrapper.nextElementSibling && skippedItemWrapper.nextElementSibling.id,
      libraryButton.parentNode.id, "Should be next to library button");
   simulateItemDrag(libraryButton, skippedItem, "start");
   let libraryWrapper = libraryButton.parentNode;
-  is(libraryWrapper.nextSibling && libraryWrapper.nextSibling.id,
+  is(libraryWrapper.nextElementSibling && libraryWrapper.nextElementSibling.id,
      skippedItem.parentNode.id, "Should be next to skipintoolbarset item");
   ok(CustomizableUI.inDefaultState, "Should still be in default state");
 });

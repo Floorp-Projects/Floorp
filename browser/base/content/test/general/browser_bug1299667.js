@@ -29,12 +29,12 @@ add_task(async function() {
 
   is(event.target.children.length, 2, "Two history items");
 
-  let node = event.target.firstChild;
+  let node = event.target.firstElementChild;
   is(node.getAttribute("uri"), "http://example.com/2.html", "first item uri");
   is(node.getAttribute("index"), "1", "first item index");
   is(node.getAttribute("historyindex"), "0", "first item historyindex");
 
-  node = event.target.lastChild;
+  node = event.target.lastElementChild;
   is(node.getAttribute("uri"), "http://example.com/", "second item uri");
   is(node.getAttribute("index"), "0", "second item index");
   is(node.getAttribute("historyindex"), "-1", "second item historyindex");

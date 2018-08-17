@@ -19,10 +19,10 @@ var header =
 function getHeaderText() {
   let headerChild = header.selectedPanel;
   while (headerChild.hasChildNodes()) {
-    headerChild = headerChild.firstChild;
+    headerChild = headerChild.firstElementChild;
   }
   let headerStrings = [];
-  for (let label = headerChild; label; label = label.nextSibling) {
+  for (let label = headerChild; label; label = label.nextElementSibling) {
     headerStrings.push(label.value);
   }
   return headerStrings.join("");

@@ -14,7 +14,7 @@ function getOpenSearchItems() {
   let addEngineList =
     document.getAnonymousElementByAttribute(oneOffsContainer, "anonid",
                                             "add-engines");
-  for (let item = addEngineList.firstChild; item; item = item.nextSibling)
+  for (let item = addEngineList.firstElementChild; item; item = item.nextElementSibling)
     os.push(item);
 
   return os;

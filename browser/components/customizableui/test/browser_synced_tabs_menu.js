@@ -259,52 +259,52 @@ add_task(async function() {
   // The UI should be showing tabs!
   is(deck.selectedIndex, DECKINDEX_TABS, "no-clients deck entry is visible");
   let tabList = document.getElementById("PanelUI-remotetabs-tabslist");
-  let node = tabList.firstChild;
+  let node = tabList.firstElementChild;
   // First entry should be the client with the most-recent tab.
   is(node.getAttribute("itemtype"), "client", "node is a client entry");
   is(node.textContent, "My Desktop", "correct client");
   // Next entry is the most-recent tab
-  node = node.nextSibling;
+  node = node.nextElementSibling;
   is(node.getAttribute("itemtype"), "tab", "node is a tab");
   is(node.getAttribute("label"), "http://example.com/10");
 
   // Next entry is the next-most-recent tab
-  node = node.nextSibling;
+  node = node.nextElementSibling;
   is(node.getAttribute("itemtype"), "tab", "node is a tab");
   is(node.getAttribute("label"), "http://example.com/5");
 
   // Next entry is the least-recent tab from the first client.
-  node = node.nextSibling;
+  node = node.nextElementSibling;
   is(node.getAttribute("itemtype"), "tab", "node is a tab");
   is(node.getAttribute("label"), "http://example.com/1");
 
   // Next is a menuseparator between the clients.
-  node = node.nextSibling;
+  node = node.nextElementSibling;
   is(node.nodeName, "menuseparator");
 
   // Next is the client with 1 tab.
-  node = node.nextSibling;
+  node = node.nextElementSibling;
   is(node.getAttribute("itemtype"), "client", "node is a client entry");
   is(node.textContent, "My Other Desktop", "correct client");
   // Its single tab
-  node = node.nextSibling;
+  node = node.nextElementSibling;
   is(node.getAttribute("itemtype"), "tab", "node is a tab");
   is(node.getAttribute("label"), "http://example.com/6");
 
   // Next is a menuseparator between the clients.
-  node = node.nextSibling;
+  node = node.nextElementSibling;
   is(node.nodeName, "menuseparator");
 
   // Next is the client with no tab.
-  node = node.nextSibling;
+  node = node.nextElementSibling;
   is(node.getAttribute("itemtype"), "client", "node is a client entry");
   is(node.textContent, "My Phone", "correct client");
   // There is a single node saying there's no tabs for the client.
-  node = node.nextSibling;
+  node = node.nextElementSibling;
   is(node.nodeName, "label", "node is a label");
   is(node.getAttribute("itemtype"), "", "node is neither a tab nor a client");
 
-  node = node.nextSibling;
+  node = node.nextElementSibling;
   is(node, null, "no more entries");
 
   let didSync = false;
@@ -366,22 +366,22 @@ add_task(async function() {
 
   function checkTabsPage(tabsShownCount, showMoreLabel) {
     let tabList = document.getElementById("PanelUI-remotetabs-tabslist");
-    let node = tabList.firstChild;
+    let node = tabList.firstElementChild;
     is(node.getAttribute("itemtype"), "client", "node is a client entry");
     is(node.textContent, "My Desktop", "correct client");
     for (let i = 0; i < tabsShownCount; i++) {
-      node = node.nextSibling;
+      node = node.nextElementSibling;
       is(node.getAttribute("itemtype"), "tab", "node is a tab");
       is(node.getAttribute("label"), "Tab #" + (i + 1), "the tab is the correct one");
       is(node.getAttribute("targetURI"), SAMPLE_TAB_URL, "url is the correct one");
     }
     let showMoreButton;
     if (showMoreLabel) {
-      node = showMoreButton = node.nextSibling;
+      node = showMoreButton = node.nextElementSibling;
       is(node.getAttribute("itemtype"), "showmorebutton", "node is a show more button");
       is(node.getAttribute("label"), showMoreLabel);
     }
-    node = node.nextSibling;
+    node = node.nextElementSibling;
     is(node, null, "no more entries");
 
     return showMoreButton;
@@ -389,7 +389,7 @@ add_task(async function() {
 
   async function checkCanOpenURL() {
     let tabList = document.getElementById("PanelUI-remotetabs-tabslist");
-    let node = tabList.firstChild.nextSibling;
+    let node = tabList.firstElementChild.nextElementSibling;
     let promiseTabOpened = BrowserTestUtils.waitForLocationChange(gBrowser, SAMPLE_TAB_URL);
     node.click();
     await promiseTabOpened;

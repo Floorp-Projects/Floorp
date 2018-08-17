@@ -5,7 +5,7 @@
 // and contextmenu's "Open in a new tab" click.
 
 async function locateBookmarkAndTestCtrlClick(menupopup) {
-  let testMenuitem = [...menupopup.childNodes].find(node => node.label == "Test1");
+  let testMenuitem = [...menupopup.children].find(node => node.label == "Test1");
   ok(testMenuitem, "Found test bookmark.");
   let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, null);
   EventUtils.synthesizeMouseAtCenter(testMenuitem, {accelKey: true});
@@ -188,15 +188,15 @@ add_task(async function testStayopenBookmarksClicks() {
 
   // Test Bookmarks Toolbar stayopen clicks - Ctrl-click.
   let BT = document.getElementById("PlacesToolbarItems");
-  let toolbarbutton = BT.firstChild;
+  let toolbarbutton = BT.firstElementChild;
   ok(toolbarbutton, "Folder should be first item on Bookmarks Toolbar.");
-  let buttonMenupopup = toolbarbutton.firstChild;
+  let buttonMenupopup = toolbarbutton.firstElementChild;
   ok(buttonMenupopup.tagName == "menupopup", "Found toolbar button's menupopup.");
   promiseEvent = BrowserTestUtils.waitForEvent(buttonMenupopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(toolbarbutton, {});
   await promiseEvent;
   ok(true, "Bookmarks toolbar folder's popup is open.");
-  menuitem = buttonMenupopup.firstChild.nextSibling;
+  menuitem = buttonMenupopup.firstElementChild.nextElementSibling;
   promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, null);
   EventUtils.synthesizeMouseAtCenter(menuitem, {ctrlKey: true});
   newTab = await promiseTabOpened;

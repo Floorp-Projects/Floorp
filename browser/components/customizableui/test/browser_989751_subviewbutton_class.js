@@ -36,7 +36,7 @@ function checkSubviewButtonClass(menuId, buttonId, subviewId) {
 
     await BrowserTestUtils.waitForEvent(PanelUI.overflowPanel, "ViewShown");
     let subview = document.getElementById(subviewId);
-    ok(subview.firstChild, "Subview should have a kid");
+    ok(subview.firstElementChild, "Subview should have a kid");
     let subviewchildren = subview.querySelectorAll("toolbarbutton");
     for (let i = 0; i < subviewchildren.length; i++) {
       let item = subviewchildren[i];

@@ -57,7 +57,7 @@ add_task(async function testTempPermissionSubframes() {
 
     let popuphidden = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
 
-    let notification = PopupNotifications.panel.firstChild;
+    let notification = PopupNotifications.panel.firstElementChild;
     EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
 
     await popuphidden;

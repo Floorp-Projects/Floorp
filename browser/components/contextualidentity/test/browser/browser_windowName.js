@@ -52,8 +52,8 @@ add_task(async function test() {
   is(browser2.contentPrincipal.userContextId, 2, "Tab2 UCI must be 2");
 
   let found = false;
-  for (let i = 0; i < gBrowser.tabContainer.childNodes.length; ++i) {
-    let tab = gBrowser.tabContainer.childNodes[i];
+  for (let i = 0; i < gBrowser.tabContainer.children.length; ++i) {
+    let tab = gBrowser.tabContainer.children[i];
     let browser = gBrowser.getBrowserForTab(tab);
     if (browser.contentTitle == "?new") {
       is(browser.contentPrincipal.userContextId, 1, "Tab3 UCI must be 1");

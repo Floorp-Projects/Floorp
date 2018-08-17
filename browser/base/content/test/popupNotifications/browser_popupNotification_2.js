@@ -205,7 +205,7 @@ var tests = [
     },
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      let notification = popup.childNodes[0];
+      let notification = popup.children[0];
       EventUtils.synthesizeMouseAtCenter(notification.closebutton, {});
     },
     onHidden(popup) {
@@ -225,7 +225,7 @@ var tests = [
     },
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      let notification = popup.childNodes[0];
+      let notification = popup.children[0];
       EventUtils.synthesizeMouseAtCenter(notification.closebutton, {});
     },
     onHidden(popup) {
