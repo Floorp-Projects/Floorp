@@ -2,10 +2,12 @@
 
 const CB_PREF = "browser.contentblocking.enabled";
 const CB_UI_PREF = "browser.contentblocking.ui.enabled";
+const CB_RT_UI_PREF = "browser.contentblocking.rejecttrackers.ui.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PBM_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TP_LIST_PREF = "urlclassifier.trackingTable";
 const FB_PREF = "browser.fastblock.enabled";
+const NCB_PREF = "network.cookie.cookieBehavior";
 
 // Checks that the content blocking toggle follows and changes the CB pref.
 add_task(async function testContentBlockingToggle() {
@@ -62,6 +64,7 @@ add_task(async function testContentBlockingRestoreDefaults() {
     TP_LIST_PREF,
     TP_PREF,
     TP_PBM_PREF,
+    NCB_PREF,
   ];
 
   Services.prefs.setBoolPref(CB_PREF, false);
@@ -69,6 +72,7 @@ add_task(async function testContentBlockingRestoreDefaults() {
   Services.prefs.setStringPref(TP_LIST_PREF, "test-track-simple,base-track-digest256,content-track-digest256");
   Services.prefs.setBoolPref(TP_PREF, true);
   Services.prefs.setBoolPref(TP_PBM_PREF, false);
+  Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
 
   for (let pref of prefs) {
     ok(Services.prefs.prefHasUserValue(pref), `modified the pref ${pref}`);
@@ -116,11 +120,13 @@ add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlle
     CB_PREF,
     FB_PREF,
     TP_LIST_PREF,
+    NCB_PREF,
   ];
 
   Services.prefs.setBoolPref(CB_PREF, false);
   Services.prefs.setBoolPref(FB_PREF, true);
   Services.prefs.setStringPref(TP_LIST_PREF, "test-track-simple,base-track-digest256,content-track-digest256");
+  Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
 
   for (let pref of resettable) {
     ok(Services.prefs.prefHasUserValue(pref), `modified the pref ${pref}`);
@@ -151,6 +157,7 @@ add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlle
 add_task(async function testContentBlockingDependentControls() {
   SpecialPowers.pushPrefEnv({set: [
     [CB_UI_PREF, true],
+    [CB_RT_UI_PREF, true],
   ]});
 
   let dependentControls = [
@@ -159,6 +166,8 @@ add_task(async function testContentBlockingDependentControls() {
     ".content-blocking-category-menu",
     ".content-blocking-category-name",
     "#changeBlockListLink",
+    "#contentBlockingChangeCookieSettings",
+    "#blockCookiesCB, #blockCookiesCB > radio",
   ];
 
   function checkControlState(doc) {
