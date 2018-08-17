@@ -74,8 +74,10 @@ public class GeckoServiceChildProcess extends Service {
                 sProcessManager = procMan;
             }
 
-            final int prefsFd = prefsPfd.detachFd();
-            final int prefMapFd = prefMapPfd.detachFd();
+            final int prefsFd = prefsPfd != null ?
+                                prefsPfd.detachFd() : -1;
+            final int prefMapFd = prefMapPfd != null ?
+                                  prefMapPfd.detachFd() : -1;
             final int ipcFd = ipcPfd.detachFd();
             final int crashReporterFd = crashReporterPfd != null ?
                                         crashReporterPfd.detachFd() : -1;
