@@ -7,7 +7,7 @@ brotlipy==0.6.0
 certifi==2017.4.17
 click==6.7
 construct==2.8.12
-cryptography==1.8.2
+cryptography==2.1.4
 cssutils==1.0.2
 EditorConfig==0.12.1
 h2==2.6.2
