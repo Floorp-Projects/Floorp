@@ -10,7 +10,7 @@ add_task(async function test_sanitization_invalid() {
         "colors": {
           "accentcolor": ACCENT_COLOR,
           "textcolor": TEXT_COLOR,
-          "toolbar_bottom_separator": "ntimsfavoriteblue",
+          "toolbar_text": "ntimsfavoriteblue",
         },
       },
     },
@@ -22,9 +22,9 @@ add_task(async function test_sanitization_invalid() {
   await extension.startup();
   await transitionPromise;
 
-  let toolbox = document.querySelector("#navigator-toolbox");
+  let navbar = document.querySelector("#nav-bar");
   Assert.equal(
-    window.getComputedStyle(toolbox, "::after").borderBottomColor,
+    window.getComputedStyle(navbar).color,
     "rgb(0, 0, 0)",
     "All invalid values should always compute to black."
   );
@@ -40,7 +40,7 @@ add_task(async function test_sanitization_css_variables() {
         "colors": {
           "accentcolor": ACCENT_COLOR,
           "textcolor": TEXT_COLOR,
-          "toolbar_bottom_separator": "var(--arrowpanel-dimmed)",
+          "toolbar_text": "var(--arrowpanel-dimmed)",
         },
       },
     },
@@ -52,9 +52,9 @@ add_task(async function test_sanitization_css_variables() {
   await extension.startup();
   await transitionPromise;
 
-  let toolbox = document.querySelector("#navigator-toolbox");
+  let navbar = document.querySelector("#nav-bar");
   Assert.equal(
-    window.getComputedStyle(toolbox, "::after").borderBottomColor,
+    window.getComputedStyle(navbar).color,
     "rgb(0, 0, 0)",
     "All CSS variables should always compute to black."
   );
@@ -71,7 +71,6 @@ add_task(async function test_sanitization_transparent() {
           "accentcolor": ACCENT_COLOR,
           "textcolor": TEXT_COLOR,
           "toolbar_top_separator": "transparent",
-          "toolbar_bottom_separator": "transparent",
         },
       },
     },
@@ -87,13 +86,6 @@ add_task(async function test_sanitization_transparent() {
   Assert.ok(
     window.getComputedStyle(navbar).boxShadow.includes("rgba(0, 0, 0, 0)"),
     "Top separator should be transparent"
-  );
-
-  let toolbox = document.querySelector("#navigator-toolbox");
-  Assert.equal(
-    window.getComputedStyle(toolbox, "::after").borderBottomColor,
-    "rgba(0, 0, 0, 0)",
-    "Bottom separator should be transparent"
   );
 
   await extension.unload();
