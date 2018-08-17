@@ -84,7 +84,7 @@ function getExtensionFilePath(extension) {
 function toExtensionComponentData(extensions) {
   return extensions.map(extension => {
     const type = DEBUG_TARGETS.EXTENSION;
-    const { actor, iconURL, id, manifestURL, name, temporarilyInstalled } = extension;
+    const { actor, iconURL, id, manifestURL, name } = extension;
     const icon = iconURL || "chrome://mozapps/skin/extensions/extensionGeneric.svg";
     const location = getExtensionFilePath(extension);
     const uuid = manifestURL ? /moz-extension:\/\/([^/]*)/.exec(manifestURL)[1] : null;
@@ -97,7 +97,6 @@ function toExtensionComponentData(extensions) {
         actor,
         location,
         manifestURL,
-        temporarilyInstalled,
         uuid,
       },
     };

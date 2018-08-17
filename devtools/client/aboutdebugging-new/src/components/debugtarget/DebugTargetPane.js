@@ -16,6 +16,8 @@ const DebugTargetList = createFactory(require("./DebugTargetList"));
 class DebugTargetPane extends PureComponent {
   static get propTypes() {
     return {
+      actionComponent: PropTypes.any.isRequired,
+      detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
       name: PropTypes.string.isRequired,
       targets: PropTypes.arrayOf(PropTypes.Object).isRequired,
@@ -23,12 +25,12 @@ class DebugTargetPane extends PureComponent {
   }
 
   render() {
-    const { dispatch, name, targets } = this.props;
+    const { actionComponent, detailComponent, dispatch, name, targets } = this.props;
 
     return dom.section(
       {},
       dom.h2({}, name),
-      DebugTargetList({ dispatch, targets }),
+      DebugTargetList({ actionComponent, detailComponent, dispatch, targets }),
     );
   }
 }
