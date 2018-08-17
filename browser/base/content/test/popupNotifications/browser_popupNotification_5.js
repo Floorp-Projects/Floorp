@@ -166,7 +166,7 @@ var tests = [
   // runNextTest that expects a single onShown/onHidden invocation per test.
   { id: "Test#6b",
     run() {
-      let id = PopupNotifications.panel.firstChild.getAttribute("popupid");
+      let id = PopupNotifications.panel.firstElementChild.getAttribute("popupid");
       ok(id.endsWith("Test#6a"), "Should have found the notification from Test6a");
       ok(PopupNotifications.isPanelOpen, "Should have shown the popup again after getting back to the tab");
       gNotification.remove();
@@ -203,13 +203,13 @@ var tests = [
 
       let anchor = win.document.getElementById("default-notification-icon");
       win.PopupNotifications._reshowNotifications(anchor);
-      ok(win.PopupNotifications.panel.childNodes.length == 0,
+      ok(win.PopupNotifications.panel.children.length == 0,
          "no notification displayed in new window");
 
       await BrowserTestUtils.closeWindow(win);
       await waitForWindowReadyForPopupNotifications(window);
 
-      let id = PopupNotifications.panel.firstChild.getAttribute("popupid");
+      let id = PopupNotifications.panel.firstElementChild.getAttribute("popupid");
       ok(id.endsWith("Test#7"), "Should have found the notification from Test7");
       ok(PopupNotifications.isPanelOpen,
          "Should have kept the popup on the first window");
@@ -277,7 +277,7 @@ var tests = [
       PopupNotifications._update();
     },
     onShown(popup) {
-      let notifications = popup.childNodes;
+      let notifications = popup.children;
       is(notifications.length, 2, "two notifications displayed");
       let [notification1, notification2] = notifications;
       is(notification1.id, this.notifyObj1.id + "-notification", "id 1 matches");
@@ -317,12 +317,12 @@ var tests = [
       PopupNotifications._update();
     },
     onShown(popup) {
-      let notifications = popup.childNodes;
+      let notifications = popup.children;
       is(notifications.length, 3, "three notifications displayed");
       EventUtils.synthesizeMouseAtCenter(notifications[1].closebutton, {});
     },
     onHidden(popup) {
-      let notifications = popup.childNodes;
+      let notifications = popup.children;
       is(notifications.length, 2, "two notifications displayed");
 
       ok(this.notification1.options.persistent, "notification 1 is persistent");
@@ -368,7 +368,7 @@ var tests = [
       // (because it's the first focusable element), but not
       // call event callbacks on the notification object.
       clickAnchor(notifyObj1);
-      is(document.activeElement, popup.childNodes[0].closebutton);
+      is(document.activeElement, popup.children[0].closebutton);
       ok(!notifyObj1.dismissalCallbackTriggered,
          "Should not have dismissed the notification");
       ok(!notifyObj1.shownCallbackTriggered,

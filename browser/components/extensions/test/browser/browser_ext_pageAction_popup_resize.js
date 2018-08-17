@@ -52,7 +52,7 @@ add_task(async function testPageActionPopupResize() {
   }
 
   function setSize(size) {
-    let elem = content.document.body.firstChild;
+    let elem = content.document.body.firstElementChild;
     elem.style.height = `${size}px`;
     elem.style.width = `${size}px`;
   }

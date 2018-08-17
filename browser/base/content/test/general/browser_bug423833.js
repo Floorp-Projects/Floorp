@@ -29,7 +29,7 @@ function test1Setup() {
   gBrowser.selectedBrowser.removeEventListener("load", test1Setup, true);
 
   var badFrame = content.frames[1];
-  document.popupNode = badFrame.document.firstChild;
+  document.popupNode = badFrame.document.firstElementChild;
 
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   var contextMenu = new nsContextMenu(contentAreaContextMenu);
@@ -66,7 +66,7 @@ function test2Setup() {
   // Now let's do the whole thing again, but this time for "Open frame in new tab"
   var badFrame = content.frames[1];
 
-  document.popupNode = badFrame.document.firstChild;
+  document.popupNode = badFrame.document.firstElementChild;
 
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   var contextMenu = new nsContextMenu(contentAreaContextMenu);
@@ -102,7 +102,7 @@ function testOpenFrameInTab() {
 function test3Setup() {
   // One more time, for "Open frame in new window"
   var badFrame = content.frames[1];
-  document.popupNode = badFrame.document.firstChild;
+  document.popupNode = badFrame.document.firstElementChild;
 
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   var contextMenu = new nsContextMenu(contentAreaContextMenu);

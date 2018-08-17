@@ -47,7 +47,7 @@ add_task(async function() {
           img.height = 100;
           img.width = 100;
           img.setAttribute("src", arg.writeDomainURL);
-          doc.body.insertBefore(img, doc.body.firstChild);
+          doc.body.insertBefore(img, doc.body.firstElementChild);
 
           return "context-viewimage";
         });
@@ -68,7 +68,7 @@ add_task(async function() {
           let doc = content.document;
           let iframe = doc.createElement("iframe");
           iframe.setAttribute("src", arg.writeDomainURL);
-          doc.body.insertBefore(iframe, doc.body.firstChild);
+          doc.body.insertBefore(iframe, doc.body.firstElementChild);
 
           // Wait for the iframe to load.
           return new Promise(resolve => {

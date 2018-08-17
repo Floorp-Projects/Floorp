@@ -88,7 +88,7 @@ add_task(async function shift_accel_left_click_test() {
   is(gBrowser.selectedTab, tab, "Focus did not change to the new tab");
 
   // Select the new background tab
-  gBrowser.selectedTab = gBrowser.selectedTab.nextSibling;
+  gBrowser.selectedTab = gBrowser.selectedTab.nextElementSibling;
   is(gURLBar.value, TEST_VALUE, "New URL is loaded in new tab");
 
   // Cleanup.

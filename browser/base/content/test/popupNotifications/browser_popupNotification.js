@@ -189,12 +189,12 @@ var tests = [
       showNotification(this.testNotif2);
     },
     onShown(popup) {
-      is(popup.childNodes.length, 2, "two notifications are shown");
+      is(popup.children.length, 2, "two notifications are shown");
       // Trigger the main command for the first notification, and the secondary
       // for the second. Need to do mainCommand first since the secondaryCommand
       // triggering is async.
       triggerMainCommand(popup);
-      is(popup.childNodes.length, 1, "only one notification left");
+      is(popup.children.length, 1, "only one notification left");
       triggerSecondaryCommand(popup, 0);
     },
     onHidden(popup) {
@@ -217,7 +217,7 @@ var tests = [
       this.notification = showNotification(this.notifyObj);
     },
     onShown(popup) {
-      let notification = popup.childNodes[0];
+      let notification = popup.children[0];
       is(notification.getAttribute("buttonhighlight"), "true", "default action is highlighted");
       triggerMainCommand(popup);
     },
@@ -237,7 +237,7 @@ var tests = [
       this.notification = showNotification(this.notifyObj);
     },
     onShown(popup) {
-      let notification = popup.childNodes[0];
+      let notification = popup.children[0];
       is(notification.getAttribute("secondarybuttonhidden"), "true", "secondary button is hidden");
       is(notification.getAttribute("buttonhighlight"), "true", "default action is highlighted");
       triggerMainCommand(popup);

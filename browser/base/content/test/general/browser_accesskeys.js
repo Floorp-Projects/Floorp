@@ -113,7 +113,7 @@ add_task(async function() {
 
 function childHandleFocus() {
   var sent = false;
-  content.document.body.firstChild.addEventListener("focus", function focused(event) {
+  content.document.body.firstElementChild.addEventListener("focus", function focused(event) {
     sent = true;
     let focusedElement = content.document.activeElement;
     focusedElement.blur();

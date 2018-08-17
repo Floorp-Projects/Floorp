@@ -27,9 +27,9 @@ function startNewTabTestCase(aTestNumber) {
     let menupopup = menu.menupopup;
     menu.addEventListener("popupshown", function() {
       is(menupopup.nodeType, Node.ELEMENT_NODE, "We have a menupopup.");
-      ok(menupopup.firstChild, "We have a first container entry.");
+      ok(menupopup.firstElementChild, "We have a first container entry.");
 
-      let firstContext = menupopup.firstChild;
+      let firstContext = menupopup.firstElementChild;
       is(firstContext.nodeType, Node.ELEMENT_NODE, "We have a first container entry.");
       ok(firstContext.hasAttribute("data-usercontextid"), "We have a usercontextid value.");
 

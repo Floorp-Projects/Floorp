@@ -80,7 +80,7 @@ function extractCanvasData(grantPermission) {
 }
 
 function triggerCommand(button) {
-  let notifications = PopupNotifications.panel.childNodes;
+  let notifications = PopupNotifications.panel.children;
   let notification = notifications[0];
   EventUtils.synthesizeMouseAtCenter(notification[button], {});
 }

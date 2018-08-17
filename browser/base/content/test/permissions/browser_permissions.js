@@ -21,7 +21,7 @@ function closeIdentityPopup() {
 add_task(async function testMainViewVisible() {
   await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function() {
     let permissionsList = document.getElementById("identity-popup-permission-list");
-    let emptyLabel = permissionsList.nextSibling.nextSibling;
+    let emptyLabel = permissionsList.nextElementSibling.nextElementSibling;
 
     await openIdentityPopup();
 
@@ -87,7 +87,7 @@ add_task(async function testIdentityIcon() {
 add_task(async function testCancelPermission() {
   await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function() {
     let permissionsList = document.getElementById("identity-popup-permission-list");
-    let emptyLabel = permissionsList.nextSibling.nextSibling;
+    let emptyLabel = permissionsList.nextElementSibling.nextElementSibling;
 
     SitePermissions.set(gBrowser.currentURI, "geo", SitePermissions.ALLOW);
     SitePermissions.set(gBrowser.currentURI, "camera", SitePermissions.BLOCK);

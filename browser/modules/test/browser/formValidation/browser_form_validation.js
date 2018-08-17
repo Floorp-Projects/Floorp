@@ -147,7 +147,7 @@ add_task(async function() {
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
 
   gBrowser.removeCurrentTab();
 });
@@ -166,7 +166,7 @@ add_task(async function() {
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
 
   gBrowser.removeCurrentTab();
 });
@@ -185,7 +185,7 @@ add_task(async function() {
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
   EventUtils.sendString("a");
@@ -208,7 +208,7 @@ add_task(async function() {
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
 
   await new Promise((resolve, reject) => {
     EventUtils.sendString("a");
@@ -235,7 +235,7 @@ add_task(async function() {
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
   await blurChildElement(browser);
@@ -257,7 +257,7 @@ add_task(async function() {
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
   EventUtils.synthesizeKey("KEY_Tab");
@@ -279,7 +279,7 @@ add_task(async function() {
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser1, gInvalidFormPopup.firstChild.textContent);
+  await checkChildFocus(browser1, gInvalidFormPopup.firstElementChild.textContent);
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
 
@@ -304,7 +304,7 @@ add_task(async function() {
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
   await BrowserTestUtils.loadURI(browser, "data:text/html,<div>hello!</div>");
@@ -368,9 +368,9 @@ add_task(async function() {
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
 
-  is(gInvalidFormPopup.firstChild.textContent, "foo",
+  is(gInvalidFormPopup.firstElementChild.textContent, "foo",
      "The panel should show the author defined error message");
 
   gBrowser.removeCurrentTab();
@@ -389,7 +389,7 @@ add_task(async function() {
   await popupShownPromise;
 
   checkPopupShow();
-  await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+  await checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
 
   let inputPromise = BrowserTestUtils.waitForEvent(gBrowser.contentDocument.getElementById("i"), "input");
   EventUtils.sendString("f");
@@ -400,7 +400,7 @@ add_task(async function() {
   await new Promise((resolve, reject) => {
     // XXXndeakin This isn't really going to work when the content is another process
     executeSoon(function() {
-      checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+      checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
       resolve();
     });
   });

@@ -57,8 +57,8 @@ add_task(async function shareURL() {
     let body = document.getElementById(view.id + "-body");
 
     // We should see 1 receiver and one extra node for the "More..." button
-    Assert.equal(body.childNodes.length, 2, "Has correct share receivers");
-    let shareButton = body.childNodes[0];
+    Assert.equal(body.children.length, 2, "Has correct share receivers");
+    let shareButton = body.children[0];
     Assert.equal(shareButton.label, mockShareData[0].menuItemTitle);
     let hiddenPromise = promisePageActionPanelHidden();
     // Click on share, panel should hide and sharingService should be
@@ -111,7 +111,7 @@ add_task(async function shareURLAddressBar() {
     // Ensure we have share providers
     let panel = document.getElementById("pageAction-urlbar-shareURL-subview-body");
     // We should see 1 receiver and one extra node for the "More..." button
-    Assert.equal(panel.childNodes.length, 2, "Has correct share receivers");
+    Assert.equal(panel.children.length, 2, "Has correct share receivers");
 
     // Remove the Share URL button from the Address bar so we dont interfere
     // with future tests
@@ -144,8 +144,8 @@ add_task(async function openSharingPreferences() {
     let body = document.getElementById(view.id + "-body");
 
     // We should see 1 receiver and one extra node for the "More..." button
-    Assert.equal(body.childNodes.length, 2, "Has correct share receivers");
-    let moreButton = body.childNodes[1];
+    Assert.equal(body.children.length, 2, "Has correct share receivers");
+    let moreButton = body.children[1];
     let hiddenPromise = promisePageActionPanelHidden();
     // Click on the "more" button,  panel should hide and we should call
     // the sharingService function to open preferences

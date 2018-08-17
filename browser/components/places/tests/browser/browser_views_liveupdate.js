@@ -268,7 +268,7 @@ function getNodeForToolbarItem(itemGuid, validator) {
   var placesToolbarItems = document.getElementById("PlacesToolbarItems");
 
   function findNode(aContainer) {
-    var children = aContainer.childNodes;
+    var children = aContainer.children;
     for (var i = 0, staticNodes = 0; i < children.length; i++) {
       var child = children[i];
 
@@ -286,7 +286,7 @@ function getNodeForToolbarItem(itemGuid, validator) {
       // Don't search in queries, they could contain our item in a
       // different position.  Search only folders
       if (PlacesUtils.nodeIsFolder(child._placesNode)) {
-        var popup = child.lastChild;
+        var popup = child.lastElementChild;
         popup.openPopup();
         var foundNode = findNode(popup);
         popup.hidePopup();
@@ -311,7 +311,7 @@ function getNodeForMenuItem(itemGuid, validator) {
   var menu = document.getElementById("bookmarksMenu");
 
   function findNode(aContainer) {
-    var children = aContainer.childNodes;
+    var children = aContainer.children;
     for (var i = 0, staticNodes = 0; i < children.length; i++) {
       var child = children[i];
 
@@ -329,7 +329,7 @@ function getNodeForMenuItem(itemGuid, validator) {
       // Don't search in queries, they could contain our item in a
       // different position.  Search only folders
       if (PlacesUtils.nodeIsFolder(child._placesNode)) {
-        var popup = child.lastChild;
+        var popup = child.lastElementChild;
         fakeOpenPopup(popup);
         var foundNode = findNode(popup);
 
@@ -341,7 +341,7 @@ function getNodeForMenuItem(itemGuid, validator) {
     return [null, null, false];
   }
 
-  return findNode(menu.lastChild);
+  return findNode(menu.lastElementChild);
 }
 
 /**

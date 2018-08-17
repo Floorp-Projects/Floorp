@@ -36,17 +36,17 @@ add_task(async function() {
   let header = document.getElementById("customization-lwtheme-menu-header");
   let recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
 
-  is(header.nextSibling.nextSibling.nextSibling.nextSibling, recommendedHeader,
+  is(header.nextElementSibling.nextElementSibling.nextElementSibling.nextElementSibling, recommendedHeader,
      "There should only be three themes (default, light, dark) in the 'My Themes' section by default");
-  is(header.nextSibling.theme.id, DEFAULT_THEME_ID,
+  is(header.nextElementSibling.theme.id, DEFAULT_THEME_ID,
      "The first theme should be the default theme");
-  is(header.nextSibling.nextSibling.theme.id, LIGHT_THEME_ID,
+  is(header.nextElementSibling.nextElementSibling.theme.id, LIGHT_THEME_ID,
      "The second theme should be the light theme");
-  is(header.nextSibling.nextSibling.nextSibling.theme.id, DARK_THEME_ID,
+  is(header.nextElementSibling.nextElementSibling.nextElementSibling.theme.id, DARK_THEME_ID,
      "The third theme should be the dark theme");
 
   let themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
-  header.nextSibling.nextSibling.doCommand(); // Select light theme
+  header.nextElementSibling.nextElementSibling.doCommand(); // Select light theme
   info("Clicked on light theme");
   await themeChangedPromise;
 
@@ -61,7 +61,7 @@ add_task(async function() {
     is(activeThemes[0].theme.id, LIGHT_THEME_ID, "Light theme should be selected");
   }
 
-  let firstLWTheme = recommendedHeader.nextSibling;
+  let firstLWTheme = recommendedHeader.nextElementSibling;
   let firstLWThemeId = firstLWTheme.theme.id;
   themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
   firstLWTheme.doCommand();
@@ -79,21 +79,21 @@ add_task(async function() {
     is(activeThemes[0].theme.id, firstLWThemeId, "First theme should be selected");
   }
 
-  is(header.nextSibling.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
-  let installedThemeId = header.nextSibling.nextSibling.nextSibling.nextSibling.theme.id;
+  is(header.nextElementSibling.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
+  let installedThemeId = header.nextElementSibling.nextElementSibling.nextElementSibling.nextElementSibling.theme.id;
   ok(installedThemeId.startsWith(firstLWThemeId),
      "The second theme in the 'My Themes' section should be the newly installed theme: " +
      "Installed theme id: " + installedThemeId + "; First theme ID: " + firstLWThemeId);
   let themeCount = 0;
   let iterNode = header;
-  while (iterNode.nextSibling && iterNode.nextSibling.theme) {
+  while (iterNode.nextElementSibling && iterNode.nextElementSibling.theme) {
     themeCount++;
-    iterNode = iterNode.nextSibling;
+    iterNode = iterNode.nextElementSibling;
   }
   is(themeCount, 4,
      "There should be four themes in the 'My Themes' section");
 
-  let defaultTheme = header.nextSibling;
+  let defaultTheme = header.nextElementSibling;
   defaultTheme.doCommand();
   await new Promise(SimpleTest.executeSoon);
   is(Services.prefs.getCharPref("lightweightThemes.selectedThemeID"),
@@ -105,7 +105,7 @@ add_task(async function() {
   info("Clicked on themes button a fourth time");
   await popupShownPromise;
 
-  firstLWTheme = recommendedHeader.nextSibling;
+  firstLWTheme = recommendedHeader.nextElementSibling;
   themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
   firstLWTheme.doCommand();
   info("Clicked on first theme again");
@@ -126,23 +126,23 @@ add_task(async function() {
   await popupShownPromise;
   header = document.getElementById("customization-lwtheme-menu-header");
   is(header.hidden, false, "Header should never be hidden");
-  let themeNode = header.nextSibling;
+  let themeNode = header.nextElementSibling;
   is(themeNode.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
   is(themeNode.hidden, false, "The default theme should never be hidden");
 
-  themeNode = themeNode.nextSibling;
+  themeNode = themeNode.nextElementSibling;
   is(themeNode.theme.id, LIGHT_THEME_ID, "The second theme should be the Light theme");
   is(themeNode.hidden, false, "The light theme should never be hidden");
 
-  themeNode = themeNode.nextSibling;
+  themeNode = themeNode.nextElementSibling;
   is(themeNode.theme.id, DARK_THEME_ID, "The third theme should be the Dark theme");
   is(themeNode.hidden, false, "The dark theme should never be hidden");
 
   recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
-  is(themeNode.nextSibling, recommendedHeader,
+  is(themeNode.nextElementSibling, recommendedHeader,
      "There should only be three themes (default, light, dark) in the 'My Themes' section now");
   let footer = document.getElementById("customization-lwtheme-menu-footer");
-  is(recommendedHeader.nextSibling.id, footer.id, "There should be no recommended themes in the menu");
+  is(recommendedHeader.nextElementSibling.id, footer.id, "There should be no recommended themes in the menu");
   is(recommendedHeader.hidden, true, "The recommendedHeader should be hidden since there are no recommended themes");
 });
 

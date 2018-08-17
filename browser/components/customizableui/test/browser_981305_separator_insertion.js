@@ -8,7 +8,7 @@ var tempElements = [];
 
 function insertTempItemsIntoMenu(parentMenu) {
   // Last element is null to insert at the end:
-  let beforeEls = [parentMenu.firstChild, parentMenu.lastChild, null];
+  let beforeEls = [parentMenu.firstElementChild, parentMenu.lastElementChild, null];
   for (let i = 0; i < beforeEls.length; i++) {
     let sep = document.createElement("menuseparator");
     tempElements.push(sep);
@@ -40,13 +40,13 @@ function checkSeparatorInsertion(menuId, buttonId, subviewId) {
     button.click();
     await BrowserTestUtils.waitForEvent(subview, "ViewShown");
 
-    let subviewBody = subview.firstChild;
-    ok(subviewBody.firstChild, "Subview should have a kid");
-    is(subviewBody.firstChild.localName, "toolbarbutton", "There should be no separators to start with");
+    let subviewBody = subview.firstElementChild;
+    ok(subviewBody.firstElementChild, "Subview should have a kid");
+    is(subviewBody.firstElementChild.localName, "toolbarbutton", "There should be no separators to start with");
 
     for (let kid of subviewBody.children) {
       if (kid.localName == "menuseparator") {
-        ok(kid.previousSibling && kid.previousSibling.localName != "menuseparator",
+        ok(kid.previousElementSibling && kid.previousElementSibling.localName != "menuseparator",
            "Separators should never have another separator next to them, and should never be the first node.");
       }
     }

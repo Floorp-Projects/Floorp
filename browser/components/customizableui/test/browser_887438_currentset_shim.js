@@ -11,12 +11,12 @@ var overflowPanelList = document.getElementById("widget-overflow-list");
 // Reading currentset
 add_task(function() {
   let nodeIds = [];
-  for (let node of navbarCT.childNodes) {
+  for (let node of navbarCT.children) {
     if (node.getAttribute("skipintoolbarset") != "true") {
       nodeIds.push(node.id);
     }
   }
-  for (let node of overflowPanelList.childNodes) {
+  for (let node of overflowPanelList.children) {
     if (node.getAttribute("skipintoolbarset") != "true") {
       nodeIds.push(node.id);
     }

@@ -68,7 +68,7 @@ add_task(async function() {
 
   await promiseForNotificationShown(notification);
 
-  PopupNotifications.panel.firstChild.button.click();
+  PopupNotifications.panel.firstElementChild.button.click();
 
   pluginInfo = await promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Plugin should be activated");
@@ -76,7 +76,7 @@ add_task(async function() {
   // Simulate clicking the "Block" button.
   await promiseForNotificationShown(notification);
 
-  PopupNotifications.panel.firstChild.secondaryButton.click();
+  PopupNotifications.panel.firstElementChild.secondaryButton.click();
 
   pluginInfo = await promiseForPluginInfo("test");
   ok(!pluginInfo.activated, "Plugin should not be activated");
@@ -144,7 +144,7 @@ add_task(async function() {
 
   await promiseForNotificationShown(notification);
 
-  PopupNotifications.panel.firstChild.button.click();
+  PopupNotifications.panel.firstElementChild.button.click();
 
   pluginInfo = await promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 12a, Plugin should be activated");
@@ -293,9 +293,9 @@ add_task(async function() {
   });
 
   let condition = () => !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
-    PopupNotifications.panel.firstChild;
+    PopupNotifications.panel.firstElementChild;
   await promiseForCondition(condition);
-  PopupNotifications.panel.firstChild.button.click();
+  PopupNotifications.panel.firstElementChild.button.click();
 
   pluginInfo = await promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 19e, Plugin should not be activated");
@@ -373,9 +373,9 @@ add_task(async function() {
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
   });
 
-  let condition = () => !notification.dismissed && !!PopupNotifications.panel.firstChild;
+  let condition = () => !notification.dismissed && !!PopupNotifications.panel.firstElementChild;
   await promiseForCondition(condition);
-  PopupNotifications.panel.firstChild.button.click();
+  PopupNotifications.panel.firstElementChild.button.click();
 
   pluginInfo = await promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 20c, plugin should be activated");
