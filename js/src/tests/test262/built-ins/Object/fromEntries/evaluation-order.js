@@ -2,8 +2,16 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-description: Evaluation order is iterator.next(), get '0', get '1', toPropertyKey, repeat.
 esid: sec-object.fromentries
+description: Evaluation order is iterator.next(), get '0', get '1', toPropertyKey, repeat.
+info: |
+  Object.fromEntries ( iterable )
+
+  ...
+  4. Let stepsDefine be the algorithm steps defined in CreateDataPropertyOnObject Functions.
+  5. Let adder be CreateBuiltinFunction(stepsDefine, « »).
+  6. Return ? AddEntriesFromIterable(obj, iterable, adder).
+
 includes: [compareArray.js]
 features: [Symbol.iterator, Object.fromEntries]
 ---*/

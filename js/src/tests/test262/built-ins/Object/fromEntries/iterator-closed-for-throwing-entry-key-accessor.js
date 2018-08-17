@@ -3,7 +3,7 @@
 
 /*---
 esid: sec-object.fromentries
-description: Does not close iterators with a `next` method which throws.
+description: Closes iterators when accessing an entry's key throws.
 info: |
   Object.fromEntries ( iterable )
 
@@ -16,32 +16,39 @@ info: |
 
   ...
   4. Repeat,
-    a. Let next be ? IteratorStep(iteratorRecord).
-
-
-  IteratorStep ( iteratorRecord )
-
-  1. Let result be ? IteratorNext(iteratorRecord).
-
-
-  IteratorNext ( iteratorRecord [ , value ] )
-
-  ...
-  3. If Type(result) is not Object, throw a TypeError exception.
+    ...
+    e. Let k be Get(nextItem, "0").
+    f. If k is an abrupt completion, return ? IteratorClose(iteratorRecord, k).
 
 features: [Symbol.iterator, Object.fromEntries]
 ---*/
 
 function DummyError() {}
 
+var returned = false;
 var iterable = {
   [Symbol.iterator]: function() {
+    var advanced = false;
     return {
       next: function() {
-        throw new DummyError();
+        if (advanced) {
+          throw new Test262Error('should only advance once');
+        }
+        advanced = true;
+        return {
+          done: false,
+          value: {
+            get '0'() {
+              throw new DummyError();
+            },
+          },
+        };
       },
       return: function() {
-        throw new Test262Error('should not call return');
+        if (returned) {
+          throw new Test262Error('should only return once');
+        }
+        returned = true;
       },
     };
   },
@@ -50,5 +57,7 @@ var iterable = {
 assert.throws(DummyError, function() {
   Object.fromEntries(iterable);
 });
+
+assert(returned, 'iterator should be closed when entry property access throws');
 
 reportCompare(0, 0);

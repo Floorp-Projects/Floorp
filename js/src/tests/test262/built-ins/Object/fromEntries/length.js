@@ -8,10 +8,11 @@ includes: [propertyHelper.js]
 features: [Object.fromEntries]
 ---*/
 
-assert.sameValue(Object.fromEntries.length, 1);
-
-verifyNotEnumerable(Object.fromEntries, "length");
-verifyNotWritable(Object.fromEntries, "length");
-verifyConfigurable(Object.fromEntries, "length");
+verifyProperty(Object.fromEntries, "length", {
+  value: 1,
+  enumerable: false,
+  writable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

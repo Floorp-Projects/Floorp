@@ -19,14 +19,14 @@ function verifyFormatParts(actual, expected, message) {
 }
 
 const units = {
-  "second": "sec.",
-  "minute": "min.",
-  "hour": "hr.",
-  "day": undefined,
-  "week": "wk.",
-  "month": "mo.",
-  "quarter": "qtr.",
-  "year": "yr.",
+  "second": ["sec."],
+  "minute": ["min."],
+  "hour": ["hr."],
+  "day": ["day", "days"],
+  "week": ["wk."],
+  "month": ["mo."],
+  "quarter": ["qtr.", "qtrs."],
+  "year": ["yr."],
 };
 
 const rtf = new Intl.RelativeTimeFormat("en-US", {
@@ -35,9 +35,8 @@ const rtf = new Intl.RelativeTimeFormat("en-US", {
 
 assert.sameValue(typeof rtf.formatToParts, "function", "formatToParts should be supported");
 
-for (const [unitArgument, unitString] of Object.entries(units)) {
-  const singular = unitString || `${unitArgument}`;
-  const plural = unitString || `${unitArgument}s`;
+for (const [unitArgument, unitStrings] of Object.entries(units)) {
+  const [singular, plural = singular] = unitStrings;
 
   verifyFormatParts(rtf.formatToParts(1000, unitArgument), [
     { "type": "literal", "value": "in " },
