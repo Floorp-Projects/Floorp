@@ -83,6 +83,7 @@ EXPORTS.mozilla += [
     'ServoCSSRuleList.h',
     'ServoElementSnapshot.h',
     'ServoElementSnapshotTable.h',
+    'ServoStyleConsts.h',
     'ServoStyleSet.h',
     'ServoStyleSetInlines.h',
     'ServoTraversalStatistics.h',
@@ -275,11 +276,6 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     GENERATED_FILES += [
         'nsComputedDOMStyleGenerated.cpp',
         'nsCSSPropsGenerated.inc',
-        'ServoStyleConsts.h',
-    ]
-
-    EXPORTS.mozilla += [
-        '!ServoStyleConsts.h',
     ]
 
     computed = GENERATED_FILES['nsComputedDOMStyleGenerated.cpp']
@@ -292,12 +288,6 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     css_props.script = 'GenerateCSSPropsGenerated.py:generate'
     css_props.inputs = [
         '!ServoCSSPropList.py',
-    ]
-
-    consts = GENERATED_FILES['ServoStyleConsts.h']
-    consts.script = 'GenerateServoStyleConsts.py:generate'
-    consts.inputs = [
-        '/servo/components/style/cbindgen.toml',
     ]
 
     CONFIGURE_SUBST_FILES += [
