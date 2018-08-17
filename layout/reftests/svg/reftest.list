@@ -552,3 +552,13 @@ fuzzy-if(skiaContent,0-1,0-100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-en
 == currentColor-override-flood.svg pass.svg
 == currentColor-override-lighting.svg currentColor-override-lighting-ref.svg
 == currentColor-override-stop.svg pass.svg
+
+# Shadow DOM id tracking.
+pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-1.html fragid-shadow-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-2.html fragid-shadow-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-3.html fragid-shadow-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-4.html fragid-shadow-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-5.html fragid-shadow-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-6.html fragid-shadow-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-7.html fragid-shadow-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-8.html fragid-shadow-ref.html
