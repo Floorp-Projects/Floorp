@@ -14,7 +14,7 @@
     var cross_site_test = async_test("Cross-Site -> Cross-Site redirect");
     cross_site_test.step(function () {
         filename = "redirect-cross-site-cross-site";
-        expected_cross_site = {"destination":"image", "target":"subresource", "site":"cross-site"};
+        expected_cross_site = {"destination":"image", "site":"cross-site"};
 
         //  Requests from the server the saved value of the Sec-Metadata header
         cross_site_xhr = new XMLHttpRequest();

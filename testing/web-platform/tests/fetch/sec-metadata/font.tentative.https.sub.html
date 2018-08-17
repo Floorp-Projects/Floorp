@@ -52,7 +52,7 @@
     var same_origin_test = async_test("Same-Origin font");
     same_origin_test.step(function () {
         key = "font-same-origin";
-        expected_same_origin = {"destination":"font", "target":"subresource", "site":"same-origin"};
+        expected_same_origin = {"destination":"font", "site":"same-origin"};
 
         //  Requests from the server the saved value of the Sec-Metadata header
         same_origin_xhr = new XMLHttpRequest();
@@ -70,7 +70,7 @@
     var same_site_test = async_test("Same-Site font");
     same_site_test.step(function () {
         key = "font-same-site";
-        expected_same_site = {"destination":"font", "target":"subresource", "site":"same-site"};
+        expected_same_site = {"destination":"font", "site":"same-site"};
 
         //  Requests from the server the saved value of the Sec-Metadata header
         same_site_xhr = new XMLHttpRequest();
@@ -88,7 +88,7 @@
     var cross_site_test = async_test("Cross-Site font");
     cross_site_test.step(function () {
         key = "font-cross-site";
-        expected_cross_site = {"destination":"font", "target":"subresource", "site":"cross-site"};
+        expected_cross_site = {"destination":"font", "site":"cross-site"};
 
         //  Requests from the server the saved value of the Sec-Metadata header
         cross_site_xhr = new XMLHttpRequest();
