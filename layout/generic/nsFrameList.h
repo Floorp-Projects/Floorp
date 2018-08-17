@@ -231,6 +231,22 @@ public:
   class FrameLinkEnumerator;
 
   /**
+   * Split this list just before the first frame that matches aPredicate,
+   * and return a nsFrameList containing all the frames before it. The
+   * matched frame and all frames after it stay in this list. If no matched
+   * frame exists, all the frames are drained into the returned list, and
+   * this list ends up empty.
+   *
+   * aPredicate should be of this function signature: bool(nsIFrame*).
+   */
+  template<typename Predicate>
+  nsFrameList Split(Predicate&& aPredicate) {
+    FrameLinkEnumerator link(*this);
+    link.Find(aPredicate);
+    return ExtractHead(link);
+  }
+
+  /**
    * Split this frame list such that all the frames before the link pointed to
    * by aLink end up in the returned list, while the remaining frames stay in
    * this list.  After this call, aLink points to the beginning of this list.
