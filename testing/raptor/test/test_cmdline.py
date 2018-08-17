@@ -10,7 +10,7 @@ from raptor.cmdline import verify_options
 
 
 def test_verify_options(filedir):
-    args = Namespace(binary='invalid/path')
+    args = Namespace(app='firefox', binary='invalid/path')
     parser = ArgumentParser()
 
     with pytest.raises(SystemExit):
