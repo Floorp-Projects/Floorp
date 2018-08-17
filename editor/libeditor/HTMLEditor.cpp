@@ -258,20 +258,6 @@ HTMLEditor::~HTMLEditor()
   }
 }
 
-void
-HTMLEditor::HideAnonymousEditingUIs()
-{
-  if (mAbsolutelyPositionedObject) {
-    HideGrabber();
-  }
-  if (mInlineEditedCell) {
-    HideInlineTableEditingUI();
-  }
-  if (mResizedObject) {
-    HideResizers();
-  }
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLEditor)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLEditor, TextEditor)
