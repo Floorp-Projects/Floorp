@@ -142,8 +142,9 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
           selection->Collapse(parent, offset);
         } else {
           // Get enclosing link if in text so we can select the link
-          Element* linkElement =
-            htmlEditor->GetElementOrParentByTagName(*nsGkAtoms::href, node);
+          RefPtr<Element> linkElement =
+            htmlEditor->GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
+                                                    node);
           if (linkElement) {
             element = linkElement;
           }
