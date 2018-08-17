@@ -27,3 +27,23 @@ treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descend
     list-style-image: url("chrome://global/skin/tree/sort-dsc-classic.png");
   }
 }
+
+@media (-moz-windows-classic) {
+  treecol,
+  treecolpicker {
+    border: 1px solid;
+    border-top-color: ThreeDHighlight;
+    border-inline-end-color: ThreeDShadow;
+    border-bottom-color: ThreeDShadow;
+    border-inline-start-color: ThreeDHighlight;
+    background-color: -moz-Dialog;
+  }
+
+  treecol:hover:active,
+  treecolpicker:hover:active {
+    border-top-color: ThreeDShadow;
+    border-inline-end-color: ThreeDHighlight;
+    border-bottom-color: ThreeDHighlight;
+    border-inline-start-color: ThreeDShadow;
+  }
+}
