@@ -6,10 +6,15 @@ assertEq(/^(PST|PDT)$/.test(getTimeZone()), true);
 
 const msPerMinute = 60 * 1000;
 
+function shortTimeZone(str) {
+    return str.replace("(Pacific Standard Time)", "(PST)")
+              .replace("(Pacific Daylight Time)", "(PDT)");
+}
+
 function assertEqDate(dt, date, time) {
-    assertEq(dt.toString(), `${date} ${time}`);
+    assertEq(shortTimeZone(dt.toString()), `${date} ${time}`);
     assertEq(dt.toDateString(), date);
-    assertEq(dt.toTimeString(), time);
+    assertEq(shortTimeZone(dt.toTimeString()), time);
 }
 
 // PDT -> PST, using milliseconds from epoch.
