@@ -1986,35 +1986,12 @@ STATIC_ATOMS = [
     Atom("RecordExecution", "recordExecution"),
     Atom("ReplayExecution", "replayExecution"),
 
-    # Names for system metrics
-    Atom("scrollbar_start_backward", "scrollbar-start-backward"),
-    Atom("scrollbar_start_forward", "scrollbar-start-forward"),
-    Atom("scrollbar_end_backward", "scrollbar-end-backward"),
-    Atom("scrollbar_end_forward", "scrollbar-end-forward"),
-    Atom("scrollbar_thumb_proportional", "scrollbar-thumb-proportional"),
-    Atom("overlay_scrollbars", "overlay-scrollbars"),
-    Atom("windows_accent_color_in_titlebar", "windows-accent-color-in-titlebar"),
-    Atom("windows_default_theme", "windows-default-theme"),
-    Atom("mac_graphite_theme", "mac-graphite-theme"),
-    Atom("mac_yosemite_theme", "mac-yosemite-theme"),
-    Atom("windows_compositor", "windows-compositor"),
-    Atom("windows_classic", "windows-classic"),
-    Atom("windows_glass", "windows-glass"),
-    Atom("touch_enabled", "touch-enabled"),
-    Atom("menubar_drag", "menubar-drag"),
-    Atom("swipe_animation_enabled", "swipe-animation-enabled"),
-    Atom("gtk_csd_available", "gtk-csd-available"),
-    Atom("gtk_csd_minimize_button", "gtk-csd-minimize-button"),
-    Atom("gtk_csd_maximize_button", "gtk-csd-maximize-button"),
-    Atom("gtk_csd_close_button", "gtk-csd-close-button"),
-    Atom("system_dark_theme", "system-dark-theme"),
-
     # windows media query names
     Atom("windows_win7", "windows-win7"),
     Atom("windows_win8", "windows-win8"),
     Atom("windows_win10", "windows-win10"),
 
-    # And the same again, as media query keywords.
+    # Names for system metrics.
     Atom("_moz_scrollbar_start_backward", "-moz-scrollbar-start-backward"),
     Atom("_moz_scrollbar_start_forward", "-moz-scrollbar-start-forward"),
     Atom("_moz_scrollbar_end_backward", "-moz-scrollbar-end-backward"),
