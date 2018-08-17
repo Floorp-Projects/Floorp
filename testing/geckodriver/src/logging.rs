@@ -27,13 +27,15 @@
 //! [`init`]: fn.init.html
 //! [`init_with_level`]: fn.init_with_level.html
 
-use chrono;
-use log;
 use std::fmt;
 use std::io;
 use std::io::Write;
 use std::str;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
+
+use chrono;
+use log;
+use mozprofile::preferences::Pref;
 
 static MAX_LOG_LEVEL: AtomicUsize = ATOMIC_USIZE_INIT;
 const LOGGED_TARGETS: &'static [&'static str] = &[
@@ -122,6 +124,21 @@ impl Into<log::Level> for Level {
     }
 }
 
+impl Into<Pref> for Level {
+    fn into(self) -> Pref {
+        use self::Level::*;
+        Pref::new(match self {
+            Fatal => "Fatal",
+            Error => "Error",
+            Warn => "Warn",
+            Info => "Info",
+            Config => "Config",
+            Debug => "Debug",
+            Trace => "Trace",
+        })
+    }
+}
+
 impl From<log::Level> for Level {
     fn from(log_level: log::Level) -> Level {
         use log::Level::*;
@@ -195,10 +212,13 @@ fn format_ts(ts: chrono::DateTime<chrono::Local>) -> String {
 #[cfg(test)]
 mod tests {
     use super::{format_ts, init_with_level, max_level, set_max_level, Level};
-    use chrono;
-    use log;
+
     use std::str::FromStr;
     use std::sync::Mutex;
+
+    use chrono;
+    use log;
+    use mozprofile::preferences::{Pref, PrefValue};
 
     lazy_static! {
         static ref LEVEL_MUTEX: Mutex<()> = Mutex::new(());
@@ -244,6 +264,24 @@ mod tests {
         assert_eq!(Into::<log::Level>::into(Level::Config), log::Level::Debug);
         assert_eq!(Into::<log::Level>::into(Level::Debug), log::Level::Debug);
         assert_eq!(Into::<log::Level>::into(Level::Trace), log::Level::Trace);
+    }
+
+    #[test]
+    fn test_level_into_pref() {
+        let tests = [
+            (Level::Fatal, "Fatal"),
+            (Level::Error, "Error"),
+            (Level::Warn, "Warn"),
+            (Level::Info, "Info"),
+            (Level::Config, "Config"),
+            (Level::Debug, "Debug"),
+            (Level::Trace, "Trace"),
+        ];
+
+        for &(lvl, s) in tests.iter() {
+            let expected = Pref { value: PrefValue::String(s.to_string()), sticky: false };
+            assert_eq!(Into::<Pref>::into(lvl), expected);
+        }
     }
 
     #[test]

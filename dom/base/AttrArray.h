@@ -127,6 +127,12 @@ public:
   // unmapped attributes of |aOther|.
   nsresult EnsureCapacityToClone(const AttrArray& aOther);
 
+  struct InternalAttr
+  {
+    nsAttrName mName;
+    nsAttrValue mValue;
+  };
+
 private:
   AttrArray(const AttrArray& aOther) = delete;
   AttrArray& operator=(const AttrArray& aOther) = delete;
@@ -153,8 +159,6 @@ private:
 
   bool GrowBy(uint32_t aGrowSize);
 
-  struct InternalAttr;
-
   // Tries to create an attribute, growing the buffer if needed, with the given
   // name and value.
   //
@@ -174,12 +178,6 @@ private:
    * Guts of UpdateMappedAttrRuleMapper for the case  when we have mapped attrs.
    */
   nsresult DoUpdateMappedAttrRuleMapper(nsMappedAttributeElement& aElement);
-
-  struct InternalAttr
-  {
-    nsAttrName mName;
-    nsAttrValue mValue;
-  };
 
 #ifdef _MSC_VER
 // Disable MSVC warning 'nonstandard extension used: zero-sized array in struct/union'

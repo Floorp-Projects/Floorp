@@ -344,7 +344,7 @@ const loadListener = {
     const winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
     const curWinID = win.windowUtils.outerWindowID;
 
-    logger.debug(`Received observer notification ${topic} for ${winID}`);
+    logger.debug(`Received observer notification ${topic}`);
 
     switch (topic) {
       // In the case when the currently selected frame is closed,

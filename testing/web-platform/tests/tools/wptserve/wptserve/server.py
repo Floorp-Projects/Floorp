@@ -369,17 +369,19 @@ class Http2WebTestRequestHandler(BaseWebTestRequestHandler):
                             stream_queues[frame.stream_id] = (self.start_stream_thread(frame, queue), queue)
                         stream_queues[frame.stream_id][1].put(frame)
 
-                        if isinstance(frame, StreamEnded) or frame.stream_ended:
+                        if isinstance(frame, StreamEnded) or (hasattr(frame, "stream_ended") and frame.stream_ended):
                             del stream_queues[frame.stream_id]
 
         except (socket.timeout, socket.error) as e:
-            self.logger.debug('(%s) ERROR - Closing Connection - \n%s' % (self.uid, str(e)))
+            self.logger.error('(%s) Closing Connection - \n%s' % (self.uid, str(e)))
             if not self.close_connection:
                 self.close_connection = True
                 for stream_id, (thread, queue) in stream_queues.items():
                     queue.put(None)
+        except Exception as e:
+            self.logger.error('(%s) Unexpected Error - \n%s' % (self.uid, str(e)))
         finally:
-            for stream_id, (thread, queue) in stream_queues:
+            for stream_id, (thread, queue) in stream_queues.items():
                 thread.join()
 
     def start_stream_thread(self, frame, queue):
@@ -440,7 +442,8 @@ class Http2WebTestRequestHandler(BaseWebTestRequestHandler):
                 self.logger.debug('(%s - %s) Stream Reset, Thread Closing' % (self.uid, stream_id))
                 break
 
-            request.frames.append(frame)
+            if request is not None:
+                request.frames.append(frame)
 
             if hasattr(frame, "stream_ended") and frame.stream_ended:
                 self.finish_handling(request, response, req_handler)
