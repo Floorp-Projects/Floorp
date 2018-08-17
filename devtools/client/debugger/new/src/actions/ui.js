@@ -24,8 +24,6 @@ var _selectors = require("../selectors/index");
 
 var _select = require("../actions/sources/select");
 
-var _ui = require("../reducers/ui");
-
 var _editor = require("../utils/editor/index");
 
 var _fileSearch = require("./file-search");
@@ -224,7 +222,7 @@ function setProjectDirectoryRoot(newRoot) {
     dispatch,
     getState
   }) => {
-    const curRoot = (0, _ui.getProjectDirectoryRoot)(getState());
+    const curRoot = (0, _selectors.getProjectDirectoryRoot)(getState());
 
     if (newRoot && curRoot) {
       const newRootArr = newRoot.replace(/\/+/g, "/").split("/");

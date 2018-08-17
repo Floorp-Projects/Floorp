@@ -12,7 +12,6 @@ exports.getShownSource = getShownSource;
 exports.getPaneCollapse = getPaneCollapse;
 exports.getHighlightedLineRange = getHighlightedLineRange;
 exports.getConditionalPanelLine = getConditionalPanelLine;
-exports.getProjectDirectoryRoot = getProjectDirectoryRoot;
 exports.getOrientation = getOrientation;
 
 var _makeRecord = require("../utils/makeRecord");
@@ -36,7 +35,6 @@ const createUIState = exports.createUIState = (0, _makeRecord2.default)({
   activeSearch: null,
   contextMenu: {},
   shownSource: null,
-  projectDirectoryRoot: _prefs.prefs.projectDirectoryRoot,
   startPanelCollapsed: _prefs.prefs.startPanelCollapsed,
   endPanelCollapsed: _prefs.prefs.endPanelCollapsed,
   frameworkGroupingOn: _prefs.prefs.frameworkGroupingOn,
@@ -112,10 +110,6 @@ function update(state = createUIState(), action) {
     case "CLOSE_CONDITIONAL_PANEL":
       return state.set("conditionalPanelLine", null);
 
-    case "SET_PROJECT_DIRECTORY_ROOT":
-      _prefs.prefs.projectDirectoryRoot = action.url;
-      return state.set("projectDirectoryRoot", action.url);
-
     case "SET_PRIMARY_PANE_TAB":
       return state.set("selectedPrimaryPaneTab", action.tabName);
 
@@ -176,10 +170,6 @@ function getHighlightedLineRange(state) {
 
 function getConditionalPanelLine(state) {
   return state.ui.get("conditionalPanelLine");
-}
-
-function getProjectDirectoryRoot(state) {
-  return state.ui.get("projectDirectoryRoot");
 }
 
 function getOrientation(state) {
