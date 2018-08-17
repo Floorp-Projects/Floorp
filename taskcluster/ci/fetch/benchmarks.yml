@@ -22,6 +22,15 @@ assorted-dom:
     sha256: e4eafe4a8e70c7ae6d42d668d3b1640b9fd9b696c486ff35aab754c368f78c2c
     size: 402665
 
+wasm-misc:
+  description: wasm-misc benchmark
+  fetch:
+    type: static-url
+    artifact-name: wasm-misc.zip
+    url: https://github.com/mozilla/perf-automation/releases/download/wasm-misc-v1/wasm-misc-c55c3c7690b2.zip
+    sha256: 0ba273b748b872117a4b230c776bbd73550398da164025a735c28a16c0224397
+    size: 4433793
+
 web-tooling-benchmark:
   description: Web Tooling Benchmark
   fetch:
