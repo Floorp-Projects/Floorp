@@ -2309,7 +2309,7 @@ private:
   nsCOMPtr<nsISupportsString> mUnicodeString;
 };
 
-class nsRelativeFilePref : public nsIRelativeFilePref
+class nsRelativeFilePref final : public nsIRelativeFilePref
 {
 public:
   NS_DECL_ISUPPORTS
