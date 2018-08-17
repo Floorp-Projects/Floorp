@@ -35,7 +35,7 @@
     var same_origin_test = async_test("Same-Origin serviceworker");
     same_origin_test.step(function () {
         key = "serviceworker-same-origin";
-        expected_same_origin = {"destination":"serviceworker", "target":"subresource", "site":"same-origin"};
+        expected_same_origin = {"destination":"serviceworker", "site":"same-origin"};
 
         //  Requests from the server the saved value of the Sec-Metadata header
         same_origin_xhr = new XMLHttpRequest();

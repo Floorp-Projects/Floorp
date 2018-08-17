@@ -9,7 +9,7 @@
     var same_origin_test = async_test("Same-Origin style");
     same_origin_test.step(function () {
         key = "style-same-origin";
-        expected_same_origin = {"destination":"style", "target":"subresource", "site":"same-origin"};
+        expected_same_origin = {"destination":"style", "site":"same-origin"};
 
         //  Requests from the server the saved value of the Sec-Metadata header
         same_origin_xhr = new XMLHttpRequest();
@@ -27,7 +27,7 @@
     var same_site_test = async_test("Same-Site style");
     same_site_test.step(function () {
         key = "style-same-site";
-        expected_same_site = {"destination":"style", "target":"subresource", "site":"same-site"};
+        expected_same_site = {"destination":"style", "site":"same-site"};
 
         //  Requests from the server the saved value of the Sec-Metadata header
         same_site_xhr = new XMLHttpRequest();
@@ -45,7 +45,7 @@
     var cross_site_test = async_test("Cross-Site style");
     cross_site_test.step(function () {
         key = "style-cross-site";
-        expected_cross_site = {"destination":"style", "target":"subresource", "site":"cross-site"};
+        expected_cross_site = {"destination":"style", "site":"cross-site"};
 
         //  Requests from the server the saved value of the Sec-Metadata header
         cross_site_xhr = new XMLHttpRequest();
