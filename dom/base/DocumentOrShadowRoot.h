@@ -161,6 +161,15 @@ public:
                               void* aData, bool aForImage);
 
   /**
+   * Lookup an image element using its associated ID, which is usually provided
+   * by |-moz-element()|. Similar to GetElementById, with the difference that
+   * elements set using mozSetImageElement have higher priority.
+   * @param aId the ID associated the element we want to lookup
+   * @return the element associated with |aId|
+   */
+  Element* LookupImageElement(const nsAString& aElementId);
+
+  /**
    * Check that aId is not empty and log a message to the console
    * service if it is.
    * @returns true if aId looks correct, false otherwise.
