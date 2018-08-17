@@ -91,13 +91,13 @@ GetLowerCaseNameAtom(const nsAString& aTagName)
 static bool
 IsLinkTag(const nsAtom& aTagName)
 {
-  return aTagName.Equals(NS_LITERAL_STRING("href"));
+  return &aTagName == nsGkAtoms::href;
 }
 
 static bool
 IsNamedAnchorTag(const nsAtom& aTagName)
 {
-  return aTagName.Equals(NS_LITERAL_STRING("anchor"));
+  return &aTagName == nsGkAtoms::anchor;
 }
 
 template EditorDOMPoint
