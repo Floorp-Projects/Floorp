@@ -635,15 +635,6 @@ ParentIsWrapperAnonBox(nsIFrame* aParent)
 // child then the block child is migrated upward until it lands in a block
 // parent (the inline frames containing block is where it will end up).
 
-// After this function returns, aLink is pointing to the first link at or
-// after its starting position for which the next frame is a block.  If there
-// is no such link, it points to the end of the list.
-static void
-FindFirstBlock(nsFrameList::FrameLinkEnumerator& aLink)
-{
-  aLink.Find([](nsIFrame* aFrame) { return !aFrame->IsInlineOutside(); });
-}
-
 inline void
 SetInitialSingleChild(nsContainerFrame* aParent, nsIFrame* aFrame)
 {
@@ -6218,10 +6209,9 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
     }
 
     // We want to put some of the frames into this inline frame.
-    nsFrameList::FrameLinkEnumerator firstBlockEnumerator(aFrameList);
-    FindFirstBlock(firstBlockEnumerator);
+    nsFrameList inlineKids =
+      aFrameList.Split([](nsIFrame* f) { return !f->IsInlineOutside(); });
 
-    nsFrameList inlineKids = aFrameList.ExtractHead(firstBlockEnumerator);
     if (!inlineKids.IsEmpty()) {
       AppendFrames(aParentFrame, kPrincipalList, inlineKids);
     }
@@ -10240,11 +10230,10 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
   nsFirstLineFrame*        aLineFrame,
   nsFrameItems&            aFrameItems)
 {
-  // Find the part of aFrameItems that we want to put in the first-line
-  nsFrameList::FrameLinkEnumerator link(aFrameItems);
-  FindFirstBlock(link);
-
-  nsFrameList firstLineChildren = aFrameItems.ExtractHead(link);
+  // Extract any initial inline frames from aFrameItems so we can put them
+  // in the first-line.
+  nsFrameList firstLineChildren =
+    aFrameItems.Split([](nsIFrame* f) { return !f->IsInlineOutside(); });
 
   if (firstLineChildren.IsEmpty()) {
     // Nothing is supposed to go into the first-line; nothing to do
@@ -11123,7 +11112,8 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
 
   nsFrameList::FrameLinkEnumerator firstBlockEnumerator(childItems);
   if (!aItem.mIsAllInline) {
-    FindFirstBlock(firstBlockEnumerator);
+    firstBlockEnumerator.Find(
+      [](nsIFrame* aFrame) { return !aFrame->IsInlineOutside(); });
   }
 
   if (aItem.mIsAllInline || firstBlockEnumerator.AtEnd()) {
@@ -11212,10 +11202,8 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
     }
 
     if (aChildItems.NotEmpty()) {
-      nsFrameList::FrameLinkEnumerator firstBlock(aChildItems);
-      FindFirstBlock(firstBlock);
-      nsFrameList inlineKids = aChildItems.ExtractHead(firstBlock);
-
+      nsFrameList inlineKids =
+        aChildItems.Split([](nsIFrame* f) { return !f->IsInlineOutside(); });
       MoveChildrenTo(aInitialInline, inlineFrame, inlineKids);
     }
 
