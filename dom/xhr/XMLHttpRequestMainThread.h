@@ -623,8 +623,6 @@ protected:
   // part of the surrogate.
   mozilla::UniquePtr<mozilla::Decoder> mDecoder;
 
-  const Encoding* mResponseCharset;
-
   void MatchCharsetAndDecoderToResponseDocument();
 
   XMLHttpRequestResponseType mResponseType;
@@ -764,6 +762,12 @@ protected:
   // When this is set to true, the event dispatching is suspended. This is
   // useful to change the correct state when XHR is working sync.
   bool mEventDispatchingSuspended;
+
+  // True iff mDecoder has processed the end of the stream.
+  // Used in lazy decoding to distinguish between having
+  // processed all the bytes but not the EOF and having
+  // processed all the bytes and the EOF.
+  bool mEofDecoded;
 
   // Our parse-end listener, if we are parsing.
   RefPtr<nsXHRParseEndListener> mParseEndListener;
