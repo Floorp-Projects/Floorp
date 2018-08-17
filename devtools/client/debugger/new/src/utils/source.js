@@ -32,6 +32,8 @@ exports.isLoaded = isLoaded;
 exports.isLoading = isLoading;
 exports.getTextAtPosition = getTextAtPosition;
 exports.getSourceClassnames = getSourceClassnames;
+exports.getRelativeUrl = getRelativeUrl;
+exports.underRoot = underRoot;
 
 var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
@@ -497,4 +499,23 @@ function getSourceClassnames(source, sourceMetaData) {
   }
 
   return sourceTypes[(0, _sourcesTree.getFileExtension)(source)] || defaultClassName;
+}
+
+function getRelativeUrl(source, root) {
+  const {
+    group,
+    path
+  } = (0, _sourcesTree.getURL)(source);
+
+  if (!root) {
+    return path;
+  } // + 1 removes the leading "/"
+
+
+  const url = group + path;
+  return url.slice(url.indexOf(root) + root.length + 1);
+}
+
+function underRoot(source, root) {
+  return source.url && source.url.includes(root);
 }
