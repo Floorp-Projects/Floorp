@@ -13,11 +13,16 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsThreadUtils.h"
 
+#include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 
 #define PREF_BDM_ADDTORECENTDOCS "browser.download.manager.addToRecentDocs"
+
+// The amount of time, in milliseconds, that our IO thread will stay alive after the last event it processes.
+#define DEFAULT_THREAD_TIMEOUT_MS 10000
 
 #ifdef XP_WIN
 #include <shlobj.h>
@@ -98,6 +103,12 @@ CFURLRef CreateCFURLFromNSIURI(nsIURI *aURI) {
 }
 #endif
 
+DownloadPlatform::DownloadPlatform()
+{
+  mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
+                                 NS_LITERAL_CSTRING("DownloadPlatform"));
+}
+
 nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIFile* aTarget,
                                         const nsACString& aContentType, bool aIsPrivate)
 {
@@ -169,25 +180,33 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIF
     }
     if (pathCFStr && !aIsPrivate) {
       bool isFromWeb = IsURLPossiblyFromWeb(aSource);
+      nsCOMPtr<nsIURI> source(aSource);
+      nsCOMPtr<nsIURI> referrer(aReferrer);
 
-      CFURLRef sourceCFURL = CreateCFURLFromNSIURI(aSource);
-      CFURLRef referrerCFURL = CreateCFURLFromNSIURI(aReferrer);
+      nsresult rv = mIOThread->Dispatch(NS_NewRunnableFunction(
+        "DownloadPlatform::DownloadDone",
+        [pathCFStr, isFromWeb, source, referrer] {
+          CFURLRef sourceCFURL = CreateCFURLFromNSIURI(source);
+          CFURLRef referrerCFURL = CreateCFURLFromNSIURI(referrer);
 
-      CocoaFileUtils::AddOriginMetadataToFile(pathCFStr,
-                                              sourceCFURL,
-                                              referrerCFURL);
-      CocoaFileUtils::AddQuarantineMetadataToFile(pathCFStr,
+          CocoaFileUtils::AddOriginMetadataToFile(pathCFStr,
                                                   sourceCFURL,
-                                                  referrerCFURL,
-                                                  isFromWeb);
+                                                  referrerCFURL);
+          CocoaFileUtils::AddQuarantineMetadataToFile(pathCFStr,
+                                                      sourceCFURL,
+                                                      referrerCFURL,
+                                                      isFromWeb);
+          ::CFRelease(pathCFStr);
+          if (sourceCFURL) {
+            ::CFRelease(sourceCFURL);
+          }
+          if (referrerCFURL) {
+            ::CFRelease(referrerCFURL);
+          }
+        }
+      ));
 
-      ::CFRelease(pathCFStr);
-      if (sourceCFURL) {
-        ::CFRelease(sourceCFURL);
-      }
-      if (referrerCFURL) {
-        ::CFRelease(referrerCFURL);
-      }
+      return rv;
     }
 #endif
   }
