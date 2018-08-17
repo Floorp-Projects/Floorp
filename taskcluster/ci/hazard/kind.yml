@@ -46,6 +46,7 @@ jobs:
             - linux64-gcc-6
             - linux64-gcc-sixgill
             - linux64-rust
+            - linux64-cbindgen
             - linux64-node
 
     linux64-haz/debug:
@@ -67,4 +68,5 @@ jobs:
             - linux64-gcc-6
             - linux64-gcc-sixgill
             - linux64-rust
+            - linux64-cbindgen
             - linux64-node
