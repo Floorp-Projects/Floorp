@@ -377,7 +377,6 @@ DrawBlitProg::DrawBlitProg(const GLBlitHelper* const parent, const GLuint prog)
     , mLoc_uTexMatrix0(mParent.mGL->fGetUniformLocation(mProg, "uTexMatrix0"))
     , mLoc_uTexMatrix1(mParent.mGL->fGetUniformLocation(mProg, "uTexMatrix1"))
     , mLoc_uColorMatrix(mParent.mGL->fGetUniformLocation(mProg, "uColorMatrix"))
-    , mType_uColorMatrix(0)
 {
     MOZ_ASSERT(mLoc_uDestMatrix != -1);
     MOZ_ASSERT(mLoc_uTexMatrix0 != -1);
@@ -513,12 +512,9 @@ DrawBlitProg::Draw(const BaseArgs& args, const YUVArgs* const argsYUV) const
 
 GLBlitHelper::GLBlitHelper(GLContext* const gl)
     : mGL(gl)
-    , mQuadVAO(0)
-    , mQuadVBO(0)
     , mDrawBlitProg_VertShader(mGL->fCreateShader(LOCAL_GL_VERTEX_SHADER))
-    , mYuvUploads{0}
-    , mYuvUploads_YSize(0, 0)
-    , mYuvUploads_UVSize(0, 0)
+    //, mYuvUploads_YSize(0, 0)
+    //, mYuvUploads_UVSize(0, 0)
 {
     mGL->fGenBuffers(1, &mQuadVBO);
     {

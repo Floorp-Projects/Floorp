@@ -318,10 +318,10 @@ class ScopedReadbackFB
 {
     GLContext* const mGL;
     ScopedBindFramebuffer mAutoFB;
-    GLuint mTempFB;
-    GLuint mTempTex;
-    SharedSurface* mSurfToUnlock;
-    SharedSurface* mSurfToLock;
+    GLuint mTempFB = 0;
+    GLuint mTempTex = 0;
+    SharedSurface* mSurfToUnlock = nullptr;
+    SharedSurface* mSurfToLock = nullptr;
 
 public:
     explicit ScopedReadbackFB(SharedSurface* src);

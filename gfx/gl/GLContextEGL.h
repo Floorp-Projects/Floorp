@@ -124,15 +124,15 @@ protected:
 public:
     const EGLContext mContext;
 protected:
-    EGLSurface mSurfaceOverride;
+    EGLSurface mSurfaceOverride = EGL_NO_SURFACE;
     RefPtr<gfxASurface> mThebesSurface;
-    bool mBound;
+    bool mBound = false;
 
-    bool mIsPBuffer;
-    bool mIsDoubleBuffered;
-    bool mCanBindToTexture;
-    bool mShareWithEGLImage;
-    bool mOwnsContext;
+    bool mIsPBuffer = false;
+    bool mIsDoubleBuffered = false;
+    bool mCanBindToTexture = false;
+    bool mShareWithEGLImage = false;
+    bool mOwnsContext = true;
 
     static EGLSurface CreatePBufferSurfaceTryingPowerOfTwo(EGLConfig config,
                                                            EGLenum bindToTextureFormat,
