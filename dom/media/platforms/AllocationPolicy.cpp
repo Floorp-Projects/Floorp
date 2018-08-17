@@ -6,6 +6,8 @@
 
 #include "AllocationPolicy.h"
 
+#include "PDMFactory.h"
+#include "MediaInfo.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SystemGroup.h"
 #ifdef MOZ_WIDGET_ANDROID
@@ -147,6 +149,68 @@ AllocationWrapper::Shutdown()
     AbstractThread::GetCurrent(), __func__, [token]() {
       return ShutdownPromise::CreateAndResolve(true, __func__);
     });
+}
+/* static */ RefPtr<AllocationWrapper::AllocateDecoderPromise>
+AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams)
+{
+  // aParams.mConfig is guaranteed to stay alive during the lifetime of the
+  // MediaDataDecoder, so keeping a pointer to the object is safe.
+  const TrackInfo* config = &aParams.mConfig;
+  RefPtr<TaskQueue> taskQueue = aParams.mTaskQueue;
+  DecoderDoctorDiagnostics* diagnostics = aParams.mDiagnostics;
+  RefPtr<layers::ImageContainer> imageContainer = aParams.mImageContainer;
+  RefPtr<layers::KnowsCompositor> knowsCompositor = aParams.mKnowsCompositor;
+  RefPtr<GMPCrashHelper> crashHelper = aParams.mCrashHelper;
+  CreateDecoderParams::UseNullDecoder useNullDecoder = aParams.mUseNullDecoder;
+  CreateDecoderParams::NoWrapper noWrapper = aParams.mNoWrapper;
+  TrackInfo::TrackType type = aParams.mType;
+  MediaEventProducer<TrackInfo::TrackType>* onWaitingForKeyEvent =
+    aParams.mOnWaitingForKeyEvent;
+  CreateDecoderParams::OptionSet options = aParams.mOptions;
+  CreateDecoderParams::VideoFrameRate rate = aParams.mRate;
+
+  RefPtr<AllocateDecoderPromise> p =
+    GlobalAllocPolicy::Instance(aParams.mType)
+      .Alloc()
+      ->Then(
+        AbstractThread::GetCurrent(),
+        __func__,
+        [=](RefPtr<Token> aToken) {
+          // result may not always be updated by PDMFactory::CreateDecoder
+          // either when the creation succeeded or failed, as such it must be
+          // initialized to a fatal error by default.
+          MediaResult result = MediaResult(
+            NS_ERROR_DOM_MEDIA_FATAL_ERR,
+            nsPrintfCString("error creating %s decoder", TrackTypeToStr(type)));
+          RefPtr<PDMFactory> pdm = new PDMFactory();
+          CreateDecoderParams params{ *config,
+                                      taskQueue,
+                                      diagnostics,
+                                      imageContainer,
+                                      &result,
+                                      knowsCompositor,
+                                      crashHelper,
+                                      useNullDecoder,
+                                      noWrapper,
+                                      type,
+                                      onWaitingForKeyEvent,
+                                      options,
+                                      rate };
+          RefPtr<MediaDataDecoder> decoder = pdm->CreateDecoder(params);
+          if (decoder) {
+            RefPtr<AllocationWrapper> wrapper =
+              new AllocationWrapper(decoder.forget(), aToken.forget());
+            return AllocateDecoderPromise::CreateAndResolve(wrapper, __func__);
+          }
+          return AllocateDecoderPromise::CreateAndReject(result, __func__);
+        },
+        []() {
+          return AllocateDecoderPromise::CreateAndReject(
+            MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                        "Allocation policy expired"),
+            __func__);
+        });
+  return p;
 }
 
 } // namespace mozilla
