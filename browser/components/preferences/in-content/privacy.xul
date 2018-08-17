@@ -458,10 +458,10 @@
 </hbox>
 
 <!-- Permissions -->
-<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true">
+<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true" data-subcategory="permissions">
   <caption class="search-header" hidden="true"><label data-l10n-id="permissions-header"/></caption>
 
-  <grid data-subcategory="permissions">
+  <grid>
     <columns>
       <column flex="1"/>
       <column/>
