@@ -10,9 +10,15 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
+const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
+const InspectAction = createFactory(require("./debugtarget/InspectAction"));
 const RuntimeInfo = createFactory(require("./RuntimeInfo"));
+const ServiceWorkerAction = createFactory(require("./debugtarget/ServiceWorkerAction"));
+const TabDetail = createFactory(require("./debugtarget/TabDetail"));
+const TemporaryExtensionAction = createFactory(require("./debugtarget/TemporaryExtensionAction"));
 const TemporaryExtensionInstaller =
   createFactory(require("./debugtarget/TemporaryExtensionInstaller"));
+const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
 
 const Services = require("Services");
 
@@ -51,31 +57,43 @@ class RuntimePage extends PureComponent {
       }),
       TemporaryExtensionInstaller({ dispatch }),
       DebugTargetPane({
+        actionComponent: TemporaryExtensionAction,
+        detailComponent: ExtensionDetail,
         dispatch,
         name: "Temporary Extensions",
         targets: temporaryExtensions,
       }),
       DebugTargetPane({
+        actionComponent: InspectAction,
+        detailComponent: ExtensionDetail,
         dispatch,
         name: "Extensions",
         targets: installedExtensions,
       }),
       DebugTargetPane({
+        actionComponent: InspectAction,
+        detailComponent: TabDetail,
         dispatch,
         name: "Tabs",
         targets: tabs
       }),
       DebugTargetPane({
+        actionComponent: ServiceWorkerAction,
+        detailComponent: WorkerDetail,
         dispatch,
         name: "Service Workers",
         targets: serviceWorkers
       }),
       DebugTargetPane({
+        actionComponent: InspectAction,
+        detailComponent: WorkerDetail,
         dispatch,
         name: "Shared Workers",
         targets: sharedWorkers
       }),
       DebugTargetPane({
+        actionComponent: InspectAction,
+        detailComponent: WorkerDetail,
         dispatch,
         name: "Other Workers",
         targets: otherWorkers
