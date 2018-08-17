@@ -125,10 +125,10 @@ function toTabComponentData(tabs) {
   });
 }
 
-function getServiceWorkerStatus(worker) {
-  if (worker.active && !!worker.workerTargetActor) {
+function getServiceWorkerStatus(isActive, isRunning) {
+  if (isActive && isRunning) {
     return SERVICE_WORKER_STATUSES.RUNNING;
-  } else if (worker.active) {
+  } else if (isActive) {
     return SERVICE_WORKER_STATUSES.STOPPED;
   }
   // We cannot get service worker registrations unless the registration is in
@@ -140,22 +140,31 @@ function getServiceWorkerStatus(worker) {
 function toWorkerComponentData(workers, isServiceWorker) {
   return workers.map(worker => {
     const type = DEBUG_TARGETS.WORKER;
+    const id = worker.workerTargetActor;
     const icon = "chrome://devtools/skin/images/debugging-workers.svg";
-    let { fetch, name, scope } = worker;
+    let { fetch, name, registrationActor, scope } = worker;
+    let isActive = false;
+    let isRunning = false;
     let status = null;
 
     if (isServiceWorker) {
       fetch = fetch ? SERVICE_WORKER_FETCH_STATES.LISTENING
                     : SERVICE_WORKER_FETCH_STATES.NOT_LISTENING;
-      status = getServiceWorkerStatus(worker);
+      isActive = worker.active;
+      isRunning = !!worker.workerTargetActor;
+      status = getServiceWorkerStatus(isActive, isRunning);
     }
 
     return {
       name,
       icon,
+      id,
       type,
       details: {
         fetch,
+        isActive,
+        isRunning,
+        registrationActor,
         scope,
         status,
       },

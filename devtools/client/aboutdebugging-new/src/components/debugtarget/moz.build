@@ -10,6 +10,8 @@ DevToolsModules(
     'DebugTargetPane.js',
     'ExtensionDetail.css',
     'ExtensionDetail.js',
+    'InspectAction.js',
+    'ServiceWorkerAction.js',
     'TabDetail.js',
     'TemporaryExtensionAction.js',
     'TemporaryExtensionInstaller.js',
