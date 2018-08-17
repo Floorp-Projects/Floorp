@@ -88,6 +88,7 @@
 
                 if (location.search == '?raptor') {
                     _data = ['raptor-benchmark', 'speedometer', measuredValuesByFullName];
+                    console.log('speedometer source about to post results to the raptor webext');
                     window.postMessage(_data, '*');
                 } else {
                     tpRecordTime(values.join(','), 0, allNames.join(','));
