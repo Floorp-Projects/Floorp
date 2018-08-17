@@ -89,6 +89,8 @@ STATIC_ATOMS = [
     Atom("anonid", "anonid"),
     Atom("anonlocation", "anonlocation"),
     Atom("any", "any"),
+    Atom("any_hover", "any-hover"),
+    Atom("any_pointer", "any-pointer"),
     Atom("applet", "applet"),
     Atom("applyImports", "apply-imports"),
     Atom("applyTemplates", "apply-templates"),
