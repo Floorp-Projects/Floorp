@@ -119,9 +119,33 @@ public:
   }
 
   // main thread
+
+  // NotifyNodeIsConnected() may be called even when the state has not
+  // changed.
+  void NotifyNodeIsConnected(bool aIsConnected)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (!aIsConnected) {
+      // Reset main thread state for FinishProducingOutputBuffer().
+      mLatency = 0.0f;
+      mLastEventTime = TimeStamp();
+      mDroppingBuffers = false;
+      // Don't flush the output buffer here because the graph thread may be
+      // using it now.  The graph thread will flush when it knows it is
+      // disconnected.
+    }
+    mNodeIsConnected = aIsConnected;
+  }
+
   void FinishProducingOutputBuffer(const AudioChunk& aBuffer)
   {
     MOZ_ASSERT(NS_IsMainThread());
+
+    if (!mNodeIsConnected) {
+      // The output buffer is not used, and mLastEventTime will not be
+      // initialized until the node is re-connected.
+      return;
+    }
 
     TimeStamp now = TimeStamp::Now();
 
@@ -165,6 +189,7 @@ public:
   }
 
   // graph thread
+
   AudioChunk GetOutputBuffer()
   {
     MOZ_ASSERT(!NS_IsMainThread());
@@ -196,16 +221,14 @@ public:
     return mDelaySoFar == STREAM_TIME_MAX ? 0 : mDelaySoFar;
   }
 
-  void Reset()
+  void Flush()
   {
     MOZ_ASSERT(!NS_IsMainThread());
     mDelaySoFar = STREAM_TIME_MAX;
-    mLatency = 0.0f;
     {
       MutexAutoLock lock(mOutputQueue.Lock());
       mOutputQueue.Clear();
     }
-    mLastEventTime = TimeStamp();
   }
 
 private:
@@ -213,9 +236,11 @@ private:
   // How much delay we've seen so far.  This measures the amount of delay
   // caused by the main thread lagging behind in producing output buffers.
   // STREAM_TIME_MAX means that we have not received our first buffer yet.
+  // Graph thread only.
   StreamTime mDelaySoFar;
   // The samplerate of the context.
-  float mSampleRate;
+  const float mSampleRate;
+  // The remaining members are main thread only.
   // This is the latency caused by the buffering. If this grows too high, we
   // will drop buffers until it is acceptable.
   float mLatency;
@@ -224,6 +249,8 @@ private:
   TimeStamp mLastEventTime;
   // True if we should be dropping buffers.
   bool mDroppingBuffers;
+  // True iff the AudioNode has at least one input or output connected.
+  bool mNodeIsConnected;
 };
 
 class ScriptProcessorNodeEngine final : public AudioNodeEngine
@@ -273,7 +300,7 @@ public:
     // buffer queue, and output a null buffer.
     if (!mIsConnected) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-      mSharedBuffers->Reset();
+      mSharedBuffers->Flush();
       mInputWriteIndex = 0;
       return;
     }
@@ -557,6 +584,9 @@ ScriptProcessorNode::UpdateConnectedStatus()
   } else {
     MarkInactive();
   }
+
+  auto engine = static_cast<ScriptProcessorNodeEngine*>(mStream->Engine());
+  engine->GetSharedBuffers()->NotifyNodeIsConnected(isConnected);
 }
 
 } // namespace dom
