@@ -151,13 +151,13 @@ with Files("tests/ambient-light/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("tests/annotation-model/**"):
-    BUG_COMPONENT = ("Toolkit", "Places")
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("tests/annotation-protocol/**"):
-    BUG_COMPONENT = ("Toolkit", "Places")
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("tests/annotation-vocab/**"):
-    BUG_COMPONENT = ("Toolkit", "Places")
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("tests/apng/**"):
     BUG_COMPONENT = ("Core", "ImageLib")
