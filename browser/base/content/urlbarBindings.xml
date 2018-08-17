@@ -1742,7 +1742,84 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }, {once: true});
           }
 
+          this.gotResultForCurrentQuery = false;
           this.controller.startSearch(value);
+        ]]></body>
+      </method>
+
+      <!--
+        Highlights the search alias in the input, or clears the highlight if
+        there is no alias.  To determine in an efficient manner whether the
+        input contains an alias, this method looks at the first (heuristic)
+        result.  If it's a searchengine result with an alias, then it looks for
+        that alias in the input.  Otherwise it clears the highlight.  That means
+        that if the input contains an alias but the alias result is not first,
+        the alias will not be highlighted.
+      -->
+      <method name="highlightSearchAlias">
+        <body><![CDATA[
+          if (!this.editor) {
+            return;
+          }
+
+          // We abuse the SELECTION_FIND selection type to do our highlighting.
+          // It's the only type that works with Selection.setColors().
+          let selection = this.editor.selectionController.getSelection(
+            Ci.nsISelectionController.SELECTION_FIND
+          );
+          selection.removeAllRanges();
+
+          let textNode = this.editor.rootElement.firstChild;
+          let value = textNode.textContent;
+          if (!value) {
+            return;
+          }
+
+          // Alias results have the searchengine style.  Check that first to
+          // avoid the more expensive regexp in _parseActionUrl when possible
+          // since this method is called by the popup every time you start a
+          // search.
+          let alias =
+            this.mController.matchCount &&
+            this.mController.getStyleAt(0).includes("searchengine") &&
+            this._parseActionUrl(this.mController.getFinalCompleteValueAt(0)).params.alias;
+          if (!alias) {
+            return;
+          }
+
+          let index = value.indexOf(alias);
+          if (index < 0) {
+            return;
+          }
+
+          let range = document.createRange();
+          range.setStart(textNode, index);
+          range.setEnd(textNode, index + alias.length);
+          selection.addRange(range);
+
+          let fg = "#2362d7";
+          let bg = "#d2e6fd";
+
+          // Selection.setColors() will swap the given foreground and background
+          // colors if it detects that the contrast between the background
+          // color and the frame color is too low.  Normally we don't want that
+          // to happen; we want it to use our colors as given (even if setColors
+          // thinks the contrast is too low).  But it's a nice feature for non-
+          // default themes, where the contrast between our background color and
+          // the input's frame color might actually be too low.  We can
+          // (hackily) force setColors to use our colors as given by passing
+          // them as the alternate colors.  Otherwise, allow setColors to swap
+          // them, which we can do by passing "currentColor".  See
+          // nsTextPaintStyle::GetHighlightColors for details.
+          if (this.querySelector(":-moz-lwtheme") ||
+              (AppConstants.platform == "win" &&
+               window.matchMedia("(-moz-windows-default-theme: 0)").matches)) {
+            // non-default theme(s)
+            selection.setColors(fg, bg, "currentColor", "currentColor");
+          } else {
+            // default themes
+            selection.setColors(fg, bg, fg, bg);
+          }
         ]]></body>
       </method>
     </implementation>
@@ -2497,6 +2574,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="onResultsAdded">
         <body>
           <![CDATA[
+            // Highlight the search alias in the input if one is present, or
+            // clear the highlight otherwise.  highlightSearchAlias examines
+            // only the first result, so as an optimzation, call it only when
+            // this is the first result.
+            if (!this.input.gotResultForCurrentQuery) {
+              this.input.highlightSearchAlias();
+            }
+
             // If nothing is selected yet, select the first result if it is a
             // pre-selected "heuristic" result.  (See UnifiedComplete.js.)
             if (this.selectedIndex == -1 && this._isFirstResultHeuristic) {
