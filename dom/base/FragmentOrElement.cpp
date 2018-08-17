@@ -1464,10 +1464,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
     unbind the child nodes.
   } */
 
-  // Clear flag here because unlinking slots will clear the
-  // containing shadow root pointer.
-  tmp->UnsetFlags(NODE_IS_IN_SHADOW_TREE);
-
   if (ShadowRoot* shadowRoot = tmp->GetShadowRoot()) {
     for (nsIContent* child = shadowRoot->GetFirstChild();
          child;
