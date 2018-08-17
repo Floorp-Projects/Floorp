@@ -213,7 +213,7 @@ for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM
 // as call-to-action buttons in snippets, onboarding tour, etc.
 const ASRouterActions = {};
 
-for (const type of ["INSTALL_ADDON_FROM_URL", "OPEN_PRIVATE_BROWSER_WINDOW", "OPEN_URL", "OPEN_ABOUT_PAGE"]) {
+for (const type of ["INSTALL_ADDON_FROM_URL", "OPEN_APPLICATIONS_MENU", "OPEN_PRIVATE_BROWSER_WINDOW", "OPEN_URL", "OPEN_ABOUT_PAGE"]) {
   ASRouterActions[type] = type;
 }
 
@@ -922,8 +922,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "convertLinks", function() { return convertLinks; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ASRouterUISurface", function() { return ASRouterUISurface; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ASRouterContent", function() { return ASRouterContent; });
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
-/* harmony import */ var fluent_react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(40);
+/* harmony import */ var fluent_react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(40);
+/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
 /* harmony import */ var content_src_lib_init_store__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
 /* harmony import */ var _components_ImpressionsWrapper_ImpressionsWrapper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9);
 /* harmony import */ var fluent__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(39);
@@ -966,10 +966,11 @@ const ASRouterUtils = {
   blockBundle(bundle) {
     ASRouterUtils.sendMessage({ type: "BLOCK_BUNDLE", data: { bundle } });
   },
-  executeAction({ button_action, button_action_params }) {
-    if (button_action in common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["ASRouterActions"]) {
-      ASRouterUtils.sendMessage({ type: button_action, data: { button_action_params } });
-    }
+  executeAction(button_action) {
+    ASRouterUtils.sendMessage({
+      type: "USER_ACTION",
+      data: button_action
+    });
   },
   unblockById(id) {
     ASRouterUtils.sendMessage({ type: "UNBLOCK_MESSAGE_BY_ID", data: { id } });
@@ -984,7 +985,7 @@ const ASRouterUtils = {
     ASRouterUtils.sendMessage({ type: "OVERRIDE_MESSAGE", data: { id } });
   },
   sendTelemetry(ping) {
-    const payload = common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].ASRouterUserEvent(ping);
+    const payload = common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__["actionCreators"].ASRouterUserEvent(ping);
     global.RPMSendAsyncMessage(content_src_lib_init_store__WEBPACK_IMPORTED_MODULE_2__["OUTGOING_MESSAGE_NAME"], payload);
   },
   getEndpoint() {
@@ -1044,7 +1045,7 @@ function convertLinks(links, sendClick) {
  */
 function RichText(props) {
   return react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
-    fluent_react__WEBPACK_IMPORTED_MODULE_1__["Localized"],
+    fluent_react__WEBPACK_IMPORTED_MODULE_0__["Localized"],
     _extends({ id: "RichTextSnippet" }, ALLOWED_TAGS, convertLinks(props.links, props.sendClick)),
     react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
       "span",
@@ -1153,7 +1154,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
         // This helps with testing
         , document: this.props.document },
       react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
-        fluent_react__WEBPACK_IMPORTED_MODULE_1__["LocalizationProvider"],
+        fluent_react__WEBPACK_IMPORTED_MODULE_0__["LocalizationProvider"],
         { messages: generateMessages(this.state.message.content.text) },
         react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(_templates_SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_9__["SimpleSnippet"], _extends({}, this.state.message, {
           richText: react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(RichText, { text: this.state.message.content.text,
@@ -1162,6 +1163,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
           UISurface: "NEWTAB_FOOTER_BAR",
           getNextMessage: ASRouterUtils.getNextMessage,
           onBlock: this.onBlockById(this.state.message.id),
+          onAction: ASRouterUtils.executeAction,
           sendUserActionTelemetry: this.sendUserActionTelemetry }))
       )
     );
@@ -7845,11 +7847,7 @@ localized_Localized.propTypes = {
 var external_React_ = __webpack_require__(5);
 var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_);
 
-// EXTERNAL MODULE: ./content-src/asrouter/template-utils.js
-var template_utils = __webpack_require__(11);
-
 // CONCATENATED MODULE: ./content-src/asrouter/components/Button/Button.jsx
-
 
 
 const ALLOWED_STYLE_TAGS = ["color", "backgroundColor"];
@@ -7869,14 +7867,16 @@ const Button = props => {
   }
 
   return external_React_default.a.createElement(
-    "a",
-    { href: Object(template_utils["safeURI"])(props.url),
-      onClick: props.onClick,
+    "button",
+    { onClick: props.onClick,
       className: props.className || "ASRouterButton",
       style: style },
     props.children
   );
 };
+// EXTERNAL MODULE: ./content-src/asrouter/template-utils.js
+var template_utils = __webpack_require__(11);
+
 // CONCATENATED MODULE: ./content-src/asrouter/components/SnippetBase/SnippetBase.jsx
 
 
@@ -7927,6 +7927,7 @@ class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent
 
   onButtonClick() {
     this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", id: this.props.UISurface });
+    this.props.onAction(this.props.content.button_action);
   }
 
   renderTitle() {
@@ -7943,14 +7944,16 @@ class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent
     return titleIcon ? external_React_default.a.createElement("span", { className: "titleIcon", style: { backgroundImage: `url("${titleIcon}")` } }) : null;
   }
 
-  renderButton(className) {
+  renderButton() {
     const { props } = this;
+    if (!props.content.button_action) {
+      return null;
+    }
+
     return external_React_default.a.createElement(
       Button,
       {
-        className: className,
         onClick: this.onButtonClick,
-        url: props.content.button_url,
         color: props.content.button_color,
         backgroundColor: props.content.button_background_color },
       props.content.button_label
@@ -7959,8 +7962,6 @@ class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent
 
   render() {
     const { props } = this;
-    const hasLink = props.content.button_url && props.content.button_type === "anchor";
-    const hasButton = props.content.button_url && !props.content.button_type;
     const className = `SimpleSnippet${props.content.tall ? " tall" : ""}`;
     return external_React_default.a.createElement(
       SnippetBase_SnippetBase,
@@ -7977,15 +7978,13 @@ class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent
           "p",
           { className: "body" },
           props.richText || props.content.text
-        ),
-        " ",
-        hasLink ? this.renderButton("ASRouterAnchor") : null
+        )
       ),
-      hasButton ? external_React_default.a.createElement(
+      external_React_default.a.createElement(
         "div",
         null,
         this.renderButton()
-      ) : null
+      )
     );
   }
 }
@@ -8498,7 +8497,7 @@ class OnboardingMessage_OnboardingCard extends external_React_default.a.PureComp
   onClick() {
     const { props } = this;
     props.sendUserActionTelemetry({ event: "CLICK_BUTTON", message_id: props.id, id: props.UISurface });
-    props.onAction(props.content);
+    props.onAction(props.content.button_action);
   }
 
   render() {

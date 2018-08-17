@@ -2022,9 +2022,8 @@ a.firstrun-link {
 .SimpleSnippet.tall .icon {
   margin-inline-end: 20px; }
 
-.SimpleSnippet .ASRouterAnchor {
-  color: inherit;
-  text-decoration: underline; }
+.SimpleSnippet .ASRouterButton {
+  cursor: pointer; }
 
 .onboardingMessageContainer {
   display: grid;

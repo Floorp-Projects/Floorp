@@ -10,6 +10,7 @@ import {
   PARENT_TO_CHILD_MESSAGE_NAME
 } from "./constants";
 import {ASRouterTriggerListeners} from "lib/ASRouterTriggerListeners.jsm";
+import {GlobalOverrider} from "test/unit/utils";
 import ProviderResponseSchema from "content-src/asrouter/schemas/provider-response.schema.json";
 
 const MESSAGE_PROVIDER_PREF_NAME = "browser.newtabpage.activity-stream.asrouter.messageProviders";
@@ -22,6 +23,10 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 // RemotePageManager listeners
 function fakeAsyncMessage(action) {
   return {data: action, target: new FakeRemotePageManager()};
+}
+// Create a message that looks like a user action
+function fakeExecuteUserAction(action) {
+  return fakeAsyncMessage({data: action, type: "USER_ACTION"});
 }
 
 describe("ASRouter", () => {
@@ -550,8 +555,8 @@ describe("ASRouter", () => {
         {id: "foo1", template: "simple_template", bundled: 1, trigger: {id: "foo"}, content: {title: "Foo1", body: "Foo123-1"}}
       ];
 
-      const {target, data} = fakeAsyncMessage({type: "TRIGGER", data: {trigger: {id: "foo"}}});
-      let message = await Router._findMessage(messages, target, data.data.trigger);
+      const {target} = fakeAsyncMessage({type: "TRIGGER", data: {trigger: {id: "foo"}}});
+      let message = await Router._findMessage(messages, target, {id: "foo"});
       assert.equal(message, messages[0]);
     });
     it("should pick a message with the right targeting and trigger", async () => {
@@ -561,8 +566,8 @@ describe("ASRouter", () => {
         {id: "foo3", template: "simple_template", bundled: 2, trigger: {id: "foo"}, content: {title: "Foo3", body: "Foo123-3"}}
       ];
       await Router.setState({messages});
-      const {target, data} = fakeAsyncMessage({type: "TRIGGER", data: {trigger: {id: "foo"}}});
-      let {bundle} = await Router._getBundledMessages(messages[0], target, data.data.trigger);
+      const {target} = fakeAsyncMessage({type: "TRIGGER", data: {trigger: {id: "foo"}}});
+      let {bundle} = await Router._getBundledMessages(messages[0], target, {id: "foo"});
       assert.equal(bundle.length, 2);
       // it should have picked foo1 and foo3 only
       assert.isTrue(bundle.every(elem => elem.id === "foo1" || elem.id === "foo3"));
@@ -589,7 +594,7 @@ describe("ASRouter", () => {
   describe("#onMessage: Onboarding actions", () => {
     it("should call OpenBrowserWindow with a private window on OPEN_PRIVATE_BROWSER_WINDOW", async () => {
       let [testMessage] = Router.state.messages;
-      const msg = fakeAsyncMessage({type: "OPEN_PRIVATE_BROWSER_WINDOW", data: testMessage});
+      const msg = fakeExecuteUserAction({type: "OPEN_PRIVATE_BROWSER_WINDOW", data: testMessage});
       await Router.onMessage(msg);
 
       assert.calledWith(msg.target.browser.ownerGlobal.OpenBrowserWindow, {private: true});
@@ -597,21 +602,21 @@ describe("ASRouter", () => {
     it("should call openLinkIn with the correct params on OPEN_URL", async () => {
       sinon.spy(Router, "openLinkIn");
       let [testMessage] = Router.state.messages;
-      testMessage.button_action_params = "some/url.com";
-      const msg = fakeAsyncMessage({type: "OPEN_URL", data: testMessage});
+      testMessage.button_action = {type: "OPEN_URL", data: {url: "some/url.com"}};
+      const msg = fakeExecuteUserAction(testMessage.button_action);
       await Router.onMessage(msg);
 
-      assert.calledWith(Router.openLinkIn, testMessage.button_action_params, msg.target, {isPrivate: false, where: "tabshifted"});
+      assert.calledWith(Router.openLinkIn, "some/url.com", msg.target, {isPrivate: false, where: "tabshifted"});
       assert.calledOnce(msg.target.browser.ownerGlobal.openLinkIn);
     });
     it("should call openLinkIn with the correct params on OPEN_ABOUT_PAGE", async () => {
       sinon.spy(Router, "openLinkIn");
       let [testMessage] = Router.state.messages;
-      testMessage.button_action_params = "something";
-      const msg = fakeAsyncMessage({type: "OPEN_ABOUT_PAGE", data: testMessage});
+      testMessage.button_action = {type: "OPEN_ABOUT_PAGE", data: {page: "something"}};
+      const msg = fakeExecuteUserAction(testMessage.button_action);
       await Router.onMessage(msg);
 
-      assert.calledWith(Router.openLinkIn, `about:${testMessage.button_action_params}`, msg.target, {isPrivate: false, trusted: true, where: "tab"});
+      assert.calledWith(Router.openLinkIn, `about:something`, msg.target, {isPrivate: false, trusted: true, where: "tab"});
       assert.calledOnce(msg.target.browser.ownerGlobal.openTrustedLinkIn);
     });
   });
@@ -619,7 +624,7 @@ describe("ASRouter", () => {
   describe("#onMessage: INSTALL_ADDON_FROM_URL", () => {
     it("should call installAddonFromURL with correct arguments", async () => {
       sandbox.stub(MessageLoaderUtils, "installAddonFromURL").resolves(null);
-      const msg = fakeAsyncMessage({type: "INSTALL_ADDON_FROM_URL", data: {url: "foo.com"}});
+      const msg = fakeExecuteUserAction({type: "INSTALL_ADDON_FROM_URL", data: {url: "foo.com"}});
 
       await Router.onMessage(msg);
 
@@ -636,6 +641,23 @@ describe("ASRouter", () => {
       Router._triggerHandler(target, trigger);
       assert.calledOnce(Router.onMessage);
       assert.calledWithExactly(Router.onMessage, {target, data: {type: "TRIGGER", trigger}});
+    });
+  });
+
+  describe("#UITour", () => {
+    let globals;
+    let showMenuStub;
+    beforeEach(() => {
+      globals = new GlobalOverrider();
+      showMenuStub = sandbox.stub();
+      globals.set("UITour", {showMenu: showMenuStub});
+    });
+    it("should call UITour.showMenu with the correct params on OPEN_APPLICATIONS_MENU", async () => {
+      const msg = fakeExecuteUserAction({type: "OPEN_APPLICATIONS_MENU", data: {target: "appMenu"}});
+      await Router.onMessage(msg);
+
+      assert.calledOnce(showMenuStub);
+      assert.calledWith(showMenuStub, msg.target.browser.ownerGlobal, "appMenu");
     });
   });
 

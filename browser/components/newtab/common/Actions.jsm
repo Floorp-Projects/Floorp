@@ -124,6 +124,7 @@ for (const type of [
 const ASRouterActions = {};
 for (const type of [
   "INSTALL_ADDON_FROM_URL",
+  "OPEN_APPLICATIONS_MENU",
   "OPEN_PRIVATE_BROWSER_WINDOW",
   "OPEN_URL",
   "OPEN_ABOUT_PAGE"
