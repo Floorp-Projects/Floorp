@@ -106,7 +106,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         self.test_packages_url = c.get('test_packages_url')
         self.test_manifest = c.get('test_manifest')
         self.robocop_path = os.path.join(abs_dirs['abs_work_dir'], "robocop.apk")
-        self.minidump_stackwalk_path = c.get("minidump_stackwalk_path")
         self.device_name = os.environ['DEVICE_NAME']
         self.device_serial = os.environ['DEVICE_SERIAL']
         self.device_ip = os.environ['DEVICE_IP']

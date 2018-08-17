@@ -2977,6 +2977,29 @@ var BrowserOnClick = {
         sslStatus = securityInfo.SSLStatus;
         let params = { exceptionAdded: false,
                        sslStatus };
+        if (Services.prefs.getBoolPref("browser.security.newcerterrorpage.enabled", false)) {
+          let overrideService = Cc["@mozilla.org/security/certoverride;1"]
+                                  .getService(Ci.nsICertOverrideService);
+          let flags = 0;
+          if (sslStatus.isUntrusted) {
+            flags |= overrideService.ERROR_UNTRUSTED;
+          }
+          if (sslStatus.isDomainMismatch) {
+            flags |= overrideService.ERROR_MISMATCH;
+          }
+          if (sslStatus.isNotValidAtThisTime) {
+            flags |= overrideService.ERROR_TIME;
+          }
+          let uri = Services.uriFixup.createFixupURI(location, 0);
+          let cert = sslStatus.serverCert;
+          overrideService.rememberValidityOverride(
+            uri.asciiHost, uri.port,
+            cert,
+            flags,
+            true);
+          browser.reload();
+          return;
+        }
 
         try {
           switch (Services.prefs.getIntPref("browser.ssl_override_behavior")) {

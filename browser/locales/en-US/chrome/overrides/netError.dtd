@@ -10,7 +10,7 @@
 <!ENTITY returnToPreviousPage.label "Go Back">
 <!ENTITY returnToPreviousPage1.label "Go Back (Recommended)">
 <!ENTITY advanced.label "Advanced">
-<!ENTITY continue1.label "Continue…">
+<!ENTITY continue2.label "More…">
 <!ENTITY moreInformation.label "More Information">
 
 <!-- Specific error messages -->
@@ -193,6 +193,7 @@ was trying to connect. -->
 
 
 <!ENTITY securityOverride.exceptionButtonLabel "Add Exception…">
+<!ENTITY securityOverride.exceptionButton1Label "Accept the Risk and Continue">
 
 <!ENTITY errorReporting.automatic2 "Report errors like this to help Mozilla identify and block malicious sites">
 <!ENTITY errorReporting.learnMore "Learn more…">

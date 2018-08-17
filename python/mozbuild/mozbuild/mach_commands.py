@@ -1344,9 +1344,16 @@ class PackageFrontend(MachCommandBase):
 
         class ArtifactRecord(DownloadRecord):
             def __init__(self, task_id, artifact_name):
-                cot = cache._download_manager.session.get(
-                    get_artifact_url(task_id, 'public/chainOfTrust.json.asc'))
-                cot.raise_for_status()
+                for _ in redo.retrier(attempts=retry+1, sleeptime=60):
+                    cot = cache._download_manager.session.get(
+                        get_artifact_url(task_id, 'public/chainOfTrust.json.asc'))
+                    if cot.status_code >= 500:
+                        continue
+                    cot.raise_for_status()
+                    break
+                else:
+                    cot.raise_for_status()
+
                 digest = algorithm = None
                 data = {}
                 # The file is GPG-signed, but we don't care about validating

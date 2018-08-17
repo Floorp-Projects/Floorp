@@ -19,7 +19,7 @@ pref("marionette.debugging.clicktostart", false);
 // Available levels are, in descending order of severity,
 // "trace", "debug", "config", "info", "warn", "error", and "fatal".
 // The value is treated case-insensitively.
-pref("marionette.log.level", "info");
+pref("marionette.log.level", "Info");
 
 // Certain log messages that are known to be long are truncated
 // before they are dumped to stdout.  The `marionette.log.truncate`
