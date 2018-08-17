@@ -65,7 +65,7 @@ def nodejs_suitability(require, node, version):
     MAYBE_FILE_A_BUG = '''
 
 If you believe this is a bug, <https://mzl.la/2vLbXAv> is a good way
-to file.  Executing `mach bootstrap --no-system changes` should
+to file.  Executing `mach bootstrap --no-system-changes` should
 install a compatible version in ~/.mozbuild on most platforms.
 More details: <https://bit.ly/2BbyD1E>
 '''
