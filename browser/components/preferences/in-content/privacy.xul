@@ -221,6 +221,36 @@
                value="2"
                flex="1" />
       </radiogroup>
+      <radiogroup id="blockCookies"
+                  preference="network.cookie.cookieBehavior"
+                  onsyncfrompreference="return gPrivacyPane.readBlockCookies();"
+                  onsynctopreference="return gPrivacyPane.writeBlockCookies();">
+        <radio value="allow"
+               data-l10n-id="sitedata-allow-cookies-option"
+               flex="1" />
+        <radio value="disallow"
+               data-l10n-id="sitedata-disallow-cookies-option"
+               flex="1" />
+        <hbox id="blockThirdPartyRow"
+              class="indent"
+              align="center">
+          <label id="blockCookiesLabel" control="blockCookiesMenu"
+                 data-l10n-id="sitedata-block-desc"/>
+          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+          <hbox>
+            <menulist id="blockCookiesMenu" preference="network.cookie.cookieBehavior"
+                      onsyncfrompreference="return gPrivacyPane.readBlockCookiesFrom();"
+                      onsynctopreference="return gPrivacyPane.writeBlockCookiesFrom();">
+              <menupopup>
+                <menuitem id="blockCookiesFromTrackers" data-l10n-id="sitedata-block-trackers-option" value="trackers"/>
+                <menuitem data-l10n-id="sitedata-block-unvisited-option" value="unvisited"/>
+                <menuitem data-l10n-id="sitedata-block-all-third-parties-option" value="all-third-parties"/>
+                <menuitem data-l10n-id="sitedata-block-always-option" value="always"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </hbox>
+      </radiogroup>
     </vbox>
     <vbox>
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
