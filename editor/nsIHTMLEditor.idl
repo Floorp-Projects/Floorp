@@ -312,8 +312,8 @@ interface nsIHTMLEditor : nsISupports
    *                        If "td", the result may be <td> or <th>.
    *                        If "href", the result may be <a> element
    *                        which has "href" attribute with non-empty value.
-   *                        If "anchor" or "namedanchor", the result may be <a>
-   *                        which has "name" attribute with non-empty value.
+   *                        If "anchor", the result may be <a> which has
+   *                        "name" attribute with non-empty value.
    * @param aNode           If non-null, this starts to look for the result
    *                        from it.  Otherwise, i.e., null, starts from
    *                        anchor node of Selection.
