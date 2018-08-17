@@ -17,18 +17,18 @@
   <script src="chrome://formautofill/content/autofillEditForms.js"></script>
 </head>
 <body dir="&locale.dir;">
-  <form id="form" autocomplete="off">
+  <form id="form" class="editCreditCardForm" autocomplete="off">
     <label>
-      <span data-localization="cardNumber"/>
+      <span data-localization="cardNumber" class="label-text"/>
       <span id="invalidCardNumberString" hidden="hidden" data-localization="invalidCardNumber"></span>
       <input id="cc-number" type="text" required="required" minlength="9" pattern="[- 0-9]+"/>
     </label>
     <label>
-      <span data-localization="nameOnCard"/>
+      <span data-localization="nameOnCard" class="label-text"/>
       <input id="cc-name" type="text" required="required"/>
     </label>
-    <div>
-      <span data-localization="cardExpires"/>
+    <label>
+      <span data-localization="cardExpiresMonth" class="label-text"/>
       <select id="cc-exp-month">
         <option/>
         <option value="1">01</option>
@@ -44,12 +44,15 @@
         <option value="11">11</option>
         <option value="12">12</option>
       </select>
+    </label>
+    <label>
+      <span data-localization="cardExpiresYear" class="label-text"/>
       <select id="cc-exp-year">
         <option/>
       </select>
-    </div>
+    </label>
     <label class="billingAddressRow">
-      <span data-localization="billingAddress"/>
+      <span data-localization="billingAddress" class="label-text"/>
       <select id="billingAddressGUID">
       </select>
     </label>
