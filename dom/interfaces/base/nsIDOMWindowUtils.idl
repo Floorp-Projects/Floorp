@@ -687,8 +687,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * non-debug builds. Available to all callers in debug builds.
    *
    * @param aListener listener that receives information about the CC graph
-   *                  (see @mozilla.org/cycle-collector-logger;1 for a logger
-   *                   component)
    */
   void garbageCollect([optional] in nsICycleCollectorListener aListener);
 
@@ -699,8 +697,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * non-debug builds. Available to all callers in debug builds.
    *
    * @param aListener listener that receives information about the CC graph
-   *                  (see @mozilla.org/cycle-collector-logger;1 for a logger
-   *                   component)
    */
   void cycleCollect([optional] in nsICycleCollectorListener aListener);
 

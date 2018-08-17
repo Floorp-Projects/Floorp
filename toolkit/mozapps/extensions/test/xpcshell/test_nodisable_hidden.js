@@ -93,7 +93,7 @@ add_task(async function() {
     await addon.disable();
     do_throw("Expected addon.userDisabled on a hidden add-on to throw!");
   } catch (e) {
-    Assert.equal(e.message, `Cannot disable hidden add-on ${SYSTEM_ID}`);
+    Assert.equal(e.message, `Cannot disable system add-on ${SYSTEM_ID}`);
   }
 
   Assert.notEqual(addon, null);

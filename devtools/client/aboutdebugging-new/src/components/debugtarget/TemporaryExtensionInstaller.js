@@ -8,19 +8,31 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const Actions = require("../../actions/index");
+
 /**
- * This component displays detail information for tab.
+ * This component provides an installer for temporary extension.
  */
-class TabDetail extends PureComponent {
+class TemporaryExtensionInstaller extends PureComponent {
   static get propTypes() {
     return {
-      target: PropTypes.object.isRequired,
+      dispatch: PropTypes.func.isRequired,
     };
   }
 
+  install() {
+    this.props.dispatch(Actions.installTemporaryExtension());
+  }
+
   render() {
-    return dom.div({ className: "ellipsis-text" }, this.props.target.details.url);
+    return dom.button(
+      {
+        className: "aboutdebugging-button",
+        onClick: e => this.install()
+      },
+      "Load Temporary Add-on…"
+    );
   }
 }
 
-module.exports = TabDetail;
+module.exports = TemporaryExtensionInstaller;
