@@ -10,8 +10,9 @@ const {
   CanvasFrameAnonymousContentHelper,
   createNode,
   createSVGNode,
+  isNodeValid,
 } = require("./utils/markup");
-
+const { TEXT_NODE } = require("devtools/shared/dom-node-constants");
 const { setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 
 /**
@@ -154,6 +155,18 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
    */
   getElement(id) {
     return this.markup.getElement(this.ID_CLASS_PREFIX + id);
+  }
+
+  /**
+   * Check if node is a valid element or text node.
+   *
+   * @override  AutoRefreshHighlighter.prototype._isNodeValid
+   * @param  {DOMNode} node
+   *         The node to highlight.
+   * @return {Boolean} whether or not node is valid.
+   */
+  _isNodeValid(node) {
+    return super._isNodeValid(node) || isNodeValid(node, TEXT_NODE);
   }
 
   /**
