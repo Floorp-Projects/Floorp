@@ -9,6 +9,7 @@ package org.mozilla.geckoview;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -278,6 +279,30 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mSettings.mSafebrowsingPhishing.set(enabled);
             return this;
         }
+
+        /**
+         * Set the display DPI override.
+         *
+         * @param dpi The display DPI value to use for overriding the system default.
+         * @return The builder instance.
+         */
+        public @NonNull Builder displayDpiOverride(int dpi) {
+            mSettings.mDisplayDpiOverride = dpi;
+            return this;
+        }
+
+        /**
+         * Set the screen size override.
+         *
+         * @param width The screen width value to use for overriding the system default.
+         * @param height The screen height value to use for overriding the system default.
+         * @return The builder instance.
+         */
+        public @NonNull Builder screenSizeOverride(int width, int height) {
+            mSettings.mScreenWidthOverride = width;
+            mSettings.mScreenHeightOverride = height;
+            return this;
+        }
     }
 
     /* package */ GeckoRuntime runtime;
@@ -346,6 +371,9 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /* package */ int mCrashReportingJobId;
     /* package */ boolean mDebugPause;
     /* package */ float mDisplayDensityOverride = -1.0f;
+    /* package */ int mDisplayDpiOverride;
+    /* package */ int mScreenWidthOverride;
+    /* package */ int mScreenHeightOverride;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
         mCookieBehavior, mCookieLifetime, mConsoleOutput,
@@ -387,6 +415,9 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mCrashReportingJobId = settings.mCrashReportingJobId;
         mDebugPause = settings.mDebugPause;
         mDisplayDensityOverride = settings.mDisplayDensityOverride;
+        mDisplayDpiOverride = settings.mDisplayDpiOverride;
+        mScreenWidthOverride = settings.mScreenWidthOverride;
+        mScreenHeightOverride = settings.mScreenHeightOverride;
     }
 
     /* package */ void flush() {
@@ -521,7 +552,32 @@ public final class GeckoRuntimeSettings implements Parcelable {
      */
     public Float getDisplayDensityOverride() {
         if (mDisplayDensityOverride > 0.0f) {
-            return new Float(mDisplayDensityOverride);
+            return mDisplayDensityOverride;
+        }
+        return null;
+    }
+
+    /**
+     * Gets the display DPI override value.
+     *
+     * @return Returns a positive number. Will return null if not set.
+     */
+    public Integer getDisplayDpiOverride() {
+        if (mDisplayDpiOverride > 0) {
+            return mDisplayDpiOverride;
+        }
+        return null;
+    }
+
+    /**
+     * Gets the screen size  override value.
+     *
+     * @return Returns a Rect containing the dimensions to use for the window size.
+     * Will return null if not set.
+     */
+    public Rect getScreenSizeOverride() {
+        if ((mScreenWidthOverride > 0) && (mScreenHeightOverride > 0)) {
+            return new Rect(0, 0, mScreenWidthOverride, mScreenHeightOverride);
         }
         return null;
     }
@@ -733,6 +789,9 @@ public final class GeckoRuntimeSettings implements Parcelable {
         out.writeInt(mCrashReportingJobId);
         ParcelableUtils.writeBoolean(out, mDebugPause);
         out.writeFloat(mDisplayDensityOverride);
+        out.writeInt(mDisplayDpiOverride);
+        out.writeInt(mScreenWidthOverride);
+        out.writeInt(mScreenHeightOverride);
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -753,6 +812,9 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mCrashReportingJobId = source.readInt();
         mDebugPause = ParcelableUtils.readBoolean(source);
         mDisplayDensityOverride = source.readFloat();
+        mDisplayDpiOverride = source.readInt();
+        mScreenWidthOverride = source.readInt();
+        mScreenHeightOverride = source.readInt();
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR
