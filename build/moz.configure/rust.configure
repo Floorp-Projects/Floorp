@@ -284,6 +284,11 @@ def rust_tests(enable_rust_tests, rustdoc):
 
 set_config('MOZ_RUST_TESTS', rust_tests)
 
+# cbindgen is needed by the style system build.
+cbindgen = check_prog('CBINDGEN', add_rustup_path('cbindgen'), paths=toolchain_search_path,
+                      when=depends(build_project)
+                      (lambda build_project: build_project != 'js'))
+
 # Bindgen can use rustfmt to format Rust file, but it's not required.
 js_option(env='RUSTFMT', nargs=1, help='Path to the rustfmt program')
 
