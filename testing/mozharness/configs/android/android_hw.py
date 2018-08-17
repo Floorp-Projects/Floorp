@@ -23,6 +23,7 @@ config = {
     # from android_common.py
     "download_tooltool": True,
     "download_minidump_stackwalk": True,
+    "minidump_stackwalk_path": "linux64-minidump_stackwalk",
     "tooltool_servers": ['https://tooltool.mozilla-releng.net/'],
     # minidump_tooltool_manifest_path is relative to workspace/build/tests/
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/linux64/releng.manifest",
