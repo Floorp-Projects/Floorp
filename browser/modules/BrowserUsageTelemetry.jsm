@@ -271,7 +271,7 @@ let URICountListener = {
       case "google":
       case "google-2018":
         let type;
-        let queries = new URLSearchParams(url.split("?")[1]);
+        let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
         let code = queries.get("client");
         if (code) {
           // Detecting follow-on searches for sap is a little tricky.
