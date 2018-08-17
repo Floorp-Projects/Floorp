@@ -349,18 +349,6 @@ DocumentOrShadowRoot::RemoveIDTargetObserver(nsAtom* aID,
   entry->RemoveContentChangeCallback(aObserver, aData, aForImage);
 }
 
-
-Element*
-DocumentOrShadowRoot::LookupImageElement(const nsAString& aId)
-{
-  if (aId.IsEmpty()) {
-    return nullptr;
-  }
-
-  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
-  return entry ? entry->GetImageIdElement() : nullptr;
-}
-
 void
 DocumentOrShadowRoot::ReportEmptyGetElementByIdArg()
 {
