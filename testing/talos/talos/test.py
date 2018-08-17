@@ -512,9 +512,7 @@ class tp5n(PageloaderTest):
                       'nonmain_startup_fileio', 'nonmain_normal_fileio',
                       'nonmain_normal_netio', 'mainthread_readcount',
                       'mainthread_readbytes', 'mainthread_writecount',
-                      'mainthread_writebytes',
-                      'time_to_session_store_window_restored_ms',
-                      ]
+                      'mainthread_writebytes']
     xperf_providers = ['PROC_THREAD', 'LOADER', 'HARD_FAULTS', 'FILENAME',
                        'FILE_IO', 'FILE_IO_INIT']
     xperf_user_providers = ['Mozilla Generic Provider',
