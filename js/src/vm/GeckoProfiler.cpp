@@ -275,17 +275,12 @@ GeckoProfilerRuntime::allocProfileString(JSScript* script, JSFunction* maybeFun)
     size_t lenFilename = strlen(filename);
 
     // Get the line number and its length as a string.
-    uint32_t lineno = script->lineno();
+    uint64_t lineno = script->lineno();
     size_t lenLineno = 1;
-    for (uint32_t i = lineno; i /= 10; lenLineno++);
-
-    // Get the column number and its length as a string.
-    uint32_t column = script->column();
-    size_t lenColumn = 1;
-    for (uint32_t i = column; i /= 10; lenColumn++);
+    for (uint64_t i = lineno; i /= 10; lenLineno++);
 
     // Determine the required buffer size.
-    size_t len = lenFilename + 1 + lenLineno + 1 + lenColumn; // +1 for each separator colon, ":".
+    size_t len = lenFilename + lenLineno + 1; // +1 for the ":" separating them.
     if (atom) {
         len += JS::GetDeflatedUTF8StringLength(atom) + 3; // +3 for the " (" and ")" it adds.
     }
@@ -302,11 +297,9 @@ GeckoProfilerRuntime::allocProfileString(JSScript* script, JSFunction* maybeFun)
         if (!atomStr)
             return nullptr;
 
-        ret = snprintf(cstr.get(), len + 1, "%s (%s:%" PRIu32 ":%" PRIu32 ")",
-                atomStr.get(), filename, lineno, column);
+        ret = snprintf(cstr.get(), len + 1, "%s (%s:%" PRIu64 ")", atomStr.get(), filename, lineno);
     } else {
-        ret = snprintf(cstr.get(), len + 1, "%s:%" PRIu32 ":%" PRIu32,
-                filename, lineno, column);
+        ret = snprintf(cstr.get(), len + 1, "%s:%" PRIu64, filename, lineno);
     }
 
     MOZ_ASSERT(ret == len, "Computed length should match actual length!");
