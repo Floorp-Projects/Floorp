@@ -1510,6 +1510,13 @@ protected: // Shouldn't be used by friend classes
   void DeleteRefToAnonymousNode(ManualNACPtr aContent,
                                 nsIPresShell* aShell);
 
+  /**
+   * RefereshEditingUI() may refresh editing UIs for current Selection, focus,
+   * etc.  If this shows or hides some UIs, it causes reflow.  So, this is
+   * not safe method.
+   */
+  nsresult RefereshEditingUI(Selection& aSelection);
+
   nsresult ShowResizersInner(Element& aResizedElement);
 
   /**
