@@ -556,7 +556,7 @@ fuzzy-if(skiaContent,0-1,0-100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-en
 # Shadow DOM id tracking.
 pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-1.html fragid-shadow-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-2.html fragid-shadow-ref.html
-pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-3.html fragid-shadow-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) random-if(webrender) == fragid-shadow-3.html fragid-shadow-ref.html # Suspected bug 1471583
 pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-4.html fragid-shadow-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-5.html fragid-shadow-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-6.html fragid-shadow-ref.html
