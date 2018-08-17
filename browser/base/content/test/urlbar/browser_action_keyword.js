@@ -1,7 +1,7 @@
 async function promise_first_result(inputText) {
   await promiseAutocompleteResultPopup(inputText);
 
-  let firstResult = gURLBar.popup.richlistbox.firstChild;
+  let firstResult = gURLBar.popup.richlistbox.firstElementChild;
   return firstResult;
 }
 

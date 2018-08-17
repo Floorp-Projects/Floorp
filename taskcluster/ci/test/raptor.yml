@@ -222,6 +222,35 @@ raptor-unity-webgl-chrome:
         fetch:
             - unity-webgl
 
+raptor-wasm-misc-firefox:
+    description: "Raptor WASM Misc on Firefox"
+    try-name: raptor-wasm-misc-firefox
+    treeherder-symbol: Rap(wm)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-misc
+    fetches:
+        fetch:
+            - wasm-misc
+
+raptor-wasm-misc-chrome:
+    description: "Raptor WASM Misc on Chrome"
+    try-name: raptor-wasm-misc-chrome
+    treeherder-symbol: Rap-C(wm)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-misc
+            - --app=chrome
+    fetches:
+        fetch:
+            - wasm-misc
+
 raptor-assorted-dom-firefox:
     description: "Raptor Assorted-Dom on Firefox"
     try-name: raptor-assorted-dom-firefox

@@ -65,7 +65,7 @@ add_task(async function actionURILosslessDecode() {
 async function checkInput(inputStr) {
   await promiseAutocompleteResultPopup(inputStr);
 
-  let item = gURLBar.popup.richlistbox.firstChild;
+  let item = gURLBar.popup.richlistbox.firstElementChild;
   Assert.ok(item, "Should have a result");
 
   // visiturl matches have their param.urls fixed up.

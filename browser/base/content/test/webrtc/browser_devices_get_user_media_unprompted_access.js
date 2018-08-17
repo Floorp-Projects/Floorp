@@ -17,7 +17,7 @@ var gTests = [
     let indicator = promiseIndicatorWindow();
 
     await promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
+      PopupNotifications.panel.firstElementChild.button.click();
     });
 
     await expectObserverCalled("getUserMedia:response:allow");
@@ -92,7 +92,7 @@ var gTests = [
     let indicator = promiseIndicatorWindow();
 
     await promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
+      PopupNotifications.panel.firstElementChild.button.click();
     });
 
     await expectObserverCalled("getUserMedia:response:allow");
@@ -183,7 +183,7 @@ var gTests = [
     let indicator = promiseIndicatorWindow();
 
     await promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
+      PopupNotifications.panel.firstElementChild.button.click();
     });
 
     await expectObserverCalled("getUserMedia:response:allow");

@@ -261,11 +261,11 @@ add_task(async function test_user_defined_commands() {
   let keysetID = `ext-keyset-id-${makeWidgetId(extension.id)}`;
   let keyset = win1.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist");
-  is(keyset.childNodes.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+  is(keyset.children.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
 
   keyset = win2.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist");
-  is(keyset.childNodes.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+  is(keyset.children.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
 
   // Confirm that the commands are registered to both windows.
   await focusWindow(win1);

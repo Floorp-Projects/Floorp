@@ -3554,6 +3554,30 @@ public:
     --mIgnoreOpensDuringUnloadCounter;
   }
 
+  void IncrementTrackerCount(bool aIsTrackerBlocked)
+  {
+    MOZ_ASSERT(!GetSameTypeParentDocument());
+
+    ++mNumTrackersFound;
+    if (aIsTrackerBlocked) {
+      ++mNumTrackersBlocked;
+    }
+  }
+
+  uint32_t NumTrackersFound()
+  {
+    MOZ_ASSERT(!GetSameTypeParentDocument() || mNumTrackersFound == 0);
+
+    return mNumTrackersFound;
+  }
+
+  uint32_t NumTrackersBlocked()
+  {
+    MOZ_ASSERT(!GetSameTypeParentDocument() || mNumTrackersBlocked == 0);
+
+    return mNumTrackersBlocked;
+  }
+
   bool AllowPaymentRequest() const
   {
     return mAllowPaymentRequest;
@@ -4506,6 +4530,12 @@ protected:
   uint32_t mIgnoreOpensDuringUnloadCounter;
 
   nsCOMPtr<nsIDOMXULCommandDispatcher> mCommandDispatcher; // [OWNER] of the focus tracker
+
+  // At the moment, trackers might be blocked by Tracking Protection or FastBlock.
+  // In order to know the numbers of trackers detected and blocked, we add
+  // these two values here and those are shared by TP and FB.
+  uint32_t mNumTrackersFound;
+  uint32_t mNumTrackersBlocked;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

@@ -22,4 +22,5 @@ function sendResult(_type, _value) {
   });
 }
 
+console.log("raptor benchmark-relay content loaded");
 window.addEventListener("message", receiveMessage);

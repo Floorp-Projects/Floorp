@@ -40,8 +40,8 @@ add_task(async function() {
 
   var items = [];
   var current = menupopup.getElementsByTagName("menuseparator")[0];
-  while (current.nextSibling) {
-    current = current.nextSibling;
+  while (current.nextElementSibling) {
+    current = current.nextElementSibling;
     items.push(current);
   }
 

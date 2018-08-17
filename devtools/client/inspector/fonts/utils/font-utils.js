@@ -17,6 +17,7 @@ module.exports = {
   getStepForUnit(unit) {
     let step;
     switch (unit) {
+      case "":
       case "em":
       case "rem":
       case "vw":

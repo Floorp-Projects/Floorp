@@ -873,6 +873,8 @@ nsChannelClassifier::SetBlockedContent(nsIChannel *channel,
   nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
   NS_ENSURE_TRUE(doc, NS_OK);
 
+  doc->IncrementTrackerCount(true);
+
   unsigned state;
   if (aErrorCode == NS_ERROR_TRACKING_URI) {
     state = nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT;

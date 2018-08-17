@@ -22,7 +22,7 @@ const EXPECTED_END_ORDINALS = [
 
 function getBrowserChildrenWithOrdinals() {
   let browser = document.getElementById("browser");
-  return [...browser.childNodes].map(node => {
+  return [...browser.children].map(node => {
     return [node.id, node.ordinal];
   });
 }

@@ -49,7 +49,7 @@ add_task(async function() {
 
   await endCustomizing();
 
-  is(homeButton.previousSibling.id, lastVisible.id,
+  is(homeButton.previousElementSibling.id, lastVisible.id,
      "The downloads button should be placed after the last visible item.");
 
   await resetCustomization();

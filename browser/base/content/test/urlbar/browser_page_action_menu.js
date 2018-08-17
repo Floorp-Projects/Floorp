@@ -755,10 +755,10 @@ function checkSendToDeviceItems(expectedItems, forUrlbar = false) {
     BrowserPageActions._panelViewNodeIDForActionID("sendToDevice", forUrlbar) +
     "-body";
   let body = document.getElementById(bodyID);
-  Assert.equal(body.childNodes.length, expectedItems.length);
+  Assert.equal(body.children.length, expectedItems.length);
   for (let i = 0; i < expectedItems.length; i++) {
     let expected = expectedItems[i];
-    let actual = body.childNodes[i];
+    let actual = body.children[i];
     if (!expected) {
       Assert.equal(actual.localName, "toolbarseparator");
       continue;
@@ -792,7 +792,7 @@ function checkSendToDeviceItems(expectedItems, forUrlbar = false) {
 
 function collectContextMenuItems() {
   let contextMenu = document.getElementById("pageActionContextMenu");
-  return Array.filter(contextMenu.childNodes, node => {
+  return Array.filter(contextMenu.children, node => {
     return window.getComputedStyle(node).visibility == "visible";
   });
 }

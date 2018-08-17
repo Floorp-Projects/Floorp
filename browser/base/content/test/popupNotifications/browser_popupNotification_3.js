@@ -289,7 +289,7 @@ var tests = [
       this.notification2 = showNotification(this.testNotif2);
     },
     onShown(popup) {
-      is(popup.childNodes.length, 2, "two notifications are shown");
+      is(popup.children.length, 2, "two notifications are shown");
       dismissNotification(popup);
     },
     onHidden() {

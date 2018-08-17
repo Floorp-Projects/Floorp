@@ -99,6 +99,8 @@ class Output(object):
                     subtests, vals = self.parseUnityWebGLOutput(test)
                 elif 'assorted-dom' in test.measurements:
                     subtests, vals = self.parseAssortedDomOutput(test)
+                elif 'wasm-misc' in test.measurements:
+                    subtests, vals = self.parseWASMMiscOutput(test)
                 suite['subtests'] = subtests
 
             else:
@@ -150,6 +152,43 @@ class Output(object):
                                       'name': sub,
                                       'replicates': []}
                 _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
+
+        vals = []
+        subtests = []
+        names = _subtests.keys()
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]['value'] = filter.median(_subtests[name]['replicates'])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]['value'], name])
+
+        return subtests, vals
+
+    def parseWASMMiscOutput(self, test):
+        '''
+          {u'wasm-misc': [
+            [[{u'name': u'validate', u'time': 163.44000000000005},
+              ...
+              {u'name': u'__total__', u'time': 63308.434904788155}]],
+            ...
+            [[{u'name': u'validate', u'time': 129.42000000000002},
+              {u'name': u'__total__', u'time': 63181.24089257814}]]
+           ]}
+        '''
+        _subtests = {}
+        data = test.measurements['wasm-misc']
+        for page_cycle in data:
+            for item in page_cycle[0]:
+                # for each pagecycle, build a list of subtests and append all related replicates
+                sub = item['name']
+                if sub not in _subtests.keys():
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {'unit': test.unit,
+                                      'alertThreshold': float(test.alert_threshold),
+                                      'lowerIsBetter': test.lower_is_better,
+                                      'name': sub,
+                                      'replicates': []}
+                _subtests[sub]['replicates'].append(item['time'])
 
         vals = []
         subtests = []
@@ -469,6 +508,14 @@ class Output(object):
         return filter.mean(results)
 
     @classmethod
+    def wasm_misc_score(cls, val_list):
+        """
+        wasm_misc_score: self reported as '__total__'
+        """
+        results = [i for i, j in val_list if j == '__total__']
+        return filter.mean(results)
+
+    @classmethod
     def stylebench_score(cls, val_list):
         """
         stylebench_score: https://bug-172968-attachments.webkit.org/attachment.cgi?id=319888
@@ -544,6 +591,8 @@ class Output(object):
             return self.webaudio_score(vals)
         elif testname.startswith('raptor-assorted-dom'):
             return self.assorted_dom_score(vals)
+        elif testname.startswith('raptor-wasm-misc'):
+            return self.wasm_misc_score(vals)
         elif len(vals) > 1:
             return round(filter.geometric_mean([i for i, j in vals]), 2)
         else:

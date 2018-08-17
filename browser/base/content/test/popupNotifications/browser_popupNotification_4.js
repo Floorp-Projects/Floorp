@@ -111,7 +111,7 @@ var tests = [
 
       let anchor = win.document.getElementById("default-notification-icon");
       win.PopupNotifications._reshowNotifications(anchor);
-      ok(win.PopupNotifications.panel.childNodes.length == 0,
+      ok(win.PopupNotifications.panel.children.length == 0,
          "no notification displayed in new window");
       ok(notifyObj.swappingCallbackTriggered, "the swapping callback was triggered");
       ok(notifyObj.removedCallbackTriggered, "the removed callback was triggered");
