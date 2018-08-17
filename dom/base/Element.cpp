@@ -1275,7 +1275,8 @@ Element::AttachShadowWithoutNameChecks(ShadowRootMode aMode)
 void
 Element::UnattachShadow()
 {
-  if (!GetShadowRoot()) {
+  RefPtr<ShadowRoot> shadowRoot = GetShadowRoot();
+  if (!shadowRoot) {
     return;
   }
 
@@ -1290,6 +1291,12 @@ Element::UnattachShadow()
 
   // Simply unhook the shadow root from the element.
   MOZ_ASSERT(!GetShadowRoot()->HasSlots(), "Won't work when shadow root has slots!");
+  for (nsIContent* child = shadowRoot->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    child->UnbindFromTree(true, false);
+  }
+
+  shadowRoot->SetIsComposedDocParticipant(false);
   SetShadowRoot(nullptr);
 }
 

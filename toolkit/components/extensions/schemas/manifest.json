@@ -219,8 +219,13 @@
                 "preprocess": "localize"
               }
             }
-          }
+          },
 
+          "hidden": {
+            "type": "boolean",
+            "optional": true,
+            "default": false
+          }
         },
 
         "additionalProperties": { "$ref": "UnrecognizedProperty" }

@@ -1,0 +1,39 @@
+From 522a892efc2ff22a2fd421b1ef4d9d9739d78b2e Mon Sep 17 00:00:00 2001
+From: Vitaly Buka <vitalybuka@google.com>
+Date: Mon, 19 Mar 2018 18:22:35 +0000
+Subject: [PATCH] Fix CMake/MSVC when compiler-rt and llvm are built separately
+
+Summary:
+For some reason CMake can't find the `append` macro if LLVM is built separately and imported via `LLVM_CONFIG_PATH`.
+
+Patch by Loo Rong Jie
+
+Reviewers: rnk, vitalybuka
+
+Reviewed By: rnk, vitalybuka
+
+Subscribers: dberris, mgorny, llvm-commits, #sanitizers
+
+Differential Revision: https://reviews.llvm.org/D43458
+
+git-svn-id: https://llvm.org/svn/llvm-project/compiler-rt/trunk@327876 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/compiler-rt/CMakeLists.txt b/compiler-rt/CMakeLists.txt
+index 4b953b212..a02ef9532 100644
+--- a/compiler-rt/CMakeLists.txt
++++ b/compiler-rt/CMakeLists.txt
+@@ -339,7 +339,7 @@ if (CMAKE_LINKER MATCHES "link.exe$")
+   # it, but CMake doesn't seem to have a way to set linker flags for
+   # individual static libraries, so we enable the suppression flag for
+   # the whole compiler-rt project.
+-  append("/IGNORE:4221" CMAKE_STATIC_LINKER_FLAGS)
++  set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} /IGNORE:4221")
+ endif()
+ 
+ add_subdirectory(include)
+-- 
+2.18.0
+

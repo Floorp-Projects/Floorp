@@ -77,11 +77,6 @@
 #define NS_MEMORY_INFO_DUMPER_CONTRACTID "@mozilla.org/memory-info-dumper;1"
 
 /**
- * Cycle collector logger contract id
- */
-#define NS_CYCLE_COLLECTOR_LOGGER_CONTRACTID "@mozilla.org/cycle-collector-logger;1"
-
-/**
  * nsMessageLoop contract id
  */
 #define NS_MESSAGE_LOOP_CONTRACTID "@mozilla.org/message-loop;1"
