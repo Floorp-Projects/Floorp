@@ -56,11 +56,19 @@ add_task(async function test_support_separator_properties() {
   );
 
   let toolbox = document.querySelector("#navigator-toolbox");
-  Assert.equal(
-    window.getComputedStyle(toolbox, "::after").borderBottomColor,
-    `rgb(${hexToRGB(SEPARATOR_BOTTOM_COLOR).join(", ")})`,
-    "Bottom separator color properly set"
-  );
+  if (AppConstants.platform == "macosx") {
+    Assert.ok(
+      window.getComputedStyle(toolbox, "::after").boxShadow
+            .includes(`rgb(${hexToRGB(SEPARATOR_BOTTOM_COLOR).join(", ")})`),
+      "Bottom separator color properly set"
+    );
+  } else {
+    Assert.equal(
+      window.getComputedStyle(toolbox, "::after").borderBottomColor,
+      `rgb(${hexToRGB(SEPARATOR_BOTTOM_COLOR).join(", ")})`,
+      "Bottom separator color properly set"
+    );
+  }
 
   await extension.unload();
 });
