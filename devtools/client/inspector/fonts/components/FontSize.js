@@ -64,9 +64,9 @@ class FontSize extends PureComponent {
       max: this.historicMax[unit],
       name: "font-size",
       onChange: this.props.onChange,
-      showUnit: true,
       step: getStepForUnit(unit),
       unit,
+      unitOptions: ["em", "rem", "%", "px", "vh", "vw"],
       value,
     });
   }
