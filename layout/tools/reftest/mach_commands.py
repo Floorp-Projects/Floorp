@@ -48,7 +48,7 @@ class ReftestRunner(MozbuildObject):
         # reftest imports will happen from the objdir
         sys.path.insert(0, self.reftest_dir)
 
-        if not args.tests:
+        if args.suite != 'jstestbrowser' and not args.tests:
             test_subdir = {
                 "reftest": os.path.join('layout', 'reftests'),
                 "crashtest": os.path.join('layout', 'crashtest'),
@@ -229,6 +229,9 @@ class MachCommands(MachCommandBase):
         kwargs["topsrcdir"] = self.topsrcdir
         process_test_objects(kwargs)
         reftest = self._spawn(ReftestRunner)
+        # Unstructured logging must be enabled prior to calling
+        # adb which uses an unstructured logger in its constructor.
+        reftest.log_manager.enable_unstructured()
         if conditions.is_android(self):
             from mozrunner.devices.android_device import verify_android_device
             verify_android_device(self, install=True, xre=True, app=kwargs["app"],
