@@ -162,7 +162,8 @@ ReplayDebugger.prototype = {
   },
 
   findAllConsoleMessages() {
-    return this._sendRequest({ type: "findConsoleMessages" });
+    const messages = this._sendRequest({ type: "findConsoleMessages" });
+    return messages.map(this._convertConsoleMessage.bind(this));
   },
 
   /////////////////////////////////////////////////////////
@@ -262,6 +263,21 @@ ReplayDebugger.prototype = {
   },
 
   /////////////////////////////////////////////////////////
+  // Console Message methods
+  /////////////////////////////////////////////////////////
+
+  _convertConsoleMessage(message) {
+    // Console API message arguments need conversion to debuggee values, but
+    // other contents of the message can be left alone.
+    if (message.messageType == "ConsoleAPI" && message.arguments) {
+      for (let i = 0; i < message.arguments.length; i++) {
+        message.arguments[i] = this._convertValue(message.arguments[i]);
+      }
+    }
+    return message;
+  },
+
+  /////////////////////////////////////////////////////////
   // Handlers
   /////////////////////////////////////////////////////////
 
@@ -306,7 +322,10 @@ ReplayDebugger.prototype = {
                                () => handler.call(this, this.getNewestFrame()));
   },
 
-  _getNewConsoleMessage() { return this._sendRequest({ type: "getNewConsoleMessage" }); },
+  _getNewConsoleMessage() {
+    const message = this._sendRequest({ type: "getNewConsoleMessage" });
+    return this._convertConsoleMessage(message);
+  },
 
   get onConsoleMessage() {
     return this._breakpointKindGetter("ConsoleMessage");
@@ -598,8 +617,8 @@ ReplayDebuggerObject.prototype = {
   asEnvironment: NYI,
   executeInGlobal: NYI,
   executeInGlobalWithBindings: NYI,
-  makeDebuggeeValue: NYI,
 
+  makeDebuggeeValue: NotAllowed,
   preventExtensions: NotAllowed,
   seal: NotAllowed,
   freeze: NotAllowed,
