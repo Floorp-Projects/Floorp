@@ -53,8 +53,8 @@ menucaption {
 .menu-iconic-accel,
 .menu-text,
 .menu-iconic-text {
-  margin: 0px !important;
-  padding: 1px 0px;
+  margin: 0 !important;
+  padding: 1px 0;
 }
 
 .menu-text {
@@ -199,8 +199,8 @@ menulist > menupopup > menu > .menu-iconic-left {
 menulist > menupopup > menuitem > label,
 menulist > menupopup > menucaption > label,
 menulist > menupopup > menu > label {
-  padding-top: 0px;
-  padding-bottom: 0px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 menulist:-moz-focusring > menupopup > menuitem[_moz-menuactive="true"] {
@@ -231,7 +231,7 @@ menuitem[checked="true"] {
 menuitem[type="checkbox"] > .menu-iconic-left,
 menuitem[checked="true"] > .menu-iconic-left {
   -moz-appearance: menucheckbox;
-  padding-top: 0px;
+  padding-top: 0;
 }
 
 menuitem[type="radio"] {
@@ -239,7 +239,7 @@ menuitem[type="radio"] {
 }
 menuitem[type="radio"] > .menu-iconic-left {
   -moz-appearance: menuradio;
-  padding-top: 0px;
+  padding-top: 0;
 }
 
 menuitem[type="checkbox"] > .menu-iconic-left > .menu-iconic-icon,
