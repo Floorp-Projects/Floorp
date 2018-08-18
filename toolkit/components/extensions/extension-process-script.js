@@ -172,7 +172,9 @@ DocumentManager = {
   // Initialize listeners that we need regardless of whether extensions are
   // enabled.
   earlyInit() {
-    Services.obs.addObserver(this, "tab-content-frameloader-created"); // eslint-disable-line mozilla/balanced-listeners
+    // eslint-disable-next-line mozilla/balanced-listeners
+    Services.obs.addObserver((subject) => this.initGlobal(subject),
+                             "tab-content-frameloader-created");
   },
 
   // Initialize a frame script global which extension contexts may be loaded
@@ -185,40 +187,7 @@ DocumentManager = {
     });
   },
 
-  initExtension(policy) {
-    this.injectExtensionScripts(policy);
-  },
-
-  // Listeners
-
-  observe(subject, topic, data) {
-    if (topic == "tab-content-frameloader-created") {
-      this.initGlobal(subject);
-    }
-  },
-
   // Script loading
-
-  injectExtensionScripts(policy) {
-    for (let window of this.enumerateWindows()) {
-      let runAt = {document_start: [], document_end: [], document_idle: []};
-
-      for (let script of policy.contentScripts) {
-        if (script.matchesWindow(window)) {
-          runAt[script.runAt].push(script);
-        }
-      }
-
-      let inject = matcher => contentScripts.get(matcher).injectInto(window);
-      let injectAll = matchers => Promise.all(matchers.map(inject));
-
-      // Intentionally using `.then` instead of `await`, we only need to
-      // chain injecting other scripts into *this* window, not all windows.
-      injectAll(runAt.document_start)
-        .then(() => injectAll(runAt.document_end))
-        .then(() => injectAll(runAt.document_idle));
-    }
-  },
 
   /**
    * Checks that all parent frames for the given withdow either have the
@@ -263,23 +232,6 @@ DocumentManager = {
       // We're in a content sub-frame or not in the extension process.
       // Only inject a minimal content script API.
       ExtensionContent.initExtensionContext(extension, window);
-    }
-  },
-
-  // Helpers
-
-  * enumerateWindows(docShell) {
-    if (docShell) {
-      let enum_ = docShell.getDocShellEnumerator(docShell.typeContent,
-                                                 docShell.ENUMERATE_FORWARDS);
-
-      for (let docShell of XPCOMUtils.IterSimpleEnumerator(enum_, Ci.nsIDocShell)) {
-        yield docShell.domWindow;
-      }
-    } else {
-      for (let global of this.globals.keys()) {
-        yield* this.enumerateWindows(global.docShell);
-      }
     }
   },
 };
@@ -370,7 +322,7 @@ ExtensionManager = {
     }
     let policy = this.initExtensionPolicy(data);
 
-    DocumentManager.initExtension(policy);
+    policy.injectContentScripts();
   },
 
   receiveMessage({name, data}) {
@@ -497,9 +449,7 @@ ExtensionProcessScript.prototype = {
   },
 
   loadContentScript(contentScript, window) {
-    if (DocumentManager.globals.has(window.docShell.messageManager)) {
-      contentScripts.get(contentScript).injectInto(window);
-    }
+    return contentScripts.get(contentScript).injectInto(window);
   },
 };
 

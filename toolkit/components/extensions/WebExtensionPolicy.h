@@ -67,6 +67,8 @@ public:
   void UnregisterContentScript(const WebExtensionContentScript& script,
                                ErrorResult& aRv);
 
+  void InjectContentScripts(ErrorResult& aRv);
+
   bool CanAccessURI(const URLInfo& aURI, bool aExplicit = false, bool aCheckRestricted = true) const
   {
     return (!aCheckRestricted || !IsRestrictedURI(aURI)) &&
