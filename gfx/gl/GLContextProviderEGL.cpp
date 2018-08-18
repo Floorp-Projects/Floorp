@@ -306,14 +306,6 @@ GLContextEGL::GLContextEGL(CreateContextFlags flags, const SurfaceCaps& caps,
     , mSurface(surface)
     , mFallbackSurface(CreateFallbackSurface(config))
     , mContext(context)
-    , mSurfaceOverride(EGL_NO_SURFACE)
-    , mThebesSurface(nullptr)
-    , mBound(false)
-    , mIsPBuffer(false)
-    , mIsDoubleBuffered(false)
-    , mCanBindToTexture(false)
-    , mShareWithEGLImage(false)
-    , mOwnsContext(true)
 {
 #ifdef DEBUG
     printf_stderr("Initializing context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());

@@ -324,29 +324,31 @@ JitcodeGlobalEntry::createScriptString(JSContext* cx, JSScript* script, size_t* 
     const char* filenameStr = script->filename() ? script->filename() : "(null)";
     size_t filenameLength = strlen(filenameStr);
 
-    // Calculate lineno length
-    bool hasLineno = false;
-    size_t linenoLength = 0;
-    char linenoStr[15];
+    // Calculate line + column length
+    bool hasLineAndColumn = false;
+    size_t lineAndColumnLength = 0;
+    char lineAndColumnStr[30];
     if (hasName || (script->functionNonDelazifying() || script->isForEval())) {
-        linenoLength = SprintfLiteral(linenoStr, "%u", script->lineno());
-        hasLineno = true;
+        lineAndColumnLength =
+            SprintfLiteral(lineAndColumnStr, "%u:%u",
+                           script->lineno(), script->column());
+        hasLineAndColumn = true;
     }
 
     // Full profile string for scripts with functions is:
-    //      FuncName (FileName:Lineno)
+    //      FuncName (FileName:Lineno:Column)
     // Full profile string for scripts without functions is:
-    //      FileName:Lineno
-    // Full profile string for scripts without functions and without linenos is:
+    //      FileName:Lineno:Column
+    // Full profile string for scripts without functions and without lines is:
     //      FileName
 
     // Calculate full string length.
     size_t fullLength = 0;
     if (hasName) {
-        MOZ_ASSERT(hasLineno);
-        fullLength = nameLength + 2 + filenameLength + 1 + linenoLength + 1;
-    } else if (hasLineno) {
-        fullLength = filenameLength + 1 + linenoLength;
+        MOZ_ASSERT(hasLineAndColumn);
+        fullLength = nameLength + 2 + filenameLength + 1 + lineAndColumnLength + 1;
+    } else if (hasLineAndColumn) {
+        fullLength = filenameLength + 1 + lineAndColumnLength;
     } else {
         fullLength = filenameLength;
     }
@@ -370,11 +372,11 @@ JitcodeGlobalEntry::createScriptString(JSContext* cx, JSScript* script, size_t* 
     memcpy(str + cur, filenameStr, filenameLength);
     cur += filenameLength;
 
-    // Fill lineno chars.
-    if (hasLineno) {
+    // Fill line + column chars.
+    if (hasLineAndColumn) {
         str[cur++] = ':';
-        memcpy(str + cur, linenoStr, linenoLength);
-        cur += linenoLength;
+        memcpy(str + cur, lineAndColumnStr, lineAndColumnLength);
+        cur += lineAndColumnLength;
     }
 
     // Terminal ')' if necessary.

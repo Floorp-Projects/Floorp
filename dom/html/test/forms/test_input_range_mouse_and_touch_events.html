@@ -134,14 +134,24 @@ function test(synthesizeFunc, clickOrTap, startName, moveName, endName) {
   elem.style.direction = "ltr"; // reset direction
   flush();
 
-  // Test mouse/touch events with modifiers are ignored:
-  var modifiers = ["shiftKey", "ctrlKey", "altKey", "metaKey", "accelKey", "altGrKey", "fnKey", "osKey"];
-  for (var modifier of modifiers) {
+  // Test mouse/touch events with certain modifiers are ignored:
+  var modifiersIgnore = ["ctrlKey", "altGrKey", "fnKey", "osKey"];
+  for (var modifier of modifiersIgnore) {
     elem.value = QUARTER_OF_RANGE;
     var eventParams = {};
     eventParams[modifier] = true;
     synthesizeFunc(elem, midX, midY, eventParams);
     is(elem.value, QUARTER_OF_RANGE, "Test " + clickOrTap + " in the middle of range with " + modifier + " modifier key is ignored");
+  }
+
+  // Test mouse/touch events with certain modifiers are allowed:
+  var modifiersAllow = ["shiftKey", "altKey", "metaKey"];
+  for (var modifier of modifiersAllow) {
+    elem.value = QUARTER_OF_RANGE;
+    var eventParams = {};
+    eventParams[modifier] = true;
+    synthesizeFunc(elem, midX, midY, eventParams);
+    is(elem.value, MIDDLE_OF_RANGE, "Test " + clickOrTap + " in the middle of range with " + modifier + " modifier key is allowed");
   }
 
   // Test that preventDefault() works:

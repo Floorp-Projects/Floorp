@@ -63,6 +63,28 @@ function test() {
   synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mouseup" });
   is(input.value, "0", "Test mouseup on spin-down button");
 
+  // Test clicks with modifiers that mean we should ignore the click:
+  var modifiersIgnore = ["altGrKey", "fnKey", "osKey"];
+  for (var modifier of modifiersIgnore) {
+    input.value = 0;
+    var eventParams = { type: "mousedown" };
+    eventParams[modifier] = true;
+    synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, eventParams);
+    is(input.value, "0", "We should ignore mousedown on spin-up button with modifier " + modifier);
+    synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mouseup" });
+  }
+
+  // Test clicks with modifiers that mean we should allow the click:
+  var modifiersAllow = ["shiftKey", "ctrlKey", "altKey", "metaKey"];
+  for (var modifier of modifiersAllow) {
+    input.value = 0;
+    var eventParams = { type: "mousedown" };
+    eventParams[modifier] = true;
+    synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, eventParams);
+    is(input.value, "1", "We should allow mousedown on spin-up button with modifier " + modifier);
+    synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mouseup" });
+  }
+
   // Test step="any" behavior:
   input.value = 0;
   var oldStep = input.step;

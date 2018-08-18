@@ -403,10 +403,6 @@ SurfaceFactory::Recycle(layers::SharedSurfaceTextureClient* texClient)
 ScopedReadbackFB::ScopedReadbackFB(SharedSurface* src)
     : mGL(src->mGL)
     , mAutoFB(mGL)
-    , mTempFB(0)
-    , mTempTex(0)
-    , mSurfToUnlock(nullptr)
-    , mSurfToLock(nullptr)
 {
     switch (src->mAttachType) {
     case AttachmentType::GLRenderbuffer:

@@ -712,8 +712,7 @@ GLContextGLX::GLContextGLX(
       mDeleteDrawable(aDeleteDrawable),
       mDoubleBuffered(aDoubleBuffered),
       mGLX(&sGLXLibrary),
-      mPixmap(aPixmap),
-      mOwnsContext(true)
+      mPixmap(aPixmap)
 {
 }
 

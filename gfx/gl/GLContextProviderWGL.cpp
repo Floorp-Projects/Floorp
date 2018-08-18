@@ -280,8 +280,7 @@ GLContextWGL::GLContextWGL(CreateContextFlags flags, const SurfaceCaps& caps,
       mContext(aContext),
       mWnd(aWindow),
       mPBuffer(nullptr),
-      mPixelFormat(0),
-      mIsDoubleBuffered(false)
+      mPixelFormat(0)
 {
 }
 
@@ -293,8 +292,7 @@ GLContextWGL::GLContextWGL(CreateContextFlags flags, const SurfaceCaps& caps,
       mContext(aContext),
       mWnd(nullptr),
       mPBuffer(aPbuffer),
-      mPixelFormat(aPixelFormat),
-      mIsDoubleBuffered(false)
+      mPixelFormat(aPixelFormat)
 {
 }
 

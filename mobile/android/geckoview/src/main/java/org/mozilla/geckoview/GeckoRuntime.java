@@ -109,6 +109,8 @@ public final class GeckoRuntime implements Parcelable {
         }
 
         GeckoAppShell.setDisplayDensityOverride(settings.getDisplayDensityOverride());
+        GeckoAppShell.setDisplayDpiOverride(settings.getDisplayDpiOverride());
+        GeckoAppShell.setScreenSizeOverride(settings.getScreenSizeOverride());
 
         final int crashReportingJobId = settings.getCrashReportingServiceJobId();
         settings.getExtras().putInt(
