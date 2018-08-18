@@ -74,16 +74,6 @@ function redefine(object, prop, value) {
 
 var XPCOMUtils = {
   /**
-   * Generate a QueryInterface implementation. The returned function must be
-   * assigned to the 'QueryInterface' property of a JS object. When invoked on
-   * that object, it checks if the given iid is listed in the |interfaces|
-   * param, and if it is, returns |this| (the object it was called on).
-   */
-  generateQI: function XPCU_generateQI(interfaces) {
-    return ChromeUtils.generateQI(interfaces);
-  },
-
-  /**
    * Generate a NSGetFactory function given an array of components.
    */
   generateNSGetFactory: function XPCU_generateNSGetFactory(componentsArray) {
