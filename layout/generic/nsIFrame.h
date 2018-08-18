@@ -4777,6 +4777,14 @@ template<typename Predicate>
 inline void
 nsFrameList::FrameLinkEnumerator::Find(Predicate&& aPredicate)
 {
+  static_assert(
+    std::is_same<typename mozilla::FunctionTypeTraits<Predicate>::ReturnType,
+                 bool>::value &&
+    mozilla::FunctionTypeTraits<Predicate>::arity == 1 &&
+    std::is_same<typename mozilla::FunctionTypeTraits<Predicate>::template ParameterType<0>,
+                 nsIFrame*>::value,
+    "aPredicate should be of this function signature: bool(nsIFrame*)");
+
   for (; !AtEnd(); Next()) {
     if (aPredicate(mFrame)) {
       return;
