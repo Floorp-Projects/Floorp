@@ -3,6 +3,15 @@
 tr{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Eş Güdümlü Evrensel Zaman"}
+        }
+        "Europe:Dublin"{
+            ld{"İrlanda Standart Saati"}
+        }
+        "Europe:London"{
+            ld{"İngiltere Yaz Saati"}
+        }
         "meta:Acre"{
             ld{"Acre Yaz Saati"}
             lg{"Acre Saati"}

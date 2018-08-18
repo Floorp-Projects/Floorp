@@ -3,6 +3,15 @@
 fo{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Samskipað heimstíð"}
+        }
+        "Europe:Dublin"{
+            ld{"Írsk vanlig tíð"}
+        }
+        "Europe:London"{
+            ld{"Stóra Bretland summartíð"}
+        }
         "meta:Afghanistan"{
             ls{"Afganistan tíð"}
         }

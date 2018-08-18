@@ -3,6 +3,15 @@
 cy{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Amser Cyffredniol Cydlynol"}
+        }
+        "Europe:Dublin"{
+            ld{"Amser Safonol Iwerddon"}
+        }
+        "Europe:London"{
+            ld{"Amser Haf Prydain"}
+        }
         "meta:Afghanistan"{
             ls{"Amser Afghanistan"}
         }

@@ -276,8 +276,8 @@ async function setupPaymentDialog(browser, {methodData, details, options, mercha
           return;
         }
         field.value = value;
-        field.dispatchEvent(new content.window.Event("input"));
-        field.dispatchEvent(new content.window.Event("change"));
+        field.dispatchEvent(new content.window.Event("input", {bubbles: true}));
+        field.dispatchEvent(new content.window.Event("change", {bubbles: true}));
         return;
       }
       while (field.value) {

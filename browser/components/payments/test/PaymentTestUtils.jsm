@@ -112,14 +112,21 @@ var PaymentTestUtils = {
       let popupBox = Cu.waiveXrays(picker).dropdown.popupBox;
       let selectedOptionIndex = popupBox.selectedIndex;
       let selectedOption = Cu.waiveXrays(picker).dropdown.selectedOption;
-      return {
+
+      let result = {
         optionCount: popupBox.children.length,
         selectedOptionIndex,
+      };
+      if (!selectedOption) {
+        return result;
+      }
+
+      return Object.assign(result, {
         selectedOptionID: selectedOption.getAttribute("value"),
         selectedOptionLabel: selectedOption.getAttribute("label"),
         selectedOptionCurrency: selectedOption.getAttribute("amount-currency"),
         selectedOptionValue: selectedOption.getAttribute("amount-value"),
-      };
+      });
     },
 
     getShippingAddresses: () => {

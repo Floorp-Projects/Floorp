@@ -3,6 +3,12 @@
 to{
     Version{"2.1.38.39"}
     zoneStrings{
+        "Europe:Dublin"{
+            ld{"houa fakaʻaealani taimi totonu"}
+        }
+        "Europe:London"{
+            ld{"houa fakapilitānia taimi liliu"}
+        }
         "meta:Acre"{
             ld{"houa fakaʻakelī taimi liliu"}
             lg{"houa fakaʻakelī"}

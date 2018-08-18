@@ -3,6 +3,15 @@
 pl{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"uniwersalny czas koordynowany"}
+        }
+        "Europe:Dublin"{
+            ld{"Irlandia (czas letni)"}
+        }
+        "Europe:London"{
+            ld{"Brytyjski czas letni"}
+        }
         "meta:Afghanistan"{
             ls{"Afganistan"}
         }

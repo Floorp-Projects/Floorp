@@ -3,6 +3,15 @@
 my{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"ညှိထားသည့် ကမ္ဘာ့ စံတော်ချိန်"}
+        }
+        "Europe:Dublin"{
+            ld{"အိုင်းရစ်ရှ် စံတော်ချိန်"}
+        }
+        "Europe:London"{
+            ld{"ဗြိတိန် နွေရာသီ အချိန်"}
+        }
         "meta:Afghanistan"{
             ls{"အာဖဂန်နစ္စတန် အချိန်"}
         }

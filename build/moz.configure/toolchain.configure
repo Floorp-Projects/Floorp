@@ -654,6 +654,9 @@ def toolchain_search_path(vc_compiler_path):
     bootstrap_clang_path = os.path.join(mozbuild_state_dir, 'clang', 'bin')
     result.append(bootstrap_clang_path)
 
+    bootstrap_cbindgen_path = os.path.join(mozbuild_state_dir, 'cbindgen')
+    result.append(bootstrap_cbindgen_path)
+
     if vc_compiler_path:
         # We're going to alter PATH for good in windows.configure, but we also
         # need to do it for the valid_compiler() check below. This is only needed

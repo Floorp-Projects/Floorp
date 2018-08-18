@@ -204,19 +204,13 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     }
 
     // Ensure `selectedShippingOption` never refers to a deleted shipping option and
-    // refers to a shipping option if one exists.
+    // matches the merchant's selected option if the user hasn't made a choice.
     if (shippingOptions && (!selectedShippingOption ||
                             !shippingOptions.find(option => option.id == selectedShippingOption))) {
-      // Use the DOM's computed selected shipping option:
-      selectedShippingOption = state.request.shippingOption;
-
-      // Otherwise, default to selecting the first option:
-      if (!selectedShippingOption && shippingOptions.length) {
-        selectedShippingOption = shippingOptions[0].id;
-      }
       this._cachedState.selectedShippingOption = selectedShippingOption;
       this.requestStore.setState({
-        selectedShippingOption,
+        // Use the DOM's computed selected shipping option:
+        selectedShippingOption: state.request.shippingOption,
       });
     }
 

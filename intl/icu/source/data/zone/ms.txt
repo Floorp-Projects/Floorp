@@ -3,6 +3,15 @@
 ms{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Waktu Universal Selaras"}
+        }
+        "Europe:Dublin"{
+            ld{"Waktu Piawai Ireland"}
+        }
+        "Europe:London"{
+            ld{"Waktu Musim Panas British"}
+        }
         "meta:Afghanistan"{
             ls{"Waktu Afghanistan"}
         }

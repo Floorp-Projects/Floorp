@@ -20,6 +20,8 @@ exports.getSourceInSources = getSourceInSources;
 exports.getSources = getSources;
 exports.getUrls = getUrls;
 exports.getSourceList = getSourceList;
+exports.getProjectDirectoryRoot = getProjectDirectoryRoot;
+exports.getRelativeSources = getRelativeSources;
 
 var _reselect = require("devtools/client/debugger/new/dist/vendors").vendored["reselect"];
 
@@ -41,8 +43,10 @@ function initialSourcesState() {
   return {
     sources: {},
     urls: {},
+    relativeSources: {},
     selectedLocation: undefined,
-    pendingSelectedLocation: _prefs.prefs.pendingSelectedLocation
+    pendingSelectedLocation: _prefs.prefs.pendingSelectedLocation,
+    projectDirectoryRoot: _prefs.prefs.projectDirectoryRoot
   };
 }
 
@@ -137,6 +141,9 @@ function update(state = initialSourcesState(), action) {
 
       break;
 
+    case "SET_PROJECT_DIRECTORY_ROOT":
+      return recalculateRelativeSources(state, action.url);
+
     case "NAVIGATE":
       const source = state.selectedLocation && state.sources[state.selectedLocation.sourceId];
       const url = source && source.url;
@@ -200,12 +207,35 @@ function updateSource(state, source) {
   const existingUrls = state.urls[source.url];
   const urls = existingUrls ? [...existingUrls, source.id] : [source.id];
   return { ...state,
+    relativeSources: updateRelativeSource({ ...state.relativeSources
+    }, updatedSource, state.projectDirectoryRoot),
     sources: { ...state.sources,
       [source.id]: updatedSource
     },
     urls: { ...state.urls,
       [source.url]: urls
     }
+  };
+}
+
+function updateRelativeSource(relativeSources, source, root) {
+  if (!(0, _source.underRoot)(source, root)) {
+    return relativeSources;
+  }
+
+  const relativeSource = { ...source,
+    relativeUrl: (0, _source.getRelativeUrl)(source, root)
+  };
+  relativeSources[source.id] = relativeSource;
+  return relativeSources;
+}
+
+function recalculateRelativeSources(state, root) {
+  _prefs.prefs.projectDirectoryRoot = root;
+  const relativeSources = Object.values(state.sources).reduce((sources, source) => updateRelativeSource(sources, source, root), {});
+  return { ...state,
+    projectDirectoryRoot: root,
+    relativeSources
   };
 }
 
@@ -323,4 +353,13 @@ const getSelectedSource = exports.getSelectedSource = (0, _reselect.createSelect
 
   return sources[selectedLocation.sourceId];
 });
+
+function getProjectDirectoryRoot(state) {
+  return state.sources.projectDirectoryRoot;
+}
+
+function getRelativeSources(state) {
+  return state.sources.relativeSources;
+}
+
 exports.default = update;

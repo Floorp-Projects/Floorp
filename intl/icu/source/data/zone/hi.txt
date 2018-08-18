@@ -3,6 +3,15 @@
 hi{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"समन्वित वैश्विक समय"}
+        }
+        "Europe:Dublin"{
+            ld{"आइरिश मानक समय"}
+        }
+        "Europe:London"{
+            ld{"ब्रिटिश ग्रीष्मकालीन समय"}
+        }
         "meta:Afghanistan"{
             ls{"अफ़गानिस्तान समय"}
         }

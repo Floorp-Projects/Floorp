@@ -262,15 +262,6 @@ Object.defineProperty(exports, "getVisibleSelectedFrame", {
   }
 });
 
-var _getRelativeSources = require("./getRelativeSources");
-
-Object.defineProperty(exports, "getRelativeSources", {
-  enumerable: true,
-  get: function () {
-    return _getRelativeSources.getRelativeSources;
-  }
-});
-
 var _breakpointSources = require("./breakpointSources");
 
 Object.defineProperty(exports, "getBreakpointSources", {

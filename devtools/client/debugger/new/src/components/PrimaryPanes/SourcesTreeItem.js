@@ -204,7 +204,7 @@ class SourceTreeItem extends _react.Component {
     } = this.props;
     const suffix = hasMatchingGeneratedSource ? _react2.default.createElement("span", {
       className: "suffix"
-    }, "[sm]") : null;
+    }, L10N.getStr("sourceFooter.mappedSuffix")) : null;
     return _react2.default.createElement("div", {
       className: (0, _classnames2.default)("node", {
         focused
