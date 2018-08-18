@@ -42,6 +42,9 @@ browser.jar:
 * skin/classic/browser/preferences/in-content/dialog.css      (preferences/in-content/dialog.css)
   skin/classic/browser/preferences/applications.css   (preferences/applications.css)
   skin/classic/browser/tabbrowser/tabDragIndicator.png      (tabbrowser/tabDragIndicator.png)
+  skin/classic/browser/window-controls/close.svg                 (window-controls/close.svg)
+  skin/classic/browser/window-controls/minimize.svg              (window-controls/minimize.svg)
+  skin/classic/browser/window-controls/restore.svg               (window-controls/restore.svg)
 
   skin/classic/browser/e10s-64@2x.png (../shared/e10s-64@2x.png)
 
