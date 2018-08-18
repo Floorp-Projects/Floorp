@@ -5,55 +5,51 @@
 -->
 <html>
 <head>
-  <title>Reference: Testing for full height flex container in a button.</title>
+  <title>Reference: Testing for full height grid container in a button.</title>
   <meta charset="utf-8">
   <style>
     button {
       vertical-align: top;
-      margin: 10px 20px 10px 0;
       padding: 0;
       border: solid 1px black;
+      background: lightblue;
       width: 200px;
       height: 200px;
     }
 
-    .button {
-      display: inline-grid;
-      justify-content: space-between;
-      align-items: stretch;
+    .grid {
+      display: grid;
       grid-template-columns: auto auto auto;
       grid-template-rows: auto;
+      justify-content: space-between;
+      align-items: stretch;
       width: 100%;
       height: 100%;
     }
 
-    .button>* {
-      border: solid 1px rgba(0, 0, 0, .5);
-      background-color: rgba(0, 0, 0, .1);
+    .grid > * {
+      margin: 1px;
+      background: teal;
       min-height: 10px;
       min-width: 10px;
     }
 
     .vertical {
-      grid-template-columns: auto;
-      grid-template-rows: auto auto auto;
-    }
-
-    .button {
-      background-color: lightblue;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
     }
   </style>
 </head>
 <body>
   <button>
-    <div class="button">
+    <div class="grid">
       <div></div>
       <div></div>
       <div></div>
     </div>
   </button>
   <button>
-    <div class="button vertical">
+    <div class="grid vertical">
       <div></div>
       <div></div>
       <div></div>

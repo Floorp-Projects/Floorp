@@ -10,47 +10,43 @@
   <style>
     button {
       vertical-align: top;
-      margin: 10px 20px 10px 0;
       padding: 0;
       border: solid 1px black;
+      background: lightblue;
       width: 200px;
       height: 200px;
     }
 
-    .button {
-      display: inline-flex;
+    .flex {
+      display: flex;
       justify-content: space-between;
       align-items: stretch;
       width: 100%;
       height: 100%;
     }
 
-    .button>* {
-      border: solid 1px rgba(0, 0, 0, .5);
-      background-color: rgba(0, 0, 0, .1);
+    .flex > * {
+      margin: 1px;
+      background: teal;
       min-height: 10px;
-      min-width:10px;
+      min-width: 10px;
     }
 
     .vertical {
       flex-direction: column;
     }
-
-    .button {
-      background-color: lightblue;
-    }
   </style>
 </head>
 <body>
   <button>
-    <div class="button pseudo">
+    <div class="flex">
      <div></div>
      <div></div>
      <div></div>
     </div>
   </button>
   <button>
-    <div class="button pseudo vertical">
+    <div class="flex vertical">
      <div></div>
      <div></div>
      <div></div>
