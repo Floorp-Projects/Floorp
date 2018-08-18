@@ -57,6 +57,8 @@ var EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
 
 let global = Cu.getGlobalForObject({});
 
+const nsIFactoryQI = ChromeUtils.generateQI([Ci.nsIFactory]);
+
 /**
  * Redefines the given property on the given object with the given
  * value. This can be used to redefine getter properties which do not
@@ -452,7 +454,7 @@ var XPCOMUtils = {
             throw Cr.NS_ERROR_NO_AGGREGATION;
           return (new component()).QueryInterface(iid);
         },
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
+        QueryInterface: nsIFactoryQI
       }
     }
     return factory;
@@ -477,7 +479,7 @@ var XPCOMUtils = {
         }
         return this._instance.QueryInterface(aIID);
       },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
+      QueryInterface: nsIFactoryQI
     };
   },
 
