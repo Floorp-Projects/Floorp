@@ -15,7 +15,7 @@ import sys
 from automation import Automation
 from mozdevice import ADBTimeoutError
 from mozlog import get_default_logger
-from mozscreenshot import dump_screen
+from mozscreenshot import dump_screen, dump_device_screen
 import mozcrash
 
 # signatures for logcat messages that we don't care about much
@@ -410,11 +410,14 @@ class RemoteAutomation(Automation):
             return status
 
         def kill(self, stagedShutdown=False):
-            if self.utilityPath:
-                # Take a screenshot to capture the screen state just before
-                # the application is killed. There are on-device screenshot
-                # options but they rarely work well with Firefox on the
-                # Android emulator. dump_screen provides an effective
+            # Take a screenshot to capture the screen state just before
+            # the application is killed.
+            if not self.device._device_serial.startswith('emulator-'):
+                dump_device_screen(self.device, get_default_logger())
+            elif self.utilityPath:
+                # Do not use the on-device screenshot options since
+                # they rarely work well with Firefox on the Android
+                # emulator. dump_screen provides an effective
                 # screenshot of the emulator and its host desktop.
                 dump_screen(self.utilityPath, get_default_logger())
             if stagedShutdown:
