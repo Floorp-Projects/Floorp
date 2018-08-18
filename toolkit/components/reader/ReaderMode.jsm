@@ -41,13 +41,7 @@ ChromeUtils.defineModuleGetter(this, "EventDispatcher", "resource://gre/modules/
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "ReaderWorker", "resource://gre/modules/reader/ReaderWorker.jsm");
 ChromeUtils.defineModuleGetter(this, "LanguageDetector", "resource:///modules/translation/LanguageDetector.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "Readability", function() {
-  let scope = {};
-  scope.dump = this.dump;
-  Services.scriptloader.loadSubScript("resource://gre/modules/reader/Readability.js", scope);
-  return scope.Readability;
-});
+ChromeUtils.defineModuleGetter(this, "Readerable", "resource://gre/modules/Readerable.jsm");
 
 const gIsFirefoxDesktop = Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 
@@ -56,42 +50,6 @@ var ReaderMode = {
   CACHE_VERSION: 1,
 
   DEBUG: 0,
-
-  // Don't try to parse the page if it has too many elements (for memory and
-  // performance reasons)
-  get maxElemsToParse() {
-    delete this.parseNodeLimit;
-
-    Services.prefs.addObserver("reader.parse-node-limit", this);
-    return this.parseNodeLimit = Services.prefs.getIntPref("reader.parse-node-limit");
-  },
-
-  get isEnabledForParseOnLoad() {
-    delete this.isEnabledForParseOnLoad;
-
-    // Listen for future pref changes.
-    Services.prefs.addObserver("reader.parse-on-load.", this);
-
-    return this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
-  },
-
-  _getStateForParseOnLoad() {
-    let isEnabled = Services.prefs.getBoolPref("reader.parse-on-load.enabled");
-    let isForceEnabled = Services.prefs.getBoolPref("reader.parse-on-load.force-enabled");
-    return isForceEnabled || isEnabled;
-  },
-
-  observe(aMessage, aTopic, aData) {
-    switch (aTopic) {
-      case "nsPref:changed":
-        if (aData.startsWith("reader.parse-on-load.")) {
-          this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
-        } else if (aData === "reader.parse-node-limit") {
-          this.parseNodeLimit = Services.prefs.getIntPref(aData);
-        }
-        break;
-    }
-  },
 
   /**
    * Enter the reader mode by going forward one step in history if applicable,
@@ -198,39 +156,6 @@ var ReaderMode = {
   },
 
   /**
-   * Decides whether or not a document is reader-able without parsing the whole thing.
-   *
-   * @param doc A document to parse.
-   * @return boolean Whether or not we should show the reader mode button.
-   */
-  isProbablyReaderable(doc) {
-    // Only care about 'real' HTML documents:
-    if (doc.mozSyntheticDocument || !(doc instanceof doc.defaultView.HTMLDocument)) {
-      return false;
-    }
-
-    let uri = Services.io.newURI(doc.location.href);
-    if (!this._shouldCheckUri(uri)) {
-      return false;
-    }
-
-    let utils = this.getUtilsForWin(doc.defaultView);
-    // We pass in a helper function to determine if a node is visible, because
-    // it uses gecko APIs that the engine-agnostic readability code can't rely
-    // upon.
-    return new Readability(doc).isProbablyReaderable(this.isNodeVisible.bind(this, utils));
-  },
-
-  isNodeVisible(utils, node) {
-    let bounds = utils.getBoundsWithoutFlushing(node);
-    return bounds.height > 0 && bounds.width > 0;
-  },
-
-  getUtilsForWin(win) {
-    return win.windowUtils;
-  },
-
-  /**
    * Gets an article from a loaded browser's document. This method will not attempt
    * to parse certain URIs (e.g. about: URIs).
    *
@@ -239,7 +164,8 @@ var ReaderMode = {
    * @resolves JS object representing the article, or null if no article is found.
    */
   parseDocument(doc) {
-    if (!this._shouldCheckUri(doc.documentURIObject) || !this._shouldCheckUri(doc.baseURIObject, true)) {
+    if (!Readerable.shouldCheckUri(doc.documentURIObject) ||
+        !Readerable.shouldCheckUri(doc.baseURIObject, true)) {
       this.log("Reader mode disabled for URI");
       return null;
     }
@@ -259,7 +185,8 @@ var ReaderMode = {
     if (!doc) {
       return null;
     }
-    if (!this._shouldCheckUri(doc.documentURIObject) || !this._shouldCheckUri(doc.baseURIObject, true)) {
+    if (!Readerable.shouldCheckUri(doc.documentURIObject) ||
+        !Readerable.shouldCheckUri(doc.baseURIObject, true)) {
       this.log("Reader mode disabled for URI");
       return null;
     }
@@ -269,7 +196,7 @@ var ReaderMode = {
 
   _downloadDocument(url) {
     try {
-      if (!this._shouldCheckUri(Services.io.newURI(url))) {
+      if (!Readerable.shouldCheckUri(Services.io.newURI(url))) {
         return null;
       }
     } catch (ex) {
@@ -413,42 +340,6 @@ var ReaderMode = {
   log(msg) {
     if (this.DEBUG)
       dump("Reader: " + msg);
-  },
-
-  _blockedHosts: [
-    "amazon.com",
-    "github.com",
-    "mail.google.com",
-    "pinterest.com",
-    "reddit.com",
-    "twitter.com",
-    "youtube.com",
-  ],
-
-  _shouldCheckUri(uri, isBaseUri = false) {
-    if (!(uri.schemeIs("http") || uri.schemeIs("https"))) {
-      this.log("Not parsing URI scheme: " + uri.scheme);
-      return false;
-    }
-
-    try {
-      uri.QueryInterface(Ci.nsIURL);
-    } catch (ex) {
-      // If this doesn't work, presumably the URL is not well-formed or something
-      return false;
-    }
-    // Sadly, some high-profile pages have false positives, so bail early for those:
-    let asciiHost = uri.asciiHost;
-    if (!isBaseUri && this._blockedHosts.some(blockedHost => asciiHost.endsWith(blockedHost))) {
-      return false;
-    }
-
-    if (!isBaseUri && (!uri.filePath || uri.filePath == "/")) {
-      this.log("Not parsing home page: " + uri.spec);
-      return false;
-    }
-
-    return true;
   },
 
   /**
@@ -641,3 +532,6 @@ var ReaderMode = {
     return readingSpeed.get(lang) || readingSpeed.get("en");
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  ReaderMode, "maxElemsToParse", "reader.parse-node-limit", 0);

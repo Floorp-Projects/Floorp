@@ -8,14 +8,18 @@ JAR_MANIFESTS += ['jar.mn']
 
 EXTRA_JS_MODULES += [
   'AboutReader.jsm',
-  'ReaderMode.jsm'
+  'ReaderMode.jsm',
+]
+
+EXTRA_PP_JS_MODULES += [
+  'Readerable.jsm',
 ]
 
 EXTRA_JS_MODULES.reader = [
   'JSDOMParser.js',
   'Readability.js',
   'ReaderWorker.js',
-  'ReaderWorker.jsm'
+  'ReaderWorker.jsm',
 ]
 
 BROWSER_CHROME_MANIFESTS += [
