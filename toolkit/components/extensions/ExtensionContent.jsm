@@ -24,6 +24,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
                                    "@mozilla.org/content/style-sheet-service;1",
                                    "nsIStyleSheetService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "processScript",
+                                   "@mozilla.org/webextensions/extension-process-script;1");
+
 const DocumentEncoder = Components.Constructor(
   "@mozilla.org/layout/documentEncoder;1?type=text/plain",
   "nsIDocumentEncoder", "init");
@@ -510,6 +513,10 @@ class Script {
   }
 }
 
+var contentScripts = new DefaultWeakMap(matcher => {
+  return new Script(processScript.extensions.get(matcher.extension), matcher);
+});
+
 /**
  * An execution context for semi-privileged extension content scripts.
  *
@@ -782,7 +789,8 @@ DocumentManager = {
 
 var ExtensionContent = {
   BrowserExtensionContent,
-  Script,
+
+  contentScripts,
 
   shutdownExtension(extension) {
     DocumentManager.shutdownExtension(extension);
@@ -913,6 +921,39 @@ var ExtensionContent = {
 
   handleWebNavigationGetAllFrames(global) {
     return WebNavigationFrames.getAllFrames(global.docShell);
+  },
+
+  async receiveMessage(global, name, target, data, recipient) {
+    switch (name) {
+      case "Extension:Capture":
+        return this.handleExtensionCapture(global, data.width, data.height, data.options);
+      case "Extension:DetectLanguage":
+        return this.handleDetectLanguage(global, target);
+      case "Extension:Execute":
+        let policy = WebExtensionPolicy.getByID(recipient.extensionId);
+
+        let matcher = new WebExtensionContentScript(policy, data.options);
+
+        Object.assign(matcher, {
+          wantReturnValue: data.options.wantReturnValue,
+          removeCSS: data.options.removeCSS,
+          cssOrigin: data.options.cssOrigin,
+          jsCode: data.options.jsCode,
+        });
+
+        let script = contentScripts.get(matcher);
+
+        // Add the cssCode to the script, so that it can be converted into a cached URL.
+        await script.addCSSCode(data.options.cssCode);
+        delete data.options.cssCode;
+
+        return this.handleExtensionExecute(global, target, data.options, script);
+      case "WebNavigation:GetFrame":
+        return this.handleWebNavigationGetFrame(global, data.options);
+      case "WebNavigation:GetAllFrames":
+        return this.handleWebNavigationGetAllFrames(global);
+    }
+    return null;
   },
 
   // Helpers
