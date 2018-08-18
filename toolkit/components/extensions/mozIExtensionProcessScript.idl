@@ -16,5 +16,6 @@ interface mozIExtensionProcessScript : nsISupports
   Promise loadContentScript(in WebExtensionContentScript contentScript,
                             in mozIDOMWindow window);
 
-  void initExtensionDocument(in nsISupports extension, in Document doc);
+  void initExtensionDocument(in nsISupports extension, in Document doc,
+                             in bool privileged);
 };
