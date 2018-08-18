@@ -108,6 +108,8 @@ public:
 
   NS_IMETHOD Init(nsLocalFile* aParent, bool aIgnored);
 
+  NS_FORWARD_NSISIMPLEENUMERATORBASE(nsSimpleEnumerator::)
+
 private:
   ~nsDirEnumeratorUnix() override;
 

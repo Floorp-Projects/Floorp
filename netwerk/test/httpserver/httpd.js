@@ -5130,6 +5130,9 @@ nsSimpleEnumerator.prototype =
 
     return this._items[this._nextIndex++];
   },
+  [Symbol.iterator]() {
+    return this._items.values();
+  },
   QueryInterface: function(aIID)
   {
     if (Ci.nsISimpleEnumerator.equals(aIID) ||

@@ -238,6 +238,7 @@ public:
   nsDriveEnumerator();
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISIMPLEENUMERATOR
+  NS_FORWARD_NSISIMPLEENUMERATORBASE(nsSimpleEnumerator::)
   nsresult Init();
 
   NS_IMETHOD GetNextFile(nsIFile** aResult) override
@@ -693,6 +694,8 @@ private:
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
+
+  NS_FORWARD_NSISIMPLEENUMERATORBASE(nsSimpleEnumerator::)
 
   nsDirEnumerator() : mDir(nullptr)
   {
