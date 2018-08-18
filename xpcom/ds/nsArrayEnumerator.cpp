@@ -9,19 +9,16 @@
 #include "nsArrayEnumerator.h"
 
 #include "nsIArray.h"
-#include "nsISimpleEnumerator.h"
+#include "nsSimpleEnumerator.h"
 
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/RefPtr.h"
 
-class nsSimpleArrayEnumerator final : public nsISimpleEnumerator
+class nsSimpleArrayEnumerator final : public nsSimpleEnumerator
 {
 public:
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
   // nsISimpleEnumerator interface
   NS_DECL_NSISIMPLEENUMERATOR
 
@@ -33,14 +30,12 @@ public:
   }
 
 private:
-  ~nsSimpleArrayEnumerator() = default;
+  ~nsSimpleArrayEnumerator() override = default;
 
 protected:
   nsCOMPtr<nsIArray> mValueArray;
   uint32_t mIndex;
 };
-
-NS_IMPL_ISUPPORTS(nsSimpleArrayEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsSimpleArrayEnumerator::HasMoreElements(bool* aResult)
@@ -104,12 +99,9 @@ NS_NewArrayEnumerator(nsISimpleEnumerator** aResult, nsIArray* aArray)
 // creates a snapshot of the array in question
 // you MUST use NS_NewArrayEnumerator to create this, so that
 // allocation is done correctly
-class nsCOMArrayEnumerator final : public nsISimpleEnumerator
+class nsCOMArrayEnumerator final : public nsSimpleEnumerator
 {
 public:
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
   // nsISimpleEnumerator interface
   NS_DECL_NSISIMPLEENUMERATOR
 
@@ -128,7 +120,7 @@ private:
     mValueArray[0] = nullptr;
   }
 
-  ~nsCOMArrayEnumerator(void);
+  ~nsCOMArrayEnumerator(void) override;
 
 protected:
   uint32_t mIndex;            // current position
@@ -137,8 +129,6 @@ protected:
   // this is actually bigger
   nsISupports* mValueArray[1];
 };
-
-NS_IMPL_ISUPPORTS(nsCOMArrayEnumerator, nsISimpleEnumerator)
 
 nsCOMArrayEnumerator::~nsCOMArrayEnumerator()
 {

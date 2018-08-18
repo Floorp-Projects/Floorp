@@ -8,7 +8,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
-#include "nsISimpleEnumerator.h"
 #include "xpcpublic.h"
 
 nsresult
@@ -112,8 +111,6 @@ nsObserverList::NotifyObservers(nsISupports* aSubject,
     observers[i]->Observe(aSubject, aTopic, someData);
   }
 }
-
-NS_IMPL_ISUPPORTS(nsObserverEnumerator, nsISimpleEnumerator)
 
 nsObserverEnumerator::nsObserverEnumerator(nsObserverList* aObserverList)
   : mIndex(0)

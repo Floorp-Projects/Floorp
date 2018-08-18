@@ -7,6 +7,7 @@
 #include "nsFilePickerProxy.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIFile.h"
+#include "nsSimpleEnumerator.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/TabChild.h"
@@ -220,11 +221,9 @@ nsFilePickerProxy::GetDomFileOrDirectory(nsISupports** aValue)
 
 namespace {
 
-class SimpleEnumerator final : public nsISimpleEnumerator
+class SimpleEnumerator final : public nsSimpleEnumerator
 {
 public:
-  NS_DECL_ISUPPORTS
-
   explicit
   SimpleEnumerator(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories)
     : mFilesOrDirectories(aFilesOrDirectories)
@@ -259,14 +258,9 @@ public:
   }
 
 private:
-  ~SimpleEnumerator()
-  {}
-
   nsTArray<mozilla::dom::OwningFileOrDirectory> mFilesOrDirectories;
   uint32_t mIndex;
 };
-
-NS_IMPL_ISUPPORTS(SimpleEnumerator, nsISimpleEnumerator)
 
 } // namespace
 

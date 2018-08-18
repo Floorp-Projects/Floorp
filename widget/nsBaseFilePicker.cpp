@@ -21,6 +21,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/Services.h"
 #include "WidgetUtils.h"
+#include "nsSimpleEnumerator.h"
 #include "nsThreadUtils.h"
 
 #include "nsBaseFilePicker.h"
@@ -100,11 +101,9 @@ private:
   RefPtr<nsIFilePickerShownCallback> mCallback;
 };
 
-class nsBaseFilePickerEnumerator : public nsISimpleEnumerator
+class nsBaseFilePickerEnumerator : public nsSimpleEnumerator
 {
 public:
-  NS_DECL_ISUPPORTS
-
   nsBaseFilePickerEnumerator(nsPIDOMWindowOuter* aParent,
                              nsISimpleEnumerator* iterator,
                              int16_t aMode)
@@ -141,17 +140,11 @@ public:
     return mIterator->HasMoreElements(aResult);
   }
 
-protected:
-  virtual ~nsBaseFilePickerEnumerator()
-  {}
-
 private:
   nsCOMPtr<nsISimpleEnumerator> mIterator;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   int16_t mMode;
 };
-
-NS_IMPL_ISUPPORTS(nsBaseFilePickerEnumerator, nsISimpleEnumerator)
 
 nsBaseFilePicker::nsBaseFilePicker()
   : mAddToRecentDocs(true)
