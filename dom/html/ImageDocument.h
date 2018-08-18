@@ -43,7 +43,8 @@ public:
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject) override;
   virtual void Destroy() override;
   virtual void OnPageShow(bool aPersisted,
-                          EventTarget* aDispatchStartTarget) override;
+                          EventTarget* aDispatchStartTarget,
+                          bool aOnlySystemGroup = false) override;
 
   NS_DECL_NSIIMAGEDOCUMENT
   NS_DECL_IMGINOTIFICATIONOBSERVER

@@ -109,7 +109,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
   }
 
   render(state) {
-    let record = {};
+    let record;
     let {
       page,
       "address-page": addressPage,
@@ -286,7 +286,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
 
   updateSaveButtonState() {
     this.saveButton.disabled = !this.form.checkValidity();
-    log.debug("updateSaveButtonState", this.saveButton.disabled);
   }
 
   async saveRecord() {

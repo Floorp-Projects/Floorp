@@ -3,6 +3,15 @@
 it{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Tempo coordinato universale"}
+        }
+        "Europe:Dublin"{
+            ld{"Ora legale dell’Irlanda"}
+        }
+        "Europe:London"{
+            ld{"Ora legale del Regno Unito"}
+        }
         "meta:Afghanistan"{
             ls{"Ora dell’Afghanistan"}
         }

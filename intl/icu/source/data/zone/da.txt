@@ -3,6 +3,15 @@
 da{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Koordineret universaltid"}
+        }
+        "Europe:Dublin"{
+            ld{"Irsk normaltid"}
+        }
+        "Europe:London"{
+            ld{"Britisk sommertid"}
+        }
         "meta:Acre"{
             ld{"Acre-sommertid"}
             lg{"Acre-tid"}

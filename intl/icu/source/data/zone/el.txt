@@ -3,6 +3,15 @@
 el{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Συντονισμένη Παγκόσμια Ώρα"}
+        }
+        "Europe:Dublin"{
+            ld{"Χειμερινή ώρα Ιρλανδίας"}
+        }
+        "Europe:London"{
+            ld{"Θερινή ώρα Βρετανίας"}
+        }
         "meta:Afghanistan"{
             ls{"Ώρα Αφγανιστάν"}
         }

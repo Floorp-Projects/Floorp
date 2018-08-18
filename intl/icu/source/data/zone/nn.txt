@@ -3,6 +3,15 @@
 nn{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"koordinert universaltid"}
+        }
+        "Europe:Dublin"{
+            ld{"irsk sumartid"}
+        }
+        "Europe:London"{
+            ld{"britisk sumartid"}
+        }
         "meta:Afghanistan"{
             ls{"afghansk tid"}
         }

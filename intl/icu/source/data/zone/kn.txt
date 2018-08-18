@@ -3,6 +3,15 @@
 kn{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"ಸಂಘಟಿತ ಸಾರ್ವತ್ರಿಕ ಸಮಯ"}
+        }
+        "Europe:Dublin"{
+            ld{"ಐರಿಷ್ ಪ್ರಮಾಣಿತ ಸಮಯ"}
+        }
+        "Europe:London"{
+            ld{"ಬ್ರಿಟಿಷ್ ಬೇಸಿಗೆ ಸಮಯ"}
+        }
         "meta:Afghanistan"{
             ls{"ಅಫಘಾನಿಸ್ತಾನ ಸಮಯ"}
         }

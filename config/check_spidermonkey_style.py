@@ -84,8 +84,10 @@ included_inclnames_to_ignore = set([
     'prtypes.h',                # NSPR
     'selfhosted.out.h',         # generated in $OBJDIR
     'shellmoduleloader.out.h',  # generated in $OBJDIR
-    'unicode/timezone.h',       # ICU
+    'unicode/basictz.h',        # ICU
+    'unicode/locid.h',          # ICU
     'unicode/plurrule.h',       # ICU
+    'unicode/timezone.h',       # ICU
     'unicode/ucal.h',           # ICU
     'unicode/uchar.h',          # ICU
     'unicode/uclean.h',         # ICU
@@ -103,6 +105,7 @@ included_inclnames_to_ignore = set([
     'unicode/ureldatefmt.h',    # ICU
     'unicode/ustring.h',        # ICU
     'unicode/utypes.h',         # ICU
+    'unicode/uversion.h',       # ICU
     'vtune/VTuneWrapper.h'      # VTune
 ])
 

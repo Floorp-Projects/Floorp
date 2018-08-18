@@ -21,6 +21,7 @@
 #include "js/RootingAPI.h"
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
+#include "vm/DateTime.h"
 #include "vm/Debugger.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
@@ -107,7 +108,7 @@ Realm::init(JSContext* cx, JSPrincipals* principals)
      * interfere with benchmarks that create tons of date objects (unless they
      * also create tons of iframes, which seems unlikely).
      */
-    JS::ResetTimeZone();
+    js::ResetTimeZoneInternal(ResetTimeZoneMode::DontResetIfOffsetUnchanged);
 
     if (!objects_.init(cx))
         return false;

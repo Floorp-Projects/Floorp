@@ -31,6 +31,8 @@ add_task(async function test_dropdown() {
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "address-page" && !state.page.guid;
       }, "Check add page state");
+
+      content.document.querySelector("#country").scrollIntoView();
     });
 
     info("going to open the country <select>");
