@@ -345,9 +345,6 @@ enum class ICStubEngine : uint8_t {
     // Baseline IC, see SharedIC.h and BaselineIC.h.
     Baseline = 0,
 
-    // Ion IC that reuses Baseline IC code, see SharedIC.h.
-    IonSharedIC,
-
     // Ion IC, see IonIC.h.
     IonIC
 };

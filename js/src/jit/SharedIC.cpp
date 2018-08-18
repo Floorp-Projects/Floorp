@@ -618,11 +618,6 @@ ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon)
 void
 ICStubCompiler::pushStubPayload(MacroAssembler& masm, Register scratch)
 {
-    if (engine_ == Engine::IonSharedIC) {
-        masm.push(Imm32(0));
-        return;
-    }
-
     if (inStubFrame_) {
         masm.loadPtr(Address(BaselineFrameReg, 0), scratch);
         masm.pushBaselineFramePtr(scratch, scratch);
