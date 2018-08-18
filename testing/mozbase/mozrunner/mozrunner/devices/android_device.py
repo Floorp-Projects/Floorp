@@ -374,6 +374,7 @@ def grant_runtime_permissions(build_obj, app, device_serial=None):
             device.shell_output('pm grant %s android.permission.ACCESS_COARSE_LOCATION' % app)
             device.shell_output('pm grant %s android.permission.ACCESS_FINE_LOCATION' % app)
             device.shell_output('pm grant %s android.permission.CAMERA' % app)
+            device.shell_output('pm grant %s android.permission.RECORD_AUDIO' % app)
     except Exception:
         _log_warning("Unable to grant runtime permissions to %s" % app)
 

@@ -180,6 +180,7 @@ class ADBCommand(object):
                                       stderr=subprocess.PIPE).communicate()
             re_version = re.compile(r'Android Debug Bridge version (.*)')
             self._adb_version = re_version.match(output[0]).group(1)
+
         except Exception as exc:
             raise ADBError('%s: %s is not executable.' % (exc, adb))
 
@@ -563,6 +564,7 @@ class ADBDevice(ADBCommand):
         ADBCommand.__init__(self, adb=adb, adb_host=adb_host,
                             adb_port=adb_port, logger_name=logger_name,
                             timeout=timeout, verbose=verbose)
+        self._logger.info('Using adb %s' % self._adb_version)
         self._device_serial = self._get_device_serial(device)
         self._initial_test_root = test_root
         self._test_root = None
@@ -597,9 +599,13 @@ class ADBDevice(ADBCommand):
         except ADBError:
             self._logger.debug("Check for su -c failed")
 
-        # Do we have Android's su?
+        # Check if Android's su 0 command works.
+        # su 0 id will hang on Pixel 2 8.1.0/OPM2.171019.029.B1/4720900
+        # rooted via magisk. If we already have detected su -c support,
+        # we can skip this check.
         try:
-            if self.shell_output("su 0 id", timeout=timeout).find(uid) != -1:
+            if (not self._have_su and
+                self.shell_output("su 0 id", timeout=timeout).find(uid) != -1):
                 self._have_android_su = True
                 self._logger.info("su 0 supported")
         except ADBError:
@@ -1815,7 +1821,7 @@ class ADBDevice(ADBCommand):
             # copy the source directory *into* the destination
             # directory otherwise it will copy the source directory
             # *onto* the destination directory.
-            if self._adb_version >= '1.0.36':
+            if self._adb_version >= '1.0.36' and self.is_dir(remote):
                 remote = '/'.join(remote.rstrip('/').split('/')[:-1])
         try:
             self.command_output(["push", local, remote], timeout=timeout)
