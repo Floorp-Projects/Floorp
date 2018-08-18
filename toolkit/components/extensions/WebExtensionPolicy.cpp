@@ -258,6 +258,15 @@ WebExtensionPolicy::UnregisterContentScript(const WebExtensionContentScript& scr
   WebExtensionPolicy_Binding::ClearCachedContentScriptsValue(this);
 }
 
+void
+WebExtensionPolicy::InjectContentScripts(ErrorResult& aRv)
+{
+  nsresult rv = EPS().InjectContentScripts(this);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+}
+
 /* static */ bool
 WebExtensionPolicy::UseRemoteWebExtensions(GlobalObject& aGlobal)
 {

@@ -135,6 +135,12 @@ interface WebExtensionPolicy {
   void unregisterContentScript(WebExtensionContentScript script);
 
   /**
+   * Injects the extension's content script into all existing matching windows.
+   */
+  [Throws]
+  void injectContentScripts();
+
+  /**
    * Returns the list of currently active extension policies.
    */
   static sequence<WebExtensionPolicy> getActiveExtensions();
