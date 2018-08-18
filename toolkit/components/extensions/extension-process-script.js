@@ -56,11 +56,6 @@ var extensions = new DefaultWeakMap(policy => {
   return extension;
 });
 
-var contentScripts = new DefaultWeakMap(matcher => {
-  return new ExtensionContent.Script(extensions.get(matcher.extension),
-                                     matcher);
-});
-
 var DocumentManager;
 var ExtensionManager;
 
@@ -91,7 +86,7 @@ class ExtensionGlobal {
     return this.frameData;
   }
 
-  async receiveMessage({target, messageName, recipient, data, name}) {
+  receiveMessage({target, messageName, recipient, data, name}) {
     switch (name) {
       case "Extension:SetFrameData":
         if (this.frameData) {
@@ -105,35 +100,7 @@ class ExtensionGlobal {
         return;
     }
 
-    switch (messageName) {
-      case "Extension:Capture":
-        return ExtensionContent.handleExtensionCapture(this.global, data.width, data.height, data.options);
-      case "Extension:DetectLanguage":
-        return ExtensionContent.handleDetectLanguage(this.global, target);
-      case "Extension:Execute":
-        let policy = WebExtensionPolicy.getByID(recipient.extensionId);
-
-        let matcher = new WebExtensionContentScript(policy, data.options);
-
-        Object.assign(matcher, {
-          wantReturnValue: data.options.wantReturnValue,
-          removeCSS: data.options.removeCSS,
-          cssOrigin: data.options.cssOrigin,
-          jsCode: data.options.jsCode,
-        });
-
-        let script = contentScripts.get(matcher);
-
-        // Add the cssCode to the script, so that it can be converted into a cached URL.
-        await script.addCSSCode(data.options.cssCode);
-        delete data.options.cssCode;
-
-        return ExtensionContent.handleExtensionExecute(this.global, target, data.options, script);
-      case "WebNavigation:GetFrame":
-        return ExtensionContent.handleWebNavigationGetFrame(this.global, data.options);
-      case "WebNavigation:GetAllFrames":
-        return ExtensionContent.handleWebNavigationGetAllFrames(this.global);
-    }
+    return ExtensionContent.receiveMessage(this.global, messageName, target, data, recipient);
   }
 }
 
@@ -321,6 +288,8 @@ ExtensionProcessScript.prototype = {
 
   get wrappedJSObject() { return this; },
 
+  extensions,
+
   getFrameData(global, force) {
     let extGlobal = DocumentManager.globals.get(global);
     return extGlobal && extGlobal.getFrameData(force);
@@ -347,11 +316,11 @@ ExtensionProcessScript.prototype = {
   },
 
   preloadContentScript(contentScript) {
-    contentScripts.get(contentScript).preload();
+    ExtensionContent.contentScripts.get(contentScript).preload();
   },
 
   loadContentScript(contentScript, window) {
-    return contentScripts.get(contentScript).injectInto(window);
+    return ExtensionContent.contentScripts.get(contentScript).injectInto(window);
   },
 };
 
