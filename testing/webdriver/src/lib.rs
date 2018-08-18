@@ -4,6 +4,8 @@ extern crate base64;
 extern crate cookie;
 #[macro_use]
 extern crate log;
+extern crate futures;
+extern crate http;
 extern crate hyper;
 extern crate regex;
 extern crate serde;
@@ -11,6 +13,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate time;
+extern crate tokio;
 extern crate unicode_segmentation;
 extern crate url;
 
