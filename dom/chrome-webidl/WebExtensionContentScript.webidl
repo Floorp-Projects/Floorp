@@ -6,6 +6,9 @@ interface LoadInfo;
 interface URI;
 interface WindowProxy;
 
+typedef (MatchPatternSet or sequence<DOMString>) MatchPatternSetOrStringSequence;
+typedef (MatchGlob or DOMString) MatchGlobOrString;
+
 [Constructor(MozDocumentMatcherInit options), ChromeOnly, Exposed=System]
 interface MozDocumentMatcher {
   /**
@@ -94,13 +97,13 @@ dictionary MozDocumentMatcherInit {
 
   unsigned long long? frameID = null;
 
-  required MatchPatternSet matches;
+  required MatchPatternSetOrStringSequence matches;
 
-  MatchPatternSet? excludeMatches = null;
+  MatchPatternSetOrStringSequence? excludeMatches = null;
 
-  sequence<MatchGlob>? includeGlobs = null;
+  sequence<MatchGlobOrString>? includeGlobs = null;
 
-  sequence<MatchGlob>? excludeGlobs = null;
+  sequence<MatchGlobOrString>? excludeGlobs = null;
 
   boolean hasActiveTabPermission = false;
 };

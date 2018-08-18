@@ -42,26 +42,6 @@ function getData(extension, key = "") {
 const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
 const isContentProcess = appinfo.processType == appinfo.PROCESS_TYPE_CONTENT;
 
-function tryMatchPatternSet(patterns, options) {
-  try {
-    return new MatchPatternSet(patterns, options);
-  } catch (e) {
-    Cu.reportError(e);
-    return new MatchPatternSet([]);
-  }
-}
-
-function parseScriptOptions(options, restrictSchemes = true) {
-  return {
-    ...options,
-
-    matches: tryMatchPatternSet(options.matches, {restrictSchemes}),
-    excludeMatches: tryMatchPatternSet(options.excludeMatches || [], {restrictSchemes}),
-    includeGlobs: options.includeGlobs && options.includeGlobs.map(glob => new MatchGlob(glob)),
-    excludeGlobs: options.excludeGlobs && options.excludeGlobs.map(glob => new MatchGlob(glob)),
-  };
-}
-
 var extensions = new DefaultWeakMap(policy => {
   let data = policy.initData;
   if (data.serialize) {
@@ -133,7 +113,7 @@ class ExtensionGlobal {
       case "Extension:Execute":
         let policy = WebExtensionPolicy.getByID(recipient.extensionId);
 
-        let matcher = new WebExtensionContentScript(policy, parseScriptOptions(data.options, !policy.hasPermission("mozillaAddons")));
+        let matcher = new WebExtensionContentScript(policy, data.options);
 
         Object.assign(matcher, {
           wantReturnValue: data.options.wantReturnValue,
@@ -250,19 +230,13 @@ ExtensionManager = {
   initExtensionPolicy(extension) {
     let policy = WebExtensionPolicy.getByID(extension.id);
     if (!policy) {
-      let localizeCallback, allowedOrigins, webAccessibleResources;
-      let restrictSchemes = !extension.permissions.has("mozillaAddons");
-
+      let localizeCallback;
       if (extension.localize) {
         // We have a real Extension object.
         localizeCallback = extension.localize.bind(extension);
-        allowedOrigins = extension.whiteListedHosts;
-        webAccessibleResources = extension.webAccessibleResources;
       } else {
         // We have serialized extension data;
         localizeCallback = str => extensions.get(policy).localize(str);
-        allowedOrigins = new MatchPatternSet(extension.whiteListedHosts, {restrictSchemes});
-        webAccessibleResources = extension.webAccessibleResources.map(host => new MatchGlob(host));
       }
 
       let {backgroundScripts} = extension;
@@ -276,9 +250,9 @@ ExtensionManager = {
         name: extension.name,
         baseURL: extension.resourceURL,
 
-        permissions: Array.from(extension.permissions),
-        allowedOrigins,
-        webAccessibleResources,
+        permissions: extension.permissions,
+        allowedOrigins: extension.whiteListedHosts,
+        webAccessibleResources: extension.webAccessibleResources,
 
         contentSecurityPolicy: extension.contentSecurityPolicy,
 
@@ -286,7 +260,7 @@ ExtensionManager = {
 
         backgroundScripts,
 
-        contentScripts: extension.contentScripts.map(script => parseScriptOptions(script, restrictSchemes)),
+        contentScripts: extension.contentScripts,
       });
 
       policy.debugName = `${JSON.stringify(policy.name)} (ID: ${policy.id}, ${policy.getURL()})`;
@@ -297,8 +271,7 @@ ExtensionManager = {
       const registeredContentScripts = this.registeredContentScripts.get(policy);
 
       for (let [scriptId, options] of getData(extension, "contentScripts") || []) {
-        const parsedOptions = parseScriptOptions(options, restrictSchemes);
-        const script = new WebExtensionContentScript(policy, parsedOptions);
+        const script = new WebExtensionContentScript(policy, options);
         policy.registerContentScript(script);
         registeredContentScripts.set(scriptId, script);
       }
@@ -360,8 +333,7 @@ ExtensionManager = {
               `Registering content script ${data.scriptId} on ${data.id} more than once`));
           } else {
             try {
-              const parsedOptions = parseScriptOptions(data.options, !policy.hasPermission("mozillaAddons"));
-              const script = new WebExtensionContentScript(policy, parsedOptions);
+              const script = new WebExtensionContentScript(policy, data.options);
               policy.registerContentScript(script);
               registeredContentScripts.set(data.scriptId, script);
             } catch (e) {
