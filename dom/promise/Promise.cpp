@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/Promise-inl.h"
 
 #include "js/Debug.h"
 
@@ -12,6 +13,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ResultExtensions.h"
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
@@ -224,6 +226,48 @@ Promise::Then(JSContext* aCx,
   }
 
   aRetval.setObject(*retval);
+}
+
+void
+PromiseNativeThenHandlerBase::ResolvedCallback(JSContext* aCx,
+                                               JS::Handle<JS::Value> aValue)
+{
+  RefPtr<Promise> promise = CallResolveCallback(aCx, aValue);
+  mPromise->MaybeResolve(promise);
+}
+
+void
+PromiseNativeThenHandlerBase::RejectedCallback(JSContext* aCx,
+                                               JS::Handle<JS::Value> aValue)
+{
+  mPromise->MaybeReject(aCx, aValue);
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(PromiseNativeThenHandlerBase)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PromiseNativeThenHandlerBase)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromise)
+  tmp->Traverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PromiseNativeThenHandlerBase)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise)
+  tmp->Unlink();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PromiseNativeThenHandlerBase)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PromiseNativeThenHandlerBase)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PromiseNativeThenHandlerBase)
+
+Result<RefPtr<Promise>, nsresult>
+Promise::ThenWithoutCycleCollection(
+  const std::function<already_AddRefed<Promise>(JSContext* aCx,
+                                                JS::HandleValue aValue)>& aCallback)
+{
+  return ThenWithCycleCollectedArgs(aCallback);
 }
 
 void
