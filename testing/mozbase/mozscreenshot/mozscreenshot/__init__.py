@@ -23,7 +23,12 @@ def printstatus(name, returncode):
 
 def dump_screen(utilityPath, log):
     """dumps a screenshot of the entire screen to a directory specified by
-    the MOZ_UPLOAD_DIR environment variable"""
+    the MOZ_UPLOAD_DIR environment variable.
+
+    :param utilityPath: Path of utility programs. This is typically a path
+        to either the objdir's bin directory or a path to the host utilities.
+    :param log: Reference to logger.
+    """
 
     is_structured_log = hasattr(log, 'process_exit')
 
@@ -61,3 +66,48 @@ def dump_screen(utilityPath, log):
     except OSError as err:
         log.info("Failed to start %s for screenshot: %s"
                  % (utility[0], err.strerror))
+
+
+def dump_device_screen(device, log):
+    """dumps a screenshot of a real device's entire screen to a directory
+    specified by the MOZ_UPLOAD_DIR environment variable. Cloned from
+    mozscreenshot.dump_screen.
+
+    :param device: Reference to an ADBAndroid object which provides the
+        interface to interact with Android devices.
+    :param log: Reference to logger.
+    """
+
+    utilityname = 'screencap'
+    is_structured_log = hasattr(log, 'process_exit')
+
+    # Get dir where to write the screenshot file
+    parent_dir = os.environ.get('MOZ_UPLOAD_DIR', None)
+    if not parent_dir:
+        log.info('Failed to retrieve MOZ_UPLOAD_DIR env var')
+        return
+
+    # Run the capture
+    try:
+        # Android 6.0 and later support mktemp.  See
+        # https://android.googlesource.com/platform/system/core/
+        # +/master/shell_and_utilities/README.md#android-6_0-marshmallow
+        # We can use mktemp on real devices since we do not test on
+        # real devices older than Android 6.0. Note we must create the
+        # file without an extension due to limitations in mktemp.
+        filename = device.shell_output('mktemp -p %s mozilla-test-fail-screenshot_XXXXXX' %
+                                       device.test_root)
+        pngfilename = filename + '.png'
+        device.mv(filename, pngfilename)
+        if is_structured_log:
+            log.process_start(utilityname)
+        device.shell_output('%s -p %s' % (utilityname, pngfilename))
+        if is_structured_log:
+            log.process_exit(utilityname, 0)
+        else:
+            printstatus(utilityname, 0)
+        device.pull(pngfilename, parent_dir)
+        device.rm(pngfilename)
+    except Exception as err:
+        log.info("Failed to start %s for screenshot: %s"
+                 % (utilityname, str(err)))
