@@ -9,7 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-#include "nsISimpleEnumerator.h"
+#include "nsSimpleEnumerator.h"
 #include "nsIXULWindow.h"
 
 class nsWindowMediator;
@@ -43,7 +43,7 @@ struct nsWindowInfo
 // virtual enumerators
 //
 
-class nsAppShellWindowEnumerator : public nsISimpleEnumerator {
+class nsAppShellWindowEnumerator : public nsSimpleEnumerator {
 
 friend class nsWindowMediator;
 
@@ -53,11 +53,9 @@ public:
   NS_IMETHOD GetNext(nsISupports **retval) override = 0;
   NS_IMETHOD HasMoreElements(bool *retval) override;
 
-  NS_DECL_ISUPPORTS
-
 protected:
 
-  virtual ~nsAppShellWindowEnumerator();
+  ~nsAppShellWindowEnumerator() override;
 
   void AdjustInitialPosition();
   virtual nsWindowInfo *FindNext() = 0;

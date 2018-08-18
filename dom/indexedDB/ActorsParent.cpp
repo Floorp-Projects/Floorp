@@ -17124,7 +17124,7 @@ FileManager::InitDirectory(nsIFile* aDirectory,
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsISimpleEnumerator> entries;
+    nsCOMPtr<nsIDirectoryEnumerator> entries;
     rv = journalDirectory->GetDirectoryEntries(getter_AddRefs(entries));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
