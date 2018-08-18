@@ -489,6 +489,8 @@ public class GeckoSession extends LayerSession
                         type = PermissionDelegate.PERMISSION_GEOLOCATION;
                     } else if ("desktop-notification".equals(typeString)) {
                         type = PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION;
+                    } else if ("autoplay-media".equals(typeString)) {
+                        type = PermissionDelegate.PERMISSION_AUTOPLAY_MEDIA;
                     } else {
                         throw new IllegalArgumentException("Unknown permission request: " + typeString);
                     }
@@ -3002,7 +3004,7 @@ public class GeckoSession extends LayerSession
      * permission dialog.
      **/
     public interface PermissionDelegate {
-        @IntDef({PERMISSION_GEOLOCATION, PERMISSION_DESKTOP_NOTIFICATION})
+        @IntDef({PERMISSION_GEOLOCATION, PERMISSION_DESKTOP_NOTIFICATION, PERMISSION_AUTOPLAY_MEDIA})
         /* package */ @interface Permission {}
 
         /**
@@ -3016,6 +3018,11 @@ public class GeckoSession extends LayerSession
          * See: https://developer.mozilla.org/en-US/docs/Web/API/notification
          */
         public static final int PERMISSION_DESKTOP_NOTIFICATION = 1;
+
+        /**
+         * Permission for allowing auto-playing media.
+         */
+        public static final int PERMISSION_AUTOPLAY_MEDIA = 2;
 
         /**
          * Callback interface for notifying the result of a permission request.
@@ -3056,6 +3063,7 @@ public class GeckoSession extends LayerSession
          * @param type The type of the requested permission; possible values are,
          *             PERMISSION_GEOLOCATION
          *             PERMISSION_DESKTOP_NOTIFICATION
+         *             PERMISSION_AUTOPLAY_MEDIA
          * @param access Not used.
          * @param callback Callback interface.
          */
