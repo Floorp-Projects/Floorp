@@ -673,7 +673,7 @@ class TabBase {
       if (!this.extension.isExtensionURL(url)) {
         return Promise.reject({message: "Files to be injected must be within the extension"});
       }
-      options[kind].push(url);
+      options[`${kind}Paths`].push(url);
     }
     if (details.allFrames) {
       options.allFrames = details.allFrames;
@@ -717,7 +717,7 @@ class TabBase {
    *        generates.
    */
   executeScript(context, details) {
-    return this._execute(context, details, "jsPaths", "executeScript");
+    return this._execute(context, details, "js", "executeScript");
   }
 
   /**
@@ -733,7 +733,7 @@ class TabBase {
    *        Resolves when the injection has completed.
    */
   insertCSS(context, details) {
-    return this._execute(context, details, "cssPaths", "insertCSS").then(() => {});
+    return this._execute(context, details, "css", "insertCSS").then(() => {});
   }
 
 

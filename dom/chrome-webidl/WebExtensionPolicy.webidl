@@ -182,11 +182,11 @@ dictionary WebExtensionInit {
 
   required WebExtensionLocalizeCallback localizeCallback;
 
-  required MatchPatternSet allowedOrigins;
+  required MatchPatternSetOrStringSequence allowedOrigins;
 
   sequence<DOMString> permissions = [];
 
-  sequence<MatchGlob> webAccessibleResources = [];
+  sequence<MatchGlobOrString> webAccessibleResources = [];
 
   sequence<WebExtensionContentScriptInit> contentScripts = [];
 
