@@ -15,7 +15,6 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "XMLHttpRequest"]);
 
 const UPDATESERVICE_CID = Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}");
-const UPDATESERVICE_CONTRACTID = "@mozilla.org/updates/update-service;1";
 
 const PREF_APP_UPDATE_ALTWINDOWTYPE        = "app.update.altwindowtype";
 const PREF_APP_UPDATE_AUTO                 = "app.update.auto";
@@ -2466,12 +2465,6 @@ UpdateService.prototype = {
   },
 
   classID: UPDATESERVICE_CID,
-  classInfo: XPCOMUtils.generateCI({classID: UPDATESERVICE_CID,
-                                    contractID: UPDATESERVICE_CONTRACTID,
-                                    interfaces: [Ci.nsIApplicationUpdateService,
-                                                 Ci.nsITimerCallback,
-                                                 Ci.nsIObserver],
-                                    flags: Ci.nsIClassInfo.SINGLETON}),
 
   _xpcom_factory: UpdateServiceFactory,
   QueryInterface: ChromeUtils.generateQI([Ci.nsIApplicationUpdateService,

@@ -9,7 +9,6 @@ const debugMode = false;
 // 30 seconds normally, or 3 seconds for testing
 const WRITE_DELAY_MS = (debugMode ? 3 : 30) * 1000;
 
-const XULSTORE_CONTRACTID = "@mozilla.org/xul/xulstore;1";
 const XULSTORE_CID = Components.ID("{6f46b6f4-c8b1-4bd4-a4fa-9ebbed0753ea}");
 const STOREDB_FILENAME = "xulstore.json";
 
@@ -25,10 +24,6 @@ function XULStore() {
 
 XULStore.prototype = {
   classID: XULSTORE_CID,
-  classInfo: XPCOMUtils.generateCI({classID: XULSTORE_CID,
-                                    contractID: XULSTORE_CONTRACTID,
-                                    classDescription: "XULStore",
-                                    interfaces: [Ci.nsIXULStore]}),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsIXULStore,
                                           Ci.nsISupportsWeakReference]),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(XULStore),

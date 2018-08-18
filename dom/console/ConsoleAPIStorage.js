@@ -46,12 +46,6 @@ ConsoleAPIStorageService.prototype = {
   classID : CONSOLEAPISTORAGE_CID,
   QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleAPIStorage,
                                           Ci.nsIObserver]),
-  classInfo: XPCOMUtils.generateCI({
-    classID: CONSOLEAPISTORAGE_CID,
-    contractID: '@mozilla.org/consoleAPI-storage;1',
-    interfaces: [Ci.nsIConsoleAPIStorage, Ci.nsIObserver],
-    flags: Ci.nsIClassInfo.SINGLETON
-  }),
 
   observe: function CS_observe(aSubject, aTopic, aData)
   {
