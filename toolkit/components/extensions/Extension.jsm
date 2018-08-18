@@ -680,6 +680,24 @@ class ExtensionData {
         return manager.initModuleJSON([modules]);
       };
 
+      result.contentScripts = [];
+      for (let options of manifest.content_scripts || []) {
+        result.contentScripts.push({
+          allFrames: options.all_frames,
+          matchAboutBlank: options.match_about_blank,
+          frameID: options.frame_id,
+          runAt: options.run_at,
+
+          matches: options.matches,
+          excludeMatches: options.exclude_matches || [],
+          includeGlobs: options.include_globs,
+          excludeGlobs: options.exclude_globs,
+
+          jsPaths: options.js || [],
+          cssPaths: options.css || [],
+        });
+      }
+
       if (this.canUseExperiment(manifest)) {
         let parentModules = {};
         let childModules = {};
@@ -820,6 +838,7 @@ class ExtensionData {
 
     this.manifest = manifestData.manifest;
     this.apiNames = manifestData.apiNames;
+    this.contentScripts = manifestData.contentScripts;
     this.dependencies = manifestData.dependencies;
     this.permissions = manifestData.permissions;
     this.schemaURLs = manifestData.schemaURLs;
@@ -1561,10 +1580,6 @@ class Extension extends ExtensionData {
       dependencies: this.dependencies,
       schemaURLs: this.schemaURLs,
     };
-  }
-
-  get contentScripts() {
-    return this.manifest.content_scripts || [];
   }
 
   broadcast(msg, data) {

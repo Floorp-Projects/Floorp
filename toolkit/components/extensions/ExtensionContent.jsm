@@ -880,14 +880,14 @@ var ExtensionContent = {
     }
 
     if (!promises.length) {
-      if (options.frame_id) {
+      if (options.frameID) {
         return Promise.reject({message: `Frame not found, or missing host permission`});
       }
 
-      let frames = options.all_frames ? ", and any iframes" : "";
+      let frames = options.allFrames ? ", and any iframes" : "";
       return Promise.reject({message: `Missing host permission for the tab${frames}`});
     }
-    if (!options.all_frames && promises.length > 1) {
+    if (!options.allFrames && promises.length > 1) {
       return Promise.reject({message: `Internal error: Script matched multiple windows`});
     }
 
@@ -898,8 +898,8 @@ var ExtensionContent = {
       // we try to send it back over the message manager.
       Cu.cloneInto(result, target);
     } catch (e) {
-      const {js} = options;
-      const fileName = js.length ? js[js.length - 1] : "<anonymous code>";
+      const {jsPaths} = options;
+      const fileName = jsPaths.length ? jsPaths[jsPaths.length - 1] : "<anonymous code>";
       const message = `Script '${fileName}' result is non-structured-clonable data`;
       return Promise.reject({message, fileName});
     }
