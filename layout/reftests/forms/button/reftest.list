@@ -1,3 +1,7 @@
+# Tests for grid and flex sizing in buttons
+== button-display-flex-fullsize-1.html button-display-flex-fullsize-1-ref.html
+== button-display-grid-fullsize-1.html button-display-grid-fullsize-1-ref.html
+
 == first-letter-1.html first-letter-1-ref.html
 != first-letter-1.html first-letter-1-noref.html
 

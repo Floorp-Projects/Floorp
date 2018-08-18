@@ -3248,6 +3248,8 @@ function BrowserReloadWithFlags(reloadFlags) {
   // Reset temporary permissions on the current tab. This is done here
   // because we only want to reset permissions on user reload.
   SitePermissions.clearTemporaryPermissions(gBrowser.selectedBrowser);
+  PanelMultiView.hidePopup(gIdentityHandler._identityPopup);
+
 
   let handlingUserInput = window.windowUtils.isHandlingUserInput;
 

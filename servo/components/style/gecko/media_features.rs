@@ -8,24 +8,12 @@ use Atom;
 use app_units::Au;
 use euclid::Size2D;
 use gecko_bindings::bindings;
+use media_queries::Device;
+use media_queries::media_feature::{AllowsRanges, ParsingRequirements};
+use media_queries::media_feature::{MediaFeatureDescription, Evaluator};
+use media_queries::media_feature_expression::{AspectRatio, RangeOrOperator};
 use values::computed::CSSPixelLength;
 use values::computed::Resolution;
-
-use media_queries::Device;
-use media_queries::media_feature::{MediaFeatureDescription, Evaluator};
-use media_queries::media_feature::{AllowsRanges, ParsingRequirements};
-use media_queries::media_feature_expression::{AspectRatio, RangeOrOperator};
-
-macro_rules! feature {
-    ($name:expr, $allows_ranges:expr, $evaluator:expr, $reqs:expr,) => {
-        MediaFeatureDescription {
-            name: $name,
-            allows_ranges: $allows_ranges,
-            evaluator: $evaluator,
-            requirements: $reqs,
-        }
-    }
-}
 
 fn viewport_size(device: &Device) -> Size2D<Au> {
     let pc = device.pres_context();
@@ -157,7 +145,7 @@ fn eval_device_pixel_ratio(
     )
 }
 
-#[derive(Debug, Copy, Clone, FromPrimitive, ToCss, Parse)]
+#[derive(Clone, Copy, Debug, FromPrimitive, Parse, ToCss)]
 #[repr(u8)]
 enum Orientation {
     Landscape,
@@ -204,7 +192,7 @@ fn eval_device_orientation(
 }
 
 /// Values for the display-mode media feature.
-#[derive(Debug, Copy, Clone, FromPrimitive, ToCss, Parse)]
+#[derive(Clone, Copy, Debug, FromPrimitive, Parse, ToCss)]
 #[repr(u8)]
 #[allow(missing_docs)]
 pub enum DisplayMode {
@@ -250,7 +238,7 @@ fn eval_transform_3d(
     query_value.map_or(supports_transforms, |v| v == supports_transforms)
 }
 
-#[derive(Debug, Copy, Clone, FromPrimitive, ToCss, Parse)]
+#[derive(Clone, Copy, Debug, FromPrimitive, Parse, ToCss)]
 #[repr(u8)]
 enum Scan {
     Progressive,
@@ -325,7 +313,7 @@ fn eval_resolution(
     )
 }
 
-#[derive(Debug, Copy, Clone, FromPrimitive, ToCss, Parse)]
+#[derive(Clone, Copy, Debug, FromPrimitive, Parse, ToCss)]
 #[repr(u8)]
 enum PrefersReducedMotion {
     NoPreference,

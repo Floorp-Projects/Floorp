@@ -15,7 +15,7 @@ import sys
 from automation import Automation
 from mozdevice import ADBTimeoutError
 from mozlog import get_default_logger
-from mozscreenshot import dump_screen
+from mozscreenshot import dump_screen, dump_device_screen
 import mozcrash
 
 # signatures for logcat messages that we don't care about much
@@ -106,31 +106,34 @@ class RemoteAutomation(Automation):
         return status
 
     def deleteANRs(self):
-        # empty ANR traces.txt file; usually need root permissions
-        # we make it empty and writable so we can test the ANR reporter later
-        traces = "/data/anr/traces.txt"
+        # Remove files from the dalvik stack-trace directory.
+        if not self._device.is_dir(self._device.stack_trace_dir, root=True):
+            return
         try:
-            self._device.shell_output('echo > %s' % traces, root=True)
-            self._device.shell_output('chmod 666 %s' % traces, root=True)
+            for trace_file in self._device.ls(self._device.stack_trace_dir, root=True):
+                trace_path = posixpath.join(self._device.stack_trace_dir, trace_file)
+                self._device.chmod(trace_path, root=True)
+                self._device.rm(trace_path, root=True)
         except Exception as e:
-            print("Error deleting %s: %s" % (traces, str(e)))
+            print("Error deleting %s: %s" % (self._device.stack_trace_dir, str(e)))
 
     def checkForANRs(self):
-        traces = "/data/anr/traces.txt"
-        if self._device.is_file(traces):
-            try:
-                t = self._device.get_file(traces)
+        if not self._device.is_dir(self._device.stack_trace_dir):
+            print("%s not found" % self._device.stack_trace_dir)
+            return
+        try:
+            for trace_file in self._device.ls(self._device.stack_trace_dir, root=True):
+                trace_path = posixpath.join(self._device.stack_trace_dir, trace_file)
+                t = self._device.get_file(trace_path)
                 if t:
                     stripped = t.strip()
                     if len(stripped) > 0:
-                        print("Contents of %s:" % traces)
+                        print("Contents of %s:" % trace_path)
                         print(t)
-                # Once reported, delete traces
-                self.deleteANRs()
-            except Exception as e:
-                print("Error pulling %s: %s" % (traces, str(e)))
-        else:
-            print("%s not found" % traces)
+            # Once reported, delete traces
+            self.deleteANRs()
+        except Exception as e:
+            print("Error pulling %s: %s" % (self._device.stack_trace_dir, str(e)))
 
     def deleteTombstones(self):
         # delete any tombstone files from device
@@ -237,6 +240,10 @@ class RemoteAutomation(Automation):
             self.procName = cmd[0].split(posixpath.sep)[-1]
             self.stdoutlen = 0
             self.utilityPath = None
+
+            if app and self.device.process_exist(app):
+                print("remoteautomation.py %s is already running. Stopping...")
+                self.device.stop_application(app, root=True)
 
             self.counts = counts
             if self.counts is not None:
@@ -407,11 +414,14 @@ class RemoteAutomation(Automation):
             return status
 
         def kill(self, stagedShutdown=False):
-            if self.utilityPath:
-                # Take a screenshot to capture the screen state just before
-                # the application is killed. There are on-device screenshot
-                # options but they rarely work well with Firefox on the
-                # Android emulator. dump_screen provides an effective
+            # Take a screenshot to capture the screen state just before
+            # the application is killed.
+            if not self.device._device_serial.startswith('emulator-'):
+                dump_device_screen(self.device, get_default_logger())
+            elif self.utilityPath:
+                # Do not use the on-device screenshot options since
+                # they rarely work well with Firefox on the Android
+                # emulator. dump_screen provides an effective
                 # screenshot of the emulator and its host desktop.
                 dump_screen(self.utilityPath, get_default_logger())
             if stagedShutdown:

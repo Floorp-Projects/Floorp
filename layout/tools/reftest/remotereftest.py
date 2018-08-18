@@ -153,7 +153,6 @@ class RemoteReftest(RefTest):
                                  device=options.deviceSerial,
                                  test_root=options.remoteTestRoot,
                                  verbose=verbose)
-
         if options.remoteTestRoot is None:
             options.remoteTestRoot = posixpath.join(self.device.test_root, "reftest")
         options.remoteProfile = posixpath.join(options.remoteTestRoot, "profile")
@@ -321,17 +320,6 @@ class RemoteReftest(RefTest):
             raise
 
         return profile
-
-    def copyExtraFilesToProfile(self, options, profile):
-        profileDir = profile.profile
-        RefTest.copyExtraFilesToProfile(self, options, profile)
-        if len(os.listdir(profileDir)) > 0:
-            try:
-                self.device.push(profileDir, options.remoteProfile)
-                self.device.chmod(options.remoteProfile, recursive=True, root=True)
-            except Exception:
-                print "Automation Error: Failed to copy extra files to device"
-                raise
 
     def printDeviceInfo(self, printLogcat=False):
         try:
