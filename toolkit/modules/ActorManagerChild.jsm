@@ -116,11 +116,25 @@ class SingletonDispatcher extends Dispatcher {
   constructor(window, data) {
     super(getMessageManager(window), data);
 
-    window.addEventListener("pageshow", this);
-    window.addEventListener("pagehide", this);
+    window.addEventListener("pageshow", this, {mozSystemGroup: true});
+    window.addEventListener("pagehide", this, {mozSystemGroup: true});
 
     this.window = window;
     this.listeners = [];
+  }
+
+  init() {
+    super.init();
+
+    for (let actor of this.instances.values()) {
+      if (typeof actor.init === "function") {
+        try {
+          actor.init();
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }
+    }
   }
 
   cleanup() {
@@ -132,6 +146,17 @@ class SingletonDispatcher extends Dispatcher {
     for (let [event, listener, options] of this.listeners) {
       this.window.removeEventListener(event, listener, options);
     }
+
+    for (let actor of this.instances.values()) {
+      if (typeof actor.cleanup === "function") {
+        try {
+          actor.cleanup();
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }
+    }
+
     this.listeners = null;
   }
 

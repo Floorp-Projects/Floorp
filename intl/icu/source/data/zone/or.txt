@@ -3,6 +3,15 @@
 or{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"ସମନ୍ୱିତ ସାର୍ବଜନୀନ ସମୟ"}
+        }
+        "Europe:Dublin"{
+            ld{"ଆଇରିଶ୍‌ ମାନାଙ୍କ ସମୟ"}
+        }
+        "Europe:London"{
+            ld{"ବ୍ରିଟିଶ୍‌ ଗ୍ରୀଷ୍ମକାଳୀନ ସମୟ"}
+        }
         "meta:Afghanistan"{
             ls{"ଆଫଗାନିସ୍ତାନ ସମୟ"}
         }

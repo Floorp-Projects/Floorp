@@ -3,6 +3,15 @@
 fil{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Coordinated Universal Time"}
+        }
+        "Europe:Dublin"{
+            ld{"Standard na Oras sa Ireland"}
+        }
+        "Europe:London"{
+            ld{"Oras sa Tag-init ng Britain"}
+        }
         "meta:Afghanistan"{
             ls{"Oras sa Afghanistan"}
         }

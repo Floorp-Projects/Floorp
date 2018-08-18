@@ -3,6 +3,15 @@
 bn{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"স্থানাংকিত আন্তর্জাতিক সময়"}
+        }
+        "Europe:Dublin"{
+            ld{"আইরিশ মানক সময়"}
+        }
+        "Europe:London"{
+            ld{"ব্রিটিশ গ্রীষ্মকালীন সময়"}
+        }
         "meta:Afghanistan"{
             ls{"আফগানিস্তান সময়"}
         }

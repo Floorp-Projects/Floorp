@@ -3,6 +3,15 @@
 vi{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Giờ Phối hợp Quốc tế"}
+        }
+        "Europe:Dublin"{
+            ld{"Giờ chuẩn Ai-len"}
+        }
+        "Europe:London"{
+            ld{"Giờ Mùa Hè Anh"}
+        }
         "meta:Acre"{
             ld{"Giờ Mùa Hè Acre"}
             lg{"Giờ Acre"}

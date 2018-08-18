@@ -1406,6 +1406,12 @@ html .toggle-button.end.vertical svg {
   background-color: white;
 }
 
+.sources-list .tree .label .suffix {
+  font-style: italic;
+  font-size: 0.9em;
+  color: var(--theme-comment);
+}
+
 .sources-list .tree img.arrow.expanded {
   transform: rotate(0deg);
 }

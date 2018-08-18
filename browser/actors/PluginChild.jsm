@@ -42,8 +42,8 @@ class PluginChild extends ActorChild {
     // Cache of plugin crash information sent from the parent
     this.pluginCrashData = new Map();
 
-    this.mm.addEventListener("pagehide", this, true);
-    this.mm.addEventListener("pageshow", this, true);
+    this.mm.addEventListener("pagehide", this, {capture: true, mozSystemGroup: true});
+    this.mm.addEventListener("pageshow", this, {capture: true, mozSystemGroup: true});
   }
 
   receiveMessage(msg) {

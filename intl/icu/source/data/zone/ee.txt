@@ -3,6 +3,15 @@
 ee{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Xexeme gaƒoƒoɖoanyi me"}
+        }
+        "Europe:Dublin"{
+            ld{"Ireland nutome gaƒoƒo me"}
+        }
+        "Europe:London"{
+            ld{"British dzomeŋɔli gaƒoƒo me"}
+        }
         "meta:Afghanistan"{
             ls{"Afghanistan gaƒoƒo me"}
         }
