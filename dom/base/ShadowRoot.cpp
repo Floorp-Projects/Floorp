@@ -120,12 +120,6 @@ ShadowRoot::SetIsComposedDocParticipant(bool aIsComposedDocParticipant)
   }
 }
 
-void
-ShadowRoot::SetIsUAWidget(bool aIsUAWidget)
-{
-  mIsUAWidget = aIsUAWidget;
-}
-
 JSObject*
 ShadowRoot::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
@@ -563,7 +557,6 @@ ShadowRoot::ImportNodeAndAppendChildAt(nsINode& aParentNode,
                                        mozilla::ErrorResult& rv)
 {
   MOZ_ASSERT(mIsUAWidget);
-  MOZ_ASSERT(OwnerDoc());
 
   if (!aParentNode.IsInUAWidget()) {
     rv.Throw(NS_ERROR_INVALID_ARG);
