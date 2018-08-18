@@ -359,17 +359,13 @@ ExtensionManager = {
 };
 
 function ExtensionProcessScript() {
-  if (!ExtensionProcessScript.singleton) {
-    ExtensionProcessScript.singleton = this;
-  }
-  return ExtensionProcessScript.singleton;
 }
-
-ExtensionProcessScript.singleton = null;
 
 ExtensionProcessScript.prototype = {
   classID: Components.ID("{21f9819e-4cdf-49f9-85a0-850af91a5058}"),
   QueryInterface: ChromeUtils.generateQI([Ci.mozIExtensionProcessScript]),
+
+  _xpcom_factory: XPCOMUtils.generateSingletonFactory(ExtensionProcessScript),
 
   get wrappedJSObject() { return this; },
 
