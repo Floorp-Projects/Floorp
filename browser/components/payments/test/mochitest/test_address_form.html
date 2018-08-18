@@ -250,7 +250,9 @@ add_task(async function test_edit() {
   await asyncElementRendered();
   is(form.querySelectorAll(":-moz-ui-invalid").length, 0,
      "Check no fields are visibly invalid on an empty 'add' form after being an edit form");
-  checkAddressForm(form, {});
+  checkAddressForm(form, {
+    country: "US",
+  });
   ok(form.saveButton.disabled, "Save button should be disabled for an empty form");
 
   form.remove();
