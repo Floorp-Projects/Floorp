@@ -109,7 +109,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
   }
 
   render(state) {
-    let record = {};
+    let record;
     let {
       page,
       "address-page": addressPage,
