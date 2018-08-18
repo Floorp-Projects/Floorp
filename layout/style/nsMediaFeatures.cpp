@@ -216,26 +216,6 @@ Gecko_MediaFeatures_GetDisplayMode(nsIDocument* aDocument)
   return static_cast<StyleDisplayMode>(displayMode);
 }
 
-float
-Gecko_MediaFeatures_GetDevicePixelRatio(nsIDocument* aDocument)
-{
-  if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
-    return 1.0;
-  }
-
-  nsIPresShell* presShell = aDocument->GetShell();
-  if (!presShell) {
-    return 1.0;
-  }
-
-  nsPresContext* pc = presShell->GetPresContext();
-  if (!pc) {
-    return 1.0;
-  }
-
-  return pc->CSSPixelsToDevPixels(1.0f);
-}
-
 bool
 Gecko_MediaFeatures_HasSystemMetric(nsIDocument* aDocument,
                                     nsAtom* aMetric,

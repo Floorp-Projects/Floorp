@@ -56,7 +56,7 @@ protected:
     HANDLE mPBuffer;
     int mPixelFormat;
 public:
-    bool mIsDoubleBuffered;
+    bool mIsDoubleBuffered = false;
 };
 
 }

@@ -6,6 +6,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+ChromeUtils.import("resource:///modules/UITour.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 const {ASRouterActions: ra, actionCreators: ac} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {OnboardingMessageProvider} = ChromeUtils.import("resource://activity-stream/lib/OnboardingMessageProvider.jsm", {});
@@ -594,8 +595,34 @@ class _ASRouter {
     }
   }
 
+  async handleUserAction({data: action, target}) {
+    switch (action.type) {
+      case ra.OPEN_PRIVATE_BROWSER_WINDOW:
+        // Forcefully open about:privatebrowsing
+        target.browser.ownerGlobal.OpenBrowserWindow({private: true});
+        break;
+      case ra.OPEN_URL:
+        this.openLinkIn(action.data.url, target, {isPrivate: false, where: "tabshifted"});
+        break;
+      case ra.OPEN_ABOUT_PAGE:
+        this.openLinkIn(`about:${action.data.page}`, target, {isPrivate: false, trusted: true, where: "tab"});
+        break;
+      case ra.OPEN_APPLICATIONS_MENU:
+        UITour.showMenu(target.browser.ownerGlobal, action.data.target);
+        break;
+      case ra.INSTALL_ADDON_FROM_URL:
+        await MessageLoaderUtils.installAddonFromURL(target.browser, action.data.url);
+        break;
+    }
+  }
+
   async onMessage({data: action, target}) {
     switch (action.type) {
+      case "USER_ACTION":
+        if (action.data.type in ra) {
+          await this.handleUserAction({data: action.data, target});
+        }
+        break;
       case "CONNECT_UI_REQUEST":
       case "GET_NEXT_MESSAGE":
       case "TRIGGER":
@@ -607,16 +634,6 @@ class _ASRouter {
         // Check if any updates are needed first
         await this.loadMessagesFromAllProviders();
         await this.sendNextMessage(target, (action.data && action.data.trigger) || {});
-        break;
-      case ra.OPEN_PRIVATE_BROWSER_WINDOW:
-        // Forcefully open about:privatebrowsing
-        target.browser.ownerGlobal.OpenBrowserWindow({private: true});
-        break;
-      case ra.OPEN_URL:
-        this.openLinkIn(action.data.button_action_params, target, {isPrivate: false, where: "tabshifted"});
-        break;
-      case ra.OPEN_ABOUT_PAGE:
-        this.openLinkIn(`about:${action.data.button_action_params}`, target, {isPrivate: false, trusted: true, where: "tab"});
         break;
       case "BLOCK_MESSAGE_BY_ID":
         await this.blockById(action.data.id);
@@ -657,9 +674,6 @@ class _ASRouter {
         break;
       case "IMPRESSION":
         this.addImpression(action.data);
-        break;
-      case ra.INSTALL_ADDON_FROM_URL:
-        await MessageLoaderUtils.installAddonFromURL(target.browser, action.data.url);
         break;
     }
   }

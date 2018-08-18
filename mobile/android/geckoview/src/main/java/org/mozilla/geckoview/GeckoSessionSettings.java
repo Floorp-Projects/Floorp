@@ -27,6 +27,11 @@ public final class GeckoSessionSettings implements Parcelable {
     public static final int DISPLAY_MODE_STANDALONE = 2;
     public static final int DISPLAY_MODE_FULLSCREEN = 3;
 
+    // This needs to match GeckoViewContentSettings.js and GeckoViewSettings.jsm
+    public static final int USER_AGENT_MODE_MOBILE = 0;
+    public static final int USER_AGENT_MODE_DESKTOP = 1;
+    public static final int USER_AGENT_MODE_VR = 2;
+
     public static class Key<T> {
         /* package */ final String name;
         /* package */ final boolean initOnly;
@@ -77,13 +82,14 @@ public final class GeckoSessionSettings implements Parcelable {
         new Key<Boolean>("useMultiprocess", /* initOnly */ true, /* values */ null);
 
     /*
-     * Key to enable and disable desktop mode browsing.
+     * Key to specify which user agent mode we should use.
      */
-    public static final Key<Boolean> USE_DESKTOP_MODE =
-        new Key<Boolean>("useDesktopMode");
+    public static final Key<Integer> USER_AGENT_MODE =
+        new Key<Integer>("userAgentMode", /* initOnly */ false,
+                         Arrays.asList(USER_AGENT_MODE_MOBILE, USER_AGENT_MODE_DESKTOP, USER_AGENT_MODE_VR));
 
     /*
-     * Key to specify which display-mode we should use
+     * Key to specify which display-mode we should use.
      */
     public static final Key<Integer> DISPLAY_MODE =
         new Key<Integer>("displayMode", /* initOnly */ false,
@@ -116,7 +122,7 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putBoolean(USE_TRACKING_PROTECTION.name, false);
         mBundle.putBoolean(USE_PRIVATE_MODE.name, false);
         mBundle.putBoolean(USE_MULTIPROCESS.name, true);
-        mBundle.putBoolean(USE_DESKTOP_MODE.name, false);
+        mBundle.putInt(USER_AGENT_MODE.name, USER_AGENT_MODE_MOBILE);
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
     }
 

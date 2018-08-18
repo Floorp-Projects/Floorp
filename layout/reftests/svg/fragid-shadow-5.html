@@ -1,0 +1,13 @@
+<!doctype html>
+<div id="host"></div>
+<script>
+  // Test absolute URIs inside shadow trees, which behave the same way as just the fragment id.
+  host.attachShadow({ mode: "open" }).innerHTML = `
+    <svg width="100" height="100">
+      <defs>
+        <rect fill="lime" id="rect-5" width="100" height="100">
+      </defs>
+      <use href="${location.href}#rect-5" />
+    </svg>
+  `;
+</script>

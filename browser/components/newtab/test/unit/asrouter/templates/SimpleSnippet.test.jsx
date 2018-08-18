@@ -34,21 +34,14 @@ describe("SimpleSnippet", () => {
     const wrapper = mountAndCheckProps({icon: "data:image/gif;base64,R0lGODl"});
     assert.equal(wrapper.find(".icon").prop("src"), "data:image/gif;base64,R0lGODl");
   });
-  it("should render .button_url and .button_label", () => {
-    const wrapper = mountAndCheckProps({button_label: "Click here", button_url: "http://foo.com"});
-    const button = wrapper.find("a");
+  it("should render .button_label and default className", () => {
+    const wrapper = mountAndCheckProps({
+      button_label: "Click here",
+      button_action: {type: "OPEN_APPLICATIONS_MENU", data: {target: "appMenu"}}
+    });
+
+    const button = wrapper.find("button.ASRouterButton");
     assert.equal(button.text(), "Click here");
-    assert.equal(button.prop("href"), "http://foo.com");
-  });
-  it("should render .button_url and .button_label", () => {
-    const wrapper = mountAndCheckProps({button_label: "Click here", button_url: "http://foo.com"});
-    const button = wrapper.find("a");
-    assert.equal(button.text(), "Click here");
-    assert.equal(button.prop("href"), "http://foo.com");
-  });
-  it("should render button with an ASRouterAnchor class if .button_type is anchor", () => {
-    const wrapper = mountAndCheckProps({button_label: "Click here", button_url: "http://foo.com", button_type: "anchor"});
-    const button = wrapper.find("a");
-    assert.equal(button.prop("className"), "ASRouterAnchor");
+    assert.equal(button.prop("className"), "ASRouterButton");
   });
 });

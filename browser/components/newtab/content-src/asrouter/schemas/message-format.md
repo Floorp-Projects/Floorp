@@ -97,6 +97,7 @@ Name | Type | Example value | Description
 `profileAgeCreated` | Number | `1522843725924` | Profile creation timestamp
 `profileAgeReset` | `Number` or `undefined` | `1522843725924` | When (if) the profile was reset
 `searchEngines` | `Object` | [example below](#searchengines-example) | Information about the current and available search engines
+`browserSettings.attribution` | `Object` or `undefined` | [example below](#attribution-example) | Attribution for the source of of where the browser was downloaded.
 
 #### addonsInfo Example
 
@@ -125,6 +126,21 @@ Name | Type | Example value | Description
   "searchEngines": {
     "current": "google",
     "installed": ["google", "amazondotcom", "duckduckgo"]
+  }
+}
+```
+
+#### attribution Example
+
+Note that `attribution` can be `undefined`, so you should check it is truthy before accessing properties
+
+```javascript
+{
+  "attribution": {
+    "source": "google.com", // referring partner domain, when install happens via a known partner
+    "medium": "organic", // category of the source, such as "organic" for a search engine
+    "campaign": "some_campaign", // identifier of the particular campaign that led to the download of the product
+    "content": "some_link", // identifier to indicate the particular link within a campaign
   }
 }
 ```

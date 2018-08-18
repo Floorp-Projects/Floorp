@@ -10,21 +10,24 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
 });
 
+// This needs to match GeckoSessionSettings.java
+const USER_AGENT_MODE_MOBILE = 0;
+
 // Handles GeckoView content settings including:
 // * tracking protection
-// * desktop mode
+// * user agent mode
 class GeckoViewContentSettings extends GeckoViewContentModule {
   onInit() {
     debug `onInit`;
-    this._useDesktopMode = false;
+    this._userAgentMode = USER_AGENT_MODE_MOBILE;
   }
 
   onSettingsUpdate() {
-    debug `onSettingsUpdate`;
+    debug `onSettingsUpdate ${this.settings}`;
 
     this.displayMode = this.settings.displayMode;
     this.useTrackingProtection = !!this.settings.useTrackingProtection;
-    this.useDesktopMode = !!this.settings.useDesktopMode;
+    this.userAgentMode = this.settings.userAgentMode;
   }
 
   get useTrackingProtection() {
@@ -35,17 +38,17 @@ class GeckoViewContentSettings extends GeckoViewContentModule {
     docShell.useTrackingProtection = aUse;
   }
 
-  get useDesktopMode() {
-    return this._useDesktopMode;
+  get userAgentMode() {
+    return this._userAgentMode;
   }
 
-  set useDesktopMode(aUse) {
-    if (this.useDesktopMode === aUse) {
+  set userAgentMode(aMode) {
+    if (this.userAgentMode === aMode) {
       return;
     }
     let utils = content.windowUtils;
-    utils.setDesktopModeViewport(aUse);
-    this._useDesktopMode = aUse;
+    utils.setDesktopModeViewport(aMode != USER_AGENT_MODE_MOBILE);
+    this._userAgentMode = aMode;
   }
 
   get displayMode() {

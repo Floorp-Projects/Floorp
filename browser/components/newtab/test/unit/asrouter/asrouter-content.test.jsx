@@ -91,15 +91,6 @@ describe("ASRouterUISurface", () => {
   });
 
   describe("snippets", () => {
-    it("should send correct event and source when snippet link is clicked", () => {
-      const content = {button_url: "https://foo.com", button_type: "anchor", button_label: "foo", ...FAKE_MESSAGE.content};
-      const message = Object.assign({}, FAKE_MESSAGE, {content});
-      wrapper.setState({message});
-
-      wrapper.find("a.ASRouterAnchor").simulate("click");
-      assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "event", "CLICK_BUTTON");
-      assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "source", "NEWTAB_FOOTER_BAR");
-    });
     it("should send correct event and source when snippet is blocked", () => {
       wrapper.setState({message: FAKE_MESSAGE});
 

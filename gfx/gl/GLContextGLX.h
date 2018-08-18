@@ -93,7 +93,7 @@ private:
     GLXLibrary* mGLX;
 
     RefPtr<gfxXlibSurface> mPixmap;
-    bool mOwnsContext;
+    bool mOwnsContext = true;
 };
 
 }
