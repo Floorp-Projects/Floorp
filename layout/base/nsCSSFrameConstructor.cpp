@@ -6240,17 +6240,15 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
   InsertFrames(aParentFrame, kPrincipalList, aPrevSibling, aFrameList);
 }
 
-#define UNSET_DISPLAY static_cast<StyleDisplay>(255)
-
 // This gets called to see if the frames corresponding to aSibling and aContent
 // should be siblings in the frame tree. Although (1) rows and cols, (2) row
 // groups and col groups, (3) row groups and captions, (4) legends and content
 // inside fieldsets, (5) popups and other kids of the menu are siblings from a
 // content perspective, they are not considered siblings in the frame tree.
 bool
-nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
-                                      nsIContent*            aContent,
-                                      StyleDisplay&          aDisplay)
+nsCSSFrameConstructor::IsValidSibling(nsIFrame* aSibling,
+                                      nsIContent* aContent,
+                                      Maybe<StyleDisplay>& aDisplay)
 {
   nsIFrame* parentFrame = aSibling->GetParent();
   LayoutFrameType parentType = parentFrame->Type();
@@ -6265,7 +6263,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
       LayoutFrameType::Menu == parentType) {
     // if we haven't already, resolve a style to find the display type of
     // aContent.
-    if (UNSET_DISPLAY == aDisplay) {
+    if (aDisplay.isNothing()) {
       if (aContent->IsComment() || aContent->IsProcessingInstruction()) {
         // Comments and processing instructions never have frames, so we should
         // not try to generate styles for them.
@@ -6274,11 +6272,13 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
       // FIXME(emilio): This is buggy some times, see bug 1424656.
       RefPtr<ComputedStyle> computedStyle = ResolveComputedStyle(aContent);
       const nsStyleDisplay* display = computedStyle->StyleDisplay();
-      aDisplay = display->mDisplay;
+      aDisplay.emplace(display->mDisplay);
     }
+
+    StyleDisplay display = aDisplay.value();
     if (LayoutFrameType::Menu == parentType) {
       return
-        (StyleDisplay::MozPopup == aDisplay) ==
+        (StyleDisplay::MozPopup == display) ==
         (StyleDisplay::MozPopup == siblingDisplay);
     }
     // To have decent performance we want to return false in cases in which
@@ -6294,15 +6294,15 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
     // siblings of each other.  Treating a column or colgroup as a valid
     // sibling of a non-table-related frame will just mean we end up reframing.
     if ((siblingDisplay == StyleDisplay::TableCaption) !=
-        (aDisplay == StyleDisplay::TableCaption)) {
+        (display == StyleDisplay::TableCaption)) {
       // One's a caption and the other is not.  Not valid siblings.
       return false;
     }
 
     if ((siblingDisplay == StyleDisplay::TableColumnGroup ||
          siblingDisplay == StyleDisplay::TableColumn) !=
-        (aDisplay == StyleDisplay::TableColumnGroup ||
-         aDisplay == StyleDisplay::TableColumn)) {
+        (display == StyleDisplay::TableColumnGroup ||
+         display == StyleDisplay::TableColumn)) {
       // One's a column or column group and the other is not.  Not valid
       // siblings.
       return false;
@@ -6336,7 +6336,7 @@ nsIFrame*
 nsCSSFrameConstructor::FindSiblingInternal(
   FlattenedChildIterator& aIter,
   nsIContent* aTargetContent,
-  StyleDisplay& aTargetContentDisplay)
+  Maybe<StyleDisplay>& aTargetContentDisplay)
 {
   auto adjust = [&](nsIFrame* aPotentialSiblingFrame) -> nsIFrame* {
     return AdjustSiblingFrame(
@@ -6397,7 +6397,7 @@ nsIFrame*
 nsCSSFrameConstructor::AdjustSiblingFrame(
   nsIFrame* aSibling,
   nsIContent* aTargetContent,
-  mozilla::StyleDisplay& aTargetContentDisplay,
+  Maybe<StyleDisplay>& aTargetContentDisplay,
   SiblingDirection aDirection)
 {
   if (!aSibling) {
@@ -6431,14 +6431,14 @@ nsCSSFrameConstructor::AdjustSiblingFrame(
 
 nsIFrame*
 nsCSSFrameConstructor::FindPreviousSibling(const FlattenedChildIterator& aIter,
-                                           StyleDisplay& aTargetContentDisplay)
+                                           Maybe<StyleDisplay>& aTargetContentDisplay)
 {
   return FindSibling<SiblingDirection::Backward>(aIter, aTargetContentDisplay);
 }
 
 nsIFrame*
 nsCSSFrameConstructor::FindNextSibling(const FlattenedChildIterator& aIter,
-                                       StyleDisplay& aTargetContentDisplay)
+                                       Maybe<StyleDisplay>& aTargetContentDisplay)
 {
   return FindSibling<SiblingDirection::Forward>(aIter, aTargetContentDisplay);
 }
@@ -6446,7 +6446,7 @@ nsCSSFrameConstructor::FindNextSibling(const FlattenedChildIterator& aIter,
 template<nsCSSFrameConstructor::SiblingDirection aDirection>
 nsIFrame*
 nsCSSFrameConstructor::FindSibling(const FlattenedChildIterator& aIter,
-                                   StyleDisplay& aTargetContentDisplay)
+                                   Maybe<StyleDisplay>& aTargetContentDisplay)
 {
   nsIContent* targetContent = aIter.Get();
   FlattenedChildIterator siblingIter = aIter;
@@ -6535,7 +6535,7 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
 
   // Note that FindPreviousSibling is passed the iterator by value, so that
   // the later usage of the iterator starts from the same place.
-  StyleDisplay childDisplay = UNSET_DISPLAY;
+  Maybe<StyleDisplay> childDisplay;
   nsIFrame* prevSibling = FindPreviousSibling(iter, childDisplay);
 
   // Now, find the geometric parent so that we can handle
@@ -6566,7 +6566,7 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
     }
   }
 
-  *aIsRangeInsertSafe = (childDisplay == UNSET_DISPLAY);
+  *aIsRangeInsertSafe = childDisplay.isNothing();
   return prevSibling;
 }
 
@@ -6933,7 +6933,7 @@ nsCSSFrameConstructor::FindNextSiblingForAppend(const InsertionPoint& aInsertion
     FlattenedChildIterator iter(aInsertion.mContainer,
                                 /* aStartAtBeginning = */ false);
     iter.GetPreviousChild(); // Prime the iterator.
-    StyleDisplay unused = UNSET_DISPLAY;
+    Maybe<StyleDisplay> unused;
     return FindNextSibling(iter, unused);
   };
 
