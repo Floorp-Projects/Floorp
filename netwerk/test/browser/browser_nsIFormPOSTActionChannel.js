@@ -75,7 +75,7 @@ function CustomChannel(aURI, aLoadInfo) {
   } else if (this.uri.spec == UPLOAD_ACTION_URI) {
     interfaces.push(Ci.nsIUploadChannel);
   }
-  this.QueryInterface = XPCOMUtils.generateQI(interfaces);
+  this.QueryInterface = ChromeUtils.generateQI(interfaces);
 }
 CustomChannel.prototype = {
   /** nsIUploadChannel */
