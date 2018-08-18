@@ -6,10 +6,11 @@
 
 ChromeUtils.defineModuleGetter(this, "CreditCard",
                                "resource://gre/modules/CreditCard.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 (function() {
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 let satchelFormListener = {
   QueryInterface: ChromeUtils.generateQI([
