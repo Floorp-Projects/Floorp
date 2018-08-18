@@ -40,39 +40,6 @@ add_test(function test_generateQI_string_names()
     run_next_test();
 });
 
-
-add_test(function test_generateCI()
-{
-    const classID = Components.ID("562dae2e-7cff-432b-995b-3d4c03fa2b89");
-    const classDescription = "generateCI test component";
-    const flags = Ci.nsIClassInfo.DOM_OBJECT;
-    var x = {
-        QueryInterface: function(iid) {
-            if (iid.equals(Ci.nsIClassInfo))
-                return this.classInfo;
-            if (iid.equals(Ci.nsISupports))
-                return this;
-            throw Cr.NS_ERROR_NO_INTERFACE;
-        },
-        classInfo: XPCOMUtils.generateCI({classID: classID,
-                                          interfaces: [],
-                                          flags: flags,
-                                          classDescription: classDescription})
-    };
-
-    try {
-        var ci = x.QueryInterface(Ci.nsIClassInfo);
-        ci = ci.QueryInterface(Ci.nsISupports);
-        ci = ci.QueryInterface(Ci.nsIClassInfo);
-        Assert.equal(ci.classID, classID);
-        Assert.equal(ci.flags, flags);
-        Assert.equal(ci.classDescription, classDescription);
-    } catch(e) {
-        do_throw("Classinfo for x should not be missing or broken");
-    }
-    run_next_test();
-});
-
 add_test(function test_defineLazyGetter()
 {
     let accessCount = 0;
