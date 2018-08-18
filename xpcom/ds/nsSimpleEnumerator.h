@@ -12,6 +12,7 @@
 class nsSimpleEnumerator : public nsISimpleEnumerator
 {
   NS_DECL_ISUPPORTS
+  NS_DECL_NSISIMPLEENUMERATORBASE
 
 protected:
   virtual ~nsSimpleEnumerator() = default;
