@@ -15,6 +15,7 @@
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ScrollStyles.h"
 
@@ -2062,12 +2063,11 @@ private:
    * @param aIter should be positioned such that aIter.GetPreviousChild()
    *          is the first content to search for frames
    * @param aTargetContentDisplay the CSS display enum for the content aIter
-   *          points to if already known, UNSET_DISPLAY otherwise. It will be
-   *          filled in if needed.
+   *          points to if already known. It will be filled in if needed.
    */
   template<SiblingDirection>
   nsIFrame* FindSibling(const mozilla::dom::FlattenedChildIterator& aIter,
-                        mozilla::StyleDisplay& aTargetContentDisplay);
+                        mozilla::Maybe<mozilla::StyleDisplay>& aTargetContentDisplay);
 
   // Helper for the implementation of FindSibling.
   //
@@ -2076,14 +2076,14 @@ private:
   nsIFrame* FindSiblingInternal(
     mozilla::dom::FlattenedChildIterator&,
     nsIContent* aTargetContent,
-    mozilla::StyleDisplay& aTargetContentDisplay);
+    mozilla::Maybe<mozilla::StyleDisplay>& aTargetContentDisplay);
 
   // An alias of FindSibling<SiblingDirection::Forward>.
   nsIFrame* FindNextSibling(const mozilla::dom::FlattenedChildIterator& aIter,
-                            mozilla::StyleDisplay& aTargetContentDisplay);
+                            mozilla::Maybe<mozilla::StyleDisplay>& aTargetContentDisplay);
   // An alias of FindSibling<SiblingDirection::Backwards>.
   nsIFrame* FindPreviousSibling(const mozilla::dom::FlattenedChildIterator& aIter,
-                                mozilla::StyleDisplay& aTargetContentDisplay);
+                                mozilla::Maybe<mozilla::StyleDisplay>& aTargetContentDisplay);
 
   // Given a potential first-continuation sibling frame for aTargetContent,
   // verify that it is an actual valid sibling for it, and return the
@@ -2091,7 +2091,7 @@ private:
   // inserted next to.
   nsIFrame* AdjustSiblingFrame(nsIFrame* aSibling,
                                nsIContent* aTargetContent,
-                               mozilla::StyleDisplay& aTargetContentDisplay,
+                               mozilla::Maybe<mozilla::StyleDisplay>& aTargetContentDisplay,
                                SiblingDirection aDirection);
 
   // Find the right previous sibling for an insertion.  This also updates the
@@ -2120,7 +2120,7 @@ private:
   // may be constructed based on tag, not based on aDisplay!
   bool IsValidSibling(nsIFrame*              aSibling,
                       nsIContent*            aContent,
-                      mozilla::StyleDisplay& aDisplay);
+                      mozilla::Maybe<mozilla::StyleDisplay>& aDisplay);
 
   void QuotesDirty();
   void CountersDirty();
