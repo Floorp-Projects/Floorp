@@ -49,7 +49,7 @@ menucaption[disabled="true"] {
 }
 
 menubar > menu {
-  padding: 0px 4px;
+  padding: 0 4px;
   color: -moz-menubartext;
 }
 
@@ -95,9 +95,9 @@ menulist > menupopup > menu {
 .menu-text,
 .menu-iconic-left,
 .menu-iconic-text {
-  margin-top: 0px !important;
-  margin-bottom: 0px !important;
-  margin-inline-start: 0px !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  margin-inline-start: 0 !important;
   margin-inline-end: 2px !important;
 }
 
@@ -108,8 +108,8 @@ menulist > menupopup > menu {
 
 .menu-accel,
 .menu-iconic-accel {
-  margin-top: 0px !important;
-  margin-bottom: 0px !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
   margin-inline-start: 7px !important;
 }
 
@@ -129,10 +129,10 @@ menulist > menupopup > menu {
 }
 
 .menu-right {
-  margin-top: 0px;
-  margin-bottom: 0px;
+  margin-top: 0;
+  margin-bottom: 0;
   margin-inline-start: 6px;
-  margin-inline-end: 0px;
+  margin-inline-end: 0;
   width: 1ex;
   height: 1ex;
   /* These next two rules are needed to prevent inheritance and thus ugliness */
@@ -142,9 +142,9 @@ menulist > menupopup > menu {
 }
 
 .menubar-left {
-  margin-top: 0px;
-  margin-bottom: 0px;
-  margin-inline-start: 0px;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-inline-start: 0;
   margin-inline-end: 2px;
 }
 
