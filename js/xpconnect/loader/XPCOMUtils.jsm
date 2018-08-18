@@ -477,9 +477,6 @@ var XPCOMUtils = {
         }
         return this._instance.QueryInterface(aIID);
       },
-      lockFactory: function XPCU_SF_lockFactory(aDoLock) {
-        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-      },
       QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
     };
   },
