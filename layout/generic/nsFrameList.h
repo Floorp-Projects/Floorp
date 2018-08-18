@@ -10,6 +10,7 @@
 #include <stdio.h> /* for FILE* */
 #include "nsDebug.h"
 #include "nsTArray.h"
+#include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ReverseIterator.h"
 
@@ -241,6 +242,14 @@ public:
    */
   template<typename Predicate>
   nsFrameList Split(Predicate&& aPredicate) {
+    static_assert(
+      std::is_same<typename mozilla::FunctionTypeTraits<Predicate>::ReturnType,
+                   bool>::value &&
+      mozilla::FunctionTypeTraits<Predicate>::arity == 1 &&
+      std::is_same<typename mozilla::FunctionTypeTraits<Predicate>::template ParameterType<0>,
+                   nsIFrame*>::value,
+      "aPredicate should be of this function signature: bool(nsIFrame*)");
+
     FrameLinkEnumerator link(*this);
     link.Find(aPredicate);
     return ExtractHead(link);
