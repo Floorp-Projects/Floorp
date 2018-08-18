@@ -241,6 +241,10 @@ class RemoteAutomation(Automation):
             self.stdoutlen = 0
             self.utilityPath = None
 
+            if app and self.device.process_exist(app):
+                print("remoteautomation.py %s is already running. Stopping...")
+                self.device.stop_application(app, root=True)
+
             self.counts = counts
             if self.counts is not None:
                 self.counts['pass'] = 0
