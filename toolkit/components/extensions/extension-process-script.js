@@ -292,83 +292,69 @@ ExtensionManager = {
   },
 
   receiveMessage({name, data}) {
-    switch (name) {
-      case "Extension:Startup": {
-        this.initExtension(data);
+    try {
+      switch (name) {
+        case "Extension:Startup":
+          this.initExtension(data);
+          break;
 
-        Services.cpmm.sendAsyncMessage("Extension:StartupComplete");
-        break;
-      }
+        case "Extension:Shutdown": {
+          let policy = WebExtensionPolicy.getByID(data.id);
+          if (policy) {
+            if (extensions.has(policy)) {
+              extensions.get(policy).shutdown();
+            }
 
-      case "Extension:Shutdown": {
-        let policy = WebExtensionPolicy.getByID(data.id);
-
-        if (policy) {
-          if (extensions.has(policy)) {
-            extensions.get(policy).shutdown();
+            if (isContentProcess) {
+              policy.active = false;
+            }
           }
-
-          if (isContentProcess) {
-            policy.active = false;
-          }
+          break;
         }
-        Services.cpmm.sendAsyncMessage("Extension:ShutdownComplete");
-        break;
-      }
 
-      case "Extension:FlushJarCache": {
-        ExtensionUtils.flushJarCache(data.path);
-        Services.cpmm.sendAsyncMessage("Extension:FlushJarCacheComplete");
-        break;
-      }
+        case "Extension:FlushJarCache":
+          ExtensionUtils.flushJarCache(data.path);
+          break;
 
-      case "Extension:RegisterContentScript": {
-        let policy = WebExtensionPolicy.getByID(data.id);
+        case "Extension:RegisterContentScript": {
+          let policy = WebExtensionPolicy.getByID(data.id);
 
-        if (policy) {
-          const registeredContentScripts = this.registeredContentScripts.get(policy);
+          if (policy) {
+            const registeredContentScripts = this.registeredContentScripts.get(policy);
 
-          if (registeredContentScripts.has(data.scriptId)) {
-            Cu.reportError(new Error(
-              `Registering content script ${data.scriptId} on ${data.id} more than once`));
-          } else {
-            try {
+            if (registeredContentScripts.has(data.scriptId)) {
+              Cu.reportError(new Error(
+                `Registering content script ${data.scriptId} on ${data.id} more than once`));
+            } else {
               const script = new WebExtensionContentScript(policy, data.options);
               policy.registerContentScript(script);
               registeredContentScripts.set(data.scriptId, script);
-            } catch (e) {
-              Cu.reportError(e);
             }
           }
+          break;
         }
 
-        Services.cpmm.sendAsyncMessage("Extension:RegisterContentScriptComplete");
-        break;
-      }
+        case "Extension:UnregisterContentScripts": {
+          let policy = WebExtensionPolicy.getByID(data.id);
 
-      case "Extension:UnregisterContentScripts": {
-        let policy = WebExtensionPolicy.getByID(data.id);
+          if (policy) {
+            const registeredContentScripts = this.registeredContentScripts.get(policy);
 
-        if (policy) {
-          const registeredContentScripts = this.registeredContentScripts.get(policy);
-
-          for (const scriptId of data.scriptIds) {
-            const script = registeredContentScripts.get(scriptId);
-            if (script) {
-              try {
+            for (const scriptId of data.scriptIds) {
+              const script = registeredContentScripts.get(scriptId);
+              if (script) {
                 policy.unregisterContentScript(script);
                 registeredContentScripts.delete(scriptId);
-              } catch (e) {
-                Cu.reportError(e);
               }
             }
           }
+          break;
         }
-
-        Services.cpmm.sendAsyncMessage("Extension:UnregisterContentScriptsComplete");
-        break;
       }
+    } catch (e) {
+      Cu.reportError(e);
     }
+    Services.cpmm.sendAsyncMessage(`${name}Complete`);
   },
 };
 
