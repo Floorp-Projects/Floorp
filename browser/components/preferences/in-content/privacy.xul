@@ -584,7 +584,7 @@
               search-l10n-ids="permissions-address,
                                permissions-button-cancel.label,
                                permissions-button-ok.label,
-                               permissions-exceptions-autoplay-media-window.title,
+                               permissions-exceptions-autoplay-media-window2.title,
                                permissions-exceptions-autoplay-media-desc2
                                " />
     </hbox>
@@ -671,7 +671,7 @@
               search-l10n-ids="permissions-address,
                                permissions-button-cancel.label,
                                permissions-button-ok.label,
-                               permissions-exceptions-autoplay-media-window.title,
+                               permissions-exceptions-autoplay-media-window2.title,
                                permissions-exceptions-autoplay-media-desc2
                                " />
     </hbox>
