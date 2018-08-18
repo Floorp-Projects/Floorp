@@ -389,6 +389,17 @@ Middleman_ClearBreakpoint(JSContext* aCx, unsigned aArgc, Value* aVp)
   return true;
 }
 
+static bool
+Middleman_MaybeSwitchToReplayingChild(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  parent::MaybeSwitchToReplayingChild();
+
+  args.rval().setUndefined();
+  return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Devtools Sandbox
 ///////////////////////////////////////////////////////////////////////////////
@@ -816,6 +827,7 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
   JS_FN("sendRequest", Middleman_SendRequest, 1, 0),
   JS_FN("setBreakpoint", Middleman_SetBreakpoint, 2, 0),
   JS_FN("clearBreakpoint", Middleman_ClearBreakpoint, 1, 0),
+  JS_FN("maybeSwitchToReplayingChild", Middleman_MaybeSwitchToReplayingChild, 0, 0),
   JS_FS_END
 };
 
