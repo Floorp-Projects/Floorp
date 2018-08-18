@@ -71,6 +71,11 @@ void SendRequest(const js::CharBuffer& aBuffer, js::CharBuffer* aResponse);
 // Set or clear a breakpoint in the child process.
 void SetBreakpoint(size_t aId, const js::BreakpointPosition& aPosition);
 
+// If possible, make sure the active child is replaying, and that requests
+// which might trigger an unhandled divergence can be processed (recording
+// children cannot process such requests).
+void MaybeSwitchToReplayingChild();
+
 ///////////////////////////////////////////////////////////////////////////////
 // Graphics
 ///////////////////////////////////////////////////////////////////////////////
