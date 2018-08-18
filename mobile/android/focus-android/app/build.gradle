@@ -104,12 +104,12 @@ android {
 
         // Debug
         focusX86Debug.root = 'src/focusDebug'
-        focusX86Debug.root = 'src/focusDebug'
-        focusX86Debug.root = 'src/focusDebug'
+        focusArmDebug.root = 'src/focusDebug'
+        focusAarch64Debug.root = 'src/focusDebug'
 
         klarX86Debug.root = 'src/klarDebug'
-        klarX86Debug.root = 'src/klarDebug'
-        klarX86Debug.root = 'src/klarDebug'
+        klarArmDebug.root = 'src/klarDebug'
+        klarAarch64Debug.root = 'src/klarDebug'
     }
 }
 
