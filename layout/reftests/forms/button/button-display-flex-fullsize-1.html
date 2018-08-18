@@ -8,21 +8,24 @@
   <title>CSS Test: Testing for full height flex container in a button.</title>
   <meta charset="utf-8">
   <style>
-    .button {
+    button {
+      vertical-align: top;
+      padding: 0;
+      border: solid 1px black;
+      background: lightblue;
+      width: 200px;
+      height: 200px;
+    }
+
+    .flex {
       display: inline-flex;
       justify-content: space-between;
       align-items: stretch;
-      width: 200px;
-      height: 200px;
-      vertical-align: top;
-      margin: 10px 20px 10px 0;
-      padding: 0;
-      border: solid 1px black;
     }
 
-    .button>* {
-      border: solid 1px rgba(0, 0, 0, .5);
-      background-color: rgba(0, 0, 0, .1);
+    .flex > * {
+      margin: 1px;
+      background: teal;
       min-height: 10px;
       min-width: 10px;
     }
@@ -30,19 +33,15 @@
     .vertical {
       flex-direction: column;
     }
-
-    button.button {
-      background-color: lightblue;
-    }
   </style>
 </head>
 <body>
-  <button class="button">
+  <button class="flex">
     <div></div>
     <div></div>
     <div></div>
   </button>
-  <button class="button vertical">
+  <button class="flex vertical">
     <div></div>
     <div></div>
     <div></div>
