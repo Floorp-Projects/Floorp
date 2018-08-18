@@ -56,7 +56,6 @@ var extensions = new DefaultWeakMap(policy => {
   return extension;
 });
 
-var DocumentManager;
 var ExtensionManager;
 
 class ExtensionGlobal {
@@ -104,33 +103,11 @@ class ExtensionGlobal {
   }
 }
 
-// Responsible for creating ExtensionContexts and injecting content
-// scripts into them when new documents are created.
-DocumentManager = {
-  globals: new Map(),
-
-  // Initialize listeners that we need regardless of whether extensions are
-  // enabled.
-  earlyInit() {
-    // eslint-disable-next-line mozilla/balanced-listeners
-    Services.obs.addObserver((subject) => this.initGlobal(subject),
-                             "tab-content-frameloader-created");
-  },
-
-  // Initialize a frame script global which extension contexts may be loaded
-  // into.
-  initGlobal(global) {
-    this.globals.set(global, new ExtensionGlobal(global));
-    // eslint-disable-next-line mozilla/balanced-listeners
-    global.addEventListener("unload", () => {
-      this.globals.delete(global);
-    });
-  },
-};
-
 ExtensionManager = {
   // WeakMap<WebExtensionPolicy, Map<string, WebExtensionContentScript>>
   registeredContentScripts: new DefaultWeakMap((policy) => new Map()),
+
+  globals: new WeakMap(),
 
   init() {
     MessageChannel.setupMessageManagers([Services.cpmm]);
@@ -140,6 +117,11 @@ ExtensionManager = {
     Services.cpmm.addMessageListener("Extension:FlushJarCache", this);
     Services.cpmm.addMessageListener("Extension:RegisterContentScript", this);
     Services.cpmm.addMessageListener("Extension:UnregisterContentScripts", this);
+
+    // eslint-disable-next-line mozilla/balanced-listeners
+    Services.obs.addObserver(
+      global => this.globals.set(global, new ExtensionGlobal(global)),
+      "tab-content-frameloader-created");
 
     for (let id of sharedData.get("extensions/activeIDs") || []) {
       this.initExtension(getData({id}));
@@ -291,7 +273,7 @@ ExtensionProcessScript.prototype = {
   extensions,
 
   getFrameData(global, force) {
-    let extGlobal = DocumentManager.globals.get(global);
+    let extGlobal = ExtensionManager.globals.get(global);
     return extGlobal && extGlobal.getFrameData(force);
   },
 
@@ -326,5 +308,4 @@ ExtensionProcessScript.prototype = {
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ExtensionProcessScript]);
 
-DocumentManager.earlyInit();
 ExtensionManager.init();
