@@ -775,18 +775,6 @@ HasSavedCheckpointsInRange(ChildProcessInfo* aChild, size_t aStart, size_t aEnd)
   return true;
 }
 
-// Return whether a child is paused at a breakpoint set by the user or by
-// stepping around, at which point the debugger will send requests to the
-// child to inspect its state. This excludes breakpoints set for things
-// internal to the debugger.
-static bool
-IsUserBreakpoint(js::BreakpointPosition::Kind aKind)
-{
-  MOZ_RELEASE_ASSERT(aKind != js::BreakpointPosition::Invalid);
-  return aKind != js::BreakpointPosition::NewScript
-      && aKind != js::BreakpointPosition::ConsoleMessage;
-}
-
 static void
 MarkActiveChildExplicitPause()
 {
@@ -797,20 +785,6 @@ MarkActiveChildExplicitPause()
     // Make sure any replaying children can play forward to the same point as
     // the recording.
     FlushRecording();
-
-    // When paused at a breakpoint, the JS debugger may (indeed, will) send
-    // requests to the recording child which can affect the recording. These
-    // side effects won't be replayed later on, so the C++ side of the debugger
-    // will not provide a useful answer to these requests, reporting an
-    // unhandled divergence instead. To avoid this issue and provide a
-    // consistent debugger experience whether still recording or replaying, we
-    // switch the active child to a replaying child when pausing at a
-    // breakpoint.
-    if (CanRewind() && gActiveChild->IsPausedAtMatchingBreakpoint(IsUserBreakpoint)) {
-      ChildProcessInfo* child =
-        OtherReplayingChild(ReplayingChildResponsibleForSavingCheckpoint(targetCheckpoint));
-      SwitchActiveChild(child);
-    }
   } else if (CanRewind()) {
     // Make sure we have a replaying child that can rewind from this point.
     // Switch to the other one if (a) this process is responsible for rewinding
@@ -840,6 +814,18 @@ ActiveChildTargetCheckpoint()
     return Some(gActiveChild->RewindTargetCheckpoint());
   }
   return Nothing();
+}
+
+void
+MaybeSwitchToReplayingChild()
+{
+  if (gActiveChild->IsRecording() && CanRewind()) {
+    FlushRecording();
+    size_t checkpoint = gActiveChild->RewindTargetCheckpoint();
+    ChildProcessInfo* child =
+      OtherReplayingChild(ReplayingChildResponsibleForSavingCheckpoint(checkpoint));
+    SwitchActiveChild(child);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
