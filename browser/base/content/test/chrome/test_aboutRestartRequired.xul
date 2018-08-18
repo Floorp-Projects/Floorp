@@ -13,7 +13,6 @@
   <iframe type="content" id="frame2" onload="doTest()"/>
   <script type="application/javascript"><![CDATA[
     ChromeUtils.import("resource://gre/modules/Services.jsm");
-    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
     SimpleTest.waitForExplicitFinish();
 
@@ -32,8 +31,8 @@
             }
           },
 
-          QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                                 Ci.nsISupportsWeakReference])
+          QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                                  Ci.nsISupportsWeakReference])
         };
 
         frame.docShell.QueryInterface(Ci.nsIInterfaceRequestor)

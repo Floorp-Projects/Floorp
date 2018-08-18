@@ -28,7 +28,7 @@
  *    _xpcom_factory: { ... },
  *
  *    // QueryInterface implementation, e.g. using the generateQI helper
- *    QueryInterface: XPCOMUtils.generateQI(
+ *    QueryInterface: ChromeUtils.generateQI(
  *      [Components.interfaces.nsIObserver,
  *       Components.interfaces.nsIMyInterface,
  *       "nsIFoo",
