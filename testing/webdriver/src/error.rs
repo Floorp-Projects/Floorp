@@ -1,5 +1,5 @@
 use base64::DecodeError;
-use hyper::status::StatusCode;
+use hyper::StatusCode;
 use serde::ser::{Serialize, Serializer};
 use serde_json;
 use std::borrow::Cow;
@@ -188,37 +188,36 @@ impl ErrorStatus {
     /// Returns the correct HTTP status code associated with the error type.
     pub fn http_status(&self) -> StatusCode {
         use self::ErrorStatus::*;
-        use self::StatusCode::*;
         match *self {
-            ElementClickIntercepted => BadRequest,
-            ElementNotInteractable => BadRequest,
-            ElementNotSelectable => BadRequest,
-            InsecureCertificate => BadRequest,
-            InvalidArgument => BadRequest,
-            InvalidCookieDomain => BadRequest,
-            InvalidCoordinates => BadRequest,
-            InvalidElementState => BadRequest,
-            InvalidSelector => BadRequest,
-            InvalidSessionId => NotFound,
-            JavascriptError => InternalServerError,
-            MoveTargetOutOfBounds => InternalServerError,
-            NoSuchAlert => NotFound,
-            NoSuchCookie => NotFound,
-            NoSuchElement => NotFound,
-            NoSuchFrame => NotFound,
-            NoSuchWindow => NotFound,
-            ScriptTimeout => InternalServerError,
-            SessionNotCreated => InternalServerError,
-            StaleElementReference => NotFound,
-            Timeout => InternalServerError,
-            UnableToCaptureScreen => BadRequest,
-            UnableToSetCookie => InternalServerError,
-            UnexpectedAlertOpen => InternalServerError,
-            UnknownCommand => NotFound,
-            UnknownError => InternalServerError,
-            UnknownMethod => MethodNotAllowed,
-            UnknownPath => NotFound,
-            UnsupportedOperation => InternalServerError,
+            ElementClickIntercepted => StatusCode::BAD_REQUEST,
+            ElementNotInteractable => StatusCode::BAD_REQUEST,
+            ElementNotSelectable => StatusCode::BAD_REQUEST,
+            InsecureCertificate => StatusCode::BAD_REQUEST,
+            InvalidArgument => StatusCode::BAD_REQUEST,
+            InvalidCookieDomain => StatusCode::BAD_REQUEST,
+            InvalidCoordinates => StatusCode::BAD_REQUEST,
+            InvalidElementState => StatusCode::BAD_REQUEST,
+            InvalidSelector => StatusCode::BAD_REQUEST,
+            InvalidSessionId => StatusCode::NOT_FOUND,
+            JavascriptError => StatusCode::INTERNAL_SERVER_ERROR,
+            MoveTargetOutOfBounds => StatusCode::INTERNAL_SERVER_ERROR,
+            NoSuchAlert => StatusCode::NOT_FOUND,
+            NoSuchCookie => StatusCode::NOT_FOUND,
+            NoSuchElement => StatusCode::NOT_FOUND,
+            NoSuchFrame => StatusCode::NOT_FOUND,
+            NoSuchWindow => StatusCode::NOT_FOUND,
+            ScriptTimeout => StatusCode::INTERNAL_SERVER_ERROR,
+            SessionNotCreated => StatusCode::INTERNAL_SERVER_ERROR,
+            StaleElementReference => StatusCode::NOT_FOUND,
+            Timeout => StatusCode::INTERNAL_SERVER_ERROR,
+            UnableToCaptureScreen => StatusCode::BAD_REQUEST,
+            UnableToSetCookie => StatusCode::INTERNAL_SERVER_ERROR,
+            UnexpectedAlertOpen => StatusCode::INTERNAL_SERVER_ERROR,
+            UnknownCommand => StatusCode::NOT_FOUND,
+            UnknownError => StatusCode::INTERNAL_SERVER_ERROR,
+            UnknownMethod => StatusCode::METHOD_NOT_ALLOWED,
+            UnknownPath => StatusCode::NOT_FOUND,
+            UnsupportedOperation => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
