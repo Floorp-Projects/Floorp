@@ -68,7 +68,8 @@ ProfileBuffer::AddStoredMarker(ProfilerMarker *aStoredMarker)
 
 void
 ProfileBuffer::CollectCodeLocation(
-  const char* aLabel, const char* aStr, int aLineNumber,
+  const char* aLabel, const char* aStr,
+  const Maybe<uint32_t>& aLineNumber, const Maybe<uint32_t>& aColumnNumber,
   const Maybe<js::ProfilingStackFrame::Category>& aCategory)
 {
   AddEntry(ProfileBufferEntry::Label(aLabel));
@@ -90,8 +91,12 @@ ProfileBuffer::CollectCodeLocation(
     }
   }
 
-  if (aLineNumber != -1) {
-    AddEntry(ProfileBufferEntry::LineNumber(aLineNumber));
+  if (aLineNumber) {
+    AddEntry(ProfileBufferEntry::LineNumber(*aLineNumber));
+  }
+
+  if (aColumnNumber) {
+    AddEntry(ProfileBufferEntry::ColumnNumber(*aColumnNumber));
   }
 
   if (aCategory.isSome()) {
@@ -149,7 +154,7 @@ ProfileBufferCollector::CollectJitReturnAddr(void* aAddr)
 void
 ProfileBufferCollector::CollectWasmFrame(const char* aLabel)
 {
-  mBuf.CollectCodeLocation("", aLabel, -1, Nothing());
+  mBuf.CollectCodeLocation("", aLabel, Nothing(), Nothing(), Nothing());
 }
 
 void
@@ -163,7 +168,8 @@ ProfileBufferCollector::CollectProfilingStackFrame(const js::ProfilingStackFrame
   const char* label = aFrame.label();
   const char* dynamicString = aFrame.dynamicString();
   bool isChromeJSEntry = false;
-  int lineno = -1;
+  Maybe<uint32_t> line;
+  Maybe<uint32_t> column;
 
   if (aFrame.isJsFrame()) {
     // There are two kinds of JS frames that get pushed onto the ProfilingStack.
@@ -181,7 +187,9 @@ ProfileBufferCollector::CollectProfilingStackFrame(const js::ProfilingStackFrame
       if (aFrame.script()) {
         isChromeJSEntry = IsChromeJSScript(aFrame.script());
         if (aFrame.pc()) {
-          lineno = JS_PCToLineNumber(aFrame.script(), aFrame.pc());
+          unsigned col = 0;
+          line = Some(JS_PCToLineNumber(aFrame.script(), aFrame.pc(), &col));
+          column = Some(col);
         }
       }
 
@@ -190,7 +198,7 @@ ProfileBufferCollector::CollectProfilingStackFrame(const js::ProfilingStackFrame
     }
   } else {
     MOZ_ASSERT(aFrame.isLabelFrame());
-    lineno = aFrame.line();
+    line = Some(aFrame.line());
   }
 
   if (dynamicString) {
@@ -202,6 +210,6 @@ ProfileBufferCollector::CollectProfilingStackFrame(const js::ProfilingStackFrame
     }
   }
 
-  mBuf.CollectCodeLocation(label, dynamicString, lineno,
+  mBuf.CollectCodeLocation(label, dynamicString, line, column,
                            Some(aFrame.category()));
 }

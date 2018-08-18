@@ -31,20 +31,6 @@ namespace gl {
 class GLXLibrary
 {
 public:
-    GLXLibrary()
-        : mSymbols{nullptr}
-        , mInitialized(false)
-        , mTriedInitializing(false)
-        , mUseTextureFromPixmap(false)
-        , mDebug(false)
-        , mHasRobustness(false)
-        , mHasCreateContextAttribs(false)
-        , mHasVideoSync(false)
-        , mIsATI(false), mIsNVIDIA(false)
-        , mClientIsMesa(false)
-        , mOGLLibrary(nullptr)
-    {}
-
     bool EnsureInitialized();
 
 private:
@@ -212,24 +198,24 @@ private:
         int          (GLAPIENTRY *fGetVideoSyncSGI) (unsigned int*);
         int          (GLAPIENTRY *fWaitVideoSyncSGI) (int, int, unsigned int*);
         void         (GLAPIENTRY *fSwapIntervalEXT) (Display*, GLXDrawable, int);
-    } mSymbols;
+    } mSymbols = {};
 
 #ifdef DEBUG
     void BeforeGLXCall();
     void AfterGLXCall();
 #endif
 
-    bool mInitialized;
-    bool mTriedInitializing;
-    bool mUseTextureFromPixmap;
-    bool mDebug;
-    bool mHasRobustness;
-    bool mHasCreateContextAttribs;
-    bool mHasVideoSync;
-    bool mIsATI;
-    bool mIsNVIDIA;
-    bool mClientIsMesa;
-    PRLibrary* mOGLLibrary;
+    bool mInitialized = false;
+    bool mTriedInitializing = false;
+    bool mUseTextureFromPixmap = false;
+    bool mDebug = false;
+    bool mHasRobustness = false;
+    bool mHasCreateContextAttribs = false;
+    bool mHasVideoSync = false;
+    bool mIsATI = false;
+    bool mIsNVIDIA = false;
+    bool mClientIsMesa = false;
+    PRLibrary* mOGLLibrary = nullptr;
 };
 
 // a global GLXLibrary instance

@@ -124,8 +124,8 @@ class NavigationDelegateTest : BaseSessionTest() {
                    sessionRule.session.evaluateJS(userAgentJs) as String,
                    containsString(mobileSubStr))
 
-        sessionRule.session.settings.setBoolean(
-            GeckoSessionSettings.USE_DESKTOP_MODE, true)
+        sessionRule.session.settings.setInt(
+            GeckoSessionSettings.USER_AGENT_MODE, GeckoSessionSettings.USER_AGENT_MODE_DESKTOP)
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
@@ -134,8 +134,8 @@ class NavigationDelegateTest : BaseSessionTest() {
                    sessionRule.session.evaluateJS(userAgentJs) as String,
                    containsString(desktopSubStr))
 
-        sessionRule.session.settings.setBoolean(
-            GeckoSessionSettings.USE_DESKTOP_MODE, false)
+        sessionRule.session.settings.setInt(
+            GeckoSessionSettings.USER_AGENT_MODE, GeckoSessionSettings.USER_AGENT_MODE_MOBILE)
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()

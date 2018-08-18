@@ -39,10 +39,6 @@ struct PBufferDC final : public ScopedDC
 class WGLLibrary
 {
 public:
-    WGLLibrary()
-      : mSymbols{}
-    { }
-
     ~WGLLibrary() {
         Reset();
     }
@@ -90,7 +86,7 @@ public:
                                                 HANDLE* hObjects);
         BOOL   (GLAPIENTRY * fDXUnlockObjectsNV) (HANDLE hDevice, GLint count,
                                                   HANDLE* hObjects);
-    } mSymbols;
+    } mSymbols = {};
 
     bool EnsureInitialized();
     //UniquePtr<WindowDC> CreateDummyWindow();

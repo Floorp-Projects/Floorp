@@ -264,10 +264,13 @@ this.VideoControlsImplPageWidget = class {
                 }
                 let preDefinedSize = this.controlBarComputedStyles.getPropertyValue(propertyName);
 
-                // This shouldn't happen, but if it does, the throw here turns
-                // intermittent oranges to perma-orange.
+                // The stylesheet from <link> might not be loaded if the
+                // element was inserted into a hidden iframe.
+                // We can safely return 0 here for now, given that the controls
+                // will be resized again, by the resizevideocontrols event,
+                // from nsVideoFrame, when the element is visible.
                 if (!preDefinedSize) {
-                  throw new Error("Stylesheet not loaded yet? propertyName: " + propertyName);
+                  return 0;
                 }
 
                 return parseInt(preDefinedSize, 10);

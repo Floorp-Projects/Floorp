@@ -1,5 +1,6 @@
 ChromeUtils.import("resource://gre/modules/components-utils/FilterExpressions.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 ChromeUtils.defineModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "NewTabUtils",
@@ -8,6 +9,8 @@ ChromeUtils.defineModuleGetter(this, "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm");
 ChromeUtils.defineModuleGetter(this, "ShellService",
   "resource:///modules/ShellService.jsm");
+ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment",
+  "resource://gre/modules/TelemetryEnvironment.jsm");
 
 const FXA_USERNAME_PREF = "services.sync.username";
 const ONBOARDING_EXPERIMENT_PREF = "browser.newtabpage.activity-stream.asrouterOnboardingCohort";
@@ -61,6 +64,13 @@ function removeRandomItemFromArray(arr) {
 }
 
 const TargetingGetters = {
+  get browserSettings() {
+    const {settings} = TelemetryEnvironment.currentEnvironment;
+    return {
+      attribution: settings.attribution,
+      update: settings.update
+    };
+  },
   get profileAgeCreated() {
     return new ProfileAge(null, null).created;
   },
@@ -69,6 +79,13 @@ const TargetingGetters = {
   },
   get hasFxAccount() {
     return Services.prefs.prefHasUserValue(FXA_USERNAME_PREF);
+  },
+  get sync() {
+    return {
+      desktopDevices: Services.prefs.getIntPref("services.sync.clients.devices.desktop", 0),
+      mobileDevices: Services.prefs.getIntPref("services.sync.clients.devices.mobile", 0),
+      totalDevices: Services.prefs.getIntPref("services.sync.numClients", 0)
+    };
   },
   get addonsInfo() {
     return AddonManager.getActiveAddons(["extension", "service"])

@@ -39,11 +39,23 @@
       "type": "string",
       "description": "Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."
     },
-    "button_url": {
-      "allOf": [
-        {"$ref": "#/definitions/link_url"},
-        {"description": "A url, button_label links to this"}
-      ]
+    "button_action": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": ["OPEN_APPLICATIONS_MENU"],
+          "description": "The type of action the button should trigger."
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string",
+              "description": "Additional parameters for button action, example which specific menu the button should open"
+            }
+          }
+        }
+      }
     },
     "button_label": {
       "allOf": [
@@ -58,11 +70,6 @@
     "button_background_color": {
       "type": "string",
       "description": "The background color of the button. Valid CSS color."
-    },
-    "button_type": {
-      "type": "string",
-      "enum": ["anchor", "button"],
-      "description": "(**temporary**, until we get html support in text field Bug 1457233) Style for button, either a regular button or a text link."
     },
     "tall": {
       "type": "boolean",
@@ -86,10 +93,8 @@
   "additionalProperties": false,
   "required": ["text"],
   "dependencies": {
-    "button_url": ["button_label"],
-    "button_label": ["button_url"],
-    "button_type": ["button_url"],
-    "button_color": ["button_url"],
-    "button_background_color": ["button_url"]
+    "button_label": ["button_action"],
+    "button_color": ["button_label"],
+    "button_background_color": ["button_label"]
   }
 }

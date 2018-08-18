@@ -31,12 +31,6 @@ using namespace mozilla::widget;
 class CGLLibrary
 {
 public:
-    CGLLibrary()
-        : mInitialized(false)
-        , mUseDoubleBufferedWindows(true)
-        , mOGLLibrary(nullptr)
-    {}
-
     bool EnsureInitialized()
     {
         if (mInitialized) {
@@ -65,9 +59,9 @@ public:
     }
 
 private:
-    bool mInitialized;
-    bool mUseDoubleBufferedWindows;
-    PRLibrary* mOGLLibrary;
+    bool mInitialized = false;
+    bool mUseDoubleBufferedWindows = true;
+    PRLibrary* mOGLLibrary = nullptr;
 };
 
 CGLLibrary sCGLLibrary;
