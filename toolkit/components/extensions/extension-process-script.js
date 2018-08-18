@@ -159,54 +159,6 @@ DocumentManager = {
       this.globals.delete(global);
     });
   },
-
-  // Script loading
-
-  /**
-   * Checks that all parent frames for the given withdow either have the
-   * same add-on ID, or are special chrome-privileged documents such as
-   * about:addons or developer tools panels.
-   *
-   * @param {Window} window
-   *        The window to check.
-   * @param {string} addonId
-   *        The add-on ID to check.
-   * @returns {boolean}
-   */
-  checkParentFrames(window, addonId) {
-    while (window.parent !== window) {
-      window = window.parent;
-
-      let principal = window.document.nodePrincipal;
-
-      if (Services.scriptSecurityManager.isSystemPrincipal(principal)) {
-        // The add-on manager is a special case, since it contains extension
-        // options pages in same-type <browser> frames.
-        if (window.location.href === "about:addons") {
-          return true;
-        }
-      }
-
-      if (principal.addonId !== addonId) {
-        return false;
-      }
-    }
-
-    return true;
-  },
-
-  loadInto(policy, window) {
-    let extension = extensions.get(policy);
-    if (WebExtensionPolicy.isExtensionProcess && this.checkParentFrames(window, policy.id)) {
-      // We're in a top-level extension frame, or a sub-frame thereof,
-      // in the extension process. Inject the full extension page API.
-      ExtensionPageChild.initExtensionContext(extension, window);
-    } else {
-      // We're in a content sub-frame or not in the extension process.
-      // Only inject a minimal content script API.
-      ExtensionContent.initExtensionContext(extension, window);
-    }
-  },
 };
 
 ExtensionManager = {
@@ -378,9 +330,12 @@ ExtensionProcessScript.prototype = {
     return ExtensionManager.initExtensionPolicy(extension);
   },
 
-  initExtensionDocument(policy, doc) {
-    if (DocumentManager.globals.has(doc.defaultView.docShell.messageManager)) {
-      DocumentManager.loadInto(policy, doc.defaultView);
+  initExtensionDocument(policy, doc, privileged) {
+    let extension = extensions.get(policy);
+    if (privileged) {
+      ExtensionPageChild.initExtensionContext(extension, doc.defaultView);
+    } else {
+      ExtensionContent.initExtensionContext(extension, doc.defaultView);
     }
   },
 

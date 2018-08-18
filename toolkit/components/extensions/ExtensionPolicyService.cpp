@@ -25,6 +25,7 @@
 #include "nsIContentPolicy.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsILoadInfo.h"
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
@@ -447,6 +448,37 @@ ExtensionPolicyService::CheckRequest(nsIChannel* aChannel)
   CheckContentScripts({uri.get(), loadInfo}, true);
 }
 
+static bool
+CheckParentFrames(nsPIDOMWindowOuter* aWindow, WebExtensionPolicy& aPolicy)
+{
+  nsCOMPtr<nsIURI> aboutAddons;
+  if (NS_FAILED(NS_NewURI(getter_AddRefs(aboutAddons), "about:addons"))) {
+    return false;
+  }
+
+  auto* piWin = aWindow;
+  while ((piWin = piWin->GetScriptableParentOrNull())) {
+    auto* win = nsGlobalWindowOuter::Cast(piWin);
+
+    auto* principal = BasePrincipal::Cast(win->GetPrincipal());
+    if (nsContentUtils::IsSystemPrincipal(principal)) {
+      // The add-on manager is a special case, since it contains extension
+      // options pages in same-type <browser> frames.
+      bool equals;
+      if (NS_SUCCEEDED(win->GetDocumentURI()->Equals(aboutAddons, &equals)) &&
+          equals) {
+        return true;
+      }
+    }
+
+    if (principal->AddonPolicy() != &aPolicy) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Checks a document, just after the document element has been inserted, for
 // matching content scripts or extension principals, and loads them if
 // necessary.
@@ -469,7 +501,9 @@ ExtensionPolicyService::CheckDocument(nsIDocument* aDocument)
 
     RefPtr<WebExtensionPolicy> policy = BasePrincipal::Cast(principal)->AddonPolicy();
     if (policy) {
-      ProcessScript().InitExtensionDocument(policy, aDocument);
+      bool privileged = IsExtensionProcess() && CheckParentFrames(win, *policy);
+
+      ProcessScript().InitExtensionDocument(policy, aDocument, privileged);
     }
   }
 }
