@@ -542,8 +542,8 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
         }
 
       public:
-        explicit Compiler(JSContext* cx, Engine engine, bool hasReceiver = false)
-          : ICStubCompiler(cx, ICStub::GetProp_Fallback, engine),
+        explicit Compiler(JSContext* cx, bool hasReceiver = false)
+          : ICStubCompiler(cx, ICStub::GetProp_Fallback, Engine::Baseline),
             hasReceiver_(hasReceiver)
         { }
 
@@ -1596,8 +1596,8 @@ class ICCompare_Fallback : public ICFallbackStub
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
       public:
-        explicit Compiler(JSContext* cx, Engine engine)
-          : ICStubCompiler(cx, ICStub::Compare_Fallback, engine) {}
+        explicit Compiler(JSContext* cx)
+          : ICStubCompiler(cx, ICStub::Compare_Fallback, Engine::Baseline) {}
 
         ICStub* getStub(ICStubSpace* space) override {
             return newStub<ICCompare_Fallback>(space, getStubCode());
@@ -1646,8 +1646,8 @@ class ICBinaryArith_Fallback : public ICFallbackStub
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
       public:
-        explicit Compiler(JSContext* cx, Engine engine)
-          : ICStubCompiler(cx, ICStub::BinaryArith_Fallback, engine) {}
+        explicit Compiler(JSContext* cx)
+          : ICStubCompiler(cx, ICStub::BinaryArith_Fallback, Engine::Baseline) {}
 
         ICStub* getStub(ICStubSpace* space) override {
             return newStub<ICBinaryArith_Fallback>(space, getStubCode());
@@ -1678,8 +1678,8 @@ class ICNewArray_Fallback : public ICFallbackStub
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
       public:
-        Compiler(JSContext* cx, ObjectGroup* templateGroup, Engine engine)
-          : ICStubCompiler(cx, ICStub::NewArray_Fallback, engine),
+        Compiler(JSContext* cx, ObjectGroup* templateGroup)
+          : ICStubCompiler(cx, ICStub::NewArray_Fallback, Engine::Baseline),
             templateGroup(cx, templateGroup)
         {}
 
@@ -1725,8 +1725,8 @@ class ICNewObject_Fallback : public ICFallbackStub
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
       public:
-        explicit Compiler(JSContext* cx, Engine engine)
-          : ICStubCompiler(cx, ICStub::NewObject_Fallback, engine)
+        explicit Compiler(JSContext* cx)
+          : ICStubCompiler(cx, ICStub::NewObject_Fallback, Engine::Baseline)
         {}
 
         ICStub* getStub(ICStubSpace* space) override {
