@@ -3,6 +3,15 @@
 id{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Waktu Universal Terkoordinasi"}
+        }
+        "Europe:Dublin"{
+            ld{"Waktu Standar Irlandia"}
+        }
+        "Europe:London"{
+            ld{"Waktu Musim Panas Inggris"}
+        }
         "meta:Acre"{
             ld{"Waktu Musim Panas Acre"}
             lg{"Waktu Acre"}

@@ -6,12 +6,14 @@
 
 #include "vm/DateTime.h"
 
-#if defined(XP_WIN)
-#include "mozilla/UniquePtr.h"
+#include "mozilla/ScopeExit.h"
+#include "mozilla/Unused.h"
 
+#include <algorithm>
+#if defined(XP_WIN)
 #include <cstdlib>
-#include <cstring>
 #endif /* defined(XP_WIN) */
+#include <cstring>
 #include <time.h>
 
 #include "jsutil.h"
@@ -19,16 +21,18 @@
 #include "js/Date.h"
 #include "threading/ExclusiveData.h"
 
-#if ENABLE_INTL_API
+#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+#include "unicode/basictz.h"
+#include "unicode/locid.h"
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
+
+#if ENABLE_INTL_API && (!MOZ_SYSTEM_ICU || defined(ICU_TZ_HAS_RECREATE_DEFAULT))
 #include "unicode/timezone.h"
-#if defined(XP_WIN)
 #include "unicode/unistr.h"
-#endif
-#endif /* ENABLE_INTL_API */
+#endif /* ENABLE_INTL_API && (!MOZ_SYSTEM_ICU || defined(ICU_TZ_HAS_RECREATE_DEFAULT)) */
 
+#include "util/Text.h"
 #include "vm/MutexIDs.h"
-
-using mozilla::UnspecifiedNaN;
 
 static bool
 ComputeLocalTime(time_t local, struct tm* ptm)
@@ -144,56 +148,87 @@ UTCToLocalStandardOffsetSeconds()
     return local_secs - (utc_secs + SecondsPerDay);
 }
 
-void
-js::DateTimeInfo::internalUpdateTimeZoneAdjustment()
+bool
+js::DateTimeInfo::internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode)
 {
     /*
      * The difference between local standard time and UTC will never change for
      * a given time zone.
      */
-    utcToLocalStandardOffsetSeconds = UTCToLocalStandardOffsetSeconds();
+    utcToLocalStandardOffsetSeconds_ = UTCToLocalStandardOffsetSeconds();
 
-    double newTZA = utcToLocalStandardOffsetSeconds * msPerSecond;
-    if (newTZA == localTZA_)
-        return;
+    int32_t newTZA = utcToLocalStandardOffsetSeconds_ * msPerSecond;
+    if (mode == ResetTimeZoneMode::DontResetIfOffsetUnchanged && newTZA == localTZA_)
+        return false;
 
     localTZA_ = newTZA;
 
-    /*
-     * The initial range values are carefully chosen to result in a cache miss
-     * on first use given the range of possible values.  Be careful to keep
-     * these values and the caching algorithm in sync!
-     */
-    offsetMilliseconds = 0;
-    rangeStartSeconds = rangeEndSeconds = INT64_MIN;
-    oldOffsetMilliseconds = 0;
-    oldRangeStartSeconds = oldRangeEndSeconds = INT64_MIN;
+    dstRange_.reset();
 
-    sanityCheck();
+#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+    utcRange_.reset();
+    localRange_.reset();
+
+    {
+        // Tell the analysis the |pFree| function pointer called by uprv_free
+        // cannot GC.
+        JS::AutoSuppressGCAnalysis nogc;
+
+        timeZone_ = nullptr;
+    }
+
+    standardName_ = nullptr;
+    daylightSavingsName_ = nullptr;
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
+
+    return true;
 }
 
 js::DateTimeInfo::DateTimeInfo()
 {
-    // Set to an impossible TZA so that the comparison in
-    // |internalUpdateTimeZoneAdjustment()| initially fails, causing the
-    // remaining fields to be properly initialized at first adjustment.
-    localTZA_ = UnspecifiedNaN<double>();
-    internalUpdateTimeZoneAdjustment();
+    internalUpdateTimeZoneAdjustment(ResetTimeZoneMode::ResetEvenIfOffsetUnchaged);
 }
 
+js::DateTimeInfo::~DateTimeInfo() = default;
+
 int64_t
+js::DateTimeInfo::toClampedSeconds(int64_t milliseconds)
+{
+    int64_t seconds = milliseconds / msPerSecond;
+    if (seconds > MaxTimeT) {
+        seconds = MaxTimeT;
+    } else if (seconds < MinTimeT) {
+        /* Go ahead a day to make localtime work (does not work with 0). */
+        seconds = SecondsPerDay;
+    }
+    return seconds;
+}
+
+int32_t
 js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t utcSeconds)
 {
-    MOZ_ASSERT(utcSeconds >= 0);
-    MOZ_ASSERT(utcSeconds <= MaxUnixTimeT);
+    MOZ_ASSERT(utcSeconds >= MinTimeT);
+    MOZ_ASSERT(utcSeconds <= MaxTimeT);
 
+#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+    UDate date = UDate(utcSeconds * msPerSecond);
+    constexpr bool dateIsLocalTime = false;
+    int32_t rawOffset, dstOffset;
+    UErrorCode status = U_ZERO_ERROR;
+
+    timeZone()->getOffset(date, dateIsLocalTime, rawOffset, dstOffset, status);
+    if (U_FAILURE(status))
+        return 0;
+
+    return dstOffset;
+#else
     struct tm tm;
     if (!ComputeLocalTime(static_cast<time_t>(utcSeconds), &tm))
         return 0;
 
     // NB: The offset isn't computed correctly when the standard local offset
     //     at |utcSeconds| is different from |utcToLocalStandardOffsetSeconds|.
-    int32_t dayoff = int32_t((utcSeconds + utcToLocalStandardOffsetSeconds) % SecondsPerDay);
+    int32_t dayoff = int32_t((utcSeconds + utcToLocalStandardOffsetSeconds_) % SecondsPerDay);
     int32_t tmoff = tm.tm_sec + (tm.tm_min * SecondsPerMinute) + (tm.tm_hour * SecondsPerHour);
 
     int32_t diff = tmoff - dayoff;
@@ -204,102 +239,259 @@ js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t utcSeconds)
         diff -= SecondsPerDay;
 
     return diff * msPerSecond;
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 }
 
-int64_t
+int32_t
 js::DateTimeInfo::internalGetDSTOffsetMilliseconds(int64_t utcMilliseconds)
 {
-    sanityCheck();
+    int64_t utcSeconds = toClampedSeconds(utcMilliseconds);
+    return getOrComputeValue(dstRange_, utcSeconds, &DateTimeInfo::computeDSTOffsetMilliseconds);
+}
 
-    int64_t utcSeconds = utcMilliseconds / msPerSecond;
+int32_t
+js::DateTimeInfo::getOrComputeValue(RangeCache& range, int64_t seconds, ComputeFn compute)
+{
+    range.sanityCheck();
 
-    if (utcSeconds > MaxUnixTimeT) {
-        utcSeconds = MaxUnixTimeT;
-    } else if (utcSeconds < 0) {
-        /* Go ahead a day to make localtime work (does not work with 0). */
-        utcSeconds = SecondsPerDay;
-    }
+    auto checkSanity = mozilla::MakeScopeExit([&range]() {
+        range.sanityCheck();
+    });
 
-    /*
-     * NB: Be aware of the initial range values when making changes to this
-     *     code: the first call to this method, with those initial range
-     *     values, must result in a cache miss.
-     */
+    // NB: Be aware of the initial range values when making changes to this
+    //     code: the first call to this method, with those initial range
+    //     values, must result in a cache miss.
+    MOZ_ASSERT(seconds != INT64_MIN);
 
-    if (rangeStartSeconds <= utcSeconds && utcSeconds <= rangeEndSeconds)
-        return offsetMilliseconds;
+    if (range.startSeconds <= seconds && seconds <= range.endSeconds)
+        return range.offsetMilliseconds;
 
-    if (oldRangeStartSeconds <= utcSeconds && utcSeconds <= oldRangeEndSeconds)
-        return oldOffsetMilliseconds;
+    if (range.oldStartSeconds <= seconds && seconds <= range.oldEndSeconds)
+        return range.oldOffsetMilliseconds;
 
-    oldOffsetMilliseconds = offsetMilliseconds;
-    oldRangeStartSeconds = rangeStartSeconds;
-    oldRangeEndSeconds = rangeEndSeconds;
+    range.oldOffsetMilliseconds = range.offsetMilliseconds;
+    range.oldStartSeconds = range.startSeconds;
+    range.oldEndSeconds = range.endSeconds;
 
-    if (rangeStartSeconds <= utcSeconds) {
-        int64_t newEndSeconds = Min(rangeEndSeconds + RangeExpansionAmount, MaxUnixTimeT);
-        if (newEndSeconds >= utcSeconds) {
-            int64_t endOffsetMilliseconds = computeDSTOffsetMilliseconds(newEndSeconds);
-            if (endOffsetMilliseconds == offsetMilliseconds) {
-                rangeEndSeconds = newEndSeconds;
-                return offsetMilliseconds;
+    if (range.startSeconds <= seconds) {
+        int64_t newEndSeconds = Min(range.endSeconds + RangeExpansionAmount, MaxTimeT);
+        if (newEndSeconds >= seconds) {
+            int32_t endOffsetMilliseconds = (this->*compute)(newEndSeconds);
+            if (endOffsetMilliseconds == range.offsetMilliseconds) {
+                range.endSeconds = newEndSeconds;
+                return range.offsetMilliseconds;
             }
 
-            offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
-            if (offsetMilliseconds == endOffsetMilliseconds) {
-                rangeStartSeconds = utcSeconds;
-                rangeEndSeconds = newEndSeconds;
+            range.offsetMilliseconds = (this->*compute)(seconds);
+            if (range.offsetMilliseconds == endOffsetMilliseconds) {
+                range.startSeconds = seconds;
+                range.endSeconds = newEndSeconds;
             } else {
-                rangeEndSeconds = utcSeconds;
+                range.endSeconds = seconds;
             }
-            return offsetMilliseconds;
+            return range.offsetMilliseconds;
         }
 
-        offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
-        rangeStartSeconds = rangeEndSeconds = utcSeconds;
-        return offsetMilliseconds;
+        range.offsetMilliseconds = (this->*compute)(seconds);
+        range.startSeconds = range.endSeconds = seconds;
+        return range.offsetMilliseconds;
     }
 
-    int64_t newStartSeconds = Max<int64_t>(rangeStartSeconds - RangeExpansionAmount, 0);
-    if (newStartSeconds <= utcSeconds) {
-        int64_t startOffsetMilliseconds = computeDSTOffsetMilliseconds(newStartSeconds);
-        if (startOffsetMilliseconds == offsetMilliseconds) {
-            rangeStartSeconds = newStartSeconds;
-            return offsetMilliseconds;
+    int64_t newStartSeconds = Max<int64_t>(range.startSeconds - RangeExpansionAmount, MinTimeT);
+    if (newStartSeconds <= seconds) {
+        int32_t startOffsetMilliseconds = (this->*compute)(newStartSeconds);
+        if (startOffsetMilliseconds == range.offsetMilliseconds) {
+            range.startSeconds = newStartSeconds;
+            return range.offsetMilliseconds;
         }
 
-        offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
-        if (offsetMilliseconds == startOffsetMilliseconds) {
-            rangeStartSeconds = newStartSeconds;
-            rangeEndSeconds = utcSeconds;
+        range.offsetMilliseconds = (this->*compute)(seconds);
+        if (range.offsetMilliseconds == startOffsetMilliseconds) {
+            range.startSeconds = newStartSeconds;
+            range.endSeconds = seconds;
         } else {
-            rangeStartSeconds = utcSeconds;
+            range.startSeconds = seconds;
         }
-        return offsetMilliseconds;
+        return range.offsetMilliseconds;
     }
 
-    rangeStartSeconds = rangeEndSeconds = utcSeconds;
-    offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
-    return offsetMilliseconds;
+    range.startSeconds = range.endSeconds = seconds;
+    range.offsetMilliseconds = (this->*compute)(seconds);
+    return range.offsetMilliseconds;
 }
 
 void
-js::DateTimeInfo::sanityCheck()
+js::DateTimeInfo::RangeCache::reset()
 {
-    MOZ_ASSERT(rangeStartSeconds <= rangeEndSeconds);
-    MOZ_ASSERT_IF(rangeStartSeconds == INT64_MIN, rangeEndSeconds == INT64_MIN);
-    MOZ_ASSERT_IF(rangeEndSeconds == INT64_MIN, rangeStartSeconds == INT64_MIN);
-    MOZ_ASSERT_IF(rangeStartSeconds != INT64_MIN,
-                  rangeStartSeconds >= 0 && rangeEndSeconds >= 0);
-    MOZ_ASSERT_IF(rangeStartSeconds != INT64_MIN,
-                  rangeStartSeconds <= MaxUnixTimeT && rangeEndSeconds <= MaxUnixTimeT);
+    // The initial range values are carefully chosen to result in a cache miss
+    // on first use given the range of possible values. Be careful to keep
+    // these values and the caching algorithm in sync!
+    offsetMilliseconds = 0;
+    startSeconds = endSeconds = INT64_MIN;
+    oldOffsetMilliseconds = 0;
+    oldStartSeconds = oldEndSeconds = INT64_MIN;
+
+    sanityCheck();
 }
+
+void
+js::DateTimeInfo::RangeCache::sanityCheck()
+{
+    auto assertRange = [](int64_t start, int64_t end) {
+        MOZ_ASSERT(start <= end);
+        MOZ_ASSERT_IF(start == INT64_MIN, end == INT64_MIN);
+        MOZ_ASSERT_IF(end == INT64_MIN, start == INT64_MIN);
+        MOZ_ASSERT_IF(start != INT64_MIN,
+                      start >= MinTimeT && end >= MinTimeT);
+        MOZ_ASSERT_IF(start != INT64_MIN,
+                      start <= MaxTimeT && end <= MaxTimeT);
+    };
+
+    assertRange(startSeconds, endSeconds);
+    assertRange(oldStartSeconds, oldEndSeconds);
+}
+
+#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+int32_t
+js::DateTimeInfo::computeUTCOffsetMilliseconds(int64_t localSeconds)
+{
+    MOZ_ASSERT(localSeconds >= MinTimeT);
+    MOZ_ASSERT(localSeconds <= MaxTimeT);
+
+    UDate date = UDate(localSeconds * msPerSecond);
+
+    // ES2019 draft rev 0ceb728a1adbffe42b26972a6541fd7f398b1557
+    //
+    // 20.3.1.7 LocalTZA
+    //
+    // If |localSeconds| represents either a skipped (at a positive time zone
+    // transition) or repeated (at a negative time zone transition) locale
+    // time, it must be interpreted as a time value before the transition.
+    constexpr int32_t skippedTime = icu::BasicTimeZone::kFormer;
+    constexpr int32_t repeatedTime = icu::BasicTimeZone::kFormer;
+
+    int32_t rawOffset, dstOffset;
+    UErrorCode status = U_ZERO_ERROR;
+
+    // All ICU TimeZone classes derive from BasicTimeZone, so we can safely
+    // perform the static_cast.
+    // Once <https://unicode-org.atlassian.net/browse/ICU-13705> is fixed we
+    // can remove this extra cast.
+    auto* basicTz = static_cast<icu::BasicTimeZone*>(timeZone());
+    basicTz->getOffsetFromLocal(date, skippedTime, repeatedTime, rawOffset, dstOffset, status);
+    if (U_FAILURE(status))
+        return 0;
+
+    return rawOffset + dstOffset;
+}
+
+int32_t
+js::DateTimeInfo::computeLocalOffsetMilliseconds(int64_t utcSeconds)
+{
+    MOZ_ASSERT(utcSeconds >= MinTimeT);
+    MOZ_ASSERT(utcSeconds <= MaxTimeT);
+
+    UDate date = UDate(utcSeconds * msPerSecond);
+    constexpr bool dateIsLocalTime = false;
+    int32_t rawOffset, dstOffset;
+    UErrorCode status = U_ZERO_ERROR;
+
+    timeZone()->getOffset(date, dateIsLocalTime, rawOffset, dstOffset, status);
+    if (U_FAILURE(status))
+        return 0;
+
+    return rawOffset + dstOffset;
+}
+
+int32_t
+js::DateTimeInfo::internalGetOffsetMilliseconds(int64_t milliseconds, TimeZoneOffset offset)
+{
+    int64_t seconds = toClampedSeconds(milliseconds);
+    return offset == TimeZoneOffset::UTC
+           ? getOrComputeValue(localRange_, seconds, &DateTimeInfo::computeLocalOffsetMilliseconds)
+           : getOrComputeValue(utcRange_, seconds, &DateTimeInfo::computeUTCOffsetMilliseconds);
+}
+
+bool
+js::DateTimeInfo::internalTimeZoneDisplayName(char16_t* buf, size_t buflen,
+                                              int64_t utcMilliseconds, const char* locale)
+{
+    MOZ_ASSERT(buf != nullptr);
+    MOZ_ASSERT(buflen > 0);
+    MOZ_ASSERT(locale != nullptr);
+
+    // Clear any previously cached names when the default locale changed.
+    if (!locale_ || std::strcmp(locale_.get(), locale) != 0) {
+        locale_ = DuplicateString(locale);
+        if (!locale_)
+            return false;
+
+        standardName_.reset();
+        daylightSavingsName_.reset();
+    }
+
+    bool daylightSavings = internalGetDSTOffsetMilliseconds(utcMilliseconds) != 0;
+
+    JS::UniqueTwoByteChars& cachedName = daylightSavings ? daylightSavingsName_ : standardName_;
+    if (!cachedName) {
+        // Retrieve the display name for the given locale.
+        icu::UnicodeString displayName;
+        timeZone()->getDisplayName(daylightSavings, icu::TimeZone::LONG, icu::Locale(locale),
+                                   displayName);
+
+        size_t capacity = displayName.length() + 1; // Null-terminate.
+        JS::UniqueTwoByteChars displayNameChars(js_pod_malloc<char16_t>(capacity));
+        if (!displayNameChars)
+            return false;
+
+        // Copy the display name. This operation always succeeds because the
+        // destination buffer is large enough to hold the complete string.
+        UErrorCode status = U_ZERO_ERROR;
+        displayName.extract(displayNameChars.get(), capacity, status);
+        MOZ_ASSERT(U_SUCCESS(status));
+        MOZ_ASSERT(displayNameChars[capacity - 1] == '\0');
+
+        cachedName = std::move(displayNameChars);
+    }
+
+    // Return an empty string if the display name doesn't fit into the buffer.
+    size_t length = js_strlen(cachedName.get());
+    if (length < buflen)
+        std::copy(cachedName.get(), cachedName.get() + length, buf);
+    else
+        length = 0;
+
+    buf[length] = '\0';
+    return true;
+}
+
+icu::TimeZone*
+js::DateTimeInfo::timeZone()
+{
+    if (!timeZone_) {
+        // The current default might be stale, because JS::ResetTimeZone()
+        // doesn't immediately update ICU's default time zone. So perform an
+        // update if needed.
+        js::ResyncICUDefaultTimeZone();
+
+        timeZone_.reset(icu::TimeZone::createDefault());
+        MOZ_ASSERT(timeZone_);
+    }
+
+    return timeZone_.get();
+}
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
 /* static */ js::ExclusiveData<js::DateTimeInfo>*
 js::DateTimeInfo::instance;
 
 /* static */ js::ExclusiveData<js::IcuTimeZoneStatus>*
 js::IcuTimeZoneState;
+
+#if defined(XP_WIN)
+static bool
+IsOlsonCompatibleWindowsTimeZoneId(const char* tz);
+#endif
 
 bool
 js::InitDateTimeState()
@@ -315,7 +507,21 @@ js::InitDateTimeState()
     MOZ_ASSERT(!IcuTimeZoneState,
                "we should be initializing only once");
 
-    IcuTimeZoneState = js_new<ExclusiveData<IcuTimeZoneStatus>>(mutexid::IcuTimeZoneStateMutex);
+    IcuTimeZoneStatus initialStatus = IcuTimeZoneStatus::Valid;
+
+#if defined(XP_WIN)
+    // Directly set the ICU time zone status into the invalid state when we
+    // need to compute the actual default time zone from the TZ environment
+    // variable. We don't yet want to initialize ICU's time zone classes,
+    // because that may cause I/O operations slowing down the JS engine
+    // initialization, which we're currently in the middle of.
+    const char* tz = std::getenv("TZ");
+    if (tz && IsOlsonCompatibleWindowsTimeZoneId(tz))
+        initialStatus = IcuTimeZoneStatus::NeedsUpdate;
+#endif
+
+    IcuTimeZoneState = js_new<ExclusiveData<IcuTimeZoneStatus>>(mutexid::IcuTimeZoneStateMutex,
+                                                                initialStatus);
     if (!IcuTimeZoneState) {
         js_delete(DateTimeInfo::instance);
         DateTimeInfo::instance = nullptr;
@@ -335,14 +541,25 @@ js::FinishDateTimeState()
     DateTimeInfo::instance = nullptr;
 }
 
+void
+js::ResetTimeZoneInternal(ResetTimeZoneMode mode)
+{
+    bool needsUpdate = js::DateTimeInfo::updateTimeZoneAdjustment(mode);
+
+#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
+    if (needsUpdate) {
+        auto guard = js::IcuTimeZoneState->lock();
+        guard.get() = js::IcuTimeZoneStatus::NeedsUpdate;
+    }
+#else
+    mozilla::Unused << needsUpdate;
+#endif
+}
+
 JS_PUBLIC_API(void)
 JS::ResetTimeZone()
 {
-    js::DateTimeInfo::updateTimeZoneAdjustment();
-
-#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
-    js::IcuTimeZoneState->lock().get() = js::IcuTimeZoneStatus::NeedsUpdate;
-#endif
+    js::ResetTimeZoneInternal(js::ResetTimeZoneMode::ResetEvenIfOffsetUnchaged);
 }
 
 #if defined(XP_WIN)

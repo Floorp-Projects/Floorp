@@ -3,6 +3,15 @@
 th{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"เวลาสากลเชิงพิกัด"}
+        }
+        "Europe:Dublin"{
+            ld{"เวลามาตรฐานไอร์แลนด์"}
+        }
+        "Europe:London"{
+            ld{"เวลาฤดูร้อนอังกฤษ"}
+        }
         "meta:Acre"{
             ld{"เวลาฤดูร้อนอาเกร"}
             lg{"เวลาอาเกร"}

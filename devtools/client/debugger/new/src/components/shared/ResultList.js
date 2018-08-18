@@ -73,9 +73,9 @@ var _initialiseProps = function () {
     })), _react2.default.createElement("div", {
       id: `${item.id}-title`,
       className: "title"
-    }, item.title), _react2.default.createElement("div", {
+    }, item.title), item.subtitle != item.title ? _react2.default.createElement("div", {
       id: `${item.id}-subtitle`,
       className: "subtitle"
-    }, item.subtitle));
+    }, item.subtitle) : null);
   };
 };

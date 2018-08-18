@@ -2850,10 +2850,12 @@ public:
 
   static void FirePageShowEvent(nsIDocShellTreeItem* aItem,
                                 mozilla::dom::EventTarget* aChromeEventHandler,
-                                bool aFireIfShowing);
+                                bool aFireIfShowing,
+                                bool aOnlySystemGroup = false);
 
   static void FirePageHideEvent(nsIDocShellTreeItem* aItem,
-                                mozilla::dom::EventTarget* aChromeEventHandler);
+                                mozilla::dom::EventTarget* aChromeEventHandler,
+                                bool aOnlySystemGroup = false);
 
   static already_AddRefed<nsPIWindowRoot> GetWindowRoot(nsIDocument* aDoc);
 

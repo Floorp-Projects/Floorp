@@ -12,6 +12,7 @@
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsINode.h"
+#include "nsIScriptObjectPrincipal.h"
 #include "nsPIDOMWindow.h"
 #include "AnimationEvent.h"
 #include "BeforeUnloadEvent.h"
@@ -104,22 +105,23 @@ static bool IsEventTargetChrome(EventTarget* aEventTarget,
   }
 
   nsIDocument* doc = nullptr;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aEventTarget);
-  if (node) {
+  if (nsCOMPtr<nsINode> node = do_QueryInterface(aEventTarget)) {
     doc = node->OwnerDoc();
-  } else {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aEventTarget);
-    if (!window) {
-      return false;
-    }
+  } else if (nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aEventTarget)) {
     doc = window->GetExtantDoc();
   }
 
   // nsContentUtils::IsChromeDoc is null-safe.
-  bool isChrome = nsContentUtils::IsChromeDoc(doc);
-  if (aDocument && doc) {
-    nsCOMPtr<nsIDocument> retVal = doc;
-    retVal.swap(*aDocument);
+  bool isChrome = false;
+  if (doc) {
+    isChrome = nsContentUtils::IsChromeDoc(doc);
+    if (aDocument) {
+      nsCOMPtr<nsIDocument> retVal = doc;
+      retVal.swap(*aDocument);
+    }
+  } else if (nsCOMPtr<nsIScriptObjectPrincipal> sop =
+              do_QueryInterface(aEventTarget->GetOwnerGlobal())) {
+    isChrome = nsContentUtils::IsSystemPrincipal(sop->GetPrincipal());
   }
   return isChrome;
 }

@@ -3,6 +3,12 @@
 lb{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Europe:Dublin"{
+            ld{"Iresch Summerzäit"}
+        }
+        "Europe:London"{
+            ld{"Britesch Summerzäit"}
+        }
         "meta:Acre"{
             ld{"Acre-Summerzäit"}
             lg{"Acre-Zäit"}

@@ -3,6 +3,20 @@
 nl{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Gecoördineerde wereldtijd"}
+        }
+        "Europe:Dublin"{
+            ld{"Ierse standaardtijd"}
+        }
+        "Europe:London"{
+            ld{"Britse zomertijd"}
+        }
+        "Pacific:Honolulu"{
+            sd{"HDT"}
+            sg{"HST"}
+            ss{"HST"}
+        }
         "meta:Acre"{
             ld{"Acre-zomertijd"}
             lg{"Acre-tijd"}

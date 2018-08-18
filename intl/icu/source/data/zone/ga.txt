@@ -3,6 +3,17 @@
 ga{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Am Uilíoch Lárnach"}
+        }
+        "Europe:Dublin"{
+            ld{"Am Caighdéanach na hÉireann"}
+            sd{"ACÉ"}
+        }
+        "Europe:London"{
+            ld{"Am Samhraidh na Breataine"}
+            sd{"ASB"}
+        }
         "meta:Acre"{
             ld{"Am Samhraidh Acre"}
             lg{"Am Acre"}

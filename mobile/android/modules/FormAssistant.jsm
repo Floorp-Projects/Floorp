@@ -94,7 +94,7 @@ var FormAssistant = {
     }
 
     // Ignore this notificaiton if the current tab doesn't contain the invalid element
-    let currentElement = aInvalidElements.queryElementAt(0, Ci.nsISupports);
+    let currentElement = aInvalidElements[0];
     let focused = this.focusedElement;
     if (focused && focused.ownerGlobal.top !== currentElement.ownerGlobal.top) {
         return;

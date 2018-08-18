@@ -46,8 +46,9 @@ add_task(async function test() {
 
   await testCase(dbg, {
     name: "sequences",
-    count: 4,
-    steps: [[23,2], [25,8], [31,4], [34,2], [37,0]]
+    count: 5,
+    steps: [[23,2], [25,8], [29,8], [31,4], [34,2], [37,0]]
+
   });
 
   await testCase(dbg, {

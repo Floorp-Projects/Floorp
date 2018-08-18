@@ -37,6 +37,11 @@
       // more own inner text, separated by 1 space.
       testName("chkbx", "Flash the screen 5 times");
 
+      // Example 4 from section 4.3.1 under 2.F.
+      // Name from content should include all the child nodes, including
+      // table cells.
+      testName("input_with_html_label", "foo bar baz");
+
       SimpleTest.finish();
     }
 
@@ -73,5 +78,14 @@
   <!-- Label from combined text and subtree -->
   <div id="chkbx" role="checkbox" aria-checked="false">Flash the screen
        <span role="textbox" aria-multiline="false"> 5 </span> times</div>
+
+  <!-- Label with name from content should include table -->
+  <input id="input_with_html_label" />
+  <label for="input_with_html_label" id="label">
+    <div>foo</div>
+    <table><tr><td>bar</td></tr></table>
+    <div>baz</div>
+  </label>
+
 </body>
 </html>
