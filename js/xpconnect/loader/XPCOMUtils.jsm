@@ -521,19 +521,6 @@ var XPCOMUtils = {
   },
 
   /**
-   * Allows you to fake a relative import. Expects the global object from the
-   * module that's calling us, and the relative filename that we wish to import.
-   */
-  importRelative: function XPCOMUtils__importRelative(that, path, scope) {
-    if (!("__URI__" in that))
-      throw Error("importRelative may only be used from a JSM, and its first argument "+
-                  "must be that JSM's global object (hint: use this)");
-
-    Cu.importGlobalProperties(["URL"]);
-    ChromeUtils.import(new URL(path, that.__URI__).href, scope || that);
-  },
-
-  /**
    * generates a singleton nsIFactory implementation that can be used as
    * the _xpcom_factory of the component.
    * @param aServiceConstructor
