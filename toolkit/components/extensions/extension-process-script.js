@@ -53,19 +53,12 @@ function tryMatchPatternSet(patterns, options) {
 
 function parseScriptOptions(options, restrictSchemes = true) {
   return {
-    allFrames: options.all_frames,
-    matchAboutBlank: options.match_about_blank,
-    frameID: options.frame_id,
-    runAt: options.run_at,
-    hasActiveTabPermission: options.hasActiveTabPermission,
+    ...options,
 
     matches: tryMatchPatternSet(options.matches, {restrictSchemes}),
-    excludeMatches: tryMatchPatternSet(options.exclude_matches || [], {restrictSchemes}),
-    includeGlobs: options.include_globs && options.include_globs.map(glob => new MatchGlob(glob)),
-    excludeGlobs: options.exclude_globs && options.exclude_globs.map(glob => new MatchGlob(glob)),
-
-    jsPaths: options.js || [],
-    cssPaths: options.css || [],
+    excludeMatches: tryMatchPatternSet(options.excludeMatches || [], {restrictSchemes}),
+    includeGlobs: options.includeGlobs && options.includeGlobs.map(glob => new MatchGlob(glob)),
+    excludeGlobs: options.excludeGlobs && options.excludeGlobs.map(glob => new MatchGlob(glob)),
   };
 }
 
@@ -144,8 +137,8 @@ class ExtensionGlobal {
 
         Object.assign(matcher, {
           wantReturnValue: data.options.wantReturnValue,
-          removeCSS: data.options.remove_css,
-          cssOrigin: data.options.css_origin,
+          removeCSS: data.options.removeCSS,
+          cssOrigin: data.options.cssOrigin,
           jsCode: data.options.jsCode,
         });
 
