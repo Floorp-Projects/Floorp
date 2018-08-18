@@ -197,7 +197,10 @@ public:
     return mIsUAWidget;
   }
 
-  void SetIsUAWidget(bool aIsUAWidget);
+  void SetIsUAWidget()
+  {
+    mIsUAWidget = true;
+  }
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
