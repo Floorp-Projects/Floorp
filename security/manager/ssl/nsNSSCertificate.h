@@ -15,10 +15,10 @@
 #include "nsIASN1Object.h"
 #include "nsIClassInfo.h"
 #include "nsISerializable.h"
-#include "nsISimpleEnumerator.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 #include "nsIX509CertList.h"
+#include "nsSimpleEnumerator.h"
 #include "nsStringFwd.h"
 
 namespace mozilla { namespace pkix { class DERArray; } }
@@ -123,10 +123,9 @@ private:
    void operator=(const nsNSSCertList&) = delete;
 };
 
-class nsNSSCertListEnumerator : public nsISimpleEnumerator
+class nsNSSCertListEnumerator : public nsSimpleEnumerator
 {
 public:
-   NS_DECL_THREADSAFE_ISUPPORTS
    NS_DECL_NSISIMPLEENUMERATOR
 
    explicit nsNSSCertListEnumerator(const mozilla::UniqueCERTCertList& certList);

@@ -6,7 +6,7 @@
 
 #include "WorkerDebuggerManager.h"
 
-#include "nsISimpleEnumerator.h"
+#include "nsSimpleEnumerator.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
@@ -76,7 +76,7 @@ static StaticRefPtr<WorkerDebuggerManager> gWorkerDebuggerManager;
 
 } /* anonymous namespace */
 
-class WorkerDebuggerEnumerator final : public nsISimpleEnumerator
+class WorkerDebuggerEnumerator final : public nsSimpleEnumerator
 {
   nsTArray<RefPtr<WorkerDebugger>> mDebuggers;
   uint32_t mIndex;
@@ -88,14 +88,11 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
 
 private:
-  ~WorkerDebuggerEnumerator() {}
+  ~WorkerDebuggerEnumerator() override = default;
 };
-
-NS_IMPL_ISUPPORTS(WorkerDebuggerEnumerator, nsISimpleEnumerator);
 
 NS_IMETHODIMP
 WorkerDebuggerEnumerator::HasMoreElements(bool* aResult)

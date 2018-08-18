@@ -146,8 +146,6 @@ DirectoryProvider::GetFiles(const char *aKey, nsISimpleEnumerator* *aResult)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMPL_ISUPPORTS(DirectoryProvider::AppendingEnumerator, nsISimpleEnumerator)
-
 NS_IMETHODIMP
 DirectoryProvider::AppendingEnumerator::HasMoreElements(bool *aResult)
 {

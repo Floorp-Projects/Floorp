@@ -8,6 +8,7 @@
 #include "PaymentRequestData.h"
 #include "PaymentRequestService.h"
 #include "BasicCardPayment.h"
+#include "nsSimpleEnumerator.h"
 
 namespace mozilla {
 namespace dom {
@@ -16,21 +17,18 @@ StaticRefPtr<PaymentRequestService> gPaymentService;
 
 namespace {
 
-class PaymentRequestEnumerator final : public nsISimpleEnumerator
+class PaymentRequestEnumerator final : public nsSimpleEnumerator
 {
 public:
-  NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
 
   PaymentRequestEnumerator()
     : mIndex(0)
   {}
 private:
-  ~PaymentRequestEnumerator() = default;
+  ~PaymentRequestEnumerator() override = default;
   uint32_t mIndex;
 };
-
-NS_IMPL_ISUPPORTS(PaymentRequestEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 PaymentRequestEnumerator::HasMoreElements(bool* aReturn)

@@ -17,7 +17,7 @@
 #include "nsIDirectoryEnumerator.h"
 #include "nsNativeCharsetUtils.h"
 
-#include "nsISimpleEnumerator.h"
+#include "nsSimpleEnumerator.h"
 #include "nsIComponentManager.h"
 #include "prio.h"
 #include "private/pprio.h"  // To get PR_ImportFile
@@ -231,11 +231,12 @@ private:
   nsString mResolvedPath;
 };
 
-class nsDriveEnumerator : public nsIDirectoryEnumerator
+class nsDriveEnumerator : public nsSimpleEnumerator
+                        , public nsIDirectoryEnumerator
 {
 public:
   nsDriveEnumerator();
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISIMPLEENUMERATOR
   nsresult Init();
 
@@ -681,7 +682,8 @@ CloseDir(nsDir*& aDir)
 //-----------------------------------------------------------------------------
 
 class nsDirEnumerator final
-  : public nsIDirectoryEnumerator
+  : public nsSimpleEnumerator
+  , public nsIDirectoryEnumerator
 {
 private:
   ~nsDirEnumerator()
@@ -690,7 +692,7 @@ private:
   }
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   nsDirEnumerator() : mDir(nullptr)
   {
@@ -802,7 +804,7 @@ protected:
   nsCOMPtr<nsIFile>  mNext;
 };
 
-NS_IMPL_ISUPPORTS(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
+NS_IMPL_ISUPPORTS_INHERITED(nsDirEnumerator, nsSimpleEnumerator, nsIDirectoryEnumerator)
 
 
 //-----------------------------------------------------------------------------
@@ -3581,7 +3583,7 @@ nsLocalFile::GetHashCode(uint32_t* aResult)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsDriveEnumerator, nsIDirectoryEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS_INHERITED(nsDriveEnumerator, nsSimpleEnumerator, nsIDirectoryEnumerator)
 
 nsDriveEnumerator::nsDriveEnumerator()
 {
