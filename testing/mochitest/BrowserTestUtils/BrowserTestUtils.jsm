@@ -1054,7 +1054,7 @@ var BrowserTestUtils = {
     /* eslint-enable no-eval */
 
     let frameScriptSource =
-        `data:,(${frameScript.toString()})(${id}, "${eventName}", ${useCapture}, "${checkFnSource}", ${wantsUntrusted})`;
+        `data:,(${frameScript.toString()})(${id}, "${eventName}", ${uneval(useCapture)}, "${checkFnSource}", ${wantsUntrusted})`;
 
     let mm = Services.mm;
 

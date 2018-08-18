@@ -7,7 +7,7 @@
 <!DOCTYPE ldml SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldml.dtd">
 <ldml>
     <identity>
-        <version number="$Revision: 40674 $"/>
+        <version number="$Revision$"/>
         <language type="sr"/>
     </identity>
     <rbnf>

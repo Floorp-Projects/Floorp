@@ -3,6 +3,27 @@
 fi{
     Version{"2.1.41.97"}
     zoneStrings{
+        "America:Godthab"{
+            ec%secondary{"Godthåb"}
+        }
+        "America:Scoresbysund"{
+            ec%secondary{"Scoresbysund"}
+        }
+        "America:Thule"{
+            ec%secondary{"Qaanaaq"}
+        }
+        "Etc:UTC"{
+            ls{"UTC-yleisaika"}
+        }
+        "Europe:Dublin"{
+            ld{"Irlannin kesäaika"}
+        }
+        "Europe:London"{
+            ld{"Britannian kesäaika"}
+        }
+        "Europe:Mariehamn"{
+            ec%secondary{"Mariehamn"}
+        }
         "meta:Acre"{
             ld{"Acren kesäaika"}
             lg{"Acren aika"}

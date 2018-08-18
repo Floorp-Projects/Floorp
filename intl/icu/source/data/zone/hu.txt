@@ -3,6 +3,15 @@
 hu{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"egyezményes koordinált világidő"}
+        }
+        "Europe:Dublin"{
+            ld{"ír nyári idő"}
+        }
+        "Europe:London"{
+            ld{"brit nyári idő"}
+        }
         "meta:Acre"{
             ld{"Acre nyári idő"}
             lg{"Acre idő"}

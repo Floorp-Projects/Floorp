@@ -3,6 +3,15 @@
 uz{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Koordinatali universal vaqt"}
+        }
+        "Europe:Dublin"{
+            ld{"Irlandiya yozgi vaqti"}
+        }
+        "Europe:London"{
+            ld{"Britaniya yozgi vaqti"}
+        }
         "meta:Afghanistan"{
             ls{"Afgʻoniston vaqti"}
         }

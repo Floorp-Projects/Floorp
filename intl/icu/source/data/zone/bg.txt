@@ -3,6 +3,15 @@
 bg{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Координирано универсално време"}
+        }
+        "Europe:Dublin"{
+            ld{"Ирландско стандартно време"}
+        }
+        "Europe:London"{
+            ld{"Британско лятно часово време"}
+        }
         "meta:Afghanistan"{
             ls{"Афганистанско време"}
         }

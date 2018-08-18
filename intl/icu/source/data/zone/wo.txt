@@ -3,6 +3,9 @@
 wo{
     Version{"2.1.38.71"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"CUT (waxtu iniwelsel yuñ boole)"}
+        }
         "meta:America_Central"{
             ld{"CDT (waxtu bëccëgu sàntaraal"}
             lg{"CT (waxtu sàntaral)"}

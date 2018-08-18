@@ -1485,11 +1485,7 @@ TextEditor::GetTextLength(int32_t* aCount)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIContentIterator> iter =
-    do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
 
   uint32_t totalLength = 0;
   iter->Init(rootElement);

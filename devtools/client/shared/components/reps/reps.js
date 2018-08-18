@@ -2913,11 +2913,11 @@ function getType(item) {
 }
 
 function getValue(item) {
-  if (item && item.contents && item.contents.hasOwnProperty("value")) {
+  if (nodeHasValue(item)) {
     return item.contents.value;
   }
 
-  if (item && item.contents && item.contents.hasOwnProperty("getterValue")) {
+  if (nodeHasGetterValue(item)) {
     return item.contents.getterValue;
   }
 
@@ -2942,6 +2942,14 @@ function nodeIsMapEntry(item) {
 
 function nodeHasChildren(item) {
   return Array.isArray(item.contents);
+}
+
+function nodeHasValue(item) {
+  return item && item.contents && item.contents.hasOwnProperty("value");
+}
+
+function nodeHasGetterValue(item) {
+  return item && item.contents && item.contents.hasOwnProperty("getterValue");
 }
 
 function nodeIsObject(item) {
@@ -3391,18 +3399,15 @@ function makeNodesForProperties(objProps, parent) {
 }
 
 function setNodeFullText(loadedProps, node) {
-  if (nodeHasFullText(node)) {
+  if (nodeHasFullText(node) || !nodeIsLongString(node)) {
     return node;
   }
 
-  if (nodeIsLongString(node)) {
-    const {fullText} = loadedProps;
-
-    if (node.contents.value) {
-      node.contents.value.fullText = fullText;
-    } else if (node.contents.getterValue) {
-      node.contents.getterValue.fullText = fullText;
-    }
+  const { fullText } = loadedProps;
+  if (nodeHasValue(node)) {
+    node.contents.value.fullText = fullText;
+  } else if (nodeHasGetterValue(node)) {
+    node.contents.getterValue.fullText = fullText;
   }
 
   return node;
