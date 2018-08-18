@@ -648,9 +648,9 @@ class TabBase {
    */
   _execute(context, details, kind, method) {
     let options = {
-      js: [],
-      css: [],
-      remove_css: method == "removeCSS",
+      jsPaths: [],
+      cssPaths: [],
+      removeCSS: method == "removeCSS",
     };
 
     // We require a `code` or a `file` property, but we can't accept both.
@@ -676,23 +676,23 @@ class TabBase {
       options[kind].push(url);
     }
     if (details.allFrames) {
-      options.all_frames = details.allFrames;
+      options.allFrames = details.allFrames;
     }
     if (details.frameId !== null) {
-      options.frame_id = details.frameId;
+      options.frameID = details.frameId;
     }
     if (details.matchAboutBlank) {
-      options.match_about_blank = details.matchAboutBlank;
+      options.matchAboutBlank = details.matchAboutBlank;
     }
     if (details.runAt !== null) {
-      options.run_at = details.runAt;
+      options.runAt = details.runAt;
     } else {
-      options.run_at = "document_idle";
+      options.runAt = "document_idle";
     }
     if (details.cssOrigin !== null) {
-      options.css_origin = details.cssOrigin;
+      options.cssOrigin = details.cssOrigin;
     } else {
-      options.css_origin = "author";
+      options.cssOrigin = "author";
     }
 
     options.wantReturnValue = true;
@@ -717,7 +717,7 @@ class TabBase {
    *        generates.
    */
   executeScript(context, details) {
-    return this._execute(context, details, "js", "executeScript");
+    return this._execute(context, details, "jsPaths", "executeScript");
   }
 
   /**
@@ -733,7 +733,7 @@ class TabBase {
    *        Resolves when the injection has completed.
    */
   insertCSS(context, details) {
-    return this._execute(context, details, "css", "insertCSS").then(() => {});
+    return this._execute(context, details, "cssPaths", "insertCSS").then(() => {});
   }
 
 
