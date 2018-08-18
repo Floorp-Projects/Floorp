@@ -61,8 +61,8 @@ async function fillField(field, value) {
       return;
     }
     field.value = value;
-    field.dispatchEvent(new Event("input"));
-    field.dispatchEvent(new Event("change"));
+    field.dispatchEvent(new Event("input", {bubbles: true}));
+    field.dispatchEvent(new Event("change", {bubbles: true}));
     return;
   }
   while (field.value) {

@@ -3,6 +3,15 @@
 sl{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Univerzalni koordinirani čas"}
+        }
+        "Europe:Dublin"{
+            ld{"irski standardni čas"}
+        }
+        "Europe:London"{
+            ld{"britanski poletni čas"}
+        }
         "meta:Afghanistan"{
             ls{"Afganistanski čas"}
         }

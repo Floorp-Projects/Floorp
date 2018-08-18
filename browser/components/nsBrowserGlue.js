@@ -19,8 +19,8 @@ let ACTORS = {
       events: {
         "AboutReaderContentLoaded": {wantUntrusted: true},
         "DOMContentLoaded": {},
-        "pageshow": {},
-        "pagehide": {},
+        "pageshow": {mozSystemGroup: true},
+        "pagehide": {mozSystemGroup: true},
       },
       messages: [
         "Reader:ToggleReaderMode",
@@ -120,6 +120,15 @@ let ACTORS = {
     },
   },
 
+  FormSubmit: {
+    child: {
+      module: "resource:///actors/FormSubmitChild.jsm",
+      events: {
+        "MozInvalidForm": {},
+      },
+    },
+  },
+
   LightWeightThemeInstall: {
     child: {
       module: "resource:///actors/LightWeightThemeInstallChild.jsm",
@@ -127,6 +136,16 @@ let ACTORS = {
         "InstallBrowserTheme": {wantUntrusted: true},
         "PreviewBrowserTheme": {wantUntrusted: true},
         "ResetBrowserThemePreview": {wantUntrusted: true},
+      },
+    },
+  },
+
+  LightweightTheme: {
+    child: {
+      module: "resource:///actors/LightweightThemeChild.jsm",
+      matches: ["about:home", "about:newtab", "about:welcome"],
+      events: {
+        "pageshow": {mozSystemGroup: true},
       },
     },
   },

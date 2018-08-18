@@ -3,6 +3,15 @@
 sq{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Ora universale e koordinuar"}
+        }
+        "Europe:Dublin"{
+            ld{"Ora strandarde e Irlandës"}
+        }
+        "Europe:London"{
+            ld{"Ora verore britanike"}
+        }
         "meta:Acre"{
             ld{"Ora verore e Ejkrit [Ako]"}
             lg{"Ora e Ejkrit [Ako]"}

@@ -3,6 +3,15 @@
 et{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Koordineeritud maailmaaeg"}
+        }
+        "Europe:Dublin"{
+            ld{"Iiri suveaeg"}
+        }
+        "Europe:London"{
+            ld{"Briti suveaeg"}
+        }
         "meta:Acre"{
             ld{"Acre suveaeg"}
             lg{"Acre aeg"}

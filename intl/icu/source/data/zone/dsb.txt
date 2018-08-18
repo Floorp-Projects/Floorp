@@ -3,6 +3,12 @@
 dsb{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Europe:Dublin"{
+            ld{"Iriski lěśojski cas"}
+        }
+        "Europe:London"{
+            ld{"Britiski lěśojski cas"}
+        }
         "meta:Afghanistan"{
             ls{"Afghaniski cas"}
         }

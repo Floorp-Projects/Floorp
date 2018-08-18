@@ -3,6 +3,15 @@
 he{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"זמן אוניברסלי מתואם"}
+        }
+        "Europe:Dublin"{
+            ld{"שעון קיץ אירלנד"}
+        }
+        "Europe:London"{
+            ld{"שעון קיץ בריטניה"}
+        }
         "meta:Afghanistan"{
             ls{"שעון אפגניסטן"}
         }

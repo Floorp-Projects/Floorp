@@ -129,7 +129,7 @@ Test swapFrameLoaders with different frame types and remoteness
           });
           addEventListener("pagehide", function({ inFrameSwap }) {
             sendAsyncMessage("pagehide", inFrameSwap);
-          });
+          }, {mozSystemGroup: true});
         }`;
       }
 

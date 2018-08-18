@@ -3,6 +3,15 @@
 ka{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"მსოფლიო კოორდინირებული დრო"}
+        }
+        "Europe:Dublin"{
+            ld{"ირლანდიის სტანდარტული დრო"}
+        }
+        "Europe:London"{
+            ld{"ბრიტანეთის ზაფხულის დრო"}
+        }
         "meta:Afghanistan"{
             ls{"ავღანეთის დრო"}
         }

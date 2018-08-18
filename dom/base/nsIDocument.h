@@ -1341,7 +1341,8 @@ protected:
 
   void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
                               const nsAString& aType,
-                              bool aPersisted);
+                              bool aPersisted,
+                              bool aOnlySystemGroup = false);
 
   // Call this before the document does something that will unbind all content.
   // That will stop us from doing a lot of work as each element is removed.
@@ -2197,12 +2198,14 @@ public:
    * PageTransitionEvent.webidl for a description of the |aPersisted|
    * parameter. If aDispatchStartTarget is null, the pageshow event is
    * dispatched on the ScriptGlobalObject for this document, otherwise it's
-   * dispatched on aDispatchStartTarget.
+   * dispatched on aDispatchStartTarget. If |aOnlySystemGroup| is true, the
+   * event is only dispatched to listeners in the system group.
    * Note: if aDispatchStartTarget isn't null, the showing state of the
    * document won't be altered.
    */
   virtual void OnPageShow(bool aPersisted,
-                          mozilla::dom::EventTarget* aDispatchStartTarget);
+                          mozilla::dom::EventTarget* aDispatchStartTarget,
+                          bool aOnlySystemGroup = false);
 
   /**
    * Notification that the page has been hidden, for documents which are loaded
@@ -2212,12 +2215,14 @@ public:
    * window.  See PageTransitionEvent.webidl for a description of the
    * |aPersisted| parameter. If aDispatchStartTarget is null, the pagehide
    * event is dispatched on the ScriptGlobalObject for this document,
-   * otherwise it's dispatched on aDispatchStartTarget.
+   * otherwise it's dispatched on aDispatchStartTarget. If |aOnlySystemGroup| is
+   * true, the event is only dispatched to listeners in the system group.
    * Note: if aDispatchStartTarget isn't null, the showing state of the
    * document won't be altered.
    */
   void OnPageHide(bool aPersisted,
-                  mozilla::dom::EventTarget* aDispatchStartTarget);
+                  mozilla::dom::EventTarget* aDispatchStartTarget,
+                  bool aOnlySystemGroup = false);
 
   /*
    * We record the set of links in the document that are relevant to

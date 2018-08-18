@@ -4,6 +4,12 @@ uz_Cyrl{
     %%Parent{"root"}
     Version{"2.1.41.97"}
     zoneStrings{
+        "Europe:Dublin"{
+            ld{"Ирландия ёзги вақти"}
+        }
+        "Europe:London"{
+            ld{"Британия ёзги вақти"}
+        }
         "meta:Afghanistan"{
             ls{"Афғонистон вақти"}
         }

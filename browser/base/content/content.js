@@ -10,7 +10,6 @@
 /* eslint no-unused-vars: ["error", {args: "none"}] */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // TabChildGlobal
 var global = this;
@@ -19,7 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
   LoginFormFactory: "resource://gre/modules/LoginManagerContent.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
-  FormSubmitObserver: "resource:///modules/FormSubmitObserver.jsm",
   ContextMenuChild: "resource:///actors/ContextMenuChild.jsm",
 });
 
@@ -29,15 +27,6 @@ XPCOMUtils.defineLazyGetter(this, "LoginManagerContent", () => {
   tmp.LoginManagerContent.setupEventListeners(global);
   return tmp.LoginManagerContent;
 });
-
-XPCOMUtils.defineLazyProxy(this, "formSubmitObserver", () => {
-  return new FormSubmitObserver(content, this);
-}, {
-  // stub QI
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFormSubmitObserver, Ci.nsISupportsWeakReference])
-});
-
-Services.obs.addObserver(formSubmitObserver, "invalidformsubmit", true);
 
 // NOTE: Much of this logic is duplicated in BrowserCLH.js for Android.
 addMessageListener("RemoteLogins:fillForm", function(message) {

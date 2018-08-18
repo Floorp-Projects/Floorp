@@ -19,7 +19,31 @@ class EditAutofillForm {
   loadRecord(record = {}) {
     for (let field of this._elements.form.elements) {
       let value = record[field.id];
-      field.value = typeof(value) == "undefined" ? "" : value;
+      value = typeof(value) == "undefined" ? "" : value;
+
+      if (record.guid) {
+        field.value = value;
+      } else if (field.localName == "select") {
+        this.setDefaultSelectedOptionByValue(field, value);
+      } else {
+        // Use .defaultValue instead of .value to avoid setting the `dirty` flag
+        // which triggers form validation UI.
+        field.defaultValue = value;
+      }
+    }
+    if (!record.guid) {
+      // Reset the dirty value flag and validity state.
+      this._elements.form.reset();
+    }
+
+    for (let field of this._elements.form.elements) {
+      this.updatePopulatedState(field);
+    }
+  }
+
+  setDefaultSelectedOptionByValue(select, value) {
+    for (let option of select.options) {
+      option.defaultSelected = option.value == value;
     }
   }
 
@@ -43,15 +67,24 @@ class EditAutofillForm {
    */
   handleEvent(event) {
     switch (event.type) {
-      case "input": {
-        this.handleInput(event);
-        break;
-      }
       case "change": {
         this.handleChange(event);
         break;
       }
+      case "input": {
+        this.handleInput(event);
+        break;
+      }
     }
+  }
+
+  /**
+   * Handle change events
+   *
+   * @param  {DOMEvent} event
+   */
+  handleChange(event) {
+    this.updatePopulatedState(event.target);
   }
 
   /**
@@ -68,8 +101,18 @@ class EditAutofillForm {
     this._elements.form.addEventListener("input", this);
   }
 
-  // An interface to be inherited.
-  handleChange(event) {}
+  /**
+   * Set the field-populated attribute if the field has a value.
+   *
+   * @param {DOMElement} field The field that will be checked for a value.
+   */
+  updatePopulatedState(field) {
+    let span = field.parentNode.querySelector(".label-text");
+    if (!span) {
+      return;
+    }
+    span.toggleAttribute("field-populated", !!field.value.trim());
+  }
 }
 
 class EditAddress extends EditAutofillForm {
@@ -239,11 +282,14 @@ class EditAddress extends EditAutofillForm {
   }
 
   handleChange(event) {
-    this.formatForm(event.target.value);
+    if (event.target == this._elements.country) {
+      this.formatForm(event.target.value);
+    }
+    super.handleChange(event);
   }
 
   attachEventListeners() {
-    this._elements.country.addEventListener("change", this);
+    this._elements.form.addEventListener("change", this);
     super.attachEventListeners();
   }
 }
@@ -264,6 +310,7 @@ class EditCreditCard extends EditAutofillForm {
     Object.assign(this._elements, {
       ccNumber: this._elements.form.querySelector("#cc-number"),
       invalidCardNumberStringElement: this._elements.form.querySelector("#invalidCardNumberString"),
+      month: this._elements.form.querySelector("#cc-exp-month"),
       year: this._elements.form.querySelector("#cc-exp-year"),
       billingAddress: this._elements.form.querySelector("#billingAddressGUID"),
       billingAddressRow: this._elements.form.querySelector(".billingAddressRow"),
@@ -282,6 +329,11 @@ class EditCreditCard extends EditAutofillForm {
       // Re-generating the years will reset the selected option.
       this.generateYears();
       super.loadRecord(record);
+
+      // Resetting the form in the super.loadRecord won't clear custom validity
+      // state so reset it here. Since the cc-number field is disabled upon editing
+      // we don't need to recaclulate its validity here.
+      this._elements.ccNumber.setCustomValidity("");
     }
   }
 
@@ -330,7 +382,7 @@ class EditCreditCard extends EditAutofillForm {
   }
 
   attachEventListeners() {
-    this._elements.ccNumber.addEventListener("change", this);
+    this._elements.form.addEventListener("change", this);
     super.attachEventListeners();
   }
 
