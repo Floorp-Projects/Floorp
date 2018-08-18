@@ -81,6 +81,15 @@ ReplayDebugger.prototype = {
     return data;
   },
 
+  // Send a request that requires the child process to perform actions that
+  // diverge from the recording. In such cases we want to be interacting with a
+  // replaying process (if there is one), as recording child processes won't
+  // provide useful responses to such requests.
+  _sendRequestAllowDiverge(request) {
+    RecordReplayControl.maybeSwitchToReplayingChild();
+    return this._sendRequest(request);
+  },
+
   _setBreakpoint(handler, position, data) {
     const id = RecordReplayControl.setBreakpoint(handler, position);
     this._breakpoints.push({id, position, data});
@@ -445,8 +454,12 @@ ReplayDebuggerFrame.prototype = {
   get live() { return true; },
 
   eval(text, options) {
-    const rv = this._dbg._sendRequest({ type: "frameEvaluate",
-                                        index: this._data.index, text, options });
+    const rv = this._dbg._sendRequestAllowDiverge({
+      type: "frameEvaluate",
+      index: this._data.index,
+      text,
+      options
+    });
     return this._dbg._convertCompletionValue(rv);
   },
 
@@ -584,7 +597,7 @@ ReplayDebuggerObject.prototype = {
 
   _ensureProperties() {
     if (!this._properties) {
-      const properties = this._dbg._sendRequest({
+      const properties = this._dbg._sendRequestAllowDiverge({
         type: "getObjectProperties",
         id: this._data.id
       });
@@ -652,8 +665,10 @@ ReplayDebuggerEnvironment.prototype = {
 
   _ensureNames() {
     if (!this._names) {
-      const names =
-        this._dbg._sendRequest({ type: "getEnvironmentNames", id: this._data.id });
+      const names = this._dbg._sendRequestAllowDiverge({
+        type: "getEnvironmentNames",
+        id: this._data.id
+      });
       this._names = {};
       names.forEach(({ name, value }) => {
         this._names[name] = this._dbg._convertValue(value);
