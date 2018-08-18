@@ -597,9 +597,13 @@ class ADBDevice(ADBCommand):
         except ADBError:
             self._logger.debug("Check for su -c failed")
 
-        # Do we have Android's su?
+        # Check if Android's su 0 command works.
+        # su 0 id will hang on Pixel 2 8.1.0/OPM2.171019.029.B1/4720900
+        # rooted via magisk. If we already have detected su -c support,
+        # we can skip this check.
         try:
-            if self.shell_output("su 0 id", timeout=timeout).find(uid) != -1:
+            if (not self._have_su and
+                self.shell_output("su 0 id", timeout=timeout).find(uid) != -1):
                 self._have_android_su = True
                 self._logger.info("su 0 supported")
         except ADBError:
