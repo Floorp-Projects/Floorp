@@ -87,6 +87,7 @@ EXPORTS.mozilla += [
     'Dafsa.h',
     'IncrementalTokenizer.h',
     'Observer.h',
+    'SimpleEnumerator.h',
     'StickyTimeDuration.h',
     'Tokenizer.h',
 ]
