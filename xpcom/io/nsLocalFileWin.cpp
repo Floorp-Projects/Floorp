@@ -769,6 +769,9 @@ public:
     if (NS_FAILED(rv)) {
       return rv;
     }
+    if (!hasMore) {
+      return NS_ERROR_FAILURE;
+    }
 
     mNext.forget(aResult);
     return NS_OK;
@@ -3628,7 +3631,7 @@ nsDriveEnumerator::GetNext(nsISupports** aNext)
    * character of the current drive. */
   if (*mStartOfCurrentDrive == L'\0') {
     *aNext = nullptr;
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   nsAString::const_iterator driveEnd = mStartOfCurrentDrive;
