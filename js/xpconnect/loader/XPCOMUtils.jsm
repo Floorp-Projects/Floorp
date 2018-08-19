@@ -413,10 +413,9 @@ var XPCOMUtils = {
    * @param e The nsISimpleEnumerator to iterate over.
    * @param i The expected interface for each element.
    */
-  IterSimpleEnumerator: function* XPCU_IterSimpleEnumerator(e, i)
+  IterSimpleEnumerator: function XPCU_IterSimpleEnumerator(e, i)
   {
-    while (e.hasMoreElements())
-      yield e.getNext().QueryInterface(i);
+    return e.entries(i);
   },
 
   /**
@@ -437,7 +436,7 @@ var XPCOMUtils = {
   enumerateCategoryEntries: function* XPCOMUtils_enumerateCategoryEntries(aCategory)
   {
     let category = this.categoryManager.enumerateCategory(aCategory);
-    for (let entry of this.IterSimpleEnumerator(category, Ci.nsISupportsCString)) {
+    for (let entry of category) {
       yield [entry.data, this.categoryManager.getCategoryEntry(aCategory, entry.data)];
     }
   },

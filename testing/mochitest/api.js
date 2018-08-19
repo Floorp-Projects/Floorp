@@ -129,9 +129,7 @@ this.mochikit = class extends ExtensionAPI {
 
   onShutdown() {
     if (AppConstants.platform != "android") {
-      let windows = Services.wm.getEnumerator("navigator:browser");
-      while (windows.hasMoreElements()) {
-        let win = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+      for (let win of Services.wm.getEnumerator("navigator:browser")) {
         WindowListener.tearDownWindow(win);
       }
 

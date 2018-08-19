@@ -90,9 +90,7 @@ function checkDialogContents(win, notBefore, notAfter) {
 }
 
 function findCertByCommonName(commonName) {
-  let certEnumerator = certDB.getCerts().getEnumerator();
-  while (certEnumerator.hasMoreElements()) {
-    let cert = certEnumerator.getNext().QueryInterface(Ci.nsIX509Cert);
+  for (let cert of certDB.getCerts().getEnumerator()) {
     if (cert.commonName == commonName) {
       return cert;
     }

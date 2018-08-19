@@ -8,9 +8,8 @@ function run_test() {
     cm.add("example.com", "/", "C", "V", false, true, false, time, {});
     const now = Math.floor((new Date()).getTime() / 1000);
 
-    var enumerator = cm.enumerator, found = false;
-    while (enumerator.hasMoreElements()) {
-      var cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
+    var found = false;
+    for (let cookie of cm.enumerator) {
       if (cookie.host == "example.com" &&
           cookie.path == "/" &&
           cookie.name == "C") {
