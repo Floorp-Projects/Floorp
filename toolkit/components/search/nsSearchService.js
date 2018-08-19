@@ -2807,11 +2807,10 @@ SearchService.prototype = {
     } catch (e) {
       // NS_APP_DISTRIBUTION_SEARCH_DIR_LIST is defined by each app
       // so this throws during unit tests (but not xpcshell tests).
-      locations = {hasMoreElements: () => false};
+      locations = [];
 
     }
-    while (locations.hasMoreElements()) {
-      let dir = locations.getNext().QueryInterface(Ci.nsIFile);
+    for (let dir of locations) {
       if (dir.directoryEntries.nextFile)
         distDirs.push(dir);
     }
@@ -2873,10 +2872,9 @@ SearchService.prototype = {
     } catch (e) {
       // NS_APP_DISTRIBUTION_SEARCH_DIR_LIST is defined by each app
       // so this throws during unit tests (but not xpcshell tests).
-      locations = {hasMoreElements: () => false};
+      locations = [];
     }
-    while (locations.hasMoreElements()) {
-      let dir = locations.getNext().QueryInterface(Ci.nsIFile);
+    for (let dir of locations) {
       let iterator = new OS.File.DirectoryIterator(dir.path,
                                                    { winPattern: "*.xml" });
       try {

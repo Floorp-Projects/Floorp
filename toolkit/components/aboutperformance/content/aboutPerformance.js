@@ -75,9 +75,7 @@ function performanceCountersEnabled() {
 let tabFinder = {
   update() {
     this._map = new Map();
-    let windows = Services.wm.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements()) {
-      let win = windows.getNext();
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
       let tabbrowser = win.gBrowser;
       for (let browser of tabbrowser.browsers) {
         let id = browser.outerWindowID; // May be `null` if the browser isn't loaded yet

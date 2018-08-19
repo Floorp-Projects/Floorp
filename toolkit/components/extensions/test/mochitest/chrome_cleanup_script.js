@@ -22,9 +22,7 @@ if (AppConstants.MOZ_BUILD_APP === "mobile/android") {
 }
 
 function* iterBrowserWindows() {
-  let enm = Services.wm.getEnumerator("navigator:browser");
-  while (enm.hasMoreElements()) {
-    let win = enm.getNext();
+  for (let win of Services.wm.getEnumerator("navigator:browser")) {
     if (!win.closed && getBrowserApp(win)) {
       yield win;
     }

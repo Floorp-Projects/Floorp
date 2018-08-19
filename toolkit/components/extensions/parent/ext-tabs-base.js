@@ -1354,10 +1354,7 @@ class WindowTrackerBase extends EventEmitter {
     // fires for browser windows when they're in that in-between state, and just
     // before we register our own "domwindowcreated" listener.
 
-    let e = Services.wm.getEnumerator("");
-    while (e.hasMoreElements()) {
-      let window = e.getNext();
-
+    for (let window of Services.wm.getEnumerator("")) {
       let ok = includeIncomplete;
       if (window.document.readyState === "complete") {
         ok = this.isBrowserWindow(window);

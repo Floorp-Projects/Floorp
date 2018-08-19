@@ -1400,9 +1400,7 @@ var Impl = {
   getOpenTabsCount: function getOpenTabsCount() {
     let tabCount = 0;
 
-    let browserEnum = Services.wm.getEnumerator("navigator:browser");
-    while (browserEnum.hasMoreElements()) {
-      let win = browserEnum.getNext();
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
       tabCount += win.gBrowser.tabs.length;
     }
 

@@ -260,9 +260,7 @@ this.LoginManagerStorage_json.prototype = {
     let realMatchData = {};
     let options = {};
     // Convert nsIPropertyBag to normal JS object
-    let propEnum = matchData.enumerator;
-    while (propEnum.hasMoreElements()) {
-      let prop = propEnum.getNext().QueryInterface(Ci.nsIProperty);
+    for (let prop of matchData.enumerator) {
       switch (prop.name) {
         // Some property names aren't field names but are special options to affect the search.
         case "schemeUpgrades": {
