@@ -2,30 +2,38 @@
 
 // kTestRoot is from head.js
 const kTestPage = kTestRoot + "simple_payment_request.html";
-
-add_task(async function() {
+const TABS_TO_OPEN = 5;
+add_task(async () => {
   Services.prefs.setBoolPref("dom.payments.request.enabled", true);
-  await BrowserTestUtils.withNewTab(kTestPage,
-    async function(browser) {
-      await BrowserTestUtils.withNewTab(kTestPage,
-        function(browser) {
-          const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
-          ok(paymentSrv, "Fail to get PaymentRequestService.");
-
-          const paymentEnum = paymentSrv.enumerate();
-          ok(paymentEnum.hasMoreElements(), "PaymentRequestService should have at least one payment request.");
-          let tabIds = [];
-          while (paymentEnum.hasMoreElements()) {
-            let payment = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
-            ok(payment, "Fail to get existing payment request.");
-            checkSimplePayment(payment);
-            tabIds.push(payment.tabId);
-          }
-          is(tabIds.length, 2, "TabId array length should be 2.");
-          ok(tabIds[0] != tabIds[1], "TabIds should be different.");
-          Services.prefs.setBoolPref("dom.payments.request.enabled", false);
-        }
-      );
-    }
+  const tabs = [];
+  const options = {
+    gBrowser: Services.wm.getMostRecentWindow("navigator:browser").gBrowser,
+    url: kTestPage,
+  };
+  for (let i = 0; i < TABS_TO_OPEN; i++) {
+    const tab = await BrowserTestUtils.openNewForegroundTab(options);
+    tabs.push(tab);
+  }
+  const paymentSrv = Cc[
+    "@mozilla.org/dom/payments/payment-request-service;1"
+  ].getService(Ci.nsIPaymentRequestService);
+  ok(paymentSrv, "Fail to get PaymentRequestService.");
+  const paymentEnum = paymentSrv.enumerate();
+  ok(
+    paymentEnum.hasMoreElements(),
+    "PaymentRequestService should have at least one payment request."
   );
+  const payments = new Set();
+  while (paymentEnum.hasMoreElements()) {
+    const payment = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
+    ok(payment, "Fail to get existing payment request.");
+    checkSimplePayment(payment);
+    payments.add(payment);
+  }
+  is(payments.size, TABS_TO_OPEN, `Should be ${TABS_TO_OPEN} unique objects.`);
+  tabs.forEach(async tab => {
+    await TestUtils.waitForTick();
+    BrowserTestUtils.removeTab(tab);
+  });
+  Services.prefs.setBoolPref("dom.payments.request.enabled", false);
 });
