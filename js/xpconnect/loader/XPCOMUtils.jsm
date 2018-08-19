@@ -409,16 +409,6 @@ var XPCOMUtils = {
   },
 
   /**
-   * Helper which iterates over a nsISimpleEnumerator.
-   * @param e The nsISimpleEnumerator to iterate over.
-   * @param i The expected interface for each element.
-   */
-  IterSimpleEnumerator: function XPCU_IterSimpleEnumerator(e, i)
-  {
-    return e.entries(i);
-  },
-
-  /**
    * Helper which iterates over a string enumerator.
    * @param e The string enumerator (nsIUTF8StringEnumerator or
    *          nsIStringEnumerator) over which to iterate.
