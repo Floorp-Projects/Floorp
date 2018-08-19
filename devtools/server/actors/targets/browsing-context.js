@@ -77,9 +77,7 @@ function getChildDocShells(parentDocShell) {
   );
 
   const docShells = [];
-  while (docShellsEnum.hasMoreElements()) {
-    const docShell = docShellsEnum.getNext();
-    docShell.QueryInterface(Ci.nsIDocShell);
+  for (const docShell of docShellsEnum) {
     docShell.QueryInterface(Ci.nsIInterfaceRequestor)
             .getInterface(Ci.nsIWebProgress);
     docShells.push(docShell);

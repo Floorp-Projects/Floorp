@@ -25,7 +25,6 @@ const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
 const nsIAccessibleEvent = Ci.nsIAccessibleEvent;
 const nsIAccessibleStateChangeEvent = Ci.nsIAccessibleStateChangeEvent;
-const nsIPropertyElement = Ci.nsIPropertyElement;
 const nsIAccessibleRole = Ci.nsIAccessibleRole;
 
 const {
@@ -322,10 +321,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     }
 
     const attributes = {};
-    const attrsEnum = this.rawAccessible.attributes.enumerate();
-    while (attrsEnum.hasMoreElements()) {
-      const { key, value } = attrsEnum.getNext().QueryInterface(
-        nsIPropertyElement);
+    for (const { key, value } of this.rawAccessible.attributes.enumerate()) {
       attributes[key] = value;
     }
 

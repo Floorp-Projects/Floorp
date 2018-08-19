@@ -93,10 +93,7 @@ Object.defineProperty(parentProcessTargetPrototype, "docShells", {
   get: function() {
     // Iterate over all top-level windows and all their docshells.
     let docShells = [];
-    const e = Services.ww.getWindowEnumerator();
-    while (e.hasMoreElements()) {
-      const window = e.getNext();
-      const docShell = window.docShell;
+    for (const {docShell} of Services.ww.getWindowEnumerator()) {
       docShells = docShells.concat(getChildDocShells(docShell));
     }
 
@@ -131,10 +128,7 @@ parentProcessTargetPrototype._attach = function() {
   Services.obs.addObserver(this, "chrome-webnavigation-destroy");
 
   // Iterate over all top-level windows.
-  const e = Services.ww.getWindowEnumerator();
-  while (e.hasMoreElements()) {
-    const window = e.getNext();
-    const docShell = window.docShell;
+  for (const {docShell} of Services.ww.getWindowEnumerator()) {
     if (docShell == this.docShell) {
       continue;
     }
@@ -152,10 +146,7 @@ parentProcessTargetPrototype._detach = function() {
   Services.obs.removeObserver(this, "chrome-webnavigation-destroy");
 
   // Iterate over all top-level windows.
-  const e = Services.ww.getWindowEnumerator();
-  while (e.hasMoreElements()) {
-    const window = e.getNext();
-    const docShell = window.docShell;
+  for (const {docShell} of Services.ww.getWindowEnumerator()) {
     if (docShell == this.docShell) {
       continue;
     }
@@ -173,10 +164,7 @@ parentProcessTargetPrototype._detach = function() {
  */
 parentProcessTargetPrototype.preNest = function() {
   // Disable events in all open windows.
-  const e = Services.wm.getEnumerator(null);
-  while (e.hasMoreElements()) {
-    const win = e.getNext();
-    const windowUtils = win.windowUtils;
+  for (const {windowUtils} of Services.wm.getEnumerator(null)) {
     windowUtils.suppressEventHandling(true);
     windowUtils.suspendTimeouts();
   }
@@ -187,10 +175,7 @@ parentProcessTargetPrototype.preNest = function() {
  */
 parentProcessTargetPrototype.postNest = function(nestData) {
   // Enable events in all open windows.
-  const e = Services.wm.getEnumerator(null);
-  while (e.hasMoreElements()) {
-    const win = e.getNext();
-    const windowUtils = win.windowUtils;
+  for (const {windowUtils} of Services.wm.getEnumerator(null)) {
     windowUtils.resumeTimeouts();
     windowUtils.suppressEventHandling(false);
   }

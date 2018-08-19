@@ -50,12 +50,7 @@ function toolRegistered(toolId) {
 }
 
 function getAllBrowserWindows() {
-  const wins = [];
-  const enumerator = Services.wm.getEnumerator("navigator:browser");
-  while (enumerator.hasMoreElements()) {
-    wins.push(enumerator.getNext());
-  }
-  return wins;
+  return Array.from(Services.wm.getEnumerator("navigator:browser"));
 }
 
 function testUnregister() {

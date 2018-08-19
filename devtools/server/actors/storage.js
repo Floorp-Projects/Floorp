@@ -810,16 +810,8 @@ var cookieHelpers = {
 
     host = trimHttpHttpsPort(host);
 
-    const cookies = Services.cookies.getCookiesFromHost(host, originAttributes);
-    const store = [];
-
-    while (cookies.hasMoreElements()) {
-      const cookie = cookies.getNext().QueryInterface(Ci.nsICookie2);
-
-      store.push(cookie);
-    }
-
-    return store;
+    return Array.from(
+      Services.cookies.getCookiesFromHost(host, originAttributes));
   },
 
   /**
@@ -854,11 +846,9 @@ var cookieHelpers = {
     const origPath = field === "path" ? oldValue : data.items.path;
     let cookie = null;
 
-    const enumerator =
-      Services.cookies.getCookiesFromHost(origHost, data.originAttributes || {});
-
-    while (enumerator.hasMoreElements()) {
-      const nsiCookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
+    const cookies = Services.cookies.getCookiesFromHost(origHost,
+                                                        data.originAttributes || {});
+    for (const nsiCookie of cookies) {
       if (nsiCookie.name === origName &&
           nsiCookie.host === origHost &&
           nsiCookie.path === origPath) {
@@ -956,11 +946,9 @@ var cookieHelpers = {
       return cookieHost == host;
     }
 
-    const enumerator =
-      Services.cookies.getCookiesFromHost(host, opts.originAttributes || {});
-
-    while (enumerator.hasMoreElements()) {
-      const cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
+    const cookies = Services.cookies.getCookiesFromHost(host,
+                                                        opts.originAttributes || {});
+    for (const cookie of cookies) {
       if (hostMatches(cookie.host, host) &&
           (!opts.name || cookie.name === opts.name) &&
           (!opts.domain || cookie.host === opts.domain) &&
