@@ -1465,13 +1465,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
   } */
 
   if (ShadowRoot* shadowRoot = tmp->GetShadowRoot()) {
-    for (nsIContent* child = shadowRoot->GetFirstChild();
-         child;
-         child = child->GetNextSibling()) {
-      child->UnbindFromTree(true, false);
-    }
-
-    shadowRoot->SetIsComposedDocParticipant(false);
+    shadowRoot->Unbind();
     tmp->ExtendedDOMSlots()->mShadowRoot = nullptr;
   }
 

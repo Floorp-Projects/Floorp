@@ -643,6 +643,15 @@ public:
   }
 
   /**
+   * Returns true if we're connected, and thus GetComposedDoc() would return a
+   * non-null value.
+   */
+  bool IsInComposedDoc() const
+  {
+    return GetBoolFlag(IsConnected);
+  }
+
+  /**
    * This method returns the owner document if the node is connected to it
    * (as defined in the DOM spec), otherwise it returns null.
    * In other words, returns non-null even in the case the node is in
@@ -651,16 +660,7 @@ public:
    */
   nsIDocument* GetComposedDoc() const
   {
-    return IsInShadowTree() ?
-      GetComposedDocInternal() : GetUncomposedDoc();
-  }
-
-  /**
-   * Returns true if GetComposedDoc() would return a non-null value.
-   */
-  bool IsInComposedDoc() const
-  {
-    return IsInUncomposedDoc() || (IsInShadowTree() && GetComposedDocInternal());
+    return IsInComposedDoc() ? OwnerDoc() : nullptr;
   }
 
   /**
@@ -1418,8 +1418,6 @@ private:
 
   mozilla::dom::SVGUseElement* DoGetContainingSVGUseShadowHost() const;
 
-  nsIDocument* GetComposedDocInternal() const;
-
   nsIContent* GetNextNodeImpl(const nsINode* aRoot,
                               const bool aSkipChildren) const
   {
@@ -1501,6 +1499,9 @@ private:
     // Set if our parent chain (including this node itself) terminates
     // in a document
     IsInDocument,
+    // Set if we're part of the composed doc.
+    // https://dom.spec.whatwg.org/#connected
+    IsConnected,
     // Set if mParent is an nsIContent
     ParentIsContent,
     // Set if this node is an Element
@@ -1555,8 +1556,6 @@ private:
     NodeAncestorHasDirAuto,
     // Set if the node is handling a click.
     NodeHandlingClick,
-    // Set if the node has had :hover selectors matched against it
-    NodeHasRelevantHoverRules,
     // Set if the element has a parser insertion mode other than "in body",
     // per the HTML5 "Parse state" section.
     ElementHasWeirdParserInsertionMode,
@@ -1680,8 +1679,6 @@ public:
   // Implemented in nsIContentInlines.h.
   inline bool NodeOrAncestorHasDirAuto() const;
 
-  bool HasRelevantHoverRules() const { return GetBoolFlag(NodeHasRelevantHoverRules); }
-  void SetHasRelevantHoverRules() { SetBoolFlag(NodeHasRelevantHoverRules); }
   void SetParserHasNotified() { SetBoolFlag(ParserHasNotified); };
   bool HasParserNotified() { return GetBoolFlag(ParserHasNotified); }
 
@@ -1700,8 +1697,9 @@ public:
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
   void SetIsInDocument() { SetBoolFlag(IsInDocument); }
-  void SetNodeIsContent() { SetBoolFlag(NodeIsContent); }
   void ClearInDocument() { ClearBoolFlag(IsInDocument); }
+  void SetIsConnected(bool aConnected) { SetBoolFlag(IsConnected, aConnected); }
+  void SetNodeIsContent() { SetBoolFlag(NodeIsContent); }
   void SetIsElement() { SetBoolFlag(NodeIsElement); }
   void SetHasID() { SetBoolFlag(ElementHasID); }
   void ClearHasID() { ClearBoolFlag(ElementHasID); }
