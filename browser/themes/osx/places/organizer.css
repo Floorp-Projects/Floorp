@@ -4,8 +4,15 @@
 
 /* Places Organizer Sidebars */
 
-#placesList > treechildren::-moz-tree-row {
-  padding-bottom: 1px;
+#placesList {
+  -moz-appearance: -moz-mac-source-list;
+  width: 160px;
+}
+
+@media (-moz-mac-yosemite-theme: 0) {
+  #placesList {
+    box-shadow: inset -2px 0 0 hsla(0,0%,100%,.2);
+  }
 }
 
 #placesList > treechildren::-moz-tree-cell-text {
@@ -22,11 +29,6 @@
   -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
 }
 
-#placesList > treechildren::-moz-tree-row(History),
-#placesList > treechildren::-moz-tree-row(history)  {
-  background-color: blue;
-}
-
 #placesList > treechildren::-moz-tree-cell(separator) {
   cursor: default;
 }
@@ -36,25 +38,16 @@
   margin: 0 10px;
 }
 
-#placesList > treechildren::-moz-tree-twisty(selected),
-#placesList > treechildren::-moz-tree-cell-text(selected) {
-  color: #fff;
-  fill-opacity: 1;
-  font-weight: bold;
-}
-
-@media (-moz-mac-yosemite-theme) {
+/* Match selected item styling for -moz-appearance values on OSX 10.9 */
+@media (-moz-mac-yosemite-theme: 0) {
+  #placesList > treechildren::-moz-tree-image(selected),
   #placesList > treechildren::-moz-tree-twisty(selected),
   #placesList > treechildren::-moz-tree-cell-text(selected) {
-    color: -moz-dialogtext;
-    fill-opacity: 0.6;
-    font-weight: 500;
+    color: #fff;
   }
 
-  #placesList > treechildren::-moz-tree-twisty(selected, focus),
-  #placesList > treechildren::-moz-tree-cell-text(selected, focus) {
-    color: #fff;
-    fill-opacity: 1;
+  #placesList > treechildren::-moz-tree-cell-text(selected) {
+    font-weight: bold;
   }
 }
 
@@ -169,19 +162,6 @@
   -moz-user-focus: ignore;
 }
 
-/* Place List, Place Content */
-#placesList {
-  -moz-appearance: -moz-mac-source-list;
-  box-shadow: inset -2px 0 0 hsla(0,0%,100%,.2);
-  width: 160px;
-}
-
-@media (-moz-mac-yosemite-theme) {
-  #placesList {
-    box-shadow: none;
-  }
-}
-
 /* Info box */
 #detailsDeck {
   border-top: 1px solid #919191;
@@ -191,27 +171,7 @@
 
 #placeContent {
   -moz-appearance: none;
-  border: 0px;
-}
-
-#placeContent > treechildren::-moz-tree-row {
-  border-top: none !important;
-  padding-top: 1px;
-}
-
-#placeContent > treechildren::-moz-tree-row(odd) {
-  background-color: #edf3fe;
-}
-
-#placeContent > treechildren::-moz-tree-row(selected),
-#placeContent > treechildren::-moz-tree-row(odd, selected) {
-  background-color: -moz-mac-secondaryhighlight;
-}
-
-#placeContent > treechildren::-moz-tree-row(selected, focus), 
-#placeContent > treechildren::-moz-tree-row(odd, selected, focus) {
-  background-color: Highlight;
-  color: HighlightText !important;
+  border: none;
 }
 
 #placeContent > treechildren::-moz-tree-cell,
