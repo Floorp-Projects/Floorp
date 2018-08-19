@@ -64,13 +64,7 @@ function insertEntries() {
 }
 
 function getEntries(type) {
-  let entryEnumerator = sss.enumerate(type);
-  let entries = [];
-  while (entryEnumerator.hasMoreElements()) {
-    let entry = entryEnumerator.getNext();
-    entries.push(entry.QueryInterface(Ci.nsISiteSecurityState));
-  }
-  return entries;
+  return Array.from(sss.enumerate(type));
 }
 
 function checkSiteSecurityStateAttrs(entries) {
@@ -92,11 +86,9 @@ function checkSiteSecurityStateAttrs(entries) {
 
 function checkSha256Keys(hpkpEntries) {
   for (let hpkpEntry of hpkpEntries) {
-    let enumerator = hpkpEntry.QueryInterface(Ci.nsISiteHPKPState).sha256Keys;
-    let keys = [];
-    while (enumerator.hasMoreElements()) {
-      keys.push(enumerator.getNext().QueryInterface(Ci.nsIVariant));
-    }
+    let keys = Array.from(hpkpEntry.QueryInterface(Ci.nsISiteHPKPState).sha256Keys,
+                          key => key.QueryInterface(Ci.nsIVariant));
+
     equal(keys.length, KEY_HASHES.length, "Should get correct number of keys");
     keys.sort();
     for (let i = 0; i < KEY_HASHES.length; i++) {

@@ -67,9 +67,8 @@ var AccessFu = {
     Services.obs.addObserver(this, "inprocess-browser-shown");
     Services.ww.registerNotification(this);
 
-    let windows = Services.wm.getEnumerator(null);
-    while (windows.hasMoreElements()) {
-      this._attachWindow(windows.getNext());
+    for (let win of Services.wm.getEnumerator(null)) {
+      this._attachWindow(win);
     }
 
     Logger.info("AccessFu:Enabled");
@@ -89,9 +88,8 @@ var AccessFu = {
     Services.obs.removeObserver(this, "inprocess-browser-shown");
     Services.ww.unregisterNotification(this);
 
-    let windows = Services.wm.getEnumerator(null);
-    while (windows.hasMoreElements()) {
-      this._detachWindow(windows.getNext());
+    for (let win of Services.wm.getEnumerator(null)) {
+      this._detachWindow(win);
     }
 
     delete this._notifyOutputPref;

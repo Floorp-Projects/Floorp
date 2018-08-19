@@ -23,9 +23,7 @@ function load_test_vacuum_component() {
   let catMan = Cc["@mozilla.org/categorymanager;1"].
                getService(Ci.nsICategoryManager);
   let found = false;
-  let entries = catMan.enumerateCategory(CATEGORY_NAME);
-  while (entries.hasMoreElements()) {
-    let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
+  for (let {data: entry} of catMan.enumerateCategory(CATEGORY_NAME)) {
     print("Check if the found category entry (" + entry + ") is expected.");
     if (EXPECTED_ENTRIES.includes(entry)) {
       print("Check that only one test entry exists.");

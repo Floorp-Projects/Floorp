@@ -16,34 +16,31 @@ function fakeSvcWinMediator() {
   // actions on windows are captured in logs
   let logs = [];
   delete Services.wm;
+
+  function getNext() {
+    let elt = {addTopics: [], remTopics: [], numAPL: 0, numRPL: 0};
+    logs.push(elt);
+    return {
+      addEventListener(topic) {
+        elt.addTopics.push(topic);
+      },
+      removeEventListener(topic) {
+        elt.remTopics.push(topic);
+      },
+      gBrowser: {
+        addProgressListener() {
+          elt.numAPL++;
+        },
+        removeProgressListener() {
+          elt.numRPL++;
+        },
+      },
+    };
+  }
+
   Services.wm = {
     getEnumerator() {
-      return {
-        cnt: 2,
-        hasMoreElements() {
-          return this.cnt-- > 0;
-        },
-        getNext() {
-          let elt = {addTopics: [], remTopics: [], numAPL: 0, numRPL: 0};
-          logs.push(elt);
-          return {
-            addEventListener(topic) {
-              elt.addTopics.push(topic);
-            },
-            removeEventListener(topic) {
-              elt.remTopics.push(topic);
-            },
-            gBrowser: {
-              addProgressListener() {
-                elt.numAPL++;
-              },
-              removeProgressListener() {
-                elt.numRPL++;
-              },
-            },
-          };
-        }
-      };
+      return [getNext(), getNext()];
     }
   };
   return logs;

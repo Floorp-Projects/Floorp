@@ -61,13 +61,7 @@ function run_test() {
   }
 
   // test the enumerator ...
-  var j = 0;
-  var perms = new Array();
-  var enumerator = pm.enumerator;
-  while (enumerator.hasMoreElements()) {
-    perms[j] = enumerator.getNext().QueryInterface(Ci.nsIPermission);
-    ++j;
-  }
+  var perms = Array.from(pm.enumerator);
   Assert.equal(perms.length, hosts.length);
 
   // ... remove all the hosts ...

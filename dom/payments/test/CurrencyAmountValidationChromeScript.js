@@ -36,10 +36,7 @@ function checkLowerCaseCurrency() {
       "PaymentRequestService should have at least one payment request.";
     sendAsyncMessage("test-fail", msg);
   }
-  while (paymentEnum.hasMoreElements()) {
-    const payRequest = paymentEnum
-      .getNext()
-      .QueryInterface(Ci.nsIPaymentRequest);
+  for (let payRequest of paymentEnum) {
     if (!payRequest) {
       sendAsyncMessage("test-fail", "Fail to get existing payment request.");
       break;
