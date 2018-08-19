@@ -378,9 +378,7 @@
                        type="checkbox"
                        class="subviewbutton subviewbutton-iconic"
                        key="key_gotoHistory"
-                       oncommand="SidebarUI.toggle('viewHistorySidebar'); PanelUI.hide();">
-          <observes element="viewHistorySidebar" attribute="checked"/>
-        </toolbarbutton>
+                       oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
         <toolbarbutton id="appMenuClearRecentHistory"
                        label="&appMenuHistory.clearRecent.label;"
                        class="subviewbutton subviewbutton-iconic"
@@ -425,8 +423,8 @@
           <vbox id="PanelUI-remotetabs-buttons">
             <toolbarbutton id="PanelUI-remotetabs-view-sidebar"
                            class="subviewbutton subviewbutton-iconic"
-                           observes="viewTabsSidebar"
-                           label="&appMenuRemoteTabs.sidebar.label;"/>
+                           label="&appMenuRemoteTabs.sidebar.label;"
+                           oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
             <toolbarbutton id="PanelUI-remotetabs-view-managedevices"
                            class="subviewbutton subviewbutton-iconic"
                            label="&appMenuRemoteTabs.managedevices.label;"
