@@ -530,9 +530,7 @@ var pktUI = (function() {
         pktUIMessaging.addMessageListener(iframe, _initL10NMessageId, function(panelId, data) {
             var strings = {};
             var bundle = Services.strings.createBundle("chrome://pocket/locale/pocket.properties");
-            var e = bundle.getSimpleEnumeration();
-            while (e.hasMoreElements()) {
-                var str = e.getNext().QueryInterface(Ci.nsIPropertyElement);
+            for (let str of bundle.getSimpleEnumeration()) {
                 if (str.key in data) {
                     strings[str.key] = bundle.formatStringFromName(str.key, data[str.key], data[str.key].length);
                 } else {
@@ -568,9 +566,7 @@ var pktUI = (function() {
           return;
         }
 
-        let windows = Services.wm.getEnumerator("navigator:browser");
-        while (windows.hasMoreElements()) {
-          let win = windows.getNext();
+        for (let win of Services.wm.getEnumerator("navigator:browser")) {
           if (!PrivateBrowsingUtils.isWindowPrivate(win)) {
             win.openWebLinkIn(url, "tab", {
               triggeringPrincipal: aTriggeringPrincipal

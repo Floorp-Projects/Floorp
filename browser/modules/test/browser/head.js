@@ -169,7 +169,7 @@ function checkEvents(events, expectedEvents) {
  */
 function makeMockPermissionRequest(browser) {
   let type = {
-    options: [],
+    options: Cc["@mozilla.org/array;1"].createInstance(Ci.nsIArray),
     QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionType]),
   };
   let types = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);

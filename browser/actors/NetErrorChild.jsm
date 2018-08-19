@@ -83,12 +83,9 @@ class NetErrorChild extends ActorChild {
   _getCertValidityRange(docShell) {
     let {securityInfo} = docShell.failedChannel;
     securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-    let certs = securityInfo.failedCertChain.getEnumerator();
     let notBefore = 0;
     let notAfter = Number.MAX_SAFE_INTEGER;
-    while (certs.hasMoreElements()) {
-      let cert = certs.getNext();
-      cert.QueryInterface(Ci.nsIX509Cert);
+    for (let cert of securityInfo.failedCertChain.getEnumerator()) {
       notBefore = Math.max(notBefore, cert.validity.notBefore);
       notAfter = Math.min(notAfter, cert.validity.notAfter);
     }

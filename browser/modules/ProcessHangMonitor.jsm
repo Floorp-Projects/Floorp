@@ -391,9 +391,7 @@ var ProcessHangMonitor = {
       return;
     }
 
-    while (e.hasMoreElements()) {
-      let win = e.getNext();
-
+    for (let win of e) {
       this.updateWindow(win);
 
       // Only listen for these events if there are active hang reports.
