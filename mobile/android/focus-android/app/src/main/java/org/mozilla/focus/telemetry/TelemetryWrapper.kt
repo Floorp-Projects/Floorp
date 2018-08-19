@@ -210,20 +210,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun setTelemetryEnabled(context: Context, enabled: Boolean) {
-        val resources = context.resources
-        val preferences = PreferenceManager.getDefaultSharedPreferences(context)
-
-        preferences.edit()
-                .putBoolean(resources.getString(R.string.pref_key_telemetry), enabled)
-                .apply()
-
-        TelemetryHolder.get()
-                .configuration
-                .setUploadEnabled(enabled).isCollectionEnabled = enabled
-    }
-
-    @JvmStatic
     fun init(context: Context) {
         // When initializing the telemetry library it will make sure that all directories exist and
         // are readable/writable.

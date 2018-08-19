@@ -10,6 +10,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.settings.LearnMoreSwitchPreference
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.SupportUtils
+import org.mozilla.telemetry.TelemetryHolder
 
 /**
  * Switch preference for enabling/disabling telemetry
@@ -17,9 +18,17 @@ import org.mozilla.focus.utils.SupportUtils
 internal class TelemetrySwitchPreference(context: Context?, attrs: AttributeSet?) :
     LearnMoreSwitchPreference(context, attrs) {
 
+    init {
+        if (context != null) {
+            isChecked = TelemetryWrapper.isTelemetryEnabled(context)
+        }
+    }
+
     override fun onClick() {
         super.onClick()
-        TelemetryWrapper.setTelemetryEnabled(context, isChecked)
+        TelemetryHolder.get()
+                .configuration
+                .setUploadEnabled(isChecked).isCollectionEnabled = isChecked
     }
 
     override fun getDescription(): String? {
