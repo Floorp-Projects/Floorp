@@ -16,8 +16,7 @@ function checkTestModuleNotPresent() {
   let modules = gModuleDB.listModules();
   ok(modules.hasMoreElements(),
      "One or more modules should be present with test module not present");
-  while (modules.hasMoreElements()) {
-    let module = modules.getNext().QueryInterface(Ci.nsIPKCS11Module);
+  for (let module of modules) {
     notEqual(module.name, "PKCS11 Test Module",
              "Non-test module name shouldn't equal 'PKCS11 Test Module'");
     ok(!(module.libName && module.libName.includes("pkcs11testmodule")),
@@ -37,8 +36,7 @@ function checkTestModuleExists() {
   ok(modules.hasMoreElements(),
      "One or more modules should be present with test module present");
   let testModule = null;
-  while (modules.hasMoreElements()) {
-    let module = modules.getNext().QueryInterface(Ci.nsIPKCS11Module);
+  for (let module of modules) {
     if (module.name == "PKCS11 Test Module") {
       testModule = module;
       break;
@@ -90,12 +88,8 @@ function run_test() {
   let testModule = checkTestModuleExists();
 
   // Check that listing the slots for the test module works.
-  let slots = testModule.listSlots();
-  let testModuleSlotNames = [];
-  while (slots.hasMoreElements()) {
-    let slot = slots.getNext().QueryInterface(Ci.nsIPKCS11Slot);
-    testModuleSlotNames.push(slot.name);
-  }
+  let testModuleSlotNames = Array.from(testModule.listSlots(),
+                                       slot => slot.name);
   testModuleSlotNames.sort();
   const expectedSlotNames = ["Empty PKCS11 Slot", "Test PKCS11 Slot", "Test PKCS11 Slot 二"];
   deepEqual(testModuleSlotNames, expectedSlotNames,

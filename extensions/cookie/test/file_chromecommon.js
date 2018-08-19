@@ -3,7 +3,7 @@ let cs = Cc["@mozilla.org/cookiemanager;1"]
 
 addMessageListener("getCookieCountAndClear", () => {
   let count = 0;
-  for (let list = cs.enumerator; list.hasMoreElements(); list.getNext())
+  for (let cookie of cs.enumerator)
     ++count;
   cs.removeAll();
 

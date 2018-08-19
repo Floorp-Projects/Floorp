@@ -74,9 +74,7 @@ let gTestcases = [
 
 function doesCertExist(commonName) {
   let allCerts = gCertDB.getCerts();
-  let enumerator = allCerts.getEnumerator();
-  while (enumerator.hasMoreElements()) {
-    let cert = enumerator.getNext().QueryInterface(Ci.nsIX509Cert);
+  for (let cert of allCerts.getEnumerator()) {
     if (cert.isBuiltInRoot) {
       continue;
     }

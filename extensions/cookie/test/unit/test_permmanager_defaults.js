@@ -215,9 +215,7 @@ add_task(async function do_test() {
 // be found.
 function findCapabilityViaEnum(origin = TEST_ORIGIN, type = TEST_PERMISSION) {
   let result = undefined;
-  let e = Services.perms.enumerator;
-  while (e.hasMoreElements()) {
-    let perm = e.getNext().QueryInterface(Ci.nsIPermission);
+  for (let perm of Services.perms.enumerator) {
     if (perm.matchesURI(origin, true) &&
         perm.type == type) {
       if (result !== undefined) {

@@ -93,24 +93,6 @@ const globalMessageManager = Services.mm;
  */
 
 /**
- * Helper function for converting a {@link nsISimpleEnumerator} to a
- * JavaScript iterator.
- *
- * @memberof driver
- *
- * @param {nsISimpleEnumerator} enumerator
- *     Enumerator to turn into  iterator.
- *
- * @return {Iterable}
- *     Iterator.
- */
-function* enumeratorIterator(enumerator) {
-  while (enumerator.hasMoreElements()) {
-    yield enumerator.getNext();
-  }
-}
-
-/**
  * Implements (parts of) the W3C WebDriver protocol.  GeckoDriver lives
  * in chrome space and mediates calls to the message listener of the current
  * browsing context's content frame message listener via ListenerProxy.
@@ -243,7 +225,7 @@ Object.defineProperty(GeckoDriver.prototype, "timeouts", {
 
 Object.defineProperty(GeckoDriver.prototype, "windows", {
   get() {
-    return enumeratorIterator(Services.wm.getEnumerator(null));
+    return Services.wm.getEnumerator(null);
   },
 });
 
