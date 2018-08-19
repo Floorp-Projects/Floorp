@@ -1048,12 +1048,27 @@ public:
   AsyncTransformComponentMatrix GetOverscrollTransform(AsyncTransformConsumer aMode) const;
 
   /**
+   * Returns the incremental transformation corresponding to the async
+   * panning/zooming of the layout viewport (unlike GetCurrentAsyncTransform,
+   * which deals with async movement of the visual viewport). That is, when
+   * this transform is multiplied with the layer's existing transform, it will
+   * make the layer appear with the desired pan/zoom amount.
+   */
+  AsyncTransform GetCurrentAsyncViewportTransform(AsyncTransformConsumer aMode) const;
+
+  /**
    * Returns the incremental transformation corresponding to the async pan/zoom
    * in progress. That is, when this transform is multiplied with the layer's
    * existing transform, it will make the layer appear with the desired pan/zoom
    * amount.
    */
   AsyncTransform GetCurrentAsyncTransform(AsyncTransformConsumer aMode) const;
+
+  /**
+   * Returns the incremental transformation corresponding to the async
+   * panning/zooming of the larger of the visual or layout viewport.
+   */
+  AsyncTransform GetCurrentAsyncTransformForFixedAdjustment(AsyncTransformConsumer aMode) const;
 
   /**
    * Returns the same transform as GetCurrentAsyncTransform(), but includes
@@ -1085,6 +1100,28 @@ private:
   CSSRect GetEffectiveLayoutViewport(AsyncTransformConsumer aMode) const;
   CSSPoint GetEffectiveScrollOffset(AsyncTransformConsumer aMode) const;
   CSSToParentLayerScale2D GetEffectiveZoom(AsyncTransformConsumer aMode) const;
+
+private:
+  friend class AutoApplyAsyncTestAttributes;
+
+  /**
+   * Applies |mTestAsyncScrollOffset| and |mTestAsyncZoom| to this
+   * AsyncPanZoomController. Calls |SampleCompositedAsyncTransform| to ensure
+   * that the GetCurrentAsync* functions consider the test offset and zoom in
+   * their computations.
+   *
+   * Returns false if neither test value is set, and true otherwise.
+   */
+  bool ApplyAsyncTestAttributes();
+
+  /**
+   * Sets this AsyncPanZoomController's FrameMetrics to |aPrevFrameMetrics| and
+   * calls |SampleCompositedAsyncTransform| to unapply any test values applied
+   * by |ApplyAsyncTestAttributes|.
+   *
+   * Returns false if neither test value is set, and true otherwise.
+   */
+  bool UnapplyAsyncTestAttributes(const FrameMetrics& aPrevFrameMetrics);
 
   /* ===================================================================
    * The functions and members in this section are used to manage

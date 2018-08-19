@@ -281,14 +281,14 @@ ViewportFrame::AdjustReflowInputAsContainingBlock(ReflowInput* aReflowInput) con
                "We don't handle correct positioning of fixed frames with "
                "scrollbars in odd positions");
 
-  // If a scroll position clamping viewport size has been set, layout
-  // fixed position elements to this size instead of the computed size.
+  // Layout fixed position elements to the visual viewport size if and only if
+  // it has been set and it is larger than the computed size, otherwise use the
+  // computed size.
   nsRect rect(0, 0, aReflowInput->ComputedWidth(), aReflowInput->ComputedHeight());
   nsIPresShell* ps = PresShell();
-  if (ps->IsVisualViewportSizeSet()) {
+  if (ps->IsVisualViewportSizeSet() && rect.Size() < ps->GetVisualViewportSize()) {
     rect.SizeTo(ps->GetVisualViewportSize());
   }
-
   return rect;
 }
 
