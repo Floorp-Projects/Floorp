@@ -10,7 +10,7 @@
                  type="text/css"?>
 
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
-<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="1163447:  selectItems in Places no longer selects items within Toolbar or Sidebar folders"
