@@ -630,8 +630,17 @@ nsHttpChannel::Connect()
     LOG(("nsHttpChannel %p tracking resource=%d, cos=%u",
           this, isTrackingResource, mClassOfService));
 
-    if (isTrackingResource && IsThirdPartyChannel()) {
-        AddClassFlags(nsIClassOfService::Tail);
+    if (isTrackingResource) {
+        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+          services::GetThirdPartyUtil();
+        bool result = false;
+        if (thirdPartyUtil &&
+            NS_SUCCEEDED(thirdPartyUtil->IsThirdPartyChannel(this, nullptr,
+                                                             &result)) &&
+            result) {
+
+            AddClassFlags(nsIClassOfService::Tail);
+        }
     }
 
     if (WaitingForTailUnblock()) {
@@ -685,7 +694,11 @@ nsHttpChannel::CheckFastBlocked()
         Preferences::AddUintVarCache(&sFastBlockTimeout, "browser.fastblock.timeout");
     }
 
-    if (!IsThirdPartyChannel()) {
+    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+    bool result = false;
+    if (!thirdPartyUtil ||
+        NS_FAILED(thirdPartyUtil->IsThirdPartyChannel(this, nullptr, &result)) ||
+        !result) {
         return false;
     }
 
@@ -713,29 +726,6 @@ nsHttpChannel::CheckFastBlocked()
          duration.ToMilliseconds(),
          this));
     return isFastBlocking;
-}
-
-bool
-nsHttpChannel::IsThirdPartyChannel()
-{
-    if (mIsThirdPartyChannel) {
-        return *mIsThirdPartyChannel;
-    }
-
-    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
-    if (!thirdPartyUtil) {
-        return false;
-    }
-
-    bool isThirdPartyChannel;
-    if (NS_FAILED(thirdPartyUtil->IsThirdPartyChannel(this,
-                                                      nullptr,
-                                                      &isThirdPartyChannel))) {
-        return false;
-    }
-
-    mIsThirdPartyChannel.emplace(isThirdPartyChannel);
-    return *mIsThirdPartyChannel;
 }
 
 nsresult
@@ -2341,8 +2331,13 @@ nsHttpChannel::ProcessResponse()
     // We consider top-level tracking resource as non-tracking if not in 3rd
     // party context.
     bool isThirdPartyAndTrackingResource = false;
-    if (mIsTrackingResource) {
-        isThirdPartyAndTrackingResource = IsThirdPartyChannel();
+    if(mIsTrackingResource) {
+        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+          services::GetThirdPartyUtil();
+        if (thirdPartyUtil) {
+            thirdPartyUtil->IsThirdPartyChannel(this, nullptr,
+                                                &isThirdPartyAndTrackingResource);
+        }
     }
 
     if (referrer) {
