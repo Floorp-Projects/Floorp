@@ -208,7 +208,7 @@ NS_IMETHODIMP nsASDOMWindowEnumerator::GetNext(nsISupports **retval)
     if (domWindow)
       return CallQueryInterface(domWindow, retval);
   }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 //
@@ -235,8 +235,9 @@ NS_IMETHODIMP nsASXULWindowEnumerator::GetNext(nsISupports **retval)
   if (mCurrentPosition) {
     CallQueryInterface(mCurrentPosition->mWindow, retval);
     mCurrentPosition = FindNext();
+    return NS_OK;
   }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 //

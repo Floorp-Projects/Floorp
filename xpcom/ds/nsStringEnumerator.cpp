@@ -117,6 +117,10 @@ nsStringEnumerator::HasMoreElements(bool* aResult)
 NS_IMETHODIMP
 nsStringEnumerator::GetNext(nsISupports** aResult)
 {
+  if (mIndex >= mArray->Length()) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (mIsUnicode) {
     nsSupportsString* stringImpl = new nsSupportsString();
     if (!stringImpl) {

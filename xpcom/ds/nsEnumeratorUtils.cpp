@@ -73,7 +73,7 @@ EmptyEnumeratorImpl::HasMore(bool* aResult)
 NS_IMETHODIMP
 EmptyEnumeratorImpl::GetNext(nsISupports** aResult)
 {
-  return NS_ERROR_UNEXPECTED;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -144,7 +144,7 @@ nsSingletonEnumerator::GetNext(nsISupports** aResult)
   }
 
   if (mConsumed) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_FAILURE;
   }
 
   mConsumed = true;
@@ -246,7 +246,7 @@ nsUnionEnumerator::GetNext(nsISupports** aResult)
   }
 
   if (mConsumed) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_FAILURE;
   }
 
   if (!mAtSecond) {

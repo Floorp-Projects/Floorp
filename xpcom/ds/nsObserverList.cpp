@@ -129,8 +129,7 @@ NS_IMETHODIMP
 nsObserverEnumerator::GetNext(nsISupports** aResult)
 {
   if (mIndex == mObservers.Count()) {
-    NS_ERROR("Enumerating after HasMoreElements returned false.");
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_FAILURE;
   }
 
   NS_ADDREF(*aResult = mObservers[mIndex]);
