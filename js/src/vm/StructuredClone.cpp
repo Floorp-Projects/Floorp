@@ -519,7 +519,7 @@ struct JSStructuredCloneWriter {
     bool writeSharedWasmMemory(HandleObject obj);
     bool startObject(HandleObject obj, bool* backref);
     bool startWrite(HandleValue v);
-    bool traverseObject(HandleObject obj);
+    bool traverseObject(HandleObject obj, ESClass cls);
     bool traverseMap(HandleObject obj);
     bool traverseSet(HandleObject obj);
     bool traverseSavedFrame(HandleObject obj);
@@ -1376,7 +1376,7 @@ JSStructuredCloneWriter::startObject(HandleObject obj, bool* backref)
 }
 
 bool
-JSStructuredCloneWriter::traverseObject(HandleObject obj)
+JSStructuredCloneWriter::traverseObject(HandleObject obj, ESClass cls)
 {
     // Get enumerable property ids and put them in reverse order so that they
     // will come off the stack in forward order.
@@ -1397,11 +1397,14 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj)
 
     checkStack();
 
-    // Write the header for obj.
-    ESClass cls;
-    if (!GetBuiltinClass(context(), obj, &cls))
+#if DEBUG
+    ESClass cls2;
+    if (!GetBuiltinClass(context(), obj, &cls2))
         return false;
+    MOZ_ASSERT(cls2 == cls);
+#endif
 
+    // Write the header for obj.
     if (cls == ESClass::Array) {
         uint32_t length = 0;
         if (!JS_GetArrayLength(context(), obj, &length))
@@ -1614,7 +1617,7 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
         switch (cls) {
           case ESClass::Object:
           case ESClass::Array:
-            return traverseObject(obj);
+            return traverseObject(obj, cls);
           case ESClass::Number: {
             RootedValue unboxed(context());
             if (!Unbox(context(), obj, &unboxed))
