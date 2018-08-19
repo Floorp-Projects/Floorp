@@ -962,7 +962,7 @@ var ExtensionContent = {
     let enum_ = docShell.getDocShellEnumerator(docShell.typeContent,
                                                docShell.ENUMERATE_FORWARDS);
 
-    for (let docShell of XPCOMUtils.IterSimpleEnumerator(enum_, Ci.nsIDocShell)) {
+    for (let docShell of enum_) {
       try {
         yield docShell.domWindow;
       } catch (e) {

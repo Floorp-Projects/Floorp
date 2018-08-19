@@ -156,9 +156,7 @@ function checkProfileName(profileNameToCheck) {
 }
 
 function profileExists(aName) {
-  var profiles = gProfileService.profiles;
-  while (profiles.hasMoreElements()) {
-    var profile = profiles.getNext().QueryInterface(I.nsIToolkitProfile);
+  for (let profile of gProfileService.profiles) {
     if (profile.name.toLowerCase() == aName.toLowerCase())
       return true;
   }

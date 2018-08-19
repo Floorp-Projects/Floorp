@@ -32,9 +32,7 @@ var ResetProfile = {
     let profileService = Cc["@mozilla.org/toolkit/profile-service;1"].
                          getService(Ci.nsIToolkitProfileService);
     let currentProfileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    let profileEnumerator = profileService.profiles;
-    while (profileEnumerator.hasMoreElements()) {
-      let profile = profileEnumerator.getNext().QueryInterface(Ci.nsIToolkitProfile);
+    for (let profile of profileService.profiles) {
       if (profile.rootDir && profile.rootDir.equals(currentProfileDir)) {
         return true;
       }
