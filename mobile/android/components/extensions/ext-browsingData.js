@@ -23,10 +23,7 @@ const clearCookies = async function(options) {
     // Convert it to microseconds
     let since =  options.since * 1000;
     // Iterate through the cookies and delete any created after our cutoff.
-    let cookiesEnum = cookieMgr.enumerator;
-    while (cookiesEnum.hasMoreElements()) {
-      let cookie = cookiesEnum.getNext().QueryInterface(Ci.nsICookie2);
-
+    for (let cookie of cookieMgr.enumerator) {
       if (cookie.creationTime >= since) {
         // This cookie was created after our cutoff, clear it.
         cookieMgr.remove(cookie.host, cookie.name, cookie.path,

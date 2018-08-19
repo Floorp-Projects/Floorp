@@ -1180,9 +1180,7 @@ SessionStore.prototype = {
   },
 
   _forEachBrowserWindow: function ss_forEachBrowserWindow(aFunc) {
-    let windowsEnum = Services.wm.getEnumerator("navigator:browser");
-    while (windowsEnum.hasMoreElements()) {
-      let window = windowsEnum.getNext();
+    for (let window of Services.wm.getEnumerator("navigator:browser")) {
       if (window.__SSID && !window.closed) {
         aFunc.call(this, window);
       }
