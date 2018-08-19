@@ -122,14 +122,6 @@
 #include ../../components/places/content/placesCommands.inc.xul
 
   <broadcasterset id="mainBroadcasterSet">
-    <broadcaster id="viewBookmarksSidebar"
-                 type="checkbox" group="sidebar"
-                 oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
-
-    <broadcaster id="viewHistorySidebar"
-                 type="checkbox" group="sidebar"
-                 oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
-
     <broadcaster id="isImage"/>
     <broadcaster id="canViewSource"/>
     <broadcaster id="isFrameImage"/>
@@ -145,9 +137,6 @@
     <broadcaster id="sync-unverified-state" hidden="true"/>
     <broadcaster id="sync-syncnow-state" hidden="true"/>
     <broadcaster id="sync-reauth-state" hidden="true"/>
-    <broadcaster id="viewTabsSidebar"
-                 type="checkbox" group="sidebar"
-                 oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
     <broadcaster id="workOfflineMenuitemState"/>
     <broadcaster id="devtoolsMenuBroadcaster_RecordExecution"
                  label="&devtoolsRecordExecution.label;"
@@ -286,11 +275,11 @@
 #else
     <key id="manBookmarkKb" key="&bookmarksGtkCmd.commandkey;" command="Browser:ShowAllBookmarks" modifiers="accel,shift"/>
 #endif
-    <key id="viewBookmarksSidebarKb" key="&bookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
+    <key id="viewBookmarksSidebarKb" key="&bookmarksCmd.commandkey;" oncommand="SidebarUI.toggle('viewBookmarksSidebar');" modifiers="accel"/>
 #ifdef XP_WIN
 # Cmd+I is conventially mapped to Info on MacOS X, thus it should not be
 # overridden for other purposes there.
-    <key id="viewBookmarksSidebarWinKb" key="&bookmarksWinCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
+    <key id="viewBookmarksSidebarWinKb" key="&bookmarksWinCmd.commandkey;" oncommand="SidebarUI.toggle('viewBookmarksSidebar');" modifiers="accel"/>
 #endif
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
@@ -306,7 +295,7 @@
 #else
          modifiers="accel"
 #endif
-         command="viewHistorySidebar"/>
+         oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
 
     <key id="key_fullZoomReduce"  key="&fullZoomReduceCmd.commandkey;"   command="cmd_fullZoomReduce"  modifiers="accel"/>
     <key                          key="&fullZoomReduceCmd.commandkey2;"  command="cmd_fullZoomReduce"  modifiers="accel"/>
