@@ -140,7 +140,7 @@ DirectoryProvider::GetFiles(const char *aKey, nsISimpleEnumerator* *aResult)
     nsCOMArray<nsIFile> distroFiles;
     AppendDistroSearchDirs(dirSvc, distroFiles);
 
-    return NS_NewArrayEnumerator(aResult, distroFiles);
+    return NS_NewArrayEnumerator(aResult, distroFiles, NS_GET_IID(nsIFile));
   }
 
   return NS_ERROR_FAILURE;

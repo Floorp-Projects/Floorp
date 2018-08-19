@@ -71,7 +71,7 @@ NS_IMPL_ISUPPORTS(JSEnumerator, nsIJSEnumerator)
 nsresult
 nsSimpleEnumerator::Iterator(nsIJSEnumerator **aResult)
 {
-  auto result = MakeRefPtr<JSEnumerator>(this, NS_GET_IID(nsISupports));
+  auto result = MakeRefPtr<JSEnumerator>(this, DefaultInterface());
   result.forget(aResult);
   return NS_OK;
 }

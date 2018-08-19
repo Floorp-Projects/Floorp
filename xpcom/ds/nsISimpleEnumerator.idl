@@ -31,7 +31,8 @@ interface nsIJSEnumerator : nsISupports {
 interface nsISimpleEnumeratorBase : nsISupports {
   /**
    * Returns a JavaScript iterator for all remaining entries in the enumerator.
-   * Each entry is queried only to nsISupports.
+   * Each entry is typically queried to the appropriate interface for the
+   * enumerator.
    */
   [symbol]
   nsIJSEnumerator iterator();

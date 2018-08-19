@@ -59,6 +59,14 @@ public:
   NS_IMETHOD GetNext(nsAString& aResult) override;
   NS_DECL_NSISIMPLEENUMERATOR
 
+  const nsID& DefaultInterface() override
+  {
+    if (mIsUnicode) {
+      return NS_GET_IID(nsISupportsString);
+    }
+    return NS_GET_IID(nsISupportsCString);
+  }
+
 private:
   ~nsStringEnumerator()
   {

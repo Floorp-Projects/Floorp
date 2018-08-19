@@ -390,6 +390,8 @@ public:
   {
   }
 
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIFile); }
+
   NS_IMETHOD HasMoreElements(bool* aResult) override
   {
     while (!mNext && *mCurrentKey) {

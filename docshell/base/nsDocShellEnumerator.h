@@ -46,6 +46,8 @@ public:
   // nsISimpleEnumerator
   NS_DECL_NSISIMPLEENUMERATOR
 
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIDocShell); }
+
 public:
   nsresult GetEnumerationRootItem(nsIDocShellTreeItem** aEnumerationRootItem);
   nsresult SetEnumerationRootItem(nsIDocShellTreeItem* aEnumerationRootItem);

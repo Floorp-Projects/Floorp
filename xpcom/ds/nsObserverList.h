@@ -82,6 +82,8 @@ public:
 
   explicit nsObserverEnumerator(nsObserverList* aObserverList);
 
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIObserver); }
+
 private:
   ~nsObserverEnumerator() override = default;
 

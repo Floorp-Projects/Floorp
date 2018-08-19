@@ -271,6 +271,11 @@ public:
     : mStringMap(aStringMap)
   {}
 
+  const nsID& DefaultInterface() override
+  {
+    return NS_GET_IID(nsIPropertyElement);
+  }
+
 protected:
   virtual ~StringMapEnumerator() = default;
 

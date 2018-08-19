@@ -14,6 +14,8 @@ class nsSimpleEnumerator : public nsISimpleEnumerator
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATORBASE
 
+  virtual const nsID& DefaultInterface() { return NS_GET_IID(nsISupports); }
+
 protected:
   virtual ~nsSimpleEnumerator() = default;
 };
