@@ -23,6 +23,11 @@ public:
 
   NS_DECL_NSISIMPLEENUMERATOR
 
+  const nsID& DefaultInterface() override
+  {
+    return NS_GET_IID(nsISupportsCString);
+  }
+
 protected:
   ~nsGroupsEnumerator() override;
 
@@ -127,6 +132,11 @@ public:
   explicit nsNamedGroupEnumerator(nsTArray<nsCString>* aInArray);
 
   NS_DECL_NSISIMPLEENUMERATOR
+
+  const nsID& DefaultInterface() override
+  {
+    return NS_GET_IID(nsISupportsCString);
+  }
 
 protected:
   ~nsNamedGroupEnumerator() override;

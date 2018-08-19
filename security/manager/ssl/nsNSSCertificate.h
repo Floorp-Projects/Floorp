@@ -128,6 +128,8 @@ class nsNSSCertListEnumerator : public nsSimpleEnumerator
 public:
    NS_DECL_NSISIMPLEENUMERATOR
 
+   const nsID& DefaultInterface() override { return NS_GET_IID(nsIX509Cert); }
+
    explicit nsNSSCertListEnumerator(const mozilla::UniqueCERTCertList& certList);
 private:
    virtual ~nsNSSCertListEnumerator() {}

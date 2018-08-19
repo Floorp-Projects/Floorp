@@ -217,7 +217,7 @@ HandlerService.prototype = {
       );
       handlers.appendElement(handler);
     }
-    return handlers.enumerate();
+    return handlers.enumerate(Ci.nsIHandlerInfo);
   },
 
   // nsIHandlerService

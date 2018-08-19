@@ -25,6 +25,12 @@ public:
   PaymentRequestEnumerator()
     : mIndex(0)
   {}
+
+  const nsID& DefaultInterface() override
+  {
+    return NS_GET_IID(nsIPaymentRequest);
+  }
+
 private:
   ~PaymentRequestEnumerator() override = default;
   uint32_t mIndex;

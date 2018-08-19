@@ -110,6 +110,8 @@ public:
 
   NS_FORWARD_NSISIMPLEENUMERATORBASE(nsSimpleEnumerator::)
 
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIFile); }
+
 private:
   ~nsDirEnumeratorUnix() override;
 

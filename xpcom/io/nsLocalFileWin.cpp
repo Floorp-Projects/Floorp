@@ -241,6 +241,8 @@ public:
   NS_FORWARD_NSISIMPLEENUMERATORBASE(nsSimpleEnumerator::)
   nsresult Init();
 
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIFile); }
+
   NS_IMETHOD GetNextFile(nsIFile** aResult) override
   {
     bool hasMore = false;
@@ -700,6 +702,8 @@ public:
   nsDirEnumerator() : mDir(nullptr)
   {
   }
+
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIFile); }
 
   nsresult Init(nsIFile* aParent)
   {

@@ -90,6 +90,11 @@ public:
 
   NS_DECL_NSISIMPLEENUMERATOR
 
+  const nsID& DefaultInterface() override
+  {
+    return NS_GET_IID(nsIWorkerDebugger);
+  }
+
 private:
   ~WorkerDebuggerEnumerator() override = default;
 };

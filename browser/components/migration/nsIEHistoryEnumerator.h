@@ -19,6 +19,11 @@ public:
 
   nsIEHistoryEnumerator();
 
+  const nsID& DefaultInterface() override
+  {
+    return NS_GET_IID(nsIWritablePropertyBag2);
+  }
+
 private:
   ~nsIEHistoryEnumerator() override;
 
