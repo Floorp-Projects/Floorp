@@ -19,9 +19,7 @@ function readFile(file) {
 function checkDirectoryContains(dir, files) {
   print("checking " + dir.path + " - should contain " + Object.keys(files));
   let seen = new Set();
-  let enumerator = dir.directoryEntries;
-  while (enumerator.hasMoreElements()) {
-    let file = enumerator.getNext().QueryInterface(Ci.nsIFile);
+  for (let file of dir.directoryEntries) {
     print("found file: " + file.path);
     Assert.ok(file.leafName in files, file.leafName + " exists, but shouldn't");
 

@@ -154,9 +154,7 @@ PaymentUIService.prototype = {
   },
 
   findDialog(requestId) {
-    let enu = Services.wm.getEnumerator(null);
-    let win;
-    while ((win = enu.getNext())) {
+    for (let win of Services.wm.getEnumerator(null)) {
       if (win.name == `${this.REQUEST_ID_PREFIX}${requestId}`) {
         return win;
       }

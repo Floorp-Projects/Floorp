@@ -176,9 +176,8 @@ var SessionCookiesInternal = {
       return;
     }
 
-    let iter = Services.cookies.sessionEnumerator;
-    while (iter.hasMoreElements()) {
-      this._addCookie(iter.getNext());
+    for (let cookie of Services.cookies.sessionEnumerator) {
+      this._addCookie(cookie);
     }
   }
 };

@@ -128,11 +128,8 @@ this.formautofill = class extends ExtensionAPI {
 
     Services.mm.removeMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);
 
-    let enumerator = Services.wm.getEnumerator("navigator:browser");
-    while (enumerator.hasMoreElements()) {
-      let win = enumerator.getNext();
-      let domWindow = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-      let cachedStyleSheets = CACHED_STYLESHEETS.get(domWindow);
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
+      let cachedStyleSheets = CACHED_STYLESHEETS.get(win);
 
       if (!cachedStyleSheets) {
         continue;

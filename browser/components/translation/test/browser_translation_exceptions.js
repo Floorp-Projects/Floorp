@@ -43,10 +43,7 @@ function getLanguageExceptions() {
 
 function getDomainExceptions() {
   let results = [];
-  let enumerator = Services.perms.enumerator;
-  while (enumerator.hasMoreElements()) {
-    let perm = enumerator.getNext().QueryInterface(Ci.nsIPermission);
-
+  for (let perm of Services.perms.enumerator) {
     if (perm.type == "translate" &&
         perm.capability == Services.perms.DENY_ACTION)
       results.push(perm.principal);

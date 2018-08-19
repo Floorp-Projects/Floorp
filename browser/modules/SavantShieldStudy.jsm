@@ -459,9 +459,7 @@ class WindowWatcher {
     this._errorCallback = errorCallback;
 
     // Add loadCallback to existing windows
-    const windows = Services.wm.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements()) {
-      const win = windows.getNext();
+    for (const win of Services.wm.getEnumerator("navigator:browser")) {
       try {
         this._loadCallback(win);
       } catch (ex) {
@@ -480,9 +478,7 @@ class WindowWatcher {
       return;
     }
 
-    const windows = Services.wm.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements()) {
-      const win = windows.getNext();
+    for (const win of Services.wm.getEnumerator("navigator:browser")) {
       try {
         this._unloadCallback(win);
       } catch (ex) {
