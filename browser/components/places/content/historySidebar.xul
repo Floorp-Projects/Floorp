@@ -5,7 +5,8 @@
 
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/sidebar.css"?>
 
 <!DOCTYPE page [
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
