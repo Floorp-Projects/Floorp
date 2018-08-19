@@ -21,6 +21,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
 
     companion object {
         fun newInstance() = InstalledSearchEnginesSettingsFragment()
+        var languageChanged: Boolean = false
     }
 
     override fun onResume() {
@@ -30,7 +31,10 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
             updateIcon(R.drawable.ic_back)
         }
 
-        refetchSearchEngines()
+        if (languageChanged)
+            restoreSearchEngines()
+        else
+            refetchSearchEngines()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -53,13 +57,17 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
                 true
             }
             R.id.menu_restore_default_engines -> {
-                CustomSearchEngineStore.restoreDefaultSearchEngines(activity!!)
-                refetchSearchEngines()
-                TelemetryWrapper.menuRestoreEnginesEvent()
+                restoreSearchEngines()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun restoreSearchEngines() {
+        CustomSearchEngineStore.restoreDefaultSearchEngines(activity!!)
+        refetchSearchEngines()
+        TelemetryWrapper.menuRestoreEnginesEvent()
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
