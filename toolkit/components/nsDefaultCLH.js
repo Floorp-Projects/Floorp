@@ -61,10 +61,8 @@ nsDefaultCLH.prototype = {
                                                        false))) {
       out = "print-xpcom-dirlist(\"" + printDirList + "\"): ";
       try {
-        var list = getDirectoryService().get(printDirList,
-                                             nsISimpleEnumerator);
-        while (list.hasMoreElements())
-          out += list.getNext().QueryInterface(nsIFile).path + ";";
+        for (let file of getDirectoryService().get(printDirList, nsISimpleEnumerator))
+          out += file.path + ";";
       } catch (e) {
         out += "<Not Provided>";
       }

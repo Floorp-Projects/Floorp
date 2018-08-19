@@ -245,9 +245,7 @@ add_task(async function test() {
     // Attach titles to components.
     let titles = [];
     let map = new Map();
-    let windows = Services.wm.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements()) {
-      let window = windows.getNext();
+    for (let window of Services.wm.getEnumerator("navigator:browser")) {
       let tabbrowser = window.gBrowser;
       for (let browser of tabbrowser.browsers) {
         let id = browser.outerWindowID; // May be `null` if the browser isn't loaded yet

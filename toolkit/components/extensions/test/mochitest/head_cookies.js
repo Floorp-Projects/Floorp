@@ -139,9 +139,8 @@ async function testCookies(options) {
 
     function getCookies(host) {
       let cookies = [];
-      let enum_ = cookieSvc.getCookiesFromHost(host, {});
-      while (enum_.hasMoreElements()) {
-        cookies.push(enum_.getNext().QueryInterface(Ci.nsICookie2));
+      for (let cookie of cookieSvc.getCookiesFromHost(host, {})) {
+        cookies.push(cookie);
       }
       return cookies.sort((a, b) => a.name.localeCompare(b.name));
     }

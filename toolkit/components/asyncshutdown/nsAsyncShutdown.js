@@ -23,9 +23,7 @@ var PropertyBagConverter = {
       throw new TypeError("Not a property bag");
     }
     let result = {};
-    let enumerator = bag.enumerator;
-    while (enumerator.hasMoreElements()) {
-      let {name, value: property} = enumerator.getNext().QueryInterface(Ci.nsIProperty);
+    for (let {name, value: property} of bag.enumerator) {
       let value = this.toValue(property);
       result[name] = value;
     }

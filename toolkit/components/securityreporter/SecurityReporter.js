@@ -62,10 +62,7 @@ SecurityReporter.prototype = {
     let asciiCertChain = [];
 
     if (transportSecurityInfo.failedCertChain) {
-      let certs = transportSecurityInfo.failedCertChain.getEnumerator();
-      while (certs.hasMoreElements()) {
-        let cert = certs.getNext();
-        cert.QueryInterface(Ci.nsIX509Cert);
+      for (let cert of transportSecurityInfo.failedCertChain.getEnumerator()) {
         asciiCertChain.push(btoa(getDERString(cert)));
       }
     }
