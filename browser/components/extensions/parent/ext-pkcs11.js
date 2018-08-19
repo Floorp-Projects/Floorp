@@ -13,8 +13,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "pkcs11db",
 var {DefaultMap} = ExtensionUtils;
 
 const findModuleByPath = function(path) {
-  let modules = pkcs11db.listModules();
-  for (let module of XPCOMUtils.IterSimpleEnumerator(modules, Ci.nsIPKCS11Module)) {
+  for (let module of pkcs11db.listModules()) {
     if (module && module.libName === path) {
       return module;
     }
@@ -118,7 +117,7 @@ this.pkcs11 = class extends ExtensionAPI {
             return Promise.reject({message: `The module ${name} is not installed`});
           }
           let rv = [];
-          for (let slot of XPCOMUtils.IterSimpleEnumerator(module.listSlots(), Ci.nsIPKCS11Slot)) {
+          for (let slot of module.listSlots()) {
             let token = slot.getToken();
             let slotobj = {
               name: slot.name,

@@ -139,9 +139,7 @@ function loadTab(tab, url) {
 function ensure_opentabs_match_db() {
   var tabs = {};
 
-  var winEnum = Services.wm.getEnumerator("navigator:browser");
-  while (winEnum.hasMoreElements()) {
-    let browserWin = winEnum.getNext();
+  for (let browserWin of Services.wm.getEnumerator("navigator:browser")) {
     // skip closed-but-not-destroyed windows
     if (browserWin.closed)
       continue;
