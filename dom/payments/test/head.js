@@ -17,9 +17,9 @@ function checkSimplePayment(aSimplePayment) {
   is(details.totalItem.amount.currency, "USD", "total item's currency should be 'USD'.");
   is(details.totalItem.amount.value, "55.00", "total item's value should be '55.00'.");
 
-  ok(!details.displayItems, "details.displayItems should be undefined.");
-  ok(!details.modifiers, "details.modifiers should be undefined.");
-  ok(!details.shippingOptions, "details.shippingOptions should be undefined.");
+  is(details.displayItems.length, 0, "details.displayItems should be a zero length array.");
+  is(details.modifiers.length, 0, "details.modifiers should be a zero length array.");
+  is(details.shippingOptions.length, 0, "details.shippingOptions should be a zero length array.");
 
   // checking the default generated PaymentOptions parameter
   const paymentOptions = aSimplePayment.paymentOptions;
