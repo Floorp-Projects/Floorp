@@ -179,6 +179,9 @@ nsDirEnumeratorUnix::GetNext(nsISupports** aResult)
   if (NS_FAILED(rv)) {
     return rv;
   }
+  if (!file) {
+    return NS_ERROR_FAILURE;
+  }
   file.forget(aResult);
   return NS_OK;
 }

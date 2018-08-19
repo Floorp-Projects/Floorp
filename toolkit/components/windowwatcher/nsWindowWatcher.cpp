@@ -205,8 +205,9 @@ nsWatcherWindowEnumerator::GetNext(nsISupports** aResult)
   if (mCurrentPosition) {
     CallQueryInterface(mCurrentPosition->mWindow, aResult);
     mCurrentPosition = FindNext();
+    return NS_OK;
   }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 nsWatcherWindowEntry*
