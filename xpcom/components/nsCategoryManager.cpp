@@ -59,6 +59,11 @@ public:
   NS_DECL_NSISIMPLEENUMERATOR
   NS_DECL_NSIUTF8STRINGENUMERATOR
 
+  const nsID& DefaultInterface() override
+  {
+    return NS_GET_IID(nsISupportsCString);
+  }
+
 protected:
   // Callback function for NS_QuickSort to sort mArray
   static int SortCallback(const void*, const void*, void*);

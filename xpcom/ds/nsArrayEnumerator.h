@@ -9,7 +9,7 @@
 
 // enumerator implementation for nsIArray
 
-#include "nscore.h"
+#include "nsISupports.h"
 
 class nsISimpleEnumerator;
 class nsIArray;
@@ -19,7 +19,8 @@ class nsCOMArray_base;
 // The enumerator holds an owning reference to the array.
 nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator** aResult,
-                      nsIArray* aArray);
+                      nsIArray* aArray,
+                      const nsID& aEntryIID = NS_GET_IID(nsISupports));
 
 // create an enumerator for an existing nsCOMArray<T> implementation
 // The enumerator will hold an owning reference to each ELEMENT in
@@ -27,6 +28,7 @@ NS_NewArrayEnumerator(nsISimpleEnumerator** aResult,
 // without its objects going away.
 nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator** aResult,
-                      const nsCOMArray_base& aArray);
+                      const nsCOMArray_base& aArray,
+                      const nsID& aEntryIID = NS_GET_IID(nsISupports));
 
 #endif

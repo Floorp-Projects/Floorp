@@ -2493,7 +2493,7 @@ nsCookieService::GetEnumerator(nsISimpleEnumerator **aEnumerator)
     }
   }
 
-  return NS_NewArrayEnumerator(aEnumerator, cookieList);
+  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie2));
 }
 
 NS_IMETHODIMP
@@ -2518,7 +2518,7 @@ nsCookieService::GetSessionEnumerator(nsISimpleEnumerator **aEnumerator)
     }
   }
 
-  return NS_NewArrayEnumerator(aEnumerator, cookieList);
+  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie2));
 }
 
 static nsresult
@@ -4928,7 +4928,7 @@ nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
     cookieList.AppendObject(cookies[i]);
   }
 
-  return NS_NewArrayEnumerator(aEnumerator, cookieList);
+  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie2));
 }
 
 NS_IMETHODIMP
@@ -4987,7 +4987,7 @@ nsCookieService::GetCookiesWithOriginAttributes(
     }
   }
 
-  return NS_NewArrayEnumerator(aEnumerator, cookies);
+  return NS_NewArrayEnumerator(aEnumerator, cookies, NS_GET_IID(nsICookie2));
 }
 
 NS_IMETHODIMP

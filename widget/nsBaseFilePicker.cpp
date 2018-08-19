@@ -112,6 +112,8 @@ public:
     , mMode(aMode)
   {}
 
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIFile); }
+
   NS_IMETHOD
   GetNext(nsISupports** aResult) override
   {
@@ -283,7 +285,7 @@ NS_IMETHODIMP nsBaseFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 
   files.AppendObject(file);
 
-  return NS_NewArrayEnumerator(aFiles, files);
+  return NS_NewArrayEnumerator(aFiles, files, NS_GET_IID(nsIFile));
 }
 
 // Set the display directory

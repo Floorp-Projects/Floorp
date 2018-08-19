@@ -83,6 +83,8 @@ public:
                           nsWindowMediator& inMediator);
   virtual ~nsASXULWindowEnumerator();
   NS_IMETHOD GetNext(nsISupports **retval) override;
+
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIXULWindow); }
 };
 
 //

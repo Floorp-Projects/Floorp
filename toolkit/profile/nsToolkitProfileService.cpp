@@ -149,6 +149,11 @@ private:
     public:
         NS_DECL_NSISIMPLEENUMERATOR
 
+        const nsID& DefaultInterface() override
+        {
+          return NS_GET_IID(nsIToolkitProfile);
+        }
+
         explicit ProfileEnumerator(nsToolkitProfile *first)
           { mCurrent = first; }
     private:

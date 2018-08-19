@@ -398,7 +398,7 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
             return NS_ERROR_FAILURE;
     }
 
-    return NS_NewArrayEnumerator(aEnumerate, propertyArray);
+    return NS_NewArrayEnumerator(aEnumerate, propertyArray, NS_GET_IID(nsIProperty));
 }
 
 /***************************************************************************/
