@@ -864,7 +864,6 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
 #ifdef DEBUG
     switch (kind_) {
       case FarJumpIsland:
-      case UnalignedExit:
       case TrapExit:
       case Throw:
         break;

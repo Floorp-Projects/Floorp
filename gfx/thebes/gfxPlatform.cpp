@@ -471,6 +471,12 @@ gfxPlatform::OnMemoryPressure(layers::MemoryPressureReason aWhy)
     gfxGradientCache::PurgeAllCaches();
     PurgeSkiaFontCache();
     PurgeSkiaGPUCache();
+    if (XRE_IsParentProcess()) {
+      layers::CompositorManagerChild* manager = CompositorManagerChild::GetInstance();
+      if (manager) {
+        manager->SendNotifyMemoryPressure();
+      }
+    }
 }
 
 gfxPlatform::gfxPlatform()

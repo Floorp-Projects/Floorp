@@ -44,6 +44,8 @@ public:
                                                const SurfaceDescriptorShared& aDesc) override;
   mozilla::ipc::IPCResult RecvRemoveSharedSurface(const wr::ExternalImageId& aId) override;
 
+  virtual mozilla::ipc::IPCResult RecvNotifyMemoryPressure() override;
+
   void BindComplete();
   void ActorDestroy(ActorDestroyReason aReason) override;
 

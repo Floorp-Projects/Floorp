@@ -31,6 +31,10 @@ use super::EncoderResult;
 use ascii::*;
 use utf_8::*;
 
+macro_rules! non_fuzz_debug_assert {
+    ($($arg:tt)*) => (if !cfg!(fuzzing) { debug_assert!($($arg)*); })
+}
+
 cfg_if!{
     if #[cfg(feature = "simd-accel")] {
         use ::std::intrinsics::unlikely;
@@ -1548,6 +1552,33 @@ pub fn convert_str_to_utf16(src: &str, dst: &mut [u16]) -> usize {
 }
 
 /// Converts potentially-invalid UTF-16 to valid UTF-8 with errors replaced
+/// with the REPLACEMENT CHARACTER with potentially insufficient output
+/// space.
+///
+/// Returns the number of code units read and the number of bytes written.
+///
+/// Not all code units are read if there isn't enough output space.
+///
+/// Note  that this method isn't designed for general streamability but for
+/// not allocating memory for the worst case up front. Specifically,
+/// if the input starts with or ends with an unpaired surrogate, those are
+/// replaced with the REPLACEMENT CHARACTER.
+///
+/// # Safety
+///
+/// Note that this function may write garbage beyond the number of bytes
+/// indicated by the return value, so using a `&mut str` interpreted as
+/// `&mut [u8]` as the destination is not safe. If you want to convert into
+/// a `&mut str`, use `convert_utf16_to_str()` instead of this function.
+#[inline]
+pub fn convert_utf16_to_utf8_partial(src: &[u16], dst: &mut [u8]) -> (usize, usize) {
+    let mut encoder = Utf8Encoder;
+    let (result, read, written) = encoder.encode_from_utf16_raw(src, dst, true);
+    debug_assert!(result == EncoderResult::OutputFull || read == src.len());
+    (read, written)
+}
+
+/// Converts potentially-invalid UTF-16 to valid UTF-8 with errors replaced
 /// with the REPLACEMENT CHARACTER.
 ///
 /// The length of the destination buffer must be at least the length of the
@@ -1568,10 +1599,40 @@ pub fn convert_str_to_utf16(src: &str, dst: &mut [u16]) -> usize {
 #[inline]
 pub fn convert_utf16_to_utf8(src: &[u16], dst: &mut [u8]) -> usize {
     assert!(dst.len() >= src.len() * 3 + 1);
-    let mut encoder = Utf8Encoder;
-    let (result, _, written) = encoder.encode_from_utf16_raw(src, dst, true);
-    debug_assert!(result == EncoderResult::InputEmpty);
+    let (read, written) = convert_utf16_to_utf8_partial(src, dst);
+    debug_assert_eq!(read, src.len());
     written
+}
+
+/// Converts potentially-invalid UTF-16 to valid UTF-8 with errors replaced
+/// with the REPLACEMENT CHARACTER such that the validity of the output is
+/// signaled using the Rust type system with potentially insufficient output
+/// space.
+///
+/// Returns the number of code units read and the number of bytes written.
+///
+/// Not all code units are read if there isn't enough output space.
+///
+/// Note  that this method isn't designed for general streamability but for
+/// not allocating memory for the worst case up front. Specifically,
+/// if the input starts with or ends with an unpaired surrogate, those are
+/// replaced with the REPLACEMENT CHARACTER.
+#[inline]
+pub fn convert_utf16_to_str_partial(src: &[u16], dst: &mut str) -> (usize, usize) {
+    let bytes: &mut [u8] = unsafe { ::std::mem::transmute(dst) };
+    let (read, written) = convert_utf16_to_utf8_partial(src, bytes);
+    let len = bytes.len();
+    let mut trail = written;
+    let max = ::std::cmp::min(len, trail + MAX_STRIDE_SIZE);
+    while trail < max {
+        bytes[trail] = 0;
+        trail += 1;
+    }
+    while trail < len && ((bytes[trail] & 0xC0) == 0x80) {
+        bytes[trail] = 0;
+        trail += 1;
+    }
+    (read, written)
 }
 
 /// Converts potentially-invalid UTF-16 to valid UTF-8 with errors replaced
@@ -1588,19 +1649,9 @@ pub fn convert_utf16_to_utf8(src: &[u16], dst: &mut [u8]) -> usize {
 /// Panics if the destination buffer is shorter than stated above.
 #[inline]
 pub fn convert_utf16_to_str(src: &[u16], dst: &mut str) -> usize {
-    let bytes: &mut [u8] = unsafe { ::std::mem::transmute(dst) };
-    let written = convert_utf16_to_utf8(src, bytes);
-    let len = bytes.len();
-    let mut trail = written;
-    let max = ::std::cmp::min(len, trail + MAX_STRIDE_SIZE);
-    while trail < max {
-        bytes[trail] = 0;
-        trail += 1;
-    }
-    while trail < len && ((bytes[trail] & 0xC0) == 0x80) {
-        bytes[trail] = 0;
-        trail += 1;
-    }
+    assert!(dst.len() >= src.len() * 3 + 1);
+    let (read, written) = convert_utf16_to_str_partial(src, dst);
+    debug_assert_eq!(read, src.len());
     written
 }
 
@@ -1630,6 +1681,59 @@ pub fn convert_latin1_to_utf16(src: &[u8], dst: &mut [u16]) {
 }
 
 /// Converts bytes whose unsigned value is interpreted as Unicode code point
+/// (i.e. U+0000 to U+00FF, inclusive) to UTF-8 with potentially insufficient
+/// output space.
+///
+/// Returns the number of bytes read and the number of bytes written.
+///
+/// If the output isn't large enough, not all input is consumed.
+///
+/// # Safety
+///
+/// Note that this function may write garbage beyond the number of bytes
+/// indicated by the return value, so using a `&mut str` interpreted as
+/// `&mut [u8]` as the destination is not safe. If you want to convert into
+/// a `&mut str`, use `convert_utf16_to_str()` instead of this function.
+#[inline]
+pub fn convert_latin1_to_utf8_partial(src: &[u8], dst: &mut [u8]) -> (usize, usize) {
+    let src_len = src.len();
+    let src_ptr = src.as_ptr();
+    let dst_ptr = dst.as_mut_ptr();
+    let dst_len = dst.len();
+    let mut total_read = 0usize;
+    let mut total_written = 0usize;
+    loop {
+        // src can't advance more than dst
+        let src_left = src_len - total_read;
+        let dst_left = dst_len - total_written;
+        let min_left = ::std::cmp::min(src_left, dst_left);
+        if let Some((non_ascii, consumed)) = unsafe {
+            ascii_to_ascii(
+                src_ptr.offset(total_read as isize),
+                dst_ptr.offset(total_written as isize),
+                min_left,
+            )
+        } {
+            total_read += consumed;
+            total_written += consumed;
+            if total_written.checked_add(2).unwrap() > dst_len {
+                return (total_read, total_written);
+            }
+
+            total_read += 1; // consume `non_ascii`
+
+            let code_point = non_ascii as u32;
+            dst[total_written] = ((code_point >> 6) | 0xC0u32) as u8;
+            total_written += 1;
+            dst[total_written] = ((code_point as u32 & 0x3Fu32) | 0x80u32) as u8;
+            total_written += 1;
+            continue;
+        }
+        return (total_read + min_left, total_written + min_left);
+    }
+}
+
+/// Converts bytes whose unsigned value is interpreted as Unicode code point
 /// (i.e. U+0000 to U+00FF, inclusive) to UTF-8.
 ///
 /// The length of the destination buffer must be at least the length of the
@@ -1653,33 +1757,35 @@ pub fn convert_latin1_to_utf8(src: &[u8], dst: &mut [u8]) -> usize {
         dst.len() >= src.len() * 2,
         "Destination must not be shorter than the source times two."
     );
-    let src_len = src.len();
-    let src_ptr = src.as_ptr();
-    let dst_ptr = dst.as_mut_ptr();
-    let mut total_read = 0usize;
-    let mut total_written = 0usize;
-    loop {
-        // src can't advance more than dst
-        let src_left = src_len - total_read;
-        if let Some((non_ascii, consumed)) = unsafe {
-            ascii_to_ascii(
-                src_ptr.offset(total_read as isize),
-                dst_ptr.offset(total_written as isize),
-                src_left,
-            )
-        } {
-            total_read += consumed + 1;
-            total_written += consumed;
+    let (read, written) = convert_latin1_to_utf8_partial(src, dst);
+    debug_assert_eq!(read, src.len());
+    written
+}
 
-            let code_point = non_ascii as u32;
-            dst[total_written] = ((code_point >> 6) | 0xC0u32) as u8;
-            total_written += 1;
-            dst[total_written] = ((code_point as u32 & 0x3Fu32) | 0x80u32) as u8;
-            total_written += 1;
-            continue;
-        }
-        return total_written + src_left;
+/// Converts bytes whose unsigned value is interpreted as Unicode code point
+/// (i.e. U+0000 to U+00FF, inclusive) to UTF-8 such that the validity of the
+/// output is signaled using the Rust type system with potentially insufficient
+/// output space.
+///
+/// Returns the number of bytes read and the number of bytes written.
+///
+/// If the output isn't large enough, not all input is consumed.
+#[inline]
+pub fn convert_latin1_to_str_partial(src: &[u8], dst: &mut str) -> (usize, usize) {
+    let bytes: &mut [u8] = unsafe { ::std::mem::transmute(dst) };
+    let (read, written) = convert_latin1_to_utf8_partial(src, bytes);
+    let len = bytes.len();
+    let mut trail = written;
+    let max = ::std::cmp::min(len, trail + MAX_STRIDE_SIZE);
+    while trail < max {
+        bytes[trail] = 0;
+        trail += 1;
     }
+    while trail < len && ((bytes[trail] & 0xC0) == 0x80) {
+        bytes[trail] = 0;
+        trail += 1;
+    }
+    (read, written)
 }
 
 /// Converts bytes whose unsigned value is interpreted as Unicode code point
@@ -1696,19 +1802,12 @@ pub fn convert_latin1_to_utf8(src: &[u8], dst: &mut [u8]) -> usize {
 /// Panics if the destination buffer is shorter than stated above.
 #[inline]
 pub fn convert_latin1_to_str(src: &[u8], dst: &mut str) -> usize {
-    let bytes: &mut [u8] = unsafe { ::std::mem::transmute(dst) };
-    let written = convert_latin1_to_utf8(src, bytes);
-    let len = bytes.len();
-    let mut trail = written;
-    let max = ::std::cmp::min(len, trail + MAX_STRIDE_SIZE);
-    while trail < max {
-        bytes[trail] = 0;
-        trail += 1;
-    }
-    while trail < len && ((bytes[trail] & 0xC0) == 0x80) {
-        bytes[trail] = 0;
-        trail += 1;
-    }
+    assert!(
+        dst.len() >= src.len() * 2,
+        "Destination must not be shorter than the source times two."
+    );
+    let (read, written) = convert_latin1_to_str_partial(src, dst);
+    debug_assert_eq!(read, src.len());
     written
 }
 
@@ -1718,6 +1817,7 @@ pub fn convert_latin1_to_str(src: &[u8], dst: &mut str) -> usize {
 /// each output byte.
 ///
 /// If the input does not fulfill the condition stated above, this function
+/// panics if debug assertions are enabled (and fuzzing isn't) and otherwise
 /// does something that is memory-safe without any promises about any
 /// properties of the output. In particular, callers shouldn't assume the
 /// output to be the same across crate versions or CPU architectures and
@@ -1731,12 +1831,16 @@ pub fn convert_latin1_to_str(src: &[u8], dst: &mut str) -> usize {
 /// # Panics
 ///
 /// Panics if the destination buffer is shorter than stated above.
+///
+/// If debug assertions are enabled (and not fuzzing) and the input is
+/// not in the range U+0000 to U+00FF, inclusive.
 #[inline]
 pub fn convert_utf8_to_latin1_lossy(src: &[u8], dst: &mut [u8]) -> usize {
     assert!(
         dst.len() >= src.len(),
         "Destination must not be shorter than the source."
     );
+    non_fuzz_debug_assert!(is_utf8_latin1(src));
     let src_len = src.len();
     let src_ptr = src.as_ptr();
     let dst_ptr = dst.as_mut_ptr();
@@ -1776,11 +1880,12 @@ pub fn convert_utf8_to_latin1_lossy(src: &[u8], dst: &mut [u8]) -> usize {
 /// represents the value of each code point as the unsigned byte value of
 /// each output byte.
 ///
-/// If the input does not fulfill the condition stated above, this function
-/// does something that is memory-safe without any promises about any
-/// properties of the output. In particular, callers shouldn't assume the
-/// output to be the same across crate versions or CPU architectures and
-/// should not assume that non-Basic Latin input can't map to ASCII output.
+/// If the input does not fulfill the condition stated above, does something
+/// that is memory-safe without any promises about any properties of the
+/// output and will probably assert in debug builds in future versions.
+/// In particular, callers shouldn't assume the output to be the same across
+/// crate versions or CPU architectures and should not assume that non-ASCII
+/// input can't map to ASCII output.
 ///
 /// The length of the destination buffer must be at least the length of the
 /// source buffer.
@@ -1790,12 +1895,16 @@ pub fn convert_utf8_to_latin1_lossy(src: &[u8], dst: &mut [u8]) -> usize {
 /// # Panics
 ///
 /// Panics if the destination buffer is shorter than stated above.
+///
+/// (Probably in future versions if debug assertions are enabled (and not
+/// fuzzing) and the input is not in the range U+0000 to U+00FF, inclusive.)
 #[inline]
 pub fn convert_utf16_to_latin1_lossy(src: &[u16], dst: &mut [u8]) {
     assert!(
         dst.len() >= src.len(),
         "Destination must not be shorter than the source."
     );
+    // non_fuzz_debug_assert!(is_utf16_latin1(src));
     unsafe {
         pack_latin1(src.as_ptr(), dst.as_mut_ptr(), src.len());
     }
@@ -2101,6 +2210,18 @@ mod tests {
     }
 
     #[test]
+    fn test_convert_utf16_to_utf8_partial() {
+        let reference = "abcdefghijklmnopqrstu\u{1F4A9}v\u{2603}w\u{00B6}xyzz";
+        let src: Vec<u16> = reference.encode_utf16().collect();
+        let mut dst: Vec<u8> = Vec::with_capacity(src.len() * 3 + 1);
+        dst.resize(src.len() * 3 + 1, 0);
+        let (read, written) = convert_utf16_to_utf8_partial(&src[..], &mut dst[..24]);
+        let len = written + convert_utf16_to_utf8(&src[read..], &mut dst[written..]);
+        dst.truncate(len);
+        assert_eq!(dst, reference.as_bytes());
+    }
+
+    #[test]
     fn test_convert_utf16_to_utf8() {
         let reference = "abcdefghijklmnopqrstu\u{1F4A9}v\u{2603}w\u{00B6}xyzz";
         let src: Vec<u16> = reference.encode_utf16().collect();
@@ -2125,6 +2246,14 @@ mod tests {
         dst.resize(src.len(), 0);
         convert_latin1_to_utf16(&src[..], &mut dst[..]);
         assert_eq!(dst, reference);
+    }
+
+    #[test]
+    fn test_convert_latin1_to_utf8_partial() {
+        let mut dst = [0u8, 2];
+        let (read, written) = convert_latin1_to_utf8_partial(b"a\xFF", &mut dst[..]);
+        assert_eq!(read, 1);
+        assert_eq!(written, 1);
     }
 
     #[test]
@@ -2164,6 +2293,13 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn test_convert_utf8_to_latin1_lossy_panics() {
+        let mut dst = [0u8; 16];
+        let _ = convert_utf8_to_latin1_lossy("\u{100}".as_bytes(), &mut dst[..]);
+    }
+
+    #[test]
     fn test_convert_utf16_to_latin1_lossy() {
         let mut src: Vec<u16> = Vec::with_capacity(256);
         src.resize(256, 0);
@@ -2177,6 +2313,13 @@ mod tests {
         dst.resize(src.len(), 0);
         convert_utf16_to_latin1_lossy(&src[..], &mut dst[..]);
         assert_eq!(dst, reference);
+    }
+
+    #[test]
+    // #[should_panic]
+    fn test_convert_utf16_to_latin1_lossy_panics() {
+        let mut dst = [0u8; 16];
+        let _ = convert_utf16_to_latin1_lossy(&[0x0100u16], &mut dst[..]);
     }
 
     #[test]

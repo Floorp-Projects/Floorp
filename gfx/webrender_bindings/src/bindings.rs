@@ -1029,6 +1029,11 @@ pub unsafe extern "C" fn wr_api_shut_down(dh: &mut DocumentHandle) {
     dh.api.shut_down();
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn wr_api_notify_memory_pressure(dh: &mut DocumentHandle) {
+    dh.api.notify_memory_pressure();
+}
+
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_clear_all_caches(dh: &mut DocumentHandle) {

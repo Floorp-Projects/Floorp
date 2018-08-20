@@ -122,35 +122,10 @@
 #include ../../components/places/content/placesCommands.inc.xul
 
   <broadcasterset id="mainBroadcasterSet">
-    <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
-                 type="checkbox" group="sidebar"
-                 sidebarurl="chrome://browser/content/places/bookmarksSidebar.xul"
-                 oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
-
-    <broadcaster id="viewHistorySidebar" autoCheck="false" sidebartitle="&historyButton.label;"
-                 type="checkbox" group="sidebar"
-                 sidebarurl="chrome://browser/content/places/historySidebar.xul"
-                 oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
-
     <broadcaster id="isImage"/>
     <broadcaster id="canViewSource"/>
     <broadcaster id="isFrameImage"/>
 
-    <!-- Sync broadcasters -->
-    <!-- A broadcaster of a number of attributes suitable for "sync now" UI -
-        A 'syncstatus' attribute is set while actively syncing, and the label
-        attribute which changes from "sync now" to "syncing" etc. -->
-    <broadcaster id="sync-status" onmouseover="gSync.refreshSyncButtonsTooltip();"/>
-    <!-- broadcasters of the "hidden" attribute to reflect setup state for
-         menus -->
-    <broadcaster id="sync-setup-state" hidden="true"/>
-    <broadcaster id="sync-unverified-state" hidden="true"/>
-    <broadcaster id="sync-syncnow-state" hidden="true"/>
-    <broadcaster id="sync-reauth-state" hidden="true"/>
-    <broadcaster id="viewTabsSidebar" autoCheck="false" sidebartitle="&syncedTabs.sidebar.label;"
-                 type="checkbox" group="sidebar"
-                 sidebarurl="chrome://browser/content/syncedtabs/sidebar.xhtml"
-                 oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
     <broadcaster id="workOfflineMenuitemState"/>
     <broadcaster id="devtoolsMenuBroadcaster_RecordExecution"
                  label="&devtoolsRecordExecution.label;"
@@ -289,11 +264,11 @@
 #else
     <key id="manBookmarkKb" key="&bookmarksGtkCmd.commandkey;" command="Browser:ShowAllBookmarks" modifiers="accel,shift"/>
 #endif
-    <key id="viewBookmarksSidebarKb" key="&bookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
+    <key id="viewBookmarksSidebarKb" key="&bookmarksCmd.commandkey;" oncommand="SidebarUI.toggle('viewBookmarksSidebar');" modifiers="accel"/>
 #ifdef XP_WIN
 # Cmd+I is conventially mapped to Info on MacOS X, thus it should not be
 # overridden for other purposes there.
-    <key id="viewBookmarksSidebarWinKb" key="&bookmarksWinCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
+    <key id="viewBookmarksSidebarWinKb" key="&bookmarksWinCmd.commandkey;" oncommand="SidebarUI.toggle('viewBookmarksSidebar');" modifiers="accel"/>
 #endif
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
@@ -309,7 +284,7 @@
 #else
          modifiers="accel"
 #endif
-         command="viewHistorySidebar"/>
+         oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
 
     <key id="key_fullZoomReduce"  key="&fullZoomReduceCmd.commandkey;"   command="cmd_fullZoomReduce"  modifiers="accel"/>
     <key                          key="&fullZoomReduceCmd.commandkey2;"  command="cmd_fullZoomReduce"  modifiers="accel"/>
