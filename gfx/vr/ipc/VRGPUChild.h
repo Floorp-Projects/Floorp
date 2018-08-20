@@ -26,7 +26,6 @@ protected:
   explicit VRGPUChild() {}
   ~VRGPUChild() {}
 
-  static void DeferredDestroy(RefPtr<VRGPUChild> aVRManagerChild);
   void Destroy();
 
 private:

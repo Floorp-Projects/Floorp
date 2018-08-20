@@ -25,10 +25,8 @@ protected:
   ~VRGPUParent() {}
 
   void Bind(Endpoint<PVRGPUParent>&& aEndpoint);
-  virtual mozilla::ipc::IPCResult RecvInitVRService(const nsCString& aId,
-                                                    const uint64_t& aGPUHandle,
-                                                    const uint64_t& aVRHandle,
-                                                    const uint64_t& aShmemFile) override;
+  virtual mozilla::ipc::IPCResult RecvStartVRService() override;
+  virtual mozilla::ipc::IPCResult RecvStopVRService() override;
 
 private:
   void DeferredDestroy();

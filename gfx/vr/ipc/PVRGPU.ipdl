@@ -10,7 +10,8 @@ namespace gfx {
 async protocol PVRGPU
 {
 parent:
-  async InitVRService(nsCString aId, uint64_t aGPUHandle, uint64_t aVRHandle, uint64_t aShmemFile);
+  async StartVRService();
+  async StopVRService();
 };
 
 } // gfx
