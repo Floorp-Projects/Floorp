@@ -59,10 +59,6 @@ interface nsITaggingService : nsISupports
                      [optional] out unsigned long length,
                      [retval, array, size_is(length)] out wstring aTags);
 
-  /**
-   * Retrieves all tags used to tag URIs in the data-base (sorted by name).
-   */
-  readonly attribute nsIVariant allTags;
 };
 
 %{C++
