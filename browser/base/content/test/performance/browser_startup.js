@@ -36,6 +36,7 @@ const startupPhases = {
     modules: new Set([
       "resource://gre/modules/AppConstants.jsm",
       "resource://gre/modules/ActorManagerParent.jsm",
+      "resource://gre/modules/CustomElementsListener.jsm",
       "resource://gre/modules/ExtensionUtils.jsm",
       "resource://gre/modules/XPCOMUtils.jsm",
       "resource://gre/modules/Services.jsm",
