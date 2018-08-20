@@ -9801,6 +9801,13 @@ nsIDocument::DoUpdateSVGUseElementShadowTrees()
     }
 
     for (auto& useElement : useElementsToUpdate) {
+      if (MOZ_UNLIKELY(!useElement->IsInComposedDoc())) {
+        // The element was in another <use> shadow tree which we processed
+        // already and also needed an update, and is removed from the document
+        // now, so nothing to do here.
+        MOZ_ASSERT(useElementsToUpdate.Length() > 1);
+        continue;
+      }
       useElement->UpdateShadowTree();
     }
   } while (!mSVGUseElementsNeedingShadowTreeUpdate.IsEmpty());
