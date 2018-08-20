@@ -168,6 +168,9 @@ struct ShareableBase : AtomicRefCounted<T>
 
 enum class PackedTypeCode : uint32_t {};
 
+static_assert(std::is_pod<PackedTypeCode>::value,
+              "must be POD to be simply serialized/deserialized");
+
 const uint32_t NoTypeCode     = 0xFF;      // Only use these
 const uint32_t NoRefTypeIndex = 0xFFFFFF;  //   with PackedTypeCode
 
