@@ -565,6 +565,10 @@ nsHttpChannel::OnBeforeConnect()
         mCaps |= NS_HTTP_LARGE_KEEPALIVE | NS_HTTP_DISABLE_TRR;
     }
 
+    if (mLoadFlags & LOAD_DISABLE_TRR) {
+        mCaps |= NS_HTTP_DISABLE_TRR;
+    }
+
     // Finalize ConnectionInfo flags before SpeculativeConnect
     mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
     mConnectionInfo->SetPrivate(mPrivateBrowsing);
