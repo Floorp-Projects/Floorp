@@ -34,6 +34,7 @@
 #include "mozilla/dom/ipc/PendingIPCBlobParent.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
+#include "mozilla/dom/simpledb/ActorsParent.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/MIDIManagerParent.h"
 #include "mozilla/dom/MIDIPortParent.h"
@@ -250,6 +251,43 @@ BackgroundParentImpl::RecvFlushPendingFileDeletions()
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
+}
+
+BackgroundParentImpl::PBackgroundSDBConnectionParent*
+BackgroundParentImpl::AllocPBackgroundSDBConnectionParent(
+                                            const PrincipalInfo& aPrincipalInfo)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::AllocPBackgroundSDBConnectionParent(aPrincipalInfo);
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPBackgroundSDBConnectionConstructor(
+                                         PBackgroundSDBConnectionParent* aActor,
+                                         const PrincipalInfo& aPrincipalInfo)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  if (!mozilla::dom::RecvPBackgroundSDBConnectionConstructor(aActor,
+                                                             aPrincipalInfo)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+bool
+BackgroundParentImpl::DeallocPBackgroundSDBConnectionParent(
+                                         PBackgroundSDBConnectionParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return mozilla::dom::DeallocPBackgroundSDBConnectionParent(aActor);
 }
 
 BackgroundParentImpl::PBackgroundLocalStorageCacheParent*

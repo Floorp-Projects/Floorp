@@ -36,6 +36,7 @@
 #include "mozilla/dom/quota/PQuotaParent.h"
 #include "mozilla/dom/quota/PQuotaRequestParent.h"
 #include "mozilla/dom/quota/PQuotaUsageRequestParent.h"
+#include "mozilla/dom/simpledb/ActorsParent.h"
 #include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -3600,8 +3601,12 @@ QuotaManager::Init(const nsAString& aBasePath)
     return NS_ERROR_FAILURE;
   }
 
-  static_assert(Client::IDB == 0 && Client::ASMJS == 1 && Client::DOMCACHE == 2 &&
-                Client::TYPE_MAX == 3, "Fix the registration!");
+  static_assert(Client::IDB == 0 &&
+                Client::ASMJS == 1 &&
+                Client::DOMCACHE == 2 &&
+                Client::SDB == 3 &&
+                Client::TYPE_MAX == 4,
+                "Fix the registration!");
 
   MOZ_ASSERT(mClients.Capacity() == Client::TYPE_MAX,
              "Should be using an auto array with correct capacity!");
@@ -3610,6 +3615,7 @@ QuotaManager::Init(const nsAString& aBasePath)
   mClients.AppendElement(indexedDB::CreateQuotaClient());
   mClients.AppendElement(asmjscache::CreateClient());
   mClients.AppendElement(cache::CreateQuotaClient());
+  mClients.AppendElement(simpledb::CreateQuotaClient());
 
   return NS_OK;
 }

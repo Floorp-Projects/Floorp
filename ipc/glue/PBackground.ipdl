@@ -5,6 +5,7 @@
 include protocol PAsmJSCacheEntry;
 include protocol PBackgroundIDBFactory;
 include protocol PBackgroundIndexedDBUtils;
+include protocol PBackgroundSDBConnection;
 include protocol PBackgroundLocalStorageCache;
 include protocol PBackgroundStorage;
 include protocol PBackgroundTest;
@@ -66,6 +67,7 @@ sync protocol PBackground
   manages PAsmJSCacheEntry;
   manages PBackgroundIDBFactory;
   manages PBackgroundIndexedDBUtils;
+  manages PBackgroundSDBConnection;
   manages PBackgroundLocalStorageCache;
   manages PBackgroundStorage;
   manages PBackgroundTest;
@@ -107,6 +109,8 @@ parent:
 
   // Use only for testing!
   async FlushPendingFileDeletions();
+
+  async PBackgroundSDBConnection(PrincipalInfo principalInfo);
 
   async PBackgroundLocalStorageCache(PrincipalInfo principalInfo,
                                      nsCString originKey,
