@@ -1,3 +1,5 @@
+requestLongerTimeout(2);
+
 let rootDir = getRootDirectory(gTestPath);
 let jar = getJar(rootDir);
 if (jar) {
@@ -6,15 +8,17 @@ if (jar) {
 }
 /* import-globals-from privacypane_tests_perwindow.js */
 Services.scriptloader.loadSubScript(rootDir + "privacypane_tests_perwindow.js", this);
-
-SpecialPowers.pushPrefEnv({"set":
-  [["browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", false]]
-});
+let runtime = Services.appInfo;
 
 run_test_subset([
-  test_pane_visibility,
-  test_dependent_elements,
-  test_dependent_cookie_elements,
-  test_dependent_clearonclose_elements,
-  test_dependent_prefs,
+  test_custom_retention("acceptCookies", "remember"),
+  test_custom_retention("acceptCookies", "custom"),
+  test_custom_retention("acceptThirdPartyMenu", "custom", "visited"),
+  test_custom_retention("acceptThirdPartyMenu", "custom", "always"),
+  test_custom_retention("keepCookiesUntil", "custom", 1),
+  test_custom_retention("keepCookiesUntil", "custom", 2),
+  test_custom_retention("keepCookiesUntil", "custom", 0),
+  test_custom_retention("alwaysClear", "custom"),
+  test_custom_retention("alwaysClear", "custom"),
+  test_historymode_retention("remember", "custom"),
 ]);
