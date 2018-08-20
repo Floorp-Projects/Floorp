@@ -11,6 +11,9 @@ ChromeUtils.import("resource://gre/modules/ActorManagerParent.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+// Windowless browsers can create documents that rely on XUL Custom Elements:
+ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm", null);
+
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonTestUtils",
