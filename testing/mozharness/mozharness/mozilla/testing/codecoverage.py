@@ -8,7 +8,6 @@ import os
 import posixpath
 import shutil
 import sys
-import tarfile
 import tempfile
 import zipfile
 import uuid
@@ -144,31 +143,14 @@ class CodeCoverageMixin(SingleTestMixin):
         self.java_coverage_output_path = os.path.join(tempfile.mkdtemp(),
                                                       'junit-coverage.ec')
 
-    def _download_grcov(self):
-        fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
-        if fetches_dir and os.path.isfile(os.path.join(fetches_dir, 'grcov')):
-            self.grcov_dir = fetches_dir
-        else:
-            # Create the grcov directory, then download it.
-            # TODO: use the fetch-content script to download artifacts.
-            self.grcov_dir = tempfile.mkdtemp()
-            ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{task}/artifacts/{artifact}'
-            for word in os.getenv('MOZ_FETCHES').split():
-                artifact, task = word.split('@', 1)
-                filename = os.path.basename(artifact)
-                url = ARTIFACT_URL.format(artifact=artifact, task=task)
-                self.download_file(url, parent_dir=self.grcov_dir)
-
-                with tarfile.open(os.path.join(self.grcov_dir, filename), 'r') as tar:
-                    tar.extractall(self.grcov_dir)
-                os.remove(os.path.join(self.grcov_dir, filename))
-
     @PostScriptAction('download-and-extract')
     def setup_coverage_tools(self, action, success=None):
         if not self.code_coverage_enabled and not self.java_code_coverage_enabled:
             return
 
-        self._download_grcov()
+        self.grcov_dir = os.environ['MOZ_FETCHES_DIR']
+        if not os.path.isfile(os.path.join(self.grcov_dir, 'grcov')):
+            self.fetch_content()
 
         if self.code_coverage_enabled:
             self._setup_cpp_js_coverage_tools()

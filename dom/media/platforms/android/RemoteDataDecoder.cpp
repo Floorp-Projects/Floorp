@@ -208,6 +208,8 @@ public:
     }
     mIsCodecSupportAdaptivePlayback =
       mJavaDecoder->IsAdaptivePlaybackSupported();
+    mIsHardwareAccelerated =
+      mJavaDecoder->IsHardwareAccelerated();
     return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
   }
 
@@ -272,12 +274,19 @@ public:
     return true;
   }
 
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override
+  {
+    return mIsHardwareAccelerated;
+  }
+
 private:
   const VideoInfo mConfig;
   GeckoSurface::GlobalRef mSurface;
   AndroidSurfaceTextureHandle mSurfaceHandle;
   // Only accessed on reader's task queue.
   bool mIsCodecSupportAdaptivePlayback = false;
+  // Can be accessed on any thread, but only written on during init.
+  bool mIsHardwareAccelerated = false;
   // Accessed on mTaskQueue, reader's TaskQueue and Java callback tread.
   // SimpleMap however is thread-safe, so it's okay to do so.
   SimpleMap<InputInfo> mInputInfos;
@@ -457,8 +466,8 @@ RemoteDataDecoder::CreateVideoDecoder(const CreateDecoderParams& aParams,
   MediaFormat::LocalRef format;
   NS_ENSURE_SUCCESS(
     MediaFormat::CreateVideoFormat(TranslateMimeType(config.mMimeType),
-                                   config.mDisplay.width,
-                                   config.mDisplay.height,
+                                   config.mImage.width,
+                                   config.mImage.height,
                                    &format),
     nullptr);
 

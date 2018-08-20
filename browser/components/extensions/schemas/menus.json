@@ -197,6 +197,11 @@
                 "optional": true,
                 "description": "List of contexts this menu item will appear in. Defaults to ['page'] if not specified."
               },
+              "visible": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the item is visible in the menu."
+              },
               "onclick": {
                 "type": "function",
                 "optional": true,
@@ -293,6 +298,11 @@
                 },
                 "minItems": 1,
                 "optional": true
+              },
+              "visible": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the item is visible in the menu."
               },
               "onclick": {
                 "type": "function",
