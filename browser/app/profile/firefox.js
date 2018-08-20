@@ -1488,13 +1488,10 @@ pref("browser.ping-centre.production.endpoint", "https://tiles.services.mozilla.
 pref("media.gmp-provider.enabled", true);
 
 pref("browser.contentblocking.enabled", true);
-pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended", true);
 #ifdef NIGHTLY_BUILD
 pref("browser.contentblocking.ui.enabled", true);
-pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", true);
 #else
 pref("browser.contentblocking.ui.enabled", false);
-pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", false);
 #endif
 #ifdef NIGHTLY_BUILD
 pref("browser.contentblocking.reportBreakage.enabled", true);
