@@ -16,7 +16,6 @@
  * https://w3c.github.io/webappsec-secure-contexts/#monkey-patching-global-object
  * https://w3c.github.io/requestidlecallback/
  * https://drafts.css-houdini.org/css-paint-api-1/#dom-window-paintworklet
- * https://wicg.github.io/visual-viewport/#the-visualviewport-interface
  */
 
 interface IID;
@@ -566,9 +565,3 @@ partial interface Window {
 };
 
 Window implements WebGPUProvider;
-
-partial interface Window {
-  [SameObject, Pref="dom.visualviewport.enabled", Replaceable]
-  readonly attribute VisualViewport visualViewport;
-
-};

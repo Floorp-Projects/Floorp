@@ -33,7 +33,6 @@
 #include "mozilla/dom/Timeout.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/TimeoutManager.h"
-#include "mozilla/dom/VisualViewport.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/dom/WindowOrientationObserver.h"
@@ -2216,15 +2215,6 @@ nsPIDOMWindowInner::Navigator()
   }
 
   return mNavigator;
-}
-
-VisualViewport* nsGlobalWindowInner::VisualViewport()
-{
-  if (!mVisualViewport) {
-    mVisualViewport = new mozilla::dom::VisualViewport(this);
-  }
-
-  return mVisualViewport;
 }
 
 nsScreen*
