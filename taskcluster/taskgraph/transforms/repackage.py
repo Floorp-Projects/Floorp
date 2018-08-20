@@ -327,6 +327,7 @@ def make_job_description(config, jobs):
             'fetches': _generate_download_config(dep_job, build_platform, build_task,
                                                  signing_task, locale=locale,
                                                  project=config.params["project"]),
+            'release-artifacts': [artifact['name'] for artifact in worker['artifacts']]
         }
 
         if build_platform.startswith('macosx'):
