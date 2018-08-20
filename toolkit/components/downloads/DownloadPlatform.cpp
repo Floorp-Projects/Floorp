@@ -14,7 +14,9 @@
 #include "nsISupportsPrimitives.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsThreadUtils.h"
+#include "xpcpublic.h"
 
+#include "mozilla/dom/Promise.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -44,6 +46,7 @@
 #endif
 
 using namespace mozilla;
+using dom::Promise;
 
 DownloadPlatform *DownloadPlatform::gDownloadPlatformService = nullptr;
 
@@ -110,8 +113,27 @@ DownloadPlatform::DownloadPlatform()
 }
 
 nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIFile* aTarget,
-                                        const nsACString& aContentType, bool aIsPrivate)
+                                        const nsACString& aContentType, bool aIsPrivate,
+                                        JSContext* aCx, Promise** aPromise)
 {
+
+  nsIGlobalObject* globalObject =
+    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(globalObject, result);
+
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  nsresult rv = NS_OK;
+  bool pendingAsyncOperations = false;
+
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID) \
  || defined(MOZ_WIDGET_GTK)
 
@@ -183,9 +205,9 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIF
       nsCOMPtr<nsIURI> source(aSource);
       nsCOMPtr<nsIURI> referrer(aReferrer);
 
-      nsresult rv = mIOThread->Dispatch(NS_NewRunnableFunction(
+      rv = mIOThread->Dispatch(NS_NewRunnableFunction(
         "DownloadPlatform::DownloadDone",
-        [pathCFStr, isFromWeb, source, referrer] {
+        [pathCFStr, isFromWeb, source, referrer, promise]() mutable {
           CFURLRef sourceCFURL = CreateCFURLFromNSIURI(source);
           CFURLRef referrerCFURL = CreateCFURLFromNSIURI(referrer);
 
@@ -203,17 +225,35 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIF
           if (referrerCFURL) {
             ::CFRelease(referrerCFURL);
           }
+
+          DebugOnly<nsresult> rv = NS_DispatchToMainThread(NS_NewRunnableFunction(
+            "DownloadPlatform::DownloadDoneResolve",
+            [promise = std::move(promise)]() {
+              promise->MaybeResolveWithUndefined();
+            }
+          ));
+          MOZ_ASSERT(NS_SUCCEEDED(rv));
+          // In non-debug builds, if we've for some reason failed to dispatch
+          // a runnable to the main thread to resolve the Promise, then it's
+          // unlikely we can reject it either. At that point, the Promise
+          // is going to remain in pending limbo until its global goes away.
         }
       ));
 
-      return rv;
+      if (NS_SUCCEEDED(rv)) {
+        pendingAsyncOperations = true;
+      }
     }
 #endif
   }
 
 #endif
 
-  return NS_OK;
+  if (!pendingAsyncOperations) {
+    promise->MaybeResolveWithUndefined();
+  }
+  promise.forget(aPromise);
+  return rv;
 }
 
 nsresult DownloadPlatform::MapUrlToZone(const nsAString& aURL,
