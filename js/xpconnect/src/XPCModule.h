@@ -40,9 +40,7 @@ NS_DEFINE_NAMED_CID(MOZ_JSSUBSCRIPTLOADER_CID);
   { &kMOZ_JSSUBSCRIPTLOADER_CID, false, nullptr, mozJSSubScriptLoaderConstructor },
 
 #define XPCONNECT_CONTRACTS                                                   \
-  { XPC_ID_CONTRACTID, &kNS_JS_ID_CID },                                      \
   { XPC_XPCONNECT_CONTRACTID, &kNS_XPCONNECT_CID },                           \
-  { XPC_CONTEXT_STACK_CONTRACTID, &kNS_XPCONNECT_CID },                       \
   { MOZJSCOMPONENTLOADER_CONTRACTID, &kMOZJSCOMPONENTLOADER_CID },            \
   { MOZJSSUBSCRIPTLOADER_CONTRACTID, &kMOZ_JSSUBSCRIPTLOADER_CID },
 
