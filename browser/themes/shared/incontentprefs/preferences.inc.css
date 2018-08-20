@@ -411,8 +411,7 @@ button > hbox > label {
   justify-content: space-between;
 }
 
-#blockCookies,
-#keepRow {
+#acceptCookies {
   margin-top: 1.5em;
 }
 
