@@ -1726,8 +1726,7 @@ class JSScript : public js::gc::TenuredCell
     js::ScriptSource* scriptSource() const;
     js::ScriptSource* maybeForwardedScriptSource() const;
 
-    void setDefaultClassConstructorSpan(JSObject* sourceObject, uint32_t start, uint32_t end,
-                                        unsigned line, unsigned column);
+    void setDefaultClassConstructorSpan(JSObject* sourceObject, uint32_t start, uint32_t end);
 
     bool mutedErrors() const { return scriptSource()->mutedErrors(); }
     const char* filename() const { return scriptSource()->filename(); }
