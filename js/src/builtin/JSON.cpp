@@ -19,6 +19,7 @@
 #include "builtin/BigInt.h"
 #endif
 #include "builtin/String.h"
+#include "js/StableStringChars.h"
 #include "util/StringBuffer.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"
@@ -37,6 +38,8 @@ using namespace js::gc;
 using mozilla::IsFinite;
 using mozilla::Maybe;
 using mozilla::RangedPtr;
+
+using JS::AutoStableStringChars;
 
 const Class js::JSONClass = {
     js_JSON_str,

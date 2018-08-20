@@ -19,6 +19,7 @@
 #include "builtin/intl/SharedIntlData.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
 #include "gc/FreeOp.h"
+#include "js/StableStringChars.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -29,6 +30,7 @@
 
 using namespace js;
 
+using JS::AutoStableStringChars;
 using JS::ClippedTime;
 using JS::TimeClip;
 

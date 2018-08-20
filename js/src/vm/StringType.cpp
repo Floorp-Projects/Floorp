@@ -20,6 +20,7 @@
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Nursery.h"
+#include "js/StableStringChars.h"
 #include "js/UbiNode.h"
 #include "util/StringBuffer.h"
 #include "vm/GeckoProfiler.h"
@@ -41,6 +42,7 @@ using mozilla::RoundUpPow2;
 using mozilla::Unused;
 
 using JS::AutoCheckCannotGC;
+using JS::AutoStableStringChars;
 
 using UniqueLatin1Chars = UniquePtr<Latin1Char[], JS::FreePolicy>;
 

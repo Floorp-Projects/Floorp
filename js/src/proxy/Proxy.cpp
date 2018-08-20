@@ -12,6 +12,7 @@
 
 #include "jsapi.h"
 
+#include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/ScriptedProxyHandler.h"
@@ -26,6 +27,8 @@
 
 using namespace js;
 using namespace js::gc;
+
+using JS::AutoStableStringChars;
 
 void
 js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext* cx, jsid id)

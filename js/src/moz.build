@@ -154,6 +154,7 @@ EXPORTS.js += [
     '../public/Result.h',
     '../public/RootingAPI.h',
     '../public/SliceBudget.h',
+    '../public/StableStringChars.h',
     '../public/Stream.h',
     '../public/StructuredClone.h',
     '../public/SweepingAPI.h',
