@@ -60,8 +60,8 @@ MainProcessSingleton.prototype = {
   observe(subject, topic, data) {
     switch (topic) {
     case "app-startup": {
+      ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm", null);
       Services.obs.addObserver(this, "xpcom-shutdown");
-      Services.obs.addObserver(this, "document-element-inserted");
 
       // Load this script early so that console.* is initialized
       // before other frame scripts.
@@ -72,24 +72,8 @@ MainProcessSingleton.prototype = {
       break;
     }
 
-    case "document-element-inserted":
-      // Set up Custom Elements for XUL and XHTML documents before anything else
-      // happens. Anything loaded here should be considered part of core XUL functionality.
-      // Any window-specific elements can be registered via <script> tags at the
-      // top of individual documents.
-      const doc = subject;
-      if (doc.nodePrincipal.isSystemPrincipal && (
-            doc.contentType == "application/vnd.mozilla.xul+xml" ||
-            doc.contentType == "application/xhtml+xml"
-        )) {
-        Services.scriptloader.loadSubScript(
-          "chrome://global/content/customElements.js", doc.ownerGlobal);
-      }
-      break;
-
     case "xpcom-shutdown":
       Services.mm.removeMessageListener("Search:AddEngine", this.addSearchEngine);
-      Services.obs.removeObserver(this, "document-element-inserted");
       break;
     }
   },
