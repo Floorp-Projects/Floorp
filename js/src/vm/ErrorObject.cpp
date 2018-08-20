@@ -13,6 +13,7 @@
 
 #include "jsexn.h"
 
+#include "js/AutoByteString.h"
 #include "js/CallArgs.h"
 #include "js/CharacterEncoding.h"
 #include "vm/GlobalObject.h"

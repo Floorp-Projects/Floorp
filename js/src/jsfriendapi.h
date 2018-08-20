@@ -13,11 +13,12 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 
-#include "jsapi.h" // For JSAutoByteString.  See bug 1033916.
 #include "jspubtd.h"
 
+#include "js/AutoByteString.h"
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
+#include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/ErrorReport.h"
 #include "js/HeapAPI.h"

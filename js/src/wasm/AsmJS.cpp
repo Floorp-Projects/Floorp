@@ -32,6 +32,7 @@
 #include "builtin/String.h"
 #include "frontend/Parser.h"
 #include "gc/Policy.h"
+#include "js/AutoByteString.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
 #include "js/StableStringChars.h"

@@ -20,6 +20,7 @@
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Nursery.h"
+#include "js/AutoByteString.h"
 #include "js/StableStringChars.h"
 #include "js/UbiNode.h"
 #include "util/StringBuffer.h"

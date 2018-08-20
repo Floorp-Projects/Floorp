@@ -10,6 +10,7 @@
 
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
+#include "js/AutoByteString.h"
 #include "js/Proxy.h"
 #include "js/StructuredClone.h"
 #include "nsContentUtils.h"

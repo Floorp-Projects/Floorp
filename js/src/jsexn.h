@@ -17,6 +17,8 @@
 #include "js/UniquePtr.h"
 #include "vm/JSContext.h"
 
+class JSAutoByteString;
+
 namespace js {
 class ErrorObject;
 
