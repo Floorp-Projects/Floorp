@@ -294,9 +294,11 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
   }
 
   // early way out if all contextual UI extensions are disabled
-  NS_ENSURE_TRUE(mIsObjectResizingEnabled ||
-      mIsAbsolutelyPositioningEnabled ||
-      mIsInlineTableEditingEnabled, NS_OK);
+  if (NS_WARN_IF(!IsObjectResizerEnabled() &&
+                 !IsAbsolutePositionEditorEnabled() &&
+                 !IsInlineTableEditorEnabled())) {
+    return NS_OK;
+  }
 
   // Don't change selection state if we're moving.
   if (mIsMoving) {
@@ -318,21 +320,21 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
   nsAtom* focusTagAtom = focusElement->NodeInfo()->NameAtom();
 
   RefPtr<Element> absPosElement;
-  if (mIsAbsolutelyPositioningEnabled) {
+  if (IsAbsolutePositionEditorEnabled()) {
     // Absolute Positioning support is enabled, is the selection contained
     // in an absolutely positioned element ?
     absPosElement = GetAbsolutelyPositionedSelectionContainer();
   }
 
   RefPtr<Element> cellElement;
-  if (mIsObjectResizingEnabled || mIsInlineTableEditingEnabled) {
+  if (IsObjectResizerEnabled() || IsInlineTableEditorEnabled()) {
     // Resizing or Inline Table Editing is enabled, we need to check if the
     // selection is contained in a table cell
     cellElement =
       GetElementOrParentByTagNameAtSelection(*aSelection, *nsGkAtoms::td);
   }
 
-  if (mIsObjectResizingEnabled && cellElement) {
+  if (IsObjectResizerEnabled() && cellElement) {
     // we are here because Resizing is enabled AND selection is contained in
     // a cell
 
@@ -359,13 +361,13 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
   // content which means a DOMAttrModified handler may cause arbitrary
   // side effects while this code runs (bug 420439).
 
-  if (mIsAbsolutelyPositioningEnabled && mAbsolutelyPositionedObject &&
+  if (IsAbsolutePositionEditorEnabled() && mAbsolutelyPositionedObject &&
       absPosElement != mAbsolutelyPositionedObject) {
     HideGrabber();
     NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
   }
 
-  if (mIsObjectResizingEnabled && mResizedObject &&
+  if (IsObjectResizerEnabled() && mResizedObject &&
       mResizedObject != focusElement) {
     nsresult rv = HideResizers();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -382,7 +384,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
   // now, let's display all contextual UI for good
   nsIContent* hostContent = GetActiveEditingHost();
 
-  if (mIsObjectResizingEnabled && focusElement &&
+  if (IsObjectResizerEnabled() && focusElement &&
       IsModifiableNode(*focusElement) && focusElement != hostContent) {
     if (nsGkAtoms::img == focusTagAtom) {
       mResizedObjectIsAnImage = true;
@@ -400,7 +402,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
     }
   }
 
-  if (mIsAbsolutelyPositioningEnabled && absPosElement &&
+  if (IsAbsolutePositionEditorEnabled() && absPosElement &&
       IsModifiableNode(*absPosElement) && absPosElement != hostContent) {
     if (mAbsolutelyPositionedObject) {
       nsresult rv = RefreshGrabber();

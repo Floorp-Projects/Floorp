@@ -221,11 +221,47 @@ public:
    */
   nsresult OnMouseMove(dom::MouseEvent* aMouseEvent);
 
-  // non-virtual methods of interface methods
-  bool AbsolutePositioningEnabled() const
+  /**
+   * Enable/disable object resizers for <img> elements, <table> elements,
+   * absolute positioned elements (required absolute position editor enabled).
+   */
+  void EnableObjectResizer(bool aEnable)
+  {
+    mIsObjectResizingEnabled = aEnable;
+  }
+  bool IsObjectResizerEnabled() const
+  {
+    return mIsObjectResizingEnabled;
+  }
+
+  /**
+   * Enable/disable inline table editor, e.g., adding new row or column,
+   * removing existing row or column.
+   */
+  void EnableInlineTableEditor(bool aEnable)
+  {
+    mIsInlineTableEditingEnabled = aEnable;
+  }
+  bool IsInlineTableEditorEnabled() const
+  {
+    return mIsInlineTableEditingEnabled;
+  }
+
+  /**
+   * Enable/disable absolute position editor, resizing absolute positioned
+   * elements (required object resizers enabled) or positioning them with
+   * dragging grabber.
+   */
+  void EnableAbsolutePositionEditor(bool aEnable)
+  {
+    mIsAbsolutelyPositioningEnabled = aEnable;
+  }
+  bool IsAbsolutePositionEditorEnabled() const
   {
     return mIsAbsolutelyPositioningEnabled;
   }
+
+  // non-virtual methods of interface methods
 
   /**
    * returns the deepest absolutely positioned container of the selection

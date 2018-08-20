@@ -28,14 +28,14 @@ namespace mozilla {
 NS_IMETHODIMP
 HTMLEditor::SetInlineTableEditingEnabled(bool aIsEnabled)
 {
-  mIsInlineTableEditingEnabled = aIsEnabled;
+  EnableInlineTableEditor(aIsEnabled);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLEditor::GetInlineTableEditingEnabled(bool* aIsEnabled)
 {
-  *aIsEnabled = mIsInlineTableEditingEnabled;
+  *aIsEnabled = IsInlineTableEditorEnabled();
   return NS_OK;
 }
 
