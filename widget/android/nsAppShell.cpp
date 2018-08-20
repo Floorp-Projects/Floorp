@@ -587,11 +587,6 @@ nsAppShell::Observe(nsISupports* aSubject,
 
     } else if (!strcmp(aTopic, "profile-after-change")) {
         if (jni::IsAvailable()) {
-            // See if we want to force 16-bit color before doing anything
-            if (Preferences::GetBool("gfx.android.rgb16.force", false)) {
-                java::GeckoAppShell::SetScreenDepthOverride(16);
-            }
-
             java::GeckoThread::SetState(
                     java::GeckoThread::State::PROFILE_READY());
 
