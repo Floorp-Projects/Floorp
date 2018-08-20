@@ -17,6 +17,7 @@
 #include "mozilla/UseCounter.h"
 
 #include "AccessCheck.h"
+#include "js/JSON.h"
 #include "js/StableStringChars.h"
 #include "jsfriendapi.h"
 #include "nsContentCreatorFunctions.h"

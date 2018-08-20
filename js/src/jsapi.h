@@ -4724,61 +4724,6 @@ PropertySpecNameToPermanentId(JSContext* cx, const char* name, jsid* idp);
 } /* namespace JS */
 
 /************************************************************************/
-/*
- * JSON functions
- */
-typedef bool (* JSONWriteCallback)(const char16_t* buf, uint32_t len, void* data);
-
-/**
- * JSON.stringify as specified by ES5.
- */
-JS_PUBLIC_API(bool)
-JS_Stringify(JSContext* cx, JS::MutableHandleValue value, JS::HandleObject replacer,
-             JS::HandleValue space, JSONWriteCallback callback, void* data);
-
-namespace JS {
-
-/**
- * An API akin to JS_Stringify but with the goal of not having observable
- * side-effects when the stringification is performed.  This means it does not
- * allow a replacer or a custom space, and has the following constraints on its
- * input:
- *
- * 1) The input must be a plain object or array, not an abitrary value.
- * 2) Every value in the graph reached by the algorithm starting with this
- *    object must be one of the following: null, undefined, a string (NOT a
- *    string object!), a boolean, a finite number (i.e. no NaN or Infinity or
- *    -Infinity), a plain object with no accessor properties, or an Array with
- *    no holes.
- *
- * The actual behavior differs from JS_Stringify only in asserting the above and
- * NOT attempting to get the "toJSON" property from things, since that could
- * clearly have side-effects.
- */
-JS_PUBLIC_API(bool)
-ToJSONMaybeSafely(JSContext* cx, JS::HandleObject input,
-                  JSONWriteCallback callback, void* data);
-
-} /* namespace JS */
-
-/**
- * JSON.parse as specified by ES5.
- */
-JS_PUBLIC_API(bool)
-JS_ParseJSON(JSContext* cx, const char16_t* chars, uint32_t len, JS::MutableHandleValue vp);
-
-JS_PUBLIC_API(bool)
-JS_ParseJSON(JSContext* cx, JS::HandleString str, JS::MutableHandleValue vp);
-
-JS_PUBLIC_API(bool)
-JS_ParseJSONWithReviver(JSContext* cx, const char16_t* chars, uint32_t len, JS::HandleValue reviver,
-                        JS::MutableHandleValue vp);
-
-JS_PUBLIC_API(bool)
-JS_ParseJSONWithReviver(JSContext* cx, JS::HandleString str, JS::HandleValue reviver,
-                        JS::MutableHandleValue vp);
-
-/************************************************************************/
 
 /**
  * The default locale for the ECMAScript Internationalization API

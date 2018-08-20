@@ -143,6 +143,7 @@ EXPORTS.js += [
     '../public/HeapAPI.h',
     '../public/Id.h',
     '../public/Initialization.h',
+    '../public/JSON.h',
     '../public/MemoryFunctions.h',
     '../public/MemoryMetrics.h',
     '../public/Principals.h',
