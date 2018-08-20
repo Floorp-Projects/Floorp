@@ -1878,7 +1878,10 @@ var gHeader = {
 
       let browser = getBrowserElement();
       let chromewin = browser.ownerGlobal;
-      chromewin.openLinkIn(url, "tab", {fromChrome: true});
+      chromewin.openLinkIn(url, "tab", {
+        fromChrome: true,
+        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+      });
     });
   },
 
