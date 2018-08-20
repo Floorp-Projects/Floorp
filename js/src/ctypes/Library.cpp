@@ -10,6 +10,9 @@
 #include "prlink.h"
 
 #include "ctypes/CTypes.h"
+#include "js/StableStringChars.h"
+
+using JS::AutoStableStringChars;
 
 namespace js {
 namespace ctypes {

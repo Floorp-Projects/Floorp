@@ -17,6 +17,7 @@
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "gc/FreeOp.h"
+#include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -26,6 +27,8 @@
 #include "vm/JSObject-inl.h"
 
 using namespace js;
+
+using JS::AutoStableStringChars;
 
 using js::intl::GetAvailableLocales;
 using js::intl::IcuLocale;

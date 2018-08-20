@@ -22,6 +22,7 @@
 #endif
 #include "irregexp/RegExpParser.h"
 #include "jit/VMFunctions.h"
+#include "js/StableStringChars.h"
 #include "util/StringBuffer.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"
@@ -41,6 +42,7 @@ using namespace js;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
+using JS::AutoStableStringChars;
 using js::frontend::TokenStream;
 
 using JS::AutoCheckCannotGC;

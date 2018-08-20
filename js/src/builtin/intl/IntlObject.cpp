@@ -22,6 +22,7 @@
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "js/Class.h"
+#include "js/StableStringChars.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
@@ -33,6 +34,8 @@ using namespace js;
 
 using mozilla::Range;
 using mozilla::RangedPtr;
+
+using JS::AutoStableStringChars;
 
 using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;

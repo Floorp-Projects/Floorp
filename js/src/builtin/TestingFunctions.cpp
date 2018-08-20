@@ -43,6 +43,7 @@
 #include "jit/JitRealm.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
+#include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/UbiNode.h"
 #include "js/UbiNodeBreadthFirst.h"
@@ -84,6 +85,8 @@ using namespace js;
 
 using mozilla::ArrayLength;
 using mozilla::Maybe;
+
+using JS::AutoStableStringChars;
 
 // If fuzzingSafe is set, remove functionality that could cause problems with
 // fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.
