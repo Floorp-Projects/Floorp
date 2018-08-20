@@ -103,6 +103,11 @@ class AnimatedProgressBar @JvmOverloads constructor(
 
     private fun setVisibilityImmediately(value: Int) {
         super.setVisibility(value)
+
+        progressDrawable?.also {
+            // Update the visibility state of the drawable too to start/stop animating it.
+            it.setVisible(value == View.VISIBLE, true)
+        }
     }
 
     internal fun animateClosing() {
@@ -159,6 +164,12 @@ class AnimatedProgressBar @JvmOverloads constructor(
             progressDrawable = resources.getDrawable(R.drawable.mozac_progressbar, context.theme)
         }
         progressDrawable = buildWrapDrawable(progressDrawable, wrap, duration, resID)
+
+        if (progress == 0) {
+            // If the progress is 0 then we set the view to GONE immediately to avoid animating the
+            // invisible progress.
+            setVisibilityImmediately(View.GONE)
+        }
 
         a.recycle()
     }

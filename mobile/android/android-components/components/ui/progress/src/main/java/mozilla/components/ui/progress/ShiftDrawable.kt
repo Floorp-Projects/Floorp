@@ -31,19 +31,15 @@ internal class ShiftDrawable @JvmOverloads constructor(
                 invalidateSelf()
             }
         }
-        animator.start()
     }
 
     override fun setVisible(visible: Boolean, restart: Boolean): Boolean {
-        val result = super.setVisible(visible, restart)
-
-        if (isVisible) {
-            animator.start()
-        } else {
-            animator.end()
+        return super.setVisible(visible, restart).also { isDifferent ->
+            when {
+                isDifferent && visible -> animator.start()
+                isDifferent && !visible -> animator.end()
+            }
         }
-
-        return result
     }
 
     override fun onBoundsChange(bounds: Rect) {
