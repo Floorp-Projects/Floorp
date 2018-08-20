@@ -17,6 +17,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/ipc/PendingIPCBlobParent.h"
+#include "mozilla/dom/quota/MemoryOutputStream.h"
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
@@ -48,6 +49,7 @@
 namespace mozilla {
 namespace dom {
 
+using namespace mozilla::dom::quota;
 using namespace mozilla::ipc;
 
 namespace {
@@ -632,8 +634,6 @@ class ReadOp final
 {
   friend class FileHandle;
 
-  class MemoryOutputStream;
-
   const FileRequestReadParams mParams;
 
 private:
@@ -649,34 +649,6 @@ private:
 
   virtual void
   GetResponse(FileRequestResponse& aResponse) override;
-};
-
-class ReadOp::MemoryOutputStream final
-  : public nsIOutputStream
-{
-  nsCString mData;
-  uint64_t mOffset;
-
-public:
-  static already_AddRefed<MemoryOutputStream>
-  Create(uint64_t aSize);
-
-  const nsCString&
-  Data() const
-  {
-    return mData;
-  }
-
-private:
-  MemoryOutputStream()
-  : mOffset(0)
-  { }
-
-  virtual ~MemoryOutputStream()
-  { }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIOUTPUTSTREAM
 };
 
 class WriteOp final
@@ -2402,96 +2374,6 @@ ReadOp::GetResponse(FileRequestResponse& aResponse)
   auto* stream = static_cast<MemoryOutputStream*>(mBufferStream.get());
 
   aResponse = FileRequestReadResponse(stream->Data());
-}
-
-// static
-already_AddRefed<ReadOp::MemoryOutputStream>
-ReadOp::
-MemoryOutputStream::Create(uint64_t aSize)
-{
-  MOZ_ASSERT(aSize, "Passed zero size!");
-
-  if (NS_WARN_IF(aSize > UINT32_MAX)) {
-    return nullptr;
-  }
-
-  RefPtr<MemoryOutputStream> stream = new MemoryOutputStream();
-
-  char* dummy;
-  uint32_t length = stream->mData.GetMutableData(&dummy, aSize, fallible);
-  if (NS_WARN_IF(length != aSize)) {
-    return nullptr;
-  }
-
-  return stream.forget();
-}
-
-NS_IMPL_ISUPPORTS(ReadOp::MemoryOutputStream, nsIOutputStream)
-
-NS_IMETHODIMP
-ReadOp::
-MemoryOutputStream::Close()
-{
-  mData.Truncate(mOffset);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ReadOp::
-MemoryOutputStream::Write(const char* aBuf, uint32_t aCount, uint32_t* _retval)
-{
-  return WriteSegments(NS_CopySegmentToBuffer, (char*)aBuf, aCount, _retval);
-}
-
-NS_IMETHODIMP
-ReadOp::
-MemoryOutputStream::Flush()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ReadOp::
-MemoryOutputStream::WriteFrom(nsIInputStream* aFromStream, uint32_t aCount,
-                              uint32_t* _retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-ReadOp::
-MemoryOutputStream::WriteSegments(nsReadSegmentFun aReader, void* aClosure,
-                                  uint32_t aCount, uint32_t* _retval)
-{
-  NS_ASSERTION(mData.Length() >= mOffset, "Bad stream state!");
-
-  uint32_t maxCount = mData.Length() - mOffset;
-  if (maxCount == 0) {
-    *_retval = 0;
-    return NS_OK;
-  }
-
-  if (aCount > maxCount) {
-    aCount = maxCount;
-  }
-
-  nsresult rv = aReader(this, aClosure, mData.BeginWriting() + mOffset, 0,
-                        aCount, _retval);
-  if (NS_SUCCEEDED(rv)) {
-    NS_ASSERTION(*_retval <= aCount,
-                 "Reader should not read more than we asked it to read!");
-    mOffset += *_retval;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ReadOp::
-MemoryOutputStream::IsNonBlocking(bool* _retval)
-{
-  *_retval = false;
-  return NS_OK;
 }
 
 WriteOp::WriteOp(FileHandle* aFileHandle,
