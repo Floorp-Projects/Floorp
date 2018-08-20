@@ -131,12 +131,6 @@
         A 'syncstatus' attribute is set while actively syncing, and the label
         attribute which changes from "sync now" to "syncing" etc. -->
     <broadcaster id="sync-status" onmouseover="gSync.refreshSyncButtonsTooltip();"/>
-    <!-- broadcasters of the "hidden" attribute to reflect setup state for
-         menus -->
-    <broadcaster id="sync-setup-state" hidden="true"/>
-    <broadcaster id="sync-unverified-state" hidden="true"/>
-    <broadcaster id="sync-syncnow-state" hidden="true"/>
-    <broadcaster id="sync-reauth-state" hidden="true"/>
     <broadcaster id="workOfflineMenuitemState"/>
     <broadcaster id="devtoolsMenuBroadcaster_RecordExecution"
                  label="&devtoolsRecordExecution.label;"
