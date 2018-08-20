@@ -13,8 +13,10 @@ import sys
 import mozinfo
 from manifestparser import TestManifest
 
+from mozharness.mozilla.fetches import FetchesMixin
 
-class SingleTestMixin(object):
+
+class SingleTestMixin(FetchesMixin):
     """Utility functions for per-test testing like test verification and per-test coverage."""
 
     def __init__(self):

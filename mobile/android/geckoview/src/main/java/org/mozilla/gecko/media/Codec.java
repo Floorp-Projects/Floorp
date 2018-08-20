@@ -350,6 +350,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     private SamplePool mSamplePool;
     // Values will be updated after configure called.
     private volatile boolean mIsAdaptivePlaybackSupported = false;
+    private volatile boolean mIsHardwareAccelerated = false;
     private boolean mIsTunneledPlaybackSupported = false;
 
     public synchronized void setCallbacks(ICodecCallbacks callbacks) throws RemoteException {
@@ -399,6 +400,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
                 Log.w(LOGTAG, "unable to configure " + name + ". Try next.");
                 continue;
             }
+            mIsHardwareAccelerated = !name.startsWith("OMX.google.");
             mCodec = codec;
             mInputProcessor = new InputProcessor();
             final boolean renderToSurface = surface != null;
@@ -475,6 +477,11 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     @Override
     public synchronized boolean isAdaptivePlaybackSupported() {
         return mIsAdaptivePlaybackSupported;
+    }
+
+    @Override
+    public synchronized boolean isHardwareAccelerated() {
+        return mIsHardwareAccelerated;
     }
 
     @Override

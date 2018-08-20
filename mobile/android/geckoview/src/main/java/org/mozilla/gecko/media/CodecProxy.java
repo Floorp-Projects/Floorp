@@ -192,6 +192,21 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
+    public synchronized boolean isHardwareAccelerated()
+    {
+      if (mRemote == null) {
+          Log.e(LOGTAG, "cannot check isHardwareAccelerated with an ended codec");
+          return false;
+      }
+      try {
+            return mRemote.isHardwareAccelerated();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @WrapForJNI
     public synchronized boolean isTunneledPlaybackSupported()
     {
       if (mRemote == null) {

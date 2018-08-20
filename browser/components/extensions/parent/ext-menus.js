@@ -580,6 +580,7 @@ MenuItem.prototype = {
       checked: false,
       contexts: ["all"],
       enabled: true,
+      visible: true,
     });
   },
 
@@ -708,6 +709,9 @@ MenuItem.prototype = {
   },
 
   enabledForContext(contextData) {
+    if (!this.visible) {
+      return false;
+    }
     let contexts = getMenuContexts(contextData);
     if (!this.contexts.some(n => contexts.has(n))) {
       return false;

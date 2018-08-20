@@ -19,6 +19,8 @@ from .taskgraph import TaskGraph
 from .try_option_syntax import parse_message
 from .actions import render_actions_json
 from taskgraph.util.partials import populate_release_history
+from taskgraph.util.yaml import load_yaml
+
 
 logger = logging.getLogger(__name__)
 
@@ -320,8 +322,7 @@ def write_artifact(filename, data):
 def read_artifact(filename):
     path = os.path.join(ARTIFACTS_DIR, filename)
     if filename.endswith('.yml'):
-        with open(path, 'r') as f:
-            return yaml.load(f)
+        return load_yaml(path, filename)
     elif filename.endswith('.json'):
         with open(path, 'r') as f:
             return json.load(f)
