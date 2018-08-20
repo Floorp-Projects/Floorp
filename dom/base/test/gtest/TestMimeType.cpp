@@ -212,10 +212,6 @@ TEST(MimeType, DuplicateParameter2)
     "Duplicate parameter #2";
 }
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4819)
-#endif
 TEST(MimeType, NonAlphanumericParametersAreQuoted)
 {
   const auto in = NS_LITERAL_STRING("text/html;test=\x00FF\\;charset=gbk");
@@ -226,9 +222,6 @@ TEST(MimeType, NonAlphanumericParametersAreQuoted)
   ASSERT_TRUE(out.Equals(NS_LITERAL_STRING("text/html;test=\"\x00FF\\\\\";charset=gbk"))) <<
     "Non-alphanumeric parameters are quoted";
 }
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 TEST(MimeType, ParameterQuotedIfHasLeadingWhitespace1)
 {
