@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(
-  this, "AddonStudies", "resource://normandy/lib/AddonStudies.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this, "CleanupManager", "resource://normandy/lib/CleanupManager.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+  AddonStudyAction: "resource://normandy/actions/AddonStudyAction.jsm",
+  AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
+  CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
+});
 
 var EXPORTED_SYMBOLS = ["ShieldPreferences"];
 
@@ -24,6 +24,7 @@ var ShieldPreferences = {
   init() {
     // Watch for changes to the Opt-out pref
     Services.prefs.addObserver(PREF_OPT_OUT_STUDIES_ENABLED, this);
+
     CleanupManager.addCleanupHandler(() => {
       Services.prefs.removeObserver(PREF_OPT_OUT_STUDIES_ENABLED, this);
     });
@@ -44,9 +45,14 @@ var ShieldPreferences = {
       case PREF_OPT_OUT_STUDIES_ENABLED: {
         prefValue = Services.prefs.getBoolPref(PREF_OPT_OUT_STUDIES_ENABLED);
         if (!prefValue) {
+          const action = new AddonStudyAction();
           for (const study of await AddonStudies.getAll()) {
             if (study.active) {
-              await AddonStudies.stop(study.recipeId, "general-opt-out");
+              try {
+                await action.unenroll(study.recipeId, "general-opt-out");
+              } catch (err) {
+                Cu.reportError(err);
+              }
             }
           }
         }
