@@ -26,6 +26,13 @@ VRGPUParent::VRGPUParent(ProcessId aChildProcessId)
 void
 VRGPUParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
+  if (mVRService) {
+    mVRService->Stop();
+    mVRService = nullptr;
+  }
+#endif
+
   MessageLoop::current()->PostTask(
   NewRunnableMethod("gfx::VRGPUParent::DeferredDestroy",
                     this,
@@ -63,10 +70,28 @@ VRGPUParent::Bind(Endpoint<PVRGPUParent>&& aEndpoint)
 }
 
 mozilla::ipc::IPCResult
-VRGPUParent::RecvInitVRService(const nsCString& aId, const uint64_t& aGPUHandle,
-                               const uint64_t& aVRHandle, const uint64_t& aShmemFile)
+VRGPUParent::RecvStartVRService()
 {
-  // TODO: Create duplicate shared memory handle from GPU process.
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
+  mVRService = VRService::Create();
+  MOZ_ASSERT(mVRService);
+
+  mVRService->Start();
+#endif
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+VRGPUParent::RecvStopVRService()
+{
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
+  if (mVRService) {
+    mVRService->Stop();
+    mVRService = nullptr;
+  }
+#endif
+
   return IPC_OK();
 }
 

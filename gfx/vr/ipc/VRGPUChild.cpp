@@ -40,12 +40,6 @@ VRGPUChild::Get()
 }
 
 /*static*/ void
-VRGPUChild::DeferredDestroy(RefPtr<VRGPUChild> aVRGPUChild)
-{
-  aVRGPUChild->Close();
-}
-
-/*static*/ void
 VRGPUChild::ShutDown()
 {
   MOZ_ASSERT(NS_IsMainThread());
