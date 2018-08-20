@@ -574,6 +574,7 @@ private:
   void UnRegisterTunnel(Http2Stream *);
   uint32_t FindTunnelCount(nsHttpConnectionInfo *);
   nsDataHashtable<nsCStringHashKey, uint32_t> mTunnelHash;
+  uint32_t mTrrStreams;
 };
 
 } // namespace net
