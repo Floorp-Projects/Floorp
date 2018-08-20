@@ -223,10 +223,14 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function() {
     return {
       onOpenWindow() {
         AeroPeek.onOpenWindow(window);
+        this.handledOpening = true;
       },
       onCloseWindow() {
-        AeroPeek.onCloseWindow(window);
-      }
+        if (this.handledOpening) {
+          AeroPeek.onCloseWindow(window);
+        }
+      },
+      handledOpening: false,
     };
   }
   return null;
@@ -1507,9 +1511,6 @@ var gBrowserInit = {
 
     LightWeightThemeWebInstaller.init();
 
-    if (Win7Features)
-      Win7Features.onOpenWindow();
-
     FullScreen.init();
     PointerLock.init();
 
@@ -1770,6 +1771,10 @@ var gBrowserInit = {
       }
     }, {timeout: 10000});
 
+    if (Win7Features) {
+      scheduleIdleTask(() => Win7Features.onOpenWindow());
+    }
+
     // This should always go last, since the idle tasks (except for the ones with
     // timeouts) should execute in order. Note that this observer notification is
     // not guaranteed to fire, since the window could close before we get here.
@@ -1895,9 +1900,6 @@ var gBrowserInit = {
     if (this._boundDelayedStartup) {
       this._cancelDelayedStartup();
     } else {
-      if (Win7Features)
-        Win7Features.onCloseWindow();
-
       Services.prefs.removeObserver(ctrlTab.prefName, ctrlTab);
       ctrlTab.uninit();
       gBrowserThumbnails.uninit();
