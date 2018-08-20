@@ -52,7 +52,7 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
 
     apply plugin: 'com.jfrog.bintray'
 
-    version = rootProject.ext.library['version']
+    version = Config.componentsVersion
 
     task sourcesJar(type: Jar) {
         from android.sourceSets.main.java.srcDirs

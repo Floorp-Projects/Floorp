@@ -6,15 +6,15 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion rootProject.ext.build['compileSdkVersion']
+    compileSdkVersion Config.compileSdkVersion
 
     defaultConfig {
-        minSdkVersion rootProject.ext.build['minSdkVersion']
-        targetSdkVersion rootProject.ext.build['targetSdkVersion']
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
-    
+
     buildTypes {
         release {
             minifyEnabled false
@@ -24,12 +24,12 @@ android {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
+    implementation Deps.kotlin_stdlib
+    implementation Deps.kotlin_coroutines
 
-    testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
-    testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
-    testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
+    testImplementation Deps.testing_junit
+    testImplementation Deps.testing_robolectric
+    testImplementation Deps.testing_mockito
 }
 
 archivesBaseName = "domains"

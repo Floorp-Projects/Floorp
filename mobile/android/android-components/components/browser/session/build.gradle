@@ -6,11 +6,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion rootProject.ext.build['compileSdkVersion']
+    compileSdkVersion Config.compileSdkVersion
 
     defaultConfig {
-        minSdkVersion rootProject.ext.build['minSdkVersion']
-        targetSdkVersion rootProject.ext.build['targetSdkVersion']
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
     }
 
     buildTypes {
@@ -26,17 +26,18 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':support-ktx')
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
-    implementation "com.android.support:customtabs:${rootProject.ext.dependencies['supportLibraries']}"
+    implementation Deps.kotlin_stdlib
+    implementation Deps.support_customtabs
 
     // We expose this as API because we are using Observable in our public API and do not want every
     // consumer to have to manually import "utils".
     api project(':support-base')
 
     testImplementation project(':support-test')
-    testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
-    testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
-    testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
+
+    testImplementation Deps.testing_junit
+    testImplementation Deps.testing_robolectric
+    testImplementation Deps.testing_mockito
 }
 
 archivesBaseName = "session"

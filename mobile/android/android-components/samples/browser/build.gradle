@@ -7,12 +7,12 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion rootProject.ext.build['compileSdkVersion']
+    compileSdkVersion Config.compileSdkVersion
 
     defaultConfig {
         applicationId "org.mozilla.samples.browser"
-        minSdkVersion rootProject.ext.build['minSdkVersion']
-        targetSdkVersion rootProject.ext.build['targetSdkVersion']
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
         versionCode 1
         versionName "1.0"
 
@@ -113,9 +113,9 @@ dependencies {
     productionX86Implementation "org.mozilla:geckoview-release-x86:${rootProject.ext.geckoRelease['version']}"
     productionAarch64Implementation "org.mozilla:geckoview-release-arm64-v8a:${rootProject.ext.geckoRelease['version']}"
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
+    implementation Deps.kotlin_stdlib
+    implementation Deps.kotlin_coroutines
 
-    implementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
-    implementation "com.android.support.constraint:constraint-layout:1.1.2"
+    implementation Deps.support_appcompat
+    implementation Deps.support_constraintlayout
 }

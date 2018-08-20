@@ -7,11 +7,11 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion rootProject.ext.build['compileSdkVersion']
+    compileSdkVersion Config.compileSdkVersion
 
     defaultConfig {
-        minSdkVersion rootProject.ext.build['minSdkVersion']
-        targetSdkVersion rootProject.ext.build['targetSdkVersion']
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
     }
 
     buildTypes {
@@ -31,19 +31,20 @@ dependencies {
     implementation project(':ui-icons')
     implementation project(':support-ktx')
 
-    implementation "com.android.support:support-fragment:${rootProject.ext.dependencies['supportLibraries']}"
-    implementation "com.android.support:recyclerview-v7:${rootProject.ext.dependencies['supportLibraries']}"
+    implementation Deps.support_fragment
+    implementation Deps.support_recyclerview
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
+    implementation Deps.kotlin_stdlib
+    implementation Deps.kotlin_coroutines
 
     // In tests we are constructing our own SessionManager instance which needs to know about an "engine".
     testImplementation project(':concept-engine')
 
     testImplementation project(':support-test')
-    testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
-    testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
-    testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
+
+    testImplementation Deps.testing_junit
+    testImplementation Deps.testing_robolectric
+    testImplementation Deps.testing_mockito
 }
 
 archivesBaseName = "feature-tabs"
