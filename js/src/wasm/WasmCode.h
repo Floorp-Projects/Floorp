@@ -190,7 +190,7 @@ class FuncExport
     FuncType funcType_;
     MOZ_INIT_OUTSIDE_CTOR struct CacheablePod {
         uint32_t funcIndex_;
-        uint32_t interpCodeRangeIndex_;
+        uint32_t funcCodeRangeIndex_;
         uint32_t eagerInterpEntryOffset_; // Machine code offset
         bool     hasEagerStubs_;
     } pod;
@@ -201,7 +201,7 @@ class FuncExport
       : funcType_(std::move(funcType))
     {
         pod.funcIndex_ = funcIndex;
-        pod.interpCodeRangeIndex_ = UINT32_MAX;
+        pod.funcCodeRangeIndex_ = UINT32_MAX;
         pod.eagerInterpEntryOffset_ = UINT32_MAX;
         pod.hasEagerStubs_ = hasEagerStubs;
     }
@@ -210,9 +210,9 @@ class FuncExport
         MOZ_ASSERT(hasEagerStubs());
         pod.eagerInterpEntryOffset_ = entryOffset;
     }
-    void initInterpCodeRangeIndex(uint32_t codeRangeIndex) {
-        MOZ_ASSERT(pod.interpCodeRangeIndex_ == UINT32_MAX);
-        pod.interpCodeRangeIndex_ = codeRangeIndex;
+    void initFuncCodeRangeIndex(uint32_t codeRangeIndex) {
+        MOZ_ASSERT(pod.funcCodeRangeIndex_ == UINT32_MAX);
+        pod.funcCodeRangeIndex_ = codeRangeIndex;
     }
 
     bool hasEagerStubs() const {
@@ -224,9 +224,9 @@ class FuncExport
     uint32_t funcIndex() const {
         return pod.funcIndex_;
     }
-    uint32_t interpCodeRangeIndex() const {
-        MOZ_ASSERT(pod.interpCodeRangeIndex_ != UINT32_MAX);
-        return pod.interpCodeRangeIndex_;
+    uint32_t funcCodeRangeIndex() const {
+        MOZ_ASSERT(pod.funcCodeRangeIndex_ != UINT32_MAX);
+        return pod.funcCodeRangeIndex_;
     }
     uint32_t eagerInterpEntryOffset() const {
         MOZ_ASSERT(pod.eagerInterpEntryOffset_ != UINT32_MAX);
@@ -532,11 +532,11 @@ struct LazyFuncExport
 {
     size_t funcIndex;
     size_t lazyStubSegmentIndex;
-    size_t interpCodeRangeIndex;
-    LazyFuncExport(size_t funcIndex, size_t lazyStubSegmentIndex, size_t interpCodeRangeIndex)
+    size_t funcCodeRangeIndex;
+    LazyFuncExport(size_t funcIndex, size_t lazyStubSegmentIndex, size_t funcCodeRangeIndex)
       : funcIndex(funcIndex),
         lazyStubSegmentIndex(lazyStubSegmentIndex),
-        interpCodeRangeIndex(interpCodeRangeIndex)
+        funcCodeRangeIndex(funcCodeRangeIndex)
     {}
 };
 
