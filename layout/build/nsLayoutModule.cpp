@@ -198,7 +198,6 @@ already_AddRefed<nsIPresentationService> NS_CreatePresentationService();
 // Factory Constructor
 typedef mozilla::dom::BlobURL::Mutator BlobURLMutator;
 NS_GENERIC_FACTORY_CONSTRUCTOR(BlobURLMutator)
-NS_GENERIC_FACTORY_CONSTRUCTOR(SDBConnection)
 NS_GENERIC_FACTORY_CONSTRUCTOR(LocalStorageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(SessionStorageManager)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(DOMRequestService,
@@ -774,7 +773,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_STYLESHEETSERVICE_CID, false, nullptr, nsStyleSheetServiceConstructor },
   { &kNS_HOSTOBJECTURI_CID, false, nullptr, BlobURLMutatorConstructor }, // do_CreateInstance returns mutator
   { &kNS_HOSTOBJECTURIMUTATOR_CID, false, nullptr, BlobURLMutatorConstructor },
-  { &kNS_SDBCONNECTION_CID, false, nullptr, SDBConnectionConstructor },
+  { &kNS_SDBCONNECTION_CID, false, nullptr, SDBConnection::Create },
   { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, SessionStorageManagerConstructor },
   { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, nullptr, LocalStorageManagerConstructor },
   { &kNS_TEXTEDITOR_CID, false, nullptr, TextEditorConstructor },

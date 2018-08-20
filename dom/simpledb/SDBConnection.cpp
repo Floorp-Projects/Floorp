@@ -14,6 +14,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsISDBCallbacks.h"
 #include "SDBRequest.h"
+#include "SimpleDBCommon.h"
 
 namespace mozilla {
 namespace dom {
@@ -74,6 +75,30 @@ SDBConnection::~SDBConnection()
     mBackgroundActor->SendDeleteMeInternal();
     MOZ_ASSERT(!mBackgroundActor, "SendDeleteMeInternal should have cleared!");
   }
+}
+
+// static
+nsresult
+SDBConnection::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+{
+  MOZ_ASSERT(aResult);
+
+  if (NS_WARN_IF(!Preferences::GetBool(kPrefSimpleDBEnabled, false))) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (aOuter) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+
+  RefPtr<SDBConnection> connection = new SDBConnection();
+
+  nsresult rv = connection->QueryInterface(aIID, aResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 void
