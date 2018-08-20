@@ -1519,7 +1519,6 @@ nsIDocument::nsIDocument()
     mNumTrackersBlocked(0)
 {
   SetIsInDocument();
-  SetIsConnected(true);
 }
 
 nsDocument::nsDocument(const char* aContentType)
