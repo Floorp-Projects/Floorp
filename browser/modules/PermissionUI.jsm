@@ -798,6 +798,8 @@ AutoplayPermissionPrompt.prototype = {
   },
 
   get popupOptions() {
+    let learnMoreURL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") + "block-autoplay";
     let checkbox = {
       show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal) &&
         !this.principal.URI.schemeIs("file")
@@ -808,6 +810,7 @@ AutoplayPermissionPrompt.prototype = {
     }
     return {
       checkbox,
+      learnMoreURL,
       displayURI: false,
       name: this.principal.URI.hostPort,
     };

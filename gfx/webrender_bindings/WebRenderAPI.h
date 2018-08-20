@@ -206,6 +206,8 @@ public:
   void WakeSceneBuilder();
   void FlushSceneBuilder();
 
+  void NotifyMemoryPressure();
+
   wr::WrIdNamespace GetNamespace();
   uint32_t GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }

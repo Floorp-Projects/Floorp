@@ -20,8 +20,8 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const ErrorDocs = require("devtools/server/actors/errordocs");
 
 loader.lazyRequireGetter(this, "NetworkMonitorActor", "devtools/server/actors/network-monitor", true);
-loader.lazyRequireGetter(this, "ConsoleProgressListener", "devtools/shared/webconsole/network-monitor", true);
-loader.lazyRequireGetter(this, "StackTraceCollector", "devtools/shared/webconsole/network-monitor", true);
+loader.lazyRequireGetter(this, "ConsoleProgressListener", "devtools/server/actors/webconsole/listeners/console-progress", true);
+loader.lazyRequireGetter(this, "StackTraceCollector", "devtools/server/actors/network-monitor/stack-trace-collector", true);
 loader.lazyRequireGetter(this, "JSPropertyProvider", "devtools/shared/webconsole/js-property-provider", true);
 loader.lazyRequireGetter(this, "Parser", "resource://devtools/shared/Parser.jsm", true);
 loader.lazyRequireGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm", true);
@@ -42,11 +42,11 @@ if (isWorker) {
   loader.lazyRequireGetter(this, "ConsoleAPIListener", "devtools/server/actors/webconsole/worker-listeners", true);
   loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/webconsole/worker-listeners", true);
 } else {
-  loader.lazyRequireGetter(this, "ConsoleAPIListener", "devtools/server/actors/webconsole/listeners", true);
-  loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/webconsole/listeners", true);
-  loader.lazyRequireGetter(this, "ConsoleReflowListener", "devtools/server/actors/webconsole/listeners", true);
-  loader.lazyRequireGetter(this, "ContentProcessListener", "devtools/server/actors/webconsole/listeners", true);
-  loader.lazyRequireGetter(this, "DocumentEventsListener", "devtools/server/actors/webconsole/listeners", true);
+  loader.lazyRequireGetter(this, "ConsoleAPIListener", "devtools/server/actors/webconsole/listeners/console-api", true);
+  loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/webconsole/listeners/console-service", true);
+  loader.lazyRequireGetter(this, "ConsoleReflowListener", "devtools/server/actors/webconsole/listeners/console-reflow", true);
+  loader.lazyRequireGetter(this, "ContentProcessListener", "devtools/server/actors/webconsole/listeners/content-process", true);
+  loader.lazyRequireGetter(this, "DocumentEventsListener", "devtools/server/actors/webconsole/listeners/document-events", true);
 }
 
 function isObject(value) {

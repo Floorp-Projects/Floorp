@@ -75,6 +75,8 @@ parent:
 
   async AddSharedSurface(ExternalImageId aId, SurfaceDescriptorShared aDesc);
   async RemoveSharedSurface(ExternalImageId aId);
+
+  async NotifyMemoryPressure();
 };
 
 } // layers
