@@ -101,6 +101,7 @@ DIRS += [
     'payments',
     'websocket',
     'serviceworkers',
+    'simpledb',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

@@ -16,6 +16,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/dom/ClientManagerActors.h"
+#include "mozilla/dom/PBackgroundSDBConnectionChild.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
@@ -232,6 +233,24 @@ BackgroundChildImpl::AllocPBackgroundLocalStorageCacheChild(
 bool
 BackgroundChildImpl::DeallocPBackgroundLocalStorageCacheChild(
                                       PBackgroundLocalStorageCacheChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
+}
+
+BackgroundChildImpl::PBackgroundSDBConnectionChild*
+BackgroundChildImpl::AllocPBackgroundSDBConnectionChild(
+                                            const PrincipalInfo& aPrincipalInfo)
+{
+  MOZ_CRASH("PBackgroundSDBConnectionChild actor should be manually "
+            "constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPBackgroundSDBConnectionChild(
+                                          PBackgroundSDBConnectionChild* aActor)
 {
   MOZ_ASSERT(aActor);
 
