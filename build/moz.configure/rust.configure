@@ -289,6 +289,28 @@ cbindgen = check_prog('CBINDGEN', add_rustup_path('cbindgen'), paths=toolchain_s
                       when=depends(build_project)
                       (lambda build_project: build_project != 'js'))
 
+
+@depends_if(cbindgen)
+@checking('cbindgen version')
+@imports(_from='textwrap', _import='dedent')
+def cbindgen_version(cbindgen):
+    cbindgen_min_version = Version('0.6.1')
+
+    # cbindgen x.y.z
+    version = Version(check_cmd_output(cbindgen, '--version').strip().split(" ")[1])
+
+    if version < cbindgen_min_version:
+        die(dedent('''\
+        cbindgen version {} is too old. At least version {} is required.
+
+        Please update using 'cargo install cbindgen --force' or running
+        './mach bootstrap', after removing the existing executable located at
+        {}.
+        '''.format(version, cbindgen_min_version, cbindgen)))
+
+    return version
+
+
 # Bindgen can use rustfmt to format Rust file, but it's not required.
 js_option(env='RUSTFMT', nargs=1, help='Path to the rustfmt program')
 
