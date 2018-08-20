@@ -420,6 +420,7 @@ BackgroundChildImpl::DeallocPCamerasChild(camera::PCamerasChild *aActor)
   RefPtr<camera::CamerasChild> child =
       dont_AddRef(static_cast<camera::CamerasChild*>(aActor));
   MOZ_ASSERT(aActor);
+  camera::Shutdown();
 #endif
   return true;
 }
