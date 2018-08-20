@@ -28,6 +28,9 @@
 #include "builtin/String.h"
 #include "double-conversion/double-conversion.h"
 #include "js/Conversions.h"
+#if !EXPOSE_INTL_API
+#include "js/LocaleSensitive.h"
+#endif
 #include "util/DoubleToString.h"
 #include "util/StringBuffer.h"
 #ifdef ENABLE_BIGINT
