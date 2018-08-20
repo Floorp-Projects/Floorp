@@ -1,6 +1,8 @@
 #!/bin/bash
 set -x -e -v
 
+# If you update this, make sure to update the minimum version in rust.configure
+# as well.
 CBINDGEN_VERSION=v0.6.1
 TARGET="$1"
 
