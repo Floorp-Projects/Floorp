@@ -22,7 +22,12 @@ var log = {
 };
 
 var PaymentDialogUtils = {
-  getAddressLabel(address) {
+  getAddressLabel(address, addressFields = null) {
+    if (addressFields) {
+      let requestedFields = addressFields.trim().split(/\s+/);
+      return requestedFields.filter(f => f && address[f]).map(f => address[f]).join(", ") +
+        ` (${address.guid})`;
+    }
     return `${address.name} (${address.guid})`;
   },
   isCCNumber(str) {
