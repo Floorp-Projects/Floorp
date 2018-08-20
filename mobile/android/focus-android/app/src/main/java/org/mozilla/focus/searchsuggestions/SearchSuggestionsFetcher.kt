@@ -55,6 +55,8 @@ class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
             client?.getSuggestions(query) ?: listOf()
         } catch (ex: SearchSuggestionClient.ResponseParserException) {
             listOf<String>()
+        } catch (ex: SearchSuggestionClient.FetchException) {
+            listOf<String>()
         }
 
         launch(UI) {
