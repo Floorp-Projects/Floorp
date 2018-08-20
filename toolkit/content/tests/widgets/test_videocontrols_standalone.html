@@ -24,6 +24,9 @@ function getMediaElement(aWindow) {
 var popup = window.open("seek_with_sound.ogg");
 popup.addEventListener("load", function() {
   var video = getMediaElement(popup);
+
+  is(popup.document.activeElement, video, "Document should load with focus moved to the video element.");
+
   if (!video.paused)
     runTestVideo(video);
   else {
@@ -52,6 +55,9 @@ function runTestAudioPre() {
   popup = window.open("audio.ogg");
   popup.addEventListener("load", function() {
     var audio = getMediaElement(popup);
+
+    is(popup.document.activeElement, audio, "Document should load with focus moved to the video element.");
+
     if (!audio.paused)
       runTestAudio(audio);
     else {
