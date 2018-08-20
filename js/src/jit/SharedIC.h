@@ -1103,9 +1103,8 @@ class ICStubCompiler
 
     static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* outerScript, Engine engine) {
         if (makesGCCalls) {
-            if (engine == ICStubCompiler::Engine::Baseline)
-                return outerScript->baselineScript()->fallbackStubSpace();
-            return outerScript->ionScript()->fallbackStubSpace();
+            MOZ_ASSERT(engine == ICStubCompiler::Engine::Baseline);
+            return outerScript->baselineScript()->fallbackStubSpace();
         }
         return outerScript->zone()->jitZone()->optimizedStubSpace();
     }
