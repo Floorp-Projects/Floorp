@@ -103,6 +103,7 @@ async function testSearchEngine(engineDetails) {
   // Test search URLs (including purposes).
   let url = engine.getSubmission("foo").uri.spec;
   Assert.equal(url, base + engineDetails.codes.submission, "Check search URL for 'foo'");
+  let sb = BrowserSearch.searchBar;
 
   let engineTests = [
     {
@@ -136,12 +137,8 @@ async function testSearchEngine(engineDetails) {
       name: "search bar search",
       searchURL: base + engineDetails.codes.submission,
       run() {
-        let sb = BrowserSearch.searchBar;
         sb.focus();
         sb.value = "foo";
-        registerCleanupFunction(function() {
-          sb.value = "";
-        });
         EventUtils.synthesizeKey("KEY_Enter");
       }
     },
@@ -185,5 +182,6 @@ async function testSearchEngine(engineDetails) {
   }
 
   engine.alias = undefined;
+  sb.value = "";
   BrowserTestUtils.removeTab(tab);
 }
