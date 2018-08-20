@@ -3496,29 +3496,30 @@ def CreateBindingJSObject(descriptor, properties):
     # of cases where we do, so for simplicity, just always root it.
     if descriptor.proxy:
         if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-            expandoValue = "JS::PrivateValue(&aObject->mExpandoAndGeneration)"
+            create = dedent(
+                """
+                MOZ_ASSERT(aObject->mExpandoAndGeneration.expando.isUndefined());
+                JS::Rooted<JS::Value> expandoValue(aCx, JS::PrivateValue(&aObject->mExpandoAndGeneration));
+                creator.CreateProxyObject(aCx, &sClass.mBase, DOMProxyHandler::getInstance(),
+                                          proto, aObject, expandoValue, aReflector);
+                """)
         else:
-            expandoValue = "JS::UndefinedValue()"
-        create = fill(
-            """
-            JS::Rooted<JS::Value> expandoValue(aCx, ${expandoValue});
-            creator.CreateProxyObject(aCx, &sClass.mBase, DOMProxyHandler::getInstance(),
-                                      proto, aObject, expandoValue, aReflector);
-            if (!aReflector) {
-              return false;
-            }
-
-            """,
-            expandoValue=expandoValue)
+            create = dedent(
+                """
+                creator.CreateProxyObject(aCx, &sClass.mBase, DOMProxyHandler::getInstance(),
+                                          proto, aObject, JS::UndefinedHandleValue, aReflector);
+                """)
     else:
         create = dedent(
             """
             creator.CreateObject(aCx, sClass.ToJSClass(), proto, aObject, aReflector);
-            if (!aReflector) {
-              return false;
-            }
             """)
-    return objDecl + create
+    return objDecl + create + dedent(
+        """
+        if (!aReflector) {
+          return false;
+        }
+        """)
 
 
 def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode,

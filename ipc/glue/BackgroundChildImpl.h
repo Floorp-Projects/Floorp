@@ -70,6 +70,14 @@ protected:
   DeallocPBackgroundIndexedDBUtilsChild(PBackgroundIndexedDBUtilsChild* aActor)
                                         override;
 
+  virtual PBackgroundSDBConnectionChild*
+  AllocPBackgroundSDBConnectionChild(const PrincipalInfo& aPrincipalInfo)
+                                     override;
+
+  virtual bool
+  DeallocPBackgroundSDBConnectionChild(PBackgroundSDBConnectionChild* aActor)
+                                       override;
+
   virtual PBackgroundLocalStorageCacheChild*
   AllocPBackgroundLocalStorageCacheChild(const PrincipalInfo& aPrincipalInfo,
                                          const nsCString& aOriginKey,
