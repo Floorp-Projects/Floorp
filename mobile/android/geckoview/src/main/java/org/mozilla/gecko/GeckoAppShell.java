@@ -1047,16 +1047,6 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static synchronized void setScreenDepthOverride(int aScreenDepth) {
-        if (sScreenDepth != 0) {
-            Log.e(LOGTAG, "Tried to override screen depth after it's already been set");
-            throw new IllegalStateException();
-        }
-
-        sScreenDepth = aScreenDepth;
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
     private static void performHapticFeedback(boolean aIsLongPress) {
         // Don't perform haptic feedback if a vibration is currently playing,
         // because the haptic feedback will nuke the vibration.
