@@ -16,6 +16,7 @@
 #include "base/basictypes.h"
 
 #include "jsapi.h"
+#include "js/AutoByteString.h"
 
 #include "xpcpublic.h"
 

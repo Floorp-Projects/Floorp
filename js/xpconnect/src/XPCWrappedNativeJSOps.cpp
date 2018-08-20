@@ -10,6 +10,7 @@
 #include "xpc_make_class.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Preferences.h"
+#include "js/AutoByteString.h"
 #include "js/Class.h"
 #include "js/Printf.h"
 

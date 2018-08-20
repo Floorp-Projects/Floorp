@@ -6,6 +6,7 @@
 
 #include "vm/Probes-inl.h"
 
+#include "js/AutoByteString.h"
 #include "vm/JSContext.h"
 
 #ifdef INCLUDE_MOZILLA_DTRACE

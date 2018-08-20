@@ -6,6 +6,7 @@
 
 #include "ChromeUtils.h"
 
+#include "js/AutoByteString.h"
 #include "js/SavedFrameAPI.h"
 #include "jsfriendapi.h"
 #include "WrapperFactory.h"

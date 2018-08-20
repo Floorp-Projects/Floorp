@@ -21,6 +21,7 @@
 #include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/ScopedICUObject.h"
+#include "js/AutoByteString.h"
 #include "js/Class.h"
 #include "js/StableStringChars.h"
 #include "vm/GlobalObject.h"

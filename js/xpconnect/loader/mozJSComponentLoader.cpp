@@ -17,6 +17,7 @@
 #endif
 
 #include "jsapi.h"
+#include "js/AutoByteString.h"
 #include "js/Printf.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
