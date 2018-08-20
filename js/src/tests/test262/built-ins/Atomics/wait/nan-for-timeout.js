@@ -40,7 +40,7 @@ $262.agent.waitUntil(i32a, RUNNING, 1);
 // Try to yield control to ensure the agent actually started to wait.
 $262.agent.tryYield();
 
-assert.sameValue(Atomics.wake(i32a, 0), 1, 'Atomics.wake(i32a, 0) returns 1');
+assert.sameValue(Atomics.notify(i32a, 0), 1, 'Atomics.notify(i32a, 0) returns 1');
 assert.sameValue($262.agent.getReport(), "ok", '$262.agent.getReport() returns "ok"');
 
 reportCompare(0, 0);

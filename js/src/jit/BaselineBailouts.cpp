@@ -796,11 +796,13 @@ InitFromBailout(JSContext* cx, size_t frameNo,
         JitSpew(JitSpew_BaselineBailouts, "      frame slots %u, nargs %zu, nfixed %zu",
                 iter.numAllocations(), fun->nargs(), script->nfixed());
 
-        if (frameNo == 0) {
-            // This is the first frame. Store the formals in a Vector until we
-            // are done. Due to UCE and phi elimination, we could store an
-            // UndefinedValue() here for formals we think are unused, but
-            // locals may still reference the original argument slot
+        bool argsObjAliasesFormals = script->argsObjAliasesFormals();
+        if (frameNo == 0 && !argsObjAliasesFormals) {
+            // This is the first (outermost) frame and we don't have an
+            // arguments object aliasing the formals. Store the formals in a
+            // Vector until we are done. Due to UCE and phi elimination, we
+            // could store an UndefinedValue() here for formals we think are
+            // unused, but locals may still reference the original argument slot
             // (MParameter/LArgument) and expect the original Value.
             MOZ_ASSERT(startFrameFormals.empty());
             if (!startFrameFormals.resize(fun->nargs()))
@@ -814,6 +816,12 @@ InitFromBailout(JSContext* cx, size_t frameNo,
             if (frameNo > 0) {
                 size_t argOffset = builder.framePushed() + JitFrameLayout::offsetOfActualArg(i);
                 builder.valuePointerAtStackOffset(argOffset).set(arg);
+            } else if (argsObjAliasesFormals) {
+                // When the arguments object aliases the formal arguments, then
+                // JSOP_SETARG mutates the argument object. In such cases, the
+                // list of arguments reported by the snapshot are only aliases
+                // of argument object slots which are optimized to only store
+                // differences compared to arguments which are on the stack.
             } else {
                 startFrameFormals[i].set(arg);
             }

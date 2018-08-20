@@ -54,9 +54,7 @@ function test_dependent_elements(win) {
     ok(control, "the dependent controls should exist");
   });
   let independents = [
-    win.document.getElementById("acceptCookies"),
-    win.document.getElementById("acceptThirdPartyLabel"),
-    win.document.getElementById("acceptThirdPartyMenu")
+    win.document.getElementById("blockCookies")
   ];
   independents.forEach(function(control) {
     ok(control, "the independent controls should exist");
@@ -118,15 +116,15 @@ function test_dependent_elements(win) {
 function test_dependent_cookie_elements(win) {
   let keepUntil = win.document.getElementById("keepUntil");
   let keepCookiesUntil = win.document.getElementById("keepCookiesUntil");
-  let acceptThirdPartyLabel = win.document.getElementById("acceptThirdPartyLabel");
-  let acceptThirdPartyMenu = win.document.getElementById("acceptThirdPartyMenu");
+  let blockCookiesLabel = win.document.getElementById("blockCookiesLabel");
+  let blockCookiesMenu = win.document.getElementById("blockCookiesMenu");
 
-  let controls = [acceptThirdPartyLabel, acceptThirdPartyMenu, keepUntil, keepCookiesUntil];
+  let controls = [blockCookiesLabel, blockCookiesMenu, keepUntil, keepCookiesUntil];
   controls.forEach(function(control) {
     ok(control, "the dependent cookie controls should exist");
   });
-  let acceptcookies = win.document.getElementById("acceptCookies");
-  ok(acceptcookies, "the accept cookies checkbox should exist");
+  let blockcookies = win.document.getElementById("blockCookies");
+  ok(blockcookies, "the block cookies checkbox should exist");
 
   function expect_disabled(disabled, c = controls) {
     c.forEach(function(control) {
@@ -135,12 +133,26 @@ function test_dependent_cookie_elements(win) {
     });
   }
 
-  acceptcookies.value = "2";
-  controlChanged(acceptcookies);
-  expect_disabled(true);
+  blockcookies.value = "disallow";
+  controlChanged(blockcookies);
+  expect_disabled(false);
 
-  acceptcookies.value = "1";
-  controlChanged(acceptcookies);
+  blockcookies.value = "allow";
+  controlChanged(blockcookies);
+  expect_disabled(true, [blockCookiesLabel, blockCookiesMenu]);
+  expect_disabled(false, [keepUntil, keepCookiesUntil]);
+
+  blockCookiesMenu.value = "always";
+  controlChanged(blockCookiesMenu);
+  expect_disabled(true, [keepUntil, keepCookiesUntil]);
+  expect_disabled(false, [blockCookiesLabel, blockCookiesMenu]);
+
+  if (win.contentBlockingCookiesAndSiteDataRejectTrackersEnabled) {
+    blockCookiesMenu.value = "trackers";
+  } else {
+    blockCookiesMenu.value = "unvisited";
+  }
+  controlChanged(blockCookiesMenu);
   expect_disabled(false);
 
   let historymode = win.document.getElementById("historyMode");
@@ -150,7 +162,7 @@ function test_dependent_cookie_elements(win) {
   historymode.value = "dontremember";
   controlChanged(historymode);
   expect_disabled(true, [keepUntil, keepCookiesUntil]);
-  expect_disabled(false, [acceptThirdPartyLabel, acceptThirdPartyMenu]);
+  expect_disabled(false, [blockCookiesLabel, blockCookiesMenu]);
 
   historymode.value = "remember";
   controlChanged(historymode);

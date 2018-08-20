@@ -10,6 +10,7 @@ DIRS += [
     'emulation',
     'highlighters',
     'inspector',
+    'network-monitor',
     'object',
     'replay',
     'targets',

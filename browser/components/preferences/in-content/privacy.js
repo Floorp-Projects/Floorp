@@ -23,6 +23,12 @@ ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingUiEnabled",
                                       "browser.contentblocking.ui.enabled");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingCookiesAndSiteDataRejectTrackersRecommended",
+                                      "browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended");
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingCookiesAndSiteDataRejectTrackersEnabled",
+                                      "browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled");
+
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingEnabled",
                                       "browser.contentblocking.enabled");
 
@@ -251,6 +257,7 @@ var gPrivacyPane = {
   init() {
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();
+    this.initAutoplay();
     this.updateAutoplayMediaControlsVisibility();
     this.updateHistoryModePane();
     this.updatePrivacyMicroControls();
@@ -266,6 +273,7 @@ var gPrivacyPane = {
     }
 
     this.trackingProtectionReadPrefs();
+    this.networkCookieBehaviorReadPrefs();
     this._initTrackingProtectionExtensionControl();
 
     this.updateContentBlockingVisibility();
@@ -274,6 +282,14 @@ var gPrivacyPane = {
       gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
     Preferences.get("privacy.trackingprotection.pbmode.enabled").on("change",
       gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
+
+    // Watch all of the prefs that the new Cookies & Site Data UI depends on
+    Preferences.get("network.cookie.cookieBehavior").on("change",
+      gPrivacyPane.networkCookieBehaviorReadPrefs.bind(gPrivacyPane));
+    Preferences.get("network.cookie.lifetimePolicy").on("change",
+      gPrivacyPane.networkCookieBehaviorReadPrefs.bind(gPrivacyPane));
+    Preferences.get("browser.privatebrowsing.autostart").on("change",
+      gPrivacyPane.networkCookieBehaviorReadPrefs.bind(gPrivacyPane));
 
     setEventListener("trackingProtectionExceptions", "command",
       gPrivacyPane.showTrackingProtectionExceptions);
@@ -475,6 +491,7 @@ var gPrivacyPane = {
    * content blocking UI pref.
    */
   updateContentBlockingVisibility() {
+    // First, update the content blocking UI.
     let visibleState = {
       "contentBlockingHeader": true,
       "contentBlockingDescription": true,
@@ -489,6 +506,17 @@ var gPrivacyPane = {
     };
     for (let id in visibleState) {
       document.getElementById(id).hidden = contentBlockingUiEnabled != visibleState[id];
+    }
+
+    // Allow turning off the "(recommended)" label using a pref
+    let blockCookiesFromTrackers = document.getElementById("blockCookiesFromTrackers");
+    if (contentBlockingCookiesAndSiteDataRejectTrackersRecommended) {
+      document.l10n.setAttributes(blockCookiesFromTrackers, "sitedata-block-trackers-option-recommended");
+    }
+
+    // Allow hiding the Reject Trackers option based on a pref
+    if (!contentBlockingCookiesAndSiteDataRejectTrackersEnabled) {
+      blockCookiesFromTrackers.remove();
     }
   },
 
@@ -562,6 +590,51 @@ var gPrivacyPane = {
       tpControl.value = "private";
     } else {
       tpControl.value = "never";
+    }
+  },
+
+  /**
+   * Selects the right items of the new Cookies & Site Data UI.
+   */
+  networkCookieBehaviorReadPrefs() {
+    let behavior = Preferences.get("network.cookie.cookieBehavior").value;
+    let blockCookiesCtrl = document.getElementById("blockCookies");
+    let blockCookiesLabel = document.getElementById("blockCookiesLabel");
+    let blockCookiesMenu = document.getElementById("blockCookiesMenu");
+    let keepUntilLabel = document.getElementById("keepUntil");
+    let keepUntilMenu = document.getElementById("keepCookiesUntil");
+
+    let blockCookies = (behavior != 0);
+    let cookieBehaviorLocked = Services.prefs.prefIsLocked("network.cookie.cookieBehavior");
+    let blockCookiesControlsDisabled = !blockCookies || cookieBehaviorLocked;
+    blockCookiesLabel.disabled = blockCookiesMenu.disabled = blockCookiesControlsDisabled;
+
+    let completelyBlockCookies = (behavior == 2);
+    let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart").value;
+    let cookieExpirationLocked = Services.prefs.prefIsLocked("network.cookie.lifetimePolicy");
+    let keepUntilControlsDisabled = privateBrowsing || completelyBlockCookies || cookieExpirationLocked;
+    keepUntilLabel.disabled = keepUntilMenu.disabled = keepUntilControlsDisabled;
+
+    switch (behavior) {
+      case Ci.nsICookieService.BEHAVIOR_ACCEPT:
+        blockCookiesCtrl.value = "allow";
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+        blockCookiesCtrl.value = "disallow";
+        blockCookiesMenu.value = "all-third-parties";
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT:
+        blockCookiesCtrl.value = "disallow";
+        blockCookiesMenu.value = "always";
+        break;
+      case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
+        blockCookiesCtrl.value = "disallow";
+        blockCookiesMenu.value = "unvisited";
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+        blockCookiesCtrl.value = "disallow";
+        blockCookiesMenu.value = "trackers";
+        break;
     }
   },
 
@@ -718,7 +791,6 @@ var gPrivacyPane = {
     // Set "Keep cookies until..." to "I close Nightly" and disable the setting
     // when we're in auto private mode (or reset it back otherwise).
     document.getElementById("keepCookiesUntil").value = this.readKeepCookiesUntil();
-    this.readAcceptCookies();
 
     let clearDataSettings = document.getElementById("clearDataSettings");
 
@@ -924,77 +996,68 @@ var gPrivacyPane = {
 
   /**
    * Reads the network.cookie.cookieBehavior preference value and
-   * enables/disables the rest of the cookie UI accordingly.
+   * enables/disables the rest of the new cookie & site data UI accordingly.
    *
-   * Returns "0" if cookies are accepted and "2" if they are entirely disabled.
+   * Returns "allow" if cookies are accepted and "disallow" if they are entirely
+   * disabled.
    */
-  readAcceptCookies() {
+  readBlockCookies() {
+    // enable the rest of the UI for anything other than "accept all cookies"
     let pref = Preferences.get("network.cookie.cookieBehavior");
-    let acceptThirdPartyLabel = document.getElementById("acceptThirdPartyLabel");
-    let acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
-    let keepUntilLabel = document.getElementById("keepUntil");
-    let keepUntilMenu = document.getElementById("keepCookiesUntil");
-
-    // enable the rest of the UI for anything other than "disable all cookies"
-    let acceptCookies = (pref.value != 2);
-    let cookieBehaviorLocked = Services.prefs.prefIsLocked("network.cookie.cookieBehavior");
-    const acceptThirdPartyControlsDisabled = !acceptCookies || cookieBehaviorLocked;
-
-    acceptThirdPartyLabel.disabled = acceptThirdPartyMenu.disabled = acceptThirdPartyControlsDisabled;
-
-    let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart").value;
-    let cookieExpirationLocked = Services.prefs.prefIsLocked("network.cookie.lifetimePolicy");
-    const keepUntilControlsDisabled = privateBrowsing || !acceptCookies || cookieExpirationLocked;
-    keepUntilLabel.disabled = keepUntilMenu.disabled = keepUntilControlsDisabled;
+    let blockCookies = (pref.value != 0);
 
     // Our top-level setting is a radiogroup that only sets "enable all"
     // and "disable all", so convert the pref value accordingly.
-    return acceptCookies ? "0" : "2";
+    return blockCookies ? "disallow" : "allow";
   },
 
   /**
    * Updates the "accept third party cookies" menu based on whether the
    * "accept cookies" or "block cookies" radio buttons are selected.
    */
-  writeAcceptCookies() {
-    var accept = document.getElementById("acceptCookies");
-    var acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
+  writeBlockCookies() {
+    let block = document.getElementById("blockCookies");
+    let blockCookiesMenu = document.getElementById("blockCookiesMenu");
 
-    // if we're enabling cookies, automatically select 'accept third party always'
-    if (accept.value == "0")
-      acceptThirdPartyMenu.selectedIndex = 0;
+    // if we're disabling cookies, automatically select 'third-party trackers'
+    if (block.value == "disallow") {
+      blockCookiesMenu.selectedIndex = 0;
+      return this.writeBlockCookiesFrom();
+    }
 
-    return parseInt(accept.value, 10);
+    return Ci.nsICookieService.BEHAVIOR_ACCEPT;
   },
 
   /**
-   * Converts between network.cookie.cookieBehavior and the third-party cookie UI
+   * Converts between network.cookie.cookieBehavior and the new third-party cookies UI
    */
-  readAcceptThirdPartyCookies() {
-    var pref = Preferences.get("network.cookie.cookieBehavior");
+  readBlockCookiesFrom() {
+    let pref = Preferences.get("network.cookie.cookieBehavior");
     switch (pref.value) {
-      case 0:
+      case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+        return "all-third-parties";
+      case Ci.nsICookieService.BEHAVIOR_REJECT:
         return "always";
-      case 1:
-        return "never";
-      case 2:
-        return "never";
-      case 3:
-        return "visited";
+      case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
+        return "unvisited";
+      case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+        return "trackers";
       default:
         return undefined;
     }
   },
 
-  writeAcceptThirdPartyCookies() {
-    var accept = document.getElementById("acceptThirdPartyMenu").selectedItem;
-    switch (accept.value) {
+  writeBlockCookiesFrom() {
+    let block = document.getElementById("blockCookiesMenu").selectedItem;
+    switch (block.value) {
+      case "trackers":
+        return Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
+      case "unvisited":
+        return Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN;
       case "always":
-        return 0;
-      case "visited":
-        return 3;
-      case "never":
-        return 1;
+        return Ci.nsICookieService.BEHAVIOR_REJECT;
+      case "all-third-parties":
+        return Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
       default:
         return undefined;
     }
@@ -1106,6 +1169,12 @@ var gPrivacyPane = {
 
 
   // MEDIA
+
+  initAutoplay() {
+    let url = Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "block-autoplay";
+    document.getElementById("autoplayLearnMoreLink").setAttribute("href", url);
+  },
 
   /**
    * The checkbox enabled sets the pref to BLOCKED

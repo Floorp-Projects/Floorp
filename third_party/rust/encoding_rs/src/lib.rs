@@ -8,7 +8,7 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "cargo-clippy", allow(doc_markdown, inline_always, new_ret_no_self))]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.4")]
+#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.6")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.
@@ -35,6 +35,13 @@
 //! file for details.
 //! The [repository is on GitHub](https://github.com/hsivonen/encoding_rs). The
 //! [crate is available on crates.io](https://crates.io/crates/encoding_rs).
+//!
+//! # Integration with `std::io`
+//!
+//! This crate doesn't implement traits from `std::io`. However, for the case of
+//! wrapping a `std::io::Read` in a decoder that implements `std::io::Read` and
+//! presents the data from the wrapped `std::io::Read` as UTF-8 is addressed by
+//! the [`encoding_rs_io`](https://docs.rs/encoding_rs_io/) crate.
 //!
 //! # Examples
 //!

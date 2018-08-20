@@ -1447,8 +1447,6 @@ class CodeRange
         TrapExit,          // calls C++ to report and jumps to throw stub
         DebugTrap,         // calls C++ to handle debug event
         FarJumpIsland,     // inserted to connect otherwise out-of-range insns
-        UnalignedExit,     // stub jumped to by wasm Atomics and non-standard
-                           // ARM unaligned trap
         Throw              // special stack-unwinding stub jumped to by other stubs
     };
 
@@ -1761,7 +1759,6 @@ enum class SymbolicAddress
     HandleDebugTrap,
     HandleThrow,
     HandleTrap,
-    ReportUnalignedAccess,
     ReportInt64JSCall,
     CallImport_Void,
     CallImport_I32,
