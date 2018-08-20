@@ -452,8 +452,6 @@ CharacterData::BindToTree(nsIDocument* aDocument,
              "aDocument must be current doc of aParent");
   MOZ_ASSERT(!GetUncomposedDoc() && !IsInUncomposedDoc(),
              "Already have a document.  Unbind first!");
-  MOZ_ASSERT(!IsInComposedDoc(),
-             "Already have a document.  Unbind first!");
   // Note that as we recurse into the kids, they'll have a non-null parent.  So
   // only assert if our parent is _changing_ while we have a parent.
   MOZ_ASSERT(!GetParent() || aParent == GetParent(),
@@ -491,14 +489,14 @@ CharacterData::BindToTree(nsIDocument* aDocument,
     if (HasFlag(NODE_IS_ANONYMOUS_ROOT)) {
       aParent->SetMayHaveAnonymousChildren();
     }
-  }
-
-  if (aParent && aParent->IsInShadowTree()) {
-    ClearSubtreeRootPointer();
-    SetFlags(NODE_IS_IN_SHADOW_TREE);
-    SetIsConnected(aParent->IsInComposedDoc());
-    MOZ_ASSERT(aParent->GetContainingShadow());
-    ExtendedContentSlots()->mContainingShadow = aParent->GetContainingShadow();
+    if (aParent->IsInShadowTree()) {
+      ClearSubtreeRootPointer();
+      SetFlags(NODE_IS_IN_SHADOW_TREE);
+    }
+    ShadowRoot* parentContainingShadow = aParent->GetContainingShadow();
+    if (parentContainingShadow) {
+      ExtendedContentSlots()->mContainingShadow = parentContainingShadow;
+    }
   }
 
   bool hadParent = !!GetParentNode();
@@ -509,7 +507,8 @@ CharacterData::BindToTree(nsIDocument* aDocument,
       NS_ADDREF(aParent);
     }
     mParent = aParent;
-  } else {
+  }
+  else {
     mParent = aDocument;
   }
   SetParentIsContent(aParent);
@@ -524,7 +523,6 @@ CharacterData::BindToTree(nsIDocument* aDocument,
 
     // XXX See the comment in Element::BindToTree
     SetIsInDocument();
-    SetIsConnected(true);
     if (mText.IsBidi()) {
       aDocument->SetBidiEnabled();
     }
@@ -555,7 +553,8 @@ void
 CharacterData::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   // Unset frame flags; if we need them again later, they'll get set again.
-  UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE | NS_REFRAME_IF_WHITESPACE);
+  UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE |
+             NS_REFRAME_IF_WHITESPACE);
 
   nsIDocument* document = GetComposedDoc();
 
@@ -571,7 +570,6 @@ CharacterData::UnbindFromTree(bool aDeep, bool aNullParent)
     SetParentIsContent(false);
   }
   ClearInDocument();
-  SetIsConnected(false);
 
   if (aNullParent || !mParent->IsInShadowTree()) {
     UnsetFlags(NODE_IS_IN_SHADOW_TREE);

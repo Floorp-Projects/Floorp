@@ -34,7 +34,7 @@ interface Node : EventTarget {
   [Pure, Throws, NeedsCallerType, BinaryName="baseURIFromJS"]
   readonly attribute DOMString? baseURI;
 
-  [Pure, BinaryName=isInComposedDoc]
+  [Pure, BinaryName=getComposedDoc]
   readonly attribute boolean isConnected;
   [Pure]
   readonly attribute Document? ownerDocument;
