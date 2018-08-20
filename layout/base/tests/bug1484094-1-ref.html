@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <meta charset="utf-8">
+  <script type="text/javascript">
+function start()
+{
+  var input = document.querySelector("input");
+  input.value = '\u{1f468}\u{200d}\u{1f469}\u{200d}\u{1f467}\u{200d}\u{1f466}';
+  input.addEventListener("focus", () => {
+    input.setSelectionRange(input.value.length, input.value.length);
+    document.documentElement.removeAttribute("class");
+  });
+  input.focus();
+}
+  </script>
+</head>
+<body onload="start()">
+  <input type="text"></input>
+</body>
+</html>

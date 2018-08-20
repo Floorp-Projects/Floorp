@@ -9,7 +9,7 @@
 #include "QuotaManager.h"
 #include "prio.h"
 
-USING_QUOTA_NAMESPACE
+BEGIN_QUOTA_NAMESPACE
 
 template <class FileStreamBase>
 NS_IMETHODIMP
@@ -91,10 +91,13 @@ FileQuotaStreamWithWrite<FileStreamBase>::Write(const char* aBuf,
 }
 
 already_AddRefed<FileInputStream>
-FileInputStream::Create(PersistenceType aPersistenceType,
-                        const nsACString& aGroup, const nsACString& aOrigin,
-                        nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
-                        int32_t aBehaviorFlags)
+CreateFileInputStream(PersistenceType aPersistenceType,
+                      const nsACString& aGroup,
+                      const nsACString& aOrigin,
+                      nsIFile* aFile,
+                      int32_t aIOFlags,
+                      int32_t aPerm,
+                      int32_t aBehaviorFlags)
 {
   RefPtr<FileInputStream> stream =
     new FileInputStream(aPersistenceType, aGroup, aOrigin);
@@ -104,10 +107,13 @@ FileInputStream::Create(PersistenceType aPersistenceType,
 }
 
 already_AddRefed<FileOutputStream>
-FileOutputStream::Create(PersistenceType aPersistenceType,
-                         const nsACString& aGroup, const nsACString& aOrigin,
-                         nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
-                         int32_t aBehaviorFlags)
+CreateFileOutputStream(PersistenceType aPersistenceType,
+                       const nsACString& aGroup,
+                       const nsACString& aOrigin,
+                       nsIFile* aFile,
+                       int32_t aIOFlags,
+                       int32_t aPerm,
+                       int32_t aBehaviorFlags)
 {
   RefPtr<FileOutputStream> stream =
     new FileOutputStream(aPersistenceType, aGroup, aOrigin);
@@ -117,9 +123,13 @@ FileOutputStream::Create(PersistenceType aPersistenceType,
 }
 
 already_AddRefed<FileStream>
-FileStream::Create(PersistenceType aPersistenceType, const nsACString& aGroup,
-                   const nsACString& aOrigin, nsIFile* aFile, int32_t aIOFlags,
-                   int32_t aPerm, int32_t aBehaviorFlags)
+CreateFileStream(PersistenceType aPersistenceType,
+                 const nsACString& aGroup,
+                 const nsACString& aOrigin,
+                 nsIFile* aFile,
+                 int32_t aIOFlags,
+                 int32_t aPerm,
+                 int32_t aBehaviorFlags)
 {
   RefPtr<FileStream> stream =
     new FileStream(aPersistenceType, aGroup, aOrigin);
@@ -127,3 +137,5 @@ FileStream::Create(PersistenceType aPersistenceType, const nsACString& aGroup,
   NS_ENSURE_SUCCESS(rv, nullptr);
   return stream.forget();
 }
+
+END_QUOTA_NAMESPACE

@@ -182,11 +182,9 @@ class Exception;
 
 /***************************************************************************/
 // data declarations...
-extern const char XPC_CONTEXT_STACK_CONTRACTID[];
 extern const char XPC_EXCEPTION_CONTRACTID[];
 extern const char XPC_CONSOLE_CONTRACTID[];
 extern const char XPC_SCRIPT_ERROR_CONTRACTID[];
-extern const char XPC_ID_CONTRACTID[];
 extern const char XPC_XPCONNECT_CONTRACTID[];
 
 /***************************************************************************/

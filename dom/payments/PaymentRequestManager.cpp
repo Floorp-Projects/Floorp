@@ -178,10 +178,7 @@ ConvertDetailsInit(JSContext* aCx,
                                   shippingOptions,
                                   modifiers,
                                   EmptyString(), // error message
-                                  EmptyString(), // shippingAddressErrors
-                                  aDetails.mDisplayItems.WasPassed(),
-                                  aDetails.mShippingOptions.WasPassed(),
-                                  aDetails.mModifiers.WasPassed());
+                                  EmptyString()); // shippingAddressErrors
   return NS_OK;
 }
 
@@ -223,10 +220,7 @@ ConvertDetailsUpdate(JSContext* aCx,
                                   shippingOptions,
                                   modifiers,
                                   error,
-                                  shippingAddressErrors,
-                                  aDetails.mDisplayItems.WasPassed(),
-                                  aDetails.mShippingOptions.WasPassed(),
-                                  aDetails.mModifiers.WasPassed());
+                                  shippingAddressErrors);
   return NS_OK;
 }
 
