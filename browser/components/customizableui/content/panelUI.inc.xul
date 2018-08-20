@@ -419,7 +419,7 @@
       <vbox class="panel-subview-body">
         <!-- this widget has 3 boxes in the body, but only 1 is ever visible -->
         <!-- When Sync is ready to sync -->
-        <vbox id="PanelUI-remotetabs-main" observes="sync-syncnow-state">
+        <vbox id="PanelUI-remotetabs-main" hidden="true">
           <vbox id="PanelUI-remotetabs-buttons">
             <toolbarbutton id="PanelUI-remotetabs-view-sidebar"
                            class="subviewbutton subviewbutton-iconic"
@@ -487,32 +487,31 @@
                 flex="1"
                 align="center"
                 class="PanelUI-remotetabs-instruction-box"
-                observes="sync-setup-state">
+                hidden="true">
             <image class="fxaSyncIllustration"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
                            label="&appMenuRemoteTabs.signin.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
-          <!-- When Sync needs re-authentication. This uses the exact same messaging
-               as "Sync is not configured" but remains a separate box so we get
-               the goodness of observing broadcasters to manage the hidden states -->
+          <!-- When Sync needs re-authentication -->
           <vbox id="PanelUI-remotetabs-reauthsync"
                 flex="1"
                 align="center"
                 class="PanelUI-remotetabs-instruction-box"
-                observes="sync-reauth-state">
+                hidden="true">
             <image class="fxaSyncIllustrationIssue"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
                            label="&appMenuRemoteTabs.signin.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
+          <!-- When Sync needs verification -->
           <vbox id="PanelUI-remotetabs-unverified"
                 flex="1"
                 align="center"
                 class="PanelUI-remotetabs-instruction-box"
-                observes="sync-unverified-state">
+                hidden="true">
             <image class="fxaSyncIllustrationIssue"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.unverified.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"

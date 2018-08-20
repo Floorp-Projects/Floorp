@@ -129,10 +129,9 @@ var gSync = {
       return;
     }
     statusBroadcaster.setAttribute("label", this.syncStrings.GetStringFromName("syncnow.label"));
-    // We start with every broadcasters hidden, so that we don't need to init
+    // We start with every menuitem hidden, so that we don't need to init
     // the sync UI on windows like pageInfo.xul (see bug 1384856).
-    let setupBroadcaster = document.getElementById("sync-setup-state");
-    setupBroadcaster.hidden = false;
+    document.getElementById("sync-setup").hidden = false;
 
     for (let topic of this._obs) {
       Services.obs.addObserver(this, topic, true);
@@ -185,7 +184,7 @@ var gSync = {
 
   updateAllUI(state) {
     this.updatePanelPopup(state);
-    this.updateStateBroadcasters(state);
+    this.updateState(state);
     this.updateSyncButtonsTooltip(state);
     this.updateSyncStatus(state);
   },
@@ -243,24 +242,19 @@ var gSync = {
     }
   },
 
-  updateStateBroadcasters(state) {
-    const status = state.status;
-
-    // Start off with a clean slate
-    document.getElementById("sync-reauth-state").hidden = true;
-    document.getElementById("sync-setup-state").hidden = true;
-    document.getElementById("sync-syncnow-state").hidden = true;
-    document.getElementById("sync-unverified-state").hidden = true;
-
-    if (status == UIState.STATUS_LOGIN_FAILED) {
-      // unhiding this element makes the menubar show the login failure state.
-      document.getElementById("sync-reauth-state").hidden = false;
-    } else if (status == UIState.STATUS_NOT_CONFIGURED) {
-      document.getElementById("sync-setup-state").hidden = false;
-    } else if (status == UIState.STATUS_NOT_VERIFIED) {
-      document.getElementById("sync-unverified-state").hidden = false;
-    } else {
-      document.getElementById("sync-syncnow-state").hidden = false;
+  updateState(state) {
+    for (let [status, menuId, boxId] of [
+      [UIState.STATUS_NOT_CONFIGURED, "sync-setup",
+                                      "PanelUI-remotetabs-setupsync"],
+      [UIState.STATUS_LOGIN_FAILED,   "sync-reauthitem",
+                                      "PanelUI-remotetabs-reauthsync"],
+      [UIState.STATUS_NOT_VERIFIED,   "sync-unverifieditem",
+                                      "PanelUI-remotetabs-unverified"],
+      [UIState.STATUS_SIGNED_IN,      "sync-syncnowitem",
+                                      "PanelUI-remotetabs-main"],
+    ]) {
+      document.getElementById(menuId).hidden =
+        document.getElementById(boxId).hidden = (status != state.status);
     }
   },
 
@@ -696,12 +690,12 @@ var gSync = {
   },
 
   onClientsSynced() {
-    let broadcaster = document.getElementById("sync-syncnow-state");
-    if (broadcaster) {
+    let element = document.getElementById("PanelUI-remotetabs-main");
+    if (element) {
       if (Weave.Service.clientsEngine.stats.numClients > 1) {
-        broadcaster.setAttribute("devices-status", "multi");
+        element.setAttribute("devices-status", "multi");
       } else {
-        broadcaster.setAttribute("devices-status", "single");
+        element.setAttribute("devices-status", "single");
       }
     }
   },
