@@ -4950,7 +4950,7 @@ HTMLMediaElement::AttachAndSetUAShadowRoot()
   // Add a closed shadow root to host video controls
   RefPtr<ShadowRoot> shadowRoot =
     AttachShadowWithoutNameChecks(ShadowRootMode::Closed);
-  shadowRoot->SetIsUAWidget(true);
+  shadowRoot->SetIsUAWidget();
 }
 
 nsresult

@@ -889,7 +889,7 @@ nsChannelClassifier::SetBlockedContent(nsIChannel *channel,
   NS_ConvertUTF8toUTF16 spec(uri->GetSpecOrDefault());
   const char16_t* params[] = { spec.get() };
   const char* message = (aErrorCode == NS_ERROR_TRACKING_URI) ?
-    "TrackingUriBlocked" : "UnsafeUriBlocked";
+    "TrackerUriBlocked" : "UnsafeUriBlocked";
   nsCString category = (aErrorCode == NS_ERROR_TRACKING_URI) ?
     NS_LITERAL_CSTRING("Tracking Protection") :
     NS_LITERAL_CSTRING("Safe Browsing");

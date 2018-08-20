@@ -1258,8 +1258,6 @@ Element::AttachShadowWithoutNameChecks(ShadowRootMode aMode)
   RefPtr<ShadowRoot> shadowRoot =
     new ShadowRoot(this, aMode, nodeInfo.forget());
 
-  shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
-
   if (NodeOrAncestorHasDirAuto()) {
     shadowRoot->SetAncestorHasDirAuto();
   }
@@ -1296,7 +1294,8 @@ Element::UnattachShadow()
 
   nsAutoScriptBlocker scriptBlocker;
 
-  if (nsIDocument* doc = GetComposedDoc()) {
+  nsIDocument* doc = GetComposedDoc();
+  if (doc) {
     if (nsIPresShell* shell = doc->GetShell()) {
       shell->DestroyFramesForAndRestyle(this);
     }
@@ -1304,13 +1303,8 @@ Element::UnattachShadow()
   MOZ_ASSERT(!GetPrimaryFrame());
 
   // Simply unhook the shadow root from the element.
-  MOZ_ASSERT(!GetShadowRoot()->HasSlots(), "Won't work when shadow root has slots!");
-  for (nsIContent* child = shadowRoot->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    child->UnbindFromTree(true, false);
-  }
-
-  shadowRoot->SetIsComposedDocParticipant(false);
+  MOZ_ASSERT(!shadowRoot->HasSlots(), "Won't work when shadow root has slots!");
+  shadowRoot->Unbind();
   SetShadowRoot(nullptr);
 }
 
@@ -1625,7 +1619,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
              "Must have the same owner document");
   MOZ_ASSERT(!aParent || aDocument == aParent->GetUncomposedDoc(),
              "aDocument must be current doc of aParent");
-  MOZ_ASSERT(!GetUncomposedDoc(), "Already have a document.  Unbind first!");
+  MOZ_ASSERT(!IsInComposedDoc(), "Already have a document.  Unbind first!");
+  MOZ_ASSERT(!IsInUncomposedDoc(), "Already have a document.  Unbind first!");
   // Note that as we recurse into the kids, they'll have a non-null parent.  So
   // only assert if our parent is _changing_ while we have a parent.
   MOZ_ASSERT(!GetParent() || aParent == GetParent(),
@@ -1678,10 +1673,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (aParent->IsInShadowTree()) {
       ClearSubtreeRootPointer();
       SetFlags(NODE_IS_IN_SHADOW_TREE);
-    }
-    ShadowRoot* parentContainingShadow = aParent->GetContainingShadow();
-    if (parentContainingShadow) {
-      ExtendedDOMSlots()->mContainingShadow = parentContainingShadow;
+      MOZ_ASSERT(aParent->GetContainingShadow());
+      ExtendedDOMSlots()->mContainingShadow = aParent->GetContainingShadow();
     }
   }
 
@@ -1693,8 +1686,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       NS_ADDREF(aParent);
     }
     mParent = aParent;
-  }
-  else {
+  } else {
     mParent = aDocument;
   }
   SetParentIsContent(aParent);
@@ -1720,10 +1712,12 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
     // Being added to a document.
     SetIsInDocument();
+    SetIsConnected(true);
 
     // Clear the lazy frame construction bits.
     UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
   } else if (IsInShadowTree()) {
+    SetIsConnected(aParent->IsInComposedDoc());
     // We're not in a document, but we did get inserted into a shadow tree.
     // Since we won't have any restyle data in the document's restyle trackers,
     // don't let us get inserted with restyle bits set incorrectly.
@@ -1828,13 +1822,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Call BindToTree on shadow root children.
   if (ShadowRoot* shadowRoot = GetShadowRoot()) {
-    shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
-    MOZ_ASSERT(shadowRoot->GetBindingParent() == this);
-    for (nsIContent* child = shadowRoot->GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      rv = child->BindToTree(nullptr, shadowRoot, this);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = shadowRoot->Bind();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // FIXME(emilio): Why is this needed? The element shouldn't even be styled in
@@ -1994,6 +1983,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
 #endif
 
   ClearInDocument();
+  SetIsConnected(false);
 
   // Ensure that CSS transitions don't continue on an element at a
   // different place in the tree (even if reinserted before next
@@ -2104,12 +2094,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
 
   // Unbind children of shadow root.
   if (ShadowRoot* shadowRoot = GetShadowRoot()) {
-    for (nsIContent* child = shadowRoot->GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      child->UnbindFromTree(true, false);
-    }
-
-    shadowRoot->SetIsComposedDocParticipant(false);
+    shadowRoot->Unbind();
   }
 
   MOZ_ASSERT(!HasAnyOfFlags(kAllServoDescendantBits));

@@ -63,7 +63,6 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
   , DocumentOrShadowRoot(*this)
   , mMode(aMode)
   , mServoStyles(Servo_AuthorStyles_Create())
-  , mIsComposedDocParticipant(false)
   , mIsUAWidget(false)
 {
   SetHost(aElement);
@@ -74,6 +73,7 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
   ClearSubtreeRootPointer();
 
   SetFlags(NODE_IS_IN_SHADOW_TREE);
+  Bind();
 
   ExtendedDOMSlots()->mBindingParent = aElement;
   ExtendedDOMSlots()->mContainingShadow = this;
@@ -91,7 +91,7 @@ ShadowRoot::~ShadowRoot()
     host->RemoveMutationObserver(this);
   }
 
-  if (IsComposedDocParticipant()) {
+  if (IsInComposedDoc()) {
     OwnerDoc()->RemoveComposedDocShadowRoot(*this);
   }
 
@@ -101,29 +101,6 @@ ShadowRoot::~ShadowRoot()
 
   // nsINode destructor expects mSubtreeRoot == this.
   SetSubtreeRootPointer(this);
-}
-
-void
-ShadowRoot::SetIsComposedDocParticipant(bool aIsComposedDocParticipant)
-{
-  bool changed = mIsComposedDocParticipant != aIsComposedDocParticipant;
-  mIsComposedDocParticipant = aIsComposedDocParticipant;
-  if (!changed) {
-    return;
-  }
-
-  nsIDocument* doc = OwnerDoc();
-  if (IsComposedDocParticipant()) {
-    doc->AddComposedDocShadowRoot(*this);
-  } else {
-    doc->RemoveComposedDocShadowRoot(*this);
-  }
-}
-
-void
-ShadowRoot::SetIsUAWidget(bool aIsUAWidget)
-{
-  mIsUAWidget = aIsUAWidget;
 }
 
 JSObject*
@@ -148,18 +125,50 @@ ShadowRoot::CloneInternalDataFrom(ShadowRoot* aOther)
   }
 }
 
+nsresult
+ShadowRoot::Bind()
+{
+  MOZ_ASSERT(!IsInComposedDoc(), "Forgot to unbind?");
+  if (Host()->IsInComposedDoc()) {
+    SetIsConnected(true);
+    OwnerDoc()->AddComposedDocShadowRoot(*this);
+  }
+
+  for (nsIContent* child = GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    nsresult rv = child->BindToTree(nullptr, this, Host());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+void
+ShadowRoot::Unbind()
+{
+  if (IsInComposedDoc()) {
+    SetIsConnected(false);
+    OwnerDoc()->RemoveComposedDocShadowRoot(*this);
+  }
+
+  for (nsIContent* child = GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    child->UnbindFromTree(true, false);
+  }
+}
+
 void
 ShadowRoot::InvalidateStyleAndLayoutOnSubtree(Element* aElement)
 {
   MOZ_ASSERT(aElement);
-
-  if (!IsComposedDocParticipant()) {
+  nsIDocument* doc = GetComposedDoc();
+  if (!doc) {
     return;
   }
 
-  MOZ_ASSERT(GetComposedDoc() == OwnerDoc());
-
-  nsIPresShell* shell = OwnerDoc()->GetShell();
+  nsIPresShell* shell = doc->GetShell();
   if (!shell) {
     return;
   }
@@ -316,11 +325,11 @@ ShadowRoot::RuleChanged(StyleSheet&, css::Rule*) {
 void
 ShadowRoot::ApplicableRulesChanged()
 {
-  if (!IsComposedDocParticipant()) {
+  nsIDocument* doc = GetComposedDoc();
+  if (!doc) {
     return;
   }
 
-  nsIDocument* doc = OwnerDoc();
   if (nsIPresShell* shell = doc->GetShell()) {
     shell->RecordShadowStyleChange(*this);
   }
@@ -514,8 +523,8 @@ ShadowRoot::MaybeReassignElement(Element* aElement)
     return;
   }
 
-  if (IsComposedDocParticipant()) {
-    if (nsIPresShell* shell = OwnerDoc()->GetShell()) {
+  if (nsIDocument* doc = GetComposedDoc()) {
+    if (nsIPresShell* shell = doc->GetShell()) {
       shell->SlotAssignmentWillChange(*aElement, oldSlot, assignment.mSlot);
     }
   }
@@ -563,7 +572,6 @@ ShadowRoot::ImportNodeAndAppendChildAt(nsINode& aParentNode,
                                        mozilla::ErrorResult& rv)
 {
   MOZ_ASSERT(mIsUAWidget);
-  MOZ_ASSERT(OwnerDoc());
 
   if (!aParentNode.IsInUAWidget()) {
     rv.Throw(NS_ERROR_INVALID_ARG);
