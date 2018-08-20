@@ -1222,8 +1222,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScope,
                                                                               const IPC::Principal& aPrincipal) override;
 
-  virtual mozilla::ipc::IPCResult RecvNotifyLowMemory() override;
-
   virtual mozilla::ipc::IPCResult RecvGetFilesRequest(const nsID& aID,
                                                       const nsString& aDirectoryPath,
                                                       const bool& aRecursiveFlag) override;

@@ -5340,18 +5340,6 @@ ContentParent::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aSco
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ContentParent::RecvNotifyLowMemory()
-{
-  MarkAsTroubled();
-
-  Telemetry::ScalarAdd(Telemetry::ScalarID::DOM_CONTENTPROCESS_TROUBLED_DUE_TO_MEMORY, 1);
-
-  nsThread::SaveMemoryReportNearOOM(nsThread::ShouldSaveMemoryReport::kForceReport);
-
-  return IPC_OK();
-}
-
 /* static */ void
 ContentParent::BroadcastBlobURLRegistration(const nsACString& aURI,
                                             BlobImpl* aBlobImpl,
