@@ -655,7 +655,7 @@ protected:
   // Whether we're in the process of sending a WM_SETTEXT ourselves
   bool                  mSendingSetText;
 
-  // Whether we we're created as a NS_CHILD_CID window (aka ChildWindow) or not.
+  // Whether we we're created as a child window (aka ChildWindow) or not.
   bool                  mIsChildWindow : 1;
 
   // The point in time at which the last paint completed. We use this to avoid
