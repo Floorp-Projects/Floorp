@@ -658,6 +658,8 @@ class LSafepoint;
 class LInstruction;
 class LElementVisitor;
 
+constexpr size_t MaxNumLInstructionOperands = 63;
+
 // The common base class for LPhi and LInstruction.
 class LNode
 {
@@ -672,9 +674,12 @@ class LNode
     // Bitfields below are all uint32_t to make sure MSVC packs them correctly.
     uint32_t op_ : 10;
     uint32_t isCall_ : 1;
+
     // LPhi::numOperands() may not fit in this bitfield, so we only use this
     // field for LInstruction.
     uint32_t nonPhiNumOperands_ : 6;
+    static_assert((1 << 6) - 1 == MaxNumLInstructionOperands, "packing constraints");
+
     // For LInstruction, the first operand is stored at offset
     // sizeof(LInstruction) + nonPhiOperandsOffset_ * sizeof(uintptr_t).
     uint32_t nonPhiOperandsOffset_ : 5;
