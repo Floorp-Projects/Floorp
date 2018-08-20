@@ -19,6 +19,7 @@
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
+#include "js/ErrorReport.h"
 #include "js/HeapAPI.h"
 #include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
@@ -40,7 +41,6 @@
 
 struct JSErrorFormatString;
 struct JSJitInfo;
-class JSErrorReport;
 
 namespace JS {
 template <class T>
