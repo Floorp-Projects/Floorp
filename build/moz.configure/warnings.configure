@@ -31,6 +31,9 @@ add_gcc_warning('-Woverloaded-virtual', cxx_compiler)
 # catches pointer arithmetic using NULL or sizeof(void)
 add_gcc_warning('-Wpointer-arith')
 
+# catch modifying constructor parameter that shadows member variable
+check_and_add_gcc_warning('-Wshadow-field-in-constructor-modified')
+
 # catches comparing signed/unsigned ints
 add_gcc_warning('-Wsign-compare')
 
