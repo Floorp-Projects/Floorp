@@ -19,6 +19,8 @@
 #include "nsIQuotaRequests.h"
 #include "nsPIDOMWindow.h"
 
+using namespace mozilla::dom::quota;
+
 namespace mozilla {
 namespace dom {
 

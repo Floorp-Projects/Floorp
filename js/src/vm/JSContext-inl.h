@@ -20,8 +20,6 @@
 
 namespace js {
 
-#ifdef JS_CRASH_DIAGNOSTICS
-
 class CompartmentChecker
 {
     JS::Compartment* compartment;
@@ -174,8 +172,6 @@ class CompartmentChecker
         check(type.maybeCompartment(), argIndex);
     }
 };
-
-#endif // JS_CRASH_DIAGNOSTICS
 
 /*
  * Don't perform these checks when called from a finalizer. The checking

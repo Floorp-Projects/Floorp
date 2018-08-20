@@ -6,15 +6,16 @@
 const NS_OK = Cr.NS_OK;
 const NS_ERROR_FAILURE = Cr.NS_ERROR_FAILURE;
 const NS_ERROR_UNEXPECTED = Cr.NS_ERROR_UNEXPECTED;
+const NS_ERROR_STORAGE_BUSY = Cr.NS_ERROR_STORAGE_BUSY;
 
 function is(a, b, msg)
 {
-  Assert.equal(a, b, Components.stack.caller);
+  Assert.equal(a, b, msg);
 }
 
 function ok(cond, msg)
 {
-  Assert.ok(!!cond, Components.stack.caller);
+  Assert.ok(!!cond, msg);
 }
 
 function run_test()
@@ -65,11 +66,13 @@ function continueToNextStepSync()
 function enableTesting()
 {
   SpecialPowers.setBoolPref("dom.quotaManager.testing", true);
+  SpecialPowers.setBoolPref("dom.simpleDB.enabled", true);
 }
 
 function resetTesting()
 {
   SpecialPowers.clearUserPref("dom.quotaManager.testing");
+  SpecialPowers.clearUserPref("dom.simpleDB.enabled");
 }
 
 function init(callback)
@@ -229,22 +232,6 @@ function getRelativeFile(relativePath)
   return file;
 }
 
-function compareBuffers(buffer1, buffer2)
-{
-  if (buffer1.byteLength != buffer2.byteLength) {
-    return false;
-  }
-
-  let view1 = buffer1 instanceof Uint8Array ? buffer1 : new Uint8Array(buffer1);
-  let view2 = buffer2 instanceof Uint8Array ? buffer2 : new Uint8Array(buffer2);
-  for (let i = 0; i < buffer1.byteLength; i++) {
-    if (view1[i] != view2[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
 function getPersistedFromMetadata(readBuffer)
 {
   const persistedPosition = 8; // Persisted state is stored in the 9th byte
@@ -292,6 +279,34 @@ function getPrincipal(url)
   return ssm.createCodebasePrincipal(uri, {});
 }
 
+function getCurrentPrincipal()
+{
+  return Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
+}
+
+function getSimpleDatabase(principal)
+{
+  let connection = Cc["@mozilla.org/dom/sdb-connection;1"]
+    .createInstance(Ci.nsISDBConnection);
+
+  if (!principal) {
+    principal = getCurrentPrincipal();
+  }
+
+  connection.init(principal);
+
+  return connection;
+}
+
+function* requestFinished(request) {
+  request.callback = continueToNextStepSync;
+  yield undefined;
+  if (request.resultCode == NS_OK) {
+    return request.result;
+  }
+  throw request.resultCode;
+}
+
 var SpecialPowers = {
   getBoolPref: function(prefName) {
     return this._getPrefs().getBoolPref(prefName);
@@ -316,3 +331,15 @@ var SpecialPowers = {
              .getService(Ci.nsIQuotaManagerService);
   },
 };
+
+function loadSubscript(path)
+{
+  let file = do_get_file(path, false);
+  let uri = Cc["@mozilla.org/network/io-service;1"]
+    .getService(Ci.nsIIOService).newFileURI(file);
+  let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+    .getService(Ci.mozIJSSubScriptLoader);
+  scriptLoader.loadSubScript(uri.spec);
+}
+
+loadSubscript("../head-shared.js");

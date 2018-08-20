@@ -184,8 +184,8 @@ BodyStartWriteStream(const QuotaInfo& aQuotaInfo,
   if (NS_WARN_IF(exists)) { return NS_ERROR_FILE_ALREADY_EXISTS; }
 
   nsCOMPtr<nsIOutputStream> fileStream =
-    FileOutputStream::Create(PERSISTENCE_TYPE_DEFAULT, aQuotaInfo.mGroup,
-                             aQuotaInfo.mOrigin, tmpFile);
+    CreateFileOutputStream(PERSISTENCE_TYPE_DEFAULT, aQuotaInfo.mGroup,
+                           aQuotaInfo.mOrigin, tmpFile);
   if (NS_WARN_IF(!fileStream)) { return NS_ERROR_UNEXPECTED; }
 
   RefPtr<SnappyCompressOutputStream> compressed =
@@ -263,8 +263,8 @@ BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
   if (NS_WARN_IF(!exists)) { return NS_ERROR_FILE_NOT_FOUND; }
 
   nsCOMPtr<nsIInputStream> fileStream =
-    FileInputStream::Create(PERSISTENCE_TYPE_DEFAULT, aQuotaInfo.mGroup,
-                            aQuotaInfo.mOrigin, finalFile);
+    CreateFileInputStream(PERSISTENCE_TYPE_DEFAULT, aQuotaInfo.mGroup,
+                          aQuotaInfo.mOrigin, finalFile);
   if (NS_WARN_IF(!fileStream)) { return NS_ERROR_UNEXPECTED; }
 
   fileStream.forget(aStreamOut);
