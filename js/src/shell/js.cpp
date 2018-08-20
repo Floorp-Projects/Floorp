@@ -81,6 +81,7 @@
 #include "js/Debug.h"
 #include "js/GCVector.h"
 #include "js/Initialization.h"
+#include "js/JSON.h"
 #include "js/Printf.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
