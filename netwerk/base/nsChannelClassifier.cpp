@@ -22,7 +22,6 @@
 #include "nsIIOService.h"
 #include "nsIParentChannel.h"
 #include "nsIPermissionManager.h"
-#include "nsIPrivateBrowsingTrackingProtectionWhitelist.h"
 #include "nsIProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
@@ -487,44 +486,32 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
         do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    uint32_t permissions = nsIPermissionManager::UNKNOWN_ACTION;
-    rv = permMgr->TestPermission(topWinURI, "trackingprotection", &permissions);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Check both the normal mode and private browsing mode user override permissions.
+    const char* types[] = {
+      "trackingprotection",
+      "trackingprotection-pb"
+    };
 
-    if (permissions == nsIPermissionManager::ALLOW_ACTION) {
-      if (LOG_ENABLED()) {
-        nsCString chanSpec = chanURI->GetSpecOrDefault();
-        chanSpec.Truncate(std::min(chanSpec.Length(), sMaxSpecLength));
-        LOG(("nsChannelClassifier[%p]: User override on channel[%p] (%s) for %s",
-             this, aChannel, chanSpec.get(), escaped.get()));
-      }
-      mIsAllowListed = true;
-      *result = false;
-    } else {
-      *result = true;
-    }
-
-    // In Private Browsing Mode we also check against an in-memory list.
-    if (NS_UsePrivateBrowsing(aChannel)) {
-      nsCOMPtr<nsIPrivateBrowsingTrackingProtectionWhitelist> pbmtpWhitelist =
-          do_GetService(NS_PBTRACKINGPROTECTIONWHITELIST_CONTRACTID, &rv);
+    for (size_t i = 0; i < ArrayLength(types); ++i) {
+      uint32_t permissions = nsIPermissionManager::UNKNOWN_ACTION;
+      rv = permMgr->TestPermission(topWinURI, types[i], &permissions);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      bool exists = false;
-      rv = pbmtpWhitelist->ExistsInAllowList(topWinURI, &exists);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (exists) {
-        mIsAllowListed = true;
+      if (permissions == nsIPermissionManager::ALLOW_ACTION) {
         if (LOG_ENABLED()) {
           nsCString chanSpec = chanURI->GetSpecOrDefault();
           chanSpec.Truncate(std::min(chanSpec.Length(), sMaxSpecLength));
-          LOG(("nsChannelClassifier[%p]: User override (PBM) on channel[%p] (%s) for %s",
-               this, aChannel, chanSpec.get(), escaped.get()));
+          LOG(("nsChannelClassifier[%p]: User override on channel[%p] (%s) for %s (%s)",
+               this, aChannel, chanSpec.get(), escaped.get(), types[i]));
         }
+        mIsAllowListed = true;
+        *result = false;
+        // Stop checking the next permisson type if we decided to override.
+        break;
+      } else if (i == ArrayLength(types) - 1) {
+        // Do this on the last iteration.
+        *result = true;
       }
-
-      *result = !exists;
     }
 
     // Tracking protection will be enabled so return without updating
