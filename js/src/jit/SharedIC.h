@@ -338,34 +338,6 @@ class ICEntry
         return &firstStub_;
     }
 
-  protected:
-    void traceEntry(JSTracer* trc);
-};
-
-class BaselineICEntry : public ICEntry
-{
-  public:
-    BaselineICEntry(uint32_t pcOffset, Kind kind)
-      : ICEntry(pcOffset, kind)
-    { }
-
-    void trace(JSTracer* trc);
-};
-
-class IonICEntry : public ICEntry
-{
-    JSScript* script_;
-
-  public:
-    IonICEntry(uint32_t pcOffset, Kind kind, JSScript* script)
-      : ICEntry(pcOffset, kind),
-        script_(script)
-    { }
-
-    JSScript* script() {
-        return script_;
-    }
-
     void trace(JSTracer* trc);
 };
 
