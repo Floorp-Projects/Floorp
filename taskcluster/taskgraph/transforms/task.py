@@ -33,6 +33,7 @@ from taskgraph.util.scriptworker import (
     get_release_config,
     add_scope_prefix,
 )
+from taskgraph.util.signed_artifacts import get_signed_artifacts
 from voluptuous import Any, Required, Optional, Extra
 from taskgraph import GECKO, MAX_DEPENDENCIES
 from ..util import docker as dockerutil
@@ -1039,6 +1040,16 @@ def build_scriptworker_signing_payload(config, task, task_def):
         'maxRunTime': worker['max-run-time'],
         'upstreamArtifacts':  worker['upstream-artifacts']
     }
+
+    artifacts = set(task.get('release-artifacts', []))
+    for upstream_artifact in worker['upstream-artifacts']:
+        for path in upstream_artifact['paths']:
+            artifacts.update(get_signed_artifacts(
+                input=path,
+                formats=upstream_artifact['formats'],
+            ))
+
+    task['release-artifacts'] = list(artifacts)
 
 
 @payload_builder('binary-transparency')
