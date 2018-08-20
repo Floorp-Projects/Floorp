@@ -2763,7 +2763,7 @@ Toolbox.prototype = {
       const nodeFound = await inspector.inspectNodeActor(objectActor.actor,
                                                          inspectFromAnnotation);
       if (nodeFound) {
-        await this.selectTool("inspector", "inspect_dom");
+        await this.selectTool("inspector");
       }
     } else if (objectActor.type !== "null" &&
                objectActor.type !== "undefined") {

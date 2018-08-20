@@ -112,7 +112,7 @@ exports.getHighlighterUtils = function(toolbox) {
       isPicking = true;
 
       toolbox.pickerButton.isChecked = true;
-      await toolbox.selectTool("inspector");
+      await toolbox.selectTool("inspector", "inspect_dom");
       toolbox.on("select", cancelPicker);
 
       if (isRemoteHighlightable()) {
