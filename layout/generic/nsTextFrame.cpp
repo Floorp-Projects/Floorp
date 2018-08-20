@@ -7994,8 +7994,8 @@ IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter,
     return false;
   if (index > 0) {
     // Check whether the proposed position is in between the two halves of a
-    // surrogate pair, or before a Variation Selector character;
-    // if so, this is not a valid character boundary.
+    // surrogate pair, before a Variation Selector character, or within a
+    // ligated emoji sequence; if so, this is not a valid character boundary.
     // (In the case where we are respecting clusters, we won't actually get
     // this far because the low surrogate is also marked as non-clusterStart
     // so we'll return FALSE above.)
@@ -8005,7 +8005,9 @@ IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter,
 
     if (gfxFontUtils::IsVarSelector(ch) ||
         (NS_IS_LOW_SURROGATE(ch) && offs > 0 &&
-         NS_IS_HIGH_SURROGATE(frag->CharAt(offs - 1)))) {
+         NS_IS_HIGH_SURROGATE(frag->CharAt(offs - 1))) ||
+        (!aTextRun->IsLigatureGroupStart(index) &&
+         unicode::GetEmojiPresentation(ch) == unicode::EmojiDefault)) {
       return false;
     }
 
@@ -8016,11 +8018,12 @@ IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter,
       if (NS_IS_LOW_SURROGATE(ch2)) {
         ch = SURROGATE_TO_UCS4(ch, ch2);
         // If the character is a (Plane-14) variation selector,
-        // or a Regional Indicator character that is ligated with the previous
-        // character, this is not a valid boundary.
+        // or an emoji character that is ligated with the previous
+        // character (i.e. part of a Regional-Indicator flag pair,
+        // or an emoji-ZWJ sequence), this is not a valid boundary.
         if (gfxFontUtils::IsVarSelector(ch) ||
-            (gfxFontUtils::IsRegionalIndicator(ch) &&
-             !aTextRun->IsLigatureGroupStart(index))) {
+            (!aTextRun->IsLigatureGroupStart(index) &&
+             unicode::GetEmojiPresentation(ch) == unicode::EmojiDefault)) {
           return false;
         }
       }
