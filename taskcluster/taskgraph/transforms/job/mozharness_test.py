@@ -337,7 +337,8 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
     if test['max-run-time']:
         worker['max-run-time'] = test['max-run-time']
 
-    worker['env'] = env = {
+    env = worker.setdefault('env', {})
+    env.update({
         'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
         'GECKO_HEAD_REV': config.params['head_rev'],
         'MOZHARNESS_CONFIG': ' '.join(mozharness['config']),
@@ -351,7 +352,7 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
         "MOZ_HIDE_RESULTS_TABLE": '1',
         "MOZ_NODE_PATH": "/usr/local/bin/node",
         'MOZ_AUTOMATION': '1',
-    }
+    })
     # talos tests don't need Xvfb
     if is_talos:
         env['NEED_XVFB'] = 'false'

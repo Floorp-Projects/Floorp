@@ -299,6 +299,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
     # clobber defined in BaseScript
 
     def download_and_extract(self, extract_dirs=None, suite_categories=None):
+        if 'MOZ_FETCHES' in os.environ:
+            self.fetch_content()
         return super(Raptor, self).download_and_extract(
             suite_categories=['common', 'raptor']
         )

@@ -146,6 +146,9 @@ test_description_schema = Schema({
         'test-platform',
         basestring),
 
+    # base work directory used to set up the task.
+    Optional('workdir'): basestring,
+
     # the name by which this test suite is addressed in try syntax; defaults to
     # the test-name.  This will translate to the `unittest_try_name` or
     # `talos_try_name` attribute.
@@ -1096,6 +1099,9 @@ def make_job_description(config, tests):
         run = jobdesc['run'] = {}
         run['using'] = 'mozharness-test'
         run['test'] = test
+
+        if 'workdir' in test:
+            run['workdir'] = test.pop('workdir')
 
         jobdesc['worker-type'] = test.pop('worker-type')
         if test.get('fetches'):
