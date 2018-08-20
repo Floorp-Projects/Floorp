@@ -6,9 +6,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function PrivateBrowsingTrackingProtectionWhitelist() {
-  // The list of URIs explicitly excluded from tracking protection.
-  this._allowlist = [];
-
   Services.obs.addObserver(this, "last-pb-context-exited", true);
 }
 
@@ -24,9 +21,8 @@ PrivateBrowsingTrackingProtectionWhitelist.prototype = {
    *        The URI to add to the list.
    */
   addToAllowList(uri) {
-    if (!this._allowlist.includes(uri.spec)) {
-      this._allowlist.push(uri.spec);
-    }
+    Services.perms.add(uri, "trackingprotection-pb", Ci.nsIPermissionManager.ALLOW_ACTION,
+                       Ci.nsIPermissionManager.EXPIRE_SESSION);
   },
 
   /**
@@ -36,10 +32,7 @@ PrivateBrowsingTrackingProtectionWhitelist.prototype = {
    *        The URI to add to the list.
    */
   removeFromAllowList(uri) {
-    let index = this._allowlist.indexOf(uri.spec);
-    if (index !== -1) {
-      this._allowlist.splice(index, 1);
-    }
+    Services.perms.remove(uri, "trackingprotection-pb");
   },
 
   /**
@@ -49,12 +42,13 @@ PrivateBrowsingTrackingProtectionWhitelist.prototype = {
    *        The URI to add to the list.
    */
   existsInAllowList(uri) {
-    return this._allowlist.includes(uri.spec);
+    return Services.perms.testPermission(uri, "trackingprotection-pb") ==
+           Ci.nsIPermissionManager.ALLOW_ACTION;
   },
 
   observe(subject, topic, data) {
     if (topic == "last-pb-context-exited") {
-      this._allowlist = [];
+      Services.perms.removeByType("trackingprotection-pb");
     }
   }
 };
