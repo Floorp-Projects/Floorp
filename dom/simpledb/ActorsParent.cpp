@@ -21,6 +21,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsStringStream.h"
 #include "prio.h"
+#include "SimpleDBCommon.h"
 
 #define DISABLE_ASSERTS_FOR_FUZZING 0
 
@@ -1197,6 +1198,10 @@ OpenOp::Open()
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !OperationMayProceed()) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (NS_WARN_IF(!Preferences::GetBool(kPrefSimpleDBEnabled, false))) {
+    return NS_ERROR_UNEXPECTED;
   }
 
   const PrincipalInfo& principalInfo = GetConnection()->GetPrincipalInfo();

@@ -48,7 +48,8 @@ class SDBConnection final
   bool mAllowedToClose;
 
 public:
-  SDBConnection();
+  static nsresult
+  Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
   void
   AssertIsOnOwningThread() const
@@ -75,6 +76,8 @@ public:
   AllowToClose();
 
 private:
+  SDBConnection();
+
   ~SDBConnection();
 
   nsresult
