@@ -344,10 +344,7 @@ SetDocumentStateCommand::DoCommandParams(const char* aCommandName,
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
-    nsresult rv = htmlEditor->SetObjectResizingEnabled(enabled);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    htmlEditor->EnableObjectResizer(enabled);
     return NS_OK;
   }
 
@@ -361,10 +358,22 @@ SetDocumentStateCommand::DoCommandParams(const char* aCommandName,
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
-    nsresult rv = htmlEditor->SetInlineTableEditingEnabled(enabled);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    htmlEditor->EnableInlineTableEditor(enabled);
+    return NS_OK;
+  }
+
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableAbsolutePositionEditing")) {
+    NS_ENSURE_ARG_POINTER(aParams);
+    HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
+    if (NS_WARN_IF(!htmlEditor)) {
+      return NS_ERROR_INVALID_ARG;
     }
+    ErrorResult error;
+    bool enabled = params->GetBool(STATE_ATTRIBUTE, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    htmlEditor->EnableAbsolutePositionEditor(enabled);
     return NS_OK;
   }
 
@@ -379,6 +388,12 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
   if (NS_WARN_IF(!aParams) || NS_WARN_IF(!refCon)) {
     return NS_ERROR_INVALID_ARG;
   }
+
+  // If the result is set to STATE_ALL as bool value, queryCommandState()
+  // returns the bool value.
+  // If the result is set to STATE_ATTRIBUTE as CString value,
+  // queryCommandValue() returns the string value.
+  // Otherwise, ignored.
 
   // The base editor owns most state info
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
@@ -398,12 +413,14 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
     return rv;
   }
 
+  // cmd_setDocumentModified is an internal command.
   if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentModified")) {
     bool modified;
     rv = textEditor->GetDocumentModified(&modified);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+    // XXX Nobody refers this result due to wrong type.
     rv = params->SetBool(STATE_ATTRIBUTE, modified);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -411,7 +428,9 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
     return NS_OK;
   }
 
+  // cmd_setDocumentReadOnly is a Gecko specific command, "contentReadOnly".
   if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly")) {
+    // XXX Nobody refers this result due to wrong type.
     rv = params->SetBool(STATE_ATTRIBUTE, textEditor->IsReadonly());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -419,6 +438,7 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
     return NS_OK;
   }
 
+  // cmd_setDocumentUseCSS is a common command, "styleWithCSS".
   if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS")) {
     HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
     if (NS_WARN_IF(!htmlEditor)) {
@@ -433,6 +453,7 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
     return NS_OK;
   }
 
+  // cmd_insertBrOnReturn is a Gecko specific command, "insertBrOrReturn".
   if (!nsCRT::strcmp(aCommandName, "cmd_insertBrOnReturn")) {
     HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
     if (NS_WARN_IF(!htmlEditor)) {
@@ -440,6 +461,7 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
     }
     bool createPOnReturn;
     htmlEditor->GetReturnInParagraphCreatesNewParagraph(&createPOnReturn);
+    // XXX Nobody refers this result due to wrong type.
     rv = params->SetBool(STATE_ATTRIBUTE, !createPOnReturn);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -447,6 +469,8 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
     return NS_OK;
   }
 
+  // cmd_defaultParagraphSeparator is a common command,
+  // "defaultParagraphSeparator".
   if (!nsCRT::strcmp(aCommandName, "cmd_defaultParagraphSeparator")) {
     HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
     if (NS_WARN_IF(!htmlEditor)) {
@@ -481,32 +505,50 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
     }
   }
 
+  // cmd_enableObjectResizing is a Gecko specific command,
+  // "enableObjectResizing".
   if (!nsCRT::strcmp(aCommandName, "cmd_enableObjectResizing")) {
     HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
     if (NS_WARN_IF(!htmlEditor)) {
       return NS_ERROR_INVALID_ARG;
     }
-    bool enabled;
-    htmlEditor->GetObjectResizingEnabled(&enabled);
-    rv = params->SetBool(STATE_ATTRIBUTE, enabled);
+    // We returned the result as STATE_ATTRIBUTE with bool value 60 or earlier.
+    // So, the result was ignored by both nsHTMLDocument::QueryCommandValue()
+    // and nsHTMLDocument::QueryCommandState().
+    rv = params->SetBool(STATE_ALL, htmlEditor->IsObjectResizerEnabled());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return NS_OK;
   }
 
+  // cmd_enableInlineTableEditing is a Gecko specific command,
+  // "enableInlineTableEditing".
   if (!nsCRT::strcmp(aCommandName, "cmd_enableInlineTableEditing")) {
     HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
     if (NS_WARN_IF(!htmlEditor)) {
       return NS_ERROR_INVALID_ARG;
     }
-    bool enabled;
-    htmlEditor->GetInlineTableEditingEnabled(&enabled);
-    rv = params->SetBool(STATE_ATTRIBUTE, enabled);
+    // We returned the result as STATE_ATTRIBUTE with bool value 60 or earlier.
+    // So, the result was ignored by both nsHTMLDocument::QueryCommandValue()
+    // and nsHTMLDocument::QueryCommandState().
+    rv = params->SetBool(STATE_ALL, htmlEditor->IsInlineTableEditorEnabled());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return NS_OK;
+  }
+
+  // cmd_enableAbsolutePositionEditing is a Gecko specific command,
+  // "cenableAbsolutePositionEditing".
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableAbsolutePositionEditing")) {
+    NS_ENSURE_ARG_POINTER(aParams);
+    HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
+    if (NS_WARN_IF(!htmlEditor)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    return params->SetBool(STATE_ALL,
+                           htmlEditor->IsAbsolutePositionEditorEnabled());
   }
 
   return NS_ERROR_NOT_IMPLEMENTED;

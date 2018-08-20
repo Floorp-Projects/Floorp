@@ -35,7 +35,9 @@ function checkSnapshots(s1, s2, shouldBeEqual, testName) {
 }
 
 function runTest() {
-  document.getElementById("iframe").contentWindow.document.designMode = "on";
+  var contentDocument = document.getElementById("iframe").contentDocument;
+  contentDocument.designMode = "on";
+  contentDocument.execCommand("enableObjectResizing", false, true);
 
   // The editor requires the event loop to spin after you turn on design mode
   // before it takes effect.

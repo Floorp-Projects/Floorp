@@ -100,6 +100,53 @@ IsNamedAnchorTag(const nsAtom& aTagName)
   return &aTagName == nsGkAtoms::anchor;
 }
 
+class HTMLEditorPrefs final
+{
+public:
+  static bool IsResizingUIEnabledByDefault()
+  {
+    EnsurePrefValues();
+    return sUserWantsToEnableResizingUIByDefault;
+  }
+  static bool IsInlineTableEditingUIEnabledByDefault()
+  {
+    EnsurePrefValues();
+    return sUserWantsToEnableInlineTableEditingUIByDefault;
+  }
+  static bool IsAbsolutePositioningUIEnabledByDefault()
+  {
+    EnsurePrefValues();
+    return sUserWantsToEnableAbsolutePositioningUIByDefault;
+  }
+
+private:
+  static bool sUserWantsToEnableResizingUIByDefault;
+  static bool sUserWantsToEnableInlineTableEditingUIByDefault;
+  static bool sUserWantsToEnableAbsolutePositioningUIByDefault;
+
+  static void EnsurePrefValues()
+  {
+    static bool sInitialized = false;
+    if (sInitialized) {
+      return;
+    }
+    Preferences::AddBoolVarCache(
+                   &sUserWantsToEnableResizingUIByDefault,
+                   "editor.resizing.enabled_by_default");
+    Preferences::AddBoolVarCache(
+                   &sUserWantsToEnableInlineTableEditingUIByDefault,
+                   "editor.inline_table_editing.enabled_by_default");
+    Preferences::AddBoolVarCache(
+                   &sUserWantsToEnableAbsolutePositioningUIByDefault,
+                   "editor.positioning.enabled_by_default");
+    sInitialized = true;
+  }
+};
+
+bool HTMLEditorPrefs::sUserWantsToEnableResizingUIByDefault = false;
+bool HTMLEditorPrefs::sUserWantsToEnableInlineTableEditingUIByDefault = false;
+bool HTMLEditorPrefs::sUserWantsToEnableAbsolutePositioningUIByDefault = false;
+
 template EditorDOMPoint
 HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
               nsIContent& aNode,
@@ -116,18 +163,20 @@ HTMLEditor::HTMLEditor()
   , mCSSAware(false)
   , mSelectedCellIndex(0)
   , mHasShownResizers(false)
-  , mIsObjectResizingEnabled(true)
+  , mIsObjectResizingEnabled(HTMLEditorPrefs::IsResizingUIEnabledByDefault())
   , mIsResizing(false)
   , mPreserveRatio(false)
   , mResizedObjectIsAnImage(false)
-  , mIsAbsolutelyPositioningEnabled(true)
+  , mIsAbsolutelyPositioningEnabled(
+      HTMLEditorPrefs::IsAbsolutePositioningUIEnabledByDefault())
   , mResizedObjectIsAbsolutelyPositioned(false)
   , mHasShownGrabber(false)
   , mGrabberClicked(false)
   , mIsMoving(false)
   , mSnapToGridEnabled(false)
   , mHasShownInlineTableEditor(false)
-  , mIsInlineTableEditingEnabled(true)
+  , mIsInlineTableEditingEnabled(
+      HTMLEditorPrefs::IsInlineTableEditingUIEnabledByDefault())
   , mOriginalX(0)
   , mOriginalY(0)
   , mResizedObjectX(0)
@@ -3069,8 +3118,10 @@ HTMLEditor::AddOverrideStyleSheetInternal(const nsAString& aURL)
   // synchronously, of course..
   RefPtr<StyleSheet> sheet;
   // Editor override style sheets may want to style Gecko anonymous boxes
-  rv = presShell->GetDocument()->CSSLoader()->
-    LoadSheetSync(uaURI, css::eAgentSheetFeatures, true, &sheet);
+  DebugOnly<nsresult> ignoredRv =
+    presShell->GetDocument()->CSSLoader()->
+      LoadSheetSync(uaURI, css::eAgentSheetFeatures, true, &sheet);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(ignoredRv), "LoadSheetSync() failed");
 
   // Synchronous loads should ALWAYS return completed
   if (NS_WARN_IF(!sheet)) {
