@@ -297,15 +297,20 @@ class Bootstrapper(object):
         state_dir, _ = get_state_dir()
 
         if not os.path.exists(state_dir):
+            should_create_state_dir = True
             if not self.instance.no_interactive:
                 choice = self.instance.prompt_int(
                     prompt=STATE_DIR_INFO.format(statedir=state_dir),
                     low=1,
                     high=2)
 
-                if choice == 1:
-                    print('Creating global state directory: %s' % state_dir)
-                    os.makedirs(state_dir, mode=0o770)
+                should_create_state_dir = choice == 1
+
+            # This directory is by default in $HOME, or overridden via an env
+            # var, so we probably shouldn't gate it on --no-system-changes.
+            if should_create_state_dir:
+                print('Creating global state directory: %s' % state_dir)
+                os.makedirs(state_dir, mode=0o770)
 
         state_dir_available = os.path.exists(state_dir)
         return state_dir_available, state_dir
@@ -314,26 +319,22 @@ class Bootstrapper(object):
                                                state_dir_available,
                                                have_clone,
                                                checkout_root):
-        # Install the clang packages needed for developing stylo, as well
-        # as the version of NodeJS that we currently support.
-        if not self.instance.no_interactive:
-            # The best place to install our packages is in the state directory
-            # we have.  If the user doesn't have one, we need them to re-run
-            # bootstrap and create the directory.
-            #
-            # XXX Android bootstrap just assumes the existence of the state
-            # directory and writes the NDK into it.  Should we do the same?
-            if not state_dir_available:
-                print(STYLO_NODEJS_DIRECTORY_MESSAGE.format(statedir=state_dir))
-                sys.exit(1)
+        # Install the clang packages needed for building the style system, as
+        # well as the version of NodeJS that we currently support.
 
-            if not have_clone:
-                print(STYLE_NODEJS_REQUIRES_CLONE)
-                sys.exit(1)
+        # The best place to install our packages is in the state directory
+        # we have.  We should have created one above in non-interactive mode.
+        if not state_dir_available:
+            print(STYLO_NODEJS_DIRECTORY_MESSAGE.format(statedir=state_dir))
+            sys.exit(1)
 
-            self.instance.state_dir = state_dir
-            self.instance.ensure_stylo_packages(state_dir, checkout_root)
-            self.instance.ensure_node_packages(state_dir, checkout_root)
+        if not have_clone:
+            print(STYLE_NODEJS_REQUIRES_CLONE)
+            sys.exit(1)
+
+        self.instance.state_dir = state_dir
+        self.instance.ensure_stylo_packages(state_dir, checkout_root)
+        self.instance.ensure_node_packages(state_dir, checkout_root)
 
     def bootstrap(self):
         if self.choice is None:
