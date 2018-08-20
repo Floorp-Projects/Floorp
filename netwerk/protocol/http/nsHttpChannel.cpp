@@ -626,21 +626,12 @@ nsHttpChannel::Connect()
         return RedirectToInterceptedChannel();
     }
 
-    bool isTrackingResource = mIsTrackingResource; // is atomic
+    bool isTrackingResource = mIsThirdPartyTrackingResource; // is atomic
     LOG(("nsHttpChannel %p tracking resource=%d, cos=%u",
           this, isTrackingResource, mClassOfService));
 
     if (isTrackingResource) {
-        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-          services::GetThirdPartyUtil();
-        bool result = false;
-        if (thirdPartyUtil &&
-            NS_SUCCEEDED(thirdPartyUtil->IsThirdPartyChannel(this, nullptr,
-                                                             &result)) &&
-            result) {
-
-            AddClassFlags(nsIClassOfService::Tail);
-        }
+        AddClassFlags(nsIClassOfService::Tail);
     }
 
     if (WaitingForTailUnblock()) {
@@ -694,14 +685,6 @@ nsHttpChannel::CheckFastBlocked()
         Preferences::AddUintVarCache(&sFastBlockTimeout, "browser.fastblock.timeout");
     }
 
-    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
-    bool result = false;
-    if (!thirdPartyUtil ||
-        NS_FAILED(thirdPartyUtil->IsThirdPartyChannel(this, nullptr, &result)) ||
-        !result) {
-        return false;
-    }
-
     TimeStamp timestamp;
     if (NS_FAILED(GetNavigationStartTimeStamp(&timestamp))) {
         return false;
@@ -735,7 +718,7 @@ nsHttpChannel::ConnectOnTailUnblock()
 
     LOG(("nsHttpChannel::ConnectOnTailUnblock [this=%p]\n", this));
 
-    bool isTrackingResource = mIsTrackingResource; // is atomic
+    bool isTrackingResource = mIsThirdPartyTrackingResource; // is atomic
     if (isTrackingResource && CheckFastBlocked()) {
         Unused << AsyncAbort(NS_ERROR_ABORT);
         CloseCacheEntry(false);
@@ -2328,24 +2311,12 @@ nsHttpChannel::ProcessResponse()
         referrer = mReferrer;
     }
 
-    // We consider top-level tracking resource as non-tracking if not in 3rd
-    // party context.
-    bool isThirdPartyAndTrackingResource = false;
-    if(mIsTrackingResource) {
-        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-          services::GetThirdPartyUtil();
-        if (thirdPartyUtil) {
-            thirdPartyUtil->IsThirdPartyChannel(this, nullptr,
-                                                &isThirdPartyAndTrackingResource);
-        }
-    }
-
     if (referrer) {
         nsCOMPtr<nsILoadContextInfo> lci = GetLoadContextInfo(this);
         mozilla::net::Predictor::UpdateCacheability(referrer, mURI, httpStatus,
                                                     mRequestHead, mResponseHead,
                                                     lci,
-                                                    isThirdPartyAndTrackingResource);
+                                                    mIsThirdPartyTrackingResource);
     }
 
     // Only allow 407 (authentication required) to continue

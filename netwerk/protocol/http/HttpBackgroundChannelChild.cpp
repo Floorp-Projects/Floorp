@@ -348,9 +348,10 @@ HttpBackgroundChannelChild::RecvNotifyTrackingProtectionDisabled()
 }
 
 IPCResult
-HttpBackgroundChannelChild::RecvNotifyTrackingResource()
+HttpBackgroundChannelChild::RecvNotifyTrackingResource(const bool& aIsThirdParty)
 {
-  LOG(("HttpBackgroundChannelChild::RecvNotifyTrackingResource [this=%p]\n", this));
+  LOG(("HttpBackgroundChannelChild::RecvNotifyTrackingResource thirdparty=%d "
+       "[this=%p]\n", static_cast<int>(aIsThirdParty), this));
   MOZ_ASSERT(OnSocketThread());
 
   if (NS_WARN_IF(!mChannelChild)) {
@@ -359,7 +360,7 @@ HttpBackgroundChannelChild::RecvNotifyTrackingResource()
 
   // NotifyTrackingResource has no order dependency to OnStartRequest.
   // It this be handled as soon as possible
-  mChannelChild->ProcessNotifyTrackingResource();
+  mChannelChild->ProcessNotifyTrackingResource(aIsThirdParty);
 
   return IPC_OK();
 }

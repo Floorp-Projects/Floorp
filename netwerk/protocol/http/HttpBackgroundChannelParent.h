@@ -70,7 +70,7 @@ public:
   bool OnNotifyTrackingProtectionDisabled();
 
   // To send NotifyTrackingResource message over background channel.
-  bool OnNotifyTrackingResource();
+  bool OnNotifyTrackingResource(bool aIsThirdParty);
 
   // To send SetClassifierMatchedInfo message over background channel.
   bool OnSetClassifierMatchedInfo(const nsACString& aList,
