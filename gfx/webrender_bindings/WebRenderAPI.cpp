@@ -503,6 +503,12 @@ WebRenderAPI::Resume()
 }
 
 void
+WebRenderAPI::NotifyMemoryPressure()
+{
+  wr_api_notify_memory_pressure(mDocHandle);
+}
+
+void
 WebRenderAPI::WakeSceneBuilder()
 {
     wr_api_wake_scene_builder(mDocHandle);

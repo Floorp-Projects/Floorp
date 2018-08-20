@@ -1912,6 +1912,17 @@ CompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aA
   return true;
 }
 
+void
+CompositorBridgeParent::NotifyMemoryPressure()
+{
+  if (mWrBridge) {
+    RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
+    if (api) {
+      api->NotifyMemoryPressure();
+    }
+  }
+}
+
 RefPtr<WebRenderBridgeParent>
 CompositorBridgeParent::GetWebRenderBridgeParent() const
 {
