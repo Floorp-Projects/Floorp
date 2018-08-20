@@ -69,7 +69,8 @@ HTMLEditorController::RegisterEditorDocStateCommands(
   NS_REGISTER_NEXT_COMMAND(SetDocumentStateCommand, "cmd_insertBrOnReturn")
   NS_REGISTER_NEXT_COMMAND(SetDocumentStateCommand, "cmd_defaultParagraphSeparator")
   NS_REGISTER_NEXT_COMMAND(SetDocumentStateCommand, "cmd_enableObjectResizing")
-  NS_REGISTER_LAST_COMMAND(SetDocumentStateCommand, "cmd_enableInlineTableEditing")
+  NS_REGISTER_NEXT_COMMAND(SetDocumentStateCommand, "cmd_enableInlineTableEditing")
+  NS_REGISTER_LAST_COMMAND(SetDocumentStateCommand, "cmd_enableAbsolutePositionEditing")
 
   NS_REGISTER_ONE_COMMAND(SetDocumentOptionsCommand, "cmd_setDocumentOptions")
 
