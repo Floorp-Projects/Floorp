@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundSDBConnection;
+
+namespace mozilla {
+namespace dom {
+
+struct SDBRequestOpenResponse
+{
+};
+
+struct SDBRequestSeekResponse
+{
+};
+
+struct SDBRequestReadResponse
+{
+  nsCString data;
+};
+
+struct SDBRequestWriteResponse
+{
+};
+
+struct SDBRequestCloseResponse
+{
+};
+
+union SDBRequestResponse
+{
+  nsresult;
+  SDBRequestOpenResponse;
+  SDBRequestSeekResponse;
+  SDBRequestReadResponse;
+  SDBRequestWriteResponse;
+  SDBRequestCloseResponse;
+};
+
+protocol PBackgroundSDBRequest
+{
+  manager PBackgroundSDBConnection;
+
+child:
+  async __delete__(SDBRequestResponse response);
+};
+
+} // namespace dom
+} // namespace mozilla

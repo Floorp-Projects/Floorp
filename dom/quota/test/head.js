@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const NS_ERROR_STORAGE_BUSY = Cr.NS_ERROR_STORAGE_BUSY;
+
 var gActiveListeners = {};
 
 // These event (un)registration handlers only work for one window, DONOT use
@@ -136,3 +138,37 @@ function getPermission(url, permission)
            .getService(Ci.nsIPermissionManager)
            .testPermissionFromPrincipal(principal, permission);
 }
+
+function getCurrentPrincipal()
+{
+  return Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
+}
+
+function getSimpleDatabase(principal)
+{
+  let connection = Cc["@mozilla.org/dom/sdb-connection;1"]
+    .createInstance(Ci.nsISDBConnection);
+
+  if (!principal) {
+    principal = getCurrentPrincipal();
+  }
+
+  connection.init(principal);
+
+  return connection;
+}
+
+function requestFinished(request) {
+  return new Promise(function(resolve, reject) {
+    request.callback = function(request) {
+      if (request.resultCode == Cr.NS_OK) {
+        resolve(request.result);
+      } else {
+        reject(request.resultCode);
+      }
+    }
+  });
+}
+
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/dom/quota/test/head-shared.js", this);
