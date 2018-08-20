@@ -755,6 +755,9 @@ bool Gecko_MediaFeatures_HasSystemMetric(nsIDocument*,
 bool Gecko_MediaFeatures_IsResourceDocument(nsIDocument*);
 nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument*);
 
+// Use counters.
+StyleUseCountersStrong Servo_UseCounters_Create();
+
 } // extern "C"
 
 #endif // mozilla_ServoBindings_h

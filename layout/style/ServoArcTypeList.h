@@ -6,6 +6,7 @@
 
 /* a list of all Servo Arc types used in stylo bindings for preprocessing */
 
+SERVO_ARC_TYPE(UseCounters, StyleUseCounters)
 SERVO_ARC_TYPE(CssRules, ServoCssRules)
 SERVO_ARC_TYPE(StyleSheetContents, RawServoStyleSheetContents)
 SERVO_ARC_TYPE(DeclarationBlock, RawServoDeclarationBlock)

@@ -20,6 +20,7 @@ use style::shared_lock::{Locked, SharedRwLock};
 use style::stylesheets::{ImportRule, Origin, StylesheetLoader as StyleStylesheetLoader};
 use style::stylesheets::{StylesheetContents, UrlExtraData};
 use style::stylesheets::import_rule::ImportSheet;
+use style::use_counters::UseCounters;
 use style::values::CssUrl;
 
 pub struct StylesheetLoader(*mut Loader, *mut DomStyleSheet, *mut SheetLoadData, *mut LoaderReusableStyleSheets);
@@ -73,6 +74,7 @@ pub struct AsyncStylesheetParser {
     origin: Origin,
     quirks_mode: QuirksMode,
     line_number_offset: u32,
+    use_counters: Option<Arc<UseCounters>>,
 }
 
 impl AsyncStylesheetParser {
@@ -83,6 +85,7 @@ impl AsyncStylesheetParser {
         origin: Origin,
         quirks_mode: QuirksMode,
         line_number_offset: u32,
+        use_counters: Option<Arc<UseCounters>>,
     ) -> Self {
         AsyncStylesheetParser {
             load_data,
@@ -91,6 +94,7 @@ impl AsyncStylesheetParser {
             origin,
             quirks_mode,
             line_number_offset,
+            use_counters,
         }
     }
 
@@ -98,9 +102,8 @@ impl AsyncStylesheetParser {
         let global_style_data = &*GLOBAL_STYLE_DATA;
         let input: &str = unsafe { (*self.bytes).as_str_unchecked() };
 
-        // Note: Parallel CSS parsing doesn't report CSS errors. When errors
-        // are being logged, Gecko prevents the parallel parsing path from
-        // running.
+        // Note: Parallel CSS parsing doesn't report CSS errors. When errors are
+        // being logged, Gecko prevents the parallel parsing path from running.
         let sheet = Arc::new(StylesheetContents::from_str(
             input,
             self.extra_data.clone(),
@@ -110,6 +113,7 @@ impl AsyncStylesheetParser {
             None,
             self.quirks_mode.into(),
             self.line_number_offset,
+            self.use_counters.as_ref().map(|counters| &**counters),
         ));
 
         unsafe {
