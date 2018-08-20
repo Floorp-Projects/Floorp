@@ -2530,6 +2530,43 @@ DrawBackgroundColor(nsCSSRendering::ImageLayerClipState& aClipState,
   aCtx->Restore();
 }
 
+static Maybe<nscolor>
+CalcScrollbarColor(nsIFrame* aFrame, StyleComplexColor nsStyleUI::* aColor)
+{
+  ComputedStyle* scrollbarStyle = nsLayoutUtils::StyleForScrollbar(aFrame);
+  auto color = scrollbarStyle->StyleUI()->*aColor;
+  if (color.IsAuto()) {
+    return Nothing();
+  }
+  return Some(color.CalcColor(scrollbarStyle));
+}
+
+static nscolor
+GetBackgroundColor(nsIFrame* aFrame, ComputedStyle* aComputedStyle)
+{
+  Maybe<nscolor> overrideColor = Nothing();
+  switch (aComputedStyle->StyleDisplay()->mAppearance) {
+    case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::ScrollbarthumbHorizontal:
+      overrideColor =
+        CalcScrollbarColor(aFrame, &nsStyleUI::mScrollbarFaceColor);
+      break;
+    case StyleAppearance::ScrollbarVertical:
+    case StyleAppearance::ScrollbarHorizontal:
+    case StyleAppearance::Scrollcorner:
+      overrideColor =
+        CalcScrollbarColor(aFrame, &nsStyleUI::mScrollbarTrackColor);
+      break;
+    default:
+      break;
+  }
+  if (overrideColor.isSome()) {
+    return *overrideColor;
+  }
+  return aComputedStyle->
+    GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
+}
+
 nscolor
 nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
                                          ComputedStyle* aComputedStyle,
@@ -2551,8 +2588,7 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
   const nsStyleBackground *bg = aComputedStyle->StyleBackground();
   nscolor bgColor;
   if (aDrawBackgroundColor) {
-    bgColor = aComputedStyle->
-      GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
+    bgColor = GetBackgroundColor(aFrame, aComputedStyle);
     if (NS_GET_A(bgColor) == 0) {
       aDrawBackgroundColor = false;
     }
