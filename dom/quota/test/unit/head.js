@@ -66,11 +66,13 @@ function continueToNextStepSync()
 function enableTesting()
 {
   SpecialPowers.setBoolPref("dom.quotaManager.testing", true);
+  SpecialPowers.setBoolPref("dom.simpleDB.enabled", true);
 }
 
 function resetTesting()
 {
   SpecialPowers.clearUserPref("dom.quotaManager.testing");
+  SpecialPowers.clearUserPref("dom.simpleDB.enabled");
 }
 
 function init(callback)

@@ -7,6 +7,8 @@ add_task(async function testSimpleDB() {
   const name = "data";
   const bufferSize = 100;
 
+  await SpecialPowers.pushPrefEnv({ set: [[ "dom.simpleDB.enabled", true ]] });
+
   let database = getSimpleDatabase();
 
   let request = database.open("data");

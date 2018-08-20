@@ -27,6 +27,7 @@ UNIFIED_SOURCES += [
     'SDBConnection.cpp',
     'SDBRequest.cpp',
     'SDBResults.cpp',
+    'SimpleDBCommon.cpp',
 ]
 
 IPDL_SOURCES += [
