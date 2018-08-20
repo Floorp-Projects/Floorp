@@ -94,6 +94,7 @@ pub enum Mp4parseCodec {
     Opus,
     Avc,
     Vp9,
+    Av1,
     Mp3,
     Mp4v,
     Jpeg,   // for QT JPEG atom in video track
@@ -432,6 +433,8 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut Mp4parseParser, track_
         Some(SampleEntry::Video(ref video)) => match video.codec_specific {
             VideoCodecSpecific::VPxConfig(_) =>
                 Mp4parseCodec::Vp9,
+            VideoCodecSpecific::AV1Config(_) =>
+                Mp4parseCodec::Av1,
             VideoCodecSpecific::AVCConfig(_) =>
                 Mp4parseCodec::Avc,
             VideoCodecSpecific::ESDSConfig(_) => // MP4V (14496-2) video is unsupported.
