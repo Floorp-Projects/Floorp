@@ -733,6 +733,14 @@ sitedata-total-size = Your stored cookies, site data and cache are currently usi
 
 sitedata-learn-more = Learn more
 
+sitedata-accept-cookies-option =
+    .label = Accept cookies and site data from websites (recommended)
+    .accesskey = A
+
+sitedata-block-cookies-option =
+    .label = Block cookies and site data (may cause websites to break)
+    .accesskey = B
+
 sitedata-keep-until = Keep until
     .accesskey = u
 
@@ -741,29 +749,15 @@ sitedata-keep-until-expire =
 sitedata-keep-until-closed =
     .label = { -brand-short-name } is closed
 
-sitedata-allow-cookies-option =
-    .label = Accept cookies and site data
-    .accesskey = A
+sitedata-accept-third-party-desc = Accept third-party cookies and site data
+    .accesskey = y
 
-sitedata-disallow-cookies-option =
-    .label = Block cookies and site data
-    .accesskey = B
-
-# This label means 'type of content that is blocked', and is followed by a drop-down list with content types below.
-# The list items are the strings named sitedata-block-*-option*.
-sitedata-block-desc = Type blocked
-    .accesskey = T
-
-sitedata-block-trackers-option-recommended =
-    .label = Third party trackers (recommended)
-sitedata-block-trackers-option =
-    .label = Third party trackers
-sitedata-block-unvisited-option =
-    .label = Cookies from unvisited websites
-sitedata-block-all-third-parties-option =
-    .label = All third-party cookies
-sitedata-block-always-option =
-    .label = All cookies (may cause websites to break)
+sitedata-accept-third-party-always-option =
+    .label = Always
+sitedata-accept-third-party-visited-option =
+    .label = From visited
+sitedata-accept-third-party-never-option =
+    .label = Never
 
 sitedata-clear =
     .label = Clear Data…
