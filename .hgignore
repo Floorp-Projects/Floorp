@@ -43,6 +43,7 @@ compile_commands\.json
 _DBG\.OBJ/
 _OPT\.OBJ/
 ^js/src/.*-obj/
+^js/src/obj-.*/
 
 # SpiderMonkey configury
 ^js/src/configure$
