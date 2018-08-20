@@ -123,19 +123,6 @@ nsHttpConnection::~nsHttpConnection()
              this, mHttp1xTransactionCount));
         Telemetry::Accumulate(Telemetry::HTTP_REQUEST_PER_CONN,
                               mHttp1xTransactionCount);
-        nsHttpConnectionInfo *ci = nullptr;
-        if (mTransaction) {
-            ci = mTransaction->ConnectionInfo();
-        }
-        if (!ci) {
-            ci = mConnInfo;
-        }
-
-        MOZ_ASSERT(ci);
-        if (ci->GetTrrUsed()) {
-            Telemetry::Accumulate(Telemetry::DNS_TRR_REQUEST_PER_CONN,
-                                  mHttp1xTransactionCount);
-        }
     }
 
     if (mTotalBytesRead) {

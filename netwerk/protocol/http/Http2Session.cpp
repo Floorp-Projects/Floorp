@@ -121,7 +121,6 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, enum SpdyVersio
   , mTlsHandshakeFinished(false)
   , mCheckNetworkStallsWithTFO(false)
   , mLastRequestBytesSentTime(0)
-  , mTrrStreams(0)
 {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -180,9 +179,6 @@ Http2Session::~Http2Session()
 
   Shutdown();
 
-  if (mTrrStreams) {
-    Telemetry::Accumulate(Telemetry::DNS_TRR_REQUEST_PER_CONN, mTrrStreams);
-  }
   Telemetry::Accumulate(Telemetry::SPDY_PARALLEL_STREAMS, mConcurrentHighWater);
   Telemetry::Accumulate(Telemetry::SPDY_REQUEST_PER_CONN, (mNextStreamID - 1) / 2);
   Telemetry::Accumulate(Telemetry::SPDY_SERVER_INITIATED_STREAMS,
@@ -404,13 +400,6 @@ Http2Session::RegisterStreamID(Http2Stream *stream, uint32_t aNewID)
       mLastRequestBytesSentTime = PR_IntervalNow();
     }
   }
-
-  MOZ_ASSERT(stream->Transaction(), "no transation for the stream!");
-  RefPtr<nsHttpConnectionInfo> ci(stream->Transaction()->ConnectionInfo());
-  if (ci && ci->GetTrrUsed()) {
-    mTrrStreams++;
-  }
-
   return aNewID;
 }
 
