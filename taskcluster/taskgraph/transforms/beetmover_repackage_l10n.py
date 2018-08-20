@@ -35,6 +35,7 @@ def make_beetmover_description(config, jobs):
         beet_description = {
             'label': job['label'],
             'dependent-task': dep_job,
+            'grandparent-tasks': job['grandparent-tasks'],
             'treeherder': treeherder,
             'locale': locale,
             'shipping-phase': job.get('shipping-phase'),
