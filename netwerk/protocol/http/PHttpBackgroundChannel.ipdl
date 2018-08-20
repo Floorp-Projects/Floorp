@@ -58,7 +58,7 @@ child:
 
   // Tell the child that the resource being loaded is on the tracking
   // protection list.
-  async NotifyTrackingResource();
+  async NotifyTrackingResource(bool aIsThirdParty);
 
   // Tell the child information of matched URL againts SafeBrowsing list
   async SetClassifierMatchedInfo(ClassifierInfo info);

@@ -479,20 +479,36 @@ interface nsIHttpChannel : nsIChannel
      * protection list.  This is only available if the
      * privacy.trackingprotection.annotate_channels pref is set and its value
      * should only be relied on after the channel has established a connection.
-     * Note that, if the privacy.trackingprotection.annotate_channels pref is set, also
-     * top-level channels could be marked as tracking resource.
+     *
+     * Note that top-level channels could be marked as tracking
+     * resource. In order to identify third-party tracking resources
+     * specifically, use isThirdPartyTrackingResource.
      */
     [infallible] readonly attribute boolean isTrackingResource;
 
     /**
-     * This method is used in order to override the tracking status of an HTTP
-     * channel.  This should only be called by Gecko under certain circumstances
-     * when Gecko can guarantee that the channel classifier service will not be
+     * Returns true if the channel has loaded a resource that is on the tracking
+     * protection list and is considered third-party with the top window URI.
+     * This is only available if the privacy.trackingprotection.annotate_channels
+     * pref is set and its value should only be relied on after the channel has
+     * established a connection.
+     */
+    [infallible] readonly attribute boolean isThirdPartyTrackingResource;
+
+    /**
+     * This method is used by the document.cookie call site in order
+     * to override the tracking status of an HTTP channel. This should
+     * only be called by Gecko under certain circumstances when Gecko
+     * can guarantee that the channel classifier service will not be
      * determining the tracking status of the channel.
      *
-     * Please avoid calling this API if you're unsure whether you should be using it.
+     * @param aDocumentChannel
+     *        The document channel from which to copy the tracking flags
+     *
+     * Please avoid calling this API if you're unsure whether you
+     * should be using it.
      */
-    [noscript] void overrideTrackingResource(in boolean aIsTracking);
+    [noscript] void overrideTrackingFlagsForDocumentCookieAccessor(in nsIHttpChannel aDocumentChannel);
 
     /**
      * ID of the top-level outer content window. Identifies this channel's
