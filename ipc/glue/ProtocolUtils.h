@@ -81,6 +81,10 @@ class NeckoParent;
 
 namespace ipc {
 
+#ifdef FUZZING
+class ProtocolFuzzerHelper;
+#endif
+
 class MessageChannel;
 
 #ifdef XP_WIN
@@ -140,6 +144,10 @@ class IToplevelProtocol;
 
 class IProtocol : public HasResultCodes
 {
+#ifdef FUZZING
+  friend class mozilla::ipc::ProtocolFuzzerHelper;
+#endif
+
 public:
     enum ActorDestroyReason {
         FailedConstructor,
@@ -420,6 +428,10 @@ public:
 
     class ToplevelState final : public ProtocolState
     {
+#ifdef FUZZING
+      friend class mozilla::ipc::ProtocolFuzzerHelper;
+#endif
+
     public:
         ToplevelState(const char* aName, IToplevelProtocol* aProtocol, Side aSide);
 
