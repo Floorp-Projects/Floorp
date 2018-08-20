@@ -13,4 +13,6 @@ run_test_subset([
   test_custom_retention("rememberForms", "custom"),
   test_custom_retention("rememberForms", "custom"),
   test_historymode_retention("remember", "custom"),
+  test_custom_retention("alwaysClear", "remember"),
+  test_custom_retention("alwaysClear", "custom"),
 ]);

@@ -88,9 +88,6 @@ async function runTests(options) {
       sidebarActionId = `${makeWidgetId(extension.id)}-sidebar-action`;
     }
 
-    let command = document.getElementById(sidebarActionId);
-    ok(command, "command exists");
-
     let menuId = `menu_${sidebarActionId}`;
     let menu = document.getElementById(menuId);
     ok(menu, "menu exists");

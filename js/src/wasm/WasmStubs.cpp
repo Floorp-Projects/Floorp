@@ -1598,42 +1598,6 @@ GenerateTrapExit(MacroAssembler& masm, Label* throwLabel, Offsets* offsets)
     return FinishOffsets(masm, offsets);
 }
 
-// Generate a stub which is only used by the signal handlers to handle out of
-// bounds access by Atomics and unaligned accesses on ARM. This stub is
-// executed by direct PC transfer from the faulting memory access and thus the
-// stack depth is unknown. Since JitActivation::packedExitFP() is not set
-// before calling the error reporter, the current wasm activation will be lost.
-// This stub should be removed when Atomics are moved to wasm and given proper
-// traps and when we use a non-faulting strategy for unaligned ARM access.
-static bool
-GenerateGenericMemoryAccessTrap(MacroAssembler& masm, SymbolicAddress reporter, Label* throwLabel,
-                                Offsets* offsets)
-{
-    AssertExpectedSP(masm);
-    masm.haltingAlign(CodeAlignment);
-
-    offsets->begin = masm.currentOffset();
-
-    // sp can be anything at this point, so ensure it is aligned when calling
-    // into C++.  We unconditionally jump to throw so don't worry about
-    // restoring sp.
-    masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
-    if (ShadowStackSpace)
-        masm.subFromStackPtr(Imm32(ShadowStackSpace));
-
-    masm.call(reporter);
-    masm.jump(throwLabel);
-
-    return FinishOffsets(masm, offsets);
-}
-
-static bool
-GenerateUnalignedExit(MacroAssembler& masm, Label* throwLabel, Offsets* offsets)
-{
-    return GenerateGenericMemoryAccessTrap(masm, SymbolicAddress::ReportUnalignedAccess, throwLabel,
-                                           offsets);
-}
-
 // Generate a stub that restores the stack pointer to what it was on entry to
 // the wasm activation, sets the return register to 'false' and then executes a
 // return which will return from this wasm activation to the caller. This stub
@@ -1804,11 +1768,6 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
     JitSpew(JitSpew_Codegen, "# Emitting wasm exit stubs");
 
     Offsets offsets;
-
-    if (!GenerateUnalignedExit(masm, &throwLabel, &offsets))
-        return false;
-    if (!code->codeRanges.emplaceBack(CodeRange::UnalignedExit, offsets))
-        return false;
 
     if (!GenerateTrapExit(masm, &throwLabel, &offsets))
         return false;
