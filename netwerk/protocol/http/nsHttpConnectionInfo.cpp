@@ -89,7 +89,6 @@ nsHttpConnectionInfo::Init(const nsACString &host, int32_t port,
     mNPNToken = npnToken;
     mOriginAttributes = originAttributes;
     mTlsFlags = 0x0;
-    mTrrUsed = false;
 
     mUsingHttpsProxy = (proxyInfo && proxyInfo->IsHTTPS());
     mUsingHttpProxy = mUsingHttpsProxy || (proxyInfo && proxyInfo->IsHTTP());
@@ -243,7 +242,6 @@ nsHttpConnectionInfo::Clone() const
     clone->SetNoSpdy(GetNoSpdy());
     clone->SetBeConservative(GetBeConservative());
     clone->SetTlsFlags(GetTlsFlags());
-    clone->SetTrrUsed(GetTrrUsed());
     MOZ_ASSERT(clone->Equals(this));
 
     return clone;

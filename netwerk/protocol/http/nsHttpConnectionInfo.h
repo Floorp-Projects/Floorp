@@ -120,9 +120,6 @@ public:
     void          SetTlsFlags(uint32_t aTlsFlags);
     uint32_t      GetTlsFlags() const { return mTlsFlags; }
 
-    void          SetTrrUsed(bool aUsed) { mTrrUsed = aUsed; }
-    bool          GetTrrUsed() const { return mTrrUsed; }
-
     const nsCString &GetNPNToken() { return mNPNToken; }
     const nsCString &GetUsername() { return mUsername; }
 
@@ -175,7 +172,6 @@ private:
     OriginAttributes       mOriginAttributes;
 
     uint32_t               mTlsFlags;
-    uint16_t               mTrrUsed : 1;
 
 // for RefPtr
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHttpConnectionInfo, override)
