@@ -25,6 +25,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
+#include "js/AutoByteString.h"
 #include "js/Date.h"
 #include "js/StableStringChars.h"
 #include "js/UbiNodeBreadthFirst.h"

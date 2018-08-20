@@ -41,6 +41,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitRealm.h"
+#include "js/AutoByteString.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
 #include "js/StableStringChars.h"

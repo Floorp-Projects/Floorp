@@ -4596,19 +4596,6 @@ JS_DecodeBytes(JSContext* cx, const char* src, size_t srclen, char16_t* dst,
                size_t* dstlenp);
 
 /**
- * A variation on JS_EncodeCharacters where a null terminated string is
- * returned that you are expected to call JS_free on when done.
- */
-JS_PUBLIC_API(char*)
-JS_EncodeString(JSContext* cx, JSString* str);
-
-/**
- * Same behavior as JS_EncodeString(), but encode into UTF-8 string
- */
-JS_PUBLIC_API(char*)
-JS_EncodeStringToUTF8(JSContext* cx, JS::HandleString str);
-
-/**
  * Get number of bytes in the string encoding (without accounting for a
  * terminating zero bytes. The function returns (size_t) -1 if the string
  * can not be encoded into bytes and reports an error using cx accordingly.
@@ -4626,75 +4613,6 @@ JS_GetStringEncodingLength(JSContext* cx, JSString* str);
  */
 MOZ_MUST_USE JS_PUBLIC_API(bool)
 JS_EncodeStringToBuffer(JSContext* cx, JSString* str, char* buffer, size_t length);
-
-class MOZ_RAII JSAutoByteString
-{
-  public:
-    JSAutoByteString(JSContext* cx, JSString* str
-                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mBytes(JS_EncodeString(cx, str))
-    {
-        MOZ_ASSERT(cx);
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    explicit JSAutoByteString(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
-      : mBytes(nullptr)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    ~JSAutoByteString() {
-        JS_free(nullptr, mBytes);
-    }
-
-    /* Take ownership of the given byte array. */
-    void initBytes(JS::UniqueChars&& bytes) {
-        MOZ_ASSERT(!mBytes);
-        mBytes = bytes.release();
-    }
-
-    char* encodeLatin1(JSContext* cx, JSString* str) {
-        MOZ_ASSERT(!mBytes);
-        MOZ_ASSERT(cx);
-        mBytes = JS_EncodeString(cx, str);
-        return mBytes;
-    }
-
-    char* encodeUtf8(JSContext* cx, JS::HandleString str) {
-        MOZ_ASSERT(!mBytes);
-        MOZ_ASSERT(cx);
-        mBytes = JS_EncodeStringToUTF8(cx, str);
-        return mBytes;
-    }
-
-    void clear() {
-        js_free(mBytes);
-        mBytes = nullptr;
-    }
-
-    char* ptr() const {
-        return mBytes;
-    }
-
-    bool operator!() const {
-        return !mBytes;
-    }
-
-    size_t length() const {
-        if (!mBytes)
-            return 0;
-        return strlen(mBytes);
-    }
-
-  private:
-    char* mBytes;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    /* Copy and assignment are not supported. */
-    JSAutoByteString(const JSAutoByteString& another);
-    JSAutoByteString& operator=(const JSAutoByteString& another);
-};
 
 /************************************************************************/
 /*

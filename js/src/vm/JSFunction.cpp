@@ -31,6 +31,7 @@
 #include "gc/Policy.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
+#include "js/AutoByteString.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Proxy.h"
 #include "js/StableStringChars.h"

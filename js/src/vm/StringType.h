@@ -26,6 +26,7 @@
 #include "util/Text.h"
 #include "vm/Printer.h"
 
+class JSAutoByteString;
 class JSDependentString;
 class JSExtensibleString;
 class JSExternalString;

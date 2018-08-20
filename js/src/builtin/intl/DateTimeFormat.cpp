@@ -19,6 +19,7 @@
 #include "builtin/intl/SharedIntlData.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
 #include "gc/FreeOp.h"
+#include "js/AutoByteString.h"
 #include "js/StableStringChars.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"

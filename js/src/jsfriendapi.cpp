@@ -20,6 +20,7 @@
 #include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
+#include "js/AutoByteString.h"
 #include "js/Printf.h"
 #include "js/Proxy.h"
 #include "js/Wrapper.h"
