@@ -42,8 +42,10 @@ security/manager/.nss.checkout
 /gecko.log
 
 # Build directories for js shell
-_DBG.OBJ/
-_OPT.OBJ/
+*_DBG.OBJ/
+*_OPT.OBJ/
+/js/src/*-obj/
+/js/src/obj-*/
 
 # SpiderMonkey configury
 js/src/configure
@@ -145,6 +147,6 @@ lextab.py
 /.tup
 
 # Ignore Visual Studio Code workspace files.
-.vscode/*
+.vscode/
 !.vscode/extensions.json
 !.vscode/tasks.json
