@@ -1,3 +1,4 @@
+extern crate base64;
 extern crate chrono;
 #[macro_use]
 extern crate clap;
@@ -8,7 +9,10 @@ extern crate mozprofile;
 extern crate mozrunner;
 extern crate mozversion;
 extern crate regex;
-extern crate rustc_serialize;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
 extern crate uuid;
 extern crate zip;
 extern crate webdriver;
@@ -37,6 +41,9 @@ mod logging;
 mod prefs;
 mod marionette;
 mod capabilities;
+
+#[cfg(test)]
+pub mod test;
 
 use build::BuildInfo;
 use marionette::{MarionetteHandler, MarionetteSettings, extension_routes};
