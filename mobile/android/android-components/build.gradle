@@ -32,9 +32,7 @@ buildscript {
     // Synchronized versions numbers of GeckoView (Nightly) artifacts.
     ext.geckoNightly = [
         // Discover nightly builds: https://tools.taskcluster.net/index/gecko.v2.mozilla-central.nightly
-        nightlyDate: '2018.08.10',
-        revision: 'd999fb858fb2c007c5be4af72bce419c63c69b8e',
-        version: '63.0.20180810100129'
+        version: '63.0.20180820100132'
     ]
 
     // Synchronized versions numbers of GeckoView (Beta) artifacts.
@@ -75,23 +73,8 @@ allprojects {
         google()
         jcenter()
 
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        // GeckoView Nightly
-        ////////////////////////////////////////////////////////////////////////////////////////////
-
-        // ARM
         maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoNightly['nightlyDate']}.revision.${geckoNightly['revision']}.mobile.android-api-16-opt/artifacts/public/android/maven"
-        }
-
-        // x86
-        maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoNightly['nightlyDate']}.revision.${geckoNightly['revision']}.mobile.android-x86-opt/artifacts/public/android/maven"
-        }
-
-        // aarch64
-        maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoNightly['nightlyDate']}.revision.${geckoNightly['revision']}.mobile.android-aarch64-opt/artifacts/public/android/maven"
+            url "https://maven.mozilla.org/maven2"
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
