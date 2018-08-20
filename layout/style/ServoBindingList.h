@@ -908,6 +908,10 @@ SERVO_BINDING_FUNC(Servo_Property_GetCSSValuesForProperty, void,
                    const nsACString* name, bool* found, nsTArray<nsString>* result)
 SERVO_BINDING_FUNC(Servo_PseudoClass_GetStates, uint64_t,
                    const nsACString* name)
+SERVO_BINDING_FUNC(Servo_IsCssPropertyRecordedInUseCounter, bool,
+                   StyleUseCountersBorrowed,
+                   const nsACString* property,
+                   bool* out_known_prop)
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \
