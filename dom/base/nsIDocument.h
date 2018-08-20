@@ -3817,7 +3817,7 @@ protected:
 
   // A hashtable of ShadowRoots belonging to the composed doc.
   //
-  // See ShadowRoot::SetIsComposedDocParticipant.
+  // See ShadowRoot::Bind and ShadowRoot::Unbind.
   ShadowRootSet mComposedShadowRoots;
 
   using SVGUseElementSet =

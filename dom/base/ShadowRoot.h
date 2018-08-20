@@ -89,6 +89,14 @@ public:
   void CloneInternalDataFrom(ShadowRoot* aOther);
   void InsertSheetAt(size_t aIndex, StyleSheet&);
 
+  // Calls UnbindFromTree for each of our kids, and also flags us as no longer
+  // being connected.
+  void Unbind();
+
+  // Calls BindToTree on each of our kids, and also maybe flags us as being
+  // connected.
+  nsresult Bind();
+
 private:
   void InsertSheetIntoAuthorData(size_t aIndex, StyleSheet&);
 
@@ -185,19 +193,15 @@ public:
                                          const nsAString& aTagName,
                                          mozilla::ErrorResult& rv);
 
-  bool IsComposedDocParticipant() const
-  {
-    return mIsComposedDocParticipant;
-  }
-
-  void SetIsComposedDocParticipant(bool aIsComposedDocParticipant);
-
   bool IsUAWidget() const
   {
     return mIsUAWidget;
   }
 
-  void SetIsUAWidget(bool aIsUAWidget);
+  void SetIsUAWidget()
+  {
+    mIsUAWidget = true;
+  }
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
@@ -218,12 +222,6 @@ protected:
   // the given name. The slots are stored as a weak pointer because the elements
   // are in the shadow tree and should be kept alive by its parent.
   nsClassHashtable<nsStringHashKey, SlotArray> mSlotMap;
-
-  // Flag to indicate whether the descendants of this shadow root are part of the
-  // composed document. Ideally, we would use a node flag on nodes to
-  // mark whether it is in the composed document, but we have run out of flags
-  // so instead we track it here.
-  bool mIsComposedDocParticipant;
 
   bool mIsUAWidget;
 

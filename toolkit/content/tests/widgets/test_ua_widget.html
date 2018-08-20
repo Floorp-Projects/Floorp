@@ -21,7 +21,7 @@ const content = document.getElementById("content");
 
 const div = content.appendChild(document.createElement("div"));
 div.attachShadow({ mode: "open"});
-SpecialPowers.wrap(div.shadowRoot).setIsUAWidget(true);
+SpecialPowers.wrap(div.shadowRoot).setIsUAWidget();
 
 const sandbox = SpecialPowers.Cu.getUAWidgetScope(SpecialPowers.wrap(div).nodePrincipal);
 
