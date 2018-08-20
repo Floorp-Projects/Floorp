@@ -26,7 +26,6 @@ namespace jit {
 
 class MacroAssembler;
 class IonBuilder;
-class IonICEntry;
 class JitCode;
 
 typedef Vector<JSObject*, 4, JitAllocPolicy> ObjectVector;

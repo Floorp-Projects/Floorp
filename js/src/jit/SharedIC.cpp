@@ -95,20 +95,7 @@ ICEntry::fallbackStub() const
 }
 
 void
-IonICEntry::trace(JSTracer* trc)
-{
-    TraceManuallyBarrieredEdge(trc, &script_, "IonICEntry::script_");
-    traceEntry(trc);
-}
-
-void
-BaselineICEntry::trace(JSTracer* trc)
-{
-    traceEntry(trc);
-}
-
-void
-ICEntry::traceEntry(JSTracer* trc)
+ICEntry::trace(JSTracer* trc)
 {
     if (!hasStub())
         return;
