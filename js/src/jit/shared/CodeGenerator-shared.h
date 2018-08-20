@@ -68,8 +68,6 @@ class CodeGeneratorShared : public LElementVisitor
     // Label for the common return path.
     NonAssertingLabel returnLabel_;
 
-    FallbackICStubSpace stubSpace_;
-
     js::Vector<SafepointIndex, 0, SystemAllocPolicy> safepointIndices_;
     js::Vector<OsiIndex, 0, SystemAllocPolicy> osiIndices_;
 

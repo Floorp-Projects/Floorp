@@ -10463,9 +10463,6 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 
     script->setIonScript(cx->runtime(), ionScript);
 
-    // Adopt fallback shared stubs from the compiler into the ion script.
-    ionScript->adoptFallbackStubs(&stubSpace_);
-
     Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, invalidateEpilogueData_),
                                        ImmPtr(ionScript),
                                        ImmPtr((void*)-1));

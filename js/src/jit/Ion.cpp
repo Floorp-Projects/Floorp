@@ -833,8 +833,7 @@ IonScript::IonScript(IonCompilationId compilationId)
     invalidationCount_(0),
     compilationId_(compilationId),
     optimizationLevel_(OptimizationLevel::Normal),
-    osrPcMismatchCounter_(0),
-    fallbackStubSpace_()
+    osrPcMismatchCounter_(0)
 {
 }
 
@@ -931,13 +930,6 @@ IonScript::New(JSContext* cx, IonCompilationId compilationId,
     script->optimizationLevel_ = optimizationLevel;
 
     return script;
-}
-
-void
-IonScript::adoptFallbackStubs(FallbackICStubSpace* stubSpace)
-
-{
-    fallbackStubSpace()->adoptFrom(stubSpace);
 }
 
 void
@@ -1117,16 +1109,6 @@ IonScript::Trace(JSTracer* trc, IonScript* script)
 void
 IonScript::Destroy(FreeOp* fop, IonScript* script)
 {
-    /*
-     * When the script contains pointers to nursery things, the store buffer can
-     * contain entries that point into the fallback stub space. Since we can
-     * destroy scripts outside the context of a GC, this situation could result
-     * in us trying to mark invalid store buffer entries.
-     *
-     * Defer freeing any allocated blocks until after the next minor GC.
-     */
-    script->fallbackStubSpace_.freeAllAfterMinorGC(script->method()->zone());
-
     fop->delete_(script);
 }
 
