@@ -4,11 +4,17 @@
 
 package mozilla.components.browser.engine.gecko
 
-import org.junit.Assert
+import mozilla.components.concept.engine.UnsupportedSettingException
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
@@ -19,16 +25,39 @@ class GeckoEngineTest {
 
     @Test
     fun testCreateView() {
-        Assert.assertTrue(GeckoEngine(runtime).createView(RuntimeEnvironment.application) is GeckoEngineView)
+        assertTrue(GeckoEngine(runtime).createView(RuntimeEnvironment.application) is GeckoEngineView)
     }
 
     @Test
     fun testCreateSession() {
-        Assert.assertTrue(GeckoEngine(runtime).createSession() is GeckoEngineSession)
+        assertTrue(GeckoEngine(runtime).createSession() is GeckoEngineSession)
     }
 
     @Test
     fun testName() {
-        Assert.assertEquals("Gecko", GeckoEngine(runtime).name())
+        assertEquals("Gecko", GeckoEngine(runtime).name())
+    }
+
+    @Test
+    fun testSettings() {
+        val runtime = mock(GeckoRuntime::class.java)
+        val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
+        `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
+        `when`(runtime.settings).thenReturn(runtimeSettings)
+        val engine = GeckoEngine(runtime)
+
+        assertTrue(engine.settings.javascriptEnabled)
+        engine.settings.javascriptEnabled = false
+        verify(runtimeSettings).javaScriptEnabled = false
+
+        try {
+            engine.settings.domStorageEnabled
+            fail("Expected UnsupportedOperationException")
+        } catch (e: UnsupportedSettingException) { }
+
+        try {
+            engine.settings.domStorageEnabled = false
+            fail("Expected UnsupportedOperationException")
+        } catch (e: UnsupportedSettingException) { }
     }
 }

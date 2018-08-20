@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.Settings
 import org.mozilla.geckoview.GeckoRuntime
 
 /**
@@ -36,4 +37,13 @@ class GeckoEngine(
      * See [Engine.name]
      */
     override fun name(): String = "Gecko"
+
+    /**
+     * See [Engine.settings]
+     */
+    override val settings: Settings = object : Settings {
+        override var javascriptEnabled: Boolean
+            get() = runtime.settings.javaScriptEnabled
+            set(value) { runtime.settings.javaScriptEnabled = value }
+    }
 }

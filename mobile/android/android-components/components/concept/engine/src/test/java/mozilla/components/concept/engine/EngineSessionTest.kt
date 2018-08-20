@@ -174,6 +174,9 @@ class EngineSessionTest {
 }
 
 open class DummyEngineSession : EngineSession() {
+    override val settings: Settings
+        get() = mock(Settings::class.java)
+
     override fun restoreState(state: Map<String, Any>) {}
 
     override fun saveState(): Map<String, Any> { return emptyMap() }

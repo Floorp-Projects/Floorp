@@ -42,6 +42,11 @@ abstract class EngineSession(
     }
 
     /**
+     * Provides access to the settings of this engine session.
+     */
+    abstract val settings: Settings
+
+    /**
      * Represents a tracking protection policy which is a combination of
      * tracker categories that should be blocked.
      */

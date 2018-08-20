@@ -39,4 +39,9 @@ interface Engine {
      * @return the engine name as specified by concrete implementations.
      */
     fun name(): String
+
+    /**
+     * Provides access to the settings of this engine.
+     */
+    val settings: Settings
 }

@@ -10,6 +10,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.ktx.kotlin.toBundle
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.experimental.launch
+import mozilla.components.concept.engine.Settings
 
 /**
  * WebView-based EngineSession implementation.
@@ -123,6 +124,22 @@ class SystemEngineSession : EngineSession() {
         trackingProtectionEnabled = false
         notifyObservers { onTrackerBlockingEnabledChange(false) }
     }
+
+    /**
+     * See [EngineSession.settings]
+     */
+    override val settings: Settings
+        get() = currentView()?.settings?.let {
+            return object : Settings {
+                override var javascriptEnabled: Boolean
+                    get() = it.javaScriptEnabled
+                    set(value) { it.javaScriptEnabled = value }
+
+                override var domStorageEnabled: Boolean
+                    get() = it.domStorageEnabled
+                    set(value) { it.domStorageEnabled = value }
+            }
+        } ?: throw IllegalStateException("System engine not initialized")
 
     internal fun currentView(): WebView? {
         return view?.get()?.currentWebView

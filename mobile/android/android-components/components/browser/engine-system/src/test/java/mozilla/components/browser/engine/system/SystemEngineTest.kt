@@ -35,4 +35,9 @@ class SystemEngineTest {
     fun testName() {
         assertEquals("System", SystemEngine().name())
     }
+
+    @Test(expected = UnsupportedOperationException::class)
+    fun testSettings() {
+        SystemEngine().settings
+    }
 }

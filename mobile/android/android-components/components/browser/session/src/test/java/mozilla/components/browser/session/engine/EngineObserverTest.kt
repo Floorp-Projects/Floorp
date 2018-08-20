@@ -6,11 +6,13 @@ package mozilla.components.browser.session.engine
 
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.Settings
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.Mockito.mock
 
 class EngineObserverTest {
 
@@ -18,6 +20,9 @@ class EngineObserverTest {
     fun testEngineSessionObserver() {
         val session = Session("")
         val engineSession = object : EngineSession() {
+            override val settings: Settings
+                get() = mock(Settings::class.java)
+
             override fun goBack() {}
             override fun goForward() {}
             override fun reload() {}
@@ -57,6 +62,9 @@ class EngineObserverTest {
     fun testEngineSessionObserverWithSecurityChanges() {
         val session = Session("")
         val engineSession = object : EngineSession() {
+            override val settings: Settings
+                get() = mock(Settings::class.java)
+
             override fun goBack() {}
             override fun goForward() {}
             override fun stopLoading() {}
@@ -90,6 +98,9 @@ class EngineObserverTest {
     fun testEngineSessionObserverWithTrackingProtection() {
         val session = Session("")
         val engineSession = object : EngineSession() {
+            override val settings: Settings
+                get() = mock(Settings::class.java)
+
             override fun goBack() {}
             override fun goForward() {}
             override fun stopLoading() {}

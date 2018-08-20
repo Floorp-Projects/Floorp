@@ -1,6 +1,7 @@
 package mozilla.components.browser.engine.system
 
 import android.os.Bundle
+import android.webkit.WebSettings
 import android.webkit.WebView
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
@@ -9,6 +10,7 @@ import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
@@ -197,5 +199,29 @@ class SystemEngineSessionTest {
         assertFalse(engineSession.trackingProtectionEnabled)
         assertNotNull(enabledObserved)
         assertFalse(enabledObserved!!)
+    }
+
+    @Test
+    fun testSettings() {
+        val engineSession = spy(SystemEngineSession())
+        val webView = mock(WebView::class.java)
+        val webViewSettings = mock(WebSettings::class.java)
+        `when`(webViewSettings.javaScriptEnabled).thenReturn(false)
+        `when`(webViewSettings.domStorageEnabled).thenReturn(false)
+        `when`(webView.settings).thenReturn(webViewSettings)
+
+        try {
+            engineSession.settings.javascriptEnabled = true
+            fail("Expected IllegalStateException")
+        } catch (e: IllegalStateException) { }
+
+        `when`(engineSession.currentView()).thenReturn(webView)
+        assertFalse(engineSession.settings.javascriptEnabled)
+        engineSession.settings.javascriptEnabled = true
+        verify(webViewSettings).javaScriptEnabled = true
+
+        assertFalse(engineSession.settings.domStorageEnabled)
+        engineSession.settings.domStorageEnabled = true
+        verify(webViewSettings).domStorageEnabled = true
     }
 }

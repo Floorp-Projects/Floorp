@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.Settings
 
 /**
  * WebView-based implementation of the Engine interface.
@@ -37,4 +38,11 @@ class SystemEngine : Engine {
      * See [Engine.name]
      */
     override fun name(): String = "System"
+
+    /**
+     * See [Engine.settings]
+     */
+    override val settings: Settings
+        get() = throw UnsupportedOperationException("""Not supported by this implementation:
+            Use EngineSession.settings instead""".trimIndent())
 }

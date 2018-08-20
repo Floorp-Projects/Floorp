@@ -390,4 +390,9 @@ class GeckoEngineSessionTest {
         val privateEngineSession = GeckoEngineSession(runtime, true)
         assertTrue(privateEngineSession.geckoSession.settings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE))
     }
+
+    @Test(expected = UnsupportedOperationException::class)
+    fun testSettings() {
+        GeckoEngineSession(mock(GeckoRuntime::class.java)).settings
+    }
 }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.Settings
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
@@ -23,7 +24,6 @@ class GeckoEngineSession(
 ) : EngineSession() {
 
     internal var geckoSession = GeckoSession()
-
     private var initialLoad = true
 
     init {
@@ -119,6 +119,29 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.enableTrackingProtection]
+     */
+    override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
+        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, true)
+        notifyObservers { onTrackerBlockingEnabledChange(true) }
+    }
+
+    /**
+     * See [EngineSession.disableTrackingProtection]
+     */
+    override fun disableTrackingProtection() {
+        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, false)
+        notifyObservers { onTrackerBlockingEnabledChange(false) }
+    }
+
+    /**
+     * See [EngineSession.settings]
+     */
+    override val settings: Settings
+        get() = throw UnsupportedOperationException("""Not supported by this implementation:
+            Use Engine.settings instead""".trimIndent())
+
+    /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
@@ -199,16 +222,6 @@ class GeckoEngineSession(
     private fun createTrackingProtectionDelegate() = GeckoSession.TrackingProtectionDelegate {
         session, uri, _ ->
             session?.let { uri?.let { notifyObservers { onTrackerBlocked(it) } } }
-    }
-
-    override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
-        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, true)
-        notifyObservers { onTrackerBlockingEnabledChange(true) }
-    }
-
-    override fun disableTrackingProtection() {
-        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, false)
-        notifyObservers { onTrackerBlockingEnabledChange(false) }
     }
 
     companion object {
