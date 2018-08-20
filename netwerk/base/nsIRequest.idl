@@ -137,6 +137,12 @@ interface nsIRequest : nsISupports
      */
     const unsigned long LOAD_DOCUMENT_NEEDS_COOKIE = 1 << 2;
 
+
+    /**
+     * Set this flag to disable TRR for this request.
+     */
+    const unsigned long LOAD_DISABLE_TRR = 1 << 3;
+
     /**************************************************************************
      * The following flags control the flow of data into the cache.
      */
