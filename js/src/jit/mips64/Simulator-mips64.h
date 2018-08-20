@@ -427,7 +427,7 @@ class SimulatorProcess
 
     static bool initialize() {
         singleton_ = js_new<SimulatorProcess>();
-        return singleton_ && singleton_->init();
+        return singleton_;
     }
     static void destroy() {
         js_delete(singleton_);
@@ -438,8 +438,6 @@ class SimulatorProcess
     ~SimulatorProcess();
 
   private:
-    bool init();
-
     static SimulatorProcess* singleton_;
 
     // This lock creates a critical section around 'redirection_' and
