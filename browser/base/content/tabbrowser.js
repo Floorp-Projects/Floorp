@@ -775,7 +775,7 @@ window._gBrowser = {
     }
   },
 
-  setIcon(aTab, aIconURL = "", aOriginalURL = aIconURL) {
+  setIcon(aTab, aIconURL = "", aOriginalURL = aIconURL, aLoadingPrincipal = null) {
     let makeString = (url) => url instanceof Ci.nsIURI ? url.spec : url;
 
     aIconURL = makeString(aIconURL);
@@ -788,8 +788,8 @@ window._gBrowser = {
       "data:",
     ];
 
-    if (aIconURL && !LOCAL_PROTOCOLS.some(protocol => aIconURL.startsWith(protocol))) {
-      console.error(`Attempt to set a remote URL ${aIconURL} as a tab icon.`);
+    if (aIconURL && !aLoadingPrincipal && !LOCAL_PROTOCOLS.some(protocol => aIconURL.startsWith(protocol))) {
+      console.error(`Attempt to set a remote URL ${aIconURL} as a tab icon without a loading principal.`);
       return;
     }
 
@@ -798,9 +798,15 @@ window._gBrowser = {
 
     if (aIconURL != aTab.getAttribute("image")) {
       if (aIconURL) {
+        if (aLoadingPrincipal) {
+          aTab.setAttribute("iconloadingprincipal", aLoadingPrincipal);
+        } else {
+          aTab.removeAttribute("iconloadingprincipal");
+        }
         aTab.setAttribute("image", aIconURL);
       } else {
         aTab.removeAttribute("image");
+        aTab.removeAttribute("iconloadingprincipal");
       }
       this._tabAttrModified(aTab, ["image"]);
     }
