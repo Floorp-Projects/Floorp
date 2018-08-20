@@ -126,8 +126,8 @@ class MenuButton extends PureComponent {
     // Mark the menu as closed since the onHidden callback may not be called in
     // this case.
     this.setState({ expanded: false });
-    this.tooltip.destroy();
     this.tooltip.off("hidden", this.onHidden);
+    this.tooltip.destroy();
     this.tooltip = null;
   }
 
