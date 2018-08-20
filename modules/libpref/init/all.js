@@ -5639,6 +5639,9 @@ pref("intl.allow-insecure-text-input", false);
 // Enable meta-viewport support in remote APZ-enabled frames.
 pref("dom.meta-viewport.enabled", false);
 
+// Disable Visual Viewport API
+pref("dom.visualviewport.enabled", false);
+
 // Search service settings
 pref("browser.search.log", false);
 pref("browser.search.update", true);
