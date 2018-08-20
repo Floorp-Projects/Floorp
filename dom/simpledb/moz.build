@@ -1,0 +1,43 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_SOURCES += [
+    'nsISDBCallbacks.idl',
+    'nsISDBConnection.idl',
+    'nsISDBRequest.idl',
+    'nsISDBResults.idl',
+]
+
+XPIDL_MODULE = 'dom_simpledb'
+
+EXPORTS.mozilla.dom.simpledb += [
+    'ActorsParent.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'SDBConnection.h',
+]
+
+UNIFIED_SOURCES += [
+    'ActorsChild.cpp',
+    'ActorsParent.cpp',
+    'SDBConnection.cpp',
+    'SDBRequest.cpp',
+    'SDBResults.cpp',
+    'SimpleDBCommon.cpp',
+]
+
+IPDL_SOURCES += [
+    'PBackgroundSDBConnection.ipdl',
+    'PBackgroundSDBRequest.ipdl',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

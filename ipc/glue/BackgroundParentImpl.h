@@ -63,6 +63,20 @@ protected:
   virtual mozilla::ipc::IPCResult
   RecvFlushPendingFileDeletions() override;
 
+  virtual PBackgroundSDBConnectionParent*
+  AllocPBackgroundSDBConnectionParent(const PrincipalInfo& aPrincipalInfo)
+                                      override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPBackgroundSDBConnectionConstructor(
+                                         PBackgroundSDBConnectionParent* aActor,
+                                         const PrincipalInfo& aPrincipalInfo)
+                                         override;
+
+  virtual bool
+  DeallocPBackgroundSDBConnectionParent(PBackgroundSDBConnectionParent* aActor)
+                                        override;
+
   virtual PBackgroundLocalStorageCacheParent*
   AllocPBackgroundLocalStorageCacheParent(const PrincipalInfo& aPrincipalInfo,
                                           const nsCString& aOriginKey,

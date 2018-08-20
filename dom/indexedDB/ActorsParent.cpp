@@ -9089,7 +9089,8 @@ public:
   nsThreadPool*
   GetOrCreateThreadPool();
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(QuotaClient, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(
+    mozilla::dom::indexedDB::QuotaClient, override)
 
   mozilla::dom::quota::Client::Type
   GetType() override;
@@ -20420,14 +20421,14 @@ MutableFile::CreateStream(bool aReadOnly)
 
   if (aReadOnly) {
     RefPtr<FileInputStream> stream =
-      FileInputStream::Create(persistenceType, group, origin, mFile, -1, -1,
-                              nsIFileInputStream::DEFER_OPEN);
+      CreateFileInputStream(persistenceType, group, origin, mFile, -1, -1,
+                            nsIFileInputStream::DEFER_OPEN);
     result = NS_ISUPPORTS_CAST(nsIFileInputStream*, stream);
   }
   else {
     RefPtr<FileStream> stream =
-      FileStream::Create(persistenceType, group, origin, mFile, -1, -1,
-                         nsIFileStream::DEFER_OPEN);
+      CreateFileStream(persistenceType, group, origin, mFile, -1, -1,
+                       nsIFileStream::DEFER_OPEN);
     result = NS_ISUPPORTS_CAST(nsIFileStream*, stream);
   }
   if (NS_WARN_IF(!result)) {
@@ -29087,10 +29088,10 @@ FileHelper::CreateFileFromStream(nsIFile* aFile,
 
   // Now try to copy the stream.
   RefPtr<FileOutputStream> fileOutputStream =
-    FileOutputStream::Create(mFileManager->Type(),
-                             mFileManager->Group(),
-                             mFileManager->Origin(),
-                             aFile);
+    CreateFileOutputStream(mFileManager->Type(),
+                           mFileManager->Group(),
+                           mFileManager->Origin(),
+                           aFile);
   if (NS_WARN_IF(!fileOutputStream)) {
     return NS_ERROR_FAILURE;
   }

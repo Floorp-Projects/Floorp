@@ -69,11 +69,53 @@ struct SetDOMProxyInformation
 
 SetDOMProxyInformation gSetDOMProxyInformation;
 
+static inline void
+CheckExpandoObject(JSObject* proxy, const JS::Value& expando)
+{
+#ifdef DEBUG
+  JSObject* obj = &expando.toObject();
+  MOZ_ASSERT(!js::gc::EdgeNeedsSweepUnbarriered(&obj));
+  MOZ_ASSERT(js::GetObjectCompartment(proxy) == js::GetObjectCompartment(obj));
+
+  // When we create an expando object in EnsureExpandoObject below, we preserve
+  // the wrapper. The wrapper is released when the object is unlinked, but we
+  // should never call these functions after that point.
+  nsISupports* native = UnwrapDOMObject<nsISupports>(proxy);
+  nsWrapperCache* cache;
+  CallQueryInterface(native, &cache);
+  MOZ_ASSERT(cache->PreservingWrapper());
+#endif
+}
+
+static inline void
+CheckExpandoAndGeneration(JSObject* proxy, js::ExpandoAndGeneration* expandoAndGeneration)
+{
+#ifdef DEBUG
+  JS::Value value = expandoAndGeneration->expando;
+  if (!value.isUndefined())
+    CheckExpandoObject(proxy, value);
+#endif
+}
+
+static inline void
+CheckDOMProxy(JSObject* proxy)
+{
+#ifdef DEBUG
+  MOZ_ASSERT(IsDOMProxy(proxy), "expected a DOM proxy object");
+  MOZ_ASSERT(!js::gc::EdgeNeedsSweepUnbarriered(&proxy));
+  nsISupports* native = UnwrapDOMObject<nsISupports>(proxy);
+  nsWrapperCache* cache;
+  CallQueryInterface(native, &cache);
+  MOZ_ASSERT(cache->GetWrapperPreserveColor() == proxy);
+#endif
+}
+
 // static
 JSObject*
 DOMProxyHandler::GetAndClearExpandoObject(JSObject* obj)
 {
-  MOZ_ASSERT(IsDOMProxy(obj), "expected a DOM proxy object");
+  CheckDOMProxy(obj);
+
   JS::Value v = js::GetProxyPrivate(obj);
   if (v.isUndefined()) {
     return nullptr;
@@ -104,6 +146,7 @@ DOMProxyHandler::GetAndClearExpandoObject(JSObject* obj)
     expandoAndGeneration->expando = UndefinedValue();
   }
 
+  CheckExpandoObject(obj, v);
 
   return &v.toObject();
 }
@@ -112,15 +155,18 @@ DOMProxyHandler::GetAndClearExpandoObject(JSObject* obj)
 JSObject*
 DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JS::Handle<JSObject*> obj)
 {
-  NS_ASSERTION(IsDOMProxy(obj), "expected a DOM proxy object");
+  CheckDOMProxy(obj);
+
   JS::Value v = js::GetProxyPrivate(obj);
   if (v.isObject()) {
+    CheckExpandoObject(obj, v);
     return &v.toObject();
   }
 
   js::ExpandoAndGeneration* expandoAndGeneration;
   if (!v.isUndefined()) {
     expandoAndGeneration = static_cast<js::ExpandoAndGeneration*>(v.toPrivate());
+    CheckExpandoAndGeneration(obj, expandoAndGeneration);
     if (expandoAndGeneration->expando.isObject()) {
       return &expandoAndGeneration->expando.toObject();
     }
@@ -270,9 +316,11 @@ DOMProxyHandler::setCustom(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handl
 JSObject *
 DOMProxyHandler::GetExpandoObject(JSObject *obj)
 {
-  MOZ_ASSERT(IsDOMProxy(obj), "expected a DOM proxy object");
+  CheckDOMProxy(obj);
+
   JS::Value v = js::GetProxyPrivate(obj);
   if (v.isObject()) {
+    CheckExpandoObject(obj, v);
     return &v.toObject();
   }
 
@@ -282,6 +330,8 @@ DOMProxyHandler::GetExpandoObject(JSObject *obj)
 
   js::ExpandoAndGeneration* expandoAndGeneration =
     static_cast<js::ExpandoAndGeneration*>(v.toPrivate());
+  CheckExpandoAndGeneration(obj, expandoAndGeneration);
+
   v = expandoAndGeneration->expando;
   return v.isUndefined() ? nullptr : &v.toObject();
 }
