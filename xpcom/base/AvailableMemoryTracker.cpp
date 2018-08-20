@@ -8,6 +8,7 @@
 
 #if defined(XP_WIN)
 #include "nsExceptionHandler.h"
+#include "nsICrashReporter.h"
 #include "nsIMemoryReporter.h"
 #include "nsMemoryPressure.h"
 #endif
@@ -46,6 +47,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
 
+  nsAvailableMemoryWatcher();
   nsresult Init();
 
 private:
@@ -57,8 +59,8 @@ private:
   static const size_t kLowVirtualMemoryThreshold = 256 * 1024 * 1024;
 #endif
 
-  // Fire a low-memory notification if we have less than this many bytes of commit
-  // space (physical memory plus page file) left.
+  // Fire a low-memory notification if we have less than this many bytes of
+  // commit space (physical memory plus page file) left.
   static const size_t kLowCommitSpaceThreshold = 256 * 1024 * 1024;
 
   // Fire a low-memory notification if we have less than this many bytes of
@@ -80,12 +82,15 @@ private:
   static bool IsPhysicalMemoryLow(const MEMORYSTATUSEX& aStat);
 
   ~nsAvailableMemoryWatcher() {};
+  bool OngoingMemoryPressure() { return mUnderMemoryPressure; }
   void AdjustPollingInterval(const bool aLowMemory);
   void SendMemoryPressureEvent();
+  void MaybeSaveMemoryReport();
   void Shutdown();
 
   nsCOMPtr<nsITimer> mTimer;
   bool mUnderMemoryPressure;
+  bool mSavedReport;
 };
 
 const char* const nsAvailableMemoryWatcher::kObserverTopics[] = {
@@ -95,6 +100,13 @@ const char* const nsAvailableMemoryWatcher::kObserverTopics[] = {
 };
 
 NS_IMPL_ISUPPORTS(nsAvailableMemoryWatcher, nsIObserver, nsITimerCallback)
+
+nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
+  : mTimer(nullptr)
+  , mUnderMemoryPressure(false)
+  , mSavedReport(false)
+{
+}
 
 nsresult
 nsAvailableMemoryWatcher::Init()
@@ -173,9 +185,23 @@ nsAvailableMemoryWatcher::IsPhysicalMemoryLow(const MEMORYSTATUSEX& aStat)
 void
 nsAvailableMemoryWatcher::SendMemoryPressureEvent()
 {
-    MemoryPressureState state = mUnderMemoryPressure ? MemPressure_Ongoing
-                                                     : MemPressure_New;
+    MemoryPressureState state = OngoingMemoryPressure() ? MemPressure_Ongoing
+                                                        : MemPressure_New;
     NS_DispatchEventualMemoryPressure(state);
+}
+
+void
+nsAvailableMemoryWatcher::MaybeSaveMemoryReport()
+{
+  if (!mSavedReport && OngoingMemoryPressure()) {
+    nsCOMPtr<nsICrashReporter> cr =
+      do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+    if (cr) {
+      if (NS_SUCCEEDED(cr->SaveMemoryReport())) {
+        mSavedReport = true;
+      }
+    }
+  }
 }
 
 void
@@ -185,7 +211,7 @@ nsAvailableMemoryWatcher::AdjustPollingInterval(const bool aLowMemory)
     // We entered a low-memory state, wait for a longer interval before polling
     // again as there's no point in rapidly sending further notifications.
     mTimer->SetDelay(kLowMemoryNotificationIntervalMS);
-  } else if (mUnderMemoryPressure) {
+  } else if (OngoingMemoryPressure()) {
     // We were under memory pressure but we're not anymore, resume polling at
     // a faster pace.
     mTimer->SetDelay(kPollingIntervalMS);
@@ -210,6 +236,9 @@ nsAvailableMemoryWatcher::Notify(nsITimer* aTimer)
 
     if (lowMemory) {
       SendMemoryPressureEvent();
+      MaybeSaveMemoryReport();
+    } else {
+      mSavedReport = false; // Save a new report if memory gets low again
     }
 
     AdjustPollingInterval(lowMemory);
