@@ -155,6 +155,7 @@ EXPORTS.js += [
     '../public/RequiredDefines.h',
     '../public/Result.h',
     '../public/RootingAPI.h',
+    '../public/SavedFrameAPI.h',
     '../public/SliceBudget.h',
     '../public/StableStringChars.h',
     '../public/Stream.h',
