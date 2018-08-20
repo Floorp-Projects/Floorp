@@ -12,6 +12,7 @@ use std::fs::File;
 static MINI_MP4: &'static str = "tests/minimal.mp4";
 static AUDIO_EME_MP4: &'static str = "tests/bipbop-cenc-audioinit.mp4";
 static VIDEO_EME_MP4: &'static str = "tests/bipbop_480wp_1001kbps-cenc-video-key1-init.mp4";
+static VIDEO_AV1_MP4: &'static str = "tests/tiny_av1.mp4";
 
 // Taken from https://github.com/GuillaumeGomez/audio-video-metadata/blob/9dff40f565af71d5502e03a2e78ae63df95cfd40/src/metadata.rs#L53
 #[test]
@@ -59,6 +60,9 @@ fn public_api() {
                     mp4::VideoCodecSpecific::ESDSConfig(mp4v) => {
                         assert!(!mp4v.is_empty());
                         "MP4V"
+                    }
+                    mp4::VideoCodecSpecific::AV1Config(_av1c) => {
+                        "AV1"
                     }
                 }, "AVC");
             }
@@ -215,4 +219,57 @@ fn public_video_cenc() {
         assert!(pssh.data.is_empty());
         assert_eq!(pssh.box_content, pssh_box);
     }
+}
+
+#[test]
+fn public_video_av1() {
+  let mut fd = File::open(VIDEO_AV1_MP4).expect("Unknown file");
+  let mut buf = Vec::new();
+  fd.read_to_end(&mut buf).expect("File error");
+
+  let mut c = Cursor::new(&buf);
+  let mut context = mp4::MediaContext::new();
+  mp4::read_mp4(&mut c, &mut context).expect("read_mp4 failed");
+  for track in context.tracks {
+      assert_eq!(track.codec_type, mp4::CodecType::AV1);
+      match track.data {
+          Some(mp4::SampleEntry::Video(v)) => {
+              // track part
+              assert_eq!(track.duration, Some(mp4::TrackScaledTime(512, 0)));
+              assert_eq!(track.empty_duration, Some(mp4::MediaScaledTime(0)));
+              assert_eq!(track.media_time, Some(mp4::TrackScaledTime(0,0)));
+              assert_eq!(track.timescale, Some(mp4::TrackTimeScale(12288, 0)));
+              assert_eq!(v.width, 64);
+              assert_eq!(v.height, 64);
+
+              // track.tkhd part
+              let tkhd = track.tkhd.unwrap();
+              assert_eq!(tkhd.disabled, false);
+              assert_eq!(tkhd.duration, 42);
+              assert_eq!(tkhd.width, 4194304);
+              assert_eq!(tkhd.height, 4194304);
+
+              match v.codec_specific {
+                  mp4::VideoCodecSpecific::AV1Config(av1c) => {
+                      // TODO: test av1c fields once ffmpeg is updated
+                      assert_eq!(av1c.profile, 0);
+                      assert_eq!(av1c.level, 0);
+                      assert_eq!(av1c.tier, 0);
+                      assert_eq!(av1c.bit_depth, 8);
+                      assert_eq!(av1c.monochrome, false);
+                      assert_eq!(av1c.chroma_subsampling_x, 1);
+                      assert_eq!(av1c.chroma_subsampling_y, 1);
+                      assert_eq!(av1c.chroma_sample_position, 0);
+                      assert_eq!(av1c.initial_presentation_delay_present, false);
+                      assert_eq!(av1c.initial_presentation_delay_minus_one, 0);
+                  },
+                  _ => assert!(false, "Invalid test condition"),
+              }
+
+          },
+          _ => {
+              assert!(false, "Invalid test condition");
+          }
+      }
+  }
 }

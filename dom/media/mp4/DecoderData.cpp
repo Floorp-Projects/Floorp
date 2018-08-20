@@ -126,6 +126,8 @@ MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
     mMimeType = NS_LITERAL_CSTRING("video/avc");
   } else if (track->codec == MP4PARSE_CODEC_VP9) {
     mMimeType = NS_LITERAL_CSTRING("video/vp9");
+  } else if (track->codec == MP4PARSE_CODEC_AV1) {
+    mMimeType = NS_LITERAL_CSTRING("video/av1");
   } else if (track->codec == MP4PARSE_CODEC_MP4V) {
     mMimeType = NS_LITERAL_CSTRING("video/mp4v-es");
   }
