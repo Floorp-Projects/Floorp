@@ -229,16 +229,19 @@
     transform: translateX(0);
     fill-opacity: 0.3;
   }
-  38% {
+  30% {
     fill: inherit;
     fill-opacity: 0.3;
   }
-  39% {
+  31% {
     fill: var(--tracking-protection-shield-color);
     fill-opacity: 1;
   }
-  75% {
+  50% {
     transform: translateX(-1232px);
+    fill: var(--tracking-protection-shield-color);
+  }
+  65% {
     fill: var(--tracking-protection-shield-color);
     fill-opacity: 1;
   }
@@ -253,16 +256,19 @@
     transform: scaleX(-1) translateX(0);
     fill-opacity: 0.3;
   }
-  38% {
+  30% {
     fill: inherit;
     fill-opacity: 0.3;
   }
-  39% {
+  31% {
     fill: var(--tracking-protection-shield-color);
     fill-opacity: 1;
   }
-  75% {
+  50% {
     transform: scaleX(-1) translateX(-1232px);
+    fill: var(--tracking-protection-shield-color);
+  }
+  65% {
     fill: var(--tracking-protection-shield-color);
     fill-opacity: 1;
   }
