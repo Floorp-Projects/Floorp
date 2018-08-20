@@ -2501,6 +2501,21 @@ nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
   keyBindings->GetEditCommands(aEvent, aCommands);
 }
 
+already_AddRefed<nsIWidget>
+nsIWidget::CreateTopLevelWindow()
+{
+  nsCOMPtr<nsIWidget> window = new nsCocoaWindow();
+  return window.forget();
+}
+
+already_AddRefed<nsIWidget>
+nsIWidget::CreateChildWindow()
+{
+  nsCOMPtr<nsIWidget> window = new nsChildView();
+  return window.forget();
+}
+
+
 @implementation WindowDelegate
 
 // We try to find a gecko menu bar to paint. If one does not exist, just paint

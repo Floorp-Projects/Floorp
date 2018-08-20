@@ -74,9 +74,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-/* Define Class IDs */
-static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
-
 #define SIZE_PERSISTENCE_TIMEOUT 500 // msec
 
 nsWebShellWindow::nsWebShellWindow(uint32_t aChromeFlags)
@@ -145,14 +142,11 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   // Create top level window
   if (gfxPlatform::IsHeadless()) {
     mWindow = nsIWidget::CreateHeadlessWidget();
-    if (!mWindow) {
-      return NS_ERROR_FAILURE;
-    }
   } else {
-    mWindow = do_CreateInstance(kWindowCID, &rv);
-    if (NS_OK != rv) {
-      return rv;
-    }
+    mWindow = nsIWidget::CreateTopLevelWindow();
+  }
+  if (!mWindow) {
+    return NS_ERROR_FAILURE;
   }
 
   /* This next bit is troublesome. We carry two different versions of a pointer
