@@ -230,7 +230,7 @@ WebConsoleOutputWrapper.prototype = {
               : null;
           },
           openNodeInInspector: async (grip) => {
-            const onSelectInspector = this.toolbox.selectTool("inspector");
+            const onSelectInspector = this.toolbox.selectTool("inspector", "inspect_dom");
             const onGripNodeToFront = this.toolbox.highlighterUtils.gripToNodeFront(grip);
             const [
               front,
