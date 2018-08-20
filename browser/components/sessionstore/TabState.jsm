@@ -12,8 +12,6 @@ ChromeUtils.defineModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
 ChromeUtils.defineModuleGetter(this, "TabAttributes",
   "resource:///modules/sessionstore/TabAttributes.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
-  "resource://gre/modules/sessionstore/Utils.jsm");
 
 /**
  * Module that contains tab state collection methods.
@@ -123,11 +121,6 @@ var TabStateInternal = {
     if (!("image" in tabData)) {
       let tabbrowser = tab.ownerGlobal.gBrowser;
       tabData.image = tabbrowser.getIcon(tab);
-    }
-
-    // Store the serialized contentPrincipal of this tab to use for the icon.
-    if (!("iconLoadingPrincipal" in tabData)) {
-      tabData.iconLoadingPrincipal = Utils.serializePrincipal(browser.mIconLoadingPrincipal);
     }
 
     // If there is a userTypedValue set, then either the user has typed something

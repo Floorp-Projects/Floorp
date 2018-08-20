@@ -1982,7 +1982,6 @@ var SessionStoreInternal = {
       state: tabState,
       title: tabTitle,
       image: tabbrowser.getIcon(aTab),
-      iconLoadingPrincipal: Utils.serializePrincipal(aTab.linkedBrowser.contentPrincipal),
       pos: aTab._tPos,
       closedAt: Date.now()
     };
@@ -2779,9 +2778,7 @@ var SessionStoreInternal = {
 
     // Restore the tab icon.
     if ("image" in tabData) {
-      // Use the serialized contentPrincipal with the new icon load.
-      let loadingPrincipal = Utils.deserializePrincipal(tabData.iconLoadingPrincipal);
-      win.gBrowser.setIcon(tab, tabData.image, loadingPrincipal);
+      win.gBrowser.setIcon(tab, tabData.image, undefined, tabData.iconLoadingPrincipal);
       TabStateCache.update(browser, { image: null, iconLoadingPrincipal: null });
     }
   },
