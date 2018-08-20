@@ -9089,7 +9089,8 @@ public:
   nsThreadPool*
   GetOrCreateThreadPool();
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(QuotaClient, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(
+    mozilla::dom::indexedDB::QuotaClient, override)
 
   mozilla::dom::quota::Client::Type
   GetType() override;
