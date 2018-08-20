@@ -1079,7 +1079,7 @@ pref("security.sandbox.content.level", 3);
 // 2 - "read access triggered by file dialog activity, limited read/write"
 //     "access for Flash functionality"
 // 3 - "limited read/write access for Flash functionality"
-pref("dom.ipc.plugins.sandbox-level.flash", 2);
+pref("dom.ipc.plugins.sandbox-level.flash", 1);
 // Controls the level used on older OS X versions. Is overriden when the
 // "dom.ipc.plugins.sandbox-level.flash" is set to 0.
 pref("dom.ipc.plugins.sandbox-level.flash.legacy", 1);
@@ -1088,7 +1088,7 @@ pref("dom.ipc.plugins.sandbox-level.flash.max-legacy-os-minor", 10);
 // Controls the sandbox level used by plugins other than Flash. On Mac,
 // no other plugins are supported and this pref is only used for test
 // plugins used in automated tests.
-pref("dom.ipc.plugins.sandbox-level.default", 2);
+pref("dom.ipc.plugins.sandbox-level.default", 1);
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
