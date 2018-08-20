@@ -466,8 +466,8 @@ RemoteDataDecoder::CreateVideoDecoder(const CreateDecoderParams& aParams,
   MediaFormat::LocalRef format;
   NS_ENSURE_SUCCESS(
     MediaFormat::CreateVideoFormat(TranslateMimeType(config.mMimeType),
-                                   config.mDisplay.width,
-                                   config.mDisplay.height,
+                                   config.mImage.width,
+                                   config.mImage.height,
                                    &format),
     nullptr);
 
