@@ -19,6 +19,7 @@ class nsIRunnable;
 #define IDB_DIRECTORY_NAME "idb"
 #define ASMJSCACHE_DIRECTORY_NAME "asmjs"
 #define DOMCACHE_DIRECTORY_NAME "cache"
+#define SDB_DIRECTORY_NAME "sdb"
 #define LS_DIRECTORY_NAME "ls"
 
 BEGIN_QUOTA_NAMESPACE
@@ -42,6 +43,7 @@ public:
     //APPCACHE,
     ASMJS,
     DOMCACHE,
+    SDB,
     TYPE_MAX
   };
 
@@ -64,6 +66,10 @@ public:
         aText.AssignLiteral(DOMCACHE_DIRECTORY_NAME);
         break;
 
+      case SDB:
+        aText.AssignLiteral(SDB_DIRECTORY_NAME);
+        break;
+
       case TYPE_MAX:
       default:
         MOZ_ASSERT_UNREACHABLE("Bad id value!");
@@ -84,6 +90,9 @@ public:
     }
     else if (aText.EqualsLiteral(DOMCACHE_DIRECTORY_NAME)) {
       aType = DOMCACHE;
+    }
+    else if (aText.EqualsLiteral(SDB_DIRECTORY_NAME)) {
+      aType = SDB;
     }
     else {
       return NS_ERROR_FAILURE;
