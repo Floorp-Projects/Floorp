@@ -15,6 +15,10 @@ XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/xpcshell.ini'
 ]
 
+TEST_HARNESS_FILES.xpcshell.dom.quota.test += [
+    'test/head-shared.js',
+]
+
 XPIDL_SOURCES += [
     'nsIQuotaCallbacks.idl',
     'nsIQuotaManagerService.idl',
