@@ -6,6 +6,7 @@
 
 #include "js/UbiNodeCensus.h"
 
+#include "js/StableStringChars.h"
 #include "util/Text.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"

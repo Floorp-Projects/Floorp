@@ -33,6 +33,7 @@
 #include "jit/Ion.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Proxy.h"
+#include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
@@ -63,6 +64,8 @@ using mozilla::ArrayLength;
 using mozilla::CheckedInt;
 using mozilla::Maybe;
 using mozilla::Some;
+
+using JS::AutoStableStringChars;
 
 static bool
 fun_enumerate(JSContext* cx, HandleObject obj)

@@ -21,6 +21,7 @@
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
 #include "js/RootingAPI.h"
+#include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
@@ -39,6 +40,8 @@ using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
 using js::intl::GetAvailableLocales;
 using js::intl::IcuLocale;
+
+using JS::AutoStableStringChars;
 
 const ClassOps NumberFormatObject::classOps_ = {
     nullptr, /* addProperty */

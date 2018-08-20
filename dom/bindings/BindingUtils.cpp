@@ -17,6 +17,7 @@
 #include "mozilla/UseCounter.h"
 
 #include "AccessCheck.h"
+#include "js/StableStringChars.h"
 #include "jsfriendapi.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
@@ -2858,7 +2859,7 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
       return false;
     }
   } else {
-    length = js::GetStringLength(s);
+    length = JS::GetStringLength(s);
   }
 
   static_assert(js::MaxStringLength < UINT32_MAX,

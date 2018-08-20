@@ -26,6 +26,7 @@
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
 #include "js/Date.h"
+#include "js/StableStringChars.h"
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/Vector.h"
 #include "js/Wrapper.h"
@@ -55,6 +56,7 @@
 
 using namespace js;
 
+using JS::AutoStableStringChars;
 using JS::dbg::AutoEntryMonitor;
 using JS::dbg::Builder;
 using js::frontend::IsIdentifier;
@@ -5036,7 +5038,7 @@ Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp)
     }
 
     JSString* str = args[0].toString();
-    size_t length = GetStringLength(str);
+    size_t length = str->length();
 
     AutoStableStringChars chars(cx);
     if (!chars.initTwoByte(cx, str))

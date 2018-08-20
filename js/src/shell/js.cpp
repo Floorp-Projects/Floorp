@@ -81,6 +81,7 @@
 #include "js/GCVector.h"
 #include "js/Initialization.h"
 #include "js/Printf.h"
+#include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/SweepingAPI.h"
 #include "js/Wrapper.h"
@@ -125,6 +126,8 @@
 using namespace js;
 using namespace js::cli;
 using namespace js::shell;
+
+using JS::AutoStableStringChars;
 
 using js::shell::RCFile;
 
