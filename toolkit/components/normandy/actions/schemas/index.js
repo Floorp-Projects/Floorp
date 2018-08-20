@@ -61,7 +61,44 @@ const ActionSchemas = {
       },
     },
   },
+
+  "addon-study": {
+    $schema: "http://json-schema.org/draft-04/schema#",
+    title: "Enroll a user in an opt-out SHIELD study",
+    type: "object",
+    required: [
+      "name",
+      "description",
+      "addonUrl"
+    ],
+    properties: {
+      name: {
+        description: "User-facing name of the study",
+        type: "string",
+        minLength: 1
+      },
+      description: {
+        description: "User-facing description of the study",
+        type: "string",
+        minLength: 1
+      },
+      addonUrl: {
+        description: "URL of the add-on XPI file",
+        type: "string",
+        format: "uri",
+        minLength: 1
+      },
+      isEnrollmentPaused: {
+        description: "If true, new users will not be enrolled in the study.",
+        type: "boolean",
+        default: false
+      }
+    }
+  }
 };
+
+// Legacy name used on Normandy server
+ActionSchemas["opt-out-study"] = ActionSchemas["addon-study"];
 
 // If running in Node.js, export the schemas.
 if (typeof module !== "undefined") {
