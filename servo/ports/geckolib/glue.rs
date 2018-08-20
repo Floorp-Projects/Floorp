@@ -5825,3 +5825,19 @@ pub unsafe extern "C" fn Servo_PseudoClass_GetStates(name: *const nsACString) ->
 pub unsafe extern "C" fn Servo_UseCounters_Create() -> bindings::StyleUseCountersStrong {
     Arc::new(UseCounters::default()).into_strong()
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_IsCssPropertyRecordedInUseCounter(
+    use_counters: bindings::StyleUseCountersBorrowed,
+    property: *const nsACString,
+    known_prop: *mut bool,
+) -> bool {
+    let prop_id = parse_enabled_property_name!(property, known_prop, false);
+    let non_custom_id = match prop_id.non_custom_id() {
+        Some(id) => id,
+        None => return false,
+    };
+
+    let use_counters = UseCounters::as_arc(&use_counters);
+    use_counters.non_custom_properties.recorded(non_custom_id)
+}
