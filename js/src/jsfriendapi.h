@@ -2802,15 +2802,6 @@ extern JS_FRIEND_API(void)
 SetJitExceptionHandler(JitExceptionHandler handler);
 #endif
 
-/**
- * Get the first SavedFrame object in this SavedFrame stack whose principals are
- * subsumed by the given |principals|. If there is no such frame, return nullptr.
- *
- * Do NOT pass a non-SavedFrame object here.
- */
-extern JS_FRIEND_API(JSObject*)
-GetFirstSubsumedSavedFrame(JSContext* cx, JSPrincipals* principals, JS::HandleObject savedFrame, JS::SavedFrameSelfHosted selfHosted);
-
 extern JS_FRIEND_API(bool)
 ReportIsNotFunction(JSContext* cx, JS::HandleValue v);
 
