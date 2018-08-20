@@ -850,3 +850,17 @@ nsWindow::RoundsWidgetCoordinatesTo()
   }
   return 1;
 }
+
+already_AddRefed<nsIWidget>
+nsIWidget::CreateTopLevelWindow()
+{
+  nsCOMPtr<nsIWidget> window = new nsWindow();
+  return window.forget();
+}
+
+already_AddRefed<nsIWidget>
+nsIWidget::CreateChildWindow()
+{
+  nsCOMPtr<nsIWidget> window = new nsWindow();
+  return window.forget();
+}
