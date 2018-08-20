@@ -676,8 +676,8 @@ class AnimationInspector {
     // representation of times, it will be treated as infinity. Rather than
     // adding special case code to represent this very rare case, we simply omit
     // such animations from the graph.
-    animations = animations.filter(anim => anim.state.delay !== Infinity &&
-                                           anim.state.endDelay !== Infinity);
+    animations = animations.filter(anim => Math.abs(anim.state.delay) !== Infinity &&
+                                           Math.abs(anim.state.endDelay) !== Infinity);
 
     this.inspector.store.dispatch(updateAnimations(animations));
 
