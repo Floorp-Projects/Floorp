@@ -70,13 +70,16 @@ struct SetDOMProxyInformation
 SetDOMProxyInformation gSetDOMProxyInformation;
 
 static inline void
-CheckExpandoObject(JSObject* proxy, JS::Value expando)
+CheckExpandoObject(JSObject* proxy, const JS::Value& expando)
 {
 #ifdef DEBUG
   JSObject* obj = &expando.toObject();
   MOZ_ASSERT(!js::gc::EdgeNeedsSweepUnbarriered(&obj));
   MOZ_ASSERT(js::GetObjectCompartment(proxy) == js::GetObjectCompartment(obj));
 
+  // When we create an expando object in EnsureExpandoObject below, we preserve
+  // the wrapper. The wrapper is released when the object is unlinked, but we
+  // should never call these functions after that point.
   nsISupports* native = UnwrapDOMObject<nsISupports>(proxy);
   nsWrapperCache* cache;
   CallQueryInterface(native, &cache);
