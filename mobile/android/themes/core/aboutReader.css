@@ -540,3 +540,6 @@ body.dark > .container > .content blockquote {
   padding: 0;
 }
 
+.reader-show-element {
+  display: initial;
+}

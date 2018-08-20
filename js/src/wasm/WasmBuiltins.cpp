@@ -289,13 +289,6 @@ WasmHandleTrap()
 }
 
 static void
-WasmReportUnalignedAccess()
-{
-    JSContext* cx = TlsContext.get();
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNALIGNED_ACCESS);
-}
-
-static void
 WasmReportInt64JSCall()
 {
     JSContext* cx = TlsContext.get();
@@ -510,9 +503,6 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::HandleTrap:
         *abiType = Args_General0;
         return FuncCast(WasmHandleTrap, *abiType);
-      case SymbolicAddress::ReportUnalignedAccess:
-        *abiType = Args_General0;
-        return FuncCast(WasmReportUnalignedAccess, *abiType);
       case SymbolicAddress::ReportInt64JSCall:
         *abiType = Args_General0;
         return FuncCast(WasmReportInt64JSCall, *abiType);
@@ -690,7 +680,6 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::HandleDebugTrap:          // GenerateDebugTrapStub
       case SymbolicAddress::HandleThrow:              // GenerateThrowStub
       case SymbolicAddress::HandleTrap:               // GenerateTrapExit
-      case SymbolicAddress::ReportUnalignedAccess:    // GenerateUnalignedExit
       case SymbolicAddress::CallImport_Void:          // GenerateImportInterpExit
       case SymbolicAddress::CallImport_I32:
       case SymbolicAddress::CallImport_I64:

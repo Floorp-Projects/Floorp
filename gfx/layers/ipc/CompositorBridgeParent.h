@@ -175,6 +175,8 @@ public:
     MOZ_CRASH();
   }
 
+  virtual void NotifyMemoryPressure() {}
+
 protected:
   ~CompositorBridgeParentBase() override;
 
@@ -235,6 +237,8 @@ public:
   mozilla::ipc::IPCResult RecvRequestNotifyAfterRemotePaint() override { return IPC_OK(); };
 
   mozilla::ipc::IPCResult RecvAllPluginsCaptured() override;
+
+  virtual void NotifyMemoryPressure() override;
 
   void ActorDestroy(ActorDestroyReason why) override;
 

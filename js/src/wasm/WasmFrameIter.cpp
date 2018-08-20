@@ -800,7 +800,6 @@ ProfilingFrameIterator::initFromExitFP(const Frame* fp)
       case CodeRange::BuiltinThunk:
       case CodeRange::TrapExit:
       case CodeRange::DebugTrap:
-      case CodeRange::UnalignedExit:
       case CodeRange::Throw:
       case CodeRange::FarJumpIsland:
         MOZ_CRASH("Unexpected CodeRange kind");
@@ -988,7 +987,6 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
         }
         break;
       case CodeRange::TrapExit:
-      case CodeRange::UnalignedExit:
         // These code stubs execute after the prologue/epilogue have completed
         // so pc/fp contains the right values here.
         fixedPC = pc;
@@ -1139,7 +1137,6 @@ ProfilingFrameIterator::operator++()
       case CodeRange::BuiltinThunk:
       case CodeRange::TrapExit:
       case CodeRange::DebugTrap:
-      case CodeRange::UnalignedExit:
       case CodeRange::FarJumpIsland:
         stackAddress_ = callerFP_;
         callerPC_ = callerFP_->returnAddress;
@@ -1165,7 +1162,6 @@ ThunkedNativeToDescription(SymbolicAddress func)
       case SymbolicAddress::HandleDebugTrap:
       case SymbolicAddress::HandleThrow:
       case SymbolicAddress::HandleTrap:
-      case SymbolicAddress::ReportUnalignedAccess:
       case SymbolicAddress::CallImport_Void:
       case SymbolicAddress::CallImport_I32:
       case SymbolicAddress::CallImport_I64:
@@ -1320,7 +1316,6 @@ ProfilingFrameIterator::label() const
       case CodeRange::ImportInterpExit:  return importInterpDescription;
       case CodeRange::TrapExit:          return trapDescription;
       case CodeRange::DebugTrap:         return debugTrapDescription;
-      case CodeRange::UnalignedExit:     return "unaligned trap stub (in wasm)";
       case CodeRange::FarJumpIsland:     return "interstitial (in wasm)";
       case CodeRange::Throw:             MOZ_CRASH("does not have a frame");
     }
