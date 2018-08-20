@@ -168,7 +168,7 @@ class TestNsinstall(unittest.TestCase):
                                                     NSINSTALL_PATH,
                                                     testfile, testdir])
             p.run()
-            rv = p.waitForFinish()
+            rv = p.wait()
 
             self.assertEqual(rv, 0)
             destfile = os.path.join(testdir, filename)
