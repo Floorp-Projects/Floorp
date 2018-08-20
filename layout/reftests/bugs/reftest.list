@@ -2080,3 +2080,4 @@ test-pref(layout.css.contain.enabled,false) == 1466008.html 1466008-ref.html
 fuzzy(0-1,0-625) == 1466638-1.html 1466638-1-ref.html
 == bug1472465-1.html bug1472465-1-ref.html
 == 1475971-1.html 1475971-1-ref.html
+== 1483649-1.xul 1483649-1-ref.xul

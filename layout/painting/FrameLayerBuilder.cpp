@@ -2924,8 +2924,15 @@ ContainerState::FindOpaqueBackgroundColorInLayer(const PaintedLayerData* aData,
   appUnitRect.ScaleInverseRoundOut(mParameters.mXScale, mParameters.mYScale);
 
   for (auto& assignedItem : Reversed(aData->mAssignedDisplayItems)) {
-    if (assignedItem.mType != DisplayItemEntryType::ITEM) {
-      // |assignedItem| is an effect marker.
+    if (assignedItem.mHasOpacity || assignedItem.mHasTransform) {
+      // We cannot easily calculate the opaque background color for items inside
+      // a flattened effect.
+      continue;
+    }
+
+    if (IsEffectEndMarker(assignedItem.mType)) {
+      // An optimization: the underlying display item for effect markers is the
+      // same for both start and end markers. Skip the effect end markers.
       continue;
     }
 
@@ -2961,12 +2968,11 @@ ContainerState::FindOpaqueBackgroundColorInLayer(const PaintedLayerData* aData,
       return NS_RGBA(0,0,0,0);
     }
 
-    if (!assignedItem.mHasOpacity && !assignedItem.mHasTransform) {
-      Maybe<nscolor> color = item->IsUniform(mBuilder);
+    MOZ_ASSERT(!assignedItem.mHasOpacity && !assignedItem.mHasTransform);
+    Maybe<nscolor> color = item->IsUniform(mBuilder);
 
-      if (color && NS_GET_A(*color) == 255) {
-        return *color;
-      }
+    if (color && NS_GET_A(*color) == 255) {
+      return *color;
     }
 
     return NS_RGBA(0,0,0,0);
