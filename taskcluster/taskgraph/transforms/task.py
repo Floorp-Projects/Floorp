@@ -213,6 +213,9 @@ task_description_schema = Schema({
     # Whether the job should use sccache compiler caching.
     Required('needs-sccache'): bool,
 
+    # Set of artifacts relevant to release tasks
+    Optional('release-artifacts'): [basestring],
+
     # information specific to the worker implementation that will run this task
     'worker': Any({
         Required('implementation'): Any('docker-worker', 'docker-engine'),
@@ -1736,6 +1739,7 @@ def build_task(config, tasks):
             'dependencies': task.get('dependencies', {}),
             'attributes': attributes,
             'optimization': task.get('optimization', None),
+            'release-artifacts': task.get('release-artifacts', []),
         }
 
 
