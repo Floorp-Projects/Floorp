@@ -14,6 +14,7 @@ import android.graphics.drawable.TransitionDrawable
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.v4.content.ContextCompat
+import android.text.InputType
 import android.text.SpannableString
 import android.text.TextUtils
 import android.text.method.LinkMovementMethod
@@ -258,6 +259,7 @@ class UrlInputFragment :
 
         urlView?.setOnFilterListener(::onFilter)
         urlView?.imeOptions = urlView.imeOptions or ViewUtils.IME_FLAG_NO_PERSONALIZED_LEARNING
+        urlView?.inputType = urlView.inputType or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
 
         if (urlInputContainerView != null) {
             urlInputContainerView.viewTreeObserver.addOnPreDrawListener(object :
