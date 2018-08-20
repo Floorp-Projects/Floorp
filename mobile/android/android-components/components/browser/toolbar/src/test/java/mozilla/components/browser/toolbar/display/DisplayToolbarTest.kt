@@ -9,12 +9,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.ktx.android.view.forEach
-import mozilla.components.ui.progress.AnimatedProgressBar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -565,11 +565,11 @@ class DisplayToolbarTest {
             return textView ?: throw AssertionError("Could not find URL view")
         }
 
-        private fun extractProgressView(displayToolbar: DisplayToolbar): AnimatedProgressBar {
-            var progressView: AnimatedProgressBar? = null
+        private fun extractProgressView(displayToolbar: DisplayToolbar): ProgressBar {
+            var progressView: ProgressBar? = null
 
             displayToolbar.forEach {
-                if (it is AnimatedProgressBar) {
+                if (it is ProgressBar) {
                     progressView = it
                     return@forEach
                 }

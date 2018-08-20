@@ -28,7 +28,6 @@ dependencies {
 
     api project(':ui-autocomplete')
     implementation project(':ui-icons')
-    implementation project(':ui-progress')
 
     implementation project(':support-ktx')
 

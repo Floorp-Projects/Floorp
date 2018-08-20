@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -20,7 +21,6 @@ import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.view.dp
 import mozilla.components.support.ktx.android.view.isVisible
-import mozilla.components.ui.progress.AnimatedProgressBar
 
 /**
  * Sub-component of the browser toolbar responsible for displaying the URL and related controls.
@@ -56,6 +56,7 @@ import mozilla.components.ui.progress.AnimatedProgressBar
  *
  */
 @SuppressLint("ViewConstructor") // This view is only instantiated in code
+@Suppress("LargeClass")
 internal class DisplayToolbar(
     context: Context,
     val toolbar: BrowserToolbar
@@ -114,7 +115,11 @@ internal class DisplayToolbar(
         }
     }
 
-    private val progressView = AnimatedProgressBar(context)
+    private val progressView = ProgressBar(
+        context, null, android.R.attr.progressBarStyleHorizontal
+    ).apply {
+        visibility = View.GONE
+    }
 
     private val browserActions: MutableList<DisplayAction> = mutableListOf()
     private val pageActions: MutableList<DisplayAction> = mutableListOf()
