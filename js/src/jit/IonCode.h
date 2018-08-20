@@ -270,9 +270,6 @@ struct IonScript
     // a LOOPENTRY pc other than osrPc_.
     uint32_t osrPcMismatchCounter_;
 
-    // Allocated space for fallback stubs.
-    FallbackICStubSpace fallbackStubSpace_;
-
     // TraceLogger events that are baked into the IonScript.
     TraceLoggerEventVector traceLoggerEvents_;
 
@@ -317,12 +314,6 @@ struct IonScript
   public:
     // Do not call directly, use IonScript::New. This is public for cx->new_.
     explicit IonScript(IonCompilationId compilationId);
-
-    ~IonScript() {
-        // The contents of the fallback stub space are removed and freed
-        // separately after the next minor GC. See IonScript::Destroy.
-        MOZ_ASSERT(fallbackStubSpace_.isEmpty());
-    }
 
     static IonScript* New(JSContext* cx, IonCompilationId compilationId,
                           uint32_t frameSlots, uint32_t argumentSlots, uint32_t frameSize,
@@ -543,11 +534,6 @@ struct IonScript
     void clearRecompiling() {
         recompiling_ = false;
     }
-
-    FallbackICStubSpace* fallbackStubSpace() {
-        return &fallbackStubSpace_;
-    }
-    void adoptFallbackStubs(FallbackICStubSpace* stubSpace);
 
     enum ShouldIncreaseAge {
         IncreaseAge = true,
