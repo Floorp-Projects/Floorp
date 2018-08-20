@@ -125,6 +125,11 @@ var TabStateInternal = {
       tabData.image = tabbrowser.getIcon(tab);
     }
 
+    // Store the serialized contentPrincipal of this tab to use for the icon.
+    if (!("iconLoadingPrincipal" in tabData)) {
+      tabData.iconLoadingPrincipal = Utils.serializePrincipal(browser.mIconLoadingPrincipal);
+    }
+
     // If there is a userTypedValue set, then either the user has typed something
     // in the URL bar, or a new tab was opened with a URI to load.
     // If so, we also track whether we were still in the process of loading something.
