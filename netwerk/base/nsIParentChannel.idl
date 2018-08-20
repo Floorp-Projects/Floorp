@@ -50,8 +50,11 @@ interface nsIParentChannel : nsIStreamListener
   /**
    * Called to notify the HttpChannelChild that the resource being loaded
    * is on the tracking protection list.
+   * @param aIsThirdParty
+   *        Whether or not the resourced is considered first-party
+   *        with the URI of the window.
    */
-  [noscript] void notifyTrackingResource();
+  [noscript] void notifyTrackingResource(in bool aIsThirdParty);
 
   /**
    * Called to invoke deletion of the IPC protocol.

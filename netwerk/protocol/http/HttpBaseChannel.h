@@ -211,7 +211,8 @@ public:
   NS_IMETHOD GetTopLevelOuterContentWindowId(uint64_t *aWindowId) override;
   NS_IMETHOD SetTopLevelOuterContentWindowId(uint64_t aWindowId) override;
   NS_IMETHOD GetIsTrackingResource(bool* aIsTrackingResource) override;
-  NS_IMETHOD OverrideTrackingResource(bool aIsTracking) override;
+  NS_IMETHOD GetIsThirdPartyTrackingResource(bool* aIsTrackingResource) override;
+  NS_IMETHOD OverrideTrackingFlagsForDocumentCookieAccessor(nsIHttpChannel* aDocumentChannel) override;
 
   // nsIHttpChannelInternal
   NS_IMETHOD GetDocumentURI(nsIURI **aDocumentURI) override;
@@ -378,7 +379,7 @@ public: /* Necko internal use only... */
     // |EnsureUploadStreamIsCloneableComplete| to main thread.
     virtual void OnCopyComplete(nsresult aStatus);
 
-    void SetIsTrackingResource();
+    void SetIsTrackingResource(bool aIsThirdParty);
 
     const uint64_t& ChannelId() const
     {
@@ -625,7 +626,8 @@ protected:
   // Use Release-Acquire ordering to ensure the OMT ODA is ignored while channel
   // is canceled on main thread.
   Atomic<bool, ReleaseAcquire> mCanceled;
-  Atomic<bool, ReleaseAcquire> mIsTrackingResource;
+  Atomic<bool, ReleaseAcquire> mIsFirstPartyTrackingResource;
+  Atomic<bool, ReleaseAcquire> mIsThirdPartyTrackingResource;
 
   uint32_t                          mLoadFlags;
   uint32_t                          mCaps;

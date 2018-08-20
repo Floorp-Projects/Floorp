@@ -213,8 +213,55 @@ CachedPrefs::~CachedPrefs()
 }
 } // anonymous namespace
 
+static nsresult
+IsThirdParty(nsIChannel* aChannel, bool* aResult)
+{
+  NS_ENSURE_ARG(aResult);
+  *aResult = false;
+
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+  if (NS_WARN_IF(!thirdPartyUtil)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel, &rv);
+  if (NS_FAILED(rv) || !chan) {
+    LOG(("nsChannelClassifier: Not an HTTP channel"));
+    return NS_OK;
+  }
+  nsCOMPtr<nsIURI> chanURI;
+  rv = aChannel->GetURI(getter_AddRefs(chanURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> topWinURI;
+  rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!topWinURI) {
+    LOG(("nsChannelClassifier: No window URI\n"));
+  }
+
+  // Third party checks don't work for chrome:// URIs in mochitests, so just
+  // default to isThirdParty = true. We check isThirdPartyWindow to expand
+  // the list of domains that are considered first party (e.g., if
+  // facebook.com includes an iframe from fatratgames.com, all subsources
+  // included in that iframe are considered third-party with
+  // isThirdPartyChannel, even if they are not third-party w.r.t.
+  // facebook.com), and isThirdPartyChannel to prevent top-level navigations
+  // from being detected as third-party.
+  bool isThirdPartyChannel = true;
+  bool isThirdPartyWindow = true;
+  thirdPartyUtil->IsThirdPartyURI(chanURI, topWinURI, &isThirdPartyWindow);
+  thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdPartyChannel);
+
+  *aResult = isThirdPartyWindow && isThirdPartyChannel;
+  return NS_OK;
+}
+
 static void
-SetIsTrackingResourceHelper(nsIChannel* aChannel)
+SetIsTrackingResourceHelper(nsIChannel* aChannel, bool aIsThirdParty)
 {
   MOZ_ASSERT(aChannel);
 
@@ -223,12 +270,12 @@ SetIsTrackingResourceHelper(nsIChannel* aChannel)
   if (parentChannel) {
     // This channel is a parent-process proxy for a child process
     // request. We should notify the child process as well.
-    parentChannel->NotifyTrackingResource();
+    parentChannel->NotifyTrackingResource(aIsThirdParty);
   }
 
   RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(aChannel);
   if (httpChannel) {
-    httpChannel->SetIsTrackingResource();
+    httpChannel->SetIsTrackingResource(aIsThirdParty);
   }
 }
 
@@ -366,27 +413,11 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
     NS_ENSURE_ARG(result);
     *result = false;
 
-    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-      services::GetThirdPartyUtil();
-    if (NS_WARN_IF(!thirdPartyUtil)) {
-      return NS_ERROR_FAILURE;
-    }
-
     nsresult rv;
     nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel, &rv);
     if (NS_FAILED(rv) || !chan) {
       LOG(("nsChannelClassifier[%p]: Not an HTTP channel", this));
       return NS_OK;
-    }
-
-    nsCOMPtr<nsIURI> topWinURI;
-    rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    if (!topWinURI) {
-      LOG(("nsChannelClassifier[%p]: No window URI\n", this));
     }
 
     nsCOMPtr<nsIURI> chanURI;
@@ -395,19 +426,13 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
 
     // Only perform third-party checks for tracking protection
     if (!aAnnotationsOnly) {
-      // Third party checks don't work for chrome:// URIs in mochitests, so just
-      // default to isThirdParty = true. We check isThirdPartyWindow to expand
-      // the list of domains that are considered first party (e.g., if
-      // facebook.com includes an iframe from fatratgames.com, all subsources
-      // included in that iframe are considered third-party with
-      // isThirdPartyChannel, even if they are not third-party w.r.t.
-      // facebook.com), and isThirdPartyChannel to prevent top-level navigations
-      // from being detected as third-party.
-      bool isThirdPartyChannel = true;
-      bool isThirdPartyWindow = true;
-      thirdPartyUtil->IsThirdPartyURI(chanURI, topWinURI, &isThirdPartyWindow);
-      thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdPartyChannel);
-      if (!isThirdPartyWindow || !isThirdPartyChannel) {
+      bool isThirdParty = false;
+      rv = IsThirdParty(aChannel, &isThirdParty);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        LOG(("nsChannelClassifier[%p]: IsThirdParty() failed", this));
+        return NS_OK;
+      }
+      if (!isThirdParty) {
         *result = false;
         if (LOG_ENABLED()) {
           nsCString spec = chanURI->GetSpecOrDefault();
@@ -426,6 +451,12 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
 
     nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> topWinURI;
+    rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     if (!topWinURI && CachedPrefs::GetInstance()->IsAllowListExample()) {
       LOG(("nsChannelClassifier[%p]: Allowlisting test domain\n", this));
@@ -1194,6 +1225,7 @@ void
 TrackingURICallback::OnTrackerFound(nsresult aErrorCode)
 {
   nsCOMPtr<nsIChannel> channel = mChannelClassifier->GetChannel();
+  MOZ_ASSERT(channel);
   if (aErrorCode == NS_ERROR_TRACKING_URI &&
       mChannelClassifier->ShouldEnableTrackingProtection()) {
     mChannelClassifier->SetBlockedContent(channel, aErrorCode,
@@ -1205,24 +1237,27 @@ TrackingURICallback::OnTrackerFound(nsresult aErrorCode)
     MOZ_ASSERT(aErrorCode == NS_ERROR_TRACKING_ANNOTATION_URI);
     MOZ_ASSERT(mChannelClassifier->ShouldEnableTrackingAnnotation());
 
+    bool isThirdPartyWithTopLevelWinURI = false;
+    nsresult rv = IsThirdParty(channel, &isThirdPartyWithTopLevelWinURI);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      LOG(("TrackingURICallback[%p]::OnTrackerFound IsThirdParty() failed",
+           mChannelClassifier.get()));
+      return; // we'll assume the channel is NOT third-party
+    }
+
     LOG(("TrackingURICallback[%p]::OnTrackerFound, annotating channel[%p]",
          mChannelClassifier.get(), channel.get()));
 
-    // Even with TP disabled, we still want to show the user that there
-    // are unblocked trackers on the site, so notify the UI that we loaded
-    // tracking content. UI code can treat this notification differently
-    // depending on whether TP is enabled or disabled.
-    mChannelClassifier->NotifyTrackingProtectionDisabled(channel);
+    SetIsTrackingResourceHelper(channel, isThirdPartyWithTopLevelWinURI);
 
-    SetIsTrackingResourceHelper(channel);
-    if (CachedPrefs::GetInstance()->IsLowerNetworkPriority()) {
-      nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-        services::GetThirdPartyUtil();
-      bool result = false;
-      if (thirdPartyUtil &&
-          NS_SUCCEEDED(thirdPartyUtil->IsThirdPartyChannel(channel, nullptr,
-                                                           &result)) &&
-          result) {
+    if (isThirdPartyWithTopLevelWinURI) {
+      // Even with TP disabled, we still want to show the user that there
+      // are unblocked trackers on the site, so notify the UI that we loaded
+      // tracking content. UI code can treat this notification differently
+      // depending on whether TP is enabled or disabled.
+      mChannelClassifier->NotifyTrackingProtectionDisabled(channel);
+
+      if (CachedPrefs::GetInstance()->IsLowerNetworkPriority()) {
         LowerPriorityHelper(channel);
       }
     }

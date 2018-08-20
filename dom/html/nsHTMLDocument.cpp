@@ -1081,7 +1081,7 @@ nsHTMLDocument::CreateDummyChannelForCookies(nsIURI* aCodebaseURI)
       MOZ_ASSERT(httpChannel, "How come we're coming from an HTTP doc but "
                               "we don't have an HTTP channel here?");
       if (httpChannel) {
-        httpChannel->OverrideTrackingResource(isTracking);
+        httpChannel->OverrideTrackingFlagsForDocumentCookieAccessor(docHTTPChannel);
       }
     }
   }

@@ -1824,12 +1824,13 @@ HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
 }
 
 NS_IMETHODIMP
-HttpChannelParent::NotifyTrackingResource()
+HttpChannelParent::NotifyTrackingResource(bool aIsThirdParty)
 {
-  LOG(("HttpChannelParent::NotifyTrackingResource [this=%p]\n", this));
+  LOG(("HttpChannelParent::NotifyTrackingResource thirdparty=%d [this=%p]\n",
+       static_cast<int>(aIsThirdParty), this));
   if (!mIPCClosed) {
     MOZ_ASSERT(mBgParent);
-    Unused << mBgParent->OnNotifyTrackingResource();
+    Unused << mBgParent->OnNotifyTrackingResource(aIsThirdParty);
   }
   return NS_OK;
 }

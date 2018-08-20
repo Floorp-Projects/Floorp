@@ -380,9 +380,10 @@ HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled()
 }
 
 bool
-HttpBackgroundChannelParent::OnNotifyTrackingResource()
+HttpBackgroundChannelParent::OnNotifyTrackingResource(bool aIsThirdParty)
 {
-  LOG(("HttpBackgroundChannelParent::OnNotifyTrackingResource [this=%p]\n", this));
+  LOG(("HttpBackgroundChannelParent::OnNotifyTrackingResource thirdparty=%d "
+       "[this=%p]\n", static_cast<int>(aIsThirdParty), this));
   AssertIsInMainProcess();
 
   if (NS_WARN_IF(!mIPCOpened)) {
@@ -392,10 +393,11 @@ HttpBackgroundChannelParent::OnNotifyTrackingResource()
   if (!IsOnBackgroundThread()) {
     MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
-      NewRunnableMethod(
+      NewRunnableMethod<bool>(
         "net::HttpBackgroundChannelParent::OnNotifyTrackingResource",
         this,
-        &HttpBackgroundChannelParent::OnNotifyTrackingResource),
+        &HttpBackgroundChannelParent::OnNotifyTrackingResource,
+        aIsThirdParty),
       NS_DISPATCH_NORMAL);
 
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -403,7 +405,7 @@ HttpBackgroundChannelParent::OnNotifyTrackingResource()
     return NS_SUCCEEDED(rv);
   }
 
-  return SendNotifyTrackingResource();
+  return SendNotifyTrackingResource(aIsThirdParty);
 }
 
 bool

@@ -171,7 +171,8 @@ HttpBaseChannel::HttpBaseChannel()
   , mReqContentLength(0U)
   , mStatus(NS_OK)
   , mCanceled(false)
-  , mIsTrackingResource(false)
+  , mIsFirstPartyTrackingResource(false)
+  , mIsThirdPartyTrackingResource(false)
   , mLoadFlags(LOAD_NORMAL)
   , mCaps(0)
   , mClassOfService(0)
@@ -318,10 +319,18 @@ HttpBaseChannel::ReleaseMainThreadOnlyReferences()
 }
 
 void
-HttpBaseChannel::SetIsTrackingResource()
+HttpBaseChannel::SetIsTrackingResource(bool aIsThirdParty)
 {
-  LOG(("HttpBaseChannel::SetIsTrackingResource %p", this));
-  mIsTrackingResource = true;
+  LOG(("HttpBaseChannel::SetIsTrackingResource thirdparty=%d %p",
+       static_cast<int>(aIsThirdParty), this));
+
+  if (aIsThirdParty) {
+    MOZ_ASSERT(!mIsFirstPartyTrackingResource);
+    mIsThirdPartyTrackingResource = true;
+  } else {
+    MOZ_ASSERT(!mIsThirdPartyTrackingResource);
+    mIsFirstPartyTrackingResource = true;
+  }
 }
 
 nsresult
@@ -1552,18 +1561,39 @@ NS_IMETHODIMP HttpBaseChannel::SetTopLevelContentWindowId(uint64_t aWindowId)
 NS_IMETHODIMP
 HttpBaseChannel::GetIsTrackingResource(bool* aIsTrackingResource)
 {
-  *aIsTrackingResource = mIsTrackingResource;
+  MOZ_ASSERT(!(mIsFirstPartyTrackingResource && mIsThirdPartyTrackingResource));
+  *aIsTrackingResource =
+    mIsThirdPartyTrackingResource || mIsFirstPartyTrackingResource;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::OverrideTrackingResource(bool aIsTracking)
+HttpBaseChannel::GetIsThirdPartyTrackingResource(bool* aIsTrackingResource)
 {
-  LOG(("HttpBaseChannel::OverrideTrackingResource(%d) %p "
-       "mIsTrackingResource=%d",
-      (int) aIsTracking, this, (int) mIsTrackingResource));
+  MOZ_ASSERT(!(mIsFirstPartyTrackingResource && mIsThirdPartyTrackingResource));
+  *aIsTrackingResource = mIsThirdPartyTrackingResource;
+  return NS_OK;
+}
 
-  mIsTrackingResource = aIsTracking;
+NS_IMETHODIMP
+HttpBaseChannel::OverrideTrackingFlagsForDocumentCookieAccessor(nsIHttpChannel* aDocumentChannel)
+{
+  LOG(("HttpBaseChannel::OverrideTrackingFlagsForDocumentCookieAccessor() %p "
+       "mIsFirstPartyTrackingResource=%d  mIsThirdPartyTrackingResource=%d",
+       this, static_cast<int>(mIsFirstPartyTrackingResource),
+       static_cast<int>(mIsThirdPartyTrackingResource)));
+
+  // The semantics we'd like to achieve here are that document.cookie
+  // should follow the same rules that the document is subject to with
+  // regards to content blocking. Therefore we need to propagate the
+  // same flags from the document channel to the fake channel here.
+  if (aDocumentChannel->GetIsThirdPartyTrackingResource()) {
+    mIsThirdPartyTrackingResource = true;
+  } else {
+    mIsFirstPartyTrackingResource = true;
+  }
+
+  MOZ_ASSERT(!(mIsFirstPartyTrackingResource && mIsThirdPartyTrackingResource));
   return NS_OK;
 }
 

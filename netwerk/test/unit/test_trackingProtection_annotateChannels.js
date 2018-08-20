@@ -279,16 +279,16 @@ var tests = [
         loadingPrincipal: null, // system principal
         topWindowURI: defaultTopWindowURI,
         expectedTracking: true,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
+        expectedThrottleable: true,
       },
       {
         path: trackingOrigin + "/evil.js",
         loadingPrincipal: null, // system principal
         topWindowURI: defaultTopWindowURI,
         expectedTracking: true,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
+        expectedThrottleable: true,
       },
     ];
     // We add the doPriorityTest test here so that it only gets injected in the
