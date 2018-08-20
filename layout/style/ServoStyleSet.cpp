@@ -176,7 +176,7 @@ EnumerateShadowRoots(const nsIDocument& aDoc, const Functor& aCb)
   for (auto iter = shadowRoots.ConstIter(); !iter.Done(); iter.Next()) {
     ShadowRoot* root = iter.Get()->GetKey();
     MOZ_ASSERT(root);
-    MOZ_DIAGNOSTIC_ASSERT(root->IsComposedDocParticipant());
+    MOZ_DIAGNOSTIC_ASSERT(root->IsInComposedDoc());
     aCb(*root);
   }
 }
