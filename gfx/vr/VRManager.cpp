@@ -7,6 +7,7 @@
 
 #include "VRManager.h"
 #include "VRManagerParent.h"
+#include "VRGPUChild.h"
 #include "VRThread.h"
 #include "gfxVR.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -61,6 +62,7 @@ VRManager::VRManager()
   : mInitialized(false)
   , mVRDisplaysRequested(false)
   , mVRControllersRequested(false)
+  , mVRServiceStarted(false)
 {
   MOZ_COUNT_CTOR(VRManager);
   MOZ_ASSERT(sVRManagerSingleton == nullptr);
@@ -154,7 +156,12 @@ VRManager::Destroy()
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->Destroy();
   }
-
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
+  if (mVRService) {
+    mVRService->Stop();
+    mVRService = nullptr;
+  }
+#endif
   mInitialized = false;
 }
 
@@ -170,7 +177,18 @@ VRManager::Shutdown()
   if (mVRService) {
     mVRService->Stop();
   }
+  if (gfxPrefs::VRProcessEnabled()) {
+    RefPtr<Runnable> task = NS_NewRunnableFunction(
+      "VRGPUChild::SendStopVRService",
+      [] () -> void {
+        VRGPUChild* vrGPUChild = VRGPUChild::Get();
+        vrGPUChild->SendStopVRService();
+    });
+
+    NS_DispatchToMainThread(task.forget());
+  }
 #endif
+  mVRServiceStarted = false;
 }
 
 void
@@ -358,8 +376,22 @@ VRManager::RefreshVRDisplays(bool aMustDispatch)
   */
   if (mVRDisplaysRequested || aMustDispatch) {
 #if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
-    if (mVRService) {
-      mVRService->Start();
+    // Tell VR process to start VR service.
+    if (gfxPrefs::VRProcessEnabled() && !mVRServiceStarted) {
+      RefPtr<Runnable> task = NS_NewRunnableFunction(
+        "VRGPUChild::SendStartVRService",
+        [] () -> void {
+          VRGPUChild* vrGPUChild = VRGPUChild::Get();
+          vrGPUChild->SendStartVRService();
+      });
+
+      NS_DispatchToMainThread(task.forget());
+      mVRServiceStarted = true;
+    } else if (!gfxPrefs::VRProcessEnabled()){
+      if (mVRService) {
+        mVRService->Start();
+        mVRServiceStarted = true;
+      }
     }
 #endif
     EnumerateVRDisplays();

@@ -311,9 +311,6 @@ mozilla::ipc::IPCResult
 GPUParent::RecvInitVR(Endpoint<PVRGPUChild>&& aEndpoint)
 {
   gfx::VRGPUChild::InitForGPUProcess(std::move(aEndpoint));
-
-  // TODO:: Bug 1481327: init VR process shared memory handle via VRGPUChild::Get();
-
   return IPC_OK();
 }
 
