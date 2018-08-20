@@ -24,8 +24,8 @@ using namespace mozilla::net;
 #define SETPROPERTY_REPETITIONS (1000 * 1000)
 #define GETPROPERTY_REPETITIONS (1000 * 1000)
 
-static void ServoParsingBench() {
-
+static void ServoParsingBench()
+{
   auto css = AsBytes(MakeStringSpan(EXAMPLE_STYLESHEET));
   nsCString cssStr;
   cssStr.Append(css);
@@ -43,12 +43,14 @@ static void ServoParsingBench() {
                                      data,
                                      0,
                                      eCompatibility_FullStandards,
+                                     nullptr,
                                      nullptr)
         .Consume();
   }
 }
 
-static void ServoSetPropertyByIdBench(const nsACString& css) {
+static void ServoSetPropertyByIdBench(const nsACString& css)
+{
   RefPtr<RawServoDeclarationBlock> block = Servo_DeclarationBlock_CreateEmpty().Consume();
   RefPtr<URLExtraData> data = new URLExtraData(
     NullPrincipalURI::Create(), nullptr, NullPrincipal::CreateWithoutOriginAttributes());

@@ -261,6 +261,19 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Are style system use counters enabled?
+#ifdef RELEASE_OR_BETA
+#define PREF_VALUE false
+#else
+#define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "layout.css.use-counters.enabled",
+   layout_css_use_counters_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 // Is CSS error reporting enabled?
 VARCACHE_PREF(
   "layout.css.report_errors",
