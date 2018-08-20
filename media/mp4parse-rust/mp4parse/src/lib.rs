@@ -324,6 +324,7 @@ pub struct AudioSampleEntry {
 pub enum VideoCodecSpecific {
     AVCConfig(Vec<u8>),
     VPxConfig(VPxConfigBox),
+    AV1Config(AV1ConfigBox),
     ESDSConfig(Vec<u8>),
 }
 
@@ -348,6 +349,21 @@ pub struct VPxConfigBox {
     matrix: Option<u8>, // Available in 'VP Codec ISO Media File Format' version 1 only.
     video_full_range: bool,
     pub codec_init: Vec<u8>, // Empty for vp8/vp9.
+}
+
+#[derive(Debug, Clone)]
+pub struct AV1ConfigBox {
+    pub profile: u8,
+    pub level: u8,
+    pub tier: u8,
+    pub bit_depth: u8,
+    pub monochrome: bool,
+    pub chroma_subsampling_x: u8,
+    pub chroma_subsampling_y: u8,
+    pub chroma_sample_position: u8,
+    pub initial_presentation_delay_present: bool,
+    pub initial_presentation_delay_minus_one: u8,
+    pub config_obus: Vec<u8>,
 }
 
 #[derive(Debug, Clone)]
@@ -456,7 +472,7 @@ pub enum CodecType {
     Opus,
     H264,   // 14496-10
     MP4V,   // 14496-2
-    VP10,
+    AV1,
     VP9,
     VP8,
     EncryptedVideo,
@@ -1369,6 +1385,55 @@ fn read_vpcc<T: Read>(src: &mut BMFFBox<T>) -> Result<VPxConfigBox> {
     })
 }
 
+fn read_av1c<T: Read>(src: &mut BMFFBox<T>) -> Result<AV1ConfigBox> {
+    let marker_byte = src.read_u8()?;
+    if !(marker_byte & 0x80 == 0x80) {
+        return Err(Error::Unsupported("missing av1C marker bit"));
+    }
+    if !(marker_byte & 0x7f == 0x01) {
+        return Err(Error::Unsupported("missing av1C marker bit"));
+    }
+    let profile_byte = src.read_u8()?;
+    let profile = (profile_byte & 0xe0) >> 5;
+    let level = profile_byte & 0x1f;
+    let flags_byte = src.read_u8()?;
+    let tier = (flags_byte & 0x80) >> 7;
+    let bit_depth = match flags_byte & 0x60 {
+        0x60 => 12,
+        0x40 => 10,
+        _ => 8
+    };
+    let monochrome = flags_byte & 0x10 == 0x10;
+    let chroma_subsampling_x = (flags_byte & 0x08) >> 3;
+    let chroma_subsampling_y = (flags_byte & 0x04) >> 2;
+    let chroma_sample_position = flags_byte & 0x03;
+    let delay_byte = src.read_u8()?;
+    let initial_presentation_delay_present = (delay_byte & 0x10) == 0x10;
+    let initial_presentation_delay_minus_one =
+        if initial_presentation_delay_present {
+            delay_byte & 0x0f
+        } else {
+            0
+        };
+
+    let config_obus_size = src.bytes_left();
+    let config_obus = read_buf(src, config_obus_size as usize)?;
+
+    Ok(AV1ConfigBox {
+        profile,
+        level,
+        tier,
+        bit_depth,
+        monochrome,
+        chroma_subsampling_x,
+        chroma_subsampling_y,
+        chroma_sample_position,
+        initial_presentation_delay_present,
+        initial_presentation_delay_minus_one,
+        config_obus
+    })
+}
+
 fn read_flac_metadata<T: Read>(src: &mut BMFFBox<T>) -> Result<FLACMetadataBlock> {
     let temp = src.read_u8()?;
     let block_type = temp & 0x7f;
@@ -1761,6 +1826,7 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
         BoxType::MP4VideoSampleEntry => CodecType::MP4V,
         BoxType::VP8SampleEntry => CodecType::VP8,
         BoxType::VP9SampleEntry => CodecType::VP9,
+        BoxType::AV1SampleEntry => CodecType::AV1,
         BoxType::ProtectedVisualSampleEntry => CodecType::EncryptedVideo,
         _ => {
             debug!("Unsupported video codec, box {:?} found", name);
@@ -1810,6 +1876,13 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                     }
                 let vpcc = read_vpcc(&mut b)?;
                 codec_specific = Some(VideoCodecSpecific::VPxConfig(vpcc));
+            }
+            BoxType::AV1CodecConfigurationBox => {
+              if name != BoxType::AV1SampleEntry  {
+                return Err(Error::InvalidData("malformed video sample entry"));
+              }
+              let av1c = read_av1c(&mut b)?;
+              codec_specific = Some(VideoCodecSpecific::AV1Config(av1c));
             }
             BoxType::ESDBox => {
                 if name != BoxType::MP4VideoSampleEntry || codec_specific.is_some() {
