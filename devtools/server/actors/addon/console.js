@@ -4,7 +4,7 @@
 
 "use strict";
 
-var { ConsoleAPIListener } = require("devtools/server/actors/webconsole/listeners");
+var { ConsoleAPIListener } = require("devtools/server/actors/webconsole/listeners/console-api");
 var { update } = require("devtools/shared/DevToolsUtils");
 
 loader.lazyRequireGetter(this, "WebConsoleActor", "devtools/server/actors/webconsole", true);

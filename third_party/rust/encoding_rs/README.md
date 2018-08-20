@@ -68,6 +68,13 @@ Additionally, `encoding_rs::mem` does the following:
 * Converts ASCII to UTF-16 up to the first non-ASCII byte.
 * Converts UTF-16 to ASCII up to the first non-Basic Latin code unit.
 
+## Integration with `std::io`
+
+Notably, the above feature list doesn't include the capability to wrap
+a `std::io::Read`, decode it into UTF-8 and presenting the result via
+`std::io::Read`. The [`encoding_rs_io`](https://crates.io/crates/encoding_rs_io)
+crate provides that capability.
+
 ## Licensing
 
 Please see the file named
@@ -236,6 +243,22 @@ used in Firefox.
 - [ ] Add actually fast CJK encode options.
 
 ## Release Notes
+
+### 0.8.6
+
+* Temporarily removed the debug assertion added in version 0.8.5 from
+  `convert_utf16_to_latin1_lossy`.
+
+### 0.8.5
+
+* If debug assertions are enabled but fuzzing isn't enabled, lossy conversions
+  to Latin1 in the `mem` module assert that the input is in the range
+  U+0000...U+00FF (inclusive).
+* In the `mem` module provide conversions from Latin1 and UTF-16 to UTF-8
+  that can deal with insufficient output space. The idea is to use them
+  first with an allocation rounded up to jemalloc bucket size and do the
+  worst-case allocation only if the jemalloc rounding up was insufficient
+  as the first guess.
 
 ### 0.8.4
 

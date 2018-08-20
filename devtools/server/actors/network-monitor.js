@@ -7,7 +7,7 @@
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { networkMonitorSpec } = require("devtools/shared/specs/network-monitor");
 
-loader.lazyRequireGetter(this, "NetworkMonitor", "devtools/shared/webconsole/network-monitor", true);
+loader.lazyRequireGetter(this, "NetworkObserver", "devtools/server/actors/network-monitor/network-observer", true);
 loader.lazyRequireGetter(this, "NetworkEventActor", "devtools/server/actors/network-event", true);
 
 const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
@@ -41,8 +41,8 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
     // Immediately start watching for new request according to `filters`.
     // NetworkMonitor will call `onNetworkEvent` method.
-    this.netMonitor = new NetworkMonitor(filters, this);
-    this.netMonitor.init();
+    this.observer = new NetworkObserver(filters, this);
+    this.observer.init();
 
     this.stackTraces = new Set();
     this.onStackTraceAvailable = this.onStackTraceAvailable.bind(this);
@@ -71,9 +71,9 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
   destroy() {
     Actor.prototype.destroy.call(this);
 
-    if (this.netMonitor) {
-      this.netMonitor.destroy();
-      this.netMonitor = null;
+    if (this.observer) {
+      this.observer.destroy();
+      this.observer = null;
     }
 
     this.stackTraces.clear();
@@ -141,10 +141,10 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
   onSetPreference({ data }) {
     if ("saveRequestAndResponseBodies" in data) {
-      this.netMonitor.saveRequestAndResponseBodies = data.saveRequestAndResponseBodies;
+      this.observer.saveRequestAndResponseBodies = data.saveRequestAndResponseBodies;
     }
     if ("throttleData" in data) {
-      this.netMonitor.throttleData = data.throttleData;
+      this.observer.throttleData = data.throttleData;
     }
   },
 

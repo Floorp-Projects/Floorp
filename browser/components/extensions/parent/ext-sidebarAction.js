@@ -116,12 +116,9 @@ this.sidebarAction = class extends ExtensionAPI {
       if (button) {
         button.remove();
       }
-      let broadcaster = document.getElementById(this.id);
-      if (broadcaster) {
-        broadcaster.remove();
-      }
       let header = document.getElementById("sidebar-switcher-target");
       header.removeEventListener("SidebarShown", this.updateHeader);
+      SidebarUI.sidebars.delete(this.id);
     }
     windowTracker.removeOpenListener(this.windowOpenListener);
     windowTracker.removeCloseListener(this.windowCloseListener);
@@ -144,27 +141,18 @@ this.sidebarAction = class extends ExtensionAPI {
 
   createMenuItem(window, details) {
     let {document, SidebarUI} = window;
+    let keyId = `ext-key-id-${this.id}`;
 
-    // Use of the broadcaster allows browser-sidebar.js to properly manage the
-    // checkmarks in the menus.
-    let broadcaster = document.createXULElement("broadcaster");
-    broadcaster.setAttribute("id", this.id);
-    broadcaster.setAttribute("autoCheck", "false");
-    broadcaster.setAttribute("type", "checkbox");
-    broadcaster.setAttribute("group", "sidebar");
-    broadcaster.setAttribute("label", details.title);
-    broadcaster.setAttribute("sidebarurl", sidebarURL);
-    broadcaster.setAttribute("panel", details.panel);
-    if (this.browserStyle) {
-      broadcaster.setAttribute("browserStyle", "true");
-    }
-    broadcaster.setAttribute("extensionId", this.extension.id);
-    let id = `ext-key-id-${this.id}`;
-    broadcaster.setAttribute("key", id);
-
-    // oncommand gets attached to menuitem, so we use the observes attribute to
-    // get the command id we pass to SidebarUI.
-    broadcaster.setAttribute("oncommand", "SidebarUI.toggle(this.getAttribute('observes'))");
+    SidebarUI.sidebars.set(this.id, {
+      title: details.title,
+      url: sidebarURL,
+      menuId: this.menuId,
+      buttonId: this.buttonId,
+      // The following properties are specific to extensions
+      extensionId: this.extension.id,
+      panel: details.panel,
+      browserStyle: this.browserStyle,
+    });
 
     let header = document.getElementById("sidebar-switcher-target");
     header.addEventListener("SidebarShown", this.updateHeader);
@@ -172,18 +160,23 @@ this.sidebarAction = class extends ExtensionAPI {
     // Insert a menuitem for View->Show Sidebars.
     let menuitem = document.createXULElement("menuitem");
     menuitem.setAttribute("id", this.menuId);
-    menuitem.setAttribute("observes", this.id);
+    menuitem.setAttribute("type", "checkbox");
+    menuitem.setAttribute("label", details.title);
+    menuitem.setAttribute("oncommand", `SidebarUI.toggle("${this.id}");`);
     menuitem.setAttribute("class", "menuitem-iconic webextension-menuitem");
+    menuitem.setAttribute("key", keyId);
     this.setMenuIcon(menuitem, details);
 
     // Insert a toolbarbutton for the sidebar dropdown selector.
     let toolbarbutton = document.createXULElement("toolbarbutton");
     toolbarbutton.setAttribute("id", this.buttonId);
-    toolbarbutton.setAttribute("observes", this.id);
+    toolbarbutton.setAttribute("type", "checkbox");
+    toolbarbutton.setAttribute("label", details.title);
+    toolbarbutton.setAttribute("oncommand", `SidebarUI.show("${this.id}");`);
     toolbarbutton.setAttribute("class", "subviewbutton subviewbutton-iconic webextension-menuitem");
+    toolbarbutton.setAttribute("key", keyId);
     this.setMenuIcon(toolbarbutton, details);
 
-    document.getElementById("mainBroadcasterSet").appendChild(broadcaster);
     document.getElementById("viewSidebarMenu").appendChild(menuitem);
     let separator = document.getElementById("sidebar-extensions-separator");
     separator.parentNode.insertBefore(toolbarbutton, separator);
@@ -203,8 +196,7 @@ this.sidebarAction = class extends ExtensionAPI {
   }
 
   /**
-   * Update the broadcaster and menuitem `node` with the tab context data
-   * in `tabData`.
+   * Update the menu items with the tab context data in `tabData`.
    *
    * @param {ChromeWindow} window
    *        Browser chrome window.
@@ -219,19 +211,16 @@ this.sidebarAction = class extends ExtensionAPI {
       menu = this.createMenuItem(window, tabData);
     }
 
-    // Update the broadcaster first, it will update both menus.
-    let broadcaster = document.getElementById(this.id);
-    broadcaster.setAttribute("tooltiptext", title);
-    broadcaster.setAttribute("label", title);
-
-    let urlChanged = tabData.panel !== broadcaster.getAttribute("panel");
+    let urlChanged = tabData.panel !== SidebarUI.sidebars.get(this.id).panel;
     if (urlChanged) {
-      broadcaster.setAttribute("panel", tabData.panel);
+      SidebarUI.sidebars.get(this.id).panel = tabData.panel;
     }
 
+    menu.setAttribute("label", title);
     this.setMenuIcon(menu, tabData);
 
     let button = document.getElementById(this.buttonId);
+    button.setAttribute("label", title);
     this.setMenuIcon(button, tabData);
 
     // Update the sidebar if this extension is the current sidebar.
@@ -246,7 +235,7 @@ this.sidebarAction = class extends ExtensionAPI {
   }
 
   /**
-   * Update the broadcaster and menuitem for a given window.
+   * Update the menu items for a given window.
    *
    * @param {ChromeWindow} window
    *        Browser chrome window.
@@ -257,7 +246,7 @@ this.sidebarAction = class extends ExtensionAPI {
   }
 
   /**
-   * Update the broadcaster and menuitem when the extension changes the icon,
+   * Update the menu items when the extension changes the icon,
    * title, url, etc. If it only changes a parameter for a single tab, `target`
    * will be that tab. If it only changes a parameter for a single window,
    * `target` will be that window. Otherwise `target` will be null.

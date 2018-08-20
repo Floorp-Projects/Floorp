@@ -5,7 +5,7 @@
 
 const {
   ConsoleAPIListener
-} = require("devtools/server/actors/webconsole/listeners");
+} = require("devtools/server/actors/webconsole/listeners/console-api");
 const { on, once, off, emit, count, handler } = require("devtools/shared/event-emitter");
 
 const pass = (message) => ok(true, message);

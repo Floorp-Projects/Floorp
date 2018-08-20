@@ -288,5 +288,16 @@ CompositorManagerParent::RecvRemoveSharedSurface(const wr::ExternalImageId& aId)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+CompositorManagerParent::RecvNotifyMemoryPressure()
+{
+  nsTArray<PCompositorBridgeParent*> compositorBridges;
+  ManagedPCompositorBridgeParent(compositorBridges);
+  for (auto bridge : compositorBridges) {
+    static_cast<CompositorBridgeParentBase*>(bridge)->NotifyMemoryPressure();
+  }
+  return IPC_OK();
+}
+
 } // namespace layers
 } // namespace mozilla
