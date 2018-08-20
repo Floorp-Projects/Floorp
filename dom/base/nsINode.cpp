@@ -251,8 +251,8 @@ nsINode::GetTextEditorRootContent(TextEditor** aTextEditor)
 nsINode* nsINode::GetRootNode(const GetRootNodeOptions& aOptions)
 {
   if (aOptions.mComposed) {
-    if (nsIDocument* doc = GetComposedDoc()) {
-      return doc;
+    if (IsInComposedDoc() && GetComposedDoc()) {
+      return OwnerDoc();
     }
 
     nsINode* node = this;
@@ -457,6 +457,17 @@ nsINode::GetTextContentInternal(nsAString& aTextContent, OOMReporter& aError)
   SetDOMStringToNull(aTextContent);
 }
 
+nsIDocument*
+nsINode::GetComposedDocInternal() const
+{
+  MOZ_ASSERT(HasFlag(NODE_IS_IN_SHADOW_TREE) && IsContent(),
+             "Should only be caled on nodes in the shadow tree.");
+
+  ShadowRoot* containingShadow = AsContent()->GetContainingShadow();
+  return containingShadow && containingShadow->IsComposedDocParticipant() ?
+    OwnerDoc() : nullptr;
+}
+
 DocumentOrShadowRoot*
 nsINode::GetUncomposedDocOrConnectedShadowRoot() const
 {
@@ -464,7 +475,7 @@ nsINode::GetUncomposedDocOrConnectedShadowRoot() const
     return OwnerDoc();
   }
 
-  if (IsInComposedDoc() && IsInShadowTree()) {
+  if (IsInComposedDoc() && HasFlag(NODE_IS_IN_SHADOW_TREE)) {
     return AsContent()->GetContainingShadow();
   }
 
