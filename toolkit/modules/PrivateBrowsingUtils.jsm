@@ -60,10 +60,6 @@ var PrivateBrowsingUtils = {
     gPBMTPWhitelist.addToAllowList(aURI);
   },
 
-  existsInTrackingAllowlist(aURI) {
-    return gPBMTPWhitelist.existsInAllowList(aURI);
-  },
-
   removeFromTrackingAllowlist(aURI) {
     gPBMTPWhitelist.removeFromAllowList(aURI);
   },

@@ -35,17 +35,6 @@ PrivateBrowsingTrackingProtectionWhitelist.prototype = {
     Services.perms.remove(uri, "trackingprotection-pb");
   },
 
-  /**
-   * Check if the provided URI exists in the list of allowed tracking sites.
-   *
-   * @param uri nsIURI
-   *        The URI to add to the list.
-   */
-  existsInAllowList(uri) {
-    return Services.perms.testPermission(uri, "trackingprotection-pb") ==
-           Ci.nsIPermissionManager.ALLOW_ACTION;
-  },
-
   observe(subject, topic, data) {
     if (topic == "last-pb-context-exited") {
       Services.perms.removeByType("trackingprotection-pb");
