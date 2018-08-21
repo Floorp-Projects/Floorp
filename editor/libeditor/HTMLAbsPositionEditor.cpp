@@ -418,7 +418,11 @@ HTMLEditor::EndMoving()
   if (!selection) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  return CheckSelectionStateForAnonymousButtons(selection);
+  nsresult rv = RefereshEditingUI(*selection);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 nsresult
 HTMLEditor::SetFinalPosition(int32_t aX,

@@ -922,6 +922,12 @@ private:
    */
   const uint32_t mOutputChannels;
 
+  /**
+   * Global volume scale. Used when running tests so that the output is not too
+   * loud.
+   */
+  const float mGlobalVolume;
+
 #ifdef DEBUG
   /**
    * Used to assert when AppendMessage() runs ControlMessages synchronously.

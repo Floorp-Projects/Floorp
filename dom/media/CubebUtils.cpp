@@ -35,6 +35,7 @@
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
 #define PREF_CUBEB_BACKEND "media.cubeb.backend"
+#define PREF_CUBEB_OUTPUT_DEVICE "media.cubeb.output_device"
 #define PREF_CUBEB_LATENCY_PLAYBACK "media.cubeb_latency_playback_ms"
 #define PREF_CUBEB_LATENCY_MSG "media.cubeb_latency_msg_frames"
 // Allows to get something non-default for the preferred sample-rate, to allow
@@ -142,6 +143,7 @@ size_t sAudioIPCStackSize;
 #endif
 StaticAutoPtr<char> sBrandName;
 StaticAutoPtr<char> sCubebBackendName;
+StaticAutoPtr<char> sCubebOutputDeviceName;
 
 const char kBrandBundleURL[]      = "chrome://branding/locale/brand.properties";
 
@@ -187,6 +189,19 @@ static const uint32_t CUBEB_NORMAL_LATENCY_FRAMES = 1024;
 
 namespace CubebUtils {
 cubeb* GetCubebContextUnlocked();
+
+void GetPrefAndSetString(const char* aPref, StaticAutoPtr<char>& aStorage)
+{
+  nsAutoCString value;
+  Preferences::GetCString(aPref, value);
+  if (value.IsEmpty()) {
+    aStorage = nullptr;
+  } else {
+    aStorage = new char[value.Length() + 1];
+    PodCopy(aStorage.get(), value.get(), value.Length());
+    aStorage[value.Length()] = 0;
+  }
+}
 
 void PrefChanged(const char* aPref, void* aClosure)
 {
@@ -235,15 +250,10 @@ void PrefChanged(const char* aPref, void* aClosure)
     }
   } else if (strcmp(aPref, PREF_CUBEB_BACKEND) == 0) {
     StaticMutexAutoLock lock(sMutex);
-    nsAutoCString value;
-    Preferences::GetCString(aPref, value);
-    if (value.IsEmpty()) {
-      sCubebBackendName = nullptr;
-    } else {
-      sCubebBackendName = new char[value.Length() + 1];
-      PodCopy(sCubebBackendName.get(), value.get(), value.Length());
-      sCubebBackendName[value.Length()] = 0;
-    }
+    GetPrefAndSetString(aPref, sCubebBackendName);
+  } else if (strcmp(aPref, PREF_CUBEB_OUTPUT_DEVICE) == 0) {
+    StaticMutexAutoLock lock(sMutex);
+    GetPrefAndSetString(aPref, sCubebOutputDeviceName);
   } else if (strcmp(aPref, PREF_CUBEB_FORCE_NULL_CONTEXT) == 0) {
     StaticMutexAutoLock lock(sMutex);
     sCubebForceNullContext = Preferences::GetBool(aPref, false);
@@ -538,15 +548,11 @@ uint32_t GetCubebMSGLatencyInFrames(cubeb_stream_params * params)
 }
 
 static const char* gInitCallbackPrefs[] = {
-  PREF_VOLUME_SCALE,
-  PREF_CUBEB_LATENCY_PLAYBACK,
-  PREF_CUBEB_LATENCY_MSG,
-  PREF_CUBEB_BACKEND,
-  PREF_CUBEB_FORCE_NULL_CONTEXT,
-  PREF_CUBEB_SANDBOX,
-  PREF_AUDIOIPC_POOL_SIZE,
-  PREF_AUDIOIPC_STACK_SIZE,
-  nullptr,
+  PREF_VOLUME_SCALE,           PREF_CUBEB_OUTPUT_DEVICE,
+  PREF_CUBEB_LATENCY_PLAYBACK, PREF_CUBEB_LATENCY_MSG,
+  PREF_CUBEB_BACKEND,          PREF_CUBEB_FORCE_NULL_CONTEXT,
+  PREF_CUBEB_SANDBOX,          PREF_AUDIOIPC_POOL_SIZE,
+  PREF_AUDIOIPC_STACK_SIZE,    nullptr,
 };
 static const char* gCallbackPrefs[] = {
   PREF_CUBEB_FORCE_SAMPLE_RATE,
@@ -625,6 +631,12 @@ void GetCurrentBackend(nsAString& aBackend)
     }
   }
   aBackend.AssignLiteral("unknown");
+}
+
+char* GetForcedOutputDevice()
+{
+  StaticMutexAutoLock lock(sMutex);
+  return sCubebOutputDeviceName;
 }
 
 uint16_t ConvertCubebType(cubeb_device_type aType)

@@ -89,6 +89,15 @@ SimpleTest.waitForFocus(async function() {
       is(target.hasAttribute("_moz_resizing"), kResizable,
          kDescription + (kResizable ? "While enableObjectResizing is enabled, resizers should appear" :
                                       "Even while enableObjectResizing is enabled, resizers shouldn't appear"));
+
+      document.execCommand("enableObjectResizing", false, false);
+      ok(!target.hasAttribute("_moz_resizing"),
+         kDescription + "enableObjectResizing is disabled even while resizers are visible, resizers should disappear");
+
+      document.execCommand("enableObjectResizing", false, true);
+      is(target.hasAttribute("_moz_resizing"), kResizable,
+         kDescription + (kResizable ? "enableObjectResizing is enabled when resizable object is selected, resizers should appear" :
+                                      "Even if enableObjectResizing is enabled when non-resizable object is selected, resizers shouldn't appear"));
     }
   }
 
