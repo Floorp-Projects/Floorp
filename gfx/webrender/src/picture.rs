@@ -6,11 +6,11 @@ use api::{DeviceRect, FilterOp, MixBlendMode, PipelineId, PremultipliedColorF};
 use api::{DeviceIntRect, DeviceIntSize, DevicePoint, LayoutPoint, LayoutRect};
 use api::{DevicePixelScale, PictureIntPoint, PictureIntRect, PictureIntSize};
 use box_shadow::{BLUR_SAMPLE_SCALE};
-use clip_scroll_tree::SpatialNodeIndex;
-use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PrimitiveRunContext};
+use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState};
+use frame_builder::{PictureContext, PrimitiveContext};
 use gpu_cache::{GpuCacheHandle};
 use gpu_types::UvRectKind;
-use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
+use prim_store::{PrimitiveIndex, PrimitiveRun, LocalRectBuilder};
 use prim_store::{PrimitiveMetadata, Transform};
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
@@ -146,11 +146,6 @@ pub struct PicturePrimitive {
     // pages to a texture), this is the pipeline this
     // picture is the root of.
     pub frame_output_pipeline_id: Option<PipelineId>,
-    // The original reference spatial node for this picture.
-    // It is only different if this is part of a 3D
-    // rendering context.
-    pub original_spatial_node_index: SpatialNodeIndex,
-    pub real_local_rect: LayoutRect,
     // An optional cache handle for storing extra data
     // in the GPU cache, depending on the type of
     // picture.
@@ -182,7 +177,6 @@ impl PicturePrimitive {
         composite_mode: Option<PictureCompositeMode>,
         is_in_3d_context: bool,
         pipeline_id: PipelineId,
-        original_spatial_node_index: SpatialNodeIndex,
         frame_output_pipeline_id: Option<PipelineId>,
         apply_local_clip_rect: bool,
     ) -> Self {
@@ -193,8 +187,6 @@ impl PicturePrimitive {
             composite_mode,
             is_in_3d_context,
             frame_output_pipeline_id,
-            original_spatial_node_index,
-            real_local_rect: LayoutRect::zero(),
             extra_gpu_data_handle: GpuCacheHandle::new(),
             apply_local_clip_rect,
             pipeline_id,
@@ -202,14 +194,39 @@ impl PicturePrimitive {
         }
     }
 
+    pub fn take_context(
+        &mut self,
+        allow_subpixel_aa: bool,
+    ) -> PictureContext {
+        // TODO(lsalzman): allow overriding parent if intermediate surface is opaque
+        let allow_subpixel_aa = allow_subpixel_aa && self.allow_subpixel_aa();
+
+        let inflation_factor = match self.composite_mode {
+            Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
+                // The amount of extra space needed for primitives inside
+                // this picture to ensure the visibility check is correct.
+                BLUR_SAMPLE_SCALE * blur_radius
+            }
+            _ => {
+                0.0
+            }
+        };
+
+        PictureContext {
+            pipeline_id: self.pipeline_id,
+            prim_runs: mem::replace(&mut self.runs, Vec::new()),
+            apply_local_clip_rect: self.apply_local_clip_rect,
+            inflation_factor,
+            allow_subpixel_aa,
+        }
+    }
+
     pub fn add_primitive(
         &mut self,
         prim_index: PrimitiveIndex,
-        spatial_node_index: SpatialNodeIndex,
     ) {
         if let Some(ref mut run) = self.runs.last_mut() {
-            if run.spatial_node_index == spatial_node_index &&
-               run.base_prim_index.0 + run.count == prim_index.0 {
+            if run.base_prim_index.0 + run.count == prim_index.0 {
                 run.count += 1;
                 return;
             }
@@ -218,23 +235,17 @@ impl PicturePrimitive {
         self.runs.push(PrimitiveRun {
             base_prim_index: prim_index,
             count: 1,
-            spatial_node_index,
         });
     }
 
-    pub fn update_local_rect_and_set_runs(
+    pub fn restore_context(
         &mut self,
-        prim_run_rect: PrimitiveRunLocalRect,
-        prim_runs: Vec<PrimitiveRun>,
+        context: PictureContext,
+        local_rect_builder: LocalRectBuilder,
     ) -> LayoutRect {
-        self.runs = prim_runs;
+        self.runs = context.prim_runs;
 
-        let local_content_rect = prim_run_rect.mapping.local_rect;
-
-        self.real_local_rect = match prim_run_rect.original_mapping {
-            Some(mapping) => mapping.local_rect,
-            None => local_content_rect,
-        };
+        let local_content_rect = local_rect_builder.local_rect;
 
         match self.composite_mode {
             Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
@@ -277,7 +288,7 @@ impl PicturePrimitive {
     }
 
     // Disallow subpixel AA if an intermediate surface is needed.
-    pub fn allow_subpixel_aa(&self) -> bool {
+    fn allow_subpixel_aa(&self) -> bool {
         self.can_draw_directly_to_parent_surface()
     }
 
@@ -285,7 +296,7 @@ impl PicturePrimitive {
         &mut self,
         prim_index: PrimitiveIndex,
         prim_metadata: &mut PrimitiveMetadata,
-        prim_run_context: &PrimitiveRunContext,
+        prim_context: &PrimitiveContext,
         mut pic_state_for_children: PictureState,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
@@ -328,7 +339,7 @@ impl PicturePrimitive {
 
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
-                    &prim_run_context.transform,
+                    &prim_context.transform,
                     &device_rect,
                     frame_context.device_pixel_scale,
                 );
@@ -341,7 +352,8 @@ impl PicturePrimitive {
                 // relevant transforms haven't changed from frame to frame.
                 let surface = if pic_state_for_children.has_non_root_coord_system {
                     let picture_task = RenderTask::new_picture(
-                        RenderTaskLocation::Dynamic(None, Some(device_rect.size)),
+                        RenderTaskLocation::Dynamic(None, device_rect.size),
+                        prim_screen_rect.unclipped.size,
                         prim_index,
                         device_rect.origin,
                         pic_state_for_children.tasks,
@@ -397,7 +409,8 @@ impl PicturePrimitive {
                             let child_tasks = mem::replace(&mut pic_state_for_children.tasks, Vec::new());
 
                             let picture_task = RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, Some(device_rect.size)),
+                                RenderTaskLocation::Dynamic(None, device_rect.size),
+                                prim_screen_rect.unclipped.size,
                                 prim_index,
                                 device_rect.origin,
                                 child_tasks,
@@ -447,13 +460,14 @@ impl PicturePrimitive {
 
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
-                    &prim_run_context.transform,
+                    &prim_context.transform,
                     &device_rect,
                     frame_context.device_pixel_scale,
                 );
 
                 let mut picture_task = RenderTask::new_picture(
-                    RenderTaskLocation::Dynamic(None, Some(device_rect.size)),
+                    RenderTaskLocation::Dynamic(None, device_rect.size),
+                    prim_screen_rect.unclipped.size,
                     prim_index,
                     device_rect.origin,
                     pic_state_for_children.tasks,
@@ -516,13 +530,14 @@ impl PicturePrimitive {
             Some(PictureCompositeMode::MixBlend(..)) => {
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
-                    &prim_run_context.transform,
+                    &prim_context.transform,
                     &prim_screen_rect.clipped,
                     frame_context.device_pixel_scale,
                 );
 
                 let picture_task = RenderTask::new_picture(
-                    RenderTaskLocation::Dynamic(None, Some(prim_screen_rect.clipped.size)),
+                    RenderTaskLocation::Dynamic(None, prim_screen_rect.clipped.size),
+                    prim_screen_rect.unclipped.size,
                     prim_index,
                     prim_screen_rect.clipped.origin,
                     pic_state_for_children.tasks,
@@ -551,13 +566,14 @@ impl PicturePrimitive {
 
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
-                    &prim_run_context.transform,
+                    &prim_context.transform,
                     &prim_screen_rect.clipped,
                     frame_context.device_pixel_scale,
                 );
 
                 let picture_task = RenderTask::new_picture(
-                    RenderTaskLocation::Dynamic(None, Some(prim_screen_rect.clipped.size)),
+                    RenderTaskLocation::Dynamic(None, prim_screen_rect.clipped.size),
+                    prim_screen_rect.unclipped.size,
                     prim_index,
                     prim_screen_rect.clipped.origin,
                     pic_state_for_children.tasks,
@@ -571,13 +587,14 @@ impl PicturePrimitive {
             Some(PictureCompositeMode::Blit) | None => {
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
-                    &prim_run_context.transform,
+                    &prim_context.transform,
                     &prim_screen_rect.clipped,
                     frame_context.device_pixel_scale,
                 );
 
                 let picture_task = RenderTask::new_picture(
-                    RenderTaskLocation::Dynamic(None, Some(prim_screen_rect.clipped.size)),
+                    RenderTaskLocation::Dynamic(None, prim_screen_rect.clipped.size),
+                    prim_screen_rect.unclipped.size,
                     prim_index,
                     prim_screen_rect.clipped.origin,
                     pic_state_for_children.tasks,

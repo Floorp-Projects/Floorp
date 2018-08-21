@@ -26,15 +26,21 @@
 #include "util/Text.h"
 #include "vm/Printer.h"
 
+class JSAutoByteString;
 class JSDependentString;
 class JSExtensibleString;
 class JSExternalString;
 class JSInlineString;
 class JSRope;
 
-namespace js {
+namespace JS {
 
 class AutoStableStringChars;
+
+} // namespace JS
+
+namespace js {
+
 class StaticStrings;
 class PropertyName;
 
@@ -810,7 +816,7 @@ static_assert(sizeof(JSRope) == sizeof(JSString),
 class JSLinearString : public JSString
 {
     friend class JSString;
-    friend class js::AutoStableStringChars;
+    friend class JS::AutoStableStringChars;
     friend class js::TenuringTracer;
 
     /* Vacuous and therefore unimplemented. */

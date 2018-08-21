@@ -9,8 +9,8 @@ CBINDGEN="${TOOLTOOL_DIR}/cbindgen/cbindgen"
 
 export NODEJS="${TOOLTOOL_DIR}/node/bin/node"
 
-CC="${TOOLTOOL_DIR}/gcc/bin/gcc"
-CXX="${TOOLTOOL_DIR}/gcc/bin/g++"
+CC="${TOOLTOOL_DIR}/clang/bin/clang"
+CXX="${TOOLTOOL_DIR}/clang/bin/clang++"
 
 mk_add_options "export PATH=${TOOLTOOL_DIR}/gcc/bin:${PATH}"
 mk_add_options "export LD_LIBRARY_PATH=${TOOLTOOL_DIR}/gcc/lib64:${TOOLTOOL_DIR}/gcc/lib32:${TOOLTOOL_DIR}/gcc/lib"

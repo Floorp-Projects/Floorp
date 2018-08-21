@@ -15,6 +15,8 @@
 
 #include "vm/JSObject-inl.h"
 
+class JSAutoByteString;
+
 namespace js {
 
 inline const char*

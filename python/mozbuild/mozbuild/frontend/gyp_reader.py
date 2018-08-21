@@ -263,20 +263,24 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
                     # NSPR_INCLUDE_DIR gets passed into the NSS build this way.
                     include = '!/' + mozpath.relpath(include, config.topobjdir)
                 else:
-                  # moz.build expects all LOCAL_INCLUDES to exist, so ensure they do.
-                  #
-                  # NB: gyp files sometimes have actual absolute paths (e.g.
-                  # /usr/include32) and sometimes paths that moz.build considers
-                  # absolute, i.e. starting from topsrcdir. There's no good way
-                  # to tell them apart here, and the actual absolute paths are
-                  # likely bogus. In any event, actual absolute paths will be
-                  # filtered out by trying to find them in topsrcdir.
-                  if include.startswith('/'):
-                      resolved = mozpath.abspath(mozpath.join(config.topsrcdir, include[1:]))
-                  else:
-                      resolved = mozpath.abspath(mozpath.join(mozpath.dirname(build_file), include))
-                  if not os.path.exists(resolved):
-                      continue
+                    # moz.build expects all LOCAL_INCLUDES to exist, so ensure they do.
+                    #
+                    # NB: gyp files sometimes have actual absolute paths (e.g.
+                    # /usr/include32) and sometimes paths that moz.build considers
+                    # absolute, i.e. starting from topsrcdir. There's no good way
+                    # to tell them apart here, and the actual absolute paths are
+                    # likely bogus. In any event, actual absolute paths will be
+                    # filtered out by trying to find them in topsrcdir.
+                    #
+                    # We do allow !- and %-prefixed paths, assuming they come
+                    # from moz.build and will be handled the same way as if they
+                    # were given to LOCAL_INCLUDES in moz.build.
+                    if include.startswith('/'):
+                        resolved = mozpath.abspath(mozpath.join(config.topsrcdir, include[1:]))
+                    elif not include.startswith(('!', '%')):
+                        resolved = mozpath.abspath(mozpath.join(mozpath.dirname(build_file), include))
+                    if not include.startswith(('!', '%')) and not os.path.exists(resolved):
+                        continue
                 context['LOCAL_INCLUDES'] += [include]
 
             context['ASFLAGS'] = target_conf.get('asflags_mozilla', [])

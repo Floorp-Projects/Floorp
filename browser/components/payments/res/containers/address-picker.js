@@ -100,7 +100,10 @@ export default class AddressPicker extends RichPicker {
         }
       }
 
-      optionEl.textContent = AddressOption.formatSingleLineLabel(address);
+      // fieldNames getter is not used here because it returns a default array with
+      // attributes even when "address-fields" observed attribute is null.
+      let addressFields = this.getAttribute("address-fields");
+      optionEl.textContent = AddressOption.formatSingleLineLabel(address, addressFields);
       desiredOptions.push(optionEl);
     }
 

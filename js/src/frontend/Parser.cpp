@@ -37,6 +37,7 @@
 #include "frontend/FoldConstants.h"
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
+#include "js/AutoByteString.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -425,7 +426,7 @@ bool
 UsedNameTracker::noteUse(JSContext* cx, JSAtom* name, uint32_t scriptId, uint32_t scopeId)
 {
     if (UsedNameMap::AddPtr p = map_.lookupForAdd(name)) {
-        if (!p->value().noteUsedInScope(scriptId, scopeId))
+        if (!p || !p->value().noteUsedInScope(scriptId, scopeId))
             return false;
     } else {
         UsedNameInfo info(cx);

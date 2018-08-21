@@ -37,6 +37,7 @@
 #include "gc/Marking.h"
 #include "jit/Ion.h"
 #include "jit/PcScriptCache.h"
+#include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #ifdef JS_SIMULATOR_ARM64

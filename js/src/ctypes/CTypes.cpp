@@ -40,6 +40,8 @@
 #include "gc/Policy.h"
 #include "gc/Zone.h"
 #include "jit/AtomicOperations.h"
+#include "js/AutoByteString.h"
+#include "js/StableStringChars.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
 #include "util/Windows.h"
@@ -54,6 +56,7 @@ using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 
 using JS::AutoCheckCannotGC;
+using JS::AutoStableStringChars;
 
 namespace js {
 namespace ctypes {

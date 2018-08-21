@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from import_module.jsm */
-/* import-globals-from import_sub_module.jsm */
 
 /**
  * Ensures that tests can import a module in the same folder through:
@@ -19,7 +18,4 @@ function run_test() {
   ChromeUtils.import(uri);
   Assert.ok(MODULE_URI == uri);
   Assert.ok(MODULE_IMPORTED);
-  Assert.ok(SUBMODULE_IMPORTED);
-  Assert.ok(same_scope);
-  Assert.ok(SUBMODULE_IMPORTED_TO_SCOPE);
 }

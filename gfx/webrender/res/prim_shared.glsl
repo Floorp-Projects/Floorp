@@ -42,6 +42,7 @@ varying vec4 vClipMaskUv;
 #define COLOR_MODE_SUBPX_DUAL_SOURCE  6
 #define COLOR_MODE_BITMAP             7
 #define COLOR_MODE_COLOR_BITMAP       8
+#define COLOR_MODE_IMAGE              9
 
 uniform HIGHP_SAMPLER_FLOAT sampler2D sPrimitiveHeadersF;
 uniform HIGHP_SAMPLER_FLOAT isampler2D sPrimitiveHeadersI;

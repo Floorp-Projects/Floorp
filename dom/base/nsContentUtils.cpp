@@ -20,6 +20,7 @@
 #include "imgRequestProxy.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/JSON.h"
 #include "js/Value.h"
 #include "Layers.h"
 #include "nsAppRunner.h"

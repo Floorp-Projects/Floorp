@@ -8,6 +8,7 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/TDZCheckCache.h"
+#include "js/AutoByteString.h"
 
 using namespace js;
 using namespace js::frontend;

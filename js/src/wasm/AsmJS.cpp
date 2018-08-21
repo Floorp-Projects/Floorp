@@ -32,8 +32,10 @@
 #include "builtin/String.h"
 #include "frontend/Parser.h"
 #include "gc/Policy.h"
+#include "js/AutoByteString.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
+#include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
@@ -70,6 +72,7 @@ using mozilla::PodZero;
 using mozilla::PositiveInfinity;
 using mozilla::Unused;
 using JS::AsmJSOption;
+using JS::AutoStableStringChars;
 using JS::GenericNaN;
 
 /*****************************************************************************/

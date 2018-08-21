@@ -1162,6 +1162,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "VideoStreamTrack", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "VisualViewport", insecureContext: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "VRDisplay", insecureContext: true, releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "VRDisplayCapabilities", insecureContext: true, releaseNonWindows: false},
