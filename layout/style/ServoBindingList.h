@@ -71,7 +71,7 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8BytesAsync,
                    mozilla::css::SheetParsingMode parsing_mode,
                    uint32_t line_number_offset,
                    nsCompatibility quirks_mode,
-                   StyleUseCountersBorrowedOrNull use_counters)
+                   bool should_record_use_counters)
 SERVO_BINDING_FUNC(Servo_StyleSheet_Empty, RawServoStyleSheetContentsStrong,
                    mozilla::css::SheetParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
@@ -908,6 +908,11 @@ SERVO_BINDING_FUNC(Servo_Property_GetCSSValuesForProperty, void,
                    const nsACString* name, bool* found, nsTArray<nsString>* result)
 SERVO_BINDING_FUNC(Servo_PseudoClass_GetStates, uint64_t,
                    const nsACString* name)
+SERVO_BINDING_FUNC(Servo_UseCounters_Create, StyleUseCounters*)
+SERVO_BINDING_FUNC(Servo_UseCounters_Drop, void, StyleUseCountersOwned)
+SERVO_BINDING_FUNC(Servo_UseCounters_Merge, void,
+                   StyleUseCountersBorrowed doc_counters,
+                   StyleUseCountersBorrowed sheet_counters)
 SERVO_BINDING_FUNC(Servo_IsCssPropertyRecordedInUseCounter, bool,
                    StyleUseCountersBorrowed,
                    const nsACString* property,

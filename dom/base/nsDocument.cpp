@@ -1520,6 +1520,10 @@ nsIDocument::nsIDocument()
 {
   SetIsInDocument();
   SetIsConnected(true);
+
+  if (StaticPrefs::layout_css_use_counters_enabled()) {
+    mStyleUseCounters.reset(Servo_UseCounters_Create());
+  }
 }
 
 nsDocument::nsDocument(const char* aContentType)
@@ -13436,18 +13440,4 @@ nsIDocument::ReportShadowDOMUsage()
   }
 
   mHasReportedShadowDOMUsage = true;
-}
-
-const StyleUseCounters*
-nsIDocument::GetStyleUseCounters()
-{
-  if (!StaticPrefs::layout_css_use_counters_enabled()) {
-    return nullptr;
-  }
-
-  if (MOZ_UNLIKELY(!mStyleUseCounters)) {
-    mStyleUseCounters = Servo_UseCounters_Create().Consume();
-  }
-
-  return mStyleUseCounters;
 }
