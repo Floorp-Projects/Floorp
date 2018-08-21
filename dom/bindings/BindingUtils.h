@@ -8,6 +8,7 @@
 #define mozilla_dom_BindingUtils_h__
 
 #include "jsfriendapi.h"
+#include "js/AutoByteString.h"
 #include "js/Wrapper.h"
 #include "js/Conversions.h"
 #include "mozilla/ArrayUtils.h"

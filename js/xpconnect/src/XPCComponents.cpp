@@ -15,6 +15,8 @@
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
 #include "jsfriendapi.h"
+#include "js/AutoByteString.h"
+#include "js/SavedFrameAPI.h"
 #include "js/StructuredClone.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"

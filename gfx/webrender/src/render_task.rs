@@ -178,7 +178,7 @@ impl ops::IndexMut<RenderTaskId> for RenderTaskTree {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTaskLocation {
     Fixed(DeviceIntRect),
-    Dynamic(Option<(DeviceIntPoint, RenderTargetIndex)>, Option<DeviceIntSize>),
+    Dynamic(Option<(DeviceIntPoint, RenderTargetIndex)>, DeviceIntSize),
     TextureCache(SourceTexture, i32, DeviceIntRect),
 }
 
@@ -202,6 +202,7 @@ pub struct ClipRegionTask {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureTask {
     pub prim_index: PrimitiveIndex,
+    pub can_merge: bool,
     pub content_origin: DeviceIntPoint,
     pub uv_rect_handle: GpuCacheHandle,
     uv_rect_kind: UvRectKind,
@@ -330,7 +331,7 @@ impl RenderTask {
         render_task_sanity_check(&size);
 
         RenderTask {
-            location: RenderTaskLocation::Dynamic(None, Some(size)),
+            location: RenderTaskLocation::Dynamic(None, size),
             children,
             kind,
             clear_mode,
@@ -340,21 +341,22 @@ impl RenderTask {
 
     pub fn new_picture(
         location: RenderTaskLocation,
+        unclipped_size: DeviceIntSize,
         prim_index: PrimitiveIndex,
         content_origin: DeviceIntPoint,
         children: Vec<RenderTaskId>,
         uv_rect_kind: UvRectKind,
     ) -> Self {
         let size = match location {
-            RenderTaskLocation::Dynamic(_, Some(size)) => Some(size),
-            RenderTaskLocation::Fixed(rect) => Some(rect.size),
-            RenderTaskLocation::TextureCache(_, _, rect) => Some(rect.size),
-            _ => None,
+            RenderTaskLocation::Dynamic(_, size) => size,
+            RenderTaskLocation::Fixed(rect) => rect.size,
+            RenderTaskLocation::TextureCache(_, _, rect) => rect.size,
         };
 
-        if let Some(size) = size {
-            render_task_sanity_check(&size);
-        }
+        render_task_sanity_check(&size);
+
+        let can_merge = size.width >= unclipped_size.width &&
+                        size.height >= unclipped_size.height;
 
         RenderTask {
             location,
@@ -362,6 +364,7 @@ impl RenderTask {
             kind: RenderTaskKind::Picture(PictureTask {
                 prim_index,
                 content_origin,
+                can_merge,
                 uv_rect_handle: GpuCacheHandle::new(),
                 uv_rect_kind,
             }),
@@ -770,10 +773,7 @@ impl RenderTask {
     pub fn get_dynamic_size(&self) -> DeviceIntSize {
         match self.location {
             RenderTaskLocation::Fixed(..) => DeviceIntSize::zero(),
-            RenderTaskLocation::Dynamic(_, Some(size)) => size,
-            RenderTaskLocation::Dynamic(_, None) => {
-                panic!("bug: render task must have assigned size by now");
-            }
+            RenderTaskLocation::Dynamic(_, size) => size,
             RenderTaskLocation::TextureCache(_, _, rect) => rect.size,
         }
     }
@@ -798,7 +798,6 @@ impl RenderTask {
             //           to mark a task as unused explicitly. This
             //           would allow us to restore this debug check.
             RenderTaskLocation::Dynamic(Some((origin, target_index)), size) => {
-                let size = size.expect("bug: must be assigned a size by now");
                 (DeviceIntRect::new(origin, size), target_index)
             }
             RenderTaskLocation::Dynamic(None, _) => {
@@ -1096,10 +1095,7 @@ impl RenderTaskCache {
                     RenderTaskLocation::TextureCache(..) => {
                         panic!("BUG: dynamic task was expected");
                     }
-                    RenderTaskLocation::Dynamic(_, None) => {
-                        panic!("BUG: must have assigned size by now");
-                    }
-                    RenderTaskLocation::Dynamic(_, Some(size)) => size,
+                    RenderTaskLocation::Dynamic(_, size) => size,
                 };
 
                 // Select the right texture page to allocate from.

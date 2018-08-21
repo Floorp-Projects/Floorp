@@ -55,12 +55,15 @@
 #include "gc/WeakMap.h"
 #include "jit/JitCommon.h"
 #include "jit/JitSpewer.h"
+#include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/Initialization.h"
+#include "js/JSON.h"
 #include "js/Proxy.h"
 #include "js/SliceBudget.h"
+#include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
@@ -107,6 +110,8 @@ using namespace js::gc;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 using mozilla::Some;
+
+using JS::AutoStableStringChars;
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list*)(ap))

@@ -301,7 +301,7 @@ fn request_render_task_from_pathfinder(glyph_key: &GlyphKey,
     let subpixel_offset = TypedPoint2D::new(glyph_subpixel_offset as f32, 0.0);
     let embolden_amount = compute_embolden_amount(size.to_f32_px());
 
-    let location = RenderTaskLocation::Dynamic(None, Some(*glyph_size));
+    let location = RenderTaskLocation::Dynamic(None, *glyph_size);
     let glyph_render_task = RenderTask::new_glyph(location,
                                                   mesh,
                                                   &glyph_origin,

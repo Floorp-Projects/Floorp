@@ -11,15 +11,13 @@ function run_test()
   var ifacePointer = Cc["@mozilla.org/supports-interface-pointer;1"]
       .createInstance(Ci.nsISupportsInterfacePointer);
 
-  var sb = Cu.Sandbox(global);
+  var sb = Cu.Sandbox(global, {wantGlobalProperties: ["ChromeUtils"]});
   sb.prop = "prop"
   sb.ifacePointer = ifacePointer
 
   var refToObjFromSb = Cu.evalInSandbox(`
-    Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
     ifacePointer.data = {
-      QueryInterface: XPCOMUtils.generateQI([]),
+      QueryInterface: ChromeUtils.generateQI([]),
       wrappedJSObject: {foo: "bar"},
     };
 

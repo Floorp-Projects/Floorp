@@ -17,7 +17,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Variant.h"
 
-#include <iterator>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -29,9 +28,11 @@
 #include "js/CallArgs.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
+#include "js/ErrorReport.h"
 #include "js/GCVector.h"
 #include "js/HashTable.h"
 #include "js/Id.h"
+#include "js/MemoryFunctions.h"
 #include "js/Principals.h"
 #include "js/Realm.h"
 #include "js/RefCounted.h"
@@ -221,51 +222,6 @@ typedef void
 (* JSPromiseRejectionTrackerCallback)(JSContext* cx, JS::HandleObject promise,
                                       JS::PromiseRejectionHandlingState state,
                                       void* data);
-
-/**
- * Possible exception types. These types are part of a JSErrorFormatString
- * structure. They define which error to throw in case of a runtime error.
- *
- * JSEXN_WARN is used for warnings in js.msg files (for instance because we
- * don't want to prepend 'Error:' to warning messages). This value can go away
- * if we ever decide to use an entirely separate mechanism for warnings.
- */
-typedef enum JSExnType {
-    JSEXN_ERR,
-    JSEXN_FIRST = JSEXN_ERR,
-        JSEXN_INTERNALERR,
-        JSEXN_EVALERR,
-        JSEXN_RANGEERR,
-        JSEXN_REFERENCEERR,
-        JSEXN_SYNTAXERR,
-        JSEXN_TYPEERR,
-        JSEXN_URIERR,
-        JSEXN_DEBUGGEEWOULDRUN,
-        JSEXN_WASMCOMPILEERROR,
-        JSEXN_WASMLINKERROR,
-        JSEXN_WASMRUNTIMEERROR,
-    JSEXN_ERROR_LIMIT,
-    JSEXN_WARN = JSEXN_ERROR_LIMIT,
-    JSEXN_NOTE,
-    JSEXN_LIMIT
-} JSExnType;
-
-struct JSErrorFormatString {
-     /** The error message name in ASCII. */
-    const char* name;
-
-    /** The error format string in ASCII. */
-    const char* format;
-
-    /** The number of arguments to expand in the formatted error message. */
-    uint16_t argCount;
-
-    /** One of the JSExnType constants above. */
-    int16_t exnType;
-};
-
-typedef const JSErrorFormatString*
-(* JSErrorCallback)(void* userRef, const unsigned errorNumber);
 
 typedef bool
 (* JSLocaleToUpperCase)(JSContext* cx, JS::HandleString src, JS::MutableHandleValue rval);
@@ -1310,30 +1266,6 @@ struct JSCTypesCallbacks {
 extern JS_PUBLIC_API(void)
 JS_SetCTypesCallbacks(JSObject* ctypesObj, const JSCTypesCallbacks* callbacks);
 #endif
-
-extern JS_PUBLIC_API(void*)
-JS_malloc(JSContext* cx, size_t nbytes);
-
-extern JS_PUBLIC_API(void*)
-JS_realloc(JSContext* cx, void* p, size_t oldBytes, size_t newBytes);
-
-/**
- * A wrapper for js_free(p) that may delay js_free(p) invocation as a
- * performance optimization.
- * cx may be nullptr.
- */
-extern JS_PUBLIC_API(void)
-JS_free(JSContext* cx, void* p);
-
-/**
- * A wrapper for js_free(p) that may delay js_free(p) invocation as a
- * performance optimization as specified by the given JSFreeOp instance.
- */
-extern JS_PUBLIC_API(void)
-JS_freeop(JSFreeOp* fop, void* p);
-
-extern JS_PUBLIC_API(void)
-JS_updateMallocCounter(JSContext* cx, size_t nbytes);
 
 /*
  * A replacement for MallocAllocPolicy that allocates in the JS heap and adds no
@@ -4664,19 +4596,6 @@ JS_DecodeBytes(JSContext* cx, const char* src, size_t srclen, char16_t* dst,
                size_t* dstlenp);
 
 /**
- * A variation on JS_EncodeCharacters where a null terminated string is
- * returned that you are expected to call JS_free on when done.
- */
-JS_PUBLIC_API(char*)
-JS_EncodeString(JSContext* cx, JSString* str);
-
-/**
- * Same behavior as JS_EncodeString(), but encode into UTF-8 string
- */
-JS_PUBLIC_API(char*)
-JS_EncodeStringToUTF8(JSContext* cx, JS::HandleString str);
-
-/**
  * Get number of bytes in the string encoding (without accounting for a
  * terminating zero bytes. The function returns (size_t) -1 if the string
  * can not be encoded into bytes and reports an error using cx accordingly.
@@ -4694,75 +4613,6 @@ JS_GetStringEncodingLength(JSContext* cx, JSString* str);
  */
 MOZ_MUST_USE JS_PUBLIC_API(bool)
 JS_EncodeStringToBuffer(JSContext* cx, JSString* str, char* buffer, size_t length);
-
-class MOZ_RAII JSAutoByteString
-{
-  public:
-    JSAutoByteString(JSContext* cx, JSString* str
-                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mBytes(JS_EncodeString(cx, str))
-    {
-        MOZ_ASSERT(cx);
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    explicit JSAutoByteString(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
-      : mBytes(nullptr)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    ~JSAutoByteString() {
-        JS_free(nullptr, mBytes);
-    }
-
-    /* Take ownership of the given byte array. */
-    void initBytes(JS::UniqueChars&& bytes) {
-        MOZ_ASSERT(!mBytes);
-        mBytes = bytes.release();
-    }
-
-    char* encodeLatin1(JSContext* cx, JSString* str) {
-        MOZ_ASSERT(!mBytes);
-        MOZ_ASSERT(cx);
-        mBytes = JS_EncodeString(cx, str);
-        return mBytes;
-    }
-
-    char* encodeUtf8(JSContext* cx, JS::HandleString str) {
-        MOZ_ASSERT(!mBytes);
-        MOZ_ASSERT(cx);
-        mBytes = JS_EncodeStringToUTF8(cx, str);
-        return mBytes;
-    }
-
-    void clear() {
-        js_free(mBytes);
-        mBytes = nullptr;
-    }
-
-    char* ptr() const {
-        return mBytes;
-    }
-
-    bool operator!() const {
-        return !mBytes;
-    }
-
-    size_t length() const {
-        if (!mBytes)
-            return 0;
-        return strlen(mBytes);
-    }
-
-  private:
-    char* mBytes;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    /* Copy and assignment are not supported. */
-    JSAutoByteString(const JSAutoByteString& another);
-    JSAutoByteString& operator=(const JSAutoByteString& another);
-};
 
 /************************************************************************/
 /*
@@ -4872,61 +4722,6 @@ JS_PUBLIC_API(bool)
 PropertySpecNameToPermanentId(JSContext* cx, const char* name, jsid* idp);
 
 } /* namespace JS */
-
-/************************************************************************/
-/*
- * JSON functions
- */
-typedef bool (* JSONWriteCallback)(const char16_t* buf, uint32_t len, void* data);
-
-/**
- * JSON.stringify as specified by ES5.
- */
-JS_PUBLIC_API(bool)
-JS_Stringify(JSContext* cx, JS::MutableHandleValue value, JS::HandleObject replacer,
-             JS::HandleValue space, JSONWriteCallback callback, void* data);
-
-namespace JS {
-
-/**
- * An API akin to JS_Stringify but with the goal of not having observable
- * side-effects when the stringification is performed.  This means it does not
- * allow a replacer or a custom space, and has the following constraints on its
- * input:
- *
- * 1) The input must be a plain object or array, not an abitrary value.
- * 2) Every value in the graph reached by the algorithm starting with this
- *    object must be one of the following: null, undefined, a string (NOT a
- *    string object!), a boolean, a finite number (i.e. no NaN or Infinity or
- *    -Infinity), a plain object with no accessor properties, or an Array with
- *    no holes.
- *
- * The actual behavior differs from JS_Stringify only in asserting the above and
- * NOT attempting to get the "toJSON" property from things, since that could
- * clearly have side-effects.
- */
-JS_PUBLIC_API(bool)
-ToJSONMaybeSafely(JSContext* cx, JS::HandleObject input,
-                  JSONWriteCallback callback, void* data);
-
-} /* namespace JS */
-
-/**
- * JSON.parse as specified by ES5.
- */
-JS_PUBLIC_API(bool)
-JS_ParseJSON(JSContext* cx, const char16_t* chars, uint32_t len, JS::MutableHandleValue vp);
-
-JS_PUBLIC_API(bool)
-JS_ParseJSON(JSContext* cx, JS::HandleString str, JS::MutableHandleValue vp);
-
-JS_PUBLIC_API(bool)
-JS_ParseJSONWithReviver(JSContext* cx, const char16_t* chars, uint32_t len, JS::HandleValue reviver,
-                        JS::MutableHandleValue vp);
-
-JS_PUBLIC_API(bool)
-JS_ParseJSONWithReviver(JSContext* cx, JS::HandleString str, JS::HandleValue reviver,
-                        JS::MutableHandleValue vp);
 
 /************************************************************************/
 
@@ -5117,208 +4912,6 @@ JS_ReportOutOfMemory(JSContext* cx);
  */
 extern JS_PUBLIC_API(void)
 JS_ReportAllocationOverflow(JSContext* cx);
-
-/**
- * Base class that implements parts shared by JSErrorReport and
- * JSErrorNotes::Note.
- */
-class JSErrorBase
-{
-    // The (default) error message.
-    // If ownsMessage_ is true, the it is freed in destructor.
-    JS::ConstUTF8CharsZ message_;
-
-  public:
-    JSErrorBase()
-      : filename(nullptr), lineno(0), column(0),
-        errorNumber(0),
-        ownsMessage_(false)
-    {}
-
-    ~JSErrorBase() {
-        freeMessage();
-    }
-
-    // Source file name, URL, etc., or null.
-    const char* filename;
-
-    // Source line number.
-    unsigned lineno;
-
-    // Zero-based column index in line.
-    unsigned column;
-
-    // the error number, e.g. see js.msg.
-    unsigned errorNumber;
-
-  private:
-    bool ownsMessage_ : 1;
-
-  public:
-    const JS::ConstUTF8CharsZ message() const {
-        return message_;
-    }
-
-    void initOwnedMessage(const char* messageArg) {
-        initBorrowedMessage(messageArg);
-        ownsMessage_ = true;
-    }
-    void initBorrowedMessage(const char* messageArg) {
-        MOZ_ASSERT(!message_);
-        message_ = JS::ConstUTF8CharsZ(messageArg, strlen(messageArg));
-    }
-
-    JSString* newMessageString(JSContext* cx);
-
-  private:
-    void freeMessage();
-};
-
-/**
- * Notes associated with JSErrorReport.
- */
-class JSErrorNotes
-{
-  public:
-    class Note : public JSErrorBase
-    {};
-
-  private:
-    // Stores pointers to each note.
-    js::Vector<js::UniquePtr<Note>, 1, js::SystemAllocPolicy> notes_;
-
-  public:
-    JSErrorNotes();
-    ~JSErrorNotes();
-
-    // Add an note to the given position.
-    bool addNoteASCII(JSContext* cx,
-                      const char* filename, unsigned lineno, unsigned column,
-                      JSErrorCallback errorCallback, void* userRef,
-                      const unsigned errorNumber, ...);
-    bool addNoteLatin1(JSContext* cx,
-                       const char* filename, unsigned lineno, unsigned column,
-                       JSErrorCallback errorCallback, void* userRef,
-                       const unsigned errorNumber, ...);
-    bool addNoteUTF8(JSContext* cx,
-                     const char* filename, unsigned lineno, unsigned column,
-                     JSErrorCallback errorCallback, void* userRef,
-                     const unsigned errorNumber, ...);
-
-    JS_PUBLIC_API(size_t) length();
-
-    // Create a deep copy of notes.
-    js::UniquePtr<JSErrorNotes> copy(JSContext* cx);
-
-    class iterator : public std::iterator<std::input_iterator_tag, js::UniquePtr<Note>>
-    {
-        js::UniquePtr<Note>* note_;
-      public:
-        explicit iterator(js::UniquePtr<Note>* note = nullptr) : note_(note)
-        {}
-
-        bool operator==(iterator other) const {
-            return note_ == other.note_;
-        }
-        bool operator!=(iterator other) const {
-            return !(*this == other);
-        }
-        iterator& operator++() {
-            note_++;
-            return *this;
-        }
-        reference operator*() {
-            return *note_;
-        }
-    };
-    JS_PUBLIC_API(iterator) begin();
-    JS_PUBLIC_API(iterator) end();
-};
-
-/**
- * Describes a single error or warning that occurs in the execution of script.
- */
-class JSErrorReport : public JSErrorBase
-{
-    // Offending source line without final '\n'.
-    // If ownsLinebuf_ is true, the buffer is freed in destructor.
-    const char16_t* linebuf_;
-
-    // Number of chars in linebuf_. Does not include trailing '\0'.
-    size_t linebufLength_;
-
-    // The 0-based offset of error token in linebuf_.
-    size_t tokenOffset_;
-
-  public:
-    JSErrorReport()
-      : linebuf_(nullptr), linebufLength_(0), tokenOffset_(0),
-        notes(nullptr),
-        flags(0), exnType(0), isMuted(false),
-        ownsLinebuf_(false)
-    {}
-
-    ~JSErrorReport() {
-        freeLinebuf();
-    }
-
-    // Associated notes, or nullptr if there's no note.
-    js::UniquePtr<JSErrorNotes> notes;
-
-    // error/warning, etc.
-    unsigned flags;
-
-    // One of the JSExnType constants.
-    int16_t exnType;
-
-    // See the comment in TransitiveCompileOptions.
-    bool isMuted : 1;
-
-  private:
-    bool ownsLinebuf_ : 1;
-
-  public:
-    const char16_t* linebuf() const {
-        return linebuf_;
-    }
-    size_t linebufLength() const {
-        return linebufLength_;
-    }
-    size_t tokenOffset() const {
-        return tokenOffset_;
-    }
-    void initOwnedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg,
-                          size_t tokenOffsetArg) {
-        initBorrowedLinebuf(linebufArg, linebufLengthArg, tokenOffsetArg);
-        ownsLinebuf_ = true;
-    }
-    void initBorrowedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg,
-                             size_t tokenOffsetArg);
-
-  private:
-    void freeLinebuf();
-};
-
-/*
- * JSErrorReport flag values.  These may be freely composed.
- */
-#define JSREPORT_ERROR      0x0     /* pseudo-flag for default case */
-#define JSREPORT_WARNING    0x1     /* reported via JS_ReportWarning */
-#define JSREPORT_EXCEPTION  0x2     /* exception was thrown */
-#define JSREPORT_STRICT     0x4     /* error or warning due to strict option */
-
-#define JSREPORT_USER_1     0x8     /* user-defined flag */
-
-/*
- * If JSREPORT_EXCEPTION is set, then a JavaScript-catchable exception
- * has been thrown for this runtime error, and the host should ignore it.
- * Exception-aware hosts should also check for JS_IsExceptionPending if
- * JS_ExecuteScript returns failure, and signal or propagate the exception, as
- * appropriate.
- */
-#define JSREPORT_IS_WARNING(flags)      (((flags) & JSREPORT_WARNING) != 0)
-#define JSREPORT_IS_EXCEPTION(flags)    (((flags) & JSREPORT_EXCEPTION) != 0)
-#define JSREPORT_IS_STRICT(flags)       (((flags) & JSREPORT_STRICT) != 0)
 
 namespace JS {
 
@@ -6249,110 +5842,6 @@ extern JS_PUBLIC_API(bool)
 CopyAsyncStack(JSContext* cx, HandleObject asyncStack,
                HandleString asyncCause, MutableHandleObject stackp,
                const mozilla::Maybe<size_t>& maxFrameCount);
-
-/*
- * Accessors for working with SavedFrame JSObjects
- *
- * Each of these functions assert that if their `HandleObject savedFrame`
- * argument is non-null, its JSClass is the SavedFrame class (or it is a
- * cross-compartment or Xray wrapper around an object with the SavedFrame class)
- * and the object is not the SavedFrame.prototype object.
- *
- * Each of these functions will find the first SavedFrame object in the chain
- * whose underlying stack frame principals are subsumed by the given
- * |principals|, and operate on that SavedFrame object. This prevents leaking
- * information about privileged frames to un-privileged callers
- *
- * The SavedFrame in parameters do _NOT_ need to be in the same compartment as
- * the cx, and the various out parameters are _NOT_ guaranteed to be in the same
- * compartment as cx.
- *
- * You may consider or skip over self-hosted frames by passing
- * `SavedFrameSelfHosted::Include` or `SavedFrameSelfHosted::Exclude`
- * respectively.
- *
- * Additionally, it may be the case that there is no such SavedFrame object
- * whose captured frame's principals are subsumed by |principals|! If the
- * `HandleObject savedFrame` argument is null, or the |principals| do not
- * subsume any of the chained SavedFrame object's principals,
- * `SavedFrameResult::AccessDenied` is returned and a (hopefully) sane default
- * value is chosen for the out param.
- *
- * See also `js/src/doc/SavedFrame/SavedFrame.md`.
- */
-
-enum class SavedFrameResult {
-    Ok,
-    AccessDenied
-};
-
-enum class SavedFrameSelfHosted {
-    Include,
-    Exclude
-};
-
-/**
- * Given a SavedFrame JSObject, get its source property. Defaults to the empty
- * string.
- */
-extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameSource(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
-                    MutableHandleString sourcep,
-                    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
-
-/**
- * Given a SavedFrame JSObject, get its line property. Defaults to 0.
- */
-extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameLine(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
-                  uint32_t* linep,
-                  SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
-
-/**
- * Given a SavedFrame JSObject, get its column property. Defaults to 0.
- */
-extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameColumn(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
-                    uint32_t* columnp,
-                    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
-
-/**
- * Given a SavedFrame JSObject, get its functionDisplayName string, or nullptr
- * if SpiderMonkey was unable to infer a name for the captured frame's
- * function. Defaults to nullptr.
- */
-extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameFunctionDisplayName(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
-                                 MutableHandleString namep,
-                                 SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
-
-/**
- * Given a SavedFrame JSObject, get its asyncCause string. Defaults to nullptr.
- */
-extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameAsyncCause(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
-                        MutableHandleString asyncCausep,
-                        SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
-
-/**
- * Given a SavedFrame JSObject, get its asyncParent SavedFrame object or nullptr
- * if there is no asyncParent. The `asyncParentp` out parameter is _NOT_
- * guaranteed to be in the cx's compartment. Defaults to nullptr.
- */
-extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameAsyncParent(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
-                         MutableHandleObject asyncParentp,
-                         SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
-
-/**
- * Given a SavedFrame JSObject, get its parent SavedFrame object or nullptr if
- * it is the oldest frame in the stack. The `parentp` out parameter is _NOT_
- * guaranteed to be in the cx's compartment. Defaults to nullptr.
- */
-extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameParent(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
-                    MutableHandleObject parentp,
-                    SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
  * Given a SavedFrame JSObject stack, stringify it in the same format as

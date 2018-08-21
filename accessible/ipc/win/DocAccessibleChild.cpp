@@ -274,6 +274,26 @@ DocAccessibleChild::SendRoleChangedEvent(const a11y::role& aRole)
 }
 
 bool
+DocAccessibleChild::SendScrollingEvent(const uint64_t& aID,
+                                       const uint64_t& aType,
+                                       const uint32_t& aScrollX,
+                                       const uint32_t& aScrollY,
+                                       const uint32_t& aMaxScrollX,
+                                       const uint32_t& aMaxScrollY)
+{
+  if (IsConstructedInParentProcess()) {
+    return PDocAccessibleChild::SendScrollingEvent(aID, aType,
+                                                   aScrollX, aScrollY,
+                                                   aMaxScrollX, aMaxScrollY);
+  }
+
+  PushDeferredEvent(MakeUnique<SerializedScrolling>(this, aID, aType,
+                                                    aScrollX, aScrollY,
+                                                    aMaxScrollX, aMaxScrollY));
+  return true;
+}
+
+bool
 DocAccessibleChild::ConstructChildDocInParentProcess(
                                         DocAccessibleChild* aNewChildDoc,
                                         uint64_t aUniqueID, uint32_t aMsaaID)

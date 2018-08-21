@@ -25,6 +25,7 @@
 
 #include "builtin/String.h"
 #include "gc/FreeOp.h"
+#include "js/AutoByteString.h"
 #include "js/Conversions.h"
 #include "js/Wrapper.h"
 #include "shell/jsshell.h"

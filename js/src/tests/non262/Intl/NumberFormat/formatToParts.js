@@ -53,6 +53,14 @@ function assertParts(nf, x, expected)
 
 //-----------------------------------------------------------------------------
 
+// Test -0's partitioning now that it's not treated like +0.
+// https://github.com/tc39/ecma402/pull/232
+
+var deadSimpleFormatter = new Intl.NumberFormat("en-US");
+
+assertParts(deadSimpleFormatter, -0,
+            [MinusSign("-"), Integer("0")]);
+
 // Test behavior of a currency with code formatting.
 var usdCodeOptions =
   {
@@ -148,8 +156,8 @@ var usdNameFractionOptions =
 var usdNameFractionFormatter =
   new Intl.NumberFormat("en-US", usdNameFractionOptions);
 
-// The US national surplus (i.e. debt) as of October 18, 2016.
-// (Replicating data from a comment in Intl.cpp.)
+// The US national surplus (i.e. debt) as of October 18, 2016.  (Replicating
+// data from a comment in builtin/Intl/NumberFormat.cpp.)
 var usNationalSurplus = -19766580028249.41;
 
 assertParts(usdNameFractionFormatter, usNationalSurplus,

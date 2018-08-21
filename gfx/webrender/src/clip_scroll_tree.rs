@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D};
+use api::{ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D, LayoutVector3D};
 use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation};
 use api::{LayoutSize, LayoutTransform, PropertyBinding, ScrollSensitivity, WorldPoint};
 use clip::{ClipStore};
@@ -24,6 +24,25 @@ pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CoordinateSystemId(pub u32);
 
+/// A node in the hierarchy of coordinate system
+/// transforms.
+#[derive(Debug)]
+pub struct CoordinateSystem {
+    pub offset: LayoutVector3D,
+    pub transform: LayoutTransform,
+    pub parent: Option<CoordinateSystemId>,
+}
+
+impl CoordinateSystem {
+    fn root() -> Self {
+        CoordinateSystem {
+            offset: LayoutVector3D::zero(),
+            transform: LayoutTransform::identity(),
+            parent: None,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -36,21 +55,17 @@ impl CoordinateSystemId {
     pub fn root() -> Self {
         CoordinateSystemId(0)
     }
-
-    pub fn next(&self) -> Self {
-        let CoordinateSystemId(id) = *self;
-        CoordinateSystemId(id + 1)
-    }
-
-    pub fn advance(&mut self) {
-        self.0 += 1;
-    }
 }
 
 pub struct ClipScrollTree {
     /// Nodes which determine the positions (offsets and transforms) for primitives
     /// and clips.
     pub spatial_nodes: Vec<SpatialNode>,
+
+    /// A list of transforms that establish new coordinate systems.
+    /// Spatial nodes only establish a new coordinate system when
+    /// they have a transform that is not a simple 2d translation.
+    pub coord_systems: Vec<CoordinateSystem>,
 
     pub pending_scroll_offsets: FastHashMap<ExternalScrollId, (LayoutPoint, ScrollClamping)>,
 
@@ -85,9 +100,47 @@ impl ClipScrollTree {
     pub fn new() -> Self {
         ClipScrollTree {
             spatial_nodes: Vec::new(),
+            coord_systems: Vec::new(),
             pending_scroll_offsets: FastHashMap::default(),
             pipelines_to_discard: FastHashSet::default(),
         }
+    }
+
+    /// Calculate the relative transform from `ref_node_index`
+    /// to `target_node_index`. It's assumed that `ref_node_index`
+    /// is a parent of `target_node_index`. This method will
+    /// panic if that invariant isn't true!
+    pub fn get_relative_transform(
+        &self,
+        ref_node_index: SpatialNodeIndex,
+        target_node_index: SpatialNodeIndex,
+    ) -> LayoutTransform {
+        let ref_node = &self.spatial_nodes[ref_node_index.0];
+        let target_node = &self.spatial_nodes[target_node_index.0];
+
+        let mut offset = LayoutVector3D::new(
+            target_node.coordinate_system_relative_offset.x,
+            target_node.coordinate_system_relative_offset.y,
+            0.0,
+        );
+        let mut transform = LayoutTransform::identity();
+
+        // Walk up the tree of coordinate systems, accumulating each
+        // relative transform.
+        let mut current_coordinate_system_id = target_node.coordinate_system_id;
+        while current_coordinate_system_id != ref_node.coordinate_system_id {
+            let coord_system = &self.coord_systems[current_coordinate_system_id.0 as usize];
+
+            let relative_transform = coord_system
+                .transform
+                .post_translate(offset);
+            transform = transform.pre_mul(&relative_transform);
+
+            offset = coord_system.offset;
+            current_coordinate_system_id = coord_system.parent.expect("invalid parent!");
+        }
+
+        transform
     }
 
     /// The root reference frame, which is the true root of the ClipScrollTree. Initially
@@ -133,6 +186,7 @@ impl ClipScrollTree {
             }
         }
 
+        self.coord_systems.clear();
         self.pipelines_to_discard.clear();
         scroll_states
     }
@@ -191,6 +245,9 @@ impl ClipScrollTree {
             return transform_palette;
         }
 
+        self.coord_systems.clear();
+        self.coord_systems.push(CoordinateSystem::root());
+
         let root_reference_frame_index = self.root_reference_frame_index();
         let mut state = TransformUpdateState {
             parent_reference_frame_transform: LayoutVector2D::new(pan.x, pan.y).into(),
@@ -202,11 +259,9 @@ impl ClipScrollTree {
             invertible: true,
         };
 
-        let mut next_coordinate_system_id = state.current_coordinate_system_id.next();
         self.update_node(
             root_reference_frame_index,
             &mut state,
-            &mut next_coordinate_system_id,
             &mut transform_palette,
             scene_properties,
         );
@@ -218,7 +273,6 @@ impl ClipScrollTree {
         &mut self,
         node_index: SpatialNodeIndex,
         state: &mut TransformUpdateState,
-        next_coordinate_system_id: &mut CoordinateSystemId,
         transform_palette: &mut TransformPalette,
         scene_properties: &SceneProperties,
     ) {
@@ -231,7 +285,7 @@ impl ClipScrollTree {
                 None => return,
             };
 
-            node.update(&mut state, next_coordinate_system_id, scene_properties);
+            node.update(&mut state, &mut self.coord_systems, scene_properties);
             node.push_gpu_data(transform_palette, node_index);
 
             if node.children.is_empty() {
@@ -246,7 +300,6 @@ impl ClipScrollTree {
             self.update_node(
                 child_node_index,
                 &mut state,
-                next_coordinate_system_id,
                 transform_palette,
                 scene_properties,
             );

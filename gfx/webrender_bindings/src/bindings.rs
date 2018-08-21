@@ -1978,7 +1978,8 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                      tile_spacing,
                      image_rendering,
                      alpha_type,
-                     key);
+                     key,
+                     ColorF::WHITE);
 }
 
 /// Push a 3 planar yuv image.

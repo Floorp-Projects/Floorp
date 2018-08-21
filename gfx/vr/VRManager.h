@@ -102,6 +102,7 @@ private:
 #endif
   bool mVRDisplaysRequested;
   bool mVRControllersRequested;
+  bool mVRServiceStarted;
 };
 
 } // namespace gfx

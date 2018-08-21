@@ -57,7 +57,7 @@ else:
             'sqlite',
             'ssl3',
         ]
-        gyp_vars['nspr_libs'] = 'nspr4 plc4 plds4'
+        gyp_vars['nspr_libs'] = 'nspr'
 
     # This disables building some NSS tools.
     gyp_vars['mozilla_client'] = 1
@@ -85,8 +85,15 @@ else:
     # System sqlite here is the in-tree mozsqlite.
     gyp_vars['use_system_sqlite'] = 1
     gyp_vars['sqlite_libs'] = 'sqlite'
-    gyp_vars['nspr_include_dir'] = CONFIG['NSPR_INCLUDE_DIR']
-    gyp_vars['nspr_lib_dir'] = CONFIG['NSPR_LIB_DIR']
+
+    if CONFIG['MOZ_SYSTEM_NSPR']:
+        gyp_vars['nspr_include_dir'] = '%' + CONFIG['NSPR_INCLUDE_DIR']
+        gyp_vars['nspr_lib_dir'] = '%' + CONFIG['NSPR_LIB_DIR']
+    else:
+        gyp_vars['nspr_include_dir'] = '!/dist/include/nspr'
+        gyp_vars['nspr_lib_dir'] = ''  # gyp wants a value, but we don't need
+                                       # it to be valid.
+
     # The Python scripts that detect clang need it to be set as CC
     # in the environment, which isn't true here. I don't know that
     # setting that would be harmful, but we already have this information
