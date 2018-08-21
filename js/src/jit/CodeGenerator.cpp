@@ -4563,7 +4563,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative* call)
     MOZ_ASSERT(obj == argObj);
 
     // Push a Value containing the callee object: natives are allowed to access their callee before
-    // setitng the return value. After this the StackPointer points to &vp[0].
+    // setting the return value. After this the StackPointer points to &vp[0].
     masm.Push(ObjectValue(*target->rawJSFunction()));
 
     // Now compute the argv value.  Since StackPointer is pointing to &vp[0] and

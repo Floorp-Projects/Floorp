@@ -681,7 +681,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
 
   float volume = 0.0f;
   for (uint32_t i = 0; i < aStream->mAudioOutputs.Length(); ++i) {
-    volume += aStream->mAudioOutputs[i].mVolume;
+    volume += aStream->mAudioOutputs[i].mVolume * mGlobalVolume;
   }
 
   StreamTime ticksWritten = 0;
@@ -3711,6 +3711,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
   , mAbstractMainThread(aMainThread)
   , mSelfRef(this)
   , mOutputChannels(std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels()))
+  , mGlobalVolume(CubebUtils::GetVolumeScale())
 #ifdef DEBUG
   , mCanRunMessagesSynchronously(false)
 #endif

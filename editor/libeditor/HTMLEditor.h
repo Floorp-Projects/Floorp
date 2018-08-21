@@ -227,7 +227,15 @@ public:
    */
   void EnableObjectResizer(bool aEnable)
   {
+    if (mIsObjectResizingEnabled == aEnable) {
+      return;
+    }
     mIsObjectResizingEnabled = aEnable;
+    RefPtr<Selection> selection = GetSelection();
+    if (NS_WARN_IF(!selection)) {
+      return;
+    }
+    RefereshEditingUI(*selection);
   }
   bool IsObjectResizerEnabled() const
   {
@@ -240,7 +248,15 @@ public:
    */
   void EnableInlineTableEditor(bool aEnable)
   {
+    if (mIsInlineTableEditingEnabled == aEnable) {
+      return;
+    }
     mIsInlineTableEditingEnabled = aEnable;
+    RefPtr<Selection> selection = GetSelection();
+    if (NS_WARN_IF(!selection)) {
+      return;
+    }
+    RefereshEditingUI(*selection);
   }
   bool IsInlineTableEditorEnabled() const
   {
@@ -254,7 +270,15 @@ public:
    */
   void EnableAbsolutePositionEditor(bool aEnable)
   {
+    if (mIsAbsolutelyPositioningEnabled == aEnable) {
+      return;
+    }
     mIsAbsolutelyPositioningEnabled = aEnable;
+    RefPtr<Selection> selection = GetSelection();
+    if (NS_WARN_IF(!selection)) {
+      return;
+    }
+    RefereshEditingUI(*selection);
   }
   bool IsAbsolutePositionEditorEnabled() const
   {
@@ -1510,6 +1534,13 @@ protected: // Shouldn't be used by friend classes
   void DeleteRefToAnonymousNode(ManualNACPtr aContent,
                                 nsIPresShell* aShell);
 
+  /**
+   * RefereshEditingUI() may refresh editing UIs for current Selection, focus,
+   * etc.  If this shows or hides some UIs, it causes reflow.  So, this is
+   * not safe method.
+   */
+  nsresult RefereshEditingUI(Selection& aSelection);
+
   nsresult ShowResizersInner(Element& aResizedElement);
 
   /**
@@ -1570,7 +1601,18 @@ protected: // Shouldn't be used by friend classes
   void SetFinalSize(int32_t aX, int32_t aY);
   void SetResizeIncrements(int32_t aX, int32_t aY, int32_t aW, int32_t aH,
                            bool aPreserveRatio);
+
+  /**
+   * HideAnonymousEditingUIs() forcibly hides all editing UIs (resizers,
+   * inline-table-editing UI, absolute positioning UI).
+   */
   void HideAnonymousEditingUIs();
+
+  /**
+   * HideAnonymousEditingUIsIfUnnecessary() hides all editing UIs if some of
+   * visible UIs are now unnecessary.
+   */
+  void HideAnonymousEditingUIsIfUnnecessary();
 
   /**
    * sets the z-index of an element.
@@ -1612,7 +1654,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * Hide all inline table editing UI
    */
-  nsresult HideInlineTableEditingUI();
+  void HideInlineTableEditingUI();
 
   /**
    * IsEmptyTextNode() returns true if aNode is a text node and does not have

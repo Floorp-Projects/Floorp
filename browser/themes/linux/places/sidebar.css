@@ -4,7 +4,7 @@
 
 /* Sidebars */
 
-%include ../../shared/places/places.inc.css
+%include ../../shared/places/sidebar.inc.css
 
 #sidebar-search-container {
   padding: 8px;
@@ -48,7 +48,3 @@
 .sidebar-placesTreechildren::-moz-tree-cell(separator) {
   cursor: default;
 }
-
-/* Trees */
-
-%include ../../shared/places/tree-icons.inc.css

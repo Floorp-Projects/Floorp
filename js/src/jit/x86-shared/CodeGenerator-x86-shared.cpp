@@ -301,9 +301,6 @@ CodeGenerator::visitWasmStackArg(LWasmStackArg* ins)
           case MIRType::Float32:
             masm.storeFloat32(ToFloatRegister(ins->arg()), dst);
             return;
-          case MIRType::Int32x4:
-          case MIRType::Bool32x4:
-          case MIRType::Float32x4:
           default:
             break;
         }
