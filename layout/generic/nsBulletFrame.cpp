@@ -570,7 +570,7 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
     return true;
   }
 
-  RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget(aBuilder, aSc, aManager, aItem, bounds);
+  RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget(aBuilder, aResources, aSc, aManager, aItem, bounds);
   RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
   PaintTextToContext(aItem->Frame(), captureCtx, aItem->IsSubpixelAADisabled());
   textDrawer->TerminateShadows();

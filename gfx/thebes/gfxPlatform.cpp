@@ -73,6 +73,7 @@
 #include "gfx2DGlue.h"
 #include "gfxGradientCache.h"
 #include "gfxUtils.h" // for NextPowerOfTwo
+#include "gfxFontMissingGlyphs.h"
 
 #include "nsExceptionHandler.h"
 #include "nsUnicodeRange.h"
@@ -470,6 +471,7 @@ gfxPlatform::OnMemoryPressure(layers::MemoryPressureReason aWhy)
 {
     Factory::PurgeAllCaches();
     gfxGradientCache::PurgeAllCaches();
+    gfxFontMissingGlyphs::Purge();
     PurgeSkiaFontCache();
     PurgeSkiaGPUCache();
     if (XRE_IsParentProcess()) {
@@ -964,6 +966,7 @@ gfxPlatform::Shutdown()
     gfxAlphaBoxBlur::ShutdownBlurCache();
     gfxGraphiteShaper::Shutdown();
     gfxPlatformFontList::Shutdown();
+    gfxFontMissingGlyphs::Shutdown();
     ShutdownTileCache();
 
     // Free the various non-null transforms and loaded profiles

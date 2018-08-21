@@ -146,6 +146,12 @@ ParentProcessId()
   MOZ_CRASH();
 }
 
+bool
+IsMiddlemanWithRecordingChild()
+{
+  return false;
+}
+
 } // namespace parent
 
 } // namespace recordreplay

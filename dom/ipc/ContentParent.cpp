@@ -773,11 +773,12 @@ ContentParent::MinTabSelect(const nsTArray<ContentParent*>& aContentParents,
 static bool
 CreateTemporaryRecordingFile(nsAString& aResult)
 {
-  unsigned long elapsed = (TimeStamp::Now() - TimeStamp::ProcessCreation()).ToMilliseconds();
-
+  static int sNumTemporaryRecordings;
   nsCOMPtr<nsIFile> file;
   return !NS_FAILED(NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file)))
-      && !NS_FAILED(file->AppendNative(nsPrintfCString("Recording%lu", elapsed)))
+      && !NS_FAILED(file->AppendNative(nsPrintfCString("TempRecording.%d.%d",
+                                                       base::GetCurrentProcId(),
+                                                       ++sNumTemporaryRecordings)))
       && !NS_FAILED(file->GetPath(aResult));
 }
 
@@ -1449,11 +1450,13 @@ ContentParent::ShutDownProcess(ShutDownMethod aMethod)
   if (aMethod == SEND_SHUTDOWN_MESSAGE) {
     if (const char* directory = recordreplay::parent::SaveAllRecordingsDirectory()) {
       // Save a recording for the child process before it shuts down.
-      unsigned long elapsed = (TimeStamp::Now() - TimeStamp::ProcessCreation()).ToMilliseconds();
+      static int sNumSavedRecordings;
       nsCOMPtr<nsIFile> file;
       if (!NS_FAILED(NS_NewNativeLocalFile(nsDependentCString(directory), false,
                                            getter_AddRefs(file))) &&
-          !NS_FAILED(file->AppendNative(nsPrintfCString("Recording%lu", elapsed)))) {
+          !NS_FAILED(file->AppendNative(nsPrintfCString("Recording.%d.%d",
+                                                        base::GetCurrentProcId(),
+                                                        ++sNumSavedRecordings)))) {
         bool unused;
         SaveRecording(file, &unused);
       }

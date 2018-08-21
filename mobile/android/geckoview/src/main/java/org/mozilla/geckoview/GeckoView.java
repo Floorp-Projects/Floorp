@@ -14,6 +14,7 @@ import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.util.ActivityUtils;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -29,6 +30,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -36,6 +38,8 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStructure;
+import android.view.autofill.AutofillValue;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
@@ -108,11 +112,13 @@ public class GeckoView extends FrameLayout {
                 final Rect frame = holder.getSurfaceFrame();
                 mDisplay.surfaceChanged(holder.getSurface(), frame.right, frame.bottom);
             }
+            GeckoView.this.setActive(true);
         }
 
         public GeckoDisplay release() {
             if (mValid) {
                 mDisplay.surfaceDestroyed();
+                GeckoView.this.setActive(false);
             }
 
             final GeckoDisplay display = mDisplay;
@@ -130,6 +136,7 @@ public class GeckoView extends FrameLayout {
             if (mDisplay != null) {
                 mDisplay.surfaceChanged(holder.getSurface(), width, height);
             }
+            GeckoView.this.setActive(true);
             mValid = true;
         }
 
@@ -138,6 +145,7 @@ public class GeckoView extends FrameLayout {
             if (mDisplay != null) {
                 mDisplay.surfaceDestroyed();
             }
+            GeckoView.this.setActive(false);
             mValid = false;
         }
 
@@ -203,6 +211,12 @@ public class GeckoView extends FrameLayout {
         }
     }
 
+    /* package */ void setActive(final boolean active) {
+        if (mSession != null) {
+            mSession.setActive(active);
+        }
+    }
+
     public GeckoSession releaseSession() {
         if (mSession == null) {
             return null;
@@ -224,10 +238,13 @@ public class GeckoView extends FrameLayout {
             mSession.getTextInput().setView(null);
         }
 
-        if (session.getSelectionActionDelegate() == mSelectionActionDelegate) {
+        if (mSession.getSelectionActionDelegate() == mSelectionActionDelegate) {
             mSession.setSelectionActionDelegate(null);
         }
 
+        if (isFocused()) {
+            mSession.setFocused(false);
+        }
         mSession = null;
         return session;
     }
@@ -314,6 +331,10 @@ public class GeckoView extends FrameLayout {
 
         if (session.getSelectionActionDelegate() == null && mSelectionActionDelegate != null) {
             session.setSelectionActionDelegate(mSelectionActionDelegate);
+        }
+
+        if (isFocused()) {
+            session.setFocused(true);
         }
     }
 
@@ -416,10 +437,27 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
+    public void onWindowFocusChanged(boolean hasWindowFocus) {
+        super.onWindowFocusChanged(hasWindowFocus);
+
+        if (mSession != null) {
+            mSession.setFocused(hasWindowFocus && isFocused());
+        }
+    }
+
+    @Override
     public void onFocusChanged(boolean gainFocus, int direction, Rect previouslyFocusedRect) {
         super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
 
-        if (!gainFocus || mIsResettingFocus) {
+        if (mIsResettingFocus) {
+            return;
+        }
+
+        if (mSession != null) {
+            mSession.setFocused(gainFocus);
+        }
+
+        if (!gainFocus) {
             return;
         }
 
@@ -551,5 +589,33 @@ public class GeckoView extends FrameLayout {
 
         return mSession.getAccessibility().onMotionEvent(event) ||
                mSession.getPanZoomController().onMotionEvent(event);
+    }
+
+    @Override
+    public void onProvideAutofillVirtualStructure(final ViewStructure structure, int flags) {
+        super.onProvideAutofillVirtualStructure(structure, flags);
+
+        if (mSession != null) {
+            mSession.getTextInput().onProvideAutofillVirtualStructure(structure, flags);
+        }
+    }
+
+    @Override
+    @TargetApi(26)
+    public void autofill(@NonNull final SparseArray<AutofillValue> values) {
+        super.autofill(values);
+
+        if (mSession == null) {
+            return;
+        }
+        final SparseArray<CharSequence> strValues = new SparseArray<>(values.size());
+        for (int i = 0; i < values.size(); i++) {
+            final AutofillValue value = values.valueAt(i);
+            if (value.isText()) {
+                // Only text is currently supported.
+                strValues.put(values.keyAt(i), value.getTextValue());
+            }
+        }
+        mSession.getTextInput().autofill(strValues);
     }
 }

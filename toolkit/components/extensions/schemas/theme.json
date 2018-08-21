@@ -236,6 +236,22 @@
               "ntp_text": {
                 "$ref": "ThemeColor",
                 "optional": true
+              },
+              "sidebar": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "sidebar_text": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "sidebar_highlight": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "sidebar_highlight_text": {
+                "$ref": "ThemeColor",
+                "optional": true
               }
             },
             "additionalProperties": { "$ref": "ThemeColor" }

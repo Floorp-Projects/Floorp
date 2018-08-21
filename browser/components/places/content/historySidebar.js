@@ -7,6 +7,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
+  LightweightThemeChild: "resource:///actors/LightweightThemeChild.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
@@ -31,6 +32,17 @@ function HistorySidebarInit() {
   if (uidensity) {
     document.documentElement.setAttribute("uidensity", uidensity);
   }
+
+  /* Listen for sidebar theme changes */
+  let themeListener = new LightweightThemeChild({
+    content: window,
+    chromeOuterWindowID: window.top.windowUtils.outerWindowID,
+    docShell: window.docShell,
+  });
+
+  window.addEventListener("unload", () => {
+    themeListener.cleanup();
+  });
 
   gHistoryTree = document.getElementById("historyTree");
   gSearchBox = document.getElementById("search-box");
