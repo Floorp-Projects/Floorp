@@ -100,6 +100,15 @@
 
 // Try to avoid platform #ifdefs below this point.
 
+inline bool js::jit::AtomicOperations::Initialize() {
+  // Nothing
+  return true;
+}
+
+inline void js::jit::AtomicOperations::ShutDown() {
+  // Nothing
+}
+
 #ifdef GNUC_COMPATIBLE
 
 inline bool js::jit::AtomicOperations::hasAtomic8() {
