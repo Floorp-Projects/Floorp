@@ -61,17 +61,24 @@
         "async": true,
         "parameters": [
           {
-            "name": "engineName",
-            "type": "string"
-          },
-          {
-            "name": "searchTerms",
-            "type": "string"
-          },
-          {
-            "type": "integer",
-            "name": "tabId",
-            "optional": true
+            "type": "object",
+            "name": "searchProperties",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "Terms to search for."
+              },
+              "engine": {
+                "type": "string",
+                "optional": true,
+                "description": "Search engine to use. Uses the default if not specified."
+              },
+              "tabId": {
+                "type": "integer",
+                "optional": true,
+                "description": "The ID of the tab for the search results. If not specified, a new tab is created."
+              }
+            }
           }
         ]
       }
