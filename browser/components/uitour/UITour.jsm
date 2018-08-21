@@ -1364,7 +1364,11 @@ var UITour = {
   },
 
   showNewTab(aWindow, aBrowser) {
-    aWindow.openLinkIn("about:newtab", "current", {targetBrowser: aBrowser});
+    let url = "about:newtab";
+    aWindow.openLinkIn(url, "current", {
+      targetBrowser: aBrowser,
+      triggeringPrincipal: Services.scriptSecurityManager.createCodebasePrincipal(Services.io.newURI(url), {}),
+    });
     aWindow.gURLBar.focus();
   },
 
