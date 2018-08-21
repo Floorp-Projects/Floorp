@@ -182,7 +182,7 @@ JSContext::checkImpl(int argIndex, const T1& t1)
 {
     // Don't perform these checks when called from a finalizer. The checking
     // depends on other objects not having been swept yet.
-    if (JS::RuntimeHeapIsCollecting())
+    if (JS::RuntimeHeapIsCollecting(runtime()->heapState()))
         return;
     js::ContextChecks(this).check(t1, argIndex);
 }
