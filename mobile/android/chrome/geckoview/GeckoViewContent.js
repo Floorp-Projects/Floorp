@@ -420,6 +420,7 @@ class GeckoViewContent extends GeckoViewContentModule {
         attributes: Object.assign({}, ...Array.from(element.attributes)
             .filter(attr => attr.localName !== "value")
             .map(attr => ({[attr.localName]: attr.value}))),
+        origin: element.ownerDocument.location.origin,
       };
       this._autoFillInfos.set(element, info);
       this._autoFillElements.set(info.id, Cu.getWeakReference(element));
