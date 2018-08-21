@@ -290,8 +290,9 @@ class TCPConnection {
       throw new UnknownCommandError(cmd.name);
     }
 
-    if (!["newSession", "WebDriver:NewSession"].includes(cmd.name)) {
-      assert.session(this.driver);
+    if (cmd.name != "WebDriver:NewSession") {
+      assert.session(this.driver,
+          "Tried to run command without establishing a connection");
     }
 
     let rv = await fn.bind(this.driver)(cmd);
