@@ -30,8 +30,6 @@
           src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/contentTheme.js"/>
 
 #include ../../../../toolkit/content/editMenuCommands.inc.xul
 
