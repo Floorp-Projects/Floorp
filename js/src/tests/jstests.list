@@ -452,10 +452,6 @@ skip script test262/intl402/ListFormat/prototype/toStringTag/toString.js
 skip script test262/intl402/ListFormat/prototype/toStringTag/toStringTag.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473228
-skip script test262/intl402/RelativeTimeFormat/prototype/toStringTag/toString.js
-skip script test262/intl402/RelativeTimeFormat/prototype/toStringTag/toStringTag.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1473228
 skip script test262/intl402/Segmenter/prototype/toStringTag/toString.js
 skip script test262/intl402/Segmenter/prototype/toStringTag/toStringTag.js
 
