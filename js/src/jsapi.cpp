@@ -61,7 +61,6 @@
 #include "js/Date.h"
 #include "js/Initialization.h"
 #include "js/JSON.h"
-#include "js/LocaleSensitive.h"
 #include "js/Proxy.h"
 #include "js/SliceBudget.h"
 #include "js/StableStringChars.h"

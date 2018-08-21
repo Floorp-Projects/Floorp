@@ -31,9 +31,6 @@
 #include "builtin/RegExp.h"
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
-#if !EXPOSE_INTL_API
-#include "js/LocaleSensitive.h"
-#endif
 #include "js/StableStringChars.h"
 #include "js/UniquePtr.h"
 #if ENABLE_INTL_API

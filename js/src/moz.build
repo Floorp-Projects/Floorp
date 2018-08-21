@@ -144,7 +144,6 @@ EXPORTS.js += [
     '../public/Id.h',
     '../public/Initialization.h',
     '../public/JSON.h',
-    '../public/LocaleSensitive.h',
     '../public/MemoryFunctions.h',
     '../public/MemoryMetrics.h',
     '../public/Principals.h',
