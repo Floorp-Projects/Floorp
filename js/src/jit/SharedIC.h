@@ -256,9 +256,8 @@ class ICEntry
         Kind_DebugTrap,
 
         // A fake IC entry for returning from a callVM to
-        // Debug{Prologue,AfterYield,Epilogue}.
+        // Debug{Prologue,Epilogue}.
         Kind_DebugPrologue,
-        Kind_DebugAfterYield,
         Kind_DebugEpilogue,
 
         Kind_Invalid
