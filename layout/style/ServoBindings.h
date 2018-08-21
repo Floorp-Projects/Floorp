@@ -171,7 +171,8 @@ RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(RawGeckoStyleChildrenIterator
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::SheetLoadDataHolder, SheetLoadDataHolder);
 
 void Gecko_StyleSheet_FinishAsyncParse(mozilla::css::SheetLoadDataHolder* data,
-                                       RawServoStyleSheetContentsStrong sheet_contents);
+                                       RawServoStyleSheetContentsStrong sheet_contents,
+                                       StyleUseCountersOwnedOrNull use_counters);
 
 mozilla::StyleSheet*
 Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
@@ -754,9 +755,6 @@ bool Gecko_MediaFeatures_HasSystemMetric(nsIDocument*,
                                          bool is_accessible_from_content);
 bool Gecko_MediaFeatures_IsResourceDocument(nsIDocument*);
 nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument*);
-
-// Use counters.
-StyleUseCountersStrong Servo_UseCounters_Create();
 
 } // extern "C"
 

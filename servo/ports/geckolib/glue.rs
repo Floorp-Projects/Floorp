@@ -1235,7 +1235,6 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
         Some(ref s) => Some(s),
     };
 
-    let use_counters = UseCounters::arc_from_borrowed(&use_counters);
     Arc::new(StylesheetContents::from_str(
         input,
         url_data.clone(),
@@ -1245,7 +1244,7 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
         reporter.as_ref().map(|r| r as &ParseErrorReporter),
         quirks_mode.into(),
         line_number_offset,
-        use_counters.map(|counters| &**counters),
+        use_counters.map(UseCounters::from_ffi),
     )).into_strong()
 }
 
@@ -1257,17 +1256,13 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
     mode: SheetParsingMode,
     line_number_offset: u32,
     quirks_mode: nsCompatibility,
-    use_counters: bindings::StyleUseCountersBorrowedOrNull,
+    should_record_use_counters: bool,
 ) {
     let load_data = RefPtr::new(load_data);
     let extra_data = UrlExtraData(RefPtr::new(extra_data));
 
     let mut sheet_bytes = nsCString::new();
     sheet_bytes.assign(&*bytes);
-
-    let use_counters = UseCounters::arc_from_borrowed(&use_counters)
-        .cloned()
-        .map(Arc::from_raw_offset);
 
     let async_parser = AsyncStylesheetParser::new(
         load_data,
@@ -1276,7 +1271,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
         mode_to_origin(mode),
         quirks_mode.into(),
         line_number_offset,
-        use_counters,
+        should_record_use_counters,
     );
 
     if let Some(thread_pool) = STYLE_THREAD_POOL.style_thread_pool.as_ref() {
@@ -5822,8 +5817,21 @@ pub unsafe extern "C" fn Servo_PseudoClass_GetStates(name: *const nsACString) ->
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_UseCounters_Create() -> bindings::StyleUseCountersStrong {
-    Arc::new(UseCounters::default()).into_strong()
+pub unsafe extern "C" fn Servo_UseCounters_Create() -> *mut structs::StyleUseCounters {
+    Box::into_raw(Box::<UseCounters>::default()) as *mut _
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_UseCounters_Drop(c: bindings::StyleUseCountersOwned) {
+    let _ = c.into_box::<UseCounters>();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_UseCounters_Merge(
+    doc_counters: bindings::StyleUseCountersBorrowed,
+    sheet_counters: bindings::StyleUseCountersBorrowed,
+) {
+    UseCounters::from_ffi(doc_counters).merge(UseCounters::from_ffi(sheet_counters))
 }
 
 #[no_mangle]
@@ -5838,6 +5846,5 @@ pub unsafe extern "C" fn Servo_IsCssPropertyRecordedInUseCounter(
         None => return false,
     };
 
-    let use_counters = UseCounters::as_arc(&use_counters);
-    use_counters.non_custom_properties.recorded(non_custom_id)
+    UseCounters::from_ffi(use_counters).non_custom_properties.recorded(non_custom_id)
 }
