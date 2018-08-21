@@ -688,7 +688,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     traceLoggerScriptedCallsLastDrainedSize(0),
     traceLoggerScriptedCallsLastDrainedIteration(0)
 {
-    assertSameCompartment(cx, dbg);
+    cx->check(dbg);
 
 #ifdef JS_TRACE_LOGGING
     TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
@@ -1154,7 +1154,7 @@ Debugger::wrapEnvironment(JSContext* cx, Handle<Env*> env,
 bool
 Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
 {
-    assertSameCompartment(cx, object.get());
+    cx->check(object.get());
 
     if (vp.isObject()) {
         RootedObject obj(cx, &vp.toObject());
@@ -1282,7 +1282,7 @@ Debugger::unwrapDebuggeeObject(JSContext* cx, MutableHandleObject obj)
 bool
 Debugger::unwrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
 {
-    assertSameCompartment(cx, object.get(), vp);
+    cx->check(object.get(), vp);
     if (vp.isObject()) {
         RootedObject dobj(cx, &vp.toObject());
         if (!unwrapDebuggeeObject(cx, &dobj))
@@ -1671,8 +1671,8 @@ Debugger::newCompletionValue(JSContext* cx, ResumeMode resumeMode, const Value& 
 {
     // We must be in the debugger's compartment, since that's where we want
     // to construct the completion value.
-    assertSameCompartment(cx, object.get());
-    assertSameCompartment(cx, value_);
+    cx->check(object.get());
+    cx->check(value_);
 
     RootedId key(cx);
     RootedValue value(cx, value_);
@@ -2346,7 +2346,7 @@ Debugger::slowPathPromiseHook(JSContext* cx, Hook hook, Handle<PromiseObject*> p
     if (hook == OnNewPromise)
         ar.emplace(cx, promise);
 
-    assertSameCompartment(cx, promise);
+    cx->check(promise);
 
     RootedValue rval(cx);
     ResumeMode resumeMode = dispatchHook(
@@ -5445,7 +5445,7 @@ class DebuggerScriptSetPrivateMatcher
 NativeObject*
 Debugger::newDebuggerScript(JSContext* cx, Handle<DebuggerScriptReferent> referent)
 {
-    assertSameCompartment(cx, object.get());
+    cx->check(object.get());
 
     RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO).toObject());
     MOZ_ASSERT(proto);
@@ -5465,7 +5465,7 @@ JSObject*
 Debugger::wrapVariantReferent(JSContext* cx, Map& map, Handle<CrossCompartmentKey> key,
                               Handle<ReferentVariant> referent)
 {
-    assertSameCompartment(cx, object);
+    cx->check(object);
 
     Handle<Referent> untaggedReferent = referent.template as<Referent>();
     MOZ_ASSERT(cx->compartment() != untaggedReferent->compartment());
@@ -7239,7 +7239,7 @@ class SetDebuggerSourcePrivateMatcher
 NativeObject*
 Debugger::newDebuggerSource(JSContext* cx, Handle<DebuggerSourceReferent> referent)
 {
-    assertSameCompartment(cx, object.get());
+    cx->check(object.get());
 
     RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_SOURCE_PROTO).toObject());
     MOZ_ASSERT(proto);
@@ -8192,7 +8192,7 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
               mozilla::Range<const char16_t> chars, const char* filename,
               unsigned lineno, MutableHandleValue rval)
 {
-    assertSameCompartment(cx, env, frame);
+    cx->check(env, frame);
 
     CompileOptions options(cx);
     options.setIsRunOnce(true)

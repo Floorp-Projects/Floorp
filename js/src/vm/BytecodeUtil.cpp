@@ -2100,7 +2100,7 @@ ExpressionDecompiler::decompilePC(const OffsetAndDefIndex& offsetAndDefIndex)
 bool
 ExpressionDecompiler::init()
 {
-    assertSameCompartment(cx, script);
+    cx->check(script);
     return sprinter.init();
 }
 

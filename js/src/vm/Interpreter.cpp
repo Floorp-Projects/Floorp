@@ -442,13 +442,13 @@ CallJSNative(JSContext* cx, Native native, const CallArgs& args)
 #ifdef DEBUG
     bool alreadyThrowing = cx->isExceptionPending();
 #endif
-    assertSameCompartment(cx, args);
+    cx->check(args);
     MOZ_ASSERT(!args.callee().is<ProxyObject>());
 
     AutoRealm ar(cx, &args.callee());
     bool ok = native(cx, args.length(), args.base());
     if (ok) {
-        assertSameCompartment(cx, args.rval());
+        cx->check(args.rval());
         MOZ_ASSERT_IF(!alreadyThrowing, !cx->isExceptionPending());
     }
     return ok;
@@ -801,7 +801,7 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& envChainArg, Value* rv
 #ifdef DEBUG
     JSObject* s = envChain;
     do {
-        assertSameCompartment(cx, s);
+        cx->check(s);
         MOZ_ASSERT_IF(!s->enclosingEnvironment(), s->is<GlobalObject>());
     } while ((s = s->enclosingEnvironment()));
 #endif

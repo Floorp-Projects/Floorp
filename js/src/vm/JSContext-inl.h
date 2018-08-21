@@ -191,15 +191,15 @@ assertSameCompartmentImpl(JSContext* cx, int argIndex, const Head& head, const T
     assertSameCompartmentImpl(cx, argIndex + 1, tail...);
 }
 
+} // namespace js
+
 template <class... Args> inline void
-assertSameCompartment(JSContext* cx, const Args&... args)
+JSContext::check(const Args&... args)
 {
 #ifdef JS_CRASH_DIAGNOSTICS
-    assertSameCompartmentImpl(cx, 1, args...);
+    assertSameCompartmentImpl(this, 0, args...);
 #endif
 }
-
-} // namespace js
 
 template <class... Args> inline void
 JSContext::releaseCheck(const Args&... args)
@@ -224,10 +224,10 @@ CallNativeImpl(JSContext* cx, NativeImpl impl, const CallArgs& args)
 #ifdef DEBUG
     bool alreadyThrowing = cx->isExceptionPending();
 #endif
-    assertSameCompartment(cx, args);
+    cx->check(args);
     bool ok = impl(cx, args);
     if (ok) {
-        assertSameCompartment(cx, args.rval());
+        cx->check(args.rval());
         MOZ_ASSERT_IF(!alreadyThrowing, !cx->isExceptionPending());
     }
     return ok;
@@ -240,10 +240,10 @@ CallJSGetterOp(JSContext* cx, GetterOp op, HandleObject obj, HandleId id,
     if (!CheckRecursionLimit(cx))
         return false;
 
-    assertSameCompartment(cx, obj, id, vp);
+    cx->check(obj, id, vp);
     bool ok = op(cx, obj, id, vp);
     if (ok)
-        assertSameCompartment(cx, vp);
+        cx->check(vp);
     return ok;
 }
 
@@ -254,7 +254,7 @@ CallJSSetterOp(JSContext* cx, SetterOp op, HandleObject obj, HandleId id, Handle
     if (!CheckRecursionLimit(cx))
         return false;
 
-    assertSameCompartment(cx, obj, id, v);
+    cx->check(obj, id, v);
     return op(cx, obj, id, v, result);
 }
 
@@ -265,7 +265,7 @@ CallJSAddPropertyOp(JSContext* cx, JSAddPropertyOp op, HandleObject obj, HandleI
     if (!CheckRecursionLimit(cx))
         return false;
 
-    assertSameCompartment(cx, obj, id, v);
+    cx->check(obj, id, v);
     return op(cx, obj, id, v);
 }
 
@@ -276,7 +276,7 @@ CallJSDeletePropertyOp(JSContext* cx, JSDeletePropertyOp op, HandleObject receiv
     if (!CheckRecursionLimit(cx))
         return false;
 
-    assertSameCompartment(cx, receiver, id);
+    cx->check(receiver, id);
     if (op)
         return op(cx, receiver, id, result);
     return result.succeed();
