@@ -963,6 +963,8 @@ struct JSContext : public JS::RootingContext,
     inline void checkImpl(int argIndex, const Head& head, const Tail&... tail);
 
   public:
+    // Assert the arguments are in this context's realm (for scripts),
+    // compartment (for objects) or zone (for strings, symbols).
     template <class... Args> inline void check(const Args&... args);
     template <class... Args> inline void releaseCheck(const Args&... args);
     template <class... Args> MOZ_ALWAYS_INLINE void debugOnlyCheck(const Args&... args);

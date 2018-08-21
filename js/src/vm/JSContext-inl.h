@@ -20,38 +20,56 @@
 
 namespace js {
 
-class CompartmentChecker
+class ContextChecks
 {
-    JS::Compartment* compartment;
+    JSContext* cx;
+
+    JS::Realm* realm() const {
+        return cx->realm();
+    }
+    JS::Compartment* compartment() const {
+        return cx->compartment();
+    }
+    JS::Zone* zone() const {
+        return cx->zone();
+    }
 
   public:
-    explicit CompartmentChecker(JSContext* cx)
-      : compartment(cx->compartment())
+    explicit ContextChecks(JSContext* cx)
+      : cx(cx)
     {
     }
 
     /*
-     * Set a breakpoint here (break js::CompartmentChecker::fail) to debug
-     * compartment mismatches.
+     * Set a breakpoint here (break js::ContextChecks::fail) to debug
+     * realm/compartment/zone mismatches.
      */
+    static void fail(JS::Realm* r1, JS::Realm* r2, int argIndex) {
+        MOZ_CRASH_UNSAFE_PRINTF("*** Realm mismatch %p vs. %p at argument %d\n",
+                                r1, r2, argIndex);
+    }
     static void fail(JS::Compartment* c1, JS::Compartment* c2, int argIndex) {
         MOZ_CRASH_UNSAFE_PRINTF("*** Compartment mismatch %p vs. %p at argument %d\n",
-                                (void*) c1, (void*) c2, argIndex);
+                                c1, c2, argIndex);
     }
-
     static void fail(JS::Zone* z1, JS::Zone* z2, int argIndex) {
         MOZ_CRASH_UNSAFE_PRINTF("*** Zone mismatch %p vs. %p at argument %d\n",
-                                (void*) z1, (void*) z2, argIndex);
+                                z1, z2, argIndex);
+    }
+
+    void check(JS::Realm* r, int argIndex) {
+        if (r && r != realm())
+            fail(realm(), r, argIndex);
     }
 
     void check(JS::Compartment* c, int argIndex) {
-        if (c && c != compartment)
-            fail(compartment, c, argIndex);
+        if (c && c != compartment())
+            fail(compartment(), c, argIndex);
     }
 
-    void checkZone(JS::Zone* z, int argIndex) {
-        if (compartment && z != compartment->zone())
-            fail(compartment->zone(), z, argIndex);
+    void check(JS::Zone* z, int argIndex) {
+        if (zone() && z != zone())
+            fail(zone(), z, argIndex);
     }
 
     void check(JSObject* obj, int argIndex) {
@@ -60,21 +78,6 @@ class CompartmentChecker
             MOZ_ASSERT(!js::gc::IsAboutToBeFinalizedUnbarriered(&obj));
             check(obj->compartment(), argIndex);
         }
-    }
-
-    template<typename T>
-    void check(const Rooted<T>& rooted, int argIndex) {
-        check(rooted.get(), argIndex);
-    }
-
-    template<typename T>
-    void check(Handle<T> handle, int argIndex) {
-        check(handle.get(), argIndex);
-    }
-
-    template<typename T>
-    void check(MutableHandle<T> handle, int argIndex) {
-        check(handle.get(), argIndex);
     }
 
     template <typename T>
@@ -86,11 +89,10 @@ class CompartmentChecker
 #ifdef DEBUG
         // Atoms which move across zone boundaries need to be marked in the new
         // zone, see JS_MarkCrossZoneId.
-        if (compartment) {
-            JSRuntime* rt = compartment->runtimeFromAnyThread();
-            if (!rt->gc.atomMarking.atomIsMarked(compartment->zone(), thing)) {
+        if (zone()) {
+            if (!cx->runtime()->gc.atomMarking.atomIsMarked(zone(), thing)) {
                 MOZ_CRASH_UNSAFE_PRINTF("*** Atom not marked for zone %p at argument %d\n",
-                                        compartment->zone(), argIndex);
+                                        zone(), argIndex);
             }
         }
 #endif
@@ -101,7 +103,7 @@ class CompartmentChecker
         if (str->isAtom())
             checkAtom(&str->asAtom(), argIndex);
         else
-            checkZone(str->zone(), argIndex);
+            check(str->zone(), argIndex);
     }
 
     void check(JS::Symbol* symbol, int argIndex) {
@@ -182,8 +184,7 @@ JSContext::checkImpl(int argIndex, const T1& t1)
     // depends on other objects not having been swept yet.
     if (JS::RuntimeHeapIsCollecting())
         return;
-    js::CompartmentChecker c(this);
-    c.check(t1, argIndex);
+    js::ContextChecks(this).check(t1, argIndex);
 }
 
 template <class Head, class... Tail> inline void

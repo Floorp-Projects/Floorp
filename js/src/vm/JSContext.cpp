@@ -1562,14 +1562,14 @@ JS::AutoCheckRequestDepth::~AutoCheckRequestDepth()
 
 #ifdef JS_CRASH_DIAGNOSTICS
 void
-CompartmentChecker::check(InterpreterFrame* fp, int argIndex)
+ContextChecks::check(InterpreterFrame* fp, int argIndex)
 {
     if (fp)
         check(fp->environmentChain(), argIndex);
 }
 
 void
-CompartmentChecker::check(AbstractFramePtr frame, int argIndex)
+ContextChecks::check(AbstractFramePtr frame, int argIndex)
 {
     if (frame)
         check(frame.environmentChain(), argIndex);
