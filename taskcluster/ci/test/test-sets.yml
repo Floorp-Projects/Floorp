@@ -108,6 +108,8 @@ raptor-chrome:
 raptor-fetch-firefox:
     - raptor-unity-webgl-firefox
     - raptor-wasm-misc-firefox
+    - raptor-wasm-misc-baseline-firefox
+    - raptor-wasm-misc-ion-firefox
 
 raptor-fetch-chrome:
     - raptor-unity-webgl-chrome
