@@ -199,11 +199,15 @@ assertSameCompartment(JSContext* cx, const Args&... args)
 #endif
 }
 
+} // namespace js
+
 template <class... Args> inline void
-releaseAssertSameCompartment(JSContext* cx, const Args&... args)
+JSContext::releaseCheck(const Args&... args)
 {
-    assertSameCompartmentImpl(cx, 1, args...);
+    assertSameCompartmentImpl(this, 0, args...);
 }
+
+namespace js {
 
 template <class... Args> inline void
 assertSameCompartmentDebugOnly(JSContext* cx, const Args&... args)

@@ -954,6 +954,8 @@ struct JSContext : public JS::RootingContext,
                            js::HandleObject incumbentGlobal);
     void addUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
     void removeUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
+
+    template <class... Args> inline void releaseCheck(const Args&... args);
 }; /* struct JSContext */
 
 inline JS::Result<>
