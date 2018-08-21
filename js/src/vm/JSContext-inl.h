@@ -155,10 +155,9 @@ class ContextChecks
     void check(JSScript* script, int argIndex) {
         MOZ_ASSERT(JS::CellIsNotGray(script));
         if (script)
-            check(script->compartment(), argIndex);
+            check(script->realm(), argIndex);
     }
 
-    void check(InterpreterFrame* fp, int argIndex);
     void check(AbstractFramePtr frame, int argIndex);
 
     void check(Handle<PropertyDescriptor> desc, int argIndex) {
