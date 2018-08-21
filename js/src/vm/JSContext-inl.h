@@ -173,45 +173,45 @@ class CompartmentChecker
     }
 };
 
+} // namespace js
+
 template <class T1> inline void
-assertSameCompartmentImpl(JSContext* cx, int argIndex, const T1& t1)
+JSContext::checkImpl(int argIndex, const T1& t1)
 {
     // Don't perform these checks when called from a finalizer. The checking
     // depends on other objects not having been swept yet.
     if (JS::RuntimeHeapIsCollecting())
         return;
-    CompartmentChecker c(cx);
+    js::CompartmentChecker c(this);
     c.check(t1, argIndex);
 }
 
 template <class Head, class... Tail> inline void
-assertSameCompartmentImpl(JSContext* cx, int argIndex, const Head& head, const Tail&... tail)
+JSContext::checkImpl(int argIndex, const Head& head, const Tail&... tail)
 {
-    assertSameCompartmentImpl(cx, argIndex, head);
-    assertSameCompartmentImpl(cx, argIndex + 1, tail...);
+    checkImpl(argIndex, head);
+    checkImpl(argIndex + 1, tail...);
 }
-
-} // namespace js
 
 template <class... Args> inline void
 JSContext::check(const Args&... args)
 {
 #ifdef JS_CRASH_DIAGNOSTICS
-    assertSameCompartmentImpl(this, 0, args...);
+    checkImpl(0, args...);
 #endif
 }
 
 template <class... Args> inline void
 JSContext::releaseCheck(const Args&... args)
 {
-    assertSameCompartmentImpl(this, 0, args...);
+    checkImpl(0, args...);
 }
 
 template <class... Args> MOZ_ALWAYS_INLINE void
 JSContext::debugOnlyCheck(const Args&... args)
 {
 #if defined(DEBUG) && defined(JS_CRASH_DIAGNOSTICS)
-    assertSameCompartmentImpl(this, 0, args...);
+    checkImpl(0, args...);
 #endif
 }
 
