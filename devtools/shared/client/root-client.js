@@ -6,6 +6,7 @@
 
 const { Ci } = require("chrome");
 const { arg, DebuggerClient } = require("devtools/shared/client/debugger-client");
+loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
 
 /**
  * A RootClient object represents a root actor on the server. Each
@@ -42,6 +43,10 @@ function RootClient(client, greeting) {
     },
     configurable: true
   });
+
+  // Cache of already created global scoped fronts
+  // [typeName:string => Front instance]
+  this.fronts = new Map();
 }
 exports.RootClient = RootClient;
 
@@ -267,6 +272,21 @@ RootClient.prototype = {
     };
 
     return this.request(packet);
+  },
+
+  /*
+   * This function returns a protocol.js Front for any root actor.
+   * i.e. the one directly served from RootActor.listTabs or getRoot.
+   */
+  async getFront(typeName) {
+    let front = this.fronts.get(typeName);
+    if (front) {
+      return front;
+    }
+    const rootForm = await this.rootForm;
+    front = getFront(this._client, typeName, rootForm);
+    this.fronts.set(typeName, front);
+    return front;
   },
 
   /**
