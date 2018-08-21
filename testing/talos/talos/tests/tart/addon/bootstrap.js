@@ -11,6 +11,7 @@
 // Reads the chrome.manifest from a legacy non-restartless extension and loads
 // its overlays into the appropriate top-level windows.
 
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -27,7 +28,7 @@ const windowTracker = {
       let {document} = window;
       let {documentURI} = document;
 
-      if (documentURI !== "chrome://browser/content/browser.xul") {
+      if (documentURI !== AppConstants.BROWSER_CHROME_URL) {
         return;
       }
       initializeBrowser(window);

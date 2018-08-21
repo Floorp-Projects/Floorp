@@ -32,7 +32,7 @@ const windowTracker = {
       let {document} = window;
       let {documentURI} = document;
 
-      if (documentURI !== "chrome://browser/content/browser.xul") {
+      if (documentURI !== AppConstants.BROWSER_CHROME_URL) {
         return;
       }
       loadChromeScripts(window);

@@ -4,6 +4,7 @@
 "use strict";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const Services = require("Services");
@@ -12,7 +13,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { DebuggerServer } = require("devtools/server/main");
 
 var TEST_BASE;
-if (window.location === "chrome://browser/content/browser.xul") {
+if (window.location === AppConstants.BROWSER_CHROME_URL) {
   TEST_BASE = "chrome://mochitests/content/browser/devtools/client/webide/test/";
 } else {
   TEST_BASE = "chrome://mochitests/content/chrome/devtools/client/webide/test/";
