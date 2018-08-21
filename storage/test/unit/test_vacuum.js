@@ -251,7 +251,7 @@ const TESTS = [
 
         run_next_test();
       },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
     }
     Services.obs.addObserver(vacuumObserver, "test-end-vacuum", false);
 
@@ -298,7 +298,7 @@ const TESTS = [
         do_check_false(aData);
         run_next_test();
       },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
     }
     Services.obs.addObserver(vacuumObserver, "test-end-vacuum", false);
 

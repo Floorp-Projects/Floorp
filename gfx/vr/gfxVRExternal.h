@@ -119,7 +119,7 @@ private:
 #if defined(XP_MACOSX)
   int mShmemFD;
 #elif defined(XP_WIN)
-  HANDLE mShmemFile;
+  base::ProcessHandle mShmemFile;
 #elif defined(MOZ_WIDGET_ANDROID)
   bool mDoShutdown;
   bool mExternalStructFailed;

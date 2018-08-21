@@ -10,6 +10,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/TypeTraits.h"
 
+#include "jsapi.h"
 #include "jsfriendapi.h"
 #include "NamespaceImports.h"
 

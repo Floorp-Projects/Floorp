@@ -9,6 +9,7 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "jsapi.h"
+#include "js/SavedFrameAPI.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"

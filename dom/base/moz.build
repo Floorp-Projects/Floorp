@@ -227,6 +227,7 @@ EXPORTS.mozilla.dom += [
     'TimeoutManager.h',
     'TreeIterator.h',
     'TreeWalker.h',
+    'VisualViewport.h',
     'WebKitCSSMatrix.h',
     'WindowOrientationObserver.h',
 ]
@@ -383,6 +384,7 @@ UNIFIED_SOURCES += [
     'TimeoutHandler.cpp',
     'TimeoutManager.cpp',
     'TreeWalker.cpp',
+    'VisualViewport.cpp',
     'WebKitCSSMatrix.cpp',
     'WindowDestroyedEvent.cpp',
     'WindowNamedPropertiesHandler.cpp',

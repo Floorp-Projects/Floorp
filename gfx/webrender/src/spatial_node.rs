@@ -5,8 +5,8 @@
 
 use api::{ExternalScrollId, LayoutPixel, LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use api::{LayoutVector2D, PipelineId, PropertyBinding, ScrollClamping, ScrollLocation};
-use api::{ScrollSensitivity, StickyOffsetBounds};
-use clip_scroll_tree::{CoordinateSystemId, SpatialNodeIndex, TransformUpdateState};
+use api::{ScrollSensitivity, StickyOffsetBounds, LayoutVector3D};
+use clip_scroll_tree::{CoordinateSystem, CoordinateSystemId, SpatialNodeIndex, TransformUpdateState};
 use euclid::SideOffsets2D;
 use gpu_types::TransformPalette;
 use scene::SceneProperties;
@@ -214,7 +214,7 @@ impl SpatialNode {
     pub fn update(
         &mut self,
         state: &mut TransformUpdateState,
-        next_coordinate_system_id: &mut CoordinateSystemId,
+        coord_systems: &mut Vec<CoordinateSystem>,
         scene_properties: &SceneProperties,
     ) {
         // If any of our parents was not rendered, we are not rendered either and can just
@@ -224,7 +224,7 @@ impl SpatialNode {
             return;
         }
 
-        self.update_transform(state, next_coordinate_system_id, scene_properties);
+        self.update_transform(state, coord_systems, scene_properties);
         self.transform_kind = self.world_content_transform.kind();
 
         // If this node is a reference frame, we check if it has a non-invertible matrix.
@@ -242,7 +242,7 @@ impl SpatialNode {
     pub fn update_transform(
         &mut self,
         state: &mut TransformUpdateState,
-        next_coordinate_system_id: &mut CoordinateSystemId,
+        coord_systems: &mut Vec<CoordinateSystem>,
         scene_properties: &SceneProperties,
     ) {
         match self.node_type {
@@ -281,8 +281,19 @@ impl SpatialNode {
                     // If we break 2D axis alignment or have a perspective component, we need to start a
                     // new incompatible coordinate system with which we cannot share clips without masking.
                     self.coordinate_system_relative_offset = LayoutVector2D::zero();
-                    state.current_coordinate_system_id = *next_coordinate_system_id;
-                    next_coordinate_system_id.advance();
+
+                    // Push that new coordinate system and record the new id.
+                    let coord_system = CoordinateSystem {
+                        offset: LayoutVector3D::new(
+                            state.coordinate_system_relative_offset.x,
+                            state.coordinate_system_relative_offset.y,
+                            0.0,
+                        ),
+                        transform: *info.resolved_transform.to_transform(),
+                        parent: Some(state.current_coordinate_system_id),
+                    };
+                    state.current_coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
+                    coord_systems.push(coord_system);
                 }
 
                 self.coordinate_system_id = state.current_coordinate_system_id;

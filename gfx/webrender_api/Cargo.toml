@@ -4,6 +4,7 @@ version = "0.57.2"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
+description = "Public API for WebRender"
 
 [features]
 nightly = ["euclid/unstable", "serde/unstable"]

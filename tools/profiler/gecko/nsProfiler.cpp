@@ -19,6 +19,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "shared-libraries.h"
+#include "js/JSON.h"
 #include "js/Value.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"

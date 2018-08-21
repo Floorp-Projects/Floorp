@@ -52,7 +52,7 @@ function spawnWithObserver(browser, observerFunc, func) {
     // This is the observer itself, it calls the passed-in function whenever
     // it encounters an event
     "  let ConsoleObserver = {",
-    "    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),",
+    "    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),",
     "    observe: function(aSubject, aTopic, aData) {",
     "      try {",
     "        (" + observerFunc.toString() + ")(aSubject.wrappedJSObject);",

@@ -18,6 +18,7 @@
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 
+#include "js/JSON.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/FetchUtil.h"

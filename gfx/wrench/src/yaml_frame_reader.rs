@@ -17,7 +17,7 @@ use webrender::api::*;
 use wrench::{FontDescriptor, Wrench, WrenchThing};
 use yaml_helper::{StringEnum, YamlHelper, make_perspective};
 use yaml_rust::{Yaml, YamlLoader};
-use {BLACK_COLOR, PLATFORM_DEFAULT_FACE_NAME, WHITE_COLOR};
+use PLATFORM_DEFAULT_FACE_NAME;
 
 fn rsrc_path(item: &Yaml, aux_dir: &PathBuf) -> PathBuf {
     let filename = item.as_str().unwrap();
@@ -680,7 +680,7 @@ impl YamlFrameReader {
         info.rect = item[bounds_key]
             .as_rect()
             .expect("rect type must have bounds");
-        let color = item["color"].as_colorf().unwrap_or(*WHITE_COLOR);
+        let color = item["color"].as_colorf().unwrap_or(ColorF::WHITE);
         dl.push_rect(&info, color);
     }
 
@@ -702,7 +702,7 @@ impl YamlFrameReader {
         item: &Yaml,
         info: &mut LayoutPrimitiveInfo,
     ) {
-        let color = item["color"].as_colorf().unwrap_or(*BLACK_COLOR);
+        let color = item["color"].as_colorf().unwrap_or(ColorF::BLACK);
         let orientation = item["orientation"]
             .as_str()
             .and_then(LineOrientation::from_str)
@@ -1123,7 +1123,7 @@ impl YamlFrameReader {
                 item
             ),
         };
-        dl.push_image(&info, stretch_size, tile_spacing, rendering, alpha_type, image_key);
+        dl.push_image(&info, stretch_size, tile_spacing, rendering, alpha_type, image_key, ColorF::WHITE);
     }
 
     fn handle_text(
@@ -1134,7 +1134,7 @@ impl YamlFrameReader {
         info: &mut LayoutPrimitiveInfo,
     ) {
         let size = item["size"].as_pt_to_au().unwrap_or(Au::from_f32_px(16.0));
-        let color = item["color"].as_colorf().unwrap_or(*BLACK_COLOR);
+        let color = item["color"].as_colorf().unwrap_or(ColorF::BLACK);
         let bg_color = item["bg-color"].as_colorf().map(|c| c.into());
         let synthetic_italics = if let Some(angle) = item["synthetic-italics"].as_f32() {
             SyntheticItalics::from_degrees(angle)
@@ -1452,7 +1452,7 @@ impl YamlFrameReader {
     ) {
         let blur_radius = yaml["blur-radius"].as_f32().unwrap_or(0.0);
         let offset = yaml["offset"].as_vector().unwrap_or(LayoutVector2D::zero());
-        let color = yaml["color"].as_colorf().unwrap_or(*BLACK_COLOR);
+        let color = yaml["color"].as_colorf().unwrap_or(ColorF::BLACK);
 
         dl.push_shadow(
             &info,

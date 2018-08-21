@@ -11,7 +11,6 @@
 
 #include "moz_external_vr.h"
 
-#include <thread>
 namespace base {
 class Thread;
 } // namespace base
@@ -33,6 +32,8 @@ public:
 private:
   VRService();
   ~VRService();
+  
+  bool InitShmem();
   void PushState(const mozilla::gfx::VRSystemState& aState);
   void PullState(mozilla::gfx::VRBrowserState& aState);
 
@@ -51,14 +52,14 @@ private:
    */
   VRBrowserState mBrowserState;
 
-  std::unique_ptr<VRSession> mSession;
+  UniquePtr<VRSession> mSession;
   base::Thread* mServiceThread;
   bool mShutdownRequested;
 
-  VRExternalShmem mAPIShmem;
+  VRExternalShmem* MOZ_OWNING_REF mAPIShmem;
+  base::ProcessHandle mTargetShmemFile;
 
   bool IsInServiceThread();
-  void RequestShutdown();
 
   /**
    * The VR Service thread is a state machine that always has one

@@ -7,6 +7,7 @@
 #include "JSControl.h"
 
 #include "js/Conversions.h"
+#include "js/JSON.h"
 #include "ChildInternal.h"
 #include "ParentInternal.h"
 #include "xpcprivate.h"
