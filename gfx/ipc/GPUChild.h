@@ -36,6 +36,7 @@ public:
   void Init();
 
   bool EnsureGPUReady();
+  base::ProcessHandle GetChildProcessHandle();
 
   PAPZInputBridgeChild* AllocPAPZInputBridgeChild(const LayersId& aLayersId) override;
   bool DeallocPAPZInputBridgeChild(PAPZInputBridgeChild* aActor) override;
@@ -47,6 +48,7 @@ public:
   mozilla::ipc::IPCResult RecvInitComplete(const GPUDeviceData& aData) override;
   mozilla::ipc::IPCResult RecvReportCheckerboard(const uint32_t& aSeverity, const nsCString& aLog) override;
   mozilla::ipc::IPCResult RecvInitCrashReporter(Shmem&& shmem, const NativeThreadId& aThreadId) override;
+  mozilla::ipc::IPCResult RecvCreateVRProcess() override;
 
   mozilla::ipc::IPCResult RecvAccumulateChildHistograms(InfallibleTArray<HistogramAccumulation>&& aAccumulations) override;
   mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistograms(InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations) override;

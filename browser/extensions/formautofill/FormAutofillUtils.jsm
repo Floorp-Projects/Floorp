@@ -246,17 +246,18 @@ this.FormAutofillUtils = {
   },
 
   /**
-   * Get address display label. It should display up to two pieces of
-   * information, separated by a comma.
+   * Get address display label. It should display information separated
+   * by a comma.
    *
    * @param  {object} address
+   * @param  {string?} addressFields Override the fields which can be displayed, but not the order.
    * @returns {string}
    */
-  getAddressLabel(address) {
+  getAddressLabel(address, addressFields = null) {
     // TODO: Implement a smarter way for deciding what to display
     //       as option text. Possibly improve the algorithm in
     //       ProfileAutoCompleteResult.jsm and reuse it here.
-    const fieldOrder = [
+    let fieldOrder = [
       "name",
       "-moz-street-address-one-line",  // Street address
       "address-level2",  // City/Town
@@ -270,6 +271,10 @@ this.FormAutofillUtils = {
 
     address = {...address};
     let parts = [];
+    if (addressFields) {
+      let requiredFields = addressFields.trim().split(/\s+/);
+      fieldOrder = fieldOrder.filter(name => requiredFields.includes(name));
+    }
     if (address["street-address"]) {
       address["-moz-street-address-one-line"] = this.toOneLineAddress(
         address["street-address"]
@@ -280,7 +285,7 @@ this.FormAutofillUtils = {
       if (string) {
         parts.push(string);
       }
-      if (parts.length == 2) {
+      if (parts.length == 2 && !addressFields) {
         break;
       }
     }

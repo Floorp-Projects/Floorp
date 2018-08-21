@@ -12,6 +12,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "gc/Marking.h"
+#include "js/AutoByteString.h"
 #include "js/Value.h"
 #include "vm/Debugger.h"
 #include "vm/TypedArrayObject.h"

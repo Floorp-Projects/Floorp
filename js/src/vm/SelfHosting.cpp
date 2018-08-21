@@ -38,8 +38,10 @@
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
+#include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"
+#include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
 #include "vm/ArgumentsObject.h"
@@ -70,6 +72,7 @@ using namespace js;
 using namespace js::selfhosted;
 
 using JS::AutoCheckCannotGC;
+using JS::AutoStableStringChars;
 using mozilla::IsInRange;
 using mozilla::Maybe;
 

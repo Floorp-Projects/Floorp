@@ -558,6 +558,7 @@ pub struct ImageDisplayItem {
     pub tile_spacing: LayoutSize,
     pub image_rendering: ImageRendering,
     pub alpha_type: AlphaType,
+    pub color: ColorF,
 }
 
 #[repr(u32)]

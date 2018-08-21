@@ -35,6 +35,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Policy.h"
 #include "jit/BaselineJIT.h"
+#include "js/AutoByteString.h"
 #include "js/MemoryMetrics.h"
 #include "js/Proxy.h"
 #include "js/UbiNode.h"
@@ -2506,6 +2507,25 @@ NativeGetPureInline(NativeObject* pobj, jsid id, PropertyResult prop, Value* vp)
     return true;
 }
 
+static inline bool
+UnboxedGetPureInline(JSObject* pobj, jsid id, PropertyResult prop, Value* vp)
+{
+    MOZ_ASSERT(prop.isNonNativeProperty());
+
+    // This might be a TypedObject.
+    if (!pobj->is<UnboxedPlainObject>())
+        return false;
+
+    const UnboxedLayout& layout = pobj->as<UnboxedPlainObject>().layout();
+    if (const UnboxedLayout::Property* property = layout.lookup(id)) {
+        *vp = pobj->as<UnboxedPlainObject>().getValue(*property);
+        return true;
+    }
+
+    // Don't bother supporting expandos for now.
+    return false;
+}
+
 bool
 js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp)
 {
@@ -2519,22 +2539,28 @@ js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp)
         return true;
     }
 
-    return pobj->isNative() && NativeGetPureInline(&pobj->as<NativeObject>(), id, prop, vp);
+    if (MOZ_LIKELY(pobj->isNative()))
+        return NativeGetPureInline(&pobj->as<NativeObject>(), id, prop, vp);
+    return UnboxedGetPureInline(pobj, id, prop, vp);
 }
 
 bool
-js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp)
+js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp, bool* found)
 {
     PropertyResult prop;
     if (!LookupOwnPropertyPure(cx, obj, id, &prop))
         return false;
 
     if (!prop) {
+        *found = false;
         vp->setUndefined();
         return true;
     }
 
-    return obj->isNative() && NativeGetPureInline(&obj->as<NativeObject>(), id, prop, vp);
+    *found = true;
+    if (MOZ_LIKELY(obj->isNative()))
+        return NativeGetPureInline(&obj->as<NativeObject>(), id, prop, vp);
+    return UnboxedGetPureInline(obj, id, prop, vp);
 }
 
 static inline bool

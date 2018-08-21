@@ -1105,7 +1105,8 @@ GetBufferSpeciesConstructor(JSContext* cx, Handle<TypedArrayObject*> typedArray,
             return nullptr;
 
         Value ctor;
-        if (GetOwnPropertyPure(cx, proto, NameToId(cx->names().constructor), &ctor) &&
+        bool found;
+        if (GetOwnPropertyPure(cx, proto, NameToId(cx->names().constructor), &ctor, &found) &&
             ctor.isObject() && &ctor.toObject() == defaultCtor)
         {
             jsid speciesId = SYMBOL_TO_JSID(cx->wellKnownSymbols().species);

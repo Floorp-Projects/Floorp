@@ -7,7 +7,7 @@ fi
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 
-if [ -n "$FORCE_GCC" ]; then
+if [ -n "$FORCE_GCC" -o -n "$MOZ_PGO" ]; then
     CC="$TOOLTOOL_DIR/gcc/bin/gcc"
     CXX="$TOOLTOOL_DIR/gcc/bin/g++"
 else

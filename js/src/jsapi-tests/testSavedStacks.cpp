@@ -8,6 +8,7 @@
 #include "builtin/String.h"
 
 #include "builtin/TestingFunctions.h"
+#include "js/SavedFrameAPI.h"
 #include "jsapi-tests/tests.h"
 #include "vm/ArrayObject.h"
 #include "vm/Realm.h"

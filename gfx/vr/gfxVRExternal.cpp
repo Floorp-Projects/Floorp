@@ -354,6 +354,10 @@ VRSystemManagerExternal::VRSystemManagerExternal(VRExternalShmem* aAPIShmem /* =
   mExternalStructFailed = false;
   mEnumerationCompleted = false;
 #endif
+
+  if (!aAPIShmem) {
+    OpenShmem();
+  }
 }
 
 VRSystemManagerExternal::~VRSystemManagerExternal()
@@ -400,7 +404,14 @@ VRSystemManagerExternal::OpenShmem()
 
 #elif defined(XP_WIN)
   if (mShmemFile == NULL) {
-    mShmemFile = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, kShmemName);
+    if (gfxPrefs::VRProcessEnabled()) {
+      mShmemFile = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0,
+                                      sizeof(VRExternalShmem), kShmemName);
+	    MOZ_ASSERT(GetLastError() == 0);
+    } else {
+      mShmemFile = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, kShmemName);
+    }
+
     if (mShmemFile == NULL) {
       // TODO - Implement logging
       CloseShmem();
@@ -504,7 +515,8 @@ VRSystemManagerExternal::Create(VRExternalShmem* aAPIShmem /* = nullptr*/)
     return nullptr;
   }
 
-  if (!gfxPrefs::VRExternalEnabled() && aAPIShmem == nullptr) {
+  if ((!gfxPrefs::VRExternalEnabled() && aAPIShmem == nullptr) ||
+      !XRE_IsGPUProcess()) {
     return nullptr;
   }
 

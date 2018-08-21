@@ -58,6 +58,10 @@ public:
   bool SendSelectionEvent(const uint64_t& aID, const uint64_t& aWidgetID,
                           const uint32_t& aType);
   bool SendRoleChangedEvent(const a11y::role& aRole);
+  bool SendScrollingEvent(const uint64_t& aID, const uint64_t& aType,
+                          const uint32_t& aScrollX, const uint32_t& aScrollY,
+                          const uint32_t& aMaxScrollX,
+                          const uint32_t& aMaxScrollY);
 
   bool ConstructChildDocInParentProcess(DocAccessibleChild* aNewChildDoc,
                                         uint64_t aUniqueID, uint32_t aMsaaID);
@@ -267,6 +271,35 @@ private:
     }
 
     a11y::role mRole;
+  };
+
+  struct SerializedScrolling final : public DeferredEvent
+  {
+    explicit SerializedScrolling(DocAccessibleChild* aTarget,
+                                 uint64_t aID, uint64_t aType,
+                                 uint32_t aScrollX, uint32_t aScrollY,
+                                 uint32_t aMaxScrollX, uint32_t aMaxScrollY)
+      : DeferredEvent(aTarget)
+      , mID(aID)
+      , mType(aType)
+      , mScrollX(aScrollX)
+      , mScrollY(aScrollY)
+      , mMaxScrollX(aMaxScrollX)
+      , mMaxScrollY(aMaxScrollY)
+    {}
+
+    void Dispatch(DocAccessibleChild* aIPCDoc) override
+    {
+      Unused << aIPCDoc->SendScrollingEvent(mID, mType, mScrollX, mScrollY,
+                                            mMaxScrollX, mMaxScrollY);
+    }
+
+    uint64_t mID;
+    uint64_t mType;
+    uint32_t mScrollX;
+    uint32_t mScrollY;
+    uint32_t mMaxScrollX;
+    uint32_t mMaxScrollY;
   };
 
   struct SerializedEvent final : public DeferredEvent

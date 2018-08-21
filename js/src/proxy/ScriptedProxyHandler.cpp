@@ -8,6 +8,7 @@
 
 #include "jsapi.h"
 
+#include "js/AutoByteString.h"
 #include "vm/Interpreter.h" // For InstanceOfOperator
 
 #include "vm/JSObject-inl.h"

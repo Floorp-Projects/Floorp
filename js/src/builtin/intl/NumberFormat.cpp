@@ -21,6 +21,7 @@
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
 #include "js/RootingAPI.h"
+#include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
@@ -33,12 +34,14 @@ using namespace js;
 using mozilla::AssertedCast;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
-using mozilla::IsNegativeZero;
+using mozilla::IsNegative;
 
 using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
 using js::intl::GetAvailableLocales;
 using js::intl::IcuLocale;
+
+using JS::AutoStableStringChars;
 
 const ClassOps NumberFormatObject::classOps_ = {
     nullptr, /* addProperty */
@@ -373,15 +376,11 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
 }
 
 static JSString*
-PartitionNumberPattern(JSContext* cx, UNumberFormat* nf, double* x,
+PartitionNumberPattern(JSContext* cx, UNumberFormat* nf, double x,
                        UFieldPositionIterator* fpositer)
 {
-    // PartitionNumberPattern doesn't consider -0.0 to be negative.
-    if (IsNegativeZero(*x))
-        *x = 0.0;
-
     return CallICU(cx, [nf, x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
-        return unum_formatDoubleForFields(nf, *x, chars, size, fpositer, status);
+        return unum_formatDoubleForFields(nf, x, chars, size, fpositer, status);
     });
 }
 
@@ -390,7 +389,7 @@ intl_FormatNumber(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue
 {
     // Passing null for |fpositer| will just not compute partition information,
     // letting us common up all ICU number-formatting code.
-    JSString* str = PartitionNumberPattern(cx, nf, &x, nullptr);
+    JSString* str = PartitionNumberPattern(cx, nf, x, nullptr);
     if (!str)
         return false;
 
@@ -426,13 +425,10 @@ GetFieldTypeForNumberField(UNumberFormatFields fieldName, double d)
         return &JSAtomState::fraction;
 
       case UNUM_SIGN_FIELD: {
-        MOZ_ASSERT(!IsNegativeZero(d),
-                   "-0 should have been excluded by PartitionNumberPattern");
-
         // Manual trawling through the ICU call graph appears to indicate that
         // the basic formatting we request will never include a positive sign.
         // But this analysis may be mistaken, so don't absolutely trust it.
-        return d < 0 ? &JSAtomState::minusSign : &JSAtomState::plusSign;
+        return IsNegative(d) ? &JSAtomState::minusSign : &JSAtomState::plusSign;
       }
 
       case UNUM_PERCENT_FIELD:
@@ -482,7 +478,7 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
     MOZ_ASSERT(fpositer);
     ScopedICUObject<UFieldPositionIterator, ufieldpositer_close> toClose(fpositer);
 
-    RootedString overallResult(cx, PartitionNumberPattern(cx, nf, &x, fpositer));
+    RootedString overallResult(cx, PartitionNumberPattern(cx, nf, x, fpositer));
     if (!overallResult)
         return false;
 

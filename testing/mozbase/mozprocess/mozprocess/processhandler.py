@@ -863,12 +863,6 @@ falling back to not using job objects for managing child processes""", file=sys.
         self.returncode = self.proc.wait()
         return self.returncode
 
-    # TODO Remove this method when consumers have been fixed
-    def waitForFinish(self, timeout=None):
-        print("MOZPROCESS WARNING: ProcessHandler.waitForFinish() is deprecated, "
-              "use ProcessHandler.wait() instead", file=sys.stderr)
-        return self.wait(timeout=timeout)
-
     @property
     def pid(self):
         return self.proc.pid

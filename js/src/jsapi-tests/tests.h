@@ -17,6 +17,7 @@
 
 #include "gc/GC.h"
 #include "js/AllocPolicy.h"
+#include "js/AutoByteString.h"
 #include "js/Vector.h"
 #include "vm/JSContext.h"
 

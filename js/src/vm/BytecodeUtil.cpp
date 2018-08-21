@@ -32,6 +32,7 @@
 #include "frontend/SourceNotes.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
+#include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #include "util/StringBuffer.h"

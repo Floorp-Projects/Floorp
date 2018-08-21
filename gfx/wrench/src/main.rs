@@ -86,8 +86,6 @@ use yaml_frame_reader::YamlFrameReader;
 
 lazy_static! {
     static ref PLATFORM_DEFAULT_FACE_NAME: String = String::from("Arial");
-    static ref WHITE_COLOR: ColorF = ColorF::new(1.0, 1.0, 1.0, 1.0);
-    static ref BLACK_COLOR: ColorF = ColorF::new(0.0, 0.0, 0.0, 1.0);
 }
 
 pub static mut CURRENT_FRAME_NUMBER: u32 = 0;

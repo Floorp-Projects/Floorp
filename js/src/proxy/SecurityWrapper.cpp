@@ -8,10 +8,13 @@
 #include "jsfriendapi.h"
 #include "NamespaceImports.h"
 
+#include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "vm/StringType.h"
 
 using namespace js;
+
+using JS::AutoStableStringChars;
 
 template <class Base>
 bool

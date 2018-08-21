@@ -12,7 +12,7 @@ function run_test() {
   // --- Preliminary platform check ---
 
   // If this test is not running on the Windows platform, stop now, before
-  // calling XPCOMUtils.generateQI during the MockWindowsRegKey declaration.
+  // calling ChromeUtils.generateQI during the MockWindowsRegKey declaration.
   if (mozinfo.os != "win")
     return;
 

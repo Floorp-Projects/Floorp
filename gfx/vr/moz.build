@@ -7,11 +7,20 @@
 EXPORTS += [
     'external_api/moz_external_vr.h',
     'gfxVR.h',
+    'gfxVRExternal.h',
+    'ipc/VRChild.h',
+    'ipc/VRGPUChild.h',
+    'ipc/VRGPUParent.h',
     'ipc/VRLayerChild.h',
     'ipc/VRManagerChild.h',
     'ipc/VRManagerParent.h',
     'ipc/VRMessageUtils.h',
+    'ipc/VRParent.h',
+    'ipc/VRProcessChild.h',
+    'ipc/VRProcessManager.h',
+    'ipc/VRProcessParent.h',
     'VRDisplayClient.h',
+    'VRDisplayHost.h',
     'VRDisplayPresentation.h',
     'VRManager.h',
     'VRThread.h',
@@ -25,10 +34,17 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     'gfxVR.cpp',
+    'ipc/VRChild.cpp',
+    'ipc/VRGPUChild.cpp',
+    'ipc/VRGPUParent.cpp',
     'ipc/VRLayerChild.cpp',
     'ipc/VRLayerParent.cpp',
     'ipc/VRManagerChild.cpp',
     'ipc/VRManagerParent.cpp',
+    'ipc/VRParent.cpp',
+    'ipc/VRProcessChild.cpp',
+    'ipc/VRProcessManager.cpp',
+    'ipc/VRProcessParent.cpp',
     'VRDisplayClient.cpp',
     'VRDisplayPresentation.cpp',
     'VRManager.cpp',
@@ -69,6 +85,8 @@ if CONFIG['OS_TARGET'] == 'Android':
     LOCAL_INCLUDES += ['/widget/android']
 
 IPDL_SOURCES = [
+    'ipc/PVR.ipdl',
+    'ipc/PVRGPU.ipdl',
     'ipc/PVRLayer.ipdl',
     'ipc/PVRManager.ipdl',
 ]

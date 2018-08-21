@@ -31,6 +31,7 @@
 #include "builtin/RegExp.h"
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
+#include "js/StableStringChars.h"
 #include "js/UniquePtr.h"
 #if ENABLE_INTL_API
 # include "unicode/uchar.h"
@@ -68,6 +69,7 @@ using mozilla::PodCopy;
 using mozilla::RangedPtr;
 
 using JS::AutoCheckCannotGC;
+using JS::AutoStableStringChars;
 
 static JSLinearString*
 ArgToLinearString(JSContext* cx, const CallArgs& args, unsigned argno)
