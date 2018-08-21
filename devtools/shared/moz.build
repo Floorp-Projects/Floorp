@@ -25,7 +25,6 @@ DIRS += [
     'platform',
     'pretty-fast',
     'qrcode',
-    'screenshot',
     'security',
     'sourcemap',
     'sprintfjs',

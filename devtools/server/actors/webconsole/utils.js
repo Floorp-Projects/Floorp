@@ -7,10 +7,11 @@
 
 const {Ci, Cu} = require("chrome");
 
-// Note that this is only used in WebConsoleCommands, see $0, screenshot and pprint().
+loader.lazyRequireGetter(this, "screenshot", "devtools/server/actors/webconsole/screenshot", true);
+
+// Note that this is only used in WebConsoleCommands, see $0 and pprint().
 if (!isWorker) {
   loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/widgets/VariablesView.jsm");
-  loader.lazyRequireGetter(this, "captureScreenshot", "devtools/shared/screenshot/capture", true);
 }
 
 const CONSOLE_WORKER_IDS = exports.CONSOLE_WORKER_IDS = [
@@ -598,13 +599,10 @@ WebConsoleCommands._registerOriginal("copy", function(owner, value) {
  *               The arguments to be passed to the screenshot
  * @return void
  */
-WebConsoleCommands._registerOriginal("screenshot", function(owner, args = {}) {
+WebConsoleCommands._registerOriginal("screenshot", function(owner, args) {
   owner.helperResult = (async () => {
     // creates data for saving the screenshot
-    // help is handled on the client side
-    const value = args.help ?
-      null :
-      await captureScreenshot(args, owner.window.document);
+    const value = await screenshot(owner, args);
     return {
       type: "screenshotOutput",
       value,

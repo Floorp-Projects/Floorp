@@ -98,8 +98,8 @@ function getFormattedHelpData() {
 
 /**
  * Main entry point in this file; Takes the original arguments that `:screenshot` was
- * called with and the image value from the server, and uses the client window to add
- * and audio effect.
+ * called with and the image value from the server, and uses the client window to save
+ * the screenshot to the remote debugging machine's memory or clipboard.
  *
  * @param object window
  *        The Debugger Client window.
@@ -113,14 +113,14 @@ function getFormattedHelpData() {
  * @return string[]
  *         Response messages from processing the screenshot
  */
-function saveScreenshot(window, args = {}, value) {
+function processScreenshot(window, args = {}, value) {
   if (args.help) {
     const message = getFormattedHelpData();
-    // Wrap message in an array so that the return value is consistant with save
+    // Wrap meesage in an array so that the return value is consistant with saveScreenshot
     return [message];
   }
-  simulateCameraShutter(window);
-  return save(args, value);
+  simulateCameraShutter(window.document);
+  return saveScreenshot(window, args, value);
 }
 
 /**
@@ -129,7 +129,8 @@ function saveScreenshot(window, args = {}, value) {
  * @param object document
  *        The Debugger Client document.
  */
-function simulateCameraShutter(window) {
+function simulateCameraShutter(document) {
+  const window = document.defaultView;
   if (Services.prefs.getBoolPref("devtools.screenshot.audio.enabled")) {
     const audioCamera = new window.Audio("resource://devtools/client/themes/audio/shutter.wav");
     audioCamera.play();
@@ -138,6 +139,9 @@ function simulateCameraShutter(window) {
 
 /**
  * Save the captured screenshot to one of several destinations.
+ *
+ * @param object window
+ *        The Debugger Client window.
  *
  * @param object args
  *        The original args with which the screenshot was called.
@@ -148,18 +152,18 @@ function simulateCameraShutter(window) {
  * @return string[]
  *         Response messages from processing the screenshot.
  */
-async function save(args, image) {
+async function saveScreenshot(window, args, image) {
   const fileNeeded = args.filename ||
     !args.clipboard || args.file;
   const results = [];
 
   if (args.clipboard) {
-    const result = saveToClipboard(image.data);
+    const result = saveToClipboard(window, image.data);
     results.push(result);
   }
 
   if (fileNeeded) {
-    const result = await saveToFile(image);
+    const result = await saveToFile(window, image);
     results.push(result);
   }
   return results;
@@ -169,13 +173,16 @@ async function save(args, image) {
  * Save the image data to the clipboard. This returns a promise, so it can
  * be treated exactly like file processing.
  *
+ * @param object window
+ *        The Debugger Client window.
+ *
  * @param string base64URI
  *        The image data encoded in a base64 URI that was sent from the server.
  *
  * @return string
  *         Response message from processing the screenshot.
  */
-function saveToClipboard(base64URI) {
+function saveToClipboard(window, base64URI) {
   try {
     const imageTools = Cc["@mozilla.org/image/tools;1"]
                        .getService(Ci.imgITools);
@@ -205,13 +212,16 @@ function saveToClipboard(base64URI) {
  * Save the screenshot data to disk, returning a promise which is resolved on
  * completion.
  *
+ * @param object window
+ *        The Debugger Client window.
+ *
  * @param object image
  *        The image object that was sent from the server.
  *
  * @return string
  *         Response message from processing the screenshot.
  */
-async function saveToFile(image) {
+async function saveToFile(window, image) {
   let filename = image.filename;
 
   // Check there is a .png extension to filename
@@ -248,4 +258,4 @@ async function saveToFile(image) {
   }
 }
 
-module.exports = saveScreenshot;
+module.exports = processScreenshot;
