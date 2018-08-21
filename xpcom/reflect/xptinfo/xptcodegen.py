@@ -84,6 +84,7 @@ nsXPTMethodInfo = mkstruct(
     "mOptArgc",
     "mContext",
     "mHasRetval",
+    "mIsSymbol",
 )
 
 ##########################################################
@@ -244,6 +245,9 @@ def link_to_cpp(interfaces, fd):
             strings[s] = 0
         return strings[s]
 
+    def lower_symbol(s):
+        return "uint32_t(JS::SymbolCode::%s)" % s
+
     def lower_extra_type(type):
         key = describe_type(type)
         idx = type_cache.get(key)
@@ -315,10 +319,16 @@ def link_to_cpp(interfaces, fd):
     def lower_method(method, ifacename):
         methodname = "%s::%s" % (ifacename, method['name'])
 
+        isSymbol = 'symbol' in method['flags']
+
         if 'notxpcom' in method['flags'] or 'hidden' in method['flags']:
             paramidx = name = numparams = 0  # hide parameters
         else:
-            name = lower_string(method['name'])
+            if isSymbol:
+                name = lower_symbol(method['name'])
+            else:
+                name = lower_string(method['name'])
+
             numparams = len(method['params'])
 
             # Check cache for parameters
@@ -346,6 +356,7 @@ def link_to_cpp(interfaces, fd):
             mOptArgc='optargc' in method['flags'],
             mContext='jscontext' in method['flags'],
             mHasRetval='hasretval' in method['flags'],
+            mIsSymbol=isSymbol,
         ))
 
     def lower_const(const, ifacename):
