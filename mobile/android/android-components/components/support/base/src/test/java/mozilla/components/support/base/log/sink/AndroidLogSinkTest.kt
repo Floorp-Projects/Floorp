@@ -7,6 +7,7 @@ package mozilla.components.support.base.log.sink
 import mozilla.components.support.base.log.Log
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -16,6 +17,11 @@ import java.io.PrintWriter
 
 @RunWith(RobolectricTestRunner::class)
 class AndroidLogSinkTest {
+    @Before
+    fun setUp() {
+        ShadowLog.clear()
+    }
+
     @Test
     fun `debug log will be print to Android log`() {
         val sink = AndroidLogSink()
@@ -91,7 +97,7 @@ class AndroidLogSinkTest {
     }
 
     @Test
-    @Config(sdk = [android.os.Build.VERSION_CODES.LOLLIPOP])
+    @Config(sdk = [21])
     fun `Tag will be truncated on SDK 21+`() {
         val sink = AndroidLogSink("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
         sink.log(message = "Hello!")
@@ -123,7 +129,7 @@ class AndroidLogSinkTest {
     }
 
     @Test
-    @Config(sdk = [android.os.Build.VERSION_CODES.N])
+    @Config(sdk = [24])
     fun `Tag will not be truncated on SDK 24+`() {
         val sink = AndroidLogSink("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
         sink.log(message = "Hello!")

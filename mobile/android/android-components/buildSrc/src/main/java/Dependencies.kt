@@ -8,11 +8,12 @@ private object Versions {
     const val coroutines = "1.0.1"
 
     const val junit = "4.12"
-    const val robolectric = "3.8"
+    const val robolectric = "4.0-alpha-3"
     const val mockito = "2.23.0"
+
     const val mockwebserver = "3.10.0"
 
-    const val support_libraries = "27.1.1"
+    const val support_libraries = "28.0.0"
     const val constraint_layout = "1.1.2"
     const val workmanager = "1.0.0-alpha09"
 

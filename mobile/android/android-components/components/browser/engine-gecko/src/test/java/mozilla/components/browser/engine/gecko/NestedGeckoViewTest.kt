@@ -6,11 +6,12 @@ package mozilla.components.browser.engine.gecko
 
 import android.support.v4.view.NestedScrollingChildHelper
 import android.support.v4.view.ViewCompat.SCROLL_AXIS_VERTICAL
-import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_CANCEL
 import android.view.MotionEvent.ACTION_DOWN
+import android.view.MotionEvent.ACTION_MOVE
 import android.view.MotionEvent.ACTION_UP
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.mockMotionEvent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -66,26 +67,18 @@ class NestedGeckoViewTest {
     @Test
     fun `verify onTouchEvent when ACTION_DOWN`() {
         val nestedWebView = NestedGeckoView(RuntimeEnvironment.application)
-        val mockMotionEvent: MotionEvent = mock()
         val mockChildHelper: NestedScrollingChildHelper = mock()
         nestedWebView.childHelper = mockChildHelper
 
-        doReturn(ACTION_DOWN).`when`(mockMotionEvent).actionMasked
-
-        nestedWebView.onTouchEvent(mockMotionEvent)
+        nestedWebView.onTouchEvent(mockMotionEvent(ACTION_DOWN))
         verify(mockChildHelper).startNestedScroll(SCROLL_AXIS_VERTICAL)
     }
 
     @Test
     fun `verify onTouchEvent when ACTION_MOVE`() {
         val nestedWebView = NestedGeckoView(RuntimeEnvironment.application)
-        val mockMotionEvent: MotionEvent = mock()
         val mockChildHelper: NestedScrollingChildHelper = mock()
         nestedWebView.childHelper = mockChildHelper
-
-        doReturn(MotionEvent.ACTION_MOVE).`when`(mockMotionEvent).actionMasked
-
-        doReturn(10f).`when`(mockMotionEvent).y
 
         doReturn(true).`when`(mockChildHelper).dispatchNestedPreScroll(
             anyInt(), anyInt(), any(),
@@ -95,7 +88,7 @@ class NestedGeckoViewTest {
         nestedWebView.scrollOffset[0] = 1
         nestedWebView.scrollOffset[1] = 2
 
-        nestedWebView.onTouchEvent(mockMotionEvent)
+        nestedWebView.onTouchEvent(mockMotionEvent(ACTION_MOVE, y = 10f))
         assertEquals(nestedWebView.nestedOffsetY, 2)
         assertEquals(nestedWebView.lastY, 8)
 
@@ -103,7 +96,7 @@ class NestedGeckoViewTest {
             anyInt(), anyInt(), anyInt(), anyInt(), any()
         )
 
-        nestedWebView.onTouchEvent(mockMotionEvent)
+        nestedWebView.onTouchEvent(mockMotionEvent(ACTION_MOVE, y = 10f))
         assertEquals(nestedWebView.nestedOffsetY, 6)
         assertEquals(nestedWebView.lastY, 6)
     }
@@ -111,18 +104,13 @@ class NestedGeckoViewTest {
     @Test
     fun `verify onTouchEvent when ACTION_UP or ACTION_CANCEL`() {
         val nestedWebView = NestedGeckoView(RuntimeEnvironment.application)
-        val mockMotionEvent: MotionEvent = mock()
         val mockChildHelper: NestedScrollingChildHelper = mock()
         nestedWebView.childHelper = mockChildHelper
 
-        doReturn(ACTION_UP).`when`(mockMotionEvent).actionMasked
-
-        nestedWebView.onTouchEvent(mockMotionEvent)
+        nestedWebView.onTouchEvent(mockMotionEvent(ACTION_UP))
         verify(mockChildHelper).stopNestedScroll()
 
-        doReturn(ACTION_CANCEL).`when`(mockMotionEvent).actionMasked
-
-        nestedWebView.onTouchEvent(mockMotionEvent)
+        nestedWebView.onTouchEvent(mockMotionEvent(ACTION_CANCEL))
         verify(mockChildHelper, times(2)).stopNestedScroll()
     }
 }
