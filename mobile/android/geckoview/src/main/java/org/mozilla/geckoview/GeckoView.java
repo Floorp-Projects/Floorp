@@ -108,11 +108,13 @@ public class GeckoView extends FrameLayout {
                 final Rect frame = holder.getSurfaceFrame();
                 mDisplay.surfaceChanged(holder.getSurface(), frame.right, frame.bottom);
             }
+            GeckoView.this.setActive(true);
         }
 
         public GeckoDisplay release() {
             if (mValid) {
                 mDisplay.surfaceDestroyed();
+                GeckoView.this.setActive(false);
             }
 
             final GeckoDisplay display = mDisplay;
@@ -130,6 +132,7 @@ public class GeckoView extends FrameLayout {
             if (mDisplay != null) {
                 mDisplay.surfaceChanged(holder.getSurface(), width, height);
             }
+            GeckoView.this.setActive(true);
             mValid = true;
         }
 
@@ -138,6 +141,7 @@ public class GeckoView extends FrameLayout {
             if (mDisplay != null) {
                 mDisplay.surfaceDestroyed();
             }
+            GeckoView.this.setActive(false);
             mValid = false;
         }
 
@@ -203,6 +207,12 @@ public class GeckoView extends FrameLayout {
         }
     }
 
+    /* package */ void setActive(final boolean active) {
+        if (mSession != null) {
+            mSession.setActive(active);
+        }
+    }
+
     public GeckoSession releaseSession() {
         if (mSession == null) {
             return null;
@@ -224,10 +234,13 @@ public class GeckoView extends FrameLayout {
             mSession.getTextInput().setView(null);
         }
 
-        if (session.getSelectionActionDelegate() == mSelectionActionDelegate) {
+        if (mSession.getSelectionActionDelegate() == mSelectionActionDelegate) {
             mSession.setSelectionActionDelegate(null);
         }
 
+        if (isFocused()) {
+            mSession.setFocused(false);
+        }
         mSession = null;
         return session;
     }
@@ -314,6 +327,10 @@ public class GeckoView extends FrameLayout {
 
         if (session.getSelectionActionDelegate() == null && mSelectionActionDelegate != null) {
             session.setSelectionActionDelegate(mSelectionActionDelegate);
+        }
+
+        if (isFocused()) {
+            session.setFocused(true);
         }
     }
 
@@ -416,10 +433,27 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
+    public void onWindowFocusChanged(boolean hasWindowFocus) {
+        super.onWindowFocusChanged(hasWindowFocus);
+
+        if (mSession != null) {
+            mSession.setFocused(hasWindowFocus && isFocused());
+        }
+    }
+
+    @Override
     public void onFocusChanged(boolean gainFocus, int direction, Rect previouslyFocusedRect) {
         super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
 
-        if (!gainFocus || mIsResettingFocus) {
+        if (mIsResettingFocus) {
+            return;
+        }
+
+        if (mSession != null) {
+            mSession.setFocused(gainFocus);
+        }
+
+        if (!gainFocus) {
             return;
         }
 
