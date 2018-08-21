@@ -1034,7 +1034,7 @@ JS::CreateError(JSContext* cx, JSExnType type, HandleObject stack, HandleString 
                     uint32_t lineNumber, uint32_t columnNumber, JSErrorReport* report,
                     HandleString message, MutableHandleValue rval)
 {
-    assertSameCompartment(cx, stack, fileName, message);
+    cx->check(stack, fileName, message);
     AssertObjectIsSavedFrameOrWrapper(cx, stack);
 
     js::UniquePtr<JSErrorReport> rep;

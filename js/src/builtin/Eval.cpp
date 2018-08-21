@@ -440,7 +440,7 @@ static bool
 ExecuteInExtensibleLexicalEnvironment(JSContext* cx, HandleScript scriptArg, HandleObject env)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, env);
+    cx->check(env);
     MOZ_ASSERT(IsExtensibleLexicalEnvironment(env));
     MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());
 
@@ -518,7 +518,7 @@ JS_FRIEND_API(bool)
 js::ExecuteInJSMEnvironment(JSContext* cx, HandleScript scriptArg, HandleObject varEnv,
                             AutoObjectVector& targetObj)
 {
-    assertSameCompartment(cx, varEnv);
+    cx->check(varEnv);
     MOZ_ASSERT(ObjectRealm::get(varEnv).getNonSyntacticLexicalEnvironment(varEnv));
     MOZ_DIAGNOSTIC_ASSERT(scriptArg->noScriptRval());
 

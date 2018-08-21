@@ -2186,7 +2186,7 @@ js::ValueToSource(JSContext* cx, HandleValue v)
 {
     if (!CheckRecursionLimit(cx))
         return nullptr;
-    assertSameCompartment(cx, v);
+    cx->check(v);
 
     if (v.isUndefined())
         return cx->names().void0;
