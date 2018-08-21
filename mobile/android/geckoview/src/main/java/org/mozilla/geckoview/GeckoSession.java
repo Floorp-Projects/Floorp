@@ -1297,15 +1297,34 @@ public class GeckoSession extends LayerSession
     }
 
     /**
-    * Set this GeckoSession as active or inactive. Setting a GeckoSession to inactive will
-    * significantly reduce its memory footprint, but should only be done if the
-    * GeckoSession is not currently visible.
-    * @param active A boolean determining whether the GeckoSession is active
-    */
+     * Set this GeckoSession as active or inactive, which represents if the session is currently
+     * visible or not. Setting a GeckoSession to inactive will significantly reduce its memory
+     * footprint, but should only be done if the GeckoSession is not currently visible. Note that
+     * a session can be active (i.e. visible) but not focused.
+     *
+     * @param active A boolean determining whether the GeckoSession is active.
+     *
+     * @see #setFocused
+     */
     public void setActive(boolean active) {
-        final GeckoBundle msg = new GeckoBundle();
+        final GeckoBundle msg = new GeckoBundle(1);
         msg.putBoolean("active", active);
         mEventDispatcher.dispatch("GeckoView:SetActive", msg);
+    }
+
+    /**
+     * Move focus to this session or away from this session. Only one session has focus at
+     * a given time. Note that a session can be unfocused but still active (i.e. visible).
+     *
+     * @param focused True if the session should gain focus or
+     *                false if the session should lose focus.
+     *
+     * @see #setActive
+     */
+    public void setFocused(boolean focused) {
+        final GeckoBundle msg = new GeckoBundle(1);
+        msg.putBoolean("focused", focused);
+        mEventDispatcher.dispatch("GeckoView:SetFocused", msg);
     }
 
     /**
