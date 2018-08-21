@@ -70,6 +70,11 @@ public:
   }
 
   /**
+   * Get a hash for the install directory.
+   */
+  nsresult GetInstallHash(nsAString & aPathHash);
+
+  /**
    * Get the directory under which update directory is created.
    * This method may be called before XPCOM is started. aResult
    * is a clone, it may be modified.
