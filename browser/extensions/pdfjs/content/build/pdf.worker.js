@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.760';
-var pdfjsBuild = '1268aea2';
+var pdfjsVersion = '2.0.775';
+var pdfjsBuild = '20cd1b35';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.760';
+    let workerVersion = '2.0.775';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -715,7 +715,7 @@ exports.WorkerMessageHandler = WorkerMessageHandler;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.URL = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.getInheritableProperty = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.toRomanNumerals = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
+exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.URL = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.getInheritableProperty = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.toRomanNumerals = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
 
 __w_pdfjs_require__(3);
 
@@ -1411,17 +1411,11 @@ function createPromiseCapability() {
   });
   return capability;
 }
-var createBlob = function createBlob(data, contentType) {
-  if (typeof Blob !== 'undefined') {
-    return new Blob([data], { type: contentType });
-  }
-  throw new Error('The "Blob" constructor is not supported.');
-};
 var createObjectURL = function createObjectURLClosure() {
   var digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
   return function createObjectURL(data, contentType, forceDataSchema = false) {
     if (!forceDataSchema && _url_polyfill.URL.createObjectURL) {
-      var blob = createBlob(data, contentType);
+      const blob = new Blob([data], { type: contentType });
       return _url_polyfill.URL.createObjectURL(blob);
     }
     var buffer = 'data:' + contentType + ';base64,';
@@ -1469,7 +1463,6 @@ exports.arrayByteLength = arrayByteLength;
 exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
-exports.createBlob = createBlob;
 exports.createPromiseCapability = createPromiseCapability;
 exports.createObjectURL = createObjectURL;
 exports.deprecated = deprecated;
@@ -4636,7 +4629,7 @@ class BasePdfManager {
   cleanup() {
     return this.pdfDocument.cleanup();
   }
-  ensure(obj, prop, args) {
+  async ensure(obj, prop, args) {
     (0, _util.unreachable)('Abstract method `ensure` called');
   }
   requestRange(begin, end) {
@@ -4666,15 +4659,12 @@ class LocalPdfManager extends BasePdfManager {
     this.pdfDocument = new _document.PDFDocument(this, stream);
     this._loadedStreamPromise = Promise.resolve(stream);
   }
-  ensure(obj, prop, args) {
-    return new Promise(function (resolve) {
-      const value = obj[prop];
-      if (typeof value === 'function') {
-        resolve(value.apply(obj, args));
-      } else {
-        resolve(value);
-      }
-    });
+  async ensure(obj, prop, args) {
+    const value = obj[prop];
+    if (typeof value === 'function') {
+      return value.apply(obj, args);
+    }
+    return value;
   }
   requestRange(begin, end) {
     return Promise.resolve();
@@ -4702,28 +4692,20 @@ class NetworkPdfManager extends BasePdfManager {
     });
     this.pdfDocument = new _document.PDFDocument(this, this.streamManager.getStream());
   }
-  ensure(obj, prop, args) {
-    return new Promise((resolve, reject) => {
-      let ensureHelper = () => {
-        try {
-          const value = obj[prop];
-          let result;
-          if (typeof value === 'function') {
-            result = value.apply(obj, args);
-          } else {
-            result = value;
-          }
-          resolve(result);
-        } catch (ex) {
-          if (!(ex instanceof _util.MissingDataException)) {
-            reject(ex);
-            return;
-          }
-          this.streamManager.requestRange(ex.begin, ex.end).then(ensureHelper, reject);
-        }
-      };
-      ensureHelper();
-    });
+  async ensure(obj, prop, args) {
+    try {
+      const value = obj[prop];
+      if (typeof value === 'function') {
+        return value.apply(obj, args);
+      }
+      return value;
+    } catch (ex) {
+      if (!(ex instanceof _util.MissingDataException)) {
+        throw ex;
+      }
+      await this.requestRange(ex.begin, ex.end);
+      return this.ensure(obj, prop, args);
+    }
   }
   requestRange(begin, end) {
     return this.streamManager.requestRange(begin, end);
@@ -5608,14 +5590,6 @@ var PDFDocument = function PDFDocumentClosure() {
         }
       }
       return (0, _util.shadow)(this, 'startXRef', startXRef);
-    },
-    get mainXRefEntriesOffset() {
-      var mainXRefEntriesOffset = 0;
-      var linearization = this.linearization;
-      if (linearization) {
-        mainXRefEntriesOffset = linearization.mainXRefEntriesOffset;
-      }
-      return (0, _util.shadow)(this, 'mainXRefEntriesOffset', mainXRefEntriesOffset);
     },
     checkHeader: function PDFDocument_checkHeader() {
       var stream = this.stream;
@@ -6968,28 +6942,22 @@ var XRef = function XRefClosure() {
       }
       return xrefEntry;
     },
-    fetchIfRefAsync: function XRef_fetchIfRefAsync(obj, suppressEncryption) {
+    async fetchIfRefAsync(obj, suppressEncryption) {
       if (!(0, _primitives.isRef)(obj)) {
-        return Promise.resolve(obj);
+        return obj;
       }
       return this.fetchAsync(obj, suppressEncryption);
     },
-    fetchAsync: function XRef_fetchAsync(ref, suppressEncryption) {
-      var streamManager = this.stream.manager;
-      var xref = this;
-      return new Promise(function tryFetch(resolve, reject) {
-        try {
-          resolve(xref.fetch(ref, suppressEncryption));
-        } catch (e) {
-          if (e instanceof _util.MissingDataException) {
-            streamManager.requestRange(e.begin, e.end).then(function () {
-              tryFetch(resolve, reject);
-            }, reject);
-            return;
-          }
-          reject(e);
+    async fetchAsync(ref, suppressEncryption) {
+      try {
+        return this.fetch(ref, suppressEncryption);
+      } catch (ex) {
+        if (!(ex instanceof _util.MissingDataException)) {
+          throw ex;
         }
-      });
+        await this.pdfManager.requestRange(ex.begin, ex.end);
+        return this.fetchAsync(ref, suppressEncryption);
+      }
     },
     getCatalogObj: function XRef_getCatalogObj() {
       return this.root;
@@ -18482,7 +18450,7 @@ var QueueOptimizer = function QueueOptimizerClosure() {
     }
     var imgWidth = Math.max(maxX, currentX) + IMAGE_PADDING;
     var imgHeight = currentY + maxLineHeight + IMAGE_PADDING;
-    var imgData = new Uint8Array(imgWidth * imgHeight * 4);
+    var imgData = new Uint8ClampedArray(imgWidth * imgHeight * 4);
     var imgRowSize = imgWidth << 2;
     for (q = 0; q < count; q++) {
       var data = argsArray[iFirstPIIXO + (q << 2)][0].data;
@@ -18821,6 +18789,7 @@ var OperatorList = function OperatorListClosure() {
         case _util.OPS.paintInlineImageXObjectGroup:
         case _util.OPS.paintImageMaskXObject:
           var arg = argsArray[i][0];
+          ;
           if (!arg.cached) {
             transfers.push(arg.data.buffer);
           }
@@ -19018,16 +18987,15 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     this.builtInCMapCache = builtInCMapCache;
     this.options = options || DefaultPartialEvaluatorOptions;
     this.pdfFunctionFactory = pdfFunctionFactory;
-    this.fetchBuiltInCMap = name => {
+    this.fetchBuiltInCMap = async name => {
       if (this.builtInCMapCache.has(name)) {
-        return Promise.resolve(this.builtInCMapCache.get(name));
+        return this.builtInCMapCache.get(name);
       }
-      return this.handler.sendWithPromise('FetchBuiltInCMap', { name }).then(data => {
-        if (data.compressionType !== _util.CMapCompressionType.NONE) {
-          this.builtInCMapCache.set(name, data);
-        }
-        return data;
-      });
+      const data = await this.handler.sendWithPromise('FetchBuiltInCMap', { name });
+      if (data.compressionType !== _util.CMapCompressionType.NONE) {
+        this.builtInCMapCache.set(name, data);
+      }
+      return data;
     };
   }
   var TIME_SLOT_DURATION_MS = 20;
@@ -40886,13 +40854,11 @@ exports.MessageHandler = undefined;
 
 var _util = __w_pdfjs_require__(2);
 
-function resolveCall(fn, args, thisArg = null) {
+async function resolveCall(fn, args, thisArg = null) {
   if (!fn) {
-    return Promise.resolve(undefined);
+    return;
   }
-  return new Promise((resolve, reject) => {
-    resolve(fn.apply(thisArg, args));
-  });
+  return fn.apply(thisArg, args);
 }
 function wrapReason(reason) {
   if (typeof reason !== 'object') {
