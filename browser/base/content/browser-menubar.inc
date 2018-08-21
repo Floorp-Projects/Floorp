@@ -245,7 +245,7 @@
                   </menupopup>
                 </menu>
                 <menu id="pageStyleMenu" label="&pageStyleMenu.label;"
-                      accesskey="&pageStyleMenu.accesskey;" observes="isImage">
+                      accesskey="&pageStyleMenu.accesskey;">
                   <menupopup onpopupshowing="gPageStyleMenu.fillPopup(this);">
                     <menuitem id="menu_pageStyleNoStyle"
                               label="&pageStyleNoStyle.label;"
@@ -517,9 +517,7 @@
                             label="&pageSourceCmd.label;"
                             key="key_viewSource"
                             command="View:PageSource"
-                            accesskey="&pageSourceCmd.accesskey;">
-                    <observes element="canViewSource" attribute="disabled"/>
-                  </menuitem>
+                            accesskey="&pageSourceCmd.accesskey;"/>
                   <menuitem id="menu_devtools_recordExecution"
                             label="&devtoolsRecordExecution.label;"
                             command="Tools:RecordExecution"
