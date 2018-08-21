@@ -373,6 +373,10 @@ class AsmFlags(BaseCompileFlags):
                     debug_flags += ['-g', 'cv8']
                 elif self._context.config.substs.get('OS_ARCH') != 'Darwin':
                     debug_flags += ['-g', 'dwarf2']
+            elif (self._context.config.substs.get('OS_ARCH') == 'WINNT' and
+                  self._context.config.substs.get('CPU_ARCH') == 'aarch64'):
+                # armasm64 accepts a paucity of options compared to ml/ml64.
+                pass
             else:
                 debug_flags += self._context.config.substs.get('MOZ_DEBUG_FLAGS', '').split()
         return debug_flags
