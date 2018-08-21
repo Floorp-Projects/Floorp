@@ -1495,6 +1495,11 @@ WebConsoleActor.prototype =
     return new Promise(resolve => {
       let messagesReceived = 0;
       const onMessage = ({ data }) => {
+        // Resolve early if the console actor is destroyed
+        if (!this.netmonitors) {
+          resolve(null);
+          return;
+        }
         if (data.url != url) {
           return;
         }
