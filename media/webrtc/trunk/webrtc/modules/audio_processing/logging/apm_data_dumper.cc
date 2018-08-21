@@ -36,7 +36,7 @@ std::string FormFileName(const char* name,
 #endif
 
   std::stringstream ss;
-  std::string base = webrtc::Trace::aec_debug_filename();
+  std::string base = rtc::LogMessage::aec_debug_filename();
   ss << base;
 
   if (base.length() && base.back() != sep) {
