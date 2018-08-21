@@ -493,17 +493,17 @@ class GeckoWebViewProvider : IWebViewProvider {
         override fun restoreWebViewState(session: Session) {
             val stateData = session.webViewState
             val desiredURL = session.url.value
-            val savedGeckoSession = stateData.getParcelable<GeckoSession>("geckoSession")
+            val savedGeckoSession = stateData.getParcelable<GeckoSession>(GECKO_SESSION)
             if (savedGeckoSession != null) {
                 // Close empty created session
                 geckoSession.close()
 
                 geckoSession = savedGeckoSession
-                canGoBack = stateData.getBoolean("canGoBack", false)
-                canGoForward = stateData.getBoolean("canGoForward", false)
-                isSecure = stateData.getBoolean("isSecure", false)
-                webViewTitle = stateData.getString("webViewTitle", null)
-                currentUrl = stateData.getString("currentUrl", "about:blank")
+                canGoBack = stateData.getBoolean(CAN_GO_BACK, false)
+                canGoForward = stateData.getBoolean(CAN_GO_FORWARD, false)
+                isSecure = stateData.getBoolean(IS_SECURE, false)
+                webViewTitle = stateData.getString(WEBVIEW_TITLE, null)
+                currentUrl = stateData.getString(CURRENT_URL, ABOUT_BLANK)
                 applySettingsAndSetDelegates()
                 if (!geckoSession.isOpen) {
                     geckoSession.open(geckoRuntime!!)
@@ -516,12 +516,12 @@ class GeckoWebViewProvider : IWebViewProvider {
 
         override fun saveWebViewState(session: Session) {
             val sessionBundle = Bundle()
-            sessionBundle.putParcelable("geckoSession", geckoSession)
-            sessionBundle.putBoolean("canGoBack", canGoBack)
-            sessionBundle.putBoolean("canGoForward", canGoForward)
-            sessionBundle.putBoolean("isSecure", isSecure)
-            sessionBundle.putString("webViewTitle", webViewTitle)
-            sessionBundle.putString("currentUrl", currentUrl)
+            sessionBundle.putParcelable(GECKO_SESSION, geckoSession)
+            sessionBundle.putBoolean(CAN_GO_BACK, canGoBack)
+            sessionBundle.putBoolean(CAN_GO_FORWARD, canGoForward)
+            sessionBundle.putBoolean(IS_SECURE, isSecure)
+            sessionBundle.putString(WEBVIEW_TITLE, webViewTitle)
+            sessionBundle.putString(CURRENT_URL, currentUrl)
             session.saveWebViewState(sessionBundle)
         }
 
@@ -614,5 +614,12 @@ class GeckoWebViewProvider : IWebViewProvider {
             "Mozilla/5.0 (Android 8.1.0; Mobile; rv:60.0) Gecko/60.0 Firefox/60.0"
         const val PREF_FIRST_GECKO_RUN: String = "first_gecko_run"
         const val PROGRESS_100 = 100
+        const val CAN_GO_BACK = "canGoBack"
+        const val CAN_GO_FORWARD = "canGoForward"
+        const val GECKO_SESSION = "geckoSession"
+        const val IS_SECURE = "isSecure"
+        const val WEBVIEW_TITLE = "webViewTitle"
+        const val CURRENT_URL = "currentUrl"
+        const val ABOUT_BLANK = "about:blank"
     }
 }
