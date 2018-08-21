@@ -373,10 +373,11 @@ function assertHighlightLocation(dbg, source, line) {
   );
 
   ok(isVisibleInEditor(dbg, lineEl), "Highlighted line is visible");
+
+  const cm = getCM(dbg);
+  const lineInfo = cm.lineInfo(line - 1);
   ok(
-    getCM(dbg)
-      .lineInfo(line - 1)
-      .wrapClass.includes("highlight-line"),
+    lineInfo.wrapClass.includes("highlight-line"),
     "Line is highlighted"
   );
 }
@@ -609,9 +610,9 @@ async function selectSpecificSource(dbg, url, line) {
 }
 
 
-function closeTab(dbg, url) {
+async function closeTab(dbg, url) {
   const source = findSource(dbg, url);
-  return dbg.actions.closeTab(source.url);
+  await dbg.actions.closeTab(source.url);
 }
 
 /**

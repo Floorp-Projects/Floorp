@@ -73,18 +73,18 @@ function update(state = initialSourcesState(), action) {
     case "UPDATE_SOURCE":
       {
         const source = action.source;
-        return updateSource(state, source);
+        return updateSources(state, [source]);
       }
 
     case "ADD_SOURCE":
       {
         const source = action.source;
-        return updateSource(state, source);
+        return updateSources(state, [source]);
       }
 
     case "ADD_SOURCES":
       {
-        return action.sources.reduce((newState, source) => updateSource(newState, source), state);
+        return updateSources(state, action.sources);
       }
 
     case "SET_SELECTED_LOCATION":
@@ -133,10 +133,10 @@ function update(state = initialSourcesState(), action) {
           isBlackBoxed
         } = action.value;
         updateBlackBoxList(url, isBlackBoxed);
-        return updateSource(state, {
+        return updateSources(state, [{
           id,
           isBlackBoxed
-        });
+        }]);
       }
 
       break;
@@ -179,8 +179,8 @@ function getTextPropsFromAction(action) {
   }
 
   return {
-    text: action.value.text,
     id: sourceId,
+    text: action.value.text,
     contentType: action.value.contentType,
     loadedState: "loaded"
   };
@@ -191,8 +191,20 @@ function getTextPropsFromAction(action) {
 
 
 function setSourceTextProps(state, action) {
-  const text = getTextPropsFromAction(action);
-  return updateSource(state, text);
+  const source = getTextPropsFromAction(action);
+  return updateSources(state, [source]);
+}
+
+function updateSources(state, sources) {
+  state = { ...state,
+    sources: { ...state.sources
+    },
+    relativeSources: { ...state.relativeSources
+    },
+    urls: { ...state.urls
+    }
+  };
+  return sources.reduce((newState, source) => updateSource(newState, source), state);
 }
 
 function updateSource(state, source) {
@@ -204,18 +216,11 @@ function updateSource(state, source) {
   const updatedSource = existingSource ? { ...existingSource,
     ...source
   } : createSource(source);
+  state.sources[source.id] = updatedSource;
   const existingUrls = state.urls[source.url];
-  const urls = existingUrls ? [...existingUrls, source.id] : [source.id];
-  return { ...state,
-    relativeSources: updateRelativeSource({ ...state.relativeSources
-    }, updatedSource, state.projectDirectoryRoot),
-    sources: { ...state.sources,
-      [source.id]: updatedSource
-    },
-    urls: { ...state.urls,
-      [source.url]: urls
-    }
-  };
+  state.urls[source.url] = existingUrls ? [...existingUrls, source.id] : [source.id];
+  updateRelativeSource(state.relativeSources, updatedSource, state.projectDirectoryRoot);
+  return state;
 }
 
 function updateRelativeSource(relativeSources, source, root) {
