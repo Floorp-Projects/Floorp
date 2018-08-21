@@ -88,7 +88,7 @@ public class SessionAccessibility {
                 if (mAutoFillRoots != null) {
                     // Add auto-fill nodes.
                     if (DEBUG) {
-                        Log.d(LOGTAG,"Adding roots " + mAutoFillRoots);
+                        Log.d(LOGTAG, "Adding roots " + mAutoFillRoots);
                     }
                     for (int i = 0; i < mAutoFillRoots.size(); i++) {
                         info.addChild(mView, mAutoFillRoots.keyAt(i));
