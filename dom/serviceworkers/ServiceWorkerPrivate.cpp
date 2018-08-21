@@ -2054,7 +2054,7 @@ ServiceWorkerPrivate::TerminateWorker()
     }
 
     Unused << NS_WARN_IF(!mWorkerPrivate->Terminate());
-    mWorkerPrivate = nullptr;
+    RefPtr<WorkerPrivate> workerPrivate(mWorkerPrivate.forget());
     mSupportsArray.Clear();
 
     // Any pending events are never going to fire on this worker.  Cancel
