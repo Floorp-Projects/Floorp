@@ -25,6 +25,419 @@
 namespace js {
 namespace jit {
 
+class ICFallbackStub : public ICStub
+{
+    friend class ICStubConstIterator;
+  protected:
+    // Fallback stubs need these fields to easily add new stubs to
+    // the linked list of stubs for an IC.
+
+    // The IC entry for this linked list of stubs.
+    ICEntry* icEntry_;
+
+    // The number of stubs kept in the IC entry.
+    ICState state_;
+
+    // A pointer to the location stub pointer that needs to be
+    // changed to add a new "last" stub immediately before the fallback
+    // stub.  This'll start out pointing to the icEntry's "firstStub_"
+    // field, and as new stubs are added, it'll point to the current
+    // last stub's "next_" field.
+    ICStub** lastStubPtrAddr_;
+
+    ICFallbackStub(Kind kind, JitCode* stubCode)
+      : ICStub(kind, ICStub::Fallback, stubCode),
+        icEntry_(nullptr),
+        state_(),
+        lastStubPtrAddr_(nullptr) {}
+
+    ICFallbackStub(Kind kind, Trait trait, JitCode* stubCode)
+      : ICStub(kind, trait, stubCode),
+        icEntry_(nullptr),
+        state_(),
+        lastStubPtrAddr_(nullptr)
+    {
+        MOZ_ASSERT(trait == ICStub::Fallback ||
+                   trait == ICStub::MonitoredFallback);
+    }
+
+  public:
+    inline ICEntry* icEntry() const {
+        return icEntry_;
+    }
+
+    inline size_t numOptimizedStubs() const {
+        return state_.numOptimizedStubs();
+    }
+
+    void setInvalid() {
+        state_.setInvalid();
+    }
+
+    bool invalid() const {
+        return state_.invalid();
+    }
+
+    ICState& state() {
+        return state_;
+    }
+
+    // The icEntry and lastStubPtrAddr_ fields can't be initialized when the stub is
+    // created since the stub is created at compile time, and we won't know the IC entry
+    // address until after compile when the JitScript is created.  This method
+    // allows these fields to be fixed up at that point.
+    void fixupICEntry(ICEntry* icEntry) {
+        MOZ_ASSERT(icEntry_ == nullptr);
+        MOZ_ASSERT(lastStubPtrAddr_ == nullptr);
+        icEntry_ = icEntry;
+        lastStubPtrAddr_ = icEntry_->addressOfFirstStub();
+    }
+
+    // Add a new stub to the IC chain terminated by this fallback stub.
+    void addNewStub(ICStub* stub) {
+        MOZ_ASSERT(!invalid());
+        MOZ_ASSERT(*lastStubPtrAddr_ == this);
+        MOZ_ASSERT(stub->next() == nullptr);
+        stub->setNext(this);
+        *lastStubPtrAddr_ = stub;
+        lastStubPtrAddr_ = stub->addressOfNext();
+        state_.trackAttached();
+    }
+
+    ICStubConstIterator beginChainConst() const {
+        return ICStubConstIterator(icEntry_->firstStub());
+    }
+
+    ICStubIterator beginChain() {
+        return ICStubIterator(this);
+    }
+
+    bool hasStub(ICStub::Kind kind) const {
+        for (ICStubConstIterator iter = beginChainConst(); !iter.atEnd(); iter++) {
+            if (iter->kind() == kind)
+                return true;
+        }
+        return false;
+    }
+
+    unsigned numStubsWithKind(ICStub::Kind kind) const {
+        unsigned count = 0;
+        for (ICStubConstIterator iter = beginChainConst(); !iter.atEnd(); iter++) {
+            if (iter->kind() == kind)
+                count++;
+        }
+        return count;
+    }
+
+    void discardStubs(JSContext* cx);
+
+    void unlinkStub(Zone* zone, ICStub* prev, ICStub* stub);
+    void unlinkStubsWithKind(JSContext* cx, ICStub::Kind kind);
+};
+
+// Base class for Trait::Regular CacheIR stubs
+class ICCacheIR_Regular : public ICStub
+{
+    const CacheIRStubInfo* stubInfo_;
+
+  public:
+    ICCacheIR_Regular(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
+      : ICStub(ICStub::CacheIR_Regular, stubCode),
+        stubInfo_(stubInfo)
+    {}
+
+    static ICCacheIR_Regular* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
+                                    ICCacheIR_Regular& other);
+
+    void notePreliminaryObject() {
+        extra_ = 1;
+    }
+    bool hasPreliminaryObject() const {
+        return extra_;
+    }
+
+    const CacheIRStubInfo* stubInfo() const {
+        return stubInfo_;
+    }
+
+    uint8_t* stubDataStart();
+};
+
+// Monitored stubs are IC stubs that feed a single resulting value out to a
+// type monitor operation.
+class ICMonitoredStub : public ICStub
+{
+  protected:
+    // Pointer to the start of the type monitoring stub chain.
+    ICStub* firstMonitorStub_;
+
+    ICMonitoredStub(Kind kind, JitCode* stubCode, ICStub* firstMonitorStub);
+
+  public:
+    inline void updateFirstMonitorStub(ICStub* monitorStub) {
+        // This should only be called once: when the first optimized monitor stub
+        // is added to the type monitor IC chain.
+        MOZ_ASSERT(firstMonitorStub_ && firstMonitorStub_->isTypeMonitor_Fallback());
+        firstMonitorStub_ = monitorStub;
+    }
+    inline void resetFirstMonitorStub(ICStub* monitorFallback) {
+        MOZ_ASSERT(monitorFallback->isTypeMonitor_Fallback());
+        firstMonitorStub_ = monitorFallback;
+    }
+    inline ICStub* firstMonitorStub() const {
+        return firstMonitorStub_;
+    }
+
+    static inline size_t offsetOfFirstMonitorStub() {
+        return offsetof(ICMonitoredStub, firstMonitorStub_);
+    }
+};
+
+class ICCacheIR_Monitored : public ICMonitoredStub
+{
+    const CacheIRStubInfo* stubInfo_;
+
+  public:
+    ICCacheIR_Monitored(JitCode* stubCode, ICStub* firstMonitorStub,
+                        const CacheIRStubInfo* stubInfo)
+      : ICMonitoredStub(ICStub::CacheIR_Monitored, stubCode, firstMonitorStub),
+        stubInfo_(stubInfo)
+    {}
+
+    static ICCacheIR_Monitored* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
+                                      ICCacheIR_Monitored& other);
+
+    void notePreliminaryObject() {
+        extra_ = 1;
+    }
+    bool hasPreliminaryObject() const {
+        return extra_;
+    }
+
+    const CacheIRStubInfo* stubInfo() const {
+        return stubInfo_;
+    }
+
+    uint8_t* stubDataStart();
+};
+
+// Updated stubs are IC stubs that use a TypeUpdate IC to track
+// the status of heap typesets that need to be updated.
+class ICUpdatedStub : public ICStub
+{
+  protected:
+    // Pointer to the start of the type updating stub chain.
+    ICStub* firstUpdateStub_;
+
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+    uint32_t numOptimizedStubs_;
+
+    ICUpdatedStub(Kind kind, JitCode* stubCode)
+      : ICStub(kind, ICStub::Updated, stubCode),
+        firstUpdateStub_(nullptr),
+        numOptimizedStubs_(0)
+    {}
+
+  public:
+    MOZ_MUST_USE bool initUpdatingChain(JSContext* cx, ICStubSpace* space);
+
+    MOZ_MUST_USE bool addUpdateStubForValue(JSContext* cx, HandleScript script, HandleObject obj,
+                                            HandleObjectGroup group, HandleId id, HandleValue val);
+
+    void addOptimizedUpdateStub(ICStub* stub) {
+        if (firstUpdateStub_->isTypeUpdate_Fallback()) {
+            stub->setNext(firstUpdateStub_);
+            firstUpdateStub_ = stub;
+        } else {
+            ICStub* iter = firstUpdateStub_;
+            MOZ_ASSERT(iter->next() != nullptr);
+            while (!iter->next()->isTypeUpdate_Fallback())
+                iter = iter->next();
+            MOZ_ASSERT(iter->next()->next() == nullptr);
+            stub->setNext(iter->next());
+            iter->setNext(stub);
+        }
+
+        numOptimizedStubs_++;
+    }
+
+    inline ICStub* firstUpdateStub() const {
+        return firstUpdateStub_;
+    }
+
+    void resetUpdateStubChain(Zone* zone);
+
+    bool hasTypeUpdateStub(ICStub::Kind kind) {
+        ICStub* stub = firstUpdateStub_;
+        do {
+            if (stub->kind() == kind)
+                return true;
+
+            stub = stub->next();
+        } while (stub);
+
+        return false;
+    }
+
+    inline uint32_t numOptimizedStubs() const {
+        return numOptimizedStubs_;
+    }
+
+    static inline size_t offsetOfFirstUpdateStub() {
+        return offsetof(ICUpdatedStub, firstUpdateStub_);
+    }
+};
+
+class ICCacheIR_Updated : public ICUpdatedStub
+{
+    const CacheIRStubInfo* stubInfo_;
+    GCPtrObjectGroup updateStubGroup_;
+    GCPtrId updateStubId_;
+
+  public:
+    ICCacheIR_Updated(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
+      : ICUpdatedStub(ICStub::CacheIR_Updated, stubCode),
+        stubInfo_(stubInfo),
+        updateStubGroup_(nullptr),
+        updateStubId_(JSID_EMPTY)
+    {}
+
+    static ICCacheIR_Updated* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
+                                    ICCacheIR_Updated& other);
+
+    GCPtrObjectGroup& updateStubGroup() {
+        return updateStubGroup_;
+    }
+    GCPtrId& updateStubId() {
+        return updateStubId_;
+    }
+
+    void notePreliminaryObject() {
+        extra_ = 1;
+    }
+    bool hasPreliminaryObject() const {
+        return extra_;
+    }
+
+    const CacheIRStubInfo* stubInfo() const {
+        return stubInfo_;
+    }
+
+    uint8_t* stubDataStart();
+};
+
+// Base class for stubcode compilers.
+class ICStubCompiler
+{
+    // Prevent GC in the middle of stub compilation.
+    js::gc::AutoSuppressGC suppressGC;
+
+  protected:
+    JSContext* cx;
+    ICStub::Kind kind;
+    bool inStubFrame_;
+
+#ifdef DEBUG
+    bool entersStubFrame_;
+    uint32_t framePushedAtEnterStubFrame_;
+#endif
+
+    // By default the stubcode key is just the kind.
+    virtual int32_t getKey() const {
+        return static_cast<int32_t>(kind) << 1;
+    }
+
+    virtual MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) = 0;
+    virtual void postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> genCode) {}
+
+    JitCode* getStubCode();
+
+    ICStubCompiler(JSContext* cx, ICStub::Kind kind)
+      : suppressGC(cx), cx(cx), kind(kind), inStubFrame_(false)
+#ifdef DEBUG
+      , entersStubFrame_(false), framePushedAtEnterStubFrame_(0)
+#endif
+    {}
+
+    // Push a payload specialized per compiler needed to execute stubs.
+    void PushStubPayload(MacroAssembler& masm, Register scratch);
+    void pushStubPayload(MacroAssembler& masm, Register scratch);
+
+    // Emits a tail call to a VMFunction wrapper.
+    MOZ_MUST_USE bool tailCallVM(const VMFunction& fun, MacroAssembler& masm);
+
+    // Emits a normal (non-tail) call to a VMFunction wrapper.
+    MOZ_MUST_USE bool callVM(const VMFunction& fun, MacroAssembler& masm);
+
+    // A stub frame is used when a stub wants to call into the VM without
+    // performing a tail call. This is required for the return address
+    // to pc mapping to work.
+    void enterStubFrame(MacroAssembler& masm, Register scratch);
+    void assumeStubFrame();
+    void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
+
+  public:
+    static inline AllocatableGeneralRegisterSet availableGeneralRegs(size_t numInputs) {
+        AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+#if defined(JS_CODEGEN_ARM)
+        MOZ_ASSERT(!regs.has(BaselineStackReg));
+        MOZ_ASSERT(!regs.has(ICTailCallReg));
+        regs.take(BaselineSecondScratchReg);
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+        MOZ_ASSERT(!regs.has(BaselineStackReg));
+        MOZ_ASSERT(!regs.has(ICTailCallReg));
+        MOZ_ASSERT(!regs.has(BaselineSecondScratchReg));
+#elif defined(JS_CODEGEN_ARM64)
+        MOZ_ASSERT(!regs.has(PseudoStackPointer));
+        MOZ_ASSERT(!regs.has(RealStackPointer));
+        MOZ_ASSERT(!regs.has(ICTailCallReg));
+#else
+        MOZ_ASSERT(!regs.has(BaselineStackReg));
+#endif
+        regs.take(BaselineFrameReg);
+        regs.take(ICStubReg);
+#ifdef JS_CODEGEN_X64
+        regs.take(ExtractTemp0);
+        regs.take(ExtractTemp1);
+#endif
+
+        switch (numInputs) {
+          case 0:
+            break;
+          case 1:
+            regs.take(R0);
+            break;
+          case 2:
+            regs.take(R0);
+            regs.take(R1);
+            break;
+          default:
+            MOZ_CRASH("Invalid numInputs");
+        }
+
+        return regs;
+    }
+
+  protected:
+    template <typename T, typename... Args>
+    T* newStub(Args&&... args) {
+        return ICStub::New<T>(cx, std::forward<Args>(args)...);
+    }
+
+  public:
+    virtual ICStub* getStub(ICStubSpace* space) = 0;
+
+    static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* outerScript) {
+        if (makesGCCalls) {
+            return outerScript->baselineScript()->fallbackStubSpace();
+        }
+        return outerScript->zone()->jitZone()->optimizedStubSpace();
+    }
+    ICStubSpace* getStubSpace(JSScript* outerScript) {
+        return StubSpaceForStub(ICStub::NonCacheIRStubMakesGCCalls(kind), outerScript);
+    }
+};
+
 // WarmUpCounter_Fallback
 
 // A WarmUpCounter IC chain has only the fallback stub.
@@ -53,6 +466,426 @@ class ICWarmUpCounter_Fallback : public ICFallbackStub
     };
 };
 
+
+// Monitored fallback stubs - as the name implies.
+class ICMonitoredFallbackStub : public ICFallbackStub
+{
+  protected:
+    // Pointer to the fallback monitor stub. Created lazily by
+    // getFallbackMonitorStub if needed.
+    ICTypeMonitor_Fallback* fallbackMonitorStub_;
+
+    ICMonitoredFallbackStub(Kind kind, JitCode* stubCode)
+      : ICFallbackStub(kind, ICStub::MonitoredFallback, stubCode),
+        fallbackMonitorStub_(nullptr) {}
+
+  public:
+    MOZ_MUST_USE bool initMonitoringChain(JSContext* cx, JSScript* script);
+    MOZ_MUST_USE bool addMonitorStubForValue(JSContext* cx, BaselineFrame* frame,
+                                             StackTypeSet* types, HandleValue val);
+
+    ICTypeMonitor_Fallback* maybeFallbackMonitorStub() const {
+        return fallbackMonitorStub_;
+    }
+    ICTypeMonitor_Fallback* getFallbackMonitorStub(JSContext* cx, JSScript* script) {
+        if (!fallbackMonitorStub_ && !initMonitoringChain(cx, script))
+            return nullptr;
+        MOZ_ASSERT(fallbackMonitorStub_);
+        return fallbackMonitorStub_;
+    }
+
+    static inline size_t offsetOfFallbackMonitorStub() {
+        return offsetof(ICMonitoredFallbackStub, fallbackMonitorStub_);
+    }
+};
+
+// TypeCheckPrimitiveSetStub
+//   Base class for IC stubs (TypeUpdate or TypeMonitor) that check that a given
+//   value's type falls within a set of primitive types.
+
+class TypeCheckPrimitiveSetStub : public ICStub
+{
+    friend class ICStubSpace;
+  protected:
+    inline static uint16_t TypeToFlag(JSValueType type) {
+        return 1u << static_cast<unsigned>(type);
+    }
+
+    inline static uint16_t ValidFlags() {
+        return ((TypeToFlag(JSVAL_TYPE_OBJECT) << 1) - 1) & ~TypeToFlag(JSVAL_TYPE_MAGIC);
+    }
+
+    TypeCheckPrimitiveSetStub(Kind kind, JitCode* stubCode, uint16_t flags)
+        : ICStub(kind, stubCode)
+    {
+        MOZ_ASSERT(kind == TypeMonitor_PrimitiveSet || kind == TypeUpdate_PrimitiveSet);
+        MOZ_ASSERT(flags && !(flags & ~ValidFlags()));
+        extra_ = flags;
+    }
+
+    TypeCheckPrimitiveSetStub* updateTypesAndCode(uint16_t flags, JitCode* code) {
+        MOZ_ASSERT(flags && !(flags & ~ValidFlags()));
+        if (!code)
+            return nullptr;
+        extra_ = flags;
+        updateCode(code);
+        return this;
+    }
+
+  public:
+    uint16_t typeFlags() const {
+        return extra_;
+    }
+
+    bool containsType(JSValueType type) const {
+        MOZ_ASSERT(type <= JSVAL_TYPE_OBJECT);
+        MOZ_ASSERT(type != JSVAL_TYPE_MAGIC);
+        return extra_ & TypeToFlag(type);
+    }
+
+    ICTypeMonitor_PrimitiveSet* toMonitorStub() {
+        return toTypeMonitor_PrimitiveSet();
+    }
+
+    ICTypeUpdate_PrimitiveSet* toUpdateStub() {
+        return toTypeUpdate_PrimitiveSet();
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        TypeCheckPrimitiveSetStub* existingStub_;
+        uint16_t flags_;
+
+        virtual int32_t getKey() const override {
+            return static_cast<int32_t>(kind) << 1 |
+                  (static_cast<int32_t>(flags_) << 17);
+        }
+
+      public:
+        Compiler(JSContext* cx, Kind kind, TypeCheckPrimitiveSetStub* existingStub,
+                 JSValueType type)
+          : ICStubCompiler(cx, kind),
+            existingStub_(existingStub),
+            flags_((existingStub ? existingStub->typeFlags() : 0) | TypeToFlag(type))
+        {
+            MOZ_ASSERT_IF(existingStub_, flags_ != existingStub_->typeFlags());
+        }
+
+        TypeCheckPrimitiveSetStub* updateStub() {
+            MOZ_ASSERT(existingStub_);
+            return existingStub_->updateTypesAndCode(flags_, getStubCode());
+        }
+    };
+};
+
+// TypeMonitor
+
+// The TypeMonitor fallback stub is not always a regular fallback stub. When
+// used for monitoring the values pushed by a bytecode it doesn't hold a
+// pointer to the IC entry, but rather back to the main fallback stub for the
+// IC (from which a pointer to the IC entry can be retrieved). When monitoring
+// the types of 'this', arguments or other values with no associated IC, there
+// is no main fallback stub, and the IC entry is referenced directly.
+class ICTypeMonitor_Fallback : public ICStub
+{
+    friend class ICStubSpace;
+
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
+    // Pointer to the main fallback stub for the IC or to the main IC entry,
+    // depending on hasFallbackStub.
+    union {
+        ICMonitoredFallbackStub* mainFallbackStub_;
+        ICEntry* icEntry_;
+    };
+
+    // Pointer to the first monitor stub.
+    ICStub* firstMonitorStub_;
+
+    // Address of the last monitor stub's field pointing to this
+    // fallback monitor stub.  This will get updated when new
+    // monitor stubs are created and added.
+    ICStub** lastMonitorStubPtrAddr_;
+
+    // Count of optimized type monitor stubs in this chain.
+    uint32_t numOptimizedMonitorStubs_ : 7;
+
+    uint32_t invalid_ : 1;
+
+    // Whether this has a fallback stub referring to the IC entry.
+    bool hasFallbackStub_ : 1;
+
+    // Index of 'this' or argument which is being monitored, or BYTECODE_INDEX
+    // if this is monitoring the types of values pushed at some bytecode.
+    uint32_t argumentIndex_ : 23;
+
+    static const uint32_t BYTECODE_INDEX = (1 << 23) - 1;
+
+    ICTypeMonitor_Fallback(JitCode* stubCode, ICMonitoredFallbackStub* mainFallbackStub,
+                           uint32_t argumentIndex)
+      : ICStub(ICStub::TypeMonitor_Fallback, stubCode),
+        mainFallbackStub_(mainFallbackStub),
+        firstMonitorStub_(thisFromCtor()),
+        lastMonitorStubPtrAddr_(nullptr),
+        numOptimizedMonitorStubs_(0),
+        invalid_(false),
+        hasFallbackStub_(mainFallbackStub != nullptr),
+        argumentIndex_(argumentIndex)
+    { }
+
+    ICTypeMonitor_Fallback* thisFromCtor() {
+        return this;
+    }
+
+    void addOptimizedMonitorStub(ICStub* stub) {
+        MOZ_ASSERT(!invalid());
+        stub->setNext(this);
+
+        MOZ_ASSERT((lastMonitorStubPtrAddr_ != nullptr) ==
+                   (numOptimizedMonitorStubs_ || !hasFallbackStub_));
+
+        if (lastMonitorStubPtrAddr_)
+            *lastMonitorStubPtrAddr_ = stub;
+
+        if (numOptimizedMonitorStubs_ == 0) {
+            MOZ_ASSERT(firstMonitorStub_ == this);
+            firstMonitorStub_ = stub;
+        } else {
+            MOZ_ASSERT(firstMonitorStub_ != nullptr);
+        }
+
+        lastMonitorStubPtrAddr_ = stub->addressOfNext();
+        numOptimizedMonitorStubs_++;
+    }
+
+  public:
+    bool hasStub(ICStub::Kind kind) {
+        ICStub* stub = firstMonitorStub_;
+        do {
+            if (stub->kind() == kind)
+                return true;
+
+            stub = stub->next();
+        } while (stub);
+
+        return false;
+    }
+
+    inline ICFallbackStub* mainFallbackStub() const {
+        MOZ_ASSERT(hasFallbackStub_);
+        return mainFallbackStub_;
+    }
+
+    inline ICEntry* icEntry() const {
+        return hasFallbackStub_ ? mainFallbackStub()->icEntry() : icEntry_;
+    }
+
+    inline ICStub* firstMonitorStub() const {
+        return firstMonitorStub_;
+    }
+
+    static inline size_t offsetOfFirstMonitorStub() {
+        return offsetof(ICTypeMonitor_Fallback, firstMonitorStub_);
+    }
+
+    inline uint32_t numOptimizedMonitorStubs() const {
+        return numOptimizedMonitorStubs_;
+    }
+
+    void setInvalid() {
+        invalid_ = 1;
+    }
+
+    bool invalid() const {
+        return invalid_;
+    }
+
+    inline bool monitorsThis() const {
+        return argumentIndex_ == 0;
+    }
+
+    inline bool monitorsArgument(uint32_t* pargument) const {
+        if (argumentIndex_ > 0 && argumentIndex_ < BYTECODE_INDEX) {
+            *pargument = argumentIndex_ - 1;
+            return true;
+        }
+        return false;
+    }
+
+    inline bool monitorsBytecode() const {
+        return argumentIndex_ == BYTECODE_INDEX;
+    }
+
+    // Fixup the IC entry as for a normal fallback stub, for this/arguments.
+    void fixupICEntry(ICEntry* icEntry) {
+        MOZ_ASSERT(!hasFallbackStub_);
+        MOZ_ASSERT(icEntry_ == nullptr);
+        MOZ_ASSERT(lastMonitorStubPtrAddr_ == nullptr);
+        icEntry_ = icEntry;
+        lastMonitorStubPtrAddr_ = icEntry_->addressOfFirstStub();
+    }
+
+    // Create a new monitor stub for the type of the given value, and
+    // add it to this chain.
+    MOZ_MUST_USE bool addMonitorStubForValue(JSContext* cx, BaselineFrame* frame,
+                                             StackTypeSet* types, HandleValue val);
+
+    void resetMonitorStubChain(Zone* zone);
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+        ICMonitoredFallbackStub* mainFallbackStub_;
+        uint32_t argumentIndex_;
+
+      protected:
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
+
+      public:
+        Compiler(JSContext* cx, ICMonitoredFallbackStub* mainFallbackStub)
+          : ICStubCompiler(cx, ICStub::TypeMonitor_Fallback),
+            mainFallbackStub_(mainFallbackStub),
+            argumentIndex_(BYTECODE_INDEX)
+        { }
+
+        Compiler(JSContext* cx, uint32_t argumentIndex)
+          : ICStubCompiler(cx, ICStub::TypeMonitor_Fallback),
+            mainFallbackStub_(nullptr),
+            argumentIndex_(argumentIndex)
+        { }
+
+        ICTypeMonitor_Fallback* getStub(ICStubSpace* space) override {
+            return newStub<ICTypeMonitor_Fallback>(space, getStubCode(), mainFallbackStub_,
+                                                       argumentIndex_);
+        }
+    };
+};
+
+class ICTypeMonitor_PrimitiveSet : public TypeCheckPrimitiveSetStub
+{
+    friend class ICStubSpace;
+
+    ICTypeMonitor_PrimitiveSet(JitCode* stubCode, uint16_t flags)
+        : TypeCheckPrimitiveSetStub(TypeMonitor_PrimitiveSet, stubCode, flags)
+    {}
+
+  public:
+    class Compiler : public TypeCheckPrimitiveSetStub::Compiler {
+      protected:
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
+
+      public:
+        Compiler(JSContext* cx, ICTypeMonitor_PrimitiveSet* existingStub,
+                 JSValueType type)
+          : TypeCheckPrimitiveSetStub::Compiler(cx, TypeMonitor_PrimitiveSet, existingStub,
+                                                type)
+        {}
+
+        ICTypeMonitor_PrimitiveSet* updateStub() {
+            TypeCheckPrimitiveSetStub* stub =
+                this->TypeCheckPrimitiveSetStub::Compiler::updateStub();
+            if (!stub)
+                return nullptr;
+            return stub->toMonitorStub();
+        }
+
+        ICTypeMonitor_PrimitiveSet* getStub(ICStubSpace* space) override {
+            MOZ_ASSERT(!existingStub_);
+            return newStub<ICTypeMonitor_PrimitiveSet>(space, getStubCode(), flags_);
+        }
+    };
+};
+
+class ICTypeMonitor_SingleObject : public ICStub
+{
+    friend class ICStubSpace;
+
+    GCPtrObject obj_;
+
+    ICTypeMonitor_SingleObject(JitCode* stubCode, JSObject* obj);
+
+  public:
+    GCPtrObject& object() {
+        return obj_;
+    }
+
+    static size_t offsetOfObject() {
+        return offsetof(ICTypeMonitor_SingleObject, obj_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        HandleObject obj_;
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
+
+      public:
+        Compiler(JSContext* cx, HandleObject obj)
+          : ICStubCompiler(cx, TypeMonitor_SingleObject),
+            obj_(obj)
+        { }
+
+        ICTypeMonitor_SingleObject* getStub(ICStubSpace* space) override {
+            return newStub<ICTypeMonitor_SingleObject>(space, getStubCode(), obj_);
+        }
+    };
+};
+
+class ICTypeMonitor_ObjectGroup : public ICStub
+{
+    friend class ICStubSpace;
+
+    GCPtrObjectGroup group_;
+
+    ICTypeMonitor_ObjectGroup(JitCode* stubCode, ObjectGroup* group);
+
+  public:
+    GCPtrObjectGroup& group() {
+        return group_;
+    }
+
+    static size_t offsetOfGroup() {
+        return offsetof(ICTypeMonitor_ObjectGroup, group_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        HandleObjectGroup group_;
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
+
+      public:
+        Compiler(JSContext* cx, HandleObjectGroup group)
+          : ICStubCompiler(cx, TypeMonitor_ObjectGroup),
+            group_(group)
+        { }
+
+        ICTypeMonitor_ObjectGroup* getStub(ICStubSpace* space) override {
+            return newStub<ICTypeMonitor_ObjectGroup>(space, getStubCode(), group_);
+        }
+    };
+};
+
+class ICTypeMonitor_AnyValue : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICTypeMonitor_AnyValue(JitCode* stubCode)
+      : ICStub(TypeMonitor_AnyValue, stubCode)
+    {}
+
+  public:
+    class Compiler : public ICStubCompiler {
+      protected:
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
+
+      public:
+        explicit Compiler(JSContext* cx)
+          : ICStubCompiler(cx, TypeMonitor_AnyValue)
+        { }
+
+        ICTypeMonitor_AnyValue* getStub(ICStubSpace* space) override {
+            return newStub<ICTypeMonitor_AnyValue>(space, getStubCode());
+        }
+    };
+};
 
 // TypeUpdate
 
