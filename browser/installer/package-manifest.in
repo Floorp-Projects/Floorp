@@ -388,10 +388,6 @@
 @RESPATH@/components/nsUrlClassifierListManager.js
 @RESPATH@/components/nsUrlClassifierLib.js
 
-; Private Browsing
-@RESPATH@/components/PrivateBrowsing.manifest
-@RESPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
-
 ; Security Reports
 @RESPATH@/components/SecurityReporter.manifest
 @RESPATH@/components/SecurityReporter.js
