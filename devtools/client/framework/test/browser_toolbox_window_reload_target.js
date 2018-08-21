@@ -17,8 +17,8 @@ const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties"
 var target, toolbox, description, reloadsSent, toolIDs;
 
 function test() {
-  addTab(TEST_URL).then(() => {
-    target = TargetFactory.forTab(gBrowser.selectedTab);
+  addTab(TEST_URL).then(async () => {
+    target = await TargetFactory.forTab(gBrowser.selectedTab);
 
     target.makeRemote().then(() => {
       toolIDs = gDevTools.getToolDefinitionArray()
