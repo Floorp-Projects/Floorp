@@ -1083,6 +1083,14 @@ ContainerLayer::Creates3DContextWithExtendingChildren()
   return false;
 }
 
+RenderTargetIntRect
+ContainerLayer::GetIntermediateSurfaceRect()
+{
+  NS_ASSERTION(mUseIntermediateSurface, "Must have intermediate surface");
+  LayerIntRect bounds = GetLocalVisibleRegion().GetBounds();
+  return RenderTargetIntRect::FromUnknownRect(bounds.ToUnknownRect());
+}
+
 bool
 ContainerLayer::HasMultipleChildren()
 {
