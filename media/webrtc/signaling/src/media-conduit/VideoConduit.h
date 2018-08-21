@@ -25,10 +25,9 @@
 #ifdef FF
 #undef FF // Avoid name collision between scoped_ptr.h and nsCRTGlue.h.
 #endif
-#include "webrtc/video_decoder.h"
-#include "webrtc/video_encoder.h"
+#include "webrtc/api/video_codecs/video_decoder.h"
+#include "webrtc/api/video_codecs/video_encoder.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
-#include "webrtc/config.h"
 #include "webrtc/media/base/videosinkinterface.h"
 #include "webrtc/media/base/videoadapter.h"
 #include "webrtc/media/base/videobroadcaster.h"
@@ -374,7 +373,7 @@ private:
 
     bool SsrcFound() const;
     uint32_t JitterMs() const;
-    uint32_t CumulativeLost() const;
+    uint32_t PacketsLost() const;
     uint64_t BytesReceived() const;
     uint32_t PacketsReceived() const;
   private:
@@ -384,7 +383,7 @@ private:
 
     bool mSsrcFound = false;
     uint32_t mJitterMs = 0;
-    uint32_t mCumulativeLost = 0;
+    uint32_t mPacketsLost = 0;
     uint64_t mBytesReceived = 0;
     uint32_t mPacketsReceived = 0;
   };
@@ -406,14 +405,14 @@ private:
      */
     uint32_t FramesDecoded() const;
     uint32_t JitterMs() const;
-    uint32_t CumulativeLost() const;
+    uint32_t PacketsLost() const;
     uint32_t Ssrc() const;
     void Update(const webrtc::VideoReceiveStream::Stats& aStats);
   private:
     uint32_t mDiscardedPackets = 0;
     uint32_t mFramesDecoded = 0;
     uint32_t mJitterMs = 0;
-    uint32_t mCumulativeLost = 0;
+    uint32_t mPacketsLost = 0;
     uint32_t mSsrc = 0;
   };
 
@@ -435,7 +434,6 @@ private:
     void SetVideoStreamFactory(rtc::scoped_refptr<VideoStreamFactory> aFactory);
     void SetMinTransmitBitrateBps(int aXmitMinBps);
     void SetContentType(webrtc::VideoEncoderConfig::ContentType aContentType);
-    void SetResolutionDivisor(unsigned char aDivisor);
     void SetMaxEncodings(size_t aMaxStreams);
     void AddStream(webrtc::VideoStream aStream);
     void AddStream(webrtc::VideoStream aStream,const SimulcastStreamConfig& aSimulcastConfig);
@@ -462,9 +460,9 @@ private:
   MediaConduitErrorCode CreateRecvStream();
   void DeleteRecvStream();
 
-  webrtc::VideoDecoder* CreateDecoder(webrtc::VideoCodecType aType);
-  webrtc::VideoEncoder* CreateEncoder(webrtc::VideoCodecType aType,
-                                      bool enable_simulcast);
+  std::unique_ptr<webrtc::VideoDecoder> CreateDecoder(webrtc::VideoCodecType aType);
+  std::unique_ptr<webrtc::VideoEncoder> CreateEncoder(webrtc::VideoCodecType aType,
+                                                      bool enable_simulcast);
 
   MediaConduitErrorCode DeliverPacket(const void *data, int len);
 
@@ -629,12 +627,12 @@ private:
   // The lifetime of these codecs are maintained by the VideoConduit instance.
   // They are passed to the webrtc::VideoSendStream or VideoReceiveStream,
   // on construction.
-  nsAutoPtr<webrtc::VideoEncoder> mEncoder; // only one encoder for now
+  std::unique_ptr<webrtc::VideoEncoder> mEncoder; // only one encoder for now
   std::vector<std::unique_ptr<webrtc::VideoDecoder>> mDecoders;
   // Main thread only
-  WebrtcVideoEncoder* mSendCodecPlugin = nullptr;
+  uint64_t mSendCodecPluginID = 0;
   // Main thread only
-  WebrtcVideoDecoder* mRecvCodecPlugin = nullptr;
+  uint64_t mRecvCodecPluginID = 0;
 
   // Timer that updates video stats periodically. Main thread only.
   nsCOMPtr<nsITimer> mVideoStatsTimer;
