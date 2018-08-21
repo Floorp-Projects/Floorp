@@ -468,14 +468,18 @@ public:
   {
     MOZ_ASSERT(OnGraphThreadOrNotRunning());
 
+#ifdef ANDROID
+    if (!mInputDeviceUsers.GetValue(mInputDeviceID)) {
+      return 0;
+    }
+#else
     if (!mInputDeviceID) {
-#ifndef ANDROID
       MOZ_ASSERT(mInputDeviceUsers.Count() == 0,
         "If running on a platform other than android,"
         "an explicit device id should be present");
-#endif
       return 0;
     }
+#endif
     uint32_t maxInputChannels = 0;
     // When/if we decide to support multiple input device per graph, this needs
     // loop over them.
