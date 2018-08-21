@@ -1187,7 +1187,12 @@ TrackingURICallback::OnTrackerFound(nsresult aErrorCode)
                                           mList, mProvider, mFullHash);
     LOG(("TrackingURICallback[%p]::OnTrackerFound, cancelling channel[%p]",
          mChannelClassifier.get(), channel.get()));
-    channel->Cancel(aErrorCode);
+    nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(channel);
+    if (httpChannel) {
+      Unused << httpChannel->CancelForTrackingProtection();
+    } else {
+      Unused << channel->Cancel(aErrorCode);
+    }
   } else {
     MOZ_ASSERT(aErrorCode == NS_ERROR_TRACKING_ANNOTATION_URI);
     MOZ_ASSERT(mChannelClassifier->ShouldEnableTrackingAnnotation());

@@ -4724,5 +4724,11 @@ HttpBaseChannel::GetNativeServerTiming(nsTArray<nsCOMPtr<nsIServerTiming>>& aSer
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::CancelForTrackingProtection()
+{
+  return Cancel(NS_ERROR_TRACKING_URI);
+}
+
 } // namespace net
 } // namespace mozilla
