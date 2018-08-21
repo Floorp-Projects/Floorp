@@ -2055,7 +2055,7 @@ public:
       return true;  // Capacity is already sufficient.
     }
 
-    RebuildStatus status = changeTableSize(bestCapacity, DontReportFailure);
+    RebuildStatus status = changeTableSize(bestCapacity, ReportFailure);
     MOZ_ASSERT(status != NotOverloaded);
     return status != RehashFailed;
   }
