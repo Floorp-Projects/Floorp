@@ -3962,9 +3962,11 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     property: nsCSSPropertyID,
     value: i32
 ) {
+    use num_traits::FromPrimitive;
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::properties::longhands;
     use style::values::specified::BorderStyle;
+    use style::values::specified::Display;
     use style::values::specified::{Clear, Float};
     use style::values::generics::font::FontStyle;
 
@@ -3974,7 +3976,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     let prop = match_wrap_declared! { long,
         MozUserModify => longhands::_moz_user_modify::SpecifiedValue::from_gecko_keyword(value),
         Direction => longhands::direction::SpecifiedValue::from_gecko_keyword(value),
-        Display => longhands::display::SpecifiedValue::from_gecko_keyword(value),
+        Display => Display::from_u32(value).unwrap(),
         Float => {
             const LEFT: u32 = structs::StyleFloat::Left as u32;
             const RIGHT: u32 = structs::StyleFloat::Right as u32;
