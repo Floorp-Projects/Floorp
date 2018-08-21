@@ -11,6 +11,7 @@
 \.gcda
 \.gcno
 \.gcov
+compile_commands\.json
 
 # Vim swap files.
 ^\.sw.$
