@@ -1087,6 +1087,18 @@ XPCJSContext::Initialize(XPCJSContext* aPrimaryContext)
 #  else
     const size_t kTrustedScriptBuffer = 180 * 1024;
 #  endif
+#elif defined(XP_WIN)
+    // 1MB is the default stack size on Windows. We use the -STACK linker flag
+    // (see WIN32_EXE_LDFLAGS in config/config.mk) to request a larger stack,
+    // so we determine the stack size at runtime.
+    const size_t kStackQuota = GetWindowsStackSize();
+#  if defined(MOZ_ASAN)
+    // See the standalone MOZ_ASAN branch below for the ASan case.
+    const size_t kTrustedScriptBuffer = 450 * 1024;
+#  else
+    const size_t kTrustedScriptBuffer = (sizeof(size_t) == 8) ? 180 * 1024   //win64
+                                                              : 120 * 1024;  //win32
+#  endif
 #elif defined(MOZ_ASAN)
     // ASan requires more stack space due to red-zones, so give it double the
     // default (1MB on 32-bit, 2MB on 64-bit). ASAN stack frame measurements
@@ -1099,13 +1111,6 @@ XPCJSContext::Initialize(XPCJSContext* aPrimaryContext)
     // (See bug 1415195)
     const size_t kStackQuota =  2 * kDefaultStackQuota;
     const size_t kTrustedScriptBuffer = 450 * 1024;
-#elif defined(XP_WIN)
-    // 1MB is the default stack size on Windows. We use the -STACK linker flag
-    // (see WIN32_EXE_LDFLAGS in config/config.mk) to request a larger stack,
-    // so we determine the stack size at runtime.
-    const size_t kStackQuota = GetWindowsStackSize();
-    const size_t kTrustedScriptBuffer = (sizeof(size_t) == 8) ? 180 * 1024   //win64
-                                                              : 120 * 1024;  //win32
 #elif defined(ANDROID)
     // Android appears to have 1MB stacks. Allow the use of 3/4 of that size
     // (768KB on 32-bit), since otherwise we can crash with a stack overflow
