@@ -4524,13 +4524,22 @@ var XULBrowserWindow = {
     delete this.reloadCommand;
     return this.reloadCommand = document.getElementById("Browser:Reload");
   },
-  get isImage() {
-    delete this.isImage;
-    return this.isImage = document.getElementById("isImage");
+  get elementsForTextBasedTypes() {
+    delete this.elementsForTextBasedTypes;
+    return this.elementsForTextBasedTypes = [
+      document.getElementById("pageStyleMenu"),
+      document.getElementById("context-viewpartialsource-selection"),
+      document.getElementById("cmd_find"),
+      document.getElementById("cmd_findAgain"),
+      document.getElementById("cmd_findPrevious"),
+    ];
   },
-  get canViewSource() {
-    delete this.canViewSource;
-    return this.canViewSource = document.getElementById("canViewSource");
+  get elementsForViewSource() {
+    delete this.elementsForViewSource;
+    return this.elementsForViewSource = [
+      document.getElementById("context-viewsource"),
+      document.getElementById("View:PageSource"),
+    ];
   },
 
   forceInitialBrowserNonRemote(aOpener) {
@@ -4684,17 +4693,22 @@ var XULBrowserWindow = {
         this.setDefaultStatus(msg);
 
         // Disable menu entries for images, enable otherwise
-        if (browser.documentContentType && BrowserUtils.mimeTypeIsTextBased(browser.documentContentType)) {
-          this.isImage.removeAttribute("disabled");
-        } else {
-          canViewSource = false;
-          this.isImage.setAttribute("disabled", "true");
+        let isText = browser.documentContentType &&
+                     BrowserUtils.mimeTypeIsTextBased(browser.documentContentType);
+        for (let element of this.elementsForTextBasedTypes) {
+          if (isText) {
+            element.removeAttribute("disabled");
+          } else {
+            element.setAttribute("disabled", "true");
+          }
         }
 
-        if (canViewSource) {
-          this.canViewSource.removeAttribute("disabled");
-        } else {
-          this.canViewSource.setAttribute("disabled", "true");
+        for (let element of this.elementsForViewSource) {
+          if (canViewSource && isText) {
+            element.removeAttribute("disabled");
+          } else {
+            element.setAttribute("disabled", "true");
+          }
         }
       }
 
@@ -4733,10 +4747,15 @@ var XULBrowserWindow = {
     let browser = gBrowser.selectedBrowser;
 
     // Disable menu entries for images, enable otherwise
-    if (browser.documentContentType && BrowserUtils.mimeTypeIsTextBased(browser.documentContentType))
-      this.isImage.removeAttribute("disabled");
-    else
-      this.isImage.setAttribute("disabled", "true");
+    let isText = browser.documentContentType &&
+                 BrowserUtils.mimeTypeIsTextBased(browser.documentContentType);
+    for (let element of this.elementsForTextBasedTypes) {
+      if (isText) {
+        element.removeAttribute("disabled");
+      } else {
+        element.setAttribute("disabled", "true");
+      }
+    }
 
     this.hideOverLinkImmediately = true;
     this.setOverLink("", null);
