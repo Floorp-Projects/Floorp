@@ -279,10 +279,7 @@ mod tests {
         ];
 
         for &(lvl, s) in tests.iter() {
-            let expected = Pref {
-                value: PrefValue::String(s.to_string()),
-                sticky: false,
-            };
+            let expected = Pref { value: PrefValue::String(s.to_string()), sticky: false };
             assert_eq!(Into::<Pref>::into(lvl), expected);
         }
     }

@@ -1,8 +1,8 @@
-use base64::DecodeError;
 use hyper::status::StatusCode;
-use serde::ser::{Serialize, Serializer};
-use serde_json;
+use rustc_serialize::base64::FromBase64Error;
+use rustc_serialize::json::{DecoderError, Json, ParserError, ToJson};
 use std::borrow::Cow;
+use std::collections::BTreeMap;
 use std::convert::From;
 use std::error::Error;
 use std::fmt;
@@ -140,15 +140,6 @@ pub enum ErrorStatus {
     UnsupportedOperation,
 }
 
-impl Serialize for ErrorStatus {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        self.error_code().serialize(serializer)
-    }
-}
-
 impl ErrorStatus {
     /// Returns the string serialisation of the error type.
     pub fn error_code(&self) -> &'static str {
@@ -178,7 +169,8 @@ impl ErrorStatus {
             UnableToCaptureScreen => "unable to capture screen",
             UnableToSetCookie => "unable to set cookie",
             UnexpectedAlertOpen => "unexpected alert open",
-            UnknownCommand | UnknownError => "unknown error",
+            UnknownCommand |
+            UnknownError => "unknown error",
             UnknownMethod => "unknown method",
             UnknownPath => "unknown command",
             UnsupportedOperation => "unsupported operation",
@@ -261,36 +253,17 @@ impl From<String> for ErrorStatus {
 
 pub type WebDriverResult<T> = Result<T, WebDriverError>;
 
-#[derive(Debug, PartialEq, Serialize)]
-#[serde(remote = "Self")]
+#[derive(Debug)]
 pub struct WebDriverError {
     pub error: ErrorStatus,
     pub message: Cow<'static, str>,
-    #[serde(rename = "stacktrace")]
     pub stack: Cow<'static, str>,
-    #[serde(skip)]
     pub delete_session: bool,
-}
-
-impl Serialize for WebDriverError {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        #[derive(Serialize)]
-        struct Wrapper<'a> {
-            #[serde(with = "WebDriverError")]
-            value: &'a WebDriverError,
-        }
-
-        Wrapper { value: self }.serialize(serializer)
-    }
 }
 
 impl WebDriverError {
     pub fn new<S>(error: ErrorStatus, message: S) -> WebDriverError
-    where
-        S: Into<Cow<'static, str>>,
+        where S: Into<Cow<'static, str>>
     {
         WebDriverError {
             error: error,
@@ -301,8 +274,7 @@ impl WebDriverError {
     }
 
     pub fn new_with_stack<S>(error: ErrorStatus, message: S, stack: S) -> WebDriverError
-    where
-        S: Into<Cow<'static, str>>,
+        where S: Into<Cow<'static, str>>
     {
         WebDriverError {
             error: error,
@@ -318,6 +290,23 @@ impl WebDriverError {
 
     pub fn http_status(&self) -> StatusCode {
         self.error.http_status()
+    }
+
+    pub fn to_json_string(&self) -> String {
+        self.to_json().to_string()
+    }
+}
+
+impl ToJson for WebDriverError {
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
+        data.insert("error".into(), self.error_code().to_json());
+        data.insert("message".into(), self.message.to_json());
+        data.insert("stacktrace".into(), self.stack.to_json());
+
+        let mut wrapper = BTreeMap::new();
+        wrapper.insert("value".into(), Json::Object(data));
+        Json::Object(wrapper)
     }
 }
 
@@ -337,9 +326,9 @@ impl fmt::Display for WebDriverError {
     }
 }
 
-impl From<serde_json::Error> for WebDriverError {
-    fn from(err: serde_json::Error) -> WebDriverError {
-        WebDriverError::new(ErrorStatus::InvalidArgument, err.to_string())
+impl From<ParserError> for WebDriverError {
+    fn from(err: ParserError) -> WebDriverError {
+        WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
     }
 }
 
@@ -349,8 +338,14 @@ impl From<io::Error> for WebDriverError {
     }
 }
 
-impl From<DecodeError> for WebDriverError {
-    fn from(err: DecodeError) -> WebDriverError {
+impl From<DecoderError> for WebDriverError {
+    fn from(err: DecoderError) -> WebDriverError {
+        WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
+    }
+}
+
+impl From<FromBase64Error> for WebDriverError {
+    fn from(err: FromBase64Error) -> WebDriverError {
         WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
     }
 }
@@ -358,36 +353,5 @@ impl From<DecodeError> for WebDriverError {
 impl From<Box<Error>> for WebDriverError {
     fn from(err: Box<Error>) -> WebDriverError {
         WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use test::check_serialize;
-
-    #[test]
-    fn test_json_webdriver_error() {
-        let json = r#"{"value":{
-            "error":"unknown error",
-            "message":"foo bar",
-            "stacktrace":"foo\nbar"
-        }}"#;
-        let data = WebDriverError {
-            error: ErrorStatus::UnknownError,
-            message: "foo bar".into(),
-            stack: "foo\nbar".into(),
-            delete_session: true,
-        };
-
-        check_serialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_error_status() {
-        let json = format!(r#""unknown error""#);
-        let data = ErrorStatus::UnknownError;
-
-        check_serialize(&json, &data);
     }
 }

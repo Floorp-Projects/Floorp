@@ -1,31 +1,44 @@
 #![allow(non_snake_case)]
 
-extern crate base64;
-extern crate cookie;
-#[macro_use]
-extern crate lazy_static;
 #[macro_use]
 extern crate log;
+extern crate rustc_serialize;
 extern crate hyper;
 extern crate regex;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+extern crate cookie;
 extern crate time;
-extern crate unicode_segmentation;
 extern crate url;
+extern crate unicode_segmentation;
 
-#[macro_use]
-pub mod macros;
+#[macro_use] pub mod macros;
 pub mod actions;
+pub mod httpapi;
 pub mod capabilities;
 pub mod command;
 pub mod common;
 pub mod error;
-pub mod httpapi;
-pub mod response;
 pub mod server;
+pub mod response;
 
 #[cfg(test)]
-pub mod test;
+mod nullable_tests {
+    use super::common::Nullable;
+
+    #[test]
+    fn test_nullable_map() {
+        let mut test = Nullable::Value(21);
+
+        assert_eq!(test.map(|x| x << 1), Nullable::Value(42));
+
+        test = Nullable::Null;
+
+        assert_eq!(test.map(|x| x << 1), Nullable::Null);
+    }
+
+    #[test]
+    fn test_nullable_into() {
+        let test: Option<i32> = Nullable::Value(42).into();
+
+        assert_eq!(test, Some(42));
+    }
+}
