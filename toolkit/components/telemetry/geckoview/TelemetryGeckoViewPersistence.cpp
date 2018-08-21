@@ -7,6 +7,7 @@
 #include "TelemetryGeckoViewPersistence.h"
 
 #include "jsapi.h"
+#include "js/JSON.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Path.h"

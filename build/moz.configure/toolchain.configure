@@ -933,19 +933,19 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                 raise FatalCheckError(
                     'This version (%s) of the MSVC compiler is not '
                     'supported.\n'
-                    'You must install Visual C++ 2017 Update 6 in '
-                    'order to build.\n'
+                    'You must install Visual C++ 2017 Update 6 or '
+                    'Update 8 or later in order to build.\n'
                     'See https://developer.mozilla.org/en/'
                     'Windows_Build_Prerequisites' % info.version)
 
             # MSVC version 15.7 and the previews for 15.8, at least,
             # can't build Firefox.
-            if info.version >= '19.14.0':
+            if info.version >= '19.14.0' and info.version < '19.15.0':
                 raise FatalCheckError(
                     'This version (%s) of the MSVC compiler is not '
                     'supported due to compiler bugs.\n'
-                    'You must install Visual C++ 2017 Update 6 in '
-                    'order to build.\n'
+                    'You must install Visual C++ 2017 Update 6 or '
+                    'Update 8 or later in order to build.\n'
                     'See https://developer.mozilla.org/en/'
                     'Windows_Build_Prerequisites' % info.version)
 
@@ -1403,8 +1403,10 @@ def lto(value, pgo, c_compiler):
 
 
 add_old_configure_assignment('MOZ_LTO', lto.enabled)
-add_old_configure_assignment('MOZ_LTO_CFLAGS', lto.cflags)
-add_old_configure_assignment('MOZ_LTO_LDFLAGS', lto.ldflags)
+set_config('MOZ_LTO', lto.enabled)
+set_define('MOZ_LTO', lto.enabled)
+set_config('MOZ_LTO_CFLAGS', lto.cflags)
+set_config('MOZ_LTO_LDFLAGS', lto.ldflags)
 
 # ASAN
 # ==============================================================

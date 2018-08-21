@@ -11,6 +11,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 
 #include "jsapi.h"
+#include "js/StableStringChars.h"
 #include "xpcpublic.h"
 #include "nsIGlobalObject.h"
 #include "nsIDocShell.h"
@@ -710,7 +711,7 @@ AutoEntryScript::DocshellEntryMonitor::Entry(JSContext* aCx, JSFunction* aFuncti
   nsString filename;
   uint32_t lineNumber = 0;
 
-  js::AutoStableStringChars functionName(aCx);
+  JS::AutoStableStringChars functionName(aCx);
   if (rootedFunction) {
     JS::Rooted<JSString*> displayId(aCx, JS_GetFunctionDisplayId(rootedFunction));
     if (displayId) {

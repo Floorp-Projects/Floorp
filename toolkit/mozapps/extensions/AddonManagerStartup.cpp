@@ -8,6 +8,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/JSON.h"
 #include "js/TracingAPI.h"
 #include "xpcpublic.h"
 

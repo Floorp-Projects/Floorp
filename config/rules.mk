@@ -388,7 +388,16 @@ endif
 ifeq (,$(CROSS_COMPILE))
 HOST_OUTOPTION = $(OUTOPTION)
 else
+# Windows-to-Windows cross compiles should always use MSVC-style options for
+# host compiles.
+ifeq (WINNT_WINNT,$(HOST_OS_ARCH)_$(OS_ARCH))
+ifneq (,$(filter-out msvc clang-cl,$(HOST_CC_TYPE)))
+$(error MSVC-style compilers should be used for host compilations!)
+endif
+HOST_OUTOPTION = -Fo# eol
+else
 HOST_OUTOPTION = -o # eol
+endif
 endif
 ################################################################################
 

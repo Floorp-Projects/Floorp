@@ -12,7 +12,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 const DEBUG = false; // set to true to show debug messages
 
-const kCAPTIVEPORTALDETECTOR_CONTRACTID = "@mozilla.org/toolkit/captive-detector;1";
 const kCAPTIVEPORTALDETECTOR_CID        = Components.ID("{d9cd00ba-aa4d-47b1-8792-b1fe0cd35060}");
 
 const kOpenCaptivePortalLoginEvent = "captive-portal-login";
@@ -224,10 +223,6 @@ function CaptivePortalDetector() {
 
 CaptivePortalDetector.prototype = {
   classID:   kCAPTIVEPORTALDETECTOR_CID,
-  classInfo: XPCOMUtils.generateCI({classID: kCAPTIVEPORTALDETECTOR_CID,
-                                    contractID: kCAPTIVEPORTALDETECTOR_CONTRACTID,
-                                    classDescription: "Captive Portal Detector",
-                                    interfaces: [Ci.nsICaptivePortalDetector]}),
   QueryInterface: ChromeUtils.generateQI([Ci.nsICaptivePortalDetector]),
 
   // nsICaptivePortalDetector

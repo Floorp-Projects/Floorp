@@ -23,6 +23,7 @@
 
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
+#include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
 #include "js/UniquePtr.h"
 #include "js/Wrapper.h"
