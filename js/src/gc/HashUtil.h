@@ -47,7 +47,8 @@ struct DependentAddPtr
     template <class KeyInput>
     void remove(JSContext* cx, T& table, const KeyInput& key) {
         refreshAddPtr(cx, table, key);
-        table.remove(addPtr);
+        if (addPtr)
+            table.remove(addPtr);
     }
 
     bool found() const                 { return addPtr.found(); }
