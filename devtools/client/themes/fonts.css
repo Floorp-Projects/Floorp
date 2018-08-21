@@ -221,12 +221,6 @@
   -moz-user-select: none;
 }
 
-.font-family-unused {
-  margin-bottom: .3em;
-  margin-left: 1.15em;
-  color: var(--grey-50);
-}
-
 .font-value-input {
   margin-left: 10px;
   text-align: right;

@@ -93,40 +93,14 @@ class FontEditor extends PureComponent {
     });
   }
 
-  renderFamilesNotUsed(familiesNotUsed = []) {
-    if (!familiesNotUsed.length) {
-      return null;
-    }
-
-    const familiesList = familiesNotUsed.map(family => {
-      return dom.div(
-        {
-          className: "font-family-unused",
-        },
-        family
-      );
-    });
-
-    return dom.details(
-      {},
-      dom.summary(
-        {},
-        getStr("fontinspector.familiesUnusedLabel")
-      ),
-      familiesList
-    );
-  }
-
   /**
    * Render font family, font name, and metadata for all fonts used on selected node.
    *
    * @param {Array} fonts
    *        Fonts used on selected node.
-   * @param {Array} families
-   *        Font familes declared on selected node.
    * @return {DOMNode}
    */
-  renderFontFamily(fonts, families) {
+  renderFontFamily(fonts) {
     if (!fonts.length) {
       return null;
     }
@@ -158,8 +132,7 @@ class FontEditor extends PureComponent {
           className: "font-control-box",
         },
         topUsedFontsList,
-        moreUsedFonts,
-        this.renderFamilesNotUsed(families.notUsed)
+        moreUsedFonts
       )
     );
   }
@@ -299,7 +272,7 @@ class FontEditor extends PureComponent {
 
   render() {
     const { fontEditor } = this.props;
-    const { fonts, families, axes, instance, properties, warning } = fontEditor;
+    const { fonts, axes, instance, properties, warning } = fontEditor;
     // Pick the first font to show editor controls regardless of how many fonts are used.
     const font = fonts[0];
     const hasFontAxes = font && font.variationAxes;
@@ -322,7 +295,7 @@ class FontEditor extends PureComponent {
         id: "font-editor"
       },
       // Always render UI for font family, format and font file URL.
-      this.renderFontFamily(fonts, families),
+      this.renderFontFamily(fonts),
       // Render UI for font variation instances if they are defined.
       hasFontInstances && this.renderInstances(font.variationInstances, instance),
       // Always render UI for font size.
