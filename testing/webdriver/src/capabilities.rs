@@ -1,9 +1,10 @@
+use command::Parameters;
 use error::{ErrorStatus, WebDriverError, WebDriverResult};
-use serde_json::{Map, Value};
-use std::convert::From;
+use rustc_serialize::json::{Json, ToJson};
+use std::collections::BTreeMap;
 use url::Url;
 
-pub type Capabilities = Map<String, Value>;
+pub type Capabilities = BTreeMap<String, Json>;
 
 /// Trait for objects that can be used to inspect browser capabilities
 ///
@@ -45,7 +46,7 @@ pub trait BrowserCapabilities {
 
     fn accept_proxy(
         &mut self,
-        proxy_settings: &Map<String, Value>,
+        proxy_settings: &BTreeMap<String, Json>,
         &Capabilities,
     ) -> WebDriverResult<bool>;
 
@@ -54,7 +55,7 @@ pub trait BrowserCapabilities {
     /// Check that custom properties containing ":" have the correct data types.
     /// Properties that are unrecognised must be ignored i.e. return without
     /// error.
-    fn validate_custom(&self, name: &str, value: &Value) -> WebDriverResult<()>;
+    fn validate_custom(&self, name: &str, value: &Json) -> WebDriverResult<()>;
 
     /// Check if custom properties are accepted capabilites
     ///
@@ -63,7 +64,7 @@ pub trait BrowserCapabilities {
     fn accept_custom(
         &mut self,
         name: &str,
-        value: &Value,
+        value: &Json,
         merged: &Capabilities,
     ) -> WebDriverResult<bool>;
 }
@@ -78,31 +79,14 @@ pub trait CapabilitiesMatching {
     /// Takes a BrowserCapabilites object and returns a set of capabilites that
     /// are valid for that browser, if any, or None if there are no matching
     /// capabilities.
-    fn match_browser<T: BrowserCapabilities>(
-        &self,
-        browser_capabilities: &mut T,
-    ) -> WebDriverResult<Option<Capabilities>>;
+    fn match_browser<T: BrowserCapabilities>(&self, browser_capabilities: &mut T)
+                                             -> WebDriverResult<Option<Capabilities>>;
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq)]
 pub struct SpecNewSessionParameters {
-    #[serde(default = "Capabilities::default")]
     pub alwaysMatch: Capabilities,
-    #[serde(default = "firstMatch_default")]
     pub firstMatch: Vec<Capabilities>,
-}
-
-impl Default for SpecNewSessionParameters {
-    fn default() -> Self {
-        SpecNewSessionParameters {
-            alwaysMatch: Capabilities::new(),
-            firstMatch: vec![Capabilities::new()],
-        }
-    }
-}
-
-fn firstMatch_default() -> Vec<Capabilities> {
-    vec![Capabilities::default()]
 }
 
 impl SpecNewSessionParameters {
@@ -114,7 +98,7 @@ impl SpecNewSessionParameters {
         // Filter out entries with the value `null`
         let null_entries = capabilities
             .iter()
-            .filter(|&(_, ref value)| **value == Value::Null)
+            .filter(|&(_, ref value)| **value == Json::Null)
             .map(|(k, _)| k.clone())
             .collect::<Vec<String>>();
         for key in null_entries {
@@ -161,66 +145,57 @@ impl SpecNewSessionParameters {
         Ok(capabilities)
     }
 
-    fn validate_page_load_strategy(value: &Value) -> WebDriverResult<()> {
+    fn validate_page_load_strategy(value: &Json) -> WebDriverResult<()> {
         match value {
-            &Value::String(ref x) => match &**x {
-                "normal" | "eager" | "none" => {}
-                x => {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        format!("Invalid page load strategy: {}", x),
-                    ))
+            &Json::String(ref x) => {
+                match &**x {
+                    "normal" |
+                    "eager" |
+                    "none" => {},
+                    x => {
+                        return Err(WebDriverError::new(
+                            ErrorStatus::InvalidArgument,
+                            format!("Invalid page load strategy: {}", x)))
+                    }
                 }
-            },
-            _ => {
-                return Err(WebDriverError::new(
-                    ErrorStatus::InvalidArgument,
-                    "pageLoadStrategy is not a string",
-                ))
             }
+            _ => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                "pageLoadStrategy is not a string"))
         }
         Ok(())
     }
 
-    fn validate_proxy(proxy_value: &Value) -> WebDriverResult<()> {
-        let obj = try_opt!(
-            proxy_value.as_object(),
-            ErrorStatus::InvalidArgument,
-            "proxy is not an object"
-        );
+    fn validate_proxy(proxy_value: &Json) -> WebDriverResult<()> {
+        let obj = try_opt!(proxy_value.as_object(),
+                           ErrorStatus::InvalidArgument,
+                           "proxy is not an object");
 
         for (key, value) in obj.iter() {
             match &**key {
-                "proxyType" => match value.as_str() {
-                    Some("pac") | Some("direct") | Some("autodetect") | Some("system")
-                    | Some("manual") => {}
-                    Some(x) => {
-                        return Err(WebDriverError::new(
-                            ErrorStatus::InvalidArgument,
-                            format!("Invalid proxyType value: {}", x),
-                        ))
-                    }
-                    None => {
-                        return Err(WebDriverError::new(
-                            ErrorStatus::InvalidArgument,
-                            format!("proxyType is not a string: {}", value),
-                        ))
-                    }
+                "proxyType" => match value.as_string() {
+                    Some("pac") |
+                    Some("direct") |
+                    Some("autodetect") |
+                    Some("system") |
+                    Some("manual") => {},
+                    Some(x) => return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        format!("Invalid proxyType value: {}", x))),
+                    None => return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        format!("proxyType is not a string: {}", value))),
                 },
 
-                "proxyAutoconfigUrl" => match value.as_str() {
+                "proxyAutoconfigUrl" => match value.as_string() {
                     Some(x) => {
                         Url::parse(x).or(Err(WebDriverError::new(
                             ErrorStatus::InvalidArgument,
-                            format!("proxyAutoconfigUrl is not a valid URL: {}", x),
-                        )))?;
-                    }
-                    None => {
-                        return Err(WebDriverError::new(
-                            ErrorStatus::InvalidArgument,
-                            "proxyAutoconfigUrl is not a string",
-                        ))
-                    }
+                            format!("proxyAutoconfigUrl is not a valid URL: {}", x))))?;
+                    },
+                    None => return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "proxyAutoconfigUrl is not a string"
+                    ))
                 },
 
                 "ftpProxy" => SpecNewSessionParameters::validate_host(value, "ftpProxy")?,
@@ -231,43 +206,36 @@ impl SpecNewSessionParameters {
                 "socksVersion" => if !value.is_number() {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
-                        format!("socksVersion is not a number: {}", value),
-                    ));
+                        format!("socksVersion is not a number: {}", value)
+                    ))
                 },
 
-                x => {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        format!("Invalid proxy configuration entry: {}", x),
-                    ))
-                }
+                x => return Err(WebDriverError::new(
+                    ErrorStatus::InvalidArgument,
+                    format!("Invalid proxy configuration entry: {}", x)))
             }
         }
 
         Ok(())
     }
 
-    fn validate_no_proxy(value: &Value) -> WebDriverResult<()> {
+    fn validate_no_proxy(value: &Json) -> WebDriverResult<()> {
         match value.as_array() {
             Some(hosts) => {
                 for host in hosts {
-                    match host.as_str() {
-                        Some(_) => {}
-                        None => {
-                            return Err(WebDriverError::new(
-                                ErrorStatus::InvalidArgument,
-                                format!("noProxy item is not a string: {}", host),
-                            ))
-                        }
+                    match host.as_string() {
+                        Some(_) => {},
+                        None => return Err(WebDriverError::new(
+                            ErrorStatus::InvalidArgument,
+                            format!("noProxy item is not a string: {}", host)
+                        ))
                     }
                 }
-            }
-            None => {
-                return Err(WebDriverError::new(
-                    ErrorStatus::InvalidArgument,
-                    format!("noProxy is not an array: {}", value),
-                ))
-            }
+            },
+            None => return Err(WebDriverError::new(
+                ErrorStatus::InvalidArgument,
+                format!("noProxy is not an array: {}", value)
+            ))
         }
 
         Ok(())
@@ -275,45 +243,42 @@ impl SpecNewSessionParameters {
 
     /// Validate whether a named capability is JSON value is a string containing a host
     /// and possible port
-    fn validate_host(value: &Value, entry: &str) -> WebDriverResult<()> {
-        match value.as_str() {
+    fn validate_host(value: &Json, entry: &str) -> WebDriverResult<()> {
+        match value.as_string() {
             Some(host) => {
                 if host.contains("://") {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
-                        format!("{} must not contain a scheme: {}", entry, host),
-                    ));
+                        format!("{} must not contain a scheme: {}", entry, host)));
                 }
 
                 // Temporarily add a scheme so the host can be parsed as URL
                 let s = String::from(format!("http://{}", host));
                 let url = Url::parse(s.as_str()).or(Err(WebDriverError::new(
                     ErrorStatus::InvalidArgument,
-                    format!("{} is not a valid URL: {}", entry, host),
-                )))?;
+                    format!("{} is not a valid URL: {}", entry, host))))?;
 
-                if url.username() != "" || url.password() != None || url.path() != "/"
-                    || url.query() != None || url.fragment() != None
-                {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        format!("{} is not of the form host[:port]: {}", entry, host),
-                    ));
-                }
-            }
+                if url.username() != "" ||
+                    url.password() != None ||
+                    url.path() != "/" ||
+                    url.query() != None ||
+                    url.fragment() != None {
+                        return Err(WebDriverError::new(
+                            ErrorStatus::InvalidArgument,
+                            format!("{} is not of the form host[:port]: {}", entry, host)));
+                    }
+            },
 
-            None => {
-                return Err(WebDriverError::new(
-                    ErrorStatus::InvalidArgument,
-                    format!("{} is not a string: {}", entry, value),
-                ))
-            }
+            None => return Err(WebDriverError::new(
+                ErrorStatus::InvalidArgument,
+                format!("{} is not a string: {}", entry, value)
+            ))
         }
 
         Ok(())
     }
 
-    fn validate_timeouts(value: &Value) -> WebDriverResult<()> {
+    fn validate_timeouts(value: &Json) -> WebDriverResult<()> {
         let obj = try_opt!(
             value.as_object(),
             ErrorStatus::InvalidArgument,
@@ -348,15 +313,19 @@ impl SpecNewSessionParameters {
         Ok(())
     }
 
-    fn validate_unhandled_prompt_behaviour(value: &Value) -> WebDriverResult<()> {
+    fn validate_unhandled_prompt_behaviour(value: &Json) -> WebDriverResult<()> {
         let behaviour = try_opt!(
-            value.as_str(),
+            value.as_string(),
             ErrorStatus::InvalidArgument,
             format!("unhandledPromptBehavior is not a string: {}", value)
         );
 
         match behaviour {
-            "accept" | "accept and notify" | "dismiss" | "dismiss and notify" | "ignore" => {}
+            "accept" |
+            "accept and notify" |
+            "dismiss" |
+            "dismiss and notify" |
+            "ignore" => {},
             x => {
                 return Err(WebDriverError::new(
                     ErrorStatus::InvalidArgument,
@@ -369,12 +338,74 @@ impl SpecNewSessionParameters {
     }
 }
 
+impl Parameters for SpecNewSessionParameters {
+    fn from_json(body: &Json) -> WebDriverResult<SpecNewSessionParameters> {
+        let data = try_opt!(
+            body.as_object(),
+            ErrorStatus::UnknownError,
+            format!("Malformed capabilities, message body is not an object: {}", body)
+        );
+
+        let capabilities = try_opt!(
+            try_opt!(
+                data.get("capabilities"),
+                ErrorStatus::InvalidArgument,
+                "Malformed capabilities, missing \"capabilities\" field"
+            ).as_object(),
+            ErrorStatus::InvalidArgument,
+            "Malformed capabilities, \"capabilities\" field is not an object}"
+        );
+
+        let default_always_match = Json::Object(Capabilities::new());
+        let always_match = try_opt!(
+            capabilities
+                .get("alwaysMatch")
+                .unwrap_or(&default_always_match)
+                .as_object(),
+            ErrorStatus::InvalidArgument,
+            "Malformed capabilities, alwaysMatch field is not an object"
+        );
+        let default_first_matches = Json::Array(vec![]);
+        let first_matches = try_opt!(
+            capabilities
+                .get("firstMatch")
+                .unwrap_or(&default_first_matches)
+                .as_array(),
+            ErrorStatus::InvalidArgument,
+            "Malformed capabilities, firstMatch field is not an array"
+        ).iter()
+            .map(|x| {
+                x.as_object().map(|x| x.clone()).ok_or(WebDriverError::new(
+                    ErrorStatus::InvalidArgument,
+                    "Malformed capabilities, firstMatch entry is not an object",
+                ))
+            })
+            .collect::<WebDriverResult<Vec<Capabilities>>>()?;
+
+        return Ok(SpecNewSessionParameters {
+            alwaysMatch: always_match.clone(),
+            firstMatch: first_matches,
+        });
+    }
+}
+
+impl ToJson for SpecNewSessionParameters {
+    fn to_json(&self) -> Json {
+        let mut body = BTreeMap::new();
+        let mut capabilities = BTreeMap::new();
+        capabilities.insert("alwaysMatch".into(), self.alwaysMatch.to_json());
+        capabilities.insert("firstMatch".into(), self.firstMatch.to_json());
+        body.insert("capabilities".into(), capabilities.to_json());
+        Json::Object(body)
+    }
+}
+
 impl CapabilitiesMatching for SpecNewSessionParameters {
     fn match_browser<T: BrowserCapabilities>(
         &self,
         browser_capabilities: &mut T,
     ) -> WebDriverResult<Option<Capabilities>> {
-        let default = vec![Map::new()];
+        let default = vec![BTreeMap::new()];
         let capabilities_list = if self.firstMatch.len() > 0 {
             &self.firstMatch
         } else {
@@ -384,22 +415,19 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
         let merged_capabilities = capabilities_list
             .iter()
             .map(|first_match_entry| {
-                if first_match_entry
-                    .keys()
-                    .any(|k| self.alwaysMatch.contains_key(k))
-                {
+                if first_match_entry.keys().any(|k| self.alwaysMatch.contains_key(k)) {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         "firstMatch key shadowed a value in alwaysMatch",
                     ));
                 }
                 let mut merged = self.alwaysMatch.clone();
-                for (key, value) in first_match_entry.clone().into_iter() {
-                    merged.insert(key, value);
-                }
+                merged.append(&mut first_match_entry.clone());
                 Ok(merged)
             })
-            .map(|merged| merged.and_then(|x| self.validate(x, browser_capabilities)))
+            .map(|merged| {
+                merged.and_then(|x| self.validate(x, browser_capabilities))
+            })
             .collect::<WebDriverResult<Vec<Capabilities>>>()?;
 
         let selected = merged_capabilities
@@ -415,7 +443,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                 .ok()
                                 .and_then(|x| x);
 
-                            if value.as_str() != browserValue.as_ref().map(|x| &**x) {
+                            if value.as_string() != browserValue.as_ref().map(|x| &**x) {
                                 return None;
                             }
                         }
@@ -425,7 +453,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                 .ok()
                                 .and_then(|x| x);
                             // We already validated this was a string
-                            let version_cond = value.as_str().unwrap_or("");
+                            let version_cond = value.as_string().unwrap_or("");
                             if let Some(version) = browserValue {
                                 if !browser_capabilities
                                     .compare_browser_version(&*version, version_cond)
@@ -442,13 +470,13 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                 .platform_name(merged)
                                 .ok()
                                 .and_then(|x| x);
-                            if value.as_str() != browserValue.as_ref().map(|x| &**x) {
+                            if value.as_string() != browserValue.as_ref().map(|x| &**x) {
                                 return None;
                             }
                         }
                         "acceptInsecureCerts" => {
-                            if value.as_bool().unwrap_or(false)
-                                && !browser_capabilities
+                            if value.as_boolean().unwrap_or(false) &&
+                                !browser_capabilities
                                     .accept_insecure_certs(merged)
                                     .unwrap_or(false)
                             {
@@ -456,8 +484,8 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                             }
                         }
                         "setWindowRect" => {
-                            if value.as_bool().unwrap_or(false)
-                                && !browser_capabilities
+                            if value.as_boolean().unwrap_or(false) &&
+                                !browser_capabilities
                                     .set_window_rect(merged)
                                     .unwrap_or(false)
                             {
@@ -465,7 +493,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                             }
                         }
                         "proxy" => {
-                            let default = Map::new();
+                            let default = BTreeMap::new();
                             let proxy = value.as_object().unwrap_or(&default);
                             if !browser_capabilities
                                 .accept_proxy(&proxy, merged)
@@ -497,11 +525,9 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq)]
 pub struct LegacyNewSessionParameters {
-    #[serde(default = "Capabilities::default")]
     pub desired: Capabilities,
-    #[serde(default = "Capabilities::default")]
     pub required: Capabilities,
 }
 
@@ -513,7 +539,7 @@ impl CapabilitiesMatching for LegacyNewSessionParameters {
         // For now don't do anything much, just merge the
         // desired and required and return the merged list.
 
-        let mut capabilities: Capabilities = Map::new();
+        let mut capabilities: Capabilities = BTreeMap::new();
         self.required.iter().chain(self.desired.iter()).fold(
             &mut capabilities,
             |caps, (key, value)| {
@@ -528,151 +554,55 @@ impl CapabilitiesMatching for LegacyNewSessionParameters {
     }
 }
 
+impl Parameters for LegacyNewSessionParameters {
+    fn from_json(body: &Json) -> WebDriverResult<LegacyNewSessionParameters> {
+        let data = try_opt!(
+            body.as_object(),
+            ErrorStatus::UnknownError,
+            format!("Malformed legacy capabilities, message body is not an object: {}", body)
+        );
+
+        let desired = if let Some(capabilities) = data.get("desiredCapabilities") {
+            try_opt!(
+                capabilities.as_object(),
+                ErrorStatus::InvalidArgument,
+                "Malformed legacy capabilities, desiredCapabilities field is not an object"
+            ).clone()
+        } else {
+            BTreeMap::new()
+        };
+
+        let required = if let Some(capabilities) = data.get("requiredCapabilities") {
+            try_opt!(
+                capabilities.as_object(),
+                ErrorStatus::InvalidArgument,
+                "Malformed legacy capabilities, requiredCapabilities field is not an object"
+            ).clone()
+        } else {
+            BTreeMap::new()
+        };
+
+        Ok(LegacyNewSessionParameters { desired, required })
+    }
+}
+
+impl ToJson for LegacyNewSessionParameters {
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
+        data.insert("desiredCapabilities".to_owned(), self.desired.to_json());
+        data.insert("requiredCapabilities".to_owned(), self.required.to_json());
+        Json::Object(data)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use serde_json::{self, Value};
-    use test::check_deserialize;
+    use rustc_serialize::json::Json;
+    use super::{SpecNewSessionParameters, WebDriverResult};
 
     fn validate_proxy(value: &str) -> WebDriverResult<()> {
-        let data = serde_json::from_str::<Value>(value).unwrap();
+        let data = Json::from_str(value).unwrap();
         SpecNewSessionParameters::validate_proxy(&data)
-    }
-
-    #[test]
-    fn test_json_spec_new_session_parameters_alwaysMatch_only() {
-        let json = r#"{
-            "alwaysMatch":{}
-        }"#;
-        let data = SpecNewSessionParameters {
-            alwaysMatch: Capabilities::new(),
-            firstMatch: vec![Capabilities::new()],
-        };
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_spec_new_session_parameters_firstMatch_only() {
-        let json = r#"{
-            "firstMatch":[{}]
-        }"#;
-        let data = SpecNewSessionParameters {
-            alwaysMatch: Capabilities::new(),
-            firstMatch: vec![Capabilities::new()],
-        };
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_spec_new_session_parameters_alwaysMatch_null() {
-        let json = r#"{
-            "alwaysMatch":null,
-            "firstMatch":[{}]
-        }"#;
-
-        assert!(serde_json::from_str::<SpecNewSessionParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_spec_new_session_parameters_firstMatch_null() {
-        let json = r#"{
-            "alwaysMatch":{},
-            "firstMatch":null
-        }"#;
-
-        assert!(serde_json::from_str::<SpecNewSessionParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_spec_new_session_parameters_both_empty() {
-        let json = r#"{
-            "alwaysMatch":{},
-            "firstMatch":[{}]
-        }"#;
-        let data = SpecNewSessionParameters {
-            alwaysMatch: Capabilities::new(),
-            firstMatch: vec![Capabilities::new()],
-        };
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_spec_new_session_parameters_both_with_capability() {
-        let json = r#"{
-            "alwaysMatch":{"foo":"bar"},
-            "firstMatch":[{"foo2":"bar2"}]
-        }"#;
-        let mut data = SpecNewSessionParameters {
-            alwaysMatch: Capabilities::new(),
-            firstMatch: vec![Capabilities::new()],
-        };
-        data.alwaysMatch.insert("foo".into(), "bar".into());
-        data.firstMatch[0].insert("foo2".into(), "bar2".into());
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_spec_legacy_new_session_parameters_desired_only() {
-        let json = r#"{"desired":{}}"#;
-        let data = LegacyNewSessionParameters {
-            desired: Capabilities::new(),
-            required: Capabilities::new(),
-        };
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_spec_legacy_new_session_parameters_required_only() {
-        let json = r#"{"required":{}}"#;
-        let data = LegacyNewSessionParameters {
-            desired: Capabilities::new(),
-            required: Capabilities::new(),
-        };
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_spec_legacy_new_session_parameters_desired_null() {
-        let json = r#"{"desired":null,"required":{}}"#;
-
-        assert!(serde_json::from_str::<LegacyNewSessionParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_spec_legacy_new_session_parameters_required_null() {
-        let json = r#"{"desired":{}, "required":null}"#;
-
-        assert!(serde_json::from_str::<LegacyNewSessionParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_spec_legacy_new_session_parameters_both_empty() {
-        let json = r#"{"desired":{},"required":{}}"#;
-        let data = LegacyNewSessionParameters {
-            desired: Capabilities::new(),
-            required: Capabilities::new(),
-        };
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_spec_legacy_new_session_parameters_both_with_capabilities() {
-        let json = r#"{"desired":{"foo":"bar"},"required":{"foo2":"bar2"}}"#;
-        let mut data = LegacyNewSessionParameters {
-            desired: Capabilities::new(),
-            required: Capabilities::new(),
-        };
-        data.desired.insert("foo".into(), "bar".into());
-        data.required.insert("foo2".into(), "bar2".into());
-
-        check_deserialize(&json, &data);
     }
 
     #[test]

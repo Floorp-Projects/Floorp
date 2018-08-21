@@ -1,4 +1,3 @@
-use serde_json;
 use std::io::Read;
 use std::marker::PhantomData;
 use std::net::SocketAddr;
@@ -7,49 +6,45 @@ use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
 
-use hyper::header::{CacheControl, CacheDirective, ContentType};
+use hyper::header::{ContentType, CacheControl, CacheDirective};
+use hyper::mime::{Mime, TopLevel, SubLevel, Attr, Value};
 use hyper::method::Method;
-use hyper::mime::{Attr, Mime, SubLevel, TopLevel, Value};
+use hyper::Result;
 use hyper::server::{Handler, Listening, Request, Response, Server};
 use hyper::status::StatusCode;
 use hyper::uri::RequestUri::AbsolutePath;
-use hyper::Result;
 
-use command::{WebDriverCommand, WebDriverMessage};
-use error::{ErrorStatus, WebDriverError, WebDriverResult};
-use httpapi::{VoidWebDriverExtensionRoute, WebDriverExtensionRoute, WebDriverHttpApi};
+use command::{WebDriverMessage, WebDriverCommand};
+use error::{WebDriverResult, WebDriverError, ErrorStatus};
+use httpapi::{WebDriverHttpApi, WebDriverExtensionRoute, VoidWebDriverExtensionRoute};
 use response::{CloseWindowResponse, WebDriverResponse};
 
 enum DispatchMessage<U: WebDriverExtensionRoute> {
-    HandleWebDriver(
-        WebDriverMessage<U>,
-        Sender<WebDriverResult<WebDriverResponse>>,
-    ),
-    Quit,
+    HandleWebDriver(WebDriverMessage<U>, Sender<WebDriverResult<WebDriverResponse>>),
+    Quit
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Session {
-    pub id: String,
+    pub id: String
 }
 
 impl Session {
     fn new(id: String) -> Session {
-        Session { id: id }
+        Session {
+            id: id
+        }
     }
 }
 
-pub trait WebDriverHandler<U: WebDriverExtensionRoute = VoidWebDriverExtensionRoute>: Send {
-    fn handle_command(
-        &mut self,
-        session: &Option<Session>,
-        msg: WebDriverMessage<U>,
-    ) -> WebDriverResult<WebDriverResponse>;
+pub trait WebDriverHandler<U: WebDriverExtensionRoute=VoidWebDriverExtensionRoute> : Send {
+    fn handle_command(&mut self, session: &Option<Session>, msg: WebDriverMessage<U>) -> WebDriverResult<WebDriverResponse>;
     fn delete_session(&mut self, session: &Option<Session>);
 }
 
 #[derive(Debug)]
-struct Dispatcher<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> {
+struct Dispatcher<T: WebDriverHandler<U>,
+                  U: WebDriverExtensionRoute> {
     handler: T,
     session: Option<Session>,
     extension_type: PhantomData<U>,
@@ -77,8 +72,8 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
                         Ok(WebDriverResponse::NewSession(ref new_session)) => {
                             self.session = Some(Session::new(new_session.sessionId.clone()));
                         }
-                        Ok(WebDriverResponse::CloseWindow(CloseWindowResponse(ref handles))) => {
-                            if handles.len() == 0 {
+                        Ok(WebDriverResponse::CloseWindow(CloseWindowResponse { ref window_handles })) => {
+                            if window_handles.len() == 0 {
                                 debug!("Last window was closed, deleting session");
                                 self.delete_session();
                             }
@@ -106,46 +101,49 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
 
     fn check_session(&self, msg: &WebDriverMessage<U>) -> WebDriverResult<()> {
         match msg.session_id {
-            Some(ref msg_session_id) => match self.session {
-                Some(ref existing_session) => {
-                    if existing_session.id != *msg_session_id {
-                        Err(WebDriverError::new(
-                            ErrorStatus::InvalidSessionId,
-                            format!("Got unexpected session id {}", msg_session_id),
-                        ))
-                    } else {
-                        Ok(())
-                    }
+            Some(ref msg_session_id) => {
+                match self.session {
+                    Some(ref existing_session) => {
+                        if existing_session.id != *msg_session_id {
+                            Err(WebDriverError::new(
+                                ErrorStatus::InvalidSessionId,
+                                format!("Got unexpected session id {}",
+                                        msg_session_id)))
+                        } else {
+                            Ok(())
+                        }
+                    },
+                    None => Ok(())
                 }
-                None => Ok(()),
             },
             None => {
                 match self.session {
                     Some(_) => {
                         match msg.command {
                             WebDriverCommand::Status => Ok(()),
-                            WebDriverCommand::NewSession(_) => Err(WebDriverError::new(
-                                ErrorStatus::SessionNotCreated,
-                                "Session is already started",
-                            )),
+                            WebDriverCommand::NewSession(_) => {
+                                Err(WebDriverError::new(
+                                    ErrorStatus::SessionNotCreated,
+                                    "Session is already started"))
+                            },
                             _ => {
                                 //This should be impossible
                                 error!("Got a message with no session id");
                                 Err(WebDriverError::new(
                                     ErrorStatus::UnknownError,
-                                    "Got a command with no session?!",
-                                ))
+                                    "Got a command with no session?!"))
                             }
                         }
-                    }
-                    None => match msg.command {
-                        WebDriverCommand::NewSession(_) => Ok(()),
-                        WebDriverCommand::Status => Ok(()),
-                        _ => Err(WebDriverError::new(
-                            ErrorStatus::InvalidSessionId,
-                            "Tried to run a command before creating a session",
-                        )),
                     },
+                    None => {
+                        match msg.command {
+                            WebDriverCommand::NewSession(_) => Ok(()),
+                            WebDriverCommand::Status => Ok(()),
+                            _ => Err(WebDriverError::new(
+                                ErrorStatus::InvalidSessionId,
+                                "Tried to run a command before creating a session"))
+                        }
+                    }
                 }
             }
         }
@@ -155,14 +153,14 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
 #[derive(Debug)]
 struct HttpHandler<U: WebDriverExtensionRoute> {
     chan: Mutex<Sender<DispatchMessage<U>>>,
-    api: Mutex<WebDriverHttpApi<U>>,
+    api: Mutex<WebDriverHttpApi<U>>
 }
 
-impl<U: WebDriverExtensionRoute> HttpHandler<U> {
+impl <U: WebDriverExtensionRoute> HttpHandler<U> {
     fn new(api: WebDriverHttpApi<U>, chan: Sender<DispatchMessage<U>>) -> HttpHandler<U> {
         HttpHandler {
             chan: Mutex::new(chan),
-            api: Mutex::new(api),
+            api: Mutex::new(api)
         }
     }
 }
@@ -210,18 +208,16 @@ impl<U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
                             }
                         }
                         match recv_res.recv() {
-                            Ok(data) => match data {
-                                Ok(response) => {
-                                    (StatusCode::Ok, serde_json::to_string(&response).unwrap())
+                            Ok(data) => {
+                                match data {
+                                    Ok(response) => (StatusCode::Ok, response.to_json_string()),
+                                    Err(err) => (err.http_status(), err.to_json_string()),
                                 }
-                                Err(err) => {
-                                    (err.http_status(), serde_json::to_string(&err).unwrap())
-                                }
-                            },
+                            }
                             Err(e) => panic!("Error reading response: {:?}", e),
                         }
                     }
-                    Err(err) => (err.http_status(), serde_json::to_string(&err).unwrap()),
+                    Err(err) => (err.http_status(), err.to_json_string()),
                 };
 
                 debug!("<- {} {}", status, resp_body);
@@ -230,11 +226,10 @@ impl<U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
                     let resp_status = res.status_mut();
                     *resp_status = status;
                 }
-                res.headers_mut().set(ContentType(Mime(
-                    TopLevel::Application,
-                    SubLevel::Json,
-                    vec![(Attr::Charset, Value::Utf8)],
-                )));
+                res.headers_mut()
+                    .set(ContentType(Mime(TopLevel::Application,
+                                          SubLevel::Json,
+                                          vec![(Attr::Charset, Value::Utf8)])));
                 res.headers_mut()
                     .set(CacheControl(vec![CacheDirective::NoCache]));
 

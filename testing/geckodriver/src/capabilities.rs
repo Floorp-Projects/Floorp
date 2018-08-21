@@ -1,4 +1,3 @@
-use base64;
 use logging::Level;
 use marionette::LogOptions;
 use mozprofile::preferences::Pref;
@@ -6,14 +5,15 @@ use mozprofile::profile::Profile;
 use mozrunner::runner::platform::firefox_default_path;
 use mozversion::{self, firefox_version, Version};
 use regex::bytes::Regex;
-use serde_json::{Map, Value};
+use rustc_serialize::base64::FromBase64;
+use rustc_serialize::json::Json;
 use std::collections::BTreeMap;
 use std::default::Default;
 use std::error::Error;
 use std::fs;
-use std::io;
 use std::io::BufWriter;
 use std::io::Cursor;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str::{self, FromStr};
@@ -34,6 +34,7 @@ pub struct FirefoxCapabilities<'a> {
     version_cache: BTreeMap<PathBuf, String>,
 }
 
+
 impl<'a> FirefoxCapabilities<'a> {
     pub fn new(fallback_binary: Option<&'a PathBuf>) -> FirefoxCapabilities<'a> {
         FirefoxCapabilities {
@@ -43,11 +44,11 @@ impl<'a> FirefoxCapabilities<'a> {
         }
     }
 
-    fn set_binary(&mut self, capabilities: &Map<String, Value>) {
+    fn set_binary(&mut self, capabilities: &BTreeMap<String, Json>) {
         self.chosen_binary = capabilities
             .get("moz:firefoxOptions")
-            .and_then(|x| x.get("binary"))
-            .and_then(|x| x.as_str())
+            .and_then(|x| x.find("binary"))
+            .and_then(|x| x.as_string())
             .map(|x| PathBuf::from(x))
             .or_else(|| self.fallback_binary.map(|x| x.clone()))
             .or_else(|| firefox_default_path())
@@ -68,7 +69,8 @@ impl<'a> FirefoxCapabilities<'a> {
                 });
             if let Some(ref version) = rv {
                 debug!("Found version {}", version);
-                self.version_cache.insert(binary.clone(), version.clone());
+                self.version_cache
+                    .insert(binary.clone(), version.clone());
             } else {
                 debug!("Failed to get binary version");
             }
@@ -79,8 +81,7 @@ impl<'a> FirefoxCapabilities<'a> {
     }
 
     fn version_from_binary(&self, binary: &PathBuf) -> Option<String> {
-        let version_regexp =
-            Regex::new(r#"\d+\.\d+(?:[a-z]\d+)?"#).expect("Error parsing version regexp");
+        let version_regexp = Regex::new(r#"\d+\.\d+(?:[a-z]\d+)?"#).expect("Error parsing version regexp");
         let output = Command::new(binary)
             .args(&["-version"])
             .stdout(Stdio::piped())
@@ -89,8 +90,7 @@ impl<'a> FirefoxCapabilities<'a> {
             .ok();
 
         if let Some(x) = output {
-            version_regexp
-                .captures(&*x.stdout)
+            version_regexp.captures(&*x.stdout)
                 .and_then(|captures| captures.get(0))
                 .and_then(|m| str::from_utf8(m.as_bytes()).ok())
                 .map(|x| x.into())
@@ -104,8 +104,7 @@ impl<'a> FirefoxCapabilities<'a> {
 fn convert_version_error(err: mozversion::Error) -> WebDriverError {
     WebDriverError::new(
         ErrorStatus::SessionNotCreated,
-        err.description().to_string(),
-    )
+        err.description().to_string())
 }
 
 impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
@@ -123,8 +122,8 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
 
     fn platform_name(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>> {
         Ok(if cfg!(target_os = "windows") {
-            Some("windows".into())
-        } else if cfg!(target_os = "macos") {
+               Some("windows".into())
+           } else if cfg!(target_os = "macos") {
             Some("mac".into())
         } else if cfg!(target_os = "linux") {
             Some("linux".into())
@@ -146,11 +145,10 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         Ok(true)
     }
 
-    fn compare_browser_version(
-        &mut self,
-        version: &str,
-        comparison: &str,
-    ) -> WebDriverResult<bool> {
+    fn compare_browser_version(&mut self,
+                               version: &str,
+                               comparison: &str)
+                               -> WebDriverResult<bool> {
         try!(Version::from_str(version).or_else(|x| Err(convert_version_error(x))))
             .matches(comparison)
             .or_else(|x| Err(convert_version_error(x)))
@@ -160,100 +158,78 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         Ok(true)
     }
 
-    fn validate_custom(&self, name: &str, value: &Value) -> WebDriverResult<()> {
+    fn validate_custom(&self, name: &str,  value: &Json) -> WebDriverResult<()> {
         if !name.starts_with("moz:") {
-            return Ok(());
+            return Ok(())
         }
         match name {
             "moz:firefoxOptions" => {
-                let data = try_opt!(
-                    value.as_object(),
-                    ErrorStatus::InvalidArgument,
-                    "moz:firefoxOptions is not an object"
-                );
+                let data = try_opt!(value.as_object(),
+                                    ErrorStatus::InvalidArgument,
+                                    "moz:firefoxOptions is not an object");
                 for (key, value) in data.iter() {
                     match &**key {
                         "binary" => {
                             if !value.is_string() {
                                 return Err(WebDriverError::new(
                                     ErrorStatus::InvalidArgument,
-                                    "binary path is not a string",
-                                ));
+                                         "binary path is not a string"));
                             }
-                        }
+                        },
                         "args" => {
-                            if !try_opt!(
-                                value.as_array(),
-                                ErrorStatus::InvalidArgument,
-                                "args is not an array"
-                            ).iter()
-                                .all(|value| value.is_string())
-                            {
+                            if !try_opt!(value.as_array(),
+                                         ErrorStatus::InvalidArgument,
+                                         "args is not an array")
+                                .iter()
+                                .all(|value| value.is_string()) {
                                 return Err(WebDriverError::new(
                                     ErrorStatus::InvalidArgument,
-                                    "args entry is not a string",
-                                ));
-                            }
-                        }
+                                         "args entry is not a string"));
+                                }
+                        },
                         "profile" => {
                             if !value.is_string() {
                                 return Err(WebDriverError::new(
                                     ErrorStatus::InvalidArgument,
-                                    "profile is not a string",
-                                ));
+                                         "profile is not a string"));
                             }
-                        }
+                        },
                         "log" => {
-                            let log_data = try_opt!(
-                                value.as_object(),
-                                ErrorStatus::InvalidArgument,
-                                "log value is not an object"
-                            );
+                            let log_data = try_opt!(value.as_object(),
+                                                    ErrorStatus::InvalidArgument,
+                                                    "log value is not an object");
                             for (log_key, log_value) in log_data.iter() {
                                 match &**log_key {
                                     "level" => {
-                                        let level = try_opt!(
-                                            log_value.as_str(),
-                                            ErrorStatus::InvalidArgument,
-                                            "log level is not a string"
-                                        );
+                                        let level = try_opt!(log_value.as_string(),
+                                                             ErrorStatus::InvalidArgument,
+                                                             "log level is not a string");
                                         if Level::from_str(level).is_err() {
                                             return Err(WebDriverError::new(
                                                 ErrorStatus::InvalidArgument,
-                                                format!("Not a valid log level: {}", level),
-                                            ));
+                                                format!("Not a valid log level: {}", level)))
                                         }
                                     }
-                                    x => {
-                                        return Err(WebDriverError::new(
-                                            ErrorStatus::InvalidArgument,
-                                            format!("Invalid log field {}", x),
-                                        ))
-                                    }
+                                    x => return Err(WebDriverError::new(
+                                        ErrorStatus::InvalidArgument,
+                                        format!("Invalid log field {}", x)))
                                 }
                             }
-                        }
+                        },
                         "prefs" => {
-                            let prefs_data = try_opt!(
-                                value.as_object(),
-                                ErrorStatus::InvalidArgument,
-                                "prefs value is not an object"
-                            );
-                            if !prefs_data.values().all(|x| {
-                                x.is_string() || x.is_i64() || x.is_u64() || x.is_boolean()
-                            }) {
-                                return Err(WebDriverError::new(
-                                    ErrorStatus::InvalidArgument,
-                                    "Preference values not all string or integer or boolean",
-                                ));
-                            }
+                            let prefs_data = try_opt!(value.as_object(),
+                                                    ErrorStatus::InvalidArgument,
+                                                    "prefs value is not an object");
+                            if !prefs_data.values()
+                                .all(|x| x.is_string() || x.is_i64() || x.is_u64() || x.is_boolean()) {
+                                    return Err(WebDriverError::new(
+                                        ErrorStatus::InvalidArgument,
+                                        "Preference values not all string or integer or boolean"));
+                                }
                         }
-                        x => {
-                            return Err(WebDriverError::new(
-                                ErrorStatus::InvalidArgument,
-                                format!("Invalid moz:firefoxOptions field {}", x),
-                            ))
-                        }
+                        x => return Err(WebDriverError::new(
+                            ErrorStatus::InvalidArgument,
+                            format!("Invalid moz:firefoxOptions field {}", x)))
                     }
                 }
             }
@@ -261,29 +237,23 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                 if !value.is_boolean() {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
-                        "moz:useNonSpecCompliantPointerOrigin is not a boolean",
-                    ));
+                        "moz:useNonSpecCompliantPointerOrigin is not a boolean"));
                 }
             }
             "moz:webdriverClick" => {
                 if !value.is_boolean() {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
-                        "moz:webdriverClick is not a boolean",
-                    ));
+                        "moz:webdriverClick is not a boolean"));
                 }
             }
-            _ => {
-                return Err(WebDriverError::new(
-                    ErrorStatus::InvalidArgument,
-                    format!("Unrecognised option {}", name),
-                ))
-            }
+            _ => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                format!("Unrecognised option {}", name)))
         }
         Ok(())
     }
 
-    fn accept_custom(&mut self, _: &str, _: &Value, _: &Capabilities) -> WebDriverResult<bool> {
+    fn accept_custom(&mut self, _: &str, _: &Json, _: &Capabilities) -> WebDriverResult<bool> {
         Ok(true)
     }
 }
@@ -294,7 +264,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
 /// the encoded profile, the binary arguments, log settings, and additional
 /// preferences to be checked and unmarshaled from the `moz:firefoxOptions`
 /// JSON Object into a Rust representation.
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct FirefoxOptions {
     pub binary: Option<PathBuf>,
     pub profile: Option<Profile>,
@@ -308,19 +278,17 @@ impl FirefoxOptions {
         Default::default()
     }
 
-    pub fn from_capabilities(
-        binary_path: Option<PathBuf>,
-        matched: &mut Capabilities,
-    ) -> WebDriverResult<FirefoxOptions> {
+    pub fn from_capabilities(binary_path: Option<PathBuf>,
+                             matched: &mut Capabilities)
+                             -> WebDriverResult<FirefoxOptions> {
         let mut rv = FirefoxOptions::new();
         rv.binary = binary_path;
 
         if let Some(json) = matched.remove("moz:firefoxOptions") {
-            let options = try!(json.as_object().ok_or(WebDriverError::new(
-                ErrorStatus::InvalidArgument,
-                "'moz:firefoxOptions' \
-                 capability is not an object"
-            )));
+            let options = try!(json.as_object()
+                                   .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                              "'moz:firefoxOptions' \
+                                                               capability is not an object")));
 
             rv.profile = try!(FirefoxOptions::load_profile(&options));
             rv.args = try!(FirefoxOptions::load_args(&options));
@@ -333,22 +301,21 @@ impl FirefoxOptions {
 
     fn load_profile(options: &Capabilities) -> WebDriverResult<Option<Profile>> {
         if let Some(profile_json) = options.get("profile") {
-            let profile_base64 = try!(profile_json.as_str().ok_or(WebDriverError::new(
-                ErrorStatus::UnknownError,
-                "Profile is not a string"
-            )));
-            let profile_zip = &*try!(base64::decode(profile_base64));
+            let profile_base64 =
+                try!(profile_json
+                         .as_string()
+                         .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+                                                    "Profile is not a string")));
+            let profile_zip = &*try!(profile_base64.from_base64());
 
             // Create an emtpy profile directory
             let profile = try!(Profile::new(None));
-            try!(unzip_buffer(
-                profile_zip,
-                profile
-                    .temp_dir
-                    .as_ref()
-                    .expect("Profile doesn't have a path")
-                    .path()
-            ));
+            try!(unzip_buffer(profile_zip,
+                              profile
+                                  .temp_dir
+                                  .as_ref()
+                                  .expect("Profile doesn't have a path")
+                                  .path()));
 
             Ok(Some(profile))
         } else {
@@ -358,22 +325,18 @@ impl FirefoxOptions {
 
     fn load_args(options: &Capabilities) -> WebDriverResult<Option<Vec<String>>> {
         if let Some(args_json) = options.get("args") {
-            let args_array = try!(args_json.as_array().ok_or(WebDriverError::new(
-                ErrorStatus::UnknownError,
-                "Arguments were not an \
-                 array"
-            )));
-            let args = try!(
-                args_array
-                    .iter()
-                    .map(|x| x.as_str().map(|x| x.to_owned()))
-                    .collect::<Option<Vec<String>>>()
-                    .ok_or(WebDriverError::new(
-                        ErrorStatus::UnknownError,
-                        "Arguments entries were not all \
-                         strings"
-                    ))
-            );
+            let args_array = try!(args_json
+                                      .as_array()
+                                      .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+                                                                 "Arguments were not an \
+                                                                  array")));
+            let args = try!(args_array
+                                .iter()
+                                .map(|x| x.as_string().map(|x| x.to_owned()))
+                                .collect::<Option<Vec<String>>>()
+                                .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+                                                           "Arguments entries were not all \
+                                                            strings")));
             Ok(Some(args))
         } else {
             Ok(None)
@@ -389,7 +352,7 @@ impl FirefoxOptions {
 
             let level = match log.get("level") {
                 Some(json) => {
-                    let s = json.as_str().ok_or(WebDriverError::new(
+                    let s = json.as_string().ok_or(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         "Log level is not a string",
                     ))?;
@@ -409,10 +372,10 @@ impl FirefoxOptions {
 
     pub fn load_prefs(options: &Capabilities) -> WebDriverResult<Vec<(String, Pref)>> {
         if let Some(prefs_data) = options.get("prefs") {
-            let prefs = try!(prefs_data.as_object().ok_or(WebDriverError::new(
-                ErrorStatus::UnknownError,
-                "Prefs were not an object"
-            )));
+            let prefs = try!(prefs_data
+                                 .as_object()
+                                 .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+                                                            "Prefs were not an object")));
             let mut rv = Vec::with_capacity(prefs.len());
             for (key, value) in prefs.iter() {
                 rv.push((key.clone(), try!(pref_from_json(value))));
@@ -424,30 +387,27 @@ impl FirefoxOptions {
     }
 }
 
-fn pref_from_json(value: &Value) -> WebDriverResult<Pref> {
+fn pref_from_json(value: &Json) -> WebDriverResult<Pref> {
     match value {
-        &Value::String(ref x) => Ok(Pref::new(x.clone())),
-        &Value::Number(ref x) => Ok(Pref::new(x.as_i64().unwrap())),
-        &Value::Bool(x) => Ok(Pref::new(x)),
-        _ => Err(WebDriverError::new(
-            ErrorStatus::UnknownError,
-            "Could not convert pref value to string, boolean, or integer",
-        )),
+        &Json::String(ref x) => Ok(Pref::new(x.clone())),
+        &Json::I64(x) => Ok(Pref::new(x)),
+        &Json::U64(x) => Ok(Pref::new(x as i64)),
+        &Json::Boolean(x) => Ok(Pref::new(x)),
+        _ => Err(WebDriverError::new(ErrorStatus::UnknownError,
+                                     "Could not convert pref value to string, boolean, or integer"))
     }
 }
 
 fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
     let reader = Cursor::new(buf);
-    let mut zip = try!(
-        zip::ZipArchive::new(reader)
-            .map_err(|_| WebDriverError::new(ErrorStatus::UnknownError, "Failed to unzip profile"))
-    );
+    let mut zip = try!(zip::ZipArchive::new(reader).map_err(|_| {
+        WebDriverError::new(ErrorStatus::UnknownError, "Failed to unzip profile")
+    }));
 
     for i in 0..zip.len() {
-        let mut file = try!(zip.by_index(i).map_err(|_| WebDriverError::new(
-            ErrorStatus::UnknownError,
-            "Processing profile zip file failed"
-        )));
+        let mut file = try!(zip.by_index(i).map_err(|_| {
+            WebDriverError::new(ErrorStatus::UnknownError, "Processing profile zip file failed")
+        }));
         let unzip_path = {
             let name = file.name();
             let is_dir = name.ends_with("/");
@@ -491,26 +451,36 @@ fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
 #[cfg(test)]
 mod tests {
     extern crate mozprofile;
+    extern crate rustc_serialize;
 
     use self::mozprofile::preferences::Pref;
-    use super::*;
+    use self::rustc_serialize::base64::{CharacterSet, Config, Newline, ToBase64};
+    use self::rustc_serialize::json::Json;
+    use super::FirefoxOptions;
     use marionette::MarionetteHandler;
+    use std::collections::BTreeMap;
     use std::default::Default;
     use std::fs::File;
     use std::io::Read;
 
     use webdriver::capabilities::Capabilities;
 
-    fn example_profile() -> Value {
+    fn example_profile() -> Json {
         let mut profile_data = Vec::with_capacity(1024);
         let mut profile = File::open("src/tests/profile.zip").unwrap();
         profile.read_to_end(&mut profile_data).unwrap();
-        Value::String(base64::encode(&profile_data))
+        let base64_config = Config {
+            char_set: CharacterSet::Standard,
+            newline: Newline::LF,
+            pad: true,
+            line_length: None,
+        };
+        Json::String(profile_data.to_base64(base64_config))
     }
 
     fn make_options(firefox_opts: Capabilities) -> FirefoxOptions {
         let mut caps = Capabilities::new();
-        caps.insert("moz:firefoxOptions".into(), Value::Object(firefox_opts));
+        caps.insert("moz:firefoxOptions".into(), Json::Object(firefox_opts));
         let binary = None;
         FirefoxOptions::from_capabilities(binary, &mut caps).unwrap()
     }
@@ -527,24 +497,22 @@ mod tests {
 
         println!("{:#?}", prefs.prefs);
 
-        assert_eq!(
-            prefs.get("startup.homepage_welcome_url"),
-            Some(&Pref::new("data:text/html,PASS"))
-        );
+        assert_eq!(prefs.get("startup.homepage_welcome_url"),
+                   Some(&Pref::new("data:text/html,PASS")));
     }
 
     #[test]
     fn test_prefs() {
         let encoded_profile = example_profile();
-        let mut prefs: Map<String, Value> = Map::new();
+        let mut prefs: BTreeMap<String, Json> = BTreeMap::new();
         prefs.insert(
             "browser.display.background_color".into(),
-            Value::String("#00ff00".into()),
+            Json::String("#00ff00".into()),
         );
 
         let mut firefox_opts = Capabilities::new();
         firefox_opts.insert("profile".into(), encoded_profile);
-        firefox_opts.insert("prefs".into(), Value::Object(prefs));
+        firefox_opts.insert("prefs".into(), Json::Object(prefs));
 
         let opts = make_options(firefox_opts);
         let mut profile = opts.profile.unwrap();

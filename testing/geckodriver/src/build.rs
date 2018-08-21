@@ -1,5 +1,6 @@
-use serde_json::Value;
 use std::fmt;
+
+use rustc_serialize::json::{Json};
 
 include!(concat!(env!("OUT_DIR"), "/build-info.rs"));
 
@@ -31,10 +32,10 @@ impl fmt::Display for BuildInfo {
     }
 }
 
-// TODO(Henrik): Change into From
 //std::convert::From<&str>` is not implemented for `rustc_serialize::json::Json
-impl Into<Value> for BuildInfo {
-    fn into(self) -> Value {
-        Value::String(BuildInfo::version().to_string())
+
+impl Into<Json> for BuildInfo {
+    fn into(self) -> Json {
+        Json::String(BuildInfo::version().to_string())
     }
 }
