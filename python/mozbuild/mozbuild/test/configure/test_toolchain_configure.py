@@ -967,7 +967,12 @@ class WindowsToolchainTest(BaseToolchainTest):
 
     # VS2017u6 or greater is required.
     def test_msvc(self):
-        self.do_toolchain_test(self.PATHS, {
+        # We'll pick msvc if clang-cl can't be found.
+        paths = {
+            k: v for k, v in self.PATHS.iteritems()
+            if os.path.basename(k) != 'clang-cl'
+        }
+        self.do_toolchain_test(paths, {
             'c_compiler': self.VS_2017u6_RESULT,
             'cxx_compiler': self.VSXX_2017u6_RESULT,
         })
@@ -1016,12 +1021,7 @@ class WindowsToolchainTest(BaseToolchainTest):
         })
 
     def test_clang_cl(self):
-        # We'll pick clang-cl if msvc can't be found.
-        paths = {
-            k: v for k, v in self.PATHS.iteritems()
-            if os.path.basename(k) != 'cl'
-        }
-        self.do_toolchain_test(paths, {
+        self.do_toolchain_test(self.PATHS, {
             'c_compiler': self.CLANG_CL_3_9_RESULT,
             'cxx_compiler': self.CLANGXX_CL_3_9_RESULT,
         })
