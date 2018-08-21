@@ -417,13 +417,6 @@ class LinkFlags(BaseCompileFlags):
             if self._context.config.substs.get('MOZ_DEBUG_SYMBOLS'):
                 flags.append('-DEBUG')
 
-
-            if self._context.config.substs.get('MOZ_DMD'):
-                # On Windows Opt DMD builds we actually override everything
-                # from OS_LDFLAGS. Bug 1413728 is on file to figure out whether
-                # this is necessary.
-                flags = ['-DEBUG']
-
             if self._context.config.substs.get('MOZ_OPTIMIZE'):
                 flags.append('-OPT:REF,ICF')
 

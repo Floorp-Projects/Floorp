@@ -284,7 +284,6 @@ class TestEmitterBasic(unittest.TestCase):
             'MOZ_DEBUG_SYMBOLS': '1',
             'MOZ_OPTIMIZE': '1',
             'MOZ_OPTIMIZE_FLAGS': [],
-            'OS_LDFLAGS': ['-Wl,-U_foo'],
         })
         sources, ldflags, lib, compile_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(ldflags, ComputedFlags)
