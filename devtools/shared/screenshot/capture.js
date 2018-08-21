@@ -3,30 +3,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-
 const { Cu } = require("chrome");
-const { getRect } = require("devtools/shared/layout/utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
+const Services = require("Services");
 
 const CONTAINER_FLASHING_DURATION = 500;
 const STRINGS_URI = "devtools/shared/locales/screenshot.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
-exports.screenshot = function takeAsyncScreenshot(owner, args = {}) {
-  if (args.help) {
-    // Early return as help will be handled on the client side.
-    return null;
-  }
-  return captureScreenshot(args, owner.window.document);
-};
+loader.lazyRequireGetter(this, "getRect", "devtools/shared/layout/utils", true);
 
 /**
  * This function is called to simulate camera effects
+ * @param object document
+ *        The target document.
  */
 function simulateCameraFlash(document) {
   const window = document.defaultView;
   const frames = Cu.cloneInto({ opacity: [ 0, 1 ] }, window);
   document.documentElement.animate(frames, CONTAINER_FLASHING_DURATION);
+}
+
+/**
+ * This function is called to simulate camera effects
+ *
+ * @param object document
+ *        The target document.
+ */
+function simulateCameraShutter(document) {
+  const window = document.defaultView;
+  if (Services.prefs.getBoolPref("devtools.screenshot.audio.enabled")) {
+    const audioCamera = new window.Audio("resource://devtools/client/themes/audio/shutter.wav");
+    audioCamera.play();
+  }
 }
 
 /**
@@ -37,18 +46,20 @@ function captureScreenshot(args, document) {
   if (args.delay > 0) {
     return new Promise((resolve, reject) => {
       document.defaultView.setTimeout(() => {
-        createScreenshotData(document, args).then(resolve, reject);
+        createScreenshotDataURL(document, args).then(resolve, reject);
       }, args.delay * 1000);
     });
   }
-  return createScreenshotData(document, args);
+  return createScreenshotDataURL(document, args);
 }
+
+exports.captureScreenshot = captureScreenshot;
 
 /**
  * This does the dirty work of creating a base64 string out of an
  * area of the browser window
  */
-function createScreenshotData(document, args) {
+function createScreenshotDataURL(document, args) {
   const window = document.defaultView;
   let left = 0;
   let top = 0;
@@ -101,6 +112,7 @@ function createScreenshotData(document, args) {
   }
 
   simulateCameraFlash(document);
+  simulateCameraShutter(document);
 
   return Promise.resolve({
     destinations: [],
@@ -110,6 +122,8 @@ function createScreenshotData(document, args) {
     filename: filename,
   });
 }
+
+exports.createScreenshotDataURL = createScreenshotDataURL;
 
 /**
  * We may have a filename specified in args, or we might have to generate
@@ -138,3 +152,4 @@ function getFilename(defaultName) {
     timeString
   ) + ".png";
 }
+
