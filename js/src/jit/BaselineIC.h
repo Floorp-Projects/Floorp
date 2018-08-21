@@ -44,7 +44,7 @@ class ICWarmUpCounter_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::WarmUpCounter_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::WarmUpCounter_Fallback)
         { }
 
         ICWarmUpCounter_Fallback* getStub(ICStubSpace* space) override {
@@ -76,7 +76,7 @@ class ICTypeUpdate_Fallback : public ICStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::TypeUpdate_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::TypeUpdate_Fallback)
         { }
 
         ICTypeUpdate_Fallback* getStub(ICStubSpace* space) override {
@@ -144,7 +144,7 @@ class ICTypeUpdate_SingleObject : public ICStub
 
       public:
         Compiler(JSContext* cx, HandleObject obj)
-          : ICStubCompiler(cx, TypeUpdate_SingleObject, Engine::Baseline),
+          : ICStubCompiler(cx, TypeUpdate_SingleObject),
             obj_(obj)
         { }
 
@@ -179,7 +179,7 @@ class ICTypeUpdate_ObjectGroup : public ICStub
 
       public:
         Compiler(JSContext* cx, HandleObjectGroup group)
-          : ICStubCompiler(cx, TypeUpdate_ObjectGroup, Engine::Baseline),
+          : ICStubCompiler(cx, TypeUpdate_ObjectGroup),
             group_(group)
         { }
 
@@ -204,7 +204,7 @@ class ICTypeUpdate_AnyValue : public ICStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, TypeUpdate_AnyValue, Engine::Baseline)
+          : ICStubCompiler(cx, TypeUpdate_AnyValue)
         {}
 
         ICTypeUpdate_AnyValue* getStub(ICStubSpace* space) override {
@@ -233,7 +233,7 @@ class ICToBool_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::ToBool_Fallback, Engine::Baseline) {}
+          : ICStubCompiler(cx, ICStub::ToBool_Fallback) {}
 
         ICStub* getStub(ICStubSpace* space) override {
             return newStub<ICToBool_Fallback>(space, getStubCode());
@@ -259,7 +259,7 @@ class ICToNumber_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::ToNumber_Fallback, Engine::Baseline) {}
+          : ICStubCompiler(cx, ICStub::ToNumber_Fallback) {}
 
         ICStub* getStub(ICStubSpace* space) override {
             return newStub<ICToNumber_Fallback>(space, getStubCode());
@@ -303,14 +303,13 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
+            return static_cast<int32_t>(kind) << 1 |
                   (static_cast<int32_t>(hasReceiver_) << 17);
         }
 
       public:
         explicit Compiler(JSContext* cx, bool hasReceiver = false)
-          : ICStubCompiler(cx, ICStub::GetElem_Fallback, Engine::Baseline),
+          : ICStubCompiler(cx, ICStub::GetElem_Fallback),
             hasReceiver_(hasReceiver)
         { }
 
@@ -349,7 +348,7 @@ class ICSetElem_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::SetElem_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::SetElem_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -375,7 +374,7 @@ class ICIn_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::In_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::In_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -401,7 +400,7 @@ class ICHasOwn_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::HasOwn_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::HasOwn_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -437,7 +436,7 @@ class ICGetName_Fallback : public ICMonitoredFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::GetName_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::GetName_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -463,7 +462,7 @@ class ICBindName_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::BindName_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::BindName_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -489,7 +488,7 @@ class ICGetIntrinsic_Fallback : public ICMonitoredFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::GetIntrinsic_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::GetIntrinsic_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -536,14 +535,13 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
         void postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code) override;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
+            return static_cast<int32_t>(kind) << 1 |
                   (static_cast<int32_t>(hasReceiver_) << 17);
         }
 
       public:
         explicit Compiler(JSContext* cx, bool hasReceiver = false)
-          : ICStubCompiler(cx, ICStub::GetProp_Fallback, Engine::Baseline),
+          : ICStubCompiler(cx, ICStub::GetProp_Fallback),
             hasReceiver_(hasReceiver)
         { }
 
@@ -585,7 +583,7 @@ class ICSetProp_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::SetProp_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::SetProp_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -608,7 +606,7 @@ class ICCallStubCompiler : public ICStubCompiler
 {
   protected:
     ICCallStubCompiler(JSContext* cx, ICStub::Kind kind)
-      : ICStubCompiler(cx, kind, Engine::Baseline)
+      : ICStubCompiler(cx, kind)
     { }
 
     enum FunApplyThing {
@@ -669,8 +667,7 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
         void postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code) override;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
+            return static_cast<int32_t>(kind) << 1 |
                   (static_cast<int32_t>(isSpread_) << 17) |
                   (static_cast<int32_t>(isConstructing_) << 18);
         }
@@ -759,8 +756,7 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
     MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
     virtual int32_t getKey() const override {
-        return static_cast<int32_t>(engine_) |
-              (static_cast<int32_t>(kind) << 1) |
+        return static_cast<int32_t>(kind) << 1 |
               (static_cast<int32_t>(isConstructing_) << 17) |
               (static_cast<int32_t>(isSpread_) << 18) |
               (static_cast<int32_t>(maybeCrossRealm_) << 19);
@@ -857,8 +853,7 @@ class ICCall_Native : public ICMonitoredStub
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
+            return static_cast<int32_t>(kind) << 1 |
                   (static_cast<int32_t>(isSpread_) << 17) |
                   (static_cast<int32_t>(isConstructing_) << 18) |
                   (static_cast<int32_t>(ignoresReturnValue_) << 19) |
@@ -938,8 +933,7 @@ class ICCall_ClassHook : public ICMonitoredStub
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
+            return static_cast<int32_t>(kind) << 1 |
                   (static_cast<int32_t>(isConstructing_) << 17);
         }
 
@@ -998,11 +992,6 @@ class ICCall_ScriptedApplyArray : public ICMonitoredStub
         uint32_t pcOffset_;
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
-        virtual int32_t getKey() const override {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1);
-        }
-
       public:
         Compiler(JSContext* cx, ICStub* firstMonitorStub, uint32_t pcOffset)
           : ICCallStubCompiler(cx, ICStub::Call_ScriptedApplyArray),
@@ -1046,11 +1035,6 @@ class ICCall_ScriptedApplyArguments : public ICMonitoredStub
         uint32_t pcOffset_;
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
-        virtual int32_t getKey() const override {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1);
-        }
-
       public:
         Compiler(JSContext* cx, ICStub* firstMonitorStub, uint32_t pcOffset)
           : ICCallStubCompiler(cx, ICStub::Call_ScriptedApplyArguments),
@@ -1092,11 +1076,6 @@ class ICCall_ScriptedFunCall : public ICMonitoredStub
         ICStub* firstMonitorStub_;
         uint32_t pcOffset_;
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
-
-        virtual int32_t getKey() const override {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1);
-        }
 
       public:
         Compiler(JSContext* cx, ICStub* firstMonitorStub, uint32_t pcOffset)
@@ -1164,11 +1143,6 @@ class ICCall_ConstStringSplit : public ICMonitoredStub
 
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
-        virtual int32_t getKey() const override {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1);
-        }
-
       public:
         Compiler(JSContext* cx, ICStub* firstMonitorStub, uint32_t pcOffset, HandleString str,
                  HandleString sep, HandleArrayObject templateObject)
@@ -1204,7 +1178,7 @@ class ICCall_IsSuspendedGenerator : public ICStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::Call_IsSuspendedGenerator, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::Call_IsSuspendedGenerator)
         {}
         ICStub* getStub(ICStubSpace* space) override {
             return newStub<ICCall_IsSuspendedGenerator>(space, getStubCode());
@@ -1240,7 +1214,7 @@ class ICTableSwitch : public ICStub
 
       public:
         Compiler(JSContext* cx, jsbytecode* pc)
-          : ICStubCompiler(cx, ICStub::TableSwitch, Engine::Baseline), pc_(pc)
+          : ICStubCompiler(cx, ICStub::TableSwitch), pc_(pc)
         {}
 
         ICStub* getStub(ICStubSpace* space) override;
@@ -1263,7 +1237,7 @@ class ICGetIterator_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::GetIterator_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::GetIterator_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -1296,7 +1270,7 @@ class ICIteratorMore_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::IteratorMore_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::IteratorMore_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -1321,7 +1295,7 @@ class ICIteratorMore_Native : public ICStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::IteratorMore_Native, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::IteratorMore_Native)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -1346,7 +1320,7 @@ class ICIteratorClose_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::IteratorClose_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::IteratorClose_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -1382,7 +1356,7 @@ class ICInstanceOf_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::InstanceOf_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::InstanceOf_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -1411,7 +1385,7 @@ class ICTypeOf_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::TypeOf_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::TypeOf_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -1444,7 +1418,7 @@ class ICRest_Fallback : public ICFallbackStub
 
       public:
         Compiler(JSContext* cx, ArrayObject* templateObject)
-          : ICStubCompiler(cx, ICStub::Rest_Fallback, Engine::Baseline),
+          : ICStubCompiler(cx, ICStub::Rest_Fallback),
             templateObject(cx, templateObject)
         { }
 
@@ -1472,7 +1446,7 @@ class ICRetSub_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::RetSub_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::RetSub_Fallback)
         { }
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -1513,7 +1487,7 @@ class ICRetSub_Resume : public ICStub
 
       public:
         Compiler(JSContext* cx, uint32_t pcOffset, uint8_t* addr)
-          : ICStubCompiler(cx, ICStub::RetSub_Resume, Engine::Baseline),
+          : ICStubCompiler(cx, ICStub::RetSub_Resume),
             pcOffset_(pcOffset),
             addr_(addr)
         { }
@@ -1553,7 +1527,7 @@ class ICUnaryArith_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::UnaryArith_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::UnaryArith_Fallback)
         {}
 
         ICStub* getStub(ICStubSpace* space) override {
@@ -1597,7 +1571,7 @@ class ICCompare_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::Compare_Fallback, Engine::Baseline) {}
+          : ICStubCompiler(cx, ICStub::Compare_Fallback) {}
 
         ICStub* getStub(ICStubSpace* space) override {
             return newStub<ICCompare_Fallback>(space, getStubCode());
@@ -1647,7 +1621,7 @@ class ICBinaryArith_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::BinaryArith_Fallback, Engine::Baseline) {}
+          : ICStubCompiler(cx, ICStub::BinaryArith_Fallback) {}
 
         ICStub* getStub(ICStubSpace* space) override {
             return newStub<ICBinaryArith_Fallback>(space, getStubCode());
@@ -1679,7 +1653,7 @@ class ICNewArray_Fallback : public ICFallbackStub
 
       public:
         Compiler(JSContext* cx, ObjectGroup* templateGroup)
-          : ICStubCompiler(cx, ICStub::NewArray_Fallback, Engine::Baseline),
+          : ICStubCompiler(cx, ICStub::NewArray_Fallback),
             templateGroup(cx, templateGroup)
         {}
 
@@ -1726,7 +1700,7 @@ class ICNewObject_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::NewObject_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::NewObject_Fallback)
         {}
 
         ICStub* getStub(ICStubSpace* space) override {

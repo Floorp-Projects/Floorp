@@ -43,23 +43,6 @@ EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t argS
 }
 
 inline void
-EmitIonTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t stackSize)
-{
-    Register scratch = R2.scratchReg();
-
-    masm.loadPtr(Address(sp, stackSize), scratch);
-    masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), scratch);
-    masm.addPtr(Imm32(stackSize + JitStubFrameLayout::Size() - sizeof(intptr_t)), scratch);
-
-    // Push frame descriptor and perform the tail call.
-    MOZ_ASSERT(ICTailCallReg == ra);
-    masm.makeFrameDescriptor(scratch, JitFrame_IonJS, ExitFrameLayout::Size());
-    masm.push(scratch);
-    masm.push(ICTailCallReg);
-    masm.jump(target);
-}
-
-inline void
 EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32_t headerSize)
 {
     // Compute stub frame size. We have to add two pointers: the stub reg and

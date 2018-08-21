@@ -782,8 +782,8 @@ CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t ent
         }
     }
 
-    ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForStub(oldStub->makesGCCalls(), entry.script,
-                                                              ICStubCompiler::Engine::Baseline);
+    ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForStub(oldStub->makesGCCalls(),
+                                                              entry.script);
 
     // Clone the existing stub into the recompiled IC.
     //

@@ -37,25 +37,6 @@ EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t argS
 }
 
 inline void
-EmitIonTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t stackSize)
-{
-    // For tail calls, find the already pushed JitFrame_IonJS signifying the
-    // end of the Ion frame. Retrieve the length of the frame and repush
-    // JitFrame_IonJS with the extra stacksize, rendering the original
-    // JitFrame_IonJS obsolete.
-
-    masm.loadPtr(Address(esp, stackSize), eax);
-    masm.shrl(Imm32(FRAMESIZE_SHIFT), eax);
-    masm.addl(Imm32(stackSize + JitStubFrameLayout::Size() - sizeof(intptr_t)), eax);
-
-    // Push frame descriptor and perform the tail call.
-    masm.makeFrameDescriptor(eax, JitFrame_IonJS, ExitFrameLayout::Size());
-    masm.push(eax);
-    masm.push(ICTailCallReg);
-    masm.jump(target);
-}
-
-inline void
 EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32_t headerSize)
 {
     // Compute stub frame size. We have to add two pointers: the stub reg and previous

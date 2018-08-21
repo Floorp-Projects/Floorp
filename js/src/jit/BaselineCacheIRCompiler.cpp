@@ -2223,8 +2223,7 @@ js::jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     size_t bytesNeeded = stubInfo->stubDataOffset() + stubInfo->stubDataSize();
 
     ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForStub(stubInfo->makesGCCalls(),
-                                                              outerScript,
-                                                              ICStubEngine::Baseline);
+                                                              outerScript);
     void* newStubMem = stubSpace->alloc(bytesNeeded);
     if (!newStubMem)
         return nullptr;

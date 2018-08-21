@@ -1001,13 +1001,9 @@ class ICStubCompiler
     // Prevent GC in the middle of stub compilation.
     js::gc::AutoSuppressGC suppressGC;
 
-  public:
-    using Engine = ICStubEngine;
-
   protected:
     JSContext* cx;
     ICStub::Kind kind;
-    Engine engine_;
     bool inStubFrame_;
 
 #ifdef DEBUG
@@ -1017,8 +1013,7 @@ class ICStubCompiler
 
     // By default the stubcode key is just the kind.
     virtual int32_t getKey() const {
-        return static_cast<int32_t>(engine_) |
-              (static_cast<int32_t>(kind) << 1);
+        return (static_cast<int32_t>(kind) << 1);
     }
 
     virtual MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) = 0;
@@ -1026,8 +1021,8 @@ class ICStubCompiler
 
     JitCode* getStubCode();
 
-    ICStubCompiler(JSContext* cx, ICStub::Kind kind, Engine engine)
-      : suppressGC(cx), cx(cx), kind(kind), engine_(engine), inStubFrame_(false)
+    ICStubCompiler(JSContext* cx, ICStub::Kind kind)
+      : suppressGC(cx), cx(cx), kind(kind), inStubFrame_(false)
 #ifdef DEBUG
       , entersStubFrame_(false), framePushedAtEnterStubFrame_(0)
 #endif
@@ -1101,15 +1096,14 @@ class ICStubCompiler
   public:
     virtual ICStub* getStub(ICStubSpace* space) = 0;
 
-    static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* outerScript, Engine engine) {
+    static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* outerScript) {
         if (makesGCCalls) {
-            MOZ_ASSERT(engine == ICStubCompiler::Engine::Baseline);
             return outerScript->baselineScript()->fallbackStubSpace();
         }
         return outerScript->zone()->jitZone()->optimizedStubSpace();
     }
     ICStubSpace* getStubSpace(JSScript* outerScript) {
-        return StubSpaceForStub(ICStub::NonCacheIRStubMakesGCCalls(kind), outerScript, engine_);
+        return StubSpaceForStub(ICStub::NonCacheIRStubMakesGCCalls(kind), outerScript);
     }
 };
 
@@ -1203,15 +1197,14 @@ class TypeCheckPrimitiveSetStub : public ICStub
         uint16_t flags_;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
+            return static_cast<int32_t>(kind) << 1 |
                   (static_cast<int32_t>(flags_) << 17);
         }
 
       public:
         Compiler(JSContext* cx, Kind kind, TypeCheckPrimitiveSetStub* existingStub,
                  JSValueType type)
-          : ICStubCompiler(cx, kind, Engine::Baseline),
+          : ICStubCompiler(cx, kind),
             existingStub_(existingStub),
             flags_((existingStub ? existingStub->typeFlags() : 0) | TypeToFlag(type))
         {
@@ -1389,13 +1382,13 @@ class ICTypeMonitor_Fallback : public ICStub
 
       public:
         Compiler(JSContext* cx, ICMonitoredFallbackStub* mainFallbackStub)
-          : ICStubCompiler(cx, ICStub::TypeMonitor_Fallback, Engine::Baseline),
+          : ICStubCompiler(cx, ICStub::TypeMonitor_Fallback),
             mainFallbackStub_(mainFallbackStub),
             argumentIndex_(BYTECODE_INDEX)
         { }
 
         Compiler(JSContext* cx, uint32_t argumentIndex)
-          : ICStubCompiler(cx, ICStub::TypeMonitor_Fallback, Engine::Baseline),
+          : ICStubCompiler(cx, ICStub::TypeMonitor_Fallback),
             mainFallbackStub_(nullptr),
             argumentIndex_(argumentIndex)
         { }
@@ -1466,7 +1459,7 @@ class ICTypeMonitor_SingleObject : public ICStub
 
       public:
         Compiler(JSContext* cx, HandleObject obj)
-          : ICStubCompiler(cx, TypeMonitor_SingleObject, Engine::Baseline),
+          : ICStubCompiler(cx, TypeMonitor_SingleObject),
             obj_(obj)
         { }
 
@@ -1500,7 +1493,7 @@ class ICTypeMonitor_ObjectGroup : public ICStub
 
       public:
         Compiler(JSContext* cx, HandleObjectGroup group)
-          : ICStubCompiler(cx, TypeMonitor_ObjectGroup, Engine::Baseline),
+          : ICStubCompiler(cx, TypeMonitor_ObjectGroup),
             group_(group)
         { }
 
@@ -1525,7 +1518,7 @@ class ICTypeMonitor_AnyValue : public ICStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, TypeMonitor_AnyValue, Engine::Baseline)
+          : ICStubCompiler(cx, TypeMonitor_AnyValue)
         { }
 
         ICTypeMonitor_AnyValue* getStub(ICStubSpace* space) override {
