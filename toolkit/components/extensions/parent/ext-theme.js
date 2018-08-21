@@ -302,7 +302,11 @@ class Theme {
             break;
           }
 
-          this.lwtStyles.backgroundsAlignment = val.join(",");
+          let alignment = [];
+          if (this.lwtStyles.headerURL) {
+            alignment.push("right top");
+          }
+          this.lwtStyles.backgroundsAlignment = alignment.concat(val).join(",");
           break;
         }
         case "additional_backgrounds_tiling": {
@@ -311,6 +315,9 @@ class Theme {
           }
 
           let tiling = [];
+          if (this.lwtStyles.headerURL) {
+            tiling.push("no-repeat");
+          }
           for (let i = 0, l = this.lwtStyles.additionalBackgrounds.length; i < l; ++i) {
             tiling.push(val[i] || "no-repeat");
           }
