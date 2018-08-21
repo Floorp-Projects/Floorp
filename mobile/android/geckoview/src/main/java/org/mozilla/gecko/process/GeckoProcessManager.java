@@ -207,7 +207,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         final ParcelFileDescriptor crashPfd;
         final ParcelFileDescriptor crashAnnotationPfd;
         try {
-            prefsPfd = ParcelFileDescriptor.fromFd(prefsFd);
+            prefsPfd = (prefsFd >= 0) ? ParcelFileDescriptor.fromFd(prefsFd) : null;
             ipcPfd = ParcelFileDescriptor.fromFd(ipcFd);
             crashPfd = (crashFd >= 0) ? ParcelFileDescriptor.fromFd(crashFd) : null;
             crashAnnotationPfd = (crashAnnotationFd >= 0) ? ParcelFileDescriptor.fromFd(crashAnnotationFd) : null;
