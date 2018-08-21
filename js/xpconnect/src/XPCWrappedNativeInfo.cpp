@@ -87,7 +87,13 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
         callback = XPC_WN_GetterSetter;
     }
 
-    JSFunction* fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, GetName());
+    JSFunction* fun;
+    jsid name = GetName();
+    if (JSID_IS_STRING(name)) {
+        fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, GetName());
+    } else {
+        fun = js::NewFunctionWithReserved(ccx, callback, argc, 0, nullptr);
+    }
     if (!fun)
         return false;
 
@@ -292,13 +298,18 @@ XPCNativeInterface::NewInstance(const nsXPTInterfaceInfo* aInfo)
         if (!XPCConvert::IsMethodReflectable(*info))
             continue;
 
-        str = JS_AtomizeAndPinString(cx, info->GetName());
-        if (!str) {
-            NS_ERROR("bad method name");
-            failed = true;
-            break;
+        jsid name;
+        if (info->IsSymbol()) {
+            name = SYMBOL_TO_JSID(info->GetSymbol(cx));
+        } else {
+            str = JS_AtomizeAndPinString(cx, info->GetName());
+            if (!str) {
+                NS_ERROR("bad method name");
+                failed = true;
+                break;
+            }
+            name = INTERNED_STRING_TO_JSID(cx, str);
         }
-        jsid name = INTERNED_STRING_TO_JSID(cx, str);
 
         if (info->IsSetter()) {
             MOZ_ASSERT(realTotalCount,"bad setter");
