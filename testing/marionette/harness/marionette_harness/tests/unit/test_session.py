@@ -47,7 +47,7 @@ class TestSession(MarionetteTestCase):
             self.marionette._send_message("WebDriver:NewSession", {})
 
     def test_no_session(self):
-        with self.assertRaisesRegexp(errors.MarionetteException, "Please start a session"):
+        with self.assertRaises(errors.InvalidSessionIdException):
             self.marionette.get_url()
 
         self.marionette.start_session()

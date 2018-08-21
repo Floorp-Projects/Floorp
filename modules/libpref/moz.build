@@ -26,6 +26,7 @@ XPIDL_MODULE = 'pref'
 
 EXPORTS.mozilla += [
     'init/StaticPrefList.h',
+    'nsRelativeFilePref.h',
     'Preferences.h',
     'StaticPrefs.h',
 ]

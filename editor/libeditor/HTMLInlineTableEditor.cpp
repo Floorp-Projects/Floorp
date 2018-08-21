@@ -94,7 +94,7 @@ HTMLEditor::ShowInlineTableEditingUI(Element* aCell)
   return RefreshInlineTableEditingUI();
 }
 
-nsresult
+void
 HTMLEditor::HideInlineTableEditingUI()
 {
   mInlineEditedCell = nullptr;
@@ -112,14 +112,23 @@ HTMLEditor::HideInlineTableEditingUI()
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
 
-  DeleteRefToAnonymousNode(std::move(mAddColumnBeforeButton), ps);
-  DeleteRefToAnonymousNode(std::move(mRemoveColumnButton), ps);
-  DeleteRefToAnonymousNode(std::move(mAddColumnAfterButton), ps);
-  DeleteRefToAnonymousNode(std::move(mAddRowBeforeButton), ps);
-  DeleteRefToAnonymousNode(std::move(mRemoveRowButton), ps);
-  DeleteRefToAnonymousNode(std::move(mAddRowAfterButton), ps);
+  // Calling DeleteRefToAnonymousNode() may cause showing the UI again.
+  // Therefore, we should forget all anonymous contents first.
+  // Otherwise, we could leak the old content because of overwritten by
+  // ShowInlineTableEditingUI().
+  ManualNACPtr addColumnBeforeButton(std::move(mAddColumnBeforeButton));
+  ManualNACPtr removeColumnButton(std::move(mRemoveColumnButton));
+  ManualNACPtr addColumnAfterButton(std::move(mAddColumnAfterButton));
+  ManualNACPtr addRowBeforeButton(std::move(mAddRowBeforeButton));
+  ManualNACPtr removeRowButton(std::move(mRemoveRowButton));
+  ManualNACPtr addRowAfterButton(std::move(mAddRowAfterButton));
 
-  return NS_OK;
+  DeleteRefToAnonymousNode(std::move(addColumnBeforeButton), ps);
+  DeleteRefToAnonymousNode(std::move(removeColumnButton), ps);
+  DeleteRefToAnonymousNode(std::move(addColumnAfterButton), ps);
+  DeleteRefToAnonymousNode(std::move(addRowBeforeButton), ps);
+  DeleteRefToAnonymousNode(std::move(removeRowButton), ps);
+  DeleteRefToAnonymousNode(std::move(addRowAfterButton), ps);
 }
 
 nsresult

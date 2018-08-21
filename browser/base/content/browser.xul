@@ -21,7 +21,7 @@
 <?xml-stylesheet href="chrome://browser/skin/customizableui/panelUI.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/downloads/downloads.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/searchbar.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/places/places.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/compacttheme.css" type="text/css" alternate="yes" title="Light/Dark"?>
 
