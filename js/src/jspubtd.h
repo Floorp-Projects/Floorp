@@ -68,6 +68,7 @@ struct JSClass;
 class JSErrorReport;
 struct JSExceptionState;
 struct JSFunctionSpec;
+struct JSLocaleCallbacks;
 struct JSPrincipals;
 struct JSPropertySpec;
 struct JSSecurityCallbacks;
