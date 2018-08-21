@@ -13,11 +13,18 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsThreadUtils.h"
+#include "xpcpublic.h"
 
+#include "mozilla/dom/Promise.h"
+#include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 
 #define PREF_BDM_ADDTORECENTDOCS "browser.download.manager.addToRecentDocs"
+
+// The amount of time, in milliseconds, that our IO thread will stay alive after the last event it processes.
+#define DEFAULT_THREAD_TIMEOUT_MS 10000
 
 #ifdef XP_WIN
 #include <shlobj.h>
@@ -39,6 +46,7 @@
 #endif
 
 using namespace mozilla;
+using dom::Promise;
 
 DownloadPlatform *DownloadPlatform::gDownloadPlatformService = nullptr;
 
@@ -98,9 +106,34 @@ CFURLRef CreateCFURLFromNSIURI(nsIURI *aURI) {
 }
 #endif
 
-nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIFile* aTarget,
-                                        const nsACString& aContentType, bool aIsPrivate)
+DownloadPlatform::DownloadPlatform()
 {
+  mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
+                                 NS_LITERAL_CSTRING("DownloadPlatform"));
+}
+
+nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIFile* aTarget,
+                                        const nsACString& aContentType, bool aIsPrivate,
+                                        JSContext* aCx, Promise** aPromise)
+{
+
+  nsIGlobalObject* globalObject =
+    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(globalObject, result);
+
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  nsresult rv = NS_OK;
+  bool pendingAsyncOperations = false;
+
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID) \
  || defined(MOZ_WIDGET_GTK)
 
@@ -169,24 +202,46 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIF
     }
     if (pathCFStr && !aIsPrivate) {
       bool isFromWeb = IsURLPossiblyFromWeb(aSource);
+      nsCOMPtr<nsIURI> source(aSource);
+      nsCOMPtr<nsIURI> referrer(aReferrer);
 
-      CFURLRef sourceCFURL = CreateCFURLFromNSIURI(aSource);
-      CFURLRef referrerCFURL = CreateCFURLFromNSIURI(aReferrer);
+      rv = mIOThread->Dispatch(NS_NewRunnableFunction(
+        "DownloadPlatform::DownloadDone",
+        [pathCFStr, isFromWeb, source, referrer, promise]() mutable {
+          CFURLRef sourceCFURL = CreateCFURLFromNSIURI(source);
+          CFURLRef referrerCFURL = CreateCFURLFromNSIURI(referrer);
 
-      CocoaFileUtils::AddOriginMetadataToFile(pathCFStr,
-                                              sourceCFURL,
-                                              referrerCFURL);
-      CocoaFileUtils::AddQuarantineMetadataToFile(pathCFStr,
+          CocoaFileUtils::AddOriginMetadataToFile(pathCFStr,
                                                   sourceCFURL,
-                                                  referrerCFURL,
-                                                  isFromWeb);
+                                                  referrerCFURL);
+          CocoaFileUtils::AddQuarantineMetadataToFile(pathCFStr,
+                                                      sourceCFURL,
+                                                      referrerCFURL,
+                                                      isFromWeb);
+          ::CFRelease(pathCFStr);
+          if (sourceCFURL) {
+            ::CFRelease(sourceCFURL);
+          }
+          if (referrerCFURL) {
+            ::CFRelease(referrerCFURL);
+          }
 
-      ::CFRelease(pathCFStr);
-      if (sourceCFURL) {
-        ::CFRelease(sourceCFURL);
-      }
-      if (referrerCFURL) {
-        ::CFRelease(referrerCFURL);
+          DebugOnly<nsresult> rv = NS_DispatchToMainThread(NS_NewRunnableFunction(
+            "DownloadPlatform::DownloadDoneResolve",
+            [promise = std::move(promise)]() {
+              promise->MaybeResolveWithUndefined();
+            }
+          ));
+          MOZ_ASSERT(NS_SUCCEEDED(rv));
+          // In non-debug builds, if we've for some reason failed to dispatch
+          // a runnable to the main thread to resolve the Promise, then it's
+          // unlikely we can reject it either. At that point, the Promise
+          // is going to remain in pending limbo until its global goes away.
+        }
+      ));
+
+      if (NS_SUCCEEDED(rv)) {
+        pendingAsyncOperations = true;
       }
     }
 #endif
@@ -194,7 +249,11 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIF
 
 #endif
 
-  return NS_OK;
+  if (!pendingAsyncOperations) {
+    promise->MaybeResolveWithUndefined();
+  }
+  promise.forget(aPromise);
+  return rv;
 }
 
 nsresult DownloadPlatform::MapUrlToZone(const nsAString& aURL,

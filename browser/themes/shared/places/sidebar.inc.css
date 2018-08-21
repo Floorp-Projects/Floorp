@@ -7,6 +7,51 @@
   background-color: transparent;
 }
 
+/* Themed sidebars */
+
+.sidebar-panel[lwt-sidebar] {
+  background-color: var(--lwt-sidebar-background-color);
+  color: var(--lwt-sidebar-text-color);
+}
+
+.sidebar-panel[lwt-sidebar] .sidebar-placesTreechildren::-moz-tree-row(selected) {
+  background-color: hsla(0,0%,80%,.3);
+}
+
+.sidebar-panel[lwt-sidebar-brighttext] .sidebar-placesTreechildren::-moz-tree-row(selected) {
+  -moz-appearance: none;
+  background-color: rgba(249,249,250,.1);
+}
+
+.sidebar-panel[lwt-sidebar-brighttext] .sidebar-placesTreechildren::-moz-tree-image(selected),
+.sidebar-panel[lwt-sidebar-brighttext] .sidebar-placesTreechildren::-moz-tree-twisty(selected),
+.sidebar-panel[lwt-sidebar-brighttext] .sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
+  color: var(--lwt-sidebar-text-color);
+}
+
+.sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-row(selected,focus) {
+  -moz-appearance: none;
+  background-color: var(--lwt-sidebar-highlight-background-color);
+}
+
+.sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-image(selected, focus),
+.sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-twisty(selected, focus),
+.sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-cell-text(selected, focus) {
+  color: var(--lwt-sidebar-highlight-text-color);
+}
+
+/* Sidebar tree */
+
+.sidebar-placesTree {
+  -moz-appearance: none;
+  background-color: transparent;
+  color: inherit;
+  border: 0;
+  margin: 0;
+}
+
+/* View button */
+
 #viewButton {
   -moz-appearance: none;
   border-radius: 4px;
