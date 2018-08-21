@@ -179,8 +179,20 @@ class GeckoViewContent extends GeckoViewContentModule {
         if (this._savedState.history) {
           let restoredHistory = SessionHistory.restore(docShell, this._savedState.history);
 
-          addEventListener("load", this, {capture: true, mozSystemGroup: true, once: true});
-          addEventListener("pageshow", this, {capture: true, mozSystemGroup: true, once: true});
+          addEventListener("load", _ => {
+            const formdata = this._savedState.formdata;
+            if (formdata) {
+              FormData.restoreTree(content, formdata);
+            }
+          }, {capture: true, mozSystemGroup: true, once: true});
+
+          addEventListener("pageshow", _ => {
+            const scrolldata = this._savedState.scrolldata;
+            if (scrolldata) {
+              ScrollPosition.restoreTree(content, scrolldata);
+            }
+            delete this._savedState;
+          }, {capture: true, mozSystemGroup: true, once: true});
 
           if (!this.progressFilter) {
             this.progressFilter =
@@ -269,21 +281,6 @@ class GeckoViewContent extends GeckoViewContentModule {
           type: "GeckoView:DOMWindowClose"
         });
         break;
-      case "load": {
-        const formdata = this._savedState.formdata;
-        if (formdata) {
-          FormData.restoreTree(content, formdata);
-        }
-        break;
-      }
-      case "pageshow": {
-        const scrolldata = this._savedState.scrolldata;
-        if (scrolldata) {
-          ScrollPosition.restoreTree(content, scrolldata);
-        }
-        delete this._savedState;
-        break;
-      }
     }
   }
 
