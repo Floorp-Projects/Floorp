@@ -179,7 +179,7 @@ var AboutCertErrorListener = {
     return content.document.documentURI.startsWith("about:certerror");
   },
 
-  _setTechDetailsMsgPart1(hostString, sslStatus, technicalInfo, doc) {
+  _setTechDetailsMsgPart1(hostString, sslStatus, securityInfo, technicalInfo, doc) {
     let msg = gPipNSSBundle.formatStringFromName("certErrorIntro",
                                                  [hostString], 1);
     msg += "\n\n";
@@ -234,7 +234,7 @@ var AboutCertErrorListener = {
       hostString += ":" + uri.port;
     }
 
-    this._setTechDetailsMsgPart1(hostString, sslStatus, technicalInfo, doc);
+    this._setTechDetailsMsgPart1(hostString, sslStatus, securityInfo, technicalInfo, doc);
 
     if (sslStatus.isDomainMismatch) {
       let subjectAltNamesList = sslStatus.serverCert.subjectAltNames;
