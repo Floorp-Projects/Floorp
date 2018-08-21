@@ -31,14 +31,6 @@ interface nsIPrivateBrowsingTrackingProtectionWhitelist : nsISupports
    * @param uri         the uri to remove from the list
    */
   void removeFromAllowList(in nsIURI uri);
-
-  /**
-   * Check if a URI exists in the list of allowed tracking sites in Private
-   * Browsing mode (the tracking whitelist).
-   *
-   * @param uri         the uri to look for in the list
-   */
-  bool existsInAllowList(in nsIURI uri);
 };
 
 %{ C++
