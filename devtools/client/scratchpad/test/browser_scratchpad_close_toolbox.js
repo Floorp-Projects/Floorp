@@ -23,7 +23,7 @@ async function runTests([win, sp]) {
   is(result, 7, "Display produced the expected output.");
 
   // Now open the toolbox and close it again.
-  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = await gDevTools.showToolbox(target, "webconsole");
   ok(toolbox, "Toolbox was opened.");
   const closed = await gDevTools.closeToolbox(target);

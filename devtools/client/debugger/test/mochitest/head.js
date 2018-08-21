@@ -43,7 +43,7 @@ registerCleanupFunction(async function() {
 
   while (gBrowser && gBrowser.tabs && gBrowser.tabs.length > 1) {
     info("Destroying toolbox.");
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    let target = await TargetFactory.forTab(gBrowser.selectedTab);
     await gDevTools.closeToolbox(target);
 
     info("Removing tab.");
@@ -553,7 +553,7 @@ let initDebugger = Task.async(function*(urlOrTab, options) {
   info("Debugee tab added successfully: " + urlOrTab);
 
   let debuggee = tab.linkedBrowser.contentWindowAsCPOW.wrappedJSObject;
-  let target = TargetFactory.forTab(tab);
+  let target = yield TargetFactory.forTab(tab);
 
   let toolbox = yield gDevTools.showToolbox(target, "jsdebugger");
   info("Debugger panel shown successfully.");
