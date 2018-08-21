@@ -47,6 +47,15 @@ static const char kLibjingle[] = "libjingle";
 #include "rtc_base/timeutils.h"
 
 namespace rtc {
+
+bool LogMessage::aec_debug_ = false;
+uint32_t LogMessage::aec_debug_size_ = 4*1024*1024;
+std::string LogMessage::aec_filename_base_;
+
+std::string LogMessage::aec_debug_filename() {
+  return aec_filename_base_;
+}
+
 namespace {
 
 // Return the filename portion of the string (that following the last slash).
@@ -100,7 +109,7 @@ LoggingSeverity LogMessage::dbg_sev_ = LS_INFO;
 LoggingSeverity LogMessage::min_sev_ = LS_NONE;
 LoggingSeverity LogMessage::dbg_sev_ = LS_NONE;
 #endif
-bool LogMessage::log_to_stderr_ = true;
+bool LogMessage::log_to_stderr_ = false;
 
 namespace {
 // Global lock for log subsystem, only needed to serialize access to streams_.
