@@ -742,9 +742,11 @@ var PlacesUIUtils = {
           this.markPageAsTyped(aNode.uri);
       }
 
+      const isJavaScriptURL = aNode.uri.startsWith("javascript:");
       aWindow.openTrustedLinkIn(aNode.uri, aWhere, {
-        allowPopups: aNode.uri.startsWith("javascript:"),
+        allowPopups: isJavaScriptURL,
         inBackground: this.loadBookmarksInBackground,
+        allowInheritPrincipal: isJavaScriptURL && aWhere == "current",
         private: aPrivate,
       });
     }
