@@ -122,8 +122,6 @@ public class GeckoViewActivity extends AppCompatActivity {
             runtimeSettingsBuilder
                     .useContentProcessHint(mUseMultiprocess)
                     .remoteDebuggingEnabled(true)
-                    .nativeCrashReportingEnabled(true)
-                    .javaCrashReportingEnabled(true)
                     .crashReportingJobId(1024)
                     .consoleOutput(true)
                     .trackingProtectionCategories(TrackingProtectionDelegate.CATEGORY_ALL);
