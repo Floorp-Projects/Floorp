@@ -165,8 +165,5 @@ class Callbacks private constructor() {
 
         override fun updateCursorAnchorInfo(session: GeckoSession, info: CursorAnchorInfo) {
         }
-
-        override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
-        }
     }
 }
