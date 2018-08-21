@@ -672,12 +672,45 @@ SVGObserverUtils::RemoveTextPathObserver(nsIFrame* aTextPathFrame)
   aTextPathFrame->DeleteProperty(HrefAsTextPathProperty());
 }
 
-SVGTemplateElementObserver*
-SVGObserverUtils::GetTemplateElementObserver(URLAndReferrerInfo* aURI,
-  nsIFrame* aFrame,
-  const mozilla::FramePropertyDescriptor<SVGTemplateElementObserver>* aProperty)
+nsIFrame*
+SVGObserverUtils::GetTemplateFrame(nsIFrame* aFrame,
+                                   HrefToTemplateCallback aGetHref)
 {
-  return GetEffectProperty(aURI, aFrame, aProperty);
+  SVGTemplateElementObserver* observer =
+    aFrame->GetProperty(SVGObserverUtils::HrefToTemplateProperty());
+
+  if (!observer) {
+    nsAutoString href;
+    aGetHref(href);
+    if (href.IsEmpty()) {
+      return nullptr; // no URL
+    }
+
+    // Convert href to an nsIURI
+    nsIContent* content = aFrame->GetContent();
+    nsCOMPtr<nsIURI> targetURI;
+    nsCOMPtr<nsIURI> base = content->GetBaseURI();
+    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
+                                              content->GetUncomposedDoc(), base);
+
+    // There's no clear refererer policy spec about non-CSS SVG resource
+    // references.  Bug 1415044 to investigate which referrer we should use.
+    RefPtr<URLAndReferrerInfo> target =
+      new URLAndReferrerInfo(targetURI,
+                             content->OwnerDoc()->GetDocumentURI(),
+                             content->OwnerDoc()->GetReferrerPolicy());
+
+    observer = GetEffectProperty(target, aFrame,
+                                 SVGObserverUtils::HrefToTemplateProperty());
+  }
+
+  return observer ? observer->GetReferencedFrame() : nullptr;
+}
+
+void
+SVGObserverUtils::RemoveTemplateObserver(nsIFrame* aFrame)
+{
+  aFrame->DeleteProperty(SVGObserverUtils::HrefToTemplateProperty());
 }
 
 nsSVGPaintingProperty*

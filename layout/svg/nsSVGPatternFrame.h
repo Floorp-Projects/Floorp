@@ -24,10 +24,6 @@ class SVGGeometryFrame;
 class nsSVGAnimatedTransformList;
 } // namespace mozilla
 
-/**
- * Patterns can refer to other patterns. We create an nsSVGPaintingProperty
- * with property type nsGkAtoms::href to track the referenced pattern.
- */
 class nsSVGPatternFrame final : public nsSVGPaintServerFrame
 {
   typedef mozilla::gfx::SourceSurface SourceSurface;
@@ -75,7 +71,10 @@ public:
 #endif // DEBUG
 
 protected:
-  // Internal methods for handling referenced patterns
+  /**
+   * Parses this frame's href and - if it references another pattern - returns
+   * it.  It also makes this frame a rendering observer of the specified ID.
+   */
   nsSVGPatternFrame* GetReferencedPattern();
 
   // Accessors to lookup pattern attributes
