@@ -91,7 +91,8 @@ bool StabsToModule::StartFunction(const string &name,
                                   uint64_t address) {
   assert(!current_function_);
   Module::Function *f = new Module::Function(Demangle(name), address);
-  f->size = 0;           // We compute this in StabsToModule::Finalize().
+  Module::Range r(address, 0); // We compute this in StabsToModule::Finalize().
+  f->ranges.push_back(r);
   f->parameter_size = 0; // We don't provide this information.
   current_function_ = f;
   boundaries_.push_back(static_cast<Module::Address>(address));
@@ -167,14 +168,14 @@ void StabsToModule::Finalize() {
     vector<Module::Address>::const_iterator boundary
         = std::upper_bound(boundaries_.begin(), boundaries_.end(), f->address);
     if (boundary != boundaries_.end())
-      f->size = *boundary - f->address;
+      f->ranges[0].size = *boundary - f->address;
     else
       // If this is the last function in the module, and the STABS
       // reader was unable to give us its ending address, then assign
       // it a bogus, very large value.  This will happen at most once
       // per module: since we've added all functions' addresses to the
       // boundary table, only one can be the last.
-      f->size = kFallbackSize;
+      f->ranges[0].size = kFallbackSize;
 
     // Compute sizes for each of the function f's lines --- if it has any.
     if (!f->lines.empty()) {
@@ -185,7 +186,8 @@ void StabsToModule::Finalize() {
            line_it != last_line; line_it++)
         line_it[0].size = line_it[1].address - line_it[0].address;
       // Compute the size of the last line from f's end address.
-      last_line->size = (f->address + f->size) - last_line->address;
+      last_line->size =
+        (f->ranges[0].address + f->ranges[0].size) - last_line->address;
     }
   }
   // Now that everything has a size, add our functions to the module, and

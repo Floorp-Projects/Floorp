@@ -58,6 +58,8 @@ struct FunctionInfo {
   uint64 lowpc;
   // End address for this function.
   uint64 highpc;
+  // Ranges offset
+  uint64 ranges;
 };
 
 struct SourceFileInfo {

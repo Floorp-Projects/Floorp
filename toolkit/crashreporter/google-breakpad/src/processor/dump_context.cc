@@ -584,7 +584,7 @@ void DumpContext::Print() {
     case MD_CONTEXT_ARM64: {
       const MDRawContextARM64* context_arm64 = GetContextARM64();
       printf("MDRawContextARM64\n");
-      printf("  context_flags       = 0x%" PRIx64 "\n",
+      printf("  context_flags       = 0x%x\n",
              context_arm64->context_flags);
       for (unsigned int ireg_index = 0;
            ireg_index < MD_CONTEXT_ARM64_GPR_COUNT;
@@ -603,6 +603,7 @@ void DumpContext::Print() {
         printf("  float_save.regs[%2d]            = 0x%" PRIx64 "%" PRIx64 "\n",
                freg_index, fp_value.high, fp_value.low);
       }
+
       break;
     }
 

@@ -125,6 +125,7 @@ class DumpSymbols {
  private:
   // Used internally.
   class DumperLineToModule;
+  class DumperRangesHandler;
   class LoadCommandDumper;
 
   // This method behaves similarly to NXFindBestFatArch, but it supports

@@ -541,6 +541,12 @@ class MinidumpModuleList : public MinidumpStream,
 
   bool Read(uint32_t expected_size);
 
+  bool StoreRange(const MinidumpModule& module,
+                  uint64_t base_address,
+                  uint32_t module_index,
+                  uint32_t module_count,
+                  bool is_android);
+
   // The largest number of modules that will be read from a minidump.  The
   // default is 1024.
   static uint32_t max_modules_;
@@ -1254,6 +1260,8 @@ class Minidump {
 
   bool swap() const { return valid_ ? swap_ : false; }
 
+  bool is_big_endian() const { return valid_ ? is_big_endian_ : false; }
+
   // Print a human-readable representation of the object to stdout.
   void Print();
 
@@ -1318,6 +1326,9 @@ class Minidump {
   // processing the minidump, this will be true.  If the two CPUs are
   // same-endian, this will be false.
   bool                      swap_;
+
+  // true if the minidump was produced by a big-endian cpu.
+  bool                      is_big_endian_;
 
   // Validity of the Minidump structure, false immediately after
   // construction or after a failed Read(); true following a successful

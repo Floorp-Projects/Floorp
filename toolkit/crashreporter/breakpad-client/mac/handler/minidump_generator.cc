@@ -545,7 +545,7 @@ bool
 MinidumpGenerator::WriteContextARM64(breakpad_thread_state_data_t state,
                                      MDLocationDescriptor *register_location)
 {
-  TypedMDRVA<MDRawContextARM64> context(&writer_);
+  TypedMDRVA<MDRawContextARM64_Old> context(&writer_);
   arm_thread_state64_t *machine_state =
       reinterpret_cast<arm_thread_state64_t *>(state);
 
@@ -553,8 +553,8 @@ MinidumpGenerator::WriteContextARM64(breakpad_thread_state_data_t state,
     return false;
 
   *register_location = context.location();
-  MDRawContextARM64 *context_ptr = context.get();
-  context_ptr->context_flags = MD_CONTEXT_ARM64_FULL;
+  MDRawContextARM64_Old *context_ptr = context.get();
+  context_ptr->context_flags = MD_CONTEXT_ARM64_FULL_OLD;
 
 #define AddGPR(a) context_ptr->iregs[a] = \
     REGISTER_FROM_THREADSTATE(machine_state, x[a])
@@ -1191,7 +1191,7 @@ bool MinidumpGenerator::WriteSystemInfoStream(
 #endif
 #ifdef HAS_ARM64_SUPPORT
     case CPU_TYPE_ARM64:
-      info_ptr->processor_architecture = MD_CPU_ARCHITECTURE_ARM64;
+      info_ptr->processor_architecture = MD_CPU_ARCHITECTURE_ARM64_OLD;
       break;
 #endif
 #ifdef HAS_PPC_SUPPORT

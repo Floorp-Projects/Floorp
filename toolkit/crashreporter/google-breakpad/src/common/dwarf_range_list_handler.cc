@@ -1,4 +1,4 @@
-// Copyright (c) 2014, Google Inc.
+// Copyright (c) 2018 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,27 +27,34 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef CLIENT_LINUX_DUMP_WRITER_COMMON_RAW_CONTEXT_CPU_H
-#define CLIENT_LINUX_DUMP_WRITER_COMMON_RAW_CONTEXT_CPU_H
+// Original author: Gabriele Svelto <gsvelto@mozilla.com>
+//                                  <gabriele.svelto@gmail.com>
 
-#include "google_breakpad/common/minidump_format.h"
+// dwarf_range_list_handler.cc: Implementation of DwarfRangeListHandler class.
+// See dwarf_range_list_handler.h for details.
+
+#include <algorithm>
+
+#include "common/dwarf_range_list_handler.h"
 
 namespace google_breakpad {
 
-#if defined(__i386__)
-typedef MDRawContextX86 RawContextCPU;
-#elif defined(__x86_64)
-typedef MDRawContextAMD64 RawContextCPU;
-#elif defined(__ARM_EABI__)
-typedef MDRawContextARM RawContextCPU;
-#elif defined(__aarch64__)
-typedef MDRawContextARM64_Old RawContextCPU;
-#elif defined(__mips__)
-typedef MDRawContextMIPS RawContextCPU;
-#else
-#error "This code has not been ported to your platform yet."
-#endif
+void DwarfRangeListHandler::AddRange(uint64 begin, uint64 end) {
+  Module::Range r(begin + base_address_, end - begin);
 
-}  // namespace google_breakpad
+  ranges_->push_back(r);
+}
 
-#endif  // CLIENT_LINUX_DUMP_WRITER_COMMON_RAW_CONTEXT_CPU_H
+void DwarfRangeListHandler::SetBaseAddress(uint64 base_address) {
+  base_address_ = base_address;
+}
+
+void DwarfRangeListHandler::Finish() {
+  std::sort(ranges_->begin(), ranges_->end(),
+    [](const Module::Range &a, const Module::Range &b) {
+      return a.address < b.address;
+    }
+  );
+}
+
+} // namespace google_breakpad

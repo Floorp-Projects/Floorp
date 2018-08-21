@@ -480,17 +480,28 @@ ParseThreadRegisters(CrashedProcess::Thread* thread,
 static void
 ParseThreadRegisters(CrashedProcess::Thread* thread,
                      const MinidumpMemoryRange& range) {
-  const MDRawContextARM64* rawregs = range.GetData<MDRawContextARM64>(0);
+#define COPY_REGS(rawregs)                                          \
+  do {                                                              \
+    for (int i = 0; i < 31; ++i)                                    \
+      thread->regs.regs[i] = rawregs->iregs[i];                     \
+    thread->regs.sp = rawregs->iregs[MD_CONTEXT_ARM64_REG_SP];      \
+    thread->regs.pc = rawregs->iregs[MD_CONTEXT_ARM64_REG_PC];      \
+    thread->regs.pstate = rawregs->cpsr;                            \
+                                                                    \
+    memcpy(thread->fpregs.vregs, rawregs->float_save.regs, 8 * 32); \
+    thread->fpregs.fpsr = rawregs->float_save.fpsr;                 \
+    thread->fpregs.fpcr = rawregs->float_save.fpcr;                 \
+  } while (false)
 
-  for (int i = 0; i < 31; ++i)
-    thread->regs.regs[i] = rawregs->iregs[i];
-  thread->regs.sp = rawregs->iregs[MD_CONTEXT_ARM64_REG_SP];
-  thread->regs.pc = rawregs->iregs[MD_CONTEXT_ARM64_REG_PC];
-  thread->regs.pstate = rawregs->cpsr;
-
-  memcpy(thread->fpregs.vregs, rawregs->float_save.regs, 8 * 32);
-  thread->fpregs.fpsr = rawregs->float_save.fpsr;
-  thread->fpregs.fpcr = rawregs->float_save.fpcr;
+  if (range.length() == sizeof(MDRawContextARM64_Old)) {
+    const MDRawContextARM64_Old* rawregs =
+        range.GetData<MDRawContextARM64_Old>(0);
+    COPY_REGS(rawregs);
+  } else {
+    const MDRawContextARM64* rawregs = range.GetData<MDRawContextARM64>(0);
+    COPY_REGS(rawregs);
+  }
+#undef COPY_REGS
 }
 #elif defined(__mips__)
 static void
@@ -590,7 +601,7 @@ ParseSystemInfo(const Options& options, CrashedProcess* crashinfo,
     exit(1);
   }
 #elif defined(__aarch64__)
-  if (sysinfo->processor_architecture != MD_CPU_ARCHITECTURE_ARM64) {
+  if (sysinfo->processor_architecture != MD_CPU_ARCHITECTURE_ARM64_OLD) {
     fprintf(stderr,
             "This version of minidump-2-core only supports ARM (64bit).\n");
     exit(1);

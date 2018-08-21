@@ -64,7 +64,7 @@ TEST(StabsToModule, SimpleCU) {
   Module::Function *function = functions[0];
   EXPECT_STREQ("function", function->name.c_str());
   EXPECT_EQ(0xfde4abbed390c394LL, function->address);
-  EXPECT_EQ(0x10U, function->size);
+  EXPECT_EQ(0x10U, function->ranges[0].size);
   EXPECT_EQ(0U, function->parameter_size);
   ASSERT_EQ((size_t) 1, function->lines.size());
   Module::Line *line = &function->lines[0];
@@ -130,7 +130,7 @@ TEST(StabsToModule, DuplicateFunctionNames) {
 
   Module::Function *function = functions[0];
   EXPECT_EQ(0xf2cfda36ecf7f46dLL, function->address);
-  EXPECT_LT(0U, function->size);  // should have used dummy size
+  EXPECT_LT(0U, function->ranges[0].size); // should have used dummy size
   EXPECT_EQ(0U, function->parameter_size);
   ASSERT_EQ(0U, function->lines.size());
 }
@@ -166,7 +166,7 @@ TEST(InferSizes, LineSize) {
   Module::Function *function = functions[0];
   EXPECT_STREQ("function", function->name.c_str());
   EXPECT_EQ(0xb4513962eff94e92LL, function->address);
-  EXPECT_EQ(0x1000100000000ULL, function->size); // inferred from CU end
+  EXPECT_EQ(0x1000100000000ULL, function->ranges[0].size); // inferred from CU end
   EXPECT_EQ(0U, function->parameter_size);
   ASSERT_EQ((size_t) 2, function->lines.size());
 
@@ -216,7 +216,7 @@ TEST(FunctionNames, Mangled) {
                "push_back(unsigned long long const&)",
                function->name.c_str());
   EXPECT_EQ(0xf2cfda63cef7f46dLL, function->address);
-  EXPECT_LT(0U, function->size); // should have used dummy size
+  EXPECT_LT(0U, function->ranges[0].size); // should have used dummy size
   EXPECT_EQ(0U, function->parameter_size);
   ASSERT_EQ(0U, function->lines.size());
 }

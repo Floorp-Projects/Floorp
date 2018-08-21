@@ -55,6 +55,7 @@
 #include "common/dwarf_cfi_to_module.h"
 #include "common/dwarf_cu_to_module.h"
 #include "common/dwarf_line_to_module.h"
+#include "common/dwarf_range_list_handler.h"
 #include "common/mac/file_id.h"
 #include "common/mac/arch_utilities.h"
 #include "common/mac/macho_reader.h"
@@ -76,6 +77,7 @@
 using dwarf2reader::ByteReader;
 using google_breakpad::DwarfCUToModule;
 using google_breakpad::DwarfLineToModule;
+using google_breakpad::DwarfRangeListHandler;
 using google_breakpad::FileID;
 using google_breakpad::mach_o::FatReader;
 using google_breakpad::mach_o::Section;
@@ -303,6 +305,31 @@ string DumpSymbols::Identifier() {
   return compacted;
 }
 
+// A range handler that accepts rangelist data parsed by
+// dwarf2reader::RangeListReader and populates a range vector (typically
+// owned by a function) with the results.
+class DumpSymbols::DumperRangesHandler:
+      public DwarfCUToModule::RangesHandler {
+ public:
+  DumperRangesHandler(const uint8_t *buffer, uint64 size,
+                      dwarf2reader::ByteReader* reader)
+      : buffer_(buffer), size_(size), reader_(reader) { }
+
+  bool ReadRanges(uint64 offset, Module::Address base_address,
+                  vector<Module::Range>* ranges) {
+    DwarfRangeListHandler handler(base_address, ranges);
+    dwarf2reader::RangeListReader rangelist_reader(buffer_, size_, reader_,
+                                                   &handler);
+
+    return rangelist_reader.ReadRangeList(offset);
+  }
+
+ private:
+  const uint8_t *buffer_;
+  uint64 size_;
+  dwarf2reader::ByteReader* reader_;
+};
+
 // A line-to-module loader that accepts line number info parsed by
 // dwarf2reader::LineInfo and populates a Module and a line vector
 // with the results.
@@ -425,6 +452,18 @@ bool DumpSymbols::ReadDwarf(google_breakpad::Module *module,
   // Build a line-to-module loader for the root handler to use.
   DumperLineToModule line_to_module(&byte_reader);
 
+  // Optional .debug_ranges reader
+  scoped_ptr<DumperRangesHandler> ranges_handler;
+  dwarf2reader::SectionMap::const_iterator ranges_entry =
+      file_context.section_map().find("__debug_ranges");
+  if (ranges_entry != file_context.section_map().end()) {
+    const std::pair<const uint8_t *, uint64>& ranges_section =
+      ranges_entry->second;
+    ranges_handler.reset(
+      new DumperRangesHandler(ranges_section.first, ranges_section.second,
+                              &byte_reader));
+  }
+
   // Walk the __debug_info section, one compilation unit at a time.
   uint64 debug_info_length = debug_info_section.second;
   for (uint64 offset = 0; offset < debug_info_length;) {
@@ -432,7 +471,8 @@ bool DumpSymbols::ReadDwarf(google_breakpad::Module *module,
     // debug info.
     DwarfCUToModule::WarningReporter reporter(selected_object_name_,
                                               offset);
-    DwarfCUToModule root_handler(&file_context, &line_to_module, &reporter);
+    DwarfCUToModule root_handler(&file_context, &line_to_module,
+                                 ranges_handler.get(), &reporter);
     // Make a Dwarf2Handler that drives our DIEHandler.
     dwarf2reader::DIEDispatcher die_dispatcher(&root_handler);
     // Make a DWARF parser for the compilation unit at OFFSET.

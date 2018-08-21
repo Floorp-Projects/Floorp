@@ -194,7 +194,7 @@ uintptr_t UContextReader::GetInstructionPointer(const ucontext_t* uc) {
 
 void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext_t *uc,
                                     const struct fpsimd_context* fpregs) {
-  out->context_flags = MD_CONTEXT_ARM64_FULL;
+  out->context_flags = MD_CONTEXT_ARM64_FULL_OLD;
 
   out->cpsr = static_cast<uint32_t>(uc->uc_mcontext.pstate);
   for (int i = 0; i < MD_CONTEXT_ARM64_REG_SP; ++i)
