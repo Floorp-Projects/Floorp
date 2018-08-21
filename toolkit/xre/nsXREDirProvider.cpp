@@ -43,9 +43,9 @@
 #include "mozilla/Telemetry.h"
 
 #include <stdlib.h>
+#include "city.h"
 
 #ifdef XP_WIN
-#include "city.h"
 #include <windows.h>
 #include <shlobj.h>
 #endif
@@ -1177,6 +1177,57 @@ GetCachedHash(HKEY rootKey, const nsAString &regPath, const nsAString &path,
 #endif
 
 nsresult
+nsXREDirProvider::GetInstallHash(nsAString & aPathHash)
+{
+  nsCOMPtr<nsIFile> updRoot;
+  nsCOMPtr<nsIFile> appFile;
+  bool per = false;
+  nsresult rv = GetFile(XRE_EXECUTABLE_FILE, &per, getter_AddRefs(appFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = appFile->GetParent(getter_AddRefs(updRoot));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString appDirPath;
+  rv = updRoot->GetPath(appDirPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef XP_WIN
+  // Figure out where we should check for a cached hash value. If the
+  // application doesn't have the nsXREAppData vendor value defined check
+  // under SOFTWARE\Mozilla.
+  bool hasVendor = gAppData->vendor && strlen(gAppData->vendor) != 0;
+  wchar_t regPath[1024] = { L'\0' };
+  swprintf_s(regPath, mozilla::ArrayLength(regPath), L"SOFTWARE\\%S\\%S\\TaskBarIDs",
+              (hasVendor ? gAppData->vendor : "Mozilla"), MOZ_APP_BASENAME);
+
+  // If we pre-computed the hash, grab it from the registry.
+  if (GetCachedHash(HKEY_LOCAL_MACHINE, nsDependentString(regPath), appDirPath,
+                    aPathHash)) {
+    return NS_OK;
+  }
+
+  if (GetCachedHash(HKEY_CURRENT_USER, nsDependentString(regPath), appDirPath,
+                    aPathHash)) {
+    return NS_OK;
+  }
+#endif
+
+  // This should only happen when the installer isn't used (e.g. zip builds).
+  void* buffer = appDirPath.BeginWriting();
+  uint32_t length = appDirPath.Length() * sizeof(nsAutoString::char_type);
+  uint64_t hash = CityHash64(static_cast<const char*>(buffer), length);
+  aPathHash.AppendInt((int)(hash >> 32), 16);
+  aPathHash.AppendInt((int)hash, 16);
+  // The installer implementation writes the registry values that were checked
+  // in the previous block for this value in uppercase and since it is an
+  // option to have a case sensitive file system on Windows this value must
+  // also be in uppercase.
+  ToUpperCase(aPathHash);
+
+  return NS_OK;
+}
+
+nsresult
 nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
 {
   nsCOMPtr<nsIFile> updRoot;
@@ -1224,42 +1275,8 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
 
 #elif XP_WIN
   nsAutoString pathHash;
-  bool pathHashResult = false;
-  bool hasVendor = gAppData->vendor && strlen(gAppData->vendor) != 0;
-
-  nsAutoString appDirPath;
-  if (SUCCEEDED(updRoot->GetPath(appDirPath))) {
-
-    // Figure out where we should check for a cached hash value. If the
-    // application doesn't have the nsXREAppData vendor value defined check
-    // under SOFTWARE\Mozilla.
-    wchar_t regPath[1024] = { L'\0' };
-    swprintf_s(regPath, mozilla::ArrayLength(regPath), L"SOFTWARE\\%S\\%S\\TaskBarIDs",
-               (hasVendor ? gAppData->vendor : "Mozilla"), MOZ_APP_BASENAME);
-
-    // If we pre-computed the hash, grab it from the registry.
-    pathHashResult = GetCachedHash(HKEY_LOCAL_MACHINE,
-                                   nsDependentString(regPath), appDirPath,
-                                   pathHash);
-    if (!pathHashResult) {
-      pathHashResult = GetCachedHash(HKEY_CURRENT_USER,
-                                     nsDependentString(regPath), appDirPath,
-                                     pathHash);
-    }
-  }
-
-  if (!pathHashResult) {
-    // This should only happen when the installer isn't used (e.g. zip builds).
-    uint64_t hash = CityHash64(static_cast<const char *>(appDirPath.get()),
-                               appDirPath.Length() * sizeof(nsAutoString::char_type));
-    pathHash.AppendInt((int)(hash >> 32), 16);
-    pathHash.AppendInt((int)hash, 16);
-    // The installer implementation writes the registry values that were checked
-    // in the previous block for this value in uppercase and since it is an
-    // option to have a case sensitive file system on Windows this value must
-    // also be in uppercase.
-    ToUpperCase(pathHash);
-  }
+  rv = GetInstallHash(pathHash);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // As a last ditch effort, get the local app data directory and if a vendor
   // name exists append it. If only a product name exists, append it. If neither
@@ -1267,6 +1284,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   // because we want a shared update directory for different apps run from the
   // same path.
   nsCOMPtr<nsIFile> localDir;
+  bool hasVendor = gAppData->vendor && strlen(gAppData->vendor) != 0;
   if ((hasVendor || gAppData->name) &&
       NS_SUCCEEDED(GetUserDataDirectoryHome(getter_AddRefs(localDir), true)) &&
       NS_SUCCEEDED(localDir->AppendNative(nsDependentCString(hasVendor ?
