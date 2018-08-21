@@ -1,4 +1,6 @@
-// Copyright (c) 2014, Google Inc.
+// -*- mode: c++ -*-
+
+// Copyright (c) 2018 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,27 +29,51 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef CLIENT_LINUX_DUMP_WRITER_COMMON_RAW_CONTEXT_CPU_H
-#define CLIENT_LINUX_DUMP_WRITER_COMMON_RAW_CONTEXT_CPU_H
+// Original author: Gabriele Svelto <gsvelto@mozilla.com>
+//                                  <gabriele.svelto@gmail.com>
 
-#include "google_breakpad/common/minidump_format.h"
+// The DwarfRangeListHandler class accepts rangelist data from a DWARF parser
+// and adds it to a google_breakpad::Function or other objects supporting
+// ranges.
+
+#ifndef COMMON_LINUX_DWARF_RANGE_LIST_HANDLER_H
+#define COMMON_LINUX_DWARF_RANGE_LIST_HANDLER_H
+
+#include <vector>
+
+#include "common/module.h"
+#include "common/dwarf/dwarf2reader.h"
 
 namespace google_breakpad {
 
-#if defined(__i386__)
-typedef MDRawContextX86 RawContextCPU;
-#elif defined(__x86_64)
-typedef MDRawContextAMD64 RawContextCPU;
-#elif defined(__ARM_EABI__)
-typedef MDRawContextARM RawContextCPU;
-#elif defined(__aarch64__)
-typedef MDRawContextARM64_Old RawContextCPU;
-#elif defined(__mips__)
-typedef MDRawContextMIPS RawContextCPU;
-#else
-#error "This code has not been ported to your platform yet."
-#endif
+// A class for producing a vector of google_breakpad::Module::Range
+// instances from a parsed DWARF range list.
 
-}  // namespace google_breakpad
+class DwarfRangeListHandler: public dwarf2reader::RangeListHandler {
+ public:
+  DwarfRangeListHandler(uint64 base_address, vector<Module::Range> *ranges)
+      : base_address_(base_address), ranges_(ranges) { }
 
-#endif  // CLIENT_LINUX_DUMP_WRITER_COMMON_RAW_CONTEXT_CPU_H
+  ~DwarfRangeListHandler() { }
+
+  // Add a range to the list
+  void AddRange(uint64 begin, uint64 end);
+
+  // Record the new base address and use it for the following entries
+  void SetBaseAddress(uint64 base_address);
+
+  // Sort the ranges so that they are in ascending order of starting address
+  void Finish();
+
+ private:
+  // The current PC to add to every entry, this can be overridden by a special
+  // list entry
+  uint64 base_address_;
+
+  // The list of ranges to be populated
+  vector<Module::Range> *ranges_;
+};
+
+} // namespace google_breakpad
+
+#endif // COMMON_LINUX_DWARF_RANGE_LIST_HANDLER_H

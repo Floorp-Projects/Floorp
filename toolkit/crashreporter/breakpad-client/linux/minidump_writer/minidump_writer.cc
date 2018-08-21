@@ -1041,7 +1041,7 @@ class MinidumpWriter {
     // processor_architecture should always be set, do this first
     sys_info->processor_architecture =
 #if defined(__aarch64__)
-        MD_CPU_ARCHITECTURE_ARM64;
+        MD_CPU_ARCHITECTURE_ARM64_OLD;
 #else
         MD_CPU_ARCHITECTURE_ARM;
 #endif

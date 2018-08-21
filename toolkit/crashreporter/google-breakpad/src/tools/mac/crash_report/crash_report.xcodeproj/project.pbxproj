@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		162F64FE161C5ECB00CD68D5 /* arch_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = 162F64FC161C5ECB00CD68D5 /* arch_utilities.cc */; };
+		4214B800211109A600B769FA /* convert_old_arm64_context.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4214B7FE211109A600B769FA /* convert_old_arm64_context.cc */; };
+		4247E6402110D5A500482558 /* path_helper.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4247E63F2110D5A500482558 /* path_helper.cc */; };
 		4D2C721B126F9ACC00B43EAF /* source_line_resolver_base.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4D2C721A126F9ACC00B43EAF /* source_line_resolver_base.cc */; };
 		4D2C721F126F9ADE00B43EAF /* exploitability.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4D2C721E126F9ADE00B43EAF /* exploitability.cc */; };
 		4D2C7223126F9AF900B43EAF /* exploitability_win.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4D2C7222126F9AF900B43EAF /* exploitability_win.cc */; };
@@ -81,6 +83,10 @@
 		08FB779EFE84155DC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		162F64FC161C5ECB00CD68D5 /* arch_utilities.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = arch_utilities.cc; path = ../../../common/mac/arch_utilities.cc; sourceTree = "<group>"; };
 		162F64FD161C5ECB00CD68D5 /* arch_utilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = arch_utilities.h; path = ../../../common/mac/arch_utilities.h; sourceTree = "<group>"; };
+		4214B7FE211109A600B769FA /* convert_old_arm64_context.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = convert_old_arm64_context.cc; path = ../../../processor/convert_old_arm64_context.cc; sourceTree = "<group>"; };
+		4214B7FF211109A600B769FA /* convert_old_arm64_context.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = convert_old_arm64_context.h; path = ../../../processor/convert_old_arm64_context.h; sourceTree = "<group>"; };
+		4247E63E2110D5A500482558 /* path_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = path_helper.h; path = ../../../common/path_helper.h; sourceTree = "<group>"; };
+		4247E63F2110D5A500482558 /* path_helper.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = path_helper.cc; path = ../../../common/path_helper.cc; sourceTree = "<group>"; };
 		4D2C721A126F9ACC00B43EAF /* source_line_resolver_base.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = source_line_resolver_base.cc; path = ../../../processor/source_line_resolver_base.cc; sourceTree = SOURCE_ROOT; };
 		4D2C721E126F9ADE00B43EAF /* exploitability.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = exploitability.cc; path = ../../../processor/exploitability.cc; sourceTree = SOURCE_ROOT; };
 		4D2C7222126F9AF900B43EAF /* exploitability_win.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = exploitability_win.cc; path = ../../../processor/exploitability_win.cc; sourceTree = SOURCE_ROOT; };
@@ -215,6 +221,10 @@
 		08FB7794FE84155DC02AAC07 /* crash_report */ = {
 			isa = PBXGroup;
 			children = (
+				4214B7FE211109A600B769FA /* convert_old_arm64_context.cc */,
+				4214B7FF211109A600B769FA /* convert_old_arm64_context.h */,
+				4247E63F2110D5A500482558 /* path_helper.cc */,
+				4247E63E2110D5A500482558 /* path_helper.h */,
 				8B31025311F0D2D400FCF3E4 /* Breakpad.xcconfig */,
 				8B3102DA11F0D65600FCF3E4 /* BreakpadDebug.xcconfig */,
 				8B3102DB11F0D65600FCF3E4 /* BreakpadRelease.xcconfig */,
@@ -446,8 +456,11 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "crash_report" */;
 			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				English,
@@ -517,6 +530,7 @@
 				4D2C7223126F9AF900B43EAF /* exploitability_win.cc in Sources */,
 				4D2C7227126F9B0F00B43EAF /* disassembler_x86.cc in Sources */,
 				F407DC48185773C10064622B /* exploitability_linux.cc in Sources */,
+				4214B800211109A600B769FA /* convert_old_arm64_context.cc in Sources */,
 				4D2C722B126F9B5A00B43EAF /* x86_disasm.c in Sources */,
 				4D2C722D126F9B6E00B43EAF /* x86_misc.c in Sources */,
 				4D2C722F126F9B8300B43EAF /* x86_operand_list.c in Sources */,
@@ -526,6 +540,7 @@
 				4D2C7246126F9C0B00B43EAF /* ia32_insn.c in Sources */,
 				4D2C724A126F9C2300B43EAF /* ia32_opcode_tables.c in Sources */,
 				4D2C724C126F9C3800B43EAF /* ia32_implicit.c in Sources */,
+				4247E6402110D5A500482558 /* path_helper.cc in Sources */,
 				F44DDD8919C85CD50047280E /* microdump_processor.cc in Sources */,
 				4D2C724E126F9C4D00B43EAF /* ia32_reg.c in Sources */,
 				4D2C725B126F9C8000B43EAF /* ia32_operand.c in Sources */,

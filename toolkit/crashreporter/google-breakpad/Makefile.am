@@ -233,6 +233,8 @@ src_libbreakpad_a_SOURCES = \
 	src/processor/cfi_frame_info.h \
 	src/processor/contained_range_map-inl.h \
 	src/processor/contained_range_map.h \
+	src/processor/convert_old_arm64_context.cc \
+	src/processor/convert_old_arm64_context.h \
 	src/processor/disassembler_x86.h \
 	src/processor/disassembler_x86.cc \
 	src/processor/dump_context.cc \
@@ -487,6 +489,7 @@ src_client_linux_linux_client_unittest_shlib_SOURCES = \
 	src/common/tests/file_utils.cc \
 	src/common/tests/file_utils.h \
 	src/processor/basic_code_modules.cc \
+	src/processor/convert_old_arm64_context.cc \
 	src/processor/dump_context.cc \
 	src/processor/dump_object.cc \
 	src/processor/logging.cc \
@@ -571,6 +574,7 @@ src_tools_linux_dump_syms_dump_syms_SOURCES = \
 	src/common/dwarf_cfi_to_module.cc \
 	src/common/dwarf_cu_to_module.cc \
 	src/common/dwarf_line_to_module.cc \
+	src/common/dwarf_range_list_handler.cc \
 	src/common/language.cc \
 	src/common/module.cc \
 	src/common/path_helper.cc \
@@ -619,6 +623,7 @@ src_tools_mac_dump_syms_dump_syms_mac_SOURCES = \
 	src/common/dwarf_cfi_to_module.cc \
 	src/common/dwarf_cu_to_module.cc \
 	src/common/dwarf_line_to_module.cc \
+	src/common/dwarf_range_list_handler.cc \
 	src/common/language.cc \
 	src/common/md5.cc \
 	src/common/module.cc \
@@ -658,6 +663,7 @@ src_common_dumper_unittest_SOURCES = \
 	src/common/dwarf_cu_to_module_unittest.cc \
 	src/common/dwarf_line_to_module.cc \
 	src/common/dwarf_line_to_module_unittest.cc \
+	src/common/dwarf_range_list_handler.cc \
 	src/common/language.cc \
 	src/common/memory_range_unittest.cc \
 	src/common/module.cc \
@@ -811,6 +817,7 @@ src_processor_exploitability_unittest_SOURCES = \
 src_processor_exploitability_unittest_CPPFLAGS = \
 	$(AM_CPPFLAGS) $(TEST_CFLAGS)
 src_processor_exploitability_unittest_LDADD = \
+	src/processor/convert_old_arm64_context.o \
 	src/processor/minidump_processor.o \
 	src/processor/process_state.o \
 	src/processor/disassembler_x86.o \
@@ -892,6 +899,7 @@ src_processor_microdump_processor_unittest_LDADD = \
 	src/processor/basic_code_modules.o \
 	src/processor/basic_source_line_resolver.o \
 	src/processor/call_stack.o \
+        src/processor/convert_old_arm64_context.o \
 	src/processor/cfi_frame_info.o \
 	src/processor/dump_context.o \
 	src/processor/dump_object.o \
@@ -926,6 +934,7 @@ src_processor_minidump_processor_unittest_LDADD = \
 	src/processor/basic_source_line_resolver.o \
 	src/processor/call_stack.o \
 	src/processor/cfi_frame_info.o \
+	src/processor/convert_old_arm64_context.o \
 	src/processor/disassembler_x86.o \
 	src/processor/dump_context.o \
 	src/processor/dump_object.o \
@@ -965,6 +974,7 @@ src_processor_minidump_unittest_CPPFLAGS = \
 	$(AM_CPPFLAGS) $(TEST_CFLAGS)
 src_processor_minidump_unittest_LDADD = \
 	src/processor/basic_code_modules.o \
+	src/processor/convert_old_arm64_context.o \
 	src/processor/dump_context.o \
 	src/processor/dump_object.o \
 	src/processor/logging.o \
@@ -1186,6 +1196,7 @@ src_processor_minidump_dump_SOURCES = \
 	src/processor/minidump_dump.cc
 src_processor_minidump_dump_LDADD = \
 	src/processor/basic_code_modules.o \
+	src/processor/convert_old_arm64_context.o \
 	src/processor/dump_context.o \
 	src/processor/dump_object.o \
 	src/processor/logging.o \
@@ -1200,6 +1211,7 @@ src_processor_microdump_stackwalk_LDADD = \
 	src/processor/basic_code_modules.o \
 	src/processor/basic_source_line_resolver.o \
 	src/processor/call_stack.o \
+	src/processor/convert_old_arm64_context.o \
 	src/processor/cfi_frame_info.o \
 	src/processor/disassembler_x86.o \
 	src/processor/dump_context.o \
@@ -1235,6 +1247,7 @@ src_processor_minidump_stackwalk_LDADD = \
 	src/processor/basic_source_line_resolver.o \
 	src/processor/call_stack.o \
 	src/processor/cfi_frame_info.o \
+	src/processor/convert_old_arm64_context.o \
 	src/processor/disassembler_x86.o \
 	src/processor/dump_context.o \
 	src/processor/dump_object.o \

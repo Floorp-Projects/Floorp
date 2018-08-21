@@ -44,6 +44,7 @@
 #include <stdio.h>
 
 #include <algorithm>
+#include <numeric>
 #include <utility>
 
 #include "common/dwarf_line_to_module.h"
@@ -51,6 +52,7 @@
 
 namespace google_breakpad {
 
+using std::accumulate;
 using std::map;
 using std::pair;
 using std::sort;
@@ -167,10 +169,15 @@ bool DwarfCUToModule::FileContext::IsUnhandledInterCUReference(
 // parsing. This is for data shared across the CU's entire DIE tree,
 // and parameters from the code invoking the CU parser.
 struct DwarfCUToModule::CUContext {
-  CUContext(FileContext *file_context_arg, WarningReporter *reporter_arg)
+  CUContext(FileContext *file_context_arg, WarningReporter *reporter_arg,
+            RangesHandler *ranges_handler_arg)
       : file_context(file_context_arg),
         reporter(reporter_arg),
-        language(Language::CPlusPlus) {}
+        ranges_handler(ranges_handler_arg),
+        language(Language::CPlusPlus),
+        low_pc(0),
+        high_pc(0),
+        ranges(0) {}
 
   ~CUContext() {
     for (vector<Module::Function *>::iterator it = functions.begin();
@@ -185,8 +192,18 @@ struct DwarfCUToModule::CUContext {
   // For printing error messages.
   WarningReporter *reporter;
 
+  // For reading ranges from the .debug_ranges section
+  RangesHandler *ranges_handler;
+
   // The source language of this compilation unit.
   const Language *language;
+
+  // Addresses covered by this CU. If high_pc_ is non-zero then the CU covers
+  // low_pc to high_pc, otherwise ranges is non-zero and low_pc represents
+  // the base address of the ranges covered by the CU.
+  uint64 low_pc;
+  uint64 high_pc;
+  uint64 ranges;
 
   // The functions defined in this compilation unit. We accumulate
   // them here during parsing. Then, in DwarfCUToModule::Finish, we
@@ -445,7 +462,7 @@ class DwarfCUToModule::FuncHandler: public GenericDIEHandler {
               uint64 offset)
       : GenericDIEHandler(cu_context, parent_context, offset),
         low_pc_(0), high_pc_(0), high_pc_form_(dwarf2reader::DW_FORM_addr),
-        abstract_origin_(NULL), inline_(false) { }
+        ranges_(0), abstract_origin_(NULL), inline_(false) { }
   void ProcessAttributeUnsigned(enum DwarfAttribute attr,
                                 enum DwarfForm form,
                                 uint64 data);
@@ -465,6 +482,7 @@ class DwarfCUToModule::FuncHandler: public GenericDIEHandler {
   string name_;
   uint64 low_pc_, high_pc_; // DW_AT_low_pc, DW_AT_high_pc
   DwarfForm high_pc_form_; // DW_AT_high_pc can be length or address.
+  uint64 ranges_; // DW_AT_ranges
   const AbstractOrigin* abstract_origin_;
   bool inline_;
 };
@@ -483,6 +501,9 @@ void DwarfCUToModule::FuncHandler::ProcessAttributeUnsigned(
     case dwarf2reader::DW_AT_high_pc:
       high_pc_form_ = form;
       high_pc_ = data;
+      break;
+    case dwarf2reader::DW_AT_ranges:
+      ranges_ = data;
       break;
 
     default:
@@ -537,17 +558,48 @@ bool DwarfCUToModule::FuncHandler::EndAttributes() {
   return true;
 }
 
+static bool IsEmptyRange(const vector<Module::Range>& ranges) {
+  uint64 size = accumulate(ranges.cbegin(), ranges.cend(), 0,
+    [](uint64 total, Module::Range entry) {
+      return total + entry.size;
+    }
+  );
+
+  return size == 0;
+}
+
 void DwarfCUToModule::FuncHandler::Finish() {
-  // Make high_pc_ an address, if it isn't already.
-  if (high_pc_form_ != dwarf2reader::DW_FORM_addr) {
-    high_pc_ += low_pc_;
+  vector<Module::Range> ranges;
+
+  if (!ranges_) {
+    // Make high_pc_ an address, if it isn't already.
+    if (high_pc_form_ != dwarf2reader::DW_FORM_addr &&
+        high_pc_form_ != dwarf2reader::DW_FORM_GNU_addr_index) {
+      high_pc_ += low_pc_;
+    }
+
+    Module::Range range(low_pc_, high_pc_ - low_pc_);
+    ranges.push_back(range);
+  } else {
+    RangesHandler *ranges_handler = cu_context_->ranges_handler;
+
+    if (ranges_handler) {
+      if (!ranges_handler->ReadRanges(ranges_, cu_context_->low_pc, &ranges)) {
+        ranges.clear();
+        cu_context_->reporter->MalformedRangeList(ranges_);
+      }
+    } else {
+      cu_context_->reporter->MissingRanges();
+    }
   }
 
   // Did we collect the information we need?  Not all DWARF function
-  // entries have low and high addresses (for example, inlined
-  // functions that were never used), but all the ones we're
-  // interested in cover a non-empty range of bytes.
-  if (low_pc_ < high_pc_) {
+  // entries are non-empty (for example, inlined functions that were never
+  // used), but all the ones we're interested in cover a non-empty range of
+  // bytes.
+  if (!IsEmptyRange(ranges)) {
+    low_pc_ = ranges.front().address;
+
     // Malformed DWARF may omit the name, but all Module::Functions must
     // have names.
     string name;
@@ -561,7 +613,7 @@ void DwarfCUToModule::FuncHandler::Finish() {
     // Create a Module::Function based on the data we've gathered, and
     // add it to the functions_ list.
     scoped_ptr<Module::Function> func(new Module::Function(name, low_pc_));
-    func->size = high_pc_ - low_pc_;
+    func->ranges = ranges;
     func->parameter_size = 0;
     if (func->address) {
        // If the function address is zero this is a sign that this function
@@ -663,7 +715,7 @@ void DwarfCUToModule::WarningReporter::UncoveredFunction(
     return;
   UncoveredHeading();
   fprintf(stderr, "    function%s: %s\n",
-          function.size == 0 ? " (zero-length)" : "",
+          IsEmptyRange(function.ranges) ? " (zero-length)" : "",
           function.name.c_str());
 }
 
@@ -697,11 +749,25 @@ void DwarfCUToModule::WarningReporter::UnhandledInterCUReference(
                   filename_.c_str(), offset, target);
 }
 
+void DwarfCUToModule::WarningReporter::MalformedRangeList(uint64 offset) {
+  CUHeading();
+  fprintf(stderr, "%s: warning: the range list at offset 0x%llx falls out of "
+                  "the .debug_ranges section.\n",
+                  filename_.c_str(), offset);
+}
+
+void DwarfCUToModule::WarningReporter::MissingRanges() {
+  CUHeading();
+  fprintf(stderr, "%s: warning: A DW_AT_ranges attribute was encountered but "
+                  "the .debug_ranges section is missing.\n", filename_.c_str());
+}
+
 DwarfCUToModule::DwarfCUToModule(FileContext *file_context,
                                  LineToModuleHandler *line_reader,
+                                 RangesHandler *ranges_handler,
                                  WarningReporter *reporter)
     : line_reader_(line_reader),
-      cu_context_(new CUContext(file_context, reporter)),
+      cu_context_(new CUContext(file_context, reporter, ranges_handler)),
       child_context_(new DIEContext()),
       has_source_line_info_(false) {
 }
@@ -732,6 +798,16 @@ void DwarfCUToModule::ProcessAttributeUnsigned(enum DwarfAttribute attr,
     case dwarf2reader::DW_AT_language: // source language of this CU
       SetLanguage(static_cast<DwarfLanguage>(data));
       break;
+    case dwarf2reader::DW_AT_low_pc:
+      cu_context_->low_pc  = data;
+      break;
+    case dwarf2reader::DW_AT_high_pc:
+      cu_context_->high_pc  = data;
+      break;
+    case dwarf2reader::DW_AT_ranges:
+      cu_context_->ranges = data;
+      break;
+
     default:
       break;
   }
@@ -841,6 +917,46 @@ void DwarfCUToModule::ReadSourceLines(uint64 offset) {
 }
 
 namespace {
+class FunctionRange {
+ public:
+  FunctionRange(const Module::Range &range, Module::Function *function) :
+      address(range.address), size(range.size), function(function) { }
+
+  void AddLine(Module::Line &line) {
+    function->lines.push_back(line);
+  }
+
+  Module::Address address;
+  Module::Address size;
+  Module::Function *function;
+};
+
+// Fills an array of ranges with pointers to the functions which owns them.
+// The array is sorted in ascending order and the ranges are non-overlapping.
+
+static void FillSortedFunctionRanges(vector<FunctionRange> &dest_ranges,
+                                     vector<Module::Function *> *functions) {
+  for (vector<Module::Function *>::const_iterator func_it = functions->cbegin();
+       func_it != functions->cend();
+       func_it++)
+  {
+    Module::Function *func = *func_it;
+    vector<Module::Range> &ranges = func->ranges;
+    for (vector<Module::Range>::const_iterator ranges_it = ranges.cbegin();
+         ranges_it != ranges.cend();
+         ++ranges_it) {
+      FunctionRange range(*ranges_it, func);
+      dest_ranges.push_back(range);
+    }
+  }
+
+  sort(dest_ranges.begin(), dest_ranges.end(),
+    [](const FunctionRange &fr1, const FunctionRange &fr2) {
+      return fr1.address < fr2.address;
+    }
+  );
+}
+
 // Return true if ADDRESS falls within the range of ITEM.
 template <class T>
 inline bool within(const T &item, Module::Address address) {
@@ -880,47 +996,50 @@ void DwarfCUToModule::AssignLinesToFunctions() {
   const Module::Function *last_function_cited = NULL;
   const Module::Line *last_line_cited = NULL;
 
-  // Make a single pass through both vectors from lower to higher
-  // addresses, populating each Function's lines vector with lines
-  // from our lines_ vector that fall within the function's address
-  // range.
-  vector<Module::Function *>::iterator func_it = functions->begin();
+  // Prepare a sorted list of ranges with range-to-function mapping
+  vector<FunctionRange> sorted_ranges;
+  FillSortedFunctionRanges(sorted_ranges, functions);
+
+  // Make a single pass through both the range and line vectors from lower to
+  // higher addresses, populating each range's function lines vector with lines
+  // from our lines_ vector that fall within the range.
+  vector<FunctionRange>::iterator range_it = sorted_ranges.begin();
   vector<Module::Line>::const_iterator line_it = lines_.begin();
 
   Module::Address current;
 
   // Pointers to the referents of func_it and line_it, or NULL if the
   // iterator is at the end of the sequence.
-  Module::Function *func;
+  FunctionRange *range;
   const Module::Line *line;
 
   // Start current at the beginning of the first line or function,
   // whichever is earlier.
-  if (func_it != functions->end() && line_it != lines_.end()) {
-    func = *func_it;
+  if (range_it != sorted_ranges.end() && line_it != lines_.end()) {
+    range = &*range_it;
     line = &*line_it;
-    current = std::min(func->address, line->address);
+    current = std::min(range->address, line->address);
   } else if (line_it != lines_.end()) {
-    func = NULL;
+    range = NULL;
     line = &*line_it;
     current = line->address;
-  } else if (func_it != functions->end()) {
-    func = *func_it;
+  } else if (range_it != sorted_ranges.end()) {
+    range = &*range_it;
     line = NULL;
-    current = (*func_it)->address;
+    current = range->address;
   } else {
     return;
   }
 
-  while (func || line) {
+  while (range || line) {
     // This loop has two invariants that hold at the top.
     //
     // First, at least one of the iterators is not at the end of its
     // sequence, and those that are not refer to the earliest
-    // function or line that contains or starts after CURRENT.
+    // range or line that contains or starts after CURRENT.
     //
     // Note that every byte is in one of four states: it is covered
-    // or not covered by a function, and, independently, it is
+    // or not covered by a range, and, independently, it is
     // covered or not covered by a line.
     //
     // The second invariant is that CURRENT refers to a byte whose
@@ -930,7 +1049,7 @@ void DwarfCUToModule::AssignLinesToFunctions() {
     //
     // Note that, although each iteration advances CURRENT from one
     // transition address to the next in each iteration, it might
-    // not advance the iterators. Suppose we have a function that
+    // not advance the iterators. Suppose we have a range that
     // starts with a line, has a gap, and then a second line, and
     // suppose that we enter an iteration with CURRENT at the end of
     // the first line. The next transition address is the start of
@@ -938,11 +1057,11 @@ void DwarfCUToModule::AssignLinesToFunctions() {
     // advance CURRENT to that point. At the head of that iteration,
     // the invariants require that the line iterator be pointing at
     // the second line. But this is also true at the head of the
-    // next. And clearly, the iteration must not change the function
+    // next. And clearly, the iteration must not change the range
     // iterator. So neither iterator moves.
 
     // Assert the first invariant (see above).
-    assert(!func || current < func->address || within(*func, current));
+    assert(!range || current < range->address || within(*range, current));
     assert(!line || current < line->address || within(*line, current));
 
     // The next transition after CURRENT.
@@ -950,33 +1069,33 @@ void DwarfCUToModule::AssignLinesToFunctions() {
 
     // Figure out which state we're in, add lines or warn, and compute
     // the next transition address.
-    if (func && current >= func->address) {
+    if (range && current >= range->address) {
       if (line && current >= line->address) {
-        // Covered by both a line and a function.
-        Module::Address func_left = func->size - (current - func->address);
+        // Covered by both a line and a range.
+        Module::Address range_left = range->size - (current - range->address);
         Module::Address line_left = line->size - (current - line->address);
         // This may overflow, but things work out.
-        next_transition = current + std::min(func_left, line_left);
+        next_transition = current + std::min(range_left, line_left);
         Module::Line l = *line;
         l.address = current;
         l.size = next_transition - current;
-        func->lines.push_back(l);
+        range->AddLine(l);
         last_line_used = line;
       } else {
-        // Covered by a function, but no line.
-        if (func != last_function_cited) {
-          reporter->UncoveredFunction(*func);
-          last_function_cited = func;
+        // Covered by a range, but no line.
+        if (range->function != last_function_cited) {
+          reporter->UncoveredFunction(*(range->function));
+          last_function_cited = range->function;
         }
-        if (line && within(*func, line->address))
+        if (line && within(*range, line->address))
           next_transition = line->address;
         else
           // If this overflows, we'll catch it below.
-          next_transition = func->address + func->size;
+          next_transition = range->address + range->size;
       }
     } else {
       if (line && current >= line->address) {
-        // Covered by a line, but no function.
+        // Covered by a line, but no range.
         //
         // If GCC emits padding after one function to align the start
         // of the next, then it will attribute the padding
@@ -988,27 +1107,27 @@ void DwarfCUToModule::AssignLinesToFunctions() {
         // start of the next function, then assume this is what
         // happened, and don't warn.
         if (line != last_line_cited
-            && !(func
+            && !(range
                  && line == last_line_used
-                 && func->address - line->address == line->size)) {
+                 && range->address - line->address == line->size)) {
           reporter->UncoveredLine(*line);
           last_line_cited = line;
         }
-        if (func && within(*line, func->address))
-          next_transition = func->address;
+        if (range && within(*line, range->address))
+          next_transition = range->address;
         else
           // If this overflows, we'll catch it below.
           next_transition = line->address + line->size;
       } else {
-        // Covered by neither a function nor a line. By the invariant,
-        // both func and line begin after CURRENT. The next transition
-        // is the start of the next function or next line, whichever
+        // Covered by neither a range nor a line. By the invariant,
+        // both range and line begin after CURRENT. The next transition
+        // is the start of the next range or next line, whichever
         // is earliest.
-        assert(func || line);
-        if (func && line)
-          next_transition = std::min(func->address, line->address);
-        else if (func)
-          next_transition = func->address;
+        assert(range || line);
+        if (range && line)
+          next_transition = std::min(range->address, line->address);
+        else if (range)
+          next_transition = range->address;
         else
           next_transition = line->address;
       }
@@ -1025,11 +1144,11 @@ void DwarfCUToModule::AssignLinesToFunctions() {
     // then we could go around more than once. We don't worry too much
     // about what result we produce in that case, just as long as we don't
     // hang or crash.
-    while (func_it != functions->end()
-           && next_transition >= (*func_it)->address
-           && !within(**func_it, next_transition))
-      func_it++;
-    func = (func_it != functions->end()) ? *func_it : NULL;
+    while (range_it != sorted_ranges.end()
+           && next_transition >= range_it->address
+           && !within(*range_it, next_transition))
+      range_it++;
+    range = (range_it != sorted_ranges.end()) ? &(*range_it) : NULL;
     while (line_it != lines_.end()
            && next_transition >= line_it->address
            && !within(*line_it, next_transition))
