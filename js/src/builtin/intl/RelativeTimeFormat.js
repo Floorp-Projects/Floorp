@@ -188,13 +188,21 @@ function Intl_RelativeTimeFormat_format(value, unit) {
 
     switch (u) {
       case "second":
+      case "seconds":
       case "minute":
+      case "minutes":
       case "hour":
+      case "hours":
       case "day":
+      case "days":
       case "week":
+      case "weeks":
       case "month":
+      case "months":
       case "quarter":
+      case "quarters":
       case "year":
+      case "years":
         break;
       default:
         ThrowRangeError(JSMSG_INVALID_OPTION_VALUE, "unit", u);
