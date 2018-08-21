@@ -8,6 +8,7 @@ from mozharness.base.script import platform_name
 
 AUTOCONFIG_TEXT = '''// Any comment. You must start the file with a comment!
 // This entry tells the browser to load a mozilla.cfg
+pref("general.config.sandbox_enabled", false);
 pref("general.config.filename", "mozilla.cfg");
 pref("general.config.obscure_value", 0);
 '''
