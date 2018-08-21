@@ -14,6 +14,7 @@ import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.util.ActivityUtils;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -29,6 +30,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -36,6 +38,8 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStructure;
+import android.view.autofill.AutofillValue;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
@@ -585,5 +589,33 @@ public class GeckoView extends FrameLayout {
 
         return mSession.getAccessibility().onMotionEvent(event) ||
                mSession.getPanZoomController().onMotionEvent(event);
+    }
+
+    @Override
+    public void onProvideAutofillVirtualStructure(final ViewStructure structure, int flags) {
+        super.onProvideAutofillVirtualStructure(structure, flags);
+
+        if (mSession != null) {
+            mSession.getTextInput().onProvideAutofillVirtualStructure(structure, flags);
+        }
+    }
+
+    @Override
+    @TargetApi(26)
+    public void autofill(@NonNull final SparseArray<AutofillValue> values) {
+        super.autofill(values);
+
+        if (mSession == null) {
+            return;
+        }
+        final SparseArray<CharSequence> strValues = new SparseArray<>(values.size());
+        for (int i = 0; i < values.size(); i++) {
+            final AutofillValue value = values.valueAt(i);
+            if (value.isText()) {
+                // Only text is currently supported.
+                strValues.put(values.keyAt(i), value.getTextValue());
+            }
+        }
+        mSession.getTextInput().autofill(strValues);
     }
 }
