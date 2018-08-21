@@ -156,6 +156,40 @@ class JSTerm extends Component {
 
     if (this.props.codeMirrorEnabled) {
       if (this.node) {
+        const onArrowUp = () => {
+          let inputUpdated;
+          if (this.autocompletePopup.isOpen) {
+            this.autocompletePopup.selectPreviousItem();
+            return null;
+          }
+
+          if (this.canCaretGoPrevious()) {
+            inputUpdated = this.historyPeruse(HISTORY_BACK);
+          }
+
+          if (!inputUpdated) {
+            return "CodeMirror.Pass";
+          }
+          return null;
+        };
+
+        const onArrowDown = () => {
+          let inputUpdated;
+          if (this.autocompletePopup.isOpen) {
+            this.autocompletePopup.selectNextItem();
+            return null;
+          }
+
+          if (this.canCaretGoNext()) {
+            inputUpdated = this.historyPeruse(HISTORY_FORWARD);
+          }
+
+          if (!inputUpdated) {
+            return "CodeMirror.Pass";
+          }
+          return null;
+        };
+
         this.editor = new Editor({
           autofocus: true,
           enableCodeFolding: false,
@@ -206,39 +240,11 @@ class JSTerm extends Component {
               return true;
             },
 
-            "Up": () => {
-              let inputUpdated;
-              if (this.autocompletePopup.isOpen) {
-                this.autocompletePopup.selectPreviousItem();
-                return null;
-              }
+            "Up": onArrowUp,
+            "Cmd-Up": onArrowUp,
 
-              if (this.canCaretGoPrevious()) {
-                inputUpdated = this.historyPeruse(HISTORY_BACK);
-              }
-
-              if (!inputUpdated) {
-                return "CodeMirror.Pass";
-              }
-              return null;
-            },
-
-            "Down": () => {
-              let inputUpdated;
-              if (this.autocompletePopup.isOpen) {
-                this.autocompletePopup.selectNextItem();
-                return null;
-              }
-
-              if (this.canCaretGoNext()) {
-                inputUpdated = this.historyPeruse(HISTORY_FORWARD);
-              }
-
-              if (!inputUpdated) {
-                return "CodeMirror.Pass";
-              }
-              return null;
-            },
+            "Down": onArrowDown,
+            "Cmd-Down": onArrowDown,
 
             "Left": () => {
               if (this.autocompletePopup.isOpen || this.getAutoCompletionText()) {

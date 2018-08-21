@@ -104,6 +104,40 @@ async function performTests() {
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   checkInput("|", "↓: input is empty");
+
+  info("Test that Cmd + ArrowDown/Up works as expected on OSX");
+  if (Services.appinfo.OS === "Darwin") {
+    const option = {metaKey: true};
+    EventUtils.synthesizeKey("KEY_ArrowUp", option);
+    checkInput("document.location|", "Cmd+↑ : input is correct");
+
+    EventUtils.synthesizeKey("KEY_ArrowUp", option);
+    checkInput("document;\nwindow;\ndocument.body|", "Cmd+↑ : input is correct");
+
+    EventUtils.synthesizeKey("KEY_ArrowUp", option);
+    checkInput("|document;\nwindow;\ndocument.body",
+      "Cmd+↑ : cursor is moved to the beginning of the input");
+
+    EventUtils.synthesizeKey("KEY_ArrowUp", option);
+    checkInput("document.body|", "Cmd+↑: input is correct");
+
+    EventUtils.synthesizeKey("KEY_ArrowDown", option);
+    checkInput("document;\nwindow;\ndocument.body|", "Cmd+↓ : input is correct");
+
+    EventUtils.synthesizeKey("KEY_ArrowUp", option);
+    checkInput("|document;\nwindow;\ndocument.body",
+      "Cmd+↑ : cursor is moved to the beginning of the input");
+
+    EventUtils.synthesizeKey("KEY_ArrowDown", option);
+    checkInput("document;\nwindow;\ndocument.body|",
+      "Cmd+↓ : cursor is moved to the end of the input");
+
+    EventUtils.synthesizeKey("KEY_ArrowDown", option);
+    checkInput("document.location|", "Cmd+↓ : input is correct");
+
+    EventUtils.synthesizeKey("KEY_ArrowDown", option);
+    checkInput("|", "Cmd+↓: input is empty");
+  }
 }
 
 function setCursorAtPosition(jsterm, pos) {
