@@ -85,10 +85,19 @@ class Module {
     int source_id;
   };
 
+  // An address range.
+  struct Range {
+    Range(const Address address_input, const Address size_input) :
+        address(address_input), size(size_input) { }
+
+    Address address;
+    Address size;
+  };
+
   // A function.
   struct Function {
     Function(const string &name_input, const Address &address_input) :
-        name(name_input), address(address_input), size(0), parameter_size(0) {}
+        name(name_input), address(address_input), parameter_size(0) {}
 
     // For sorting by address.  (Not style-guide compliant, but it's
     // stupid not to put this in the struct.)
@@ -99,9 +108,9 @@ class Module {
     // The function's name.
     const string name;
 
-    // The start address and length of the function's code.
+    // The start address and the address ranges covered by the function.
     const Address address;
-    Address size;
+    vector<Range> ranges;
 
     // The function's parameter size.
     Address parameter_size;

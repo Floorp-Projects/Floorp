@@ -1,4 +1,4 @@
-// Copyright (c) 2014, Google Inc.
+// Copyright (c) 2018, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,27 +27,41 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef CLIENT_LINUX_DUMP_WRITER_COMMON_RAW_CONTEXT_CPU_H
-#define CLIENT_LINUX_DUMP_WRITER_COMMON_RAW_CONTEXT_CPU_H
+#include "processor/convert_old_arm64_context.h"
 
-#include "google_breakpad/common/minidump_format.h"
+#include <string.h>
 
 namespace google_breakpad {
 
-#if defined(__i386__)
-typedef MDRawContextX86 RawContextCPU;
-#elif defined(__x86_64)
-typedef MDRawContextAMD64 RawContextCPU;
-#elif defined(__ARM_EABI__)
-typedef MDRawContextARM RawContextCPU;
-#elif defined(__aarch64__)
-typedef MDRawContextARM64_Old RawContextCPU;
-#elif defined(__mips__)
-typedef MDRawContextMIPS RawContextCPU;
-#else
-#error "This code has not been ported to your platform yet."
-#endif
+void ConvertOldARM64Context(const MDRawContextARM64_Old& old,
+                            MDRawContextARM64* context) {
+  context->context_flags = MD_CONTEXT_ARM64;
+  if (old.context_flags & MD_CONTEXT_ARM64_INTEGER_OLD) {
+    context->context_flags |=
+        MD_CONTEXT_ARM64_INTEGER | MD_CONTEXT_ARM64_CONTROL;
+  }
+  if (old.context_flags & MD_CONTEXT_ARM64_FLOATING_POINT_OLD) {
+    context->context_flags |= MD_CONTEXT_ARM64_FLOATING_POINT;
+  }
+
+  context->cpsr = old.cpsr;
+
+  static_assert(sizeof(old.iregs) == sizeof(context->iregs),
+                "iregs size mismatch");
+  memcpy(context->iregs, old.iregs, sizeof(context->iregs));
+
+  static_assert(sizeof(old.float_save.regs) == sizeof(context->float_save.regs),
+                "float_save.regs size mismatch");
+  memcpy(context->float_save.regs,
+         old.float_save.regs,
+         sizeof(context->float_save.regs));
+  context->float_save.fpcr = old.float_save.fpcr;
+  context->float_save.fpsr = old.float_save.fpsr;
+
+  memset(context->bcr, 0, sizeof(context->bcr));
+  memset(context->bvr, 0, sizeof(context->bvr));
+  memset(context->wcr, 0, sizeof(context->wcr));
+  memset(context->wvr, 0, sizeof(context->wvr));
+}
 
 }  // namespace google_breakpad
-
-#endif  // CLIENT_LINUX_DUMP_WRITER_COMMON_RAW_CONTEXT_CPU_H
