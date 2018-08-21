@@ -135,6 +135,7 @@
         android:id="@+id/dismissView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="57dp"
         android:background="@color/colorOverlay"
         android:contentDescription="@string/content_description_dismiss_input" />
 
