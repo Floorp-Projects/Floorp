@@ -365,7 +365,7 @@ function takeInstrumentation() {
     }
 
     win.addEventListener("load", () => {
-      if (win.location.href != "chrome://browser/content/browser.xul") {
+      if (win.location.href != AppConstants.BROWSER_CHROME_URL) {
         return;
       }
 

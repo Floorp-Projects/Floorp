@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=931768
   /** Test for Bug 931768 **/
 
   try {
-    openDialog("chrome://browser/content/browser.xul");
+    openDialog(AppConstants.BROWSER_CHROME_URL);
     ok(false, "Calling openDialog from unprivileged script should throw.");
   } catch (e) {
     ok(e instanceof ReferenceError,

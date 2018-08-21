@@ -6,6 +6,7 @@
 /* eslint mozilla/avoid-Date-timing: "off" */
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
 
 var NUM_CYCLES = 5;
@@ -181,7 +182,7 @@ function plInit() {
       toolbars = "titlebar,resizable";
     }
 
-    browserWindow = Services.ww.openWindow(null, "chrome://browser/content/", "_blank",
+    browserWindow = Services.ww.openWindow(null, AppConstants.BROWSER_CHROME_URL, "_blank",
        `chrome,${toolbars},dialog=no,width=${winWidth},height=${winHeight}`, blank);
 
     gPaintWindow = browserWindow;
