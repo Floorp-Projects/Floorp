@@ -12,6 +12,7 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/layers/StackingContextHelper.h"
+#include "mozilla/layers/IpcResourceUpdateQueue.h"
 
 namespace mozilla {
 namespace layout {
@@ -50,11 +51,12 @@ class TextDrawTarget : public DrawTarget
 {
 public:
   explicit TextDrawTarget(wr::DisplayListBuilder& aBuilder,
+                          wr::IpcResourceUpdateQueue& aResources,
                           const layers::StackingContextHelper& aSc,
                           layers::WebRenderLayerManager* aManager,
                           nsDisplayItem* aItem,
                           nsRect& aBounds)
-    : mBuilder(aBuilder), mSc(aSc), mManager(aManager)
+    : mBuilder(aBuilder), mResources(aResources), mSc(aSc), mManager(aManager)
   {
     SetPermitSubpixelAA(!aItem->IsSubpixelAADisabled());
 
@@ -302,6 +304,33 @@ public:
     mBuilder.PushLine(ClipRect(), mBackfaceVisible, decoration);
   }
 
+  layers::WebRenderBridgeChild* WrBridge() { return mManager->WrBridge(); }
+  layers::WebRenderLayerManager* WrLayerManager() { return mManager; }
+
+  Maybe<wr::ImageKey>
+  DefineImage(const IntSize& aSize,
+              uint32_t aStride,
+              SurfaceFormat aFormat,
+              const uint8_t* aData)
+  {
+    wr::ImageKey key = mManager->WrBridge()->GetNextImageKey();
+    wr::ImageDescriptor desc(aSize, aStride, aFormat);
+    Range<uint8_t> bytes(const_cast<uint8_t*>(aData), aStride * aSize.height);
+    if (mResources.AddImage(key, desc, bytes)) {
+        return Some(key);
+    }
+    return Nothing();
+  }
+
+  void PushImage(wr::ImageKey aKey,
+                 const wr::LayoutRect& aBounds,
+                 const wr::LayoutRect& aClip,
+                 wr::ImageRendering aFilter,
+                 const wr::ColorF& aColor)
+  {
+    mBuilder.PushImage(aBounds, aClip, true, aFilter, aKey, true, aColor);
+  }
+
 private:
   wr::LayoutRect ClipRect()
   {
@@ -323,6 +352,7 @@ private:
 
   // Things used to push to webrender
   wr::DisplayListBuilder& mBuilder;
+  wr::IpcResourceUpdateQueue& mResources;
   const layers::StackingContextHelper& mSc;
   layers::WebRenderLayerManager* mManager;
 
@@ -418,34 +448,29 @@ public:
     MOZ_RELEASE_ASSERT(aPattern.GetType() == PatternType::COLOR &&
                        aStrokeOptions.mDashLength == 0);
 
-    wr::Line line;
-    line.wavyLineThickness = 0; // dummy value, unused
-    line.color = wr::ToColorF(static_cast<const ColorPattern&>(aPattern).mColor);
-    line.style = wr::LineStyle::Solid;
-
-    // Top horizontal line
-    LayoutDevicePoint top(aRect.x, aRect.y - aStrokeOptions.mLineWidth / 2);
-    LayoutDeviceSize horiSize(aRect.width, aStrokeOptions.mLineWidth);
-    line.bounds = wr::ToRoundedLayoutRect(LayoutDeviceRect(top, horiSize));
-    line.orientation = wr::LineOrientation::Horizontal;
-    mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
-
-    // Bottom horizontal line
-    LayoutDevicePoint bottom(aRect.x, aRect.YMost() - aStrokeOptions.mLineWidth / 2);
-    line.bounds = wr::ToRoundedLayoutRect(LayoutDeviceRect(bottom, horiSize));
-    mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
-
-    // Left vertical line
-    LayoutDevicePoint left(aRect.x + aStrokeOptions.mLineWidth / 2, aRect.y + aStrokeOptions.mLineWidth / 2);
-    LayoutDeviceSize vertSize(aStrokeOptions.mLineWidth, aRect.height - aStrokeOptions.mLineWidth);
-    line.bounds = wr::ToRoundedLayoutRect(LayoutDeviceRect(left, vertSize));
-    line.orientation = wr::LineOrientation::Vertical;
-    mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
-
-    // Right vertical line
-    LayoutDevicePoint right(aRect.XMost() - aStrokeOptions.mLineWidth / 2, aRect.y + aStrokeOptions.mLineWidth / 2);
-    line.bounds = wr::ToRoundedLayoutRect(LayoutDeviceRect(right, vertSize));
-    mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
+    wr::BorderWidths widths = {
+        aStrokeOptions.mLineWidth,
+        aStrokeOptions.mLineWidth,
+        aStrokeOptions.mLineWidth,
+        aStrokeOptions.mLineWidth
+    };
+    wr::ColorF color = wr::ToColorF(static_cast<const ColorPattern&>(aPattern).mColor);
+    wr::BorderSide sides[4] = {
+        { color, wr::BorderStyle::Solid },
+        { color, wr::BorderStyle::Solid },
+        { color, wr::BorderStyle::Solid },
+        { color, wr::BorderStyle::Solid }
+    };
+    wr::BorderRadius radius = {
+        { 0, 0 },
+        { 0, 0 },
+        { 0, 0 },
+        { 0, 0 }
+    };
+    Rect rect(aRect);
+    rect.Inflate(aStrokeOptions.mLineWidth / 2);
+    wr::LayoutRect bounds = wr::ToRoundedLayoutRect(LayoutDeviceRect::FromUnknownRect(rect));
+    mBuilder.PushBorder(bounds, ClipRect(), true, widths, Range<const wr::BorderSide>(sides, 4), radius);
   }
 
   void StrokeLine(const Point &aStart,

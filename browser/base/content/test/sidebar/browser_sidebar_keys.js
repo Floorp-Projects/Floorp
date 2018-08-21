@@ -2,6 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 async function testSidebarKeyToggle(key, options, expectedSidebarId) {
+  EventUtils.synthesizeMouseAtCenter(gURLBar, {});
   let promiseShown = BrowserTestUtils.waitForEvent(window, "SidebarShown");
   EventUtils.synthesizeKey(key, options);
   await promiseShown;

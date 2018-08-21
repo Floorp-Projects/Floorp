@@ -373,6 +373,10 @@ class AsmFlags(BaseCompileFlags):
                     debug_flags += ['-g', 'cv8']
                 elif self._context.config.substs.get('OS_ARCH') != 'Darwin':
                     debug_flags += ['-g', 'dwarf2']
+            elif (self._context.config.substs.get('OS_ARCH') == 'WINNT' and
+                  self._context.config.substs.get('CPU_ARCH') == 'aarch64'):
+                # armasm64 accepts a paucity of options compared to ml/ml64.
+                pass
             else:
                 debug_flags += self._context.config.substs.get('MOZ_DEBUG_FLAGS', '').split()
         return debug_flags
@@ -406,19 +410,6 @@ class LinkFlags(BaseCompileFlags):
         if all([self._context.config.substs.get('OS_ARCH') == 'WINNT',
                 not self._context.config.substs.get('GNU_CC'),
                 not self._context.config.substs.get('MOZ_DEBUG')]):
-
-            # MOZ_DEBUG_SYMBOLS generates debug symbols in separate PDB files.
-            # Used for generating an optimized build with debugging symbols.
-            # Used in the Windows nightlies to generate symbols for crash reporting.
-            if self._context.config.substs.get('MOZ_DEBUG_SYMBOLS'):
-                flags.append('-DEBUG')
-
-
-            if self._context.config.substs.get('MOZ_DMD'):
-                # On Windows Opt DMD builds we actually override everything
-                # from OS_LDFLAGS. Bug 1413728 is on file to figure out whether
-                # this is necessary.
-                flags = ['-DEBUG']
 
             if self._context.config.substs.get('MOZ_OPTIMIZE'):
                 flags.append('-OPT:REF,ICF')

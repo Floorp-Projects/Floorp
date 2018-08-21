@@ -14,14 +14,25 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 elif CONFIG['OS_ARCH'] == 'Darwin':
     ASFLAGS += ['-DPREFIX']
 
-ASFLAGS += [
+data_symbol = 'icudt%s_dat' % CONFIG['MOZ_ICU_VERSION']
+asflags = [
     '-DICU_DATA_FILE="%s"' % CONFIG['ICU_DATA_FILE'],
-    '-DICU_DATA_SYMBOL=icudt%s_dat' % CONFIG['MOZ_ICU_VERSION'],
+    '-DICU_DATA_SYMBOL=%s' % data_symbol,
 ]
 LOCAL_INCLUDES += ['.']
 
-if CONFIG['HAVE_YASM']:
+if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64':
+    icudata = 'icudata.asm'
+    GENERATED_FILES += [icudata]
+    SOURCES += ['!%s' % icudata]
+    icudata = GENERATED_FILES[icudata]
+    icudata.script = 'genicudata.py'
+    icudata.inputs = [CONFIG['ICU_DATA_FILE']]
+    icudata.flags = [data_symbol]
+elif CONFIG['HAVE_YASM']:
     USE_YASM = True
     SOURCES += ['icudata.s']
+    ASFLAGS += asflags
 elif CONFIG['GNU_AS']:
     SOURCES += ['icudata_gas.S']
+    ASFLAGS += asflags

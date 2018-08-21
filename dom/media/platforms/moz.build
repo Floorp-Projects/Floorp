@@ -11,6 +11,7 @@ EXPORTS += [
     'agnostic/TheoraDecoder.h',
     'agnostic/VorbisDecoder.h',
     'agnostic/VPXDecoder.h',
+    'AllocationPolicy.h',
     'MediaTelemetryConstants.h',
     'PDMFactory.h',
     'PlatformDecoderModule.h',
@@ -31,6 +32,7 @@ UNIFIED_SOURCES += [
     'agnostic/VorbisDecoder.cpp',
     'agnostic/VPXDecoder.cpp',
     'agnostic/WAVDecoder.cpp',
+    'AllocationPolicy.cpp',
     'PDMFactory.cpp',
     'wrappers/H264Converter.cpp',
     'wrappers/MediaDataDecoderProxy.cpp'

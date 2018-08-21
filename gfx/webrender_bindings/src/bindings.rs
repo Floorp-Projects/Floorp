@@ -1960,7 +1960,8 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    tile_spacing: LayoutSize,
                                    image_rendering: ImageRendering,
                                    key: WrImageKey,
-                                   premultiplied_alpha: bool) {
+                                   premultiplied_alpha: bool,
+                                   color: ColorF) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
@@ -1979,7 +1980,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                      image_rendering,
                      alpha_type,
                      key,
-                     ColorF::WHITE);
+                     color);
 }
 
 /// Push a 3 planar yuv image.

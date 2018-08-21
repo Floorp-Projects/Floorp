@@ -44,6 +44,11 @@ using namespace js;
 using namespace js::jit;
 
 #ifdef XP_WIN
+// TODO: implement the necessary support for AArch64.
+# if defined(HAVE_64BIT_BUILD) && defined(_M_X64)
+#  define NEED_JIT_UNWIND_HANDLING
+# endif
+
 static void*
 ComputeRandomAllocationAddress()
 {
@@ -72,7 +77,7 @@ ComputeRandomAllocationAddress()
     return (void*) (base | (rand & mask));
 }
 
-# ifdef HAVE_64BIT_BUILD
+# ifdef NEED_JIT_UNWIND_HANDLING
 static js::JitExceptionHandler sJitExceptionHandler;
 
 JS_FRIEND_API(void)
@@ -183,7 +188,7 @@ UnregisterExecutableMemory(void* p, size_t bytes, size_t pageSize)
 static void*
 ReserveProcessExecutableMemory(size_t bytes)
 {
-# ifdef HAVE_64BIT_BUILD
+# ifdef NEED_JIT_UNWIND_HANDLING
     size_t pageSize = gc::SystemPageSize();
     if (sJitExceptionHandler)
         bytes += pageSize;
@@ -204,7 +209,7 @@ ReserveProcessExecutableMemory(size_t bytes)
             return nullptr;
     }
 
-# ifdef HAVE_64BIT_BUILD
+# ifdef NEED_JIT_UNWIND_HANDLING
     if (sJitExceptionHandler) {
         if (!RegisterExecutableMemory(p, bytes, pageSize)) {
             VirtualFree(p, 0, MEM_RELEASE);
@@ -224,7 +229,7 @@ ReserveProcessExecutableMemory(size_t bytes)
 static void
 DeallocateProcessExecutableMemory(void* addr, size_t bytes)
 {
-# ifdef HAVE_64BIT_BUILD
+# ifdef NEED_JIT_UNWIND_HANDLING
     UnregisterJitCodeRegion((uint8_t*)addr, bytes);
 
     if (sJitExceptionHandler) {

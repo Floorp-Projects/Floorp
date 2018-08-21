@@ -47,7 +47,23 @@
 }
 
 #navigator-toolbox {
+  -moz-appearance: none;
   --tabs-border-color: rgba(0,0,0,.3);
+}
+
+/*
+  This is a workaround for Bug 1482157
+  -moz-appearance: toolbox; makes the macOS sheets attached to the element's
+  bottom border. We cannot put this property on the toolbox itself as it
+  cancels all backgrounds that are there, so we set it on the toolbox bottom
+  border.
+*/
+#navigator-toolbox::after {
+  -moz-appearance: toolbox;
+  height: 1px;
+  /* use inset box-shadow instead of border because -moz-appearance hides the border */
+  border: none;
+  box-shadow: inset 0 -1px var(--toolbox-border-bottom-color);
 }
 
 #tabbrowser-tabs {

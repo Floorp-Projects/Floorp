@@ -154,8 +154,6 @@ menuitem.bookmark-item {
 #restore-button,
 #close-button {
   -moz-appearance: none;
-  border: none;
-  margin: 0 !important;
   padding: 6px 12px;
   -moz-context-properties: stroke;
   stroke: currentColor;

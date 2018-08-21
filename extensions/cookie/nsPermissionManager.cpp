@@ -2101,6 +2101,87 @@ nsPermissionManager::RemoveAllSince(int64_t aSince)
   return RemoveAllModifiedSince(aSince);
 }
 
+template<class T>
+nsresult
+nsPermissionManager::RemovePermissionEntries(T aCondition)
+{
+  nsCOMArray<nsIPermission> array;
+  for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
+    PermissionHashKey* entry = iter.Get();
+    for (const auto& permEntry : entry->GetPermissions()) {
+      if (!aCondition(permEntry)) {
+        continue;
+      }
+
+      nsCOMPtr<nsIPrincipal> principal;
+      nsresult rv = GetPrincipalFromOrigin(entry->GetKey()->mOrigin,
+                                           getter_AddRefs(principal));
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+
+      nsCOMPtr<nsIPermission> permission =
+        nsPermission::Create(principal,
+                             mTypeArray.ElementAt(permEntry.mType),
+                             permEntry.mPermission,
+                             permEntry.mExpireType,
+                             permEntry.mExpireTime);
+      if (NS_WARN_IF(!permission)) {
+        continue;
+      }
+      array.AppendObject(permission);
+    }
+  }
+
+  for (int32_t i = 0; i<array.Count(); ++i) {
+    nsCOMPtr<nsIPrincipal> principal;
+    nsAutoCString type;
+
+    nsresult rv = array[i]->GetPrincipal(getter_AddRefs(principal));
+    if (NS_FAILED(rv)) {
+      NS_ERROR("GetPrincipal() failed!");
+      continue;
+    }
+
+    rv = array[i]->GetType(type);
+    if (NS_FAILED(rv)) {
+      NS_ERROR("GetType() failed!");
+      continue;
+    }
+
+    // AddInternal handles removal, so let it do the work...
+    AddInternal(
+      principal,
+      type,
+      nsIPermissionManager::UNKNOWN_ACTION,
+      0,
+      nsIPermissionManager::EXPIRE_NEVER, 0, 0,
+      nsPermissionManager::eNotify,
+      nsPermissionManager::eWriteToDB);
+  }
+  // now re-import any defaults as they may now be required if we just deleted
+  // an override.
+  ImportDefaults();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPermissionManager::RemoveByType(const char* aType)
+{
+  ENSURE_NOT_CHILD_PROCESS;
+
+  int32_t typeIndex = GetTypeIndex(aType, false);
+  // If type == -1, the type isn't known,
+  // so just return NS_OK
+  if (typeIndex == -1) {
+    return NS_OK;
+  }
+
+  return RemovePermissionEntries([typeIndex] (const PermissionEntry& aPermEntry) {
+    return static_cast<uint32_t> (typeIndex) == aPermEntry.mType;
+  });
+}
+
 void
 nsPermissionManager::CloseDB(bool aRebuildOnSuccess)
 {
@@ -2627,64 +2708,9 @@ nsPermissionManager::RemoveAllModifiedSince(int64_t aModificationTime)
 {
   ENSURE_NOT_CHILD_PROCESS;
 
-  nsCOMArray<nsIPermission> array;
-  for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
-    PermissionHashKey* entry = iter.Get();
-    for (const auto& permEntry : entry->GetPermissions()) {
-      if (aModificationTime > permEntry.mModificationTime) {
-        continue;
-      }
-
-      nsCOMPtr<nsIPrincipal> principal;
-      nsresult rv = GetPrincipalFromOrigin(entry->GetKey()->mOrigin,
-                                           getter_AddRefs(principal));
-      if (NS_FAILED(rv)) {
-        continue;
-      }
-
-      nsCOMPtr<nsIPermission> permission =
-        nsPermission::Create(principal,
-                             mTypeArray.ElementAt(permEntry.mType),
-                             permEntry.mPermission,
-                             permEntry.mExpireType,
-                             permEntry.mExpireTime);
-      if (NS_WARN_IF(!permission)) {
-        continue;
-      }
-      array.AppendObject(permission);
-    }
-  }
-
-  for (int32_t i = 0; i<array.Count(); ++i) {
-    nsCOMPtr<nsIPrincipal> principal;
-    nsAutoCString type;
-
-    nsresult rv = array[i]->GetPrincipal(getter_AddRefs(principal));
-    if (NS_FAILED(rv)) {
-      NS_ERROR("GetPrincipal() failed!");
-      continue;
-    }
-
-    rv = array[i]->GetType(type);
-    if (NS_FAILED(rv)) {
-      NS_ERROR("GetType() failed!");
-      continue;
-    }
-
-    // AddInternal handles removal, so let it do the work...
-    AddInternal(
-      principal,
-      type,
-      nsIPermissionManager::UNKNOWN_ACTION,
-      0,
-      nsIPermissionManager::EXPIRE_NEVER, 0, 0,
-      nsPermissionManager::eNotify,
-      nsPermissionManager::eWriteToDB);
-  }
-  // now re-import any defaults as they may now be required if we just deleted
-  // an override.
-  ImportDefaults();
-  return NS_OK;
+  return RemovePermissionEntries([aModificationTime] (const PermissionEntry& aPermEntry) {
+    return aModificationTime <= aPermEntry.mModificationTime;
+  });
 }
 
 NS_IMETHODIMP

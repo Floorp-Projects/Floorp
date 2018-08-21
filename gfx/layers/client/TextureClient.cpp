@@ -1470,7 +1470,7 @@ public:
 
   virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
 
-  int32_t mReadCount;
+  Atomic<int32_t> mReadCount;
 };
 
 // The cross-prcess implementation of TextureReadLock.
@@ -1651,14 +1651,14 @@ MemoryTextureReadLock::ReadLock()
 {
   NS_ASSERT_OWNINGTHREAD(MemoryTextureReadLock);
 
-  PR_ATOMIC_INCREMENT(&mReadCount);
+  ++mReadCount;
   return true;
 }
 
 int32_t
 MemoryTextureReadLock::ReadUnlock()
 {
-  int32_t readCount = PR_ATOMIC_DECREMENT(&mReadCount);
+  int32_t readCount = --mReadCount;
   MOZ_ASSERT(readCount >= 0);
 
   return readCount;

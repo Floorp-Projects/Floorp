@@ -54,6 +54,10 @@ public:
      */
     static Float GetDesiredMinWidth(uint32_t aChar,
                                     uint32_t aAppUnitsPerDevUnit);
+
+    static void Purge();
+
+    static void Shutdown();
 };
 
 #endif
