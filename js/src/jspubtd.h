@@ -144,10 +144,15 @@ RuntimeHeapIsMinorCollecting()
 }
 
 static inline bool
+RuntimeHeapIsCollecting(HeapState state)
+{
+    return state == HeapState::MajorCollecting || state == HeapState::MinorCollecting;
+}
+
+static inline bool
 RuntimeHeapIsCollecting()
 {
-    HeapState state = RuntimeHeapState();
-    return state == HeapState::MajorCollecting || state == HeapState::MinorCollecting;
+    return RuntimeHeapIsCollecting(RuntimeHeapState());
 }
 
 static inline bool
