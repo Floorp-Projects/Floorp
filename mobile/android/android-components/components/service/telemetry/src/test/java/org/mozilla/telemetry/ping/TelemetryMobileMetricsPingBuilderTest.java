@@ -47,7 +47,7 @@ public class TelemetryMobileMetricsPingBuilderTest {
         assertEquals("Android", results.get("os"));
 
         assertTrue(results.containsKey("osversion"));
-        assertEquals("27", results.get("osversion"));
+        assertEquals("28", results.get("osversion"));
 
         assertTrue(results.containsKey("device"));
         assertFalse(TextUtils.isEmpty((String) results.get("device")));
