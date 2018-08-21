@@ -20,36 +20,32 @@ use nserror::*;
 use nsstring::*;
 use std::slice;
 
-// nsStringBuffer's internal bookkeeping takes 8 bytes from
-// the allocation. Plus one for termination.
-const NS_CSTRING_OVERHEAD: usize = 9;
-
 /// Takes `Option<usize>`, the destination string and a value
-/// to return on failure and tries to set the length of the
-/// destination string to the `usize` wrapped in the first
-/// argument.
-macro_rules! try_dst_set_len {
+/// to return on failure and tries to start a bulk write of the
+/// destination string with the capacity given by the `usize`
+/// wrapped in the first argument. Returns the bulk write
+/// handle.
+macro_rules! try_start_bulk_write {
     ($needed:expr,
      $dst:ident,
-     $ret:expr) => (
-    let needed = match $needed {
-        Some(max) => {
-            // XPCOM strings use uint32_t for length.
-            if max > ::std::u32::MAX as usize {
+     $ret:expr) => ({
+        let needed = match $needed {
+            Some(needed) => {
+                needed
+            }
+            None => {
                 return $ret;
             }
-            max as u32
+        };
+        match unsafe { $dst.bulk_write(needed, 0, false) } {
+            Err(_) => {
+                return $ret;
+            },
+            Ok(handle) => {
+                handle
+            }
         }
-        None => {
-            return $ret;
-        }
-    };
-    unsafe {
-        if $dst.fallible_set_length(needed).is_err() {
-            return $ret;
-        }
-    }
-     )
+    })
 }
 
 #[no_mangle]
@@ -105,19 +101,14 @@ pub fn decode_to_nsstring_without_bom_handling(encoding: &'static Encoding,
                                                dst: &mut nsAString)
                                                -> nsresult {
     let mut decoder = encoding.new_decoder_without_bom_handling();
-    try_dst_set_len!(decoder.max_utf16_buffer_length(src.len()),
-                     dst,
-                     NS_ERROR_OUT_OF_MEMORY);
-    // to_mut() shouldn't fail right after setting length.
-    let (result, read, written, had_errors) = decoder.decode_to_utf16(src, dst.to_mut(), true);
+    let mut handle = try_start_bulk_write!(decoder.max_utf16_buffer_length(src.len()),
+                                           dst,
+                                           NS_ERROR_OUT_OF_MEMORY);
+    let (result, read, written, had_errors) = decoder.decode_to_utf16(src, handle.as_mut_slice(), true);
     debug_assert_eq!(result, CoderResult::InputEmpty);
     debug_assert_eq!(read, src.len());
-    debug_assert!(written <= dst.len());
-    unsafe {
-        if dst.fallible_set_length(written as u32).is_err() {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-    }
+    debug_assert!(written <= handle.as_mut_slice().len());
+    let _ = handle.finish(written, true);
     if had_errors {
         return NS_OK_HAD_REPLACEMENTS;
     }
@@ -139,25 +130,20 @@ pub unsafe extern "C" fn mozilla_encoding_decode_to_nsstring_without_bom_handlin
 
 pub fn decode_to_nsstring_without_bom_handling_and_without_replacement(encoding: &'static Encoding, src: &[u8], dst: &mut nsAString) -> nsresult{
     let mut decoder = encoding.new_decoder_without_bom_handling();
-    try_dst_set_len!(decoder.max_utf16_buffer_length(src.len()),
-                     dst,
-                     NS_ERROR_OUT_OF_MEMORY);
-    // to_mut() shouldn't fail right after setting length.
+    let mut handle = try_start_bulk_write!(decoder.max_utf16_buffer_length(src.len()),
+                                           dst,
+                                           NS_ERROR_OUT_OF_MEMORY);
     let (result, read, written) = decoder
-        .decode_to_utf16_without_replacement(src, dst.to_mut(), true);
+        .decode_to_utf16_without_replacement(src, handle.as_mut_slice(), true);
     match result {
         DecoderResult::InputEmpty => {
             debug_assert_eq!(read, src.len());
-            debug_assert!(written <= dst.len());
-            unsafe {
-                if dst.fallible_set_length(written as u32).is_err() {
-                    return NS_ERROR_OUT_OF_MEMORY;
-                }
-            }
+            debug_assert!(written <= handle.as_mut_slice().len());
+            let _ = handle.finish(written, true);
             NS_OK
         }
         DecoderResult::Malformed(_, _) => {
-            dst.truncate();
+            // Let handle's drop() run
             NS_ERROR_UDEC_ILLEGALINPUT
         }
         DecoderResult::OutputFull => unreachable!(),
@@ -181,9 +167,9 @@ pub fn encode_from_utf16(encoding: &'static Encoding,
                          -> (nsresult, &'static Encoding) {
     let output_encoding = encoding.output_encoding();
     let mut encoder = output_encoding.new_encoder();
-    try_dst_set_len!(encoder.max_buffer_length_from_utf16_if_no_unmappables(src.len()),
-                     dst,
-                     (NS_ERROR_OUT_OF_MEMORY, output_encoding));
+    let mut handle = try_start_bulk_write!(encoder.max_buffer_length_from_utf16_if_no_unmappables(src.len()),
+                                           dst,
+                                           (NS_ERROR_OUT_OF_MEMORY, output_encoding));
 
     let mut total_read = 0;
     let mut total_written = 0;
@@ -191,7 +177,7 @@ pub fn encode_from_utf16(encoding: &'static Encoding,
     loop {
         let (result, read, written, had_errors) = encoder
             .encode_from_utf16(&src[total_read..],
-                               &mut (dst.to_mut())[total_written..],
+                               &mut (handle.as_mut_slice())[total_written..],
                                true);
         total_read += read;
         total_written += written;
@@ -199,12 +185,8 @@ pub fn encode_from_utf16(encoding: &'static Encoding,
         match result {
             CoderResult::InputEmpty => {
                 debug_assert_eq!(total_read, src.len());
-                debug_assert!(total_written <= dst.len());
-                unsafe {
-                    if dst.fallible_set_length(total_written as u32).is_err() {
-                        return (NS_ERROR_OUT_OF_MEMORY, output_encoding);
-                    }
-                }
+                debug_assert!(total_written <= handle.as_mut_slice().len());
+                let _ = handle.finish(total_written, true);
                 if total_had_errors {
                     return (NS_OK_HAD_REPLACEMENTS, output_encoding);
                 }
@@ -215,21 +197,8 @@ pub fn encode_from_utf16(encoding: &'static Encoding,
                     checked_add(total_written,
                                 encoder.max_buffer_length_from_utf16_if_no_unmappables(src.len() -
                                                                                        total_read)) {
-                    // Let's round the allocation up in order to avoid repeated
-                    // allocations. Using power-of-two as the approximation of
-                    // available jemalloc buckets, since linking with
-                    // malloc_good_size is messy.
-                    if let Some(with_bookkeeping) = NS_CSTRING_OVERHEAD.checked_add(needed) {
-                        let rounded = with_bookkeeping.next_power_of_two();
-                        let unclowned = rounded - NS_CSTRING_OVERHEAD;
-                        // XPCOM strings use uint32_t for length.
-                        if unclowned <= ::std::u32::MAX as usize {
-                            unsafe {
-                                if dst.fallible_set_length(unclowned as u32).is_ok() {
-                                    continue;
-                                }
-                            }
-                        }
+                    if unsafe { handle.restart_bulk_write(needed, total_written, false).is_ok() } {
+                        continue;
                     }
                 }
                 return (NS_ERROR_OUT_OF_MEMORY, output_encoding);
@@ -325,27 +294,20 @@ fn decode_from_slice_to_nscstring_without_bom_handling(encoding: &'static Encodi
                                                        -> nsresult {
     let bytes = src;
     let mut decoder = encoding.new_decoder_without_bom_handling();
-    let rounded_without_replacement =
-        checked_next_power_of_two(checked_add(already_validated, decoder.max_utf8_buffer_length_without_replacement(bytes.len() - already_validated)));
-    let with_replacement = checked_add(already_validated,
-                                       decoder.max_utf8_buffer_length(bytes.len() -
-                                                                      already_validated));
-    try_dst_set_len!(checked_min(rounded_without_replacement, with_replacement),
-                     dst,
-                     NS_ERROR_OUT_OF_MEMORY);
+    let mut handle = try_start_bulk_write!(Some(src.len()),
+                                           dst,
+                                           NS_ERROR_OUT_OF_MEMORY);
 
     if already_validated != 0 {
-        // to_mut() shouldn't fail right after setting length.
-        &mut (dst.to_mut())[..already_validated].copy_from_slice(&bytes[..already_validated]);
+        &mut (handle.as_mut_slice())[..already_validated].copy_from_slice(&bytes[..already_validated]);
     }
     let mut total_read = already_validated;
     let mut total_written = already_validated;
     let mut total_had_errors = false;
     loop {
-        // to_mut() shouldn't fail right after setting length.
         let (result, read, written, had_errors) =
             decoder.decode_to_utf8(&bytes[total_read..],
-                                   &mut (dst.to_mut())[total_written..],
+                                   &mut (handle.as_mut_slice())[total_written..],
                                    true);
         total_read += read;
         total_written += written;
@@ -353,11 +315,7 @@ fn decode_from_slice_to_nscstring_without_bom_handling(encoding: &'static Encodi
         match result {
             CoderResult::InputEmpty => {
                 debug_assert_eq!(total_read, bytes.len());
-                unsafe {
-                    if dst.fallible_set_length(total_written as u32).is_err() {
-                        return NS_ERROR_OUT_OF_MEMORY;
-                    }
-                }
+                let _ = handle.finish(total_written, true);
                 if total_had_errors {
                     return NS_OK_HAD_REPLACEMENTS;
                 }
@@ -366,12 +324,15 @@ fn decode_from_slice_to_nscstring_without_bom_handling(encoding: &'static Encodi
             CoderResult::OutputFull => {
                 // Allocate for the worst case. That is, we should come
                 // here at most once per invocation of this method.
-                try_dst_set_len!(checked_add(total_written,
-                                             decoder.max_utf8_buffer_length(bytes.len() -
-                                                                            total_read)),
-                                 dst,
-                                 NS_ERROR_OUT_OF_MEMORY);
-                continue;
+                if let Some(needed) =
+                    checked_add(total_written,
+                                decoder.max_utf8_buffer_length(bytes.len() -
+                                                               total_read)) {
+                    if unsafe { handle.restart_bulk_write(needed, total_written, false).is_ok() } {
+                        continue;
+                    }
+                }
+                return NS_ERROR_OUT_OF_MEMORY;
             }
         }
     }
@@ -412,14 +373,13 @@ pub fn decode_to_nscstring_without_bom_handling_and_without_replacement(encoding
         return NS_OK;
     }
     let mut decoder = encoding.new_decoder_without_bom_handling();
-    try_dst_set_len!(checked_add(valid_up_to,
-                                 decoder.max_utf8_buffer_length_without_replacement(bytes.len() -
-                                                                                    valid_up_to)),
-                     dst,
-                     NS_ERROR_OUT_OF_MEMORY);
-    // to_mut() shouldn't fail right after setting length.
+    let mut handle = try_start_bulk_write!(checked_add(valid_up_to,
+                                                       decoder.max_utf8_buffer_length_without_replacement(bytes.len() -
+                                                                                                          valid_up_to)),
+                                           dst,
+                                           NS_ERROR_OUT_OF_MEMORY);
     let (result, read, written) = {
-        let dest = dst.to_mut();
+        let dest = handle.as_mut_slice();
         dest[..valid_up_to].copy_from_slice(&bytes[..valid_up_to]);
         decoder
             .decode_to_utf8_without_replacement(&src[valid_up_to..], &mut dest[valid_up_to..], true)
@@ -427,17 +387,12 @@ pub fn decode_to_nscstring_without_bom_handling_and_without_replacement(encoding
     match result {
         DecoderResult::InputEmpty => {
             debug_assert_eq!(valid_up_to + read, src.len());
-            debug_assert!(valid_up_to + written <= dst.len());
-            unsafe {
-                if dst.fallible_set_length((valid_up_to + written) as u32)
-                       .is_err() {
-                    return NS_ERROR_OUT_OF_MEMORY;
-                }
-            }
+            debug_assert!(valid_up_to + written <= handle.as_mut_slice().len());
+            let _ = handle.finish(valid_up_to + written, true);
             NS_OK
         }
         DecoderResult::Malformed(_, _) => {
-            dst.truncate();
+            // let handle's drop() run
             NS_ERROR_UDEC_ILLEGALINPUT
         }
         DecoderResult::OutputFull => unreachable!(),
@@ -492,12 +447,14 @@ pub fn encode_from_nscstring(encoding: &'static Encoding,
     };
 
     let mut encoder = output_encoding.new_encoder();
-    try_dst_set_len!(checked_add(valid_up_to,
-                    encoder.max_buffer_length_from_utf8_if_no_unmappables(trail.len())), dst, (NS_ERROR_OUT_OF_MEMORY, output_encoding));
+    let mut handle = try_start_bulk_write!(checked_add(valid_up_to,
+                                                       encoder.max_buffer_length_from_utf8_if_no_unmappables(trail.len())),
+                                           dst,
+                                           (NS_ERROR_OUT_OF_MEMORY, output_encoding));
 
     if valid_up_to != 0 {
         // to_mut() shouldn't fail right after setting length.
-        &mut (dst.to_mut())[..valid_up_to].copy_from_slice(&bytes[..valid_up_to]);
+        &mut (handle.as_mut_slice())[..valid_up_to].copy_from_slice(&bytes[..valid_up_to]);
     }
 
     // `total_read` tracks `trail` only but `total_written` tracks the overall situation!
@@ -509,7 +466,7 @@ pub fn encode_from_nscstring(encoding: &'static Encoding,
     loop {
         let (result, read, written, had_errors) = encoder
             .encode_from_utf8(&trail[total_read..],
-                              &mut (dst.to_mut())[total_written..],
+                              &mut (handle.as_mut_slice())[total_written..],
                               true);
         total_read += read;
         total_written += written;
@@ -517,12 +474,8 @@ pub fn encode_from_nscstring(encoding: &'static Encoding,
         match result {
             CoderResult::InputEmpty => {
                 debug_assert_eq!(valid_up_to + total_read, src.len());
-                debug_assert!(total_written <= dst.len());
-                unsafe {
-                    if dst.fallible_set_length(total_written as u32).is_err() {
-                        return (NS_ERROR_OUT_OF_MEMORY, output_encoding);
-                    }
-                }
+                debug_assert!(total_written <= handle.as_mut_slice().len());
+                let _ = handle.finish(total_written, true);
                 if total_had_errors {
                     return (NS_OK_HAD_REPLACEMENTS, output_encoding);
                 }
@@ -534,21 +487,8 @@ pub fn encode_from_nscstring(encoding: &'static Encoding,
                                 encoder
                                     .max_buffer_length_from_utf8_if_no_unmappables(trail.len() -
                                                                                    total_read)) {
-                    // Let's round the allocation up in order to avoid repeated
-                    // allocations. Using power-of-two as the approximation of
-                    // available jemalloc buckets, since linking with
-                    // malloc_good_size is messy.
-                    if let Some(with_bookkeeping) = NS_CSTRING_OVERHEAD.checked_add(needed) {
-                        let rounded = with_bookkeeping.next_power_of_two();
-                        let unclowned = rounded - NS_CSTRING_OVERHEAD;
-                        // XPCOM strings use uint32_t for length.
-                        if unclowned <= ::std::u32::MAX as usize {
-                            unsafe {
-                                if dst.fallible_set_length(unclowned as u32).is_ok() {
-                                    continue;
-                                }
-                            }
-                        }
+                    if unsafe { handle.restart_bulk_write(needed, total_written, false).is_ok() } {
+                        continue;
                     }
                 }
                 return (NS_ERROR_OUT_OF_MEMORY, output_encoding);
@@ -563,24 +503,6 @@ fn checked_add(num: usize, opt: Option<usize>) -> Option<usize> {
         n.checked_add(num)
     } else {
         None
-    }
-}
-
-#[inline(always)]
-fn checked_next_power_of_two(opt: Option<usize>) -> Option<usize> {
-    opt.map(|n| n.next_power_of_two())
-}
-
-#[inline(always)]
-fn checked_min(one: Option<usize>, other: Option<usize>) -> Option<usize> {
-    if let Some(a) = one {
-        if let Some(b) = other {
-            Some(::std::cmp::min(a, b))
-        } else {
-            Some(a)
-        }
-    } else {
-        other
     }
 }
 

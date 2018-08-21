@@ -430,7 +430,7 @@ NS_IMETHODIMP nsExtProtocolChannel::SetClassifierMatchedInfo(const nsACString& a
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::NotifyTrackingResource()
+NS_IMETHODIMP nsExtProtocolChannel::NotifyTrackingResource(bool aIsThirdParty)
 {
   // nothing to do
   return NS_OK;

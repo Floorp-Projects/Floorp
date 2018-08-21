@@ -19,12 +19,12 @@ ChromeUtils.import("resource://testing-common/httpd.js");
 // Below where we need to take different actions based on the process type we're
 // in, we use runtime.processType to take the correct actions.
 
-const runtime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+const runtime = Services.appinfo;
 if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT) {
   do_get_profile();
 }
 
-const topWindowURI = NetUtil.newURI("http://www.example.com/");
+const defaultTopWindowURI = NetUtil.newURI("http://www.example.com/");
 
 function listener(tracking, priority, throttleable, nextTest) {
   this._tracking = tracking;
@@ -35,21 +35,19 @@ function listener(tracking, priority, throttleable, nextTest) {
 listener.prototype = {
   onStartRequest: function(request, context) {
     Assert.equal(request.QueryInterface(Ci.nsIHttpChannel).isTrackingResource,
-                 this._tracking);
+                 this._tracking, "tracking flag");
     Assert.equal(request.QueryInterface(Ci.nsISupportsPriority).priority,
-                 this._priority);
+                 this._priority, "channel priority");
     if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT && this._tracking) {
       Assert.equal(!!(request.QueryInterface(Ci.nsIClassOfService).classFlags &
                        Ci.nsIClassOfService.Throttleable),
-                   this._throttleable);
+                   this._throttleable, "throttleable flag");
     }
     request.cancel(Cr.NS_ERROR_ABORT);
     this._nextTest();
   },
-  onDataAvailable: function(request, context, stream, offset, count) {
-  },
-  onStopRequest: function(request, context, status) {
-  }
+  onDataAvailable: (request, context, stream, offset, count) => {},
+  onStopRequest: (request, context, status) => {},
 };
 
 var httpServer;
@@ -92,20 +90,25 @@ function doPriorityTest() {
   }
 
   currentTest = testPriorityMap.shift();
-  var channel = makeChannel(currentTest.path, currentTest.loadingPrincipal);
+
+  // Let's be explicit about what we're testing!
+  Assert.ok("loadingPrincipal" in currentTest, "check for incomplete test case");
+  Assert.ok("topWindowURI" in currentTest, "check for incomplete test case");
+
+  var channel = makeChannel(currentTest.path, currentTest.loadingPrincipal, currentTest.topWindowURI);
   channel.asyncOpen2(new listener(currentTest.expectedTracking,
                                   currentTest.expectedPriority,
                                   currentTest.expectedThrottleable,
                                   doPriorityTest));
 }
 
-function makeChannel(path, loadingPrincipal) {
+function makeChannel(path, loadingPrincipal, topWindowURI) {
   var chan;
 
   if (loadingPrincipal) {
     chan = NetUtil.newChannel({
       uri: path,
-      loadingPrincipal: loadingPrincipal,
+      loadingPrincipal,
       securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
       contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
     });
@@ -118,11 +121,13 @@ function makeChannel(path, loadingPrincipal) {
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
   chan.loadFlags |= Ci.nsIChannel.LOAD_CLASSIFY_URI;
-  chan.QueryInterface(Ci.nsIHttpChannelInternal).setTopWindowURIIfUnknown(topWindowURI);
+  if (topWindowURI) {
+    chan.QueryInterface(Ci.nsIHttpChannelInternal).setTopWindowURIIfUnknown(topWindowURI);
+  }
   return chan;
 }
 
-var tests =[
+var tests = [
   // Create the HTTP server.
   setup_test,
 
@@ -137,8 +142,9 @@ var tests =[
     }
   },
 
-  // With the pref off, the priority of channel should be normal.
-  function setupNormalPriority() {
+  // Annotations OFF, normal loading principal, topWinURI of example.com
+  // => trackers should not be de-prioritized
+  function setupAnnotationsOff() {
     if (skipNormalPriority) {
       runTests();
       return;
@@ -147,30 +153,39 @@ var tests =[
       Services.prefs.setBoolPref("privacy.trackingprotection.annotate_channels", false);
       Services.prefs.setBoolPref("privacy.trackingprotection.lower_network_priority", false);
     }
+    var principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(normalOrigin);
     testPriorityMap = [
       {
         path: normalOrigin + "/innocent.css",
+        loadingPrincipal: principal,
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: false,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: false,
+        expectedThrottleable: false, // ignored since tracking==false
       },
       {
         path: normalOrigin + "/innocent.js",
+        loadingPrincipal: principal,
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: false,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: false,
+        expectedThrottleable: false, // ignored since tracking==false
       },
       {
         path: trackingOrigin + "/evil.css",
+        loadingPrincipal: principal,
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: false,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: false,
+        expectedThrottleable: false, // ignored since tracking==false
       },
       {
         path: trackingOrigin + "/evil.js",
+        loadingPrincipal: principal,
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: false,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: false,
+        expectedThrottleable: false, // ignored since tracking==false
       },
     ];
     // We add the doPriorityTest test here so that it only gets injected in the
@@ -179,8 +194,9 @@ var tests =[
     runTests();
   },
 
-  // With the pref on, the priority of channel should be lowest.
-  function setupLowestPriority() {
+  // Annotations ON, normal loading principal, topWinURI of example.com
+  // => trackers should be de-prioritized
+  function setupAnnotationsOn() {
     if (skipLowestPriority) {
       runTests();
       return;
@@ -194,20 +210,23 @@ var tests =[
       {
         path: normalOrigin + "/innocent.css",
         loadingPrincipal: principal,
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: false,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: true,
+        expectedThrottleable: false, // ignored since tracking==false
       },
       {
         path: normalOrigin + "/innocent.js",
         loadingPrincipal: principal,
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: false,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: true,
+        expectedThrottleable: false, // ignored since tracking==false
       },
       {
         path: trackingOrigin + "/evil.css",
         loadingPrincipal: principal,
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: true,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
         expectedThrottleable: true,
@@ -215,6 +234,7 @@ var tests =[
       {
         path: trackingOrigin + "/evil.js",
         loadingPrincipal: principal,
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: true,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
         expectedThrottleable: true,
@@ -226,9 +246,9 @@ var tests =[
     runTests();
   },
 
-  // With the pref on, but not top-level requests, the priority of channel
-  // should be normal.
-  function setupTopLevelNormalPriority() {
+  // Annotations ON, system loading principal, topWinURI of example.com
+  // => trackers should be de-prioritized
+  function setupAnnotationsOnSystemPrincipal() {
     if (skipLowestPriority) {
       runTests();
       return;
@@ -240,27 +260,35 @@ var tests =[
     testPriorityMap = [
       {
         path: normalOrigin + "/innocent.css",
+        loadingPrincipal: null, // system principal
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: false,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: false,
+        expectedThrottleable: false, // ignored since tracking==false
       },
       {
         path: normalOrigin + "/innocent.js",
+        loadingPrincipal: null, // system principal
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: false,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: false,
+        expectedThrottleable: false, // ignored since tracking==false
       },
       {
         path: trackingOrigin + "/evil.css",
+        loadingPrincipal: null, // system principal
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: true,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
+        expectedThrottleable: true,
       },
       {
         path: trackingOrigin + "/evil.js",
+        loadingPrincipal: null, // system principal
+        topWindowURI: defaultTopWindowURI,
         expectedTracking: true,
-        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL,
-        expectedThrottleable: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST,
+        expectedThrottleable: true,
       },
     ];
     // We add the doPriorityTest test here so that it only gets injected in the
@@ -278,8 +306,7 @@ var tests =[
   }
 ];
 
-function runTests()
-{
+function runTests() {
   if (!tests.length) {
     do_test_finished();
     return;

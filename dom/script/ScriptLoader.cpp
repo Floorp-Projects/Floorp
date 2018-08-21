@@ -3162,7 +3162,7 @@ ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
       aRequest->mSourceMapURL = NS_ConvertUTF8toUTF16(sourceMapURL);
     }
 
-    if (httpChannel->GetIsTrackingResource()) {
+    if (httpChannel->GetIsThirdPartyTrackingResource()) {
       aRequest->SetIsTracking();
     }
   }
