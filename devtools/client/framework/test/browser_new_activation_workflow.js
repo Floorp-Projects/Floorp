@@ -8,8 +8,8 @@
 var toolbox, target;
 
 function test() {
-  addTab("about:blank").then(function(aTab) {
-    target = TargetFactory.forTab(gBrowser.selectedTab);
+  addTab("about:blank").then(async function(aTab) {
+    target = await TargetFactory.forTab(gBrowser.selectedTab);
     loadWebConsole(aTab).then(function() {
       console.log("loaded");
     });
@@ -45,9 +45,9 @@ function selectAndCheckById(id) {
 }
 
 function testToggle() {
-  toolbox.once("destroyed", () => {
+  toolbox.once("destroyed", async () => {
     // Cannot reuse a target after it's destroyed.
-    target = TargetFactory.forTab(gBrowser.selectedTab);
+    target = await TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.showToolbox(target, "styleeditor").then(function(aToolbox) {
       toolbox = aToolbox;
       is(toolbox.currentToolId, "styleeditor", "The style editor is selected");

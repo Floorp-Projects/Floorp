@@ -56,7 +56,7 @@ const tabs = [{
 add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const currentTab = gBrowser.selectedTab;
-  const target = TargetFactory.forTab(currentTab);
+  const target = await TargetFactory.forTab(currentTab);
 
   // Execute XHR and expand it after all network
   // update events are received. Consequently,

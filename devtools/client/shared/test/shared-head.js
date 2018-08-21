@@ -408,7 +408,7 @@ var openToolboxForTab = async function(tab, toolId, hostType) {
   info("Opening the toolbox");
 
   let toolbox;
-  const target = TargetFactory.forTab(tab);
+  const target = await TargetFactory.forTab(tab);
   await target.makeRemote();
 
   // Check if the toolbox is already loaded.
@@ -451,7 +451,7 @@ var openNewTabAndToolbox = async function(url, toolId, hostType) {
  * closed.
  */
 var closeTabAndToolbox = async function(tab = gBrowser.selectedTab) {
-  const target = TargetFactory.forTab(tab);
+  const target = await TargetFactory.forTab(tab);
   if (target) {
     await gDevTools.closeToolbox(target);
   }
@@ -618,7 +618,7 @@ function lookupPath(obj, path) {
 }
 
 var closeToolbox = async function() {
-  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
   await gDevTools.closeToolbox(target);
 };
 

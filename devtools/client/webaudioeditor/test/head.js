@@ -64,7 +64,7 @@ function initBackend(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = TargetFactory.forTab(tab);
+    const target = await TargetFactory.forTab(tab);
 
     await target.makeRemote();
 
@@ -83,7 +83,7 @@ function initWebAudioEditor(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = TargetFactory.forTab(tab);
+    const target = await TargetFactory.forTab(tab);
 
     await target.makeRemote();
 
