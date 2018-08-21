@@ -1665,7 +1665,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
     bool ok = finishCallback(parseTask.get().get());
 
     for (auto& script : parseTask->scripts)
-        releaseAssertSameCompartment(cx, script);
+        cx->releaseCheck(script);
 
     if (!parseTask->finish(cx) || !ok)
         return false;
