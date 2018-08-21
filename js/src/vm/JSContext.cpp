@@ -1354,7 +1354,7 @@ JSContext::getPendingException(MutableHandleValue rval)
     clearPendingException();
     if (!compartment()->wrap(this, rval))
         return false;
-    assertSameCompartment(this, rval);
+    this->check(rval);
     setPendingException(rval);
     overRecursed_ = wasOverRecursed;
     return true;

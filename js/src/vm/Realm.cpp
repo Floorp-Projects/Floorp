@@ -642,12 +642,12 @@ void
 Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj)
 {
     MOZ_ASSERT(obj->maybeCCWRealm() == this);
-    assertSameCompartment(cx, compartment(), obj);
+    cx->check(compartment(), obj);
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
     if (JSObject* metadata = allocationMetadataBuilder_->build(cx, obj, oomUnsafe)) {
         MOZ_ASSERT(metadata->maybeCCWRealm() == obj->maybeCCWRealm());
-        assertSameCompartment(cx, metadata);
+        cx->check(metadata);
 
         if (!objects_.objectMetadataTable) {
             auto table = cx->make_unique<ObjectWeakMap>(cx);

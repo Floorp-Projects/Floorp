@@ -470,7 +470,7 @@ Proxy::enumerate(JSContext* cx, HandleObject proxy)
             return nullptr;
         if (!proto)
             return EnumeratedIdVectorToIterator(cx, proxy, props);
-        assertSameCompartment(cx, proxy, proto);
+        cx->check(proxy, proto);
 
         AutoIdVector protoProps(cx);
         if (!GetPropertyKeys(cx, proto, 0, &protoProps))

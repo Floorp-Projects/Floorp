@@ -2753,7 +2753,7 @@ JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
                         uint32_t nconsts, uint32_t nobjects, uint32_t ntrynotes,
                         uint32_t nscopenotes, uint32_t nyieldoffsets, uint32_t nTypeSets)
 {
-    assertSameCompartment(cx, script);
+    cx->check(script);
 
     size_t size = ScriptDataSize(nscopes, nconsts, nobjects, ntrynotes,
                                  nscopenotes, nyieldoffsets);
@@ -3824,7 +3824,7 @@ JSScript::setNewStepMode(FreeOp* fop, uint32_t newValue)
 bool
 JSScript::incrementStepModeCount(JSContext* cx)
 {
-    assertSameCompartment(cx, this);
+    cx->check(this);
     MOZ_ASSERT(cx->realm()->isDebuggee());
 
     AutoRealm ar(cx, this);
@@ -4282,7 +4282,7 @@ LazyScript::CreateRaw(JSContext* cx, HandleFunction fun,
                       uint64_t packedFields, uint32_t sourceStart, uint32_t sourceEnd,
                       uint32_t toStringStart, uint32_t lineno, uint32_t column)
 {
-    assertSameCompartment(cx, fun);
+    cx->check(fun);
 
     MOZ_ASSERT(sourceObject);
     union {

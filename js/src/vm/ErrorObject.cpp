@@ -46,7 +46,7 @@ js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj, JSExnType type,
                       HandleString message)
 {
     AssertObjectIsSavedFrameOrWrapper(cx, stack);
-    assertSameCompartment(cx, obj, stack);
+    cx->check(obj, stack);
 
     // Null out early in case of error, for exn_finalize's sake.
     obj->initReservedSlot(ERROR_REPORT_SLOT, PrivateValue(nullptr));
