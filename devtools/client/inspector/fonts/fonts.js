@@ -126,23 +126,6 @@ class FontInspector {
   }
 
   /**
-   * Given all fonts on the page, and given the fonts used in given node, return all fonts
-   * not from the page not used in this node.
-   *
-   * @param  {Array} allFonts
-   *         All fonts used on the entire page
-   * @param  {Array} nodeFonts
-   *         Fonts used only in one of the nodes
-   * @return {Array}
-   *         All fonts, except the ones used in the current node
-   */
-  excludeNodeFonts(allFonts, nodeFonts) {
-    return allFonts.filter(font => {
-      return !nodeFonts.some(nodeFont => nodeFont.name === font.name);
-    });
-  }
-
-  /**
    * Convert a value for font-size between two CSS unit types.
    * Conversion is done via pixels. If neither of the two given unit types is "px",
    * recursively get the value in pixels, then convert that result to the desired unit.
@@ -451,7 +434,7 @@ class FontInspector {
     return fonts;
   }
 
-  async getFontsNotInNode(nodeFonts, options) {
+  async getAllFonts(options) {
     // In case we've been destroyed in the meantime
     if (!this.document) {
       return [];
@@ -462,7 +445,7 @@ class FontInspector {
       allFonts = [];
     }
 
-    return this.excludeNodeFonts(allFonts, nodeFonts);
+    return allFonts;
   }
 
   /**
@@ -1005,11 +988,12 @@ class FontInspector {
       return;
     }
 
+    let allFonts = [];
     let fonts = [];
     let otherFonts = [];
 
     if (!this.isSelectedNodeValid()) {
-      this.store.dispatch(updateFonts(fonts, otherFonts));
+      this.store.dispatch(updateFonts(fonts, otherFonts, allFonts));
       return;
     }
 
@@ -1029,17 +1013,21 @@ class FontInspector {
 
     const node = this.inspector.selection.nodeFront;
     fonts = await this.getFontsForNode(node, options);
-    otherFonts = await this.getFontsNotInNode(fonts, options);
+    allFonts = await this.getAllFonts(options);
+    // Get the subset of fonts from the page which are not used on the selected node.
+    otherFonts = allFonts.filter(font => {
+      return !fonts.some(nodeFont => nodeFont.name === font.name);
+    });
 
     if (!fonts.length && !otherFonts.length) {
       // No fonts to display. Clear the previously shown fonts.
       if (this.store) {
-        this.store.dispatch(updateFonts(fonts, otherFonts));
+        this.store.dispatch(updateFonts(fonts, otherFonts, allFonts));
       }
       return;
     }
 
-    for (const font of [...fonts, ...otherFonts]) {
+    for (const font of [...allFonts]) {
       font.previewUrl = await font.preview.data.string();
     }
 
@@ -1048,7 +1036,7 @@ class FontInspector {
       return;
     }
 
-    this.store.dispatch(updateFonts(fonts, otherFonts));
+    this.store.dispatch(updateFonts(fonts, otherFonts, allFonts));
 
     this.inspector.emit("fontinspector-updated");
   }
