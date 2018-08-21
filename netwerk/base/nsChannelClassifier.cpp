@@ -37,6 +37,7 @@
 #include "nsIUrlClassifierDBService.h"
 #include "nsIURLFormatter.h"
 
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
@@ -448,8 +449,8 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
         return NS_OK;
     }
 
-    nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIIOService> ios = services::GetIOService();
+    NS_ENSURE_TRUE(ios, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIURI> topWinURI;
     rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
@@ -464,54 +465,21 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    // Take the host/port portion so we can allowlist by site. Also ignore the
-    // scheme, since users who put sites on the allowlist probably don't expect
-    // allowlisting to depend on scheme.
-    nsCOMPtr<nsIURL> url = do_QueryInterface(topWinURI, &rv);
+    rv = AntiTrackingCommon::IsOnContentBlockingAllowList(topWinURI, mIsAllowListed);
     if (NS_FAILED(rv)) {
       return rv; // normal for some loads, no need to print a warning
     }
 
-    nsCString escaped(NS_LITERAL_CSTRING("https://"));
-    nsAutoCString temp;
-    rv = url->GetHostPort(temp);
-    NS_ENSURE_SUCCESS(rv, rv);
-    escaped.Append(temp);
-
-    // Stuff the whole thing back into a URI for the permission manager.
-    rv = ios->NewURI(escaped, nullptr, nullptr, getter_AddRefs(topWinURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIPermissionManager> permMgr =
-        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Check both the normal mode and private browsing mode user override permissions.
-    const char* types[] = {
-      "trackingprotection",
-      "trackingprotection-pb"
-    };
-
-    for (size_t i = 0; i < ArrayLength(types); ++i) {
-      uint32_t permissions = nsIPermissionManager::UNKNOWN_ACTION;
-      rv = permMgr->TestPermission(topWinURI, types[i], &permissions);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (permissions == nsIPermissionManager::ALLOW_ACTION) {
-        if (LOG_ENABLED()) {
-          nsCString chanSpec = chanURI->GetSpecOrDefault();
-          chanSpec.Truncate(std::min(chanSpec.Length(), sMaxSpecLength));
-          LOG(("nsChannelClassifier[%p]: User override on channel[%p] (%s) for %s (%s)",
-               this, aChannel, chanSpec.get(), escaped.get(), types[i]));
-        }
-        mIsAllowListed = true;
-        *result = false;
-        // Stop checking the next permisson type if we decided to override.
-        break;
-      } else if (i == ArrayLength(types) - 1) {
-        // Do this on the last iteration.
-        *result = true;
+    if (mIsAllowListed) {
+      *result = false;
+      if (LOG_ENABLED()) {
+        nsCString chanSpec = chanURI->GetSpecOrDefault();
+        chanSpec.Truncate(std::min(chanSpec.Length(), sMaxSpecLength));
+        LOG(("nsChannelClassifier[%p]: User override on channel[%p] (%s)",
+             this, aChannel, chanSpec.get()));
       }
+    } else {
+      *result = true;
     }
 
     // Tracking protection will be enabled so return without updating
