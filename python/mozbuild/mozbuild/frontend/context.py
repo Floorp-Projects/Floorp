@@ -411,12 +411,6 @@ class LinkFlags(BaseCompileFlags):
                 not self._context.config.substs.get('GNU_CC'),
                 not self._context.config.substs.get('MOZ_DEBUG')]):
 
-            # MOZ_DEBUG_SYMBOLS generates debug symbols in separate PDB files.
-            # Used for generating an optimized build with debugging symbols.
-            # Used in the Windows nightlies to generate symbols for crash reporting.
-            if self._context.config.substs.get('MOZ_DEBUG_SYMBOLS'):
-                flags.append('-DEBUG')
-
             if self._context.config.substs.get('MOZ_OPTIMIZE'):
                 flags.append('-OPT:REF,ICF')
 
