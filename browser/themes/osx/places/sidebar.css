@@ -4,7 +4,7 @@
 
 /* Sidebars */
 
-%include ../../shared/places/places.inc.css
+%include ../../shared/places/sidebar.inc.css
 
 .sidebar-placesTree {
   margin: 0;
@@ -66,7 +66,3 @@
 #viewButton:focus {
   box-shadow: var(--focus-ring-box-shadow);
 }
-
-/* Trees */
-
-%include ../../shared/places/tree-icons.inc.css

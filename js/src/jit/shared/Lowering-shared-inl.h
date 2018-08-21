@@ -828,7 +828,6 @@ LIRGeneratorShared::useBoxOrTyped(MDefinition* mir)
     if (mir->type() == MIRType::Value)
         return useBox(mir);
 
-
 #if defined(JS_NUNBOX32)
     return LBoxAllocation(useRegister(mir), LAllocation());
 #else

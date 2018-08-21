@@ -140,7 +140,7 @@ class TestQuitRestart(MarionetteTestCase):
         self.marionette.quit(clean=True)
 
         self.assertEqual(self.marionette.session, None)
-        with self.assertRaisesRegexp(errors.MarionetteException, "Please start a session"):
+        with self.assertRaisesRegexp(errors.InvalidSessionIdException, "Please start a session"):
             self.marionette.get_url()
 
         self.marionette.start_session()
@@ -153,7 +153,7 @@ class TestQuitRestart(MarionetteTestCase):
         self.marionette.quit()
 
         self.assertEqual(self.marionette.session, None)
-        with self.assertRaisesRegexp(errors.MarionetteException, "Please start a session"):
+        with self.assertRaisesRegexp(errors.InvalidSessionIdException, "Please start a session"):
             self.marionette.get_url()
 
         self.marionette.start_session()
@@ -245,7 +245,7 @@ class TestQuitRestart(MarionetteTestCase):
         self.marionette.quit(in_app=True)
 
         self.assertEqual(self.marionette.session, None)
-        with self.assertRaisesRegexp(errors.MarionetteException, "Please start a session"):
+        with self.assertRaisesRegexp(errors.InvalidSessionIdException, "Please start a session"):
             self.marionette.get_url()
 
         self.marionette.start_session()
@@ -257,7 +257,7 @@ class TestQuitRestart(MarionetteTestCase):
     def test_in_app_quit_with_callback(self):
         self.marionette.quit(in_app=True, callback=self.shutdown)
         self.assertEqual(self.marionette.session, None)
-        with self.assertRaisesRegexp(errors.MarionetteException, "Please start a session"):
+        with self.assertRaisesRegexp(errors.InvalidSessionIdException, "Please start a session"):
             self.marionette.get_url()
 
         self.marionette.start_session()

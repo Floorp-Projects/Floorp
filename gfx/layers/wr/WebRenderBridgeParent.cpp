@@ -773,8 +773,15 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
 
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
 
+  // If id namespaces do not match, it means the command is obsolete, probably
+  // because the tab just moved to a new window.
+  // In that case do not send the commands to webrender.
+  bool validTransaction = aIdNamespace == mIdNamespace;
   wr::TransactionBuilder txn;
-  wr::AutoTransactionSender sender(mApi, &txn);
+  Maybe<wr::AutoTransactionSender> sender;
+  if (validTransaction) {
+    sender.emplace(mApi, &txn);
+  }
 
   ProcessWebRenderParentCommands(aCommands, txn);
 
@@ -795,10 +802,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
 
   wr::Vec<uint8_t> dlData(std::move(dl));
 
-  // If id namespaces do not match, it means the command is obsolete, probably
-  // because the tab just moved to a new window.
-  // In that case do not send the commands to webrender.
-  if (mIdNamespace == aIdNamespace) {
+  if (validTransaction) {
     if (IsRootWebRenderBridgeParent()) {
       LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
       LayoutDeviceIntRect docRect(LayoutDeviceIntPoint(), widgetSize);
@@ -817,7 +821,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
 
   HoldPendingTransactionId(wrEpoch, aTransactionId, aRefreshStartTime, aTxnStartTime, aFwdTime);
 
-  if (mIdNamespace != aIdNamespace) {
+  if (!validTransaction) {
     // Pretend we composited since someone is wating for this event,
     // though DisplayList was not pushed to webrender.
     if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {

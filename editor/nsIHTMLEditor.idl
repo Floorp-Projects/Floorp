@@ -399,9 +399,14 @@ interface nsIHTMLEditor : nsISupports
   attribute boolean isCSSEnabled;
 
   /**
-   * Checks if the anonymous nodes created by the HTML editor have to be
-   * refreshed or hidden depending on a possible new state of the selection
-   * @param aSelection [IN] a selection
+   * checkSelectionStateForAnonymousButtons() may refresh editing UI such as
+   * resizers, inline-table-editing UI, absolute positioning UI for current
+   * Selection and focus state.  When this method shows or hides UI, the
+   * editor (and/or its document/window) could be broken by mutation observers.
+   * FYI: Current user in script is only BlueGriffon.
+   *
+   * @param aSelection  Selection instance for the normal selection of the
+   *                    document.
    */
   void checkSelectionStateForAnonymousButtons(in Selection aSelection);
 

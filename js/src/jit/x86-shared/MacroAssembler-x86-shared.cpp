@@ -335,7 +335,7 @@ MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput, Register remO
     MOZ_ASSERT(lhsOutput != remOutput);
 
     // Choose a register that is not edx, or eax to hold the rhs;
-    // ebx is chosen arbitrarily, and will be preserved if necessary. 
+    // ebx is chosen arbitrarily, and will be preserved if necessary.
     Register regForRhs = (rhs == eax || rhs == edx) ? ebx : rhs;
 
     // Add registers we will be clobbering as live, but
