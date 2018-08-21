@@ -11,6 +11,7 @@ DIRS += [
 DevToolsModules(
     'commands.js',
     'content-process-forward.js',
+    'eval-with-debugger.js',
     'message-manager-mock.js',
     'screenshot.js',
     'utils.js',
