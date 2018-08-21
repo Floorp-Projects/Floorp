@@ -15,7 +15,7 @@ add_task(async function() {
   await pushPref("devtools.testing", false);
 
   let tab = await addTab(URL_ROOT + "doc_viewsource.html");
-  let target = TargetFactory.forTab(tab);
+  let target = await TargetFactory.forTab(tab);
   let toolbox = await gDevTools.showToolbox(target, "styleeditor");
   let panel = toolbox.getPanel("styleeditor");
 
