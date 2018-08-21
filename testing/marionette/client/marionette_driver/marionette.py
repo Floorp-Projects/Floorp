@@ -740,9 +740,8 @@ class Marionette(object):
         :returns: Full response from the server, or if `key` is given,
             the value of said key in the response.
         """
-
         if not self.session_id and name != "WebDriver:NewSession":
-            raise errors.MarionetteException("Please start a session")
+            raise errors.InvalidSessionIdException("Please start a session")
 
         try:
             msg = self.client.request(name, params)
@@ -1277,7 +1276,10 @@ class Marionette(object):
         """
         try:
             if send_request:
-                self._send_message("WebDriver:DeleteSession")
+                try:
+                    self._send_message("WebDriver:DeleteSession")
+                except errors.InvalidSessionIdException:
+                    pass
         finally:
             self.process_id = None
             self.profile = None
