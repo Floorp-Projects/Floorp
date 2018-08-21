@@ -1247,6 +1247,41 @@ void LineInfo::ReadLines() {
   after_header_ = lengthstart + header_.total_length;
 }
 
+RangeListReader::RangeListReader(const uint8_t *buffer, uint64 size,
+                                 ByteReader *reader, RangeListHandler *handler)
+    : buffer_(buffer), size_(size), reader_(reader), handler_(handler) { }
+
+bool RangeListReader::ReadRangeList(uint64 offset) {
+  const uint64 max_address =
+    (reader_->AddressSize() == 4) ? 0xffffffffUL
+                                  : 0xffffffffffffffffULL;
+  const uint64 entry_size = reader_->AddressSize() * 2;
+  bool list_end = false;
+
+  do {
+    if (offset > size_ - entry_size) {
+      return false; // Invalid range detected
+    }
+
+    uint64 start_address = reader_->ReadAddress(buffer_ + offset);
+    uint64 end_address =
+      reader_->ReadAddress(buffer_ + offset + reader_->AddressSize());
+
+    if (start_address == max_address) { // Base address selection
+      handler_->SetBaseAddress(end_address);
+    } else if (start_address == 0 && end_address == 0) { // End-of-list
+      handler_->Finish();
+      list_end = true;
+    } else { // Add a range entry
+      handler_->AddRange(start_address, end_address);
+    }
+
+    offset += entry_size;
+  } while (!list_end);
+
+  return true;
+}
+
 // A DWARF rule for recovering the address or value of a register, or
 // computing the canonical frame address. There is one subclass of this for
 // each '*Rule' member function in CallFrameInfo::Handler.

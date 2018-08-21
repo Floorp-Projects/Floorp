@@ -42,9 +42,9 @@
 #include "util/hash/hash.h"
 
 template <class T, class U, class H = __gnu_cxx::hash<T> >
-struct unordered_map : public hash_map<T, U, H> {};
+struct unordered_map : public __gnu_cxx::hash_map<T, U, H> {};
 template <class T, class H = __gnu_cxx::hash<T> >
-struct unordered_set : public hash_set<T, H> {};
+struct unordered_set : public __gnu_cxx::hash_set<T, H> {};
 
 #elif defined(_LIBCPP_VERSION)  // c++11
 #include <unordered_map>

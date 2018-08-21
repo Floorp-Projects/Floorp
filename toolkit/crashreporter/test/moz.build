@@ -10,6 +10,7 @@ BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
 
 UNIFIED_SOURCES += [
     '../google-breakpad/src/processor/basic_code_modules.cc',
+    '../google-breakpad/src/processor/convert_old_arm64_context.cc',
     '../google-breakpad/src/processor/dump_context.cc',
     '../google-breakpad/src/processor/dump_object.cc',
     '../google-breakpad/src/processor/logging.cc',

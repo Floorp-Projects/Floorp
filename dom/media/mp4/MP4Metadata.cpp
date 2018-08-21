@@ -255,6 +255,7 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     case MP4PARSE_CODEC_ALAC: codec_string = "alac"; break;
     case MP4PARSE_CODEC_AVC: codec_string = "h.264"; break;
     case MP4PARSE_CODEC_VP9: codec_string = "vp9"; break;
+    case MP4PARSE_CODEC_AV1: codec_string = "av1"; break;
     case MP4PARSE_CODEC_MP3: codec_string = "mp3"; break;
     case MP4PARSE_CODEC_MP4V: codec_string = "mp4v"; break;
     case MP4PARSE_CODEC_JPEG: codec_string = "jpeg"; break;

@@ -348,7 +348,10 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   if (mStyleSheet) {
     if (thisContent->IsInShadowTree()) {
       ShadowRoot* containingShadow = thisContent->GetContainingShadow();
-      containingShadow->RemoveSheet(mStyleSheet);
+      // Could be null only during unlink.
+      if (MOZ_LIKELY(containingShadow)) {
+        containingShadow->RemoveSheet(mStyleSheet);
+      }
     } else {
       doc->RemoveStyleSheet(mStyleSheet);
     }

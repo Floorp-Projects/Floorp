@@ -128,7 +128,8 @@ class CUFixtureBase {
         language_signed_(false),
         appender_(&lines_),
         reporter_("dwarf-filename", 0xcf8f9bb6443d29b5LL),
-        root_handler_(&file_context_, &line_reader_, &reporter_),
+        root_handler_(&file_context_, &line_reader_,
+                      /* ranges_reader */ nullptr, &reporter_),
         functions_filled_(false) {
     // By default, expect no warnings to be reported, and expect the
     // compilation unit's name to be provided. The test can override
@@ -597,7 +598,7 @@ void CUFixtureBase::TestFunction(int i, const string &name,
   Module::Function *function = functions_[i];
   EXPECT_EQ(name,    function->name);
   EXPECT_EQ(address, function->address);
-  EXPECT_EQ(size,    function->size);
+  EXPECT_EQ(size,    function->ranges[0].size);
   EXPECT_EQ(0U,      function->parameter_size);
 }
 
@@ -1515,7 +1516,7 @@ TEST_F(Specifications, InterCU) {
 
   // First CU.  Declares class_A.
   {
-    DwarfCUToModule root1_handler(&fc, &lr, &reporter_);
+    DwarfCUToModule root1_handler(&fc, &lr, nullptr, &reporter_);
     ASSERT_TRUE(root1_handler.StartCompilationUnit(0, 1, 2, 3, 3));
     ASSERT_TRUE(root1_handler.StartRootDIE(1,
                                            dwarf2reader::DW_TAG_compile_unit));
@@ -1528,7 +1529,7 @@ TEST_F(Specifications, InterCU) {
 
   // Second CU.  Defines class_A, declares member_func_B.
   {
-    DwarfCUToModule root2_handler(&fc, &lr, &reporter_);
+    DwarfCUToModule root2_handler(&fc, &lr, nullptr, &reporter_);
     ASSERT_TRUE(root2_handler.StartCompilationUnit(0, 1, 2, 3, 3));
     ASSERT_TRUE(root2_handler.StartRootDIE(1,
                                            dwarf2reader::DW_TAG_compile_unit));
@@ -1545,7 +1546,7 @@ TEST_F(Specifications, InterCU) {
 
   // Third CU.  Defines member_func_B.
   {
-    DwarfCUToModule root3_handler(&fc, &lr, &reporter_);
+    DwarfCUToModule root3_handler(&fc, &lr, nullptr, &reporter_);
     ASSERT_TRUE(root3_handler.StartCompilationUnit(0, 1, 2, 3, 3));
     ASSERT_TRUE(root3_handler.StartRootDIE(1,
                                            dwarf2reader::DW_TAG_compile_unit));
@@ -1574,7 +1575,7 @@ TEST_F(Specifications, UnhandledInterCU) {
 
   // First CU.  Declares class_A.
   {
-    DwarfCUToModule root1_handler(&fc, &lr, &reporter_);
+    DwarfCUToModule root1_handler(&fc, &lr, nullptr, &reporter_);
     ASSERT_TRUE(root1_handler.StartCompilationUnit(0, 1, 2, 3, 3));
     ASSERT_TRUE(root1_handler.StartRootDIE(1,
                                            dwarf2reader::DW_TAG_compile_unit));
@@ -1587,7 +1588,7 @@ TEST_F(Specifications, UnhandledInterCU) {
 
   // Second CU.  Defines class_A, declares member_func_B.
   {
-    DwarfCUToModule root2_handler(&fc, &lr, &reporter_);
+    DwarfCUToModule root2_handler(&fc, &lr, nullptr, &reporter_);
     ASSERT_TRUE(root2_handler.StartCompilationUnit(0, 1, 2, 3, 3));
     ASSERT_TRUE(root2_handler.StartRootDIE(1,
                                            dwarf2reader::DW_TAG_compile_unit));
@@ -1605,7 +1606,7 @@ TEST_F(Specifications, UnhandledInterCU) {
 
   // Third CU.  Defines member_func_B.
   {
-    DwarfCUToModule root3_handler(&fc, &lr, &reporter_);
+    DwarfCUToModule root3_handler(&fc, &lr, nullptr, &reporter_);
     ASSERT_TRUE(root3_handler.StartCompilationUnit(0, 1, 2, 3, 3));
     ASSERT_TRUE(root3_handler.StartRootDIE(1,
                                            dwarf2reader::DW_TAG_compile_unit));
@@ -1791,7 +1792,8 @@ struct Reporter: public Test {
         file("source file name") {
     reporter.SetCUName("compilation-unit-name");
 
-    function.size = 0x89808a5bdfa0a6a3ULL;
+    Module::Range range(0x19c45c30770c1eb0ULL, 0x89808a5bdfa0a6a3ULL);
+    function.ranges.push_back(range);
     function.parameter_size = 0x6a329f18683dcd51ULL;
 
     line.address = 0x3606ac6267aebeccULL;

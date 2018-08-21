@@ -38,6 +38,7 @@ if CONFIG['OS_ARCH'] != 'WINNT':
         'dwarf_cfi_to_module.cc',
         'dwarf_cu_to_module.cc',
         'dwarf_line_to_module.cc',
+        'dwarf_range_list_handler.cc',
         'language.cc',
         'md5.cc',
         'module.cc',

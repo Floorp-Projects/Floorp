@@ -535,7 +535,7 @@ bool MinidumpProcessor::GetCPUInfo(Minidump *dump, SystemInfo *info) {
       break;
     }
 
-    case MD_CPU_ARCHITECTURE_ARM64: {
+    case MD_CPU_ARCHITECTURE_ARM64_OLD: {
       info->cpu = "arm64";
       break;
     }
@@ -735,7 +735,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
               if (raw_system_info->processor_architecture ==
                   MD_CPU_ARCHITECTURE_ARM ||
                   raw_system_info->processor_architecture ==
-                  MD_CPU_ARCHITECTURE_ARM64) {
+                  MD_CPU_ARCHITECTURE_ARM64_OLD) {
                 switch (exception_flags) {
                   case MD_EXCEPTION_CODE_MAC_ARM_DA_ALIGN:
                     reason.append("EXC_ARM_DA_ALIGN");
@@ -789,7 +789,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           reason = "EXC_BAD_INSTRUCTION / ";
           switch (raw_system_info->processor_architecture) {
             case MD_CPU_ARCHITECTURE_ARM:
-            case MD_CPU_ARCHITECTURE_ARM64: {
+            case MD_CPU_ARCHITECTURE_ARM64_OLD: {
               switch (exception_flags) {
                 case MD_EXCEPTION_CODE_MAC_ARM_UNDEFINED:
                   reason.append("EXC_ARM_UNDEFINED");
@@ -972,7 +972,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           reason = "EXC_BREAKPOINT / ";
           switch (raw_system_info->processor_architecture) {
             case MD_CPU_ARCHITECTURE_ARM:
-            case MD_CPU_ARCHITECTURE_ARM64: {
+            case MD_CPU_ARCHITECTURE_ARM64_OLD: {
               switch (exception_flags) {
                 case MD_EXCEPTION_CODE_MAC_ARM_DA_ALIGN:
                   reason.append("EXC_ARM_DA_ALIGN");

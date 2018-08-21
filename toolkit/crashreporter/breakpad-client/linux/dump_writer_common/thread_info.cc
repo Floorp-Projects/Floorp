@@ -214,7 +214,7 @@ uintptr_t ThreadInfo::GetInstructionPointer() const {
 }
 
 void ThreadInfo::FillCPUContext(RawContextCPU* out) const {
-  out->context_flags = MD_CONTEXT_ARM64_FULL;
+  out->context_flags = MD_CONTEXT_ARM64_FULL_OLD;
 
   out->cpsr = static_cast<uint32_t>(regs.pstate);
   for (int i = 0; i < MD_CONTEXT_ARM64_REG_SP; ++i)
