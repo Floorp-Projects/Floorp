@@ -45,16 +45,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'PolicyChecks.h',
         'WinDllServices.h',
     ]
-    SOURCES += [
-        '../../other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp',
-    ]
     UNIFIED_SOURCES += [
         'nsNativeAppSupportWin.cpp',
         'WinDllServices.cpp',
     ]
     DEFINES['PROXY_PRINTING'] = 1
     LOCAL_INCLUDES += [
-        '../../other-licenses/nsis/Contrib/CityHash/cityhash',
         '../components/printingui',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
@@ -116,6 +112,7 @@ UNIFIED_SOURCES += [
 # they pull in OS X system headers.
 # nsEmbedFunctions.cpp cannot be built in unified mode because it pulls in X11 headers.
 SOURCES += [
+    '../../other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp',
     'nsAppRunner.cpp',
     'nsEmbedFunctions.cpp',
     'ProfileReset.cpp',
@@ -181,6 +178,7 @@ if CONFIG['MOZ_BUILD_APP'] == 'browser':
     DEFINES['MOZ_BUILD_APP_IS_BROWSER'] = True
 
 LOCAL_INCLUDES += [
+    '../../other-licenses/nsis/Contrib/CityHash/cityhash',
     '../components/find',
     '../components/printingui/ipc',
     '../components/windowwatcher',
