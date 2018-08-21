@@ -178,8 +178,6 @@ static const VMFunction DoWarmUpCounterFallbackOSRInfo =
 bool
 ICWarmUpCounter_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     // Push a stub frame so that we can perform a non-tail call.
     enterStubFrame(masm, R1.scratchReg());
 
@@ -346,8 +344,6 @@ const VMFunction DoTypeUpdateFallbackInfo =
 bool
 ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     // Just store false into R1.scratchReg() and return.
     masm.move32(Imm32(0), R1.scratchReg());
     EmitReturnFromIC(masm);
@@ -357,8 +353,6 @@ ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICTypeUpdate_PrimitiveSet::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label success;
     if ((flags_ & TypeToFlag(JSVAL_TYPE_INT32)) && !(flags_ & TypeToFlag(JSVAL_TYPE_DOUBLE)))
         masm.branchTestInt32(Assembler::Equal, R0, &success);
@@ -397,8 +391,6 @@ ICTypeUpdate_PrimitiveSet::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICTypeUpdate_SingleObject::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
@@ -419,8 +411,6 @@ ICTypeUpdate_SingleObject::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICTypeUpdate_ObjectGroup::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
@@ -496,7 +486,6 @@ static const VMFunction fun = FunctionInfo<pf>(DoToBoolFallback, "DoToBoolFallba
 bool
 ICToBool_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     // Restore the tail call register.
@@ -531,7 +520,6 @@ static const VMFunction DoToNumberFallbackInfo =
 bool
 ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     // Restore the tail call register.
@@ -745,7 +733,6 @@ static const VMFunction DoGetElemSuperFallbackInfo =
 bool
 ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     // Restore the tail call register.
@@ -933,7 +920,6 @@ static const VMFunction DoSetElemFallbackInfo =
 bool
 ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     EmitRestoreTailCallReg(masm);
@@ -1124,8 +1110,6 @@ static const VMFunction DoInFallbackInfo =
 bool
 ICIn_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     EmitRestoreTailCallReg(masm);
 
     // Sync for the decompiler.
@@ -1191,8 +1175,6 @@ static const VMFunction DoHasOwnFallbackInfo =
 bool
 ICHasOwn_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     EmitRestoreTailCallReg(masm);
 
     // Sync for the decompiler.
@@ -1280,7 +1262,6 @@ static const VMFunction DoGetNameFallbackInfo =
 bool
 ICGetName_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     EmitRestoreTailCallReg(masm);
@@ -1342,7 +1323,6 @@ static const VMFunction DoBindNameFallbackInfo =
 bool
 ICBindName_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     EmitRestoreTailCallReg(masm);
@@ -1415,8 +1395,6 @@ static const VMFunction DoGetIntrinsicFallbackInfo =
 bool
 ICGetIntrinsic_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     EmitRestoreTailCallReg(masm);
 
     masm.push(ICStubReg);
@@ -1669,12 +1647,10 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 void
 ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code)
 {
-    if (engine_ == Engine::Baseline) {
-        BailoutReturnStub kind = hasReceiver_ ? BailoutReturnStub::GetPropSuper
-                                              : BailoutReturnStub::GetProp;
-        void* address = code->raw() + bailoutReturnOffset_.offset();
-        cx->realm()->jitRealm()->initBailoutReturnAddr(address, getKey(), kind);
-    }
+    BailoutReturnStub kind = hasReceiver_ ? BailoutReturnStub::GetPropSuper
+                                            : BailoutReturnStub::GetProp;
+    void* address = code->raw() + bailoutReturnOffset_.offset();
+    cx->realm()->jitRealm()->initBailoutReturnAddr(address, getKey(), kind);
 }
 
 //
@@ -1847,7 +1823,6 @@ static const VMFunction DoSetPropFallbackInfo =
 bool
 ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     EmitRestoreTailCallReg(masm);
@@ -2942,8 +2917,6 @@ static const VMFunction DoSpreadCallFallbackInfo =
 bool
 ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     // Values are on the stack left-to-right. Calling convention wants them
@@ -3070,8 +3043,6 @@ static const VMFunction CreateThisInfoBaseline =
 bool
 ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
     bool canUseTailCallReg = regs.has(ICTailCallReg);
@@ -3338,8 +3309,6 @@ static const VMFunction CopyStringSplitArrayInfo =
 bool
 ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     // Stack Layout: [ ..., CalleeVal, ThisVal, strVal, sepVal, +ICStackValueOffset+ ]
     static const size_t SEP_DEPTH = 0;
     static const size_t STR_DEPTH = sizeof(Value);
@@ -3438,8 +3407,6 @@ ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCall_IsSuspendedGenerator::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     // The IsSuspendedGenerator intrinsic is only called in self-hosted code,
     // so it's safe to assume we have a single argument and the callee is our
     // intrinsic.
@@ -3483,8 +3450,6 @@ ICCall_IsSuspendedGenerator::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
@@ -3596,8 +3561,6 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
@@ -3687,8 +3650,6 @@ ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
@@ -3785,8 +3746,6 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
@@ -3877,8 +3836,6 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
     bool canUseTailCallReg = regs.has(ICTailCallReg);
@@ -4011,8 +3968,6 @@ DoubleValueToInt32ForSwitch(Value* v)
 bool
 ICTableSwitch::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label isInt32, notInt32, outOfRange;
     Register scratch = R1.scratchReg();
 
@@ -4159,8 +4114,6 @@ static const VMFunction DoGetIteratorFallbackInfo =
 bool
 ICGetIterator_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     EmitRestoreTailCallReg(masm);
 
     // Sync stack for the decompiler.
@@ -4218,8 +4171,6 @@ static const VMFunction DoIteratorMoreFallbackInfo =
 bool
 ICIteratorMore_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     EmitRestoreTailCallReg(masm);
 
     masm.unboxObject(R0, R0.scratchReg());
@@ -4237,8 +4188,6 @@ ICIteratorMore_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICIteratorMore_Native::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
 
     Register obj = masm.extractObject(R0, ExtractTemp0);
@@ -4298,8 +4247,6 @@ static const VMFunction DoIteratorCloseFallbackInfo =
 bool
 ICIteratorClose_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     EmitRestoreTailCallReg(masm);
 
     masm.pushValue(R0);
@@ -4395,8 +4342,6 @@ static const VMFunction DoInstanceOfFallbackInfo =
 bool
 ICInstanceOf_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     EmitRestoreTailCallReg(masm);
 
     // Sync stack for the decompiler.
@@ -4455,8 +4400,6 @@ static const VMFunction DoTypeOfFallbackInfo =
 bool
 ICTypeOf_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     EmitRestoreTailCallReg(masm);
 
     masm.pushValue(R0);
@@ -4508,8 +4451,6 @@ static const VMFunction ThrowInfoBaseline =
 bool
 ICRetSub_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     // If R0 is BooleanValue(true), rethrow R1.
     Label rethrow;
     masm.branchTestBooleanTruthy(true, R0, &rethrow);
@@ -4544,8 +4485,6 @@ ICRetSub_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICRetSub_Resume::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     // If R0 is BooleanValue(true), rethrow R1.
     Label fail, rethrow;
     masm.branchTestBooleanTruthy(true, R0, &rethrow);
@@ -4727,8 +4666,6 @@ static const VMFunction DoRestFallbackInfo =
 bool
 ICRest_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     EmitRestoreTailCallReg(masm);
 
     masm.push(ICStubReg);

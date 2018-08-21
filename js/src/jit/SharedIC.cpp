@@ -533,12 +533,7 @@ ICStubCompiler::tailCallVM(const VMFunction& fun, MacroAssembler& masm)
     TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
     MOZ_ASSERT(fun.expectTailCall == TailCall);
     uint32_t argSize = fun.explicitStackSlots() * sizeof(void*);
-    if (engine_ == Engine::Baseline) {
-        EmitBaselineTailCallVM(code, masm, argSize);
-    } else {
-        uint32_t stackSize = argSize + fun.extraValuesToPop * sizeof(Value);
-        EmitIonTailCallVM(code, masm, stackSize);
-    }
+    EmitBaselineTailCallVM(code, masm, argSize);
     return true;
 }
 
@@ -549,7 +544,6 @@ ICStubCompiler::callVM(const VMFunction& fun, MacroAssembler& masm)
 
     TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
     MOZ_ASSERT(fun.expectTailCall == NonTailCall);
-    MOZ_ASSERT(engine_ == Engine::Baseline);
 
     EmitBaselineCallVM(code, masm);
     return true;
@@ -558,7 +552,6 @@ ICStubCompiler::callVM(const VMFunction& fun, MacroAssembler& masm)
 void
 ICStubCompiler::enterStubFrame(MacroAssembler& masm, Register scratch)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     EmitBaselineEnterStubFrame(masm, scratch);
 #ifdef DEBUG
     framePushedAtEnterStubFrame_ = masm.framePushed();
@@ -592,8 +585,7 @@ ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon)
 {
     MOZ_ASSERT(entersStubFrame_ && inStubFrame_);
     inStubFrame_ = false;
-
-    MOZ_ASSERT(engine_ == Engine::Baseline);
+    
 #ifdef DEBUG
     masm.setFramePushed(framePushedAtEnterStubFrame_);
     if (calledIntoIon)
