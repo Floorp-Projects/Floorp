@@ -35,6 +35,7 @@ using mozilla::AssertedCast;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
 using mozilla::IsNegative;
+using mozilla::SpecificNaN;
 
 using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
@@ -376,11 +377,17 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
 }
 
 static JSString*
-PartitionNumberPattern(JSContext* cx, UNumberFormat* nf, double x,
+PartitionNumberPattern(JSContext* cx, UNumberFormat* nf, double* x,
                        UFieldPositionIterator* fpositer)
 {
-    return CallICU(cx, [nf, x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
-        return unum_formatDoubleForFields(nf, x, chars, size, fpositer, status);
+    // ICU incorrectly formats NaN values with the sign bit set, as if they
+    // were negative.  Replace all NaNs with a single pattern with sign bit
+    // unset ("positive", that is) until ICU is fixed.
+    if (MOZ_UNLIKELY(IsNaN(*x)))
+        *x = SpecificNaN<double>(0, 1);
+
+    return CallICU(cx, [nf, d = *x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
+        return unum_formatDoubleForFields(nf, d, chars, size, fpositer, status);
     });
 }
 
@@ -389,7 +396,7 @@ intl_FormatNumber(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue
 {
     // Passing null for |fpositer| will just not compute partition information,
     // letting us common up all ICU number-formatting code.
-    JSString* str = PartitionNumberPattern(cx, nf, x, nullptr);
+    JSString* str = PartitionNumberPattern(cx, nf, &x, nullptr);
     if (!str)
         return false;
 
@@ -428,6 +435,11 @@ GetFieldTypeForNumberField(UNumberFormatFields fieldName, double d)
         // Manual trawling through the ICU call graph appears to indicate that
         // the basic formatting we request will never include a positive sign.
         // But this analysis may be mistaken, so don't absolutely trust it.
+        MOZ_ASSERT(!IsNaN(d),
+                   "ICU appearing not to produce positive-sign among fields, "
+                   "plus our coercing all NaNs to one with sign bit unset "
+                   "(i.e. \"positive\"), means we shouldn't reach here with a "
+                   "NaN value");
         return IsNegative(d) ? &JSAtomState::minusSign : &JSAtomState::plusSign;
       }
 
@@ -478,7 +490,7 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
     MOZ_ASSERT(fpositer);
     ScopedICUObject<UFieldPositionIterator, ufieldpositer_close> toClose(fpositer);
 
-    RootedString overallResult(cx, PartitionNumberPattern(cx, nf, x, fpositer));
+    RootedString overallResult(cx, PartitionNumberPattern(cx, nf, &x, fpositer));
     if (!overallResult)
         return false;
 
