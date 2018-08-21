@@ -194,6 +194,18 @@ public class GeckoViewActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        mGeckoSession.setActive(false);
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        mGeckoSession.setActive(true);
+        super.onResume();
+    }
+
+    @Override
     public void onBackPressed() {
         if (mFullScreen) {
             mGeckoSession.exitFullScreen();

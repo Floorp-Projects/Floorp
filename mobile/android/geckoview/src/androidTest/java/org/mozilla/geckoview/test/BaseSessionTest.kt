@@ -28,7 +28,6 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val CLICK_TO_RELOAD_HTML_PATH = "/assets/www/clickToReload.html"
         const val CONTENT_CRASH_URL = "about:crashcontent"
         const val DOWNLOAD_HTML_PATH = "/assets/www/download.html"
-        const val FORMS_HTML_PATH = "/assets/www/forms.html"
         const val HELLO_HTML_PATH = "/assets/www/hello.html"
         const val HELLO2_HTML_PATH = "/assets/www/hello2.html"
         const val INPUTS_PATH = "/assets/www/inputs.html"

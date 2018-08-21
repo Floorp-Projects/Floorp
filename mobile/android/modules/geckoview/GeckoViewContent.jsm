@@ -23,7 +23,6 @@ class GeckoViewContent extends GeckoViewModule {
         "GeckoView:RestoreState",
         "GeckoView:SaveState",
         "GeckoView:SetActive",
-        "GeckoView:SetFocused",
         "GeckoView:ZoomToInput",
     ]);
 
@@ -79,17 +78,12 @@ class GeckoViewContent extends GeckoViewModule {
         break;
       case "GeckoView:SetActive":
         if (aData.active) {
+          this.browser.setAttribute("primary", "true");
+          this.browser.focus();
           this.browser.docShellIsActive = true;
         } else {
-          this.browser.docShellIsActive = false;
-        }
-        break;
-      case "GeckoView:SetFocused":
-        if (aData.focused) {
-          this.browser.focus();
-          this.browser.setAttribute("primary", "true");
-        } else {
           this.browser.removeAttribute("primary");
+          this.browser.docShellIsActive = false;
           this.browser.blur();
         }
         break;
