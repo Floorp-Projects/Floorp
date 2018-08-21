@@ -1,7 +1,11 @@
 var ab = new ArrayBuffer(5);
 var p = new Proxy(ab, {});
 var ps = Object.getOwnPropertyDescriptor(Object.prototype, "__proto__").set;
-var new_proto = {};
-ps.call(p, new_proto);
+var threw = 0;
+try {
+    ps.call(p, {});
+} catch(ex) {
+    threw = 1;
+}
 
-reportCompare(ab.__proto__, new_proto);
+reportCompare(1, threw, "Setting __proto__ on a proxy to an ArrayBuffer must throw.");

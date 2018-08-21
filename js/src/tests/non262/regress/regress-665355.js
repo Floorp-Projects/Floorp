@@ -9,11 +9,8 @@ try {
 }
 }
 
-// assert cycle doesn't work
 assertEq(test(x), true);
-
-// works
-assertEq(test({}), false);
-assertEq(test(null), false);
+assertEq(test({}), true);
+assertEq(test(null), true);
 
 reportCompare(true, true);
