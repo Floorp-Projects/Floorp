@@ -18,6 +18,15 @@
 #  error "This file only for gcc-compatible compilers"
 #endif
 
+inline bool js::jit::AtomicOperations::Initialize() {
+  // Nothing
+  return true;
+}
+
+inline void js::jit::AtomicOperations::ShutDown() {
+  // Nothing
+}
+
 inline bool js::jit::AtomicOperations::hasAtomic8() { return true; }
 
 inline bool js::jit::AtomicOperations::isLockfree8() {

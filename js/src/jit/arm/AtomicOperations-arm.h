@@ -32,6 +32,15 @@
 #  error "This file only for gcc-compatible compilers"
 #endif
 
+inline bool js::jit::AtomicOperations::Initialize() {
+  // Nothing
+  return true;
+}
+
+inline void js::jit::AtomicOperations::ShutDown() {
+  // Nothing
+}
+
 inline bool js::jit::AtomicOperations::hasAtomic8() {
   // This guard is really only for tier-2 and tier-3 systems: LDREXD and
   // STREXD have been available since ARMv6K, and only ARMv7 and later are

@@ -147,6 +147,13 @@ class AtomicOperations {
                                          size_t nbytes);
 
  public:
+  // On some platforms we generate code for the atomics at run-time; that
+  // happens here.
+  static bool Initialize();
+
+  // Deallocate the code segment for generated atomics functions.
+  static void ShutDown();
+
   // Test lock-freedom for any int32 value.  This implements the
   // Atomics::isLockFree() operation in the ECMAScript Shared Memory and
   // Atomics specification, as follows:
@@ -355,7 +362,9 @@ inline bool AtomicOperations::isLockfreeJS(int32_t size) {
 #  endif
 #elif defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || \
     defined(_M_IX86)
-#  if defined(__clang__) || defined(__GNUC__)
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+#    include "jit/shared/AtomicOperations-shared-jit.h"
+#  elif defined(__clang__) || defined(__GNUC__)
 #    include "jit/x86-shared/AtomicOperations-x86-shared-gcc.h"
 #  elif defined(_MSC_VER)
 #    include "jit/x86-shared/AtomicOperations-x86-shared-msvc.h"
@@ -363,13 +372,17 @@ inline bool AtomicOperations::isLockfreeJS(int32_t size) {
 #    error "No AtomicOperations support for this platform+compiler combination"
 #  endif
 #elif defined(__arm__)
-#  if defined(__clang__) || defined(__GNUC__)
+#  if defined(JS_CODEGEN_ARM)
+#    include "jit/shared/AtomicOperations-shared-jit.h"
+#  elif defined(__clang__) || defined(__GNUC__)
 #    include "jit/arm/AtomicOperations-arm.h"
 #  else
 #    error "No AtomicOperations support for this platform+compiler combination"
 #  endif
 #elif defined(__aarch64__) || defined(_M_ARM64)
-#  if defined(__clang__) || defined(__GNUC__)
+#  if defined(JS_CODEGEN_ARM64)
+#    include "jit/shared/AtomicOperations-shared-jit.h"
+#  elif defined(__clang__) || defined(__GNUC__)
 #    include "jit/arm64/AtomicOperations-arm64-gcc.h"
 #  elif defined(_MSC_VER)
 #    include "jit/arm64/AtomicOperations-arm64-msvc.h"
