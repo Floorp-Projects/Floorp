@@ -34,7 +34,6 @@
 #include "runnable_utils.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
-#include "webrtc/system_wrappers/include/trace.h"
 
 static const char* wgiLogTag = "WebrtcGlobalInformation";
 #ifdef LOGTAG
@@ -672,7 +671,7 @@ void
 WebrtcGlobalInformation::SetDebugLevel(const GlobalObject& aGlobal, int32_t aLevel)
 {
   if (aLevel) {
-    StartWebRtcLog(webrtc::TraceLevel(aLevel));
+    StartWebRtcLog(mozilla::LogLevel(aLevel));
   } else {
     StopWebRtcLog();
   }
@@ -929,7 +928,7 @@ WebrtcGlobalChild::RecvSetDebugMode(const int& aLevel)
 {
   if (!mShutdown) {
     if (aLevel) {
-      StartWebRtcLog(webrtc::TraceLevel(aLevel));
+      StartWebRtcLog(mozilla::LogLevel(aLevel));
     } else {
       StopWebRtcLog();
     }
