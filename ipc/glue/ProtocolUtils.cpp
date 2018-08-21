@@ -686,6 +686,7 @@ IToplevelProtocol::IToplevelProtocol(const char* aName,
 
 IToplevelProtocol::~IToplevelProtocol()
 {
+  mState = nullptr;
   if (mTrans) {
     RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTrans.release());
     XRE_GetIOMessageLoop()->PostTask(task.forget());
