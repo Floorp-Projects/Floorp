@@ -443,7 +443,9 @@ LocalStorageCache::SetItem(const LocalStorage* aStorage, const nsAString& aKey,
     return NS_OK;
   }
 
+#if !defined(MOZ_WIDGET_ANDROID)
   NotifyObservers(aStorage, nsString(aKey), aOld, aValue);
+#endif
 
   if (Persist(aStorage)) {
     StorageDBChild* storageChild = StorageDBChild::Get();
@@ -491,7 +493,9 @@ LocalStorageCache::RemoveItem(const LocalStorage* aStorage,
     return NS_OK;
   }
 
+#if !defined(MOZ_WIDGET_ANDROID)
   NotifyObservers(aStorage, nsString(aKey), aOld, VoidString());
+#endif
 
   if (Persist(aStorage)) {
     StorageDBChild* storageChild = StorageDBChild::Get();
@@ -539,9 +543,11 @@ LocalStorageCache::Clear(const LocalStorage* aStorage,
     return hadData ? NS_OK : NS_SUCCESS_DOM_NO_OPERATION;
   }
 
+#if !defined(MOZ_WIDGET_ANDROID)
   if (hadData) {
     NotifyObservers(aStorage, VoidString(), VoidString(), VoidString());
   }
+#endif
 
   if (Persist(aStorage) && (refresh || hadData)) {
     StorageDBChild* storageChild = StorageDBChild::Get();
