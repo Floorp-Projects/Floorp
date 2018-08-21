@@ -316,7 +316,7 @@ if [ $NO_INIT_SUPPORT -eq 0 ]; then
 fi
 NSS_SSL_TESTS="${NSS_SSL_TESTS:-$nss_ssl_tests}"
 
-nss_ssl_run="cov auth stapling stress"
+nss_ssl_run="cov auth stapling signed_cert_timestamps stress dtls scheme"
 NSS_SSL_RUN="${NSS_SSL_RUN:-$nss_ssl_run}"
 
 # NOTE:

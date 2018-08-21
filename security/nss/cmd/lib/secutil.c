@@ -3799,7 +3799,7 @@ SECU_ParseSSLVersionRangeString(const char *input,
     return SECSuccess;
 }
 
-SSLNamedGroup
+static SSLNamedGroup
 groupNameToNamedGroup(char *name)
 {
     if (PL_strlen(name) == 4) {
@@ -3837,6 +3837,23 @@ groupNameToNamedGroup(char *name)
     return ssl_grp_none;
 }
 
+static SECStatus
+countItems(const char *arg, unsigned int *numItems)
+{
+    char *str = PORT_Strdup(arg);
+    if (!str) {
+        return SECFailure;
+    }
+    char *p = strtok(str, ",");
+    while (p) {
+        ++(*numItems);
+        p = strtok(NULL, ",");
+    }
+    PORT_Free(str);
+    str = NULL;
+    return SECSuccess;
+}
+
 SECStatus
 parseGroupList(const char *arg, SSLNamedGroup **enabledGroups,
                unsigned int *enabledGroupsCount)
@@ -3847,21 +3864,12 @@ parseGroupList(const char *arg, SSLNamedGroup **enabledGroups,
     unsigned int numValues = 0;
     unsigned int count = 0;
 
-    /* Count the number of groups. */
-    str = PORT_Strdup(arg);
-    if (!str) {
+    if (countItems(arg, &numValues) != SECSuccess) {
         return SECFailure;
     }
-    p = strtok(str, ",");
-    while (p) {
-        ++numValues;
-        p = strtok(NULL, ",");
-    }
-    PORT_Free(str);
-    str = NULL;
     groups = PORT_ZNewArray(SSLNamedGroup, numValues);
     if (!groups) {
-        goto done;
+        return SECFailure;
     }
 
     /* Get group names. */
@@ -3881,9 +3889,7 @@ parseGroupList(const char *arg, SSLNamedGroup **enabledGroups,
     }
 
 done:
-    if (str) {
-        PORT_Free(str);
-    }
+    PORT_Free(str);
     if (!count) {
         PORT_Free(groups);
         return SECFailure;
@@ -3891,5 +3897,85 @@ done:
 
     *enabledGroupsCount = count;
     *enabledGroups = groups;
+    return SECSuccess;
+}
+
+SSLSignatureScheme
+schemeNameToScheme(const char *name)
+{
+#define compareScheme(x)                                \
+    do {                                                \
+        if (!PORT_Strncmp(name, #x, PORT_Strlen(#x))) { \
+            return ssl_sig_##x;                         \
+        }                                               \
+    } while (0)
+
+    compareScheme(rsa_pkcs1_sha1);
+    compareScheme(rsa_pkcs1_sha256);
+    compareScheme(rsa_pkcs1_sha384);
+    compareScheme(rsa_pkcs1_sha512);
+    compareScheme(ecdsa_sha1);
+    compareScheme(ecdsa_secp256r1_sha256);
+    compareScheme(ecdsa_secp384r1_sha384);
+    compareScheme(ecdsa_secp521r1_sha512);
+    compareScheme(rsa_pss_rsae_sha256);
+    compareScheme(rsa_pss_rsae_sha384);
+    compareScheme(rsa_pss_rsae_sha512);
+    compareScheme(ed25519);
+    compareScheme(ed448);
+    compareScheme(rsa_pss_pss_sha256);
+    compareScheme(rsa_pss_pss_sha384);
+    compareScheme(rsa_pss_pss_sha512);
+    compareScheme(dsa_sha1);
+    compareScheme(dsa_sha256);
+    compareScheme(dsa_sha384);
+    compareScheme(dsa_sha512);
+
+#undef compareScheme
+
+    return ssl_sig_none;
+}
+
+SECStatus
+parseSigSchemeList(const char *arg, const SSLSignatureScheme **enabledSigSchemes,
+                   unsigned int *enabledSigSchemeCount)
+{
+    SSLSignatureScheme *schemes;
+    unsigned int numValues = 0;
+    unsigned int count = 0;
+
+    if (countItems(arg, &numValues) != SECSuccess) {
+        return SECFailure;
+    }
+    schemes = PORT_ZNewArray(SSLSignatureScheme, numValues);
+    if (!schemes) {
+        return SECFailure;
+    }
+
+    /* Get group names. */
+    char *str = PORT_Strdup(arg);
+    if (!str) {
+        goto done;
+    }
+    char *p = strtok(str, ",");
+    while (p) {
+        SSLSignatureScheme scheme = schemeNameToScheme(p);
+        if (scheme == ssl_sig_none) {
+            count = 0;
+            goto done;
+        }
+        schemes[count++] = scheme;
+        p = strtok(NULL, ",");
+    }
+
+done:
+    PORT_Free(str);
+    if (!count) {
+        PORT_Free(schemes);
+        return SECFailure;
+    }
+
+    *enabledSigSchemeCount = count;
+    *enabledSigSchemes = schemes;
     return SECSuccess;
 }

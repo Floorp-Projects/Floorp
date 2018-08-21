@@ -394,6 +394,33 @@ TEST_P(TlsConnectTls13, TestTls13ResumeDifferentGroup) {
             ssl_sig_rsa_pss_rsae_sha256);
 }
 
+// Verify that TLS 1.3 server doesn't request certificate in the main
+// handshake, after resumption.
+TEST_P(TlsConnectTls13, TestTls13ResumeNoCertificateRequest) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  Connect();
+  SendReceive();  // Need to read so that we absorb the session ticket.
+  ScopedCERTCertificate cert1(SSL_LocalCertificate(client_->ssl_fd()));
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ExpectResumption(RESUME_TICKET);
+  server_->RequestClientAuth(false);
+  auto cr_capture =
+      MakeTlsFilter<TlsHandshakeRecorder>(server_, ssl_hs_certificate_request);
+  cr_capture->EnableDecryption();
+  Connect();
+  SendReceive();
+  EXPECT_EQ(0U, cr_capture->buffer().len()) << "expect nothing captured yet";
+
+  // Sanity check whether the client certificate matches the one
+  // decrypted from ticket.
+  ScopedCERTCertificate cert2(SSL_PeerCertificate(server_->ssl_fd()));
+  EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
+}
+
 // We need to enable different cipher suites at different times in the following
 // tests.  Those cipher suites need to be suited to the version.
 static uint16_t ChooseOneCipher(uint16_t version) {
