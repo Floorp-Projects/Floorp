@@ -37,6 +37,15 @@
 // Note, _InterlockedCompareExchange takes the *new* value as the second
 // argument and the *comparand* (expected old value) as the third argument.
 
+inline bool js::jit::AtomicOperations::Initialize() {
+  // Nothing
+  return true;
+}
+
+inline void js::jit::AtomicOperations::ShutDown() {
+  // Nothing
+}
+
 inline bool js::jit::AtomicOperations::hasAtomic8() { return true; }
 
 inline bool js::jit::AtomicOperations::isLockfree8() {

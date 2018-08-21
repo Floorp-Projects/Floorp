@@ -58,6 +58,15 @@
 // For now, we require that the C++ compiler's atomics are lock free, even for
 // 64-bit accesses.
 
+inline bool js::jit::AtomicOperations::Initialize() {
+  // Nothing
+  return true;
+}
+
+inline void js::jit::AtomicOperations::ShutDown() {
+  // Nothing
+}
+
 // When compiling with Clang on 32-bit linux it will be necessary to link with
 // -latomic to get the proper 64-bit intrinsics.
 
