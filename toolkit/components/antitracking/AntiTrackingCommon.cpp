@@ -495,7 +495,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
       return false;
     }
 
-    parentPrincipal = loadInfo->TriggeringPrincipal();
+    parentPrincipal = toplevelPrincipal;
     if (NS_WARN_IF(!parentPrincipal)) {
       LOG(("No triggering principal, this shouldn't be happening! Bail out early"));
       // Why we are here?!?
