@@ -12,6 +12,14 @@ Unreleased
 - Support for WebDriver web element, web frame, and web window
   identifiers from Firefox.
 
+### Changed
+
+- The HTTP status codes used for [`ScriptTimeout`] and [`Timeout`]
+  errors has changed from Request Timeout (408) to Internal Server
+  Error (500) in order to not break HTTP/1.1 `Keep-Alive` support,
+  as HTTP clients interpret the old status code to mean they should
+  duplicate the request.
+
 
 0.21.0 (2018-06-15)
 -------------------
