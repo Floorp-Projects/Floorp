@@ -8,8 +8,8 @@
 const TEST_URI = URL_ROOT + "browser_toolbox_options_disable_js.html";
 
 function test() {
-  addTab(TEST_URI).then(tab => {
-    const target = TargetFactory.forTab(tab);
+  addTab(TEST_URI).then(async (tab) => {
+    const target = await TargetFactory.forTab(tab);
     gDevTools.showToolbox(target).then(testSelectTool);
   });
 }

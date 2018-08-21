@@ -19,7 +19,8 @@ add_task(async function() {
   const tab = await addTab(URL);
   const nbox = gBrowser.getNotificationBox();
   const {clientHeight: nboxHeight, clientWidth: nboxWidth} = nbox;
-  const toolbox = await gDevTools.showToolbox(TargetFactory.forTab(tab));
+  const target = await TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target);
 
   is(nbox.clientHeight, nboxHeight, "Opening the toolbox hasn't changed the height of the nbox");
   is(nbox.clientWidth, nboxWidth, "Opening the toolbox hasn't changed the width of the nbox");
@@ -44,7 +45,8 @@ add_task(async function() {
   const tab = await addTab(URL);
   const nbox = gBrowser.getNotificationBox();
   const {clientHeight: nboxHeight, clientWidth: nboxWidth} = nbox;
-  const toolbox = await gDevTools.showToolbox(TargetFactory.forTab(tab));
+  const target = await TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target);
 
   is(nbox.clientHeight, nboxHeight, "Opening the toolbox hasn't changed the height of the nbox");
   is(nbox.clientWidth, nboxWidth, "Opening the toolbox hasn't changed the width of the nbox");

@@ -8,7 +8,7 @@
 const TEST_URL = "http://example.com/";
 
 const checkToolbox = async function(tab, location) {
-  const target = TargetFactory.forTab(tab);
+  const target = await TargetFactory.forTab(tab);
   ok(!!gDevTools.getToolbox(target), `Toolbox exists ${location}`);
 };
 
