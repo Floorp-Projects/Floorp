@@ -5332,16 +5332,18 @@ pref("dom.vr.poseprediction.enabled", true);
 // this requirement to be disabled for special cases such as during automated
 // tests or in a headless kiosk system.
 pref("dom.vr.require-gesture", true);
-// path to OSVR DLLs
-pref("gfx.vr.osvr.utilLibPath", "");
-pref("gfx.vr.osvr.commonLibPath", "");
-pref("gfx.vr.osvr.clientLibPath", "");
-pref("gfx.vr.osvr.clientKitLibPath", "");
+// Enable a separate process for VR module.
+pref("dom.vr.process.enabled", false);
 // Puppet device, used for simulating VR hardware within tests and dev tools
 pref("dom.vr.puppet.enabled", false);
 // Allow displaying the result of vr submitframe (0: disable, 1: store the
 // result as a base64 image, 2: show it on the screen).
 pref("dom.vr.puppet.submitframe", 0);
+// path to OSVR DLLs
+pref("gfx.vr.osvr.utilLibPath", "");
+pref("gfx.vr.osvr.commonLibPath", "");
+pref("gfx.vr.osvr.clientLibPath", "");
+pref("gfx.vr.osvr.clientKitLibPath", "");
 // The number of milliseconds since last frame start before triggering a new frame.
 // When content is failing to submit frames on time or the lower level VR platform API's
 // are rejecting frames, it determines the rate at which RAF callbacks will be called.
@@ -5636,6 +5638,9 @@ pref("intl.allow-insecure-text-input", false);
 
 // Enable meta-viewport support in remote APZ-enabled frames.
 pref("dom.meta-viewport.enabled", false);
+
+// Disable Visual Viewport API
+pref("dom.visualviewport.enabled", false);
 
 // Search service settings
 pref("browser.search.log", false);

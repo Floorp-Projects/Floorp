@@ -28,24 +28,11 @@
  *    _xpcom_factory: { ... },
  *
  *    // QueryInterface implementation, e.g. using the generateQI helper
- *    QueryInterface: XPCOMUtils.generateQI(
+ *    QueryInterface: ChromeUtils.generateQI(
  *      [Components.interfaces.nsIObserver,
  *       Components.interfaces.nsIMyInterface,
  *       "nsIFoo",
  *       "nsIBar" ]),
- *
- *    // [optional] classInfo implementation, e.g. using the generateCI helper.
- *    // Will be automatically returned from QueryInterface if that was
- *    // generated with the generateQI helper.
- *    classInfo: XPCOMUtils.generateCI(
- *      {classID: Components.ID("{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}"),
- *       contractID: "@example.com/xxx;1",
- *       classDescription: "unique text description",
- *       interfaces: [Components.interfaces.nsIObserver,
- *                    Components.interfaces.nsIMyInterface,
- *                    "nsIFoo",
- *                    "nsIBar"],
- *       flags: Ci.nsIClassInfo.SINGLETON}),
  *
  *    // The following properties were used prior to Mozilla 2, but are no
  *    // longer supported. They may still be included for compatibility with
@@ -70,6 +57,8 @@ var EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
 
 let global = Cu.getGlobalForObject({});
 
+const nsIFactoryQI = ChromeUtils.generateQI([Ci.nsIFactory]);
+
 /**
  * Redefines the given property on the given object with the given
  * value. This can be used to redefine getter properties which do not
@@ -86,55 +75,6 @@ function redefine(object, prop, value) {
 }
 
 var XPCOMUtils = {
-  /**
-   * Generate a QueryInterface implementation. The returned function must be
-   * assigned to the 'QueryInterface' property of a JS object. When invoked on
-   * that object, it checks if the given iid is listed in the |interfaces|
-   * param, and if it is, returns |this| (the object it was called on).
-   * If the JS object has a classInfo property it'll be returned for the
-   * nsIClassInfo IID, generateCI can be used to generate the classInfo
-   * property.
-   */
-  generateQI: function XPCU_generateQI(interfaces) {
-    return ChromeUtils.generateQI(interfaces);
-  },
-
-  /**
-   * Generate a ClassInfo implementation for a component. The returned object
-   * must be assigned to the 'classInfo' property of a JS object. The first and
-   * only argument should be an object that contains a number of optional
-   * properties: "interfaces", "contractID", "classDescription", "classID" and
-   * "flags". The values of the properties will be returned as the values of the
-   * various properties of the nsIClassInfo implementation.
-   */
-  generateCI: function XPCU_generateCI(classInfo)
-  {
-    if (QueryInterface in classInfo)
-      throw Error("In generateCI, don't use a component for generating classInfo");
-    /* Note that Ci[Ci.x] == Ci.x for all x */
-    let _interfaces = [];
-    for (let i = 0; i < classInfo.interfaces.length; i++) {
-      let iface = classInfo.interfaces[i];
-      if (Ci[iface]) {
-        _interfaces.push(Ci[iface]);
-      }
-    }
-    return {
-      getInterfaces: function XPCU_getInterfaces(countRef) {
-        countRef.value = _interfaces.length;
-        return _interfaces;
-      },
-      getScriptableHelper: function XPCU_getScriptableHelper() {
-        return null;
-      },
-      contractID: classInfo.contractID,
-      classDescription: classInfo.classDescription,
-      classID: classInfo.classID,
-      flags: classInfo.flags,
-      QueryInterface: this.generateQI([Ci.nsIClassInfo])
-    };
-  },
-
   /**
    * Generate a NSGetFactory function given an array of components.
    */
@@ -514,23 +454,10 @@ var XPCOMUtils = {
             throw Cr.NS_ERROR_NO_AGGREGATION;
           return (new component()).QueryInterface(iid);
         },
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
+        QueryInterface: nsIFactoryQI
       }
     }
     return factory;
-  },
-
-  /**
-   * Allows you to fake a relative import. Expects the global object from the
-   * module that's calling us, and the relative filename that we wish to import.
-   */
-  importRelative: function XPCOMUtils__importRelative(that, path, scope) {
-    if (!("__URI__" in that))
-      throw Error("importRelative may only be used from a JSM, and its first argument "+
-                  "must be that JSM's global object (hint: use this)");
-
-    Cu.importGlobalProperties(["URL"]);
-    ChromeUtils.import(new URL(path, that.__URI__).href, scope || that);
   },
 
   /**
@@ -552,10 +479,7 @@ var XPCOMUtils = {
         }
         return this._instance.QueryInterface(aIID);
       },
-      lockFactory: function XPCU_SF_lockFactory(aDoLock) {
-        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-      },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
+      QueryInterface: nsIFactoryQI
     };
   },
 

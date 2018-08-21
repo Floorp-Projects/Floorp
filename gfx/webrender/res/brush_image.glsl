@@ -175,6 +175,7 @@ void brush_vs(
             break;
         case COLOR_MODE_SUBPX_BG_PASS2:
         case COLOR_MODE_SUBPX_DUAL_SOURCE:
+        case COLOR_MODE_IMAGE:
             vMaskSwizzle = vec2(1.0, 0.0);
             vColor = image_data.color;
             break;

@@ -19,6 +19,7 @@
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
+#include "js/StableStringChars.h"
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/RegExpObject.h"
@@ -29,6 +30,7 @@
 using namespace js;
 using namespace js::frontend;
 
+using JS::AutoStableStringChars;
 using JS::AutoValueArray;
 using mozilla::DebugOnly;
 

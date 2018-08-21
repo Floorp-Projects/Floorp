@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_DOMJSClass_h
 #define mozilla_dom_DOMJSClass_h
 
+#include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/Wrapper.h"
 #include "mozilla/Assertions.h"

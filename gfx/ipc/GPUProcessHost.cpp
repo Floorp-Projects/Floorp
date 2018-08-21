@@ -160,6 +160,8 @@ GPUProcessHost::Shutdown()
   mListener = nullptr;
 
   if (mGPUChild) {
+    mGPUChild->SendShutdownVR();
+
     // OnChannelClosed uses this to check if the shutdown was expected or
     // unexpected.
     mShutdownRequested = true;

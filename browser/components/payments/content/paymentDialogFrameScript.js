@@ -76,8 +76,8 @@ let PaymentFrameScript = {
       DEFAULT_REGION: FormAutofill.DEFAULT_REGION,
       supportedCountries: FormAutofill.supportedCountries,
 
-      getAddressLabel(address) {
-        return FormAutofillUtils.getAddressLabel(address);
+      getAddressLabel(address, addressFields = null) {
+        return FormAutofillUtils.getAddressLabel(address, addressFields);
       },
 
       isCCNumber(value) {

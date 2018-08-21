@@ -21,6 +21,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
 
 #include "mozilla/dom/BindingUtils.h"

@@ -38,6 +38,7 @@
 #include "js/Date.h"
 #include "js/MemoryMetrics.h"
 #include "js/SliceBudget.h"
+#include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/Windows.h"
 #include "vm/DateTime.h"
@@ -59,6 +60,7 @@ using mozilla::DebugOnly;
 using mozilla::NegativeInfinity;
 using mozilla::PodZero;
 using mozilla::PositiveInfinity;
+using JS::AutoStableStringChars;
 using JS::DoubleNaNValue;
 
 /* static */ MOZ_THREAD_LOCAL(JSContext*) js::TlsContext;

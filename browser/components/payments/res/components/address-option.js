@@ -57,8 +57,8 @@ export default class AddressOption extends ObservedPropertiesMixin(RichOption) {
     super.connectedCallback();
   }
 
-  static formatSingleLineLabel(address) {
-    return PaymentDialogUtils.getAddressLabel(address);
+  static formatSingleLineLabel(address, addressFields) {
+    return PaymentDialogUtils.getAddressLabel(address, addressFields);
   }
 
   render() {

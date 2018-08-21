@@ -560,17 +560,6 @@ ProcessDDE(nsINativeAppSupport* aNative, bool aWait)
 }
 #endif
 
-/**
- * Determines if there is support for showing the profile manager
- *
- * @return true in all environments
-*/
-static bool
-CanShowProfileManager()
-{
-  return true;
-}
-
 bool gSafeMode = false;
 
 /**
@@ -795,9 +784,10 @@ SYNC_ENUMS(IPDLUNITTEST, IPDLUnitTest)
 SYNC_ENUMS(GMPLUGIN, GMPlugin)
 SYNC_ENUMS(GPU, GPU)
 SYNC_ENUMS(PDFIUM, PDFium)
+SYNC_ENUMS(VR, VR)
 
 // .. and ensure that that is all of them:
-static_assert(GeckoProcessType_PDFium + 1 == GeckoProcessType_End,
+static_assert(GeckoProcessType_VR + 1 == GeckoProcessType_End,
               "Did not find the final GeckoProcessType");
 
 NS_IMETHODIMP
@@ -2132,10 +2122,6 @@ static ReturnAbortOnError
 ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
                    nsINativeAppSupport* aNative)
 {
-  if (!CanShowProfileManager()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   nsresult rv;
 
   nsCOMPtr<nsIFile> profD, profLD;
@@ -2484,9 +2470,7 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
       return NS_ERROR_FAILURE;
     }
 
-    if (CanShowProfileManager()) {
-      return ShowProfileManager(aProfileSvc, aNative);
-    }
+    return ShowProfileManager(aProfileSvc, aNative);
   }
   if (ar) {
     ar = CheckArg("osint");
@@ -2536,9 +2520,7 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
       return ProfileLockedDialog(profile, unlocker, aNative, aResult);
     }
 
-    if (CanShowProfileManager()) {
-      return ShowProfileManager(aProfileSvc, aNative);
-    }
+    return ShowProfileManager(aProfileSvc, aNative);
   }
 
   ar = CheckArg("profilemanager", nullptr, CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
@@ -2546,7 +2528,7 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     PR_fprintf(PR_STDERR, "Error: argument --profilemanager is invalid when argument --osint is specified\n");
     return NS_ERROR_FAILURE;
   }
-  if (ar == ARG_FOUND && CanShowProfileManager()) {
+  if (ar == ARG_FOUND) {
     return ShowProfileManager(aProfileSvc, aNative);
   }
 
@@ -2599,7 +2581,7 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
   }
 
   bool useDefault = true;
-  if (count > 1 && CanShowProfileManager()) {
+  if (count > 1) {
     aProfileSvc->GetStartWithLastProfile(&useDefault);
   }
 
@@ -2665,10 +2647,6 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
 
       return ProfileLockedDialog(profile, unlocker, aNative, aResult);
     }
-  }
-
-  if (!CanShowProfileManager()) {
-    return NS_ERROR_FAILURE;
   }
 
   return ShowProfileManager(aProfileSvc, aNative);
@@ -5135,6 +5113,12 @@ bool
 XRE_IsGPUProcess()
 {
   return XRE_GetProcessType() == GeckoProcessType_GPU;
+}
+
+bool
+XRE_IsVRProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_VR;
 }
 
 /**

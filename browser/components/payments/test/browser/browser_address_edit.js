@@ -375,6 +375,89 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
   });
 });
 
+add_task(async function test_shipping_address_picker() {
+  await setup();
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: PTU.Details.total60USD,
+        options: PTU.Options.requestShippingOption,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
+
+    await spawnPaymentDialogTask(frame, async function test_picker_option_label(address) {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+
+      let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return Object.keys(state.savedAddresses).length == 1;
+      }, "One saved addresses when starting test");
+      let savedAddress = Object.values(state.savedAddresses)[0];
+
+      let selector = "address-picker[selected-state-key='selectedShippingAddress']";
+      let picker = content.document.querySelector(selector);
+      let option = Cu.waiveXrays(picker).dropdown.popupBox.children[0];
+      ok(option.textContent,
+         FormAutofillUtils.getAddressLabel(savedAddress, null),
+         "Shows correct shipping option label");
+    });
+
+    info("clicking cancel");
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+  });
+});
+
+add_task(async function test_payer_address_picker() {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: PTU.Details.total60USD,
+        options: PTU.Options.requestPayerNameEmailAndPhone,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
+
+    await spawnPaymentDialogTask(frame, async function test_picker_option_label(address) {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+
+      let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return Object.keys(state.savedAddresses).length == 1;
+      }, "One saved addresses when starting test");
+      let savedAddress = Object.values(state.savedAddresses)[0];
+
+      let selector = "address-picker[selected-state-key='selectedPayerAddress']";
+      let picker = content.document.querySelector(selector);
+      let option = Cu.waiveXrays(picker).dropdown.popupBox.children[0];
+      is(option.textContent.includes("32 Vassar Street"), false,
+         "Payer option label does not contain street address");
+      ok(option.textContent,
+         FormAutofillUtils.getAddressLabel(savedAddress, "name tel email"),
+         "Shows correct payer option label");
+    });
+
+    info("clicking cancel");
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+  });
+});
+
 /*
  * Test that we can correctly add an address from a private window
  */

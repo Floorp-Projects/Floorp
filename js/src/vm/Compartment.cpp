@@ -17,6 +17,7 @@
 #include "js/Date.h"
 #include "js/Proxy.h"
 #include "js/RootingAPI.h"
+#include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Debugger.h"
@@ -35,6 +36,8 @@
 
 using namespace js;
 using namespace js::gc;
+
+using JS::AutoStableStringChars;
 
 Compartment::Compartment(Zone* zone)
   : zone_(zone),

@@ -1135,7 +1135,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JS::Handle<JSObject*> obj,
   }
   MOZ_ASSERT(sJSObjWrappersAccessible);
 
-  JSObjWrapperTable::Ptr p = sJSObjWrappers->lookupForAdd(nsJSObjWrapperKey(obj, npp));
+  JSObjWrapperTable::Ptr p = sJSObjWrappers->lookup(nsJSObjWrapperKey(obj, npp));
   if (p) {
     MOZ_ASSERT(p->value());
     // Found a live nsJSObjWrapper, return it.
