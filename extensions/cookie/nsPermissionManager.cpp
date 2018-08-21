@@ -11,6 +11,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentPrincipal.h"
+#include "mozilla/Pair.h"
 #include "mozilla/Services.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
@@ -2105,7 +2106,7 @@ template<class T>
 nsresult
 nsPermissionManager::RemovePermissionEntries(T aCondition)
 {
-  nsCOMArray<nsIPermission> array;
+  AutoTArray<Pair<nsCOMPtr<nsIPrincipal>, nsCString>, 10> array;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
     for (const auto& permEntry : entry->GetPermissions()) {
@@ -2120,39 +2121,16 @@ nsPermissionManager::RemovePermissionEntries(T aCondition)
         continue;
       }
 
-      nsCOMPtr<nsIPermission> permission =
-        nsPermission::Create(principal,
-                             mTypeArray.ElementAt(permEntry.mType),
-                             permEntry.mPermission,
-                             permEntry.mExpireType,
-                             permEntry.mExpireTime);
-      if (NS_WARN_IF(!permission)) {
-        continue;
-      }
-      array.AppendObject(permission);
+      array.AppendElement(MakePair(principal,
+                                   mTypeArray.ElementAt(permEntry.mType)));
     }
   }
 
-  for (int32_t i = 0; i<array.Count(); ++i) {
-    nsCOMPtr<nsIPrincipal> principal;
-    nsAutoCString type;
-
-    nsresult rv = array[i]->GetPrincipal(getter_AddRefs(principal));
-    if (NS_FAILED(rv)) {
-      NS_ERROR("GetPrincipal() failed!");
-      continue;
-    }
-
-    rv = array[i]->GetType(type);
-    if (NS_FAILED(rv)) {
-      NS_ERROR("GetType() failed!");
-      continue;
-    }
-
+  for (size_t i = 0; i < array.Length(); ++i) {
     // AddInternal handles removal, so let it do the work...
     AddInternal(
-      principal,
-      type,
+      array[i].first(),
+      array[i].second(),
       nsIPermissionManager::UNKNOWN_ACTION,
       0,
       nsIPermissionManager::EXPIRE_NEVER, 0, 0,
@@ -2728,7 +2706,7 @@ nsPermissionManager::RemovePermissionsWithAttributes(const nsAString& aPattern)
 nsresult
 nsPermissionManager::RemovePermissionsWithAttributes(mozilla::OriginAttributesPattern& aPattern)
 {
-  nsCOMArray<nsIPermission> permissions;
+  AutoTArray<Pair<nsCOMPtr<nsIPrincipal>, nsCString>, 10> permissions;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
 
@@ -2744,28 +2722,14 @@ nsPermissionManager::RemovePermissionsWithAttributes(mozilla::OriginAttributesPa
     }
 
     for (const auto& permEntry : entry->GetPermissions()) {
-      nsCOMPtr<nsIPermission> permission =
-        nsPermission::Create(principal,
-                             mTypeArray.ElementAt(permEntry.mType),
-                             permEntry.mPermission,
-                             permEntry.mExpireType,
-                             permEntry.mExpireTime);
-      if (NS_WARN_IF(!permission)) {
-        continue;
-      }
-      permissions.AppendObject(permission);
+      permissions.AppendElement(MakePair(principal,
+                                         mTypeArray.ElementAt(permEntry.mType)));
     }
   }
 
-  for (int32_t i = 0; i < permissions.Count(); ++i) {
-    nsCOMPtr<nsIPrincipal> principal;
-    nsAutoCString type;
-
-    permissions[i]->GetPrincipal(getter_AddRefs(principal));
-    permissions[i]->GetType(type);
-
-    AddInternal(principal,
-                type,
+  for (size_t i = 0; i < permissions.Length(); ++i) {
+    AddInternal(permissions[i].first(),
+                permissions[i].second(),
                 nsIPermissionManager::UNKNOWN_ACTION,
                 0,
                 nsIPermissionManager::EXPIRE_NEVER,
