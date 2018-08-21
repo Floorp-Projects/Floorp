@@ -874,10 +874,16 @@ window._gBrowser = {
       return;
     }
 
-    if (!aForceUpdate) {
-      document.commandDispatcher.lock();
+    let newTab = this.getTabForBrowser(newBrowser);
 
+    if (!aForceUpdate) {
       TelemetryStopwatch.start("FX_TAB_SWITCH_UPDATE_MS");
+
+      if (gMultiProcessBrowser) {
+        this._getSwitcher().requestTab(newTab);
+      }
+
+      document.commandDispatcher.lock();
     }
 
     let oldTab = this.selectedTab;
@@ -904,7 +910,6 @@ window._gBrowser = {
           !window.isFullyOccluded);
     }
 
-    let newTab = this.getTabForBrowser(newBrowser);
     this._selectedBrowser = newBrowser;
     this._selectedTab = newTab;
     this.showTab(newTab);
@@ -4349,12 +4354,6 @@ window._gBrowser = {
     this.tabpanels.addEventListener("select", event => {
       if (event.target == this.tabpanels) {
         this.updateCurrentBrowser();
-      }
-    });
-
-    this.tabpanels.addEventListener("preselect", event => {
-      if (gMultiProcessBrowser) {
-        this._getSwitcher().requestTab(event.detail);
       }
     });
 

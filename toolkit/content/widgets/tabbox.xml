@@ -614,11 +614,6 @@
           if (val < 0 || val >= this.children.length)
             return val;
 
-          // Give the tabbrowser a chance to run logic regardless of
-          // whether the panel is going to change:
-          this.dispatchEvent(new CustomEvent("preselect",
-            { detail: this.getRelatedElement(this.children[val]) }));
-
           var panel = this._selectedPanel;
           this._selectedPanel = this.children[val];
           this.setAttribute("selectedIndex", val);
