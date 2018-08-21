@@ -16,6 +16,8 @@ import android.os.Bundle
 import android.support.test.filters.MediumTest
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4
+import android.text.InputType
+import android.util.SparseLongArray
 
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityNodeProvider
@@ -23,6 +25,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityRecord
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 
 import android.widget.FrameLayout
 
@@ -65,6 +68,16 @@ class AccessibilityTest : BaseSessionTest() {
             return 0
         }
     }
+
+    // Get a child ID by index.
+    private fun AccessibilityNodeInfo.getChildId(index: Int): Int =
+            getVirtualDescendantId(
+                    if (Build.VERSION.SDK_INT >= 21)
+                        AccessibilityNodeInfo::class.java.getMethod(
+                                "getChildId", Int::class.java).invoke(this, index) as Long
+                    else
+                        (AccessibilityNodeInfo::class.java.getMethod("getChildNodeIds")
+                                .invoke(this) as SparseLongArray).get(index))
 
     private interface EventDelegate {
         fun onAccessibilityFocused(event: AccessibilityEvent) { }
@@ -561,5 +574,155 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat("Focused node is onscreen", screenContainsNode(nodeId), equalTo(true))
             }
         })
+    }
+
+    @WithDevToolsAPI
+    @Test fun autoFill() {
+        // Wait for the accessibility nodes to populate.
+        mainSession.loadTestPath(FORMS_HTML_PATH)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            // For the root document and the iframe document, each has a form group and
+            // a group for inputs outside of forms, so the total count is 4.
+            @AssertCalled(count = 4)
+            override fun onWinContentChanged(event: AccessibilityEvent) {
+            }
+        })
+
+        val autoFills = mapOf(
+                "#user1" to "bar", "#pass1" to "baz", "#user2" to "bar", "#pass2" to "baz") +
+                if (Build.VERSION.SDK_INT >= 19) mapOf(
+                        "#email1" to "a@b.c", "#number1" to "24", "#tel1" to "42")
+                else mapOf(
+                        "#email1" to "bar", "#number1" to "", "#tel1" to "bar")
+
+        // Set up promises to monitor the values changing.
+        val promises = autoFills.flatMap { entry ->
+            // Repeat each test with both the top document and the iframe document.
+            arrayOf("document", "$('#iframe').contentDocument").map { doc ->
+                mainSession.evaluateJS("""new Promise(resolve =>
+                    $doc.querySelector('${entry.key}').addEventListener(
+                        'input', event => resolve([event.target.value, '${entry.value}']),
+                        { once: true }))""").asJSPromise()
+            }
+        }
+
+        // Perform auto-fill and return number of auto-fills performed.
+        fun autoFillChild(id: Int, child: AccessibilityNodeInfo) {
+            // Seal the node info instance so we can perform actions on it.
+            if (child.childCount > 0) {
+                for (i in 0 until child.childCount) {
+                    val childId = child.getChildId(i)
+                    autoFillChild(childId, provider.createAccessibilityNodeInfo(childId))
+                }
+            }
+
+            if (EditText::class.java.name == child.className) {
+                assertThat("Input should be enabled", child.isEnabled, equalTo(true))
+                assertThat("Input should be focusable", child.isFocusable, equalTo(true))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("Password type should match", child.isPassword, equalTo(
+                            child.inputType == InputType.TYPE_CLASS_TEXT or
+                                    InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD))
+                }
+
+                val args = Bundle(1)
+                val value = if (child.isPassword) "baz" else
+                    if (Build.VERSION.SDK_INT < 19) "bar" else
+                        when (child.inputType) {
+                            InputType.TYPE_CLASS_TEXT or
+                                    InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS -> "a@b.c"
+                            InputType.TYPE_CLASS_NUMBER -> "24"
+                            InputType.TYPE_CLASS_PHONE -> "42"
+                            else -> "bar"
+                        }
+
+                val ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE = if (Build.VERSION.SDK_INT >= 21)
+                    AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE else
+                    "ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE"
+                val ACTION_SET_TEXT = if (Build.VERSION.SDK_INT >= 21)
+                    AccessibilityNodeInfo.ACTION_SET_TEXT else 0x200000
+
+                args.putCharSequence(ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value)
+                assertThat("Can perform auto-fill",
+                           provider.performAction(id, ACTION_SET_TEXT, args), equalTo(true))
+            }
+            child.recycle()
+        }
+
+        autoFillChild(View.NO_ID, provider.createAccessibilityNodeInfo(View.NO_ID))
+
+        // Wait on the promises and check for correct values.
+        for ((actual, expected) in promises.map { it.value.asJSList<String>() }) {
+            assertThat("Auto-filled value must match", actual, equalTo(expected))
+        }
+    }
+
+    @Test fun autoFill_navigation() {
+        fun countAutoFillNodes(cond: (AccessibilityNodeInfo) -> Boolean =
+                                       { it.className == "android.widget.EditText" },
+                               id: Int = View.NO_ID): Int {
+            val info = provider.createAccessibilityNodeInfo(id)
+            try {
+                return (if (cond(info)) 1 else 0) + (if (info.childCount > 0)
+                    (0 until info.childCount).sumBy {
+                        countAutoFillNodes(cond, info.getChildId(it))
+                    } else 0)
+            } finally {
+                info.recycle()
+            }
+        }
+
+        // Wait for the accessibility nodes to populate.
+        mainSession.loadTestPath(FORMS_HTML_PATH)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 4)
+            override fun onWinContentChanged(event: AccessibilityEvent) {
+            }
+        })
+        assertThat("Initial auto-fill count should match",
+                   countAutoFillNodes(), equalTo(14))
+        assertThat("Password auto-fill count should match",
+                   countAutoFillNodes({ it.isPassword }), equalTo(4))
+
+        // Now wait for the nodes to clear.
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+        assertThat("Should not have auto-fill fields",
+                   countAutoFillNodes(), equalTo(0))
+
+        // Now wait for the nodes to reappear.
+        mainSession.goBack()
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 4)
+            override fun onWinContentChanged(event: AccessibilityEvent) {
+            }
+        })
+        assertThat("Should have auto-fill fields again",
+                   countAutoFillNodes(), equalTo(14))
+        assertThat("Should not have focused field",
+                   countAutoFillNodes({ it.isFocused }), equalTo(0))
+
+        mainSession.evaluateJS("$('#pass1').focus()")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled
+            override fun onFocused(event: AccessibilityEvent) {
+            }
+        })
+        assertThat("Should have one focused field",
+                   countAutoFillNodes({ it.isFocused }), equalTo(1))
+        // The focused field, its siblings, and its parent should be visible.
+        assertThat("Should have at least six visible fields",
+                   countAutoFillNodes({ node -> node.isVisibleToUser &&
+                           !(Rect().also({ node.getBoundsInScreen(it) }).isEmpty) }),
+                   greaterThanOrEqualTo(6))
+
+        mainSession.evaluateJS("$('#pass1').blur()")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled
+            override fun onFocused(event: AccessibilityEvent) {
+            }
+        })
+        assertThat("Should not have focused field",
+                   countAutoFillNodes({ it.isFocused }), equalTo(0))
     }
 }
