@@ -114,6 +114,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img,
+            ColorF::WHITE,
         );
 
         let mut epoch = Epoch(0);
@@ -180,6 +181,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img,
+            ColorF::WHITE,
         );
         txn.set_image_visible_area(
             blob_img,
@@ -284,6 +286,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img1,
+            ColorF::WHITE,
         );
 
         self.submit_dl(&mut Epoch(0), layout_size, builder, &txn.resource_updates);
@@ -319,6 +322,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img2,
+            ColorF::WHITE,
         );
 
         self.submit_dl(&mut Epoch(1), layout_size, builder, &txn.resource_updates);
@@ -372,6 +376,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img,
+            ColorF::WHITE,
         );
 
         let mut epoch = Epoch(0);
@@ -396,6 +401,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img,
+            ColorF::WHITE,
         );
 
         self.submit_dl(&mut epoch, layout_size, builder, &[]);
@@ -425,6 +431,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img,
+            ColorF::WHITE,
         );
 
         let mut epoch = Epoch(2);
@@ -485,6 +492,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img,
+            ColorF::WHITE,
         );
 
         let mut epoch = Epoch(0);
@@ -507,6 +515,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img,
+            ColorF::WHITE,
         );
 
         txn.resource_updates.clear();
@@ -591,6 +600,7 @@ impl<'a> RawtestHarness<'a> {
                 ImageRendering::Auto,
                 AlphaType::PremultipliedAlpha,
                 blob_img,
+                ColorF::WHITE,
             );
             builder.push_image(
                 &info2,
@@ -599,6 +609,7 @@ impl<'a> RawtestHarness<'a> {
                 ImageRendering::Auto,
                 AlphaType::PremultipliedAlpha,
                 blob_img2,
+                ColorF::WHITE,
             );
         };
 
@@ -689,6 +700,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img,
+            ColorF::WHITE,
         );
 
         let mut epoch = Epoch(0);
@@ -715,6 +727,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img,
+            ColorF::WHITE,
         );
 
         self.submit_dl(&mut epoch, layout_size, builder, &txn.resource_updates);
@@ -739,6 +752,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img,
+            ColorF::WHITE,
         );
 
         self.submit_dl(&mut epoch, layout_size, builder, &txn.resource_updates);
@@ -900,6 +914,7 @@ impl<'a> RawtestHarness<'a> {
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             image,
+            ColorF::WHITE,
         );
 
         let mut txn = Transaction::new();

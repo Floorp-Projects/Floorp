@@ -22,7 +22,7 @@ use webrender;
 use webrender::api::*;
 use webrender::{DebugFlags, RendererStats};
 use yaml_frame_writer::YamlFrameWriterReceiver;
-use {WindowWrapper, NotifierEvent, BLACK_COLOR, WHITE_COLOR};
+use {WindowWrapper, NotifierEvent};
 
 // TODO(gw): This descriptor matches what we currently support for fonts
 //           but is quite a mess. We should at least document and
@@ -561,7 +561,7 @@ impl Wrench {
             "X - Do a hit test at the current cursor position",
         ];
 
-        let color_and_offset = [(*BLACK_COLOR, 2.0), (*WHITE_COLOR, 0.0)];
+        let color_and_offset = [(ColorF::BLACK, 2.0), (ColorF::WHITE, 0.0)];
         let dr = self.renderer.debug_renderer().unwrap();
 
         for ref co in &color_and_offset {
