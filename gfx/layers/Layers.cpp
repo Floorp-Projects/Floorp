@@ -1143,7 +1143,7 @@ SortLayersWithBSPTree(nsTArray<Layer*>& aArray)
     }
 
     const gfx::IntRect& bounds =
-      layer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds();
+      layer->GetLocalVisibleRegion().GetBounds().ToUnknownRect();
 
     const gfx::Matrix4x4& transform = layer->GetEffectiveTransform();
 
@@ -2435,7 +2435,7 @@ SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget)
     return;
   }
 
-  const IntRect& bounds = aLayer->GetVisibleRegion().ToUnknownRegion().GetBounds();
+  const IntRect& bounds = aLayer->GetVisibleRegion().GetBounds().ToUnknownRect();
   gfx::Rect transformedBounds = aTarget->GetTransform().TransformBounds(gfx::Rect(Float(bounds.X()), Float(bounds.Y()),
                                                                                   Float(bounds.Width()), Float(bounds.Height())));
   transformedBounds.RoundOut();

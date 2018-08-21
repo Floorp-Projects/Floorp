@@ -440,7 +440,7 @@ ClientTiledPaintedLayer::RenderLayer()
     ClientManager()->GetPaintedLayerCallback();
   void *data = ClientManager()->GetPaintedLayerCallbackData();
 
-  IntSize layerSize = mVisibleRegion.ToUnknownRegion().GetBounds().Size();
+  IntSize layerSize = mVisibleRegion.GetBounds().ToUnknownRect().Size();
   IntSize tileSize = gfx::gfxVars::TileSize();
   bool isHalfTileWidthOrHeight = layerSize.width <= tileSize.width / 2 ||
     layerSize.height <= tileSize.height / 2;

@@ -73,7 +73,7 @@ DrawLayerInfo(const RenderTargetIntRect& aClipRect,
 
   uint32_t maxWidth = std::min<uint32_t>(visibleRegion.GetBounds().Width(), 500);
 
-  IntPoint topLeft = visibleRegion.ToUnknownRegion().GetBounds().TopLeft();
+  IntPoint topLeft = visibleRegion.GetBounds().ToUnknownRect().TopLeft();
   aManager->GetTextRenderer()->RenderText(
     aManager->GetCompositor(),
     ss.str().c_str(),
@@ -159,7 +159,7 @@ TransformLayerGeometry(Layer* aLayer, Maybe<gfx::Polygon>& aGeometry)
 template<class ContainerT>
 static gfx::IntRect ContainerVisibleRect(ContainerT* aContainer)
 {
-  gfx::IntRect surfaceRect = aContainer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds();
+  gfx::IntRect surfaceRect = aContainer->GetLocalVisibleRegion().GetBounds().ToUnknownRect();
   return surfaceRect;
 }
 
@@ -532,7 +532,7 @@ CreateTemporaryTargetAndCopyFromBackground(ContainerT* aContainer,
                                            LayerManagerComposite* aManager)
 {
   Compositor* compositor = aManager->GetCompositor();
-  gfx::IntRect visibleRect = aContainer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds();
+  gfx::IntRect visibleRect = aContainer->GetLocalVisibleRegion().GetBounds().ToUnknownRect();
   RefPtr<CompositingRenderTarget> previousTarget = compositor->GetCurrentRenderTarget();
   gfx::IntRect surfaceRect = gfx::IntRect(visibleRect.X(), visibleRect.Y(),
                                           visibleRect.Width(), visibleRect.Height());
@@ -596,7 +596,7 @@ ContainerRender(ContainerT* aContainer,
       return;
     }
 
-    gfx::Rect visibleRect(aContainer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds());
+    gfx::Rect visibleRect(aContainer->GetLocalVisibleRegion().GetBounds().ToUnknownRect());
 
     RefPtr<Compositor> compositor = aManager->GetCompositor();
 #ifdef MOZ_DUMP_PAINTING
