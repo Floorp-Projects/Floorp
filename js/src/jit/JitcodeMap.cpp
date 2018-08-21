@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 
 #include "gc/Marking.h"
@@ -1425,26 +1426,6 @@ JitcodeRegionEntry::findPcOffset(uint32_t queryNativeOffset, uint32_t startPcOff
     return curPcOffset;
 }
 
-typedef js::Vector<char*, 32, SystemAllocPolicy> ProfilingStringVector;
-
-struct AutoFreeProfilingStrings {
-    ProfilingStringVector& profilingStrings_;
-    bool keep_;
-    explicit AutoFreeProfilingStrings(ProfilingStringVector& vec)
-        : profilingStrings_(vec),
-          keep_(false)
-    {}
-
-    void keepStrings() { keep_ = true; }
-
-    ~AutoFreeProfilingStrings() {
-        if (keep_)
-            return;
-        for (size_t i = 0; i < profilingStrings_.length(); i++)
-            js_free(profilingStrings_[i]);
-    }
-};
-
 bool
 JitcodeIonTable::makeIonEntry(JSContext* cx, JitCode* code,
                               uint32_t numScripts, JSScript** scripts,
@@ -1461,7 +1442,12 @@ JitcodeIonTable::makeIonEntry(JSContext* cx, JitCode* code,
     if (!profilingStrings.reserve(numScripts))
         return false;
 
-    AutoFreeProfilingStrings autoFreeProfilingStrings(profilingStrings);
+    // Cleanup allocations on failure.
+    auto autoFreeProfilingStrings = mozilla::MakeScopeExit([&] {
+        for (auto elem: profilingStrings)
+            js_free(elem);
+    });
+
     for (uint32_t i = 0; i < numScripts; i++) {
         char* str = JitcodeGlobalEntry::createScriptString(cx, scripts[i]);
         if (!str)
@@ -1475,8 +1461,8 @@ JitcodeIonTable::makeIonEntry(JSContext* cx, JitCode* code,
     if (!mem)
         return false;
 
-    // Keep allocated profiling strings on destruct.
-    autoFreeProfilingStrings.keepStrings();
+    // Keep allocated profiling strings.
+    autoFreeProfilingStrings.release();
 
     SizedScriptList* scriptList = new (mem) SizedScriptList(numScripts, scripts,
                                                             &profilingStrings[0]);
