@@ -104,7 +104,13 @@ NullHttpChannel::GetIsTrackingResource(bool* aIsTrackingResource)
 }
 
 NS_IMETHODIMP
-NullHttpChannel::OverrideTrackingResource(bool aIsTracking)
+NullHttpChannel::GetIsThirdPartyTrackingResource(bool* aIsTrackingResource)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::OverrideTrackingFlagsForDocumentCookieAccessor(nsIHttpChannel* aDocumentChannel)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

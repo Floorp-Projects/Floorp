@@ -284,8 +284,10 @@ interface nsIHTMLEditor : nsISupports
                         in AString aBulletType);
 
   /**
-   * Document me!
+   * removeList removes list items (<li>, <dd>, and <dt>) and list structures
+   * (<ul>, <ol>, and <dl>).
    *
+   * @param aListType  Unused.
    */
   void removeList(in AString aListType);
 

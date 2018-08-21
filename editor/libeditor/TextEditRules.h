@@ -524,7 +524,6 @@ public:
     , flags(0)
     , collapsedAction(nsIEditor::eNext)
     , stripWrappers(nsIEditor::eStrip)
-    , bOrdered(false)
     , entireList(false)
     , bulletType(nullptr)
     , alignType(nullptr)
@@ -545,9 +544,6 @@ public:
   // EditSubAction::eDeleteSelectedContent
   nsIEditor::EDirection collapsedAction;
   nsIEditor::EStripWrappers stripWrappers;
-
-  // EditSubAction::eRemoveList
-  bool bOrdered;
 
   // EditSubAction::eCreateOrChangeList
   bool entireList;
