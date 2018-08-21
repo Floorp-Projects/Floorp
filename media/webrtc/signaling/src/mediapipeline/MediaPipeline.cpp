@@ -47,6 +47,7 @@
 #include "runnable_utils.h"
 #include "signaling/src/peerconnection/MediaTransportHandler.h"
 #include "Tracing.h"
+#include "WebrtcImageBuffer.h"
 
 #include "webrtc/base/bind.h"
 #include "webrtc/base/keep_ref_until_done.h"
@@ -2040,14 +2041,17 @@ public:
                         uint32_t aTimeStamp,
                         int64_t aRenderTime)
   {
-    if (aBuffer.native_handle()) {
+    if (aBuffer.type() == webrtc::VideoFrameBuffer::Type::kNative) {
       // We assume that only native handles are used with the
       // WebrtcMediaDataDecoderCodec decoder.
-      RefPtr<Image> image = static_cast<Image*>(aBuffer.native_handle());
+      const ImageBuffer *imageBuffer = static_cast<const ImageBuffer*>(&aBuffer);
       MutexAutoLock lock(mMutex);
-      mImage = image;
+      mImage = imageBuffer->GetNativeImage();
       return;
     }
+
+    MOZ_ASSERT(aBuffer.type() == webrtc::VideoFrameBuffer::Type::kI420);
+    rtc::scoped_refptr<const webrtc::I420BufferInterface> i420 = aBuffer.GetI420();
 
     MOZ_ASSERT(aBuffer.DataY());
     // Create a video frame using |buffer|.
