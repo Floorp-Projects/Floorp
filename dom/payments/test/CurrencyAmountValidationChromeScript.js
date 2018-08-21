@@ -3,46 +3,52 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
+const paymentSrv = Cc[
+  "@mozilla.org/dom/payments/payment-request-service;1"
+].getService(Ci.nsIPaymentRequestService);
 
 const InvalidDetailsUIService = {
-  showPayment: function(requestId) {
+  showPayment(requestId) {
     paymentSrv.changeShippingOption(requestId, "");
   },
-  abortPayment: function(requestId) {
-    let abortResponse = Cc["@mozilla.org/dom/payments/payment-abort-action-response;1"].
-                           createInstance(Ci.nsIPaymentAbortActionResponse);
+  abortPayment(requestId) {
+    const abortResponse = Cc[
+      "@mozilla.org/dom/payments/payment-abort-action-response;1"
+    ].createInstance(Ci.nsIPaymentAbortActionResponse);
     abortResponse.init(requestId, Ci.nsIPaymentActionResponse.ABORT_SUCCEEDED);
-    paymentSrv.respondPayment(abortResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+    paymentSrv.respondPayment(
+      abortResponse.QueryInterface(Ci.nsIPaymentActionResponse)
+    );
   },
-  completePayment: function(requestId) {
-  },
-  updatePayment: function(requestId) {
-  },
+  completePayment(requestId) {},
+  updatePayment(requestId) {},
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
-
 };
-
-function emitTestFail(message) {
-  sendAsyncMessage("test-fail", message);
-}
 
 function checkLowerCaseCurrency() {
   const paymentEnum = paymentSrv.enumerate();
   if (!paymentEnum.hasMoreElements()) {
-    emitTestFail("PaymentRequestService should have at least one payment request.");
+    const msg =
+      "PaymentRequestService should have at least one payment request.";
+    sendAsyncMessage("test-fail", msg);
   }
   while (paymentEnum.hasMoreElements()) {
-    let payRequest = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
+    const payRequest = paymentEnum
+      .getNext()
+      .QueryInterface(Ci.nsIPaymentRequest);
     if (!payRequest) {
-      emitTestFail("Fail to get existing payment request.");
+      sendAsyncMessage("test-fail", "Fail to get existing payment request.");
       break;
     }
-    if (payRequest.paymentDetails.totalItem.amount.currency != "USD") {
-      emitTestFail("Currency of PaymentItem total should be 'USD', but got " +
-                   payRequest.paymentDetails.totalItem.amount.currency + ".");
+    const { currency } = payRequest.paymentDetails.totalItem.amount;
+    if (currency != "USD") {
+      const msg =
+        "Currency of PaymentItem total should be 'USD', but got ${currency}";
+      sendAsyncMessage("check-complete");
     }
   }
   paymentSrv.cleanup();
@@ -51,10 +57,10 @@ function checkLowerCaseCurrency() {
 
 addMessageListener("check-lower-case-currency", checkLowerCaseCurrency);
 
-addMessageListener("set-update-with-invalid-details-ui-service", function() {
-  paymentSrv.setTestingUIService(InvalidDetailsUIService.QueryInterface(Ci.nsIPaymentUIService));
+addMessageListener("set-update-with-invalid-details-ui-service", () => {
+  paymentSrv.setTestingUIService(
+    InvalidDetailsUIService.QueryInterface(Ci.nsIPaymentUIService)
+  );
 });
 
-addMessageListener("teardown", function() {
-  sendAsyncMessage("teardown-complete");
-});
+addMessageListener("teardown", () => sendAsyncMessage("teardown-complete"));
