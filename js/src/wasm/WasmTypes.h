@@ -302,6 +302,10 @@ class ExprType
         return tc_;
     }
 
+    PackedTypeCode* packedPtr() {
+        return &tc_;
+    }
+
     Code code() const {
         return Code(UnpackTypeCodeType(tc_));
     }
