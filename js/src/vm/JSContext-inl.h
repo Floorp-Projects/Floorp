@@ -173,89 +173,45 @@ class CompartmentChecker
     }
 };
 
-/*
- * Don't perform these checks when called from a finalizer. The checking
- * depends on other objects not having been swept yet.
- */
-#define START_ASSERT_SAME_COMPARTMENT()                                 \
-    if (JS::RuntimeHeapIsCollecting())                                  \
-        return;                                                         \
-    CompartmentChecker c(cx)
-
 template <class T1> inline void
-releaseAssertSameCompartment(JSContext* cx, const T1& t1)
+assertSameCompartmentImpl(JSContext* cx, int argIndex, const T1& t1)
 {
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
+    // Don't perform these checks when called from a finalizer. The checking
+    // depends on other objects not having been swept yet.
+    if (JS::RuntimeHeapIsCollecting())
+        return;
+    CompartmentChecker c(cx);
+    c.check(t1, argIndex);
 }
 
-template <class T1> inline void
-assertSameCompartment(JSContext* cx, const T1& t1)
+template <class Head, class... Tail> inline void
+assertSameCompartmentImpl(JSContext* cx, int argIndex, const Head& head, const Tail&... tail)
+{
+    assertSameCompartmentImpl(cx, argIndex, head);
+    assertSameCompartmentImpl(cx, argIndex + 1, tail...);
+}
+
+template <class... Args> inline void
+assertSameCompartment(JSContext* cx, const Args&... args)
 {
 #ifdef JS_CRASH_DIAGNOSTICS
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
+    assertSameCompartmentImpl(cx, 1, args...);
 #endif
 }
 
-template <class T1> inline void
-assertSameCompartmentDebugOnly(JSContext* cx, const T1& t1)
+template <class... Args> inline void
+releaseAssertSameCompartment(JSContext* cx, const Args&... args)
+{
+    assertSameCompartmentImpl(cx, 1, args...);
+}
+
+template <class... Args> inline void
+assertSameCompartmentDebugOnly(JSContext* cx, const Args&... args)
 {
 #if defined(DEBUG) && defined(JS_CRASH_DIAGNOSTICS)
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
+    assertSameCompartmentImpl(cx, 1, args...);
 #endif
 }
-
-template <class T1, class T2> inline void
-assertSameCompartment(JSContext* cx, const T1& t1, const T2& t2)
-{
-#ifdef JS_CRASH_DIAGNOSTICS
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
-    c.check(t2, 3);
-#endif
-}
-
-template <class T1, class T2, class T3> inline void
-assertSameCompartment(JSContext* cx, const T1& t1, const T2& t2, const T3& t3)
-{
-#ifdef JS_CRASH_DIAGNOSTICS
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
-    c.check(t2, 3);
-    c.check(t3, 4);
-#endif
-}
-
-template <class T1, class T2, class T3, class T4> inline void
-assertSameCompartment(JSContext* cx,
-                      const T1& t1, const T2& t2, const T3& t3, const T4& t4)
-{
-#ifdef JS_CRASH_DIAGNOSTICS
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
-    c.check(t2, 3);
-    c.check(t3, 4);
-    c.check(t4, 5);
-#endif
-}
-
-template <class T1, class T2, class T3, class T4, class T5> inline void
-assertSameCompartment(JSContext* cx,
-                      const T1& t1, const T2& t2, const T3& t3, const T4& t4, const T5& t5)
-{
-#ifdef JS_CRASH_DIAGNOSTICS
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
-    c.check(t2, 3);
-    c.check(t3, 4);
-    c.check(t4, 5);
-    c.check(t5, 6);
-#endif
-}
-
-#undef START_ASSERT_SAME_COMPARTMENT
 
 STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
 MOZ_ALWAYS_INLINE bool
