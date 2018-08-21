@@ -46,6 +46,9 @@ module.exports = exports = async function(tests, dirname) {
             loader: require.resolve("babel-loader"),
             options: {
               babelrc: false,
+              plugins: [
+                require.resolve("@babel/plugin-proposal-class-properties")
+              ],
               presets: [
                 require.resolve("@babel/preset-flow"),
                 babelEnv

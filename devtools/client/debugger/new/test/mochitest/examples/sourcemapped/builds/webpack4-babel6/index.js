@@ -56,7 +56,8 @@ module.exports = exports = async function(tests, dirname) {
                   : null
               ].filter(Boolean),
               plugins: [
-                require.resolve("babel-plugin-transform-flow-strip-types")
+                require.resolve("babel-plugin-transform-flow-strip-types"),
+                require.resolve("babel-plugin-transform-class-properties")
               ]
             }
           }
