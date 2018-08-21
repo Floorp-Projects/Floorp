@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -42,7 +42,7 @@ of the License or (at your option) any later version.
 
 using namespace graphite2;
 
-Segment::Segment(unsigned int numchars, const Face* face, uint32 script, int textDir)
+Segment::Segment(size_t numchars, const Face* face, uint32 script, int textDir)
 : m_freeSlots(NULL),
   m_freeJustifies(NULL),
   m_charinfo(new CharInfo[numchars]),
@@ -54,14 +54,12 @@ Segment::Segment(unsigned int numchars, const Face* face, uint32 script, int tex
   m_bufSize(numchars + 10),
   m_numGlyphs(numchars),
   m_numCharinfo(numchars),
-  m_passBits(m_silf->aPassBits() ? -1 : 0),
   m_defaultOriginal(0),
   m_dir(textDir),
-  m_flags(((m_silf->flags() & 0x20) != 0) << 1)
+  m_flags(((m_silf->flags() & 0x20) != 0) << 1),
+  m_passBits(m_silf->aPassBits() ? -1 : 0)
 {
-    Slot *s = newSlot();
-    if (s)
-        freeSlot(s);
+    freeSlot(newSlot());
     m_bufSize = log_binary(numchars)+1;
 }
 
@@ -77,82 +75,17 @@ Segment::~Segment()
     free(m_collisions);
 }
 
-#ifndef GRAPHITE2_NSEGCACHE
-SegmentScopeState Segment::setScope(Slot * firstSlot, Slot * lastSlot, size_t subLength)
-{
-    SegmentScopeState state;
-    state.numGlyphsOutsideScope = m_numGlyphs - subLength;
-    state.realFirstSlot = m_first;
-    state.slotBeforeScope = firstSlot->prev();
-    state.slotAfterScope = lastSlot->next();
-    state.realLastSlot = m_last;
-    firstSlot->prev(NULL);
-    lastSlot->next(NULL);
-    assert(m_defaultOriginal == 0);
-    m_defaultOriginal = firstSlot->original();
-    m_numGlyphs = subLength;
-    m_first = firstSlot;
-    m_last = lastSlot;
-    return state;
-}
-
-void Segment::removeScope(SegmentScopeState & state)
-{
-    m_numGlyphs = state.numGlyphsOutsideScope + m_numGlyphs;
-    if (state.slotBeforeScope)
-    {
-        state.slotBeforeScope->next(m_first);
-        m_first->prev(state.slotBeforeScope);
-        m_first = state.realFirstSlot;
-    }
-    if (state.slotAfterScope)
-    {
-        state.slotAfterScope->prev(m_last);
-        m_last->next(state.slotAfterScope);
-        m_last = state.realLastSlot;
-    }
-    m_defaultOriginal = 0;
-}
-
-#if 0
-void Segment::append(const Segment &other)
-{
-    Rect bbox = other.m_bbox + m_advance;
-
-    m_slots.insert(m_slots.end(), other.m_slots.begin(), other.m_slots.end());
-    CharInfo* pNewCharInfo = new CharInfo[m_numCharinfo+other.m_numCharinfo];       //since CharInfo has no constructor, this doesn't do much
-    for (unsigned int i=0 ; i<m_numCharinfo ; ++i)
-    pNewCharInfo[i] = m_charinfo[i];
-    m_last->next(other.m_first);
-    other.m_last->prev(m_last);
-    m_userAttrs.insert(m_userAttrs.end(), other.m_userAttrs.begin(), other.m_userAttrs.end());
-    
-    delete[] m_charinfo;
-    m_charinfo = pNewCharInfo;
-    pNewCharInfo += m_numCharinfo ;
-    for (unsigned int i=0 ; i<m_numCharinfo ; ++i)
-        pNewCharInfo[i] = other.m_charinfo[i];
- 
-    m_numCharinfo += other.m_numCharinfo;
-    m_numGlyphs += other.m_numGlyphs;
-    m_advance = m_advance + other.m_advance;
-    m_bbox = m_bbox.widen(bbox);
-    m_passBits &= other.passBits();
-}
-#endif
-#endif // GRAPHITE2_NSEGCACHE
-
 void Segment::appendSlot(int id, int cid, int gid, int iFeats, size_t coffset)
 {
     Slot *aSlot = newSlot();
-    
+
     if (!aSlot) return;
     m_charinfo[id].init(cid);
     m_charinfo[id].feats(iFeats);
     m_charinfo[id].base(coffset);
     const GlyphFace * theGlyph = m_face->glyphs().glyphSafe(gid);
     m_charinfo[id].breakWeight(theGlyph ? theGlyph->attrs()[m_silf->aBreak()] : 0);
-    
+
     aSlot->child(NULL);
     aSlot->setGlyph(this, gid, theGlyph);
     aSlot->originate(id);
@@ -163,7 +96,7 @@ void Segment::appendSlot(int id, int cid, int gid, int iFeats, size_t coffset)
     m_last = aSlot;
     if (!m_first) m_first = aSlot;
     if (theGlyph && m_silf->aPassBits())
-        m_passBits &= theGlyph->attrs()[m_silf->aPassBits()] 
+        m_passBits &= theGlyph->attrs()[m_silf->aPassBits()]
                     | (m_silf->numPasses() > 16 ? (theGlyph->attrs()[m_silf->aPassBits() + 1] << 16) : 0);
 }
 
@@ -206,6 +139,7 @@ Slot *Segment::newSlot()
 
 void Segment::freeSlot(Slot *aSlot)
 {
+    if (aSlot == nullptr) return;
     if (m_last == aSlot) m_last = aSlot->prev();
     if (m_first == aSlot) m_first = aSlot->next();
     if (aSlot->attachedTo())
@@ -214,11 +148,11 @@ void Segment::freeSlot(Slot *aSlot)
     {
         if (aSlot->firstChild()->attachedTo() == aSlot)
         {
-            aSlot->firstChild()->attachTo(NULL);
+            aSlot->firstChild()->attachTo(nullptr);
             aSlot->removeChild(aSlot->firstChild());
         }
         else
-            aSlot->firstChild(NULL);
+            aSlot->firstChild(nullptr);
     }
     // reset the slot incase it is reused
     ::new (aSlot) Slot(aSlot->userAttrs());
@@ -230,7 +164,7 @@ void Segment::freeSlot(Slot *aSlot)
 #endif
     // update next pointer
     if (!m_freeSlots)
-        aSlot->next(NULL);
+        aSlot->next(nullptr);
     else
         aSlot->next(m_freeSlots);
     m_freeSlots = aSlot;
@@ -243,7 +177,7 @@ SlotJustify *Segment::newJustify()
         const size_t justSize = SlotJustify::size_of(m_silf->numJustLevels());
         byte *justs = grzeroalloc<byte>(justSize * m_bufSize);
         if (!justs) return NULL;
-        for (int i = m_bufSize - 2; i >= 0; --i)
+        for (ptrdiff_t i = m_bufSize - 2; i >= 0; --i)
         {
             SlotJustify *p = reinterpret_cast<SlotJustify *>(justs + justSize * i);
             SlotJustify *next = reinterpret_cast<SlotJustify *>(justs + justSize * (i + 1));
@@ -266,64 +200,6 @@ void Segment::freeJustify(SlotJustify *aJustify)
     memset(aJustify->values, 0, numJust*SlotJustify::NUMJUSTPARAMS*sizeof(int16));
     m_freeJustifies = aJustify;
 }
-
-#ifndef GRAPHITE2_NSEGCACHE
-void Segment::splice(size_t offset, size_t length, Slot * const startSlot,
-                       Slot * endSlot, const Slot * srcSlot,
-                       const size_t numGlyphs)
-{
-    size_t numChars = length;
-    extendLength(numGlyphs - length);
-    // remove any extra
-    if (numGlyphs < length)
-    {
-        Slot * end = endSlot->next();
-        do
-        {
-            endSlot = endSlot->prev();
-            freeSlot(endSlot->next());
-        } while (numGlyphs < --length);
-        endSlot->next(end);
-        if (end)
-            end->prev(endSlot);
-    }
-    else
-    {
-        // insert extra slots if needed
-        while (numGlyphs > length)
-        {
-            Slot * extra = newSlot();
-            if (!extra) return;
-            extra->prev(endSlot);
-            extra->next(endSlot->next());
-            endSlot->next(extra);
-            if (extra->next())
-                extra->next()->prev(extra);
-            if (m_last == endSlot)
-                m_last = extra;
-            endSlot = extra;
-            ++length;
-        }
-    }
-
-    endSlot = endSlot->next();
-    assert(numGlyphs == length);
-    assert(offset + numChars <= m_numCharinfo);
-    Slot * indexmap[eMaxSpliceSize*3];
-    assert(numGlyphs < sizeof indexmap/sizeof *indexmap);
-    Slot * slot = startSlot;
-    for (uint16 i=0; i < numGlyphs; slot = slot->next(), ++i)
-        indexmap[i] = slot;
-
-    for (slot = startSlot; slot != endSlot; slot = slot->next(), srcSlot = srcSlot->next())
-    {
-        slot->set(*srcSlot, offset, m_silf->numUser(), m_silf->numJustLevels(), numChars);
-        if (srcSlot->attachedTo())  slot->attachTo(indexmap[srcSlot->attachedTo()->index()]);
-        if (srcSlot->nextSibling()) slot->m_sibling = indexmap[srcSlot->nextSibling()->index()];
-        if (srcSlot->firstChild())  slot->m_child = indexmap[srcSlot->firstChild()->index()];
-    }
-}
-#endif // GRAPHITE2_NSEGCACHE
 
 // reverse the slots but keep diacritics in their same position after their bases
 void Segment::reverseSlots()
@@ -452,7 +328,7 @@ Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd, bo
 }
 
 
-void Segment::associateChars(int offset, int numChars)
+void Segment::associateChars(int offset, size_t numChars)
 {
     int i = 0, j = 0;
     CharInfo *c, *cend;
@@ -476,7 +352,7 @@ void Segment::associateChars(int offset, int numChars)
     for (Slot *s = m_first; s; s = s->next())
     {
         int a;
-        for (a = s->after() + 1; a < offset + numChars && charinfo(a)->after() < 0; ++a)
+        for (a = s->after() + 1; a < offset + int(numChars) && charinfo(a)->after() < 0; ++a)
         { charinfo(a)->after(s->index()); }
         --a;
         s->after(a);

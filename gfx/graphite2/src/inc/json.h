@@ -33,6 +33,7 @@ of the License or (at your option) any later version.
 #include "inc/Main.h"
 #include <cassert>
 #include <cstdio>
+#include <cstdint>
 #include "inc/List.h"
 
 namespace graphite2 {
@@ -44,7 +45,6 @@ class json
     json & operator = (const json &);
 
     typedef void (*_context_t)(json &);
-    class _null_t {};
 
     FILE * const    _stream;
     char            _contexts[128], // context stack
@@ -61,11 +61,12 @@ class json
 public:
     class closer;
 
-    typedef const char *    string;
-    typedef double          number;
-    typedef long signed int integer;
-    typedef bool            boolean;
-    static const _null_t    null;
+    using string = const char *;
+    using number = double;
+    enum class integer : std::intmax_t {};
+    enum class integer_u : std::uintmax_t {};
+    using boolean = bool;
+    static const std::nullptr_t  null;
 
     void setenv(unsigned int index, void *val) { _env.reserve(index + 1); if (index >= _env.size()) _env.insert(_env.end(), _env.size() - index + 1, 0); _env[index] = val; }
     void *getenv(unsigned int index) const { return _env[index]; }
@@ -85,9 +86,9 @@ public:
     json & operator << (string) throw();
     json & operator << (number) throw();
     json & operator << (integer) throw();
-    json & operator << (long unsigned int d) throw();
+    json & operator << (integer_u) throw();
     json & operator << (boolean) throw();
-    json & operator << (_null_t) throw();
+    json & operator << (std::nullptr_t) throw();
     json & operator << (_context_t) throw();
 
     operator bool() const throw();
@@ -136,29 +137,34 @@ json & json::operator << (json::_context_t ctxt) throw()
 }
 
 inline
-json & operator << (json & j, signed char d) throw()        { return j << json::integer(d); }
+json & operator << (json & j, signed char d) throw()   { return j << json::integer(d); }
 
 inline
-json & operator << (json & j, short signed int d) throw()   { return j << json::integer(d); }
+json & operator << (json & j, unsigned char d) throw() { return j << json::integer_u(d); }
 
 inline
-json & operator << (json & j, signed int d) throw()         { return j << json::integer(d); }
+json & operator << (json & j, short int d) throw()   { return j << json::integer(d); }
 
 inline
-json & operator << (json & j, unsigned char d) throw()      { return j << json::integer(d); }
+json & operator << (json & j, unsigned short int d) throw() { return j << json::integer_u(d); }
 
 inline
-json & operator << (json & j, short unsigned int d) throw() { return j << json::integer(d); }
+json & operator << (json & j, int d) throw()         { return j << json::integer(d); }
 
 inline
-json & operator << (json & j, unsigned int d) throw()       { return j << json::integer(d); }
+json & operator << (json & j, unsigned int d) throw()       { return j << json::integer_u(d); }
 
 inline
-json & operator << (json & j, char c) throw ()
-{
-    const char str[2] = {c,0};
-    return j << str;
-}
+json & operator << (json & j, long int d) throw()         { return j << json::integer(d); }
+
+inline
+json & operator << (json & j, unsigned long int d) throw()       { return j << json::integer_u(d); }
+
+inline
+json & operator << (json & j, long long int d) throw()         { return j << json::integer(d); }
+
+inline
+json & operator << (json & j, unsigned long long int d) throw()       { return j << json::integer_u(d); }
 
 inline
 json::operator bool() const throw()     { return good(); }

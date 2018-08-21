@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -41,7 +41,7 @@ public:
     FeatureSetting(int16 theValue, uint16 labelId) : m_label(labelId), m_value(theValue) {};
     uint16 label() const { return m_label; }
     int16 value() const { return m_value; }
-    
+
     CLASS_NEW_DELETE;
 private:
     FeatureSetting(const FeatureSetting & fs) : m_label(fs.m_label), m_value(fs.m_value) {};
@@ -146,7 +146,7 @@ friend class SillMap;
     FeatureRef *m_feats;
     NameAndFeatureRef* m_pNamedFeats;   //owned
     FeatureVal m_defaultFeatures;        //owned
-    
+
 private:        //defensive on m_feats, m_pNamedFeats, and m_defaultFeatures
     FeatureMap(const FeatureMap&);
     FeatureMap& operator=(const FeatureMap&);
@@ -164,7 +164,7 @@ private:
     public:
         LangFeaturePair() :  m_lang(0), m_pFeatures(0) {}
         ~LangFeaturePair() { delete m_pFeatures; }
-        
+
         uint32 m_lang;
         Features* m_pFeatures;      //owns
         CLASS_NEW_DELETE

@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -170,23 +170,23 @@ class Face::Table
 {
     const Face *            _f;
     mutable const byte *    _p;
-    uint32                  _sz;
+    size_t                  _sz;
     bool                    _compressed;
 
     Error decompress();
 
-    void releaseBuffers();
+    void release();
 
 public:
     Table() throw();
     Table(const Face & face, const Tag n, uint32 version=0xffffffff) throw();
-    Table(const Table & rhs) throw();
     ~Table() throw();
+    Table(const Table && rhs) throw();
 
     operator const byte * () const throw();
 
-    Table & operator = (const Table & rhs) throw();
     size_t  size() const throw();
+    Table & operator = (const Table && rhs) throw();
 };
 
 inline
@@ -196,7 +196,7 @@ Face::Table::Table() throw()
 }
 
 inline
-Face::Table::Table(const Table & rhs) throw()
+Face::Table::Table(const Table && rhs) throw()
 : _f(rhs._f), _p(rhs._p), _sz(rhs._sz), _compressed(rhs._compressed)
 {
     rhs._p = 0;
@@ -205,7 +205,7 @@ Face::Table::Table(const Table & rhs) throw()
 inline
 Face::Table::~Table() throw()
 {
-    releaseBuffers();
+    release();
 }
 
 inline

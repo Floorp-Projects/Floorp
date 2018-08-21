@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -33,7 +33,7 @@ of the License or (at your option) any later version.
 namespace graphite2 {
 
 struct Rule {
-  const vm::Machine::Code * constraint, 
+  const vm::Machine::Code * constraint,
                  * action;
   unsigned short   sort;
   byte             preContext;
@@ -87,7 +87,7 @@ struct State
 {
   const RuleEntry     * rules,
                       * rules_end;
-  
+
   bool   empty() const;
 };
 
@@ -102,14 +102,14 @@ class SlotMap
 {
 public:
   enum {MAX_SLOTS=64};
-  SlotMap(Segment & seg, uint8 direction, int maxSize);
-  
+  SlotMap(Segment & seg, uint8 direction, size_t maxSize);
+
   Slot       * * begin();
   Slot       * * end();
   size_t         size() const;
   unsigned short context() const;
   void           reset(Slot &, unsigned short);
-  
+
   Slot * const & operator[](int n) const;
   Slot       * & operator [] (int);
   void           pushSlot(Slot * const slot);
@@ -149,11 +149,11 @@ private:
       const RuleEntry * begin() const;
       const RuleEntry * end() const;
       size_t            size() const;
-      
+
       void accumulate_rules(const State &state);
 
   private:
-      RuleEntry * m_begin, 
+      RuleEntry * m_begin,
                 * m_end,
                   m_rules[MAX_RULES*2];
   };
@@ -219,13 +219,13 @@ void FiniteStateMachine::Rules::accumulate_rules(const State &state)
 {
   // Only bother if there are rules in the State object.
   if (state.empty()) return;
-  
+
   // Merge the new sorted rules list into the current sorted result set.
   const RuleEntry * lre = begin(), * rre = state.rules;
-  RuleEntry * out = m_rules + (m_begin == m_rules)*MAX_RULES;    
+  RuleEntry * out = m_rules + (m_begin == m_rules)*MAX_RULES;
   const RuleEntry * const lrend = out + MAX_RULES,
                   * const rrend = state.rules_end;
-  m_begin = out; 
+  m_begin = out;
   while (lre != end() && out != lrend)
   {
     if (*lre < *rre)      *out++ = *lre++;
@@ -233,7 +233,7 @@ void FiniteStateMachine::Rules::accumulate_rules(const State &state)
     else                { *out++ = *lre++; ++rre; }
 
     if (rre == rrend)
-    { 
+    {
       while (lre != end() && out != lrend) { *out++ = *lre++; }
       m_end = out;
       return;
@@ -244,9 +244,9 @@ void FiniteStateMachine::Rules::accumulate_rules(const State &state)
 }
 
 inline
-SlotMap::SlotMap(Segment & seg, uint8 direction, int maxSize)
+SlotMap::SlotMap(Segment & seg, uint8 direction, size_t maxSize)
 : segment(seg), m_size(0), m_precontext(0), m_highwater(0),
-    m_maxSize(maxSize), m_dir(direction), m_highpassed(false)
+    m_maxSize(int(maxSize)), m_dir(direction), m_highpassed(false)
 {
     m_slot_map[0] = 0;
 }

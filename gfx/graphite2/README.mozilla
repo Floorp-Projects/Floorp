@@ -1,7 +1,3 @@
-This directory contains the Graphite2 library release 1.3.11 from
-https://github.com/silnrsi/graphite/releases/download/1.3.11/graphite2-minimal-1.3.11.tgz
+This directory contains the Graphite2 library release 1.3.12 from
+https://github.com/silnrsi/graphite/releases/download/1.3.12/graphite2-minimal-1.3.12.tgz
 See ./gfx/graphite2/moz-gr-update.sh for update procedure.
-
-Note (2018-03-10):
-Cherry-picked 6e24eb7edbd0872b46441d7397e8b87cccfede73 from upstream to fix memory leak
-as noted in bug https://bugzilla.mozilla.org/show_bug.cgi?id=1443095.

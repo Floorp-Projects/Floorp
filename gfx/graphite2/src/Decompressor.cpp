@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -47,7 +47,7 @@ bool read_sequence(u8 const * &src, u8 const * const end, u8 const * &literal,
                     u32 & literal_len, u32 & match_len, u32 & match_dist)
 {
     u8 const token = *src++;
-    
+
     literal_len = read_literal(src, end, token >> 4);
     literal = src;
     src += literal_len;
@@ -55,7 +55,7 @@ bool read_sequence(u8 const * &src, u8 const * const end, u8 const * &literal,
     // Normal exit for end of stream, wrap arround check and parital match check.
     if (src > end - sizeof(u16) || src < literal)
         return false;
-    
+
     match_dist  = *src++;
     match_dist |= *src++ << 8;
     match_len = read_literal(src, end, token & 0xf) + MINMATCH;
@@ -70,7 +70,7 @@ int lz4::decompress(void const *in, size_t in_size, void *out, size_t out_size)
 {
     if (out_size <= in_size || in_size < MINSRCSIZE)
         return -1;
-    
+
     u8 const *       src     = static_cast<u8 const *>(in),
              *       literal = 0,
              * const src_end = src + in_size;
@@ -100,7 +100,7 @@ int lz4::decompress(void const *in, size_t in_size, void *out, size_t out_size)
             dst = overrun_copy(dst, literal, literal_len);
             out_size -= literal_len;
         }
-        
+
         // Copy, possibly repeating, match from earlier in the
         //  decoded output.
         u8 const * const pcpy = dst - match_dist;
@@ -120,7 +120,6 @@ int lz4::decompress(void const *in, size_t in_size, void *out, size_t out_size)
     if (literal > src_end - literal_len || literal_len > out_size)
         return -1;
     dst = fast_copy(dst, literal, literal_len);
-    
-    return dst - (u8*)out;
-}
 
+    return int(dst - (u8*)out);
+}
