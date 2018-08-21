@@ -134,6 +134,7 @@ js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame, Handle<Generat
 {
     if (resumeKind == GeneratorObject::THROW) {
         cx->setPendingException(arg);
+        genObj->setRunning();
     } else {
         MOZ_ASSERT(resumeKind == GeneratorObject::RETURN);
 
@@ -149,8 +150,9 @@ js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame, Handle<Generat
 
 bool
 GeneratorObject::resume(JSContext* cx, InterpreterActivation& activation,
-                        Handle<GeneratorObject*> genObj, HandleValue arg)
+                        HandleObject obj, HandleValue arg, GeneratorObject::ResumeKind resumeKind)
 {
+    Rooted<GeneratorObject*> genObj(cx, &obj->as<GeneratorObject>());
     MOZ_ASSERT(genObj->isSuspended());
 
     RootedFunction callee(cx, &genObj->callee());
@@ -182,8 +184,18 @@ GeneratorObject::resume(JSContext* cx, InterpreterActivation& activation,
     MOZ_ASSERT(activation.regs().spForStackDepth(activation.regs().stackDepth()));
     activation.regs().sp[-1] = arg;
 
-    genObj->setRunning();
-    return true;
+    switch (resumeKind) {
+      case NEXT:
+        genObj->setRunning();
+        return true;
+
+      case THROW:
+      case RETURN:
+        return GeneratorThrowOrReturn(cx, activation.regs().fp(), genObj, arg, resumeKind);
+
+      default:
+        MOZ_CRASH("bad resumeKind");
+    }
 }
 
 const Class GeneratorObject::class_ = {
