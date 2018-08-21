@@ -515,8 +515,11 @@ VRSystemManagerExternal::Create(VRExternalShmem* aAPIShmem /* = nullptr*/)
     return nullptr;
   }
 
-  if ((!gfxPrefs::VRExternalEnabled() && aAPIShmem == nullptr) ||
-      !XRE_IsGPUProcess()) {
+  if ((!gfxPrefs::VRExternalEnabled() && aAPIShmem == nullptr)
+#if defined(XP_WIN)
+      || !XRE_IsGPUProcess()
+#endif
+     ) {
     return nullptr;
   }
 
