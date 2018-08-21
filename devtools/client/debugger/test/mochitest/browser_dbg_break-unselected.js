@@ -13,7 +13,7 @@ const TAB_URL = EXAMPLE_URL + "doc_inline-debugger-statement.html";
 function test() {
   Task.spawn(function* () {
     const tab = yield getTab(TAB_URL);
-    const target = TargetFactory.forTab(tab);
+    const target = yield TargetFactory.forTab(tab);
     const toolbox = yield gDevTools.showToolbox(target, "webconsole");
 
     is(toolbox.currentToolId, "webconsole", "Console is the current panel");

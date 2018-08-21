@@ -289,7 +289,7 @@ function initNetMonitor(url, enableCache) {
     const tab = await addTab(url);
     info("Net tab added successfully: " + url);
 
-    const target = TargetFactory.forTab(tab);
+    const target = await TargetFactory.forTab(tab);
 
     await target.makeRemote();
     info("Target remoted.");

@@ -79,7 +79,7 @@ add_task(async function test_devtools_panels_elements_onSelectionChanged() {
 
   await extension.startup();
 
-  let target = devtools.TargetFactory.forTab(tab);
+  let target = await devtools.TargetFactory.forTab(tab);
 
   const toolbox = await gDevTools.showToolbox(target, "webconsole");
   info("developer toolbox opened");
