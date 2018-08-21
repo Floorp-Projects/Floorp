@@ -30,7 +30,7 @@
 
 #define GR2_VERSION_MAJOR   1
 #define GR2_VERSION_MINOR   3
-#define GR2_VERSION_BUGFIX  11
+#define GR2_VERSION_BUGFIX  12
 
 #ifdef __cplusplus
 extern "C"
@@ -51,12 +51,12 @@ GR2_API void gr_engine_version(int *nMajor, int *nMinor, int *nBugFix);
 * The Face Options allow the application to require that certain tables are
 * read during face construction. This may be of concern if the appFaceHandle
 * used in the gr_get_table_fn may change.
-* The values can be combined 
+* The values can be combined
 */
 enum gr_face_options {
     /** No preload, no cmap caching, fail if the graphite tables are invalid */
     gr_face_default = 0,
-    /** Dumb rendering will be enabled if the graphite tables are invalid */
+    /** Dumb rendering will be enabled if the graphite tables are invalid. @deprecated Since 1.311 */
     gr_face_dumbRendering = 1,
     /** preload glyphs at construction time */
     gr_face_preloadGlyphs = 2,
@@ -113,7 +113,7 @@ struct gr_face_ops
 	gr_get_table_fn 	get_table;
         /** is a pointer to a function to notify the client the a table can be released.
           * This can be NULL to signify that the client does not wish to do any release handling. */
-	gr_release_table_fn	release_table;  
+	gr_release_table_fn	release_table;
 };
 typedef struct gr_face_ops	gr_face_ops;
 
@@ -130,8 +130,8 @@ typedef struct gr_face_ops	gr_face_ops;
   */
 GR2_API gr_face* gr_make_face_with_ops(const void* appFaceHandle/*non-NULL*/, const gr_face_ops *face_ops, unsigned int faceOptions);
 
-/** Create a gr_face object given application information and a getTable function. This function is deprecated as of v1.2.0 in
-  * favour of gr_make_face_with_ops.
+/** @deprecated Since v1.2.0 in favour of gr_make_face_with_ops.
+  * Create a gr_face object given application information and a getTable function.
   *
   * @return gr_face or NULL if the font fails to load for some reason.
   * @param appFaceHandle This is application specific information that is passed
@@ -140,22 +140,25 @@ GR2_API gr_face* gr_make_face_with_ops(const void* appFaceHandle/*non-NULL*/, co
   * @param getTable      Callback function to get table data.
   * @param faceOptions   Bitfield describing various options. See enum gr_face_options for details.
   */
-GR2_API gr_face* gr_make_face(const void* appFaceHandle/*non-NULL*/, gr_get_table_fn getTable, unsigned int faceOptions);
+GR2_DEPRECATED_API gr_face* gr_make_face(const void* appFaceHandle/*non-NULL*/, gr_get_table_fn getTable, unsigned int faceOptions);
 
-//#ifndef GRAPHITE2_NSEGCACHE
-/** Create a gr_face object given application information, with subsegmental caching support
+/** @deprecated   Since 1.3.7 this function is now an alias for gr_make_face_with_ops().
+  *
+  * Create a gr_face object given application information, with subsegmental caching support
   *
   * @return gr_face or NULL if the font fails to load.
   * @param appFaceHandle is a pointer to application specific information that is passed to getTable.
   *                      This may not be NULL and must stay alive as long as the gr_face is alive.
   * @param face_ops      Pointer to face specific callback structure for table management. Must stay
   *                      alive for the duration of the call only.
-  * @param segCacheMaxSize   How large the segment cache is.
+  * @param segCacheMaxSize Unused.
   * @param faceOptions   Bitfield of values from enum gr_face_options
   */
-GR2_API gr_face* gr_make_face_with_seg_cache_and_ops(const void* appFaceHandle, const gr_face_ops *face_ops, unsigned int segCacheMaxSize, unsigned int faceOptions);
+GR2_DEPRECATED_API gr_face* gr_make_face_with_seg_cache_and_ops(const void* appFaceHandle, const gr_face_ops *face_ops, unsigned int segCacheMaxSize, unsigned int faceOptions);
 
-/** Create a gr_face object given application information, with subsegmental caching support.
+/** @deprecated   Since 1.3.7 this function is now an alias for gr_make_face().
+  *
+  * Create a gr_face object given application information, with subsegmental caching support.
   * This function is deprecated as of v1.2.0 in favour of gr_make_face_with_seg_cache_and_ops.
   *
   * @return gr_face or NULL if the font fails to load.
@@ -165,8 +168,7 @@ GR2_API gr_face* gr_make_face_with_seg_cache_and_ops(const void* appFaceHandle, 
   * @param segCacheMaxSize   How large the segment cache is.
   * @param faceOptions   Bitfield of values from enum gr_face_options
   */
-GR2_API gr_face* gr_make_face_with_seg_cache(const void* appFaceHandle, gr_get_table_fn getTable, unsigned int segCacheMaxSize, unsigned int faceOptions);
-//#endif
+GR2_DEPRECATED_API gr_face* gr_make_face_with_seg_cache(const void* appFaceHandle, gr_get_table_fn getTable, unsigned int segCacheMaxSize, unsigned int faceOptions);
 
 /** Convert a tag in a string into a gr_uint32
   *
@@ -243,16 +245,16 @@ GR2_API int gr_face_is_char_supported(const gr_face *pFace, gr_uint32 usv, gr_ui
   */
 GR2_API gr_face* gr_make_file_face(const char *filename, unsigned int faceOptions);
 
-//#ifndef GRAPHITE2_NSEGCACHE
-/** Create gr_face from a font file, with subsegment caching support.
+/** @deprecated   Since 1.3.7. This function is now an alias for gr_make_file_face().
+  *
+  * Create gr_face from a font file, with subsegment caching support.
   *
   * @return gr_face that accesses a font file directly. Returns NULL on failure.
   * @param filename Full path and filename to font file
   * @param segCacheMaxSize Specifies how big to make the cache in segments.
   * @param faceOptions   Bitfield from enum gr_face_options to control face options.
   */
-GR2_API gr_face* gr_make_file_face_with_seg_cache(const char *filename, unsigned int segCacheMaxSize, unsigned int faceOptions);
-//#endif
+GR2_DEPRECATED_API gr_face* gr_make_file_face_with_seg_cache(const char *filename, unsigned int segCacheMaxSize, unsigned int faceOptions);
 #endif      // !GRAPHITE2_NFILEFACE
 
 /** Create a font from a face
@@ -347,7 +349,7 @@ GR2_API gr_uint16 gr_fref_n_values(const gr_feature_ref* pfeatureref);
   * @param pfeatureref gr_feature_ref of the feature of interest
   * @param settingno   Index up to the return value of gr_fref_n_values() of the value
   */
-GR2_API gr_int16 gr_fref_value(const gr_feature_ref* pfeatureref, gr_uint16 settingno);   
+GR2_API gr_int16 gr_fref_value(const gr_feature_ref* pfeatureref, gr_uint16 settingno);
 
 /** Returns a string of the UI name of a feature
   *
@@ -385,4 +387,3 @@ GR2_API void gr_featureval_destroy(gr_feature_val *pfeatures);
 #ifdef __cplusplus
 }
 #endif
-

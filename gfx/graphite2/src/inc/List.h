@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -38,12 +38,12 @@ of the License or (at your option) any later version.
 
 namespace graphite2 {
 
-template <typename T> 
+template <typename T>
 inline
 ptrdiff_t distance(T* first, T* last) { return last-first; }
 
 
-template <typename T> 
+template <typename T>
 class Vector
 {
     T * m_first, *m_last, *m_end;
@@ -56,32 +56,32 @@ public:
     Vector() : m_first(0), m_last(0), m_end(0) {}
     Vector(size_t n, const T& value = T())      : m_first(0), m_last(0), m_end(0) { insert(begin(), n, value); }
     Vector(const Vector<T> &rhs)                : m_first(0), m_last(0), m_end(0) { insert(begin(), rhs.begin(), rhs.end()); }
-    template <typename I> 
+    template <typename I>
     Vector(I first, const I last)               : m_first(0), m_last(0), m_end(0) { insert(begin(), first, last); }
     ~Vector() { clear(); free(m_first); }
-    
+
     iterator            begin()         { return m_first; }
     const_iterator      begin() const   { return m_first; }
 
     iterator            end()           { return m_last; }
     const_iterator      end() const     { return m_last; }
-    
+
     bool                empty() const   { return m_first == m_last; }
     size_t              size() const    { return m_last - m_first; }
     size_t              capacity() const{ return m_end - m_first; }
-    
+
     void                reserve(size_t n);
     void                resize(size_t n, const T & v = T());
-    
+
     reference           front()         { assert(size() > 0); return *begin(); }
     const_reference     front() const   { assert(size() > 0); return *begin(); }
     reference           back()          { assert(size() > 0); return *(end()-1); }
     const_reference     back() const    { assert(size() > 0); return *(end()-1); }
-    
+
     Vector<T>         & operator = (const Vector<T> & rhs) { assign(rhs.begin(), rhs.end()); return *this; }
     reference           operator [] (size_t n)          { assert(size() > n); return m_first[n]; }
     const_reference     operator [] (size_t n) const    { assert(size() > n); return m_first[n]; }
-    
+
     void                assign(size_t n, const T& u)    { clear(); insert(begin(), n, u); }
     void                assign(const_iterator first, const_iterator last)      { clear(); insert(begin(), first, last); }
     iterator            insert(iterator p, const T & x) { p = _insert_default(p, 1); new (p) T(x); return p; }
@@ -97,12 +97,12 @@ public:
 private:
     iterator            _insert_default(iterator p, size_t n);
 };
-    
+
 template <typename T>
-inline 
+inline
 void Vector<T>::reserve(size_t n)
 {
-    if (n > capacity()) 
+    if (n > capacity())
     {
         const ptrdiff_t sz = size();
         size_t requested;
@@ -122,8 +122,8 @@ void Vector<T>::resize(size_t n, const T & v) {
     else if (d > 0) insert(end(), d, v);
 }
 
-template<typename T> 
-inline 
+template<typename T>
+inline
 typename Vector<T>::iterator Vector<T>::_insert_default(iterator p, size_t n)
 {
     assert(begin() <= p && p <= end());
@@ -136,8 +136,8 @@ typename Vector<T>::iterator Vector<T>::_insert_default(iterator p, size_t n)
     return p;
 }
 
-template<typename T> 
-inline 
+template<typename T>
+inline
 void Vector<T>::insert(iterator p, size_t n, const T & x)
 {
     p = _insert_default(p, n);
@@ -146,7 +146,7 @@ void Vector<T>::insert(iterator p, size_t n, const T & x)
 }
 
 template<typename T>
-inline 
+inline
 void Vector<T>::insert(iterator p, const_iterator first, const_iterator last)
 {
     p = _insert_default(p, distance(first, last));

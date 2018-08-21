@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -73,7 +73,7 @@ class Silf
 public:
     Silf() throw();
     ~Silf() throw();
-    
+
     bool readGraphite(const byte * const pSilf, size_t lSilf, Face &face, uint32 version);
     bool runGraphite(Segment *seg, uint8 firstPass=0, uint8 lastPass=0, int dobidi = 0) const;
     uint16 findClassIndex(uint16 cid, uint16 gid) const;
@@ -121,7 +121,7 @@ private:
     uint16      m_aLig, m_numPseudo, m_nClass, m_nLinear,
                 m_gEndLine;
     gr_faceinfo m_silfinfo;
-    
+
     void releaseBuffers() throw();
 };
 

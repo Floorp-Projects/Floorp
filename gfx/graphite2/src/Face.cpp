@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -34,7 +34,6 @@ of the License or (at your option) any later version.
 #include "inc/FileFace.h"
 #include "inc/GlyphFace.h"
 #include "inc/json.h"
-#include "inc/SegCacheStore.h"
 #include "inc/Segment.h"
 #include "inc/NameTable.h"
 #include "inc/Error.h"
@@ -142,7 +141,7 @@ bool Face::readGraphite(const Table & silf)
     {
         error_context(EC_ASILF + (i << 8));
         const uint32 offset = be::read<uint32>(p),
-                     next   = i == m_numSilf - 1 ? silf.size() : be::peek<uint32>(p);
+                     next   = i == m_numSilf - 1 ? uint32(silf.size()) : be::peek<uint32>(p);
         if (e.test(next > silf.size() || offset >= next, E_BADSIZE))
             return error(e);
 
@@ -201,7 +200,7 @@ bool Face::runGraphite(Segment *seg, const Silf *aSilf) const
                 << "advance" << seg->advance()
                 << "chars"   << json::array;
         for(size_t i = 0, n = seg->charInfoCount(); i != n; ++i)
-            *dbgout     << json::flat << *seg->charinfo(i);
+            *dbgout     << json::flat << *seg->charinfo(int(i));
         *dbgout         << json::close  // Close up the chars array
                     << json::close;     // Close up the segment object
     }
@@ -239,7 +238,7 @@ int32 Face::getGlyphMetric(uint16 gid, uint8 metric) const
     {
         case kgmetAscent : return m_ascent;
         case kgmetDescent : return m_descent;
-        default: 
+        default:
             if (gid >= glyphs().numGlyphs()) return 0;
             return glyphs().glyph(gid)->getMetric(metric);
     }
@@ -250,7 +249,7 @@ void Face::takeFileFace(FileFace* pFileFace GR_MAYBE_UNUSED/*takes ownership*/)
 #ifndef GRAPHITE2_NFILEFACE
     if (m_pFileFace==pFileFace)
       return;
-    
+
     delete m_pFileFace;
     m_pFileFace = pFileFace;
 #endif
@@ -276,15 +275,13 @@ uint16 Face::languageForLocale(const char * locale) const
 
 
 Face::Table::Table(const Face & face, const Tag n, uint32 version) throw()
-: _f(&face), _compressed(false)
+: _f(&face), _sz(0), _compressed(false)
 {
-    size_t sz = 0;
-    _p = static_cast<const byte *>((*_f->m_ops.get_table)(_f->m_appFaceHandle, n, &sz));
-    _sz = uint32(sz);
+    _p = static_cast<const byte *>((*_f->m_ops.get_table)(_f->m_appFaceHandle, n, &_sz));
 
     if (!TtfUtil::CheckTable(n, _p, _sz))
     {
-        releaseBuffers();     // Make sure we release the table buffer even if the table failed it's checks
+        release();     // Make sure we release the table buffer even if the table failed its checks
         return;
     }
 
@@ -292,7 +289,7 @@ Face::Table::Table(const Face & face, const Tag n, uint32 version) throw()
         decompress();
 }
 
-void Face::Table::releaseBuffers()
+void Face::Table::release()
 {
     if (_compressed)
         free(const_cast<byte *>(_p));
@@ -301,12 +298,11 @@ void Face::Table::releaseBuffers()
     _p = 0; _sz = 0;
 }
 
-Face::Table & Face::Table::operator = (const Table & rhs) throw()
+Face::Table & Face::Table::operator = (const Table && rhs) throw()
 {
-    if (_p == rhs._p)   return *this;
-
-    this->~Table();
-    new (this) Table(rhs);
+    if (this == &rhs)   return *this;
+    release();
+    new (this) Table(std::move(rhs));
     return *this;
 }
 
@@ -353,7 +349,7 @@ Error Face::Table::decompress()
 
     // Tell the provider to release the compressed form since were replacing
     //   it anyway.
-    releaseBuffers();
+    release();
 
     if (e)
     {

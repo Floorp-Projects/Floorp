@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -71,7 +71,7 @@ class GlyphBox
     GlyphBox & operator = (const GlyphBox &);
 
 public:
-    GlyphBox(uint8 numsubs, unsigned short bitmap, Rect *slanted) : _num(numsubs), _bitmap(bitmap), _slant(*slanted) {}; 
+    GlyphBox(uint8 numsubs, unsigned short bitmap, Rect *slanted) : _num(numsubs), _bitmap(bitmap), _slant(*slanted) {};
 
     void addSubBox(int subindex, int boundary, Rect *val) { _subs[subindex * 2 + boundary] = *val; }
     Rect &subVal(int subindex, int boundary) { return _subs[subindex * 2 + boundary]; }
@@ -115,7 +115,7 @@ public:
     bool             hasBoxes() const { return _boxes != 0; }
 
     CLASS_NEW_DELETE;
-    
+
 private:
     const Rect            _empty_slant_box;
     const Loader        * _glyph_loader;

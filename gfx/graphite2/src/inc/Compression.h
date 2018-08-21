@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -53,7 +53,7 @@ ptrdiff_t const     MINMATCH = 4,
                     MINSRCSIZE = 13;
 
 template<int S>
-inline 
+inline
 void unaligned_copy(void * d, void const * s) {
   ::memcpy(d, s, S);
 }
@@ -63,7 +63,7 @@ size_t align(size_t p) {
     return (p + sizeof(unsigned long)-1) & ~(sizeof(unsigned long)-1);
 }
 
-inline 
+inline
 u8 * safe_copy(u8 * d, u8 const * s, size_t n) {
     while (n--) *d++ = *s++;
     return d;
@@ -73,7 +73,7 @@ inline
 u8 * overrun_copy(u8 * d, u8 const * s, size_t n) {
     size_t const WS = sizeof(unsigned long);
     u8 const * e = s + n;
-    do 
+    do
     {
         unaligned_copy<WS>(d, s);
         d += WS;
@@ -81,7 +81,7 @@ u8 * overrun_copy(u8 * d, u8 const * s, size_t n) {
     }
     while (s < e);
     d-=(s-e);
-    
+
     return d;
 }
 
@@ -90,7 +90,7 @@ inline
 u8 * fast_copy(u8 * d, u8 const * s, size_t n) {
     size_t const WS = sizeof(unsigned long);
     size_t wn = n/WS;
-    while (wn--) 
+    while (wn--)
     {
         unaligned_copy<WS>(d, s);
         d += WS;
@@ -102,5 +102,3 @@ u8 * fast_copy(u8 * d, u8 const * s, size_t n) {
 
 
 } // end of anonymous namespace
-
-

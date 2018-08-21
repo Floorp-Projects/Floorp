@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -59,7 +59,7 @@ public:
         ////COLL_JUMPABLE = 128,    // moving glyphs may jump this stationary glyph in any direction - DELETE
         ////COLL_OVERLAP = 256,    // use maxoverlap to restrict - DELETE
     };
-    
+
     // Behavior for the collision.order attribute. To GDL this is an enum, to us it's a bitfield, with only 1 bit set
     // Allows for easier inversion.
     enum {
@@ -70,10 +70,10 @@ public:
         SEQ_ORDER_NOLEFT = 16,
         SEQ_ORDER_NORIGHT = 32
     };
-    
+
     SlotCollision(Segment *seg, Slot *slot);
     void initFromSlot(Segment *seg, Slot *slot);
-    
+
     const Rect &limit() const { return _limit; }
     void setLimit(const Rect &r) { _limit = r; }
     SLOTCOLSETPOSITIONPROP(shift, setShift)
@@ -95,7 +95,7 @@ public:
 
     float getKern(int dir) const;
     bool ignore() const;
-    
+
 private:
     Rect        _limit;
     Position    _shift;     // adjustment within the given pass
@@ -114,7 +114,7 @@ private:
     uint16		_seqBelowWt;
     uint16		_seqValignHt;
     uint16		_seqValignWt;
-	
+
 };  // end of class SlotColllision
 
 struct BBox;
@@ -133,7 +133,7 @@ public:
     bool initSlot(Segment *seg, Slot *aSlot, const Rect &constraint,
                 float margin, float marginMin, const Position &currShift,
                 const Position &currOffset, int dir, GR_MAYBE_UNUSED json * const dbgout);
-    bool mergeSlot(Segment *seg, Slot *slot, const SlotCollision *cinfo, const Position &currShift, bool isAfter, 
+    bool mergeSlot(Segment *seg, Slot *slot, const SlotCollision *cinfo, const Position &currShift, bool isAfter,
                 bool sameCluster, bool &hasCol, bool isExclusion, GR_MAYBE_UNUSED json * const dbgout);
     Position resolve(Segment *seg, bool &isCol, GR_MAYBE_UNUSED json * const dbgout);
     void addBox_slope(bool isx, const Rect &box, const BBox &bb, const SlantBox &sb, const Position &org, float weight, float m, bool minright, int mode);
@@ -164,7 +164,7 @@ protected:
     uint16  _seqClass;
 	uint16	_seqProxClass;
     uint16  _seqOrder;
-    
+
 	//bool _scraping[4];
 
 };	// end of class ShiftCollider
@@ -212,7 +212,7 @@ private:
     float _xbound;        // max or min edge
     bool  _hit;
 
-#if !defined GRAPHITE2_NTRACING    
+#if !defined GRAPHITE2_NTRACING
     // Debugging
     Segment * _seg;
     Vector<float> _nearEdges; // closest potential collision in each slice
@@ -243,4 +243,3 @@ KernCollider::KernCollider(GR_MAYBE_UNUSED json *dbg)
 };
 
 };  // end of namespace graphite2
-
