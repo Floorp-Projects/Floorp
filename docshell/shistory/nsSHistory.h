@@ -22,7 +22,6 @@
 
 class nsIDocShell;
 class nsDocShell;
-class nsSHEnumerator;
 class nsSHistoryObserver;
 class nsISHEntry;
 class nsISHTransaction;
@@ -133,7 +132,6 @@ public:
 
 private:
   virtual ~nsSHistory();
-  friend class nsSHEnumerator;
   friend class nsSHistoryObserver;
 
   nsresult GetTransactionAtIndex(int32_t aIndex, nsISHTransaction** aResult);
@@ -190,23 +188,6 @@ private:
 
   // Max viewers allowed total, across all SHistory objects
   static int32_t sHistoryMaxTotalViewers;
-};
-
-class nsSHEnumerator : public nsISimpleEnumerator
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISIMPLEENUMERATOR
-
-  explicit nsSHEnumerator(nsSHistory* aHistory);
-
-protected:
-  friend class nsSHistory;
-  virtual ~nsSHEnumerator();
-
-private:
-  int32_t mIndex;
-  nsSHistory* mSHistory;
 };
 
 inline nsISupports*
