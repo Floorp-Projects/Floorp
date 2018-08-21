@@ -150,6 +150,12 @@ function Editor(config) {
   this.config.extraKeys[Editor.keyFor("indentLess")] = false;
   this.config.extraKeys[Editor.keyFor("indentMore")] = false;
 
+  // Disable Alt-B and Alt-F to navigate groups (respectively previous and next) since:
+  // - it's not standard in input fields
+  // - it also inserts a character which feels weird
+  this.config.extraKeys["Alt-B"] = false;
+  this.config.extraKeys["Alt-F"] = false;
+
   // Overwrite default config with user-provided, if needed.
   Object.keys(config).forEach(k => {
     if (k != "extraKeys") {
