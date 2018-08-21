@@ -72,6 +72,10 @@ body,
   -moz-user-select: none;
 }
 
+#toolbar.left-aligned {
+  grid-template-columns: min-content min-content min-content auto;
+}
+
 #toolbar-center-controls,
 #toolbar-end-controls {
   display: flex;
@@ -80,6 +84,11 @@ body,
 
 #toolbar-center-controls {
   justify-self: center;
+  margin: 1px;
+}
+
+#toolbar.left-aligned #toolbar-end-controls {
+  justify-self: end;
 }
 
 #rotate-button::before {

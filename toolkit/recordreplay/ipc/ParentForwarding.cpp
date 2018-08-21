@@ -18,79 +18,12 @@ namespace mozilla {
 namespace recordreplay {
 namespace parent {
 
-// Known associations between managee and manager routing IDs.
-static StaticInfallibleVector<std::pair<int32_t, int32_t>> gProtocolManagers;
-
-// The routing IDs of actors in the parent process that have been destroyed.
-static StaticInfallibleVector<int32_t> gDeadRoutingIds;
-
-static void
-NoteProtocolManager(int32_t aManagee, int32_t aManager)
-{
-  gProtocolManagers.emplaceBack(aManagee, aManager);
-  for (auto id : gDeadRoutingIds) {
-    if (id == aManager) {
-      gDeadRoutingIds.emplaceBack(aManagee);
-    }
-  }
-}
-
-static void
-DestroyRoutingId(int32_t aId)
-{
-  gDeadRoutingIds.emplaceBack(aId);
-  for (auto manager : gProtocolManagers) {
-    if (manager.second == aId) {
-      DestroyRoutingId(manager.first);
-    }
-  }
-}
-
-// Return whether a message from the child process to the UI process is being
-// sent to a target that is being destroyed, and should be suppressed.
-static bool
-MessageTargetIsDead(const IPC::Message& aMessage)
-{
-  // After the parent process destroys a browser, we handle the destroy in
-  // both the middleman and child processes. Both processes will respond to
-  // the destroy by sending additional messages to the UI process indicating
-  // the browser has been destroyed, but we need to ignore such messages from
-  // the child process (if it is still recording) to avoid confusing the UI
-  // process.
-  for (int32_t id : gDeadRoutingIds) {
-    if (id == aMessage.routing_id()) {
-      return true;
-    }
-  }
-  return false;
-}
-
 static bool
 HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
 {
   IPC::Message::msgid_t type = aMessage.type();
 
-  // Ignore messages sent from the child to dead UI process targets.
   if (aSide == ipc::ParentSide) {
-    // When the browser is destroyed in the UI process all its children will
-    // also be destroyed. Figure out the routing IDs of children which we need
-    // to recognize as dead once the browser is destroyed. This is not a
-    // complete list of all the browser's children, but only includes ones
-    // where crashes have been seen as a result.
-    if (type == dom::PBrowser::Msg_PDocAccessibleConstructor__ID) {
-      PickleIterator iter(aMessage);
-      ipc::ActorHandle handle;
-
-      if (!IPC::ReadParam(&aMessage, &iter, &handle))
-        MOZ_CRASH("IPC::ReadParam failed");
-
-      NoteProtocolManager(handle.mId, aMessage.routing_id());
-    }
-
-    if (MessageTargetIsDead(aMessage)) {
-      PrintSpew("Suppressing %s message to dead target\n", IPC::StringFromIPCMessageType(type));
-      return true;
-    }
     return false;
   }
 
@@ -117,15 +50,32 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
       type == dom::PBrowser::Msg_AsyncMessage__ID ||
       // Teardown that must be performed in both processes.
       type == dom::PBrowser::Msg_Destroy__ID) {
-    ipc::IProtocol::Result r =
-      dom::ContentChild::GetSingleton()->PContentChild::OnMessageReceived(aMessage);
+    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+
+    if (type >= dom::PBrowser::PBrowserStart && type <= dom::PBrowser::PBrowserEnd) {
+      // Ignore messages sent from the parent to browsers that do not have an
+      // actor in the middleman process. PBrowser may be allocated on either
+      // side of the IPDL channel, and when allocated by the recording child
+      // there will not be a corresponding actor in the middleman.
+      nsTArray<dom::PBrowserChild*> browsers;
+      contentChild->ManagedPBrowserChild(browsers);
+      bool found = false;
+      for (ipc::IProtocol* child : browsers) {
+        if (child->Id() == aMessage.routing_id()) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        return false;
+      }
+    }
+
+    ipc::IProtocol::Result r = contentChild->PContentChild::OnMessageReceived(aMessage);
     MOZ_RELEASE_ASSERT(r == ipc::IProtocol::MsgProcessed);
     if (type == dom::PContent::Msg_SetXPCOMProcessAttributes__ID) {
       // Preferences are initialized via the SetXPCOMProcessAttributes message.
       PreferencesLoaded();
-    }
-    if (type == dom::PBrowser::Msg_Destroy__ID) {
-      DestroyRoutingId(aMessage.routing_id());
     }
     if (type == dom::PBrowser::Msg_RenderLayers__ID) {
       // Graphics are being loaded or unloaded for a tab, so update what we are
@@ -158,6 +108,18 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
   }
 
   return false;
+}
+
+// Return whether a message should be sent to the recording child, even if it
+// is not currently active.
+static bool
+AlwaysForwardMessage(const IPC::Message& aMessage)
+{
+  IPC::Message::msgid_t type = aMessage.type();
+
+  // Forward close messages so that the tab shuts down properly even if it is
+  // currently replaying.
+  return type == dom::PBrowser::Msg_Destroy__ID;
 }
 
 static bool gMainThreadIsWaitingForIPDLReply = false;
@@ -204,7 +166,7 @@ public:
   }
 
   static void ForwardMessageAsync(MiddlemanProtocol* aProtocol, Message* aMessage) {
-    if (ActiveChildIsRecording()) {
+    if (ActiveChildIsRecording() || AlwaysForwardMessage(*aMessage)) {
       PrintSpew("ForwardAsyncMsg %s %s %d\n",
                 (aProtocol->mSide == ipc::ChildSide) ? "Child" : "Parent",
                 IPC::StringFromIPCMessageType(aMessage->type()),
@@ -257,7 +219,6 @@ public:
 
   virtual Result OnMessageReceived(const Message& aMessage, Message*& aReply) override {
     MOZ_RELEASE_ASSERT(mOppositeMessageLoop);
-    MOZ_RELEASE_ASSERT(mSide == ipc::ChildSide || !MessageTargetIsDead(aMessage));
 
     Message* nMessage = new Message();
     nMessage->CopyFrom(aMessage);
@@ -294,7 +255,6 @@ public:
 
   virtual Result OnCallReceived(const Message& aMessage, Message*& aReply) override {
     MOZ_RELEASE_ASSERT(mOppositeMessageLoop);
-    MOZ_RELEASE_ASSERT(mSide == ipc::ChildSide || !MessageTargetIsDead(aMessage));
 
     Message* nMessage = new Message();
     nMessage->CopyFrom(aMessage);

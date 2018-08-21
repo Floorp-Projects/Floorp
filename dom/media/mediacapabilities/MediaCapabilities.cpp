@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaCapabilities.h"
+#include "AllocationPolicy.h"
 #include "Benchmark.h"
 #include "DecoderTraits.h"
 #include "Layers.h"
@@ -328,68 +329,75 @@ MediaCapabilities::DecodingInfo(
                                     CreateDecoderParams::VideoFrameRate(
                                       frameRate),
                                     TrackInfo::kVideoTrack };
-
-        RefPtr<PDMFactory> pdm = new PDMFactory();
-        RefPtr<MediaDataDecoder> decoder = pdm->CreateDecoder(params);
-        if (!decoder) {
-          return CapabilitiesPromise::CreateAndReject(
-            MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, "Can't create decoder"),
-            __func__);
-        }
-        // We now query the decoder to determine if it's power efficient.
-        return decoder->Init()->Then(
+        return AllocationWrapper::CreateDecoder(params)->Then(
           taskQueue,
           __func__,
-          [taskQueue, decoder, frameRate, config = std::move(config)](
-            const MediaDataDecoder::InitPromise::ResolveOrRejectValue&
-              aValue) mutable {
-            RefPtr<CapabilitiesPromise> p;
+          [taskQueue, frameRate, config = std::move(config)](
+            const AllocationWrapper::AllocateDecoderPromise::
+              ResolveOrRejectValue& aValue) mutable {
             if (aValue.IsReject()) {
-              p = CapabilitiesPromise::CreateAndReject(aValue.RejectValue(),
-                                                       __func__);
-            } else {
-              MOZ_ASSERT(config->IsVideo());
-              nsAutoCString reason;
-              bool powerEfficient = true;
-              bool smooth = true;
-              if (config->GetAsVideoInfo()->mImage.height > 480) {
-                // Assume that we can do stuff at 480p or less in a power
-                // efficient manner and smoothly. If greater than 480p we assume
-                // that if the video decoding is hardware accelerated it will be
-                // smooth and power efficient, otherwise we use the benchmark to
-                // estimate
-                powerEfficient = decoder->IsHardwareAccelerated(reason);
-                if (!powerEfficient && VPXDecoder::IsVP9(config->mMimeType)) {
-                  smooth = VP9Benchmark::IsVP9DecodeFast(true /* default */);
-                  uint32_t fps = VP9Benchmark::MediaBenchmarkVp9Fps();
-                  if (!smooth && fps > 0) {
-                    // The VP9 estimizer decode a 1280x720 video. Let's adjust
-                    // the result for the resolution and frame rate of what we
-                    // actually want. If the result is twice that we need we
-                    // assume it will be smooth.
-                    const auto& videoConfig = *config->GetAsVideoInfo();
-                    double needed =
-                      ((1280.0 * 720.0) /
-                       (videoConfig.mImage.width * videoConfig.mImage.height) *
-                       fps) /
-                      frameRate;
-                    smooth = needed > 2;
-                  }
-                }
-              }
-              p = CapabilitiesPromise::CreateAndResolve(
-                MediaCapabilitiesInfo(
-                  true /* supported */, smooth, powerEfficient),
-                __func__);
+              return CapabilitiesPromise::CreateAndReject(aValue.RejectValue(),
+                                                          __func__);
             }
-            MOZ_ASSERT(p.get(), "the promise has been created");
-            // Let's keep alive the decoder and the config object until the
-            // decoder has shutdown.
-            decoder->Shutdown()->Then(
+            RefPtr<MediaDataDecoder> decoder = aValue.ResolveValue();
+            // We now query the decoder to determine if it's power efficient.
+            RefPtr<CapabilitiesPromise> p = decoder->Init()->Then(
               taskQueue,
               __func__,
-              [taskQueue, decoder, config = std::move(config)](
-                const ShutdownPromise::ResolveOrRejectValue& aValue) {});
+              [taskQueue, decoder, frameRate, config = std::move(config)](
+                const MediaDataDecoder::InitPromise::ResolveOrRejectValue&
+                  aValue) mutable {
+                RefPtr<CapabilitiesPromise> p;
+                if (aValue.IsReject()) {
+                  p = CapabilitiesPromise::CreateAndReject(aValue.RejectValue(),
+                                                           __func__);
+                } else {
+                  MOZ_ASSERT(config->IsVideo());
+                  nsAutoCString reason;
+                  bool powerEfficient = true;
+                  bool smooth = true;
+                  if (config->GetAsVideoInfo()->mImage.height > 480) {
+                    // Assume that we can do stuff at 480p or less in a power
+                    // efficient manner and smoothly. If greater than 480p we
+                    // assume that if the video decoding is hardware accelerated
+                    // it will be smooth and power efficient, otherwise we use
+                    // the benchmark to estimate
+                    powerEfficient = decoder->IsHardwareAccelerated(reason);
+                    if (!powerEfficient &&
+                        VPXDecoder::IsVP9(config->mMimeType)) {
+                      smooth =
+                        VP9Benchmark::IsVP9DecodeFast(true /* default */);
+                      uint32_t fps = VP9Benchmark::MediaBenchmarkVp9Fps();
+                      if (!smooth && fps > 0) {
+                        // The VP9 estimizer decode a 1280x720 video. Let's
+                        // adjust the result for the resolution and frame rate
+                        // of what we actually want. If the result is twice that
+                        // we need we assume it will be smooth.
+                        const auto& videoConfig = *config->GetAsVideoInfo();
+                        double needed = ((1280.0 * 720.0) /
+                                         (videoConfig.mImage.width *
+                                          videoConfig.mImage.height) *
+                                         fps) /
+                                        frameRate;
+                        smooth = needed > 2;
+                      }
+                    }
+                  }
+                  p = CapabilitiesPromise::CreateAndResolve(
+                    MediaCapabilitiesInfo(
+                      true /* supported */, smooth, powerEfficient),
+                    __func__);
+                }
+                MOZ_ASSERT(p.get(), "the promise has been created");
+                // Let's keep alive the decoder and the config object until the
+                // decoder has shutdown.
+                decoder->Shutdown()->Then(
+                  taskQueue,
+                  __func__,
+                  [taskQueue, decoder, config = std::move(config)](
+                    const ShutdownPromise::ResolveOrRejectValue& aValue) {});
+                return p;
+              });
             return p;
           });
       }));

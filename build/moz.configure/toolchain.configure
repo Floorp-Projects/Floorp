@@ -689,7 +689,7 @@ def default_c_compilers(host_or_target):
             return (android_clang_compiler,) + gcc
 
         if host_or_target.kernel == 'WINNT':
-            return ('cl', 'clang-cl') + gcc + ('clang',)
+            return ('clang-cl', 'cl') + gcc + ('clang',)
         if host_or_target.kernel == 'Darwin':
             return ('clang',)
         if developer_options:

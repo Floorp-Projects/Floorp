@@ -13,17 +13,20 @@
 
 class nsINIParserImpl final
   : public nsIINIParser
+  , public nsIINIParserWriter
 {
   ~nsINIParserImpl() {}
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINIPARSER
+  NS_DECL_NSIINIPARSERWRITER
 
   nsresult Init(nsIFile* aINIFile) { return mParser.Init(aINIFile); }
 
 private:
   nsINIParser mParser;
+  bool ContainsNull(const nsACString& aStr);
 };
 
 NS_IMPL_ISUPPORTS(nsINIParserFactory,
@@ -41,13 +44,15 @@ nsINIParserFactory::CreateINIParser(nsIFile* aINIFile,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = p->Init(aINIFile);
-
-  if (NS_SUCCEEDED(rv)) {
-    NS_ADDREF(*aResult = p);
+  if (aINIFile) {
+    nsresult rv = p->Init(aINIFile);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
-  return rv;
+   p.forget(aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -70,7 +75,13 @@ nsINIParserFactory::LockFactory(bool aLock)
 }
 
 NS_IMPL_ISUPPORTS(nsINIParserImpl,
-                  nsIINIParser)
+                  nsIINIParser,
+                  nsIINIParserWriter)
+
+bool
+nsINIParserImpl::ContainsNull(const nsACString& aStr) {
+  return aStr.CountChar('\0') > 0;
+}
 
 static bool
 SectionCB(const char* aSection, void* aClosure)
@@ -112,6 +123,10 @@ NS_IMETHODIMP
 nsINIParserImpl::GetKeys(const nsACString& aSection,
                          nsIUTF8StringEnumerator** aResult)
 {
+  if (ContainsNull(aSection)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   nsTArray<nsCString>* strings = new nsTArray<nsCString>;
   if (!strings) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -136,7 +151,31 @@ nsINIParserImpl::GetString(const nsACString& aSection,
                            const nsACString& aKey,
                            nsACString& aResult)
 {
+  if (ContainsNull(aSection) || ContainsNull(aKey)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   return mParser.GetString(PromiseFlatCString(aSection).get(),
                            PromiseFlatCString(aKey).get(),
                            aResult);
+}
+
+NS_IMETHODIMP
+nsINIParserImpl::SetString(const nsACString& aSection,
+                           const nsACString& aKey,
+                           const nsACString& aValue)
+{
+  if (ContainsNull(aSection) || ContainsNull(aKey) || ContainsNull(aValue)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return mParser.SetString(PromiseFlatCString(aSection).get(),
+                           PromiseFlatCString(aKey).get(),
+                           PromiseFlatCString(aValue).get());
+}
+
+NS_IMETHODIMP
+nsINIParserImpl::WriteFile(nsIFile* aINIFile)
+{
+  return mParser.WriteToFile(aINIFile);
 }

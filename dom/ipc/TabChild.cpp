@@ -44,6 +44,7 @@
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/plugins/PPluginWidgetChild.h"
+#include "mozilla/recordreplay/ParentIPC.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Move.h"
@@ -340,7 +341,10 @@ private:
         }
 
         // Check in case ActorDestroy was called after RecvDestroy message.
-        if (mTabChild->IPCOpen()) {
+        // Middleman processes with their own recording child process avoid
+        // sending a delete message, so that the parent process does not
+        // receive two deletes for the same actor.
+        if (mTabChild->IPCOpen() && !recordreplay::parent::IsMiddlemanWithRecordingChild()) {
           Unused << PBrowserChild::Send__delete__(mTabChild);
         }
 

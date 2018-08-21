@@ -4448,8 +4448,20 @@ JSScript::hasLoops()
     JSTryNote* tn = trynotes()->vector;
     JSTryNote* tnlimit = tn + trynotes()->length;
     for (; tn < tnlimit; tn++) {
-        if (tn->kind == JSTRY_FOR_IN || tn->kind == JSTRY_LOOP)
+        switch (tn->kind) {
+          case JSTRY_FOR_IN:
+          case JSTRY_FOR_OF:
+          case JSTRY_LOOP:
             return true;
+          case JSTRY_CATCH:
+          case JSTRY_FINALLY:
+          case JSTRY_FOR_OF_ITERCLOSE:
+          case JSTRY_DESTRUCTURING_ITERCLOSE:
+            break;
+          default:
+            MOZ_ASSERT(false, "Add new try note type to JSScript::hasLoops");
+            break;
+        }
     }
     return false;
 }
