@@ -197,18 +197,6 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override
-    public void onResume() {
-        mGeckoSession.setActive(true);
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        mGeckoSession.setActive(false);
-        super.onPause();
-    }
-
-    @Override
     public void onDestroy() {
         mGeckoSession.close();
         mTextSelection.destroy();
