@@ -659,6 +659,22 @@ AudioCallbackDriver::Init()
     return true;
   }
 
+  CubebUtils::AudioDeviceID forcedOutputDeviceId = nullptr;
+
+  char* forcedOutputDeviceName = CubebUtils::GetForcedOutputDevice();
+  if (forcedOutputDeviceName) {
+    nsTArray<RefPtr<AudioDeviceInfo>> deviceInfos;
+    GetDeviceCollection(deviceInfos, CubebUtils::Output);
+    for (const auto& device : deviceInfos) {
+      const nsString& name = device->Name();
+      if (name.Equals(NS_ConvertUTF8toUTF16(forcedOutputDeviceName))) {
+        if (device->DeviceID()) {
+          forcedOutputDeviceId = device->DeviceID();
+        }
+      }
+    }
+  }
+
   mBuffer = AudioCallbackBufferWrapper<AudioDataValue>(mOutputChannels);
   mScratchBuffer = SpillBuffer<AudioDataValue, WEBAUDIO_BLOCK_SIZE * 2>(mOutputChannels);
 
@@ -690,7 +706,7 @@ AudioCallbackDriver::Init()
                         "AudioCallbackDriver",
                         input_id,
                         inputWanted ? &input : nullptr,
-                        output_id,
+                        forcedOutputDeviceId ? forcedOutputDeviceId : output_id,
                         &output,
                         latency_frames,
                         DataCallback_s,

@@ -71,6 +71,7 @@
 #include "nsQuickSort.h"
 #include "nsReadableUtils.h"
 #include "nsRefPtrHashtable.h"
+#include "nsRelativeFilePref.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -2307,21 +2308,6 @@ private:
   virtual ~nsPrefLocalizedString();
 
   nsCOMPtr<nsISupportsString> mUnicodeString;
-};
-
-class nsRelativeFilePref final : public nsIRelativeFilePref
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRELATIVEFILEPREF
-
-  nsRelativeFilePref();
-
-private:
-  virtual ~nsRelativeFilePref();
-
-  nsCOMPtr<nsIFile> mFile;
-  nsCString mRelativeToKey;
 };
 
 //----------------------------------------------------------------------------

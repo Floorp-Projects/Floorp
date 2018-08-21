@@ -10,7 +10,7 @@ import shutil
 
 from marionette_driver import Wait
 from marionette_driver.errors import (
-    MarionetteException,
+    InvalidSessionIdException,
     NoSuchWindowException,
     TimeoutException
 )
@@ -106,8 +106,8 @@ class TestCrash(BaseCrashTestCase):
 
         self.assertEqual(self.marionette.crashed, 1)
         self.assertIsNone(self.marionette.session)
-        self.assertRaisesRegexp(MarionetteException, 'Please start a session',
-                                self.marionette.get_url)
+        with self.assertRaisesRegexp(InvalidSessionIdException, 'Please start a session'):
+            self.marionette.get_url()
 
         self.marionette.start_session()
         self.assertNotEqual(self.marionette.process_id, self.pid)
@@ -134,8 +134,8 @@ class TestCrash(BaseCrashTestCase):
 
         self.assertEqual(self.marionette.crashed, 1)
         self.assertIsNone(self.marionette.session)
-        self.assertRaisesRegexp(MarionetteException, 'Please start a session',
-                                self.marionette.get_url)
+        with self.assertRaisesRegexp(InvalidSessionIdException, 'Please start a session'):
+            self.marionette.get_url()
 
         self.marionette.start_session()
         self.assertNotEqual(self.marionette.process_id, self.pid)

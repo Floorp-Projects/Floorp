@@ -239,8 +239,8 @@ class MUse : public TempObject, public InlineListNode<MUse>
 
 #ifdef DEBUG
     // Return the operand index of this MUse in its consumer. This is DEBUG-only
-    // as normal code should instead to call indexOf on the casted consumer
-    // directly, to allow it to be devirtualized and inlined.
+    // as normal code should instead call indexOf on the cast consumer directly,
+    // to allow it to be devirtualized and inlined.
     size_t index() const;
 #endif
 };

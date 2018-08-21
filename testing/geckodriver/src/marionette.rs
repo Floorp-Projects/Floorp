@@ -554,7 +554,7 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
                             },
                             _ => {
                                 return Err(WebDriverError::new(
-                                    ErrorStatus::SessionNotCreated,
+                                    ErrorStatus::InvalidSessionId,
                                     "Tried to run command without establishing a connection"));
                             }
                         }

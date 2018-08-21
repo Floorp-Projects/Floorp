@@ -229,23 +229,26 @@ wasm::UnregisterCodeSegment(const CodeSegment* cs)
 }
 
 const CodeSegment*
-wasm::LookupCodeSegment(const void* pc, const CodeRange** cr /*= nullptr */)
+wasm::LookupCodeSegment(const void* pc, const CodeRange** codeRange /*= nullptr */)
 {
     if (const CodeSegment* found = processCodeSegmentMap.lookup(pc)) {
-        if (cr) {
-            *cr = found->isModule()
-                  ? found->asModule()->lookupRange(pc)
-                  : found->asLazyStub()->lookupRange(pc);
+        if (codeRange) {
+            *codeRange = found->isModule()
+                       ? found->asModule()->lookupRange(pc)
+                       : found->asLazyStub()->lookupRange(pc);
         }
         return found;
     }
+    if (codeRange)
+        *codeRange = nullptr;
     return nullptr;
 }
 
 const Code*
-wasm::LookupCode(const void* pc, const CodeRange** cr /* = nullptr */)
+wasm::LookupCode(const void* pc, const CodeRange** codeRange /* = nullptr */)
 {
-    const CodeSegment* found = LookupCodeSegment(pc, cr);
+    const CodeSegment* found = LookupCodeSegment(pc, codeRange);
+    MOZ_ASSERT_IF(!found && codeRange, !*codeRange);
     return found ? &found->code() : nullptr;
 }
 

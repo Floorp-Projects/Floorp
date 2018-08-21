@@ -648,7 +648,7 @@ LazyStubTier::createMany(HasGcTypes gcTypesEnabled, const Uint32Vector& funcExpo
         const FuncExport& fe = funcExports[funcExportIndex];
         numExpectedRanges += fe.funcType().temporarilyUnsupportedAnyRef() ? 1 : 2;
         void* calleePtr = moduleSegmentBase +
-                          moduleRanges[fe.interpCodeRangeIndex()].funcNormalEntry();
+                          moduleRanges[fe.funcCodeRangeIndex()].funcNormalEntry();
         Maybe<ImmPtr> callee;
         callee.emplace(calleePtr, ImmPtr::NoCheckToken());
         if (!GenerateEntryStubs(masm, funcExportIndex, fe, callee, /* asmjs */ false,
@@ -803,7 +803,7 @@ LazyStubTier::lookupInterpEntry(uint32_t funcIndex) const
                     &match));
     const LazyFuncExport& fe = exports_[match];
     const LazyStubSegment& stub = *stubSegments_[fe.lazyStubSegmentIndex];
-    return stub.base() + stub.codeRanges()[fe.interpCodeRangeIndex].begin();
+    return stub.base() + stub.codeRanges()[fe.funcCodeRangeIndex].begin();
 }
 
 void
