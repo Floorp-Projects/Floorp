@@ -29,6 +29,3 @@ UNIFIED_SOURCES += [
 DEFINES['TRACING'] = True
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['MOZ_ASAN'] and CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1306642
