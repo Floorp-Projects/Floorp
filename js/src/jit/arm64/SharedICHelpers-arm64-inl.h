@@ -48,12 +48,6 @@ EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t argS
 }
 
 inline void
-EmitIonTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t stackSize)
-{
-    MOZ_CRASH("Not implemented yet.");
-}
-
-inline void
 EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32_t headerSize)
 {
     ARMRegister reg64(reg, 64);
