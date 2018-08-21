@@ -1250,8 +1250,6 @@ public class GeckoSessionTestRule implements TestRule {
 
             if (env.isAutomation()) {
                 runtimeSettingsBuilder
-                        .nativeCrashReportingEnabled(true)
-                        .javaCrashReportingEnabled(true)
                         .crashReportingJobId(1024);
             }
 

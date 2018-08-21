@@ -125,38 +125,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
         }
 
         /**
-         * Set whether crash reporting for native code should be enabled. This will cause
-         * a SIGSEGV handler to be installed, and any crash encountered there will be
-         * reported to Mozilla.
-         *
-         * <br>If crash reporting is enabled {@link #crashReportingJobId(int)} must also be used.
-         *
-         * @param enabled A flag determining whether native crash reporting should be enabled.
-         *                Defaults to false.
-         * @return This Builder.
-         */
-        public @NonNull Builder nativeCrashReportingEnabled(final boolean enabled) {
-            mSettings.mNativeCrashReporting = enabled;
-            return this;
-        }
-
-        /**
-         * Set whether crash reporting for Java code should be enabled. This will cause
-         * a default unhandled exception handler to be installed, and any exceptions encountered
-         * will automatically reported to Mozilla.
-         *
-         * <br>If crash reporting is enabled {@link #crashReportingJobId(int)} must also be used.
-         *
-         * @param enabled A flag determining whether Java crash reporting should be enabled.
-         *                Defaults to false.
-         * @return This Builder.
-         */
-        public @NonNull Builder javaCrashReportingEnabled(final boolean enabled) {
-            mSettings.mJavaCrashReporting = enabled;
-            return this;
-        }
-
-        /**
          * On Oreo and later devices we use the JobScheduler for crash reporting in the background.<br>
          * This allows for setting the unique Job Id to be used.
          * <a href="https://developer.android.com/reference/android/app/job/JobInfo.Builder#JobInfo.Builder(int,%20android.content.ComponentName)">
@@ -366,8 +334,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /* package */ Pref<Boolean> mSafebrowsingPhishing = new Pref<Boolean>(
         "browser.safebrowsing.phishing.enabled", true);
 
-    /* package */ boolean mNativeCrashReporting;
-    /* package */ boolean mJavaCrashReporting;
     /* package */ int mCrashReportingJobId;
     /* package */ boolean mDebugPause;
     /* package */ float mDisplayDensityOverride = -1.0f;
@@ -410,8 +376,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
             uncheckedPref.set(settings.mPrefs[i].get());
         }
 
-        mNativeCrashReporting = settings.mNativeCrashReporting;
-        mJavaCrashReporting = settings.mJavaCrashReporting;
         mCrashReportingJobId = settings.mCrashReportingJobId;
         mDebugPause = settings.mDebugPause;
         mDisplayDensityOverride = settings.mDisplayDensityOverride;
@@ -514,27 +478,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
     }
 
     /**
-     * Get whether native crash reporting is enabled or not.
-     *
-     * @return True if native crash reporting is enabled.
-     */
-    public boolean getNativeCrashReportingEnabled() {
-        return mNativeCrashReporting;
-    }
-
-    /**
-     * Get whether Java crash reporting is enabled or not.
-     *
-     * @return True if Java crash reporting is enabled.
-     */
-    public boolean getJavaCrashReportingEnabled() {
-        return mJavaCrashReporting;
-    }
-
-    /**
-     * Get the Job ID used on Oreo and later devices to manage crash reporting in background.
-     *
-     * @return Crash reporting service Job ID
+     * Get the Job Id used on Oreo and later devices to manage crash reporting in background.
      */
     public int getCrashReportingServiceJobId() {
         return mCrashReportingJobId;
@@ -786,8 +730,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
             out.writeValue(pref.get());
         }
 
-        ParcelableUtils.writeBoolean(out, mNativeCrashReporting);
-        ParcelableUtils.writeBoolean(out, mJavaCrashReporting);
         out.writeInt(mCrashReportingJobId);
         ParcelableUtils.writeBoolean(out, mDebugPause);
         out.writeFloat(mDisplayDensityOverride);
@@ -809,8 +751,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
             uncheckedPref.set(source.readValue(getClass().getClassLoader()));
         }
 
-        mNativeCrashReporting = ParcelableUtils.readBoolean(source);
-        mJavaCrashReporting = ParcelableUtils.readBoolean(source);
         mCrashReportingJobId = source.readInt();
         mDebugPause = ParcelableUtils.readBoolean(source);
         mDisplayDensityOverride = source.readFloat();

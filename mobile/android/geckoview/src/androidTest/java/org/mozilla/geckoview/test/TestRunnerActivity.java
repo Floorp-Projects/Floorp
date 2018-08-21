@@ -160,8 +160,6 @@ public class TestRunnerActivity extends Activity {
             }
 
             runtimeSettingsBuilder
-                    .nativeCrashReportingEnabled(true)
-                    .javaCrashReportingEnabled(true)
                     .crashReportingJobId(1024)
                     .consoleOutput(true);
 
