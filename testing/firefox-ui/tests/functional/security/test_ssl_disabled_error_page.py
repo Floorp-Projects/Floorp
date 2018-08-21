@@ -51,10 +51,16 @@ class TestSSLDisabledErrorPage(PuppeteerMixin, MarionetteTestCase):
                           short_description.get_property('textContent'))
 
             # Verify that the "Restore" button appears and works
-            reset_button = self.marionette.find_element(By.ID, 'prefResetButton')
-            reset_button.click()
+            restore_button = self.marionette.find_element(By.ID, 'prefResetButton')
+            restore_button.click()
+            Wait(self.marionette).until(
+                expected.element_not_present(By.ID, "prefResetButton"),
+                message="Click on the restore button didn't trigger a page load"
+            )
 
             # With the preferences reset, the page has to load correctly
             el = Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
-                expected.element_present(By.TAG_NAME, 'h1'))
+                expected.element_present(By.TAG_NAME, 'h1'),
+                message="Expected target page has not been loaded"
+            )
             self.assertIn('tls-v1-0', el.get_property('innerText'))

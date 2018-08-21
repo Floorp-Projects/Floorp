@@ -9,54 +9,10 @@
 #include "nsError.h"
 #include "nsIFile.h"
 #include "nsINIParser.h"
-#include "mozilla/FileUtils.h" // AutoFILE
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/URLPreloader.h"
 
-// System headers (alphabetical)
-#include <stdio.h>
-#include <stdlib.h>
-#ifdef XP_WIN
-#include <windows.h>
-#endif
-
 using namespace mozilla;
-
-#ifdef XP_WIN
-inline FILE*
-TS_tfopen(const char* aPath, const wchar_t* aMode)
-{
-  wchar_t wPath[MAX_PATH];
-  MultiByteToWideChar(CP_UTF8, 0, aPath, -1, wPath, MAX_PATH);
-  return _wfopen(wPath, aMode);
-}
-#else
-inline FILE*
-TS_tfopen(const char* aPath, const char* aMode)
-{
-  return fopen(aPath, aMode);
-}
-#endif
-
-// Stack based FILE wrapper to ensure that fclose is called, copied from
-// toolkit/mozapps/update/updater/readstrings.cpp
-
-class AutoFILE
-{
-public:
-  explicit AutoFILE(FILE* aFp = nullptr) : fp_(aFp) {}
-  ~AutoFILE()
-  {
-    if (fp_) {
-      fclose(fp_);
-    }
-  }
-  operator FILE*() { return fp_; }
-  FILE** operator&() { return &fp_; }
-  void operator=(FILE* aFp) { fp_ = aFp; }
-private:
-  FILE* fp_;
-};
 
 nsresult
 nsINIParser::Init(nsIFile* aFile)
@@ -75,26 +31,27 @@ static const char kRBracket[] = "]";
 nsresult
 nsINIParser::InitFromString(const nsCString& aStr)
 {
+  nsCString fileContents;
   char* buffer;
 
   if (StringHead(aStr, 3) == "\xEF\xBB\xBF") {
     // Someone set us up the Utf-8 BOM
     // This case is easy, since we assume that BOM-less
     // files are Utf-8 anyway.  Just skip the BOM and process as usual.
-    mFileContents.Append(aStr);
-    buffer = mFileContents.BeginWriting() + 3;
+    fileContents.Append(aStr);
+    buffer = fileContents.BeginWriting() + 3;
   } else {
     if (StringHead(aStr, 2) == "\xFF\xFE") {
       // Someone set us up the Utf-16LE BOM
       nsDependentSubstring str(reinterpret_cast<const char16_t*>(aStr.get()),
                                aStr.Length() / 2);
 
-      AppendUTF16toUTF8(Substring(str, 1), mFileContents);
+      AppendUTF16toUTF8(Substring(str, 1), fileContents);
     } else {
-      mFileContents.Append(aStr);
+      fileContents.Append(aStr);
     }
 
-    buffer = mFileContents.BeginWriting();
+    buffer = fileContents.BeginWriting();
   }
 
   char* currSection = nullptr;
@@ -138,43 +95,49 @@ nsINIParser::InitFromString(const nsCString& aStr)
       continue;
     }
 
-    INIValue* v;
-    if (!mSections.Get(currSection, &v)) {
-      v = new INIValue(key, token);
-      if (!v) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      mSections.Put(currSection, v);
-      continue;
-    }
-
-    // Check whether this key has already been specified; overwrite
-    // if so, or append if not.
-    while (v) {
-      if (!strcmp(key, v->key)) {
-        v->value = token;
-        break;
-      }
-      if (!v->next) {
-        v->next = MakeUnique<INIValue>(key, token);
-        if (!v->next) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-        break;
-      }
-      v = v->next.get();
-    }
-    NS_ASSERTION(v, "v should never be null coming out of this loop");
+    SetString(currSection, key, token);
   }
 
   return NS_OK;
+}
+
+bool
+nsINIParser::IsValidSection(const char* aSection)
+{
+  if (aSection[0] == '\0') {
+    return false;
+  }
+
+  const char* found = strpbrk(aSection, "\r\n[]");
+  return found == nullptr;
+}
+
+bool
+nsINIParser::IsValidKey(const char* aKey)
+{
+  if (aKey[0] == '\0') {
+    return false;
+  }
+
+  const char* found = strpbrk(aKey, "\r\n=");
+  return found == nullptr;
+}
+
+bool
+nsINIParser::IsValidValue(const char* aValue)
+{
+  const char* found = strpbrk(aValue, "\r\n");
+  return found == nullptr;
 }
 
 nsresult
 nsINIParser::GetString(const char* aSection, const char* aKey,
                        nsACString& aResult)
 {
+  if (!IsValidSection(aSection) || !IsValidKey(aKey)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   INIValue* val;
   mSections.Get(aSection, &val);
 
@@ -194,6 +157,10 @@ nsresult
 nsINIParser::GetString(const char* aSection, const char* aKey,
                        char* aResult, uint32_t aResultLen)
 {
+  if (!IsValidSection(aSection) || !IsValidKey(aKey)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   INIValue* val;
   mSections.Get(aSection, &val);
 
@@ -229,6 +196,10 @@ nsresult
 nsINIParser::GetStrings(const char* aSection,
                         INIStringCallback aCB, void* aClosure)
 {
+  if (!IsValidSection(aSection)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   INIValue* val;
 
   for (mSections.Get(aSection, &val);
@@ -240,5 +211,116 @@ nsINIParser::GetStrings(const char* aSection,
     }
   }
 
+  return NS_OK;
+}
+
+nsresult
+nsINIParser::SetString(const char* aSection, const char* aKey, const char* aValue)
+{
+  if (!IsValidSection(aSection) || !IsValidKey(aKey) || !IsValidValue(aValue)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  INIValue* v;
+  if (!mSections.Get(aSection, &v)) {
+    v = new INIValue(aKey, aValue);
+
+    mSections.Put(aSection, v);
+    return NS_OK;
+  }
+
+  // Check whether this key has already been specified; overwrite
+  // if so, or append if not.
+  while (v) {
+    if (!strcmp(aKey, v->key)) {
+      v->SetValue(aValue);
+      break;
+    }
+    if (!v->next) {
+      v->next = MakeUnique<INIValue>(aKey, aValue);
+      break;
+    }
+    v = v->next.get();
+  }
+  NS_ASSERTION(v, "v should never be null coming out of this loop");
+
+  return NS_OK;
+}
+
+nsresult
+nsINIParser::DeleteString(const char* aSection, const char* aKey)
+{
+  if (!IsValidSection(aSection) || !IsValidKey(aKey)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  INIValue* val;
+  if (!mSections.Get(aSection, &val)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Special case the first result
+  if (strcmp(val->key, aKey) == 0) {
+    if (!val->next) {
+      mSections.Remove(aSection);
+    } else {
+      mSections.Put(aSection, val->next.release());
+      delete val;
+    }
+    return NS_OK;
+  }
+
+  while (val->next) {
+    if (strcmp(val->next->key, aKey) == 0) {
+      val->next = std::move(val->next->next);
+
+      return NS_OK;
+    }
+
+    val = val->next.get();
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsINIParser::DeleteSection(const char* aSection)
+{
+  if (!IsValidSection(aSection)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (!mSections.Remove(aSection)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsINIParser::WriteToFile(nsIFile *aFile) {
+  nsCString buffer;
+
+  for (auto iter = mSections.Iter(); !iter.Done(); iter.Next()) {
+    buffer.AppendPrintf("[%s]\n", iter.Key());
+    INIValue* val = iter.Data();
+    while (val) {
+      buffer.AppendPrintf("%s=%s\n", val->key, val->value);
+      val = val->next.get();
+    }
+    buffer.AppendLiteral("\n");
+  }
+
+  FILE* writeFile;
+  nsresult rv = aFile->OpenANSIFileDesc("w", &writeFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  unsigned int length = buffer.Length();
+
+  if (fwrite(buffer.get(), sizeof(char), length, writeFile) != length) {
+      fclose(writeFile);
+      return NS_ERROR_UNEXPECTED;
+  }
+
+  fclose(writeFile);
   return NS_OK;
 }

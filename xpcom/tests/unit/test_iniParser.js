@@ -89,7 +89,7 @@ var testdata = [
     { filename: "data/iniparser16.ini", reference:
                     { "☺♫": { "♫": "☻", "♪": "♥"  },
                        "☼": { "♣": "♠", "♦": "♥"  }} },
-
+    { filename: "data/iniparser17.ini", reference: { section: { key: "" } } },
     ];
 
     testdata.push( { filename: "data/iniparser01-utf8BOM.ini",
@@ -165,7 +165,7 @@ var testdata = [
     }
 
 /* ========== 0 ========== */
-factory = Cc["@mozilla.org/xpcom/ini-processor-factory;1"].
+factory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
           getService(Ci.nsIINIParserFactory);
 Assert.ok(!!factory);
 
@@ -201,21 +201,28 @@ if (newfile.exists())
     newfile.remove(false);
 Assert.ok(!newfile.exists());
 
-var parser = factory.createINIParser(newfile);
+try {
+    var parser = factory.createINIParser(newfile);
+    Assert.ok(false, "Should have thrown an exception");
+} catch (e) {
+    Assert.equal(e.result, Cr.NS_ERROR_FILE_NOT_FOUND, "Caught a file not found exception");
+}
+parser = factory.createINIParser();
 Assert.ok(!!parser);
 Assert.ok(parser instanceof Ci.nsIINIParserWriter);
 checkParserOutput(parser, {});
-parser.writeFile();
+parser.writeFile(newfile);
 Assert.ok(newfile.exists());
 
 // test adding a new section and new key
 parser.setString("section", "key", "value");
-parser.writeFile();
+parser.setString("section", "key2", "");
+parser.writeFile(newfile);
 Assert.ok(newfile.exists());
-checkParserOutput(parser, {section: {key: "value"} });
+checkParserOutput(parser, {section: {key: "value", key2: ""} });
 // read it in again, check for same data.
 parser = parserForFile("data/nonexistent-file.ini");
-checkParserOutput(parser, {section: {key: "value"} });
+checkParserOutput(parser, {section: {key: "value", key2: ""} });
 // cleanup after the test
 newfile.remove(false);
 
@@ -233,52 +240,73 @@ dump("INFO | test #" + ++testnum + "\n");
 
 // test trying to set illegal characters
 var caughtError;
-caughtError = false;
+caughtError = null;
 checkParserOutput(parser, {section1: {name1: "value2"} });
 
 // Bad characters in section name
-try { parser.SetString("bad\0", "ok", "ok"); } catch (e) { caughtError = true; }
+try { parser.setString("bad\0", "ok", "ok"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
-caughtError = false;
-try { parser.SetString("bad\r", "ok", "ok"); } catch (e) { caughtError = true; }
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("bad\r", "ok", "ok"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
-caughtError = false;
-try { parser.SetString("bad\n", "ok", "ok"); } catch (e) { caughtError = true; }
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("bad\n", "ok", "ok"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
-caughtError = false;
-try { parser.SetString("bad[", "ok", "ok"); } catch (e) { caughtError = true; }
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("bad[", "ok", "ok"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
-caughtError = false;
-try { parser.SetString("bad]", "ok", "ok"); } catch (e) { caughtError = true; }
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("bad]", "ok", "ok"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("", "ok", "ok"); } catch (e) { caughtError = e; }
+Assert.ok(caughtError);
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
 
 // Bad characters in key name
-caughtError = false;
-try { parser.SetString("ok", "bad\0", "ok"); } catch (e) { caughtError = true; }
+caughtError = null;
+try { parser.setString("ok", "bad\0", "ok"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
-caughtError = false;
-try { parser.SetString("ok", "bad\r", "ok"); } catch (e) { caughtError = true; }
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("ok", "bad\r", "ok"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
-caughtError = false;
-try { parser.SetString("ok", "bad\n", "ok"); } catch (e) { caughtError = true; }
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("ok", "bad\n", "ok"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
-caughtError = false;
-try { parser.SetString("ok", "bad=", "ok"); } catch (e) { caughtError = true; }
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("ok", "bad=", "ok"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("ok", "", "ok"); } catch (e) { caughtError = e; }
+Assert.ok(caughtError);
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
 
 // Bad characters in value
-caughtError = false;
-try { parser.SetString("ok", "ok", "bad\0"); } catch (e) { caughtError = true; }
+caughtError = null;
+try { parser.setString("ok", "ok", "bad\0"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
-caughtError = false;
-try { parser.SetString("ok", "ok", "bad\r"); } catch (e) { caughtError = true; }
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("ok", "ok", "bad\r"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
-caughtError = false;
-try { parser.SetString("ok", "ok", "bad\n"); } catch (e) { caughtError = true; }
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("ok", "ok", "bad\n"); } catch (e) { caughtError = e; }
 Assert.ok(caughtError);
-caughtError = false;
-try { parser.SetString("ok", "ok", "bad="); } catch (e) { caughtError = true; }
-Assert.ok(caughtError);
+Assert.equal(caughtError.result, Cr.NS_ERROR_INVALID_ARG);
+caughtError = null;
+try { parser.setString("ok", "ok", "good="); } catch (e) { caughtError = e; }
+Assert.ok(!caughtError);
+caughtError = null;
 
 } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;

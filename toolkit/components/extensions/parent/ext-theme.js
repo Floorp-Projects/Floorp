@@ -2,6 +2,8 @@
 
 /* global windowTracker, EventManager, EventEmitter */
 
+/* eslint-disable complexity */
+
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
@@ -184,6 +186,10 @@ class Theme {
         case "popup_highlight_text":
         case "ntp_background":
         case "ntp_text":
+        case "sidebar":
+        case "sidebar_text":
+        case "sidebar_highlight":
+        case "sidebar_highlight_text":
           this.lwtStyles[color] = cssColor;
           break;
         default:
@@ -302,11 +308,7 @@ class Theme {
             break;
           }
 
-          let alignment = [];
-          if (this.lwtStyles.headerURL) {
-            alignment.push("right top");
-          }
-          this.lwtStyles.backgroundsAlignment = alignment.concat(val).join(",");
+          this.lwtStyles.backgroundsAlignment = val.join(",");
           break;
         }
         case "additional_backgrounds_tiling": {
@@ -315,9 +317,6 @@ class Theme {
           }
 
           let tiling = [];
-          if (this.lwtStyles.headerURL) {
-            tiling.push("no-repeat");
-          }
           for (let i = 0, l = this.lwtStyles.additionalBackgrounds.length; i < l; ++i) {
             tiling.push(val[i] || "no-repeat");
           }

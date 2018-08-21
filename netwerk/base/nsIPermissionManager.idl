@@ -176,6 +176,11 @@ interface nsIPermissionManager : nsISupports
   void removeAllSince(in int64_t since);
 
   /**
+   * Clear all permissions of the passed type.
+   */
+  void removeByType(in string type);
+
+  /**
    * Test whether a website has permission to perform the given action.
    * This function will perform a pref lookup to permissions.default.<type>
    * if the specific permission type is part of the whitelist for that functionality.

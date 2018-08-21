@@ -30,13 +30,6 @@ interface nsIINIParser : nsISupports
 interface nsIINIParserWriter : nsISupports
 {
   /**
-   * Windows and the NSIS installer code sometimes expect INI files to be in
-   * UTF-16 encoding. On Windows only, this flag to writeFile can be used to
-   * change the encoding from its default UTF-8.
-   */
-  const unsigned long WRITE_UTF16 = 0x1;
-
-  /**
    * Set the value of a string for a particular section and key.
    */
   void setString(in AUTF8String aSection, in AUTF8String aKey, in AUTF8String aValue);
@@ -44,8 +37,7 @@ interface nsIINIParserWriter : nsISupports
   /**
    * Write to the INI file.
    */
-  void writeFile([optional] in nsIFile aINIFile,
-                 [optional] in unsigned long aFlags);
+  void writeFile(in nsIFile aINIFile);
 };
 
 [scriptable, uuid(ccae7ea5-1218-4b51-aecb-c2d8ecd46af9)]
@@ -54,5 +46,5 @@ interface nsIINIParserFactory : nsISupports
   /**
    * Create an iniparser instance from a local file.
    */
-  nsIINIParser createINIParser(in nsIFile aINIFile);
+  nsIINIParser createINIParser([optional] in nsIFile aINIFile);
 };

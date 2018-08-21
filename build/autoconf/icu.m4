@@ -91,9 +91,16 @@ if test -n "$USE_ICU"; then
     AC_DEFINE(U_USING_ICU_NAMESPACE,0)
 
     if test -z "$MOZ_SYSTEM_ICU"; then
-        if test -z "$YASM" -a -z "$GNU_AS" -a "$COMPILE_ENVIRONMENT"; then
-            AC_MSG_ERROR([Building ICU requires either yasm or a GNU assembler. If you do not have either of those available for this platform you must use --without-intl-api])
-        fi
+        case "$OS_TARGET:$CPU_ARCH" in
+        WINNT:aarch64)
+            dnl we use non-yasm, non-GNU as solutions here.
+            ;;
+        *)
+            if test -z "$YASM" -a -z "$GNU_AS" -a "$COMPILE_ENVIRONMENT"; then
+                AC_MSG_ERROR([Building ICU requires either yasm or a GNU assembler. If you do not have either of those available for this platform you must use --without-intl-api])
+            fi
+            ;;
+        esac
         dnl We build ICU as a static library.
         AC_DEFINE(U_STATIC_IMPLEMENTATION)
     fi

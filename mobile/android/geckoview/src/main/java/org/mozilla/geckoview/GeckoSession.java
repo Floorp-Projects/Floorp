@@ -1008,6 +1008,12 @@ public class GeckoSession extends LayerSession
         if ((change == WINDOW_OPEN || change == WINDOW_TRANSFER_IN) && !inProgress) {
             mTextInput.onWindowChanged(mWindow);
         }
+        if ((change == WINDOW_CLOSE || change == WINDOW_TRANSFER_OUT) && !inProgress) {
+            if (mAccessibility != null) {
+                mAccessibility.clearAutoFill();
+            }
+            mTextInput.clearAutoFill();
+        }
     }
 
     /**
@@ -1297,15 +1303,38 @@ public class GeckoSession extends LayerSession
     }
 
     /**
-    * Set this GeckoSession as active or inactive. Setting a GeckoSession to inactive will
-    * significantly reduce its memory footprint, but should only be done if the
-    * GeckoSession is not currently visible.
-    * @param active A boolean determining whether the GeckoSession is active
-    */
+     * Set this GeckoSession as active or inactive, which represents if the session is currently
+     * visible or not. Setting a GeckoSession to inactive will significantly reduce its memory
+     * footprint, but should only be done if the GeckoSession is not currently visible. Note that
+     * a session can be active (i.e. visible) but not focused.
+     *
+     * @param active A boolean determining whether the GeckoSession is active.
+     *
+     * @see #setFocused
+     */
     public void setActive(boolean active) {
-        final GeckoBundle msg = new GeckoBundle();
+        final GeckoBundle msg = new GeckoBundle(1);
         msg.putBoolean("active", active);
         mEventDispatcher.dispatch("GeckoView:SetActive", msg);
+    }
+
+    /**
+     * Move focus to this session or away from this session. Only one session has focus at
+     * a given time. Note that a session can be unfocused but still active (i.e. visible).
+     *
+     * @param focused True if the session should gain focus or
+     *                false if the session should lose focus.
+     *
+     * @see #setActive
+     */
+    public void setFocused(boolean focused) {
+        final GeckoBundle msg = new GeckoBundle(1);
+        msg.putBoolean("focused", focused);
+        mEventDispatcher.dispatch("GeckoView:SetFocused", msg);
+
+        if (focused && mAccessibility != null) {
+            mAccessibility.onWindowFocus();
+        }
     }
 
     /**
@@ -3343,5 +3372,45 @@ public class GeckoSession extends LayerSession
          * @param info Cursor-anchor information.
          */
         void updateCursorAnchorInfo(@NonNull GeckoSession session, @NonNull CursorAnchorInfo info);
+
+        @Retention(RetentionPolicy.SOURCE)
+        @IntDef({AUTO_FILL_NOTIFY_STARTED, AUTO_FILL_NOTIFY_COMMITTED, AUTO_FILL_NOTIFY_CANCELED,
+                AUTO_FILL_NOTIFY_VIEW_ADDED, AUTO_FILL_NOTIFY_VIEW_REMOVED,
+                AUTO_FILL_NOTIFY_VIEW_UPDATED, AUTO_FILL_NOTIFY_VIEW_ENTERED,
+                AUTO_FILL_NOTIFY_VIEW_EXITED})
+        /* package */ @interface AutoFillNotification {}
+
+        /** An auto-fill session has started, usually as a result of loading a page. */
+        int AUTO_FILL_NOTIFY_STARTED = 0;
+        /** An auto-fill session has been committed, usually as a result of submitting a form. */
+        int AUTO_FILL_NOTIFY_COMMITTED = 1;
+        /** An auto-fill session has been canceled, usually as a result of unloading a page. */
+        int AUTO_FILL_NOTIFY_CANCELED = 2;
+        /** A view within the auto-fill session has been added. */
+        int AUTO_FILL_NOTIFY_VIEW_ADDED = 3;
+        /** A view within the auto-fill session has been removed. */
+        int AUTO_FILL_NOTIFY_VIEW_REMOVED = 4;
+        /** A view within the auto-fill session has been updated (e.g. change in state). */
+        int AUTO_FILL_NOTIFY_VIEW_UPDATED = 5;
+        /** A view within the auto-fill session has gained focus. */
+        int AUTO_FILL_NOTIFY_VIEW_ENTERED = 6;
+        /** A view within the auto-fill session has lost focus. */
+        int AUTO_FILL_NOTIFY_VIEW_EXITED = 7;
+
+        /**
+         * Notify that an auto-fill event has occurred. The default implementation forwards the
+         * notification to the system {@link android.view.autofill.AutofillManager}. This method is
+         * only called on Android 6.0 and above, and it is called in viewless mode as well.
+         *
+         * @param session Session instance.
+         * @param notification Notification type as one of the {@link #AUTO_FILL_NOTIFY_STARTED
+         *                     AUTO_FILL_NOTIFY_*} constants.
+         * @param virtualId Virtual ID of the target, or {@link android.view.View#NO_ID} if not
+         *                  applicable. The ID matches one of the virtual IDs provided by {@link
+         *                  SessionTextInput#onProvideAutofillVirtualStructure} and can be used
+         *                  with {@link SessionTextInput#autofill}.
+         */
+        void notifyAutoFill(@NonNull GeckoSession session, @AutoFillNotification int notification,
+                            int virtualId);
     }
 }

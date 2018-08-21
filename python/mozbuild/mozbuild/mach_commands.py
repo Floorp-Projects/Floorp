@@ -905,6 +905,10 @@ class RunProgram(MachCommandBase):
             if not background and sys.platform == 'darwin':
                 args.append('-foreground')
 
+            if sys.platform.startswith('win') and \
+               'MOZ_LAUNCHER_PROCESS' in self.defines:
+                args.append('-wait-for-browser')
+
             no_profile_option_given = \
                 all(p not in params for p in ['-profile', '--profile', '-P'])
             if no_profile_option_given and not noprofile:

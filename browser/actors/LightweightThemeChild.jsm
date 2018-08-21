@@ -11,6 +11,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * LightweightThemeChild forwards theme data to in-content pages.
+ * It is both instantiated by the traditional Actor mechanism,
+ * and also manually within the sidebar JS global (which has no message manager)
  */
 class LightweightThemeChild extends ActorChild {
   constructor(mm) {

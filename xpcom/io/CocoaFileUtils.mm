@@ -144,6 +144,7 @@ nsresult SetFileTypeCode(CFURLRef url, OSType typeCode)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+// Can be called off of the main thread.
 void AddOriginMetadataToFile(const CFStringRef filePath,
                              const CFURLRef sourceURL,
                              const CFURLRef referrerURL) {
@@ -193,6 +194,7 @@ void AddOriginMetadataToFile(const CFStringRef filePath,
   ::CFRelease(mdItem);
 }
 
+// Can be called off of the main thread.
 CFStringRef GetQuarantinePropKey() {
   if (nsCocoaFeatures::OnYosemiteOrLater()) {
     return kCFURLQuarantinePropertiesKey;
@@ -200,6 +202,7 @@ CFStringRef GetQuarantinePropKey() {
   return kLSItemQuarantineProperties;
 }
 
+// Can be called off of the main thread.
 CFMutableDictionaryRef CreateQuarantineDictionary(const CFURLRef aFileURL,
                                                   const bool aCreateProps) {
   // The properties key changed in 10.10:
@@ -235,6 +238,7 @@ CFMutableDictionaryRef CreateQuarantineDictionary(const CFURLRef aFileURL,
   return mutQuarantineProps;
 }
 
+// Can be called off of the main thread.
 void AddQuarantineMetadataToFile(const CFStringRef filePath,
                                  const CFURLRef sourceURL,
                                  const CFURLRef referrerURL,
@@ -284,6 +288,7 @@ void AddQuarantineMetadataToFile(const CFStringRef filePath,
   ::CFRelease(mutQuarantineProps);
 }
 
+// Can be called off of the main thread.
 void CopyQuarantineReferrerUrl(const CFStringRef aFilePath,
                                nsAString& aReferrer)
 {

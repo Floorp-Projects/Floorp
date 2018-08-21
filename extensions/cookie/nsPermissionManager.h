@@ -364,6 +364,10 @@ private:
   nsresult
   RemoveAllModifiedSince(int64_t aModificationTime);
 
+  template<class T>
+  nsresult
+  RemovePermissionEntries(T aCondition);
+
   /**
    * Returns false if this permission manager wouldn't have the permission
    * requested available.

@@ -40,6 +40,10 @@ const char* SaveAllRecordingsDirectory();
 // Get the pid of the UI process.
 base::ProcessId ParentProcessId();
 
+// Return whether this is a middleman process that forwards IPDL messages to
+// a recording child process.
+bool IsMiddlemanWithRecordingChild();
+
 // Save the recording up to the current point in execution.
 void SaveRecording(const ipc::FileDescriptor& aFile);
 
