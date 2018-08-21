@@ -115,6 +115,14 @@ nsSocketTransportService::SocketContext::TimeoutIn(PRIntervalTime now) const
     return timeout - elapsed;
 }
 
+void
+nsSocketTransportService::SocketContext::MaybeResetEpoch()
+{
+  if (mPollStartEpoch && mHandler->mPollTimeout == UINT16_MAX) {
+    mPollStartEpoch = 0;
+  }
+}
+
 //-----------------------------------------------------------------------------
 // ctor/dtor (called on the main/UI thread by the service manager)
 
@@ -1276,6 +1284,8 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
                 s.DisengageTimeout();
                 s.mHandler->OnSocketReady(desc.fd, -1);
                 numberOfOnSocketReadyCalls++;
+            } else {
+                s.MaybeResetEpoch();
             }
         }
         if (mTelemetryEnabledPref) {
