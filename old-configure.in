@@ -864,6 +864,10 @@ case "$target" in
         if test "$AS_BIN"; then
             AS="$(basename "$AS_BIN")"
         fi
+        # armasm64 doesn't understand -c.
+        if test "$CPU_ARCH" = "aarch64"; then
+            AS_DASH_C_FLAG=
+        fi
         case "$LINKER" in
         *lld*)
             AR='llvm-lib'
