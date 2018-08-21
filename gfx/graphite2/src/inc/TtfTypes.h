@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -77,11 +77,11 @@ enum
 //**********************************************************************************************
 //  Table declarations
 //**********************************************************************************************
-namespace Sfnt 
+namespace Sfnt
 {
-#pragma pack(1) // We need this or the structure members aren't alligned 
+#pragma pack(1) // We need this or the structure members aren't aligned
                         // correctly.  Fortunately this form of pragma is supposed
-                        // to be recongnised by VS C++ too (at least according to 
+                        // to be recognised by VS C++ too (at least according to
                         // MSDN).
 
     struct OffsetSubTable
@@ -99,9 +99,9 @@ namespace Sfnt
                 length;
         } table_directory[1];
 
-        enum ScalerType 
-        { 
-            TrueTypeMac = 0x74727565U, 
+        enum ScalerType
+        {
+            TrueTypeMac = 0x74727565U,
             TrueTypeWin = 0x00010000U,
             Type1   = 0x74797031U
         };
@@ -109,7 +109,7 @@ namespace Sfnt
 
 
 
-    
+
     struct CharacterCodeMap
     {
         uint16  version,
@@ -137,7 +137,7 @@ namespace Sfnt
             range_shift,
             end_code[1];
         // There are arrarys after this which need their
-        // start positions calculated since end_code is 
+        // start positions calculated since end_code is
         // seg_count uint16s long.
     };
 
@@ -147,7 +147,7 @@ namespace Sfnt
         uint32  length,
             language,
             num_groups;
-        struct 
+        struct
         {
             uint32  start_char_code,
                 end_char_code,
@@ -176,9 +176,9 @@ namespace Sfnt
         int16   font_direction_hint,
             index_to_loc_format,
             glyph_data_format;
-        enum 
+        enum
         {
-            MagicNumber = 0x5F0F3CF5, 
+            MagicNumber = 0x5F0F3CF5,
             GlypDataFormat = 0
         };
         enum {ShortIndexLocFormat, LongIndexLocFormat};
@@ -197,37 +197,37 @@ namespace Sfnt
             min_mem_type42,
             max_mem_type42,
             min_mem_type1,
-            max_mem_type1;          
-        enum 
+            max_mem_type1;
+        enum
         {
-            Format1  = 0x10000, 
+            Format1  = 0x10000,
             Format2  = 0x20000,
             Format25 = 0x28000,
             Format3  = 0x30000,
             Format4  = 0x40000
         };
     };
-    
+
     struct PostScriptGlyphName2 : PostScriptGlyphName
     {
         uint16  number_of_glyphs,
             glyph_name_index[1];
     };
-    
+
     struct PostScriptGlyphName25 : PostScriptGlyphName
     {
         uint16  number_of_glyphs;
         int8    offset[1];
     };
-    
+
     struct PostScriptGlyphName3 : PostScriptGlyphName {};
-    
+
     struct PostScriptGlyphName4 : PostScriptGlyphName
     {
         uint16 glyph_to_char_map[1];
     };
-    
-    
+
+
     struct HorizontalHeader
     {
         fixed   version;
@@ -245,7 +245,7 @@ namespace Sfnt
             metric_data_format;
         uint16  num_long_hor_metrics;
     };
-    
+
     struct MaximumProfile
     {
         fixed   version;
@@ -297,23 +297,23 @@ namespace Sfnt
             type_linegap,
             win_ascent,
             win_descent;
-        
-        enum 
+
+        enum
         {
-            Italic    =0x01, 
-            Underscore=0x02, 
-            Negative  =0x04, 
-            Outlined  =0x08, 
-            StrikeOut =0x10, 
+            Italic    =0x01,
+            Underscore=0x02,
+            Negative  =0x04,
+            Outlined  =0x08,
+            StrikeOut =0x10,
             Bold      =0x20
         };
     };
-    
+
     struct Compatibility1 : Compatibility0
     {
         uint32  codepage_range[2];
     };
-    
+
     struct Compatibility2 : Compatibility1
     {
             int16   x_height,
@@ -322,12 +322,12 @@ namespace Sfnt
                 break_char,
                 max_context;
     };
-    
+
     struct Compatibility3 : Compatibility2 {};
-    
+
     typedef Compatibility3  Compatibility;
-    
-    
+
+
     struct NameRecord
     {
         uint16  platform_id,
@@ -337,9 +337,9 @@ namespace Sfnt
             length,
             offset;
         enum    {Unicode, Mactintosh, Reserved, Microsoft};
-        enum    
+        enum
         {
-            Copyright, Family, Subfamily, UniqueSubfamily, 
+            Copyright, Family, Subfamily, UniqueSubfamily,
             Fullname, Version, PostScript
         };
     };
@@ -357,15 +357,15 @@ namespace Sfnt
             string_offset;
         NameRecord name_record[1];
     };
-    
-    
+
+
     struct HorizontalMetric
     {
         uint16  advance_width;
         int16   left_side_bearing;
     };
-    
-    
+
+
     struct Glyph
     {
         int16   number_of_contours;
@@ -374,11 +374,11 @@ namespace Sfnt
             x_max,
             y_max;
     };
-    
+
     struct SimpleGlyph : Glyph
     {
         uint16  end_pts_of_contours[1];
-        enum 
+        enum
         {
             OnCurve = 0x01,
             XShort  = 0x02,
@@ -390,12 +390,12 @@ namespace Sfnt
             YIsPos  = 0x20
         };
     };
-    
+
     struct CompoundGlyph : Glyph
     {
         uint16  flags,
             glyph_index;
-        enum 
+        enum
         {
             Arg1Arg2Words   = 0x01,
             ArgsAreXYValues = 0x02,

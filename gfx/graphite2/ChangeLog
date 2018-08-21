@@ -1,3 +1,21 @@
+1.3.12
+    . Graphite no longer does dumb rendering for fonts with no smarts
+    . Segment caching code removed. Anything attempting to use the segment cache gets given a regular face instead
+    . Add libfuzzer support
+    . Builds now require C++11
+    . Improvements to Windows 64 bit builds
+    . Support different versions of python including 32 bit and python 3
+    . Various minor bug fixes
+
+1.3.11
+    . Fixes due to security review
+    . Minor collision avoidance fixes
+    . Fix LZ4 decompressor against high compression
+
+1.3.10
+    . Address floating point build parameters to give consistent positioning results across platforms
+    . Various bug fixes
+
 1.3.9
     . Add Collision COLL_ISSPACE to allow for visible spaces in collision avoidance
     . Add segment and pass direction information to tracing output

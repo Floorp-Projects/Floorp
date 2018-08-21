@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -37,7 +37,7 @@ of the License or (at your option) any later version.
 
 #define ISQRT2 0.707106781f
 
-// Possible rounding error for subbox boundaries: 0.016 = 1/64 = 1/256 * 4 
+// Possible rounding error for subbox boundaries: 0.016 = 1/64 = 1/256 * 4
 // (values in font range from 0..256)
 // #define SUBBOX_RND_ERR 0.016
 
@@ -118,7 +118,7 @@ bool ShiftCollider::initSlot(Segment *seg, Slot *aSlot, const Rect &limit, float
 
 	_margin = margin;
 	_marginWt = marginWeight;
-    
+
     SlotCollision *c = seg->collisionInfo(aSlot);
     _seqClass = c->seqClass();
 	_seqProxClass = c->seqProxClass();
@@ -166,7 +166,7 @@ void ShiftCollider::addBox_slope(bool isx, const Rect &box, const BBox &bb, cons
                     _ranges[axis].weighted<XY>(box.bl.y - c, box.tr.y - c, weight, a, 0, 0, org.x,
                                                 m * (a * a + sqr((minright ? box.tr.x : box.bl.x) - 0.5f * (bb.xi + bb.xa))), false);
                 else
-                    _ranges[axis].weighted<XY>(box.bl.y - c, box.tr.y - c, weight, a, m, 
+                    _ranges[axis].weighted<XY>(box.bl.y - c, box.tr.y - c, weight, a, m,
                                                 (minright ? box.tr.y : box.bl.y) - c, a, 0, false);
             }
             break;
@@ -230,7 +230,7 @@ inline void ShiftCollider::removeBox(const Rect &box, const BBox &bb, const Slan
             }
             break;
         case 2 :
-            if (box.bl.x - box.tr.y < org.x - org.y + sb.da && box.tr.x - box.bl.y > org.x - org.y + sb.di 
+            if (box.bl.x - box.tr.y < org.x - org.y + sb.da && box.tr.x - box.bl.y > org.x - org.y + sb.di
                 && box.width() > 0 && box.height() > 0)
             {
                 float di = org.x - org.y + sb.di;
@@ -242,7 +242,7 @@ inline void ShiftCollider::removeBox(const Rect &box, const BBox &bb, const Slan
             }
             break;
         case 3 :
-            if (box.bl.x + box.bl.y < org.x + org.y + sb.sa && box.tr.x + box.tr.y > org.x + org.y + sb.si 
+            if (box.bl.x + box.bl.y < org.x + org.y + sb.sa && box.tr.x + box.tr.y > org.x + org.y + sb.si
                 && box.width() > 0 && box.height() > 0)
             {
                 float si = org.x + org.y + sb.si;
@@ -285,7 +285,7 @@ bool ShiftCollider::mergeSlot(Segment *seg, Slot *slot, const SlotCollision *csl
     // SlotCollision * cslot = seg->collisionInfo(slot);
     int orderFlags = 0;
     bool sameClass = _seqProxClass == 0 && cslot->seqClass() == _seqClass;
-    if (sameCluster && _seqClass 
+    if (sameCluster && _seqClass
         && (sameClass || (_seqProxClass != 0 && cslot->seqClass() == _seqProxClass)))
 		// Force the target glyph to be in the specified direction from the slot we're testing.
         orderFlags = _seqOrder;
@@ -378,7 +378,7 @@ bool ShiftCollider::mergeSlot(Segment *seg, Slot *slot, const SlotCollision *csl
                 default :
                     continue;
             }
-            
+
 #if !defined GRAPHITE2_NTRACING
             if (dbgout)
                 dbgout->setenv(1, reinterpret_cast<void *>(-1));
@@ -400,7 +400,7 @@ bool ShiftCollider::mergeSlot(Segment *seg, Slot *slot, const SlotCollision *csl
                         float r1Xedge = cslot->seqAboveXoff() + 0.5f * (bb.xi + bb.xa) + sx;
                         float r3Xedge = cslot->seqBelowXlim() + bb.xa + sx + 0.5f * (tbb.xa - tbb.xi);
                         float r2Yedge = 0.5f * (bb.yi + bb.ya) + sy;
-                        
+
                         // DBGTAG(1x) means the regions are up and right
                         // region 1
                         DBGTAG(11)
@@ -452,7 +452,7 @@ bool ShiftCollider::mergeSlot(Segment *seg, Slot *slot, const SlotCollision *csl
                     }
                     case SlotCollision::SEQ_ORDER_NOABOVE : // enforce neighboring glyph being above
                         DBGTAG(31);
-                        removeBox(Rect(Position(bb.xi - tbb.xa + sx, sy + bb.ya), 
+                        removeBox(Rect(Position(bb.xi - tbb.xa + sx, sy + bb.ya),
                                         Position(bb.xa - tbb.xi + sx, ypinf)), tbb, tsb, org, i);
                         break;
                     case SlotCollision::SEQ_ORDER_NOBELOW :	// enforce neighboring glyph being below
@@ -569,7 +569,7 @@ bool ShiftCollider::mergeSlot(Segment *seg, Slot *slot, const SlotCollision *csl
     }
     hasCol |= isCol;
     return res;
-    
+
 }   // end of ShiftCollider::mergeSlot
 
 
@@ -666,7 +666,7 @@ void ShiftCollider::outputJsonDbg(json * const dbgout, Segment *seg, int axis)
     {
         *dbgout << json::flat << json::array << _ranges[iAxis].position();
         for (Zones::const_iterator s = _ranges[iAxis].begin(), e = _ranges[iAxis].end(); s != e; ++s)
-            *dbgout << json::flat << json::array 
+            *dbgout << json::flat << json::array
                         << Position(s->x, s->xm) << s->sm << s->smx << s->c
                     << json::close;
         *dbgout << json::close;
@@ -703,7 +703,7 @@ void ShiftCollider::outputJsonDbgEndSlot(GR_MAYBE_UNUSED json * const dbgout,
 }
 
 void ShiftCollider::outputJsonDbgOneVector(json * const dbgout, Segment *seg, int axis,
-	float tleft, float bestCost, float bestVal) 
+	float tleft, float bestCost, float bestVal)
 {
 	const char * label;
 	switch (axis)
@@ -718,9 +718,9 @@ void ShiftCollider::outputJsonDbgOneVector(json * const dbgout, Segment *seg, in
 	*dbgout << json::object // vector
 		<< "direction" << label
 		<< "targetMin" << tleft;
-            
+
 	outputJsonDbgRemovals(dbgout, axis, seg);
-    	
+
     *dbgout << "ranges";
     outputJsonDbg(dbgout, seg, axis);
 
@@ -756,7 +756,7 @@ static float localmin(float al, float au, float bl, float bu, float x)
     if (bl > al)
     { if (bu > au) return bl > x ? bl : x; }
     else if (au > bu) return al > x ? al : x;
-    return x;        
+    return x;
 }
 
 // Return the given edge of the glyph at height y, taking any slant box into account.
@@ -835,7 +835,7 @@ bool KernCollider::initSlot(Segment *seg, Slot *aSlot, const Rect &limit, float 
 
     _limit = limit;
     _offsetPrev = offsetPrev; // kern from a previous pass
-    
+
     // Calculate the height of the glyph and how many horizontal slices to use.
     if (_maxy >= 1e37f)
     {
@@ -877,7 +877,7 @@ bool KernCollider::initSlot(Segment *seg, Slot *aSlot, const Rect &limit, float 
         }
         goto done;
     }
-    numSlices = _edges.size();
+    numSlices = int(_edges.size());
 
 #if !defined GRAPHITE2_NTRACING
     // Debugging
@@ -887,7 +887,7 @@ bool KernCollider::initSlot(Segment *seg, Slot *aSlot, const Rect &limit, float 
     _nearEdges.clear();
     _nearEdges.insert(_nearEdges.begin(), numSlices, (dir & 1) ? -1e38f : +1e38f);
 #endif
-    
+
     // Determine the trailing edge of each slice (ie, left edge for a RTL glyph).
     for (s = base; s; s = s->nextInCluster(s))
     {
@@ -997,7 +997,7 @@ bool KernCollider::mergeSlot(Segment *seg, Slot *slot, const Position &currShift
     if (collides && !nooverlap)
         _hit = true;
     return collides | nooverlap;   // note that true is not a necessarily reliable value
-    
+
 }   // end of KernCollider::mergeSlot
 
 
@@ -1027,19 +1027,19 @@ Position KernCollider::resolve(GR_MAYBE_UNUSED Segment *seg, GR_MAYBE_UNUSED Slo
                     << "slantBox" << seg->getFace()->glyphs().slant(_target->gid())
                     << "fix" << "kern"
                     << json::close; // target object
-        
+
         *dbgout << "slices" << json::array;
         for (int is = 0; is < (int)_edges.size(); is++)
         {
-            *dbgout << json::flat << json::object 
-                << "i" << is 
+            *dbgout << json::flat << json::object
+                << "i" << is
                 << "targetEdge" << _edges[is]
                 << "neighbor" << objectid(dslot(seg, _slotNear[is]))
-                << "nearEdge" << _nearEdges[is] 
+                << "nearEdge" << _nearEdges[is]
                 << json::close;
         }
         *dbgout << json::close; // slices array
-            
+
         *dbgout
             << "xbound" << _xbound
             << "minGap" << _mingap
@@ -1051,7 +1051,7 @@ Position KernCollider::resolve(GR_MAYBE_UNUSED Segment *seg, GR_MAYBE_UNUSED Slo
 #endif
 
     return Position(result, 0.);
-    
+
 }   // end of KernCollider::resolve
 
 void KernCollider::shift(const Position &mv, int dir)
@@ -1072,7 +1072,7 @@ SlotCollision::SlotCollision(Segment *seg, Slot *slot)
 void SlotCollision::initFromSlot(Segment *seg, Slot *slot)
 {
     // Initialize slot attributes from glyph attributes.
-	// The order here must match the order in the grcompiler code, 
+	// The order here must match the order in the grcompiler code,
 	// GrcSymbolTable::AssignInternalGlyphAttrIDs.
     uint16 gid = slot->gid();
     uint16 aCol = seg->silf()->aCollision(); // flags attr ID
@@ -1094,7 +1094,7 @@ void SlotCollision::initFromSlot(Segment *seg, Slot *slot)
 	_seqBelowXlim = p[aCol+12];
 	_seqBelowWt = p[aCol+13];
 	_seqValignHt = p[aCol+14];
-	_seqValignWt = p[aCol+15];    
+	_seqValignWt = p[aCol+15];
 
     // These attributes do not have corresponding glyph attribute:
     _exclGlyph = 0;

@@ -51,7 +51,7 @@ NameTable::NameTable(const void* data, size_t length, uint16 platformId, uint16 
         {
             m_nameData = reinterpret_cast<const uint8*>(pdata) + offset;
             setPlatformEncoding(platformId, encodingID);
-            m_nameDataLength = length - offset;
+            m_nameDataLength = uint16(length - offset);
             return;
         }
     }
@@ -180,7 +180,7 @@ void* NameTable::getName(uint16& languageId, uint16 nameId, gr_encform enc, uint
         utf8::iterator d = uniBuffer;
         for (utf16::const_iterator s = utf16Name, e = utf16Name + utf16Length; s != e; ++s, ++d)
             *d = *s;
-        length = d - uniBuffer;
+        length = uint32(d - uniBuffer);
         uniBuffer[length] = 0;
         free(utf16Name);
         return uniBuffer;
@@ -201,7 +201,7 @@ void* NameTable::getName(uint16& languageId, uint16 nameId, gr_encform enc, uint
         utf32::iterator d = uniBuffer;
         for (utf16::const_iterator s = utf16Name, e = utf16Name + utf16Length; s != e; ++s, ++d)
             *d = *s;
-        length = d - uniBuffer;
+        length = uint32(d - uniBuffer);
         uniBuffer[length] = 0;
         free(utf16Name);
         return uniBuffer;
@@ -252,4 +252,3 @@ uint16 NameTable::getLanguageId(const char * bcp47Locale)
     }
     return localeId;
 }
-

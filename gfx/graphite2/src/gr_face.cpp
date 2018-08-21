@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -28,7 +28,6 @@ of the License or (at your option) any later version.
 #include "inc/Face.h"
 #include "inc/FileFace.h"
 #include "inc/GlyphCache.h"
-#include "inc/CachedFace.h"
 #include "inc/CmapCache.h"
 #include "inc/Silf.h"
 #include "inc/json.h"
@@ -47,8 +46,7 @@ namespace
         telemetry::category _misc_cat(face.tele.misc);
 #endif
         Face::Table silf(face, Tag::Silf, 0x00050000);
-        if (silf)   options &= ~gr_face_dumbRendering;
-        else if (!(options &  gr_face_dumbRendering))
+        if (!silf)
             return false;
 
         if (!face.readGlyphs(options))
@@ -74,14 +72,24 @@ namespace
                 return true;
         }
         else
-            return options & gr_face_dumbRendering;
+            return false;
+    }
+
+    inline
+    uint32 zeropad(const uint32 x)
+    {
+        if (x == 0x20202020)                    return 0;
+        if ((x & 0x00FFFFFF) == 0x00202020)     return x & 0xFF000000;
+        if ((x & 0x0000FFFF) == 0x00002020)     return x & 0xFFFF0000;
+        if ((x & 0x000000FF) == 0x00000020)     return x & 0xFFFFFF00;
+        return x;
     }
 }
 
 extern "C" {
 
 gr_face* gr_make_face_with_ops(const void* appFaceHandle/*non-NULL*/, const gr_face_ops *ops, unsigned int faceOptions)
-                  //the appFaceHandle must stay alive all the time when the gr_face is alive. When finished with the gr_face, call destroy_face    
+                  //the appFaceHandle must stay alive all the time when the gr_face is alive. When finished with the gr_face, call destroy_face
 {
     if (ops == 0)   return 0;
 
@@ -99,56 +107,41 @@ gr_face* gr_make_face(const void* appFaceHandle/*non-NULL*/, gr_get_table_fn tab
     return gr_make_face_with_ops(appFaceHandle, &ops, faceOptions);
 }
 
-#ifndef GRAPHITE2_NSEGCACHE
-gr_face* gr_make_face_with_seg_cache_and_ops(const void* appFaceHandle/*non-NULL*/, const gr_face_ops *ops, unsigned int cacheSize, unsigned int faceOptions)
-                  //the appFaceHandle must stay alive all the time when the GrFace is alive. When finished with the GrFace, call destroy_face
+
+gr_face* gr_make_face_with_seg_cache_and_ops(const void* appFaceHandle/*non-NULL*/, const gr_face_ops *ops, unsigned int , unsigned int faceOptions)
 {
-    if (ops == 0)   return 0;
-
-    CachedFace *res = new CachedFace(appFaceHandle, *ops);
-    if (res && load_face(*res, faceOptions)
-            && res->setupCache(cacheSize))
-        return static_cast<gr_face *>(static_cast<Face *>(res));
-
-    delete res;
-    return 0;
+  return gr_make_face_with_ops(appFaceHandle, ops, faceOptions);
 }
 
-gr_face* gr_make_face_with_seg_cache(const void* appFaceHandle/*non-NULL*/, gr_get_table_fn getTable, unsigned int cacheSize, unsigned int faceOptions)
+gr_face* gr_make_face_with_seg_cache(const void* appFaceHandle/*non-NULL*/, gr_get_table_fn tablefn, unsigned int, unsigned int faceOptions)
 {
-    const gr_face_ops ops = {sizeof(gr_face_ops), getTable, NULL};
-    return gr_make_face_with_seg_cache_and_ops(appFaceHandle, &ops, cacheSize, faceOptions);
+  const gr_face_ops ops = {sizeof(gr_face_ops), tablefn, NULL};
+  return gr_make_face_with_ops(appFaceHandle, &ops, faceOptions);
 }
-#endif
 
 gr_uint32 gr_str_to_tag(const char *str)
 {
     uint32 res = 0;
-    int i = strlen(str);
-    if (i > 4) i = 4;
-    while (--i >= 0)
-        res = (res >> 8) + (str[i] << 24);
+    switch(max(strlen(str),size_t(4)))
+    {
+        case 4: res |= str[3];       GR_FALLTHROUGH;
+        case 3: res |= str[2] << 8;  GR_FALLTHROUGH;
+        case 2: res |= str[1] << 16; GR_FALLTHROUGH;
+        case 1: res |= str[0] << 24; GR_FALLTHROUGH;
+        default:  break;
+    }
     return res;
 }
 
 void gr_tag_to_str(gr_uint32 tag, char *str)
 {
-    int i = 4;
-    while (--i >= 0)
-    {
-        str[i] = tag & 0xFF;
-        tag >>= 8;
-    }
-}
+    if (!str) return;
 
-inline
-uint32 zeropad(const uint32 x)
-{
-    if (x == 0x20202020)                    return 0;
-    if ((x & 0x00FFFFFF) == 0x00202020)     return x & 0xFF000000;
-    if ((x & 0x0000FFFF) == 0x00002020)     return x & 0xFFFF0000;
-    if ((x & 0x000000FF) == 0x00000020)     return x & 0xFFFFFF00;
-    return x;
+    *str++ = char(tag >> 24);
+    *str++ = char(tag >> 16);
+    *str++ = char(tag >> 8);
+    *str++ = char(tag);
+    *str = '\0';
 }
 
 gr_feature_val* gr_face_featureval_for_lang(const gr_face* pFace, gr_uint32 langname/*0 means clone default*/) //clones the features. if none for language, clones the default
@@ -246,37 +239,18 @@ gr_face* gr_make_file_face(const char *filename, unsigned int faceOptions)
         return pRes;
       }
     }
-    
+
     //error when loading
 
     delete pFileFace;
     return NULL;
 }
 
-#ifndef GRAPHITE2_NSEGCACHE
-gr_face* gr_make_file_face_with_seg_cache(const char* filename, unsigned int segCacheMaxSize, unsigned int faceOptions)   //returns NULL on failure. //TBD better error handling
+gr_face* gr_make_file_face_with_seg_cache(const char* filename, unsigned int, unsigned int faceOptions)   //returns NULL on failure. //TBD better error handling
                   //when finished with, call destroy_face
 {
-    FileFace* pFileFace = new FileFace(filename);
-    if (*pFileFace)
-    {
-      gr_face * pRes = gr_make_face_with_seg_cache_and_ops(pFileFace, &FileFace::ops, segCacheMaxSize, faceOptions);
-      if (pRes)
-      {
-        pRes->takeFileFace(pFileFace);        //takes ownership
-        return pRes;
-      }
-    }
-
-    //error when loading
-
-    delete pFileFace;
-    return NULL;
+    return gr_make_file_face(filename, faceOptions);
 }
-#endif
 #endif      //!GRAPHITE2_NFILEFACE
 
-
 } // extern "C"
-
-

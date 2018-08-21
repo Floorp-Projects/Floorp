@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -30,7 +30,7 @@ of the License or (at your option) any later version.
 
 using namespace graphite2;
 
-namespace 
+namespace
 {
 
   gr_segment* makeAndInitialize(const Font *font, const Face *face, uint32 script, const Features* pFeats/*must not be NULL*/, gr_encform enc, const void* pStart, size_t nChars, int dir)
@@ -42,7 +42,7 @@ namespace
       // if (!font) return NULL;
       Segment* pRes=new Segment(nChars, face, script, dir);
 
-      
+
       if (!pRes->read_text(face, pFeats, enc, pStart, nChars) || !pRes->runGraphite())
       {
         delete pRes;
@@ -53,33 +53,36 @@ namespace
       return static_cast<gr_segment*>(pRes);
   }
 
+  template <typename utf_iter>
+  inline size_t count_unicode_chars(utf_iter first, const utf_iter last, const void **error)
+  {
+      size_t n_chars = 0;
+      uint32 usv = 0;
 
+      if (last)
+      {
+          if (!first.validate(last))
+          {
+              if (error)  *error = last - 1;
+              return 0;
+          }
+          for (;first != last; ++first, ++n_chars)
+              if ((usv = *first) == 0 || first.error()) break;
+      }
+      else
+      {
+          while ((usv = *first) != 0 && !first.error())
+          {
+              ++first;
+              ++n_chars;
+          }
+      }
+
+      if (error)  *error = first.error() ? first : 0;
+      return n_chars;
+  }
 }
 
-
-template <typename utf_iter>
-inline size_t count_unicode_chars(utf_iter first, const utf_iter last, const void **error)
-{
-    size_t n_chars = 0;
-    uint32 usv = 0;
-
-    if (last)
-    {
-        for (;first != last; ++first, ++n_chars)
-            if ((usv = *first) == 0 || first.error()) break;
-    }
-    else
-    {
-        while ((usv = *first) != 0 && !first.error())
-        {
-            ++first;
-            ++n_chars;
-        }
-    }
-
-    if (error)  *error = first.error() ? first : 0;
-    return n_chars;
-}
 
 extern "C" {
 
@@ -99,6 +102,8 @@ size_t gr_count_unicode_characters(gr_encform enc, const void* buffer_begin, con
 
 gr_segment* gr_make_seg(const gr_font *font, const gr_face *face, gr_uint32 script, const gr_feature_val* pFeats, gr_encform enc, const void* pStart, size_t nChars, int dir)
 {
+    if (!face) return nullptr;
+
     const gr_feature_val * tmp_feats = 0;
     if (pFeats == 0)
         pFeats = tmp_feats = static_cast<const gr_feature_val*>(face->theSill().cloneFeatures(0));
@@ -132,7 +137,7 @@ float gr_seg_advance_Y(const gr_segment* pSeg/*not NULL*/)
 unsigned int gr_seg_n_cinfo(const gr_segment* pSeg/*not NULL*/)
 {
     assert(pSeg);
-    return pSeg->charInfoCount();
+    return static_cast<unsigned int>(pSeg->charInfoCount());
 }
 
 
@@ -145,7 +150,7 @@ const gr_char_info* gr_seg_cinfo(const gr_segment* pSeg/*not NULL*/, unsigned in
 unsigned int gr_seg_n_slots(const gr_segment* pSeg/*not NULL*/)
 {
     assert(pSeg);
-    return pSeg->slotCount();
+    return static_cast<unsigned int>(pSeg->slotCount());
 }
 
 const gr_slot* gr_seg_first_slot(gr_segment* pSeg/*not NULL*/)
