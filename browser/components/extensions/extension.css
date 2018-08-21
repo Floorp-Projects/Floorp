@@ -322,8 +322,8 @@ textarea.browser-style.focused {
 }
 
 /* Interactive States */
-.browser-style > input[type="text"]:not(disabled):hover,
-textarea.browser-style:not(disabled):hover {
+.browser-style > input[type="text"]:not(.disabled):hover,
+textarea.browser-style:not(.disabled):hover {
   border: 1px solid #858585;
 }
 
