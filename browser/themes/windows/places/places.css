@@ -6,6 +6,14 @@
 
 %include ../../shared/places/places.inc.css
 
+.sidebar-placesTree {
+  -moz-appearance: none;
+  background-color: transparent;
+  color: inherit;
+  border: 0;
+  margin: 0;
+}
+
 :root[uidensity=touch] #search-box,
 :root[uidensity=touch] .sidebar-placesTreechildren::-moz-tree-row {
   min-height: 32px;
