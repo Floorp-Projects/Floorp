@@ -956,6 +956,7 @@ struct JSContext : public JS::RootingContext,
     void removeUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
 
     template <class... Args> inline void releaseCheck(const Args&... args);
+    template <class... Args> MOZ_ALWAYS_INLINE void debugOnlyCheck(const Args&... args);
 }; /* struct JSContext */
 
 inline JS::Result<>
