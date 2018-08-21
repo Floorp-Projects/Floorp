@@ -555,11 +555,13 @@ var DownloadIntegration = {
       aReferrer = NetUtil.newURI(aDownload.source.referrer);
     }
 
-    gDownloadPlatform.downloadDone(NetUtil.newURI(aDownload.source.url),
-                                   aReferrer,
-                                   new FileUtils.File(aDownload.target.path),
-                                   aDownload.contentType,
-                                   aDownload.source.isPrivate);
+    await gDownloadPlatform.downloadDone(
+      NetUtil.newURI(aDownload.source.url),
+      aReferrer,
+      new FileUtils.File(aDownload.target.path),
+      aDownload.contentType,
+      aDownload.source.isPrivate
+    );
   },
 
   /**

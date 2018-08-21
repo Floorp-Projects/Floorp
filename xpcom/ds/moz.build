@@ -129,11 +129,6 @@ if CONFIG['CC_TYPE'] == 'msvc':
         '-Zc:externConstexpr',
     ]
 
-EXTRA_COMPONENTS += [
-    'nsINIProcessor.js',
-    'nsINIProcessor.manifest',
-]
-
 LOCAL_INCLUDES += [
     '../io',
 ]

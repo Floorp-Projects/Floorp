@@ -14,7 +14,6 @@ var EXPORTED_SYMBOLS = ["FormAutofillContent"];
 
 const Cm = Components.manager;
 
-ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -32,6 +31,8 @@ ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
                                "resource://gre/modules/FormLikeFactory.jsm");
 ChromeUtils.defineModuleGetter(this, "InsecurePasswordUtils",
                                "resource://gre/modules/InsecurePasswordUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const formFillController = Cc["@mozilla.org/satchel/form-fill-controller;1"]
                              .getService(Ci.nsIFormFillController);

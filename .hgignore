@@ -11,6 +11,7 @@
 \.gcda
 \.gcno
 \.gcov
+compile_commands\.json
 
 # Vim swap files.
 ^\.sw.$
@@ -42,6 +43,7 @@
 _DBG\.OBJ/
 _OPT\.OBJ/
 ^js/src/.*-obj/
+^js/src/obj-.*/
 
 # SpiderMonkey configury
 ^js/src/configure$

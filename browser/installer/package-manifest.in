@@ -285,8 +285,6 @@
 #ifdef XP_MACOSX
 @RESPATH@/browser/components/SafariProfileMigrator.js
 #endif
-@RESPATH@/components/nsINIProcessor.manifest
-@RESPATH@/components/nsINIProcessor.js
 @RESPATH@/components/nsPrompter.manifest
 @RESPATH@/components/nsPrompter.js
 @RESPATH@/components/SyncComponents.manifest

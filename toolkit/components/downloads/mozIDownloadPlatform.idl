@@ -34,10 +34,11 @@ interface mozIDownloadPlatform : nsISupports
    *        The source's content type
    * @param aIsPrivate
    *        True for private downloads
-   * @return none
+   * @return Promise that resolves once operations have completed.
    */
-  void downloadDone(in nsIURI aSource, in nsIURI aReferrer, in nsIFile aTarget,
-                    in ACString aContentType, in boolean aIsPrivate);
+  [implicit_jscontext]
+  Promise downloadDone(in nsIURI aSource, in nsIURI aReferrer, in nsIFile aTarget,
+                       in ACString aContentType, in boolean aIsPrivate);
 
   /**
    * Security Zone constants. Used by mapUrlToZone().

@@ -24,8 +24,17 @@
 }
 
 /* Increase contrast of UI links on dark themes */
+
 :root[lwt-popup-brighttext] panel .text-link {
   color: @lwtPopupBrighttextLinkColor@;
+}
+
+/* Set additional backgrounds alignment relative to toolbox*/
+
+#navigator-toolbox:-moz-lwtheme {
+  background-image: var(--lwt-additional-images);
+  background-position: var(--lwt-background-alignment);
+  background-repeat: var(--lwt-background-tiling);
 }
 
 /* Toolbar / content area border */
