@@ -1503,7 +1503,7 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
 }
 
 #define REGS                     (activation.regs())
-#define PUSH_COPY(v)             do { *REGS.sp++ = (v); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
+#define PUSH_COPY(v)             do { *REGS.sp++ = (v); cx->debugOnlyCheck(REGS.sp[-1]); } while (0)
 #define PUSH_COPY_SKIP_CHECK(v)  *REGS.sp++ = (v)
 #define PUSH_NULL()              REGS.sp++->setNull()
 #define PUSH_UNDEFINED()         REGS.sp++->setUndefined()
@@ -1511,9 +1511,9 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
 #define PUSH_DOUBLE(d)           REGS.sp++->setDouble(d)
 #define PUSH_INT32(i)            REGS.sp++->setInt32(i)
 #define PUSH_SYMBOL(s)           REGS.sp++->setSymbol(s)
-#define PUSH_STRING(s)           do { REGS.sp++->setString(s); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
-#define PUSH_OBJECT(obj)         do { REGS.sp++->setObject(obj); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
-#define PUSH_OBJECT_OR_NULL(obj) do { REGS.sp++->setObjectOrNull(obj); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
+#define PUSH_STRING(s)           do { REGS.sp++->setString(s); cx->debugOnlyCheck(REGS.sp[-1]); } while (0)
+#define PUSH_OBJECT(obj)         do { REGS.sp++->setObject(obj); cx->debugOnlyCheck(REGS.sp[-1]); } while (0)
+#define PUSH_OBJECT_OR_NULL(obj) do { REGS.sp++->setObjectOrNull(obj); cx->debugOnlyCheck(REGS.sp[-1]); } while (0)
 #define PUSH_MAGIC(magic)        REGS.sp++->setMagic(magic)
 #define POP_COPY_TO(v)           (v) = *--REGS.sp
 #define POP_RETURN_VALUE()       REGS.fp()->setReturnValue(*--REGS.sp)
@@ -2961,7 +2961,7 @@ CASE(JSOP_CALLPROP)
         goto error;
 
     TypeScript::Monitor(cx, script, REGS.pc, lval);
-    assertSameCompartmentDebugOnly(cx, lval);
+    cx->debugOnlyCheck(lval);
 }
 END_CASE(JSOP_GETPROP)
 
@@ -2975,7 +2975,7 @@ CASE(JSOP_GETPROP_SUPER)
         goto error;
 
     TypeScript::Monitor(cx, script, REGS.pc, rref);
-    assertSameCompartmentDebugOnly(cx, rref);
+    cx->debugOnlyCheck(rref);
 
     REGS.sp--;
 }
@@ -2990,7 +2990,7 @@ CASE(JSOP_GETBOUNDNAME)
         goto error;
 
     TypeScript::Monitor(cx, script, REGS.pc, rval);
-    assertSameCompartmentDebugOnly(cx, rval);
+    cx->debugOnlyCheck(rval);
 }
 END_CASE(JSOP_GETBOUNDNAME)
 
@@ -3706,7 +3706,7 @@ CASE(JSOP_GETLOCAL)
      * a use of the variable.
      */
     if (REGS.pc[JSOP_GETLOCAL_LENGTH] != JSOP_POP)
-        assertSameCompartmentDebugOnly(cx, REGS.sp[-1]);
+        cx->debugOnlyCheck(REGS.sp[-1]);
 }
 END_CASE(JSOP_GETLOCAL)
 

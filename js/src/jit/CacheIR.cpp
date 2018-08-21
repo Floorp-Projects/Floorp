@@ -33,8 +33,9 @@ const char* const js::jit::CacheKindNames[] = {
 };
 
 void
-CacheIRWriter::assertSameCompartment(JSObject* obj) {
-    assertSameCompartmentDebugOnly(cx_, obj);
+CacheIRWriter::assertSameCompartment(JSObject* obj)
+{
+    cx_->debugOnlyCheck(obj);
 }
 
 StubField

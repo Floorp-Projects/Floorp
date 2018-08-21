@@ -207,15 +207,15 @@ JSContext::releaseCheck(const Args&... args)
     assertSameCompartmentImpl(this, 0, args...);
 }
 
-namespace js {
-
-template <class... Args> inline void
-assertSameCompartmentDebugOnly(JSContext* cx, const Args&... args)
+template <class... Args> MOZ_ALWAYS_INLINE void
+JSContext::debugOnlyCheck(const Args&... args)
 {
 #if defined(DEBUG) && defined(JS_CRASH_DIAGNOSTICS)
-    assertSameCompartmentImpl(cx, 1, args...);
+    assertSameCompartmentImpl(this, 0, args...);
 #endif
 }
+
+namespace js {
 
 STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
 MOZ_ALWAYS_INLINE bool
