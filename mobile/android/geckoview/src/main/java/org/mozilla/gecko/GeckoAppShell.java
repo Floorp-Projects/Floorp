@@ -986,13 +986,13 @@ public class GeckoAppShell
         getNotificationListener().closeNotification(name);
     }
 
-    public static synchronized void setDisplayDpiOverride(final Integer dpi) {
+    public static synchronized void setDisplayDpiOverride(@Nullable final Integer dpi) {
         if (dpi == null) {
             return;
         }
         if (sDensityDpi != 0) {
             Log.e(LOGTAG, "Tried to override screen DPI after it's already been set");
-            throw new IllegalStateException();
+            return;
         }
         sDensityDpi = dpi;
     }
@@ -1005,10 +1005,13 @@ public class GeckoAppShell
         return sDensityDpi;
     }
 
-    public static synchronized void setDisplayDensityOverride(@Nullable Float density) {
+    public static synchronized void setDisplayDensityOverride(@Nullable final Float density) {
+        if (density == null) {
+            return;
+        }
         if (sDensity != null) {
             Log.e(LOGTAG, "Tried to override screen density after it's already been set");
-            throw new IllegalStateException();
+            return;
         }
         sDensity = density;
     }
