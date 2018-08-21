@@ -467,6 +467,21 @@ nsHttpChannel::PrepareToConnect()
 }
 
 void
+nsHttpChannel::HandleContinueCancelledByTrackingProtection()
+{
+    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
+
+    if (mSuspendCount) {
+        LOG(("Waiting until resume HandleContinueCancelledByTrackingProtection [this=%p]\n", this));
+        mCallOnResume = &nsHttpChannel::HandleContinueCancelledByTrackingProtection;
+        return;
+    }
+
+    LOG(("nsHttpChannel::HandleContinueCancelledByTrackingProtection [this=%p]\n", this));
+    ContinueCancelledByTrackingProtection();
+}
+
+void
 nsHttpChannel::HandleOnBeforeConnect()
 {
     MOZ_ASSERT(!mCallOnResume, "How did that happen?");
@@ -5987,6 +6002,8 @@ nsHttpChannel::Cancel(nsresult status)
     MOZ_ASSERT(NS_IsMainThread());
     // We should never have a pump open while a CORS preflight is in progress.
     MOZ_ASSERT_IF(mPreflightChannel, !mCachePump);
+    MOZ_ASSERT(status != NS_ERROR_TRACKING_URI,
+               "NS_ERROR_TRACKING_URI needs to be handled by CancelForTrackingProtection()");
 
     LOG(("nsHttpChannel::Cancel [this=%p status=%" PRIx32 "]\n",
          this, static_cast<uint32_t>(status)));
@@ -5998,6 +6015,75 @@ nsHttpChannel::Cancel(nsresult status)
     if (mWaitingForRedirectCallback) {
         LOG(("channel canceled during wait for redirect callback"));
     }
+
+    return CancelInternal(status);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::CancelForTrackingProtection()
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    // We should never have a pump open while a CORS preflight is in progress.
+    MOZ_ASSERT_IF(mPreflightChannel, !mCachePump);
+
+    LOG(("nsHttpChannel::CancelForTrackingProtection [this=%p]\n", this));
+
+    if (mCanceled) {
+        LOG(("  ignoring; already canceled\n"));
+        return NS_OK;
+    }
+
+    // We are being canceled by the channel classifier because of tracking
+    // protection, but we haven't yet had a chance to dispatch the
+    // "http-on-modify-request" notifications yet (this would normally be
+    // done in PrepareToConnect()).  So do that now, before proceeding to
+    // cancel.
+    //
+    // Note that running these observers can itself result in the channel
+    // being canceled.  In that case, we accept that cancelation code as
+    // the cause of the cancelation, as if the classification of the channel
+    // would have occurred past this point!
+
+    // notify "http-on-modify-request" observers
+    CallOnModifyRequestObservers();
+
+    SetLoadGroupUserAgentOverride();
+
+    // Check if request was cancelled during on-modify-request or on-useragent.
+    if (mCanceled) {
+        return mStatus;
+    }
+
+    if (mSuspendCount) {
+        LOG(("Waiting until resume in Cancel [this=%p]\n", this));
+        MOZ_ASSERT(!mCallOnResume);
+        mCallOnResume = &nsHttpChannel::HandleContinueCancelledByTrackingProtection;
+        return NS_OK;
+    }
+
+    return CancelInternal(NS_ERROR_TRACKING_URI);
+}
+
+void
+nsHttpChannel::ContinueCancelledByTrackingProtection()
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    // We should never have a pump open while a CORS preflight is in progress.
+    MOZ_ASSERT_IF(mPreflightChannel, !mCachePump);
+
+    LOG(("nsHttpChannel::ContinueCancelledByTrackingProtection [this=%p]\n",
+         this));
+    if (mCanceled) {
+        LOG(("  ignoring; already canceled\n"));
+        return;
+    }
+
+    Unused << CancelInternal(NS_ERROR_TRACKING_URI);
+}
+
+nsresult
+nsHttpChannel::CancelInternal(nsresult status)
+{
     mCanceled = true;
     mStatus = status;
     if (mProxyRequest)
