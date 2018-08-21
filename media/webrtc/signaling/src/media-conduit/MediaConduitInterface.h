@@ -18,12 +18,16 @@
 
 #include "ImageContainer.h"
 
-#include "webrtc/call.h"
-#include "webrtc/config.h"
+#include "webrtc/call/call.h"
 #include "webrtc/common_types.h"
 #include "webrtc/common_types.h"
 #include "webrtc/api/video/video_frame_buffer.h"
 #include "webrtc/logging/rtc_event_log/rtc_event_log.h"
+#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
+#include "webrtc/modules/audio_device/include/fake_audio_device.h"
+#include "webrtc/modules/audio_mixer/audio_mixer_impl.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/voice_engine/include/voe_base.h"
 
 #include <vector>
 #include <set>
@@ -324,10 +328,27 @@ public:
 
   MOZ_DECLARE_REFCOUNTED_TYPENAME(WebRtcCallWrapper)
 
+  rtc::scoped_refptr<webrtc::AudioDecoderFactory> mDecoderFactory;
+
 private:
   WebRtcCallWrapper()
   {
+    auto voice_engine = webrtc::VoiceEngine::Create();
+    mDecoderFactory = webrtc::CreateBuiltinAudioDecoderFactory();
+
+    webrtc::AudioState::Config audio_state_config;
+    audio_state_config.voice_engine = voice_engine;
+    audio_state_config.audio_mixer = webrtc::AudioMixerImpl::Create();
+    audio_state_config.audio_processing = webrtc::AudioProcessing::Create();
+    mFakeAudioDeviceModule.reset(new webrtc::FakeAudioDeviceModule());
+    auto voe_base = webrtc::VoEBase::GetInterface(voice_engine);
+    voe_base->Init(mFakeAudioDeviceModule.get(),
+                   audio_state_config.audio_processing.get(),
+                   mDecoderFactory);
+    voe_base->Release();
+    auto audio_state = webrtc::AudioState::Create(audio_state_config);
     webrtc::Call::Config config(&mEventLog);
+    config.audio_state = audio_state;
     mCall.reset(webrtc::Call::Create(config));
   }
 
@@ -338,6 +359,7 @@ private:
   }
 
   UniquePtr<webrtc::Call> mCall;
+  UniquePtr<webrtc::FakeAudioDeviceModule> mFakeAudioDeviceModule;
   webrtc::RtcEventLogNullImpl mEventLog;
   // Allows conduits to know about one another, to avoid remote SSRC
   // collisions.
@@ -495,7 +517,8 @@ public:
    * @result Concrete AudioSessionConduitObject or nullptr in the case
    *         of failure
    */
-  static RefPtr<AudioSessionConduit> Create();
+  static RefPtr<AudioSessionConduit> Create(
+    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsIEventTarget> aStsThread);
 
   virtual ~AudioSessionConduit() {}
 
