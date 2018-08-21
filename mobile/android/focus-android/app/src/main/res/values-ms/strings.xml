@@ -37,6 +37,8 @@
   <string name="preference_category_general">Umum</string>
   <string name="preference_category_data_collection_use">Pengumpulan Data &amp; Penggunaan</string>
   <string name="preference_category_search">Carian</string>
+  <string name="preference_show_search_suggestions">Dapatkan cadangan carian</string>
+  <string name="preference_show_search_suggestions_summary">%1$s akan menghantar apa yang anda taip dalam bar alamat kepada enjin carian</string>
   <string name="preference_search_engine_default">Piawai</string>
   <string name="preference_state_on">Aktif</string>
   <string name="preference_state_off">Nyahaktif</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Tidak</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Sekat kuki pihak ke-3 sahaja</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ya</string>
+  <string name="preference_security_biometric">Guna cap jari untuk membuka aplikasi</string>
+  <string name="preference_security_biometric_summary">Cap jari anda boleh membuka %1$s jika URL telah dibuka dalam aplikasi. Halimunan akan diaktifkan.</string>
   <string name="preference_privacy_secure_mode">Halimunan</string>
-  <string name="preference_privacy_stealth_summary">Sorok laman web apabila bertukar aplikasi</string>
+  <string name="preference_privacy_stealth_summary">Sorok halaman web apabila bertukar aplikasi dan sekat mengambil skrinsyot.</string>
+  <string name="preference_category_security">Keselamatan</string>
   <string name="preference_category_performance">Prestasi</string>
   <string name="preference_performance_block_webfonts">Sekat fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Boleh menyebabkan imej atau ikon hilang</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Tambah enjin carian lain</string>
   <string name="preference_search_remove_title">Buang enjin carian</string>
   <string name="preference_search_remove">Buang</string>
+  <string name="preference_homescreen_tips">Papar panduan skrin utama</string>
   <string name="action_option_add_search_engine">Tambah enjin carian</string>
   <string name="search_add_manually_name_hint">Nama enjin carian</string>
   <string name="search_add_manually_string">Cari string yang mahu digunakan</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Navigasi undur</string>
   <string name="content_description_stop">Hentikan memuat laman web</string>
   <string name="content_description_customtab_exit">Kembali ke aplikasi dahulu</string>
+  <string name="content_description_trackers_blocked">Bilangan penjejak disekat</string>
   <string name="content_description_blocking_switch">Sekat penjejak</string>
   <string name="your_rights">Hak Anda</string>
   <string name="external_app_prompt_title">Buka pautan guna aplikasi lain</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Kata laluan</string>
   <string name="preference_performance_request_desktop_site">Pinta laman desktop</string>
   <string name="custom_tab_copy_url_action">URL disalin</string>
+  <string name="preference_advanced_summary">Alatan pembangun</string>
+  <string name="preference_category_advanced">Lanjutan</string>
+  <string name="preference_remote_debugging">Nyahpepijat jauh via USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Buka %1$s</string>
+  <string name="biometric_auth_description">Sentuh sensor cap jari untuk meneruskan.</string>
+  <string name="biometric_auth_new_session">Sesi Baru</string>
+  <string name="biometric_auth_image_description">Ikon cap jari</string>
+  <string name="biometric_auth_not_recognized_error">Cap jari tidak dikenali. Cuba lagi.</string>
+  <string name="biometric_auth_moved_too_quickly">Jari digerak terlalu pantas. Cuba lagi.</string>
+  <string name="enable_search_suggestion_title">Adakah anda mahu mengaktifkan cadangan carian?</string>
+  <string name="enable_search_suggestion_subtitle">Untuk mendapatkan cadangan carian, %1$s perlu menghantar apa yang anda taip dalam bar alamat kepada enjin carian yang dipilih. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Ketahui selanjutnya</string>
+  <string name="enable_search_suggestions_no">Tidak</string>
+  <string name="enable_search_suggestions_yes">Ya</string>
+  <string name="no_suggestions_message">Sesetengah enjin carian tidak dapat menunjukkan cadangan.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Abai</string>
+  <string name="tip_disable_tracking_protection">Laman berkelakuan tidak dijangka?\n Cuba nyahaktifkan Perlindungan Penjejakan</string>
+  <string name="tip_add_to_homescreen">"Akses sekali-sentuh ke laman yang kerap dilawati\n        Menu &gt; Tambah ke skrin Utama"</string>
+  <string name="tip_set_default_browser">Buka pautan dalam %1$s\n Tetapkan %1$s sebagai pelayar piawai</string>
+  <string name="tip_autocomplete_url">Autolengkap URL untuk laman yang kerap dilawati\n Tekan lama-lama URL dalam bar alamat</string>
+  <string name="tip_open_in_new_tab">Buka pautan dalam tab baru\n Tekan lama-lama pautan atau halaman</string>
+  <string name="tip_request_desktop">"Mahu paparan laman desktop?\n    Menu &gt; Pinta laman desktop"</string>
 </resources>

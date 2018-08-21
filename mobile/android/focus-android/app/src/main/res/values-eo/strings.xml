@@ -37,6 +37,8 @@
   <string name="preference_category_general">Ĝenerala</string>
   <string name="preference_category_data_collection_use">Kolekto kaj uzo de datumoj</string>
   <string name="preference_category_search">Serĉi</string>
+  <string name="preference_show_search_suggestions">Ricevi serĉajn sugestojn</string>
+  <string name="preference_show_search_suggestions_summary">%1$s sendos tion, kion vi tajpas en la adresa strio, al via serĉilo</string>
   <string name="preference_search_engine_default">Norma</string>
   <string name="preference_state_on">Ŝaltita</string>
   <string name="preference_state_off">Malŝaltita</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloki nur nerektajn kuketojn</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Jes</string>
+  <string name="preference_security_biometric">Uzi fingrospuron por malbloki programon</string>
+  <string name="preference_security_biometric_summary">Via fingrospuro povas malbloki %1$s se readreso jam estas malfermita en la programo. La kaŝreĝimo estos ŝaltita.</string>
   <string name="preference_privacy_secure_mode">Kaŝreĝimo</string>
-  <string name="preference_privacy_stealth_summary">Kaŝi retpaĝojn dum ŝanĝo de programo</string>
+  <string name="preference_privacy_stealth_summary">Kaŝi retpaĝojn dum ŝanĝo de programo kaj bloki la faradon de ekrankopioj.</string>
+  <string name="preference_category_security">Sekureco</string>
   <string name="preference_category_performance">Efikeco</string>
   <string name="preference_performance_block_webfonts">Bloki retajn tiparojn</string>
   <string name="preference_performance_block_webfonts_summary">Tio povus malaperigi emblemojn aŭ bildojn</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Aldoni alian serĉilon</string>
   <string name="preference_search_remove_title">Forigi serĉilojn</string>
   <string name="preference_search_remove">Forigi</string>
+  <string name="preference_homescreen_tips">Montri konsiletojn en la hejmekrano</string>
   <string name="action_option_add_search_engine">Aldoni serĉilon</string>
   <string name="search_add_manually_name_hint">Nomo de serĉilo</string>
   <string name="search_add_manually_string">Teksto por serĉi</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Iri reen</string>
   <string name="content_description_stop">Haltigi ŝargadon de retejo</string>
   <string name="content_description_customtab_exit">Reen al antaŭa programo</string>
+  <string name="content_description_trackers_blocked">Nombro de blokitaj spuriloj</string>
   <string name="content_description_blocking_switch">Bloki spurilojn</string>
   <string name="your_rights">Viaj rajtoj</string>
   <string name="external_app_prompt_title">Malfermi ligilon en alia programo</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Pasvorto</string>
   <string name="preference_performance_request_desktop_site">Peti version por komputiloj</string>
   <string name="custom_tab_copy_url_action">Retadreso kopiita</string>
+  <string name="preference_advanced_summary">Iloj por programistoj</string>
+  <string name="preference_category_advanced">Spertula</string>
+  <string name="preference_remote_debugging">Fora senerarigo per USB aŭ sendrata reto</string>
+  <string name="biometric_auth_title">Malbloki %1$s</string>
+  <string name="biometric_auth_description">Tuŝu la fingrospuran sensilon por daŭrigi.</string>
+  <string name="biometric_auth_new_session">Nova seanco</string>
+  <string name="biometric_auth_image_description">Emblemo de fingrospuro</string>
+  <string name="biometric_auth_not_recognized_error">Fingrospuro nerekonita. Provu denove.</string>
+  <string name="biometric_auth_moved_too_quickly">La fingro moviĝis tro rapide. Provu denove.</string>
+  <string name="enable_search_suggestion_title">Ĉu vi ŝatus ŝalti serĉajn sugestojn?</string>
+  <string name="enable_search_suggestion_subtitle">Por ricev serĉajn sugestojn, %1$s bezonas sendi tion, kion vi tajpas en la adresa strio, al la serĉilo kiun vi elektis. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Pli da informo</string>
+  <string name="enable_search_suggestions_no">Ne</string>
+  <string name="enable_search_suggestions_yes">Jes</string>
+  <string name="no_suggestions_message">Kelkaj serĉiloj ne povas montri serĉajn sugestojn.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Ignori</string>
+  <string name="tip_disable_tracking_protection">Ĉu la retejo neatendite kondutas?\n Provu malŝalti la protekton kontraŭ spurado</string>
+  <string name="tip_add_to_homescreen">"Atingu viajn plej vizititajn retejojn per nura tuŝeto\n        Menuo &gt; Aldoni al hejmekrano"</string>
+  <string name="tip_set_default_browser">Malfermi ĉiun ligilon per %1$s\n Igu %1$s via norma retumilo</string>
+  <string name="tip_autocomplete_url">Aŭtomate kompletigi restadresojn por la retejoj, kiujn vi plej multe uzas\n Longe premu iun ajn retadreson en la adresa strio</string>
+  <string name="tip_open_in_new_tab">Malfermu ligilon en nova langeto\n Longe premu iun ajn ligilon en paĝo</string>
+  <string name="tip_request_desktop">"Ĉu vi preferus vidi la version de la retejo por komputiloj?\n    Menuo &gt; Peti version por komputiloj"</string>
 </resources>

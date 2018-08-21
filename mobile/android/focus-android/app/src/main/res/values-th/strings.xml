@@ -37,6 +37,7 @@
   <string name="preference_category_general">ทั่วไป</string>
   <string name="preference_category_data_collection_use">การเก็บรวบรวมและใช้ข้อมูล</string>
   <string name="preference_category_search">ค้นหา</string>
+  <string name="preference_show_search_suggestions">รับข้อเสนอแนะการค้นหา</string>
   <string name="preference_search_engine_default">ค่าเริ่มต้น</string>
   <string name="preference_state_on">เปิด</string>
   <string name="preference_state_off">ปิด</string>
@@ -77,8 +78,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">ไม่</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">ปิดกั้นคุกกี้จากบุคคลที่สามเท่านั้น</string>
   <string name="preference_privacy_should_block_cookies_yes_option">ใช่</string>
+  <string name="preference_security_biometric">ใช้ลายนิ้วมือเพื่อปลดล็อคแอป</string>
   <string name="preference_privacy_secure_mode">พรางตัว</string>
-  <string name="preference_privacy_stealth_summary">ซ่อนหน้าเว็บเมื่อสลับแอป</string>
+  <string name="preference_privacy_stealth_summary">ซ่อนหน้าเว็บเมื่อสลับแอปและปิดกั้นการจับภาพหน้าจอ</string>
+  <string name="preference_category_security">ความปลอดภัย</string>
   <string name="preference_category_performance">ประสิทธิภาพ</string>
   <string name="preference_performance_block_webfonts">ปิดกั้นแบบอักษรเว็บ</string>
   <string name="preference_performance_block_webfonts_summary">อาจส่งผลให้ไอคอนหรือภาพขาดหายไป</string>
@@ -119,6 +122,7 @@
   <string name="content_description_back">นำทางย้อนกลับ</string>
   <string name="content_description_stop">หยุดการโหลดเว็บไซต์</string>
   <string name="content_description_customtab_exit">กลับไปที่แอปก่อนหน้า</string>
+  <string name="content_description_trackers_blocked">จำนวนตัวติดตามที่ถูกปิดกั้น</string>
   <string name="content_description_blocking_switch">ปิดกั้นตัวติดตาม</string>
   <string name="your_rights">สิทธิของคุณ</string>
   <string name="external_app_prompt_title">เปิดลิงก์ในแอปอื่น</string>
@@ -200,4 +204,16 @@
   <string name="http_auth_dialog_password">รหัสผ่าน</string>
   <string name="preference_performance_request_desktop_site">ขอไซต์สำหรับเดสก์ท็อป</string>
   <string name="custom_tab_copy_url_action">คัดลอก URL แล้ว</string>
+  <string name="preference_advanced_summary">เครื่องมือนักพัฒนา</string>
+  <string name="preference_category_advanced">ขั้นสูง</string>
+  <string name="preference_remote_debugging">การดีบั๊กระยะไกลผ่าน USB/Wi-Fi</string>
+  <string name="biometric_auth_title">ปลดล็อค %1$s</string>
+  <string name="biometric_auth_description">สัมผัสเซนเซอร์ลายนิ้วมือเพื่อดำเนินการต่อ</string>
+  <string name="biometric_auth_new_session">วาระใหม่</string>
+  <string name="biometric_auth_image_description">ไอคอนลายนิ้วมือ</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">เรียนรู้เพิ่มเติม</string>
+  <string name="enable_search_suggestions_no">ไม่</string>
+  <string name="enable_search_suggestions_yes">ใช่</string>
+  <string name="no_suggestions_message">เครื่องมือค้นหาบางตัวไม่สามารถแสดงข้อเสนอแนะ</string>
+  <string name="dismiss_no_suggestions_prompt_button">ยกเลิก</string>
 </resources>

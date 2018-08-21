@@ -11,7 +11,7 @@
   <string name="menu_report_site_issue">Sayt Problemini Bildir</string>
   <string name="menu_open_with_default_browser2">%1$s ilə aç</string>
   <string name="menu_open_with_a_browser2">Bununla aç…</string>
-  <string name="menu_add_to_home_screen">Ana ekrana əlavə et</string>
+  <string name="menu_add_to_home_screen">Ana Ekrana əlavə et</string>
   <string name="menu_whats_new">Yeniliklər</string>
   <string name="menu_settings">Tənzimləmələr</string>
   <string name="menu_about">Haqqında</string>
@@ -37,6 +37,8 @@
   <string name="preference_category_general">Ümumi</string>
   <string name="preference_category_data_collection_use">Məlumat yığılması və istifadəsi</string>
   <string name="preference_category_search">Axtar</string>
+  <string name="preference_show_search_suggestions">Axtarış təkliflərini al</string>
+  <string name="preference_show_search_suggestions_summary">%1$s ünvan sətrində yazdıqlarınızı axtarış mühərriyinizə göndərəcək</string>
   <string name="preference_search_engine_default">İlkin hal</string>
   <string name="preference_state_on">Açıq</string>
   <string name="preference_state_off">Bağlı</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Xeyr</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Ancaq 3cü tərəf çərəzləri əngəllə</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Bəli</string>
+  <string name="preference_security_biometric">Tətbiqi açmaq üçün barmaq izi işlət</string>
+  <string name="preference_security_biometric_summary">Əgər ünvan artıq tətbiqdə açıqdırsa barmaq iziniz %1$s səyyahının kilidini aça bilər. Görünməzlik aktivləşdiriləcək.</string>
   <string name="preference_privacy_secure_mode">Görünməzlik</string>
-  <string name="preference_privacy_stealth_summary">Tətbiqlər arası keçərkən saytları gizlət</string>
+  <string name="preference_privacy_stealth_summary">Tətbiqlər arası keçərkən saytları gizlət və ekran görüntüləri çəkməyi əngəllə.</string>
+  <string name="preference_category_security">Təhlükəsizlik</string>
   <string name="preference_category_performance">Məhsuldarlıq</string>
   <string name="preference_performance_block_webfonts">Web şriftlərini əngəllə</string>
   <string name="preference_performance_block_webfonts_summary">Əksik icon və şəkillərə səbəb ola bilər</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Digər axtarış mühərriyini əlavə et</string>
   <string name="preference_search_remove_title">Axtarış mühərriklərini sil</string>
   <string name="preference_search_remove">Sil</string>
+  <string name="preference_homescreen_tips">Ana Ekranı məsləhətlərini göstər</string>
   <string name="action_option_add_search_engine">Axtarış mühərriyini əlavə et</string>
   <string name="search_add_manually_name_hint">Axtarış mühərriyinin adı</string>
   <string name="search_add_manually_string">İstifadə ediləcək axtarış sətri</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Geri get</string>
   <string name="content_description_stop">Səhifəni yükləməyi dayandır</string>
   <string name="content_description_customtab_exit">Əvvəlki tətbiqə qayıt</string>
+  <string name="content_description_trackers_blocked">Əngəllənmiş izləyicilərin sayı</string>
   <string name="content_description_blocking_switch">İzləyiciləri əngəllə</string>
   <string name="your_rights">Hüquqlarınız</string>
   <string name="external_app_prompt_title">Keçidi başqa tətbiqdə aç</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Parol</string>
   <string name="preference_performance_request_desktop_site">Masaüstü saytını istə</string>
   <string name="custom_tab_copy_url_action">URL köçürüldü</string>
+  <string name="preference_advanced_summary">Tərtibatçı alətləri</string>
+  <string name="preference_category_advanced">Təkmilləşmiş</string>
+  <string name="preference_remote_debugging">USB/Wi-Fi ilə məsafəli sazlama</string>
+  <string name="biometric_auth_title">%1$s kilidini aç</string>
+  <string name="biometric_auth_description">Davam etmək üçün barmaq izi oxuyucusuna toxunun.</string>
+  <string name="biometric_auth_new_session">Yeni Sessiya</string>
+  <string name="biometric_auth_image_description">Barmaq izi ikonu</string>
+  <string name="biometric_auth_not_recognized_error">Barmaq izi tanınmadı. Təkrar yoxlayın.</string>
+  <string name="biometric_auth_moved_too_quickly">Barmaq çox sürətli hərəkət elədi. Təkrar yoxlayın.</string>
+  <string name="enable_search_suggestion_title">Axtarış məsləhətlərini aktiv etmək istərdiniz?</string>
+  <string name="enable_search_suggestion_subtitle">Axtarış məsləhətlərini almaq üçün %1$s ünvan sətrinə yazdıqlarınızı seçdiyiniz axtarış mühərriyinə göndərməlidir. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Ətraflı öyrən</string>
+  <string name="enable_search_suggestions_no">Xeyr</string>
+  <string name="enable_search_suggestions_yes">Bəli</string>
+  <string name="no_suggestions_message">Bəzi axtarış mühərrikləri məsləhətləri göstərə bilmirlər.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Qapat</string>
+  <string name="tip_disable_tracking_protection">Sayt gözlənilməyən hərəkətlər edir?\n İzləmə Qorumasınını söndürməyi yoxlayın</string>
+  <string name="tip_add_to_homescreen">"Çox işlətdiyiniz saytları tək toxunuşla açın\n        Menyu &gt; Ana Ekrana əlavə et"</string>
+  <string name="tip_set_default_browser">Bütün keçidləri %1$s ilə açın\n %1$s əsas səyyahınız olsun</string>
+  <string name="tip_autocomplete_url">Çox işlətdiyiniz saytlar üçün avto doldurma\n Ünvan sətrindəki hər hansı bir ünvana uzun basın</string>
+  <string name="tip_open_in_new_tab">Keçidi yeni vərəqdə açın\n Səhifədə hər hansı bir keçidə uzun basın</string>
+  <string name="tip_request_desktop">"Bütöv masaüstü saytını görmək istərdiz?\n    Menyu &gt; Masaüstü saytını istə"</string>
 </resources>

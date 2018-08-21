@@ -37,6 +37,8 @@
   <string name="preference_category_general">Bendrosios</string>
   <string name="preference_category_data_collection_use">Duomenų rinkimas ir naudojimas</string>
   <string name="preference_category_search">Paieška</string>
+  <string name="preference_show_search_suggestions">Gauti paieškos žodžių siūlymus</string>
+  <string name="preference_show_search_suggestions_summary">„%1$s“ perduos jūsų ieškyklei tai, ką rašote adreso lauke</string>
   <string name="preference_search_engine_default">Numatytoji</string>
   <string name="preference_state_on">Taip</string>
   <string name="preference_state_off">Ne</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokuoti tik trečiųjų šalių slapukus</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Taip</string>
+  <string name="preference_security_biometric">Atrakinti programą piršto atspaudu</string>
+  <string name="preference_security_biometric_summary">Jūsų piršto atspaudas gali atrakinti „%1$s“, jeigu programoje jau yra atvertas URL. Bus įjungtas slaptumas.</string>
   <string name="preference_privacy_secure_mode">Slaptumas</string>
-  <string name="preference_privacy_stealth_summary">Slėpti tinklalapius pereinant tarp programų</string>
+  <string name="preference_privacy_stealth_summary">Slėpti tinklalapius pereinant tarp programų bei neleisti daryti ekrano nuotraukų.</string>
+  <string name="preference_category_security">Saugumas</string>
   <string name="preference_category_performance">Našumas</string>
   <string name="preference_performance_block_webfonts">Blokuoti saityno šriftus</string>
   <string name="preference_performance_block_webfonts_summary">Galite nematyti kai kurių piktogramų arba paveikslų</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Pridėti kitą ieškyklę</string>
   <string name="preference_search_remove_title">Pašalinti ieškykles</string>
   <string name="preference_search_remove">Pašalinti</string>
+  <string name="preference_homescreen_tips">Rodyti pradžios ekrano patarimus</string>
   <string name="action_option_add_search_engine">Pridėti ieškyklę</string>
   <string name="search_add_manually_name_hint">Ieškyklės pavadinimas</string>
   <string name="search_add_manually_string">Paieškos eilutės struktūra</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Grįžti atgal</string>
   <string name="content_description_stop">Nebeįkėlinėti svetainės</string>
   <string name="content_description_customtab_exit">Grįžti į ankstesnę programą</string>
+  <string name="content_description_trackers_blocked">Viso užblokuotų elementų</string>
   <string name="content_description_blocking_switch">Blokuokite stebėjimo elementus</string>
   <string name="your_rights">Jūsų teisės</string>
   <string name="external_app_prompt_title">Atverti saitą kitoje programoje</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Slaptažodis</string>
   <string name="preference_performance_request_desktop_site">Prašyti ne mob. svetainės</string>
   <string name="custom_tab_copy_url_action">URL nukopijuotas</string>
+  <string name="preference_advanced_summary">Programuotojo priemonės</string>
+  <string name="preference_category_advanced">Kitkas</string>
+  <string name="preference_remote_debugging">Nuotolinis derinimas per USB arba belaidį tinklą</string>
+  <string name="biometric_auth_title">Atrakinti „%1$s“</string>
+  <string name="biometric_auth_description">Palieskite piršto atspaudo jutiklį.</string>
+  <string name="biometric_auth_new_session">Naujas seansas</string>
+  <string name="biometric_auth_image_description">Piršto atspaudo piktograma</string>
+  <string name="biometric_auth_not_recognized_error">Neatpažintas piršto atspaudas. Bandykite dar kartą.</string>
+  <string name="biometric_auth_moved_too_quickly">Pirštas sujudėjo per greitai. Bandykite dar kartą.</string>
+  <string name="enable_search_suggestion_title">Ar norite įjungti paieškos žodžių siūlymus?</string>
+  <string name="enable_search_suggestion_subtitle">Kad gautų paieškos žodžių siūlymus, „%1$s“ turi persiųsti jūsų pasirinktai ieškyklei viską, ką rašote į adreso lauką. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Sužinoti daugiau</string>
+  <string name="enable_search_suggestions_no">Ne</string>
+  <string name="enable_search_suggestions_yes">Taip</string>
+  <string name="no_suggestions_message">Kai kurios ieškyklės negali rodyti paieškos žodžių siūlymų.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Paslėpti</string>
+  <string name="tip_disable_tracking_protection">Svetainė veikia netinkamai?\n Pabandykite išjungti apsaugą nuo stebėjimo</string>
+  <string name="tip_add_to_homescreen">"Pasiekite lankomiausias svetaines vienu spustelėjimu\n        Meniu &gt; Įtraukti į pradžios ekraną"</string>
+  <string name="tip_set_default_browser">Atverkite visus saitus per „%1$s“\n Paskirkite „%1$s“ numatytąja naršykle</string>
+  <string name="tip_autocomplete_url">Automatiškai užbaikite lankomiausių svetainių adresus\n Spustelėkite ir palaikykite bet kurį URL adreso lauke</string>
+  <string name="tip_open_in_new_tab">Atverkite saitą naujoje kortelėje\n Spustelėkite ir palaikykite bet kurį saitą puslapyje</string>
+  <string name="tip_request_desktop">"Norite tradicinės svetainės versijos?\n    Meniu &gt; Prašyti ne mob. svetainės"</string>
 </resources>

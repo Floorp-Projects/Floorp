@@ -78,7 +78,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloquear sólo cookies de terceros</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
-  <string name="preference_privacy_stealth_summary">Ocultar páginas web al intercambiar aplicaciones</string>
+  <string name="preference_privacy_stealth_summary">Ocultar páginas web al intercambiar aplicaciones y bloquear las capturas de pantalla.</string>
   <string name="preference_category_performance">Rendimiento</string>
   <string name="preference_performance_block_webfonts">Bloquear fuentes web</string>
   <string name="preference_performance_block_webfonts_summary">Puede hacer que falten iconos o imágenes</string>

@@ -37,6 +37,8 @@
   <string name="preference_category_general">Cyffredinol</string>
   <string name="preference_category_data_collection_use">Casglu a Defnydd Data</string>
   <string name="preference_category_search">Chwilio</string>
+  <string name="preference_show_search_suggestions">Derbyn awgrymiadau chwilio</string>
+  <string name="preference_show_search_suggestions_summary">Bydd %1$s yn anfon yr hyn rydych yn ei deipio yn y bar cyfeiriad i\'ch peiriant chwilio</string>
   <string name="preference_search_engine_default">Rhagosodiad</string>
   <string name="preference_state_on">Ymlaen</string>
   <string name="preference_state_off">Diffodd</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Na</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Rhwystro cwcis trydydd parti\'n unig</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Iawn</string>
+  <string name="preference_security_biometric">Defnyddio ôl bys i ddatgloi ap</string>
+  <string name="preference_security_biometric_summary">Gall eich ôl bys ddatgloi %1$s os oes URL ar agor yn barod yn yr ap. Bydd y modd Dirgel ymlaen.</string>
   <string name="preference_privacy_secure_mode">Dirgel</string>
-  <string name="preference_privacy_stealth_summary">Cuddio tudalennau gwe wrth agor apiau</string>
+  <string name="preference_privacy_stealth_summary">Cuddio tudalennau gwe wrth newid apiau a rhwystro cymryd lluniau sgrin.</string>
+  <string name="preference_category_security">Diogelwch</string>
   <string name="preference_category_performance">Perfformiad</string>
   <string name="preference_performance_block_webfonts">Rhwystro ffontiau Gwe</string>
   <string name="preference_performance_block_webfonts_summary">Gall olygu colli eiconau neu ddelweddau</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Ychwanegu peiriannau chwilio arall</string>
   <string name="preference_search_remove_title">Tynnu peiriannau chwilio</string>
   <string name="preference_search_remove">Tynnu</string>
+  <string name="preference_homescreen_tips">Dangos cynghorion sgrin cartref</string>
   <string name="action_option_add_search_engine">Ychwanegu peiriant chwilio</string>
   <string name="search_add_manually_name_hint">Enw peiriant chwilio</string>
   <string name="search_add_manually_string">Llinyn chwilio i\'w ddefnyddio</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Symud nôl</string>
   <string name="content_description_stop">Atal llwytho\'r wefan</string>
   <string name="content_description_customtab_exit">Nôl i\'r ap blaenorol</string>
+  <string name="content_description_trackers_blocked">Nifer o dracwyr wedi eu rhwystro</string>
   <string name="content_description_blocking_switch">Rhwystro tracwyr</string>
   <string name="your_rights">Eich Hawliau</string>
   <string name="external_app_prompt_title">Agor dolen mewn ap arall</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Cyfrinair</string>
   <string name="preference_performance_request_desktop_site">Gwefan bwrdd gwaith</string>
   <string name="custom_tab_copy_url_action">URL wedi\'i gopïo</string>
+  <string name="preference_advanced_summary">Offer datblygwyr</string>
+  <string name="preference_category_advanced">Uwch</string>
+  <string name="preference_remote_debugging">Dadfygio pell drwy\'r USB/Diwifr</string>
+  <string name="biometric_auth_title">Datgloi %1$s</string>
+  <string name="biometric_auth_description">Cyffwrdd a\'r synhwyrydd ôl bys i barhau.</string>
+  <string name="biometric_auth_new_session">Sesiwn Newydd</string>
+  <string name="biometric_auth_image_description">Eicon ôl bys</string>
+  <string name="biometric_auth_not_recognized_error">Ôl bys heb ei adnabod. Ceisiwch eto.</string>
+  <string name="biometric_auth_moved_too_quickly">Symudodd y bys yn rhy gyflym. Ceisiwch eto.</string>
+  <string name="enable_search_suggestion_title">Hoffech chi agor awgrymiadau chwilio?</string>
+  <string name="enable_search_suggestion_subtitle">I dderbyn awgrymiadau chwilio, mae %1$s angen anfon yr hyn rydych yn ei deipio i\'r bar cyfeiriad i beiriant chwilio rydych wedi ei ddewis. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Dysgu rhagor</string>
+  <string name="enable_search_suggestions_no">Na</string>
+  <string name="enable_search_suggestions_yes">Iawn</string>
+  <string name="no_suggestions_message">Nid yw rhai peiriannau chwilio\'n gallu dangos awgrymiadau.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Cau</string>
+  <string name="tip_disable_tracking_protection">Gwefan yn ymddwyn yn anisgwyl?\n Ceisiwch ddiffodd Diogelwch rhag Tracio</string>
+  <string name="tip_add_to_homescreen">"Mynediad un tap i\'ch hoff wefannau\n        Dewislen &gt; Ychwanegu i\'r Dudalen Cartref"</string>
+  <string name="tip_set_default_browser">Agor pob dolen yn %1$s\n Gosod %1$s fel y porwr rhagosodedig</string>
+  <string name="tip_autocomplete_url">Gosod URLau awtogwblhau i\'ch gwefannau gorau\n Pwyso\'n hir unrhyw URL yn y bar cyfeiriad</string>
+  <string name="tip_open_in_new_tab">Agor dolen mewn tab newydd\n Pwyso\'n hir ar unrhyw ddolen ar dudalen</string>
+  <string name="tip_request_desktop">"Gwell gweld gwefan bwrdd gwaith lawn?\n    Dewislen &gt; Gwefan bwrdd gwaith"</string>
 </resources>

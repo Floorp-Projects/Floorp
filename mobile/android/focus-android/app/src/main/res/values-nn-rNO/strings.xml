@@ -37,6 +37,7 @@
   <string name="preference_category_general">Generelt</string>
   <string name="preference_category_data_collection_use">Datainnsamling og bruk</string>
   <string name="preference_category_search">Søk</string>
+  <string name="preference_show_search_suggestions">Få søkjeforslag</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_state_on">På</string>
   <string name="preference_state_off">Av</string>
@@ -78,7 +79,8 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokker berre tredjepartsinfokapslar</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
   <string name="preference_privacy_secure_mode">Usynleg løyndmodus</string>
-  <string name="preference_privacy_stealth_summary">Gøym nettsider når du byter appar</string>
+  <string name="preference_privacy_stealth_summary">Gøym nettsider når du byter appar og blokker skjermbildeknipsing.</string>
+  <string name="preference_category_security">Sikkerheit</string>
   <string name="preference_category_performance">Yting</string>
   <string name="preference_performance_block_webfonts">Blokker nettfontar</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilde manglar</string>
@@ -119,6 +121,7 @@
   <string name="content_description_back">Naviger tilbake</string>
   <string name="content_description_stop">Stopp lasting av nettsida</string>
   <string name="content_description_customtab_exit">Gå tilbake til førre app</string>
+  <string name="content_description_trackers_blocked">Tal på blokkerte sporfølgjarar</string>
   <string name="content_description_blocking_switch">Blokker sporfølgjarar</string>
   <string name="your_rights">Dine rettar</string>
   <string name="external_app_prompt_title">Opna lenke i ein annan app</string>
@@ -200,4 +203,12 @@
   <string name="http_auth_dialog_password">Passord</string>
   <string name="preference_performance_request_desktop_site">Vis skrivebordsversjon</string>
   <string name="custom_tab_copy_url_action">URL kopiert</string>
+  <string name="preference_advanced_summary">Utviklarverktøy</string>
+  <string name="preference_category_advanced">Avansert</string>
+  <string name="biometric_auth_title">Lås opp %1$s</string>
+  <string name="biometric_auth_new_session">Ny økt</string>
+  <string name="biometric_auth_image_description">Fingeravtrykkikon</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Les meir</string>
+  <string name="enable_search_suggestions_no">Nei</string>
+  <string name="enable_search_suggestions_yes">Ja</string>
 </resources>

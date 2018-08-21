@@ -37,6 +37,8 @@
   <string name="preference_category_general">Основные</string>
   <string name="preference_category_data_collection_use">Сбор и использование данных</string>
   <string name="preference_category_search">Поиск</string>
+  <string name="preference_show_search_suggestions">Получать поисковые предложения</string>
+  <string name="preference_show_search_suggestions_summary">%1$s будет отправлять поисковой системе текст, который вы вводите в адресной строке</string>
   <string name="preference_search_engine_default">По умолчанию</string>
   <string name="preference_state_on">Включено</string>
   <string name="preference_state_off">Отключено</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Нет</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Не принимать только куки со сторонних веб-сайтов</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Да</string>
+  <string name="preference_security_biometric">Использовать отпечатки пальцев для разблокировки приложения</string>
+  <string name="preference_security_biometric_summary">Ваш отпечаток сможет разблокировать %1$s, если ссылка уже открыта в приложении. Режим «Невидимка» будет включён.</string>
   <string name="preference_privacy_secure_mode">Невидимка</string>
-  <string name="preference_privacy_stealth_summary">Скрыть веб-страницы при переключении приложений</string>
+  <string name="preference_privacy_stealth_summary">Скрывать веб-страницы при переключении приложений и блокировать создание скриншотов.</string>
+  <string name="preference_category_security">Защита</string>
   <string name="preference_category_performance">Производительность</string>
   <string name="preference_performance_block_webfonts">Блокировать веб-шрифты</string>
   <string name="preference_performance_block_webfonts_summary">Может привести к отсутствию значков или изображений</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Добавить другую поисковую систему</string>
   <string name="preference_search_remove_title">Удалить поисковые системы</string>
   <string name="preference_search_remove">Удалить</string>
+  <string name="preference_homescreen_tips">Показывать советы на домашнем экране</string>
   <string name="action_option_add_search_engine">Добавить поисковую систему</string>
   <string name="search_add_manually_name_hint">Имя поисковой системы</string>
   <string name="search_add_manually_string">Строка поискового запроса</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Перейти назад</string>
   <string name="content_description_stop">Остановить загрузку сайта</string>
   <string name="content_description_customtab_exit">Вернуться к последнему приложению</string>
+  <string name="content_description_trackers_blocked">Трекеров заблокировано</string>
   <string name="content_description_blocking_switch">Блокировать трекеры</string>
   <string name="your_rights">Ваши права</string>
   <string name="external_app_prompt_title">Открыть ссылку в другом приложении</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Пароль</string>
   <string name="preference_performance_request_desktop_site">Полная версия сайта</string>
   <string name="custom_tab_copy_url_action">URL скопирован</string>
+  <string name="preference_advanced_summary">Инструменты разработчика</string>
+  <string name="preference_category_advanced">Дополнительно</string>
+  <string name="preference_remote_debugging">Удалённая отладка через USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Разблокировать %1$s</string>
+  <string name="biometric_auth_description">Дотроньтесь до датчика отпечатков пальцев для продолжения.</string>
+  <string name="biometric_auth_new_session">Новая сессия</string>
+  <string name="biometric_auth_image_description">Значок отпечатков пальцев</string>
+  <string name="biometric_auth_not_recognized_error">Отпечатки пальцев не распознаны. Попробуйте снова.</string>
+  <string name="biometric_auth_moved_too_quickly">Слишком быстрое прикосновение. Попробуйте снова.</string>
+  <string name="enable_search_suggestion_title">Вы хотите включить поисковые предложения?</string>
+  <string name="enable_search_suggestion_subtitle">Для получения поисковых предложений, %1$s необходимо отправлять то, что вы вводите в адресной строке, в вашу поисковую систему. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Подробнее</string>
+  <string name="enable_search_suggestions_no">Нет</string>
+  <string name="enable_search_suggestions_yes">Да</string>
+  <string name="no_suggestions_message">Некоторые поисковые системы не могут показывать предложения.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Закрыть</string>
+  <string name="tip_disable_tracking_protection">Сайт ведёт себя неожиданно?\n Попробуйте отключить защиту от отслеживания</string>
+  <string name="tip_add_to_homescreen">"Получайте доступ к нужным сайтам в одно касание\n        Меню &gt; Добавить на домашний экран"</string>
+  <string name="tip_set_default_browser">Открывайте все ссылки в %1$s\n Установить %1$s браузером по умолчанию</string>
+  <string name="tip_autocomplete_url">Автодополнение URL для часто посещаемых сайтов\n Произведите долгое нажатие на любой URL в адресной строке</string>
+  <string name="tip_open_in_new_tab">Открывайте ссылки в новых вкладках\n Произведите долгое нажатие на любую ссылку на странице</string>
+  <string name="tip_request_desktop">"Хотите увидеть полную версию сайта?\n    Меню &gt; Полная версия сайта"</string>
 </resources>

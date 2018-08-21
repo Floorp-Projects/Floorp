@@ -78,7 +78,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Estä vain kolmannen osapuolen evästeet</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Kyllä</string>
   <string name="preference_privacy_secure_mode">Häivetila</string>
-  <string name="preference_privacy_stealth_summary">Piilota verkkosivut vaihdettaessa sovellusta</string>
+  <string name="preference_privacy_stealth_summary">Piilota verkkosivut vaihdettaessa sovellusta ja estä kuvakaappaukset.</string>
   <string name="preference_category_performance">Suorituskyky</string>
   <string name="preference_performance_block_webfonts">Estä verkkosivun kirjasinlajit</string>
   <string name="preference_performance_block_webfonts_summary">Saattaa aiheuttaa puuttuvia kuvakkeita tai kuvia</string>
@@ -158,7 +158,7 @@
   <string name="contextmenu_image_warning"><![CDATA["Tallennettuja ja jaettuja kuvia "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ei poisteta</b>" kun %1$sen selaushistoria tyhjennetään."]]></string>
   <string name="firstrun_defaultbrowser_title">Tehosta yksityisyyttäsi</string>
   <string name="firstrun_defaultbrowser_text2">Vie yksityinen selaus uudelle tasolle. Estä mainoksia ja muuta sisältöä, jotka voivat seurata sinua eri sivustoilla ja hidastaa sivujen latausaikoja.</string>
-  <string name="firstrun_search_title">Sinun haut, sinun ehdoilla</string>
+  <string name="firstrun_search_title">Hakusi haluamallasi tavalla</string>
   <string name="firstrun_search_text">Haetko jotain erilaista? Valitse asetuksista toinen oletushakukone.</string>
   <string name="firstrun_shortcut_title">Lisää linkki kotinäkymään</string>
   <string name="firstrun_shortcut_text">Avaa suosikkisivusi nopeasti %1$sessa. Valitse vain \"Lisää linkki kotinäkymään\" %1$s valikosta.</string>

@@ -79,6 +79,7 @@
   <string name="preference_privacy_should_block_cookies_yes_option">हाँ</string>
   <string name="preference_privacy_secure_mode">तरक़ीब</string>
   <string name="preference_privacy_stealth_summary">ऐप्स को स्विच करते समय वेबपेज छिपाएं</string>
+  <string name="preference_category_security">सुरक्षा</string>
   <string name="preference_category_performance">प्रदर्शन</string>
   <string name="preference_performance_block_webfonts">वेब लिपियों को अवरुद्ध करें</string>
   <string name="preference_performance_block_webfonts_summary">अनुपस्थित प्रतीकों या छवियों के रूप में परिणाम हो सकता है</string>
@@ -96,6 +97,7 @@
   <string name="preference_search_add2">+ अन्य खोज इंजन जोड़ें</string>
   <string name="preference_search_remove_title">खोज इंजन हटाएँ</string>
   <string name="preference_search_remove">हटाएँ</string>
+  <string name="preference_homescreen_tips">मूल पटल युक्तियाँ दिखाएँ</string>
   <string name="action_option_add_search_engine">खोज इंजन जोड़ें</string>
   <string name="search_add_manually_name_hint">खोज इंजन का नाम</string>
   <string name="search_add_manually_string">उपयोग के लिए खोज स्ट्रिंग</string>
@@ -119,6 +121,7 @@
   <string name="content_description_back">पीछे मार्गनिर्देशित करें</string>
   <string name="content_description_stop">वेबसाइट लोड करना रोकें</string>
   <string name="content_description_customtab_exit">पिछले ऐप पर वापस जाएँ</string>
+  <string name="content_description_trackers_blocked">अवरुद्ध किये गये ट्रैकर्स की संख्या</string>
   <string name="content_description_blocking_switch">ट्रैकर्स को अवरुद्ध करें</string>
   <string name="your_rights">आपके अधिकार</string>
   <string name="external_app_prompt_title">किसी अन्य अनुप्रयोग में लिंक खोलें</string>
@@ -200,4 +203,16 @@
   <string name="http_auth_dialog_password">कूटशब्द</string>
   <string name="preference_performance_request_desktop_site">डेस्कटॉप साइट के लिए आग्रह करें</string>
   <string name="custom_tab_copy_url_action">URL की नकल की गई</string>
+  <string name="preference_advanced_summary">डेवलेपर औज़ार</string>
+  <string name="preference_category_advanced">विस्तृत</string>
+  <string name="preference_remote_debugging">यूएसबी/वाई-फाई से दूरस्थ दोषसुधार</string>
+  <string name="biometric_auth_title">%1$s को खोलें</string>
+  <string name="biometric_auth_description">जारी रखने के लिए फिंगरप्रिंट संवेदक स्पर्श करें।</string>
+  <string name="biometric_auth_new_session">नया सत्र</string>
+  <string name="biometric_auth_image_description">फिंगरप्रिंट चिन्ह</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">अधिक जानें</string>
+  <string name="enable_search_suggestions_no">नहीं</string>
+  <string name="enable_search_suggestions_yes">हाँ</string>
+  <string name="no_suggestions_message">कुछ खोज इंजन सुझाव नहीं दिखा सकते हैं।</string>
+  <string name="dismiss_no_suggestions_prompt_button">निरस्त करें</string>
 </resources>

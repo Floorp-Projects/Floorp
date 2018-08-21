@@ -37,6 +37,8 @@
   <string name="preference_category_general">عمومی</string>
   <string name="preference_category_data_collection_use">گردآوری داده و موارد استفاده</string>
   <string name="preference_category_search">جست‌وجو</string>
+  <string name="preference_show_search_suggestions">دریافت پیشنهادات جست‌وجو</string>
+  <string name="preference_show_search_suggestions_summary">%1$sچیزهایی رو که شما در نوار آدرس وارد می‌کنید برای موتور جست‌وجوی شما ارسال خواهد کرد</string>
   <string name="preference_search_engine_default">پیش‌فرض</string>
   <string name="preference_state_on">روشن</string>
   <string name="preference_state_off">خاموش</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">خیر</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">فقط مسدود کردن کوکی‌های شخص ثالث</string>
   <string name="preference_privacy_should_block_cookies_yes_option">بله</string>
+  <string name="preference_security_biometric">استفاده از اثرانگشت برای بازکردن برنامه</string>
+  <string name="preference_security_biometric_summary">اثرانگشت شما همچنین می‌تواند%1$s را بازکند اگر یکURL در برنامه باز بوده باشد مخفی خواهد ماند تا زمانی که باز شود.</string>
   <string name="preference_privacy_secure_mode">حالت پنهان</string>
-  <string name="preference_privacy_stealth_summary">هنگام تعویض برنامه‌ها صفحه‌های وب را مخفی کن</string>
+  <string name="preference_privacy_stealth_summary">هنگام تعویض برنامه‌ها صفحه‌های وب را مخفی و گرفتن تصاویر صفحه را مسدود کن.</string>
+  <string name="preference_category_security">امنیت</string>
   <string name="preference_category_performance">کارایی</string>
   <string name="preference_performance_block_webfonts">مسدود کردن قلم‌های وب</string>
   <string name="preference_performance_block_webfonts_summary">ممکن است باعث بارگیری نشدن برخی از شمایل‌ها و تصاویر بشود</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ افزودن یک موتور جستجوی دیگر</string>
   <string name="preference_search_remove_title">حذف موتورهای جست‌وجو</string>
   <string name="preference_search_remove">حذف</string>
+  <string name="preference_homescreen_tips">نمایش نکات صفحه اصلی</string>
   <string name="action_option_add_search_engine">اضافه کردن موتور جست‌وجو</string>
   <string name="search_add_manually_name_hint">نام موتور جست‌وجو</string>
   <string name="search_add_manually_string">رشتهٔ جست‌وجو جهت استفاده</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">بازگشت به عقب</string>
   <string name="content_description_stop">توقف بارگیری وب‌سایت</string>
   <string name="content_description_customtab_exit">بازگشت به برنامهٔ قبل</string>
+  <string name="content_description_trackers_blocked">تعداد دنبال کننده‌های مسدود شده</string>
   <string name="content_description_blocking_switch">مسدود کردن ردیاب‌ها</string>
   <string name="your_rights">حقوق شما</string>
   <string name="external_app_prompt_title">باز کردن پیوند در برنامه‌ای دیگر</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">گذرواژه</string>
   <string name="preference_performance_request_desktop_site">درخواست نسخه رومیزی پایگاه</string>
   <string name="custom_tab_copy_url_action">برداشتURL</string>
+  <string name="preference_advanced_summary">ابزارهای توسعه دهنده</string>
+  <string name="preference_category_advanced">پیشرفته</string>
+  <string name="preference_remote_debugging">اشکال زدایی از طریق USB/Wi-Fi</string>
+  <string name="biometric_auth_title">بازکردن%1$s</string>
+  <string name="biometric_auth_description">سنسور اثرانگشت را برای ادامه لمس کنید.</string>
+  <string name="biometric_auth_new_session">جلسه جدید</string>
+  <string name="biometric_auth_image_description">نشانه اثرانگشت</string>
+  <string name="biometric_auth_not_recognized_error">اثرانگشت شناسایی نشد. مجددا تلاش کنید.</string>
+  <string name="biometric_auth_moved_too_quickly">انگشت خیلی سریع حرکت کرد. مجدد تلاش کنید.</string>
+  <string name="enable_search_suggestion_title">آیا مایل هستید پیشنهاد بر روی جست‌وجو خود را فعال کنید؟</string>
+  <string name="enable_search_suggestion_subtitle">برای دریافت پیشنهاد روی جست‌وجو، %1$s بایستی موارد تایپ شده در نوار آدرس را برای موتور جست‌وجو انتخاب شده توسط شما ارسال کند.%2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">بیشتر بدانید</string>
+  <string name="enable_search_suggestions_no">خیر</string>
+  <string name="enable_search_suggestions_yes">بله</string>
+  <string name="no_suggestions_message">تعدادی از موتورهای ‌جست‌وجو امکان نمایش پیشنهادات را ندارند.</string>
+  <string name="dismiss_no_suggestions_prompt_button">رد کردن</string>
+  <string name="tip_disable_tracking_protection">سایت رفتار غیرمنتظره‌ای دارد؟\n محافظت از دنبال کردن را خاموش کنید</string>
+  <string name="tip_add_to_homescreen">"با اشاره یک انگشت به سایت های پربازدید خود دسترسی داشته باشید\n        فهرست&gt; اضافه کردن به صفحه خانگی"</string>
+  <string name="tip_set_default_browser">بازکردن هر پیوندی در %1$s\n تنظیم%1$s به عنوان مرورگر پیش فرض</string>
+  <string name="tip_autocomplete_url">پرکردن خودکارURLs برای سایت های پربازدید شما\n نگاه داشتن بیشتر انگشت بر روی هر URL در نوار آدرس برای انجام این کار</string>
+  <string name="tip_open_in_new_tab">بازکردن یک پیوند در زبانه جدید\n نگاه داشتن بیشتر انگشت برای باز کردن پیوند در صفحه</string>
+  <string name="tip_request_desktop">"ترجیح به دیدن نسخه رومیزی وب‌سایت؟\n    فهرست &gt; درخواست نسخه رومیزی وب‌سایت"</string>
 </resources>

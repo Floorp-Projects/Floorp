@@ -78,7 +78,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloca solo le cookies de tertie partes</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Si</string>
   <string name="preference_privacy_secure_mode">Invisibile</string>
-  <string name="preference_privacy_stealth_summary">Celar le paginas web quando on cambia de applicationes</string>
+  <string name="preference_privacy_stealth_summary">Celar le paginas web quando on cambia de applicationes e blocar le prisa de instantaneos.</string>
   <string name="preference_category_performance">Rendimento</string>
   <string name="preference_performance_block_webfonts">Blocar le typos de character de web</string>
   <string name="preference_performance_block_webfonts_summary">Pote resultar in icones o imagines mancante</string>

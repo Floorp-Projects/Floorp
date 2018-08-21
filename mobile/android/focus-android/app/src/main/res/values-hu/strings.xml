@@ -37,6 +37,8 @@
   <string name="preference_category_general">Általános</string>
   <string name="preference_category_data_collection_use">Adatgyűjtés és -felhasználás</string>
   <string name="preference_category_search">Keresés</string>
+  <string name="preference_show_search_suggestions">Keresési javaslatok kérése</string>
+  <string name="preference_show_search_suggestions_summary">A %1$s elküldi a címsávba írt szöget a keresőszolgáltatásának</string>
   <string name="preference_search_engine_default">Alapértelmezett</string>
   <string name="preference_state_on">Be</string>
   <string name="preference_state_off">Ki</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Nem</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Csak a harmadik féltől származó sütik törlése</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Igen</string>
+  <string name="preference_security_biometric">Ujjlenyomat használata az alkalmazás feloldásához</string>
+  <string name="preference_security_biometric_summary">Az ujjlenyomata feloldhatja a %1$st, ha egy URL már meg lett nyitva az alkalmazásban. A rejtőzködés be lesz kapcsolva.</string>
   <string name="preference_privacy_secure_mode">Rejtőzködés</string>
-  <string name="preference_privacy_stealth_summary">Weboldalak elrejtése alkalmazásváltáskor</string>
+  <string name="preference_privacy_stealth_summary">Weboldalak elrejtése alkalmazásváltáskor, és a képernyőkép készítés letiltása.</string>
+  <string name="preference_category_security">Biztonság</string>
   <string name="preference_category_performance">Teljesítmény</string>
   <string name="preference_performance_block_webfonts">Webes betűkészletek blokkolása</string>
   <string name="preference_performance_block_webfonts_summary">Hiányzó ikonokat és képeket eredményezhet</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ További keresőszolgáltatás felvétele</string>
   <string name="preference_search_remove_title">Keresőszolgáltatások eltávolítása</string>
   <string name="preference_search_remove">Eltávolítás</string>
+  <string name="preference_homescreen_tips">Tippek megjelenítése a kezdőképernyőn</string>
   <string name="action_option_add_search_engine">Keresőszolgáltatás hozzáadása</string>
   <string name="search_add_manually_name_hint">Keresőszolgáltatás neve</string>
   <string name="search_add_manually_string">Használandó keresőkifejezés</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Navigálás visszafelé</string>
   <string name="content_description_stop">Webhely betöltésének leállítása</string>
   <string name="content_description_customtab_exit">Vissza az előző apphoz</string>
+  <string name="content_description_trackers_blocked">Blokkolt követők száma</string>
   <string name="content_description_blocking_switch">Követők blokkolása</string>
   <string name="your_rights">Az Ön jogai</string>
   <string name="external_app_prompt_title">Hivatkozás megnyitása egy másik appban</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Jelszó</string>
   <string name="preference_performance_request_desktop_site">Asztali oldal kérése</string>
   <string name="custom_tab_copy_url_action">URL másolva</string>
+  <string name="preference_advanced_summary">Fejlesztői eszközök</string>
+  <string name="preference_category_advanced">Speciális</string>
+  <string name="preference_remote_debugging">Távoli hibakeresés USB-n/Wi-Fi-n</string>
+  <string name="biometric_auth_title">A %1$s feloldása</string>
+  <string name="biometric_auth_description">Érintse meg az ujjlenyomat-leolvasót a folytatáshoz.</string>
+  <string name="biometric_auth_new_session">Új munkamenetet</string>
+  <string name="biometric_auth_image_description">Ujjlenyomat ikon</string>
+  <string name="biometric_auth_not_recognized_error">Az ujjlenyomat nem ismerhető fel. Próbálja újra.</string>
+  <string name="biometric_auth_moved_too_quickly">Az ujja túl gyorsan mozgott. Próbálja újra.</string>
+  <string name="enable_search_suggestion_title">Szeretné bekapcsolni a keresési javaslatokat?</string>
+  <string name="enable_search_suggestion_subtitle">A keresési javaslatokhoz a %1$snak el kell küldenie a címsorba gépelt szöveget a kiválasztott keresésszolgáltatónak. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">További tudnivalók</string>
+  <string name="enable_search_suggestions_no">Nem</string>
+  <string name="enable_search_suggestions_yes">Igen</string>
+  <string name="no_suggestions_message">Néhány keresőszolgáltatás nem tud javaslatokat megjeleníteni.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Eltüntetés</string>
+  <string name="tip_disable_tracking_protection">Az oldal váratlanul viselkedik?\nPróbálja kikapcsolni a követésvédelmet</string>
+  <string name="tip_add_to_homescreen">"Érje el a leggyakrabban használt oldalakat egy koppintással\n        Menü &gt; Hozzáadás a kezdőképernyőhöz"</string>
+  <string name="tip_set_default_browser">Nyisson meg minden hivatkozást a %1$sban\nÁllítsa be a %1$st alapértelmezett böngészőnek</string>
+  <string name="tip_autocomplete_url">URL-ek automatikus kiegészítése a leggyakrabban használt oldalaknál\nNyomja meg hosszan az URL-t a címsorban</string>
+  <string name="tip_open_in_new_tab">Nyissa meg a hivatkozást új lapon\nNyomja meg hosszan bármelyik hivatkozást az oldalon</string>
+  <string name="tip_request_desktop">Inkább az asztali oldalt látná?\nMenü &gt; Asztali oldal kérése</string>
 </resources>

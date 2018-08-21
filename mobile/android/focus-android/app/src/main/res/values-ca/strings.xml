@@ -37,6 +37,7 @@
   <string name="preference_category_general">General</string>
   <string name="preference_category_data_collection_use">Ús i recollida de dades</string>
   <string name="preference_category_search">Cerca</string>
+  <string name="preference_show_search_suggestions">Mostra suggeriments de cerca</string>
   <string name="preference_search_engine_default">Per defecte</string>
   <string name="preference_state_on">Activat</string>
   <string name="preference_state_off">Desactivat</string>
@@ -79,6 +80,7 @@
   <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
   <string name="preference_privacy_stealth_summary">Amaga les pàgines web en canviar d\'aplicacions</string>
+  <string name="preference_category_security">Seguretat</string>
   <string name="preference_category_performance">Rendiment</string>
   <string name="preference_performance_block_webfonts">Bloca tipus de lletra web</string>
   <string name="preference_performance_block_webfonts_summary">Pot fer que no es vegin algunes icones o imatges</string>
@@ -119,6 +121,7 @@
   <string name="content_description_back">Vés enrere</string>
   <string name="content_description_stop">Atura la càrrega del lloc web</string>
   <string name="content_description_customtab_exit">Torna a l\'aplicació anterior</string>
+  <string name="content_description_trackers_blocked">Nombre d\'elements blocats</string>
   <string name="content_description_blocking_switch">Bloca els elements de seguiment</string>
   <string name="your_rights">Els vostres drets</string>
   <string name="external_app_prompt_title">Obre l\'enllaç en una altra aplicació</string>
@@ -200,4 +203,14 @@
   <string name="http_auth_dialog_password">Contrasenya</string>
   <string name="preference_performance_request_desktop_site">Mostra lloc d\'escriptori</string>
   <string name="custom_tab_copy_url_action">S\'ha copiat l\'URL</string>
+  <string name="preference_advanced_summary">Eines per a desenvolupadors</string>
+  <string name="preference_category_advanced">Avançat</string>
+  <string name="preference_remote_debugging">Depuració remota per USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Desbloca el %1$s</string>
+  <string name="biometric_auth_new_session">Sessió nova</string>
+  <string name="enable_search_suggestion_title">Voleu activar els suggeriments de cerca?</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Més informació</string>
+  <string name="enable_search_suggestions_no">No</string>
+  <string name="enable_search_suggestions_yes">Sí</string>
+  <string name="dismiss_no_suggestions_prompt_button">Tanca</string>
 </resources>

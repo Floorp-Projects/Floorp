@@ -70,7 +70,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">3-వ పక్షం కుకీలను మాత్రమే నిరోధించు</string>
   <string name="preference_privacy_should_block_cookies_yes_option">అవును</string>
   <string name="preference_privacy_secure_mode">గోప్యత</string>
-  <string name="preference_privacy_stealth_summary">యాప్స్ మధ్య మారేప్పుడు జాలపేజీలు కనబడకుండా దాచిపెట్టు</string>
+  <string name="preference_privacy_stealth_summary">యాప్స్ మధ్య మారేప్పుడు జాలపేజీలు కనబడకుండా దాచిపెట్టు, తెరపట్టు తీసుకోవడం నిరోధించు.</string>
   <string name="preference_category_performance">పనితనం</string>
   <string name="preference_performance_block_webfonts">జాల ఖతులను (వెబ్ ఫాంట్లను) నిరోధించు</string>
   <string name="preference_performance_block_webfonts_summary">దీనివల్ల ప్రతీకాలు లేదా బొమ్మలు కనబడకపోవచ్చు</string>

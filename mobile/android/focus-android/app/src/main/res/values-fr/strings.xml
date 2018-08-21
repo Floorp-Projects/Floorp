@@ -37,6 +37,8 @@
   <string name="preference_category_general">Général</string>
   <string name="preference_category_data_collection_use">Collecte de données et utilisation</string>
   <string name="preference_category_search">Recherche</string>
+  <string name="preference_show_search_suggestions">Obtenir des suggestions de recherche</string>
+  <string name="preference_show_search_suggestions_summary">%1$s enverra ce que vous saisissez dans votre barre d’adresse à votre moteur de recherche</string>
   <string name="preference_search_engine_default">Par défaut</string>
   <string name="preference_state_on">Activée</string>
   <string name="preference_state_off">Désactivée</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Non</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Interdire les cookies tiers uniquement</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Oui</string>
+  <string name="preference_security_biometric">Utiliser une empreinte digitale pour déverrouiller l’application</string>
+  <string name="preference_security_biometric_summary">Votre empreinte digitale peut déverrouiller %1$s si une URL est déjà ouverte au sein de l’application. Vous naviguerez ainsi de manière plus sécurisée.</string>
   <string name="preference_privacy_secure_mode">Mode furtif</string>
-  <string name="preference_privacy_stealth_summary">Masquer les pages web lorsque vous changez d’application</string>
+  <string name="preference_privacy_stealth_summary">Masquer les pages web lorsque vous changez d’application et empêcher les captures d’écran.</string>
+  <string name="preference_category_security">Sécurité</string>
   <string name="preference_category_performance">Performances</string>
   <string name="preference_performance_block_webfonts">Bloquer les polices web</string>
   <string name="preference_performance_block_webfonts_summary">Peut empêcher certaines icônes ou images de s’afficher</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Ajouter un autre moteur de recherche</string>
   <string name="preference_search_remove_title">Supprimer des moteurs de recherche</string>
   <string name="preference_search_remove">Supprimer</string>
+  <string name="preference_homescreen_tips">Afficher des astuces sur l’écran d’accueil</string>
   <string name="action_option_add_search_engine">Ajouter un moteur de recherche</string>
   <string name="search_add_manually_name_hint">Nom du moteur de recherche</string>
   <string name="search_add_manually_string">Chaîne de recherche à utiliser</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Précédent</string>
   <string name="content_description_stop">Arrêter le chargement du site web</string>
   <string name="content_description_customtab_exit">Revenir à l’application précédente</string>
+  <string name="content_description_trackers_blocked">Nombre de traqueurs bloqués</string>
   <string name="content_description_blocking_switch">Bloquer les traqueurs</string>
   <string name="your_rights">Droits de l’utilisateur</string>
   <string name="external_app_prompt_title">Ouvrir le lien dans une autre application</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Mot de passe</string>
   <string name="preference_performance_request_desktop_site">Voir version ordinateur</string>
   <string name="custom_tab_copy_url_action">Adresse web copiée</string>
+  <string name="preference_advanced_summary">Outils de développement</string>
+  <string name="preference_category_advanced">Avancé</string>
+  <string name="preference_remote_debugging">Débogage distant par USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Déverrouiller %1$s</string>
+  <string name="biometric_auth_description">Touchez le capteur d’empreinte digitale pour continuer.</string>
+  <string name="biometric_auth_new_session">Nouvelle session</string>
+  <string name="biometric_auth_image_description">Icône d’empreinte digitale</string>
+  <string name="biometric_auth_not_recognized_error">Empreinte digitale non reconnue. Veuillez réessayer.</string>
+  <string name="biometric_auth_moved_too_quickly">Votre doigt a bougé trop rapidement. Veuillez réessayer.</string>
+  <string name="enable_search_suggestion_title">Voulez-vous activer les suggestions de recherche ?</string>
+  <string name="enable_search_suggestion_subtitle">Pour obtenir des suggestions de recherche, %1$s doit envoyer ce que vous saisissez dans la barre d’adresse vers le moteur de recherche choisi. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">En savoir plus</string>
+  <string name="enable_search_suggestions_no">Non</string>
+  <string name="enable_search_suggestions_yes">Oui</string>
+  <string name="no_suggestions_message">Certains moteurs de recherche ne peuvent pas afficher de suggestions.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Ignorer</string>
+  <string name="tip_disable_tracking_protection">Ce site ne se comporte pas comme prévu ?\nEssayer de désactiver la protection contre le pistage</string>
+  <string name="tip_add_to_homescreen">"Accédez rapidement à vos sites favoris \n        Menu &gt; Ajouter à l’écran d’accueil"</string>
+  <string name="tip_set_default_browser">Ouvrir tous les liens dans %1$s\n Définir %1$s comme navigateur par défaut</string>
+  <string name="tip_autocomplete_url">Compléter automatiquement les URL des sites les plus visités\n Effectuez un appui long sur une URL dans la barre d’adresse</string>
+  <string name="tip_open_in_new_tab">Ouvrir un lien dans un nouvel onglet\n Effectuez un appui long sur un lien dans une page</string>
+  <string name="tip_request_desktop">"Préférez-vous voir la version pour ordinateur du site ?\n    Menu &gt; Voir version ordinateur"</string>
 </resources>

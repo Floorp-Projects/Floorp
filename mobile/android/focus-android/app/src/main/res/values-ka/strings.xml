@@ -37,6 +37,8 @@
   <string name="preference_category_general">მთავარი</string>
   <string name="preference_category_data_collection_use">მონაცემთა აღრიცხვა და გამოყენება</string>
   <string name="preference_category_search">ძიება</string>
+  <string name="preference_show_search_suggestions">ძიების შემოთავაზების ჩვენება</string>
+  <string name="preference_show_search_suggestions_summary">%1$s გაუგზავნის საძიებო სისტემას, მისამართების ველში აკრეფილ ტექსტს</string>
   <string name="preference_search_engine_default">ნაგულისხმევი</string>
   <string name="preference_state_on">ჩართული</string>
   <string name="preference_state_off">გამორთული</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">არა</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">მხოლოდ მე-3 მხარის ფუნთუშების</string>
   <string name="preference_privacy_should_block_cookies_yes_option">დიახ</string>
+  <string name="preference_security_biometric">გამოიყენეთ თითის ანაბეჭდი, პროგრამის გასახსნელად</string>
+  <string name="preference_security_biometric_summary">თითის ანაბეჭდით შეგიძლიათ იხილოთ %1$s თუ URL-ბმული უკვე გახსნილია პროგრამაში. შენიღბვა კვლავ იმუშავებს.</string>
   <string name="preference_privacy_secure_mode">ფარული რეჟიმი</string>
-  <string name="preference_privacy_stealth_summary">ვებგვერდების დამალვა, პროგრამების გადართვისას</string>
+  <string name="preference_privacy_stealth_summary">ვებგვერდების დამალვა, პროგრამების გადართვისას და ეკრანის სურათების გადაღების აკრძალვა.</string>
+  <string name="preference_category_security">უსაფრთხოება</string>
   <string name="preference_category_performance">წარმადობა</string>
   <string name="preference_performance_block_webfonts">საიტის შრიფტების შეზღუდვა</string>
   <string name="preference_performance_block_webfonts_summary">შესაძლოა ხატულების და სურათების ნაწილი გაქრეს</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ სხვა საძიებო სისტემის დამატება</string>
   <string name="preference_search_remove_title">საძიებოს ამოშლა</string>
   <string name="preference_search_remove">მოცილება</string>
+  <string name="preference_homescreen_tips">ცნობების ჩვენება საწყის გვერდზე</string>
   <string name="action_option_add_search_engine">საძიებოს დამატება</string>
   <string name="search_add_manually_name_hint">საძიებოს დასახელება</string>
   <string name="search_add_manually_string">საძიებო ფრაზა</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">გადასვლა უკან</string>
   <string name="content_description_stop">საიტის ჩატვირთვის შეჩერება</string>
   <string name="content_description_customtab_exit">წინა პროგრამაზე დაბრუნება</string>
+  <string name="content_description_trackers_blocked">შეზღუდული მეთვალყურეები</string>
   <string name="content_description_blocking_switch">მეთვალყურე ელემენტების შეზღუდვა</string>
   <string name="your_rights">თქვენი უფლებები</string>
   <string name="external_app_prompt_title">ბმულის სხვა პროგრამით გახსნა</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">პაროლი</string>
   <string name="preference_performance_request_desktop_site">სრული საიტის მოთხოვნა</string>
   <string name="custom_tab_copy_url_action">URL დაკოპირდა</string>
+  <string name="preference_advanced_summary">შემმუშავებლის ხელსაწყოები</string>
+  <string name="preference_category_advanced">დამატებითი</string>
+  <string name="preference_remote_debugging">დისტანციური გამართვა USB/Wi-Fi-ით</string>
+  <string name="biometric_auth_title">გაიხსნას %1$s</string>
+  <string name="biometric_auth_description">შეახეთ თითი ანაბეჭდის აღმქმელს გასაგრძელებლად.</string>
+  <string name="biometric_auth_new_session">ახალი სეანსი</string>
+  <string name="biometric_auth_image_description">თითის ანაბეჭდის ხატულა</string>
+  <string name="biometric_auth_not_recognized_error">ანაბეჭდის ამოცნობა ვერ მოხერხდა. სცადეთ ხელახლა.</string>
+  <string name="biometric_auth_moved_too_quickly">თითი სწრაფად ამოძრავდა. სცადეთ ხელახლა.</string>
+  <string name="enable_search_suggestion_title">გსურთ ძიების შემოთავაზებების ჩართვა?</string>
+  <string name="enable_search_suggestion_subtitle">ძიების შემოთავაზებების მისაღებად, %1$s საჭიროებს მისამართების ველში აკრეფილი ტექსტის, შერჩეული საძიებო სისტემისთვის გადაგზავნას. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">იხილეთ ვრცლად</string>
+  <string name="enable_search_suggestions_no">არა</string>
+  <string name="enable_search_suggestions_yes">დიახ</string>
+  <string name="no_suggestions_message">ზოგიერთ საძიებო სისტემას, არ აქვს შემოთავაზებების ჩვენების შესაძლებლობა.</string>
+  <string name="dismiss_no_suggestions_prompt_button">დახურვა</string>
+  <string name="tip_disable_tracking_protection">საიტი ხარვეზებით მუშაობს?\n სცადეთ თვალთვალისგან დაცვის გამორთვა</string>
+  <string name="tip_add_to_homescreen">"მიიღეთ წვდომა სასურველ საიტებზე ერთი შეხებით\n        მენიუ &gt; მთავარ ეკრანზე დამატება"</string>
+  <string name="tip_set_default_browser">გახსნეთი ყველა ბმული %1$s-ით\n დააყენეთ %1$s ნაგულისხმევ ბრაუზერად</string>
+  <string name="tip_autocomplete_url">URL-ბმულების თვითშევსება სასურველი საიტებისთვის\n ნებისმიერ URL-ბმულზე ხანგრძლივი დაჭერით მისამართების ველში</string>
+  <string name="tip_open_in_new_tab">გახსენით ბმული ახალ ჩანართში\n გვერდის ნებისმიერ ბმულზე ხანგრძლივი დაჭერით</string>
+  <string name="tip_request_desktop">"გირჩევნიათ საიტის სრული ვერსიის ნახვა?\n    მენიუ &gt; სრული საიტის მოთხოვნა"</string>
 </resources>

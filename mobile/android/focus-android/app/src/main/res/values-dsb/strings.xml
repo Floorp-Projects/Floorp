@@ -37,6 +37,8 @@
   <string name="preference_category_general">Powšykne</string>
   <string name="preference_category_data_collection_use">Zběranje a wužywanje datow</string>
   <string name="preference_category_search">Pytaś</string>
+  <string name="preference_show_search_suggestions">Pytańske naraźenja wobstaraś</string>
+  <string name="preference_show_search_suggestions_summary">%1$s se na wašu pytnicu pósćelo, což w adresowem pólu zapódajośo</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_state_on">Zašaltowany</string>
   <string name="preference_state_off">Wušaltowany</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Ně</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Jano cookieje tśeśich póbitowarjow blokěrowaś</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Jo</string>
+  <string name="preference_security_biometric">Wužywajśo palcowy wótśišć, aby nałoženje wótwórił</string>
+  <string name="preference_security_biometric_summary">Waš palcowy wótśišć móž0 %1$s wówtwóriś, jolic URL jo južo w nałoženju wócynjony. Tarnowański modus se zašaltujo.</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
-  <string name="preference_privacy_stealth_summary">Webboki schowaś, gaž se nałoženja pśešaltuju</string>
+  <string name="preference_privacy_stealth_summary">Webboki schowaś, gaž se nałoženja pśešaltuju a fota wobrazowki blokěrowaś.</string>
+  <string name="preference_category_security">Wěstota</string>
   <string name="preference_category_performance">Wugbaśe</string>
   <string name="preference_performance_block_webfonts">Webpisma blokěrowaś</string>
   <string name="preference_performance_block_webfonts_summary">Móžo k tomu wjasć, až symbole abo wobraze feluju</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Dalšnu pytnicu pśidaś</string>
   <string name="preference_search_remove_title">Pytnice wótwónoźeś</string>
   <string name="preference_search_remove">Wótwónoźeś</string>
+  <string name="preference_homescreen_tips">Pokazki na startowej wobrazowce pokazaś</string>
   <string name="action_option_add_search_engine">Pytnicu pśidaś</string>
   <string name="search_add_manually_name_hint">Mě pytnice</string>
   <string name="search_add_manually_string">Pytański wuraz, kótaryž ma se wužywaś</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Slědk</string>
   <string name="content_description_stop">Cytanje websedła zastajiś</string>
   <string name="content_description_customtab_exit">Slědk k pjerwjejšnemu nałoženjeju</string>
+  <string name="content_description_trackers_blocked">Licba zablokěrowanych pśeslědowakow</string>
   <string name="content_description_blocking_switch">Pśeslědowaki blokěrowaś</string>
   <string name="your_rights">Waše pšawa</string>
   <string name="external_app_prompt_title">Wótkaz w drugem nałoženju wócyniś</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Gronidło</string>
   <string name="preference_performance_request_desktop_site">Desktopowe sedło pominaś</string>
   <string name="custom_tab_copy_url_action">URL jo kopěrowany</string>
+  <string name="preference_advanced_summary">Wuwijarske rědy</string>
+  <string name="preference_category_advanced">Rozšyrjone</string>
+  <string name="preference_remote_debugging">Daloke pytanje zmólkow pśez USB/WLAN</string>
+  <string name="biometric_auth_title">%1$s wěcej njeblokěrowaś</string>
+  <string name="biometric_auth_description">Dotykniśo se sensora palcowego wótśišća, aby pókšacował.</string>
+  <string name="biometric_auth_new_session">Nowe pósejźenje</string>
+  <string name="biometric_auth_image_description">Symbol palcowego wótśišća</string>
+  <string name="biometric_auth_not_recognized_error">Palcowy wótśišć njejo se spóznał. Wopytajśo hyšći raz.</string>
+  <string name="biometric_auth_moved_too_quickly">Palc jo se pśemalsnje gibnuł. Wopytajśo hyšći raz.</string>
+  <string name="enable_search_suggestion_title">Cośo pytańske naraźenja aktiwěrowaś?</string>
+  <string name="enable_search_suggestion_subtitle">Aby pytańske naraźenja dostał, musyi %1$s wopśimjeśe, kótarež sćo zapódał do adresowego póla, na pytnicu słaś, kótaruž sćo wubrał. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Dalšne informacije</string>
+  <string name="enable_search_suggestions_no">Ně</string>
+  <string name="enable_search_suggestions_yes">Jo</string>
+  <string name="no_suggestions_message">Někotare pytnice njamógu naraźenja pokazaś.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Zachyśiś</string>
+  <string name="tip_disable_tracking_protection">Sedło se na njewócakowanu wašnju zaźaržy?\nWopytajśo slědowański šćit znjemóžniś</string>
+  <string name="tip_add_to_homescreen">"Wócyńśo sedła, ku kótarymž nejcesćej woglědujośo, z jadnym dotyknjenim\n        Meni &gt; Startowej wobrazowce pśidaś"</string>
+  <string name="tip_set_default_browser">Kuždy wótkaz w %1$s wócyniś\n%1$s ako standardny wobglědowak nastajiś</string>
+  <string name="tip_autocomplete_url">URL za sedła, ku kótarymž se nejcesćej woglědujośo, awtomatiski wudopołniś\nTłocćo dłujko na URL w adresowem pólu</string>
+  <string name="tip_open_in_new_tab">Wótkaz w nowem rejtarku wócyniś\nTłocćo dłujko na wótkaz na boku</string>
+  <string name="tip_request_desktop">"Cośo lubjej dopołne desktopowe sedło wiźeś?\n    Meni &gt; Desktopowe sedło pominaś"</string>
 </resources>

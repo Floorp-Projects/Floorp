@@ -37,6 +37,8 @@
   <string name="preference_category_general">Општа</string>
   <string name="preference_category_data_collection_use">Сакупљање и коришћење података</string>
   <string name="preference_category_search">Претраживач</string>
+  <string name="preference_show_search_suggestions">Добијајте предлоге претраге</string>
+  <string name="preference_show_search_suggestions_summary">%1$s ће послати оно што куцате у адресну траку вашег претраживача</string>
   <string name="preference_search_engine_default">Подразумевано</string>
   <string name="preference_state_on">Укључено</string>
   <string name="preference_state_off">Искључено</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Не</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Само колачиће од трећих лица</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Да</string>
+  <string name="preference_security_biometric">Користите отисак прста да откључате апликацију</string>
+  <string name="preference_security_biometric_summary">Ваш отисак прста може откључати %1$s ако је URL већ отворен у апликацији. Потајни режим ће бити укључен.</string>
   <string name="preference_privacy_secure_mode">Потајни режим</string>
-  <string name="preference_privacy_stealth_summary">Сакриј веб странице приликом мењања између апликација</string>
+  <string name="preference_privacy_stealth_summary">Сакриј веб странице приликом мењања између апликација и блокирај бележење снимка екрана.</string>
+  <string name="preference_category_security">Безбедност</string>
   <string name="preference_category_performance">Перформансе</string>
   <string name="preference_performance_block_webfonts">Блокирај веб фонтове</string>
   <string name="preference_performance_block_webfonts_summary">Иконице и слике се можда неће приказивати</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Додај претраживач</string>
   <string name="preference_search_remove_title">Уклони претраживач</string>
   <string name="preference_search_remove">Уклони</string>
+  <string name="preference_homescreen_tips">Прикажи неке савете за почетни екран</string>
   <string name="action_option_add_search_engine">Додај претраживач</string>
   <string name="search_add_manually_name_hint">Име претраживача</string>
   <string name="search_add_manually_string">Претражи текст за коришћење</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Иди назад</string>
   <string name="content_description_stop">Престани са учитавањем веб сајта</string>
   <string name="content_description_customtab_exit">Повратак на претходну</string>
+  <string name="content_description_trackers_blocked">Број блокираних пратиоца</string>
   <string name="content_description_blocking_switch">Блокирај пратиоце</string>
   <string name="your_rights">Ваша права</string>
   <string name="external_app_prompt_title">Отворите везу у другој апликацији</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Лозинка</string>
   <string name="preference_performance_request_desktop_site">Захтевај десктоп сајт</string>
   <string name="custom_tab_copy_url_action">URL копиран</string>
+  <string name="preference_advanced_summary">Алати за програмере</string>
+  <string name="preference_category_advanced">Напредно</string>
+  <string name="preference_remote_debugging">Удаљено отклањање грешака уз USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Откључај %1$s</string>
+  <string name="biometric_auth_description">Притисните сензор за отисак прста да наставите.</string>
+  <string name="biometric_auth_new_session">Нова сесија</string>
+  <string name="biometric_auth_image_description">Иконица отиска прста</string>
+  <string name="biometric_auth_not_recognized_error">Отисак прста није препознат. Покушајте поново.</string>
+  <string name="biometric_auth_moved_too_quickly">Превише брзо сте превукли прстом. Покушајте поново.</string>
+  <string name="enable_search_suggestion_title">Да ли бисте желели да укључите предлоге претрага?</string>
+  <string name="enable_search_suggestion_subtitle">Да бисте добијали предлоге претраге, %1$s мора да шаље претраживачу који сте изабрали, оно што уносите у адресну траку. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Сазнајте више</string>
+  <string name="enable_search_suggestions_no">Не</string>
+  <string name="enable_search_suggestions_yes">Да</string>
+  <string name="no_suggestions_message">Неки претраживачи не могу приказивати предлоге.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Склони</string>
+  <string name="tip_disable_tracking_protection">Сајт се понаша чудно?\n Покушајте искључити заштиту од праћења</string>
+  <string name="tip_add_to_homescreen">"Подесите приступ сајтовима које користите највише, једним кликом\n        Мени &gt; Додај на почетни екран"</string>
+  <string name="tip_set_default_browser">Отвори сваку везу у %1$s-у\n Постави %1$s као подразумевани прегледач</string>
+  <string name="tip_autocomplete_url">Аутоматско завршавање URLs за сајтове које користите највише\n Дуго држите URL у адресној траци</string>
+  <string name="tip_open_in_new_tab">Отвори везу у новом језичку\n Дуго држите на било којој вези на страници</string>
+  <string name="tip_request_desktop">"Радије бисте видели цео десктоп сајт?\n    Мени &gt; Захтевај десктоп сајт"</string>
 </resources>

@@ -37,6 +37,8 @@
   <string name="preference_category_general">一般</string>
   <string name="preference_category_data_collection_use">データの収集と使用</string>
   <string name="preference_category_search">検索</string>
+  <string name="preference_show_search_suggestions">検索候補を取得</string>
+  <string name="preference_show_search_suggestions_summary">%1$s はあなたがアドレスバーに入力した語句を検索エンジンへ送信します</string>
   <string name="preference_search_engine_default">既定</string>
   <string name="preference_state_on">オン</string>
   <string name="preference_state_off">オフ</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">いいえ</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">サードパーティ Cookie のみブロック</string>
   <string name="preference_privacy_should_block_cookies_yes_option">はい</string>
+  <string name="preference_security_biometric">アプリのロック解除に指紋を使用</string>
+  <string name="preference_security_biometric_summary">アプリ内で URL を開いている場合、指紋を使って %1$s のロックを解除できます。ステルスモードが有効となります。</string>
   <string name="preference_privacy_secure_mode">ステルス</string>
-  <string name="preference_privacy_stealth_summary">アプリ切り替え時にウェブページを隠す</string>
+  <string name="preference_privacy_stealth_summary">アプリ切り替え時にウェブページを隠し、スクリーンショット撮影を禁止します。</string>
+  <string name="preference_category_security">セキュリティ</string>
   <string name="preference_category_performance">パフォーマンス</string>
   <string name="preference_performance_block_webfonts">ウェブフォントをブロック</string>
   <string name="preference_performance_block_webfonts_summary">アイコンや画像が正常に表示されない場合があります</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ 別の検索エンジンを追加</string>
   <string name="preference_search_remove_title">検索エンジンを削除</string>
   <string name="preference_search_remove">削除</string>
+  <string name="preference_homescreen_tips">ホーム画面にヒントを表示</string>
   <string name="action_option_add_search_engine">検索エンジンを追加</string>
   <string name="search_add_manually_name_hint">検索エンジン名</string>
   <string name="search_add_manually_string">使用する検索語</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">前のページへ戻る</string>
   <string name="content_description_stop">サイトの読み込みを中止</string>
   <string name="content_description_customtab_exit">前のアプリへ戻る</string>
+  <string name="content_description_trackers_blocked">ブロックされた追跡数</string>
   <string name="content_description_blocking_switch">オンライン追跡をブロック</string>
   <string name="your_rights">あなたの権利</string>
   <string name="external_app_prompt_title">リンクを他のアプリで開く</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">パスワード</string>
   <string name="preference_performance_request_desktop_site">デスクトップ版を見る</string>
   <string name="custom_tab_copy_url_action">URL をコピーしました</string>
+  <string name="preference_advanced_summary">開発者ツール</string>
+  <string name="preference_category_advanced">詳細</string>
+  <string name="preference_remote_debugging">USB/Wi-Fi を通じたリモートデバッグ</string>
+  <string name="biometric_auth_title">%1$s のロックを解除</string>
+  <string name="biometric_auth_description">続けるには指紋センサーにタッチしてください。</string>
+  <string name="biometric_auth_new_session">新規セッション</string>
+  <string name="biometric_auth_image_description">指紋アイコン</string>
+  <string name="biometric_auth_not_recognized_error">指紋を認識できませんでした。もう一度試してください。</string>
+  <string name="biometric_auth_moved_too_quickly">指の動きが素早すぎます。もう一度試してください。</string>
+  <string name="enable_search_suggestion_title">検索語句の候補を表示しますか？</string>
+  <string name="enable_search_suggestion_subtitle">検索候補を取得する場合、%1$s はあなたがアドレスバーに入力した語句を選択された検索エンジンへ送信する必要があります。%2$s。</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">詳しくはこちら</string>
+  <string name="enable_search_suggestions_no">いいえ</string>
+  <string name="enable_search_suggestions_yes">はい</string>
+  <string name="no_suggestions_message">一部の検索エンジンは候補表示に対応していません。</string>
+  <string name="dismiss_no_suggestions_prompt_button">閉じる</string>
+  <string name="tip_disable_tracking_protection">サイトが予期せぬ挙動をしますか？\n トラッキング防止機能を無効化してみてください</string>
+  <string name="tip_add_to_homescreen">"よく使うサイトへワンタップでアクセスするには\n        メニュー &gt; ホーム画面に追加"</string>
+  <string name="tip_set_default_browser">すべてのリンクを %1$s で開くには\n %1$s を既定のブラウザーに設定してください</string>
+  <string name="tip_autocomplete_url">よく使うサイトで URL を自動補完するには\n アドレスバー内で URL を長押しします</string>
+  <string name="tip_open_in_new_tab">リンクを新しいタブで開くには\n ページ上でリンクを長押しします</string>
+  <string name="tip_request_desktop">"完全なデスクトップ向けサイトを見たいですか？\n    メニュー &gt; デスクトップ版を見る"</string>
 </resources>

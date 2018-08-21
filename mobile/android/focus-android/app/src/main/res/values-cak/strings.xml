@@ -37,6 +37,8 @@
   <string name="preference_category_general">Chijun</string>
   <string name="preference_category_data_collection_use">Kimolik Tzij &amp; Okisaxïk</string>
   <string name="preference_category_search">Tikanöx</string>
+  <string name="preference_show_search_suggestions">Kechilab\'ëx ri yekanöx</string>
+  <string name="preference_show_search_suggestions_summary">%1$s xtutäq ri xtatz\'ib\'aj pa ri rukajtz\'ik ochochib\'äl chi re ri akanob\'al</string>
   <string name="preference_search_engine_default">K\'o wi</string>
   <string name="preference_state_on">Titzij</string>
   <string name="preference_state_off">Tichup</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Mani</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Keq\'at xa xe 3rx kiwinaqil kaxlanwäy</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ja\'</string>
+  <string name="preference_security_biometric">Tawokisaj retal ruwi\' aq\'a\' richin man niq\'at ta chik ri chokoy</string>
+  <string name="preference_security_biometric_summary">Ri retal ruwi\' aq\'a\' nitikïr numeq\'atij ri %1$s we jaqäl chik jun URL pa ri chokoy. Xtitzij ri metz\'etel rub\'anikil.</string>
   <string name="preference_privacy_secure_mode">Ewan</string>
-  <string name="preference_privacy_stealth_summary">Ke\'ewäx ajk\'amaya\'l taq ruxaq toq yatok pa ri taq chokoy</string>
+  <string name="preference_privacy_stealth_summary">Ke\'ewäx ri ajk\'amaya\'l taq ruxaq toq yejal taq chokoy chuqa\' yeq\'at chapoj taq ruwa.</string>
+  <string name="preference_category_security">Jikomal</string>
   <string name="preference_category_performance">Rub\'eyal nisamäj</string>
   <string name="preference_performance_block_webfonts">Tiq\'at ruxe\'el Ajk\'amaya\'l</string>
   <string name="preference_performance_block_webfonts_summary">Tikirel nib\'anatäj pa kiwachaj chuqa\' taq wachib\'äl</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Titz\'aqatisäx jun chik kanob\'äl</string>
   <string name="preference_search_remove_title">Tiyuj kanob\'äl</string>
   <string name="preference_search_remove">Tiyuj</string>
+  <string name="preference_homescreen_tips">Kek\'ut taq rupixa\' ri tikirib\'äl ruxaq</string>
   <string name="action_option_add_search_engine">Titz\'aqatisäx kanob\'äl</string>
   <string name="search_add_manually_name_hint">Rub\'i\' ri kanob\'äl</string>
   <string name="search_add_manually_string">Rucholajem kanoxïk richin nokisäx</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Katok pa k\'amaya\'l titzolin</string>
   <string name="content_description_stop">Tiq\'at ruqasaxik ruxaq ajk\'amaya\'l</string>
   <string name="content_description_customtab_exit">Titzolin pa ri jun chokoy</string>
+  <string name="content_description_trackers_blocked">Kajilab\'al taq ojqanela\' eq\'aton</string>
   <string name="content_description_blocking_switch">Keq\'at ojqanela\'</string>
   <string name="your_rights">Taq Ach\'ojib\'al</string>
   <string name="external_app_prompt_title">Tijaq ximonel pa jun chik chokoy</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Ewan tzij</string>
   <string name="preference_performance_request_desktop_site">Tik\'utüx ruxaq ruk\'amaya\'l ajkematz\'ib\'</string>
   <string name="custom_tab_copy_url_action">URL xwachib\'ëx</string>
+  <string name="preference_advanced_summary">Taq rusamajib\'al nuk\'unel</string>
+  <string name="preference_category_advanced">Q\'axinäq</string>
+  <string name="preference_remote_debugging">Näj chojmirisanem pa USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Timeq\'at %1$s</string>
+  <string name="biometric_auth_description">Tachapa\' qa ri na\'onel retal ruwi\' q\'ab\'aj richin yasamäj chik el.</string>
+  <string name="biometric_auth_new_session">K\'ak\'a\' Molojri\'ïl</string>
+  <string name="biometric_auth_image_description">Ruwachib\'al retal ruwi\' q\'ab\'aj</string>
+  <string name="biometric_auth_not_recognized_error">"Man xetamäx ta ruwa ri  rel ruwi\' q\'ab\'aj. Tatojtob\'ej chik."</string>
+  <string name="biometric_auth_moved_too_quickly">Aninäq xsilon ri ruwi\' q\'ab\'aj. Tatojtob\'ej chik.</string>
+  <string name="enable_search_suggestion_title">¿La nawajo\' ye\'atzïj ri taq chilab\'enïk richin yakanon?</string>
+  <string name="enable_search_suggestion_subtitle">Richin nik\'ul kichilab\'exik achike nikanöx, %1$s k\'o chi nutäq ri natz\'ib\'aj pa ri rajtz\'ik ochochib\'äl chi re ri kanob\'äl xacha\'. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Tetamäx ch\'aqa\' chik</string>
+  <string name="enable_search_suggestions_no">Mani</string>
+  <string name="enable_search_suggestions_yes">Ja\'</string>
+  <string name="no_suggestions_message">Jujun taq kanob\'än man yatikïr ta yekik\'üt ta chilab\'enïk.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Tichup ruwäch</string>
+  <string name="tip_disable_tracking_protection">¿La man pa rub\'eyal ta nisamäj re ruxaq k\'amaya\'l re\'?\n Tatojtob\'ej rik\'in nachüp ri Chajinïk chuwäch Ojqanem</string>
+  <string name="tip_add_to_homescreen">"Katok rik\'in jun chapoj pa ri taq ruxaq yalan ye\'awokisaj\n        Molsamajib\'äl &gt; Titz\'aqatisäx pa Tikirib\'äl tzuwäch"</string>
+  <string name="tip_set_default_browser">Kejaq konojel ri taq ximonel pa %1$s\n Tib\'an runuk\'ulem %1$s achi\'el ri awokik\'amaya\'l k\'o wi</string>
+  <string name="tip_autocomplete_url">Ruyon ke\'atz\'aqatisaj ri taq URLs kichin ri taq ruxan yalan ye\'awokisaj\n Tapitz\'itz\'ej xa b\'achike URL pa rukajtz\'ik ochochib\'äl</string>
+  <string name="tip_open_in_new_tab">Tijaq jun ximonel pa jun k\'ak\'a\' ruwi\'\n Tapitz\'itz\'ej xab\'achike ximonel pa jun ruxaq</string>
+  <string name="tip_request_desktop">"¿La nawajo\' natzu\' ri ruxaq ruk\'amaya\'l ruwa kematz\'ib\'?\n    K\'utsamajib\'äl &gt; Tik\'utüx jun ruxaq ruk\'amaya\'l ruwa kematz\'ib\'"</string>
 </resources>

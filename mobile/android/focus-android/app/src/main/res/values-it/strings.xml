@@ -37,6 +37,8 @@
   <string name="preference_category_general">Generale</string>
   <string name="preference_category_data_collection_use">Raccolta e uso dati</string>
   <string name="preference_category_search">Ricerca</string>
+  <string name="preference_show_search_suggestions">Ottieni suggerimenti di ricerca</string>
+  <string name="preference_show_search_suggestions_summary">Ciò che digiti nella barra degli indirizzi verrà inviato da %1$s al motore di ricerca</string>
   <string name="preference_search_engine_default">Predefinito</string>
   <string name="preference_state_on">Attivo</string>
   <string name="preference_state_off">Disattivato</string>
@@ -77,8 +79,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">No</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blocca solo cookie di terze parti</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Sì</string>
+  <string name="preference_security_biometric">Usa l’impronta digitale per sbloccare l’app</string>
   <string name="preference_privacy_secure_mode">Invisibile</string>
-  <string name="preference_privacy_stealth_summary">Nascondi le pagine web nel passaggio tra le app</string>
+  <string name="preference_privacy_stealth_summary">Nascondi le pagine web durante il passaggio tra le app e blocca la funzione di screenshot.</string>
+  <string name="preference_category_security">Sicurezza</string>
   <string name="preference_category_performance">Prestazioni</string>
   <string name="preference_performance_block_webfonts">Blocca web font</string>
   <string name="preference_performance_block_webfonts_summary">Alcune immagini e icone potrebbero non essere visualizzate</string>
@@ -96,6 +100,7 @@
   <string name="preference_search_add2">+ Aggiungi un altro motore di ricerca</string>
   <string name="preference_search_remove_title">Rimozione motori di ricerca</string>
   <string name="preference_search_remove">Rimuovi</string>
+  <string name="preference_homescreen_tips">Visualizza suggerimenti sulla schermata iniziale</string>
   <string name="action_option_add_search_engine">Aggiungi motore di ricerca</string>
   <string name="search_add_manually_name_hint">Nome del motore di ricerca</string>
   <string name="search_add_manually_string">Stringa di ricerca da utilizzare</string>
@@ -119,6 +124,7 @@
   <string name="content_description_back">Torna indietro</string>
   <string name="content_description_stop">Interrompi il caricamento del sito</string>
   <string name="content_description_customtab_exit">Torna all’applicazione precedente</string>
+  <string name="content_description_trackers_blocked">Numero di tracciamenti bloccati</string>
   <string name="content_description_blocking_switch">Blocca elementi traccianti</string>
   <string name="your_rights">I tuoi diritti</string>
   <string name="external_app_prompt_title">Apri link in un’altra app</string>
@@ -200,4 +206,26 @@
   <string name="http_auth_dialog_password">Password</string>
   <string name="preference_performance_request_desktop_site">Richiedi sito desktop</string>
   <string name="custom_tab_copy_url_action">URL copiato</string>
+  <string name="preference_advanced_summary">Strumenti di sviluppo</string>
+  <string name="preference_category_advanced">Avanzate</string>
+  <string name="preference_remote_debugging">Debug remoto attraverso USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Sblocca %1$s</string>
+  <string name="biometric_auth_description">Tocca il sensore dell’impronta digitale per continuare.</string>
+  <string name="biometric_auth_new_session">Nuova sessione</string>
+  <string name="biometric_auth_image_description">Icona dell’impronta digitale</string>
+  <string name="biometric_auth_not_recognized_error">Impronta digitale non riconosciuta. Riprova.</string>
+  <string name="biometric_auth_moved_too_quickly">Dito rimosso troppo presto. Riprova.</string>
+  <string name="enable_search_suggestion_title">Attivare i suggerimenti di ricerca?</string>
+  <string name="enable_search_suggestion_subtitle">Per visualizzare i suggerimenti di ricerca, ciò che digiti nella barra degli indirizzi verrà inviato da %1$s al motore di ricerca selezionato. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Scopri di più</string>
+  <string name="enable_search_suggestions_no">No</string>
+  <string name="enable_search_suggestions_yes">Sì</string>
+  <string name="no_suggestions_message">I suggerimenti non sono disponibili per tutti i motori di ricerca.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Ignora</string>
+  <string name="tip_disable_tracking_protection">Un sito mostra un comportamento anomalo?\n Prova a disattivare la protezione antitracciamento</string>
+  <string name="tip_add_to_homescreen">"Accedi in un solo tocco ai siti che visiti più spesso\n        Menu &gt; Aggiungi alla schermata iniziale"</string>
+  <string name="tip_set_default_browser">Apri ogni link in %1$s\n Imposta %1$s come browser predefinito</string>
+  <string name="tip_autocomplete_url">Completamento automatico degli indirizzi per i siti che visiti più spesso\n Tieni premuto più a lungo un indirizzo URL nella barra degli indirizzi</string>
+  <string name="tip_open_in_new_tab">Apri un link in una nuova scheda\n Tieni premuto a lungo un link in una pagina</string>
+  <string name="tip_request_desktop">"Preferisci visualizzare il sito in modalità desktop?\n    Menu &gt; Modalità desktop"</string>
 </resources>

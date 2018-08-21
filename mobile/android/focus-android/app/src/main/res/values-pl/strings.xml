@@ -17,8 +17,8 @@
   <string name="menu_about">O programie</string>
   <string name="menu_help">Pomoc</string>
   <string name="menu_rights">O prawach użytkownika</string>
-  <string name="menu_trackers_blocked_title">Zablokowano:</string>
-  <string name="menu_custom_tab_branding">Funkcja programu %1$s</string>
+  <string name="menu_trackers_blocked_title">Blokowanie</string>
+  <string name="menu_custom_tab_branding">Funkcja %1$s</string>
   <string name="share_dialog_title">Udostępnij przez</string>
   <string name="notification_erase_text">Usuń historię przeglądania</string>
   <string name="notification_action_open">Otwórz</string>
@@ -37,6 +37,8 @@
   <string name="preference_category_general">Ogólne</string>
   <string name="preference_category_data_collection_use">Zbieranie i wykorzystywanie danych</string>
   <string name="preference_category_search">Wyszukiwanie</string>
+  <string name="preference_show_search_suggestions">Podpowiedzi wyszukiwania</string>
+  <string name="preference_show_search_suggestions_summary">%1$s będzie wysyłał słowa wpisywane na pasku adresu do wyszukiwarki</string>
   <string name="preference_search_engine_default">Domyślna</string>
   <string name="preference_state_on">Włączone</string>
   <string name="preference_state_off">Wyłączone</string>
@@ -77,18 +79,21 @@
   <string name="preference_privacy_should_block_cookies_no_option">Nie</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokowanie tylko ciasteczek witryn zewnętrznych podmiotów</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Tak</string>
+  <string name="preference_security_biometric">Używaj odcisku palca do odblokowywania aplikacji</string>
+  <string name="preference_security_biometric_summary">Można odblokować %1$s za pomocą odcisku palca, jeśli w aplikacji jest już otwarty adres. Tryb ukryty będzie włączony.</string>
   <string name="preference_privacy_secure_mode">Tryb ukryty</string>
-  <string name="preference_privacy_stealth_summary">Ukrywanie stron podczas przełączania aplikacji</string>
+  <string name="preference_privacy_stealth_summary">Ukrywanie stron podczas przełączania aplikacji i blokowanie wykonywania zrzutów ekranu.</string>
+  <string name="preference_category_security">Bezpieczeństwo</string>
   <string name="preference_category_performance">Wydajność</string>
   <string name="preference_performance_block_webfonts">Blokowanie czcionek sieciowych</string>
   <string name="preference_performance_block_webfonts_summary">Może spowodować, że niektóre ikony lub obrazy będą niewidoczne</string>
   <string name="preference_performance_block_javascript">Blokowanie skryptów JavaScript</string>
   <string name="preference_performance_block_javascript_summary">Strony mogą się szybciej wczytywać, ale mogą także nie działać poprawnie</string>
-  <string name="preference_default_browser2">Ustaw przeglądarkę %1$s jako domyślną</string>
+  <string name="preference_default_browser2">Ustaw %1$s jako domyślną przeglądarkę</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Przesyłanie danych o użyciu</string>
   <string name="preference_mozilla_telemetry_summary">Więcej informacji</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla zbiera wyłącznie informacje niezbędne do udostępniania i ulepszania programu %1$s.</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla zbiera wyłącznie informacje niezbędne do udostępniania i ulepszania %1$s.</string>
   <string name="preference_privacy_notice">Zasady ochrony prywatności</string>
   <string name="preference_about">O programie %1$s</string>
   <string name="preference_search_installed_search_engines">Zainstalowane wyszukiwarki</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Dodaj inną wyszukiwarkę</string>
   <string name="preference_search_remove_title">Usuń wyszukiwarki</string>
   <string name="preference_search_remove">Usuń</string>
+  <string name="preference_homescreen_tips">Wskazówki na ekranie głównym</string>
   <string name="action_option_add_search_engine">Dodaj wyszukiwarkę</string>
   <string name="search_add_manually_name_hint">Nazwa wyszukiwarki</string>
   <string name="search_add_manually_string">Używany ciąg wyszukiwania</string>
@@ -119,16 +125,17 @@
   <string name="content_description_back">Przejdź wstecz</string>
   <string name="content_description_stop">Zatrzymaj wczytywanie strony</string>
   <string name="content_description_customtab_exit">Wróć do poprzedniej aplikacji</string>
+  <string name="content_description_trackers_blocked">Liczba zablokowanych elementów śledzących</string>
   <string name="content_description_blocking_switch">Blokowanie elementów śledzących</string>
   <string name="your_rights">O prawach użytkownika</string>
   <string name="external_app_prompt_title">Otwórz odnośnik w innej aplikacji</string>
-  <string name="external_app_prompt">Można wyjść z aplikacji %1$s, aby otworzyć ten odnośnik w aplikacji %2$s.</string>
+  <string name="external_app_prompt">Można wyjść z %1$s, aby otworzyć ten odnośnik w aplikacji %2$s.</string>
   <string name="external_app_prompt_no_app_title">Wyszukiwanie aplikacji mogącej otworzyć odnośnik</string>
-  <string name="external_app_prompt_no_app">Żadna aplikacja na urządzeniu nie może otworzyć tego odnośnika. Można wyjść z aplikacji %1$s, aby wyszukać odpowiednią aplikację w „%2$s”.</string>
+  <string name="external_app_prompt_no_app">Żadna aplikacja na urządzeniu nie może otworzyć tego odnośnika. Można wyjść z %1$s, aby wyszukać odpowiednią aplikację w „%2$s”.</string>
   <string name="external_multiple_apps_matched_exit">Wyjść z trybu prywatnego?</string>
   <string name="download_snackbar_finished">Ukończono „%1$s”</string>
   <string name="download_snackbar_open">Otwórz</string>
-  <string name="download_dialog_warning"><![CDATA["Pobrane pliki "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nie zostan&#261; usuni&#281;te</b>" po wyczyszczeniu historii programu %1$s."]]></string>
+  <string name="download_dialog_warning"><![CDATA["Pobrane pliki "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nie zostan&#261; usuni&#281;te</b>" po wyczyszczeniu historii %1$s."]]></string>
   <string name="download_dialog_title">Pobieranie pliku</string>
   <string name="download_dialog_action_cancel">Anuluj</string>
   <string name="download_dialog_action_download">Pobierz</string>
@@ -155,13 +162,13 @@
   <string name="contextmenu_image_copy">Kopiuj adres obrazu</string>
   <string name="contextmenu_image_save">Zapisz obraz</string>
   <string name="contextmenu_open_in_new_tab">Otwórz odnośnik w nowej karcie</string>
-  <string name="contextmenu_image_warning"><![CDATA["Zapisane i udostępnione obrazy "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nie zostan&#261; usuni&#281;te</b>" po wyczyszczeniu historii programu %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Zapisane i udostępnione obrazy "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nie zostan&#261; usuni&#281;te</b>" po wyczyszczeniu historii %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Nowy poziom prywatności</string>
   <string name="firstrun_defaultbrowser_text2">Przejdź na wyższy poziom prywatności. Blokuj reklamy i inne elementy mogące Cię śledzić między stronami i wydłużające wczytywanie się stron.</string>
   <string name="firstrun_search_title">Wyszukuj po swojemu</string>
   <string name="firstrun_search_text">Szukasz czegoś innego? Wybierz inną domyślną wyszukiwarkę w ustawieniach.</string>
   <string name="firstrun_shortcut_title">Dodawaj skróty do ekranu głównego</string>
-  <string name="firstrun_shortcut_text">Szybko wracaj do ulubionych stron w programie %1$s. Po prostu wybierz „Dodaj do ekranu głównego” z menu.</string>
+  <string name="firstrun_shortcut_text">Szybko wracaj do ulubionych stron w %1$s. Po prostu wybierz „Dodaj do ekranu głównego” z menu.</string>
   <string name="firstrun_privacy_title">Prywatność na co dzień</string>
   <string name="firstrun_privacy_text">Ustaw %1$s jako domyślną przeglądarkę i korzystaj z zalet przeglądania prywatnego podczas otwierania stron z innych aplikacji.</string>
   <string name="firstrun_close_button">OK!</string>
@@ -172,13 +179,13 @@
   <string name="dialog_addtohomescreen_action_cancel">Anuluj</string>
   <string name="dialog_addtohomescreen_tracking_protection">Skrót będzie otwierany bez ochrony przed śledzeniem</string>
   <string name="notification_browsing_session_channel_name">Sesja przeglądania prywatnego</string>
-  <string name="notification_browsing_session_channel_description">Powiadomienia umożliwiają usunięcie sesji programu %1$s jednym dotknięciem. Nie trzeba otwierać aplikacji ani widzieć, co jest otwarte w przeglądarce.</string>
+  <string name="notification_browsing_session_channel_description">Powiadomienia umożliwiają usunięcie sesji %1$s jednym dotknięciem. Nie trzeba otwierać aplikacji ani widzieć, co jest otwarte w przeglądarce.</string>
   <string name="tabs_tray_action_erase">Usuń historię przeglądania</string>
   <string name="download_firefox">Pobierz Firefoksa</string>
   <string name="your_rights_content1">%1$s to wolne oprogramowanie o otwartym kodzie źródłowym tworzone przez Mozillę i innych współtwórców.</string>
   <string name="your_rights_content2"><![CDATA["%1$s jest dostępny na warunkach licencji "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">MPL (Mozilla Public License)</a>" i innych licencji open source."]]></string>
   <string name="your_rights_content3"><![CDATA["Nie otrzymujesz żadnych licencji ani praw do znaków towarowych Mozilla Foundation i innych podmiotów, w tym do nazw i logotypów Mozilla, Firefox i %1$s. "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Tutaj</a>" znajduje się więcej informacji na ten temat."]]></string>
-  <string name="your_rights_content4"><![CDATA["Dodatkowy kod źródłowy programu %1$s jest dostępny na warunkach innych "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencji</a>" wolnego oprogramowania i open source."]]></string>
+  <string name="your_rights_content4"><![CDATA["Dodatkowy kod źródłowy %1$s jest dostępny na warunkach innych "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencji</a>" wolnego oprogramowania i open source."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s używa także list blokowania dostarczanych przez Disconnect, Inc. jako oddzielny i niezależny produkt dostępny na warunkach licencji "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GPLv3 (GNU General Public License v3)</a>", opisany "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tutaj</a>.]]></string>
   <string name="gv_prompt_username_hint">Nazwa użytkownika</string>
   <string name="gv_prompt_password_hint">Hasło</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Hasło</string>
   <string name="preference_performance_request_desktop_site">Wersja na komputery</string>
   <string name="custom_tab_copy_url_action">Skopiowano adres</string>
+  <string name="preference_advanced_summary">Narzędzia dla programistów</string>
+  <string name="preference_category_advanced">Zaawansowane</string>
+  <string name="preference_remote_debugging">Zdalne debugowanie przez USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Odblokuj %1$s</string>
+  <string name="biometric_auth_description">Dotknij czujnika odcisków palców, aby kontynuować.</string>
+  <string name="biometric_auth_new_session">Nowa sesja</string>
+  <string name="biometric_auth_image_description">Ikona odcisku palca</string>
+  <string name="biometric_auth_not_recognized_error">Nie rozpoznano odcisku palca. Spróbuj ponownie.</string>
+  <string name="biometric_auth_moved_too_quickly">Palec ruszył się za szybko. Spróbuj ponownie.</string>
+  <string name="enable_search_suggestion_title">Włączyć podpowiedzi wyszukiwania?</string>
+  <string name="enable_search_suggestion_subtitle">Aby uzyskać podpowiedzi wyszukiwania, %1$s musi wysłać słowa wpisywane na pasku adresu do wybranej wyszukiwarki. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Więcej informacji</string>
+  <string name="enable_search_suggestions_no">Nie</string>
+  <string name="enable_search_suggestions_yes">Tak</string>
+  <string name="no_suggestions_message">Część wyszukiwarek nie może wyświetlać podpowiedzi.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Zamknij</string>
+  <string name="tip_disable_tracking_protection">Strona zachowuje się nie tak, jak powinna?\n Spróbuj wyłączyć ochronę przed śledzeniem</string>
+  <string name="tip_add_to_homescreen">"Otwieraj najczęściej odwiedzane strony jednym stuknięciem\n        Menu → Dodaj do ekranu głównego"</string>
+  <string name="tip_set_default_browser">Otwieraj każdy odnośnik w %1$s\n Ustaw %1$s jako domyślną przeglądarkę</string>
+  <string name="tip_autocomplete_url">Automatycznie uzupełniaj adresy najczęściej odwiedzanych stron\n Przytrzymaj dowolny adres na pasku adresu</string>
+  <string name="tip_open_in_new_tab">Otwórz odnośnik w nowej karcie\n Przytrzymaj dowolny odnośnik na stronie</string>
+  <string name="tip_request_desktop">"Wolisz pełną wersję strony jak na komputerze?\n    Menu → Tryb stacjonarny"</string>
 </resources>

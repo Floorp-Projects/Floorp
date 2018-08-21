@@ -37,6 +37,8 @@
   <string name="preference_category_general">सामान्य</string>
   <string name="preference_category_data_collection_use">डेटा संग्रह आरु उपयोग</string>
   <string name="preference_category_search">खोजियै</string>
+  <string name="preference_show_search_suggestions">खोज सुझाव प्राप्त करियै</string>
+  <string name="preference_show_search_suggestions_summary">आपनो के सर्च ईंजन के एड्रेस बार म जे टाइप करबे %1$s उकरा भेज देत</string>
   <string name="preference_search_engine_default">डिफ़ॉल्ट</string>
   <string name="preference_state_on">चालू</string>
   <string name="preference_state_off">बंद</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">नैय</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">खाली 3र्ड पार्टी कूकीज ब्लौक करियै</string>
   <string name="preference_privacy_should_block_cookies_yes_option">हौं</string>
+  <string name="preference_security_biometric">ऐप अनलॉक करै ले फिंगरप्रिंट क प्रयोग करियै</string>
+  <string name="preference_security_biometric_summary">यदि आपनो के URL पहलो स खुलि गेल छे त आपनो फिंगरप्रिंट %1$s अनलॉक कैर सकै छै. छुपि क चालू होय जैतै.</string>
   <string name="preference_privacy_secure_mode">गोपनीयता</string>
-  <string name="preference_privacy_stealth_summary">ऐप्स कs स्विच करै समय वेबपेज नुकैइयै</string>
+  <string name="preference_privacy_stealth_summary">ऐप्स क स्विच करै समय आरु स्क्रीनशॉट लै पर ब्लोक करै समय वेबपेज नुकैइयै.</string>
+  <string name="preference_category_security">सुरक्षा</string>
   <string name="preference_category_performance">प्रदर्शन</string>
   <string name="preference_performance_block_webfonts">वेब फ्रंट ब्लौक करियै</string>
   <string name="preference_performance_block_webfonts_summary">आइकन अथवा छवि गुम हुए सकै छै</string>
@@ -87,7 +92,7 @@
   <string name="preference_default_browser2">%1$s कऽ डिफ़ॉल्ट ब्रॉजर बनैइयै</string>
   <string name="preference_category_mozilla">मोजिला</string>
   <string name="preference_mozilla_telemetry2">उपयोग डेटा भेजियै</string>
-  <string name="preference_mozilla_telemetry_summary">अधिक जानियैs</string>
+  <string name="preference_mozilla_telemetry_summary">बेसी जानकारी</string>
   <string name="preference_mozilla_telemetry_summary2">मोजिला केवल ओ चीज के जमा करै छै जकरा %1$s मे सभक लेली सुधार करै केरो आवश्यक्ता छै.</string>
   <string name="preference_privacy_notice">गोपनीयता सूचना</string>
   <string name="preference_about">%1$s के बारे मे</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ अन्य सर्च इंजन जोड़ियै</string>
   <string name="preference_search_remove_title">सर्च ईंजन हटैइयै</string>
   <string name="preference_search_remove">हटैइयै</string>
+  <string name="preference_homescreen_tips">होम स्क्रीन टिप्स दिखाइयै</string>
   <string name="action_option_add_search_engine">सर्च ईंजन जोरियै</string>
   <string name="search_add_manually_name_hint">सर्च ईंजन नाम</string>
   <string name="search_add_manually_string">उपयोग लेली सर्च स्ट्रिंग</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">पाछाँ मार्गनिर्देशित करियै</string>
   <string name="content_description_stop">लोड भ्या रहलो वेबसाईट के रोकियै</string>
   <string name="content_description_customtab_exit">पिछला ऐप पर वापस घुरियैs</string>
+  <string name="content_description_trackers_blocked">ब्लॉक भेल ट्रैकर्स के संख्या</string>
   <string name="content_description_blocking_switch">ट्रेकर्स ब्लॉक करियै</string>
   <string name="your_rights">अपने के अधिकार</string>
   <string name="external_app_prompt_title">दोसर एप मे लिंक खोलियै</string>
@@ -200,4 +207,20 @@
   <string name="http_auth_dialog_password">पासवर्ड</string>
   <string name="preference_performance_request_desktop_site">डेस्कटॉप साइट लs आग्रह करियै</string>
   <string name="custom_tab_copy_url_action">URL कॉपी भेलऽ</string>
+  <string name="preference_advanced_summary">डेवलपर उपकरण</string>
+  <string name="preference_category_advanced">विकसित करल गेल</string>
+  <string name="preference_remote_debugging">USB/Wi-Fi के द्वारा रिमोट डीबगिंग</string>
+  <string name="biometric_auth_title">अनलॉक %1$s</string>
+  <string name="biometric_auth_description">जारी रखै ल फिंगरप्रिंट सेंसर छुइयै.</string>
+  <string name="biometric_auth_new_session">नया सत्र</string>
+  <string name="biometric_auth_image_description">फिंगरप्रिंट आइकन</string>
+  <string name="biometric_auth_not_recognized_error">फिंगरप्रिंट नै पहचानल गेल छकै. फेनु प्रयास करियै.</string>
+  <string name="biometric_auth_moved_too_quickly">फिंगर बहुत तेज छ्कै. फेनु प्रयास करियै.</string>
+  <string name="enable_search_suggestion_title">कि तोय खोज सुझावों क चालू करै ले चाहे छकै?</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">बेसी जानकारी</string>
+  <string name="enable_search_suggestions_no">नैय</string>
+  <string name="enable_search_suggestions_yes">हौं</string>
+  <string name="no_suggestions_message">कुछ सर्च ईंजन सुझाव नै दिखाय सकै छै.</string>
+  <string name="dismiss_no_suggestions_prompt_button">रद्द करियै</string>
+  <string name="tip_open_in_new_tab">नया टैब में एगो लिंक खोलियै \n  पेज पर कोनो लिंक के देर तक दाबियै</string>
 </resources>

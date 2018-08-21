@@ -37,6 +37,7 @@
   <string name="preference_category_general">Genel</string>
   <string name="preference_category_data_collection_use">Veri toplanması ve kullanımı</string>
   <string name="preference_category_search">Arama</string>
+  <string name="preference_show_search_suggestions">Arama önerilerini göster</string>
   <string name="preference_search_engine_default">Varsayılan</string>
   <string name="preference_state_on">Açık</string>
   <string name="preference_state_off">Kapalı</string>
@@ -77,8 +78,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">Hayır</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Yalnızca 3. taraf çerezlerini engelle</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Evet</string>
+  <string name="preference_security_biometric">Uygulama kilidini açmak için parmak izimi kullan</string>
   <string name="preference_privacy_secure_mode">Görünmezlik</string>
   <string name="preference_privacy_stealth_summary">Uygulama değiştirirken web sayfalarını gizle</string>
+  <string name="preference_category_security">Güvenlik</string>
   <string name="preference_category_performance">Performans</string>
   <string name="preference_performance_block_webfonts">Web fontlarını engelle</string>
   <string name="preference_performance_block_webfonts_summary">Simge ve resimlerin görünmemesine yol açabilir</string>
@@ -96,6 +99,7 @@
   <string name="preference_search_add2">+ Başka bir arama motoru ekle</string>
   <string name="preference_search_remove_title">Arama motorlarını sil</string>
   <string name="preference_search_remove">Sil</string>
+  <string name="preference_homescreen_tips">Ana ekranda ipuçlarını göster</string>
   <string name="action_option_add_search_engine">Arama motoru ekle</string>
   <string name="search_add_manually_name_hint">Arama motoru adı</string>
   <string name="search_add_manually_string">Kullanılacak arama dizgisi</string>
@@ -119,6 +123,7 @@
   <string name="content_description_back">Geri git</string>
   <string name="content_description_stop">Siteyi yüklemeyi durdur</string>
   <string name="content_description_customtab_exit">Önceki uygulamaya dön</string>
+  <string name="content_description_trackers_blocked">Engellenen takipçi sayısı</string>
   <string name="content_description_blocking_switch">Takipçileri engelle</string>
   <string name="your_rights">Haklarınız</string>
   <string name="external_app_prompt_title">Bağlantıyı farklı uygulamada aç</string>
@@ -200,4 +205,19 @@
   <string name="http_auth_dialog_password">Parola</string>
   <string name="preference_performance_request_desktop_site">Masaüstü sitesini iste</string>
   <string name="custom_tab_copy_url_action">Adres kopyalandı</string>
+  <string name="preference_advanced_summary">Geliştirici araçları</string>
+  <string name="preference_category_advanced">Gelişmiş</string>
+  <string name="preference_remote_debugging">USB/Wi-Fi ile uzaktan hata ayıklama</string>
+  <string name="biometric_auth_title">%1$s kilidini aç</string>
+  <string name="biometric_auth_description">Devam etmek için parmak izi sensörüne dokunun.</string>
+  <string name="biometric_auth_new_session">Yeni oturum</string>
+  <string name="biometric_auth_image_description">Parmak izi simgesi</string>
+  <string name="biometric_auth_not_recognized_error">Parmak izi tanınamadı. Yeniden deneyin.</string>
+  <string name="biometric_auth_moved_too_quickly">Parmağınızı çok hızlı hareket ettirdiniz. Yeniden deneyin.</string>
+  <string name="enable_search_suggestion_title">Arama önerilerini açmak ister misiniz?</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Daha fazla bilgi al</string>
+  <string name="enable_search_suggestions_no">Hayır</string>
+  <string name="enable_search_suggestions_yes">Evet</string>
+  <string name="no_suggestions_message">Bazı arama motorlarında öneriler gösterilemez.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Kapat</string>
 </resources>

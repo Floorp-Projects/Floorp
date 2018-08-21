@@ -37,6 +37,8 @@
   <string name="preference_category_general">General</string>
   <string name="preference_category_data_collection_use">Data Collection &amp; Use</string>
   <string name="preference_category_search">Search</string>
+  <string name="preference_show_search_suggestions">Get search suggestions</string>
+  <string name="preference_show_search_suggestions_summary">%1$s will send what you type in the address bar to your search engine</string>
   <string name="preference_search_engine_default">Default</string>
   <string name="preference_state_on">On</string>
   <string name="preference_state_off">Off</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">No</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Block 3rd-party cookies only</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Yes</string>
+  <string name="preference_security_biometric">Use fingerprint to unlock app</string>
+  <string name="preference_security_biometric_summary">Your fingerprint can unlock %1$s if a URL is already opened in the app. Stealth will be turned on.</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
-  <string name="preference_privacy_stealth_summary">Hide webpages when switching apps</string>
+  <string name="preference_privacy_stealth_summary">Hide webpages when switching apps and block taking screenshots.</string>
+  <string name="preference_category_security">Security</string>
   <string name="preference_category_performance">Performance</string>
   <string name="preference_performance_block_webfonts">Block Web fonts</string>
   <string name="preference_performance_block_webfonts_summary">May result in missing icons or images</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Add another search engine</string>
   <string name="preference_search_remove_title">Remove search engines</string>
   <string name="preference_search_remove">Remove</string>
+  <string name="preference_homescreen_tips">Show home screen tips</string>
   <string name="action_option_add_search_engine">Add search engine</string>
   <string name="search_add_manually_name_hint">Search engine name</string>
   <string name="search_add_manually_string">Search string to use</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Navigate back</string>
   <string name="content_description_stop">Stop loading website</string>
   <string name="content_description_customtab_exit">Return to previous app</string>
+  <string name="content_description_trackers_blocked">Number of trackers blocked</string>
   <string name="content_description_blocking_switch">Block trackers</string>
   <string name="your_rights">Your Rights</string>
   <string name="external_app_prompt_title">Open link in another app</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Password</string>
   <string name="preference_performance_request_desktop_site">Request desktop site</string>
   <string name="custom_tab_copy_url_action">URL copied</string>
+  <string name="preference_advanced_summary">Developer tools</string>
+  <string name="preference_category_advanced">Advanced</string>
+  <string name="preference_remote_debugging">Remote debugging via USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Unlock %1$s</string>
+  <string name="biometric_auth_description">Touch the fingerprint sensor to continue.</string>
+  <string name="biometric_auth_new_session">New Session</string>
+  <string name="biometric_auth_image_description">Fingerprint icon</string>
+  <string name="biometric_auth_not_recognized_error">Fingerprint not recognized. Try again.</string>
+  <string name="biometric_auth_moved_too_quickly">Finger moved too fast. Try again.</string>
+  <string name="enable_search_suggestion_title">Would you like to turn on search suggestions?</string>
+  <string name="enable_search_suggestion_subtitle">To get search suggestions, %1$s needs to send what you type in the address bar to the search engine you’ve chosen. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Learn more</string>
+  <string name="enable_search_suggestions_no">No</string>
+  <string name="enable_search_suggestions_yes">Yes</string>
+  <string name="no_suggestions_message">Some search engines cannot show suggestions.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Dismiss</string>
+  <string name="tip_disable_tracking_protection">Site behaving unexpectedly?\n Try turning off Tracking Protection</string>
+  <string name="tip_add_to_homescreen">"Get one-tap access to sites you use most\n        Menu &gt; Add to Home screen"</string>
+  <string name="tip_set_default_browser">Open every link in %1$s\n Set %1$s as default browser</string>
+  <string name="tip_autocomplete_url">Autocomplete URLs for sites you use most\n Long-press any URL in the address bar</string>
+  <string name="tip_open_in_new_tab">Open a link in a new tab\n Long-press any link on a page</string>
+  <string name="tip_request_desktop">"Rather see the full desktop site?\n    Menu &gt; Request desktop site"</string>
 </resources>

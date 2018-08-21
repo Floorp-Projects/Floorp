@@ -37,6 +37,8 @@
   <string name="preference_category_general">Гомуми</string>
   <string name="preference_category_data_collection_use">Мәгълүмат туплау һәм аны куллану</string>
   <string name="preference_category_search">Эзләү</string>
+  <string name="preference_show_search_suggestions">Эзләү тәкъдимнәрен алу</string>
+  <string name="preference_show_search_suggestions_summary">%1$s Сез адрес юлында язганны Сезнең эзләү системасына җибәрәчәк</string>
   <string name="preference_search_engine_default">Стандарт</string>
   <string name="preference_state_on">Кабызылган</string>
   <string name="preference_state_off">Сүнгән</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Юк</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Өченче тараф кукиларын гына блоклау</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Әйе</string>
+  <string name="preference_security_biometric">Кушымтаны ачу өчен бармак эзен куллану</string>
+  <string name="preference_security_biometric_summary">Сезнең бармак эзегез, кушымтада бер URL сылтама инде ачык булганда, %1$s\'ны ача ала. Stealth-режим кабыначак.</string>
   <string name="preference_privacy_secure_mode">Күренмәслек</string>
-  <string name="preference_privacy_stealth_summary">Кушымталарны алмаштырганда веб-сәхифәләрне яшерү</string>
+  <string name="preference_privacy_stealth_summary">Кушымталарны алмаштырганда веб-сәхифәләрне яшерү.</string>
+  <string name="preference_category_security">Хәвефсезлек</string>
   <string name="preference_category_performance">Җитештерүчәнлек</string>
   <string name="preference_performance_block_webfonts">Веб-шрифтларны блоклау</string>
   <string name="preference_performance_block_webfonts_summary">Билге һәм рәсемнәрнең күренмәвенә сәбәп була ала</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Башка бер эзләү системасын өстәү</string>
   <string name="preference_search_remove_title">Эзләү системаларын бетерү</string>
   <string name="preference_search_remove">Бетерү</string>
+  <string name="preference_homescreen_tips">Өй экранында киңәшләр күрсәтү</string>
   <string name="action_option_add_search_engine">Эзләү системасын өстәү</string>
   <string name="search_add_manually_name_hint">Эзләү системасының исеме</string>
   <string name="search_add_manually_string">Эзләнәчәк сүз я сүзтезмә</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Кире кайту</string>
   <string name="content_description_stop">Веб-сайтны йөкләүне туктату</string>
   <string name="content_description_customtab_exit">Соңгы кушымтага кире кайту</string>
+  <string name="content_description_trackers_blocked">Блокланган күзәтүчеләр саны</string>
   <string name="content_description_blocking_switch">Күзәтүчеләрне блоклау</string>
   <string name="your_rights">Хокукларыгыз</string>
   <string name="external_app_prompt_title">Сылтаманы башка кушымтада ачу</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Серсүз</string>
   <string name="preference_performance_request_desktop_site">Сайтның тулы версиясен сорау</string>
   <string name="custom_tab_copy_url_action">URL копияләнде</string>
+  <string name="preference_advanced_summary">Җитештерүче кораллары</string>
+  <string name="preference_category_advanced">Киңәйтелгән</string>
+  <string name="preference_remote_debugging">USB/Wi-Fi аркылы хаталарны ерактан төзәтү</string>
+  <string name="biometric_auth_title">%1$s\'ны ачу</string>
+  <string name="biometric_auth_description">Дәвам итү өчен, бармак эзен укучы сенсорга басыгыз.</string>
+  <string name="biometric_auth_new_session">Яңа утырыш</string>
+  <string name="biometric_auth_image_description">Бармак эзе рәсеме</string>
+  <string name="biometric_auth_not_recognized_error">Бармак эзе танылмады. Тагын бер кат тырышып карагыз.</string>
+  <string name="biometric_auth_moved_too_quickly">Бармак артык тиз алынды. Тагын бер кат тырышып карагыз.</string>
+  <string name="enable_search_suggestion_title">Эзләү тәкъдимнәрен кабызасыгыз киләме?</string>
+  <string name="enable_search_suggestion_subtitle">Эзләү тәкъдимнәрен алыр өчен, %1$s Сез адрес юлында язганнарны үзегез сайлаган эзләү системасына җибәрергә тиеш. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Күбрәк белү</string>
+  <string name="enable_search_suggestions_no">Юк</string>
+  <string name="enable_search_suggestions_yes">Әйе</string>
+  <string name="no_suggestions_message">Кайбер эзләү машиналары тәкъдимнәр ясамый.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Яшерү</string>
+  <string name="tip_disable_tracking_protection">Сайт көтелгәнчә эшләмиме?\nКүзәтүчеләрдән саклауны сүндереп карагыз</string>
+  <string name="tip_add_to_homescreen">"Иң еш кулланылган сайтларга бер орыну белән күчү өчен\n        Меню &gt; Төп экранга өстәү"</string>
+  <string name="tip_set_default_browser">Һәр сылтаманы да %1$s\'та ачу\n%1$s\'ны төп гизгеч итегез</string>
+  <string name="tip_autocomplete_url">Иң еш кулланылган сайтларның адресларын автотөгәлләү өчен\nАдрес юлындагы URL\'га озак итеп басып торыгыз</string>
+  <string name="tip_open_in_new_tab">Сылтаманы яңа биттә ачу өчен\nСылтамага озак итеп басып торыгыз</string>
+  <string name="tip_request_desktop">"Сайтның өстәл өсте компьютерлары өчен эшләнгән версиясен карыйсыгыз киләме?\n    Меню → Өстәл өсте компьютеры"</string>
 </resources>

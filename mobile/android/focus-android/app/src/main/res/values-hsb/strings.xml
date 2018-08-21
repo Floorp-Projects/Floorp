@@ -37,6 +37,8 @@
   <string name="preference_category_general">Powšitkowne</string>
   <string name="preference_category_data_collection_use">Zběranje a wužiwanje datow</string>
   <string name="preference_category_search">Pytać</string>
+  <string name="preference_show_search_suggestions">Pytanske namjety wobstarać</string>
+  <string name="preference_show_search_suggestions_summary">%1$s so na wašu pytawu pósćele, štož w adresowym polu zapodaće</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_state_on">Zapinjeny</string>
   <string name="preference_state_off">Wupinjeny</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Ně</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Jenož placki třećich poskićowarjow</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Haj</string>
+  <string name="preference_security_biometric">Wužiwajće porstowy wotćišć, zo byšće nałoženje wotewrěł</string>
+  <string name="preference_security_biometric_summary">Waš porstowy wotćišć móže %1$s wotewrěć, jeli URL je hižo w nałoženju wočinjeny. Tarnowanski modus so zapinje.</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
-  <string name="preference_privacy_stealth_summary">Webstrony schować, hdyž so nałoženja přepinaja</string>
+  <string name="preference_privacy_stealth_summary">Webstrony schować, hdyž so nałoženja přepinaja a fotam wobrazowki zadźěwać.</string>
+  <string name="preference_category_security">Wěstota</string>
   <string name="preference_category_performance">Wukon</string>
   <string name="preference_performance_block_webfonts">Webpisma blokować</string>
   <string name="preference_performance_block_webfonts_summary">Móže k tomu wjesć, zo symbole abo wobrazy faluja</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Dalšu pytawu přidać</string>
   <string name="preference_search_remove_title">Pytawy wotstronić</string>
   <string name="preference_search_remove">Wotstronić</string>
+  <string name="preference_homescreen_tips">Pokiwy na startowej wobrazowce pokazać</string>
   <string name="action_option_add_search_engine">Pytawu přidać</string>
   <string name="search_add_manually_name_hint">Mjeno pytawy</string>
   <string name="search_add_manually_string">Pytanski wuraz, kotryž ma so wužiwać</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Wróćo</string>
   <string name="content_description_stop">Čitanje websydła zastajić</string>
   <string name="content_description_customtab_exit">Wróćo k předchadnemu nałoženju</string>
+  <string name="content_description_trackers_blocked">Ličba zablokowanych přesćěhowakow</string>
   <string name="content_description_blocking_switch">Přesćěhowaki blokować</string>
   <string name="your_rights">Waše prawa</string>
   <string name="external_app_prompt_title">Wotkaz w druhim nałoženju wočinić</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Hesło</string>
   <string name="preference_performance_request_desktop_site">Desktopowe sydło požadać</string>
   <string name="custom_tab_copy_url_action">URL kopěrowany</string>
+  <string name="preference_advanced_summary">Wuwiwarske nastroje</string>
+  <string name="preference_category_advanced">Rozšěrjene</string>
+  <string name="preference_remote_debugging">Zdalene pytanje zmylkow přez USB/WLAN</string>
+  <string name="biometric_auth_title">%1$s hižo njeblokować</string>
+  <string name="biometric_auth_description">Dótkńće so sensora porstoweho wotćišća, zo byšće pokročował.</string>
+  <string name="biometric_auth_new_session">Nowe posedźenje</string>
+  <string name="biometric_auth_image_description">Symbol porstoweho wotćišća</string>
+  <string name="biometric_auth_not_recognized_error">Porstowy wotćišće njeje so spóznał. Spytajće hišće raz.</string>
+  <string name="biometric_auth_moved_too_quickly">Porst je so přespěšnje pohibnył. Spytajće hišće raz.</string>
+  <string name="enable_search_suggestion_title">Chceće pytanske namjety aktiwizować?</string>
+  <string name="enable_search_suggestion_subtitle">Zo byšće pytanske namjety dóstał, dyrbi %1$s wobsah, kotryž sće do adresoweho pola zapodał, na pytawu słać, kotruž sće wubrał. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Dalše informacije</string>
+  <string name="enable_search_suggestions_no">Ně</string>
+  <string name="enable_search_suggestions_yes">Haj</string>
+  <string name="no_suggestions_message">Někotre pytawy njemóža namjety pokazać.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Zaćisnyć</string>
+  <string name="tip_disable_tracking_protection">Sydło so na njewočakowane wašnje zadźerži?\nSpytajće slědowanski škit znjemóžnić</string>
+  <string name="tip_add_to_homescreen">"Wočińće sydła, kotrež najhusćišo wopytujeće, z jednym podótkom\n        Meni &gt; Startowej wobrazowce přidać"</string>
+  <string name="tip_set_default_browser">Kóždy wotkaz w %1$s wočinić\n%1$s jako standardny wobhladowak nastajić</string>
+  <string name="tip_autocomplete_url">URL za sydła, kotrež najhusćišo wopytujeće, awtomatisce wudospołnić\nTłóčće dołho na URL w adresowym polu</string>
+  <string name="tip_open_in_new_tab">Wotkaz w nowym rajtarku wočinić\nTłóčće dołho na wotkaz na stronje</string>
+  <string name="tip_request_desktop">"Chceće radšo dospołne desktopowe sydło widźeć?\n    Meni &gt; Desktopowe sydło požadać"</string>
 </resources>

@@ -37,6 +37,8 @@
   <string name="preference_category_general">Загальні</string>
   <string name="preference_category_data_collection_use">Збір даних і використання</string>
   <string name="preference_category_search">Пошук</string>
+  <string name="preference_show_search_suggestions">Отримувати пошукові пропозиції</string>
+  <string name="preference_show_search_suggestions_summary">%1$s буде відправляти провайдеру пошуку текст, введений в рядку адреси</string>
   <string name="preference_search_engine_default">Типовий</string>
   <string name="preference_state_on">Увімкнено</string>
   <string name="preference_state_off">Вимкнено</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Так</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Блокувати лише сторонні куки</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Так</string>
+  <string name="preference_security_biometric">Використовувати відбиток пальця для розблокування</string>
+  <string name="preference_security_biometric_summary">Ваш відбиток пальця може розблокувати %1$s, якщо URL-адресу вже відкрито в програмі. Буде увімкнено режим Під прикриттям.</string>
   <string name="preference_privacy_secure_mode">Під прикриттям</string>
-  <string name="preference_privacy_stealth_summary">Приховувати веб-сторінки при перемиканні додатків</string>
+  <string name="preference_privacy_stealth_summary">Приховувати веб-сторінки при перемиканні додатків та не дозволяти знімки екрану.</string>
+  <string name="preference_category_security">Безпека</string>
   <string name="preference_category_performance">Швидкодія</string>
   <string name="preference_performance_block_webfonts">Блокувати веб-шрифти</string>
   <string name="preference_performance_block_webfonts_summary">Може призвести до втрати піктограм чи зображень</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Додати інший засіб пошуку</string>
   <string name="preference_search_remove_title">Вилучити засоби пошуку</string>
   <string name="preference_search_remove">Вилучити</string>
+  <string name="preference_homescreen_tips">Показати знайомство</string>
   <string name="action_option_add_search_engine">Додати засіб пошуку</string>
   <string name="search_add_manually_name_hint">Назва засобу пошуку</string>
   <string name="search_add_manually_string">Запит для пошуку</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Перейти назад</string>
   <string name="content_description_stop">Зупинити завантаження сайту</string>
   <string name="content_description_customtab_exit">Повернутись до попередньої програми</string>
+  <string name="content_description_trackers_blocked">Заблоковано стеження</string>
   <string name="content_description_blocking_switch">Блокувати стеження</string>
   <string name="your_rights">Ваші права</string>
   <string name="external_app_prompt_title">Відкрити посилання в іншій програмі</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Пароль</string>
   <string name="preference_performance_request_desktop_site">Повна версія сайту</string>
   <string name="custom_tab_copy_url_action">URL скопійовано</string>
+  <string name="preference_advanced_summary">Інструменти розробника</string>
+  <string name="preference_category_advanced">Додатково</string>
+  <string name="preference_remote_debugging">Віддалене зневадження через USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Розблокувати %1$s</string>
+  <string name="biometric_auth_description">Торкніться датчика відбитку пальця для продовження.</string>
+  <string name="biometric_auth_new_session">Новий сеанс</string>
+  <string name="biometric_auth_image_description">Піктограма відбитку пальця</string>
+  <string name="biometric_auth_not_recognized_error">Відбиток пальця не розпізнано. Спробуйте знову.</string>
+  <string name="biometric_auth_moved_too_quickly">Надто швидкий рух пальцем. Спробуйте знову.</string>
+  <string name="enable_search_suggestion_title">Бажаєте увімкнути пошукові пропозиції?</string>
+  <string name="enable_search_suggestion_subtitle">Для отримання пошукових пропозицій %1$s повинен відправляти введений в адресному рядку текст провайдеру пошуку. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Докладніше</string>
+  <string name="enable_search_suggestions_no">Ні</string>
+  <string name="enable_search_suggestions_yes">Так</string>
+  <string name="no_suggestions_message">Деякі засоби пошуку не можуть показувати пропозиції.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Відхилити</string>
+  <string name="tip_disable_tracking_protection">Неочікувана поведінка сайту?\n Спробуйте вимкнути захист від стеження</string>
+  <string name="tip_add_to_homescreen">"Швидкий доступ до популярних сайтів\n        Меню &gt; Додати на головний екран"</string>
+  <string name="tip_set_default_browser">Відкривайте всі посилання в %1$s\n Встановіть %1$s типовим браузером</string>
+  <string name="tip_autocomplete_url">Автозавершення популярних URL-адрес\n Тривалий дотик до URL в адресному рядку</string>
+  <string name="tip_open_in_new_tab">Відкривайте посилання в новій вкладці\n Тривалий дотик до посилання на сторінці</string>
+  <string name="tip_request_desktop">"Бажаєте бачити повну версію сайту?\n    Меню &gt; Повна версія сайту"</string>
 </resources>

@@ -37,6 +37,8 @@
   <string name="preference_category_general">Жалпы</string>
   <string name="preference_category_data_collection_use">Деректерді жинау және қолдану</string>
   <string name="preference_category_search">Іздеу</string>
+  <string name="preference_show_search_suggestions">Іздеу ұсыныстарын алу</string>
+  <string name="preference_show_search_suggestions_summary">%1$s сіз адрестік жолақта терген нәрсені сіздің іздеу жүйеңізге жіберетін болады</string>
   <string name="preference_search_engine_default">Негізгі</string>
   <string name="preference_state_on">Іске қосулған</string>
   <string name="preference_state_off">Сөндірілген</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Жоқ</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Тек үшінші жақты cookies файлдарын бұғаттау</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Иә</string>
+  <string name="preference_security_biometric">Қолданбаны босату үшін саусақ баспасын қолдану</string>
+  <string name="preference_security_biometric_summary">Сіздің саусақ баспаңыз URL сілтемеде ашық болған кезде %1$s босата алады. Тыңшы іске қосылатын болады.</string>
   <string name="preference_privacy_secure_mode">Жасырын</string>
-  <string name="preference_privacy_stealth_summary">Қолданбаларды ауыстыру кезінде веб парақтарды жасыру</string>
+  <string name="preference_privacy_stealth_summary">Қолданбаларды ауыстыру кезінде веб парақтарды жасыру және скриншот түсіруді бұғаттау.</string>
+  <string name="preference_category_security">Қауіпсіздік</string>
   <string name="preference_category_performance">Өнімділік</string>
   <string name="preference_performance_block_webfonts">Веб қаріптерін блоктау</string>
   <string name="preference_performance_block_webfonts_summary">Жоқ болып тұрған таңбашалар немесе суреттерге әкеп соғуы мүмкін</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Басқа іздеу жүйесін қосу</string>
   <string name="preference_search_remove_title">Іздеу жүйелерін өшіру</string>
   <string name="preference_search_remove">Өшіру</string>
+  <string name="preference_homescreen_tips">Үй парағында кеңестерді көрсету</string>
   <string name="action_option_add_search_engine">Іздеу жүйесін қосу</string>
   <string name="search_add_manually_name_hint">Іздеу жүйесінің аты</string>
   <string name="search_add_manually_string">Қолданылатын іздеу жолы</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Артқа өту</string>
   <string name="content_description_stop">Вебсайтты жүктеуді тоқтату</string>
   <string name="content_description_customtab_exit">Алдыңғы қолданбаға оралу</string>
+  <string name="content_description_trackers_blocked">Блокталған трекерлер саны</string>
   <string name="content_description_blocking_switch">Трекерлерді блоктау</string>
   <string name="your_rights">Құқықтарыңыз</string>
   <string name="external_app_prompt_title">Сілтемені басқа қолданбада ашу</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Пароль</string>
   <string name="preference_performance_request_desktop_site">Сайттың толық нұсқасы</string>
   <string name="custom_tab_copy_url_action">URL сілтемесі көшірілді</string>
+  <string name="preference_advanced_summary">Әзірлеуші құралдары</string>
+  <string name="preference_category_advanced">Кеңейтілген</string>
+  <string name="preference_remote_debugging">USB/Wi-Fi арқылы қашықтан жөндеу</string>
+  <string name="biometric_auth_title">%1$s босату</string>
+  <string name="biometric_auth_description">Жалғастыру үшін саусақ баспасын оқу құрылғысын тиіңіз.</string>
+  <string name="biometric_auth_new_session">Жаңа сессия</string>
+  <string name="biometric_auth_image_description">Саусақ баспасы таңбашасы</string>
+  <string name="biometric_auth_not_recognized_error">Саусақ баспасы танылмады. Қайталап көріңіз.</string>
+  <string name="biometric_auth_moved_too_quickly">Саусақ тым жылдам өткізілді. Қайталап көріңіз.</string>
+  <string name="enable_search_suggestion_title">Іздеу ұсыныстарын іске қосу керек пе?</string>
+  <string name="enable_search_suggestion_subtitle">Іздеу ұсыныстарын алу үшін, %1$s сіз адрестік жолақта терген нәрсені өзіңіз таңдаған іздеу жүйесіне жіберуі тиіс. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Көбірек білу</string>
+  <string name="enable_search_suggestions_no">Жоқ</string>
+  <string name="enable_search_suggestions_yes">Иә</string>
+  <string name="no_suggestions_message">Кейбір іздеу жүйелері ұсыныстарды көрсете алмайды.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Тайдыру</string>
+  <string name="tip_disable_tracking_protection">Әлі де күтпегендей әрекет жасайды ма?\n Бақылаудан қорғанысты сөндіріп көріңіз</string>
+  <string name="tip_add_to_homescreen">"Жиірек қолданылатын сайттарға бір шертумен қатынаңыз\n        Мәзір &gt; Үй бетіне қосу"</string>
+  <string name="tip_set_default_browser">Әр сілтемені %1$s ішінде ашыңыз\n %1$s негізгі браузер ретінде орнатыңыз</string>
+  <string name="tip_autocomplete_url">Жиірек қолданылатын сайттар үшін сілтемелерді автотолықтырыңыз\n Адрестік жолақта кез келген сілтемеге ұзақ шертіңіз</string>
+  <string name="tip_open_in_new_tab">Сілтемені жаңа бетте ашу\n Беттегі кез келген сілтемеге ұзақ шертіңіз</string>
+  <string name="tip_request_desktop">"Жұмыс үстелге арналған толық өлшемді көргіңіз келе ме?\n    Мәзір &gt; Сайттың толық нұсқасы"</string>
 </resources>

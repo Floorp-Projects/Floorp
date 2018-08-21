@@ -37,6 +37,8 @@
   <string name="preference_category_general">Algemeen</string>
   <string name="preference_category_data_collection_use">Gegevensverzameling en -gebruik</string>
   <string name="preference_category_search">Zoeken</string>
+  <string name="preference_show_search_suggestions">Zoeksuggesties verkrijgen</string>
+  <string name="preference_show_search_suggestions_summary">%1$s zal wat u in de adresbalk intypt naar uw zoekmachine sturen</string>
   <string name="preference_search_engine_default">Standaard</string>
   <string name="preference_state_on">Aan</string>
   <string name="preference_state_off">Uit</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Nee</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Alleen cookies van derden blokkeren</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
+  <string name="preference_security_biometric">Vingerafdruk voor ontgrendelen van app gebruiken</string>
+  <string name="preference_security_biometric_summary">Uw vingerafdruk kan %1$s ontgrendelen als er al een URL in de app is geopend. Stealth wordt ingeschakeld.</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
-  <string name="preference_privacy_stealth_summary">Webpagina’s verbergen bij wisselen van apps</string>
+  <string name="preference_privacy_stealth_summary">Webpagina’s verbergen bij wisselen van apps en maken van schermafbeeldingen blokkeren</string>
+  <string name="preference_category_security">Beveiliging</string>
   <string name="preference_category_performance">Prestaties</string>
   <string name="preference_performance_block_webfonts">Weblettertypen blokkeren</string>
   <string name="preference_performance_block_webfonts_summary">Kan tot ontbrekende pictogrammen of afbeeldingen leiden</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Nog een zoekmachine toevoegen</string>
   <string name="preference_search_remove_title">Zoekmachines verwijderen</string>
   <string name="preference_search_remove">Verwijderen</string>
+  <string name="preference_homescreen_tips">Tips op startscherm tonen</string>
   <string name="action_option_add_search_engine">Zoekmachine toevoegen</string>
   <string name="search_add_manually_name_hint">Naam van zoekmachine</string>
   <string name="search_add_manually_string">Te gebruiken zoekstring</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Terug bladeren</string>
   <string name="content_description_stop">Laden van website stoppen</string>
   <string name="content_description_customtab_exit">Terug naar vorige app</string>
+  <string name="content_description_trackers_blocked">Aantal geblokkeerde trackers</string>
   <string name="content_description_blocking_switch">Trackers blokkeren</string>
   <string name="your_rights">Uw rechten</string>
   <string name="external_app_prompt_title">Koppeling openen in andere app</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Wachtwoord</string>
   <string name="preference_performance_request_desktop_site">Desktopwebsite opvragen</string>
   <string name="custom_tab_copy_url_action">URL gekopieerd</string>
+  <string name="preference_advanced_summary">Ontwikkelaarshulpmiddelen</string>
+  <string name="preference_category_advanced">Geavanceerd</string>
+  <string name="preference_remote_debugging">Remote debugging via USB/wifi</string>
+  <string name="biometric_auth_title">%1$s ontgrendelen</string>
+  <string name="biometric_auth_description">Raak de vingerafdruksensor aan om verder te gaan.</string>
+  <string name="biometric_auth_new_session">Nieuwe sessie</string>
+  <string name="biometric_auth_image_description">Vingerafdrukpictogram</string>
+  <string name="biometric_auth_not_recognized_error">Vingerafdruk niet herkend. Probeer het opnieuw.</string>
+  <string name="biometric_auth_moved_too_quickly">Vinger te snel bewogen. Probeer het opnieuw.</string>
+  <string name="enable_search_suggestion_title">Wilt u zoeksuggesties aanzetten?</string>
+  <string name="enable_search_suggestion_subtitle">Om zoeksuggesties te verkrijgen, moet %1$s wat u in de adresbalk intypt naar de gekozen zoekmachine sturen. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Meer info</string>
+  <string name="enable_search_suggestions_no">Nee</string>
+  <string name="enable_search_suggestions_yes">Ja</string>
+  <string name="no_suggestions_message">Sommige zoekmachines kunnen geen suggesties tonen.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Verwijderen</string>
+  <string name="tip_disable_tracking_protection">Gedraagt een website zich onverwacht?\n Probeer Bescherming tegen volgen uit te schakelen</string>
+  <string name="tip_add_to_homescreen">"Toegang via één tik tot meestgebruikte websites\n        Menu &gt; Toevoegen aan startscherm"</string>
+  <string name="tip_set_default_browser">Alle koppelingen in %1$s openen\n Stel %1$s in als uw standaardbrowser</string>
+  <string name="tip_autocomplete_url">URL’s voor meestgebruikte websites automatisch aanvullen\n Houd uw vinger op een URL in de adresbalk</string>
+  <string name="tip_open_in_new_tab">Een koppeling in een nieuw tabblad openen\n Houd uw vinger op een koppeling op een pagina</string>
+  <string name="tip_request_desktop">"Ziet u liever de volledige desktopwebsite?\n    Menu &gt; Desktopwebsite opvragen"</string>
 </resources>
