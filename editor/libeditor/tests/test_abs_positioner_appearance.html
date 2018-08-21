@@ -78,6 +78,16 @@ SimpleTest.waitForFocus(async function() {
       is(target.hasAttribute("_moz_abspos"), kTest.movable,
          kDescription + (kTest.movable ? "While enableAbsolutePositionEditing is enabled, positioner should appear" :
                                          "Even while enableAbsolutePositionEditing is enabled, positioner shouldn't appear"));
+
+      document.execCommand("enableAbsolutePositionEditing", false, false);
+      ok(!target.hasAttribute("_moz_abspos"),
+         kDescription + "When enableAbsolutePositionEditing is disabled even while positioner is visible, positioner should disappear");
+
+      document.execCommand("enableAbsolutePositionEditing", false, true);
+      is(target.hasAttribute("_moz_abspos"), kTest.movable,
+         kDescription + (kTest.movable ?
+                           "When enableAbsolutePositionEditing is enabled when absolute positioned element is selected, positioner should appear" :
+                           "Even if enableAbsolutePositionEditing is enabled when static positioned element is selected, positioner shouldn't appear"));
     }
   }
 

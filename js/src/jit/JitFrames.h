@@ -190,6 +190,7 @@ class OsiIndex
 // [ frame size | has cached saved frame bit | frame header size | frame type ]
 // < highest - - - - - - - - - - - - - - lowest >
 static const uintptr_t FRAMETYPE_BITS = 4;
+static const uintptr_t FRAMETYPE_MASK = (1 << FRAMETYPE_BITS) - 1;
 static const uintptr_t FRAME_HEADER_SIZE_SHIFT = FRAMETYPE_BITS;
 static const uintptr_t FRAME_HEADER_SIZE_BITS = 3;
 static const uintptr_t FRAME_HEADER_SIZE_MASK = (1 << FRAME_HEADER_SIZE_BITS) - 1;
@@ -342,8 +343,6 @@ class CommonFrameLayout
     uint8_t* returnAddress_;
     uintptr_t descriptor_;
 
-    static const uintptr_t FrameTypeMask = (1 << FRAMETYPE_BITS) - 1;
-
   public:
     static size_t offsetOfDescriptor() {
         return offsetof(CommonFrameLayout, descriptor_);
@@ -355,10 +354,10 @@ class CommonFrameLayout
         return offsetof(CommonFrameLayout, returnAddress_);
     }
     FrameType prevType() const {
-        return FrameType(descriptor_ & FrameTypeMask);
+        return FrameType(descriptor_ & FRAMETYPE_MASK);
     }
     void changePrevType(FrameType type) {
-        descriptor_ &= ~FrameTypeMask;
+        descriptor_ &= ~FRAMETYPE_MASK;
         descriptor_ |= type;
     }
     size_t prevFrameLocalSize() const {

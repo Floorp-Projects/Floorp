@@ -4200,10 +4200,8 @@ EditorBase::EndUpdateViewBatch()
     return;
   }
 
-  DebugOnly<nsresult> rv =
-    htmlEditor->CheckSelectionStateForAnonymousButtons(selection);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-    "CheckSelectionStateForAnonymousButtons() failed");
+  DebugOnly<nsresult> rv = htmlEditor->RefereshEditingUI(*selection);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RefereshEditingUI() failed");
 }
 
 TextComposition*

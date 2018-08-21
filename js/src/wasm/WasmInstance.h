@@ -118,7 +118,7 @@ class Instance
 #endif
 
     // This method returns a pointer to the GC object that owns this Instance.
-    // Instances may be reached via weak edges (e.g., Compartment::instances_)
+    // Instances may be reached via weak edges (e.g., Realm::instances_)
     // so this perform a read-barrier on the returned object unless the barrier
     // is explicitly waived.
 

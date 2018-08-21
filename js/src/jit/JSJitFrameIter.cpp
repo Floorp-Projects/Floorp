@@ -93,7 +93,7 @@ JSJitFrameIter::callee() const
 JSFunction*
 JSJitFrameIter::maybeCallee() const
 {
-    if (isScripted() && (isFunctionFrame()))
+    if (isScripted() && isFunctionFrame())
         return callee();
     return nullptr;
 }

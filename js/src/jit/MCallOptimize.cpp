@@ -2656,7 +2656,7 @@ IonBuilder::inlineGuardToClass(CallInfo& callInfo, const Class* clasp)
     {
         return InliningStatus_NotInlined;
     }
-    
+
     TemporaryTypeSet* types = callInfo.getArg(0)->resultTypeSet();
     const Class* knownClass = types ? types->getKnownClass(constraints()) : nullptr;
 
