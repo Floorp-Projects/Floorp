@@ -304,22 +304,22 @@ js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
         if (!unit)
             return false;
 
-        if (StringEqualsAscii(unit, "second")) {
+        if (StringEqualsAscii(unit, "second") || StringEqualsAscii(unit, "seconds")) {
             relDateTimeUnit = UDAT_REL_UNIT_SECOND;
-        } else if (StringEqualsAscii(unit, "minute")) {
+        } else if (StringEqualsAscii(unit, "minute") || StringEqualsAscii(unit, "minutes")) {
             relDateTimeUnit = UDAT_REL_UNIT_MINUTE;
-        } else if (StringEqualsAscii(unit, "hour")) {
+        } else if (StringEqualsAscii(unit, "hour") || StringEqualsAscii(unit, "hours")) {
             relDateTimeUnit = UDAT_REL_UNIT_HOUR;
-        } else if (StringEqualsAscii(unit, "day")) {
+        } else if (StringEqualsAscii(unit, "day") || StringEqualsAscii(unit, "days")) {
             relDateTimeUnit = UDAT_REL_UNIT_DAY;
-        } else if (StringEqualsAscii(unit, "week")) {
+        } else if (StringEqualsAscii(unit, "week") || StringEqualsAscii(unit, "weeks")) {
             relDateTimeUnit = UDAT_REL_UNIT_WEEK;
-        } else if (StringEqualsAscii(unit, "month")) {
+        } else if (StringEqualsAscii(unit, "month") || StringEqualsAscii(unit, "months")) {
             relDateTimeUnit = UDAT_REL_UNIT_MONTH;
-        } else if (StringEqualsAscii(unit, "quarter")) {
+        } else if (StringEqualsAscii(unit, "quarter") || StringEqualsAscii(unit, "quarters")) {
             relDateTimeUnit = UDAT_REL_UNIT_QUARTER;
         } else {
-            MOZ_ASSERT(StringEqualsAscii(unit, "year"));
+            MOZ_ASSERT(StringEqualsAscii(unit, "year") || StringEqualsAscii(unit, "years"));
             relDateTimeUnit = UDAT_REL_UNIT_YEAR;
         }
     }
