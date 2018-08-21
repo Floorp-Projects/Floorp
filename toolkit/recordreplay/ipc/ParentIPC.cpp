@@ -187,6 +187,12 @@ Shutdown()
   _exit(0);
 }
 
+bool
+IsMiddlemanWithRecordingChild()
+{
+  return IsMiddleman() && gRecordingChild;
+}
+
 static ChildProcessInfo*
 OtherReplayingChild(ChildProcessInfo* aChild)
 {
