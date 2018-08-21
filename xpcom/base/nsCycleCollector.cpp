@@ -2728,7 +2728,9 @@ public:
   bool
   Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry)
   {
-    if (mBudget) {
+    // Ignore any slice budget we have when recording/replaying, as it behaves
+    // non-deterministically.
+    if (mBudget && !recordreplay::IsRecordingOrReplaying()) {
       if (mBudget->isOverBudget()) {
         return false;
       }
