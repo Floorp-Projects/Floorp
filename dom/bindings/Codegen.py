@@ -1604,13 +1604,8 @@ class CGAbstractMethod(CGThing):
         return "" if self.inline else self._define()
 
     def definition_prologue(self, fromDeclare):
-        prologue = "%s%s%s(%s)\n{\n" % (self._template(), self._decorators(),
-                                        self.name, self._argstring(fromDeclare))
-        profiler_label = self._auto_profiler_label()
-        if profiler_label:
-            prologue += "  %s\n\n" % profiler_label
-
-        return prologue
+        return "%s%s%s(%s)\n{\n" % (self._template(), self._decorators(),
+                                    self.name, self._argstring(fromDeclare))
 
     def definition_epilogue(self):
         return "}\n"
@@ -1618,12 +1613,6 @@ class CGAbstractMethod(CGThing):
     def definition_body(self):
         assert False  # Override me!
 
-    """
-    Override this method to return a pair of (descriptive string, name of a
-    JSContext* variable) in order to generate a profiler label for this method.
-    """
-    def profiler_label_and_jscontext(self):
-        return None # Override me!
 
 class CGAbstractStaticMethod(CGAbstractMethod):
     """
@@ -8615,11 +8604,6 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
         return CGMethodCall(nativeName, self.method.isStatic(), self.descriptor,
                             self.method).define()
 
-    def profiler_label_and_jscontext(self):
-        interface_name = self.descriptor.interface.identifier.name
-        method_name = self.method.identifier.name
-        return ("%s.%s" % (interface_name, method_name), "cx")
-
     @staticmethod
     def makeNativeName(descriptor, method):
         name = method.identifier.name
@@ -8982,11 +8966,6 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 cgGetterCall(self.attr.type, nativeName,
                              self.descriptor, self.attr).define())
 
-    def profiler_label_and_jscontext(self):
-        interface_name = self.descriptor.interface.identifier.name
-        attr_name = self.attr.identifier.name
-        return ("get %s.%s" % (interface_name, attr_name), "cx")
-
     @staticmethod
     def makeNativeName(descriptor, attr):
         name = attr.identifier.name
@@ -9072,11 +9051,6 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
         return CGSetterCall(self.attr.type, nativeName, self.descriptor,
                             self.attr).define()
 
-    def profiler_label_and_jscontext(self):
-        interface_name = self.descriptor.interface.identifier.name
-        attr_name = self.attr.identifier.name
-        return ("set %s.%s" % (interface_name, attr_name), "cx")
-
     @staticmethod
     def makeNativeName(descriptor, attr):
         name = attr.identifier.name
@@ -9105,11 +9079,6 @@ class CGStaticSetter(CGAbstractStaticBindingMethod):
         call = CGSetterCall(self.attr.type, nativeName, self.descriptor,
                             self.attr)
         return CGList([checkForArg, call])
-
-    def profiler_label(self):
-        interface_name = self.descriptor.interface.identifier.name
-        attr_name = self.attr.identifier.name
-        return "set %s.%s" % (interface_name, attr_name)
 
 
 class CGSpecializedForwardingSetter(CGSpecializedSetter):
@@ -13873,7 +13842,6 @@ class CGBindingRoot(CGThing):
             'mozilla/dom/BindingDeclarations.h',
             'mozilla/dom/Nullable.h',
             'mozilla/ErrorResult.h',
-            'GeckoProfiler.h'
             ),
             True)
 
