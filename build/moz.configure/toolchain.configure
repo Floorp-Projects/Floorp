@@ -1402,6 +1402,7 @@ def lto(value, pgo, c_compiler):
     )
 
 
+add_old_configure_assignment('MOZ_LTO', lto.enabled)
 set_config('MOZ_LTO', lto.enabled)
 set_define('MOZ_LTO', lto.enabled)
 set_config('MOZ_LTO_CFLAGS', lto.cflags)
