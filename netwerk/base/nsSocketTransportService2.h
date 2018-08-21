@@ -185,6 +185,10 @@ private:
         // or 0 (zero) when it has already timed out.  Returns NS_SOCKET_POLL_TIMEOUT
         // when there is no timeout set on the socket.
         PRIntervalTime TimeoutIn(PRIntervalTime now) const;
+        // When a socket timeout is reset and later set again, it may happen
+        // that mPollStartEpoch is not reset in between.  We have to manually
+        // call this on every iteration over sockets to ensure the epoch reset.
+        void MaybeResetEpoch();
     };
 
     SocketContext *mActiveList;                   /* mListSize entries */
