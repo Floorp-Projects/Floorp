@@ -10,9 +10,9 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 var toolbox, tab1, tab2;
 
 function test() {
-  addTab(TEST_URL).then(tab => {
+  addTab(TEST_URL).then(async (tab) => {
     tab2 = BrowserTestUtils.addTab(gBrowser);
-    const target = TargetFactory.forTab(tab);
+    const target = await TargetFactory.forTab(tab);
     gDevTools.showToolbox(target)
              .then(testBottomHost, console.error)
              .catch(console.error);
