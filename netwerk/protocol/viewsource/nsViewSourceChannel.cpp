@@ -834,10 +834,17 @@ nsViewSourceChannel::GetIsTrackingResource(bool* aIsTrackingResource)
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::OverrideTrackingResource(bool aIsTracking)
+nsViewSourceChannel::GetIsThirdPartyTrackingResource(bool* aIsTrackingResource)
 {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER :
-      mHttpChannel->OverrideTrackingResource(aIsTracking);
+      mHttpChannel->GetIsThirdPartyTrackingResource(aIsTrackingResource);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::OverrideTrackingFlagsForDocumentCookieAccessor(nsIHttpChannel* aDocumentChannel)
+{
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+      mHttpChannel->OverrideTrackingFlagsForDocumentCookieAccessor(aDocumentChannel);
 }
 
 NS_IMETHODIMP

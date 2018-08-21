@@ -65,7 +65,7 @@ protected:
 
   IPCResult RecvNotifyTrackingProtectionDisabled() override;
 
-  IPCResult RecvNotifyTrackingResource() override;
+  IPCResult RecvNotifyTrackingResource(const bool& aIsThirdParty) override;
 
   IPCResult RecvSetClassifierMatchedInfo(const ClassifierInfo& info) override;
 
