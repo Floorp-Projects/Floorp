@@ -1344,7 +1344,7 @@ nsSocketTransport::InitiateSocket()
         IsIPAddrLocal(&mNetAddr)) {
         if (SOCKET_LOG_ENABLED()) {
             nsAutoCString netAddrCString;
-            netAddrCString.SetCapacity(kIPv6CStrBufSize);
+            netAddrCString.SetLength(kIPv6CStrBufSize);
             if (!NetAddrToString(&mNetAddr,
                                  netAddrCString.BeginWriting(),
                                  kIPv6CStrBufSize))
