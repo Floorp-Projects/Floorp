@@ -4647,7 +4647,7 @@ BaselineCompiler::emit_JSOP_AWAIT()
     return emit_JSOP_YIELD();
 }
 
-typedef bool (*DebugAfterYieldFn)(JSContext*, BaselineFrame*, jsbytecode*, bool*);
+typedef bool (*DebugAfterYieldFn)(JSContext*, BaselineFrame*);
 static const VMFunction DebugAfterYieldInfo =
     FunctionInfo<DebugAfterYieldFn>(jit::DebugAfterYield, "DebugAfterYield");
 
@@ -4660,21 +4660,8 @@ BaselineCompiler::emit_JSOP_DEBUGAFTERYIELD()
     frame.assertSyncedStack();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
     prepareVMCall();
-    pushArg(ImmPtr(pc));
     pushArg(R0.scratchReg());
-    if (!callVM(DebugAfterYieldInfo))
-        return false;
-
-    icEntries_.back().setFakeKind(ICEntry::Kind_DebugAfterYield);
-
-    Label done;
-    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &done);
-    {
-        masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
-        masm.jump(&return_);
-    }
-    masm.bind(&done);
-    return true;
+    return callVM(DebugAfterYieldInfo);
 }
 
 typedef bool (*FinalSuspendFn)(JSContext*, HandleObject, jsbytecode*);
@@ -4706,7 +4693,7 @@ static const VMFunction InterpretResumeInfo =
 
 typedef bool (*GeneratorThrowFn)(JSContext*, BaselineFrame*, Handle<GeneratorObject*>,
                                  HandleValue, uint32_t);
-static const VMFunction GeneratorThrowOrReturnInfo =
+static const VMFunction GeneratorThrowInfo =
     FunctionInfo<GeneratorThrowFn>(jit::GeneratorThrowOrReturn, "GeneratorThrowOrReturn", TailCall);
 
 bool
@@ -4891,7 +4878,7 @@ BaselineCompiler::emit_JSOP_RESUME()
         pushArg(genObj);
         pushArg(scratch2);
 
-        TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(GeneratorThrowOrReturnInfo);
+        TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(GeneratorThrowInfo);
 
         // Create the frame descriptor.
         masm.subStackPtrFrom(scratch1);
