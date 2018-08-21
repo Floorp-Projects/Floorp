@@ -123,6 +123,22 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
     scoped_ptr<FilePrivate> file_private_;
   };
 
+  // An abstract base class for handlers that handle DWARF range lists for
+  // DwarfCUToModule.
+  class RangesHandler {
+   public:
+    RangesHandler() { }
+    virtual ~RangesHandler() { }
+
+    // Called when finishing a function to populate the function's ranges.
+    // The ranges' entries are read starting from offset in the .debug_ranges
+    // section, base_address holds the base PC the range list values are
+    // offsets off. Return false if the rangelist falls out of the
+    // .debug_ranges section.
+    virtual bool ReadRanges(uint64 offset, Module::Address base_address,
+                            vector<Module::Range>* ranges) = 0;
+  };
+
   // An abstract base class for handlers that handle DWARF line data
   // for DwarfCUToModule. DwarfCUToModule could certainly just use
   // dwarf2reader::LineInfo itself directly, but decoupling things
@@ -208,6 +224,14 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
     // FilePrivate did not retain the inter-CU specification data.
     virtual void UnhandledInterCUReference(uint64 offset, uint64 target);
 
+    // The DW_AT_ranges at offset is malformed (truncated or outside of the
+    // .debug_ranges section's bound).
+    virtual void MalformedRangeList(uint64 offset);
+
+    // A DW_AT_ranges attribute was encountered but the no .debug_ranges
+    // section was found.
+    virtual void MissingRanges();
+
     uint64 cu_offset() const {
       return cu_offset_;
     }
@@ -235,6 +259,7 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
   // data we find.
   DwarfCUToModule(FileContext *file_context,
                   LineToModuleHandler *line_reader,
+                  RangesHandler *ranges_handler,
                   WarningReporter *reporter);
   ~DwarfCUToModule();
 

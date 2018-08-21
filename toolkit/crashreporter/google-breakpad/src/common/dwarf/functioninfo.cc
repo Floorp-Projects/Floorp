@@ -184,6 +184,9 @@ void CUFunctionInfoHandler::ProcessAttributeUnsigned(uint64 offset,
       case DW_AT_decl_file:
         current_function_info_->file = files_->at(data).name;
         break;
+      case DW_AT_ranges:
+        current_function_info_->ranges = data;
+        break;
       default:
         break;
     }

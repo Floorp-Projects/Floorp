@@ -117,6 +117,14 @@ MP4Decoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
       tracks.AppendElement(std::move(trackInfo));
       continue;
     }
+#ifdef MOZ_AV1
+    if (IsAV1CodecString(codec)) {
+      tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+          NS_LITERAL_CSTRING("video/") + NS_ConvertUTF16toUTF8(codec), aType));
+      continue;
+    }
+#endif
     if (isVideo && IsWhitelistedH264Codec(codec)) {
       auto trackInfo =
         CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(

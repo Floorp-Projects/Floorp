@@ -39,9 +39,7 @@ add_task(async function() {
   });
 
   info("Expand the last node");
-  const view = lastNode.ownerDocument.defaultView;
-  EventUtils.synthesizeMouseAtCenter(lastNode, {}, view);
-
+  lastNode.click();
   await onOiMutation;
 
   is(scrollTop, outputContainer.scrollTop,

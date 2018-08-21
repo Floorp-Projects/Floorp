@@ -55,7 +55,8 @@ static Module::Function *generate_duplicate_function(const string &name) {
   const Module::Address DUP_PARAMETER_SIZE = 0xf14ac4fed48c4a99LL;
 
   Module::Function *function = new Module::Function(name, DUP_ADDRESS);
-  function->size = DUP_SIZE;
+  Module::Range range(DUP_ADDRESS, DUP_SIZE);
+  function->ranges.push_back(range);
   function->parameter_size = DUP_PARAMETER_SIZE;
   return function;
 }
@@ -92,7 +93,8 @@ TEST(Write, OneLineFunc) {
   Module::File *file = m.FindFile("file_name.cc");
   Module::Function *function = new Module::Function(
       "function_name", 0xe165bf8023b9d9abLL);
-  function->size = 0x1e4bb0eb1cbf5b09LL;
+  Module::Range range(0xe165bf8023b9d9abLL, 0x1e4bb0eb1cbf5b09LL);
+  function->ranges.push_back(range);
   function->parameter_size = 0x772beee89114358aLL;
   Module::Line line = { 0xe165bf8023b9d9abLL, 0x1e4bb0eb1cbf5b09LL,
                         file, 67519080 };
@@ -120,7 +122,8 @@ TEST(Write, RelativeLoadAddress) {
   // A function.
   Module::Function *function = new Module::Function(
       "A_FLIBBERTIJIBBET::a_will_o_the_wisp(a clown)", 0xbec774ea5dd935f3LL);
-  function->size = 0x2922088f98d3f6fcLL;
+  Module::Range range(0xbec774ea5dd935f3LL, 0x2922088f98d3f6fcLL);
+  function->ranges.push_back(range);
   function->parameter_size = 0xe5e9aa008bd5f0d0LL;
 
   // Some source lines.  The module should not sort these.
@@ -177,13 +180,14 @@ TEST(Write, OmitUnusedFiles) {
   // Create a function.
   Module::Function *function = new Module::Function(
       "function_name", 0x9b926d464f0b9384LL);
-  function->size = 0x4f524a4ba795e6a6LL;
+  Module::Range range(0x9b926d464f0b9384LL, 0x4f524a4ba795e6a6LL);
+  function->ranges.push_back(range);
   function->parameter_size = 0xbbe8133a6641c9b7LL;
 
   // Source files that refer to some files, but not others.
-  Module::Line line1 = { 0x595fa44ebacc1086LL, 0x1e1e0191b066c5b3LL,
+  Module::Line line1 = { 0xab415089485e1a20LL, 0x126e3124979291f2LL,
                          file1, 137850127 };
-  Module::Line line2 = { 0x401ce8c8a12d25e3LL, 0x895751c41b8d2ce2LL,
+  Module::Line line2 = { 0xb2675b5c3c2ed33fLL, 0x1df77f5551dbd68cLL,
                          file3, 28113549 };
   function->lines.push_back(line1);
   function->lines.push_back(line2);
@@ -210,8 +214,8 @@ TEST(Write, OmitUnusedFiles) {
                "FILE 1 filename3\n"
                "FUNC 9b926d464f0b9384 4f524a4ba795e6a6 bbe8133a6641c9b7"
                " function_name\n"
-               "595fa44ebacc1086 1e1e0191b066c5b3 137850127 0\n"
-               "401ce8c8a12d25e3 895751c41b8d2ce2 28113549 1\n",
+               "ab415089485e1a20 126e3124979291f2 137850127 0\n"
+               "b2675b5c3c2ed33f 1df77f5551dbd68c 28113549 1\n",
                contents.c_str());
 }
 
@@ -225,7 +229,8 @@ TEST(Write, NoCFI) {
   // A function.
   Module::Function *function = new Module::Function(
       "A_FLIBBERTIJIBBET::a_will_o_the_wisp(a clown)", 0xbec774ea5dd935f3LL);
-  function->size = 0x2922088f98d3f6fcLL;
+  Module::Range range(0xbec774ea5dd935f3LL, 0x2922088f98d3f6fcLL);
+  function->ranges.push_back(range);
   function->parameter_size = 0xe5e9aa008bd5f0d0LL;
 
   // Some source lines.  The module should not sort these.
@@ -267,12 +272,14 @@ TEST(Construct, AddFunctions) {
   // Two functions.
   Module::Function *function1 = new Module::Function(
       "_without_form", 0xd35024aa7ca7da5cLL);
-  function1->size = 0x200b26e605f99071LL;
+  Module::Range r1(0xd35024aa7ca7da5cLL, 0x200b26e605f99071LL);
+  function1->ranges.push_back(r1);
   function1->parameter_size = 0xf14ac4fed48c4a99LL;
 
   Module::Function *function2 = new Module::Function(
       "_and_void", 0x2987743d0b35b13fLL);
-  function2->size = 0xb369db048deb3010LL;
+  Module::Range r2(0x2987743d0b35b13fLL, 0xb369db048deb3010LL);
+  function2->ranges.push_back(r2);
   function2->parameter_size = 0x938e556cb5a79988LL;
 
   // Put them in a vector.
@@ -504,7 +511,8 @@ TEST(Construct, FunctionsAndExternsWithSameAddress) {
   m.AddExtern(extern2);
 
   Module::Function* function = new Module::Function("_xyz", 0xfff0);
-  function->size = 0x10;
+  Module::Range range(0xfff0, 0x10);
+  function->ranges.push_back(range);
   function->parameter_size = 0;
   m.AddFunction(function);
 
@@ -541,7 +549,8 @@ TEST(Construct, FunctionsAndThumbExternsWithSameAddress) {
   // The corresponding function from the DWARF debug data have the actual
   // address.
   Module::Function* function = new Module::Function("_thumb_xyz", 0xfff0);
-  function->size = 0x10;
+  Module::Range range(0xfff0, 0x10);
+  function->ranges.push_back(range);
   function->parameter_size = 0;
   m.AddFunction(function);
 

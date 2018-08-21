@@ -53,6 +53,29 @@ class ShadowRoot;
 class SRIMetadata;
 } // namespace dom
 
+enum class StyleSheetState : uint8_t
+{
+  // Whether the sheet is disabled. Sheets can be made disabled via CSSOM, or
+  // via alternate links and such.
+  Disabled = 1 << 0,
+  // Whether the sheet is complete. The sheet is complete if it's finished
+  // loading. See StyleSheet::SetComplete.
+  Complete = 1 << 1,
+  // Whether we've forced a unique inner. StyleSheet objects share an 'inner'
+  // StyleSheetInfo object if they share URL, CORS mode, etc.
+  //
+  // See the Loader's `mCompleteSheets` and `mLoadingSheets`.
+  ForcedUniqueInner = 1 << 2,
+  // Whether this stylesheet has suffered any modification to the rules via
+  // CSSOM.
+  //
+  // FIXME(emilio): I think as of right now we also set this flag for normal
+  // @import rules, which looks very fishy.
+  ModifiedRules = 1 << 3,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StyleSheetState)
+
 class StyleSheet final : public nsICSSLoaderObserver
                        , public nsWrapperCache
 {
@@ -63,6 +86,8 @@ class StyleSheet final : public nsICSSLoaderObserver
              nsINode* aOwningNodeToUse);
 
   virtual ~StyleSheet();
+
+  using State = StyleSheetState;
 
 public:
   StyleSheet(css::SheetParsingMode aParsingMode,
@@ -149,19 +174,17 @@ public:
   /**
    * Whether the sheet is complete.
    */
-  bool IsComplete() const;
+  bool IsComplete() const
+  {
+    return bool(mState & State::Complete);
+  }
+
   void SetComplete();
 
-  /**
-   * Set the stylesheet to be enabled.  This may or may not make it
-   * applicable.  Note that this WILL inform the sheet's document of
-   * its new applicable state if the state changes but WILL NOT call
-   * BeginUpdate() or EndUpdate() on the document -- calling those is
-   * the caller's responsibility.  This allows use of SetEnabled when
-   * batched updates are desired.  If you want updates handled for
-   * you, see SetDisabled().
-   */
-  void SetEnabled(bool aEnabled);
+  void SetEnabled(bool aEnabled)
+  {
+    SetDisabled(!aEnabled);
+  }
 
   // Whether the sheet is for an inline <style> element.
   bool IsInline() const
@@ -206,7 +229,7 @@ public:
    */
   bool IsApplicable() const
   {
-    return !mDisabled && Inner().mComplete;
+    return !Disabled() && IsComplete();
   }
 
   already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
@@ -216,17 +239,17 @@ public:
 
   bool HasForcedUniqueInner() const
   {
-    return mDirtyFlags & FORCED_UNIQUE_INNER;
+    return bool(mState & State::ForcedUniqueInner);
   }
 
   bool HasModifiedRules() const
   {
-    return mDirtyFlags & MODIFIED_RULES;
+    return bool(mState & State::ModifiedRules);
   }
 
   void ClearModifiedRules()
   {
-    mDirtyFlags &= ~MODIFIED_RULES;
+    mState &= ~State::ModifiedRules;
   }
 
   bool HasUniqueInner() const
@@ -366,7 +389,10 @@ public:
   }
   void GetTitle(nsAString& aTitle);
   dom::MediaList* Media();
-  bool Disabled() const { return mDisabled; }
+  bool Disabled() const
+  {
+    return bool(mState & State::Disabled);
+  }
   void SetDisabled(bool aDisabled);
   void GetSourceMapURL(nsAString& aTitle);
   void SetSourceMapURL(const nsAString& aSourceMapURL);
@@ -511,15 +537,12 @@ protected:
   // mParsingMode controls access to nonstandard style constructs that
   // are not safe for use on the public Web but necessary in UA sheets
   // and/or useful in user sheets.
+  //
+  // FIXME(emilio): Given we store the parsed contents in the Inner, this should
+  // probably also move there.
   css::SheetParsingMode mParsingMode;
 
-  bool mDisabled;
-
-  enum dirtyFlagAttributes {
-    FORCED_UNIQUE_INNER = 0x1,
-    MODIFIED_RULES = 0x2,
-  };
-  uint8_t mDirtyFlags; // has been modified
+  State mState;
 
   // mAssociationMode determines whether mDocumentOrShadowRoot directly owns us
   // (in the sense that if it's known-live then we're known-live).
@@ -530,7 +553,7 @@ protected:
   // Core information we get from parsed sheets, which are shared amongst
   // StyleSheet clones.
   //
-  // FIXME(emilio): Should be NonNull.
+  // Always nonnull until LastRelease().
   StyleSheetInfo* mInner;
 
   nsTArray<ServoStyleSet*> mStyleSets;

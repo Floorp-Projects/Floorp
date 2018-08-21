@@ -27,6 +27,7 @@ UNIFIED_SOURCES += [
     'basic_source_line_resolver.cc',
     'call_stack.cc',
     'cfi_frame_info.cc',
+    'convert_old_arm64_context.cc',
     'dump_context.cc',
     'dump_object.cc',
     'exploitability.cc',
