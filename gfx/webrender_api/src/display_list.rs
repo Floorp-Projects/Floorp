@@ -1062,6 +1062,7 @@ impl DisplayListBuilder {
         image_rendering: ImageRendering,
         alpha_type: AlphaType,
         key: ImageKey,
+        color: ColorF,
     ) {
         let item = SpecificDisplayItem::Image(ImageDisplayItem {
             image_key: key,
@@ -1069,6 +1070,7 @@ impl DisplayListBuilder {
             tile_spacing,
             image_rendering,
             alpha_type,
+            color,
         });
 
         self.push_item(item, info);

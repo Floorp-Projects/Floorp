@@ -248,6 +248,7 @@ pub enum ShaderColorMode {
     SubpixelDualSource = 6,
     Bitmap = 7,
     ColorBitmap = 8,
+    Image = 9,
 }
 
 impl From<GlyphFormat> for ShaderColorMode {

@@ -351,7 +351,11 @@ impl RenderTarget for ColorRenderTarget {
 
                     let (target_rect, _) = task.get_target_rect();
 
-                    let mut batch_builder = AlphaBatchBuilder::new(self.screen_size, target_rect);
+                    let mut batch_builder = AlphaBatchBuilder::new(
+                        self.screen_size,
+                        target_rect,
+                        pic_task.can_merge,
+                    );
 
                     batch_builder.add_pic_to_batch(
                         pic,
@@ -845,7 +849,6 @@ impl RenderPass {
                                 None
                             }
                             RenderTaskLocation::Dynamic(ref mut origin, size) => {
-                                let size = size.expect("bug: size must be assigned by now");
                                 let alloc_size = DeviceUintSize::new(size.width as u32, size.height as u32);
                                 let (alloc_origin, target_index) =  match target_kind {
                                     RenderTargetKind::Color => color.allocate(alloc_size),

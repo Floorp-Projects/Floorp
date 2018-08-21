@@ -263,7 +263,6 @@ impl OpaqueBatchList {
 pub struct BatchList {
     pub alpha_batch_list: AlphaBatchList,
     pub opaque_batch_list: OpaqueBatchList,
-    pub combined_bounding_rect: DeviceIntRect,
 }
 
 impl BatchList {
@@ -275,15 +274,7 @@ impl BatchList {
         BatchList {
             alpha_batch_list: AlphaBatchList::new(),
             opaque_batch_list: OpaqueBatchList::new(batch_area_threshold),
-            combined_bounding_rect: DeviceIntRect::zero(),
         }
-    }
-
-    fn add_bounding_rect(
-        &mut self,
-        task_relative_bounding_rect: &DeviceIntRect,
-    ) {
-        self.combined_bounding_rect = self.combined_bounding_rect.union(task_relative_bounding_rect);
     }
 
     pub fn get_suitable_batch(
@@ -291,8 +282,6 @@ impl BatchList {
         key: BatchKey,
         task_relative_bounding_rect: &DeviceIntRect,
     ) -> &mut Vec<PrimitiveInstance> {
-        self.add_bounding_rect(task_relative_bounding_rect);
-
         match key.blend_mode {
             BlendMode::None => {
                 self.opaque_batch_list
@@ -409,31 +398,27 @@ pub struct AlphaBatchBuilder {
     pub batch_list: BatchList,
     glyph_fetch_buffer: Vec<GlyphFetchResult>,
     target_rect: DeviceIntRect,
+    can_merge: bool,
 }
 
 impl AlphaBatchBuilder {
     pub fn new(
         screen_size: DeviceIntSize,
         target_rect: DeviceIntRect,
+        can_merge: bool,
     ) -> Self {
         AlphaBatchBuilder {
             batch_list: BatchList::new(screen_size),
             glyph_fetch_buffer: Vec::new(),
             target_rect,
+            can_merge,
         }
     }
 
     pub fn build(mut self, merged_batches: &mut AlphaBatchContainer) -> Option<AlphaBatchContainer> {
         self.batch_list.finalize();
 
-        let task_relative_target_rect = DeviceIntRect::new(
-            DeviceIntPoint::zero(),
-            self.target_rect.size,
-        );
-
-        let can_merge = task_relative_target_rect.contains_rect(&self.batch_list.combined_bounding_rect);
-
-        if can_merge {
+        if self.can_merge {
             merged_batches.merge(self);
             None
         } else {
@@ -473,12 +458,8 @@ impl AlphaBatchBuilder {
 
         // Add each run in this picture to the batch.
         for run in &pic.runs {
-            let transform_id = ctx
-                .transforms
-                .get_id(run.spatial_node_index);
             self.add_run_to_batch(
                 run,
-                transform_id,
                 ctx,
                 gpu_cache,
                 render_tasks,
@@ -540,7 +521,6 @@ impl AlphaBatchBuilder {
     fn add_run_to_batch(
         &mut self,
         run: &PrimitiveRun,
-        transform_id: TransformPaletteId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
         render_tasks: &RenderTaskTree,
@@ -556,6 +536,10 @@ impl AlphaBatchBuilder {
             let metadata = &ctx.prim_store.primitives[prim_index.0].metadata;
 
             if metadata.screen_rect.is_some() {
+                let transform_id = ctx
+                    .transforms
+                    .get_id(metadata.spatial_node_index);
+
                 self.add_prim_to_batch(
                     transform_id,
                     prim_index,
@@ -670,12 +654,12 @@ impl AlphaBatchBuilder {
                             // Push into parent plane splitter.
                             debug_assert!(picture.surface.is_some());
                             let transform = &ctx.transforms
-                                .get_transform(picture.original_spatial_node_index);
+                                .get_transform_by_id(transform_id);
 
                             match transform.transform_kind {
                                 TransformedRectKind::AxisAligned => {
                                     let polygon = Polygon::from_transformed_rect(
-                                        picture.real_local_rect.cast(),
+                                        prim_metadata.local_rect.cast(),
                                         transform.m.cast(),
                                         prim_index.0,
                                     ).unwrap();
@@ -686,7 +670,7 @@ impl AlphaBatchBuilder {
                                     let bounds = (screen_rect.clipped.to_f32() / ctx.device_pixel_scale).to_f64();
                                     let matrix = transform.m.cast();
                                     let results = clipper.clip_transformed(
-                                        Polygon::from_rect(picture.real_local_rect.cast(), prim_index.0),
+                                        Polygon::from_rect(prim_metadata.local_rect.cast(), prim_index.0),
                                         &matrix,
                                         Some(bounds),
                                     );
@@ -723,7 +707,7 @@ impl AlphaBatchBuilder {
                                                 let batch = self.batch_list.get_suitable_batch(key, &task_relative_bounding_rect);
                                                 let prim_header_index = prim_headers.push(&prim_header, [
                                                     uv_rect_address.as_int(),
-                                                    (ShaderColorMode::ColorBitmap as i32) << 16 |
+                                                    (ShaderColorMode::Image as i32) << 16 |
                                                     RasterizationSpace::Screen as i32,
                                                     0,
                                                 ]);
@@ -786,7 +770,7 @@ impl AlphaBatchBuilder {
 
                                             let content_prim_header_index = prim_headers.push(&prim_header, [
                                                 content_uv_rect_address,
-                                                (ShaderColorMode::ColorBitmap as i32) << 16 |
+                                                (ShaderColorMode::Image as i32) << 16 |
                                                 RasterizationSpace::Screen as i32,
                                                 0,
                                             ]);
@@ -971,7 +955,7 @@ impl AlphaBatchBuilder {
                                     .as_int();
                                 let prim_header_index = prim_headers.push(&prim_header, [
                                     uv_rect_address,
-                                    (ShaderColorMode::ColorBitmap as i32) << 16 |
+                                    (ShaderColorMode::Image as i32) << 16 |
                                     RasterizationSpace::Screen as i32,
                                     0,
                                 ]);
@@ -1203,8 +1187,6 @@ impl AlphaBatchBuilder {
             brush_flags: BrushFlags::PERSPECTIVE_INTERPOLATION,
         };
 
-        self.batch_list.add_bounding_rect(task_relative_bounding_rect);
-
         let batch_key = BatchKey {
             blend_mode,
             kind: BatchKind::Brush(batch_kind),
@@ -1235,8 +1217,6 @@ impl AlphaBatchBuilder {
             edge_flags: EdgeAaSegmentMask::all(),
             brush_flags: BrushFlags::PERSPECTIVE_INTERPOLATION,
         };
-
-        self.batch_list.add_bounding_rect(task_relative_bounding_rect);
 
         match brush.segment_desc {
             Some(ref segment_desc) => {
@@ -1317,7 +1297,6 @@ fn add_gradient_tiles(
     base_prim_header: &PrimitiveHeader,
     prim_headers: &mut PrimitiveHeaders,
 ) {
-    batch_list.add_bounding_rect(task_relative_bounding_rect);
     let batch = batch_list.get_suitable_batch(
         BatchKey {
             blend_mode: blend_mode,
@@ -1373,7 +1352,7 @@ fn get_image_tile_params(
             textures,
             [
                 cache_item.uv_rect_handle.as_int(gpu_cache),
-                (ShaderColorMode::ColorBitmap as i32) << 16 |
+                (ShaderColorMode::Image as i32) << 16 |
                      RasterizationSpace::Local as i32,
                 0,
             ],
@@ -1423,7 +1402,7 @@ impl BrushPrimitive {
                         textures,
                         [
                             cache_item.uv_rect_handle.as_int(gpu_cache),
-                            (ShaderColorMode::ColorBitmap as i32) << 16|
+                            (ShaderColorMode::Image as i32) << 16|
                              RasterizationSpace::Local as i32,
                             0,
                         ],
@@ -1461,7 +1440,7 @@ impl BrushPrimitive {
                         textures,
                         [
                             cache_item.uv_rect_handle.as_int(gpu_cache),
-                            (ShaderColorMode::ColorBitmap as i32) << 16|
+                            (ShaderColorMode::Image as i32) << 16|
                              RasterizationSpace::Local as i32,
                             0,
                         ],
