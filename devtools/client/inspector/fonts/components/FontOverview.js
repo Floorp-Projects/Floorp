@@ -43,29 +43,6 @@ class FontOverview extends PureComponent {
     } = this.props;
     const { fonts } = fontData;
 
-    // If the font editor is enabled, show the fonts in a collapsed accordion.
-    // The editor already displays fonts, in another way, rendering twice is not desired.
-    if (Services.prefs.getBoolPref(PREF_FONT_EDITOR)) {
-      return fonts.length ?
-        Accordion({
-          items: [
-            {
-              header: getStr("fontinspector.renderedFontsInPageHeader"),
-              component: FontList,
-              componentProps: {
-                fonts,
-                fontOptions,
-                onPreviewFonts,
-                onToggleFontHighlight,
-              },
-              opened: false
-            }
-          ]
-        })
-        :
-        null;
-    }
-
     return fonts.length ?
       FontList({
         fonts,
@@ -82,26 +59,33 @@ class FontOverview extends PureComponent {
       );
   }
 
-  renderOtherFonts() {
+  renderFonts() {
     const {
       fontData,
       fontOptions,
       onPreviewFonts,
     } = this.props;
-    const { otherFonts } = fontData;
 
-    if (!otherFonts.length) {
+    const header = Services.prefs.getBoolPref(PREF_FONT_EDITOR)
+      ? getStr("fontinspector.allFontsOnPageHeader")
+      : getStr("fontinspector.otherFontsInPageHeader");
+
+    const fonts = Services.prefs.getBoolPref(PREF_FONT_EDITOR)
+      ? fontData.allFonts
+      : fontData.otherFonts;
+
+    if (!fonts.length) {
       return null;
     }
 
     return Accordion({
       items: [
         {
-          header: getStr("fontinspector.otherFontsInPageHeader"),
+          header,
           component: FontList,
           componentProps: {
             fontOptions,
-            fonts: otherFonts,
+            fonts,
             onPreviewFonts,
             onToggleFontHighlight: this.onToggleFontHighlightGlobal
           },
@@ -116,8 +100,9 @@ class FontOverview extends PureComponent {
       {
         id: "font-container",
       },
-      this.renderElementFonts(),
-      this.renderOtherFonts()
+      // Render element fonts only when the Font Editor is not enabled.
+      !Services.prefs.getBoolPref(PREF_FONT_EDITOR) && this.renderElementFonts(),
+      this.renderFonts()
     );
   }
 }

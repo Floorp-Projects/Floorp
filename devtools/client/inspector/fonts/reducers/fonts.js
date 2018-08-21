@@ -9,14 +9,18 @@ const {
 } = require("../actions/index");
 
 const INITIAL_FONT_DATA = {
+  // All fonts on the current page.
+  allFonts: [],
+  // Fonts used on the selected element.
   fonts: [],
-  otherFonts: []
+  // Fonts on the current page not used on the selected element.
+  otherFonts: [],
 };
 
 const reducers = {
 
-  [UPDATE_FONTS](_, { fonts, otherFonts }) {
-    return { fonts, otherFonts };
+  [UPDATE_FONTS](_, { fonts, otherFonts, allFonts }) {
+    return { fonts, otherFonts, allFonts };
   },
 
 };
