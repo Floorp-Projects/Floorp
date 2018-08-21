@@ -18,7 +18,7 @@ import kotlinx.coroutines.experimental.launch
 class SystemEngineSession : EngineSession() {
     internal var view: WeakReference<SystemEngineView>? = null
     internal var scheduledLoad = ScheduledLoad(null)
-    internal var trackingProtectionEnabled = false
+    @Volatile internal var trackingProtectionEnabled = false
 
     /**
      * See [EngineSession.loadUrl]

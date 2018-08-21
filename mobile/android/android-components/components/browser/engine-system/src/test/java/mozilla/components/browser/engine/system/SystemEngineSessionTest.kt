@@ -3,8 +3,8 @@ package mozilla.components.browser.engine.system
 import android.os.Bundle
 import android.webkit.WebView
 import kotlinx.coroutines.experimental.runBlocking
+import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.support.utils.matcher.UrlMatcher
 import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

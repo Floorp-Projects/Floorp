@@ -8,10 +8,10 @@ import android.net.Uri
 import android.net.http.SslCertificate
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
-import mozilla.components.support.utils.matcher.UrlMatcher
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
