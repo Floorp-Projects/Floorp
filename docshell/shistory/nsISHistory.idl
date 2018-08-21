@@ -7,7 +7,6 @@
 
 interface nsISHEntry;
 interface nsISHistoryListener;
-interface nsISimpleEnumerator;
 
 /**
  * An interface to the primary properties of the Session History
@@ -131,29 +130,6 @@ interface nsISHistory: nsISupports
    * @see nsSupportsWeakReference
    */ 
    void removeSHistoryListener(in nsISHistoryListener aListener);
-
-  /**
-   * Called to obtain a enumerator for all the  documents stored in
-   * session history. The enumerator object thus returned by this method
-   * can be traversed using nsISimpleEnumerator. 
-   *
-   * @note  To access individual history entries of the enumerator, perform the
-   *        following steps:
-   *        1) Call nsISHistory->GetSHistoryEnumerator() to obtain handle 
-   *           the nsISimpleEnumerator object.
-   *        2) Use nsISimpleEnumerator->GetNext() on the object returned
-   *           by step #1 to obtain handle to the next object in the list. 
-   *           The object returned by this step is of type nsISupports.
-   *        3) Perform a QueryInterface on the object returned by step #2 
-   *           to nsISHEntry.
-   *        4) Use nsISHEntry to access properties of each history entry. 
-   *
-   * @see nsISimpleEnumerator
-   * @see nsISHEntry
-   * @see QueryInterface()
-   * @see do_QueryInterface()
-   */
-   readonly attribute nsISimpleEnumerator SHistoryEnumerator;
 
    void reloadCurrentEntry();
 
