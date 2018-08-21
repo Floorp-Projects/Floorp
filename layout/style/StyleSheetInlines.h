@@ -18,9 +18,9 @@ StyleSheet::SetURIs(nsIURI* aSheetURI,
                     nsIURI* aBaseURI)
 {
   MOZ_ASSERT(aSheetURI && aBaseURI, "null ptr");
-  StyleSheetInfo& info = Inner();
-  MOZ_ASSERT(!HasRules() && !info.mComplete,
+  MOZ_ASSERT(!HasRules() && !IsComplete(),
              "Can't call SetURIs on sheets that are complete or have rules");
+  StyleSheetInfo& info = Inner();
   info.mSheetURI = aSheetURI;
   info.mOriginalSheetURI = aOriginalSheetURI;
   info.mBaseURI = aBaseURI;

@@ -37,8 +37,7 @@ StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode,
   , mOwningNode(nullptr)
   , mOwnerRule(nullptr)
   , mParsingMode(aParsingMode)
-  , mDisabled(false)
-  , mDirtyFlags(0)
+  , mState(static_cast<State>(0))
   , mAssociationMode(NotOwnedByDocumentOrShadowRoot)
   , mInner(new StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity, aParsingMode))
 {
@@ -56,8 +55,7 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   , mOwningNode(aOwningNodeToUse)
   , mOwnerRule(aOwnerRuleToUse)
   , mParsingMode(aCopy.mParsingMode)
-  , mDisabled(aCopy.mDisabled)
-  , mDirtyFlags(aCopy.mDirtyFlags)
+  , mState(aCopy.mState)
   // We only use this constructor during cloning.  It's the cloner's
   // responsibility to notify us if we end up being owned by a document.
   , mAssociationMode(NotOwnedByDocumentOrShadowRoot)
@@ -67,8 +65,8 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   mInner->AddSheet(this);
 
   if (HasForcedUniqueInner()) { // CSSOM's been there, force full copy now
-    NS_ASSERTION(mInner->mComplete,
-                 "Why have rules been accessed on an incomplete sheet?");
+    MOZ_ASSERT(IsComplete(),
+               "Why have rules been accessed on an incomplete sheet?");
     // FIXME: handle failure?
     EnsureUniqueInner();
   }
@@ -234,20 +232,14 @@ StyleSheet::ParsingModeDOM()
   return static_cast<mozilla::dom::CSSStyleSheetParsingMode>(mParsingMode);
 }
 
-bool
-StyleSheet::IsComplete() const
-{
-  return Inner().mComplete;
-}
-
 void
 StyleSheet::SetComplete()
 {
-  NS_ASSERTION(!HasForcedUniqueInner(),
-               "Can't complete a sheet that's already been forced "
-               "unique.");
-  Inner().mComplete = true;
-  if (!mDisabled) {
+  MOZ_ASSERT(!HasForcedUniqueInner(),
+             "Can't complete a sheet that's already been forced unique.");
+  MOZ_ASSERT(!IsComplete(), "Already complete?");
+  mState |= State::Complete;
+  if (!Disabled()) {
     ApplicableStateChanged(true);
   }
 }
@@ -268,14 +260,20 @@ StyleSheet::ApplicableStateChanged(bool aApplicable)
 }
 
 void
-StyleSheet::SetEnabled(bool aEnabled)
+StyleSheet::SetDisabled(bool aDisabled)
 {
-  // Internal method, so callers must handle BeginUpdate/EndUpdate
-  bool oldDisabled = mDisabled;
-  mDisabled = !aEnabled;
+  if (aDisabled == Disabled()) {
+    return;
+  }
 
-  if (IsComplete() && oldDisabled != mDisabled) {
-    ApplicableStateChanged(!mDisabled);
+  if (aDisabled) {
+    mState |= State::Disabled;
+  } else {
+    mState &= ~State::Disabled;
+  }
+
+  if (IsComplete()) {
+    ApplicableStateChanged(!aDisabled);
   }
 }
 
@@ -287,7 +285,6 @@ StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
   , mCORSMode(aCORSMode)
   , mReferrerPolicy(aReferrerPolicy)
   , mIntegrity(aIntegrity)
-  , mComplete(false)
   , mContents(Servo_StyleSheet_Empty(aParsingMode).Consume())
   , mURLData(URLExtraData::Dummy())
 #ifdef DEBUG
@@ -308,7 +305,6 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy, StyleSheet* aPrimarySheet)
   , mCORSMode(aCopy.mCORSMode)
   , mReferrerPolicy(aCopy.mReferrerPolicy)
   , mIntegrity(aCopy.mIntegrity)
-  , mComplete(aCopy.mComplete)
   , mFirstChild()  // We don't rebuild the child because we're making a copy
                    // without children.
   , mSourceMapURL(aCopy.mSourceMapURL)
@@ -399,12 +395,6 @@ StyleSheet::GetType(nsAString& aType)
 }
 
 void
-StyleSheet::SetDisabled(bool aDisabled)
-{
-  SetEnabled(!aDisabled);
-}
-
-void
 StyleSheet::GetHref(nsAString& aHref, ErrorResult& aRv)
 {
   if (nsIURI* sheetURI = Inner().mOriginalSheetURI) {
@@ -438,7 +428,7 @@ StyleSheet::GetTitle(nsAString& aTitle)
 void
 StyleSheet::WillDirty()
 {
-  if (mInner->mComplete) {
+  if (IsComplete()) {
     EnsureUniqueInner();
   }
 }
@@ -463,7 +453,7 @@ StyleSheet::EnsureUniqueInner()
 {
   MOZ_ASSERT(mInner->mSheets.Length() != 0,
              "unexpected number of outers");
-  mDirtyFlags |= FORCED_UNIQUE_INNER;
+  mState |= State::ForcedUniqueInner;
 
   if (HasUniqueInner()) {
     // already unique
@@ -499,8 +489,7 @@ StyleSheet::AppendAllChildSheets(nsTArray<StyleSheet*>& aArray)
 // WebIDL CSSStyleSheet API
 
 dom::CSSRuleList*
-StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
-                        ErrorResult& aRv)
+StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
 {
   if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return nullptr;
@@ -620,7 +609,7 @@ StyleSheet::GetContainingShadow() const
 void
 StyleSheet::RuleAdded(css::Rule& aRule)
 {
-  mDirtyFlags |= MODIFIED_RULES;
+  mState |= State::ModifiedRules;
   NOTIFY(RuleAdded, (*this, aRule));
 
   if (nsIDocument* doc = GetComposedDoc()) {
@@ -631,7 +620,7 @@ StyleSheet::RuleAdded(css::Rule& aRule)
 void
 StyleSheet::RuleRemoved(css::Rule& aRule)
 {
-  mDirtyFlags |= MODIFIED_RULES;
+  mState |= State::ModifiedRules;
   NOTIFY(RuleRemoved, (*this, aRule));
 
   if (nsIDocument* doc = GetComposedDoc()) {
@@ -642,7 +631,7 @@ StyleSheet::RuleRemoved(css::Rule& aRule)
 void
 StyleSheet::RuleChanged(css::Rule* aRule)
 {
-  mDirtyFlags |= MODIFIED_RULES;
+  mState |= State::ModifiedRules;
   NOTIFY(RuleChanged, (*this, aRule));
 
   if (nsIDocument* doc = GetComposedDoc()) {
@@ -745,7 +734,7 @@ StyleSheet::SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
   // That means we need a unique inner, of course.  But we don't want to do that
   // if we're not complete yet.  Luckily, all the callers of this method throw
   // anyway if not complete, so we can just do that here too.
-  if (!info.mComplete) {
+  if (!IsComplete()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
   }
@@ -760,7 +749,7 @@ StyleSheet::AreRulesAvailable(nsIPrincipal& aSubjectPrincipal,
                               ErrorResult& aRv)
 {
   // Rules are not available on incomplete sheets.
-  if (!Inner().mComplete) {
+  if (!IsComplete()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return false;
   }
@@ -1104,7 +1093,7 @@ StyleSheet::FinishParse()
 nsresult
 StyleSheet::ReparseSheet(const nsAString& aInput)
 {
-  if (!mInner->mComplete) {
+  if (!IsComplete()) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
