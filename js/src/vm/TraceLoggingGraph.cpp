@@ -218,41 +218,52 @@ js::DestroyTraceLoggerGraphState()
 }
 
 bool
-TraceLoggerGraph::init(uint64_t startTimestamp)
+TraceLoggerGraph::init(uint64_t startTimestamp, bool graphFileEnabled)
 {
     auto fail = MakeScopeExit([&] { failed = true; });
+
+    if (graphFileEnabled) {
+        if (!EnsureTraceLoggerGraphState())
+            return false;
+
+        uint32_t loggerId = traceLoggerGraphState->nextLoggerId();
+        if (loggerId == uint32_t(-1))
+            return false;
+
+        uint32_t pid = traceLoggerGraphState->pid();
+
+        js::UniqueChars dictFilename = AllocTraceLogFilename("tl-dict.%u.%d.json", pid, loggerId);
+        dictFile = fopen(dictFilename.get(), "w");
+        if (!dictFile)
+            return false;
+        auto cleanupDict = MakeScopeExit([&] { fclose(dictFile); dictFile = nullptr; });
+
+        js::UniqueChars treeFilename = AllocTraceLogFilename("tl-tree.%u.%d.tl", pid, loggerId);
+        treeFile = fopen(treeFilename.get(), "w+b");
+        if (!treeFile)
+            return false;
+        auto cleanupTree = MakeScopeExit([&] { fclose(treeFile); treeFile = nullptr; });
+
+        js::UniqueChars eventFilename = AllocTraceLogFilename("tl-event.%u.%d.tl", pid, loggerId);
+        eventFile = fopen(eventFilename.get(), "wb");
+        if (!eventFile)
+            return false;
+        auto cleanupEvent = MakeScopeExit([&] { fclose(eventFile); eventFile = nullptr; });
+
+        if (fprintf(dictFile, "[") < 0) {
+            fprintf(stderr, "TraceLogging: Error while writing.\n");
+            return false;
+        }
+
+        cleanupDict.release();
+        cleanupTree.release();
+        cleanupEvent.release();
+    }
 
     if (!tree.init())
         return false;
     if (!stack.init())
         return false;
-
-    if (!EnsureTraceLoggerGraphState())
-        return false;
-
-    uint32_t loggerId = traceLoggerGraphState->nextLoggerId();
-    if (loggerId == uint32_t(-1))
-        return false;
-
-    uint32_t pid = traceLoggerGraphState->pid();
-
-    js::UniqueChars dictFilename = AllocTraceLogFilename("tl-dict.%u.%d.json", pid, loggerId);
-    dictFile = fopen(dictFilename.get(), "w");
-    if (!dictFile)
-        return false;
-    auto cleanupDict = MakeScopeExit([&] { fclose(dictFile); dictFile = nullptr; });
-
-    js::UniqueChars treeFilename = AllocTraceLogFilename("tl-tree.%u.%d.tl", pid, loggerId);
-    treeFile = fopen(treeFilename.get(), "w+b");
-    if (!treeFile)
-        return false;
-    auto cleanupTree = MakeScopeExit([&] { fclose(treeFile); treeFile = nullptr; });
-
-    js::UniqueChars eventFilename = AllocTraceLogFilename("tl-event.%u.%d.tl", pid, loggerId);
-    eventFile = fopen(eventFilename.get(), "wb");
-    if (!eventFile)
-        return false;
-    auto cleanupEvent = MakeScopeExit([&] { fclose(eventFile); eventFile = nullptr; });
 
     // Create the top tree node and corresponding first stack item.
     TreeEntry& treeEntry = tree.pushUninitialized();
@@ -267,15 +278,7 @@ TraceLoggerGraph::init(uint64_t startTimestamp)
     stackEntry.setLastChildId(0);
     stackEntry.setActive(true);
 
-    if (fprintf(dictFile, "[") < 0) {
-        fprintf(stderr, "TraceLogging: Error while writing.\n");
-        return false;
-    }
-
     fail.release();
-    cleanupDict.release();
-    cleanupTree.release();
-    cleanupEvent.release();
 
     return true;
 }
@@ -375,6 +378,11 @@ TraceLoggerGraph::startEvent(uint32_t id, uint64_t timestamp)
 
     if (!tree.hasSpaceForAdd()) {
         if (tree.size() >= treeSizeFlushLimit() || !tree.ensureSpaceBeforeAdd()) {
+            if (!treeFile) {
+                disable(timestamp);
+                return;
+            }
+
             if (!flush()) {
                 fprintf(stderr, "TraceLogging: Couldn't write the data to disk.\n");
                 enabled = false;
@@ -506,7 +514,7 @@ TraceLoggerGraph::logTimestamp(uint32_t id, uint64_t timestamp)
     if (id == TraceLogger_Disable)
         disable(timestamp);
 
-    MOZ_ASSERT(eventFile);
+    if (!eventFile) return;
 
     // Format data in big endian
     timestamp = NativeEndian::swapToBigEndian(timestamp);
@@ -532,6 +540,10 @@ TraceLoggerGraph::getTreeEntry(uint32_t treeId, TreeEntry* entry)
         return true;
     }
 
+    // If treeFile is null and treeOffset is non-zero then something is wrong
+    if (treeFile != nullptr) return false;
+
+    // Entry has been flushed to disk. Look it up.
     int success = fseek(treeFile, treeId * sizeof(TreeEntry), SEEK_SET);
     if (success != 0)
         return false;
@@ -547,6 +559,7 @@ TraceLoggerGraph::getTreeEntry(uint32_t treeId, TreeEntry* entry)
 bool
 TraceLoggerGraph::saveTreeEntry(uint32_t treeId, TreeEntry* entry)
 {
+    MOZ_ASSERT(treeFile != nullptr);
     int success = fseek(treeFile, treeId * sizeof(TreeEntry), SEEK_SET);
     if (success != 0)
         return false;
@@ -568,7 +581,7 @@ TraceLoggerGraph::updateHasChildren(uint32_t treeId, bool hasChildren)
         if (!getTreeEntry(treeId, &entry))
             return false;
         entry.setHasChildren(hasChildren);
-        if (!saveTreeEntry(treeId, &entry))
+        if (treeFile && !saveTreeEntry(treeId, &entry))
             return false;
         return true;
     }
@@ -585,7 +598,7 @@ TraceLoggerGraph::updateNextId(uint32_t treeId, uint32_t nextId)
         if (!getTreeEntry(treeId, &entry))
             return false;
         entry.setNextId(nextId);
-        if (!saveTreeEntry(treeId, &entry))
+        if (treeFile && !saveTreeEntry(treeId, &entry))
             return false;
         return true;
     }
@@ -602,7 +615,7 @@ TraceLoggerGraph::updateStop(uint32_t treeId, uint64_t timestamp)
         if (!getTreeEntry(treeId, &entry))
             return false;
         entry.setStop(timestamp);
-        if (!saveTreeEntry(treeId, &entry))
+        if (treeFile && !saveTreeEntry(treeId, &entry))
             return false;
         return true;
     }
