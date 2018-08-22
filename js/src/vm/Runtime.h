@@ -69,6 +69,7 @@ class AutoHeapSession;
 } // namespace js
 
 struct DtoaState;
+struct JSLocaleCallbacks;
 
 #ifdef JS_SIMULATOR_ARM64
 namespace vixl {

@@ -6,9 +6,8 @@
 
 #include "mozilla/Assertions.h"
 
-#include "jsapi.h"
+#include "js/LocaleSensitive.h"
 
-#include "nsJSUtils.h"
 #include "nsIObserver.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -18,7 +17,6 @@
 
 #include "xpcpublic.h"
 
-using namespace JS;
 using namespace mozilla;
 using mozilla::intl::LocaleService;
 

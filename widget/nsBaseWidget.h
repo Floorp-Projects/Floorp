@@ -554,9 +554,7 @@ protected:
   virtual already_AddRefed<nsIWidget>
   AllocateChildPopupWidget()
   {
-    static NS_DEFINE_IID(kCPopUpCID, NS_CHILD_CID);
-    nsCOMPtr<nsIWidget> widget = do_CreateInstance(kCPopUpCID);
-    return widget.forget();
+    return nsIWidget::CreateChildWindow();
   }
 
   LayerManager* CreateBasicLayerManager();

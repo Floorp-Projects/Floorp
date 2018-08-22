@@ -3121,17 +3121,6 @@ NS_IMETHODIMP
 nsLocalFile::GetTarget(nsAString& aResult)
 {
   aResult.Truncate();
-#if STRICT_FAKE_SYMLINKS
-  bool symLink = false;
-  nsresult rv = IsSymlink(&symLink);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (!symLink) {
-    return NS_ERROR_FILE_INVALID_PATH;
-  }
-#endif
   Resolve();
 
   aResult = mResolvedPath;
