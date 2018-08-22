@@ -2562,10 +2562,11 @@ CommonPerformPromiseAllRace(JSContext *cx, PromiseForOfIterator& iterator, Handl
                     return false;
             }
 
-            // If either the object to depend on or the object that gets
-            // blocked isn't a, maybe-wrapped, Promise instance, we ignore it.
-            // All this does is lose some small amount of debug information in
-            // scenarios that are highly unlikely to occur in useful code.
+            // If either the object to depend on (`nextPromiseObj`) or the
+            // object that gets blocked (`resultPromise`) isn't a,
+            // maybe-wrapped, Promise instance, we ignore it. All this does is
+            // lose some small amount of debug information in scenarios that
+            // are highly unlikely to occur in useful code.
             if (nextPromiseObj->is<PromiseObject>() && resultPromise->is<PromiseObject>()) {
                 Handle<PromiseObject*> promise = nextPromiseObj.as<PromiseObject>();
                 if (!AddDummyPromiseReactionForDebugger(cx, promise, blockedPromise))
@@ -2999,7 +3000,12 @@ Promise_static_species(JSContext* cx, unsigned argc, Value* vp)
 // ES2016, 25.4.5.1, implemented in Promise.js.
 
 enum class IncumbentGlobalObject {
-    Yes, No
+    // Do not use the incumbent global, this is a special case used by the
+    // debugger.
+    No,
+
+    // Use incumbent global, this is the normal operation.
+    Yes
 };
 
 static PromiseReactionRecord*
@@ -3007,16 +3013,45 @@ NewReactionRecord(JSContext* cx, Handle<PromiseCapability> resultCapability,
                   HandleValue onFulfilled, HandleValue onRejected,
                   IncumbentGlobalObject incumbentGlobalObjectOption)
 {
-    // Either of the following conditions must be met:
-    //   * resultCapability.promise is a PromiseObject
-    //   * resultCapability.resolve and resultCapability.resolve are callable
-    // except for Async Generator, there resultPromise can be nullptr.
 #ifdef DEBUG
-    if (resultCapability.promise() && !resultCapability.promise()->is<PromiseObject>()) {
-        MOZ_ASSERT(resultCapability.resolve());
-        MOZ_ASSERT(IsCallable(resultCapability.resolve()));
-        MOZ_ASSERT(resultCapability.reject());
-        MOZ_ASSERT(IsCallable(resultCapability.reject()));
+    if (resultCapability.promise()) {
+        if (incumbentGlobalObjectOption == IncumbentGlobalObject::Yes) {
+            if (resultCapability.promise()->is<PromiseObject>()) {
+                // If `resultCapability.promise` is a Promise object,
+                // `resultCapability.{resolve,reject}` may be optimized out,
+                // but if they're not, they should be callable.
+                MOZ_ASSERT_IF(resultCapability.resolve(),
+                              IsCallable(resultCapability.resolve()));
+                MOZ_ASSERT_IF(resultCapability.reject(),
+                              IsCallable(resultCapability.reject()));
+            } else {
+                // If `resultCapability.promise` is a non-Promise object
+                // (including wrapped Promise object),
+                // `resultCapability.{resolve,reject}` should be callable.
+                MOZ_ASSERT(resultCapability.resolve());
+                MOZ_ASSERT(IsCallable(resultCapability.resolve()));
+                MOZ_ASSERT(resultCapability.reject());
+                MOZ_ASSERT(IsCallable(resultCapability.reject()));
+            }
+        } else {
+            // For debugger usage, `resultCapability.promise` should be a
+            // maybe-wrapped Promise object. The other fields are not used.
+            //
+            // This is the only case where we allow `resolve` and `reject` to
+            // be null when the `promise` field is not a PromiseObject.
+            JSObject* unwrappedPromise = UncheckedUnwrap(resultCapability.promise());
+            MOZ_ASSERT(unwrappedPromise->is<PromiseObject>());
+            MOZ_ASSERT(!resultCapability.resolve());
+            MOZ_ASSERT(!resultCapability.reject());
+        }
+    } else {
+        // `resultCapability.promise` is null for the following cases:
+        //   * resulting Promise is known to be unused
+        //   * Async Generator
+        // In any case, other fields are also not used.
+        MOZ_ASSERT(!resultCapability.resolve());
+        MOZ_ASSERT(!resultCapability.reject());
+        MOZ_ASSERT(incumbentGlobalObjectOption == IncumbentGlobalObject::Yes);
     }
 #endif
 
@@ -4017,6 +4052,9 @@ AddDummyPromiseReactionForDebugger(JSContext* cx, Handle<PromiseObject*> promise
 {
     if (promise->state() != JS::PromiseState::Pending)
         return true;
+
+    // `dependentPromise` should be a maybe-wrapped Promise.
+    MOZ_ASSERT(UncheckedUnwrap(dependentPromise)->is<PromiseObject>());
 
     // Leave resolve and reject as null.
     Rooted<PromiseCapability> capability(cx);

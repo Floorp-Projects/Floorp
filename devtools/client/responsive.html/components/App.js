@@ -11,9 +11,11 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const DeviceModal = createFactory(require("./DeviceModal"));
 const Toolbar = createFactory(require("./Toolbar"));
 const Viewports = createFactory(require("./Viewports"));
+
+loader.lazyGetter(this, "DeviceModal",
+  () => createFactory(require("./DeviceModal")));
 
 const {
   addCustomDevice,
@@ -255,15 +257,18 @@ class App extends Component {
         onRemoveDeviceAssociation,
         onResizeViewport,
       }),
-      DeviceModal({
-        deviceAdderViewportTemplate,
-        devices,
-        onAddCustomDevice,
-        onDeviceListUpdate,
-        onRemoveCustomDevice,
-        onUpdateDeviceDisplayed,
-        onUpdateDeviceModal,
-      })
+      devices.isModalOpen ?
+        DeviceModal({
+          deviceAdderViewportTemplate,
+          devices,
+          onAddCustomDevice,
+          onDeviceListUpdate,
+          onRemoveCustomDevice,
+          onUpdateDeviceDisplayed,
+          onUpdateDeviceModal,
+        })
+        :
+        null
     );
   }
 }

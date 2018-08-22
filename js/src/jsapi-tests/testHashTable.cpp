@@ -448,8 +448,34 @@ BEGIN_TEST(testHashLazyStorage)
     set.compact();
     CHECK(set.capacity() == 0);
 
-    // lookupForAdd() instantiates, even if not followed by add().
-    set.lookupForAdd(1);
+    auto p = set.lookupForAdd(1);
+    CHECK(set.capacity() == 0);
+    CHECK(set.add(p, 1));
+    CHECK(set.capacity() == minCap);
+    CHECK(set.has(1));
+
+    set.clear();
+    set.compact();
+    CHECK(set.capacity() == 0);
+
+    p = set.lookupForAdd(1);
+    CHECK(set.putNew(2));
+    CHECK(set.capacity() == minCap);
+    CHECK(set.relookupOrAdd(p, 1, 1));
+    CHECK(set.capacity() == minCap);
+    CHECK(set.has(1));
+
+    set.clear();
+    set.compact();
+    CHECK(set.capacity() == 0);
+
+    CHECK(set.putNew(1));
+    p = set.lookupForAdd(1);
+    set.clear();
+    set.compact();
+    CHECK(set.count() == 0);
+    CHECK(set.relookupOrAdd(p, 1, 1));
+    CHECK(set.count() == 1);
     CHECK(set.capacity() == minCap);
 
     set.clear();
