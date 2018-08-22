@@ -42,6 +42,7 @@ var dragLinkText = [[
 
 
 function dumpTransfer(dataTransfer,expect) {
+  dataTransfer = SpecialPowers.wrap(dataTransfer);
   dtData = dataTransfer.mozItemCount + "items:\n";
   for (var i = 0; i < dataTransfer.mozItemCount; i++) {
     var dtTypes = dataTransfer.mozTypesAt(i);

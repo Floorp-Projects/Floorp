@@ -957,12 +957,19 @@ InterpretResume(JSContext* cx, HandleObject obj, HandleValue val, HandleProperty
 }
 
 bool
-DebugAfterYield(JSContext* cx, BaselineFrame* frame)
+DebugAfterYield(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* mustReturn)
 {
+    *mustReturn = false;
+
     // The BaselineFrame has just been constructed by JSOP_RESUME in the
     // caller. We need to set its debuggee flag as necessary.
-    if (frame->script()->isDebuggee())
+    //
+    // If a breakpoint is set on JSOP_DEBUGAFTERYIELD, or stepping is enabled,
+    // we may already have done this work. Don't fire onEnterFrame again.
+    if (frame->script()->isDebuggee() && !frame->isDebuggee()) {
         frame->setIsDebuggee();
+        return DebugPrologue(cx, frame, pc, mustReturn);
+    }
     return true;
 }
 
@@ -975,9 +982,19 @@ GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObje
     // the exception handler where we will clear the pc.
     JSScript* script = frame->script();
     uint32_t offset = script->yieldAndAwaitOffsets()[genObj->yieldAndAwaitIndex()];
-    frame->setOverridePc(script->offsetToPC(offset));
+    jsbytecode* pc = script->offsetToPC(offset);
+    frame->setOverridePc(pc);
 
-    MOZ_ALWAYS_TRUE(DebugAfterYield(cx, frame));
+    // In the interpreter, GeneratorObject::resume marks the generator as running,
+    // so we do the same.
+    genObj->setRunning();
+
+    bool mustReturn = false;
+    if (!DebugAfterYield(cx, frame, pc, &mustReturn))
+        return false;
+    if (mustReturn)
+        resumeKind = GeneratorObject::RETURN;
+
     MOZ_ALWAYS_FALSE(js::GeneratorThrowOrReturn(cx, frame, genObj, arg, resumeKind));
     return false;
 }
@@ -1087,11 +1104,15 @@ HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr, bool* mus
     jsbytecode* pc = script->baselineScript()->icEntryFromReturnAddress(retAddr).pc(script);
 
     if (*pc == JSOP_DEBUGAFTERYIELD) {
-        // JSOP_DEBUGAFTERYIELD will set the frame's debuggee flag, but if we
-        // set a breakpoint there we have to do it now.
+        // JSOP_DEBUGAFTERYIELD will set the frame's debuggee flag and call the
+        // onEnterFrame handler, but if we set a breakpoint there we have to do
+        // it now.
         MOZ_ASSERT(!frame->isDebuggee());
-        if (!DebugAfterYield(cx, frame))
+
+        if (!DebugAfterYield(cx, frame, pc, mustReturn))
             return false;
+        if (*mustReturn)
+            return true;
     }
 
     MOZ_ASSERT(frame->isDebuggee());

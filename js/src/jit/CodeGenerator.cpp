@@ -8701,7 +8701,8 @@ JitRealm::generateStringConcatStub(JSContext* cx)
     // Ensure result length <= JSString::MAX_LENGTH.
     masm.branch32(Assembler::Above, temp2, Imm32(JSString::MAX_LENGTH), &failure);
 
-    // Allocate a new rope, guaranteed to be in the nursery.
+    // Allocate a new rope, guaranteed to be in the nursery if
+    // stringsCanBeInNursery. (As a result, no post barriers are needed below.)
     masm.newGCString(output, temp3, &failure, stringsCanBeInNursery);
 
     // Store rope length and flags. temp1 still holds the result of AND'ing the

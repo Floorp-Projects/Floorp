@@ -8,13 +8,13 @@ const { createEnum } = require("devtools/client/shared/enum");
 
 createEnum([
 
-  // Update the geometry editor's enabled state.
+  // Updates the geometry editor's enabled state.
   "UPDATE_GEOMETRY_EDITOR_ENABLED",
 
-  // Update the layout state with the latest layout properties.
+  // Updates the layout state with the latest layout properties.
   "UPDATE_LAYOUT",
 
-  // Update the offset parent state with the new DOM node.
+  // Updates the offset parent state with the new DOM node.
   "UPDATE_OFFSET_PARENT",
 
 ], module.exports);

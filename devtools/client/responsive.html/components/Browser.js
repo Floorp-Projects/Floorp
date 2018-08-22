@@ -26,10 +26,10 @@ class Browser extends PureComponent {
    */
   static get propTypes() {
     return {
-      swapAfterMount: PropTypes.bool.isRequired,
-      userContextId: PropTypes.number.isRequired,
       onBrowserMounted: PropTypes.func.isRequired,
       onContentResize: PropTypes.func.isRequired,
+      swapAfterMount: PropTypes.bool.isRequired,
+      userContextId: PropTypes.number.isRequired,
     };
   }
 
@@ -149,22 +149,24 @@ class Browser extends PureComponent {
     // @noisolation and @allowfullscreen are needed so that these frames have the same
     // access to browser features as regular browser tabs. The `swapFrameLoaders` platform
     // API we use compares such features before allowing the swap to proceed.
-    return dom.iframe(
-      {
-        allowFullScreen: "true",
-        className: "browser",
-        height: "100%",
-        mozbrowser: "true",
-        noisolation: "true",
-        remote: "true",
-        remotetype: "web",
-        src: "about:blank",
-        usercontextid: userContextId,
-        width: "100%",
-        ref: browser => {
-          this.browser = browser;
-        },
-      }
+    return (
+      dom.iframe(
+        {
+          allowFullScreen: "true",
+          className: "browser",
+          height: "100%",
+          mozbrowser: "true",
+          noisolation: "true",
+          remote: "true",
+          remotetype: "web",
+          src: "about:blank",
+          usercontextid: userContextId,
+          width: "100%",
+          ref: browser => {
+            this.browser = browser;
+          },
+        }
+      )
     );
   }
 }

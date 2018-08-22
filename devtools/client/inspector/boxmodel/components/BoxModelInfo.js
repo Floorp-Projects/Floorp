@@ -49,33 +49,21 @@ class BoxModelInfo extends PureComponent {
       buttonClass += " checked";
     }
 
-    return dom.div(
-      {
-        className: "boxmodel-info",
-      },
-      dom.span(
-        {
-          className: "boxmodel-element-size",
-        },
-        SHARED_L10N.getFormatStr("dimensions", width, height)
-      ),
-      dom.section(
-        {
-          className: "boxmodel-position-group",
-        },
-        isPositionEditable ?
-          dom.button({
-            className: buttonClass,
-            title: BOXMODEL_L10N.getStr("boxmodel.geometryButton.tooltip"),
-            onClick: this.onToggleGeometryEditor,
-          })
-          :
-          null,
-        dom.span(
-          {
-            className: "boxmodel-element-position",
-          },
-          position
+    return (
+      dom.div({ className: "boxmodel-info" },
+        dom.span({ className: "boxmodel-element-size" },
+          SHARED_L10N.getFormatStr("dimensions", width, height)
+        ),
+        dom.section({ className: "boxmodel-position-group" },
+          isPositionEditable ?
+            dom.button({
+              className: buttonClass,
+              title: BOXMODEL_L10N.getStr("boxmodel.geometryButton.tooltip"),
+              onClick: this.onToggleGeometryEditor,
+            })
+            :
+            null,
+          dom.span({ className: "boxmodel-element-position" }, position)
         )
       )
     );

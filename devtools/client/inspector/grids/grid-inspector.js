@@ -56,8 +56,6 @@ class GridInspector {
     this.telemetry = inspector.telemetry;
     this.walker = this.inspector.walker;
 
-    this.updateGridPanel = this.updateGridPanel.bind(this);
-
     this.onHighlighterShown = this.onHighlighterShown.bind(this);
     this.onHighlighterHidden = this.onHighlighterHidden.bind(this);
     this.onNavigate = this.onNavigate.bind(this);
@@ -69,6 +67,7 @@ class GridInspector {
     this.onToggleShowGridAreas = this.onToggleShowGridAreas.bind(this);
     this.onToggleShowGridLineNumbers = this.onToggleShowGridLineNumbers.bind(this);
     this.onToggleShowInfiniteLines = this.onToggleShowInfiniteLines.bind(this);
+    this.updateGridPanel = this.updateGridPanel.bind(this);
 
     this.init();
   }
