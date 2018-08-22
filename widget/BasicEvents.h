@@ -944,7 +944,6 @@ public:
                            mMessage == eMouseDoubleClick ||
                            mMessage == eMouseAuxClick ||
                            mMessage == eMouseDown || mMessage == eMouseUp ||
-                           mMessage == eMouseEnter || mMessage == eMouseLeave ||
                            mMessage == eMouseOver || mMessage == eMouseOut ||
                            mMessage == eMouseMove || mMessage == eContextMenu;
         break;
@@ -955,8 +954,6 @@ public:
                            mMessage == ePointerCancel ||
                            mMessage == ePointerOver ||
                            mMessage == ePointerOut ||
-                           mMessage == ePointerEnter ||
-                           mMessage == ePointerLeave ||
                            mMessage == ePointerGotCapture ||
                            mMessage == ePointerLostCapture;
         break;
