@@ -25,17 +25,33 @@ CONTENT_WIN.addEventListener("DOMContentLoaded", function onDCL(evt) {
 
   let mutationObserver = new doc.ownerGlobal.MutationObserver(function onMutation(mutations) {
     for (let mutation of mutations) {
-      if (!mutation.target.hasAttribute(mutation.attributeName)) {
-        // The attribute was removed in the meantime.
-        continue;
+      switch (mutation.type) {
+        case "attributes": {
+          if (!mutation.target.hasAttribute(mutation.attributeName)) {
+            // The attribute was removed in the meantime.
+            continue;
+          }
+          FormAutofillUtils.localizeAttributeForElement(mutation.target, mutation.attributeName);
+          break;
+        }
+
+        case "childList": {
+          // We really only care about the <form>s appending inside pages.
+          if (!mutation.addedNodes || !mutation.target.classList ||
+              !mutation.target.classList.contains("page")) {
+            break;
+          }
+          FormAutofillUtils.localizeMarkup(mutation.target);
+          break;
+        }
       }
-      FormAutofillUtils.localizeAttributeForElement(mutation.target, mutation.attributeName);
     }
   });
 
   mutationObserver.observe(doc, {
     attributes: true,
     attributeFilter: L10N_ATTRIBUTES,
+    childList: true,
     subtree: true,
   });
 });

@@ -162,3 +162,43 @@ add_task(async function test_show_closeReject_dialog() {
        "rq.show() shouldn't resolve to a response");
   });
 });
+
+add_task(async function test_localized() {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData,
+        details,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
+
+    await spawnPaymentDialogTask(frame, async function check_l10n() {
+      await ContentTaskUtils.waitForCondition(() => {
+        let telephoneLabel = content.document.querySelector("#tel-container > .label-text");
+        return telephoneLabel && telephoneLabel.textContent.includes("Phone");
+      }, "Check that the telephone number label is localized");
+
+      await ContentTaskUtils.waitForCondition(() => {
+        let ccNumberField = content.document.querySelector("#cc-number");
+        if (!ccNumberField) {
+          return false;
+        }
+        let ccNumberLabel = ccNumberField.parentElement.querySelector(".label-text");
+        return ccNumberLabel.textContent.includes("Number");
+      }, "Check that the cc-number label is localized");
+
+      const L10N_ATTRIBUTE_SELECTOR = "[data-localization], [data-localization-region]";
+      await ContentTaskUtils.waitForCondition(() => {
+        return content.document.querySelectorAll(L10N_ATTRIBUTE_SELECTOR).length === 0;
+      }, "Check that there are no unlocalized strings");
+    });
+
+    // abort the payment request
+    ContentTask.spawn(browser, null, async () => content.rq.abort());
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+  });
+});
