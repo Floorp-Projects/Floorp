@@ -956,11 +956,17 @@ struct JSContext : public JS::RootingContext,
     void removeUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
 
   private:
-    template <class T1>
-    inline void checkImpl(int argIndex, const T1& t1);
+    // Base case for the recursive function below.
+    inline void checkImpl(int argIndex) {}
 
     template <class Head, class... Tail>
     inline void checkImpl(int argIndex, const Head& head, const Tail&... tail);
+
+    bool contextChecksEnabled() const {
+        // Don't perform these checks when called from a finalizer. The checking
+        // depends on other objects not having been swept yet.
+        return !RuntimeHeapIsCollecting(runtime()->heapState());
+    }
 
   public:
     // Assert the arguments are in this context's realm (for scripts),
