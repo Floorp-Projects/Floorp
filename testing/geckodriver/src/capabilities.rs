@@ -1,3 +1,4 @@
+use base64;
 use logging::Level;
 use marionette::LogOptions;
 use mozprofile::preferences::Pref;
@@ -5,8 +6,7 @@ use mozprofile::profile::Profile;
 use mozrunner::runner::platform::firefox_default_path;
 use mozversion::{self, firefox_version, Version};
 use regex::bytes::Regex;
-use rustc_serialize::base64::FromBase64;
-use rustc_serialize::json::Json;
+use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::default::Default;
 use std::error::Error;
@@ -44,11 +44,11 @@ impl<'a> FirefoxCapabilities<'a> {
         }
     }
 
-    fn set_binary(&mut self, capabilities: &BTreeMap<String, Json>) {
+    fn set_binary(&mut self, capabilities: &Map<String, Value>) {
         self.chosen_binary = capabilities
             .get("moz:firefoxOptions")
-            .and_then(|x| x.find("binary"))
-            .and_then(|x| x.as_string())
+            .and_then(|x| x.get("binary"))
+            .and_then(|x| x.as_str())
             .map(|x| PathBuf::from(x))
             .or_else(|| self.fallback_binary.map(|x| x.clone()))
             .or_else(|| firefox_default_path())
@@ -158,7 +158,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         Ok(true)
     }
 
-    fn validate_custom(&self, name: &str,  value: &Json) -> WebDriverResult<()> {
+    fn validate_custom(&self, name: &str,  value: &Value) -> WebDriverResult<()> {
         if !name.starts_with("moz:") {
             return Ok(())
         }
@@ -201,7 +201,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                             for (log_key, log_value) in log_data.iter() {
                                 match &**log_key {
                                     "level" => {
-                                        let level = try_opt!(log_value.as_string(),
+                                        let level = try_opt!(log_value.as_str(),
                                                              ErrorStatus::InvalidArgument,
                                                              "log level is not a string");
                                         if Level::from_str(level).is_err() {
@@ -253,7 +253,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         Ok(())
     }
 
-    fn accept_custom(&mut self, _: &str, _: &Json, _: &Capabilities) -> WebDriverResult<bool> {
+    fn accept_custom(&mut self, _: &str, _: &Value, _: &Capabilities) -> WebDriverResult<bool> {
         Ok(true)
     }
 }
@@ -264,7 +264,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
 /// the encoded profile, the binary arguments, log settings, and additional
 /// preferences to be checked and unmarshaled from the `moz:firefoxOptions`
 /// JSON Object into a Rust representation.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct FirefoxOptions {
     pub binary: Option<PathBuf>,
     pub profile: Option<Profile>,
@@ -303,10 +303,10 @@ impl FirefoxOptions {
         if let Some(profile_json) = options.get("profile") {
             let profile_base64 =
                 try!(profile_json
-                         .as_string()
+                         .as_str()
                          .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
                                                     "Profile is not a string")));
-            let profile_zip = &*try!(profile_base64.from_base64());
+            let profile_zip = &*try!(base64::decode(profile_base64));
 
             // Create an emtpy profile directory
             let profile = try!(Profile::new(None));
@@ -332,7 +332,7 @@ impl FirefoxOptions {
                                                                   array")));
             let args = try!(args_array
                                 .iter()
-                                .map(|x| x.as_string().map(|x| x.to_owned()))
+                                .map(|x| x.as_str().map(|x| x.to_owned()))
                                 .collect::<Option<Vec<String>>>()
                                 .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
                                                            "Arguments entries were not all \
@@ -352,7 +352,7 @@ impl FirefoxOptions {
 
             let level = match log.get("level") {
                 Some(json) => {
-                    let s = json.as_string().ok_or(WebDriverError::new(
+                    let s = json.as_str().ok_or(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         "Log level is not a string",
                     ))?;
@@ -387,12 +387,11 @@ impl FirefoxOptions {
     }
 }
 
-fn pref_from_json(value: &Json) -> WebDriverResult<Pref> {
+fn pref_from_json(value: &Value) -> WebDriverResult<Pref> {
     match value {
-        &Json::String(ref x) => Ok(Pref::new(x.clone())),
-        &Json::I64(x) => Ok(Pref::new(x)),
-        &Json::U64(x) => Ok(Pref::new(x as i64)),
-        &Json::Boolean(x) => Ok(Pref::new(x)),
+        &Value::String(ref x) => Ok(Pref::new(x.clone())),
+        &Value::Number(ref x) => Ok(Pref::new(x.as_i64().unwrap())),
+        &Value::Bool(x) => Ok(Pref::new(x)),
         _ => Err(WebDriverError::new(ErrorStatus::UnknownError,
                                      "Could not convert pref value to string, boolean, or integer"))
     }
@@ -451,36 +450,26 @@ fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
 #[cfg(test)]
 mod tests {
     extern crate mozprofile;
-    extern crate rustc_serialize;
 
     use self::mozprofile::preferences::Pref;
-    use self::rustc_serialize::base64::{CharacterSet, Config, Newline, ToBase64};
-    use self::rustc_serialize::json::Json;
-    use super::FirefoxOptions;
+    use super::*;
     use marionette::MarionetteHandler;
-    use std::collections::BTreeMap;
     use std::default::Default;
     use std::fs::File;
     use std::io::Read;
 
     use webdriver::capabilities::Capabilities;
 
-    fn example_profile() -> Json {
+    fn example_profile() -> Value {
         let mut profile_data = Vec::with_capacity(1024);
         let mut profile = File::open("src/tests/profile.zip").unwrap();
         profile.read_to_end(&mut profile_data).unwrap();
-        let base64_config = Config {
-            char_set: CharacterSet::Standard,
-            newline: Newline::LF,
-            pad: true,
-            line_length: None,
-        };
-        Json::String(profile_data.to_base64(base64_config))
+        Value::String(base64::encode(&profile_data))
     }
 
     fn make_options(firefox_opts: Capabilities) -> FirefoxOptions {
         let mut caps = Capabilities::new();
-        caps.insert("moz:firefoxOptions".into(), Json::Object(firefox_opts));
+        caps.insert("moz:firefoxOptions".into(), Value::Object(firefox_opts));
         let binary = None;
         FirefoxOptions::from_capabilities(binary, &mut caps).unwrap()
     }
@@ -504,15 +493,15 @@ mod tests {
     #[test]
     fn test_prefs() {
         let encoded_profile = example_profile();
-        let mut prefs: BTreeMap<String, Json> = BTreeMap::new();
+        let mut prefs: Map<String, Value> = Map::new();
         prefs.insert(
             "browser.display.background_color".into(),
-            Json::String("#00ff00".into()),
+            Value::String("#00ff00".into()),
         );
 
         let mut firefox_opts = Capabilities::new();
         firefox_opts.insert("profile".into(), encoded_profile);
-        firefox_opts.insert("prefs".into(), Json::Object(prefs));
+        firefox_opts.insert("prefs".into(), Value::Object(prefs));
 
         let opts = make_options(firefox_opts);
         let mut profile = opts.profile.unwrap();
