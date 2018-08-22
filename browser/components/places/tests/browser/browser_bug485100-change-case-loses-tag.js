@@ -11,7 +11,7 @@ add_task(async function() {
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     title: "mozilla",
-    url: testURI
+    url: testURI,
   });
 
   // Init panel

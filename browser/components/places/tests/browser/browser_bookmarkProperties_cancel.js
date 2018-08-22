@@ -23,7 +23,7 @@ add_task(async function setup() {
     }, {
       title: "bm2",
       url: "http://example.com/2",
-    }]
+    }],
   });
 
   // Undo is called asynchronously - and not waited for. Since we're not

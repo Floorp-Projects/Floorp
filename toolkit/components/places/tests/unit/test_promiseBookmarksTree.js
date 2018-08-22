@@ -237,7 +237,7 @@ add_task(async function() {
       guidsPassedToExcludeCallback.add(aItem.guid);
       return aItem.root == "bookmarksMenuFolder";
     },
-    includeItemIds: true
+    includeItemIds: true,
   }, [PlacesUtils.bookmarks.menuGuid]);
   Assert.equal(guidsPassedToExcludeCallback.size, 5);
   Assert.equal(placesRootWithoutTheMenu.children.length, 3);

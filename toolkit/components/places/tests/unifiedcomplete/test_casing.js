@@ -10,7 +10,7 @@ add_task(async function test_casing_1() {
   await check_autocomplete({
     search: "MOZ",
     autofilled: "MOZilla.org/",
-    completed: "http://mozilla.org/"
+    completed: "http://mozilla.org/",
   });
   await cleanup();
 });
@@ -23,7 +23,7 @@ add_task(async function test_casing_2() {
   await check_autocomplete({
     search: "mozilla.org/T",
     autofilled: "mozilla.org/T",
-    completed: "mozilla.org/T"
+    completed: "mozilla.org/T",
   });
   await cleanup();
 });
@@ -36,7 +36,7 @@ add_task(async function test_casing_3() {
   await check_autocomplete({
     search: "mozilla.org/T",
     autofilled: "mozilla.org/Test/",
-    completed: "http://mozilla.org/Test/"
+    completed: "http://mozilla.org/Test/",
   });
   await cleanup();
 });
@@ -49,7 +49,7 @@ add_task(async function test_casing_4() {
   await check_autocomplete({
     search: "mOzilla.org/t",
     autofilled: "mOzilla.org/t",
-    completed: "mOzilla.org/t"
+    completed: "mOzilla.org/t",
   });
   await cleanup();
 });
@@ -62,7 +62,7 @@ add_task(async function test_casing_5() {
   await check_autocomplete({
     search: "mOzilla.org/T",
     autofilled: "mOzilla.org/Test/",
-    completed: "http://mozilla.org/Test/"
+    completed: "http://mozilla.org/Test/",
   });
   await cleanup();
 });
@@ -75,7 +75,7 @@ add_task(async function test_untrimmed_casing() {
   await check_autocomplete({
     search: "http://mOz",
     autofilled: "http://mOzilla.org/",
-    completed: "http://mozilla.org/"
+    completed: "http://mozilla.org/",
   });
   await cleanup();
 });
@@ -88,7 +88,7 @@ add_task(async function test_untrimmed_www_casing() {
   await check_autocomplete({
     search: "http://www.mOz",
     autofilled: "http://www.mOzilla.org/",
-    completed: "http://www.mozilla.org/"
+    completed: "http://www.mozilla.org/",
   });
   await cleanup();
 });
@@ -101,7 +101,7 @@ add_task(async function test_untrimmed_path_casing() {
   await check_autocomplete({
     search: "http://mOzilla.org/t",
     autofilled: "http://mOzilla.org/t",
-    completed: "http://mOzilla.org/t"
+    completed: "http://mOzilla.org/t",
   });
   await cleanup();
 });
@@ -114,7 +114,7 @@ add_task(async function test_untrimmed_path_casing_2() {
   await check_autocomplete({
     search: "http://mOzilla.org/T",
     autofilled: "http://mOzilla.org/Test/",
-    completed: "http://mozilla.org/Test/"
+    completed: "http://mozilla.org/Test/",
   });
   await cleanup();
 });
@@ -127,7 +127,7 @@ add_task(async function test_untrimmed_path_www_casing() {
   await check_autocomplete({
     search: "http://www.mOzilla.org/t",
     autofilled: "http://www.mOzilla.org/t",
-    completed: "http://www.mOzilla.org/t"
+    completed: "http://www.mOzilla.org/t",
   });
   await cleanup();
 });
@@ -140,7 +140,7 @@ add_task(async function test_untrimmed_path_www_casing_2() {
   await check_autocomplete({
     search: "http://www.mOzilla.org/T",
     autofilled: "http://www.mOzilla.org/Test/",
-    completed: "http://www.mozilla.org/Test/"
+    completed: "http://www.mozilla.org/Test/",
   });
   await cleanup();
 });
@@ -164,14 +164,14 @@ add_task(async function test_searching() {
   await check_autocomplete({
     search: "\u03BB",
     matches: [ { uri: uri1, title: "uppercase lambda \u039B" },
-               { uri: uri2, title: "lowercase lambda \u03BB" } ]
+               { uri: uri2, title: "lowercase lambda \u03BB" } ],
   });
 
   info("Search for uppercase lambda");
   await check_autocomplete({
     search: "\u039B",
     matches: [ { uri: uri1, title: "uppercase lambda \u039B" },
-               { uri: uri2, title: "lowercase lambda \u03BB" } ]
+               { uri: uri2, title: "lowercase lambda \u03BB" } ],
   });
 
   info("Search for kelvin sign");
@@ -179,7 +179,7 @@ add_task(async function test_searching() {
     search: "\u212A",
     matches: [ { uri: uri3, title: "symbol \u212A" },
                { uri: uri4, title: "uppercase K" },
-               { uri: uri5, title: "lowercase k" } ]
+               { uri: uri5, title: "lowercase k" } ],
   });
 
   info("Search for lowercase k");
@@ -187,7 +187,7 @@ add_task(async function test_searching() {
     search: "k",
     matches: [ { uri: uri3, title: "symbol \u212A" },
                { uri: uri4, title: "uppercase K" },
-               { uri: uri5, title: "lowercase k" } ]
+               { uri: uri5, title: "lowercase k" } ],
   });
 
   info("Search for uppercase k");
@@ -195,7 +195,7 @@ add_task(async function test_searching() {
     search: "K",
     matches: [ { uri: uri3, title: "symbol \u212A" },
                { uri: uri4, title: "uppercase K" },
-               { uri: uri5, title: "lowercase k" } ]
+               { uri: uri5, title: "lowercase k" } ],
   });
 
   await cleanup();

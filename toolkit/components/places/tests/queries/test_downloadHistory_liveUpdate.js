@@ -19,7 +19,7 @@ function accumulateNotifications(result) {
       return () => {
         notifications.push(name);
       };
-    }
+    },
   });
   result.addObserver(resultObserver, false);
   return resultObserver;
@@ -47,7 +47,7 @@ add_task(async function test_downloadhistory_query_notifications() {
     //  - an icon
     await PlacesUtils.bookmarks.insert({
       url: uri,
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     });
     await PlacesUtils.history.update({
       url: uri,
@@ -91,7 +91,7 @@ add_task(async function test_downloadhistory_query_filtering() {
     await PlacesTestUtils.addVisits({
       uri,
       transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
-      visitDate
+      visitDate,
     });
     uris.push(uri);
   }
@@ -99,7 +99,7 @@ add_task(async function test_downloadhistory_query_filtering() {
   await PlacesTestUtils.addVisits({
     uri: `http://fx-search.com/download/unordered`,
     transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
-    visitDate: new Date(Date.now() - 7200000)
+    visitDate: new Date(Date.now() - 7200000),
   });
 
   Assert.equal(root.childCount, MAX_RESULTS, "Result should be limited");

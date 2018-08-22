@@ -18,7 +18,7 @@ add_task(async function test_setup() {
 
   // Temporary disable history, so we won't record pages navigation.
   await SpecialPowers.pushPrefEnv({set: [
-    ["places.history.enabled", false]
+    ["places.history.enabled", false],
   ]});
 
   // Ensure the database is empty.
@@ -64,7 +64,7 @@ gTests.push({
 
   async cleanup() {
     await PlacesUtils.bookmarks.remove(this._bookmark);
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ gTests.push({
 
   async cleanup() {
     await PlacesUtils.bookmarks.remove(this._bookmarks[0]);
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -161,7 +161,7 @@ gTests.push({
   async cleanup() {
     await PlacesUtils.bookmarks.remove(this._bookmarks[0]);
     await PlacesUtils.bookmarks.remove(this._query);
-  }
+  },
 });
 
 async function runTest(test) {

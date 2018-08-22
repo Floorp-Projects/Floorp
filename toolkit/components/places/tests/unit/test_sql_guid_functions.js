@@ -84,7 +84,7 @@ function test_guid_on_background() {
       Assert.equal(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
       Assert.ok(checked);
       run_next_test();
-    }
+    },
   });
   stmt.finalize();
 }

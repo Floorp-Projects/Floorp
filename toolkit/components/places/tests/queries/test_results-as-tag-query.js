@@ -5,7 +5,7 @@ const testData = {
   "http://foo.com/": ["tag1", "tag 2", "Space ☺️ Between"].sort(),
   "http://bar.com/": ["tag1", "tag 2"].sort(),
   "http://baz.com/": ["tag 2", "Space ☺️ Between"].sort(),
-  "http://qux.com/": ["Space ☺️ Between"]
+  "http://qux.com/": ["Space ☺️ Between"],
 };
 
 const formattedTestData = [];
@@ -15,7 +15,7 @@ for (const [uri, tagArray] of Object.entries(testData)) {
     uri,
     isBookmark: true,
     isTag: true,
-    tagArray
+    tagArray,
   });
 }
 

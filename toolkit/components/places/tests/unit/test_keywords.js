@@ -80,7 +80,7 @@ function expectBookmarkNotifications() {
       if (name in target)
         return target[name];
       return undefined;
-    }
+    },
   });
   PlacesUtils.bookmarks.addObserver(observer);
   return observer;
@@ -498,7 +498,7 @@ add_task(async function test_tagDoesntPreventKeywordRemoval() {
 
   let httpBookmark = await PlacesUtils.bookmarks.insert({
       url: "http://example.com/",
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   Assert.equal((await foreign_count("http://example.com/")), fc + 1); // +1 bookmark
 

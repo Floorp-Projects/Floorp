@@ -23,7 +23,7 @@ add_task(async function setup() {
           let uri = subject.QueryInterface(Ci.nsIURI);
           resolve(uri.spec);
         }
-      }
+      },
     };
   });
 

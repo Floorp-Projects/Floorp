@@ -11,7 +11,7 @@ var originalFavicon = {
   file: do_get_file("favicon-normal16.png"),
   uri: uri(do_get_file("favicon-normal16.png")),
   data: readFileData(do_get_file("favicon-normal16.png")),
-  mimetype: "image/png"
+  mimetype: "image/png",
 };
 
 var uniqueFaviconId = 0;
@@ -42,7 +42,7 @@ function createFavicon(fileName) {
     file: outfile,
     uri: uri(outfile),
     data: readFileData(outfile),
-    mimetype: "image/png"
+    mimetype: "image/png",
   };
 }
 

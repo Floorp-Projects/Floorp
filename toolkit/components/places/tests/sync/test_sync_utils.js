@@ -647,7 +647,7 @@ add_task(async function test_pullChanges_tags() {
 
   let tagBm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.tagsGuid,
-    index: 0
+    index: 0,
   });
   let tagFolderGuid = tagBm.guid;
   let tagFolderId = await PlacesUtils.promiseItemId(tagFolderGuid);
@@ -709,7 +709,7 @@ add_task(async function test_pullChanges_tags() {
   {
     let bm = await PlacesUtils.bookmarks.fetch({
       parentGuid: tagFolderGuid,
-      index: 0
+      index: 0,
     });
     bm.url = "https://bugzilla.org/";
     await PlacesUtils.bookmarks.update(bm);
@@ -1658,7 +1658,7 @@ add_task(async function test_unsynced_orphans() {
     await PlacesUtils.bookmarks.update({
       guid: unknownGuid,
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-      index: PlacesUtils.bookmarks.DEFAULT_INDEX
+      index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     });
     let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
       SYNC_PARENT_ANNO, nonexistentRecordId);
@@ -2355,7 +2355,7 @@ add_task(async function test_separator() {
   let separator = await PlacesSyncUtils.bookmarks.insert({
     kind: "separator",
     parentRecordId: "menu",
-    recordId: separatorRecordId
+    recordId: separatorRecordId,
   });
   await PlacesSyncUtils.bookmarks.insert({
     kind: "bookmark",
@@ -2372,7 +2372,7 @@ add_task(async function test_separator() {
   await PlacesUtils.bookmarks.update({
     guid: child2Guid,
     parentGuid,
-    index: 2
+    index: 2,
   });
   let changes = await PlacesSyncUtils.bookmarks.pullChanges();
   deepEqual(Object.keys(changes).sort(),
@@ -2384,7 +2384,7 @@ add_task(async function test_separator() {
   await PlacesUtils.bookmarks.update({
     guid: separatorGuid,
     parentGuid,
-    index: 0
+    index: 0,
   });
 
   changes = await PlacesSyncUtils.bookmarks.pullChanges();

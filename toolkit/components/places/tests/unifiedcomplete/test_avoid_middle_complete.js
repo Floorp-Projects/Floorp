@@ -5,14 +5,14 @@
 add_task(async function test_prefix_space_noautofill() {
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://moz.org/test/"),
-    transition: TRANSITION_TYPED
+    transition: TRANSITION_TYPED,
   });
 
   info("Should not try to autoFill if search string contains a space");
   await check_autocomplete({
     search: " mo",
     autofilled: " mo",
-    completed: " mo"
+    completed: " mo",
   });
 
   await cleanup();
@@ -21,14 +21,14 @@ add_task(async function test_prefix_space_noautofill() {
 add_task(async function test_trailing_space_noautofill() {
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://moz.org/test/"),
-    transition: TRANSITION_TYPED
+    transition: TRANSITION_TYPED,
   });
 
   info("Should not try to autoFill if search string contains a space");
   await check_autocomplete({
     search: "mo ",
     autofilled: "mo ",
-    completed: "mo "
+    completed: "mo ",
   });
 
   await cleanup();
@@ -46,7 +46,7 @@ add_task(async function test_searchEngine_autofill() {
   await check_autocomplete({
     search: "ca",
     autofilled: "cake.search/",
-    completed: "http://cake.search/"
+    completed: "http://cake.search/",
   });
 
   await cleanup();
@@ -64,7 +64,7 @@ add_task(async function test_searchEngine_prefix_space_noautofill() {
   await check_autocomplete({
     search: " cu",
     autofilled: " cu",
-    completed: " cu"
+    completed: " cu",
   });
 
   await cleanup();
@@ -82,7 +82,7 @@ add_task(async function test_searchEngine_trailing_space_noautofill() {
   await check_autocomplete({
     search: "ba ",
     autofilled: "ba ",
-    completed: "ba "
+    completed: "ba ",
   });
 
   await cleanup();
@@ -100,7 +100,7 @@ add_task(async function test_searchEngine_www_noautofill() {
   await check_autocomplete({
     search: "www.ham",
     autofilled: "www.ham",
-    completed: "www.ham"
+    completed: "www.ham",
   });
 
   await cleanup();
@@ -118,7 +118,7 @@ add_task(async function test_searchEngine_different_scheme_noautofill() {
   await check_autocomplete({
     search: "http://pie",
     autofilled: "http://pie",
-    completed: "http://pie"
+    completed: "http://pie",
   });
 
   await cleanup();
@@ -137,21 +137,21 @@ add_task(async function test_searchEngine_matching_prefix_autofill() {
   await check_autocomplete({
     search: "http://www.be",
     autofilled: "http://www.bean.search/",
-    completed: "http://www.bean.search/"
+    completed: "http://www.bean.search/",
   });
 
   info("Should autoFill search engine if search string has www prefix.");
   await check_autocomplete({
     search: "www.be",
     autofilled: "www.bean.search/",
-    completed: "http://www.bean.search/"
+    completed: "http://www.bean.search/",
   });
 
   info("Should autoFill search engine if search string has matching scheme.");
   await check_autocomplete({
     search: "http://be",
     autofilled: "http://bean.search/",
-    completed: "http://www.bean.search/"
+    completed: "http://www.bean.search/",
   });
 
   await cleanup();
@@ -170,7 +170,7 @@ add_task(async function test_prefix_autofill() {
     incompleteSearch: "moz",
     search: "mozi",
     autofilled: "mozilla.org/",
-    completed: "http://mozilla.org/"
+    completed: "http://mozilla.org/",
   });
 
   await cleanup();

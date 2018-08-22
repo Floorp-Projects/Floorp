@@ -16,7 +16,7 @@ add_task(async function() {
           PlacesUtils.bookmarks.removeObserver(this);
           resolve({ property, value });
         },
-        QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver])
+        QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver]),
       });
     });
   }
@@ -24,7 +24,7 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: TEST_URL,
-    waitForStateStop: true
+    waitForStateStop: true,
   });
 
   let library = await promiseLibrary("UnfiledBookmarks");

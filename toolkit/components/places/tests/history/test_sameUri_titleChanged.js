@@ -14,7 +14,7 @@ add_task(async function test() {
           PlacesUtils.history.removeObserver(historyObserver);
           resolve();
         }
-      }
+      },
     };
     PlacesUtils.history.addObserver(historyObserver);
   });

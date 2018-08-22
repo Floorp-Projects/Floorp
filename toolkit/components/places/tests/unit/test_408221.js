@@ -37,11 +37,11 @@ AutoCompleteInput.prototype = {
     invalidate() {},
 
     // nsISupports implementation
-    QueryInterface: ChromeUtils.generateQI(["nsIAutoCompletePopup"])
+    QueryInterface: ChromeUtils.generateQI(["nsIAutoCompletePopup"]),
   },
 
   // nsISupports implementation
-  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteInput"])
+  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteInput"]),
 };
 
 // Get tagging service

@@ -11,11 +11,11 @@ add_task(async function same_host_redirect() {
   let destUrl = "https://other.bookmarked.com/";
   await PlacesTestUtils.addVisits([
     { uri: srcUrl, transition: TRANSITION_LINK },
-    { uri: destUrl, transition: TRANSITION_REDIRECT_TEMPORARY, referrer: srcUrl }
+    { uri: destUrl, transition: TRANSITION_REDIRECT_TEMPORARY, referrer: srcUrl },
   ]);
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: srcUrl
+    url: srcUrl,
   });
 
   registerCleanupFunction(async function() {
@@ -47,11 +47,11 @@ add_task(async function other_host_redirect() {
   let destUrl = "https://notfirst.com/";
   await PlacesTestUtils.addVisits([
     { uri: srcUrl, transition: TRANSITION_LINK },
-    { uri: destUrl, transition: TRANSITION_REDIRECT_TEMPORARY, referrer: srcUrl }
+    { uri: destUrl, transition: TRANSITION_REDIRECT_TEMPORARY, referrer: srcUrl },
   ]);
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: srcUrl
+    url: srcUrl,
   });
 
   let promise = Promise.race([
@@ -60,7 +60,7 @@ add_task(async function other_host_redirect() {
             uri.spec == srcUrl &&
             value == SMALLPNG_DATA_URI.spec;
     }, "history"),
-    new Promise((resolve, reject) => do_timeout(300, () => reject(new Error("timeout"))))
+    new Promise((resolve, reject) => do_timeout(300, () => reject(new Error("timeout")))),
   ]);
 
   PlacesUtils.favicons.setAndFetchFaviconForPage(Services.io.newURI(destUrl),

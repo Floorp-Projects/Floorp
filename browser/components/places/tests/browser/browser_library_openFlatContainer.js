@@ -77,7 +77,7 @@ add_task(async function test_open_history_query() {
   const todayTitle = PlacesUtils.getString("finduri-AgeInDays-is-0");
   await PlacesTestUtils.addVisits([{
     "uri": "http://example.com",
-    "title": "Whittingtons"
+    "title": "Whittingtons",
   }]);
 
   library.PlacesOrganizer.selectLeftPaneBuiltIn("History");

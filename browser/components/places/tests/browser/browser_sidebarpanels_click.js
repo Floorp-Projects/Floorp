@@ -49,7 +49,7 @@ add_task(async function test_sidebarpanels_click() {
     },
     sidebarName: BOOKMARKS_SIDEBAR_ID,
     treeName: BOOKMARKS_SIDEBAR_TREE_ID,
-    desc: "Bookmarks sidebar test"
+    desc: "Bookmarks sidebar test",
   });
 
   tests.push({
@@ -58,7 +58,7 @@ add_task(async function test_sidebarpanels_click() {
       let uri = Services.io.newURI(TEST_URL);
       await PlacesTestUtils.addVisits({
         uri, visitDate: Date.now() * 1000,
-        transition: PlacesUtils.history.TRANSITION_TYPED
+        transition: PlacesUtils.history.TRANSITION_TYPED,
       });
     },
     prepare() {
@@ -74,7 +74,7 @@ add_task(async function test_sidebarpanels_click() {
     },
     sidebarName: HISTORY_SIDEBAR_ID,
     treeName: HISTORY_SIDEBAR_TREE_ID,
-    desc: "History sidebar test"
+    desc: "History sidebar test",
   });
 
   for (let test of tests) {

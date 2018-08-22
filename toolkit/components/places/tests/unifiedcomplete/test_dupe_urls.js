@@ -8,7 +8,7 @@ add_task(async function test_dupe_urls() {
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/"),
   }, {
-    uri: NetUtil.newURI("http://mozilla.org/?")
+    uri: NetUtil.newURI("http://mozilla.org/?"),
   });
   await check_autocomplete({
     search: "moz",
@@ -18,7 +18,7 @@ add_task(async function test_dupe_urls() {
       {
         value: "mozilla.org/",
         comment: "mozilla.org",
-        style: ["autofill", "heuristic"]
+        style: ["autofill", "heuristic"],
       },
     ],
   });
@@ -28,7 +28,7 @@ add_task(async function test_dupe_secure_urls() {
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("https://example.org/"),
   }, {
-    uri: NetUtil.newURI("https://example.org/?")
+    uri: NetUtil.newURI("https://example.org/?"),
   });
   await check_autocomplete({
     search: "exam",
@@ -38,7 +38,7 @@ add_task(async function test_dupe_secure_urls() {
       {
         value: "example.org/",
         comment: "https://example.org",
-        style: ["autofill", "heuristic"]
+        style: ["autofill", "heuristic"],
       },
     ],
   });

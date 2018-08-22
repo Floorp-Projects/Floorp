@@ -8,7 +8,7 @@ add_task(async function test() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "Plain Bob",
-    url: "http://example.com"
+    url: "http://example.com",
   });
 
   registerCleanupFunction(async () => {

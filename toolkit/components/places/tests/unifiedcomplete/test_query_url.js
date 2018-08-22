@@ -6,12 +6,12 @@ add_task(async function test_no_slash() {
   info("Searching for host match without slash should match host");
   await PlacesTestUtils.addVisits([
     { uri: "http://file.org/test/" },
-    { uri: "file:///c:/test.html" }
+    { uri: "file:///c:/test.html" },
   ]);
   await check_autocomplete({
     search: "file",
     autofilled: "file.org/",
-    completed: "http://file.org/"
+    completed: "http://file.org/",
   });
   await cleanup();
 });
@@ -26,7 +26,7 @@ add_task(async function test_w_slash() {
   await check_autocomplete({
     search: "file.org/",
     autofilled: "file.org/",
-    completed: "http://file.org/"
+    completed: "http://file.org/",
   });
   await cleanup();
 });
@@ -41,7 +41,7 @@ add_task(async function test_middle() {
   await check_autocomplete({
     search: "file.org/t",
     autofilled: "file.org/test/",
-    completed: "http://file.org/test/"
+    completed: "http://file.org/test/",
   });
   await cleanup();
 });
@@ -54,7 +54,7 @@ add_task(async function test_nonhost() {
   await check_autocomplete({
     search: "file",
     autofilled: "file",
-    completed: "file"
+    completed: "file",
   });
   await cleanup();
 });

@@ -168,7 +168,7 @@ add_task(async function test_getAnnotationsHavingName() {
   const ANNOS = {
     "int": 7,
     "double": 7.7,
-    "string": "seven"
+    "string": "seven",
   };
   for (let name in ANNOS) {
     PlacesUtils.annotations.setItemAnnotation(

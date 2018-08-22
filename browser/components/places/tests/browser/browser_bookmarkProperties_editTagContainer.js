@@ -5,7 +5,7 @@ add_task(async function() {
   let uri = Services.io.newURI("http://example.com/");
   let bm = await PlacesUtils.bookmarks.insert({
     url: uri.spec,
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(bm);

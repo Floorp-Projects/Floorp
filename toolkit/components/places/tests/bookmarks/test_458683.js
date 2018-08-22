@@ -65,22 +65,22 @@ add_task(async function() {
   // support inserting invalid items into the tag folder.
   await insert({
     parentGuid: tagItemGuid,
-    type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
   });
   await insert({
     parentGuid: tagItemGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
 
   // add a separator and a folder inside tag root
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.tagsGuid,
-    type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
   });
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.tagsGuid,
     title: "test tags root folder",
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
 
   // sanity

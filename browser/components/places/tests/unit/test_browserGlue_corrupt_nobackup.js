@@ -39,7 +39,7 @@ add_task(async function() {
   // Check that bookmarks html has been restored.
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   });
   Assert.equal(bm.title, "example");
 });

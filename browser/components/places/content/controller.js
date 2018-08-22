@@ -58,7 +58,7 @@ PlacesInsertionPoint.prototype = {
 
   get isTag() {
     return typeof(this.tagName) == "string";
-  }
+  },
 };
 
 /**
@@ -89,7 +89,7 @@ PlacesController.prototype = {
   disableUserActions: false,
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIClipboardOwner
+    Ci.nsIClipboardOwner,
   ]),
 
   // nsIClipboardOwner
@@ -275,7 +275,7 @@ PlacesController.prototype = {
                                          type: "bookmark",
                                          hiddenRows: [ "keyword", "location" ],
                                          uri: Services.io.newURI(node.uri),
-                                         title: node.title
+                                         title: node.title,
                                        }, window.top);
       break;
     }
@@ -649,7 +649,7 @@ PlacesController.prototype = {
 
     PlacesUIUtils.showBookmarkDialog({ action: "edit",
                                        node,
-                                       hiddenRows: [ "folderPicker" ]
+                                       hiddenRows: [ "folderPicker" ],
                                      }, window.top);
   },
 
@@ -698,7 +698,7 @@ PlacesController.prototype = {
       PlacesUIUtils.showBookmarkDialog({ action: "add",
                                          type: aType,
                                          defaultInsertionPoint: ip,
-                                         hiddenRows: [ "folderPicker" ]
+                                         hiddenRows: [ "folderPicker" ],
                                        }, window.top);
     if (bookmarkGuid) {
       this._view.selectItems([bookmarkGuid], false);
@@ -914,7 +914,7 @@ PlacesController.prototype = {
       // end up removing more history than requested.
       await PlacesUtils.history.removeByFilter({
         beginDate: PlacesUtils.toDate(beginTime + 1000),
-        endDate: PlacesUtils.toDate(endTime)
+        endDate: PlacesUtils.toDate(endTime),
       });
     }
   },
@@ -1431,7 +1431,7 @@ var PlacesControllerDragHelper = {
         nodes.push({
           uri: spec,
           title: data.label,
-          type: PlacesUtils.TYPE_X_MOZ_URL
+          type: PlacesUtils.TYPE_X_MOZ_URL,
         });
       } else {
         throw new Error("bogus data was passed as a tab");

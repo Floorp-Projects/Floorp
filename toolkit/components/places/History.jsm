@@ -1030,7 +1030,7 @@ var fetch = async function(db, guidOrURL, options) {
           guid: row.getResultByName("guid"),
           url: new URL(row.getResultByName("url")),
           frecency: row.getResultByName("frecency"),
-          title: row.getResultByName("title") || ""
+          title: row.getResultByName("title") || "",
         };
         placeId = row.getResultByName("id");
       }
@@ -1124,7 +1124,7 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
        if (onResult) {
          onResultData.push({
            date: new Date(row.getResultByName("date")),
-           transition: row.getResultByName("visit_type")
+           transition: row.getResultByName("visit_type"),
          });
        }
      }
@@ -1256,7 +1256,7 @@ var removeByFilter = async function(db, filter, onResult = null) {
           guid,
           title: row.getResultByName("title"),
           frecency: row.getResultByName("frecency"),
-          url: new URL(url)
+          url: new URL(url),
         });
       }
     });
@@ -1320,7 +1320,7 @@ var remove = async function(db, {guids, urls}, onResult = null) {
         guid,
         title: row.getResultByName("title"),
         frecency: row.getResultByName("frecency"),
-        url: new URL(url)
+        url: new URL(url),
       });
     }
   });
@@ -1376,7 +1376,7 @@ function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo = {}) {
       return {
         date: PlacesUtils.toDate(visit.visitDate),
         transition: visit.transitionType,
-        referrer: (visit.referrerURI) ? new URL(visit.referrerURI.spec) : null
+        referrer: (visit.referrerURI) ? new URL(visit.referrerURI.spec) : null,
       };
     });
   }
@@ -1397,7 +1397,7 @@ var insert = function(db, pageInfo) {
       },
       handleCompletion: () => {
         resolve(pageInfo);
-      }
+      },
     });
   });
 };
@@ -1433,7 +1433,7 @@ var insertMany = function(db, pageInfos, onResult, onError) {
         } else {
           reject({message: "No items were added to history."});
         }
-      }
+      },
     }, true);
   });
 };

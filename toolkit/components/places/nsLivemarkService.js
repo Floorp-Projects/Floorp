@@ -111,7 +111,7 @@ LivemarkService.prototype = {
             dateAdded: row.getResultByName("dateAdded"),
             lastModified: row.getResultByName("lastModified"),
             feedURI: NetUtil.newURI(row.getResultByName("feedURI")),
-            siteURI: siteURI ? NetUtil.newURI(siteURI) : null
+            siteURI: siteURI ? NetUtil.newURI(siteURI) : null,
           });
           this._livemarksMap.set(livemark.guid, livemark);
         }
@@ -212,7 +212,7 @@ LivemarkService.prototype = {
                                     siteURI:      aLivemarkInfo.siteURI,
                                     guid:         folder.guid,
                                     dateAdded:    toPRTime(folder.dateAdded),
-                                    lastModified: toPRTime(folder.lastModified)
+                                    lastModified: toPRTime(folder.lastModified),
                                   });
 
       livemark.writeFeedURI(aLivemarkInfo.feedURI, aLivemarkInfo.source);
@@ -443,8 +443,8 @@ LivemarkService.prototype = {
     Ci.nsINavBookmarkObserver,
     Ci.nsINavHistoryObserver,
     Ci.nsIObserver,
-    Ci.nsISupportsWeakReference
-  ])
+    Ci.nsISupportsWeakReference,
+  ]),
 };
 
 // Livemark
@@ -573,7 +573,7 @@ Livemark.prototype = {
         uri: this.feedURI,
         loadingPrincipal: Services.scriptSecurityManager.createCodebasePrincipal(this.feedURI, {}),
         securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_XMLHTTPREQUEST
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_XMLHTTPREQUEST,
       }).QueryInterface(Ci.nsIHttpChannel);
       channel.loadGroup = loadgroup;
       channel.loadFlags |= Ci.nsIRequest.LOAD_BACKGROUND |
@@ -676,7 +676,7 @@ Livemark.prototype = {
         get tags() {
           return PlacesUtils.tagging.getTagsForURI(NetUtil.newURI(this.uri)).join(", ");
         },
-        QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryResultNode])
+        QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryResultNode]),
       };
       nodes.push(node);
     }
@@ -753,8 +753,8 @@ Livemark.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.mozILivemark
-  ])
+    Ci.mozILivemark,
+  ]),
 };
 
 // LivemarkLoadListener
@@ -916,8 +916,8 @@ LivemarkLoadListener.prototype = {
     Ci.nsIFeedResultListener,
     Ci.nsIStreamListener,
     Ci.nsIRequestObserver,
-    Ci.nsIInterfaceRequestor
-  ])
+    Ci.nsIInterfaceRequestor,
+  ]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([LivemarkService]);

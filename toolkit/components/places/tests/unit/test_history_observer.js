@@ -15,7 +15,7 @@ NavHistoryObserver.prototype = {
   onClearHistory() { },
   onPageChanged() { },
   onDeleteVisits() { },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
 };
 
 /**
@@ -61,7 +61,7 @@ async function task_add_visit(uri, timestamp, transition) {
   await PlacesTestUtils.addVisits({
     uri,
     transition: transition || TRANSITION_TYPED,
-    visitDate: timestamp
+    visitDate: timestamp,
   });
   return [uri, timestamp];
 }
@@ -199,7 +199,7 @@ add_task(async function test_onTitleChanged() {
   let title = "test-title";
   await PlacesTestUtils.addVisits({
     uri: testuri,
-    title
+    title,
   });
   await promiseNotify;
 });

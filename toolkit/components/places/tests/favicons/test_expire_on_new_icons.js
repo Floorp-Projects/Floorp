@@ -12,17 +12,17 @@ add_task(async function test_replaceFaviconData_validHistoryURI() {
     {
       name: "favicon-normal16.png",
       mimeType: "image/png",
-      expire: PlacesUtils.toPRTime(new Date(1)) // Very old.
+      expire: PlacesUtils.toPRTime(new Date(1)), // Very old.
     },
     {
       name: "favicon-normal32.png",
       mimeType: "image/png",
-      expire: 0
+      expire: 0,
     },
     {
       name: "favicon-big64.png",
       mimeType: "image/png",
-      expire: 0
+      expire: 0,
     },
   ];
 

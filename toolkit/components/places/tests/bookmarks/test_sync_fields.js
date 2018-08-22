@@ -323,7 +323,7 @@ class AsyncTestCases extends TestCases {
     let item = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
       parentGuid,
-      index
+      index,
     });
     return item.guid;
   }

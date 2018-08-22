@@ -216,7 +216,7 @@ add_task(async function test_move() {
       guid: "bzBmk_______",
       title: "Bugzilla",
       url: "https://bugzilla.mozilla.org",
-    }]
+    }],
   });
   await PlacesTestUtils.markBookmarksAsSynced();
 

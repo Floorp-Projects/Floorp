@@ -13,14 +13,14 @@ add_task(async function test_get_child_index() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: "http://test.mozilla.org/bookmark/",
-    title: "Test bookmark"
+    title: "Test bookmark",
   });
 
   // Add a bookmark to unfiled folder.
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "http://test.mozilla.org/unfiled/",
-    title: "Unfiled bookmark"
+    title: "Unfiled bookmark",
   });
 
   // Get the unfiled bookmark node.

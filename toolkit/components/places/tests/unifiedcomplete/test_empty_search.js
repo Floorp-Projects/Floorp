@@ -22,7 +22,7 @@ add_task(async function test_javascript_match() {
     { uri: uri3, title: "title", transition: TRANSITION_TYPED},
     { uri: uri4, title: "title", transition: TRANSITION_TYPED },
     { uri: uri6, title: "title", transition: TRANSITION_TYPED },
-    { uri: uri7, title: "title" }
+    { uri: uri7, title: "title" },
   ]);
 
   await addBookmark({ uri: uri2,
@@ -51,7 +51,7 @@ add_task(async function test_javascript_match() {
                { uri: uri5, title: "title", style: ["bookmark"] },
                { uri: uri6, title: "title", style: ["bookmark"] },
                makeSwitchToTabMatch("http://t.foo/6", { title: "title" }),
-             ]
+             ],
   });
 
   // Note the next few tests do *not* get a search result as enable-actions
@@ -60,14 +60,14 @@ add_task(async function test_javascript_match() {
   await check_autocomplete({
     search: "foo ^ ~",
     matches: [ { uri: uri3, title: "title" },
-               { uri: uri4, title: "title" } ]
+               { uri: uri4, title: "title" } ],
   });
 
   info("Drop-down empty search matches only typed history");
   await check_autocomplete({
     search: "",
     matches: [ { uri: uri3, title: "title" },
-               { uri: uri4, title: "title" } ]
+               { uri: uri4, title: "title" } ],
   });
 
   info("Drop-down empty search matches only bookmarks");
@@ -78,7 +78,7 @@ add_task(async function test_javascript_match() {
     matches: [ { uri: uri2, title: "title", style: ["bookmark"] },
                { uri: uri4, title: "title", style: ["bookmark"] },
                { uri: uri5, title: "title", style: ["bookmark"] },
-               { uri: uri6, title: "title", style: ["bookmark"] } ]
+               { uri: uri6, title: "title", style: ["bookmark"] } ],
   });
 
   info("Drop-down empty search matches only open tabs");
@@ -88,7 +88,7 @@ add_task(async function test_javascript_match() {
     searchParam: "enable-actions",
     matches: [
                makeSwitchToTabMatch("http://t.foo/6", { title: "title" }),
-             ]
+             ],
   });
 
   Services.prefs.clearUserPref("browser.urlbar.suggest.history");

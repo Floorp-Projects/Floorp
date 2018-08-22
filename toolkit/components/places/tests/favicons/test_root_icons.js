@@ -67,7 +67,7 @@ add_task(async function test_removePagesByTimeframe() {
 
   await PlacesUtils.history.removeByFilter({
     beginDate: new Date(Date.now() - 14400000),
-    endDate: new Date()
+    endDate: new Date(),
   });
 
   // Check database entries.
@@ -83,7 +83,7 @@ add_task(async function test_removePagesByTimeframe() {
 
   await PlacesUtils.history.removeByFilter({
     beginDate: new Date(0),
-    endDt: new Date()
+    endDt: new Date(),
   });
   await PlacesTestUtils.promiseAsyncUpdates();
   rows = await db.execute("SELECT * FROM moz_icons");

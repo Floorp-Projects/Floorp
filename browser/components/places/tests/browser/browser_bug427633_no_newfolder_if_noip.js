@@ -11,7 +11,7 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: TEST_URL,
-    waitForStateStop: true
+    waitForStateStop: true,
   });
 
   registerCleanupFunction(async () => {

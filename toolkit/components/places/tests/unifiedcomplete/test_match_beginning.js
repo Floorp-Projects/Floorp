@@ -14,32 +14,32 @@ add_task(async function test_match_beginning() {
   let uri2 = NetUtil.newURI("https://y.com/x");
   await PlacesTestUtils.addVisits([
     { uri: uri1, title: "a b" },
-    { uri: uri2, title: "b a" }
+    { uri: uri2, title: "b a" },
   ]);
 
   info("Match at the beginning of titles");
   Services.prefs.setIntPref("browser.urlbar.matchBehavior", 3);
   await check_autocomplete({
     search: "a",
-    matches: [ { uri: uri1, title: "a b" } ]
+    matches: [ { uri: uri1, title: "a b" } ],
   });
 
   info("Match at the beginning of titles");
   await check_autocomplete({
     search: "b",
-    matches: [ { uri: uri2, title: "b a" } ]
+    matches: [ { uri: uri2, title: "b a" } ],
   });
 
   info("Match at the beginning of urls");
   await check_autocomplete({
     search: "x",
-    matches: [ { uri: uri1, title: "a b" } ]
+    matches: [ { uri: uri1, title: "a b" } ],
   });
 
   info("Match at the beginning of urls");
   await check_autocomplete({
     search: "y",
-    matches: [ { uri: uri2, title: "b a" } ]
+    matches: [ { uri: uri2, title: "b a" } ],
   });
 
   info("Sanity check that matching anywhere finds more");
@@ -47,7 +47,7 @@ add_task(async function test_match_beginning() {
   await check_autocomplete({
     search: "a",
     matches: [ { uri: uri1, title: "a b" },
-               { uri: uri2, title: "b a" } ]
+               { uri: uri2, title: "b a" } ],
   });
 
   await cleanup();

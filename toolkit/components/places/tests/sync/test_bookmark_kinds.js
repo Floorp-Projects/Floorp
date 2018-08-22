@@ -524,7 +524,7 @@ add_task(async function test_mismatched_but_compatible_folder_types() {
       ["HCRq40Rnxhrd", "YeyWCV1RVsYw", "GCceVZMhvMbP", "sYi2hevdArlF",
        "vjbZlPlSyGY8", "UtjUhVyrpeG6", "rVq8WMG2wfZI", "Lx0tcy43ZKhZ",
        "oT74WwV8_j4P", "IztsItWVSo3-"],
-    "parentid": "toolbar"
+    "parentid": "toolbar",
   }]);
 
   info("Apply remote");
@@ -575,7 +575,7 @@ add_task(async function test_mismatched_but_incompatible_folder_types() {
       "type": "folder",
       "title": "not really a Livemark",
       "description": null,
-      "parentid": "menu"
+      "parentid": "menu",
     }]);
 
     info("Apply remote, should fail");
@@ -607,7 +607,7 @@ add_task(async function test_different_but_compatible_bookmark_types() {
           title: "a query",
           url: "place:foo",
 
-        }
+        },
       ],
     });
 

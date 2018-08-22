@@ -34,7 +34,7 @@ add_task(async function test_remove_single() {
       await PlacesUtils.bookmarks.insert({
         parentGuid: PlacesUtils.bookmarks.unfiledGuid,
         url: uri,
-        title: "test bookmark"
+        title: "test bookmark",
       });
     }
 
@@ -78,7 +78,7 @@ add_task(async function test_remove_single() {
         },
         onDeleteVisits(aURI) {
           Assert.equal(aURI.spec, uri.spec, "Observing onDeleteVisits on the right uri");
-        }
+        },
       };
     });
     PlacesUtils.history.addObserver(observer);

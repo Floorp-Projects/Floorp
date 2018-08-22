@@ -288,7 +288,7 @@ function merge(item1, item2) {
   let mean = {
     lightness: (lab1.lightness * num1 + lab2.lightness * num2) / total,
     a: (lab1.a * num1 + lab2.a * num2) / total,
-    b: (lab1.b * num1 + lab2.b * num2) / total
+    b: (lab1.b * num1 + lab2.b * num2) / total,
   };
 
   let colors = item1.colors.concat(item2.colors);

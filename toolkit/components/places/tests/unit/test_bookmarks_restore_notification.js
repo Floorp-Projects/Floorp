@@ -34,7 +34,7 @@ var uris = [
 async function addBookmarks() {
   for (let url of uris) {
     await PlacesUtils.bookmarks.insert({
-      url, parentGuid: PlacesUtils.bookmarks.menuGuid
+      url, parentGuid: PlacesUtils.bookmarks.menuGuid,
     });
     Assert.ok(await PlacesUtils.bookmarks.fetch({ url }), "Url is bookmarked");
   }
@@ -122,7 +122,7 @@ add_task(async function test_json_restore_normal() {
   //           otherwise, set it to null
   let expectedData = {
     data:       NSIOBSERVER_DATA_JSON,
-    folderId:   null
+    folderId:   null,
   };
   let expectPromises = registerObservers(true);
 
@@ -145,7 +145,7 @@ add_task(async function test_json_restore_normal() {
 add_task(async function test_json_restore_empty() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_JSON,
-    folderId:   null
+    folderId:   null,
   };
   let expectPromises = registerObservers(false);
 
@@ -161,7 +161,7 @@ add_task(async function test_json_restore_empty() {
 add_task(async function test_json_restore_nonexist() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_JSON,
-    folderId:   null
+    folderId:   null,
   };
   let expectPromises = registerObservers(false);
 
@@ -178,7 +178,7 @@ add_task(async function test_json_restore_nonexist() {
 add_task(async function test_html_restore_normal() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML,
-    folderId:   null
+    folderId:   null,
   };
   let expectPromises = registerObservers(true);
 
@@ -201,7 +201,7 @@ add_task(async function test_html_restore_normal() {
 add_task(async function test_html_restore_empty() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML,
-    folderId:   null
+    folderId:   null,
   };
   let expectPromises = registerObservers(true);
 
@@ -221,7 +221,7 @@ add_task(async function test_html_restore_empty() {
 add_task(async function test_html_restore_nonexist() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML,
-    folderId:   null
+    folderId:   null,
   };
   let expectPromises = registerObservers(false);
 
@@ -238,7 +238,7 @@ add_task(async function test_html_restore_nonexist() {
 add_task(async function test_html_init_restore_normal() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML_INIT,
-    folderId:   null
+    folderId:   null,
   };
   let expectPromises = registerObservers(true);
 
@@ -261,7 +261,7 @@ add_task(async function test_html_init_restore_normal() {
 add_task(async function test_html_init_restore_empty() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML_INIT,
-    folderId:   null
+    folderId:   null,
   };
   let expectPromises = registerObservers(true);
 
@@ -281,7 +281,7 @@ add_task(async function test_html_init_restore_empty() {
 add_task(async function test_html_init_restore_nonexist() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML_INIT,
-    folderId:   null
+    folderId:   null,
   };
   let expectPromises = registerObservers(false);
 

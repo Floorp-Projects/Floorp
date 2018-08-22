@@ -9,7 +9,7 @@ add_task(async function() {
   let root = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "",
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
 
   registerCleanupFunction(async () => {
@@ -34,7 +34,7 @@ add_task(async function() {
     let shortcut = await PlacesUtils.bookmarks.insert({
       parentGuid: root.guid,
       title: "bar",
-      url: `place:parent=${folder.guid}`
+      url: `place:parent=${folder.guid}`,
     });
     tree.selectItems([shortcut.guid]);
     Assert.equal(tree.selectedNode.bookmarkGuid, shortcut.guid,
@@ -57,7 +57,7 @@ add_task(async function() {
     let query = await PlacesUtils.bookmarks.insert({
       parentGuid: root.guid,
       title: "bar",
-      url: `place:terms=foo`
+      url: `place:terms=foo`,
     });
     tree.selectItems([query.guid]);
     Assert.equal(tree.selectedNode.bookmarkGuid, query.guid,

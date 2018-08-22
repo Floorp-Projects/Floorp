@@ -77,7 +77,7 @@ var PlacesTestUtils = Object.freeze({
       info.visits = [{
         transition: place.transition,
         date: visitDate,
-        referrer: place.referrer
+        referrer: place.referrer,
       }];
       infos.push(info);
       if (place.transition != PlacesUtils.history.TRANSITIONS.EMBED)
@@ -347,7 +347,7 @@ var PlacesTestUtils = Object.freeze({
             return false;
           }
           return () => false;
-        }
+        },
       });
       PlacesUtils[type].addObserver(proxifiedObserver);
     });

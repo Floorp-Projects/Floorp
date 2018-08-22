@@ -28,7 +28,7 @@ add_task(async function() {
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     title: "bookmark/" + TEST_URL.spec,
-    url: TEST_URL
+    url: TEST_URL,
   });
 
   ok(newBookmark, "A bookmark was added");

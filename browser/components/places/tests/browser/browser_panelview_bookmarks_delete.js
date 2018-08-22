@@ -37,7 +37,7 @@ add_task(async function test_panelview_bookmarks_delete() {
   promise = BrowserTestUtils.waitForEvent(placesContext, "popupshown");
   EventUtils.synthesizeMouseAtCenter(listItem, {
     button: 2,
-    type: "contextmenu"
+    type: "contextmenu",
   });
   await promise;
 

@@ -37,7 +37,7 @@ var testData = [
   { isVisit: true,
     uri: "http://notbookmarked.com/",
     title: "",
-    isInQuery: false }
+    isInQuery: false },
 ];
 
 
@@ -82,7 +82,7 @@ add_task(async function test_onlyBookmarked() {
       title: "",
       parentGuid: PlacesUtils.bookmarks.menuGuid,
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-      isInQuery: false }
+      isInQuery: false },
   ];
 
   await task_populateDB(liveUpdateTestData); // add to the db

@@ -12,21 +12,21 @@ add_task(async function() {
   await check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("mozilla", { heuristic: true }) ]
+    matches: [ makeSearchMatch("mozilla", { heuristic: true }) ],
   });
 
   info("search engine, uri-like input");
   await check_autocomplete({
     search: "http:///",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("http:///", { heuristic: true }) ]
+    matches: [ makeSearchMatch("http:///", { heuristic: true }) ],
   });
 
   info("search engine, multiple words");
   await check_autocomplete({
     search: "mozzarella cheese",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("mozzarella cheese", { heuristic: true }) ]
+    matches: [ makeSearchMatch("mozzarella cheese", { heuristic: true }) ],
   });
 
   info("search engine, after current engine has changed");
@@ -38,7 +38,7 @@ add_task(async function() {
   await check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("mozilla", { engineName: "MozSearch2", heuristic: true }) ]
+    matches: [ makeSearchMatch("mozilla", { engineName: "MozSearch2", heuristic: true }) ],
   });
 
   await cleanup();

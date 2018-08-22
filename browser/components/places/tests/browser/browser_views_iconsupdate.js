@@ -36,7 +36,7 @@ add_task(async function() {
   let bm = await PlacesUtils.bookmarks.insert({
     url: PAGE_URI,
     title: "test icon",
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
   });
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(bm);
@@ -117,6 +117,6 @@ async function getRectForSidebarItem(guid) {
     left: treerect.left + cellrect.left + sidebar.getBoundingClientRect().left,
     top: treerect.top + cellrect.top + sidebar.getBoundingClientRect().top,
     width: cellrect.width,
-    height: cellrect.height
+    height: cellrect.height,
   };
 }
