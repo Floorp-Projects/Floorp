@@ -144,9 +144,7 @@ tasks:
             --apk focusX86/release/app-focus-x86-release-unsigned.apk \
             --apk klarX86/release/app-klar-x86-release-unsigned.apk \
             --apk focusArm/release/app-focus-arm-release-unsigned.apk \
-            --apk klarArm/release/app-klar-arm-release-unsigned.apk \
-            --apk focusAarch64/release/app-focus-aarch64-release-unsigned.apk \
-            --apk klarAarch64/release/app-klar-aarch64-release-unsigned.apk
+            --apk klarArm/release/app-klar-arm-release-unsigned.apk
       features:
         taskclusterProxy: true
         chainOfTrust: true
