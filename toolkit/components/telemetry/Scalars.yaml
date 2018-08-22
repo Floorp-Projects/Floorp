@@ -948,6 +948,38 @@ media:
       - main
       - content
 
+  blocked_no_metadata:
+    bug_numbers:
+      - 1483703
+    description: >
+      The number of HTMLMediaElements which we blocked because they hadn't loaded metadata yet.
+    expires: "68"
+    kind: uint
+    notification_emails:
+      - cpearce@mozilla.com
+      - alwu@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - main
+      - content
+
+  blocked_no_metadata_endup_no_audio_track:
+    bug_numbers:
+      - 1483703
+    description: >
+      The number of HTMLMediaElements which were blocked because they hadn't loaded metadata yet, but ended up having no audio track.
+    expires: "68"
+    kind: uint
+    notification_emails:
+      - cpearce@mozilla.com
+      - alwu@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - main
+      - content
+
 # The following section contains content process base counters.
 dom.contentprocess:
   buildID_mismatch:
