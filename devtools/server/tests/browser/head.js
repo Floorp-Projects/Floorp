@@ -12,7 +12,6 @@ Services.scriptloader.loadSubScript(
   this);
 
 const {DebuggerClient} = require("devtools/shared/client/debugger-client");
-const { ActorRegistry } = require("devtools/server/actor-registry");
 const {DebuggerServer} = require("devtools/server/main");
 
 const PATH = "browser/devtools/server/tests/browser/";

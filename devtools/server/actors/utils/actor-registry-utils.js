@@ -7,7 +7,6 @@
 const { Cu, CC } = require("chrome");
 
 const { DebuggerServer } = require("devtools/server/main");
-const { ActorRegistry } = require("devtools/server/actor-registry");
 
 /**
  * Support for actor registration. Main used by ActorRegistryActor
@@ -39,15 +38,15 @@ exports.registerActorInCurrentProcess = function(sourceText, fileName, options) 
 
   const { prefix, constructor, type } = options;
 
-  if (type.global && !ActorRegistry.globalActorFactories.hasOwnProperty(prefix)) {
-    ActorRegistry.addGlobalActor({
+  if (type.global && !DebuggerServer.globalActorFactories.hasOwnProperty(prefix)) {
+    DebuggerServer.addGlobalActor({
       constructorName: constructor,
       constructorFun: sandbox[constructor]
     }, prefix);
   }
 
-  if (type.target && !ActorRegistry.targetScopedActorFactories.hasOwnProperty(prefix)) {
-    ActorRegistry.addTargetScopedActor({
+  if (type.target && !DebuggerServer.targetScopedActorFactories.hasOwnProperty(prefix)) {
+    DebuggerServer.addTargetScopedActor({
       constructorName: constructor,
       constructorFun: sandbox[constructor]
     }, prefix);
@@ -67,10 +66,10 @@ exports.unregisterActor = function(options) {
 
 exports.unregisterActorInCurrentProcess = function(options) {
   if (options.target) {
-    ActorRegistry.removeTargetScopedActor(options);
+    DebuggerServer.removeTargetScopedActor(options);
   }
 
   if (options.global) {
-    ActorRegistry.removeGlobalActor(options);
+    DebuggerServer.removeGlobalActor(options);
   }
 };
