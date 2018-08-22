@@ -520,15 +520,6 @@ public class GeckoThread extends Thread {
         Looper.myQueue().removeIdleHandler(idleHandler);
     }
 
-    public static int getCrashReporterJobId() {
-        synchronized (INSTANCE) {
-            if (!INSTANCE.mInitialized) {
-                return 1024;        // speculative, unique value
-            }
-            return INSTANCE.mExtras.getInt(GeckoRuntimeSettings.EXTRA_CRASH_REPORTING_JOB_ID, 1024);
-        }
-    }
-
     @WrapForJNI(calledFrom = "gecko")
     private static boolean pumpMessageLoop(final Message msg) {
         final Handler geckoHandler = ThreadUtils.sGeckoHandler;
