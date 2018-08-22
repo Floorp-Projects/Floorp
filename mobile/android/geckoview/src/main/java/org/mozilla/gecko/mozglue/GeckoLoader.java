@@ -5,6 +5,16 @@
 
 package org.mozilla.gecko.mozglue;
 
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.annotation.JNITarget;
+import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.geckoview.BuildConfig;
+
+import android.content.Context;
+import android.os.Build;
+import android.os.Environment;
+import android.util.Log;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -12,19 +22,6 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Environment;
-import java.util.ArrayList;
-import android.util.Log;
-
-import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.annotation.JNITarget;
-import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.geckoview.BuildConfig;
 
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";
@@ -138,6 +135,12 @@ public final class GeckoLoader {
         }
 
         putenv("LANG=" + Locale.getDefault().toString());
+
+        final Class<?> crashHandler = GeckoAppShell.getCrashHandlerService();
+        if (crashHandler != null) {
+            putenv("MOZ_ANDROID_CRASH_HANDLER=" +
+                    context.getPackageName() + "/" + crashHandler.getName());
+        }
 
         putenv("MOZ_ANDROID_DEVICE_SDK_VERSION=" + Build.VERSION.SDK_INT);
 
