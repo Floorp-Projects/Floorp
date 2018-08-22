@@ -1538,10 +1538,21 @@ var BookmarkingUI = {
     let isStarred = !forceReset && this._itemGuids.size > 0;
     let label = this.stringbundleset.getAttribute(
       isStarred ? "string-editthisbookmark" : "string-bookmarkthispage");
+
+    let panelMenuToolbarButton =
+      document.getElementById("panelMenuBookmarkThisPage");
+    if (!panelMenuToolbarButton) {
+      // We don't have the star UI or context menu (e.g. we're the hidden
+      // window). So we just set the bookmarks menu item label and exit.
+      document.getElementById("menu_bookmarkThisPage")
+              .setAttribute("label", label);
+      return;
+    }
+
     for (let element of [
       document.getElementById("menu_bookmarkThisPage"),
       document.getElementById("context-bookmarkpage"),
-      document.getElementById("panelMenuBookmarkThisPage"),
+      panelMenuToolbarButton,
     ]) {
       element.setAttribute("label", label);
     }
