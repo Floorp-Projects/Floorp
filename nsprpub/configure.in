@@ -2106,6 +2106,10 @@ tools are selected during the Xcode/Developer Tools installation.])
 	    AC_DEFINE(_AMD64_)
 	    USE_64=1
 	    ;;
+    aarch64)
+	    AC_DEFINE(_ARM64_)
+	    USE_64=1
+	    ;;
     ia64)
 	    AC_DEFINE(_IA64_)
 	    USE_64=1
