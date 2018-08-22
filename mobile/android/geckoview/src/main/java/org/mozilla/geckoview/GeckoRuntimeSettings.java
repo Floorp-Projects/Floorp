@@ -9,6 +9,7 @@ package org.mozilla.geckoview;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import android.app.Service;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -252,6 +253,44 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mSettings.mScreenHeightOverride = height;
             return this;
         }
+
+        /**
+         * When set, the specified {@link android.app.Service} will be started by
+         * an {@link android.content.Intent} with action {@link GeckoRuntime#ACTION_CRASHED} when
+         * a crash is encountered. Crash details can be found in the Intent extras, such as
+         * {@link GeckoRuntime#EXTRA_MINIDUMP_PATH}.
+         * <br><br>
+         * The crash handler Service must be declared to run in a different process from
+         * the {@link GeckoRuntime}. Additionally, the handler will be run as a foreground service,
+         * so the normal rules about activating a foreground service apply.
+         * <br><br>
+         * In practice, you have one of three
+         * options once the crash handler is started:
+         * <ul>
+         * <li>Call {@link android.app.Service#startForeground(int, android.app.Notification)}. You can then
+         * take as much time as necessary to report the crash.</li>
+         * <li>Start an activity. Unless you also call {@link android.app.Service#startForeground(int, android.app.Notification)}
+         * this should be in a different process from the crash handler, since Android will
+         * kill the crash handler process as part of the background execution limitations.</li>
+         * <li>Schedule work via {@link android.app.job.JobScheduler}. This will allow you to
+         * do substantial work in the background without execution limits.</li>
+         * </ul><br>
+         * You can use {@link CrashReporter} to send the report to Mozilla, which provides Mozilla
+         * with data needed to fix the crash. Be aware that the minidump may contain
+         * personally identifiable information (PII). Consult Mozilla's
+         * <a href="https://www.mozilla.org/en-US/privacy/">privacy policy</a> for information
+         * on how this data will be handled.
+         *
+         * @param handler The class for the crash handler Service.
+         * @return This builder instance.
+         *
+         * @see <a href="https://developer.android.com/about/versions/oreo/background">Android Background Execution Limits</a>
+         * @see GeckoRuntime#ACTION_CRASHED
+         */
+        public @NonNull Builder crashHandler(final Class<? extends Service> handler) {
+            mSettings.mCrashHandler = handler;
+            return this;
+        }
     }
 
     /* package */ GeckoRuntime runtime;
@@ -320,6 +359,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /* package */ int mDisplayDpiOverride;
     /* package */ int mScreenWidthOverride;
     /* package */ int mScreenHeightOverride;
+    /* package */ Class<? extends Service> mCrashHandler;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
         mCookieBehavior, mCookieLifetime, mConsoleOutput,
@@ -361,6 +401,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mDisplayDpiOverride = settings.mDisplayDpiOverride;
         mScreenWidthOverride = settings.mScreenWidthOverride;
         mScreenHeightOverride = settings.mScreenHeightOverride;
+        mCrashHandler = settings.mCrashHandler;
     }
 
     /* package */ void flush() {
@@ -485,6 +526,10 @@ public final class GeckoRuntimeSettings implements Parcelable {
             return mDisplayDpiOverride;
         }
         return null;
+    }
+
+    public Class<? extends Service> getCrashHandler() {
+        return mCrashHandler;
     }
 
     /**
@@ -707,6 +752,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         out.writeInt(mDisplayDpiOverride);
         out.writeInt(mScreenWidthOverride);
         out.writeInt(mScreenHeightOverride);
+        out.writeString(mCrashHandler != null ? mCrashHandler.getName() : null);
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -727,6 +773,18 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mDisplayDpiOverride = source.readInt();
         mScreenWidthOverride = source.readInt();
         mScreenHeightOverride = source.readInt();
+
+        final String crashHandlerName = source.readString();
+        if (crashHandlerName != null) {
+            try {
+                @SuppressWarnings("unchecked")
+                final Class<? extends Service> handler =
+                        (Class<? extends Service>) Class.forName(crashHandlerName);
+
+                mCrashHandler = handler;
+            } catch (ClassNotFoundException e) {
+            }
+        }
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR

@@ -40,6 +40,7 @@ import org.mozilla.geckoview.BuildConfig;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -162,6 +163,15 @@ public class GeckoAppShell
         }
 
         return sCrashHandler;
+    }
+
+    private static Class<? extends Service> sCrashHandlerService;
+    public static synchronized void setCrashHandlerService(final Class<? extends Service> handlerService) {
+        sCrashHandlerService = handlerService;
+    }
+
+    public static synchronized Class<? extends Service> getCrashHandlerService() {
+        return sCrashHandlerService;
     }
 
     public static synchronized boolean isCrashHandlingEnabled() {
