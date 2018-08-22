@@ -367,18 +367,18 @@ var PanelMultiView = class extends AssociatedToNode {
     PanelMultiView.ensureUnloadHandlerRegistered(this.window);
 
     let viewContainer = this._viewContainer =
-      this.document.createElement("box");
+      this.document.createXULElement("box");
     viewContainer.classList.add("panel-viewcontainer");
 
-    let viewStack = this._viewStack = this.document.createElement("box");
+    let viewStack = this._viewStack = this.document.createXULElement("box");
     viewStack.classList.add("panel-viewstack");
     viewContainer.append(viewStack);
 
-    let offscreenViewContainer = this.document.createElement("box");
+    let offscreenViewContainer = this.document.createXULElement("box");
     offscreenViewContainer.classList.add("panel-viewcontainer", "offscreen");
 
     let offscreenViewStack = this._offscreenViewStack =
-      this.document.createElement("box");
+      this.document.createXULElement("box");
     offscreenViewStack.classList.add("panel-viewstack");
     offscreenViewContainer.append(offscreenViewStack);
 
@@ -1212,10 +1212,10 @@ var PanelView = class extends AssociatedToNode {
       return;
     }
 
-    header = this.document.createElement("box");
+    header = this.document.createXULElement("box");
     header.classList.add("panel-header");
 
-    let backButton = this.document.createElement("toolbarbutton");
+    let backButton = this.document.createXULElement("toolbarbutton");
     backButton.className =
       "subviewbutton subviewbutton-iconic subviewbutton-back";
     backButton.setAttribute("closemenu", "none");
@@ -1228,7 +1228,7 @@ var PanelView = class extends AssociatedToNode {
       backButton.blur();
     });
 
-    let label = this.document.createElement("label");
+    let label = this.document.createXULElement("label");
     label.setAttribute("value", value);
 
     header.append(backButton, label);
