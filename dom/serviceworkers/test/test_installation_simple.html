@@ -46,7 +46,7 @@
     }).then(function(w) {
       ok(false, "non-HTTPS pages cannot register ServiceWorkers");
     }, function(e) {
-      ok(e.name === "SecurityError", "Should fail with a SecurityError");
+      ok(e.name === "TypeError", "navigator.serviceWorker should be undefined");
     }).then(function() {
       return SpecialPowers.popPrefEnv();
     });
@@ -176,10 +176,10 @@
 
   function runTest() {
     simpleRegister()
-      .then(readyPromise)
       .then(sameOriginWorker)
       .then(sameOriginScope)
       .then(httpsOnly)
+      .then(readyPromise)
       .then(realWorker)
       .then(networkError404)
       .then(redirectError)
