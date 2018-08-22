@@ -1,11 +1,13 @@
 var INPUTS = {
   HTML: "Hi, I want to be transformed!",
+  SCRIPT: "Hi, I want to be transformed!",
   SCRIPTURL: "http://this.is.a.scripturl.test/",
   URL: "http://hello.i.am.an.url/"
 };
 
 var RESULTS = {
   HTML: "Quack, I want to be a duck!",
+  SCRIPT: "Meow, I want to be a cat!",
   SCRIPTURL: "http://this.is.a.successful.test/",
   URL: "http://hooray.i.am.successfully.transformed/"
 };
@@ -13,6 +15,11 @@ var RESULTS = {
 function createHTMLJS(html) {
   return html.replace("Hi", "Quack")
       .replace("transformed", "a duck");
+}
+
+function createScriptJS(script) {
+  return script.replace("Hi", "Meow")
+      .replace("transformed", "a cat");
 }
 
 function createScriptURLJS(scripturl) {
@@ -28,6 +35,10 @@ function createHTML_policy(win) {
   return win.trustedTypes.createPolicy('SomeName', { createHTML: createHTMLJS });
 }
 
+function createScript_policy(win) {
+  return win.trustedTypes.createPolicy('SomeName', { createScript: createScriptJS });
+}
+
 function createScriptURL_policy(win) {
   return win.trustedTypes.createPolicy('SomeName', { createScriptURL: createScriptURLJS });
 }
@@ -41,6 +52,14 @@ function assert_element_accepts_trusted_html(win, t, tag, attribute, expected) {
       .then(t.step_func_done(p => {
           let html = p.createHTML(INPUTS.HTML);
           assert_element_accepts_trusted_type(tag, attribute, html, expected);
+      }));
+}
+
+function assert_element_accepts_trusted_script(win, t, tag, attribute, expected) {
+  createScript_policy(win)
+      .then(t.step_func_done(p => {
+          let script = p.createScript(INPUTS.SCRIPT);
+          assert_element_accepts_trusted_type(tag, attribute, script, expected);
       }));
 }
 
