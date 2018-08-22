@@ -76,7 +76,7 @@ nsSHEntry::~nsSHEntry()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsSHEntry, nsISHContainer, nsISHEntry, nsISHEntryInternal)
+NS_IMPL_ISUPPORTS(nsSHEntry, nsISHContainer, nsISHEntry)
 
 NS_IMETHODIMP
 nsSHEntry::SetScrollPosition(int32_t aX, int32_t aY)
@@ -589,10 +589,7 @@ nsSHEntry::HasBFCacheEntry(nsIBFCacheEntry* aEntry)
 NS_IMETHODIMP
 nsSHEntry::AdoptBFCacheEntry(nsISHEntry* aEntry)
 {
-  nsCOMPtr<nsISHEntryInternal> shEntry = do_QueryInterface(aEntry);
-  NS_ENSURE_STATE(shEntry);
-
-  nsSHEntryShared* shared = shEntry->GetSharedState();
+  nsSHEntryShared* shared = aEntry->GetSharedState();
   NS_ENSURE_STATE(shared);
 
   mShared = shared;
@@ -604,10 +601,7 @@ nsSHEntry::SharesDocumentWith(nsISHEntry* aEntry, bool* aOut)
 {
   NS_ENSURE_ARG_POINTER(aOut);
 
-  nsCOMPtr<nsISHEntryInternal> internal = do_QueryInterface(aEntry);
-  NS_ENSURE_STATE(internal);
-
-  *aOut = mShared == internal->GetSharedState();
+  *aOut = mShared == aEntry->GetSharedState();
   return NS_OK;
 }
 
@@ -885,18 +879,6 @@ NS_IMETHODIMP
 nsSHEntry::SyncPresentationState()
 {
   return mShared->SyncPresentationState();
-}
-
-void
-nsSHEntry::RemoveFromBFCacheSync()
-{
-  mShared->RemoveFromBFCacheSync();
-}
-
-void
-nsSHEntry::RemoveFromBFCacheAsync()
-{
-  mShared->RemoveFromBFCacheAsync();
 }
 
 nsDocShellEditorData*

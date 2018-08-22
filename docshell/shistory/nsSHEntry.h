@@ -20,8 +20,7 @@ class nsIInputStream;
 class nsIURI;
 
 class nsSHEntry final : public nsISHEntry,
-                        public nsISHContainer,
-                        public nsISHEntryInternal
+                        public nsISHContainer
 {
 public:
   nsSHEntry();
@@ -29,7 +28,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHENTRY
-  NS_DECL_NSISHENTRYINTERNAL
   NS_DECL_NSISHCONTAINER
 
   void DropPresentationState();
