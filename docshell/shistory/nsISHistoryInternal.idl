@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 
 interface nsIBFCacheEntry;
-interface nsISHContainer;
 interface nsISHEntry;
 interface nsISHistoryListener;
 interface nsISHTransaction;
@@ -106,13 +105,13 @@ interface nsISHistoryInternal: nsISupports
     * @param aIndex
     *        Index to remove dynamic entries from. It will be passed to
     *        RemoveEntries as aStartIndex.
-    * @param aContainer (optional)
-    *        The container to start looking for dynamic entries. Only the
-    *        dynamic descendants of the container will be removed. If not given,
+    * @param aEntry (optional)
+    *        The entry to start looking in for dynamic entries. Only the
+    *        dynamic descendants of the entry will be removed. If not given,
     *        all dynamic entries at the index will be removed.
     */
    [noscript, notxpcom] void RemoveDynEntries(in long aIndex,
-                                              in nsISHContainer aContainer);
+                                              in nsISHEntry aEntry);
 
    /**
     * Similar to RemoveDynEntries, but instead of specifying an index, use the

@@ -9,7 +9,6 @@
 
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsISHContainer.h"
 #include "nsISHEntry.h"
 #include "nsString.h"
 
@@ -19,8 +18,7 @@ class nsSHEntryShared;
 class nsIInputStream;
 class nsIURI;
 
-class nsSHEntry final : public nsISHEntry,
-                        public nsISHContainer
+class nsSHEntry final : public nsISHEntry
 {
 public:
   nsSHEntry();
@@ -28,7 +26,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHENTRY
-  NS_DECL_NSISHCONTAINER
 
   void DropPresentationState();
 

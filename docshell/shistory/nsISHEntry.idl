@@ -4,10 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * The interface to nsISHentry. Each document or subframe in 
+ * The interface to nsISHentry. Each document or subframe in
  * Session History will have a nsISHEntry associated with it which will
  * hold all information required to recreate the document from history
- * 
  */
 
 #include "nsISupports.idl"
@@ -180,7 +179,7 @@ interface nsISHEntry : nsISupports
      * attribute to indicate the content-type of the document that this
      * is a session history entry for
      */
-    attribute ACString contentType; 
+    attribute ACString contentType;
 
     /**
      * If we created this SHEntry via history.pushState or modified it via
@@ -194,7 +193,7 @@ interface nsISHEntry : nsISupports
      *
      */
     attribute boolean URIWasModified;
- 
+
     /** Set/Get scrollers' positon in anchored pages */
     void setScrollPosition(in long x, in long y);
     void getScrollPosition(out long x, out long y);
@@ -373,6 +372,34 @@ interface nsISHEntry : nsISupports
      */
     [noscript, notxpcom]
     nsSHEntryShared getSharedState();
+
+    /**
+     * The current number of nsISHEntries which are immediate children of this
+     * SHEntry.
+     */
+    readonly attribute long childCount;
+
+    /**
+     * Add a new child SHEntry. If offset is -1 adds to the end of the list.
+     */
+    void AddChild(in nsISHEntry aChild, in long aOffset);
+
+    /**
+     * Remove a child SHEntry.
+     */
+    void RemoveChild(in nsISHEntry aChild);
+
+    /**
+     * Get child at an index.
+     */
+    nsISHEntry GetChildAt(in long aIndex);
+
+    /**
+     * Replaces a child which is for the same docshell as aNewChild
+     * with aNewChild.
+     * @throw if nothing was replaced.
+     */
+    void ReplaceChild(in nsISHEntry aNewChild);
 };
 
 %{ C++
@@ -382,6 +409,5 @@ interface nsISHEntry : nsISupports
 
 #define NS_SHENTRY_CONTRACTID \
     "@mozilla.org/browser/session-history-entry;1"
-
 %}
 
