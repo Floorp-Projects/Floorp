@@ -160,7 +160,6 @@ public class TestRunnerActivity extends Activity {
             }
 
             runtimeSettingsBuilder
-                    .crashReportingJobId(1024)
                     .consoleOutput(true);
 
             sRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());

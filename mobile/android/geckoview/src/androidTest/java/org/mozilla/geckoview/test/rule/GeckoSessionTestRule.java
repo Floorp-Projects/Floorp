@@ -1248,11 +1248,6 @@ public class GeckoSessionTestRule implements TestRule {
                     .remoteDebuggingEnabled(true)
                     .consoleOutput(true);
 
-            if (env.isAutomation()) {
-                runtimeSettingsBuilder
-                        .crashReportingJobId(1024);
-            }
-
             sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
                 runtimeSettingsBuilder.build());
