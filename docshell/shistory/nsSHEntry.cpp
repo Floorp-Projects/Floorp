@@ -76,7 +76,7 @@ nsSHEntry::~nsSHEntry()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsSHEntry, nsISHContainer, nsISHEntry)
+NS_IMPL_ISUPPORTS(nsSHEntry, nsISHEntry)
 
 NS_IMETHODIMP
 nsSHEntry::SetScrollPosition(int32_t aX, int32_t aY)
