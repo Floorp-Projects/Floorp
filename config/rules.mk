@@ -905,7 +905,7 @@ ifdef MOZ_USING_SCCACHE
 sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
 endif
 
-ifneq (WINNT,$(OS_ARCH))
+ifneq (WINNT,$(HOST_OS_ARCH))
 ifndef MOZ_ASAN
 ifndef MOZ_TSAN
 ifndef MOZ_CODE_COVERAGE
