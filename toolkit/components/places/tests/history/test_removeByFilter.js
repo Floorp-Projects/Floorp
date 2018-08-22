@@ -36,7 +36,7 @@ add_task(async function test_removeByFilter() {
       await PlacesUtils.bookmarks.insert({
         parentGuid: PlacesUtils.bookmarks.unfiledGuid,
         url: bookmarkedUri,
-        title: "test bookmark"
+        title: "test bookmark",
       });
     }
     await checkBeforeRemove();
@@ -72,7 +72,7 @@ add_task(async function test_removeByFilter() {
 
   const remoteUriList = [ "http://mozilla.org/test_browserhistory/test_removeByFilter/" + Math.random(),
                           "http://subdomain1.mozilla.org/test_browserhistory/test_removeByFilter/" + Math.random(),
-                          "http://subdomain2.mozilla.org/test_browserhistory/test_removeByFilter/" + Math.random()
+                          "http://subdomain2.mozilla.org/test_browserhistory/test_removeByFilter/" + Math.random(),
                         ];
   const localhostUriList = [ "http://localhost:4500/" + Math.random(), "http://localhost/" + Math.random() ];
   const fileUriList = [ "file:///home/user/files" + Math.random() ];
@@ -81,51 +81,51 @@ add_task(async function test_removeByFilter() {
     {
       uri: remoteUriList[0],
       title,
-      visitDate: new Date(2005, 1, 1) * 1000
+      visitDate: new Date(2005, 1, 1) * 1000,
     },
     {
       uri: remoteUriList[0],
       title,
-      visitDate: new Date(2005, 3, 3) * 1000
+      visitDate: new Date(2005, 3, 3) * 1000,
     },
     {
       uri: remoteUriList[0],
       title,
-      visitDate: new Date(2007, 1, 1) * 1000
-    }
+      visitDate: new Date(2007, 1, 1) * 1000,
+    },
   ];
   let randomHostVisits = [
     {
       uri: remoteUriList[0],
       title,
-      visitDate: new Date(2005, 1, 1) * 1000
+      visitDate: new Date(2005, 1, 1) * 1000,
     },
     {
       uri: remoteUriList[1],
       title,
-      visitDate: new Date(2005, 3, 3) * 1000
+      visitDate: new Date(2005, 3, 3) * 1000,
     },
     {
       uri: remoteUriList[2],
       title,
-      visitDate: new Date(2007, 1, 1) * 1000
-    }
+      visitDate: new Date(2007, 1, 1) * 1000,
+    },
   ];
   let localhostVisits = [
     {
       uri: localhostUriList[0],
-      title
+      title,
     },
     {
       uri: localhostUriList[1],
-      title
-    }
+      title,
+    },
   ];
   let fileVisits = [
     {
       uri: fileUriList[0],
-      title
-    }
+      title,
+    },
   ];
   let assertInDB = async function(aUri) {
       Assert.ok((await PlacesTestUtils.isPageInDB(aUri)));
@@ -317,7 +317,7 @@ function getObserverPromise(bookmarkedUri) {
         } finally {
           resolve();
         }
-      }
+      },
     };
   });
   return { observer, promiseObserved };

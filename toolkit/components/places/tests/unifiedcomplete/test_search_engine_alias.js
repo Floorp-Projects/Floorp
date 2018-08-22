@@ -19,7 +19,7 @@ add_task(async function() {
       matches: [ makeSearchMatch(alias, { engineName: `Aliased${alias.toUpperCase()}MozSearch`,
                                           searchQuery: "", alias, heuristic: true }),
         { uri: histURI, title: "History entry" },
-      ]
+      ],
     });
 
     await check_autocomplete({
@@ -28,7 +28,7 @@ add_task(async function() {
       matches: [ makeSearchMatch(`${alias} `, { engineName: `Aliased${alias.toUpperCase()}MozSearch`,
                                                 searchQuery: "", alias, heuristic: true }),
         { uri: histURI, title: "History entry" },
-      ]
+      ],
     });
 
     await check_autocomplete({
@@ -37,28 +37,28 @@ add_task(async function() {
       matches: [ makeSearchMatch(`${alias} fire`, { engineName: `Aliased${alias.toUpperCase()}MozSearch`,
                                                     searchQuery: "fire", alias, heuristic: true }),
         { uri: histURI, title: "History entry" },
-      ]
+      ],
     });
 
     await check_autocomplete({
       search: `${alias} mozilla`,
       searchParam: "enable-actions",
           matches: [ makeSearchMatch(`${alias} mozilla`, { engineName: `Aliased${alias.toUpperCase()}MozSearch`,
-                                                           searchQuery: "mozilla", alias, heuristic: true }) ]
+                                                           searchQuery: "mozilla", alias, heuristic: true }) ],
     });
 
     await check_autocomplete({
       search: `${alias} MoZiLlA`,
       searchParam: "enable-actions",
           matches: [ makeSearchMatch(`${alias} MoZiLlA`, { engineName: `Aliased${alias.toUpperCase()}MozSearch`,
-                                                           searchQuery: "MoZiLlA", alias, heuristic: true }) ]
+                                                           searchQuery: "MoZiLlA", alias, heuristic: true }) ],
     });
 
     await check_autocomplete({
       search: `${alias} mozzarella mozilla`,
       searchParam: "enable-actions",
           matches: [ makeSearchMatch(`${alias} mozzarella mozilla`, { engineName: `Aliased${alias.toUpperCase()}MozSearch`,
-                                                                      searchQuery: "mozzarella mozilla", alias, heuristic: true }) ]
+                                                                      searchQuery: "mozzarella mozilla", alias, heuristic: true }) ],
     });
   }
 

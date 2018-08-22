@@ -33,7 +33,7 @@ add_task(async function test_create_and_remove_bookmarks() {
     children: [{
       title: "deleteme",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      children: bmChildren
+      children: bmChildren,
     }, {
       title: "keepme",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,

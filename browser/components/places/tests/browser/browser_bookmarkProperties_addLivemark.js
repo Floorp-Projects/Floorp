@@ -22,13 +22,13 @@ add_task(async function() {
 
         let bookmark = await PlacesUtils.bookmarks.fetch({
           parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-          index: PlacesUtils.bookmarks.DEFAULT_INDEX
+          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         });
 
         Assert.equal(bookmark.title, "modified", "folder name has been edited");
 
         let livemark = await PlacesUtils.livemarks.getLivemark({
-          guid: bookmark.guid
+          guid: bookmark.guid,
         });
         Assert.equal(livemark.feedURI.spec, "http://livemark.com/", "livemark has the correct url");
         Assert.equal(livemark.title, "modified", "livemark has the correct title");

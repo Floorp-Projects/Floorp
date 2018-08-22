@@ -24,7 +24,7 @@ add_task(async function() {
   let bm1 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "mozilla",
-    url: uri1.spec
+    url: uri1.spec,
   });
   PlacesUtils.tagging.tagURI(uri1, tags);
 
@@ -33,14 +33,14 @@ add_task(async function() {
   let bm2 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "mozilla",
-    url: uri2.spec
+    url: uri2.spec,
   });
   PlacesUtils.tagging.tagURI(uri2, tags);
 
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: TEST_URL,
-    waitForStateStop: true
+    waitForStateStop: true,
   });
 
   registerCleanupFunction(async () => {

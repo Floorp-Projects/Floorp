@@ -53,11 +53,11 @@ AutoCompleteInput.prototype = {
     invalidate() {},
 
     // nsISupports implementation
-    QueryInterface: ChromeUtils.generateQI(["nsIAutoCompletePopup"])
+    QueryInterface: ChromeUtils.generateQI(["nsIAutoCompletePopup"]),
   },
 
   // nsISupports implementation
-  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteInput"])
+  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteInput"]),
 };
 
 add_task(async function test_autocomplete_non_english() {

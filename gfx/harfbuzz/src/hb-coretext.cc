@@ -348,7 +348,7 @@ hb_coretext_font_create (CTFontRef ct_font)
   hb_font_set_ptem (font, coretext_font_size_to_ptem (CTFontGetSize(ct_font)));
 
   /* Let there be dragons here... */
-  HB_SHAPER_DATA_GET (font) = (hb_coretext_font_data_t *) CFRetain (ct_font);
+  HB_SHAPER_DATA (HB_SHAPER, font).set_relaxed ((hb_coretext_font_data_t *) CFRetain (ct_font));
 
   return font;
 }

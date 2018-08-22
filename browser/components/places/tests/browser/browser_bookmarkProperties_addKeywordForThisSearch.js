@@ -57,7 +57,7 @@ add_task(async function reopen_same_field() {
   await PlacesUtils.keywords.insert({
     url: TEST_URL,
     keyword: "kw",
-    postData: "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s"
+    postData: "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s",
   });
   registerCleanupFunction(async function() {
     await PlacesUtils.keywords.remove("kw");
@@ -84,7 +84,7 @@ add_task(async function open_other_field() {
   await PlacesUtils.keywords.insert({
     url: TEST_URL,
     keyword: "kw2",
-    postData: "search%3D%25s"
+    postData: "search%3D%25s",
   });
   registerCleanupFunction(async function() {
     await PlacesUtils.keywords.remove("kw2");

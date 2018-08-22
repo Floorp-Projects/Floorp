@@ -11,11 +11,11 @@ add_task(async function setup() {
   // Add multiple bookmarks to the same uri.
   gBookmarkGuids.push((await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: "http://book.ma.rk/"
+    url: "http://book.ma.rk/",
   })).guid);
   gBookmarkGuids.push((await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    url: "http://book.ma.rk/"
+    url: "http://book.ma.rk/",
   })).guid);
   Assert.equal(gBookmarkGuids.length, 2);
 });
@@ -35,7 +35,7 @@ add_task(async function test_add_visit() {
   await PlacesTestUtils.addVisits({
     uri: "http://book.ma.rk/",
     transition: TRANSITION_TYPED,
-    visitDate: NOW
+    visitDate: NOW,
   });
   await promiseNotifications;
 });

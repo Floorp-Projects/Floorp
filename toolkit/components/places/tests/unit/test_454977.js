@@ -20,7 +20,7 @@ async function task_add_visit(aURI, aVisitType) {
   // Add visits.
   await PlacesTestUtils.addVisits([{
     uri: aURI,
-    transition: aVisitType
+    transition: aVisitType,
   }]);
 
   if (aVisitType != TRANSITION_EMBED) {

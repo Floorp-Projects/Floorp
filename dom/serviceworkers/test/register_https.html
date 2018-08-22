@@ -9,13 +9,6 @@ function done() {
 }
 
 ok(location.protocol == "https:", "We should be loaded from HTTPS");
-
-navigator.serviceWorker.register("empty.js", {scope: "register-https"})
-  .then(reg => {
-    ok(false, "Registration should fail");
-    done();
-  }).catch(err => {
-    ok(err.name === "SecurityError", "Registration should fail with SecurityError");
-    done();
-  });
+ok(!("serviceWorker" in navigator), "ServiceWorkerContainer not availalble in insecure context");
+done();
 </script>

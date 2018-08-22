@@ -20,25 +20,25 @@ add_task(async function() {
   let tests = [{
     private: false,
     topic: "uri-visit-saved",
-    subtest: "visited_page.html"
+    subtest: "visited_page.html",
   }, {
     private: false,
     topic: "visited-status-resolution",
     subtest: "link_page.html",
     color: kRed,
-    message: "Visited link coloring should work outside of private mode"
+    message: "Visited link coloring should work outside of private mode",
   }, {
     private: true,
     topic: "visited-status-resolution",
     subtest: "link_page-2.html",
     color: kBlue,
-    message: "Visited link coloring should not work inside of private mode"
+    message: "Visited link coloring should not work inside of private mode",
   }, {
     private: false,
     topic: "visited-status-resolution",
     subtest: "link_page-3.html",
     color: kRed,
-    message: "Visited link coloring should work outside of private mode"
+    message: "Visited link coloring should work outside of private mode",
   }];
 
   let uri = Services.io.newURI(prefix + tests[0].subtest);

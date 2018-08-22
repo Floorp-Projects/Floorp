@@ -35,7 +35,7 @@ add_task(async function test_change_location_from_Toolbar() {
   let toolbarBookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "",
-    url: TEST_URL
+    url: TEST_URL,
   });
 
   let toolbarNode = getToolbarNodeForItemGuid(toolbarBookmark.guid);
@@ -47,7 +47,7 @@ add_task(async function test_change_location_from_Toolbar() {
       let promisePopup = BrowserTestUtils.waitForEvent(placesContext, "popupshown");
       EventUtils.synthesizeMouseAtCenter(toolbarNode, {
         button: 2,
-        type: "contextmenu"
+        type: "contextmenu",
       });
       await promisePopup;
 

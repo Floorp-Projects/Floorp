@@ -76,7 +76,7 @@ async function task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark) {
     getValueAt() {
       return aURI.spec;
     },
-    searchString: aSearch
+    searchString: aSearch,
   };
 
   // Bump up the instrumentation feedback.
@@ -135,7 +135,7 @@ function promiseResultsCompleted() {
           return;
         ensure_results(this.results, this.search, resolve);
         Services.obs.removeObserver(observer, PlacesUtils.TOPIC_FEEDBACK_UPDATED);
-      }
+      },
     };
     Services.obs.addObserver(observer, PlacesUtils.TOPIC_FEEDBACK_UPDATED);
   });

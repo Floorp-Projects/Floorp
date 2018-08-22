@@ -17,6 +17,7 @@
 #include "hb-private.hh"
 
 #include "hb-unicode-private.hh"
+#include "hb-machinery-private.hh"
 
 #include "ucdn.h"
 
@@ -238,31 +239,14 @@ hb_ucdn_decompose_compatibility(hb_unicode_funcs_t *ufuncs HB_UNUSED,
     return ucdn_compat_decompose(u, decomposed);
 }
 
-static hb_unicode_funcs_t *static_ucdn_funcs = nullptr;
 
-#ifdef HB_USE_ATEXIT
-static
-void free_static_ucdn_funcs (void)
+static void free_static_ucdn_funcs (void);
+
+static struct hb_ucdn_unicode_funcs_lazy_loader_t : hb_unicode_funcs_lazy_loader_t<hb_ucdn_unicode_funcs_lazy_loader_t>
 {
-retry:
-  hb_unicode_funcs_t *ucdn_funcs = (hb_unicode_funcs_t *) hb_atomic_ptr_get (&static_ucdn_funcs);
-  if (!hb_atomic_ptr_cmpexch (&static_ucdn_funcs, ucdn_funcs, nullptr))
-    goto retry;
-
-  hb_unicode_funcs_destroy (ucdn_funcs);
-}
-#endif
-
-extern "C" HB_INTERNAL
-hb_unicode_funcs_t *
-hb_ucdn_get_unicode_funcs (void)
-{
-retry:
-  hb_unicode_funcs_t *funcs = (hb_unicode_funcs_t *) hb_atomic_ptr_get (&static_ucdn_funcs);
-
-  if (unlikely (!funcs))
+  static inline hb_unicode_funcs_t *create (void)
   {
-    funcs = hb_unicode_funcs_create (nullptr);
+    hb_unicode_funcs_t *funcs = hb_unicode_funcs_create (nullptr);
 
 #define HB_UNICODE_FUNC_IMPLEMENT(name) \
     hb_unicode_funcs_set_##name##_func (funcs, hb_ucdn_##name, nullptr, nullptr);
@@ -271,15 +255,25 @@ retry:
 
     hb_unicode_funcs_make_immutable (funcs);
 
-    if (!hb_atomic_ptr_cmpexch (&static_ucdn_funcs, nullptr, funcs)) {
-      hb_unicode_funcs_destroy (funcs);
-      goto retry;
-    }
+#ifdef HB_USE_ATEXIT
+    atexit (free_static_ucdn_funcs);
+#endif
+
+    return funcs;
+  }
+} static_ucdn_funcs;
 
 #ifdef HB_USE_ATEXIT
-    atexit (free_static_ucdn_funcs); /* First person registers atexit() callback. */
+static
+void free_static_ucdn_funcs (void)
+{
+  static_ucdn_funcs.free_instance ();
+}
 #endif
-  };
 
-  return hb_unicode_funcs_reference (funcs);
+extern "C" HB_INTERNAL
+hb_unicode_funcs_t *
+hb_ucdn_get_unicode_funcs (void)
+{
+  return static_ucdn_funcs.get_unconst ();
 }

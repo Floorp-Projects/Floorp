@@ -7,7 +7,7 @@ var bookmarkData = [
     tags: ["social media", "news", "humour"] },
   { uri: uri("http://www.4chan.org"),
     title: "4chan",
-    tags: ["discussion", "imageboard", "anime"] }
+    tags: ["discussion", "imageboard", "anime"] },
 ];
 
 /*

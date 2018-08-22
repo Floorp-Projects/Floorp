@@ -222,7 +222,7 @@ class TransactionsHistoryArray extends Array {
     let proxy = Object.freeze({
       transact() {
         return TransactionsManager.transact(this);
-      }
+      },
     });
     this.proxifiedToRaw.set(proxy, rawTransaction);
     return proxy;
@@ -428,7 +428,7 @@ var PlacesTransactions = {
    */
   get topRedoEntry() {
     return TransactionsHistory.topRedoEntry;
-  }
+  },
 };
 
 /**
@@ -498,7 +498,7 @@ Enqueuer.prototype = {
    */
   get promise() {
     return this._promise;
-  }
+  },
 };
 
 var TransactionsManager = {
@@ -656,7 +656,7 @@ var TransactionsManager = {
     } catch (ex) {
       console.error(ex, "Couldn't update undo commands.");
     }
-  }
+  },
 };
 
 /**
@@ -782,7 +782,7 @@ DefineTransaction.defineInputProps = function(names, validateFn, defaultValue) {
         return this.validateValue(input[name]);
       },
 
-      isArrayProperty: false
+      isArrayProperty: false,
     });
   }
 };
@@ -839,7 +839,7 @@ DefineTransaction.defineArrayInputProp = function(name, basePropertyName) {
       return [];
     },
 
-    isArrayProperty: true
+    isArrayProperty: true,
   });
 };
 
@@ -1107,7 +1107,7 @@ PT.NewBookmark.prototype = Object.seal({
       await createItem();
     };
     return info.guid;
-  }
+  },
 });
 
 /**
@@ -1174,7 +1174,7 @@ PT.NewFolder.prototype = Object.seal({
       await createItem();
     };
     return folderGuid;
-  }
+  },
 });
 
 /**
@@ -1194,7 +1194,7 @@ PT.NewSeparator.prototype = Object.seal({
     this.undo = PlacesUtils.bookmarks.remove.bind(PlacesUtils.bookmarks, info);
     this.redo = PlacesUtils.bookmarks.insert.bind(PlacesUtils.bookmarks, info);
     return info.guid;
-  }
+  },
 });
 
 /**
@@ -1237,7 +1237,7 @@ PT.NewLivemark.prototype = Object.seal({
       livemark = await createItem();
     };
     return livemark.guid;
-  }
+  },
 });
 
 /**
@@ -1274,7 +1274,7 @@ PT.Move.prototype = Object.seal({
     };
     this.redo = PlacesUtils.bookmarks.moveToFolder.bind(PlacesUtils.bookmarks, guids, newParentGuid, index);
     return guids;
-  }
+  },
 });
 
 /**
@@ -1294,7 +1294,7 @@ PT.EditTitle.prototype = Object.seal({
 
     this.undo = PlacesUtils.bookmarks.update.bind(PlacesUtils.bookmarks, originalInfo);
     this.redo = PlacesUtils.bookmarks.update.bind(PlacesUtils.bookmarks, updateInfo);
-  }
+  },
 });
 
 /**
@@ -1348,7 +1348,7 @@ PT.EditUrl.prototype = Object.seal({
     this.redo = async function() {
       updatedInfo = await updateItem();
     };
-  }
+  },
 });
 
 /**
@@ -1376,7 +1376,7 @@ PT.EditKeyword.prototype = Object.seal({
       await PlacesUtils.keywords.insert({
         url,
         keyword,
-        postData: postData || (oldKeywordEntry ? oldKeywordEntry.postData : "")
+        postData: postData || (oldKeywordEntry ? oldKeywordEntry.postData : ""),
       });
     }
 
@@ -1388,7 +1388,7 @@ PT.EditKeyword.prototype = Object.seal({
         await PlacesUtils.keywords.insert(oldKeywordEntry);
       }
     };
-  }
+  },
 });
 
 /**
@@ -1440,7 +1440,7 @@ PT.SortByName.prototype = {
     this.redo = async function() {
       await PlacesUtils.bookmarks.reorder(guid, newOrderGuids);
     };
-  }
+  },
 };
 
 /**
@@ -1487,7 +1487,7 @@ PT.Remove.prototype = {
       }
     };
     this.redo = removeThem;
-  }
+  },
 };
 
 /**
@@ -1535,7 +1535,7 @@ PT.Tag.prototype = {
         await f();
       }
     };
-  }
+  },
 };
 
 /**
@@ -1583,7 +1583,7 @@ PT.Untag.prototype = {
         await f();
       }
     };
-  }
+  },
 };
 
 /**
@@ -1675,7 +1675,7 @@ PT.RenameTag.prototype = {
         await f();
       }
     };
-  }
+  },
 };
 
 /**
@@ -1712,5 +1712,5 @@ PT.Copy.prototype = {
     };
 
     return newItemGuid;
-  }
+  },
 };

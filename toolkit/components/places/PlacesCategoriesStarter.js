@@ -57,7 +57,7 @@ PlacesCategoriesStarter.prototype = {
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(PlacesCategoriesStarter),
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
-  ])
+  ]),
 };
 
 var components = [PlacesCategoriesStarter];

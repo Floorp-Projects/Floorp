@@ -34,7 +34,7 @@ add_task(async function setup() {
     SELECT guid FROM moz_bookmarks
     WHERE parent = (SELECT id from moz_bookmarks WHERE guid = :guid)
   `, {
-    guid: PlacesUtils.bookmarks.rootGuid
+    guid: PlacesUtils.bookmarks.rootGuid,
   });
 
   let guids = rows.map(row => row.getResultByName("guid"));
@@ -84,7 +84,7 @@ add_task(async function test_database_recreates_roots() {
     SELECT 1 FROM moz_bookmarks
     WHERE parent = (SELECT id from moz_bookmarks WHERE guid = :guid)
   `, {
-    guid: PlacesUtils.bookmarks.rootGuid
+    guid: PlacesUtils.bookmarks.rootGuid,
   });
 
   Assert.equal(rows.length, ALL_ROOT_GUIDS.length,

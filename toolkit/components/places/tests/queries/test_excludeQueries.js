@@ -13,17 +13,17 @@ add_task(async function setup() {
   bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "http://example.com/",
-    title: "a bookmark"
+    title: "a bookmark",
   });
   fakeQuery = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "place:terms=foo",
-    title: "a bookmark"
+    title: "a bookmark",
   });
   folderShortcut = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`,
-    title: "a bookmark"
+    title: "a bookmark",
   });
 
   checkBookmarkObject(bm);

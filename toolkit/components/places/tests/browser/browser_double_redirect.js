@@ -55,7 +55,7 @@ add_task(async function() {
           transitionType,
         } = events[0];
         this.onVisit(url, visitId, visitTime, referringVisitId, transitionType);
-      }
+      },
     };
     observer.handleEvents = observer.handleEvents.bind(observer);
     PlacesObservers.addListener(["page-visited"], observer.handleEvents);

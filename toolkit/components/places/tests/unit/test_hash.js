@@ -15,7 +15,7 @@ add_task(async function() {
     Assert.ok(await PlacesUtils.history.fetch(url),
               "Found the added visit");
     await PlacesUtils.bookmarks.insert({
-      url, parentGuid: PlacesUtils.bookmarks.unfiledGuid
+      url, parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     });
     Assert.ok(await PlacesUtils.bookmarks.fetch({ url }),
               "Found the added bookmark");

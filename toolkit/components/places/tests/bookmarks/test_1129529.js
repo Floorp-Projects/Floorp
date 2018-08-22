@@ -29,7 +29,7 @@ add_task(async function() {
           type: "text/x-moz-place",
           dateAdded: now,
           lastModified: now,
-          uri: "http://test0.com/"
+          uri: "http://test0.com/",
         },
         {
           guid: "___guid2____",
@@ -40,7 +40,7 @@ add_task(async function() {
           type: "text/x-moz-place",
           dateAdded: now,
           lastModified: now,
-          uri: "http://test1.com/"
+          uri: "http://test1.com/",
         },
         {
           guid: "___guid3____",
@@ -51,10 +51,10 @@ add_task(async function() {
           type: "text/x-moz-place",
           dateAdded: now,
           lastModified: now,
-          uri: "http://test2.com/"
-        }
-      ]
-    }]
+          uri: "http://test2.com/",
+        },
+      ],
+    }],
   };
 
   let contentType = "application/json";

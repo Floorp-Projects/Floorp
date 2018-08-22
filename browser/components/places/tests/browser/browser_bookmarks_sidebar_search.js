@@ -43,7 +43,7 @@ add_task(async function test() {
     await PlacesUtils.bookmarks.insert({
       url,
       title: "example page " + i,
-      parentGuid: PlacesUtils.bookmarks.toolbarGuid
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     });
     PlacesUtils.tagging.tagURI(url, ["test"]);
   }

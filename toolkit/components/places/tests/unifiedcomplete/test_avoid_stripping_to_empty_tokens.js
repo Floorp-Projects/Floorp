@@ -8,7 +8,7 @@ add_task(async function test_protocol_trimming() {
       // Include the protocol in the query string to ensure we get matches (see bug 1059395)
       uri: NetUtil.newURI(prot + "://www.mozilla.org/test/?q=" + prot + encodeURIComponent("://") + "www.foo"),
       title: "Test title",
-      transition: TRANSITION_TYPED
+      transition: TRANSITION_TYPED,
     };
     await PlacesTestUtils.addVisits(visit);
 
@@ -27,7 +27,7 @@ add_task(async function test_protocol_trimming() {
           value: visit.uri.spec,
           comment: visit.title,
           style: ["favicon"],
-        }
+        },
       ],
     });
 
@@ -46,7 +46,7 @@ add_task(async function test_protocol_trimming() {
           value: visit.uri.spec,
           comment: visit.title,
           style: ["favicon"],
-        }
+        },
       ],
     });
 
@@ -60,7 +60,7 @@ add_task(async function test_protocol_trimming() {
       prot + "://www.mo te",
       "www. ",
       "www. mo",
-      "www.mo te"
+      "www.mo te",
     ];
     for (input of inputs) {
       info("Searching for: " + input);

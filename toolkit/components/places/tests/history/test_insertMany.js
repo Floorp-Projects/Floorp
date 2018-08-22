@@ -9,8 +9,8 @@ add_task(async function test_error_cases() {
   let validPageInfo = {
     url: "http://mozilla.com",
     visits: [
-      {transition: TRANSITION_LINK}
-    ]
+      {transition: TRANSITION_LINK},
+    ],
   };
 
   Assert.throws(
@@ -42,8 +42,8 @@ add_task(async function test_insertMany() {
       let pageInfo = {
         title: `Visit to ${url}`,
         visits: [
-          {transition: TRANSITION_LINK}
-        ]
+          {transition: TRANSITION_LINK},
+        ],
       };
 
       pageInfo.url = await filter(uri);
@@ -132,8 +132,8 @@ add_task(async function test_transitions() {
   const places = Object.keys(PlacesUtils.history.TRANSITIONS).map(transition => {
     return { url: `http://places.test/${transition}`,
              visits: [
-               { transition: PlacesUtils.history.TRANSITIONS[transition] }
-             ]
+               { transition: PlacesUtils.history.TRANSITIONS[transition] },
+             ],
            };
   });
   // Should not reject.
@@ -157,9 +157,9 @@ add_task(async function test_guid() {
       url: "http://example.com/foo",
       guid: guidA,
       visits: [
-        { transition: TRANSITION_LINK, date: new Date() }
-      ]
-    }
+        { transition: TRANSITION_LINK, date: new Date() },
+      ],
+    },
   ]);
 
   Assert.ok(await PlacesUtils.history.fetch(guidA),
@@ -172,17 +172,17 @@ add_task(async function test_guid() {
       url: "http://example.com/bar",
       guid: guidB,
       visits: [
-        { transition: TRANSITION_LINK, date: new Date() }
-      ]
+        { transition: TRANSITION_LINK, date: new Date() },
+      ],
     },
     {
       title: "baz",
       url: "http://example.com/baz",
       guid: guidC,
       visits: [
-        { transition: TRANSITION_LINK, date: new Date() }
-      ]
-    }
+        { transition: TRANSITION_LINK, date: new Date() },
+      ],
+    },
   ], pageInfo => {
     Assert.ok(expectedGuids.has(pageInfo.guid));
     expectedGuids.delete(pageInfo.guid);

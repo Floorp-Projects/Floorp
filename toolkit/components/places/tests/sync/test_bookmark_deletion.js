@@ -646,7 +646,7 @@ add_task(async function test_nonexistent_on_one_side() {
   info("Create remote tombstone for nonexistent local item B");
   await storeRecords(buf, [{
     id: "bookmarkBBBB",
-    deleted: true
+    deleted: true,
   }]);
 
   info("Apply remote");

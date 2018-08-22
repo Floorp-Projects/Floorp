@@ -26,8 +26,8 @@ add_task(async function test_addBookmarksAndCheckGuids() {
       }, {
         title: "test folder 2",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      }]
-    }]
+      }],
+    }],
   });
 
   let root = PlacesUtils.getFolderContents(bookmarks[0].guid).root;
@@ -79,8 +79,8 @@ add_task(async function test_updateBookmarksAndCheckGuids() {
       }, {
         title: "test folder 2",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      }]
-    }]
+      }],
+    }],
   });
 
   let root = PlacesUtils.getFolderContents(bookmarks[0].guid).root;
@@ -164,7 +164,7 @@ add_task(async function test_addItemsWithInvalidGUIDsFails() {
     PlacesUtils.bookmarks.insert({
       parentGuid: folder.guid,
       guid: INVALID_GUID,
-      type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+      type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
     });
     do_throw("Adding a separator with an invalid guid should fail");
   } catch (ex) { }
@@ -190,8 +190,8 @@ add_task(async function test_addItemsWithGUIDs() {
       }, {
         type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
         guid: SEPARATOR_GUID,
-      }]
-    }]
+      }],
+    }],
   });
 
   let root = PlacesUtils.getFolderContents(bookmarks[0].guid).root;
@@ -210,7 +210,7 @@ add_task(async function test_emptyGUIDFails() {
       parentGuid: PlacesUtils.bookmarks.menuGuid,
       guid: "",
       title: "test folder",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
     });
     do_throw("Adding a folder with an empty guid should fail");
   } catch (ex) {

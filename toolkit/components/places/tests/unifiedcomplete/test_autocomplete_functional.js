@@ -15,7 +15,7 @@ add_task(async function test_disabling_autocomplete() {
   await check_autocomplete({
     search: "vis",
     autofilled: "vis",
-    completed: "vis"
+    completed: "vis",
   });
   await cleanup();
 });
@@ -28,7 +28,7 @@ add_task(async function test_urls_order() {
   await check_autocomplete({
     search: "vis",
     autofilled: "visit2.mozilla.org/",
-    completed: "http://visit2.mozilla.org/"
+    completed: "http://visit2.mozilla.org/",
   });
   await cleanup();
 });
@@ -40,7 +40,7 @@ add_task(async function test_bookmark_first() {
   await check_autocomplete({
     search: "bookmark",
     autofilled: "bookmark1.mozilla.org/",
-    completed: "http://bookmark1.mozilla.org/"
+    completed: "http://bookmark1.mozilla.org/",
   });
   await cleanup();
 });

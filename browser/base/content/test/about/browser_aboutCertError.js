@@ -85,6 +85,7 @@ add_task(async function checkReturnToAboutHome() {
 });
 
 add_task(async function checkExceptionDialogButton() {
+  Services.prefs.setBoolPref("browser.security.newcerterrorpage.enabled", true);
   info("Loading a bad cert page and making sure the exceptionDialogButton directly adds an exception");
   let tab = await openErrorPage(BAD_CERT);
   let browser = tab.linkedBrowser;
@@ -108,6 +109,7 @@ add_task(async function checkExceptionDialogButton() {
                               .getService(Ci.nsICertOverrideService);
   certOverrideService.clearValidityOverride("expired.example.com", -1);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  Services.prefs.clearUserPref("browser.security.newcerterrorpage.enabled");
 });
 
 add_task(async function checkReturnToPreviousPage() {
@@ -165,13 +167,11 @@ add_task(async function checkBadStsCert() {
     let tab = await openErrorPage(BAD_STS_CERT, useFrame);
     let browser = tab.linkedBrowser;
 
-    let exceptionButtonHidden = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
+    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
       let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
       let exceptionButton = doc.getElementById("exceptionDialogButton");
-      return exceptionButton.hidden;
+      ok(ContentTaskUtils.is_hidden(exceptionButton), "Exception button is hidden.");
     });
-
-    ok(exceptionButtonHidden, "Exception button is hidden");
 
     let message = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
       let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
@@ -372,7 +372,7 @@ add_task(async function checkAdvancedDetails() {
   }
 });
 
-add_task(async function checkhideAddExceptionButton() {
+add_task(async function checkhideAddExceptionButtonViaPref() {
   info("Loading a bad cert page and verifying the pref security.certerror.hideAddException");
   Services.prefs.setBoolPref("security.certerror.hideAddException", true);
 
@@ -384,13 +384,27 @@ add_task(async function checkhideAddExceptionButton() {
       let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
 
       let exceptionButton = doc.querySelector(".exceptionDialogButtonContainer");
-      ok(exceptionButton.hidden, "Exception button is hidden.");
+      ok(ContentTaskUtils.is_hidden(exceptionButton), "Exception button is hidden.");
     });
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 
   Services.prefs.clearUserPref("security.certerror.hideAddException");
+});
+
+add_task(async function checkhideAddExceptionButtonInFrames() {
+  info("Loading a bad cert page in a frame and verifying it's hidden.");
+  let tab = await openErrorPage(BAD_CERT, true);
+  let browser = tab.linkedBrowser;
+
+  await ContentTask.spawn(browser, null, async function() {
+    let doc = content.document.querySelector("iframe").contentDocument;
+    let exceptionButton = doc.getElementById("exceptionDialogButton");
+    ok(ContentTaskUtils.is_hidden(exceptionButton), "Exception button is hidden.");
+  });
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function checkAdvancedDetailsForHSTS() {

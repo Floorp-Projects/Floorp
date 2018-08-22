@@ -23,19 +23,19 @@ add_task(async function() {
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     url: TEST_URL,
-    title: "0"
+    title: "0",
   }));
   bookmarks.push(await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     url: TEST_URL,
-    title: "1"
+    title: "1",
   }));
   bookmarks.push(await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     url: TEST_URL,
-    title: "2"
+    title: "2",
   }));
 
   await selectBookmarksIn(organizer, bookmarks, "BookmarksToolbar");

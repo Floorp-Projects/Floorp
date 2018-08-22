@@ -29,8 +29,8 @@ add_task(async function test_getURLsForContainerNode_folder() {
         children: [{
           url: "place:sort=1",
           title: "inside query",
-        }]
-      }]
+        }],
+      }],
     }],
   });
 
@@ -46,7 +46,7 @@ add_task(async function test_getURLsForContainerNode_folder() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: bookmarks[0].guid,
     url: "http://www.mozilla.org/",
-    title: "bookmark"
+    title: "bookmark",
   });
   check_uri_nodes(query, options, 1);
 
@@ -69,8 +69,8 @@ add_task(async function test_getURLsForContainerNode_folder_excludeItems() {
         children: [{
           url: "place:sort=1",
           title: "inside query",
-        }]
-      }]
+        }],
+      }],
     }],
   });
 
@@ -87,7 +87,7 @@ add_task(async function test_getURLsForContainerNode_folder_excludeItems() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: bookmarks[0].guid,
     url: "http://www.mozilla.org/",
-    title: "bookmark"
+    title: "bookmark",
   });
   check_uri_nodes(query, options, 1);
 
@@ -113,7 +113,7 @@ add_task(async function test_getURLsForContainerNode_query() {
       children: [{
         url: "place:sort=1",
         title: "inside query",
-      }]
+      }],
     }],
   });
 
@@ -129,7 +129,7 @@ add_task(async function test_getURLsForContainerNode_query() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: "http://www.mozilla.org/",
-    title: "bookmark"
+    title: "bookmark",
   });
   check_uri_nodes(query, options, 1);
 
@@ -155,7 +155,7 @@ add_task(async function test_getURLsForContainerNode_query_excludeItems() {
       children: [{
         url: "place:sort=1",
         title: "inside query",
-      }]
+      }],
     }],
   });
 
@@ -172,7 +172,7 @@ add_task(async function test_getURLsForContainerNode_query_excludeItems() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: "http://www.mozilla.org/",
-    title: "bookmark"
+    title: "bookmark",
   });
   check_uri_nodes(query, options, 1);
 
@@ -198,7 +198,7 @@ add_task(async function test_getURLsForContainerNode_query_excludeQueries() {
       children: [{
         url: "place:sort=1",
         title: "inside query",
-      }]
+      }],
     }],
   });
 
@@ -215,7 +215,7 @@ add_task(async function test_getURLsForContainerNode_query_excludeQueries() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: "http://www.mozilla.org/",
-    title: "bookmark"
+    title: "bookmark",
   });
   check_uri_nodes(query, options, 1);
 });

@@ -83,11 +83,6 @@ var gEMEHandler = {
         notificationMessage = this.getEMEDisabledFragment();
         break;
 
-      case "cdm-insufficient-version":
-        notificationId = "drmContentCDMInsufficientVersion";
-        notificationMessage = this.getMessageWithBrandName(notificationId);
-        break;
-
       case "cdm-not-installed":
         notificationId = "drmContentCDMInstalling";
         notificationMessage = this.getMessageWithBrandName(notificationId);

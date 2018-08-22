@@ -34,17 +34,17 @@ const gTestItems = [{
   // Folder shortcut to using id.
   guid: "m47_______ID",
   url: "place:folder=%id%",
-  expectedUrl: "place:parent=%guid%"
+  expectedUrl: "place:parent=%guid%",
 }, {
   // Folder shortcut to multiple folders.
   guid: "m47____MULTI",
   url: "place:folder=TOOLBAR&folder=%id%&sort=1",
-  expectedUrl: "place:parent=%toolbarGuid%&parent=%guid%&sort=1"
+  expectedUrl: "place:parent=%toolbarGuid%&parent=%guid%&sort=1",
 }, {
   // Folder shortcut to non-existent folder.
   guid: "m47______NON",
   url: "place:folder=454554545",
-  expectedUrl: "place:invalidOldParentId=454554545&excludeItems=1"
+  expectedUrl: "place:invalidOldParentId=454554545&excludeItems=1",
 }];
 
 add_task(async function setup() {
@@ -86,7 +86,7 @@ add_task(async function setup() {
       id: item.folder,
       guid: item.guid,
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      title: item.guid
+      title: item.guid,
     });
   }
 

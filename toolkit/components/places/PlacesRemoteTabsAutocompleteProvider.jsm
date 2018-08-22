@@ -139,7 +139,7 @@ var PlacesRemoteTabsAutocompleteProvider = {
         let record = {
           url, title, icon,
           deviceName: client.name,
-          lastUsed: tab.lastUsed * 1000
+          lastUsed: tab.lastUsed * 1000,
         };
         matches.push(record);
       }

@@ -262,7 +262,7 @@ var Bookmarks = Object.freeze({
         dateAdded: { defaultValue: addedTime },
         lastModified: { defaultValue: modTime,
                         validIf: b => b.lastModified >= now || (b.dateAdded && b.lastModified >= b.dateAdded) },
-        source: { defaultValue: this.SOURCES.DEFAULT }
+        source: { defaultValue: this.SOURCES.DEFAULT },
       });
 
     return (async () => {
@@ -438,7 +438,7 @@ var Bookmarks = Object.freeze({
           charset: { validIf: b => b.type == TYPE_BOOKMARK },
           postData: { validIf: b => b.type == TYPE_BOOKMARK },
           tags: { validIf: b => b.type == TYPE_BOOKMARK },
-          children: { validIf: b => b.type == TYPE_FOLDER && Array.isArray(b.children) }
+          children: { validIf: b => b.type == TYPE_FOLDER && Array.isArray(b.children) },
         };
         if (fixupOrSkipInvalidEntries) {
           insertInfo.guid.fixup = b => b.guid = PlacesUtils.history.makeGuid();
@@ -625,7 +625,7 @@ var Bookmarks = Object.freeze({
         index: { requiredIf: b => b.hasOwnProperty("parentGuid"),
                  validIf: b => b.index >= 0 || b.index == this.DEFAULT_INDEX },
         parentGuid: { validIf: b => b.parentGuid != this.rootGuid },
-        source: { defaultValue: this.SOURCES.DEFAULT }
+        source: { defaultValue: this.SOURCES.DEFAULT },
       });
 
     // There should be at last one more property in addition to guid and source.
@@ -662,7 +662,7 @@ var Bookmarks = Object.freeze({
           lastModified: { defaultValue: lastModifiedDefault,
                           validIf: b => b.lastModified >= now ||
                                         b.lastModified >= (b.dateAdded || item.dateAdded) },
-          dateAdded: { defaultValue: item.dateAdded }
+          dateAdded: { defaultValue: item.dateAdded },
         });
 
       return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: update",
@@ -1056,7 +1056,7 @@ var Bookmarks = Object.freeze({
       // Disallow removing the root folders.
       if ([
         Bookmarks.rootGuid, Bookmarks.menuGuid, Bookmarks.toolbarGuid,
-        Bookmarks.unfiledGuid, Bookmarks.tagsGuid, Bookmarks.mobileGuid
+        Bookmarks.unfiledGuid, Bookmarks.tagsGuid, Bookmarks.mobileGuid,
       ].includes(info.guid)) {
         throw new Error("It's not possible to remove Places root folders.");
       }
@@ -1250,7 +1250,7 @@ var Bookmarks = Object.freeze({
         v => v.hasOwnProperty("parentGuid") && v.hasOwnProperty("index"),
         v => v.hasOwnProperty("url"),
         v => v.hasOwnProperty("guidPrefix"),
-        v => v.hasOwnProperty("tags")
+        v => v.hasOwnProperty("tags"),
       ].reduce((old, fn) => old + fn(info) | 0, 0);
       if (conditionsCount != 1)
         throw new Error(`Unexpected number of conditions provided: ${conditionsCount}`);
@@ -1262,7 +1262,7 @@ var Bookmarks = Object.freeze({
         parentGuid: { requiredIf: b => b.hasOwnProperty("index") },
         index: { requiredIf: b => b.hasOwnProperty("parentGuid"),
                  validIf: b => typeof(b.index) == "number" &&
-                               b.index >= 0 || b.index == this.DEFAULT_INDEX }
+                               b.index >= 0 || b.index == this.DEFAULT_INDEX },
       };
     }
 
@@ -1399,7 +1399,7 @@ var Bookmarks = Object.freeze({
     `, { tagsGuid: this.tagsGuid });
     return rows.map(r => ({
       name: r.getResultByName("name"),
-      count: r.getResultByName("count")
+      count: r.getResultByName("count"),
     }));
   },
 
@@ -1826,7 +1826,7 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
         type: item.type, parentGuid: item.parentGuid, index: item.index,
         title: item.title, date_added: PlacesUtils.toPRTime(item.dateAdded),
         last_modified: PlacesUtils.toPRTime(item.lastModified), guid: item.guid,
-        syncChangeCounter: syncChangeDelta, syncStatus, rootId
+        syncChangeCounter: syncChangeDelta, syncStatus, rootId,
       }));
       await db.executeCached(
         `INSERT INTO moz_bookmarks (fk, type, parent, position, title,
@@ -1931,7 +1931,7 @@ async function handleBookmarkItemSpecialData(itemId, item) {
         keyword: item.keyword,
         url: item.url,
         postData: item.postData,
-        source: item.source
+        source: item.source,
       });
     } catch (ex) {
       Cu.reportError(`Failed to insert keyword "${item.keyword} for ${item.url}": ${ex}`);
@@ -1956,7 +1956,7 @@ async function handleBookmarkItemSpecialData(itemId, item) {
 
       await PlacesUtils.history.update({
         url: item.url,
-        annotations: new Map([[PlacesUtils.CHARSET_ANNO, charset]])
+        annotations: new Map([[PlacesUtils.CHARSET_ANNO, charset]]),
       });
     } catch (ex) {
       Cu.reportError(`Failed to set charset "${item.charset}" for ${item.url}: ${ex}`);
@@ -2735,7 +2735,7 @@ async function(db, folderGuids, options) {
                                        // removed as a descendent.
                                        {
                                          isDescendantRemoval: true,
-                                         parentGuid: item.parentGuid
+                                         parentGuid: item.parentGuid,
                                        });
 
     let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
@@ -2851,7 +2851,7 @@ function adjustSeparatorsSyncCounter(db, parentId, startIndex, syncChangeDelta) 
       delta: syncChangeDelta,
       parent: parentId,
       start_index: startIndex,
-      item_type: Bookmarks.TYPE_SEPARATOR
+      item_type: Bookmarks.TYPE_SEPARATOR,
     });
 }
 

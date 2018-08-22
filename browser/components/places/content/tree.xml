@@ -534,7 +534,7 @@
           return new PlacesInsertionPoint({
             parentId: PlacesUtils.getConcreteItemId(container),
             parentGuid: PlacesUtils.getConcreteItemGuid(container),
-            index, orientation, tagName, dropNearNode
+            index, orientation, tagName, dropNearNode,
           });
         ]]></body>
       </method>

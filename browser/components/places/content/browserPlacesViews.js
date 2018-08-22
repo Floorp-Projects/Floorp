@@ -218,7 +218,7 @@ PlacesViewBase.prototype = {
     return new PlacesInsertionPoint({
       parentId: PlacesUtils.getConcreteItemId(container),
       parentGuid: PlacesUtils.getConcreteItemGuid(container),
-      index, orientation, tagName
+      index, orientation, tagName,
     });
   },
 
@@ -968,7 +968,7 @@ function PlacesToolbar(aPlace) {
     ["_rootElt",              "PlacesToolbarItems"],
     ["_dropIndicator",        "PlacesToolbarDropIndicator"],
     ["_chevron",              "PlacesChevron"],
-    ["_chevronPopup",         "PlacesChevronPopup"]
+    ["_chevronPopup",         "PlacesChevronPopup"],
   ].forEach(function(elementGlobal) {
     let [name, id] = elementGlobal;
     thisView.__defineGetter__(name, function() {
@@ -1564,7 +1564,7 @@ PlacesToolbar.prototype = {
               parentId: PlacesUtils.getConcreteItemId(this._resultNode),
               parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
               index: eltIndex,
-              orientation: Ci.nsITreeView.DROP_BEFORE
+              orientation: Ci.nsITreeView.DROP_BEFORE,
             });
           dropPoint.beforeIndex = eltIndex;
         } else if (this.isRTL ? (aEvent.clientX > eltRect.left + threshold)
@@ -1576,7 +1576,7 @@ PlacesToolbar.prototype = {
             new PlacesInsertionPoint({
               parentId: PlacesUtils.getConcreteItemId(elt._placesNode),
               parentGuid: PlacesUtils.getConcreteItemGuid(elt._placesNode),
-              tagName
+              tagName,
             });
           dropPoint.beforeIndex = eltIndex;
           dropPoint.folderElt = elt;
@@ -1591,7 +1591,7 @@ PlacesToolbar.prototype = {
               parentId: PlacesUtils.getConcreteItemId(this._resultNode),
               parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
               index: beforeIndex,
-              orientation: Ci.nsITreeView.DROP_BEFORE
+              orientation: Ci.nsITreeView.DROP_BEFORE,
             });
           dropPoint.beforeIndex = beforeIndex;
         }
@@ -1607,7 +1607,7 @@ PlacesToolbar.prototype = {
               parentId: PlacesUtils.getConcreteItemId(this._resultNode),
               parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
               index: eltIndex,
-              orientation: Ci.nsITreeView.DROP_BEFORE
+              orientation: Ci.nsITreeView.DROP_BEFORE,
             });
           dropPoint.beforeIndex = eltIndex;
         } else {
@@ -1620,7 +1620,7 @@ PlacesToolbar.prototype = {
               parentId: PlacesUtils.getConcreteItemId(this._resultNode),
               parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
               index: beforeIndex,
-              orientation: Ci.nsITreeView.DROP_BEFORE
+              orientation: Ci.nsITreeView.DROP_BEFORE,
             });
           dropPoint.beforeIndex = beforeIndex;
         }
@@ -1632,7 +1632,7 @@ PlacesToolbar.prototype = {
         new PlacesInsertionPoint({
           parentId: PlacesUtils.getConcreteItemId(this._resultNode),
           parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
-          orientation: Ci.nsITreeView.DROP_BEFORE
+          orientation: Ci.nsITreeView.DROP_BEFORE,
         });
       dropPoint.beforeIndex = -1;
     }
@@ -1904,7 +1904,7 @@ PlacesToolbar.prototype = {
       this._openedMenuButton.open = false;
       target.open = true;
     }
-  }
+  },
 };
 
 /**
@@ -1981,7 +1981,7 @@ PlacesMenu.prototype = {
     // when the folder closes because it is no longer applicable.
     popup.removeAttribute("autoopened");
     popup.removeAttribute("dragstart");
-  }
+  },
 };
 
 function PlacesPanelMenuView(aPlace, aViewId, aRootId, aOptions) {
@@ -2128,7 +2128,7 @@ PlacesPanelMenuView.prototype = {
       this._insertNewItem(this._resultNode.getChild(i), fragment);
     }
     this._rootElt.appendChild(fragment);
-  }
+  },
 };
 
 this.PlacesPanelview = class extends PlacesViewBase {

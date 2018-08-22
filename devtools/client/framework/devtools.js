@@ -447,11 +447,13 @@ DevTools.prototype = {
    * @param {Number} startTime
    *        Optional, indicates the time at which the user event related to this toolbox
    *        opening started. This is a `Cu.now()` timing.
+   * @param {string} reason
+   *        Reason the tool was opened
    *
    * @return {Toolbox} toolbox
    *        The toolbox that was opened
    */
-  async showToolbox(target, toolId, hostType, hostOptions, startTime) {
+  async showToolbox(target, toolId, hostType, hostOptions, startTime, reason = "toolbox_show") {
     let toolbox = this._toolboxes.get(target);
 
     if (toolbox) {
@@ -460,7 +462,7 @@ DevTools.prototype = {
       }
 
       if (toolId != null && toolbox.currentToolId != toolId) {
-        await toolbox.selectTool(toolId, "toolbox_show");
+        await toolbox.selectTool(toolId, reason);
       }
 
       toolbox.raise();
@@ -692,7 +694,8 @@ DevTools.prototype = {
   async inspectNode(tab, nodeSelectors, startTime) {
     const target = TargetFactory.forTab(tab);
 
-    const toolbox = await gDevTools.showToolbox(target, "inspector", null, null, startTime);
+    const toolbox = await gDevTools.showToolbox(target, "inspector", null, null,
+                                                startTime, "inspect_dom");
     const inspector = toolbox.getCurrentPanel();
 
     // If the toolbox has been switched into a nested frame, we should first remove

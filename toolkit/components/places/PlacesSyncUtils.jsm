@@ -1548,7 +1548,7 @@ function removeConflictingKeywords(bookmarkURL, newKeyword) {
         return;
       }
       let entryForNewKeyword = await PlacesUtils.keywords.fetch({
-        keyword: newKeyword
+        keyword: newKeyword,
       });
       if (entryForNewKeyword) {
         await PlacesUtils.keywords.remove({
@@ -1820,7 +1820,7 @@ function validateNewBookmark(name, info) {
                                  BookmarkSyncUtils.KINDS.QUERY ].includes(b.kind) },
       feed: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.LIVEMARK },
       site: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.LIVEMARK },
-      dateAdded: { required: false }
+      dateAdded: { required: false },
     });
 
   return insertInfo;
@@ -2239,7 +2239,7 @@ var dedupeSyncBookmark = async function(db, localGuid, remoteGuid,
                                        bookmarkType,
                                        localParentId,
                                        remoteGuid, remoteParentGuid,
-                                       localGuid, SOURCE_SYNC
+                                       localGuid, SOURCE_SYNC,
                                      ]);
 
   // TODO (Bug 1313890): Refactor the bookmarks engine to pull change records

@@ -27,7 +27,7 @@ add_task(async function test_historyClear() {
     let bm = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: pageURI,
-      title: null
+      title: null,
     });
     let id = await PlacesUtils.promiseItemId(bm.guid);
     // Will persist because it's an EXPIRE_NEVER item anno.

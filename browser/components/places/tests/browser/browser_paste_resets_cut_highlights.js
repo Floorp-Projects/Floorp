@@ -34,7 +34,7 @@ add_task(async function paste() {
     }, {
       url: TEST_URL1,
       title: "1",
-    }]
+    }],
   });
 
   Assert.equal(ContentTree.view.view.rowCount, 2,

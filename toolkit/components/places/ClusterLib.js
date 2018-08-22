@@ -61,7 +61,7 @@ HierarchicalClustering.prototype = {
         // index of cluster in clusters array, can change during any merge
         index,
         // how many clusters have been merged into this one
-        size: 1
+        size: 1,
       };
       clusters[index] = cluster;
       clustersByKey[index] = cluster;
@@ -199,7 +199,7 @@ HierarchicalClustering.prototype = {
       return [minKey, neighbors[minKey]];
     }
     return null;
-  }
+  },
 };
 
 var clusterlib = {
@@ -243,5 +243,5 @@ var clusterlib = {
       max = Math.max(max, Math.abs(v2[i] - v1[i]));
     }
     return max;
-  }
+  },
 };

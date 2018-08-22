@@ -1063,7 +1063,7 @@ add_task(async function test_date_added() {
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
     updated: ["bookmarkAAAA"],
-    deleted: []
+    deleted: [],
   }, "Should flag A for weak reupload");
 
   let localItemIds = await PlacesUtils.promiseManyItemIds(["bookmarkAAAA",

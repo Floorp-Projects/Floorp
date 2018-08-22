@@ -10,7 +10,7 @@ add_task(async function() {
 
   await PlacesTestUtils.addVisits([
     { uri: uri1, title: "foo title" },
-    { uri: uri2, title: "bar title" }
+    { uri: uri2, title: "bar title" },
   ]);
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -20,7 +20,7 @@ add_task(async function() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: uri2,
-    title: null
+    title: null,
   });
 
   PlacesUtils.tagging.tagURI(uri1, ["tag 1"]);
