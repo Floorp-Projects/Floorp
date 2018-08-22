@@ -125,8 +125,7 @@ CheckDebuggeeThing(JSObject* obj, bool invisibleOk);
  * transitions.
  */
 template <class UnbarrieredKey, bool InvisibleKeysOk=false>
-class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObject*>,
-                                        MovableCellHasher<HeapPtr<UnbarrieredKey>>>
+class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObject*>>
 {
   private:
     typedef HeapPtr<UnbarrieredKey> Key;
@@ -141,7 +140,7 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
     JS::Compartment* compartment;
 
   public:
-    typedef WeakMap<Key, Value, MovableCellHasher<Key>> Base;
+    typedef WeakMap<Key, Value> Base;
 
     explicit DebuggerWeakMap(JSContext* cx)
         : Base(cx),

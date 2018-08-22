@@ -22,19 +22,20 @@ class GridItem extends PureComponent {
     return {
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       grid: PropTypes.shape(Types.grid).isRequired,
-      setSelectedNode: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleGridHighlighter: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
   constructor(props) {
     super(props);
-    this.setGridColor = this.setGridColor.bind(this);
+
     this.onGridCheckboxClick = this.onGridCheckboxClick.bind(this);
     this.onGridInspectIconClick = this.onGridInspectIconClick.bind(this);
+    this.setGridColor = this.setGridColor.bind(this);
   }
 
   componentDidMount() {
@@ -97,47 +98,42 @@ class GridItem extends PureComponent {
     } = this.props;
     const { nodeFront } = grid;
 
-    return dom.li(
-      {},
-      dom.label(
-        {},
-        dom.input(
+    return (
+      dom.li({},
+        dom.label({},
+          dom.input(
+            {
+              checked: grid.highlighted,
+              type: "checkbox",
+              value: grid.id,
+              onChange: this.onGridCheckboxClick,
+            }
+          ),
+          Rep(
+            {
+              defaultRep: ElementNode,
+              mode: MODE.TINY,
+              object: translateNodeFrontToGrip(nodeFront),
+              onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
+              onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
+              onInspectIconClick: () => this.onGridInspectIconClick(nodeFront),
+            }
+          )
+        ),
+        dom.div(
           {
-            checked: grid.highlighted,
-            type: "checkbox",
-            value: grid.id,
-            onChange: this.onGridCheckboxClick,
+            className: "grid-color-swatch",
+            style: {
+              backgroundColor: grid.color,
+            },
+            title: grid.color,
           }
         ),
-        Rep(
-          {
-            defaultRep: ElementNode,
-            mode: MODE.TINY,
-            object: translateNodeFrontToGrip(nodeFront),
-            onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
-            onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
-            onInspectIconClick: () => this.onGridInspectIconClick(nodeFront),
-          }
-        )
-      ),
-      dom.div(
-        {
-          className: "grid-color-swatch",
-          style: {
-            backgroundColor: grid.color,
-          },
-          title: grid.color,
-        }
-      ),
-      // The SwatchColorPicker relies on the nextSibling of the swatch element to apply
-      // the selected color. This is why we use a span in display: none for now.
-      // Ideally we should modify the SwatchColorPickerTooltip to bypass this requirement.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1341578
-      dom.span(
-        {
-          className: "grid-color-value"
-        },
-        grid.color
+        // The SwatchColorPicker relies on the nextSibling of the swatch element to apply
+        // the selected color. This is why we use a span in display: none for now.
+        // Ideally we should modify the SwatchColorPickerTooltip to bypass this
+        // requirement. See https://bugzilla.mozilla.org/show_bug.cgi?id=1341578
+        dom.span({ className: "grid-color-value" }, grid.color)
       )
     );
   }

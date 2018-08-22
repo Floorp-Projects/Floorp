@@ -41,9 +41,8 @@ template <typename K, typename V>
 struct Utils
 {
     typedef typename DataType<K>::BarrieredType KeyType;
-    typedef typename DataType<K>::HasherType HasherType;
     typedef typename DataType<V>::BarrieredType ValueType;
-    typedef WeakMap<KeyType, ValueType, HasherType> Type;
+    typedef WeakMap<KeyType, ValueType> Type;
     typedef Type* PtrType;
     static PtrType cast(void* ptr) { return static_cast<PtrType>(ptr); }
 };

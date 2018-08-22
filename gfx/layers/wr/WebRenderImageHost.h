@@ -50,7 +50,7 @@ public:
 
   virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
-  gfx::IntSize GetImageSize() const override;
+  gfx::IntSize GetImageSize() override;
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
@@ -65,6 +65,11 @@ public:
   virtual void Unlock() override;
 
   virtual void CleanupResources() override;
+
+  uint32_t GetDroppedFrames() override
+  {
+    return GetDroppedFramesAndReset();
+  }
 
   virtual WebRenderImageHost* AsWebRenderImageHost() override { return this; }
 

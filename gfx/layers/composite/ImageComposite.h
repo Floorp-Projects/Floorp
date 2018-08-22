@@ -40,6 +40,12 @@ public:
 
   int32_t GetLastFrameID() const { return mLastFrameID; }
   int32_t GetLastProducerID() const { return mLastProducerID; }
+  uint32_t GetDroppedFramesAndReset()
+  {
+    uint32_t dropped = mDroppedFrames;
+    mDroppedFrames = 0;
+    return dropped;
+  }
 
   enum Bias {
     // Don't apply bias to frame times
@@ -50,13 +56,8 @@ public:
     BIAS_POSITIVE,
   };
 
-  static TimeStamp GetBiasedTime(const TimeStamp& aInput, ImageComposite::Bias aBias);
-
 protected:
-  static Bias UpdateBias(const TimeStamp& aCompositionTime,
-                         const TimeStamp& aCompositedImageTime,
-                         const TimeStamp& aNextImageTime, // may be null
-                         ImageComposite::Bias aBias);
+  void UpdateBias(size_t aImageIndex);
 
   virtual TimeStamp GetCompositionTime() const = 0;
 
@@ -74,17 +75,34 @@ protected:
    * it depends only on mImages, mCompositor->GetCompositionTime(), and mBias.
    * mBias is updated at the end of Composite().
    */
-  const TimedImage* ChooseImage() const;
-  TimedImage* ChooseImage();
-  int ChooseImageIndex() const;
+  const TimedImage* ChooseImage();
+  int ChooseImageIndex();
+  const TimedImage* GetImage(size_t aIndex) const;
+  size_t ImagesCount() const { return mImages.Length(); }
+  const nsTArray<TimedImage>& Images() const { return mImages; }
 
-  nsTArray<TimedImage> mImages;
+  void RemoveImagesWithTextureHost(TextureHost* aTexture);
+  void ClearImages();
+  void SetImages(nsTArray<TimedImage>&& aNewImages);
+
   int32_t mLastFrameID;
   int32_t mLastProducerID;
+
+private:
+  nsTArray<TimedImage> mImages;
+  TimeStamp GetBiasedTime(const TimeStamp& aInput) const;
+  // Scan new images and look for common ones in the existing mImages array.
+  // Will determine if an image has been dropped through gaps between images and
+  // adjust mDroppedFrames accordingly.
+  // Return the index of what the last returned image would have been.
+  uint32_t ScanForLastFrameIndex(const nsTArray<TimedImage>& aNewImages);
+
   /**
    * Bias to apply to the next frame.
    */
   Bias mBias;
+  uint32_t mDroppedFrames;
+  uint32_t mLastChosenImageIndex;
 };
 
 } // namespace layers

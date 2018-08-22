@@ -48,6 +48,3 @@ if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
 
     # Disable warning for decorated name length exceeded, name was truncated
     CXXFLAGS += ['-wd4503']
-
-if CONFIG['MOZ_ASAN'] and CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1306642

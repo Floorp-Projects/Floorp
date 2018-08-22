@@ -22,7 +22,6 @@
 #include "nsIIOService.h"
 #include "nsIParentChannel.h"
 #include "nsIPermissionManager.h"
-#include "nsIPrivateBrowsingTrackingProtectionWhitelist.h"
 #include "nsIProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
@@ -38,6 +37,7 @@
 #include "nsIUrlClassifierDBService.h"
 #include "nsIURLFormatter.h"
 
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
@@ -449,8 +449,8 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
         return NS_OK;
     }
 
-    nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIIOService> ios = services::GetIOService();
+    NS_ENSURE_TRUE(ios, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIURI> topWinURI;
     rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
@@ -465,66 +465,21 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    // Take the host/port portion so we can allowlist by site. Also ignore the
-    // scheme, since users who put sites on the allowlist probably don't expect
-    // allowlisting to depend on scheme.
-    nsCOMPtr<nsIURL> url = do_QueryInterface(topWinURI, &rv);
+    rv = AntiTrackingCommon::IsOnContentBlockingAllowList(topWinURI, mIsAllowListed);
     if (NS_FAILED(rv)) {
       return rv; // normal for some loads, no need to print a warning
     }
 
-    nsCString escaped(NS_LITERAL_CSTRING("https://"));
-    nsAutoCString temp;
-    rv = url->GetHostPort(temp);
-    NS_ENSURE_SUCCESS(rv, rv);
-    escaped.Append(temp);
-
-    // Stuff the whole thing back into a URI for the permission manager.
-    rv = ios->NewURI(escaped, nullptr, nullptr, getter_AddRefs(topWinURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIPermissionManager> permMgr =
-        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint32_t permissions = nsIPermissionManager::UNKNOWN_ACTION;
-    rv = permMgr->TestPermission(topWinURI, "trackingprotection", &permissions);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (permissions == nsIPermissionManager::ALLOW_ACTION) {
+    if (mIsAllowListed) {
+      *result = false;
       if (LOG_ENABLED()) {
         nsCString chanSpec = chanURI->GetSpecOrDefault();
         chanSpec.Truncate(std::min(chanSpec.Length(), sMaxSpecLength));
-        LOG(("nsChannelClassifier[%p]: User override on channel[%p] (%s) for %s",
-             this, aChannel, chanSpec.get(), escaped.get()));
+        LOG(("nsChannelClassifier[%p]: User override on channel[%p] (%s)",
+             this, aChannel, chanSpec.get()));
       }
-      mIsAllowListed = true;
-      *result = false;
     } else {
       *result = true;
-    }
-
-    // In Private Browsing Mode we also check against an in-memory list.
-    if (NS_UsePrivateBrowsing(aChannel)) {
-      nsCOMPtr<nsIPrivateBrowsingTrackingProtectionWhitelist> pbmtpWhitelist =
-          do_GetService(NS_PBTRACKINGPROTECTIONWHITELIST_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      bool exists = false;
-      rv = pbmtpWhitelist->ExistsInAllowList(topWinURI, &exists);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (exists) {
-        mIsAllowListed = true;
-        if (LOG_ENABLED()) {
-          nsCString chanSpec = chanURI->GetSpecOrDefault();
-          chanSpec.Truncate(std::min(chanSpec.Length(), sMaxSpecLength));
-          LOG(("nsChannelClassifier[%p]: User override (PBM) on channel[%p] (%s) for %s",
-               this, aChannel, chanSpec.get(), escaped.get()));
-        }
-      }
-
-      *result = !exists;
     }
 
     // Tracking protection will be enabled so return without updating
@@ -1232,7 +1187,12 @@ TrackingURICallback::OnTrackerFound(nsresult aErrorCode)
                                           mList, mProvider, mFullHash);
     LOG(("TrackingURICallback[%p]::OnTrackerFound, cancelling channel[%p]",
          mChannelClassifier.get(), channel.get()));
-    channel->Cancel(aErrorCode);
+    nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(channel);
+    if (httpChannel) {
+      Unused << httpChannel->CancelForTrackingProtection();
+    } else {
+      Unused << channel->Cancel(aErrorCode);
+    }
   } else {
     MOZ_ASSERT(aErrorCode == NS_ERROR_TRACKING_ANNOTATION_URI);
     MOZ_ASSERT(mChannelClassifier->ShouldEnableTrackingAnnotation());

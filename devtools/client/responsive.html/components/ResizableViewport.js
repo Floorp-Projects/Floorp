@@ -22,13 +22,13 @@ class ResizableViewport extends Component {
   static get propTypes() {
     return {
       leftAlignmentEnabled: PropTypes.bool.isRequired,
-      screenshot: PropTypes.shape(Types.screenshot).isRequired,
-      swapAfterMount: PropTypes.bool.isRequired,
-      viewport: PropTypes.shape(Types.viewport).isRequired,
       onBrowserMounted: PropTypes.func.isRequired,
       onContentResize: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
       onResizeViewport: PropTypes.func.isRequired,
+      screenshot: PropTypes.shape(Types.screenshot).isRequired,
+      swapAfterMount: PropTypes.bool.isRequired,
+      viewport: PropTypes.shape(Types.viewport).isRequired,
     };
   }
 

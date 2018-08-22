@@ -469,7 +469,7 @@
   "CYCLE_COLLECTOR_SLICE_DURING_IDLE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "62",
+    "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
@@ -521,7 +521,7 @@
   "FORGET_SKIPPABLE_DURING_IDLE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "62",
+    "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
@@ -787,7 +787,7 @@
   "GC_SLICE_DURING_IDLE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "62",
+    "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
