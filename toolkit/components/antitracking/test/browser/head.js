@@ -1,11 +1,9 @@
 const TEST_DOMAIN = "http://example.net/";
 const TEST_3RD_PARTY_DOMAIN = "https://tracking.example.org/";
-const TEST_3RD_PARTY_DOMAIN_TP = "https://tracking.example.com/";
 
 const TEST_PATH = "browser/toolkit/components/antitracking/test/browser/";
 
 const TEST_TOP_PAGE = TEST_DOMAIN + TEST_PATH + "page.html";
-const TEST_EMBEDDER_PAGE = TEST_DOMAIN + TEST_PATH + "embedder.html";
 const TEST_POPUP_PAGE = TEST_DOMAIN + TEST_PATH + "popup.html";
 const TEST_3RD_PARTY_PAGE = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 const TEST_3RD_PARTY_PAGE_WO = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyWO.html";
