@@ -64,9 +64,9 @@ ssl_init()
     PORT=$(($PORT + $padd))
   fi
   NSS_SSL_TESTS=${NSS_SSL_TESTS:-normal_normal}
-  nss_ssl_run="stapling signed_cert_timestamps cov auth stress dtls"
+  nss_ssl_run="stapling signed_cert_timestamps cov auth stress dtls scheme"
   NSS_SSL_RUN=${NSS_SSL_RUN:-$nss_ssl_run}
-  
+
   # Test case files
   SSLCOV=${QADIR}/ssl/sslcov.txt
   SSLAUTH=${QADIR}/ssl/sslauth.txt
@@ -210,7 +210,6 @@ start_selfserv()
   if [ -n "$testname" ] ; then
       echo "$SCRIPTNAME: $testname ----"
   fi
-  sparam=`echo $sparam | sed -e 's;_; ;g'`
   if [ -z "$NO_ECC_CERTS" -o "$NO_ECC_CERTS" != "1" ] ; then
       ECC_OPTIONS="-e ${HOSTADDR}-ecmixed -e ${HOSTADDR}-ec"
   else
@@ -223,16 +222,16 @@ start_selfserv()
   fi
   echo "selfserv starting at `date`"
   echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} ${RSA_OPTIONS} ${SERVER_OPTIONS} \\"
-  echo "         ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID}\\"
+  echo "         ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss "$@" -i ${R_SERVERPID}\\"
   echo "         -V ssl3:tls1.2 $verbose -H 1 &"
   if [ ${fileout} -eq 1 ]; then
       ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} ${RSA_OPTIONS} ${SERVER_OPTIONS} \
-               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID} -V ssl3:tls1.2 $verbose -H 1 \
+               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss "$@" -i ${R_SERVERPID} -V ssl3:tls1.2 $verbose -H 1 \
                > ${SERVEROUTFILE} 2>&1 &
       RET=$?
   else
       ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} ${RSA_OPTIONS} ${SERVER_OPTIONS} \
-               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID} -V ssl3:tls1.2 $verbose -H 1 &
+               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss "$@" -i ${R_SERVERPID} -V ssl3:tls1.2 $verbose -H 1 &
       RET=$?
   fi
 
@@ -275,9 +274,8 @@ ssl_cov()
   html_head "SSL Cipher Coverage $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
 
   testname=""
-  sparam="$CIPHER_SUITES"
 
-  start_selfserv # Launch the server
+  start_selfserv $CIPHER_SUITES # Launch the server
 
   VMIN="ssl3"
   VMAX="tls1.1"
@@ -290,8 +288,8 @@ ssl_cov()
 
       # RSA-PSS tests are handled in a separate function
       case $testname in
-	*RSA-PSS)
-	  continue
+        *RSA-PSS)
+          continue
           ;;
       esac
 
@@ -331,7 +329,6 @@ ssl_cov_rsa_pss()
   html_head "SSL Cipher Coverage (RSA-PSS) $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
 
   testname=""
-  sparam="$CIPHER_SUITES"
 
   if [ "$NORM_EXT" = "Extended Test" ] ; then
       echo "$SCRIPTNAME: skipping SSL Cipher Coverage (RSA-PSS) for $NORM_EXT"
@@ -340,7 +337,7 @@ ssl_cov_rsa_pss()
 
   RSA_PSS_CERT=1
   NO_ECC_CERTS=1
-  start_selfserv # Launch the server
+  start_selfserv $CIPHER_SUITES
   RSA_PSS_CERT=0
   NO_ECC_CERTS=0
 
@@ -351,11 +348,11 @@ ssl_cov_rsa_pss()
   while read ectype testmax param testname
   do
       case $testname in
-	*RSA-PSS)
+        *RSA-PSS)
           ;;
-	*)
-	  continue
-	  ;;
+        *)
+          continue
+          ;;
       esac
 
       echo "$SCRIPTNAME: running $testname (RSA-PSS) ----------------------------"
@@ -402,7 +399,7 @@ ssl_auth()
               cparam=`echo $cparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
               sparam=`echo $sparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
           fi
-          start_selfserv
+          start_selfserv `echo "$sparam" | sed -e 's,_, ,g'`
 
           echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} $verbose ${CLIENT_OPTIONS} \\"
           echo "        ${cparam}  < ${REQUEST_FILE}"
@@ -435,15 +432,15 @@ ssl_stapling_sub()
     value=$3
 
     if [ "$NORM_EXT" = "Extended Test" ] ; then
-	# these tests use the ext_client directory for tstclnt,
-	# which doesn't contain the required "TestCA" for server cert
-	# verification, I don't know if it would be OK to add it...
-	echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
-	return 0
+        # these tests use the ext_client directory for tstclnt,
+        # which doesn't contain the required "TestCA" for server cert
+        # verification, I don't know if it would be OK to add it...
+        echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
+        return 0
     fi
     if [ "$SERVER_MODE" = "fips" -o "$CLIENT_MODE" = "fips" ] ; then
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
-	return 0
+        return 0
     fi
 
     SAVE_SERVER_OPTIONS=${SERVER_OPTIONS}
@@ -460,8 +457,8 @@ ssl_stapling_sub()
     echo "        -c v -T -O -F -M 1 -V ssl3:tls1.2 < ${REQUEST_FILE}"
     rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
     ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f ${CLIENT_OPTIONS} \
-	    -d ${P_R_CLIENTDIR} $verbose -c v -T -O -F -M 1 -V ssl3:tls1.2 < ${REQUEST_FILE} \
-	    >${TMP}/$HOST.tmp.$$  2>&1
+            -d ${P_R_CLIENTDIR} $verbose -c v -T -O -F -M 1 -V ssl3:tls1.2 < ${REQUEST_FILE} \
+            >${TMP}/$HOST.tmp.$$  2>&1
     ret=$?
     cat ${TMP}/$HOST.tmp.$$
     rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
@@ -470,7 +467,7 @@ ssl_stapling_sub()
     # (see commands in ssl_auth
 
     html_msg $ret $value "${testname}" \
-	    "produced a returncode of $ret, expected is $value"
+            "produced a returncode of $ret, expected is $value"
     kill_selfserv
 
     SERVER_OPTIONS=${SAVE_SERVER_OPTIONS}
@@ -484,15 +481,15 @@ ssl_stapling_stress()
     value=0
 
     if [ "$NORM_EXT" = "Extended Test" ] ; then
-	# these tests use the ext_client directory for tstclnt,
-	# which doesn't contain the required "TestCA" for server cert
-	# verification, I don't know if it would be OK to add it...
-	echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
-	return 0
+        # these tests use the ext_client directory for tstclnt,
+        # which doesn't contain the required "TestCA" for server cert
+        # verification, I don't know if it would be OK to add it...
+        echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
+        return 0
     fi
     if [ "$SERVER_MODE" = "fips" -o "$CLIENT_MODE" = "fips" ] ; then
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
-	return 0
+        return 0
     fi
 
     SAVE_SERVER_OPTIONS=${SERVER_OPTIONS}
@@ -508,13 +505,13 @@ ssl_stapling_stress()
     echo "         -c 1000 -V ssl3:tls1.2 -N -T $verbose ${HOSTADDR}"
     echo "strsclnt started at `date`"
     ${PROFTOOL} ${BINDIR}/strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} -w nss \
-	    -c 1000 -V ssl3:tls1.2 -N -T $verbose ${HOSTADDR}
+            -c 1000 -V ssl3:tls1.2 -N -T $verbose ${HOSTADDR}
     ret=$?
 
     echo "strsclnt completed at `date`"
     html_msg $ret $value \
-	    "${testname}" \
-	    "produced a returncode of $ret, expected is $value."
+            "${testname}" \
+            "produced a returncode of $ret, expected is $value."
     kill_selfserv
 
     SERVER_OPTIONS=${SAVE_SERVER_OPTIONS}
@@ -621,7 +618,7 @@ ssl_stress()
               sparam=`echo $sparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
           fi
 
-          start_selfserv
+          start_selfserv `echo "$sparam" | sed -e 's,_, ,g'`
 
           if [ "`uname -n`" = "sjsu" ] ; then
               echo "debugging disapering selfserv... ps -ef | grep selfserv"
@@ -675,56 +672,56 @@ ssl_crl_ssl()
     if [ "$ectype" = "SNI" ]; then
         continue
     else
-	servarg=`echo $sparam | awk '{r=split($0,a,"-r") - 1;print r;}'`
-	pwd=`echo $cparam | grep nss`
-	user=`echo $cparam | grep TestUser`
-	_cparam=$cparam
-	case $servarg in
-	    1) if [ -z "$pwd" -o -z "$user" ]; then
+        servarg=`echo $sparam | awk '{r=split($0,a,"-r") - 1;print r;}'`
+        pwd=`echo $cparam | grep nss`
+        user=`echo $cparam | grep TestUser`
+        _cparam=$cparam
+        case $servarg in
+            1) if [ -z "$pwd" -o -z "$user" ]; then
                  rev_modvalue=0
                else
-	         rev_modvalue=254
+                 rev_modvalue=254
                fi
                ;;
-	    2) rev_modvalue=254 ;;
-	    3) if [ -z "$pwd" -o -z "$user" ]; then
-		rev_modvalue=0
-		else
-		rev_modvalue=1
-		fi
-		;;
-	    4) rev_modvalue=1 ;;
-	esac
-	TEMP_NUM=0
-	while [ $TEMP_NUM -lt $CRL_GROUP_RANGE ]
-	  do
-	  CURR_SER_NUM=`expr ${CRL_GROUP_BEGIN} + ${TEMP_NUM}`
-	  TEMP_NUM=`expr $TEMP_NUM + 1`
-	  USER_NICKNAME="TestUser${CURR_SER_NUM}"
-	  cparam=`echo $_cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
-	  start_selfserv
+            2) rev_modvalue=254 ;;
+            3) if [ -z "$pwd" -o -z "$user" ]; then
+                rev_modvalue=0
+                else
+                rev_modvalue=1
+                fi
+                ;;
+            4) rev_modvalue=1 ;;
+        esac
+        TEMP_NUM=0
+        while [ $TEMP_NUM -lt $CRL_GROUP_RANGE ]
+          do
+          CURR_SER_NUM=`expr ${CRL_GROUP_BEGIN} + ${TEMP_NUM}`
+          TEMP_NUM=`expr $TEMP_NUM + 1`
+          USER_NICKNAME="TestUser${CURR_SER_NUM}"
+          cparam=`echo $_cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
+          start_selfserv `echo "$sparam" | sed -e 's,_, ,g'`
 
-	  echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} $verbose \\"
-	  echo "        ${cparam}  < ${REQUEST_FILE}"
-	  rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-	  ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f ${cparam} \
-	      -d ${R_CLIENTDIR} $verbose < ${REQUEST_FILE} \
-	      >${TMP}/$HOST.tmp.$$  2>&1
-	  ret=$?
-	  cat ${TMP}/$HOST.tmp.$$
-	  rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-	  if [ $CURR_SER_NUM -ne $UNREVOKED_CERT ]; then
-	      modvalue=$rev_modvalue
+          echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} $verbose \\"
+          echo "        ${cparam}  < ${REQUEST_FILE}"
+          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+          ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f ${cparam} \
+              -d ${R_CLIENTDIR} $verbose < ${REQUEST_FILE} \
+              >${TMP}/$HOST.tmp.$$  2>&1
+          ret=$?
+          cat ${TMP}/$HOST.tmp.$$
+          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+          if [ $CURR_SER_NUM -ne $UNREVOKED_CERT ]; then
+              modvalue=$rev_modvalue
               testAddMsg="revoked"
-	  else
+          else
               testAddMsg="not revoked"
-	      modvalue=$value
-	  fi
+              modvalue=$value
+          fi
 
-	  html_msg $ret $modvalue "${testname} (cert ${USER_NICKNAME} - $testAddMsg)" \
-		"produced a returncode of $ret, expected is $modvalue"
-	  kill_selfserv
-	done
+          html_msg $ret $modvalue "${testname} (cert ${USER_NICKNAME} - $testAddMsg)" \
+                "produced a returncode of $ret, expected is $modvalue"
+          kill_selfserv
+        done
     fi
   done
 
@@ -767,7 +764,6 @@ ssl_policy()
   html_head "SSL POLICY $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
 
   testname=""
-  sparam="$CIPHER_SUITES"
 
   if [ ! -f "${P_R_CLIENTDIR}/pkcs11.txt" ] ; then
       html_failed "${SCRIPTNAME}: ${P_R_CLIENTDIR} is not initialized"
@@ -777,7 +773,7 @@ ssl_policy()
   echo "Saving pkcs11.txt"
   cp ${P_R_CLIENTDIR}/pkcs11.txt ${P_R_CLIENTDIR}/pkcs11.txt.sav
 
-  start_selfserv # Launch the server
+  start_selfserv $CIPHER_SUITES
 
   ignore_blank_lines ${SSLPOLICY} | \
   while read value ectype testmax param policy testname
@@ -840,7 +836,6 @@ ssl_policy_listsuites()
   html_head "SSL POLICY LISTSUITES $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
 
   testname=""
-  sparam="$CIPHER_SUITES"
 
   if [ ! -f "${P_R_CLIENTDIR}/pkcs11.txt" ] ; then
       html_failed "${SCRIPTNAME}: ${P_R_CLIENTDIR} is not initialized"
@@ -880,7 +875,6 @@ ssl_policy_selfserv()
   html_head "SSL POLICY SELFSERV $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
 
   testname=""
-  sparam="$CIPHER_SUITES"
 
   if [ ! -f "${P_R_SERVERDIR}/pkcs11.txt" ] ; then
       html_failed "${SCRIPTNAME}: ${P_R_SERVERDIR} is not initialized"
@@ -893,7 +887,7 @@ ssl_policy_selfserv()
   # Disallow RSA in key exchange explicitly
   setup_policy "disallow=rsa/ssl-key-exchange" ${P_R_SERVERDIR}
 
-  start_selfserv # Launch the server
+  start_selfserv $CIPHER_SUITES
 
   VMIN="ssl3"
   VMAX="tls1.2"
@@ -1021,7 +1015,7 @@ _EOF_REQUEST_
              -p ../tests.pw.928
         ret=$?
         if [ "$ret" -eq 0 ]; then
-	    html_passed "${CU_ACTION}"
+            html_passed "${CU_ACTION}"
             return 1
         fi
         start_selfserv
@@ -1049,8 +1043,7 @@ ssl_crl_cache()
   echo $?
   while [ $? -eq 0 -a -f ${SSLAUTH_TMP} ]
     do
-    sparam=$SERV_ARG
-    start_selfserv
+    start_selfserv `echo $SERV_ARG | sed -e 's,_, ,g'`
     exec < ${SSLAUTH_TMP}
     while read ectype value sparam cparam testname
       do
@@ -1078,7 +1071,7 @@ ssl_crl_cache()
                 fi
                 ;;
             4) rev_modvalue=1 ;;
-	  esac
+          esac
         TEMP_NUM=0
         LOADED_GRP=1
         while [ ${LOADED_GRP} -le ${TOTAL_GRP_NUM} ]
@@ -1095,7 +1088,7 @@ ssl_crl_cache()
             echo "        ${cparam}  < ${REQUEST_FILE}"
             rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
             ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f ${cparam} \
-	        -d ${R_CLIENTDIR} $verbose < ${REQUEST_FILE} \
+                -d ${R_CLIENTDIR} $verbose < ${REQUEST_FILE} \
                 >${TMP}/$HOST.tmp.$$  2>&1
             ret=$?
             cat ${TMP}/$HOST.tmp.$$
@@ -1134,7 +1127,7 @@ ssl_crl_cache()
         # Restart selfserv to roll back to two initial group 1 crls
         # TestCA CRL and TestCA-ec CRL
         kill_selfserv
-        start_selfserv
+        start_selfserv `echo "$sparam" | sed -e 's,_, ,g'`
       fi
     done
     kill_selfserv
@@ -1171,22 +1164,66 @@ ssl_dtls()
                 -d ${P_R_SERVERDIR} $verbose -U -V tls1.1:tls1.2 -P server -n ${HOSTADDR} -w nss < ${REQUEST_FILE} 2>&1 &
 
     PID=$!
-    
+
     sleep 1
-    
+
     echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} $verbose ${CLIENT_OPTIONS} \\"
     echo "        -U -V tls1.1:tls1.2 -P client -Q < ${REQUEST_FILE}"
     ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f ${CLIENT_OPTIONS} \
-            -d ${P_R_CLIENTDIR} $verbose -U -V tls1.1:tls1.2 -P client -Q < ${REQUEST_FILE} 2>&1 
+            -d ${P_R_CLIENTDIR} $verbose -U -V tls1.1:tls1.2 -P client -Q < ${REQUEST_FILE} 2>&1
     ret=$?
     html_msg $ret $value "${testname}" \
              "produced a returncode of $ret, expected is $value"
 
     kill ${PID}
-    
+
   html "</TABLE><BR>"
 }
 
+############################ ssl_scheme ###################################
+# local shell function to test tstclnt and selfserv handling of signature schemes
+#########################################################################
+ssl_scheme()
+{
+    if [ "$SERVER_MODE" = "fips" -o "$CLIENT_MODE" = "fips" ] ; then
+        echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
+        return 0
+    fi
+
+    html_head "SSL SCHEME $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
+
+    NO_ECC_CERTS=1
+    schemes=("rsa_pkcs1_sha256" "rsa_pss_rsae_sha256" "rsa_pkcs1_sha256,rsa_pss_rsae_sha256")
+    for sscheme in "${schemes[@]}"; do
+        for cscheme in "${schemes[@]}"; do
+            testname="ssl_scheme server='$sscheme' client='$cscheme'"
+            echo "${testname}"
+
+            start_selfserv -V tls1.2:tls1.2 -J "$sscheme"
+
+            echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} $verbose ${CLIENT_OPTIONS} \\"
+            echo "        -V tls1.2:tls1.2 -J "$cscheme" < ${REQUEST_FILE}"
+            ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f ${CLIENT_OPTIONS} \
+                        -d ${P_R_CLIENTDIR} $verbose -V tls1.2:tls1.2 -J "$cscheme" < ${REQUEST_FILE} 2>&1
+            ret=$?
+            # If both schemes include just one option and those options don't
+            # match, then the test should fail; otherwise, assume that it works.
+            if [ "${cscheme#*,}" = "$cscheme" -a \
+                 "${sscheme#*,}" = "$sscheme" -a \
+                 "$cscheme" != "$sscheme" ]; then
+                expected=254
+            else
+                expected=0
+            fi
+            html_msg $ret $expected "${testname}" \
+                     "produced a returncode of $ret, expected is $expected"
+            kill_selfserv
+        done
+    done
+    NO_ECC_CERTS=0
+
+    html "</TABLE><BR>"
+}
 
 ############################## ssl_cleanup #############################
 # local shell function to finish this script (no exit since it might be
@@ -1228,6 +1265,9 @@ ssl_run()
         "dtls")
             ssl_dtls
             ;;
+        "scheme")
+            ssl_scheme
+            ;;
          esac
     done
 }
@@ -1248,9 +1288,9 @@ ssl_run_all()
     # in FIPS mode, so cope with that. Note there's also semicolon in here
     # but it doesn't need escaping/quoting; the shell copes.
     if [ "${CLIENT_MODE}" = "fips" ]; then
-	USER_NICKNAME="pkcs11:token=NSS%20FIPS%20140-2%20Certificate%20DB;object=TestUser"
+        USER_NICKNAME="pkcs11:token=NSS%20FIPS%20140-2%20Certificate%20DB;object=TestUser"
     else
-	USER_NICKNAME="pkcs11:token=NSS%20Certificate%20DB;object=TestUser"
+        USER_NICKNAME="pkcs11:token=NSS%20Certificate%20DB;object=TestUser"
     fi
     NORM_EXT=""
     cd ${CLIENTDIR}
@@ -1412,4 +1452,3 @@ ssl_run_tests()
 ssl_init
 ssl_run_tests
 ssl_cleanup
-

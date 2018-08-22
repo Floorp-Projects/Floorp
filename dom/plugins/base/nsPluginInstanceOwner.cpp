@@ -66,7 +66,6 @@ using mozilla::DefaultXDisplay;
 
 #include "nsContentCID.h"
 #include "nsWidgetsCID.h"
-static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 #ifdef XP_WIN
@@ -2983,7 +2982,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
     if (!mWidget) {
       // native (single process)
-      mWidget = do_CreateInstance(kWidgetCID, &rv);
+      mWidget = nsIWidget::CreateChildWindow();
       nsWidgetInitData initData;
       initData.mWindowType = eWindowType_plugin;
       initData.mUnicode = false;

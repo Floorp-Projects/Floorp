@@ -28,9 +28,9 @@ function always(s) {
 
 // https://www.unicode.org/cldr/charts/33/summary/pl.html#1419
 const units = {
-  "second": always("sek."),
+  "second": always("s"),
   "minute": always("min"),
-  "hour": always("godz."),
+  "hour": always("g."),
   "day": {
     "many": "dni",
     "few": "dni",
@@ -51,7 +51,7 @@ const units = {
 };
 
 const rtf = new Intl.RelativeTimeFormat("pl-PL", {
-  "style": "short",
+  "style": "narrow",
 });
 
 assert.sameValue(typeof rtf.formatToParts, "function", "formatToParts should be supported");

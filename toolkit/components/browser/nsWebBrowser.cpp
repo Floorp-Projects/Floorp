@@ -55,8 +55,6 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-static NS_DEFINE_CID(kChildCID, NS_CHILD_CID);
-
 nsWebBrowser::nsWebBrowser()
   : mInitInfo(new nsWebBrowserInitInfo())
   , mContentType(typeContentWrapper)
@@ -1106,8 +1104,8 @@ nsWebBrowser::Create()
   nsCOMPtr<nsIWidget> docShellParentWidget(mParentWidget);
   if (!mParentWidget) {
     // Create the widget
-    mInternalWidget = do_CreateInstance(kChildCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mInternalWidget = nsIWidget::CreateChildWindow();
+    NS_ENSURE_TRUE(mInternalWidget, NS_ERROR_FAILURE);
 
     docShellParentWidget = mInternalWidget;
     nsWidgetInitData widgetInit;
