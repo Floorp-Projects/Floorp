@@ -474,17 +474,6 @@
 #define NS_URICLASSIFIERSERVICE_CONTRACTID \
     "@mozilla.org/uriclassifierservice"
 
-// Redirect channel registrar used for redirect to various protocols
-#define NS_REDIRECTCHANNELREGISTRAR_CONTRACTID \
-    "@mozilla.org/redirectchannelregistrar;1"
-#define NS_REDIRECTCHANNELREGISTRAR_CID \
-{ /* {b69043a6-8929-4d60-8d17-a27e44a8393e} */ \
-    0xb69043a6, \
-    0x8929, \
-    0x4d60, \
-    { 0x8d, 0x17, 0xa2, 0x7e, 0x44, 0xa8, 0x39, 0x3e } \
-}
-
 // service implementing nsINetworkPredictor
 #define NS_NETWORKPREDICTOR_CONTRACTID \
     "@mozilla.org/network/predictor;1"
