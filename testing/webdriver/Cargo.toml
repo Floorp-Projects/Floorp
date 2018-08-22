@@ -13,7 +13,6 @@ license = "MPL-2.0"
 cookie = { version = "0.10", default-features = false }
 base64 = "0.6"
 hyper = "0.10"
-lazy_static = "1.0"
 log = "0.4"
 regex = "1.0"
 serde = "1.0"
@@ -22,3 +21,6 @@ serde_derive = "1.0"
 time = "0.1"
 unicode-segmentation = "1.2"
 url = "1"
+
+[dev-dependencies]
+lazy_static = "1.0"
