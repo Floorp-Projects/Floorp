@@ -36,7 +36,7 @@
 
 
 #ifdef HB_SHAPER
-#define HB_SHAPER_DATA_GET(object) HB_SHAPER_DATA (HB_SHAPER, object)
+#define HB_SHAPER_DATA_GET(object) HB_SHAPER_DATA (HB_SHAPER, object).get ()
 #endif
 
 

@@ -1,3 +1,21 @@
+Overview of changes leading to 1.8.8
+Tuesday, August 14, 2018
+====================================
+- Fix hb-icu crash on architectures where compare_exchange_weak() can
+  fail falsely.  This bug was introduced in 1.8.4.
+  https://bugs.chromium.org/p/chromium/issues/detail?id=873568
+- More internal refactoring of atomic operations and singletons.
+- API changes:
+  The following functions do NOT reference their return value before
+  returning:
+  * hb_unicode_funcs_get_default()
+  * hb_glib_get_unicode_funcs()
+  * hb_icu_get_unicode_funcs()
+  This is consistent with their naming ("get", instead of "reference")
+  as well as how they are used in the wild (ie. no one calls destroy()
+  on their return value.)
+
+
 Overview of changes leading to 1.8.7
 Wednesday, August 8, 2018
 ====================================
