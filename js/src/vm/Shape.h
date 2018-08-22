@@ -696,6 +696,7 @@ class Shape : public gc::TenuredCell
 
   protected:
     GCPtrBaseShape base_;
+    GCPtrShape parent;
     PreBarrieredId propid_;
 
     // Flags that are not modified after the Shape is created. Off-thread Ion
@@ -745,7 +746,6 @@ class Shape : public gc::TenuredCell
     uint8_t             attrs;          /* attributes, see jsapi.h JSPROP_* */
     uint8_t             mutableFlags;   /* mutable flags, see below for defines */
 
-    GCPtrShape   parent;          /* parent node, reverse for..in order */
     /* kids is valid when !inDictionary(), listp is valid when inDictionary(). */
     union {
         KidsPointer kids;         /* null, single child, or a tagged ptr
@@ -1520,11 +1520,11 @@ class MutableWrappedPtrOperations<StackShape, Wrapper>
 inline
 Shape::Shape(const StackShape& other, uint32_t nfixed)
   : base_(other.base),
+    parent(nullptr),
     propid_(other.propid),
     immutableFlags(other.immutableFlags),
     attrs(other.attrs),
     mutableFlags(other.mutableFlags),
-    parent(nullptr),
     listp(nullptr)
 {
     setNumFixedSlots(nfixed);
@@ -1555,11 +1555,11 @@ class NurseryShapesRef : public gc::BufferableRef
 inline
 Shape::Shape(UnownedBaseShape* base, uint32_t nfixed)
   : base_(base),
+    parent(nullptr),
     propid_(JSID_EMPTY),
     immutableFlags(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
     attrs(0),
     mutableFlags(0),
-    parent(nullptr),
     listp(nullptr)
 {
     MOZ_ASSERT(base);

@@ -582,7 +582,8 @@ struct BaseShape {
 class Shape {
 public:
     shadow::BaseShape* base;
-    jsid              _1;
+    void*             _1;
+    jsid              _2;
     uint32_t          immutableFlags;
 
     static const uint32_t FIXED_SLOTS_SHIFT = 24;
