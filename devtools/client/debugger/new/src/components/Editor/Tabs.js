@@ -67,11 +67,11 @@ class Tabs extends _react.PureComponent {
 
     this.renderDropdownSource = source => {
       const {
-        selectSpecificSource
+        selectSource
       } = this.props;
       const filename = (0, _source.getFilename)(source);
 
-      const onClick = () => selectSpecificSource(source.id);
+      const onClick = () => selectSource(source.id);
 
       return _react2.default.createElement("li", {
         key: source.id,
@@ -206,7 +206,7 @@ const mapStateToProps = state => ({
 });
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, {
-  selectSpecificSource: _actions2.default.selectSpecificSource,
+  selectSource: _actions2.default.selectSource,
   moveTab: _actions2.default.moveTab,
   closeTab: _actions2.default.closeTab,
   togglePaneCollapse: _actions2.default.togglePaneCollapse,

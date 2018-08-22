@@ -31,8 +31,13 @@ async function buildMappedScopes(source, frame, scopes, sourceMaps, client) {
     return null;
   }
 
-  const generatedAstBindings = (0, _buildGeneratedBindingList.buildGeneratedBindingList)(scopes, generatedAstScopes, frame.this);
   const originalRanges = await (0, _rangeMetadata.loadRangeMetadata)(source, frame, originalAstScopes, sourceMaps);
+
+  if (hasLineMappings(originalRanges)) {
+    return null;
+  }
+
+  const generatedAstBindings = (0, _buildGeneratedBindingList.buildGeneratedBindingList)(scopes, generatedAstScopes, frame.this);
   const {
     mappedOriginalScopes,
     expressionLookup
@@ -102,6 +107,10 @@ function isReliableScope(scope) {
 
 
   return totalBindings === 0 || unknownBindings / totalBindings < 0.25;
+}
+
+function hasLineMappings(ranges) {
+  return ranges.every(range => range.columnStart === 0 && range.columnEnd === Infinity);
 }
 
 function batchScopeMappings(originalAstScopes, source, sourceMaps) {
