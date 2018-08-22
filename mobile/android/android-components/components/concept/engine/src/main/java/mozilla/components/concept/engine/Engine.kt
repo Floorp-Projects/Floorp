@@ -25,9 +25,11 @@ interface Engine {
     /**
      * Creates a new engine session.
      *
+     * @param private whether or not this session should use private mode.
+     *
      * @return the newly created [EngineSession].
      */
-    fun createSession(): EngineSession
+    fun createSession(private: Boolean = false): EngineSession
 
     /**
      * Returns the name of this engine. The returned string might be used

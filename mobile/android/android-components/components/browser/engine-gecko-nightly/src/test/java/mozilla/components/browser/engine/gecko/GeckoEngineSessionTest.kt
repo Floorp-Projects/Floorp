@@ -378,4 +378,16 @@ class GeckoEngineSessionTest {
         assertTrue(trackerBlockingDisabledObserved)
         assertFalse(engineSession.geckoSession.settings.getBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION))
     }
+
+    @Test
+    fun testSettingPrivateMode() {
+        val runtime = mock(GeckoRuntime::class.java)
+        `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
+
+        val engineSession = GeckoEngineSession(runtime)
+        assertFalse(engineSession.geckoSession.settings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE))
+
+        val privateEngineSession = GeckoEngineSession(runtime, true)
+        assertTrue(privateEngineSession.geckoSession.settings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE))
+    }
 }

@@ -130,6 +130,35 @@ class DefaultSessionStorageTest {
     }
 
     @Test
+    fun testPersistIgnoresPrivateSessions() {
+        val session = Session("http://mozilla.org", true)
+        val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
+
+        val engineSession = mock(EngineSession::class.java)
+        `when`(engineSession.saveState()).thenReturn(engineSessionState)
+
+        val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
+        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
+
+        val sessionManager = SessionManager(engine)
+        sessionManager.add(session, true, engineSession)
+
+        // Persist current sessions
+        val storage = DefaultSessionStorage(RuntimeEnvironment.application)
+        val persisted = storage.persist(sessionManager)
+        assertTrue(persisted)
+
+        // Restore session using a fresh SessionManager
+        val restoredSessionManager = SessionManager(engine)
+        val restored = storage.restore(restoredSessionManager)
+        assertTrue(restored)
+
+        // Nothing to restore as private sessions should not be persisted
+        assertEquals(0, restoredSessionManager.sessions.size)
+    }
+
+    @Test
     fun testRestoreReturnsFalseOnIOException() {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")

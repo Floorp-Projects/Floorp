@@ -93,7 +93,7 @@ class SessionManager(
     fun getOrCreateEngineSession(session: Session = selectedSessionOrThrow): EngineSession {
         getEngineSession(session)?.let { return it }
 
-        return engine.createSession().apply {
+        return engine.createSession(session.private).apply {
             link(session, this)
         }
     }

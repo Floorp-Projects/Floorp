@@ -28,8 +28,8 @@ class GeckoEngine(
     /**
      * Creates a new Gecko-based EngineSession.
      */
-    override fun createSession(): EngineSession {
-        return GeckoEngineSession(runtime)
+    override fun createSession(private: Boolean): EngineSession {
+        return GeckoEngineSession(runtime, private)
     }
 
     /**

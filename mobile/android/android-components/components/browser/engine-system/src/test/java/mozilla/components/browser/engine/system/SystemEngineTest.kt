@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.system
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -22,6 +23,12 @@ class SystemEngineTest {
     @Test
     fun testCreateSession() {
         assertTrue(SystemEngine().createSession() is SystemEngineSession)
+
+        try {
+            SystemEngine().createSession(true)
+            // Private browsing not yet supported
+            fail("Expected UnsupportedOperationException")
+        } catch (e: UnsupportedOperationException) { }
     }
 
     @Test

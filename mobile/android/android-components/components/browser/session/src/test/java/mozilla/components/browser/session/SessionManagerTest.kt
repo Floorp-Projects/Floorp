@@ -292,7 +292,9 @@ class SessionManagerTest {
         val engine: Engine = mock()
 
         val actualEngineSession: EngineSession = mock()
-        doReturn(actualEngineSession).`when`(engine).createSession()
+        doReturn(actualEngineSession).`when`(engine).createSession(false)
+        val privateEngineSession: EngineSession = mock()
+        doReturn(privateEngineSession).`when`(engine).createSession(true)
 
         val sessionManager = SessionManager(engine)
 
@@ -300,10 +302,14 @@ class SessionManagerTest {
         sessionManager.add(session)
 
         assertNull(sessionManager.getEngineSession(session))
-
         assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
         assertEquals(actualEngineSession, sessionManager.getEngineSession(session))
         assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
+
+        val privateSession = Session("https://www.mozilla.org", true, Session.Source.NONE)
+        sessionManager.add(privateSession)
+        assertNull(sessionManager.getEngineSession(privateSession))
+        assertEquals(privateEngineSession, sessionManager.getOrCreateEngineSession(privateSession))
     }
 
     @Test

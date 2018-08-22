@@ -50,7 +50,22 @@ class TabsUseCases(
          * @param selectTab True (default) if the new tab should be selected immediately.
          */
         fun invoke(url: String, selectTab: Boolean = true) {
-            val session = Session(url, Source.NEW_TAB)
+            val session = Session(url, false, Source.NEW_TAB)
+            sessionManager.add(session, selected = selectTab)
+        }
+    }
+
+    class AddNewPrivateTabUseCase internal constructor(
+        private val sessionManager: SessionManager
+    ) {
+        /**
+         * Add a new private tab and load the provided URL.
+         *
+         * @param url The URL to be loaded in the new tab.
+         * @param selectTab True (default) if the new tab should be selected immediately.
+         */
+        fun invoke(url: String, selectTab: Boolean = true) {
+            val session = Session(url, true, Source.NEW_TAB)
             sessionManager.add(session, selected = selectTab)
         }
     }
@@ -58,4 +73,5 @@ class TabsUseCases(
     val selectSession: SelectTabUseCase by lazy { SelectTabUseCase(sessionManager) }
     val removeSession: RemoveTabUseCase by lazy { RemoveTabUseCase(sessionManager) }
     val addSession: AddNewTabUseCase by lazy { AddNewTabUseCase(sessionManager) }
+    val addPrivateSession: AddNewPrivateTabUseCase by lazy { AddNewPrivateTabUseCase(sessionManager) }
 }

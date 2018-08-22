@@ -18,6 +18,7 @@ import kotlin.properties.Delegates
 @Suppress("TooManyFunctions")
 class Session(
     initialUrl: String,
+    val private: Boolean = false,
     val source: Source = Source.NONE,
     val id: String = UUID.randomUUID().toString(),
     delegate: Observable<Session.Observer> = ObserverRegistry()

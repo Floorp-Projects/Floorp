@@ -34,7 +34,7 @@ class SessionIntentProcessor(
             TextUtils.isEmpty(url) -> false
 
             CustomTabConfig.isCustomTabIntent(safeIntent) -> {
-                val session = Session(url, Source.CUSTOM_TAB).apply {
+                val session = Session(url, false, Source.CUSTOM_TAB).apply {
                     this.customTabConfig = CustomTabConfig.createFromIntent(safeIntent)
                 }
                 sessionManager.add(session)
@@ -45,9 +45,9 @@ class SessionIntentProcessor(
 
             else -> {
                 val session = if (openNewTab) {
-                    Session(url, Source.ACTION_VIEW).also { sessionManager.add(it, selected = true) }
+                    Session(url, false, Source.ACTION_VIEW).also { sessionManager.add(it, selected = true) }
                 } else {
-                    sessionManager.selectedSession ?: Session(url, Source.ACTION_VIEW)
+                    sessionManager.selectedSession ?: Session(url, false, Source.ACTION_VIEW)
                 }
 
                 sessionUseCases.loadUrl.invoke(url, session)

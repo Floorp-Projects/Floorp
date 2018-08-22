@@ -16,16 +16,20 @@ import mozilla.components.concept.engine.EngineView
 class SystemEngine : Engine {
 
     /**
-     * Createa a new WebView-based EngineView implementation.
+     * Creates a new WebView-based EngineView implementation.
      */
     override fun createView(context: Context, attrs: AttributeSet?): EngineView {
         return SystemEngineView(context, attrs)
     }
 
     /**
-     * Createa a new WebView-based EngineSession implementation.
+     * Creates a new WebView-based EngineSession implementation.
      */
-    override fun createSession(): EngineSession {
+    override fun createSession(private: Boolean): EngineSession {
+        if (private) {
+            // TODO Implement private browsing: https://github.com/mozilla-mobile/android-components/issues/649
+            throw UnsupportedOperationException("Private browsing is not supported in ${this::class.java.simpleName}")
+        }
         return SystemEngineSession()
     }
 

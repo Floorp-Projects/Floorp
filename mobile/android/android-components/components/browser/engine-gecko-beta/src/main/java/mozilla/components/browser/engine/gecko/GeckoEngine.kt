@@ -19,17 +19,17 @@ class GeckoEngine(
 ) : Engine {
 
     /**
-     * Create a new Gecko-based EngineView.
+     * Creates a new Gecko-based EngineView.
      */
     override fun createView(context: Context, attrs: AttributeSet?): EngineView {
         return GeckoEngineView(context, attrs)
     }
 
     /**
-     * Create a new Gecko-based EngineSession.
+     * Creates a new Gecko-based EngineSession.
      */
-    override fun createSession(): EngineSession {
-        return GeckoEngineSession(runtime)
+    override fun createSession(private: Boolean): EngineSession {
+        return GeckoEngineSession(runtime, private)
     }
 
     override fun name(): String = "Gecko"

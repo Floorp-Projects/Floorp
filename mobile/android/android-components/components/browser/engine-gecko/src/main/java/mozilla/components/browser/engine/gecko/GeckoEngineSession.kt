@@ -18,7 +18,8 @@ import org.mozilla.geckoview.GeckoSessionSettings
  */
 @Suppress("TooManyFunctions")
 class GeckoEngineSession(
-    private val runtime: GeckoRuntime
+    runtime: GeckoRuntime,
+    privateMode: Boolean = false
 ) : EngineSession() {
 
     internal var geckoSession = GeckoSession()
@@ -26,6 +27,7 @@ class GeckoEngineSession(
     private var initialLoad = true
 
     init {
+        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, privateMode)
         geckoSession.open(runtime)
 
         geckoSession.navigationDelegate = createNavigationDelegate()

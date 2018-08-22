@@ -112,7 +112,7 @@ class DefaultSessionStorage(
             json.put(VERSION_KEY, VERSION)
             json.put(SELECTED_SESSION_KEY, sessionManager.selectedSession?.id ?: "")
 
-            sessionManager.sessions.forEach { session ->
+            sessionManager.sessions.filter { !it.private }.forEach { session ->
                 val sessionJson = JSONObject()
                 sessionJson.put(SESSION_KEY, serializeSession(session))
                 sessionJson.put(ENGINE_SESSION_KEY, serializeEngineSession(sessionManager.getEngineSession(session)))
@@ -152,7 +152,7 @@ class DefaultSessionStorage(
         } catch (e: IllegalArgumentException) {
             Source.NONE
         }
-        return Session(json.getString("url"), source, id)
+        return Session(json.getString("url"), false, source, id)
     }
 
     private fun serializeEngineSession(engineSession: EngineSession?): JSONObject {
