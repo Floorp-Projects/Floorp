@@ -4,7 +4,7 @@
 "use strict";
 
 const TEST_FILE = "test-network-request.html";
-const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/" +
+const TEST_PATH = "https://example.com/browser/devtools/client/webconsole/" +
                   "test/mochitest/";
 const TEST_URI = TEST_PATH + TEST_FILE;
 
@@ -44,6 +44,10 @@ const tabs = [{
   id: "stack-trace",
   testEmpty: testEmptyStackTrace,
   testContent: testStackTrace,
+}, {
+  id: "security",
+  testEmpty: testEmptySecurity,
+  testContent: testSecurity,
 }];
 
 /**
@@ -129,13 +133,18 @@ async function openRequestBeforeUpdates(target, hud, tab) {
   const urlNode = messageNode.querySelector(".url");
   urlNode.click();
 
-  // Make sure the current tab is the expected one.
-  const currentTab = messageNode.querySelector(`#${tab.id}-tab`);
-  is(currentTab.getAttribute("aria-selected"), "true",
-    "The correct tab is selected");
+  // Except the security tab. It isn't available till the
+  // "securityInfo" packet type is received, so doesn't
+  // fit this part of the test.
+  if (tab.id != "security") {
+    // Make sure the current tab is the expected one.
+    const currentTab = messageNode.querySelector(`#${tab.id}-tab`);
+    is(currentTab.getAttribute("aria-selected"), "true",
+      "The correct tab is selected");
 
-  // The tab should be empty now.
-  tab.testEmpty(messageNode);
+    // The tab should be empty now.
+    tab.testEmpty(messageNode);
+  }
 
   // Wait till all updates and payload are received.
   await updates;
@@ -158,6 +167,7 @@ async function testNetworkMessage(toolbox, messageNode) {
   await testResponse(messageNode);
   await testTimings(messageNode);
   await testStackTrace(messageNode);
+  await testSecurity(messageNode);
   await waitForLazyRequests(toolbox);
 }
 
@@ -289,6 +299,24 @@ async function testStackTrace(messageNode) {
   });
 }
 
+// Security
+
+function testEmptySecurity(messageNode) {
+  const panel = messageNode.querySelector("#security-panel .tab-panel");
+  is(panel.textContent, "", "Security tab is empty");
+}
+
+async function testSecurity(messageNode) {
+  const securityTab = messageNode.querySelector("#security-tab");
+  ok(securityTab, "Security tab is available");
+
+  // Select Timings tab and check the content.
+  securityTab.click();
+  await waitUntil(() => {
+    return !!messageNode.querySelector("#security-panel .treeTable .treeRow");
+  });
+}
+
 // Waiting helpers
 
 async function waitForPayloadReady(toolbox) {
@@ -318,7 +346,7 @@ async function waitForRequestUpdates(toolbox) {
 }
 
 /**
- * Wait until all lazily fetch requests in netmonitor get finsished.
+ * Wait until all lazily fetch requests in netmonitor get finished.
  * Otherwise test will be shutdown too early and cause failure.
  */
 async function waitForLazyRequests(toolbox) {
