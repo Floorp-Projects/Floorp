@@ -550,6 +550,10 @@ class TryOptionSyntax(object):
                 return False
             return set(['try', 'all']) & set(attr('run_on_projects', []))
 
+        # Don't schedule code coverage when try option syntax is used
+        if 'ccov' in attr('build_platform', []) or 'jsdcov' in attr('build_platform', []):
+            return False
+
         def match_test(try_spec, attr_name):
             run_by_default = True
             if attr('build_type') not in self.build_types:
@@ -593,8 +597,8 @@ class TryOptionSyntax(object):
             return check_run_on_projects()
         elif attr('kind') == 'test':
             return match_test(self.unittests, 'unittest_try_name') \
-                 or match_test(self.talos, 'talos_try_name') \
-                 or match_test(self.raptor, 'raptor_try_name')
+                or match_test(self.talos, 'talos_try_name') \
+                or match_test(self.raptor, 'raptor_try_name')
         elif attr('kind') in BUILD_KINDS:
             if attr('build_type') not in self.build_types:
                 return False
