@@ -31,10 +31,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function update(state = _prefs.prefs.tabs || [], action) {
   switch (action.type) {
     case "ADD_TAB":
-      return updateTabList(state, action.url);
+    case "UPDATE_TAB":
+      return updateTabList(state, action);
 
     case "MOVE_TAB":
-      return updateTabList(state, action.url, action.tabIndex);
+      return moveTabInList(state, action);
 
     case "CLOSE_TAB":
     case "CLOSE_TABS":
@@ -47,7 +48,7 @@ function update(state = _prefs.prefs.tabs || [], action) {
 }
 
 function removeSourceFromTabList(tabs, url) {
-  return tabs.filter(tab => tab !== url);
+  return tabs.filter(tab => tab.url !== url);
 }
 
 function removeSourcesFromTabList(tabs, urls) {
@@ -60,15 +61,31 @@ function removeSourcesFromTabList(tabs, urls) {
  */
 
 
-function updateTabList(tabs, url, newIndex) {
-  const currentIndex = tabs.indexOf(url);
+function updateTabList(tabs, {
+  url,
+  framework = null
+}) {
+  const currentIndex = tabs.findIndex(tab => tab.url == url);
 
   if (currentIndex === -1) {
-    tabs = [url, ...tabs];
-  } else if (newIndex !== undefined) {
-    tabs = (0, _lodashMove2.default)(tabs, currentIndex, newIndex);
+    tabs = [{
+      url,
+      framework
+    }, ...tabs];
+  } else if (framework) {
+    tabs[currentIndex].framework = framework;
   }
 
+  _prefs.prefs.tabs = tabs;
+  return tabs;
+}
+
+function moveTabInList(tabs, {
+  url,
+  tabIndex: newIndex
+}) {
+  const currentIndex = tabs.findIndex(tab => tab.url == url);
+  tabs = (0, _lodashMove2.default)(tabs, currentIndex, newIndex);
   _prefs.prefs.tabs = tabs;
   return tabs;
 }
@@ -96,7 +113,9 @@ function getNewSelectedSourceId(state, availableTabs) {
     return "";
   }
 
-  if (availableTabs.includes(selectedTab.url)) {
+  const matchingTab = availableTabs.find(tab => tab.url == selectedTab.url);
+
+  if (matchingTab) {
     const sources = state.sources.sources;
 
     if (!sources) {
@@ -112,15 +131,18 @@ function getNewSelectedSourceId(state, availableTabs) {
     return "";
   }
 
-  const tabUrls = state.tabs;
+  const tabUrls = state.tabs.map(t => t.url);
   const leftNeighborIndex = Math.max(tabUrls.indexOf(selectedTab.url) - 1, 0);
   const lastAvailbleTabIndex = availableTabs.length - 1;
   const newSelectedTabIndex = Math.min(leftNeighborIndex, lastAvailbleTabIndex);
   const availableTab = availableTabs[newSelectedTabIndex];
-  const tabSource = (0, _sources.getSourceByUrlInSources)((0, _sources.getSources)(state), (0, _sources.getUrls)(state), availableTab);
 
-  if (tabSource) {
-    return tabSource.id;
+  if (availableTab) {
+    const tabSource = (0, _sources.getSourceByUrlInSources)((0, _sources.getSources)(state), (0, _sources.getUrls)(state), availableTab.url);
+
+    if (tabSource) {
+      return tabSource.id;
+    }
   }
 
   return "";
@@ -136,8 +158,8 @@ function getNewSelectedSourceId(state, availableTabs) {
 
 const getTabs = exports.getTabs = state => state.tabs;
 
-const getSourceTabs = exports.getSourceTabs = (0, _reselect.createSelector)(getTabs, _sources.getSources, _sources.getUrls, (tabs, sources, urls) => tabs.filter(tab => (0, _sources.getSourceByUrlInSources)(sources, urls, tab)));
+const getSourceTabs = exports.getSourceTabs = (0, _reselect.createSelector)(getTabs, _sources.getSources, _sources.getUrls, (tabs, sources, urls) => tabs.filter(tab => (0, _sources.getSourceByUrlInSources)(sources, urls, tab.url)));
 const getSourcesForTabs = exports.getSourcesForTabs = (0, _reselect.createSelector)(getSourceTabs, _sources.getSources, _sources.getUrls, (tabs, sources, urls) => {
-  return tabs.map(tab => (0, _sources.getSourceByUrlInSources)(sources, urls, tab)).filter(source => source);
+  return tabs.map(tab => (0, _sources.getSourceByUrlInSources)(sources, urls, tab.url)).filter(source => source);
 });
 exports.default = update;

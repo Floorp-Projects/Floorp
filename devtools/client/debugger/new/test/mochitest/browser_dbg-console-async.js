@@ -38,7 +38,7 @@ async function hasMessage(dbg, msg) {
 
 add_task(async function() {
   Services.prefs.setBoolPref("devtools.toolbox.splitconsoleEnabled", true);
-  Services.prefs.setBoolPref("devtools.map-await-expression", true);
+  Services.prefs.setBoolPref("devtools.debugger.features.map-await-expression", true);
 
   const dbg = await initDebugger("doc-script-switching.html");
 

@@ -540,6 +540,9 @@ private:
   RefPtr<mozilla::GenericPromise>
   StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent, nsIURI* aURI);
 
+  nsresult AssociateSourceElementsForModuleTree(JSContext* aCx,
+                                                ModuleLoadRequest* aRequest);
+
   nsIDocument* mDocument;                   // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
   ScriptLoadRequestList mNonAsyncExternalScriptInsertedRequests;

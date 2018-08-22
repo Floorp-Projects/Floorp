@@ -12,6 +12,8 @@ var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
 var _source = require("../../utils/source");
 
+var _tabs = require("../../utils/tabs");
+
 var _selectors = require("../../selectors/index");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -24,9 +26,10 @@ class SourceIcon extends _react.PureComponent {
     const {
       shouldHide,
       source,
-      sourceMetaData
+      sourceMetaData,
+      framework
     } = this.props;
-    const iconClass = (0, _source.getSourceClassnames)(source, sourceMetaData);
+    const iconClass = framework ? framework.toLowerCase() : (0, _source.getSourceClassnames)(source, sourceMetaData);
 
     if (shouldHide && shouldHide(iconClass)) {
       return null;
@@ -41,6 +44,7 @@ class SourceIcon extends _react.PureComponent {
 
 exports.default = (0, _reactRedux.connect)((state, props) => {
   return {
-    sourceMetaData: (0, _selectors.getSourceMetaData)(state, props.source.id)
+    sourceMetaData: (0, _selectors.getSourceMetaData)(state, props.source.id),
+    framework: (0, _tabs.getFramework)((0, _selectors.getTabs)(state), props.source.url)
   };
 })(SourceIcon);

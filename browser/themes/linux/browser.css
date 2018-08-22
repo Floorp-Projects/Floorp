@@ -193,12 +193,12 @@ menuitem.bookmark-item {
 }
 
 #close-button:hover {
-  background-color: hsl(355, 86%, 49%);
+  background-color: #d70022;
   stroke: white;
 }
 
 #close-button:hover:active {
-  background-color: hsl(355, 82%, 69%);
+  background-color: #ff0039;
 }
 
 /* Location bar */

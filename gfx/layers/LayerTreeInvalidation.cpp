@@ -298,23 +298,23 @@ public:
   }
 
   IntRect NewTransformedBoundsForLeaf() {
-    return TransformRect(mLayer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds(),
+    return TransformRect(mLayer->GetLocalVisibleRegion().GetBounds().ToUnknownRect(),
                          GetTransformForInvalidation(mLayer));
   }
 
   IntRect OldTransformedBoundsForLeaf() {
-    return TransformRect(mVisibleRegion.ToUnknownRegion().GetBounds(), mTransform);
+    return TransformRect(mVisibleRegion.GetBounds().ToUnknownRect(), mTransform);
   }
 
   virtual Maybe<IntRect> NewTransformedBounds()
   {
-    return Some(TransformRect(mLayer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds(),
+    return Some(TransformRect(mLayer->GetLocalVisibleRegion().GetBounds().ToUnknownRect(),
                               GetTransformForInvalidation(mLayer)));
   }
 
   virtual Maybe<IntRect> OldTransformedBounds()
   {
-    return Some(TransformRect(mVisibleRegion.ToUnknownRegion().GetBounds(), mTransform));
+    return Some(TransformRect(mVisibleRegion.GetBounds().ToUnknownRect(), mTransform));
   }
 
   virtual bool ComputeChangeInternal(const char* aPrefix,
@@ -791,7 +791,7 @@ LayerPropertiesBase::ComputeDifferences(Layer* aRoot, nsIntRegion& aOutRegion, N
       ClearInvalidations(aRoot);
     }
     IntRect bounds = TransformRect(
-      aRoot->GetLocalVisibleRegion().ToUnknownRegion().GetBounds(),
+      aRoot->GetLocalVisibleRegion().GetBounds().ToUnknownRect(),
       aRoot->GetLocalTransform());
     Maybe<IntRect> oldBounds = OldTransformedBounds();
     if (!oldBounds) {

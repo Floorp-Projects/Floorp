@@ -38,6 +38,9 @@ module.exports = exports = async function(tests, dirname) {
         },
         rollupBabel({
           babelrc: false,
+          plugins: [
+            require.resolve("@babel/plugin-proposal-class-properties")
+          ],
           presets: [
             require.resolve("@babel/preset-flow"),
             babelEnv

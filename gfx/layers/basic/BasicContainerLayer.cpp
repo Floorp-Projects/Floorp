@@ -111,7 +111,7 @@ BasicContainerLayer::ChildrenPartitionVisibleRegion(const gfx::IntRect& aInRect)
     return false;
 
   nsIntPoint offset(int32_t(transform._31), int32_t(transform._32));
-  gfx::IntRect rect = aInRect.Intersect(GetLocalVisibleRegion().ToUnknownRegion().GetBounds() + offset);
+  gfx::IntRect rect = aInRect.Intersect(GetLocalVisibleRegion().GetBounds().ToUnknownRect() + offset);
   nsIntRegion covered;
 
   for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {

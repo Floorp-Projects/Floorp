@@ -12,12 +12,13 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const Button = createFactory(require("./Button"));
+const LearnMoreLink = createFactory(require("./LearnMoreLink"));
 const { enable, updateCanBeEnabled } = require("../actions/ui");
 
 // Localization
 const { L10N } = require("../utils/l10n");
 
-const { A11Y_SERVICE_ENABLED_COUNT } = require("../constants");
+const { A11Y_LEARN_MORE_LINK, A11Y_SERVICE_ENABLED_COUNT } = require("../constants");
 
 class OldVersionDescription extends Component {
   render() {
@@ -99,13 +100,23 @@ class Description extends Component {
     }
 
     return (
-      div({ className: "description" },
-        p({ className: "general" },
+      div({ className: "description", role: "presentation" },
+        div({ className: "general", role: "presentation" },
           img({
             src: "chrome://devtools/skin/images/accessibility.svg",
             alt: L10N.getStr("accessibility.logo")
           }),
-          L10N.getStr("accessibility.description.general")),
+          div({ role: "presentation" },
+            LearnMoreLink({
+              href: A11Y_LEARN_MORE_LINK +
+                    "?utm_source=devtools&utm_medium=a11y-panel-description",
+              learnMoreStringKey: "accessibility.learnMore",
+              l10n: L10N,
+              messageStringKey: "accessibility.description.general.p1"
+            }),
+            p({}, L10N.getStr("accessibility.description.general.p2"))
+          )
+        ),
         Button({
           id: "accessibility-enable-button",
           onClick: this.onEnable,

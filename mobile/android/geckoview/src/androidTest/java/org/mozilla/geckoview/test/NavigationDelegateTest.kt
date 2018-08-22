@@ -20,7 +20,6 @@ import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
 import org.junit.Assume.assumeThat
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -29,52 +28,143 @@ import org.junit.runner.RunWith
 @ReuseSession(false)
 class NavigationDelegateTest : BaseSessionTest() {
 
-    fun loadExpectError(testUri: String, expectedCategory: Int,
-                        expectedError: Int) {
+    fun testLoadErrorWithErrorPage(testUri: String, expectedCategory: Int,
+                                   expectedError: Int,
+                                   errorPageUrl: String?) {
+        sessionRule.delegateDuringNextWait(
+                object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
+                    @AssertCalled(count = 1, order = [1])
+                    override fun onLoadRequest(session: GeckoSession, uri: String,
+                                               where: Int, flags: Int): GeckoResult<Boolean>? {
+                        assertThat("URI should be " + testUri, uri, equalTo(testUri))
+                        return null
+                    }
+
+                    @AssertCalled(count = 1, order = [2])
+                    override fun onPageStart(session: GeckoSession, url: String) {
+                        assertThat("URI should be " + testUri, url, equalTo(testUri))
+                    }
+
+                    @AssertCalled(count = 1, order = [3])
+                    override fun onLoadError(session: GeckoSession, uri: String?,
+                                             category: Int, error: Int): GeckoResult<String>? {
+                        assertThat("Error category should match", category,
+                                equalTo(expectedCategory))
+                        assertThat("Error should match", error,
+                                equalTo(expectedError))
+                        return GeckoResult.fromValue(errorPageUrl)
+                    }
+
+                    @AssertCalled(count = 1, order = [4])
+                    override fun onPageStop(session: GeckoSession, success: Boolean) {
+                        assertThat("Load should fail", success, equalTo(false))
+                    }
+                })
+
         sessionRule.session.loadUri(testUri);
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(
-            object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate {
-            @AssertCalled(count = 1, order = [1])
-            override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean>? {
-                assertThat("URI should be " + testUri, uri, equalTo(testUri))
-                return null
-            }
+        if (errorPageUrl != null) {
+            sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate, Callbacks.NavigationDelegate {
+                @AssertCalled(count = 1, order = [1])
+                override fun onLocationChange(session: GeckoSession, url: String) {
+                    assertThat("URL should match", url, equalTo(testUri))
+                }
 
-            @AssertCalled(count = 1, order = [2])
-            override fun onLoadError(session: GeckoSession, uri: String,
-                                     category: Int, error: Int) {
-                assertThat("Error category should match", category,
-                           equalTo(expectedCategory))
-                assertThat("Error should match", error,
-                           equalTo(expectedError))
-            }
+                @AssertCalled(count = 1, order = [2])
+                override fun onTitleChange(session: GeckoSession, title: String) {
+                    assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
+                }
+            })
+        }
+    }
 
-            @AssertCalled(count = 1, order = [3])
-            override fun onPageStop(session: GeckoSession, success: Boolean) {
-                assertThat("Load should fail", success, equalTo(false))
-            }
-        })
+    fun testLoadExpectError(testUri: String, expectedCategory: Int,
+                            expectedError: Int) {
+        testLoadErrorWithErrorPage(testUri, expectedCategory,
+                expectedError, createTestUrl(HELLO_HTML_PATH))
+        testLoadErrorWithErrorPage(testUri, expectedCategory,
+                expectedError, null)
+    }
+
+    fun testLoadEarlyErrorWithErrorPage(testUri: String, expectedCategory: Int,
+                                        expectedError: Int,
+                                        errorPageUrl: String?) {
+        sessionRule.delegateDuringNextWait(
+                object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
+
+                    @AssertCalled(false)
+                    override fun onPageStart(session: GeckoSession, url: String) {
+                        assertThat("URI should be " + testUri, url, equalTo(testUri))
+                    }
+
+                    @AssertCalled(count = 1, order = [1])
+                    override fun onLoadError(session: GeckoSession, uri: String?,
+                                             category: Int, error: Int): GeckoResult<String>? {
+                        assertThat("Error category should match", category,
+                                equalTo(expectedCategory))
+                        assertThat("Error should match", error,
+                                equalTo(expectedError))
+                        return GeckoResult.fromValue(errorPageUrl)
+                    }
+
+                    @AssertCalled(false)
+                    override fun onPageStop(session: GeckoSession, success: Boolean) {
+                    }
+                })
+
+        sessionRule.session.loadUri(testUri)
+        sessionRule.waitUntilCalled(Callbacks.NavigationDelegate::class, "onLoadError")
+
+        if (errorPageUrl != null) {
+            sessionRule.waitUntilCalled(object: Callbacks.ContentDelegate {
+                @AssertCalled(count = 1)
+                override fun onTitleChange(session: GeckoSession, title: String) {
+                    assertThat("Title should not be empty", title, not(isEmptyOrNullString()));
+                }
+            })
+        }
+    }
+
+    fun testLoadEarlyError(testUri: String, expectedCategory: Int,
+                           expectedError: Int) {
+        testLoadEarlyErrorWithErrorPage(testUri, expectedCategory, expectedError, createTestUrl(HELLO_HTML_PATH))
+        testLoadEarlyErrorWithErrorPage(testUri, expectedCategory, expectedError, null)
     }
 
     @Test fun loadFileNotFound() {
-        loadExpectError("file:///test.mozilla",
-                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_URI,
-                        GeckoSession.NavigationDelegate.ERROR_FILE_NOT_FOUND)
+        testLoadExpectError("file:///test.mozilla",
+                GeckoSession.NavigationDelegate.ERROR_CATEGORY_URI,
+                GeckoSession.NavigationDelegate.ERROR_FILE_NOT_FOUND)
     }
 
     @Test fun loadUnknownHost() {
-        loadExpectError(INVALID_URI,
-                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_URI,
-                        GeckoSession.NavigationDelegate.ERROR_UNKNOWN_HOST)
+        testLoadExpectError(UNKNOWN_HOST_URI,
+                GeckoSession.NavigationDelegate.ERROR_CATEGORY_URI,
+                GeckoSession.NavigationDelegate.ERROR_UNKNOWN_HOST)
+    }
+
+    @Test fun loadInvalidUri() {
+        testLoadEarlyError(INVALID_URI,
+                GeckoSession.NavigationDelegate.ERROR_CATEGORY_URI,
+                GeckoSession.NavigationDelegate.ERROR_MALFORMED_URI)
     }
 
     @Test fun loadBadPort() {
-        loadExpectError("http://localhost:1/",
-                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_NETWORK,
-                        GeckoSession.NavigationDelegate.ERROR_PORT_BLOCKED)
+        testLoadEarlyError("http://localhost:1/",
+                GeckoSession.NavigationDelegate.ERROR_CATEGORY_NETWORK,
+                GeckoSession.NavigationDelegate.ERROR_PORT_BLOCKED)
+    }
+
+    @Test fun loadUntrusted() {
+        val uri = if (sessionRule.env.isAutomation) {
+            "https://expired.example.com/"
+        } else {
+            "https://expired.badssl.com/"
+        }
+        testLoadExpectError(uri,
+                GeckoSession.NavigationDelegate.ERROR_CATEGORY_SECURITY,
+                GeckoSession.NavigationDelegate.ERROR_SECURITY_BAD_CERT);
     }
 
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")

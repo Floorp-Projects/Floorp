@@ -41,9 +41,9 @@ interface nsILoadURIDelegate : nsISupports
    * @param aError The error code.
    * @param aErrorModule The error module code.
 
-   * Returns whether the page load error has been successfully handled.
+   * Returns an error page URL to load, or null to show the default error page.
+   * No error page is shown at all if an error is thrown.
    */
-  boolean
+  nsIURI
   handleLoadError(in nsIURI aURI, in nsresult aError, in short aErrorModule);
-
 };

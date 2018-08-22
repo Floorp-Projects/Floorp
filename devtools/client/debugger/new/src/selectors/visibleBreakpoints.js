@@ -3,13 +3,15 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getVisibleBreakpoints = getVisibleBreakpoints;
+exports.getVisibleBreakpoints = undefined;
 
 var _breakpoints = require("../reducers/breakpoints");
 
 var _sources = require("../reducers/sources");
 
 var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
+
+var _reselect = require("devtools/client/debugger/new/dist/vendors").vendored["reselect"];
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,7 +20,20 @@ function getLocation(breakpoint, isGeneratedSource) {
   return isGeneratedSource ? breakpoint.generatedLocation || breakpoint.location : breakpoint.location;
 }
 
-function formatBreakpoint(breakpoint, selectedSource) {
+function memoize(func) {
+  const store = new WeakMap();
+  return function (key, ...rest) {
+    if (store.has(key)) {
+      return store.get(key);
+    }
+
+    const value = func.apply(null, arguments);
+    store.set(key, value);
+    return value;
+  };
+}
+
+const formatBreakpoint = memoize(function (breakpoint, selectedSource) {
   const {
     condition,
     loading,
@@ -34,7 +49,7 @@ function formatBreakpoint(breakpoint, selectedSource) {
     disabled,
     hidden
   };
-}
+});
 
 function isVisible(breakpoint, selectedSource) {
   const sourceId = selectedSource.id;
@@ -47,12 +62,10 @@ function isVisible(breakpoint, selectedSource) {
   */
 
 
-function getVisibleBreakpoints(state) {
-  const selectedSource = (0, _sources.getSelectedSource)(state);
-
+const getVisibleBreakpoints = exports.getVisibleBreakpoints = (0, _reselect.createSelector)(_sources.getSelectedSource, _breakpoints.getBreakpoints, (selectedSource, breakpoints) => {
   if (!selectedSource) {
     return null;
   }
 
-  return (0, _breakpoints.getBreakpoints)(state).filter(bp => isVisible(bp, selectedSource)).map(bp => formatBreakpoint(bp, selectedSource));
-}
+  return breakpoints.filter(bp => isVisible(bp, selectedSource)).map(bp => formatBreakpoint(bp, selectedSource));
+});
