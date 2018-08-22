@@ -223,17 +223,6 @@ interface nsITableEditor : nsISupports
    */
   Element getFirstRow(in Element aTableElement);
 
-  /**
-   * getNextRow() returns next <tr> element of given <tr> element.
-   *
-   * @param aTableRowElement     Must be a <tr> element.
-   * @return                     <tr> element next to aTableRowElement if there
-   *                             is.  Note that this may be in different
-   *                             table section element (e.g., <tbody>).
-   *                             However, never crosses <table> boundary.
-   */
-  Element getNextRow(in Element aTableElement);
-
   /** Preferred direction to search for neighboring cell
     * when trying to locate a cell to place caret in after
     * a table editing action.
