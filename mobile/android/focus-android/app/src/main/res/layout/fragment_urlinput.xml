@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:layout_marginTop="57dp"
+        android:layout_marginTop="@dimen/urlinput_height"
         android:orientation="vertical"
         app:animate="true">
 
@@ -43,7 +43,7 @@
 
     <FrameLayout android:id="@+id/urlInputLayout"
         android:layout_width="match_parent"
-        android:layout_height="57dp"
+        android:layout_height="@dimen/urlinput_height"
         android:orientation="horizontal"
         android:elevation="4dp"
         android:clipChildren="false">
@@ -135,7 +135,7 @@
         android:id="@+id/dismissView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="57dp"
+        android:layout_marginTop="@dimen/urlinput_height"
         android:background="@color/colorOverlay"
         android:contentDescription="@string/content_description_dismiss_input" />
 
@@ -144,7 +144,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        android:layout_marginTop="57dp">
+        android:layout_marginTop="@dimen/urlinput_height">
     </FrameLayout>
 
 </FrameLayout>
