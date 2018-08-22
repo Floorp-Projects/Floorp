@@ -3,8 +3,6 @@
 extern crate base64;
 extern crate cookie;
 #[macro_use]
-extern crate lazy_static;
-#[macro_use]
 extern crate log;
 extern crate hyper;
 extern crate regex;
@@ -27,5 +25,8 @@ pub mod httpapi;
 pub mod response;
 pub mod server;
 
+#[cfg(test)]
+#[macro_use]
+extern crate lazy_static;
 #[cfg(test)]
 pub mod test;
