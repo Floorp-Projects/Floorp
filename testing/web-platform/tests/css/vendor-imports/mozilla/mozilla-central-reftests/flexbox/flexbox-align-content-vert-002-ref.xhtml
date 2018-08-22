@@ -9,32 +9,35 @@
     <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com"/>
     <style>
       div.flexbox {
-        width: 20px;
-        height: 200px;
-        margin-right: 2px;
-        float: left;
+        width: 200px;
+        margin-bottom: 2px;
         background: lightgray;
+        height: 20px;
+        clear: all;
       }
       div.a {
-        width: 20px;
-        height: 10px;
+        width: 10px;
+        height: 20px;
         background: lightgreen;
+        float: right;
       }
       div.b {
-        width: 20px;
-        height: 30px;
+        width: 30px;
+        height: 20px;
         background: pink;
+        float: right;
       }
       div.c {
-        width: 20px;
-        height: 40px;
+        width: 40px;
+        height: 20px;
         background: orange;
+        float: right;
       }
 
       /* Inside of 'b': */
       div.fixedSizeChild {
-        width: 10px;
-        height: 30px;
+        width: 30px;
+        height: 10px;
         background: purple;
       }
     </style>
@@ -47,11 +50,11 @@
     </div>
     <div class="flexbox">
       <div class="a"/>
-      <div class="b" style="margin-top:80px; height:110px"><div class="fixedSizeChild"/></div>
+      <div class="b" style="margin-right:80px; width:110px"><div class="fixedSizeChild"/></div>
     </div>
     <div class="flexbox">
       <div class="a"/>
-      <div class="b" style="margin-top:40px; height: 70px"><div class="fixedSizeChild"/></div>
+      <div class="b" style="margin-right: 40px; width: 70px"><div class="fixedSizeChild"/></div>
       <div class="c"/>
     </div>
 
@@ -71,28 +74,28 @@
 
     <!-- flex-end -->
     <div class="flexbox">
-      <div class="a" style="margin-top: 190px"/>
+      <div class="a" style="margin-right: 190px"/>
     </div>
     <div class="flexbox">
-      <div class="a" style="margin-top: 160px"/>
+      <div class="a" style="margin-right: 160px"/>
       <div class="b"><div class="fixedSizeChild"/></div>
     </div>
     <div class="flexbox">
-      <div class="a" style="margin-top: 120px"/>
+      <div class="a" style="margin-right: 120px"/>
       <div class="b"><div class="fixedSizeChild"/></div>
       <div class="c"/>
     </div>
 
     <!-- center -->
     <div class="flexbox">
-      <div class="a" style="margin-top: 95px"/>
+      <div class="a" style="margin-right: 95px"/>
     </div>
     <div class="flexbox">
-      <div class="a" style="margin-top: 80px"/>
+      <div class="a" style="margin-right: 80px"/>
       <div class="b"><div class="fixedSizeChild"/></div>
     </div>
     <div class="flexbox">
-      <div class="a" style="margin-top: 60px"/>
+      <div class="a" style="margin-right: 60px"/>
       <div class="b"><div class="fixedSizeChild"/></div>
       <div class="c"/>
     </div>
@@ -103,66 +106,66 @@
     </div>
     <div class="flexbox">
       <div class="a"/>
-      <div class="b" style="margin-top: 160px"><div class="fixedSizeChild"/></div>
+      <div class="b" style="margin-right: 160px"><div class="fixedSizeChild"/></div>
     </div>
     <div class="flexbox">
       <div class="a"/>
-      <div class="b" style="margin-top: 60px"><div class="fixedSizeChild"/></div>
-      <div class="c" style="margin-top: 60px"/>
+      <div class="b" style="margin-right: 60px"><div class="fixedSizeChild"/></div>
+      <div class="c" style="margin-right: 60px"/>
     </div>
 
     <!-- space-around -->
     <div class="flexbox">
-      <div class="a" style="margin-top: 95px"/>
+      <div class="a" style="margin-right: 95px"/>
     </div>
     <div class="flexbox">
-      <div class="a" style="margin-top: 40px"/>
-      <div class="b" style="margin-top: 80px"><div class="fixedSizeChild"/></div>
+      <div class="a" style="margin-right: 40px"/>
+      <div class="b" style="margin-right: 80px"><div class="fixedSizeChild"/></div>
     </div>
     <div class="flexbox">
-      <div class="a" style="margin-top: 20px"/>
-      <div class="b" style="margin-top: 40px"><div class="fixedSizeChild"/></div>
-      <div class="c" style="margin-top: 40px"/>
+      <div class="a" style="margin-right: 20px"/>
+      <div class="b" style="margin-right: 40px"><div class="fixedSizeChild"/></div>
+      <div class="c" style="margin-right: 40px"/>
     </div>
 
     <!-- space-evenly -->
     <div class="flexbox">
-      <div class="a" style="margin-top: 95px"/>
+      <div class="a" style="margin-right: 95px"/>
     </div>
     <div class="flexbox">
-      <div class="a" style="margin-top: calc(160px / 3)"/>
-      <div class="b" style="margin-top: calc(160px / 3)"><div class="fixedSizeChild"/></div>
+      <div class="a" style="margin-right: calc(160px / 3)"/>
+      <div class="b" style="margin-right: calc(160px / 3)"><div class="fixedSizeChild"/></div>
     </div>
     <div class="flexbox">
-      <div class="a" style="margin-top: 30px"/>
-      <div class="b" style="margin-top: 30px"><div class="fixedSizeChild"/></div>
-      <div class="c" style="margin-top: 30px"/>
+      <div class="a" style="margin-right: 30px"/>
+      <div class="b" style="margin-right: 30px"><div class="fixedSizeChild"/></div>
+      <div class="c" style="margin-right: 30px"/>
     </div>
 
     <!-- start -->
     <div class="flexbox">
-      <div class="a"/>
+      <div class="a" style="margin-right: 190px"/>
     </div>
     <div class="flexbox">
-      <div class="a"/>
+      <div class="a" style="margin-right: 160px"/>
       <div class="b"><div class="fixedSizeChild"/></div>
     </div>
     <div class="flexbox">
-      <div class="a"/>
+      <div class="a" style="margin-right: 120px"/>
       <div class="b"><div class="fixedSizeChild"/></div>
       <div class="c"/>
     </div>
 
     <!-- end -->
     <div class="flexbox">
-      <div class="a" style="margin-top: 190px"/>
+      <div class="a"/>
     </div>
     <div class="flexbox">
-      <div class="a" style="margin-top: 160px"/>
+      <div class="a"/>
       <div class="b"><div class="fixedSizeChild"/></div>
     </div>
     <div class="flexbox">
-      <div class="a" style="margin-top: 120px"/>
+      <div class="a"/>
       <div class="b"><div class="fixedSizeChild"/></div>
       <div class="c"/>
     </div>
