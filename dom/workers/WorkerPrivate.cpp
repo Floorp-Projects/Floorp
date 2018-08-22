@@ -6,6 +6,7 @@
 
 #include "WorkerPrivate.h"
 
+#include "js/LocaleSensitive.h"
 #include "js/MemoryMetrics.h"
 #include "MessageEventRunnable.h"
 #include "mozilla/ScopeExit.h"

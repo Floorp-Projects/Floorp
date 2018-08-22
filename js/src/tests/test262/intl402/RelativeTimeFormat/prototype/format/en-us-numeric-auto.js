@@ -30,6 +30,11 @@ const exceptions = {
     "0": "this year",
     "1": "next year",
   },
+  "quarter": {
+    "-1": "last quarter",
+    "0": "this quarter",
+    "1": "next quarter",
+  },
   "month": {
     "-1": "last month",
     "0": "this month",

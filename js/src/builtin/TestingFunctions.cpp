@@ -44,6 +44,7 @@
 #include "js/AutoByteString.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
+#include "js/LocaleSensitive.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/UbiNode.h"

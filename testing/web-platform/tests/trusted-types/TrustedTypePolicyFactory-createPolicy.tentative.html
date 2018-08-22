@@ -4,11 +4,226 @@
 <script src="support/helper.sub.js"></script>
 <body>
 <script>
+  //Policy name test
   async_test(t => {
-    var policy = window.trustedTypes.createPolicy('SomeName')
+    let policy = window.trustedTypes.createPolicy('SomeName', { createHTML: s => s } )
         .then(t.step_func_done(policy => {
-           assert_true(policy instanceof TrustedTypePolicy);
-           assert_equals(policy.name, 'SomeName');
+            assert_true(policy instanceof TrustedTypePolicy);
+            assert_equals(policy.name, 'SomeName');
     }));
   }, "policy.name = name");
+
+  //HTML tests
+  function createHTMLTest(policy, expectedHTML, t) {
+    let p = window.trustedTypes.createPolicy('SomeName', policy)
+        .then(t.step_func_done(p => {
+            assert_true(p.createHTML('whatever') instanceof TrustedHTML);
+            assert_equals(p.createHTML('whatever') + "", expectedHTML);
+    }));
+  }
+
+  async_test(t => {
+    createHTMLTest( { createHTML: s => s }, 'whatever', t);
+  }, "html = identity function");
+
+  async_test(t => {
+    createHTMLTest( { createHTML: s => null }, "null", t);
+  }, "html = null");
+
+  var HTMLstr = 'well, ';
+  async_test(t => {
+    createHTMLTest( { createHTML: s => HTMLstr + s }, HTMLstr + 'whatever', t);
+  }, "html = string + global string");
+
+  var HTMLx = 'global';
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', {
+        createHTML: s => { HTMLx = s; return s; }
+      })
+      .then(t.step_func_done(p => {
+        assert_true(p.createHTML('whatever') instanceof TrustedHTML);
+        assert_equals(p.createHTML('whatever') + "", 'whatever');
+        assert_equals(HTMLx, 'whatever');
+    }));
+  }, "html = identity function, global string changed");
+
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', {
+        createHTML: s => { throw new Error(); }
+      })
+      .then(t.step_func_done(p => {
+        assert_throws(new Error(), _ => {
+          p.createHTML('whatever');
+        });
+    }));
+  }, "html = callback that throws");
+
+  var obj = {
+    "foo": "well,"
+  }
+
+  function getHTML(s) {
+    return this.foo + " " + s;
+  }
+
+  async_test(t => {
+    createHTMLTest( {
+      createHTML: getHTML.bind(obj)},
+      'well, whatever', t);
+  }, "html = this bound to an object");
+
+  var foo = "well,";
+  async_test(t => {
+    createHTMLTest( { createHTML: s => getHTML(s) }, 'well, whatever', t);
+  }, "html = this without bind");
+
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', null)
+        .then(t.step_func_done(p => {
+            assert_equals(p.createHTML('whatever'), null);
+    }));
+  }, "html - calling undefined callback");
+
+  //ScriptURL tests
+  function createScriptURLTest(policy, expectedScriptURL, t) {
+    let p = window.trustedTypes.createPolicy('SomeName', policy)
+        .then(t.step_func_done(p => {
+            assert_true(p.createScriptURL(URLS.safe) instanceof TrustedScriptURL);
+            assert_equals(p.createScriptURL(URLS.safe) + "", expectedScriptURL);
+    }));
+  }
+
+  async_test(t => {
+    createScriptURLTest( { createScriptURL: s => s }, URLS.safe, t);
+  }, "script_url = identity function");
+
+  async_test(t => {
+    createScriptURLTest( { createScriptURL: s => null }, "", t);
+  }, "script_url = null");
+
+  var scriptURLstr = 'duck';
+  async_test(t => {
+    createScriptURLTest( { createScriptURL: s => s + scriptURLstr }, URLS.safe + scriptURLstr, t);
+  }, "script_url = string + global string");
+
+  var scriptURLx = 'global';
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', {
+        createScriptURL: s => { ScriptURLx = s; return s; }
+      })
+      .then(t.step_func_done(p => {
+        assert_true(p.createScriptURL(URLS.safe) instanceof TrustedScriptURL);
+        assert_equals(p.createScriptURL(URLS.safe) + "", URLS.safe);
+        assert_equals(ScriptURLx, URLS.safe);
+    }));
+  }, "script_url = identity function, global string changed");
+
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', {
+        createScriptURL: s => { throw new Error(); }
+      })
+      .then(t.step_func_done(p => {
+        assert_throws(new Error(), _ => {
+          p.createScriptURL(URLS.safe);
+        });
+    }));
+  }, "script_url = callback that throws");
+
+  function getScriptURL(s) {
+    return s + this.baz;
+  }
+
+  var obj = {
+    "baz": "duck"
+  }
+
+  async_test(t => {
+    createScriptURLTest( {
+      createScriptURL: getScriptURL.bind(obj)},
+      URLS.safe + "duck", t);
+  }, "script_url = this bound to an object");
+
+  var baz = "duck";
+
+  async_test(t => {
+    createScriptURLTest( { createScriptURL: s => getScriptURL(s) }, URLS.safe + baz, t);
+  }, "script_url = this without bind");
+
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', null)
+        .then(t.step_func_done(p => {
+            assert_equals(p.createScriptURL('whatever'), null);
+    }));
+  }, "script_url - calling undefined callback");
+
+  //URL tests
+  function createURLTest(policy, expectedURL, t) {
+    let p = window.trustedTypes.createPolicy('SomeName', policy)
+        .then(t.step_func_done(p => {
+            assert_true(p.createURL(URLS.safe) instanceof TrustedURL);
+            assert_equals(p.createURL(URLS.safe) + "", expectedURL);
+    }));
+  }
+
+  async_test(t => {
+    createURLTest( { createURL: s => s }, URLS.safe, t);
+  }, "url = identity function");
+
+  async_test(t => {
+    createURLTest( { createURL: s => null }, "", t);
+  }, "url = null");
+
+  var URLstr = '#x';
+  async_test(t => {
+    createURLTest( { createURL: s => s + URLstr }, URLS.safe + URLstr, t);
+  }, "url = string + global string");
+
+  var URLx = 'global';
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', {
+        createURL: s => { URLx = s; return s; }
+      })
+      .then(t.step_func_done(p => {
+        assert_true(p.createURL(URLS.safe) instanceof TrustedURL);
+        assert_equals(p.createURL(URLS.safe) + "", URLS.safe);
+        assert_equals(URLx, URLS.safe);
+    }));
+  }, "url = identity function, global string changed");
+
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', {
+        createURL: s => { throw new Error(); }
+      })
+      .then(t.step_func_done(p => {
+        assert_throws(new Error(), _ => {
+          p.createURL(URLS.safe);
+        });
+    }));
+  }, "url = callback that throws");
+
+  function getURL(s) {
+    return s + this.bar;
+  }
+
+  var obj = {
+    "bar": "#x"
+  }
+
+  async_test(t => {
+    createURLTest( {
+      createURL: getURL.bind(obj)},
+      URLS.safe + "#x", t);
+  }, "url = this bound to an object");
+
+  var bar = "#x";
+  async_test(t => {
+    createURLTest( { createURL: s => getURL(s) }, URLS.safe + bar, t);
+  }, "url = this without bind");
+
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', null)
+        .then(t.step_func_done(p => {
+            assert_equals(p.createURL('whatever'), null);
+    }));
+  }, "url - calling undefined callback");
 </script>

@@ -68,6 +68,11 @@ static const JSFunctionSpec relativeTimeFormat_methods[] = {
     JS_FS_END
 };
 
+static const JSPropertySpec relativeTimeFormat_properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "Intl.RelativeTimeFormat", JSPROP_READONLY),
+    JS_PS_END
+};
+
 /**
  * RelativeTimeFormat constructor.
  * Spec: ECMAScript 402 API, RelativeTimeFormat, 1.1
@@ -146,6 +151,9 @@ js::CreateRelativeTimeFormatPrototype(JSContext* cx, HandleObject Intl,
         return nullptr;
 
     if (!JS_DefineFunctions(cx, proto, relativeTimeFormat_methods))
+        return nullptr;
+
+    if (!JS_DefineProperties(cx, proto, relativeTimeFormat_properties))
         return nullptr;
 
     RootedValue ctorValue(cx, ObjectValue(*ctor));

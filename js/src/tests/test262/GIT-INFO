@@ -1,5 +1,7 @@
-commit 60b9467630a7b4899058e3ad74eb88c3ecb08a40
-Author: Kevin Gibbons <bakkot@gmail.com>
-Date:   Fri Aug 10 23:16:46 2018 -0700
+commit ab436c465106be86719c4849c9cedecd7b570ff9
+Author: Leo Balter <leonardo.balter@gmail.com>
+Date:   Fri Aug 17 18:06:19 2018 -0400
 
-    Two more simple tests
+    Merge pull request #1677 from tc39/ofe-use-verifyproperty
+    
+    Object.fromEntries: use verifyProperty; add specification details
