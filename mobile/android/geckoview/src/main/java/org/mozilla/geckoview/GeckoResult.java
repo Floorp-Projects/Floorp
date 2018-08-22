@@ -251,7 +251,7 @@ public class GeckoResult<T> {
      * @param <U> Type of the new result that is returned by the listener.
      * @return A new {@link GeckoResult} that the listener will complete.
      */
-    public @NonNull <U> GeckoResult<U> then(@NonNull final OnExceptionListener<U> exceptionListener) {
+    public @NonNull <U> GeckoResult<U> exceptionally(@NonNull final OnExceptionListener<U> exceptionListener) {
         return then(null, exceptionListener);
     }
 
