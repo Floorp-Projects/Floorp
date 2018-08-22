@@ -166,10 +166,6 @@ if CONFIG["CPU_ARCH"] == "aarch64":
     DEFINES["WEBRTC_ARCH_ARM64"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
-    LOCAL_INCLUDES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
-    ]
-
 if CONFIG["CPU_ARCH"] == "arm":
 
     CXXFLAGS += [
@@ -212,11 +208,23 @@ if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
 
     DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
 
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
+
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
     CXXFLAGS += [
         "-msse2"
     ]
+
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     LOCAL_INCLUDES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
@@ -238,6 +246,17 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["NO_TCMALLOC"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
 
     CXXFLAGS += [
@@ -249,6 +268,12 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     LOCAL_INCLUDES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
