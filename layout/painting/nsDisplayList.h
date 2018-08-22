@@ -68,6 +68,7 @@ enum class nsDisplayOwnLayerFlags;
 
 namespace mozilla {
 class FrameLayerBuilder;
+struct MotionPathData;
 namespace layers {
 class Layer;
 class ImageLayer;
@@ -6577,6 +6578,11 @@ public:
     FrameTransformProperties(const nsIFrame* aFrame,
                              float aAppUnitsPerPixel,
                              const nsRect* aBoundsOverride);
+    // This constructor is used on the compositor (for animations).
+    // Bug 1186329, Bug 1425837, If we want to support compositor animationsf
+    // or individual transforms and motion path, we may need to update this.
+    // For now, let mIndividualTransformList and mMotion as nullptr and
+    // Nothing().
     FrameTransformProperties(RefPtr<const nsCSSValueSharedList>&&
                                aTransformList,
                              const Point3D& aToTransformOrigin)
@@ -6585,7 +6591,14 @@ public:
       , mToTransformOrigin(aToTransformOrigin)
     {}
 
+    bool HasTransform() const
+    {
+      return mIndividualTransformList || mTransformList || mMotion.isSome();
+    }
+
     const nsIFrame* mFrame;
+    const RefPtr<const nsCSSValueSharedList> mIndividualTransformList;
+    const mozilla::Maybe<mozilla::MotionPathData> mMotion;
     const RefPtr<const nsCSSValueSharedList> mTransformList;
     const Point3D mToTransformOrigin;
   };

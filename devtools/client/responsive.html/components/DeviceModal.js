@@ -32,6 +32,11 @@ class DeviceModal extends PureComponent {
     super(props);
 
     this.state = {};
+    for (const type of this.props.devices.types) {
+      for (const device of this.props.devices[type]) {
+        this.state[device.name] = device.displayed;
+      }
+    }
 
     this.onAddCustomDevice = this.onAddCustomDevice.bind(this);
     this.onDeviceCheckboxChange = this.onDeviceCheckboxChange.bind(this);
@@ -41,26 +46,6 @@ class DeviceModal extends PureComponent {
 
   componentDidMount() {
     window.addEventListener("keydown", this.onKeyDown, true);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const {
-      devices: oldDevices,
-    } = this.props;
-    const {
-      devices,
-    } = nextProps;
-
-    // Refresh component state only when model transitions from closed to open
-    if (!oldDevices.isModalOpen && devices.isModalOpen) {
-      for (const type of devices.types) {
-        for (const device of devices[type]) {
-          this.setState({
-            [device.name]: device.displayed,
-          });
-        }
-      }
-    }
   }
 
   componentWillUnmount() {

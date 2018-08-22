@@ -2949,6 +2949,7 @@ exports.CSS_PROPERTIES = {
       "rotate",
       "scale",
       "translate",
+      "offset-path",
       "scroll-behavior",
       "scroll-snap-type-x",
       "scroll-snap-type-y",
@@ -7415,6 +7416,20 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "offset-path": {
+    "isInherited": false,
+    "subproperties": [
+      "offset-path"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "none",
+      "path",
+      "unset"
+    ]
+  },
   "opacity": {
     "isInherited": false,
     "subproperties": [
@@ -9330,6 +9345,10 @@ exports.PREFERENCES = [
   [
     "font-variation-settings",
     "layout.css.font-variations.enabled"
+  ],
+  [
+    "offset-path",
+    "layout.css.motion-path.enabled"
   ],
   [
     "rotate",

@@ -141,9 +141,6 @@ endif
 endif
 DEFINES += -DLPROJ_ROOT=$(LPROJ_ROOT)
 
-ifdef MOZ_SYSTEM_ICU
-DEFINES += -DMOZ_SYSTEM_ICU
-endif
 ifdef CLANG_CXX
 DEFINES += -DCLANG_CXX
 endif
