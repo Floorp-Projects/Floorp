@@ -14,7 +14,7 @@ add_task(async function() {
   const { view, inspector } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
   await selectNode("div", inspector);
-  await expandOtherFontsAccordion(viewDoc);
+  await expandFontsAccordion(viewDoc);
 
   const previews = viewDoc.querySelectorAll("#font-container .font-preview");
   const initialPreviews = [...previews].map(p => p.src);
