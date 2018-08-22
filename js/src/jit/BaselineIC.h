@@ -1018,7 +1018,7 @@ class ICStubCompiler
 
     // By default the stubcode key is just the kind.
     virtual int32_t getKey() const {
-        return static_cast<int32_t>(kind) << 1;
+        return static_cast<int32_t>(kind);
     }
 
     virtual MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) = 0;
@@ -1231,8 +1231,8 @@ class TypeCheckPrimitiveSetStub : public ICStub
         uint16_t flags_;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(kind) << 1 |
-                  (static_cast<int32_t>(flags_) << 17);
+            return static_cast<int32_t>(kind) |
+                  (static_cast<int32_t>(flags_) << 16);
         }
 
       public:
@@ -1810,8 +1810,8 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(kind) << 1 |
-                  (static_cast<int32_t>(hasReceiver_) << 17);
+            return static_cast<int32_t>(kind) |
+                  (static_cast<int32_t>(hasReceiver_) << 16);
         }
 
       public:
@@ -2042,8 +2042,8 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
         void postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code) override;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(kind) << 1 |
-                  (static_cast<int32_t>(hasReceiver_) << 17);
+            return static_cast<int32_t>(kind) |
+                  (static_cast<int32_t>(hasReceiver_) << 16);
         }
 
       public:
@@ -2174,9 +2174,9 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
         void postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code) override;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(kind) << 1 |
-                  (static_cast<int32_t>(isSpread_) << 17) |
-                  (static_cast<int32_t>(isConstructing_) << 18);
+            return static_cast<int32_t>(kind) |
+                  (static_cast<int32_t>(isSpread_) << 16) |
+                  (static_cast<int32_t>(isConstructing_) << 17);
         }
 
       public:
@@ -2263,10 +2263,10 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
     MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
     virtual int32_t getKey() const override {
-        return static_cast<int32_t>(kind) << 1 |
-              (static_cast<int32_t>(isConstructing_) << 17) |
-              (static_cast<int32_t>(isSpread_) << 18) |
-              (static_cast<int32_t>(maybeCrossRealm_) << 19);
+        return static_cast<int32_t>(kind) |
+              (static_cast<int32_t>(isConstructing_) << 16) |
+              (static_cast<int32_t>(isSpread_) << 17) |
+              (static_cast<int32_t>(maybeCrossRealm_) << 18);
     }
 
   public:
@@ -2360,11 +2360,11 @@ class ICCall_Native : public ICMonitoredStub
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(kind) << 1 |
-                  (static_cast<int32_t>(isSpread_) << 17) |
-                  (static_cast<int32_t>(isConstructing_) << 18) |
-                  (static_cast<int32_t>(ignoresReturnValue_) << 19) |
-                  (static_cast<int32_t>(isCrossRealm_) << 20);
+            return static_cast<int32_t>(kind) |
+                  (static_cast<int32_t>(isSpread_) << 16) |
+                  (static_cast<int32_t>(isConstructing_) << 17) |
+                  (static_cast<int32_t>(ignoresReturnValue_) << 18) |
+                  (static_cast<int32_t>(isCrossRealm_) << 19);
         }
 
       public:
@@ -2440,8 +2440,8 @@ class ICCall_ClassHook : public ICMonitoredStub
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
         virtual int32_t getKey() const override {
-            return static_cast<int32_t>(kind) << 1 |
-                  (static_cast<int32_t>(isConstructing_) << 17);
+            return static_cast<int32_t>(kind) |
+                  (static_cast<int32_t>(isConstructing_) << 16);
         }
 
       public:
