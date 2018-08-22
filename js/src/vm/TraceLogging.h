@@ -33,7 +33,7 @@ namespace jit {
 } // namespace jit
 
 /*
- * Tracelogging overview.
+ * [SMDOC] Tracelogging overview.
  *
  * Tracelogging makes it possible to trace the occurrence of a single event
  * and/or the start and stop of an event. This is implemented with as low
@@ -382,7 +382,8 @@ class TraceLoggerThreadState
     bool enabledTextIds[TraceLogger_Last];
     bool mainThreadEnabled;
     bool helperThreadEnabled;
-    bool graphSpewingEnabled;
+    bool graphEnabled;
+    bool graphFileEnabled;
     bool spewErrors;
     mozilla::LinkedList<TraceLoggerThread> threadLoggers;
 
@@ -409,7 +410,8 @@ class TraceLoggerThreadState
 #endif
         mainThreadEnabled(false),
         helperThreadEnabled(false),
-        graphSpewingEnabled(false),
+        graphEnabled(false),
+        graphFileEnabled(false),
         spewErrors(false),
         nextTextId(TraceLogger_Last),
         startupTime(0),
@@ -451,6 +453,9 @@ class TraceLoggerThreadState
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
         return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }
+
+    bool IsGraphFileEnabled()  { return graphFileEnabled; }
+    bool IsGraphEnabled()      { return graphEnabled;  }
 #endif
 };
 
