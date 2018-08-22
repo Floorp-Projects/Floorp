@@ -2223,11 +2223,7 @@ public:
    * NOTE: Since this layer has an intermediate surface it follows
    *       that LayerPixel == RenderTargetPixel
    */
-  RenderTargetIntRect GetIntermediateSurfaceRect()
-  {
-    NS_ASSERTION(mUseIntermediateSurface, "Must have intermediate surface");
-    return RenderTargetIntRect::FromUnknownRect(GetLocalVisibleRegion().ToUnknownRegion().GetBounds());
-  }
+  RenderTargetIntRect GetIntermediateSurfaceRect();
 
   /**
    * Returns true if this container has more than one non-empty child

@@ -7,10 +7,13 @@
 var EXPORTED_SYMBOLS = ["LoadURIDelegate"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
+
+GeckoViewUtils.initLogging("LoadURIDelegate", this);
 
 const LoadURIDelegate = {
   // Delegate URI loading to the app.
@@ -41,23 +44,28 @@ const LoadURIDelegate = {
 
     const msg = {
       type: "GeckoView:OnLoadError",
-      uri: aUri.spec,
+      uri: aUri && aUri.spec,
       error: aError,
       errorModule: aErrorModule,
       errorClass
     };
 
-    let handled = undefined;
+    let errorPageURI = undefined;
     aEventDispatcher.sendRequestForResult(msg).then(response => {
-      handled = response;
-    }, () => {
-      // There was an error or listener was not registered in GeckoSession,
-      // treat as unhandled.
-      handled = false;
+      try {
+        errorPageURI = Services.io.newURI(response);
+      } catch (e) {
+        warn `Failed to parse URI '${response}`;
+        errorPageURI = null;
+        Components.returnCode = Cr.NS_ERROR_ABORT;
+      }
+    }, e => {
+      errorPageURI = null;
+      Components.returnCode = Cr.NS_ERROR_ABORT;
     });
     Services.tm.spinEventLoopUntil(() =>
-        aWindow.closed || handled !== undefined);
+        aWindow.closed || errorPageURI !== undefined);
 
-    return handled || false;
+    return errorPageURI;
   }
 };

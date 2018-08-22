@@ -97,6 +97,8 @@ SERIALIZED_PREDEFINED_TYPES = [
     "OffsetPath",
     "Opacity",
     "Resize",
+    "basic_shape::ClippingShape",
+    "basic_shape::FloatAreaShape",
     "url::ImageUrlOrNone",
 ]
 

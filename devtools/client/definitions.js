@@ -465,6 +465,15 @@ Tools.accessibility = {
 
   buildToolStartup(toolbox) {
     return new AccessibilityStartup(toolbox);
+  },
+
+  // @remove after release 63 (See Bug 1482461)
+  get badge() {
+    if (Services.prefs.getIntPref("devtools.promote.accessibility") > 0) {
+      return l10n("toolbox.tab.newBadge");
+    }
+
+    return null;
   }
 };
 

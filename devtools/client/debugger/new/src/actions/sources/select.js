@@ -154,7 +154,7 @@ function selectLocation(location, {
       source = (0, _sources.getSourceFromId)(getState(), location.sourceId);
     }
 
-    dispatch((0, _tabs.addTab)(source.url, 0));
+    dispatch((0, _tabs.addTab)(source.url));
     dispatch(setSelectedLocation(source, location));
     await dispatch((0, _loadSourceText.loadSourceText)(source));
     const loadedSource = (0, _selectors.getSource)(getState(), source.id);

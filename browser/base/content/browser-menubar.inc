@@ -89,8 +89,7 @@
                           label="&goOfflineCmd.label;"
                           accesskey="&goOfflineCmd.accesskey;"
                           type="checkbox"
-                          observes="workOfflineMenuitemState"
-                          oncommand="BrowserOffline.toggleOfflineStatus();"/>
+                          command="cmd_toggleOfflineStatus"/>
                 <menuitem id="menu_FileQuitItem"
 #ifdef XP_WIN
                           label="&quitApplicationCmdWin2.label;"
@@ -246,7 +245,7 @@
                   </menupopup>
                 </menu>
                 <menu id="pageStyleMenu" label="&pageStyleMenu.label;"
-                      accesskey="&pageStyleMenu.accesskey;" observes="isImage">
+                      accesskey="&pageStyleMenu.accesskey;">
                   <menupopup onpopupshowing="gPageStyleMenu.fillPopup(this);">
                     <menuitem id="menu_pageStyleNoStyle"
                               label="&pageStyleNoStyle.label;"
@@ -518,17 +517,18 @@
                             label="&pageSourceCmd.label;"
                             key="key_viewSource"
                             command="View:PageSource"
-                            accesskey="&pageSourceCmd.accesskey;">
-                    <observes element="canViewSource" attribute="disabled"/>
-                  </menuitem>
+                            accesskey="&pageSourceCmd.accesskey;"/>
                   <menuitem id="menu_devtools_recordExecution"
-                            observes="devtoolsMenuBroadcaster_RecordExecution"
+                            label="&devtoolsRecordExecution.label;"
+                            command="Tools:RecordExecution"
                             hidden="true"/>
                   <menuitem id="menu_devtools_saveRecording"
-                            observes="devtoolsMenuBroadcaster_SaveRecording"
+                            label="&devtoolsSaveRecording.label;"
+                            command="Tools:SaveRecording"
                             hidden="true"/>
                   <menuitem id="menu_devtools_replayExecution"
-                            observes="devtoolsMenuBroadcaster_ReplayExecution"
+                            label="&devtoolsReplayExecution.label;"
+                            command="Tools:ReplayExecution"
                             hidden="true"/>
                 </menupopup>
               </menu>

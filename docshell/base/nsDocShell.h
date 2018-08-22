@@ -590,12 +590,18 @@ private: // member functions
                        nsresult aResult);
 
 
+  // Builds an error page URI (e.g. about:neterror?etc) for the given aURI
+  // and displays it via the LoadErrorPage() overload below.
   nsresult LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
-                           const char* aErrorPage,
-                           const char* aErrorType,
-                           const char16_t* aDescription,
-                           const char* aCSSClass,
-                           nsIChannel* aFailedChannel);
+                         const char* aErrorPage,
+                         const char* aErrorType,
+                         const char16_t* aDescription,
+                         const char* aCSSClass,
+                         nsIChannel* aFailedChannel);
+
+  // This method directly loads aErrorURI as an error page. aFailedURI and aFailedChannel
+  // come from DisplayLoadError() or the LoadErrorPage() overload above.
+  nsresult LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI, nsIChannel* aFailedChannel);
 
   bool DisplayLoadError(nsresult aError, nsIURI* aURI, const char16_t* aURL,
                         nsIChannel* aFailedChannel)

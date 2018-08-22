@@ -26,7 +26,6 @@ exports.getFrameScope = getFrameScope;
 exports.getSelectedScope = getSelectedScope;
 exports.getSelectedScopeMappings = getSelectedScopeMappings;
 exports.getSelectedFrameId = getSelectedFrameId;
-exports.getSelectedComponentIndex = getSelectedComponentIndex;
 exports.getTopFrame = getTopFrame;
 exports.getDebuggeeUrl = getDebuggeeUrl;
 exports.getSkipPausing = getSkipPausing;
@@ -50,19 +49,9 @@ var _sources = require("./sources");
  * Pause reducer
  * @module reducers/pause
  */
-const createPauseState = exports.createPauseState = () => ({
+const createPauseState = exports.createPauseState = () => ({ ...emptyPauseState,
   extra: {},
-  why: null,
   isWaitingOnBreak: false,
-  frames: undefined,
-  selectedFrameId: undefined,
-  selectedComponentIndex: undefined,
-  frameScopes: {
-    generated: {},
-    original: {},
-    mappings: {}
-  },
-  loadedObjects: {},
   shouldPauseOnExceptions: _prefs.prefs.pauseOnExceptions,
   shouldPauseOnCaughtExceptions: _prefs.prefs.pauseOnCaughtExceptions,
   canRewind: false,
@@ -183,11 +172,6 @@ function update(state = createPauseState(), action) {
     case "SELECT_FRAME":
       return { ...state,
         selectedFrameId: action.frame.id
-      };
-
-    case "SELECT_COMPONENT":
-      return { ...state,
-        selectedComponentIndex: action.componentIndex
       };
 
     case "SET_POPUP_OBJECT_PROPERTIES":
@@ -446,10 +430,6 @@ function getSelectedScopeMappings(state) {
 
 function getSelectedFrameId(state) {
   return state.pause.selectedFrameId;
-}
-
-function getSelectedComponentIndex(state) {
-  return state.pause.selectedComponentIndex;
 }
 
 function getTopFrame(state) {

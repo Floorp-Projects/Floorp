@@ -9,6 +9,7 @@ extern crate libc;
 #[macro_use] extern crate log;
 extern crate malloc_size_of;
 extern crate nsstring;
+extern crate num_traits;
 extern crate selectors;
 extern crate servo_arc;
 extern crate smallvec;
