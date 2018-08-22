@@ -16,7 +16,10 @@ import org.mozilla.focus.architecture.NonNullLiveData;
 import org.mozilla.focus.architecture.NonNullMutableLiveData;
 import org.mozilla.focus.customtabs.CustomTabConfig;
 import org.mozilla.focus.shortcut.HomeScreen;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.UrlUtils;
+import org.mozilla.focus.web.GeckoWebViewProvider;
+import org.mozilla.geckoview.GeckoSession;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -294,12 +297,14 @@ public class SessionManager {
      * Remove all sessions.
      */
     public void removeAllSessions() {
+        closeGeckoSessions(this.sessions.getValue());
         currentSessionUUID = null;
 
         sessions.setValue(Collections.unmodifiableList(Collections.<Session>emptyList()));
     }
 
     @VisibleForTesting void removeAllCustomTabSessions() {
+        closeGeckoSessions(this.customTabSessions.getValue());
         customTabSessions.setValue(Collections.unmodifiableList(Collections.<Session>emptyList()));
     }
 
@@ -320,6 +325,7 @@ public class SessionManager {
 
             if (currentSession.getUUID().equals(uuid)) {
                 removedFromPosition = i;
+                closeGeckoSessions(new ArrayList<>(Collections.singletonList(currentSession)));
                 continue;
             }
 
@@ -348,6 +354,7 @@ public class SessionManager {
             final Session currentSession = this.customTabSessions.getValue().get(i);
 
             if (currentSession.getUUID().equals(uuid)) {
+                closeGeckoSessions(new ArrayList<>(Collections.singletonList(currentSession)));
                 continue;
             }
 
@@ -355,5 +362,20 @@ public class SessionManager {
         }
 
         this.customTabSessions.setValue(sessions);
+    }
+
+    private void closeGeckoSessions(List<Session> sessions) {
+        if (AppConstants.INSTANCE.isGeckoBuild()) {
+            for (int i = 0; i < sessions.size(); i++) {
+                final Session session = sessions.get(i);
+                if (session != null && session.hasWebViewState()) {
+                    final Bundle webViewState = session.getWebViewState();
+                    final GeckoSession geckoSession = webViewState.getParcelable(GeckoWebViewProvider.GECKO_SESSION);
+                    if (geckoSession != null && geckoSession.isOpen()) {
+                        geckoSession.close();
+                    }
+                }
+            }
+        }
     }
 }

@@ -494,7 +494,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             val stateData = session.webViewState
             val desiredURL = session.url.value
             val savedGeckoSession = stateData.getParcelable<GeckoSession>(GECKO_SESSION)
-            if (savedGeckoSession != null) {
+            if (savedGeckoSession != null && geckoSession != savedGeckoSession) {
                 // Close empty created session
                 geckoSession.close()
 
@@ -508,6 +508,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                 if (!geckoSession.isOpen) {
                     geckoSession.open(geckoRuntime!!)
                 }
+                releaseSession()
                 setSession(geckoSession)
             } else {
                 loadUrl(desiredURL)
