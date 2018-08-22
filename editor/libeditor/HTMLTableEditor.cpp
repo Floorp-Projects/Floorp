@@ -277,23 +277,6 @@ HTMLEditor::GetFirstTableRowElement(Element& aTableOrElementInTable,
   return nullptr;
 }
 
-NS_IMETHODIMP
-HTMLEditor::GetNextRow(Element* aTableRowElement,
-                       Element** aNextTableRowElement)
-{
-  if (NS_WARN_IF(!aTableRowElement) || NS_WARN_IF(!aNextTableRowElement)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  ErrorResult error;
-  RefPtr<Element> nextRowElement =
-    GetNextTableRowElement(*aTableRowElement, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-  nextRowElement.forget(aNextTableRowElement);
-  return NS_OK;
-}
-
 Element*
 HTMLEditor::GetNextTableRowElement(Element& aTableRowElement,
                                    ErrorResult& aRv) const
