@@ -340,7 +340,14 @@ DirectMapTextureSource::Update(gfx::DataSourceSurface* aSurface,
 bool
 DirectMapTextureSource::Sync(bool aBlocking)
 {
-  gl()->MakeCurrent();
+  if (!gl() || !gl()->MakeCurrent()) {
+    // We use this function to decide whether we can unlock the texture
+    // and clean it up. If we return false here and for whatever reason
+    // the context is absent or invalid, the compositor will keep a
+    // reference to this texture forever.
+    return true;
+  }
+
   if (!gl()->IsDestroyed()) {
     if (aBlocking) {
       gl()->fFinishObjectAPPLE(LOCAL_GL_TEXTURE, mTextureHandle);
@@ -357,7 +364,9 @@ DirectMapTextureSource::UpdateInternal(gfx::DataSourceSurface* aSurface,
                                        gfx::IntPoint* aSrcOffset,
                                        bool aInit)
 {
-  gl()->MakeCurrent();
+  if (!gl() || !gl()->MakeCurrent()) {
+    return false;
+  }
 
   if (aInit) {
     gl()->fGenTextures(1, &mTextureHandle);

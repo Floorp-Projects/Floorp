@@ -313,10 +313,8 @@ public:
   // "layout.css.background-clip.text" changes:
   static const KTableEntry kBorderImageRepeatKTable[];
   static const KTableEntry kBorderStyleKTable[];
-  static const KTableEntry kClipPathGeometryBoxKTable[];
   static const KTableEntry kShapeRadiusKTable[];
   static const KTableEntry kFilterFunctionKTable[];
-  static const KTableEntry kShapeOutsideShapeBoxKTable[];
   static const KTableEntry kBoxShadowTypeKTable[];
   static const KTableEntry kCursorKTable[];
   // Not const because we modify its entries when various

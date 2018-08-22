@@ -25,7 +25,7 @@ fn panic() {
                                         ptr::null_mut(), h_option, &c_option);
         rooted!(in(context) let global_root = global);
         let global = global_root.handle();
-        let _ac = js::ac::AutoCompartment::with_obj(context, global.get());
+        let _ar = js::ar::AutoRealm::with_obj(context, global.get());
         let function = JS_DefineFunction(context, global,
                                          b"test\0".as_ptr() as *const _,
                                          Some(test), 0, 0);

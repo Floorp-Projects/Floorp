@@ -627,8 +627,7 @@
                        class="subviewbutton"
                        label="&goOfflineCmd.label;"
                        type="checkbox"
-                       observes="workOfflineMenuitemState"
-                       oncommand="BrowserOffline.toggleOfflineStatus();"/>
+                       command="cmd_toggleOfflineStatus"/>
       </vbox>
     </panelview>
     <panelview id="appMenu-libraryView" class="PanelUI-subView">

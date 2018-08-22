@@ -4,7 +4,7 @@
 
 //! Rust wrappers around the raw JS apis
 
-use ac::AutoCompartment;
+use ar::AutoRealm;
 use libc::c_uint;
 use std::cell::{Cell, UnsafeCell};
 use std::char;
@@ -231,7 +231,7 @@ impl Runtime {
         };
         assert!(!ptr.is_null());
         unsafe {
-            let _ac = AutoCompartment::with_obj(self.cx(), glob.get());
+            let _ar = AutoRealm::with_obj(self.cx(), glob.get());
             let options = CompileOptionsWrapper::new(self.cx(), filename_cstr.as_ptr(), line_num);
 
             let mut srcBuf = JS::SourceBufferHolder {

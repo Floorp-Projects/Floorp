@@ -8,6 +8,7 @@ DevToolsModules(
     'Accessible.js',
     'Button.js',
     'Description.js',
+    'LearnMoreLink.js',
     'MainFrame.js',
     'RightSidebar.js',
     'Toolbar.js'

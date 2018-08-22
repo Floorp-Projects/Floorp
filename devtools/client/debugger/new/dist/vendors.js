@@ -6525,15 +6525,7 @@ class Tree extends Component {
         if (focused || !nativeEvent || !this.treeRef) {
           return;
         }
-
-        const { explicitOriginalTarget } = nativeEvent;
-
-        // Only set default focus to the first tree node if the focus came
-        // from outside the tree (e.g. by tabbing to the tree from other
-        // external elements).
-        if (explicitOriginalTarget !== this.treeRef && !this.treeRef.contains(explicitOriginalTarget)) {
-          this._focus(traversal[0].item);
-        }
+        this._focus(traversal[0].item);
       },
       onBlur: this._onBlur,
       "aria-label": this.props.label,
@@ -7148,6 +7140,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _propTypes = __webpack_require__(3642);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
@@ -7166,87 +7160,120 @@ var _tabList2 = _interopRequireDefault(_tabList);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-class TabList extends _react2.default.Component {
-  constructor(props) {
-    super(props);
-    this.handleKeyPress = this.handleKeyPress.bind(this);
-    this.tabRefs = new Array(_react2.default.Children.count(props.children)).fill(0).map(_ => _react2.default.createRef());
-    this.handlers = this.getHandlers(props.vertical);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var TabList = function (_React$Component) {
+  _inherits(TabList, _React$Component);
+
+  function TabList(props) {
+    _classCallCheck(this, TabList);
+
+    var _this = _possibleConstructorReturn(this, (TabList.__proto__ || Object.getPrototypeOf(TabList)).call(this, props));
+
+    var childrenCount = _react2.default.Children.count(props.children);
+
+    _this.handleKeyPress = _this.handleKeyPress.bind(_this);
+    _this.tabRefs = new Array(childrenCount).fill(0).map(function () {
+      return _react2.default.createRef();
+    });
+    _this.handlers = _this.getHandlers(props.vertical);
+    return _this;
   }
 
-  getHandlers(vertical) {
-    if (vertical) {
+  _createClass(TabList, [{
+    key: 'componentDidUpdate',
+    value: function componentDidUpdate(prevProps) {
+      if (prevProps.activeIndex !== this.props.activeIndex) {
+        this.tabRefs[this.props.activeIndex].current.focus();
+      }
+    }
+  }, {
+    key: 'getHandlers',
+    value: function getHandlers(vertical) {
+      if (vertical) {
+        return {
+          ArrowDown: this.next.bind(this),
+          ArrowUp: this.previous.bind(this)
+        };
+      }
       return {
-        ArrowDown: this.next.bind(this),
-        ArrowUp: this.previous.bind(this)
+        ArrowLeft: this.previous.bind(this),
+        ArrowRight: this.next.bind(this)
       };
     }
-    return {
-      ArrowLeft: this.previous.bind(this),
-      ArrowRight: this.next.bind(this)
-    };
-  }
-
-  wrapIndex(index) {
-    const count = _react2.default.Children.count(this.props.children);
-    return (index + count) % count;
-  }
-
-  handleKeyPress(event) {
-    const handler = this.handlers[event.key];
-    if (handler) {
-      handler();
+  }, {
+    key: 'wrapIndex',
+    value: function wrapIndex(index) {
+      var count = _react2.default.Children.count(this.props.children);
+      return (index + count) % count;
     }
-  }
-
-  previous() {
-    const newIndex = this.wrapIndex(this.props.activeIndex - 1);
-    this.props.onActivateTab(newIndex);
-  }
-
-  next() {
-    const newIndex = this.wrapIndex(this.props.activeIndex + 1);
-    this.props.onActivateTab(newIndex);
-  }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.activeIndex !== this.props.activeIndex) {
-      this.tabRefs[this.props.activeIndex].current.focus();
+  }, {
+    key: 'handleKeyPress',
+    value: function handleKeyPress(event) {
+      var handler = this.handlers[event.key];
+      if (handler) {
+        handler();
+      }
     }
-  }
+  }, {
+    key: 'previous',
+    value: function previous() {
+      var newIndex = this.wrapIndex(this.props.activeIndex - 1);
+      this.props.onActivateTab(newIndex);
+    }
+  }, {
+    key: 'next',
+    value: function next() {
+      var newIndex = this.wrapIndex(this.props.activeIndex + 1);
+      this.props.onActivateTab(newIndex);
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this2 = this;
 
-  render() {
-    var _props = this.props;
-    const accessibleId = _props.accessibleId,
+      var _props = this.props,
+          accessibleId = _props.accessibleId,
           activeIndex = _props.activeIndex,
           children = _props.children,
           className = _props.className,
           onActivateTab = _props.onActivateTab;
 
 
-    return _react2.default.createElement(
-      'ul',
-      { className: className, onKeyUp: this.handleKeyPress, role: 'tablist' },
-      _react2.default.Children.map(children, (child, index) => {
-        if (child.type !== _tab2.default) {
-          throw new Error('Direct children of a <TabList> must be a <Tab>');
-        }
+      return _react2.default.createElement(
+        'ul',
+        { className: className, onKeyUp: this.handleKeyPress, role: 'tablist' },
+        _react2.default.Children.map(children, function (child, index) {
+          if (child.type !== _tab2.default) {
+            throw new Error('Direct children of a <TabList> must be a <Tab>');
+          }
 
-        const active = index === activeIndex;
-        const tabRef = this.tabRefs[index];
+          var active = index === activeIndex;
+          var tabRef = _this2.tabRefs[index];
 
-        return _react2.default.cloneElement(child, {
-          accessibleId: active ? accessibleId : undefined,
-          active,
-          tabRef,
-          onActivate: () => this.props.onActivateTab(index)
-        });
-      })
-    );
-  }
-}
+          return _react2.default.cloneElement(child, {
+            accessibleId: active ? accessibleId : undefined,
+            active: active,
+            tabRef: tabRef,
+            onActivate: function onActivate() {
+              return onActivateTab(index);
+            }
+          });
+        })
+      );
+    }
+  }]);
+
+  return TabList;
+}(_react2.default.Component);
 
 exports.default = TabList;
+
+
 TabList.propTypes = {
   accessibleId: _propTypes2.default.string,
   activeIndex: _propTypes2.default.number,
@@ -7261,7 +7288,7 @@ TabList.defaultProps = {
   activeIndex: 0,
   children: null,
   className: _tabList2.default.container,
-  onActivateTab: () => {},
+  onActivateTab: function onActivateTab() {},
   vertical: false
 };
 
@@ -7286,20 +7313,24 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
+var _ref2 = __webpack_require__(3784);
+
+var _ref3 = _interopRequireDefault(_ref2);
+
 var _tab = __webpack_require__(3763);
 
 var _tab2 = _interopRequireDefault(_tab);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function Tab({
-  accessibleId,
-  active,
-  children,
-  className,
-  onActivate,
-  tabRef
-}) {
+function Tab(_ref) {
+  var accessibleId = _ref.accessibleId,
+      active = _ref.active,
+      children = _ref.children,
+      className = _ref.className,
+      onActivate = _ref.onActivate,
+      tabRef = _ref.tabRef;
+
   return _react2.default.createElement(
     'li',
     {
@@ -7307,6 +7338,7 @@ function Tab({
       className: className,
       id: accessibleId,
       onClick: onActivate,
+      onKeyDown: function onKeyDown() {},
       ref: tabRef,
       role: 'tab',
       tabIndex: active ? 0 : undefined
@@ -7318,10 +7350,10 @@ function Tab({
 Tab.propTypes = {
   accessibleId: _propTypes2.default.string,
   active: _propTypes2.default.bool,
-  children: _propTypes2.default.node,
+  children: _propTypes2.default.node.isRequired,
   className: _propTypes2.default.string,
   onActivate: _propTypes2.default.func,
-  tabRef: _propTypes2.default.object
+  tabRef: _ref3.default
 };
 
 Tab.defaultProps = {
@@ -7355,13 +7387,13 @@ var _react2 = _interopRequireDefault(_react);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function TabPanels({
-  accessibleId,
-  activeIndex,
-  children,
-  className,
-  hasFocusableContent
-}) {
+function TabPanels(_ref) {
+  var accessibleId = _ref.accessibleId,
+      activeIndex = _ref.activeIndex,
+      children = _ref.children,
+      className = _ref.className,
+      hasFocusableContent = _ref.hasFocusableContent;
+
   return _react2.default.createElement(
     'div',
     {
@@ -7377,7 +7409,7 @@ function TabPanels({
 TabPanels.propTypes = {
   accessibleId: _propTypes2.default.string,
   activeIndex: _propTypes2.default.number,
-  children: _propTypes2.default.node,
+  children: _propTypes2.default.node.isRequired,
   className: _propTypes2.default.string,
   hasFocusableContent: _propTypes2.default.bool.isRequired
 };
@@ -7464,6 +7496,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _propTypes = __webpack_require__(3642);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
@@ -7486,43 +7520,62 @@ var _tabPanels2 = _interopRequireDefault(_tabPanels);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-class Tabs extends _react2.default.Component {
-  constructor() {
-    super();
-    this.accessibleId = (0, _uniqueId2.default)();
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Tabs = function (_React$Component) {
+  _inherits(Tabs, _React$Component);
+
+  function Tabs() {
+    _classCallCheck(this, Tabs);
+
+    var _this = _possibleConstructorReturn(this, (Tabs.__proto__ || Object.getPrototypeOf(Tabs)).call(this));
+
+    _this.accessibleId = (0, _uniqueId2.default)();
+    return _this;
   }
 
-  render() {
-    var _props = this.props;
-    const activeIndex = _props.activeIndex,
+  _createClass(Tabs, [{
+    key: 'render',
+    value: function render() {
+      var _props = this.props,
+          activeIndex = _props.activeIndex,
           children = _props.children,
           className = _props.className,
           onActivateTab = _props.onActivateTab;
 
-    const accessibleId = this.accessibleId;
+      var accessibleId = this.accessibleId;
 
-    return _react2.default.createElement(
-      'div',
-      { className: className },
-      _react2.default.Children.map(children, child => {
-        if (!child) {
-          return child;
-        }
-
-        switch (child.type) {
-          case _tabList2.default:
-            return _react2.default.cloneElement(child, { accessibleId, activeIndex, onActivateTab });
-          case _tabPanels2.default:
-            return _react2.default.cloneElement(child, { accessibleId, activeIndex });
-          default:
+      return _react2.default.createElement(
+        'div',
+        { className: className },
+        _react2.default.Children.map(children, function (child) {
+          if (!child) {
             return child;
-        }
-      })
-    );
-  }
-}
+          }
+
+          switch (child.type) {
+            case _tabList2.default:
+              return _react2.default.cloneElement(child, { accessibleId: accessibleId, activeIndex: activeIndex, onActivateTab: onActivateTab });
+            case _tabPanels2.default:
+              return _react2.default.cloneElement(child, { accessibleId: accessibleId, activeIndex: activeIndex });
+            default:
+              return child;
+          }
+        })
+      );
+    }
+  }]);
+
+  return Tabs;
+}(_react2.default.Component);
 
 exports.default = Tabs;
+
+
 Tabs.propTypes = {
   activeIndex: _propTypes2.default.number.isRequired,
   children: _propTypes2.default.node,
@@ -7533,7 +7586,7 @@ Tabs.propTypes = {
 Tabs.defaultProps = {
   children: null,
   className: undefined,
-  onActivateTab: () => {}
+  onActivateTab: function onActivateTab() {}
 };
 
 /***/ }),
@@ -7548,11 +7601,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = uniqueId;
-let counter = 0;
+var counter = 0;
 
 function uniqueId() {
-  counter++;
-  return `$rac$${counter}`;
+  counter += 1;
+  return "$rac$" + counter;
 }
 
 /***/ }),
@@ -7915,6 +7968,26 @@ function polyfill(Component) {
 
 
 
+
+/***/ }),
+
+/***/ 3784:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _propTypes = __webpack_require__(3642);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = _propTypes2.default.object;
 
 /***/ }),
 

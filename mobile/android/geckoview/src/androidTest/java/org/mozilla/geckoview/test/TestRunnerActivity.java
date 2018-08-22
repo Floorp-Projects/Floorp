@@ -63,8 +63,8 @@ public class TestRunnerActivity extends Activity {
         }
 
         @Override
-        public void onLoadError(GeckoSession session, String uri, int category, int error) {
-
+        public GeckoResult<String> onLoadError(GeckoSession session, String uri, int category, int error) {
+            return null;
         }
     };
 

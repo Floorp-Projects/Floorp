@@ -1904,12 +1904,20 @@ CompositorOGL::Resume()
 already_AddRefed<DataTextureSource>
 CompositorOGL::CreateDataTextureSource(TextureFlags aFlags)
 {
+  if (!gl()) {
+    return nullptr;
+  }
+
   return MakeAndAddRef<TextureImageTextureSourceOGL>(this, aFlags);
 }
 
 already_AddRefed<DataTextureSource>
 CompositorOGL::CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture)
 {
+  if (!gl()) {
+    return nullptr;
+  }
+
   BufferTextureHost* bufferTexture = aTexture->AsBufferTextureHost();
   MOZ_ASSERT(bufferTexture);
 
@@ -1991,6 +1999,10 @@ CompositorOGL::TryUnlockTextures()
 already_AddRefed<DataTextureSource>
 CompositorOGL::CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface)
 {
+  if (!gl()) {
+    return nullptr;
+  }
+
   return MakeAndAddRef<DirectMapTextureSource>(this, aSurface);
 }
 

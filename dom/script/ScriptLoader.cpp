@@ -965,6 +965,39 @@ ScriptLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest)
 }
 
 nsresult
+ScriptLoader::AssociateSourceElementsForModuleTree(JSContext* aCx,
+                                                   ModuleLoadRequest* aRequest)
+{
+  // Preloading can cause JS scripts to be compiled before DOM script element
+  // nodes have been created. This method ensures compiled scripts are
+  // associated with DOM element nodes before execution.
+
+  MOZ_ASSERT(aRequest);
+
+  ModuleScript* moduleScript = aRequest->mModuleScript;
+  if (moduleScript->SourceElementAssociated()) {
+    return NS_OK;
+  }
+
+  for (ModuleLoadRequest* childRequest : aRequest->mImports) {
+    nsresult rv = AssociateSourceElementsForModuleTree(aCx, childRequest);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  JS::Rooted<JSScript*> script(aCx, moduleScript->Script());
+  MOZ_ASSERT(script);
+
+  nsresult rv = nsJSUtils::InitModuleSourceElement(aCx, script, aRequest->Element());
+  NS_ENSURE_SUCCESS(rv, rv);
+  moduleScript->SetSourceElementAssociated();
+
+  // The script is now ready to be exposed to the debugger.
+  JS::ExposeScriptToDebugger(aCx, script);
+
+  return NS_OK;
+}
+
+nsresult
 ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest)
 {
   MOZ_ASSERT(aRequest->IsBytecode());
@@ -2312,12 +2345,8 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
       MOZ_ASSERT(script);
 
       if (!moduleScript->SourceElementAssociated()) {
-        rv = nsJSUtils::InitModuleSourceElement(cx, script, aRequest->Element());
+        rv = AssociateSourceElementsForModuleTree(cx, request);
         NS_ENSURE_SUCCESS(rv, rv);
-        moduleScript->SetSourceElementAssociated();
-
-        // The script is now ready to be exposed to the debugger.
-        JS::ExposeScriptToDebugger(cx, script);
       }
 
       rv = nsJSUtils::ModuleEvaluate(cx, script);

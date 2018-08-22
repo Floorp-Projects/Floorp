@@ -30,8 +30,8 @@ add_task(async function() {
 
   await selectSource(dbg, "simple1");
   await selectSource(dbg, "simple2");
-  closeTab(dbg, "simple1");
-  closeTab(dbg, "simple2");
+  await closeTab(dbg, "simple1");
+  await closeTab(dbg, "simple2");
 
   // Test reloading the debugger
   await reload(dbg, "simple1", "simple2");

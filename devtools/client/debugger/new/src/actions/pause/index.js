@@ -142,15 +142,6 @@ Object.defineProperty(exports, "pauseOnExceptions", {
   }
 });
 
-var _selectComponent = require("./selectComponent");
-
-Object.defineProperty(exports, "selectComponent", {
-  enumerable: true,
-  get: function () {
-    return _selectComponent.selectComponent;
-  }
-});
-
 var _selectFrame = require("./selectFrame");
 
 Object.defineProperty(exports, "selectFrame", {

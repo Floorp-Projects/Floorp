@@ -414,7 +414,6 @@ private:
   already_AddRefed<CSSValue> DoGetScrollSnapCoordinate();
   already_AddRefed<CSSValue> DoGetScrollbarFaceColor();
   already_AddRefed<CSSValue> DoGetScrollbarTrackColor();
-  already_AddRefed<CSSValue> DoGetShapeOutside();
 
   /* User interface properties */
   already_AddRefed<CSSValue> DoGetCaretColor();
@@ -474,7 +473,6 @@ private:
 
 
 
-  already_AddRefed<CSSValue> DoGetClipPath();
   already_AddRefed<CSSValue> DoGetFilter();
   already_AddRefed<CSSValue> DoGetPaintOrder();
 
@@ -558,10 +556,6 @@ private:
                          bool aClampNegativeCalc);
   already_AddRefed<CSSValue> CreatePrimitiveValueForStyleFilter(
     const nsStyleFilter& aStyleFilter);
-
-  already_AddRefed<CSSValue>
-  GetShapeSource(const mozilla::StyleShapeSource& aShapeSource,
-                 const KTableEntry aBoxKeywordTable[]);
 
   template<typename ReferenceBox>
   already_AddRefed<CSSValue>

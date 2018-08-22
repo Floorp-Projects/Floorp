@@ -4282,7 +4282,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
                              bool* aDisplayedErrorPage)
 {
   *aDisplayedErrorPage = false;
-  // Get prompt and string bundle servcies
+  // Get prompt and string bundle services
   nsCOMPtr<nsIPrompt> prompter;
   nsCOMPtr<nsIStringBundle> stringBundle;
   GetPromptAndStringBundle(getter_AddRefs(prompter),
@@ -4303,19 +4303,23 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
   nsAutoCString cssClass;
   nsAutoCString errorPage;
 
-  errorPage.AssignLiteral("neterror");
-
   if (mLoadURIDelegate) {
-    bool loadErrorHandled = false;
+    nsCOMPtr<nsIURI> errorPageURI;
     rv = mLoadURIDelegate->HandleLoadError(aURI, aError,
                                            NS_ERROR_GET_MODULE(aError),
-                                           &loadErrorHandled);
-    if (NS_SUCCEEDED(rv) && loadErrorHandled) {
-      // The request has been handled, nothing to do here.
+                                           getter_AddRefs(errorPageURI));
+    if (NS_FAILED(rv)) {
       *aDisplayedErrorPage = false;
       return NS_OK;
     }
+
+    if (errorPageURI) {
+      *aDisplayedErrorPage = NS_SUCCEEDED(LoadErrorPage(errorPageURI, aURI, aFailedChannel));
+      return NS_OK;
+    }
   }
+
+  errorPage.AssignLiteral("neterror");
 
   // Turn the error code into a human readable error message.
   if (NS_ERROR_UNKNOWN_PROTOCOL == aError) {
@@ -4757,16 +4761,6 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
             chanName.get()));
   }
 #endif
-  mFailedChannel = aFailedChannel;
-  mFailedURI = aURI;
-  mFailedLoadType = mLoadType;
-
-  if (mLSHE) {
-    // Abandon mLSHE's BFCache entry and create a new one.  This way, if
-    // we go back or forward to another SHEntry with the same doc
-    // identifier, the error page won't persist.
-    mLSHE->AbandonBFCacheEntry();
-  }
 
   nsAutoCString url;
   if (aURI) {
@@ -4833,7 +4827,24 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
   nsresult rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return InternalLoad(errorPageURI, nullptr, Nothing(), false, false, nullptr, RP_Unset,
+  return LoadErrorPage(errorPageURI, aURI, aFailedChannel);
+}
+
+nsresult
+nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI, nsIChannel* aFailedChannel)
+{
+  mFailedChannel = aFailedChannel;
+  mFailedURI = aFailedURI;
+  mFailedLoadType = mLoadType;
+
+  if (mLSHE) {
+    // Abandon mLSHE's BFCache entry and create a new one.  This way, if
+    // we go back or forward to another SHEntry with the same doc
+    // identifier, the error page won't persist.
+    mLSHE->AbandonBFCacheEntry();
+  }
+
+  return InternalLoad(aErrorURI, nullptr, Nothing(), false, false, nullptr, RP_Unset,
                       nsContentUtils::GetSystemPrincipal(), nullptr,
                       INTERNAL_LOAD_FLAGS_NONE, EmptyString(),
                       nullptr, VoidString(), nullptr, nullptr,
@@ -9526,7 +9537,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   const bool checkLoadDelegates = !(aFlags & INTERNAL_LOAD_FLAGS_DELEGATES_CHECKED);
   aFlags = aFlags & ~INTERNAL_LOAD_FLAGS_DELEGATES_CHECKED;
 
-  if (aURI && mLoadURIDelegate && checkLoadDelegates &&
+  if (aURI && mLoadURIDelegate && checkLoadDelegates && aLoadType != LOAD_ERROR_PAGE &&
       (!targetDocShell || targetDocShell == static_cast<nsIDocShell*>(this))) {
     // Dispatch only load requests for the current or a new window to the
     // delegate, e.g., to allow for GeckoView apps to handle the load event

@@ -4,7 +4,11 @@
 
 "use strict";
 
+const Services = require("Services");
 const { AccessibilityFront } = require("devtools/shared/fronts/accessibility");
+
+// @remove after release 63 (See Bug 1482461)
+const PROMOTE_COUNT_PREF = "devtools.promote.accessibility";
 
 /**
  * Component responsible for all accessibility panel startup steps before the panel is
@@ -127,6 +131,11 @@ class AccessibilityStartup {
     } else {
       this.toolbox.unhighlightTool("accessibility");
     }
+  }
+
+  // @remove after release 63 (See Bug 1482461)
+  updatePanelPromoteCount() {
+    Services.prefs.setIntPref(PROMOTE_COUNT_PREF, 0);
   }
 
   async destroy() {

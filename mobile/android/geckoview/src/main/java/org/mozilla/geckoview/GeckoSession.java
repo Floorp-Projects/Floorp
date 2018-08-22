@@ -345,9 +345,37 @@ public class GeckoSession extends LayerSession
                                                         errorClass);
                     final int errorCat = getErrorCategory(errorModule, error);
 
-                    delegate.onLoadError(GeckoSession.this, uri, errorCat, error);
+                    final GeckoResult<String> result = delegate.onLoadError(GeckoSession.this, uri, errorCat, error);
+                    if (result == null) {
+                        if (GeckoAppShell.isFennec()) {
+                            callback.sendSuccess(null);
+                        } else {
+                            callback.sendError("abort");
+                        }
+                        return;
+                    }
 
-                    callback.sendSuccess(!GeckoAppShell.isFennec());
+                    result.then(new GeckoResult.OnValueListener<String, Void>() {
+                                    @Override
+                                    public GeckoResult<Void> onValue(@Nullable String url) throws Throwable {
+                                        if (url == null) {
+                                            if (GeckoAppShell.isFennec()) {
+                                                callback.sendSuccess(null);
+                                            } else {
+                                                callback.sendError("abort");
+                                            }
+                                        } else {
+                                            callback.sendSuccess(url);
+                                        }
+                                        return null;
+                                    }
+                                }, new GeckoResult.OnExceptionListener<Void>() {
+                                    @Override
+                                    public GeckoResult<Void> onException(@NonNull Throwable exception) throws Throwable {
+                                        callback.sendError(exception.getMessage());
+                                        return null;
+                                    }
+                                });
                 } else if ("GeckoView:OnNewSession".equals(event)) {
                     final String uri = message.getString("uri");
                     final GeckoResult<GeckoSession> result = delegate.onNewSession(GeckoSession.this, uri);
@@ -2486,10 +2514,11 @@ public class GeckoSession extends LayerSession
          * @param uri The URI that failed to load.
          * @param category The error category.
          * @param error The error type.
+         * @return A URI to display as an error. Returning null will halt the load entirely.
          */
-        void onLoadError(GeckoSession session, String uri,
-                         @LoadErrorCategory int category,
-                         @LoadError int error);
+        GeckoResult<String> onLoadError(GeckoSession session, String uri,
+                                        @LoadErrorCategory int category,
+                                        @LoadError int error);
     }
 
     /**

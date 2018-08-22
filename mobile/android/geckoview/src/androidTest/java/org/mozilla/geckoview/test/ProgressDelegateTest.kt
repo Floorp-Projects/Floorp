@@ -80,7 +80,7 @@ class ProgressDelegateTest : BaseSessionTest() {
     }
 
     @Test fun multipleLoads() {
-        sessionRule.session.loadUri(INVALID_URI)
+        sessionRule.session.loadUri(UNKNOWN_HOST_URI)
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStops(2)
 
@@ -88,7 +88,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 2, order = [1, 3])
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url,
-                           endsWith(forEachCall(INVALID_URI, HELLO_HTML_PATH)))
+                           endsWith(forEachCall(UNKNOWN_HOST_URI, HELLO_HTML_PATH)))
             }
 
             @AssertCalled(count = 2, order = [2, 4])

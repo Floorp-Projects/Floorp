@@ -149,7 +149,7 @@ class MonitorPanel extends Component {
           initialHeight: initialHeight,
           minSize: "50px",
           maxSize: "80%",
-          splitterSize: 1,
+          splitterSize: networkDetailsOpen ? 1 : 0,
           startPanel: RequestList({ isEmpty, connector }),
           endPanel: networkDetailsOpen && NetworkDetailsPanel({
             ref: "endPanel",
