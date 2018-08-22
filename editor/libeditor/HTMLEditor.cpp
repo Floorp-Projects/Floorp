@@ -2561,7 +2561,7 @@ HTMLEditor::Align(const nsAString& aAlignType)
 
 Element*
 HTMLEditor::GetElementOrParentByTagName(const nsAtom& aTagName,
-                                        nsINode* aNode)
+                                        nsINode* aNode) const
 {
   MOZ_ASSERT(&aTagName != nsGkAtoms::_empty);
 
@@ -2577,7 +2577,7 @@ HTMLEditor::GetElementOrParentByTagName(const nsAtom& aTagName,
 
 Element*
 HTMLEditor::GetElementOrParentByTagNameAtSelection(Selection& aSelection,
-                                                   const nsAtom& aTagName)
+                                                   const nsAtom& aTagName) const
 {
   MOZ_ASSERT(&aTagName != nsGkAtoms::_empty);
 
@@ -2605,7 +2605,7 @@ HTMLEditor::GetElementOrParentByTagNameAtSelection(Selection& aSelection,
 
 Element*
 HTMLEditor::GetElementOrParentByTagNameInternal(const nsAtom& aTagName,
-                                                nsINode& aNode)
+                                                nsINode& aNode) const
 {
   MOZ_ASSERT(&aTagName != nsGkAtoms::_empty);
 

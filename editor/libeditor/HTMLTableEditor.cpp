@@ -221,104 +221,123 @@ HTMLEditor::InsertTableCell(int32_t aNumber,
 }
 
 NS_IMETHODIMP
-HTMLEditor::GetFirstRow(Element* aTableElement,
-                        nsINode** aRowNode)
+HTMLEditor::GetFirstRow(Element* aTableOrElementInTable,
+                        Element** aFirstRowElement)
 {
-  if (NS_WARN_IF(!aTableElement) || NS_WARN_IF(!aRowNode)) {
+  if (NS_WARN_IF(!aTableOrElementInTable) || NS_WARN_IF(!aFirstRowElement)) {
     return NS_ERROR_INVALID_ARG;
   }
+  ErrorResult error;
+  RefPtr<Element> firstRowElement =
+    GetFirstTableRowElement(*aTableOrElementInTable, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  firstRowElement.forget(aFirstRowElement);
+  return NS_OK;
+}
 
-  *aRowNode = nullptr;
+Element*
+HTMLEditor::GetFirstTableRowElement(Element& aTableOrElementInTable,
+                                    ErrorResult& aRv) const
+{
+  MOZ_ASSERT(!aRv.Failed());
 
   Element* tableElement =
-    GetElementOrParentByTagNameInternal(*nsGkAtoms::table, *aTableElement);
+    GetElementOrParentByTagNameInternal(*nsGkAtoms::table,
+                                        aTableOrElementInTable);
+  // If the element is not in <table>, return error.
   if (NS_WARN_IF(!tableElement)) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  nsCOMPtr<nsIContent> tableChild = tableElement->GetFirstChild();
-  while (tableChild) {
+  for (nsIContent* tableChild = tableElement->GetFirstChild();
+       tableChild;
+       tableChild = tableChild->GetNextSibling()) {
     if (tableChild->IsHTMLElement(nsGkAtoms::tr)) {
       // Found a row directly under <table>
-      tableChild.forget(aRowNode);
-      return NS_OK;
+      return tableChild->AsElement();
     }
-    // Look for row in one of the row container elements
+    // <table> can have table section elements like <tbody>.  <tr> elements
+    // may be children of them.
     if (tableChild->IsAnyOfHTMLElements(nsGkAtoms::tbody,
                                         nsGkAtoms::thead,
                                         nsGkAtoms::tfoot)) {
-      nsCOMPtr<nsIContent> rowNode = tableChild->GetFirstChild();
-
-      // We can encounter textnodes here -- must find a row
-      while (rowNode && !HTMLEditUtils::IsTableRow(rowNode)) {
-        rowNode = rowNode->GetNextSibling();
-      }
-
-      if (rowNode) {
-        rowNode.forget(aRowNode);
-        return NS_OK;
+      for (nsIContent* tableSectionChild = tableChild->GetFirstChild();
+           tableSectionChild;
+           tableSectionChild = tableSectionChild->GetNextSibling()) {
+        if (tableSectionChild->IsHTMLElement(nsGkAtoms::tr)) {
+          return tableSectionChild->AsElement();
+        }
       }
     }
-    // Here if table child was a CAPTION or COLGROUP
-    //  or child of a row parent wasn't a row (bad HTML?),
-    //  or first child was a textnode
-    // Look in next table child
-    tableChild = tableChild->GetNextSibling();
   }
-  // If here, row was not found
-  return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  // Don't return error when there is no <tr> element in the <table>.
+  return nullptr;
 }
 
-NS_IMETHODIMP
-HTMLEditor::GetNextRow(nsINode* aCurrentRowNode,
-                       nsINode** aRowNode)
+Element*
+HTMLEditor::GetNextTableRowElement(Element& aTableRowElement,
+                                   ErrorResult& aRv) const
 {
-  NS_ENSURE_TRUE(aRowNode, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(!aRv.Failed());
 
-  *aRowNode = nullptr;
-
-  NS_ENSURE_TRUE(aCurrentRowNode, NS_ERROR_NULL_POINTER);
-
-  if (!HTMLEditUtils::IsTableRow(aCurrentRowNode)) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!aTableRowElement.IsHTMLElement(nsGkAtoms::tr))) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  nsIContent* nextRow = aCurrentRowNode->GetNextSibling();
-
-  // Skip over any textnodes here
-  while (nextRow && !HTMLEditUtils::IsTableRow(nextRow)) {
-    nextRow = nextRow->GetNextSibling();
-  }
-  if (nextRow) {
-    *aRowNode = do_AddRef(nextRow).take();
-    return NS_OK;
-  }
-
-  // No row found, search for rows in other table sections
-  nsINode* rowParent = aCurrentRowNode->GetParentNode();
-  NS_ENSURE_TRUE(rowParent, NS_ERROR_NULL_POINTER);
-
-  nsIContent* parentSibling = rowParent->GetNextSibling();
-
-  while (parentSibling) {
-    nextRow = parentSibling->GetFirstChild();
-
-    // We can encounter textnodes here -- must find a row
-    while (nextRow && !HTMLEditUtils::IsTableRow(nextRow)) {
-      nextRow = nextRow->GetNextSibling();
+  for (nsIContent* maybeNextRow = aTableRowElement.GetNextSibling();
+       maybeNextRow;
+       maybeNextRow = maybeNextRow->GetNextSibling()) {
+    if (maybeNextRow->IsHTMLElement(nsGkAtoms::tr)) {
+      return maybeNextRow->AsElement();
     }
-    if (nextRow) {
-      *aRowNode = do_AddRef(nextRow).take();
-      return NS_OK;
-    }
-
-    // We arrive here only if a table section has no children
-    //  or first child of section is not a row (bad HTML or more "_moz_text" nodes!)
-    // So look for another section sibling
-    parentSibling = parentSibling->GetNextSibling();
   }
-  // If here, row was not found
-  return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+
+  // In current table section (e.g., <tbody>), there is no <tr> element.
+  // Then, check the following table sections.
+  Element* parentElementOfRow = aTableRowElement.GetParentElement();
+  if (NS_WARN_IF(!parentElementOfRow)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  // Basically, <tr> elements should be in table section elements even if
+  // they are not written in the source explicitly.  However, for preventing
+  // cross table boundary, check it now.
+  if (parentElementOfRow->IsHTMLElement(nsGkAtoms::table)) {
+    // Don't return error since this means just not found.
+    return nullptr;
+  }
+
+  for (nsIContent* maybeNextTableSection = parentElementOfRow->GetNextSibling();
+       maybeNextTableSection;
+       maybeNextTableSection = maybeNextTableSection->GetNextSibling()) {
+    // If the sibling of parent of given <tr> is a table section element,
+    // check its children.
+    if (maybeNextTableSection->IsAnyOfHTMLElements(nsGkAtoms::tbody,
+                                                   nsGkAtoms::thead,
+                                                   nsGkAtoms::tfoot)) {
+      for (nsIContent* maybeNextRow = maybeNextTableSection->GetFirstChild();
+           maybeNextRow;
+           maybeNextRow = maybeNextRow->GetNextSibling()) {
+        if (maybeNextRow->IsHTMLElement(nsGkAtoms::tr)) {
+          return maybeNextRow->AsElement();
+        }
+      }
+    }
+    // I'm not sure whether this is a possible case since table section
+    // elements are created automatically.  However, DOM API may create
+    // <tr> elements without table section elements.  So, let's check it.
+    else if (maybeNextTableSection->IsHTMLElement(nsGkAtoms::tr)) {
+      return maybeNextTableSection->AsElement();
+    }
+  }
+  // Don't return error when the given <tr> element is the last <tr> element in
+  // the <table>.
+  return nullptr;
 }
 
 nsresult
@@ -409,7 +428,8 @@ HTMLEditor::InsertTableColumn(int32_t aNumber,
     NormalizeTable(table);
   }
 
-  nsCOMPtr<nsINode> rowNode;
+  ErrorResult error;
+  RefPtr<Element> rowElement;
   for (rowIndex = 0; rowIndex < rowCount; rowIndex++) {
     if (startColIndex < colCount) {
       // We are inserting before an existing column
@@ -442,24 +462,31 @@ HTMLEditor::InsertTableColumn(int32_t aNumber,
     } else {
       // Get current row and append new cells after last cell in row
       if (!rowIndex) {
-        rv = GetFirstRow(table, getter_AddRefs(rowNode));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+        rowElement = GetFirstTableRowElement(*table, error);
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
         }
       } else {
-        nsCOMPtr<nsINode> nextRow;
-        rv = GetNextRow(rowNode, getter_AddRefs(nextRow));
+        if (NS_WARN_IF(!rowElement)) {
+          // XXX Looks like that when rowIndex is 0, startColIndex is always
+          //     same as or larger than colCount.  Is it true?
+          return NS_ERROR_FAILURE;
+        }
+        rowElement = GetNextTableRowElement(*rowElement, error);
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
+        }
+      }
+
+      if (rowElement) {
+        nsCOMPtr<nsINode> lastCell;
+        rv = GetLastCellInRow(rowElement, getter_AddRefs(lastCell));
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
-        rowNode = nextRow;
-      }
-
-      if (rowNode) {
-        nsCOMPtr<nsINode> lastCell;
-        rv = GetLastCellInRow(rowNode, getter_AddRefs(lastCell));
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_TRUE(lastCell, NS_ERROR_FAILURE);
+        if (NS_WARN_IF(!lastCell)) {
+          return NS_ERROR_FAILURE;
+        }
 
         curCell = lastCell->AsElement();
         // Simply add same number of cells to each row
