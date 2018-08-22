@@ -32,6 +32,7 @@ install:
 build: false
 
 test_script:
+  - cargo test --benches
   - cargo test
   - cargo test --features nightly
   - cargo test --manifest-path rand-derive/Cargo.toml

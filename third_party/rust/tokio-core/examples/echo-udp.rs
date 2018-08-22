@@ -6,7 +6,7 @@
 //!
 //! and in another terminal you can run:
 //!
-//!     nc -4u localhost 8080
+//!     cargo run --example connect -- --udp 127.0.0.1:8080
 //!
 //! Each line you type in to the `nc` terminal should be echo'd back to you!
 
@@ -58,7 +58,7 @@ fn main() {
     let mut l = Core::new().unwrap();
     let handle = l.handle();
     let socket = UdpSocket::bind(&addr, &handle).unwrap();
-    println!("Listening on: {}", addr);
+    println!("Listening on: {}", socket.local_addr().unwrap());
 
     // Next we'll create a future to spawn (the one we defined above) and then
     // we'll run the event loop by running the future.

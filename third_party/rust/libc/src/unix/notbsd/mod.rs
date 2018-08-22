@@ -177,6 +177,58 @@ s! {
         #[cfg(target_pointer_width = "32")]
         __unused1: [::c_int; 12]
     }
+
+    pub struct in_pktinfo {
+        pub ipi_ifindex: ::c_int,
+        pub ipi_spec_dst: ::in_addr,
+        pub ipi_addr: ::in_addr,
+    }
+
+    pub struct ifaddrs {
+        pub ifa_next: *mut ifaddrs,
+        pub ifa_name: *mut c_char,
+        pub ifa_flags: ::c_uint,
+        pub ifa_addr: *mut ::sockaddr,
+        pub ifa_netmask: *mut ::sockaddr,
+        pub ifa_ifu: *mut ::sockaddr, // FIXME This should be a union
+        pub ifa_data: *mut ::c_void
+    }
+
+    pub struct in6_rtmsg {
+        rtmsg_dst: ::in6_addr,
+        rtmsg_src: ::in6_addr,
+        rtmsg_gateway: ::in6_addr,
+        rtmsg_type: u32,
+        rtmsg_dst_len: u16,
+        rtmsg_src_len: u16,
+        rtmsg_metric: u32,
+        rtmsg_info: ::c_ulong,
+        rtmsg_flags: u32,
+        rtmsg_ifindex: ::c_int,
+    }
+
+    pub struct arpreq {
+        pub arp_pa: ::sockaddr,
+        pub arp_ha: ::sockaddr,
+        pub arp_flags: ::c_int,
+        pub arp_netmask: ::sockaddr,
+        pub arp_dev: [::c_char; 16],
+    }
+
+    pub struct arpreq_old {
+        pub arp_pa: ::sockaddr,
+        pub arp_ha: ::sockaddr,
+        pub arp_flags: ::c_int,
+        pub arp_netmask: ::sockaddr,
+    }
+
+    pub struct arphdr {
+        pub ar_hrd: u16,
+        pub ar_pro: u16,
+        pub ar_hln: u8,
+        pub ar_pln: u8,
+        pub ar_op: u16,
+    }
 }
 
 // intentionally not public, only used for fd_set
@@ -573,6 +625,7 @@ pub const IP_MULTICAST_TTL: ::c_int = 33;
 pub const IP_MULTICAST_LOOP: ::c_int = 34;
 pub const IP_TTL: ::c_int = 2;
 pub const IP_HDRINCL: ::c_int = 3;
+pub const IP_PKTINFO: ::c_int = 8;
 pub const IP_ADD_MEMBERSHIP: ::c_int = 35;
 pub const IP_DROP_MEMBERSHIP: ::c_int = 36;
 pub const IP_TRANSPARENT: ::c_int = 19;
@@ -583,6 +636,8 @@ pub const IPV6_MULTICAST_LOOP: ::c_int = 19;
 pub const IPV6_ADD_MEMBERSHIP: ::c_int = 20;
 pub const IPV6_DROP_MEMBERSHIP: ::c_int = 21;
 pub const IPV6_V6ONLY: ::c_int = 26;
+pub const IPV6_RECVPKTINFO: ::c_int = 49;
+pub const IPV6_PKTINFO: ::c_int = 50;
 
 pub const TCP_NODELAY: ::c_int = 1;
 pub const TCP_MAXSEG: ::c_int = 2;
@@ -805,6 +860,122 @@ pub const POLLNVAL: ::c_short = 0x20;
 pub const POLLRDNORM: ::c_short = 0x040;
 pub const POLLRDBAND: ::c_short = 0x080;
 
+pub const IPTOS_LOWDELAY: u8 = 0x10;
+pub const IPTOS_THROUGHPUT: u8 = 0x08;
+pub const IPTOS_RELIABILITY: u8 = 0x04;
+pub const IPTOS_MINCOST: u8 = 0x02;
+
+pub const IPTOS_PREC_NETCONTROL: u8 = 0xe0;
+pub const IPTOS_PREC_INTERNETCONTROL: u8 = 0xc0;
+pub const IPTOS_PREC_CRITIC_ECP: u8 = 0xa0;
+pub const IPTOS_PREC_FLASHOVERRIDE: u8 = 0x80;
+pub const IPTOS_PREC_FLASH: u8 = 0x60;
+pub const IPTOS_PREC_IMMEDIATE: u8 = 0x40;
+pub const IPTOS_PREC_PRIORITY: u8 = 0x20;
+pub const IPTOS_PREC_ROUTINE: u8 = 0x00;
+
+pub const IPOPT_COPY: u8 = 0x80;
+pub const IPOPT_CLASS_MASK: u8 = 0x60;
+pub const IPOPT_NUMBER_MASK: u8 = 0x1f;
+
+pub const IPOPT_CONTROL: u8 = 0x00;
+pub const IPOPT_RESERVED1: u8 = 0x20;
+pub const IPOPT_MEASUREMENT: u8 = 0x40;
+pub const IPOPT_RESERVED2: u8 = 0x60;
+pub const IPOPT_END: u8 = (0 |IPOPT_CONTROL);
+pub const IPOPT_NOOP: u8 = (1 |IPOPT_CONTROL);
+pub const IPOPT_SEC: u8 = (2 |IPOPT_CONTROL|IPOPT_COPY);
+pub const IPOPT_LSRR: u8 = (3 |IPOPT_CONTROL|IPOPT_COPY);
+pub const IPOPT_TIMESTAMP: u8 = (4 |IPOPT_MEASUREMENT);
+pub const IPOPT_RR: u8 = (7 |IPOPT_CONTROL);
+pub const IPOPT_SID: u8 = (8 |IPOPT_CONTROL|IPOPT_COPY);
+pub const IPOPT_SSRR: u8 = (9 |IPOPT_CONTROL|IPOPT_COPY);
+pub const IPOPT_RA: u8 = (20|IPOPT_CONTROL|IPOPT_COPY);
+pub const IPVERSION: u8 = 4;
+pub const MAXTTL: u8 = 255;
+pub const IPDEFTTL: u8 = 64;
+pub const IPOPT_OPTVAL: u8 = 0;
+pub const IPOPT_OLEN: u8 = 1;
+pub const IPOPT_OFFSET: u8 = 2;
+pub const IPOPT_MINOFF: u8 = 4;
+pub const MAX_IPOPTLEN: u8 = 40;
+pub const IPOPT_NOP: u8 = IPOPT_NOOP;
+pub const IPOPT_EOL: u8 = IPOPT_END;
+pub const IPOPT_TS: u8 = IPOPT_TIMESTAMP;
+pub const IPOPT_TS_TSONLY: u8 = 0;
+pub const IPOPT_TS_TSANDADDR: u8 = 1;
+pub const IPOPT_TS_PRESPEC: u8 = 3;
+
+pub const ARPOP_RREQUEST: u16 = 3;
+pub const ARPOP_RREPLY: u16 = 4;
+pub const ARPOP_InREQUEST: u16 = 8;
+pub const ARPOP_InREPLY: u16 = 9;
+pub const ARPOP_NAK: u16 = 10;
+
+pub const ATF_NETMASK: ::c_int = 0x20;
+pub const ATF_DONTPUB: ::c_int = 0x40;
+
+pub const ARPHRD_NETROM: u16 = 0;
+pub const ARPHRD_ETHER: u16 = 1;
+pub const ARPHRD_EETHER: u16 = 2;
+pub const ARPHRD_AX25: u16 = 3;
+pub const ARPHRD_PRONET: u16 = 4;
+pub const ARPHRD_CHAOS: u16 = 5;
+pub const ARPHRD_IEEE802: u16 = 6;
+pub const ARPHRD_ARCNET: u16 = 7;
+pub const ARPHRD_APPLETLK: u16 = 8;
+pub const ARPHRD_DLCI: u16 = 15;
+pub const ARPHRD_ATM: u16 = 19;
+pub const ARPHRD_METRICOM: u16 = 23;
+pub const ARPHRD_IEEE1394: u16 = 24;
+pub const ARPHRD_EUI64: u16 = 27;
+pub const ARPHRD_INFINIBAND: u16 = 32;
+
+pub const ARPHRD_SLIP: u16 = 256;
+pub const ARPHRD_CSLIP: u16 = 257;
+pub const ARPHRD_SLIP6: u16 = 258;
+pub const ARPHRD_CSLIP6: u16 = 259;
+pub const ARPHRD_RSRVD: u16 = 260;
+pub const ARPHRD_ADAPT: u16 = 264;
+pub const ARPHRD_ROSE: u16 = 270;
+pub const ARPHRD_X25: u16 = 271;
+pub const ARPHRD_HWX25: u16 = 272;
+pub const ARPHRD_PPP: u16 = 512;
+pub const ARPHRD_CISCO: u16 = 513;
+pub const ARPHRD_HDLC: u16 = ARPHRD_CISCO;
+pub const ARPHRD_LAPB: u16 = 516;
+pub const ARPHRD_DDCMP: u16 = 517;
+pub const ARPHRD_RAWHDLC: u16 = 518;
+
+pub const ARPHRD_TUNNEL: u16 = 768;
+pub const ARPHRD_TUNNEL6: u16 = 769;
+pub const ARPHRD_FRAD: u16 = 770;
+pub const ARPHRD_SKIP: u16 = 771;
+pub const ARPHRD_LOOPBACK: u16 = 772;
+pub const ARPHRD_LOCALTLK: u16 = 773;
+pub const ARPHRD_FDDI: u16 = 774;
+pub const ARPHRD_BIF: u16 = 775;
+pub const ARPHRD_SIT: u16 = 776;
+pub const ARPHRD_IPDDP: u16 = 777;
+pub const ARPHRD_IPGRE: u16 = 778;
+pub const ARPHRD_PIMREG: u16 = 779;
+pub const ARPHRD_HIPPI: u16 = 780;
+pub const ARPHRD_ASH: u16 = 781;
+pub const ARPHRD_ECONET: u16 = 782;
+pub const ARPHRD_IRDA: u16 = 783;
+pub const ARPHRD_FCPP: u16 = 784;
+pub const ARPHRD_FCAL: u16 = 785;
+pub const ARPHRD_FCPL: u16 = 786;
+pub const ARPHRD_FCFABRIC: u16 = 787;
+pub const ARPHRD_IEEE802_TR: u16 = 800;
+pub const ARPHRD_IEEE80211: u16 = 801;
+pub const ARPHRD_IEEE80211_PRISM: u16 = 802;
+pub const ARPHRD_IEEE80211_RADIOTAP: u16 = 803;
+pub const ARPHRD_IEEE802154: u16 = 804;
+
+pub const ARPHRD_VOID: u16 = 0xFFFF;
+pub const ARPHRD_NONE: u16 = 0xFFFE;
+
 f! {
     pub fn FD_CLR(fd: ::c_int, set: *mut fd_set) -> () {
         let fd = fd as usize;
@@ -866,6 +1037,18 @@ f! {
 
     pub fn QCMD(cmd: ::c_int, type_: ::c_int) -> ::c_int {
         (cmd << 8) | (type_ & 0x00ff)
+    }
+
+    pub fn IPOPT_COPIED(o: u8) -> u8 {
+        o & IPOPT_COPY
+    }
+
+    pub fn IPOPT_CLASS(o: u8) -> u8 {
+        o & IPOPT_CLASS_MASK
+    }
+
+    pub fn IPOPT_NUMBER(o: u8) -> u8 {
+        o & IPOPT_NUMBER_MASK
     }
 }
 
@@ -946,8 +1129,6 @@ extern {
     pub fn stat64(path: *const c_char, buf: *mut stat64) -> ::c_int;
     pub fn truncate64(path: *const c_char, length: off64_t) -> ::c_int;
 
-    pub fn fdopendir(fd: ::c_int) -> *mut ::DIR;
-
     pub fn mknodat(dirfd: ::c_int, pathname: *const ::c_char,
                    mode: ::mode_t, dev: dev_t) -> ::c_int;
     pub fn pthread_condattr_getclock(attr: *const pthread_condattr_t,
@@ -994,6 +1175,23 @@ extern {
     pub fn fexecve(fd: ::c_int, argv: *const *const ::c_char,
                    envp: *const *const ::c_char)
                    -> ::c_int;
+    pub fn getifaddrs(ifap: *mut *mut ::ifaddrs) -> ::c_int;
+    pub fn freeifaddrs(ifa: *mut ::ifaddrs);
+    pub fn bind(socket: ::c_int, address: *const ::sockaddr,
+                address_len: ::socklen_t) -> ::c_int;
+
+    pub fn writev(fd: ::c_int,
+                  iov: *const ::iovec,
+                  iovcnt: ::c_int) -> ::ssize_t;
+    pub fn readv(fd: ::c_int,
+                 iov: *const ::iovec,
+                 iovcnt: ::c_int) -> ::ssize_t;
+
+    pub fn sendmsg(fd: ::c_int,
+                   msg: *const ::msghdr,
+                   flags: ::c_int) -> ::ssize_t;
+    pub fn recvmsg(fd: ::c_int, msg: *mut ::msghdr, flags: ::c_int)
+                   -> ::ssize_t;
 }
 
 cfg_if! {

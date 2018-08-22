@@ -96,12 +96,42 @@ impl<'a> SignedJar<'a> {
     /// assert_eq!(jar.signed(&key).get("name").unwrap().value(), "value");
     /// ```
     pub fn add(&mut self, mut cookie: Cookie<'static>) {
+        self.sign_cookie(&mut cookie);
+        self.parent.add(cookie);
+    }
+
+    /// Adds an "original" `cookie` to this jar. The cookie's value is signed
+    /// assuring integrity and authenticity. Adding an original cookie does not
+    /// affect the [`CookieJar::delta()`](struct.CookieJar.html#method.delta)
+    /// computation. This method is intended to be used to seed the cookie jar
+    /// with cookies received from a client's HTTP message.
+    ///
+    /// For accurate `delta` computations, this method should not be called
+    /// after calling `remove`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cookie::{CookieJar, Cookie, Key};
+    ///
+    /// let key = Key::generate();
+    /// let mut jar = CookieJar::new();
+    /// jar.signed(&key).add_original(Cookie::new("name", "value"));
+    ///
+    /// assert_eq!(jar.iter().count(), 1);
+    /// assert_eq!(jar.delta().count(), 0);
+    /// ```
+    pub fn add_original(&mut self, mut cookie: Cookie<'static>) {
+        self.sign_cookie(&mut cookie);
+        self.parent.add_original(cookie);
+    }
+
+    /// Signs the cookie's value assuring integrity and authenticity.
+    fn sign_cookie(&self, cookie: &mut Cookie) {
         let digest = sign(&self.key, cookie.value().as_bytes());
         let mut new_value = base64::encode(digest.as_ref());
         new_value.push_str(cookie.value());
         cookie.set_value(new_value);
-
-        self.parent.add(cookie);
     }
 
     /// Removes `cookie` from the parent jar.

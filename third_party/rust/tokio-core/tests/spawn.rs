@@ -1,3 +1,4 @@
+extern crate tokio;
 extern crate tokio_core;
 extern crate env_logger;
 extern crate futures;
@@ -31,6 +32,66 @@ fn simple() {
     });
 
     assert_eq!(lp.run(rx1.join(rx2)).unwrap(), (1, 2));
+}
+
+#[test]
+fn simple_send() {
+    drop(env_logger::init());
+    let mut lp = Core::new().unwrap();
+
+    let (tx1, rx1) = oneshot::channel();
+    let (tx2, rx2) = oneshot::channel();
+    lp.handle().spawn_send(future::lazy(|| {
+        tx1.send(1).unwrap();
+        Ok(())
+    }));
+    lp.remote().spawn(|_| {
+        future::lazy(|| {
+            tx2.send(2).unwrap();
+            Ok(())
+        })
+    });
+
+    assert_eq!(lp.run(rx1.join(rx2)).unwrap(), (1, 2));
+}
+
+#[test]
+fn simple_send_current_thread() {
+    drop(env_logger::init());
+    let mut lp = Core::new().unwrap();
+
+    let (tx, rx) = oneshot::channel();
+
+    lp.run(future::lazy(move || {
+        tokio::executor::current_thread::spawn(future::lazy(move || {
+            tx.send(1).unwrap();
+            Ok(())
+        }));
+
+        rx.map_err(|_| panic!())
+            .and_then(|v| {
+                assert_eq!(v, 1);
+                Ok(())
+            })
+    })).unwrap();
+}
+
+#[test]
+fn tokio_spawn_from_fut() {
+    drop(env_logger::init());
+    let mut lp = Core::new().unwrap();
+
+    let (tx1, rx1) = oneshot::channel();
+
+    lp.run(future::lazy(|| {
+        tokio::spawn(future::lazy(|| {
+            tx1.send(1).unwrap();
+            Ok(())
+        }));
+        Ok::<_, ()>(())
+    })).unwrap();
+
+    assert_eq!(lp.run(rx1).unwrap(), 1);
 }
 
 #[test]
@@ -73,6 +134,26 @@ fn spawn_in_poll() {
                 Ok(())
             })
         });
+        Ok(())
+    }));
+
+    assert_eq!(lp.run(rx1.join(rx2)).unwrap(), (1, 2));
+}
+
+#[test]
+fn spawn_in_poll2() {
+    drop(env_logger::init());
+    let mut lp = Core::new().unwrap();
+
+    let (tx1, rx1) = oneshot::channel();
+    let (tx2, rx2) = oneshot::channel();
+    lp.handle().spawn(future::lazy(move || {
+        tx1.send(1).unwrap();
+        tokio::spawn(future::lazy(|| {
+            tx2.send(2).unwrap();
+            Ok(())
+        }));
+
         Ok(())
     }));
 

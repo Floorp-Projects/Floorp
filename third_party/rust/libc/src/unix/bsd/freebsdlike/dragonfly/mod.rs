@@ -115,6 +115,27 @@ s! {
         pub f_uid_uuid: ::uuid_t,
     }
 
+    pub struct statfs {
+        pub f_bsize: ::c_long,
+        pub f_iosize: ::c_long,
+        pub f_blocks: ::c_long,
+        pub f_bfree: ::c_long,
+        pub f_bavail: ::c_long,
+        pub f_files: ::c_long,
+        pub f_ffree: ::c_long,
+        pub f_fsid: ::fsid_t,
+        pub f_owner: ::uid_t,
+        pub f_type: ::int32_t,
+        pub f_flags: ::int32_t,
+        pub f_syncwrites: ::c_long,
+        pub f_asyncwrites: ::c_long,
+        pub f_fstypename: [::c_char; 16],
+        pub f_mntonname: [::c_char; 90],
+        pub f_syncreads: ::c_long,
+        pub f_asyncreads: ::c_long,
+        pub f_mntfromname: [::c_char; 90],
+    }
+
     pub struct stat {
         pub st_ino: ::ino_t,
         pub st_nlink: ::nlink_t,
@@ -760,4 +781,7 @@ extern {
 
     pub fn lwp_rtprio(function: ::c_int, pid: ::pid_t, lwpid: lwpid_t,
                       rtp: *mut super::rtprio) -> ::c_int;
+
+    pub fn statfs(path: *const ::c_char, buf: *mut statfs) -> ::c_int;
+    pub fn fstatfs(fd: ::c_int, buf: *mut statfs) -> ::c_int;
 }

@@ -5,7 +5,7 @@ mod io;
 mod handler;
 mod notify;
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 pub mod unix;
 
 pub use self::event_loop::{
@@ -24,7 +24,7 @@ pub use self::handler::{
 pub use self::notify::{
     NotifyError,
 };
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 pub use self::unix::{
     pipe,
     PipeReader,
