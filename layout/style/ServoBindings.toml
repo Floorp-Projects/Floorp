@@ -45,6 +45,7 @@ args = [
 ]
 "arch=x86" = ["--target=i686-pc-win32"]
 "arch=x86_64" = ["--target=x86_64-pc-win32"]
+"arch=aarch64" = ["--target=aarch64-pc-windows-msvc"]
 
 [structs]
 headers = [
