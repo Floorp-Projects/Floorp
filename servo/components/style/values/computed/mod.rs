@@ -65,7 +65,6 @@ pub use self::length::{NonNegativeLengthOrPercentage, NonNegativeLengthOrPercent
 pub use self::list::Quotes;
 #[cfg(feature = "gecko")]
 pub use self::list::ListStyleType;
-pub use self::motion::OffsetPath;
 pub use self::outline::OutlineStyle;
 pub use self::percentage::{Percentage, NonNegativePercentage};
 pub use self::position::{GridAutoFlow, GridTemplateAreas, Position, ZIndex};
@@ -101,7 +100,6 @@ pub mod gecko;
 pub mod image;
 pub mod length;
 pub mod list;
-pub mod motion;
 pub mod outline;
 pub mod percentage;
 pub mod position;
