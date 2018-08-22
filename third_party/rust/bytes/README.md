@@ -33,10 +33,13 @@ Serde support is optional and disabled by default. To enable use the feature `se
 bytes = { version = "0.4", features = ["serde"] }
 ```
 
-# License
+## License
 
-`bytes` is primarily distributed under the terms of both the MIT license and the
-Apache License (Version 2.0), with portions covered by various BSD-like
-licenses.
+This project is licensed under the [MIT license](LICENSE).
 
-See LICENSE-APACHE, and LICENSE-MIT for details.
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in `bytes` by you, shall be licensed as MIT, without any additional
+terms or conditions.
+

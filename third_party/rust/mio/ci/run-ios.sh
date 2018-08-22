@@ -20,7 +20,7 @@ case "$TARGET" in
 
 
     # Find the file to run
-    TEST_FILE="$(find target/$TARGET/debug -maxdepth 1 -type f -name test-* | head -1)";
+    TEST_FILE="$(find $TARGET/debug -maxdepth 1 -type f -name test-* | head -1)";
 
     rustc -O ./ci/ios/deploy_and_run_on_ios_simulator.rs;
     ./deploy_and_run_on_ios_simulator $TEST_FILE;

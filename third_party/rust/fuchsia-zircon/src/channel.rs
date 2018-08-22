@@ -4,15 +4,15 @@
 
 //! Type-safe bindings for Zircon channel objects.
 
-use {AsHandleRef, HandleBased, Handle, HandleRef, INVALID_HANDLE, Peered, Status, Time, usize_into_u32, size_to_u32_sat};
-use {sys, handle_drop, into_result};
+use {AsHandleRef, HandleBased, Handle, HandleRef, Peered, Status, Time, usize_into_u32, size_to_u32_sat};
+use {sys, ok};
 use std::mem;
 
 /// An object representing a Zircon
 /// [channel](https://fuchsia.googlesource.com/zircon/+/master/docs/objects/channel.md).
 ///
 /// As essentially a subtype of `Handle`, it can be freely interconverted.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Channel(Handle);
 impl_handle_based!(Channel);
 impl Peered for Channel {}
@@ -24,14 +24,16 @@ impl Channel {
     /// Wraps the
     /// [zx_channel_create](https://fuchsia.googlesource.com/zircon/+/master/docs/syscalls/channel_create.md)
     /// syscall.
-    pub fn create(opts: ChannelOpts) -> Result<(Channel, Channel), Status> {
+    pub fn create() -> Result<(Channel, Channel), Status> {
         unsafe {
             let mut handle0 = 0;
             let mut handle1 = 0;
-            let status = sys::zx_channel_create(opts as u32, &mut handle0, &mut handle1);
-            into_result(status, ||
-                (Self::from(Handle(handle0)),
-                    Self::from(Handle(handle1))))
+            let opts = 0;
+            ok(sys::zx_channel_create(opts, &mut handle0, &mut handle1))?;
+            Ok((
+                Self::from(Handle::from_raw(handle0)),
+                Self::from(Handle::from_raw(handle1))
+                ))
         }
     }
 
@@ -42,21 +44,22 @@ impl Channel {
     /// If the `MessageBuf` lacks the capacity to hold the pending message,
     /// returns an `Err` with the number of bytes and number of handles needed.
     /// Otherwise returns an `Ok` with the result as usual.
-    pub fn read_raw(&self, opts: u32, buf: &mut MessageBuf)
+    pub fn read_raw(&self, buf: &mut MessageBuf)
         -> Result<Result<(), Status>, (usize, usize)>
     {
+        let opts = 0;
         unsafe {
-            buf.reset_handles();
+            buf.clear();
             let raw_handle = self.raw_handle();
             let mut num_bytes: u32 = size_to_u32_sat(buf.bytes.capacity());
             let mut num_handles: u32 = size_to_u32_sat(buf.handles.capacity());
-            let status = sys::zx_channel_read(raw_handle, opts,
-                buf.bytes.as_mut_ptr(), buf.handles.as_mut_ptr(),
-                num_bytes, num_handles, &mut num_bytes, &mut num_handles);
-            if status == sys::ZX_ERR_BUFFER_TOO_SMALL {
+            let status = ok(sys::zx_channel_read(raw_handle, opts,
+                buf.bytes.as_mut_ptr(), buf.handles.as_mut_ptr() as *mut _,
+                num_bytes, num_handles, &mut num_bytes, &mut num_handles));
+            if status == Err(Status::BUFFER_TOO_SMALL) {
                 Err((num_bytes as usize, num_handles as usize))
             } else {
-                Ok(into_result(status, || {
+                Ok(status.map(|()| {
                     buf.bytes.set_len(num_bytes as usize);
                     buf.handles.set_len(num_handles as usize);
                 }))
@@ -69,9 +72,9 @@ impl Channel {
     /// Note that this method can cause internal reallocations in the `MessageBuf`
     /// if it is lacks capacity to hold the full message. If such reallocations
     /// are not desirable, use `read_raw` instead.
-    pub fn read(&self, opts: u32, buf: &mut MessageBuf) -> Result<(), Status> {
+    pub fn read(&self, buf: &mut MessageBuf) -> Result<(), Status> {
         loop {
-            match self.read_raw(opts, buf) {
+            match self.read_raw(buf) {
                 Ok(result) => return result,
                 Err((num_bytes, num_handles)) => {
                     buf.ensure_capacity_bytes(num_bytes);
@@ -84,18 +87,19 @@ impl Channel {
     /// Write a message to a channel. Wraps the
     /// [zx_channel_write](https://fuchsia.googlesource.com/zircon/+/master/docs/syscalls/channel_write.md)
     /// syscall.
-    pub fn write(&self, bytes: &[u8], handles: &mut Vec<Handle>, opts: u32)
+    pub fn write(&self, bytes: &[u8], handles: &mut Vec<Handle>)
             -> Result<(), Status>
     {
-        let n_bytes = try!(usize_into_u32(bytes.len()).map_err(|_| Status::ErrOutOfRange));
-        let n_handles = try!(usize_into_u32(handles.len()).map_err(|_| Status::ErrOutOfRange));
+        let opts = 0;
+        let n_bytes = try!(usize_into_u32(bytes.len()).map_err(|_| Status::OUT_OF_RANGE));
+        let n_handles = try!(usize_into_u32(handles.len()).map_err(|_| Status::OUT_OF_RANGE));
         unsafe {
             let status = sys::zx_channel_write(self.raw_handle(), opts, bytes.as_ptr(), n_bytes,
                 handles.as_ptr() as *const sys::zx_handle_t, n_handles);
-            into_result(status, || {
-                // Handles were successfully transferred, forget them on sender side
-                handles.set_len(0);
-            })
+            ok(status)?;
+            // Handles were successfully transferred, forget them on sender side
+            handles.set_len(0);
+            Ok(())
         }
     }
 
@@ -113,21 +117,21 @@ impl Channel {
     /// On failure returns the both the main and read status.
     ///
     /// [read]: struct.Channel.html#method.read
-    pub fn call(&self, options: u32, timeout: Time, bytes: &[u8], handles: &mut Vec<Handle>,
+    pub fn call(&self, timeout: Time, bytes: &[u8], handles: &mut Vec<Handle>,
         buf: &mut MessageBuf) -> Result<(), (Status, Status)>
     {
         let write_num_bytes = try!(usize_into_u32(bytes.len()).map_err(
-            |_| (Status::ErrOutOfRange, Status::NoError)));
+            |_| (Status::OUT_OF_RANGE, Status::OK)));
         let write_num_handles = try!(usize_into_u32(handles.len()).map_err(
-            |_| (Status::ErrOutOfRange, Status::NoError)));
-        buf.reset_handles();
+            |_| (Status::OUT_OF_RANGE, Status::OK)));
+        buf.clear();
         let read_num_bytes: u32 = size_to_u32_sat(buf.bytes.capacity());
         let read_num_handles: u32 = size_to_u32_sat(buf.handles.capacity());
         let args = sys::zx_channel_call_args_t {
             wr_bytes: bytes.as_ptr(),
             wr_handles: handles.as_ptr() as *const sys::zx_handle_t,
             rd_bytes: buf.bytes.as_mut_ptr(),
-            rd_handles: buf.handles.as_mut_ptr(),
+            rd_handles: buf.handles.as_mut_ptr() as *mut _,
             wr_num_bytes: write_num_bytes,
             wr_num_handles: write_num_handles,
             rd_num_bytes: read_num_bytes,
@@ -135,40 +139,64 @@ impl Channel {
         };
         let mut actual_read_bytes: u32 = 0;
         let mut actual_read_handles: u32 = 0;
-        let mut read_status = sys::ZX_OK;
+        let mut read_status = Status::OK.into_raw();
+        let options = 0;
         let status = unsafe {
-            sys::zx_channel_call(self.raw_handle(), options, timeout, &args, &mut actual_read_bytes,
-                &mut actual_read_handles, &mut read_status)
+            Status::from_raw(
+                sys::zx_channel_call(
+                    self.raw_handle(), options, timeout.nanos(), &args, &mut actual_read_bytes,
+                    &mut actual_read_handles, &mut read_status))
         };
-        if status == sys::ZX_OK || status == sys::ZX_ERR_TIMED_OUT || status == sys::ZX_ERR_CALL_FAILED
-        {
-            // Handles were successfully transferred, even if we didn't get a response, so forget
-            // them on the sender side.
-            unsafe { handles.set_len(0); }
+
+        match status {
+            Status::OK |
+            Status::TIMED_OUT |
+            Status::CALL_FAILED => {
+                // Handles were successfully transferred,
+                // even if we didn't get a response, so forget
+                // them on the sender side.
+                unsafe { handles.set_len(0); }
+            }
+            _ => {}
         }
+
         unsafe {
             buf.bytes.set_len(actual_read_bytes as usize);
             buf.handles.set_len(actual_read_handles as usize);
         }
-        if status == sys::ZX_OK {
+        if Status::OK == status {
             Ok(())
         } else {
-            Err((Status::from_raw(status), Status::from_raw(read_status)))
+            Err((status, Status::from_raw(read_status)))
         }
     }
 }
 
-/// Options for creating a channel.
-#[repr(u32)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum ChannelOpts {
-    /// A normal channel.
-    Normal = 0,
+#[test]
+pub fn test_handle_repr() {
+    assert_eq!(::std::mem::size_of::<sys::zx_handle_t>(), 4);
+    assert_eq!(::std::mem::size_of::<Handle>(), 4);
+    assert_eq!(::std::mem::align_of::<sys::zx_handle_t>(), ::std::mem::align_of::<Handle>());
+
+    // This test asserts that repr(transparent) still works for Handle -> zx_handle_t
+
+    let n: Vec<sys::zx_handle_t> = vec![0, 100, 2<<32-1];
+    let v: Vec<Handle> = n.iter().map(|h| unsafe { Handle::from_raw(*h) } ).collect();
+
+    for (handle, raw) in v.iter().zip(n.iter()) {
+        unsafe {
+            assert_eq!(*(handle as *const _ as *const [u8; 4]), *(raw as *const _ as *const [u8; 4]));
+        }
+    }
+
+    for h in v.into_iter() {
+        ::std::mem::forget(h);
+    }
 }
 
-impl Default for ChannelOpts {
-    fn default() -> Self {
-        ChannelOpts::Normal
+impl AsRef<Channel> for Channel {
+    fn as_ref(&self) -> &Self {
+        &self
     }
 }
 
@@ -183,13 +211,21 @@ impl Default for ChannelOpts {
 #[derive(Debug)]
 pub struct MessageBuf {
     bytes: Vec<u8>,
-    handles: Vec<sys::zx_handle_t>,
+    handles: Vec<Handle>,
 }
 
 impl MessageBuf {
     /// Create a new, empty, message buffer.
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Create a new non-empty message buffer.
+    pub fn new_with(v: Vec<u8>, h: Vec<Handle>) -> Self {
+        Self{
+            bytes: v,
+            handles: h,
+        }
     }
 
     /// Ensure that the buffer has the capacity to hold at least `n_bytes` bytes.
@@ -200,6 +236,14 @@ impl MessageBuf {
     /// Ensure that the buffer has the capacity to hold at least `n_handles` handles.
     pub fn ensure_capacity_handles(&mut self, n_handles: usize) {
         ensure_capacity(&mut self.handles, n_handles);
+    }
+
+    /// Ensure that at least n_bytes bytes are initialized (0 fill).
+    pub fn ensure_initialized_bytes(&mut self, n_bytes: usize) {
+        if n_bytes <= self.bytes.len() {
+            return;
+        }
+        self.bytes.resize(n_bytes, 0);
     }
 
     /// Get a reference to the bytes of the message buffer, as a `&[u8]` slice.
@@ -218,32 +262,20 @@ impl MessageBuf {
     /// method is called again with the same index, it will return `None`, as
     /// will happen if the index exceeds the number of handles available.
     pub fn take_handle(&mut self, index: usize) -> Option<Handle> {
-        self.handles.get_mut(index).and_then(|handleref|
-            if *handleref == INVALID_HANDLE {
+        self.handles.get_mut(index).and_then(|handle|
+            if handle.is_invalid() {
                 None
             } else {
-                Some(Handle(mem::replace(handleref, INVALID_HANDLE)))
+                Some(mem::replace(handle, Handle::invalid()))
             }
         )
     }
 
-    fn drop_handles(&mut self) {
-        for &handle in &self.handles {
-            if handle != 0 {
-                handle_drop(handle);
-            }
-        }
-    }
-
-    fn reset_handles(&mut self) {
-        self.drop_handles();
+    /// Clear the bytes and handles contained in the buf. This will drop any
+    /// contained handles, resulting in their resources being freed.
+    pub fn clear(&mut self) {
+        self.bytes.clear();
         self.handles.clear();
-    }
-}
-
-impl Drop for MessageBuf {
-    fn drop(&mut self) {
-        self.drop_handles();
     }
 }
 
@@ -257,31 +289,30 @@ fn ensure_capacity<T>(vec: &mut Vec<T>, size: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {Duration, ZX_CHANNEL_READABLE, ZX_CHANNEL_WRITABLE, ZX_RIGHT_SAME_RIGHTS, ZX_SIGNAL_LAST_HANDLE, Vmo, VmoOpts};
-    use deadline_after;
+    use {DurationNum, Rights, Signals, Vmo};
     use std::thread;
 
     #[test]
     fn channel_basic() {
-        let (p1, p2) = Channel::create(ChannelOpts::Normal).unwrap();
+        let (p1, p2) = Channel::create().unwrap();
 
         let mut empty = vec![];
-        assert!(p1.write(b"hello", &mut empty, 0).is_ok());
+        assert!(p1.write(b"hello", &mut empty).is_ok());
 
         let mut buf = MessageBuf::new();
-        assert!(p2.read(0, &mut buf).is_ok());
+        assert!(p2.read(&mut buf).is_ok());
         assert_eq!(buf.bytes(), b"hello");
     }
 
     #[test]
     fn channel_read_raw_too_small() {
-        let (p1, p2) = Channel::create(ChannelOpts::Normal).unwrap();
+        let (p1, p2) = Channel::create().unwrap();
 
         let mut empty = vec![];
-        assert!(p1.write(b"hello", &mut empty, 0).is_ok());
+        assert!(p1.write(b"hello", &mut empty).is_ok());
 
         let mut buf = MessageBuf::new();
-        let result = p2.read_raw(0, &mut buf);
+        let result = p2.read_raw(&mut buf);
         assert_eq!(result, Err((5, 0)));
         assert_eq!(buf.bytes(), b"");
     }
@@ -291,19 +322,19 @@ mod tests {
         let hello_length: usize = 5;
 
         // Create a pair of channels and a virtual memory object.
-        let (p1, p2) = Channel::create(ChannelOpts::Normal).unwrap();
-        let vmo = Vmo::create(hello_length as u64, VmoOpts::Default).unwrap();
+        let (p1, p2) = Channel::create().unwrap();
+        let vmo = Vmo::create(hello_length as u64).unwrap();
 
         // Duplicate VMO handle and send it down the channel.
-        let duplicate_vmo_handle = vmo.duplicate_handle(ZX_RIGHT_SAME_RIGHTS).unwrap().into();
+        let duplicate_vmo_handle = vmo.duplicate_handle(Rights::SAME_RIGHTS).unwrap().into();
         let mut handles_to_send: Vec<Handle> = vec![duplicate_vmo_handle];
-        assert!(p1.write(b"", &mut handles_to_send, 0).is_ok());
+        assert!(p1.write(b"", &mut handles_to_send).is_ok());
         // Handle should be removed from vector.
         assert!(handles_to_send.is_empty());
 
         // Read the handle from the receiving channel.
         let mut buf = MessageBuf::new();
-        assert!(p2.read(0, &mut buf).is_ok());
+        assert!(p2.read(&mut buf).is_ok());
         assert_eq!(buf.n_handles(), 1);
         // Take the handle from the buffer.
         let received_handle = buf.take_handle(0).unwrap();
@@ -324,57 +355,64 @@ mod tests {
 
     #[test]
     fn channel_call_timeout() {
-        let ten_ms: Duration = 10_000_000;
+        let ten_ms = 10.millis();
 
         // Create a pair of channels and a virtual memory object.
-        let (p1, p2) = Channel::create(ChannelOpts::Normal).unwrap();
-        let vmo = Vmo::create(0 as u64, VmoOpts::Default).unwrap();
+        let (p1, p2) = Channel::create().unwrap();
+        let vmo = Vmo::create(0 as u64).unwrap();
 
         // Duplicate VMO handle and send it along with the call.
-        let duplicate_vmo_handle = vmo.duplicate_handle(ZX_RIGHT_SAME_RIGHTS).unwrap().into();
+        let duplicate_vmo_handle = vmo.duplicate_handle(Rights::SAME_RIGHTS).unwrap().into();
         let mut handles_to_send: Vec<Handle> = vec![duplicate_vmo_handle];
         let mut buf = MessageBuf::new();
-        assert_eq!(p1.call(0, deadline_after(ten_ms), b"call", &mut handles_to_send, &mut buf),
-            Err((Status::ErrTimedOut, Status::NoError)));
+        assert_eq!(p1.call(ten_ms.after_now(), b"call", &mut handles_to_send, &mut buf),
+            Err((Status::TIMED_OUT, Status::OK)));
         // Handle should be removed from vector even though we didn't get a response, as it was
         // still sent over the channel.
         assert!(handles_to_send.is_empty());
 
         // Should be able to read call even though it timed out waiting for a response.
         let mut buf = MessageBuf::new();
-        assert!(p2.read(0, &mut buf).is_ok());
+        assert!(p2.read(&mut buf).is_ok());
         assert_eq!(buf.bytes(), b"call");
         assert_eq!(buf.n_handles(), 1);
     }
 
     #[test]
     fn channel_call() {
-        let hundred_ms: Duration = 100_000_000;
-
         // Create a pair of channels
-        let (p1, p2) = Channel::create(ChannelOpts::Normal).unwrap();
+        let (p1, p2) = Channel::create().unwrap();
+
+        // create an mpsc channel for communicating the call data for later assertion
+        let (tx, rx) = ::std::sync::mpsc::channel();
 
         // Start a new thread to respond to the call.
-        let server = thread::spawn(move || {
-            assert_eq!(p2.wait_handle(ZX_CHANNEL_READABLE, deadline_after(hundred_ms)),
-                Ok(ZX_CHANNEL_READABLE | ZX_CHANNEL_WRITABLE | ZX_SIGNAL_LAST_HANDLE));
+        thread::spawn(move || {
             let mut buf = MessageBuf::new();
-            assert_eq!(p2.read(0, &mut buf), Ok(()));
-            assert_eq!(buf.bytes(), b"txidcall");
-            assert_eq!(buf.n_handles(), 0);
-            let mut empty = vec![];
-            assert_eq!(p2.write(b"txidresponse", &mut empty, 0), Ok(()));
+            // if either the read or the write fail, this thread will panic,
+            // resulting in tx being dropped, which will be noticed by the rx.
+            p2.wait_handle(Signals::CHANNEL_READABLE, 1.seconds().after_now()).expect("callee wait error");
+            p2.read(&mut buf).expect("callee read error");
+            p2.write(b"txidresponse", &mut vec![]).expect("callee write error");
+            tx.send(buf).expect("callee mpsc send error");
         });
 
         // Make the call.
-        let mut empty = vec![];
         let mut buf = MessageBuf::new();
         buf.ensure_capacity_bytes(12);
-        assert_eq!(p1.call(0, deadline_after(hundred_ms), b"txidcall", &mut empty, &mut buf),
-            Ok(()));
+        // NOTE(raggi): CQ has been seeing some long stalls from channel call,
+        // and it's as yet unclear why. The timeout here has been made much
+        // larger in order to avoid that, as the issues are not issues with this
+        // crate's concerns. The timeout is here just to prevent the tests from
+        // stalling forever if a developer makes a mistake locally in this
+        // crate. Tests of Zircon behavior or virtualization behavior should be
+        // covered elsewhere. See ZX-1324.
+        p1.call(30.seconds().after_now(), b"txidcall", &mut vec![], &mut buf).expect("channel call error");
         assert_eq!(buf.bytes(), b"txidresponse");
         assert_eq!(buf.n_handles(), 0);
 
-        assert!(server.join().is_ok());
+        let sbuf = rx.recv().expect("mpsc channel recv error");
+        assert_eq!(sbuf.bytes(), b"txidcall");
+        assert_eq!(sbuf.n_handles(), 0);
     }
 }

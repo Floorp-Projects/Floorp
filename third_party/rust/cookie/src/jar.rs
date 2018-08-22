@@ -121,10 +121,13 @@ impl CookieJar {
             .and_then(|c| if !c.removed { Some(&c.cookie) } else { None })
     }
 
-    /// Adds an "original" `cookie` to this jar. Adding an original cookie does
-    /// not affect the [delta](#method.delta) computation. This method is
-    /// intended to be used to seed the cookie jar with cookies received from a
-    /// client's HTTP message.
+    /// Adds an "original" `cookie` to this jar. If an original cookie with the
+    /// same name already exists, it is replaced with `cookie`. Cookies added
+    /// with `add` take precedence and are not replaced by this method.
+    ///
+    /// Adding an original cookie does not affect the [delta](#method.delta)
+    /// computation. This method is intended to be used to seed the cookie jar
+    /// with cookies received from a client's HTTP message.
     ///
     /// For accurate `delta` computations, this method should not be called
     /// after calling `remove`.
@@ -147,7 +150,8 @@ impl CookieJar {
         self.original_cookies.replace(DeltaCookie::added(cookie));
     }
 
-    /// Adds `cookie` to this jar.
+    /// Adds `cookie` to this jar. If a cookie with the same name already
+    /// exists, it is replaced with `cookie`.
     ///
     /// # Example
     ///
@@ -226,6 +230,47 @@ impl CookieJar {
         } else {
             self.delta_cookies.remove(cookie.name());
         }
+    }
+
+    /// Removes `cookie` from this jar completely. This method differs from
+    /// `remove` in that no delta cookie is created under any condition. Neither
+    /// the `delta` nor `iter` methods will return a cookie that is removed
+    /// using this method.
+    ///
+    /// # Example
+    ///
+    /// Removing an _original_ cookie; no _removal_ cookie is generated:
+    ///
+    /// ```rust
+    /// # extern crate cookie;
+    /// extern crate time;
+    ///
+    /// use cookie::{CookieJar, Cookie};
+    /// use time::Duration;
+    ///
+    /// # fn main() {
+    /// let mut jar = CookieJar::new();
+    ///
+    /// // Add an original cookie and a new cookie.
+    /// jar.add_original(Cookie::new("name", "value"));
+    /// jar.add(Cookie::new("key", "value"));
+    /// assert_eq!(jar.delta().count(), 1);
+    /// assert_eq!(jar.iter().count(), 2);
+    ///
+    /// // Now force remove the original cookie.
+    /// jar.force_remove(Cookie::new("name", "value"));
+    /// assert_eq!(jar.delta().count(), 1);
+    /// assert_eq!(jar.iter().count(), 1);
+    ///
+    /// // Now force remove the new cookie.
+    /// jar.force_remove(Cookie::new("key", "value"));
+    /// assert_eq!(jar.delta().count(), 0);
+    /// assert_eq!(jar.iter().count(), 0);
+    /// # }
+    /// ```
+    pub fn force_remove<'a>(&mut self, cookie: Cookie<'a>) {
+        self.original_cookies.remove(cookie.name());
+        self.delta_cookies.remove(cookie.name());
     }
 
     /// Removes all cookies from this cookie jar.

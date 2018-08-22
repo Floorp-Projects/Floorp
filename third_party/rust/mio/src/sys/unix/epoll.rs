@@ -5,19 +5,9 @@ use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 use std::time::Duration;
 use std::{cmp, i32};
 
-use libc::c_int;
-use libc;
-use libc::{EPOLLERR, EPOLLHUP};
+use libc::{self, c_int};
+use libc::{EPOLLERR, EPOLLHUP, EPOLLRDHUP, EPOLLONESHOT};
 use libc::{EPOLLET, EPOLLOUT, EPOLLIN, EPOLLPRI};
-
-#[cfg(not(target_os = "android"))]
-use libc::{EPOLLRDHUP, EPOLLONESHOT};
-
-// libc doesn't define these constants on android, but they are supported.
-#[cfg(target_os = "android")]
-const EPOLLRDHUP: libc::c_int = 0x00002000;
-#[cfg(target_os = "android")]
-const EPOLLONESHOT: libc::c_int = 0x40000000;
 
 use {io, Ready, PollOpt, Token};
 use event_imp::Event;
@@ -47,10 +37,10 @@ impl Selector {
 
             match epoll_create1.get() {
                 Some(epoll_create1_fn) => {
-                    try!(cvt(epoll_create1_fn(libc::EPOLL_CLOEXEC)))
+                    cvt(epoll_create1_fn(libc::EPOLL_CLOEXEC))?
                 }
                 None => {
-                    let fd = try!(cvt(libc::epoll_create(1024)));
+                    let fd = cvt(libc::epoll_create(1024))?;
                     drop(set_cloexec(fd));
                     fd
                 }
@@ -77,12 +67,12 @@ impl Selector {
             .unwrap_or(-1);
 
         // Wait for epoll events for at most timeout_ms milliseconds
+        evts.clear();
         unsafe {
-            evts.events.set_len(0);
-            let cnt = try!(cvt(libc::epoll_wait(self.epfd,
-                                                evts.events.as_mut_ptr(),
-                                                evts.events.capacity() as i32,
-                                                timeout_ms)));
+            let cnt = cvt(libc::epoll_wait(self.epfd,
+                                           evts.events.as_mut_ptr(),
+                                           evts.events.capacity() as i32,
+                                           timeout_ms))?;
             let cnt = cnt as usize;
             evts.events.set_len(cnt);
 
@@ -105,7 +95,7 @@ impl Selector {
         };
 
         unsafe {
-            try!(cvt(libc::epoll_ctl(self.epfd, libc::EPOLL_CTL_ADD, fd, &mut info)));
+            cvt(libc::epoll_ctl(self.epfd, libc::EPOLL_CTL_ADD, fd, &mut info))?;
             Ok(())
         }
     }
@@ -118,7 +108,7 @@ impl Selector {
         };
 
         unsafe {
-            try!(cvt(libc::epoll_ctl(self.epfd, libc::EPOLL_CTL_MOD, fd, &mut info)));
+            cvt(libc::epoll_ctl(self.epfd, libc::EPOLL_CTL_MOD, fd, &mut info))?;
             Ok(())
         }
     }
@@ -134,32 +124,17 @@ impl Selector {
         };
 
         unsafe {
-            try!(cvt(libc::epoll_ctl(self.epfd, libc::EPOLL_CTL_DEL, fd, &mut info)));
+            cvt(libc::epoll_ctl(self.epfd, libc::EPOLL_CTL_DEL, fd, &mut info))?;
             Ok(())
         }
     }
-}
-
-#[cfg(feature = "with-deprecated")]
-#[allow(deprecated)]
-fn is_urgent(opts: PollOpt) -> bool {
-    opts.is_urgent()
-}
-
-#[cfg(not(feature = "with-deprecated"))]
-fn is_urgent(_: PollOpt) -> bool {
-    false
 }
 
 fn ioevent_to_epoll(interest: Ready, opts: PollOpt) -> u32 {
     let mut kind = 0;
 
     if interest.is_readable() {
-        if is_urgent(opts) {
-            kind |= EPOLLPRI;
-        } else {
-            kind |= EPOLLIN;
-        }
+        kind |= EPOLLIN;
     }
 
     if interest.is_writable() {
@@ -259,6 +234,10 @@ impl Events {
             events: ioevent_to_epoll(event.readiness(), PollOpt::empty()),
             u64: usize::from(event.token()) as u64
         });
+    }
+
+    pub fn clear(&mut self) {
+        unsafe { self.events.set_len(0); }
     }
 }
 

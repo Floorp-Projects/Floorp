@@ -2,18 +2,19 @@
 language: rust
 sudo: false
 
-rust:
-  - stable
-
-os:
-  - linux
-  - osx
-
 matrix:
   include:
-    - os: linux
-      # Oldest supported Rust (this should track Mio)
-      rust: 1.9.0
+    # Oldest supported Rust (this should track Mio)
+    - rust: 1.9.0
+    - rust: stable
+    # OS X support
+    - rust: stable
+      os: osx
+    # WebAssembly support.
+    - rust: beta
+      script:
+        - rustup target add wasm32-unknown-unknown
+        - cargo build --target=wasm32-unknown-unknown
 
 script:
   - cargo build

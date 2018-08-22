@@ -5,7 +5,7 @@
 //! Type-safe bindings for Zircon fifo objects.
 
 use {AsHandleRef, HandleBased, Handle, HandleRef, Status};
-use {sys, into_result};
+use {sys, ok};
 
 /// An object representing a Zircon fifo.
 ///
@@ -19,15 +19,20 @@ impl Fifo {
     /// element into the fifo from which the opposing endpoint reads. Wraps the
     /// [zx_fifo_create](https://fuchsia.googlesource.com/zircon/+/master/docs/syscalls/fifo_create.md)
     /// syscall.
-    pub fn create(elem_count: u32, elem_size: u32, options: FifoOpts)
+    pub fn create(elem_count: u32, elem_size: u32)
         -> Result<(Fifo, Fifo), Status>
     {
         let mut out0 = 0;
         let mut out1 = 0;
+        let options = 0;
         let status = unsafe {
-            sys::zx_fifo_create(elem_count, elem_size, options as u32, &mut out0, &mut out1)
+            sys::zx_fifo_create(elem_count, elem_size, options, &mut out0, &mut out1)
         };
-        into_result(status, || (Self::from(Handle(out0)), Self::from(Handle(out1))))
+        ok(status)?;
+        unsafe { Ok((
+            Self::from(Handle::from_raw(out0)),
+            Self::from(Handle::from_raw(out1))
+        ))}
     }
 
     /// Attempts to write some number of elements into the fifo. The number of bytes written will be
@@ -42,7 +47,7 @@ impl Fifo {
             sys::zx_fifo_write(self.raw_handle(), bytes.as_ptr(), bytes.len(),
                 &mut num_entries_written)
         };
-        into_result(status, || num_entries_written)
+        ok(status).map(|()| num_entries_written)
     }
 
     /// Attempts to read some number of elements out of the fifo. The number of bytes read will
@@ -57,21 +62,7 @@ impl Fifo {
             sys::zx_fifo_read(self.raw_handle(), bytes.as_mut_ptr(), bytes.len(),
                 &mut num_entries_read)
         };
-        into_result(status, || num_entries_read)
-    }
-}
-
-/// Options for creating a fifo pair.
-#[repr(u32)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum FifoOpts {
-    /// Default options.
-    Default = 0,
-}
-
-impl Default for FifoOpts {
-    fn default() -> Self {
-        FifoOpts::Default
+        ok(status).map(|()| num_entries_read)
     }
 }
 
@@ -81,11 +72,11 @@ mod tests {
 
     #[test]
     fn fifo_basic() {
-        let (fifo1, fifo2) = Fifo::create(4, 2, FifoOpts::Default).unwrap();
+        let (fifo1, fifo2) = Fifo::create(4, 2).unwrap();
 
         // Trying to write less than one element should fail.
-        assert_eq!(fifo1.write(b""), Err(Status::ErrOutOfRange));
-        assert_eq!(fifo1.write(b"h"), Err(Status::ErrOutOfRange));
+        assert_eq!(fifo1.write(b""), Err(Status::OUT_OF_RANGE));
+        assert_eq!(fifo1.write(b"h"), Err(Status::OUT_OF_RANGE));
 
         // Should write one element "he" and ignore the last half-element as it rounds down.
         assert_eq!(fifo1.write(b"hex").unwrap(), 1);
@@ -94,7 +85,7 @@ mod tests {
         assert_eq!(fifo1.write(b"llo worlds").unwrap(), 3);
 
         // Now that the fifo is full any further attempts to write should fail.
-        assert_eq!(fifo1.write(b"blah blah"), Err(Status::ErrShouldWait));
+        assert_eq!(fifo1.write(b"blah blah"), Err(Status::SHOULD_WAIT));
 
         // Read all 4 entries from the other end.
         let mut read_vec = vec![0; 8];
@@ -102,6 +93,6 @@ mod tests {
         assert_eq!(read_vec, b"hello wo");
 
         // Reading again should fail as the fifo is empty.
-        assert_eq!(fifo2.read(&mut read_vec), Err(Status::ErrShouldWait));
+        assert_eq!(fifo2.read(&mut read_vec), Err(Status::SHOULD_WAIT));
     }
 }

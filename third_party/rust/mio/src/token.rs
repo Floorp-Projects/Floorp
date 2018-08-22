@@ -11,8 +11,10 @@
 /// example, `HashMap` is used, but usually something like [`slab`] is better.
 ///
 /// ```
+/// # use std::error::Error;
+/// # fn try_main() -> Result<(), Box<Error>> {
 /// use mio::{Events, Ready, Poll, PollOpt, Token};
-/// use mio::tcp::TcpListener;
+/// use mio::net::TcpListener;
 ///
 /// use std::thread;
 /// use std::io::{self, Read};
@@ -32,19 +34,19 @@
 /// let mut next_socket_index = 0;
 ///
 /// // The `Poll` instance
-/// let poll = Poll::new().unwrap();
+/// let poll = Poll::new()?;
 ///
 /// // Tcp listener
-/// let listener = TcpListener::bind(&"127.0.0.1:0".parse().unwrap()).unwrap();
+/// let listener = TcpListener::bind(&"127.0.0.1:0".parse()?)?;
 ///
 /// // Register the listener
 /// poll.register(&listener,
 ///               LISTENER,
 ///               Ready::readable(),
-///               PollOpt::edge()).unwrap();
+///               PollOpt::edge())?;
 ///
 /// // Spawn a thread that will connect a bunch of sockets then close them
-/// let addr = listener.local_addr().unwrap();
+/// let addr = listener.local_addr()?;
 /// thread::spawn(move || {
 ///     use std::net::TcpStream;
 ///
@@ -64,7 +66,7 @@
 /// // The main event loop
 /// loop {
 ///     // Wait for events
-///     poll.poll(&mut events, None).unwrap();
+///     poll.poll(&mut events, None)?;
 ///
 ///     for event in &events {
 ///         match event.token() {
@@ -76,7 +78,7 @@
 ///                         Ok((socket, _)) => {
 ///                             // Shutdown the server
 ///                             if next_socket_index == MAX_SOCKETS {
-///                                 return;
+///                                 return Ok(());
 ///                             }
 ///
 ///                             // Get the token for the socket
@@ -87,7 +89,7 @@
 ///                             poll.register(&socket,
 ///                                          token,
 ///                                          Ready::readable(),
-///                                          PollOpt::edge()).unwrap();
+///                                          PollOpt::edge())?;
 ///
 ///                             // Store the socket
 ///                             sockets.insert(token, socket);
@@ -113,7 +115,7 @@
 ///                         Ok(_) => unreachable!(),
 ///                         Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
 ///                             // Socket is not ready anymore, stop reading
-///                             continue;
+///                             break;
 ///                         }
 ///                         e => panic!("err={:?}", e), // Unexpected error
 ///                     }
@@ -122,6 +124,12 @@
 ///         }
 ///     }
 /// }
+/// #     Ok(())
+/// # }
+/// #
+/// # fn main() {
+/// #     try_main().unwrap();
+/// # }
 /// ```
 ///
 /// [`Evented`]: event/trait.Evented.html

@@ -25,6 +25,10 @@ pub mod c {
     pub fn sockaddr_in_u32(sa: &sockaddr_in) -> u32 {
         ::ntoh((*sa).sin_addr.s_addr)
     }
+
+    pub fn in_addr_to_u32(addr: &in_addr) -> u32 {
+        ::ntoh(addr.s_addr)
+    }
 }
 
 pub struct Socket {

@@ -11,7 +11,6 @@ pub type id_t = ::c_uint;
 pub type useconds_t = u32;
 pub type dev_t = u64;
 pub type socklen_t = u32;
-pub type pthread_t = ::c_ulong;
 pub type mode_t = u32;
 pub type ino64_t = u64;
 pub type off64_t = i64;
@@ -225,34 +224,80 @@ s! {
         pub ifa_data: *mut ::c_void
     }
 
+    #[cfg_attr(all(feature = "align",
+                   target_pointer_width = "32",
+                   any(target_arch = "mips",
+                       target_arch = "arm",
+                       target_arch = "powerpc")),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   any(target_pointer_width = "64",
+                       not(any(target_arch = "mips",
+                               target_arch = "arm",
+                               target_arch = "powerpc")))),
+               repr(align(8)))]
     pub struct pthread_mutex_t {
-        #[cfg(any(target_arch = "mips", target_arch = "arm",
-                  target_arch = "powerpc"))]
+        #[cfg(all(not(feature = "align"),
+                  any(target_arch = "mips",
+                      target_arch = "arm",
+                      target_arch = "powerpc")))]
         __align: [::c_long; 0],
-        #[cfg(not(any(target_arch = "mips", target_arch = "arm",
+        #[cfg(not(any(feature = "align",
+                      target_arch = "mips",
+                      target_arch = "arm",
                       target_arch = "powerpc")))]
         __align: [::c_longlong; 0],
         size: [u8; __SIZEOF_PTHREAD_MUTEX_T],
     }
 
+    #[cfg_attr(all(feature = "align",
+                   target_pointer_width = "32",
+                   any(target_arch = "mips",
+                       target_arch = "arm",
+                       target_arch = "powerpc")),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   any(target_pointer_width = "64",
+                       not(any(target_arch = "mips",
+                               target_arch = "arm",
+                               target_arch = "powerpc")))),
+               repr(align(8)))]
     pub struct pthread_rwlock_t {
-        #[cfg(any(target_arch = "mips", target_arch = "arm",
-                  target_arch = "powerpc"))]
+        #[cfg(all(not(feature = "align"),
+                  any(target_arch = "mips",
+                      target_arch = "arm",
+                      target_arch = "powerpc")))]
         __align: [::c_long; 0],
-        #[cfg(not(any(target_arch = "mips", target_arch = "arm",
+        #[cfg(not(any(feature = "align",
+                      target_arch = "mips",
+                      target_arch = "arm",
                       target_arch = "powerpc")))]
         __align: [::c_longlong; 0],
         size: [u8; __SIZEOF_PTHREAD_RWLOCK_T],
     }
 
+    #[cfg_attr(all(feature = "align",
+                   any(target_pointer_width = "32",
+                       target_arch = "x86_64", target_arch = "powerpc64",
+                       target_arch = "mips64", target_arch = "s390x",
+                       target_arch = "sparc64")),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   not(any(target_pointer_width = "32",
+                           target_arch = "x86_64", target_arch = "powerpc64",
+                           target_arch = "mips64", target_arch = "s390x",
+                           target_arch = "sparc64"))),
+               repr(align(8)))]
     pub struct pthread_mutexattr_t {
-        #[cfg(any(target_arch = "x86_64", target_arch = "powerpc64",
-                  target_arch = "mips64", target_arch = "s390x",
-                  target_arch = "sparc64"))]
-        __align: [::c_int; 0],
-        #[cfg(not(any(target_arch = "x86_64", target_arch = "powerpc64",
+        #[cfg(all(not(feature = "align"),
+                  any(target_arch = "x86_64", target_arch = "powerpc64",
                       target_arch = "mips64", target_arch = "s390x",
                       target_arch = "sparc64")))]
+        __align: [::c_int; 0],
+        #[cfg(all(not(feature = "align"),
+                  not(any(target_arch = "x86_64", target_arch = "powerpc64",
+                          target_arch = "mips64", target_arch = "s390x",
+                          target_arch = "sparc64"))))]
         __align: [::c_long; 0],
         size: [u8; __SIZEOF_PTHREAD_MUTEXATTR_T],
     }
@@ -262,12 +307,16 @@ s! {
         __pshared: ::c_int,
     }
 
+    #[cfg_attr(feature = "align", repr(align(8)))]
     pub struct pthread_cond_t {
+        #[cfg(not(feature = "align"))]
         __align: [::c_longlong; 0],
         size: [u8; __SIZEOF_PTHREAD_COND_T],
     }
 
+    #[cfg_attr(feature = "align", repr(align(4)))]
     pub struct pthread_condattr_t {
+        #[cfg(not(feature = "align"))]
         __align: [::c_int; 0],
         size: [u8; __SIZEOF_PTHREAD_CONDATTR_T],
     }
@@ -1117,18 +1166,17 @@ pub const RTLD_NOW: ::c_int = 0x2;
 
 pub const TCP_MD5SIG: ::c_int = 14;
 
-pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
-    __align: [],
-    size: [0; __SIZEOF_PTHREAD_MUTEX_T],
-};
-pub const PTHREAD_COND_INITIALIZER: pthread_cond_t = pthread_cond_t {
-    __align: [],
-    size: [0; __SIZEOF_PTHREAD_COND_T],
-};
-pub const PTHREAD_RWLOCK_INITIALIZER: pthread_rwlock_t = pthread_rwlock_t {
-    __align: [],
-    size: [0; __SIZEOF_PTHREAD_RWLOCK_T],
-};
+align_const! {
+    pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
+        size: [0; __SIZEOF_PTHREAD_MUTEX_T],
+    };
+    pub const PTHREAD_COND_INITIALIZER: pthread_cond_t = pthread_cond_t {
+        size: [0; __SIZEOF_PTHREAD_COND_T],
+    };
+    pub const PTHREAD_RWLOCK_INITIALIZER: pthread_rwlock_t = pthread_rwlock_t {
+        size: [0; __SIZEOF_PTHREAD_RWLOCK_T],
+    };
+}
 pub const PTHREAD_MUTEX_NORMAL: ::c_int = 0;
 pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 1;
 pub const PTHREAD_MUTEX_ERRORCHECK: ::c_int = 2;
@@ -1328,6 +1376,9 @@ pub const PR_GET_TID_ADDRESS: ::c_int = 40;
 
 pub const PR_SET_THP_DISABLE: ::c_int = 41;
 pub const PR_GET_THP_DISABLE: ::c_int = 42;
+
+pub const GRND_NONBLOCK: ::c_uint = 0x0001;
+pub const GRND_RANDOM: ::c_uint = 0x0002;
 
 pub const ABDAY_1: ::nl_item = 0x300;
 pub const ABDAY_2: ::nl_item = 0x301;
@@ -1610,8 +1661,6 @@ extern {
     pub fn truncate64(path: *const c_char, length: off64_t) -> ::c_int;
     pub fn eventfd(init: ::c_uint, flags: ::c_int) -> ::c_int;
 
-    pub fn fdopendir(fd: ::c_int) -> *mut ::DIR;
-
     pub fn mknodat(dirfd: ::c_int, pathname: *const ::c_char,
                    mode: ::mode_t, dev: dev_t) -> ::c_int;
     pub fn ppoll(fds: *mut ::pollfd,
@@ -1635,6 +1684,8 @@ extern {
     pub fn unshare(flags: ::c_int) -> ::c_int;
     pub fn sem_timedwait(sem: *mut sem_t,
                          abstime: *const ::timespec) -> ::c_int;
+    pub fn sem_getvalue(sem: *mut sem_t,
+                        sval: *mut ::c_int) -> ::c_int;
     pub fn accept4(fd: ::c_int, addr: *mut ::sockaddr, len: *mut ::socklen_t,
                    flg: ::c_int) -> ::c_int;
     pub fn pthread_mutex_timedlock(lock: *mut pthread_mutex_t,

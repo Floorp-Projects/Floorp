@@ -10,8 +10,7 @@
 
 //! The implementations of `Rand` for the built-in types.
 
-use std::char;
-use std::mem;
+use core::{char, mem};
 
 use {Rand,Rng};
 

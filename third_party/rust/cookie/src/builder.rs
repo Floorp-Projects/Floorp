@@ -154,7 +154,7 @@ impl CookieBuilder {
     ///     .secure(true)
     ///     .finish();
     ///
-    /// assert_eq!(c.secure(), true);
+    /// assert_eq!(c.secure(), Some(true));
     /// ```
     #[inline]
     pub fn secure(mut self, value: bool) -> CookieBuilder {
@@ -173,7 +173,7 @@ impl CookieBuilder {
     ///     .http_only(true)
     ///     .finish();
     ///
-    /// assert_eq!(c.http_only(), true);
+    /// assert_eq!(c.http_only(), Some(true));
     /// ```
     #[inline]
     pub fn http_only(mut self, value: bool) -> CookieBuilder {

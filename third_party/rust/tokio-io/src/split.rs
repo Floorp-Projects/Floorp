@@ -2,6 +2,7 @@ use std::io::{self, Read, Write};
 
 use futures::{Async, Poll};
 use futures::sync::BiLock;
+use bytes::{Buf, BufMut};
 
 use {AsyncRead, AsyncWrite};
 
@@ -36,6 +37,12 @@ impl<T: AsyncRead> Read for ReadHalf<T> {
 }
 
 impl<T: AsyncRead> AsyncRead for ReadHalf<T> {
+    fn read_buf<B: BufMut>(&mut self, buf: &mut B) -> Poll<usize, io::Error> {
+        match self.handle.poll_lock() {
+            Async::Ready(mut l) => l.read_buf(buf),
+            Async::NotReady => Err(would_block()),
+        }
+    }
 }
 
 impl<T: AsyncWrite> Write for WriteHalf<T> {
@@ -58,6 +65,15 @@ impl<T: AsyncWrite> AsyncWrite for WriteHalf<T> {
     fn shutdown(&mut self) -> Poll<(), io::Error> {
         match self.handle.poll_lock() {
             Async::Ready(mut l) => l.shutdown(),
+            Async::NotReady => Err(would_block()),
+        }
+    }
+
+    fn write_buf<B: Buf>(&mut self, buf: &mut B) -> Poll<usize, io::Error>
+        where Self: Sized,
+    {
+        match self.handle.poll_lock() {
+            Async::Ready(mut l) => l.write_buf(buf),
             Async::NotReady => Err(would_block()),
         }
     }

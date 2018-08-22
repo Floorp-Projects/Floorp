@@ -24,13 +24,15 @@ pub const MAX_LENGTH: usize = sys::MAX_LENGTH;
 
 /// A specialized byte slice type for performing vectored I/O operations.
 ///
-/// On all systems, the types needed to peform vectored I/O systems have the
-/// same size as Rust's [slice]. However, the layout is not necessarily the
+/// On all systems, the types needed to perform vectored I/O systems have the
+/// same size as Rust's [`slice`]. However, the layout is not necessarily the
 /// same. `IoVec` provides a portable compatibility layer.
 ///
-/// The `IoVec` behaves like like a Rust [slice], providing the same functions.
+/// The `IoVec` behaves like a Rust [`slice`], providing the same functions.
 /// It also provides conversion functions to and from the OS specific vectored
 /// types.
+///
+/// [`slice`]: https://doc.rust-lang.org/std/primitive.slice.html
 ///
 /// # Examples
 ///
@@ -47,8 +49,8 @@ pub const MAX_LENGTH: usize = sys::MAX_LENGTH;
 ///
 /// # Panics
 ///
-/// Attempting to convert a slice longer than [`MAX_LENGTH`] to an `IoVec` will
-/// result in a panic.
+/// Attempting to convert a zero-length slice or a slice longer than
+/// [`MAX_LENGTH`] to an `IoVec` will result in a panic.
 ///
 /// [`MAX_LENGTH`]: constant.MAX_LENGTH.html
 pub struct IoVec {
@@ -56,6 +58,26 @@ pub struct IoVec {
 }
 
 impl IoVec {
+    pub fn from_bytes(slice: &[u8]) -> Option<&IoVec> {
+        if slice.len() == 0 {
+            return None
+        }
+        unsafe {
+            let iovec: &sys::IoVec = slice.into();
+            Some(mem::transmute(iovec))
+        }
+    }
+
+    pub fn from_bytes_mut(slice: &mut [u8]) -> Option<&mut IoVec> {
+        if slice.len() == 0 {
+            return None
+        }
+        unsafe {
+            let iovec: &mut sys::IoVec = slice.into();
+            Some(mem::transmute(iovec))
+        }
+    }
+
     #[deprecated(since = "0.1.0", note = "deref instead")]
     #[doc(hidden)]
     pub fn as_bytes(&self) -> &[u8] {
@@ -83,35 +105,43 @@ impl ops::DerefMut for IoVec {
     }
 }
 
+#[doc(hidden)]
 impl<'a> From<&'a [u8]> for &'a IoVec {
     fn from(bytes: &'a [u8]) -> &'a IoVec {
-        unsafe {
-            let iovec: &sys::IoVec = bytes.into();
-            mem::transmute(iovec)
-        }
+        IoVec::from_bytes(bytes)
+            .expect("this crate accidentally accepted 0-sized slices \
+                     originally but this was since discovered as a soundness \
+                     hole, it's recommended to use the `from_bytes` \
+                     function instead")
     }
 }
 
+#[doc(hidden)]
 impl<'a> From<&'a mut [u8]> for &'a mut IoVec {
     fn from(bytes: &'a mut [u8]) -> &'a mut IoVec {
-        unsafe {
-            let iovec: &mut sys::IoVec = bytes.into();
-            mem::transmute(iovec)
-        }
+        IoVec::from_bytes_mut(bytes)
+            .expect("this crate accidentally accepted 0-sized slices \
+                     originally but this was since discovered as a soundness \
+                     hole, it's recommended to use the `from_bytes_mut` \
+                     function instead")
     }
 }
 
+#[doc(hidden)]
 impl<'a> Default for &'a IoVec {
     fn default() -> Self {
-        let b: &[u8] = Default::default();
-        b.into()
+        panic!("this implementation was accidentally provided but is \
+                unfortunately unsound, it's recommended to stop using \
+                `IoVec::default` or construct a vector with a nonzero length");
     }
 }
 
+#[doc(hidden)]
 impl<'a> Default for &'a mut IoVec {
     fn default() -> Self {
-        let b: &mut [u8] = Default::default();
-        b.into()
+        panic!("this implementation was accidentally provided but is \
+                unfortunately unsound, it's recommended to stop using \
+                `IoVec::default` or construct a vector with a nonzero length");
     }
 }
 
