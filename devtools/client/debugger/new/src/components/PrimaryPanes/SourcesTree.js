@@ -247,17 +247,14 @@ var _initialiseProps = function () {
 
   this.getPath = item => {
     const path = `${item.path}/${item.name}`;
+    const source = this.getSource(item);
 
-    if ((0, _sourcesTree.isDirectory)(item)) {
+    if (!source || (0, _sourcesTree.isDirectory)(item)) {
       return path;
     }
 
-    const source = this.getSource(item);
-    const blackBoxedPart = source && source.isBlackBoxed ? ":blackboxed" : ""; // Original and generated sources can point to the same path
-    // therefore necessary to distinguish as path is used as keys.
-
-    const generatedPart = source && source.sourceMapURL ? ":generated" : "";
-    return `${path}${blackBoxedPart}${generatedPart}`;
+    const blackBoxedPart = source.isBlackBoxed ? ":blackboxed" : "";
+    return `${path}/${source.id}/${blackBoxedPart}`;
   };
 
   this.onExpand = (item, expandedState) => {
