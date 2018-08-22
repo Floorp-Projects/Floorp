@@ -696,17 +696,6 @@ static_assert(ArrayLength(nsCSSProps::kFlexBasisKTable) ==
 
 // keyword tables for SVG properties
 
-const KTableEntry nsCSSProps::kClipPathGeometryBoxKTable[] = {
-  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
-  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
-  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
-  { eCSSKeyword_margin_box, StyleGeometryBox::MarginBox },
-  { eCSSKeyword_fill_box, StyleGeometryBox::FillBox },
-  { eCSSKeyword_stroke_box, StyleGeometryBox::StrokeBox },
-  { eCSSKeyword_view_box, StyleGeometryBox::ViewBox },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kShapeRadiusKTable[] = {
   { eCSSKeyword_closest_side, StyleShapeRadius::ClosestSide },
   { eCSSKeyword_farthest_side, StyleShapeRadius::FarthestSide },
@@ -724,14 +713,6 @@ const KTableEntry nsCSSProps::kFilterFunctionKTable[] = {
   { eCSSKeyword_sepia, NS_STYLE_FILTER_SEPIA },
   { eCSSKeyword_hue_rotate, NS_STYLE_FILTER_HUE_ROTATE },
   { eCSSKeyword_drop_shadow, NS_STYLE_FILTER_DROP_SHADOW },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kShapeOutsideShapeBoxKTable[] = {
-  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
-  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
-  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
-  { eCSSKeyword_margin_box, StyleGeometryBox::MarginBox },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

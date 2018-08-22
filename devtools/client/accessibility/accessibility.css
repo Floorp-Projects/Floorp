@@ -12,6 +12,17 @@
   --accessibility-horizontal-padding: 5px;
   --accessibility-arrow-horizontal-padding: 4px;
   --accessibility-tree-row-height: 21px;
+  --accessibility-unfocused-tree-focused-node-background: var(--grey-20);
+  --accessibility-tree-focused-node-twisty-brightness: brightness(20%);
+  --accessibility-link-color: var(--blue-60);
+  --accessibility-link-color-active: var(--blue-70);
+}
+
+:root.theme-dark {
+  --accessibility-unfocused-tree-focused-node-background: var(--grey-70);
+  --accessibility-tree-focused-node-twisty-brightness: unset;
+  --accessibility-link-color: var(--theme-highlight-blue);
+  --accessibility-link-color-active: var(--blue-40);
 }
 
 /* General */
@@ -85,6 +96,41 @@ body {
   -moz-outline-radius: 2px;
 }
 
+.devtools-toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.devtools-toolbar .help {
+  cursor: pointer;
+  width: 18px;
+  margin-inline-start: auto;
+  margin-inline-end: 3px;
+  background: transparent;
+}
+
+.devtools-toolbar .help .btn-content {
+  display: block;
+  padding: 0;
+  background-color: var(--theme-body-color);
+  width: 16px;
+  height: 16px;
+  mask: url("chrome://devtools/skin/images/help.svg") no-repeat;
+}
+
+.devtools-toolbar .help:focus {
+  outline: 2px solid var(--accessibility-toolbar-focus);
+  box-shadow: 0 0 0 3px var(--accessibility-toolbar-focus-alpha30);
+  border-radius: 2px;
+  outline-offset: -1px;
+  -moz-outline-radius: 2px;
+}
+
+.devtools-toolbar .help:focus > .btn-content {
+  outline: none;
+  box-shadow: none;
+}
+
 /* Description */
 .description {
   color: var(--theme-toolbar-color);
@@ -95,10 +141,18 @@ body {
   width: 50vw;
 }
 
+/* To ensure that the message does not look squished in vertical mode, increase its width
+   when the toolbox is narrow */
+@media (max-width: 700px) {
+  .description {
+    width: 80vw;
+  }
+}
+
 .description .general {
   display: flex;
   align-items: center;
-  margin-bottom: 1.7em;
+  margin-bottom: 1em;
 }
 
 .description img {
@@ -113,6 +167,26 @@ body {
   display: flex;
   align-items: center;
   margin: auto;
+}
+
+.description .link {
+  color: var(--accessibility-link-color);
+  cursor: pointer;
+  outline: 0;
+}
+
+.description .link:hover:not(:focus) {
+  text-decoration: underline;
+}
+
+.description .link:focus:not(:active) {
+  box-shadow: 0 0 0 2px var(--accessibility-toolbar-focus), 0 0 0 4px var(--accessibility-toolbar-focus-alpha30);
+  border-radius: 2px;
+}
+
+.description .link:active {
+  color: var(--accessibility-link-color-active);
+  text-decoration: underline;
 }
 
 /* TreeView Customization */
@@ -155,9 +229,21 @@ body {
   border: 0;
 }
 
-.treeTable:focus > tbody {
-  outline: var(--theme-focus-outline);
-  outline-offset: -1px;
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected {
+  background-color: var(--accessibility-unfocused-tree-focused-node-background);
+}
+
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected .theme-twisty {
+  filter: var(--accessibility-tree-focused-node-twisty-brightness);
+}
+
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected *,
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected .treeLabelCell:after {
+  color: inherit;
+}
+
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected .objectBox-string {
+  color: var(--string-color);
 }
 
 .treeTable > thead {
@@ -260,23 +346,44 @@ body {
   align-items: center;
 }
 
-.accessible .tree .node.focused {
-  background-color: var(--theme-selection-background);
+.accessible .tree:focus {
+  outline: 0;
 }
 
-.accessible .tree .tree-node:hover:not(.focused) {
+.accessible .tree::-moz-focus-inner {
+  border: 0;
+}
+
+/* Unset tree styles leaking from reps.css */
+.accessible .tree .tree-node:not(.focused):hover {
+  background-color: transparent;
+}
+
+.accessible .tree:not(:focus) .node.focused {
+  background-color: var(--accessibility-unfocused-tree-focused-node-background);
+}
+
+.accessible .tree:not(:focus) .node.focused .theme-twisty {
+  filter: var(--accessibility-tree-focused-node-twisty-brightness);
+}
+
+.accessible .tree .node:not(.focused):hover {
   background-color: var(--theme-selection-background-hover);
 }
 
-.accessible .tree .node.focused * {
+.accessible .tree:focus .node.focused {
+  background-color: var(--theme-selection-background);
+}
+
+.accessible .tree:focus .node.focused * {
   color: var(--theme-selection-color);
 }
 
-.accessible .tree .node.focused .open-inspector {
+.accessible .tree:focus .node.focused .open-inspector {
   background-color: var(--grey-30);
 }
 
-.accessible .tree .node.focused:hover .open-inspector {
+.accessible .tree:focus .node.focused:hover .open-inspector {
   background-color: var(--theme-selection-color);
 }
 

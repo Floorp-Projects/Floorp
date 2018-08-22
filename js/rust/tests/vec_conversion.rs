@@ -5,7 +5,7 @@
 #[macro_use]
 extern crate js;
 
-use js::ac::AutoCompartment;
+use js::ar::AutoRealm;
 use js::conversions::ConversionBehavior;
 use js::conversions::ConversionResult;
 use js::conversions::FromJSValConvertible;
@@ -42,7 +42,7 @@ fn vec_conversion() {
         rooted!(in(cx) let global_root = global);
         let global = global_root.handle();
 
-        let _ac = AutoCompartment::with_obj(cx, global.get());
+        let _ar = AutoRealm::with_obj(cx, global.get());
         assert!(InitRealmStandardClasses(cx));
 
         rooted!(in(cx) let mut rval = UndefinedValue());

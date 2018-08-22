@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.updateTab = updateTab;
 exports.addTab = addTab;
 exports.moveTab = moveTab;
 exports.closeTab = closeTab;
@@ -22,11 +23,19 @@ var _selectors = require("../selectors/index");
  * Redux actions for the editor tabs
  * @module actions/tabs
  */
-function addTab(url, tabIndex) {
+function updateTab(url, framework) {
+  return {
+    type: "UPDATE_TAB",
+    url,
+    framework
+  };
+}
+
+function addTab(url, framework) {
   return {
     type: "ADD_TAB",
     url,
-    tabIndex
+    framework
   };
 }
 

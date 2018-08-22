@@ -14,25 +14,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // Implements nsILoadURIDelegate.
 class GeckoViewNavigationContent extends GeckoViewContentModule {
   onInit() {
-    this.onEnable();
-  }
-
-  onEnable() {
-    debug `onEnable`;
-
     docShell.loadURIDelegate = this;
-  }
-
-  onDisable() {
-    debug `onDisable`;
-
-    docShell.loadURIDelegate = null;
   }
 
   // nsILoadURIDelegate.
   loadURI(aUri, aWhere, aFlags, aTriggeringPrincipal) {
     debug `loadURI: uri=${aUri && aUri.spec}
                     where=${aWhere} flags=${aFlags}`;
+
+    if (!this.enabled) {
+      return Promise.resolve(false);
+    }
 
     // TODO: Remove this when we have a sensible error API.
     if (aUri && aUri.displaySpec.startsWith("about:certerror")) {
@@ -49,14 +41,13 @@ class GeckoViewNavigationContent extends GeckoViewContentModule {
                              uri2=${aUri && aUri.displaySpec}
                              error=${aError}`;
 
-    const handled = LoadURIDelegate.handleLoadError(content, this.eventDispatcher,
-                                                    aUri, aError, aErrorModule);
-    this.eventDispatcher.sendRequest({
-      type: "GeckoView:PageStop",
-      sucess: false,
-    });
+    if (!this.enabled) {
+      Components.returnCode = Cr.NS_ERROR_ABORT;
+      return null;
+    }
 
-    return handled;
+    return LoadURIDelegate.handleLoadError(content, this.eventDispatcher,
+                                           aUri, aError, aErrorModule);
   }
 }
 
