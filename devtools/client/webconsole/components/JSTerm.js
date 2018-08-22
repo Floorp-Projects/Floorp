@@ -1226,13 +1226,11 @@ class JSTerm extends Component {
       completionText = selectedItem.label.substring(selectedItem.preLabel.length);
     }
 
-    if (!completionText) {
-      return false;
-    }
-
-    this.insertStringAtCursor(completionText);
     this.clearCompletion();
-    return true;
+
+    if (completionText) {
+      this.insertStringAtCursor(completionText);
+    }
   }
 
   getInputValueBeforeCursor() {
