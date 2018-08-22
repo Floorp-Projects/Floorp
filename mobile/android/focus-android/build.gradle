@@ -1,14 +1,14 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.architecture_components_version = '1.1.0'
-    ext.support_libraries_version = '28.0.0-beta01'
+    ext.architecture_components_version = '1.1.1'
+    ext.support_libraries_version = '28.0.0-rc01'
     ext.espresso_version = '3.0.1'
-    ext.kotlin_version = '1.2.60'
+    ext.kotlin_version = '1.2.61'
     ext.geckoview_revision = '7fda8e538067e826e61f6d4f6f9c3e955b0597aa'
     ext.geckoview_version = '62.0.20180823143155' // 62.0b20
     ext.spotbugs_version = '3.1.2'
-    ext.mozilla_components_version = '0.17'
+    ext.mozilla_components_version = '0.19.1'
 
     repositories {
         google()
@@ -16,7 +16,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.3'
+        classpath 'com.android.tools.build:gradle:3.1.4'
         classpath 'com.dicedmelon.gradle:jacoco-android:0.1.3'
 
         classpath 'org.ajoberstar:grgit:1.5.0'
