@@ -88,7 +88,7 @@ async function notifyKeywordChange(url, keyword, source) {
                                          bookmark.type,
                                          bookmark.parentId,
                                          bookmark.guid, bookmark.parentGuid,
-                                         "", source
+                                         "", source,
                                        ]);
   }
 }
@@ -115,7 +115,7 @@ function getAnnotationsForItem(aItemId) {
       name,
       flags: flags.value,
       expires: exp.value,
-      value: value.value
+      value: value.value,
     });
   }
   return annos;
@@ -492,7 +492,7 @@ var PlacesUtils = {
       let [, type, params] = url.match(MOZ_ACTION_REGEX);
       let action = {
         type,
-        params: JSON.parse(params)
+        params: JSON.parse(params),
       };
       for (let key in action.params) {
         action.params[key] = decodeURIComponent(action.params[key]);
@@ -1813,7 +1813,7 @@ var PlacesUtils = {
     }
 
     return rootItem;
-  }
+  },
 };
 
 XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function() {
@@ -1833,7 +1833,7 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function() {
         return property.bind(object);
       }
       return property;
-    }
+    },
   }));
 });
 
@@ -1847,7 +1847,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "bmsvc",
 XPCOMUtils.defineLazyGetter(PlacesUtils, "bookmarks", () => {
   return Object.freeze(new Proxy(Bookmarks, {
     get: (target, name) => Bookmarks.hasOwnProperty(name) ? Bookmarks[name]
-                                                          : bmsvc[name]
+                                                          : bmsvc[name],
   }));
 });
 
@@ -1928,7 +1928,7 @@ function setupDbForShutdown(conn, name) {
 XPCOMUtils.defineLazyGetter(this, "gAsyncDBConnPromised",
   () => Sqlite.cloneStorageConnection({
     connection: PlacesUtils.history.DBConnection,
-    readOnly:   true
+    readOnly:   true,
   }).then(conn => {
       setupDbForShutdown(conn, "PlacesUtils read-only connection");
       return conn;
@@ -2298,7 +2298,7 @@ PlacesUtils.keywords = {
     if (typeof(keywordOrEntry) == "string") {
       keywordOrEntry = {
         keyword: keywordOrEntry,
-        source: Ci.nsINavBookmarksService.SOURCE_DEFAULT
+        source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
       };
     }
 
@@ -2704,5 +2704,5 @@ var GuidHelper = {
         PlacesUtils.bookmarks.removeObserver(this.observer);
       });
     }
-  }
+  },
 };

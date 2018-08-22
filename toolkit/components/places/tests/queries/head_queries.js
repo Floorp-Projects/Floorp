@@ -48,7 +48,7 @@ async function task_populateDB(aArray) {
           transition: qdata.transType,
           visitDate: qdata.lastVisit,
           referrer: qdata.referrer ? uri(qdata.referrer) : null,
-          title: qdata.title
+          title: qdata.title,
         });
         if (qdata.visitCount && !qdata.isDetails) {
           // Set a fake visit_count, this is not a real count but can be used
@@ -87,7 +87,7 @@ async function task_populateDB(aArray) {
         await PlacesTestUtils.addVisits({
           uri: uri(qdata.uri),
           visitDate: qdata.lastVisit,
-          title: qdata.title
+          title: qdata.title,
         });
       }
 
@@ -100,7 +100,7 @@ async function task_populateDB(aArray) {
           url: qdata.uri,
           annotations: new Map([[
             qdata.annoName,
-            qdata.removeAnnotation ? null : qdata.annoVal
+            qdata.removeAnnotation ? null : qdata.annoVal,
           ]]),
         });
       }
@@ -123,7 +123,7 @@ async function task_populateDB(aArray) {
           parentGuid: qdata.parentGuid,
           type: PlacesUtils.bookmarks.TYPE_FOLDER,
           title: qdata.title,
-          index: qdata.index
+          index: qdata.index,
         });
       }
 
@@ -132,7 +132,7 @@ async function task_populateDB(aArray) {
                                                   parentId: (await PlacesUtils.promiseItemId(qdata.parentGuid)),
                                                   index: qdata.index,
                                                   feedURI: uri(qdata.feedURI),
-                                                  siteURI: uri(qdata.uri)
+                                                  siteURI: uri(qdata.uri),
                                                 });
       }
 
@@ -141,7 +141,7 @@ async function task_populateDB(aArray) {
           parentGuid: qdata.parentGuid,
           index: qdata.index,
           title: qdata.title,
-          url: qdata.uri
+          url: qdata.uri,
         };
 
         if (qdata.dateAdded) {
@@ -168,7 +168,7 @@ async function task_populateDB(aArray) {
         await PlacesUtils.bookmarks.insert({
           parentGuid: qdata.parentGuid,
           type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-          index: qdata.index
+          index: qdata.index,
         });
       }
     } catch (ex) {

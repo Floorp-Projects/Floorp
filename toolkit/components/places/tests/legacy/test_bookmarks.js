@@ -66,7 +66,7 @@ var bookmarksObserver = {
   },
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavBookmarkObserver,
-  ])
+  ]),
 };
 
 

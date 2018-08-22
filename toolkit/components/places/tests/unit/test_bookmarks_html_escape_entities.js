@@ -22,7 +22,7 @@ add_task(async function() {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url,
-    title: unescaped
+    title: unescaped,
   });
   await PlacesUtils.keywords.insert({ url, keyword: unescaped, postData: unescaped });
   PlacesUtils.tagging.tagURI(Services.io.newURI(url), [unescaped]);

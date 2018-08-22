@@ -49,7 +49,7 @@ function expectNotifications(skipDescendants, checkAllArgs) {
       if (name in target)
         return target[name];
       return undefined;
-    }
+    },
   });
   PlacesUtils.bookmarks.addObserver(observer);
   return observer;

@@ -14,7 +14,7 @@ var gLibrary = null;
 add_task(async function test_setup() {
   // Temporary disable history, so we won't record pages navigation.
   await SpecialPowers.pushPrefEnv({set: [
-    ["places.history.enabled", false]
+    ["places.history.enabled", false],
   ]});
 
   // Open Library window.
@@ -36,7 +36,7 @@ add_task(async function test_open_folder_in_tabs() {
   let children = URIs.map(url => {
     return {
       title: "Title",
-      url
+      url,
     };
   });
 

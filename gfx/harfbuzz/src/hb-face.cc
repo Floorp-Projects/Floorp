@@ -78,12 +78,12 @@ DEFINE_NULL_INSTANCE (hb_face_t) =
   0,    /* num_glyphs */
 
   {
-#define HB_SHAPER_IMPLEMENT(shaper) HB_SHAPER_DATA_INVALID,
+#define HB_SHAPER_IMPLEMENT(shaper) HB_ATOMIC_PTR_INIT (HB_SHAPER_DATA_INVALID),
 #include "hb-shaper-list.hh"
 #undef HB_SHAPER_IMPLEMENT
   },
 
-  nullptr, /* shape_plans */
+  HB_ATOMIC_PTR_INIT (nullptr), /* shape_plans */
 };
 
 
@@ -249,7 +249,7 @@ hb_face_destroy (hb_face_t *face)
 {
   if (!hb_object_destroy (face)) return;
 
-  for (hb_face_t::plan_node_t *node = face->shape_plans; node; )
+  for (hb_face_t::plan_node_t *node = face->shape_plans.get (); node; )
   {
     hb_face_t::plan_node_t *next = node->next;
     hb_shape_plan_destroy (node->shape_plan);

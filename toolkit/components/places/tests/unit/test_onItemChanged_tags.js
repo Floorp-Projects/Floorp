@@ -11,7 +11,7 @@ add_task(async function run_test() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: uri,
-    title: "Bookmark 1"
+    title: "Bookmark 1",
   });
   PlacesUtils.tagging.tagURI(uri, tags);
 
@@ -19,7 +19,7 @@ add_task(async function run_test() {
 
   let bookmarksObserver = {
     QueryInterface: ChromeUtils.generateQI([
-      Ci.nsINavBookmarkObserver
+      Ci.nsINavBookmarkObserver,
     ]),
 
     _changedCount: 0,

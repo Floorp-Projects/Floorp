@@ -28,6 +28,7 @@
 
 #include "hb-private.hh"
 
+#include "hb-machinery-private.hh"
 
 #include <locale.h>
 #ifdef HAVE_XLOCALE_H
@@ -244,15 +245,15 @@ struct hb_language_item_t {
 
 /* Thread-safe lock-free language list */
 
-static hb_language_item_t *langs;
+static hb_atomic_ptr_t <hb_language_item_t> langs;
 
 #ifdef HB_USE_ATEXIT
 static void
 free_langs (void)
 {
 retry:
-  hb_language_item_t *first_lang = (hb_language_item_t *) hb_atomic_ptr_get (&langs);
-  if (!hb_atomic_ptr_cmpexch (&langs, first_lang, nullptr))
+  hb_language_item_t *first_lang = langs.get ();
+  if (unlikely (!langs.cmpexch (first_lang, nullptr)))
     goto retry;
 
   while (first_lang) {
@@ -268,7 +269,7 @@ static hb_language_item_t *
 lang_find_or_insert (const char *key)
 {
 retry:
-  hb_language_item_t *first_lang = (hb_language_item_t *) hb_atomic_ptr_get (&langs);
+  hb_language_item_t *first_lang = langs.get ();
 
   for (hb_language_item_t *lang = first_lang; lang; lang = lang->next)
     if (*lang == key)
@@ -286,7 +287,8 @@ retry:
     return nullptr;
   }
 
-  if (!hb_atomic_ptr_cmpexch (&langs, first_lang, lang)) {
+  if (unlikely (!langs.cmpexch (first_lang, lang)))
+  {
     lang->fini ();
     free (lang);
     goto retry;
@@ -368,15 +370,16 @@ hb_language_to_string (hb_language_t language)
 hb_language_t
 hb_language_get_default (void)
 {
-  static hb_language_t default_language = HB_LANGUAGE_INVALID;
+  static hb_atomic_ptr_t <hb_language_t> default_language;
 
-  hb_language_t language = (hb_language_t) hb_atomic_ptr_get (&default_language);
-  if (unlikely (language == HB_LANGUAGE_INVALID)) {
+  hb_language_t language = default_language.get ();
+  if (unlikely (language == HB_LANGUAGE_INVALID))
+  {
     language = hb_language_from_string (setlocale (LC_CTYPE, nullptr), -1);
-    (void) hb_atomic_ptr_cmpexch (&default_language, HB_LANGUAGE_INVALID, language);
+    (void) default_language.cmpexch (HB_LANGUAGE_INVALID, language);
   }
 
-  return default_language;
+  return language;
 }
 
 
@@ -728,47 +731,46 @@ parse_uint32 (const char **pp, const char *end, uint32_t *pv)
 
 #ifdef USE_XLOCALE
 
-static HB_LOCALE_T C_locale;
+
+static void free_static_C_locale (void);
+
+static struct hb_C_locale_lazy_loader_t : hb_lazy_loader_t<hb_remove_ptr_t<HB_LOCALE_T>::value,
+							  hb_C_locale_lazy_loader_t>
+{
+  static inline HB_LOCALE_T create (void)
+  {
+    HB_LOCALE_T C_locale = HB_CREATE_LOCALE ("C");
 
 #ifdef HB_USE_ATEXIT
-static void
-free_C_locale (void)
+    atexit (free_static_C_locale);
+#endif
+
+    return C_locale;
+  }
+  static inline void destroy (HB_LOCALE_T p)
+  {
+    HB_FREE_LOCALE (p);
+  }
+  static inline HB_LOCALE_T get_null (void)
+  {
+    return nullptr;
+  }
+} static_C_locale;
+
+#ifdef HB_USE_ATEXIT
+static
+void free_static_C_locale (void)
 {
-retry:
-  HB_LOCALE_T locale = (HB_LOCALE_T) hb_atomic_ptr_get (&C_locale);
-
-  if (!hb_atomic_ptr_cmpexch (&C_locale, locale, nullptr))
-    goto retry;
-
-  if (locale)
-    HB_FREE_LOCALE (locale);
+  static_C_locale.free_instance ();
 }
 #endif
 
 static HB_LOCALE_T
 get_C_locale (void)
 {
-retry:
-  HB_LOCALE_T C = (HB_LOCALE_T) hb_atomic_ptr_get (&C_locale);
-
-  if (unlikely (!C))
-  {
-    C = HB_CREATE_LOCALE ("C");
-
-    if (!hb_atomic_ptr_cmpexch (&C_locale, nullptr, C))
-    {
-      HB_FREE_LOCALE (C_locale);
-      goto retry;
-    }
-
-#ifdef HB_USE_ATEXIT
-    atexit (free_C_locale); /* First person registers atexit() callback. */
-#endif
-  }
-
-  return C;
+  return static_C_locale.get_unconst ();
 }
-#endif
+#endif /* USE_XLOCALE */
 
 static bool
 parse_float (const char **pp, const char *end, float *pv)
@@ -845,7 +847,7 @@ parse_tag (const char **pp, const char *end, hb_tag_t *tag)
   }
 
   const char *p = *pp;
-  while (*pp < end && ISALNUM(**pp))
+  while (*pp < end && (ISALNUM(**pp) || **pp == '_'))
     (*pp)++;
 
   if (p == *pp || *pp - p > 4)

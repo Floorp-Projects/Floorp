@@ -19,7 +19,7 @@ add_task(async function() {
     }, {
       title: "f1",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    }]
+    }],
   });
 
   let bookmark = bms[0];

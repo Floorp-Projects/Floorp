@@ -51,7 +51,7 @@ PlacesTreeView.prototype = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsITreeView,
     Ci.nsINavHistoryResultObserver,
-    Ci.nsISupportsWeakReference
+    Ci.nsISupportsWeakReference,
   ]),
 
   /**
@@ -415,7 +415,7 @@ PlacesTreeView.prototype = {
         nodesInfo.push({
           node: this._rows[i],
           oldRow: i,
-          wasVisible: i >= firstVisibleRow && i <= lastVisibleRow
+          wasVisible: i >= firstVisibleRow && i <= lastVisibleRow,
         });
       }
     }
@@ -551,7 +551,7 @@ PlacesTreeView.prototype = {
     if (!this.__dateFormatter) {
       const dtOptions = {
         dateStyle: "short",
-        timeStyle: "short"
+        timeStyle: "short",
       };
       this.__dateFormatter = new Services.intl.DateTimeFormat(undefined, dtOptions);
     }
@@ -1442,7 +1442,7 @@ PlacesTreeView.prototype = {
     return new PlacesInsertionPoint({
       parentId: PlacesUtils.getConcreteItemId(container),
       parentGuid: PlacesUtils.getConcreteItemGuid(container),
-      index, orientation, tagName, dropNearNode
+      index, orientation, tagName, dropNearNode,
     });
   },
 
@@ -1764,5 +1764,5 @@ PlacesTreeView.prototype = {
   isSelectable(aRow, aColumn) { return false; },
   performAction(aAction) { },
   performActionOnRow(aAction, aRow) { },
-  performActionOnCell(aAction, aRow, aColumn) { }
+  performActionOnCell(aAction, aRow, aColumn) { },
 };

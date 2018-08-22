@@ -43,7 +43,7 @@ add_task(async function setup() {
     return PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       title: `Title ${index}`,
-      url
+      url,
     });
   }));
 
@@ -76,13 +76,13 @@ add_task(async function setup() {
 add_task(async function click() {
   let promise = waitForLoad(gBrowser.selectedBrowser, TEST_PAGES[0]);
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[0], {
-    button: 0
+    button: 0,
   });
   await promise;
 
   promise = waitForNewTab(TEST_PAGES[1], false);
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[1], {
-    button: 0, accelKey: true
+    button: 0, accelKey: true,
   });
   await promise;
 
@@ -94,25 +94,25 @@ add_task(async function click() {
 add_task(async function middleclick() {
   let promise = waitForNewTab(TEST_PAGES[0], true);
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[0], {
-    button: 1, shiftKey: true
+    button: 1, shiftKey: true,
   });
   await promise;
 
   promise = waitForNewTab(TEST_PAGES[1], false);
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[1], {
-    button: 1
+    button: 1,
   });
   await promise;
 });
 
 add_task(async function clickWithPrefSet() {
   await SpecialPowers.pushPrefEnv({set: [
-    [PREF_LOAD_BOOKMARKS_IN_TABS, true]
+    [PREF_LOAD_BOOKMARKS_IN_TABS, true],
   ]});
 
   let promise = waitForNewTab(TEST_PAGES[0], false);
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[0], {
-    button: 0
+    button: 0,
   });
   await promise;
 
@@ -120,14 +120,14 @@ add_task(async function clickWithPrefSet() {
   promise = BrowserTestUtils.waitForEvent(placesContext, "popupshown");
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[1], {
     button: 2,
-    type: "contextmenu"
+    type: "contextmenu",
   });
   await promise;
 
   promise = waitForLoad(gBrowser.selectedBrowser, TEST_PAGES[1]);
   let open = document.getElementById("placesContext_open");
   EventUtils.synthesizeMouseAtCenter(open, {
-    button: 0
+    button: 0,
   });
   await promise;
 
@@ -136,7 +136,7 @@ add_task(async function clickWithPrefSet() {
     await BrowserTestUtils.withNewTab({gBrowser}, async (tab) => {
       promise = waitForLoad(gBrowser.selectedBrowser, TEST_PAGES[1]);
       EventUtils.synthesizeMouseAtCenter(gBookmarkElements[1], {
-        button
+        button,
       });
       await promise;
     });
@@ -149,13 +149,13 @@ add_task(async function clickWithPrefSet() {
 // enabled state of the menuitems is updated properly.
 add_task(async function quickContextMenu() {
   await SpecialPowers.pushPrefEnv({set: [
-    [PREF_LOAD_BOOKMARKS_IN_TABS, true]
+    [PREF_LOAD_BOOKMARKS_IN_TABS, true],
   ]});
 
   let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, TEST_PAGES[0]);
 
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[0], {
-    button: 0
+    button: 0,
   });
   let newTab = await tabPromise;
 
@@ -163,7 +163,7 @@ add_task(async function quickContextMenu() {
   let promise = BrowserTestUtils.waitForEvent(placesContext, "popupshown");
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[1], {
     button: 2,
-    type: "contextmenu"
+    type: "contextmenu",
   });
   await promise;
 

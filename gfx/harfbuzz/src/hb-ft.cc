@@ -32,6 +32,7 @@
 #include "hb-ft.h"
 
 #include "hb-font-private.hh"
+#include "hb-machinery-private.hh"
 
 #include FT_ADVANCES_H
 #include FT_MULTIPLE_MASTERS_H
@@ -416,30 +417,13 @@ hb_ft_get_font_h_extents (hb_font_t *font HB_UNUSED,
   return true;
 }
 
-static hb_font_funcs_t *static_ft_funcs = nullptr;
+static void free_static_ft_funcs (void);
 
-#ifdef HB_USE_ATEXIT
-static
-void free_static_ft_funcs (void)
+static struct hb_ft_font_funcs_lazy_loader_t : hb_font_funcs_lazy_loader_t<hb_ft_font_funcs_lazy_loader_t>
 {
-retry:
-  hb_font_funcs_t *ft_funcs = (hb_font_funcs_t *) hb_atomic_ptr_get (&static_ft_funcs);
-  if (!hb_atomic_ptr_cmpexch (&static_ft_funcs, ft_funcs, nullptr))
-    goto retry;
-
-  hb_font_funcs_destroy (ft_funcs);
-}
-#endif
-
-static void
-_hb_ft_font_set_funcs (hb_font_t *font, FT_Face ft_face, bool unref)
-{
-retry:
-  hb_font_funcs_t *funcs = (hb_font_funcs_t *) hb_atomic_ptr_get (&static_ft_funcs);
-
-  if (unlikely (!funcs))
+  static inline hb_font_funcs_t *create (void)
   {
-    funcs = hb_font_funcs_create ();
+    hb_font_funcs_t *funcs = hb_font_funcs_create ();
 
     hb_font_funcs_set_font_h_extents_func (funcs, hb_ft_get_font_h_extents, nullptr, nullptr);
     //hb_font_funcs_set_font_v_extents_func (funcs, hb_ft_get_font_v_extents, nullptr, nullptr);
@@ -458,20 +442,35 @@ retry:
 
     hb_font_funcs_make_immutable (funcs);
 
-    if (!hb_atomic_ptr_cmpexch (&static_ft_funcs, nullptr, funcs)) {
-      hb_font_funcs_destroy (funcs);
-      goto retry;
-    }
+#ifdef HB_USE_ATEXIT
+    atexit (free_static_ft_funcs);
+#endif
+
+    return funcs;
+  }
+} static_ft_funcs;
 
 #ifdef HB_USE_ATEXIT
-    atexit (free_static_ft_funcs); /* First person registers atexit() callback. */
+static
+void free_static_ft_funcs (void)
+{
+  static_ft_funcs.free_instance ();
+}
 #endif
-  };
 
+static hb_font_funcs_t *
+_hb_ft_get_font_funcs (void)
+{
+  return static_ft_funcs.get_unconst ();
+}
+
+static void
+_hb_ft_font_set_funcs (hb_font_t *font, FT_Face ft_face, bool unref)
+{
   bool symbol = ft_face->charmap && ft_face->charmap->encoding == FT_ENCODING_MS_SYMBOL;
 
   hb_font_set_funcs (font,
-		     funcs,
+		     _hb_ft_get_font_funcs (),
 		     _hb_ft_font_create (ft_face, symbol, unref),
 		     _hb_ft_font_destroy);
 }
@@ -684,46 +683,45 @@ hb_ft_font_create_referenced (FT_Face ft_face)
 }
 
 
-/* Thread-safe, lock-free, FT_Library */
+static void free_static_ft_library (void);
 
-static FT_Library ft_library;
+static struct hb_ft_library_lazy_loader_t : hb_lazy_loader_t<hb_remove_ptr_t<FT_Library>::value,
+							     hb_ft_library_lazy_loader_t>
+{
+  static inline FT_Library create (void)
+  {
+    FT_Library l;
+    if (FT_Init_FreeType (&l))
+      return nullptr;
+
+#ifdef HB_USE_ATEXIT
+    atexit (free_static_ft_library);
+#endif
+
+    return l;
+  }
+  static inline void destroy (FT_Library l)
+  {
+    FT_Done_FreeType (l);
+  }
+  static inline FT_Library get_null (void)
+  {
+    return nullptr;
+  }
+} static_ft_library;
 
 #ifdef HB_USE_ATEXIT
 static
-void free_ft_library (void)
+void free_static_ft_library (void)
 {
-retry:
-  FT_Library library = (FT_Library) hb_atomic_ptr_get (&ft_library);
-  if (!hb_atomic_ptr_cmpexch (&ft_library, library, nullptr))
-    goto retry;
-
-  FT_Done_FreeType (library);
+  static_ft_library.free_instance ();
 }
 #endif
 
 static FT_Library
 get_ft_library (void)
 {
-retry:
-  FT_Library library = (FT_Library) hb_atomic_ptr_get (&ft_library);
-
-  if (unlikely (!library))
-  {
-    /* Not found; allocate one. */
-    if (FT_Init_FreeType (&library))
-      return nullptr;
-
-    if (!hb_atomic_ptr_cmpexch (&ft_library, nullptr, library)) {
-      FT_Done_FreeType (library);
-      goto retry;
-    }
-
-#ifdef HB_USE_ATEXIT
-    atexit (free_ft_library); /* First person registers atexit() callback. */
-#endif
-  }
-
-  return library;
+  return static_ft_library.get_unconst ();
 }
 
 static void

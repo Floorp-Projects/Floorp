@@ -41,7 +41,7 @@ add_task(async function test_buildTestDatabase() {
     places.push({
       uri: testURI,
       transition: modHistoryTypes(i),
-      visitDate: today
+      visitDate: today,
     });
   }
 
@@ -52,7 +52,7 @@ add_task(async function test_buildTestDatabase() {
     places.push({
       uri: testURI,
       transition: modHistoryTypes(i),
-      visitDate: today
+      visitDate: today,
     });
   }
 

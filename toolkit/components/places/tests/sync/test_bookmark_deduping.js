@@ -285,7 +285,7 @@ add_task(async function test_duping_remote_newer() {
   // Make sure we still dedupe this even though it doesn't have SYNC_STATUS.NEW
   PlacesTestUtils.setBookmarkSyncFields({
     guid: "folderBBBBBB",
-    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN,
   });
 
   // Not a candidate for `bookmarkH111` because we didn't dupe `folderAAAAAA`.

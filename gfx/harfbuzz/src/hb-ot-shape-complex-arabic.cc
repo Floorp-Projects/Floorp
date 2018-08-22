@@ -250,7 +250,7 @@ struct arabic_shape_plan_t
    * mask_array[NONE] == 0. */
   hb_mask_t mask_array[ARABIC_NUM_FEATURES + 1];
 
-  mutable arabic_fallback_plan_t *fallback_plan;
+  hb_atomic_ptr_t<arabic_fallback_plan_t> fallback_plan;
 
   unsigned int do_fallback : 1;
   unsigned int has_stch : 1;
@@ -280,7 +280,7 @@ data_destroy_arabic (void *data)
 {
   arabic_shape_plan_t *arabic_plan = (arabic_shape_plan_t *) data;
 
-  arabic_fallback_plan_destroy (arabic_plan->fallback_plan);
+  arabic_fallback_plan_destroy (arabic_plan->fallback_plan.get ());
 
   free (data);
 }
@@ -403,12 +403,13 @@ arabic_fallback_shape (const hb_ot_shape_plan_t *plan,
     return;
 
 retry:
-  arabic_fallback_plan_t *fallback_plan = (arabic_fallback_plan_t *) hb_atomic_ptr_get (&arabic_plan->fallback_plan);
+  arabic_fallback_plan_t *fallback_plan = arabic_plan->fallback_plan.get ();
   if (unlikely (!fallback_plan))
   {
     /* This sucks.  We need a font to build the fallback plan... */
     fallback_plan = arabic_fallback_plan_create (plan, font);
-    if (unlikely (!hb_atomic_ptr_cmpexch (&(const_cast<arabic_shape_plan_t *> (arabic_plan))->fallback_plan, nullptr, fallback_plan))) {
+    if (unlikely (!arabic_plan->fallback_plan.cmpexch (nullptr, fallback_plan)))
+    {
       arabic_fallback_plan_destroy (fallback_plan);
       goto retry;
     }

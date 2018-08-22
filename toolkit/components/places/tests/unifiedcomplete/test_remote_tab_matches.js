@@ -34,7 +34,7 @@ let MockClientsEngine = {
   },
   getClientName(id) {
     return id.endsWith("mobile") ? "My Phone" : "My Desktop";
-  }
+  },
 };
 
 // Tell Sync about the mocks.
@@ -75,7 +75,7 @@ add_task(async function test_nomatch() {
       tabs: [{
         urlHistory: ["http://foo.com/"],
       }],
-    }
+    },
   });
 
   // No remote tabs match here, so we only expect search results.
@@ -94,7 +94,7 @@ add_task(async function test_minimal() {
       tabs: [{
         urlHistory: ["http://example.com/"],
       }],
-    }
+    },
   });
 
   await check_autocomplete({
@@ -115,7 +115,7 @@ add_task(async function test_maximal() {
         title: "An Example",
         icon: "http://favicon",
       }],
-    }
+    },
   });
 
   await check_autocomplete({
@@ -124,7 +124,7 @@ add_task(async function test_maximal() {
     matches: [ makeSearchMatch("ex", { heuristic: true }),
                makeRemoteTabMatch("http://example.com/", "My Phone",
                                   { title: "An Example",
-                                    icon: "moz-anno:favicon:http://favicon/"
+                                    icon: "moz-anno:favicon:http://favicon/",
                                   }),
              ],
   });
@@ -140,7 +140,7 @@ add_task(async function test_noShowIcons() {
         title: "An Example",
         icon: "http://favicon",
       }],
-    }
+    },
   });
 
   await check_autocomplete({
@@ -167,7 +167,7 @@ add_task(async function test_dontMatchSyncedTabs() {
         title: "An Example",
         icon: "http://favicon",
       }],
-    }
+    },
   });
 
   await check_autocomplete({
@@ -187,7 +187,7 @@ add_task(async function test_matches_title() {
         urlHistory: ["http://foo.com/"],
         title: "An Example",
       }],
-    }
+    },
   });
 
   await check_autocomplete({
@@ -212,7 +212,7 @@ add_task(async function test_localtab_matches_override() {
         urlHistory: ["http://foo.com/"],
         title: "An Example",
       }],
-    }
+    },
   });
 
   // Setup Places to think the tab is open locally.
@@ -243,7 +243,7 @@ add_task(async function test_remotetab_matches_override() {
         urlHistory: [url],
         title: "An Example",
       }],
-    }
+    },
   });
 
   // Setup Places to think the tab is open locally.
@@ -272,9 +272,9 @@ add_task(async function test_many_remotetab_matches() {
       tabs: Array(5).fill(0).map((e, i) => ({
         urlHistory: [`${url}${i}`],
         title: "A title",
-        lastUsed: (Date.now() / 1000) - (i * 86400) // i days ago.
+        lastUsed: (Date.now() / 1000) - (i * 86400), // i days ago.
       })),
-    }
+    },
   });
 
   // Also add a local history result.

@@ -85,7 +85,7 @@ add_task(async function setup() {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: "about:robots",
-    waitForStateStop: true
+    waitForStateStop: true,
   });
 
   folders = await PlacesUtils.bookmarks.insertTree({
@@ -108,7 +108,7 @@ add_task(async function setup() {
     }, {
       title: "Principal",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    }]
+    }],
   });
 
   registerCleanupFunction(async () => {

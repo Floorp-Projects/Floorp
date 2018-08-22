@@ -162,7 +162,7 @@ var PlacesBackups = {
     return [
       dateObj.getFullYear(),
       padDate(dateObj.getMonth() + 1),
-      padDate(dateObj.getDate())
+      padDate(dateObj.getDate()),
     ].join("-");
    },
 
@@ -414,7 +414,7 @@ var PlacesBackups = {
   async getBookmarksTree() {
     let startTime = Date.now();
     let root = await PlacesUtils.promiseBookmarksTree(PlacesUtils.bookmarks.rootGuid, {
-      includeItemIds: true
+      includeItemIds: true,
     });
 
     try {

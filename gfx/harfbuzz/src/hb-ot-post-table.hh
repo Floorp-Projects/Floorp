@@ -130,7 +130,7 @@ struct post
     inline void fini (void)
     {
       index_to_offset.fini ();
-      free (gids_sorted_by_name);
+      free (gids_sorted_by_name.get ());
     }
 
     inline bool get_glyph_name (hb_codepoint_t glyph,
@@ -162,7 +162,7 @@ struct post
 	return false;
 
     retry:
-      uint16_t *gids = (uint16_t *) hb_atomic_ptr_get (&gids_sorted_by_name);
+      uint16_t *gids = gids_sorted_by_name.get ();
 
       if (unlikely (!gids))
       {
@@ -174,7 +174,8 @@ struct post
 	  gids[i] = i;
 	hb_sort_r (gids, count, sizeof (gids[0]), cmp_gids, (void *) this);
 
-	if (!hb_atomic_ptr_cmpexch (&gids_sorted_by_name, nullptr, gids)) {
+	if (unlikely (!gids_sorted_by_name.cmpexch (nullptr, gids)))
+	{
 	  free (gids);
 	  goto retry;
 	}
@@ -255,7 +256,7 @@ struct post
     const ArrayOf<HBUINT16> *glyphNameIndex;
     hb_vector_t<uint32_t, 1> index_to_offset;
     const uint8_t *pool;
-    mutable uint16_t *gids_sorted_by_name;
+    hb_atomic_ptr_t<uint16_t *> gids_sorted_by_name;
   };
 
   public:

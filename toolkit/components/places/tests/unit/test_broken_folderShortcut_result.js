@@ -16,7 +16,7 @@ add_task(async function test_brokenFolderShortcut() {
     }, {
       url: "http://2.moz.org/",
       title: "Bookmark 2",
-    }]
+    }],
   });
 
   // Add also a simple visit.

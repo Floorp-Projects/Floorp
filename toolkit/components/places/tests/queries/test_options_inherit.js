@@ -25,7 +25,7 @@ add_task(async function() {
           {
             type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
           },
-        ]
+        ],
       },
       { title: "bm",
         url: "http://example.com",
@@ -33,7 +33,7 @@ add_task(async function() {
       {
         type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
       },
-    ]
+    ],
   });
 
   await test_query({}, 3, 3, 2);
@@ -75,7 +75,7 @@ async function test_query(opts, expectedRootCc, expectedFolderCc, expectedQueryC
   }
   let f = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
   checkURIOptions(root.getChild(root.childCount - 1).uri);
   await PlacesUtils.bookmarks.remove(f);

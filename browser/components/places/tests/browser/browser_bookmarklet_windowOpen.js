@@ -11,7 +11,7 @@ function makeBookmarkFor(url, keyword) {
                                    title: "bookmarklet",
                                    url }),
     PlacesUtils.keywords.insert({url,
-                                 keyword})
+                                 keyword}),
   ]);
 
 }
@@ -20,7 +20,7 @@ add_task(async function openKeywordBookmarkWithWindowOpen() {
   // This is the current default, but let's not assume that...
   await SpecialPowers.pushPrefEnv({"set": [
     [ "browser.link.open_newwindow", 3 ],
-    [ "dom.disable_open_during_load", true ]
+    [ "dom.disable_open_during_load", true ],
   ]});
 
   let moztab;
@@ -39,7 +39,7 @@ add_task(async function openKeywordBookmarkWithWindowOpen() {
   registerCleanupFunction(function() {
     return Promise.all([
       PlacesUtils.bookmarks.remove(bookmarkInfo),
-      PlacesUtils.keywords.remove(keywordForBM)
+      PlacesUtils.keywords.remove(keywordForBM),
     ]);
   });
   gURLBar.value = keywordForBM;

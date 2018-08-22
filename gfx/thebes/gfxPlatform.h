@@ -377,8 +377,8 @@ public:
      * available in the system, this may return second or later font in the
      * pref.  If there are no available fonts in the pref, returns empty string.
      */
-    nsString GetDefaultFontName(const nsACString& aLangGroup,
-                                const nsACString& aGenericFamily);
+    nsAutoString GetDefaultFontName(const nsACString& aLangGroup,
+                                    const nsACString& aGenericFamily);
 
     /**
      * Create the appropriate platform font group

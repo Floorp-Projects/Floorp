@@ -20,7 +20,7 @@ add_task(async function test_tag_match_url() {
   let uri2 = NetUtil.newURI("http://asciiescaped/blocking-firefox3%2B");
   await PlacesTestUtils.addVisits([
     { uri: uri1, title: "title" },
-    { uri: uri2, title: "title" }
+    { uri: uri2, title: "title" },
   ]);
   await addBookmark({ uri: uri1,
                       title: "title",
@@ -33,7 +33,7 @@ add_task(async function test_tag_match_url() {
   await check_autocomplete({
     search: "superTag",
     matches: [ { uri: uri1, title: "title", tags: [ "superTag" ], style: [ "bookmark-tag" ] },
-               { uri: uri2, title: "title", tags: [ "superTag" ], style: [ "bookmark-tag" ] } ]
+               { uri: uri2, title: "title", tags: [ "superTag" ], style: [ "bookmark-tag" ] } ],
   });
   await cleanup();
 });

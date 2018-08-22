@@ -16,7 +16,7 @@ var gObserver = {
   notifications: 0,
   observe(aSubject, aTopic, aData) {
     this.notifications++;
-  }
+  },
 };
 Services.obs.addObserver(gObserver, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
 

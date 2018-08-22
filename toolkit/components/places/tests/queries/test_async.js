@@ -31,7 +31,7 @@ var tests = [
       this.checkState("opened", 1);
       this.checkArgs("closed", node, oldState, node.STATE_OPENED);
       this.success();
-    }
+    },
   },
 
   {
@@ -68,7 +68,7 @@ var tests = [
         this.success();
         break;
       }
-    }
+    },
   },
 
   {
@@ -91,8 +91,8 @@ var tests = [
       this.checkState("loading", 1);
       this.checkArgs("closed", node, oldState, node.STATE_LOADING);
       this.success();
-    }
-  }
+    },
+  },
 ];
 
 
@@ -235,7 +235,7 @@ Test.prototype = {
       { type: "bookmark" },
       { type: "separator" },
       { type: "folder" },
-      { type: "bookmark", uri: "place:terms=foo" }
+      { type: "bookmark", uri: "place:terms=foo" },
     ]);
     await task_populateDB(this.data);
 
@@ -256,7 +256,7 @@ Test.prototype = {
 
     // Resolve the promise object that indicates that the next test can be run.
     this.deferNextTest.resolve();
-  }
+  },
 };
 
 /**
@@ -267,17 +267,17 @@ var DataHelper = {
     bookmark: {
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       uri: "http://example.com/",
-      title: "test bookmark"
+      title: "test bookmark",
     },
 
     folder: {
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      title: "test folder"
+      title: "test folder",
     },
 
     separator: {
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid
-    }
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    },
   },
 
   /**
@@ -301,14 +301,14 @@ var DataHelper = {
           parentGuid: dat.parentGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           title: dat.title,
-          isInQuery: true
+          isInQuery: true,
         };
       case "separator":
         return {
           isSeparator: true,
           parentGuid: dat.parentGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-          isInQuery: true
+          isInQuery: true,
         };
       case "folder":
         return {
@@ -316,7 +316,7 @@ var DataHelper = {
           parentGuid: dat.parentGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           title: dat.title,
-          isInQuery: true
+          isInQuery: true,
         };
       default:
         do_throw("Unknown data type when populating DB: " + type);
@@ -341,7 +341,7 @@ var DataHelper = {
       dat[prop] = aData.hasOwnProperty(prop) ? aData[prop] : val;
     }
     return dat;
-  }
+  },
 };
 
 add_task(async function test_async() {

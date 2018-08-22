@@ -169,7 +169,7 @@ var BookmarkPropertiesPanel = {
         this._defaultInsertionPoint =
           new PlacesInsertionPoint({
             parentId: PlacesUtils.bookmarksMenuFolderId,
-            parentGuid: PlacesUtils.bookmarks.menuGuid
+            parentGuid: PlacesUtils.bookmarks.menuGuid,
           });
       }
 
@@ -500,8 +500,8 @@ var BookmarkPropertiesPanel = {
       parent: {
         itemId: containerId,
         bookmarkGuid: parentGuid,
-        type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
-      }
+        type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
+      },
     });
-  }
+  },
 };

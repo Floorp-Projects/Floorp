@@ -99,7 +99,7 @@ var observer = {
                                  newParentGuid: aNewParentGuid,
                                  newIndex:      aNewIndex,
                                  itemType:      aItemType });
-  }
+  },
 };
 observer.reset();
 
@@ -477,7 +477,7 @@ add_task(async function test_new_folder_with_annotation() {
 add_task(async function test_new_folder_with_children() {
   let folder_info = createTestFolderInfo("Test folder", PlacesUtils.bookmarks.menuGuid, [{
     url: "http://test_create_item.com",
-    title: "Test creating an item"
+    title: "Test creating an item",
   }]);
   ensureUndoState();
   let txn = PT.NewFolder(folder_info);
@@ -503,7 +503,7 @@ add_task(async function test_new_folder_with_children() {
       children: [{
         title: "Test creating an item",
         url: "http://test_create_item.com",
-      }]
+      }],
     });
     observer.reset();
   };
@@ -745,13 +745,13 @@ add_task(async function test_move_multiple_items_to_folder() {
       oldParentGuid: folder_a_info.guid,
       newParentGuid: folder_a_info.guid,
       oldIndex: 0,
-      newIndex: 2
+      newIndex: 2,
     }, {
       guid: bkm_b_info.guid,
       oldParentGuid: folder_a_info.guid,
       newParentGuid: folder_a_info.guid,
       oldIndex: 1,
-      newIndex: 2
+      newIndex: 2,
     });
     observer.reset();
   };
@@ -762,13 +762,13 @@ add_task(async function test_move_multiple_items_to_folder() {
       oldParentGuid: folder_a_info.guid,
       newParentGuid: folder_a_info.guid,
       oldIndex: 1,
-      newIndex: 0
+      newIndex: 0,
     }, {
       guid: bkm_b_info.guid,
       oldParentGuid: folder_a_info.guid,
       newParentGuid: folder_a_info.guid,
       oldIndex: 2,
-      newIndex: 1
+      newIndex: 1,
     });
     observer.reset();
   };
@@ -1160,7 +1160,7 @@ add_task(async function test_edit_title() {
   let bm_info = {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "http://test_create_item.com",
-    title: "Original Title"
+    title: "Original Title",
   };
 
   function ensureTitleChange(aCurrentTitle) {
@@ -1353,19 +1353,19 @@ add_task(async function test_edit_specific_keyword() {
   function ensureKeywordChange(aCurrentKeyword = "", aPreviousKeyword = "") {
     ensureItemsChanged({ guid: bm_info.guid,
                          property: "keyword",
-                         newValue: aCurrentKeyword
+                         newValue: aCurrentKeyword,
                        });
   }
 
   await PlacesUtils.keywords.insert({
     keyword: "kw1",
     url: bm_info.url,
-    postData: "postData1"
+    postData: "postData1",
   });
   await PlacesUtils.keywords.insert({
     keyword: "kw2",
     url: bm_info.url,
-    postData: "postData2"
+    postData: "postData2",
   });
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
 
@@ -1653,7 +1653,7 @@ add_task(async function test_livemark_txns() {
 add_task(async function test_copy() {
   async function duplicate_and_test(aOriginalGuid) {
     let txn = PT.Copy({
-      guid: aOriginalGuid, newParentGuid: PlacesUtils.bookmarks.unfiledGuid
+      guid: aOriginalGuid, newParentGuid: PlacesUtils.bookmarks.unfiledGuid,
     });
     let duplicateGuid = await txn.transact();
     let originalInfo = await PlacesUtils.promiseBookmarksTree(aOriginalGuid);
@@ -1697,7 +1697,7 @@ add_task(async function test_copy() {
                    annos: [{ name: "Anno", value: "AnnoValue"}] });
   let sepTxn = PT.NewSeparator({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    index: 1
+    index: 1,
   });
   let livemarkTxn = PT.NewLivemark(
     { feedUrl: "http://test.feed.uri",
@@ -1871,16 +1871,16 @@ add_task(async function test_renameTag() {
   // Create bookmark queries that point to the modified tag.
   let bm1 = await PlacesUtils.bookmarks.insert({
     url: "place:tag=t2",
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   let bm2 = await PlacesUtils.bookmarks.insert({
     url: "place:tag=t2&sort=1",
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   // This points to 2 tags, and as such won't be touched.
   let bm3 = await PlacesUtils.bookmarks.insert({
     url: "place:tag=t2&tag=t1",
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
 
   await PT.RenameTag({ oldTag: "t2", tag: "t3" }).transact();

@@ -27,6 +27,7 @@
 #include "nsError.h"
 #include "nsNetUtil.h"
 #include "xpcpublic.h"
+#include "nsReadableUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -265,13 +266,8 @@ void
 PopulateBufferForBinaryString(char16_t* aDest, const char* aSource,
                               uint32_t aCount)
 {
-  const unsigned char* source = (const unsigned char*)aSource;
-  char16_t* end = aDest + aCount;
-  while (aDest != end) {
-    *aDest = *source;
-    ++aDest;
-    ++source;
-  }
+  // Zero-extend each char to char16_t.
+  ConvertLatin1toUTF16(MakeSpan(aSource, aCount), MakeSpan(aDest, aCount));
 }
 
 nsresult

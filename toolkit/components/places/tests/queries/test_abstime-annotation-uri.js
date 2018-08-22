@@ -129,12 +129,12 @@ add_task(async function test_abstime_annotation_uri() {
   // live update.
   info("change title");
   var change1 = [{isDetails: true, uri: "http://foo.com/",
-                  title: "mo"}, ];
+                  title: "mo"} ];
   await task_populateDB(change1);
   Assert.ok(!isInResult({uri: "http://foo.com/"}, root));
 
   var change2 = [{isDetails: true, uri: "http://foo.com/",
-                  title: "moz", lastvisit: endTime}, ];
+                  title: "moz", lastvisit: endTime} ];
   await task_populateDB(change2);
   dump_table("moz_places");
   Assert.ok(!isInResult({uri: "http://foo.com/"}, root));

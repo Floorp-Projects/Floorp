@@ -28,7 +28,7 @@ add_task(async function setup() {
     SELECT guid FROM moz_bookmarks
     WHERE guid = :guid
   `, {
-    guid: PlacesUtils.bookmarks.rootGuid
+    guid: PlacesUtils.bookmarks.rootGuid,
   });
 
   Assert.equal(rows.length, 0, "Root folder should not exist");

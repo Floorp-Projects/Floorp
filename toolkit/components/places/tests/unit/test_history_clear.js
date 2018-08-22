@@ -26,7 +26,7 @@ add_task(async function test_history_clear() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: `place:parent=${PlacesUtils.bookmarks.tagsGuid}`,
-    title: "shortcut"
+    title: "shortcut",
   });
 
   // Add an expire never annotation
@@ -42,7 +42,7 @@ add_task(async function test_history_clear() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "http://typed.mozilla.org/",
-    title: "bookmark"
+    title: "bookmark",
   });
 
   await PlacesTestUtils.addVisits([

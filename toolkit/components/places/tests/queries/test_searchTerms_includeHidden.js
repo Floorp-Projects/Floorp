@@ -14,14 +14,14 @@ const VISITS = [
     uri: "http://redirect.example.com/",
     title: "example",
     isRedirect: true,
-    lastVisit: timeInMicroseconds--
+    lastVisit: timeInMicroseconds--,
   },
   { isVisit: true,
     transType: TRANSITION_TYPED,
     uri: "http://target.example.com/",
     title: "example",
-    lastVisit: timeInMicroseconds--
-  }
+    lastVisit: timeInMicroseconds--,
+  },
 ];
 
 const HIDDEN_VISITS = [
@@ -29,23 +29,23 @@ const HIDDEN_VISITS = [
     transType: TRANSITION_FRAMED_LINK,
     uri: "http://hidden.example.com/",
     title: "red",
-    lastVisit: timeInMicroseconds--
+    lastVisit: timeInMicroseconds--,
   },
 ];
 
 const TEST_DATA = [
   { searchTerms: "example",
     includeHidden: true,
-    expectedResults: 2
+    expectedResults: 2,
   },
   { searchTerms: "example",
     includeHidden: false,
-    expectedResults: 1
+    expectedResults: 1,
   },
   { searchTerms: "red",
     includeHidden: true,
-    expectedResults: 1
-  }
+    expectedResults: 1,
+  },
 ];
 
 add_task(async function test_initalize() {

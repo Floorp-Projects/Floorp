@@ -103,16 +103,16 @@ add_task(async function test_eraseEverything_reparented() {
   // Create a folder with 1 bookmark in it...
   let folder1 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
   let bookmark1 = await PlacesUtils.bookmarks.insert({
     parentGuid: folder1.guid,
-    url: "http://example.com/"
+    url: "http://example.com/",
   });
   // ...and a second folder.
   let folder2 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
 
   // Reparent the bookmark to the 2nd folder.
@@ -141,8 +141,8 @@ add_task(async function test_notifications() {
       children: [{
         title: "test2",
         url: "http://example.com/2",
-      }]
-    }]
+      }],
+    }],
   });
 
   let skipDescendantsObserver = expectNotifications(true);

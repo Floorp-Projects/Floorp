@@ -65,7 +65,7 @@ add_task(async function test_import() {
   // Sanity check: we should not have any bookmark on the toolbar.
   Assert.ok(!(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   })));
 
   // Set preferences.
@@ -76,7 +76,7 @@ add_task(async function test_import() {
   // Check bookmarks.html has been imported.
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   });
   Assert.equal(bm.title, "example");
 
@@ -93,7 +93,7 @@ add_task(async function test_restore() {
   // Sanity check: we should not have any bookmark on the toolbar.
   Assert.ok(!(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   })));
 
   // Set preferences.
@@ -104,7 +104,7 @@ add_task(async function test_restore() {
   // Check bookmarks.html has been restored.
   Assert.ok(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   }));
 
   // Check preferences have been reverted.
@@ -120,7 +120,7 @@ add_task(async function test_restore_import() {
   // Sanity check: we should not have any bookmark on the toolbar.
   Assert.ok(!(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   })));
 
   // Set preferences.
@@ -132,7 +132,7 @@ add_task(async function test_restore_import() {
   // Check bookmarks.html has been restored.
   Assert.ok(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   }));
 
   // Check preferences have been reverted.

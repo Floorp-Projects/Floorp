@@ -40,7 +40,7 @@ async function addNormalizedVisit(aURI, aTime, aDayOffset) {
   info("Adding visit to " + aURI.spec + " at " + PlacesUtils.toDate(PRTimeWithOffset));
   await PlacesTestUtils.addVisits({
     uri: aURI,
-    visitDate: PRTimeWithOffset
+    visitDate: PRTimeWithOffset,
   });
 }
 
@@ -267,7 +267,7 @@ add_task(async function test_RESULTS_AS_SITE_QUERY() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     url: "http://foobar",
-    title: ""
+    title: "",
   });
 
   let options = PlacesUtils.history.getNewQueryOptions();
@@ -337,7 +337,7 @@ async function test_date_liveupdate(aResultType) {
   // Remove "Today".
   await PlacesUtils.history.removeByFilter({
     beginDate: new Date(midnight.getTime()),
-    endDate: new Date(Date.now())
+    endDate: new Date(Date.now()),
   });
   Assert.equal(root.childCount, visibleContainers.length - 1);
 
@@ -371,7 +371,7 @@ async function test_date_liveupdate(aResultType) {
   // Remove "Today".
   await PlacesUtils.history.removeByFilter({
     beginDate: new Date(midnight.getTime()),
-    endDate: new Date(Date.now())
+    endDate: new Date(Date.now()),
   });
   Assert.equal(dateContainer.childCount, visibleContainers.length - 1);
   // Add a visit for "Today".

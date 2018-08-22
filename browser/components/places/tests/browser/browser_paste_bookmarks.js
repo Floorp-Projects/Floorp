@@ -29,7 +29,7 @@ add_task(async function paste() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     url: TEST_URL,
-    title: "0"
+    title: "0",
   });
 
   ContentTree.view.selectItems([bookmark.guid]);
@@ -67,22 +67,22 @@ add_task(async function paste_check_indexes() {
   for (let i = 0; i < 10; i++) {
     copyChildren.push({
       url: `${TEST_URL}${i}`,
-      title: `Copy ${i}`
+      title: `Copy ${i}`,
     });
     targetChildren.push({
       url: `${TEST_URL1}${i}`,
-      title: `Target ${i}`
+      title: `Target ${i}`,
     });
   }
 
   let copyBookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.toolbarGuid,
-    children: copyChildren
+    children: copyChildren,
   });
 
   let targetBookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: targetChildren
+    children: targetChildren,
   });
 
   ContentTree.view.selectItems([
@@ -143,13 +143,13 @@ add_task(async function paste_check_indexes_same_folder() {
   for (let i = 0; i < 10; i++) {
     copyChildren.push({
       url: `${TEST_URL}${i}`,
-      title: `Copy ${i}`
+      title: `Copy ${i}`,
     });
   }
 
   let copyBookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.toolbarGuid,
-    children: copyChildren
+    children: copyChildren,
   });
 
   ContentTree.view.selectItems([
@@ -213,7 +213,7 @@ add_task(async function paste_from_different_instance() {
     "dateAdded": 1464866275853000,
     "lastModified": 1507638113352000,
     "type": "text/x-moz-place",
-    "uri": TEST_URL1
+    "uri": TEST_URL1,
   };
   data = JSON.stringify(data);
 
@@ -257,7 +257,7 @@ add_task(async function paste_separator_from_different_instance() {
     "parent": 452,
     "dateAdded": 1464866275853000,
     "lastModified": 1507638113352000,
-    "type": PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR
+    "type": PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
   };
   data = JSON.stringify(data);
 
@@ -293,22 +293,22 @@ add_task(async function paste_copy_check_indexes() {
   for (let i = 0; i < 10; i++) {
     copyChildren.push({
       url: `${TEST_URL}${i}`,
-      title: `Copy ${i}`
+      title: `Copy ${i}`,
     });
     targetChildren.push({
       url: `${TEST_URL1}${i}`,
-      title: `Target ${i}`
+      title: `Target ${i}`,
     });
   }
 
   let copyBookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.toolbarGuid,
-    children: copyChildren
+    children: copyChildren,
   });
 
   let targetBookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: targetChildren
+    children: targetChildren,
   });
 
   ContentTree.view.selectItems([

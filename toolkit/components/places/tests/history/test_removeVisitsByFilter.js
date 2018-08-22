@@ -68,7 +68,7 @@ add_task(async function test_removeVisitsByFilter() {
         await PlacesUtils.bookmarks.insert({
           url: uri,
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-          title: "test bookmark"
+          title: "test bookmark",
         });
         info("Bookmark added");
       }
@@ -163,7 +163,7 @@ add_task(async function test_removeVisitsByFilter() {
       },
       onDeleteVisits(aURI) {
         // Not sure we can test anything.
-      }
+      },
     };
     PlacesUtils.history.addObserver(observer);
 

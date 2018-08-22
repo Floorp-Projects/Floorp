@@ -42,22 +42,24 @@ HB_SHAPER_DATA_ENSURE_DEFINE(graphite2, font)
  * shaper face data
  */
 
-typedef struct hb_graphite2_tablelist_t {
+typedef struct hb_graphite2_tablelist_t
+{
   struct hb_graphite2_tablelist_t *next;
   hb_blob_t *blob;
   unsigned int tag;
 } hb_graphite2_tablelist_t;
 
-struct hb_graphite2_face_data_t {
+struct hb_graphite2_face_data_t
+{
   hb_face_t *face;
   gr_face   *grface;
-  hb_graphite2_tablelist_t *tlist;
+  hb_atomic_ptr_t<hb_graphite2_tablelist_t> tlist;
 };
 
 static const void *hb_graphite2_get_table (const void *data, unsigned int tag, size_t *len)
 {
   hb_graphite2_face_data_t *face_data = (hb_graphite2_face_data_t *) data;
-  hb_graphite2_tablelist_t *tlist = face_data->tlist;
+  hb_graphite2_tablelist_t *tlist = face_data->tlist.get ();
 
   hb_blob_t *blob = nullptr;
 
@@ -80,10 +82,10 @@ static const void *hb_graphite2_get_table (const void *data, unsigned int tag, s
     p->tag = tag;
 
 retry:
-    hb_graphite2_tablelist_t *tlist = (hb_graphite2_tablelist_t *) hb_atomic_ptr_get (&face_data->tlist);
+    hb_graphite2_tablelist_t *tlist = face_data->tlist.get ();
     p->next = tlist;
 
-    if (!hb_atomic_ptr_cmpexch (&face_data->tlist, tlist, p))
+    if (unlikely (!face_data->tlist.cmpexch (tlist, p)))
       goto retry;
   }
 
@@ -124,7 +126,7 @@ _hb_graphite2_shaper_face_data_create (hb_face_t *face)
 void
 _hb_graphite2_shaper_face_data_destroy (hb_graphite2_face_data_t *data)
 {
-  hb_graphite2_tablelist_t *tlist = data->tlist;
+  hb_graphite2_tablelist_t *tlist = data->tlist.get ();
 
   while (tlist)
   {
