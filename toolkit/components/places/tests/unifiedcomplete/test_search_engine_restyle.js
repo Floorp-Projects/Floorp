@@ -21,14 +21,14 @@ add_task(async function test_searchEngine() {
     matches: [
       makeSearchMatch("Terms", {
         engineName: "SearchEngine",
-        style: ["favicon"]
+        style: ["favicon"],
       }),
       {
         uri: uri2,
         title: "Terms - SearchEngine Search",
-        style: ["bookmark"]
-      }
-    ]
+        style: ["bookmark"],
+      },
+    ],
   });
 
   info("Past search terms should not be styled if restyling is disabled");
@@ -36,7 +36,7 @@ add_task(async function test_searchEngine() {
   await check_autocomplete({
     search: "term",
     matches: [ { uri: uri1, title: "Terms - SearchEngine Search" },
-               { uri: uri2, title: "Terms - SearchEngine Search", style: ["bookmark"] } ]
+               { uri: uri2, title: "Terms - SearchEngine Search", style: ["bookmark"] } ],
   });
 
   await cleanup();

@@ -33,7 +33,7 @@ add_task(async function run_test() {
     children: [
       { url: uri1 }, { url: uri2 }, { url: uri3 },
       { url: uri4 }, { url: uri5 }, { url: uri6 },
-    ]
+    ],
   });
 
   tagssvc.tagURI(uri1, ["foo"]);

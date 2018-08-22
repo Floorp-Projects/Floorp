@@ -198,7 +198,7 @@ add_task(async function test_contents_removed() {
   expectedNotifications.unshift({
     name: "onItemRemoved",
     arguments: {
-      guid: bm1.guid
+      guid: bm1.guid,
     },
   });
 

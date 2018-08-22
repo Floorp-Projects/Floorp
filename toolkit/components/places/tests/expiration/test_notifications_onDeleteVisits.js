@@ -98,7 +98,7 @@ add_task(async function test_notifications_onDeleteVisits() {
       await PlacesUtils.bookmarks.insert({
         parentGuid: PlacesUtils.bookmarks.unfiledGuid,
         title: null,
-        url: page
+        url: page,
       });
       currentTest.bookmarks.push(page);
     }

@@ -8,7 +8,7 @@ add_task(async function() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: TEST_URI,
-    title: "A title"
+    title: "A title",
   });
   await PlacesTestUtils.promiseAsyncUpdates();
   Assert.ok(frecencyForUrl(TEST_URI) > 0);

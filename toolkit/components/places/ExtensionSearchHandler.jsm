@@ -303,5 +303,5 @@ var ExtensionSearchHandler = Object.freeze({
     }
     gActiveInputSession.cancel(this.MSG_INPUT_CANCELLED);
     gActiveInputSession = null;
-  }
+  },
 });

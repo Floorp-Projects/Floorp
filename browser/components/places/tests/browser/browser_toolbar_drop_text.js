@@ -71,7 +71,7 @@ add_task(async function test() {
     const urls = [
       "http://www.mozilla.org/C54263C6-A484-46CF-8E2B-FE131586348A",
       "http://www.mozilla.org/71381257-61E6-4376-AF7C-BF3C5FD8870D",
-      "http://www.mozilla.org/091A88BD-5743-4C16-A005-3D2EA3A3B71E"
+      "http://www.mozilla.org/091A88BD-5743-4C16-A005-3D2EA3A3B71E",
     ];
     let data;
     if (aMimeType == "text/x-moz-url")

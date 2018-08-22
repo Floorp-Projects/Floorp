@@ -49,7 +49,7 @@ function waitForFaviconChanged(aExpectedPageURI, aExpectedFaviconURI,
       Assert.equal(aValue, aExpectedFaviconURI.spec);
       do_check_guid_for_uri(aURI, aGUID);
       aCallback();
-    }
+    },
   };
   PlacesUtils.history.addObserver(historyObserver);
 }

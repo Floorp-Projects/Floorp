@@ -43,20 +43,20 @@ add_task(async function reorder_nonexistent_guid() {
 add_task(async function reorder() {
   let bookmarks = [
     { url: "http://example1.com/",
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     },
     { type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     },
     { type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     },
     { url: "http://example2.com/",
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     },
     { url: "http://example3.com/",
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid
-    }
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    },
   ];
 
   let sorted = [];
@@ -127,31 +127,31 @@ add_task(async function move_and_reorder() {
 
   let bm1 = await PlacesUtils.bookmarks.insert({
     url: "http://example1.com/",
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   let f1 = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   let bm2 = await PlacesUtils.bookmarks.insert({
     url: "http://example2.com/",
-    parentGuid: f1.guid
+    parentGuid: f1.guid,
   });
   let f2 = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   let bm3 = await PlacesUtils.bookmarks.insert({
     url: "http://example3.com/",
-    parentGuid: f2.guid
+    parentGuid: f2.guid,
   });
   let bm4 = await PlacesUtils.bookmarks.insert({
     url: "http://example4.com/",
-    parentGuid: f2.guid
+    parentGuid: f2.guid,
   });
   let bm5 = await PlacesUtils.bookmarks.insert({
     url: "http://example5.com/",
-    parentGuid: f2.guid
+    parentGuid: f2.guid,
   });
 
   // Invert f2 children.
@@ -197,7 +197,7 @@ add_task(async function reorder_empty_folder_invalid_children() {
 
   let f1 = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   // Specifying a child that doesn't exist should cause that to be ignored.
   // However, before bug 1333304, doing this on an empty folder threw.

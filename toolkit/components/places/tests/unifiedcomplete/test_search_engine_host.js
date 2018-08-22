@@ -23,7 +23,7 @@ add_task(async function test_searchEngine_autoFill() {
   await check_autocomplete({
     search: "my",
     autofilled: "my.search.com/",
-    completed: "http://my.search.com/"
+    completed: "http://my.search.com/",
   });
 
   await cleanup();
@@ -40,7 +40,7 @@ add_task(async function test_searchEngine_noautoFill() {
   await check_autocomplete({
     search: "example",
     autofilled: "example.com/",
-    completed: "http://example.com/"
+    completed: "http://example.com/",
   });
 
   await cleanup();

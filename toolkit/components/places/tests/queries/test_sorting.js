@@ -61,7 +61,7 @@ tests.push({
 
   check_reverse() {
     // no reverse sorting for SORT BY NONE
-  }
+  },
 });
 
 tests.push({
@@ -134,7 +134,7 @@ tests.push({
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_DESCENDING;
     this._sortedData.reverse();
     this.check();
-  }
+  },
 });
 
 tests.push({
@@ -232,7 +232,7 @@ tests.push({
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
     this._sortedData.reverse();
     this.check();
-  }
+  },
 });
 
 tests.push({
@@ -336,7 +336,7 @@ tests.push({
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_URI_DESCENDING;
     this._sortedData.reverse();
     this.check();
-  }
+  },
 });
 
 tests.push({
@@ -435,7 +435,7 @@ tests.push({
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING;
     this._sortedData.reverse();
     this.check();
-  }
+  },
 });
 
 tests.push({
@@ -523,7 +523,7 @@ tests.push({
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING;
     this._sortedData.reverse();
     this.check();
-  }
+  },
 });
 
 tests.push({
@@ -619,7 +619,7 @@ tests.push({
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING;
     this._sortedData.reverse();
     this.check();
-  }
+  },
 });
 
 tests.push({
@@ -717,7 +717,7 @@ tests.push({
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_TAGS_DESCENDING;
     this._sortedData.reverse();
     this.check();
-  }
+  },
 });
 
 // SORT_BY_FRECENCY_*
@@ -804,7 +804,7 @@ tests.push({
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING;
     this._sortedData.reverse();
     this.check();
-  }
+  },
 });
 
 add_task(async function test_sorting() {

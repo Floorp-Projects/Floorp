@@ -72,7 +72,7 @@ var resultObserver = {
     this.closedContainer = null;
     this.invalidatedContainer = null;
     this.sortingMode = null;
-  }
+  },
 };
 
 var testURI = uri("http://mozilla.com");
@@ -148,7 +148,7 @@ add_task(async function check_bookmarks_query() {
   let testBookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: testURI,
-    title: "foo"
+    title: "foo",
   });
   Assert.equal("foo", resultObserver.insertedNode.title);
   Assert.equal(testURI.spec, resultObserver.insertedNode.uri);
@@ -168,7 +168,7 @@ add_task(async function check_bookmarks_query() {
   let testBookmark2 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: "http://google.com",
-    title: "foo"
+    title: "foo",
   });
 
   await PlacesUtils.bookmarks.update({

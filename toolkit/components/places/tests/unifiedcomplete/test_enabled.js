@@ -9,21 +9,21 @@ add_task(async function test_enabled() {
   info("plain search");
   await check_autocomplete({
     search: "url",
-    matches: [ { uri, title: "title" } ]
+    matches: [ { uri, title: "title" } ],
   });
 
   info("search disabled");
   Services.prefs.setBoolPref("browser.urlbar.autocomplete.enabled", false);
   await check_autocomplete({
     search: "url",
-    matches: [ ]
+    matches: [ ],
   });
 
   info("resume normal search");
   Services.prefs.setBoolPref("browser.urlbar.autocomplete.enabled", true);
   await check_autocomplete({
     search: "url",
-    matches: [ { uri, title: "title" } ]
+    matches: [ { uri, title: "title" } ],
   });
 
   await cleanup();

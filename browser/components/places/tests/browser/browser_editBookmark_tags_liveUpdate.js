@@ -34,7 +34,7 @@ add_task(async function() {
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     url: TEST_URI.spec,
-    title: "test.me"
+    title: "test.me",
   });
 
   // Init panel.
@@ -66,7 +66,7 @@ add_task(async function() {
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     title: "test.again.me",
-    url: TEST_URI2.spec
+    url: TEST_URI2.spec,
   });
 
   // Init panel with multiple uris.

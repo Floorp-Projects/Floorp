@@ -16,7 +16,7 @@ add_task(async function test_tag_match_has_bookmark_title() {
                       tags: [ "superTag" ]});
   await check_autocomplete({
     search: "superTag",
-    matches: [ { uri, title: "Bookmark title", tags: [ "superTag" ], style: [ "bookmark-tag" ] } ]
+    matches: [ { uri, title: "Bookmark title", tags: [ "superTag" ], style: [ "bookmark-tag" ] } ],
   });
   await cleanup();
 });

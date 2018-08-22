@@ -703,7 +703,7 @@ var gEditItemOverlay = {
         this._paneInfo.itemGuid != containerGuid) {
       await PlacesTransactions.Move({
         guid: this._paneInfo.itemGuid,
-        newParentGuid: containerGuid
+        newParentGuid: containerGuid,
       }).transact();
 
       // Auto-show the bookmarks toolbar when adding / moving an item there.
@@ -827,7 +827,7 @@ var gEditItemOverlay = {
     if (!ip) {
       ip = new PlacesInsertionPoint({
         parentId: PlacesUtils.bookmarksMenuFolderId,
-        parentGuid: PlacesUtils.bookmarks.menuGuid
+        parentGuid: PlacesUtils.bookmarks.menuGuid,
       });
     }
 
@@ -836,7 +836,7 @@ var gEditItemOverlay = {
     let guid = await PlacesTransactions.NewFolder({
       parentGuid: ip.guid,
       title,
-      index: await ip.getIndex()
+      index: await ip.getIndex(),
     }).transact().catch(Cu.reportError);
 
     this._folderTree.focus();

@@ -32,7 +32,7 @@ add_task(async function changeuri_unvisited_bookmark() {
 
   await PlacesUtils.bookmarks.update({
     guid: bookmark.guid,
-    url: TEST_URL2
+    url: TEST_URL2,
   });
 
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -99,7 +99,7 @@ add_task(async function changeuri_bookmark_still_bookmarked() {
 
   await PlacesUtils.bookmarks.update({
     guid: bookmark.guid,
-    url: TEST_URL2
+    url: TEST_URL2,
   });
 
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -115,7 +115,7 @@ add_task(async function changeuri_nonexistent_bookmark() {
   // Try a bogus guid.
   await Assert.rejects(PlacesUtils.bookmarks.update({
     guid: "ABCDEDFGHIJK",
-    url: TEST_URL2
+    url: TEST_URL2,
   }), /No bookmarks found for the provided GUID/,
     "Changing the URI of a non-existent bookmark should fail.");
 
@@ -130,7 +130,7 @@ add_task(async function changeuri_nonexistent_bookmark() {
 
   await Assert.rejects(PlacesUtils.bookmarks.update({
     guid: bookmark.guid,
-    url: TEST_URL2
+    url: TEST_URL2,
   }), /No bookmarks found for the provided GUID/,
     "Changing the URI of a non-existent bookmark should fail.");
 

@@ -224,7 +224,7 @@ var BookmarkHTMLUtils = Object.freeze({
       return Services.prefs.getCharPref("browser.bookmarks.file");
     } catch (ex) {}
     return OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.html");
-  }
+  },
 });
 
 function Frame(aFolder) {
@@ -313,7 +313,7 @@ function BookmarkImporter(aInitialImport, aSource) {
   this._bookmarkTree = {
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     guid: PlacesUtils.bookmarks.menuGuid,
-    children: []
+    children: [],
   };
 
   this._frames = [];
@@ -345,7 +345,7 @@ BookmarkImporter.prototype = {
 
     let folder = {
       children: [],
-      type: PlacesUtils.bookmarks.TYPE_FOLDER
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
     };
 
     switch (containerType) {
@@ -404,7 +404,7 @@ BookmarkImporter.prototype = {
     let frame = this._curFrame;
 
     let separator = {
-      type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+      type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
     };
     frame.folder.children.push(separator);
     frame.previousItem = separator;
@@ -636,14 +636,14 @@ BookmarkImporter.prototype = {
           "name": PlacesUtils.LMANNO_FEEDURI,
           "flags": 0,
           "expires": 4,
-          "value": frame.previousFeed
+          "value": frame.previousFeed,
         });
         if (frame.previousLink) {
           frame.previousItem.annos.push({
             "name": PlacesUtils.LMANNO_SITEURI,
             "flags": 0,
             "expires": 4,
-            "value": frame.previousLink
+            "value": frame.previousLink,
           });
         }
       }
@@ -1048,7 +1048,7 @@ BookmarkExporter.prototype = {
                           aItem.annos.find(anno => anno.name == DESCRIPTION_ANNO);
     if (descriptionAnno)
       this._writeLine(aIndent + "<DD>" + escapeHtmlEntities(descriptionAnno.value));
-  }
+  },
 };
 
 /**

@@ -26,7 +26,7 @@ add_task(async function test_fetch_existent() {
       uri,
       title,
       transition: transitions[i],
-      visitDate: dates[i]
+      visitDate: dates[i],
     });
   }
   await PlacesTestUtils.addVisits(visits);
@@ -39,12 +39,12 @@ add_task(async function test_fetch_existent() {
 
   // Initialize the objects to compare against.
   let idealPageInfo = {
-    url: new URL(uriString), guid, title
+    url: new URL(uriString), guid, title,
   };
   let idealVisits = visits.map(v => {
     return {
       date: v.visitDate,
-      transition: v.transition
+      transition: v.transition,
     };
   });
 

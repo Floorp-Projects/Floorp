@@ -143,7 +143,7 @@ tests.push({
     stmt.params.anno = this._obsoleteWeaveAttribute;
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 tests.push({
@@ -196,7 +196,7 @@ tests.push({
     stmt.params.anno3 = this._obsoleteWeaveAttribute;
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 tests.push({
@@ -251,7 +251,7 @@ tests.push({
     stmt.params.anno = this._unusedAttribute;
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -298,7 +298,7 @@ tests.push({
     stmt = mDBConn.createStatement("SELECT id FROM moz_annos WHERE anno_attribute_id = 1337");
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -345,7 +345,7 @@ tests.push({
     stmt = mDBConn.createStatement("SELECT id FROM moz_annos WHERE place_id = 1337");
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -378,7 +378,7 @@ tests.push({
       PlacesUtils.bookmarks.unfiledGuid,
       PlacesUtils.bookmarks.mobileGuid,
     ]);
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -438,7 +438,7 @@ tests.push({
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
     Assert.deepEqual(tombstones.map(info => info.guid), ["bookmarkAAAA"]);
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -483,7 +483,7 @@ tests.push({
     stmt.params.parent = this._tagId;
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -526,7 +526,7 @@ tests.push({
     stmt.params.parent = bs.tagsFolder;
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -589,7 +589,7 @@ tests.push({
       let actualChangeCounter = rows[0].getResultByName("syncChangeCounter");
       Assert.equal(actualChangeCounter, syncChangeCounter);
     }
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -622,7 +622,7 @@ tests.push({
     stmt.params.type = bs.TYPE_BOOKMARK;
     Assert.ok(stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -661,7 +661,7 @@ tests.push({
     Assert.ok(stmt.executeStep());
     Assert.equal(stmt.row.syncChangeCounter, 1);
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -715,7 +715,7 @@ tests.push({
       let actualChangeCounter = rows[0].getResultByName("syncChangeCounter");
       Assert.equal(actualChangeCounter, syncChangeCounter);
     }
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -822,7 +822,7 @@ tests.push({
 
     await check_order(PlacesUtils.unfiledBookmarksFolderId, this._unfiledBookmarks);
     await check_order(PlacesUtils.toolbarFolderId, this._toolbarBookmarks);
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -886,7 +886,7 @@ tests.push({
       Assert.greaterOrEqual(taggedItemsStmt.row.syncChangeCounter, 1);
     }
     taggedItemsStmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -945,7 +945,7 @@ tests.push({
     stmt.params.page_id = 99;
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -980,7 +980,7 @@ tests.push({
     stmt.params.place_id = this._invalidPlaceId;
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -1017,7 +1017,7 @@ tests.push({
     stmt.params.place_id = this._invalidPlaceId;
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -1067,7 +1067,7 @@ tests.push({
     stmt = mDBConn.createStatement("SELECT id FROM moz_items_annos WHERE anno_attribute_id = 1337");
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -1118,7 +1118,7 @@ tests.push({
     stmt = mDBConn.createStatement("SELECT id FROM moz_items_annos WHERE item_id = 8888");
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 
@@ -1148,7 +1148,7 @@ tests.push({
     stmt.params.keyword = "unused";
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -1562,7 +1562,7 @@ tests.push({
     );
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -1606,11 +1606,11 @@ tests.push({
           Assert.equal(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
           Assert.equal(this._count, 2);
           resolve();
-        }
+        },
       });
       stmt.finalize();
     });
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -1637,7 +1637,7 @@ tests.push({
 
   async check() {
     Assert.equal((await this._getForeignCount()), 2);
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -1665,7 +1665,7 @@ tests.push({
 
   async check() {
     Assert.ok((await this._getHash()) > 0);
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -2134,8 +2134,8 @@ tests.push({
         children: [{
           title: "testbookmark",
           url: this._uri1,
-        }]
-      }]
+        }],
+      }],
     });
 
     this._folder = bookmarks[0];
@@ -2184,7 +2184,7 @@ tests.push({
         resolve();
       });
     });
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------

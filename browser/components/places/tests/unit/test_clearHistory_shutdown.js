@@ -12,7 +12,7 @@ const URIS = [
   "http://a.example1.com/",
   "http://b.example1.com/",
   "http://b.example2.com/",
-  "http://c.example3.com/"
+  "http://c.example3.com/",
 ];
 
 const TOPIC_CONNECTION_CLOSED = "places-connection-closed";
@@ -20,11 +20,11 @@ const TOPIC_CONNECTION_CLOSED = "places-connection-closed";
 var EXPECTED_NOTIFICATIONS = [
   "places-shutdown",
   "places-expiration-finished",
-  "places-connection-closed"
+  "places-connection-closed",
 ];
 
 const UNEXPECTED_NOTIFICATIONS = [
-  "xpcom-shutdown"
+  "xpcom-shutdown",
 ];
 
 const FTP_URL = "ftp://localhost/clearHistoryOnShutdown/";
@@ -66,7 +66,7 @@ add_task(async function test_execute() {
   for (let aUrl of URIS) {
     await PlacesTestUtils.addVisits({
       uri: uri(aUrl), visitDate: timeInMicroseconds++,
-      transition: PlacesUtils.history.TRANSITION_TYPED
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     });
   }
   info("Add cache.");
@@ -107,7 +107,7 @@ function addFormHistory() {
                          value: "test",
                          timesUsed: 1,
                          firstUsed: now,
-                         lastUsed: now
+                         lastUsed: now,
                        },
                        { handleCompletion(reason) { resolve(); } });
   });
@@ -118,7 +118,7 @@ function getFormHistoryCount() {
     let count = -1;
     FormHistory.count({ fieldname: "testfield" },
                       { handleResult(result) { count = result; },
-                        handleCompletion(reason) { resolve(count); }
+                        handleCompletion(reason) { resolve(count); },
                       });
   });
 }
@@ -148,7 +148,7 @@ function storeCache(aURL, aContent) {
         os.close();
         entry.close();
         resolve();
-      }
+      },
     };
 
     storage.asyncOpenURI(Services.io.newURI(aURL), "",
@@ -167,7 +167,7 @@ function checkCache(aURL) {
       onCacheEntryAvailable(entry, isnew, appcache, status) {
         Assert.equal(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
         resolve();
-      }
+      },
     };
 
     storage.asyncOpenURI(Services.io.newURI(aURL), "",

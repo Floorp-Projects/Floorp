@@ -481,7 +481,7 @@ var PlacesUIUtils = {
 
     await PlacesUtils.history.update({
       url,
-      annotations: new Map([[PlacesUtils.CHARSET_ANNO, charset]])
+      annotations: new Map([[PlacesUtils.CHARSET_ANNO, charset]]),
     });
   },
 
@@ -844,7 +844,7 @@ var PlacesUIUtils = {
     let parent = {
       itemId: await PlacesUtils.promiseItemId(aFetchInfo.parentGuid),
       bookmarkGuid: aFetchInfo.parentGuid,
-      type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
+      type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
     };
 
     return Object.freeze({
@@ -872,7 +872,7 @@ var PlacesUIUtils = {
 
       get parent() {
         return parent;
-      }
+      },
     });
   },
 

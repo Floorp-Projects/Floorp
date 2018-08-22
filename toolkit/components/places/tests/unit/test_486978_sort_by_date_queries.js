@@ -33,7 +33,7 @@ add_task(async function test_initialize() {
     let page = pages[pageIndex];
     await PlacesTestUtils.addVisits({
       uri: uri(page),
-      visitDate: new Date(now - (pages.length - pageIndex))
+      visitDate: new Date(now - (pages.length - pageIndex)),
     });
   }
 });

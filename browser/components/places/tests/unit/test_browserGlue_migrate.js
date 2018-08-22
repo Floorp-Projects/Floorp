@@ -35,7 +35,7 @@ add_task(async function test_migrate_bookmarks() {
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     url: "http://mozilla.org/",
-    title: "migrated"
+    title: "migrated",
   });
 
   let promise = promiseTopicObserved("places-browser-init-complete");
@@ -45,18 +45,18 @@ add_task(async function test_migrate_bookmarks() {
   // Check the created bookmark still exists.
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
-    index: 0
+    index: 0,
   });
   Assert.equal(bm.title, "migrated");
 
   // Check that we have not imported any new bookmark.
   Assert.ok(!(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
-    index: 1
+    index: 1,
   })));
 
   Assert.ok(!(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   })));
 });

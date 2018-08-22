@@ -26,37 +26,37 @@ add_task(async function test_keyword_searc() {
   info("Plain keyword query");
   await check_autocomplete({
     search: "key term",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=term"), title: "abc", style: ["keyword", "heuristic"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=term"), title: "abc", style: ["keyword", "heuristic"] } ],
   });
 
   info("Plain keyword UC");
   await check_autocomplete({
     search: "key TERM",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=TERM"), title: "abc", style: ["keyword", "heuristic"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=TERM"), title: "abc", style: ["keyword", "heuristic"] } ],
   });
 
   info("Multi-word keyword query");
   await check_autocomplete({
     search: "key multi word",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=multi%20word"), title: "abc", style: ["keyword", "heuristic"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=multi%20word"), title: "abc", style: ["keyword", "heuristic"] } ],
   });
 
   info("Keyword query with +");
   await check_autocomplete({
     search: "key blocking+",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=blocking%2B"), title: "abc", style: ["keyword", "heuristic"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=blocking%2B"), title: "abc", style: ["keyword", "heuristic"] } ],
   });
 
   info("Unescaped term in query");
   await check_autocomplete({
     search: "key ユニコード",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=ユニコード"), title: "abc", style: ["keyword", "heuristic"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=ユニコード"), title: "abc", style: ["keyword", "heuristic"] } ],
   });
 
   info("Keyword with query that happens to match a page");
   await check_autocomplete({
     search: "key ThisPageIsInHistory",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "abc", style: ["keyword", "heuristic"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "abc", style: ["keyword", "heuristic"] } ],
   });
 
   info("Keyword with query that partially matches a page");
@@ -75,7 +75,7 @@ add_task(async function test_keyword_searc() {
       { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] },
       { uri: NetUtil.newURI("http://abc/?search=%s"), title: "Bookmark title", style: ["bookmark"] },
       { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "Generic page title" },
-    ]
+    ],
   });
 
   info("Keyword without query (with space)");
@@ -85,13 +85,13 @@ add_task(async function test_keyword_searc() {
       { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] },
       { uri: NetUtil.newURI("http://abc/?search=%s"), title: "Bookmark title", style: ["bookmark"] },
       { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "Generic page title" },
-    ]
+    ],
   });
 
   info("Bug 1228111 - Keyword with a space in front");
   await check_autocomplete({
     search: " key test",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=test"), title: "abc", style: ["keyword", "heuristic"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=test"), title: "abc", style: ["keyword", "heuristic"] } ],
   });
 
   info("Bug 1481319 - Keyword with a prefix in front");
