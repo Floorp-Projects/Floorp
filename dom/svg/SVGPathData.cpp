@@ -262,18 +262,18 @@ ApproximateZeroLengthSubpathSquareCaps(PathBuilder* aPB,
   aPB->MoveTo(aPoint);
 }
 
-#define MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT               \
-  do {                                                                        \
-    if (!subpathHasLength && hasLineCaps && aStrokeWidth > 0 &&               \
-        subpathContainsNonMoveTo &&                                           \
-        SVGPathSegUtils::IsValidType(prevSegType) &&                          \
-        (!IsMoveto(prevSegType) || segType == PATHSEG_CLOSEPATH)) {           \
-      ApproximateZeroLengthSubpathSquareCaps(builder, segStart, aStrokeWidth);\
-    }                                                                         \
+#define MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT                \
+  do {                                                                         \
+    if (!subpathHasLength && hasLineCaps && aStrokeWidth > 0 &&                \
+        subpathContainsNonMoveTo &&                                            \
+        SVGPathSegUtils::IsValidType(prevSegType) &&                           \
+        (!IsMoveto(prevSegType) || segType == PATHSEG_CLOSEPATH)) {            \
+      ApproximateZeroLengthSubpathSquareCaps(aBuilder, segStart, aStrokeWidth);\
+    }                                                                          \
   } while(0)
 
 already_AddRefed<Path>
-SVGPathData::BuildPath(PathBuilder* builder,
+SVGPathData::BuildPath(PathBuilder* aBuilder,
                        uint8_t aStrokeLineCap,
                        Float aStrokeWidth) const
 {
@@ -309,20 +309,20 @@ SVGPathData::BuildPath(PathBuilder* builder,
       subpathContainsNonMoveTo = true;
       MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
       segEnd = pathStart;
-      builder->Close();
+      aBuilder->Close();
       break;
 
     case PATHSEG_MOVETO_ABS:
       MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
       pathStart = segEnd = Point(mData[i], mData[i+1]);
-      builder->MoveTo(segEnd);
+      aBuilder->MoveTo(segEnd);
       subpathHasLength = false;
       break;
 
     case PATHSEG_MOVETO_REL:
       MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
       pathStart = segEnd = segStart + Point(mData[i], mData[i+1]);
-      builder->MoveTo(segEnd);
+      aBuilder->MoveTo(segEnd);
       subpathHasLength = false;
       break;
 
@@ -330,7 +330,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       segEnd = Point(mData[i], mData[i+1]);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        builder->LineTo(segEnd);
+        aBuilder->LineTo(segEnd);
       }
       break;
 
@@ -338,7 +338,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       segEnd = segStart + Point(mData[i], mData[i+1]);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        builder->LineTo(segEnd);
+        aBuilder->LineTo(segEnd);
       }
       break;
 
@@ -348,7 +348,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       segEnd = Point(mData[i+4], mData[i+5]);
       if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
         subpathHasLength = true;
-        builder->BezierTo(cp1, cp2, segEnd);
+        aBuilder->BezierTo(cp1, cp2, segEnd);
       }
       break;
 
@@ -358,7 +358,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       segEnd = segStart + Point(mData[i+4], mData[i+5]);
       if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
         subpathHasLength = true;
-        builder->BezierTo(cp1, cp2, segEnd);
+        aBuilder->BezierTo(cp1, cp2, segEnd);
       }
       break;
 
@@ -370,7 +370,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       tcp2 = cp1 + (segEnd - cp1) / 3;
       if (segEnd != segStart || segEnd != cp1) {
         subpathHasLength = true;
-        builder->BezierTo(tcp1, tcp2, segEnd);
+        aBuilder->BezierTo(tcp1, tcp2, segEnd);
       }
       break;
 
@@ -382,7 +382,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       tcp2 = cp1 + (segEnd - cp1) / 3;
       if (segEnd != segStart || segEnd != cp1) {
         subpathHasLength = true;
-        builder->BezierTo(tcp1, tcp2, segEnd);
+        aBuilder->BezierTo(tcp1, tcp2, segEnd);
       }
       break;
 
@@ -397,12 +397,12 @@ SVGPathData::BuildPath(PathBuilder* builder,
       if (segEnd != segStart) {
         subpathHasLength = true;
         if (radii.x == 0.0f || radii.y == 0.0f) {
-          builder->LineTo(segEnd);
+          aBuilder->LineTo(segEnd);
         } else {
           nsSVGArcConverter converter(segStart, segEnd, radii, mData[i+2],
                                       mData[i+3] != 0, mData[i+4] != 0);
           while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
-            builder->BezierTo(cp1, cp2, segEnd);
+            aBuilder->BezierTo(cp1, cp2, segEnd);
           }
         }
       }
@@ -413,7 +413,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       segEnd = Point(mData[i], segStart.y);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        builder->LineTo(segEnd);
+        aBuilder->LineTo(segEnd);
       }
       break;
 
@@ -421,7 +421,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       segEnd = segStart + Point(mData[i], 0.0f);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        builder->LineTo(segEnd);
+        aBuilder->LineTo(segEnd);
       }
       break;
 
@@ -429,7 +429,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       segEnd = Point(segStart.x, mData[i]);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        builder->LineTo(segEnd);
+        aBuilder->LineTo(segEnd);
       }
       break;
 
@@ -437,7 +437,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       segEnd = segStart + Point(0.0f, mData[i]);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        builder->LineTo(segEnd);
+        aBuilder->LineTo(segEnd);
       }
       break;
 
@@ -447,7 +447,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       segEnd = Point(mData[i+2], mData[i+3]);
       if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
         subpathHasLength = true;
-        builder->BezierTo(cp1, cp2, segEnd);
+        aBuilder->BezierTo(cp1, cp2, segEnd);
       }
       break;
 
@@ -457,7 +457,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       segEnd = segStart + Point(mData[i+2], mData[i+3]);
       if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
         subpathHasLength = true;
-        builder->BezierTo(cp1, cp2, segEnd);
+        aBuilder->BezierTo(cp1, cp2, segEnd);
       }
       break;
 
@@ -469,7 +469,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       tcp2 = cp1 + (segEnd - cp1) / 3;
       if (segEnd != segStart || segEnd != cp1) {
         subpathHasLength = true;
-        builder->BezierTo(tcp1, tcp2, segEnd);
+        aBuilder->BezierTo(tcp1, tcp2, segEnd);
       }
       break;
 
@@ -481,7 +481,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
       tcp2 = cp1 + (segEnd - cp1) / 3;
       if (segEnd != segStart || segEnd != cp1) {
         subpathHasLength = true;
-        builder->BezierTo(tcp1, tcp2, segEnd);
+        aBuilder->BezierTo(tcp1, tcp2, segEnd);
       }
       break;
 
@@ -503,7 +503,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
 
   MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
 
-  return builder->Finish();
+  return aBuilder->Finish();
 }
 
 already_AddRefed<Path>
