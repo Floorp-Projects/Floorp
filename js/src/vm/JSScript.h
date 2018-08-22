@@ -1274,6 +1274,182 @@ template<XDRMode mode>
 XDRResult
 XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 
+// [SMDOC] - JSScript data layout (unshared)
+//
+// PrivateScriptData stores variable-length data associated with a script.
+// Abstractly a PrivateScriptData consists of all these arrays:
+//
+//   * A non-empty array of GCPtrScope in scopes()
+//   * A possibly-empty array of GCPtrValue in consts()
+//   * A possibly-empty array of JSObject* in objects()
+//   * A possibly-empty array of JSTryNote in tryNotes()
+//   * A possibly-empty array of ScopeNote in scopeNotes()
+//   * A possibly-empty array of uint32_t in yieldAndAwaitOffsets()
+//
+// Accessing any of these arrays just requires calling the appropriate public
+// Span-computing function.
+//
+// Under the hood, PrivateScriptData is a small class followed by a memory
+// layout that compactly encodes all these arrays, in this manner (only
+// explicit padding, "--" separators for readability only):
+//
+//   <PrivateScriptData itself>
+//   --
+//   (OPTIONAL) PackedSpan for consts()
+//   (OPTIONAL) PackedSpan for objects()
+//   (OPTIONAL) PackedSpan for tryNotes()
+//   (OPTIONAL) PackedSpan for scopeNotes()
+//   (OPTIONAL) PackedSpan for yieldAndAwaitOffsets()
+//   --
+//   (REQUIRED) All the GCPtrScopes that constitute scopes()
+//   --
+//   (OPTIONAL) If there are consts, padding needed for space so far to be
+//              GCPtrValue-aligned
+//   (OPTIONAL) All the GCPtrValues that constitute consts()
+//   --
+//   (OPTIONAL) All the GCPtrObjects that constitute objects()
+//   --
+//   (OPTIONAL) All the JSTryNotes that constitute tryNotes()
+//   --
+//   (OPTIONAL) All the ScopeNotes that constitute scopeNotes()
+//   --
+//   (OPTIONAL) All the uint32_t's that constitute yieldAndAwaitOffsets()
+//
+// The contents of PrivateScriptData indicate which optional items are present.
+// PrivateScriptData::packedOffsets contains bit-fields, one per array.
+// Multiply each packed offset by sizeof(uint32_t) to compute a *real* offset.
+//
+// PrivateScriptData::scopesOffset indicates where scopes() begins. The bound
+// of five PackedSpans ensures we can encode this offset compactly.
+// PrivateScriptData::nscopes indicates the number of GCPtrScopes in scopes().
+//
+// The other PackedScriptData::*Offset fields indicate where a potential
+// corresponding PackedSpan resides. If the packed offset is 0, there is no
+// PackedSpan, and the array is empty. Otherwise the PackedSpan's uint32_t
+// offset and length fields store: 1) a *non-packed* offset (a literal count of
+// bytes offset from the *start* of PrivateScriptData struct) to the
+// corresponding array, and 2) the number of elements in the array,
+// respectively.
+//
+// PrivateScriptData and PackedSpan are 64-bit-aligned, so manual alignment in
+// trailing fields is only necessary before the first trailing fields with
+// increased alignment -- before GCPtrValues for consts(), on 32-bit, where the
+// preceding GCPtrScopes as pointers are only 32-bit-aligned.
+class alignas(JS::Value) PrivateScriptData final
+{
+    struct PackedOffsets
+    {
+        static constexpr size_t SCALE = sizeof(uint32_t);
+        static constexpr size_t MAX_OFFSET = 0b1111;
+
+        // (Scaled) offset to Scopes
+        uint32_t scopesOffset : 8;
+
+        // (Scaled) offset to Spans. These are set to 0 if they don't exist.
+        uint32_t constsSpanOffset : 4;
+        uint32_t objectsSpanOffset : 4;
+        uint32_t tryNotesSpanOffset : 4;
+        uint32_t scopeNotesSpanOffset : 4;
+        uint32_t yieldOffsetsSpanOffset : 4;
+    };
+
+    // Detect accidental size regressions.
+    static_assert(sizeof(PackedOffsets) == sizeof(uint32_t),
+                  "unexpected bit-field packing");
+
+    // A span describes base offset and length of one variable length array in
+    // the private data.
+    struct alignas(uintptr_t) PackedSpan
+    {
+        uint32_t offset;
+        uint32_t length;
+    };
+
+    // Concrete Fields
+    PackedOffsets packedOffsets = {}; // zeroes
+    uint32_t nscopes;
+
+    // Translate an offset into a concrete pointer.
+    template <typename T>
+    T* offsetToPointer(size_t offset)
+    {
+        uintptr_t base = reinterpret_cast<uintptr_t>(this);
+        uintptr_t elem = base + offset;
+        return reinterpret_cast<T*>(elem);
+    }
+
+    // Translate a PackedOffsets member into a pointer.
+    template <typename T>
+    T* packedOffsetToPointer(size_t packedOffset)
+    {
+        return offsetToPointer<T>(packedOffset * PackedOffsets::SCALE);
+    }
+
+    // Translates a PackedOffsets member into a PackedSpan* and then unpacks
+    // that to a mozilla::Span.
+    template <typename T>
+    mozilla::Span<T> packedOffsetToSpan(size_t scaledSpanOffset)
+    {
+        PackedSpan* span = packedOffsetToPointer<PackedSpan>(scaledSpanOffset);
+        T* base = offsetToPointer<T>(span->offset);
+        return mozilla::MakeSpan(base, span->length);
+    }
+
+    // Helpers for creating initializing trailing data
+    template <typename T>
+    void initSpan(size_t* cursor, uint32_t scaledSpanOffset, size_t length);
+
+    template <typename T>
+    void initElements(size_t offset, size_t length);
+
+    // Size to allocate
+    static size_t AllocationSize(uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
+                                 uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets);
+
+    // Initialize header and PackedSpans
+    PrivateScriptData(uint32_t nscopes_, uint32_t nconsts, uint32_t nobjects,
+                      uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets);
+
+  public:
+
+    // Accessors for typed array spans.
+    mozilla::Span<GCPtrScope> scopes() {
+        GCPtrScope* base = packedOffsetToPointer<GCPtrScope>(packedOffsets.scopesOffset);
+        return mozilla::MakeSpan(base, nscopes);
+    }
+    mozilla::Span<GCPtrValue> consts() {
+        return packedOffsetToSpan<GCPtrValue>(packedOffsets.constsSpanOffset);
+    }
+    mozilla::Span<GCPtrObject> objects() {
+        return packedOffsetToSpan<GCPtrObject>(packedOffsets.objectsSpanOffset);
+    }
+    mozilla::Span<JSTryNote> tryNotes() {
+        return packedOffsetToSpan<JSTryNote>(packedOffsets.tryNotesSpanOffset);
+    }
+    mozilla::Span<ScopeNote> scopeNotes() {
+        return packedOffsetToSpan<ScopeNote>(packedOffsets.scopeNotesSpanOffset);
+    }
+    mozilla::Span<uint32_t> yieldAndAwaitOffsets() {
+        return packedOffsetToSpan<uint32_t>(packedOffsets.yieldOffsetsSpanOffset);
+    }
+
+    // Fast tests for if array exists
+    bool hasConsts() const { return packedOffsets.constsSpanOffset != 0; }
+    bool hasObjects() const { return packedOffsets.objectsSpanOffset != 0; }
+    bool hasTryNotes() const { return packedOffsets.tryNotesSpanOffset != 0; }
+    bool hasScopeNotes() const { return packedOffsets.scopeNotesSpanOffset != 0; }
+    bool hasYieldOffsets() const { return packedOffsets.yieldOffsetsSpanOffset != 0; }
+
+    // Allocate a new PrivateScriptData. Headers and GCPtrs are initialized.
+    // The size of allocation is returned as an out parameter.
+    static PrivateScriptData* new_(JSContext* cx,
+                                   uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
+                                   uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets,
+                                   uint32_t* dataSize);
+
+    void traceChildren(JSTracer* trc);
+};
+
 /*
  * Common data that can be shared between many scripts in a single runtime.
  */
