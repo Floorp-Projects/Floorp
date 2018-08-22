@@ -1303,12 +1303,7 @@ public:
     nsCOMPtr<nsISHEntry> shentry;
     mTransaction->GetSHEntry(getter_AddRefs(shentry));
 
-    nsCOMPtr<nsISHEntryInternal> shentryInternal = do_QueryInterface(shentry);
-    if (shentryInternal) {
-      shentryInternal->GetLastTouched(&mLastTouched);
-    } else {
-      NS_WARNING("Can't cast to nsISHEntryInternal?");
-    }
+    shentry->GetLastTouched(&mLastTouched);
   }
 
   bool operator<(const TransactionAndDistance& aOther) const
@@ -1896,11 +1891,8 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
   }
 
   // Remember that this entry is getting loaded at this point in the sequence
-  nsCOMPtr<nsISHEntryInternal> entryInternal = do_QueryInterface(nextEntry);
 
-  if (entryInternal) {
-    entryInternal->SetLastTouched(++gTouchCounter);
-  }
+  nextEntry->SetLastTouched(++gTouchCounter);
 
   // Get the uri for the entry we are about to visit
   nextEntry->GetURI(getter_AddRefs(nextURI));
