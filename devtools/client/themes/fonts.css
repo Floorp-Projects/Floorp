@@ -133,6 +133,7 @@
 }
 
 .font-name {
+  display: inline-block;
   margin-bottom: 0.6em;
   font-size: 1em;
   color: var(--grey-50);
@@ -148,7 +149,6 @@
 }
 
 .font-group .font-name {
-  display: inline-block;
   white-space: unset;
   margin-right: .5em;
 }
