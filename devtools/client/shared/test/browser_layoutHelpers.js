@@ -10,11 +10,11 @@ const TEST_URI = TEST_URI_ROOT + "doc_layoutHelpers.html";
 
 add_task(async function() {
   const [host, win] = await createHost("bottom", TEST_URI);
-  runTest(win);
+  await runTest(win);
   host.destroy();
 });
 
-function runTest(win) {
+async function runTest(win) {
   const some = win.document.getElementById("some");
 
   some.style.top = win.innerHeight + "px";
@@ -90,4 +90,21 @@ function runTest(win) {
      "if parameter is false.");
   is(win.scrollX, xPos,
      "scrollX position has not changed.");
+
+  // Check smooth flag (scroll goes below the viewport)
+
+  info("Checking smooth flag");
+  is(win.matchMedia("(prefers-reduced-motion)").matches, false,
+    "Reduced motion is disabled");
+
+  const other = win.document.getElementById("other");
+  other.style.top = win.innerHeight + "px";
+  other.style.left = win.innerWidth + "px";
+  win.scroll(0, 0);
+
+  scrollIntoViewIfNeeded(other, false, true);
+  ok(win.scrollY < other.clientHeight,
+    "Window has not instantly scrolled to the final position");
+  await waitUntil(() => win.scrollY === other.clientHeight);
+  ok(true, "Window did finish scrolling");
 }
