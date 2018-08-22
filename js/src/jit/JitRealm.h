@@ -342,7 +342,7 @@ enum class CacheKind : uint8_t;
 class CacheIRStubInfo;
 
 enum class ICStubEngine : uint8_t {
-    // Baseline IC, see SharedIC.h and BaselineIC.h.
+    // Baseline IC, see BaselineIC.h.
     Baseline = 0,
 
     // Ion IC, see IonIC.h.

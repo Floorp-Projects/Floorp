@@ -14,7 +14,9 @@
 #include "gc/Rooting.h"
 #include "jit/CompactBuffer.h"
 #include "jit/ICState.h"
-#include "jit/SharedIC.h"
+#include "jit/MacroAssembler.h"
+#include "vm/Iteration.h"
+#include "vm/Shape.h"
 
 namespace js {
 namespace jit {
