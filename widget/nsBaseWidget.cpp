@@ -435,8 +435,7 @@ nsBaseWidget::CreateChild(const LayoutDeviceIntRect& aRect,
   if (aInitData && aInitData->mWindowType == eWindowType_popup) {
     widget = AllocateChildPopupWidget();
   } else {
-    static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-    widget = do_CreateInstance(kCChildCID);
+    widget = nsIWidget::CreateChildWindow();
   }
 
   if (widget &&

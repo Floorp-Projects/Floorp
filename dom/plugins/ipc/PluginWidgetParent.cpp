@@ -28,8 +28,6 @@ const wchar_t* kPluginWidgetContentParentProperty =
 namespace mozilla {
 namespace plugins {
 
-static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
-
 // This macro returns IPC_OK() to prevent an abort in the child process when
 // ipc message delivery fails.
 #define ENSURE_CHANNEL {                                      \
@@ -86,8 +84,8 @@ PluginWidgetParent::RecvCreate(nsresult* aResult, uint64_t* aScrollCaptureId,
   *aScrollCaptureId = 0;
   *aPluginInstanceId = 0;
 
-  mWidget = do_CreateInstance(kWidgetCID, aResult);
-  NS_ASSERTION(NS_SUCCEEDED(*aResult), "widget create failure");
+  mWidget = nsIWidget::CreateChildWindow();
+  *aResult = mWidget ? NS_OK : NS_ERROR_FAILURE;
 
   // This returns the top level window widget
   nsCOMPtr<nsIWidget> parentWidget = GetTabParent()->GetWidget();

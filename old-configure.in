@@ -1016,7 +1016,7 @@ case "$target" in
         # Silence VS2017 15.5+ TR1 deprecation warnings hit by older gtest versions
         CXXFLAGS="$CXXFLAGS -D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib secur32.lib"
-        MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
+        MOZ_DEBUG_LDFLAGS='-DEBUG'
         WARNINGS_AS_ERRORS='-WX'
         # Use a higher optimization level for clang-cl, so we can come closer
         # to MSVC's performance numbers (see bug 1443590).
@@ -1026,11 +1026,10 @@ case "$target" in
             MOZ_OPTIMIZE_FLAGS='-O1 -Oi'
         fi
         MOZ_FIX_LINK_PATHS=
-        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
+        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE"
         if test -z "$DEVELOPER_OPTIONS"; then
             LDFLAGS="$LDFLAGS -RELEASE"
         fi
-        LDFLAGS="$LDFLAGS -DYNAMICBASE"
         RCFLAGS="-nologo"
         dnl Minimum reqiurement of Gecko is VS2015 or later which supports
         dnl both SSSE3 and SSE4.1.

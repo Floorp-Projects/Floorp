@@ -3,14 +3,14 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src="/cookies/resources/cookie-helper.sub.js"></script>
 <script>
-  ["", "domain="+document.location.hostname, "MaxAge=10", "HttpOnly"].forEach(extraParams => {
+  ["", "MaxAge=10", "domain="+document.location.hostname].forEach(extraParams => {
     // Without 'secure'
     set_prefixed_cookie_via_dom_test({
       prefix: "__Secure-",
       params: "Path=/;" + extraParams,
       shouldExistInDOM: false,
       shouldExistViaHTTP: false,
-      title: "__Secure: Non-secure origin: 'Path=/;" + extraParams + "'"
+      title: "__Secure: Non-secure origin: Should not set 'Path=/;" + extraParams + "'"
     });
 
     // With 'secure'
@@ -19,7 +19,7 @@
       params: "Secure; Path=/;" + extraParams,
       shouldExistInDOM: false,
       shouldExistViaHTTP: false,
-      title: "__Secure: Non-secure origin: 'Secure; Path=/;" + extraParams + "'"
+      title: "__Secure: Non-secure origin: Should not set 'Secure; Path=/;" + extraParams + "'"
     });
   });
 </script>

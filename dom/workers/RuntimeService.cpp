@@ -29,6 +29,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "GeckoProfiler.h"
 #include "jsfriendapi.h"
+#include "js/LocaleSensitive.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"

@@ -106,6 +106,45 @@ secuPWData pwdata = { PW_NONE, 0 };
 
 SSLNamedGroup *enabledGroups = NULL;
 unsigned int enabledGroupsCount = 0;
+const SSLSignatureScheme *enabledSigSchemes = NULL;
+unsigned int enabledSigSchemeCount = 0;
+
+const char *
+signatureSchemeName(SSLSignatureScheme scheme)
+{
+    switch (scheme) {
+#define strcase(x)    \
+    case ssl_sig_##x: \
+        return #x
+        strcase(none);
+        strcase(rsa_pkcs1_sha1);
+        strcase(rsa_pkcs1_sha256);
+        strcase(rsa_pkcs1_sha384);
+        strcase(rsa_pkcs1_sha512);
+        strcase(ecdsa_sha1);
+        strcase(ecdsa_secp256r1_sha256);
+        strcase(ecdsa_secp384r1_sha384);
+        strcase(ecdsa_secp521r1_sha512);
+        strcase(rsa_pss_rsae_sha256);
+        strcase(rsa_pss_rsae_sha384);
+        strcase(rsa_pss_rsae_sha512);
+        strcase(ed25519);
+        strcase(ed448);
+        strcase(rsa_pss_pss_sha256);
+        strcase(rsa_pss_pss_sha384);
+        strcase(rsa_pss_pss_sha512);
+        strcase(dsa_sha1);
+        strcase(dsa_sha256);
+        strcase(dsa_sha384);
+        strcase(dsa_sha512);
+#undef strcase
+        case ssl_sig_rsa_pkcs1_sha1md5:
+            return "RSA PKCS#1 SHA1+MD5";
+        default:
+            break;
+    }
+    return "Unknown Scheme";
+}
 
 void
 printSecurityInfo(PRFileDesc *fd)
@@ -132,11 +171,13 @@ printSecurityInfo(PRFileDesc *fd)
                     suite.macBits, suite.macAlgorithmName);
             FPRINTF(stderr,
                     "tstclnt: Server Auth: %d-bit %s, Key Exchange: %d-bit %s\n"
-                    "         Compression: %s, Extended Master Secret: %s\n",
+                    "         Compression: %s, Extended Master Secret: %s\n"
+                    "         Signature Scheme: %s\n",
                     channel.authKeyBits, suite.authAlgorithmName,
                     channel.keaKeyBits, suite.keaTypeName,
                     channel.compressionMethodName,
-                    channel.extendedMasterSecretUsed ? "Yes" : "No");
+                    channel.extendedMasterSecretUsed ? "Yes" : "No",
+                    signatureSchemeName(channel.signatureScheme));
         }
     }
     cert = SSL_RevealCert(fd);
@@ -178,11 +219,12 @@ PrintUsageHeader()
 {
     fprintf(stderr,
             "Usage:  %s -h host [-a 1st_hs_name ] [-a 2nd_hs_name ] [-p port]\n"
-            "[-D | -d certdir] [-C] [-b | -R root-module] \n"
-            "[-n nickname] [-Bafosvx] [-c ciphers] [-Y] [-Z]\n"
-            "[-V [min-version]:[max-version]] [-K] [-T] [-U]\n"
-            "[-r N] [-w passwd] [-W pwfile] [-q [-t seconds]] [-I groups]\n"
-            "[-A requestfile] [-L totalconnections] [-P {client,server}] [-Q]\n"
+            "  [-D | -d certdir] [-C] [-b | -R root-module] \n"
+            "  [-n nickname] [-Bafosvx] [-c ciphers] [-Y] [-Z]\n"
+            "  [-V [min-version]:[max-version]] [-K] [-T] [-U]\n"
+            "  [-r N] [-w passwd] [-W pwfile] [-q [-t seconds]]\n"
+            "  [-I groups] [-J signatureschemes]\n"
+            "  [-A requestfile] [-L totalconnections] [-P {client,server}] [-Q]\n"
             "\n",
             progName);
 }
@@ -225,7 +267,6 @@ PrintParameterUsage()
     fprintf(stderr, "%-20s Timeout for server ping (default: no timeout).\n", "-t seconds");
     fprintf(stderr, "%-20s Renegotiate N times (resuming session if N>1).\n", "-r N");
     fprintf(stderr, "%-20s Enable the session ticket extension.\n", "-u");
-    fprintf(stderr, "%-20s Enable compression.\n", "-z");
     fprintf(stderr, "%-20s Enable false start.\n", "-g");
     fprintf(stderr, "%-20s Enable the cert_status extension (OCSP stapling).\n", "-T");
     fprintf(stderr, "%-20s Enable the signed_certificate_timestamp extension.\n", "-U");
@@ -255,6 +296,15 @@ PrintParameterUsage()
                     "%-20s The following values are valid:\n"
                     "%-20s P256, P384, P521, x25519, FF2048, FF3072, FF4096, FF6144, FF8192\n",
             "-I", "", "");
+    fprintf(stderr, "%-20s Comma separated list of signature schemes in preference order.\n"
+                    "%-20s The following values are valid:\n"
+                    "%-20s rsa_pkcs1_sha1, rsa_pkcs1_sha256, rsa_pkcs1_sha384, rsa_pkcs1_sha512,\n"
+                    "%-20s ecdsa_sha1, ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384,\n"
+                    "%-20s ecdsa_secp521r1_sha512,\n"
+                    "%-20s rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, rsa_pss_rsae_sha512,\n"
+                    "%-20s rsa_pss_pss_sha256, rsa_pss_pss_sha384, rsa_pss_pss_sha512,\n"
+                    "%-20s dsa_sha1, dsa_sha256, dsa_sha384, dsa_sha512\n",
+            "-J", "", "", "", "", "", "", "");
     fprintf(stderr, "%-20s Enable alternative TLS 1.3 handshake\n", "-X alt-server-hello");
     fprintf(stderr, "%-20s Use DTLS\n", "-P {client, server}");
     fprintf(stderr, "%-20s Exit after handshake\n", "-Q");
@@ -906,7 +956,6 @@ int multiplier = 0;
 SSLVersionRange enabledVersions;
 int disableLocking = 0;
 int enableSessionTickets = 0;
-int enableCompression = 0;
 int enableFalseStart = 0;
 int enableCertStatus = 0;
 int enableSignedCertTimestamps = 0;
@@ -1283,14 +1332,6 @@ run()
         goto done;
     }
 
-    /* enable compression. */
-    rv = SSL_OptionSet(s, SSL_ENABLE_DEFLATE, enableCompression);
-    if (rv != SECSuccess) {
-        SECU_PrintError(progName, "error enabling compression");
-        error = 1;
-        goto done;
-    }
-
     /* enable false start. */
     rv = SSL_OptionSet(s, SSL_ENABLE_FALSE_START, enableFalseStart);
     if (rv != SECSuccess) {
@@ -1369,6 +1410,15 @@ run()
         rv = SSL_NamedGroupConfig(s, enabledGroups, enabledGroupsCount);
         if (rv < 0) {
             SECU_PrintError(progName, "SSL_NamedGroupConfig failed");
+            error = 1;
+            goto done;
+        }
+    }
+
+    if (enabledSigSchemes) {
+        rv = SSL_SignatureSchemePrefSet(s, enabledSigSchemes, enabledSigSchemeCount);
+        if (rv < 0) {
+            SECU_PrintError(progName, "SSL_SignatureSchemePrefSet failed");
             error = 1;
             goto done;
         }
@@ -1628,10 +1678,12 @@ main(int argc, char **argv)
         }
     }
 
-    /* XXX: 'B' was used in the past but removed in 3.28,
-     *      please leave some time before resuing it. */
+    /* Note: 'B' was used in the past but removed in 3.28
+     *       'z' was removed in 3.39
+     * Please leave some time before reusing these.
+     */
     optstate = PL_CreateOptState(argc, argv,
-                                 "46A:CDFGHI:KL:M:OP:QR:STUV:W:X:YZa:bc:d:fgh:m:n:op:qr:st:uvw:z");
+                                 "46A:CDFGHI:J:KL:M:OP:QR:STUV:W:X:YZa:bc:d:fgh:m:n:op:qr:st:uvw:");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             case '?':
@@ -1850,15 +1902,20 @@ main(int argc, char **argv)
                 pwdata.data = PORT_Strdup(optstate->value);
                 break;
 
-            case 'z':
-                enableCompression = 1;
-                break;
-
             case 'I':
                 rv = parseGroupList(optstate->value, &enabledGroups, &enabledGroupsCount);
                 if (rv != SECSuccess) {
                     PL_DestroyOptState(optstate);
                     fprintf(stderr, "Bad group specified.\n");
+                    Usage();
+                }
+                break;
+
+            case 'J':
+                rv = parseSigSchemeList(optstate->value, &enabledSigSchemes, &enabledSigSchemeCount);
+                if (rv != SECSuccess) {
+                    PL_DestroyOptState(optstate);
+                    fprintf(stderr, "Bad signature scheme specified.\n");
                     Usage();
                 }
                 break;

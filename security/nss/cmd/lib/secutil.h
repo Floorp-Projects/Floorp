@@ -406,7 +406,9 @@ SECU_ParseSSLVersionRangeString(const char *input,
 
 SECStatus parseGroupList(const char *arg, SSLNamedGroup **enabledGroups,
                          unsigned int *enabledGroupsCount);
-SSLNamedGroup groupNameToNamedGroup(char *name);
+SECStatus parseSigSchemeList(const char *arg,
+                             const SSLSignatureScheme **enabledSigSchemes,
+                             unsigned int *enabledSigSchemeCount);
 
 /*
  *

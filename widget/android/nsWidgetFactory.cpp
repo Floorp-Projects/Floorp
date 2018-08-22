@@ -35,7 +35,6 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ScreenManager, ScreenManager::GetAddRefedSingleton)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceAndroid, nsIdleServiceAndroid::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -78,8 +77,6 @@ nsNativeThemeAndroidConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
-NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
-NS_DEFINE_NAMED_CID(NS_CHILD_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_THEMERENDERER_CID);
 NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
@@ -96,8 +93,6 @@ NS_DEFINE_NAMED_CID(NS_ANDROIDPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_SYSTEMALERTSSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
-  { &kNS_WINDOW_CID, false, nullptr, nsWindowConstructor },
-  { &kNS_CHILD_CID, false, nullptr, nsWindowConstructor },
   { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor },
   { &kNS_SCREENMANAGER_CID, false, nullptr, ScreenManagerConstructor,
     mozilla::Module::MAIN_PROCESS_ONLY },
@@ -118,8 +113,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
 };
 
 static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
-  { "@mozilla.org/widgets/window/android;1", &kNS_WINDOW_CID },
-  { "@mozilla.org/widgets/child_window/android;1", &kNS_CHILD_CID },
   { "@mozilla.org/widget/appshell/android;1", &kNS_APPSHELL_CID },
   { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID,
     mozilla::Module::MAIN_PROCESS_ONLY },
