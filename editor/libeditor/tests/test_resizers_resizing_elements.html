@@ -25,6 +25,8 @@ SimpleTest.waitForFocus(async function() {
   document.execCommand("enableObjectResizing", false, true);
   ok(document.queryCommandState("enableObjectResizing"),
      "Object resizer should be enabled by the call of execCommand");
+  // Disable inline-table-editing UI for this test.
+  document.execCommand("enableInlineTableEditing", false, false);
 
   let outOfEditor = document.getElementById("clickaway");
 
@@ -219,17 +221,18 @@ SimpleTest.waitForFocus(async function() {
     },
   ];
 
-  // Resizers for absolute positioned element are available only when
-  // enableAbsolutePositionEditing is enabled.  So, let's enable it
-  // during testing resizers for absolute positioned elements.
+  // Resizers for absolute positioned element and table element are available
+  // only when enableAbsolutePositionEditing or enableInlineTableEditing is
+  // enabled for each.  So, let's enable them during testing resizers for 
+  // absolute positioned elements or table elements.
   await SpecialPowers.pushPrefEnv({"set": [["editor.resizing.preserve_ratio", false]]});
   for (const kTest of kTests) {
-    document.execCommand("enableAbsolutePositionEditing", false, kTests.isAbsolutePosition);
+    document.execCommand("enableAbsolutePositionEditing", false, kTest.isAbsolutePosition);
     await doTest(kTest.description, false, kTest.innerHTML);
   }
   await SpecialPowers.pushPrefEnv({"set": [["editor.resizing.preserve_ratio", true]]});
   for (const kTest of kTests) {
-    document.execCommand("enableAbsolutePositionEditing", false, kTests.isAbsolutePosition);
+    document.execCommand("enableAbsolutePositionEditing", false, kTest.isAbsolutePosition);
     await doTest(kTest.description, kTest.mayPreserveRatio, kTest.innerHTML);
   }
   content.innerHTML = "";
