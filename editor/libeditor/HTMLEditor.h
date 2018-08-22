@@ -993,6 +993,20 @@ protected: // Shouldn't be used by friend classes
                           ErrorResult& aRv) const;
 
   /**
+   * GetNextTableRowElement() returns next <tr> element of aTableRowElement.
+   * This won't cross <table> element boundary but may cross table section
+   * elements like <tbody>.
+   *
+   * @param aTableRowElement    A <tr> element.
+   * @param aRv                 Returns error.  If given element is <tr> but
+   *                            there is no next <tr> element, this returns
+   *                            nullptr but does not return error.
+   */
+  Element*
+  GetNextTableRowElement(Element& aTableRowElement,
+                         ErrorResult& aRv) const;
+
+  /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.
