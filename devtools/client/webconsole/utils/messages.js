@@ -270,6 +270,7 @@ function transformNetworkEventPacket(packet) {
     updates: networkEvent.updates,
     cause: networkEvent.cause,
     private: networkEvent.private,
+    securityState: networkEvent.securityState,
   });
 }
 

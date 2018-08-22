@@ -351,7 +351,7 @@ class FirefoxDataProvider {
 
     switch (updateType) {
       case "securityInfo":
-        this.pushRequestToQueue(actor, { securityState: networkInfo.securityInfo });
+        this.pushRequestToQueue(actor, { securityState: networkInfo.securityState });
         break;
       case "responseStart":
         this.pushRequestToQueue(actor, {
