@@ -95,7 +95,7 @@ promise_test(async t => {
 
   assert_less_than_equal(
     animation.startTime,
-    animation.timeline.currentTime - holdTime
+    animation.timeline.currentTime - holdTime + TIME_PRECISION
   );
 }, 'Resuming an animation from paused calculates start time from hold time');
 

@@ -40,7 +40,7 @@ struct _utf_codec
 
     static void     put(codeunit_t * cp, const uchar_t , int8 & len) throw();
     static uchar_t  get(const codeunit_t * cp, int8 & len) throw();
-    static bool     validate(const codeunit_t * s, const codeunit_t * e) throw();
+    static bool     validate(const codeunit_t * s, const codeunit_t * const e) throw();
 };
 
 
@@ -66,9 +66,9 @@ public:
     }
 
     inline
-    static bool validate(codeunit_t * s, codeunit_t * e) throw()
+    static bool validate(const codeunit_t * s, const codeunit_t * const e) throw()
     {
-        return e > s;
+        return s <= e;
     }
 };
 
@@ -101,18 +101,19 @@ public:
         l = 1;
 
         if (uh < 0xD800|| uh > 0xDFFF) { return uh; }
+        if (uh > 0xDBFF) { l = -1; return 0xFFFD; }
         const uint32 ul = cp[1];
-        if (uh > 0xDBFF || ul < 0xDC00 || ul > 0xDFFF) { l = -1; return 0xFFFD; }
+        if (ul < 0xDC00 || ul > 0xDFFF) { l = -1; return 0xFFFD; }
         ++l;
         return (uh<<10) + ul + surrogate_offset;
     }
 
     inline
-    static bool validate(codeunit_t * s, codeunit_t * e) throw()
+    static bool validate(const codeunit_t * s, const codeunit_t * const e) throw()
     {
         const ptrdiff_t n = e-s;
         if (n <= 0) return n == 0;
-        const uint32 u = *(s+(n-1)); // Get the last codepoint
+        const uint32 u = *(e-1); // Get the last codepoint
         return (u < 0xD800 || u > 0xDBFF);
     }
 };
@@ -166,7 +167,7 @@ public:
     }
 
     inline
-    static bool validate(codeunit_t * s, codeunit_t * e) throw()
+    static bool validate(const codeunit_t * s, const codeunit_t * const e) throw()
     {
         const ptrdiff_t n = e-s;
         if (n <= 0) return n == 0;
@@ -175,7 +176,7 @@ public:
         if (*s >= 0xC0) return false;
         if (n == 1) return true;
         if (*--s < 0x80) return true;
-        if (*s >= 0xe0) return false;
+        if (*s >= 0xE0) return false;
         if (n == 2 || *s >= 0xC0) return true;
         if (*--s < 0x80) return true;
         if (*s >= 0xF0) return false;
@@ -225,6 +226,7 @@ public:
     operator codeunit_type * () const throw() { return cp; }
 
     bool error() const throw()  { return sl < 1; }
+    bool validate(const _utf_iterator & e)  { return codec::validate(cp, e.cp); }
 };
 
 template <typename C>

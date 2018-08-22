@@ -577,7 +577,7 @@ var BrowserTestUtils = {
         if (url) {
           await this.waitForEvent(win, "DOMContentLoaded");
 
-          if (win.document.documentURI != "chrome://browser/content/browser.xul") {
+          if (win.document.documentURI != AppConstants.BROWSER_CHROME_URL) {
             return;
           }
         }

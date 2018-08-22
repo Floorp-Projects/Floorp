@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -33,20 +33,20 @@ of the License or (at your option) any later version.
 // ==================
 // You have access to a few primitives and the full C++ code:
 //    declare_params(n) Tells the interpreter how many bytes of parameter
-//                      space to claim for this instruction uses and 
-//                      initialises the param pointer.  You *must* before the 
+//                      space to claim for this instruction uses and
+//                      initialises the param pointer.  You *must* before the
 //                      first use of param.
-//    use_params(n)     Claim n extra bytes of param space beyond what was 
+//    use_params(n)     Claim n extra bytes of param space beyond what was
 //                      claimed using delcare_param.
 //    param             A const byte pointer for the parameter space claimed by
 //                      this instruction.
-//    binop(op)         Implement a binary operation on the stack using the 
+//    binop(op)         Implement a binary operation on the stack using the
 //                      specified C++ operator.
-//    NOT_IMPLEMENTED   Any instruction body containing this will exit the 
+//    NOT_IMPLEMENTED   Any instruction body containing this will exit the
 //                      program with an assertion error.  Instructions that are
 //                      not implemented should also be marked NILOP in the
 //                      opcodes tables this will cause the code class to spot
-//                      them in a live code stream and throw a runtime_error 
+//                      them in a live code stream and throw a runtime_error
 //                      instead.
 //    push(n)           Push the value n onto the stack.
 //    pop()             Pop the top most value and return it.
@@ -62,7 +62,7 @@ of the License or (at your option) any later version.
 //        ip        = The current instruction pointer
 //        endPos    = Position of advance of last cluster
 //        dir       = writing system directionality of the font
-     
+
 
 // #define NOT_IMPLEMENTED     assert(false)
 // #define NOT_IMPLEMENTED
@@ -96,7 +96,7 @@ ENDOP
 
 STARTOP(push_short)
     declare_params(2);
-    const int16 r   = int16(param[0]) << 8 
+    const int16 r   = int16(param[0]) << 8
                     | uint8(param[1]);
     push(r);
 ENDOP
@@ -322,7 +322,7 @@ STARTOP(insert)
         smap.highpassed(false);
     is = newSlot;
     seg.extendLength(1);
-    if (map != &smap[-1]) 
+    if (map != &smap[-1])
         --map;
 ENDOP
 
@@ -333,12 +333,12 @@ STARTOP(delete_)
         is->prev()->next(is->next());
     else
         seg.first(is->next());
-    
+
     if (is->next())
         is->next()->prev(is->prev());
     else
         seg.last(is->prev());
-    
+
 
     if (is == smap.highwater())
             smap.highwater(is->next());
@@ -371,7 +371,7 @@ ENDOP
 
 STARTOP(cntxt_item)
     // It turns out this is a cunningly disguised condition forward jump.
-    declare_params(3);    
+    declare_params(3);
     const int       is_arg = int8(param[0]);
     const size_t    iskip  = uint8(param[1]),
                     dskip  = uint8(param[2]);
@@ -387,49 +387,49 @@ ENDOP
 STARTOP(attr_set)
     declare_params(1);
     const attrCode      slat = attrCode(uint8(*param));
-    const          int  val  = int(pop());
+    const          int  val  = pop();
     is->setAttr(&seg, slat, 0, val, smap);
 ENDOP
 
 STARTOP(attr_add)
     declare_params(1);
     const attrCode      slat = attrCode(uint8(*param));
-    const          int  val  = int(pop());
+    const     uint32_t  val  = pop();
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
         seg.positionSlots(0, *smap.begin(), *(smap.end()-1), seg.currdir());
         flags |= POSITIONED;
     }
-    int res = is->getAttr(&seg, slat, 0);
-    is->setAttr(&seg, slat, 0, val + res, smap);
+    uint32_t res = uint32_t(is->getAttr(&seg, slat, 0));
+    is->setAttr(&seg, slat, 0, int32_t(val + res), smap);
 ENDOP
 
 STARTOP(attr_sub)
     declare_params(1);
     const attrCode      slat = attrCode(uint8(*param));
-    const          int  val  = int(pop());
+    const     uint32_t  val  = pop();
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
         seg.positionSlots(0, *smap.begin(), *(smap.end()-1), seg.currdir());
         flags |= POSITIONED;
     }
-    int res = is->getAttr(&seg, slat, 0);
-    is->setAttr(&seg, slat, 0, res - val, smap);
+    uint32_t res = uint32_t(is->getAttr(&seg, slat, 0));
+    is->setAttr(&seg, slat, 0, int32_t(res - val), smap);
 ENDOP
 
 STARTOP(attr_set_slot)
     declare_params(1);
-    const attrCode      slat = attrCode(uint8(*param));
-    const int offset = (map - smap.begin())*int(slat == gr_slatAttTo);
-    const          int  val  = int(pop())  + offset;
+    const attrCode  slat   = attrCode(uint8(*param));
+    const int       offset = int(map - smap.begin())*int(slat == gr_slatAttTo);
+    const int       val    = pop()  + offset;
     is->setAttr(&seg, slat, offset, val, smap);
 ENDOP
 
 STARTOP(iattr_set_slot)
     declare_params(2);
-    const attrCode      slat = attrCode(uint8(param[0]));
-    const size_t        idx  = uint8(param[1]);
-    const          int  val  = int(pop())  + (map - smap.begin())*int(slat == gr_slatAttTo);
+    const attrCode  slat = attrCode(uint8(param[0]));
+    const uint8     idx  = uint8(param[1]);
+    const int       val  = int(pop()  + (map - smap.begin())*int(slat == gr_slatAttTo));
     is->setAttr(&seg, slat, idx, val, smap);
 ENDOP
 
@@ -531,7 +531,7 @@ STARTOP(push_iglyph_attr) // not implemented
     NOT_IMPLEMENTED;
 ENDOP
 #endif
-      
+
 STARTOP(pop_ret)
     const uint32 ret = pop();
     EXIT(ret);
@@ -548,37 +548,37 @@ ENDOP
 STARTOP(iattr_set)
     declare_params(2);
     const attrCode      slat = attrCode(uint8(param[0]));
-    const size_t        idx  = uint8(param[1]);
-    const          int  val  = int(pop());
+    const uint8         idx  = uint8(param[1]);
+    const          int  val  = pop();
     is->setAttr(&seg, slat, idx, val, smap);
 ENDOP
 
 STARTOP(iattr_add)
     declare_params(2);
     const attrCode      slat = attrCode(uint8(param[0]));
-    const size_t        idx  = uint8(param[1]);
-    const          int  val  = int(pop());
+    const uint8         idx  = uint8(param[1]);
+    const     uint32_t  val  = pop();
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
         seg.positionSlots(0, *smap.begin(), *(smap.end()-1), seg.currdir());
         flags |= POSITIONED;
     }
-    int res = is->getAttr(&seg, slat, idx);
-    is->setAttr(&seg, slat, idx, val + res, smap);
+    uint32_t res = uint32_t(is->getAttr(&seg, slat, idx));
+    is->setAttr(&seg, slat, idx, int32_t(val + res), smap);
 ENDOP
 
 STARTOP(iattr_sub)
     declare_params(2);
     const attrCode      slat = attrCode(uint8(param[0]));
-    const size_t        idx  = uint8(param[1]);
-    const          int  val  = int(pop());
+    const uint8         idx  = uint8(param[1]);
+    const     uint32_t  val  = pop();
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
         seg.positionSlots(0, *smap.begin(), *(smap.end()-1), seg.currdir());
         flags |= POSITIONED;
     }
-    int res = is->getAttr(&seg, slat, idx);
-    is->setAttr(&seg, slat, idx, res - val, smap);
+    uint32_t res = uint32_t(is->getAttr(&seg, slat, idx));
+    is->setAttr(&seg, slat, idx, int32_t(res - val), smap);
 ENDOP
 
 STARTOP(push_proc_state)
@@ -689,4 +689,3 @@ STARTOP(set_feat)
         seg.setFeature(fid, feat, pop());
     }
 ENDOP
-

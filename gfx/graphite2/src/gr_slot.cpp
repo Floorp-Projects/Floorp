@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -58,7 +58,7 @@ const gr_slot* gr_slot_first_attachment(const gr_slot* p/*not NULL*/)        //r
     return static_cast<const gr_slot*>(p->firstChild());
 }
 
-    
+
 const gr_slot* gr_slot_next_sibling_attachment(const gr_slot* p/*not NULL*/)        //returns NULL iff no more attachments.
 {        //if slot_next_sibling_attachment(p) is not NULL, then slot_attached_to(slot_next_sibling_attachment(p))==slot_attached_to(p).
     assert(p);
@@ -112,7 +112,7 @@ float gr_slot_advance_Y(const gr_slot *p/*not NULL*/, GR_MAYBE_UNUSED const gr_f
     else
         return res;
 }
-        
+
 int gr_slot_before(const gr_slot* p/*not NULL*/)
 {
     assert(p);
@@ -170,4 +170,3 @@ size_t id(const gr_slot* p/*not NULL*/)
 
 
 } // extern "C"
-

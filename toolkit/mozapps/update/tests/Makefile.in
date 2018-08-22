@@ -2,16 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPCSHELLTESTROOT = $(topobjdir)/_tests/xpcshell/$(relativesrcdir)
-
-pp_const_file = $(srcdir)/data/xpcshellConstantsPP.js
-
-PP_TARGETS            += aus-test-const
-aus-test-const        := $(pp_const_file)
-aus-test-const_PATH   := $(XPCSHELLTESTROOT)/data
-aus-test-const_FLAGS  := -Fsubstitution $(DEFINES) $(ACDEFINES)
-aus-test-const_TARGET := misc
-
 MOZ_WINCONSOLE = 1
 
 include $(topsrcdir)/config/rules.mk

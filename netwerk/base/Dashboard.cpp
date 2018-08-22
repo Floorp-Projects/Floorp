@@ -886,7 +886,7 @@ HttpConnInfo::SetHTTP2ProtocolVersion(SpdyVersion pv)
 NS_IMETHODIMP
 Dashboard::GetLogPath(nsACString &aLogPath)
 {
-    aLogPath.SetCapacity(2048);
+    aLogPath.SetLength(2048);
     uint32_t len = LogModule::GetLogFile(aLogPath.BeginWriting(), 2048);
     aLogPath.SetLength(len);
     return NS_OK;

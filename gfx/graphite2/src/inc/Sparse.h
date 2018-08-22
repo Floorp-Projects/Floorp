@@ -138,7 +138,7 @@ sparse::sparse(I attr, const I last)
         if (ci != ci_)
         {
             ci = ci_;
-            ci->offset = vi - m_array.values;
+            ci->offset = key_type(vi - m_array.values);
         }
 
         ci->mask |= 1UL << (SIZEOF_CHUNK - 1 - (v.first % SIZEOF_CHUNK));

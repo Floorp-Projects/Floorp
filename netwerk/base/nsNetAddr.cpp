@@ -45,12 +45,12 @@ NS_IMETHODIMP nsNetAddr::GetAddress(nsACString & aAddress)
   switch(mAddr.raw.family) {
   /* PR_NetAddrToString can handle INET and INET6, but not LOCAL. */
   case AF_INET:
-    aAddress.SetCapacity(kIPv4CStrBufSize);
+    aAddress.SetLength(kIPv4CStrBufSize);
     NetAddrToString(&mAddr, aAddress.BeginWriting(), kIPv4CStrBufSize);
     aAddress.SetLength(strlen(aAddress.BeginReading()));
     break;
   case AF_INET6:
-    aAddress.SetCapacity(kIPv6CStrBufSize);
+    aAddress.SetLength(kIPv6CStrBufSize);
     NetAddrToString(&mAddr, aAddress.BeginWriting(), kIPv6CStrBufSize);
     aAddress.SetLength(strlen(aAddress.BeginReading()));
     break;

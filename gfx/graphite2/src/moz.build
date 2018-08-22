@@ -23,7 +23,6 @@ else:
 
 # This should contain all of the _SOURCES from files.mk, except *_machine.cpp
 UNIFIED_SOURCES += [
-    'CachedFace.cpp',
     'CmapCache.cpp',
     'Code.cpp',
     'Collider.cpp',
@@ -46,9 +45,6 @@ UNIFIED_SOURCES += [
     'Justifier.cpp',
     'Pass.cpp',
     'Position.cpp',
-    'SegCache.cpp',
-    'SegCacheEntry.cpp',
-    'SegCacheStore.cpp',
     'Segment.cpp',
     'Silf.cpp',
     'Slot.cpp',

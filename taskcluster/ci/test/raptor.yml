@@ -199,7 +199,6 @@ raptor-unity-webgl-firefox:
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
     run-on-projects: ['try', 'mozilla-central']
-    tier: 3
     max-run-time: 3600
     mozharness:
         extra-options:
@@ -213,7 +212,6 @@ raptor-unity-webgl-chrome:
     try-name: raptor-unity-webgl-chrome
     treeherder-symbol: Rap-C(ugl)
     run-on-projects: ['try', 'mozilla-central']
-    tier: 3
     max-run-time: 3600
     mozharness:
         extra-options:
@@ -228,11 +226,36 @@ raptor-wasm-misc-firefox:
     try-name: raptor-wasm-misc-firefox
     treeherder-symbol: Rap(wm)
     run-on-projects: ['try', 'mozilla-central']
-    tier: 3
     max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc
+    fetches:
+        fetch:
+            - wasm-misc
+
+raptor-wasm-misc-baseline-firefox:
+    description: "Raptor WASM Misc on Firefox with baseline JIT"
+    try-name: raptor-wasm-misc-baseline-firefox
+    treeherder-symbol: Rap(wm-b)
+    run-on-projects: ['try', 'mozilla-central']
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-misc-baseline
+    fetches:
+        fetch:
+            - wasm-misc
+
+raptor-wasm-misc-ion-firefox:
+    description: "Raptor WASM Misc on Firefox with ION Monkey"
+    try-name: raptor-wasm-misc-ion-firefox
+    treeherder-symbol: Rap(wm-i)
+    run-on-projects: ['try', 'mozilla-central']
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-misc-ion
     fetches:
         fetch:
             - wasm-misc
@@ -242,7 +265,6 @@ raptor-wasm-misc-chrome:
     try-name: raptor-wasm-misc-chrome
     treeherder-symbol: Rap-C(wm)
     run-on-projects: ['try', 'mozilla-central']
-    tier: 3
     max-run-time: 1800
     mozharness:
         extra-options:

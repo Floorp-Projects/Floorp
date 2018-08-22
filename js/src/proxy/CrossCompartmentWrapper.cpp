@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ScopeExit.h"
+
 #include "gc/PublicIterators.h"
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
@@ -263,62 +265,40 @@ CanReify(HandleObject obj)
     return obj->is<PropertyIteratorObject>();
 }
 
-struct AutoCloseIterator
-{
-    AutoCloseIterator(JSContext* cx, PropertyIteratorObject* obj) : obj(cx, obj) {}
-
-    ~AutoCloseIterator() {
-        if (obj)
-            CloseIterator(obj);
-    }
-
-    void clear() { obj = nullptr; }
-
-  private:
-    Rooted<PropertyIteratorObject*> obj;
-};
-
 static JSObject*
-Reify(JSContext* cx, JS::Compartment* origin, HandleObject objp)
+Reify(JSContext* cx, JS::Compartment* origin, HandleObject iter)
 {
-    Rooted<PropertyIteratorObject*> iterObj(cx, &objp->as<PropertyIteratorObject>());
-    NativeIterator* ni = iterObj->getNativeIterator();
+    // Ensure iterator gets closed.
+    auto autoCloseIterator = mozilla::MakeScopeExit([=] {
+        CloseIterator(iter);
+    });
 
+    NativeIterator* ni = iter->as<PropertyIteratorObject>().getNativeIterator();
     RootedObject obj(cx, ni->objectBeingIterated());
-    {
-        AutoCloseIterator close(cx, iterObj);
 
-        /* Wrap the iteratee. */
-        if (!origin->wrap(cx, &obj))
+    // Wrap iteratee.
+    if (!origin->wrap(cx, &obj))
+        return nullptr;
+
+    // Wrap the elements in the iterator's snapshot.
+    size_t length = ni->numKeys();
+    AutoIdVector keys(cx);
+    if (length > 0) {
+        if (!keys.reserve(length))
             return nullptr;
-
-        /*
-         * Wrap the elements in the iterator's snapshot.
-         * N.B. the order of closing/creating iterators is important due to the
-         * implicit cx->enumerators state.
-         */
-        size_t length = ni->numKeys();
-        AutoIdVector keys(cx);
-        if (length > 0) {
-            if (!keys.reserve(length))
+        RootedId id(cx);
+        RootedValue v(cx);
+        for (size_t i = 0; i < length; ++i) {
+            v.setString(ni->propertiesBegin()[i]);
+            if (!ValueToId<CanGC>(cx, v, &id))
                 return nullptr;
-            RootedId id(cx);
-            RootedValue v(cx);
-            for (size_t i = 0; i < length; ++i) {
-                v.setString(ni->propertiesBegin()[i]);
-                if (!ValueToId<CanGC>(cx, v, &id))
-                    return nullptr;
-                cx->markId(id);
-                keys.infallibleAppend(id);
-            }
+            cx->markId(id);
+            keys.infallibleAppend(id);
         }
-
-        close.clear();
-        CloseIterator(iterObj);
-
-        obj = EnumeratedIdVectorToIterator(cx, obj, keys);
     }
-    return obj;
+
+    // Return iterator in current compartment.
+    return EnumeratedIdVectorToIterator(cx, obj, keys);
 }
 
 JSObject*

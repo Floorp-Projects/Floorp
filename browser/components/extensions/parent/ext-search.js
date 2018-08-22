@@ -57,36 +57,30 @@ this.search = class extends ExtensionAPI {
           }));
         },
 
-        async search(name, searchTerms, tabId) {
+        async search(searchProperties) {
           await searchInitialized;
-          let engine = Services.search.getEngineByName(name);
-          if (!engine) {
-            throw new ExtensionError(`${name} was not found`);
+          let engine;
+          if (searchProperties.engine) {
+            engine = Services.search.getEngineByName(searchProperties.engine);
+            if (!engine) {
+              throw new ExtensionError(`${searchProperties.engine} was not found`);
+            }
+          } else {
+            engine = Services.search.currentEngine;
           }
-          let submission = engine.getSubmission(searchTerms, null, "webextension");
+          let submission = engine.getSubmission(searchProperties.query, null, "webextension");
           let options = {
             postData: submission.postData,
             triggeringPrincipal: context.principal,
           };
-          if (tabId === null) {
-            let browser = context.pendingEventBrowser || context.xulBrowser;
-            let {gBrowser} = browser.ownerGlobal;
-            if (!gBrowser || !gBrowser.addTab) {
-              // In some cases (about:addons, sidebar, maybe others), we need
-              // to go up one more level.
-              browser = browser.ownerDocument.docShell.chromeEventHandler;
-
-              ({gBrowser} = browser.ownerGlobal);
-            }
-            if (!gBrowser || !gBrowser.addTab) {
-              throw new ExtensionError("Unable to locate a browser.");
-            }
+          if (searchProperties.tabId === null) {
+            let {gBrowser} = windowTracker.topWindow;
             let nativeTab = gBrowser.addTab(submission.uri.spec, options);
             if (!searchLoadInBackground) {
               gBrowser.selectedTab = nativeTab;
             }
           } else {
-            let tab = tabTracker.getTab(tabId);
+            let tab = tabTracker.getTab(searchProperties.tabId);
             tab.linkedBrowser.loadURI(submission.uri.spec, options);
           }
         },

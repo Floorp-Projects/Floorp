@@ -86,7 +86,7 @@ struct telemetry  {};
   #define HAVE_BUILTIN_OVERFLOW
 #endif
 #if defined(__has_include)
-  #if __has_include(<intsafe.h>)
+  #if __has_include(<intsafe.h>) && !defined(__CYGWIN__)
     #define HAVE_INTSAFE_H
   #endif
 #elif defined(_WIN32)
@@ -172,9 +172,14 @@ inline T max(const T a, const T b)
 #define GR_MAYBE_UNUSED
 #endif
 
-#if defined(__clang__) && __cplusplus >= 201103L
-   /* clang's fallthrough annotations are only available starting in C++11. */
-    #define GR_FALLTHROUGH [[fallthrough]]
+#ifndef __has_cpp_attribute
+#  define __has_cpp_attribute(x) 0
+#endif
+
+#if __has_cpp_attribute(clang::fallthrough)
+#  define GR_FALLTHROUGH [[clang::fallthrough]]
+#elif __has_cpp_attribute(gnu::fallthrough)
+#  define GR_FALLTHROUGH [[gnu::fallthrough]]
 #elif defined(_MSC_VER)
    /*
     * MSVC's __fallthrough annotations are checked by /analyze (Code Analysis):

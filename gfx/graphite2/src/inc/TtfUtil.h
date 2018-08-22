@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -43,6 +43,8 @@ namespace graphite2
 namespace TtfUtil
 {
 
+#define OVERFLOW_OFFSET_CHECK(p, o) (o + reinterpret_cast<size_t>(p) < reinterpret_cast<size_t>(p))
+
 typedef long fontTableId32;
 typedef unsigned short gid16;
 
@@ -51,12 +53,12 @@ typedef unsigned short gid16;
 // Enumeration used to specify a table in a TTF file
 class Tag
 {
-    unsigned long _v;
+    unsigned int _v;
 public:
     Tag(const char n[5]) throw()            : _v(TTF_TAG(n[0],n[1],n[2],n[3])) {}
-    Tag(const unsigned long tag) throw()    : _v(tag) {}
+    Tag(const unsigned int tag) throw()    : _v(tag) {}
 
-    operator unsigned long () const throw () { return _v; }
+    operator unsigned int () const throw () { return _v; }
 
     enum
     {
@@ -100,12 +102,12 @@ public:
         size_t & lOffset, size_t & lSize);
     bool CheckTable(const Tag TableId, const void * pTable, size_t lTableSize);
 
-    ////////////////////////////////// simple font wide info 
-    size_t  GlyphCount(const void * pMaxp); 
+    ////////////////////////////////// simple font wide info
+    size_t  GlyphCount(const void * pMaxp);
 #ifdef ALL_TTFUTILS
     size_t  MaxCompositeComponentCount(const void * pMaxp);
     size_t  MaxCompositeLevelCount(const void * pMaxp);
-    size_t  LocaGlyphCount(size_t lLocaSize, const void * pHead); // throw (std::domain_error); 
+    size_t  LocaGlyphCount(size_t lLocaSize, const void * pHead); // throw (std::domain_error);
 #endif
     int DesignUnits(const void * pHead);
 #ifdef ALL_TTFUTILS
@@ -120,7 +122,7 @@ public:
     bool Get31EngFullFontInfo(const void * pName, size_t & lOffset, size_t & lSize);
     bool Get30EngFamilyInfo(const void * pName, size_t & lOffset, size_t & lSize);
     bool Get30EngFullFontInfo(const void * pName, size_t & lOffset, size_t & lSize);
-    int PostLookup(const void * pPost, size_t lPostSize, const void * pMaxp, 
+    int PostLookup(const void * pPost, size_t lPostSize, const void * pMaxp,
         const char * pPostName);
 #endif
 
@@ -134,8 +136,8 @@ public:
     void SwapWString(void * pWStr, size_t nSize = 0); // throw (std::invalid_argument);
 #endif
 
-    ////////////////////////////////// cmap lookup tools 
-    const void * FindCmapSubtable(const void * pCmap, int nPlatformId = 3, 
+    ////////////////////////////////// cmap lookup tools
+    const void * FindCmapSubtable(const void * pCmap, int nPlatformId = 3,
         int nEncodingId = 1, size_t length = 0);
     bool CheckCmapSubtable4(const void * pCmap31, const void * pCmapEnd /*, unsigned int maxgid*/);
     gid16 CmapSubtable4Lookup(const void * pCmapSubtabel4, unsigned int nUnicodeId, int rangeKey = 0);
@@ -147,57 +149,57 @@ public:
         int * pRangeKey = 0);
 
     ///////////////////////////////// horizontal metric data for a glyph
-    bool HorMetrics(gid16 nGlyphId, const void * pHmtx, size_t lHmtxSize, 
+    bool HorMetrics(gid16 nGlyphId, const void * pHmtx, size_t lHmtxSize,
         const void * pHhea, int & nLsb, unsigned int & nAdvWid);
 
-    ////////////////////////////////// primitives for loca and glyf lookup 
-    size_t LocaLookup(gid16 nGlyphId, const void * pLoca, size_t lLocaSize, 
-        const void * pHead); // throw (std::out_of_range); 
+    ////////////////////////////////// primitives for loca and glyf lookup
+    size_t LocaLookup(gid16 nGlyphId, const void * pLoca, size_t lLocaSize,
+        const void * pHead); // throw (std::out_of_range);
     void * GlyfLookup(const void * pGlyf, size_t lGlyfOffset, size_t lTableLen);
 
     ////////////////////////////////// primitves for simple glyph data
-    bool GlyfBox(const void * pSimpleGlyf, int & xMin, int & yMin, 
+    bool GlyfBox(const void * pSimpleGlyf, int & xMin, int & yMin,
         int & xMax, int & yMax);
 
 #ifdef ALL_TTFUTILS
-    int GlyfContourCount(const void * pSimpleGlyf); 
-    bool GlyfContourEndPoints(const void * pSimpleGlyf, int * prgnContourEndPoint, 
+    int GlyfContourCount(const void * pSimpleGlyf);
+    bool GlyfContourEndPoints(const void * pSimpleGlyf, int * prgnContourEndPoint,
         int cnPointsTotal, size_t & cnPoints);
-    bool GlyfPoints(const void * pSimpleGlyf, int * prgnX, int * prgnY, 
+    bool GlyfPoints(const void * pSimpleGlyf, int * prgnX, int * prgnY,
         char * prgbFlag, int cnPointsTotal, int & cnPoints);
-    
+
     // primitive to find the glyph ids in a composite glyph
-    bool GetComponentGlyphIds(const void * pSimpleGlyf, int * prgnCompId, 
+    bool GetComponentGlyphIds(const void * pSimpleGlyf, int * prgnCompId,
         size_t cnCompIdTotal, size_t & cnCompId);
     // primitive to find the placement data for a component in a composite glyph
     bool GetComponentPlacement(const void * pSimpleGlyf, int nCompId,
-        bool fOffset, int & a, int & b);                        
+        bool fOffset, int & a, int & b);
     // primitive to find the transform data for a component in a composite glyph
     bool GetComponentTransform(const void * pSimpleGlyf, int nCompId,
         float & flt11, float & flt12, float & flt21, float & flt22, bool & fTransOffset);
 #endif
 
     ////////////////////////////////// operate on composite or simple glyph (auto glyf lookup)
-    void * GlyfLookup(gid16 nGlyphId, const void * pGlyf, const void * pLoca, 
+    void * GlyfLookup(gid16 nGlyphId, const void * pGlyf, const void * pLoca,
         size_t lGlyfSize, size_t lLocaSize, const void * pHead); // primitive used by below methods
 
 #ifdef ALL_TTFUTILS
     // below are primary user methods for handling glyf data
     bool IsSpace(gid16 nGlyphId, const void * pLoca, size_t lLocaSize, const void * pHead);
-    bool IsDeepComposite(gid16 nGlyphId, const void * pGlyf, const void * pLoca, 
+    bool IsDeepComposite(gid16 nGlyphId, const void * pGlyf, const void * pLoca,
         size_t lGlyfSize, size_t lLocaSize, const void * pHead);
 
-    bool GlyfBox(gid16 nGlyphId, const void * pGlyf, const void * pLoca, size_t lGlyfSize, size_t lLocaSize, 
+    bool GlyfBox(gid16 nGlyphId, const void * pGlyf, const void * pLoca, size_t lGlyfSize, size_t lLocaSize,
         const void * pHead, int & xMin, int & yMin, int & xMax, int & yMax);
-    bool GlyfContourCount(gid16 nGlyphId, const void * pGlyf, const void * pLoca, 
+    bool GlyfContourCount(gid16 nGlyphId, const void * pGlyf, const void * pLoca,
         size_t lGlyfSize, size_t lLocaSize, const void *pHead, size_t & cnContours);
-    bool GlyfContourEndPoints(gid16 nGlyphId, const void * pGlyf, const void * pLoca, 
-        size_t lGlyfSize, size_t lLocaSize, const void * pHead, int * prgnContourEndPoint, size_t cnPoints); 
-    bool GlyfPoints(gid16 nGlyphId, const void * pGlyf, const void * pLoca, 
-        size_t lGlyfSize, size_t lLocaSize, const void * pHead, const int * prgnContourEndPoint, size_t cnEndPoints, 
+    bool GlyfContourEndPoints(gid16 nGlyphId, const void * pGlyf, const void * pLoca,
+        size_t lGlyfSize, size_t lLocaSize, const void * pHead, int * prgnContourEndPoint, size_t cnPoints);
+    bool GlyfPoints(gid16 nGlyphId, const void * pGlyf, const void * pLoca,
+        size_t lGlyfSize, size_t lLocaSize, const void * pHead, const int * prgnContourEndPoint, size_t cnEndPoints,
         int * prgnX, int * prgnY, bool * prgfOnCurve, size_t cnPoints);
 
-    // utitily method used by high-level GlyfPoints 
+    // utitily method used by high-level GlyfPoints
     bool SimplifyFlags(char * prgbFlags, int cnPoints);
     bool CalcAbsolutePoints(int * prgnX, int * prgnY, int cnPoints);
 #endif

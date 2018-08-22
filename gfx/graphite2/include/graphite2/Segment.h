@@ -62,63 +62,63 @@ enum gr_justFlags {
 /** Used for looking up slot attributes. Most are already available in other functions **/
 enum gr_attrCode {
     /// adjusted glyph advance in x direction in design units
-    gr_slatAdvX = 0,        
+    gr_slatAdvX = 0,
     /// adjusted glyph advance in y direction (usually 0) in design units
-    gr_slatAdvY,            
+    gr_slatAdvY,
     /// returns 0. Deprecated.
-    gr_slatAttTo,           
+    gr_slatAttTo,
     /// This slot attaches to its parent at the given design units in the x direction
-    gr_slatAttX,            
+    gr_slatAttX,
     /// This slot attaches to its parent at the given design units in the y direction
-    gr_slatAttY,            
+    gr_slatAttY,
     /// This slot attaches to its parent at the given glyph point (not implemented)
-    gr_slatAttGpt,          
+    gr_slatAttGpt,
     /// x-direction adjustment from the given glyph point (not implemented)
-    gr_slatAttXOff,         
+    gr_slatAttXOff,
     /// y-direction adjustment from the given glyph point (not implemented)
-    gr_slatAttYOff,         
+    gr_slatAttYOff,
     /// Where on this glyph should align with the attachment point on the parent glyph in the x-direction.
-    gr_slatAttWithX,        
+    gr_slatAttWithX,
     /// Where on this glyph should align with the attachment point on the parent glyph in the y-direction
-    gr_slatAttWithY,        
+    gr_slatAttWithY,
     /// Which glyph point on this glyph should align with the attachment point on the parent glyph (not implemented).
-    gr_slatWithGpt,         
+    gr_slatWithGpt,
     /// Adjustment to gr_slatWithGpt in x-direction (not implemented)
-    gr_slatAttWithXOff,     
+    gr_slatAttWithXOff,
     /// Adjustment to gr_slatWithGpt in y-direction (not implemented)
-    gr_slatAttWithYOff,     
+    gr_slatAttWithYOff,
     /// Attach at given nesting level (not implemented)
-    gr_slatAttLevel,        
+    gr_slatAttLevel,
     /// Line break breakweight for this glyph
-    gr_slatBreak,           
+    gr_slatBreak,
     /// Ligature component reference (not implemented)
-    gr_slatCompRef,         
+    gr_slatCompRef,
     /// bidi directionality of this glyph (not implemented)
-    gr_slatDir,             
+    gr_slatDir,
     /// Whether insertion is allowed before this glyph
     gr_slatInsert,
     /// Final positioned position of this glyph relative to its parent in x-direction in pixels
-    gr_slatPosX,            
+    gr_slatPosX,
     /// Final positioned position of this glyph relative to its parent in y-direction in pixels
-    gr_slatPosY,            
+    gr_slatPosY,
     /// Amount to shift glyph by in x-direction design units
-    gr_slatShiftX,          
+    gr_slatShiftX,
     /// Amount to shift glyph by in y-direction design units
-    gr_slatShiftY,          
+    gr_slatShiftY,
     /// attribute user1
-    gr_slatUserDefnV1,      
+    gr_slatUserDefnV1,
     /// not implemented
-    gr_slatMeasureSol,      
+    gr_slatMeasureSol,
     /// not implemented
-    gr_slatMeasureEol,      
+    gr_slatMeasureEol,
     /// Amount this slot can stretch (not implemented)
-    gr_slatJStretch,        
+    gr_slatJStretch,
     /// Amount this slot can shrink (not implemented)
-    gr_slatJShrink,         
+    gr_slatJShrink,
     /// Granularity by which this slot can stretch or shrink (not implemented)
-    gr_slatJStep,           
+    gr_slatJStep,
     /// Justification weight for this glyph (not implemented)
-    gr_slatJWeight,         
+    gr_slatJWeight,
     /// Amount this slot mush shrink or stretch in design units
     gr_slatJWidth = 29,
     /// SubSegment split point
@@ -159,11 +159,11 @@ enum gr_attrCode {
     gr_slatSeqBelowWt,
     gr_slatSeqValignHt,
     gr_slatSeqValignWt,
-                            
+
     /// not implemented
-    gr_slatMax,             
+    gr_slatMax,
     /// not implemented
-    gr_slatNoEffect = gr_slatMax + 1    
+    gr_slatNoEffect = gr_slatMax + 1
 };
 
 enum gr_bidirtl {
@@ -182,13 +182,13 @@ typedef struct gr_segment       gr_segment;
 typedef struct gr_slot          gr_slot;
 
 /** Returns Unicode character for a charinfo.
-  * 
+  *
   * @param p Pointer to charinfo to return information on.
   */
 GR2_API unsigned int gr_cinfo_unicode_char(const gr_char_info* p/*not NULL*/);
 
 /** Returns breakweight for a charinfo.
-  * 
+  *
   * @return Breakweight is a number between -50 and 50 indicating the cost of a
   * break before or after this character. If the value < 0, the absolute value
   * is this character's contribution to the overall breakweight before it. If the value

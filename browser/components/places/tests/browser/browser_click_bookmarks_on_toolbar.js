@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const PREF_LOAD_BOOKMARKS_IN_TABS = "browser.tabs.loadBookmarksInTabs";
-const TEST_PAGES = ["about:mozilla", "about:robots"];
+const EXAMPLE_PAGE = "http://example.com/";
+const TEST_PAGES = ["about:mozilla", "about:robots", "javascript:window.location=%22" + EXAMPLE_PAGE + "%22"];
 
 var gBookmarkElements = [];
 
@@ -83,6 +84,10 @@ add_task(async function click() {
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[1], {
     button: 0, accelKey: true
   });
+  await promise;
+
+  promise = waitForLoad(gBrowser.selectedBrowser, EXAMPLE_PAGE);
+  EventUtils.synthesizeMouseAtCenter(gBookmarkElements[2], {});
   await promise;
 });
 

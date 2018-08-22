@@ -144,7 +144,6 @@ class JitcodeGlobalEntry
         BytecodeLocation(JSScript* script, jsbytecode* pc) : script(script), pc(pc) {}
     };
     typedef Vector<BytecodeLocation, 0, SystemAllocPolicy> BytecodeLocationVector;
-    typedef Vector<const char*, 0, SystemAllocPolicy> ProfileStringVector;
 
     struct BaseEntry
     {

@@ -6,6 +6,8 @@
 
 #include "jit/JitFrames-inl.h"
 
+#include "mozilla/ScopeExit.h"
+
 #include "jsutil.h"
 
 #include "gc/Marking.h"
@@ -570,53 +572,28 @@ HandleExceptionBaseline(JSContext* cx, const JSJitFrameIter& frame, ResumeFromEx
     OnLeaveBaselineFrame(cx, frame, pc, rfe, frameOk);
 }
 
-struct AutoDeleteDebugModeOSRInfo
-{
-    BaselineFrame* frame;
-    explicit AutoDeleteDebugModeOSRInfo(BaselineFrame* frame) : frame(frame) { MOZ_ASSERT(frame); }
-    ~AutoDeleteDebugModeOSRInfo() { frame->deleteDebugModeOSRInfo(); }
-};
-
-struct AutoResetLastProfilerFrameOnReturnFromException
-{
-    JSContext* cx;
-    ResumeFromException* rfe;
-
-    AutoResetLastProfilerFrameOnReturnFromException(JSContext* cx, ResumeFromException* rfe)
-      : cx(cx), rfe(rfe) {}
-
-    ~AutoResetLastProfilerFrameOnReturnFromException() {
-        if (!cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
-            return;
-
-        MOZ_ASSERT(cx->jitActivation == cx->profilingActivation());
-
-        void* lastProfilingFrame = getLastProfilingFrame();
-        cx->jitActivation->setLastProfilingFrame(lastProfilingFrame);
-    }
-
-    void* getLastProfilingFrame() {
-        switch (rfe->kind) {
-          case ResumeFromException::RESUME_ENTRY_FRAME:
-          case ResumeFromException::RESUME_WASM:
-            return nullptr;
-
-          // The following all return into baseline frames.
-          case ResumeFromException::RESUME_CATCH:
-          case ResumeFromException::RESUME_FINALLY:
-          case ResumeFromException::RESUME_FORCED_RETURN:
-            return rfe->framePointer + BaselineFrame::FramePointerOffset;
-
-          // When resuming into a bailed-out ion frame, use the bailout info to
-          // find the frame we are resuming into.
-          case ResumeFromException::RESUME_BAILOUT:
-            return rfe->bailoutInfo->incomingStack;
-        }
-
-        MOZ_CRASH("Invalid ResumeFromException type!");
+static void*
+GetLastProfilingFrame(ResumeFromException* rfe) {
+    switch (rfe->kind) {
+      case ResumeFromException::RESUME_ENTRY_FRAME:
+      case ResumeFromException::RESUME_WASM:
         return nullptr;
+
+      // The following all return into baseline frames.
+      case ResumeFromException::RESUME_CATCH:
+      case ResumeFromException::RESUME_FINALLY:
+      case ResumeFromException::RESUME_FORCED_RETURN:
+        return rfe->framePointer + BaselineFrame::FramePointerOffset;
+
+      // When resuming into a bailed-out ion frame, use the bailout info to
+      // find the frame we are resuming into.
+      case ResumeFromException::RESUME_BAILOUT:
+        return rfe->bailoutInfo->incomingStack;
     }
-};
+
+    MOZ_CRASH("Invalid ResumeFromException type!");
+    return nullptr;
+}
 
 void
 HandleExceptionWasm(JSContext* cx, wasm::WasmFrameIter* iter, ResumeFromException* rfe)
@@ -634,7 +611,15 @@ HandleException(ResumeFromException* rfe)
     JSContext* cx = TlsContext.get();
     TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
 
-    AutoResetLastProfilerFrameOnReturnFromException profFrameReset(cx, rfe);
+    auto resetProfilerFrame = mozilla::MakeScopeExit([=] {
+        if (!cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
+            return;
+
+        MOZ_ASSERT(cx->jitActivation == cx->profilingActivation());
+
+        void* lastProfilingFrame = GetLastProfilingFrame(rfe);
+        cx->jitActivation->setLastProfilingFrame(lastProfilingFrame);
+    });
 
     rfe->kind = ResumeFromException::RESUME_ENTRY_FRAME;
 
@@ -756,7 +741,9 @@ HandleException(ResumeFromException* rfe)
             // on-stack recompile info, we should free the allocated
             // RecompileInfo struct before we leave this block, as we will not
             // be returning to the recompile handler.
-            AutoDeleteDebugModeOSRInfo deleteDebugModeOSRInfo(frame.baselineFrame());
+            auto deleteDebugModeOSRInfo = mozilla::MakeScopeExit([=] {
+                frame.baselineFrame()->deleteDebugModeOSRInfo();
+            });
 
             if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME &&
                 rfe->kind != ResumeFromException::RESUME_FORCED_RETURN)

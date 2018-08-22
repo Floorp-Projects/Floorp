@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -28,12 +28,12 @@ of the License or (at your option) any later version.
 // Author: Tim Eves
 
 // Build either this interpreter or the call_machine implementation.
-// The direct threaded interpreter is relies upon a gcc feature called 
-// labels-as-values so is only portable to compilers that support the 
+// The direct threaded interpreter is relies upon a gcc feature called
+// labels-as-values so is only portable to compilers that support the
 // extension (gcc only as far as I know) however it should build on any
-// architecture gcc supports. 
-// This is twice as fast as the call threaded model and is likely faster on 
-// inorder processors with short pipelines and little branch prediction such 
+// architecture gcc supports.
+// This is twice as fast as the call threaded model and is likely faster on
+// inorder processors with short pipelines and little branch prediction such
 // as the ARM and possibly Atom chips.
 
 
@@ -65,7 +65,7 @@ const void * direct_run(const bool          get_table_mode,
                         Machine::status_t & status,
                         SlotMap           * __smap=0)
 {
-    // We need to define and return to opcode table from within this function 
+    // We need to define and return to opcode table from within this function
     // other inorder to take the addresses of the instruction bodies.
     #include "inc/opcode_table.h"
     if (get_table_mode)
@@ -83,13 +83,13 @@ const void * direct_run(const bool          get_table_mode,
                   * const mapb = smap.begin()+smap.context();
     uint8                  dir = _dir;
     int8                 flags = 0;
-    
+
     // start the program
     goto **ip;
 
     // Pull in the opcode definitions
     #include "inc/opcodes.h"
-    
+
     end:
     __map  = map;
     *__map = is;
@@ -111,11 +111,10 @@ Machine::stack_t  Machine::run(const instr   * program,
                                slotref     * & is)
 {
     assert(program != 0);
-    
+
     const stack_t *sp = static_cast<const stack_t *>(
                 direct_run(false, program, data, _stack, is, _map.dir(), _status, &_map));
     const stack_t ret = sp == _stack+STACK_GUARD+1 ? *sp-- : 0;
     check_final_stack(sp);
     return ret;
 }
-
