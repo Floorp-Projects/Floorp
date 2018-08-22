@@ -106,3 +106,8 @@ MSG_DEF(MSG_CACHE_OPEN_FAILED, 0, JSEXN_TYPEERR, "CacheStorage.open() failed to 
 MSG_DEF(MSG_MATRIX_INIT_LENGTH_WRONG, 1, JSEXN_TYPEERR, "Matrix init sequence must have a length of 6 or 16 (actual value: {0})")
 MSG_DEF(MSG_INVALID_MEDIA_VIDEO_CONFIGURATION, 0, JSEXN_TYPEERR, "Invalid VideoConfiguration.")
 MSG_DEF(MSG_INVALID_MEDIA_AUDIO_CONFIGURATION, 0, JSEXN_TYPEERR, "Invalid AudioConfiguration.")
+MSG_DEF(MSG_INVALID_CURVE_DURATION_ERROR, 0, JSEXN_RANGEERR, "The curve duration for SetValueCurve must be strictly positive.")
+MSG_DEF(MSG_INVALID_AUDIOPARAM_METHOD_START_TIME_ERROR, 0, JSEXN_RANGEERR, "The start time for an AudioParam method must be positive.")
+MSG_DEF(MSG_INVALID_AUDIOPARAM_METHOD_END_TIME_ERROR, 0, JSEXN_RANGEERR, "The end time for an AudioParam method must be positive.")
+MSG_DEF(MSG_INVALID_AUDIOPARAM_EXPONENTIAL_VALUE_ERROR, 0, JSEXN_RANGEERR, "The value passed to exponentialCurveToValueAtTime must be positive.")
+MSG_DEF(MSG_INVALID_AUDIOPARAM_EXPONENTIAL_CONSTANT_ERROR, 0, JSEXN_RANGEERR, "The exponential constant passed to setTargetAtTime must be positive.")
