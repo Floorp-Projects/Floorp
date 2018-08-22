@@ -25,8 +25,8 @@ static T* extractUnbarriered(T* v)
     return v;
 }
 
-template <class K, class V, class HP>
-WeakMap<K, V, HP>::WeakMap(JSContext* cx, JSObject* memOf)
+template <class K, class V>
+WeakMap<K, V>::WeakMap(JSContext* cx, JSObject* memOf)
   : Base(cx->zone()), WeakMapBase(memOf, cx->zone())
 {
     zone()->gcWeakMapList().insertFront(this);
@@ -40,9 +40,9 @@ WeakMap<K, V, HP>::WeakMap(JSContext* cx, JSObject* memOf)
 // This implementation does not use 'markedCell'; it looks up origKey and checks
 // the mark bits on everything it cares about, one of which will be
 // markedCell. But a subclass might use it to optimize the liveness check.
-template <class K, class V, class HP>
+template <class K, class V>
 void
-WeakMap<K, V, HP>::markEntry(GCMarker* marker, gc::Cell* markedCell, JS::GCCellPtr origKey)
+WeakMap<K, V>::markEntry(GCMarker* marker, gc::Cell* markedCell, JS::GCCellPtr origKey)
 {
     MOZ_ASSERT(marked);
 
@@ -64,9 +64,9 @@ WeakMap<K, V, HP>::markEntry(GCMarker* marker, gc::Cell* markedCell, JS::GCCellP
     key.unsafeSet(nullptr); // Prevent destructor from running barriers.
 }
 
-template <class K, class V, class HP>
+template <class K, class V>
 void
-WeakMap<K, V, HP>::trace(JSTracer* trc)
+WeakMap<K, V>::trace(JSTracer* trc)
 {
     MOZ_ASSERT_IF(JS::RuntimeHeapIsBusy(), isInList());
 
@@ -94,9 +94,9 @@ WeakMap<K, V, HP>::trace(JSTracer* trc)
         TraceEdge(trc, &r.front().value(), "WeakMap entry value");
 }
 
-template <class K, class V, class HP>
+template <class K, class V>
 /* static */ void
-WeakMap<K, V, HP>::addWeakEntry(GCMarker* marker, JS::GCCellPtr key,
+WeakMap<K, V>::addWeakEntry(GCMarker* marker, JS::GCCellPtr key,
                                 const gc::WeakMarkable& markable)
 {
     Zone* zone = key.asCell()->asTenured().zone();
@@ -114,9 +114,9 @@ WeakMap<K, V, HP>::addWeakEntry(GCMarker* marker, JS::GCCellPtr key,
     }
 }
 
-template <class K, class V, class HP>
+template <class K, class V>
 bool
-WeakMap<K, V, HP>::markIteratively(GCMarker* marker)
+WeakMap<K, V>::markIteratively(GCMarker* marker)
 {
     MOZ_ASSERT(marked);
 
@@ -152,10 +152,12 @@ WeakMap<K, V, HP>::markIteratively(GCMarker* marker)
     return markedAny;
 }
 
-template <class K, class V, class HP>
+template <class K, class V>
 inline JSObject*
-WeakMap<K, V, HP>::getDelegate(JSObject* key) const
+WeakMap<K, V>::getDelegate(JSObject* key) const
 {
+    JS::AutoSuppressGCAnalysis nogc;
+
     JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp();
     if (!op)
         return nullptr;
@@ -168,23 +170,23 @@ WeakMap<K, V, HP>::getDelegate(JSObject* key) const
     return obj;
 }
 
-template <class K, class V, class HP>
+template <class K, class V>
 inline JSObject*
-WeakMap<K, V, HP>::getDelegate(JSScript* script) const
+WeakMap<K, V>::getDelegate(JSScript* script) const
 {
     return nullptr;
 }
 
-template <class K, class V, class HP>
+template <class K, class V>
 inline JSObject*
-WeakMap<K, V, HP>::getDelegate(LazyScript* script) const
+WeakMap<K, V>::getDelegate(LazyScript* script) const
 {
     return nullptr;
 }
 
-template <class K, class V, class HP>
+template <class K, class V>
 inline bool
-WeakMap<K, V, HP>::keyNeedsMark(JSObject* key) const
+WeakMap<K, V>::keyNeedsMark(JSObject* key) const
 {
     JSObject* delegate = getDelegate(key);
     /*
@@ -194,24 +196,24 @@ WeakMap<K, V, HP>::keyNeedsMark(JSObject* key) const
     return delegate && gc::IsMarkedUnbarriered(zone()->runtimeFromMainThread(), &delegate);
 }
 
-template <class K, class V, class HP>
+template <class K, class V>
 inline bool
-WeakMap<K, V, HP>::keyNeedsMark(JSScript* script) const
+WeakMap<K, V>::keyNeedsMark(JSScript* script) const
 {
     return false;
 }
 
-template <class K, class V, class HP>
+template <class K, class V>
 inline bool
-WeakMap<K, V, HP>::keyNeedsMark(LazyScript* script) const
+WeakMap<K, V>::keyNeedsMark(LazyScript* script) const
 {
     return false;
 }
 
 
-template <class K, class V, class HP>
+template <class K, class V>
 void
-WeakMap<K, V, HP>::sweep()
+WeakMap<K, V>::sweep()
 {
     /* Remove all entries whose keys remain unmarked. */
     for (Enum e(*this); !e.empty(); e.popFront()) {
@@ -227,9 +229,9 @@ WeakMap<K, V, HP>::sweep()
 }
 
 /* memberOf can be nullptr, which means that the map is not part of a JSObject. */
-template <class K, class V, class HP>
+template <class K, class V>
 void
-WeakMap<K, V, HP>::traceMappings(WeakMapTracer* tracer)
+WeakMap<K, V>::traceMappings(WeakMapTracer* tracer)
 {
     for (Range r = Base::all(); !r.empty(); r.popFront()) {
         gc::Cell* key = gc::ToMarkable(r.front().key());
@@ -243,9 +245,9 @@ WeakMap<K, V, HP>::traceMappings(WeakMapTracer* tracer)
 }
 
 #if DEBUG
-template <class K, class V, class HP>
+template <class K, class V>
 void
-WeakMap<K, V, HP>::assertEntriesNotAboutToBeFinalized()
+WeakMap<K, V>::assertEntriesNotAboutToBeFinalized()
 {
     for (Range r = Base::all(); !r.empty(); r.popFront()) {
         K k(r.front().key());

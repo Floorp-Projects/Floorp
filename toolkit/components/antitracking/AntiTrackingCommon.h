@@ -83,6 +83,11 @@ public:
                                                              const nsCString& aGrantedOrigin,
                                                              FirstPartyStorageAccessGrantedForOriginResolver&& aResolver);
 
+
+  // Check whether a top window URI is on the content blocking allow list.
+  static nsresult
+  IsOnContentBlockingAllowList(nsIURI* aTopWinURI, bool& aIsAllowListed);
+
 };
 
 } // namespace mozilla

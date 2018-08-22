@@ -375,12 +375,13 @@ bool SkDashPath::InternalFilter(SkPath* dst, const SkPath& src, SkStrokeRec* rec
             SkScalar pathLength = SkPathMeasure(src, false, rec->getResScale()).getLength();
             SkScalar endPhase = SkScalarMod(pathLength + initialDashLength, intervalLength);
             int index = 0;
-            while (endPhase > intervals[index]) {
-                endPhase -= intervals[index++];
+            SkScalar sum = 0;
+            while (endPhase > sum + intervals[index]) {
+                sum += intervals[index++];
                 SkASSERT(index <= count);
             }
             // if dash ends inside "on", or ends at beginning of "off"
-            if (is_even(index) == (endPhase > 0)) {
+            if (is_even(index) == (endPhase > sum)) {
                 SkPoint midPoint = src.getPoint(0);
                 // get vector at end of rect
                 int last = src.countPoints() - 1;

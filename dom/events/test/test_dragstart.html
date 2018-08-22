@@ -41,10 +41,6 @@ function afterDragTests()
               "NoModificationAllowedError", "setData when read only");
   expectError(() => gDataTransfer.clearData("text/plain"),
               "NoModificationAllowedError", "clearData when read only");
-  expectError(() => gDataTransfer.mozSetDataAt("text/plain", "Some Text", 0),
-              "NoModificationAllowedError", "setDataAt when read only");
-  expectError(() => gDataTransfer.mozClearDataAt("text/plain", 0),
-              "NoModificationAllowedError", "clearDataAt when read only");
   expectError(() => gDataTransfer.addElement(draggable),
               "NoModificationAllowedError", "addElement when read only");
 
@@ -130,7 +126,7 @@ function doDragStartSelection(event)
   is(dt.getData("TEXT"), "This is a draggable bit of text.", "initial selection TEXT");
   is(dt.getData("text/UNICODE"), "This is a draggable bit of text.", "initial selection text/UNICODE"); 
 
-  is(dt.mozItemCount, 1, "initial selection item count");
+  is(SpecialPowers.wrap(dt).mozItemCount, 1, "initial selection item count");
 
   dt.clearData("text/plain");
   dt.clearData("text/html");
@@ -143,10 +139,14 @@ function doDragStartSelection(event)
 
 function test_DataTransfer(dt)
 {
-  is(dt.mozItemCount, 0, "empty itemCount");
+  is(SpecialPowers.wrap(dt).mozItemCount, 0, "empty itemCount");
 
   var types = dt.types;
   ok(Array.isArray(types), "empty types is an Array");
+  // The above test fails if we have SpecialPowers.wrap(dt).types instead of dt.types
+  // because chrome consumers get the 'ReturnValueNeedsContainsHack'.
+  // So wrap with special powers after the test
+  dt = SpecialPowers.wrap(dt);
   checkTypes(dt, [], 0, "empty");
   is(dt.getData("text/plain"), "", "empty data is empty");
 
@@ -316,11 +316,9 @@ function test_DataTransfer(dt)
   checkOneDataItem(dt, ["application/-moz-node"], ["draggable"], 2, "setDataAt node item at index 2");
 
   // Try to add and then remove a non-string type to the DataTransfer and ensure
-  // that the type appears in DataTransfer.types. These calls need to be called
-  // with SpecialPowers.wrap(), as adding and removing non-string/file types to
-  // DataTransfer is chrome-only.
+  // that the type appears in DataTransfer.types.
   {
-    SpecialPowers.wrap(dt).mozSetDataAt("application/-x-body", document.body, 0);
+    dt.mozSetDataAt("application/-x-body", document.body, 0);
     let found = false;
     for (let i = 0; i < dt.types.length; ++i) {
       if (dt.types[i] == "application/-x-body") {
@@ -329,7 +327,7 @@ function test_DataTransfer(dt)
       }
     }
     ok(found, "Data should appear in datatransfer.types despite having a non-string type");
-    SpecialPowers.wrap(dt).mozClearDataAt("application/-x-body", 0);
+    dt.mozClearDataAt("application/-x-body", 0);
   }
 
   dt.mozClearDataAt("text/html", 1);
@@ -419,7 +417,7 @@ function doDragStartLink(event)
   checkTypes(dt, ["text/x-moz-url", "text/x-moz-url-data", "text/x-moz-url-desc", "text/uri-list",
                   "text/_moz_htmlcontext", "text/_moz_htmlinfo", "text/html", "text/plain"], 0, "initial link");
 
-  is(dt.mozItemCount, 1, "initial link item count");
+  is(SpecialPowers.wrap(dt).mozItemCount, 1, "initial link item count");
   is(dt.getData("text/uri-list"), "http://www.mozilla.org/", "link text/uri-list");
   is(dt.getData("text/plain"), "http://www.mozilla.org/", "link text/plain");
 
@@ -436,7 +434,7 @@ function doDragStartImage(event)
   checkTypes(dt, ["text/x-moz-url", "text/x-moz-url-data", "text/x-moz-url-desc", "text/uri-list",
                   "text/_moz_htmlcontext", "text/_moz_htmlinfo", "text/html", "text/plain"], 0, "initial image");
 
-  is(dt.mozItemCount, 1, "initial image item count");
+  is(SpecialPowers.wrap(dt).mozItemCount, 1, "initial image item count");
   is(dt.getData("text/uri-list"), dataurl, "image text/uri-list");
   is(dt.getData("text/plain"), dataurl, "image text/plain");
 
@@ -450,7 +448,7 @@ function doDragStartInput(event)
   var dt = event.dataTransfer;
   checkTypes(dt, ["text/plain"], 0, "initial input");
 
-  is(dt.mozItemCount, 1, "initial input item count");
+  is(SpecialPowers.wrap(dt).mozItemCount, 1, "initial input item count");
 //  is(dt.getData("text/plain"), "Text", "input text/plain");
 
 //  event.preventDefault();
@@ -511,11 +509,12 @@ function doDragOverSynthetic(event)
 function onDragStartDraggable(event)
 {
   var dt = event.dataTransfer;
-  ok(dt.mozItemCount == 0 && dt.types.length == 0 && event.originalTarget == gDragInfo.target, gDragInfo.testid);
+  ok(SpecialPowers.wrap(dt).mozItemCount == 0 && dt.types.length == 0 && event.originalTarget == gDragInfo.target, gDragInfo.testid);
 
   gExtraDragTests++;
 }
 
+// Expects dt wrapped in SpecialPowers
 function checkOneDataItem(dt, expectedtypes, expecteddata, index, testid)
 {
   checkTypes(dt, expectedtypes, index, testid);
@@ -537,13 +536,14 @@ function checkTypes(dt, expectedtypes, index, testid)
     }
   }
 
-  types = dt.mozTypesAt(index);
+  types = SpecialPowers.wrap(dt).mozTypesAt(index);
   is(types.length, expectedtypes.length, testid + " typesAt length");
   for (var f = 0; f < expectedtypes.length; f++) {
     is(types[f], expectedtypes[f], testid + " " + types[f] + " at " + index + " check");
   }
 }
 
+// Expects dt wrapped in SpecialPowers
 function checkURL(dt, url, fullurllist, index, testid)
 {
   is(dt.getData("text/uri-list"), fullurllist, testid + " text/uri-list");

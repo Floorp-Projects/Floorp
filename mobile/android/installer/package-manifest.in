@@ -253,10 +253,6 @@
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
 
-; Private Browsing
-@BINPATH@/components/PrivateBrowsing.manifest
-@BINPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
-
 ; Security Reports
 @BINPATH@/components/SecurityReporter.manifest
 @BINPATH@/components/SecurityReporter.js

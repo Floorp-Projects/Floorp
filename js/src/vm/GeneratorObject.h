@@ -60,7 +60,7 @@ class GeneratorObject : public NativeObject
     static JSObject* create(JSContext* cx, AbstractFramePtr frame);
 
     static bool resume(JSContext* cx, InterpreterActivation& activation,
-                       HandleObject obj, HandleValue arg, ResumeKind resumeKind);
+                       Handle<GeneratorObject*> genObj, HandleValue arg);
 
     static bool initialSuspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame, jsbytecode* pc) {
         return suspend(cx, obj, frame, pc, nullptr, 0);
@@ -147,13 +147,17 @@ class GeneratorObject : public NativeObject
         setFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT, Int32Value(YIELD_AND_AWAIT_INDEX_RUNNING));
     }
     void setClosing() {
-        MOZ_ASSERT(isSuspended());
+        MOZ_ASSERT(isRunning());
         setFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT, Int32Value(YIELD_AND_AWAIT_INDEX_CLOSING));
     }
     void setYieldAndAwaitIndex(uint32_t yieldAndAwaitIndex) {
         MOZ_ASSERT_IF(yieldAndAwaitIndex == 0,
                       getFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT).isUndefined());
         MOZ_ASSERT_IF(yieldAndAwaitIndex != 0, isRunning() || isClosing());
+        setYieldAndAwaitIndexNoAssert(yieldAndAwaitIndex);
+    }
+    // Debugger has to flout the state machine rules a bit.
+    void setYieldAndAwaitIndexNoAssert(uint32_t yieldAndAwaitIndex) {
         MOZ_ASSERT(yieldAndAwaitIndex < uint32_t(YIELD_AND_AWAIT_INDEX_CLOSING));
         setFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT, Int32Value(yieldAndAwaitIndex));
         MOZ_ASSERT(isSuspended());
