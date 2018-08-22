@@ -157,7 +157,6 @@ public:
     void
     Remove()
     {
-        remove();
         mManager->RemoveUserData(&sWRUserDataKey);
     }
 
@@ -232,8 +231,11 @@ PurgeWRGlyphAtlas()
                 }
             }
         }
-        // Remove the layer manager's destroy notification.
-        user->Remove();
+    }
+    // Remove the layer managers' destroy notifications only after processing
+    // so as not to mess up gWRUsers iteration.
+    while (!gWRUsers.isEmpty()) {
+        gWRUsers.popFirst()->Remove();
     }
     // Finally, clear out the atlases.
     for (size_t i = 0; i < 8; i++) {
