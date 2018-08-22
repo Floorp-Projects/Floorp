@@ -1209,6 +1209,18 @@ public:
     {
     }
 
+    // This constructor is used only by AddPtr() within lookupForAdd().
+    explicit Ptr(const HashTable& aTable)
+      : mEntry(nullptr)
+#ifdef DEBUG
+      , mTable(&aTable)
+      , mGeneration(aTable.generation())
+#endif
+    {
+    }
+
+    bool isValid() const { return !!mEntry; }
+
   public:
     Ptr()
       : mEntry(nullptr)
@@ -1218,8 +1230,6 @@ public:
 #endif
     {
     }
-
-    bool isValid() const { return !!mEntry; }
 
     bool found() const
     {
@@ -1285,6 +1295,21 @@ public:
 #endif
     {
     }
+
+    // This constructor is used when lookupForAdd() is performed on a table
+    // lacking entry storage; it leaves mEntry null but initializes everything
+    // else.
+    AddPtr(const HashTable& aTable, HashNumber aHashNumber)
+      : Ptr(aTable)
+      , mKeyHash(aHashNumber)
+#ifdef DEBUG
+      , mMutationCount(aTable.mMutationCount)
+#endif
+    {
+      MOZ_ASSERT(isLive());
+    }
+
+    bool isLive() const { return isLiveHash(mKeyHash); }
 
   public:
     AddPtr()
@@ -2030,7 +2055,7 @@ public:
       return true;  // Capacity is already sufficient.
     }
 
-    RebuildStatus status = changeTableSize(bestCapacity, DontReportFailure);
+    RebuildStatus status = changeTableSize(bestCapacity, ReportFailure);
     MOZ_ASSERT(status != NotOverloaded);
     return status != RehashFailed;
   }
@@ -2107,16 +2132,12 @@ public:
       return AddPtr();
     }
 
+    HashNumber keyHash = prepareHash(aLookup);
+
     if (!mTable) {
-      uint32_t newCapacity = rawCapacity();
-      RebuildStatus status = changeTableSize(newCapacity, ReportFailure);
-      MOZ_ASSERT(status != NotOverloaded);
-      if (status == RehashFailed) {
-        return AddPtr();
-      }
+      return AddPtr(*this, keyHash);
     }
 
-    HashNumber keyHash = prepareHash(aLookup);
     // Directly call the constructor in the return statement to avoid
     // excess copying when building with Visual Studio 2017.
     // See bug 1385181.
@@ -2133,7 +2154,7 @@ public:
     MOZ_ASSERT(!(aPtr.mKeyHash & sCollisionBit));
 
     // Check for error from ensureHash() here.
-    if (!aPtr.isValid()) {
+    if (!aPtr.isLive()) {
       return false;
     }
 
@@ -2142,14 +2163,25 @@ public:
     MOZ_ASSERT(aPtr.mMutationCount == mMutationCount);
 #endif
 
-    // Changing an entry from removed to live does not affect whether we
-    // are overloaded and can be handled separately.
-    if (aPtr.mEntry->isRemoved()) {
+    if (!aPtr.isValid()) {
+      MOZ_ASSERT(!mTable && mEntryCount == 0);
+      uint32_t newCapacity = rawCapacity();
+      RebuildStatus status = changeTableSize(newCapacity, ReportFailure);
+      MOZ_ASSERT(status != NotOverloaded);
+      if (status == RehashFailed) {
+        return false;
+      }
+      aPtr.mEntry = &findNonLiveEntry(aPtr.mKeyHash);
+
+    } else if (aPtr.mEntry->isRemoved()) {
+      // Changing an entry from removed to live does not affect whether we are
+      // overloaded and can be handled separately.
       if (!this->checkSimulatedOOM()) {
         return false;
       }
       mRemovedCount--;
       aPtr.mKeyHash |= sCollisionBit;
+
     } else {
       // Preserve the validity of |aPtr.mEntry|.
       RebuildStatus status = rehashIfOverloaded();
@@ -2210,20 +2242,27 @@ public:
                                   Args&&... aArgs)
   {
     // Check for error from ensureHash() here.
-    if (!aPtr.isValid()) {
+    if (!aPtr.isLive()) {
       return false;
     }
 #ifdef DEBUG
     aPtr.mGeneration = generation();
     aPtr.mMutationCount = mMutationCount;
 #endif
-    {
+    if (mTable) {
       ReentrancyGuard g(*this);
       // Check that aLookup has not been destroyed.
       MOZ_ASSERT(prepareHash(aLookup) == aPtr.mKeyHash);
       aPtr.mEntry = &lookup<ForAdd>(aLookup, aPtr.mKeyHash);
+      if (aPtr.found()) {
+        return true;
+      }
+    } else {
+      // Clear aPtr so it's invalid; add() will allocate storage and redo the
+      // lookup.
+      aPtr.mEntry = nullptr;
     }
-    return aPtr.found() || add(aPtr, std::forward<Args>(aArgs)...);
+    return add(aPtr, std::forward<Args>(aArgs)...);
   }
 
   void remove(Ptr aPtr)
