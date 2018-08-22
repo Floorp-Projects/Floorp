@@ -2788,6 +2788,8 @@ if test -n "$MOZ_LIBJPEG_TURBO" -a -n "$COMPILE_ENVIRONMENT"; then
   WINNT:x86_64)
     LIBJPEG_TURBO_ASFLAGS="-D__x86_64__ -DPIC -DWIN64 -DMSVC"
   ;;
+  WINNT:*)
+  ;;
   *:arm)
     LIBJPEG_TURBO_ASFLAGS="-march=armv7-a -mfpu=neon"
   ;;
