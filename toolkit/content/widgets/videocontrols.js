@@ -1107,32 +1107,6 @@ this.VideoControlsImplPageWidget = class {
         }
       },
 
-      // Polyfill animation.finished promise, also invalidate
-      // the previous promise.
-      // Remove when the platform implementation ships.
-      // (currently behind dom.animations-api.core.enabled)
-      installFinishedPromisePolyfill(animation) {
-        let handler = {
-          handleEvent(evt) {
-            animation.removeEventListener("finish", this);
-            animation.removeEventListener("cancel", this);
-            if (evt.type == "finish" &&
-                this === animation.finished) {
-              this.fn();
-            }
-          },
-          then(fn) {
-            this.fn = fn;
-          }
-        };
-        // Note that handler is not a real Promise.
-        // All it offered is a then() method to register a callback
-        // to be triggered at the right time.
-        Object.defineProperty(animation, "finished", { value: handler, configurable: true });
-        animation.addEventListener("finish", handler);
-        animation.addEventListener("cancel", handler);
-      },
-
       startFade(element, fadeIn, immediate = false) {
         let animationProp =
           this.animationProps[element.id];
@@ -1143,15 +1117,8 @@ this.VideoControlsImplPageWidget = class {
 
         let animation = this.animationMap.get(element);
         if (!animation) {
-          // Create the animation object but don't start it.
-          // To be replaced with the following when the constructors ship
-          // (currently behind dom.animations-api.core.enabled)
-          /*
           animation = new this.window.Animation(new this.window.KeyframeEffect(
             element, animationProp.keyframes, animationProp.options));
-          */
-          animation = element.animate(animationProp.keyframes, animationProp.options);
-          animation.cancel();
 
           this.animationMap.set(element, animation);
         }
@@ -1193,7 +1160,6 @@ this.VideoControlsImplPageWidget = class {
         if (!immediate) {
           animation.playbackRate = fadeIn ? 1 : -1;
           animation.play();
-          this.installFinishedPromisePolyfill(animation);
           finishedPromise = animation.finished;
         } else {
           animation.cancel();
