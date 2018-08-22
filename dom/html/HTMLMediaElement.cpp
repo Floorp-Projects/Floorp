@@ -4047,13 +4047,13 @@ HTMLMediaElement::UpdateHadAudibleAutoplayState()
     OwnerDoc()->SetDocTreeHadAudibleMedia();
     if (AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(*this)) {
       ScalarAdd(Telemetry::ScalarID::MEDIA_AUTOPLAY_WOULD_BE_ALLOWED_COUNT, 1);
+      if (mReadyState >= HAVE_METADATA && !HasAudio()) {
+        ScalarAdd(Telemetry::ScalarID::MEDIA_ALLOWED_AUTOPLAY_NO_AUDIO_TRACK_COUNT, 1);
+      }
     } else {
       if (mReadyState < HAVE_METADATA) {
         mBlockedAsWithoutMetadata = true;
         ScalarAdd(Telemetry::ScalarID::MEDIA_BLOCKED_NO_METADATA, 1);
-      }
-      if (mReadyState >= HAVE_METADATA && !HasAudio()) {
-        ScalarAdd(Telemetry::ScalarID::MEDIA_BLOCKED_AUTOPLAY_NO_AUDIO_TRACK_COUNT, 1);
       }
       ScalarAdd(Telemetry::ScalarID::MEDIA_AUTOPLAY_WOULD_NOT_BE_ALLOWED_COUNT, 1);
     }
@@ -5573,13 +5573,6 @@ HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
                                mMediaInfo.mVideo.mDisplay.height > 0),
                "Video resolution must be known on 'loadedmetadata'");
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
-  // The play invocation which was call by script had happened before media
-  // element loaded metadata.
-  if ((!mPaused && OwnerDoc() && !OwnerDoc()->HasBeenUserGestureActivated()) &&
-      !HasAudio() &&
-      (Volume() != 0 && !Muted())) {
-    ScalarAdd(Telemetry::ScalarID::MEDIA_BLOCKED_AUTOPLAY_NO_AUDIO_TRACK_COUNT, 1);
-  }
 
   if (mBlockedAsWithoutMetadata && !HasAudio()) {
     mBlockedAsWithoutMetadata = false;
