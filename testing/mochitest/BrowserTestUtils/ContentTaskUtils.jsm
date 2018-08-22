@@ -20,6 +20,50 @@ ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var ContentTaskUtils = {
   /**
+   * Checks if a DOM element is hidden.
+   *
+   * @param {Element} element
+   *        The element which is to be checked.
+   *
+   * @return {boolean}
+   */
+  is_hidden(element) {
+    var style = element.ownerGlobal.getComputedStyle(element);
+    if (style.display == "none")
+      return true;
+    if (style.visibility != "visible")
+      return true;
+
+    // Hiding a parent element will hide all its children
+    if (element.parentNode != element.ownerDocument)
+      return ContentTaskUtils.is_hidden(element.parentNode);
+
+    return false;
+  },
+
+  /**
+   * Checks if a DOM element is visible.
+   *
+   * @param {Element} element
+   *        The element which is to be checked.
+   *
+   * @return {boolean}
+   */
+  is_visible(element) {
+    var style = element.ownerGlobal.getComputedStyle(element);
+    if (style.display == "none")
+      return false;
+    if (style.visibility != "visible")
+      return false;
+
+    // Hiding a parent element will hide all its children
+    if (element.parentNode != element.ownerDocument)
+      return ContentTaskUtils.is_visible(element.parentNode);
+
+    return true;
+  },
+
+  /**
    * Will poll a condition function until it returns true.
    *
    * @param condition
