@@ -65,6 +65,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       fromCache: this._fromCache,
       fromServiceWorker: this._fromServiceWorker,
       private: this._private,
+      isTrackingResource: this._isTrackingResource,
     };
   },
 
@@ -103,6 +104,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._cause = networkEvent.cause;
     this._fromCache = networkEvent.fromCache;
     this._fromServiceWorker = networkEvent.fromServiceWorker;
+    this._isTrackingResource = networkEvent.isTrackingResource;
     this._channelId = networkEvent.channelId;
 
     // Stack trace info isn't sent automatically. The client
