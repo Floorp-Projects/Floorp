@@ -1951,35 +1951,6 @@ Gecko_NewShapeImage(mozilla::StyleShapeSource* aShape)
 }
 
 void
-Gecko_NewStyleSVGPath(mozilla::StyleShapeSource* aShape)
-{
-  MOZ_ASSERT(aShape);
-  aShape->SetPath(MakeUnique<mozilla::StyleSVGPath>());
-}
-
-void
-Gecko_SetStyleMotion(UniquePtr<mozilla::StyleMotion>* aMotion,
-                     mozilla::StyleMotion* aValue)
-{
-  MOZ_ASSERT(aMotion);
-  aMotion->reset(aValue);
-}
-
-mozilla::StyleMotion*
-Gecko_NewStyleMotion()
-{
-  return new StyleMotion();
-}
-
-void
-Gecko_CopyStyleMotions(mozilla::UniquePtr<mozilla::StyleMotion>* aMotion,
-                       const mozilla::StyleMotion* aOther)
-{
-  MOZ_ASSERT(aMotion);
-  *aMotion = aOther ? MakeUnique<StyleMotion>(*aOther) : nullptr;
-}
-
-void
 Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len)
 {
   effects->mFilters.Clear();

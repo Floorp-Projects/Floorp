@@ -58,7 +58,6 @@ pub use self::length::{NonNegativeLengthOrPercentage, NonNegativeLengthOrPercent
 pub use self::list::Quotes;
 #[cfg(feature = "gecko")]
 pub use self::list::ListStyleType;
-pub use self::motion::OffsetPath;
 pub use self::outline::OutlineStyle;
 pub use self::rect::LengthOrNumberRect;
 pub use self::resolution::Resolution;
@@ -102,7 +101,6 @@ pub mod image;
 pub mod length;
 pub mod list;
 pub mod outline;
-pub mod motion;
 pub mod percentage;
 pub mod position;
 pub mod rect;
