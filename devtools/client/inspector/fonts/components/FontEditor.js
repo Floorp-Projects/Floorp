@@ -8,7 +8,6 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const FontMeta = createFactory(require("./FontMeta"));
 const FontPropertyValue = createFactory(require("./FontPropertyValue"));
 const FontSize = createFactory(require("./FontSize"));
 const FontStyle = createFactory(require("./FontStyle"));
@@ -94,76 +93,81 @@ class FontEditor extends PureComponent {
   }
 
   /**
-   * Render font family, font name, and metadata for all fonts used on selected node.
+   * Render fonts used on the selected node grouped by font-family.
    *
    * @param {Array} fonts
    *        Fonts used on selected node.
    * @return {DOMNode}
    */
-  renderFontFamily(fonts) {
+  renderUsedFonts(fonts) {
     if (!fonts.length) {
       return null;
     }
 
-    const topUsedFontsList = this.renderFontList(fonts.slice(0, MAX_FONTS));
-    const moreUsedFontsList = this.renderFontList(fonts.slice(MAX_FONTS, fonts.length));
-    const moreUsedFonts = moreUsedFontsList === null
+    // Group fonts by family name.
+    const fontGroups = fonts.reduce((acc, font) => {
+      const family = font.CSSFamilyName.toString();
+      acc[family] = acc[family] || [];
+      acc[family].push(font);
+      return acc;
+    }, {});
+
+    const renderedFontGroups = Object.keys(fontGroups).map(family => {
+      return this.renderFontGroup(family, fontGroups[family]);
+    });
+
+    const topFontsList = renderedFontGroups.slice(0, MAX_FONTS);
+    const moreFontsList = renderedFontGroups.slice(MAX_FONTS, renderedFontGroups.length);
+
+    const moreFonts = !moreFontsList.length
       ? null
       : dom.details({},
           dom.summary({},
             dom.span({ className: "label-open" }, getStr("fontinspector.showMore")),
             dom.span({ className: "label-close" }, getStr("fontinspector.showLess"))
           ),
-          moreUsedFontsList
+          moreFontsList
         );
 
     return dom.label(
       {
-        className: "font-control font-control-family",
+        className: "font-control font-control-used-fonts",
       },
       dom.span(
         {
           className: "font-control-label",
         },
-        getStr("fontinspector.fontFamilyLabel")
+        getStr("fontinspector.usedFontsLabel")
       ),
       dom.div(
         {
           className: "font-control-box",
         },
-        topUsedFontsList,
-        moreUsedFonts
+        topFontsList,
+        moreFonts
       )
     );
   }
 
-  /**
-   * Given an array of fonts, get an unordered list with rendered FontMeta components.
-   * If the array of fonts is empty, return null.
-   *
-   * @param {Array} fonts
-   *        Array of objects with information about fonts used on the selected node.
-   * @return {DOMNode|null}
-   */
-  renderFontList(fonts = []) {
-    if (!fonts.length) {
-      return null;
-    }
+  renderFontGroup(family, fonts = []) {
+    const group = fonts.map(font => {
+      return dom.span(
+        {
+          className: "font-name",
+        },
+        font.name);
+    });
 
-    return dom.ul(
+    return dom.div(
       {
-        className: "fonts-list"
+        className: "font-group"
       },
-      fonts.map(font => {
-        return dom.li(
-          {},
-          FontMeta({
-            font,
-            key: font.name,
-            onToggleFontHighlight: this.props.onToggleFontHighlight
-          })
-        );
-      })
+      dom.div(
+        {
+          className: "font-family-name"
+        },
+        family),
+      group
     );
   }
 
@@ -294,8 +298,8 @@ class FontEditor extends PureComponent {
       {
         id: "font-editor"
       },
-      // Always render UI for font family, format and font file URL.
-      this.renderFontFamily(fonts),
+      // Always render UI for used fonts.
+      this.renderUsedFonts(fonts),
       // Render UI for font variation instances if they are defined.
       hasFontInstances && this.renderInstances(font.variationInstances, instance),
       // Always render UI for font size.

@@ -143,6 +143,24 @@
   font-size: 1.2em;
 }
 
+.font-group {
+  margin-bottom: .5em;
+}
+
+.font-group .font-name {
+  display: inline-block;
+  white-space: unset;
+  margin-right: .5em;
+}
+
+.font-group .font-name::after {
+  content: ",";
+}
+
+.font-group .font-name:nth-last-child(1)::after {
+  content: "";
+}
+
 .font-css-code {
   direction: ltr;
   margin: 0;
@@ -192,7 +210,7 @@
   padding-top: unset;
 }
 
-.font-control-family {
+.font-control-used-fonts {
   align-items: flex-start;
   border-bottom: 1px solid var(--theme-splitter-color);
   margin-top: 0;
