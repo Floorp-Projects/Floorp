@@ -1,7 +1,6 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-/* global getURL, getFamilyName */
 "use strict";
 
 requestLongerTimeout(2);
@@ -18,10 +17,6 @@ add_task(async function() {
   await testBodyFonts(inspector, viewDoc);
   await testDivFonts(inspector, viewDoc);
 });
-
-function isRemote(fontLi) {
-  return fontLi.querySelector(".font-origin").classList.contains("remote");
-}
 
 async function testBodyFonts(inspector, viewDoc) {
   await selectNode("body", inspector);

@@ -27,7 +27,14 @@ selectNode = async function(node, inspector, reason) {
   const onInspectorUpdated = inspector.once("fontinspector-updated");
   const onEditorUpdated = inspector.once("fonteditor-updated");
   await _selectNode(node, inspector, reason);
-  await Promise.all([onInspectorUpdated, onEditorUpdated]);
+
+  if (Services.prefs.getBoolPref("devtools.inspector.fonteditor.enabled")) {
+    // Wait for both the font inspetor and font editor before proceeding.
+    await Promise.all([onInspectorUpdated, onEditorUpdated]);
+  } else {
+    // Wait just for the font inspector.
+    await onInspectorUpdated;
+  }
 };
 
 /**
@@ -102,25 +109,14 @@ function getUsedFontsEls(viewDoc) {
 }
 
 /**
- * Get the DOM element for the accordion widget that contains the fonts used to render the
- * current element.
- *
- * @param  {document} viewDoc
- * @return {DOMNode}
- */
-function getRenderedFontsAccordion(viewDoc) {
-  return viewDoc.querySelectorAll("#font-container .accordion")[0];
-}
-
-/**
  * Get the DOM element for the accordion widget that contains the fonts used elsewhere in
  * the document.
  *
  * @param  {document} viewDoc
  * @return {DOMNode}
  */
-function getOtherFontsAccordion(viewDoc) {
-  return viewDoc.querySelectorAll("#font-container .accordion")[1];
+function getFontsAccordion(viewDoc) {
+  return viewDoc.querySelector("#font-container .accordion");
 }
 
 /**
@@ -141,23 +137,13 @@ async function expandAccordion(accordion) {
 }
 
 /**
- * Expand the other fonts accordion.
+ * Expand the fonts accordion.
  *
  * @param  {document} viewDoc
  */
-async function expandOtherFontsAccordion(viewDoc) {
+async function expandFontsAccordion(viewDoc) {
   info("Expanding the other fonts section");
-  await expandAccordion(getOtherFontsAccordion(viewDoc));
-}
-
-/**
- * Get all of the <li> elements for the fonts used to render the current element.
- *
- * @param  {document} viewDoc
- * @return {Array}
- */
-function getRenderedFontsEls(viewDoc) {
-  return getRenderedFontsAccordion(viewDoc).querySelectorAll(".fonts-list > li");
+  await expandAccordion(getFontsAccordion(viewDoc));
 }
 
 /**
@@ -166,8 +152,8 @@ function getRenderedFontsEls(viewDoc) {
  * @param  {document} viewDoc
  * @return {Array}
  */
-function getOtherFontsEls(viewDoc) {
-  return getOtherFontsAccordion(viewDoc).querySelectorAll(".fonts-list > li");
+function getAllFontsEls(viewDoc) {
+  return getFontsAccordion(viewDoc).querySelectorAll(".fonts-list > li");
 }
 
 /**
@@ -232,6 +218,17 @@ function getPropertyValue(viewDoc, name) {
     unit: viewDoc.querySelector(selector + ` ~ .font-value-select`) &&
           viewDoc.querySelector(selector + ` ~ .font-value-select`).value
   };
+}
+
+/**
+ * Given a font element, check whether its font source is remote.
+ *
+ * @param  {DOMNode} fontEl
+ *         The font element.
+ * @return {Boolean}
+ */
+function isRemote(fontEl) {
+  return fontEl.querySelector(".font-origin").classList.contains("remote");
 }
 
 /**

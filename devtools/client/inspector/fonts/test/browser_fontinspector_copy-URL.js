@@ -14,8 +14,10 @@ add_task(async function() {
   const { view, inspector } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
   await selectNode("div", inspector);
+  await expandFontsAccordion(viewDoc);
+  const allFontsEls = getAllFontsEls(viewDoc);
+  const fontEl = allFontsEls[0];
 
-  const fontEl = getUsedFontsEls(viewDoc)[0];
   const linkEl = fontEl.querySelector(".font-origin");
   const iconEl = linkEl.querySelector(".copy-icon");
 
