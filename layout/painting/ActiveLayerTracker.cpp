@@ -249,22 +249,30 @@ static void
 IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame, LayerActivity* aActivity)
 {
   const nsStyleDisplay* display = aFrame->StyleDisplay();
-  RefPtr<nsCSSValueSharedList> transformList = display->GetCombinedTransform();
-  if (!transformList) {
+  if (!display->mSpecifiedTransform &&
+      !display->HasIndividualTransform() &&
+      !(display->mMotion && display->mMotion->HasPath())) {
     // The transform was removed.
     aActivity->mPreviousTransformScale = Nothing();
-    IncrementMutationCount(&aActivity->mRestyleCounts[LayerActivity::ACTIVITY_SCALE]);
+    IncrementMutationCount(
+      &aActivity->mRestyleCounts[LayerActivity::ACTIVITY_SCALE]);
     return;
   }
 
   // Compute the new scale due to the CSS transform property.
   bool dummyBool;
   nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
-  Matrix4x4 transform =
-    nsStyleTransformMatrix::ReadTransforms(transformList->mHead,
-                                           refBox,
-                                           AppUnitsPerCSSPixel(),
-                                           &dummyBool);
+  Matrix4x4 transform = nsStyleTransformMatrix::ReadTransforms(
+      display->mIndividualTransform
+        ? display->mIndividualTransform->mHead
+        : nullptr,
+      nsLayoutUtils::ResolveMotionPath(aFrame),
+      display->mSpecifiedTransform
+        ? display->mSpecifiedTransform->mHead
+        : nullptr,
+      refBox,
+      AppUnitsPerCSSPixel(),
+      &dummyBool);
   Matrix transform2D;
   if (!transform.Is2D(&transform2D)) {
     // We don't attempt to handle 3D transforms; just assume the scale changed.
