@@ -17,24 +17,24 @@ class Viewports extends Component {
   static get propTypes() {
     return {
       leftAlignmentEnabled: PropTypes.bool.isRequired,
-      screenshot: PropTypes.shape(Types.screenshot).isRequired,
-      viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
       onBrowserMounted: PropTypes.func.isRequired,
       onContentResize: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
       onResizeViewport: PropTypes.func.isRequired,
+      screenshot: PropTypes.shape(Types.screenshot).isRequired,
+      viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
     };
   }
 
   render() {
     const {
       leftAlignmentEnabled,
-      screenshot,
-      viewports,
       onBrowserMounted,
       onContentResize,
       onRemoveDeviceAssociation,
       onResizeViewport,
+      screenshot,
+      viewports,
     } = this.props;
 
     const viewportSize = window.getViewportSize();
@@ -68,13 +68,13 @@ class Viewports extends Component {
             return ResizableViewport({
               key: viewport.id,
               leftAlignmentEnabled,
-              screenshot,
-              swapAfterMount: i == 0,
-              viewport,
               onBrowserMounted,
               onContentResize,
               onRemoveDeviceAssociation,
               onResizeViewport,
+              screenshot,
+              swapAfterMount: i == 0,
+              viewport,
             });
           })
         )
