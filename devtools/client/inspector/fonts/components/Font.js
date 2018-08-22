@@ -8,7 +8,8 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const FontMeta = createFactory(require("./FontMeta"));
+const FontName = createFactory(require("./FontName"));
+const FontOrigin = createFactory(require("./FontOrigin"));
 const FontPreview = createFactory(require("./FontPreview"));
 
 const Types = require("../types");
@@ -96,6 +97,14 @@ class Font extends PureComponent {
     return dom.span(attributes);
   }
 
+  renderFontFamilyName(family) {
+    if (!family) {
+      return null;
+    }
+
+    return dom.div({ className: "font-family-name" }, family);
+  }
+
   render() {
     const {
       font,
@@ -107,6 +116,7 @@ class Font extends PureComponent {
     const { previewText } = fontOptions;
 
     const {
+      CSSFamilyName,
       previewUrl,
       rule,
       ruleText,
@@ -116,7 +126,12 @@ class Font extends PureComponent {
       {
         className: "font",
       },
-      FontMeta({ font, onToggleFontHighlight }),
+      dom.div(
+        {},
+        this.renderFontFamilyName(CSSFamilyName),
+        FontName({ font, onToggleFontHighlight })
+      ),
+      FontOrigin({ font }),
       FontPreview({ previewText, previewUrl, onPreviewFonts }),
       this.renderFontCSSCode(rule, ruleText)
     );
