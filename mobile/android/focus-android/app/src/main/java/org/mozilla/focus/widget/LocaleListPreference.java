@@ -61,6 +61,9 @@ public class LocaleListPreference extends ListPreference {
         languageCodeToNameMap.put("ay", "Aimara");
         languageCodeToNameMap.put("quc", "K'iche'");
         languageCodeToNameMap.put("tsz", "P'urhepecha");
+        languageCodeToNameMap.put("jv", "Basa Jawa");
+        languageCodeToNameMap.put("ppl", "Náhuat Pipil");
+        languageCodeToNameMap.put("su", "Basa Sunda");
     }
 
     public LocaleListPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {

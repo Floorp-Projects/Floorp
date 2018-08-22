@@ -157,6 +157,24 @@ MISSING_LOCALES = {
         'local_name': 'K\'iche\'',
         'plural_rule': 'de',
         'team': 'anp <LL@li.org>\n'
+    },
+    'jv': {
+        'name': 'Javanese',
+        'local_name': 'Basa Jawa',
+        'plural_rule': 'ja',
+        'team': 'anp <LL@li.org>\n'
+    },
+    'ppl': {
+        'name': 'Náhuat Pipil',
+        'local_name': 'Náhuat Pipil',
+        'plural_rule': 'az',
+        'team': 'anp <LL@li.org>\n'
+    },
+    'su': {
+        'name': 'Sundanese',
+        'local_name': 'Basa Sunda',
+        'plural_rule': 'ja',
+        'team': 'anp <LL@li.org>\n'
     }
 }
 

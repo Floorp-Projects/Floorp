@@ -113,7 +113,12 @@ RELEASE_LOCALES = [
 ADDITIONAL_SCREENSHOT_LOCALES = [
 	"ay",
 	"quc",
-	"pa-IN"
+	"pa-IN",
+	"jv",
+	"ppl",
+	"su",
+	"mr",
+	"gl"
 ]
 
 # Those are locales that we take automated screenshots of.
