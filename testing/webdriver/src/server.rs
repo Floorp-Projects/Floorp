@@ -1,3 +1,4 @@
+use serde_json;
 use std::io::Read;
 use std::marker::PhantomData;
 use std::net::SocketAddr;
@@ -72,8 +73,8 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
                         Ok(WebDriverResponse::NewSession(ref new_session)) => {
                             self.session = Some(Session::new(new_session.sessionId.clone()));
                         }
-                        Ok(WebDriverResponse::CloseWindow(CloseWindowResponse { ref window_handles })) => {
-                            if window_handles.len() == 0 {
+                        Ok(WebDriverResponse::CloseWindow(CloseWindowResponse(ref handles))) => {
+                            if handles.len() == 0 {
                                 debug!("Last window was closed, deleting session");
                                 self.delete_session();
                             }
@@ -210,14 +211,17 @@ impl<U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
                         match recv_res.recv() {
                             Ok(data) => {
                                 match data {
-                                    Ok(response) => (StatusCode::Ok, response.to_json_string()),
-                                    Err(err) => (err.http_status(), err.to_json_string()),
+                                    Ok(response) => (StatusCode::Ok,
+                                                     serde_json::to_string(&response).unwrap()),
+                                    Err(err) => (err.http_status(),
+                                                 serde_json::to_string(&err).unwrap()),
                                 }
                             }
                             Err(e) => panic!("Error reading response: {:?}", e),
                         }
                     }
-                    Err(err) => (err.http_status(), err.to_json_string()),
+                    Err(err) => (err.http_status(),
+                                 serde_json::to_string(&err).unwrap()),
                 };
 
                 debug!("<- {} {}", status, resp_body);

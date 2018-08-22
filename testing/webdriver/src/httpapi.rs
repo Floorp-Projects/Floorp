@@ -1,8 +1,8 @@
 use regex::{Regex, Captures};
-use rustc_serialize::json::Json;
 
 use hyper::method::Method;
 use hyper::method::Method::{Get, Post, Delete};
+use serde_json::Value;
 
 use command::{WebDriverCommand, WebDriverMessage, WebDriverExtensionCommand,
               VoidWebDriverExtensionCommand};
@@ -139,7 +139,7 @@ pub enum Route<U:WebDriverExtensionRoute> {
 pub trait WebDriverExtensionRoute : Clone + Send + PartialEq {
     type Command: WebDriverExtensionCommand + 'static;
 
-    fn command(&self, &Captures, &Json) -> WebDriverResult<WebDriverCommand<Self::Command>>;
+    fn command(&self, &Captures, &Value) -> WebDriverResult<WebDriverCommand<Self::Command>>;
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -148,7 +148,7 @@ pub struct VoidWebDriverExtensionRoute;
 impl WebDriverExtensionRoute for VoidWebDriverExtensionRoute {
     type Command = VoidWebDriverExtensionCommand;
 
-    fn command(&self, _:&Captures, _:&Json) -> WebDriverResult<WebDriverCommand<VoidWebDriverExtensionCommand>> {
+    fn command(&self, _:&Captures, _:&Value) -> WebDriverResult<WebDriverCommand<VoidWebDriverExtensionCommand>> {
         panic!("No extensions implemented");
     }
 }
