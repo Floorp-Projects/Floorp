@@ -122,10 +122,31 @@ must be one of the following:
           outside the specified interval. Note that with '!=' tests the
           minimum bounds of the ranges must be zero.
 
+          Fuzzy tends to be used for two different sorts of cases.  The main
+          case is tests that are expected to be equal, but actually fail in a
+          minor way (e.g., an antialiasing difference), and we want to ensure
+          that the test doesn't regress further so we don't want to mark the
+          test as failing.  For these cases, test annotations should be the
+          tightest bounds possible:  if the behavior is entirely deterministic
+          this means a range like fuzzy(1-1,8-8), and if at all possible, the
+          ranges should not include 0.  In cases where the test only sometimes
+          fails, this unfortunately requires using 0 in both ranges, which
+          means that we won't get reports of an unexpected pass if the problem
+          is fixed (allowing us to remove the fuzzy() annotation and expect
+          the test to pass from then on).
+
+          The second case where fuzzy is used is tests that are supposed
+          to allow some amount of variability (i.e., tests where the
+          specification allows variability such that we can't assert
+          that all pixels are the same).  Such tests should generally be
+          avoided (for example, by covering up the pixels that can vary
+          with another element), but when they are needed, the ranges in
+          the fuzzy() annotation should generally include 0.
+
       fuzzy-if(condition,minDiff-maxDiff,minPixelCount-maxPixelCount)
           If the condition is met, the test is treated as if 'fuzzy' had been
           specified. This is useful if there are differences on particular
-          platforms.
+          platforms.  See fuzzy() above.
 
       require-or(cond1&&cond2&&...,fallback)
           Require some particular setup be performed or environmental
