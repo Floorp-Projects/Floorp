@@ -93,6 +93,11 @@ public class GeckoAppShell
     private GeckoAppShell() { }
 
     private static class GeckoCrashHandler extends CrashHandler {
+
+        public GeckoCrashHandler(final Class<? extends Service> handlerService) {
+            super(handlerService);
+        }
+
         @Override
         protected String getAppPackageName() {
             final Context appContext = getAppContext();
@@ -157,9 +162,9 @@ public class GeckoAppShell
     private static String sAppNotes;
     private static CrashHandler sCrashHandler;
 
-    public static synchronized CrashHandler ensureCrashHandling() {
+    public static synchronized CrashHandler ensureCrashHandling(final Class<? extends Service> handler) {
         if (sCrashHandler == null) {
-            sCrashHandler = new GeckoCrashHandler();
+            sCrashHandler = new GeckoCrashHandler(handler);
         }
 
         return sCrashHandler;

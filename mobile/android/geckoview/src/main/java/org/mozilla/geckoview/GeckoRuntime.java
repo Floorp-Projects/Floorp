@@ -177,10 +177,6 @@ public final class GeckoRuntime implements Parcelable {
             }
         }
 
-        if (GeckoAppShell.isFennec()) {
-            flags |= GeckoThread.FLAG_ENABLE_JAVA_CRASHREPORTER;
-        }
-
         GeckoAppShell.setDisplayDensityOverride(settings.getDisplayDensityOverride());
         GeckoAppShell.setDisplayDpiOverride(settings.getDisplayDpiOverride());
         GeckoAppShell.setScreenSizeOverride(settings.getScreenSizeOverride());
