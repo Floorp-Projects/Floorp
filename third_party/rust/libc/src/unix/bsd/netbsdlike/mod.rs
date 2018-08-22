@@ -35,6 +35,11 @@ s! {
         pub sin_zero: [::int8_t; 8],
     }
 
+    pub struct in6_pktinfo {
+        pub ipi6_addr: ::in6_addr,
+        pub ipi6_ifindex: ::c_uint,
+    }
+
     pub struct termios {
         pub c_iflag: ::tcflag_t,
         pub c_oflag: ::tcflag_t,
@@ -177,7 +182,6 @@ pub const SIGSEGV : ::c_int = 11;
 pub const SIGPIPE : ::c_int = 13;
 pub const SIGALRM : ::c_int = 14;
 pub const SIGTERM : ::c_int = 15;
-pub const SIGSTKSZ : ::size_t = 40960;
 
 pub const PROT_NONE : ::c_int = 0;
 pub const PROT_READ : ::c_int = 1;
@@ -413,8 +417,11 @@ pub const IP_TTL: ::c_int = 4;
 pub const IP_HDRINCL: ::c_int = 2;
 pub const IP_ADD_MEMBERSHIP: ::c_int = 12;
 pub const IP_DROP_MEMBERSHIP: ::c_int = 13;
+pub const IPV6_RECVPKTINFO: ::c_int = 36;
+pub const IPV6_PKTINFO: ::c_int = 46;
 
-pub const TCP_NODELAY: ::c_int = 0x01;
+pub const TCP_NODELAY:    ::c_int = 0x01;
+
 pub const SOL_SOCKET: ::c_int = 0xffff;
 pub const SO_DEBUG: ::c_int = 0x01;
 pub const SO_ACCEPTCONN: ::c_int = 0x0002;
@@ -547,6 +554,9 @@ pub const TIOCMBIS: ::c_ulong = 0x8004746c;
 pub const TIOCMSET: ::c_ulong = 0x8004746d;
 pub const TIOCSTART: ::c_ulong = 0x2000746e;
 pub const TIOCSTOP: ::c_ulong = 0x2000746f;
+pub const TIOCSCTTY: ::c_ulong = 0x20007461;
+pub const TIOCGWINSZ: ::c_ulong = 0x40087468;
+pub const TIOCSWINSZ: ::c_ulong = 0x80087467;
 pub const TIOCM_LE: ::c_int = 0o0001;
 pub const TIOCM_DTR: ::c_int = 0o0002;
 pub const TIOCM_RTS: ::c_int = 0o0004;
@@ -617,14 +627,14 @@ extern {
     pub fn getpriority(which: ::c_int, who: ::id_t) -> ::c_int;
     pub fn setpriority(which: ::c_int, who: ::id_t, prio: ::c_int) -> ::c_int;
 
-    pub fn fdopendir(fd: ::c_int) -> *mut ::DIR;
-
     pub fn mknodat(dirfd: ::c_int, pathname: *const ::c_char,
                    mode: ::mode_t, dev: dev_t) -> ::c_int;
     pub fn mkfifoat(dirfd: ::c_int, pathname: *const ::c_char,
                     mode: ::mode_t) -> ::c_int;
     pub fn sem_timedwait(sem: *mut sem_t,
                          abstime: *const ::timespec) -> ::c_int;
+    pub fn sem_getvalue(sem: *mut sem_t,
+                        sval: *mut ::c_int) -> ::c_int;
     pub fn pthread_condattr_setclock(attr: *mut pthread_condattr_t,
                                      clock_id: ::clockid_t) -> ::c_int;
     pub fn sethostname(name: *const ::c_char, len: ::size_t) -> ::c_int;
@@ -637,15 +647,6 @@ extern {
                         groups: *mut ::gid_t,
                         ngroups: *mut ::c_int) -> ::c_int;
     pub fn initgroups(name: *const ::c_char, basegid: ::gid_t) -> ::c_int;
-    #[cfg_attr(target_os = "netbsd", link_name = "__getpwent_r50")]
-    pub fn getpwent_r(pwd: *mut ::passwd,
-                      buf: *mut ::c_char,
-                      buflen: ::size_t,
-                      result: *mut *mut ::passwd) -> ::c_int;
-    pub fn getgrent_r(grp: *mut ::group,
-                      buf: *mut ::c_char,
-                      buflen: ::size_t,
-                      result: *mut *mut ::group) -> ::c_int;
     pub fn fexecve(fd: ::c_int, argv: *const *const ::c_char,
                    envp: *const *const ::c_char)
                    -> ::c_int;

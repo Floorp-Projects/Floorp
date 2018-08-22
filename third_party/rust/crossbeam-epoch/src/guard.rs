@@ -1,8 +1,10 @@
+use core::fmt;
 use core::ptr;
 use core::mem;
 
-use garbage::Garbage;
+use deferred::Deferred;
 use internal::Local;
+use collector::Collector;
 
 /// A guard that keeps the current thread pinned.
 ///
@@ -73,26 +75,10 @@ use internal::Local;
 ///
 /// [`pin`]: fn.pin.html
 pub struct Guard {
-    local: *const Local,
+    pub(crate) local: *const Local,
 }
 
 impl Guard {
-    /// Creates a new guard from a pointer to `Local`.
-    ///
-    /// # Safety
-    ///
-    /// The `local` should be a valid pointer created by `Local::register()`.
-    #[doc(hidden)]
-    pub unsafe fn new(local: *const Local) -> Guard {
-        Guard { local: local }
-    }
-
-    /// Accesses the internal pointer to `Local`.
-    #[doc(hidden)]
-    pub unsafe fn get_local(&self) -> *const Local {
-        self.local
-    }
-
     /// Stores a function so that it can be executed at some point after all currently pinned
     /// threads get unpinned.
     ///
@@ -127,16 +113,29 @@ impl Guard {
     /// }
     /// ```
     ///
-    /// Apart from that, keep in mind that another thread may execute `f`, so anything accessed
-    /// by the closure must be `Send`.
+    /// Apart from that, keep in mind that another thread may execute `f`, so anything accessed by
+    /// the closure must be `Send`.
+    ///
+    /// We intentionally didn't require `F: Send`, because Rust's type systems usually cannot prove
+    /// `F: Send` for typical use cases. For example, consider the following code snippet, which
+    /// exemplifies the typical use case of deferring the deallocation of a shared reference:
+    ///
+    /// ```ignore
+    /// let shared = Owned::new(7i32).into_shared(guard);
+    /// guard.defer(Deferred::new(move || shared.into_owned())); // `Shared` is not `Send`!
+    /// ```
+    ///
+    /// While `Shared` is not `Send`, it's safe for another thread to call the deferred function,
+    /// because it's called only after the grace period and `shared` is no longer shared with other
+    /// threads. But we don't expect type systems to prove this.
     ///
     /// # Examples
     ///
     /// When a heap-allocated object in a data structure becomes unreachable, it has to be
     /// deallocated. However, the current thread and other threads may be still holding references
-    /// on the stack to that same object. Therefore it cannot be deallocated before those
-    /// references get dropped. This method can defer deallocation until all those threads get
-    /// unpinned and consequently drop all their references on the stack.
+    /// on the stack to that same object. Therefore it cannot be deallocated before those references
+    /// get dropped. This method can defer deallocation until all those threads get unpinned and
+    /// consequently drop all their references on the stack.
     ///
     /// ```rust
     /// use crossbeam_epoch::{self as epoch, Atomic, Owned};
@@ -173,10 +172,8 @@ impl Guard {
     where
         F: FnOnce() -> R,
     {
-        let garbage = Garbage::new(|| drop(f()));
-
         if let Some(local) = self.local.as_ref() {
-            local.defer(garbage, self);
+            local.defer(Deferred::new(move || drop(f())), self);
         }
     }
 
@@ -300,6 +297,28 @@ impl Guard {
 
         f()
     }
+
+    /// Returns the `Collector` associated with this guard.
+    ///
+    /// This method is useful when you need to ensure that all guards used with
+    /// a data structure come from the same collector.
+    ///
+    /// If this method is called from an [`unprotected`] guard, then `None` is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use crossbeam_epoch as epoch;
+    ///
+    /// let mut guard1 = epoch::pin();
+    /// let mut guard2 = epoch::pin();
+    /// assert!(guard1.collector() == guard2.collector());
+    /// ```
+    ///
+    /// [`unprotected`]: fn.unprotected.html
+    pub fn collector(&self) -> Option<&Collector> {
+        unsafe { self.local.as_ref().map(|local| local.collector()) }
+    }
 }
 
 impl Drop for Guard {
@@ -318,6 +337,12 @@ impl Clone for Guard {
             None => Guard { local: ptr::null() },
             Some(local) => local.pin(),
         }
+    }
+}
+
+impl fmt::Debug for Guard {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Guard").finish()
     }
 }
 
@@ -370,19 +395,19 @@ impl Clone for Guard {
 ///
 /// ```
 /// use crossbeam_epoch::{self as epoch, Atomic};
-/// use std::ptr;
+/// use std::mem::ManuallyDrop;
 /// use std::sync::atomic::Ordering::Relaxed;
 ///
-/// struct Stack {
-///     head: epoch::Atomic<Node>,
+/// struct Stack<T> {
+///     head: Atomic<Node<T>>,
 /// }
 ///
-/// struct Node {
-///     data: u32,
-///     next: epoch::Atomic<Node>,
+/// struct Node<T> {
+///     data: ManuallyDrop<T>,
+///     next: Atomic<Node<T>>,
 /// }
 ///
-/// impl Drop for Stack {
+/// impl<T> Drop for Stack<T> {
 ///     fn drop(&mut self) {
 ///         unsafe {
 ///             // Unprotected load.
@@ -392,8 +417,10 @@ impl Clone for Guard {
 ///                 // Unprotected load.
 ///                 let next = n.next.load(Relaxed, epoch::unprotected());
 ///
-///                 // Take ownership of the node, then drop it.
-///                 drop(node.into_owned());
+///                 // Take ownership of the node, then drop its data and deallocate it.
+///                 let mut o = node.into_owned();
+///                 ManuallyDrop::drop(&mut o.data);
+///                 drop(o);
 ///
 ///                 node = next;
 ///             }

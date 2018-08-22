@@ -16,6 +16,7 @@ RUN dpkg --add-architecture i386 && \
   expect \
   openjdk-9-jre \
   libstdc++6:i386 \
+  libc++1 \
   gcc \
   libc6-dev \
   qt5-default zlib1g:i386 libx11-6:i386 \

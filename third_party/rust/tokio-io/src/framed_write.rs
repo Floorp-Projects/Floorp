@@ -1,39 +1,24 @@
+#![allow(deprecated)]
+
 use std::io::{self, Read};
 use std::fmt;
 
 use {AsyncRead, AsyncWrite};
-use codec::Decoder;
+use codec::{Decoder, Encoder};
 use framed::Fuse;
 
 use futures::{Async, AsyncSink, Poll, Stream, Sink, StartSend};
 use bytes::BytesMut;
 
-/// Trait of helper objects to write out messages as bytes, for use with
-/// `FramedWrite`.
-pub trait Encoder {
-    /// The type of items consumed by the `Encoder`
-    type Item;
-
-    /// The type of encoding errors.
-    ///
-    /// `FramedWrite` requires `Encoder`s errors to implement `From<io::Error>`
-    /// in the interest letting it return `Error`s directly.
-    type Error: From<io::Error>;
-
-    /// Encodes a frame into the buffer provided.
-    ///
-    /// This method will encode `msg` into the byte buffer provided by `buf`.
-    /// The `buf` provided is an internal buffer of the `Framed` instance and
-    /// will be written out when possible.
-    fn encode(&mut self, item: Self::Item, dst: &mut BytesMut)
-              -> Result<(), Self::Error>;
-}
-
 /// A `Sink` of frames encoded to an `AsyncWrite`.
+#[deprecated(since = "0.1.7", note = "Moved to tokio-codec")]
+#[doc(hidden)]
 pub struct FramedWrite<T, E> {
     inner: FramedWrite2<Fuse<T, E>>,
 }
 
+#[deprecated(since = "0.1.7", note = "Moved to tokio-codec")]
+#[doc(hidden)]
 pub struct FramedWrite2<T> {
     inner: T,
     buffer: BytesMut,
@@ -205,7 +190,7 @@ impl<T> Sink for FramedWrite2<T>
         while !self.buffer.is_empty() {
             trace!("writing; remaining={}", self.buffer.len());
 
-            let n = try_nb!(self.inner.write(&self.buffer));
+            let n = try_ready!(self.inner.poll_write(&self.buffer));
 
             if n == 0 {
                 return Err(io::Error::new(io::ErrorKind::WriteZero, "failed to
@@ -218,7 +203,7 @@ impl<T> Sink for FramedWrite2<T>
         }
 
         // Try flushing the underlying IO
-        try_nb!(self.inner.flush());
+        try_ready!(self.inner.poll_flush());
 
         trace!("framed transport flushed");
         return Ok(Async::Ready(()));

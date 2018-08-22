@@ -123,6 +123,7 @@ fn run_app_on_simulator() {
                     .arg("com.rust.unittests")
                     .output());
 
+    println!("status: {}", output.status);
     println!("stdout --\n{}\n", String::from_utf8_lossy(&output.stdout));
     println!("stderr --\n{}\n", String::from_utf8_lossy(&output.stderr));
 

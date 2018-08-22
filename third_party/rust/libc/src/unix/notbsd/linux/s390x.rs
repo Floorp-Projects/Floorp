@@ -1,3 +1,5 @@
+use pthread_mutex_t;
+
 pub type blkcnt_t = i64;
 pub type blksize_t = i64;
 pub type c_char = u8;
@@ -153,6 +155,21 @@ s! {
         f_spare: [::c_uint; 4],
     }
 
+    pub struct statvfs {
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_blocks: ::fsblkcnt_t,
+        pub f_bfree: ::fsblkcnt_t,
+        pub f_bavail: ::fsblkcnt_t,
+        pub f_files: ::fsfilcnt_t,
+        pub f_ffree: ::fsfilcnt_t,
+        pub f_favail: ::fsfilcnt_t,
+        pub f_fsid: ::c_ulong,
+        pub f_flag: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+        __f_spare: [::c_int; 6],
+    }
+
     pub struct msghdr {
         pub msg_name: *mut ::c_void,
         pub msg_namelen: ::socklen_t,
@@ -230,8 +247,13 @@ s! {
     }
 
     // FIXME this is actually a union
+    #[cfg_attr(all(feature = "align", target_pointer_width = "32"),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align", target_pointer_width = "64"),
+               repr(align(8)))]
     pub struct sem_t {
         __size: [::c_char; 32],
+        #[cfg(not(feature = "align"))]
         __align: [::c_long; 0],
     }
 
@@ -356,6 +378,30 @@ pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 40;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
 pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
 
+align_const! {
+    pub const PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP: ::pthread_mutex_t =
+        pthread_mutex_t {
+            size: [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            ],
+        };
+    pub const PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP: ::pthread_mutex_t =
+        pthread_mutex_t {
+            size: [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            ],
+        };
+    pub const PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP: ::pthread_mutex_t =
+        pthread_mutex_t {
+            size: [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            ],
+        };
+}
+
 pub const EADDRINUSE: ::c_int = 98;
 pub const EADDRNOTAVAIL: ::c_int = 99;
 pub const ECONNABORTED: ::c_int = 103;
@@ -374,6 +420,7 @@ pub const O_CREAT: ::c_int = 64;
 pub const O_EXCL: ::c_int = 128;
 pub const O_NONBLOCK: ::c_int = 2048;
 pub const PTHREAD_STACK_MIN: ::size_t = 16384;
+pub const PTHREAD_MUTEX_ADAPTIVE_NP: ::c_int = 3;
 pub const RLIM_INFINITY: ::rlim_t = 0xffffffffffffffff;
 pub const SA_NOCLDWAIT: ::c_int = 2;
 pub const SA_ONSTACK: ::c_int = 0x08000000;
@@ -734,6 +781,9 @@ pub const PTRACE_SEIZE: ::c_uint = 0x4206;
 pub const PTRACE_INTERRUPT: ::c_uint = 0x4207;
 pub const PTRACE_LISTEN: ::c_uint = 0x4208;
 pub const PTRACE_PEEKSIGINFO: ::c_uint = 0x4209;
+
+pub const MCL_CURRENT: ::c_int = 0x0001;
+pub const MCL_FUTURE: ::c_int = 0x0002;
 
 pub const EPOLLWAKEUP: ::c_int = 0x20000000;
 

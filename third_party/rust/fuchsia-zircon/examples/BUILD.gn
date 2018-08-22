@@ -2,8 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-group("examples") {
+import("//build/package.gni")
+
+package("zircon_rust_examples") {
+  system_image = true
+
   deps = [
-    "//garnet/public/rust/crates/fuchsia-zircon/examples/zx_toy",
+    "zx_toy",
   ]
+
+  binaries = [ {
+        name = "example_zx_toy"
+      } ]
 }

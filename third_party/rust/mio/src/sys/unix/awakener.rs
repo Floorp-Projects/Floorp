@@ -20,7 +20,7 @@ mod pipe {
 
     impl Awakener {
         pub fn new() -> io::Result<Awakener> {
-            let (rd, wr) = try!(unix::pipe());
+            let (rd, wr) = unix::pipe()?;
 
             Ok(Awakener {
                 reader: rd,

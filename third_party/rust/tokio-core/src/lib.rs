@@ -44,9 +44,11 @@
 //! ```no_run
 //! extern crate futures;
 //! extern crate tokio_core;
+//! extern crate tokio_io;
 //!
 //! use futures::{Future, Stream};
-//! use tokio_core::io::{copy, Io};
+//! use tokio_io::AsyncRead;
+//! use tokio_io::io::copy;
 //! use tokio_core::net::TcpListener;
 //! use tokio_core::reactor::Core;
 //!
@@ -71,7 +73,7 @@
 //!
 //!         // ... after which we'll print what happened
 //!         let handle_conn = bytes_copied.map(|amt| {
-//!             println!("wrote {} bytes", amt)
+//!             println!("wrote {:?} bytes", amt)
 //!         }).map_err(|err| {
 //!             println!("IO error {:?}", err)
 //!         });
@@ -87,16 +89,21 @@
 //! }
 //! ```
 
-#![doc(html_root_url = "https://docs.rs/tokio-core/0.1")]
+#![doc(html_root_url = "https://docs.rs/tokio-core/0.1.17")]
 #![deny(missing_docs)]
+#![deny(warnings)]
+#![cfg_attr(test, allow(deprecated))]
 
 extern crate bytes;
 #[macro_use]
 extern crate futures;
 extern crate iovec;
 extern crate mio;
-extern crate slab;
+extern crate tokio;
+extern crate tokio_executor;
 extern crate tokio_io;
+extern crate tokio_reactor;
+extern crate tokio_timer;
 
 #[macro_use]
 extern crate scoped_tls;
@@ -105,16 +112,10 @@ extern crate scoped_tls;
 extern crate log;
 
 #[macro_use]
+#[doc(hidden)]
 pub mod io;
 
-mod heap;
 #[doc(hidden)]
 pub mod channel;
 pub mod net;
 pub mod reactor;
-
-use std::io as sio;
-
-fn would_block() -> sio::Error {
-    sio::Error::new(sio::ErrorKind::WouldBlock, "would block")
-}

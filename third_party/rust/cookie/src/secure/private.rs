@@ -104,6 +104,44 @@ impl<'a> PrivateJar<'a> {
     /// assert_eq!(jar.private(&key).get("name").unwrap().value(), "value");
     /// ```
     pub fn add(&mut self, mut cookie: Cookie<'static>) {
+        self.encrypt_cookie(&mut cookie);
+
+        // Add the sealed cookie to the parent.
+        self.parent.add(cookie);
+    }
+
+    /// Adds an "original" `cookie` to parent jar. The cookie's value is
+    /// encrypted with authenticated encryption assuring confidentiality,
+    /// integrity, and authenticity. Adding an original cookie does not affect
+    /// the [`CookieJar::delta()`](struct.CookieJar.html#method.delta)
+    /// computation. This method is intended to be used to seed the cookie jar
+    /// with cookies received from a client's HTTP message.
+    ///
+    /// For accurate `delta` computations, this method should not be called
+    /// after calling `remove`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cookie::{CookieJar, Cookie, Key};
+    ///
+    /// let key = Key::generate();
+    /// let mut jar = CookieJar::new();
+    /// jar.private(&key).add_original(Cookie::new("name", "value"));
+    ///
+    /// assert_eq!(jar.iter().count(), 1);
+    /// assert_eq!(jar.delta().count(), 0);
+    /// ```
+    pub fn add_original(&mut self, mut cookie: Cookie<'static>) {
+        self.encrypt_cookie(&mut cookie);
+
+        // Add the sealed cookie to the parent.
+        self.parent.add_original(cookie);
+    }
+
+    /// Encrypts the cookie's value with
+    /// authenticated encryption assuring confidentiality, integrity, and authenticity.
+    fn encrypt_cookie(&self, cookie: &mut Cookie) {
         let mut data;
         let output_len = {
             // Create the `SealingKey` structure.
@@ -129,9 +167,6 @@ impl<'a> PrivateJar<'a> {
         // Base64 encode the nonce and encrypted value.
         let sealed_value = base64::encode(&data[..(NONCE_LEN + output_len)]);
         cookie.set_value(sealed_value);
-
-        // Add the sealed cookie to the parent.
-        self.parent.add(cookie);
     }
 
     /// Removes `cookie` from the parent jar.

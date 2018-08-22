@@ -5,7 +5,7 @@
 //! Type-safe bindings for Zircon vmo objects.
 
 use {AsHandleRef, Cookied, HandleBased, Handle, HandleRef, Status};
-use {sys, into_result};
+use {sys, ok};
 use std::{mem, ptr};
 
 /// An object representing a Zircon
@@ -25,11 +25,14 @@ impl Vmo {
     /// syscall. See the
     /// [Shared Memory: Virtual Memory Objects (VMOs)](https://fuchsia.googlesource.com/zircon/+/master/docs/concepts.md#Shared-Memory_Virtual-Memory-Objects-VMOs)
     /// for more information.
-    pub fn create(size: u64, options: VmoOpts) -> Result<Vmo, Status> {
+    pub fn create(size: u64) -> Result<Vmo, Status> {
         let mut handle = 0;
-        let status = unsafe { sys::zx_vmo_create(size, options as u32, &mut handle) };
-        into_result(status, ||
-            Vmo::from(Handle(handle)))
+        let opts = 0;
+        let status = unsafe { sys::zx_vmo_create(size, opts, &mut handle) };
+        ok(status)?;
+        unsafe {
+            Ok(Vmo::from(Handle::from_raw(handle)))
+        }
     }
 
     /// Read from a virtual memory object.
@@ -40,7 +43,7 @@ impl Vmo {
             let mut actual = 0;
             let status = sys::zx_vmo_read(self.raw_handle(), data.as_mut_ptr(),
                 offset, data.len(), &mut actual);
-            into_result(status, || actual)
+            ok(status).map(|()| actual)
         }
     }
 
@@ -52,7 +55,7 @@ impl Vmo {
             let mut actual = 0;
             let status = sys::zx_vmo_write(self.raw_handle(), data.as_ptr(),
                 offset, data.len(), &mut actual);
-            into_result(status, || actual)
+            ok(status).map(|()| actual)
         }
     }
 
@@ -62,7 +65,7 @@ impl Vmo {
     pub fn get_size(&self) -> Result<u64, Status> {
         let mut size = 0;
         let status = unsafe { sys::zx_vmo_get_size(self.raw_handle(), &mut size) };
-        into_result(status, || size)
+        ok(status).map(|()| size)
     }
 
     /// Attempt to change the size of a virtual memory object.
@@ -70,7 +73,7 @@ impl Vmo {
     /// Wraps the `zx_vmo_set_size` syscall.
     pub fn set_size(&self, size: u64) -> Result<(), Status> {
         let status = unsafe { sys::zx_vmo_set_size(self.raw_handle(), size) };
-        into_result(status, || ())
+        ok(status)
     }
 
     /// Perform an operation on a range of a virtual memory object.
@@ -80,9 +83,9 @@ impl Vmo {
     /// syscall.
     pub fn op_range(&self, op: VmoOp, offset: u64, size: u64) -> Result<(), Status> {
         let status = unsafe {
-            sys::zx_vmo_op_range(self.raw_handle(), op as u32, offset, size, ptr::null_mut(), 0)
+            sys::zx_vmo_op_range(self.raw_handle(), op.into_raw(), offset, size, ptr::null_mut(), 0)
         };
-        into_result(status, || ())
+        ok(status)
     }
 
     /// Look up a list of physical addresses corresponding to the pages held by the VMO from
@@ -95,10 +98,10 @@ impl Vmo {
         -> Result<(), Status>
     {
         let status = unsafe {
-            sys::zx_vmo_op_range(self.raw_handle(), sys::ZX_VMO_OP_LOOKUP, offset, size,
+            sys::zx_vmo_op_range(self.raw_handle(), VmoOp::LOOKUP.into_raw(), offset, size,
                 buffer.as_mut_ptr() as *mut u8, buffer.len() * mem::size_of::<sys::zx_paddr_t>())
         };
-        into_result(status, || ())
+        ok(status)
     }
 
     /// Create a new virtual memory object that clones a range of this one.
@@ -106,62 +109,42 @@ impl Vmo {
     /// Wraps the
     /// [zx_vmo_clone](https://fuchsia.googlesource.com/zircon/+/master/docs/syscalls/vmo_clone.md)
     /// syscall.
-    pub fn clone(&self, options: VmoCloneOpts, offset: u64, size: u64) -> Result<Vmo, Status> {
+    pub fn clone(&self, offset: u64, size: u64) -> Result<Vmo, Status> {
         let mut out = 0;
+        let opts = sys::ZX_VMO_CLONE_COPY_ON_WRITE;
         let status = unsafe {
-            sys::zx_vmo_clone(self.raw_handle(), options as u32, offset, size, &mut out)
+            sys::zx_vmo_clone(self.raw_handle(), opts, offset, size, &mut out)
         };
-        into_result(status, || Vmo::from(Handle(out)))
+        ok(status)?;
+        unsafe { Ok(Vmo::from(Handle::from_raw(out))) }
     }
 }
 
-/// Options for creating virtual memory objects. None supported yet.
-#[repr(u32)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum VmoOpts {
-    /// Default options.
-    Default = 0,
-}
-
-impl Default for VmoOpts {
-    fn default() -> Self {
-        VmoOpts::Default
+/// VM Object opcodes
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct VmoOp(u32);
+impl VmoOp {
+    pub fn from_raw(raw: u32) -> VmoOp {
+        VmoOp(raw)
+    }
+    pub fn into_raw(self) -> u32 {
+        self.0
     }
 }
 
-#[repr(u32)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum VmoOp {
-    /// Commit `size` bytes worth of pages starting at byte `offset` for the VMO.
-    Commit = sys::ZX_VMO_OP_COMMIT,
-    /// Release a range of pages previously committed to the VMO from `offset` to `offset`+`size`.
-    Decommit = sys::ZX_VMO_OP_DECOMMIT,
-    // Presently unsupported.
-    Lock = sys::ZX_VMO_OP_LOCK,
-    // Presently unsupported.
-    Unlock = sys::ZX_VMO_OP_UNLOCK,
-    /// Perform a cache sync operation.
-    CacheSync = sys::ZX_VMO_OP_CACHE_SYNC,
-    /// Perform a cache invalidation operation.
-    CacheInvalidate = sys::ZX_VMO_OP_CACHE_INVALIDATE,
-    /// Perform a cache clean operation.
-    CacheClean = sys::ZX_VMO_OP_CACHE_CLEAN,
-    /// Perform cache clean and invalidation operations together.
-    CacheCleanInvalidate = sys::ZX_VMO_OP_CACHE_CLEAN_INVALIDATE,
-}
+assoc_consts!(VmoOp, [
+    COMMIT =           sys::ZX_VMO_OP_COMMIT;
+    DECOMMIT =         sys::ZX_VMO_OP_DECOMMIT;
+    LOCK =             sys::ZX_VMO_OP_LOCK;
+    UNLOCK =           sys::ZX_VMO_OP_UNLOCK;
+    LOOKUP =           sys::ZX_VMO_OP_LOOKUP;
+    CACHE_SYNC =       sys::ZX_VMO_OP_CACHE_SYNC;
+    CACHE_INVALIDATE = sys::ZX_VMO_OP_CACHE_INVALIDATE;
+    CACHE_CLEAN =      sys::ZX_VMO_OP_CACHE_CLEAN;
+    CACHE_CLEAN_INVALIDATE = sys::ZX_VMO_OP_CACHE_CLEAN_INVALIDATE;
+]);
 
-#[repr(u32)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum VmoCloneOpts {
-    /// Create a copy-on-write clone.
-    CopyOnWrite = sys::ZX_VMO_CLONE_COPY_ON_WRITE,
-}
-
-impl Default for VmoCloneOpts {
-    fn default() -> Self {
-        VmoCloneOpts::CopyOnWrite
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -170,14 +153,14 @@ mod tests {
     #[test]
     fn vmo_get_size() {
         let size = 16 * 1024 * 1024;
-        let vmo = Vmo::create(size, VmoOpts::Default).unwrap();
+        let vmo = Vmo::create(size).unwrap();
         assert_eq!(size, vmo.get_size().unwrap());
     }
 
     #[test]
     fn vmo_set_size() {
         let start_size = 12;
-        let vmo = Vmo::create(start_size, VmoOpts::Default).unwrap();
+        let vmo = Vmo::create(start_size).unwrap();
         assert_eq!(start_size, vmo.get_size().unwrap());
 
         // Change the size and make sure the new size is reported
@@ -189,7 +172,7 @@ mod tests {
     #[test]
     fn vmo_read_write() {
         let mut vec1 = vec![0; 16];
-        let vmo = Vmo::create(vec1.len() as u64, VmoOpts::Default).unwrap();
+        let vmo = Vmo::create(vec1.len() as u64).unwrap();
         assert_eq!(vmo.write(b"abcdef", 0), Ok(6));
         assert_eq!(16, vmo.read(&mut vec1, 0).unwrap());
         assert_eq!(b"abcdef", &vec1[0..6]);
@@ -202,48 +185,48 @@ mod tests {
 
     #[test]
     fn vmo_op_range_unsupported() {
-        let vmo = Vmo::create(12, VmoOpts::Default).unwrap();
-        assert_eq!(vmo.op_range(VmoOp::Lock, 0, 1), Err(Status::ErrNotSupported));
-        assert_eq!(vmo.op_range(VmoOp::Unlock, 0, 1), Err(Status::ErrNotSupported));
+        let vmo = Vmo::create(12).unwrap();
+        assert_eq!(vmo.op_range(VmoOp::LOCK, 0, 1), Err(Status::NOT_SUPPORTED));
+        assert_eq!(vmo.op_range(VmoOp::UNLOCK, 0, 1), Err(Status::NOT_SUPPORTED));
     }
 
     #[test]
     fn vmo_lookup() {
-        let vmo = Vmo::create(12, VmoOpts::Default).unwrap();
+        let vmo = Vmo::create(12).unwrap();
         let mut buffer = vec![0; 2];
 
         // Lookup will fail as it is not committed yet.
-        assert_eq!(vmo.lookup(0, 12, &mut buffer), Err(Status::ErrNoMemory));
+        assert_eq!(vmo.lookup(0, 12, &mut buffer), Err(Status::NO_MEMORY));
 
-        // Commit and try again.
-        assert_eq!(vmo.op_range(VmoOp::Commit, 0, 12), Ok(()));
+        // COMMIT and try again.
+        assert_eq!(vmo.op_range(VmoOp::COMMIT, 0, 12), Ok(()));
         assert_eq!(vmo.lookup(0, 12, &mut buffer), Ok(()));
         assert_ne!(buffer[0], 0);
         assert_eq!(buffer[1], 0);
 
         // If we decommit then lookup should go back to failing.
-        assert_eq!(vmo.op_range(VmoOp::Decommit, 0, 12), Ok(()));
-        assert_eq!(vmo.lookup(0, 12, &mut buffer), Err(Status::ErrNoMemory));
+        assert_eq!(vmo.op_range(VmoOp::DECOMMIT, 0, 12), Ok(()));
+        assert_eq!(vmo.lookup(0, 12, &mut buffer), Err(Status::NO_MEMORY));
     }
 
     #[test]
     fn vmo_cache() {
-        let vmo = Vmo::create(12, VmoOpts::Default).unwrap();
+        let vmo = Vmo::create(12).unwrap();
 
         // Cache operations should all succeed.
-        assert_eq!(vmo.op_range(VmoOp::CacheSync, 0, 12), Ok(()));
-        assert_eq!(vmo.op_range(VmoOp::CacheInvalidate, 0, 12), Ok(()));
-        assert_eq!(vmo.op_range(VmoOp::CacheClean, 0, 12), Ok(()));
-        assert_eq!(vmo.op_range(VmoOp::CacheCleanInvalidate, 0, 12), Ok(()));
+        assert_eq!(vmo.op_range(VmoOp::CACHE_SYNC, 0, 12), Ok(()));
+        assert_eq!(vmo.op_range(VmoOp::CACHE_INVALIDATE, 0, 12), Ok(()));
+        assert_eq!(vmo.op_range(VmoOp::CACHE_CLEAN, 0, 12), Ok(()));
+        assert_eq!(vmo.op_range(VmoOp::CACHE_CLEAN_INVALIDATE, 0, 12), Ok(()));
     }
 
     #[test]
     fn vmo_clone() {
-        let original = Vmo::create(12, VmoOpts::Default).unwrap();
+        let original = Vmo::create(12).unwrap();
         assert_eq!(original.write(b"one", 0), Ok(3));
 
         // Clone the VMO, and make sure it contains what we expect.
-        let clone = original.clone(VmoCloneOpts::CopyOnWrite, 0, 10).unwrap();
+        let clone = original.clone(0, 10).unwrap();
         let mut read_buffer = vec![0; 16];
         assert_eq!(clone.read(&mut read_buffer, 0), Ok(10));
         assert_eq!(&read_buffer[0..3], b"one");

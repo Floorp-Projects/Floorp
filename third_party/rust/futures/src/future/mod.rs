@@ -102,7 +102,7 @@ if_std! {
     #[doc(hidden)]
     #[deprecated(note = "removed without replacement, recommended to use a \
                          local extension trait or function if needed, more \
-                         details in https://github.com/alexcrichton/futures-rs/issues/228")]
+                         details in https://github.com/rust-lang-nursery/futures-rs/issues/228")]
     pub type BoxFuture<T, E> = ::std::boxed::Box<Future<Item = T, Error = E> + Send>;
 
     impl<F: ?Sized + Future> Future for ::std::boxed::Box<F> {
@@ -323,7 +323,7 @@ pub trait Future {
     #[doc(hidden)]
     #[deprecated(note = "removed without replacement, recommended to use a \
                          local extension trait or function if needed, more \
-                         details in https://github.com/alexcrichton/futures-rs/issues/228")]
+                         details in https://github.com/rust-lang-nursery/futures-rs/issues/228")]
     #[allow(deprecated)]
     fn boxed(self) -> BoxFuture<Self::Item, Self::Error>
         where Self: Sized + Send + 'static

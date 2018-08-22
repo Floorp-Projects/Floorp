@@ -1,80 +1,60 @@
-use std::io::{self, Read, Write, Cursor};
-use std::net::{SocketAddr, Shutdown};
-use std::time::Duration;
-use std::cell::Cell;
+#[cfg(feature = "runtime")]
+use std::collections::HashMap;
+use std::cmp;
+use std::io::{self, Read, Write};
+#[cfg(feature = "runtime")]
+use std::sync::{Arc, Mutex};
 
-use net::{NetworkStream, NetworkConnector, SslClient};
+use bytes::Buf;
+use futures::{Async, Poll};
+#[cfg(feature = "runtime")]
+use futures::Future;
+use futures::task::{self, Task};
+use tokio_io::{AsyncRead, AsyncWrite};
 
-#[derive(Clone, Debug)]
-pub struct MockStream {
-    pub read: Cursor<Vec<u8>>,
-    next_reads: Vec<Vec<u8>>,
-    pub write: Vec<u8>,
-    pub is_closed: bool,
-    pub error_on_write: bool,
-    pub error_on_read: bool,
-    pub read_timeout: Cell<Option<Duration>>,
-    pub write_timeout: Cell<Option<Duration>>,
-    pub id: u64,
+#[cfg(feature = "runtime")]
+use ::client::connect::{Connect, Connected, Destination};
+
+#[derive(Debug)]
+pub struct MockCursor {
+    vec: Vec<u8>,
+    pos: usize,
 }
 
-impl PartialEq for MockStream {
-    fn eq(&self, other: &MockStream) -> bool {
-        self.read.get_ref() == other.read.get_ref() && self.write == other.write
-    }
-}
-
-impl MockStream {
-    pub fn new() -> MockStream {
-        MockStream::with_input(b"")
-    }
-
-    pub fn with_input(input: &[u8]) -> MockStream {
-        MockStream::with_responses(vec![input])
-    }
-
-    pub fn with_responses(mut responses: Vec<&[u8]>) -> MockStream {
-        MockStream {
-            read: Cursor::new(responses.remove(0).to_vec()),
-            next_reads: responses.into_iter().map(|arr| arr.to_vec()).collect(),
-            write: vec![],
-            is_closed: false,
-            error_on_write: false,
-            error_on_read: false,
-            read_timeout: Cell::new(None),
-            write_timeout: Cell::new(None),
-            id: 0,
+impl MockCursor {
+    pub fn wrap(vec: Vec<u8>) -> MockCursor {
+        MockCursor {
+            vec: vec,
+            pos: 0,
         }
     }
 }
 
-impl Read for MockStream {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        if self.error_on_read {
-            Err(io::Error::new(io::ErrorKind::Other, "mock error"))
-        } else {
-            match self.read.read(buf) {
-                Ok(n) => {
-                    if self.read.position() as usize == self.read.get_ref().len() {
-                        if self.next_reads.len() > 0 {
-                            self.read = Cursor::new(self.next_reads.remove(0));
-                        }
-                    }
-                    Ok(n)
-                },
-                r => r
-            }
-        }
+impl ::std::ops::Deref for MockCursor {
+    type Target = [u8];
+
+    fn deref(&self) -> &[u8] {
+        &self.vec
     }
 }
 
-impl Write for MockStream {
-    fn write(&mut self, msg: &[u8]) -> io::Result<usize> {
-        if self.error_on_write {
-            Err(io::Error::new(io::ErrorKind::Other, "mock error"))
-        } else {
-            Write::write(&mut self.write, msg)
-        }
+impl AsRef<[u8]> for MockCursor {
+    fn as_ref(&self) -> &[u8] {
+        &self.vec
+    }
+}
+
+impl<S: AsRef<[u8]>> PartialEq<S> for MockCursor {
+    fn eq(&self, other: &S) -> bool {
+        self.vec == other.as_ref()
+    }
+}
+
+impl Write for MockCursor {
+    fn write(&mut self, data: &[u8]) -> io::Result<usize> {
+        trace!("MockCursor::write; len={}", data.len());
+        self.vec.extend(data);
+        Ok(data.len())
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -82,87 +62,454 @@ impl Write for MockStream {
     }
 }
 
-impl NetworkStream for MockStream {
-    fn peer_addr(&mut self) -> io::Result<SocketAddr> {
-        Ok("127.0.0.1:1337".parse().unwrap())
-    }
-
-    fn set_read_timeout(&self, dur: Option<Duration>) -> io::Result<()> {
-        self.read_timeout.set(dur);
-        Ok(())
-    }
-
-    fn set_write_timeout(&self, dur: Option<Duration>) -> io::Result<()> {
-        self.write_timeout.set(dur);
-        Ok(())
-    }
-
-    fn close(&mut self, _how: Shutdown) -> io::Result<()> {
-        self.is_closed = true;
-        Ok(())
+impl Read for MockCursor {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        (&self.vec[self.pos..]).read(buf).map(|n| {
+            trace!("MockCursor::read; len={}", n);
+            self.pos += n;
+            if self.pos == self.vec.len() {
+                trace!("MockCursor::read to end, clearing");
+                self.pos = 0;
+                self.vec.clear();
+            }
+            n
+        })
     }
 }
 
-pub struct MockConnector;
+const READ_VECS_CNT: usize = 64;
 
-impl NetworkConnector for MockConnector {
-    type Stream = MockStream;
+#[derive(Debug)]
+pub struct AsyncIo<T> {
+    blocked: bool,
+    bytes_until_block: usize,
+    error: Option<io::Error>,
+    flushed: bool,
+    inner: T,
+    max_read_vecs: usize,
+    num_writes: usize,
+    panic: bool,
+    park_tasks: bool,
+    task: Option<Task>,
+}
 
-    fn connect(&self, _host: &str, _port: u16, _scheme: &str) -> ::Result<MockStream> {
-        Ok(MockStream::new())
+impl<T> AsyncIo<T> {
+    pub fn new(inner: T, bytes: usize) -> AsyncIo<T> {
+        AsyncIo {
+            blocked: false,
+            bytes_until_block: bytes,
+            error: None,
+            flushed: false,
+            inner: inner,
+            max_read_vecs: READ_VECS_CNT,
+            num_writes: 0,
+            panic: false,
+            park_tasks: false,
+            task: None,
+        }
+    }
+
+    pub fn block_in(&mut self, bytes: usize) {
+        self.bytes_until_block = bytes;
+
+        if let Some(task) = self.task.take() {
+            task.notify();
+        }
+    }
+
+    pub fn error(&mut self, err: io::Error) {
+        self.error = Some(err);
+    }
+
+    #[cfg(feature = "nightly")]
+    pub fn panic(&mut self) {
+        self.panic = true;
+    }
+
+    pub fn max_read_vecs(&mut self, cnt: usize) {
+        assert!(cnt <= READ_VECS_CNT);
+        self.max_read_vecs = cnt;
+    }
+
+    #[cfg(feature = "runtime")]
+    pub fn park_tasks(&mut self, enabled: bool) {
+        self.park_tasks = enabled;
+    }
+
+    /*
+    pub fn flushed(&self) -> bool {
+        self.flushed
+    }
+    */
+
+    pub fn blocked(&self) -> bool {
+        self.blocked
+    }
+
+    pub fn num_writes(&self) -> usize {
+        self.num_writes
+    }
+
+    fn would_block(&mut self) -> io::Error {
+        self.blocked = true;
+        if self.park_tasks {
+            self.task = Some(task::current());
+        }
+        io::ErrorKind::WouldBlock.into()
+    }
+
+}
+
+impl AsyncIo<MockCursor> {
+    pub fn new_buf<T: Into<Vec<u8>>>(buf: T, bytes: usize) -> AsyncIo<MockCursor> {
+        AsyncIo::new(MockCursor::wrap(buf.into()), bytes)
+    }
+
+    /*
+    pub fn new_eof() -> AsyncIo<Buf> {
+        AsyncIo::new(Buf::wrap(Vec::new().into()), 1)
+    }
+    */
+
+    #[cfg(feature = "runtime")]
+    fn close(&mut self) {
+        self.block_in(1);
+        assert_eq!(
+            self.inner.vec.len(),
+            self.inner.pos,
+            "AsyncIo::close(), but cursor not consumed",
+        );
+        self.inner.vec.truncate(0);
+        self.inner.pos = 0;
     }
 }
 
-/// new connectors must be created if you wish to intercept requests.
-macro_rules! mock_connector (
-    ($name:ident {
-        $($url:expr => $res:expr)*
-    }) => (
+impl<T: Read + Write> AsyncIo<T> {
+    fn write_no_vecs<B: Buf>(&mut self, buf: &mut B) -> Poll<usize, io::Error> {
+        if !buf.has_remaining() {
+            return Ok(Async::Ready(0));
+        }
 
-        struct $name;
+        let n = try_nb!(self.write(buf.bytes()));
+        buf.advance(n);
+        Ok(Async::Ready(n))
+    }
+}
 
-        impl $crate::net::NetworkConnector for $name {
-            type Stream = ::mock::MockStream;
-            fn connect(&self, host: &str, port: u16, scheme: &str)
-                    -> $crate::Result<::mock::MockStream> {
-                use std::collections::HashMap;
-                debug!("MockStream::connect({:?}, {:?}, {:?})", host, port, scheme);
-                let mut map = HashMap::new();
-                $(map.insert($url, $res);)*
+impl<S: AsRef<[u8]>, T: AsRef<[u8]>> PartialEq<S> for AsyncIo<T> {
+    fn eq(&self, other: &S) -> bool {
+        self.inner.as_ref() == other.as_ref()
+    }
+}
 
 
-                let key = format!("{}://{}", scheme, host);
-                // ignore port for now
-                match map.get(&*key) {
-                    Some(&res) => Ok($crate::mock::MockStream::with_input(res.as_bytes())),
-                    None => panic!("{:?} doesn't know url {}", stringify!($name), key)
+impl<T: Read> Read for AsyncIo<T> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        assert!(!self.panic, "AsyncIo::read panic");
+        self.blocked = false;
+        if let Some(err) = self.error.take() {
+            Err(err)
+        } else if self.bytes_until_block == 0 {
+            Err(self.would_block())
+        } else {
+            let n = cmp::min(self.bytes_until_block, buf.len());
+            let n = try!(self.inner.read(&mut buf[..n]));
+            self.bytes_until_block -= n;
+            Ok(n)
+        }
+    }
+}
+
+impl<T: Write> Write for AsyncIo<T> {
+    fn write(&mut self, data: &[u8]) -> io::Result<usize> {
+        assert!(!self.panic, "AsyncIo::write panic");
+        self.num_writes += 1;
+        if let Some(err) = self.error.take() {
+            trace!("AsyncIo::write error");
+            Err(err)
+        } else if self.bytes_until_block == 0 {
+            trace!("AsyncIo::write would block");
+            Err(self.would_block())
+        } else {
+            trace!("AsyncIo::write; {} bytes", data.len());
+            self.flushed = false;
+            let n = cmp::min(self.bytes_until_block, data.len());
+            let n = try!(self.inner.write(&data[..n]));
+            self.bytes_until_block -= n;
+            Ok(n)
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.flushed = true;
+        self.inner.flush()
+    }
+}
+
+impl<T: Read + Write> AsyncRead for AsyncIo<T> {
+}
+
+impl<T: Read + Write> AsyncWrite for AsyncIo<T> {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        Ok(().into())
+    }
+
+    fn write_buf<B: Buf>(&mut self, buf: &mut B) -> Poll<usize, io::Error> {
+        assert!(!self.panic, "AsyncIo::write_buf panic");
+        if self.max_read_vecs == 0 {
+            return self.write_no_vecs(buf);
+        }
+        let r = {
+            static DUMMY: &[u8] = &[0];
+            let mut bufs = [From::from(DUMMY); READ_VECS_CNT];
+            let i = Buf::bytes_vec(&buf, &mut bufs[..self.max_read_vecs]);
+            let mut n = 0;
+            let mut ret = Ok(0);
+            // each call to write() will increase our count, but we assume
+            // that if iovecs are used, its really only 1 write call.
+            let num_writes = self.num_writes;
+            for iovec in &bufs[..i] {
+                match self.write(iovec) {
+                    Ok(num) => {
+                        n += num;
+                        ret = Ok(n);
+                    },
+                    Err(e) => {
+                        if e.kind() == io::ErrorKind::WouldBlock {
+                            if let Ok(0) = ret {
+                                ret = Err(e);
+                            }
+                        } else {
+                            ret = Err(e);
+                        }
+                        break;
+                    }
                 }
             }
+            self.num_writes = num_writes + 1;
+            ret
+        };
+        match r {
+            Ok(n) => {
+                Buf::advance(buf, n);
+                Ok(Async::Ready(n))
+            }
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                Ok(Async::NotReady)
+            }
+            Err(e) => Err(e),
         }
+    }
+}
 
-    );
+impl ::std::ops::Deref for AsyncIo<MockCursor> {
+    type Target = [u8];
 
-    ($name:ident { $($response:expr),+ }) => (
-        struct $name;
+    fn deref(&self) -> &[u8] {
+        &self.inner
+    }
+}
 
-        impl $crate::net::NetworkConnector for $name {
-            type Stream = $crate::mock::MockStream;
-            fn connect(&self, _: &str, _: u16, _: &str)
-                    -> $crate::Result<$crate::mock::MockStream> {
-                Ok($crate::mock::MockStream::with_responses(vec![
-                    $($response),+
-                ]))
+#[cfg(feature = "runtime")]
+pub struct Duplex {
+    inner: Arc<Mutex<DuplexInner>>,
+}
+
+#[cfg(feature = "runtime")]
+struct DuplexInner {
+    handle_read_task: Option<Task>,
+    read: AsyncIo<MockCursor>,
+    write: AsyncIo<MockCursor>,
+}
+
+#[cfg(feature = "runtime")]
+impl Duplex {
+    pub(crate) fn channel() -> (Duplex, DuplexHandle) {
+        let mut inner = DuplexInner {
+            handle_read_task: None,
+            read: AsyncIo::new_buf(Vec::new(), 0),
+            write: AsyncIo::new_buf(Vec::new(), ::std::usize::MAX),
+        };
+
+        inner.read.park_tasks(true);
+        inner.write.park_tasks(true);
+
+        let inner = Arc::new(Mutex::new(inner));
+
+        let duplex = Duplex {
+            inner: inner.clone(),
+        };
+        let handle = DuplexHandle {
+            inner: inner,
+        };
+
+        (duplex, handle)
+    }
+}
+
+#[cfg(feature = "runtime")]
+impl Read for Duplex {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.inner.lock().unwrap().read.read(buf)
+    }
+}
+
+#[cfg(feature = "runtime")]
+impl Write for Duplex {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        let mut inner = self.inner.lock().unwrap();
+        if let Some(task) = inner.handle_read_task.take() {
+            trace!("waking DuplexHandle read");
+            task.notify();
+        }
+        inner.write.write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.inner.lock().unwrap().write.flush()
+    }
+}
+
+#[cfg(feature = "runtime")]
+impl AsyncRead for Duplex {
+}
+
+#[cfg(feature = "runtime")]
+impl AsyncWrite for Duplex {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        Ok(().into())
+    }
+
+    fn write_buf<B: Buf>(&mut self, buf: &mut B) -> Poll<usize, io::Error> {
+        let mut inner = self.inner.lock().unwrap();
+        if let Some(task) = inner.handle_read_task.take() {
+            task.notify();
+        }
+        inner.write.write_buf(buf)
+    }
+}
+
+#[cfg(feature = "runtime")]
+pub struct DuplexHandle {
+    inner: Arc<Mutex<DuplexInner>>,
+}
+
+#[cfg(feature = "runtime")]
+impl DuplexHandle {
+    pub fn read(&self, buf: &mut [u8]) -> Poll<usize, io::Error> {
+        let mut inner = self.inner.lock().unwrap();
+        assert!(buf.len() >= inner.write.inner.len());
+        if inner.write.inner.is_empty() {
+            trace!("DuplexHandle read parking");
+            inner.handle_read_task = Some(task::current());
+            return Ok(Async::NotReady);
+        }
+        inner.write.inner.vec.truncate(0);
+        Ok(Async::Ready(inner.write.inner.len()))
+    }
+
+    pub fn write(&self, bytes: &[u8]) -> Poll<usize, io::Error> {
+        let mut inner = self.inner.lock().unwrap();
+        assert_eq!(inner.read.inner.pos, 0);
+        assert_eq!(inner.read.inner.vec.len(), 0, "write but read isn't empty");
+        inner
+            .read
+            .inner
+            .vec
+            .extend(bytes);
+        inner.read.block_in(bytes.len());
+        Ok(Async::Ready(bytes.len()))
+    }
+}
+
+#[cfg(feature = "runtime")]
+impl Drop for DuplexHandle {
+    fn drop(&mut self) {
+        trace!("mock duplex handle drop");
+        if !::std::thread::panicking() {
+            let mut inner = self.inner.lock().unwrap();
+            inner.read.close();
+            inner.write.close();
+        }
+    }
+}
+
+#[cfg(feature = "runtime")]
+type BoxedConnectFut = Box<Future<Item=(Duplex, Connected), Error=io::Error> + Send>;
+
+#[cfg(feature = "runtime")]
+pub struct MockConnector {
+    mocks: Mutex<HashMap<String, Vec<BoxedConnectFut>>>,
+}
+
+#[cfg(feature = "runtime")]
+impl MockConnector {
+    pub fn new() -> MockConnector {
+        MockConnector {
+            mocks: Mutex::new(HashMap::new()),
+        }
+    }
+
+    pub fn mock(&mut self, key: &str) -> DuplexHandle {
+        use futures::future;
+        self.mock_fut(key, future::ok::<_, ()>(()))
+    }
+
+    pub fn mock_fut<F>(&mut self, key: &str, fut: F) -> DuplexHandle
+    where
+        F: Future + Send + 'static,
+    {
+        let key = key.to_owned();
+
+        let (duplex, handle) = Duplex::channel();
+
+        let fut = Box::new(fut.then(move |_| {
+            trace!("MockConnector mocked fut ready");
+            Ok((duplex, Connected::new()))
+        }));
+        self.mocks.lock().unwrap().entry(key)
+            .or_insert(Vec::new())
+            .push(fut);
+
+        handle
+    }
+}
+
+#[cfg(feature = "runtime")]
+impl Connect for MockConnector {
+    type Transport = Duplex;
+    type Error = io::Error;
+    type Future = BoxedConnectFut;
+
+    fn connect(&self, dst: Destination) -> Self::Future {
+        trace!("mock connect: {:?}", dst);
+        let key = format!("{}://{}{}", dst.scheme(), dst.host(), if let Some(port) = dst.port() {
+            format!(":{}", port)
+        } else {
+            "".to_owned()
+        });
+        let mut mocks = self.mocks.lock().unwrap();
+        let mocks = mocks.get_mut(&key)
+            .expect(&format!("unknown mocks uri: {}", key));
+        assert!(!mocks.is_empty(), "no additional mocks for {}", key);
+        mocks.remove(0)
+    }
+}
+
+
+#[cfg(feature = "runtime")]
+impl Drop for MockConnector {
+    fn drop(&mut self) {
+        if !::std::thread::panicking() {
+            let mocks = self.mocks.lock().unwrap();
+            for (key, mocks) in mocks.iter() {
+                assert_eq!(
+                    mocks.len(),
+                    0,
+                    "not all mocked connects for {:?} were used",
+                    key,
+                );
             }
         }
-    );
-);
-
-#[derive(Debug, Default)]
-pub struct MockSsl;
-
-impl<T: NetworkStream + Send + Clone> SslClient<T> for MockSsl {
-    type Stream = T;
-    fn wrap_client(&self, stream: T, _host: &str) -> ::Result<T> {
-        Ok(stream)
     }
 }

@@ -166,8 +166,10 @@ s! {
         pub s_addr: in_addr_t,
     }
 
+    #[cfg_attr(feature = "align", repr(align(4)))]
     pub struct in6_addr {
         pub s6_addr: [u8; 16],
+        #[cfg(not(feature = "align"))]
         __align: [u32; 0],
     }
 
@@ -518,14 +520,30 @@ s! {
         pub ifa_data: *mut ::c_void
     }
 
+    #[cfg_attr(all(feature = "align",
+                   target_pointer_width = "32",
+                   any(target_arch = "mips",
+                       target_arch = "arm",
+                       target_arch = "powerpc",
+                       target_arch = "x86_64")),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   any(target_pointer_width = "64",
+                       not(any(target_arch = "mips",
+                               target_arch = "arm",
+                               target_arch = "powerpc",
+                               target_arch = "x86_64")))),
+               repr(align(8)))]
     pub struct pthread_mutex_t {
-        #[cfg(any(target_arch = "mips",
-                  target_arch = "arm",
-                  target_arch = "powerpc",
-                  all(target_arch = "x86_64",
-                      target_pointer_width = "32")))]
+        #[cfg(all(not(feature = "align"),
+                  any(target_arch = "mips",
+                      target_arch = "arm",
+                      target_arch = "powerpc",
+                      all(target_arch = "x86_64",
+                          target_pointer_width = "32"))))]
         __align: [::c_long; 0],
-        #[cfg(not(any(target_arch = "mips",
+        #[cfg(not(any(feature = "align",
+                      target_arch = "mips",
                       target_arch = "arm",
                       target_arch = "powerpc",
                       all(target_arch = "x86_64",
@@ -534,14 +552,30 @@ s! {
         size: [u8; __SIZEOF_PTHREAD_MUTEX_T],
     }
 
+    #[cfg_attr(all(feature = "align",
+                   target_pointer_width = "32",
+                   any(target_arch = "mips",
+                       target_arch = "arm",
+                       target_arch = "powerpc",
+                       target_arch = "x86_64")),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   any(target_pointer_width = "64",
+                       not(any(target_arch = "mips",
+                               target_arch = "arm",
+                               target_arch = "powerpc",
+                               target_arch = "x86_64")))),
+               repr(align(8)))]
     pub struct pthread_rwlock_t {
-        #[cfg(any(target_arch = "mips",
-                  target_arch = "arm",
-                  target_arch = "powerpc",
-                  all(target_arch = "x86_64",
-                      target_pointer_width = "32")))]
+        #[cfg(all(not(feature = "align"),
+                  any(target_arch = "mips",
+                      target_arch = "arm",
+                      target_arch = "powerpc",
+                      all(target_arch = "x86_64",
+                          target_pointer_width = "32"))))]
         __align: [::c_long; 0],
-        #[cfg(not(any(target_arch = "mips",
+        #[cfg(not(any(feature = "align",
+                      target_arch = "mips",
                       target_arch = "arm",
                       target_arch = "powerpc",
                       all(target_arch = "x86_64",
@@ -550,39 +584,78 @@ s! {
         size: [u8; __SIZEOF_PTHREAD_RWLOCK_T],
     }
 
+    #[cfg_attr(all(feature = "align",
+                   any(target_pointer_width = "32",
+                       target_arch = "x86_64", target_arch = "powerpc64",
+                       target_arch = "mips64", target_arch = "s390x",
+                       target_arch = "sparc64",
+                       all(target_arch = "aarch64", target_env = "musl"))),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   not(any(target_pointer_width = "32",
+                           target_arch = "x86_64", target_arch = "powerpc64",
+                           target_arch = "mips64", target_arch = "s390x",
+                           target_arch = "sparc64",
+                           all(target_arch = "aarch64", target_env = "musl")))),
+               repr(align(8)))]
     pub struct pthread_mutexattr_t {
-        #[cfg(any(target_arch = "x86_64", target_arch = "powerpc64",
-                  target_arch = "mips64", target_arch = "s390x",
-                  target_arch = "sparc64"))]
-        __align: [::c_int; 0],
-        #[cfg(not(any(target_arch = "x86_64", target_arch = "powerpc64",
+        #[cfg(all(not(features = "align"),
+                  any(target_arch = "x86_64", target_arch = "powerpc64",
                       target_arch = "mips64", target_arch = "s390x",
-                      target_arch = "sparc64", target_arch = "aarch64")))]
-        __align: [::c_long; 0],
-        #[cfg(all(target_arch = "aarch64", target_env = "gnu"))]
-        __align: [::c_long; 0],
-        #[cfg(all(target_arch = "aarch64", target_env = "musl"))]
+                      target_arch = "sparc64",
+                      all(target_arch = "aarch64", target_env = "musl"))))]
         __align: [::c_int; 0],
+        #[cfg(all(not(features = "align"),
+                  not(any(target_arch = "x86_64", target_arch = "powerpc64",
+                          target_arch = "mips64", target_arch = "s390x",
+                          target_arch = "sparc64",
+                          all(target_arch = "aarch64", target_env = "musl")))))]
+        __align: [::c_long; 0],
         size: [u8; __SIZEOF_PTHREAD_MUTEXATTR_T],
     }
 
+    #[cfg_attr(all(feature = "align",
+                   any(target_env = "musl", target_pointer_width = "32")),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   not(target_env = "musl"),
+                   target_pointer_width = "64"),
+               repr(align(8)))]
     pub struct pthread_rwlockattr_t {
-        #[cfg(any(target_env = "musl"))]
+        #[cfg(all(not(feature = "align"), target_env = "musl"))]
         __align: [::c_int; 0],
-        #[cfg(not(any(target_env = "musl")))]
+        #[cfg(all(not(feature = "align"), not(target_env = "musl")))]
         __align: [::c_long; 0],
         size: [u8; __SIZEOF_PTHREAD_RWLOCKATTR_T],
     }
 
+    #[cfg_attr(all(feature = "align",
+                   target_env = "musl",
+                   target_pointer_width = "32"),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   target_env = "musl",
+                   target_pointer_width = "64"),
+               repr(align(8)))]
+    #[cfg_attr(all(feature = "align",
+                   not(target_env = "musl"),
+                   target_arch = "x86"),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   not(target_env = "musl"),
+                   not(target_arch = "x86")),
+               repr(align(8)))]
     pub struct pthread_cond_t {
-        #[cfg(any(target_env = "musl"))]
+        #[cfg(all(not(feature = "align"), target_env = "musl"))]
         __align: [*const ::c_void; 0],
-        #[cfg(not(any(target_env = "musl")))]
+        #[cfg(not(any(feature = "align", target_env = "musl")))]
         __align: [::c_longlong; 0],
         size: [u8; __SIZEOF_PTHREAD_COND_T],
     }
 
+    #[cfg_attr(feature = "align", repr(align(4)))]
     pub struct pthread_condattr_t {
+        #[cfg(not(feature = "align"))]
         __align: [::c_int; 0],
         size: [u8; __SIZEOF_PTHREAD_CONDATTR_T],
     }
@@ -2004,18 +2077,17 @@ pub const RTLD_NOW: ::c_int = 0x2;
 
 pub const TCP_MD5SIG: ::c_int = 14;
 
-pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
-    __align: [],
-    size: [0; __SIZEOF_PTHREAD_MUTEX_T],
-};
-pub const PTHREAD_COND_INITIALIZER: pthread_cond_t = pthread_cond_t {
-    __align: [],
-    size: [0; __SIZEOF_PTHREAD_COND_T],
-};
-pub const PTHREAD_RWLOCK_INITIALIZER: pthread_rwlock_t = pthread_rwlock_t {
-    __align: [],
-    size: [0; __SIZEOF_PTHREAD_RWLOCK_T],
-};
+align_const! {
+    pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
+        size: [0; __SIZEOF_PTHREAD_MUTEX_T],
+    };
+    pub const PTHREAD_COND_INITIALIZER: pthread_cond_t = pthread_cond_t {
+        size: [0; __SIZEOF_PTHREAD_COND_T],
+    };
+    pub const PTHREAD_RWLOCK_INITIALIZER: pthread_rwlock_t = pthread_rwlock_t {
+        size: [0; __SIZEOF_PTHREAD_RWLOCK_T],
+    };
+}
 pub const PTHREAD_MUTEX_NORMAL: ::c_int = 0;
 pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 1;
 pub const PTHREAD_MUTEX_ERRORCHECK: ::c_int = 2;
@@ -3796,6 +3868,8 @@ extern {
     pub fn sched_rr_get_interval(pid: ::pid_t, tp: *mut ::timespec) -> ::c_int;
     pub fn sem_timedwait(sem: *mut sem_t,
                          abstime: *const ::timespec) -> ::c_int;
+    pub fn sem_getvalue(sem: *mut sem_t,
+                        sval: *mut ::c_int) -> ::c_int;
     pub fn sched_setparam(pid: ::pid_t, param: *const ::sched_param) -> ::c_int;
     pub fn setns(fd: ::c_int, nstype: ::c_int) -> ::c_int;
     pub fn swapoff(puath: *const ::c_char) -> ::c_int;

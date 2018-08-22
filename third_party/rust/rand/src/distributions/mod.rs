@@ -17,19 +17,28 @@
 //! internally. The `IndependentSample` trait is for generating values
 //! that do not need to record state.
 
-use std::marker;
+use core::marker;
 
 use {Rng, Rand};
 
 pub use self::range::Range;
+#[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
+#[cfg(feature="std")]
 pub use self::normal::{Normal, LogNormal};
+#[cfg(feature="std")]
 pub use self::exponential::Exp;
 
 pub mod range;
+#[cfg(feature="std")]
 pub mod gamma;
+#[cfg(feature="std")]
 pub mod normal;
+#[cfg(feature="std")]
 pub mod exponential;
+
+#[cfg(feature="std")]
+mod ziggurat_tables;
 
 /// Types that can be used to create a random instance of `Support`.
 pub trait Sample<Support> {
@@ -124,7 +133,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
     ///
     /// Panics if:
     ///
-    /// - `v` is empty
+    /// - `items` is empty
     /// - the total weight is 0
     /// - the total weight is larger than a `u32` can contain.
     pub fn new(items: &'a mut [Weighted<T>]) -> WeightedChoice<'a, T> {
@@ -203,8 +212,6 @@ impl<'a, T: Clone> IndependentSample<T> for WeightedChoice<'a, T> {
     }
 }
 
-mod ziggurat_tables;
-
 /// Sample a random number using the Ziggurat method (specifically the
 /// ZIGNOR variant from Doornik 2005). Most of the arguments are
 /// directly from the paper:
@@ -220,6 +227,7 @@ mod ziggurat_tables;
 
 // the perf improvement (25-50%) is definitely worth the extra code
 // size from force-inlining.
+#[cfg(feature="std")]
 #[inline(always)]
 fn ziggurat<R: Rng, P, Z>(
             rng: &mut R,
