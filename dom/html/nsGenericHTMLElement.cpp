@@ -2894,10 +2894,13 @@ nsGenericHTMLElement::NewURIFromString(const nsAString& aURISpec,
   return NS_OK;
 }
 
-static bool
-IsOrHasAncestorWithDisplayNone(Element* aElement)
+// https://html.spec.whatwg.org/#being-rendered
+//
+// With a gotcha for display contents:
+//   https://github.com/whatwg/html/issues/3947
+static bool IsRendered(const Element& aElement)
 {
-  return !aElement->HasServoData() || Servo_Element_IsDisplayNone(aElement);
+  return aElement.GetPrimaryFrame() || aElement.IsDisplayContents();
 }
 
 void
@@ -2958,7 +2961,7 @@ nsGenericHTMLElement::GetInnerText(mozilla::dom::DOMString& aValue,
     doc->FlushPendingNotifications(FlushType::Layout);
   }
 
-  if (IsOrHasAncestorWithDisplayNone(this)) {
+  if (!IsRendered(*this)) {
     GetTextContentInternal(aValue, aError);
   } else {
     nsRange::GetInnerTextNoFlush(aValue, aError, this);
