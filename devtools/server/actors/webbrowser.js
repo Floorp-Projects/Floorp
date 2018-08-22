@@ -9,7 +9,6 @@
 var { Ci } = require("chrome");
 var Services = require("Services");
 var { DebuggerServer } = require("devtools/server/main");
-var { ActorRegistry } = require("devtools/server/actor-registry");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
@@ -63,7 +62,7 @@ exports.sendShutdownEvent = sendShutdownEvent;
 /**
  * Construct a root actor appropriate for use in a server running in a
  * browser. The returned root actor:
- * - respects the factories registered with ActorRegistry.addGlobalActor,
+ * - respects the factories registered with DebuggerServer.addGlobalActor,
  * - uses a BrowserTabList to supply target actors for tabs,
  * - sends all navigator:browser window documents a Debugger:Shutdown event
  *   when it exits.
@@ -79,7 +78,7 @@ exports.createRootActor = function createRootActor(connection) {
     serviceWorkerRegistrationList:
       new ServiceWorkerRegistrationActorList(connection),
     processList: new ProcessActorList(),
-    globalActorFactories: ActorRegistry.globalActorFactories,
+    globalActorFactories: DebuggerServer.globalActorFactories,
     onShutdown: sendShutdownEvent
   });
 };

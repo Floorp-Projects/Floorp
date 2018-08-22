@@ -31,7 +31,6 @@ Services.prefs.setBoolPref("devtools.debugger.log", true);
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { ActorRegistry } = require("devtools/server/actor-registry");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerServer: WorkerDebuggerServer } = worker.require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
@@ -77,7 +76,7 @@ function makeMemoryActorTest(testGeneratorFunction) {
   return function run_test() {
     do_test_pending();
     startTestDebuggerServer(TEST_GLOBAL_NAME).then(client => {
-      ActorRegistry.registerModule("devtools/server/actors/heap-snapshot-file", {
+      DebuggerServer.registerModule("devtools/server/actors/heap-snapshot-file", {
         prefix: "heapSnapshotFile",
         constructor: "HeapSnapshotFileActor",
         type: { global: true }
@@ -115,7 +114,7 @@ function makeFullRuntimeMemoryActorTest(testGeneratorFunction) {
   return function run_test() {
     do_test_pending();
     startTestDebuggerServer("test_MemoryActor").then(client => {
-      ActorRegistry.registerModule("devtools/server/actors/heap-snapshot-file", {
+      DebuggerServer.registerModule("devtools/server/actors/heap-snapshot-file", {
         prefix: "heapSnapshotFile",
         constructor: "HeapSnapshotFileActor",
         type: { global: true }

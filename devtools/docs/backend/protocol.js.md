@@ -51,7 +51,7 @@ The actor implementation would go somewhere like
     // You also need to export the actor class in your module for discovery.
     exports.HelloActor = HelloActor;
 
-To activate your actor, register it in the `addBrowserActors` method in `server/actor-registry.js`.
+To activate your actor, register it in the `_addBrowserActors` method in `server/main.js`.
 The registration code would look something like this:
 
     this.registerModule("devtools/server/actors/hello-world", {
