@@ -21,7 +21,6 @@ class Grid extends PureComponent {
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
       highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
-      setSelectedNode: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
@@ -30,6 +29,7 @@ class Grid extends PureComponent {
       onToggleShowGridAreas: PropTypes.func.isRequired,
       onToggleShowGridLineNumbers: PropTypes.func.isRequired,
       onToggleShowInfiniteLines: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
@@ -38,7 +38,6 @@ class Grid extends PureComponent {
       getSwatchColorPickerTooltip,
       grids,
       highlighterSettings,
-      setSelectedNode,
       onHideBoxModelHighlighter,
       onSetGridOverlayColor,
       onShowBoxModelHighlighterForNode,
@@ -47,25 +46,28 @@ class Grid extends PureComponent {
       onToggleGridHighlighter,
       onToggleShowGridLineNumbers,
       onToggleShowInfiniteLines,
+      setSelectedNode,
     } = this.props;
 
-    return grids.length ?
-      dom.div(
-        {
-          id: "layout-grid-container",
-        },
-        dom.div(
-          {
-            className: "grid-content",
-          },
+    if (!grids.length) {
+      return (
+        dom.div({ className: "devtools-sidepanel-no-result" },
+          getStr("layout.noGridsOnThisPage")
+        )
+      );
+    }
+
+    return (
+      dom.div({ id: "layout-grid-container" },
+        dom.div({ className: "grid-content" },
           GridList({
             getSwatchColorPickerTooltip,
             grids,
-            setSelectedNode,
             onHideBoxModelHighlighter,
             onSetGridOverlayColor,
             onShowBoxModelHighlighterForNode,
             onToggleGridHighlighter,
+            setSelectedNode,
           }),
           GridDisplaySettings({
             highlighterSettings,
@@ -79,13 +81,7 @@ class Grid extends PureComponent {
           onShowGridOutlineHighlight,
         })
       )
-      :
-      dom.div(
-        {
-          className: "devtools-sidepanel-no-result",
-        },
-        getStr("layout.noGridsOnThisPage")
-      );
+    );
   }
 }
 

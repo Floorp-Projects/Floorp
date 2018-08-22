@@ -18,11 +18,11 @@ class GridList extends PureComponent {
     return {
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
-      setSelectedNode: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleGridHighlighter: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
@@ -30,36 +30,32 @@ class GridList extends PureComponent {
     const {
       getSwatchColorPickerTooltip,
       grids,
-      setSelectedNode,
       onHideBoxModelHighlighter,
       onSetGridOverlayColor,
       onShowBoxModelHighlighterForNode,
       onToggleGridHighlighter,
+      setSelectedNode,
     } = this.props;
 
-    return dom.div(
-      {
-        className: "grid-container",
-      },
-      dom.span(
-        {},
-        getStr("layout.overlayGrid")
-      ),
-      dom.ul(
-        {
-          id: "grid-list",
-          className: "devtools-monospace",
-        },
-        grids.map(grid => GridItem({
-          key: grid.id,
-          getSwatchColorPickerTooltip,
-          grid,
-          setSelectedNode,
-          onHideBoxModelHighlighter,
-          onSetGridOverlayColor,
-          onShowBoxModelHighlighterForNode,
-          onToggleGridHighlighter,
-        }))
+    return (
+      dom.div({ className: "grid-container" },
+        dom.span({}, getStr("layout.overlayGrid")),
+        dom.ul(
+          {
+            id: "grid-list",
+            className: "devtools-monospace",
+          },
+          grids.map(grid => GridItem({
+            key: grid.id,
+            getSwatchColorPickerTooltip,
+            grid,
+            onHideBoxModelHighlighter,
+            onSetGridOverlayColor,
+            onShowBoxModelHighlighterForNode,
+            onToggleGridHighlighter,
+            setSelectedNode,
+          }))
+        )
       )
     );
   }
