@@ -480,31 +480,14 @@ template<typename T>
 static void
 AssertNotStackAllocated(T* aPtr)
 {
-  // On all of our supported platforms, the stack grows down. Any address
-  // located below the address of our argument is therefore guaranteed not to be
-  // stack-allocated by the caller.
-  //
-  // For addresses above our argument, things get trickier. The main thread
-  // stack is traditionally placed at the top of the program's address space,
-  // but that is becoming less reliable as more and more systems adopt address
-  // space layout randomization strategies, so we have to guess how much space
-  // above our argument pointer we need to care about.
-  //
-  // On most systems, we're guaranteed at least several KiB at the top of each
-  // stack for TLS. We'd probably be safe assuming at least 4KiB in the stack
-  // segment above our argument address, but safer is... well, safer.
-  //
-  // For threads with huge stacks, it's theoretically possible that we could
-  // wind up being passed a stack-allocated string from farther up the stack,
-  // but this is a best-effort thing, so we'll assume we only care about the
-  // immediate caller. For that case, max 2KiB per stack frame is probably a
-  // reasonable guess most of the time, and is less than the ~4KiB that we
-  // expect for TLS, so go with that to avoid the risk of bumping into heap
-  // data just above the stack.
-  static constexpr size_t kFuzz = 2048;
-
-  MOZ_ASSERT(uintptr_t(aPtr) < uintptr_t(&aPtr) ||
-             uintptr_t(aPtr) > uintptr_t(&aPtr) + kFuzz);
+  // The main thread's stack should be allocated at the top of our address
+  // space. Anything stack allocated should be above us on the stack, and
+  // therefore above our first argument pointer.
+  // Only this is apparently not the case on Windows.
+#if !(defined(XP_WIN) || defined(ANDROID))
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(uintptr_t(aPtr) < uintptr_t(&aPtr));
+#endif
 }
 
 static inline nsCString
