@@ -22,9 +22,9 @@ class DevicePixelRatioMenu extends PureComponent {
     return {
       devices: PropTypes.shape(Types.devices).isRequired,
       displayPixelRatio: Types.pixelRatio.value.isRequired,
+      onChangePixelRatio: PropTypes.func.isRequired,
       selectedDevice: PropTypes.string.isRequired,
       selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
-      onChangePixelRatio: PropTypes.func.isRequired,
     };
   }
 
