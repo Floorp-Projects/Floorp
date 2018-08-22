@@ -65,25 +65,30 @@ public class CrashReporterService extends JobIntentService {
             return;
         }
 
-        Class<?> reporterActivityCls = getFennecReporterActivity();
-        if (reporterActivityCls != null) {
-            intent.setClass(this, reporterActivityCls);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            return;
-        }
-
         submitCrash(intent);
     }
 
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
+        Class<?> reporterActivityCls = getFennecReporterActivity();
+        if (reporterActivityCls != null) {
+            intent.setClass(this, reporterActivityCls);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+
+            // Exit now so we don't trigger an ANR
+            System.exit(0);
+        }
+
         // When running on pre-O devices the work will be dispatched to onHandleWork() automatically
         // When running on Oreo and later devices we will enqueue the work for the JobIntentService to perform
         if (Build.VERSION.SDK_INT >= 26) {
             // Only when the system restarts the service because of Service.START_STICKY
             // the intent will be null. So the intent is safe to be passed to the JobIntentService.
             enqueueWork(this, intent);
+
+            // Exit now so we don't trigger an ANR
+            System.exit(0);
         }
 
         return super.onStartCommand(intent, flags, startId);
