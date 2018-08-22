@@ -1247,7 +1247,7 @@ DEFINE_NULL_INSTANCE (hb_font_t) =
   nullptr, /* destroy */
 
   {
-#define HB_SHAPER_IMPLEMENT(shaper) HB_SHAPER_DATA_INVALID,
+#define HB_SHAPER_IMPLEMENT(shaper) HB_ATOMIC_PTR_INIT (HB_SHAPER_DATA_INVALID),
 #include "hb-shaper-list.hh"
 #undef HB_SHAPER_IMPLEMENT
   }

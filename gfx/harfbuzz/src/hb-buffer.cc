@@ -216,7 +216,7 @@ hb_buffer_t::reset (void)
     return;
 
   hb_unicode_funcs_destroy (unicode);
-  unicode = hb_unicode_funcs_get_default ();
+  unicode = hb_unicode_funcs_reference (hb_unicode_funcs_get_default ());
   flags = HB_BUFFER_FLAG_DEFAULT;
   replacement = HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT;
 
@@ -907,7 +907,6 @@ hb_buffer_set_unicode_funcs (hb_buffer_t        *buffer,
 
   if (!unicode_funcs)
     unicode_funcs = hb_unicode_funcs_get_default ();
-
 
   hb_unicode_funcs_reference (unicode_funcs);
   hb_unicode_funcs_destroy (buffer->unicode);
