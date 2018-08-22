@@ -1221,8 +1221,7 @@ class JSScript : public js::gc::TenuredCell
     // fullyInitFromEmitter() do not need to do this.
     static bool partiallyInit(JSContext* cx, JS::Handle<JSScript*> script,
                               uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
-                              uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets,
-                              uint32_t nTypeSets);
+                              uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets);
 
   private:
     static void initFromFunctionBox(js::HandleScript script, js::frontend::FunctionBox* funbox);
