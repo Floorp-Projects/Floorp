@@ -223,17 +223,16 @@ interface nsITableEditor : nsISupports
    */
   Element getFirstRow(in Element aTableElement);
 
-  /** Get the next row element starting the search from aTableElement
-    *
-    * @param aTableElement Any TR or child-of-TR element in the document
-    *
-    * @return            The row to start search from
-    *                    and the row returned from the search
-    *                    Returns null if there isn't another row
-    * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    *  passes NS_SUCCEEDED macro)
-    */
-  Node getNextRow(in Node aTableElement);
+  /**
+   * getNextRow() returns next <tr> element of given <tr> element.
+   *
+   * @param aTableRowElement     Must be a <tr> element.
+   * @return                     <tr> element next to aTableRowElement if there
+   *                             is.  Note that this may be in different
+   *                             table section element (e.g., <tbody>).
+   *                             However, never crosses <table> boundary.
+   */
+  Element getNextRow(in Element aTableElement);
 
   /** Preferred direction to search for neighboring cell
     * when trying to locate a cell to place caret in after
