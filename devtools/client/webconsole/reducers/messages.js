@@ -314,7 +314,7 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
           ...networkMessagesUpdateById,
           [action.id]: {
             ...request,
-            ...processNetworkUpdates(action.data),
+            ...processNetworkUpdates(action.data, request),
           }
         }
       };

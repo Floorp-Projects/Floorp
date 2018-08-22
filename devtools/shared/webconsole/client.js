@@ -165,7 +165,7 @@ WebConsoleClient.prototype = {
         networkInfo.totalTime = packet.totalTime;
         break;
       case "securityInfo":
-        networkInfo.securityInfo = packet.state;
+        networkInfo.securityState = packet.state;
         break;
       case "responseCache":
         networkInfo.response.responseCache = packet.responseCache;
