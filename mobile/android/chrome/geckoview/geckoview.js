@@ -326,8 +326,6 @@ function startup() {
     name: "GeckoViewNavigation",
     onInit: {
       resource: "resource://gre/modules/GeckoViewNavigation.jsm",
-    },
-    onEnable: {
       frameScript: "chrome://geckoview/content/GeckoViewNavigationContent.js",
     },
   }, {

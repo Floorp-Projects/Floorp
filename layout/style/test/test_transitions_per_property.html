@@ -729,16 +729,16 @@ const basicShapesTests = [
   { start: "circle(calc(80px + 20px))", end: "circle(calc(200px + 300px))",
     expected: ["circle", ["200px at 50% 50%"]] },
   { start: "circle(calc(80% + 20%))", end: "circle(calc(200% + 300%))",
-    expected: ["circle", ["calc(0px + 200%) at 50% 50%"]] },
+    expected: ["circle", ["200% at 50% 50%"]] },
   { start: "circle(calc(10px + 20%))", end: "circle(calc(50px + 40%))",
-    expected: ["circle", ["calc(20px + 25%) at 50% 50%"]] },
+    expected: ["circle", ["calc(25% + 20px) at 50% 50%"]] },
   // matching functions with interpolation between percentage/pixel values
   { start: "circle(20px)", end: "circle(100%)",
-    expected: ["circle", ["calc(15px + 25%) at 50% 50%"]] },
+    expected: ["circle", ["calc(25% + 15px) at 50% 50%"]] },
   { start: "ellipse(100% 100px at 8px 20%) border-box",
     end:   "ellipse(40px 4%    at 80% 60px) border-box",
-    expected: ["ellipse", ["calc(10px + 75%) calc(75px + 1%) at " +
-                           "calc(6px + 20%) calc(15px + 15%)"],
+    expected: ["ellipse", ["calc(75% + 10px) calc(1% + 75px) at " +
+                           "calc(20% + 6px) calc(15% + 15px)"],
                "border-box"] },
   // no interpolation for keywords
   { start: "circle()", end: "circle(50px)",
@@ -762,7 +762,7 @@ const basicShapesTests = [
   { start: "ellipse(500px 500px)", end: "ellipse(farthest-side farthest-side)",
     expected: ["ellipse", ["farthest-side farthest-side at 50% 50%"]] },
   { start: "ellipse(500px 500px)", end: "ellipse(closest-side closest-side)",
-    expected: ["ellipse", ["closest-side closest-side at 50% 50%"]] },
+    expected: ["ellipse", ["at 50% 50%"]] },
   // mismatching boxes
   { start: "circle(100px at 100px 100px) border-box",
     end: "circle(500px at 500px 500px) content-box",

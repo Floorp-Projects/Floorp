@@ -12,6 +12,8 @@ var _selectors = require("../selectors/index");
 
 var _pause = require("./pause/index");
 
+var _tabs = require("./tabs");
+
 var _setInScopeLines = require("./ast/setInScopeLines");
 
 var _parser = require("../workers/parser/index");
@@ -39,6 +41,7 @@ function setSourceMetaData(sourceId) {
     }
 
     const framework = await (0, _parser.getFramework)(source.id);
+    dispatch((0, _tabs.updateTab)(source.url, framework));
     dispatch({
       type: "SET_SOURCE_METADATA",
       sourceId: source.id,

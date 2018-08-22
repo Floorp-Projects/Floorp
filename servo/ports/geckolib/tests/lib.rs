@@ -17,6 +17,7 @@ extern crate cssparser;
 extern crate geckoservo;
 #[macro_use] extern crate log;
 extern crate malloc_size_of;
+extern crate num_traits;
 extern crate selectors;
 extern crate smallvec;
 #[macro_use] extern crate size_of_test;
