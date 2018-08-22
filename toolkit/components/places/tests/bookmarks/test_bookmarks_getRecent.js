@@ -37,7 +37,7 @@ add_task(async function getRecent_returns_recent_bookmarks() {
   // Add a separator.
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
   });
 
   // Add a query bookmark.

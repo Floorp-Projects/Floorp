@@ -20,7 +20,7 @@ function insertChildren(folder, items) {
     if (items[i].type === TYPE_BOOKMARK) {
       children.push({
         title: `${i}`,
-        url: "http://example.com"
+        url: "http://example.com",
       });
     } else {
       throw new Error(`Type ${items[i].type} is not supported.`);
@@ -28,7 +28,7 @@ function insertChildren(folder, items) {
   }
   return PlacesUtils.bookmarks.insertTree({
     guid: folder.guid,
-    children
+    children,
   });
 }
 
@@ -126,11 +126,11 @@ async function testMoveToFolder(details) {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       children: [{
         title: "a",
-        type: PlacesUtils.bookmarks.TYPE_FOLDER
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
       }, {
         title: "b",
-        type: PlacesUtils.bookmarks.TYPE_FOLDER
-      }]
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      }],
     });
 
   checkBookmarkObject(folderA);
@@ -248,18 +248,18 @@ add_task(async function invalid_input_throws() {
 
 add_task(async function test_move_nonexisting_bookmark_rejects() {
   await Assert.rejects(PlacesUtils.bookmarks.moveToFolder([
-    "123456789012"
+    "123456789012",
   ], "123456789012", -1), /No bookmarks found for the provided GUID/, "Should reject when moving a non-existing bookmark");
 });
 
 add_task(async function test_move_folder_into_descendant_rejects() {
   let parent = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
   let descendant = await PlacesUtils.bookmarks.insert({
     parentGuid: parent.guid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
 
   await Assert.rejects(PlacesUtils.bookmarks.moveToFolder([parent.guid], parent.guid, 0),
@@ -277,7 +277,7 @@ add_task(async function test_move_from_differnt_with_no_target_rejects() {
     type: PlacesUtils.bookmarks.TYPE_FOLDER });
   let bm2 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
 
   await Assert.rejects(PlacesUtils.bookmarks.moveToFolder([bm1.guid, bm2.guid], null, -1),
@@ -303,7 +303,7 @@ add_task(async function test_move_append_same_folder() {
         {folder: "a", originalIndex: 2},
         {folder: "a", originalIndex: 1},
       ],
-      folderB: []
+      folderB: [],
     },
     notifications: [{
       originalFolder: "folderA", originalIndex: 1,
@@ -332,7 +332,7 @@ add_task(async function test_move_append_multiple_same_folder() {
         {folder: "a", originalIndex: 1},
         {folder: "a", originalIndex: 2},
       ],
-      folderB: []
+      folderB: [],
     },
     // These are all inserted at position 3 as that's what the views require
     // to be notified, to ensure the new items are displayed in their correct
@@ -369,7 +369,7 @@ add_task(async function test_move_append_multiple_new_folder() {
         {folder: "a", originalIndex: 0},
         {folder: "a", originalIndex: 1},
         {folder: "a", originalIndex: 2},
-      ]
+      ],
     },
     notifications: [{
       originalFolder: "folderA", originalIndex: 0,
@@ -407,7 +407,7 @@ add_task(async function test_move_append_multiple_new_folder_with_existing() {
         {folder: "a", originalIndex: 0},
         {folder: "a", originalIndex: 1},
         {folder: "a", originalIndex: 2},
-      ]
+      ],
     },
     notifications: [{
       originalFolder: "folderA", originalIndex: 0,
@@ -440,7 +440,7 @@ add_task(async function test_move_insert_same_folder_up() {
         {folder: "a", originalIndex: 0},
         {folder: "a", originalIndex: 1},
       ],
-      folderB: []
+      folderB: [],
     },
     notifications: [{
       originalFolder: "folderA", originalIndex: 2,
@@ -467,7 +467,7 @@ add_task(async function test_move_insert_same_folder_down() {
         {folder: "a", originalIndex: 0},
         {folder: "a", originalIndex: 2},
       ],
-      folderB: []
+      folderB: [],
     },
     notifications: [{
       originalFolder: "folderA", originalIndex: 0,
@@ -508,7 +508,7 @@ add_task(async function test_move_insert_multiple_same_folder_split_locations() 
         {folder: "a", originalIndex: 7},
         {folder: "a", originalIndex: 8},
       ],
-      folderB: []
+      folderB: [],
     },
     notifications: [{
       originalFolder: "folderA", originalIndex: 0,

@@ -22,7 +22,7 @@ add_task(async function test_bookmarkLastModified() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: "http://www.mozilla.org/",
-    title: "itemTitle"
+    title: "itemTitle",
   });
 
   let guid = bookmark.guid;
@@ -39,7 +39,7 @@ add_task(async function test_bookmarkLastModified() {
   // we manually increase the time value.  See bug 500640 for details.
   await PlacesUtils.bookmarks.update({
     guid,
-    lastModified: PlacesUtils.toDate(dateAdded + 1000)
+    lastModified: PlacesUtils.toDate(dateAdded + 1000),
   });
 
   bookmark = await PlacesUtils.bookmarks.fetch(guid);
@@ -50,7 +50,7 @@ add_task(async function test_bookmarkLastModified() {
 
   await PlacesUtils.bookmarks.update({
     guid,
-    dateAdded: PlacesUtils.toDate(dateAdded + 2000)
+    dateAdded: PlacesUtils.toDate(dateAdded + 2000),
   });
 
   bookmark = await PlacesUtils.bookmarks.fetch(guid);
@@ -64,7 +64,7 @@ add_task(async function test_bookmarkLastModified() {
 
   await PlacesUtils.bookmarks.update({
     guid,
-    dateAdded: PlacesUtils.toDate(dateAdded - 10000)
+    dateAdded: PlacesUtils.toDate(dateAdded - 10000),
   });
 
   bookmark = await PlacesUtils.bookmarks.fetch(guid);

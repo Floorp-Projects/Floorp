@@ -14,16 +14,16 @@ add_task(async function test() {
   // Add visits.
   await PlacesTestUtils.addVisits([{
     uri: "http://mozilla.org",
-    transition: PlacesUtils.history.TRANSITION_TYPED
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   }, {
     uri: "http://google.com",
-    transition: PlacesUtils.history.TRANSITION_DOWNLOAD
+    transition: PlacesUtils.history.TRANSITION_DOWNLOAD,
   }, {
     uri: "http://en.wikipedia.org",
-    transition: PlacesUtils.history.TRANSITION_TYPED
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   }, {
     uri: "http://ubuntu.org",
-    transition: PlacesUtils.history.TRANSITION_DOWNLOAD
+    transition: PlacesUtils.history.TRANSITION_DOWNLOAD,
   }]);
 
   let library = await promiseLibrary("Downloads");

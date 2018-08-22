@@ -34,7 +34,7 @@ add_task(async function test_remove_bookmark_from_toolbar() {
   let toolbarBookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "Bookmark Title",
-    url: TEST_URL
+    url: TEST_URL,
   });
 
   let toolbarNode = getToolbarNodeForItemGuid(toolbarBookmark.guid);
@@ -44,7 +44,7 @@ add_task(async function test_remove_bookmark_from_toolbar() {
 
   EventUtils.synthesizeMouseAtCenter(toolbarNode, {
     button: 2,
-    type: "contextmenu"
+    type: "contextmenu",
   });
   await popupShownPromise;
 
@@ -76,7 +76,7 @@ add_task(async function test_remove_bookmark_from_library() {
   // Insert bookmarks.
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children
+    children,
   });
 
   // Open the Library and select the "UnfiledBookmarks".

@@ -74,7 +74,7 @@ add_task(async function test_execute() {
       children: [{
         title: "moz test",
         url: uri,
-      }]
+      }],
     }],
   });
 
@@ -114,7 +114,7 @@ add_task(async function test_execute() {
   for (let i = 0; i < 3; i++) {
     await PlacesTestUtils.addVisits({
       uri: NetUtil.newURI("http://" + i + ".moz.org/"),
-      visitDate: newTimeInMicroseconds()
+      visitDate: newTimeInMicroseconds(),
     });
   }
   Services.prefs.setIntPref("places.history.expiration.max_pages", 0);

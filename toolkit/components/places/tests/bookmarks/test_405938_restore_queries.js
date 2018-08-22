@@ -65,7 +65,7 @@ var test = {
           dateAdded,
           url: `http://${i}`,
           title: `bookmark${i}`,
-        }]
+        }],
       });
     }
 
@@ -75,8 +75,8 @@ var test = {
         dateAdded,
         title: this._testRootTitle,
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
-        children: testFolderItems
-      }]
+        children: testFolderItems,
+      }],
     };
 
     let insertedBookmarks = await PlacesUtils.bookmarks.insertTree(bookmarksTree);
@@ -88,7 +88,7 @@ var test = {
       parentGuid: insertedBookmarks[0].guid,
       dateAdded,
       url: this._queryURI1,
-      title: this._queryTitle1
+      title: this._queryTitle1,
     });
 
     // create a query URI with _count folders
@@ -98,7 +98,7 @@ var test = {
       parentGuid: insertedBookmarks[0].guid,
       dateAdded,
       url: this._queryURI2,
-      title: this._queryTitle2
+      title: this._queryTitle2,
     });
 
     // Create a query URI for most recent bookmarks with NO folders specified.
@@ -108,7 +108,7 @@ var test = {
       parentGuid: insertedBookmarks[0].guid,
       dateAdded,
       url: this._queryURI3,
-      title: this._queryTitle3
+      title: this._queryTitle3,
     });
   },
 

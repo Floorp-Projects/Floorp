@@ -42,7 +42,7 @@ add_task(async function test_removePages() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: pages[BOOKMARK_INDEX],
-    title: "test bookmark"
+    title: "test bookmark",
   });
   await PlacesUtils.history.update({
     url: pages[BOOKMARK_INDEX],
@@ -75,7 +75,7 @@ add_task(async function test_removePagesByTimeframe() {
   for (let i = 0; i < 10; i++) {
     visits.push({
       uri: NetUtil.newURI(TEST_URI.spec + i),
-      visitDate: startDate + i * 1000
+      visitDate: startDate + i * 1000,
     });
   }
 
@@ -84,7 +84,7 @@ add_task(async function test_removePagesByTimeframe() {
   // Delete all pages except the first and the last.
   await PlacesUtils.history.removeByFilter({
     beginDate: PlacesUtils.toDate(startDate + 1000),
-    endDate: PlacesUtils.toDate(startDate + 8000)
+    endDate: PlacesUtils.toDate(startDate + 8000),
   });
 
   // Check that we have removed the correct pages.
@@ -96,7 +96,7 @@ add_task(async function test_removePagesByTimeframe() {
   // Clear remaining items and check that all pages have been removed.
   await PlacesUtils.history.removeByFilter({
     beginDate: PlacesUtils.toDate(startDate),
-    endDate: PlacesUtils.toDate(startDate + 9000)
+    endDate: PlacesUtils.toDate(startDate + 9000),
   });
   Assert.ok(await checkEmptyHistory(), "History is empty");
 });

@@ -158,7 +158,7 @@ async function updateAndCheckItem(newItemData, expectedIndex) {
 
 async function removeAndCheckItem(itemData) {
   await PlacesUtils.bookmarks.remove(itemData);
-  let [node, ] = getNodeForTreeItem(itemData.guid, gLibrary.PlacesOrganizer._places);
+  let [node ] = getNodeForTreeItem(itemData.guid, gLibrary.PlacesOrganizer._places);
   Assert.ok(!node, "Should not be able to find the removed node");
 }
 

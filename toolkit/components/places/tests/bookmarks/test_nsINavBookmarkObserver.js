@@ -106,7 +106,7 @@ add_task(async function onItemAdded_bookmark() {
   let uri = Services.io.newURI("http://1.mozilla.org/");
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemAdded"
+      "onItemAdded",
     ]),
     gBookmarksObserver.setup([
       { name: "onItemAdded",
@@ -126,7 +126,7 @@ add_task(async function onItemAdded_bookmark() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: uri,
-    title
+    title,
   });
   await promise;
 });
@@ -134,7 +134,7 @@ add_task(async function onItemAdded_bookmark() {
 add_task(async function onItemAdded_separator() {
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemAdded"
+      "onItemAdded",
     ]),
     gBookmarksObserver.setup([
       { name: "onItemAdded",
@@ -153,7 +153,7 @@ add_task(async function onItemAdded_separator() {
   ])]);
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
   });
   await promise;
 });
@@ -162,7 +162,7 @@ add_task(async function onItemAdded_folder() {
   const title = "Folder 1";
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemAdded"
+      "onItemAdded",
     ]),
     gBookmarksObserver.setup([
       { name: "onItemAdded",
@@ -182,7 +182,7 @@ add_task(async function onItemAdded_folder() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
   await promise;
 });
@@ -190,12 +190,12 @@ add_task(async function onItemAdded_folder() {
 add_task(async function onItemChanged_title_bookmark() {
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    index: 0
+    index: 0,
   });
   const title = "New title";
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemChanged"
+      "onItemChanged",
     ]),
     gBookmarksObserver.setup([
       { name: "onItemChanged",
@@ -220,13 +220,13 @@ add_task(async function onItemChanged_title_bookmark() {
 add_task(async function onItemChanged_tags_bookmark() {
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    index: 0
+    index: 0,
   });
   let uri = Services.io.newURI(bm.url.href);
   const TAG = "tag";
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemChanged", "onItemChanged"
+      "onItemChanged", "onItemChanged",
     ]),
     gBookmarksObserver.setup([
       { name: "onItemAdded", // This is the tag folder.
@@ -314,11 +314,11 @@ add_task(async function onItemChanged_tags_bookmark() {
 add_task(async function onItemMoved_bookmark() {
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    index: 0
+    index: 0,
   });
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemMoved", "onItemMoved"
+      "onItemMoved", "onItemMoved",
     ]),
     gBookmarksObserver.setup([
       { name: "onItemMoved",
@@ -353,12 +353,12 @@ add_task(async function onItemMoved_bookmark() {
   await PlacesUtils.bookmarks.update({
     guid: bm.guid,
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   });
   await PlacesUtils.bookmarks.update({
     guid: bm.guid,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    index: 0
+    index: 0,
   });
   await promise;
 });
@@ -366,12 +366,12 @@ add_task(async function onItemMoved_bookmark() {
 add_task(async function onItemMoved_bookmark() {
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    index: 0
+    index: 0,
   });
   let uri = Services.io.newURI(bm.url.href);
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemVisited"
+      "onItemVisited",
     ]),
     gBookmarksObserver.setup([
       { name: "onItemVisited",
@@ -393,12 +393,12 @@ add_task(async function onItemMoved_bookmark() {
 add_task(async function onItemRemoved_bookmark() {
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    index: 0
+    index: 0,
   });
   let uri = Services.io.newURI(bm.url.href);
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemRemoved"
+      "onItemRemoved",
     ]),
     gBookmarksObserver.setup([
       { name: "onItemRemoved",
@@ -420,11 +420,11 @@ add_task(async function onItemRemoved_bookmark() {
 add_task(async function onItemRemoved_separator() {
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    index: 0
+    index: 0,
   });
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemRemoved"
+      "onItemRemoved",
     ]),
     gBookmarksObserver.setup([
       { name: "onItemRemoved",
@@ -446,11 +446,11 @@ add_task(async function onItemRemoved_separator() {
 add_task(async function onItemRemoved_folder() {
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    index: 0
+    index: 0,
   });
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemRemoved"
+      "onItemRemoved",
     ]),
     gBookmarksObserver.setup([
       { name: "onItemRemoved",
@@ -476,7 +476,7 @@ add_task(async function onItemRemoved_folder_recursive() {
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemAdded", "onItemAdded", "onItemAdded", "onItemAdded",
-      "onItemRemoved"
+      "onItemRemoved",
     ]),
     gBookmarksObserver.setup([
       { name: "onItemAdded",
@@ -579,22 +579,22 @@ add_task(async function onItemRemoved_folder_recursive() {
   let folder = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
   await PlacesUtils.bookmarks.insert({
     parentGuid: folder.guid,
     url: uri,
-    title: BMTITLE
+    title: BMTITLE,
   });
   let folder2 = await PlacesUtils.bookmarks.insert({
     parentGuid: folder.guid,
     title,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
   await PlacesUtils.bookmarks.insert({
     parentGuid: folder2.guid,
     url: uri,
-    title: BMTITLE
+    title: BMTITLE,
   });
 
   await PlacesUtils.bookmarks.remove(folder);

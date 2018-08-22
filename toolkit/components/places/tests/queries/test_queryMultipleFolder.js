@@ -13,7 +13,7 @@ add_task(async function setup() {
     let folder = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      title: `Folder${i}`
+      title: `Folder${i}`,
     });
     folderGuids.push(folder.guid);
 
@@ -21,7 +21,7 @@ add_task(async function setup() {
       let bm = await PlacesUtils.bookmarks.insert({
         parentGuid: folderGuids[i],
         url: `http://Bookmark${i}_${j}.com`,
-        title: ""
+        title: "",
       });
       bookmarkGuids.push(bm.guid);
     }

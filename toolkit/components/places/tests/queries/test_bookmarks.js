@@ -14,9 +14,9 @@ add_task(async function test_eraseEverything() {
           { title: "sub-folder",
             type: PlacesUtils.bookmarks.TYPE_FOLDER },
           { type: PlacesUtils.bookmarks.TYPE_SEPARATOR },
-        ]
-      }
-    ]
+        ],
+      },
+    ],
   });
 
   let unfiled = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid).root;

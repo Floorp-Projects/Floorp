@@ -5,7 +5,7 @@ var gAccumulator = {
   get callback() {
     this.results = [];
     return result => this.results.push(result);
-  }
+  },
 };
 
 add_task(async function invalid_input_throws() {

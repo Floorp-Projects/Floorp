@@ -26,7 +26,7 @@ add_task(async function test_error_cases() {
   Assert.throws(
     () => PlacesUtils.history.update({
       url: "http://valid.uri.com",
-      description: 123
+      description: 123,
     }),
     /TypeError: description property of/,
     "passing a non-string description in pageInfo should throw a TypeError"
@@ -35,7 +35,7 @@ add_task(async function test_error_cases() {
     () => PlacesUtils.history.update({
       url: "http://valid.uri.com",
       guid: "invalid guid",
-      description: "Test description"
+      description: "Test description",
     }),
     /TypeError: guid property of/,
     "passing a invalid guid in pageInfo should throw a TypeError"
@@ -43,7 +43,7 @@ add_task(async function test_error_cases() {
   Assert.throws(
     () => PlacesUtils.history.update({
       url: "http://valid.uri.com",
-      previewImageURL: "not a valid url string"
+      previewImageURL: "not a valid url string",
     }),
     /TypeError: not a valid url string is/,
     "passing an invlid preview image url in pageInfo should throw a TypeError"
@@ -54,7 +54,7 @@ add_task(async function test_error_cases() {
       let previewImageURL = `http://valid.uri.com/${imageName}.png`;
       PlacesUtils.history.update({
         url: "http://valid.uri.com",
-        previewImageURL
+        previewImageURL,
       });
     },
     /TypeError: previewImageURL property of/,

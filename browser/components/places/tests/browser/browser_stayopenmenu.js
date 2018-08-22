@@ -58,18 +58,18 @@ add_task(async function test_setup() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: "http://example.com/",
-    title: "Test1"
+    title: "Test1",
   });
   let folder =  await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     title: "TEST_TITLE",
-    index: 0
+    index: 0,
   });
   await PlacesUtils.bookmarks.insert({
     parentGuid: folder.guid,
     url: "http://example.com/",
-    title: "Test1"
+    title: "Test1",
   });
 
   registerCleanupFunction(async function() {

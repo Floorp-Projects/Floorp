@@ -93,8 +93,8 @@ const querySwitches = [
       function(aQuery, aQueryOptions) {
         aQuery.beginTime = Date.now() * 1000;
         aQuery.beginTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_TODAY;
-      }
-    ]
+      },
+    ],
   },
   // hasEndTime
   {
@@ -110,8 +110,8 @@ const querySwitches = [
       function(aQuery, aQueryOptions) {
         aQuery.endTime = Date.now() * 1000;
         aQuery.endTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_TODAY;
-      }
-    ]
+      },
+    ],
   },
   // hasSearchTerms
   {
@@ -125,8 +125,8 @@ const querySwitches = [
       },
       function(aQuery, aQueryOptions) {
         aQuery.searchTerms = "";
-      }
-    ]
+      },
+    ],
   },
   // hasDomain
   {
@@ -145,8 +145,8 @@ const querySwitches = [
       },
       function(aQuery, aQueryOptions) {
         aQuery.domain = "";
-      }
-    ]
+      },
+    ],
   },
   // hasUri
   {
@@ -158,7 +158,7 @@ const querySwitches = [
       function(aQuery, aQueryOptions) {
         aQuery.uri = uri("http://mozilla.com");
       },
-    ]
+    ],
   },
   // hasAnnotation
   {
@@ -174,8 +174,8 @@ const querySwitches = [
       function(aQuery, aQueryOptions) {
         aQuery.annotation = "bookmarks/toolbarFolder";
         aQuery.annotationIsNot = true;
-      }
-    ]
+      },
+    ],
   },
   // minVisits
   {
@@ -186,8 +186,8 @@ const querySwitches = [
     runs:     [
       function(aQuery, aQueryOptions) {
         aQuery.minVisits = 0x7fffffff; // 2^31 - 1
-      }
-    ]
+      },
+    ],
   },
   // maxVisits
   {
@@ -197,8 +197,8 @@ const querySwitches = [
     runs:     [
       function(aQuery, aQueryOptions) {
         aQuery.maxVisits = 0x7fffffff; // 2^31 - 1
-      }
-    ]
+      },
+    ],
   },
   // onlyBookmarked
   {
@@ -208,8 +208,8 @@ const querySwitches = [
     runs:     [
       function(aQuery, aQueryOptions) {
         aQuery.onlyBookmarked = true;
-      }
-    ]
+      },
+    ],
   },
   // getFolders
   {
@@ -239,8 +239,8 @@ const querySwitches = [
       function(aQuery, aQueryOptions) {
         aQuery.setParents([PlacesUtils.bookmarks.rootGuid,
                            PlacesUtils.bookmarks.tagsGuid], 2);
-      }
-    ]
+      },
+    ],
   },
   // tags
   {
@@ -295,8 +295,8 @@ const querySwitches = [
           "あいうえお",
         ];
         aQuery.tagsAreNot =  true;
-      }
-    ]
+      },
+    ],
   },
   // transitions
   {
@@ -327,8 +327,8 @@ const querySwitches = [
       function(aQuery, aQueryOptions) {
         aQuery.setTransitions([Ci.nsINavHistoryService.TRANSITION_TYPED,
                                Ci.nsINavHistoryService.TRANSITION_BOOKMARK], 2);
-      }
-    ]
+      },
+    ],
   },
 ];
 
@@ -347,7 +347,7 @@ const queryOptionSwitches = [
       function(aQuery, aQueryOptions) {
         aQueryOptions.sortingMode = aQueryOptions.SORT_BY_DATE_ASCENDING;
       },
-    ]
+    ],
   },
   // resultType
   {
@@ -359,7 +359,7 @@ const queryOptionSwitches = [
       function(aQuery, aQueryOptions) {
         aQueryOptions.resultType = aQueryOptions.RESULTS_AS_URI;
       },
-    ]
+    ],
   },
   // excludeItems
   {
@@ -369,8 +369,8 @@ const queryOptionSwitches = [
     runs:     [
       function(aQuery, aQueryOptions) {
         aQueryOptions.excludeItems = true;
-      }
-    ]
+      },
+    ],
   },
   // excludeQueries
   {
@@ -380,8 +380,8 @@ const queryOptionSwitches = [
     runs:     [
       function(aQuery, aQueryOptions) {
         aQueryOptions.excludeQueries = true;
-      }
-    ]
+      },
+    ],
   },
   // expandQueries
   {
@@ -391,8 +391,8 @@ const queryOptionSwitches = [
     runs:     [
       function(aQuery, aQueryOptions) {
         aQueryOptions.expandQueries = true;
-      }
-    ]
+      },
+    ],
   },
   // includeHidden
   {
@@ -402,8 +402,8 @@ const queryOptionSwitches = [
     runs:     [
       function(aQuery, aQueryOptions) {
         aQueryOptions.includeHidden = true;
-      }
-    ]
+      },
+    ],
   },
   // maxResults
   {
@@ -413,8 +413,8 @@ const queryOptionSwitches = [
     runs:     [
       function(aQuery, aQueryOptions) {
         aQueryOptions.maxResults = 0xffffffff; // 2^32 - 1
-      }
-    ]
+      },
+    ],
   },
   // queryType
   {
@@ -427,8 +427,8 @@ const queryOptionSwitches = [
       },
       function(aQuery, aQueryOptions) {
         aQueryOptions.queryType = aQueryOptions.QUERY_TYPE_UNIFIED;
-      }
-    ]
+      },
+    ],
   },
 ];
 

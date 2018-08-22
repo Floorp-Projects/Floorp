@@ -9,73 +9,73 @@ var testData = [
     isVisit: true,
     title: "page 0",
     uri: "http://mozilla.com/",
-    transType: Ci.nsINavHistoryService.TRANSITION_TYPED
+    transType: Ci.nsINavHistoryService.TRANSITION_TYPED,
   },
   {
     isVisit: true,
     title: "page 1",
     uri: "http://google.com/",
-    transType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD
+    transType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
   },
   {
     isVisit: true,
     title: "page 2",
     uri: "http://microsoft.com/",
-    transType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD
+    transType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
   },
   {
     isVisit: true,
     title: "page 3",
     uri: "http://en.wikipedia.org/",
-    transType: Ci.nsINavHistoryService.TRANSITION_BOOKMARK
+    transType: Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
   },
   {
     isVisit: true,
     title: "page 4",
     uri: "http://fr.wikipedia.org/",
-    transType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD
+    transType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
   },
   {
     isVisit: true,
     title: "page 5",
     uri: "http://apple.com/",
-    transType: Ci.nsINavHistoryService.TRANSITION_TYPED
+    transType: Ci.nsINavHistoryService.TRANSITION_TYPED,
   },
   {
     isVisit: true,
     title: "page 6",
     uri: "http://campus-bike-store.com/",
-    transType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD
+    transType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
   },
   {
     isVisit: true,
     title: "page 7",
     uri: "http://uwaterloo.ca/",
-    transType: Ci.nsINavHistoryService.TRANSITION_TYPED
+    transType: Ci.nsINavHistoryService.TRANSITION_TYPED,
   },
   {
     isVisit: true,
     title: "page 8",
     uri: "http://pugcleaner.com/",
-    transType: Ci.nsINavHistoryService.TRANSITION_BOOKMARK
+    transType: Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
   },
   {
     isVisit: true,
     title: "page 9",
     uri: "http://de.wikipedia.org/",
-    transType: Ci.nsINavHistoryService.TRANSITION_TYPED
+    transType: Ci.nsINavHistoryService.TRANSITION_TYPED,
   },
   {
     isVisit: true,
     title: "arewefastyet",
     uri: "http://arewefastyet.com/",
-    transType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD
+    transType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
   },
   {
     isVisit: true,
     title: "arewefastyet",
     uri: "http://arewefastyet.com/",
-    transType: Ci.nsINavHistoryService.TRANSITION_BOOKMARK
+    transType: Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
   }];
 // sets of indices of testData array by transition type
 var testDataTyped = [0, 5, 7, 9];
@@ -89,7 +89,7 @@ add_task(async function test_transitions() {
       uri: uri(item.uri),
       transition: item.transType,
       visitDate: timeNow++ * 1000,
-      title: item.title
+      title: item.title,
     });
   }
 
@@ -138,7 +138,7 @@ add_task(async function test_transitions() {
   Assert.equal(testDataDownload.length, root.childCount);
   await PlacesTestUtils.addVisits({
     uri: uri("http://getfirefox.com"),
-    transition: TRANSITION_DOWNLOAD
+    transition: TRANSITION_DOWNLOAD,
   });
   Assert.equal(testDataDownload.length + 1, root.childCount);
   root.containerOpen = false;

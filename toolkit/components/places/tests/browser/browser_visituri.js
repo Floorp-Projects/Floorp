@@ -43,7 +43,7 @@ add_task(async function() {
     "http://example.com/tests/toolkit/components/places/tests/browser/begin.html",
     "http://example.com/tests/toolkit/components/places/tests/browser/redirect_twice.sjs",
     "http://example.com/tests/toolkit/components/places/tests/browser/redirect_once.sjs",
-    "http://example.com/tests/toolkit/components/places/tests/browser/final.html"
+    "http://example.com/tests/toolkit/components/places/tests/browser/final.html",
   ];
   var currentIndex = 0;
 

@@ -49,8 +49,8 @@ add_task(async function test_insert_error_cases() {
       visits: [
         {
           transition: TRANSITION_LINK,
-          date: "a"
-        }
+          date: "a",
+        },
       ]}),
     /TypeError: Expected a Date, got a/,
     "passing a visit object with an invalid date to History.insert should throw a TypeError"
@@ -60,12 +60,12 @@ add_task(async function test_insert_error_cases() {
       url: TEST_URL,
       visits: [
         {
-          transition: TRANSITION_LINK
+          transition: TRANSITION_LINK,
         },
         {
           transition: TRANSITION_LINK,
-          date: "a"
-        }
+          date: "a",
+        },
       ]}),
     /TypeError: Expected a Date, got a/,
     "passing a second visit object with an invalid date to History.insert should throw a TypeError"
@@ -79,7 +79,7 @@ add_task(async function test_insert_error_cases() {
         {
           transition: TRANSITION_LINK,
           date: futureDate,
-        }
+        },
       ]}),
     /cannot be a future date/,
     "passing a visit object with a future date to History.insert should throw a TypeError"
@@ -88,7 +88,7 @@ add_task(async function test_insert_error_cases() {
     () => PlacesUtils.history.insert({
       url: TEST_URL,
       visits: [
-        {transition: "a"}
+        {transition: "a"},
       ]}),
     /TypeError: transition: a is not a valid transition type/,
     "passing a visit object with an invalid transition to History.insert should throw a TypeError"
@@ -108,8 +108,8 @@ add_task(async function test_history_insert() {
     let pageInfo = {
       title,
       visits: [
-        {transition, referrer, date, }
-      ]
+        {transition, referrer, date },
+      ],
     };
 
     pageInfo.url = await filter(uri);

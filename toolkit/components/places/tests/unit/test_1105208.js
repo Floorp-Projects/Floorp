@@ -4,13 +4,13 @@ add_task(async function() {
   let folder = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    title: "fake"
+    title: "fake",
   });
 
   let shortcutInfo = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: `place:parent=${folder.guid}`
+    url: `place:parent=${folder.guid}`,
   });
 
   let unfiledRoot =

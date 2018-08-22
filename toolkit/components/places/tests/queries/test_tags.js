@@ -207,7 +207,7 @@ add_task(async function tagsAreNot() {
   var urisAndTags = {
     "http://example.com/1": ["foo", "bar"],
     "http://example.com/2": ["baz", "qux"],
-    "http://example.com/3": null
+    "http://example.com/3": null,
   };
 
   info("Add bookmarks and tag the URIs");
@@ -268,13 +268,13 @@ add_task(async function duplicate_tags() {
   let dupTag = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.tagsGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    title: tagName
+    title: tagName,
   });
 
   await PlacesUtils.bookmarks.insert({
     parentGuid: dupTag.guid,
     title: "title",
-    url: TEST_URI
+    url: TEST_URI,
   });
 
   info("Querying for tag should match URI");
@@ -298,7 +298,7 @@ add_task(async function folder_named_as_tag() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    title: tagName
+    title: tagName,
   });
 
   info("Querying for tag should match URI");
@@ -313,7 +313,7 @@ add_task(async function ORed_queries() {
   info("Multiple queries ORed together should work");
   var urisAndTags = {
     "http://example.com/1": [],
-    "http://example.com/2": []
+    "http://example.com/2": [],
   };
 
   // Search with lots of tags to make sure tag parameter substitution in SQL
@@ -385,7 +385,7 @@ function addBookmark(aURI) {
   return PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: aURI.spec,
-    url: aURI
+    url: aURI,
   });
 }
 

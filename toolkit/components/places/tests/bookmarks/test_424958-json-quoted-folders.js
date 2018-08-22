@@ -26,7 +26,7 @@ add_task(async function() {
   let folder = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: FOLDER_TITLE,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
 
   checkQuotedFolder();

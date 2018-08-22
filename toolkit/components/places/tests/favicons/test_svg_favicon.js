@@ -5,7 +5,7 @@ add_task(async function() {
   await PlacesTestUtils.addVisits({
     uri: PAGEURI,
     transition: TRANSITION_LINK,
-    visitDate: Date.now() * 1000
+    visitDate: Date.now() * 1000,
   });
 
   await new Promise(resolve => {

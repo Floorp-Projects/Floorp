@@ -163,7 +163,7 @@ var BookmarkJSONUtils = Object.freeze({
 
     await OS.File.writeAtomic(aFilePath, jsonString, writeOptions);
     return { count, hash };
-  }
+  },
 });
 
 function BookmarkImporter(aReplace, aSource) {
@@ -350,7 +350,7 @@ const rootToFolderGuidMap = {
   "bookmarksMenuFolder": PlacesUtils.bookmarks.menuGuid,
   "unfiledBookmarksFolder": PlacesUtils.bookmarks.unfiledGuid,
   "toolbarFolder": PlacesUtils.bookmarks.toolbarGuid,
-  "mobileFolder": PlacesUtils.bookmarks.mobileGuid
+  "mobileFolder": PlacesUtils.bookmarks.mobileGuid,
 };
 
 /**

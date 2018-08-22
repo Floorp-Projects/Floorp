@@ -9,7 +9,7 @@ add_task(async function() {
   const TEST_PAGES = [
     BASE_URL + "bookmark_dummy_1.html",
     BASE_URL + "bookmark_dummy_2.html",
-    BASE_URL + "bookmark_dummy_1.html"
+    BASE_URL + "bookmark_dummy_1.html",
   ];
 
   function promiseAddTab(url) {
@@ -24,11 +24,11 @@ add_task(async function() {
   Assert.deepEqual(URIs.map(URI => URI.uri.spec), [
     "about:blank",
     BASE_URL + "bookmark_dummy_1.html",
-    BASE_URL + "bookmark_dummy_2.html"
+    BASE_URL + "bookmark_dummy_2.html",
   ], "Correct URIs are returned");
 
   Assert.deepEqual(URIs.map(URI => URI.title), [
-    "New Tab", "Bookmark Dummy 1", "Bookmark Dummy 2"
+    "New Tab", "Bookmark Dummy 1", "Bookmark Dummy 2",
   ], "Correct titles are returned");
 
   registerCleanupFunction(async function() {

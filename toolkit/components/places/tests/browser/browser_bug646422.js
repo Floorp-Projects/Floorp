@@ -27,7 +27,7 @@ add_task(async function() {
       onClearHistory() { },
       onPageChanged() { },
       onDeleteVisits() { },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
     };
 
     PlacesUtils.history.addObserver(observer);

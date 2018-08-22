@@ -27,7 +27,7 @@ var bucketPrefs = [
   [ "secondBucketCutoff", "secondBucketWeight"],
   [ "thirdBucketCutoff", "thirdBucketWeight"],
   [ "fourthBucketCutoff", "fourthBucketWeight"],
-  [ null, "defaultBucketWeight"]
+  [ null, "defaultBucketWeight"],
 ];
 
 var bonusPrefs = {
@@ -78,7 +78,7 @@ async function task_initializeBucket(bucket) {
           await PlacesUtils.bookmarks.insert({
             parentGuid: PlacesUtils.bookmarks.unfiledGuid,
             url: calculatedURI,
-            title: matchTitle
+            title: matchTitle,
           });
         } else {
           matchTitle = searchTerm + "UnvisitedTyped";
@@ -86,7 +86,7 @@ async function task_initializeBucket(bucket) {
             uri: calculatedURI,
             title: matchTitle,
             transition: visitType,
-            visitDate: now
+            visitDate: now,
           });
           histsvc.markPageAsTyped(calculatedURI);
         }
@@ -117,14 +117,14 @@ async function task_initializeBucket(bucket) {
         await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           url: calculatedURI,
-          title: matchTitle
+          title: matchTitle,
         });
       } else
         matchTitle = calculatedURI.spec.substr(calculatedURI.spec.lastIndexOf("/") + 1);
       await PlacesTestUtils.addVisits({
         uri: calculatedURI,
         transition: visitType,
-        visitDate: dateInPeriod
+        visitDate: dateInPeriod,
       });
     }
 
@@ -134,7 +134,7 @@ async function task_initializeBucket(bucket) {
         uri: calculatedURI,
         title: matchTitle,
         transition: visitType,
-        visitDate: dateInPeriod
+        visitDate: dateInPeriod,
       });
     }
   }
@@ -173,11 +173,11 @@ AutoCompleteInput.prototype = {
     invalidate() {},
 
     // nsISupports implementation
-    QueryInterface: ChromeUtils.generateQI(["nsIAutoCompletePopup"])
+    QueryInterface: ChromeUtils.generateQI(["nsIAutoCompletePopup"]),
   },
 
   // nsISupports implementation
-  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteInput"])
+  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteInput"]),
 };
 
 add_task(async function test_frecency() {

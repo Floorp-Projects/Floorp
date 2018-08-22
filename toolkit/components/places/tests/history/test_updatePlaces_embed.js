@@ -15,7 +15,7 @@ add_task(async function test_embed_visit() {
     uri: NetUtil.newURI("http://places.test/"),
     visits: [
       { transitionType: PlacesUtils.history.TRANSITIONS.EMBED,
-        visitDate: PlacesUtils.toPRTime(new Date()) }
+        visitDate: PlacesUtils.toPRTime(new Date()) },
     ],
   };
   let errors = 0;
@@ -32,7 +32,7 @@ add_task(async function test_embed_visit() {
       },
       handleCompletion(resultCount) {
         resolve(resultCount);
-      }
+      },
     });
   });
   Assert.equal(errors, 0, "There should be no error callback");
@@ -47,7 +47,7 @@ add_task(async function test_misc_visits() {
       { transitionType: PlacesUtils.history.TRANSITIONS.EMBED,
         visitDate: PlacesUtils.toPRTime(new Date()) },
       { transitionType: PlacesUtils.history.TRANSITIONS.LINK,
-        visitDate: PlacesUtils.toPRTime(new Date()) }
+        visitDate: PlacesUtils.toPRTime(new Date()) },
     ],
   };
   let errors = 0;
@@ -64,7 +64,7 @@ add_task(async function test_misc_visits() {
       },
       handleCompletion(resultCount) {
         resolve(resultCount);
-      }
+      },
     });
   });
   Assert.equal(errors, 0, "There should be no error callback");

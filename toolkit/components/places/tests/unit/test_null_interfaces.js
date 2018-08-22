@@ -11,11 +11,11 @@
 var testServices = [
   ["browser/nav-history-service;1",
     ["nsINavHistoryService"],
-    ["queryStringToQuery", "removePagesByTimeframe", "removePagesFromHost", "getObservers"]
+    ["queryStringToQuery", "removePagesByTimeframe", "removePagesFromHost", "getObservers"],
   ],
   ["browser/nav-bookmarks-service;1",
     ["nsINavBookmarksService", "nsINavHistoryObserver"],
-    ["createFolder", "getObservers", "onFrecencyChanged", "onTitleChanged", "onDeleteURI"]
+    ["createFolder", "getObservers", "onFrecencyChanged", "onTitleChanged", "onDeleteURI"],
   ],
   ["browser/livemark-service;2", ["mozIAsyncLivemarks"], ["reloadLivemarks"]],
   ["browser/favicon-service;1", ["nsIFaviconService"], []],

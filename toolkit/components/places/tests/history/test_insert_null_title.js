@@ -26,8 +26,8 @@ add_task(async function() {
     url,
     title,
     visits: [
-      { transition: PlacesUtils.history.TRANSITIONS.LINK }
-    ]
+      { transition: PlacesUtils.history.TRANSITIONS.LINK },
+    ],
   });
   Assert.equal(title, result.title, "title should be stored");
   Assert.equal(title, await fetchTitle(url), "title should be stored");
@@ -42,8 +42,8 @@ add_task(async function() {
     url,
     title: null,
     visits: [
-      { transition: PlacesUtils.history.TRANSITIONS.LINK }
-    ]
+      { transition: PlacesUtils.history.TRANSITIONS.LINK },
+    ],
   });
   Assert.equal(title, result.title, "title should be unchanged");
   Assert.equal(title, await fetchTitle(url), "title should be unchanged");
@@ -55,8 +55,8 @@ add_task(async function() {
   result = await PlacesUtils.history.insert({
     url,
     visits: [
-      { transition: PlacesUtils.history.TRANSITIONS.LINK }
-    ]
+      { transition: PlacesUtils.history.TRANSITIONS.LINK },
+    ],
   });
   Assert.equal(title, result.title, "title should be unchanged");
   Assert.equal(title, await fetchTitle(url), "title should be unchanged");
@@ -68,8 +68,8 @@ add_task(async function() {
     url,
     title: "",
     visits: [
-      { transition: PlacesUtils.history.TRANSITIONS.LINK }
-    ]
+      { transition: PlacesUtils.history.TRANSITIONS.LINK },
+    ],
   });
   info("Waiting for the title change notification");
   await promiseTitleChange;

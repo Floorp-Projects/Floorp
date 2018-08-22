@@ -48,7 +48,7 @@ add_task(async function() {
           {
             url,
           },
-        ]
+        ],
       },
       {
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -56,7 +56,7 @@ add_task(async function() {
         children: [
           { // Should fix lastModified and dateAdded.
             url,
-            lastModified: null
+            lastModified: null,
           },
           { // Should be skipped, since the url is invalid.
             url: "fake_url",
@@ -64,7 +64,7 @@ add_task(async function() {
           },
           { // Should fix lastModified and dateAdded.
             url,
-            dateAdded: undefined
+            dateAdded: undefined,
           },
           { // Should be skipped since it's a separator with a url
             url,
@@ -73,11 +73,11 @@ add_task(async function() {
           { // Should fix lastModified and dateAdded.
             url,
             dateAdded: new Date(now - 86400000),
-            lastModified: new Date(now - 172800000) // less than dateAdded
+            lastModified: new Date(now - 172800000), // less than dateAdded
           },
-        ]
-      }
-    ]
+        ],
+      },
+    ],
   };
 
   let bms = await insertTree(tree);

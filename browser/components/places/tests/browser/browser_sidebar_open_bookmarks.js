@@ -12,11 +12,11 @@ add_task(async function setup() {
     guid: PlacesUtils.bookmarks.unfiledGuid,
     children: [{
       title: "bm1",
-      url: "about:buildconfig"
+      url: "about:buildconfig",
     }, {
       title: "bm2",
       url: "about:mozilla",
-    }]
+    }],
   });
 
   registerCleanupFunction(async () => {
@@ -69,7 +69,7 @@ add_task(async function test_open_bookmark_from_sidebar_keypress() {
 
 add_task(async function test_open_bookmark_in_tab_from_sidebar() {
   await SpecialPowers.pushPrefEnv({set: [
-    [PREF_LOAD_BOOKMARKS_IN_TABS, true]
+    [PREF_LOAD_BOOKMARKS_IN_TABS, true],
   ]});
 
   await BrowserTestUtils.withNewTab({gBrowser}, async (initialTab) => {

@@ -16,7 +16,7 @@ add_task(async function test_search_for_tagged_bookmarks() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: folder.guid,
     title: "1 title",
-    url: testURI
+    url: testURI,
   });
 
   // tag the bookmarked URI

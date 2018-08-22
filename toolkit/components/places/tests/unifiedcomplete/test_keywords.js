@@ -11,7 +11,7 @@ add_task(async function test_non_keyword() {
   await check_autocomplete({
     search: "moz",
     autofilled: "mozilla.org/",
-    completed: "http://mozilla.org/"
+    completed: "http://mozilla.org/",
   });
   await cleanup();
 });
@@ -39,7 +39,7 @@ add_task(async function test_more_than_keyword() {
   await check_autocomplete({
     search: "mozi",
     autofilled: "mozilla.org/",
-    completed: "http://mozilla.org/"
+    completed: "http://mozilla.org/",
   });
   await cleanup();
 });
@@ -67,7 +67,7 @@ add_task(async function test_keyword_casing() {
   await check_autocomplete({
     search: "MoZ",
     autofilled: "MoZ",
-    completed: "MoZ"
+    completed: "MoZ",
   });
   await cleanup();
 });
@@ -76,7 +76,7 @@ add_task(async function test_less_then_equal_than_keyword_bug_1124238() {
   info("Searching for less than keyworded entry should autoFill it");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
-    transition: TRANSITION_TYPED
+    transition: TRANSITION_TYPED,
   });
   await PlacesTestUtils.addVisits("http://mozilla.com/");
   addBookmark({ uri: Services.io.newURI("http://mozilla.com/"), keyword: "moz" });

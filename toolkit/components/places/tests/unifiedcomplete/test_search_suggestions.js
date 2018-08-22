@@ -333,7 +333,7 @@ add_task(async function restrictToken() {
         title: ENGINE_NAME,
         style: ["action", "searchengine", "suggestion"],
         icon: "",
-      }
+      },
     ],
   });
 
@@ -609,7 +609,7 @@ add_task(async function prohibit_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("localhost", "http://localhost/", { heuristic: true }),
-      makeSearchMatch("localhost", { engineName: ENGINE_NAME, heuristic: false })
+      makeSearchMatch("localhost", { engineName: ENGINE_NAME, heuristic: false }),
     ],
   });
 
@@ -657,7 +657,7 @@ add_task(async function prohibit_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("localhost", "http://localhost/", { heuristic: true }),
-      makeSearchMatch("localhost", { engineName: ENGINE_NAME, heuristic: false })
+      makeSearchMatch("localhost", { engineName: ENGINE_NAME, heuristic: false }),
     ],
   });
 
@@ -666,7 +666,7 @@ add_task(async function prohibit_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("somethingelse", "http://somethingelse/", { heuristic: true }),
-      makeSearchMatch("somethingelse", { engineName: ENGINE_NAME, heuristic: false })
+      makeSearchMatch("somethingelse", { engineName: ENGINE_NAME, heuristic: false }),
     ],
   });
 
@@ -1104,7 +1104,7 @@ function updateSearchHistory(op, value) {
                          },
                          handleCompletion(reason) {
                            reason ? reject(reason) : resolve();
-                         }
+                         },
                        });
   });
 }

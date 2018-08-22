@@ -57,7 +57,7 @@ AutoCompleteInput.prototype = {
   popup: {
     selectedIndex: -1,
     invalidate() {},
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup]),
   },
   popupOpen: false,
 
@@ -100,7 +100,7 @@ AutoCompleteInput.prototype = {
   onTextEntered: () => false,
   onTextReverted: () => false,
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput]),
 };
 
 /**
@@ -297,13 +297,13 @@ var addBookmark = async function(aBookmarkObj) {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: aBookmarkObj.title || "A bookmark",
-    url: aBookmarkObj.uri
+    url: aBookmarkObj.uri,
   });
 
   if (aBookmarkObj.keyword) {
     await PlacesUtils.keywords.insert({ keyword: aBookmarkObj.keyword,
                                         url: aBookmarkObj.uri.spec ? aBookmarkObj.uri.spec : aBookmarkObj.uri,
-                                        postData: aBookmarkObj.postData
+                                        postData: aBookmarkObj.postData,
                                       });
   }
 
@@ -512,7 +512,7 @@ function addAdaptiveFeedback(aUrl, aSearch) {
     popupOpen: true,
     selectedIndex: 0,
     getValueAt: () => aUrl,
-    searchString: aSearch
+    searchString: aSearch,
   };
   Services.obs.notifyObservers(thing, "autocomplete-will-enter-text");
   return promise;

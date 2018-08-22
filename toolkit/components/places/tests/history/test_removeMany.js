@@ -47,7 +47,7 @@ add_task(async function test_remove_many() {
       await PlacesUtils.bookmarks.insert({
         parentGuid: PlacesUtils.bookmarks.unfiledGuid,
         url: uri,
-        title: "test bookmark " + i
+        title: "test bookmark " + i,
       });
     }
     Assert.ok(page_in_database(uri), "Page added");
@@ -107,7 +107,7 @@ add_task(async function test_remove_many() {
       Assert.ok(origin);
       Assert.ok(!origin.onDeleteVisitsCalled, "Observing onDeleteVisits for the first time");
       origin.onDeleteVisitsCalled = true;
-    }
+    },
   };
   PlacesUtils.history.addObserver(observer);
 

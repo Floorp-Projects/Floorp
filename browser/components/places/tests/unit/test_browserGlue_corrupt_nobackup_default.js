@@ -39,7 +39,7 @@ add_task(async function() {
   // Check that default bookmarks have been restored.
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   });
 
   // Bug 1283076: Nightly bookmark points to Get Involved page, not Getting Started one

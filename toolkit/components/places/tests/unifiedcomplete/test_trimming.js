@@ -10,7 +10,7 @@ add_task(async function test_untrimmed_secure_www() {
   await check_autocomplete({
     search: "mo",
     autofilled: "mozilla.org/",
-    completed: "https://www.mozilla.org/"
+    completed: "https://www.mozilla.org/",
   });
   await cleanup();
 });
@@ -23,7 +23,7 @@ add_task(async function test_untrimmed_secure_www_path() {
   await check_autocomplete({
     search: "mozilla.org/t",
     autofilled: "mozilla.org/test/",
-    completed: "https://www.mozilla.org/test/"
+    completed: "https://www.mozilla.org/test/",
   });
   await cleanup();
 });
@@ -36,7 +36,7 @@ add_task(async function test_untrimmed_secure() {
   await check_autocomplete({
     search: "mo",
     autofilled: "mozilla.org/",
-    completed: "https://mozilla.org/"
+    completed: "https://mozilla.org/",
   });
   await cleanup();
 });
@@ -49,7 +49,7 @@ add_task(async function test_untrimmed_secure_path() {
   await check_autocomplete({
     search: "mozilla.org/t",
     autofilled: "mozilla.org/test/",
-    completed: "https://mozilla.org/test/"
+    completed: "https://mozilla.org/test/",
   });
   await cleanup();
 });
@@ -62,7 +62,7 @@ add_task(async function test_untrimmed_www() {
   await check_autocomplete({
     search: "mo",
     autofilled: "mozilla.org/",
-    completed: "http://www.mozilla.org/"
+    completed: "http://www.mozilla.org/",
   });
   await cleanup();
 });
@@ -75,7 +75,7 @@ add_task(async function test_untrimmed_www_path() {
   await check_autocomplete({
     search: "mozilla.org/t",
     autofilled: "mozilla.org/test/",
-    completed: "http://www.mozilla.org/test/"
+    completed: "http://www.mozilla.org/test/",
   });
   await cleanup();
 });
@@ -88,7 +88,7 @@ add_task(async function test_untrimmed_ftp() {
   await check_autocomplete({
     search: "mo",
     autofilled: "mozilla.org/",
-    completed: "ftp://mozilla.org/"
+    completed: "ftp://mozilla.org/",
   });
   await cleanup();
 });
@@ -101,7 +101,7 @@ add_task(async function test_untrimmed_ftp_path() {
   await check_autocomplete({
     search: "mozilla.org/t",
     autofilled: "mozilla.org/test/",
-    completed: "ftp://mozilla.org/test/"
+    completed: "ftp://mozilla.org/test/",
   });
   await cleanup();
 });
@@ -114,7 +114,7 @@ add_task(async function test_escaped_chars() {
   await check_autocomplete({
     search: "https://www.mozilla.org/啊-test",
     autofilled: "https://www.mozilla.org/啊-test",
-    completed: "https://www.mozilla.org/啊-test"
+    completed: "https://www.mozilla.org/啊-test",
   });
   await cleanup();
 });

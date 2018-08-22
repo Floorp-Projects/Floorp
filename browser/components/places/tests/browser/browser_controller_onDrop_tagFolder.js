@@ -28,12 +28,12 @@ add_task(async function setup() {
     guid: PlacesUtils.bookmarks.unfiledGuid,
     children: [{
       title: "bm1",
-      url: "http://example1.com"
+      url: "http://example1.com",
     }, {
       title: "bm2",
       url: "http://example2.com",
-      tags: [TAG_NAME]
-    }]
+      tags: [TAG_NAME],
+    }],
   });
   bookmarkId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
 });
@@ -59,14 +59,14 @@ async function run_drag_test(startBookmarkIndex, newParentGuid) {
     let ip = new PlacesInsertionPoint({
       isTag: true,
       tagName: TAG_NAME,
-      orientation: Ci.nsITreeView.DROP_ON
+      orientation: Ci.nsITreeView.DROP_ON,
     });
 
     let bookmarkWithId = JSON.stringify(Object.assign({
       id: bookmarkId,
       itemGuid: dragBookmark.guid,
       parent: PlacesUtils.unfiledBookmarksFolderId,
-      uri: dragBookmark.url
+      uri: dragBookmark.url,
     }, dragBookmark));
 
     let dt = {
@@ -79,7 +79,7 @@ async function run_drag_test(startBookmarkIndex, newParentGuid) {
       },
       mozGetDataAt(i) {
         return bookmarkWithId;
-      }
+      },
     };
 
     await PlacesControllerDragHelper.onDrop(ip, dt);

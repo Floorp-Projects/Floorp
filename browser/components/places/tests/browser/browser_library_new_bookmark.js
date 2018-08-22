@@ -20,7 +20,7 @@ add_task(async function test_open_bookmark_from_library() {
     }, {
       url: "https://example3.com",
       title: "bm3",
-    }]
+    }],
   });
 
   let library = await promiseLibrary("UnfiledBookmarks");
@@ -43,7 +43,7 @@ add_task(async function test_open_bookmark_from_library() {
       let promisePopup = BrowserTestUtils.waitForEvent(placesContext, "popupshown");
       synthesizeClickOnSelectedTreeCell(library.ContentTree.view, {
         button: 2,
-        type: "contextmenu"
+        type: "contextmenu",
       });
 
       await promisePopup;

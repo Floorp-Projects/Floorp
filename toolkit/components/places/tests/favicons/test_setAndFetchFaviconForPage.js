@@ -11,7 +11,7 @@ let gTests = [
     loadType: PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
     async setup() {
       await PlacesTestUtils.addVisits({uri: this.href, transition: TRANSITION_TYPED});
-    }
+    },
   },
   {
     desc: "Bookmarked about: uri",
@@ -20,9 +20,9 @@ let gTests = [
     async setup() {
       await PlacesUtils.bookmarks.insert({
         parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-        url: this.href
+        url: this.href,
       });
-    }
+    },
   },
   {
     desc: "Bookmarked in private window",
@@ -31,9 +31,9 @@ let gTests = [
     async setup() {
       await PlacesUtils.bookmarks.insert({
         parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-        url: this.href
+        url: this.href,
       });
-    }
+    },
   },
   {
     desc: "Bookmarked with disabled history",
@@ -42,13 +42,13 @@ let gTests = [
     async setup() {
       await PlacesUtils.bookmarks.insert({
         parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-        url: this.href
+        url: this.href,
       });
       Services.prefs.setBoolPref("places.history.enabled", false);
     },
     clean() {
       Services.prefs.setBoolPref("places.history.enabled", true);
-    }
+    },
   },
 ];
 

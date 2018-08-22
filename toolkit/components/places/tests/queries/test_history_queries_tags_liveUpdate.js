@@ -156,7 +156,7 @@ add_task(async function pages_searchterm_is_tag_query() {
     await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: uri,
-      title: data.title
+      title: data.title,
     });
     PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
     compareArrayToResult([data], root);
@@ -177,7 +177,7 @@ add_task(async function visits_searchterm_is_tag_query() {
     await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: uri,
-      title: data.title
+      title: data.title,
     });
     PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
     compareArrayToResult([data], root);

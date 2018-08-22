@@ -2,7 +2,7 @@ add_task(async function test_folder_shortcuts() {
   let shortcutInfo = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`
+    url: `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`,
   });
 
   let unfiledRoot =
@@ -20,7 +20,7 @@ add_task(async function test_folder_shortcuts() {
   shortcutInfo = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: `place:parent=${PlacesUtils.bookmarks.menuGuid}`
+    url: `place:parent=${PlacesUtils.bookmarks.menuGuid}`,
   });
   shortcutNode = unfiledRoot.getChild(unfiledRoot.childCount - 1);
   Assert.strictEqual(shortcutNode.itemId,
@@ -37,7 +37,7 @@ add_task(async function test_folder_shortcuts() {
 add_task(async function test_plain_folder() {
   let folderInfo = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
 
   let unfiledRoot =

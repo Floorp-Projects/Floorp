@@ -15,7 +15,7 @@ add_task(async function test() {
   await PlacesTestUtils.addVisits([ { uri: uri1, title: "title" } ]);
   await check_autocomplete({
     search: "site",
-    matches: [ { uri: uri1, title: "title" } ]
+    matches: [ { uri: uri1, title: "title" } ],
   });
   await cleanup();
 });

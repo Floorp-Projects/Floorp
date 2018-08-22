@@ -19,14 +19,14 @@ add_task(async function setup() {
     guid: PlacesUtils.bookmarks.unfiledGuid,
     children: [{
       title: "bm1",
-      url: "http://example1.com"
+      url: "http://example1.com",
     }, {
       title: "bm2",
-      url: "http://example2.com"
+      url: "http://example2.com",
     }, {
       title: "bm3",
-      url: "http://example3.com"
-    }]
+      url: "http://example3.com",
+    }],
   });
 
   bookmarkIds = await PlacesUtils.promiseManyItemIds([
@@ -59,7 +59,7 @@ async function run_drag_test(startBookmarkIndex, insertionIndex) {
       this._data.push({
         type,
         data,
-        index
+        index,
       });
     },
   };
@@ -87,7 +87,7 @@ async function run_drag_test(startBookmarkIndex, insertionIndex) {
   let ip = new PlacesInsertionPoint({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     index: insertionIndex,
-    orientation: Ci.nsITreeView.DROP_ON
+    orientation: Ci.nsITreeView.DROP_ON,
   });
 
   await PlacesControllerDragHelper.onDrop(ip, dataTransfer);

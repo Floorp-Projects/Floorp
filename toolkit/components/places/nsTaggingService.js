@@ -400,8 +400,8 @@ TaggingService.prototype = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsITaggingService,
     Ci.nsINavBookmarkObserver,
-    Ci.nsIObserver
-  ])
+    Ci.nsIObserver,
+  ]),
 };
 
 // Implements nsIAutoCompleteSearch
@@ -497,8 +497,8 @@ TagAutoCompleteSearch.prototype = {
   classID: Components.ID("{1dcc23b0-d4cb-11dc-9ad6-479d56d89593}"),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(TagAutoCompleteSearch),
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIAutoCompleteSearch
-  ])
+    Ci.nsIAutoCompleteSearch,
+  ]),
 };
 
 var component = [TaggingService, TagAutoCompleteSearch];

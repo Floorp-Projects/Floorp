@@ -12,7 +12,7 @@ add_task(async function() {
     file,
     uri: NetUtil.newURI(file),
     data: readFileData(file),
-    mimetype: "image/png"
+    mimetype: "image/png",
   };
 
   // If this should fail, it means MAX_FAVICON_BUFFER_SIZE has been made bigger

@@ -42,7 +42,7 @@ function promiseUpdatePlaces(aPlaces, aOptions, aBatchFrecencyNotifications) {
       },
       handleCompletion(resultCount) {
         resolve({ errors: this._errors, results: this._results, resultCount});
-      }
+      },
     }, aOptions), aBatchFrecencyNotifications);
   });
 }
@@ -1057,7 +1057,7 @@ add_task(async function test_visit_notifies() {
 add_task(async function test_callbacks_not_supplied() {
   const URLS = [
     "imap://cyrus.andrew.cmu.edu/archive.imap",  // bad URI
-    "http://mozilla.org/" // valid URI
+    "http://mozilla.org/", // valid URI
   ];
   let places = [];
   URLS.forEach(function(url) {
@@ -1093,14 +1093,14 @@ add_task(async function test_typed_hidden_not_overwritten() {
       title: "test",
       visits: [
         new VisitInfo(TRANSITION_TYPED),
-        new VisitInfo(TRANSITION_LINK)
-      ]
+        new VisitInfo(TRANSITION_LINK),
+      ],
     },
     { uri: NetUtil.newURI("http://mozilla.org/"),
       title: "test",
       visits: [
-        new VisitInfo(TRANSITION_FRAMED_LINK)
-      ]
+        new VisitInfo(TRANSITION_FRAMED_LINK),
+      ],
     },
   ];
   await promiseUpdatePlaces(places);
@@ -1123,13 +1123,13 @@ add_task(async function test_omit_frecency_notifications() {
       title: "test",
       visits: [
         new VisitInfo(TRANSITION_TYPED),
-      ]
+      ],
     },
     { uri: NetUtil.newURI("http://example.org/"),
       title: "test",
       visits: [
         new VisitInfo(TRANSITION_TYPED),
-      ]
+      ],
     },
   ];
   let promiseFrecenciesChanged = new Promise(resolve => {
@@ -1196,8 +1196,8 @@ add_task(async function test_ignore_results() {
     uri: NetUtil.newURI("http://mozilla.org/"),
     title: "test",
     visits: [
-      new VisitInfo()
-    ]
+      new VisitInfo(),
+    ],
   };
   let placesResult = await promiseUpdatePlaces(place, {ignoreResults: true});
   Assert.equal(placesResult.results.length, 0,

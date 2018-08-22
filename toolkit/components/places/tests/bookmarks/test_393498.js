@@ -17,7 +17,7 @@ var observer = {
     this._itemChangedProperty = property;
     this._itemChanged_isAnnotationProperty = isAnnotationProperty;
     this._itemChangedValue = value;
-  }
+  },
 };
 PlacesUtils.bookmarks.addObserver(observer);
 
@@ -40,14 +40,14 @@ add_task(async function test_bookmark_update_notifications() {
   let testFolder = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     title: "test Folder",
-    parentGuid: PlacesUtils.bookmarks.menuGuid
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
   });
 
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: testFolder.guid,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     url: "http://google.com/",
-    title: "a bookmark"
+    title: "a bookmark",
   });
 
   // Sanity check.
@@ -56,7 +56,7 @@ add_task(async function test_bookmark_update_notifications() {
   // Set dateAdded in the past and verify the changes.
   await PlacesUtils.bookmarks.update({
     guid: bookmark.guid,
-    dateAdded: PAST_DATE
+    dateAdded: PAST_DATE,
   });
 
   Assert.equal(observer._itemChangedProperty, "dateAdded");
@@ -66,7 +66,7 @@ add_task(async function test_bookmark_update_notifications() {
   do_check_date_eq(bookmark.lastModified, bookmark.dateAdded);
 
   let updatedBookmark = await PlacesUtils.bookmarks.fetch({
-    guid: bookmark.guid
+    guid: bookmark.guid,
   });
 
   do_check_date_eq(updatedBookmark.dateAdded, PAST_DATE);
@@ -74,7 +74,7 @@ add_task(async function test_bookmark_update_notifications() {
   // Set lastModified in the past and verify the changes.
   updatedBookmark = await PlacesUtils.bookmarks.update({
     guid: bookmark.guid,
-    lastModified: PAST_DATE
+    lastModified: PAST_DATE,
   });
 
   Assert.equal(observer._itemChangedProperty, "lastModified");
@@ -84,7 +84,7 @@ add_task(async function test_bookmark_update_notifications() {
   // Set bookmark title
   updatedBookmark = await PlacesUtils.bookmarks.update({
     guid: bookmark.guid,
-    title: "Google"
+    title: "Google",
   });
 
   // Test notifications.
@@ -111,7 +111,7 @@ add_task(async function test_bookmark_update_notifications() {
   updatedBookmark = await PlacesUtils.bookmarks.update({
     guid: bookmark.guid,
     lastModified: PAST_DATE,
-    title: "Google"
+    title: "Google",
   });
 
   // Check lastModified has been updated.

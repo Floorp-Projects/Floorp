@@ -158,7 +158,7 @@ const EXPIRATION_QUERIES = {
           ORDER BY v.visit_date ASC
           LIMIT :limit_visits`,
     actions: ACTION.TIMED_OVERLIMIT | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
-             ACTION.DEBUG
+             ACTION.DEBUG,
   },
 
   // Finds visits to be expired when history is over the unique pages limit,
@@ -176,7 +176,7 @@ const EXPIRATION_QUERIES = {
           ORDER BY v.visit_date ASC
           LIMIT :limit_visits`,
     actions: ACTION.TIMED_OVERLIMIT | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
-             ACTION.DEBUG
+             ACTION.DEBUG,
   },
 
   // Removes the previously found visits.
@@ -185,7 +185,7 @@ const EXPIRATION_QUERIES = {
             SELECT v_id FROM expiration_notify WHERE v_id NOTNULL
           )`,
     actions: ACTION.TIMED_OVERLIMIT | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
-             ACTION.DEBUG
+             ACTION.DEBUG,
   },
 
   // Finds orphan URIs in the database.
@@ -206,7 +206,7 @@ const EXPIRATION_QUERIES = {
             AND frecency <> -1
           LIMIT :limit_uris`,
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 
   // Expire found URIs from the database.
@@ -215,7 +215,7 @@ const EXPIRATION_QUERIES = {
             SELECT p_id FROM expiration_notify WHERE p_id NOTNULL
           ) AND foreign_count = 0 AND last_visit_date ISNULL`,
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 
   // Hosts accumulated during the places delete are updated through a trigger
@@ -223,7 +223,7 @@ const EXPIRATION_QUERIES = {
   QUERY_UPDATE_HOSTS: {
     sql: `DELETE FROM moz_updateoriginsdelete_temp`,
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 
   // Expire orphan pages from the icons database.
@@ -233,7 +233,7 @@ const EXPIRATION_QUERIES = {
             SELECT url_hash FROM moz_places
           )`,
     actions: ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 
   // Expire orphan icons from the database.
@@ -244,7 +244,7 @@ const EXPIRATION_QUERIES = {
             SELECT icon_id FROM moz_icons_to_pages
           )`,
     actions: ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 
   // Expire orphan page annotations from the database.
@@ -256,7 +256,7 @@ const EXPIRATION_QUERIES = {
             LIMIT :limit_annos
           )`,
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 
   // Expire item annos without a corresponding item id.
@@ -267,7 +267,7 @@ const EXPIRATION_QUERIES = {
             WHERE b.id IS NULL
             LIMIT :limit_annos
           )`,
-    actions: ACTION.IDLE_DAILY | ACTION.DEBUG
+    actions: ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 
   // Expire all annotation names without a corresponding annotation.
@@ -281,7 +281,7 @@ const EXPIRATION_QUERIES = {
             LIMIT :limit_annos
           )`,
     actions: ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY |
-             ACTION.IDLE_DAILY | ACTION.DEBUG
+             ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 
   // Expire orphan inputhistory.
@@ -295,7 +295,7 @@ const EXPIRATION_QUERIES = {
             LIMIT :limit_inputhistory
           )`,
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 
   // Select entries for notifications.
@@ -311,14 +311,14 @@ const EXPIRATION_QUERIES = {
           FROM expiration_notify n
           GROUP BY url`,
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 
   // Empty the notifications table.
   QUERY_DELETE_NOTIFICATIONS: {
     sql: "DELETE FROM expiration_notify",
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 };
 
@@ -777,7 +777,7 @@ nsPlacesExpiration.prototype = {
       handleError(aError) {
         Cu.reportError("Async statement execution returned with '" +
                        aError.result + "', '" + aError.message + "'");
-      }
+      },
     });
   },
 
@@ -942,8 +942,8 @@ nsPlacesExpiration.prototype = {
     Ci.nsINavHistoryObserver,
     Ci.nsITimerCallback,
     Ci.mozIStorageStatementCallback,
-    Ci.nsISupportsWeakReference
-  ])
+    Ci.nsISupportsWeakReference,
+  ]),
 };
 
 // Module Registration

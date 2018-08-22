@@ -48,7 +48,7 @@ add_task(async function test_main() {
   // Check that JSON backup has been restored.
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   });
   Assert.equal(bm.title, "examplejson");
 });

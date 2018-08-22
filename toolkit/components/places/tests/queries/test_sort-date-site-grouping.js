@@ -20,50 +20,50 @@ var testData = [
     uri: "file:///directory/1",
     lastVisit: today,
     title: "test visit",
-    isInQuery: true
+    isInQuery: true,
   },
   {
     isVisit: true,
     uri: "http://example.com/1",
     lastVisit: today,
     title: "test visit",
-    isInQuery: true
+    isInQuery: true,
   },
   {
     isVisit: true,
     uri: "http://example.com/2",
     lastVisit: today,
     title: "test visit",
-    isInQuery: true
+    isInQuery: true,
   },
   {
     isVisit: true,
     uri: "file:///directory/2",
     lastVisit: olderthansixmonths,
     title: "test visit",
-    isInQuery: true
+    isInQuery: true,
   },
   {
     isVisit: true,
     uri: "http://example.com/3",
     lastVisit: olderthansixmonths,
     title: "test visit",
-    isInQuery: true
+    isInQuery: true,
   },
   {
     isVisit: true,
     uri: "http://example.com/4",
     lastVisit: olderthansixmonths,
     title: "test visit",
-    isInQuery: true
+    isInQuery: true,
   },
   {
     isVisit: true,
     uri: "http://example.net/1",
     lastVisit: olderthansixmonths + 1000,
     title: "test visit",
-    isInQuery: true
-  }
+    isInQuery: true,
+  },
 ];
 var leveledTestData = [// Today
                        [[0],    // Today, local files
@@ -71,7 +71,7 @@ var leveledTestData = [// Today
                        // Older than six months
                        [[3],    // Older than six months, local files
                         [4, 5],  // Older than six months, example.com
-                        [6]     // Older than six months, example.net
+                        [6],     // Older than six months, example.net
                         ]];
 
 // This test data is meant for live updating. The |levels| property indicates
@@ -83,7 +83,7 @@ var testDataAddedLater = [
     lastVisit: olderthansixmonths,
     title: "test visit",
     isInQuery: true,
-    levels: [1, 1]
+    levels: [1, 1],
   },
   {
     isVisit: true,
@@ -91,7 +91,7 @@ var testDataAddedLater = [
     lastVisit: olderthansixmonths,
     title: "test visit",
     isInQuery: true,
-    levels: [1, 1]
+    levels: [1, 1],
   },
   {
     isVisit: true,
@@ -99,7 +99,7 @@ var testDataAddedLater = [
     lastVisit: today,
     title: "test visit",
     isInQuery: true,
-    levels: [0, 1]
+    levels: [0, 1],
   },
   {
     isVisit: true,
@@ -107,8 +107,8 @@ var testDataAddedLater = [
     lastVisit: today,
     title: "test visit",
     isInQuery: true,
-    levels: [0, 0]
-  }
+    levels: [0, 0],
+  },
 ];
 
 add_task(async function test_sort_date_site_grouping() {

@@ -42,7 +42,7 @@ async function simulateDrop(selectTargets, sourceBm, dropEffect, targetGuid,
         this._data.push({
           type,
           data,
-          index
+          index,
         });
       },
     };
@@ -73,7 +73,7 @@ async function simulateDrop(selectTargets, sourceBm, dropEffect, targetGuid,
       parentId: await PlacesUtils.promiseItemId(targetGuid),
       parentGuid: targetGuid,
       index: 0,
-      orientation: Ci.nsITreeView.DROP_ON
+      orientation: Ci.nsITreeView.DROP_ON,
     });
 
     await PlacesControllerDragHelper.onDrop(ip, dataTransfer);
@@ -84,7 +84,7 @@ add_task(async function test_move_normal_bm_in_sidebar() {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "Fake",
-    url: TEST_URL
+    url: TEST_URL,
   });
 
   await simulateDrop([bm.guid], bm, "move", PlacesUtils.bookmarks.unfiledGuid);
@@ -96,7 +96,7 @@ add_task(async function test_move_normal_bm_in_sidebar() {
 
   let oldLocationBm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
+    index: 0,
   });
 
   Assert.ok(!oldLocationBm,
@@ -134,7 +134,7 @@ add_task(async function test_try_move_bm_within_two_root_folder_queries() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "Fake",
-    url: TEST_URL
+    url: TEST_URL,
   });
 
   let queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
@@ -143,8 +143,8 @@ add_task(async function test_try_move_bm_within_two_root_folder_queries() {
     guid: PlacesUtils.bookmarks.toolbarGuid,
     children: [{
       title: "Query",
-      url: `place:queryType=${queryType}&terms=Fake`
-    }]
+      url: `place:queryType=${queryType}&terms=Fake`,
+    }],
   });
 
   await simulateDrop([queries[0].guid, bookmark.guid],

@@ -10,7 +10,7 @@ add_task(async function search_bookmark_by_lastModified_dateDated() {
   let folder = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    title: "bug 385829 test"
+    title: "bug 385829 test",
   });
 
   let now = new Date();
@@ -21,44 +21,44 @@ add_task(async function search_bookmark_by_lastModified_dateDated() {
     parentGuid: folder.guid,
     url: "http://a1.com/",
     title: "1 title",
-    dateAdded: new Date(now.getTime() + 1000)
+    dateAdded: new Date(now.getTime() + 1000),
   });
   let b2 = await PlacesUtils.bookmarks.insert({
     parentGuid: folder.guid,
     url: "http://a2.com/",
     title: "2 title",
-    dateAdded: new Date(now.getTime() + 2000)
+    dateAdded: new Date(now.getTime() + 2000),
   });
   let b3 = await PlacesUtils.bookmarks.insert({
     parentGuid: folder.guid,
     url: "http://a3.com/",
     title: "3 title",
-    dateAdded: new Date(now.getTime() + 3000)
+    dateAdded: new Date(now.getTime() + 3000),
   });
   let b4 = await PlacesUtils.bookmarks.insert({
     parentGuid: folder.guid,
     url: "http://a4.com/",
     title: "4 title",
-    dateAdded: new Date(now.getTime() + 4000)
+    dateAdded: new Date(now.getTime() + 4000),
   });
 
   // make sure lastModified is larger than dateAdded
   let modifiedTime = new Date(now.getTime() + 5000);
   await PlacesUtils.bookmarks.update({
     guid: b1.guid,
-    lastModified: new Date(modifiedTime.getTime() + 4000)
+    lastModified: new Date(modifiedTime.getTime() + 4000),
   });
   await PlacesUtils.bookmarks.update({
     guid: b2.guid,
-    lastModified: new Date(modifiedTime.getTime() + 3000)
+    lastModified: new Date(modifiedTime.getTime() + 3000),
   });
   await PlacesUtils.bookmarks.update({
     guid: b3.guid,
-    lastModified: new Date(modifiedTime.getTime() + 2000)
+    lastModified: new Date(modifiedTime.getTime() + 2000),
   });
   await PlacesUtils.bookmarks.update({
     guid: b4.guid,
-    lastModified: new Date(modifiedTime.getTime() + 1000)
+    lastModified: new Date(modifiedTime.getTime() + 1000),
   });
 
   let hs = PlacesUtils.history;

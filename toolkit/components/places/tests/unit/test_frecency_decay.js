@@ -53,7 +53,7 @@ add_task(async function test_frecency_decay() {
   let promiseOne = promiseFrecencyChanged(url, unvisitedBookmarkFrecency);
   await PlacesUtils.bookmarks.insert({
     url,
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   await promiseOne;
 

@@ -10,13 +10,13 @@ add_task(async function test_change_title_from_BookmarkStar() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: TEST_URL,
-    title: "Before Edit"
+    title: "Before Edit",
   });
 
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: TEST_URL,
-    waitForStateStop: true
+    waitForStateStop: true,
   });
 
   registerCleanupFunction(async () => {
@@ -52,7 +52,7 @@ add_task(async function test_change_title_from_BookmarkStar() {
     },
     mozGetDataAt(i) {
       return bookmarkWithId;
-    }
+    },
   };
 
   Assert.ok(!folderTree.view.canDrop(1, Ci.nsITreeView.DROP_BEFORE, dt),
@@ -68,7 +68,7 @@ add_task(async function test_change_title_from_BookmarkStar() {
     "cmd_delete",
     "cmd_selectAll",
     // Anything starting with placesCmd_ should also be disabled.
-    "placesCmd_"
+    "placesCmd_",
   ];
   for (let action of userActions) {
     Assert.ok(!folderTree.view._controller.supportsCommand(action),

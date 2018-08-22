@@ -76,7 +76,7 @@ add_task(async function test_changes_remote() {
     type: "bookmark",
     title: "New Mozilla",
     bmkUri: "https://mozilla.org",
-    tags: ["moz", "dot", "org"]
+    tags: ["moz", "dot", "org"],
   }], { needsMerge: true });
 
   const hasChanges = await buf.hasChanges();

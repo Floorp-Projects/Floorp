@@ -42,14 +42,14 @@ add_task(async function test_keyword_search() {
     search: "key term",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=term", input: "key term"}),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   info("Plain keyword UC");
   await check_autocomplete({
     search: "key TERM",
     matches: [ { uri: "http://abc/?search=TERM",
-                 title: "abc", style: ["keyword", "heuristic"] } ]
+                 title: "abc", style: ["keyword", "heuristic"] } ],
   });
 
   info("Multi-word keyword query");
@@ -57,7 +57,7 @@ add_task(async function test_keyword_search() {
     search: "key multi word",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=multi%20word", input: "key multi word"}),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   info("Keyword query with +");
@@ -65,7 +65,7 @@ add_task(async function test_keyword_search() {
     search: "key blocking+",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=blocking%2B", input: "key blocking+"}),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   info("Unescaped term in query");
@@ -76,7 +76,7 @@ add_task(async function test_keyword_search() {
     search: "key ユニコード",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=" + encodeURIComponent("ユニコード"), input: "key ユニコード"}),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   info("Keyword that happens to match a page");
@@ -84,7 +84,7 @@ add_task(async function test_keyword_search() {
     search: "key ThisPageIsInHistory",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=ThisPageIsInHistory", input: "key ThisPageIsInHistory"}),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   info("Keyword with partial page match");
@@ -96,7 +96,7 @@ add_task(async function test_keyword_search() {
                // Only the most recent bookmark for the URL:
                { value: "http://abc/?search=ThisPageIsInHistory",
                  title: "Noparam-Post", style: ["bookmark"] },
-    ]
+    ],
   });
 
   // For the keyword with no query terms (with or without space after), the
@@ -109,7 +109,7 @@ add_task(async function test_keyword_search() {
     matches: [ { uri: makeActionURI("keyword", {url: "http://def/?search=", input: "key2"}),
                  title: "def", style: [ "action", "keyword", "heuristic" ] },
                { uri: uri5, title: "Keyword", style: [ "bookmark" ] },
-    ]
+    ],
   });
 
   info("Keyword without query (with space)");
@@ -119,7 +119,7 @@ add_task(async function test_keyword_search() {
     matches: [ { uri: makeActionURI("keyword", {url: "http://def/?search=", input: "key2 "}),
                  title: "def", style: [ "action", "keyword", "heuristic" ] },
                { uri: uri5, title: "Keyword", style: [ "bookmark" ] },
-    ]
+    ],
   });
 
   info("POST Keyword");
@@ -127,19 +127,19 @@ add_task(async function test_keyword_search() {
     search: "post foo",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=foo", input: "post foo", postData: "post_search=foo"}),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   info("Bug 420328: no-param keyword with a param");
   await check_autocomplete({
     search: "noparam foo",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("noparam foo", { heuristic: true }) ]
+    matches: [ makeSearchMatch("noparam foo", { heuristic: true }) ],
   });
   await check_autocomplete({
     search: "post_noparam foo",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("post_noparam foo", { heuristic: true }) ]
+    matches: [ makeSearchMatch("post_noparam foo", { heuristic: true }) ],
   });
 
   info("escaping with default UTF-8 charset");
@@ -147,7 +147,7 @@ add_task(async function test_keyword_search() {
     search: "encoded foé",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=fo%C3%A9&raw=foé", input: "encoded foé" }),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   info("escaping with forced ISO-8859-1 charset");
@@ -155,7 +155,7 @@ add_task(async function test_keyword_search() {
     search: "charset foé",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=fo%E9&raw=foé", input: "charset foé" }),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   info("escaping with ISO-8859-1 charset annotated in history");
@@ -163,7 +163,7 @@ add_task(async function test_keyword_search() {
     search: "charset_history foé",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://ghi/?search=fo%E9&raw=foé", input: "charset_history foé" }),
-                 title: "ghi", style: [ "action", "keyword", "heuristic" ] } ]
+                 title: "ghi", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   info("Bug 359809: escaping +, / and @ with default UTF-8 charset");
@@ -171,7 +171,7 @@ add_task(async function test_keyword_search() {
     search: "encoded +/@",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=%2B%2F%40&raw=+/@", input: "encoded +/@" }),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   info("Bug 359809: escaping +, / and @ with forced ISO-8859-1 charset");
@@ -179,7 +179,7 @@ add_task(async function test_keyword_search() {
     search: "charset +/@",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=%2B%2F%40&raw=+/@", input: "charset +/@" }),
-                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+                 title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   info("Bug 1228111 - Keyword with a space in front");
@@ -187,7 +187,7 @@ add_task(async function test_keyword_search() {
     search: " key test",
     searchParam: "enable-actions",
     matches: [ { uri:  makeActionURI("keyword", {url: "http://abc/?search=test", input: " key test" }),
-    title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+    title: "abc", style: [ "action", "keyword", "heuristic" ] } ],
   });
 
   await cleanup();

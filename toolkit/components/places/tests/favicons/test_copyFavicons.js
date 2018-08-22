@@ -88,7 +88,7 @@ add_task(async function test_copyFavicons() {
 
   info("Private copy to a bookmarked page");
   await PlacesUtils.bookmarks.insert({
-    url: TEST_URI3, parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    url: TEST_URI3, parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   promiseChange = promisePageChanged();
   Assert.equal((await copyFavicons(TEST_URI1, TEST_URI3, true)).spec,

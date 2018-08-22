@@ -42,7 +42,7 @@ add_task(async function test_execute() {
     }
     await PlacesTestUtils.addVisits({
       uri: uri(visit.url),
-      transition: visit.transition
+      transition: visit.transition,
     });
   }
 

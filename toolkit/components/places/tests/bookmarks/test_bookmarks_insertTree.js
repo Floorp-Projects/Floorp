@@ -74,26 +74,26 @@ add_task(async function invalid_input_rejects() {
 
   let treeWithBrokenURL = {
     children: [{ type: PlacesUtils.bookmarks.TYPE_BOOKMARK, url: "http://te st" }],
-    guid: PlacesUtils.bookmarks.unfiledGuid
+    guid: PlacesUtils.bookmarks.unfiledGuid,
   };
   await Assert.throws(() => PlacesUtils.bookmarks.insertTree(treeWithBrokenURL),
                       /Invalid value for property 'url'/);
   let longurl = "http://www.example.com/" + "a".repeat(65536);
   let treeWithLongURL = {
     children: [{ type: PlacesUtils.bookmarks.TYPE_BOOKMARK, url: longurl }],
-    guid: PlacesUtils.bookmarks.unfiledGuid
+    guid: PlacesUtils.bookmarks.unfiledGuid,
   };
   await Assert.throws(() => PlacesUtils.bookmarks.insertTree(treeWithLongURL),
                       /Invalid value for property 'url'/);
   let treeWithLongURI = {
     children: [{ type: PlacesUtils.bookmarks.TYPE_BOOKMARK, url: NetUtil.newURI(longurl) }],
-    guid: PlacesUtils.bookmarks.unfiledGuid
+    guid: PlacesUtils.bookmarks.unfiledGuid,
   };
   await Assert.throws(() => PlacesUtils.bookmarks.insertTree(treeWithLongURI),
                       /Invalid value for property 'url'/);
   let treeWithOtherBrokenURL = {
     children: [{ type: PlacesUtils.bookmarks.TYPE_BOOKMARK, url: "te st" }],
-    guid: PlacesUtils.bookmarks.unfiledGuid
+    guid: PlacesUtils.bookmarks.unfiledGuid,
   };
   await Assert.throws(() => PlacesUtils.bookmarks.insertTree(treeWithOtherBrokenURL),
                       /Invalid value for property 'url'/);
@@ -102,19 +102,19 @@ add_task(async function invalid_input_rejects() {
 add_task(async function invalid_properties_for_bookmark_type() {
   let folderWithURL = {
     children: [{ type: PlacesUtils.bookmarks.TYPE_FOLDER, url: "http://www.moz.com/" }],
-    guid: PlacesUtils.bookmarks.unfiledGuid
+    guid: PlacesUtils.bookmarks.unfiledGuid,
   };
   await Assert.throws(() => PlacesUtils.bookmarks.insertTree(folderWithURL),
                       /Invalid value for property 'url'/);
   let separatorWithURL = {
     children: [{ type: PlacesUtils.bookmarks.TYPE_SEPARATOR, url: "http://www.moz.com/" }],
-    guid: PlacesUtils.bookmarks.unfiledGuid
+    guid: PlacesUtils.bookmarks.unfiledGuid,
   };
   await Assert.throws(() => PlacesUtils.bookmarks.insertTree(separatorWithURL),
                       /Invalid value for property 'url'/);
   let separatorWithTitle = {
     children: [{ type: PlacesUtils.bookmarks.TYPE_SEPARATOR, title: "test" }],
-    guid: PlacesUtils.bookmarks.unfiledGuid
+    guid: PlacesUtils.bookmarks.unfiledGuid,
   };
   await Assert.throws(() => PlacesUtils.bookmarks.insertTree(separatorWithTitle),
                       /Invalid value for property 'title'/);
@@ -122,7 +122,7 @@ add_task(async function invalid_properties_for_bookmark_type() {
 
 add_task(async function create_separator() {
   let [bm] = await PlacesUtils.bookmarks.insertTree({children: [{
-    type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
   }], guid: PlacesUtils.bookmarks.unfiledGuid});
   checkBookmarkObject(bm);
   Assert.equal(bm.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
@@ -135,7 +135,7 @@ add_task(async function create_separator() {
 add_task(async function create_plain_bm() {
   let [bm] = await PlacesUtils.bookmarks.insertTree({children: [{
     url: "http://www.example.com/",
-    title: "Test"
+    title: "Test",
   }], guid: PlacesUtils.bookmarks.unfiledGuid});
   checkBookmarkObject(bm);
   Assert.equal(bm.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
@@ -149,7 +149,7 @@ add_task(async function create_plain_bm() {
 add_task(async function create_folder() {
   let [bm] = await PlacesUtils.bookmarks.insertTree({children: [{
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    title: "Test"
+    title: "Test",
   }], guid: PlacesUtils.bookmarks.unfiledGuid});
   checkBookmarkObject(bm);
   Assert.equal(bm.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
@@ -243,7 +243,7 @@ add_task(async function create_hierarchy() {
           },
         ],
       },
-    ]
+    ],
   }], guid: PlacesUtils.bookmarks.unfiledGuid});
   await PlacesTestUtils.promiseAsyncUpdates();
   PlacesUtils.bookmarks.removeObserver(obs);
@@ -297,7 +297,7 @@ add_task(async function insert_many_non_nested() {
       title: "Item 3",
     },
     {
-      type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+      type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
     },
     {
       title: "Item 4",

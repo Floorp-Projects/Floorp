@@ -8,7 +8,7 @@ add_task(async function test_results_as_tag_query() {
       { url: "http://tag1.moz.com/", tags: ["tag1"] },
       { url: "http://tag2.moz.com/", tags: ["tag2"] },
       { url: "place:tag=tag1" },
-    ]
+    ],
   });
 
   let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid, false, true).root;

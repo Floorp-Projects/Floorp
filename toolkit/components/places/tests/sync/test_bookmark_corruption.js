@@ -1405,7 +1405,7 @@ add_task(async function test_non_syncable_items() {
         index: 0,
         title: "B",
         url: "http://example.com/b",
-      }]
+      }],
     }, {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,

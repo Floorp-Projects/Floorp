@@ -27,7 +27,7 @@ add_task(async function test_explicit_weakupload() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   let changesToUpload = await buf.apply({
-    weakUpload: ["mozBmk______"]
+    weakUpload: ["mozBmk______"],
   });
 
   ok("mozBmk______" in changesToUpload);
@@ -76,7 +76,7 @@ add_task(async function test_explicit_weakupload_with_dateAdded() {
 
   info("Explicitly request changed item for weak upload");
   let changesToUpload = await buf.apply({
-    weakUpload: ["mozBmk______"]
+    weakUpload: ["mozBmk______"],
   });
   deepEqual(changesToUpload, {
     mozBmk______: {

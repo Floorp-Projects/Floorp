@@ -35,7 +35,7 @@ add_task(async function test_special_searches() {
     { uri: uri3, title: "title" },
     { uri: uri4, title: "foo.bar", transition: TRANSITION_TYPED },
     { uri: uri6, title: "foo.bar" },
-    { uri: uri11, title: "title", transition: TRANSITION_TYPED }
+    { uri: uri11, title: "title", transition: TRANSITION_TYPED },
   ]);
   await addBookmark( { uri: uri5, title: "title" } );
   await addBookmark( { uri: uri6, title: "foo.bar" } );
@@ -55,7 +55,7 @@ add_task(async function test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("Star restrict");
@@ -68,7 +68,7 @@ add_task(async function test_special_searches() {
                { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar"], style: [ "bookmark-tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info("Tag restrict");
@@ -77,7 +77,7 @@ add_task(async function test_special_searches() {
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   // Test specials as any word position
@@ -88,7 +88,7 @@ add_task(async function test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("Special as middle word");
@@ -98,7 +98,7 @@ add_task(async function test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("Special as last word");
@@ -108,7 +108,7 @@ add_task(async function test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   // Test restricting and matching searches with a term
@@ -119,7 +119,7 @@ add_task(async function test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo * -> is star");
@@ -131,7 +131,7 @@ add_task(async function test_special_searches() {
                { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info("foo # -> in title");
@@ -144,7 +144,7 @@ add_task(async function test_special_searches() {
                { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo @ -> in url");
@@ -155,7 +155,7 @@ add_task(async function test_special_searches() {
                { uri: uri7, title: "title", style: [ "bookmark" ] },
                { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo + -> is tag");
@@ -164,14 +164,14 @@ add_task(async function test_special_searches() {
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo ~ -> is typed");
   await check_autocomplete({
     search: "foo ~",
     matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   // Test various pairs of special searches
@@ -179,7 +179,7 @@ add_task(async function test_special_searches() {
   await check_autocomplete({
     search: "foo ^ *",
     matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info("foo ^ # -> history, in title");
@@ -188,7 +188,7 @@ add_task(async function test_special_searches() {
     matches: [ { uri: uri2, title: "foo.bar" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo ^ @ -> history, in url");
@@ -196,20 +196,20 @@ add_task(async function test_special_searches() {
     search: "foo ^ @",
     matches: [ { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo ^ + -> history, is tag");
   await check_autocomplete({
     search: "foo ^ +",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo ^ ~ -> history, is typed");
   await check_autocomplete({
     search: "foo ^ ~",
     matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo * # -> is star, in title");
@@ -220,7 +220,7 @@ add_task(async function test_special_searches() {
                { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info("foo * @ -> is star, in url");
@@ -229,7 +229,7 @@ add_task(async function test_special_searches() {
     matches: [ { uri: uri7, title: "title", style: [ "bookmark" ] },
                { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info("foo * + -> same as +");
@@ -238,13 +238,13 @@ add_task(async function test_special_searches() {
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info("foo * ~ -> is star, is typed");
   await check_autocomplete({
     search: "foo * ~",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
+    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info("foo # @ -> in title, in url");
@@ -253,7 +253,7 @@ add_task(async function test_special_searches() {
     matches: [ { uri: uri4, title: "foo.bar" },
                { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo # + -> in title, is tag");
@@ -262,34 +262,34 @@ add_task(async function test_special_searches() {
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo # ~ -> in title, is typed");
   await check_autocomplete({
     search: "foo # ~",
     matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo @ + -> in url, is tag");
   await check_autocomplete({
     search: "foo @ +",
     matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo @ ~ -> in url, is typed");
   await check_autocomplete({
     search: "foo @ ~",
     matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   info("foo + ~ -> is tag, is typed");
   await check_autocomplete({
     search: "foo + ~",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ],
   });
 
   // Disable autoFill for the next tests, see test_autoFill_default_behavior.js
@@ -306,7 +306,7 @@ add_task(async function test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: ["foo.bar"], style: [ "tag" ] } ]
+               { uri: uri11, title: "title", tags: ["foo.bar"], style: [ "tag" ] } ],
   });
 
   info("foo -> default history, is star");
@@ -324,7 +324,7 @@ add_task(async function test_special_searches() {
                { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar"], style: [ "bookmark-tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info("foo -> default history, is star, is typed");
@@ -335,7 +335,7 @@ add_task(async function test_special_searches() {
   await check_autocomplete({
     search: "foo",
     matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info("foo -> is star");
@@ -350,7 +350,7 @@ add_task(async function test_special_searches() {
                { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info("foo -> is star, is typed");
@@ -366,7 +366,7 @@ add_task(async function test_special_searches() {
                { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] }  ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] }  ],
   });
 
   await cleanup();

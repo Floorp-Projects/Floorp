@@ -55,7 +55,7 @@ var database_check = async function() {
   Assert.equal(folderNode.title, "test");
 
   let bookmark = await PlacesUtils.bookmarks.fetch({
-    guid: folderNode.bookmarkGuid
+    guid: folderNode.bookmarkGuid,
   });
   Assert.equal(PlacesUtils.toPRTime(bookmark.dateAdded), 1177541020000000);
   Assert.equal(PlacesUtils.toPRTime(bookmark.lastModified), 1177541050000000);
