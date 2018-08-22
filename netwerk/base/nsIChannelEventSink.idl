@@ -53,6 +53,13 @@ interface nsIChannelEventSink : nsISupports
     const unsigned long REDIRECT_STS_UPGRADE = 1 << 3;
 
     /**
+     * This redirect has already been presented to the nsILoadURIDelegate
+     * for possible handling; if this flag is set we may safely skip checking
+     * if the nsILoadURIDelegate will handle the redirect.
+     */
+    const unsigned long REDIRECT_DELEGATES_CHECKED = 1 << 4;
+
+    /**
      * Called when a redirect occurs. This may happen due to an HTTP 3xx status
      * code. The purpose of this method is to notify the sink that a redirect
      * is about to happen, but also to give the sink the right to veto the

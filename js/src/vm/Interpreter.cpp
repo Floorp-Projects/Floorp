@@ -4267,13 +4267,14 @@ CASE(JSOP_AWAIT)
 CASE(JSOP_RESUME)
 {
     {
-        ReservedRooted<JSObject*> gen(&rootObject0, &REGS.sp[-2].toObject());
+        Rooted<GeneratorObject*> gen(cx, &REGS.sp[-2].toObject().as<GeneratorObject>());
         ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
         // popInlineFrame expects there to be an additional value on the stack
         // to pop off, so leave "gen" on the stack.
 
         GeneratorObject::ResumeKind resumeKind = GeneratorObject::getResumeKind(REGS.pc);
-        bool ok = GeneratorObject::resume(cx, activation, gen, val, resumeKind);
+        if (!GeneratorObject::resume(cx, activation, gen, val))
+            goto error;
 
         JSScript* generatorScript = REGS.fp()->script();
         if (cx->realm() != generatorScript->realm())
@@ -4285,8 +4286,31 @@ CASE(JSOP_RESUME)
         TraceLogStartEvent(logger, scriptEvent);
         TraceLogStartEvent(logger, TraceLogger_Interpreter);
 
-        if (!ok)
+        switch (Debugger::onEnterFrame(cx, REGS.fp())) {
+          case ResumeMode::Continue:
+            break;
+          case ResumeMode::Throw:
+          case ResumeMode::Terminate:
             goto error;
+          case ResumeMode::Return:
+            MOZ_ASSERT_IF(REGS.fp()->callee().isGenerator(),  // as opposed to an async function
+                          gen->isClosed());
+            if (!ForcedReturn(cx, REGS))
+                goto error;
+            goto successful_return_continuation;
+        }
+
+        switch (resumeKind) {
+          case GeneratorObject::NEXT:
+            break;
+          case GeneratorObject::THROW:
+          case GeneratorObject::RETURN:
+            MOZ_ALWAYS_FALSE(GeneratorThrowOrReturn(cx, activation.regs().fp(), gen, val,
+                                                    resumeKind));
+            goto error;
+          default:
+            MOZ_CRASH("bad resumeKind");
+        }
     }
     ADVANCE_AND_DISPATCH(0);
 }

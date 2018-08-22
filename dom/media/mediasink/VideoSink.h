@@ -108,7 +108,8 @@ private:
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
 
-  MediaQueue<VideoData>& VideoQueue() const {
+  MediaQueue<VideoData>& VideoQueue() const
+  {
     return mVideoQueue;
   }
 
@@ -130,6 +131,8 @@ private:
 
   // The presentation end time of the last video frame which has been displayed.
   TimeUnit mVideoFrameEndTime;
+
+  uint32_t mOldDroppedCount;
 
   // Event listeners for VideoQueue
   MediaEventListener mPushListener;

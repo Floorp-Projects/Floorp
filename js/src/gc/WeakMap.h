@@ -111,13 +111,12 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase>
     bool marked;
 };
 
-template <class Key, class Value,
-          class HashPolicy = DefaultHasher<Key> >
-class WeakMap : public HashMap<Key, Value, HashPolicy, ZoneAllocPolicy>,
+template <class Key, class Value>
+class WeakMap : public HashMap<Key, Value, MovableCellHasher<Key>, ZoneAllocPolicy>,
                 public WeakMapBase
 {
   public:
-    typedef HashMap<Key, Value, HashPolicy, ZoneAllocPolicy> Base;
+    typedef HashMap<Key, Value, MovableCellHasher<Key>, ZoneAllocPolicy> Base;
     typedef typename Base::Enum Enum;
     typedef typename Base::Lookup Lookup;
     typedef typename Base::Entry Entry;
@@ -191,13 +190,11 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, ZoneAllocPolicy>,
 };
 
 
-class ObjectValueMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>,
-                                      MovableCellHasher<HeapPtr<JSObject*>>>
+class ObjectValueMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>>
 {
   public:
     ObjectValueMap(JSContext* cx, JSObject* obj)
-      : WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>,
-                MovableCellHasher<HeapPtr<JSObject*>>>(cx, obj)
+      : WeakMap(cx, obj)
     {}
 
     bool findZoneEdges() override;

@@ -20,9 +20,9 @@ class BoxModelProperties extends PureComponent {
   static get propTypes() {
     return {
       boxModel: PropTypes.shape(Types.boxModel).isRequired,
-      setSelectedNode: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
@@ -73,9 +73,9 @@ class BoxModelProperties extends PureComponent {
   render() {
     const {
       boxModel,
-      setSelectedNode,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      setSelectedNode,
     } = this.props;
     const { layout } = boxModel;
 
@@ -88,19 +88,16 @@ class BoxModelProperties extends PureComponent {
       return ComputedProperty({
         name: info,
         key: info,
-        value: layout[info],
+        onHideBoxModelHighlighter,
+        onShowBoxModelHighlighterForNode,
         referenceElement,
         referenceElementType,
         setSelectedNode,
-        onHideBoxModelHighlighter,
-        onShowBoxModelHighlighterForNode,
+        value: layout[info],
       });
     });
 
-    return dom.div(
-      {
-        className: "boxmodel-properties",
-      },
+    return dom.div({ className: "boxmodel-properties" },
       dom.div(
         {
           className: "boxmodel-properties-header",
