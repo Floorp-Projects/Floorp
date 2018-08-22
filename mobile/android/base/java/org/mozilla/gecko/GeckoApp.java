@@ -37,6 +37,7 @@ import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.PrefUtils;
+import org.mozilla.gecko.util.StrictModeContext;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.widget.ActionModePresenter;
@@ -2033,6 +2034,7 @@ public abstract class GeckoApp extends GeckoActivity
         super.onPause();
     }
 
+    @SuppressWarnings("try")
     @Override
     public void onRestart() {
         if (mIsAbortingAppLaunch) {
@@ -2041,13 +2043,10 @@ public abstract class GeckoApp extends GeckoActivity
         }
 
         // Faster on main thread with an async apply().
-        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
-        try {
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
             SharedPreferences.Editor editor = GeckoApp.this.getSharedPreferences().edit();
             editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, false);
             editor.apply();
-        } finally {
-            StrictMode.setThreadPolicy(savedPolicy);
         }
 
         super.onRestart();
