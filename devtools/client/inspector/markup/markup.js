@@ -631,7 +631,7 @@ MarkupView.prototype = {
    * Highlights the node if needed, and make sure it is shown and selected in
    * the view.
    */
-  _onNewSelection: function() {
+  _onNewSelection: function(nodeFront, reason) {
     const selection = this.inspector.selection;
 
     if (this.htmlEditor) {
@@ -656,20 +656,22 @@ MarkupView.prototype = {
     }
 
     const slotted = selection.isSlotted();
-    const onShow = this.showNode(selection.nodeFront, { slotted }).then(() => {
-      // We could be destroyed by now.
-      if (this._destroyer) {
-        return promise.reject("markupview destroyed");
-      }
+    const smoothScroll = reason === "reveal-from-slot";
+    const onShow = this.showNode(selection.nodeFront, { slotted, smoothScroll })
+      .then(() => {
+        // We could be destroyed by now.
+        if (this._destroyer) {
+          return promise.reject("markupview destroyed");
+        }
 
-      // Mark the node as selected.
-      const container = this.getContainer(selection.nodeFront, slotted);
-      this._markContainerAsSelected(container);
+        // Mark the node as selected.
+        const container = this.getContainer(selection.nodeFront, slotted);
+        this._markContainerAsSelected(container);
 
-      // Make sure the new selection is navigated to.
-      this.maybeNavigateToNewSelection();
-      return undefined;
-    }).catch(this._handleRejectionIfNotDestroyed);
+        // Make sure the new selection is navigated to.
+        this.maybeNavigateToNewSelection();
+        return undefined;
+      }).catch(this._handleRejectionIfNotDestroyed);
 
     promise.all([onShowBoxModel, onShow]).then(done);
   },
@@ -1203,7 +1205,7 @@ MarkupView.prototype = {
    * Make sure the given node's parents are expanded and the
    * node is scrolled on to screen.
    */
-  showNode: function(node, {centered = true, slotted} = {}) {
+  showNode: function(node, {centered = true, slotted, smoothScroll = false} = {}) {
     if (slotted && !this.hasContainer(node, slotted)) {
       throw new Error("Tried to show a slotted node not previously imported");
     } else {
@@ -1217,7 +1219,7 @@ MarkupView.prototype = {
       return this._ensureVisible(node);
     }).then(() => {
       const container = this.getContainer(node, slotted);
-      scrollIntoViewIfNeeded(container.editor.elt, centered);
+      scrollIntoViewIfNeeded(container.editor.elt, centered, smoothScroll);
     }, this._handleRejectionIfNotDestroyed);
   },
 
