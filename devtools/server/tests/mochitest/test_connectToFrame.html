@@ -47,7 +47,6 @@ function runTests() {
     /* eslint-disable no-shadow */
     const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const { DebuggerServer } = require("devtools/server/main");
-    const { ActorRegistry } = require("devtools/server/actor-registry");
     /* eslint-enable no-shadow */
 
     DebuggerServer.init();
@@ -68,7 +67,7 @@ function runTests() {
     TestActor.prototype.requestTypes = {
       "hello": TestActor.prototype.hello
     };
-    ActorRegistry.addTargetScopedActor({
+    DebuggerServer.addTargetScopedActor({
       constructorName: "TestActor",
       constructorFun: TestActor,
     }, "testActor");

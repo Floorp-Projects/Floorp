@@ -826,10 +826,6 @@ Pool.prototype = extend(EventEmitter.prototype, {
     return this.conn.poolFor(this.actorID);
   },
 
-  poolFor: function(actorID) {
-    return this.conn.poolFor(actorID);
-  },
-
   /**
    * Override this if you want actors returned by this actor
    * to belong to a different actor by default.
@@ -859,18 +855,8 @@ Pool.prototype = extend(EventEmitter.prototype, {
   manage: function(actor) {
     if (!actor.actorID) {
       actor.actorID = this.conn.allocID(actor.actorPrefix || actor.typeName);
-    } else {
-      // If the actor is already registerd in a pool, remove it without destroying it.
-      // This happens for example when an addon is reloaded. To see this behavior, take a
-      // look at devtools/server/tests/unit/test_addon_reload.js
-
-      // TODO: not all actors have been moved to protocol.js, so they do not all have
-      // a parent field. Remove the check for the parent once the conversion is finished
-      const parent = this.poolFor(actor.actorID);
-      if (parent) {
-        parent.unmanage(actor);
-      }
     }
+
     this._poolMap.set(actor.actorID, actor);
     return actor;
   },
@@ -889,19 +875,13 @@ Pool.prototype = extend(EventEmitter.prototype, {
 
   // The actor for a given actor id stored in this pool
   actor: function(actorID) {
-    if (this.__poolMap) {
-      return this._poolMap.get(actorID);
-    }
-    return null;
+    return this.__poolMap ? this._poolMap.get(actorID) : null;
   },
 
   // Same as actor, should update debugger connection to use 'actor'
   // and then remove this.
   get: function(actorID) {
-    if (this.__poolMap) {
-      return this._poolMap.get(actorID);
-    }
-    return null;
+    return this.__poolMap ? this._poolMap.get(actorID) : null;
   },
 
   // True if this pool has no children.

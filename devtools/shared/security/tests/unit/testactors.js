@@ -1,12 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
-const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-pool");
+const { ActorPool, appendExtraActors, createExtraActors } =
+  require("devtools/server/actors/common");
 const { RootActor } = require("devtools/server/actors/root");
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { DebuggerServer } = require("devtools/server/main");
-const { ActorRegistry } = require("devtools/server/actor-registry");
 const promise = require("promise");
 
 var gTestGlobals = [];
@@ -29,17 +30,19 @@ function TestTabList(connection) {
   this._targetActors = [];
 
   // A pool mapping those actors' names to the actors.
-  this._targetActorPool = new LazyPool(connection);
+  this._targetActorPool = new ActorPool(connection);
 
   for (const global of gTestGlobals) {
     const actor = new TestTargetActor(connection, global);
     actor.selected = false;
     this._targetActors.push(actor);
-    this._targetActorPool.manage(actor);
+    this._targetActorPool.addActor(actor);
   }
   if (this._targetActors.length > 0) {
     this._targetActors[0].selected = true;
   }
+
+  connection.addActorPool(this._targetActorPool);
 }
 
 TestTabList.prototype = {
@@ -52,7 +55,7 @@ TestTabList.prototype = {
 exports.createRootActor = function createRootActor(connection) {
   const root = new RootActor(connection, {
     tabList: new TestTabList(connection),
-    globalActorFactories: ActorRegistry.globalActorFactories
+    globalActorFactories: DebuggerServer.globalActorFactories
   });
   root.applicationType = "xpcshell-tests";
   return root;
@@ -82,25 +85,26 @@ TestTargetActor.prototype = {
   form: function() {
     const response = { actor: this.actorID, title: this._global.__name };
 
-    // Walk over target-scoped actors and add them to a new LazyPool.
-    const actorPool = new LazyPool(this.conn);
-    const actors = createExtraActors(
-      ActorRegistry.targetScopedActorFactories,
-      actorPool,
-      this
-    );
+    // Walk over target-scoped actors and add them to a new ActorPool.
+    const actorPool = new ActorPool(this.conn);
+    this._createExtraActors(DebuggerServer.targetScopedActorFactories, actorPool);
     if (!actorPool.isEmpty()) {
       this._targetActorPool = actorPool;
       this.conn.addActorPool(this._targetActorPool);
     }
 
-    return { ...response, ...actors };
+    this._appendExtraActors(response);
+
+    return response;
   },
 
   onAttach: function(request) {
     this._attached = true;
 
-    return { type: "tabAttached", threadActor: this._threadActor.actorID };
+    const response = { type: "tabAttached", threadActor: this._threadActor.actorID };
+    this._appendExtraActors(response);
+
+    return response;
   },
 
   onDetach: function(request) {
@@ -108,7 +112,11 @@ TestTargetActor.prototype = {
       return { "error": "wrongState" };
     }
     return { type: "detached" };
-  }
+  },
+
+  /* Support for DebuggerServer.addTargetScopedActor. */
+  _createExtraActors: createExtraActors,
+  _appendExtraActors: appendExtraActors
 };
 
 TestTargetActor.prototype.requestTypes = {

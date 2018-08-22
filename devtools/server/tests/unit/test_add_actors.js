@@ -16,12 +16,12 @@ function getActorInstance(connID, actorID) {
  * regardless of the object's state.
  */
 add_task(async function() {
-  ActorRegistry.registerModule("resource://test/pre_init_global_actors.js", {
+  DebuggerServer.registerModule("resource://test/pre_init_global_actors.js", {
     prefix: "preInitGlobal",
     constructor: "PreInitGlobalActor",
     type: { global: true },
   });
-  ActorRegistry.registerModule("resource://test/pre_init_target_scoped_actors.js", {
+  DebuggerServer.registerModule("resource://test/pre_init_target_scoped_actors.js", {
     prefix: "preInitTargetScoped",
     constructor: "PreInitTargetScopedActor",
     type: { target: true },
@@ -29,12 +29,12 @@ add_task(async function() {
 
   const client = await startTestDebuggerServer("example tab");
 
-  ActorRegistry.registerModule("resource://test/post_init_global_actors.js", {
+  DebuggerServer.registerModule("resource://test/post_init_global_actors.js", {
     prefix: "postInitGlobal",
     constructor: "PostInitGlobalActor",
     type: { global: true },
   });
-  ActorRegistry.registerModule("resource://test/post_init_target_scoped_actors.js", {
+  DebuggerServer.registerModule("resource://test/post_init_target_scoped_actors.js", {
     prefix: "postInitTargetScoped",
     constructor: "PostInitTargetScopedActor",
     type: { target: true },
