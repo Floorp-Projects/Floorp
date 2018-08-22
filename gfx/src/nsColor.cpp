@@ -206,6 +206,18 @@ bool NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult) {
   return false;
 }
 
+// Fast approximate division by 255. It has the property that
+// for all 0 <= n <= 255*255, FAST_DIVIDE_BY_255(n) == n/255.
+// But it only uses two adds and two shifts instead of an
+// integer division (which is expensive on many processors).
+//
+// equivalent to target=v/255
+#define FAST_DIVIDE_BY_255(target, v)        \
+  PR_BEGIN_MACRO                             \
+  unsigned tmp_ = v;                         \
+  target = ((tmp_ << 8) + tmp_ + 255) >> 16; \
+  PR_END_MACRO
+
 // Macro to blend two colors
 //
 // equivalent to target = (bg*(255-fgalpha) + fg*fgalpha)/255
