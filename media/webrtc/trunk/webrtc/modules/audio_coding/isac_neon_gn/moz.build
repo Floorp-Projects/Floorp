@@ -46,7 +46,6 @@ if not CONFIG["MOZ_DEBUG"]:
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
     DEFINES["NDEBUG"] = True
     DEFINES["NVALGRIND"] = True
-    DEFINES["_FORTIFY_SOURCE"] = "2"
 
 if CONFIG["MOZ_DEBUG"] == "1":
 
@@ -75,6 +74,19 @@ if CONFIG["OS_TARGET"] == "FreeBSD":
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
 
+if CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["USE_NSS_CERTS"] = "1"
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_LINUX"] = True
+
+    OS_LIBS += [
+        "rt"
+    ]
+
 if CONFIG["OS_TARGET"] == "NetBSD":
 
     DEFINES["USE_X11"] = "1"
@@ -85,10 +97,6 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
 
-if CONFIG["CPU_ARCH"] == "aarch64":
-
-    DEFINES["WEBRTC_ARCH_ARM64"] = True
-
 if CONFIG["CPU_ARCH"] == "arm":
 
     CFLAGS += [
@@ -97,5 +105,37 @@ if CONFIG["CPU_ARCH"] == "arm":
 
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
 
 Library("isac_neon_gn")
