@@ -1425,7 +1425,7 @@ function dispatchPause(a, tickDuration) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   let duration = typeof a.duration == "undefined" ? tickDuration : a.duration;
   return new Promise(resolve =>
-      timer.initWithCallback(resolve, duration, Ci.nsITimer.TYPE_ONE_SHOT)
+      timer.initWithCallback(() => resolve(), duration, Ci.nsITimer.TYPE_ONE_SHOT)
   );
 }
 
