@@ -50,8 +50,6 @@ body {
 
 @media only screen and (max-width: 480px) {
   .button-container button {
-    /* Force buttons to display: block here to try and enforce collapsing margins */
-    display: block;
     width: 100%;
     margin: 0.66em 0 0;
   }
