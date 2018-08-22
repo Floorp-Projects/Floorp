@@ -7,40 +7,9 @@ var EXPORTED_SYMBOLS = ["PrivateBrowsingUtils"];
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function PrivateBrowsingContentBlockingAllowList() {
-  Services.obs.addObserver(this, "last-pb-context-exited", true);
-}
-
-PrivateBrowsingContentBlockingAllowList.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
-
-  /**
-   * Add the provided URI to the list of allowed tracking sites.
-   *
-   * @param uri nsIURI
-   *        The URI to add to the list.
-   */
-  addToAllowList(uri) {
-    Services.perms.add(uri, "trackingprotection-pb", Ci.nsIPermissionManager.ALLOW_ACTION,
-                       Ci.nsIPermissionManager.EXPIRE_SESSION);
-  },
-
-  /**
-   * Remove the provided URI from the list of allowed tracking sites.
-   *
-   * @param uri nsIURI
-   *        The URI to remove from the list.
-   */
-  removeFromAllowList(uri) {
-    Services.perms.remove(uri, "trackingprotection-pb");
-  },
-
-  observe(subject, topic, data) {
-    if (topic == "last-pb-context-exited") {
-      Services.perms.removeByType("trackingprotection-pb");
-    }
-  }
-};
+XPCOMUtils.defineLazyServiceGetter(this, "gPBMTPWhitelist",
+                                   "@mozilla.org/pbm-tp-whitelist;1",
+                                   "nsIPrivateBrowsingTrackingProtectionWhitelist");
 
 const kAutoStartPref = "browser.privatebrowsing.autostart";
 
@@ -87,17 +56,16 @@ var PrivateBrowsingUtils = {
     return aWindow.docShell.QueryInterface(Ci.nsILoadContext);
   },
 
-  get _pbCBAllowList() {
-    delete this._pbCBAllowList;
-    return this._pbCBAllowList = new PrivateBrowsingContentBlockingAllowList();
+  addToTrackingAllowlist(aURI) {
+    gPBMTPWhitelist.addToAllowList(aURI);
   },
 
-  addToTrackingAllowlist(aURI) {
-    this._pbCBAllowList.addToAllowList(aURI);
+  existsInTrackingAllowlist(aURI) {
+    return gPBMTPWhitelist.existsInAllowList(aURI);
   },
 
   removeFromTrackingAllowlist(aURI) {
-    this._pbCBAllowList.removeFromAllowList(aURI);
+    gPBMTPWhitelist.removeFromAllowList(aURI);
   },
 
   get permanentPrivateBrowsing() {
