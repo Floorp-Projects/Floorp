@@ -429,16 +429,11 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Geolocation, Geolocation::NonWindowSingleton)
 
-#define NS_GEOLOCATION_SERVICE_CID \
-  { 0x404d02a, 0x1CA, 0xAAAB, { 0x47, 0x62, 0x94, 0x4b, 0x1b, 0xf2, 0xf7, 0xb5 } }
-
 #define NS_AUDIOCHANNEL_SERVICE_CID \
   { 0xf712e983, 0x048a, 0x443f, { 0x88, 0x02, 0xfc, 0xc3, 0xd9, 0x27, 0xce, 0xac }}
 
 #define NS_WEBSOCKETEVENT_SERVICE_CID \
   { 0x31689828, 0xda66, 0x49a6, { 0x87, 0x0c, 0xdf, 0x62, 0xb8, 0x3f, 0xe7, 0x89 }}
-
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsGeolocationService, nsGeolocationService::GetGeolocationService)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AudioChannelService, AudioChannelService::GetOrCreate)
 
@@ -552,7 +547,6 @@ NS_DEFINE_NAMED_CID(NS_EDITORCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITINGCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORCOMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_EDITINGCOMMANDTABLE_CID);
-NS_DEFINE_NAMED_CID(NS_GEOLOCATION_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_CID);
 NS_DEFINE_NAMED_CID(NS_AUDIOCHANNEL_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_WEBSOCKETEVENT_SERVICE_CID);
@@ -790,7 +784,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_EDITINGCONTROLLER_CID, false, nullptr, nsEditingControllerConstructor },
   { &kNS_EDITORCOMMANDTABLE_CID, false, nullptr, nsEditorCommandTableConstructor },
   { &kNS_EDITINGCOMMANDTABLE_CID, false, nullptr, nsEditingCommandTableConstructor },
-  { &kNS_GEOLOCATION_SERVICE_CID, false, nullptr, nsGeolocationServiceConstructor },
   { &kNS_GEOLOCATION_CID, false, nullptr, GeolocationConstructor },
   { &kNS_AUDIOCHANNEL_SERVICE_CID, false, nullptr, AudioChannelServiceConstructor },
   { &kNS_WEBSOCKETEVENT_SERVICE_CID, false, nullptr, WebSocketEventServiceConstructor },
@@ -891,7 +884,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },
   { "@mozilla.org/editor/editorcontroller;1", &kNS_EDITORCONTROLLER_CID },
   { "@mozilla.org/editor/editingcontroller;1", &kNS_EDITINGCONTROLLER_CID },
-  { "@mozilla.org/geolocation/service;1", &kNS_GEOLOCATION_SERVICE_CID },
   { "@mozilla.org/geolocation;1", &kNS_GEOLOCATION_CID },
   { "@mozilla.org/audiochannel/service;1", &kNS_AUDIOCHANNEL_SERVICE_CID },
   { "@mozilla.org/websocketevent/service;1", &kNS_WEBSOCKETEVENT_SERVICE_CID },
