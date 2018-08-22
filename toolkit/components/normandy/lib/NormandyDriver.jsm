@@ -9,7 +9,6 @@ ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource:///modules/ShellService.jsm");
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://normandy/lib/Addons.jsm");
 ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
 ChromeUtils.import("resource://normandy/lib/Storage.jsm");
 ChromeUtils.import("resource://normandy/lib/Heartbeat.jsm");
@@ -19,8 +18,6 @@ ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm");
 ChromeUtils.defineModuleGetter(
   this, "Sampling", "resource://gre/modules/components-utils/Sampling.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
-ChromeUtils.defineModuleGetter(
-  this, "AddonStudies", "resource://normandy/lib/AddonStudies.jsm");
 
 const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
@@ -157,12 +154,6 @@ var NormandyDriver = function(sandboxManager) {
       sandboxManager.removeHold(`setTimeout-${token}`);
     },
 
-    addons: {
-      get: sandboxManager.wrapAsync(Addons.get.bind(Addons), {cloneInto: true}),
-      install: sandboxManager.wrapAsync(Addons.install.bind(Addons)),
-      uninstall: sandboxManager.wrapAsync(Addons.uninstall.bind(Addons)),
-    },
-
     // Sampling
     ratioSample: sandboxManager.wrapAsync(Sampling.ratioSample),
 
@@ -185,18 +176,6 @@ var NormandyDriver = function(sandboxManager) {
         {cloneInto: true}
       ),
       has: sandboxManager.wrapAsync(PreferenceExperiments.has.bind(PreferenceExperiments)),
-    },
-
-    // Study storage API
-    studies: {
-      start: sandboxManager.wrapAsync(
-        AddonStudies.start.bind(AddonStudies),
-        {cloneArguments: true, cloneInto: true}
-      ),
-      stop: sandboxManager.wrapAsync(AddonStudies.stop.bind(AddonStudies)),
-      get: sandboxManager.wrapAsync(AddonStudies.get.bind(AddonStudies), {cloneInto: true}),
-      getAll: sandboxManager.wrapAsync(AddonStudies.getAll.bind(AddonStudies), {cloneInto: true}),
-      has: sandboxManager.wrapAsync(AddonStudies.has.bind(AddonStudies)),
     },
 
     // Preference read-only API
