@@ -8,6 +8,7 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FontName = createFactory(require("./FontName"));
 const FontPropertyValue = createFactory(require("./FontPropertyValue"));
 const FontSize = createFactory(require("./FontSize"));
 const FontStyle = createFactory(require("./FontStyle"));
@@ -151,11 +152,10 @@ class FontEditor extends PureComponent {
 
   renderFontGroup(family, fonts = []) {
     const group = fonts.map(font => {
-      return dom.span(
-        {
-          className: "font-name",
-        },
-        font.name);
+      return FontName({
+        font,
+        onToggleFontHighlight: this.props.onToggleFontHighlight,
+      });
     });
 
     return dom.div(
