@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -62,7 +62,7 @@ void JustifyTotal::accumulate(Slot *s, Segment *seg, int level)
 
 float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUSED justFlags jflags, Slot *pFirst, Slot *pLast)
 {
-    Slot *s, *end;
+    Slot *end = last();
     float currWidth = 0.0;
     const float scale = font ? font->scale() : 1.0f;
     Position res;
@@ -73,9 +73,7 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
     if ((m_dir & 1) != m_silf->dir() && m_silf->bidiPass() != m_silf->numPasses())
     {
         reverseSlots();
-        s = pFirst;
-        pFirst = pLast;
-        pLast = s;
+        std::swap(pFirst, pLast);
     }
     if (!pFirst) pFirst = pSlot;
     while (!pFirst->isBase()) pFirst = pFirst->attachedTo();
@@ -85,22 +83,25 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
     width = width / scale;
     if ((jflags & gr_justEndInline) == 0)
     {
-        do {
+        while (pLast != pFirst && pLast)
+        {
             Rect bbox = theGlyphBBoxTemporary(pLast->glyph());
             if (bbox.bl.x != 0.f || bbox.bl.y != 0.f || bbox.tr.x != 0.f || bbox.tr.y == 0.f)
                 break;
             pLast = pLast->prev();
-        } while (pLast != pFirst);
+        }
     }
 
-    end = pLast->nextSibling();
-    pFirst = pFirst->nextSibling();
+    if (pLast)
+        end = pLast->nextSibling();
+    if (pFirst)
+        pFirst = pFirst->nextSibling();
 
     int icount = 0;
     int numLevels = silf()->numJustLevels();
     if (!numLevels)
     {
-        for (s = pSlot; s && s != end; s = s->nextSibling())
+        for (Slot *s = pSlot; s && s != end; s = s->nextSibling())
         {
             CharInfo *c = charinfo(s->before());
             if (isWhitespace(c->unicodeChar()))
@@ -113,7 +114,7 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
         }
         if (!icount)
         {
-            for (s = pSlot; s && s != end; s = s->nextSibling())
+            for (Slot *s = pSlot; s && s != end; s = s->nextSibling())
             {
                 s->setJustify(this, 0, 3, 1);
                 s->setJustify(this, 0, 2, 1);
@@ -124,7 +125,7 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
     }
 
     Vector<JustifyTotal> stats(numLevels);
-    for (s = pFirst; s && s != end; s = s->nextSibling())
+    for (Slot *s = pFirst; s && s != end; s = s->nextSibling())
     {
         float w = s->origin().x / scale + s->advance() - base;
         if (w > currWidth) currWidth = w;
@@ -146,7 +147,7 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
             diff = width - currWidth;
             diffpw = diff / tWeight;
             tWeight = 0;
-            for (s = pFirst; s && s != end; s = s->nextSibling()) // don't include final glyph
+            for (Slot *s = pFirst; s && s != end; s = s->nextSibling()) // don't include final glyph
             {
                 int w = s->getJustify(this, i, 3);
                 float pref = diffpw * w + error;
@@ -224,8 +225,10 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
 
     if (silf()->flags() & 1)
     {
-        delLineEnd(m_first);
-        delLineEnd(m_last);
+        if (m_first)
+            delLineEnd(m_first);
+        if (m_last)
+            delLineEnd(m_last);
     }
     m_first = oldFirst;
     m_last = oldLast;
@@ -277,4 +280,3 @@ void Segment::delLineEnd(Slot *s)
         s->prev()->next(NULL);
     freeSlot(s);
 }
-

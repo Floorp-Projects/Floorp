@@ -1963,9 +1963,9 @@ public:
     }
 
     mCallee = aCallee;
-    if (nsIPresShell* shell = mCallee->mOuter->PresShell()) {
-      shell->SuppressDisplayport(true);
-    }
+    nsIPresShell* shell = mCallee->mOuter->PresShell();
+    MOZ_ASSERT(shell);
+    shell->SuppressDisplayport(true);
     return true;
   }
 
@@ -1983,9 +1983,9 @@ public:
   void RemoveObserver() {
     if (mCallee) {
       RefreshDriver(mCallee)->RemoveRefreshObserver(this, FlushType::Style);
-      if (nsIPresShell* shell = mCallee->mOuter->PresShell()) {
-        shell->SuppressDisplayport(false);
-      }
+      nsIPresShell* shell = mCallee->mOuter->PresShell();
+      MOZ_ASSERT(shell);
+      shell->SuppressDisplayport(false);
       mCallee = nullptr;
     }
   }

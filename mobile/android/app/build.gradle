@@ -80,6 +80,7 @@ android {
         def isDebuggable = (!mozconfig.substs.MOZILLA_OFFICIAL) || (mozconfig.substs.NIGHTLY_BUILD && mozconfig.substs.MOZ_DEBUG)
         debug {
             debuggable isDebuggable 
+            multiDexKeepProguard file("${topsrcdir}/mobile/android/config/proguard/debug-robocop-keeps.cfg")
         }
         release {
             debuggable isDebuggable

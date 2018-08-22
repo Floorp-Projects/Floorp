@@ -8,6 +8,7 @@ import android.app.KeyguardManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.support.multidex.MultiDex;
 import android.test.InstrumentationTestRunner;
 import android.util.Log;
 
@@ -22,6 +23,7 @@ public class FennecInstrumentationTestRunner extends InstrumentationTestRunner {
 
     @Override
     public void onCreate(Bundle arguments) {
+        MultiDex.install(getTargetContext());
         sArguments = arguments;
         if (sArguments == null) {
             Log.e("Robocop", "FennecInstrumentationTestRunner.onCreate got null bundle");

@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -41,7 +41,7 @@ of the License or (at your option) any later version.
 //      gmetric - 0 .. 11 (kgmetDescent)
 //      featidx - 0 .. face.numFeatures()
 //      level - any byte
-static const opcode_t opcode_table[] = 
+static const opcode_t opcode_table[] =
 {
     {{do2(nop)},                                    0, "NOP"},
 
@@ -122,4 +122,3 @@ static const opcode_t opcode_table[] =
     // private opcodes for internal use only, comes after all other on disk opcodes.
     {{do_(temp_copy), NILOP},                       0, "TEMP_COPY"}
 };
-

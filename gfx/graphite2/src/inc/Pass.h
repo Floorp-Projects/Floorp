@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -46,11 +46,11 @@ class json;
 enum passtype;
 
 class Pass
-{   
+{
 public:
     Pass();
     ~Pass();
-    
+
     bool readPass(const byte * pPass, size_t pass_length, size_t subtable_base, Face & face,
         enum passtype pt, uint32 version, Error &e);
     bool runGraphite(vm::Machine & m, FiniteStateMachine & fsm, bool reverse) const;
@@ -66,7 +66,7 @@ private:
     bool    testConstraint(const Rule & r, vm::Machine &) const;
     bool    readRules(const byte * rule_map, const size_t num_entries,
                      const byte *precontext, const uint16 * sort_key,
-                     const uint16 * o_constraint, const byte *constraint_data, 
+                     const uint16 * o_constraint, const byte *constraint_data,
                      const uint16 * o_action, const byte * action_data,
                      Face &, enum passtype pt, Error &e);
     bool    readStates(const byte * starts, const byte * states, const byte * o_rule_map, Face &, Error &e);
@@ -109,7 +109,7 @@ private:
     byte m_colThreshold;
     bool m_isReverseDir;
     vm::Machine::Code m_cPConstraint;
-    
+
 private:        //defensive
     Pass(const Pass&);
     Pass& operator=(const Pass&);

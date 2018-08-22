@@ -16,9 +16,11 @@
 
 /* globals exportFunction */
 
+console.info("window.controllers has been shimmed for compatibility reasons. See https://webcompat.com/issues/16401 for details.");
+
 Object.defineProperty(window.wrappedJSObject, "controllers", {
   get: exportFunction(function() {
-    return "window.controllers has been shimmed with a string to get this site's browser detection to work in Firefox 61+.";
+    return true;
   }, window),
 
   set: exportFunction(function() {}, window)

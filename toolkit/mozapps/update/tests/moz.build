@@ -111,6 +111,10 @@ FINAL_TARGET_FILES += [
     'TestAUSReadStrings3.ini',
 ]
 
+FINAL_TARGET_PP_FILES += [
+    'data/xpcshellConstantsPP.js',
+]
+
 with Files("browser/browser_TelemetryUpdatePing.js"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 

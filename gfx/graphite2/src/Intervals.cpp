@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -183,16 +183,16 @@ void Zones::remove(float x, float xm)
 
 Zones::const_iterator Zones::find_exclusion_under(float x) const
 {
-    int l = 0, h = _exclusions.size();
+    size_t l = 0, h = _exclusions.size();
 
     while (l < h)
     {
-        int const p = (l+h) >> 1;
+        size_t const p = (l+h) >> 1;
         switch (_exclusions[p].outcode(x))
         {
         case 0 : return _exclusions.begin()+p;
         case 1 : h = p; break;
-        case 2 : 
+        case 2 :
         case 3 : l = p+1; break;
         }
     }
@@ -287,7 +287,7 @@ void Zones::jsonDbgOut(Segment *seg) const {
                 *_dbg << "remove" << Position(s->_excl.x, s->_excl.xm);
             else
                 *_dbg << "exclude" << json::flat << json::array
-                    << s->_excl.x << s->_excl.xm 
+                    << s->_excl.x << s->_excl.xm
                     << s->_excl.sm << s->_excl.smx << s->_excl.c
                     << json::close;
             *_dbg << json::close;
@@ -296,4 +296,3 @@ void Zones::jsonDbgOut(Segment *seg) const {
 }
 
 #endif
-

@@ -22,7 +22,7 @@ fi
 TARBALL="https://github.com/silnrsi/graphite/releases/download/$RELEASE/graphite2-minimal-$RELEASE.tgz"
 
 foo=`basename $0`
-TMPFILE=`mktemp -t ${foo}` || exit 1
+TMPFILE=`mktemp -t ${foo}.XXX` || exit 1
 
 curl -L "$TARBALL" -o "$TMPFILE"
 tar -x -z -C gfx/graphite2/ --strip-components 1 -f "$TMPFILE" || exit 1

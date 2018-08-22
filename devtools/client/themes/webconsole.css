@@ -88,7 +88,7 @@ a {
 /* The red bubble that shows the number of times a message is repeated */
 .message-repeats {
   -moz-user-select: none;
-  flex: none;
+  flex-shrink: 0;
   margin: 2px 6px;
   padding: 0 6px;
   height: 1.25em;
@@ -98,6 +98,7 @@ a {
   font: message-box;
   font-size: 0.9em;
   font-weight: 600;
+  margin-inline-start: 5px;
 }
 
 .message-repeats[value="1"] {
@@ -106,8 +107,9 @@ a {
 
 .message-location {
   max-width: 40vw;
-  grid-column: -1 / -2;
+  flex-shrink: 0;
   color: var(--frame-link-source);
+  margin-inline-start: 5px;
 }
 
 .stack-trace {
@@ -140,9 +142,7 @@ a {
 }
 
 .message-flex-body {
-  display: grid;
-  grid-template-columns: 1fr auto max-content;
-  grid-gap: 5px;
+  display: flex;
 }
 
 .message-body {
@@ -152,7 +152,7 @@ a {
 
 .message-flex-body > .message-body {
   display: block;
-  flex: auto;
+  flex: 1;
 }
 
 /* Network styles */

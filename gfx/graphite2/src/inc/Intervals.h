@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -216,7 +216,7 @@ Zones::Exclusion Zones::Exclusion::weighted<XY>(float xmin, float xmax, float f,
         float m, float xi, GR_MAYBE_UNUSED float ai, float c, GR_MAYBE_UNUSED bool nega) {
     return Exclusion(xmin, xmax,
             m + f,
-            m * xi, 
+            m * xi,
             m * xi * xi + f * a0 * a0 + c);
 }
 
@@ -225,9 +225,9 @@ inline
 Zones::Exclusion Zones::Exclusion::weighted<SD>(float xmin, float xmax, float f, float a0,
         float m, float xi, float ai,float c, bool nega) {
     float xia = nega ? xi - ai : xi + ai;
-    return Exclusion(xmin, xmax, 
-            0.25f * (m + 2.f * f), 
-            0.25f * m * xia, 
+    return Exclusion(xmin, xmax,
+            0.25f * (m + 2.f * f),
+            0.25f * m * xia,
             0.25f * (m * xia * xia + 2.f * f * a0 * a0) + c);
 }
 
