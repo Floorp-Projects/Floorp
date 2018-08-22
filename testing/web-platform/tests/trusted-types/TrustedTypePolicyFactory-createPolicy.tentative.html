@@ -84,6 +84,77 @@
     }));
   }, "html - calling undefined callback");
 
+  //Script tests
+  function createScriptTest(policy, expectedScript, t) {
+    let p = window.trustedTypes.createPolicy('SomeName', policy)
+        .then(t.step_func_done(p => {
+            assert_true(p.createScript('whatever') instanceof TrustedScript);
+            assert_equals(p.createScript('whatever') + "", expectedScript);
+    }));
+  }
+
+  async_test(t => {
+    createScriptTest( { createScript: s => s }, 'whatever', t);
+  }, "script = identity function");
+
+  async_test(t => {
+    createScriptTest( { createScript: s => null }, "null", t);
+  }, "script = null");
+
+  var Scriptstr = 'well, ';
+  async_test(t => {
+    createScriptTest( { createScript: s => Scriptstr + s }, Scriptstr + 'whatever', t);
+  }, "script = string + global string");
+
+  var Scriptx = 'global';
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', {
+        createScript: s => { Scriptx = s; return s; }
+      })
+      .then(t.step_func_done(p => {
+        assert_true(p.createScript('whatever') instanceof TrustedScript);
+        assert_equals(p.createScript('whatever') + "", 'whatever');
+        assert_equals(Scriptx, 'whatever');
+    }));
+  }, "script = identity function, global string changed");
+
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', {
+        createScript: s => { throw new Error(); }
+      })
+      .then(t.step_func_done(p => {
+        assert_throws(new Error(), _ => {
+          p.createScript('whatever');
+        });
+    }));
+  }, "script = callback that throws");
+
+  var obj = {
+    "foo": "well,"
+  }
+
+  function getScript(s) {
+    return this.foo + " " + s;
+  }
+
+  async_test(t => {
+    createScriptTest( {
+      createScript: getScript.bind(obj)},
+      'well, whatever', t);
+  }, "script = this bound to an object");
+
+  var foo = "well,";
+  async_test(t => {
+    createScriptTest( { createScript: s => getScript(s) }, 'well, whatever', t);
+  }, "script = this without bind");
+
+  async_test(t => {
+    let p = window.trustedTypes.createPolicy('SomeName', null)
+        .then(t.step_func_done(p => {
+            assert_equals(p.createScript('whatever'), null);
+    }));
+  }, "script - calling undefined callback");
+
   //ScriptURL tests
   function createScriptURLTest(policy, expectedScriptURL, t) {
     window.trustedTypes.createPolicy('SomeName', policy)
