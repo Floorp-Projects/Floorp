@@ -402,7 +402,7 @@ public:
    *                        an Element.  Otherwise, nullptr.
    */
   Element*
-  GetElementOrParentByTagName(const nsAtom& aTagName, nsINode* aNode);
+  GetElementOrParentByTagName(const nsAtom& aTagName, nsINode* aNode) const;
 
   /**
     * Get an active editor's editing host in DOM window.  If this editor isn't
@@ -912,7 +912,7 @@ protected: // Shouldn't be used by friend classes
    */
   Element*
   GetElementOrParentByTagNameAtSelection(Selection& aSelection,
-                                         const nsAtom& aTagName);
+                                         const nsAtom& aTagName) const;
 
   /**
    * GetElementOrParentByTagNameInternal() looks for an element node whose
@@ -933,7 +933,7 @@ protected: // Shouldn't be used by friend classes
    */
   Element*
   GetElementOrParentByTagNameInternal(const nsAtom& aTagName,
-                                      nsINode& aNode);
+                                      nsINode& aNode) const;
 
   /**
    * GetSelectedElement() returns an element node which is in first range of
@@ -971,6 +971,26 @@ protected: // Shouldn't be used by friend classes
   GetSelectedElement(Selection& aSelection,
                      const nsAtom* aTagName,
                      ErrorResult& aRv);
+
+  /**
+   * GetFirstTableRowElement() returns the first <tr> element in the most
+   * nearest ancestor of aTableOrElementInTable or itself.
+   *
+   * @param aTableOrElementInTable      <table> element or another element.
+   *                                    If this is a <table> element, returns
+   *                                    first <tr> element in it.  Otherwise,
+   *                                    returns first <tr> element in nearest
+   *                                    ancestor <table> element.
+   * @param aRv                         Returns an error code.  When
+   *                                    aTableOrElementInTable is neither
+   *                                    <table> nor in a <table> element,
+   *                                    returns NS_ERROR_FAILURE.
+   *                                    However, if <table> does not have
+   *                                    <tr> element, returns NS_OK.
+   */
+  Element*
+  GetFirstTableRowElement(Element& aTableOrElementInTable,
+                          ErrorResult& aRv) const;
 
   /**
    * PasteInternal() pasts text with replacing selected content.

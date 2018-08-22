@@ -203,14 +203,25 @@ interface nsITableEditor : nsISupports
                      out long  aActualRowSpan, out long  aActualColSpan,
                      out boolean aIsSelected);
 
-  /** Get the first row element in a table
-    *
-    * @return            The row at the requested index
-    *                    Returns null if there are no rows in table
-    * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    *  passes NS_SUCCEEDED macro)
-    */
-  Node getFirstRow(in Element aTableElement);
+  /**
+   * getFirstRow() returns first <tr> element in a <table> element.
+   *
+   * @param aTableOrElementInTable  If a <table> element, returns its first
+   *                                <tr> element.
+   *                                If another element, looks for nearest
+   *                                ancestor <table> element first.  Then,
+   *                                return its first <tr> element.
+   * @return                        <tr> element in the <table> element.
+   *                                If <table> element is not found, this
+   *                                throws an exception.
+   *                                If there is a <table> element but it
+   *                                does not have <tr> elements, returns
+   *                                null without throwing exception.
+   *                                Note that this may return anonymous <tr>
+   *                                element if <table> has one or more cells
+   *                                but <tr> element is not in the source.
+   */
+  Element getFirstRow(in Element aTableElement);
 
   /** Get the next row element starting the search from aTableElement
     *
