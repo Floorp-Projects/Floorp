@@ -902,38 +902,27 @@ set_config('ENABLE_MARIONETTE', marionette)
 
 # geckodriver WebDriver implementation
 # ==============================================================
-option('--enable-geckodriver', help='Enable WebDriver implementation')
+#
+# Turn off geckodriver for build configs we don't handle yet,
+# but allow --enable-geckodriver to override when compile environment is available.
+# --disable-tests implies disabling geckodriver.
 
-@depends('--enable-geckodriver',
-         'MOZ_AUTOMATION',
-         compile_environment,
-         target,
-         cross_compiling,
-         hazard_analysis,
-         asan)
-def geckodriver(enable, automation, compile_env, target, cross_compile, hazard, asan):
-    """
-    geckodriver is implied on supported platforms when MOZ_AUTOMATION
-    is set, but we also provide the --enable-geckodriver option for
-    developers to use.
+@depends('--enable-tests', target, cross_compiling, hazard_analysis, asan)
+def geckodriver_default(enable_tests, target, cross_compile, hazard, asan):
+    if not enable_tests:
+        return False
+    if hazard or target.os == 'Android' or (asan and cross_compile):
+        return False
+    return True
 
-    At the present time, we want individual developers to be able to
-    opt-in to building geckodriver locally, and for it to be enabled by
-    default on supported CI build platforms.
-    """
-    if enable:
-        if not compile_env:
-            die("--enable-geckodriver is not available without a compile "
-                "environment. A geckodriver binary will be downloaded during "
-                "an artifact build by default where available.")
+option('--enable-geckodriver', default=geckodriver_default,
+       when='--enable-compile-environment',
+       help='Build geckodriver')
+
+@depends('--enable-geckodriver', when='--enable-compile-environment')
+def geckodriver(enabled):
+    if enabled:
         return True
-
-    if enable.origin == 'default':
-        # Bug 1441656 for Android.
-        broken_platforms = hazard or target.os == 'Android' or (asan and cross_compile)
-
-        if automation and compile_env and not broken_platforms:
-            return True
 
 set_config('ENABLE_GECKODRIVER', geckodriver)
 
