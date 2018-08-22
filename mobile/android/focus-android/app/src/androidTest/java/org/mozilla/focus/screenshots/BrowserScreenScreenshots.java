@@ -4,6 +4,8 @@
 
 package org.mozilla.focus.screenshots;
 
+import android.os.SystemClock;
+import android.support.test.espresso.ViewInteraction;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiObject;
@@ -38,7 +40,10 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static junit.framework.Assert.assertTrue;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.mozilla.focus.helpers.EspressoHelper.childAtPosition;
+import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 
 @RunWith(AndroidJUnit4.class)
 public class BrowserScreenScreenshots extends ScreenshotTest {
@@ -77,7 +82,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
 
     @Test
     public void takeScreenshotsOfBrowsingScreen() throws Exception {
-        Screengrab.screenshot("Ignore_Browsingscreen");
+        SystemClock.sleep(5000);
         takeScreenshotsOfBrowsingView();
         takeScreenshotsOfMenu();
         takeScreenshotsOfOpenWithAndShare();
@@ -89,8 +94,8 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
     }
 
     private void takeScreenshotsOfBrowsingView() {
-        assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
-        Screengrab.screenshot("LocationBarEmptyState");
+        onView(withId(R.id.urlView))
+                .check(matches(isDisplayed()));
 
         /* Autocomplete View */
         onView(withId(R.id.urlView))
@@ -100,12 +105,56 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
 
         assertTrue(TestHelper.hint.waitForExists(waitingTime));
 
-        Screengrab.screenshot("SearchFor");
+        onView(withId(R.id.urlView))
+                .check(matches(isDisplayed()))
+                .check(matches(hasFocus()))
+                .perform(click(), replaceText(webServer.url("/").toString()));
+
+        Screengrab.screenshot("Suggestion_accept_dialog");
+
+        // click yes, then go into search dialog and change to twitter
+        onView(withId(R.id.enable_search_suggestions_button))
+                .check(matches(isDisplayed()))
+                .perform(click());
+
+        onView(withId(R.id.clearView))
+                .check(matches(isDisplayed()))
+                .perform(click());
+
+        openSettings();
+        onView(withText(R.string.preference_category_search))
+                .perform(click());
+        onView(withText(R.string.preference_search_engine_default))
+                .perform(click());
+        onView(withText(R.string.preference_search_installed_search_engines))
+                .check(matches(isDisplayed()));
+
+        onView(allOf(childAtPosition(
+                withId(R.id.search_engine_group), 3),
+                isDisplayed()))
+                .perform(click());
+
+        device.pressBack();
+        device.pressBack();
+        device.pressBack();
 
         onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()))
-                .perform(click(), replaceText(webServer.url("/").toString()), pressImeActionButton());
+                .perform(click(), replaceText(webServer.url("/").toString()));
+
+        ViewInteraction dismissbutton = onView(withId(R.id.dismiss_no_suggestions_message));
+
+        dismissbutton.check(matches(isDisplayed()));
+
+        Screengrab.screenshot("Suggestion_unavailable_dialog");
+
+        dismissbutton.perform(click());
+
+        onView(withId(R.id.urlView))
+                .check(matches(isDisplayed()))
+                .check(matches(hasFocus()))
+                .perform(pressImeActionButton());
 
         device.findObject(new UiSelector()
                 .resourceId(TestHelper.getAppName() + ":id/webview")
@@ -115,8 +164,6 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
         onView(withId(R.id.display_url))
                 .check(matches(isDisplayed()))
                 .check(matches(withText(containsString(webServer.getHostName()))));
-
-        Screengrab.screenshot("BrowserView");
     }
 
     private void takeScreenshotsOfMenu() {

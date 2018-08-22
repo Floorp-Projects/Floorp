@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.screenshots;
 
+import android.os.SystemClock;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.ClassRule;
@@ -17,6 +18,8 @@ import tools.fastlane.screengrab.locale.LocaleTestRule;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.pressImeActionButton;
+import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.hasFocus;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -29,13 +32,26 @@ public class HomeScreenScreenshots extends ScreenshotTest {
     @ClassRule
     public static final LocaleTestRule localeTestRule = new LocaleTestRule();
 
+    private enum TipTypes {
+        TIP_CREATETP (1),
+        TIP_CREATEHS (2),
+        TIP_CREATEDEFAULTBROWSER (3),
+        TIP_AC_URL (4),
+        TIP_NEWTAB (5),
+        TIP_REQDESKTOP (6);
+        private int value;
+
+        TipTypes(int value) {
+            this.value = value;
+        }
+    }
+
     @Test
     public void takeScreenshotOfHomeScreen() {
-        Screengrab.screenshot("Ignore");
         onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()));
-
+        SystemClock.sleep(5000);
         Screengrab.screenshot("Home_View");
     }
 
@@ -47,5 +63,19 @@ public class HomeScreenScreenshots extends ScreenshotTest {
                 .check(matches(isDisplayed()));
 
         Screengrab.screenshot("MainViewMenu");
+    }
+
+    @Test
+    public void takeScreenshotOfTips() {
+        for (TipTypes tip: TipTypes.values()) {
+            onView(withId(R.id.urlView))
+                    .check(matches(isDisplayed()))
+                    .check(matches(hasFocus()))
+                    .perform(click(), replaceText("l10n:tip:" + tip.value), pressImeActionButton());
+
+            onView(withId(R.id.homeViewTipsLabel))
+                    .check(matches(isDisplayed()));
+            Screengrab.screenshot("MainViewTip_" + tip.name());
+        }
     }
 }

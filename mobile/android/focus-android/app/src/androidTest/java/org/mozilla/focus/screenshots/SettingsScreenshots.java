@@ -5,6 +5,7 @@
 package org.mozilla.focus.screenshots;
 
 import android.content.Context;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
@@ -31,14 +32,12 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isEnabled;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.core.AllOf.allOf;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.assertToolbarMatchesText;
 import static org.mozilla.focus.helpers.EspressoHelper.childAtPosition;
@@ -72,6 +71,7 @@ public class SettingsScreenshots extends ScreenshotTest {
 
     @Test
     public void takeScreenShotsOfSettings() throws Exception {
+        SystemClock.sleep(5000);
         openSettings();
 
         Screengrab.screenshot("Settings_View_Top");
@@ -151,8 +151,9 @@ public class SettingsScreenshots extends ScreenshotTest {
         onView(withText(getString(R.string.preference_autocomplete_custom_summary)))
                 .perform(click());
         /* Add custom URL */
-        onView(allOf(withId(R.id.list),
-                childAtPosition(withId(android.R.id.list_container), 0))).perform(actionOnItemAtPosition(4, click()));
+        onView(childAtPosition(withId(R.id.recycler_view), 4)).perform(click());
+
+        //        onView(childAtPosition(withId(R.id.recycler_view), 0)).perform(actionOnItemAtPosition(4, click()));
 
         final String addCustomURLAction = getString(R.string.preference_autocomplete_action_add);
         onView(withText(addCustomURLAction))
@@ -166,15 +167,14 @@ public class SettingsScreenshots extends ScreenshotTest {
         Screengrab.screenshot("Autocomplete_Add_Custom_URL_Dialog");
         onView(withId(R.id.save))
                 .perform(click());
-        device.waitForIdle();
-        Screengrab.screenshot("Autocomplete_Add_Custom_URL_Error_Popup");
+       Screengrab.screenshot("Autocomplete_Add_Custom_URL_Error_Popup");
 
         onView(withId(R.id.domainView))
                 .perform(replaceText("screenshot.com"), closeSoftKeyboard());
         onView(withId(R.id.save))
                 .perform(click());
+        SystemClock.sleep(500);
         Screengrab.screenshot("Autocomplete_Add_Custom_URL_Saved_Popup");
-        device.waitForIdle();
         onView(withText(addCustomURLAction))
                 .check(matches(isDisplayed()));
 
@@ -201,13 +201,6 @@ public class SettingsScreenshots extends ScreenshotTest {
         Espresso.pressBack();
         Espresso.pressBack();
 
-        /*
-        assertTrue(TestHelper.settingsHeading.waitForExists(waitingTime));
-        UiScrollable settingsView = new UiScrollable(new UiSelector().scrollable(true));
-        settingsView.scrollToEnd(4);
-        Screengrab.screenshot("Settings_View_Bottom");
-        */
-
         // "Mozilla" submenu
         onView(withText(R.string.preference_category_mozilla))
                 .perform(click());
@@ -220,16 +213,12 @@ public class SettingsScreenshots extends ScreenshotTest {
                 .check(matches(isDisplayed()))
                 .perform(click());
 
-        onView(withId(R.id.display_url))
-                .check(matches(isDisplayed()))
-                .check(matches(withText("focus:about")));
-
+        onView(withText(R.string.menu_about))
+                .check(matches(isDisplayed()));
         Screengrab.screenshot("About_Page");
 
         // leave about page, tap menu and go to settings again
-        openSettings();
-        onView(withText(R.string.preference_category_mozilla))
-                .perform(click());
+        device.pressBack();
 
         // "Your rights" screen
         final String yourRightsLabel = getString(R.string.menu_rights);
@@ -238,21 +227,19 @@ public class SettingsScreenshots extends ScreenshotTest {
                 .check(matches(isDisplayed()))
                 .perform(click());
 
-        onView(withId(R.id.display_url))
-                .check(matches(isDisplayed()))
-                .check(matches(withText("focus:rights")));
-
+        onView(withText(R.string.your_rights))
+                .check(matches(isDisplayed()));
         Screengrab.screenshot("YourRights_Page");
-
+        device.pressBack();
+        device.pressBack();
 
         // "Privacy & Security" submenu
-        openSettings();
         onView(withText(R.string.preference_privacy_and_security_header))
                 .perform(click());
         Screengrab.screenshot("Privacy_Security_Submenu_top");
         UiScrollable settingsView = new UiScrollable(new UiSelector().scrollable(true));
         if (settingsView.exists()) {        // On tablet, this will not be found
-            settingsView.scrollToEnd(4);
+            settingsView.scrollToEnd(5);
             Screengrab.screenshot("Privacy_Security_Submenu_bottom");
         }
     }
