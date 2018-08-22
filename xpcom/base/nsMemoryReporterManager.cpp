@@ -193,6 +193,12 @@ SystemHeapSize(int64_t* aSizeOut)
 static MOZ_MUST_USE nsresult
 GetKinfoProcSelf(KINFO_PROC* aProc)
 {
+#if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
+  static LazyLogModule sPledgeLog("SandboxPledge");
+  MOZ_LOG(sPledgeLog, LogLevel::Debug,
+         ("%s called when pledged, returning NS_ERROR_FAILURE\n", __func__));
+  return NS_ERROR_FAILURE;
+#endif
   int mib[] = {
     CTL_KERN,
     KERN_PROC,
