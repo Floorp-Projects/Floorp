@@ -88,6 +88,8 @@ async function performTests() {
     const deckHeight = deck.getBoundingClientRect().height;
     const webconsoleHeight = webconsolePanel.getBoundingClientRect().height;
     const splitterVisibility = !splitter.getAttribute("hidden");
+    // Splitter height will be 1px since the margin is negative.
+    const splitterHeight = splitterVisibility ? 1 : 0;
     const openedConsolePanel = toolbox.currentToolId === "webconsole";
     const menuLabel = await getMenuLabel(toolbox);
 
@@ -96,6 +98,7 @@ async function performTests() {
       containerHeight: containerHeight,
       webconsoleHeight: webconsoleHeight,
       splitterVisibility: splitterVisibility,
+      splitterHeight: splitterHeight,
       openedConsolePanel: openedConsolePanel,
       menuLabel,
     };
@@ -218,7 +221,9 @@ async function performTests() {
        "Deck has a height > 0 when console is split");
     ok(currentUIState.webconsoleHeight > 0,
        "Web console has a height > 0 when console is split");
-    is(Math.round(currentUIState.deckHeight + currentUIState.webconsoleHeight),
+    is(Math.round(currentUIState.deckHeight +
+                  currentUIState.webconsoleHeight +
+                  currentUIState.splitterHeight),
        currentUIState.containerHeight,
        "Everything adds up to container height");
     ok(!currentUIState.openedConsolePanel,
