@@ -916,11 +916,11 @@ media:
       - main
       - content
 
-  blocked_autoplay_no_audio_track_count:
+  allowed_autoplay_no_audio_track_count:
     bug_numbers:
       - 1480484
     description: >
-      The number of HTMLMediaElement autoplays on HTMLMediaElements without an audio track which would not be allowed to play if block autoplay was enabled; we'd either prompt for permission to play or block outright depending on user preferences.
+      The number of HTMLMediaElement autoplays on HTMLMediaElements without an audio track which would be allowed to play.
     expires: "68"
     kind: uint
     notification_emails:
