@@ -143,12 +143,12 @@ struct hb_lockable_set_t
 
 struct hb_reference_count_t
 {
-  hb_atomic_int_t ref_count;
+  mutable hb_atomic_int_t ref_count;
 
-  inline void init (int v) { ref_count.set_relaxed (v); }
+  inline void init (int v = 1) { ref_count.set_relaxed (v); }
   inline int get_relaxed (void) const { return ref_count.get_relaxed (); }
-  inline int inc (void) { return ref_count.inc (); }
-  inline int dec (void) { return ref_count.dec (); }
+  inline int inc (void) const { return ref_count.inc (); }
+  inline int dec (void) const { return ref_count.dec (); }
   inline void fini (void) { ref_count.set_relaxed (HB_REFERENCE_COUNT_POISON_VALUE); }
 
   inline bool is_inert (void) const { return ref_count.get_relaxed () == HB_REFERENCE_COUNT_INERT_VALUE; }
@@ -194,9 +194,9 @@ struct hb_user_data_array_t
 struct hb_object_header_t
 {
   hb_reference_count_t ref_count;
-  mutable hb_user_data_array_t *user_data;
+  hb_atomic_ptr_t<hb_user_data_array_t> user_data;
 
-#define HB_OBJECT_HEADER_STATIC {HB_REFERENCE_COUNT_INIT, nullptr}
+#define HB_OBJECT_HEADER_STATIC {HB_REFERENCE_COUNT_INIT, HB_ATOMIC_PTR_INIT (nullptr)}
 
   private:
   ASSERT_POD ();
@@ -231,8 +231,8 @@ static inline Type *hb_object_create (void)
 template <typename Type>
 static inline void hb_object_init (Type *obj)
 {
-  obj->header.ref_count.init (1);
-  obj->header.user_data = nullptr;
+  obj->header.ref_count.init ();
+  obj->header.user_data.init ();
 }
 template <typename Type>
 static inline bool hb_object_is_inert (const Type *obj)
@@ -271,10 +271,11 @@ template <typename Type>
 static inline void hb_object_fini (Type *obj)
 {
   obj->header.ref_count.fini (); /* Do this before user_data */
-  if (obj->header.user_data)
+  hb_user_data_array_t *user_data = obj->header.user_data.get ();
+  if (user_data)
   {
-    obj->header.user_data->fini ();
-    free (obj->header.user_data);
+    user_data->fini ();
+    free (user_data);
   }
 }
 template <typename Type>
@@ -289,14 +290,14 @@ static inline bool hb_object_set_user_data (Type               *obj,
   assert (hb_object_is_valid (obj));
 
 retry:
-  hb_user_data_array_t *user_data = (hb_user_data_array_t *) hb_atomic_ptr_get (&obj->header.user_data);
+  hb_user_data_array_t *user_data = obj->header.user_data.get ();
   if (unlikely (!user_data))
   {
     user_data = (hb_user_data_array_t *) calloc (sizeof (hb_user_data_array_t), 1);
     if (unlikely (!user_data))
       return false;
     user_data->init ();
-    if (unlikely (!hb_atomic_ptr_cmpexch (&obj->header.user_data, nullptr, user_data)))
+    if (unlikely (!obj->header.user_data.cmpexch (nullptr, user_data)))
     {
       user_data->fini ();
       free (user_data);
@@ -311,10 +312,13 @@ template <typename Type>
 static inline void *hb_object_get_user_data (Type               *obj,
 					     hb_user_data_key_t *key)
 {
-  if (unlikely (!obj || hb_object_is_inert (obj) || !obj->header.user_data))
+  if (unlikely (!obj || hb_object_is_inert (obj)))
     return nullptr;
   assert (hb_object_is_valid (obj));
-  return obj->header.user_data->get (key);
+  hb_user_data_array_t *user_data = obj->header.user_data.get ();
+  if (!user_data)
+    return nullptr;
+  return user_data->get (key);
 }
 
 

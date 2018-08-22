@@ -31,6 +31,7 @@
 #include "hb-glib.h"
 
 #include "hb-unicode-private.hh"
+#include "hb-machinery-private.hh"
 
 
 #if !GLIB_CHECK_VERSION(2,29,14)
@@ -364,30 +365,15 @@ hb_glib_unicode_decompose_compatibility (hb_unicode_funcs_t *ufuncs HB_UNUSED,
   return utf8_decomposed_len;
 }
 
-static hb_unicode_funcs_t *static_glib_funcs = nullptr;
 
-#ifdef HB_USE_ATEXIT
-static
-void free_static_glib_funcs (void)
+
+static void free_static_glib_funcs (void);
+
+static struct hb_glib_unicode_funcs_lazy_loader_t : hb_unicode_funcs_lazy_loader_t<hb_glib_unicode_funcs_lazy_loader_t>
 {
-retry:
-  hb_unicode_funcs_t *glib_funcs = (hb_unicode_funcs_t *) hb_atomic_ptr_get (&static_glib_funcs);
-  if (!hb_atomic_ptr_cmpexch (&static_glib_funcs, glib_funcs, nullptr))
-    goto retry;
-
-  hb_unicode_funcs_destroy (glib_funcs);
-}
-#endif
-
-hb_unicode_funcs_t *
-hb_glib_get_unicode_funcs (void)
-{
-retry:
-  hb_unicode_funcs_t *funcs = (hb_unicode_funcs_t *) hb_atomic_ptr_get (&static_glib_funcs);
-
-  if (unlikely (!funcs))
+  static inline hb_unicode_funcs_t *create (void)
   {
-    funcs = hb_unicode_funcs_create (nullptr);
+    hb_unicode_funcs_t *funcs = hb_unicode_funcs_create (nullptr);
 
 #define HB_UNICODE_FUNC_IMPLEMENT(name) \
     hb_unicode_funcs_set_##name##_func (funcs, hb_glib_unicode_##name, nullptr, nullptr);
@@ -396,18 +382,29 @@ retry:
 
     hb_unicode_funcs_make_immutable (funcs);
 
-    if (!hb_atomic_ptr_cmpexch (&static_glib_funcs, nullptr, funcs)) {
-      hb_unicode_funcs_destroy (funcs);
-      goto retry;
-    }
+#ifdef HB_USE_ATEXIT
+    atexit (free_static_glib_funcs);
+#endif
+
+    return funcs;
+  }
+} static_glib_funcs;
 
 #ifdef HB_USE_ATEXIT
-    atexit (free_static_glib_funcs); /* First person registers atexit() callback. */
-#endif
-  };
-
-  return hb_unicode_funcs_reference (funcs);
+static
+void free_static_glib_funcs (void)
+{
+  static_glib_funcs.free_instance ();
 }
+#endif
+
+hb_unicode_funcs_t *
+hb_glib_get_unicode_funcs (void)
+{
+  return static_glib_funcs.get_unconst ();
+}
+
+
 
 #if GLIB_CHECK_VERSION(2,31,10)
 

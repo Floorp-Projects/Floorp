@@ -590,47 +590,93 @@ struct BEInt<Type, 4>
  * Lazy loaders.
  */
 
-template <unsigned int WheresFace,
-	  typename Subclass,
-	  typename Returned,
-	  typename Stored = Returned>
-struct hb_lazy_loader_t
+template <typename Data, unsigned int WheresData>
+struct hb_data_wrapper_t
 {
-  static_assert (WheresFace > 0, "");
+  static_assert (WheresData > 0, "");
 
-  /* https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern */
-  inline const Subclass* thiz (void) const { return static_cast<const Subclass *> (this); }
-  inline Subclass* thiz (void) { return static_cast<Subclass *> (this); }
+  inline Data * get_data (void) const
+  {
+    return *(((Data **) (void *) this) - WheresData);
+  }
+
+  template <typename Stored, typename Subclass>
+  inline Stored * call_create (void) const
+  {
+    Data *data = this->get_data ();
+    return likely (data) ? Subclass::create (data) : nullptr;
+  }
+};
+template <>
+struct hb_data_wrapper_t<void, 0>
+{
+  template <typename Stored, typename Funcs>
+  inline Stored * call_create (void) const
+  {
+    return Funcs::create ();
+  }
+};
+
+template <typename T1, typename T2> struct hb_non_void_t { typedef T1 value; };
+template <typename T2> struct hb_non_void_t<void, T2> { typedef T2 value; };
+
+template <typename Returned,
+	  typename Subclass = void,
+	  typename Data = void,
+	  unsigned int WheresData = 0,
+	  typename Stored = Returned>
+struct hb_lazy_loader_t : hb_data_wrapper_t<Data, WheresData>
+{
+  typedef typename hb_non_void_t<Subclass,
+				 hb_lazy_loader_t<Returned,Subclass,Data,WheresData,Stored>
+				>::value Funcs;
 
   inline void init0 (void) {} /* Init, when memory is already set to 0. No-op for us. */
-  inline void init (void)
-  {
-    instance = nullptr;
-  }
+  inline void init (void) { instance.set_relaxed (nullptr); }
   inline void fini (void)
   {
-    if (instance)
-      thiz ()->destroy (instance);
+    do_destroy (instance.get ());
+  }
+  inline void free_instance (void)
+  {
+  retry:
+    Stored *p = instance.get ();
+    if (unlikely (p && !this->instance.cmpexch (p, nullptr)))
+      goto retry;
+    do_destroy (p);
   }
 
-  inline const Returned * operator -> (void) const { return thiz ()->get (); }
-  inline const Returned & operator * (void) const { return *thiz ()->get (); }
+  inline Stored * do_create (void) const
+  {
+    Stored *p = this->template call_create<Stored, Funcs> ();
+    if (unlikely (!p))
+      p = const_cast<Stored *> (Funcs::get_null ());
+    return p;
+  }
+  static inline void do_destroy (Stored *p)
+  {
+    if (p && p != Funcs::get_null ())
+      Funcs::destroy (p);
+  }
+
+  inline const Returned * operator -> (void) const { return get (); }
+  inline const Returned & operator * (void) const { return *get (); }
+
+  inline Data * get_data (void) const
+  {
+    return *(((Data **) this) - WheresData);
+  }
 
   inline Stored * get_stored (void) const
   {
   retry:
-    Stored *p = (Stored *) hb_atomic_ptr_get (&this->instance);
+    Stored *p = this->instance.get ();
     if (unlikely (!p))
     {
-      hb_face_t *face = *(((hb_face_t **) this) - WheresFace);
-      if (likely (!p))
-	p = thiz ()->create (face);
-      if (unlikely (!p))
-	p = thiz ()->create (nullptr); /* Produce nil object. */
-      assert (p);
-      if (unlikely (!hb_atomic_ptr_cmpexch (const_cast<Stored **>(&this->instance), nullptr, p)))
+      p = do_create ();
+      if (unlikely (!this->instance.cmpexch (nullptr, p)))
       {
-        thiz ()->destroy (p);
+        do_destroy (p);
 	goto retry;
       }
     }
@@ -642,68 +688,69 @@ struct hb_lazy_loader_t
     /* This *must* be called when there are no other threads accessing.
      * However, to make TSan, etc, happy, we using cmpexch. */
   retry:
-    Stored *p = (Stored *) hb_atomic_ptr_get (&this->instance);
-    if (p)
-    {
-      if (unlikely (!hb_atomic_ptr_cmpexch (const_cast<Stored **>(&this->instance), p, instance_)))
-        goto retry;
-      thiz ()->destroy (p);
-    }
+    Stored *p = this->instance.get ();
+    if (unlikely (!this->instance.cmpexch (p, instance_)))
+      goto retry;
+    do_destroy (p);
   }
 
-  inline const Returned * get (void) const
-  {
-    return thiz ()->convert (get_stored ());
-  }
+  inline const Returned * get (void) const { return Funcs::convert (get_stored ()); }
+  inline Returned * get_unconst (void) const { return const_cast<Returned *> (Funcs::convert (get_stored ())); }
 
-  static inline const Returned* convert (const Stored *p)
+  /* To be possibly overloaded by subclasses. */
+  static inline Returned* convert (Stored *p) { return p; }
+
+  /* By default null/init/fini the object. */
+  static inline const Stored* get_null (void) { return &Null(Stored); }
+  static inline Stored *create (Data *data)
   {
+    Stored *p = (Stored *) calloc (1, sizeof (Stored));
+    if (likely (p))
+      p->init (data);
     return p;
+  }
+  static inline Stored *create (void)
+  {
+    Stored *p = (Stored *) calloc (1, sizeof (Stored));
+    if (likely (p))
+      p->init ();
+    return p;
+  }
+  static inline void destroy (Stored *p)
+  {
+    p->fini ();
+    free (p);
   }
 
   private:
   /* Must only have one pointer. */
-  mutable Stored *instance;
+  hb_atomic_ptr_t<Stored *> instance;
 };
 
 /* Specializations. */
 
 template <unsigned int WheresFace, typename T>
-struct hb_object_lazy_loader_t : hb_lazy_loader_t<WheresFace, hb_object_lazy_loader_t<WheresFace, T>, T>
-{
-  static inline T *create (hb_face_t *face)
-  {
-    if (unlikely (!face))
-      return const_cast<T *> (&Null(T));
-    T *p = (T *) calloc (1, sizeof (T));
-    if (unlikely (!p))
-      p = const_cast<T *> (&Null(T));
-    else
-      p->init (face);
-    return p;
-  }
-  static inline void destroy (T *p)
-  {
-    if (p != &Null(T))
-    {
-      p->fini();
-      free (p);
-    }
-  }
-};
+struct hb_face_lazy_loader_t : hb_lazy_loader_t<T,
+						hb_face_lazy_loader_t<WheresFace, T>,
+						hb_face_t, WheresFace> {};
 
-template <unsigned int WheresFace, typename T>
-struct hb_table_lazy_loader_t : hb_lazy_loader_t<WheresFace, hb_table_lazy_loader_t<WheresFace, T>, T, hb_blob_t>
+template <typename T, unsigned int WheresFace>
+struct hb_table_lazy_loader_t : hb_lazy_loader_t<T,
+						 hb_table_lazy_loader_t<T, WheresFace>,
+						 hb_face_t, WheresFace,
+						 hb_blob_t>
 {
   static inline hb_blob_t *create (hb_face_t *face)
   {
-    if (unlikely (!face))
-      return hb_blob_get_empty ();
     return hb_sanitize_context_t ().reference_table<T> (face);
   }
   static inline void destroy (hb_blob_t *p)
   {
     hb_blob_destroy (p);
+  }
+  static inline const hb_blob_t *get_null (void)
+  {
+      return hb_blob_get_empty ();
   }
   static inline const T* convert (const hb_blob_t *blob)
   {
@@ -713,6 +760,31 @@ struct hb_table_lazy_loader_t : hb_lazy_loader_t<WheresFace, hb_table_lazy_loade
   inline hb_blob_t* get_blob (void) const
   {
     return this->get_stored ();
+  }
+};
+
+template <typename Subclass>
+struct hb_font_funcs_lazy_loader_t : hb_lazy_loader_t<hb_font_funcs_t, Subclass>
+{
+  static inline void destroy (hb_font_funcs_t *p)
+  {
+    hb_font_funcs_destroy (p);
+  }
+  static inline const hb_font_funcs_t *get_null (void)
+  {
+      return hb_font_funcs_get_empty ();
+  }
+};
+template <typename Subclass>
+struct hb_unicode_funcs_lazy_loader_t : hb_lazy_loader_t<hb_unicode_funcs_t, Subclass>
+{
+  static inline void destroy (hb_unicode_funcs_t *p)
+  {
+    hb_unicode_funcs_destroy (p);
+  }
+  static inline const hb_unicode_funcs_t *get_null (void)
+  {
+      return hb_unicode_funcs_get_empty ();
   }
 };
 
