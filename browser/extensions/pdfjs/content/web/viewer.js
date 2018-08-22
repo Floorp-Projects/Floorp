@@ -816,7 +816,7 @@ let PDFViewerApplication = {
       return;
     }
     this.pdfDocument.getData().then(function (data) {
-      let blob = (0, _pdfjsLib.createBlob)(data, 'application/pdf');
+      const blob = new Blob([data], { type: 'application/pdf' });
       downloadManager.download(blob, url, filename);
     }).catch(downloadByUrl);
   },
@@ -6468,7 +6468,6 @@ class BaseViewer {
     this.downloadManager = options.downloadManager || null;
     this.removePageBorders = options.removePageBorders || false;
     this.textLayerMode = Number.isInteger(options.textLayerMode) ? options.textLayerMode : _ui_utils.TextLayerMode.ENABLE;
-    this.enhanceTextSelection = options.enhanceTextSelection || false;
     this.imageResourcesPath = options.imageResourcesPath || '';
     this.renderInteractiveForms = options.renderInteractiveForms || false;
     this.enablePrintAutoRotate = options.enablePrintAutoRotate || false;
@@ -6800,9 +6799,7 @@ class BaseViewer {
       let hPadding = noPadding ? 0 : _ui_utils.SCROLLBAR_PADDING;
       let vPadding = noPadding ? 0 : _ui_utils.VERTICAL_PADDING;
       if (!noPadding && this._isScrollModeHorizontal) {
-        const temp = hPadding;
-        hPadding = vPadding;
-        vPadding = temp;
+        [hPadding, vPadding] = [vPadding, hPadding];
       }
       let pageWidthScale = (this.container.clientWidth - hPadding) / currentPage.width * currentPage.scale;
       let pageHeightScale = (this.container.clientHeight - vPadding) / currentPage.height * currentPage.scale;
@@ -7136,7 +7133,6 @@ class BaseViewer {
     this.scrollPageIntoView({ pageNumber });
     this.update();
   }
-  setScrollMode(mode) {}
   get spreadMode() {
     return this._spreadMode;
   }
@@ -7186,7 +7182,6 @@ class BaseViewer {
     this.scrollPageIntoView({ pageNumber });
     this.update();
   }
-  setSpreadMode(mode) {}
 }
 exports.BaseViewer = BaseViewer;
 exports.ScrollMode = ScrollMode;

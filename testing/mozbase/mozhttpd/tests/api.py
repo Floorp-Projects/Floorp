@@ -6,15 +6,12 @@
 
 from __future__ import absolute_import
 
-import mozfile
-import mozhttpd
-import os
-import unittest
+import collections
 import json
-import tempfile
+import os
 
-import mozunit
-
+import pytest
+from six.moves.urllib.error import HTTPError
 from six.moves.urllib.request import (
     HTTPHandler,
     ProxyHandler,
@@ -23,262 +20,361 @@ from six.moves.urllib.request import (
     install_opener,
     urlopen,
 )
-from six.moves.urllib.error import HTTPError
 
-here = os.path.dirname(os.path.abspath(__file__))
+import mozunit
+import mozhttpd
 
 
-class ApiTest(unittest.TestCase):
-    resource_get_called = 0
-    resource_post_called = 0
-    resource_del_called = 0
+def httpd_url(httpd, path, querystr=None):
+    """Return the URL to a started MozHttpd server for the given info."""
 
-    @mozhttpd.handlers.json_response
-    def resource_get(self, request, objid):
-        self.resource_get_called += 1
-        return (200, {'called': self.resource_get_called,
-                      'id': objid,
-                      'query': request.query})
+    url = "http://127.0.0.1:{port}{path}".format(
+        port=httpd.httpd.server_port,
+        path=path,
+    )
 
-    @mozhttpd.handlers.json_response
-    def resource_post(self, request):
-        self.resource_post_called += 1
-        return (201, {'called': self.resource_post_called,
-                      'data': json.loads(request.body),
-                      'query': request.query})
+    if querystr is not None:
+        url = "{url}?{querystr}".format(
+            url=url,
+            querystr=querystr,
+        )
 
-    @mozhttpd.handlers.json_response
-    def resource_del(self, request, objid):
-        self.resource_del_called += 1
-        return (200, {'called': self.resource_del_called,
-                      'id': objid,
-                      'query': request.query})
+    return url
 
-    def get_url(self, path, server_port, querystr):
-        url = "http://127.0.0.1:%s%s" % (server_port, path)
-        if querystr:
-            url += "?%s" % querystr
-        return url
 
-    def try_get(self, server_port, querystr):
-        self.resource_get_called = 0
+@pytest.fixture(name="num_requests")
+def fixture_num_requests():
+    """Return a defaultdict to count requests to HTTP handlers."""
+    return collections.defaultdict(int)
 
-        f = urlopen(self.get_url('/api/resource/1', server_port, querystr))
-        try:
-            self.assertEqual(f.getcode(), 200)
-        except AttributeError:
-            pass  # python 2.4
-        self.assertEqual(json.loads(f.read()), {'called': 1, 'id': str(1), 'query': querystr})
-        self.assertEqual(self.resource_get_called, 1)
 
-    def try_post(self, server_port, querystr):
-        self.resource_post_called = 0
+@pytest.fixture(name="try_get")
+def fixture_try_get(num_requests):
+    """Return a function to try GET requests to the server."""
 
-        postdata = {'hamburgers': '1234'}
-        try:
-            f = urlopen(
-                self.get_url('/api/resource/', server_port, querystr),
-                data=json.dumps(postdata),
-            )
-        except HTTPError as e:
-            # python 2.4
-            self.assertEqual(e.code, 201)
-            body = e.fp.read()
-        else:
-            self.assertEqual(f.getcode(), 201)
-            body = f.read()
-        self.assertEqual(json.loads(body), {'called': 1,
-                                            'data': postdata,
-                                            'query': querystr})
-        self.assertEqual(self.resource_post_called, 1)
+    def try_get(httpd, querystr):
+        """Try GET requests to the server."""
 
-    def try_del(self, server_port, querystr):
-        self.resource_del_called = 0
+        num_requests["get_handler"] = 0
+
+        f = urlopen(httpd_url(httpd, "/api/resource/1", querystr))
+
+        assert f.getcode() == 200
+        assert json.loads(f.read()) == {"called": 1, "id": "1", "query": querystr}
+        assert num_requests["get_handler"] == 1
+
+    return try_get
+
+
+@pytest.fixture(name="try_post")
+def fixture_try_post(num_requests):
+    """Return a function to try POST calls to the server."""
+
+    def try_post(httpd, querystr):
+        """Try POST calls to the server."""
+
+        num_requests["post_handler"] = 0
+
+        postdata = {"hamburgers": "1234"}
+
+        f = urlopen(
+            httpd_url(httpd, "/api/resource/", querystr),
+            data=json.dumps(postdata),
+        )
+
+        assert f.getcode() == 201
+        assert json.loads(f.read()) == {
+            "called": 1,
+            "data": postdata,
+            "query": querystr,
+        }
+        assert num_requests["post_handler"] == 1
+
+    return try_post
+
+
+@pytest.fixture(name="try_del")
+def fixture_try_del(num_requests):
+    """Return a function to try DEL calls to the server."""
+
+    def try_del(httpd, querystr):
+        """Try DEL calls to the server."""
+
+        num_requests["del_handler"] = 0
 
         opener = build_opener(HTTPHandler)
-        request = Request(self.get_url('/api/resource/1', server_port, querystr))
-        request.get_method = lambda: 'DEL'
+        request = Request(httpd_url(httpd, "/api/resource/1", querystr))
+        request.get_method = lambda: "DEL"
         f = opener.open(request)
 
-        try:
-            self.assertEqual(f.getcode(), 200)
-        except AttributeError:
-            pass  # python 2.4
-        self.assertEqual(json.loads(f.read()), {'called': 1, 'id': str(1), 'query': querystr})
-        self.assertEqual(self.resource_del_called, 1)
+        assert f.getcode() == 200
+        assert json.loads(f.read()) == {"called": 1, "id": "1", "query": querystr}
+        assert num_requests["del_handler"] == 1
 
-    def test_api(self):
-        httpd = mozhttpd.MozHttpd(port=0,
-                                  urlhandlers=[{'method': 'GET',
-                                                'path': '/api/resource/([^/]+)/?',
-                                                'function': self.resource_get},
-                                               {'method': 'POST',
-                                                'path': '/api/resource/?',
-                                                'function': self.resource_post},
-                                               {'method': 'DEL',
-                                                'path': '/api/resource/([^/]+)/?',
-                                                'function': self.resource_del}
-                                               ])
-        httpd.start(block=False)
-
-        server_port = httpd.httpd.server_port
-
-        # GET
-        self.try_get(server_port, '')
-        self.try_get(server_port, '?foo=bar')
-
-        # POST
-        self.try_post(server_port, '')
-        self.try_post(server_port, '?foo=bar')
-
-        # DEL
-        self.try_del(server_port, '')
-        self.try_del(server_port, '?foo=bar')
-
-        # GET: By default we don't serve any files if we just define an API
-        exception_thrown = False
-        try:
-            urlopen(self.get_url('/', server_port, None))
-        except HTTPError as e:
-            self.assertEqual(e.code, 404)
-            exception_thrown = True
-        self.assertTrue(exception_thrown)
-
-    def test_nonexistent_resources(self):
-        # Create a server with a placeholder handler so we don't fall back
-        # to serving local files
-        httpd = mozhttpd.MozHttpd(port=0)
-        httpd.start(block=False)
-        server_port = httpd.httpd.server_port
-
-        # GET: Return 404 for non-existent endpoint
-        exception_thrown = False
-        try:
-            urlopen(self.get_url('/api/resource/', server_port, None))
-        except HTTPError as e:
-            self.assertEqual(e.code, 404)
-            exception_thrown = True
-        self.assertTrue(exception_thrown)
-
-        # POST: POST should also return 404
-        exception_thrown = False
-        try:
-            urlopen(
-                self.get_url('/api/resource/', server_port, None),
-                data=json.dumps({}),
-            )
-        except HTTPError as e:
-            self.assertEqual(e.code, 404)
-            exception_thrown = True
-        self.assertTrue(exception_thrown)
-
-        # DEL: DEL should also return 404
-        exception_thrown = False
-        try:
-            opener = build_opener(HTTPHandler)
-            request = Request(self.get_url('/api/resource/', server_port, None))
-            request.get_method = lambda: 'DEL'
-            opener.open(request)
-        except HTTPError:
-            self.assertEqual(e.code, 404)
-            exception_thrown = True
-        self.assertTrue(exception_thrown)
-
-    def test_api_with_docroot(self):
-        httpd = mozhttpd.MozHttpd(port=0, docroot=here,
-                                  urlhandlers=[{'method': 'GET',
-                                                'path': '/api/resource/([^/]+)/?',
-                                                'function': self.resource_get}])
-        httpd.start(block=False)
-        server_port = httpd.httpd.server_port
-
-        # We defined a docroot, so we expect a directory listing
-        f = urlopen(self.get_url('/', server_port, None))
-        try:
-            self.assertEqual(f.getcode(), 200)
-        except AttributeError:
-            pass  # python 2.4
-        self.assertTrue('Directory listing for' in f.read())
-
-        # Make sure API methods still work
-        self.try_get(server_port, '')
-        self.try_get(server_port, '?foo=bar')
+    return try_del
 
 
-class ProxyTest(unittest.TestCase):
-
-    def tearDown(self):
-        # reset proxy opener in case it changed
-        install_opener(None)
-
-    def test_proxy(self):
-        docroot = tempfile.mkdtemp()
-        self.addCleanup(mozfile.remove, docroot)
-        hosts = ('mozilla.com', 'mozilla.org')
-        unproxied_host = 'notmozilla.org'
-
-        def url(host): return 'http://%s/' % host
-
-        index_filename = 'index.html'
-
-        def index_contents(host): return '%s index' % host
-
-        index = open(os.path.join(docroot, index_filename), 'w')
-        index.write(index_contents('*'))
-        index.close()
-
-        httpd = mozhttpd.MozHttpd(port=0, docroot=docroot)
-        httpd.start(block=False)
-        server_port = httpd.httpd.server_port
-
-        proxy_support = ProxyHandler({
-            'http': 'http://127.0.0.1:%d' % server_port,
-        })
-        install_opener(build_opener(proxy_support))
-
-        for host in hosts:
-            f = urlopen(url(host))
-            try:
-                self.assertEqual(f.getcode(), 200)
-            except AttributeError:
-                pass  # python 2.4
-            self.assertEqual(f.read(), index_contents('*'))
-
-        httpd.stop()
-
-        # test separate directories per host
-
-        httpd = mozhttpd.MozHttpd(port=0, docroot=docroot, proxy_host_dirs=True)
-        httpd.start(block=False)
-        server_port = httpd.httpd.server_port
-
-        proxy_support = ProxyHandler({
-            'http': 'http://127.0.0.1:%d' % server_port,
-        })
-        install_opener(build_opener(proxy_support))
-
-        # set up dirs
-        for host in hosts:
-            os.mkdir(os.path.join(docroot, host))
-            open(os.path.join(docroot, host, index_filename), 'w') \
-                .write(index_contents(host))
-
-        for host in hosts:
-            f = urlopen(url(host))
-            try:
-                self.assertEqual(f.getcode(), 200)
-            except AttributeError:
-                pass  # python 2.4
-            self.assertEqual(f.read(), index_contents(host))
-
-        exc = None
-        try:
-            urlopen(url(unproxied_host))
-        except HTTPError as e:
-            exc = e
-        self.assertNotEqual(exc, None)
-        self.assertEqual(exc.code, 404)
+@pytest.fixture(name="httpd_no_urlhandlers")
+def fixture_httpd_no_urlhandlers():
+    """Yields a started MozHttpd server with no URL handlers."""
+    httpd = mozhttpd.MozHttpd(port=0)
+    httpd.start(block=False)
+    yield httpd
+    httpd.stop()
 
 
-if __name__ == '__main__':
+@pytest.fixture(name="httpd_with_docroot")
+def fixture_httpd_with_docroot(num_requests):
+    """Yields a started MozHttpd server with docroot set."""
+
+    @mozhttpd.handlers.json_response
+    def get_handler(request, objid):
+        """Handler for HTTP GET requests."""
+
+        num_requests["get_handler"] += 1
+
+        return (
+            200,
+            {
+                "called": num_requests["get_handler"],
+                "id": objid,
+                "query": request.query,
+            },
+        )
+
+    httpd = mozhttpd.MozHttpd(
+        port=0,
+        docroot=os.path.dirname(os.path.abspath(__file__)),
+        urlhandlers=[
+            {
+                "method": "GET",
+                "path": "/api/resource/([^/]+)/?",
+                "function": get_handler,
+            }
+        ],
+    )
+
+    httpd.start(block=False)
+    yield httpd
+    httpd.stop()
+
+
+@pytest.fixture(name="httpd")
+def fixture_httpd(num_requests):
+    """Yield a started MozHttpd server."""
+
+    @mozhttpd.handlers.json_response
+    def get_handler(request, objid):
+        """Handler for HTTP GET requests."""
+
+        num_requests["get_handler"] += 1
+
+        return (
+            200,
+            {
+                "called": num_requests["get_handler"],
+                "id": objid,
+                "query": request.query,
+            },
+        )
+
+    @mozhttpd.handlers.json_response
+    def post_handler(request):
+        """Handler for HTTP POST requests."""
+
+        num_requests["post_handler"] += 1
+
+        return (
+            201,
+            {
+                "called": num_requests["post_handler"],
+                "data": json.loads(request.body),
+                "query": request.query,
+            },
+        )
+
+    @mozhttpd.handlers.json_response
+    def del_handler(request, objid):
+        """Handler for HTTP DEL requests."""
+
+        num_requests["del_handler"] += 1
+
+        return (
+            200,
+            {
+                "called": num_requests["del_handler"],
+                "id": objid,
+                "query": request.query,
+            },
+        )
+
+    httpd = mozhttpd.MozHttpd(
+        port=0,
+        urlhandlers=[
+            {
+                "method": "GET",
+                "path": "/api/resource/([^/]+)/?",
+                "function": get_handler,
+            },
+            {
+                "method": "POST",
+                "path": "/api/resource/?",
+                "function": post_handler,
+            },
+            {
+                "method": "DEL",
+                "path": "/api/resource/([^/]+)/?",
+                "function": del_handler,
+            },
+        ],
+    )
+
+    httpd.start(block=False)
+    yield httpd
+    httpd.stop()
+
+
+def test_api(httpd, try_get, try_post, try_del):
+    # GET requests
+    try_get(httpd, "")
+    try_get(httpd, "?foo=bar")
+
+    # POST requests
+    try_post(httpd, "")
+    try_post(httpd, "?foo=bar")
+
+    # DEL requests
+    try_del(httpd, "")
+    try_del(httpd, "?foo=bar")
+
+    # GET: By default we don't serve any files if we just define an API
+    with pytest.raises(HTTPError) as exc_info:
+        urlopen(httpd_url(httpd, "/"))
+
+    assert exc_info.value.code == 404
+
+
+def test_nonexistent_resources(httpd_no_urlhandlers):
+    # GET: Return 404 for non-existent endpoint
+    with pytest.raises(HTTPError) as excinfo:
+        urlopen(httpd_url(httpd_no_urlhandlers, "/api/resource/"))
+    assert excinfo.value.code == 404
+
+    # POST: POST should also return 404
+    with pytest.raises(HTTPError) as excinfo:
+        urlopen(httpd_url(httpd_no_urlhandlers, "/api/resource/"), data=json.dumps({}))
+    assert excinfo.value.code == 404
+
+    # DEL: DEL should also return 404
+    opener = build_opener(HTTPHandler)
+    request = Request(httpd_url(httpd_no_urlhandlers, "/api/resource/"))
+    request.get_method = lambda: "DEL"
+
+    with pytest.raises(HTTPError) as excinfo:
+        opener.open(request)
+    assert excinfo.value.code == 404
+
+
+def test_api_with_docroot(httpd_with_docroot, try_get):
+    f = urlopen(httpd_url(httpd_with_docroot, "/"))
+    assert f.getcode() == 200
+    assert "Directory listing for" in f.read()
+
+    # Make sure API methods still work
+    try_get(httpd_with_docroot, "")
+    try_get(httpd_with_docroot, "?foo=bar")
+
+
+def index_contents(host):
+    """Return the expected index contents for the given host."""
+    return "{host} index".format(host=host)
+
+
+@pytest.fixture(name="hosts")
+def fixture_hosts():
+    """Returns a tuple of hosts."""
+    return ("mozilla.com", "mozilla.org")
+
+
+@pytest.fixture(name="docroot")
+def fixture_docroot(tmpdir):
+    """Returns a path object to a temporary docroot directory."""
+    docroot = tmpdir.mkdir("docroot")
+    index_file = docroot.join("index.html")
+    index_file.write(index_contents("*"))
+
+    yield docroot
+
+    docroot.remove()
+
+
+@pytest.fixture(name="httpd_with_proxy_handler")
+def fixture_httpd_with_proxy_handler(docroot):
+    """Yields a started MozHttpd server for the proxy test."""
+
+    httpd = mozhttpd.MozHttpd(port=0, docroot=str(docroot))
+    httpd.start(block=False)
+
+    port = httpd.httpd.server_port
+    proxy_support = ProxyHandler(
+        {
+            "http": "http://127.0.0.1:{port:d}".format(port=port),
+        }
+    )
+    install_opener(build_opener(proxy_support))
+
+    yield httpd
+
+    httpd.stop()
+
+    # Reset proxy opener in case it changed
+    install_opener(None)
+
+
+def test_proxy(httpd_with_proxy_handler, hosts):
+    for host in hosts:
+        f = urlopen("http://{host}/".format(host=host))
+        assert f.getcode() == 200
+        assert f.read() == index_contents("*")
+
+
+@pytest.fixture(name="httpd_with_proxy_host_dirs")
+def fixture_httpd_with_proxy_host_dirs(docroot, hosts):
+    for host in hosts:
+        index_file = docroot.mkdir(host).join("index.html")
+        index_file.write(index_contents(host))
+
+    httpd = mozhttpd.MozHttpd(port=0, docroot=str(docroot), proxy_host_dirs=True)
+
+    httpd.start(block=False)
+
+    port = httpd.httpd.server_port
+    proxy_support = ProxyHandler(
+        {"http": "http://127.0.0.1:{port:d}".format(port=port)}
+    )
+    install_opener(build_opener(proxy_support))
+
+    yield httpd
+
+    httpd.stop()
+
+    # Reset proxy opener in case it changed
+    install_opener(None)
+
+
+def test_proxy_separate_directories(httpd_with_proxy_host_dirs, hosts):
+    for host in hosts:
+        f = urlopen("http://{host}/".format(host=host))
+        assert f.getcode() == 200
+        assert f.read() == index_contents(host)
+
+    unproxied_host = "notmozilla.org"
+
+    with pytest.raises(HTTPError) as excinfo:
+        urlopen("http://{host}/".format(host=unproxied_host))
+
+    assert excinfo.value.code == 404
+
+
+if __name__ == "__main__":
     mozunit.main()

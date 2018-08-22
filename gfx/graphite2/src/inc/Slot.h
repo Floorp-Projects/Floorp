@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -37,7 +37,6 @@ namespace graphite2 {
 typedef gr_attrCode attrCode;
 
 class GlyphFace;
-class SegCacheEntry;
 class Segment;
 
 struct SlotJustify
@@ -163,7 +162,6 @@ private:
     int16   *m_userAttr;    // pointer to user attributes
     SlotJustify *m_justs;   // pointer to justification parameters
 
-    friend class SegCacheEntry;
     friend class Segment;
 };
 

@@ -4,44 +4,62 @@
 
 from __future__ import absolute_import
 
-import mozhttpd
 import os
-import unittest
 
 from six.moves.urllib.request import urlopen
+import pytest
 
+import mozhttpd
 import mozunit
 
-here = os.path.dirname(os.path.abspath(__file__))
+
+def log_requests(enabled):
+    """Decorator to change the log_requests parameter for MozHttpd."""
+    param_id = "enabled" if enabled else "disabled"
+    return pytest.mark.parametrize("log_requests", [enabled], ids=[param_id])
 
 
-class RequestLogTest(unittest.TestCase):
-
-    def check_logging(self, log_requests=False):
-
-        httpd = mozhttpd.MozHttpd(port=0, docroot=here, log_requests=log_requests)
-        httpd.start(block=False)
-        url = "http://%s:%s/" % ('127.0.0.1', httpd.httpd.server_port)
-        f = urlopen(url)
-        f.read()
-
-        return httpd.request_log
-
-    def test_logging_enabled(self):
-        request_log = self.check_logging(log_requests=True)
-
-        self.assertEqual(len(request_log), 1)
-
-        log_entry = request_log[0]
-        self.assertEqual(log_entry['method'], 'GET')
-        self.assertEqual(log_entry['path'], '/')
-        self.assertEqual(type(log_entry['time']), float)
-
-    def test_logging_disabled(self):
-        request_log = self.check_logging(log_requests=False)
-
-        self.assertEqual(len(request_log), 0)
+@pytest.fixture(name="docroot")
+def fixture_docroot():
+    """Return a docroot path."""
+    return os.path.dirname(os.path.abspath(__file__))
 
 
-if __name__ == '__main__':
+@pytest.fixture(name="request_log")
+def fixture_request_log(docroot, log_requests):
+    """Yields the request log of a started MozHttpd server."""
+    httpd = mozhttpd.MozHttpd(
+        port=0,
+        docroot=docroot,
+        log_requests=log_requests,
+    )
+    httpd.start(block=False)
+
+    url = "http://{host}:{port}/".format(
+        host="127.0.0.1",
+        port=httpd.httpd.server_port,
+    )
+    f = urlopen(url)
+    f.read()
+
+    yield httpd.request_log
+
+    httpd.stop()
+
+
+@log_requests(True)
+def test_logging_enabled(request_log):
+    assert len(request_log) == 1
+    log_entry = request_log[0]
+    assert log_entry["method"] == "GET"
+    assert log_entry["path"] == "/"
+    assert type(log_entry["time"]) == float
+
+
+@log_requests(False)
+def test_logging_disabled(request_log):
+    assert len(request_log) == 0
+
+
+if __name__ == "__main__":
     mozunit.main()

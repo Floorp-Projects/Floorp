@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street, 
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+    If not, write to the Free Software Foundation, 51 Franklin Street,
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -48,9 +48,9 @@ public:
     {
         size_t n = size();
         if (n != b.size())      return false;
-        
+
         for(const_iterator l = begin(), r = b.begin(); n && *l == *r; --n, ++l, ++r);
-        
+
         return n == 0;
     }
 

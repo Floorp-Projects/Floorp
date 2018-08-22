@@ -57,11 +57,11 @@ public:
 
     template<typename T>
     inline static T read(const unsigned char * &p) {
-        const T r = T(_peek<sizeof(T)>(p)); 
+        const T r = T(_peek<sizeof(T)>(p));
         p += sizeof r;
         return r;
     }
-    
+
     template<typename T>
     inline static T swap(const T x) {
         return T(_peek<sizeof(T)>(reinterpret_cast<const unsigned char *>(&x)));
@@ -77,7 +77,7 @@ template<>
 inline unsigned long int be::_peek<1>(const unsigned char * p) { return *p; }
 
 
-class le 
+class le
 {
     template<int S>
     inline static unsigned long int _peek(const unsigned char * p) {
@@ -91,11 +91,11 @@ public:
 
     template<typename T>
     inline static T read(const unsigned char * &p) {
-        const T r = T(_peek<sizeof(T)>(p)); 
+        const T r = T(_peek<sizeof(T)>(p));
         p += sizeof r;
         return r;
     }
-    
+
     template<typename T>
     inline static T swap(const T x) {
         return T(_peek<sizeof(T)>(reinterpret_cast<const unsigned char *>(&x)));
@@ -109,4 +109,3 @@ public:
 
 template<>
 inline unsigned long int le::_peek<1>(const unsigned char * p) { return *p; }
-

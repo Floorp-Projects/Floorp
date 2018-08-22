@@ -1,24 +1,36 @@
 from __future__ import absolute_import
 
-import mozhttpd
-import unittest
+import pytest
 
+import mozhttpd
 import mozunit
 
 
-class BaseUrlTest(unittest.TestCase):
-
-    def test_base_url(self):
-        httpd = mozhttpd.MozHttpd(port=0)
-        self.assertEqual(httpd.get_url(), None)
-        httpd.start(block=False)
-        self.assertEqual("http://127.0.0.1:%s/" % httpd.httpd.server_port,
-                         httpd.get_url())
-        self.assertEqual("http://127.0.0.1:%s/cheezburgers.html" %
-                         httpd.httpd.server_port,
-                         httpd.get_url(path="/cheezburgers.html"))
-        httpd.stop()
+@pytest.fixture(name="httpd")
+def fixture_httpd():
+    """Yields a started MozHttpd server."""
+    httpd = mozhttpd.MozHttpd(port=0)
+    httpd.start(block=False)
+    yield httpd
+    httpd.stop()
 
 
-if __name__ == '__main__':
+def test_base_url(httpd):
+    port = httpd.httpd.server_port
+
+    want = "http://127.0.0.1:{}/".format(port)
+    got = httpd.get_url()
+    assert got == want
+
+    want = "http://127.0.0.1:{}/cheezburgers.html".format(port)
+    got = httpd.get_url(path="/cheezburgers.html")
+    assert got == want
+
+
+def test_base_url_when_not_started():
+    httpd = mozhttpd.MozHttpd(port=0)
+    assert httpd.get_url() is None
+
+
+if __name__ == "__main__":
     mozunit.main()

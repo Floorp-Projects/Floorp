@@ -15,8 +15,8 @@
 #
 #    You should also have received a copy of the GNU Lesser General Public
 #    License along with this library in the file named "LICENSE".
-#    If not, write to the Free Software Foundation, 51 Franklin Street, 
-#    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
+#    If not, write to the Free Software Foundation, 51 Franklin Street,
+#    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
 #    internet at http://www.fsf.org/licenses/lgpl.html.
 #
 # Alternatively, the contents of this file may be used under the terms of the
@@ -63,9 +63,6 @@ $(_NS)_SOURCES = \
     $($(_NS)_BASE)/src/NameTable.cpp \
     $($(_NS)_BASE)/src/Pass.cpp \
     $($(_NS)_BASE)/src/Position.cpp \
-    $($(_NS)_BASE)/src/SegCache.cpp \
-    $($(_NS)_BASE)/src/SegCacheEntry.cpp \
-    $($(_NS)_BASE)/src/SegCacheStore.cpp \
     $($(_NS)_BASE)/src/Segment.cpp \
     $($(_NS)_BASE)/src/Silf.cpp \
     $($(_NS)_BASE)/src/Slot.cpp \
@@ -104,9 +101,6 @@ $(_NS)_PRIVATE_HEADERS = \
     $($(_NS)_BASE)/src/inc/Pass.h \
     $($(_NS)_BASE)/src/inc/Position.h \
     $($(_NS)_BASE)/src/inc/Rule.h \
-    $($(_NS)_BASE)/src/inc/SegCache.h \
-    $($(_NS)_BASE)/src/inc/SegCacheEntry.h \
-    $($(_NS)_BASE)/src/inc/SegCacheStore.h \
     $($(_NS)_BASE)/src/inc/Segment.h \
     $($(_NS)_BASE)/src/inc/Silf.h \
     $($(_NS)_BASE)/src/inc/Slot.h \
@@ -120,4 +114,3 @@ $(_NS)_PUBLIC_HEADERS = \
     $($(_NS)_BASE)/include/graphite2/Log.h \
     $($(_NS)_BASE)/include/graphite2/Segment.h \
     $($(_NS)_BASE)/include/graphite2/Types.h
-
