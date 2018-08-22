@@ -14,8 +14,8 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate uuid;
-extern crate zip;
 extern crate webdriver;
+extern crate zip;
 
 #[macro_use]
 extern crate log;
@@ -28,25 +28,25 @@ use std::str::FromStr;
 use clap::{App, Arg};
 
 macro_rules! try_opt {
-    ($expr:expr, $err_type:expr, $err_msg:expr) => ({
+    ($expr:expr, $err_type:expr, $err_msg:expr) => {{
         match $expr {
             Some(x) => x,
-            None => return Err(WebDriverError::new($err_type, $err_msg))
+            None => return Err(WebDriverError::new($err_type, $err_msg)),
         }
-    })
+    }};
 }
 
 mod build;
-mod logging;
-mod prefs;
-mod marionette;
 mod capabilities;
+mod logging;
+mod marionette;
+mod prefs;
 
 #[cfg(test)]
 pub mod test;
 
 use build::BuildInfo;
-use marionette::{MarionetteHandler, MarionetteSettings, extension_routes};
+use marionette::{extension_routes, MarionetteHandler, MarionetteSettings};
 
 type ProgramResult = std::result::Result<(), (ExitCode, String)>;
 
@@ -69,52 +69,70 @@ fn print_version() {
 fn app<'a, 'b>() -> App<'a, 'b> {
     App::new(format!("geckodriver {}", crate_version!()))
         .about("WebDriver implementation for Firefox.")
-        .arg(Arg::with_name("webdriver_host")
-            .long("host")
-            .value_name("HOST")
-            .help("Host ip to use for WebDriver server (default: 127.0.0.1)")
-            .takes_value(true))
-        .arg(Arg::with_name("webdriver_port")
-            .short("p")
-            .long("port")
-            .value_name("PORT")
-            .help("Port to use for WebDriver server (default: 4444)")
-            .takes_value(true)
-            .alias("webdriver-port"))
-        .arg(Arg::with_name("binary")
-            .short("b")
-            .long("binary")
-            .value_name("BINARY")
-            .help("Path to the Firefox binary")
-            .takes_value(true))
-        .arg(Arg::with_name("marionette_port")
-            .long("marionette-port")
-            .value_name("PORT")
-            .help("Port to use to connect to Gecko (default: random free port)")
-            .takes_value(true))
-        .arg(Arg::with_name("connect_existing")
-            .long("connect-existing")
-            .requires("marionette_port")
-            .help("Connect to an existing Firefox instance"))
-        .arg(Arg::with_name("jsdebugger")
-            .long("jsdebugger")
-            .takes_value(false)
-            .help("Attach browser toolbox debugger for Firefox"))
-        .arg(Arg::with_name("verbosity")
-            .short("v")
-            .multiple(true)
-            .conflicts_with("log_level")
-            .help("Log level verbosity (-v for debug and -vv for trace level)"))
-        .arg(Arg::with_name("log_level")
-            .long("log")
-            .takes_value(true)
-            .value_name("LEVEL")
-            .possible_values(&["fatal", "error", "warn", "info", "config", "debug", "trace"])
-            .help("Set Gecko log level"))
-        .arg(Arg::with_name("version")
-            .short("V")
-            .long("version")
-            .help("Prints version and copying information"))
+        .arg(
+            Arg::with_name("webdriver_host")
+                .long("host")
+                .value_name("HOST")
+                .help("Host ip to use for WebDriver server (default: 127.0.0.1)")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("webdriver_port")
+                .short("p")
+                .long("port")
+                .value_name("PORT")
+                .help("Port to use for WebDriver server (default: 4444)")
+                .takes_value(true)
+                .alias("webdriver-port"),
+        )
+        .arg(
+            Arg::with_name("binary")
+                .short("b")
+                .long("binary")
+                .value_name("BINARY")
+                .help("Path to the Firefox binary")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("marionette_port")
+                .long("marionette-port")
+                .value_name("PORT")
+                .help("Port to use to connect to Gecko (default: random free port)")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("connect_existing")
+                .long("connect-existing")
+                .requires("marionette_port")
+                .help("Connect to an existing Firefox instance"),
+        )
+        .arg(
+            Arg::with_name("jsdebugger")
+                .long("jsdebugger")
+                .takes_value(false)
+                .help("Attach browser toolbox debugger for Firefox"),
+        )
+        .arg(
+            Arg::with_name("verbosity")
+                .short("v")
+                .multiple(true)
+                .conflicts_with("log_level")
+                .help("Log level verbosity (-v for debug and -vv for trace level)"),
+        )
+        .arg(
+            Arg::with_name("log_level")
+                .long("log")
+                .takes_value(true)
+                .value_name("LEVEL")
+                .possible_values(&["fatal", "error", "warn", "info", "config", "debug", "trace"])
+                .help("Set Gecko log level"),
+        )
+        .arg(
+            Arg::with_name("version")
+                .short("V")
+                .long("version")
+                .help("Prints version and copying information"),
+        )
 }
 
 fn run() -> ProgramResult {
@@ -143,12 +161,10 @@ fn run() -> ProgramResult {
     let binary = matches.value_of("binary").map(|x| PathBuf::from(x));
 
     let marionette_port = match matches.value_of("marionette_port") {
-        Some(x) => {
-            match u16::from_str(x) {
-                Ok(x) => Some(x),
-                Err(_) => return Err((ExitCode::Usage, "invalid Marionette port".into())),
-            }
-        }
+        Some(x) => match u16::from_str(x) {
+            Ok(x) => Some(x),
+            Err(_) => return Err((ExitCode::Usage, "invalid Marionette port".into())),
+        },
         None => None,
     };
 
