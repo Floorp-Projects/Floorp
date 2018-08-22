@@ -762,18 +762,20 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
   rv = GetFirstSelectedCell(nullptr, getter_AddRefs(firstCell));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // When 2 or more cells are selected, ignore aNumber and use selected cells.
   if (firstCell && selection->RangeCount() > 1) {
-    // When > 1 selected cell,
-    //  ignore aNumber and use selected cells
-    cell = firstCell;
-
     int32_t rowCount, colCount;
     rv = GetTableSize(table, &rowCount, &colCount);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Get indexes -- may be different than original cell
-    rv = GetCellIndexes(cell, &startRowIndex, &startColIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    CellIndexes firstCellIndexes(*firstCell, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    cell = firstCell;
+    startRowIndex = firstCellIndexes.mRow;
+    startColIndex = firstCellIndexes.mColumn;
 
     // The setCaret object will call AutoSelectionSetterAfterTableEdit in its
     // destructor
@@ -804,8 +806,12 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
             if (!cell) {
               break;
             }
-            rv = GetCellIndexes(cell, &nextRow, &startColIndex);
-            NS_ENSURE_SUCCESS(rv, rv);
+            CellIndexes nextSelectedCellIndexes(*cell, error);
+            if (NS_WARN_IF(error.Failed())) {
+              return error.StealNSResult();
+            }
+            nextRow = nextSelectedCellIndexes.mRow;
+            startColIndex = nextSelectedCellIndexes.mColumn;
           }
           // Delete entire row
           rv = DeleteRow(table, startRowIndex);
@@ -836,8 +842,12 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
               if (!cell) {
                 break;
               }
-              rv = GetCellIndexes(cell, &startRowIndex, &nextCol);
-              NS_ENSURE_SUCCESS(rv, rv);
+              CellIndexes nextSelectedCellIndexes(*cell, error);
+              if (NS_WARN_IF(error.Failed())) {
+                return error.StealNSResult();
+              }
+              startRowIndex = nextSelectedCellIndexes.mRow;
+              nextCol = nextSelectedCellIndexes.mColumn;
             }
             // Delete entire Col
             rv = DeleteColumn(table, startColIndex);
@@ -863,11 +873,15 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
           }
 
           // The next cell to delete
-          cell = nextCell;
-          if (cell) {
-            rv = GetCellIndexes(cell, &startRowIndex, &startColIndex);
-            NS_ENSURE_SUCCESS(rv, rv);
+          if (nextCell) {
+            CellIndexes nextCellIndexes(*nextCell, error);
+            if (NS_WARN_IF(error.Failed())) {
+              return error.StealNSResult();
+            }
+            startRowIndex = nextCellIndexes.mRow;
+            startColIndex = nextCellIndexes.mColumn;
           }
+          cell = nextCell;
         }
       }
     }
@@ -957,9 +971,14 @@ HTMLEditor::DeleteTableCellContents()
 
 
   if (firstCell) {
+    ErrorResult error;
+    CellIndexes firstCellIndexes(*firstCell, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
     cell = firstCell;
-    rv = GetCellIndexes(cell, &startRowIndex, &startColIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
+    startRowIndex = firstCellIndexes.mRow;
+    startColIndex = firstCellIndexes.mColumn;
   }
 
   AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
@@ -1037,10 +1056,14 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
 
   uint32_t rangeCount = selection->RangeCount();
 
+  ErrorResult error;
   if (firstCell && rangeCount > 1) {
-    // Fetch indexes again - may be different for selected cells
-    rv = GetCellIndexes(firstCell, &startRowIndex, &startColIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
+    CellIndexes firstCellIndexes(*firstCell, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    startRowIndex = firstCellIndexes.mRow;
+    startColIndex = firstCellIndexes.mColumn;
   }
   //We control selection resetting after the insert...
   AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
@@ -1053,8 +1076,12 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
 
     while (cell) {
       if (cell != firstCell) {
-        rv = GetCellIndexes(cell, &startRowIndex, &startColIndex);
-        NS_ENSURE_SUCCESS(rv, rv);
+        CellIndexes cellIndexes(*cell, error);
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
+        }
+        startRowIndex = cellIndexes.mRow;
+        startColIndex = cellIndexes.mColumn;
       }
       // Find the next cell in a different column
       // to continue after we delete this column
@@ -1065,8 +1092,12 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
         if (!cell) {
           break;
         }
-        rv = GetCellIndexes(cell, &startRowIndex, &nextCol);
-        NS_ENSURE_SUCCESS(rv, rv);
+        CellIndexes cellIndexes(*cell, error);
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
+        }
+        startRowIndex = cellIndexes.mRow;
+        nextCol = cellIndexes.mColumn;
       }
       rv = DeleteColumn(table, startColIndex);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1201,10 +1232,15 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
 
   uint32_t rangeCount = selection->RangeCount();
 
+  ErrorResult error;
   if (firstCell && rangeCount > 1) {
     // Fetch indexes again - may be different for selected cells
-    rv = GetCellIndexes(firstCell, &startRowIndex, &startColIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
+    CellIndexes firstCellIndexes(*firstCell, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    startRowIndex = firstCellIndexes.mRow;
+    startColIndex = firstCellIndexes.mColumn;
   }
 
   //We control selection resetting after the insert...
@@ -1220,8 +1256,12 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
 
     while (cell) {
       if (cell != firstCell) {
-        rv = GetCellIndexes(cell, &startRowIndex, &startColIndex);
-        NS_ENSURE_SUCCESS(rv, rv);
+        CellIndexes cellIndexes(*cell, error);
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
+        }
+        startRowIndex = cellIndexes.mRow;
+        startColIndex = cellIndexes.mColumn;
       }
       // Find the next cell in a different row
       // to continue after we delete this row
@@ -1229,9 +1269,15 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
       while (nextRow == startRowIndex) {
         rv = GetNextSelectedCell(nullptr, getter_AddRefs(cell));
         NS_ENSURE_SUCCESS(rv, rv);
-        if (!cell) break;
-        rv = GetCellIndexes(cell, &nextRow, &startColIndex);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (!cell) {
+          break;
+        }
+        CellIndexes cellIndexes(*cell, error);
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
+        }
+        nextRow = cellIndexes.mRow;
+        startColIndex = cellIndexes.mColumn;
       }
       // Delete entire row
       rv = DeleteRow(table, startRowIndex);
@@ -1434,17 +1480,14 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
     return NS_OK;
   }
 
-  int32_t startRowIndex, startColIndex, endRowIndex, endColIndex;
-
-  // Get starting and ending cells' location in the cellmap
-  nsresult rv = GetCellIndexes(aStartCell, &startRowIndex, &startColIndex);
-  if (NS_FAILED(rv)) {
-    return rv;
+  ErrorResult error;
+  CellIndexes startCellIndexes(*aStartCell, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
-
-  rv = GetCellIndexes(aEndCell, &endRowIndex, &endColIndex);
-  if (NS_FAILED(rv)) {
-    return rv;
+  CellIndexes endCellIndexes(*aEndCell, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
 
   // Suppress nsISelectionListener notification
@@ -1453,26 +1496,34 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
 
   // Examine all cell nodes in current selection and
   //  remove those outside the new block cell region
-  int32_t minColumn = std::min(startColIndex, endColIndex);
-  int32_t minRow    = std::min(startRowIndex, endRowIndex);
-  int32_t maxColumn   = std::max(startColIndex, endColIndex);
-  int32_t maxRow      = std::max(startRowIndex, endRowIndex);
+  int32_t minColumn =
+    std::min(startCellIndexes.mColumn, endCellIndexes.mColumn);
+  int32_t minRow =
+    std::min(startCellIndexes.mRow, endCellIndexes.mRow);
+  int32_t maxColumn =
+    std::max(startCellIndexes.mColumn, endCellIndexes.mColumn);
+  int32_t maxRow =
+    std::max(startCellIndexes.mRow, endCellIndexes.mRow);
 
   RefPtr<Element> cell;
   int32_t currentRowIndex, currentColIndex;
   RefPtr<nsRange> range;
-  rv = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(cell));
+  nsresult rv =
+    GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(cell));
   NS_ENSURE_SUCCESS(rv, rv);
   if (rv == NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND) {
     return NS_OK;
   }
 
   while (cell) {
-    rv = GetCellIndexes(cell, &currentRowIndex, &currentColIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (currentRowIndex < maxRow || currentRowIndex > maxRow ||
-        currentColIndex < maxColumn || currentColIndex > maxColumn) {
+    CellIndexes currentCellIndexes(*cell, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    if (currentCellIndexes.mRow < maxRow ||
+        currentCellIndexes.mRow > maxRow ||
+        currentCellIndexes.mColumn < maxColumn ||
+        currentCellIndexes.mColumn > maxColumn) {
       selection->RemoveRange(*range, IgnoreErrors());
       // Since we've removed the range, decrement pointer to next range
       mSelectedCellIndex--;
@@ -2625,43 +2676,85 @@ HTMLEditor::NormalizeTable(Element* aTable)
 }
 
 NS_IMETHODIMP
-HTMLEditor::GetCellIndexes(Element* aCell,
+HTMLEditor::GetCellIndexes(Element* aCellElement,
                            int32_t* aRowIndex,
-                           int32_t* aColIndex)
+                           int32_t* aColumnIndex)
 {
-  NS_ENSURE_ARG_POINTER(aRowIndex);
-  *aColIndex=0; // initialize out params
-  NS_ENSURE_ARG_POINTER(aColIndex);
-  *aRowIndex=0;
-  // Needs to stay alive while we're using aCell, since it may be keeping it
-  // alive.
-  // XXX Looks like it's safe to use raw pointer here.  However, layout code
-  //     change won't be handled by editor developers so that it must be safe
-  //     to keep using RefPtr here.
-  RefPtr<Element> cell;
-  if (!aCell) {
+  if (NS_WARN_IF(!aRowIndex) || NS_WARN_IF(!aColumnIndex)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aRowIndex = 0;
+  *aColumnIndex = 0;
+
+  if (!aCellElement) {
+    // Use cell element which contains anchor of Selection when aCellElement is
+    // nullptr.
     RefPtr<Selection> selection = GetSelection();
     if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
     }
-    // Get the selected cell or the cell enclosing the selection anchor
-    cell = GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::td);
-    if (!cell) {
-      return NS_ERROR_FAILURE;
+    ErrorResult error;
+    CellIndexes cellIndexes(*this, *selection, error);
+    if (error.Failed()) {
+      return error.StealNSResult();
     }
-    aCell = cell;
+    *aRowIndex = cellIndexes.mRow;
+    *aColumnIndex = cellIndexes.mColumn;
+    return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
+  ErrorResult error;
+  CellIndexes cellIndexes(*aCellElement, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  *aRowIndex = cellIndexes.mRow;
+  *aColumnIndex = cellIndexes.mColumn;
+  return NS_OK;
+}
 
-  // frames are not ref counted, so don't use an nsCOMPtr
-  nsIFrame *layoutObject = aCell->GetPrimaryFrame();
-  NS_ENSURE_TRUE(layoutObject, NS_ERROR_FAILURE);
+void
+HTMLEditor::CellIndexes::Update(HTMLEditor& aHTMLEditor,
+                                Selection& aSelection,
+                                ErrorResult& aRv)
+{
+  MOZ_ASSERT(!aRv.Failed());
 
-  nsITableCellLayout *cellLayoutObject = do_QueryFrame(layoutObject);
-  NS_ENSURE_TRUE(cellLayoutObject, NS_ERROR_FAILURE);
-  return cellLayoutObject->GetCellIndexes(*aRowIndex, *aColIndex);
+  // Guarantee the life time of the cell element since Init() will access
+  // layout methods.
+  RefPtr<Element> cellElement =
+    aHTMLEditor.GetElementOrParentByTagNameAtSelection(aSelection,
+                                                       *nsGkAtoms::td);
+  if (!cellElement) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  Update(*cellElement, aRv);
+}
+
+void
+HTMLEditor::CellIndexes::Update(Element& aCellElement,
+                                ErrorResult& aRv)
+{
+  MOZ_ASSERT(!aRv.Failed());
+
+  // XXX If the table cell is created immediately before this call, e.g.,
+  //     using innerHTML, frames have not been created yet.  In such case,
+  //     shouldn't we flush pending layout?
+  nsIFrame* frameOfCell = aCellElement.GetPrimaryFrame();
+  if (NS_WARN_IF(!frameOfCell)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsITableCellLayout* tableCellLayout = do_QueryFrame(frameOfCell);
+  if (!tableCellLayout) {
+    aRv.Throw(NS_ERROR_FAILURE); // not a cell element.
+    return;
+  }
+
+  aRv = tableCellLayout->GetCellIndexes(mRow, mColumn);
+  NS_WARNING_ASSERTION(!aRv.Failed(), "Failed to get cell indexes");
 }
 
 nsTableWrapperFrame*
@@ -2884,7 +2977,7 @@ HTMLEditor::GetCellContext(Selection** aSelection,
                            nsINode** aCellParent,
                            int32_t* aCellOffset,
                            int32_t* aRowIndex,
-                           int32_t* aColIndex)
+                           int32_t* aColumnIndex)
 {
   // Initialize return pointers
   if (aSelection) {
@@ -2905,8 +2998,8 @@ HTMLEditor::GetCellContext(Selection** aSelection,
   if (aRowIndex) {
     *aRowIndex = 0;
   }
-  if (aColIndex) {
-    *aColIndex = 0;
+  if (aColumnIndex) {
+    *aColumnIndex = 0;
   }
 
   RefPtr<Selection> selection = GetSelection();
@@ -2969,18 +3062,17 @@ HTMLEditor::GetCellContext(Selection** aSelection,
   }
 
   // Get the rest of the related data only if requested
-  if (aRowIndex || aColIndex) {
-    int32_t rowIndex, colIndex;
-    // Get current cell location so we can put caret back there when done
-    nsresult rv = GetCellIndexes(cell, &rowIndex, &colIndex);
-    if (NS_FAILED(rv)) {
-      return rv;
+  if (aRowIndex || aColumnIndex) {
+    ErrorResult error;
+    CellIndexes cellIndexes(*cell, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
     }
     if (aRowIndex) {
-      *aRowIndex = rowIndex;
+      *aRowIndex = cellIndexes.mRow;
     }
-    if (aColIndex) {
-      *aColIndex = colIndex;
+    if (aColumnIndex) {
+      *aColumnIndex = cellIndexes.mColumn;
     }
   }
   if (aCellParent) {
@@ -3135,7 +3227,7 @@ HTMLEditor::GetNextSelectedCell(nsRange** aRange,
 
 NS_IMETHODIMP
 HTMLEditor::GetFirstSelectedCellInTable(int32_t* aRowIndex,
-                                        int32_t* aColIndex,
+                                        int32_t* aColumnIndex,
                                         Element** aCell)
 {
   NS_ENSURE_TRUE(aCell, NS_ERROR_NULL_POINTER);
@@ -3143,8 +3235,8 @@ HTMLEditor::GetFirstSelectedCellInTable(int32_t* aRowIndex,
   if (aRowIndex) {
     *aRowIndex = 0;
   }
-  if (aColIndex) {
-    *aColIndex = 0;
+  if (aColumnIndex) {
+    *aColumnIndex = 0;
   }
 
   RefPtr<Element> cell;
@@ -3155,22 +3247,22 @@ HTMLEditor::GetFirstSelectedCellInTable(int32_t* aRowIndex,
   // We don't want to cell.forget() here, because we use "cell" below.
   *aCell = do_AddRef(cell).take();
 
-  // Also return the row and/or column if requested
-  if (aRowIndex || aColIndex) {
-    int32_t startRowIndex, startColIndex;
-    rv = GetCellIndexes(cell, &startRowIndex, &startColIndex);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    if (aRowIndex) {
-      *aRowIndex = startRowIndex;
-    }
-    if (aColIndex) {
-      *aColIndex = startColIndex;
-    }
+  if (!aRowIndex && !aColumnIndex) {
+    return NS_OK;
   }
 
+  // Also return the row and/or column if requested
+  ErrorResult error;
+  CellIndexes cellIndexes(*cell, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  if (aRowIndex) {
+    *aRowIndex = cellIndexes.mRow;
+  }
+  if (aColumnIndex) {
+    *aColumnIndex = cellIndexes.mColumn;
+  }
   return NS_OK;
 }
 
@@ -3371,19 +3463,18 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
   // Store indexes of each row/col to avoid duplication of searches
   nsTArray<int32_t> indexArray;
 
+  ErrorResult error;
   bool allCellsInRowAreSelected = false;
   bool allCellsInColAreSelected = false;
   while (NS_SUCCEEDED(rv) && selectedCell) {
-    // Get the cell's location in the cellmap
-    int32_t startRowIndex, startColIndex;
-    rv = GetCellIndexes(selectedCell, &startRowIndex, &startColIndex);
-    if (NS_FAILED(rv)) {
-      return rv;
+    CellIndexes selectedCellIndexes(*selectedCell, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
     }
-
-    if (!indexArray.Contains(startColIndex)) {
-      indexArray.AppendElement(startColIndex);
-      allCellsInRowAreSelected = AllCellsInRowSelected(table, startRowIndex, colCount);
+    if (!indexArray.Contains(selectedCellIndexes.mColumn)) {
+      indexArray.AppendElement(selectedCellIndexes.mColumn);
+      allCellsInRowAreSelected =
+        AllCellsInRowSelected(table, selectedCellIndexes.mRow, colCount);
       // We're done as soon as we fail for any row
       if (!allCellsInRowAreSelected) {
         break;
@@ -3404,16 +3495,15 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
   // Start at first cell again
   rv = GetFirstSelectedCell(nullptr, getter_AddRefs(selectedCell));
   while (NS_SUCCEEDED(rv) && selectedCell) {
-    // Get the cell's location in the cellmap
-    int32_t startRowIndex, startColIndex;
-    rv = GetCellIndexes(selectedCell, &startRowIndex, &startColIndex);
-    if (NS_FAILED(rv)) {
-      return rv;
+    CellIndexes selectedCellIndexes(*selectedCell, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
     }
 
-    if (!indexArray.Contains(startRowIndex)) {
-      indexArray.AppendElement(startColIndex);
-      allCellsInColAreSelected = AllCellsInColumnSelected(table, startColIndex, rowCount);
+    if (!indexArray.Contains(selectedCellIndexes.mRow)) {
+      indexArray.AppendElement(selectedCellIndexes.mColumn);
+      allCellsInColAreSelected =
+        AllCellsInColumnSelected(table, selectedCellIndexes.mColumn, rowCount);
       // We're done as soon as we fail for any column
       if (!allCellsInRowAreSelected) {
         break;
