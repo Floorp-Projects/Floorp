@@ -473,6 +473,7 @@ structs-types = [
     "mozilla::FontWeight",
     "mozilla::MallocSizeOf",
     "mozilla::OriginFlags",
+    "mozilla::StyleMotion",
     "mozilla::UniquePtr",
     "mozilla::StyleDisplayMode",
     "ServoRawOffsetArc",

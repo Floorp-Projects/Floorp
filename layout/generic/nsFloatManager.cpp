@@ -2409,6 +2409,10 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       MOZ_ASSERT_UNREACHABLE("shape-outside doesn't have URL source type!");
       return;
 
+    case StyleShapeSourceType::Path:
+      MOZ_ASSERT_UNREACHABLE("shape-outside doesn't have Path source type!");
+      return;
+
     case StyleShapeSourceType::Image: {
       float shapeImageThreshold = styleDisplay->mShapeImageThreshold;
       mShapeInfo = ShapeInfo::CreateImageShape(shapeOutside.GetShapeImage(),
