@@ -1,54 +1,56 @@
+use base64;
 use hyper::method::Method;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
-use mozrunner::runner::{FirefoxRunner, FirefoxProcess, Runner, RunnerProcess};
+use mozrunner::runner::{FirefoxProcess, FirefoxRunner, Runner, RunnerProcess};
 use regex::Captures;
-use rustc_serialize::base64::FromBase64;
-use rustc_serialize::json;
-use rustc_serialize::json::{Json, ToJson};
-use std::collections::BTreeMap;
+use serde::de::{self, Deserialize, Deserializer};
+use serde::ser::{Serialize, Serializer};
+use serde_json::{self, Map, Value};
 use std::env;
 use std::error::Error;
 use std::fs::File;
+use std::io::prelude::*;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
-use std::io::prelude::*;
-use std::path::PathBuf;
 use std::io::Result as IoResult;
 use std::net::{TcpListener, TcpStream};
+use std::path::PathBuf;
 use std::sync::Mutex;
 use std::thread;
 use std::time;
 use uuid::Uuid;
 use webdriver::capabilities::CapabilitiesMatching;
-use webdriver::command::{WebDriverCommand, WebDriverMessage, Parameters,
-                         WebDriverExtensionCommand};
-use webdriver::command::WebDriverCommand::{
-    NewSession, DeleteSession, Status, Get, GetCurrentUrl,
-    GoBack, GoForward, Refresh, GetTitle, GetPageSource, GetWindowHandle,
-    GetWindowHandles, CloseWindow, SetWindowRect, GetWindowRect,
-    MinimizeWindow, MaximizeWindow, FullscreenWindow, SwitchToWindow, SwitchToFrame,
-    SwitchToParentFrame, FindElement, FindElements,
-    FindElementElement, FindElementElements, GetActiveElement,
-    IsDisplayed, IsSelected, GetElementAttribute, GetElementProperty, GetCSSValue,
-    GetElementText, GetElementTagName, GetElementRect, IsEnabled,
-    ElementClick, ElementTap, ElementClear, ElementSendKeys,
-    ExecuteScript, ExecuteAsyncScript, GetCookies, GetNamedCookie, AddCookie,
-    DeleteCookies, DeleteCookie, GetTimeouts, SetTimeouts, DismissAlert,
-    AcceptAlert, GetAlertText, SendAlertText, TakeScreenshot, TakeElementScreenshot,
-    Extension, PerformActions, ReleaseActions};
-use webdriver::command::{
-    NewSessionParameters, GetParameters, WindowRectParameters, SwitchToWindowParameters,
-    SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
-    GetNamedCookieParameters, AddCookieParameters, TimeoutsParameters,
-    ActionsParameters, TakeScreenshotParameters};
-use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse,
+use webdriver::command::WebDriverCommand::{AcceptAlert, AddCookie, CloseWindow, DeleteCookie,
+                                           DeleteCookies, DeleteSession, DismissAlert,
+                                           ElementClear, ElementClick, ElementSendKeys,
+                                           ElementTap, ExecuteAsyncScript, ExecuteScript,
+                                           Extension, FindElement, FindElementElement,
+                                           FindElementElements, FindElements, FullscreenWindow,
+                                           Get, GetActiveElement, GetAlertText, GetCSSValue,
+                                           GetCookies, GetCurrentUrl, GetElementAttribute,
+                                           GetElementProperty, GetElementRect, GetElementTagName,
+                                           GetElementText, GetNamedCookie, GetPageSource,
+                                           GetTimeouts, GetTitle, GetWindowHandle,
+                                           GetWindowHandles, GetWindowRect, GoBack, GoForward,
+                                           IsDisplayed, IsEnabled, IsSelected, MaximizeWindow,
+                                           MinimizeWindow, NewSession, PerformActions, Refresh,
+                                           ReleaseActions, SendAlertText, SetTimeouts,
+                                           SetWindowRect, Status, SwitchToFrame,
+                                           SwitchToParentFrame, SwitchToWindow,
+                                           TakeElementScreenshot, TakeScreenshot};
+use webdriver::command::{ActionsParameters, AddCookieParameters, GetNamedCookieParameters,
+                         GetParameters, JavascriptCommandParameters, LocatorParameters,
+                         NewSessionParameters, SwitchToFrameParameters, SwitchToWindowParameters,
+                         TakeScreenshotParameters, TimeoutsParameters, WindowRectParameters};
+use webdriver::command::{WebDriverCommand, WebDriverExtensionCommand, WebDriverMessage};
+use webdriver::common::{Cookie, FrameId, WebElement, ELEMENT_KEY, FRAME_KEY, WINDOW_KEY};
+use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
+use webdriver::httpapi::WebDriverExtensionRoute;
+use webdriver::response::{CloseWindowResponse, CookieResponse, CookiesResponse,
                           ElementRectResponse, NewSessionResponse, TimeoutsResponse,
                           ValueResponse, WebDriverResponse, WindowRectResponse};
-use webdriver::common::{Date, ELEMENT_KEY, FrameId, FRAME_KEY, Nullable, WebElement, WINDOW_KEY};
-use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
-use webdriver::server::{WebDriverHandler, Session};
-use webdriver::httpapi::{WebDriverExtensionRoute};
+use webdriver::server::{Session, WebDriverHandler};
 
 use build::BuildInfo;
 use capabilities::{FirefoxCapabilities, FirefoxOptions};
@@ -63,18 +65,38 @@ const CHROME_ELEMENT_KEY: &'static str = "chromeelement-9fc5-4b51-a3c8-01716eede
 const LEGACY_ELEMENT_KEY: &'static str = "ELEMENT";
 
 pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
-    return vec![(Method::Get, "/session/{sessionId}/moz/context", GeckoExtensionRoute::GetContext),
-             (Method::Post, "/session/{sessionId}/moz/context", GeckoExtensionRoute::SetContext),
-             (Method::Post,
-              "/session/{sessionId}/moz/xbl/{elementId}/anonymous_children",
-              GeckoExtensionRoute::XblAnonymousChildren),
-             (Method::Post,
-              "/session/{sessionId}/moz/xbl/{elementId}/anonymous_by_attribute",
-              GeckoExtensionRoute::XblAnonymousByAttribute),
-             (Method::Post, "/session/{sessionId}/moz/addon/install",
-                GeckoExtensionRoute::InstallAddon),
-             (Method::Post, "/session/{sessionId}/moz/addon/uninstall",
-                GeckoExtensionRoute::UninstallAddon)];
+    return vec![
+        (
+            Method::Get,
+            "/session/{sessionId}/moz/context",
+            GeckoExtensionRoute::GetContext,
+        ),
+        (
+            Method::Post,
+            "/session/{sessionId}/moz/context",
+            GeckoExtensionRoute::SetContext,
+        ),
+        (
+            Method::Post,
+            "/session/{sessionId}/moz/xbl/{elementId}/anonymous_children",
+            GeckoExtensionRoute::XblAnonymousChildren,
+        ),
+        (
+            Method::Post,
+            "/session/{sessionId}/moz/xbl/{elementId}/anonymous_by_attribute",
+            GeckoExtensionRoute::XblAnonymousByAttribute,
+        ),
+        (
+            Method::Post,
+            "/session/{sessionId}/moz/addon/install",
+            GeckoExtensionRoute::InstallAddon,
+        ),
+        (
+            Method::Post,
+            "/session/{sessionId}/moz/addon/uninstall",
+            GeckoExtensionRoute::UninstallAddon,
+        ),
+    ];
 }
 
 #[derive(Clone, PartialEq)]
@@ -90,37 +112,41 @@ pub enum GeckoExtensionRoute {
 impl WebDriverExtensionRoute for GeckoExtensionRoute {
     type Command = GeckoExtensionCommand;
 
-    fn command(&self,
-               captures: &Captures,
-               body_data: &Json)
-               -> WebDriverResult<WebDriverCommand<GeckoExtensionCommand>> {
+    fn command(
+        &self,
+        params: &Captures,
+        body_data: &Value,
+    ) -> WebDriverResult<WebDriverCommand<GeckoExtensionCommand>> {
         let command = match self {
             &GeckoExtensionRoute::GetContext => GeckoExtensionCommand::GetContext,
             &GeckoExtensionRoute::SetContext => {
-                let parameters: GeckoContextParameters = try!(Parameters::from_json(&body_data));
-                GeckoExtensionCommand::SetContext(parameters)
+                GeckoExtensionCommand::SetContext(serde_json::from_value(body_data.clone())?)
             }
             &GeckoExtensionRoute::XblAnonymousChildren => {
-                let element_id = try!(captures.name("elementId")
-                    .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                               "Missing elementId parameter")));
-                GeckoExtensionCommand::XblAnonymousChildren(element_id.as_str().into())
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
+                let element = WebElement::new(element_id.as_str().to_string());
+                GeckoExtensionCommand::XblAnonymousChildren(element)
             }
             &GeckoExtensionRoute::XblAnonymousByAttribute => {
-                let element_id = try!(captures.name("elementId")
-                    .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                               "Missing elementId parameter")));
-                let parameters: AttributeParameters = try!(Parameters::from_json(&body_data));
-                GeckoExtensionCommand::XblAnonymousByAttribute(element_id.as_str().into(),
-                                                               parameters)
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
+                GeckoExtensionCommand::XblAnonymousByAttribute(
+                    WebElement::new(element_id.as_str().into()),
+                    serde_json::from_value(body_data.clone())?,
+                )
             }
             &GeckoExtensionRoute::InstallAddon => {
-                let parameters: AddonInstallParameters = try!(Parameters::from_json(&body_data));
-                GeckoExtensionCommand::InstallAddon(parameters)
+                GeckoExtensionCommand::InstallAddon(serde_json::from_value(body_data.clone())?)
             }
             &GeckoExtensionRoute::UninstallAddon => {
-                let parameters: AddonUninstallParameters = try!(Parameters::from_json(&body_data));
-                GeckoExtensionCommand::UninstallAddon(parameters)
+                GeckoExtensionCommand::UninstallAddon(serde_json::from_value(body_data.clone())?)
             }
         };
         Ok(WebDriverCommand::Extension(command))
@@ -132,249 +158,173 @@ pub enum GeckoExtensionCommand {
     GetContext,
     SetContext(GeckoContextParameters),
     XblAnonymousChildren(WebElement),
-    XblAnonymousByAttribute(WebElement, AttributeParameters),
+    XblAnonymousByAttribute(WebElement, XblLocatorParameters),
     InstallAddon(AddonInstallParameters),
-    UninstallAddon(AddonUninstallParameters)
+    UninstallAddon(AddonUninstallParameters),
 }
 
 impl WebDriverExtensionCommand for GeckoExtensionCommand {
-    fn parameters_json(&self) -> Option<Json> {
+    fn parameters_json(&self) -> Option<Value> {
         match self {
             &GeckoExtensionCommand::GetContext => None,
-            &GeckoExtensionCommand::SetContext(ref x) => Some(x.to_json()),
+            &GeckoExtensionCommand::InstallAddon(ref x) => {
+                Some(serde_json::to_value(x.clone()).unwrap())
+            }
+            &GeckoExtensionCommand::SetContext(ref x) => {
+                Some(serde_json::to_value(x.clone()).unwrap())
+            }
+            &GeckoExtensionCommand::UninstallAddon(ref x) => {
+                Some(serde_json::to_value(x.clone()).unwrap())
+            }
+            &GeckoExtensionCommand::XblAnonymousByAttribute(_, ref x) => {
+                Some(serde_json::to_value(x.clone()).unwrap())
+            }
             &GeckoExtensionCommand::XblAnonymousChildren(_) => None,
-            &GeckoExtensionCommand::XblAnonymousByAttribute(_, ref x) => Some(x.to_json()),
-            &GeckoExtensionCommand::InstallAddon(ref x) => Some(x.to_json()),
-            &GeckoExtensionCommand::UninstallAddon(ref x) => Some(x.to_json()),
         }
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct AddonInstallParameters {
+    pub path: String,
+    pub temporary: bool,
+}
+
+impl<'de> Deserialize<'de> for AddonInstallParameters {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Debug, Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct Base64 {
+            addon: String,
+            temporary: bool,
+        };
+
+        #[derive(Debug, Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct Path {
+            path: String,
+            temporary: bool,
+        };
+
+        #[derive(Debug, Deserialize)]
+        #[serde(untagged)]
+        enum Helper {
+            Base64(Base64),
+            Path(Path),
+        };
+
+        let params = match Helper::deserialize(deserializer)? {
+            Helper::Path(ref mut data) => AddonInstallParameters {
+                path: data.path.clone(),
+                temporary: data.temporary,
+            },
+            Helper::Base64(ref mut data) => {
+                let content = base64::decode(&data.addon).map_err(de::Error::custom)?;
+
+                let path = env::temp_dir()
+                    .as_path()
+                    .join(format!("addon-{}.xpi", Uuid::new_v4()));
+                let mut xpi_file = File::create(&path).map_err(de::Error::custom)?;
+                xpi_file
+                    .write(content.as_slice())
+                    .map_err(de::Error::custom)?;
+
+                let path = match path.to_str() {
+                    Some(path) => path.to_string(),
+                    None => return Err(de::Error::custom("could not write addon to file")),
+                };
+
+                AddonInstallParameters {
+                    path: path,
+                    temporary: data.temporary,
+                }
+            }
+        };
+
+        Ok(params)
+    }
+}
+
+impl ToMarionette for AddonInstallParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        data.insert("path".to_string(), Value::String(self.path.clone()));
+        data.insert("temporary".to_string(), Value::Bool(self.temporary));
+        Ok(data)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct AddonUninstallParameters {
+    pub id: String,
+}
+
+impl ToMarionette for AddonUninstallParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        data.insert("id".to_string(), Value::String(self.id.clone()));
+        Ok(data)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 enum GeckoContext {
     Content,
     Chrome,
 }
 
-impl ToJson for GeckoContext {
-    fn to_json(&self) -> Json {
-        match self {
-            &GeckoContext::Content => Json::String("content".to_owned()),
-            &GeckoContext::Chrome => Json::String("chrome".to_owned()),
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct GeckoContextParameters {
-    context: GeckoContext
-}
-
-impl Parameters for GeckoContextParameters {
-    fn from_json(body: &Json) -> WebDriverResult<GeckoContextParameters> {
-        let data = try!(body.as_object().ok_or(
-            WebDriverError::new(ErrorStatus::InvalidArgument,
-                                "Message body was not an object")));
-        let context_value = try!(data.get("context").ok_or(
-            WebDriverError::new(ErrorStatus::InvalidArgument,
-                                "Missing context key")));
-        let value = try!(context_value.as_string().ok_or(
-            WebDriverError::new(
-                ErrorStatus::InvalidArgument,
-                "context was not a string")));
-        let context = try!(match value {
-            "chrome" => Ok(GeckoContext::Chrome),
-            "content" => Ok(GeckoContext::Content),
-            _ => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                         format!("{} is not a valid context",
-                                                 value)))
-        });
-        Ok(GeckoContextParameters {
-            context: context
-        })
-    }
+    context: GeckoContext,
 }
 
 impl ToMarionette for GeckoContextParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        let mut data = BTreeMap::new();
-        data.insert("value".to_owned(), self.context.to_json());
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        data.insert(
+            "value".to_owned(),
+            serde_json::to_value(self.context.clone())?,
+        );
         Ok(data)
     }
 }
 
-impl ToJson for GeckoContextParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("context".to_owned(), self.context.to_json());
-        Json::Object(data)
-    }
-}
-
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct AttributeParameters {
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct XblLocatorParameters {
     name: String,
-    value: String
+    value: String,
 }
 
-impl Parameters for AttributeParameters {
-    fn from_json(body: &Json) -> WebDriverResult<AttributeParameters> {
-        let data = try!(body.as_object().ok_or(
-            WebDriverError::new(ErrorStatus::InvalidArgument,
-                                "Message body was not an object")));
-        let name = try!(try!(data.get("name").ok_or(
-            WebDriverError::new(ErrorStatus::InvalidArgument,
-                                "Missing 'name' parameter"))).as_string().
-                            ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                      "'name' parameter is not a string")));
-        let value = try!(try!(data.get("value").ok_or(
-            WebDriverError::new(ErrorStatus::InvalidArgument,
-                                "Missing 'value' parameter"))).as_string().
-                            ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                      "'value' parameter is not a string")));
-        Ok(AttributeParameters {
-            name: name.to_owned(),
-            value: value.to_owned(),
-        })
-    }
-}
+impl ToMarionette for XblLocatorParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut value = Map::new();
+        value.insert(self.name.to_owned(), Value::String(self.value.clone()));
 
-impl ToJson for AttributeParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("name".to_owned(), self.name.to_json());
-        data.insert("value".to_owned(), self.value.to_json());
-        Json::Object(data)
-    }
-}
-
-impl ToMarionette for AttributeParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        let mut data = BTreeMap::new();
-        data.insert("using".to_owned(), "anon attribute".to_json());
-        let mut value = BTreeMap::new();
-        value.insert(self.name.to_owned(), self.value.to_json());
-        data.insert("value".to_owned(), Json::Object(value));
+        let mut data = Map::new();
+        data.insert(
+            "using".to_owned(),
+            Value::String("anon attribute".to_string()),
+        );
+        data.insert("value".to_owned(), Value::Object(value));
         Ok(data)
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct AddonInstallParameters {
-    pub path: String,
-    pub temporary: bool
-}
-
-impl Parameters for AddonInstallParameters {
-    fn from_json(body: &Json) -> WebDriverResult<AddonInstallParameters> {
-        let data = try!(body.as_object().ok_or(
-            WebDriverError::new(ErrorStatus::InvalidArgument,
-                                "Message body was not an object")));
-
-        let base64 = match data.get("addon") {
-            Some(x) => {
-                let s = try_opt!(x.as_string(),
-                                 ErrorStatus::InvalidArgument,
-                                 "'addon' is not a string").to_string();
-
-                let addon_path = env::temp_dir().as_path()
-                    .join(format!("addon-{}.xpi", Uuid::new_v4()));
-                let mut addon_file = try!(File::create(&addon_path));
-                let addon_buf = try!(s.from_base64());
-                try!(addon_file.write(addon_buf.as_slice()));
-
-                Some(try_opt!(addon_path.to_str(),
-                              ErrorStatus::UnknownError,
-                              "could not write addon to file").to_string())
-            },
-            None => None,
-        };
-        let path = match data.get("path") {
-            Some(x) => Some(try_opt!(x.as_string(),
-                                     ErrorStatus::InvalidArgument,
-                                     "'path' is not a string").to_string()),
-            None => None,
-        };
-        if (base64.is_none() && path.is_none()) || (base64.is_some() && path.is_some()) {
-            return Err(WebDriverError::new(
-                ErrorStatus::InvalidArgument,
-                "Must specify exactly one of 'path' and 'addon'"));
-        }
-
-        let temporary = match data.get("temporary") {
-            Some(x) => try_opt!(x.as_boolean(),
-                                ErrorStatus::InvalidArgument,
-                                "Failed to convert 'temporary' to boolean"),
-            None => false
-        };
-
-        return Ok(AddonInstallParameters {
-            path: base64.or(path).unwrap(),
-            temporary: temporary,
-        })
-    }
-}
-
-impl ToJson for AddonInstallParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("path".to_string(), self.path.to_json());
-        data.insert("temporary".to_string(), self.temporary.to_json());
-        Json::Object(data)
-    }
-}
-
-impl ToMarionette for AddonInstallParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        let mut data = BTreeMap::new();
-        data.insert("path".to_string(), self.path.to_json());
-        data.insert("temporary".to_string(), self.temporary.to_json());
-        Ok(data)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct AddonUninstallParameters {
-    pub id: String
-}
-
-impl Parameters for AddonUninstallParameters {
-    fn from_json(body: &Json) -> WebDriverResult<AddonUninstallParameters> {
-        let data = try!(body.as_object().ok_or(
-            WebDriverError::new(ErrorStatus::InvalidArgument,
-                                "Message body was not an object")));
-
-        let id = try_opt!(
-            try_opt!(data.get("id"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'id' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "'id' is not a string").to_string();
-
-        return Ok(AddonUninstallParameters {id: id})
-    }
-}
-
-impl ToJson for AddonUninstallParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("id".to_string(), self.id.to_json());
-        Json::Object(data)
-    }
-}
-
-impl ToMarionette for AddonUninstallParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        let mut data = BTreeMap::new();
-        data.insert("id".to_string(), self.id.to_json());
-        Ok(data)
-    }
-}
-
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct LogOptions {
     pub level: Option<logging::Level>,
+}
+
+#[derive(Debug, PartialEq, Deserialize)]
+pub struct MarionetteHandshake {
+    #[serde(rename = "marionetteProtocol")]
+    protocol: u16,
+    #[serde(rename = "applicationType")]
+    application_type: String,
 }
 
 #[derive(Default)]
@@ -388,6 +338,7 @@ pub struct MarionetteSettings {
     pub jsdebugger: bool,
 }
 
+#[derive(Default)]
 pub struct MarionetteHandler {
     connection: Mutex<Option<MarionetteConnection>>,
     settings: MarionetteSettings,
@@ -403,21 +354,26 @@ impl MarionetteHandler {
         }
     }
 
-    fn create_connection(&mut self,
-                         session_id: &Option<String>,
-                         new_session_parameters: &NewSessionParameters)
-                         -> WebDriverResult<BTreeMap<String, Json>> {
+    fn create_connection(
+        &mut self,
+        session_id: &Option<String>,
+        new_session_parameters: &NewSessionParameters,
+    ) -> WebDriverResult<Map<String, Value>> {
         let (options, capabilities) = {
             let mut fx_capabilities = FirefoxCapabilities::new(self.settings.binary.as_ref());
             let mut capabilities = try!(
-                try!(new_session_parameters
-                    .match_browser(&mut fx_capabilities))
-                    .ok_or(WebDriverError::new(
+                try!(new_session_parameters.match_browser(&mut fx_capabilities)).ok_or(
+                    WebDriverError::new(
                         ErrorStatus::SessionNotCreated,
-                        "Unable to find a matching set of capabilities")));
+                        "Unable to find a matching set of capabilities",
+                    ),
+                )
+            );
 
-            let options = try!(FirefoxOptions::from_capabilities(fx_capabilities.chosen_binary,
-                                                                 &mut capabilities));
+            let options = try!(FirefoxOptions::from_capabilities(
+                fx_capabilities.chosen_binary,
+                &mut capabilities
+            ));
             (options, capabilities)
         };
 
@@ -431,31 +387,33 @@ impl MarionetteHandler {
         }
 
         let mut connection = MarionetteConnection::new(port, session_id.clone());
-        try!(connection.connect(&mut self.browser));
+        connection.connect(&mut self.browser)?;
         self.connection = Mutex::new(Some(connection));
-
         Ok(capabilities)
     }
 
     fn start_browser(&mut self, port: u16, options: FirefoxOptions) -> WebDriverResult<()> {
-        let binary = options.binary
-            .ok_or(WebDriverError::new(ErrorStatus::SessionNotCreated,
-                                       "Expected browser binary location, but unable to find \
-                                        binary in default location, no \
-                                        'moz:firefoxOptions.binary' capability provided, and \
-                                        no binary flag set on the command line"))?;
+        let binary = options.binary.ok_or(WebDriverError::new(
+            ErrorStatus::SessionNotCreated,
+            "Expected browser binary location, but unable to find \
+             binary in default location, no \
+             'moz:firefoxOptions.binary' capability provided, and \
+             no binary flag set on the command line",
+        ))?;
 
         let is_custom_profile = options.profile.is_some();
 
         let mut profile = match options.profile {
             Some(x) => x,
-            None => Profile::new(None)?
+            None => Profile::new(None)?,
         };
 
         self.set_prefs(port, &mut profile, is_custom_profile, options.prefs)
             .map_err(|e| {
-                WebDriverError::new(ErrorStatus::SessionNotCreated,
-                                    format!("Failed to set preferences: {}", e))
+                WebDriverError::new(
+                    ErrorStatus::SessionNotCreated,
+                    format!("Failed to set preferences: {}", e),
+                )
             })?;
 
         let mut runner = FirefoxRunner::new(&binary, profile);
@@ -475,12 +433,12 @@ impl MarionetteHandler {
             runner.args(args);
         }
 
-        let browser_proc = runner.start()
-            .map_err(|e| {
-                WebDriverError::new(ErrorStatus::SessionNotCreated,
-                                    format!("Failed to start browser {}: {}",
-                                            binary.display(), e))
-            })?;
+        let browser_proc = runner.start().map_err(|e| {
+            WebDriverError::new(
+                ErrorStatus::SessionNotCreated,
+                format!("Failed to start browser {}: {}", binary.display(), e),
+            )
+        })?;
         self.browser = Some(browser_proc);
 
         Ok(())
@@ -509,14 +467,20 @@ impl MarionetteHandler {
         prefs.insert_slice(&extra_prefs[..]);
 
         if self.settings.jsdebugger {
-            prefs.insert("devtools.browsertoolbox.panel", Pref::new("jsdebugger".to_owned()));
+            prefs.insert(
+                "devtools.browsertoolbox.panel",
+                Pref::new("jsdebugger".to_owned()),
+            );
             prefs.insert("devtools.debugger.remote-enabled", Pref::new(true));
             prefs.insert("devtools.chrome.enabled", Pref::new(true));
             prefs.insert("devtools.debugger.prompt-connection", Pref::new(false));
             prefs.insert("marionette.debugging.clicktostart", Pref::new(true));
         }
 
-        prefs.insert("marionette.log.level", logging::max_level().into());
+        prefs.insert(
+            "marionette.log.level",
+            Pref::new(logging::max_level().to_string()),
+        );
         prefs.insert("marionette.port", Pref::new(port));
 
         prefs.write().map_err(|_| {
@@ -526,49 +490,60 @@ impl MarionetteHandler {
 }
 
 impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
-    fn handle_command(&mut self, _: &Option<Session>,
-                      msg: WebDriverMessage<GeckoExtensionRoute>) -> WebDriverResult<WebDriverResponse> {
+    fn handle_command(
+        &mut self,
+        _: &Option<Session>,
+        msg: WebDriverMessage<GeckoExtensionRoute>,
+    ) -> WebDriverResult<WebDriverResponse> {
         let mut resolved_capabilities = None;
         {
             let mut capabilities_options = None;
             // First handle the status message which doesn't actually require a marionette
             // connection or message
             if msg.command == Status {
-                let (ready, message) = self.connection.lock()
-                    .map(|ref connection| connection
-                         .as_ref()
-                         .map(|_| (false, "Session already started"))
-                         .unwrap_or((true, "")))
+                let (ready, message) = self.connection
+                    .lock()
+                    .map(|ref connection| {
+                        connection
+                            .as_ref()
+                            .map(|_| (false, "Session already started"))
+                            .unwrap_or((true, ""))
+                    })
                     .unwrap_or((false, "geckodriver internal error"));
-                let mut value = BTreeMap::new();
-                value.insert("ready".to_string(), Json::Boolean(ready));
-                value.insert("message".to_string(), Json::String(message.into()));
-                return Ok(WebDriverResponse::Generic(ValueResponse::new(Json::Object(value))));
+                let mut value = Map::new();
+                value.insert("ready".to_string(), Value::Bool(ready));
+                value.insert("message".to_string(), Value::String(message.into()));
+                return Ok(WebDriverResponse::Generic(ValueResponse(Value::Object(
+                    value,
+                ))));
             }
+
             match self.connection.lock() {
                 Ok(ref connection) => {
                     if connection.is_none() {
                         match msg.command {
                             NewSession(ref capabilities) => {
                                 capabilities_options = Some(capabilities);
-                            },
+                            }
                             _ => {
                                 return Err(WebDriverError::new(
                                     ErrorStatus::InvalidSessionId,
-                                    "Tried to run command without establishing a connection"));
+                                    "Tried to run command without establishing a connection",
+                                ));
                             }
                         }
                     }
-                },
+                }
                 Err(_) => {
                     return Err(WebDriverError::new(
                         ErrorStatus::UnknownError,
-                        "Failed to aquire Marionette connection"))
+                        "Failed to aquire Marionette connection",
+                    ))
                 }
             }
             if let Some(capabilities) = capabilities_options {
-                resolved_capabilities = Some(try!(
-                    self.create_connection(&msg.session_id, &capabilities)));
+                resolved_capabilities =
+                    Some(try!(self.create_connection(&msg.session_id, &capabilities)));
             }
         }
 
@@ -583,16 +558,16 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
                                 if let NewSession(_) = msg.command {
                                     err.delete_session = true;
                                 }
-                                err})
-                    },
-                    None => panic!("Connection missing")
+                                err
+                            })
+                    }
+                    None => panic!("Connection missing"),
                 }
-            },
-            Err(_) => {
-                Err(WebDriverError::new(
-                    ErrorStatus::UnknownError,
-                    "Failed to aquire Marionette connection"))
             }
+            Err(_) => Err(WebDriverError::new(
+                ErrorStatus::UnknownError,
+                "Failed to aquire Marionette connection",
+            )),
         }
     }
 
@@ -627,9 +602,9 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
 
 pub struct MarionetteSession {
     pub session_id: String,
-    protocol: Option<String>,
+    protocol: Option<u16>,
     application_type: Option<String>,
-    command_id: u64
+    command_id: u64,
 }
 
 impl MarionetteSession {
@@ -639,22 +614,28 @@ impl MarionetteSession {
             session_id: initital_id,
             protocol: None,
             application_type: None,
-            command_id: 0
+            command_id: 0,
         }
     }
 
-    pub fn update(&mut self, msg: &WebDriverMessage<GeckoExtensionRoute>,
-                  resp: &MarionetteResponse) -> WebDriverResult<()> {
+    pub fn update(
+        &mut self,
+        msg: &WebDriverMessage<GeckoExtensionRoute>,
+        resp: &MarionetteResponse,
+    ) -> WebDriverResult<()> {
         match msg.command {
             NewSession(_) => {
                 let session_id = try_opt!(
-                    try_opt!(resp.result.find("sessionId"),
-                             ErrorStatus::SessionNotCreated,
-                             "Unable to get session id").as_string(),
+                    try_opt!(
+                        resp.result.get("sessionId"),
                         ErrorStatus::SessionNotCreated,
-                        "Unable to convert session id to string");
+                        "Unable to get session id"
+                    ).as_str(),
+                    ErrorStatus::SessionNotCreated,
+                    "Unable to convert session id to string"
+                );
                 self.session_id = session_id.to_string().clone();
-            },
+            }
             _ => {}
         }
         Ok(())
@@ -664,7 +645,7 @@ impl MarionetteSession {
     ///
     /// Note that it currently coerces all chrome elements, web frames, and web
     /// windows also into web elements.  This will change at a later point.
-    fn to_web_element(&self, json_data: &Json) -> WebDriverResult<WebElement> {
+    fn to_web_element(&self, json_data: &Value) -> WebDriverResult<WebElement> {
         let data = try_opt!(
             json_data.as_object(),
             ErrorStatus::UnknownError,
@@ -687,7 +668,7 @@ impl MarionetteSession {
             "Failed to extract web element from Marionette response"
         );
         let id = try_opt!(
-            value.as_string(),
+            value.as_str(),
             ErrorStatus::UnknownError,
             "Failed to convert web element reference value to string"
         ).to_string();
@@ -699,13 +680,19 @@ impl MarionetteSession {
         self.command_id
     }
 
-    pub fn response(&mut self, msg: &WebDriverMessage<GeckoExtensionRoute>,
-                    resp: MarionetteResponse) -> WebDriverResult<WebDriverResponse> {
-
+    pub fn response(
+        &mut self,
+        msg: &WebDriverMessage<GeckoExtensionRoute>,
+        resp: MarionetteResponse,
+    ) -> WebDriverResult<WebDriverResponse> {
         if resp.id != self.command_id {
-            return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                           format!("Marionette responses arrived out of sequence, expected {}, got {}",
-                                                   self.command_id, resp.id)));
+            return Err(WebDriverError::new(
+                ErrorStatus::UnknownError,
+                format!(
+                    "Marionette responses arrived out of sequence, expected {}, got {}",
+                    self.command_id, resp.id
+                ),
+            ));
         }
 
         if let Some(error) = resp.error {
@@ -716,136 +703,192 @@ impl MarionetteSession {
 
         Ok(match msg.command {
             // Everything that doesn't have a response value
-            Get(_) | GoBack | GoForward | Refresh | SetTimeouts(_) |
-            SwitchToWindow(_) | SwitchToFrame(_) |
-            SwitchToParentFrame | AddCookie(_) | DeleteCookies | DeleteCookie(_) |
-            DismissAlert | AcceptAlert | SendAlertText(_) | ElementClick(_) |
-            ElementTap(_) | ElementClear(_) | ElementSendKeys(_, _) |
-            PerformActions(_) | ReleaseActions => {
-                WebDriverResponse::Void
-            },
+            Get(_)
+            | GoBack
+            | GoForward
+            | Refresh
+            | SetTimeouts(_)
+            | SwitchToWindow(_)
+            | SwitchToFrame(_)
+            | SwitchToParentFrame
+            | AddCookie(_)
+            | DeleteCookies
+            | DeleteCookie(_)
+            | DismissAlert
+            | AcceptAlert
+            | SendAlertText(_)
+            | ElementClick(_)
+            | ElementTap(_)
+            | ElementClear(_)
+            | ElementSendKeys(_, _)
+            | PerformActions(_)
+            | ReleaseActions => WebDriverResponse::Void,
             // Things that simply return the contents of the marionette "value" property
-            GetCurrentUrl | GetTitle | GetPageSource | GetWindowHandle | IsDisplayed(_) |
-            IsSelected(_) | GetElementAttribute(_, _) | GetElementProperty(_, _) |
-            GetCSSValue(_, _) | GetElementText(_) |
-            GetElementTagName(_) | IsEnabled(_) | ExecuteScript(_) | ExecuteAsyncScript(_) |
-            GetAlertText | TakeScreenshot | TakeElementScreenshot(_) => {
-                let value = try_opt!(resp.result.find("value"),
-                                     ErrorStatus::UnknownError,
-                                     "Failed to find value field");
-                //TODO: Convert webelement keys
-                WebDriverResponse::Generic(ValueResponse::new(value.clone()))
-            },
+            GetCurrentUrl
+            | GetTitle
+            | GetPageSource
+            | GetWindowHandle
+            | IsDisplayed(_)
+            | IsSelected(_)
+            | GetElementAttribute(_, _)
+            | GetElementProperty(_, _)
+            | GetCSSValue(_, _)
+            | GetElementText(_)
+            | GetElementTagName(_)
+            | IsEnabled(_)
+            | ExecuteScript(_)
+            | ExecuteAsyncScript(_)
+            | GetAlertText
+            | TakeScreenshot
+            | TakeElementScreenshot(_) => WebDriverResponse::Generic(resp.to_value_response(true)?),
             GetTimeouts => {
-                let script = try_opt!(try_opt!(resp.result
-                                                   .find("script"),
-                                               ErrorStatus::UnknownError,
-                                               "Missing field: script")
-                                          .as_u64(),
-                                      ErrorStatus::UnknownError,
-                                      "Failed to interpret script timeout duration as u64");
+                let script = try_opt!(
+                    try_opt!(
+                        resp.result.get("script"),
+                        ErrorStatus::UnknownError,
+                        "Missing field: script"
+                    ).as_u64(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret script timeout duration as u64"
+                );
                 // Check for the spec-compliant "pageLoad", but also for "page load",
                 // which was sent by Firefox 52 and earlier.
-                let page_load = try_opt!(try_opt!(resp.result.find("pageLoad")
-                                                      .or(resp.result.find("page load")),
-                                                  ErrorStatus::UnknownError,
-                                                  "Missing field: pageLoad")
-                                             .as_u64(),
-                                         ErrorStatus::UnknownError,
-                                         "Failed to interpret page load duration as u64");
-                let implicit = try_opt!(try_opt!(resp.result
-                                                     .find("implicit"),
-                                                 ErrorStatus::UnknownError,
-                                                 "Missing field: implicit")
-                                            .as_u64(),
-                                        ErrorStatus::UnknownError,
-                                        "Failed to interpret implicit search duration as u64");
+                let page_load = try_opt!(
+                    try_opt!(
+                        resp.result.get("pageLoad").or(resp.result.get("page load")),
+                        ErrorStatus::UnknownError,
+                        "Missing field: pageLoad"
+                    ).as_u64(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret page load duration as u64"
+                );
+                let implicit = try_opt!(
+                    try_opt!(
+                        resp.result.get("implicit"),
+                        ErrorStatus::UnknownError,
+                        "Missing field: implicit"
+                    ).as_u64(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret implicit search duration as u64"
+                );
 
                 WebDriverResponse::Timeouts(TimeoutsResponse {
                     script: script,
                     pageLoad: page_load,
                     implicit: implicit,
                 })
-            },
+            }
             Status => panic!("Got status command that should already have been handled"),
-            GetWindowHandles => {
-                WebDriverResponse::Generic(ValueResponse::new(resp.result.clone()))
-            },
+            GetWindowHandles => WebDriverResponse::Generic(resp.to_value_response(false)?),
             CloseWindow => {
-                let data = try_opt!(resp.result.as_array(),
-                                    ErrorStatus::UnknownError,
-                                    "Failed to interpret value as array");
-                let handles = try!(data.iter()
-                                       .map(|x| {
-                                                Ok(try_opt!(x.as_string(),
-                                                            ErrorStatus::UnknownError,
-                                                            "Failed to interpret window handle as string")
-                                                           .to_owned())
-                                            })
-                                       .collect());
-                WebDriverResponse::CloseWindow(CloseWindowResponse { window_handles: handles })
-            },
+                let data = try_opt!(
+                    resp.result.as_array(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret value as array"
+                );
+                let handles = try!(
+                    data.iter()
+                        .map(|x| {
+                            Ok(try_opt!(
+                                x.as_str(),
+                                ErrorStatus::UnknownError,
+                                "Failed to interpret window handle as string"
+                            ).to_owned())
+                        })
+                        .collect()
+                );
+                WebDriverResponse::CloseWindow(CloseWindowResponse(handles))
+            }
             GetElementRect(_) => {
                 let x = try_opt!(
-                    try_opt!(resp.result.find("x"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find x field").as_f64(),
+                    try_opt!(
+                        resp.result.get("x"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find x field"
+                    ).as_f64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret x as float");
+                    "Failed to interpret x as float"
+                );
 
                 let y = try_opt!(
-                    try_opt!(resp.result.find("y"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find y field").as_f64(),
+                    try_opt!(
+                        resp.result.get("y"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find y field"
+                    ).as_f64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret y as float");
+                    "Failed to interpret y as float"
+                );
 
                 let width = try_opt!(
-                    try_opt!(resp.result.find("width"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find width field").as_f64(),
+                    try_opt!(
+                        resp.result.get("width"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find width field"
+                    ).as_f64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret width as float");
+                    "Failed to interpret width as float"
+                );
 
                 let height = try_opt!(
-                    try_opt!(resp.result.find("height"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find height field").as_f64(),
+                    try_opt!(
+                        resp.result.get("height"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find height field"
+                    ).as_f64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret width as float");
+                    "Failed to interpret width as float"
+                );
 
-                let rect = ElementRectResponse { x, y, width, height };
+                let rect = ElementRectResponse {
+                    x,
+                    y,
+                    width,
+                    height,
+                };
                 WebDriverResponse::ElementRect(rect)
-            },
-            FullscreenWindow | MinimizeWindow | MaximizeWindow | GetWindowRect |
-            SetWindowRect(_) => {
+            }
+            FullscreenWindow | MinimizeWindow | MaximizeWindow | GetWindowRect
+            | SetWindowRect(_) => {
                 let width = try_opt!(
-                    try_opt!(resp.result.find("width"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find width field").as_u64(),
+                    try_opt!(
+                        resp.result.get("width"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find width field"
+                    ).as_u64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret width as positive integer");
+                    "Failed to interpret width as positive integer"
+                );
 
                 let height = try_opt!(
-                    try_opt!(resp.result.find("height"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find heigenht field").as_u64(),
+                    try_opt!(
+                        resp.result.get("height"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find heigenht field"
+                    ).as_u64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret height as positive integer");
+                    "Failed to interpret height as positive integer"
+                );
 
                 let x = try_opt!(
-                    try_opt!(resp.result.find("x"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find x field").as_i64(),
+                    try_opt!(
+                        resp.result.get("x"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find x field"
+                    ).as_i64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret x as integer");
+                    "Failed to interpret x as integer"
+                );
 
                 let y = try_opt!(
-                    try_opt!(resp.result.find("y"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find y field").as_i64(),
+                    try_opt!(
+                        resp.result.get("y"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find y field"
+                    ).as_i64(),
                     ErrorStatus::UnknownError,
-                    "Failed to interpret y as integer");
+                    "Failed to interpret y as integer"
+                );
 
                 let rect = WindowRectResponse {
                     x: x as i32,
@@ -854,171 +897,141 @@ impl MarionetteSession {
                     height: height as i32,
                 };
                 WebDriverResponse::WindowRect(rect)
-            },
+            }
             GetCookies => {
-                let cookies = try!(self.process_cookies(&resp.result));
-                WebDriverResponse::Cookies(CookiesResponse { value: cookies })
-            },
+                let cookies: Vec<Cookie> = serde_json::from_value(resp.result)?;
+                WebDriverResponse::Cookies(CookiesResponse(cookies))
+            }
             GetNamedCookie(ref name) => {
-                let mut cookies = try!(self.process_cookies(&resp.result));
+                let mut cookies: Vec<Cookie> = serde_json::from_value(resp.result)?;
                 cookies.retain(|x| x.name == *name);
-                let cookie = try_opt!(cookies.pop(),
-                                      ErrorStatus::NoSuchCookie,
-                                      format!("No cookie with name {}", name));
-                WebDriverResponse::Cookie(CookieResponse { value: cookie })
+                let cookie = try_opt!(
+                    cookies.pop(),
+                    ErrorStatus::NoSuchCookie,
+                    format!("No cookie with name {}", name)
+                );
+                WebDriverResponse::Cookie(CookieResponse(cookie))
             }
             FindElement(_) | FindElementElement(_, _) => {
-                let element = try!(self.to_web_element(
-                    try_opt!(resp.result.find("value"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find value field")));
-                WebDriverResponse::Generic(ValueResponse::new(element.to_json()))
-            },
+                let element = try!(self.to_web_element(try_opt!(
+                    resp.result.get("value"),
+                    ErrorStatus::UnknownError,
+                    "Failed to find value field"
+                )));
+                WebDriverResponse::Generic(ValueResponse(serde_json::to_value(element)?))
+            }
             FindElements(_) | FindElementElements(_, _) => {
-                let element_vec = try_opt!(resp.result.as_array(),
-                                           ErrorStatus::UnknownError,
-                                           "Failed to interpret value as array");
-                let elements = try!(element_vec.iter().map(
-                    |x| {
-                        self.to_web_element(x)
-                    }).collect::<Result<Vec<_>, _>>());
-                WebDriverResponse::Generic(ValueResponse::new(
-                    Json::Array(elements.iter().map(|x| {x.to_json()}).collect())))
-            },
+                let element_vec = try_opt!(
+                    resp.result.as_array(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret value as array"
+                );
+                let elements = try!(
+                    element_vec
+                        .iter()
+                        .map(|x| self.to_web_element(x))
+                        .collect::<Result<Vec<_>, _>>()
+                );
+                // TODO(Henrik): How to remove unwrap?
+                WebDriverResponse::Generic(ValueResponse(Value::Array(
+                    elements
+                        .iter()
+                        .map(|x| serde_json::to_value(x).unwrap())
+                        .collect(),
+                )))
+            }
             GetActiveElement => {
-                let element = try!(self.to_web_element(
-                    try_opt!(resp.result.find("value"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find value field")));
-                WebDriverResponse::Generic(ValueResponse::new(element.to_json()))
-            },
+                let element = try!(self.to_web_element(try_opt!(
+                    resp.result.get("value"),
+                    ErrorStatus::UnknownError,
+                    "Failed to find value field"
+                )));
+                WebDriverResponse::Generic(ValueResponse(serde_json::to_value(element)?))
+            }
             NewSession(_) => {
                 let session_id = try_opt!(
-                    try_opt!(resp.result.find("sessionId"),
-                             ErrorStatus::InvalidSessionId,
-                             "Failed to find sessionId field").as_string(),
+                    try_opt!(
+                        resp.result.get("sessionId"),
+                        ErrorStatus::InvalidSessionId,
+                        "Failed to find sessionId field"
+                    ).as_str(),
                     ErrorStatus::InvalidSessionId,
-                    "sessionId is not a string");
+                    "sessionId is not a string"
+                );
 
                 let mut capabilities = try_opt!(
-                    try_opt!(resp.result.find("capabilities"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find capabilities field").as_object(),
+                    try_opt!(
+                        resp.result.get("capabilities"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find capabilities field"
+                    ).as_object(),
                     ErrorStatus::UnknownError,
-                    "capabilities field is not an object").clone();
+                    "capabilities field is not an object"
+                ).clone();
 
                 capabilities.insert("moz:geckodriverVersion".into(), BuildInfo.into());
 
                 WebDriverResponse::NewSession(NewSessionResponse::new(
-                    session_id.to_string(), Json::Object(capabilities)))
-            },
-            DeleteSession => {
-                WebDriverResponse::DeleteSession
-            },
-            Extension(ref extension) => {
-                match extension {
-                    &GeckoExtensionCommand::GetContext => {
-                        let value = try_opt!(resp.result.find("value"),
-                                             ErrorStatus::UnknownError,
-                                             "Failed to find value field");
-                        WebDriverResponse::Generic(ValueResponse::new(value.clone()))
-                    },
-                    &GeckoExtensionCommand::SetContext(_) => WebDriverResponse::Void,
-                    &GeckoExtensionCommand::XblAnonymousChildren(_) => {
-                        let els_vec = try_opt!(resp.result.as_array(),
-                            ErrorStatus::UnknownError, "Failed to interpret body as array");
-                        let els = try!(els_vec.iter().map(|x| self.to_web_element(x))
-                            .collect::<Result<Vec<_>, _>>());
-                        WebDriverResponse::Generic(ValueResponse::new(
-                            Json::Array(els.iter().map(|el| el.to_json()).collect())))
-                    },
-                    &GeckoExtensionCommand::XblAnonymousByAttribute(_, _) => {
-                        let el = try!(self.to_web_element(try_opt!(resp.result.find("value"),
-                            ErrorStatus::UnknownError, "Failed to find value field")));
-                        WebDriverResponse::Generic(ValueResponse::new(el.to_json()))
-                    },
-                    &GeckoExtensionCommand::InstallAddon(_) => {
-                        let value = try_opt!(resp.result.find("value"),
-                                             ErrorStatus::UnknownError,
-                                             "Failed to find value field");
-                        WebDriverResponse::Generic(ValueResponse::new(value.clone()))
-                    },
-                    &GeckoExtensionCommand::UninstallAddon(_) => WebDriverResponse::Void
-                }
+                    session_id.to_string(),
+                    Value::Object(capabilities.clone()),
+                ))
             }
+            DeleteSession => WebDriverResponse::DeleteSession,
+            Extension(ref extension) => match extension {
+                &GeckoExtensionCommand::GetContext => {
+                    WebDriverResponse::Generic(resp.to_value_response(true)?)
+                }
+                &GeckoExtensionCommand::SetContext(_) => WebDriverResponse::Void,
+                &GeckoExtensionCommand::XblAnonymousChildren(_) => {
+                    let els_vec = try_opt!(
+                        resp.result.as_array(),
+                        ErrorStatus::UnknownError,
+                        "Failed to interpret body as array"
+                    );
+                    let els = try!(
+                        els_vec
+                            .iter()
+                            .map(|x| self.to_web_element(x))
+                            .collect::<Result<Vec<_>, _>>()
+                    );
+                    WebDriverResponse::Generic(ValueResponse(serde_json::to_value(els)?))
+                }
+                &GeckoExtensionCommand::XblAnonymousByAttribute(_, _) => {
+                    let el = try!(self.to_web_element(try_opt!(
+                        resp.result.get("value"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find value field"
+                    )));
+                    WebDriverResponse::Generic(ValueResponse(serde_json::to_value(el)?))
+                }
+                &GeckoExtensionCommand::InstallAddon(_) => {
+                    WebDriverResponse::Generic(resp.to_value_response(true)?)
+                }
+                &GeckoExtensionCommand::UninstallAddon(_) => WebDriverResponse::Void,
+            },
         })
-    }
-
-    fn process_cookies(&self, json_data: &Json) -> WebDriverResult<Vec<Cookie>> {
-        let value = try_opt!(json_data.as_array(),
-                             ErrorStatus::UnknownError,
-                             "Failed to interpret value as array");
-        value.iter().map(|x| {
-            let name = try_opt!(
-                try_opt!(x.find("name"),
-                         ErrorStatus::UnknownError,
-                         "Cookie must have a name field").as_string(),
-                ErrorStatus::UnknownError,
-                "Cookie must have string name").to_string();
-            let value = try_opt!(
-                try_opt!(x.find("value"),
-                         ErrorStatus::UnknownError,
-                         "Cookie must have a value field").as_string(),
-                ErrorStatus::UnknownError,
-                "Cookie must have a string value").to_string();
-            let path = try!(
-                Nullable::from_json(x.find("path").unwrap_or(&Json::Null),
-                                    |x| {
-                                        Ok((try_opt!(x.as_string(),
-                                                     ErrorStatus::UnknownError,
-                                                     "Cookie path must be string")).to_string())
-                                    }));
-            let domain = try!(
-                Nullable::from_json(x.find("domain").unwrap_or(&Json::Null),
-                                    |x| {
-                                        Ok((try_opt!(x.as_string(),
-                                                     ErrorStatus::UnknownError,
-                                                     "Cookie domain must be string")).to_string())
-                                    }));
-            let expiry = try!(
-                Nullable::from_json(x.find("expiry").unwrap_or(&Json::Null),
-                                    |x| {
-                                        Ok(Date::new(try_opt!(
-                                            x.as_u64(),
-                                            ErrorStatus::UnknownError,
-                                            "Cookie expiry must be a positive integer")))
-                                    }));
-            let secure = try_opt!(
-                x.find("secure").map_or(Some(false), |x| x.as_boolean()),
-                ErrorStatus::UnknownError,
-                "Cookie secure flag must be boolean");
-            let http_only = try_opt!(
-                x.find("httpOnly").map_or(Some(false), |x| x.as_boolean()),
-                ErrorStatus::UnknownError,
-                "Cookie httpOnly flag must be boolean");
-
-            let new_cookie = Cookie {
-                name: name,
-                value: value,
-                path: path,
-                domain: domain,
-                expiry: expiry,
-                secure: secure,
-                httpOnly: http_only,
-            };
-            Ok(new_cookie)
-        }).collect::<Result<Vec<_>, _>>()
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct MarionetteCommand {
     pub id: u64,
     pub name: String,
-    pub params: BTreeMap<String, Json>
+    pub params: Map<String, Value>,
+}
+
+impl Serialize for MarionetteCommand {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let data = (&0, &self.id, &self.name, &self.params);
+        data.serialize(serializer)
+    }
 }
 
 impl MarionetteCommand {
-    fn new(id: u64, name: String, params: BTreeMap<String, Json>) -> MarionetteCommand {
+    fn new(id: u64, name: String, params: Map<String, Value>) -> MarionetteCommand {
         MarionetteCommand {
             id: id,
             name: name,
@@ -1026,10 +1039,11 @@ impl MarionetteCommand {
         }
     }
 
-    fn from_webdriver_message(id: u64,
-                              capabilities: Option<BTreeMap<String, Json>>,
-                              msg: &WebDriverMessage<GeckoExtensionRoute>)
-                              -> WebDriverResult<MarionetteCommand> {
+    fn from_webdriver_message(
+        id: u64,
+        capabilities: Option<Map<String, Value>>,
+        msg: &WebDriverMessage<GeckoExtensionRoute>,
+    ) -> WebDriverResult<MarionetteCommand> {
         let (opt_name, opt_parameters) = match msg.command {
             Status => panic!("Got status command that should already have been handled"),
             AcceptAlert => {
@@ -1039,30 +1053,34 @@ impl MarionetteCommand {
             AddCookie(ref x) => (Some("WebDriver:AddCookie"), Some(x.to_marionette())),
             CloseWindow => (Some("WebDriver:CloseWindow"), None),
             DeleteCookie(ref x) => {
-                let mut data = BTreeMap::new();
-                data.insert("name".to_string(), x.to_json());
+                let mut data = Map::new();
+                data.insert("name".to_string(), Value::String(x.clone()));
                 (Some("WebDriver:DeleteCookie"), Some(Ok(data)))
             }
             DeleteCookies => (Some("WebDriver:DeleteAllCookies"), None),
             DeleteSession => {
-                let mut body = BTreeMap::new();
-                body.insert("flags".to_owned(), vec!["eForceQuit".to_json()].to_json());
+                let mut body = Map::new();
+                body.insert(
+                    "flags".to_owned(),
+                    serde_json::to_value(vec!["eForceQuit".to_string()])?,
+                );
                 (Some("Marionette:Quit"), Some(Ok(body)))
             }
             DismissAlert => (Some("WebDriver:DismissAlert"), None),
             ElementClear(ref x) => (Some("WebDriver:ElementClear"), Some(x.to_marionette())),
             ElementClick(ref x) => (Some("WebDriver:ElementClick"), Some(x.to_marionette())),
             ElementSendKeys(ref e, ref x) => {
-                let mut data = BTreeMap::new();
-                data.insert("id".to_string(), e.id.to_json());
-                data.insert("text".to_string(), x.text.to_json());
+                let mut data = Map::new();
+                data.insert("id".to_string(), Value::String(e.id.clone()));
+                data.insert("text".to_string(), Value::String(x.text.clone()));
                 data.insert(
                     "value".to_string(),
-                    x.text
-                        .chars()
-                        .map(|x| x.to_string())
-                        .collect::<Vec<String>>()
-                        .to_json(),
+                    serde_json::to_value(
+                        x.text
+                            .chars()
+                            .map(|x| x.to_string())
+                            .collect::<Vec<String>>(),
+                    )?,
                 );
                 (Some("WebDriver:ElementSendKeys"), Some(Ok(data)))
             }
@@ -1075,13 +1093,13 @@ impl MarionetteCommand {
             FindElement(ref x) => (Some("WebDriver:FindElement"), Some(x.to_marionette())),
             FindElementElement(ref e, ref x) => {
                 let mut data = try!(x.to_marionette());
-                data.insert("element".to_string(), e.id.to_json());
+                data.insert("element".to_string(), Value::String(e.id.clone()));
                 (Some("WebDriver:FindElement"), Some(Ok(data)))
             }
             FindElements(ref x) => (Some("WebDriver:FindElements"), Some(x.to_marionette())),
             FindElementElements(ref e, ref x) => {
                 let mut data = try!(x.to_marionette());
-                data.insert("element".to_string(), e.id.to_json());
+                data.insert("element".to_string(), Value::String(e.id.clone()));
                 (Some("WebDriver:FindElements"), Some(Ok(data)))
             }
             FullscreenWindow => (Some("WebDriver:FullscreenWindow"), None),
@@ -1091,21 +1109,21 @@ impl MarionetteCommand {
             GetCookies | GetNamedCookie(_) => (Some("WebDriver:GetCookies"), None),
             GetCurrentUrl => (Some("WebDriver:GetCurrentURL"), None),
             GetCSSValue(ref e, ref x) => {
-                let mut data = BTreeMap::new();
-                data.insert("id".to_string(), e.id.to_json());
-                data.insert("propertyName".to_string(), x.to_json());
+                let mut data = Map::new();
+                data.insert("id".to_string(), Value::String(e.id.clone()));
+                data.insert("propertyName".to_string(), Value::String(x.clone()));
                 (Some("WebDriver:GetElementCSSValue"), Some(Ok(data)))
             }
             GetElementAttribute(ref e, ref x) => {
-                let mut data = BTreeMap::new();
-                data.insert("id".to_string(), e.id.to_json());
-                data.insert("name".to_string(), x.to_json());
+                let mut data = Map::new();
+                data.insert("id".to_string(), Value::String(e.id.clone()));
+                data.insert("name".to_string(), Value::String(x.clone()));
                 (Some("WebDriver:GetElementAttribute"), Some(Ok(data)))
             }
             GetElementProperty(ref e, ref x) => {
-                let mut data = BTreeMap::new();
-                data.insert("id".to_string(), e.id.to_json());
-                data.insert("name".to_string(), x.to_json());
+                let mut data = Map::new();
+                data.insert("id".to_string(), Value::String(e.id.clone()));
+                data.insert("name".to_string(), Value::String(x.clone()));
                 (Some("WebDriver:GetElementProperty"), Some(Ok(data)))
             }
             GetElementRect(ref x) => (Some("WebDriver:GetElementRect"), Some(x.to_marionette())),
@@ -1133,9 +1151,9 @@ impl MarionetteCommand {
                 let caps = capabilities
                     .expect("Tried to create new session without processing capabilities");
 
-                let mut data = BTreeMap::new();
+                let mut data = Map::new();
                 for (k, v) in caps.iter() {
-                    data.insert(k.to_string(), v.to_json());
+                    data.insert(k.to_string(), serde_json::to_value(v)?);
                 }
 
                 (Some("WebDriver:NewSession"), Some(Ok(data)))
@@ -1144,15 +1162,16 @@ impl MarionetteCommand {
             Refresh => (Some("WebDriver:Refresh"), None),
             ReleaseActions => (Some("WebDriver:ReleaseActions"), None),
             SendAlertText(ref x) => {
-                let mut data = BTreeMap::new();
-                data.insert("text".to_string(), x.text.to_json());
+                let mut data = Map::new();
+                data.insert("text".to_string(), Value::String(x.text.clone()));
                 data.insert(
                     "value".to_string(),
-                    x.text
-                        .chars()
-                        .map(|x| x.to_string())
-                        .collect::<Vec<String>>()
-                        .to_json(),
+                    serde_json::to_value(
+                        x.text
+                            .chars()
+                            .map(|x| x.to_string())
+                            .collect::<Vec<String>>(),
+                    )?,
                 );
                 (Some("WebDriver:SendAlertText"), Some(Ok(data)))
             }
@@ -1162,17 +1181,18 @@ impl MarionetteCommand {
             SwitchToParentFrame => (Some("WebDriver:SwitchToParentFrame"), None),
             SwitchToWindow(ref x) => (Some("WebDriver:SwitchToWindow"), Some(x.to_marionette())),
             TakeElementScreenshot(ref e) => {
-                let mut data = BTreeMap::new();
-                data.insert("id".to_string(), e.id.to_json());
-                data.insert("highlights".to_string(), Json::Array(vec![]));
-                data.insert("full".to_string(), Json::Boolean(false));
+                let mut data = Map::new();
+                data.insert("element".to_string(), serde_json::to_value(e)?);
+                // data.insert("id".to_string(), e.id.to_json());
+                data.insert("highlights".to_string(), Value::Array(vec![]));
+                data.insert("full".to_string(), Value::Bool(false));
                 (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
             }
             TakeScreenshot => {
-                let mut data = BTreeMap::new();
-                data.insert("id".to_string(), Json::Null);
-                data.insert("highlights".to_string(), Json::Array(vec![]));
-                data.insert("full".to_string(), Json::Boolean(false));
+                let mut data = Map::new();
+                data.insert("id".to_string(), Value::Null);
+                data.insert("highlights".to_string(), Value::Array(vec![]));
+                data.insert("full".to_string(), Value::Bool(false));
                 (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
             }
             Extension(ref extension) => match extension {
@@ -1188,134 +1208,87 @@ impl MarionetteCommand {
                 }
                 &GeckoExtensionCommand::XblAnonymousByAttribute(ref e, ref x) => {
                     let mut data = try!(x.to_marionette());
-                    data.insert("element".to_string(), e.id.to_json());
+                    data.insert("element".to_string(), Value::String(e.id.clone()));
                     (Some("WebDriver:FindElement"), Some(Ok(data)))
                 }
                 &GeckoExtensionCommand::XblAnonymousChildren(ref e) => {
-                    let mut data = BTreeMap::new();
-                    data.insert("using".to_owned(), "anon".to_json());
-                    data.insert("value".to_owned(), Json::Null);
-                    data.insert("element".to_string(), e.id.to_json());
+                    let mut data = Map::new();
+                    data.insert("using".to_owned(), serde_json::to_value("anon")?);
+                    data.insert("value".to_owned(), Value::Null);
+                    data.insert("element".to_string(), serde_json::to_value(e.id.clone())?);
                     (Some("WebDriver:FindElements"), Some(Ok(data)))
                 }
             },
         };
 
-        let name = try_opt!(opt_name,
-                            ErrorStatus::UnsupportedOperation,
-                            "Operation not supported");
-        let parameters = try!(opt_parameters.unwrap_or(Ok(BTreeMap::new())));
+        let name = try_opt!(
+            opt_name,
+            ErrorStatus::UnsupportedOperation,
+            "Operation not supported"
+        );
+        let parameters = try!(opt_parameters.unwrap_or(Ok(Map::new())));
 
         Ok(MarionetteCommand::new(id, name.into(), parameters))
     }
 }
 
-impl ToJson for MarionetteCommand {
-    fn to_json(&self) -> Json {
-        Json::Array(vec![Json::U64(0), self.id.to_json(), self.name.to_json(),
-                         self.params.to_json()])
-    }
-}
-
+#[derive(Debug, PartialEq)]
 pub struct MarionetteResponse {
     pub id: u64,
     pub error: Option<MarionetteError>,
-    pub result: Json,
+    pub result: Value,
+}
+
+impl<'de> Deserialize<'de> for MarionetteResponse {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct ResponseWrapper {
+            msg_type: u64,
+            id: u64,
+            error: Option<MarionetteError>,
+            result: Value,
+        }
+
+        let wrapper: ResponseWrapper = Deserialize::deserialize(deserializer)?;
+
+        if wrapper.msg_type != 1 {
+            return Err(de::Error::custom(
+                "Expected '1' in first element of response",
+            ));
+        };
+
+        Ok(MarionetteResponse {
+            id: wrapper.id,
+            error: wrapper.error,
+            result: wrapper.result,
+        })
+    }
 }
 
 impl MarionetteResponse {
-    fn from_json(data: &Json) -> WebDriverResult<MarionetteResponse> {
-        let data_array = try_opt!(data.as_array(),
-                                  ErrorStatus::UnknownError,
-                                  "Expected a json array");
-
-        if data_array.len() != 4 {
-            return Err(WebDriverError::new(
+    fn to_value_response(self, value_required: bool) -> WebDriverResult<ValueResponse> {
+        let value: &Value = match value_required {
+            true => try_opt!(
+                self.result.get("value"),
                 ErrorStatus::UnknownError,
-                "Expected an array of length 4"));
-        }
-
-        if data_array[0].as_u64() != Some(1) {
-            return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                           "Expected 1 in first element of response"));
-        };
-        let id = try_opt!(data[1].as_u64(),
-                          ErrorStatus::UnknownError,
-                          "Expected an integer id");
-        let error = if data[2].is_object() {
-            Some(try!(MarionetteError::from_json(&data[2])))
-        } else if data[2].is_null() {
-            None
-        } else {
-            return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                           "Expected object or null error"));
+                "Failed to find value field"
+            ),
+            false => &self.result,
         };
 
-        let result = if data[3].is_null() || data[3].is_object() || data[3].is_array() {
-            data[3].clone()
-        } else {
-            return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                           "Expected object params"));
-        };
-
-        Ok(MarionetteResponse {id: id,
-                               error: error,
-                               result: result})
+        Ok(ValueResponse(value.clone()))
     }
 }
 
-impl ToJson for MarionetteResponse {
-    fn to_json(&self) -> Json {
-        Json::Array(vec![Json::U64(1), self.id.to_json(), self.error.to_json(),
-                         self.result.clone()])
-    }
-}
-
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct MarionetteError {
+    #[serde(rename = "error")]
     pub code: String,
     pub message: String,
-    pub stacktrace: Option<String>
-}
-
-impl MarionetteError {
-    fn from_json(data: &Json) -> WebDriverResult<MarionetteError> {
-        if !data.is_object() {
-            return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                           "Expected an error object"));
-        }
-
-        let code = try_opt!(
-            try_opt!(data.find("error"),
-                     ErrorStatus::UnknownError,
-                     "Error value has no error code").as_string(),
-            ErrorStatus::UnknownError,
-            "Error status was not a string").into();
-        let message = try_opt!(
-            try_opt!(data.find("message"),
-                     ErrorStatus::UnknownError,
-                     "Error value has no message").as_string(),
-            ErrorStatus::UnknownError,
-            "Error message was not a string").into();
-        let stacktrace = match data.find("stacktrace") {
-            None | Some(&Json::Null) => None,
-            Some(x) => Some(try_opt!(x.as_string(),
-                                     ErrorStatus::UnknownError,
-                                     "Error message was not a string").into()),
-        };
-
-        Ok(MarionetteError { code, message, stacktrace })
-    }
-}
-
-impl ToJson for MarionetteError {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("error".into(), self.code.to_json());
-        data.insert("message".into(), self.message.to_json());
-        data.insert("stacktrace".into(), self.stacktrace.to_json());
-        Json::Object(data)
-    }
+    pub stacktrace: Option<String>,
 }
 
 impl Into<WebDriverError> for MarionetteError {
@@ -1340,7 +1313,7 @@ fn get_free_port() -> IoResult<u16> {
 pub struct MarionetteConnection {
     port: u16,
     stream: Option<TcpStream>,
-    pub session: MarionetteSession
+    pub session: MarionetteSession,
 }
 
 impl MarionetteConnection {
@@ -1402,81 +1375,83 @@ impl MarionetteConnection {
             }
         }
 
+        let data = self.handshake()?;
+        self.session.protocol = Some(data.protocol);
+        self.session.application_type = Some(data.application_type);
+
         debug!("Connected to Marionette on {}:{}", DEFAULT_HOST, self.port);
-        self.handshake()
-    }
-
-    fn handshake(&mut self) -> WebDriverResult<()> {
-        let resp = try!(self.read_resp());
-        let handshake_data = try!(Json::from_str(&*resp));
-
-        let data = try_opt!(handshake_data.as_object(),
-                            ErrorStatus::UnknownError,
-                            "Expected a json object in handshake");
-
-        self.session.protocol = Some(try_opt!(data.get("marionetteProtocol"),
-                                              ErrorStatus::UnknownError,
-                                              "Missing 'marionetteProtocol' field in handshake").to_string());
-
-        self.session.application_type = Some(try_opt!(data.get("applicationType"),
-                                              ErrorStatus::UnknownError,
-                                              "Missing 'applicationType' field in handshake").to_string());
-
-        if self.session.protocol != Some("3".into()) {
-            return Err(WebDriverError::new(
-                ErrorStatus::UnknownError,
-                format!("Unsupported Marionette protocol version {}, required 3",
-                        self.session.protocol.as_ref().unwrap_or(&"<unknown>".into()))));
-        }
-
         Ok(())
     }
 
-    pub fn close(&self) {
+    fn handshake(&mut self) -> WebDriverResult<MarionetteHandshake> {
+        let resp = self.read_resp()?;
+        let data = serde_json::from_str::<MarionetteHandshake>(&resp)?;
+
+        if data.protocol != 3 {
+            return Err(WebDriverError::new(
+                ErrorStatus::UnknownError,
+                format!(
+                    "Unsupported Marionette protocol version {}, required 3",
+                    data.protocol
+                ),
+            ));
+        }
+
+        Ok(data)
     }
 
-    fn encode_msg(&self, msg:Json) -> String {
-        let data = json::encode(&msg).unwrap();
-        format!("{}:{}", data.len(), data)
+    pub fn close(&self) {}
+
+    fn encode_msg(&self, msg: MarionetteCommand) -> WebDriverResult<String> {
+        let data = serde_json::to_string(&msg)?;
+
+        Ok(format!("{}:{}", data.len(), data))
     }
 
-    pub fn send_command(&mut self,
-                        capabilities: Option<BTreeMap<String, Json>>,
-                        msg: &WebDriverMessage<GeckoExtensionRoute>)
-                        -> WebDriverResult<WebDriverResponse> {
+    pub fn send_command(
+        &mut self,
+        capabilities: Option<Map<String, Value>>,
+        msg: &WebDriverMessage<GeckoExtensionRoute>,
+    ) -> WebDriverResult<WebDriverResponse> {
         let id = self.session.next_command_id();
-        let command = try!(MarionetteCommand::from_webdriver_message(id, capabilities, msg));
+        let command = MarionetteCommand::from_webdriver_message(id, capabilities, msg)?;
+        let resp_data = self.send(command)?;
+        let data: MarionetteResponse = serde_json::from_str(&resp_data)?;
 
-        let resp_data = try!(self.send(command.to_json()));
-        let json_data: Json = try!(Json::from_str(&*resp_data));
-
-        self.session.response(msg, try!(MarionetteResponse::from_json(&json_data)))
+        self.session.response(msg, data)
     }
 
-    fn send(&mut self, msg: Json) -> WebDriverResult<String> {
-        let data = self.encode_msg(msg);
+    fn send(&mut self, msg: MarionetteCommand) -> WebDriverResult<String> {
+        let data = self.encode_msg(msg)?;
 
         match self.stream {
             Some(ref mut stream) => {
                 if stream.write(&*data.as_bytes()).is_err() {
-                    let mut err = WebDriverError::new(ErrorStatus::UnknownError,
-                                                      "Failed to write response to stream");
+                    let mut err = WebDriverError::new(
+                        ErrorStatus::UnknownError,
+                        "Failed to write response to stream",
+                    );
                     err.delete_session = true;
                     return Err(err);
                 }
             }
             None => {
-                let mut err = WebDriverError::new(ErrorStatus::UnknownError,
-                                                  "Tried to write before opening stream");
+                let mut err = WebDriverError::new(
+                    ErrorStatus::UnknownError,
+                    "Tried to write before opening stream",
+                );
                 err.delete_session = true;
                 return Err(err);
             }
         }
+
         match self.read_resp() {
             Ok(resp) => Ok(resp),
             Err(_) => {
-                let mut err = WebDriverError::new(ErrorStatus::UnknownError,
-                                                  "Failed to decode response from marionette");
+                let mut err = WebDriverError::new(
+                    ErrorStatus::UnknownError,
+                    "Failed to decode response from marionette",
+                );
                 err.delete_session = true;
                 Err(err)
             }
@@ -1517,8 +1492,10 @@ impl MarionetteConnection {
         while total_read < bytes {
             let num_read = try!(stream.read(buf));
             if num_read == 0 {
-                return Err(IoError::new(ErrorKind::Other,
-                                        "EOF reading marionette message"))
+                return Err(IoError::new(
+                    ErrorKind::Other,
+                    "EOF reading marionette message",
+                ));
             }
             total_read += num_read;
             for x in &buf[..num_read] {
@@ -1532,193 +1509,388 @@ impl MarionetteConnection {
 }
 
 trait ToMarionette {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>>;
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>>;
+}
+
+impl ToMarionette for ActionsParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        Ok(try_opt!(
+            serde_json::to_value(self)?.as_object(),
+            ErrorStatus::UnknownError,
+            "Expected an object"
+        ).clone())
+    }
+}
+
+impl ToMarionette for AddCookieParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut cookie = Map::new();
+        cookie.insert("name".to_string(), serde_json::to_value(&self.name)?);
+        cookie.insert("value".to_string(), serde_json::to_value(&self.value)?);
+        if self.path.is_some() {
+            cookie.insert("path".to_string(), serde_json::to_value(&self.path)?);
+        }
+        if self.domain.is_some() {
+            cookie.insert("domain".to_string(), serde_json::to_value(&self.domain)?);
+        }
+        if self.expiry.is_some() {
+            cookie.insert("expiry".to_string(), serde_json::to_value(&self.expiry)?);
+        }
+        cookie.insert("secure".to_string(), serde_json::to_value(self.secure)?);
+        cookie.insert("httpOnly".to_string(), serde_json::to_value(self.httpOnly)?);
+
+        let mut data = Map::new();
+        data.insert("cookie".to_string(), serde_json::to_value(cookie)?);
+        Ok(data)
+    }
+}
+
+impl ToMarionette for FrameId {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        match *self {
+            FrameId::Short(x) => data.insert("id".to_string(), serde_json::to_value(x)?),
+            FrameId::Element(ref x) => data.insert(
+                "element".to_string(),
+                Value::Object(try!(x.to_marionette())),
+            ),
+        };
+        Ok(data)
+    }
+}
+
+impl ToMarionette for GetNamedCookieParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        Ok(try_opt!(
+            serde_json::to_value(self)?.as_object(),
+            ErrorStatus::UnknownError,
+            "Expected an object"
+        ).clone())
+    }
 }
 
 impl ToMarionette for GetParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        Ok(try_opt!(self.to_json().as_object(), ErrorStatus::UnknownError, "Expected an object").clone())
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        Ok(try_opt!(
+            serde_json::to_value(self)?.as_object(),
+            ErrorStatus::UnknownError,
+            "Expected an object"
+        ).clone())
     }
 }
 
-impl ToMarionette for TimeoutsParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        Ok(try_opt!(self.to_json().as_object(), ErrorStatus::UnknownError, "Expected an object").clone())
-    }
-}
-
-impl ToMarionette for WindowRectParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        Ok(try_opt!(self.to_json().as_object(), ErrorStatus::UnknownError, "Expected an object").clone())
-    }
-}
-
-impl ToMarionette for SwitchToWindowParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        let mut data = BTreeMap::new();
-        data.insert("name".to_string(), self.handle.to_json());
+impl ToMarionette for JavascriptCommandParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = serde_json::to_value(self)?.as_object().unwrap().clone();
+        data.insert("newSandbox".to_string(), Value::Bool(false));
+        data.insert("specialPowers".to_string(), Value::Bool(false));
+        data.insert("scriptTimeout".to_string(), Value::Null);
         Ok(data)
     }
 }
 
 impl ToMarionette for LocatorParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        Ok(try_opt!(self.to_json().as_object(),
-                    ErrorStatus::UnknownError,
-                    "Expected an object")
-            .clone())
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        Ok(try_opt!(
+            serde_json::to_value(self)?.as_object(),
+            ErrorStatus::UnknownError,
+            "Expected an object"
+        ).clone())
     }
 }
 
 impl ToMarionette for SwitchToFrameParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        let mut data = BTreeMap::new();
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
         let key = match self.id {
-            FrameId::Null => None,
-            FrameId::Short(_) => Some("id"),
-            FrameId::Element(_) => Some("element"),
+            None => None,
+            Some(FrameId::Short(_)) => Some("id"),
+            Some(FrameId::Element(_)) => Some("element"),
         };
         if let Some(x) = key {
-            data.insert(x.to_string(), self.id.to_json());
+            data.insert(x.to_string(), serde_json::to_value(&self.id)?);
         }
         Ok(data)
     }
 }
 
-impl ToMarionette for JavascriptCommandParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        let mut data = self.to_json().as_object().unwrap().clone();
-        data.insert("newSandbox".to_string(), false.to_json());
-        data.insert("specialPowers".to_string(), false.to_json());
-        data.insert("scriptTimeout".to_string(), Json::Null);
-        Ok(data)
-    }
-}
-
-impl ToMarionette for ActionsParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        Ok(try_opt!(self.to_json().as_object(),
-                    ErrorStatus::UnknownError,
-                    "Expected an object")
-            .clone())
-    }
-}
-
-impl ToMarionette for GetNamedCookieParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        Ok(try_opt!(self.to_json().as_object(),
-                    ErrorStatus::UnknownError,
-                    "Expected an object")
-            .clone())
-    }
-}
-
-impl ToMarionette for AddCookieParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        let mut cookie = BTreeMap::new();
-        cookie.insert("name".to_string(), self.name.to_json());
-        cookie.insert("value".to_string(), self.value.to_json());
-        if self.path.is_value() {
-            cookie.insert("path".to_string(), self.path.to_json());
-        }
-        if self.domain.is_value() {
-            cookie.insert("domain".to_string(), self.domain.to_json());
-        }
-        if self.expiry.is_value() {
-            cookie.insert("expiry".to_string(), self.expiry.to_json());
-        }
-        cookie.insert("secure".to_string(), self.secure.to_json());
-        cookie.insert("httpOnly".to_string(), self.httpOnly.to_json());
-        let mut data = BTreeMap::new();
-        data.insert("cookie".to_string(), Json::Object(cookie));
+impl ToMarionette for SwitchToWindowParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        data.insert(
+            "name".to_string(),
+            serde_json::to_value(self.handle.clone())?,
+        );
         Ok(data)
     }
 }
 
 impl ToMarionette for TakeScreenshotParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        let mut data = BTreeMap::new();
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
         let element = match self.element {
-            Nullable::Null => Json::Null,
-            Nullable::Value(ref x) => Json::Object(try!(x.to_marionette()))
+            None => Value::Null,
+            Some(ref x) => Value::Object(try!(x.to_marionette())),
         };
         data.insert("element".to_string(), element);
         Ok(data)
     }
 }
 
+impl ToMarionette for TimeoutsParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        Ok(try_opt!(
+            serde_json::to_value(self)?.as_object(),
+            ErrorStatus::UnknownError,
+            "Expected an object"
+        ).clone())
+    }
+}
+
 impl ToMarionette for WebElement {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        let mut data = BTreeMap::new();
-        data.insert("id".to_string(), self.id.to_json());
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        data.insert("id".to_string(), serde_json::to_value(&self.id)?);
         Ok(data)
     }
 }
 
-impl<T: ToJson> ToMarionette for Nullable<T> {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        //Note this is a terrible hack. We don't want Nullable<T: ToJson+ToMarionette>
-        //so in cases where ToJson != ToMarionette you have to deal with the Nullable
-        //explicitly. This kind of suggests that the whole design is wrong.
-        Ok(try_opt!(self.to_json().as_object(), ErrorStatus::UnknownError, "Expected an object").clone())
-    }
-}
-
-impl ToMarionette for FrameId {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        let mut data = BTreeMap::new();
-        match *self {
-            FrameId::Short(x) => data.insert("id".to_string(), x.to_json()),
-            FrameId::Element(ref x) => data.insert("element".to_string(),
-                                                   Json::Object(try!(x.to_marionette()))),
-            FrameId::Null => None
-        };
-        Ok(data)
+impl ToMarionette for WindowRectParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        Ok(try_opt!(
+            serde_json::to_value(self)?.as_object(),
+            ErrorStatus::UnknownError,
+            "Expected an object"
+        ).clone())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use marionette::{AddonInstallParameters, Parameters};
-    use rustc_serialize::json::Json;
-    use std::io::Read;
+    use super::*;
     use std::fs::File;
-    use webdriver::error::WebDriverResult;
+    use std::io::Read;
+    use test::check_deserialize;
 
     #[test]
-    fn test_addon_install_params_missing_path() {
-        let json_data: Json = Json::from_str(r#"{"temporary": true}"#).unwrap();
-        let res: WebDriverResult<AddonInstallParameters> = Parameters::from_json(&json_data);
-        assert!(res.is_err());
+    fn test_json_addon_install_parameters_null() {
+        let json = r#""#;
+
+        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
     }
 
     #[test]
-    fn test_addon_install_params_with_both_path_and_base64() {
-        let json_data: Json = Json::from_str(
-            r#"{"path": "/path/to.xpi", "addon": "aGVsbG8=", "temporary": true}"#).unwrap();
-        let res: WebDriverResult<AddonInstallParameters> = Parameters::from_json(&json_data);
-        assert!(res.is_err());
+    fn test_json_addon_install_parameters_empty() {
+        let json = r#"{}"#;
+
+        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
     }
 
     #[test]
-    fn test_addon_install_params_with_path() {
-        let json_data: Json = Json::from_str(
-            r#"{"path": "/path/to.xpi", "temporary": true}"#).unwrap();
-        let parameters: AddonInstallParameters = Parameters::from_json(&json_data).unwrap();
-        assert_eq!(parameters.path, "/path/to.xpi");
-        assert_eq!(parameters.temporary, true);
+    fn test_json_addon_install_parameters_with_path() {
+        let json = r#"{"path": "/path/to.xpi", "temporary": true}"#;
+        let data = AddonInstallParameters {
+            path: "/path/to.xpi".to_string(),
+            temporary: true,
+        };
+
+        check_deserialize(&json, &data);
     }
 
     #[test]
-    fn test_addon_install_params_with_base64() {
-        let json_data: Json = Json::from_str(
-            r#"{"addon": "aGVsbG8=", "temporary": true}"#).unwrap();
-        let parameters: AddonInstallParameters = Parameters::from_json(&json_data).unwrap();
+    fn test_json_addon_install_parameters_with_path_invalid_type() {
+        let json = r#"{"path": true, "temporary": true}"#;
 
-        assert_eq!(parameters.temporary, true);
-        let mut file = File::open(parameters.path).unwrap();
+        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_addon_install_parameters_with_path_and_temporary_invalid_type() {
+        let json = r#"{"path": "/path/to.xpi", "temporary": "foo"}"#;
+
+        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_addon_install_parameters_with_path_only() {
+        let json = r#"{"path": "/path/to.xpi"}"#;
+
+        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_addon_install_parameters_with_addon() {
+        let json = r#"{"addon": "aGVsbG8=", "temporary": true}"#;
+        let data = serde_json::from_str::<AddonInstallParameters>(&json).unwrap();
+
+        assert_eq!(data.temporary, true);
+        let mut file = File::open(data.path).unwrap();
         let mut contents = String::new();
         file.read_to_string(&mut contents).unwrap();
-        assert_eq!("hello", contents);
+        assert_eq!(contents, "hello");
+    }
+
+    #[test]
+    fn test_json_addon_install_parameters_with_addon_invalid_type() {
+        let json = r#"{"addon": true, "temporary": true}"#;
+
+        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_addon_install_parameters_with_addon_and_temporary_invalid_type() {
+        let json = r#"{"addon": "aGVsbG8=", "temporary": "foo"}"#;
+
+        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_addon_install_parameters_with_addon_only() {
+        let json = r#"{"addon": "aGVsbG8="}"#;
+
+        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_install_parameters_with_temporary_only() {
+        let json = r#"{"temporary": true}"#;
+
+        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_addon_install_parameters_with_both_path_and_addon() {
+        let json = r#"{
+            "path":"/path/to.xpi",
+            "addon":"aGVsbG8=",
+            "temporary":true
+        }"#;
+
+        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_addon_uninstall_parameters_null() {
+        let json = r#""#;
+
+        assert!(serde_json::from_str::<AddonUninstallParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_addon_uninstall_parameters_empty() {
+        let json = r#"{}"#;
+
+        assert!(serde_json::from_str::<AddonUninstallParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_addon_uninstall_parameters() {
+        let json = r#"{"id": "foo"}"#;
+        let data = AddonUninstallParameters {
+            id: "foo".to_string(),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_addon_uninstall_parameters_id_invalid_type() {
+        let json = r#"{"id": true}"#;
+
+        assert!(serde_json::from_str::<AddonUninstallParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_gecko_context_parameters_content() {
+        let json = r#"{"context": "content"}"#;
+        let data = GeckoContextParameters {
+            context: GeckoContext::Content,
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_gecko_context_parameters_chrome() {
+        let json = r#"{"context": "chrome"}"#;
+        let data = GeckoContextParameters {
+            context: GeckoContext::Chrome,
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_gecko_context_parameters_context_missing() {
+        let json = r#"{}"#;
+
+        assert!(serde_json::from_str::<GeckoContextParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_gecko_context_parameters_context_null() {
+        let json = r#"{"context": null}"#;
+
+        assert!(serde_json::from_str::<GeckoContextParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_gecko_context_parameters_context_invalid_value() {
+        let json = r#"{"context": "foo"}"#;
+
+        assert!(serde_json::from_str::<GeckoContextParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_xbl_anonymous_by_attribute() {
+        let json = r#"{
+            "name": "foo",
+            "value": "bar"
+        }"#;
+
+        let data = XblLocatorParameters {
+            name: "foo".to_string(),
+            value: "bar".to_string(),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_xbl_anonymous_by_attribute_with_name_missing() {
+        let json = r#"{
+            "value": "bar"
+        }"#;
+
+        assert!(serde_json::from_str::<XblLocatorParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_xbl_anonymous_by_attribute_with_name_invalid_type() {
+        let json = r#"{
+            "name": null,
+            "value": "bar"
+        }"#;
+
+        assert!(serde_json::from_str::<XblLocatorParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_xbl_anonymous_by_attribute_with_value_missing() {
+        let json = r#"{
+            "name": "foo",
+        }"#;
+
+        assert!(serde_json::from_str::<XblLocatorParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_xbl_anonymous_by_attribute_with_value_invalid_type() {
+        let json = r#"{
+            "name": "foo",
+            "value": null
+        }"#;
+
+        assert!(serde_json::from_str::<XblLocatorParameters>(&json).is_err());
     }
 }
