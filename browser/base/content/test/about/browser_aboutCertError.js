@@ -85,6 +85,7 @@ add_task(async function checkReturnToAboutHome() {
 });
 
 add_task(async function checkExceptionDialogButton() {
+  Services.prefs.setBoolPref("browser.security.newcerterrorpage.enabled", true);
   info("Loading a bad cert page and making sure the exceptionDialogButton directly adds an exception");
   let tab = await openErrorPage(BAD_CERT);
   let browser = tab.linkedBrowser;
@@ -108,6 +109,7 @@ add_task(async function checkExceptionDialogButton() {
                               .getService(Ci.nsICertOverrideService);
   certOverrideService.clearValidityOverride("expired.example.com", -1);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  Services.prefs.clearUserPref("browser.security.newcerterrorpage.enabled");
 });
 
 add_task(async function checkReturnToPreviousPage() {
