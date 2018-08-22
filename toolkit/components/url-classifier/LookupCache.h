@@ -55,7 +55,7 @@ public:
     }
   }
 
-  nsCString PartialHashHex() const {
+  nsAutoCString PartialHashHex() const {
     nsAutoCString hex;
     for (size_t i = 0; i < mPartialHashLength; i++) {
       hex.AppendPrintf("%.2X", hash.complete.buf[i]);
