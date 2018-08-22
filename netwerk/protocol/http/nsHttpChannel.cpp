@@ -7061,6 +7061,8 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
     nsresult rv;
 
+    MOZ_ASSERT(mRequestObserversCalled);
+
     AUTO_PROFILER_LABEL("nsHttpChannel::OnStartRequest", NETWORK);
 
     if (!(mCanceled || NS_FAILED(mStatus)) && !WRONG_RACING_RESPONSE_SOURCE(request)) {
@@ -8249,6 +8251,10 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     // toggle mIsPending to allow nsIObserver implementations to modify
     // the request headers (bug 95044).
     mIsPending = false;
+
+    // Reset mRequestObserversCalled because we've probably called the request
+    // observers once already.
+    mRequestObserversCalled = false;
 
     // fetch cookies, and add them to the request header.
     // the server response could have included cookies that must be sent with
