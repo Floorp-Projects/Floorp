@@ -26,9 +26,6 @@ if CONFIG['HOST_OS_ARCH'] != 'WINNT':
     ]
     HostProgram('nsinstall_real')
 
-if CONFIG['MOZ_SYSTEM_ICU']:
-    DEFINES['MOZ_SYSTEM_ICU'] = True
-
 PYTHON_UNITTEST_MANIFESTS += [
     'tests/python.ini',
 ]

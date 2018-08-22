@@ -76,6 +76,7 @@
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/KeyframeEffect.h"
+#include "mozilla/dom/SVGPathData.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "imgIRequest.h"
 #include "nsIImageLoadingContent.h"
@@ -10265,4 +10266,95 @@ nsLayoutUtils::StyleForScrollbar(nsIFrame* aScrollbarPart)
   // Dropping the strong reference is fine because the style should be
   // held strongly by the element.
   return style.get();
+}
+
+static float
+ResolveTransformOrigin(const nsStyleCoord& aCoord,
+                       TransformReferenceBox& aRefBox,
+                       TransformReferenceBox::DimensionGetter aGetter)
+{
+  float result = 0.0;
+  const float scale = mozilla::AppUnitsPerCSSPixel();
+  if (aCoord.GetUnit() == eStyleUnit_Calc) {
+    const nsStyleCoord::Calc *calc = aCoord.GetCalcValue();
+    result = NSAppUnitsToFloatPixels((aRefBox.*aGetter)(), scale) *
+               calc->mPercent +
+               NSAppUnitsToFloatPixels(calc->mLength, scale);
+  } else if (aCoord.GetUnit() == eStyleUnit_Percent) {
+    result = NSAppUnitsToFloatPixels((aRefBox.*aGetter)(), scale) *
+               aCoord.GetPercentValue();
+  } else {
+    MOZ_ASSERT(aCoord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+    result = NSAppUnitsToFloatPixels(aCoord.GetCoordValue(), scale);
+  }
+  return result;
+}
+
+/* static */ Maybe<MotionPathData>
+nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame);
+
+  const nsStyleDisplay* display = aFrame->StyleDisplay();
+  if (!display->mMotion || !display->mMotion->HasPath()) {
+    return Nothing();
+  }
+
+  const UniquePtr<StyleMotion>& motion = display->mMotion;
+  // Bug 1429299 - Implement offset-distance for motion path. For now, we use
+  // the default value, i.e. 0%.
+  float distance = 0.0;
+  float angle = 0.0;
+  Point point;
+  if (motion->OffsetPath().GetType() == StyleShapeSourceType::Path) {
+    // Build the path and compute the point and angle for creating the
+    // equivalent translate and rotate.
+    // Here we only need to build a valid path for motion path, so
+    // using the default values of stroke-width, stoke-linecap, and fill-rule
+    // is fine for now because what we want is get the point and its normal
+    // vector along the path, instead of rendering it.
+    // FIXME: Bug 1484780, we should cache the path to avoid rebuilding it here
+    // at every restyle. (Caching the path avoids the cost of flattening it
+    // again each time.)
+    RefPtr<DrawTarget> drawTarget =
+      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+    RefPtr<PathBuilder> builder =
+      drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
+    RefPtr<gfx::Path> gfxPath =
+      SVGPathData::BuildPath(motion->OffsetPath().GetPath()->Path(),
+                             builder,
+                             NS_STYLE_STROKE_LINECAP_BUTT,
+                             0.0);
+    if (!gfxPath) {
+      return Nothing();
+    }
+    float pathLength = gfxPath->ComputeLength();
+    float computedDistance = distance * pathLength;
+    Point tangent;
+    point = gfxPath->ComputePointAtLength(computedDistance, &tangent);
+    // Bug 1429301 - Implement offset-rotate for motion path.
+    // After implement offset-rotate, |angle| will be adjusted more.
+    // For now, the default value of offset-rotate is "auto", so we use the
+    // directional tangent vector.
+    angle = atan2(tangent.y, tangent.x);
+  } else {
+    // Bug 1480665: Implement ray() function.
+    NS_WARNING("Unsupported offset-path value");
+  }
+
+  // Compute the offset for motion path translate.
+  // We need to resolve transform-origin here to calculate the correct path
+  // translate. (i.e. Center transform-origin on the path.)
+  TransformReferenceBox refBox(aFrame);
+  Point origin(
+    ResolveTransformOrigin(display->mTransformOrigin[0],
+                           refBox,
+                           &TransformReferenceBox::Width),
+    ResolveTransformOrigin(display->mTransformOrigin[1],
+                           refBox,
+                           &TransformReferenceBox::Height)
+  );
+  // Bug 1186329: the translate parameters will be adjusted more after we
+  // implement offset-position and offset-anchor.
+  return Some(MotionPathData { point - origin, angle });
 }

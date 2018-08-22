@@ -27,23 +27,20 @@ class DeviceAdder extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.state = {};
+    const {
+      height,
+      width,
+    } = this.props.viewportTemplate;
+
+    this.state = {
+      deviceAdderDisplayed: false,
+      height,
+      width,
+    };
 
     this.onChangeSize = this.onChangeSize.bind(this);
     this.onDeviceAdderShow = this.onDeviceAdderShow.bind(this);
     this.onDeviceAdderSave = this.onDeviceAdderSave.bind(this);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const {
-      width,
-      height,
-    } = nextProps.viewportTemplate;
-
-    this.setState({
-      width,
-      height,
-    });
   }
 
   onChangeSize(_, width, height) {
@@ -68,6 +65,7 @@ class DeviceAdder extends PureComponent {
     if (!this.pixelRatioInput.checkValidity()) {
       return;
     }
+
     if (devices.custom.find(device => device.name == this.nameInput.value)) {
       this.nameInput.setCustomValidity("Device name already in use");
       return;
@@ -76,6 +74,7 @@ class DeviceAdder extends PureComponent {
     this.setState({
       deviceAdderDisplayed: false,
     });
+
     onAddCustomDevice({
       name: this.nameInput.value,
       width: this.state.width,
