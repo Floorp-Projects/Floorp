@@ -208,7 +208,7 @@ public class GeckoResultTest {
             }
         };
 
-        deferred.then(new OnExceptionListener<Void>() {
+        deferred.exceptionally(new OnExceptionListener<Void>() {
             @Override
             public GeckoResult<Void> onException(Throwable error) {
                 assertThat("Exception should match", error, equalTo(boom));
@@ -246,13 +246,13 @@ public class GeckoResultTest {
                 assertThat("Value should match", value, equalTo(42.0f));
                 return GeckoResult.fromException(new Exception("boom"));
             }
-        }).then(new OnExceptionListener<Void>() {
+        }).exceptionally(new OnExceptionListener<Void>() {
             @Override
             public GeckoResult<Void> onException(Throwable error) {
                 assertThat("Error message should match", error.getMessage(), equalTo("boom"));
                 throw new MockException();
             }
-        }).then(new OnExceptionListener<Void>() {
+        }).exceptionally(new OnExceptionListener<Void>() {
             @Override
             public GeckoResult<Void> onException(Throwable exception) {
                 assertThat("Exception should be MockException", exception, instanceOf(MockException.class));
@@ -269,7 +269,7 @@ public class GeckoResultTest {
     public void then_propagatedValue() {
         // The first GeckoResult only has an exception listener, so when the value 42 is
         // propagated to subsequent GeckoResult instances, the propagated value is coerced to null.
-        GeckoResult.fromValue(42).then(new OnExceptionListener<String>() {
+        GeckoResult.fromValue(42).exceptionally(new OnExceptionListener<String>() {
             @Override
             public GeckoResult<String> onException(Throwable exception) throws Throwable {
                 return null;
@@ -330,7 +330,7 @@ public class GeckoResultTest {
             public GeckoResult<Void> onValue(String value) throws Throwable {
                 return null;
             }
-        }).then(new OnExceptionListener<Void>() {
+        }).exceptionally(new OnExceptionListener<Void>() {
             @Override
             public GeckoResult<Void> onException(Throwable exception) throws Throwable {
                 assertThat("Exception should be expected",
