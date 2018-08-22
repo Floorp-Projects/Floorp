@@ -550,7 +550,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     if (mode == XDR_DECODE) {
         if (!JSScript::partiallyInit(cx, script, nscopes, nconsts, nobjects, ntrynotes,
-                                     nscopenotes, nyieldoffsets, nTypeSets))
+                                     nscopenotes, nyieldoffsets))
         {
             return xdr->fail(JS::TranscodeResult_Throw);
         }
@@ -558,6 +558,9 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         MOZ_ASSERT(!script->mainOffset());
         script->mainOffset_ = prologueLength;
         script->funLength_ = funLength;
+
+        MOZ_ASSERT(nTypeSets <= UINT16_MAX);
+        script->nTypeSets_ = uint16_t(nTypeSets);
 
         scriptp.set(script);
 
@@ -2751,7 +2754,7 @@ AllocScriptData(JSContext* cx, size_t size)
 /* static */ bool
 JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
                         uint32_t nconsts, uint32_t nobjects, uint32_t ntrynotes,
-                        uint32_t nscopenotes, uint32_t nyieldoffsets, uint32_t nTypeSets)
+                        uint32_t nscopenotes, uint32_t nyieldoffsets)
 {
     cx->check(script);
 
@@ -2762,9 +2765,6 @@ JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
         return false;
 
     script->dataSize_ = size;
-
-    MOZ_ASSERT(nTypeSets <= UINT16_MAX);
-    script->nTypeSets_ = uint16_t(nTypeSets);
 
     uint8_t* cursor = script->data;
 
@@ -2856,12 +2856,13 @@ JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
     uint32_t numTryNotes = 0;
     uint32_t numScopeNotes = 0;
     uint32_t numYieldAndAwaitOffsets = 0;
-    uint32_t numTypeSets = 0;
     if (!partiallyInit(cx, script, numScopes, numConsts, numObjects, numTryNotes,
-                       numScopeNotes, numYieldAndAwaitOffsets, numTypeSets))
+                       numScopeNotes, numYieldAndAwaitOffsets))
     {
         return false;
     }
+
+    script->nTypeSets_ = 0;
 
     RootedScope enclosing(cx, &cx->global()->emptyGlobalScope());
     Scope* functionProtoScope = FunctionScope::create(cx, nullptr, false, false, functionProto,
@@ -2971,14 +2972,14 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, BytecodeEmitt
     if (!partiallyInit(cx, script,
                        bce->scopeList.length(), bce->constList.length(), bce->objectList.length,
                        bce->tryNoteList.length(), bce->scopeNoteList.length(),
-                       bce->yieldAndAwaitOffsetList.length(), bce->typesetCount))
+                       bce->yieldAndAwaitOffsetList.length()))
     {
         return false;
     }
 
     MOZ_ASSERT(script->mainOffset() == 0);
     script->mainOffset_ = prologueLength;
-
+    script->nTypeSets_ = bce->typesetCount;
     script->lineno_ = bce->firstLine;
 
     if (!script->createScriptData(cx, prologueLength + mainLength, nsrcnotes, natoms))
