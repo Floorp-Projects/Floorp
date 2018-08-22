@@ -17,6 +17,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/IntegerRange.h"
@@ -8556,7 +8557,8 @@ nsTextFrame::AddInlineMinISizeForFlow(gfxContext *aRenderingContext,
   }
 
   // If overflow-wrap is break-word, we can wrap everywhere.
-  if (textStyle->WordCanWrap(this)) {
+  if (StaticPrefs::layout_css_overflow_break_intrinsic_size() &&
+      textStyle->WordCanWrap(this)) {
     aData->OptionallyBreak();
     aData->mCurrentLine +=
       textRun->GetMinAdvanceWidth(Range(start, flowEndInTextRun));
