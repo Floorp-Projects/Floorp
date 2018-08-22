@@ -15,9 +15,9 @@ const Types = require("../types");
 class ViewportDimension extends Component {
   static get propTypes() {
     return {
-      viewport: PropTypes.shape(Types.viewport).isRequired,
       onResizeViewport: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
+      viewport: PropTypes.shape(Types.viewport).isRequired,
     };
   }
 
