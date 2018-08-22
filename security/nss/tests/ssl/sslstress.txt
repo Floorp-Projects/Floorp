@@ -12,9 +12,6 @@
   noECC     0      _         -c_1000_-C_c                  Stress TLS  RC4 128 with MD5
   noECC     0      _         -c_1000_-C_c_-g               Stress TLS  RC4 128 with MD5 (false start)
   noECC     0      -u        -V_ssl3:tls1.2_-c_1000_-C_c_-u            Stress TLS  RC4 128 with MD5 (session ticket)
-  noECC     0      -z        -V_ssl3:tls1.2_-c_1000_-C_c_-z            Stress TLS  RC4 128 with MD5 (compression)
-  noECC     0      -u_-z     -V_ssl3:tls1.2_-c_1000_-C_c_-u_-z         Stress TLS  RC4 128 with MD5 (session ticket, compression)
-  noECC     0      -u_-z     -V_ssl3:tls1.2_-c_1000_-C_c_-u_-z_-g      Stress TLS  RC4 128 with MD5 (session ticket, compression, false start)
   SNI       0      -u_-a_Host-sni.Dom -V_tls1.0:tls1.2_-c_1000_-C_c_-u Stress TLS RC4 128 with MD5 (session ticket, SNI)
 
 #
@@ -24,10 +21,6 @@
   noECC     0      -r_-r     -c_100_-C_c_-V_ssl3:ssl3_-N_-n_TestUser Stress SSL3 RC4 128 with MD5 (no reuse, client auth, no login)
   noECC     0      -r_-r     -c_100_-C_c_-N_-n_TestUser    Stress TLS RC4 128 with MD5 (no reuse, client auth)
   noECC     0      -r_-r_-u  -V_ssl3:tls1.2_-c_100_-C_c_-n_TestUser_-u Stress TLS RC4 128 with MD5 (session ticket, client auth)
-  noECC     0      -r_-r_-z  -V_ssl3:tls1.2_-c_100_-C_c_-n_TestUser_-z Stress TLS RC4 128 with MD5 (compression, client auth)
-  noECC     0      -r_-r_-z  -V_ssl3:tls1.2_-c_100_-C_c_-n_TestUser_-z_-g Stress TLS RC4 128 with MD5 (compression, client auth, false start)
-  noECC     0   -r_-r_-u_-z  -V_ssl3:tls1.2_-c_100_-C_c_-n_TestUser_-u_-z Stress TLS RC4 128 with MD5 (session ticket, compression, client auth)
-  noECC     0   -r_-r_-u_-z  -V_ssl3:tls1.2_-c_100_-C_c_-n_TestUser_-u_-z_-g Stress TLS RC4 128 with MD5 (session ticket, compression, client auth, false start)
   SNI       0   -r_-r_-u_-a_Host-sni.Dom -V_tls1.0:tls1.2_-c_1000_-C_c_-u Stress TLS RC4 128 with MD5 (session ticket, SNI, client auth, default virt host)
   SNI       0   -r_-r_-u_-a_Host-sni.Dom_-k_Host-sni.Dom -V_tls1.0:tls1.2_-c_1000_-C_c_-u_-a_Host-sni.Dom Stress TLS RC4 128 with MD5 (session ticket, SNI, client auth, change virt host)
 

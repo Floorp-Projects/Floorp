@@ -165,9 +165,8 @@ PrintUsageHeader(const char *progName)
             "         [-f password_file] [-L [seconds]] [-M maxProcs] [-P dbprefix]\n"
             "         [-V [min-version]:[max-version]] [-a sni_name]\n"
             "         [ T <good|revoked|unknown|badsig|corrupted|none|ocsp>] [-A ca]\n"
-            "         [-C SSLCacheEntries] [-S dsa_nickname] -Q [-I groups]"
-            " [-e ec_nickname]"
-            "\n"
+            "         [-C SSLCacheEntries] [-S dsa_nickname] [-Q]\n"
+            "         [-I groups] [-J signatureschemes] [-e ec_nickname]\n"
             "         -U [0|1] -H [0|1|2] -W [0|1]\n"
             "\n",
             progName);
@@ -195,7 +194,6 @@ PrintParameterUsage()
         "-s means disable SSL socket locking for performance\n"
         "-u means enable Session Ticket extension for TLS.\n"
         "-v means verbose output\n"
-        "-z means enable compression.\n"
         "-L seconds means log statistics every 'seconds' seconds (default=30).\n"
         "-M maxProcs tells how many processes to run in a multi-process server\n"
         "-N means do NOT use the server session cache.  Incompatible with -M.\n"
@@ -228,6 +226,13 @@ PrintParameterUsage()
         "-I comma separated list of enabled groups for TLS key exchange.\n"
         "   The following values are valid:\n"
         "   P256, P384, P521, x25519, FF2048, FF3072, FF4096, FF6144, FF8192\n"
+        "-J comma separated list of enabled signature schemes in preference order.\n"
+        "   The following values are valid:\n"
+        "     rsa_pkcs1_sha1, rsa_pkcs1_sha256, rsa_pkcs1_sha384, rsa_pkcs1_sha512,\n"
+        "     ecdsa_sha1, ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384,\n"
+        "     ecdsa_secp521r1_sha512,\n"
+        "     rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, rsa_pss_rsae_sha512,\n"
+        "     rsa_pss_pss_sha256, rsa_pss_pss_sha384, rsa_pss_pss_sha512,\n"
         "-Z enable 0-RTT (for TLS 1.3; also use -u)\n",
         stderr);
 }
@@ -795,13 +800,14 @@ PRBool NoReuse = PR_FALSE;
 PRBool hasSidCache = PR_FALSE;
 PRBool disableLocking = PR_FALSE;
 PRBool enableSessionTickets = PR_FALSE;
-PRBool enableCompression = PR_FALSE;
 PRBool failedToNegotiateName = PR_FALSE;
 PRBool enableExtendedMasterSecret = PR_FALSE;
 PRBool zeroRTT = PR_FALSE;
 PRBool enableALPN = PR_FALSE;
 SSLNamedGroup *enabledGroups = NULL;
 unsigned int enabledGroupsCount = 0;
+const SSLSignatureScheme *enabledSigSchemes = NULL;
+unsigned int enabledSigSchemeCount = 0;
 
 static char *virtServerNameArray[MAX_VIRT_SERVER_NAME_ARRAY_INDEX];
 static int virtServerNameIndex = 1;
@@ -1857,13 +1863,6 @@ server_main(
         }
     }
 
-    if (enableCompression) {
-        rv = SSL_OptionSet(model_sock, SSL_ENABLE_DEFLATE, PR_TRUE);
-        if (rv != SECSuccess) {
-            errExit("error enabling compression ");
-        }
-    }
-
     if (virtServerNameIndex > 1) {
         rv = SSL_SNISocketConfigHook(model_sock, mySSLSNISocketConfig,
                                      (void *)&virtServerNameArray);
@@ -1967,6 +1966,13 @@ server_main(
         rv = SSL_NamedGroupConfig(model_sock, enabledGroups, enabledGroupsCount);
         if (rv < 0) {
             errExit("SSL_NamedGroupConfig failed");
+        }
+    }
+
+    if (enabledSigSchemes) {
+        rv = SSL_SignatureSchemePrefSet(model_sock, enabledSigSchemes, enabledSigSchemeCount);
+        if (rv < 0) {
+            errExit("SSL_SignatureSchemePrefSet failed");
         }
     }
 
@@ -2214,9 +2220,10 @@ main(int argc, char **argv)
     /* please keep this list of options in ASCII collating sequence.
     ** numbers, then capital letters, then lower case, alphabetical.
     ** XXX: 'B', 'E', 'q', and 'x' were used in the past but removed
-    **      in 3.28, please leave some time before resuing those. */
+    **      in 3.28, please leave some time before resuing those.
+    **      'z' was removed in 3.39. */
     optstate = PL_CreateOptState(argc, argv,
-                                 "2:A:C:DGH:I:L:M:NP:QRS:T:U:V:W:YZa:bc:d:e:f:g:hi:jk:lmn:op:rst:uvw:yz");
+                                 "2:A:C:DGH:I:J:L:M:NP:QRS:T:U:V:W:YZa:bc:d:e:f:g:hi:jk:lmn:op:rst:uvw:y");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         ++optionsFound;
         switch (optstate->option) {
@@ -2429,10 +2436,6 @@ main(int argc, char **argv)
                 debugCache = PR_TRUE;
                 break;
 
-            case 'z':
-                enableCompression = PR_TRUE;
-                break;
-
             case 'Z':
                 zeroRTT = PR_TRUE;
                 break;
@@ -2446,6 +2449,16 @@ main(int argc, char **argv)
                 if (rv != SECSuccess) {
                     PL_DestroyOptState(optstate);
                     fprintf(stderr, "Bad group specified.\n");
+                    fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
+                    exit(5);
+                }
+                break;
+
+            case 'J':
+                rv = parseSigSchemeList(optstate->value, &enabledSigSchemes, &enabledSigSchemeCount);
+                if (rv != SECSuccess) {
+                    PL_DestroyOptState(optstate);
+                    fprintf(stderr, "Bad signature scheme specified.\n");
                     fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
                     exit(5);
                 }

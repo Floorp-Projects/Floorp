@@ -237,12 +237,14 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
                         << dest.mBufferRect.Width() << ", "
                         << dest.mBufferRect.Height();
       }
+      result.mAsyncTask = nullptr;
       Clear();
       return result;
     }
 
     if (!newBuffer->Lock(writeMode)) {
       gfxCriticalNote << "Failed to lock new back buffer.";
+      result.mAsyncTask = nullptr;
       Clear();
       return result;
     }
@@ -295,7 +297,7 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
 void
 ContentClient::EndPaint(PaintState& aPaintState, nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
 {
-  if (aPaintState.mAsyncTask && mBuffer) {
+  if (aPaintState.mAsyncTask) {
     aPaintState.mAsyncTask->mCapture = mBuffer->EndCapture();
   }
 }
