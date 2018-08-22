@@ -138,12 +138,25 @@ interface nsITableEditor : nsISupports
     */
   void normalizeTable(in Element aTable);
 
-  /** Get the row an column index from the layout's cellmap
-    * If aCell is null, it will try to find enclosing table of selection anchor
-    *
-    */
-  void getCellIndexes(in Element aCell,
-                      out long aRowIndex, out long aColIndex);
+  /**
+   * getCellIndexes() computes row index and column index of a table cell.
+   * Note that this depends on layout information.  Therefore, all pending
+   * layout should've been flushed before calling this.
+   *
+   * @param aCellElement        If not null, this computes indexes of the cell.
+   *                            If null, this computes indexes of a cell which
+   *                            contains anchor of Selection.
+   * @param aRowIndex           Must be an object, whose .value will be set
+   *                            to row index of the cell.  0 is the first row.
+   *                            If rowspan is set to 2 or more, the start
+   *                            row index is used.
+   * @param aColumnIndex        Must be an object, whose .value will be set
+   *                            to column index of the cell.  0 is the first
+   *                            column.  If colspan is set to 2 or more, the
+   *                            start column index is used.
+   */
+  void getCellIndexes(in Element aCellElement,
+                      out long aRowIndex, out long aColumnIndex);
 
   /** Get the number of rows and columns in a table from the layout's cellmap
     * If aTable is null, it will try to find enclosing table of selection ancho

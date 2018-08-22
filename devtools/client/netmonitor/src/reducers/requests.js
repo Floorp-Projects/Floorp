@@ -87,7 +87,7 @@ function requestsReducer(state = Requests(), action) {
 
       request = {
         ...request,
-        ...processNetworkUpdates(action.data),
+        ...processNetworkUpdates(action.data, request),
       };
       const requestEndTime = request.startedMillis +
         (request.eventTimings ? request.eventTimings.totalTime : 0);
