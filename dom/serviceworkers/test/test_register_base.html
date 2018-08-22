@@ -18,14 +18,8 @@
 <script class="testbody" type="text/javascript">
 
   function runTest() {
-    navigator.serviceWorker.register("http://mochi.test:8888/tests/dom/serviceworkers/test/empty.js")
-      .then(reg => {
-        ok(false, "Register should fail");
-        SimpleTest.finish();
-      }, err => {
-        is(err.name, "SecurityError", "Registration should fail with SecurityError");
-        SimpleTest.finish();
-      });
+    ok(!("serviceWorker" in navigator), "ServiceWorkerContainer shouldn't be defined");
+    SimpleTest.finish();
   }
 
   SimpleTest.waitForExplicitFinish();

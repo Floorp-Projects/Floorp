@@ -46,23 +46,56 @@ NS_IMPL_RELEASE_INHERITED(ServiceWorkerContainer, DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerContainer, DOMEventTargetHelper,
                                    mControllerWorker, mReadyPromise)
 
+namespace {
+
+bool
+IsInPrivateBrowsing(JSContext* const aCx)
+{
+  if (const nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx)) {
+    if (const nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull()) {
+      return principal->GetPrivateBrowsingId() > 0;
+    }
+  }
+  return false;
+}
+
+bool
+IsServiceWorkersTestingEnabledInWindow(JSObject* const aGlobal)
+{
+  if (const nsCOMPtr<nsPIDOMWindowInner> innerWindow = Navigator::GetWindowFromGlobal(aGlobal)) {
+    if (const nsCOMPtr<nsPIDOMWindowOuter> outerWindow = innerWindow->GetOuterWindow()) {
+      return outerWindow->GetServiceWorkersTestingEnabled();
+    }
+  }
+  return false;
+}
+
+}
+
 /* static */ bool
 ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   JS::Rooted<JSObject*> global(aCx, aGlobal);
-  nsCOMPtr<nsPIDOMWindowInner> window = Navigator::GetWindowFromGlobal(global);
-  if (!window) {
+
+  if (!DOMPrefs::ServiceWorkersEnabled()) {
     return false;
   }
 
-  nsIDocument* doc = window->GetExtantDoc();
-  if (!doc || nsContentUtils::IsInPrivateBrowsing(doc)) {
+  if (IsInPrivateBrowsing(aCx)) {
     return false;
   }
 
-  return DOMPrefs::ServiceWorkersEnabled();
+  if (IsSecureContextOrObjectIsFromSecureContext(aCx, aGlobal)) {
+    return true;
+  }
+
+  const bool isTestingEnabledInWindow = IsServiceWorkersTestingEnabledInWindow(aGlobal);
+  const bool isTestingEnabledByPref = DOMPrefs::ServiceWorkersTestingEnabled();
+  const bool isTestingEnabled = isTestingEnabledByPref || isTestingEnabledInWindow;
+
+  return isTestingEnabled;
 }
 
 // static
@@ -152,39 +185,6 @@ GetBaseURIFromGlobal(nsIGlobalObject* aGlobal, ErrorResult& aRv)
   }
 
   return baseURI.forget();
-}
-
-// This function implements parts of the step 3 of the following algorithm:
-// https://w3c.github.io/webappsec/specs/powerfulfeatures/#settings-secure
-static bool
-IsFromAuthenticatedOrigin(nsIDocument* aDoc)
-{
-  MOZ_ASSERT(aDoc);
-  nsCOMPtr<nsIDocument> doc(aDoc);
-  nsCOMPtr<nsIContentSecurityManager> csm = do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
-  if (NS_WARN_IF(!csm)) {
-    return false;
-  }
-
-  while (doc && !nsContentUtils::IsChromeDoc(doc)) {
-    bool trustworthyOrigin = false;
-
-    // The origin of the document may be different from the document URI
-    // itself.  Check the principal, not the document URI itself.
-    nsCOMPtr<nsIPrincipal> documentPrincipal = doc->NodePrincipal();
-
-    // The check for IsChromeDoc() above should mean we never see a system
-    // principal inside the loop.
-    MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(documentPrincipal));
-
-    csm->IsOriginPotentiallyTrustworthy(documentPrincipal, &trustworthyOrigin);
-    if (!trustworthyOrigin) {
-      return false;
-    }
-
-    doc = doc->GetParentDocument();
-  }
-  return true;
 }
 
 } // anonymous namespace
@@ -282,27 +282,6 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
   nsIDocument* doc = window->GetExtantDoc();
   if (!doc) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  // Next, implement a lame version of [SecureContext] with an
-  // exception based on a pref or devtools option.
-  // TODO: This logic should be moved to a webidl [Func]. See bug 1455078.
-  nsCOMPtr<nsPIDOMWindowOuter> outerWindow = window->GetOuterWindow();
-  bool serviceWorkersTestingEnabled =
-    outerWindow->GetServiceWorkersTestingEnabled();
-
-  bool authenticatedOrigin;
-  if (DOMPrefs::ServiceWorkersTestingEnabled() ||
-      serviceWorkersTestingEnabled) {
-    authenticatedOrigin = true;
-  } else {
-    authenticatedOrigin = IsFromAuthenticatedOrigin(doc);
-  }
-
-  if (!authenticatedOrigin) {
-    NS_WARNING("ServiceWorker registration from insecure websites is not allowed.");
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 
