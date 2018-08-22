@@ -26,8 +26,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 import java.io.File;
 
 public final class GeckoRuntime implements Parcelable {
-    public static final String PREF_CRASH_REPORTING_JOB_ID = "PrefGeckoCrashReportingJobId";
-
     private static final String LOGTAG = "GeckoRuntime";
     private static final boolean DEBUG = false;
 
@@ -103,10 +101,6 @@ public final class GeckoRuntime implements Parcelable {
         GeckoAppShell.setDisplayDensityOverride(settings.getDisplayDensityOverride());
         GeckoAppShell.setDisplayDpiOverride(settings.getDisplayDpiOverride());
         GeckoAppShell.setScreenSizeOverride(settings.getScreenSizeOverride());
-
-        final int crashReportingJobId = settings.getCrashReportingServiceJobId();
-        settings.getExtras().putInt(
-                GeckoRuntimeSettings.EXTRA_CRASH_REPORTING_JOB_ID, crashReportingJobId);
 
         if (!GeckoThread.initMainProcess(/* profile */ null, settings.getArguments(),
                                          settings.getExtras(), flags)) {

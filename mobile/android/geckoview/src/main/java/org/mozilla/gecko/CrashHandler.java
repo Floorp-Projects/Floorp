@@ -300,7 +300,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
             final String component = javaPkg + ".CrashReporterService";
             final String action = javaPkg + ".reportCrash";
             final ProcessBuilder pb;
-            final int crashReporterJobId = GeckoThread.getCrashReporterJobId();
+            final int crashReporterJobId = 1024; // FIXME
 
             if (context != null) {
                 final Intent intent = new Intent(action);

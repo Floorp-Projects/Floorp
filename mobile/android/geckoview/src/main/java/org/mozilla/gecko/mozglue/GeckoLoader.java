@@ -108,9 +108,6 @@ public final class GeckoLoader {
 
         putenv("MOZ_ANDROID_PACKAGE_NAME=" + context.getPackageName());
 
-        final int crashReporterJobId = GeckoThread.getCrashReporterJobId();
-        putenv("MOZ_ANDROID_CRASH_REPORTER_JOB_ID=" + crashReporterJobId);
-
         setupDownloadEnvironment(context);
 
         // profile home path
