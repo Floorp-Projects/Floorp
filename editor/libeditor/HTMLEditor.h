@@ -1007,6 +1007,65 @@ protected: // Shouldn't be used by friend classes
                          ErrorResult& aRv) const;
 
   /**
+   * CellIndexes store both row index and column index of a table cell.
+   */
+  struct MOZ_STACK_CLASS CellIndexes final
+  {
+    int32_t mRow;
+    int32_t mColumn;
+
+    /**
+     * This constructor initializes mRowIndex and mColumnIndex with indexes of
+     * aCellElement.
+     *
+     * @param aCellElement      An <td> or <th> element.
+     * @param aRv               Returns error if layout information is not
+     *                          available or given element is not a table cell.
+     */
+    CellIndexes(Element& aCellElement, ErrorResult& aRv)
+      : mRow(-1)
+      , mColumn(-1)
+    {
+      MOZ_ASSERT(!aRv.Failed());
+      Update(aCellElement, aRv);
+    }
+
+    /**
+     * Update mRowIndex and mColumnIndex with indexes of aCellElement.
+     *
+     * @param                   See above.
+     */
+    void Update(Element& aCellElement, ErrorResult& aRv);
+
+    /**
+     * This constructor initializes mRowIndex and mColumnIndex with indexes of
+     * cell element which contains anchor of Selection.
+     *
+     * @param aHTMLEditor       The editor which creates the instance.
+     * @param aSelection        The Selection for the editor.
+     * @param aRv               Returns error if there is no cell element
+     *                          which contains anchor of Selection, or layout
+     *                          information is not available.
+     */
+    CellIndexes(HTMLEditor& aHTMLEditor, Selection& aSelection,
+                ErrorResult& aRv)
+      : mRow(-1)
+      , mColumn(-1)
+    {
+      Update(aHTMLEditor, aSelection, aRv);
+    }
+
+    /**
+     * Update mRowIndex and mColumnIndex with indexes of cell element which
+     * contains anchor of Selection.
+     *
+     * @param                   See above.
+     */
+    void Update(HTMLEditor& aHTMLEditor, Selection& aSelection,
+                ErrorResult& aRv);
+  };
+
+  /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.
