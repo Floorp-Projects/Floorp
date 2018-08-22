@@ -340,7 +340,7 @@ public:
 protected:
     virtual ~gfxFcPlatformFontList();
 
-#ifdef MOZ_CONTENT_SANDBOX
+#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
     typedef mozilla::SandboxBroker::Policy SandboxPolicy;
 #else
     // Dummy type just so we can still have a SandboxPolicy* parameter.
