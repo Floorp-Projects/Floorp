@@ -37,23 +37,18 @@
     <command id="cmd_closeWindow" oncommand="BrowserTryToCloseWindow()"/>
     <command id="cmd_toggleMute" oncommand="gBrowser.selectedTab.toggleMuteAudio()"/>
     <command id="cmd_CustomizeToolbars" oncommand="gCustomizeMode.enter()"/>
+    <command id="cmd_toggleOfflineStatus" oncommand="BrowserOffline.toggleOfflineStatus();"/>
     <command id="cmd_quitApplication" oncommand="goQuitApplication()"/>
 
 #include ../../../toolkit/content/editMenuCommands.inc.xul
 
-    <command id="View:PageSource" oncommand="BrowserViewSource(window.gBrowser.selectedBrowser);" observes="canViewSource"/>
+    <command id="View:PageSource" oncommand="BrowserViewSource(window.gBrowser.selectedBrowser);"/>
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
     <command id="View:ReaderView" oncommand="ReaderParent.toggleReaderMode(event);"/>
-    <command id="cmd_find"
-             oncommand="gLazyFindCommand('onFindCommand')"
-             observes="isImage"/>
-    <command id="cmd_findAgain"
-             oncommand="gLazyFindCommand('onFindAgainCommand', false)"
-             observes="isImage"/>
-    <command id="cmd_findPrevious"
-             oncommand="gLazyFindCommand('onFindAgainCommand', true)"
-             observes="isImage"/>
+    <command id="cmd_find" oncommand="gLazyFindCommand('onFindCommand')"/>
+    <command id="cmd_findAgain" oncommand="gLazyFindCommand('onFindAgainCommand', false)"/>
+    <command id="cmd_findPrevious" oncommand="gLazyFindCommand('onFindAgainCommand', true)"/>
 #ifdef XP_MACOSX
     <command id="cmd_findSelection" oncommand="gLazyFindCommand('onFindSelectionCommand')"/>
 #endif
@@ -120,23 +115,6 @@
   </commandset>
 
 #include ../../components/places/content/placesCommands.inc.xul
-
-  <broadcasterset id="mainBroadcasterSet">
-    <broadcaster id="isImage"/>
-    <broadcaster id="canViewSource"/>
-    <broadcaster id="isFrameImage"/>
-
-    <broadcaster id="workOfflineMenuitemState"/>
-    <broadcaster id="devtoolsMenuBroadcaster_RecordExecution"
-                 label="&devtoolsRecordExecution.label;"
-                 command="Tools:RecordExecution"/>
-    <broadcaster id="devtoolsMenuBroadcaster_SaveRecording"
-                 label="&devtoolsSaveRecording.label;"
-                 command="Tools:SaveRecording"/>
-    <broadcaster id="devtoolsMenuBroadcaster_ReplayExecution"
-                 label="&devtoolsReplayExecution.label;"
-                 command="Tools:ReplayExecution"/>
-  </broadcasterset>
 
   <keyset id="mainKeyset">
     <key id="key_newNavigator"

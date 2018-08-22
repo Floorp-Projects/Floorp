@@ -41,6 +41,8 @@
 
   /* Border color that splits the toolbars/panels/headers. */
   --theme-splitter-color: #e0e0e1;
+  --theme-emphasized-splitter-color: var(--grey-30);
+  --theme-emphasized-splitter-color-hover: var(--grey-40);
 
   --theme-comment: var(--grey-50);
   --theme-comment-alt: #ccd1d5;
@@ -146,6 +148,8 @@
 
   /* Border color that splits the toolbars/panels/headers. */
   --theme-splitter-color: #3c3c3d;
+  --theme-emphasized-splitter-color: var(--grey-60);
+  --theme-emphasized-splitter-color-hover: var(--grey-50);
 
   --theme-comment: #939393;
   --theme-comment-alt: #939393;
