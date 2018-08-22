@@ -23,10 +23,8 @@ const Types = require("devtools/client/responsive.html/types");
 
 addRDMTask(TEST_URL, async function({ ui }) {
   const { toolWindow } = ui;
-  const { store, document } = toolWindow;
+  const { document, store } = toolWindow;
   const deviceSelector = document.getElementById("device-selector");
-  const modal = document.getElementById("device-modal-wrapper");
-  const submitButton = document.getElementById("device-submit-button");
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1
@@ -60,10 +58,9 @@ addRDMTask(TEST_URL, async function({ ui }) {
     .filter(cb => !cb.checked)[0];
   const value = uncheckedCb.value;
   uncheckedCb.click();
-  submitButton.click();
+  document.getElementById("device-submit-button").click();
 
-  ok(modal.classList.contains("closed") && !modal.classList.contains("opened"),
-    "The device modal is closed on submit.");
+  ok(!store.getState().devices.isModalOpen, "The device modal is closed on submit.");
 
   info("Checking that the new device is added to the user preference list.");
   let preferredDevices = _loadPreferredDevices();
@@ -80,6 +77,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   info("Reopen device modal and check new device is correctly checked");
   await openDeviceModal(ui);
+
   ok([...document.querySelectorAll(".device-input-checkbox")]
     .filter(cb => cb.checked && cb.value === value)[0],
     value + " is checked in the device modal.");
@@ -90,7 +88,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
     .filter(cb => cb.checked && cb.value != value)[0];
   const checkedVal = checkedCb.value;
   checkedCb.click();
-  submitButton.click();
+  document.getElementById("device-submit-button").click();
 
   info("Checking that the device is removed from the user preference list.");
   preferredDevices = _loadPreferredDevices();
@@ -117,7 +115,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
 addRDMTask(TEST_URL, async function({ ui }) {
   const { toolWindow } = ui;
-  const { store, document } = toolWindow;
+  const { document, store } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1

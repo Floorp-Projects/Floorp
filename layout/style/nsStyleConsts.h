@@ -198,6 +198,7 @@ enum class StyleShapeSourceType : uint8_t {
   Image, // shape-outside only
   Shape,
   Box,
+  Path,  // SVG path function
 };
 
 // -moz-stack-sizing

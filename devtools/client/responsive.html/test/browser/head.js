@@ -228,16 +228,14 @@ async function testViewportResize(ui, selector, moveBy,
 }
 
 async function openDeviceModal(ui) {
-  const { document } = ui.toolWindow;
-  const modal = document.getElementById("device-modal-wrapper");
-
-  info("Checking initial device modal state");
-  ok(modal.classList.contains("closed") && !modal.classList.contains("opened"),
-    "The device modal is closed by default.");
+  const { document, store } = ui.toolWindow;
 
   info("Opening device modal through device selector.");
+  const onModalOpen = waitUntilState(store, state => state.devices.isModalOpen);
   await selectMenuItem(ui, "#device-selector", getStr("responsive.editDeviceList2"));
+  await onModalOpen;
 
+  const modal = document.getElementById("device-modal-wrapper");
   ok(modal.classList.contains("opened") && !modal.classList.contains("closed"),
     "The device modal is displayed.");
 }
@@ -414,7 +412,7 @@ async function testUserAgentFromBrowser(browser, expected) {
 function addDeviceInModal(ui, device) {
   const { Simulate } =
     ui.toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
-  const { store, document } = ui.toolWindow;
+  const { document, store } = ui.toolWindow;
 
   const nameInput = document.querySelector("#device-adder-name input");
   const [ widthInput, heightInput ] =

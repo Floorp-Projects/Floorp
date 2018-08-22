@@ -114,6 +114,7 @@ class MachCommands(MachCommandBase):
 
             valgrind_args = [
                 valgrind,
+                '--sym-offsets=yes',
                 '--smc-check=all-non-file',
                 '--vex-iropt-register-updates=allregs-at-mem-access',
                 '--gen-suppressions=all',

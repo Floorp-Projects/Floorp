@@ -8173,6 +8173,28 @@ if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-width.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
+  gCSSProperties["offset-path"] = {
+    domProp: "offsetPath",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [
+      "path('M 10 10 20 20 H 90 V 90 Z')",
+      "path('M10 10 20,20H90V90Z')",
+      "path('M 10 10 C 20 20, 40 20, 50 10')",
+      "path('M 10 80 C 40 10, 65 10, 95 80 S 1.5e2 150, 180 80')",
+      "path('M 10 80 Q 95 10 180 80')",
+      "path('M 10 80 Q 52.5 10, 95 80 T 180 80')",
+      "path('M 80 80 A 45 45, 0, 0, 0, 1.25e2 1.25e2 L 125 80 Z')",
+      "path('M100-200h20z')",
+      "path('M10,10L20.6.5z')"
+    ],
+    invalid_values: [ "path('')", "path()", "path(a)", "path('M 10 Z')" ,
+                      "path('M 10-10 20')", "path('M 10 10 C 20 20 40 20')" ]
+  };
+}
+
 const OVERFLOW_MOZKWS = [
   "-moz-scrollbars-none",
   "-moz-scrollbars-horizontal",

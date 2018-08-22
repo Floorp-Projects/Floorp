@@ -9,9 +9,7 @@ const TEST_URL = "data:text/html;charset=utf-8,";
 const Types = require("devtools/client/responsive.html/types");
 
 addRDMTask(TEST_URL, async function({ ui }) {
-  const { store, document } = ui.toolWindow;
-  const modal = document.querySelector("#device-modal-wrapper");
-  const closeButton = document.querySelector("#device-close-button");
+  const { document, store } = ui.toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1
@@ -26,20 +24,17 @@ addRDMTask(TEST_URL, async function({ ui }) {
     .filter(cb => !cb.checked)[0];
   const value = uncheckedCb.value;
   uncheckedCb.click();
-  closeButton.click();
+  document.getElementById("device-close-button").click();
 
-  ok(modal.classList.contains("closed") && !modal.classList.contains("opened"),
-    "The device modal is closed on exit.");
+  ok(!store.getState().devices.isModalOpen, "The device modal is closed on exit.");
 
   info("Check that the device list remains unchanged after exitting.");
   const preferredDevicesAfter = _loadPreferredDevices();
 
   is(preferredDevicesBefore.added.size, preferredDevicesAfter.added.size,
     "Got expected number of added devices.");
-
   is(preferredDevicesBefore.removed.size, preferredDevicesAfter.removed.size,
     "Got expected number of removed devices.");
-
   ok(!preferredDevicesAfter.removed.has(value),
     value + " was not added to removed device list.");
 });

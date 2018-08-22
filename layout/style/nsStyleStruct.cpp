@@ -1039,6 +1039,9 @@ StyleShapeSource::operator==(const StyleShapeSource& aOther) const
 
     case StyleShapeSourceType::Box:
       return mReferenceBox == aOther.mReferenceBox;
+
+    case StyleShapeSourceType::Path:
+      return *mSVGPath == *aOther.mSVGPath;
   }
 
   MOZ_ASSERT_UNREACHABLE("Unexpected shape source type!");
@@ -1091,6 +1094,15 @@ StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
 }
 
 void
+StyleShapeSource::SetPath(UniquePtr<StyleSVGPath> aPath)
+{
+  MOZ_ASSERT(aPath);
+  DoDestroy();
+  new (&mSVGPath) UniquePtr<StyleSVGPath>(std::move(aPath));
+  mType = StyleShapeSourceType::Path;
+}
+
+void
 StyleShapeSource::SetReferenceBox(StyleGeometryBox aReferenceBox)
 {
   DoDestroy();
@@ -1123,6 +1135,10 @@ StyleShapeSource::DoCopy(const StyleShapeSource& aOther)
     case StyleShapeSourceType::Box:
       SetReferenceBox(aOther.GetReferenceBox());
       break;
+
+    case StyleShapeSourceType::Path:
+      SetPath(MakeUnique<StyleSVGPath>(*aOther.GetPath()));
+      break;
   }
 }
 
@@ -1136,6 +1152,9 @@ StyleShapeSource::DoDestroy()
     case StyleShapeSourceType::Image:
     case StyleShapeSourceType::URL:
       mShapeImage.~UniquePtr<nsStyleImage>();
+      break;
+    case StyleShapeSourceType::Path:
+      mSVGPath.~UniquePtr<StyleSVGPath>();
       break;
     case StyleShapeSourceType::None:
     case StyleShapeSourceType::Box:
@@ -3617,7 +3636,10 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mSpecifiedRotate(aSource.mSpecifiedRotate)
   , mSpecifiedTranslate(aSource.mSpecifiedTranslate)
   , mSpecifiedScale(aSource.mSpecifiedScale)
-  , mCombinedTransform(aSource.mCombinedTransform)
+  , mIndividualTransform(aSource.mIndividualTransform)
+  , mMotion(aSource.mMotion
+            ? MakeUnique<StyleMotion>(*aSource.mMotion)
+            : nullptr)
   , mTransformOrigin{ aSource.mTransformOrigin[0],
                       aSource.mTransformOrigin[1],
                       aSource.mTransformOrigin[2] }
@@ -3682,9 +3704,8 @@ nsStyleDisplay::~nsStyleDisplay()
                                 mSpecifiedTranslate);
   ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedScale",
                                 mSpecifiedScale);
-  ReleaseSharedListOnMainThread("nsStyleDisplay::mCombinedTransform",
-                                mCombinedTransform);
-
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mIndividualTransform",
+                                mIndividualTransform);
   MOZ_COUNT_DTOR(nsStyleDisplay);
 }
 
@@ -3712,7 +3733,7 @@ nsStyleDisplay::FinishStyle(
     }
   }
 
-  GenerateCombinedTransform();
+  GenerateCombinedIndividualTransform();
 }
 
 static inline nsChangeHint
@@ -3732,6 +3753,29 @@ CompareTransformValues(const RefPtr<nsCSSValueSharedList>& aList,
     }
   }
 
+  return result;
+}
+
+static inline nsChangeHint
+CompareMotionValues(const StyleMotion* aMotion,
+                    const StyleMotion* aNewMotion)
+{
+  nsChangeHint result = nsChangeHint(0);
+
+  // TODO: Bug 1482737: This probably doesn't need to UpdateOverflow
+  // (or UpdateTransformLayer) if there's already a transform.
+  if (!aMotion != !aNewMotion ||
+      (aMotion && *aMotion != *aNewMotion)) {
+    // Set the same hints as what we use for transform because motion path is
+    // a kind of transform and will be combined with other transforms.
+    result |= nsChangeHint_UpdateTransformLayer;
+    if ((aMotion && aMotion->HasPath()) &&
+        (aNewMotion && aNewMotion->HasPath())) {
+      result |= nsChangeHint_UpdatePostTransformOverflow;
+    } else {
+      result |= nsChangeHint_UpdateOverflow;
+    }
+  }
   return result;
 }
 
@@ -3866,6 +3910,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
                                             aNewData.mSpecifiedTranslate);
     transformHint |= CompareTransformValues(mSpecifiedScale,
                                             aNewData.mSpecifiedScale);
+    transformHint |= CompareMotionValues(mMotion.get(), aNewData.mMotion.get());
 
     const nsChangeHint kUpdateOverflowAndRepaintHint =
       nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
@@ -3985,17 +4030,17 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
 }
 
 void
-nsStyleDisplay::GenerateCombinedTransform()
+nsStyleDisplay::GenerateCombinedIndividualTransform()
 {
   // FIXME(emilio): This should probably be called from somewhere like what we
   // do for image layers, instead of FinishStyle.
   //
   // This does and undoes the work a ton of times in Stylo.
-  mCombinedTransform = nullptr;
+  mIndividualTransform = nullptr;
 
   // Follow the order defined in the spec to append transform functions.
   // https://drafts.csswg.org/css-transforms-2/#ctm
-  AutoTArray<nsCSSValueSharedList*, 4> shareLists;
+  AutoTArray<nsCSSValueSharedList*, 3> shareLists;
   if (mSpecifiedTranslate) {
     shareLists.AppendElement(mSpecifiedTranslate.get());
   }
@@ -4005,24 +4050,20 @@ nsStyleDisplay::GenerateCombinedTransform()
   if (mSpecifiedScale) {
     shareLists.AppendElement(mSpecifiedScale.get());
   }
-  if (mSpecifiedTransform) {
-    shareLists.AppendElement(mSpecifiedTransform.get());
-  }
 
   if (shareLists.Length() == 0) {
     return;
   }
-
   if (shareLists.Length() == 1) {
-    mCombinedTransform = shareLists[0];
+    mIndividualTransform = shareLists[0];
     return;
   }
 
-  // In common, we may have 3 transform functions(for rotate, translate and
-  // scale) in mSpecifiedTransform, one rotate function in mSpecifiedRotate,
-  // one translate function in mSpecifiedTranslate, and one scale function in
-  // mSpecifiedScale. So 6 slots are enough for the most cases.
-  AutoTArray<nsCSSValueList*, 6> valueLists;
+  // In common, we may have 3 transform functions:
+  // 1. one rotate function in mSpecifiedRotate,
+  // 2. one translate function in mSpecifiedTranslate,
+  // 3. one scale function in mSpecifiedScale.
+  AutoTArray<nsCSSValueList*, 3> valueLists;
   for (auto list: shareLists) {
     if (list) {
       valueLists.AppendElement(list->mHead->Clone());
@@ -4037,8 +4078,9 @@ nsStyleDisplay::GenerateCombinedTransform()
     valueLists[i]->mNext = valueLists[i + 1];
   }
 
-  mCombinedTransform = new nsCSSValueSharedList(valueLists[0]);
+  mIndividualTransform = new nsCSSValueSharedList(valueLists[0]);
 }
+
 // --------------------
 // nsStyleVisibility
 //

@@ -94,6 +94,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "NonNegativeLength",
     "NonNegativeLengthOrPercentage",
     "ListStyleType",
+    "OffsetPath",
     "Opacity",
     "Resize",
     "url::ImageUrlOrNone",
