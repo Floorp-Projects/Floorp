@@ -17,11 +17,11 @@ class DeviceSelector extends PureComponent {
   static get propTypes() {
     return {
       devices: PropTypes.shape(Types.devices).isRequired,
-      selectedDevice: PropTypes.string.isRequired,
-      viewportId: PropTypes.number.isRequired,
       onChangeDevice: PropTypes.func.isRequired,
       onResizeViewport: PropTypes.func.isRequired,
       onUpdateDeviceModal: PropTypes.func.isRequired,
+      selectedDevice: PropTypes.string.isRequired,
+      viewportId: PropTypes.number.isRequired,
     };
   }
 
@@ -33,11 +33,11 @@ class DeviceSelector extends PureComponent {
   onShowDeviceMenu(event) {
     const {
       devices,
-      selectedDevice,
-      viewportId,
       onChangeDevice,
       onResizeViewport,
       onUpdateDeviceModal,
+      selectedDevice,
+      viewportId,
     } = this.props;
 
     const menuItems = [];

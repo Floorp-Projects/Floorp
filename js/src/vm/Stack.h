@@ -2159,7 +2159,7 @@ class FrameIter
     bool ensureHasRematerializedFrame(JSContext* cx);
 
     // True when isInterp() or isBaseline(). True when isIon() if it
-    // has a rematerialized frame. False otherwise false otherwise.
+    // has a rematerialized frame. False otherwise.
     bool hasUsableAbstractFramePtr() const;
 
     // -----------------------------------------------------------

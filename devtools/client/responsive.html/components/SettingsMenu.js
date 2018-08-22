@@ -18,9 +18,9 @@ class SettingsMenu extends PureComponent {
   static get propTypes() {
     return {
       leftAlignmentEnabled: PropTypes.bool.isRequired,
-      reloadConditions: PropTypes.shape(Types.reloadConditions).isRequired,
       onChangeReloadCondition: PropTypes.func.isRequired,
       onToggleLeftAlignment: PropTypes.func.isRequired,
+      reloadConditions: PropTypes.shape(Types.reloadConditions).isRequired,
     };
   }
 
@@ -32,9 +32,9 @@ class SettingsMenu extends PureComponent {
   onToggleSettingMenu(event) {
     const {
       leftAlignmentEnabled,
-      reloadConditions,
       onChangeReloadCondition,
       onToggleLeftAlignment,
+      reloadConditions,
     } = this.props;
 
     const menuItems = [

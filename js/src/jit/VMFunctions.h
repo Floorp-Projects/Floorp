@@ -785,7 +785,7 @@ MOZ_MUST_USE bool
 InterpretResume(JSContext* cx, HandleObject obj, HandleValue val, HandlePropertyName kind,
                 MutableHandleValue rval);
 MOZ_MUST_USE bool
-DebugAfterYield(JSContext* cx, BaselineFrame* frame);
+DebugAfterYield(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* mustReturn);
 MOZ_MUST_USE bool
 GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObject*> genObj,
                        HandleValue arg, uint32_t resumeKind);

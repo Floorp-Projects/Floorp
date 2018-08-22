@@ -163,6 +163,7 @@ public:
     NS_IMETHOD SetChannelIsForDownload(bool aChannelIsForDownload) override;
     NS_IMETHOD GetNavigationStartTimeStamp(TimeStamp* aTimeStamp) override;
     NS_IMETHOD SetNavigationStartTimeStamp(TimeStamp aTimeStamp) override;
+    NS_IMETHOD CancelForTrackingProtection() override;
     // nsISupportsPriority
     NS_IMETHOD SetPriority(int32_t value) override;
     // nsIClassOfService
@@ -284,6 +285,9 @@ private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 
     bool     RequestIsConditional();
+    void HandleContinueCancelledByTrackingProtection();
+    nsresult CancelInternal(nsresult status);
+    void ContinueCancelledByTrackingProtection();
 
     // Connections will only be established in this function.
     // (including DNS prefetch and speculative connection.)

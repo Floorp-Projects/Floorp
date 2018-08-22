@@ -24,15 +24,7 @@ function checkAllowed(event)
 
   let exception;
   try {
-    clipboardData.mozSetDataAt("text/customdata", document.getElementById("input"), 0);
-  } catch(ex) {
-    exception = ex;
-  }
-  is(String(exception).indexOf("SecurityError"), 0, "Cannot set non-string");
-
-  exception = null;
-  try {
-    clipboardData.mozSetDataAt("application/x-moz-file", "Test", 0);
+    clipboardData.setData("application/x-moz-file", "Test");
   } catch(ex) {
     exception = ex;
   }
@@ -40,7 +32,7 @@ function checkAllowed(event)
 
   exception = null;
   try {
-    clipboardData.mozSetDataAt("application/x-moz-file-promise", "Test", 0);
+    clipboardData.setData("application/x-moz-file-promise", "Test");
   } catch(ex) {
     exception = ex;
   }
@@ -48,7 +40,7 @@ function checkAllowed(event)
 
   exception = null;
   try {
-    clipboardData.mozSetDataAt("application/something", "This is data", 0);
+    clipboardData.setData("application/something", "This is data");
   } catch(ex) {
     exception = ex;
   }

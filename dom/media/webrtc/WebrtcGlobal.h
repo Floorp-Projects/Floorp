@@ -292,6 +292,7 @@ static void WriteRTCRtpStreamStats(
     WriteParam(aMsg, aParam.mIsRemote);
     WriteParam(aMsg, aParam.mMediaTrackId);
     WriteParam(aMsg, aParam.mMediaType);
+    WriteParam(aMsg, aParam.mKind);
     WriteParam(aMsg, aParam.mRemoteId);
     WriteParam(aMsg, aParam.mSsrc);
     WriteParam(aMsg, aParam.mTransportId);
@@ -309,6 +310,7 @@ static bool ReadRTCRtpStreamStats(
       !ReadParam(aMsg, aIter, &(aResult->mIsRemote)) ||
       !ReadParam(aMsg, aIter, &(aResult->mMediaTrackId)) ||
       !ReadParam(aMsg, aIter, &(aResult->mMediaType)) ||
+      !ReadParam(aMsg, aIter, &(aResult->mKind)) ||
       !ReadParam(aMsg, aIter, &(aResult->mRemoteId)) ||
       !ReadParam(aMsg, aIter, &(aResult->mSsrc)) ||
       !ReadParam(aMsg, aIter, &(aResult->mTransportId))) {

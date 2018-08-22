@@ -13,7 +13,7 @@ const {
 module.exports = {
 
   /**
-   * Update the geometry editor's enabled state.
+   * Updates the geometry editor's enabled state.
    *
    * @param  {Boolean} enabled
    *         Whether or not the geometry editor is enabled or not.
@@ -26,7 +26,7 @@ module.exports = {
   },
 
   /**
-   * Update the layout state with the new layout properties.
+   * Updates the layout state with the new layout properties.
    */
   updateLayout(layout) {
     return {
@@ -36,7 +36,7 @@ module.exports = {
   },
 
   /**
-   * Update the offset parent state with the new DOM node.
+   * Updates the offset parent state with the new DOM node.
    */
   updateOffsetParent(offsetParent) {
     return {

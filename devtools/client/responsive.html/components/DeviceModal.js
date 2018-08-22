@@ -133,93 +133,86 @@ class DeviceModal extends PureComponent {
         .sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    return dom.div(
-      {
-        id: "device-modal-wrapper",
-        className: this.props.devices.isModalOpen ? "opened" : "closed",
-      },
+    return (
       dom.div(
         {
-          className: "device-modal",
+          id: "device-modal-wrapper",
+          className: this.props.devices.isModalOpen ? "opened" : "closed",
         },
-        dom.button({
-          id: "device-close-button",
-          className: "devtools-button",
-          onClick: () => onUpdateDeviceModal(false),
-        }),
+        dom.div({ className: "device-modal" },
+          dom.button({
+            id: "device-close-button",
+            className: "devtools-button",
+            onClick: () => onUpdateDeviceModal(false),
+          }),
+          dom.div({ className: "device-modal-content" },
+            devices.types.map(type => {
+              return dom.div(
+                {
+                  className: `device-type device-type-${type}`,
+                  key: type,
+                },
+                dom.header({ className: "device-header" },
+                  type
+                ),
+                sortedDevices[type].map(device => {
+                  const details = getFormatStr(
+                    "responsive.deviceDetails", device.width, device.height,
+                    device.pixelRatio, device.userAgent, device.touch
+                  );
+
+                  let removeDeviceButton;
+                  if (type == "custom") {
+                    removeDeviceButton = dom.button({
+                      className: "device-remove-button devtools-button",
+                      onClick: () => onRemoveCustomDevice(device),
+                    });
+                  }
+
+                  return dom.label(
+                    {
+                      className: "device-label",
+                      key: device.name,
+                      title: details,
+                    },
+                    dom.input({
+                      className: "device-input-checkbox",
+                      type: "checkbox",
+                      value: device.name,
+                      checked: this.state[device.name],
+                      onChange: this.onDeviceCheckboxChange,
+                    }),
+                    dom.span(
+                      {
+                        className: "device-name",
+                      },
+                      device.name
+                    ),
+                    removeDeviceButton
+                  );
+                })
+              );
+            })
+          ),
+          DeviceAdder({
+            devices,
+            viewportTemplate: deviceAdderViewportTemplate,
+            onAddCustomDevice,
+          }),
+          dom.button(
+            {
+              id: "device-submit-button",
+              onClick: this.onDeviceModalSubmit,
+            },
+            getStr("responsive.done")
+          )
+        ),
         dom.div(
           {
-            className: "device-modal-content",
-          },
-          devices.types.map(type => {
-            return dom.div(
-              {
-                className: `device-type device-type-${type}`,
-                key: type,
-              },
-              dom.header(
-                {
-                  className: "device-header",
-                },
-                type
-              ),
-              sortedDevices[type].map(device => {
-                const details = getFormatStr(
-                  "responsive.deviceDetails", device.width, device.height,
-                  device.pixelRatio, device.userAgent, device.touch
-                );
-
-                let removeDeviceButton;
-                if (type == "custom") {
-                  removeDeviceButton = dom.button({
-                    className: "device-remove-button devtools-button",
-                    onClick: () => onRemoveCustomDevice(device),
-                  });
-                }
-
-                return dom.label(
-                  {
-                    className: "device-label",
-                    key: device.name,
-                    title: details,
-                  },
-                  dom.input({
-                    className: "device-input-checkbox",
-                    type: "checkbox",
-                    value: device.name,
-                    checked: this.state[device.name],
-                    onChange: this.onDeviceCheckboxChange,
-                  }),
-                  dom.span(
-                    {
-                      className: "device-name",
-                    },
-                    device.name
-                  ),
-                  removeDeviceButton
-                );
-              })
-            );
-          })
-        ),
-        DeviceAdder({
-          devices,
-          viewportTemplate: deviceAdderViewportTemplate,
-          onAddCustomDevice,
-        }),
-        dom.button(
-          {
-            id: "device-submit-button",
-            onClick: this.onDeviceModalSubmit,
-          },
-          getStr("responsive.done")
+            className: "modal-overlay",
+            onClick: () => onUpdateDeviceModal(false),
+          }
         )
-      ),
-      dom.div(
-        {
-          className: "modal-overlay",
-          onClick: () => onUpdateDeviceModal(false),
-        }
       )
     );
   }

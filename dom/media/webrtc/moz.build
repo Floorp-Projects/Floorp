@@ -88,6 +88,3 @@ if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
                    # 'reinterpret_cast': conversion from 'DWORD' to 'HANDLE' of greater size
     ]
     DEFINES['__PRETTY_FUNCTION__'] = '__FUNCSIG__'
-
-if CONFIG['MOZ_ASAN'] and CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1306642

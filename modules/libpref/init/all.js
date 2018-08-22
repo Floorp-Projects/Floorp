@@ -4894,7 +4894,7 @@ pref("layers.max-active", -1);
 // 0  -> full-tilt mode: Recomposite even if not transaction occured.
 pref("layers.offmainthreadcomposition.frame-rate", -1);
 
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) || defined (OS_OPENBSD)
 pref("layers.enable-tiles", true);
 #else
 pref("layers.enable-tiles", false);
@@ -5937,3 +5937,10 @@ pref("dom.events.asyncClipboard", true);
 pref("dom.events.asyncClipboard.dataTransfer", false);
 // Should only be enabled in tests
 pref("dom.events.testing.asyncClipboard", false);
+
+#ifdef NIGHTLY_BUILD
+// Disable moz* APIs in DataTransfer
+pref("dom.datatransfer.mozAtAPIs", false);
+#else
+pref("dom.datatransfer.mozAtAPIs", true);
+#endif

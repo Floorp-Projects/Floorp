@@ -333,4 +333,12 @@ interface nsIHttpChannelInternal : nsISupports
       // This is use to determine the duration since navigation started.
     [noscript] attribute TimeStamp navigationStartTimeStamp;
 
+    /**
+     * Cancel a channel because we have determined that it needs to be blocked
+     * for tracking protection.  This is an internal API that is meant to be
+     * called by the channel classifier.  Please DO NOT use this API if you don't
+     * know whether you should be using it.
+     */
+    [noscript] void cancelForTrackingProtection();
+
 };
