@@ -81,7 +81,6 @@ EXPORTS.mozilla.dom += [
     'SVGMatrix.h',
     'SVGMetadataElement.h',
     'SVGMPathElement.h',
-    'SVGPathData.h',
     'SVGPathElement.h',
     'SVGPatternElement.h',
     'SVGPolygonElement.h',

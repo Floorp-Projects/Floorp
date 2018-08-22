@@ -7849,14 +7849,11 @@ nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
   return true;
 }
 
-nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(
-  const nsIFrame* aFrame,
-  float aAppUnitsPerPixel,
-  const nsRect* aBoundsOverride)
+nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(const nsIFrame* aFrame,
+                                                                       float aAppUnitsPerPixel,
+                                                                       const nsRect* aBoundsOverride)
   : mFrame(aFrame)
-  , mIndividualTransformList(aFrame->StyleDisplay()->mIndividualTransform)
-  , mMotion(nsLayoutUtils::ResolveMotionPath(aFrame))
-  , mTransformList(aFrame->StyleDisplay()->mSpecifiedTransform)
+  , mTransformList(aFrame->StyleDisplay()->GetCombinedTransform())
   , mToTransformOrigin(GetDeltaToTransformOrigin(aFrame, aAppUnitsPerPixel, aBoundsOverride))
 {
 }
@@ -7925,16 +7922,10 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     frame && frame->IsSVGTransformed(&svgTransform,
                                      &parentsChildrenOnlyTransform);
   /* Transformed frames always have a transform, or are preserving 3d (and might still have perspective!) */
-  if (aProperties.HasTransform()) {
-    result = nsStyleTransformMatrix::ReadTransforms(
-        aProperties.mIndividualTransformList
-          ? aProperties.mIndividualTransformList->mHead
-          : nullptr,
-        aProperties.mMotion,
-        aProperties.mTransformList
-          ? aProperties.mTransformList->mHead
-          : nullptr,
-        refBox, aAppUnitsPerPixel, &dummyBool);
+  if (aProperties.mTransformList) {
+    result = nsStyleTransformMatrix::ReadTransforms(aProperties.mTransformList->mHead,
+                                                    refBox, aAppUnitsPerPixel,
+                                                    &dummyBool);
   } else if (hasSVGTransforms) {
     // Correct the translation components for zoom:
     float pixelsPerCSSPx = AppUnitsPerCSSPixel() /

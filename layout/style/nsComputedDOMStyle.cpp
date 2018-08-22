@@ -5048,11 +5048,6 @@ nsComputedDOMStyle::GetShapeSource(
       SetValueToStyleImage(*aShapeSource.GetShapeImage(), val);
       return val.forget();
     }
-    case StyleShapeSourceType::Path: {
-      // Bug 1246764: we have to support this for clip-path. For now, no one
-      // uses this.
-      MOZ_ASSERT_UNREACHABLE("Unexpected SVG Path type.");
-    }
   }
   return nullptr;
 }

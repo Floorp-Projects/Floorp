@@ -210,7 +210,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "min-block-size",
     "-moz-min-font-size-ratio",
     "min-inline-size",
-    "offset-path",
     "padding-block-end",
     "padding-block-start",
     "padding-inline-end",

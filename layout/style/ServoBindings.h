@@ -524,12 +524,6 @@ void Gecko_NewBasicShape(mozilla::StyleShapeSource* shape,
                          mozilla::StyleBasicShapeType type);
 void Gecko_NewShapeImage(mozilla::StyleShapeSource* shape);
 void Gecko_StyleShapeSource_SetURLValue(mozilla::StyleShapeSource* shape, mozilla::css::URLValue* uri);
-void Gecko_NewStyleSVGPath(mozilla::StyleShapeSource* shape);
-void Gecko_SetStyleMotion(mozilla::UniquePtr<mozilla::StyleMotion>* aMotion,
-                          mozilla::StyleMotion* aValue);
-mozilla::StyleMotion* Gecko_NewStyleMotion();
-void Gecko_CopyStyleMotions(mozilla::UniquePtr<mozilla::StyleMotion>* motion,
-                            const mozilla::StyleMotion* other);
 
 void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
 void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest);

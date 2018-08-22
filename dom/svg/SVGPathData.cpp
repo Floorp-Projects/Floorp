@@ -26,39 +26,10 @@ using namespace mozilla;
 using namespace mozilla::dom::SVGPathSeg_Binding;
 using namespace mozilla::gfx;
 
-static inline bool IsMoveto(uint16_t aSegType)
+static bool IsMoveto(uint16_t aSegType)
 {
   return aSegType == PATHSEG_MOVETO_ABS ||
          aSegType == PATHSEG_MOVETO_REL;
-}
-
-static inline bool
-IsMoveto(StylePathCommand::Tag aSegType)
-{
-  return aSegType == StylePathCommand::Tag::MoveTo;
-}
-
-static inline bool
-IsValidType(uint16_t aSegType)
-{
-  return SVGPathSegUtils::IsValidType(aSegType);
-}
-
-static inline bool
-IsValidType(StylePathCommand::Tag aSegType)
-{
-  return aSegType != StylePathCommand::Tag::Unknown;
-}
-
-static inline bool
-IsClosePath(uint16_t aSegType) {
-  return aSegType == PATHSEG_CLOSEPATH;
-}
-
-static inline bool
-IsClosePath(StylePathCommand::Tag aSegType)
-{
-  return aSegType == StylePathCommand::Tag::ClosePath;
 }
 
 nsresult
@@ -291,18 +262,18 @@ ApproximateZeroLengthSubpathSquareCaps(PathBuilder* aPB,
   aPB->MoveTo(aPoint);
 }
 
-#define MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT                \
-  do {                                                                         \
-    if (!subpathHasLength && hasLineCaps && aStrokeWidth > 0 &&                \
-        subpathContainsNonMoveTo &&                                            \
-        IsValidType(prevSegType) &&                                            \
-        (!IsMoveto(prevSegType) || IsClosePath(segType))) {                    \
-      ApproximateZeroLengthSubpathSquareCaps(aBuilder, segStart, aStrokeWidth);\
-    }                                                                          \
+#define MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT               \
+  do {                                                                        \
+    if (!subpathHasLength && hasLineCaps && aStrokeWidth > 0 &&               \
+        subpathContainsNonMoveTo &&                                           \
+        SVGPathSegUtils::IsValidType(prevSegType) &&                          \
+        (!IsMoveto(prevSegType) || segType == PATHSEG_CLOSEPATH)) {           \
+      ApproximateZeroLengthSubpathSquareCaps(builder, segStart, aStrokeWidth);\
+    }                                                                         \
   } while(0)
 
 already_AddRefed<Path>
-SVGPathData::BuildPath(PathBuilder* aBuilder,
+SVGPathData::BuildPath(PathBuilder* builder,
                        uint8_t aStrokeLineCap,
                        Float aStrokeWidth) const
 {
@@ -338,20 +309,20 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       subpathContainsNonMoveTo = true;
       MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
       segEnd = pathStart;
-      aBuilder->Close();
+      builder->Close();
       break;
 
     case PATHSEG_MOVETO_ABS:
       MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
       pathStart = segEnd = Point(mData[i], mData[i+1]);
-      aBuilder->MoveTo(segEnd);
+      builder->MoveTo(segEnd);
       subpathHasLength = false;
       break;
 
     case PATHSEG_MOVETO_REL:
       MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
       pathStart = segEnd = segStart + Point(mData[i], mData[i+1]);
-      aBuilder->MoveTo(segEnd);
+      builder->MoveTo(segEnd);
       subpathHasLength = false;
       break;
 
@@ -359,7 +330,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       segEnd = Point(mData[i], mData[i+1]);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        aBuilder->LineTo(segEnd);
+        builder->LineTo(segEnd);
       }
       break;
 
@@ -367,7 +338,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       segEnd = segStart + Point(mData[i], mData[i+1]);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        aBuilder->LineTo(segEnd);
+        builder->LineTo(segEnd);
       }
       break;
 
@@ -377,7 +348,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       segEnd = Point(mData[i+4], mData[i+5]);
       if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
         subpathHasLength = true;
-        aBuilder->BezierTo(cp1, cp2, segEnd);
+        builder->BezierTo(cp1, cp2, segEnd);
       }
       break;
 
@@ -387,7 +358,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       segEnd = segStart + Point(mData[i+4], mData[i+5]);
       if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
         subpathHasLength = true;
-        aBuilder->BezierTo(cp1, cp2, segEnd);
+        builder->BezierTo(cp1, cp2, segEnd);
       }
       break;
 
@@ -399,7 +370,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       tcp2 = cp1 + (segEnd - cp1) / 3;
       if (segEnd != segStart || segEnd != cp1) {
         subpathHasLength = true;
-        aBuilder->BezierTo(tcp1, tcp2, segEnd);
+        builder->BezierTo(tcp1, tcp2, segEnd);
       }
       break;
 
@@ -411,7 +382,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       tcp2 = cp1 + (segEnd - cp1) / 3;
       if (segEnd != segStart || segEnd != cp1) {
         subpathHasLength = true;
-        aBuilder->BezierTo(tcp1, tcp2, segEnd);
+        builder->BezierTo(tcp1, tcp2, segEnd);
       }
       break;
 
@@ -426,12 +397,12 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       if (segEnd != segStart) {
         subpathHasLength = true;
         if (radii.x == 0.0f || radii.y == 0.0f) {
-          aBuilder->LineTo(segEnd);
+          builder->LineTo(segEnd);
         } else {
           nsSVGArcConverter converter(segStart, segEnd, radii, mData[i+2],
                                       mData[i+3] != 0, mData[i+4] != 0);
           while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
-            aBuilder->BezierTo(cp1, cp2, segEnd);
+            builder->BezierTo(cp1, cp2, segEnd);
           }
         }
       }
@@ -442,7 +413,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       segEnd = Point(mData[i], segStart.y);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        aBuilder->LineTo(segEnd);
+        builder->LineTo(segEnd);
       }
       break;
 
@@ -450,7 +421,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       segEnd = segStart + Point(mData[i], 0.0f);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        aBuilder->LineTo(segEnd);
+        builder->LineTo(segEnd);
       }
       break;
 
@@ -458,7 +429,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       segEnd = Point(segStart.x, mData[i]);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        aBuilder->LineTo(segEnd);
+        builder->LineTo(segEnd);
       }
       break;
 
@@ -466,7 +437,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       segEnd = segStart + Point(0.0f, mData[i]);
       if (segEnd != segStart) {
         subpathHasLength = true;
-        aBuilder->LineTo(segEnd);
+        builder->LineTo(segEnd);
       }
       break;
 
@@ -476,7 +447,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       segEnd = Point(mData[i+2], mData[i+3]);
       if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
         subpathHasLength = true;
-        aBuilder->BezierTo(cp1, cp2, segEnd);
+        builder->BezierTo(cp1, cp2, segEnd);
       }
       break;
 
@@ -486,7 +457,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       segEnd = segStart + Point(mData[i+2], mData[i+3]);
       if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
         subpathHasLength = true;
-        aBuilder->BezierTo(cp1, cp2, segEnd);
+        builder->BezierTo(cp1, cp2, segEnd);
       }
       break;
 
@@ -498,7 +469,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       tcp2 = cp1 + (segEnd - cp1) / 3;
       if (segEnd != segStart || segEnd != cp1) {
         subpathHasLength = true;
-        aBuilder->BezierTo(tcp1, tcp2, segEnd);
+        builder->BezierTo(tcp1, tcp2, segEnd);
       }
       break;
 
@@ -510,7 +481,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
       tcp2 = cp1 + (segEnd - cp1) / 3;
       if (segEnd != segStart || segEnd != cp1) {
         subpathHasLength = true;
-        aBuilder->BezierTo(tcp1, tcp2, segEnd);
+        builder->BezierTo(tcp1, tcp2, segEnd);
       }
       break;
 
@@ -532,7 +503,7 @@ SVGPathData::BuildPath(PathBuilder* aBuilder,
 
   MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
 
-  return aBuilder->Finish();
+  return builder->Finish();
 }
 
 already_AddRefed<Path>
@@ -551,209 +522,6 @@ SVGPathData::BuildPathForMeasuring() const
   RefPtr<PathBuilder> builder =
     drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
   return BuildPath(builder, NS_STYLE_STROKE_LINECAP_BUTT, 0);
-}
-
-// We could simplify this function because this is only used by CSS motion path
-// and clip-path, which don't render the SVG Path. i.e. The returned path is
-// used as a reference.
-/* static */ already_AddRefed<Path>
-SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
-                       PathBuilder* aBuilder,
-                       uint8_t aStrokeLineCap,
-                       Float aStrokeWidth)
-{
-  if (aPath.IsEmpty() || !aPath[0].IsMoveTo()) {
-    return nullptr; // paths without an initial moveto are invalid
-  }
-
-  auto toGfxPoint = [](const StyleCoordPair& aPair) {
-    return Point(aPair._0, aPair._1);
-  };
-
-  auto isCubicType = [](StylePathCommand::Tag aType) {
-    return aType == StylePathCommand::Tag::CurveTo ||
-           aType == StylePathCommand::Tag::SmoothCurveTo;
-  };
-
-  auto isQuadraticType = [](StylePathCommand::Tag aType) {
-    return aType == StylePathCommand::Tag::QuadBezierCurveTo ||
-           aType == StylePathCommand::Tag::SmoothQuadBezierCurveTo;
-  };
-
-  bool hasLineCaps = aStrokeLineCap != NS_STYLE_STROKE_LINECAP_BUTT;
-  bool subpathHasLength = false;  // visual length
-  bool subpathContainsNonMoveTo = false;
-
-  StylePathCommand::Tag segType = StylePathCommand::Tag::Unknown;
-  StylePathCommand::Tag prevSegType = StylePathCommand::Tag::Unknown;
-  Point pathStart(0.0, 0.0); // start point of [sub]path
-  Point segStart(0.0, 0.0);
-  Point segEnd;
-  Point cp1, cp2;            // previous bezier's control points
-  Point tcp1, tcp2;          // temporaries
-
-  // Regarding cp1 and cp2: If the previous segment was a cubic bezier curve,
-  // then cp2 is its second control point. If the previous segment was a
-  // quadratic curve, then cp1 is its (only) control point.
-
-  for (const StylePathCommand& cmd: aPath) {
-    segType = cmd.tag;
-    switch (segType) {
-      case StylePathCommand::Tag::ClosePath:
-        // set this early to allow drawing of square caps for "M{x},{y} Z":
-        subpathContainsNonMoveTo = true;
-        MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
-        segEnd = pathStart;
-        aBuilder->Close();
-        break;
-      case StylePathCommand::Tag::MoveTo: {
-        MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
-        const Point& p = toGfxPoint(cmd.move_to.point);
-        pathStart = segEnd = cmd.move_to.absolute ? p : segStart + p;
-        aBuilder->MoveTo(segEnd);
-        subpathHasLength = false;
-        break;
-      }
-      case StylePathCommand::Tag::LineTo: {
-        const Point& p = toGfxPoint(cmd.line_to.point);
-        segEnd = cmd.line_to.absolute ? p : segStart + p;
-        if (segEnd != segStart) {
-          subpathHasLength = true;
-          aBuilder->LineTo(segEnd);
-        }
-        break;
-      }
-      case StylePathCommand::Tag::CurveTo:
-        cp1 = toGfxPoint(cmd.curve_to.control1);
-        cp2 = toGfxPoint(cmd.curve_to.control2);
-        segEnd = toGfxPoint(cmd.curve_to.point);
-
-        if (!cmd.curve_to.absolute) {
-          cp1 += segStart;
-          cp2 += segStart;
-          segEnd += segStart;
-        }
-
-        if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
-          subpathHasLength = true;
-          aBuilder->BezierTo(cp1, cp2, segEnd);
-        }
-        break;
-
-      case StylePathCommand::Tag::QuadBezierCurveTo:
-        cp1 = toGfxPoint(cmd.quad_bezier_curve_to.control1);
-        segEnd = toGfxPoint(cmd.quad_bezier_curve_to.point);
-
-        if (!cmd.quad_bezier_curve_to.absolute) {
-          cp1 += segStart;
-          segEnd += segStart; // set before setting tcp2!
-        }
-
-        // Convert quadratic curve to cubic curve:
-        tcp1 = segStart + (cp1 - segStart) * 2 / 3;
-        tcp2 = cp1 + (segEnd - cp1) / 3;
-
-        if (segEnd != segStart || segEnd != cp1) {
-          subpathHasLength = true;
-          aBuilder->BezierTo(tcp1, tcp2, segEnd);
-        }
-        break;
-
-      case StylePathCommand::Tag::EllipticalArc: {
-        const auto& arc = cmd.elliptical_arc;
-        Point radii(arc.rx, arc.ry);
-        segEnd = toGfxPoint(arc.point);
-        if (!arc.absolute) {
-          segEnd += segStart;
-        }
-        if (segEnd != segStart) {
-          subpathHasLength = true;
-          if (radii.x == 0.0f || radii.y == 0.0f) {
-            aBuilder->LineTo(segEnd);
-          } else {
-            nsSVGArcConverter converter(segStart, segEnd, radii, arc.angle,
-                                        arc.large_arc_flag, arc.sweep_flag);
-            while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
-              aBuilder->BezierTo(cp1, cp2, segEnd);
-            }
-          }
-        }
-        break;
-      }
-      case StylePathCommand::Tag::HorizontalLineTo:
-        if (cmd.horizontal_line_to.absolute) {
-          segEnd = Point(cmd.horizontal_line_to.x, segStart.y);
-        } else {
-          segEnd = segStart + Point(cmd.horizontal_line_to.x, 0.0f);
-        }
-
-        if (segEnd != segStart) {
-          subpathHasLength = true;
-          aBuilder->LineTo(segEnd);
-        }
-        break;
-
-      case StylePathCommand::Tag::VerticalLineTo:
-        if (cmd.vertical_line_to.absolute) {
-          segEnd = Point(segStart.x, cmd.vertical_line_to.y);
-        } else {
-          segEnd = segStart + Point(0.0f, cmd.vertical_line_to.y);
-        }
-
-        if (segEnd != segStart) {
-          subpathHasLength = true;
-          aBuilder->LineTo(segEnd);
-        }
-        break;
-
-      case StylePathCommand::Tag::SmoothCurveTo:
-        cp1 = isCubicType(prevSegType) ? segStart * 2 - cp2 : segStart;
-        cp2 = toGfxPoint(cmd.smooth_curve_to.control2);
-        segEnd = toGfxPoint(cmd.smooth_curve_to.point);
-
-        if (!cmd.smooth_curve_to.absolute) {
-          cp2 += segStart;
-          segEnd += segStart;
-        }
-
-        if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
-          subpathHasLength = true;
-          aBuilder->BezierTo(cp1, cp2, segEnd);
-        }
-        break;
-
-      case StylePathCommand::Tag::SmoothQuadBezierCurveTo: {
-        cp1 = isQuadraticType(prevSegType) ? segStart * 2 - cp1 : segStart;
-        // Convert quadratic curve to cubic curve:
-        tcp1 = segStart + (cp1 - segStart) * 2 / 3;
-
-        const Point& p = toGfxPoint(cmd.smooth_quad_bezier_curve_to.point);
-        // set before setting tcp2!
-        segEnd = cmd.smooth_quad_bezier_curve_to.absolute ? p : segStart + p;
-        tcp2 = cp1 + (segEnd - cp1) / 3;
-
-        if (segEnd != segStart || segEnd != cp1) {
-          subpathHasLength = true;
-          aBuilder->BezierTo(tcp1, tcp2, segEnd);
-        }
-        break;
-      }
-      case StylePathCommand::Tag::Unknown:
-        MOZ_ASSERT_UNREACHABLE("Unacceptable path segment type");
-        return nullptr;
-    }
-
-    subpathContainsNonMoveTo = !IsMoveto(segType);
-    prevSegType = segType;
-    segStart = segEnd;
-  }
-
-  MOZ_ASSERT(prevSegType == segType,
-             "prevSegType should be left at the final segType");
-
-  MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
-
-  return aBuilder->Finish();
 }
 
 static double

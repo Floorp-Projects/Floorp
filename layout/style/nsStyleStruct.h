@@ -1971,27 +1971,6 @@ private:
   nsStyleCorners mRadius;
 };
 
-struct StyleSVGPath final
-{
-  const nsTArray<StylePathCommand>& Path() const
-  {
-    return mPath;
-  }
-
-  bool operator==(const StyleSVGPath& aOther) const
-  {
-    return mPath == aOther.mPath;
-  }
-
-  bool operator!=(const StyleSVGPath& aOther) const
-  {
-    return !(*this == aOther);
-  }
-
-private:
-  nsTArray<StylePathCommand> mPath;
-};
-
 struct StyleShapeSource final
 {
   StyleShapeSource();
@@ -2056,13 +2035,6 @@ struct StyleShapeSource final
 
   void SetReferenceBox(StyleGeometryBox aReferenceBox);
 
-  const StyleSVGPath* GetPath() const
-  {
-    MOZ_ASSERT(mType == StyleShapeSourceType::Path, "Wrong shape source type!");
-    return mSVGPath.get();
-  }
-  void SetPath(UniquePtr<StyleSVGPath> aPath);
-
 private:
   void* operator new(size_t) = delete;
 
@@ -2072,39 +2044,11 @@ private:
   union {
     mozilla::UniquePtr<StyleBasicShape> mBasicShape;
     mozilla::UniquePtr<nsStyleImage> mShapeImage;
-    mozilla::UniquePtr<StyleSVGPath> mSVGPath;
+    // TODO: Bug 1429298, implement SVG Path function.
     // TODO: Bug 1480665, implement ray() function.
   };
   StyleShapeSourceType mType = StyleShapeSourceType::None;
   StyleGeometryBox mReferenceBox = StyleGeometryBox::NoBox;
-};
-
-struct StyleMotion final
-{
-  bool operator==(const StyleMotion& aOther) const
-  {
-    return mOffsetPath == aOther.mOffsetPath;
-  }
-
-  bool operator!=(const StyleMotion& aOther) const
-  {
-    return !(*this == aOther);
-  }
-
-  const StyleShapeSource& OffsetPath() const
-  {
-    return mOffsetPath;
-  }
-
-  bool HasPath() const
-  {
-    // Bug 1186329: We have to check other acceptable types after supporting
-    // different values of offset-path. e.g. basic-shapes, ray.
-    return mOffsetPath.GetType() == StyleShapeSourceType::Path;
-  }
-
-private:
-  StyleShapeSource mOffsetPath;
 };
 
 } // namespace mozilla
@@ -2181,10 +2125,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   RefPtr<nsCSSValueSharedList> mSpecifiedRotate;
   RefPtr<nsCSSValueSharedList> mSpecifiedTranslate;
   RefPtr<nsCSSValueSharedList> mSpecifiedScale;
-  // Used to store the final combination of mSpecifiedRotate,
-  // mSpecifiedTranslate, and mSpecifiedScale.
-  RefPtr<nsCSSValueSharedList> mIndividualTransform;
-  mozilla::UniquePtr<mozilla::StyleMotion> mMotion;
+
+  // Used to store the final combination of mSpecifiedTranslate,
+  // mSpecifiedRotate, mSpecifiedScale and mSpecifiedTransform.
+  // Use GetCombinedTransform() to get the final transform, instead of
+  // accessing mCombinedTransform directly.
+  RefPtr<nsCSSValueSharedList> mCombinedTransform;
 
   nsStyleCoord mTransformOrigin[3]; // percent, coord, calc, 3rd param is coord, calc only
   nsStyleCoord mChildPerspective; // none, coord
@@ -2434,8 +2380,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
     return mSpecifiedTransform || mSpecifiedRotate || mSpecifiedTranslate ||
            mSpecifiedScale ||
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
-           (mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM) ||
-           (mMotion && mMotion->HasPath());
+           (mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM);
   }
 
   bool HasIndividualTransform() const {
@@ -2525,17 +2470,21 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   inline bool IsFixedPosContainingBlockForTransformSupportingFrames() const;
 
   /**
-   * Returns the final combined individual transform.
+   * Returns the final combined transform.
    **/
-  already_AddRefed<nsCSSValueSharedList> GetCombinedTransform() const
-  {
-    return mIndividualTransform ? do_AddRef(mIndividualTransform) : nullptr;
+  already_AddRefed<nsCSSValueSharedList> GetCombinedTransform() const {
+    if (mCombinedTransform) {
+      return do_AddRef(mCombinedTransform);
+    }
+
+    // backward compatible to gecko-backed style system.
+    return mSpecifiedTransform ? do_AddRef(mSpecifiedTransform) : nullptr;
   }
 
 private:
   // Helpers for above functions, which do some but not all of the tests
   // for them (since transform must be tested separately for each).
-  void GenerateCombinedIndividualTransform();
+  void GenerateCombinedTransform();
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTable

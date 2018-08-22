@@ -926,12 +926,14 @@ SetIdentityMatrix(nsCSSValue::Array* aMatrix)
   }
 }
 
-static void
-ReadTransformsImpl(Matrix4x4& aMatrix,
-                   const nsCSSValueList* aList,
-                   TransformReferenceBox& aRefBox,
-                   bool* aContains3dTransform)
+Matrix4x4
+ReadTransforms(const nsCSSValueList* aList,
+               TransformReferenceBox& aRefBox,
+               float aAppUnitsPerMatrixUnit,
+               bool* aContains3dTransform)
 {
+  Matrix4x4 result;
+
   for (const nsCSSValueList* curr = aList; curr != nullptr; curr = curr->mNext) {
     const nsCSSValue &currElem = curr->mValue;
     if (currElem.GetUnit() != eCSSUnit_Function) {
@@ -945,54 +947,8 @@ ReadTransformsImpl(Matrix4x4& aMatrix,
                  "Incoming function is too short!");
 
     /* Read in a single transform matrix. */
-    MatrixForTransformFunction(aMatrix, currElem.GetArrayValue(), aRefBox,
+    MatrixForTransformFunction(result, currElem.GetArrayValue(), aRefBox,
                                aContains3dTransform);
-  }
-}
-
-Matrix4x4
-ReadTransforms(const nsCSSValueList* aList,
-               TransformReferenceBox& aRefBox,
-               float aAppUnitsPerMatrixUnit,
-               bool* aContains3dTransform)
-{
-  Matrix4x4 result;
-  ReadTransformsImpl(result, aList, aRefBox, aContains3dTransform);
-
-  float scale = float(AppUnitsPerCSSPixel()) / aAppUnitsPerMatrixUnit;
-  result.PreScale(1/scale, 1/scale, 1/scale);
-  result.PostScale(scale, scale, scale);
-
-  return result;
-}
-
-Matrix4x4
-ReadTransforms(const nsCSSValueList* aIndividualTransforms,
-               const Maybe<MotionPathData>& aMotion,
-               const nsCSSValueList* aTransform,
-               TransformReferenceBox& aRefBox,
-               float aAppUnitsPerMatrixUnit,
-               bool* aContains3dTransform)
-{
-  Matrix4x4 result;
-
-  if (aIndividualTransforms) {
-    ReadTransformsImpl(result, aIndividualTransforms, aRefBox,
-                       aContains3dTransform);
-  }
-
-  if (aMotion.isSome()) {
-    // Create the equivalent translate and rotate function, according to the
-    // order in spec. We combine the translate and then the rotate.
-    // https://drafts.fxtf.org/motion-1/#calculating-path-transform
-    result.PreTranslate(aMotion->mTranslate.x, aMotion->mTranslate.y, 0.0);
-    if (aMotion->mRotate != 0.0) {
-      result.RotateZ(aMotion->mRotate);
-    }
-  }
-
-  if (aTransform) {
-    ReadTransformsImpl(result, aTransform, aRefBox, aContains3dTransform);
   }
 
   float scale = float(AppUnitsPerCSSPixel()) / aAppUnitsPerMatrixUnit;
