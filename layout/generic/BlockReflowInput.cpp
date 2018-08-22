@@ -1065,10 +1065,10 @@ BlockReflowInput::PushFloatPastBreak(nsIFrame *aFloat)
  * Place below-current-line floats.
  */
 void
-BlockReflowInput::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList,
-                                                nsLineBox* aLine)
+BlockReflowInput::PlaceBelowCurrentLineFloats(nsLineBox* aLine)
 {
-  nsFloatCache* fc = aList.Head();
+  MOZ_ASSERT(mBelowCurrentLineFloats.NotEmpty());
+  nsFloatCache* fc = mBelowCurrentLineFloats.Head();
   while (fc) {
 #ifdef DEBUG
     if (nsBlockFrame::gNoisyReflow) {
@@ -1082,12 +1082,13 @@ BlockReflowInput::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList,
     bool placed = FlowAndPlaceFloat(fc->mFloat);
     nsFloatCache *next = fc->Next();
     if (!placed) {
-      aList.Remove(fc);
+      mBelowCurrentLineFloats.Remove(fc);
       delete fc;
       aLine->SetHadFloatPushed();
     }
     fc = next;
   }
+  aLine->AppendFloats(mBelowCurrentLineFloats);
 }
 
 nscoord

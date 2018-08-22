@@ -154,8 +154,7 @@ public:
 
   bool FlowAndPlaceFloat(nsIFrame* aFloat);
 
-  void PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats,
-                                   nsLineBox* aLine);
+  void PlaceBelowCurrentLineFloats(nsLineBox* aLine);
 
   // Returns the first coordinate >= aBCoord that clears the
   // floats indicated by aBreakType and has enough inline size between floats
