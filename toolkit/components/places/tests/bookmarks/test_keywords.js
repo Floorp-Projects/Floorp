@@ -61,7 +61,7 @@ function expectNotifications() {
       }
 
       return target[name];
-    }
+    },
   });
   PlacesUtils.bookmarks.addObserver(observer);
   return observer;
@@ -85,7 +85,7 @@ add_task(async function test_addBookmarkAndKeyword() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: URI1,
-    title: "test"
+    title: "test",
   });
   await PlacesUtils.keywords.insert({url: URI1, keyword: "keyword"});
   let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
@@ -94,7 +94,7 @@ add_task(async function test_addBookmarkAndKeyword() {
                                   bookmark.lastModified * 1000, bookmark.type,
                                   (await PlacesUtils.promiseItemId(bookmark.parentGuid)),
                                   bookmark.guid, bookmark.parentGuid, "",
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                  ]);
   await check_keyword(URI1, "keyword");
   Assert.equal((await foreign_count(URI1)), fc + 2); // + 1 bookmark + 1 keyword
@@ -109,7 +109,7 @@ add_task(async function test_addBookmarkToURIHavingKeyword() {
   let bookmark = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: URI1,
-      title: "test"
+      title: "test",
     });
   await check_keyword(URI1, "keyword");
   Assert.equal((await foreign_count(URI1)), fc + 1); // + 1 bookmark
@@ -132,7 +132,7 @@ add_task(async function test_sameKeywordDifferentURI() {
   let bookmark2 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: URI2,
-    title: "test2"
+    title: "test2",
   });
   await check_keyword(URI1, "keyword");
   await check_keyword(URI2, null);
@@ -153,7 +153,7 @@ add_task(async function test_sameKeywordDifferentURI() {
                                   bookmark2.lastModified * 1000, bookmark2.type,
                                   (await PlacesUtils.promiseItemId(bookmark2.parentGuid)),
                                   bookmark2.guid, bookmark2.parentGuid, "",
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                  ]);
 
   // The keyword should have been "moved" to the new URI.
@@ -171,7 +171,7 @@ add_task(async function test_sameURIDifferentKeyword() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: URI2,
-    title: "test2"
+    title: "test2",
   });
   await check_keyword(URI2, "keyword");
 
@@ -191,7 +191,7 @@ add_task(async function test_sameURIDifferentKeyword() {
                                   bookmarks[1].lastModified * 1000, bookmarks[1].type,
                                   (await PlacesUtils.promiseItemId(bookmarks[1].parentGuid)),
                                   bookmarks[1].guid, bookmarks[1].parentGuid, "",
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                  ]);
   await check_keyword(URI2, "keyword2");
   Assert.equal((await foreign_count(URI2)), fc + 1); // + 1 bookmark - 1 keyword + 1 keyword
@@ -203,7 +203,7 @@ add_task(async function test_removeBookmarkWithKeyword() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: URI2,
-    title: "test"
+    title: "test",
   });
 
    // The keyword should not be removed, since there are other bookmarks yet.
@@ -221,7 +221,7 @@ add_task(async function test_unsetKeyword() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: URI2,
-    title: "test"
+    title: "test",
   });
 
   // The keyword should be removed from any bookmark.
@@ -250,7 +250,7 @@ add_task(async function test_unsetKeyword() {
                                   bookmarks[2].lastModified * 1000, bookmarks[2].type,
                                   (await PlacesUtils.promiseItemId(bookmarks[2].parentGuid)),
                                   bookmarks[2].guid, bookmarks[2].parentGuid, "",
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                  ]);
 
   await check_keyword(URI1, null);
@@ -266,7 +266,7 @@ add_task(async function test_addRemoveBookmark() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: URI3,
-    title: "test3"
+    title: "test3",
   });
   let itemId = (await PlacesUtils.promiseItemId(bookmark.guid));
   await PlacesUtils.keywords.insert({ url: URI3, keyword: "keyword" });
@@ -278,7 +278,7 @@ add_task(async function test_addRemoveBookmark() {
                                   bookmark.lastModified * 1000, bookmark.type,
                                   (await PlacesUtils.promiseItemId(bookmark.parentGuid)),
                                   bookmark.guid, bookmark.parentGuid, "",
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                  ]);
 
   await check_keyword(URI3, null);

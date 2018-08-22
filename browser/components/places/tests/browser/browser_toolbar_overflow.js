@@ -19,7 +19,7 @@ add_task(async function setup() {
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.toolbarGuid,
     children: Array(BOOKMARKS_COUNT).fill("")
-                                    .map((_, i) => ({ url: `http://test.places.${i}/`}))
+                                    .map((_, i) => ({ url: `http://test.places.${i}/`})),
   });
 
   // Uncollapse the personal toolbar if needed.
@@ -74,7 +74,7 @@ add_task(async function test_separator_first() {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-    index: 0
+    index: 0,
   });
   // Hide and show the toolbar to cause a rebuild.
   let promiseReady = BrowserTestUtils.waitForEvent(gToolbar, "BookmarksToolbarVisibilityUpdated");
@@ -99,7 +99,7 @@ add_task(async function test_newWindow_noOverflow() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     url: "http://toolbar.overflow/",
-    title: "Example"
+    title: "Example",
   });
   // Add a favicon for the bookmark.
   let favicon =  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
@@ -135,7 +135,7 @@ async function test_index(desc, index, expected) {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     url: "http://test.places.added/",
-    index
+    index,
   });
   Assert.equal(bm.index, index, "Sanity check the bookmark index");
   await promiseUpdateVisibility;
@@ -186,7 +186,7 @@ async function test_move_index(desc, fromIndex, toIndex, original, expected) {
     : Promise.resolve();
   await PlacesUtils.bookmarks.update({
     guid: movedGuid,
-    index: toIndex
+    index: toIndex,
   });
   await promiseUpdateVisibility;
 
@@ -216,7 +216,7 @@ async function test_move_index(desc, fromIndex, toIndex, original, expected) {
     : Promise.resolve();
   await PlacesUtils.bookmarks.update({
     guid: movedGuid,
-    index: fromIndex
+    index: fromIndex,
   });
   await promiseUpdateVisibility;
 
@@ -243,12 +243,12 @@ add_task(async function test_separator_first() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-    index: 0
+    index: 0,
   });
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-    index: 0
+    index: 0,
   });
   // Hide and show the toolbar to cause a rebuild.
   let promiseReady = BrowserTestUtils.waitForEvent(gToolbar, "BookmarksToolbarVisibilityUpdated");

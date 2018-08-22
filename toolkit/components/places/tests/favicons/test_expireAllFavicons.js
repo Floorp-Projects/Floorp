@@ -18,7 +18,7 @@ add_task(async function test_expireAllFavicons() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     url: BOOKMARKED_PAGE_URI,
-    title: "Test bookmark"
+    title: "Test bookmark",
   });
 
   // Set a favicon for our bookmark.

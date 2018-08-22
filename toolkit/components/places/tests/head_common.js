@@ -722,7 +722,7 @@ NavBookmarkObserver.prototype = {
   onItemMoved() {},
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavBookmarkObserver,
-  ])
+  ]),
 };
 
 /**
@@ -741,7 +741,7 @@ NavHistoryObserver.prototype = {
   onDeleteVisits() {},
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavHistoryObserver,
-  ])
+  ]),
 };
 
 /**
@@ -770,7 +770,7 @@ NavHistoryResultObserver.prototype = {
   sortingChanged() {},
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavHistoryResultObserver,
-  ])
+  ]),
 };
 
 function checkBookmarkObject(info) {
@@ -869,7 +869,7 @@ async function compareFavicons(icon1, icon2, msg) {
     return new Promise((resolve, reject) => {
       NetUtil.asyncFetch({
         uri: icon.href, loadUsingSystemPrincipal: true,
-        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
       }, function(inputStream, status) {
           if (!Components.isSuccessCode(status))
             reject();

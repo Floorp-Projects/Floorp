@@ -32,10 +32,10 @@ add_task(async function test_hierarchical_query() {
           children: [{
             title: "3 title",
             url: "http://a3.com/",
-          }]
-        }]
-      }]
-    }]
+          }],
+        }],
+      }],
+    }],
   });
 
   let [folderGuid, b1, sf1, b2, sf2, b3] = bookmarks.map((bookmark) => bookmark.guid);

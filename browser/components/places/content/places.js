@@ -70,19 +70,19 @@ var PlacesOrganizer = {
       case "BookmarksMenu":
         this.selectLeftPaneContainerByHierarchy([
           PlacesUtils.virtualAllBookmarksGuid,
-          PlacesUtils.bookmarks.virtualMenuGuid
+          PlacesUtils.bookmarks.virtualMenuGuid,
         ]);
         break;
       case "BookmarksToolbar":
         this.selectLeftPaneContainerByHierarchy([
           PlacesUtils.virtualAllBookmarksGuid,
-          PlacesUtils.bookmarks.virtualToolbarGuid
+          PlacesUtils.bookmarks.virtualToolbarGuid,
         ]);
         break;
       case "UnfiledBookmarks":
         this.selectLeftPaneContainerByHierarchy([
           PlacesUtils.virtualAllBookmarksGuid,
-          PlacesUtils.bookmarks.virtualUnfiledGuid
+          PlacesUtils.bookmarks.virtualUnfiledGuid,
         ]);
         break;
       default:
@@ -446,7 +446,7 @@ var PlacesOrganizer = {
     let restorePopup = document.getElementById("fileRestorePopup");
 
     const dtOptions = {
-      dateStyle: "long"
+      dateStyle: "long",
     };
     let dateFormatter = new Services.intl.DateTimeFormat(undefined, dtOptions);
 
@@ -880,7 +880,7 @@ var PlacesQueryBuilder = {
     var searchStr = PlacesSearchBox.searchFilter.value;
     if (searchStr)
       PlacesSearchBox.search(searchStr);
-  }
+  },
 };
 
 /**
@@ -1125,7 +1125,7 @@ var ViewMenu = {
 
     var sortConst = "SORT_BY_" + colLookupTable[columnId].key + "_" + aDirection;
     result.sortingMode = Ci.nsINavHistoryQueryOptions[sortConst];
-  }
+  },
 };
 
 var ContentArea = {
@@ -1260,7 +1260,7 @@ var ContentArea = {
 
   focus() {
     this._deck.selectedPanel.focus();
-  }
+  },
 };
 
 var ContentTree = {
@@ -1275,7 +1275,7 @@ var ContentTree = {
   get viewOptions() {
     return Object.seal({
       showDetailsPane: true,
-      toolbarSet: "back-button, forward-button, organizeButton, viewMenu, maintenanceButton, libraryToolbarSpacer, searchFilter"
+      toolbarSet: "back-button, forward-button, organizeButton, viewMenu, maintenanceButton, libraryToolbarSpacer, searchFilter",
     });
   },
 
@@ -1304,5 +1304,5 @@ var ContentTree = {
   onKeyPress: function CT_onKeyPress(aEvent) {
     if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
       this.openSelectedNode(aEvent);
-  }
+  },
 };

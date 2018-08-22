@@ -864,7 +864,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "ServiceWorker", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ServiceWorkerContainer", insecureContext: true},
+    {name: "ServiceWorkerContainer", insecureContext: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "ServiceWorkerRegistration", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!

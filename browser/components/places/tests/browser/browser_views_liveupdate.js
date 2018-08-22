@@ -193,7 +193,7 @@ var bookmarksObserver = {
 
   async assertItemRemoved(views, guid) {
     for (let i = 0; i < views.length; i++) {
-      let [node, ] = searchItemInView(guid, views[i]);
+      let [node ] = searchItemInView(guid, views[i]);
       Assert.equal(node, null, "Should not have found the node");
     }
   },
@@ -230,7 +230,7 @@ var bookmarksObserver = {
       Assert.equal(node.title, newValue, "Node should have the correct new title");
       Assert.ok(valid, "Node element should have the correct label");
     }
-  }
+  },
 };
 
 /**

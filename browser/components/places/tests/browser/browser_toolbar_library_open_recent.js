@@ -10,7 +10,7 @@
 const BASE_URL = "http://example.org/browser/browser/components/places/tests/browser/";
 const bookmarkItems = [{
   url: `${BASE_URL}bookmark_dummy_1.html`,
-  title: "Custom Title 1"
+  title: "Custom Title 1",
 }, {
   url: `${BASE_URL}bookmark_dummy_2.html`,
   title: "Custom Title 2",
@@ -41,7 +41,7 @@ async function openBookmarkedItemInNewTab(itemFromMenu) {
   let openContextMenuPromise = BrowserTestUtils.waitForEvent(placesContext, "popupshown");
   EventUtils.synthesizeMouseAtCenter(itemFromMenu, {
     button: 2,
-    type: "contextmenu"
+    type: "contextmenu",
   });
   await openContextMenuPromise;
   info("Opened context menu");
@@ -50,7 +50,7 @@ async function openBookmarkedItemInNewTab(itemFromMenu) {
 
   let openInNewTabOption = document.getElementById("placesContext_open:newtab");
   EventUtils.synthesizeMouseAtCenter(openInNewTabOption, {
-    button: 0
+    button: 0,
   });
   info("Click open in new tab");
 

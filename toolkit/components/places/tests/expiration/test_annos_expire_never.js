@@ -49,7 +49,7 @@ add_task(async function test_annos_expire_never() {
     let bm = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: pageURI,
-      title: null
+      title: null,
     });
     let id = await PlacesUtils.promiseItemId(bm.guid);
     as.setItemAnnotation(id, "item_persist1", "test", 0, as.EXPIRE_NEVER);

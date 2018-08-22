@@ -19,7 +19,7 @@ var transitions = [
   TRANSITION_FRAMED_LINK,
   TRANSITION_REDIRECT_PERMANENT,
   TRANSITION_REDIRECT_TEMPORARY,
-  TRANSITION_DOWNLOAD
+  TRANSITION_DOWNLOAD,
 ];
 
 function runQuery(aResultType) {
@@ -45,7 +45,7 @@ add_task(async function test_execute() {
   for (let transition of transitions) {
     await PlacesTestUtils.addVisits({
       uri: uri("http://" + transition + ".mozilla.org/"),
-      transition
+      transition,
     });
   }
 

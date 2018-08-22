@@ -30,7 +30,7 @@ function streamDefaultFavicon(uri, loadInfo, outputStream, originalChannel) {
       onStopRequest(request, context, statusCode) {
         // We must close the outputStream regardless.
         outputStream.close();
-      }
+      },
     });
     originalChannel.contentType = PlacesUtils.favicons.defaultFaviconMimeType;
     let defaultIconChannel = makeDefaultFaviconChannel(uri, loadInfo);
@@ -127,7 +127,7 @@ PageIconProtocolHandler.prototype = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIProtocolHandler,
     Ci.nsISupportsWeakReference,
-  ])
+  ]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PageIconProtocolHandler]);

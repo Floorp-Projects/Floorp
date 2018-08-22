@@ -71,7 +71,7 @@ add_task(async function test_bookmarkFields() {
       children: [{
         title: "test title",
         url: "http://test4.com",
-      }]
+      }],
     }],
   });
 

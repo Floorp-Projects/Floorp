@@ -77,7 +77,7 @@ add_task(async function maintenance_foreign_count_test() {
     stmt.executeAsync({
       handleCompletion() {
         resolve();
-      }
+      },
     });
     stmt.finalize();
   });

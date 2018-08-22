@@ -25,7 +25,7 @@ add_task(async function remove_visits_outside_unbookmarked_uri() {
   info("Remove visits using timerange outside the URI's visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 10),
-    endDate: new Date(JS_NOW)
+    endDate: new Date(JS_NOW),
   };
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -70,13 +70,13 @@ add_task(async function remove_visits_outside_bookmarked_uri() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: TEST_URI,
-    title: "bookmark title"
+    title: "bookmark title",
   });
 
   info("Remove visits using timerange outside the URI's visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 10),
-    endDate: new Date(JS_NOW)
+    endDate: new Date(JS_NOW),
   };
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -121,7 +121,7 @@ add_task(async function remove_visits_unbookmarked_uri() {
   info("Remove the 5 most recent visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 4),
-    endDate: new Date(JS_NOW)
+    endDate: new Date(JS_NOW),
   };
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -166,13 +166,13 @@ add_task(async function remove_visits_bookmarked_uri() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: TEST_URI,
-    title: "bookmark title"
+    title: "bookmark title",
   });
 
   info("Remove the 5 most recent visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 4),
-    endDate: new Date(JS_NOW)
+    endDate: new Date(JS_NOW),
   };
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -217,7 +217,7 @@ add_task(async function remove_all_visits_unbookmarked_uri() {
   info("Remove all visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 10),
-    endDate: new Date(JS_NOW)
+    endDate: new Date(JS_NOW),
   };
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -254,7 +254,7 @@ add_task(async function remove_all_visits_bookmarked_uri() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: TEST_URI,
-    title: "bookmark title"
+    title: "bookmark title",
   });
   await PlacesTestUtils.promiseAsyncUpdates();
   let initialFrecency = frecencyForUrl(TEST_URI);
@@ -262,7 +262,7 @@ add_task(async function remove_all_visits_bookmarked_uri() {
   info("Remove all visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 10),
-    endDate: new Date(JS_NOW)
+    endDate: new Date(JS_NOW),
   };
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -299,13 +299,13 @@ add_task(async function remove_all_visits_bookmarked_uri() {
   info("Add some visits for the URI.");
   await PlacesTestUtils.addVisits([
     { uri: TEST_URI, transition: TRANSITION_FRAMED_LINK, visitDate: (DB_NOW - 86400000000000) },
-    { uri: TEST_URI, transition: TRANSITION_FRAMED_LINK, visitDate: DB_NOW }
+    { uri: TEST_URI, transition: TRANSITION_FRAMED_LINK, visitDate: DB_NOW },
   ]);
 
   info("Remove newer visit.");
   let filter = {
     beginDate: new Date(JS_NOW - 10),
-    endDate: new Date(JS_NOW)
+    endDate: new Date(JS_NOW),
   };
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();

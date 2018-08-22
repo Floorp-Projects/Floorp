@@ -188,7 +188,7 @@ add_task(async function test_correct_events_are_emitted() {
   ExtensionSearchHandler.handleSearch(keyword, `${keyword} f`, () => {});
   checkEvents([
     ExtensionSearchHandler.MSG_INPUT_STARTED,
-    ExtensionSearchHandler.MSG_INPUT_CHANGED
+    ExtensionSearchHandler.MSG_INPUT_CHANGED,
   ]);
 
   ExtensionSearchHandler.handleInputCancelled();
@@ -197,7 +197,7 @@ add_task(async function test_correct_events_are_emitted() {
   ExtensionSearchHandler.handleSearch(anotherKeyword, `${anotherKeyword} baz`, () => {});
   checkEvents([
     ExtensionSearchHandler.MSG_INPUT_STARTED,
-    ExtensionSearchHandler.MSG_INPUT_CHANGED
+    ExtensionSearchHandler.MSG_INPUT_CHANGED,
   ]);
 
   ExtensionSearchHandler.handleInputEntered(anotherKeyword, `${anotherKeyword} baz`, "tab");
@@ -224,7 +224,7 @@ add_task(async function test_removes_suggestion_if_its_content_is_typed_in() {
           controller.stopSearch();
         });
       }
-    }
+    },
   };
 
   ExtensionSearchHandler.registerKeyword(keyword, mockExtension);
@@ -236,8 +236,8 @@ add_task(async function test_removes_suggestion_if_its_content_is_typed_in() {
       makeExtensionMatch({heuristic: true, keyword, description: extensionName, content: `${keyword} unmatched`}),
       makeExtensionMatch({keyword, content: `${keyword} foo`, description: "first suggestion"}),
       makeExtensionMatch({keyword, content: `${keyword} bar`, description: "second suggestion"}),
-      makeExtensionMatch({keyword, content: `${keyword} baz`, description: "third suggestion"})
-    ]
+      makeExtensionMatch({keyword, content: `${keyword} baz`, description: "third suggestion"}),
+    ],
   });
 
   await check_autocomplete({
@@ -246,8 +246,8 @@ add_task(async function test_removes_suggestion_if_its_content_is_typed_in() {
     matches: [
       makeExtensionMatch({heuristic: true, keyword, description: extensionName, content: `${keyword} foo`}),
       makeExtensionMatch({keyword, content: `${keyword} bar`, description: "second suggestion"}),
-      makeExtensionMatch({keyword, content: `${keyword} baz`, description: "third suggestion"})
-    ]
+      makeExtensionMatch({keyword, content: `${keyword} baz`, description: "third suggestion"}),
+    ],
   });
 
   await check_autocomplete({
@@ -256,8 +256,8 @@ add_task(async function test_removes_suggestion_if_its_content_is_typed_in() {
     matches: [
       makeExtensionMatch({heuristic: true, keyword, description: extensionName, content: `${keyword} bar`}),
       makeExtensionMatch({keyword, content: `${keyword} foo`, description: "first suggestion"}),
-      makeExtensionMatch({keyword, content: `${keyword} baz`, description: "third suggestion"})
-    ]
+      makeExtensionMatch({keyword, content: `${keyword} baz`, description: "third suggestion"}),
+    ],
   });
 
   await check_autocomplete({
@@ -266,8 +266,8 @@ add_task(async function test_removes_suggestion_if_its_content_is_typed_in() {
     matches: [
       makeExtensionMatch({heuristic: true, keyword, description: extensionName, content: `${keyword} baz`}),
       makeExtensionMatch({keyword, content: `${keyword} foo`, description: "first suggestion"}),
-      makeExtensionMatch({keyword, content: `${keyword} bar`, description: "second suggestion"})
-    ]
+      makeExtensionMatch({keyword, content: `${keyword} bar`, description: "second suggestion"}),
+    ],
   });
 
   ExtensionSearchHandler.unregisterKeyword(keyword);
@@ -296,7 +296,7 @@ add_task(async function test_extension_results_should_come_first() {
       // Do not stop the search here, of we'd not fetch results after the
       // extension ones. The timeout in unifiedComplete will let us proceed
       // after a few seconds.
-    }
+    },
   };
 
   ExtensionSearchHandler.registerKeyword(keyword, mockExtension);
@@ -312,8 +312,8 @@ add_task(async function test_extension_results_should_come_first() {
       makeExtensionMatch({keyword, content: `${keyword} foo`, description: "first suggestion"}),
       makeExtensionMatch({keyword, content: `${keyword} bar`, description: "second suggestion"}),
       makeExtensionMatch({keyword, content: `${keyword} baz`, description: "third suggestion"}),
-      { uri, title: `${keyword} -` }
-    ]
+      { uri, title: `${keyword} -` },
+    ],
   });
 
   ExtensionSearchHandler.unregisterKeyword(keyword);
@@ -334,13 +334,13 @@ add_task(async function test_setting_the_default_suggestion() {
           controller.stopSearch();
         });
       }
-    }
+    },
   };
 
   ExtensionSearchHandler.registerKeyword(keyword, mockExtension);
 
   ExtensionSearchHandler.setDefaultSuggestion(keyword, {
-    description: "hello world"
+    description: "hello world",
   });
 
   let searchString = `${keyword} search query`;
@@ -349,11 +349,11 @@ add_task(async function test_setting_the_default_suggestion() {
     searchParam: "enable-actions",
     matches: [
       makeExtensionMatch({heuristic: true, keyword, description: "hello world", content: searchString}),
-    ]
+    ],
   });
 
   ExtensionSearchHandler.setDefaultSuggestion(keyword, {
-    description: "foo bar"
+    description: "foo bar",
   });
 
   await check_autocomplete({
@@ -361,7 +361,7 @@ add_task(async function test_setting_the_default_suggestion() {
     searchParam: "enable-actions",
     matches: [
       makeExtensionMatch({heuristic: true, keyword, description: "foo bar", content: searchString}),
-    ]
+    ],
   });
 
   ExtensionSearchHandler.unregisterKeyword(keyword);
@@ -393,7 +393,7 @@ add_task(async function test_maximum_number_of_suggestions_is_enforced() {
           controller.stopSearch();
         });
       }
-    }
+    },
   };
 
   ExtensionSearchHandler.registerKeyword(keyword, mockExtension);
@@ -411,7 +411,7 @@ add_task(async function test_maximum_number_of_suggestions_is_enforced() {
       makeExtensionMatch({keyword, content: `${keyword} c`, description: "third suggestion"}),
       makeExtensionMatch({keyword, content: `${keyword} d`, description: "fourth suggestion"}),
       makeExtensionMatch({keyword, content: `${keyword} e`, description: "fifth suggestion"}),
-    ]
+    ],
   });
 
   ExtensionSearchHandler.unregisterKeyword(keyword);

@@ -12,7 +12,7 @@ add_task(async function test_livemark_cache() {
   let folder = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     title: "test",
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   let id = await PlacesUtils.promiseItemId(folder.guid);
   PlacesUtils.annotations
@@ -99,7 +99,7 @@ add_task(async function test_addLivemark_invalidIndex_throws() {
   try {
     await PlacesUtils.livemarks.addLivemark(
       { parentId: PlacesUtils.unfiledBookmarksFolderId,
-        index: -2
+        index: -2,
       });
     do_throw("Invoking addLivemark with an invalid index should throw");
   } catch (ex) {
@@ -164,7 +164,7 @@ add_task(async function test_addLivemark_parentId_succeeds() {
       Assert.equal(aIndex, 0);
       Assert.equal(aItemType, Ci.nsINavBookmarksService.TYPE_FOLDER);
       Assert.equal(aTitle, "test");
-    }
+    },
   });
 
   await PlacesUtils.livemarks.addLivemark(
@@ -179,7 +179,7 @@ add_task(async function test_addLivemark_noSiteURI_succeeds() {
   let livemark = await PlacesUtils.livemarks.addLivemark(
     { title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      feedURI: FEED_URI
+      feedURI: FEED_URI,
     });
   Assert.ok(livemark.id > 0);
   do_check_valid_places_guid(livemark.guid);
@@ -201,7 +201,7 @@ add_task(async function test_addLivemark_succeeds() {
     { title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       feedURI: FEED_URI,
-      siteURI: SITE_URI
+      siteURI: SITE_URI,
     });
 
   Assert.ok(livemark.id > 0);
@@ -225,7 +225,7 @@ add_task(async function test_addLivemark_bogusid_succeeds() {
       title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       feedURI: FEED_URI,
-      siteURI: SITE_URI
+      siteURI: SITE_URI,
     });
   Assert.ok(livemark.id > 0);
   Assert.notEqual(livemark.id, 100);
@@ -236,7 +236,7 @@ add_task(async function test_addLivemark_bogusParentId_fails() {
     await PlacesUtils.livemarks.addLivemark(
       { title: "test",
         parentId: 187,
-        feedURI: FEED_URI
+        feedURI: FEED_URI,
       });
     do_throw("Adding a livemark with a bogus parent should fail");
   } catch (ex) {}
@@ -247,7 +247,7 @@ add_task(async function test_addLivemark_bogusParentGuid_fails() {
     await PlacesUtils.livemarks.addLivemark(
       { title: "test",
         parentGuid: "123456789012",
-        feedURI: FEED_URI
+        feedURI: FEED_URI,
       });
     do_throw("Adding a livemark with a bogus parent should fail");
   } catch (ex) {}
@@ -257,14 +257,14 @@ add_task(async function test_addLivemark_intoLivemark_fails() {
   let livemark = await PlacesUtils.livemarks.addLivemark(
     { title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      feedURI: FEED_URI
+      feedURI: FEED_URI,
     });
 
   try {
     await PlacesUtils.livemarks.addLivemark(
       { title: "test",
         parentGuid: livemark.guid,
-        feedURI: FEED_URI
+        feedURI: FEED_URI,
       });
     do_throw("Adding a livemark into a livemark should fail");
   } catch (ex) {
@@ -277,7 +277,7 @@ add_task(async function test_addLivemark_forceGuid_succeeds() {
     { title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       feedURI: FEED_URI,
-      guid: "1234567890AB"
+      guid: "1234567890AB",
     });
     Assert.equal(livemark.guid, "1234567890AB");
     do_check_guid_for_bookmark(livemark.id, "1234567890AB");
@@ -289,7 +289,7 @@ add_task(async function test_addLivemark_dateAdded_succeeds() {
     { title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       feedURI: FEED_URI,
-      dateAdded
+      dateAdded,
     });
   Assert.equal(livemark.dateAdded, dateAdded);
 });
@@ -300,7 +300,7 @@ add_task(async function test_addLivemark_lastModified_succeeds() {
     { title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       feedURI: FEED_URI,
-      lastModified: now
+      lastModified: now,
     });
   Assert.equal(livemark.dateAdded, now);
   Assert.equal(livemark.lastModified, now);
@@ -337,13 +337,13 @@ add_task(async function test_removeLivemark_guid_succeeds() {
     { title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       feedURI: FEED_URI,
-      guid: "234567890ABC"
+      guid: "234567890ABC",
   });
 
   Assert.equal(livemark.guid, "234567890ABC");
 
   await PlacesUtils.livemarks.removeLivemark({
-    id: 789, guid: "234567890ABC"
+    id: 789, guid: "234567890ABC",
   });
 
   Assert.equal((await PlacesUtils.bookmarks.fetch("234567890ABC")), null);
@@ -353,7 +353,7 @@ add_task(async function test_removeLivemark_id_succeeds() {
   let livemark = await PlacesUtils.livemarks.addLivemark(
     { title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      feedURI: FEED_URI
+      feedURI: FEED_URI,
   });
 
   await PlacesUtils.livemarks.removeLivemark({ id: livemark.id });
@@ -419,7 +419,7 @@ add_task(async function test_getLivemark_id_succeeds() {
   let livemark = await PlacesUtils.livemarks.addLivemark(
     { title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      feedURI: FEED_URI
+      feedURI: FEED_URI,
     });
 
   livemark = await PlacesUtils.livemarks.getLivemark({ id: livemark.id });
@@ -439,13 +439,13 @@ add_task(async function test_getLivemark_removeItem_contention() {
   // do not yield.
   PlacesUtils.livemarks.addLivemark({ title: "test",
                                       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                      feedURI: FEED_URI
+                                      feedURI: FEED_URI,
                                   }).catch(() => { /* swallow errors*/ });
   await PlacesUtils.bookmarks.eraseEverything();
   let livemark = await PlacesUtils.livemarks.addLivemark(
     { title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      feedURI: FEED_URI
+      feedURI: FEED_URI,
     });
 
   livemark = await PlacesUtils.livemarks.getLivemark({ guid: livemark.guid });
@@ -461,7 +461,7 @@ add_task(async function test_title_change() {
   let livemark = await PlacesUtils.livemarks.addLivemark(
     { title: "test",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      feedURI: FEED_URI
+      feedURI: FEED_URI,
     });
 
   await PlacesUtils.bookmarks.update({ guid: livemark.guid,

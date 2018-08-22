@@ -27,7 +27,7 @@ add_task(async function test_nsNavHistory_UpdateFrecency() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url,
-    title: "test"
+    title: "test",
   });
   await promise;
 });
@@ -41,7 +41,7 @@ add_task(async function test_invalidateFrecencies() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url,
-    title: "test"
+    title: "test",
   });
   let promise = onFrecencyChanged(url);
   await PlacesUtils.history.removeByFilter({ host: url.host });

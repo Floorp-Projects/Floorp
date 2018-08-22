@@ -50,7 +50,7 @@ add_task(async function test_isURIVisited() {
       if (PlacesUtils.history.canAddURI(aURI)) {
         await PlacesTestUtils.addVisits([{
           uri: aURI,
-          transition: aTransition
+          transition: aTransition,
         }]);
         info("Added visit for " + aURI.spec);
       }

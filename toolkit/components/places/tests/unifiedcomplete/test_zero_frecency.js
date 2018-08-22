@@ -8,12 +8,12 @@ add_task(async function test_zero_frec_domain() {
   info("Searching for zero frecency domain should not autoFill it");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
-    transition: TRANSITION_FRAMED_LINK
+    transition: TRANSITION_FRAMED_LINK,
   });
   await check_autocomplete({
     search: "moz",
     autofilled: "moz",
-    completed:  "moz"
+    completed:  "moz",
   });
   await cleanup();
 });
@@ -22,12 +22,12 @@ add_task(async function test_zero_frec_url() {
   info("Searching for zero frecency url should not autoFill it");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
-    transition: TRANSITION_FRAMED_LINK
+    transition: TRANSITION_FRAMED_LINK,
   });
   await check_autocomplete({
     search: "mozilla.org/f",
     autofilled: "mozilla.org/f",
-    completed:  "mozilla.org/f"
+    completed:  "mozilla.org/f",
   });
   await cleanup();
 });

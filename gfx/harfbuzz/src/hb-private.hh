@@ -125,7 +125,20 @@ struct _hb_alignof
 #define alignof(x) (_hb_alignof<x>::value)
 #endif
 
-#endif // __cplusplus < 201103L
+/* https://github.com/harfbuzz/harfbuzz/issues/1127 */
+#ifndef explicit_operator
+#define explicit_operator
+#endif
+
+#else /* __cplusplus >= 201103L */
+
+/* https://github.com/harfbuzz/harfbuzz/issues/1127 */
+#ifndef explicit_operator
+#define explicit_operator explicit
+#endif
+
+#endif /* __cplusplus < 201103L */
+
 
 #if (defined(__GNUC__) || defined(__clang__)) && defined(__OPTIMIZE__)
 #define likely(expr) (__builtin_expect (!!(expr), 1))

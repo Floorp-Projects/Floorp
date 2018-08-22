@@ -33,18 +33,18 @@ add_task(async function test_change_location_from_Toolbar() {
   let children = [
     {
       title: "first",
-      url: "http://www.mochi.test/first"
+      url: "http://www.mochi.test/first",
     },
     {
       title: "second",
-      url: "http://www.mochi.test/second"
+      url: "http://www.mochi.test/second",
     },
     {
       type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
     },
     {
       title: "third",
-      url: "http://www.mochi.test/third"
+      url: "http://www.mochi.test/third",
     },
   ];
   let guid = PlacesUtils.history.makeGuid();

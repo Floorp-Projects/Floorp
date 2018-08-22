@@ -34,11 +34,11 @@ add_task(async function test_getAnnotationsForItem() {
     }, {
       title: "one annotations",
       url: "http://example.com/1",
-      annos: [TEST_ANNOTATIONS[0]]
+      annos: [TEST_ANNOTATIONS[0]],
     }, {
       title: "two annotations",
       url: "http://example.com/2",
-      annos: TEST_ANNOTATIONS
+      annos: TEST_ANNOTATIONS,
     }],
   });
 

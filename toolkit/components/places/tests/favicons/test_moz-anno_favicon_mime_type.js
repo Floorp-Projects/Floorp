@@ -28,7 +28,7 @@ streamListener.prototype =
   onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount) {
     aRequest.cancel(Cr.NS_ERROR_ABORT);
     throw Cr.NS_ERROR_ABORT;
-  }
+  },
 };
 
 add_task(async function() {
@@ -36,7 +36,7 @@ add_task(async function() {
   let channel = NetUtil.newChannel({
     uri: PlacesUtils.favicons.defaultFavicon,
     loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
   });
   let listener = new streamListener(PlacesUtils.favicons.defaultFaviconMimeType);
   channel.asyncOpen2(listener);
@@ -48,7 +48,7 @@ add_task(async function() {
   let channel = NetUtil.newChannel({
     uri: PlacesUtils.favicons.getFaviconLinkForIcon(testIconURI).spec,
     loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
   });
   let listener = new streamListener(PlacesUtils.favicons.defaultFaviconMimeType);
   channel.asyncOpen2(listener);
@@ -68,7 +68,7 @@ add_task(async function() {
   let channel = NetUtil.newChannel({
     uri: PlacesUtils.favicons.getFaviconLinkForIcon(testIconURI).spec,
     loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
   });
   let listener = new streamListener("image/png");
   channel.asyncOpen2(listener);

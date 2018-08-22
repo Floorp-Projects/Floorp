@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/PlacesDBUtils.jsm");
 add_task(async function() {
   let icon = {
     file: do_get_file("noise.png"),
-    mimetype: "image/png"
+    mimetype: "image/png",
   };
 
   let url = "http://foo.bar/";

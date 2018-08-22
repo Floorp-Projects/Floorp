@@ -183,7 +183,7 @@ SearchSuggestionControllerWrapper.prototype = {
     let { suggestion, historical } = this._suggestions.shift();
     return { match: SearchAutocompleteProviderInternal.defaultMatch,
              suggestion,
-             historical
+             historical,
            };
   },
 

@@ -41,7 +41,7 @@ function add_bookmark(url) {
   return PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url,
-    title: `bookmark/${url}`
+    title: `bookmark/${url}`,
   });
 }
 
@@ -120,7 +120,7 @@ gTests.push({
           default:
             Assert.ok(false, "unknown event: " + aEvent.type);
         }
-      }
+      },
     };
     tagsField.popup.addEventListener("popupshown", popupListener, true);
     tagsField.popup.addEventListener("popuphidden", popupListener, true);
@@ -149,7 +149,7 @@ gTests.push({
     await PlacesUtils.bookmarks.remove(this._bookmark);
     let bm = await PlacesUtils.bookmarks.fetch(this._bookmark.guid);
     Assert.ok(!bm, "should have been removed");
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -224,7 +224,7 @@ gTests.push({
           default:
             Assert.ok(false, "unknown event: " + aEvent.type);
         }
-      }
+      },
     };
     tagsField.popup.addEventListener("popupshown", popupListener, true);
     tagsField.popup.addEventListener("popuphidden", popupListener, true);
@@ -252,7 +252,7 @@ gTests.push({
     await PlacesUtils.bookmarks.remove(this._bookmark);
     let bm = await PlacesUtils.bookmarks.fetch(this._bookmark.guid);
     Assert.ok(!bm, "should have been removed");
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------
@@ -337,7 +337,7 @@ gTests.push({
     await PlacesTestUtils.promiseAsyncUpdates();
 
     await PlacesUtils.history.clear();
-  }
+  },
 });
 
 // ------------------------------------------------------------------------------

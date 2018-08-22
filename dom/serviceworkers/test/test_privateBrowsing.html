@@ -45,7 +45,7 @@ var wP;
 function testPrivateWindow() {
   testOnWindow(true, function(aWin) {
     wP = aWin;
-    ok(!("serviceWorker" in wP.content.navigator), "ServiceWorkers are not available for private windows");
+    ok(!wP.content.eval('"serviceWorker" in navigator'), "ServiceWorkers are not available for private windows");
     runTest();
   });
 }

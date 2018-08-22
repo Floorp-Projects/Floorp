@@ -146,7 +146,7 @@ add_task(async function test_scheme_and_www() {
     "https://",
     "https://",
     "https://",
-      []
+      [],
     ],
 
     [
@@ -157,7 +157,7 @@ add_task(async function test_scheme_and_www() {
         ["www.ooops-https-www.com/", "https://www.ooops-https-www.com"],
         "HTTP://www.ooops-HTTP-www.com/",
         "https://www.bar.com/",
-      ]
+      ],
     ],
 
     [
@@ -166,14 +166,14 @@ add_task(async function test_scheme_and_www() {
     "http://www.ooops-http-www.com/",
       [
         ["http://www.ooops-http-www.com/", "www.ooops-http-www.com"],
-      ]
+      ],
     ],
 
     [
     "ftp://ooops",
     "ftp://ooops",
     "ftp://ooops",
-      []
+      [],
     ],
 
     [
@@ -185,7 +185,7 @@ add_task(async function test_scheme_and_www() {
         "HTTP://www.ooops-HTTP-www.com/",
         ["https://foo.com/", "Title with www", ["preloaded-top-site"]],
         "https://www.bar.com/",
-      ]
+      ],
     ],
 
     [
@@ -197,7 +197,7 @@ add_task(async function test_scheme_and_www() {
         "https://ooops-https.com/",
         "HTTP://ooops-HTTP.com/",
         "HTTP://www.ooops-HTTP-www.com/",
-      ]
+      ],
     ],
 
     [
@@ -207,7 +207,7 @@ add_task(async function test_scheme_and_www() {
       [
         ["www.ooops-https-www.com/", "https://www.ooops-https-www.com"],
         "HTTP://www.ooops-HTTP-www.com/",
-      ]
+      ],
     ],
 
     [
@@ -216,14 +216,14 @@ add_task(async function test_scheme_and_www() {
     "https://www.ooops-https-www.com/",
       [
         ["ooops-https-www.com/", "https://www.ooops-https-www.com"],
-      ]
+      ],
     ],
 
     [
     "www.ooops-https.",
     "www.ooops-https.",
     "www.ooops-https.",
-      []
+      [],
     ],
 
     [
@@ -233,7 +233,7 @@ add_task(async function test_scheme_and_www() {
       [
         ["https://ooops-https-www.com/", "https://www.ooops-https-www.com"],
         "https://ooops-https.com/",
-      ]
+      ],
     ],
 
     [
@@ -242,21 +242,21 @@ add_task(async function test_scheme_and_www() {
     "https://www.ooops-https-www.com/",
       [
         ["https://www.ooops-https-www.com/", "https://www.ooops-https-www.com"],
-      ]
+      ],
     ],
 
     [
     "http://www.ooops-http.",
     "http://www.ooops-http.",
     "http://www.ooops-http.",
-      []
+      [],
     ],
 
     [
     "http://ooops-https",
     "http://ooops-https",
     "http://ooops-https",
-      []
+      [],
     ],
   ];
 
