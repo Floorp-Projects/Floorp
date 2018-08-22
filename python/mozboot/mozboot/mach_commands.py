@@ -47,14 +47,12 @@ class VersionControlCommands(object):
              description='Help configure a VCS for optimal development.')
     @CommandArgument('-u', '--update-only', action='store_true',
                      help='Only update recommended extensions, don\'t run the wizard.')
-    @CommandArgument('-g', '--git', action='store_true',
-                     help='Use Git instead of Mercurial.')
-    def vcs_setup(self, update_only=False, git=False):
+    def vcs_setup(self, update_only=False):
         """Ensure a Version Control System (Mercurial or Git) is optimally
         configured.
 
         This command will inspect your VCS configuration and
-        guide you through an interactive wizard helping you configure
+        guide you through an interactive wizard helping you configure the
         VCS for optimal use on Mozilla projects.
 
         User choice is respected: no changes are made without explicit
@@ -63,15 +61,14 @@ class VersionControlCommands(object):
         If "--update-only" is used, the interactive wizard is disabled
         and this command only ensures that remote repositories providing
         VCS extensions are up to date.
-
-        If "--git" is used, then Git is selected as the VCS instead of Mercurial,
-        which is the default.
         """
         import which
         import mozboot.bootstrap as bootstrap
+        import mozversioncontrol
 
+        repo = mozversioncontrol.get_repository_object(self._context.topdir)
         vcs = 'hg'
-        if git:
+        if repo.name == 'git':
             vcs = 'git'
 
         # "hg" is an executable script with a shebang, which will be found
@@ -84,12 +81,12 @@ class VersionControlCommands(object):
             vcs = which.which(vcs)
 
         if update_only:
-            if git:
+            if repo.name == 'git':
                 bootstrap.update_git_tools(vcs, self._context.state_dir)
             else:
                 bootstrap.update_vct(vcs, self._context.state_dir)
         else:
-            if git:
+            if repo.name == 'git':
                 bootstrap.configure_git(vcs, self._context.state_dir)
             else:
                 bootstrap.configure_mercurial(vcs, self._context.state_dir)
