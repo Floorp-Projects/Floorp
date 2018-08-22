@@ -47,6 +47,7 @@ VideoSink::VideoSink(AbstractThread* aThread,
   , mContainer(aContainer)
   , mProducerID(ImageContainer::AllocateProducerID())
   , mFrameStats(aFrameStats)
+  , mOldDroppedCount(0)
   , mHasVideo(false)
   , mUpdateScheduler(aThread)
   , mVideoQueueSendToCompositorSize(aVQueueSentToCompositerSize)
@@ -464,6 +465,13 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
 
   if (images.Length() > 0) {
     mContainer->SetCurrentFrames(frames[0]->mDisplay, images);
+    uint32_t droppedCount = mContainer->GetDroppedImageCount();
+    uint32_t dropped = droppedCount - mOldDroppedCount;
+    if (dropped > 0) {
+      mFrameStats.NotifyDecodedFrames({0, 0, dropped});
+      mOldDroppedCount = droppedCount;
+      VSINK_LOG_V("%u video frame discarded by compositor", dropped);
+    }
   }
 }
 

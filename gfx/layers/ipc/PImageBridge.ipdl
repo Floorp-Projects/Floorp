@@ -36,6 +36,9 @@ child:
 
   async DidComposite(ImageCompositeNotification[] aNotifications);
 
+  // Report the number of frames dropped for the given CompositableHost.
+  async ReportFramesDropped(CompositableHandle aHandle, uint32_t aFrames);
+
 parent:
   async Update(CompositableOperation[] ops, OpDestroy[] toDestroy, uint64_t fwdTransactionId);
 

@@ -1,4 +1,4 @@
-// If debugger.onEnterFrame returns {return:val}, the frame returns immediately.
+// If debugger.onEnterFrame returns null, the debuggee is terminated immediately.
 
 load(libdir + "asserts.js");
 
@@ -13,7 +13,7 @@ dbg.onDebuggerStatement = function (frame) {
         innerSavedFrame = frame;
         return null;
     };
-    // Using frame.eval lets us catch termination.  
+    // Using frame.eval lets us catch termination.
     assertEq(frame.eval("set = true;"), null);
     assertEq(innerSavedFrame.live, false);
     savedFrame = frame;

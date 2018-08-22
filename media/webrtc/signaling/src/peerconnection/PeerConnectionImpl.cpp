@@ -3433,9 +3433,9 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
     }
     const MediaPipeline& mp = *query->pipelines[p];
     bool isAudio = (mp.Conduit()->type() == MediaSessionConduit::AUDIO);
-    nsString mediaType = isAudio ?
+    nsString kind = isAudio ?
         NS_LITERAL_STRING("audio") : NS_LITERAL_STRING("video");
-    nsString idstr = mediaType;
+    nsString idstr = kind;
     idstr.AppendLiteral("_");
     idstr.AppendInt((uint32_t)p);
 
@@ -3472,7 +3472,8 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
             s.mId.Construct(remoteId);
             s.mType.Construct(RTCStatsType::Inbound_rtp);
             ssrc.apply([&s](uint32_t aSsrc){s.mSsrc.Construct(aSsrc);});
-            s.mMediaType.Construct(mediaType);
+            s.mMediaType.Construct(kind); // mediaType is the old name for kind.
+            s.mKind.Construct(kind);
             s.mJitter.Construct(double(jitterMs)/1000);
             s.mRemoteId.Construct(localId);
             s.mIsRemote = true;
@@ -3493,7 +3494,8 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
           s.mId.Construct(localId);
           s.mType.Construct(RTCStatsType::Outbound_rtp);
           ssrc.apply([&s](uint32_t aSsrc){s.mSsrc.Construct(aSsrc);});
-          s.mMediaType.Construct(mediaType);
+          s.mMediaType.Construct(kind); // mediaType is the old name for kind.
+          s.mKind.Construct(kind);
           s.mRemoteId.Construct(remoteId);
           s.mIsRemote = false;
           s.mPacketsSent.Construct(mp.RtpPacketsSent());
@@ -3558,7 +3560,8 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
             s.mId.Construct(remoteId);
             s.mType.Construct(RTCStatsType::Outbound_rtp);
             ssrc.apply([&s](uint32_t aSsrc){s.mSsrc.Construct(aSsrc);});
-            s.mMediaType.Construct(mediaType);
+            s.mMediaType.Construct(kind); // mediaType is the old name for kind.
+            s.mKind.Construct(kind);
             s.mRemoteId.Construct(localId);
             s.mIsRemote = true;
             s.mPacketsSent.Construct(packetsSent);
@@ -3573,7 +3576,8 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
         s.mId.Construct(localId);
         s.mType.Construct(RTCStatsType::Inbound_rtp);
         ssrc.apply([&s](uint32_t aSsrc){s.mSsrc.Construct(aSsrc);});
-        s.mMediaType.Construct(mediaType);
+        s.mMediaType.Construct(kind); // mediaType is the old name for kind.
+        s.mKind.Construct(kind);
         unsigned int jitterMs, packetsLost;
         if (mp.Conduit()->GetRTPStats(&jitterMs, &packetsLost)) {
           s.mJitter.Construct(double(jitterMs)/1000);

@@ -103,6 +103,7 @@ struct DebugModeOSREntry
                frameKind == ICEntry::Kind_EarlyStackCheck ||
                frameKind == ICEntry::Kind_DebugTrap ||
                frameKind == ICEntry::Kind_DebugPrologue ||
+               frameKind == ICEntry::Kind_DebugAfterYield ||
                frameKind == ICEntry::Kind_DebugEpilogue;
     }
 
@@ -307,6 +308,8 @@ ICEntryKindToString(ICEntry::Kind kind)
         return "debug trap";
       case ICEntry::Kind_DebugPrologue:
         return "debug prologue";
+      case ICEntry::Kind_DebugAfterYield:
+        return "debug after yield";
       case ICEntry::Kind_DebugEpilogue:
         return "debug epilogue";
       default:
@@ -367,6 +370,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
     //  - All the ways above.
     //  C. From the debug trap handler.
     //  D. From the debug prologue.
+    //  K. From a JSOP_DEBUGAFTERYIELD instruction.
     //  E. From the debug epilogue.
     //
     // Cycles (On to Off to On)+ or (Off to On to Off)+:
@@ -470,6 +474,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                            kind == ICEntry::Kind_EarlyStackCheck ||
                            kind == ICEntry::Kind_DebugTrap ||
                            kind == ICEntry::Kind_DebugPrologue ||
+                           kind == ICEntry::Kind_DebugAfterYield ||
                            kind == ICEntry::Kind_DebugEpilogue);
 
                 // We will have allocated a new recompile info, so delete the
@@ -543,6 +548,17 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 // We patch a jump directly to the right place in the prologue
                 // after popping the frame reg and checking for forced return.
                 recompInfo->resumeAddr = bl->postDebugPrologueAddr();
+                popFrameReg = true;
+                break;
+
+              case ICEntry::Kind_DebugAfterYield:
+                // Case K above.
+                //
+                // Resume at the next instruction.
+                MOZ_ASSERT(*pc == JSOP_DEBUGAFTERYIELD);
+                recompInfo->resumeAddr = bl->nativeCodeForPC(script,
+                                                             pc + JSOP_DEBUGAFTERYIELD_LENGTH,
+                                                             &recompInfo->slotInfo);
                 popFrameReg = true;
                 break;
 
@@ -945,9 +961,9 @@ HasForcedReturn(BaselineDebugModeOSRInfo* info, bool rv)
     if (kind == ICEntry::Kind_DebugEpilogue)
         return true;
 
-    // |rv| is the value in ReturnReg. If true, in the case of the prologue,
-    // it means a forced return.
-    if (kind == ICEntry::Kind_DebugPrologue)
+    // |rv| is the value in ReturnReg. If true, in the case of the prologue or
+    // after yield, it means a forced return.
+    if (kind == ICEntry::Kind_DebugPrologue || kind == ICEntry::Kind_DebugAfterYield)
         return rv;
 
     // N.B. The debug trap handler handles its own forced return, so no
