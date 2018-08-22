@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
-extern crate cookie;
 extern crate base64;
+extern crate cookie;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
@@ -13,18 +13,19 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate time;
-extern crate url;
 extern crate unicode_segmentation;
+extern crate url;
 
-#[macro_use] pub mod macros;
+#[macro_use]
+pub mod macros;
 pub mod actions;
-pub mod httpapi;
 pub mod capabilities;
 pub mod command;
 pub mod common;
 pub mod error;
-pub mod server;
+pub mod httpapi;
 pub mod response;
+pub mod server;
 
 #[cfg(test)]
 pub mod test;
