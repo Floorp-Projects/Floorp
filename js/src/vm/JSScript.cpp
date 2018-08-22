@@ -3036,6 +3036,209 @@ js::FreeScriptData(JSRuntime* rt)
     table.clear();
 }
 
+// Placement-new elements of an array. This should optimize away for types with
+// trivial default initiation.
+template <typename T>
+static void
+DefaultInitializeElements(void* arrayPtr, size_t length)
+{
+    uintptr_t elem = reinterpret_cast<uintptr_t>(arrayPtr);
+    MOZ_ASSERT(elem % alignof(T) == 0);
+
+    for (size_t i = 0; i < length; ++i) {
+        new (reinterpret_cast<T*>(elem)) T;
+        elem += sizeof(T);
+    }
+}
+
+/* static */ size_t
+PrivateScriptData::AllocationSize(uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
+                                  uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets)
+{
+    size_t size = sizeof(PrivateScriptData);
+
+    if (nconsts) { size += sizeof(PackedSpan); }
+    if (nobjects) { size += sizeof(PackedSpan); }
+    if (ntrynotes) { size += sizeof(PackedSpan); }
+    if (nscopenotes) { size += sizeof(PackedSpan); }
+    if (nyieldoffsets) { size += sizeof(PackedSpan); }
+
+    size += nscopes * sizeof(GCPtrScope);
+
+    if (nconsts) {
+        // The scope array doesn't maintain Value alignment, so compute the
+        // padding needed to remedy this.
+        size = JS_ROUNDUP(size, alignof(GCPtrValue));
+        size += nconsts * sizeof(GCPtrValue);
+    }
+    if (nobjects) {
+        size += nobjects * sizeof(GCPtrObject);
+    }
+    if (ntrynotes) {
+        size += ntrynotes * sizeof(JSTryNote);
+    }
+    if (nscopenotes) {
+        size += nscopenotes * sizeof(ScopeNote);
+    }
+    if (nyieldoffsets) {
+        size += nyieldoffsets * sizeof(uint32_t);
+    }
+
+    return size;
+}
+
+// Placement-new elements of an array. This should optimize away for types with
+// trivial default initiation.
+template <typename T>
+void
+PrivateScriptData::initElements(size_t offset, size_t length)
+{
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    DefaultInitializeElements<T>(reinterpret_cast<void*>(base + offset), length);
+}
+
+template <typename T>
+void
+PrivateScriptData::initSpan(size_t* cursor, uint32_t scaledSpanOffset, size_t length)
+{
+    // PackedSpans are elided when arrays are empty
+    if (scaledSpanOffset == 0) {
+        MOZ_ASSERT(length == 0);
+        return;
+    }
+
+    // Placement-new the PackedSpan
+    PackedSpan* span = packedOffsetToPointer<PackedSpan>(scaledSpanOffset);
+    span = new (span) PackedSpan { uint32_t(*cursor), uint32_t(length) };
+
+    // Placement-new the elements
+    initElements<T>(*cursor, length);
+
+    // Advance cursor
+    (*cursor) += length * sizeof(T);
+}
+
+// Initialize PackedSpans and placement-new the trailing arrays.
+PrivateScriptData::PrivateScriptData(uint32_t nscopes_, uint32_t nconsts, uint32_t nobjects,
+                                     uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets)
+  : nscopes(nscopes_)
+{
+    // Convert cursor possition to a packed offset.
+    auto ToPackedOffset = [](size_t cursor) {
+        MOZ_ASSERT(cursor % PackedOffsets::SCALE == 0);
+        return cursor / PackedOffsets::SCALE;
+    };
+
+    // Helper to allocate a PackedSpan from the variable length data.
+    auto TakeSpan = [=](size_t* cursor) {
+        size_t packedOffset = ToPackedOffset(*cursor);
+        MOZ_ASSERT(packedOffset <= PackedOffsets::MAX_OFFSET);
+
+        (*cursor) += sizeof(PackedSpan);
+        return packedOffset;
+    };
+
+    // Variable-length data begins immediately after PrivateScriptData itself.
+    // NOTE: Alignment is computed using cursor/offset so the alignment of
+    // PrivateScriptData must be stricter than any trailing array type.
+    size_t cursor = sizeof(*this);
+
+    // Layout PackedSpan structures and initialize packedOffsets fields.
+    static_assert(alignof(PrivateScriptData) >= alignof(PackedSpan),
+                  "Incompatible alignment");
+    if (nconsts) { packedOffsets.constsSpanOffset = TakeSpan(&cursor); }
+    if (nobjects) { packedOffsets.objectsSpanOffset = TakeSpan(&cursor); }
+    if (ntrynotes) { packedOffsets.tryNotesSpanOffset = TakeSpan(&cursor); }
+    if (nscopenotes) { packedOffsets.scopeNotesSpanOffset = TakeSpan(&cursor); }
+    if (nyieldoffsets) { packedOffsets.yieldOffsetsSpanOffset = TakeSpan(&cursor); }
+
+    // Layout and initialize the scopes array. Manually insert padding so that
+    // the subsequent |consts| array is aligned.
+    {
+        MOZ_ASSERT(nscopes > 0);
+
+        static_assert(alignof(PackedSpan) >= alignof(GCPtrScope),
+                      "Incompatible alignment");
+        initElements<GCPtrScope>(cursor, nscopes);
+        packedOffsets.scopesOffset = ToPackedOffset(cursor);
+
+        cursor += nscopes * sizeof(GCPtrScope);
+    }
+
+    if (nconsts) {
+        // Pad to required alignment if we are emitting constant array.
+        cursor = JS_ROUNDUP(cursor, alignof(GCPtrValue));
+
+        static_assert(alignof(PrivateScriptData) >= alignof(GCPtrValue),
+                      "Incompatible alignment");
+        initSpan<GCPtrValue>(&cursor, packedOffsets.constsSpanOffset, nconsts);
+    }
+
+    // Layout arrays, initialize PackedSpans and placement-new the elements.
+    static_assert(alignof(GCPtrValue) >= alignof(GCPtrObject),
+                  "Incompatible alignment");
+    static_assert(alignof(GCPtrScope) >= alignof(GCPtrObject),
+                  "Incompatible alignment");
+    initSpan<GCPtrObject>(&cursor, packedOffsets.objectsSpanOffset, nobjects);
+    static_assert(alignof(GCPtrObject) >= alignof(JSTryNote),
+                  "Incompatible alignment");
+    initSpan<JSTryNote>(&cursor, packedOffsets.tryNotesSpanOffset, ntrynotes);
+    static_assert(alignof(JSTryNote) >= alignof(ScopeNote),
+                  "Incompatible alignment");
+    initSpan<ScopeNote>(&cursor, packedOffsets.scopeNotesSpanOffset, nscopenotes);
+    static_assert(alignof(ScopeNote) >= alignof(uint32_t),
+                  "Incompatible alignment");
+    initSpan<uint32_t>(&cursor, packedOffsets.yieldOffsetsSpanOffset, nyieldoffsets);
+
+    // Sanity check
+    MOZ_ASSERT(AllocationSize(nscopes_, nconsts, nobjects,
+                              ntrynotes, nscopenotes, nyieldoffsets) == cursor);
+}
+
+/* static */ PrivateScriptData*
+PrivateScriptData::new_(JSContext* cx,
+                        uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
+                        uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets,
+                        uint32_t* dataSize)
+{
+    // Compute size including trailing arrays
+    size_t size = AllocationSize(nscopes, nconsts, nobjects,
+                                 ntrynotes, nscopenotes, nyieldoffsets);
+
+    // Allocate contiguous raw buffer
+    void* raw = cx->pod_malloc<uint8_t>(size);
+    MOZ_ASSERT(uintptr_t(raw) % alignof(PrivateScriptData) == 0);
+    if (!raw) {
+        return nullptr;
+    }
+
+    if (dataSize) {
+        *dataSize = size;
+    }
+
+    // Constuct the PrivateScriptData. Trailing arrays are uninitialized but
+    // GCPtrs are put into a safe state.
+    return new (raw) PrivateScriptData(nscopes, nconsts, nobjects,
+                                       ntrynotes, nscopenotes, nyieldoffsets);
+}
+
+void
+PrivateScriptData::traceChildren(JSTracer* trc)
+{
+    auto scopearray = scopes();
+    TraceRange(trc, scopearray.size(), scopearray.data(), "scopes");
+
+    if (hasConsts()) {
+        auto constarray = consts();
+        TraceRange(trc, constarray.size(), constarray.data(), "consts");
+    }
+
+    if (hasObjects()) {
+        auto objarray = objects();
+        TraceRange(trc, objarray.size(), objarray.data(), "objects");
+    }
+}
+
 /*
  * [SMDOC] JSScript data layout (unshared)
  *
@@ -4156,7 +4359,8 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
         GCPtrValue* vector = Rebase<GCPtrValue>(dst, src, src->constsRaw()->vector);
         dst->constsRaw()->vector = vector;
         for (unsigned i = 0; i < nconsts; ++i) {
-            MOZ_ASSERT_IF(vector[i].isGCThing(), vector[i].toString()->isAtom());
+            // We don't support GCThings here and thus don't need to call |init|.
+            MOZ_ASSERT(!vector[i].isGCThing());
         }
     }
     if (nobjects != 0) {
