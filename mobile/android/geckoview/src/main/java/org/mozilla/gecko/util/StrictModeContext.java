@@ -20,6 +20,9 @@ import java.io.Closeable;
  *     }
  * </pre>
  *
+ * Because the StrictModeContext variable is technically unused, the containing method might have to
+ * be annotated with <code>@SuppressWarnings("try")</code>.
+ *
  */
 public final class StrictModeContext implements Closeable {
     private final StrictMode.ThreadPolicy mThreadPolicy;
@@ -50,7 +53,8 @@ public final class StrictModeContext implements Closeable {
     }
 
     /**
-     * Convenience method for disabling StrictMode for disk-writes with try-with-resources.
+     * Convenience method for disabling StrictMode for disk-writes and -reads with
+     * try-with-resources.
      */
     public static StrictModeContext allowDiskWrites() {
         StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
