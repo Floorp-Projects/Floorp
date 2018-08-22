@@ -31,6 +31,7 @@ using namespace mozilla;
 using mozilla::dom::ContentChild;
 
 static LazyLogModule gAntiTrackingLog("AntiTracking");
+static const nsCString::size_type sMaxSpecLength = 128;
 
 #define LOG(format) MOZ_LOG(gAntiTrackingLog, mozilla::LogLevel::Debug, format)
 
@@ -38,6 +39,7 @@ static LazyLogModule gAntiTrackingLog("AntiTracking");
   PR_BEGIN_MACRO                                                              \
     if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {           \
       nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)"));                   \
+      _specStr.Truncate(std::min(_specStr.Length(), sMaxSpecLength));         \
       if (uri) {                                                              \
         _specStr = uri->GetSpecOrDefault();                                   \
       }                                                                       \
