@@ -67,6 +67,12 @@ nsShmImage::CreateShmSegment()
 {
   size_t size = SharedMemory::PageAlignedSize(mStride * mSize.height);
 
+#if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
+  static mozilla::LazyLogModule sPledgeLog("SandboxPledge");
+  MOZ_LOG(sPledgeLog, mozilla::LogLevel::Debug,
+         ("%s called when pledged, returning false\n", __func__));
+  return false;
+#endif
   mShmId = shmget(IPC_PRIVATE, size, IPC_CREAT | 0600);
   if (mShmId == -1) {
     return false;
