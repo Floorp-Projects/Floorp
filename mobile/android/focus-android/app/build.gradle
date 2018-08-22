@@ -110,6 +110,15 @@ android {
         klarX86Debug.root = 'src/klarDebug'
         klarArmDebug.root = 'src/klarDebug'
         klarAarch64Debug.root = 'src/klarDebug'
+
+        // Nightly
+        focusX86Nightly.root = 'src/focusNightly'
+        focusArmNightly.root = 'src/focusNightly'
+        focusAarch64Nightly.root = 'src/focusNightly'
+
+        klarX86Nightly.root = 'src/klarNightly'
+        klarArmNightly.root = 'src/klarNightly'
+        klarAarch64Nightly.root = 'src/klarNightly'
     }
 }
 
