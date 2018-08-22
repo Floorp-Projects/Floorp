@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+/**
+ * The Private Browsing Tracking Protection service checks a URI against an
+ * in-memory list of tracking sites.
+ */
+[scriptable, uuid(c77ddfac-6cd6-43a9-84e8-91682a1a7b18)]
+interface nsIPrivateBrowsingTrackingProtectionWhitelist : nsISupports
+{
+  /**
+   * Add a URI to the list of allowed tracking sites in Private Browsing mode
+   * (essentially a tracking whitelist). This operation will cause the URI to
+   * be registered if it does not currently exist. If it already exists, then
+   * the operation is essentially a no-op.
+   *
+   * @param uri         the uri to add to the list
+   */
+  void addToAllowList(in nsIURI uri);
+
+  /**
+   * Remove a URI from the list of allowed tracking sites in Private Browsing
+   * mode (the tracking whitelist). If the URI is not already in the list,
+   * then the operation is essentially a no-op.
+   *
+   * @param uri         the uri to remove from the list
+   */
+  void removeFromAllowList(in nsIURI uri);
+
+  /**
+   * Check if a URI exists in the list of allowed tracking sites in Private
+   * Browsing mode (the tracking whitelist).
+   *
+   * @param uri         the uri to look for in the list
+   */
+  bool existsInAllowList(in nsIURI uri);
+};
+
+%{ C++
+#define NS_PBTRACKINGPROTECTIONWHITELIST_CONTRACTID "@mozilla.org/pbm-tp-whitelist;1"
+%}
