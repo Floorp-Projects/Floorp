@@ -3,9 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RedirectChannelRegistrar.h"
+#include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 namespace net {
+
+namespace {
+StaticRefPtr<RedirectChannelRegistrar> gSingleton;
+}
 
 NS_IMPL_ISUPPORTS(RedirectChannelRegistrar, nsIRedirectChannelRegistrar)
 
@@ -15,6 +20,26 @@ RedirectChannelRegistrar::RedirectChannelRegistrar()
   , mId(1)
   , mLock("RedirectChannelRegistrar")
 {
+  MOZ_ASSERT(!gSingleton);
+}
+
+// static
+already_AddRefed<nsIRedirectChannelRegistrar>
+RedirectChannelRegistrar::GetOrCreate()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!gSingleton) {
+    gSingleton = new RedirectChannelRegistrar();
+  }
+  return do_AddRef(gSingleton);
+}
+
+// static
+void
+RedirectChannelRegistrar::Shutdown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  gSingleton = nullptr;
 }
 
 NS_IMETHODIMP
