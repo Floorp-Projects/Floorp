@@ -71,7 +71,6 @@ class FirefoxDataProvider {
       startedDateTime,
       fromCache,
       fromServiceWorker,
-      isTrackingResource,
     } = data;
 
     if (this.actionsEnabled && this.actions.addRequest) {
@@ -90,7 +89,6 @@ class FirefoxDataProvider {
 
         fromCache,
         fromServiceWorker,
-        isTrackingResource,
       }, true);
     }
 
@@ -325,7 +323,6 @@ class FirefoxDataProvider {
         url,
       },
       startedDateTime,
-      isTrackingResource,
     } = networkInfo;
 
     await this.addRequest(actor, {
@@ -336,7 +333,6 @@ class FirefoxDataProvider {
       method,
       startedDateTime,
       url,
-      isTrackingResource,
     });
 
     this.emit(EVENTS.NETWORK_EVENT, actor);
@@ -355,9 +351,7 @@ class FirefoxDataProvider {
 
     switch (updateType) {
       case "securityInfo":
-        this.pushRequestToQueue(actor, {
-          securityState: networkInfo.securityState
-        });
+        this.pushRequestToQueue(actor, { securityState: networkInfo.securityState });
         break;
       case "responseStart":
         this.pushRequestToQueue(actor, {
