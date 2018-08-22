@@ -4477,7 +4477,10 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
                 useMultipart = false;
             } else {
                 JSAutoByteString printable;
-                JS_ReportErrorASCII(cx, "Unknown value for option `format`, expected 'multipart' or 'simple', got %s", ValueToPrintableUTF8(cx, optionFormat, &printable));
+                JS_ReportErrorUTF8(cx,
+                                   "Unknown value for option `format`, expected 'multipart' or "
+                                   "'simple', got %s",
+                                   ValueToPrintableUTF8(cx, optionFormat, &printable));
                 return false;
             }
         } else {
