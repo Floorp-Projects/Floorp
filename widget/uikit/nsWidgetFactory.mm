@@ -14,10 +14,8 @@
 #include "nsAppShellSingleton.h"
 #include "nsLookAndFeel.h"
 #include "nsScreenManager.h"
-#include "nsWindow.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(UIKitScreenManager)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 
 #include "GfxInfo.h"
 namespace mozilla {
@@ -27,15 +25,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
 }
 }
 
-NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
-NS_DEFINE_NAMED_CID(NS_CHILD_CID);
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
-  { &kNS_WINDOW_CID, false, nullptr, nsWindowConstructor },
-  { &kNS_CHILD_CID, false, nullptr, nsWindowConstructor },
   { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor },
   { &kNS_SCREENMANAGER_CID, false, nullptr, UIKitScreenManagerConstructor },
   { &kNS_GFXINFO_CID, false, nullptr, mozilla::widget::GfxInfoConstructor },
@@ -43,8 +37,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
 };
 
 static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
-  { "@mozilla.org/widgets/window/uikit;1", &kNS_WINDOW_CID },
-  { "@mozilla.org/widgets/childwindow/uikit;1", &kNS_CHILD_CID },
   { "@mozilla.org/widget/appshell/uikit;1", &kNS_APPSHELL_CID },
   { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID },
   { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },

@@ -223,19 +223,6 @@ typedef void
                                       JS::PromiseRejectionHandlingState state,
                                       void* data);
 
-typedef bool
-(* JSLocaleToUpperCase)(JSContext* cx, JS::HandleString src, JS::MutableHandleValue rval);
-
-typedef bool
-(* JSLocaleToLowerCase)(JSContext* cx, JS::HandleString src, JS::MutableHandleValue rval);
-
-typedef bool
-(* JSLocaleCompare)(JSContext* cx, JS::HandleString src1, JS::HandleString src2,
-                    JS::MutableHandleValue rval);
-
-typedef bool
-(* JSLocaleToUnicode)(JSContext* cx, const char* src, JS::MutableHandleValue rval);
-
 /**
  * Callback used to ask the embedding for the cross compartment wrapper handler
  * that implements the desired prolicy for this kind of object in the
@@ -4722,55 +4709,6 @@ JS_PUBLIC_API(bool)
 PropertySpecNameToPermanentId(JSContext* cx, const char* name, jsid* idp);
 
 } /* namespace JS */
-
-/************************************************************************/
-
-/**
- * The default locale for the ECMAScript Internationalization API
- * (Intl.Collator, Intl.NumberFormat, Intl.DateTimeFormat).
- * Note that the Internationalization API encourages clients to
- * specify their own locales.
- * The locale string remains owned by the caller.
- */
-extern JS_PUBLIC_API(bool)
-JS_SetDefaultLocale(JSRuntime* rt, const char* locale);
-
-/**
- * Look up the default locale for the ECMAScript Internationalization API.
- * NB: The locale information is retrieved from cx's runtime.
- */
-extern JS_PUBLIC_API(JS::UniqueChars)
-JS_GetDefaultLocale(JSContext* cx);
-
-/**
- * Reset the default locale to OS defaults.
- */
-extern JS_PUBLIC_API(void)
-JS_ResetDefaultLocale(JSRuntime* rt);
-
-/**
- * Locale specific string conversion and error message callbacks.
- */
-struct JSLocaleCallbacks {
-    JSLocaleToUpperCase     localeToUpperCase; // not used #if EXPOSE_INTL_API
-    JSLocaleToLowerCase     localeToLowerCase; // not used #if EXPOSE_INTL_API
-    JSLocaleCompare         localeCompare; // not used #if EXPOSE_INTL_API
-    JSLocaleToUnicode       localeToUnicode;
-};
-
-/**
- * Establish locale callbacks. The pointer must persist as long as the
- * JSContext.  Passing nullptr restores the default behaviour.
- */
-extern JS_PUBLIC_API(void)
-JS_SetLocaleCallbacks(JSRuntime* rt, const JSLocaleCallbacks* callbacks);
-
-/**
- * Return the address of the current locale callbacks struct, which may
- * be nullptr.
- */
-extern JS_PUBLIC_API(const JSLocaleCallbacks*)
-JS_GetLocaleCallbacks(JSRuntime* rt);
 
 /************************************************************************/
 

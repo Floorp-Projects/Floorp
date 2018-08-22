@@ -13724,6 +13724,16 @@
     "bug_numbers": [1341569],
     "description": "Milliseconds between starting to fill an autofill-eligible form field and submitting the form, keyed by the combination of form type and filling type."
   },
+  "GFX_OMTP_PAINT_TIME": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
+    "expires_in_version": "70",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "description": "Amount of time in tenths of a millisecond from the beginning of the first async paint until all async paints are finished.",
+    "bug_numbers": [1483245]
+  },
   "GFX_OMTP_PAINT_WAIT_TIME": {
     "record_in_processes": ["content"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
@@ -13733,6 +13743,16 @@
     "n_buckets": 50,
     "description": "Amount of time in milliseconds the main thread spends waiting for the paint thread to complete, if the time was greater than 200us.",
     "bug_numbers": [1386968]
+  },
+  "GFX_OMTP_PAINT_TASK_COUNT": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
+    "expires_in_version": "70",
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 25,
+    "description": "The amount of async paint tasks queued to the paint thread during a layer transaction.",
+    "bug_numbers": [1483245]
   },
   "PREFERENCES_FILE_LOAD_TIME_US": {
     "record_in_processes": ["main", "content"],
