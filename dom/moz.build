@@ -104,11 +104,6 @@ DIRS += [
     'simpledb',
 ]
 
-if CONFIG['OS_TARGET'] != 'Android':
-    DIRS += [
-        'prio',
-    ]
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['plugins/ipc/hangui']
 

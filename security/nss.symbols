@@ -261,7 +261,6 @@ NSS_Get_SEC_UTF8StringTemplate
 NSS_Get_SEC_UTF8StringTemplate_Util
 NSS_GetVersion
 NSS_Init
-NSS_InitContext
 NSS_Initialize
 NSS_InitWithMerge
 NSS_IsInitialized
@@ -272,7 +271,6 @@ NSS_SecureMemcmp
 NSS_SetAlgorithmPolicy
 NSS_SetDomesticPolicy
 NSS_Shutdown
-NSS_ShutdownContext
 NSSSMIME_GetVersion
 NSS_SMIMESignerInfo_SaveSMIMEProfile
 NSS_SMIMEUtil_FindBulkAlgForRecipients
