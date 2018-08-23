@@ -28,7 +28,7 @@ public:
   AntialiasMode GetDefaultAAMode() override;
 
 #ifdef USE_SKIA
-  SkTypeface* GetSkTypeface() override;
+  SkTypeface* CreateSkTypeface() override;
 #endif
 
 protected:
