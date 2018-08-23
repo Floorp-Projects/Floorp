@@ -8159,21 +8159,21 @@
     "alert_emails": ["flashvideo-2015@mozilla.com"]
   },
   "POPUP_NOTIFICATION_STATS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["fxprivacyandsecurity@mozilla.com", "MattN+telemetry@mozilla.com"],
     "bug_numbers": [1207089],
-    "expires_in_version": "55",
+    "expires_in_version": "70",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 40,
     "description": "(Bug 1207089) Usage of popup notifications, keyed by ID (0 = Offered, 1..4 = Action, 5 = Click outside, 6 = Leave page, 7 = Use 'X', 8 = Not now, 10 = Open submenu, 11 = Learn more. Add 20 if happened after reopen.)"
   },
   "POPUP_NOTIFICATION_MAIN_ACTION_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "record_in_processes": ["main"],
+    "alert_emails": ["fxprivacyandsecurity@mozilla.com", "MattN+telemetry@mozilla.com"],
     "bug_numbers": [1207089],
-    "expires_in_version": "55",
+    "expires_in_version": "70",
     "kind": "exponential",
     "keyed": true,
     "low": 100,
@@ -8182,10 +8182,10 @@
     "description": "(Bug 1207089) Time in ms between initially requesting a popup notification and triggering the main action, keyed by ID"
   },
   "POPUP_NOTIFICATION_DISMISSAL_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "record_in_processes": ["main"],
+    "alert_emails": ["fxprivacyandsecurity@mozilla.com", "MattN+telemetry@mozilla.com"],
     "bug_numbers": [1207089],
-    "expires_in_version": "55",
+    "expires_in_version": "70",
     "kind": "exponential",
     "keyed": true,
     "low": 200,
