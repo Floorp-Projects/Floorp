@@ -13,4 +13,4 @@
 == change-type-submit-control.html invalid-ref.html
 == change-type-not-submit-control.html valid-ref-4.html
 == self-invalid.html about:blank
-== remove-form.html invalid-ref-3.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == remove-form.html invalid-ref-3.html # bug 1392106
