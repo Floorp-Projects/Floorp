@@ -446,7 +446,7 @@ int vp8_create_decoder_instances(struct frame_buffers *fb, VP8D_CONFIG *oxcf) {
 #if CONFIG_MULTITHREAD
   if (setjmp(fb->pbi[0]->common.error.jmp)) {
     vp8_remove_decoder_instances(fb);
-    memset(fb->pbi, 0, sizeof(fb->pbi) / sizeof(fb->pbi[0]));
+    memset(fb->pbi, 0, sizeof(fb->pbi));
     vpx_clear_system_state();
     return VPX_CODEC_ERROR;
   }
