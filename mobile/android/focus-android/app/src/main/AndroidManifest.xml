@@ -16,6 +16,9 @@
 
     <uses-feature android:name="android.hardware.fingerprint" android:required="false"/>
     <uses-permission-sdk-23 android:name="android.permission.USE_FINGERPRINT"/>
+
+    <!-- Permission needed to publish the app on Samsung AppStore -->
+    <uses-permission android:name="com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY"/>
     
     <application
         android:allowBackup="false"
