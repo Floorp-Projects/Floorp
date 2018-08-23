@@ -523,8 +523,8 @@ LocaleService::NegotiateLanguages(const nsTArray<nsCString>& aRequested,
                                   LangNegStrategy aStrategy,
                                   nsTArray<nsCString>& aRetVal)
 {
-  MOZ_ASSERT(aDefaultLocale.IsEmpty() || Locale(aDefaultLocale).IsValid(),
-    "If specified, default locale must be a valid BCP47 language tag.");
+  MOZ_ASSERT(aDefaultLocale.IsEmpty() || Locale(aDefaultLocale).IsWellFormed(),
+    "If specified, default locale must be a well-formed BCP47 language tag.");
 
   if (aStrategy == LangNegStrategy::Lookup && aDefaultLocale.IsEmpty()) {
     NS_WARNING("Default locale should be specified when using lookup strategy.");

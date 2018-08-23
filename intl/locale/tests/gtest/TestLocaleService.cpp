@@ -83,7 +83,7 @@ TEST(Intl_Locale_LocaleService, GetDefaultLocale) {
   LocaleService::GetInstance()->GetDefaultLocale(locStr);
 
   ASSERT_FALSE(locStr.IsEmpty());
-  ASSERT_TRUE(Locale(locStr).IsValid());
+  ASSERT_TRUE(Locale(locStr).IsWellFormed());
 }
 
 TEST(Intl_Locale_LocaleService, IsAppLocaleRTL) {
