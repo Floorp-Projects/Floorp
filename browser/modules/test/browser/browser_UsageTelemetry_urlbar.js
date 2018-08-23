@@ -82,7 +82,7 @@ function clickURLBarSuggestion(entryName, button = 1) {
 async function withNewSearchEngine(taskFn) {
   const url = getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
   let suggestionEngine = await new Promise((resolve, reject) => {
-    Services.search.addEngine(url, null, "", false, {
+    Services.search.addEngine(url, "", false, {
       onSuccess(engine) { resolve(engine); },
       onError() { reject(); }
     });
