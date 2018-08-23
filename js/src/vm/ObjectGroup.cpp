@@ -240,15 +240,13 @@ ObjectGroup::useSingletonForAllocationSite(JSScript* script, jsbytecode* pc, JSP
 
     unsigned offset = script->pcToOffset(pc);
 
-    JSTryNote* tn = script->trynotes()->vector;
-    JSTryNote* tnlimit = tn + script->trynotes()->length;
-    for (; tn < tnlimit; tn++) {
-        if (tn->kind != JSTRY_FOR_IN && tn->kind != JSTRY_FOR_OF && tn->kind != JSTRY_LOOP) {
+    for (const JSTryNote& tn : script->trynotes()) {
+        if (tn.kind != JSTRY_FOR_IN && tn.kind != JSTRY_FOR_OF && tn.kind != JSTRY_LOOP) {
             continue;
         }
 
-        unsigned startOffset = script->mainOffset() + tn->start;
-        unsigned endOffset = startOffset + tn->length;
+        unsigned startOffset = script->mainOffset() + tn.start;
+        unsigned endOffset = startOffset + tn.length;
 
         if (offset >= startOffset && offset < endOffset) {
             return GenericObject;

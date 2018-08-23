@@ -105,7 +105,7 @@ NumArgAndLocalSlots(const InlineFrameIterator& frame)
 }
 
 static void
-CloseLiveIteratorIon(JSContext* cx, const InlineFrameIterator& frame, JSTryNote* tn)
+CloseLiveIteratorIon(JSContext* cx, const InlineFrameIterator& frame, const JSTryNote* tn)
 {
     MOZ_ASSERT(tn->kind == JSTRY_FOR_IN ||
                tn->kind == JSTRY_DESTRUCTURING_ITERCLOSE);
@@ -223,7 +223,7 @@ HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame, ResumeFromEx
     bool inForOfIterClose = false;
 
     for (TryNoteIterIon tni(cx, frame); !tni.done(); ++tni) {
-        JSTryNote* tn = *tni;
+        const JSTryNote* tn = *tni;
 
         switch (tn->kind) {
           case JSTRY_FOR_IN:
@@ -305,7 +305,7 @@ ForcedReturn(JSContext* cx, const JSJitFrameIter& frame, jsbytecode* pc,
 }
 
 static inline void
-BaselineFrameAndStackPointersFromTryNote(JSTryNote* tn, const JSJitFrameIter& frame,
+BaselineFrameAndStackPointersFromTryNote(const JSTryNote* tn, const JSJitFrameIter& frame,
                                          uint8_t** framePointer, uint8_t** stackPointer)
 {
     JSScript* script = frame.baselineFrame()->script();
@@ -315,7 +315,7 @@ BaselineFrameAndStackPointersFromTryNote(JSTryNote* tn, const JSJitFrameIter& fr
 }
 
 static void
-SettleOnTryNote(JSContext* cx, JSTryNote* tn, const JSJitFrameIter& frame,
+SettleOnTryNote(JSContext* cx, const JSTryNote* tn, const JSJitFrameIter& frame,
                 EnvironmentIter& ei, ResumeFromException* rfe, jsbytecode** pc)
 {
     RootedScript script(cx, frame.baselineFrame()->script());
@@ -376,7 +376,7 @@ CloseLiveIteratorsBaselineForUncatchableException(JSContext* cx, const JSJitFram
 {
     bool inForOfIterClose = false;
     for (TryNoteIterBaseline tni(cx, frame.baselineFrame(), pc); !tni.done(); ++tni) {
-        JSTryNote* tn = *tni;
+        const JSTryNote* tn = *tni;
         switch (tn->kind) {
           case JSTRY_FOR_IN: {
             // See corresponding comment in ProcessTryNotes.
@@ -415,7 +415,7 @@ ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame, EnvironmentI
     bool inForOfIterClose = false;
 
     for (TryNoteIterBaseline tni(cx, frame.baselineFrame(), *pc); !tni.done(); ++tni) {
-        JSTryNote* tn = *tni;
+        const JSTryNote* tn = *tni;
 
         MOZ_ASSERT(cx->isExceptionPending());
         switch (tn->kind) {
