@@ -4632,7 +4632,7 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                              size_t* compartmentsPrivateData)
 {
     *typePool += types.typeLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
-    *regexpZone += regExps.sizeOfExcludingThis(mallocSizeOf);
+    *regexpZone += regExps().sizeOfExcludingThis(mallocSizeOf);
     if (jitZone_)
         jitZone_->addSizeOfIncludingThis(mallocSizeOf, jitZone, baselineStubsOptimized, cachedCFG);
     *uniqueIdMap += uniqueIds().shallowSizeOfExcludingThis(mallocSizeOf);

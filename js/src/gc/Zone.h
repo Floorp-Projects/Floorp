@@ -14,12 +14,12 @@
 #include "gc/GCRuntime.h"
 #include "js/GCHashTable.h"
 #include "vm/MallocProvider.h"
-#include "vm/RegExpShared.h"
 #include "vm/Runtime.h"
 
 namespace js {
 
 class Debugger;
+class RegExpZone;
 
 namespace jit {
 class JitZone;
@@ -459,8 +459,10 @@ class Zone : public JS::shadow::Zone,
         counter.recordTrigger(trigger);
     }
 
+    js::MainThreadData<js::UniquePtr<js::RegExpZone>> regExps_;
+
   public:
-    js::RegExpZone regExps;
+    js::RegExpZone& regExps() { return *regExps_.ref(); }
 
     JS::WeakCache<TypeDescrObjectSet>& typeDescrObjects() { return typeDescrObjects_.ref(); }
 

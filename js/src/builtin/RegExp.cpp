@@ -186,7 +186,7 @@ CheckPatternSyntax(JSContext* cx, HandleAtom pattern, RegExpFlag flags)
     // If we already have a RegExpShared for this pattern/flags, we can
     // avoid the much slower CheckPatternSyntaxSlow call.
 
-    if (RegExpShared* shared = cx->zone()->regExps.maybeGet(pattern, flags)) {
+    if (RegExpShared* shared = cx->zone()->regExps().maybeGet(pattern, flags)) {
 #ifdef DEBUG
         // Assert the pattern is valid.
         if (!CheckPatternSyntaxSlow(cx, pattern, flags)) {
@@ -202,7 +202,7 @@ CheckPatternSyntax(JSContext* cx, HandleAtom pattern, RegExpFlag flags)
 
     // Allocate and return a new RegExpShared so we will hit the fast path
     // next time.
-    return cx->zone()->regExps.get(cx, pattern, flags);
+    return cx->zone()->regExps().get(cx, pattern, flags);
 }
 
 /*
