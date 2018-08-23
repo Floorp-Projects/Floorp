@@ -19,18 +19,41 @@ class DebugTargetPane extends PureComponent {
       actionComponent: PropTypes.any.isRequired,
       detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
+      isCollapsed: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
       targets: PropTypes.arrayOf(PropTypes.Object).isRequired,
     };
   }
 
   render() {
-    const { actionComponent, detailComponent, dispatch, name, targets } = this.props;
+    const {
+      actionComponent,
+      detailComponent,
+      dispatch,
+      isCollapsed,
+      name,
+      targets,
+    } = this.props;
 
     return dom.section(
       {},
-      dom.h2({}, dom.a({ className: "debug-target-pane__title" }, name)),
-      DebugTargetList({ actionComponent, detailComponent, dispatch, targets }),
+      dom.h2(
+        {},
+        dom.a(
+          {
+            className: "debug-target-pane__title" +
+                       (isCollapsed ? " debug-target-pane__title--collapsed" : ""),
+          },
+          name
+        )
+      ),
+      DebugTargetList({
+        actionComponent,
+        detailComponent,
+        dispatch,
+        isCollapsed,
+        targets,
+      }),
     );
   }
 }

@@ -30,3 +30,7 @@
   text-decoration: none;
   color: var(--text-color);
 }
+
+.debug-target-pane__title--collapsed::before {
+  transform: rotate(-90deg);
+}
