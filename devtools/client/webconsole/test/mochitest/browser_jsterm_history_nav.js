@@ -12,11 +12,8 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>bug 660806 - history " +
                  "navigation must not show the autocomplete popup";
 
 add_task(async function() {
-  // Run test with legacy JsTerm
+  // Only run in legacy JsTerm - fixme in Bug 1485510.
   await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await testHistory();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
   await testHistory();
 });
 

@@ -245,12 +245,37 @@ WebConsoleFrame.prototype = {
     this._onToolboxPrefChanged();
 
     this._initShortcuts();
+    this._initOutputSyntaxHighlighting();
 
     if (toolbox) {
       toolbox.on("webconsole-selected", this._onPanelSelected);
       toolbox.on("split-console", this._onChangeSplitConsoleState);
       toolbox.on("select", this._onChangeSplitConsoleState);
     }
+  },
+
+  _initOutputSyntaxHighlighting: function() {
+    // Given a DOM node, we syntax highlight identically to how the input field
+    // looks. See https://codemirror.net/demo/runmode.html;
+    const syntaxHighlightNode = node => {
+      const editor = this.jsterm && this.jsterm.editor;
+      if (node && editor) {
+        node.classList.add("cm-s-mozilla");
+        editor.CodeMirror.runMode(node.textContent, "application/javascript", node);
+      }
+    };
+
+    // Use a Custom Element to handle syntax highlighting to avoid
+    // dealing with refs or innerHTML from React.
+    const win = this.window;
+    win.customElements.define("syntax-highlighted", class extends win.HTMLElement {
+      connectedCallback() {
+        if (!this.connected) {
+          this.connected = true;
+          syntaxHighlightNode(this);
+        }
+      }
+    });
   },
 
   _initShortcuts: function() {

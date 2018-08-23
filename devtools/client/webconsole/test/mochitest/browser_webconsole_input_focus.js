@@ -14,6 +14,9 @@ const TEST_URI =
   </script>`;
 
 add_task(async function() {
+  // Only run in legacy JsTerm - fixme in Bug 1485510.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
+
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const inputNode = hud.jsterm.inputNode;
