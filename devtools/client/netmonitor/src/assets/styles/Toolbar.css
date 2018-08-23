@@ -33,10 +33,6 @@
   align-items: center;
 }
 
-.devtools-toolbar-group .devtools-separator {
-  height: 24px;
-}
-
 .devtools-toolbar-two-rows-1,
 .devtools-toolbar-two-rows-2,
 .devtools-toolbar-single-row {
