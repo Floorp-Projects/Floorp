@@ -124,6 +124,15 @@ ForOfLoopControl::emitIteratorCloseInScope(BytecodeEmitter* bce,
     return bce->tryNoteList.append(JSTRY_FOR_OF_ITERCLOSE, 0, start, end);
 }
 
+// Since we're in the middle of emitting code that will leave
+// |bce->innermostEmitterScope()|, passing the innermost emitter scope to
+// emitIteratorCloseInScope and looking up .generator there would be very,
+// very wrong.  We'd find .generator in the function environment, and we'd
+// compute a NameLocation with the correct slot, but we'd compute a
+// hop-count to the function environment that was too big.  At runtime we'd
+// either crash, or we'd find a user-controllable value in that slot, and
+// Very Bad Things would ensue as we reinterpreted that value as an
+// iterator.
 bool
 ForOfLoopControl::emitPrepareForNonLocalJumpFromScope(BytecodeEmitter* bce,
                                                       EmitterScope& currentScope,
