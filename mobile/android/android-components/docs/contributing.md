@@ -10,6 +10,10 @@ Before you attempt to make a contribution please read the [Community Participati
 
 ## Docs
 
+### Project
+
+* [Hosting Android code in the Android Components repository]({{ site.baseurl }}//contributing/hosting-android-code-in-repository)
+
 ### Development
 
 * [Code coverage]({{ site.baseurl }}/contributing/code-coverage)
