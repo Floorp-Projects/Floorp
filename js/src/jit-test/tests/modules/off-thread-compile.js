@@ -9,8 +9,8 @@ load(libdir + "dummyModuleResolveHook.js");
 function offThreadParseAndEvaluate(source) {
     offThreadCompileModule(source);
     let m = finishOffThreadModule();
-    m.declarationInstantiation();
-    return m.evaluation();
+    instantiateModule(m);
+    return evaluateModule(m);
 }
 
 offThreadParseAndEvaluate("export let x = 2 * 3;");

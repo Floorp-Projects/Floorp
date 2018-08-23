@@ -4,8 +4,8 @@ if (helperThreadCount() == 0)
 function eval(source) {
     offThreadCompileModule(source);
     let m = finishOffThreadModule();
-    m.declarationInstantiation();
-    return m.evaluation();
+    instantiateModule(m);
+    return evaluateModule(m);
 }
 function runTestCase(testcase) {
     if (testcase() !== true) {}
