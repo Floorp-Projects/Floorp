@@ -2,3 +2,4 @@
 # our script for generating it. This allows us to run configure without any
 # extra dependencies on specific toolchains, e.g. gtk3.
 ac_add_options --disable-compile-environment
+ac_add_options --disable-nodejs
