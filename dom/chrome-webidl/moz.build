@@ -51,11 +51,6 @@ WEBIDL_FILES = [
     'XULScrollElement.webidl'
 ]
 
-if CONFIG['OS_TARGET'] != 'Android':
-    WEBIDL_FILES += [
-        'PrioEncoder.webidl',
-    ]
-
 if CONFIG['MOZ_PLACES']:
     WEBIDL_FILES += [
         'PlacesEvent.webidl',
