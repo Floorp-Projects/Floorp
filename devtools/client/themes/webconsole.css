@@ -1016,7 +1016,8 @@ body #output-container {
 
 .sidebar-contents {
   grid-row: 2 / 3;
-  overflow: scroll;
+  overflow: auto;
+  max-height: 100%;
 }
 
 .webconsole-sidebar-toolbar .sidebar-close-button {
