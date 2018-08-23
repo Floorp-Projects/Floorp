@@ -11,6 +11,7 @@ const rootReducer = require("./reducers/index");
 const { RuntimeState } = require("./reducers/runtime-state");
 const { UiState } = require("./reducers/ui-state");
 const debugTargetListenerMiddleware = require("./middleware/debug-target-listener");
+const extensionComponentDataMiddleware = require("./middleware/extension-component-data");
 const tabComponentDataMiddleware = require("./middleware/tab-component-data");
 const { getNetworkLocations } = require("./modules/network-locations");
 
@@ -22,6 +23,7 @@ function configureStore() {
 
   const middleware = applyMiddleware(thunk,
                                      debugTargetListenerMiddleware,
+                                     extensionComponentDataMiddleware,
                                      tabComponentDataMiddleware);
 
   return createStore(rootReducer, initialState, middleware);
