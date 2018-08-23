@@ -597,10 +597,13 @@ html|input.urlbar-input {
 }
 
 #sidebar-box {
-  -moz-appearance: -moz-mac-source-list;
-  -moz-font-smoothing-background-color: -moz-mac-source-list;
   /* Default font size is 11px on mac, so this is 12px */
   font-size: 1.0909rem;
+}
+
+#sidebar-box:not([lwt-sidebar]) {
+  -moz-appearance: -moz-mac-source-list;
+  -moz-font-smoothing-background-color: -moz-mac-source-list;
 }
 
 /* ----- CONTENT ----- */
