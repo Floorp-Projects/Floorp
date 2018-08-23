@@ -17,6 +17,7 @@ Before you attempt to make a contribution please read the [Community Participati
 ### Development
 
 * [Code coverage]({{ site.baseurl }}/contributing/code-coverage)
+* [Working on unreleased component code in an app]({{ site.baseurl }}{% link contribute/components_inside_app.md %})
 
 ### Process
 
