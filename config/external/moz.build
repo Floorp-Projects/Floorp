@@ -8,9 +8,14 @@ external_dirs = []
 
 DIRS += [
     'lgpllibs',
-    'prio',
     'sqlite',
 ]
+
+if CONFIG['OS_TARGET'] != 'Android':
+    DIRS += [
+        'prio',
+    ]
+
 if not CONFIG['MOZ_SYSTEM_JPEG']:
     external_dirs += ['media/libjpeg']
 
