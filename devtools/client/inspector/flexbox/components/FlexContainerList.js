@@ -9,13 +9,11 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
-loader.lazyGetter(this, "FlexContainerList", function() {
-  return createFactory(require("./FlexContainerList"));
-});
+const FlexContainerItem = createFactory(require("./FlexContainerItem"));
 
 const Types = require("../types");
 
-class Flexbox extends PureComponent {
+class FlexContainerList extends PureComponent {
   static get propTypes() {
     return {
       flexbox: PropTypes.shape(Types.flexbox).isRequired,
@@ -39,18 +37,16 @@ class Flexbox extends PureComponent {
       setSelectedNode,
     } = this.props;
 
-    if (!flexbox.actorID) {
-      return (
-        dom.div({ className: "devtools-sidepanel-no-result" },
-          getStr("flexbox.noFlexboxeOnThisPage")
-        )
-      );
-    }
-
     return (
-      dom.div({ id: "layout-flexbox-container" },
-        dom.div({ className: "flexbox-content" },
-          FlexContainerList({
+      dom.div({ className: "flexbox-container" },
+        dom.span({}, getStr("flexbox.overlayFlexbox")),
+        dom.ul(
+          {
+            id: "flexbox-list",
+            className: "devtools-monospace",
+          },
+          FlexContainerItem({
+            key: flexbox.id,
             flexbox,
             getSwatchColorPickerTooltip,
             onHideBoxModelHighlighter,
@@ -65,4 +61,4 @@ class Flexbox extends PureComponent {
   }
 }
 
-module.exports = Flexbox;
+module.exports = FlexContainerList;

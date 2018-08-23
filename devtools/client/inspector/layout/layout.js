@@ -23,8 +23,6 @@ class LayoutView {
     this.inspector = inspector;
     this.store = inspector.store;
 
-    this.getSwatchColorPickerTooltip = this.getSwatchColorPickerTooltip.bind(this);
-
     this.init();
   }
 
@@ -62,7 +60,7 @@ class LayoutView {
     } = this.gridInspector.getComponentProps();
 
     const layoutApp = LayoutApp({
-      getSwatchColorPickerTooltip: this.getSwatchColorPickerTooltip,
+      getSwatchColorPickerTooltip: () => this.swatchColorPickerTooltip,
       onHideBoxModelHighlighter,
       onSetFlexboxOverlayColor,
       onSetGridOverlayColor,
@@ -110,13 +108,6 @@ class LayoutView {
     this.document = null;
     this.inspector = null;
     this.store = null;
-  }
-
-  /**
-   * Retrieve the shared SwatchColorPicker instance.
-   */
-  getSwatchColorPickerTooltip() {
-    return this.swatchColorPickerTooltip;
   }
 
   get swatchColorPickerTooltip() {
