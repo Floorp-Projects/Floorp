@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.6.0 */
+/* Generated with cbindgen:0.6.2 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -240,9 +240,9 @@ struct Tiles;
 // A Transaction is a group of commands to apply atomically to a document.
 //
 // This mechanism ensures that:
-//  - no other message can be interleaved between two commands that need to be applied together.
-//  - no redundant work is performed if two commands in the same transaction cause the scene or
-//    the frame to be rebuilt.
+// - no other message can be interleaved between two commands that need to be applied together.
+// - no redundant work is performed if two commands in the same transaction cause the scene or
+// the frame to be rebuilt.
 struct Transaction;
 
 // The default unit.
@@ -715,8 +715,7 @@ union GlyphRasterSpace {
     float _0;
 
     bool operator==(const Local_Body& aOther) const {
-      return tag == aOther.tag &&
-             _0 == aOther._0;
+      return _0 == aOther._0;
     }
   };
 
@@ -744,6 +743,16 @@ union GlyphRasterSpace {
 
   bool IsScreen() const {
     return tag == Tag::Screen;
+  }
+
+  bool operator==(const GlyphRasterSpace& aOther) const {
+    if (tag != aOther.tag) {
+      return false;
+    }
+    switch (tag) {
+      case Tag::Local: return local == aOther.local;
+      default: return true;
+    }
   }
 };
 
@@ -971,13 +980,6 @@ struct WrOpacityProperty {
 };
 
 extern "C" {
-
-/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
- * To generate this file:
- *   1. Get the latest cbindgen using `cargo install --force cbindgen`
- *      a. Alternatively, you can clone `https://github.com/eqrion/cbindgen` and use a tagged release
- *   2. Run `rustup run nightly cbindgen toolkit/library/rust/ --lockfile Cargo.lock --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
- */
 
 extern void AddFontData(WrFontKey aKey,
                         const uint8_t *aData,
@@ -1296,7 +1298,7 @@ void wr_dp_push_image(WrState *aState,
                       ImageRendering aImageRendering,
                       WrImageKey aKey,
                       bool aPremultipliedAlpha,
-                      ColorF color)
+                      ColorF aColor)
 WR_FUNC;
 
 WR_INLINE
@@ -1763,10 +1765,3 @@ WR_FUNC;
 
 } // namespace wr
 } // namespace mozilla
-
-/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
- * To generate this file:
- *   1. Get the latest cbindgen using `cargo install --force cbindgen`
- *      a. Alternatively, you can clone `https://github.com/eqrion/cbindgen` and use a tagged release
- *   2. Run `rustup run nightly cbindgen toolkit/library/rust/ --lockfile Cargo.lock --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
- */
