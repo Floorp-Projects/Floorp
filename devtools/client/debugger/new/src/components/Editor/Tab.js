@@ -132,7 +132,7 @@ class Tab extends _react.PureComponent {
   render() {
     const {
       selectedSource,
-      selectSource,
+      selectSpecificSource,
       closeTab,
       source,
       tabSources
@@ -149,7 +149,7 @@ class Tab extends _react.PureComponent {
     function handleTabClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      return selectSource(sourceId);
+      return selectSpecificSource(sourceId);
     }
 
     const className = (0, _classnames2.default)("source-tab", {
@@ -190,7 +190,7 @@ const mapStateToProps = (state, {
 };
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, {
-  selectSource: _actions2.default.selectSource,
+  selectSpecificSource: _actions2.default.selectSpecificSource,
   closeTab: _actions2.default.closeTab,
   closeTabs: _actions2.default.closeTabs,
   togglePrettyPrint: _actions2.default.togglePrettyPrint,
