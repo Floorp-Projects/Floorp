@@ -146,6 +146,7 @@ const UPDATE_PROPS = [
   "responseCacheAvailable",
   "formDataSections",
   "stacktrace",
+  "isTrackingResource",
 ];
 
 const PANELS = {
