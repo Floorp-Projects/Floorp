@@ -39,10 +39,10 @@ fuzzy-if(webrender,0-1,0-2) == flexbox-align-self-horiz-004.xhtml  flexbox-align
 == flexbox-align-self-vert-003.xhtml  flexbox-align-self-vert-003-ref.xhtml
 == flexbox-align-self-vert-004.xhtml  flexbox-align-self-vert-004-ref.xhtml
 fuzzy-if(Android,0-158,0-32) == flexbox-align-self-vert-rtl-001.xhtml  flexbox-align-self-vert-rtl-001-ref.xhtml
-== flexbox-align-self-vert-rtl-002.xhtml  flexbox-align-self-vert-rtl-002-ref.xhtml
-== flexbox-align-self-vert-rtl-003.xhtml  flexbox-align-self-vert-rtl-003-ref.xhtml
-== flexbox-align-self-vert-rtl-004.xhtml  flexbox-align-self-vert-rtl-004-ref.xhtml
-== flexbox-align-self-vert-rtl-005.xhtml  flexbox-align-self-vert-rtl-005-ref.xhtml
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == flexbox-align-self-vert-rtl-002.xhtml  flexbox-align-self-vert-rtl-002-ref.xhtml # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == flexbox-align-self-vert-rtl-003.xhtml  flexbox-align-self-vert-rtl-003-ref.xhtml # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == flexbox-align-self-vert-rtl-004.xhtml  flexbox-align-self-vert-rtl-004-ref.xhtml # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == flexbox-align-self-vert-rtl-005.xhtml  flexbox-align-self-vert-rtl-005-ref.xhtml # Bug 1392106
 
 == flexbox-align-items-center-nested-001.html flexbox-align-items-center-nested-001-ref.html
 
