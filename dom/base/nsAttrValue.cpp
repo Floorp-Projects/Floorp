@@ -1707,15 +1707,15 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
 {
   nsIDocument* ownerDoc = aElement->OwnerDoc();
   nsHTMLCSSStyleSheet* sheet = ownerDoc->GetInlineStyleSheet();
-  nsCOMPtr<nsIURI> baseURI = aElement->GetBaseURIForStyleAttr();
+  nsIURI* baseURI = aElement->GetBaseURIForStyleAttr();
   nsIURI* docURI = ownerDoc->GetDocumentURI();
 
   NS_ASSERTION(aElement->NodePrincipal() == ownerDoc->NodePrincipal(),
                "This is unexpected");
 
-  nsCOMPtr<nsIPrincipal> principal = (
-      aMaybeScriptedPrincipal ? aMaybeScriptedPrincipal
-                              : aElement->NodePrincipal());
+  nsIPrincipal* principal =
+    aMaybeScriptedPrincipal ? aMaybeScriptedPrincipal
+                            : aElement->NodePrincipal();
 
   // If the (immutable) document URI does not match the element's base URI
   // (the common case is that they do match) do not cache the rule.  This is
@@ -1724,8 +1724,9 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
   // Similarly, if the triggering principal does not match the node principal,
   // do not cache the rule, since the principal will be encoded in any parsed
   // URLs in the rule.
-  bool cachingAllowed = (sheet && baseURI == docURI &&
-                         principal == aElement->NodePrincipal());
+  const bool cachingAllowed = sheet &&
+                              baseURI == docURI &&
+                              principal == aElement->NodePrincipal();
   if (cachingAllowed) {
     MiscContainer* cont = sheet->LookupStyleAttr(aString);
     if (cont) {
@@ -1736,12 +1737,12 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
     }
   }
 
-  RefPtr<URLExtraData> data = new URLExtraData(baseURI, docURI,
-                                                principal);
-  RefPtr<DeclarationBlock> decl = DeclarationBlock::
-    FromCssText(aString, data,
-                ownerDoc->GetCompatibilityMode(),
-                ownerDoc->CSSLoader());
+  RefPtr<URLExtraData> data = new URLExtraData(baseURI, docURI, principal);
+  RefPtr<DeclarationBlock> decl =
+    DeclarationBlock::FromCssText(aString,
+                                  data,
+                                  ownerDoc->GetCompatibilityMode(),
+                                  ownerDoc->CSSLoader());
   if (!decl) {
     return false;
   }

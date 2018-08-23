@@ -61,17 +61,6 @@ interface nsICertificateDialogs : nsISupports
   [must_use]
   boolean getPKCS12FilePassword(in nsIInterfaceRequestor ctx,
                                 out AString password);
-
-  /**
-   *  UI shown when a certificate needs to be shown to the user.
-   *  The implementation should try to display as many attributes
-   *  as possible.
-   *
-   *  @param ctx A user interface context.
-   *  @param cert The certificate to be shown to the user.
-   */
-  [must_use]
-  void viewCert(in nsIInterfaceRequestor ctx, in nsIX509Cert cert);
 };
 
 %{C++

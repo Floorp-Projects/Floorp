@@ -88,11 +88,6 @@ fun:*nsDisplayOpacity*ShouldFlattenAway*
 fun:*pref_InitInitialObjects*
 # Code in netwerk/base/nsIOService.cpp
 fun:*nsIOService*GetCachedProtocolHandler*
-# Code in layout/style/nsCSSRuleProcessor.cpp
-fun:*0nsCSSRuleProcessor@@*
-fun:*nsCSSRuleProcessor*ClearSheets*
-fun:*TreeMatchContext*InitAncestors*
-fun:*TreeMatchContext*InitStyleScopes*
 # Code in layout/xul/nsXULPopupManager.cpp
 fun:*nsXULPopupManager*AdjustPopupsOnWindowChange*
 # Code in dom/base/nsDocument.cpp

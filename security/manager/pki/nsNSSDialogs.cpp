@@ -348,20 +348,6 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
 }
 
 NS_IMETHODIMP
-nsNSSDialogs::ViewCert(nsIInterfaceRequestor* ctx, nsIX509Cert* cert)
-{
-  // |ctx| is allowed to be null.
-  NS_ENSURE_ARG(cert);
-
-  // Get the parent window for the dialog
-  nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
-  return nsNSSDialogHelper::openDialog(parent,
-                                       "chrome://pippki/content/certViewer.xul",
-                                       cert,
-                                       false /*modal*/);
-}
-
-NS_IMETHODIMP
 nsNSSDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *aCtx, nsIKeygenThread *runnable)
 {
   nsresult rv;
