@@ -3730,7 +3730,7 @@ window._gBrowser = {
     return SessionStore.duplicateTab(window, aTab, 0, aRestoreTabImmediately);
   },
 
-  addToMultiSelectedTabs(aTab, skipPositionalAttributes) {
+  addToMultiSelectedTabs(aTab, multiSelectMayChangeMore) {
     if (aTab.multiselected) {
       return;
     }
@@ -3745,7 +3745,11 @@ window._gBrowser = {
       this._multiSelectChangeAdditions.add(aTab);
     }
 
-    if (!skipPositionalAttributes) {
+    if (!multiSelectMayChangeMore) {
+      let {selectedTab} = this;
+      if (!selectedTab.multiselected) {
+        this.addToMultiSelectedTabs(selectedTab, true);
+      }
       this.tabContainer._setPositionalAttributes();
     }
   },
@@ -3771,7 +3775,7 @@ window._gBrowser = {
     this.tabContainer._setPositionalAttributes();
   },
 
-  removeFromMultiSelectedTabs(aTab, updatePositionalAttributes) {
+  removeFromMultiSelectedTabs(aTab, isLastMultiSelectChange) {
     if (!aTab.multiselected) {
       return;
     }
@@ -3784,12 +3788,16 @@ window._gBrowser = {
     } else {
       this._multiSelectChangeRemovals.add(aTab);
     }
-    if (updatePositionalAttributes) {
+    if (isLastMultiSelectChange) {
+      if (aTab.selected) {
+        this.switchToNextMultiSelectedTab();
+      }
+      this.avoidSingleSelectedTab();
       this.tabContainer._setPositionalAttributes();
     }
   },
 
-  clearMultiSelectedTabs(updatePositionalAttributes) {
+  clearMultiSelectedTabs(isLastMultiSelectChange) {
     if (this._clearMultiSelectionLocked) {
       if (this._clearMultiSelectionLockedOnce) {
         this._clearMultiSelectionLockedOnce = false;
@@ -3806,7 +3814,7 @@ window._gBrowser = {
       this.removeFromMultiSelectedTabs(tab, false);
     }
     this._lastMultiSelectedTabRef = null;
-    if (updatePositionalAttributes) {
+    if (isLastMultiSelectChange) {
       this.tabContainer._setPositionalAttributes();
     }
   },
