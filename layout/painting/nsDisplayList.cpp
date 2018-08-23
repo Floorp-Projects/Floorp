@@ -9660,13 +9660,8 @@ nsDisplayFilter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
                                          mozilla::layers::WebRenderLayerManager* aManager,
                                          nsDisplayListBuilder* aDisplayListBuilder)
 {
-  if (mFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    return false;
-  }
-
-  // Due to differences in the way that WebRender filters operate
-  // only the brightness and contrast filters use that path. We
-  // can gradually enable more filters as WebRender bugs are fixed.
+  // All CSS filters are supported by WebRender. SVG filters are not supported,
+  // those use NS_STYLE_FILTER_URL.
   nsTArray<mozilla::wr::WrFilterOp> wrFilters;
   const nsTArray<nsStyleFilter>& filters = mFrame->StyleEffects()->mFilters;
   for (const nsStyleFilter& filter : filters) {

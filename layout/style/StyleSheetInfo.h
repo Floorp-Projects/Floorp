@@ -14,7 +14,6 @@
 
 #include "nsIURI.h"
 
-class nsCSSRuleProcessor;
 class nsIPrincipal;
 
 namespace mozilla {

@@ -5,6 +5,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ActionSandboxManager: "resource://normandy/lib/ActionSandboxManager.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   Uptake: "resource://normandy/lib/Uptake.jsm",
+  AddonStudyAction: "resource://normandy/actions/AddonStudyAction.jsm",
   ConsoleLogAction: "resource://normandy/actions/ConsoleLogAction.jsm",
   PreferenceRolloutAction: "resource://normandy/actions/PreferenceRolloutAction.jsm",
   PreferenceRollbackAction: "resource://normandy/actions/PreferenceRollbackAction.jsm",
@@ -28,10 +29,14 @@ class ActionsManager {
     this.finalized = false;
     this.remoteActionSandboxes = {};
 
+    const addonStudyAction = new AddonStudyAction();
+
     this.localActions = {
+      "addon-study": addonStudyAction,
       "console-log": new ConsoleLogAction(),
       "preference-rollout": new PreferenceRolloutAction(),
       "preference-rollback": new PreferenceRollbackAction(),
+      "opt-out-study": addonStudyAction, // Legacy name used on Normandy server
     };
   }
 

@@ -239,7 +239,7 @@ struct String
 };
 
 struct Symbol {
-    uintptr_t reserved_;
+    void* _1;
     uint32_t code_;
     static const uint32_t WellKnownAPILimit = 0x80000000;
 
