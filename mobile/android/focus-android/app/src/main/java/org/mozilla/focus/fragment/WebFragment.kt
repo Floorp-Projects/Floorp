@@ -64,13 +64,8 @@ abstract class WebFragment : LocaleAwareFragment() {
             webViewInstance!!.setRequestDesktop(session.shouldRequestDesktopSite())
         }
 
-        if (session == null || !session.hasWebViewState()) {
-            val url = initialUrl
-            if (!TextUtils.isEmpty(url)) {
-                webViewInstance!!.loadUrl(url)
-            }
-        } else if (!AppConstants.isGeckoBuild) {
-            webViewInstance!!.restoreWebViewState(session)
+        if (!AppConstants.isGeckoBuild) {
+            restoreStateOrLoadInitialUrl()
         }
 
         onCreateViewCalled()
@@ -110,6 +105,10 @@ abstract class WebFragment : LocaleAwareFragment() {
     override fun onResume() {
         webViewInstance!!.onResume()
 
+        if (AppConstants.isGeckoBuild) {
+            restoreStateOrLoadInitialUrl()
+        }
+
         super.onResume()
     }
 
@@ -131,5 +130,17 @@ abstract class WebFragment : LocaleAwareFragment() {
 
     protected fun getWebView(): IWebView? {
         return if (isWebViewAvailable) webViewInstance else null
+    }
+
+    private fun restoreStateOrLoadInitialUrl() {
+        val session = session
+        if (session == null || !session.hasWebViewState()) {
+            val url = initialUrl
+            if (!TextUtils.isEmpty(url)) {
+                webViewInstance!!.loadUrl(url)
+            }
+        } else {
+            webViewInstance!!.restoreWebViewState(session)
+        }
     }
 }
