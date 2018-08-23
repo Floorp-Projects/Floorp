@@ -10,6 +10,8 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const DebugTargetList = createFactory(require("./DebugTargetList"));
 
+const Actions = require("../../actions/index");
+
 /**
  * This component provides list for debug target and name area.
  */
@@ -17,12 +19,18 @@ class DebugTargetPane extends PureComponent {
   static get propTypes() {
     return {
       actionComponent: PropTypes.any.isRequired,
+      collapsibilityKey: PropTypes.string.isRequired,
       detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
       isCollapsed: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
       targets: PropTypes.arrayOf(PropTypes.Object).isRequired,
     };
+  }
+
+  toggleCollapsibility() {
+    const { collapsibilityKey, dispatch, isCollapsed } = this.props;
+    dispatch(Actions.updateDebugTargetCollapsibility(collapsibilityKey, !isCollapsed));
   }
 
   render() {
@@ -43,6 +51,8 @@ class DebugTargetPane extends PureComponent {
           {
             className: "debug-target-pane__title" +
                        (isCollapsed ? " debug-target-pane__title--collapsed" : ""),
+            href: "#",
+            onClick: e => this.toggleCollapsibility(),
           },
           name
         )

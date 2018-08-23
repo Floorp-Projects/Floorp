@@ -61,6 +61,7 @@ class RuntimePage extends PureComponent {
       TemporaryExtensionInstaller({ dispatch }),
       DebugTargetPane({
         actionComponent: TemporaryExtensionAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
         detailComponent: ExtensionDetail,
         dispatch,
         isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.TEMPORARY_EXTENSION),
@@ -69,6 +70,7 @@ class RuntimePage extends PureComponent {
       }),
       DebugTargetPane({
         actionComponent: InspectAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
         detailComponent: ExtensionDetail,
         dispatch,
         isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.INSTALLED_EXTENSION),
@@ -77,6 +79,7 @@ class RuntimePage extends PureComponent {
       }),
       DebugTargetPane({
         actionComponent: InspectAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.TAB,
         detailComponent: TabDetail,
         dispatch,
         isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.TAB),
@@ -85,6 +88,7 @@ class RuntimePage extends PureComponent {
       }),
       DebugTargetPane({
         actionComponent: ServiceWorkerAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.SERVICE_WORKER,
         detailComponent: WorkerDetail,
         dispatch,
         isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.SERVICE_WORKER),
@@ -93,6 +97,7 @@ class RuntimePage extends PureComponent {
       }),
       DebugTargetPane({
         actionComponent: InspectAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.SHARED_WORKER,
         detailComponent: WorkerDetail,
         dispatch,
         isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.SHARED_WORKER),
@@ -101,6 +106,7 @@ class RuntimePage extends PureComponent {
       }),
       DebugTargetPane({
         actionComponent: InspectAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.OTHER_WORKER,
         detailComponent: WorkerDetail,
         dispatch,
         isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.OTHER_WORKER),
