@@ -276,8 +276,13 @@ TEST_P(TlsConnectGeneric, ConnectResumeCorruptTicket) {
   ASSERT_NE(nullptr, hmac_key);
   SSLInt_SetSelfEncryptMacKey(hmac_key);
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  ConnectExpectAlert(server_, illegal_parameter);
-  server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    ExpectResumption(RESUME_NONE);
+    Connect();
+  } else {
+    ConnectExpectAlert(server_, illegal_parameter);
+    server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+  }
 }
 
 // This callback switches out the "server" cert used on the server with
