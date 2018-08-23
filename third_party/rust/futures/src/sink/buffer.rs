@@ -49,9 +49,6 @@ impl<S: Sink> Buffer<S> {
             if let AsyncSink::NotReady(item) = self.sink.start_send(item)? {
                 self.buf.push_front(item);
 
-                // ensure that we attempt to complete any pushes we've started
-                self.sink.poll_complete()?;
-
                 return Ok(Async::NotReady);
             }
         }

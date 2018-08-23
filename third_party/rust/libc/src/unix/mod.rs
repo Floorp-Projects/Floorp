@@ -104,8 +104,10 @@ s! {
         pub s_addr: in_addr_t,
     }
 
+    #[cfg_attr(feature = "align", repr(align(4)))]
     pub struct in6_addr {
         pub s6_addr: [u8; 16],
+        #[cfg(not(feature = "align"))]
         __align: [u32; 0],
     }
 
@@ -268,8 +270,16 @@ pub const INADDR_ANY: in_addr_t = 0;
 pub const INADDR_BROADCAST: in_addr_t = 4294967295;
 pub const INADDR_NONE: in_addr_t = 4294967295;
 
+pub const ARPOP_REQUEST: u16 = 1;
+pub const ARPOP_REPLY: u16 = 2;
+
+pub const ATF_COM: ::c_int = 0x02;
+pub const ATF_PERM: ::c_int = 0x04;
+pub const ATF_PUBL: ::c_int = 0x08;
+pub const ATF_USETRAILERS: ::c_int = 0x10;
+
 cfg_if! {
-    if #[cfg(dox)] {
+    if #[cfg(cross_platform_docs)] {
         // on dox builds don't pull in anything
     } else if #[cfg(target_os = "l4re")] {
         // required libraries for L4Re are linked externally, ATM
@@ -286,11 +296,11 @@ cfg_if! {
     } else if #[cfg(target_os = "emscripten")] {
         #[link(name = "c")]
         extern {}
-    } else if #[cfg(all(target_os = "netbsd"))] {
+    } else if #[cfg(all(target_os = "netbsd",
+                        feature = "stdbuild", target_vendor = "rumprun"))] {
         // Since we don't use -nodefaultlibs on Rumprun, libc is always pulled
         // in automatically by the linker. We avoid passing it explicitly, as it
         // causes some versions of binutils to crash with an assertion failure.
-        #[cfg_attr(feature = "stdbuild", target_vendor = "rumprun")]
         #[link(name = "m")]
         extern {}
     } else if #[cfg(any(target_os = "macos",
@@ -312,6 +322,11 @@ cfg_if! {
     } else if #[cfg(target_env = "newlib")] {
         #[link(name = "c")]
         #[link(name = "m")]
+        extern {}
+    } else if #[cfg(target_os = "hermit")] {
+        // no_default_libraries is set to false for HermitCore, so only a link
+        // to "pthread" needs to be added.
+        #[link(name = "pthread")]
         extern {}
     } else {
         #[link(name = "c")]
@@ -416,6 +431,13 @@ extern {
                link_name = "opendir$INODE64$UNIX2003")]
     #[cfg_attr(target_os = "netbsd", link_name = "__opendir30")]
     pub fn opendir(dirname: *const c_char) -> *mut ::DIR;
+
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86_64"),
+               link_name = "fdopendir$INODE64")]
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "fdopendir$INODE64$UNIX2003")]
+    pub fn fdopendir(fd: ::c_int) -> *mut ::DIR;
+
     #[cfg_attr(target_os = "macos", link_name = "readdir$INODE64")]
     #[cfg_attr(target_os = "netbsd", link_name = "__readdir30")]
     #[cfg_attr(target_os = "freebsd", link_name = "readdir@FBSD_1.0")]
@@ -914,6 +936,7 @@ extern {
     pub fn openlog(ident: *const ::c_char, logopt: ::c_int, facility: ::c_int);
     pub fn closelog();
     pub fn setlogmask(maskpri: ::c_int) -> ::c_int;
+    #[cfg_attr(target_os = "macos", link_name = "syslog$DARWIN_EXTSN")]
     pub fn syslog(priority: ::c_int, message: *const ::c_char, ...);
     #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
                link_name = "nice$UNIX2003")]
@@ -953,6 +976,9 @@ cfg_if! {
     } else if #[cfg(target_os = "haiku")] {
         mod haiku;
         pub use self::haiku::*;
+    } else if #[cfg(target_os = "hermit")] {
+        mod hermit;
+        pub use self::hermit::*;
     } else {
         // Unknown target_os
     }

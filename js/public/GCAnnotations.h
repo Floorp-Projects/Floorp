@@ -26,6 +26,12 @@
 // is not itself a GC pointer.
 # define JS_HAZ_GC_INVALIDATED __attribute__((tag("Invalidated by GC")))
 
+// Mark a class as a base class of rooted types, eg CustomAutoRooter. All
+// descendants of this class will be considered rooted, though classes that
+// merely contain these as a field member will not be. "Inherited" by
+// templatized types with MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS
+# define JS_HAZ_ROOTED_BASE __attribute__((tag("Rooted Base")))
+
 // Mark a type that would otherwise be considered a GC Pointer (eg because it
 // contains a JS::Value field) as a non-GC pointer. It is handled almost the
 // same in the analysis as a rooted pointer, except it will not be reported as
@@ -52,6 +58,7 @@
 # define JS_HAZ_GC_POINTER
 # define JS_HAZ_ROOTED
 # define JS_HAZ_GC_INVALIDATED
+# define JS_HAZ_ROOTED_BASE
 # define JS_HAZ_NON_GC_POINTER
 # define JS_HAZ_GC_CALL
 # define JS_HAZ_GC_SUPPRESSED

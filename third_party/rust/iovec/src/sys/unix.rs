@@ -29,6 +29,7 @@ impl IoVec {
 
 impl<'a> From<&'a [u8]> for &'a IoVec {
     fn from(src: &'a [u8]) -> Self {
+        assert!(src.len() > 0);
         unsafe {
             mem::transmute(libc::iovec {
                 iov_base: src.as_ptr() as *mut _,
@@ -40,6 +41,7 @@ impl<'a> From<&'a [u8]> for &'a IoVec {
 
 impl<'a> From<&'a mut [u8]> for &'a mut IoVec {
     fn from(src: &'a mut [u8]) -> Self {
+        assert!(src.len() > 0);
         unsafe {
             mem::transmute(libc::iovec {
                 iov_base: src.as_ptr() as *mut _,

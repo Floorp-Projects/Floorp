@@ -20,38 +20,56 @@
 
 namespace js {
 
-class CompartmentChecker
+class ContextChecks
 {
-    JS::Compartment* compartment;
+    JSContext* cx;
+
+    JS::Realm* realm() const {
+        return cx->realm();
+    }
+    JS::Compartment* compartment() const {
+        return cx->compartment();
+    }
+    JS::Zone* zone() const {
+        return cx->zone();
+    }
 
   public:
-    explicit CompartmentChecker(JSContext* cx)
-      : compartment(cx->compartment())
+    explicit ContextChecks(JSContext* cx)
+      : cx(cx)
     {
     }
 
     /*
-     * Set a breakpoint here (break js::CompartmentChecker::fail) to debug
-     * compartment mismatches.
+     * Set a breakpoint here (break js::ContextChecks::fail) to debug
+     * realm/compartment/zone mismatches.
      */
+    static void fail(JS::Realm* r1, JS::Realm* r2, int argIndex) {
+        MOZ_CRASH_UNSAFE_PRINTF("*** Realm mismatch %p vs. %p at argument %d\n",
+                                r1, r2, argIndex);
+    }
     static void fail(JS::Compartment* c1, JS::Compartment* c2, int argIndex) {
         MOZ_CRASH_UNSAFE_PRINTF("*** Compartment mismatch %p vs. %p at argument %d\n",
-                                (void*) c1, (void*) c2, argIndex);
+                                c1, c2, argIndex);
     }
-
     static void fail(JS::Zone* z1, JS::Zone* z2, int argIndex) {
         MOZ_CRASH_UNSAFE_PRINTF("*** Zone mismatch %p vs. %p at argument %d\n",
-                                (void*) z1, (void*) z2, argIndex);
+                                z1, z2, argIndex);
+    }
+
+    void check(JS::Realm* r, int argIndex) {
+        if (r && r != realm())
+            fail(realm(), r, argIndex);
     }
 
     void check(JS::Compartment* c, int argIndex) {
-        if (c && c != compartment)
-            fail(compartment, c, argIndex);
+        if (c && c != compartment())
+            fail(compartment(), c, argIndex);
     }
 
-    void checkZone(JS::Zone* z, int argIndex) {
-        if (compartment && z != compartment->zone())
-            fail(compartment->zone(), z, argIndex);
+    void check(JS::Zone* z, int argIndex) {
+        if (zone() && z != zone())
+            fail(zone(), z, argIndex);
     }
 
     void check(JSObject* obj, int argIndex) {
@@ -60,21 +78,6 @@ class CompartmentChecker
             MOZ_ASSERT(!js::gc::IsAboutToBeFinalizedUnbarriered(&obj));
             check(obj->compartment(), argIndex);
         }
-    }
-
-    template<typename T>
-    void check(const Rooted<T>& rooted, int argIndex) {
-        check(rooted.get(), argIndex);
-    }
-
-    template<typename T>
-    void check(Handle<T> handle, int argIndex) {
-        check(handle.get(), argIndex);
-    }
-
-    template<typename T>
-    void check(MutableHandle<T> handle, int argIndex) {
-        check(handle.get(), argIndex);
     }
 
     template <typename T>
@@ -86,11 +89,10 @@ class CompartmentChecker
 #ifdef DEBUG
         // Atoms which move across zone boundaries need to be marked in the new
         // zone, see JS_MarkCrossZoneId.
-        if (compartment) {
-            JSRuntime* rt = compartment->runtimeFromAnyThread();
-            if (!rt->gc.atomMarking.atomIsMarked(compartment->zone(), thing)) {
+        if (zone()) {
+            if (!cx->runtime()->gc.atomMarking.atomIsMarked(zone(), thing)) {
                 MOZ_CRASH_UNSAFE_PRINTF("*** Atom not marked for zone %p at argument %d\n",
-                                        compartment->zone(), argIndex);
+                                        zone(), argIndex);
             }
         }
 #endif
@@ -101,7 +103,7 @@ class CompartmentChecker
         if (str->isAtom())
             checkAtom(&str->asAtom(), argIndex);
         else
-            checkZone(str->zone(), argIndex);
+            check(str->zone(), argIndex);
     }
 
     void check(JS::Symbol* symbol, int argIndex) {
@@ -153,10 +155,9 @@ class CompartmentChecker
     void check(JSScript* script, int argIndex) {
         MOZ_ASSERT(JS::CellIsNotGray(script));
         if (script)
-            check(script->compartment(), argIndex);
+            check(script->realm(), argIndex);
     }
 
-    void check(InterpreterFrame* fp, int argIndex);
     void check(AbstractFramePtr frame, int argIndex);
 
     void check(Handle<PropertyDescriptor> desc, int argIndex) {
@@ -173,89 +174,41 @@ class CompartmentChecker
     }
 };
 
-/*
- * Don't perform these checks when called from a finalizer. The checking
- * depends on other objects not having been swept yet.
- */
-#define START_ASSERT_SAME_COMPARTMENT()                                 \
-    if (JS::RuntimeHeapIsCollecting())                                  \
-        return;                                                         \
-    CompartmentChecker c(cx)
+} // namespace js
 
-template <class T1> inline void
-releaseAssertSameCompartment(JSContext* cx, const T1& t1)
+template <class Head, class... Tail> inline void
+JSContext::checkImpl(int argIndex, const Head& head, const Tail&... tail)
 {
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
+    js::ContextChecks(this).check(head, argIndex);
+    checkImpl(argIndex + 1, tail...);
 }
 
-template <class T1> inline void
-assertSameCompartment(JSContext* cx, const T1& t1)
+template <class... Args> inline void
+JSContext::check(const Args&... args)
 {
 #ifdef JS_CRASH_DIAGNOSTICS
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
+    if (contextChecksEnabled())
+        checkImpl(0, args...);
 #endif
 }
 
-template <class T1> inline void
-assertSameCompartmentDebugOnly(JSContext* cx, const T1& t1)
+template <class... Args> inline void
+JSContext::releaseCheck(const Args&... args)
+{
+    if (contextChecksEnabled())
+        checkImpl(0, args...);
+}
+
+template <class... Args> MOZ_ALWAYS_INLINE void
+JSContext::debugOnlyCheck(const Args&... args)
 {
 #if defined(DEBUG) && defined(JS_CRASH_DIAGNOSTICS)
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
+    if (contextChecksEnabled())
+        checkImpl(0, args...);
 #endif
 }
 
-template <class T1, class T2> inline void
-assertSameCompartment(JSContext* cx, const T1& t1, const T2& t2)
-{
-#ifdef JS_CRASH_DIAGNOSTICS
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
-    c.check(t2, 3);
-#endif
-}
-
-template <class T1, class T2, class T3> inline void
-assertSameCompartment(JSContext* cx, const T1& t1, const T2& t2, const T3& t3)
-{
-#ifdef JS_CRASH_DIAGNOSTICS
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
-    c.check(t2, 3);
-    c.check(t3, 4);
-#endif
-}
-
-template <class T1, class T2, class T3, class T4> inline void
-assertSameCompartment(JSContext* cx,
-                      const T1& t1, const T2& t2, const T3& t3, const T4& t4)
-{
-#ifdef JS_CRASH_DIAGNOSTICS
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
-    c.check(t2, 3);
-    c.check(t3, 4);
-    c.check(t4, 5);
-#endif
-}
-
-template <class T1, class T2, class T3, class T4, class T5> inline void
-assertSameCompartment(JSContext* cx,
-                      const T1& t1, const T2& t2, const T3& t3, const T4& t4, const T5& t5)
-{
-#ifdef JS_CRASH_DIAGNOSTICS
-    START_ASSERT_SAME_COMPARTMENT();
-    c.check(t1, 2);
-    c.check(t2, 3);
-    c.check(t3, 4);
-    c.check(t4, 5);
-    c.check(t5, 6);
-#endif
-}
-
-#undef START_ASSERT_SAME_COMPARTMENT
+namespace js {
 
 STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
 MOZ_ALWAYS_INLINE bool
@@ -264,10 +217,10 @@ CallNativeImpl(JSContext* cx, NativeImpl impl, const CallArgs& args)
 #ifdef DEBUG
     bool alreadyThrowing = cx->isExceptionPending();
 #endif
-    assertSameCompartment(cx, args);
+    cx->check(args);
     bool ok = impl(cx, args);
     if (ok) {
-        assertSameCompartment(cx, args.rval());
+        cx->check(args.rval());
         MOZ_ASSERT_IF(!alreadyThrowing, !cx->isExceptionPending());
     }
     return ok;
@@ -280,10 +233,10 @@ CallJSGetterOp(JSContext* cx, GetterOp op, HandleObject obj, HandleId id,
     if (!CheckRecursionLimit(cx))
         return false;
 
-    assertSameCompartment(cx, obj, id, vp);
+    cx->check(obj, id, vp);
     bool ok = op(cx, obj, id, vp);
     if (ok)
-        assertSameCompartment(cx, vp);
+        cx->check(vp);
     return ok;
 }
 
@@ -294,7 +247,7 @@ CallJSSetterOp(JSContext* cx, SetterOp op, HandleObject obj, HandleId id, Handle
     if (!CheckRecursionLimit(cx))
         return false;
 
-    assertSameCompartment(cx, obj, id, v);
+    cx->check(obj, id, v);
     return op(cx, obj, id, v, result);
 }
 
@@ -305,7 +258,7 @@ CallJSAddPropertyOp(JSContext* cx, JSAddPropertyOp op, HandleObject obj, HandleI
     if (!CheckRecursionLimit(cx))
         return false;
 
-    assertSameCompartment(cx, obj, id, v);
+    cx->check(obj, id, v);
     return op(cx, obj, id, v);
 }
 
@@ -316,7 +269,7 @@ CallJSDeletePropertyOp(JSContext* cx, JSDeletePropertyOp op, HandleObject receiv
     if (!CheckRecursionLimit(cx))
         return false;
 
-    assertSameCompartment(cx, receiver, id);
+    cx->check(receiver, id);
     if (op)
         return op(cx, receiver, id, result);
     return result.succeed();
@@ -388,9 +341,7 @@ JSContext::setPendingException(JS::HandleValue v)
     this->overRecursed_ = false;
     this->throwing = true;
     this->unwrappedException() = v;
-    // We don't use assertSameCompartment here to allow
-    // js::SetPendingExceptionCrossContext to work.
-    MOZ_ASSERT_IF(v.isObject(), v.toObject().compartment() == compartment());
+    check(v);
 }
 
 inline bool

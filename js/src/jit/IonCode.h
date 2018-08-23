@@ -26,7 +26,6 @@ namespace jit {
 
 class MacroAssembler;
 class IonBuilder;
-class IonICEntry;
 class JitCode;
 
 typedef Vector<JSObject*, 4, JitAllocPolicy> ObjectVector;
@@ -258,10 +257,6 @@ struct IonScript
     uint32_t constantTable_;
     uint32_t constantEntries_;
 
-    // List of entries to the shared stub.
-    uint32_t sharedStubList_;
-    uint32_t sharedStubEntries_;
-
     // Number of references from invalidation records.
     uint32_t invalidationCount_;
 
@@ -274,9 +269,6 @@ struct IonScript
     // Number of times we tried to enter this script via OSR but failed due to
     // a LOOPENTRY pc other than osrPc_.
     uint32_t osrPcMismatchCounter_;
-
-    // Allocated space for fallback stubs.
-    FallbackICStubSpace fallbackStubSpace_;
 
     // TraceLogger events that are baked into the IonScript.
     TraceLoggerEventVector traceLoggerEvents_;
@@ -323,12 +315,6 @@ struct IonScript
     // Do not call directly, use IonScript::New. This is public for cx->new_.
     explicit IonScript(IonCompilationId compilationId);
 
-    ~IonScript() {
-        // The contents of the fallback stub space are removed and freed
-        // separately after the next minor GC. See IonScript::Destroy.
-        MOZ_ASSERT(fallbackStubSpace_.isEmpty());
-    }
-
     static IonScript* New(JSContext* cx, IonCompilationId compilationId,
                           uint32_t frameSlots, uint32_t argumentSlots, uint32_t frameSize,
                           size_t snapshotsListSize, size_t snapshotsRVATableSize,
@@ -336,7 +322,7 @@ struct IonScript
                           size_t constants, size_t safepointIndexEntries,
                           size_t osiIndexEntries, size_t icEntries,
                           size_t runtimeSize, size_t safepointsSize,
-                          size_t sharedStubEntries, OptimizationLevel optimizationLevel);
+                          OptimizationLevel optimizationLevel);
     static void Trace(JSTracer* trc, IonScript* script);
     static void Destroy(FreeOp* fop, IonScript* script);
 
@@ -491,12 +477,6 @@ struct IonScript
     size_t numICs() const {
         return icEntries_;
     }
-    IonICEntry* sharedStubList() {
-        return (IonICEntry*) &bottomBuffer()[sharedStubList_];
-    }
-    size_t numSharedStubs() const {
-        return sharedStubEntries_;
-    }
     size_t runtimeSize() const {
         return runtimeSize_;
     }
@@ -554,12 +534,6 @@ struct IonScript
     void clearRecompiling() {
         recompiling_ = false;
     }
-
-    FallbackICStubSpace* fallbackStubSpace() {
-        return &fallbackStubSpace_;
-    }
-    void adoptFallbackStubs(FallbackICStubSpace* stubSpace);
-    void purgeOptimizedStubs(Zone* zone);
 
     enum ShouldIncreaseAge {
         IncreaseAge = true,

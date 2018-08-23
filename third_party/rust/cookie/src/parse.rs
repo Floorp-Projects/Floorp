@@ -1,10 +1,12 @@
 use std::borrow::Cow;
 use std::cmp;
 use std::error::Error;
-use std::ascii::AsciiExt;
 use std::str::Utf8Error;
 use std::fmt;
 use std::convert::From;
+
+#[allow(unused_imports, deprecated)]
+use std::ascii::AsciiExt;
 
 #[cfg(feature = "percent-encode")]
 use url::percent_encoding::percent_decode;
@@ -133,8 +135,8 @@ fn parse_inner<'c>(s: &str, decode: bool) -> Result<Cookie<'c>, ParseError> {
         max_age: None,
         domain: None,
         path: None,
-        secure: false,
-        http_only: false,
+        secure: None,
+        http_only: None,
         same_site: None
     };
 
@@ -145,8 +147,8 @@ fn parse_inner<'c>(s: &str, decode: bool) -> Result<Cookie<'c>, ParseError> {
         };
 
         match (&*key.to_ascii_lowercase(), value) {
-            ("secure", _) => cookie.secure = true,
-            ("httponly", _) => cookie.http_only = true,
+            ("secure", _) => cookie.secure = Some(true),
+            ("httponly", _) => cookie.http_only = Some(true),
             ("max-age", Some(v)) => {
                 // See RFC 6265 Section 5.2.2, negative values indicate that the
                 // earliest possible expiration time should be used, so set the

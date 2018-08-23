@@ -15,6 +15,7 @@ var typeInfo = {
     'NonGCPointers': {},
     'RootedGCThings': {},
     'RootedPointers': {},
+    'RootedBases': {'JS::AutoGCRooter': true},
 
     // RAII types within which we should assume GC is suppressed, eg
     // AutoSuppressGC.
@@ -36,6 +37,26 @@ var rootedPointers = {};
 
 function processCSU(csu, body)
 {
+    for (let { 'Name': [ annType, tag ] } of (body.Annotation || [])) {
+        if (annType != 'Tag')
+            continue;
+
+        if (tag == 'GC Pointer')
+            typeInfo.GCPointers.push(csu);
+        else if (tag == 'Invalidated by GC')
+            typeInfo.GCPointers.push(csu);
+        else if (tag == 'GC Thing')
+            typeInfo.GCThings.push(csu);
+        else if (tag == 'Suppressed GC Pointer')
+            typeInfo.NonGCPointers[csu] = true;
+        else if (tag == 'Rooted Pointer')
+            typeInfo.RootedPointers[csu] = true;
+        else if (tag == 'Rooted Base')
+            typeInfo.RootedBases[csu] = true;
+        else if (tag == 'Suppress GC')
+            typeInfo.GCSuppressors[csu] = true;
+    }
+
     for (let { 'Base': base } of (body.CSUBaseClass || []))
         addBaseClass(csu, base);
 
@@ -52,31 +73,8 @@ function processCSU(csu, body)
             if (target.Kind == "CSU")
                 addNestedStructure(csu, target.Name, fieldName);
         }
-        if (type.Kind == "CSU") {
-            // Ignore nesting in classes which are AutoGCRooters. We only consider
-            // types with fields that may not be properly rooted.
-            if (type.Name == "JS::AutoGCRooter" || type.Name == "JS::CustomAutoRooter")
-                return;
+        if (type.Kind == "CSU")
             addNestedStructure(csu, type.Name, fieldName);
-        }
-    }
-
-    for (let { 'Name': [ annType, tag ] } of (body.Annotation || [])) {
-        if (annType != 'Tag')
-            continue;
-
-        if (tag == 'GC Pointer')
-            typeInfo.GCPointers.push(csu);
-        else if (tag == 'Invalidated by GC')
-            typeInfo.GCPointers.push(csu);
-        else if (tag == 'GC Thing')
-            typeInfo.GCThings.push(csu);
-        else if (tag == 'Suppressed GC Pointer')
-            typeInfo.NonGCPointers[csu] = true;
-        else if (tag == 'Rooted Pointer')
-            typeInfo.RootedPointers[csu] = true;
-        else if (tag == 'Suppress GC')
-            typeInfo.GCSuppressors[csu] = true;
     }
 }
 
@@ -86,6 +84,8 @@ function addNestedStructure(csu, inner, field)
     if (!(inner in structureParents))
         structureParents[inner] = [];
 
+    // Skip fields that are really base classes, to avoid duplicating the base
+    // fields; addBaseClass already added a "base-N" name.
     if (field.match(/^field:\d+$/) && (csu in baseClasses) && (baseClasses[csu].indexOf(inner) != -1))
         return;
 
@@ -139,6 +139,16 @@ for (const csu of typeInfo.GCThings)
     addGCType(csu);
 for (const csu of typeInfo.GCPointers)
     addGCPointer(csu);
+
+// Everything that inherits from a "Rooted Base" is considered to be rooted.
+// This is for things like CustomAutoRooter and its subclasses.
+var basework = Object.keys(typeInfo.RootedBases);
+while (basework.length) {
+    const base = basework.pop();
+    typeInfo.RootedPointers[base] = true;
+    if (base in subClasses)
+        basework.push(...subClasses[base]);
+}
 
 // "typeName is a (pointer to a)^'typePtrLevel' GC type because it contains a field
 // named 'child' of type 'why' (or pointer to 'why' if fieldPtrLevel == 1), which is
@@ -230,7 +240,7 @@ function addGCPointer(typeName)
 
 // Call a function for a type and every type that contains the type in a field
 // or as a base class (which internally is pretty much the same thing --
-// sublcasses are structs beginning with the base class and adding on their
+// subclasses are structs beginning with the base class and adding on their
 // local fields.)
 function foreachContainingStruct(typeName, func, seen = new Set())
 {

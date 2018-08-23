@@ -21,10 +21,13 @@ env:
   global:
     secure: "e2/3QjgRN9atOuSHp22TrYG7QVKcYUWY48Hi9b60w+r1+BhPkTseIJLte7WefRhdXtqpjjUJTooKDhnurFOeHaCT+nmBgiv+FPU893sBl4bhesY4m0vgUJVbNZcs6lTImYekWVb+aqjGdgV/XAgCw7c3kPmrZV0MzGDWL64Xaps="
 matrix:
+  allow_failures:
+    # FIXME(#987) move back to include once 404 is fixed
+    - env: TARGET=s390x-unknown-linux-gnu
   include:
-    # 1.0.0 compat
+    # 1.13.0 compat
     - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
-      rust: 1.0.0
+      rust: 1.13.0
       script: rm -f Cargo.lock && cargo build
       install:
 
@@ -38,10 +41,10 @@ matrix:
     - env: TARGET=i686-unknown-linux-gnu
     - os: osx
       env: TARGET=x86_64-apple-darwin NO_ADD=1
-      osx_image: xcode8.3
+      osx_image: xcode9.4
     - os: osx
       env: TARGET=i686-apple-darwin
-      osx_image: xcode8.3
+      osx_image: xcode9.4
     - env: TARGET=arm-linux-androideabi
     - env: TARGET=aarch64-linux-android
     # FIXME(#826) should reenable
@@ -56,14 +59,14 @@ matrix:
       # FIXME(#856)
       rust: 1.22.1
     - os: osx
-      osx_image: xcode8.2
+      osx_image: xcode9.4
       env: TARGET=i386-apple-ios
            CARGO_TARGET_I386_APPLE_IOS_RUNNER=$HOME/runtest
            RUSTFLAGS=-Clink-arg=-mios-simulator-version-min=7.0
       before_install:
         rustc ./ci/ios/deploy_and_run_on_ios_simulator.rs -o $HOME/runtest
     - os: osx
-      osx_image: xcode8.2
+      osx_image: xcode9.4
       env: TARGET=x86_64-apple-ios
            CARGO_TARGET_X86_64_APPLE_IOS_RUNNER=$HOME/runtest
            RUSTFLAGS=-Clink-arg=-mios-simulator-version-min=7.0
@@ -88,7 +91,7 @@ matrix:
       rust: beta
     - os: osx
       env: TARGET=x86_64-apple-darwin NO_ADD=1
-      osx_image: xcode8.3
+      osx_image: xcode9.4
       rust: beta
 
     # nightly
@@ -96,7 +99,7 @@ matrix:
       rust: nightly
     - os: osx
       env: TARGET=x86_64-apple-darwin NO_ADD=1
-      osx_image: xcode8.3
+      osx_image: xcode9.4
       rust: nightly
     # not available on stable
     # without --release the build fails
@@ -106,6 +109,13 @@ matrix:
 
     # QEMU based targets that compile in an emulator
     - env: TARGET=x86_64-unknown-freebsd
+  allow_failures:
+    - env: TARGET=i386-apple-ios
+           CARGO_TARGET_I386_APPLE_IOS_RUNNER=$HOME/runtest
+           RUSTFLAGS=-Clink-arg=-mios-simulator-version-min=7.0
+    - env: TARGET=x86_64-apple-ios
+           CARGO_TARGET_X86_64_APPLE_IOS_RUNNER=$HOME/runtest
+           RUSTFLAGS=-Clink-arg=-mios-simulator-version-min=7.0
 
 notifications:
   email:

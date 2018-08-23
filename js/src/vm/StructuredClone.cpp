@@ -1640,7 +1640,7 @@ JSStructuredCloneWriter::traverseSavedFrame(HandleObject obj)
 bool
 JSStructuredCloneWriter::startWrite(HandleValue v)
 {
-    assertSameCompartment(context(), v);
+    context()->check(v);
 
     if (v.isString()) {
         return writeString(SCTAG_STRING, v.toString());
@@ -1943,7 +1943,7 @@ JSStructuredCloneWriter::write(HandleValue v)
 
     while (!counts.empty()) {
         obj = &objs.back().toObject();
-        assertSameCompartment(context(), obj);
+        context()->check(obj);
         if (counts.back()) {
             counts.back()--;
             key = entries.back();
@@ -2941,7 +2941,7 @@ JS_WriteStructuredClone(JSContext* cx, HandleValue value, JSStructuredCloneData*
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, value);
+    cx->check(value);
 
     const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
     return WriteStructuredClone(cx, value, bufp, scope, cloneDataPolicy, callbacks, closure,
@@ -3150,7 +3150,7 @@ JS_PUBLIC_API(bool)
 JS_WriteTypedArray(JSStructuredCloneWriter* w, HandleValue v)
 {
     MOZ_ASSERT(v.isObject());
-    assertSameCompartment(w->context(), v);
+    w->context()->check(v);
     RootedObject obj(w->context(), &v.toObject());
 
     // Note: writeTypedArray also does a CheckedUnwrap but it assumes this

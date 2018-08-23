@@ -176,20 +176,9 @@ function process(functionName, functionBodies)
     if (markerPos > 0) {
         var inChargeXTor = functionName.replace(internalMarker, "");
         print("D " + memo(inChargeXTor) + " " + memo(functionName));
-
-        // Bug 1056410: Oh joy. GCC does something even funkier internally,
-        // where it generates calls to ~Foo() but a body for ~Foo(int32) even
-        // though it uses the same mangled name for both. So we need to add a
-        // synthetic edge from ~Foo() -> ~Foo(int32).
-        //
-        // inChargeXTor will have the (int32).
-        if (functionName.indexOf("::~") > 0) {
-            var calledDestructor = inChargeXTor.replace("(int32)", "()");
-            print("D " + memo(calledDestructor) + " " + memo(inChargeXTor));
-        }
     }
 
-    // Further note: from http://mentorembedded.github.io/cxx-abi/abi.html the
+    // Further note: from https://itanium-cxx-abi.github.io/cxx-abi/abi.html the
     // different kinds of constructors/destructors are:
     // C1	# complete object constructor
     // C2	# base object constructor
@@ -210,18 +199,35 @@ function process(functionName, functionBodies)
     // inject an edge to it from C1, C2, and C3 (or D1, D2, and D3). (Note that
     // C3 isn't even used in current GCC, but add the edge anyway just in
     // case.)
-    if (functionName.indexOf("C4E") != -1 || functionName.indexOf("D4Ev") != -1) {
+    //
+    // from gcc/cp/mangle.c:
+    //
+    // <special-name> ::= D0 # deleting (in-charge) destructor
+    //                ::= D1 # complete object (in-charge) destructor
+    //                ::= D2 # base object (not-in-charge) destructor
+    // <special-name> ::= C1   # complete object constructor
+    //                ::= C2   # base object constructor
+    //                ::= C3   # complete object allocating constructor
+    //
+    // Currently, allocating constructors are never used.
+    //
+    if (functionName.indexOf("C4") != -1) {
         var [ mangled, unmangled ] = splitFunction(functionName);
         // E terminates the method name (and precedes the method parameters).
         // If eg "C4E" shows up in the mangled name for another reason, this
-        // will create bogus edges in the callgraph. But will affect little and
-        // is somewhat difficult to avoid, so we will live with it.
-        for (let [synthetic, variant] of [['C4E', 'C1E'],
-                                          ['C4E', 'C2E'],
-                                          ['C4E', 'C3E'],
-                                          ['D4Ev', 'D1Ev'],
-                                          ['D4Ev', 'D2Ev'],
-                                          ['D4Ev', 'D3Ev']])
+        // will create bogus edges in the callgraph. But it will affect little
+        // and is somewhat difficult to avoid, so we will live with it.
+        //
+        // Another possibility! A templatized constructor will contain C4I...E
+        // for template arguments.
+        //
+        for (let [synthetic, variant] of [
+            ['C4E', 'C1E'],
+            ['C4E', 'C2E'],
+            ['C4E', 'C3E'],
+            ['C4I', 'C1I'],
+            ['C4I', 'C2I'],
+            ['C4I', 'C3I']])
         {
             if (mangled.indexOf(synthetic) == -1)
                 continue;
@@ -230,6 +236,30 @@ function process(functionName, functionBodies)
             let variant_full = variant_mangled + "$" + unmangled;
             print("D " + memo(variant_full) + " " + memo(functionName));
         }
+    }
+
+    // For destructors:
+    //
+    // I've never seen D4Ev() + D4Ev(int32), only one or the other. So
+    // for a D4Ev of any sort, create:
+    //
+    //   D0() -> D1()  # deleting destructor calls complete destructor, then deletes
+    //   D1() -> D2()  # complete destructor calls base destructor, then destroys virtual bases
+    //   D2() -> D4(?) # base destructor might be aliased to unified destructor
+    //                 # use whichever one is defined, in-charge or not.
+    //                 # ('?') means either () or (int32).
+    //
+    // Note that this doesn't actually make sense -- D0 and D1 should be
+    // in-charge, but gcc doesn't seem to give them the in-charge parameter?!
+    //
+    if (functionName.indexOf("D4Ev") != -1 && functionName.indexOf("::~") != -1) {
+        const not_in_charge_dtor = functionName.replace("(int32)", "()");
+        const D0 = not_in_charge_dtor.replace("D4Ev", "D0Ev");
+        const D1 = not_in_charge_dtor.replace("D4Ev", "D1Ev");
+        const D2 = not_in_charge_dtor.replace("D4Ev", "D2Ev");
+        print("D " + memo(D0) + " " + memo(D1));
+        print("D " + memo(D1) + " " + memo(D2));
+        print("D " + memo(D2) + " " + memo(functionName));
     }
 }
 

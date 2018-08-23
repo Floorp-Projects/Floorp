@@ -109,7 +109,7 @@ impl Task {
     /// Indicate that the task should attempt to poll its future in a timely
     /// fashion.
     ///
-    /// It's typically guaranteed that, for each call to `notify`, `poll` will
+    /// It's typically guaranteed that, after calling `notify`, `poll` will
     /// be called at least once subsequently (unless the future has terminated).
     /// If the task is currently polling its future when `notify` is called, it
     /// must poll the future *again* afterwards, ensuring that all relevant

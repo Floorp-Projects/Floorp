@@ -1,3 +1,8 @@
+**Note**: This CHANGELOG is no longer maintained for newer 0.1.x releases.
+See instead the github release tags and individual git commits.
+
+-----
+
 # 0.1.17 - 2017-10-31
 
 * Add a `close` method on `sink::Wait`
@@ -234,7 +239,7 @@ Notable deprecations in the 0.1.4 release that will be deleted in an eventual
 * The `failed` constructor is now `err`.
 * The `done` constructor is now `result`.
 
-As always, please report bugs to https://github.com/alexcrichton/futures-rs and
+As always, please report bugs to https://github.com/rust-lang-nursery/futures-rs and
 we always love feedback! If you've got situations we don't cover, combinators
 you'd like to see, or slow code, please let us know!
 

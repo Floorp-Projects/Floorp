@@ -1,4 +1,4 @@
-# Mio - Metal IO
+# Mio – Metal IO
 
 Mio is a lightweight I/O library for Rust with a focus on adding as little
 overhead as possible over the OS abstractions.
@@ -9,7 +9,7 @@ overhead as possible over the OS abstractions.
 
 **API documentation**
 
-* [master](http://carllerche.github.io/mio)
+* [master](https://carllerche.github.io/mio)
 * [v0.6](https://docs.rs/mio/^0.6)
 * [v0.5](https://docs.rs/mio/^0.5)
 
@@ -33,19 +33,19 @@ extern crate mio;
 
 ## Features
 
-* Event loop backed by epoll, kqueue.
+* Non-blocking TCP, UDP.
+* I/O event notification queue backed by epoll, kqueue, and IOCP.
 * Zero allocations at runtime
-* Non-blocking TCP, UDP and Unix domain sockets
-* High performance timer system
-* Thread safe message channel for cross thread communication
+* Platform specific extensions.
 
-## Non goals
+## Non-goals
 
-The following are specifically omitted from MIO and are left to the user
-or higher level libraries.
+The following are specifically omitted from Mio and are left to the user
+or higher-level libraries.
 
 * File operations
 * Thread pools / multi-threaded event loop
+* Timers
 
 ## Platforms
 
@@ -54,26 +54,27 @@ Currently supported platforms:
 * Linux
 * OS X
 * Windows
+* FreeBSD
 * NetBSD
+* Solaris
 * Android
 * iOS
+* Fuchsia (experimental).
 
 There are potentially others. If you find that Mio works on another
 platform, submit a PR to update the list!
 
 ### Libraries
 
-* [tokio-core](//github.com/tokio-rs/tokio-core) - Underlying event loop
-  for the [Tokio project](//github.com/tokio-rs/tokio).
-* [mioco](//github.com/dpc/mioco) - Mio COroutines
-* [simplesched](//github.com/zonyitoo/simplesched) - Coroutine I/O with a simple scheduler
-* [coio-rs](//github.com/zonyitoo/coio-rs) - Coroutine I/O with work-stealing scheduler
-* [rotor](//github.com/tailhook/rotor) - A wrapper that allows to create composable I/O libraries on top of mio
-* [ws-rs](//github.com/housleyjk/ws-rs) - WebSockets based on Mio
+* [tokio-core](https://github.com/tokio-rs/tokio-core) – Underlying event loop
+  for the [Tokio project](https://github.com/tokio-rs/tokio).
+* [mioco](https://github.com/dpc/mioco) – Mio COroutines
+* [coio-rs](https://github.com/zonyitoo/coio-rs) – Coroutine I/O with work-stealing scheduler
+* [ws-rs](https://github.com/housleyjk/ws-rs) – WebSockets based on Mio
 
 ## Community
 
-A group of mio users hang out in the #mio channel on the Mozilla IRC
+A group of Mio users hang out in the #mio channel on the Mozilla IRC
 server (irc.mozilla.org). This can be a good place to go for questions.
 
 ## Contributing

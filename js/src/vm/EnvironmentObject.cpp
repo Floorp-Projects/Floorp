@@ -227,7 +227,7 @@ CallObject*
 CallObject::create(JSContext* cx, AbstractFramePtr frame)
 {
     MOZ_ASSERT(frame.isFunctionFrame());
-    assertSameCompartment(cx, frame);
+    cx->check(frame);
 
     RootedObject envChain(cx, frame.environmentChain());
     RootedFunction callee(cx, frame.callee());
@@ -913,7 +913,7 @@ LexicalEnvironmentObject::createTemplateObject(JSContext* cx, HandleShape shape,
 LexicalEnvironmentObject::create(JSContext* cx, Handle<LexicalScope*> scope,
                                  HandleObject enclosing, gc::InitialHeap heap)
 {
-    assertSameCompartment(cx, enclosing);
+    cx->check(enclosing);
     MOZ_ASSERT(scope->hasEnvironment());
 
     RootedShape shape(cx, scope->environmentShape());
@@ -1249,7 +1249,7 @@ EnvironmentIter::EnvironmentIter(JSContext* cx, AbstractFramePtr frame, jsbyteco
     env_(cx, frame.environmentChain()),
     frame_(frame)
 {
-    assertSameCompartment(cx, frame);
+    cx->check(frame);
     settle();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
@@ -1260,7 +1260,7 @@ EnvironmentIter::EnvironmentIter(JSContext* cx, JSObject* env, Scope* scope, Abs
     env_(cx, env),
     frame_(frame)
 {
-    assertSameCompartment(cx, frame);
+    cx->check(frame);
     settle();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
@@ -2705,7 +2705,7 @@ DebugEnvironments::takeFrameSnapshot(JSContext* cx, Handle<DebugEnvironmentProxy
 /* static */ void
 DebugEnvironments::onPopCall(JSContext* cx, AbstractFramePtr frame)
 {
-    assertSameCompartment(cx, frame);
+    cx->check(frame);
 
     DebugEnvironments* envs = cx->realm()->debugEnvs();
     if (!envs)
@@ -2747,7 +2747,7 @@ DebugEnvironments::onPopCall(JSContext* cx, AbstractFramePtr frame)
 void
 DebugEnvironments::onPopLexical(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc)
 {
-    assertSameCompartment(cx, frame);
+    cx->check(frame);
 
     DebugEnvironments* envs = cx->realm()->debugEnvs();
     if (!envs)
@@ -2795,7 +2795,7 @@ DebugEnvironments::onPopLexical(JSContext* cx, const EnvironmentIter& ei)
 void
 DebugEnvironments::onPopVar(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc)
 {
-    assertSameCompartment(cx, frame);
+    cx->check(frame);
 
     DebugEnvironments* envs = cx->realm()->debugEnvs();
     if (!envs)
@@ -3115,7 +3115,7 @@ GetDebugEnvironment(JSContext* cx, const EnvironmentIter& ei)
 JSObject*
 js::GetDebugEnvironmentForFunction(JSContext* cx, HandleFunction fun)
 {
-    assertSameCompartment(cx, fun);
+    cx->check(fun);
     MOZ_ASSERT(CanUseDebugEnvironmentMaps(cx));
     if (!DebugEnvironments::updateLiveEnvironments(cx))
         return nullptr;
@@ -3129,7 +3129,7 @@ js::GetDebugEnvironmentForFunction(JSContext* cx, HandleFunction fun)
 JSObject*
 js::GetDebugEnvironmentForFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc)
 {
-    assertSameCompartment(cx, frame);
+    cx->check(frame);
     if (CanUseDebugEnvironmentMaps(cx) && !DebugEnvironments::updateLiveEnvironments(cx))
         return nullptr;
 
@@ -3155,7 +3155,7 @@ js::CreateObjectsForEnvironmentChain(JSContext* cx, AutoObjectVector& chain,
 {
 #ifdef DEBUG
     for (size_t i = 0; i < chain.length(); ++i) {
-        assertSameCompartment(cx, chain[i]);
+        cx->check(chain[i]);
         MOZ_ASSERT(!chain[i]->is<GlobalObject>() &&
                    !chain[i]->is<NonSyntacticVariablesObject>());
     }

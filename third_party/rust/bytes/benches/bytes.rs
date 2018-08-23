@@ -30,6 +30,18 @@ fn alloc_big(b: &mut Bencher) {
 }
 
 #[bench]
+fn split_off_and_drop(b: &mut Bencher) {
+    b.iter(|| {
+        for _ in 0..1024 {
+            let v = vec![10; 200];
+            let mut b = Bytes::from(v);
+            test::black_box(b.split_off(100));
+            test::black_box(b);
+        }
+    })
+}
+
+#[bench]
 fn deref_unique(b: &mut Bencher) {
     let mut buf = BytesMut::with_capacity(4096);
     buf.put(&[0u8; 1024][..]);
@@ -97,6 +109,39 @@ fn deref_two(b: &mut Bencher) {
         for _ in 0..512 {
             test::black_box(&buf1[..]);
             test::black_box(&buf2[..]);
+        }
+    })
+}
+
+#[bench]
+fn clone_inline(b: &mut Bencher) {
+    let bytes = Bytes::from_static(b"hello world");
+
+    b.iter(|| {
+        for _ in 0..1024 {
+            test::black_box(&bytes.clone());
+        }
+    })
+}
+
+#[bench]
+fn clone_static(b: &mut Bencher) {
+    let bytes = Bytes::from_static("hello world 1234567890 and have a good byte 0987654321".as_bytes());
+
+    b.iter(|| {
+        for _ in 0..1024 {
+            test::black_box(&bytes.clone());
+        }
+    })
+}
+
+#[bench]
+fn clone_arc(b: &mut Bencher) {
+    let bytes = Bytes::from("hello world 1234567890 and have a good byte 0987654321".as_bytes());
+
+    b.iter(|| {
+        for _ in 0..1024 {
+            test::black_box(&bytes.clone());
         }
     })
 }

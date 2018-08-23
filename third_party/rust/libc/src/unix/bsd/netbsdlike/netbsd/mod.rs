@@ -313,6 +313,20 @@ s! {
         pub sdl_slen: ::uint8_t,
         pub sdl_data: [::c_char; 12],
     }
+
+    pub struct in_pktinfo {
+        pub ipi_addr: ::in_addr,
+        pub ipi_ifindex: ::c_uint,
+    }
+
+    #[repr(packed)]
+    pub struct arphdr {
+        pub ar_hrd: u16,
+        pub ar_pro: u16,
+        pub ar_hln: u8,
+        pub ar_pln: u8,
+        pub ar_op: u16,
+    }
 }
 
 pub const AT_FDCWD: ::c_int = -100;
@@ -371,8 +385,15 @@ pub const F_GETNOSIGPIPE: ::c_int = 13;
 pub const F_SETNOSIGPIPE: ::c_int = 14;
 pub const F_MAXFD: ::c_int = 11;
 
+pub const IP_PKTINFO: ::c_int = 25;
+pub const IP_RECVPKTINFO: ::c_int = 26;
 pub const IPV6_JOIN_GROUP: ::c_int = 12;
 pub const IPV6_LEAVE_GROUP: ::c_int = 13;
+
+pub const TCP_KEEPIDLE:  ::c_int = 3;
+pub const TCP_KEEPINTVL: ::c_int = 5;
+pub const TCP_KEEPCNT:   ::c_int = 6;
+pub const TCP_KEEPINIT:  ::c_int = 7;
 
 pub const SOCK_CONN_DGRAM: ::c_int = 6;
 pub const SOCK_DCCP: ::c_int = SOCK_CONN_DGRAM;
@@ -947,6 +968,8 @@ pub const CHWFLOW: ::tcflag_t = ::MDMBUF | ::CRTSCTS | ::CDTRCTS;
 pub const SOCK_CLOEXEC: ::c_int = 0x10000000;
 pub const SOCK_NONBLOCK: ::c_int = 0x20000000;
 
+pub const SIGSTKSZ : ::size_t = 40960;
+
 // dirfd() is a macro on netbsd to access
 // the first field of the struct where dirp points to:
 // http://cvsweb.netbsd.org/bsdweb.cgi/src/include/dirent.h?rev=1.36
@@ -1072,6 +1095,19 @@ extern {
                      base: ::locale_t) -> ::locale_t;
     #[link_name = "__settimeofday50"]
     pub fn settimeofday(tv: *const ::timeval, tz: *const ::c_void) -> ::c_int;
+}
+
+#[link(name = "util")]
+extern {
+    #[cfg_attr(target_os = "netbsd", link_name = "__getpwent_r50")]
+    pub fn getpwent_r(pwd: *mut ::passwd,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut ::passwd) -> ::c_int;
+    pub fn getgrent_r(grp: *mut ::group,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut ::group) -> ::c_int;
 }
 
 mod other;

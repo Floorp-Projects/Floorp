@@ -26,8 +26,8 @@ curl -o sdk-tools-linux-3859397.zip https://dl.google.com/android/repository/sdk
 
 
 
-yes | sdkmanager --licenses
-sdkmanager tools platform-tools "build-tools;25.0.2" "platforms;android-24" "system-images;android-24;default;arm64-v8a"
+yes | sdkmanager --licenses --no_https
+sdkmanager tools platform-tools "build-tools;25.0.2" "platforms;android-24" "system-images;android-24;default;arm64-v8a" --no_https
 
 echo "no" | avdmanager create avd \
                 --force \

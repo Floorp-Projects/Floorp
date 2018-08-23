@@ -40,8 +40,8 @@ m = parseModule(`
     assertArrayEq(a.n, [22]);
 `);
 
-m.declarationInstantiation();
-m.evaluation();
+instantiateModule(m);
+evaluateModule(m);
 
 moduleRepo['o'] = parseModule(`
     export const {} = {};
@@ -66,8 +66,8 @@ m = parseModule(`
     assertEq(o.h, 6);
 `);
 
-m.declarationInstantiation();
-m.evaluation();
+instantiateModule(m);
+evaluateModule(m);
 
 moduleRepo['ao'] = parseModule(`
     export const [{x: a}, {x: b}] = [{x: 1}, {x: 2}];
@@ -102,5 +102,5 @@ m = parseModule(`
     assertEq(ao.p, 21);
 `);
 
-m.declarationInstantiation();
-m.evaluation();
+instantiateModule(m);
+evaluateModule(m);

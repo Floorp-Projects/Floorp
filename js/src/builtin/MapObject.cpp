@@ -1711,7 +1711,7 @@ RetT
 CallObjFunc(RetT(*ObjFunc)(JSContext*, HandleObject), JSContext* cx, HandleObject obj)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
 
     // Always unwrap, in case this is an xray or cross-compartment wrapper.
     RootedObject unwrappedObj(cx);
@@ -1729,7 +1729,7 @@ CallObjFunc(bool(*ObjFunc)(JSContext *cx, HandleObject obj, HandleValue key, boo
             JSContext *cx, HandleObject obj, HandleValue key, bool *rval)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, key);
+    cx->check(obj, key);
 
     // Always unwrap, in case this is an xray or cross-compartment wrapper.
     RootedObject unwrappedObj(cx);
@@ -1754,7 +1754,7 @@ CallObjFunc(bool(*ObjFunc)(JSContext* cx, Iter kind,
             JSContext *cx, Iter iterType, HandleObject obj, MutableHandleValue rval)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
 
     // Always unwrap, in case this is an xray or cross-compartment wrapper.
     RootedObject unwrappedObj(cx);
@@ -1794,7 +1794,7 @@ JS_PUBLIC_API(bool)
 JS::MapGet(JSContext* cx, HandleObject obj, HandleValue key, MutableHandleValue rval)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, key, rval);
+    cx->check(obj, key, rval);
 
     // Unwrap the object, and enter its realm. If object isn't wrapped,
     // this is essentially a noop.
@@ -1825,7 +1825,7 @@ JS_PUBLIC_API(bool)
 JS::MapSet(JSContext *cx, HandleObject obj, HandleValue key, HandleValue val)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, key, val);
+    cx->check(obj, key, val);
 
     // Unwrap the object, and enter its compartment. If object isn't wrapped,
     // this is essentially a noop.
@@ -1906,7 +1906,7 @@ JS_PUBLIC_API(bool)
 JS::SetAdd(JSContext *cx, HandleObject obj, HandleValue key)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, key);
+    cx->check(obj, key);
 
     // Unwrap the object, and enter its compartment. If object isn't wrapped,
     // this is essentially a noop.

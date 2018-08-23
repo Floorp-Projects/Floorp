@@ -45,28 +45,6 @@ EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t argS
 }
 
 inline void
-EmitIonTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t stackSize)
-{
-    // We assume during this that R0 and R1 have been pushed, and that R2 is
-    // unused.
-    MOZ_ASSERT(R2 == ValueOperand(r1, r0));
-
-    masm.loadPtr(Address(sp, stackSize), r0);
-    masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), r0);
-    masm.add32(Imm32(stackSize + JitStubFrameLayout::Size() - sizeof(intptr_t)), r0);
-
-    // Push frame descriptor and perform the tail call.
-    // ICTailCallReg (lr) already contains the return address (as we keep
-    // it there through the stub calls), but the VMWrapper code being called
-    // expects the return address to also be pushed on the stack.
-    MOZ_ASSERT(ICTailCallReg == lr);
-    masm.makeFrameDescriptor(r0, JitFrame_IonJS, ExitFrameLayout::Size());
-    masm.push(r0);
-    masm.push(lr);
-    masm.jump(target);
-}
-
-inline void
 EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32_t headerSize)
 {
     // Compute stub frame size. We have to add two pointers: the stub reg and

@@ -1,6 +1,5 @@
 extern crate tokio_io;
 extern crate futures;
-extern crate bytes;
 
 use tokio_io::{AsyncRead, AsyncWrite};
 use tokio_io::codec::length_delimited::*;
@@ -43,6 +42,23 @@ fn read_single_frame_one_packet_little_endian() {
         .little_endian()
         .new_read(mock! {
             Ok(b"\x09\x00\x00\x00abcdefghi"[..].into()),
+        });
+
+    assert_eq!(io.poll().unwrap(), Ready(Some(b"abcdefghi"[..].into())));
+    assert_eq!(io.poll().unwrap(), Ready(None));
+}
+
+#[test]
+fn read_single_frame_one_packet_native_endian() {
+    let data = if cfg!(target_endian = "big") {
+        b"\x00\x00\x00\x09abcdefghi"
+    } else {
+        b"\x09\x00\x00\x00abcdefghi"
+    };
+    let mut io = Builder::new()
+        .native_endian()
+        .new_read(mock! {
+            Ok(data[..].into()),
         });
 
     assert_eq!(io.poll().unwrap(), Ready(Some(b"abcdefghi"[..].into())));
@@ -187,7 +203,7 @@ fn read_max_frame_len() {
 }
 
 #[test]
-fn update_max_frame_len_at_rest() {
+fn read_update_max_frame_len_at_rest() {
     let mut io = Builder::new()
         .new_read(mock! {
             Ok(b"\x00\x00\x00\x09abcdefghi"[..].into()),
@@ -200,7 +216,7 @@ fn update_max_frame_len_at_rest() {
 }
 
 #[test]
-fn update_max_frame_len_in_flight() {
+fn read_update_max_frame_len_in_flight() {
     let mut io = Builder::new()
         .new_read(mock! {
             Ok(b"\x00\x00\x00\x09abcd"[..].into()),
@@ -404,6 +420,51 @@ fn write_single_frame_with_short_length_field() {
 
     assert!(io.start_send("abcdefghi").unwrap().is_ready());
     assert!(io.poll_complete().unwrap().is_ready());
+    assert!(io.get_ref().calls.is_empty());
+}
+
+#[test]
+fn write_max_frame_len() {
+    let mut io = Builder::new()
+        .max_frame_length(5)
+        .new_write(mock! { });
+
+    assert_eq!(io.start_send("abcdef").unwrap_err().kind(), io::ErrorKind::InvalidInput);
+    assert!(io.get_ref().calls.is_empty());
+}
+
+#[test]
+fn write_update_max_frame_len_at_rest() {
+    let mut io = Builder::new()
+        .new_write(mock! {
+            Ok(b"\x00\x00\x00\x06"[..].into()),
+            Ok(b"abcdef"[..].into()),
+            Ok(Flush),
+        });
+
+    assert!(io.start_send("abcdef").unwrap().is_ready());
+    assert!(io.poll_complete().unwrap().is_ready());
+    io.set_max_frame_length(5);
+    assert_eq!(io.start_send("abcdef").unwrap_err().kind(), io::ErrorKind::InvalidInput);
+    assert!(io.get_ref().calls.is_empty());
+}
+
+#[test]
+fn write_update_max_frame_len_in_flight() {
+    let mut io = Builder::new()
+        .new_write(mock! {
+            Ok(b"\x00\x00\x00\x06"[..].into()),
+            Ok(b"ab"[..].into()),
+            Err(would_block()),
+            Ok(b"cdef"[..].into()),
+            Ok(Flush),
+        });
+
+    assert!(io.start_send("abcdef").unwrap().is_ready());
+    assert!(!io.poll_complete().unwrap().is_ready());
+    io.set_max_frame_length(5);
+    assert!(io.poll_complete().unwrap().is_ready());
+    assert_eq!(io.start_send("abcdef").unwrap_err().kind(), io::ErrorKind::InvalidInput);
     assert!(io.get_ref().calls.is_empty());
 }
 

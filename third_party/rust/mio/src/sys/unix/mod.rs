@@ -3,10 +3,10 @@ use libc::{self, c_int};
 #[macro_use]
 pub mod dlsym;
 
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "fuchsia"))]
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "solaris"))]
 mod epoll;
 
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "fuchsia"))]
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "solaris"))]
 pub use self::epoll::{Events, Selector};
 
 #[cfg(any(target_os = "bitrig", target_os = "dragonfly",
@@ -32,7 +32,7 @@ mod uds;
 pub use self::awakener::Awakener;
 pub use self::eventedfd::EventedFd;
 pub use self::io::{Io, set_nonblock};
-pub use self::ready::UnixReady;
+pub use self::ready::{UnixReady, READY_ALL};
 pub use self::tcp::{TcpStream, TcpListener};
 pub use self::udp::UdpSocket;
 
@@ -53,10 +53,10 @@ pub fn pipe() -> ::io::Result<(Io, Io)> {
     unsafe {
         match pipe2.get() {
             Some(pipe2_fn) => {
-                try!(cvt(pipe2_fn(pipes.as_mut_ptr(), flags)));
+                cvt(pipe2_fn(pipes.as_mut_ptr(), flags))?;
             }
             None => {
-                try!(cvt(libc::pipe(pipes.as_mut_ptr())));
+                cvt(libc::pipe(pipes.as_mut_ptr()))?;
                 libc::fcntl(pipes[0], libc::F_SETFL, flags);
                 libc::fcntl(pipes[1], libc::F_SETFL, flags);
             }

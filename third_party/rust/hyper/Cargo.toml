@@ -12,51 +12,191 @@
 
 [package]
 name = "hyper"
-version = "0.10.13"
-authors = ["Sean McArthur <sean.monstar@gmail.com>", "Jonathan Reem <jonathan.reem@gmail.com>"]
+version = "0.12.7"
+authors = ["Sean McArthur <sean@seanmonstar.com>"]
 include = ["Cargo.toml", "LICENSE", "src/**/*"]
-description = "A modern HTTP library."
-homepage = "http://hyper.rs"
+description = "A fast and correct HTTP library."
+homepage = "https://hyper.rs"
 documentation = "https://docs.rs/hyper"
 readme = "README.md"
 keywords = ["http", "hyper", "hyperium"]
-categories = ["web-programming::http-client", "web-programming::http-server"]
+categories = ["network-programming", "web-programming::http-client", "web-programming::http-server"]
 license = "MIT"
 repository = "https://github.com/hyperium/hyper"
-[dependencies.mime]
-version = "0.2"
+[profile.bench]
+codegen-units = 1
+incremental = false
 
-[dependencies.traitobject]
-version = "0.1"
+[profile.release]
+codegen-units = 1
+incremental = false
 
-[dependencies.unicase]
-version = "1.0"
+[[example]]
+name = "client"
+path = "examples/client.rs"
+required-features = ["runtime"]
 
-[dependencies.language-tags]
-version = "0.2"
+[[example]]
+name = "client_json"
+path = "examples/client_json.rs"
+required-features = ["runtime"]
+
+[[example]]
+name = "echo"
+path = "examples/echo.rs"
+required-features = ["runtime"]
+
+[[example]]
+name = "hello"
+path = "examples/hello.rs"
+required-features = ["runtime"]
+
+[[example]]
+name = "multi_server"
+path = "examples/multi_server.rs"
+required-features = ["runtime"]
+
+[[example]]
+name = "params"
+path = "examples/params.rs"
+required-features = ["runtime"]
+
+[[example]]
+name = "send_file"
+path = "examples/send_file.rs"
+required-features = ["runtime"]
+
+[[example]]
+name = "state"
+path = "examples/state.rs"
+required-features = ["runtime"]
+
+[[example]]
+name = "upgrades"
+path = "examples/upgrades.rs"
+required-features = ["runtime"]
+
+[[example]]
+name = "web_api"
+path = "examples/web_api.rs"
+required-features = ["runtime"]
+
+[[test]]
+name = "client"
+path = "tests/client.rs"
+required-features = ["runtime"]
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"
+required-features = ["runtime"]
+
+[[test]]
+name = "server"
+path = "tests/server.rs"
+required-features = ["runtime"]
+
+[[bench]]
+name = "end_to_end"
+path = "benches/end_to_end.rs"
+required-features = ["runtime"]
+
+[[bench]]
+name = "server"
+path = "benches/server.rs"
+required-features = ["runtime"]
+[dependencies.bytes]
+version = "0.4.4"
+
+[dependencies.futures]
+version = "0.1.21"
+
+[dependencies.futures-cpupool]
+version = "0.1.6"
+optional = true
+
+[dependencies.h2]
+version = "0.1.10"
+
+[dependencies.http]
+version = "0.1.7"
 
 [dependencies.httparse]
 version = "1.0"
 
-[dependencies.typeable]
+[dependencies.iovec]
 version = "0.1"
+
+[dependencies.itoa]
+version = "0.4.1"
+
+[dependencies.log]
+version = "0.4"
+
+[dependencies.net2]
+version = "0.2.32"
+optional = true
 
 [dependencies.time]
 version = "0.1"
 
-[dependencies.url]
+[dependencies.tokio]
+version = "0.1.7"
+optional = true
+
+[dependencies.tokio-executor]
+version = "0.1.0"
+optional = true
+
+[dependencies.tokio-io]
+version = "0.1"
+
+[dependencies.tokio-reactor]
+version = "0.1"
+optional = true
+
+[dependencies.tokio-tcp]
+version = "0.1"
+optional = true
+
+[dependencies.tokio-timer]
+version = "0.2"
+optional = true
+
+[dependencies.want]
+version = "0.0.6"
+[dev-dependencies.futures-timer]
+version = "0.1"
+
+[dev-dependencies.num_cpus]
 version = "1.0"
 
-[dependencies.log]
-version = "0.3"
+[dev-dependencies.pretty_env_logger]
+version = "0.2.0"
 
-[dependencies.num_cpus]
+[dev-dependencies.serde]
 version = "1.0"
 
-[dependencies.base64]
-version = "0.6.0"
-[dev-dependencies.env_logger]
-version = "0.4"
+[dev-dependencies.serde_derive]
+version = "1.0"
+
+[dev-dependencies.serde_json]
+version = "1.0"
+
+[dev-dependencies.spmc]
+version = "0.2"
+
+[dev-dependencies.tokio-fs]
+version = "0.1"
+
+[dev-dependencies.tokio-mockstream]
+version = "1.1.0"
+
+[dev-dependencies.url]
+version = "1.0"
 
 [features]
+__internal_flaky_tests = []
+default = ["__internal_flaky_tests", "runtime"]
 nightly = []
+runtime = ["futures-cpupool", "net2", "tokio", "tokio-executor", "tokio-reactor", "tokio-tcp", "tokio-timer"]

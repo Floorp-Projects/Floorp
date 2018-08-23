@@ -8,6 +8,9 @@
 #include "nsITransactionManager.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/Likely.h"
+#include "mozilla/TransactionManager.h"
+
+using mozilla::TransactionManager;
 
 static int32_t sConstructorCount     = 0;
 static int32_t sDoCount              = 0;
@@ -533,10 +536,7 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  nsresult rv;
-  nsCOMPtr<nsITransactionManager> mgr =
-    do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &rv);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  nsCOMPtr<nsITransactionManager> mgr = new TransactionManager();
 
   /*******************************************************************
    *
@@ -544,7 +544,7 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  rv = mgr->DoTransaction(0);
+  nsresult rv = mgr->DoTransaction(0);
   EXPECT_EQ(rv, NS_ERROR_NULL_POINTER);
 
   /*******************************************************************
@@ -1285,11 +1285,7 @@ quick_batch_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  nsresult rv;
-  nsCOMPtr<nsITransactionManager> mgr =
-    do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &rv);
-  ASSERT_TRUE(mgr);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  nsCOMPtr<nsITransactionManager> mgr = new TransactionManager();
 
   int32_t numitems;
 
@@ -1300,7 +1296,7 @@ quick_batch_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  rv = mgr->GetNumberOfUndoItems(&numitems);
+  nsresult rv = mgr->GetNumberOfUndoItems(&numitems);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   EXPECT_EQ(numitems, 0);
 
@@ -1920,12 +1916,9 @@ stress_test(TestTransactionFactory *factory, int32_t iterations)
    *
    *******************************************************************/
 
-  nsresult rv;
-  nsCOMPtr<nsITransactionManager> mgr =
-    do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &rv);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-  ASSERT_TRUE(mgr);
+  nsCOMPtr<nsITransactionManager> mgr = new TransactionManager();
 
+  nsresult rv;
   int32_t i, j;
 
   for (i = 1; i <= iterations; i++) {

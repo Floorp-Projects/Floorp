@@ -32,7 +32,7 @@ impl Awakener {
             let status = CompletionStatus::new(0,
                                                usize::from(inner.token),
                                                0 as *mut _);
-            try!(inner.selector.port().post(status));
+            inner.selector.port().post(status)?;
         }
         Ok(())
     }

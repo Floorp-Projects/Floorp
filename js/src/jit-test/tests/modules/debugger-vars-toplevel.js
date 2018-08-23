@@ -32,7 +32,7 @@ g.eval(
         function f() { return e; }
         debugger;
     \`);
-    m.declarationInstantiation();
-    m.evaluation();
+    instantiateModule(m);
+    evaluateModule(m);
 `);
 

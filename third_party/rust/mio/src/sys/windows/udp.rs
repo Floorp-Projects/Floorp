@@ -94,23 +94,23 @@ impl UdpSocket {
 
         match me.write {
             State::Empty => {}
-            _ => return Err(would_block()),
+            _ => return Err(io::ErrorKind::WouldBlock.into()),
         }
 
         if !me.iocp.registered() {
-            return Err(would_block())
+            return Err(io::ErrorKind::WouldBlock.into())
         }
 
         let interest = me.iocp.readiness();
-        me.iocp.set_readiness(interest & !Ready::writable());
+        me.iocp.set_readiness(interest - Ready::writable());
 
         let mut owned_buf = me.iocp.get_buffer(64 * 1024);
-        let amt = try!(owned_buf.write(buf));
-        try!(unsafe {
+        let amt = owned_buf.write(buf)?;
+        unsafe {
             trace!("scheduling a send");
             self.imp.inner.socket.send_to_overlapped(&owned_buf, target,
                                                      self.imp.inner.write.as_mut_ptr())
-        });
+        }?;
         me.write = State::Pending(owned_buf);
         mem::forget(self.imp.clone());
         Ok(amt)
@@ -128,23 +128,23 @@ impl UdpSocket {
 
         match me.write {
             State::Empty => {}
-            _ => return Err(would_block()),
+            _ => return Err(io::ErrorKind::WouldBlock.into()),
         }
 
         if !me.iocp.registered() {
-            return Err(would_block())
+            return Err(io::ErrorKind::WouldBlock.into())
         }
 
         let interest = me.iocp.readiness();
-        me.iocp.set_readiness(interest & !Ready::writable());
+        me.iocp.set_readiness(interest - Ready::writable());
 
         let mut owned_buf = me.iocp.get_buffer(64 * 1024);
-        let amt = try!(owned_buf.write(buf));
-        try!(unsafe {
+        let amt = owned_buf.write(buf)?;
+        unsafe {
             trace!("scheduling a send");
             self.imp.inner.socket.send_overlapped(&owned_buf, self.imp.inner.write.as_mut_ptr())
 
-        });
+        }?;
         me.write = State::Pending(owned_buf);
         mem::forget(self.imp.clone());
         Ok(amt)
@@ -153,8 +153,8 @@ impl UdpSocket {
     pub fn recv_from(&self, mut buf: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
         let mut me = self.inner();
         match mem::replace(&mut me.read, State::Empty) {
-            State::Empty => Err(would_block()),
-            State::Pending(b) => { me.read = State::Pending(b); Err(would_block()) }
+            State::Empty => Err(io::ErrorKind::WouldBlock.into()),
+            State::Pending(b) => { me.read = State::Pending(b); Err(io::ErrorKind::WouldBlock.into()) }
             State::Ready(data) => {
                 // If we weren't provided enough space to receive the message
                 // then don't actually read any data, just return an error.
@@ -181,7 +181,7 @@ impl UdpSocket {
         }
     }
 
-    pub fn recv(&self, mut buf: &mut [u8])
+    pub fn recv(&self, buf: &mut [u8])
                      -> io::Result<usize> {
         //Since recv_from can be used on connected sockets just call it and drop the address.
         self.recv_from(buf).map(|(size,_)| size)
@@ -255,6 +255,14 @@ impl UdpSocket {
         self.imp.inner.socket.leave_multicast_v6(multiaddr, interface)
     }
 
+    pub fn set_only_v6(&self, only_v6: bool) -> io::Result<()> {
+        self.imp.inner.socket.set_only_v6(only_v6)
+    }
+
+    pub fn only_v6(&self) -> io::Result<bool> {
+        self.imp.inner.socket.only_v6()
+    }
+
     pub fn take_error(&self) -> io::Result<Option<io::Error>> {
         self.imp.inner.socket.take_error()
     }
@@ -291,7 +299,7 @@ impl Imp {
         }
 
         let interest = me.iocp.readiness();
-        me.iocp.set_readiness(interest & !Ready::readable());
+        me.iocp.set_readiness(interest - Ready::readable());
 
         let mut buf = me.iocp.get_buffer(64 * 1024);
         let res = unsafe {
@@ -324,9 +332,9 @@ impl Evented for UdpSocket {
     fn register(&self, poll: &Poll, token: Token,
                 interest: Ready, opts: PollOpt) -> io::Result<()> {
         let mut me = self.inner();
-        try!(me.iocp.register_socket(&self.imp.inner.socket,
+        me.iocp.register_socket(&self.imp.inner.socket,
                                      poll, token, interest, opts,
-                                     &self.registration));
+                                     &self.registration)?;
         self.post_register(interest, &mut me);
         Ok(())
     }
@@ -334,9 +342,9 @@ impl Evented for UdpSocket {
     fn reregister(&self, poll: &Poll, token: Token,
                   interest: Ready, opts: PollOpt) -> io::Result<()> {
         let mut me = self.inner();
-        try!(me.iocp.reregister_socket(&self.imp.inner.socket,
+        me.iocp.reregister_socket(&self.imp.inner.socket,
                                        poll, token, interest,
-                                       opts, &self.registration));
+                                       opts, &self.registration)?;
         self.post_register(interest, &mut me);
         Ok(())
     }
@@ -349,7 +357,8 @@ impl Evented for UdpSocket {
 
 impl fmt::Debug for UdpSocket {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        "UdpSocket { ... }".fmt(f)
+        f.debug_struct("UdpSocket")
+            .finish()
     }
 }
 
@@ -401,12 +410,4 @@ fn recv_done(status: &OVERLAPPED_ENTRY) {
     }
     me.read = State::Ready(buf);
     me2.add_readiness(&mut me, Ready::readable());
-}
-
-// TODO: Use std's allocation free io::Error
-const WOULDBLOCK: i32 = ::winapi::winerror::WSAEWOULDBLOCK as i32;
-
-/// Returns a std `WouldBlock` error without allocating
-pub fn would_block() -> ::std::io::Error {
-    ::std::io::Error::from_raw_os_error(WOULDBLOCK)
 }

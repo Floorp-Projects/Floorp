@@ -32,25 +32,16 @@ s! {
     pub struct sem_t {
         __val: [::c_int; 4],
     }
-
-    pub struct ipc_perm {
-        pub __ipc_perm_key: ::key_t,
-        pub uid: ::uid_t,
-        pub gid: ::gid_t,
-        pub cuid: ::uid_t,
-        pub cgid: ::gid_t,
-        pub mode: ::mode_t,
-        pub __seq: ::c_int,
-        __unused1: ::c_long,
-        __unused2: ::c_long
-    }
 }
-
-pub const SIGSTKSZ: ::size_t = 8192;
-pub const MINSIGSTKSZ: ::size_t = 2048;
 
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 32;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 24;
+
+pub const TIOCINQ: ::c_int = ::FIONREAD;
+
+extern {
+    pub fn ioctl(fd: ::c_int, request: ::c_int, ...) -> ::c_int;
+}
 
 cfg_if! {
     if #[cfg(any(target_arch = "x86"))] {
@@ -62,6 +53,9 @@ cfg_if! {
     } else if #[cfg(any(target_arch = "arm"))] {
         mod arm;
         pub use self::arm::*;
+    } else if #[cfg(any(target_arch = "powerpc"))] {
+        mod powerpc;
+        pub use self::powerpc::*;
     } else {
         // Unknown target_arch
     }

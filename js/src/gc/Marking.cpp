@@ -26,7 +26,6 @@
 #endif
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
-#include "vm/RegExpObject.h"
 #include "vm/RegExpShared.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"

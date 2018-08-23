@@ -13,28 +13,42 @@
 use std::io;
 use std::mem;
 use std::net::{TcpListener, TcpStream, UdpSocket};
-use std::os::windows::io::FromRawSocket;
+use std::os::windows::io::{RawSocket, FromRawSocket};
 use std::sync::{Once, ONCE_INIT};
 
-use winapi::*;
-use ws2_32::*;
-use kernel32::*;
-
-const WSA_FLAG_OVERLAPPED: DWORD = 0x01;
 const HANDLE_FLAG_INHERIT: DWORD = 0x00000001;
 
 pub mod c {
-    pub use winapi::*;
-    pub use ws2_32::*;
-
-    pub use winapi::SOCKADDR as sockaddr;
-    pub use winapi::SOCKADDR_STORAGE as sockaddr_storage;
-    pub use winapi::SOCKADDR_IN as sockaddr_in;
+    pub use winapi::ctypes::*;
+    pub use winapi::um::handleapi::*;
+    pub use winapi::um::winbase::*;
+    pub use winapi::um::winsock2::*;
+    pub use winapi::um::ws2tcpip::*;
+    
+    pub use winapi::shared::inaddr::*;
+    pub use winapi::shared::in6addr::*;
+    pub use winapi::shared::minwindef::*;
+    pub use winapi::shared::ntdef::*;
+    pub use winapi::shared::ws2def::*;
+    pub use winapi::shared::ws2def::{SOCK_STREAM, SOCK_DGRAM};
+    pub use winapi::shared::ws2def::SOCKADDR as sockaddr;
+    pub use winapi::shared::ws2def::SOCKADDR_STORAGE as sockaddr_storage;
+    pub use winapi::shared::ws2def::SOCKADDR_IN as sockaddr_in;
+    pub use winapi::shared::ws2ipdef::*;
+    pub use winapi::shared::ws2ipdef::SOCKADDR_IN6_LH as sockaddr_in6;
+    pub use winapi::shared::ws2ipdef::IP_MREQ as ip_mreq;
+    pub use winapi::shared::ws2ipdef::IPV6_MREQ as ipv6_mreq;
 
     pub fn sockaddr_in_u32(sa: &sockaddr_in) -> u32 {
-        ::ntoh(sa.sin_addr.S_un)
+        ::ntoh(unsafe { *sa.sin_addr.S_un.S_addr() })
+    }
+
+    pub fn in_addr_to_u32(addr: &in_addr) -> u32 {
+        ::ntoh(unsafe { *addr.S_un.S_addr() })
     }
 }
+
+use self::c::*;
 
 mod impls;
 
@@ -76,15 +90,15 @@ impl Socket {
     }
 
     pub fn into_tcp_listener(self) -> TcpListener {
-        unsafe { TcpListener::from_raw_socket(self.into_socket()) }
+        unsafe { TcpListener::from_raw_socket(self.into_socket() as RawSocket) }
     }
 
     pub fn into_tcp_stream(self) -> TcpStream {
-        unsafe { TcpStream::from_raw_socket(self.into_socket()) }
+        unsafe { TcpStream::from_raw_socket(self.into_socket() as RawSocket) }
     }
 
     pub fn into_udp_socket(self) -> UdpSocket {
-        unsafe { UdpSocket::from_raw_socket(self.into_socket()) }
+        unsafe { UdpSocket::from_raw_socket(self.into_socket() as RawSocket) }
     }
 
     fn set_no_inherit(&self) -> io::Result<()> {

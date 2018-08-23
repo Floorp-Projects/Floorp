@@ -53,13 +53,13 @@ impl fmt::Debug for OsRng {
     }
 }
 
-fn next_u32(mut fill_buf: &mut FnMut(&mut [u8])) -> u32 {
+fn next_u32(fill_buf: &mut FnMut(&mut [u8])) -> u32 {
     let mut buf: [u8; 4] = [0; 4];
     fill_buf(&mut buf);
     unsafe { mem::transmute::<[u8; 4], u32>(buf) }
 }
 
-fn next_u64(mut fill_buf: &mut FnMut(&mut [u8])) -> u64 {
+fn next_u64(fill_buf: &mut FnMut(&mut [u8])) -> u64 {
     let mut buf: [u8; 8] = [0; 8];
     fill_buf(&mut buf);
     unsafe { mem::transmute::<[u8; 8], u64>(buf) }
@@ -102,7 +102,7 @@ mod imp {
         #[cfg(target_arch = "aarch64")]
         const NR_GETRANDOM: libc::c_long = 278;
         #[cfg(target_arch = "powerpc")]
-        const NR_GETRANDOM: libc::c_long = 384;
+        const NR_GETRANDOM: libc::c_long = 359;
 
         unsafe {
             syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(), 0)
@@ -407,7 +407,7 @@ mod imp {
             next_u64(&mut |v| self.fill_bytes(v))
         }
         fn fill_bytes(&mut self, v: &mut [u8]) {
-            for s in v.chunks_mut(fuchsia_zircon::ZX_CPRNG_DRAW_MAX_LEN) {
+            for s in v.chunks_mut(fuchsia_zircon::sys::ZX_CPRNG_DRAW_MAX_LEN) {
                 let mut filled = 0;
                 while filled < s.len() {
                     match fuchsia_zircon::cprng_draw(&mut s[filled..]) {
@@ -422,19 +422,16 @@ mod imp {
 
 #[cfg(windows)]
 mod imp {
+    extern crate winapi;
+
     use std::io;
     use Rng;
 
     use super::{next_u32, next_u64};
 
-    type BOOLEAN = u8;
-    type ULONG = u32;
-
-    #[link(name = "advapi32")]
-    extern "system" {
-        // This function's real name is `RtlGenRandom`.
-        fn SystemFunction036(RandomBuffer: *mut u8, RandomBufferLength: ULONG) -> BOOLEAN;
-    }
+    use self::winapi::shared::minwindef::ULONG;
+    use self::winapi::um::ntsecapi::RtlGenRandom;
+    use self::winapi::um::winnt::PVOID;
 
     #[derive(Debug)]
     pub struct OsRng;
@@ -457,7 +454,7 @@ mod imp {
             // split up the buffer.
             for slice in v.chunks_mut(<ULONG>::max_value() as usize) {
                 let ret = unsafe {
-                    SystemFunction036(slice.as_mut_ptr(), slice.len() as ULONG)
+                    RtlGenRandom(slice.as_mut_ptr() as PVOID, slice.len() as ULONG)
                 };
                 if ret == 0 {
                     panic!("couldn't generate random bytes: {}",
@@ -544,6 +541,26 @@ mod imp {
     }
 }
 
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+mod imp {
+    use std::io;
+    use Rng;
+
+    #[derive(Debug)]
+    pub struct OsRng;
+
+    impl OsRng {
+        pub fn new() -> io::Result<OsRng> {
+            Err(io::Error::new(io::ErrorKind::Other, "Not supported"))
+        }
+    }
+
+    impl Rng for OsRng {
+        fn next_u32(&mut self) -> u32 {
+            panic!("Not supported")
+        }
+    }
+}
 
 #[cfg(test)]
 mod test {

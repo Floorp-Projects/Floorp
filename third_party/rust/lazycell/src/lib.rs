@@ -1,5 +1,5 @@
 // Original work Copyright (c) 2014 The Rust Project Developers
-// Modified work Copyright (c) 2016 Nikita Pekin and the lazycell contributors
+// Modified work Copyright (c) 2016-2017 Nikita Pekin and the lazycell contributors
 // See the README.md file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -20,8 +20,8 @@
 //! variation on `RefCell` which allows borrows to be tied to the lifetime of
 //! the outer object.
 //!
-//! The limitation of a `LazyCell` is that after it is initialized, it can never
-//! be modified.
+//! The limitation of a `LazyCell` is that after it is initialized and shared,
+//! it can be modified.
 //!
 //! # Example
 //!
@@ -48,6 +48,7 @@ use std::cell::UnsafeCell;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// A lazily filled `Cell`, with frozen contents.
+#[derive(Debug, Default)]
 pub struct LazyCell<T> {
     inner: UnsafeCell<Option<T>>,
 }
@@ -60,15 +61,15 @@ impl<T> LazyCell<T> {
 
     /// Put a value into this cell.
     ///
-    /// This function will return Err(value) is the cell is already full.
-    pub fn fill(&self, t: T) -> Result<(), T> {
+    /// This function will return `Err(value)` is the cell is already full.
+    pub fn fill(&self, value: T) -> Result<(), T> {
         let mut slot = unsafe { &mut *self.inner.get() };
         if slot.is_some() {
-	    return Err(t);
+            return Err(value);
         }
-        *slot = Some(t);
+        *slot = Some(value);
 
-	Ok(())
+        Ok(())
     }
 
     /// Test whether this cell has been previously filled.
@@ -85,9 +86,66 @@ impl<T> LazyCell<T> {
         unsafe { &*self.inner.get() }.as_ref()
     }
 
+    /// Borrows the contents of this lazy cell mutably for the duration of the cell
+    /// itself.
+    ///
+    /// This function will return `Some` if the cell has been previously
+    /// initialized, and `None` if it has not yet been initialized.
+    pub fn borrow_mut(&mut self) -> Option<&mut T> {
+        unsafe { &mut *self.inner.get() }.as_mut()
+    }
+
+    /// Borrows the contents of this lazy cell for the duration of the cell
+    /// itself.
+    ///
+    /// If the cell has not yet been filled, the cell is first filled using the
+    /// function provided.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the cell becomes filled as a side effect of `f`.
+    pub fn borrow_with<F: FnOnce() -> T>(&self, f: F) -> &T {
+        if let Some(value) = self.borrow() {
+            return value;
+        }
+        let value = f();
+        if self.fill(value).is_err() {
+            panic!("borrow_with: cell was filled by closure")
+        }
+        self.borrow().unwrap()
+    }
+
+    /// Same as `borrow_with`, but allows the initializing function to fail.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the cell becomes filled as a side effect of `f`.
+    pub fn try_borrow_with<E, F>(&self, f: F) -> Result<&T, E>
+        where F: FnOnce() -> Result<T, E>
+    {
+        if let Some(value) = self.borrow() {
+            return Ok(value);
+        }
+        let value = f()?;
+        if self.fill(value).is_err() {
+            panic!("try_borrow_with: cell was filled by closure")
+        }
+        Ok(self.borrow().unwrap())
+    }
+
     /// Consumes this `LazyCell`, returning the underlying value.
     pub fn into_inner(self) -> Option<T> {
         unsafe { self.inner.into_inner() }
+    }
+}
+
+impl<T: Copy> LazyCell<T> {
+    /// Returns a copy of the contents of the lazy cell.
+    ///
+    /// This function will return `Some` if the cell has been previously initialized,
+    /// and `None` if it has not yet been initialized.
+    pub fn get(&self) -> Option<T> {
+        unsafe { *self.inner.get() }
     }
 }
 
@@ -97,6 +155,7 @@ const LOCK: usize = 1;
 const SOME: usize = 2;
 
 /// A lazily filled `Cell`, with frozen contents.
+#[derive(Debug, Default)]
 pub struct AtomicLazyCell<T> {
     inner: UnsafeCell<Option<T>>,
     state: AtomicUsize,
@@ -113,7 +172,7 @@ impl<T> AtomicLazyCell<T> {
 
     /// Put a value into this cell.
     ///
-    /// This function will return Err(value) is the cell is already full.
+    /// This function will return `Err(value)` is the cell is already full.
     pub fn fill(&self, t: T) -> Result<(), T> {
         if NONE != self.state.compare_and_swap(NONE, LOCK, Ordering::Acquire) {
             return Err(t);
@@ -151,18 +210,35 @@ impl<T> AtomicLazyCell<T> {
     }
 }
 
-unsafe impl<T: Sync> Sync for AtomicLazyCell<T> { }
-unsafe impl<T: Send> Send for AtomicLazyCell<T> { }
+impl<T: Copy> AtomicLazyCell<T> {
+    /// Returns a copy of the contents of the lazy cell.
+    ///
+    /// This function will return `Some` if the cell has been previously initialized,
+    /// and `None` if it has not yet been initialized.
+    pub fn get(&self) -> Option<T> {
+        match self.state.load(Ordering::Acquire) {
+            SOME => unsafe { *self.inner.get() },
+            _ => None,
+        }
+    }
+}
+
+unsafe impl<T: Sync + Send> Sync for AtomicLazyCell<T> {}
+
+unsafe impl<T: Send> Send for AtomicLazyCell<T> {}
 
 #[cfg(test)]
 mod tests {
-    use super::{LazyCell, AtomicLazyCell};
+    use super::{AtomicLazyCell, LazyCell};
 
     #[test]
     fn test_borrow_from_empty() {
         let lazycell: LazyCell<usize> = LazyCell::new();
 
         let value = lazycell.borrow();
+        assert_eq!(value, None);
+
+        let value = lazycell.get();
         assert_eq!(value, None);
     }
 
@@ -176,6 +252,25 @@ mod tests {
 
         let value = lazycell.borrow();
         assert_eq!(value, Some(&1));
+
+        let value = lazycell.get();
+        assert_eq!(value, Some(1));
+    }
+
+    #[test]
+    fn test_borrow_mut() {
+        let mut lazycell = LazyCell::new();
+        assert!(lazycell.borrow_mut().is_none());
+
+        lazycell.fill(1).unwrap();
+        assert_eq!(lazycell.borrow_mut(), Some(&mut 1));
+
+        *lazycell.borrow_mut().unwrap() = 2;
+        assert_eq!(lazycell.borrow_mut(), Some(&mut 2));
+
+        // official way to reset the cell
+        lazycell = LazyCell::new();
+        assert!(lazycell.borrow_mut().is_none());
     }
 
     #[test]
@@ -184,6 +279,85 @@ mod tests {
 
         lazycell.fill(1).unwrap();
         assert_eq!(lazycell.fill(1), Err(1));
+    }
+
+    #[test]
+    fn test_borrow_with() {
+        let lazycell = LazyCell::new();
+
+        let value = lazycell.borrow_with(|| 1);
+        assert_eq!(&1, value);
+    }
+
+    #[test]
+    fn test_borrow_with_already_filled() {
+        let lazycell = LazyCell::new();
+        lazycell.fill(1).unwrap();
+
+        let value = lazycell.borrow_with(|| 1);
+        assert_eq!(&1, value);
+    }
+
+    #[test]
+    fn test_borrow_with_not_called_when_filled() {
+        let lazycell = LazyCell::new();
+
+        lazycell.fill(1).unwrap();
+
+        let value = lazycell.borrow_with(|| 2);
+        assert_eq!(&1, value);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_borrow_with_sound_with_reentrancy() {
+        // Kudos to dbaupp for discovering this issue
+        // https://www.reddit.com/r/rust/comments/5vs9rt/lazycell_a_rust_library_providing_a_lazilyfilled/de527xm/
+        let lazycell: LazyCell<Box<i32>> = LazyCell::new();
+
+        let mut reference: Option<&i32> = None;
+
+        lazycell.borrow_with(|| {
+            let _ = lazycell.fill(Box::new(1));
+            reference = lazycell.borrow().map(|r| &**r);
+            Box::new(2)
+        });
+    }
+
+    #[test]
+    fn test_try_borrow_with_ok() {
+        let lazycell = LazyCell::new();
+        let result = lazycell.try_borrow_with::<(), _>(|| Ok(1));
+        assert_eq!(result, Ok(&1));
+    }
+
+    #[test]
+    fn test_try_borrow_with_err() {
+        let lazycell = LazyCell::<()>::new();
+        let result = lazycell.try_borrow_with(|| Err(1));
+        assert_eq!(result, Err(1));
+    }
+
+    #[test]
+    fn test_try_borrow_with_already_filled() {
+        let lazycell = LazyCell::new();
+        lazycell.fill(1).unwrap();
+        let result = lazycell.try_borrow_with::<(), _>(|| unreachable!());
+        assert_eq!(result, Ok(&1));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_try_borrow_with_sound_with_reentrancy() {
+        let lazycell: LazyCell<Box<i32>> = LazyCell::new();
+
+        let mut reference: Option<&i32> = None;
+
+        let _ = lazycell.try_borrow_with::<(), _>(|| {
+            let _ = lazycell.fill(Box::new(1));
+            reference = lazycell.borrow().map(|r| &**r);
+            Ok(Box::new(2))
+        });
     }
 
     #[test]
@@ -201,6 +375,9 @@ mod tests {
 
         let value = lazycell.borrow();
         assert_eq!(value, None);
+
+        let value = lazycell.get();
+        assert_eq!(value, None);
     }
 
     #[test]
@@ -213,6 +390,9 @@ mod tests {
 
         let value = lazycell.borrow();
         assert_eq!(value, Some(&1));
+
+        let value = lazycell.get();
+        assert_eq!(value, Some(1));
     }
 
     #[test]

@@ -63,5 +63,3 @@ pub const __PTHREAD_RWLOCKATTR_SIZE__: usize = 16;
 
 pub const TIOCTIMESTAMP: ::c_ulong = 0x40107459;
 pub const TIOCDCDTIMESTAMP: ::c_ulong = 0x40107458;
-
-pub const FIONREAD: ::c_ulong = 0x4004667f;

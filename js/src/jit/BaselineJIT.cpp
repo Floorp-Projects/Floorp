@@ -244,7 +244,7 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
 MethodStatus
 jit::BaselineCompile(JSContext* cx, JSScript* script, bool forceDebugInstrumentation)
 {
-    assertSameCompartment(cx, script);
+    cx->check(script);
     MOZ_ASSERT(!script->hasBaselineScript());
     MOZ_ASSERT(script->canBaselineCompile());
     MOZ_ASSERT(IsBaselineEnabled(cx));
@@ -377,7 +377,7 @@ BaselineScript::New(JSScript* jsscript,
 {
     static const unsigned DataAlignment = sizeof(uintptr_t);
 
-    size_t icEntriesSize = icEntries * sizeof(BaselineICEntry);
+    size_t icEntriesSize = icEntries * sizeof(ICEntry);
     size_t pcMappingIndexEntriesSize = pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
     size_t bytecodeTypeMapSize = bytecodeTypeMapEntries * sizeof(uint32_t);
     size_t yieldEntriesSize = yieldEntries * sizeof(uintptr_t);
@@ -441,7 +441,7 @@ BaselineScript::trace(JSTracer* trc)
 
     // Mark all IC stub codes hanging off the IC stub entries.
     for (size_t i = 0; i < numICEntries(); i++) {
-        BaselineICEntry& ent = icEntry(i);
+        ICEntry& ent = icEntry(i);
         ent.trace(trc);
     }
 }
@@ -536,7 +536,7 @@ BaselineScript::removeDependentWasmImport(wasm::Instance& instance, uint32_t idx
     }
 }
 
-BaselineICEntry&
+ICEntry&
 BaselineScript::icEntry(size_t index)
 {
     MOZ_ASSERT(index < numICEntries());
@@ -569,12 +569,12 @@ struct ICEntries
 
     explicit ICEntries(BaselineScript* baseline) : baseline_(baseline) {}
 
-    BaselineICEntry& operator[](size_t index) const {
+    ICEntry& operator[](size_t index) const {
         return baseline_->icEntry(index);
     }
 };
 
-BaselineICEntry&
+ICEntry&
 BaselineScript::icEntryFromReturnOffset(CodeOffset returnOffset)
 {
     size_t loc;
@@ -582,7 +582,7 @@ BaselineScript::icEntryFromReturnOffset(CodeOffset returnOffset)
     bool found =
 #endif
         BinarySearchIf(ICEntries(this), 0, numICEntries(),
-                       [&returnOffset](BaselineICEntry& entry) {
+                       [&returnOffset](ICEntry& entry) {
                            size_t roffset = returnOffset.offset();
                            size_t entryRoffset = entry.returnOffset().offset();
                            if (roffset < entryRoffset)
@@ -603,7 +603,7 @@ static inline bool
 ComputeBinarySearchMid(BaselineScript* baseline, uint32_t pcOffset, size_t* loc)
 {
     return BinarySearchIf(ICEntries(baseline), 0, baseline->numICEntries(),
-                          [pcOffset](BaselineICEntry& entry) {
+                          [pcOffset](ICEntry& entry) {
                               uint32_t entryOffset = entry.pcOffset();
                               if (pcOffset < entryOffset)
                                   return -1;
@@ -615,12 +615,12 @@ ComputeBinarySearchMid(BaselineScript* baseline, uint32_t pcOffset, size_t* loc)
 }
 
 uint8_t*
-BaselineScript::returnAddressForIC(const BaselineICEntry& ent)
+BaselineScript::returnAddressForIC(const ICEntry& ent)
 {
     return method()->raw() + ent.returnOffset().offset();
 }
 
-BaselineICEntry*
+ICEntry*
 BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset)
 {
     // Multiple IC entries can have the same PC offset, but this method only looks for
@@ -647,25 +647,25 @@ BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset)
     return nullptr;
 }
 
-BaselineICEntry&
+ICEntry&
 BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
 {
-    BaselineICEntry* entry = maybeICEntryFromPCOffset(pcOffset);
+    ICEntry* entry = maybeICEntryFromPCOffset(pcOffset);
     MOZ_RELEASE_ASSERT(entry);
     return *entry;
 }
 
-BaselineICEntry*
-BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset, BaselineICEntry* prevLookedUpEntry)
+ICEntry*
+BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry)
 {
     // Do a linear forward search from the last queried PC offset, or fallback to a
     // binary search if the last offset is too far away.
     if (prevLookedUpEntry && pcOffset >= prevLookedUpEntry->pcOffset() &&
         (pcOffset - prevLookedUpEntry->pcOffset()) <= 10)
     {
-        BaselineICEntry* firstEntry = &icEntry(0);
-        BaselineICEntry* lastEntry = &icEntry(numICEntries() - 1);
-        BaselineICEntry* curEntry = prevLookedUpEntry;
+        ICEntry* firstEntry = &icEntry(0);
+        ICEntry* lastEntry = &icEntry(numICEntries() - 1);
+        ICEntry* curEntry = prevLookedUpEntry;
         while (curEntry >= firstEntry && curEntry <= lastEntry) {
             if (curEntry->pcOffset() == pcOffset && curEntry->isForOp())
                 return curEntry;
@@ -677,15 +677,15 @@ BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset, BaselineICEntry* pre
     return maybeICEntryFromPCOffset(pcOffset);
 }
 
-BaselineICEntry&
-BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, BaselineICEntry* prevLookedUpEntry)
+ICEntry&
+BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry)
 {
-    BaselineICEntry* entry = maybeICEntryFromPCOffset(pcOffset, prevLookedUpEntry);
+    ICEntry* entry = maybeICEntryFromPCOffset(pcOffset, prevLookedUpEntry);
     MOZ_RELEASE_ASSERT(entry);
     return *entry;
 }
 
-BaselineICEntry&
+ICEntry&
 BaselineScript::callVMEntryFromPCOffset(uint32_t pcOffset)
 {
     // Like icEntryFromPCOffset, but only looks for the fake ICEntries
@@ -707,7 +707,7 @@ BaselineScript::callVMEntryFromPCOffset(uint32_t pcOffset)
     MOZ_CRASH("Invalid PC offset for callVM entry.");
 }
 
-BaselineICEntry&
+ICEntry&
 BaselineScript::stackCheckICEntry(bool earlyCheck)
 {
     // The stack check will always be at offset 0, so just do a linear search
@@ -722,7 +722,7 @@ BaselineScript::stackCheckICEntry(bool earlyCheck)
     MOZ_CRASH("No stack check ICEntry found.");
 }
 
-BaselineICEntry&
+ICEntry&
 BaselineScript::warmupCountICEntry()
 {
     // The stack check will be at a very low offset, so just do a linear search
@@ -734,7 +734,7 @@ BaselineScript::warmupCountICEntry()
     MOZ_CRASH("No warmup count ICEntry found.");
 }
 
-BaselineICEntry&
+ICEntry&
 BaselineScript::icEntryFromReturnAddress(uint8_t* returnAddr)
 {
     MOZ_ASSERT(returnAddr > method_->raw());
@@ -755,12 +755,12 @@ BaselineScript::copyYieldAndAwaitEntries(JSScript* script, Vector<uint32_t>& yie
 }
 
 void
-BaselineScript::copyICEntries(JSScript* script, const BaselineICEntry* entries)
+BaselineScript::copyICEntries(JSScript* script, const ICEntry* entries)
 {
     // Fix up the return offset in the IC entries and copy them in.
     // Also write out the IC entry ptrs in any fallback stubs that were added.
     for (uint32_t i = 0; i < numICEntries(); i++) {
-        BaselineICEntry& realEntry = icEntry(i);
+        ICEntry& realEntry = icEntry(i);
         realEntry = entries[i];
 
         if (!realEntry.hasStub()) {
@@ -1056,7 +1056,7 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
     JitSpew(JitSpew_BaselineIC, "Purging optimized stubs");
 
     for (size_t i = 0; i < numICEntries(); i++) {
-        BaselineICEntry& entry = icEntry(i);
+        ICEntry& entry = icEntry(i);
         if (!entry.hasStub())
             continue;
 
@@ -1098,7 +1098,7 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
 #ifdef DEBUG
     // All remaining stubs must be allocated in the fallback space.
     for (size_t i = 0; i < numICEntries(); i++) {
-        BaselineICEntry& entry = icEntry(i);
+        ICEntry& entry = icEntry(i);
         if (!entry.hasStub())
             continue;
 

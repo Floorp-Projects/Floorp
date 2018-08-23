@@ -187,6 +187,20 @@ s! {
         pub sdl_slen: ::c_uchar,
         pub sdl_data: [::c_char; 24],
     }
+
+    pub struct sockpeercred {
+        pub uid: ::uid_t,
+        pub gid: ::gid_t,
+        pub pid: ::pid_t,
+    }
+
+    pub struct arphdr {
+        pub ar_hrd: u16,
+        pub ar_pro: u16,
+        pub ar_hln: u8,
+        pub ar_pln: u8,
+        pub ar_op: u16,
+    }
 }
 
 pub const UT_NAMESIZE: usize = 32;
@@ -235,24 +249,6 @@ pub const SO_NETPROC: ::c_int = 0x1020;
 pub const SO_RTABLE: ::c_int = 0x1021;
 pub const SO_PEERCRED: ::c_int = 0x1022;
 pub const SO_SPLICE: ::c_int = 0x1023;
-
-// https://github.com/openbsd/src/blob/master/sys/net/if.h#L187
-pub const IFF_UP: ::c_int = 0x1; // interface is up
-pub const IFF_BROADCAST: ::c_int = 0x2; // broadcast address valid
-pub const IFF_DEBUG: ::c_int = 0x4; // turn on debugging
-pub const IFF_LOOPBACK: ::c_int = 0x8; // is a loopback net
-pub const IFF_POINTOPOINT: ::c_int = 0x10; // interface is point-to-point link
-pub const IFF_NOTRAILERS: ::c_int = 0x20; // avoid use of trailers
-pub const IFF_RUNNING: ::c_int = 0x40; // resources allocated
-pub const IFF_NOARP: ::c_int = 0x80; // no address resolution protocol
-pub const IFF_PROMISC: ::c_int = 0x100; // receive all packets
-pub const IFF_ALLMULTI: ::c_int = 0x200; // receive all multicast packets
-pub const IFF_OACTIVE: ::c_int = 0x400; // transmission in progress
-pub const IFF_SIMPLEX: ::c_int = 0x800; // can't hear own transmissions
-pub const IFF_LINK0: ::c_int = 0x1000; // per link layer defined bit
-pub const IFF_LINK1: ::c_int = 0x2000; // per link layer defined bit
-pub const IFF_LINK2: ::c_int = 0x4000; // per link layer defined bit
-pub const IFF_MULTICAST: ::c_int = 0x8000; // supports multicast
 
 // sys/netinet/in.h
 // Protocols (RFC 1700)
@@ -319,6 +315,9 @@ pub const IPPROTO_MAX: ::c_int = 256;
 /* Only used internally, so it can be outside the range of valid IP protocols */
 /// Divert sockets
 pub const IPPROTO_DIVERT: ::c_int = 258;
+
+pub const IP_RECVDSTADDR: ::c_int = 7;
+pub const IP_SENDSRCADDR: ::c_int = IP_RECVDSTADDR;
 
 pub const AF_ECMA: ::c_int = 8;
 pub const AF_ROUTE: ::c_int = 17;
@@ -588,6 +587,7 @@ pub const CTL_MACHDEP: ::c_int = 7;
 pub const CTL_DDB: ::c_int = 9;
 pub const CTL_VFS: ::c_int = 10;
 pub const CTL_MAXID: ::c_int = 11;
+pub const HW_NCPUONLINE: ::c_int = 25;
 pub const KERN_OSTYPE: ::c_int = 1;
 pub const KERN_OSRELEASE: ::c_int = 2;
 pub const KERN_OSREV: ::c_int = 3;
@@ -662,7 +662,8 @@ pub const KERN_PROC_VMMAP: ::c_int = 80;
 pub const KERN_GLOBAL_PTRACE: ::c_int = 81;
 pub const KERN_CONSBUFSIZE: ::c_int = 82;
 pub const KERN_CONSBUF: ::c_int = 83;
-pub const KERN_MAXID: ::c_int = 84;
+pub const KERN_AUDIO: ::c_int = 84;
+pub const KERN_MAXID: ::c_int = 85;
 pub const KERN_PROC_ALL: ::c_int = 0;
 pub const KERN_PROC_PID: ::c_int = 1;
 pub const KERN_PROC_PGRP: ::c_int = 2;
@@ -731,8 +732,6 @@ extern {
                   newlen: ::size_t)
                   -> ::c_int;
     pub fn getentropy(buf: *mut ::c_void, buflen: ::size_t) -> ::c_int;
-    pub fn pledge(promises: *const ::c_char,
-                  paths: *mut *const ::c_char) -> ::c_int;
     pub fn setresgid(rgid: ::gid_t, egid: ::gid_t, sgid: ::gid_t) -> ::c_int;
     pub fn setresuid(ruid: ::uid_t, euid: ::uid_t, suid: ::uid_t) -> ::c_int;
 }

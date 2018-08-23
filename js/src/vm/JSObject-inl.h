@@ -817,7 +817,7 @@ InitClass(JSContext* cx, HandleObject obj, HandleObject parent_proto,
 MOZ_ALWAYS_INLINE const char*
 GetObjectClassName(JSContext* cx, HandleObject obj)
 {
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
 
     if (obj->is<ProxyObject>())
         return Proxy::className(cx, obj);

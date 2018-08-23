@@ -33,21 +33,26 @@ fn test_get_u8() {
 #[test]
 fn test_get_u16() {
     let buf = b"\x21\x54zomg";
-    assert_eq!(0x2154, Cursor::new(buf).get_u16::<byteorder::BigEndian>());
-    assert_eq!(0x5421, Cursor::new(buf).get_u16::<byteorder::LittleEndian>());
+    assert_eq!(0x2154, Cursor::new(buf).get_u16_be());
+    assert_eq!(0x5421, Cursor::new(buf).get_u16_le());
 }
 
 #[test]
 #[should_panic]
 fn test_get_u16_buffer_underflow() {
     let mut buf = Cursor::new(b"\x21");
-    buf.get_u16::<byteorder::BigEndian>();
+    buf.get_u16_be();
 }
 
 #[test]
 fn test_bufs_vec() {
     let buf = Cursor::new(b"hello world");
-    let mut dst: [&IoVec; 2] = Default::default();
+
+    let b1: &[u8] = &mut [0];
+    let b2: &[u8] = &mut [0];
+
+    let mut dst: [&IoVec; 2] =
+        [b1.into(), b2.into()];
 
     assert_eq!(1, buf.bytes_vec(&mut dst[..]));
 }

@@ -12,7 +12,7 @@
 
 [package]
 name = "crossbeam-epoch"
-version = "0.3.1"
+version = "0.4.3"
 authors = ["The Crossbeam Project Developers"]
 description = "Epoch-based garbage collection"
 homepage = "https://github.com/crossbeam-rs/crossbeam-epoch"
@@ -30,25 +30,21 @@ default-features = false
 version = "0.1"
 
 [dependencies.crossbeam-utils]
-version = "0.2"
+version = "0.3"
 default-features = false
 
 [dependencies.lazy_static]
-version = "1.0.0"
+version = "1"
 optional = true
 
 [dependencies.memoffset]
 version = "0.2"
 
-[dependencies.nodrop]
-version = "0.1.12"
-default-features = false
-
 [dependencies.scopeguard]
 version = "0.3"
 default-features = false
 [dev-dependencies.rand]
-version = "0.3"
+version = "0.4"
 
 [features]
 default = ["use_std"]

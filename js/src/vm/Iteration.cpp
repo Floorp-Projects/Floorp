@@ -935,7 +935,7 @@ js::GetIterator(JSContext* cx, HandleObject obj)
         return nullptr;
 
     PropertyIteratorObject* iterobj = &res->as<PropertyIteratorObject>();
-    assertSameCompartment(cx, iterobj);
+    cx->check(iterobj);
 
     // Cache the iterator object.
     if (numGuards > 0) {

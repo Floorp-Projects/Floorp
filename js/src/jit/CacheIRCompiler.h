@@ -902,6 +902,12 @@ class CacheIRStubInfo
 template <typename T>
 void TraceCacheIRStub(JSTracer* trc, T* stub, const CacheIRStubInfo* stubInfo);
 
+void
+LoadTypedThingData(MacroAssembler& masm, TypedThingLayout layout, Register obj, Register result);
+
+void
+LoadTypedThingLength(MacroAssembler& masm, TypedThingLayout layout, Register obj, Register result);
+
 } // namespace jit
 } // namespace js
 

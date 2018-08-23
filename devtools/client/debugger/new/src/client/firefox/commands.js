@@ -366,7 +366,7 @@ async function checkServerSupportsListWorkers() {
     return false;
   }
 
-  const deviceFront = await (0, _frontsDevice.getDeviceFront)(debuggerClient, root);
+  const deviceFront = await debuggerClient.mainRoot.getFront("device");
   const description = await deviceFront.getDescription();
   const isFennec = description.apptype === "mobile/android";
 
