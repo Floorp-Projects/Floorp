@@ -357,9 +357,25 @@ other kinds of objects.
     [visible frame][vf] currently on the calling thread's stack, or `null`
     if there are no visible frames on the stack.
 
-<code>findSources()</code>
-:   Return an array of all [`Debugger.Source`][source] instances of all debuggee
+<code>findSources([<i>query</i>]) <i>(not yet implemented)</i></code>
+:   Return an array of all [`Debugger.Source`][source] instances matching
+    <i>query</i>. Each source appears only once in the array. <i>Query</i>
+    is an object whose properties restrict which sources are returned; a
+    source must meet all the criteria given by <i>query</i> to be returned.
+    If <i>query</i> is omitted, we return all sources of all debuggee
     scripts.
+
+    <i>Query</i> may have the following properties:
+
+    `url`
+    :   The source's `url` property must be equal to this value.
+
+    `global`
+    :   The source must have been evaluated in the scope of the given global
+        object. If this property's value is a [`Debugger.Object`][object] instance
+        belonging to this `Debugger` instance, then its referent is used. If the
+        object is not a global object, then the global in whose scope it was
+        allocated is used.
 
     Note that the result may include sources that can no longer ever be
     used by the debuggee: say, eval code that has finished running, or
