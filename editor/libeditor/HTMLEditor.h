@@ -1066,6 +1066,45 @@ protected: // Shouldn't be used by friend classes
   };
 
   /**
+   * TableSize stores and computes number of rows and columns of a <table>
+   * element.
+   */
+  struct MOZ_STACK_CLASS TableSize final
+  {
+    int32_t mRowCount;
+    int32_t mColumnCount;
+
+    /**
+     * @param aHTMLEditor               The editor which creates the instance.
+     * @param aTableOrElementInTable    If a <table> element, computes number
+     *                                  of rows and columns of it.
+     *                                  If another element in a <table> element,
+     *                                  computes number of rows and columns
+     *                                  of nearest ancestor <table> element.
+     *                                  Otherwise, i.e., non-<table> element
+     *                                  not in <table>, returns error.
+     * @param aRv                       Returns error if the element is not
+     *                                  in <table> or layout information is
+     *                                  not available.
+     */
+    TableSize(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
+              ErrorResult& aRv)
+      : mRowCount(-1)
+      , mColumnCount(-1)
+    {
+      MOZ_ASSERT(!aRv.Failed());
+      Update(aHTMLEditor, aTableOrElementInTable, aRv);
+    }
+
+    /**
+     * Update mRowCount and mColumnCount for aTableOrElementInTable.
+     * See above for the detail.
+     */
+    void Update(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
+                ErrorResult& aRv);
+  };
+
+  /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.

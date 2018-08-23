@@ -158,12 +158,31 @@ interface nsITableEditor : nsISupports
   void getCellIndexes(in Element aCellElement,
                       out long aRowIndex, out long aColumnIndex);
 
-  /** Get the number of rows and columns in a table from the layout's cellmap
-    * If aTable is null, it will try to find enclosing table of selection ancho
-    * Note that all rows in table will not have this many because of
-    * ROWSPAN effects or if table is not "rectangular" (has short rows)
-    */
-  void getTableSize(in Element aTable,
+  /**
+   * getTableSize() computes number of rows and columns.
+   * Note that this depends on layout information.  Therefore, all pending
+   * layout should've been flushed before calling this.
+   *
+   * @param aTableOrElementInTable  If a <table> element, this computes number
+   *                                of rows and columns of it.
+   *                                If another element and in a <table>, this
+   *                                computes number of rows and columns of
+   *                                the nearest ancestor <table> element.
+   *                                If element is not in <table> element,
+   *                                throwing an exception.
+   *                                If null, this looks for nearest ancestor
+   *                                <table> element containing anchor of
+   *                                Selection.  If found, computes the number
+   *                                of rows and columns of the <table>.
+   *                                Otherwise, throwing an exception.
+   * @param aRowCount               Number of *actual* row count.
+   *                                I.e., rowspan does NOT increase this value.
+   * @param aColumnCount            Number of column count.
+   *                                I.e., if colspan is specified with bigger
+   *                                number than actual, the value is used
+   *                                as this.
+   */
+  void getTableSize(in Element aTableOrElementInTable,
                     out long aRowCount, out long aColCount);
 
   /** Get a cell element at cellmap grid coordinates
