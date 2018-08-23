@@ -17,6 +17,7 @@
   fill: currentColor;
   height: 1em;
   margin-inline-end: 0.5em;
+  transition: transform 150ms cubic-bezier(.07, .95, 0, 1);
   width: 1em;
   -moz-context-properties: fill;
 }
