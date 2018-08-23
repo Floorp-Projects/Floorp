@@ -331,8 +331,8 @@ function viewCertHelper(parent, cert) {
   if (!cert)
     return;
 
-  var cd = Cc[CERTIFICATEDIALOGS_CONTRACTID].getService(nsICertificateDialogs);
-  cd.viewCert(parent, cert);
+  Services.ww.openWindow(parent, "chrome://pippki/content/certViewer.xul",
+                         "_blank", "centerscreen,chrome", cert);
 }
 
 /**

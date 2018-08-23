@@ -11,7 +11,6 @@
 #include "mozilla/StyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 
-class nsCSSRuleProcessor;
 class nsAtom;
 class nsIContent;
 class nsXBLPrototypeBinding;
