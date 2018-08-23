@@ -10,11 +10,6 @@ config = {
     "log_name": "raptor",
     "installer_path": "installer.exe",
     "virtualenv_path": VENV_PATH,
-    "pip_index": False,
-    "find_links": [
-        "http://pypi.pvt.build.mozilla.org/pub",
-        "http://pypi.pub.build.mozilla.org/pub",
-    ],
     "virtualenv_modules": ['pywin32', 'raptor', 'mozinstall'],
     "exes": {
         'python': PYTHON,

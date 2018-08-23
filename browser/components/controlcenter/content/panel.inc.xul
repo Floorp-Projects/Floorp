@@ -94,6 +94,14 @@
               <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
                      onclick="ContentBlocking.openPreferences('identityPopup-CB-tracking-protection');">&contentBlocking.trackingProtection.add.label;</label>
             </hbox>
+            <hbox id="identity-popup-content-blocking-category-3rdpartycookies"
+                  class="identity-popup-content-blocking-category" align="center" role="group">
+              <image class="identity-popup-content-blocking-category-icon thirdpartycookies-icon"/>
+              <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.3rdPartyCookies.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.3rdPartyCookies.blocked.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
+                     onclick="ContentBlocking.openPreferences('identityPopup-CB-3rdpartycookies');">&contentBlocking.3rdPartyCookies.add.label;</label>
+            </hbox>
           </vbox>
 
           <button id="tracking-action-unblock"

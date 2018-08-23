@@ -17,7 +17,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIObserverService.h"
-#include "nsISHContainer.h"
 #include "nsISHEntry.h"
 #include "nsISHistoryListener.h"
 #include "nsISHTransaction.h"
@@ -233,8 +232,7 @@ nsSHistory::EvictContentViewerForTransaction(nsISHTransaction* aTrans)
   int32_t index = -1;
   GetIndexOfEntry(entry, &index);
   if (index != -1) {
-    nsCOMPtr<nsISHContainer> container(do_QueryInterface(entry));
-    RemoveDynEntries(index, container);
+    RemoveDynEntries(index, entry);
   }
 }
 
@@ -419,16 +417,11 @@ nsSHistory::WalkHistoryEntries(nsISHEntry* aRootEntry,
 {
   NS_ENSURE_TRUE(aRootEntry, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISHContainer> container(do_QueryInterface(aRootEntry));
-  if (!container) {
-    return NS_ERROR_FAILURE;
-  }
-
   int32_t childCount;
-  container->GetChildCount(&childCount);
+  aRootEntry->GetChildCount(&childCount);
   for (int32_t i = 0; i < childCount; i++) {
     nsCOMPtr<nsISHEntry> childEntry;
-    container->GetChildAt(i, getter_AddRefs(childEntry));
+    aRootEntry->GetChildAt(i, getter_AddRefs(childEntry));
     if (!childEntry) {
       // childEntry can be null for valid reasons, for example if the
       // docshell at index i never loaded anything useful.
@@ -493,10 +486,9 @@ nsSHistory::CloneAndReplaceChild(nsISHEntry* aEntry,
   uint32_t cloneID = data->cloneID;
   nsISHEntry* replaceEntry = data->replaceEntry;
 
-  nsCOMPtr<nsISHContainer> container = do_QueryInterface(data->destTreeParent);
   if (!aEntry) {
-    if (container) {
-      container->AddChild(nullptr, aEntryIndex);
+    if (data->destTreeParent) {
+      data->destTreeParent->AddChild(nullptr, aEntryIndex);
     }
     return NS_OK;
   }
@@ -528,8 +520,8 @@ nsSHistory::CloneAndReplaceChild(nsISHEntry* aEntry,
     aShell->SwapHistoryEntries(aEntry, dest);
   }
 
-  if (container) {
-    container->AddChild(dest, aEntryIndex);
+  if (data->destTreeParent) {
+    data->destTreeParent->AddChild(dest, aEntryIndex);
   }
 
   data->resultEntry = dest;
@@ -570,9 +562,8 @@ nsSHistory::SetChildHistoryEntry(nsISHEntry* aEntry, nsDocShell* aShell,
   nsISHEntry* destTreeRoot = data->destTreeRoot;
 
   nsCOMPtr<nsISHEntry> destEntry;
-  nsCOMPtr<nsISHContainer> container = do_QueryInterface(data->destTreeParent);
 
-  if (container) {
+  if (data->destTreeParent) {
     // aEntry is a clone of some child of destTreeParent, but since the
     // trees aren't necessarily in sync, we'll have to locate it.
     // Note that we could set aShell's entry to null if we don't find a
@@ -583,14 +574,14 @@ nsSHistory::SetChildHistoryEntry(nsISHEntry* aEntry, nsDocShell* aShell,
 
     // First look at the given index, since this is the common case.
     nsCOMPtr<nsISHEntry> entry;
-    container->GetChildAt(aEntryIndex, getter_AddRefs(entry));
+    data->destTreeParent->GetChildAt(aEntryIndex, getter_AddRefs(entry));
     if (entry && NS_SUCCEEDED(entry->GetID(&id)) && id == targetID) {
       destEntry.swap(entry);
     } else {
       int32_t childCount;
-      container->GetChildCount(&childCount);
+      data->destTreeParent->GetChildCount(&childCount);
       for (int32_t i = 0; i < childCount; ++i) {
-        container->GetChildAt(i, getter_AddRefs(entry));
+        data->destTreeParent->GetChildAt(i, getter_AddRefs(entry));
         if (!entry) {
           continue;
         }
@@ -1303,12 +1294,7 @@ public:
     nsCOMPtr<nsISHEntry> shentry;
     mTransaction->GetSHEntry(getter_AddRefs(shentry));
 
-    nsCOMPtr<nsISHEntryInternal> shentryInternal = do_QueryInterface(shentry);
-    if (shentryInternal) {
-      shentryInternal->GetLastTouched(&mLastTouched);
-    } else {
-      NS_WARNING("Can't cast to nsISHEntryInternal?");
-    }
+    shentry->GetLastTouched(&mLastTouched);
   }
 
   bool operator<(const TransactionAndDistance& aOther) const
@@ -1526,15 +1512,15 @@ nsSHistory::GloballyEvictAllContentViewers()
 }
 
 void
-GetDynamicChildren(nsISHContainer* aContainer,
+GetDynamicChildren(nsISHEntry* aEntry,
                    nsTArray<nsID>& aDocshellIDs,
                    bool aOnlyTopLevelDynamic)
 {
   int32_t count = 0;
-  aContainer->GetChildCount(&count);
+  aEntry->GetChildCount(&count);
   for (int32_t i = 0; i < count; ++i) {
     nsCOMPtr<nsISHEntry> child;
-    aContainer->GetChildAt(i, getter_AddRefs(child));
+    aEntry->GetChildAt(i, getter_AddRefs(child));
     if (child) {
       bool dynAdded = false;
       child->IsDynamicallyAdded(&dynAdded);
@@ -1543,42 +1529,30 @@ GetDynamicChildren(nsISHContainer* aContainer,
         aDocshellIDs.AppendElement(docshellID);
       }
       if (!dynAdded || !aOnlyTopLevelDynamic) {
-        nsCOMPtr<nsISHContainer> childAsContainer = do_QueryInterface(child);
-        if (childAsContainer) {
-          GetDynamicChildren(childAsContainer, aDocshellIDs,
-                             aOnlyTopLevelDynamic);
-        }
+        GetDynamicChildren(child, aDocshellIDs, aOnlyTopLevelDynamic);
       }
     }
   }
 }
 
 bool
-RemoveFromSessionHistoryContainer(nsISHContainer* aContainer,
-                                  nsTArray<nsID>& aDocshellIDs)
+RemoveFromSessionHistoryEntry(nsISHEntry* aRoot, nsTArray<nsID>& aDocshellIDs)
 {
-  nsCOMPtr<nsISHEntry> root = do_QueryInterface(aContainer);
-  NS_ENSURE_TRUE(root, false);
-
   bool didRemove = false;
   int32_t childCount = 0;
-  aContainer->GetChildCount(&childCount);
+  aRoot->GetChildCount(&childCount);
   for (int32_t i = childCount - 1; i >= 0; --i) {
     nsCOMPtr<nsISHEntry> child;
-    aContainer->GetChildAt(i, getter_AddRefs(child));
+    aRoot->GetChildAt(i, getter_AddRefs(child));
     if (child) {
       nsID docshelldID = child->DocshellID();
       if (aDocshellIDs.Contains(docshelldID)) {
         didRemove = true;
-        aContainer->RemoveChild(child);
+        aRoot->RemoveChild(child);
       } else {
-        nsCOMPtr<nsISHContainer> container = do_QueryInterface(child);
-        if (container) {
-          bool childRemoved =
-            RemoveFromSessionHistoryContainer(container, aDocshellIDs);
-          if (childRemoved) {
-            didRemove = true;
-          }
+        bool childRemoved = RemoveFromSessionHistoryEntry(child, aDocshellIDs);
+        if (childRemoved) {
+          didRemove = true;
         }
       }
     }
@@ -1590,10 +1564,9 @@ bool
 RemoveChildEntries(nsISHistory* aHistory, int32_t aIndex,
                    nsTArray<nsID>& aEntryIDs)
 {
-  nsCOMPtr<nsISHEntry> rootHE;
-  aHistory->GetEntryAtIndex(aIndex, false, getter_AddRefs(rootHE));
-  nsCOMPtr<nsISHContainer> root = do_QueryInterface(rootHE);
-  return root ? RemoveFromSessionHistoryContainer(root, aEntryIDs) : false;
+  nsCOMPtr<nsISHEntry> root;
+  aHistory->GetEntryAtIndex(aIndex, false, getter_AddRefs(root));
+  return root ? RemoveFromSessionHistoryEntry(root, aEntryIDs) : false;
 }
 
 bool
@@ -1612,17 +1585,15 @@ IsSameTree(nsISHEntry* aEntry1, nsISHEntry* aEntry2)
     return false;
   }
 
-  nsCOMPtr<nsISHContainer> container1 = do_QueryInterface(aEntry1);
-  nsCOMPtr<nsISHContainer> container2 = do_QueryInterface(aEntry2);
   int32_t count1, count2;
-  container1->GetChildCount(&count1);
-  container2->GetChildCount(&count2);
+  aEntry1->GetChildCount(&count1);
+  aEntry2->GetChildCount(&count2);
   // We allow null entries in the end of the child list.
   int32_t count = std::max(count1, count2);
   for (int32_t i = 0; i < count; ++i) {
     nsCOMPtr<nsISHEntry> child1, child2;
-    container1->GetChildAt(i, getter_AddRefs(child1));
-    container2->GetChildAt(i, getter_AddRefs(child2));
+    aEntry1->GetChildAt(i, getter_AddRefs(child1));
+    aEntry2->GetChildAt(i, getter_AddRefs(child2));
     if (!IsSameTree(child1, child2)) {
       return false;
     }
@@ -1727,19 +1698,17 @@ nsSHistory::RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex)
 }
 
 void
-nsSHistory::RemoveDynEntries(int32_t aIndex, nsISHContainer* aContainer)
+nsSHistory::RemoveDynEntries(int32_t aIndex, nsISHEntry* aEntry)
 {
   // Remove dynamic entries which are at the index and belongs to the container.
-  nsCOMPtr<nsISHContainer> container(aContainer);
-  if (!container) {
-    nsCOMPtr<nsISHEntry> entry;
+  nsCOMPtr<nsISHEntry> entry(aEntry);
+  if (!entry) {
     GetEntryAtIndex(aIndex, false, getter_AddRefs(entry));
-    container = do_QueryInterface(entry);
   }
 
-  if (container) {
+  if (entry) {
     AutoTArray<nsID, 16> toBeRemovedEntries;
-    GetDynamicChildren(container, toBeRemovedEntries, true);
+    GetDynamicChildren(entry, toBeRemovedEntries, true);
     if (toBeRemovedEntries.Length()) {
       RemoveEntries(toBeRemovedEntries, aIndex);
     }
@@ -1755,8 +1724,7 @@ nsSHistory::RemoveDynEntriesForBFCacheEntry(nsIBFCacheEntry* aEntry)
   if (trans) {
     nsCOMPtr<nsISHEntry> entry;
     trans->GetSHEntry(getter_AddRefs(entry));
-    nsCOMPtr<nsISHContainer> container(do_QueryInterface(entry));
-    RemoveDynEntries(index, container);
+    RemoveDynEntries(index, entry);
   }
 }
 
@@ -1896,11 +1864,8 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
   }
 
   // Remember that this entry is getting loaded at this point in the sequence
-  nsCOMPtr<nsISHEntryInternal> entryInternal = do_QueryInterface(nextEntry);
 
-  if (entryInternal) {
-    entryInternal->SetLastTouched(++gTouchCounter);
-  }
+  nextEntry->SetLastTouched(++gTouchCounter);
 
   // Get the uri for the entry we are about to visit
   nextEntry->GetURI(getter_AddRefs(nextURI));
@@ -1975,15 +1940,9 @@ nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
   int32_t pcnt = 0;
   int32_t ncnt = 0;
   int32_t dsCount = 0;
-  nsCOMPtr<nsISHContainer> prevContainer(do_QueryInterface(aPrevEntry));
-  nsCOMPtr<nsISHContainer> nextContainer(do_QueryInterface(aNextEntry));
 
-  if (!prevContainer || !nextContainer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  prevContainer->GetChildCount(&pcnt);
-  nextContainer->GetChildCount(&ncnt);
+  aPrevEntry->GetChildCount(&pcnt);
+  aNextEntry->GetChildCount(&ncnt);
   aParent->GetChildCount(&dsCount);
 
   // Create an array for child docshells.
@@ -2001,7 +1960,7 @@ nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
   for (int32_t i = 0; i < ncnt; ++i) {
     // First get an entry which may cause a new page to be loaded.
     nsCOMPtr<nsISHEntry> nChild;
-    nextContainer->GetChildAt(i, getter_AddRefs(nChild));
+    aNextEntry->GetChildAt(i, getter_AddRefs(nChild));
     if (!nChild) {
       continue;
     }
@@ -2027,7 +1986,7 @@ nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
     nsCOMPtr<nsISHEntry> pChild;
     for (int32_t k = 0; k < pcnt; ++k) {
       nsCOMPtr<nsISHEntry> child;
-      prevContainer->GetChildAt(k, getter_AddRefs(child));
+      aPrevEntry->GetChildAt(k, getter_AddRefs(child));
       if (child) {
         nsID dID = child->DocshellID();
         if (dID == docshellID) {

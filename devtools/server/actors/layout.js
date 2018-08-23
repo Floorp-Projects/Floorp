@@ -52,8 +52,18 @@ const FlexboxActor = ActorClassWithSpec(flexboxSpec, {
       return this.actorID;
     }
 
+    const styles = CssLogic.getComputedStyle(this.containerEl);
+
     const form = {
       actor: this.actorID,
+      // The computed style properties of the flex container.
+      properties: {
+        "align-content": styles.alignContent,
+        "align-items": styles.alignItems,
+        "flex-direction": styles.flexDirection,
+        "flex-wrap": styles.flexWrap,
+        "justify-content": styles.justifyContent,
+      },
     };
 
     // If the WalkerActor already knows the container element, then also return its

@@ -1800,8 +1800,8 @@ Engine.prototype = {
     if (aElement.hasAttribute("rel"))
       url.rels = aElement.getAttribute("rel").toLowerCase().split(/\s+/);
 
-    for (var i = 0; i < aElement.childNodes.length; ++i) {
-      var param = aElement.childNodes[i];
+    for (var i = 0; i < aElement.children.length; ++i) {
+      var param = aElement.children[i];
       if (param.localName == "Param") {
         try {
           url.addParam(param.getAttribute("name"), param.getAttribute("value"));
@@ -1881,8 +1881,8 @@ Engine.prototype = {
     // The OpenSearch spec sets a default value for the input encoding.
     this._queryCharset = OS_PARAM_INPUT_ENCODING_DEF;
 
-    for (var i = 0; i < doc.childNodes.length; ++i) {
-      var child = doc.childNodes[i];
+    for (var i = 0; i < doc.children.length; ++i) {
+      var child = doc.children[i];
       switch (child.localName) {
         case "ShortName":
           this._name = child.textContent;
