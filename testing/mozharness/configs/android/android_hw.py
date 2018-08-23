@@ -29,10 +29,6 @@ config = {
     "tooltool_servers": ['https://tooltool.mozilla-releng.net/'],
     # minidump_tooltool_manifest_path is relative to workspace/build/tests/
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/linux64/releng.manifest",
-    "find_links": [
-        "https://pypi.pub.build.mozilla.org/pub",
-    ],
-    "pip_index": False,
     "suite_definitions": {
         "mochitest": {
             "run_filename": "runtestsremote.py",
