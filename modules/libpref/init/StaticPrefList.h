@@ -1253,12 +1253,6 @@ VARCACHE_PREF(
   bool, true
 )
 
-VARCACHE_PREF(
-  "privacy.restrict3rdpartystorage.ui.enabled",
-   privacy_restrict3rdpartystorage_ui_enabled,
-  RelaxedAtomicBool, false
-)
-
 // Anti-tracking permission expiration
 VARCACHE_PREF(
   "privacy.restrict3rdpartystorage.expiration",
