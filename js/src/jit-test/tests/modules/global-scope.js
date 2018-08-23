@@ -2,8 +2,8 @@
 
 function evalModuleAndCheck(source, expected) {
     let m = parseModule(source);
-    m.declarationInstantiation();
-    m.evaluation();
+    instantiateModule(m);
+    evaluateModule(m);
     assertEq(getModuleEnvironmentValue(m, "r"), expected);
 }
 
@@ -22,8 +22,8 @@ function offThreadEvalModuleAndCheck(source, expected) {
     offThreadCompileModule(source);
     let m = finishOffThreadModule();
     print("compiled");
-    m.declarationInstantiation();
-    m.evaluation();
+    instantiateModule(m);
+    evaluateModule(m);
     assertEq(getModuleEnvironmentValue(m, "r"), expected);
 }
 

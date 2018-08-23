@@ -11,7 +11,7 @@ loadFile(lfLogBuffer);
 function loadFile(lfVarx) {
     oomTest(function() {
         let m = parseModule(lfVarx);
-        m.declarationInstantiation();
-        m.evaluation();
+        instantiateModule(m);
+        evaluateModule(m);
     });
 }

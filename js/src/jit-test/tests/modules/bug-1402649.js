@@ -4,7 +4,7 @@ if (!('oomTest' in this))
 loadFile(`
 function parseAndEvaluate(source) {
     let m = parseModule(source);
-    m.declarationInstantiation();
+    instantiateModule(m);
 }
 parseAndEvaluate("async function a() { await 2 + 3; }")
 `);
