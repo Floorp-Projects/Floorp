@@ -1,4 +1,8 @@
 function testScript(script) {
+  function makeWrapperUrl(wrapper) {
+    return wrapper + "?script=" + script;
+  }
+  let workerWrapperUrl = makeWrapperUrl("worker_wrapper.js");
 
   // The framework runs the entire test in many different configurations.
   // On slow platforms and builds this can make the tests likely to
@@ -24,7 +28,7 @@ function testScript(script) {
 
   function workerTest() {
     return new Promise(function(resolve, reject) {
-      var worker = new Worker("worker_wrapper.js");
+      var worker = new Worker(workerWrapperUrl);
       worker.onmessage = function(event) {
         if (event.data.context != "Worker") {
           return;
@@ -45,7 +49,7 @@ function testScript(script) {
 
   function nestedWorkerTest() {
     return new Promise(function(resolve, reject) {
-      var worker = new Worker("nested_worker_wrapper.js");
+      var worker = new Worker(makeWrapperUrl("nested_worker_wrapper.js"));
       worker.onmessage = function(event) {
         if (event.data.context != "NestedWorker") {
           return;
@@ -104,7 +108,7 @@ function testScript(script) {
         document.body.appendChild(iframe);
       }
 
-      navigator.serviceWorker.register("worker_wrapper.js", {scope: "."})
+      navigator.serviceWorker.register(workerWrapperUrl, {scope: "."})
         .then(setupSW);
     });
   }

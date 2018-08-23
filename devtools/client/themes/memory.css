@@ -489,10 +489,6 @@ html, body, #app, #memory-tool {
   vertical-align: middle;
 }
 
-.heap-tree-item-name .frame-link {
-  display: inline-block;
-}
-
 /**
  * Heap tree view subcolumns
  */
