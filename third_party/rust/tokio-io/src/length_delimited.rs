@@ -1,11 +1,14 @@
+#![allow(deprecated)]
+
 use {codec, AsyncRead, AsyncWrite};
 
-use bytes::{Buf, BufMut, BytesMut, IntoBuf, BigEndian, LittleEndian};
+use bytes::{Buf, BufMut, BytesMut, IntoBuf};
 use bytes::buf::Chain;
 
 use futures::{Async, AsyncSink, Stream, Sink, StartSend, Poll};
 
 use std::{cmp, fmt};
+use std::error::Error as StdError;
 use std::io::{self, Cursor};
 
 /// Configure length delimited `FramedRead`, `FramedWrite`, and `Framed` values.
@@ -53,6 +56,11 @@ pub struct Framed<T, B: IntoBuf = BytesMut> {
 #[derive(Debug)]
 pub struct FramedRead<T> {
     inner: codec::FramedRead<T, Decoder>,
+}
+
+/// An error when the number of bytes read is more than max frame length.
+pub struct FrameTooBig {
+    _priv: (),
 }
 
 #[derive(Debug)]
@@ -285,13 +293,15 @@ impl Decoder {
 
             // match endianess
             let n = if self.builder.length_field_is_big_endian {
-                src.get_uint::<BigEndian>(field_len)
+                src.get_uint_be(field_len)
             } else {
-                src.get_uint::<LittleEndian>(field_len)
+                src.get_uint_le(field_len)
             };
 
             if n > self.builder.max_frame_len as u64 {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, "frame size too big"));
+                return Err(io::Error::new(io::ErrorKind::InvalidData, FrameTooBig {
+                    _priv: (),
+                }));
             }
 
             // The check above ensures there is no overflow
@@ -378,6 +388,24 @@ impl<T: AsyncWrite, B: IntoBuf> FramedWrite<T, B> {
 }
 
 impl<T, B: IntoBuf> FramedWrite<T, B> {
+    /// Returns the current max frame setting
+    ///
+    /// This is the largest size this codec will write to the wire. Larger
+    /// frames will be rejected.
+    pub fn max_frame_length(&self) -> usize {
+        self.builder.max_frame_len
+    }
+
+    /// Updates the max frame setting.
+    ///
+    /// The change takes effect the next time a frame is encoded. In other
+    /// words, if a frame is currently in process of being encoded with a frame
+    /// size greater than `val` but less than the max frame length in effect
+    /// before calling this function, then the frame will be allowed.
+    pub fn set_max_frame_length(&mut self, val: usize) {
+        self.builder.max_frame_length(val);
+    }
+
     /// Returns a reference to the underlying I/O stream wrapped by
     /// `FramedWrite`.
     ///
@@ -434,7 +462,9 @@ impl<T: AsyncWrite, B: IntoBuf> FramedWrite<T, B> {
         let n = buf.remaining();
 
         if n > self.builder.max_frame_len {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, "frame too big"));
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, FrameTooBig {
+                _priv: (),
+            }));
         }
 
         // Adjust `n` with bounds checking
@@ -451,9 +481,9 @@ impl<T: AsyncWrite, B: IntoBuf> FramedWrite<T, B> {
         };
 
         if self.builder.length_field_is_big_endian {
-            head.put_uint::<BigEndian>(n as u64, self.builder.length_field_len);
+            head.put_uint_be(n as u64, self.builder.length_field_len);
         } else {
-            head.put_uint::<LittleEndian>(n as u64, self.builder.length_field_len);
+            head.put_uint_le(n as u64, self.builder.length_field_len);
         }
 
         debug_assert!(self.frame.is_none());
@@ -483,7 +513,7 @@ impl<T: AsyncWrite, B: IntoBuf> Sink for FramedWrite<T, B> {
         try_ready!(self.do_write());
 
         // Try flushing the underlying IO
-        try_nb!(self.inner.flush());
+        try_ready!(self.inner.poll_flush());
 
         return Ok(Async::Ready(()));
     }
@@ -621,6 +651,32 @@ impl Builder {
         self
     }
 
+    /// Read the length field as a native endian integer
+    ///
+    /// The default setting is big endian.
+    ///
+    /// This configuration option applies to both encoding and decoding.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use tokio_io::AsyncRead;
+    /// use tokio_io::codec::length_delimited::Builder;
+    ///
+    /// # fn bind_read<T: AsyncRead>(io: T) {
+    /// Builder::new()
+    ///     .native_endian()
+    ///     .new_read(io);
+    /// # }
+    /// ```
+    pub fn native_endian(&mut self) -> &mut Self {
+        if cfg!(target_endian = "big") {
+            self.big_endian()
+        } else {
+            self.little_endian()
+        }
+    }
+
     /// Sets the max frame length
     ///
     /// This configuration option applies to both encoding and decoding. The
@@ -630,6 +686,9 @@ impl Builder {
     /// against this setting **before** any adjustments are applied. When
     /// encoding, the length of the submitted payload is checked against this
     /// setting.
+    ///
+    /// When frames exceed the max length, an `io::Error` with the custom value
+    /// of the `FrameTooBig` type will be returned.
     ///
     /// # Examples
     ///
@@ -826,5 +885,27 @@ impl Builder {
 
     fn get_num_skip(&self) -> usize {
         self.num_skip.unwrap_or(self.length_field_offset + self.length_field_len)
+    }
+}
+
+
+// ===== impl FrameTooBig =====
+
+impl fmt::Debug for FrameTooBig {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("FrameTooBig")
+            .finish()
+    }
+}
+
+impl fmt::Display for FrameTooBig {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(self.description())
+    }
+}
+
+impl StdError for FrameTooBig {
+    fn description(&self) -> &str {
+        "frame size too big"
     }
 }

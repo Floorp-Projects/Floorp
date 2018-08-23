@@ -12,10 +12,13 @@
 
 [package]
 name = "fuchsia-zircon"
-version = "0.2.1"
+version = "0.3.3"
 authors = ["Raph Levien <raph@google.com>"]
 description = "Rust bindings for the Zircon kernel"
 license = "BSD-3-Clause"
 repository = "https://fuchsia.googlesource.com/garnet/"
+[dependencies.bitflags]
+version = "1.0.0"
+
 [dependencies.fuchsia-zircon-sys]
-version = "0.2.0"
+version = "0.3.3"

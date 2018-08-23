@@ -816,7 +816,7 @@ GlobalObject::getDebuggers() const
 /* static */ GlobalObject::DebuggerVector*
 GlobalObject::getOrCreateDebuggers(JSContext* cx, Handle<GlobalObject*> global)
 {
-    assertSameCompartment(cx, global);
+    cx->check(global);
     DebuggerVector* debuggers = global->getDebuggers();
     if (debuggers)
         return debuggers;
@@ -835,7 +835,7 @@ GlobalObject::getOrCreateDebuggers(JSContext* cx, Handle<GlobalObject*> global)
 /* static */ NativeObject*
 GlobalObject::getOrCreateForOfPICObject(JSContext* cx, Handle<GlobalObject*> global)
 {
-    assertSameCompartment(cx, global);
+    cx->check(global);
     NativeObject* forOfPIC = global->getForOfPICObject();
     if (forOfPIC)
         return forOfPIC;

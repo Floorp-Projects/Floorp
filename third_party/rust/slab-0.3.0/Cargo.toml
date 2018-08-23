@@ -1,0 +1,17 @@
+[package]
+
+name = "slab"
+version = "0.3.0"
+license = "MIT"
+authors = ["Carl Lerche <me@carllerche.com>"]
+description = "Simple slab allocator"
+documentation = "https://docs.rs/slab/0.3.0/slab/"
+homepage = "https://github.com/carllerche/slab"
+repository = "https://github.com/carllerche/slab"
+readme = "README.md"
+keywords = ["slab", "allocator"]
+exclude = [
+    ".gitignore",
+    ".travis.yml",
+    "test/**/*",
+]

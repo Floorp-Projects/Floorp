@@ -12,7 +12,7 @@
 
 [package]
 name = "crossbeam-deque"
-version = "0.2.0"
+version = "0.3.1"
 authors = ["The Crossbeam Project Developers"]
 description = "Concurrent work-stealing deque"
 homepage = "https://github.com/crossbeam-rs/crossbeam-deque"
@@ -23,10 +23,10 @@ categories = ["algorithms", "concurrency", "data-structures"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/crossbeam-rs/crossbeam-deque"
 [dependencies.crossbeam-epoch]
-version = "0.3.0"
+version = "0.4.0"
 
 [dependencies.crossbeam-utils]
-version = "0.2.1"
+version = "0.3"
 [dev-dependencies.rand]
 version = "0.4"
 [badges.travis-ci]

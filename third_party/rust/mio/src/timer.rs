@@ -2,8 +2,10 @@
 
 #![allow(deprecated, missing_debug_implementations)]
 
-use {convert, io, Evented, Ready, Poll, PollOpt, Registration, SetReadiness, Token};
+use {convert, io, Ready, Poll, PollOpt, Registration, SetReadiness, Token};
+use event::Evented;
 use lazycell::LazyCell;
+use slab::Slab;
 use std::{cmp, error, fmt, u64, usize, iter, thread};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -91,19 +93,16 @@ const TICK_MAX: Tick = u64::MAX;
 // Manages communication with wakeup thread
 type WakeupState = Arc<AtomicUsize>;
 
-type Slab<T> = ::slab::Slab<T, ::Token>;
-
 pub type Result<T> = ::std::result::Result<T, TimerError>;
 // TODO: remove
 pub type TimerResult<T> = Result<T>;
 
 
+/// Deprecated and unused.
 #[derive(Debug)]
-pub struct TimerError {
-    kind: TimerErrorKind,
-    desc: &'static str,
-}
+pub struct TimerError;
 
+/// Deprecated and unused.
 #[derive(Debug)]
 pub enum TimerErrorKind {
     TimerOverflow,
@@ -189,14 +188,13 @@ impl<T> Timer<T> {
         let curr = self.wheel[slot];
 
         // Insert the new entry
-        let token = try!(
-            self.entries.insert(Entry::new(state, tick, curr.head))
-            .map_err(|_| TimerError::overflow()));
+        let entry = Entry::new(state, tick, curr.head);
+        let token = Token(self.entries.insert(entry));
 
         if curr.head != EMPTY {
             // If there was a previous entry, set its prev pointer to the new
             // entry
-            self.entries[curr.head].links.prev = token;
+            self.entries[curr.head.into()].links.prev = token;
         }
 
         // Update the head slot
@@ -207,7 +205,7 @@ impl<T> Timer<T> {
 
         self.schedule_readiness(tick);
 
-        trace!("inserted timout; slot={}; token={:?}", slot, token);
+        trace!("inserted timeout; slot={}; token={:?}", slot, token);
 
         // Return the new timeout
         Ok(Timeout {
@@ -217,7 +215,7 @@ impl<T> Timer<T> {
     }
 
     pub fn cancel_timeout(&mut self, timeout: &Timeout) -> Option<T> {
-        let links = match self.entries.get(timeout.token) {
+        let links = match self.entries.get(timeout.token.into()) {
             Some(e) => e.links,
             None => return None
         };
@@ -228,7 +226,7 @@ impl<T> Timer<T> {
         }
 
         self.unlink(&links, timeout.token);
-        self.entries.remove(timeout.token).map(|e| e.state)
+        Some(self.entries.remove(timeout.token.into()).state)
     }
 
     pub fn poll(&mut self) -> Option<T> {
@@ -269,7 +267,7 @@ impl<T> Timer<T> {
                     self.wheel[slot].next_tick = TICK_MAX;
                 }
 
-                let links = self.entries[curr].links;
+                let links = self.entries[curr.into()].links;
 
                 if links.tick <= self.tick {
                     trace!("triggering; token={:?}", curr);
@@ -278,8 +276,7 @@ impl<T> Timer<T> {
                     self.unlink(&links, curr);
 
                     // Remove and return the token
-                    return self.entries.remove(curr)
-                        .map(|e| e.state);
+                    return Some(self.entries.remove(curr.into()).state);
                 } else {
                     let next_tick = self.wheel[slot].next_tick;
                     self.wheel[slot].next_tick = cmp::min(next_tick, links.tick);
@@ -309,11 +306,11 @@ impl<T> Timer<T> {
             let slot = self.slot_for(links.tick);
             self.wheel[slot].head = links.next;
         } else {
-            self.entries[links.prev].links.next = links.next;
+            self.entries[links.prev.into()].links.next = links.next;
         }
 
         if links.next != EMPTY {
-            self.entries[links.next].links.prev = links.prev;
+            self.entries[links.next.into()].links.prev = links.prev;
 
             if token == self.next {
                 self.next = links.next;
@@ -354,7 +351,7 @@ impl<T> Timer<T> {
     // Next tick containing a timeout
     fn next_tick(&self) -> Option<Tick> {
         if self.next != EMPTY {
-            let slot = self.slot_for(self.entries[self.next].links.tick);
+            let slot = self.slot_for(self.entries[self.next.into()].links.tick);
 
             if self.wheel[slot].next_tick == self.tick {
                 // There is data ready right now
@@ -497,23 +494,16 @@ impl<T> Entry<T> {
 }
 
 impl fmt::Display for TimerError {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}: {}", self.kind, self.desc)
-    }
-}
-
-impl TimerError {
-    fn overflow() -> TimerError {
-        TimerError {
-            kind: TimerOverflow,
-            desc: "too many timer entries"
-        }
+    fn fmt(&self, _: &mut fmt::Formatter) -> fmt::Result {
+        // `TimerError` will never be constructed.
+        unreachable!();
     }
 }
 
 impl error::Error for TimerError {
     fn description(&self) -> &str {
-        self.desc
+        // `TimerError` will never be constructed.
+        unreachable!();
     }
 }
 

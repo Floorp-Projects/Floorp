@@ -85,6 +85,7 @@
 extern crate crossbeam_epoch as epoch;
 extern crate crossbeam_utils as utils;
 
+use std::cmp;
 use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
@@ -136,10 +137,7 @@ impl<T> Buffer<T> {
         let ptr = v.as_mut_ptr();
         mem::forget(v);
 
-        Buffer {
-            ptr: ptr,
-            cap: cap,
-        }
+        Buffer { ptr, cap }
     }
 
     /// Returns a pointer to the element at the specified `index`.
@@ -342,6 +340,8 @@ impl<T> Deque<T> {
     ///
     /// // The minimum capacity will be rounded up to 1024.
     /// let d = Deque::<i32>::with_min_capacity(1000);
+    /// assert_eq!(d.min_capacity(), 1024);
+    /// assert_eq!(d.capacity(), 1024);
     /// ```
     pub fn with_min_capacity(min_cap: usize) -> Deque<T> {
         Deque {
@@ -385,6 +385,96 @@ impl<T> Deque<T> {
         b.wrapping_sub(t) as usize
     }
 
+    /// Returns the minimum capacity of the deque.
+    ///
+    /// The minimum capacity can be specified in [`Deque::with_min_capacity`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use crossbeam_deque::Deque;
+    ///
+    /// // Gets rounded to the next power of two.
+    /// let d = Deque::<i32>::with_min_capacity(50);
+    /// assert_eq!(d.min_capacity(), 64);
+    /// assert_eq!(d.capacity(), 64);
+    /// ```
+    ///
+    /// [`Deque::with_min_capacity`]: struct.Deque.html#method.with_min_capacity
+    pub fn min_capacity(&self) -> usize {
+        self.inner.min_cap
+    }
+
+    /// Returns the number of elements the deque can hold without reallocating.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use crossbeam_deque::Deque;
+    ///
+    /// let d = Deque::with_min_capacity(50);
+    /// assert_eq!(d.capacity(), 64);
+    ///
+    /// for i in 0..200 {
+    ///     d.push(i);
+    /// }
+    /// assert_eq!(d.capacity(), 256);
+    /// ```
+    pub fn capacity(&self) -> usize {
+        unsafe {
+            let buf = self.inner.buffer.load(Relaxed, epoch::unprotected());
+            buf.deref().cap
+        }
+    }
+
+    /// Shrinks the capacity of the deque as much as possible.
+    ///
+    /// The capacity will drop down as close as possible to the length but there may still be some
+    /// free space left.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use crossbeam_deque::Deque;
+    ///
+    /// // Insert a lot of elements. This makes the buffer grow.
+    /// let d = Deque::new();
+    /// for i in 0..200 {
+    ///     d.push(i);
+    /// }
+    ///
+    /// // Remove all elements.
+    /// let s = d.stealer();
+    /// for i in 0..200 {
+    ///     s.steal();
+    /// }
+    ///
+    /// // Stealers cannot shrink the buffer, so the capacity is still very large.
+    /// assert!(d.capacity() >= 200);
+    ///
+    /// // Shrink the buffer. The capacity drops down, but some free space may still be left.
+    /// d.shrink_to_fit();
+    /// assert!(d.capacity() < 50);
+    /// ```
+    pub fn shrink_to_fit(&self) {
+        let b = self.inner.bottom.load(Relaxed);
+        let t = self.inner.top.load(Acquire);
+        let cap = self.capacity();
+        let len = b.wrapping_sub(t);
+
+        // Shrink the capacity as much as possible without overshooting `min_cap` or `len`.
+        let mut new_cap = cap;
+        while self.inner.min_cap <= new_cap / 2 && len <= new_cap as isize / 2 {
+            new_cap /= 2;
+        }
+
+        if new_cap != cap {
+            unsafe {
+                self.inner.resize(new_cap);
+            }
+        }
+    }
+
     /// Pushes an element into the bottom of the deque.
     ///
     /// If the internal buffer is full, a new one twice the capacity of the current one will be
@@ -411,11 +501,16 @@ impl<T> Deque<T> {
             // Calculate the length of the deque.
             let len = b.wrapping_sub(t);
 
-            // Is the deque full?
             let cap = buffer.deref().cap;
+            // Is the deque full?
             if len >= cap as isize {
                 // Yes. Grow the underlying buffer.
                 self.inner.resize(2 * cap);
+                buffer = self.inner.buffer.load(Relaxed, epoch::unprotected());
+            // Is the new length less than one fourth the capacity?
+            } else if cap > self.inner.min_cap && len + 1 < cap as isize / 4 {
+                // Yes. Shrink the underlying buffer.
+                self.inner.resize(cap / 2);
                 buffer = self.inner.buffer.load(Relaxed, epoch::unprotected());
             }
 
@@ -531,16 +626,14 @@ impl<T> Deque<T> {
     /// assert_eq!(d.steal(), Steal::Data(1));
     ///
     /// // Attempt to steal an element, but keep retrying if we get `Retry`.
-    /// loop {
+    /// let stolen = loop {
     ///     match d.steal() {
-    ///         Steal::Empty => panic!("should steal something"),
-    ///         Steal::Data(data) => {
-    ///             assert_eq!(data, 2);
-    ///             break;
-    ///         }
+    ///         Steal::Empty => break None,
+    ///         Steal::Data(data) => break Some(data),
     ///         Steal::Retry => {}
     ///     }
-    /// }
+    /// };
+    /// assert_eq!(stolen, Some(2));
     /// ```
     ///
     /// [`Steal::Retry`]: enum.Steal.html#variant.Retry
@@ -669,7 +762,7 @@ impl<T> Stealer<T> {
         let t = self.inner.top.load(Relaxed);
         atomic::fence(SeqCst);
         let b = self.inner.bottom.load(Relaxed);
-        std::cmp::max(b.wrapping_sub(t), 0) as usize
+        cmp::max(b.wrapping_sub(t), 0) as usize
     }
 
     /// Steals an element from the top of the deque.
@@ -691,16 +784,14 @@ impl<T> Stealer<T> {
     /// d.push(2);
     ///
     /// // Attempt to steal an element, but keep retrying if we get `Retry`.
-    /// loop {
-    ///     match d.steal() {
-    ///         Steal::Empty => panic!("should steal something"),
-    ///         Steal::Data(data) => {
-    ///             assert_eq!(data, 1);
-    ///             break;
-    ///         }
+    /// let stolen = loop {
+    ///     match s.steal() {
+    ///         Steal::Empty => break None,
+    ///         Steal::Data(data) => break Some(data),
     ///         Steal::Retry => {}
     ///     }
-    /// }
+    /// };
+    /// assert_eq!(stolen, Some(1));
     /// ```
     ///
     /// [`Steal::Retry`]: enum.Steal.html#variant.Retry

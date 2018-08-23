@@ -68,8 +68,6 @@ class CodeGeneratorShared : public LElementVisitor
     // Label for the common return path.
     NonAssertingLabel returnLabel_;
 
-    FallbackICStubSpace stubSpace_;
-
     js::Vector<SafepointIndex, 0, SystemAllocPolicy> safepointIndices_;
     js::Vector<OsiIndex, 0, SystemAllocPolicy> osiIndices_;
 
@@ -173,11 +171,6 @@ class CodeGeneratorShared : public LElementVisitor
     // constant header present for every Ion frame, used for pre-determined
     // spills.
     int32_t frameDepth_;
-
-    // In some cases, we force stack alignment to platform boundaries, see
-    // also CodeGeneratorShared constructor. This value records the adjustment
-    // we've done.
-    int32_t frameInitialAdjustment_;
 
     // Frame class this frame's size falls into (see IonFrame.h).
     FrameSizeClass frameClass_;

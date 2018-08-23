@@ -133,6 +133,7 @@ s! {
 //
 //    pub struct in6_addr {
 //        pub s6_addr: [u8; 16],
+//        #[cfg(not(feature = "align"))]
 //        __align: [u32; 0],
 //    }
 
@@ -204,51 +205,106 @@ s! {
         pub c_cc: [::cc_t; ::NCCS],
     }
 
+    #[cfg_attr(all(feature = "align", target_pointer_width = "32"),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align", target_pointer_width = "64"),
+               repr(align(8)))]
     pub struct sem_t { // ToDo
         #[cfg(target_pointer_width = "32")]
         __size: [::c_char; 16],
         #[cfg(target_pointer_width = "64")]
         __size: [::c_char; 32],
+        #[cfg(not(feature = "align"))]
         __align: [::c_long; 0],
     }
 
+    #[cfg_attr(all(feature = "align",
+                   target_pointer_width = "32",
+                   any(target_arch = "mips",
+                       target_arch = "arm",
+                       target_arch = "powerpc")),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   any(target_pointer_width = "64",
+                       not(any(target_arch = "mips",
+                               target_arch = "arm",
+                               target_arch = "powerpc")))),
+               repr(align(8)))]
     pub struct pthread_mutex_t { // ToDo
-        #[cfg(any(target_arch = "mips", target_arch = "arm",
-                  target_arch = "powerpc"))]
+        #[cfg(all(not(feature = "align"),
+                  any(target_arch = "mips",
+                      target_arch = "arm",
+                      target_arch = "powerpc")))]
         __align: [::c_long; 0],
-        #[cfg(not(any(target_arch = "mips", target_arch = "arm",
+        #[cfg(not(any(feature = "align",
+                      target_arch = "mips",
+                      target_arch = "arm",
                       target_arch = "powerpc")))]
         __align: [::c_longlong; 0],
         size: [u8; __SIZEOF_PTHREAD_MUTEX_T],
     }
 
+    #[cfg_attr(all(feature = "align",
+                   any(target_pointer_width = "32",
+                       target_arch = "x86_64", target_arch = "powerpc64",
+                       target_arch = "mips64", target_arch = "s390x",
+                       target_arch = "sparc64")),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   not(any(target_pointer_width = "32",
+                           target_arch = "x86_64", target_arch = "powerpc64",
+                           target_arch = "mips64", target_arch = "s390x",
+                           target_arch = "sparc64"))),
+               repr(align(8)))]
     pub struct pthread_mutexattr_t { // ToDo
-        #[cfg(any(target_arch = "x86_64", target_arch = "powerpc64",
-                  target_arch = "mips64", target_arch = "s390x",
-                  target_arch = "sparc64"))]
-        __align: [::c_int; 0],
-        #[cfg(not(any(target_arch = "x86_64", target_arch = "powerpc64",
+        #[cfg(all(not(feature = "align"),
+                  any(target_arch = "x86_64", target_arch = "powerpc64",
                       target_arch = "mips64", target_arch = "s390x",
                       target_arch = "sparc64")))]
+        __align: [::c_int; 0],
+        #[cfg(all(not(feature = "align"),
+                  not(any(target_arch = "x86_64", target_arch = "powerpc64",
+                          target_arch = "mips64", target_arch = "s390x",
+                          target_arch = "sparc64"))))]
         __align: [::c_long; 0],
         size: [u8; __SIZEOF_PTHREAD_MUTEXATTR_T],
     }
 
+    #[cfg_attr(feature = "align", repr(align(8)))]
     pub struct pthread_cond_t { // ToDo
+        #[cfg(not(feature = "align"))]
         __align: [::c_longlong; 0],
         size: [u8; __SIZEOF_PTHREAD_COND_T],
     }
 
+    #[cfg_attr(feature = "align", repr(align(4)))]
     pub struct pthread_condattr_t { // ToDo
+        #[cfg(not(feature = "align"))]
         __align: [::c_int; 0],
         size: [u8; __SIZEOF_PTHREAD_CONDATTR_T],
     }
 
+    #[cfg_attr(all(feature = "align",
+                   target_pointer_width = "32",
+                   any(target_arch = "mips",
+                       target_arch = "arm",
+                       target_arch = "powerpc")),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align",
+                   any(target_pointer_width = "64",
+                       not(any(target_arch = "mips",
+                               target_arch = "arm",
+                               target_arch = "powerpc")))),
+               repr(align(8)))]
     pub struct pthread_rwlock_t { // ToDo
-        #[cfg(any(target_arch = "mips", target_arch = "arm",
-                  target_arch = "powerpc"))]
+        #[cfg(all(not(feature = "align"),
+                  any(target_arch = "mips",
+                      target_arch = "arm",
+                      target_arch = "powerpc")))]
         __align: [::c_long; 0],
-        #[cfg(not(any(target_arch = "mips", target_arch = "arm",
+        #[cfg(not(any(feature = "align",
+                      target_arch = "mips",
+                      target_arch = "arm",
                       target_arch = "powerpc")))]
         __align: [::c_longlong; 0],
         size: [u8; __SIZEOF_PTHREAD_RWLOCK_T],
@@ -352,6 +408,9 @@ cfg_if! {
     if #[cfg(target_os = "l4re")] {
         mod l4re;
         pub use self::l4re::*;
-    } else { }
+    } else {
+        mod other;
+        pub use other::*;
+    }
 }
 

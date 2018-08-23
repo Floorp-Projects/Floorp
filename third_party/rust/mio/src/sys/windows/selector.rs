@@ -1,6 +1,6 @@
 #![allow(deprecated)]
 
-use std::{fmt, io, u32};
+use std::{fmt, io};
 use std::cell::UnsafeCell;
 use std::os::windows::prelude::*;
 use std::sync::{Arc, Mutex};
@@ -73,7 +73,7 @@ impl Selector {
         trace!("select; timeout={:?}", timeout);
 
         // Clear out the previous list of I/O events and get some more!
-        events.events.truncate(0);
+        events.clear();
 
         trace!("polling IOCP");
         let n = match self.inner.port.get_many(&mut events.statuses, timeout) {
@@ -85,7 +85,7 @@ impl Selector {
         let mut ret = false;
         for status in events.statuses[..n].iter() {
             // This should only ever happen from the awakener, and we should
-            // only ever have one awakener right not, so assert as such.
+            // only ever have one awakener right now, so assert as such.
             if status.overlapped() as usize == 0 {
                 assert_eq!(status.token(), usize::from(awakener));
                 ret = true;
@@ -184,7 +184,7 @@ impl Binding {
 
         // Ignore errors, we'll see them on the next line.
         drop(self.selector.fill(selector.inner.clone()));
-        try!(self.check_same_selector(poll));
+        self.check_same_selector(poll)?;
 
         selector.inner.port.add_handle(usize::from(token), handle)
     }
@@ -196,7 +196,7 @@ impl Binding {
                                   poll: &Poll) -> io::Result<()> {
         let selector = poll::selector(poll);
         drop(self.selector.fill(selector.inner.clone()));
-        try!(self.check_same_selector(poll));
+        self.check_same_selector(poll)?;
         selector.inner.port.add_socket(usize::from(token), handle)
     }
 
@@ -270,7 +270,8 @@ impl Binding {
 
 impl fmt::Debug for Binding {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Binding")
+        f.debug_struct("Binding")
+            .finish()
     }
 }
 
@@ -357,7 +358,7 @@ impl ReadyBinding {
                            -> io::Result<()> {
         trace!("register {:?} {:?}", token, events);
         unsafe {
-            try!(self.binding.register_socket(socket, token, poll));
+            self.binding.register_socket(socket, token, poll)?;
         }
 
         let (r, s) = poll::new_registration(poll, token, events, opts);
@@ -377,7 +378,7 @@ impl ReadyBinding {
                              -> io::Result<()> {
         trace!("reregister {:?} {:?}", token, events);
         unsafe {
-            try!(self.binding.reregister_socket(socket, token, poll));
+            self.binding.reregister_socket(socket, token, poll)?;
         }
 
         registration.lock().unwrap()
@@ -396,7 +397,7 @@ impl ReadyBinding {
                       -> io::Result<()> {
         trace!("deregistering");
         unsafe {
-            try!(self.binding.deregister_socket(socket, poll));
+            self.binding.deregister_socket(socket, poll)?;
         }
 
         registration.lock().unwrap()
@@ -451,6 +452,10 @@ impl Events {
 
     pub fn push_event(&mut self, event: Event) {
         self.events.push(event);
+    }
+
+    pub fn clear(&mut self) {
+        self.events.truncate(0);
     }
 }
 
@@ -517,7 +522,8 @@ impl Overlapped {
 
 impl fmt::Debug for Overlapped {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Overlapped")
+        f.debug_struct("Overlapped")
+            .finish()
     }
 }
 

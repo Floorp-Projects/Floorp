@@ -23,7 +23,10 @@ impl Decoder for LineCodec {
 
     fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<BytesMut>, io::Error> {
         match buf.iter().position(|&b| b == b'\n') {
-            Some(i) => Ok(Some(buf.split_to(i + 1).into())),
+            Some(i) => {
+                let ret = buf.split_to(i + 1);
+                Ok(Some(ret))
+            }
             None => Ok(None),
         }
     }
@@ -59,7 +62,11 @@ fn echo() {
     let addr = listener.local_addr().unwrap();
     let srv = listener.incoming().for_each(move |(socket, _)| {
         let (sink, stream) = socket.framed(LineCodec).split();
-        handle.spawn(sink.send_all(stream).map(|_| ()).map_err(|_| ()));
+        handle.spawn({
+            ::futures::future::lazy(|| {
+                sink.send_all(stream).map(|_| ()).map_err(|_| ())
+            })
+        });
         Ok(())
     });
 

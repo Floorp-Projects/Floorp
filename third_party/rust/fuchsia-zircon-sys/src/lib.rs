@@ -3,183 +3,226 @@
 // found in the LICENSE file.
 
 #![allow(non_camel_case_types)]
-
-#[macro_use]
-extern crate bitflags;
+#![deny(warnings)]
 
 use std::{cmp, fmt};
 
-pub type zx_handle_t = i32;
-
-pub type zx_status_t = i32;
-
-pub type zx_futex_t = isize;
 pub type zx_addr_t = usize;
-pub type zx_paddr_t = usize;
-pub type zx_vaddr_t = usize;
-pub type zx_off_t = u64;
-
-// Auto-generated using tools/gen_status.py
-pub const ZX_OK                    : zx_status_t = 0;
-pub const ZX_ERR_INTERNAL          : zx_status_t = -1;
-pub const ZX_ERR_NOT_SUPPORTED     : zx_status_t = -2;
-pub const ZX_ERR_NO_RESOURCES      : zx_status_t = -3;
-pub const ZX_ERR_NO_MEMORY         : zx_status_t = -4;
-pub const ZX_ERR_CALL_FAILED       : zx_status_t = -5;
-pub const ZX_ERR_INTERRUPTED_RETRY : zx_status_t = -6;
-pub const ZX_ERR_INVALID_ARGS      : zx_status_t = -10;
-pub const ZX_ERR_BAD_HANDLE        : zx_status_t = -11;
-pub const ZX_ERR_WRONG_TYPE        : zx_status_t = -12;
-pub const ZX_ERR_BAD_SYSCALL       : zx_status_t = -13;
-pub const ZX_ERR_OUT_OF_RANGE      : zx_status_t = -14;
-pub const ZX_ERR_BUFFER_TOO_SMALL  : zx_status_t = -15;
-pub const ZX_ERR_BAD_STATE         : zx_status_t = -20;
-pub const ZX_ERR_TIMED_OUT         : zx_status_t = -21;
-pub const ZX_ERR_SHOULD_WAIT       : zx_status_t = -22;
-pub const ZX_ERR_CANCELED          : zx_status_t = -23;
-pub const ZX_ERR_PEER_CLOSED       : zx_status_t = -24;
-pub const ZX_ERR_NOT_FOUND         : zx_status_t = -25;
-pub const ZX_ERR_ALREADY_EXISTS    : zx_status_t = -26;
-pub const ZX_ERR_ALREADY_BOUND     : zx_status_t = -27;
-pub const ZX_ERR_UNAVAILABLE       : zx_status_t = -28;
-pub const ZX_ERR_ACCESS_DENIED     : zx_status_t = -30;
-pub const ZX_ERR_IO                : zx_status_t = -40;
-pub const ZX_ERR_IO_REFUSED        : zx_status_t = -41;
-pub const ZX_ERR_IO_DATA_INTEGRITY : zx_status_t = -42;
-pub const ZX_ERR_IO_DATA_LOSS      : zx_status_t = -43;
-pub const ZX_ERR_BAD_PATH          : zx_status_t = -50;
-pub const ZX_ERR_NOT_DIR           : zx_status_t = -51;
-pub const ZX_ERR_NOT_FILE          : zx_status_t = -52;
-pub const ZX_ERR_FILE_BIG          : zx_status_t = -53;
-pub const ZX_ERR_NO_SPACE          : zx_status_t = -54;
-pub const ZX_ERR_STOP              : zx_status_t = -60;
-pub const ZX_ERR_NEXT              : zx_status_t = -61;
-
-pub type zx_time_t = u64;
 pub type zx_duration_t = u64;
-pub const ZX_TIME_INFINITE : zx_time_t = ::std::u64::MAX;
-
-bitflags! {
-    #[repr(C)]
-    pub flags zx_signals_t: u32 {
-        const ZX_SIGNAL_NONE              = 0,
-        const ZX_OBJECT_SIGNAL_ALL        = 0x00ffffff,
-        const ZX_USER_SIGNAL_ALL          = 0xff000000,
-        const ZX_OBJECT_SIGNAL_0          = 1 << 0,
-        const ZX_OBJECT_SIGNAL_1          = 1 << 1,
-        const ZX_OBJECT_SIGNAL_2          = 1 << 2,
-        const ZX_OBJECT_SIGNAL_3          = 1 << 3,
-        const ZX_OBJECT_SIGNAL_4          = 1 << 4,
-        const ZX_OBJECT_SIGNAL_5          = 1 << 5,
-        const ZX_OBJECT_SIGNAL_6          = 1 << 6,
-        const ZX_OBJECT_SIGNAL_7          = 1 << 7,
-        const ZX_OBJECT_SIGNAL_8          = 1 << 8,
-        const ZX_OBJECT_SIGNAL_9          = 1 << 9,
-        const ZX_OBJECT_SIGNAL_10         = 1 << 10,
-        const ZX_OBJECT_SIGNAL_11         = 1 << 11,
-        const ZX_OBJECT_SIGNAL_12         = 1 << 12,
-        const ZX_OBJECT_SIGNAL_13         = 1 << 13,
-        const ZX_OBJECT_SIGNAL_14         = 1 << 14,
-        const ZX_OBJECT_SIGNAL_15         = 1 << 15,
-        const ZX_OBJECT_SIGNAL_16         = 1 << 16,
-        const ZX_OBJECT_SIGNAL_17         = 1 << 17,
-        const ZX_OBJECT_SIGNAL_18         = 1 << 18,
-        const ZX_OBJECT_SIGNAL_19         = 1 << 19,
-        const ZX_OBJECT_SIGNAL_20         = 1 << 20,
-        const ZX_OBJECT_SIGNAL_21         = 1 << 21,
-        const ZX_OBJECT_LAST_HANDLE       = 1 << 22,
-        const ZX_OBJECT_HANDLE_CLOSED     = 1 << 23,
-        const ZX_USER_SIGNAL_0            = 1 << 24,
-        const ZX_USER_SIGNAL_1            = 1 << 25,
-        const ZX_USER_SIGNAL_2            = 1 << 26,
-        const ZX_USER_SIGNAL_3            = 1 << 27,
-        const ZX_USER_SIGNAL_4            = 1 << 28,
-        const ZX_USER_SIGNAL_5            = 1 << 29,
-        const ZX_USER_SIGNAL_6            = 1 << 30,
-        const ZX_USER_SIGNAL_7            = 1 << 31,
-
-        const ZX_OBJECT_READABLE          = ZX_OBJECT_SIGNAL_0.bits,
-        const ZX_OBJECT_WRITABLE          = ZX_OBJECT_SIGNAL_1.bits,
-        const ZX_OBJECT_PEER_CLOSED       = ZX_OBJECT_SIGNAL_2.bits,
-
-        // Cancelation (handle was closed while waiting with it)
-        const ZX_SIGNAL_HANDLE_CLOSED     = ZX_OBJECT_HANDLE_CLOSED.bits,
-
-        // Only one user-more reference (handle) to the object exists.
-        const ZX_SIGNAL_LAST_HANDLE       = ZX_OBJECT_LAST_HANDLE.bits,
-
-        // Event
-        const ZX_EVENT_SIGNALED           = ZX_OBJECT_SIGNAL_3.bits,
-
-        // EventPair
-        const ZX_EPAIR_SIGNALED           = ZX_OBJECT_SIGNAL_3.bits,
-        const ZX_EPAIR_CLOSED             = ZX_OBJECT_SIGNAL_2.bits,
-
-        // Task signals (process, thread, job)
-        const ZX_TASK_TERMINATED          = ZX_OBJECT_SIGNAL_3.bits,
-
-        // Channel
-        const ZX_CHANNEL_READABLE         = ZX_OBJECT_SIGNAL_0.bits,
-        const ZX_CHANNEL_WRITABLE         = ZX_OBJECT_SIGNAL_1.bits,
-        const ZX_CHANNEL_PEER_CLOSED      = ZX_OBJECT_SIGNAL_2.bits,
-
-        // Socket
-        const ZX_SOCKET_READABLE          = ZX_OBJECT_SIGNAL_0.bits,
-        const ZX_SOCKET_WRITABLE          = ZX_OBJECT_SIGNAL_1.bits,
-        const ZX_SOCKET_PEER_CLOSED       = ZX_OBJECT_SIGNAL_2.bits,
-
-        // Port
-        const ZX_PORT_READABLE            = ZX_OBJECT_READABLE.bits,
-
-        // Resource
-        const ZX_RESOURCE_DESTROYED       = ZX_OBJECT_SIGNAL_3.bits,
-        const ZX_RESOURCE_READABLE        = ZX_OBJECT_READABLE.bits,
-        const ZX_RESOURCE_WRITABLE        = ZX_OBJECT_WRITABLE.bits,
-        const ZX_RESOURCE_CHILD_ADDED     = ZX_OBJECT_SIGNAL_4.bits,
-
-        // Fifo
-        const ZX_FIFO_READABLE            = ZX_OBJECT_READABLE.bits,
-        const ZX_FIFO_WRITABLE            = ZX_OBJECT_WRITABLE.bits,
-        const ZX_FIFO_PEER_CLOSED         = ZX_OBJECT_PEER_CLOSED.bits,
-
-        // Job
-        const ZX_JOB_NO_PROCESSES         = ZX_OBJECT_SIGNAL_3.bits,
-        const ZX_JOB_NO_JOBS              = ZX_OBJECT_SIGNAL_4.bits,
-
-        // Process
-        const ZX_PROCESS_TERMINATED       = ZX_OBJECT_SIGNAL_3.bits,
-
-        // Thread
-        const ZX_THREAD_TERMINATED        = ZX_OBJECT_SIGNAL_3.bits,
-
-        // Log
-        const ZX_LOG_READABLE             = ZX_OBJECT_READABLE.bits,
-        const ZX_LOG_WRITABLE             = ZX_OBJECT_WRITABLE.bits,
-
-        // Timer
-        const ZX_TIMER_SIGNALED           = ZX_OBJECT_SIGNAL_3.bits,
-    }
-}
-
+pub type zx_futex_t = i32;
+pub type zx_handle_t = u32;
+pub type zx_off_t = u64;
+pub type zx_paddr_t = usize;
+pub type zx_rights_t = u32;
+pub type zx_signals_t = u32;
 pub type zx_size_t = usize;
 pub type zx_ssize_t = isize;
+pub type zx_status_t = i32;
+pub type zx_time_t = u64;
+pub type zx_vaddr_t = usize;
 
-bitflags! {
-    #[repr(C)]
-    pub flags zx_rights_t: u32 {
-        const ZX_RIGHT_NONE         = 0,
-        const ZX_RIGHT_DUPLICATE    = 1 << 0,
-        const ZX_RIGHT_TRANSFER     = 1 << 1,
-        const ZX_RIGHT_READ         = 1 << 2,
-        const ZX_RIGHT_WRITE        = 1 << 3,
-        const ZX_RIGHT_EXECUTE      = 1 << 4,
-        const ZX_RIGHT_MAP          = 1 << 5,
-        const ZX_RIGHT_GET_PROPERTY = 1 << 6,
-        const ZX_RIGHT_SET_PROPERTY = 1 << 7,
-        const ZX_RIGHT_DEBUG        = 1 << 8,
-        const ZX_RIGHT_SAME_RIGHTS  = 1 << 31,
+// TODO: combine these macros with the bitflags and assoc consts macros below
+// so that we only have to do one macro invocation.
+// The result would look something like:
+// multiconst!(bitflags, zx_rights_t, Rights, [RIGHT_NONE => ZX_RIGHT_NONE = 0; ...]);
+// multiconst!(assoc_consts, zx_status_t, Status, [OK => ZX_OK = 0; ...]);
+// Note that the actual name of the inner macro (e.g. `bitflags`) can't be a variable.
+// It'll just have to be matched on manually
+macro_rules! multiconst {
+    ($typename:ident, [$($rawname:ident = $value:expr;)*]) => {
+        $(
+            pub const $rawname: $typename = $value;
+        )*
     }
 }
+
+multiconst!(zx_handle_t, [
+    ZX_HANDLE_INVALID = 0;
+]);
+
+multiconst!(zx_time_t, [
+    ZX_TIME_INFINITE = ::std::u64::MAX;
+]);
+
+multiconst!(zx_rights_t, [
+    ZX_RIGHT_NONE         = 0;
+    ZX_RIGHT_DUPLICATE    = 1 << 0;
+    ZX_RIGHT_TRANSFER     = 1 << 1;
+    ZX_RIGHT_READ         = 1 << 2;
+    ZX_RIGHT_WRITE        = 1 << 3;
+    ZX_RIGHT_EXECUTE      = 1 << 4;
+    ZX_RIGHT_MAP          = 1 << 5;
+    ZX_RIGHT_GET_PROPERTY = 1 << 6;
+    ZX_RIGHT_SET_PROPERTY = 1 << 7;
+    ZX_RIGHT_ENUMERATE    = 1 << 8;
+    ZX_RIGHT_DESTROY      = 1 << 9;
+    ZX_RIGHT_SET_POLICY   = 1 << 10;
+    ZX_RIGHT_GET_POLICY   = 1 << 11;
+    ZX_RIGHT_SIGNAL       = 1 << 12;
+    ZX_RIGHT_SIGNAL_PEER  = 1 << 13;
+    ZX_RIGHT_WAIT         = 0 << 14; // Coming Soon!
+    ZX_RIGHT_SAME_RIGHTS  = 1 << 31;
+]);
+
+// TODO: add an alias for this type in the C headers.
+multiconst!(u32, [
+    ZX_VMO_OP_COMMIT = 1;
+    ZX_VMO_OP_DECOMMIT = 2;
+    ZX_VMO_OP_LOCK = 3;
+    ZX_VMO_OP_UNLOCK = 4;
+    ZX_VMO_OP_LOOKUP = 5;
+    ZX_VMO_OP_CACHE_SYNC = 6;
+    ZX_VMO_OP_CACHE_INVALIDATE = 7;
+    ZX_VMO_OP_CACHE_CLEAN = 8;
+    ZX_VMO_OP_CACHE_CLEAN_INVALIDATE = 9;
+]);
+
+// TODO: add an alias for this type in the C headers.
+multiconst!(u32, [
+    ZX_VM_FLAG_PERM_READ          = 1  << 0;
+    ZX_VM_FLAG_PERM_WRITE         = 1  << 1;
+    ZX_VM_FLAG_PERM_EXECUTE       = 1  << 2;
+    ZX_VM_FLAG_COMPACT            = 1  << 3;
+    ZX_VM_FLAG_SPECIFIC           = 1  << 4;
+    ZX_VM_FLAG_SPECIFIC_OVERWRITE = 1  << 5;
+    ZX_VM_FLAG_CAN_MAP_SPECIFIC   = 1  << 6;
+    ZX_VM_FLAG_CAN_MAP_READ       = 1  << 7;
+    ZX_VM_FLAG_CAN_MAP_WRITE      = 1  << 8;
+    ZX_VM_FLAG_CAN_MAP_EXECUTE    = 1  << 9;
+]);
+
+multiconst!(zx_status_t, [
+    ZX_OK                    = 0;
+    ZX_ERR_INTERNAL          = -1;
+    ZX_ERR_NOT_SUPPORTED     = -2;
+    ZX_ERR_NO_RESOURCES      = -3;
+    ZX_ERR_NO_MEMORY         = -4;
+    ZX_ERR_CALL_FAILED       = -5;
+    ZX_ERR_INTERRUPTED_RETRY = -6;
+    ZX_ERR_INVALID_ARGS      = -10;
+    ZX_ERR_BAD_HANDLE        = -11;
+    ZX_ERR_WRONG_TYPE        = -12;
+    ZX_ERR_BAD_SYSCALL       = -13;
+    ZX_ERR_OUT_OF_RANGE      = -14;
+    ZX_ERR_BUFFER_TOO_SMALL  = -15;
+    ZX_ERR_BAD_STATE         = -20;
+    ZX_ERR_TIMED_OUT         = -21;
+    ZX_ERR_SHOULD_WAIT       = -22;
+    ZX_ERR_CANCELED          = -23;
+    ZX_ERR_PEER_CLOSED       = -24;
+    ZX_ERR_NOT_FOUND         = -25;
+    ZX_ERR_ALREADY_EXISTS    = -26;
+    ZX_ERR_ALREADY_BOUND     = -27;
+    ZX_ERR_UNAVAILABLE       = -28;
+    ZX_ERR_ACCESS_DENIED     = -30;
+    ZX_ERR_IO                = -40;
+    ZX_ERR_IO_REFUSED        = -41;
+    ZX_ERR_IO_DATA_INTEGRITY = -42;
+    ZX_ERR_IO_DATA_LOSS      = -43;
+    ZX_ERR_BAD_PATH          = -50;
+    ZX_ERR_NOT_DIR           = -51;
+    ZX_ERR_NOT_FILE          = -52;
+    ZX_ERR_FILE_BIG          = -53;
+    ZX_ERR_NO_SPACE          = -54;
+    ZX_ERR_STOP              = -60;
+    ZX_ERR_NEXT              = -61;
+]);
+
+multiconst!(zx_signals_t, [
+    ZX_SIGNAL_NONE              = 0;
+    ZX_OBJECT_SIGNAL_ALL        = 0x00ffffff;
+    ZX_USER_SIGNAL_ALL          = 0xff000000;
+    ZX_OBJECT_SIGNAL_0          = 1 << 0;
+    ZX_OBJECT_SIGNAL_1          = 1 << 1;
+    ZX_OBJECT_SIGNAL_2          = 1 << 2;
+    ZX_OBJECT_SIGNAL_3          = 1 << 3;
+    ZX_OBJECT_SIGNAL_4          = 1 << 4;
+    ZX_OBJECT_SIGNAL_5          = 1 << 5;
+    ZX_OBJECT_SIGNAL_6          = 1 << 6;
+    ZX_OBJECT_SIGNAL_7          = 1 << 7;
+    ZX_OBJECT_SIGNAL_8          = 1 << 8;
+    ZX_OBJECT_SIGNAL_9          = 1 << 9;
+    ZX_OBJECT_SIGNAL_10         = 1 << 10;
+    ZX_OBJECT_SIGNAL_11         = 1 << 11;
+    ZX_OBJECT_SIGNAL_12         = 1 << 12;
+    ZX_OBJECT_SIGNAL_13         = 1 << 13;
+    ZX_OBJECT_SIGNAL_14         = 1 << 14;
+    ZX_OBJECT_SIGNAL_15         = 1 << 15;
+    ZX_OBJECT_SIGNAL_16         = 1 << 16;
+    ZX_OBJECT_SIGNAL_17         = 1 << 17;
+    ZX_OBJECT_SIGNAL_18         = 1 << 18;
+    ZX_OBJECT_SIGNAL_19         = 1 << 19;
+    ZX_OBJECT_SIGNAL_20         = 1 << 20;
+    ZX_OBJECT_SIGNAL_21         = 1 << 21;
+    ZX_OBJECT_SIGNAL_22         = 1 << 22;
+    ZX_OBJECT_HANDLE_CLOSED     = 1 << 23;
+    ZX_USER_SIGNAL_0            = 1 << 24;
+    ZX_USER_SIGNAL_1            = 1 << 25;
+    ZX_USER_SIGNAL_2            = 1 << 26;
+    ZX_USER_SIGNAL_3            = 1 << 27;
+    ZX_USER_SIGNAL_4            = 1 << 28;
+    ZX_USER_SIGNAL_5            = 1 << 29;
+    ZX_USER_SIGNAL_6            = 1 << 30;
+    ZX_USER_SIGNAL_7            = 1 << 31;
+
+    ZX_OBJECT_READABLE          = ZX_OBJECT_SIGNAL_0;
+    ZX_OBJECT_WRITABLE          = ZX_OBJECT_SIGNAL_1;
+    ZX_OBJECT_PEER_CLOSED       = ZX_OBJECT_SIGNAL_2;
+
+    // Cancelation (handle was closed while waiting with it)
+    ZX_SIGNAL_HANDLE_CLOSED     = ZX_OBJECT_HANDLE_CLOSED;
+
+    // Event
+    ZX_EVENT_SIGNALED           = ZX_OBJECT_SIGNAL_3;
+
+    // EventPair
+    ZX_EPAIR_SIGNALED           = ZX_OBJECT_SIGNAL_3;
+    ZX_EPAIR_CLOSED             = ZX_OBJECT_SIGNAL_2;
+
+    // Task signals (process, thread, job)
+    ZX_TASK_TERMINATED          = ZX_OBJECT_SIGNAL_3;
+
+    // Channel
+    ZX_CHANNEL_READABLE         = ZX_OBJECT_SIGNAL_0;
+    ZX_CHANNEL_WRITABLE         = ZX_OBJECT_SIGNAL_1;
+    ZX_CHANNEL_PEER_CLOSED      = ZX_OBJECT_SIGNAL_2;
+
+    // Socket
+    ZX_SOCKET_READABLE          = ZX_OBJECT_SIGNAL_0;
+    ZX_SOCKET_WRITABLE          = ZX_OBJECT_SIGNAL_1;
+    ZX_SOCKET_PEER_CLOSED       = ZX_OBJECT_SIGNAL_2;
+
+    // Port
+    ZX_PORT_READABLE            = ZX_OBJECT_READABLE;
+
+    // Resource
+    ZX_RESOURCE_DESTROYED       = ZX_OBJECT_SIGNAL_3;
+    ZX_RESOURCE_READABLE        = ZX_OBJECT_READABLE;
+    ZX_RESOURCE_WRITABLE        = ZX_OBJECT_WRITABLE;
+    ZX_RESOURCE_CHILD_ADDED     = ZX_OBJECT_SIGNAL_4;
+
+    // Fifo
+    ZX_FIFO_READABLE            = ZX_OBJECT_READABLE;
+    ZX_FIFO_WRITABLE            = ZX_OBJECT_WRITABLE;
+    ZX_FIFO_PEER_CLOSED         = ZX_OBJECT_PEER_CLOSED;
+
+    // Job
+    ZX_JOB_NO_PROCESSES         = ZX_OBJECT_SIGNAL_3;
+    ZX_JOB_NO_JOBS              = ZX_OBJECT_SIGNAL_4;
+
+    // Process
+    ZX_PROCESS_TERMINATED       = ZX_OBJECT_SIGNAL_3;
+
+    // Thread
+    ZX_THREAD_TERMINATED        = ZX_OBJECT_SIGNAL_3;
+
+    // Log
+    ZX_LOG_READABLE             = ZX_OBJECT_READABLE;
+    ZX_LOG_WRITABLE             = ZX_OBJECT_WRITABLE;
+
+    // Timer
+    ZX_TIMER_SIGNALED           = ZX_OBJECT_SIGNAL_3;
+]);
 
 // clock ids
 pub const ZX_CLOCK_MONOTONIC: u32 = 0;
@@ -191,37 +234,8 @@ pub const ZX_CPRNG_ADD_ENTROPY_MAX_LEN: usize = 256;
 // Socket flags and limits.
 pub const ZX_SOCKET_HALF_CLOSE: u32 = 1;
 
-// VM Object opcodes
-pub const ZX_VMO_OP_COMMIT: u32 = 1;
-pub const ZX_VMO_OP_DECOMMIT: u32 = 2;
-pub const ZX_VMO_OP_LOCK: u32 = 3;
-pub const ZX_VMO_OP_UNLOCK: u32 = 4;
-pub const ZX_VMO_OP_LOOKUP: u32 = 5;
-pub const ZX_VMO_OP_CACHE_SYNC: u32 = 6;
-pub const ZX_VMO_OP_CACHE_INVALIDATE: u32 = 7;
-pub const ZX_VMO_OP_CACHE_CLEAN: u32 = 8;
-pub const ZX_VMO_OP_CACHE_CLEAN_INVALIDATE: u32 = 9;
-
 // VM Object clone flags
 pub const ZX_VMO_CLONE_COPY_ON_WRITE: u32 = 1;
-
-// Mapping flags to vmar routines
-bitflags! {
-    #[repr(C)]
-    pub flags zx_vmar_flags_t: u32 {
-    // flags to vmar routines
-        const ZX_VM_FLAG_PERM_READ          = 1  << 0,
-        const ZX_VM_FLAG_PERM_WRITE         = 1  << 1,
-        const ZX_VM_FLAG_PERM_EXECUTE       = 1  << 2,
-        const ZX_VM_FLAG_COMPACT            = 1  << 3,
-        const ZX_VM_FLAG_SPECIFIC           = 1  << 4,
-        const ZX_VM_FLAG_SPECIFIC_OVERWRITE = 1  << 5,
-        const ZX_VM_FLAG_CAN_MAP_SPECIFIC   = 1  << 6,
-        const ZX_VM_FLAG_CAN_MAP_READ       = 1  << 7,
-        const ZX_VM_FLAG_CAN_MAP_WRITE      = 1  << 8,
-        const ZX_VM_FLAG_CAN_MAP_EXECUTE    = 1  << 9,
-    }
-}
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

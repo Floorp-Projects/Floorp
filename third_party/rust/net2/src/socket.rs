@@ -15,7 +15,7 @@ use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4, SocketAddrV6};
 #[cfg(unix)]
 use libc::c_int;
 #[cfg(windows)]
-use winapi::c_int;
+use winapi::ctypes::c_int;
 
 use sys;
 use sys::c;
@@ -119,7 +119,8 @@ fn raw2addr(storage: &c::sockaddr_storage, len: c::socklen_t) -> io::Result<Sock
                 assert!(len as usize >= mem::size_of::<c::sockaddr_in6>());
 
                 let sa = storage as *const _ as *const c::sockaddr_in6;
-                let arr = (*sa).sin6_addr.s6_addr;
+                #[cfg(windows)]      let arr = (*sa).sin6_addr.u.Byte();
+                #[cfg(not(windows))] let arr = (*sa).sin6_addr.s6_addr;
 
                 let ip = Ipv6Addr::new(
                     (arr[0] as u16) << 8 | (arr[1] as u16),
@@ -132,10 +133,13 @@ fn raw2addr(storage: &c::sockaddr_storage, len: c::socklen_t) -> io::Result<Sock
                     (arr[14] as u16) << 8 | (arr[15] as u16),
                 );
 
+                #[cfg(windows)]      let sin6_scope_id = *(*sa).u.sin6_scope_id();
+                #[cfg(not(windows))] let sin6_scope_id = (*sa).sin6_scope_id;
+
                 Ok(SocketAddr::V6(SocketAddrV6::new(ip,
                                                     ::ntoh((*sa).sin6_port),
                                                     (*sa).sin6_flowinfo,
-                                                    (*sa).sin6_scope_id)))
+                                                    sin6_scope_id)))
             }
         }
         _ => Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid argument")),

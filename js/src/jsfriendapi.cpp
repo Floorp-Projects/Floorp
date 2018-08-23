@@ -76,7 +76,7 @@ JS_SetGrayGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data)
 JS_FRIEND_API(JSObject*)
 JS_FindCompilationScope(JSContext* cx, HandleObject objArg)
 {
-    assertSameCompartment(cx, objArg);
+    cx->check(objArg);
 
     RootedObject obj(cx, objArg);
 
@@ -111,7 +111,7 @@ JS_SplicePrototype(JSContext* cx, HandleObject obj, HandleObject proto)
      * does not nuke type information for the object.
      */
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, proto);
+    cx->check(obj, proto);
 
     if (!obj->isSingleton()) {
         /*
@@ -145,7 +145,7 @@ JS_NewObjectWithUniqueType(JSContext* cx, const JSClass* clasp, HandleObject pro
 JS_FRIEND_API(JSObject*)
 JS_NewObjectWithoutMetadata(JSContext* cx, const JSClass* clasp, JS::Handle<JSObject*> proto)
 {
-    assertSameCompartment(cx, proto);
+    cx->check(proto);
     AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
     return JS_NewObjectWithGivenProto(cx, clasp, proto);
 }
@@ -253,7 +253,7 @@ JS_DefineFunctionsWithHelp(JSContext* cx, HandleObject obj, const JSFunctionSpec
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
     for (; fs->name; fs++) {
         JSAtom* atom = Atomize(cx, fs->name, strlen(fs->name));
         if (!atom)
@@ -333,7 +333,7 @@ js::GetBuiltinClass(JSContext* cx, HandleObject obj, ESClass* cls)
 JS_FRIEND_API(const char*)
 js::ObjectClassName(JSContext* cx, HandleObject obj)
 {
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
     return GetObjectClassName(cx, obj);
 }
 
@@ -393,13 +393,13 @@ js::GetPrototypeNoProxy(JSObject* obj)
 JS_FRIEND_API(void)
 js::AssertSameCompartment(JSContext* cx, JSObject* obj)
 {
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
 }
 
 JS_FRIEND_API(void)
 js::AssertSameCompartment(JSContext* cx, JS::HandleValue v)
 {
-    assertSameCompartment(cx, v);
+    cx->check(v);
 }
 
 #ifdef DEBUG
@@ -445,7 +445,7 @@ js::DefineFunctionWithReserved(JSContext* cx, JSObject* objArg, const char* name
     RootedObject obj(cx, objArg);
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
     JSAtom* atom = Atomize(cx, name, strlen(name));
     if (!atom)
         return nullptr;
@@ -480,7 +480,7 @@ js::NewFunctionByIdWithReserved(JSContext* cx, JSNative native, unsigned nargs, 
     MOZ_ASSERT(JSID_IS_STRING(id));
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, id);
+    cx->check(id);
 
     RootedAtom atom(cx, JSID_TO_ATOM(id));
     return (flags & JSFUN_CONSTRUCTOR) ?
@@ -513,7 +513,7 @@ js::FunctionHasNativeReserved(JSObject* fun)
 JS_FRIEND_API(bool)
 js::GetObjectProto(JSContext* cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> proto)
 {
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
 
     if (IsProxy(obj))
         return JS_GetPrototype(cx, obj, proto);
@@ -659,7 +659,7 @@ JS_FRIEND_API(JSObject*)
 JS_CloneObject(JSContext* cx, HandleObject obj, HandleObject protoArg)
 {
     // |obj| might be in a different compartment.
-    assertSameCompartment(cx, protoArg);
+    cx->check(protoArg);
     Rooted<TaggedProto> proto(cx, TaggedProto(protoArg.get()));
     return CloneObject(cx, obj, proto);
 }
@@ -1120,7 +1120,7 @@ JS::ForceLexicalInitialization(JSContext *cx, HandleObject obj)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
 
     bool initializedAny = false;
     NativeObject* nobj = &obj->as<NativeObject>();
@@ -1446,7 +1446,7 @@ js::GetAllocationMetadata(JSObject* obj)
 JS_FRIEND_API(bool)
 js::ReportIsNotFunction(JSContext* cx, HandleValue v)
 {
-    assertSameCompartment(cx, v);
+    cx->check(v);
     return ReportIsNotFunction(cx, v, -1);
 }
 
@@ -1491,7 +1491,7 @@ js::SetWindowProxy(JSContext* cx, HandleObject global, HandleObject windowProxy)
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
-    assertSameCompartment(cx, global, windowProxy);
+    cx->check(global, windowProxy);
 
     MOZ_ASSERT(IsWindowProxy(windowProxy));
     global->as<GlobalObject>().setWindowProxy(windowProxy);

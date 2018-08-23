@@ -20,6 +20,8 @@ var hasSharedArrayBuffer = !!(this.SharedArrayBuffer &&
 // Only run if helper threads are available.
 if (hasSharedArrayBuffer && helperThreadCount() !== 0) {
 
+var mem = new Int32Array(new SharedArrayBuffer(1024));
+
 ////////////////////////////////////////////////////////////
 
 // wait() returns "not-equal" if the value is not the expected one.
@@ -55,7 +57,7 @@ dprint("Sleeping for 2 seconds");
 sleep(2);
 dprint("Waking the main thread now");
 setSharedObject(null);
-assertEq(Atomics.wake(mem, 0, 1), 1); // Can fail spuriously but very unlikely
+assertEq(Atomics.notify(mem, 0, 1), 1); // Can fail spuriously but very unlikely
 `);
 
 var then = Date.now();
@@ -66,14 +68,14 @@ assertEq(getSharedObject(), null); // The worker's clearing of the mbx is visibl
 
 ////////////////////////////////////////////////////////////
 
-// Test the default argument to atomics.wake()
+// Test the default argument to Atomics.notify()
 
 setSharedObject(mem.buffer);
 
 evalInWorker(`
 var mem = new Int32Array(getSharedObject());
 sleep(2);				// Probably long enough to avoid a spurious error next
-assertEq(Atomics.wake(mem, 0), 1);	// Last argument to wake should default to +Infinity
+assertEq(Atomics.notify(mem, 0), 1);	// Last argument to notify should default to +Infinity
 `);
 
 var then = Date.now();

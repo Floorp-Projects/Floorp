@@ -63,6 +63,14 @@ impl<'a> IntoBuf for &'a [u8] {
     }
 }
 
+impl<'a> IntoBuf for &'a mut [u8] {
+    type Buf = io::Cursor<&'a mut [u8]>;
+
+    fn into_buf(self) -> Self::Buf {
+        io::Cursor::new(self)
+    }
+}
+
 impl<'a> IntoBuf for &'a str {
     type Buf = io::Cursor<&'a [u8]>;
 

@@ -12,14 +12,14 @@ function testModuleEnvironment(module, expected) {
 
 // Check the environment of an empty module.
 let m = parseModule("");
-m.declarationInstantiation();
+instantiateModule(m);
 testModuleEnvironment(m, []);
 
 let a = moduleRepo['a'] = parseModule("var x = 1; export { x };");
 let b = moduleRepo['b'] = parseModule("import { x as y } from 'a';");
 
-a.declarationInstantiation();
-b.declarationInstantiation();
+instantiateModule(a);
+instantiateModule(b);
 
 testModuleEnvironment(a, ['x']);
 testModuleEnvironment(b, ['y']);
@@ -32,7 +32,7 @@ let c = parseModule(`function a(x) { return x; }
 const names = ['a', 'b', 'c', 'd'];
 testModuleEnvironment(c, names);
 names.forEach((n) => assertEq(typeof getModuleEnvironmentValue(c, n), "undefined"));
-c.declarationInstantiation();
+instantiateModule(c);
 for (let i = 0; i < names.length; i++) {
     let f = getModuleEnvironmentValue(c, names[i]);
     assertEq(f(21), 21 + i);

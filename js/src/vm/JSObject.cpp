@@ -140,7 +140,7 @@ JS::FromPropertyDescriptor(JSContext* cx, Handle<PropertyDescriptor> desc, Mutab
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, desc);
+    cx->check(desc);
 
     // Step 1.
     if (!desc.object()) {
@@ -476,7 +476,7 @@ GetSealedOrFrozenAttributes(unsigned attrs, IntegrityLevel level)
 bool
 js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
 {
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
 
     // Steps 3-5. (Steps 1-2 are redundant assertions.)
     if (!PreventExtensions(cx, obj))
@@ -1139,7 +1139,7 @@ JS_CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
                     HandleObject obj, PropertyCopyBehavior copyBehavior)
 {
     // |obj| and |cx| are generally not same-compartment with |target| here.
-    assertSameCompartment(cx, obj, id);
+    cx->check(obj, id);
     Rooted<PropertyDescriptor> desc(cx);
 
     if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
@@ -1376,7 +1376,7 @@ InitializePropertiesFromCompatibleNativeObject(JSContext* cx,
                                                HandleNativeObject dst,
                                                HandleNativeObject src)
 {
-    assertSameCompartment(cx, src, dst);
+    cx->check(src, dst);
     MOZ_ASSERT(src->getClass() == dst->getClass());
     MOZ_ASSERT(dst->lastProperty()->getObjectFlags() == 0);
     MOZ_ASSERT(!src->isSingleton());
@@ -1445,7 +1445,7 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
     /* NB: Keep this in sync with DeepCloneObjectLiteral. */
 
     JSContext* cx = xdr->cx();
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
 
     // Distinguish between objects and array classes.
     uint32_t isArray = 0;

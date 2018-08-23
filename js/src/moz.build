@@ -323,7 +323,6 @@ UNIFIED_SOURCES += [
     'jit/shared/CodeGenerator-shared.cpp',
     'jit/shared/Disassembler-shared.cpp',
     'jit/shared/Lowering-shared.cpp',
-    'jit/SharedIC.cpp',
     'jit/Sink.cpp',
     'jit/Snapshots.cpp',
     'jit/StupidAllocator.cpp',

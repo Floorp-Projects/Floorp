@@ -1,0 +1,29 @@
+language: rust
+rust:
+  - nightly
+  - stable
+  - 1.6.0
+
+script:
+  - cargo test
+  - cargo doc --no-deps
+
+# Deploy documentation to S3 for specific branches. At some
+# point, it would be nice to also support building docs for
+# a specific tag
+deploy:
+  provider: s3
+  access_key_id: AKIAIXM3KLI7WZS4ZA3Q
+  secret_access_key:
+    secure: WyYzM8PxSKC3HQ+jINE50KOu5j3taOA4chJJ9zfAhM8Eug/Z1bK8taHnm73xrCUsvh4bv1C3XWAnSTl4YO/HykYulTIVPPs6go+ssk/59PDV6dGPhheLj2tKcSrjKd4q8H668MAPiAlNt9Rvq/GkkdAW2GXG1+otPMVFBrnR+kld6WaX5EB18SjApKgl5NwSRj9wiSIPYJTBnZQhCsaM4YRMkpFbFoHUWjSjm7N9f/6A3a3jRzW7/ZtqXvMaMazMSBAlN0/LH2UMTKCuj7nywKJt1NkpEF8mA9IEUCDBCnQs+e58v6BpkDZ2nhCJ7vdm0bISuZB6jXhg+sOycZbdb7mbn5n4mPBMa1c8WnsfmVxm7bV7G3sRpcGU8HvRT35lCCuCt4bFBX1O2abuTtVqS7XgtyChBmrSG6I/z+lw+u44Dk5bYK9A2hZSOEPFr09R8f2YRe9cqAq+uI6rNPyY7DC0eATCRCX5CxjYR6DG2bDoDFfPsBlRLQJJUl/BOM5pWYdm97iaqobxlPmKaxuxTSHw1D3Z9OvuQVeB2z+4G9xMhBBTJ0N671oZhUajpBy8OW4k9c8jl+joe01W+SScfk+qPV8ivjirTPYsUYRT3gtUgO/X/XuZ+EXGcnx+Brpu6FQtW6qSKH4Q+cofM4aohoopSIAP9dZ5zpQqQTACKyE=
+  bucket: rust-doc
+  endpoint: rust-doc.s3-website-us-east-1.amazonaws.com
+  skip_cleanup: true
+  local-dir: target/doc
+  upload-dir: slab/${TRAVIS_BRANCH}
+  acl: public_read
+  on:
+    condition: $TRAVIS_RUST_VERSION == "1.3.0" && $TRAVIS_OS_NAME == "linux"
+    repo: carllerche/slab
+    branch:
+      - master

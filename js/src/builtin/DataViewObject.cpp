@@ -171,7 +171,7 @@ bool
 DataViewObject::constructSameCompartment(JSContext* cx, HandleObject bufobj, const CallArgs& args)
 {
     MOZ_ASSERT(args.isConstructing());
-    assertSameCompartment(cx, bufobj);
+    cx->check(bufobj);
 
     uint32_t byteOffset, byteLength;
     if (!getAndCheckConstructorArgs(cx, bufobj, args, &byteOffset, &byteLength))

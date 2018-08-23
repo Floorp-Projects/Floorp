@@ -48,12 +48,18 @@ tasks:
 
         tags:
           $if: 'tasks_for == "hg-push"'
-          then: {createdForUser: "${ownerEmail}"}
+          then:
+            createdForUser: "${ownerEmail}"
+            kind: decision-task
           else:
             $if: 'tasks_for == "action"'
             then:
               createdForUser: '${ownerEmail}'
               kind: 'action-callback'
+            else:
+              $if: 'tasks_for == "cron"'
+              then:
+                kind: cron-task
 
         routes:
           $flatten:

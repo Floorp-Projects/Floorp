@@ -56,7 +56,7 @@ def get_flavors(graph_config, param):
     title='Release Promotion',
     symbol='${input.release_promotion_flavor}',
     description="Promote a release.",
-    order=10000,
+    order=500,
     context=[],
     available=is_release_promotion_available,
     schema=lambda graph_config: {

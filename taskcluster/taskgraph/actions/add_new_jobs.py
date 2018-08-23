@@ -18,7 +18,7 @@ from .util import (create_tasks, fetch_graph_and_labels)
     generic=True,
     symbol='add-new',
     description="Add new jobs using task labels.",
-    order=10000,
+    order=100,
     context=[],
     schema={
         'type': 'object',

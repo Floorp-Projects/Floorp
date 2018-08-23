@@ -206,7 +206,7 @@ impl<T> Inner<T> {
         // under the hood. If it instead used `Release` / `Acquire` ordering,
         // then it would not necessarily synchronize with `inner.complete`
         // and deadlock might be possible, as was observed in
-        // https://github.com/alexcrichton/futures-rs/pull/219.
+        // https://github.com/rust-lang-nursery/futures-rs/pull/219.
         self.complete.store(true, SeqCst);
         if let Some(mut slot) = self.rx_task.try_lock() {
             if let Some(task) = slot.take() {

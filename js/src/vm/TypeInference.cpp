@@ -3415,7 +3415,7 @@ js::FillBytecodeTypeMap(JSScript* script, uint32_t* bytecodeMap)
 void
 js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, TypeSet::Type type)
 {
-    assertSameCompartment(cx, script, type);
+    cx->check(script, type);
 
     AutoEnterAnalysis enter(cx);
 
@@ -3433,7 +3433,7 @@ void
 js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, StackTypeSet* types,
                       TypeSet::Type type)
 {
-    assertSameCompartment(cx, script, type);
+    cx->check(script, type);
 
     AutoEnterAnalysis enter(cx);
 
@@ -3468,7 +3468,7 @@ bool
 JSScript::makeTypes(JSContext* cx)
 {
     MOZ_ASSERT(!types_);
-    assertSameCompartment(cx, this);
+    cx->check(this);
 
     AutoEnterAnalysis enter(cx);
 
@@ -4632,7 +4632,7 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                              size_t* compartmentsPrivateData)
 {
     *typePool += types.typeLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
-    *regexpZone += regExps.sizeOfExcludingThis(mallocSizeOf);
+    *regexpZone += regExps().sizeOfExcludingThis(mallocSizeOf);
     if (jitZone_)
         jitZone_->addSizeOfIncludingThis(mallocSizeOf, jitZone, baselineStubsOptimized, cachedCFG);
     *uniqueIdMap += uniqueIds().shallowSizeOfExcludingThis(mallocSizeOf);

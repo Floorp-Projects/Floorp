@@ -1,5 +1,5 @@
 use base64;
-use hyper::method::Method;
+use hyper::Method;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::{FirefoxProcess, FirefoxRunner, Runner, RunnerProcess};
@@ -67,32 +67,32 @@ const LEGACY_ELEMENT_KEY: &'static str = "ELEMENT";
 pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
     return vec![
         (
-            Method::Get,
+            Method::GET,
             "/session/{sessionId}/moz/context",
             GeckoExtensionRoute::GetContext,
         ),
         (
-            Method::Post,
+            Method::POST,
             "/session/{sessionId}/moz/context",
             GeckoExtensionRoute::SetContext,
         ),
         (
-            Method::Post,
+            Method::POST,
             "/session/{sessionId}/moz/xbl/{elementId}/anonymous_children",
             GeckoExtensionRoute::XblAnonymousChildren,
         ),
         (
-            Method::Post,
+            Method::POST,
             "/session/{sessionId}/moz/xbl/{elementId}/anonymous_by_attribute",
             GeckoExtensionRoute::XblAnonymousByAttribute,
         ),
         (
-            Method::Post,
+            Method::POST,
             "/session/{sessionId}/moz/addon/install",
             GeckoExtensionRoute::InstallAddon,
         ),
         (
-            Method::Post,
+            Method::POST,
             "/session/{sessionId}/moz/addon/uninstall",
             GeckoExtensionRoute::UninstallAddon,
         ),

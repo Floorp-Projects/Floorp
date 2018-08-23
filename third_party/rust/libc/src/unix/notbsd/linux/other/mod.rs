@@ -158,11 +158,16 @@ s! {
     }
 
     // FIXME this is actually a union
+    #[cfg_attr(all(feature = "align", target_pointer_width = "32"),
+               repr(align(4)))]
+    #[cfg_attr(all(feature = "align", target_pointer_width = "64"),
+               repr(align(8)))]
     pub struct sem_t {
         #[cfg(target_pointer_width = "32")]
         __size: [::c_char; 16],
         #[cfg(target_pointer_width = "64")]
         __size: [::c_char; 32],
+        #[cfg(not(feature = "align"))]
         __align: [::c_long; 0],
     }
 
@@ -180,41 +185,62 @@ s! {
     }
 
     pub struct nlmsghdr {
-        nlmsg_len: u32,
-        nlmsg_type: u16,
-        nlmsg_flags: u16,
-        nlmsg_seq: u32,
-        nlmsg_pid: u32,
+        pub nlmsg_len: u32,
+        pub nlmsg_type: u16,
+        pub nlmsg_flags: u16,
+        pub nlmsg_seq: u32,
+        pub nlmsg_pid: u32,
     }
 
     pub struct nlmsgerr {
-        error: ::c_int,
-        msg: nlmsghdr,
+        pub error: ::c_int,
+        pub msg: nlmsghdr,
     }
 
     pub struct nl_pktinfo {
-        group: u32,
+        pub group: u32,
     }
 
     pub struct nl_mmap_req {
-        nm_block_size: ::c_uint,
-        nm_block_nr: ::c_uint,
-        nm_frame_size: ::c_uint,
-        nm_frame_nr: ::c_uint,
+        pub nm_block_size: ::c_uint,
+        pub nm_block_nr: ::c_uint,
+        pub nm_frame_size: ::c_uint,
+        pub nm_frame_nr: ::c_uint,
     }
 
     pub struct nl_mmap_hdr {
-        nm_status: ::c_uint,
-        nm_len: ::c_uint,
-        nm_group: u32,
-        nm_pid: u32,
-        nm_uid: u32,
-        nm_gid: u32,
+        pub nm_status: ::c_uint,
+        pub nm_len: ::c_uint,
+        pub nm_group: u32,
+        pub nm_pid: u32,
+        pub nm_uid: u32,
+        pub nm_gid: u32,
     }
 
     pub struct nlattr {
-        nla_len: u16,
-        nla_type: u16,
+        pub nla_len: u16,
+        pub nla_type: u16,
+    }
+
+    pub struct rtentry {
+        pub rt_pad1: ::c_ulong,
+        pub rt_dst: ::sockaddr,
+        pub rt_gateway: ::sockaddr,
+        pub rt_genmask: ::sockaddr,
+        pub rt_flags: ::c_ushort,
+        pub rt_pad2: ::c_short,
+        pub rt_pad3: ::c_ulong,
+        pub rt_tos: ::c_uchar,
+        pub rt_class: ::c_uchar,
+        #[cfg(target_pointer_width = "64")]
+        pub rt_pad4: [::c_short; 3usize],
+        #[cfg(not(target_pointer_width = "64"))]
+        pub rt_pad4: ::c_short,
+        pub rt_metric: ::c_short,
+        pub rt_dev: *mut ::c_char,
+        pub rt_mtu: ::c_ulong,
+        pub rt_window: ::c_ulong,
+        pub rt_irtt: ::c_ushort,
     }
 }
 
@@ -813,6 +839,7 @@ cfg_if! {
         pub const PTHREAD_STACK_MIN: ::size_t = 131072;
     }
 }
+pub const PTHREAD_MUTEX_ADAPTIVE_NP: ::c_int = 3;
 
 f! {
     pub fn NLA_ALIGN(len: ::c_int) -> ::c_int {

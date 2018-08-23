@@ -2,12 +2,8 @@
 
 <table>
     <tr>
-        <td><strong>Linux / OS X</strong></td>
+        <td><strong>Linux</strong></td>
         <td><a href="https://travis-ci.org/indiv0/lazycell" title="Travis Build Status"><img src="https://travis-ci.org/indiv0/lazycell.svg?branch=master" alt="travis-badge"></img></a></td>
-    </tr>
-    <tr>
-        <td><strong>Windows</strong></td>
-        <td><a href="https://ci.appveyor.com/project/indiv0/lazycell" title="Appveyor Build Status"><img src="https://ci.appveyor.com/api/projects/status/8sql0kict385l3cy?svg=true" alt="appveyor-badge"></img></a></td>
     </tr>
     <tr>
         <td colspan="2">
@@ -34,7 +30,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-lazycell = "0.4"
+lazycell = "0.6"
 ```
 
 And in your `lib.rs` or `main.rs`:

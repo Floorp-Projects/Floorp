@@ -14,18 +14,4 @@ const PreferenceFront = protocol.FrontClassWithSpec(preferenceSpec, {
   },
 });
 
-const _knownPreferenceFronts = new WeakMap();
-
-exports.getPreferenceFront = function(client, form) {
-  if (!form.preferenceActor) {
-    return null;
-  }
-
-  if (_knownPreferenceFronts.has(client)) {
-    return _knownPreferenceFronts.get(client);
-  }
-
-  const front = new PreferenceFront(client, form);
-  _knownPreferenceFronts.set(client, front);
-  return front;
-};
+exports.PreferenceFront = PreferenceFront;

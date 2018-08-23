@@ -25,7 +25,7 @@ curl https://dl.google.com/android/android-sdk_r24.4.1-linux.tgz | \
 filter="platform-tools,android-21"
 filter="$filter,sys-img-armeabi-v7a-android-21"
 
-./accept-licenses.sh "android - update sdk -a --no-ui --filter $filter"
+./accept-licenses.sh "android - update sdk -a --no-ui --filter $filter --no-https"
 
 echo "no" | android create avd \
                 --name arm-21 \

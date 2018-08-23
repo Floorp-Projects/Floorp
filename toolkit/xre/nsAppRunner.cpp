@@ -4384,6 +4384,9 @@ void AddSandboxAnnotations()
   sandboxCapable = true;
 #elif defined(XP_LINUX)
   sandboxCapable = SandboxInfo::Get().CanSandboxContent();
+#elif defined(__OpenBSD__)
+  sandboxCapable = true;
+  StartOpenBSDSandbox(GeckoProcessType_Default);
 #endif
 
   CrashReporter::AnnotateCrashReport(

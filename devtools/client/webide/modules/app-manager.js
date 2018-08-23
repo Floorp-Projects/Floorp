@@ -11,8 +11,6 @@ const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const TabStore = require("devtools/client/webide/modules/tab-store");
 const {AppValidator} = require("devtools/client/webide/modules/app-validator");
 const {ConnectionManager, Connection} = require("devtools/shared/client/connection-manager");
-const {getDeviceFront} = require("devtools/shared/fronts/device");
-const {getPreferenceFront} = require("devtools/shared/fronts/preference");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
 const {RuntimeTypes} = require("devtools/client/webide/modules/runtime-types");
 const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
@@ -141,7 +139,7 @@ var AppManager = exports.AppManager = {
     }
   },
 
-  onConnectionChanged: function() {
+  onConnectionChanged: async function() {
     console.log("Connection status changed: " + this.connection.status);
 
     if (this.connection.status == Connection.Status.DISCONNECTED) {
@@ -150,12 +148,21 @@ var AppManager = exports.AppManager = {
 
     if (!this.connected) {
       this._listTabsResponse = null;
+      this.deviceFront = null;
+      this.preferenceFront = null;
     } else {
-      this.connection.client.listTabs().then((response) => {
-        this._listTabsResponse = response;
-        this._recordRuntimeInfo();
-        this.update("runtime-global-actors");
+      const response = await this.connection.client.listTabs();
+      // RootClient.getRoot request was introduced in FF59, but RootClient.getFront
+      // expects it to work. Override its root form with the listTabs results (which is
+      // an equivalent) in orfer to fix RootClient.getFront.
+      Object.defineProperty(this.connection.client.mainRoot, "rootForm", {
+        value: response
       });
+      this._listTabsResponse = response;
+      this.deviceFront = await this.connection.client.mainRoot.getFront("device");
+      this.preferenceFront = await this.connection.client.mainRoot.getFront("preference");
+      this._recordRuntimeInfo();
+      this.update("runtime-global-actors");
     }
 
     this.update("connection");
@@ -507,20 +514,6 @@ var AppManager = exports.AppManager = {
 
   get listTabsForm() {
     return this._listTabsResponse;
-  },
-
-  get deviceFront() {
-    if (!this._listTabsResponse) {
-      return null;
-    }
-    return getDeviceFront(this.connection.client, this._listTabsResponse);
-  },
-
-  get preferenceFront() {
-    if (!this._listTabsResponse) {
-      return null;
-    }
-    return getPreferenceFront(this.connection.client, this._listTabsResponse);
   },
 
   disconnectRuntime: function() {

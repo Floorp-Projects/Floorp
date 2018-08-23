@@ -1642,3 +1642,15 @@ exports.dumpProtocolSpec = function() {
 
   return ret;
 };
+
+function getFront(client, typeName, form) {
+  const type = types.getType(typeName);
+  if (!type) {
+    throw new Error(`No spec for front type '${typeName}'.`);
+  }
+  if (!type.frontClass) {
+    lazyLoadFront(typeName);
+  }
+  return type.frontClass(client, form);
+}
+exports.getFront = getFront;

@@ -180,6 +180,10 @@ nsDebugImpl::GetIsDebuggerAttached(bool* aResult)
 {
   *aResult = false;
 
+#if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
+  // no access to KERN_PROC_PID sysctl when pledge'd
+  return NS_OK;
+#endif
 #if defined(XP_WIN)
   *aResult = ::IsDebuggerPresent();
 #elif defined(XP_MACOSX) || defined(__DragonFly__) || defined(__FreeBSD__) \

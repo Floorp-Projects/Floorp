@@ -2,7 +2,8 @@
 
 #![allow(unused_imports, deprecated, missing_debug_implementations)]
 
-use {io, Evented, Ready, Poll, PollOpt, Registration, SetReadiness, Token};
+use {io, Ready, Poll, PollOpt, Registration, SetReadiness, Token};
+use event::Evented;
 use lazycell::{LazyCell, AtomicLazyCell};
 use std::any::Any;
 use std::fmt;
@@ -118,7 +119,7 @@ impl<T> Sender<T> {
         self.tx.send(t)
             .map_err(SendError::from)
             .and_then(|_| {
-                try!(self.ctl.inc());
+                self.ctl.inc()?;
                 Ok(())
             })
     }
@@ -138,7 +139,7 @@ impl<T> SyncSender<T> {
         self.tx.send(t)
             .map_err(From::from)
             .and_then(|_| {
-                try!(self.ctl.inc());
+                self.ctl.inc()?;
                 Ok(())
             })
     }
@@ -147,7 +148,7 @@ impl<T> SyncSender<T> {
         self.tx.try_send(t)
             .map_err(From::from)
             .and_then(|_| {
-                try!(self.ctl.inc());
+                self.ctl.inc()?;
                 Ok(())
             })
     }
@@ -199,7 +200,7 @@ impl SenderCtl {
         if 0 == cnt {
             // Toggle readiness to readable
             if let Some(set_readiness) = self.inner.set_readiness.borrow() {
-                try!(set_readiness.set_readiness(Ready::readable()));
+                set_readiness.set_readiness(Ready::readable())?;
             }
         }
 
@@ -229,7 +230,7 @@ impl ReceiverCtl {
         if first == 1 {
             // Unset readiness
             if let Some(set_readiness) = self.inner.set_readiness.borrow() {
-                try!(set_readiness.set_readiness(Ready::empty()));
+                set_readiness.set_readiness(Ready::empty())?;
             }
         }
 
@@ -240,7 +241,7 @@ impl ReceiverCtl {
             // There are still pending messages. Since readiness was
             // previously unset, it must be reset here
             if let Some(set_readiness) = self.inner.set_readiness.borrow() {
-                try!(set_readiness.set_readiness(Ready::readable()));
+                set_readiness.set_readiness(Ready::readable())?;
             }
         }
 

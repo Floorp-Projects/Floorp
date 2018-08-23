@@ -35,13 +35,6 @@ CacheRegisterAllocator::addressOf(MacroAssembler& masm, BaselineFrameSlot slot) 
 // BaselineCacheIRCompiler compiles CacheIR to BaselineIC native code.
 class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
 {
-#ifdef DEBUG
-    // Some Baseline IC stubs can be used in IonMonkey through SharedStubs.
-    // Those stubs have different machine code, so we need to track whether
-    // we're compiling for Baseline or Ion.
-    ICStubEngine engine_;
-#endif
-
 
     bool inStubFrame_;
     bool makesGCCalls_;
@@ -58,12 +51,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
   public:
     friend class AutoStubFrame;
 
-    BaselineCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, ICStubEngine engine,
+    BaselineCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer,
                             uint32_t stubDataOffset)
       : CacheIRCompiler(cx, writer, stubDataOffset, Mode::Baseline, StubFieldPolicy::Address),
-#ifdef DEBUG
-        engine_(engine),
-#endif
         inStubFrame_(false),
         makesGCCalls_(false)
     {}
@@ -113,7 +103,6 @@ class MOZ_RAII AutoStubFrame
 
     void enter(MacroAssembler& masm, Register scratch, CallCanGC canGC = CallCanGC::CanGC) {
         MOZ_ASSERT(compiler.allocator.stackPushed() == 0);
-        MOZ_ASSERT(compiler.engine_ == ICStubEngine::Baseline);
 
         EmitBaselineEnterStubFrame(masm, scratch);
 
@@ -153,7 +142,6 @@ BaselineCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun)
 
     TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
     MOZ_ASSERT(fun.expectTailCall == NonTailCall);
-    MOZ_ASSERT(engine_ == ICStubEngine::Baseline);
 
     EmitBaselineCallVM(code, masm);
     return true;
@@ -166,7 +154,6 @@ BaselineCacheIRCompiler::tailCallVM(MacroAssembler& masm, const VMFunction& fun)
 
     TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
     MOZ_ASSERT(fun.expectTailCall == TailCall);
-    MOZ_ASSERT(engine_ == ICStubEngine::Baseline);
     size_t argSize = fun.explicitStackSlots() * sizeof(void*);
 
     EmitBaselineTailCallVM(code, masm, argSize);
@@ -557,8 +544,6 @@ BaselineCacheIRCompiler::emitGuardHasGetterSetter()
 bool
 BaselineCacheIRCompiler::emitCallScriptedGetterResult()
 {
-    MOZ_ASSERT(engine_ == ICStubEngine::Baseline);
-
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address getterAddr(stubAddress(reader.stubOffset()));
     bool isCrossRealm = reader.readBool();
@@ -2121,8 +2106,8 @@ static const size_t MaxOptimizedCacheIRStubs = 16;
 ICStub*
 js::jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
                                    CacheKind kind, BaselineCacheIRStubKind stubKind,
-                                   ICStubEngine engine, JSScript* outerScript,
-                                   ICFallbackStub* stub, bool* attached)
+                                   JSScript* outerScript, ICFallbackStub* stub,
+                                   bool* attached)
 {
     // We shouldn't GC or report OOM (or any other exception) here.
     AutoAssertNoPendingException aanpe(cx);
@@ -2154,12 +2139,13 @@ js::jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
 
     // Check if we already have JitCode for this stub.
     CacheIRStubInfo* stubInfo;
-    CacheIRStubKey::Lookup lookup(kind, engine, writer.codeStart(), writer.codeLength());
+    CacheIRStubKey::Lookup lookup(kind, ICStubEngine::Baseline, writer.codeStart(),
+                                  writer.codeLength());
     JitCode* code = jitZone->getBaselineCacheIRStubCode(lookup, &stubInfo);
     if (!code) {
         // We have to generate stub code.
         JitContext jctx(cx, nullptr);
-        BaselineCacheIRCompiler comp(cx, writer, engine, stubDataOffset);
+        BaselineCacheIRCompiler comp(cx, writer, stubDataOffset);
         if (!comp.init(kind))
             return nullptr;
 
@@ -2172,7 +2158,8 @@ js::jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
         // to the stub code HashMap, so we don't have to worry about freeing
         // it below.
         MOZ_ASSERT(!stubInfo);
-        stubInfo = CacheIRStubInfo::New(kind, engine, comp.makesGCCalls(), stubDataOffset, writer);
+        stubInfo = CacheIRStubInfo::New(kind, ICStubEngine::Baseline, comp.makesGCCalls(),
+                                        stubDataOffset, writer);
         if (!stubInfo)
             return nullptr;
 
@@ -2236,7 +2223,7 @@ js::jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     size_t bytesNeeded = stubInfo->stubDataOffset() + stubInfo->stubDataSize();
 
     ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForStub(stubInfo->makesGCCalls(),
-                                                              outerScript, engine);
+                                                              outerScript);
     void* newStubMem = stubSpace->alloc(bytesNeeded);
     if (!newStubMem)
         return nullptr;

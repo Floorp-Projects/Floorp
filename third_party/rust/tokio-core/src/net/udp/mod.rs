@@ -1,16 +1,15 @@
 use std::io;
-use std::mem;
 use std::net::{self, SocketAddr, Ipv4Addr, Ipv6Addr};
 use std::fmt;
 
 use futures::{Async, Future, Poll};
 use mio;
 
-use reactor::{Handle, PollEvented};
+use reactor::{Handle, PollEvented2};
 
 /// An I/O object representing a UDP socket.
 pub struct UdpSocket {
-    io: PollEvented<mio::udp::UdpSocket>,
+    io: PollEvented2<mio::net::UdpSocket>,
 }
 
 mod frame;
@@ -22,12 +21,12 @@ impl UdpSocket {
     /// This function will create a new UDP socket and attempt to bind it to the
     /// `addr` provided. If the result is `Ok`, the socket has successfully bound.
     pub fn bind(addr: &SocketAddr, handle: &Handle) -> io::Result<UdpSocket> {
-        let udp = try!(mio::udp::UdpSocket::bind(addr));
+        let udp = try!(mio::net::UdpSocket::bind(addr));
         UdpSocket::new(udp, handle)
     }
 
-    fn new(socket: mio::udp::UdpSocket, handle: &Handle) -> io::Result<UdpSocket> {
-        let io = try!(PollEvented::new(socket, handle));
+    fn new(socket: mio::net::UdpSocket, handle: &Handle) -> io::Result<UdpSocket> {
+        let io = try!(PollEvented2::new_with_handle(socket, handle.new_tokio_handle()));
         Ok(UdpSocket { io: io })
     }
 
@@ -42,7 +41,7 @@ impl UdpSocket {
     /// `reuse_address` or binding to multiple addresses.
     pub fn from_socket(socket: net::UdpSocket,
                        handle: &Handle) -> io::Result<UdpSocket> {
-        let udp = try!(mio::udp::UdpSocket::from_socket(socket));
+        let udp = try!(mio::net::UdpSocket::from_socket(socket));
         UdpSocket::new(udp, handle)
     }
 
@@ -74,6 +73,46 @@ impl UdpSocket {
         self.io.get_ref().local_addr()
     }
 
+    /// Connects the UDP socket setting the default destination for send() and
+    /// limiting packets that are read via recv from the address specified in addr.
+    pub fn connect(&self, addr: &SocketAddr) -> io::Result<()> {
+        self.io.get_ref().connect(*addr)
+    }
+
+    /// Sends data on the socket to the address previously bound via connect().
+    /// On success, returns the number of bytes written.
+    pub fn send(&self, buf: &[u8]) -> io::Result<usize> {
+        if let Async::NotReady = self.io.poll_write_ready()? {
+            return Err(io::ErrorKind::WouldBlock.into())
+        }
+        match self.io.get_ref().send(buf) {
+            Ok(n) => Ok(n),
+            Err(e) => {
+                if e.kind() == io::ErrorKind::WouldBlock {
+                    self.io.clear_write_ready()?;
+                }
+                Err(e)
+            }
+        }
+    }
+
+    /// Receives data from the socket previously bound with connect().
+    /// On success, returns the number of bytes read.
+    pub fn recv(&self, buf: &mut [u8]) -> io::Result<usize> {
+        if let Async::NotReady = self.io.poll_read_ready(mio::Ready::readable())? {
+            return Err(io::ErrorKind::WouldBlock.into())
+        }
+        match self.io.get_ref().recv(buf) {
+            Ok(n) => Ok(n),
+            Err(e) => {
+                if e.kind() == io::ErrorKind::WouldBlock {
+                    self.io.clear_read_ready(mio::Ready::readable())?;
+                }
+                Err(e)
+            }
+        }
+    }
+
     /// Test whether this socket is ready to be read or not.
     ///
     /// If the socket is *not* readable then the current task is scheduled to
@@ -81,7 +120,15 @@ impl UdpSocket {
     /// is only suitable for calling in a `Future::poll` method and will
     /// automatically handle ensuring a retry once the socket is readable again.
     pub fn poll_read(&self) -> Async<()> {
-        self.io.poll_read()
+        self.io.poll_read_ready(mio::Ready::readable())
+            .map(|r| {
+                if r.is_ready() {
+                    Async::Ready(())
+                } else {
+                    Async::NotReady
+                }
+            })
+            .unwrap_or(().into())
     }
 
     /// Test whether this socket is ready to be written to or not.
@@ -91,25 +138,34 @@ impl UdpSocket {
     /// is only suitable for calling in a `Future::poll` method and will
     /// automatically handle ensuring a retry once the socket is writable again.
     pub fn poll_write(&self) -> Async<()> {
-        self.io.poll_write()
+        self.io.poll_write_ready()
+            .map(|r| {
+                if r.is_ready() {
+                    Async::Ready(())
+                } else {
+                    Async::NotReady
+                }
+            })
+            .unwrap_or(().into())
     }
 
     /// Sends data on the socket to the given address. On success, returns the
     /// number of bytes written.
     ///
-    /// Address type can be any implementor of `ToSocketAddrs` trait. See its
+    /// Address type can be any implementer of `ToSocketAddrs` trait. See its
     /// documentation for concrete examples.
     pub fn send_to(&self, buf: &[u8], target: &SocketAddr) -> io::Result<usize> {
-        if let Async::NotReady = self.io.poll_write() {
-            return Err(::would_block())
+        if let Async::NotReady = self.io.poll_write_ready()? {
+            return Err(io::ErrorKind::WouldBlock.into())
         }
         match self.io.get_ref().send_to(buf, target) {
-            Ok(Some(n)) => Ok(n),
-            Ok(None) => {
-                self.io.need_write();
-                Err(::would_block())
+            Ok(n) => Ok(n),
+            Err(e) => {
+                if e.kind() == io::ErrorKind::WouldBlock {
+                    self.io.clear_write_ready()?;
+                }
+                Err(e)
             }
-            Err(e) => Err(e),
         }
     }
 
@@ -131,28 +187,23 @@ impl UdpSocket {
     pub fn send_dgram<T>(self, buf: T, addr: SocketAddr) -> SendDgram<T>
         where T: AsRef<[u8]>,
     {
-        SendDgram {
-            state: SendState::Writing {
-                sock: self,
-                addr: addr,
-                buf: buf,
-            },
-        }
+        SendDgram(Some((self, buf, addr)))
     }
 
     /// Receives data from the socket. On success, returns the number of bytes
     /// read and the address from whence the data came.
     pub fn recv_from(&self, buf: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
-        if let Async::NotReady = self.io.poll_read() {
-            return Err(::would_block())
+        if let Async::NotReady = self.io.poll_read_ready(mio::Ready::readable())? {
+            return Err(io::ErrorKind::WouldBlock.into())
         }
         match self.io.get_ref().recv_from(buf) {
-            Ok(Some(n)) => Ok(n),
-            Ok(None) => {
-                self.io.need_read();
-                Err(::would_block())
+            Ok(n) => Ok(n),
+            Err(e) => {
+                if e.kind() == io::ErrorKind::WouldBlock {
+                    self.io.clear_read_ready(mio::Ready::readable())?;
+                }
+                Err(e)
             }
-            Err(e) => Err(e),
         }
     }
 
@@ -173,12 +224,7 @@ impl UdpSocket {
     pub fn recv_dgram<T>(self, buf: T) -> RecvDgram<T>
         where T: AsMut<[u8]>,
     {
-        RecvDgram {
-            state: RecvState::Reading {
-                sock: self,
-                buf: buf,
-            },
-        }
+        RecvDgram(Some((self, buf)))
     }
 
     /// Gets the value of the `SO_BROADCAST` option for this socket.
@@ -320,6 +366,27 @@ impl UdpSocket {
                               interface: u32) -> io::Result<()> {
         self.io.get_ref().leave_multicast_v6(multiaddr, interface)
     }
+
+    /// Sets the value for the `IPV6_V6ONLY` option on this socket.
+    ///
+    /// If this is set to `true` then the socket is restricted to sending and
+    /// receiving IPv6 packets only. In this case two IPv4 and IPv6 applications
+    /// can bind the same port at the same time.
+    ///
+    /// If this is set to `false` then the socket can be used to send and
+    /// receive packets from an IPv4-mapped IPv6 address.
+    pub fn set_only_v6(&self, only_v6: bool) -> io::Result<()> {
+        self.io.get_ref().set_only_v6(only_v6)
+    }
+
+    /// Gets the value of the `IPV6_V6ONLY` option for this socket.
+    ///
+    /// For more information about this option, see [`set_only_v6`][link].
+    ///
+    /// [link]: #method.set_only_v6
+    pub fn only_v6(&self) -> io::Result<bool> {
+        self.io.get_ref().only_v6()
+    }
 }
 
 impl fmt::Debug for UdpSocket {
@@ -331,18 +398,8 @@ impl fmt::Debug for UdpSocket {
 /// A future used to write the entire contents of some data to a UDP socket.
 ///
 /// This is created by the `UdpSocket::send_dgram` method.
-pub struct SendDgram<T> {
-    state: SendState<T>,
-}
-
-enum SendState<T> {
-    Writing {
-        sock: UdpSocket,
-        buf: T,
-        addr: SocketAddr,
-    },
-    Empty,
-}
+#[must_use = "futures do nothing unless polled"]
+pub struct SendDgram<T>(Option<(UdpSocket, T, SocketAddr)>);
 
 fn incomplete_write(reason: &str) -> io::Error {
     io::Error::new(io::ErrorKind::Other, reason)
@@ -355,40 +412,26 @@ impl<T> Future for SendDgram<T>
     type Error = io::Error;
 
     fn poll(&mut self) -> Poll<(UdpSocket, T), io::Error> {
-        match self.state {
-            SendState::Writing { ref sock, ref buf, ref addr } => {
-                let n = try_nb!(sock.send_to(buf.as_ref(), addr));
-                if n != buf.as_ref().len() {
-                    return Err(incomplete_write("failed to send entire message \
-                                                 in datagram"))
-                }
+        {
+            let (ref sock, ref buf, ref addr) =
+                *self.0.as_ref().expect("SendDgram polled after completion");
+            let n = try_nb!(sock.send_to(buf.as_ref(), addr));
+            if n != buf.as_ref().len() {
+                return Err(incomplete_write("failed to send entire message \
+                                             in datagram"))
             }
-            SendState::Empty => panic!("poll a SendDgram after it's done"),
         }
 
-        match mem::replace(&mut self.state, SendState::Empty) {
-            SendState::Writing { sock, buf, addr: _ } => {
-                Ok(Async::Ready((sock, buf)))
-            }
-            SendState::Empty => panic!(),
-        }
+        let (sock, buf, _addr) = self.0.take().unwrap();
+        Ok(Async::Ready((sock, buf)))
     }
 }
 
 /// A future used to receive a datagram from a UDP socket.
 ///
 /// This is created by the `UdpSocket::recv_dgram` method.
-pub struct RecvDgram<T> {
-    state: RecvState<T>,
-}
-
-enum RecvState<T> {
-    Reading {
-        sock: UdpSocket,
-        buf: T,
-    },
-    Empty,
-}
+#[must_use = "futures do nothing unless polled"]
+pub struct RecvDgram<T>(Option<(UdpSocket, T)>);
 
 impl<T> Future for RecvDgram<T>
     where T: AsMut<[u8]>,
@@ -397,23 +440,19 @@ impl<T> Future for RecvDgram<T>
     type Error = io::Error;
 
     fn poll(&mut self) -> Poll<Self::Item, io::Error> {
-        let (n, addr) = match self.state {
-            RecvState::Reading { ref sock, ref mut buf } => {
-                try_nb!(sock.recv_from(buf.as_mut()))
-            }
-            RecvState::Empty => panic!("poll a RecvDgram after it's done"),
+        let (n, addr) = {
+            let (ref socket, ref mut buf) =
+                *self.0.as_mut().expect("RecvDgram polled after completion");
+
+            try_nb!(socket.recv_from(buf.as_mut()))
         };
 
-        match mem::replace(&mut self.state, RecvState::Empty) {
-            RecvState::Reading { sock, buf } => {
-                Ok(Async::Ready((sock, buf, n, addr)))
-            }
-            RecvState::Empty => panic!(),
-        }
+        let (socket, buf) = self.0.take().unwrap();
+        Ok(Async::Ready((socket, buf, n, addr)))
     }
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 mod sys {
     use std::os::unix::prelude::*;
     use super::UdpSocket;

@@ -11,7 +11,7 @@
 //! A wrapper around another RNG that reseeds it after it
 //! generates a certain number of random bytes.
 
-use std::default::Default;
+use core::default::Default;
 
 use {Rng, SeedableRng};
 
