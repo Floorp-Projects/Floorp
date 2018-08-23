@@ -63,7 +63,6 @@ DIRS += [
     'notification',
     'offline',
     'power',
-    'prio',
     'push',
     'quota',
     'security',
