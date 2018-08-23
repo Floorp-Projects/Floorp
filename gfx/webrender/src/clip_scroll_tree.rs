@@ -10,6 +10,7 @@ use gpu_types::TransformPalette;
 use internal_types::{FastHashMap, FastHashSet};
 use print_tree::{PrintTree, PrintTreePrinter};
 use scene::SceneProperties;
+use smallvec::SmallVec;
 use spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo};
 use util::LayoutToWorldFastTransform;
 
@@ -112,35 +113,54 @@ impl ClipScrollTree {
     /// panic if that invariant isn't true!
     pub fn get_relative_transform(
         &self,
-        ref_node_index: SpatialNodeIndex,
-        target_node_index: SpatialNodeIndex,
-    ) -> LayoutTransform {
-        let ref_node = &self.spatial_nodes[ref_node_index.0];
-        let target_node = &self.spatial_nodes[target_node_index.0];
+        from_node_index: SpatialNodeIndex,
+        to_node_index: SpatialNodeIndex,
+    ) -> Option<LayoutTransform> {
+        let from_node = &self.spatial_nodes[from_node_index.0];
+        let to_node = &self.spatial_nodes[to_node_index.0];
 
-        let mut offset = LayoutVector3D::new(
-            target_node.coordinate_system_relative_offset.x,
-            target_node.coordinate_system_relative_offset.y,
-            0.0,
-        );
-        let mut transform = LayoutTransform::identity();
+        let (child, parent, inverse) = if from_node_index.0 > to_node_index.0 {
+            (from_node, to_node, false)
+        } else {
+            (to_node, from_node, true)
+        };
 
-        // Walk up the tree of coordinate systems, accumulating each
-        // relative transform.
-        let mut current_coordinate_system_id = target_node.coordinate_system_id;
-        while current_coordinate_system_id != ref_node.coordinate_system_id {
-            let coord_system = &self.coord_systems[current_coordinate_system_id.0 as usize];
+        let mut coordinate_system_id = child.coordinate_system_id;
+        let mut nodes: SmallVec<[_; 16]> = SmallVec::new();
 
-            let relative_transform = coord_system
-                .transform
-                .post_translate(offset);
-            transform = transform.pre_mul(&relative_transform);
-
-            offset = coord_system.offset;
-            current_coordinate_system_id = coord_system.parent.expect("invalid parent!");
+        while coordinate_system_id != parent.coordinate_system_id {
+            nodes.push(coordinate_system_id);
+            let coord_system = &self.coord_systems[coordinate_system_id.0 as usize];
+            coordinate_system_id = coord_system.parent.expect("invalid parent!");
         }
 
-        transform
+        nodes.reverse();
+
+        let mut transform = LayoutTransform::create_translation(
+            -parent.coordinate_system_relative_offset.x,
+            -parent.coordinate_system_relative_offset.y,
+            0.0,
+        );
+
+        for node in nodes {
+            let coord_system = &self.coord_systems[node.0 as usize];
+            transform = transform.pre_translate(coord_system.offset)
+                                 .pre_mul(&coord_system.transform);
+        }
+
+        let transform = transform.post_translate(
+            LayoutVector3D::new(
+                child.coordinate_system_relative_offset.x,
+                child.coordinate_system_relative_offset.y,
+                0.0,
+            )
+        );
+
+        if inverse {
+            transform.inverse()
+        } else {
+            Some(transform)
+        }
     }
 
     /// The root reference frame, which is the true root of the ClipScrollTree. Initially
@@ -441,4 +461,220 @@ impl ClipScrollTree {
             self.print_node(self.root_reference_frame_index(), pt, clip_store);
         }
     }
+}
+
+#[cfg(test)]
+fn add_reference_frame(
+    cst: &mut ClipScrollTree,
+    parent: Option<SpatialNodeIndex>,
+    transform: LayoutTransform,
+    origin_in_parent_reference_frame: LayoutVector2D,
+) -> SpatialNodeIndex {
+    cst.add_reference_frame(
+        parent,
+        Some(PropertyBinding::Value(transform)),
+        None,
+        origin_in_parent_reference_frame,
+        PipelineId::dummy(),
+    )
+}
+
+#[cfg(test)]
+fn test_pt(
+    px: f32,
+    py: f32,
+    cst: &ClipScrollTree,
+    from: SpatialNodeIndex,
+    to: SpatialNodeIndex,
+    expected_x: f32,
+    expected_y: f32,
+) {
+    use euclid::approxeq::ApproxEq;
+    const EPSILON: f32 = 0.0001;
+
+    let p = LayoutPoint::new(px, py);
+    let m = cst.get_relative_transform(from, to).unwrap();
+    let pt = m.transform_point2d(&p).unwrap();
+    assert!(pt.x.approx_eq_eps(&expected_x, &EPSILON) &&
+            pt.y.approx_eq_eps(&expected_y, &EPSILON),
+            "p: {:?} -> {:?}\nm={:?}",
+            p, pt, m,
+            );
+}
+
+#[test]
+fn test_cst_simple_translation() {
+    // Basic translations only
+
+    let mut cst = ClipScrollTree::new();
+
+    let root = add_reference_frame(
+        &mut cst,
+        None,
+        LayoutTransform::identity(),
+        LayoutVector2D::zero(),
+    );
+
+    let child1 = add_reference_frame(
+        &mut cst,
+        Some(root),
+        LayoutTransform::create_translation(100.0, 0.0, 0.0),
+        LayoutVector2D::zero(),
+    );
+
+    let child2 = add_reference_frame(
+        &mut cst,
+        Some(child1),
+        LayoutTransform::create_translation(0.0, 50.0, 0.0),
+        LayoutVector2D::zero(),
+    );
+
+    let child3 = add_reference_frame(
+        &mut cst,
+        Some(child2),
+        LayoutTransform::create_translation(200.0, 200.0, 0.0),
+        LayoutVector2D::zero(),
+    );
+
+    cst.update_tree(WorldPoint::zero(), &SceneProperties::new());
+
+    test_pt(100.0, 100.0, &cst, child1, root, 200.0, 100.0);
+    test_pt(100.0, 100.0, &cst, root, child1, 0.0, 100.0);
+    test_pt(100.0, 100.0, &cst, child2, root, 200.0, 150.0);
+    test_pt(100.0, 100.0, &cst, root, child2, 0.0, 50.0);
+    test_pt(100.0, 100.0, &cst, child2, child1, 100.0, 150.0);
+    test_pt(100.0, 100.0, &cst, child1, child2, 100.0, 50.0);
+    test_pt(100.0, 100.0, &cst, child3, root, 400.0, 350.0);
+}
+
+#[test]
+fn test_cst_simple_scale() {
+    // Basic scale only
+
+    let mut cst = ClipScrollTree::new();
+
+    let root = add_reference_frame(
+        &mut cst,
+        None,
+        LayoutTransform::identity(),
+        LayoutVector2D::zero(),
+    );
+
+    let child1 = add_reference_frame(
+        &mut cst,
+        Some(root),
+        LayoutTransform::create_scale(4.0, 1.0, 1.0),
+        LayoutVector2D::zero(),
+    );
+
+    let child2 = add_reference_frame(
+        &mut cst,
+        Some(child1),
+        LayoutTransform::create_scale(1.0, 2.0, 1.0),
+        LayoutVector2D::zero(),
+    );
+
+    let child3 = add_reference_frame(
+        &mut cst,
+        Some(child2),
+        LayoutTransform::create_scale(2.0, 2.0, 1.0),
+        LayoutVector2D::zero(),
+    );
+
+    cst.update_tree(WorldPoint::zero(), &SceneProperties::new());
+
+    test_pt(100.0, 100.0, &cst, child1, root, 400.0, 100.0);
+    test_pt(100.0, 100.0, &cst, root, child1, 25.0, 100.0);
+    test_pt(100.0, 100.0, &cst, child2, root, 400.0, 200.0);
+    test_pt(100.0, 100.0, &cst, root, child2, 25.0, 50.0);
+    test_pt(100.0, 100.0, &cst, child3, root, 800.0, 400.0);
+    test_pt(100.0, 100.0, &cst, child2, child1, 100.0, 200.0);
+    test_pt(100.0, 100.0, &cst, child1, child2, 100.0, 50.0);
+    test_pt(100.0, 100.0, &cst, child3, child1, 200.0, 400.0);
+    test_pt(100.0, 100.0, &cst, child1, child3, 50.0, 25.0);
+}
+
+#[test]
+fn test_cst_scale_translation() {
+    // Scale + translation
+
+    let mut cst = ClipScrollTree::new();
+
+    let root = add_reference_frame(
+        &mut cst,
+        None,
+        LayoutTransform::identity(),
+        LayoutVector2D::zero(),
+    );
+
+    let child1 = add_reference_frame(
+        &mut cst,
+        Some(root),
+        LayoutTransform::create_translation(100.0, 50.0, 0.0),
+        LayoutVector2D::zero(),
+    );
+
+    let child2 = add_reference_frame(
+        &mut cst,
+        Some(child1),
+        LayoutTransform::create_scale(2.0, 4.0, 1.0),
+        LayoutVector2D::zero(),
+    );
+
+    let child3 = add_reference_frame(
+        &mut cst,
+        Some(child2),
+        LayoutTransform::create_translation(200.0, -100.0, 0.0),
+        LayoutVector2D::zero(),
+    );
+
+    let child4 = add_reference_frame(
+        &mut cst,
+        Some(child3),
+        LayoutTransform::create_scale(3.0, 2.0, 1.0),
+        LayoutVector2D::zero(),
+    );
+
+    cst.update_tree(WorldPoint::zero(), &SceneProperties::new());
+
+    test_pt(100.0, 100.0, &cst, child1, root, 200.0, 150.0);
+    test_pt(100.0, 100.0, &cst, child2, root, 300.0, 450.0);
+    test_pt(100.0, 100.0, &cst, root, child1, 0.0, 50.0);
+    test_pt(100.0, 100.0, &cst, root, child2, 0.0, 12.5);
+    test_pt(100.0, 100.0, &cst, child4, root, 1100.0, 450.0);
+    test_pt(1100.0, 450.0, &cst, root, child4, 100.0, 100.0);
+
+    test_pt(0.0, 0.0, &cst, child4, child1, 400.0, -400.0);
+    test_pt(100.0, 100.0, &cst, child4, child1, 1000.0, 400.0);
+    test_pt(100.0, 100.0, &cst, child2, child1, 200.0, 400.0);
+    test_pt(200.0, 400.0, &cst, child1, child2, 100.0, 100.0);
+
+    test_pt(100.0, 100.0, &cst, child3, child1, 400.0, 300.0);
+    test_pt(400.0, 300.0, &cst, child1, child3, 100.0, 100.0);
+}
+
+#[test]
+fn test_cst_translation_rotate() {
+    // Rotation + translation
+    use euclid::Angle;
+
+    let mut cst = ClipScrollTree::new();
+
+    let root = add_reference_frame(
+        &mut cst,
+        None,
+        LayoutTransform::identity(),
+        LayoutVector2D::zero(),
+    );
+
+    let child1 = add_reference_frame(
+        &mut cst,
+        Some(root),
+        LayoutTransform::create_rotation(0.0, 0.0, 1.0, Angle::degrees(90.0)),
+        LayoutVector2D::zero(),
+    );
+
+    cst.update_tree(WorldPoint::zero(), &SceneProperties::new());
+
+    test_pt(100.0, 0.0, &cst, child1, root, 0.0, -100.0);
 }
