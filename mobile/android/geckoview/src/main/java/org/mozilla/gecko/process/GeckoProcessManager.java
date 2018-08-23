@@ -23,8 +23,6 @@ import android.os.SystemClock;
 import android.support.v4.util.SimpleArrayMap;
 import android.util.Log;
 
-import java.io.IOException;
-
 public final class GeckoProcessManager extends IProcessManager.Stub {
     private static final String LOGTAG = "GeckoProcessManager";
     private static final GeckoProcessManager INSTANCE = new GeckoProcessManager();
@@ -219,8 +217,8 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         final int flags = filterFlagsForChild(GeckoThread.getActiveFlags());
 
         boolean started = false;
-        final String crashHandler = GeckoAppShell.getsCrashHandlerService() != null ?
-                GeckoAppShell.getsCrashHandlerService().getCanonicalName() : null;
+        final String crashHandler = GeckoAppShell.getCrashHandlerService() != null ?
+                GeckoAppShell.getCrashHandlerService().getName() : null;
         try {
             started = child.start(this, args, extras, flags, crashHandler,
                     prefsPfd, prefMapPfd, ipcPfd, crashPfd, crashAnnotationPfd);

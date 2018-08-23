@@ -8,8 +8,10 @@ package org.mozilla.geckoview;
 
 import android.app.ActivityManager;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.content.Context;
@@ -132,9 +134,25 @@ public final class GeckoRuntime implements Parcelable {
         @Override
         public void handleMessage(final String event, final GeckoBundle message,
                                   final EventCallback callback) {
+            final Class<?> crashHandler = GeckoRuntime.this.getSettings().mCrashHandler;
+
             if ("Gecko:Exited".equals(event) && mDelegate != null) {
                 mDelegate.onShutdown();
                 EventDispatcher.getInstance().unregisterUiThreadListener(mEventListener, "Gecko:Exited");
+            } else if ("GeckoView:ContentCrash".equals(event) && crashHandler != null) {
+                final Context context = GeckoAppShell.getApplicationContext();
+                Intent i = new Intent(ACTION_CRASHED, null,
+                        context, crashHandler);
+                i.putExtra(EXTRA_MINIDUMP_PATH, message.getString(EXTRA_MINIDUMP_PATH));
+                i.putExtra(EXTRA_EXTRAS_PATH, message.getString(EXTRA_EXTRAS_PATH));
+                i.putExtra(EXTRA_MINIDUMP_SUCCESS, true);
+                i.putExtra(EXTRA_CRASH_FATAL, message.getBoolean(EXTRA_CRASH_FATAL, true));
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(i);
+                } else {
+                    context.startService(i);
+                }
             }
         }
     };
@@ -170,6 +188,8 @@ public final class GeckoRuntime implements Parcelable {
                 if (info.processName.equals(getProcessName(context))) {
                     throw new IllegalArgumentException("Crash handler service must run in a separate process");
                 }
+
+                EventDispatcher.getInstance().registerUiThreadListener(mEventListener, "GeckoView:ContentCrash");
 
                 flags |= GeckoThread.FLAG_ENABLE_NATIVE_CRASHREPORTER;
             } catch (PackageManager.NameNotFoundException e) {
