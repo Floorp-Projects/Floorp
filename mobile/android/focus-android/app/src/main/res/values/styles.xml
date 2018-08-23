@@ -43,6 +43,9 @@
 
     <style name="SettingsTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
+        <item name="dialogPreferredPadding">24dp</item>
+        <item name="android:background">@drawable/dialog_background</item>
         <item name="actionButtonStyle">@style/SettingsActionButtonStyle</item>
     </style>
 
