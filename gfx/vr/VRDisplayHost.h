@@ -101,11 +101,6 @@ private:
   VRDisplayInfo mLastUpdateDisplayInfo;
   TimeStamp mLastFrameStart;
   bool mFrameStarted;
-#if defined(MOZ_WIDGET_ANDROID)
-protected:
-  uint64_t mLastSubmittedFrameId;
-  uint64_t mLastStartedFrame;
-#endif // defined(MOZ_WIDGET_ANDROID)
 
 #if defined(XP_WIN)
 protected:

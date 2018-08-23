@@ -37,7 +37,7 @@ public:
 
   void Initialize(dom::HTMLCanvasElement* aCanvasElement,
                   const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect);
-  void SubmitFrame(const VRDisplayInfo& aDisplayInfo);
+  void SubmitFrame(uint64_t aFrameId);
   bool IsIPCOpen();
 
 private:
