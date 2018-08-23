@@ -5,3 +5,7 @@
 .debug-target-list {
   margin-inline-start: 60px;
 }
+
+.debug-target-list--collapsed {
+  display: none;
+}
