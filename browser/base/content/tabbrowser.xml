@@ -2127,15 +2127,8 @@
             // Ctrl (Cmd for mac) key is pressed
             if (this.multiselected) {
               gBrowser.removeFromMultiSelectedTabs(this, true);
-              if (this == gBrowser.selectedTab) {
-                gBrowser.switchToNextMultiSelectedTab();
-              }
-              gBrowser.avoidSingleSelectedTab();
             } else if (this != gBrowser.selectedTab) {
-              for (let tab of [this, gBrowser.selectedTab]) {
-                gBrowser.addToMultiSelectedTabs(tab, true);
-              }
-              gBrowser.tabContainer._setPositionalAttributes();
+              gBrowser.addToMultiSelectedTabs(this, false);
               gBrowser.lastMultiSelectedTab = this;
             }
             return;

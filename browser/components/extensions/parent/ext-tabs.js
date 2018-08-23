@@ -707,6 +707,21 @@ this.tabs = class extends ExtensionAPI {
               // Not sure what to do here? Which tab should we select?
             }
           }
+          if (updateProperties.highlighted !== null) {
+            if (!gMultiSelectEnabled) {
+              throw new ExtensionError(`updateProperties.highlight is currently experimental and must be enabled with the ${MULTISELECT_PREFNAME} preference.`);
+            }
+            if (updateProperties.highlighted) {
+              if (!nativeTab.selected && !nativeTab.multiselected) {
+                tabbrowser.addToMultiSelectedTabs(nativeTab, false);
+                // Select the highlighted tab, this matches Chrome's behavior.
+                tabbrowser.lockClearMultiSelectionOnce();
+                tabbrowser.selectedTab = nativeTab;
+              }
+            } else {
+              tabbrowser.removeFromMultiSelectedTabs(nativeTab, true);
+            }
+          }
           if (updateProperties.muted !== null) {
             if (nativeTab.muted != updateProperties.muted) {
               nativeTab.toggleMuteAudio(extension.id);
