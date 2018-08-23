@@ -110,7 +110,8 @@ WebConsoleClient.prototype = {
         updates: [],
         private: actor.private,
         fromCache: actor.fromCache,
-        fromServiceWorker: actor.fromServiceWorker
+        fromServiceWorker: actor.fromServiceWorker,
+        isTrackingResource: actor.isTrackingResource,
       };
       this._networkRequests.set(actor.actor, networkInfo);
 

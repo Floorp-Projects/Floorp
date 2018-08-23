@@ -18,14 +18,10 @@ function CollapseButton(props) {
     title = messageToggleDetails,
   } = props;
 
-  const classes = ["arrow", "collapse-button"];
-
-  if (open) {
-    classes.push("expanded");
-  }
-
-  return dom.img({
-    className: classes.join(" "),
+  return dom.button({
+    "aria-expanded": open ? "true" : "false",
+    "aria-label": title,
+    className: "arrow collapse-button",
     onClick,
     title: title,
   });

@@ -205,9 +205,12 @@
   margin-inline-end: 3px;
 }
 
+#toolbox-buttons-start > .devtools-separator {
+  --separator-inline-margin: 0;
+}
+
 #toolbox-buttons-end > .devtools-separator {
-  margin-inline-start: 5px;
-  margin-inline-end: 5px;
+  --separator-inline-margin: 5px;
 }
 
 #toolbox-close {

@@ -735,7 +735,7 @@ def enable_code_coverage(config, tests):
     """Enable code coverage for the ccov and jsdcov build-platforms"""
     for test in tests:
         if 'ccov' in test['build-platform']:
-            # do not run tests on fuzzing or opt build
+            # Do not run tests on fuzzing or opt build
             if 'opt' in test['build-platform'] or 'fuzzing' in test['build-platform']:
                 test['run-on-projects'] = []
                 continue
@@ -786,7 +786,7 @@ def enable_code_coverage(config, tests):
                 test['max-run-time'] = 1800
                 if 'linux' in test['build-platform']:
                     test['docker-image'] = {"in-tree": "desktop1604-test"}
-        elif test['build-platform'] == 'linux64-jsdcov/opt':
+        elif 'jsdcov' in test['build-platform']:
             # Ensure we always run on the projects defined by the build, unless the test
             # is try only or shouldn't run at all.
             if test['run-on-projects'] not in [[], ['try']]:

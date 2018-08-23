@@ -102,10 +102,6 @@
   --theme-arrowpanel-dimmed-further: hsla(0,0%,80%,.45);
   --theme-arrowpanel-disabled-color: GrayText;
 
-  /* Command line */
-  --theme-command-line-image: url(chrome://devtools/skin/images/commandline-icon.svg#light-theme);
-  --theme-command-line-image-focus: url(chrome://devtools/skin/images/commandline-icon.svg#light-theme-focus);
-
   --theme-codemirror-gutter-background: #f4f4f4;
   --theme-messageCloseButtonFilter: invert(0);
 }
@@ -209,10 +205,6 @@
   --theme-arrowpanel-dimmed-further: rgba(249,249,250,.15);
   --theme-arrowpanel-disabled-color: rgba(249,249,250,.5);
 
-  /* Command line */
-  --theme-command-line-image: url(chrome://devtools/skin/images/commandline-icon.svg#dark-theme);
-  --theme-command-line-image-focus: url(chrome://devtools/skin/images/commandline-icon.svg#dark-theme-focus);
-
   --theme-codemirror-gutter-background: #262b37;
   --theme-messageCloseButtonFilter: invert(1);
 }
@@ -244,6 +236,10 @@
   --select-arrow-image: url(chrome://devtools/skin/images/select-arrow.svg);
   --theme-pane-collapse-image: url(chrome://devtools/skin/images/pane-collapse.svg);
   --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
+  --theme-console-alert-image: url(chrome://devtools/skin/images/webconsole/alert.svg);
+  --theme-console-info-image: url(chrome://devtools/skin/images/webconsole/info.svg);
+  --theme-console-input-image: url(chrome://devtools/skin/images/webconsole/input.svg);
+  --theme-console-return-image: url(chrome://devtools/skin/images/webconsole/return.svg);
 
   /* Firefox Colors CSS Variables v1.0.3
    * Colors are taken from: https://github.com/FirefoxUX/design-tokens */

@@ -386,6 +386,16 @@
   background-image: url(chrome://devtools/skin/images/globe.svg);
 }
 
+.tracking-resource {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0 3px 0 -3px;
+  vertical-align: text-bottom;
+  background-image: url(chrome://devtools/content/netmonitor/src/assets/icons/shield.svg);
+  background-repeat: no-repeat;
+}
+
 /* RemoteIP column */
 
 .requests-list-remoteip {

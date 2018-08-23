@@ -32,7 +32,7 @@ async function test_telemetry_background() {
   async function contentScript() {
     await browser.storage.local.set({a: "b"});
     await browser.storage.local.get("a");
-    browser.runtime.sendMessage("contentDone");
+    browser.test.sendMessage("contentDone");
   }
 
   let baseManifest = {
@@ -47,10 +47,6 @@ async function test_telemetry_background() {
 
   let baseExtInfo = {
     async background() {
-      browser.runtime.onMessage.addListener(msg => {
-        browser.test.sendMessage(msg);
-      });
-
       await browser.storage.local.set({a: "b"});
       await browser.storage.local.get("a");
       browser.test.sendMessage("backgroundDone");
@@ -122,10 +118,9 @@ async function test_telemetry_background() {
   // Run a content script.
   process = IS_OOP ? "content" : "parent";
   let expectedCount = IS_OOP ? 1 : 3;
-  let contentScriptPromise = extension1.awaitMessage("contentDone");
+
   let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
-  await contentScriptPromise;
-  await contentPage.close();
+  await extension1.awaitMessage("contentDone");
 
   for (let id of expectedNonEmptyHistograms) {
     await promiseTelemetryRecorded(id, process, expectedCount);
@@ -144,6 +139,8 @@ async function test_telemetry_background() {
   for (let id of expectedEmptyHistograms) {
     ok(!(id in snapshots), `No data recorded for histogram: ${id}.`);
   }
+
+  await contentPage.close();
 }
 
 add_task(function test_telemetry_background_file_backend() {
