@@ -76,6 +76,14 @@ add_task(async function() {
 
   await promise;
 
+  info("Verify the number of tracking nodes found");
+  await ContentTask.spawn(browser,
+                          { expected: 3,
+                          },
+                          async function(obj) {
+    is(content.document.blockedTrackingNodeCount, obj.expected, "Expected tracking nodes found");
+  });
+
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
 
