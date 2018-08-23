@@ -45,7 +45,7 @@ public class FirstrunPanel extends Fragment {
             @Override
             public void onClick(View v) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-next");
-                pagerNavigation.next();
+                next();
             }
         });
 
