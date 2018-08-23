@@ -538,6 +538,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .devtools-toolbar.webconsole-filterbar-secondary {
+  --separator-inline-margin: 5px;
   display: flex;
   width: 100%;
   align-items: center;
@@ -586,10 +587,6 @@ a.learn-more-link.webconsole-learn-more-link {
   display: flex;
   align-items: center;
   -moz-user-select: none;
-}
-
-.webconsole-filterbar-secondary .devtools-separator {
-  margin: 0 5px;
 }
 
 .webconsole-filterbar-filtered-messages {
