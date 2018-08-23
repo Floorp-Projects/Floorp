@@ -388,6 +388,11 @@ struct DIGroup
   static IntRect
   ToDeviceSpace(nsRect aBounds, Matrix& aMatrix, int32_t aAppUnitsPerDevPixel, LayerIntPoint aOffset)
   {
+    // RoundedOut can convert empty rectangles to non-empty ones
+    // so special case them here
+    if (aBounds.IsEmpty()) {
+      return IntRect();
+    }
     return RoundedOut(aMatrix.TransformBounds(ToRect(nsLayoutUtils::RectToGfxRect(aBounds, aAppUnitsPerDevPixel)))) - aOffset.ToUnknownPoint();
   }
 
