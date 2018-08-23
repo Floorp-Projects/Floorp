@@ -1,3 +1,8 @@
+// |jit-test| slow;
+//
+// Temporarily marked as slow - they time out on the build systems even with
+// reduced iteration count.
+//
 // Test that wasm atomic operations implement correct mutual exclusion.
 //
 // We have several agents that attempt to hammer on a shared location with rmw
