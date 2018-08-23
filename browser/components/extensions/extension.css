@@ -102,8 +102,8 @@ select.browser-style.pressed {
   border: 1px solid #858585;
 }
 
-button.browser-style.disabled,
-select.browser-style.disabled {
+button.browser-style:disabled,
+select.browser-style:disabled {
   color: #999;
   opacity: .5;
 }
@@ -261,29 +261,29 @@ button.browser-style.expander {
 }
 
 /* Interactive States */
-button.browser-style:hover:not(.pressed):not(.disabled):not(.focused),
-select.browser-style:hover:not(.pressed):not(.disabled):not(.focused) {
+button.browser-style:hover:not(.pressed):not(:disabled):not(.focused),
+select.browser-style:hover:not(.pressed):not(:disabled):not(.focused) {
   background-color: #ebebeb;
   border: 1px solid #b1b1b1;
 }
 
-button.browser-style:hover:active:not(.hover):not(.disabled):not(.focused),
-select.browser-style:hover:active:not(.hover):not(.disabled):not(.focused) {
+button.browser-style:hover:active:not(.hover):not(:disabled):not(.focused),
+select.browser-style:hover:active:not(.hover):not(:disabled):not(.focused) {
   background-color: #d4d4d4;
   border: 1px solid #858585;
 }
 
-button.browser-style.default:hover:not(.pressed):not(.disabled):not(.focused) {
+button.browser-style.default:hover:not(.pressed):not(:disabled):not(.focused) {
   background-color: #0670cc;
   border-color: #005bab;
 }
 
-button.browser-style.default:hover:active:not(.hover):not(.disabled):not(.focused) {
+button.browser-style.default:hover:active:not(.hover):not(:disabled):not(.focused) {
   background-color: #005bab;
   border-color: #004480;
 }
 
-button.browser-style:focus:not(.disabled) {
+button.browser-style:focus:not(:disabled) {
   border-color: #fff !important;
   box-shadow: 0 0 0 2px rgba(97, 181, 255, 0.75);
 }
@@ -309,8 +309,8 @@ textarea.browser-style.hover {
   border: 1px solid #858585;
 }
 
-.browser-style > input[type="text"].disabled,
-textarea.browser-style.disabled {
+.browser-style > input[type="text"]:disabled,
+textarea.browser-style:disabled {
   color: #999;
   opacity: .5;
 }
@@ -322,8 +322,8 @@ textarea.browser-style.focused {
 }
 
 /* Interactive States */
-.browser-style > input[type="text"]:not(.disabled):hover,
-textarea.browser-style:not(.disabled):hover {
+.browser-style > input[type="text"]:not(:disabled):hover,
+textarea.browser-style:not(:disabled):hover {
   border: 1px solid #858585;
 }
 
