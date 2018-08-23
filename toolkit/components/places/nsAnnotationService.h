@@ -97,8 +97,7 @@ protected:
   static const int kAnnoIndex_DateAdded;
   static const int kAnnoIndex_LastModified;
 
-  nsresult StartGetAnnotation(nsIURI* aURI,
-                              int64_t aItemId,
+  nsresult StartGetAnnotation(int64_t aItemId,
                               const nsACString& aName,
                               nsCOMPtr<mozIStorageStatement>& aStatement);
 

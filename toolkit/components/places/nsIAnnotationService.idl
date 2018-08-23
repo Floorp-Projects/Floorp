@@ -83,8 +83,6 @@ interface nsIAnnotationService : nsISupports
      * The type-specific methods throw if the given annotation is set in
      * a different type.
      */
-    nsIVariant getPageAnnotation(in nsIURI aURI,
-                                 in AUTF8String aName);
     nsIVariant getItemAnnotation(in long long aItemId,
                                  in AUTF8String aName);
 
