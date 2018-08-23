@@ -42,7 +42,7 @@ public:
   virtual Float GetSize() const override { return mSize; }
 
 #ifdef USE_SKIA
-  virtual SkTypeface* GetSkTypeface() { return mTypeface; }
+  SkTypeface* GetSkTypeface();
 #endif
 
 #ifdef USE_CAIRO_SCALED_FONT
@@ -54,7 +54,8 @@ public:
 protected:
   friend class DrawTargetSkia;
 #ifdef USE_SKIA
-  SkTypeface* mTypeface;
+  Atomic<SkTypeface*> mTypeface;
+  virtual SkTypeface* CreateSkTypeface() { return nullptr; }
   SkPath GetSkiaPathForGlyphs(const GlyphBuffer &aBuffer);
 #endif
 #ifdef USE_CAIRO_SCALED_FONT

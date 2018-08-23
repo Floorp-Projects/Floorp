@@ -35,13 +35,9 @@ ScaledFontFreeType::ScaledFontFreeType(cairo_scaled_font_t* aScaledFont,
 }
 
 #ifdef USE_SKIA
-SkTypeface* ScaledFontFreeType::GetSkTypeface()
+SkTypeface* ScaledFontFreeType::CreateSkTypeface()
 {
-  if (!mTypeface) {
-    mTypeface = SkCreateTypefaceFromCairoFTFont(mScaledFont);
-  }
-
-  return mTypeface;
+  return SkCreateTypefaceFromCairoFTFont(mScaledFont);
 }
 #endif
 
