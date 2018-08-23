@@ -603,7 +603,7 @@ async function selectSource(dbg, url, line) {
   return waitForSelectedSource(dbg, url);
 }
 
-async function selectSource(dbg, url, line) {
+async function selectSpecificSource(dbg, url, line) {
   const source = findSource(dbg, url);
   await dbg.actions.selectLocation({ sourceId: source.id, line }, {keepContext: false});
   return waitForSelectedSource(dbg, url);
