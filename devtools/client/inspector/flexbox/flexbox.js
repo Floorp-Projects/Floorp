@@ -93,7 +93,6 @@ class FlexboxInspector {
 
   getComponentProps() {
     return {
-      getSwatchColorPickerTooltip: this.getSwatchColorPickerTooltip,
       onSetFlexboxOverlayColor: this.onSetFlexboxOverlayColor,
       onToggleFlexboxHighlighter: this.onToggleFlexboxHighlighter,
     };
@@ -347,6 +346,7 @@ class FlexboxInspector {
       color,
       highlighted,
       nodeFront,
+      properties: flexboxFront.properties,
     }));
   }
 }

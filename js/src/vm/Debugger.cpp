@@ -4188,19 +4188,73 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
 
 static inline DebuggerSourceReferent GetSourceReferent(JSObject* obj);
 
+class MOZ_STACK_CLASS Debugger::QueryBase
+{
+  protected:
+    QueryBase(JSContext* cx, Debugger* dbg)
+      : cx(cx),
+        debugger(dbg),
+        iterMarker(&cx->runtime()->gc),
+        realms(cx->zone()),
+        oom(false)
+    {}
+
+    // The context in which we should do our work.
+    JSContext* cx;
+
+    // The debugger for which we conduct queries.
+    Debugger* debugger;
+
+    // Require the set of realms to stay fixed while this query is alive.
+    gc::AutoEnterIteration iterMarker;
+
+    using RealmSet = HashSet<Realm*, DefaultHasher<Realm*>, ZoneAllocPolicy>;
+
+    // A script must be in one of these realms to match the query.
+    RealmSet realms;
+
+    // Indicates whether OOM has occurred while matching.
+    bool oom;
+
+    bool addRealm(Realm* realm) {
+        return realms.put(realm);
+    }
+
+    // Arrange for this query to match only scripts that run in |global|.
+    bool matchSingleGlobal(GlobalObject* global) {
+        MOZ_ASSERT(realms.count() == 0);
+        if (!addRealm(global->realm())) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
+    }
+
+    // Arrange for this ScriptQuery to match all scripts running in debuggee
+    // globals.
+    bool matchAllDebuggeeGlobals() {
+        MOZ_ASSERT(realms.count() == 0);
+        // Build our realm set from the debugger's set of debuggee globals.
+        for (WeakGlobalObjectSet::Range r = debugger->debuggees.all(); !r.empty(); r.popFront()) {
+            if (!addRealm(r.front()->realm())) {
+                ReportOutOfMemory(cx);
+                return false;
+            }
+        }
+        return true;
+    }
+};
+
 /*
  * A class for parsing 'findScripts' query arguments and searching for
  * scripts that match the criteria they represent.
  */
-class MOZ_STACK_CLASS Debugger::ScriptQuery
+class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase
 {
   public:
     /* Construct a ScriptQuery to use matching scripts for |dbg|. */
-    ScriptQuery(JSContext* cx, Debugger* dbg):
-        cx(cx),
-        debugger(dbg),
-        iterMarker(&cx->runtime()->gc),
-        realms(cx->zone()),
+    ScriptQuery(JSContext* cx, Debugger* dbg)
+      : QueryBase(cx, dbg),
         url(cx),
         displayURLString(cx),
         hasSource(false),
@@ -4211,8 +4265,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         innermostForRealm(cx->zone()),
         scriptVector(cx, ScriptVector(cx)),
         lazyScriptVector(cx, LazyScriptVector(cx)),
-        wasmInstanceVector(cx, WasmInstanceObjectVector(cx)),
-        oom(false)
+        wasmInstanceVector(cx, WasmInstanceObjectVector(cx))
     {}
 
     /*
@@ -4436,20 +4489,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     }
 
   private:
-    /* The context in which we should do our work. */
-    JSContext* cx;
-
-    /* The debugger for which we conduct queries. */
-    Debugger* debugger;
-
-    /* Require the set of realms to stay fixed while the ScriptQuery is alive. */
-    gc::AutoEnterIteration iterMarker;
-
-    using RealmSet = HashSet<Realm*, DefaultHasher<Realm*>, ZoneAllocPolicy>;
-
-    /* A script must be in one of these realms to match the query. */
-    RealmSet realms;
-
     /* If this is a string, matching scripts have urls equal to it. */
     RootedValue url;
 
@@ -4498,39 +4537,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
      * Like above, but for wasm modules.
      */
     Rooted<WasmInstanceObjectVector> wasmInstanceVector;
-
-    /* Indicates whether OOM has occurred while matching. */
-    bool oom;
-
-    bool addRealm(Realm* realm) {
-        return realms.put(realm);
-    }
-
-    /* Arrange for this ScriptQuery to match only scripts that run in |global|. */
-    bool matchSingleGlobal(GlobalObject* global) {
-        MOZ_ASSERT(realms.count() == 0);
-        if (!addRealm(global->realm())) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
-        return true;
-    }
-
-    /*
-     * Arrange for this ScriptQuery to match all scripts running in debuggee
-     * globals.
-     */
-    bool matchAllDebuggeeGlobals() {
-        MOZ_ASSERT(realms.count() == 0);
-        // Build our realm set from the debugger's set of debuggee globals.
-        for (WeakGlobalObjectSet::Range r = debugger->debuggees.all(); !r.empty(); r.popFront()) {
-            if (!addRealm(r.front()->realm())) {
-                ReportOutOfMemory(cx);
-                return false;
-            }
-        }
-        return true;
-    }
 
     /*
      * Given that parseQuery or omittedQuery has been called, prepare to match
@@ -4759,6 +4765,160 @@ Debugger::findScripts(JSContext* cx, unsigned argc, Value* vp)
         if (!scriptObject)
             return false;
         result->setDenseElement(wasmStart + i, ObjectValue(*scriptObject));
+    }
+
+    args.rval().setObject(*result);
+    return true;
+}
+
+/*
+ * A class for searching sources for 'findSources'.
+ */
+class MOZ_STACK_CLASS Debugger::SourceQuery : public Debugger::QueryBase
+{
+  public:
+    using SourceSet = JS::GCHashSet<JSObject*,
+                                    js::MovableCellHasher<JSObject*>,
+                                    ZoneAllocPolicy>;
+
+    SourceQuery(JSContext* cx, Debugger* dbg)
+      : QueryBase(cx, dbg),
+        sources(cx, SourceSet(cx->zone()))
+    {}
+
+    bool findSources() {
+        if (!matchAllDebuggeeGlobals())
+            return false;
+
+        Realm* singletonRealm = nullptr;
+        if (realms.count() == 1)
+            singletonRealm = realms.all().front();
+
+        // Search each realm for debuggee scripts.
+        MOZ_ASSERT(sources.empty());
+        oom = false;
+        IterateScripts(cx, singletonRealm, this, considerScript);
+        IterateLazyScripts(cx, singletonRealm, this, considerLazyScript);
+        if (oom) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+
+        // TODO: Until such time that wasm modules are real ES6 modules,
+        // unconditionally consider all wasm toplevel instance scripts.
+        for (WeakGlobalObjectSet::Range r = debugger->allDebuggees(); !r.empty(); r.popFront()) {
+            for (wasm::Instance* instance : r.front()->realm()->wasm.instances()) {
+                consider(instance->object());
+                if (oom) {
+                    ReportOutOfMemory(cx);
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    Handle<SourceSet> foundSources() const {
+        return sources;
+    }
+
+  private:
+    Rooted<SourceSet> sources;
+
+    static void considerScript(JSRuntime* rt, void* data, JSScript* script,
+                               const JS::AutoRequireNoGC& nogc) {
+        SourceQuery* self = static_cast<SourceQuery*>(data);
+        self->consider(script, nogc);
+    }
+
+    static void considerLazyScript(JSRuntime* rt, void* data, LazyScript* lazyScript,
+                                   const JS::AutoRequireNoGC& nogc) {
+        SourceQuery* self = static_cast<SourceQuery*>(data);
+        self->consider(lazyScript, nogc);
+    }
+
+    void consider(JSScript* script, const JS::AutoRequireNoGC& nogc) {
+        if (oom || script->selfHosted())
+            return;
+        Realm* realm = script->realm();
+        if (!realms.has(realm))
+            return;
+
+        if (!script->sourceObject())
+            return;
+
+        ScriptSourceObject* source =
+            &UncheckedUnwrap(script->sourceObject())->as<ScriptSourceObject>();
+        if (!sources.put(source))
+            oom = true;
+    }
+
+    void consider(LazyScript* lazyScript, const JS::AutoRequireNoGC& nogc) {
+        if (oom)
+            return;
+        Realm* realm = lazyScript->realm();
+        if (!realms.has(realm))
+            return;
+
+        // If the script is already delazified, it should already be handled.
+        if (lazyScript->maybeScript())
+            return;
+
+        ScriptSourceObject* source = &lazyScript->sourceObject();
+        if (!sources.put(source))
+            oom = true;
+    }
+
+    void consider(WasmInstanceObject* instanceObject) {
+        if (oom)
+            return;
+
+        if (!sources.put(instanceObject))
+            oom = true;
+    }
+};
+
+static inline DebuggerSourceReferent
+AsSourceReferent(JSObject* obj)
+{
+    if (obj->is<ScriptSourceObject>()) {
+        return AsVariant(&obj->as<ScriptSourceObject>());
+    }
+    return AsVariant(&obj->as<WasmInstanceObject>());
+}
+
+/* static */ bool
+Debugger::findSources(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "findSources", args, dbg);
+
+    if (gc::GCRuntime::temporaryAbortIfWasmGc(cx)) {
+        JS_ReportErrorASCII(cx, "API temporarily unavailable under wasm gc");
+        return false;
+    }
+
+    SourceQuery query(cx, dbg);
+    if (!query.findSources())
+        return false;
+
+    Handle<SourceQuery::SourceSet> sources(query.foundSources());
+
+    size_t resultLength = sources.count();
+    RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, resultLength));
+    if (!result)
+        return false;
+
+    result->ensureDenseInitializedLength(cx, 0, resultLength);
+
+    size_t i = 0;
+    for (auto iter = sources.get().iter(); !iter.done(); iter.next()) {
+        Rooted<DebuggerSourceReferent> sourceReferent(cx, AsSourceReferent(iter.get()));
+        RootedObject sourceObject(cx, dbg->wrapVariantReferent(cx, sourceReferent));
+        if (!sourceObject)
+            return false;
+        result->setDenseElement(i, ObjectValue(*sourceObject));
+        i++;
     }
 
     args.rval().setObject(*result);
@@ -5181,6 +5341,7 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FN("getNewestFrame", Debugger::getNewestFrame, 0, 0),
     JS_FN("clearAllBreakpoints", Debugger::clearAllBreakpoints, 0, 0),
     JS_FN("findScripts", Debugger::findScripts, 1, 0),
+    JS_FN("findSources", Debugger::findSources, 1, 0),
     JS_FN("findObjects", Debugger::findObjects, 1, 0),
     JS_FN("findAllGlobals", Debugger::findAllGlobals, 0, 0),
     JS_FN("makeGlobalObjectReference", Debugger::makeGlobalObjectReference, 1, 0),

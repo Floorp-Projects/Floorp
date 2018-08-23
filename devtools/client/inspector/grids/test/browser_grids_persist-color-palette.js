@@ -23,7 +23,7 @@ add_task(async function() {
   const { inspector, gridInspector, layoutView, toolbox } = await openLayoutView();
   const { document: doc } = gridInspector;
   const { store } = inspector;
-  const cPicker = layoutView.getSwatchColorPickerTooltip();
+  const cPicker = layoutView.swatchColorPickerTooltip;
   const swatch = doc.querySelector(".grid-color-swatch");
 
   info("Scrolling into view of the #grid color swatch.");

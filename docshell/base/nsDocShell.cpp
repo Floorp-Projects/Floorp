@@ -117,7 +117,6 @@
 #include "nsISecurityUITelemetry.h"
 #include "nsISeekableStream.h"
 #include "nsISelectionDisplay.h"
-#include "nsISHContainer.h"
 #include "nsISHEntry.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
@@ -1069,10 +1068,9 @@ nsDocShell::FirePageHideNotificationInternal(bool aIsUnload,
     // If the document is unloading, remove all dynamic subframe entries.
     if (aIsUnload && !aSkipCheckingDynEntries) {
       RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
-      nsCOMPtr<nsISHContainer> container(do_QueryInterface(mOSHE));
-      if (rootSH && container) {
+      if (rootSH && mOSHE) {
         int32_t index = rootSH->Index();
-        rootSH->LegacySHistoryInternal()->RemoveDynEntries(index, container);
+        rootSH->LegacySHistoryInternal()->RemoveDynEntries(index, mOSHE);
       }
     }
 
@@ -3729,13 +3727,10 @@ nsDocShell::GetChildSHEntry(int32_t aChildOffset, nsISHEntry** aResult)
       return rv;
     }
 
-    nsCOMPtr<nsISHContainer> container(do_QueryInterface(mLSHE));
-    if (container) {
-      // Get the child subframe from session history.
-      rv = container->GetChildAt(aChildOffset, aResult);
-      if (*aResult) {
-        (*aResult)->SetLoadType(loadType);
-      }
+    // Get the child subframe from session history.
+    rv = mLSHE->GetChildAt(aChildOffset, aResult);
+    if (*aResult) {
+      (*aResult)->SetLoadType(loadType);
     }
   }
   return rv;
@@ -3752,17 +3747,13 @@ nsDocShell::AddChildSHEntry(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
     /* You get here if you are currently building a
      * hierarchy ie.,you just visited a frameset page
      */
-    nsCOMPtr<nsISHContainer> container(do_QueryInterface(mLSHE, &rv));
-    if (container) {
-      if (NS_FAILED(container->ReplaceChild(aNewEntry))) {
-        rv = container->AddChild(aNewEntry, aChildOffset);
-      }
+    if (NS_FAILED(mLSHE->ReplaceChild(aNewEntry))) {
+      rv = mLSHE->AddChild(aNewEntry, aChildOffset);
     }
   } else if (!aCloneRef) {
     /* This is an initial load in some subframe.  Just append it if we can */
-    nsCOMPtr<nsISHContainer> container(do_QueryInterface(mOSHE, &rv));
-    if (container) {
-      rv = container->AddChild(aNewEntry, aChildOffset);
+    if (mOSHE) {
+      rv = mOSHE->AddChild(aNewEntry, aChildOffset);
     }
   } else {
     rv = AddChildSHEntryInternal(aCloneRef, aNewEntry, aChildOffset,
@@ -3997,18 +3988,17 @@ nsDocShell::GetDeviceSizeIsPageSize(bool* aValue)
 void
 nsDocShell::ClearFrameHistory(nsISHEntry* aEntry)
 {
-  nsCOMPtr<nsISHContainer> shcontainer = do_QueryInterface(aEntry);
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
-  if (!rootSH || !shcontainer) {
+  if (!rootSH || !aEntry) {
     return;
   }
 
   int32_t count = 0;
-  shcontainer->GetChildCount(&count);
+  aEntry->GetChildCount(&count);
   AutoTArray<nsID, 16> ids;
   for (int32_t i = 0; i < count; ++i) {
     nsCOMPtr<nsISHEntry> child;
-    shcontainer->GetChildAt(i, getter_AddRefs(child));
+    aEntry->GetChildAt(i, getter_AddRefs(child));
     if (child) {
       ids.AppendElement(child->DocshellID());
     }
@@ -12044,15 +12034,14 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
       root != static_cast<nsIDocShellTreeItem*>(this)) {
     // This is a subframe
     entry = mOSHE;
-    nsCOMPtr<nsISHContainer> shContainer(do_QueryInterface(entry));
-    if (shContainer) {
+    if (entry) {
       int32_t childCount = 0;
-      shContainer->GetChildCount(&childCount);
+      entry->GetChildCount(&childCount);
       // Remove all children of this entry
       for (int32_t i = childCount - 1; i >= 0; i--) {
         nsCOMPtr<nsISHEntry> child;
-        shContainer->GetChildAt(i, getter_AddRefs(child));
-        shContainer->RemoveChild(child);
+        entry->GetChildAt(i, getter_AddRefs(child));
+        entry->RemoveChild(child);
       }
       entry->AbandonBFCacheEntry();
     }

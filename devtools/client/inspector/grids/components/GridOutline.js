@@ -195,17 +195,16 @@ class GridOutline extends PureComponent {
    * Displays a message text "Cannot show outline for this grid".
    */
   renderCannotShowOutlineText() {
-    return dom.div(
-      {
-        className: "grid-outline-text"
-      },
-      dom.span(
-        {
-          className: "grid-outline-text-icon",
-          title: getStr("layout.cannotShowGridOutline.title")
-        }
-      ),
-      getStr("layout.cannotShowGridOutline")
+    return (
+      dom.div({ className: "grid-outline-text" },
+        dom.span(
+          {
+            className: "grid-outline-text-icon",
+            title: getStr("layout.cannotShowGridOutline.title")
+          }
+        ),
+        getStr("layout.cannotShowGridOutline")
+      )
     );
   }
 
@@ -296,8 +295,8 @@ class GridOutline extends PureComponent {
    */
   renderGridCell(id, gridFragmentIndex, x, y, rowNumber, columnNumber, color,
     gridAreaName, width, height) {
-    return dom.rect(
-      {
+    return (
+      dom.rect({
         key: `${id}-${rowNumber}-${columnNumber}`,
         className: "grid-outline-cell",
         "data-grid-area-name": gridAreaName,
@@ -312,33 +311,35 @@ class GridOutline extends PureComponent {
         fill: "none",
         onMouseEnter: this.onHighlightCell,
         onMouseLeave: this.onHighlightCell,
-      }
+      })
     );
   }
 
   renderGridOutline(grid) {
     const { color } = grid;
 
-    return dom.g(
-      {
-        id: "grid-outline-group",
-        className: "grid-outline-group",
-        style: { color }
-      },
-      this.renderGrid(grid)
+    return (
+      dom.g(
+        {
+          id: "grid-outline-group",
+          className: "grid-outline-group",
+          style: { color }
+        },
+        this.renderGrid(grid)
+      )
     );
   }
 
   renderGridOutlineBorder(borderWidth, borderHeight, color) {
-    return dom.rect(
-      {
+    return (
+      dom.rect({
         key: "border",
         className: "grid-outline-border",
         x: 0,
         y: 0,
         width: borderWidth,
         height: borderHeight
-      }
+      })
     );
   }
 

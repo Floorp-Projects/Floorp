@@ -56,6 +56,47 @@
   margin-inline-start: -3px;
 }
 
+/* Layout Properties: Common styles used for the Box Model and Flexbox Properties */
+
+.layout-properties-header {
+  padding: 2px 3px;
+  -moz-user-select: none;
+}
+
+.layout-properties-expander {
+  vertical-align: middle;
+  display: inline-block;
+  margin-inline-start: 2px;
+  margin-inline-end: 1px;
+}
+
+.layout-properties-wrapper {
+  column-width: 250px;
+  column-gap: 20px;
+  column-rule: 1px solid var(--theme-splitter-color);
+}
+
+.layout-properties-wrapper .computed-property-view {
+  padding-inline-start: 20px;
+}
+
+.layout-properties-wrapper .computed-property-name-container {
+  flex: 1;
+}
+
+.layout-properties-wrapper .computed-property-value-container {
+  flex: 1;
+  display: block;
+}
+
+/**
+ * Flex Container Properties
+ */
+
+#flex-container-properties {
+  margin: 0 0 5px 0;
+}
+
 /**
  * Grid Container
  */

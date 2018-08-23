@@ -17,7 +17,6 @@
 #include "nsIWebNavigation.h"
 #include "nsISHistory.h"
 #include "nsISHEntry.h"
-#include "nsISHContainer.h"
 #include "nsIWindowWatcher.h"
 #include "mozilla/Services.h"
 #include "nsIXULWindow.h"
@@ -233,15 +232,13 @@ MarkSHEntry(nsISHEntry* aSHEntry, bool aCleanupJS)
     MarkDocShell(child, aCleanupJS);
   }
 
-  nsCOMPtr<nsISHContainer> shCont = do_QueryInterface(aSHEntry);
   int32_t count;
-  shCont->GetChildCount(&count);
+  aSHEntry->GetChildCount(&count);
   for (i = 0; i < count; ++i) {
     nsCOMPtr<nsISHEntry> childEntry;
-    shCont->GetChildAt(i, getter_AddRefs(childEntry));
+    aSHEntry->GetChildAt(i, getter_AddRefs(childEntry));
     MarkSHEntry(childEntry, aCleanupJS);
   }
-
 }
 
 void

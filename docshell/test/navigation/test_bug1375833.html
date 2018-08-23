@@ -50,9 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375833
       is(newFrameDocShellId, frameDocShellId, "check docshell ID remains after reload");
 
       let entry = shistory.legacySHistory.getEntryAtIndex(shistory.index, false);
-      let frameEntry = SpecialPowers.wrap(entry)
-                       .QueryInterface(SpecialPowers.Ci.nsISHContainer)
-                       .GetChildAt(0);
+      let frameEntry = entry.GetChildAt(0);
       is(String(frameEntry.docshellID), frameDocShellId, "check newly added shentry uses the same docshell ID");
 
       webNav.goBack();
