@@ -541,7 +541,10 @@ ExtensionPolicyService::CheckWindow(nsPIDOMWindowOuter* aWindow)
 void
 ExtensionPolicyService::CheckContentScripts(const DocInfo& aDocInfo, bool aIsPreload)
 {
-  nsCOMPtr<nsPIDOMWindowInner> win = aDocInfo.GetWindow()->GetCurrentInnerWindow();
+  nsCOMPtr<nsPIDOMWindowInner> win;
+  if (!aIsPreload) {
+    win = aDocInfo.GetWindow()->GetCurrentInnerWindow();
+  }
 
   for (auto iter = mExtensions.Iter(); !iter.Done(); iter.Next()) {
     if (!win->IsCurrentInnerWindow()) {
