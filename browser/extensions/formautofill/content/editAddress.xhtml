@@ -57,15 +57,12 @@
         <input id="postal-code" type="text" required="required"/>
         <span class="label-text"/>
       </label>
-      <div id="country-container">
-        <label id="country-label">
-          <select id="country" required="required">
-            <option/>
-          </select>
-          <span data-localization="country" class="label-text"/>
-        </label>
-        <p id="country-warning-message" data-localization="countryWarningMessage2"/>
-      </div>
+      <label id="country-container">
+        <select id="country" required="required">
+          <option/>
+        </select>
+        <span data-localization="country" class="label-text"/>
+      </label>
       <label id="tel-container">
         <input id="tel" type="tel"/>
         <span data-localization="tel" class="label-text"/>
@@ -79,6 +76,7 @@
   <div id="controls-container">
     <button id="cancel" data-localization="cancelBtnLabel"/>
     <button id="save" disabled="disabled" data-localization="saveBtnLabel"/>
+    <span id="country-warning-message" data-localization="countryWarningMessage2"/>
   </div>
   <script type="application/javascript"><![CDATA[
     "use strict";

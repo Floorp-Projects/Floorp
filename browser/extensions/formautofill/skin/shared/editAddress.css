@@ -18,8 +18,7 @@
 #additional-name-container,
 #address-level1-container,
 #postal-code-container,
-#country-label,
-#country-warning-message,
+#country-container,
 #family-name-container,
 #organization-container,
 #address-level2-container,
@@ -95,10 +94,8 @@
 
 /* End name field rules */
 
-
 #name-container,
 #street-address-container,
-#country-container,
 #email-container {
   flex: 0 1 100%;
 }
@@ -115,4 +112,8 @@
   text-align: start;
   color: #737373;
   padding-inline-start: 1em;
+}
+
+:root:not([subdialog]) #country-warning-message {
+  display: none;
 }
