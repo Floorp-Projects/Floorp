@@ -1896,9 +1896,9 @@ private:
 
     RefPtr<IDWriteFactory>      mFactory;
 
-    nsCOMPtr<nsIFile>             mFontDir;
-    nsCOMPtr<nsISimpleEnumerator> mEntries;
-    nsCOMPtr<nsISupports>         mCurrent;
+    nsCOMPtr<nsIFile>                mFontDir;
+    nsCOMPtr<nsIDirectoryEnumerator> mEntries;
+    nsCOMPtr<nsISupports>            mCurrent;
 };
 
 BundledFontFileEnumerator::BundledFontFileEnumerator(IDWriteFactory *aFactory,
