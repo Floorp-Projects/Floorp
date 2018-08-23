@@ -167,7 +167,7 @@ function promiseNewEngine(basename) {
   info("Waiting for engine to be added: " + basename);
   return new Promise((resolve, reject) => {
     let url = getRootDirectory(gTestPath) + basename;
-    Services.search.addEngine(url, null, "", false, {
+    Services.search.addEngine(url, "", false, {
       onSuccess(engine) {
         info("Search engine added: " + basename);
         registerCleanupFunction(() => {
