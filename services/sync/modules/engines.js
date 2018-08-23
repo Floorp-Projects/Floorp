@@ -493,14 +493,7 @@ EngineManager.prototype = {
       return engines;
     }
 
-    let engine = this._engines[name];
-    if (!engine) {
-      this._log.debug("Could not get engine: " + name);
-      if (Object.keys) {
-        this._log.debug("Engines are: " + JSON.stringify(Object.keys(this._engines)));
-      }
-    }
-    return engine;
+    return this._engines[name]; // Silently returns undefined for unknown names.
   },
 
   getAll() {
