@@ -9,8 +9,9 @@ const {
   PAGE_SELECTED,
 } = require("../constants");
 
-function UiState(locations = []) {
+function UiState(locations = [], debugTargetCollapsibilities = {}) {
   return {
+    debugTargetCollapsibilities,
     networkLocations: locations,
     selectedPage: null,
   };

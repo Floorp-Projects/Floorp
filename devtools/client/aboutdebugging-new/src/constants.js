@@ -30,6 +30,15 @@ const DEBUG_TARGETS = {
   WORKER: "WORKER",
 };
 
+const DEBUG_TARGET_PANE = {
+  INSTALLED_EXTENSION: "installedExtension",
+  OTHER_WORKER: "otherWorker",
+  SERVICE_WORKER: "serviceWorker",
+  SHARED_WORKER: "sharedWorker",
+  TAB: "tab",
+  TEMPORARY_EXTENSION: "temporaryExtension",
+};
+
 const PAGES = {
   THIS_FIREFOX: "this-firefox",
   CONNECT: "connect",
@@ -49,6 +58,7 @@ const SERVICE_WORKER_STATUSES = {
 // flatten constants
 module.exports = Object.assign({}, {
   DEBUG_TARGETS,
+  DEBUG_TARGET_PANE,
   PAGES,
   SERVICE_WORKER_FETCH_STATES,
   SERVICE_WORKER_STATUSES,
