@@ -844,7 +844,6 @@
                 "description": "Whether the tab should be active. Does not affect whether the window is focused (see $(ref:windows.update))."
               },
               "highlighted": {
-                "unsupported": true,
                 "type": "boolean",
                 "optional": true,
                 "description": "Adds or removes the tab from the current selection."
