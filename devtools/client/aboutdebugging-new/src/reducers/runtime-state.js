@@ -6,13 +6,10 @@
 
 const {
   CONNECT_RUNTIME_SUCCESS,
-  DEBUG_TARGETS,
   DISCONNECT_RUNTIME_SUCCESS,
   REQUEST_EXTENSIONS_SUCCESS,
   REQUEST_TABS_SUCCESS,
   REQUEST_WORKERS_SUCCESS,
-  SERVICE_WORKER_FETCH_STATES,
-  SERVICE_WORKER_STATUSES,
 } = require("../constants");
 
 function RuntimeState() {
@@ -46,63 +43,12 @@ function runtimeReducer(state = RuntimeState(), action) {
     }
     case REQUEST_WORKERS_SUCCESS: {
       const { otherWorkers, serviceWorkers, sharedWorkers } = action;
-      return Object.assign({}, state, {
-        otherWorkers: toWorkerComponentData(otherWorkers),
-        serviceWorkers: toWorkerComponentData(serviceWorkers, true),
-        sharedWorkers: toWorkerComponentData(sharedWorkers),
-      });
+      return Object.assign({}, state, { otherWorkers, serviceWorkers, sharedWorkers });
     }
 
     default:
       return state;
   }
-}
-
-function getServiceWorkerStatus(isActive, isRunning) {
-  if (isActive && isRunning) {
-    return SERVICE_WORKER_STATUSES.RUNNING;
-  } else if (isActive) {
-    return SERVICE_WORKER_STATUSES.STOPPED;
-  }
-  // We cannot get service worker registrations unless the registration is in
-  // ACTIVE state. Unable to know the actual state ("installing", "waiting"), we
-  // display a custom state "registering" for now. See Bug 1153292.
-  return SERVICE_WORKER_STATUSES.REGISTERING;
-}
-
-function toWorkerComponentData(workers, isServiceWorker) {
-  return workers.map(worker => {
-    const type = DEBUG_TARGETS.WORKER;
-    const id = worker.workerTargetActor;
-    const icon = "chrome://devtools/skin/images/debugging-workers.svg";
-    let { fetch, name, registrationActor, scope } = worker;
-    let isActive = false;
-    let isRunning = false;
-    let status = null;
-
-    if (isServiceWorker) {
-      fetch = fetch ? SERVICE_WORKER_FETCH_STATES.LISTENING
-                    : SERVICE_WORKER_FETCH_STATES.NOT_LISTENING;
-      isActive = worker.active;
-      isRunning = !!worker.workerTargetActor;
-      status = getServiceWorkerStatus(isActive, isRunning);
-    }
-
-    return {
-      name,
-      icon,
-      id,
-      type,
-      details: {
-        fetch,
-        isActive,
-        isRunning,
-        registrationActor,
-        scope,
-        status,
-      },
-    };
-  });
 }
 
 module.exports = {
