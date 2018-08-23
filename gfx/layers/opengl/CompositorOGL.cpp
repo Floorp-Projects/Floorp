@@ -1061,6 +1061,10 @@ CompositorOGL::GetShaderProgramFor(const ShaderConfigOGL &aConfig)
   ProgramProfileOGL profile = ProgramProfileOGL::GetProfileFor(aConfig);
   ShaderProgramOGL *shader = new ShaderProgramOGL(gl(), profile);
   if (!shader->Initialize()) {
+    gfxCriticalError() << "Shader compilation failure, cfg:"
+                       << " features: " << gfx::hexa(aConfig.mFeatures)
+                       << " multiplier: " << aConfig.mMultiplier
+                       << " op: " << aConfig.mCompositionOp;
     delete shader;
     return nullptr;
   }
@@ -1314,6 +1318,10 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
   ApplyPrimitiveConfig(config, aGeometry);
 
   ShaderProgramOGL *program = GetShaderProgramFor(config);
+  MOZ_DIAGNOSTIC_ASSERT(program);
+  if (!program) {
+    return;
+  }
   ActivateProgram(program);
   program->SetProjectionMatrix(mProjMatrix);
   program->SetLayerTransform(aTransform);

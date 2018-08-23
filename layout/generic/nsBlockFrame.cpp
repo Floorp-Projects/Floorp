@@ -4802,8 +4802,7 @@ nsBlockFrame::PlaceLine(BlockReflowInput& aState,
   if (aState.mBelowCurrentLineFloats.NotEmpty()) {
     // Reflow the below-current-line floats, which places on the line's
     // float list.
-    aState.PlaceBelowCurrentLineFloats(aState.mBelowCurrentLineFloats, aLine);
-    aLine->AppendFloats(aState.mBelowCurrentLineFloats);
+    aState.PlaceBelowCurrentLineFloats(aLine);
   }
 
   // When a line has floats, factor them into the combined-area
