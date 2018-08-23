@@ -7,14 +7,13 @@ use api::{ImageRendering, LayoutRect, LayoutSize, LayoutPoint, LayoutVector2D, L
 use api::{BoxShadowClipMode, LayoutToWorldScale, LineOrientation, LineStyle, LayoutTransform};
 use border::{ensure_no_corner_overlap};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
-use clip_scroll_tree::{CoordinateSystemId, SpatialNodeIndex};
+use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, SpatialNodeIndex};
 use ellipse::Ellipse;
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use gpu_types::BoxShadowStretchMode;
 use prim_store::{BrushClipMaskKind, ClipData, ImageMaskData};
 use render_task::to_cache_size;
 use resource_cache::{ImageRequest, ResourceCache};
-use spatial_node::SpatialNode;
 use std::u32;
 use util::{extract_inner_rect_safe, pack_as_float, recycle_vec, MatrixHelpers};
 
@@ -449,7 +448,7 @@ impl ClipStore {
         local_prim_rect: LayoutRect,
         local_prim_clip_rect: LayoutRect,
         spatial_node_index: SpatialNodeIndex,
-        spatial_nodes: &[SpatialNode],
+        clip_scroll_tree: &ClipScrollTree,
         gpu_cache: &mut GpuCache,
         resource_cache: &mut ResourceCache,
         device_pixel_scale: DevicePixelScale,
@@ -461,6 +460,7 @@ impl ClipStore {
             None => return None,
         };
         let mut current_local_clip_rect = local_prim_clip_rect;
+        let spatial_nodes = &clip_scroll_tree.spatial_nodes;
 
         // Walk the clip chain to build local rects, and collect the
         // smallest possible local clip area.
@@ -489,26 +489,16 @@ impl ClipStore {
                                  ref_spatial_node.coordinate_system_relative_offset;
                     Some(ClipSpaceConversion::Offset(offset))
                 } else {
-                    // TODO(gw): We still have issues with clip nodes and primitives where
-                    //           there is a perspective transform. We intend to fix these
-                    //           cases as a follow up.
-                    let relative_transform = ref_spatial_node
-                        .world_content_transform
-                        .to_transform()
-                        .inverse()
-                        .map(|inv| {
-                            inv.pre_mul(&clip_spatial_node.world_content_transform.to_transform())
-                        });
-                    let inv_relative_transform = relative_transform
-                        .and_then(|rt| rt.inverse());
-                    match (relative_transform, inv_relative_transform) {
-                        (Some(relative_transform), Some(inv_relative_transform)) => {
-                            Some(ClipSpaceConversion::Transform(relative_transform, inv_relative_transform))
-                        }
-                        _ => {
-                            None
-                        }
-                    }
+                    let xf = clip_scroll_tree.get_relative_transform(
+                        clip_node.spatial_node_index,
+                        spatial_node_index,
+                    );
+
+                    xf.and_then(|xf| {
+                        xf.inverse().map(|inv| {
+                            ClipSpaceConversion::Transform(xf, inv)
+                        })
+                    })
                 };
 
                 // If we can convert spaces, try to reduce the size of the region
