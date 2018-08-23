@@ -508,6 +508,13 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
       // as we can't rely on future network events to do it
       mSession->ConnectPushedStream(this);
       mOpenGenerated = 1;
+
+      // if the "mother stream" had TRR, this one is a TRR stream too!
+      RefPtr<nsHttpConnectionInfo> ci(Transaction()->ConnectionInfo());
+      if (ci && ci->GetTrrUsed()) {
+        mSession->IncrementTrrCounter();
+      }
+
       return NS_OK;
     }
   }
