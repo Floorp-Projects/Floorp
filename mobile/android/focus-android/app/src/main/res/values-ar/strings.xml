@@ -37,6 +37,8 @@
   <string name="preference_category_general">عام</string>
   <string name="preference_category_data_collection_use">تجميل البيانات واستخدامها</string>
   <string name="preference_category_search">البحث</string>
+  <string name="preference_show_search_suggestions">اجلب اقتراحات البحث</string>
+  <string name="preference_show_search_suggestions_summary">سيُرسل %1$s ما تكتبه في شريط العنوان إلى محرك البحث الذي فضّله</string>
   <string name="preference_search_engine_default">المبدئي</string>
   <string name="preference_state_on">مفعّل</string>
   <string name="preference_state_off">معطّل</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">لا</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">احجب الكعكات من الأطراف الثالثة فحسب</string>
   <string name="preference_privacy_should_block_cookies_yes_option">نعم</string>
+  <string name="preference_security_biometric">استخدم البصمة لإلغاء قفل التطبيق</string>
+  <string name="preference_security_biometric_summary">يمكن للبصمة إلغاء قفل %1$s إن كان مفتوحًا في التطبيق أحد العناوين. سيُفعّل وضع التخفّي.</string>
   <string name="preference_privacy_secure_mode">التخفّي</string>
-  <string name="preference_privacy_stealth_summary">أخفِ صفحات الوب عند الانتقال بين التطبيقات</string>
+  <string name="preference_privacy_stealth_summary">أخفِ صفحات الوب عند الانتقال بين التطبيقات وامنع التقاط الشاشة.</string>
+  <string name="preference_category_security">الأمان</string>
   <string name="preference_category_performance">الأداء</string>
   <string name="preference_performance_block_webfonts">احجب خطوط الوب</string>
   <string name="preference_performance_block_webfonts_summary">قد يسبب اختفاء بعض الأيقونات أو الصور</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ أضف محرك بحث آخر</string>
   <string name="preference_search_remove_title">أزِل محركات البحث</string>
   <string name="preference_search_remove">أزِل</string>
+  <string name="preference_homescreen_tips">اعرض الفوائد في شاشة البداية</string>
   <string name="action_option_add_search_engine">أضف محرك بحث</string>
   <string name="search_add_manually_name_hint">اسم محرك البحث</string>
   <string name="search_add_manually_string">نص البحث المستخدم</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">تصفّح للوراء</string>
   <string name="content_description_stop">أوقف تحميل الموقع</string>
   <string name="content_description_customtab_exit">ارجع للتطبيق السابق</string>
+  <string name="content_description_trackers_blocked">عدد المتعقّبات المحجوبة</string>
   <string name="content_description_blocking_switch">احجب المتعقّبات</string>
   <string name="your_rights">حقوقك</string>
   <string name="external_app_prompt_title">افتح الرابط في تطبيق آخر</string>
@@ -160,8 +167,8 @@
   <string name="firstrun_defaultbrowser_text2">انتقل بالتصفّح الخاص إلى المستوى التالي. احجب الإعلانات وغيرها من المحتويات التي تتعقبك أثناء التصفح وتأخذ من وقت تحميل الصفحات.</string>
   <string name="firstrun_search_title">تبحثُ بأسلوبك أنت</string>
   <string name="firstrun_search_text">أتبحث عن شيء مختلف؟ اختر محرّك بحث آخر ليكون المبدئي من الإعدادات.</string>
-  <string name="firstrun_shortcut_title">أضف اختصارات إلى الشاشة الرئيسية</string>
-  <string name="firstrun_shortcut_text">عُد إلى مواقعك المفضلة في %1$s بسرعة. اختر ”أضف إلى الشاشة الرئيسية“ من قائمة %1$s.</string>
+  <string name="firstrun_shortcut_title">أضف اختصارات إلى شاشة البداية</string>
+  <string name="firstrun_shortcut_text">عُد إلى مواقعك المفضلة في %1$s بسرعة. اختر ”أضف إلى شاشة البداية“ من قائمة %1$s.</string>
   <string name="firstrun_privacy_title">اجعل من الخصوصية عادة</string>
   <string name="firstrun_privacy_text">اضبط %1$s ليكون المتصفّح المبدئي وتمتع بفوائد التصفح الخاص عندما تفتح موقعا من تطبيق آخر.</string>
   <string name="firstrun_close_button">حسنًا، فهمت</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">كلمة السر</string>
   <string name="preference_performance_request_desktop_site">اطلب موقع سطح المكتب</string>
   <string name="custom_tab_copy_url_action">نُسِخَ المسار</string>
+  <string name="preference_advanced_summary">أدوات المطوّرين</string>
+  <string name="preference_category_advanced">متقدم</string>
+  <string name="preference_remote_debugging">التنقيح عن بعد عبر واي-فاي/USB</string>
+  <string name="biometric_auth_title">ألغِ قفل %1$s</string>
+  <string name="biometric_auth_description">المس مجسّ البصمة للمتابعة.</string>
+  <string name="biometric_auth_new_session">جلسة جديدة</string>
+  <string name="biometric_auth_image_description">أيقونة البصمة</string>
+  <string name="biometric_auth_not_recognized_error">فشل التعرف على البصمة. أعِد المحاولة.</string>
+  <string name="biometric_auth_moved_too_quickly">حرّكت إصبعك بسرعة. أعِد المحاولة.</string>
+  <string name="enable_search_suggestion_title">أتريد تفعيل اقتراحات البحث؟</string>
+  <string name="enable_search_suggestion_subtitle">لتجلب اقتراحات البحث سيكون على %1$s إرسال ما تكتبه في شريط العنوان إلى محرك البحث الذي اخترته. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">اطّلع على المزيد</string>
+  <string name="enable_search_suggestions_no">لا</string>
+  <string name="enable_search_suggestions_yes">نعم</string>
+  <string name="no_suggestions_message">لا تعرض بعض محركات البحث أية اقتراحات.</string>
+  <string name="dismiss_no_suggestions_prompt_button">أهمِل</string>
+  <string name="tip_disable_tracking_protection">أترى أن سلوك الموقع غريب؟\nجرّب تعطيل الحماية من التعقّب</string>
+  <string name="tip_add_to_homescreen">اصنع زرًا لتفتح المواقع التي تزورها باستمرار بسرعة\nالقائمة &gt; أضِف إلى شاشة البداية</string>
+  <string name="tip_set_default_browser">افتح كل الروابط في %1$s\nاضبط %1$s ليكون المتصفح المبدئي</string>
+  <string name="tip_autocomplete_url">أكمِل تلقائيًا عناوين المواقع التي تزورها باستمرار\nاضغط مطوّلًا على أي عنوان في شريط العنوان</string>
+  <string name="tip_open_in_new_tab">افتح الرابط في لسان جديد\nانقر مطوّلًا على أي رابط في الصفحة</string>
+  <string name="tip_request_desktop">أتفضّل عرض نسخة سطح المكتب؟\nالقائمة &gt; اطلب موقع سطح المكتب</string>
 </resources>

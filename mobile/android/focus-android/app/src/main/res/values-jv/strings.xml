@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Batal</string>
+  <string name="action_ok">OKÉ</string>
+  <string name="action_save">Simpen</string>
+  <string name="urlbar_hint">Golèk utawa lebokaké alamat</string>
+  <string name="feedback_erase">Riwayat dlajahan sampéyan wis dibusak.</string>
+  <string name="search_hint">Golèk %1$s</string>
+  <string name="menu_share">Dumké…</string>
+  <string name="menu_open_with_default_browser2">Bukak ing %1$s</string>
+  <string name="menu_open_with_a_browser2">Bukak ing…</string>
+  <string name="menu_whats_new">Kabar Anyar</string>
+  <string name="menu_settings">Setèlan</string>
+  <string name="menu_about">Ngenani</string>
+  <string name="menu_help">Pitulung</string>
+  <string name="menu_rights">Hak Sampéyan</string>
+  <string name="menu_trackers_blocked_title">Palacak kablokir</string>
+  <string name="share_dialog_title">Dumké liwat</string>
+  <string name="notification_erase_text">Busak riwayat dlajahan</string>
+  <string name="notification_action_open">Bukak</string>
+  <string name="notification_action_erase_and_open">Busak lan Bukak</string>
+  <string name="shortcut_erase_short_label">Busak</string>
+  <string name="shortcut_erase_long_label">Busak riwayat dlajahan</string>
+  <string name="preference_category_general">Umum</string>
+  <string name="preference_category_search">Golèk</string>
+  <string name="preference_autocomplete_menu_remove">Busak</string>
+  <string name="preference_autocomplete_action_remove_content_description">Busak</string>
+  <string name="preference_language">Basa</string>
+  <string name="preference_about">Ngenani %1$s</string>
+  <string name="search_add_manually_name_hint">Jeneng mesin panggolèk</string>
+  <string name="search_add_manually_save">Simpen</string>
+  <string name="content_description_dismiss_input">Singkirké</string>
+  <string name="download_dialog_action_download">Undhuh</string>
+  <string name="contextmenu_link_share">Dumké pranala</string>
+  <string name="contextmenu_image_share">Dumké gambar</string>
+  <string name="contextmenu_image_save">Simpen gambar</string>
+  <string name="contextmenu_open_in_new_tab">Bukak pranala ing tab anyar</string>
+  <string name="firstrun_close_button">Oké, mudheng!</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="download_firefox">Undhuh Firefox</string>
+  <string name="gv_prompt_username_hint">Jeneng Panganggo</string>
+  <string name="http_auth_dialog_username">Jeneng Panganggo</string>
+</resources>

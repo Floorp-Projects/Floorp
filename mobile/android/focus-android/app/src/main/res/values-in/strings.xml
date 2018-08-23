@@ -37,6 +37,7 @@
   <string name="preference_category_general">Umum</string>
   <string name="preference_category_data_collection_use">Pengumpulan Data &amp; Penggunaan</string>
   <string name="preference_category_search">Cari</string>
+  <string name="preference_show_search_suggestions">Dapatkan saran pencarian</string>
   <string name="preference_search_engine_default">Baku</string>
   <string name="preference_state_on">Aktif</string>
   <string name="preference_state_off">Nonaktif</string>
@@ -78,7 +79,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Hanya blokir kuki pihak ke-3</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ya</string>
   <string name="preference_privacy_secure_mode">Mode Siluman</string>
-  <string name="preference_privacy_stealth_summary">Sembunyikan laman web saat berpindah aplikasi</string>
+  <string name="preference_category_security">Keamanan</string>
   <string name="preference_category_performance">Kinerja</string>
   <string name="preference_performance_block_webfonts">Blokir fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
@@ -200,4 +201,12 @@
   <string name="http_auth_dialog_password">Sandi</string>
   <string name="preference_performance_request_desktop_site">Minta situs desktop</string>
   <string name="custom_tab_copy_url_action">URL tersalin</string>
+  <string name="preference_remote_debugging">Pengawakutuan jarak jauh melalui USB/Wi-Fi</string>
+  <string name="biometric_auth_new_session">Sesi Baru</string>
+  <string name="biometric_auth_image_description">Ikon sidik jari</string>
+  <string name="biometric_auth_not_recognized_error">Sidik jari tidak dikenali. Coba lagi.</string>
+  <string name="biometric_auth_moved_too_quickly">Jari bergerak terlalu cepat. Coba lagi.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Pelajari lebih lanjut</string>
+  <string name="enable_search_suggestions_no">Tidak</string>
+  <string name="enable_search_suggestions_yes">Ya</string>
 </resources>

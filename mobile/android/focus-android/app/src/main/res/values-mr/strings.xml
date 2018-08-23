@@ -38,12 +38,25 @@
   <string name="preference_category_data_collection_use">माहिती संकलन आणि वापर</string>
   <string name="preference_category_search">शोधा</string>
   <string name="preference_show_search_suggestions">शोध सूचना मिळवा</string>
+  <string name="preference_show_search_suggestions_summary">आपण जे पत्ता पट्टी मध्ये टाईप कराल ते %1$s आपल्या शोध इंजिनला पाठवेल</string>
   <string name="preference_search_engine_default">पूर्वनिर्धारीत</string>
   <string name="preference_state_on">चालू</string>
   <string name="preference_state_off">बंद</string>
   <string name="preference_subitem_autocomplete">URL स्वयंपूर्ण</string>
   <string name="preference_switch_autocomplete">स्वयंपूर्ण</string>
+  <string name="preference_category_autocomplete_preinstalled">पूर्वनिर्धारित URL यादी</string>
+  <string name="preference_autocomplete_preinstalled_summary">450 हुन अधिक विख्यात URL %1$s ने स्वयंपूर्ण करणे सक्षम करा.</string>
+  <string name="preference_category_autocomplete_custom_urls">सानुकूल URLs</string>
+  <string name="preference_autocomplete_subitem_customlist">सानुकूल URLs</string>
+  <string name="preference_autocomplete_action_add">+ सानुकूल URL जोडा</string>
+  <string name="preference_autocomplete_title_add">सानुकूल URL जोडा</string>
+  <string name="custom_autocomplete_quick_add">सानुकूल URL जोडा</string>
+  <string name="preference_category_cookies">कूकीज आणि संकेतस्थळाची माहिती</string>
+  <string name="preference_category_data_choices">माहिती पर्याय</string>
+  <string name="preference_autocomplete_title_remove">सानुकूल URLs काढा</string>
   <string name="preference_autocomplete_learn_more">अधिक जाणून घ्या</string>
+  <string name="preference_autocomplete_custom_summary">सानुकूल स्वयंपूर्ण URLs जोडा आणि व्यवस्थापित करा.</string>
+  <string name="preference_autocomplete_add_title">जोडायची URL</string>
   <string name="preference_autocomplete_add_hint">चिकटवा किंवा URL प्रविष्ट करा</string>
   <string name="preference_autocomplete_add_example2">उदाहरण: mozilla.org</string>
   <string name="preference_autocomplete_add_example">उदाहरण: example.com</string>
@@ -59,15 +72,23 @@
   <string name="preference_privacy_block_analytics">विश्लेषणात्मक ट्रॅकर्स अवरोधित करा</string>
   <string name="preference_privacy_block_analytics_summary">टॅपिंग आणि स्क्रोलिंगसारख्या क्रियाकलाप एकत्रित करण्यासाठी, मोजमापआणि विश्लेषण करण्यासाठी वापरला जातो</string>
   <string name="preference_privacy_block_social">सामाजिक ट्रॅकर अवरोधित करा</string>
+  <string name="preference_privacy_block_social_summary">आपल्या भेटींचा मागोवा घेण्यासाठी आणि शेअर बटन सारखी सुविधा दर्शवण्यासाठी साईट वर ठेवले आहे</string>
+  <string name="preference_privacy_block_content">इतर मजकूर ट्रॅकर्स अवरोधित करा</string>
+  <string name="preference_privacy_block_content_summary2">सक्षम करण्यामुळे काही पृष्ठ अनपेक्षितरित्या वागू शकतात</string>
   <string name="preference_privacy_category_cookies">कुकीज अवरोधित करा</string>
   <string name="preference_privacy_should_block_cookies_no_option">नाही</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">केवळ तृतीय-पक्षाच्या कुकीज अवरोधित करा</string>
   <string name="preference_privacy_should_block_cookies_yes_option">हो</string>
+  <string name="preference_security_biometric">अँप उघडण्यासाठी बोटाचा ठसा वापरा</string>
+  <string name="preference_security_biometric_summary">जर एखादी URL आधीच अँप मध्ये उघडली असेल तर आपल्या बोटाचा ठसा %1$s उघडू शकतो. स्टेल्थ चालू होईल.</string>
+  <string name="preference_privacy_secure_mode">स्टेल्थ</string>
+  <string name="preference_privacy_stealth_summary">अँप बदलताना वेब पृष्ठे लपवा आणि स्क्रीनशॉट घेणे आडवा.</string>
   <string name="preference_category_security">सुरक्षा</string>
   <string name="preference_category_performance">कार्यक्षमता</string>
   <string name="preference_performance_block_webfonts">वेब फॉन्ट अवरोधित करा</string>
   <string name="preference_performance_block_webfonts_summary">याचा परिणाम हरवलेल्या प्रतिमा किंवा चिन्हांमध्ये होऊ शकतो</string>
   <string name="preference_performance_block_javascript">JavaScript अवरोधित करा</string>
+  <string name="preference_performance_block_javascript_summary">पृष्ठे जलद लोड होतील पण अनपेक्षित वर्तणूक दाखवू शकतात</string>
   <string name="preference_default_browser2">मुलभूत ब्राउझर म्हणून %1$s वापरा</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">वापर डेटा पाठवा</string>
@@ -80,13 +101,17 @@
   <string name="preference_search_add2">+ अजून एक शोध इंजिन जोडा</string>
   <string name="preference_search_remove_title">शोध इंजिने काढून टाका</string>
   <string name="preference_search_remove">काढून टाका</string>
+  <string name="preference_homescreen_tips">मुख्य पृष्ठाच्या सूचना दाखवा</string>
   <string name="action_option_add_search_engine">शोध इंजीन जोडा</string>
   <string name="search_add_manually_name_hint">शोध इंजिनचे नाव</string>
+  <string name="search_add_manually_string">शोधण्यास वापरायची अक्षरमाळ</string>
   <string name="search_add_manually_save">जतन करा</string>
   <string name="search_add_manually_example">उदाहरण: example.com/search/?q=%s</string>
   <string name="search_add_confirmation">नवीन शोध इंजिन जोडले.</string>
+  <string name="search_add_error_empty_name">शोध इंजिनाचे नाव प्रविष्ट करा</string>
   <string name="search_add_error_duplicate_name">एक स्थापित शोध इंजिन आधीपासून त्या नावाचा वापर करीत आहे.</string>
   <string name="search_add_error_empty_search">सर्च स्ट्रिंग प्रविष्ट करा</string>
+  <string name="search_add_error_format">शोध अक्षरमाळ उदाहरणाच्या स्वरूपात आहे का ते तपासा</string>
   <string name="content_description_clear_input">इनपुट साफ करा</string>
   <string name="content_description_dismiss_input">बरखास्त करा</string>
   <string name="content_description_erase">ब्राऊझिंग इतिहास खोडून टाका</string>
@@ -100,6 +125,8 @@
   <string name="content_description_back">मागे नॅव्हिगेट करा</string>
   <string name="content_description_stop">वेबसाइट लोड करणे थांबवा</string>
   <string name="content_description_customtab_exit">मागील अॅप वर परत या</string>
+  <string name="content_description_trackers_blocked">अवरोधित मागोवा यंत्रणा संख्या</string>
+  <string name="content_description_blocking_switch">मागोवा यंत्रणा अवरोधित करा</string>
   <string name="your_rights">आपले हक्क</string>
   <string name="external_app_prompt_title">दुसर्या अॅपमध्ये दुवा उघडा</string>
   <string name="external_app_prompt">दुआ %2$s मध्ये उघडण्यासाठी आपण %1$s सोडू शकता.</string>
@@ -118,20 +145,25 @@
   <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>&#2361;&#2375; &#2360;&#2306;&#2325;&#2375;&#2340;&#2360;&#2381;&#2341;&#2355; &#2340;&#2366;&#2340;&#2381;&#2346;&#2369;&#2352;&#2340;&#2375; &#2313;&#2346;&#2354;&#2348;&#2381;&#2343; &#2344;&#2360;&#2375;&#2354; &#2325;&#2367;&#2306;&#2357;&#2366; &#2309;&#2340;&#2367;&#2358;&#2351; &#2357;&#2381;&#2351;&#2360;&#2381;&#2340; &#2309;&#2360;&#2375;&#2354;. &#2325;&#2366;&#2361;&#2368; &#2325;&#2381;&#2359;&#2339;&#2366;&#2340; &#2346;&#2369;&#2344;&#2381;&#2361;&#2366; &#2346;&#2381;&#2352;&#2351;&#2340;&#2381;&#2344; &#2325;&#2352;&#2366;.</li>\n<li>&#2332;&#2352; &#2310;&#2346;&#2339; &#2325;&#2379;&#2339;&#2340;&#2368;&#2361;&#2368; &#2360;&#2306;&#2325;&#2375;&#2340;&#2360;&#2381;&#2341;&#2355;&#2375; &#2313;&#2328;&#2337;&#2370; &#2358;&#2325;&#2340; &#2344;&#2360;&#2366;&#2354; &#2340;&#2352; &#2310;&#2346;&#2354;&#2381;&#2351;&#2366; &#2350;&#2379;&#2348;&#2366;&#2312;&#2354; &#2313;&#2346;&#2325;&#2352;&#2339;&#2366;&#2330;&#2368; &#2357;&#2366;&#2351;&#2347;&#2366;&#2351; &#2325;&#2367;&#2306;&#2357;&#2366; &#2337;&#2375;&#2335;&#2366; &#2332;&#2379;&#2337;&#2339;&#2368; &#2340;&#2346;&#2366;&#2360;&#2370;&#2344; &#2346;&#2361;&#2366;.</li>\n</ul>]]></string>
   <string name="error_timeout_title">कनेक्शन कालबाह्य झाले आहे</string>
   <string name="error_hostLookup_title">सर्व्हर आढळला नाही</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>" &#2335;&#2366;&#2311;&#2346;&#2367;&#2306;&#2327; &#2340;&#2381;&#2352;&#2369;&#2335;&#2368;&#2306;&#2360;&#2366;&#2336;&#2368; &#2346;&#2340;&#2381;&#2340;&#2366; &#2340;&#2346;&#2366;&#2360;&#2366; &#2332;&#2360;&#2375; &#2325;&#2368;\n          "<strong>ww</strong>".example.com &#2320;&#2357;&#2332;&#2368;\n          "<strong>" www"</strong>" .example.com"</li>"\n        "<li>&#2310;&#2346;&#2339; &#2325;&#2379;&#2339;&#2340;&#2375;&#2361;&#2368; &#2346;&#2371;&#2359;&#2381;&#2336;&#2375; &#2354;&#2379;&#2337; &#2325;&#2352;&#2339;&#2381;&#2351;&#2366;&#2340; &#2309;&#2325;&#2381;&#2359;&#2350; &#2309;&#2360;&#2354;&#2381;&#2351;&#2366;&#2360;, &#2310;&#2346;&#2354;&#2381;&#2351;&#2366; &#2337;&#2367;&#2357;&#2381;&#2361;&#2366;&#2311;&#2360;&#2330;&#2366; &#2337;&#2375;&#2335;&#2366; &#2325;&#2367;&#2306;&#2357;&#2366; &#2357;&#2366;&#2351;-&#2347;&#2366;&#2351; &#2325;&#2344;&#2375;&#2325;&#2381;&#2358;&#2344; &#2340;&#2346;&#2366;&#2360;&#2366;.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">हा पत्ता वैध नाही</string>
   <string name="error_redirectLoop_title">पृष्ठ योग्यपणे मार्गदर्शित होत नाही</string>
   <string name="error_unsupportedprotocol_title">हा पत्ता समजला नाही</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n\n  "<li>&#2340;&#2369;&#2350;&#2381;&#2361;&#2366;&#2354;&#2366; &#2361;&#2366; &#2346;&#2340;&#2381;&#2340;&#2366; &#2346;&#2366;&#2361;&#2339;&#2381;&#2351;&#2366;&#2360;&#2366;&#2336;&#2368; &#2325;&#2342;&#2366;&#2330;&#2368;&#2340; &#2342;&#2369;&#2360;&#2352;&#2375; &#2360;&#2377;&#2347;&#2381;&#2335;&#2357;&#2375;&#2309;&#2352; &#2360;&#2381;&#2341;&#2366;&#2346;&#2368;&#2340; &#2325;&#2352;&#2366;&#2357;&#2375; &#2354;&#2366;&#2327;&#2375;&#2354;.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">सुरक्षित कनेक्शन अयशस्वी</string>
   <string name="error_generic_title">अरेरे</string>
   <string name="error_generic_message">काही कारणास्तव आम्ही हे पृष्ठ लोड करू शकत नाही.</string>
   <string name="contextmenu_link_share">दुवा शेअर करा</string>
   <string name="contextmenu_link_copy">दुवा पत्ता कॉपी करा</string>
   <string name="contextmenu_image_share">प्रतिमा शेअर करा</string>
+  <string name="contextmenu_image_copy">प्रतिमा पत्ता कॉपी करा</string>
   <string name="contextmenu_image_save">प्रतिमा साठवा</string>
   <string name="contextmenu_open_in_new_tab">दुवा नवीन टॅबमध्ये उघडा</string>
   <string name="contextmenu_image_warning"><![CDATA["आपण %1$s इतिहास नष्ट केल्यावर साठवलेल्या व शेअर केलेल्या प्रतिमा "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2344;&#2359;&#2381;&#2335; &#2361;&#2379;&#2339;&#2366;&#2352; &#2344;&#2366;&#2361;&#2368;&#2340;</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">आपली गोपनीयता वाढवा</string>
+  <string name="firstrun_defaultbrowser_text2">खाजगी ब्राऊझिंग पुढच्या स्तरावर न्या. जाहिराती आणि इतर मजकूर अवरोधित करा जो आपला विविध साईट वरून मागोवा घेऊ शकतो आणि पृष्ठ लोड वेळ कमी करू शकतो.</string>
   <string name="firstrun_search_title">आपला शोध, आपल्या पद्धतीने</string>
+  <string name="firstrun_search_text">काही वेगळे शोधत आहात का? सेटिंग मधून अन्य पूर्वनिर्धारित शोध इंजिन ठरवा.</string>
   <string name="firstrun_shortcut_title">आपल्या मुख्य पटलावर शॉर्टकट जोडा</string>
   <string name="firstrun_privacy_title">गोपनीयता एक सवय बनवा</string>
   <string name="firstrun_close_button">ठीक आहे, समजले!</string>
@@ -143,11 +175,17 @@
   <string name="notification_browsing_session_channel_name">खाजगी ब्राऊझिंग सत्र</string>
   <string name="tabs_tray_action_erase">ब्राऊझिंग इतिहास नष्ट करा</string>
   <string name="download_firefox">Firefox डाउनलोड करा</string>
+  <string name="your_rights_content1">%1$s Mozilla आणि इतर योगदानकर्त्यांनी बनवलेले मोफत आणि खुल्या स्रोताचे सॉफ्टवेअर आहे.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s आपल्याला "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" आणि इतर खुल्या स्त्रोत परवान्यांच्या नियमांतर्गत उपलब्ध करून दिले गेले आहे."]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s साठी अधिक स्रोत कोड इतर अनेक मुक्त आणि खुल्या स्त्रोताच्या "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2346;&#2352;&#2357;&#2366;&#2344;&#2381;&#2351;&#2366;&#2306;&#2340;&#2352;&#2381;&#2327;&#2340;</a>" उपलब्ध आहे."]]></string>
   <string name="gv_prompt_username_hint">वापरकर्त्याचे नाव</string>
   <string name="gv_prompt_password_hint">पासवर्ड</string>
   <string name="gv_prompt_clear">पुसा</string>
   <string name="security_popup_secure_connection">सुरक्षित जोडणी</string>
   <string name="security_popup_insecure_connection">असुरक्षित जोडणी</string>
+  <string name="security_popup_security_verified">%1$s द्वारे तपसालेले</string>
+  <string name="site_security_icon_content_description">साइट सुरक्षा</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL आधिपासूनच अस्तित्वात आहे.</string>
   <string name="find_in_page">पृष्ठामध्ये शोधा</string>
   <string name="find_in_page_input">पृष्ठामध्ये शोधा</string>
   <string name="find_in_page_result">%1$d/%2$d</string>
@@ -160,10 +198,22 @@
   <string name="http_auth_dialog_password">पासवर्ड</string>
   <string name="preference_performance_request_desktop_site">डेस्कटॉप साइटची विनंती करा</string>
   <string name="custom_tab_copy_url_action">URL ची प्रत बनवली</string>
+  <string name="preference_advanced_summary">डेव्हलपर साधने</string>
   <string name="preference_category_advanced">प्रगत</string>
+  <string name="preference_remote_debugging">Wi-Fi द्वारे दूरस्थ डीबगिंग</string>
+  <string name="biometric_auth_title">%1$s उघडा</string>
+  <string name="biometric_auth_description">पुढे चालू ठेवण्यासाठी बोटाच्या ठश्याच्या सेन्सर ला स्पर्श करा.</string>
   <string name="biometric_auth_new_session">नवीन सत्र</string>
+  <string name="biometric_auth_image_description">बोटाच्या ठश्याचे चिन्ह</string>
+  <string name="biometric_auth_not_recognized_error">बोटाचा ठसा ओळखला नाही. पुन्हा प्रयत्न करा.</string>
+  <string name="biometric_auth_moved_too_quickly">बोट पटकन हलवले. पुन्हा प्रयत्न करा.</string>
+  <string name="enable_search_suggestion_title">आपण शोध सूचना सुरु करु इच्छिता?</string>
+  <string name="enable_search_suggestion_subtitle">शोध सूचना मिळवण्यासाठी, %1$s ला आपण निवडलेल्या शोध इंजिनला आपण काय टाईप करता ते पाठवावे लागेल. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">आणखी शिका</string>
   <string name="enable_search_suggestions_no">नाही</string>
   <string name="enable_search_suggestions_yes">होय</string>
+  <string name="no_suggestions_message">काही शोध इंजिन सूचना दाखवू शकत नाहीत.</string>
   <string name="dismiss_no_suggestions_prompt_button">रद्द करा</string>
+  <string name="tip_disable_tracking_protection">साइट अनपेक्षितरित्या वागत आहे?\n ट्रॅकिंग संरक्षण बंद करण्याचा प्रयत्न करा</string>
+  <string name="tip_open_in_new_tab">एका नवीन टॅबमध्ये एक दुवा उघडा\n एका पृष्ठावर कोणताही दुवा दीर्घ-दाबून ठेवा</string>
 </resources>

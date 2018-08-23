@@ -217,10 +217,16 @@
   <string name="biometric_auth_not_recognized_error">फिंगरप्रिंट नै पहचानल गेल छकै. फेनु प्रयास करियै.</string>
   <string name="biometric_auth_moved_too_quickly">फिंगर बहुत तेज छ्कै. फेनु प्रयास करियै.</string>
   <string name="enable_search_suggestion_title">कि तोय खोज सुझावों क चालू करै ले चाहे छकै?</string>
+  <string name="enable_search_suggestion_subtitle">सर्च सुझाव खातिर, %1$s के आपनो द्वारा चुनल गेल सर्च इंजन पर एड्रेस बार में जे टाइप करने छियै ओकरा भेजै के जरुरी छै. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">बेसी जानकारी</string>
   <string name="enable_search_suggestions_no">नैय</string>
   <string name="enable_search_suggestions_yes">हौं</string>
   <string name="no_suggestions_message">कुछ सर्च ईंजन सुझाव नै दिखाय सकै छै.</string>
   <string name="dismiss_no_suggestions_prompt_button">रद्द करियै</string>
-  <string name="tip_open_in_new_tab">नया टैब में एगो लिंक खोलियै \n  पेज पर कोनो लिंक के देर तक दाबियै</string>
+  <string name="tip_disable_tracking_protection">कि साइट अप्रत्याशित रूप से व्यवहार कैर रहल छै?\n ट्रैकिंग सुरक्षा बंद करै के प्रयास करियै</string>
+  <string name="tip_add_to_homescreen">सबसे जादा उपयोग करै वाला साइटों के एक-टैप मे एक्सेस प्राप्त करियै\n        मेनू&gt; होम स्क्रीन में जोरियै</string>
+  <string name="tip_set_default_browser">%1$s में सब लिंक खोलियै\n डिफ़ॉल्ट ब्राउज़र के रूप में %1$s सेट करियै</string>
+  <string name="tip_autocomplete_url">सबसे जादा उपयोग करै वाला साइटों के अपना सँ पूर्ण URLs ले\n एड्रेस बार में कोनो URL के देर तक दबियै</string>
+  <string name="tip_open_in_new_tab">नया टैब में एगो लिंक खोलियै\n  पेज पर कोनो लिंक के देर तक दाबियै</string>
+  <string name="tip_request_desktop">बल्कि पूरे डेस्कटॉप साइट देखियै?\n    मेनू&gt; डेस्कटॉप साइट के अनुरोध करियै</string>
 </resources>

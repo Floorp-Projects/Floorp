@@ -38,6 +38,7 @@
   <string name="preference_category_data_collection_use">Datuen bilketa eta erabilera</string>
   <string name="preference_category_search">Bilaketa</string>
   <string name="preference_show_search_suggestions">Eskuratu bilaketa-iradokizunak</string>
+  <string name="preference_show_search_suggestions_summary">Helbide-barran idazten duzuna bilaketa-motorrera bidaliko du %1$s(e)k</string>
   <string name="preference_search_engine_default">Lehenetsia</string>
   <string name="preference_state_on">Aktibatuta</string>
   <string name="preference_state_off">Desaktibatuta</string>
