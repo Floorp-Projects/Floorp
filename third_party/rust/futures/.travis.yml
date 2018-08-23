@@ -7,10 +7,6 @@ matrix:
     - rust: beta
     - rust: nightly
       env: BENCH=1
-      before_script:
-        - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
-      after_success:
-        - travis-cargo doc-upload
     - os: linux
       rust: 1.15.0
       script: cargo test

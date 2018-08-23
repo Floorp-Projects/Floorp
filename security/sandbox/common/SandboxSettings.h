@@ -21,5 +21,9 @@ bool IsContentSandboxEnabled();
 int ClampFlashSandboxLevel(const int aLevel);
 #endif
 
+#if defined(__OpenBSD__)
+bool StartOpenBSDSandbox(GeckoProcessType type);
+#endif
+
 }
 #endif // mozilla_SandboxPolicies_h

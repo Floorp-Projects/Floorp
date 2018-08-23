@@ -6,10 +6,10 @@
 use std::io;
 use std::time::{Duration, Instant};
 
-use futures::{Future, Poll, Async};
+use futures::{Future, Poll};
+use tokio_timer::Delay;
 
-use reactor::{Remote, Handle};
-use reactor::timeout_token::TimeoutToken;
+use reactor::Handle;
 
 /// A future representing the notification that a timeout has occurred.
 ///
@@ -18,17 +18,17 @@ use reactor::timeout_token::TimeoutToken;
 /// Note that timeouts are not intended for high resolution timers, but rather
 /// they will likely fire some granularity after the exact instant that they're
 /// otherwise indicated to fire at.
+#[must_use = "futures do nothing unless polled"]
+#[derive(Debug)]
 pub struct Timeout {
-    token: TimeoutToken,
-    when: Instant,
-    handle: Remote,
+    delay: Delay
 }
 
 impl Timeout {
     /// Creates a new timeout which will fire at `dur` time into the future.
     ///
-    /// This function will return a future that will resolve to the actual
-    /// timeout object. The timeout object itself is then a future which will be
+    /// This function will return a Result with the actual timeout object or an
+    /// error. The timeout object itself is then a future which will be
     /// set to fire at the specified point in the future.
     pub fn new(dur: Duration, handle: &Handle) -> io::Result<Timeout> {
         Timeout::new_at(Instant::now() + dur, handle)
@@ -36,15 +36,30 @@ impl Timeout {
 
     /// Creates a new timeout which will fire at the time specified by `at`.
     ///
-    /// This function will return a future that will resolve to the actual
-    /// timeout object. The timeout object itself is then a future which will be
+    /// This function will return a Result with the actual timeout object or an
+    /// error. The timeout object itself is then a future which will be
     /// set to fire at the specified point in the future.
     pub fn new_at(at: Instant, handle: &Handle) -> io::Result<Timeout> {
         Ok(Timeout {
-            token: try!(TimeoutToken::new(at, &handle)),
-            when: at,
-            handle: handle.remote().clone(),
+            delay: handle.remote.timer_handle.delay(at)
         })
+    }
+
+    /// Resets this timeout to an new timeout which will fire at the time
+    /// specified by `at`.
+    ///
+    /// This method is usable even of this instance of `Timeout` has "already
+    /// fired". That is, if this future has resolved, calling this method means
+    /// that the future will still re-resolve at the specified instant.
+    ///
+    /// If `at` is in the past then this future will immediately be resolved
+    /// (when `poll` is called).
+    ///
+    /// Note that if any task is currently blocked on this future then that task
+    /// will be dropped. It is required to call `poll` again after this method
+    /// has been called to ensure that a task is blocked on this future.
+    pub fn reset(&mut self, at: Instant) {
+        self.delay.reset(at)
     }
 }
 
@@ -53,19 +68,7 @@ impl Future for Timeout {
     type Error = io::Error;
 
     fn poll(&mut self) -> Poll<(), io::Error> {
-        // TODO: is this fast enough?
-        let now = Instant::now();
-        if self.when <= now {
-            Ok(Async::Ready(()))
-        } else {
-            self.token.update_timeout(&self.handle);
-            Ok(Async::NotReady)
-        }
-    }
-}
-
-impl Drop for Timeout {
-    fn drop(&mut self) {
-        self.token.cancel_timeout(&self.handle);
+        self.delay.poll()
+            .map_err(|err| io::Error::new(io::ErrorKind::Other, err))
     }
 }

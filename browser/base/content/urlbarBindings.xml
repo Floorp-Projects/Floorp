@@ -589,11 +589,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             // invoked regardless, thus this should be enough.
             if (this._formattingInstance != instance)
               return;
-            let isDomainRTL = window.windowUtils.getDirectionFromText(domain);
+            let directionality = window.windowUtils.getDirectionFromText(domain);
             // In the future, for example in bug 525831, we may add a forceRTL
             // char just after the domain, and in such a case we should not
             // scroll to the left.
-            if (isDomainRTL && value[preDomain.length + domain.length] != "\u200E") {
+            if (directionality == window.windowUtils.DIRECTION_RTL &&
+                value[preDomain.length + domain.length] != "\u200E") {
               this.inputField.scrollLeft = this.inputField.scrollLeftMax;
             }
           });

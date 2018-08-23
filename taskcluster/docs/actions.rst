@@ -79,6 +79,9 @@ the entire task-group (result-set or push in Treeherder terminology). To create
 an action that shows up in the context menu for a task we would specify the
 ``context`` parameter.
 
+The ``order`` value is the sort key defining the order of actions in the
+resulting ``actions.json`` file.  If multiple actions have the same name and
+match the same task, the action with the smallest ``order`` will be used.
 
 Setting the Action Context
 ..........................

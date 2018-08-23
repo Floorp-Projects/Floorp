@@ -1543,7 +1543,7 @@ gfxFcPlatformFontList::AddFontSetFamilies(FcFontSet* aFontSet,
             continue;
         }
 
-#ifdef MOZ_CONTENT_SANDBOX
+#if defined(MOZ_CONTENT_SANDBOX) && defined (XP_LINUX)
         // Skip any fonts that will be blocked by the content-process sandbox
         // policy.
         if (aPolicy && !(aPolicy->Lookup(reinterpret_cast<const char*>(path)) &
@@ -1705,7 +1705,7 @@ gfxFcPlatformFontList::InitFontListForPlatform()
 
     UniquePtr<SandboxPolicy> policy;
 
-#ifdef MOZ_CONTENT_SANDBOX
+#if defined(MOZ_CONTENT_SANDBOX) && defined (XP_LINUX)
     // If read sandboxing is enabled, create a temporary SandboxPolicy to
     // check font paths; use a fake PID to avoid picking up any PID-specific
     // rules by accident.

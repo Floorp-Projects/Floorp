@@ -1559,7 +1559,7 @@ intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 3);
 
     Rooted<TypedArrayObject*> target(cx, &args[0].toObject().as<TypedArrayObject>());
-    assertSameCompartment(cx, target);
+    cx->check(target);
     MOZ_ASSERT(!target->hasDetachedBuffer(),
                "shouldn't set elements if underlying buffer is detached");
 

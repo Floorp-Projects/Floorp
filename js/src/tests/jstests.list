@@ -378,34 +378,23 @@ skip script test262/language/expressions/prefix-decrement/target-cover-newtarget
 skip script test262/language/expressions/prefix-decrement/non-simple.js
 skip script test262/language/asi/S7.9_A5.7_T1.js
 
-# Dependent on evalInWorker, setSharedArrayBuffer, and getSharedArrayBuffer; plus:
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1349863 - Enable test262 agent tests in browser
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1470490 - Rename Atomics.wake to Atomics.notify
-skip include test262/built-ins/Atomics/notify/jstests.list
-skip script test262/built-ins/Atomics/wait/false-for-timeout-agent.js
-skip script test262/built-ins/Atomics/wait/nan-for-timeout.js
-skip script test262/built-ins/Atomics/wait/negative-timeout-agent.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-no-operation.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-add.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-and.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-compareExchange.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-exchange.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-or.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-store.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-sub.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup-on-xor.js
-skip script test262/built-ins/Atomics/wait/null-for-timeout-agent.js
-skip script test262/built-ins/Atomics/wait/object-for-timeout-agent.js
-skip script test262/built-ins/Atomics/wait/poisoned-object-for-timeout-throws-agent.js
-skip script test262/built-ins/Atomics/wait/symbol-for-index-throws-agent.js
-skip script test262/built-ins/Atomics/wait/symbol-for-timeout-throws-agent.js
-skip script test262/built-ins/Atomics/wait/symbol-for-value-throws-agent.js
-skip script test262/built-ins/Atomics/wait/true-for-timeout-agent.js
-skip script test262/built-ins/Atomics/wait/undefined-for-timeout.js
-skip script test262/built-ins/Atomics/wait/undefined-index-defaults-to-zero.js
-skip script test262/built-ins/Atomics/wait/wait-index-value-not-equal.js
-skip script test262/built-ins/Atomics/wait/waiterlist-block-indexedposition-wake.js
-skip script test262/built-ins/Atomics/wait/waiterlist-order-of-operations-is-fifo.js
+# Dependent on evalInWorker, setSharedArrayBuffer, and
+# getSharedArrayBuffer, plus the test cases can't actually run in the
+# browser even if that were fixed, https://bugzil.la/1349863
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/negative-timeout.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/was-woken.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/did-timeout.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/good-views.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/no-spurious-wakeup.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/nan-timeout.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-all.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-zero.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-negative.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-nan.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-two.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-in-order.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-one.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-all-on-loc.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1346081
 skip script test262/intl402/NumberFormat/prototype/format/format-fraction-digits.js

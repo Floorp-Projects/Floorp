@@ -689,10 +689,10 @@ js::atomics_wait(JSContext* cx, unsigned argc, Value* vp)
 }
 
 int64_t
-js::atomics_wake_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset, int64_t count)
+js::atomics_notify_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset, int64_t count)
 {
     // Validation should ensure this does not happen.
-    MOZ_ASSERT(sarb, "wake is only applicable to shared memory");
+    MOZ_ASSERT(sarb, "notify is only applicable to shared memory");
 
     AutoLockFutexAPI lock;
 
@@ -706,7 +706,7 @@ js::atomics_wake_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset, int64_t c
             iter = iter->lower_pri;
             if (c->offset != byteOffset || !c->cx->fx.isWaiting())
                 continue;
-            c->cx->fx.wake(FutexThread::WakeExplicit);
+            c->cx->fx.notify(FutexThread::NotifyExplicit);
             // Overflow will be a problem only in two cases:
             // (1) 128-bit systems with substantially more than 2^64 bytes of
             //     memory per process, and a very lightweight
@@ -723,7 +723,7 @@ js::atomics_wake_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset, int64_t c
 }
 
 bool
-js::atomics_wake(JSContext* cx, unsigned argc, Value* vp)
+js::atomics_notify(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     HandleValue objv = args.get(0);
@@ -758,7 +758,7 @@ js::atomics_wake(JSContext* cx, unsigned argc, Value* vp)
                           (view->viewDataShared().cast<uint8_t*>().unwrap(/* arithmetic */) -
                            sab->dataPointerShared().unwrap(/* arithmetic */));
 
-    r.setNumber(double(atomics_wake_impl(sab->rawBufferObject(), byteOffset, count)));
+    r.setNumber(double(atomics_notify_impl(sab->rawBufferObject(), byteOffset, count)));
 
     return true;
 }
@@ -830,7 +830,7 @@ js::FutexThread::isWaiting()
     // When a worker is awoken for an interrupt it goes into state
     // WaitingNotifiedForInterrupt for a short time before it actually
     // wakes up and goes into WaitingInterrupted.  In those states the
-    // worker is still waiting, and if an explicit wake arrives the
+    // worker is still waiting, and if an explicit notify arrives the
     // worker transitions to Woken.  See further comments in
     // FutexThread::wait().
     return state_ == Waiting || state_ == WaitingInterrupted || state_ == WaitingNotifiedForInterrupt;
@@ -909,14 +909,14 @@ js::FutexThread::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
             //   should be woken when the interrupt handler returns.
             //   To that end, we flag the thread as interrupted around
             //   the interrupt and check state_ when the interrupt
-            //   handler returns.  A wake() call that reaches the
+            //   handler returns.  A notify() call that reaches the
             //   runtime during the interrupt sets state_ to Woken.
             //
             // - It is in principle possible for wait() to be
             //   reentered on the same thread/runtime and waiting on the
             //   same location and to yet again be interrupted and enter
             //   the interrupt handler.  In this case, it is important
-            //   that when another agent wakes waiters, all waiters using
+            //   that when another agent notifies waiters, all waiters using
             //   the same runtime on the same location are woken in LIFO
             //   order; FIFO may be the required order, but FIFO would
             //   fail to wake up the innermost call.  Interrupts are
@@ -947,25 +947,25 @@ js::FutexThread::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
 }
 
 void
-js::FutexThread::wake(WakeReason reason)
+js::FutexThread::notify(NotifyReason reason)
 {
     MOZ_ASSERT(isWaiting());
 
-    if ((state_ == WaitingInterrupted || state_ == WaitingNotifiedForInterrupt) && reason == WakeExplicit) {
+    if ((state_ == WaitingInterrupted || state_ == WaitingNotifiedForInterrupt) && reason == NotifyExplicit) {
         state_ = Woken;
         return;
     }
     switch (reason) {
-      case WakeExplicit:
+      case NotifyExplicit:
         state_ = Woken;
         break;
-      case WakeForJSInterrupt:
+      case NotifyForJSInterrupt:
         if (state_ == WaitingNotifiedForInterrupt)
             return;
         state_ = WaitingNotifiedForInterrupt;
         break;
       default:
-        MOZ_CRASH("bad WakeReason in FutexThread::wake()");
+        MOZ_CRASH("bad NotifyReason in FutexThread::notify()");
     }
     cond_->notify_all();
 }
@@ -982,7 +982,8 @@ const JSFunctionSpec AtomicsMethods[] = {
     JS_INLINABLE_FN("xor",                atomics_xor,                3,0, AtomicsXor),
     JS_INLINABLE_FN("isLockFree",         atomics_isLockFree,         1,0, AtomicsIsLockFree),
     JS_FN("wait",                         atomics_wait,               4,0),
-    JS_FN("wake",                         atomics_wake,               3,0),
+    JS_FN("notify",                       atomics_notify,             3,0),
+    JS_FN("wake",                         atomics_notify,             3,0), // Legacy name
     JS_FS_END
 };
 

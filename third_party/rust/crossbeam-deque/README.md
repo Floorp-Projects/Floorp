@@ -11,7 +11,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-crossbeam-deque = "0.1"
+crossbeam-deque = "0.3"
 ```
 
 Next, add this to your crate:
@@ -19,6 +19,8 @@ Next, add this to your crate:
 ```rust
 extern crate crossbeam_deque;
 ```
+
+The minimum required Rust version is 1.20.
 
 ## License
 

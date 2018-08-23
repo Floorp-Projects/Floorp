@@ -160,10 +160,6 @@ enum Family {
     V4, V6,
 }
 
-fn wouldblock() -> io::Error {
-    io::Error::new(io::ErrorKind::WouldBlock, "operation would block")
-}
-
 unsafe fn cancel(socket: &AsRawSocket,
                  overlapped: &Overlapped) -> io::Result<()> {
     let handle = socket.as_raw_socket() as winapi::HANDLE;

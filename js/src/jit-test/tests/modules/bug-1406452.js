@@ -1,5 +1,5 @@
 // |jit-test| error: Error
 let m = parseModule(`for (var x of iterator) {}`);
-m.declarationInstantiation();
-try { m.evaluation(); } catch (e) {}
+instantiateModule(m);
+try { evaluateModule(m); } catch (e) {}
 getModuleEnvironmentValue(m, "r");

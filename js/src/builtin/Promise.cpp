@@ -232,9 +232,9 @@ NewPromiseAllDataHolder(JSContext* cx, HandleObject resultPromise, HandleValue v
     if (!dataHolder)
         return nullptr;
 
-    assertSameCompartment(cx, resultPromise);
-    assertSameCompartment(cx, valuesArray);
-    assertSameCompartment(cx, resolve);
+    cx->check(resultPromise);
+    cx->check(valuesArray);
+    cx->check(resolve);
 
     dataHolder->setFixedSlot(PromiseAllDataHolderSlot_Promise, ObjectValue(*resultPromise));
     dataHolder->setFixedSlot(PromiseAllDataHolderSlot_RemainingElements, Int32Value(1));
@@ -772,7 +772,7 @@ static bool Promise_then_impl(JSContext* cx, HandleValue promiseVal, HandleValue
 static MOZ_MUST_USE bool
 ResolvePromiseInternal(JSContext* cx, HandleObject promise, HandleValue resolutionVal)
 {
-    assertSameCompartment(cx, promise, resolutionVal);
+    cx->check(promise, resolutionVal);
     MOZ_ASSERT(!IsSettledMaybeWrappedPromise(promise));
 
     // Step 7 (reordered).
@@ -935,7 +935,7 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     // Must not enqueue a reaction job more than once.
     MOZ_ASSERT(reaction->targetState() == JS::PromiseState::Pending);
 
-    assertSameCompartment(cx, handlerArg);
+    cx->check(handlerArg);
     reaction->setTargetStateAndHandlerArg(targetState, handlerArg);
 
     RootedValue reactionVal(cx, ObjectValue(*reaction));
@@ -1637,7 +1637,7 @@ PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc, Value* vp)
     RootedObject promise(cx, &job->getExtendedSlot(BuiltinThenableJobSlot_Promise).toObject());
     RootedObject thenable(cx, &job->getExtendedSlot(BuiltinThenableJobSlot_Thenable).toObject());
 
-    assertSameCompartment(cx, promise, thenable);
+    cx->check(promise, thenable);
     MOZ_ASSERT(promise->is<PromiseObject>());
     MOZ_ASSERT(thenable->is<PromiseObject>());
 
@@ -1740,7 +1740,7 @@ static MOZ_MUST_USE bool
 EnqueuePromiseResolveThenableBuiltinJob(JSContext* cx, HandleObject promiseToResolve,
                                         HandleObject thenable)
 {
-    assertSameCompartment(cx, promiseToResolve, thenable);
+    cx->check(promiseToResolve, thenable);
     MOZ_ASSERT(promiseToResolve->is<PromiseObject>());
     MOZ_ASSERT(thenable->is<PromiseObject>());
 
@@ -2156,7 +2156,7 @@ js::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
 #ifdef DEBUG
     for (size_t i = 0, len = promises.length(); i < len; i++) {
         JSObject* obj = promises[i];
-        assertSameCompartment(cx, obj);
+        cx->check(obj);
         MOZ_ASSERT(UncheckedUnwrap(obj)->is<PromiseObject>());
     }
 #endif
@@ -2285,9 +2285,9 @@ RunResolutionFunction(JSContext *cx, HandleObject resolutionFun, HandleValue res
     // subclass constructor passes null/undefined to `super()`.)
     // There are also reactions where the Promise itself is missing. For
     // those, there's nothing left to do here.
-    assertSameCompartment(cx, resolutionFun);
-    assertSameCompartment(cx, result);
-    assertSameCompartment(cx, promiseObj);
+    cx->check(resolutionFun);
+    cx->check(result);
+    cx->check(promiseObj);
     if (resolutionFun) {
         RootedValue calleeOrRval(cx, ObjectValue(*resolutionFun));
         return Call(cx, calleeOrRval, UndefinedHandleValue, result, &calleeOrRval);
@@ -3080,12 +3080,12 @@ NewReactionRecord(JSContext* cx, Handle<PromiseCapability> resultCapability,
     if (!reaction)
         return nullptr;
 
-    assertSameCompartment(cx, resultCapability.promise());
-    assertSameCompartment(cx, onFulfilled);
-    assertSameCompartment(cx, onRejected);
-    assertSameCompartment(cx, resultCapability.resolve());
-    assertSameCompartment(cx, resultCapability.reject());
-    assertSameCompartment(cx, incumbentGlobalObject);
+    cx->check(resultCapability.promise());
+    cx->check(onFulfilled);
+    cx->check(onRejected);
+    cx->check(resultCapability.resolve());
+    cx->check(resultCapability.reject());
+    cx->check(incumbentGlobalObject);
 
     reaction->setFixedSlot(ReactionRecordSlot_Promise,
                            ObjectOrNullValue(resultCapability.promise()));
@@ -3160,7 +3160,7 @@ static MOZ_MUST_USE bool
 OriginalPromiseThenWithoutSettleHandlers(JSContext* cx, Handle<PromiseObject*> promise,
                                          Handle<PromiseObject*> promiseToResolve)
 {
-    assertSameCompartment(cx, promise);
+    cx->check(promise);
 
     // Steps 3-4.
     Rooted<PromiseCapability> resultCapability(cx);
@@ -3187,7 +3187,7 @@ static bool
 OriginalPromiseThenBuiltin(JSContext* cx, HandleValue promiseVal, HandleValue onFulfilled,
                            HandleValue onRejected, MutableHandleValue rval, bool rvalUsed)
 {
-    assertSameCompartment(cx, promiseVal, onFulfilled, onRejected);
+    cx->check(promiseVal, onFulfilled, onRejected);
     MOZ_ASSERT(CanCallOriginalPromiseThenBuiltin(cx, promiseVal));
 
     Rooted<PromiseObject*> promise(cx, &promiseVal.toObject().as<PromiseObject>());

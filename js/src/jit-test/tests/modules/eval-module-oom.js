@@ -21,6 +21,6 @@ const sb =
 oomTest(() => {
     let a = moduleRepo['a'] = parseModule(sa);
     let b = moduleRepo['b'] = parseModule(sb);
-    b.declarationInstantiation();
-    assertEq(b.evaluation(), 42);
+    instantiateModule(b);
+    assertEq(evaluateModule(b), 42);
 });

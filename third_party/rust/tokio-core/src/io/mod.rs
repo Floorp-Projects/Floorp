@@ -10,6 +10,7 @@
 //! [low level details]: https://tokio.rs/docs/going-deeper-tokio/core-low-level/
 
 #![deprecated(note = "moved to the `tokio-io` crate")]
+#![allow(deprecated)]
 
 use std::io;
 
@@ -64,7 +65,7 @@ pub use self::write_all::{write_all, WriteAll};
 
 /// A trait for read/write I/O objects
 ///
-/// This trait represents I/O object which are readable and writable.
+/// This trait represents I/O objects which are readable and writable.
 /// Additionally, they're associated with the ability to test whether they're
 /// readable or writable.
 ///

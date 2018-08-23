@@ -60,22 +60,17 @@ s! {
     }
 }
 
-pub const SYS_pivot_root: ::c_long = 203;
-pub const SYS_gettid: ::c_long = 207;
-pub const SYS_perf_event_open: ::c_long = 319;
-pub const SYS_memfd_create: ::c_long = 360;
-
 pub const MAP_32BIT: ::c_int = 0x0040;
-pub const O_DIRECT: ::c_int = 0x4000;
-pub const O_DIRECTORY: ::c_int = 0x10000;
-pub const O_LARGEFILE: ::c_int = 0;
-pub const O_NOFOLLOW: ::c_int = 0x20000;
+pub const O_DIRECT: ::c_int = 0x20000;
+pub const O_DIRECTORY: ::c_int = 0x4000;
+pub const O_LARGEFILE: ::c_int = 0x10000;
+pub const O_NOFOLLOW: ::c_int = 0x8000;
 
-pub const SIGSTKSZ: ::size_t = 8192;
-pub const MINSIGSTKSZ: ::size_t = 2048;
+pub const SIGSTKSZ: ::size_t = 10240;
+pub const MINSIGSTKSZ: ::size_t = 4096;
 
 #[doc(hidden)]
-pub const AF_MAX: ::c_int = 42;
+pub const AF_MAX: ::c_int = 43;
 #[doc(hidden)]
 pub const PF_MAX: ::c_int = AF_MAX;
 
@@ -439,3 +434,139 @@ pub const SYS_copy_file_range: ::c_long = 379;
 pub const SYS_preadv2: ::c_long = 380;
 pub const SYS_pwritev2: ::c_long = 381;
 pub const SYS_kexec_file_load: ::c_long = 382;
+
+pub const FIOCLEX: ::c_ulong = 0x20006601;
+pub const FIONBIO: ::c_ulong = 0x8004667e;
+pub const EDEADLK: ::c_int = 58;
+pub const EDEADLOCK: ::c_int = EDEADLK;
+pub const SO_PASSCRED: ::c_int = 20;
+pub const SO_PEERCRED: ::c_int = 21;
+pub const SO_RCVLOWAT: ::c_int = 16;
+pub const SO_SNDLOWAT: ::c_int = 17;
+pub const SO_RCVTIMEO: ::c_int = 18;
+pub const SO_SNDTIMEO: ::c_int = 19;
+pub const EXTPROC: ::tcflag_t = 0x10000000;
+pub const VEOL: usize = 6;
+pub const VEOL2: usize = 8;
+pub const VMIN: usize = 5;
+pub const IEXTEN: ::tcflag_t = 0x00000400;
+pub const TOSTOP: ::tcflag_t = 0x00400000;
+pub const FLUSHO: ::tcflag_t = 0x00800000;
+pub const TCGETS: ::c_ulong = 0x403c7413;
+pub const TCSETS: ::c_ulong = 0x803c7414;
+pub const TCSETSW: ::c_ulong = 0x803c7415;
+pub const TCSETSF: ::c_ulong = 0x803c7416;
+pub const TCGETA: ::c_ulong = 0x40147417;
+pub const TCSETA: ::c_ulong = 0x80147418;
+pub const TCSETAW: ::c_ulong = 0x80147419;
+pub const TCSETAF: ::c_ulong = 0x8014741c;
+pub const TCSBRK: ::c_ulong = 0x2000741d;
+pub const TCXONC: ::c_ulong = 0x2000741e;
+pub const TCFLSH: ::c_ulong = 0x2000741f;
+pub const TIOCGSOFTCAR: ::c_ulong = 0x5419;
+pub const TIOCSSOFTCAR: ::c_ulong = 0x541A;
+pub const TIOCLINUX: ::c_ulong = 0x541C;
+pub const TIOCGSERIAL: ::c_ulong = 0x541E;
+pub const TIOCEXCL: ::c_ulong = 0x540C;
+pub const TIOCNXCL: ::c_ulong = 0x540D;
+pub const TIOCSCTTY: ::c_ulong = 0x540E;
+pub const TIOCGPGRP: ::c_ulong = 0x40047477;
+pub const TIOCSPGRP: ::c_ulong = 0x80047476;
+pub const TIOCOUTQ: ::c_ulong = 0x40047473;
+pub const TIOCGWINSZ: ::c_ulong = 0x40087468;
+pub const TIOCSWINSZ: ::c_ulong = 0x80087467;
+pub const TIOCMGET: ::c_ulong = 0x5415;
+pub const TIOCMBIS: ::c_ulong = 0x5416;
+pub const TIOCMBIC: ::c_ulong = 0x5417;
+pub const TIOCMSET: ::c_ulong = 0x5418;
+pub const FIONREAD: ::c_ulong = 0x4004667f;
+pub const TIOCCONS: ::c_ulong = 0x541D;
+pub const TIOCM_LE: ::c_ulong = 0x001;
+pub const TIOCM_DTR: ::c_ulong = 0x002;
+pub const TIOCM_RTS: ::c_ulong = 0x004;
+pub const TIOCM_ST: ::c_ulong = 0x008;
+pub const TIOCM_SR: ::c_ulong = 0x010;
+pub const TIOCM_CTS: ::c_ulong = 0x020;
+pub const TIOCM_CAR: ::c_ulong = 0x040;
+pub const TIOCM_RNG: ::c_ulong = 0x080;
+pub const TIOCM_DSR: ::c_ulong = 0x100;
+pub const TIOCM_CD: ::c_ulong = TIOCM_CAR;
+pub const TIOCM_RI: ::c_ulong = TIOCM_RNG;
+
+pub const RLIMIT_NLIMITS: ::c_int = 15;
+pub const TIOCINQ: ::c_ulong = ::FIONREAD;
+pub const MCL_CURRENT: ::c_int = 0x2000;
+pub const MCL_FUTURE: ::c_int = 0x4000;
+pub const CBAUD: ::tcflag_t = 0xff;
+pub const TAB1: ::c_int = 0x400;
+pub const TAB2: ::c_int = 0x800;
+pub const TAB3: ::c_int = 0xc00;
+pub const CR1: ::c_int  = 0x1000;
+pub const CR2: ::c_int  = 0x2000;
+pub const CR3: ::c_int  = 0x3000;
+pub const FF1: ::c_int  = 0x4000;
+pub const BS1: ::c_int  = 0x8000;
+pub const VT1: ::c_int  = 0x10000;
+pub const VWERASE: usize = 10;
+pub const VREPRINT: usize = 11;
+pub const VSUSP: usize = 12;
+pub const VSTART: usize = 13;
+pub const VSTOP: usize = 14;
+pub const VDISCARD: usize = 16;
+pub const VTIME: usize = 7;
+pub const IXON: ::tcflag_t = 0x00000200;
+pub const IXOFF: ::tcflag_t = 0x00000400;
+pub const ONLCR: ::tcflag_t = 0x2;
+pub const CSIZE: ::tcflag_t = 0x00000300;
+
+pub const CS6: ::tcflag_t = 0x00000100;
+pub const CS7: ::tcflag_t = 0x00000200;
+pub const CS8: ::tcflag_t = 0x00000300;
+pub const CSTOPB: ::tcflag_t = 0x00000400;
+pub const CREAD: ::tcflag_t = 0x00000800;
+pub const PARENB: ::tcflag_t = 0x00001000;
+pub const PARODD: ::tcflag_t = 0x00002000;
+pub const HUPCL: ::tcflag_t = 0x00004000;
+pub const CLOCAL: ::tcflag_t = 0x00008000;
+pub const ECHOKE: ::tcflag_t = 0x00000001;
+pub const ECHOE: ::tcflag_t = 0x00000002;
+pub const ECHOK: ::tcflag_t = 0x00000004;
+pub const ECHONL: ::tcflag_t = 0x00000010;
+pub const ECHOPRT: ::tcflag_t = 0x00000020;
+pub const ECHOCTL: ::tcflag_t = 0x00000040;
+pub const ISIG: ::tcflag_t = 0x00000080;
+pub const ICANON: ::tcflag_t = 0x00000100;
+pub const PENDIN: ::tcflag_t = 0x20000000;
+pub const NOFLSH: ::tcflag_t = 0x80000000;
+
+pub const CIBAUD: ::tcflag_t = 0o77600000;
+pub const CBAUDEX: ::tcflag_t = 0o0000020;
+pub const VSWTC: usize = 9;
+pub const OLCUC:  ::tcflag_t = 0o000004;
+pub const NLDLY:  ::tcflag_t = 0o0001400;
+pub const CRDLY:  ::tcflag_t = 0o0030000;
+pub const TABDLY: ::tcflag_t = 0o0006000;
+pub const BSDLY:  ::tcflag_t = 0o0100000;
+pub const FFDLY:  ::tcflag_t = 0o0040000;
+pub const VTDLY:  ::tcflag_t = 0o0200000;
+pub const XTABS:  ::tcflag_t = 0o00006000;
+
+pub const B57600: ::speed_t = 0o00020;
+pub const B115200: ::speed_t = 0o00021;
+pub const B230400: ::speed_t = 0o00022;
+pub const B460800: ::speed_t = 0o00023;
+pub const B500000: ::speed_t = 0o00024;
+pub const B576000: ::speed_t = 0o00025;
+pub const B921600: ::speed_t = 0o00026;
+pub const B1000000: ::speed_t = 0o00027;
+pub const B1152000: ::speed_t = 0o00030;
+pub const B1500000: ::speed_t = 0o00031;
+pub const B2000000: ::speed_t = 0o00032;
+pub const B2500000: ::speed_t = 0o00033;
+pub const B3000000: ::speed_t = 0o00034;
+pub const B3500000: ::speed_t = 0o00035;
+pub const B4000000: ::speed_t = 0o00036;
+
+extern {
+    pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
+}

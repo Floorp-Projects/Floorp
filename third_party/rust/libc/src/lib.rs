@@ -13,80 +13,81 @@
 #![allow(bad_style, overflowing_literals, improper_ctypes)]
 #![crate_type = "rlib"]
 #![crate_name = "libc"]
-#![cfg_attr(dox, feature(no_core, lang_items))]
-#![cfg_attr(dox, no_core)]
+#![cfg_attr(cross_platform_docs, feature(no_core, lang_items, const_fn))]
+#![cfg_attr(cross_platform_docs, no_core)]
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
        html_favicon_url = "https://doc.rust-lang.org/favicon.ico")]
 
 #![cfg_attr(all(target_os = "linux", target_arch = "x86_64"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/x86_64-unknown-linux-gnu"
+    html_root_url = "https://rust-lang.github.io/libc/x86_64-unknown-linux-gnu"
 ))]
 #![cfg_attr(all(target_os = "linux", target_arch = "x86"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/i686-unknown-linux-gnu"
+    html_root_url = "https://rust-lang.github.io/libc/i686-unknown-linux-gnu"
 ))]
 #![cfg_attr(all(target_os = "linux", target_arch = "arm"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/arm-unknown-linux-gnueabihf"
+    html_root_url = "https://rust-lang.github.io/libc/arm-unknown-linux-gnueabihf"
 ))]
 #![cfg_attr(all(target_os = "linux", target_arch = "mips"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/mips-unknown-linux-gnu"
+    html_root_url = "https://rust-lang.github.io/libc/mips-unknown-linux-gnu"
 ))]
 #![cfg_attr(all(target_os = "linux", target_arch = "aarch64"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/aarch64-unknown-linux-gnu"
+    html_root_url = "https://rust-lang.github.io/libc/aarch64-unknown-linux-gnu"
 ))]
 #![cfg_attr(all(target_os = "linux", target_env = "musl"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/x86_64-unknown-linux-musl"
+    html_root_url = "https://rust-lang.github.io/libc/x86_64-unknown-linux-musl"
 ))]
 #![cfg_attr(all(target_os = "macos", target_arch = "x86_64"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/x86_64-apple-darwin"
+    html_root_url = "https://rust-lang.github.io/libc/x86_64-apple-darwin"
 ))]
 #![cfg_attr(all(target_os = "macos", target_arch = "x86"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/i686-apple-darwin"
+    html_root_url = "https://rust-lang.github.io/libc/i686-apple-darwin"
 ))]
 #![cfg_attr(all(windows, target_arch = "x86_64", target_env = "gnu"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/x86_64-pc-windows-gnu"
+    html_root_url = "https://rust-lang.github.io/libc/x86_64-pc-windows-gnu"
 ))]
 #![cfg_attr(all(windows, target_arch = "x86", target_env = "gnu"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/i686-pc-windows-gnu"
+    html_root_url = "https://rust-lang.github.io/libc/i686-pc-windows-gnu"
 ))]
 #![cfg_attr(all(windows, target_arch = "x86_64", target_env = "msvc"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/x86_64-pc-windows-msvc"
+    html_root_url = "https://rust-lang.github.io/libc/x86_64-pc-windows-msvc"
 ))]
 #![cfg_attr(all(windows, target_arch = "x86", target_env = "msvc"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/i686-pc-windows-msvc"
+    html_root_url = "https://rust-lang.github.io/libc/i686-pc-windows-msvc"
 ))]
 #![cfg_attr(target_os = "android", doc(
-    html_root_url = "https://doc.rust-lang.org/libc/arm-linux-androideabi"
+    html_root_url = "https://rust-lang.github.io/libc/arm-linux-androideabi"
 ))]
 #![cfg_attr(target_os = "freebsd", doc(
-    html_root_url = "https://doc.rust-lang.org/libc/x86_64-unknown-freebsd"
+    html_root_url = "https://rust-lang.github.io/libc/x86_64-unknown-freebsd"
 ))]
 #![cfg_attr(target_os = "openbsd", doc(
-    html_root_url = "https://doc.rust-lang.org/libc/x86_64-unknown-openbsd"
+    html_root_url = "https://rust-lang.github.io/libc/x86_64-unknown-openbsd"
 ))]
 #![cfg_attr(target_os = "bitrig", doc(
-    html_root_url = "https://doc.rust-lang.org/libc/x86_64-unknown-bitrig"
+    html_root_url = "https://rust-lang.github.io/libc/x86_64-unknown-bitrig"
 ))]
 #![cfg_attr(target_os = "netbsd", doc(
-    html_root_url = "https://doc.rust-lang.org/libc/x86_64-unknown-netbsd"
+    html_root_url = "https://rust-lang.github.io/libc/x86_64-unknown-netbsd"
 ))]
 #![cfg_attr(target_os = "dragonfly", doc(
-    html_root_url = "https://doc.rust-lang.org/libc/x86_64-unknown-dragonfly"
+    html_root_url = "https://rust-lang.github.io/libc/x86_64-unknown-dragonfly"
+))]
+#![cfg_attr(target_os = "solaris", doc(
+    html_root_url = "https://rust-lang.github.io/libc/x86_64-sun-solaris"
 ))]
 #![cfg_attr(all(target_os = "emscripten", target_arch = "asmjs"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/asmjs-unknown-emscripten"
+    html_root_url = "https://rust-lang.github.io/libc/asmjs-unknown-emscripten"
 ))]
 #![cfg_attr(all(target_os = "emscripten", target_arch = "wasm32"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/wasm32-unknown-emscripten"
+    html_root_url = "https://rust-lang.github.io/libc/wasm32-unknown-emscripten"
 ))]
-#![cfg_attr(all(target_os = "linux", target_arch = "xparc64"), doc(
-    html_root_url = "https://doc.rust-lang.org/libc/sparc64-unknown-linux-gnu"
+#![cfg_attr(all(target_os = "linux", target_arch = "sparc64"), doc(
+    html_root_url = "https://rust-lang.github.io/libc/sparc64-unknown-linux-gnu"
 ))]
 
 // Attributes needed when building as part of the standard library
-#![cfg_attr(feature = "stdbuild", feature(no_std, staged_api, custom_attribute, cfg_target_vendor))]
-#![cfg_attr(feature = "stdbuild", feature(link_cfg))]
-#![cfg_attr(feature = "stdbuild", no_std)]
-#![cfg_attr(feature = "stdbuild", staged_api)]
+#![cfg_attr(feature = "stdbuild", feature(staged_api, cfg_target_vendor))]
+#![cfg_attr(feature = "stdbuild", feature(link_cfg, repr_packed))]
 #![cfg_attr(feature = "stdbuild", allow(warnings))]
 #![cfg_attr(feature = "stdbuild", unstable(feature = "libc",
                                reason = "use `libc` from crates.io",
@@ -94,7 +95,7 @@
 
 #![cfg_attr(not(feature = "use_std"), no_std)]
 
-#[cfg(all(not(dox), feature = "use_std"))]
+#[cfg(all(not(cross_platform_docs), feature = "use_std"))]
 extern crate std as core;
 
 #[macro_use] mod macros;

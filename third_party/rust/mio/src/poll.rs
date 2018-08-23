@@ -3,16 +3,14 @@ use event_imp::{self as event, Ready, Event, Evented, PollOpt};
 use std::{fmt, io, ptr, usize};
 use std::cell::UnsafeCell;
 use std::{mem, ops, isize};
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 use std::os::unix::io::AsRawFd;
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 use std::os::unix::io::RawFd;
 use std::sync::{Arc, Mutex, Condvar};
 use std::sync::atomic::{AtomicUsize, AtomicPtr, AtomicBool};
 use std::sync::atomic::Ordering::{self, Acquire, Release, AcqRel, Relaxed, SeqCst};
 use std::time::{Duration, Instant};
-#[cfg(unix)]
-use sys::unix::UnixReady;
 
 // Poll is backed by two readiness queues. The first is a system readiness queue
 // represented by `sys::Selector`. The system readiness queue handles events
@@ -20,7 +18,7 @@ use sys::unix::UnixReady;
 // implemented in user space by `ReadinessQueue`. It provides a way to implement
 // purely user space `Evented` types.
 //
-// `ReadinessQueue` is is backed by a MPSC queue that supports reuse of linked
+// `ReadinessQueue` is backed by a MPSC queue that supports reuse of linked
 // list nodes. This significantly reduces the number of required allocations.
 // Each `Registration` / `SetReadiness` pair allocates a single readiness node
 // that is used for the lifetime of the registration.
@@ -89,38 +87,46 @@ use sys::unix::UnixReady;
 /// A basic example -- establishing a `TcpStream` connection.
 ///
 /// ```
+/// # use std::error::Error;
+/// # fn try_main() -> Result<(), Box<Error>> {
 /// use mio::{Events, Poll, Ready, PollOpt, Token};
-/// use mio::tcp::TcpStream;
+/// use mio::net::TcpStream;
 ///
 /// use std::net::{TcpListener, SocketAddr};
 ///
 /// // Bind a server socket to connect to.
-/// let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
-/// let server = TcpListener::bind(&addr).unwrap();
+/// let addr: SocketAddr = "127.0.0.1:0".parse()?;
+/// let server = TcpListener::bind(&addr)?;
 ///
 /// // Construct a new `Poll` handle as well as the `Events` we'll store into
-/// let poll = Poll::new().unwrap();
+/// let poll = Poll::new()?;
 /// let mut events = Events::with_capacity(1024);
 ///
 /// // Connect the stream
-/// let stream = TcpStream::connect(&server.local_addr().unwrap()).unwrap();
+/// let stream = TcpStream::connect(&server.local_addr()?)?;
 ///
 /// // Register the stream with `Poll`
-/// poll.register(&stream, Token(0), Ready::all(), PollOpt::edge()).unwrap();
+/// poll.register(&stream, Token(0), Ready::readable() | Ready::writable(), PollOpt::edge())?;
 ///
 /// // Wait for the socket to become ready. This has to happens in a loop to
 /// // handle spurious wakeups.
 /// loop {
-///     poll.poll(&mut events, None).unwrap();
+///     poll.poll(&mut events, None)?;
 ///
 ///     for event in &events {
 ///         if event.token() == Token(0) && event.readiness().is_writable() {
 ///             // The socket connected (probably, it could still be a spurious
 ///             // wakeup)
-///             return;
+///             return Ok(());
 ///         }
 ///     }
 /// }
+/// #     Ok(())
+/// # }
+/// #
+/// # fn main() {
+/// #     try_main().unwrap();
+/// # }
 /// ```
 ///
 /// # Edge-triggered and level-triggered
@@ -153,7 +159,7 @@ use sys::unix::UnixReady;
 /// assume that [`Poll::poll`] may never return another event for the same token
 /// and readiness until the operation returns [`WouldBlock`].
 ///
-/// By contrast, when level-triggered notfications was requested, each call to
+/// By contrast, when level-triggered notifications was requested, each call to
 /// [`Poll::poll`] will return an event for the socket as long as data remains
 /// in the socket buffer. Generally, level-triggered events should be avoided if
 /// high performance is a concern.
@@ -246,31 +252,39 @@ use sys::unix::UnixReady;
 ///
 /// [`readable`]: struct.Ready.html#method.readable
 /// [`writable`]: struct.Ready.html#method.writable
-/// [`error`]: struct.Ready.html#method.error
-/// [`hup`]: struct.Ready.html#method.hup
+/// [`error`]: unix/struct.UnixReady.html#method.error
+/// [`hup`]: unix/struct.UnixReady.html#method.hup
 ///
 /// ### Registering handles
 ///
 /// Unless otherwise noted, it should be assumed that types implementing
-/// [`Evented`] will never be become ready unless they are registered with `Poll`.
+/// [`Evented`] will never become ready unless they are registered with `Poll`.
 ///
 /// For example:
 ///
 /// ```
+/// # use std::error::Error;
+/// # fn try_main() -> Result<(), Box<Error>> {
 /// use mio::{Poll, Ready, PollOpt, Token};
-/// use mio::tcp::TcpStream;
+/// use mio::net::TcpStream;
 /// use std::time::Duration;
 /// use std::thread;
 ///
-/// let sock = TcpStream::connect(&"216.58.193.100:80".parse().unwrap()).unwrap();
+/// let sock = TcpStream::connect(&"216.58.193.100:80".parse()?)?;
 ///
 /// thread::sleep(Duration::from_secs(1));
 ///
-/// let poll = Poll::new().unwrap();
+/// let poll = Poll::new()?;
 ///
 /// // The connect is not guaranteed to have started until it is registered at
 /// // this point
-/// poll.register(&sock, Token(0), Ready::all(), PollOpt::edge()).unwrap();
+/// poll.register(&sock, Token(0), Ready::readable() | Ready::writable(), PollOpt::edge())?;
+/// #     Ok(())
+/// # }
+/// #
+/// # fn main() {
+/// #     try_main().unwrap();
+/// # }
 /// ```
 ///
 /// # Implementation notes
@@ -417,6 +431,11 @@ pub struct Poll {
 /// [`Poll`]: struct.Poll.html
 /// [`Registration::new2`]: struct.Registration.html#method.new2
 /// [`Evented`]: event/trait.Evented.html
+/// [`set_readiness`]: struct.SetReadiness.html#method.set_readiness
+/// [`register`]: struct.Poll.html#method.register
+/// [`reregister`]: struct.Poll.html#method.reregister
+/// [`deregister`]: struct.Poll.html#method.deregister
+/// [portability]: struct.Poll.html#portability
 pub struct Registration {
     inner: RegistrationInner,
 }
@@ -424,12 +443,13 @@ pub struct Registration {
 unsafe impl Send for Registration {}
 unsafe impl Sync for Registration {}
 
-/// Updates the readiness state of the associated [`Registration`].
+/// Updates the readiness state of the associated `Registration`.
 ///
 /// See [`Registration`] for more documentation on using `SetReadiness` and
 /// [`Poll`] for high level polling documentation.
 ///
-/// [`Registration`]
+/// [`Poll`]: struct.Poll.html
+/// [`Registration`]: struct.Registration.html
 #[derive(Clone)]
 pub struct SetReadiness {
     inner: RegistrationInner,
@@ -603,6 +623,8 @@ impl Poll {
     /// # Examples
     ///
     /// ```
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
     /// use mio::{Poll, Events};
     /// use std::time::Duration;
     ///
@@ -616,30 +638,36 @@ impl Poll {
     ///
     /// // Wait for events, but none will be received because no `Evented`
     /// // handles have been registered with this `Poll` instance.
-    /// let n = poll.poll(&mut events, Some(Duration::from_millis(500))).unwrap();
+    /// let n = poll.poll(&mut events, Some(Duration::from_millis(500)))?;
     /// assert_eq!(n, 0);
+    /// #     Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
     /// ```
     pub fn new() -> io::Result<Poll> {
         is_send::<Poll>();
         is_sync::<Poll>();
 
         let poll = Poll {
-            selector: try!(sys::Selector::new()),
-            readiness_queue: try!(ReadinessQueue::new()),
+            selector: sys::Selector::new()?,
+            readiness_queue: ReadinessQueue::new()?,
             lock_state: AtomicUsize::new(0),
             lock: Mutex::new(()),
             condvar: Condvar::new(),
         };
 
         // Register the notification wakeup FD with the IO poller
-        try!(poll.readiness_queue.inner.awakener.register(&poll, AWAKEN, Ready::readable(), PollOpt::edge()));
+        poll.readiness_queue.inner.awakener.register(&poll, AWAKEN, Ready::readable(), PollOpt::edge())?;
 
         Ok(poll)
     }
 
     /// Register an `Evented` handle with the `Poll` instance.
     ///
-    /// Once registerd, the `Poll` instance will monitor the `Evented` handle
+    /// Once registered, the `Poll` instance will monitor the `Evented` handle
     /// for readiness state changes. When it notices a state change, it will
     /// return a readiness event for the handle the next time [`poll`] is
     /// called.
@@ -703,15 +731,17 @@ impl Poll {
     /// # Examples
     ///
     /// ```
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
     /// use mio::{Events, Poll, Ready, PollOpt, Token};
-    /// use mio::tcp::TcpStream;
+    /// use mio::net::TcpStream;
     /// use std::time::{Duration, Instant};
     ///
-    /// let poll = Poll::new().unwrap();
-    /// let socket = TcpStream::connect(&"216.58.193.100:80".parse().unwrap()).unwrap();
+    /// let poll = Poll::new()?;
+    /// let socket = TcpStream::connect(&"216.58.193.100:80".parse()?)?;
     ///
     /// // Register the socket with `poll`
-    /// poll.register(&socket, Token(0), Ready::all(), PollOpt::edge()).unwrap();
+    /// poll.register(&socket, Token(0), Ready::readable() | Ready::writable(), PollOpt::edge())?;
     ///
     /// let mut events = Events::with_capacity(1024);
     /// let start = Instant::now();
@@ -722,24 +752,30 @@ impl Poll {
     ///
     ///     if elapsed >= timeout {
     ///         // Connection timed out
-    ///         return;
+    ///         return Ok(());
     ///     }
     ///
     ///     let remaining = timeout - elapsed;
-    ///     poll.poll(&mut events, Some(remaining)).unwrap();
+    ///     poll.poll(&mut events, Some(remaining))?;
     ///
     ///     for event in &events {
     ///         if event.token() == Token(0) {
     ///             // Something (probably) happened on the socket.
-    ///             return;
+    ///             return Ok(());
     ///         }
     ///     }
     /// }
+    /// #     Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
     /// ```
     pub fn register<E: ?Sized>(&self, handle: &E, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()>
         where E: Evented
     {
-        try!(validate_args(token, interest));
+        validate_args(token)?;
 
         /*
          * Undefined behavior:
@@ -749,7 +785,7 @@ impl Poll {
         trace!("registering with poller");
 
         // Register interests for this socket
-        try!(handle.register(self, token, interest, opts));
+        handle.register(self, token, interest, opts)?;
 
         Ok(())
     }
@@ -780,19 +816,27 @@ impl Poll {
     /// # Examples
     ///
     /// ```
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
     /// use mio::{Poll, Ready, PollOpt, Token};
-    /// use mio::tcp::TcpStream;
+    /// use mio::net::TcpStream;
     ///
-    /// let poll = Poll::new().unwrap();
-    /// let socket = TcpStream::connect(&"216.58.193.100:80".parse().unwrap()).unwrap();
+    /// let poll = Poll::new()?;
+    /// let socket = TcpStream::connect(&"216.58.193.100:80".parse()?)?;
     ///
     /// // Register the socket with `poll`, requesting readable
-    /// poll.register(&socket, Token(0), Ready::readable(), PollOpt::edge()).unwrap();
+    /// poll.register(&socket, Token(0), Ready::readable(), PollOpt::edge())?;
     ///
     /// // Reregister the socket specifying a different token and write interest
     /// // instead. `PollOpt::edge()` must be specified even though that value
     /// // is not being changed.
-    /// poll.reregister(&socket, Token(2), Ready::writable(), PollOpt::edge()).unwrap();
+    /// poll.reregister(&socket, Token(2), Ready::writable(), PollOpt::edge())?;
+    /// #     Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
     /// ```
     ///
     /// [`struct`]: #
@@ -802,12 +846,12 @@ impl Poll {
     pub fn reregister<E: ?Sized>(&self, handle: &E, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()>
         where E: Evented
     {
-        try!(validate_args(token, interest));
+        validate_args(token)?;
 
         trace!("registering with poller");
 
         // Register interests for this socket
-        try!(handle.reregister(self, token, interest, opts));
+        handle.reregister(self, token, interest, opts)?;
 
         Ok(())
     }
@@ -829,23 +873,31 @@ impl Poll {
     /// # Examples
     ///
     /// ```
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
     /// use mio::{Events, Poll, Ready, PollOpt, Token};
-    /// use mio::tcp::TcpStream;
+    /// use mio::net::TcpStream;
     /// use std::time::Duration;
     ///
-    /// let poll = Poll::new().unwrap();
-    /// let socket = TcpStream::connect(&"216.58.193.100:80".parse().unwrap()).unwrap();
+    /// let poll = Poll::new()?;
+    /// let socket = TcpStream::connect(&"216.58.193.100:80".parse()?)?;
     ///
     /// // Register the socket with `poll`
-    /// poll.register(&socket, Token(0), Ready::readable(), PollOpt::edge()).unwrap();
+    /// poll.register(&socket, Token(0), Ready::readable(), PollOpt::edge())?;
     ///
-    /// poll.deregister(&socket).unwrap();
+    /// poll.deregister(&socket)?;
     ///
     /// let mut events = Events::with_capacity(1024);
     ///
     /// // Set a timeout because this poll should never receive any events.
-    /// let n = poll.poll(&mut events, Some(Duration::from_secs(1))).unwrap();
+    /// let n = poll.poll(&mut events, Some(Duration::from_secs(1)))?;
     /// assert_eq!(0, n);
+    /// #     Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
     /// ```
     pub fn deregister<E: ?Sized>(&self, handle: &E) -> io::Result<()>
         where E: Evented
@@ -853,7 +905,7 @@ impl Poll {
         trace!("deregistering handle with poller");
 
         // Deregister interests for this socket
-        try!(handle.deregister(self));
+        handle.deregister(self)?;
 
         Ok(())
     }
@@ -866,7 +918,7 @@ impl Poll {
     /// been received or `timeout` has elapsed. A `timeout` of `None` means that
     /// `poll` will block until a readiness event has been received.
     ///
-    /// The supplied `events` will be cleared and newly received readinss events
+    /// The supplied `events` will be cleared and newly received readiness events
     /// will be pushed onto the end. At most `events.capacity()` events will be
     /// returned. If there are further pending readiness events, they will be
     /// returned on the next call to `poll`.
@@ -884,7 +936,10 @@ impl Poll {
     ///
     /// `poll` returns the number of readiness events that have been pushed into
     /// `events` or `Err` when an error has been encountered with the system
-    /// selector.
+    /// selector.  The value returned is deprecated and will be removed in 0.7.0.
+    /// Accessing the events by index is also deprecated.  Events can be
+    /// inserted by other events triggering, thus making sequential access
+    /// problematic.  Use the iterator API instead.  See [`iter`].
     ///
     /// See the [struct] level documentation for a higher level discussion of
     /// polling.
@@ -892,22 +947,25 @@ impl Poll {
     /// [`readable`]: struct.Ready.html#method.readable
     /// [`writable`]: struct.Ready.html#method.writable
     /// [struct]: #
+    /// [`iter`]: struct.Events.html#method.iter
     ///
     /// # Examples
     ///
     /// A basic example -- establishing a `TcpStream` connection.
     ///
     /// ```
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
     /// use mio::{Events, Poll, Ready, PollOpt, Token};
-    /// use mio::tcp::TcpStream;
+    /// use mio::net::TcpStream;
     ///
     /// use std::net::{TcpListener, SocketAddr};
     /// use std::thread;
     ///
     /// // Bind a server socket to connect to.
-    /// let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
-    /// let server = TcpListener::bind(&addr).unwrap();
-    /// let addr = server.local_addr().unwrap().clone();
+    /// let addr: SocketAddr = "127.0.0.1:0".parse()?;
+    /// let server = TcpListener::bind(&addr)?;
+    /// let addr = server.local_addr()?.clone();
     ///
     /// // Spawn a thread to accept the socket
     /// thread::spawn(move || {
@@ -915,32 +973,50 @@ impl Poll {
     /// });
     ///
     /// // Construct a new `Poll` handle as well as the `Events` we'll store into
-    /// let poll = Poll::new().unwrap();
+    /// let poll = Poll::new()?;
     /// let mut events = Events::with_capacity(1024);
     ///
     /// // Connect the stream
-    /// let stream = TcpStream::connect(&addr).unwrap();
+    /// let stream = TcpStream::connect(&addr)?;
     ///
     /// // Register the stream with `Poll`
-    /// poll.register(&stream, Token(0), Ready::all(), PollOpt::edge()).unwrap();
+    /// poll.register(&stream, Token(0), Ready::readable() | Ready::writable(), PollOpt::edge())?;
     ///
     /// // Wait for the socket to become ready. This has to happens in a loop to
     /// // handle spurious wakeups.
     /// loop {
-    ///     poll.poll(&mut events, None).unwrap();
+    ///     poll.poll(&mut events, None)?;
     ///
     ///     for event in &events {
     ///         if event.token() == Token(0) && event.readiness().is_writable() {
     ///             // The socket connected (probably, it could still be a spurious
     ///             // wakeup)
-    ///             return;
+    ///             return Ok(());
     ///         }
     ///     }
     /// }
+    /// #     Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
     /// ```
     ///
     /// [struct]: #
-    pub fn poll(&self, events: &mut Events, mut timeout: Option<Duration>) -> io::Result<usize> {
+    pub fn poll(&self, events: &mut Events, timeout: Option<Duration>) -> io::Result<usize> {
+        self.poll1(events, timeout, false)
+    }
+
+    /// Like `poll`, but may be interrupted by a signal
+    ///
+    /// If `poll` is inturrupted while blocking, it will transparently retry the syscall.  If you
+    /// want to handle signals yourself, however, use `poll_interruptible`.
+    pub fn poll_interruptible(&self, events: &mut Events, timeout: Option<Duration>) -> io::Result<usize> {
+        self.poll1(events, timeout, true)
+    }
+
+    fn poll1(&self, events: &mut Events, mut timeout: Option<Duration>, interruptible: bool) -> io::Result<usize> {
         let zero = Some(Duration::from_millis(0));
 
         // At a high level, the synchronization strategy is to acquire access to
@@ -1058,7 +1134,7 @@ impl Poll {
             }
         }
 
-        let ret = self.poll2(events, timeout);
+        let ret = self.poll2(events, timeout, interruptible);
 
         // Release the lock
         if 1 != self.lock_state.fetch_and(!1, Release) {
@@ -1073,60 +1149,61 @@ impl Poll {
     }
 
     #[inline]
-    fn poll2(&self, events: &mut Events, timeout: Option<Duration>) -> io::Result<usize> {
+    fn poll2(&self, events: &mut Events, mut timeout: Option<Duration>, interruptible: bool) -> io::Result<usize> {
         // Compute the timeout value passed to the system selector. If the
         // readiness queue has pending nodes, we still want to poll the system
         // selector for new events, but we don't want to block the thread to
         // wait for new events.
-        let timeout = if timeout == Some(Duration::from_millis(0)) {
+        if timeout == Some(Duration::from_millis(0)) {
             // If blocking is not requested, then there is no need to prepare
             // the queue for sleep
-            timeout
         } else if self.readiness_queue.prepare_for_sleep() {
             // The readiness queue is empty. The call to `prepare_for_sleep`
             // inserts `sleep_marker` into the queue. This signals to any
             // threads setting readiness that the `Poll::poll` is going to
             // sleep, so the awakener should be used.
-            timeout
         } else {
             // The readiness queue is not empty, so do not block the thread.
-            Some(Duration::from_millis(0))
-        };
+            timeout = Some(Duration::from_millis(0));
+        }
 
-        // First get selector events
-        let res = self.selector.select(&mut events.inner, AWAKEN, timeout);
-
-        if try!(res) {
-            // Some awakeners require reading from a FD.
-            self.readiness_queue.inner.awakener.cleanup();
+        loop {
+            let now = Instant::now();
+            // First get selector events
+            let res = self.selector.select(&mut events.inner, AWAKEN, timeout);
+            match res {
+                Ok(true) => {
+                    // Some awakeners require reading from a FD.
+                    self.readiness_queue.inner.awakener.cleanup();
+                    break;
+                }
+                Ok(false) => break,
+                Err(ref e) if e.kind() == io::ErrorKind::Interrupted && !interruptible => {
+                    // Interrupted by a signal; update timeout if necessary and retry
+                    if let Some(to) = timeout {
+                        let elapsed = now.elapsed();
+                        if elapsed >= to {
+                            break;
+                        } else {
+                            timeout = Some(to - elapsed);
+                        }
+                    }
+                }
+                Err(e) => return Err(e),
+            }
         }
 
         // Poll custom event queue
         self.readiness_queue.poll(&mut events.inner);
 
         // Return number of polled events
-        Ok(events.len())
+        Ok(events.inner.len())
     }
 }
 
-#[cfg(unix)]
-fn registerable(interest: Ready) -> bool {
-    let unixinterest = UnixReady::from(interest);
-    unixinterest.is_readable() || unixinterest.is_writable() || unixinterest.is_aio()
-}
-
-#[cfg(not(unix))]
-fn registerable(interest: Ready) -> bool {
-    interest.is_readable() || interest.is_writable()
-}
-
-fn validate_args(token: Token, interest: Ready) -> io::Result<()> {
+fn validate_args(token: Token) -> io::Result<()> {
     if token == AWAKEN {
         return Err(io::Error::new(io::ErrorKind::Other, "invalid token"));
-    }
-
-    if !registerable(interest) {
-        return Err(io::Error::new(io::ErrorKind::Other, "interest must include readable or writable or aio"));
     }
 
     Ok(())
@@ -1134,11 +1211,12 @@ fn validate_args(token: Token, interest: Ready) -> io::Result<()> {
 
 impl fmt::Debug for Poll {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "Poll")
+        fmt.debug_struct("Poll")
+            .finish()
     }
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 impl AsRawFd for Poll {
     fn as_raw_fd(&self) -> RawFd {
         self.selector.as_raw_fd()
@@ -1148,34 +1226,41 @@ impl AsRawFd for Poll {
 /// A collection of readiness events.
 ///
 /// `Events` is passed as an argument to [`Poll::poll`] and will be used to
-/// receive any new readiness events received since the last call to [`poll`].
-/// Usually, a single `Events` instance is created at the same time as the
-/// [`Poll`] and the single instance is reused for each call to [`poll`].
+/// receive any new readiness events received since the last poll. Usually, a
+/// single `Events` instance is created at the same time as a [`Poll`] and
+/// reused on each call to [`Poll::poll`].
 ///
 /// See [`Poll`] for more documentation on polling.
 ///
 /// # Examples
 ///
 /// ```
+/// # use std::error::Error;
+/// # fn try_main() -> Result<(), Box<Error>> {
 /// use mio::{Events, Poll};
 /// use std::time::Duration;
 ///
 /// let mut events = Events::with_capacity(1024);
-/// let poll = Poll::new().unwrap();
+/// let poll = Poll::new()?;
 ///
 /// assert_eq!(0, events.len());
 ///
 /// // Register `Evented` handles with `poll`
 ///
-/// poll.poll(&mut events, Some(Duration::from_millis(100))).unwrap();
+/// poll.poll(&mut events, Some(Duration::from_millis(100)))?;
 ///
 /// for event in &events {
 ///     println!("event={:?}", event);
 /// }
+/// #     Ok(())
+/// # }
+/// #
+/// # fn main() {
+/// #     try_main().unwrap();
+/// # }
 /// ```
 ///
 /// [`Poll::poll`]: struct.Poll.html#method.poll
-/// [`poll`]: struct.Poll.html#method.poll
 /// [`Poll`]: struct.Poll.html
 pub struct Events {
     inner: sys::Events,
@@ -1188,26 +1273,70 @@ pub struct Events {
 /// # Examples
 ///
 /// ```
+/// # use std::error::Error;
+/// # fn try_main() -> Result<(), Box<Error>> {
 /// use mio::{Events, Poll};
 /// use std::time::Duration;
 ///
 /// let mut events = Events::with_capacity(1024);
-/// let poll = Poll::new().unwrap();
+/// let poll = Poll::new()?;
 ///
 /// // Register handles with `poll`
 ///
-/// poll.poll(&mut events, Some(Duration::from_millis(100))).unwrap();
+/// poll.poll(&mut events, Some(Duration::from_millis(100)))?;
 ///
 /// for event in events.iter() {
 ///     println!("event={:?}", event);
 /// }
+/// #     Ok(())
+/// # }
+/// #
+/// # fn main() {
+/// #     try_main().unwrap();
+/// # }
 /// ```
 ///
 /// [`Events`]: struct.Events.html
 /// [`iter`]: struct.Events.html#method.iter
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Iter<'a> {
     inner: &'a Events,
+    pos: usize,
+}
+
+/// Owned [`Events`] iterator.
+///
+/// This struct is created by the `into_iter` method on [`Events`].
+///
+/// # Examples
+///
+/// ```
+/// # use std::error::Error;
+/// # fn try_main() -> Result<(), Box<Error>> {
+/// use mio::{Events, Poll};
+/// use std::time::Duration;
+///
+/// let mut events = Events::with_capacity(1024);
+/// let poll = Poll::new()?;
+///
+/// // Register handles with `poll`
+///
+/// poll.poll(&mut events, Some(Duration::from_millis(100)))?;
+///
+/// for event in events {
+///     println!("event={:?}", event);
+/// }
+/// #     Ok(())
+/// # }
+/// #
+/// # fn main() {
+/// #     try_main().unwrap();
+/// # }
+/// ```
+/// [`Events`]: struct.Events.html
+#[derive(Debug)]
+pub struct IntoIter {
+    inner: Events,
     pos: usize,
 }
 
@@ -1229,41 +1358,14 @@ impl Events {
         }
     }
 
-    /// Returns the `Event` at the given index, or `None` if the index is out of
-    /// bounds.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use mio::{Events, Poll};
-    /// use std::time::Duration;
-    ///
-    /// let mut events = Events::with_capacity(1024);
-    /// let poll = Poll::new().unwrap();
-    ///
-    /// // Register handles with `poll`
-    ///
-    /// let n = poll.poll(&mut events, Some(Duration::from_millis(100))).unwrap();
-    ///
-    /// for i in 0..n {
-    ///     println!("event={:?}", events.get(i).unwrap());
-    /// }
-    /// ```
+    #[deprecated(since="0.6.10", note="Index access removed in favor of iterator only API.")]
+    #[doc(hidden)]
     pub fn get(&self, idx: usize) -> Option<Event> {
         self.inner.get(idx)
     }
 
-    /// Returns the number of `Event` values currently in `self`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use mio::Events;
-    ///
-    /// let events = Events::with_capacity(1024);
-    ///
-    /// assert_eq!(0, events.len());
-    /// ```
+    #[doc(hidden)]
+    #[deprecated(since="0.6.10", note="Index access removed in favor of iterator only API.")]
     pub fn len(&self) -> usize {
         self.inner.len()
     }
@@ -1301,25 +1403,66 @@ impl Events {
     /// # Examples
     ///
     /// ```
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
     /// use mio::{Events, Poll};
     /// use std::time::Duration;
     ///
     /// let mut events = Events::with_capacity(1024);
-    /// let poll = Poll::new().unwrap();
+    /// let poll = Poll::new()?;
     ///
     /// // Register handles with `poll`
     ///
-    /// poll.poll(&mut events, Some(Duration::from_millis(100))).unwrap();
+    /// poll.poll(&mut events, Some(Duration::from_millis(100)))?;
     ///
     /// for event in events.iter() {
     ///     println!("event={:?}", event);
     /// }
+    /// #     Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
     /// ```
     pub fn iter(&self) -> Iter {
         Iter {
             inner: self,
             pos: 0
         }
+    }
+
+    /// Clearing all `Event` values from container explicitly.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
+    /// use mio::{Events, Poll};
+    /// use std::time::Duration;
+    ///
+    /// let mut events = Events::with_capacity(1024);
+    /// let poll = Poll::new()?;
+    ///
+    /// // Register handles with `poll`
+    /// for _ in 0..2 {
+    ///     events.clear();
+    ///     poll.poll(&mut events, Some(Duration::from_millis(100)))?;
+    ///
+    ///     for event in events.iter() {
+    ///         println!("event={:?}", event);
+    ///     }
+    /// }
+    /// #     Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
+    /// ```
+    pub fn clear(&mut self) {
+        self.inner.clear();
     }
 }
 
@@ -1336,7 +1479,29 @@ impl<'a> Iterator for Iter<'a> {
     type Item = Event;
 
     fn next(&mut self) -> Option<Event> {
-        let ret = self.inner.get(self.pos);
+        let ret = self.inner.inner.get(self.pos);
+        self.pos += 1;
+        ret
+    }
+}
+
+impl IntoIterator for Events {
+    type Item = Event;
+    type IntoIter = IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter {
+            inner: self,
+            pos: 0,
+        }
+    }
+}
+
+impl Iterator for IntoIter {
+    type Item = Event;
+
+    fn next(&mut self) -> Option<Event> {
+        let ret = self.inner.inner.get(self.pos);
         self.pos += 1;
         ret
     }
@@ -1345,7 +1510,6 @@ impl<'a> Iterator for Iter<'a> {
 impl fmt::Debug for Events {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Events")
-            .field("len", &self.len())
             .field("capacity", &self.capacity())
             .finish()
     }
@@ -1381,6 +1545,8 @@ impl Registration {
     /// # Examples
     ///
     /// ```
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
     /// use mio::{Events, Ready, Registration, Poll, PollOpt, Token};
     /// use std::thread;
     ///
@@ -1393,8 +1559,8 @@ impl Registration {
     ///     set_readiness.set_readiness(Ready::readable());
     /// });
     ///
-    /// let poll = Poll::new().unwrap();
-    /// poll.register(&registration, Token(0), Ready::all(), PollOpt::edge()).unwrap();
+    /// let poll = Poll::new()?;
+    /// poll.register(&registration, Token(0), Ready::readable() | Ready::writable(), PollOpt::edge())?;
     ///
     /// let mut events = Events::with_capacity(256);
     ///
@@ -1403,11 +1569,16 @@ impl Registration {
     ///
     ///     for event in &events {
     ///         if event.token() == Token(0) && event.readiness().is_readable() {
-    ///             return;
+    ///             return Ok(());
     ///         }
     ///     }
     /// }
-    ///
+    /// #     Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
     /// ```
     /// [struct]: #
     /// [`Poll`]: struct.Poll.html
@@ -1536,14 +1707,22 @@ impl SetReadiness {
     /// # Examples
     ///
     /// ```
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
     /// use mio::{Registration, Ready};
     ///
     /// let (registration, set_readiness) = Registration::new2();
     ///
     /// assert!(set_readiness.readiness().is_empty());
     ///
-    /// set_readiness.set_readiness(Ready::readable()).unwrap();
+    /// set_readiness.set_readiness(Ready::readable())?;
     /// assert!(set_readiness.readiness().is_readable());
+    /// #     Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
     /// ```
     pub fn readiness(&self) -> Ready {
         self.inner.readiness()
@@ -1552,9 +1731,9 @@ impl SetReadiness {
     /// Set the registration's readiness
     ///
     /// If the associated `Registration` is registered with a [`Poll`] instance
-    /// and has requested readiness events that include `ready`, then a call
-    /// [`poll`] will receive a readiness event representing the readiness
-    /// state change.
+    /// and has requested readiness events that include `ready`, then a future
+    /// call to [`Poll::poll`] will receive a readiness event representing the
+    /// readiness state change.
     ///
     /// # Note
     ///
@@ -1568,28 +1747,36 @@ impl SetReadiness {
     /// work:
     ///
     /// ```
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
     /// use mio::{Events, Registration, Ready, Poll, PollOpt, Token};
     ///
-    /// let poll = Poll::new().unwrap();
+    /// let poll = Poll::new()?;
     /// let (registration, set_readiness) = Registration::new2();
     ///
     /// poll.register(&registration,
     ///               Token(0),
     ///               Ready::readable(),
-    ///               PollOpt::edge()).unwrap();
+    ///               PollOpt::edge())?;
     ///
     /// // Set the readiness, then immediately poll to try to get the readiness
     /// // event
-    /// set_readiness.set_readiness(Ready::readable()).unwrap();
+    /// set_readiness.set_readiness(Ready::readable())?;
     ///
     /// let mut events = Events::with_capacity(1024);
-    /// poll.poll(&mut events, None).unwrap();
+    /// poll.poll(&mut events, None)?;
     ///
     /// // There is NO guarantee that the following will work. It is possible
     /// // that the readiness event will be delivered at a later time.
     /// let event = events.get(0).unwrap();
     /// assert_eq!(event.token(), Token(0));
     /// assert!(event.readiness().is_readable());
+    /// #     Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
     /// ```
     ///
     /// # Examples
@@ -1598,19 +1785,28 @@ impl SetReadiness {
     /// documentation.
     ///
     /// ```
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
     /// use mio::{Registration, Ready};
     ///
     /// let (registration, set_readiness) = Registration::new2();
     ///
     /// assert!(set_readiness.readiness().is_empty());
     ///
-    /// set_readiness.set_readiness(Ready::readable()).unwrap();
+    /// set_readiness.set_readiness(Ready::readable())?;
     /// assert!(set_readiness.readiness().is_readable());
+    /// #     Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
     /// ```
     ///
     /// [`Registration`]: struct.Registration.html
+    /// [`Evented`]: event/trait.Evented.html#examples
     /// [`Poll`]: struct.Poll.html
-    /// [`poll`]: struct.Poll.html#method.poll
+    /// [`Poll::poll`]: struct.Poll.html#method.poll
     pub fn set_readiness(&self, ready: Ready) -> io::Result<()> {
         self.inner.set_readiness(ready)
     }
@@ -1618,7 +1814,8 @@ impl SetReadiness {
 
 impl fmt::Debug for SetReadiness {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "SetReadiness")
+        f.debug_struct("SetReadiness")
+            .finish()
     }
 }
 
@@ -1666,7 +1863,7 @@ impl RegistrationInner {
         if !state.is_queued() && next.is_queued() {
             // We toggled the queued flag, making us responsible for queuing the
             // node in the MPSC readiness queue.
-            try!(self.enqueue_with_wakeup());
+            self.enqueue_with_wakeup()?;
         }
 
         Ok(())
@@ -1824,7 +2021,7 @@ impl RegistrationInner {
 
         if !state.is_queued() && next.is_queued() {
             // We are responsible for enqueing the node.
-            try!(enqueue_with_wakeup(queue, self));
+            enqueue_with_wakeup(queue, self)?;
         }
 
         Ok(())
@@ -1902,7 +2099,7 @@ impl ReadinessQueue {
 
         Ok(ReadinessQueue {
             inner: Arc::new(ReadinessQueueInner {
-                awakener: try!(sys::Awakener::new()),
+                awakener: sys::Awakener::new()?,
                 head_readiness: AtomicPtr::new(ptr),
                 tail_readiness: UnsafeCell::new(ptr),
                 end_marker: end_marker,
@@ -2012,7 +2209,7 @@ impl ReadinessQueue {
 
     /// Prepare the queue for the `Poll::poll` thread to block in the system
     /// selector. This involves changing `head_readiness` to `sleep_marker`.
-    /// Returns true if successfull and `poll` can block.
+    /// Returns true if successful and `poll` can block.
     fn prepare_for_sleep(&self) -> bool {
         let end_marker = self.inner.end_marker();
         let sleep_marker = self.inner.sleep_marker();
@@ -2033,6 +2230,16 @@ impl ReadinessQueue {
             return false;
         }
 
+        // The sleep marker is *not* currently in the readiness queue.
+        //
+        // The sleep marker is only inserted in this function. It is also only
+        // inserted in the tail position. This is guaranteed by first checking
+        // that the end marker is in the tail position, pushing the sleep marker
+        // after the end marker, then removing the end marker.
+        //
+        // Before inserting a node into the queue, the next pointer has to be
+        // set to null. Again, this is only safe to do when the node is not
+        // currently in the queue, but we already have ensured this.
         self.inner.sleep_marker.next_readiness.store(ptr::null_mut(), Relaxed);
 
         let actual = self.inner.head_readiness.compare_and_swap(
@@ -2094,7 +2301,7 @@ impl ReadinessQueueInner {
     /// with relaxed ordering. Returns true if `Poll` needs to be woken up.
     fn enqueue_node_with_wakeup(&self, node: &ReadinessNode) -> io::Result<()> {
         if self.enqueue_node(node) {
-            try!(self.wakeup());
+            self.wakeup()?;
         }
 
         Ok(())
@@ -2519,7 +2726,7 @@ impl Clone for SelectorId {
 }
 
 #[test]
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 pub fn as_raw_fd() {
     let poll = Poll::new().unwrap();
     assert!(poll.as_raw_fd() > 0);

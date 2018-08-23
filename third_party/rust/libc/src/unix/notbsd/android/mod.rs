@@ -187,47 +187,52 @@ s! {
     }
 
     pub struct genlmsghdr {
-        cmd: u8,
-        version: u8,
-        reserved: u16,
+        pub cmd: u8,
+        pub version: u8,
+        pub reserved: u16,
     }
 
     pub struct nlmsghdr {
-        nlmsg_len: u32,
-        nlmsg_type: u16,
-        nlmsg_flags: u16,
-        nlmsg_seq: u32,
-        nlmsg_pid: u32,
+        pub nlmsg_len: u32,
+        pub nlmsg_type: u16,
+        pub nlmsg_flags: u16,
+        pub nlmsg_seq: u32,
+        pub nlmsg_pid: u32,
     }
 
     pub struct nlmsgerr {
-        error: ::c_int,
-        msg: nlmsghdr,
+        pub error: ::c_int,
+        pub msg: nlmsghdr,
     }
 
     pub struct nl_pktinfo {
-        group: u32,
+        pub group: u32,
     }
 
     pub struct nl_mmap_req {
-        nm_block_size: ::c_uint,
-        nm_block_nr: ::c_uint,
-        nm_frame_size: ::c_uint,
-        nm_frame_nr: ::c_uint,
+        pub nm_block_size: ::c_uint,
+        pub nm_block_nr: ::c_uint,
+        pub nm_frame_size: ::c_uint,
+        pub nm_frame_nr: ::c_uint,
     }
 
     pub struct nl_mmap_hdr {
-        nm_status: ::c_uint,
-        nm_len: ::c_uint,
-        nm_group: u32,
-        nm_pid: u32,
-        nm_uid: u32,
-        nm_gid: u32,
+        pub nm_status: ::c_uint,
+        pub nm_len: ::c_uint,
+        pub nm_group: u32,
+        pub nm_pid: u32,
+        pub nm_uid: u32,
+        pub nm_gid: u32,
     }
 
     pub struct nlattr {
-        nla_len: u16,
-        nla_type: u16,
+        pub nla_len: u16,
+        pub nla_type: u16,
+    }
+
+    pub struct in6_pktinfo {
+        pub ipi6_addr: ::in6_addr,
+        pub ipi6_ifindex: ::c_int,
     }
 }
 
@@ -385,6 +390,49 @@ pub const _SC_NPROCESSORS_ONLN: ::c_int = 97;
 pub const _SC_PHYS_PAGES: ::c_int = 98;
 pub const _SC_AVPHYS_PAGES: ::c_int = 99;
 pub const _SC_MONOTONIC_CLOCK: ::c_int = 100;
+
+pub const _SC_2_PBS: ::c_int = 101;
+pub const _SC_2_PBS_ACCOUNTING: ::c_int = 102;
+pub const _SC_2_PBS_CHECKPOINT: ::c_int = 103;
+pub const _SC_2_PBS_LOCATE: ::c_int = 104;
+pub const _SC_2_PBS_MESSAGE: ::c_int = 105;
+pub const _SC_2_PBS_TRACK: ::c_int = 106;
+pub const _SC_ADVISORY_INFO: ::c_int = 107;
+pub const _SC_BARRIERS: ::c_int = 108;
+pub const _SC_CLOCK_SELECTION: ::c_int = 109;
+pub const _SC_CPUTIME: ::c_int = 110;
+pub const _SC_HOST_NAME_MAX: ::c_int = 111;
+pub const _SC_IPV6: ::c_int = 112;
+pub const _SC_RAW_SOCKETS: ::c_int = 113;
+pub const _SC_READER_WRITER_LOCKS: ::c_int = 114;
+pub const _SC_REGEXP: ::c_int = 115;
+pub const _SC_SHELL: ::c_int = 116;
+pub const _SC_SPAWN: ::c_int = 117;
+pub const _SC_SPIN_LOCKS: ::c_int = 118;
+pub const _SC_SPORADIC_SERVER: ::c_int = 119;
+pub const _SC_SS_REPL_MAX: ::c_int = 120;
+pub const _SC_SYMLOOP_MAX: ::c_int = 121;
+pub const _SC_THREAD_CPUTIME: ::c_int = 122;
+pub const _SC_THREAD_PROCESS_SHARED: ::c_int = 123;
+pub const _SC_THREAD_ROBUST_PRIO_INHERIT: ::c_int = 124;
+pub const _SC_THREAD_ROBUST_PRIO_PROTECT: ::c_int = 125;
+pub const _SC_THREAD_SPORADIC_SERVER: ::c_int = 126;
+pub const _SC_TIMEOUTS: ::c_int = 127;
+pub const _SC_TRACE: ::c_int = 128;
+pub const _SC_TRACE_EVENT_FILTER: ::c_int = 129;
+pub const _SC_TRACE_EVENT_NAME_MAX: ::c_int = 130;
+pub const _SC_TRACE_INHERIT: ::c_int = 131;
+pub const _SC_TRACE_LOG: ::c_int = 132;
+pub const _SC_TRACE_NAME_MAX: ::c_int = 133;
+pub const _SC_TRACE_SYS_MAX: ::c_int = 134;
+pub const _SC_TRACE_USER_EVENT_MAX: ::c_int = 135;
+pub const _SC_TYPED_MEMORY_OBJECTS: ::c_int = 136;
+pub const _SC_V7_ILP32_OFF32: ::c_int = 137;
+pub const _SC_V7_ILP32_OFFBIG: ::c_int = 138;
+pub const _SC_V7_LP64_OFF64: ::c_int = 139;
+pub const _SC_V7_LPBIG_OFFBIG: ::c_int = 140;
+pub const _SC_XOPEN_STREAMS: ::c_int = 141;
+pub const _SC_XOPEN_UUCP: ::c_int = 142;
 
 pub const PTHREAD_MUTEX_NORMAL: ::c_int = 0;
 pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 1;
@@ -1372,6 +1420,51 @@ pub const ETH_P_XDSA: ::c_int = 0x00F8;
 /* see rust-lang/libc#924 pub const ETH_P_MAP: ::c_int = 0x00F9;*/
 // end android/platform/bionic/libc/kernel/uapi/linux/if_ether.h
 
+pub const SIOCADDRT: ::c_ulong = 0x0000890B;
+pub const SIOCDELRT: ::c_ulong = 0x0000890C;
+pub const SIOCGIFNAME: ::c_ulong = 0x00008910;
+pub const SIOCSIFLINK: ::c_ulong = 0x00008911;
+pub const SIOCGIFCONF: ::c_ulong = 0x00008912;
+pub const SIOCGIFFLAGS: ::c_ulong = 0x00008913;
+pub const SIOCSIFFLAGS: ::c_ulong = 0x00008914;
+pub const SIOCGIFADDR: ::c_ulong = 0x00008915;
+pub const SIOCSIFADDR: ::c_ulong = 0x00008916;
+pub const SIOCGIFDSTADDR: ::c_ulong = 0x00008917;
+pub const SIOCSIFDSTADDR: ::c_ulong = 0x00008918;
+pub const SIOCGIFBRDADDR: ::c_ulong = 0x00008919;
+pub const SIOCSIFBRDADDR: ::c_ulong = 0x0000891A;
+pub const SIOCGIFNETMASK: ::c_ulong = 0x0000891B;
+pub const SIOCSIFNETMASK: ::c_ulong = 0x0000891C;
+pub const SIOCGIFMETRIC: ::c_ulong = 0x0000891D;
+pub const SIOCSIFMETRIC: ::c_ulong = 0x0000891E;
+pub const SIOCGIFMEM: ::c_ulong = 0x0000891F;
+pub const SIOCSIFMEM: ::c_ulong = 0x00008920;
+pub const SIOCGIFMTU: ::c_ulong = 0x00008921;
+pub const SIOCSIFMTU: ::c_ulong = 0x00008922;
+pub const SIOCSIFHWADDR: ::c_ulong = 0x00008924;
+pub const SIOCGIFENCAP: ::c_ulong = 0x00008925;
+pub const SIOCSIFENCAP: ::c_ulong = 0x00008926;
+pub const SIOCGIFHWADDR: ::c_ulong = 0x00008927;
+pub const SIOCGIFSLAVE: ::c_ulong = 0x00008929;
+pub const SIOCSIFSLAVE: ::c_ulong = 0x00008930;
+pub const SIOCADDMULTI: ::c_ulong = 0x00008931;
+pub const SIOCDELMULTI: ::c_ulong = 0x00008932;
+pub const SIOCDARP: ::c_ulong = 0x00008953;
+pub const SIOCGARP: ::c_ulong = 0x00008954;
+pub const SIOCSARP: ::c_ulong = 0x00008955;
+pub const SIOCDRARP: ::c_ulong = 0x00008960;
+pub const SIOCGRARP: ::c_ulong = 0x00008961;
+pub const SIOCSRARP: ::c_ulong = 0x00008962;
+pub const SIOCGIFMAP: ::c_ulong = 0x00008970;
+pub const SIOCSIFMAP: ::c_ulong = 0x00008971;
+
+// linux/module.h
+pub const MODULE_INIT_IGNORE_MODVERSIONS: ::c_uint = 0x0001;
+pub const MODULE_INIT_IGNORE_VERMAGIC: ::c_uint = 0x0002;
+
+// Similarity to Linux it's not used but defined for compatibility.
+pub const ENOATTR: ::c_int = ::ENODATA;
+
 f! {
     pub fn CPU_ZERO(cpuset: &mut cpu_set_t) -> () {
         for slot in cpuset.__bits.iter_mut() {
@@ -1495,6 +1588,8 @@ extern {
     pub fn sched_rr_get_interval(pid: ::pid_t, tp: *mut ::timespec) -> ::c_int;
     pub fn sem_timedwait(sem: *mut sem_t,
                          abstime: *const ::timespec) -> ::c_int;
+    pub fn sem_getvalue(sem: *mut sem_t,
+                        sval: *mut ::c_int) -> ::c_int;
     pub fn sched_setparam(pid: ::pid_t, param: *const ::sched_param) -> ::c_int;
     pub fn setns(fd: ::c_int, nstype: ::c_int) -> ::c_int;
     pub fn swapoff(puath: *const ::c_char) -> ::c_int;
