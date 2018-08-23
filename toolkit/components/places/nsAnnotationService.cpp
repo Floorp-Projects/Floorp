@@ -380,50 +380,6 @@ nsAnnotationService::SetAnnotationDoubleInternal(int64_t aItemId,
 }
 
 
-NS_IMETHODIMP
-nsAnnotationService::GetPageAnnotation(nsIURI* aURI,
-                                       const nsACString& aName,
-                                       nsIVariant** _retval)
-{
-  NS_ENSURE_ARG(aURI);
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(aURI, 0, aName, statement);
-  if (NS_FAILED(rv))
-    return rv;
-
-  mozStorageStatementScoper scoper(statement);
-
-  nsCOMPtr<nsIWritableVariant> value = new nsVariant();
-  int32_t type = statement->AsInt32(kAnnoIndex_Type);
-  switch (type) {
-    case nsIAnnotationService::TYPE_INT32:
-    case nsIAnnotationService::TYPE_INT64:
-    case nsIAnnotationService::TYPE_DOUBLE: {
-      rv = value->SetAsDouble(statement->AsDouble(kAnnoIndex_Content));
-      break;
-    }
-    case nsIAnnotationService::TYPE_STRING: {
-      nsAutoString valueString;
-      rv = statement->GetString(kAnnoIndex_Content, valueString);
-      if (NS_SUCCEEDED(rv))
-        rv = value->SetAsAString(valueString);
-      break;
-    }
-    default: {
-      rv = NS_ERROR_UNEXPECTED;
-      break;
-    }
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    value.forget(_retval);
-  }
-
-  return rv;
-}
-
 nsresult
 nsAnnotationService::GetValueFromStatement(nsCOMPtr<mozIStorageStatement>& aStatement,
                                            nsIVariant** _retval)
@@ -467,7 +423,7 @@ nsAnnotationService::GetItemAnnotation(int64_t aItemId,
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(nullptr, aItemId, aName, statement);
+  nsresult rv = StartGetAnnotation(aItemId, aName, statement);
   if (NS_FAILED(rv))
     return rv;
 
@@ -492,7 +448,7 @@ nsAnnotationService::GetItemAnnotationInfo(int64_t aItemId,
   NS_ENSURE_ARG_POINTER(_storageType);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(nullptr, aItemId, aName, statement);
+  nsresult rv = StartGetAnnotation(aItemId, aName, statement);
   if (NS_FAILED(rv))
     return rv;
 
@@ -822,42 +778,23 @@ nsAnnotationService::ItemHasAnnotation(int64_t aItemId,
  */
 
 nsresult
-nsAnnotationService::StartGetAnnotation(nsIURI* aURI,
-                                        int64_t aItemId,
+nsAnnotationService::StartGetAnnotation(int64_t aItemId,
                                         const nsACString& aName,
                                         nsCOMPtr<mozIStorageStatement>& aStatement)
 {
-  bool isItemAnnotation = (aItemId > 0);
-
-  if (isItemAnnotation) {
-    aStatement = mDB->GetStatement(
-      "SELECT a.id, a.item_id, :anno_name, a.content, a.flags, "
-             "a.expiration, a.type "
-      "FROM moz_anno_attributes n "
-      "JOIN moz_items_annos a ON a.anno_attribute_id = n.id "
-      "WHERE a.item_id = :item_id "
-      "AND n.name = :anno_name"
-    );
-  }
-  else {
-    aStatement = mDB->GetStatement(
-      "SELECT a.id, a.place_id, :anno_name, a.content, a.flags, "
-             "a.expiration, a.type "
-      "FROM moz_anno_attributes n "
-      "JOIN moz_annos a ON n.id = a.anno_attribute_id "
-      "JOIN moz_places h ON h.id = a.place_id "
-      "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url "
-        "AND n.name = :anno_name"
-    );
-  }
+  aStatement = mDB->GetStatement(
+    "SELECT a.id, a.item_id, :anno_name, a.content, a.flags, "
+           "a.expiration, a.type "
+    "FROM moz_anno_attributes n "
+    "JOIN moz_items_annos a ON a.anno_attribute_id = n.id "
+    "WHERE a.item_id = :item_id "
+    "AND n.name = :anno_name"
+  );
   NS_ENSURE_STATE(aStatement);
   mozStorageStatementScoper getAnnoScoper(aStatement);
 
   nsresult rv;
-  if (isItemAnnotation)
-    rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
-  else
-    rv = URIBinder::Bind(aStatement, NS_LITERAL_CSTRING("page_url"), aURI);
+  rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aStatement->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);

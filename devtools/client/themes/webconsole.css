@@ -3,10 +3,52 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Webconsole specific theme variables */
+:root {
+  /* Output rows should be 20px tall for a single line of text;
+   * 20 = 3 (top padding) + 14 (line-height) + 3 (bottom padding)
+   */
+  --console-output-font-size: 11px;
+  --console-output-line-height: calc(14 / 11);
+  --console-output-vertical-padding: 3px;
+  /* Width of the left gutter where icons appear */
+  --console-inline-start-gutter: 32px;
+  /* Icons perfectly centered in the left gutter "feel" closer to the window
+   * edge than to message text. This value pushes them slightly to the right. */
+  --console-icon-horizontal-offset: 1px;
+}
+
+.theme-dark {
+  --console-arrow-color: hsl(210, 6%, 52%);
+  --console-input-icon-color: hsl(0, 0%, 50%, 0.5);
+  --console-input-icon-focused: hsl(210, 100%, 73%);
+  --console-output-icon-info: hsl(210, 6%, 52%);
+  --console-output-icon-input: hsl(210, 6%, 76%);
+  --console-output-icon-error: hsl(0, 100%, 65%);
+  --console-output-icon-warning: hsl(36, 100%, 60%);
+  --console-output-indent-border-color: var(--theme-highlight-blue);
+  --error-color: hsl(0, 100%, 79%);
+  --error-background-color: hsl(352, 79%, 62%, 0.17);
+  --warning-color: hsl(43, 94%, 81%);
+  --warning-background-color: hsl(42, 37%, 19%);
+  --console-output-color: white;
+  --repeat-bubble-background-color: var(--blue-60);
+}
+
 .theme-light {
-  --error-color: #FF0000;
-  --error-background-color: #FFEBEB;
-  --warning-background-color: #FFFFC8;
+  --console-arrow-color: hsl(210, 6%, 67%);
+  --console-input-icon-color: hsl(210, 6%, 75%);
+  --console-input-icon-focused: hsl(210, 100%, 44%);
+  --console-output-icon-info: hsl(210, 6%, 67%);
+  --console-output-icon-input: hsl(210, 6%, 34%);
+  --console-output-icon-error: hsl(0, 90%, 45%);
+  --console-output-icon-warning: hsl(36, 100%, 45%);
+  --console-output-indent-border-color: var(--theme-highlight-blue);
+  --error-color: var(--red-70);
+  --error-background-color: hsl(344, 73%, 97%);
+  --warning-color: var(--yellow-80);
+  --warning-background-color: hsl(54, 100%, 92%);
+  --console-output-color: var(--grey-90);
+  --repeat-bubble-background-color: var(--theme-highlight-blue);
 }
 
 /* General output styles */
@@ -27,78 +69,136 @@ a {
 
 .message {
   display: flex;
-  padding: 0 7px;
   width: 100%;
-  box-sizing: border-box;
+  /* Avoid vertical padding, so that we can draw full-height items (e.g. indent guides).
+   * Use vertical margins on children instead. */
+  padding-inline-start: 1px;
+  padding-inline-end: 8px;
+  border-inline-start: solid 3px transparent;
+  font-size: var(--console-output-font-size);
+  line-height: var(--console-output-line-height);
+}
+
+.message:hover {
+  border-inline-start-color: var(--theme-highlight-blue);
+}
+
+.message.error {
+  color: var(--error-color);
+  background-color: var(--error-background-color);
+}
+
+.message.warn {
+  color: var(--warning-color);
+  background-color: var(--warning-background-color);
+}
+
+.message.startGroup,
+.message.startGroupCollapsed {
+  --console-output-indent-border-color: transparent;
 }
 
 .message > .prefix,
 .message > .timestamp {
   flex: none;
   color: var(--theme-comment);
-  margin: 3px 6px 0 0;
+  margin: var(--console-output-vertical-padding) 4px;
+}
+
+@media (max-width: 500px) {
+  .message > .timestamp {
+    display: none;
+  }
 }
 
 .message > .indent {
   flex: none;
+  display: inline-block;
+  margin-inline-start: 12px;
+  border-inline-end: solid 1px var(--console-output-indent-border-color);
+}
+
+.message > .indent[data-indent="0"] {
+  display: none;
+}
+
+/* Center first level indent within the left gutter */
+.message:not(.startGroup):not(.startGroupCollapsed) > .indent[data-indent="1"] {
+  margin-inline-start: calc(1px + var(--console-icon-horizontal-offset));
+  margin-inline-end: calc(11px - var(--console-icon-horizontal-offset));
 }
 
 .message > .icon {
   flex: none;
-  margin: 3px 6px 0 0;
-  padding: 0 4px;
-  height: 1em;
   align-self: flex-start;
-}
-
-.theme-light .message.error {
-  color: var(--error-color);
-  background-color: var(--error-background-color);
-}
-
-.theme-light .message.warn {
-  background-color: var(--warning-background-color);
-}
-
-.message > .icon::before {
-  content: "";
-  background-image: url(chrome://devtools/skin/images/webconsole.svg);
-  background-position: 12px 12px;
+  /* Width and height must be a multiples of 2px to avoid blurry images.
+   * Height should match the text's line-height for optimal vertical alignment */
+  width: 14px;
+  height: 14px;
+  margin: var(--console-output-vertical-padding) 4px;
+  background-image: none;
+  background-position: 50% 50%;
   background-repeat: no-repeat;
-  background-size: 72px 60px;
-  width: 12px;
-  height: 12px;
-  display: inline-block;
+  background-size: 12px 12px;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
-.theme-light .message > .icon::before {
-  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
+/* Icon on unindented row should be centered within the left gutter */
+.message > .indent[data-indent="0"] + .icon {
+  width: 24px;
+  margin-inline-start: var(--console-icon-horizontal-offset);
+  margin-inline-end: calc(4px - var(--console-icon-horizontal-offset));
+}
+
+.message.command > .icon {
+  color: var(--console-output-icon-input);
+  background-image: var(--theme-console-input-image);
+}
+
+.message.result > .icon {
+  color: var(--console-output-icon-info);
+  background-image: var(--theme-console-return-image);
+}
+
+.message.info > .icon {
+  color: var(--console-output-icon-info);
+  background-image: var(--theme-console-info-image);
+}
+
+.message.error > .icon {
+  color: var(--console-output-icon-error);
+  background-image: var(--theme-console-alert-image);
+}
+
+.message.warn > .icon {
+  color: var(--console-output-icon-warning);
+  background-image: var(--theme-console-alert-image);
 }
 
 .message > .message-body-wrapper {
   flex: auto;
   min-width: 0px;
-  margin: 3px;
+  margin: var(--console-output-vertical-padding) 0;
 }
 
 .message-body-wrapper .table-widget-body {
   overflow: visible;
 }
 
-/* The red bubble that shows the number of times a message is repeated */
+/* The bubble that shows the number of times a message is repeated */
 .message-repeats {
   -moz-user-select: none;
   flex-shrink: 0;
-  margin: 2px 6px;
+  margin: 2px 5px;
   padding: 0 6px;
   height: 1.25em;
   color: white;
-  background-color: red;
+  background-color: var(--repeat-bubble-background-color);
   border-radius: 40px;
   font: message-box;
-  font-size: 0.9em;
-  font-weight: 600;
-  margin-inline-start: 5px;
+  font-size: 0.8em;
+  font-weight: normal;
 }
 
 .message-repeats[value="1"] {
@@ -157,10 +257,6 @@ a {
 
 /* Network styles */
 
-.theme-dark .message.error {
-  background-color: rgba(235, 83, 104, 0.17);
-}
-
 .console-string {
   color: var(--theme-highlight-lightorange);
 }
@@ -170,10 +266,6 @@ a {
 .theme-selected .cm-variable,
 .theme-selected .kind-ArrayLike {
   color: #f5f7fa !important; /* Selection Text Color */
-}
-
-.message.network.error > .icon::before {
-  background-position: -12px 0;
 }
 
 .message.network > .message-body {
@@ -221,54 +313,6 @@ a {
   margin-inline-end: 1ex;
 }
 
-/* CSS styles */
-
-.message.cssparser > .indent  {
-  border-inline-end: solid #00b6f0 6px;
-}
-
-.message.cssparser.error > .icon::before {
-  background-position: -12px -12px;
-}
-
-.message.cssparser.warn > .icon::before {
-  background-position: -24px -12px;
-}
-
-/* JS styles */
-
-.message.exception > .indent {
-  border-inline-end: solid #fb9500 6px;
-}
-
-.message.exception.error > .icon::before {
-  background-position: -12px -24px;
-}
-
-.message.exception.warn > .icon::before {
-  background-position: -24px -24px;
-}
-
-/* Web Developer styles */
-
-.message.console-api > .indent {
-  border-inline-end: solid #cbcbcb 6px;
-}
-
-/* Input and output styles */
-.message.command > .indent,
-.message.result > .indent {
-  border-inline-end: solid #808080 6px;
-}
-
-.message.command > .icon::before {
-  background-position: -48px -36px;
-}
-
-.message.result > .icon::before {
-  background-position: -60px -36px;
-}
-
 /* JSTerm Styles */
 
 html .jsterm-input-node-html,
@@ -284,13 +328,17 @@ html #webconsole-notificationbox {
 }
 
 .jsterm-input-node {
-  background-image: var(--theme-command-line-image);
-  background-repeat: no-repeat;
-  background-size: 16px 16px;
-  background-position: 4px 4px;
-  color: var(--theme-content-color1);
   box-sizing: border-box;
   height: 100%;
+  color: var(--theme-content-color1);
+  /* input icon */
+  background-image: var(--theme-console-input-image);
+  background-position-x: calc(10px + var(--console-icon-horizontal-offset));
+  background-position-y: 7px;
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  -moz-context-properties: fill;
+  fill: var(--console-input-icon-color);
 }
 
 .jsterm-complete-node {
@@ -314,8 +362,8 @@ textarea.jsterm-complete-node {
   font-size: inherit;
   line-height: 16px;
   overflow-x: hidden;
-  padding: 4px 0;
-  padding-inline-start: 20px;
+  padding: 5px 0;
+  padding-inline-start: var(--console-inline-start-gutter);
 }
 
 textarea.jsterm-complete-node {
@@ -327,25 +375,29 @@ textarea.jsterm-complete-node {
 }
 
 textarea.jsterm-input-node:focus {
-  background-image: var(--theme-command-line-image-focus);
+  fill: var(--console-input-icon-focused);
   box-shadow: none;
   outline: none;
 }
 
 /* CodeMirror-powered JsTerm */
 .jsterm-cm .jsterm-input-container > .CodeMirror {
-  font-size: inherit;
-  line-height: 16px;
-  padding-inline-start: 20px;
+  font-size: var(--console-output-font-size);
+  line-height: var(--console-output-line-height);
+  /* aim for a 32px left space (a descendent has 4px padding) */
+  padding-inline-start: calc(var(--console-inline-start-gutter) - 4px);
   /* input icon */
-  background-image: var(--theme-command-line-image);
+  background-image: var(--theme-console-input-image);
+  background-position-x: calc(10px + var(--console-icon-horizontal-offset));
+  background-position-y: 5px;
   background-repeat: no-repeat;
-  background-size: 16px 16px;
-  background-position: 4px 4px;
+  background-size: 12px 12px;
+  -moz-context-properties: fill;
+  fill: var(--console-input-icon-color);
 }
 
 .jsterm-cm .jsterm-input-container > .CodeMirror-focused {
-  background-image: var(--theme-command-line-image-focus);
+  fill: var(--console-input-icon-focused);
 }
 
 .jsterm-cm .cm-auto-complete-shadow-text::after {
@@ -355,24 +407,12 @@ textarea.jsterm-input-node:focus {
 
 /* Security styles */
 
-.message.security > .indent {
-  border-inline-end: solid red 6px;
-}
-
-.message.security.error > .icon::before {
-  background-position: -12px -48px;
-}
-
-.message.security.warn > .icon::before {
-  background-position: -24px -48px;
-}
-
 .navigation-marker {
   color: #aaa;
   background: linear-gradient(#aaa, #aaa) no-repeat left 50%;
   background-size: 100% 2px;
-  margin-top: 6px;
-  margin-bottom: 6px;
+  margin-block-start: 6px;
+  margin-block-end: 6px;
   font-size: 0.9em;
 }
 
@@ -388,11 +428,14 @@ textarea.jsterm-input-node:focus {
 
 .stacktrace {
   display: none;
-  padding: 5px 10px;
-  margin: 5px 0 0 0;
   overflow-y: auto;
-  border: 1px solid var(--theme-splitter-color);
-  border-radius: 3px;
+  margin-block-start: 5px;
+  margin-block-end: var(--attachment-margin-block-end);
+  padding-inline-start: 4px;
+}
+
+.message.open .stacktrace {
+  display: block;
 }
 
 .consoletable {
@@ -409,24 +452,9 @@ textarea.jsterm-input-node:focus {
   line-height: 1.25em;
 }
 
-.theme-light .message.error .stacktrace {
-  background-color: rgba(255, 255, 255, 0.5);
-}
-
-.theme-dark .message.error .stacktrace {
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.message.open .stacktrace {
-  display: block;
-}
-
-.message .theme-twisty {
-  position: relative;
-  top: 0.1em;
-}
-
-/*Do not mirror the twisty because container force to ltr */
+/* Do not mirror the twisty because container force to ltr
+ * (theme-twisty still used in network request details)
+ */
 .message .theme-twisty:dir(rtl),
 .message .theme-twisty:-moz-locale-dir(rtl) {
   transform: none;
@@ -449,8 +477,8 @@ a.learn-more-link.webconsole-learn-more-link {
 /* Open DOMNode in inspector button */
 .open-inspector {
   background: url("chrome://devtools/skin/images/vview-open-inspector.png") no-repeat 0 0;
-  padding-left: 16px;
-  margin-left: 5px;
+  padding-inline-start: 16px;
+  margin-inline-start: 5px;
   cursor: pointer;
 }
 
@@ -462,33 +490,8 @@ a.learn-more-link.webconsole-learn-more-link {
   filter: var(--theme-icon-checked-filter) brightness(0.9);
 }
 
-@media (max-width: 500px) {
-  .message > .timestamp {
-    display: none;
-  }
-}
-
 #output-container {
   height: 100%;
-}
-
-/* Webconsole specific theme variables */
-.theme-light .webconsole-output-wrapper {
-  --error-color: var(--red-70);
-  --error-background-color: #FDF2F5;
-  --warning-color: var(--yellow-80);
-  --warning-background-color: #FFFBD5;
-  --console-output-color: var(--grey-90);
-  --repeat-bubble-background-color: var(--theme-highlight-blue);
-}
-
-.theme-dark .webconsole-output-wrapper {
-  --error-color: #FF9494;
-  --error-background-color: #442923;
-  --warning-color: #FCE19F;
-  --warning-background-color: #44391F;
-  --console-output-color: white;
-  --repeat-bubble-background-color: var(--blue-60);
 }
 
 /*
@@ -538,6 +541,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .devtools-toolbar.webconsole-filterbar-secondary {
+  --separator-inline-margin: 5px;
   display: flex;
   width: 100%;
   align-items: center;
@@ -569,7 +573,7 @@ a.learn-more-link.webconsole-learn-more-link {
 .webconsole-filterbar-primary .devtools-plaininput {
   flex: 1 1 100%;
   align-self: stretch;
-  margin-left: 1px;
+  margin-inline-start: 1px;
   padding-inline-start: 4px;
   border: 1px solid transparent;
 }
@@ -586,10 +590,6 @@ a.learn-more-link.webconsole-learn-more-link {
   display: flex;
   align-items: center;
   -moz-user-select: none;
-}
-
-.webconsole-filterbar-secondary .devtools-separator {
-  margin: 0 5px;
 }
 
 .webconsole-filterbar-filtered-messages {
@@ -621,27 +621,6 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .webconsole-filterbar-filtered-messages .reset-filters-button {
   margin-inline-start: 0.5em;
-}
-
-.webconsole-output-wrapper .message {
-  --border-size: 3px;
-  border-inline-start: var(--border-size) solid transparent;
-}
-
-.webconsole-output-wrapper .message:hover {
-  border-inline-start-color: var(--theme-highlight-blue);
-}
-
-.webconsole-output-wrapper .message.warn.warn {
-  background-color: var(--warning-background-color);
-}
-
-.webconsole-output-wrapper .message.error .message-body {
-  color: var(--error-color);
-}
-
-.webconsole-output-wrapper .message.warn .message-body {
-  color: var(--warning-color);
 }
 
 /* Special casing String reps so they are legible */
@@ -682,44 +661,6 @@ a.learn-more-link.webconsole-learn-more-link {
 .message.startGroupCollapsed .message-body > .objectBox-string {
   color: var(--theme-body-color);
   font-weight: bold;
-}
-
-.webconsole-output-wrapper .message > .icon {
-  margin: var(--icon-top-margin) 0 0 0;
-  padding: 0 0 0 6px;
-}
-
-.webconsole-output-wrapper .message.error > .icon::before {
-  /* Red warning icon */
-  background-position: -24px -48px;
-}
-
-.webconsole-output-wrapper .message.warn > .icon::before {
-  /* Yellow warning icon */
-  background-position: -24px -24px;
-}
-
-.webconsole-output-wrapper .message .theme-twisty {
-  margin: calc(var(--icon-top-margin) - 1px) 0 0 0;
-}
-
-.message.error > .icon::before {
-  background-position: -12px -36px;
-}
-
-.message.warn > .icon::before {
-  background-position: -24px -36px;
-}
-
-.message.info > .icon::before {
-  background-position: -36px -36px;
-}
-
-/* The bubble that shows the number of times a message is repeated */
-.webconsole-output-wrapper .message-repeats {
-  background-color: var(--repeat-bubble-background-color);
-  font-weight: normal;
-  font-size: 0.8em;
 }
 
 /* Prefix text that can be set by ConsoleAPI option */
@@ -784,7 +725,8 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .network.message .network-info {
   display: none;
-  margin-top: 8px;
+  margin-block-start: 6px;
+  margin-block-end: 2px;
   border: solid 1px var(--theme-splitter-color);
 }
 
@@ -808,46 +750,12 @@ a.learn-more-link.webconsole-learn-more-link {
   flex-wrap: wrap;
 }
 
-/* Output Wrapper */
-
-.webconsole-output-wrapper .message .indent {
-  display: inline-block;
-  border-inline-end: solid 1px var(--console-output-indent-border-color);
-}
-.webconsole-output-wrapper .message .indent[data-indent="0"] {
-  border-inline-end: none;
-}
-
-.message.startGroup .indent,
-.message.startGroupCollapsed .indent {
-  border-inline-end-color: transparent;
-  margin-inline-end: 5px;
-}
-
-.message.startGroup .icon,
-.message.startGroupCollapsed .icon {
-  display: none;
-}
-
 /*
  * Open DOMNode in inspector button. Style need to be reset in the new
  * console since its style is already defined in reps.css .
  */
 .webconsole-output-wrapper .open-inspector {
   background-image: unset;
-}
-
-/* Stacktraces */
-.webconsole-output-wrapper .stacktrace {
-  border: none;
-  margin-block-end: var(--attachment-margin-block-end);
-  padding: 0 0 0 4px;
-}
-
-.theme-dark .webconsole-output-wrapper .message.error .stacktrace,
-.theme-light .webconsole-output-wrapper .message.error .stacktrace {
-  /* Removing specificity from the old console */
-  background-color: inherit;
 }
 
 /* console.table() */
@@ -932,10 +840,6 @@ body #output-container {
  *  +------------------------------+--------------+
  */
 .webconsole-output-wrapper {
-  -moz-user-focus: normal;
-  color: var(--console-output-color);
-  --console-output-indent-border-color: var(--theme-selection-background);
-  --icon-top-margin: 3px;
   --object-inspector-hover-background: transparent;
   --attachment-margin-block-end: 3px;
   --primary-toolbar-height: 29px;
@@ -946,6 +850,8 @@ body #output-container {
   height: 100vh !important;
   width: 100vw;
   overflow: hidden;
+  color: var(--console-output-color);
+  -moz-user-focus: normal;
 }
 
 .webconsole-flex-wrapper {
@@ -968,7 +874,6 @@ body #output-container {
   min-height: 19px;
 }
 
-
 .webconsole-output-wrapper #webconsole-notificationbox {
   flex-shrink: 0;
 }
@@ -976,7 +881,10 @@ body #output-container {
 .webconsole-output-wrapper .jsterm-input-container {
   min-height: 28px;
   overflow: auto;
-  padding-top: 1px;
+}
+
+.jsterm-cm .jsterm-input-container {
+  padding-block-start: 2px;
 }
 
 .webconsole-flex-wrapper > .webconsole-output:empty ~ .jsterm-input-container {
@@ -1006,45 +914,69 @@ body #output-container {
  * used in the ObjectInspector (same background-image, width, transition).
  * Properties were copied from devtools/client/shared/components/reps/reps.css.
  */
-.webconsole-output-wrapper img.collapse-button.arrow {
+.collapse-button {
   flex: none;
+  align-self: flex-start;
+  margin-block-start: var(--console-output-vertical-padding);
+  margin-inline-start: -3px;
+  margin-inline-end: 0;
+  padding: 2px 4px;
+  border: none;
+  background: transparent;
+}
+
+.collapse-button::before {
+  content: "";
+  display: block;
+  width: 10px;
+  height: 10px;
   mask: url("chrome://devtools/skin/images/devtools-components/arrow.svg") no-repeat;
   mask-size: 100%;
-  width: 9px;
-  height: 9px;
-  margin-block-start: 5px;
-  margin-inline-start: 4px;
-  margin-inline-end: 1px;
   transform: rotate(-90deg);
   transition: transform 0.125s ease;
+  background-color: var(--console-arrow-color);
 }
 
-/*
- * We need to override the margin for group arrow in order to keep the alignment
- * with the indent border.
- */
-.webconsole-output-wrapper .message.startGroup img.collapse-button.arrow,
-.webconsole-output-wrapper .message.startGroupCollapsed img.collapse-button.arrow {
-  margin-inline-start: 2px;
+.collapse-button[aria-expanded="true"]::before {
+  transform: rotate(0);
 }
 
-html[dir="rtl"] .webconsole-output-wrapper img.collapse-button.arrow:not(.expanded) {
-  transform: rotate(90deg);
+.collapse-button::-moz-focus-inner {
+  border: none;
 }
 
-.webconsole-output-wrapper img.collapse-button.arrow.expanded {
-  transform: rotate(0deg);
+/* Larger collapse buttons for groups and network requests */
+.message.network > .collapse-button,
+.message.startGroup .collapse-button,
+.message.startGroupCollapsed .collapse-button {
+  margin-inline-start: 0;
+  padding-inline-start: 6px;
+  padding-inline-end: 6px;
 }
 
-/* Apply the same color to both message arrows and ObjectInspector ones. */
-.webconsole-output-wrapper .message img.arrow,
-.webconsole-output-wrapper .sidebar img.arrow {
-  background-color: #AFA8AB;
+/* Hide the icon, so that we can use the collapse-button in its place */
+.message.network > .icon,
+.message.startGroup > .icon,
+.message.startGroupCollapsed > .icon {
+  display: none;
 }
 
-.theme-dark .webconsole-output-wrapper .message img.arrow,
-.theme-dark .webconsole-output-wrapper .sidebar img.arrow {
-  background-color: #7F7E81;
+/* Center the collapse button in the left gutter (first-level only) */
+.message.network > .collapse-button,
+.message.startGroup > .indent[data-indent="0"] ~ .collapse-button,
+.message.message.startGroupCollapsed > .indent[data-indent="0"] ~ .collapse-button {
+  margin-inline-start: calc(1px + var(--console-icon-horizontal-offset));
+  margin-inline-end: calc(5px - var(--console-icon-horizontal-offset));
+}
+
+/* Apply a style similar to collapse-button for the object tree arrows */
+.webconsole-output-wrapper .tree .arrow,
+.webconsole-output-wrapper .object-inspector .tree-node .arrow {
+  width: 10px;
+  height: 10px;
+  vertical-align: 0px;
+  line-height: 1;
+  background-color: var(--console-arrow-color);
 }
 
 /* Sidebar */
@@ -1084,7 +1016,8 @@ html[dir="rtl"] .webconsole-output-wrapper img.collapse-button.arrow:not(.expand
 
 .sidebar-contents {
   grid-row: 2 / 3;
-  overflow: scroll;
+  overflow: auto;
+  max-height: 100%;
 }
 
 .webconsole-sidebar-toolbar .sidebar-close-button {
@@ -1099,10 +1032,6 @@ html[dir="rtl"] .webconsole-output-wrapper img.collapse-button.arrow:not(.expand
 
 .sidebar-contents .object-inspector {
   min-width: 100%;
-}
-
-.theme-twisty {
-  cursor: default;
 }
 
 #split-console-close-button::before {

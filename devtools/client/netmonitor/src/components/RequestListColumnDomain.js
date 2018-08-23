@@ -55,6 +55,10 @@ class RequestListColumnDomain extends Component {
           onMouseDown: onSecurityIconMouseDown,
           title: iconTitle,
         }),
+        item.isTrackingResource && div({
+          className: "tracking-resource",
+          title: L10N.getStr("netmonitor.trackingResource.tooltip"),
+        }),
         host,
       )
     );
