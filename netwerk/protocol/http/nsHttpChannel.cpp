@@ -6062,6 +6062,12 @@ nsHttpChannel::CancelForTrackingProtection()
         return NS_OK;
     }
 
+    // Check to see if we should redirect this channel elsewhere by
+    // nsIHttpChannel.redirectTo API request
+    if (mAPIRedirectToURI) {
+        return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
+    }
+
     return CancelInternal(NS_ERROR_TRACKING_URI);
 }
 
@@ -6076,6 +6082,13 @@ nsHttpChannel::ContinueCancelledByTrackingProtection()
          this));
     if (mCanceled) {
         LOG(("  ignoring; already canceled\n"));
+        return;
+    }
+
+    // Check to see if we should redirect this channel elsewhere by
+    // nsIHttpChannel.redirectTo API request
+    if (mAPIRedirectToURI) {
+        Unused << AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
         return;
     }
 
