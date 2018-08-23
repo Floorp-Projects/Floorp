@@ -309,8 +309,11 @@ js::MakeDefaultConstructor(JSContext* cx, HandleScript script, jsbytecode* pc, H
         return nullptr;
     uint32_t classStartOffset = GetSrcNoteOffset(classNote, 0);
     uint32_t classEndOffset = GetSrcNoteOffset(classNote, 1);
-    ctorScript->setDefaultClassConstructorSpan(script->sourceObject(), classStartOffset,
-                                               classEndOffset);
+    unsigned column;
+    unsigned line = PCToLineNumber(script, pc, &column);
+    ctorScript->setDefaultClassConstructorSpan(script->sourceObject(),
+                                               classStartOffset, classEndOffset,
+                                               line, column);
 
     return ctor;
 }

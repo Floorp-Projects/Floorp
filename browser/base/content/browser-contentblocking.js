@@ -4,6 +4,7 @@
 
 var FastBlock = {
   PREF_ENABLED: "browser.fastblock.enabled",
+  PREF_UI_ENABLED: "browser.contentblocking.fastblock.control-center.ui.enabled",
 
   get categoryItem() {
     delete this.categoryItem;
@@ -12,12 +13,14 @@ var FastBlock = {
 
   init() {
     XPCOMUtils.defineLazyPreferenceGetter(this, "enabled", this.PREF_ENABLED, false);
+    XPCOMUtils.defineLazyPreferenceGetter(this, "visible", this.PREF_UI_ENABLED, false);
   },
 };
 
 var TrackingProtection = {
   PREF_ENABLED_GLOBALLY: "privacy.trackingprotection.enabled",
   PREF_ENABLED_IN_PRIVATE_WINDOWS: "privacy.trackingprotection.pbmode.enabled",
+  PREF_UI_ENABLED: "browser.contentblocking.trackingprotection.control-center.ui.enabled",
   enabledGlobally: false,
   enabledInPrivateWindows: false,
 
@@ -61,6 +64,8 @@ var TrackingProtection = {
 
     Services.prefs.addObserver(this.PREF_ENABLED_GLOBALLY, this);
     Services.prefs.addObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this);
+
+    XPCOMUtils.defineLazyPreferenceGetter(this, "visible", this.PREF_UI_ENABLED, false);
   },
 
   uninit() {
@@ -122,6 +127,27 @@ var TrackingProtection = {
         appMenuButton.setAttribute("aria-pressed", this.enabledGlobally);
       }
     }
+  },
+};
+
+var ThirdPartyCookies = {
+  PREF_ENABLED: "network.cookie.cookieBehavior",
+  PREF_ENABLED_VALUE: Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+  PREF_UI_ENABLED: "browser.contentblocking.rejecttrackers.control-center.ui.enabled",
+
+  get categoryItem() {
+    delete this.categoryItem;
+    return this.categoryItem =
+      document.getElementById("identity-popup-content-blocking-category-3rdpartycookies");
+  },
+
+  init() {
+    XPCOMUtils.defineLazyPreferenceGetter(this, "behaviorPref", this.PREF_ENABLED,
+                                          Ci.nsICookieService.BEHAVIOR_ACCEPT);
+    XPCOMUtils.defineLazyPreferenceGetter(this, "visible", this.PREF_UI_ENABLED, false);
+  },
+  get enabled() {
+    return this.behaviorPref == this.PREF_ENABLED_VALUE;
   },
 };
 
@@ -189,7 +215,7 @@ var ContentBlocking = {
   //
   // It may also contain an init() and uninit() function, which will be called
   // on ContentBlocking.init() and ContentBlocking.uninit().
-  blockers: [FastBlock, TrackingProtection],
+  blockers: [FastBlock, TrackingProtection, ThirdPartyCookies],
 
   get _baseURIForChannelClassifier() {
     // Convert document URI into the format used by
@@ -335,13 +361,16 @@ var ContentBlocking = {
     body += "\n**Preferences**\n";
     body += `${TrackingProtection.PREF_ENABLED_GLOBALLY}: ${Services.prefs.getBoolPref(TrackingProtection.PREF_ENABLED_GLOBALLY)}\n`;
     body += `${TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS}: ${Services.prefs.getBoolPref(TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS)}\n`;
+    body += `${TrackingProtection.PREF_UI_ENABLED}: ${Services.prefs.getBoolPref(TrackingProtection.PREF_UI_ENABLED)}\n`;
     body += `urlclassifier.trackingTable: ${Services.prefs.getStringPref("urlclassifier.trackingTable")}\n`;
     body += `network.http.referer.defaultPolicy: ${Services.prefs.getIntPref("network.http.referer.defaultPolicy")}\n`;
     body += `network.http.referer.defaultPolicy.pbmode: ${Services.prefs.getIntPref("network.http.referer.defaultPolicy.pbmode")}\n`;
-    body += `network.cookie.cookieBehavior: ${Services.prefs.getIntPref("network.cookie.cookieBehavior")}\n`;
+    body += `${ThirdPartyCookies.PREF_UI_ENABLED}: ${Services.prefs.getBoolPref(ThirdPartyCookies.PREF_UI_ENABLED)}\n`;
+    body += `${ThirdPartyCookies.PREF_ENABLED}: ${Services.prefs.getIntPref(ThirdPartyCookies.PREF_ENABLED)}\n`;
     body += `network.cookie.lifetimePolicy: ${Services.prefs.getIntPref("network.cookie.lifetimePolicy")}\n`;
     body += `privacy.restrict3rdpartystorage.expiration: ${Services.prefs.getIntPref("privacy.restrict3rdpartystorage.expiration")}\n`;
     body += `${FastBlock.PREF_ENABLED}: ${Services.prefs.getBoolPref(FastBlock.PREF_ENABLED)}\n`;
+    body += `${FastBlock.PREF_UI_ENABLED}: ${Services.prefs.getBoolPref(FastBlock.PREF_UI_ENABLED)}\n`;
     body += `browser.fastblock.timeout: ${Services.prefs.getIntPref("browser.fastblock.timeout")}\n`;
 
     let comments = document.getElementById("identity-popup-breakageReportView-collection-comments");
@@ -415,6 +444,7 @@ var ContentBlocking = {
 
     for (let blocker of this.blockers) {
       blocker.categoryItem.classList.toggle("blocked", this.enabled && blocker.enabled);
+      blocker.categoryItem.hidden = !blocker.visible;
     }
 
     // Check whether the user has added an exception for this site.

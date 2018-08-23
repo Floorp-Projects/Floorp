@@ -115,6 +115,6 @@ async function testChangingValues(inspector, boxmodel, testActor) {
 }
 
 function getPropertySelector(propertyName) {
-  return `.boxmodel-properties-wrapper .computed-property-view` +
+  return `.boxmodel-container .computed-property-view` +
   `[data-property-name=${propertyName}] .computed-property-value`;
 }

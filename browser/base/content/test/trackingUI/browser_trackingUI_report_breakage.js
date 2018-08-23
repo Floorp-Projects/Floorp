@@ -180,13 +180,16 @@ add_task(async function testReportBreakage() {
         let prefs = [
           "privacy.trackingprotection.enabled",
           "privacy.trackingprotection.pbmode.enabled",
+          "browser.contentblocking.trackingprotection.control-center.ui.enabled",
           "urlclassifier.trackingTable",
           "network.http.referer.defaultPolicy",
           "network.http.referer.defaultPolicy.pbmode",
+          "browser.contentblocking.rejecttrackers.control-center.ui.enabled",
           "network.cookie.cookieBehavior",
           "network.cookie.lifetimePolicy",
           "privacy.restrict3rdpartystorage.expiration",
           "browser.fastblock.enabled",
+          "browser.contentblocking.fastblock.control-center.ui.enabled",
           "browser.fastblock.timeout",
         ];
         let prefsBody = "";

@@ -17,25 +17,25 @@ const ElementNode = REPS.ElementNode;
 
 const Types = require("../types");
 
-class FlexboxItem extends PureComponent {
+class FlexContainerItem extends PureComponent {
   static get propTypes() {
     return {
       flexbox: PropTypes.shape(Types.flexbox).isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
-      setSelectedNode: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
   constructor(props) {
     super(props);
 
-    this.setFlexboxColor = this.setFlexboxColor.bind(this);
     this.onFlexboxCheckboxClick = this.onFlexboxCheckboxClick.bind(this);
     this.onFlexboxInspectIconClick = this.onFlexboxInspectIconClick.bind(this);
+    this.setFlexboxColor = this.setFlexboxColor.bind(this);
   }
 
   componentDidMount() {
@@ -109,45 +109,45 @@ class FlexboxItem extends PureComponent {
       nodeFront,
     } = flexbox;
 
-    return dom.li(
-      {},
-      dom.label(
-        {},
-        dom.input(
+    return (
+      dom.li({},
+        dom.label({},
+          dom.input(
+            {
+              type: "checkbox",
+              value: actorID,
+              checked: highlighted,
+              onChange: this.onFlexboxCheckboxClick,
+            }
+          ),
+          Rep(
+            {
+              defaultRep: ElementNode,
+              mode: MODE.TINY,
+              object: translateNodeFrontToGrip(nodeFront),
+              onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
+              onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
+              onInspectIconClick: () => this.onFlexboxInspectIconClick(nodeFront),
+            }
+          )
+        ),
+        dom.div(
           {
-            type: "checkbox",
-            value: actorID,
-            checked: highlighted,
-            onChange: this.onFlexboxCheckboxClick,
+            className: "flexbox-color-swatch",
+            style: {
+              backgroundColor: color,
+            },
+            title: color,
           }
         ),
-        Rep(
-          {
-            defaultRep: ElementNode,
-            mode: MODE.TINY,
-            object: translateNodeFrontToGrip(nodeFront),
-            onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
-            onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
-            onInspectIconClick: () => this.onFlexboxInspectIconClick(nodeFront),
-          }
-        )
-      ),
-      dom.div(
-        {
-          className: "flexbox-color-swatch",
-          style: {
-            backgroundColor: color,
-          },
-          title: color,
-        }
-      ),
-      // The SwatchColorPicker relies on the nextSibling of the swatch element to apply
-      // the selected color. This is why we use a span in display: none for now.
-      // Ideally we should modify the SwatchColorPickerTooltip to bypass this requirement.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1341578
-      dom.span({ className: "flexbox-color-value" }, color)
+        // The SwatchColorPicker relies on the nextSibling of the swatch element to apply
+        // the selected color. This is why we use a span in display: none for now.
+        // Ideally we should modify the SwatchColorPickerTooltip to bypass this
+        // requirement. See https://bugzilla.mozilla.org/show_bug.cgi?id=1341578
+        dom.span({ className: "flexbox-color-value" }, color)
+      )
     );
   }
 }
 
-module.exports = FlexboxItem;
+module.exports = FlexContainerItem;
