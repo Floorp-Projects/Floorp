@@ -36,6 +36,7 @@ Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", 
 const EXTENSION_ID = "formautofill@mozilla.org";
 
 AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
 
 async function loadExtension() {
   AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
