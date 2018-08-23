@@ -11,9 +11,9 @@ let a = moduleRepo['a'] = parseModule(s);
 
 let b = moduleRepo['b'] = parseModule("import * as ns from 'a'");
 
-b.declarationInstantiation();
-b.evaluation();
+instantiateModule(b);
+evaluateModule(b);
 
-let ns = a.namespace;
+let ns = getModuleObject(a).namespace;
 for (let i = 0; i < count; i++)
     assertEq(ns["e" + i], i * i);
