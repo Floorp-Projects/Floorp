@@ -109,16 +109,14 @@ class GridItem extends PureComponent {
               onChange: this.onGridCheckboxClick,
             }
           ),
-          Rep(
-            {
-              defaultRep: ElementNode,
-              mode: MODE.TINY,
-              object: translateNodeFrontToGrip(nodeFront),
-              onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
-              onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
-              onInspectIconClick: () => this.onGridInspectIconClick(nodeFront),
-            }
-          )
+          Rep({
+            defaultRep: ElementNode,
+            mode: MODE.TINY,
+            object: translateNodeFrontToGrip(nodeFront),
+            onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
+            onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
+            onInspectIconClick: () => this.onGridInspectIconClick(nodeFront),
+          })
         ),
         dom.div(
           {
