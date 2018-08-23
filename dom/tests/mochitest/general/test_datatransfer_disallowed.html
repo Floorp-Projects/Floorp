@@ -11,7 +11,7 @@
 function run_test()
 {
   SpecialPowers.pushPrefEnv({"set": [
-    ["dom.datatransfer.moz", false],
+    ["dom.datatransfer.mozAtAPIs", false],
   ]}, function() {
     let hiddenMethods = ["mozTypesAt", "mozClearDataAt", "mozGetDataAt", "mozSetDataAt", "mozItemCount"];
     let exposedMethods = Object.getOwnPropertyNames(DataTransfer.prototype);
