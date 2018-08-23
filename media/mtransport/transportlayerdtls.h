@@ -24,6 +24,7 @@
 #include "m_cpp_utils.h"
 #include "dtlsidentity.h"
 #include "transportlayer.h"
+#include "ssl.h"
 
 namespace mozilla {
 
@@ -51,12 +52,7 @@ class TransportLayerNSPRAdapter {
 
 class TransportLayerDtls final : public TransportLayer {
  public:
-  TransportLayerDtls() :
-      role_(CLIENT),
-      verification_mode_(VERIFY_UNSET),
-      ssl_fd_(nullptr),
-      auth_hook_called_(false),
-      cert_ok_(false) {}
+  TransportLayerDtls() = default;
 
   virtual ~TransportLayerDtls();
 
@@ -82,7 +78,7 @@ class TransportLayerDtls final : public TransportLayer {
 
   nsresult GetCipherSuite(uint16_t* cipherSuite) const;
 
-  nsresult SetSrtpCiphers(std::vector<uint16_t> ciphers);
+  nsresult SetSrtpCiphers(const std::vector<uint16_t>& ciphers);
   nsresult GetSrtpCipher(uint16_t *cipher) const;
 
   nsresult ExportKeyingMaterial(const std::string& label,
@@ -136,7 +132,7 @@ class TransportLayerDtls final : public TransportLayer {
 
 
   bool Setup();
-  bool SetupCipherSuites(UniquePRFileDesc& ssl_fd) const;
+  bool SetupCipherSuites(UniquePRFileDesc& ssl_fd);
   bool SetupAlpn(UniquePRFileDesc& ssl_fd) const;
   void GetDecryptedPackets();
   void Handshake();
@@ -163,6 +159,14 @@ class TransportLayerDtls final : public TransportLayer {
   void RecordHandshakeCompletionTelemetry(TransportLayer::State endState);
   void RecordCipherTelemetry();
 
+  static PRBool WriteSrtpXtn(PRFileDesc* fd, SSLHandshakeType message,
+                             uint8_t* data, unsigned int* len,
+                             unsigned int max_len, void* arg);
+
+  static SECStatus HandleSrtpXtn(PRFileDesc* fd, SSLHandshakeType message,
+                                 const uint8_t* data, unsigned int len,
+                                 SSLAlertDescription* alert, void* arg);
+
   RefPtr<DtlsIdentity> identity_;
   // What ALPN identifiers are permitted.
   std::set<std::string> alpn_allowed_;
@@ -171,20 +175,21 @@ class TransportLayerDtls final : public TransportLayer {
   std::string alpn_default_;
   // What ALPN string was negotiated.
   std::string alpn_;
-  std::vector<uint16_t> srtp_ciphers_;
+  std::vector<uint16_t> enabled_srtp_ciphers_;
+  uint16_t srtp_cipher_ = 0;
 
-  Role role_;
-  Verification verification_mode_;
+  Role role_ = CLIENT;
+  Verification verification_mode_ = VERIFY_UNSET;
   std::vector<RefPtr<VerificationDigest> > digests_;
 
   // Must delete nspr_io_adapter after ssl_fd_ b/c ssl_fd_ causes an alert
   // (ssl_fd_ contains an un-owning pointer to nspr_io_adapter_)
-  UniquePtr<TransportLayerNSPRAdapter> nspr_io_adapter_;
-  UniquePRFileDesc ssl_fd_;
+  UniquePtr<TransportLayerNSPRAdapter> nspr_io_adapter_ = nullptr;
+  UniquePRFileDesc ssl_fd_ = nullptr;
 
-  nsCOMPtr<nsITimer> timer_;
-  bool auth_hook_called_;
-  bool cert_ok_;
+  nsCOMPtr<nsITimer> timer_ = nullptr;
+  bool auth_hook_called_ = false;
+  bool cert_ok_ = false;
   TimeStamp handshake_started_;
 };
 

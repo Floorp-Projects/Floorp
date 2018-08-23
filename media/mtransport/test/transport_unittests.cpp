@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include <algorithm>
+#include <functional>
 
 #include "mozilla/UniquePtr.h"
 
@@ -19,6 +20,7 @@
 #include "nspr.h"
 #include "nss.h"
 #include "ssl.h"
+#include "sslexp.h"
 #include "sslproto.h"
 
 #include "nsThreadUtils.h"
@@ -449,7 +451,6 @@ class TransportTestPeer : public sigslot::has_slots<> {
         gathering_complete_(false),
         enabled_cipersuites_(),
         disabled_cipersuites_(),
-        reuse_dhe_key_(false),
         test_utils_(utils) {
     std::vector<NrIceStunServer> stun_servers;
     UniquePtr<NrIceStunServer> server(NrIceStunServer::Create(
@@ -570,15 +571,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
     if (dtls_->state() != TransportLayer::TS_ERROR) {
       // Don't execute these blocks if DTLS didn't initialize.
       TweakCiphers(dtls_->internal_fd());
-      if (reuse_dhe_key_) {
-        // TransportLayerDtls automatically sets this pref to false
-        // so set it back for test.
-        // This is pretty gross. Dig directly into the NSS FD. The problem
-        // is that we are testing a feature which TransaportLayerDtls doesn't
-        // expose.
-        SECStatus rv = SSL_OptionSet(dtls_->internal_fd(),
-                                     SSL_REUSE_SERVER_ECDHE_KEY, PR_TRUE);
-        ASSERT_EQ(SECSuccess, rv);
+      if (post_setup_) {
+        post_setup_(dtls_->internal_fd());
       }
     }
 
@@ -774,8 +768,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
     enabled_cipersuites_ = enableThese;
   }
 
-  void SetReuseECDHEKey() {
-    reuse_dhe_key_ = true;
+  void SetPostSetup(const std::function<void(PRFileDesc*)>& setup) {
+    post_setup_ = std::move(setup);
   }
 
   TransportLayer::State state() {
@@ -846,8 +840,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
   size_t fingerprint_len_;
   std::vector<uint16_t> enabled_cipersuites_;
   std::vector<uint16_t> disabled_cipersuites_;
-  bool reuse_dhe_key_;
   MtransportTestUtils* test_utils_;
+  std::function<void(PRFileDesc* fd)> post_setup_ = nullptr;
 };
 
 
@@ -1163,11 +1157,22 @@ TEST_F(TransportTest, TestConnectVerifyNewECDHE) {
 }
 
 TEST_F(TransportTest, TestConnectVerifyReusedECDHE) {
+
+  auto set_reuse_ecdhe_key = [](PRFileDesc* fd) {
+    // TransportLayerDtls automatically sets this pref to false
+    // so set it back for test.
+    // This is pretty gross. Dig directly into the NSS FD. The problem
+    // is that we are testing a feature which TransaportLayerDtls doesn't
+    // expose.
+    SECStatus rv = SSL_OptionSet(fd, SSL_REUSE_SERVER_ECDHE_KEY, PR_TRUE);
+    ASSERT_EQ(SECSuccess, rv);
+  };
+
   SetDtlsPeer();
   DtlsInspectorRecordHandshakeMessage *i1 = new
     DtlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   p1_->SetInspector(i1);
-  p1_->SetReuseECDHEKey();
+  p1_->SetPostSetup(set_reuse_ecdhe_key);
   ConnectSocket();
   TlsServerKeyExchangeECDHE dhe1;
   ASSERT_TRUE(dhe1.Parse(i1->buffer().data(), i1->buffer().len()));
@@ -1178,7 +1183,7 @@ TEST_F(TransportTest, TestConnectVerifyReusedECDHE) {
     DtlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
 
   p1_->SetInspector(i2);
-  p1_->SetReuseECDHEKey();
+  p1_->SetPostSetup(set_reuse_ecdhe_key);
 
   ConnectSocket();
   TlsServerKeyExchangeECDHE dhe2;
@@ -1300,10 +1305,110 @@ TEST_F(TransportTest, TestSrtpMismatch) {
   p1_->SetSrtpCiphers(setA);
   p2_->SetSrtpCiphers(setB);
   SetDtlsPeer();
-  ConnectSocket();
+  ConnectSocketExpectFail();
 
   ASSERT_EQ(0, p1_->srtpCipher());
   ASSERT_EQ(0, p2_->srtpCipher());
+}
+
+static SECStatus NoopXtnHandler(PRFileDesc* fd, SSLHandshakeType message,
+                                const uint8_t* data, unsigned int len,
+                                SSLAlertDescription* alert, void* arg) {
+  return SECSuccess;
+}
+
+static PRBool WriteFixedXtn(PRFileDesc* fd, SSLHandshakeType message,
+                            uint8_t* data, unsigned int* len,
+                            unsigned int max_len, void* arg) {
+  // When we enable TLS 1.3, change ssl_hs_server_hello here to
+  // ssl_hs_encrypted_extensions.  At the same time, add a test that writes to
+  // ssl_hs_server_hello, which should fail.
+  if (message != ssl_hs_client_hello && message != ssl_hs_server_hello) {
+    return false;
+  }
+
+  auto v = reinterpret_cast<std::vector<uint8_t>*>(arg);
+  memcpy(data, &((*v)[0]), v->size());
+  *len = v->size();
+  return true;
+}
+
+// Note that |value| needs to be readable after this function returns.
+static void InstallBadSrtpExtensionWriter(TransportTestPeer* peer,
+                                          std::vector<uint8_t>* value) {
+  peer->SetPostSetup([value](PRFileDesc* fd) {
+      // Override the handler that is installed by the DTLS setup.
+      SECStatus rv = SSL_InstallExtensionHooks(
+          fd, ssl_use_srtp_xtn, WriteFixedXtn, value, NoopXtnHandler, nullptr);
+      ASSERT_EQ(SECSuccess, rv);
+    });
+}
+
+TEST_F(TransportTest, TestSrtpErrorServerSendsTwoSrtpCiphers) {
+  // Server (p1_) sends an extension with two values, and empty MKI.
+  std::vector<uint8_t> xtn = { 0x04, 0x00, 0x01, 0x00, 0x02, 0x00 };
+  InstallBadSrtpExtensionWriter(p1_, &xtn);
+  SetupSrtp();
+  SetDtlsPeer();
+  ConnectSocketExpectFail();
+}
+
+TEST_F(TransportTest, TestSrtpErrorServerSendsTwoMki) {
+  // Server (p1_) sends an MKI.
+  std::vector<uint8_t> xtn = { 0x02, 0x00, 0x01, 0x01, 0x00 };
+  InstallBadSrtpExtensionWriter(p1_, &xtn);
+  SetupSrtp();
+  SetDtlsPeer();
+  ConnectSocketExpectFail();
+}
+
+TEST_F(TransportTest, TestSrtpErrorServerSendsUnknownValue) {
+  std::vector<uint8_t> xtn = { 0x02, 0x9a, 0xf1, 0x00 };
+  InstallBadSrtpExtensionWriter(p1_, &xtn);
+  SetupSrtp();
+  SetDtlsPeer();
+  ConnectSocketExpectFail();
+}
+
+TEST_F(TransportTest, TestSrtpErrorServerSendsOverflow) {
+  std::vector<uint8_t> xtn = { 0x32, 0x00, 0x01, 0x00 };
+  InstallBadSrtpExtensionWriter(p1_, &xtn);
+  SetupSrtp();
+  SetDtlsPeer();
+  ConnectSocketExpectFail();
+}
+
+TEST_F(TransportTest, TestSrtpErrorServerSendsUnevenList) {
+  std::vector<uint8_t> xtn = { 0x01, 0x00, 0x00 };
+  InstallBadSrtpExtensionWriter(p1_, &xtn);
+  SetupSrtp();
+  SetDtlsPeer();
+  ConnectSocketExpectFail();
+}
+
+TEST_F(TransportTest, TestSrtpErrorClientSendsUnevenList) {
+  std::vector<uint8_t> xtn = { 0x01, 0x00, 0x00 };
+  InstallBadSrtpExtensionWriter(p2_, &xtn);
+  SetupSrtp();
+  SetDtlsPeer();
+  ConnectSocketExpectFail();
+}
+
+TEST_F(TransportTest, OnlyServerSendsSrtpXtn) {
+  p1_->SetupSrtp();
+  SetDtlsPeer();
+  ConnectSocketExpectState(TransportLayer::TS_ERROR,
+                           TransportLayer::TS_CLOSED);
+}
+
+TEST_F(TransportTest, OnlyClientSendsSrtpXtn) {
+  p2_->SetupSrtp();
+  SetDtlsPeer();
+  // This means that the server won't semd the extension as well.  The server
+  // (p1) thinks that everything is OK.  The client (p2) notices the problem
+  // after connecting and aborts.
+  ConnectSocketExpectState(TransportLayer::TS_CLOSED,
+                           TransportLayer::TS_ERROR);
 }
 
 // NSS doesn't support DHE suites on the server end.
