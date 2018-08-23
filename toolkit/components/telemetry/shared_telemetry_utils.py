@@ -136,7 +136,11 @@ class StringTable:
                     return "'%s'" % s
             return ", ".join(map(toCChar, string))
 
+        f.write("#if defined(_MSC_VER) && !defined(__clang__)\n")
         f.write("const char %s[] = {\n" % name)
+        f.write("#else\n")
+        f.write("constexpr char %s[] = {\n" % name)
+        f.write("#endif\n")
         for (string, offset) in entries:
             if "*/" in string:
                 raise ValueError("String in string table contains unexpected sequence '*/': %s" %

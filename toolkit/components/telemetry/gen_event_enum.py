@@ -72,7 +72,11 @@ def main(output, *filenames):
 
         print("};\n", file=output)
 
-    print("const uint32_t EventCount = %d;\n" % index, file=output)
+    print("#if defined(_MSC_VER) && !defined(__clang__)", file=output)
+    print("const uint32_t EventCount = %d;" % index, file=output)
+    print("#else", file=output)
+    print("constexpr uint32_t EventCount = %d;" % index, file=output)
+    print("#endif\n", file=output)
 
     print(file_footer, file=output)
 
