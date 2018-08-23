@@ -260,6 +260,7 @@ public:
   void Received421(nsHttpConnectionInfo *ci);
 
   void SendPriorityFrame(uint32_t streamID, uint32_t dependsOn, uint8_t weight);
+  void IncrementTrrCounter() { mTrrStreams++; }
 
 private:
 
@@ -574,6 +575,7 @@ private:
   void UnRegisterTunnel(Http2Stream *);
   uint32_t FindTunnelCount(nsHttpConnectionInfo *);
   nsDataHashtable<nsCStringHashKey, uint32_t> mTunnelHash;
+  uint32_t mTrrStreams;
 };
 
 } // namespace net
