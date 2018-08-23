@@ -55,42 +55,12 @@ function openCertDownloadDialog(cert) {
   });
 }
 
-// Mock implementation of nsICertificateDialogs.
-const gCertificateDialogs = {
-  expectedCert: null,
-  viewCertCallCount: 0,
-  confirmDownloadCACert(ctx, cert, trust) {
-    Assert.ok(false, "confirmDownloadCACert() should not have been called");
-  },
-  setPKCS12FilePassword(ctx, password) {
-    Assert.ok(false, "setPKCS12FilePassword() should not have been called");
-  },
-  getPKCS12FilePassword(ctx, password) {
-    Assert.ok(false, "getPKCS12FilePassword() should not have been called");
-  },
-  viewCert(ctx, cert) {
-    this.viewCertCallCount++;
-    Assert.notEqual(cert, null, "Cert to view should not be null");
-    Assert.equal(cert, this.expectedCert,
-                 "Actual and expected cert should match");
-  },
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs])
-};
-
 add_task(async function setup() {
   for (let testCase of TEST_CASES) {
     testCase.cert = await readCertificate(testCase.certFilename, ",,");
     Assert.notEqual(testCase.cert, null,
                     `'${testCase.certFilename}' should have been read`);
   }
-
-  let certificateDialogsCID =
-    MockRegistrar.register("@mozilla.org/nsCertificateDialogs;1",
-                           gCertificateDialogs);
-  registerCleanupFunction(() => {
-    MockRegistrar.unregister(certificateDialogsCID);
-  });
 });
 
 // Test that the trust header message corresponds to the provided cert, and that
@@ -105,13 +75,6 @@ add_task(async function testTrustHeaderAndViewCertButton() {
                  expectedTrustHeaderString,
                  "Actual and expected trust header text should match for " +
                  `${testCase.certFilename}`);
-
-    gCertificateDialogs.viewCertCallCount = 0;
-    gCertificateDialogs.expectedCert = testCase.cert;
-    info("Pressing View Cert button");
-    win.document.getElementById("viewC-button").doCommand();
-    Assert.equal(gCertificateDialogs.viewCertCallCount, 1,
-                 "viewCert() should've been called once");
 
     await BrowserTestUtils.closeWindow(win);
   }

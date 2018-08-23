@@ -1,9 +1,9 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/IndexedDB.jsm", this);
+ChromeUtils.import("resource://gre/modules/AddonManager.jsm", this);
 ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
-ChromeUtils.import("resource://normandy/lib/Addons.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 
@@ -114,197 +114,6 @@ decorate_task(
   }
 );
 
-add_task(async function testStartRequiredArguments() {
-  const requiredArguments = startArgsFactory();
-  for (const key in requiredArguments) {
-    const args = Object.assign({}, requiredArguments);
-    delete args[key];
-    await Assert.rejects(
-      AddonStudies.start(args),
-      /Required arguments/,
-      `start rejects when missing required argument ${key}.`
-    );
-  }
-});
-
-decorate_task(
-  AddonStudies.withStudies([
-    studyFactory(),
-  ]),
-  async function testStartExisting([study]) {
-    await Assert.rejects(
-      AddonStudies.start(startArgsFactory({recipeId: study.recipeId})),
-      /already exists/,
-      "start rejects when a study exists with the given recipeId already."
-    );
-  }
-);
-
-decorate_task(
-  withStub(Addons, "applyInstall"),
-  withSendEventStub,
-  withWebExtension(),
-  async function testStartAddonCleanup(applyInstallStub, sendEventStub, [addonId, addonFile]) {
-    const fakeError = new Error("Fake failure");
-    fakeError.fileName = "fake/filename.js";
-    fakeError.lineNumber = 42;
-    fakeError.columnNumber = 54;
-    applyInstallStub.rejects(fakeError);
-
-    const addonUrl = Services.io.newFileURI(addonFile).spec;
-    const args = startArgsFactory({addonUrl});
-    await Assert.rejects(
-      AddonStudies.start(args),
-      /Fake failure/,
-      "start rejects when the Addons.applyInstall function rejects"
-    );
-
-    const addon = await Addons.get(addonId);
-    ok(!addon, "If something fails during start after the add-on is installed, it is uninstalled.");
-
-    Assert.deepEqual(
-      sendEventStub.getCall(0).args,
-      ["enrollFailed", "addon_study", args.name, {reason: "fake/filename.js:42:54 Error"}],
-      "AddonStudies.start() should send an enroll-failed event when applyInstall rejects",
-    );
-  }
-);
-
-const testOverwriteId = "testStartAddonNoOverwrite@example.com";
-decorate_task(
-  withInstalledWebExtension({version: "1.0", id: testOverwriteId}),
-  withWebExtension({version: "2.0", id: testOverwriteId}),
-  async function testStartAddonNoOverwrite([installedId, installedFile], [id, addonFile]) {
-    const addonUrl = Services.io.newFileURI(addonFile).spec;
-    await Assert.rejects(
-      AddonStudies.start(startArgsFactory({addonUrl})),
-      /updating is disabled/,
-      "start rejects when the study add-on is already installed"
-    );
-
-    await Addons.uninstall(testOverwriteId);
-  }
-);
-
-decorate_task(
-  withWebExtension({version: "2.0"}),
-  withSendEventStub,
-  AddonStudies.withStudies(),
-  async function testStart([addonId, addonFile], sendEventStub) {
-    const startupPromise = AddonTestUtils.promiseWebExtensionStartup(addonId);
-    const addonUrl = Services.io.newFileURI(addonFile).spec;
-
-    let addon = await Addons.get(addonId);
-    is(addon, null, "Before start is called, the add-on is not installed.");
-
-    const args = startArgsFactory({
-      name: "Test Study",
-      description: "Test Desc",
-      addonUrl,
-    });
-    await AddonStudies.start(args);
-    await startupPromise;
-
-    addon = await Addons.get(addonId);
-    ok(addon, "After start is called, the add-on is installed.");
-
-    const study = await AddonStudies.get(args.recipeId);
-    Assert.deepEqual(
-      study,
-      {
-        recipeId: args.recipeId,
-        name: args.name,
-        description: args.description,
-        addonId,
-        addonVersion: "2.0",
-        addonUrl,
-        active: true,
-        studyStartDate: study.studyStartDate,
-      },
-      "start saves study data to storage",
-    );
-    ok(study.studyStartDate, "start assigns a value to the study start date.");
-
-    Assert.deepEqual(
-      sendEventStub.getCall(0).args,
-      ["enroll", "addon_study", args.name, {addonId, addonVersion: "2.0"}],
-      "AddonStudies.start() should send the correct telemetry event"
-    );
-
-    await AddonStudies.stop(args.recipeId);
-  }
-);
-
-decorate_task(
-  AddonStudies.withStudies(),
-  async function testStopNoStudy() {
-    await Assert.rejects(
-      AddonStudies.stop("does-not-exist"),
-      /No study found/,
-      "stop rejects when no study exists for the given recipe."
-    );
-  }
-);
-
-decorate_task(
-  AddonStudies.withStudies([
-    studyFactory({active: false}),
-  ]),
-  async function testStopInactiveStudy([study]) {
-    await Assert.rejects(
-      AddonStudies.stop(study.recipeId),
-      /already inactive/,
-      "stop rejects when the requested study is already inactive."
-    );
-  }
-);
-
-const testStopId = "testStop@example.com";
-decorate_task(
-  AddonStudies.withStudies([
-    studyFactory({active: true, addonId: testStopId, studyEndDate: null}),
-  ]),
-  withInstalledWebExtension({id: testStopId}),
-  withSendEventStub,
-  async function testStop([study], [addonId, addonFile], sendEventStub) {
-    await AddonStudies.stop(study.recipeId, "test-reason");
-    const newStudy = await AddonStudies.get(study.recipeId);
-    ok(!newStudy.active, "stop marks the study as inactive.");
-    ok(newStudy.studyEndDate, "stop saves the study end date.");
-
-    const addon = await Addons.get(addonId);
-    is(addon, null, "stop uninstalls the study add-on.");
-
-    Assert.deepEqual(
-      sendEventStub.getCall(0).args,
-      ["unenroll", "addon_study", study.name, {
-        addonId,
-        addonVersion: study.addonVersion,
-        reason: "test-reason",
-      }],
-      "stop should send the correct telemetry event"
-    );
-  }
-);
-
-decorate_task(
-  AddonStudies.withStudies([
-    studyFactory({active: true, addonId: "testStopWarn@example.com", studyEndDate: null}),
-  ]),
-  async function testStopWarn([study]) {
-    const addon = await Addons.get("testStopWarn@example.com");
-    is(addon, null, "Before start is called, the add-on is not installed.");
-
-    // If the add-on is not installed, log a warning to the console, but do not
-    // throw.
-    await new Promise(resolve => {
-      SimpleTest.waitForExplicitFinish();
-      SimpleTest.monitorConsole(resolve, [{message: /Could not uninstall addon/}]);
-      AddonStudies.stop(study.recipeId).then(() => SimpleTest.endMonitorConsole());
-    });
-  }
-);
-
 decorate_task(
   AddonStudies.withStudies([
     studyFactory({active: true, addonId: "does.not.exist@example.com", studyEndDate: null}),
@@ -355,9 +164,10 @@ decorate_task(
   AddonStudies.withStudies([
     studyFactory({active: true, addonId: "installed@example.com", studyEndDate: null}),
   ]),
-  withInstalledWebExtension({id: "installed@example.com"}),
+  withInstalledWebExtension({id: "installed@example.com"}, /* expectUninstall: */ true),
   async function testInit([study], [id, addonFile]) {
-    await Addons.uninstall(id);
+    const addon = await AddonManager.getAddonByID(id);
+    await addon.uninstall();
     await TestUtils.topicObserved("shield-study-ended");
 
     const newStudy = await AddonStudies.get(study.recipeId);
@@ -365,21 +175,6 @@ decorate_task(
     ok(
       newStudy.studyEndDate,
       "The study end date is set when the add-on for the study is uninstalled."
-    );
-  }
-);
-
-// stop should pass "unknown" to TelemetryEvents for `reason` if none specified
-decorate_task(
-  AddonStudies.withStudies([studyFactory({ active: true })]),
-  withSendEventStub,
-  async function testStopUnknownReason([study], sendEventStub) {
-    await AddonStudies.stop(study.recipeId);
-    is(
-      sendEventStub.getCall(0).args[3].reason,
-      "unknown",
-      "stop should send the correct telemetry event",
-      "AddonStudies.stop() should use unknown as the default reason",
     );
   }
 );

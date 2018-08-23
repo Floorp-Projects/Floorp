@@ -32,10 +32,6 @@ const gCertificateDialogs = {
     // We don't test anything that calls this method yet.
     ok(false, "getPKCS12FilePassword() should not have been called");
   },
-  viewCert: (ctx, cert) => {
-    // This shouldn't be called for import methods.
-    ok(false, "viewCert() should not have been called");
-  },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs])
 };

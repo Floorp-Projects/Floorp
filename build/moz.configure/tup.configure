@@ -48,12 +48,17 @@ def tup_and_sccache(tup, using_sccache):
         die('Cannot use sccache with tup yet. Please disable sccache or use '
             'the make backend until it is supported.')
 
-@depends(tup, rustc_info)
-def check_tup_min_rustc_version(tup, rustc_info):
-    min_rustc_version = Version('1.28.0')
-    if tup and rustc_info.version < min_rustc_version:
-        die('Cannot build with tup and rustc %s. please update to at least '
-            'rustc %s to continue.', rustc_info.version, min_rustc_version)
+@depends(tup, cargo)
+@imports('re')
+def check_tup_cargo_channel(tup, cargo):
+    channel = None
+    out = check_cmd_output(cargo, '--version')
+    VERSION_FORMAT = r'cargo \d\.\d+\.\d+-(\S+)'
+    m = re.match(VERSION_FORMAT, out)
+    if m:
+        channel = m.group(1)
+    if tup and channel != 'nightly':
+        die('Nightly Cargo is required when building with Tup.')
 
 @depends(tup, target, build_project)
 def tup_and_non_linux(tup, target, build_project):
