@@ -538,6 +538,7 @@ devtools.main:
     extra_keys:
       oldpanel: The panel the user is switching from
       newpanel: The panel the user is switching to
+      os: The OS name and version e.g. "Linux 4.4.0-1014-aws", "Darwin 14.5.0", "Windows_NT 6.1.7601" or "Windows_NT 10.0.15063." This can be used to make sense of data when a feature is only available from a particular operating system build number.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   edit_resend:
     objects: ["netmonitor"]
@@ -687,4 +688,16 @@ devtools.main:
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  tool_timer:
+    objects: ["animationinspector", "computedview", "fontinspector", "layoutview", "ruleview"]
+    bug_numbers: [1483817]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: The amount of time a tool was opened for.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      time_open: Time open.
+      os: The OS name and version e.g. "Linux 4.4.0-1014-aws", "Darwin 14.5.0", "Windows_NT 6.1.7601" or "Windows_NT 10.0.15063." This can be used to make sense of data when a feature is only available from a particular operating system build number.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
