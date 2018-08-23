@@ -346,6 +346,7 @@ class FlexboxInspector {
       color,
       highlighted,
       nodeFront,
+      properties: flexboxFront.properties,
     }));
   }
 }
