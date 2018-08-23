@@ -10,5 +10,4 @@ DevToolsModules(
     'BoxModelInfo.js',
     'BoxModelMain.js',
     'BoxModelProperties.js',
-    'ComputedProperty.js',
 )

@@ -20,4 +20,7 @@ exports.flexbox = {
   // The NodeFront of the flex container.
   nodeFront: PropTypes.object,
 
+  // The computed style properties of the flex container.
+  properties: PropTypes.object,
+
 };

@@ -364,45 +364,13 @@
   align-items: center;
 }
 
-/* Box Model Properties: contains a list of relevant box model properties */
-
-.boxmodel-properties-header {
-  padding: 2px 3px;
-}
-
-.boxmodel-properties-expander {
-  vertical-align: middle;
-  display: inline-block;
-  margin-inline-start: 2px;
-  margin-inline-end: 1px;
-}
-
-.boxmodel-properties-wrapper {
-  column-width: 250px;
-  column-gap: 20px;
-  column-rule: 1px solid var(--theme-splitter-color);
-}
-
-.boxmodel-properties-wrapper .computed-property-view {
-  padding-inline-start: 20px;
-}
-
-.boxmodel-properties-wrapper .computed-property-name-container {
-  flex: 1;
-}
-
-.boxmodel-properties-wrapper .computed-property-value-container {
-  flex: 1;
-  display: block;
-}
+/* Tag displayed next to DOM Node previews (used to display reference elements) */
 
 .boxmodel-container .reference-element {
   margin-inline-start: 14px;
   margin-block-start: 4px;
   display: block;
 }
-
-/* Tag displayed next to DOM Node previews (used to display reference elements) */
 
 .boxmodel-container .reference-element-type {
   background: var(--theme-highlight-purple);
