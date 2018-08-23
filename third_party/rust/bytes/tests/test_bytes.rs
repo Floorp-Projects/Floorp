@@ -1,6 +1,6 @@
 extern crate bytes;
 
-use bytes::{Bytes, BytesMut, BufMut};
+use bytes::{Bytes, BytesMut, BufMut, IntoBuf};
 
 const LONG: &'static [u8] = b"mary had a little lamb, little lamb, little lamb";
 const SHORT: &'static [u8] = b"hello world";
@@ -304,6 +304,13 @@ fn fns_defined_for_bytes_mut() {
 }
 
 #[test]
+fn mut_into_buf() {
+    let mut v = vec![0, 0, 0, 0];
+    let s = &mut v[..];
+    s.into_buf().put_u32_le(42);
+}
+
+#[test]
 fn reserve_convert() {
     // Inline -> Vec
     let mut bytes = BytesMut::with_capacity(8);
@@ -350,16 +357,16 @@ fn reserve_growth() {
 
 #[test]
 fn reserve_allocates_at_least_original_capacity() {
-    let mut bytes = BytesMut::with_capacity(128);
+    let mut bytes = BytesMut::with_capacity(1024);
 
-    for i in 0..120 {
+    for i in 0..1020 {
         bytes.put(i as u8);
     }
 
     let _other = bytes.take();
 
     bytes.reserve(16);
-    assert_eq!(bytes.capacity(), 128);
+    assert_eq!(bytes.capacity(), 1024);
 }
 
 #[test]
@@ -376,6 +383,21 @@ fn reserve_max_original_capacity_value() {
 
     bytes.reserve(16);
     assert_eq!(bytes.capacity(), 64 * 1024);
+}
+
+// Without either looking at the internals of the BytesMut or doing weird stuff
+// with the memory allocator, there's no good way to automatically verify from
+// within the program that this actually recycles memory. Instead, just exercise
+// the code path to ensure that the results are correct.
+#[test]
+fn reserve_vec_recycling() {
+    let mut bytes = BytesMut::from(Vec::with_capacity(16));
+    assert_eq!(bytes.capacity(), 16);
+    bytes.put("0123456789012345");
+    bytes.advance(10);
+    assert_eq!(bytes.capacity(), 6);
+    bytes.reserve(8);
+    assert_eq!(bytes.capacity(), 16);
 }
 
 #[test]
@@ -467,6 +489,44 @@ fn from_static() {
 }
 
 #[test]
+fn advance_inline() {
+    let mut a = Bytes::from(&b"hello world"[..]);
+    a.advance(6);
+    assert_eq!(a, &b"world"[..]);
+}
+
+#[test]
+fn advance_static() {
+    let mut a = Bytes::from_static(b"hello world");
+    a.advance(6);
+    assert_eq!(a, &b"world"[..]);
+}
+
+#[test]
+fn advance_vec() {
+    let mut a = BytesMut::from(b"hello world boooo yah world zomg wat wat".to_vec());
+    a.advance(16);
+    assert_eq!(a, b"o yah world zomg wat wat"[..]);
+
+    a.advance(4);
+    assert_eq!(a, b"h world zomg wat wat"[..]);
+
+    // Reserve some space.
+    a.reserve(1024);
+    assert_eq!(a, b"h world zomg wat wat"[..]);
+
+    a.advance(6);
+    assert_eq!(a, b"d zomg wat wat"[..]);
+}
+
+#[test]
+#[should_panic]
+fn advance_past_len() {
+    let mut a = BytesMut::from(b"hello world".to_vec());
+    a.advance(20);
+}
+
+#[test]
 // Only run these tests on little endian systems. CI uses qemu for testing
 // little endian... and qemu doesn't really support threading all that well.
 #[cfg(target_endian = "little")]
@@ -513,4 +573,147 @@ fn partial_eq_bytesmut() {
     let bytes2 = Bytes::from(&b"Jumped over the lazy brown dog"[..]);
     assert!(bytes2 != bytesmut);
     assert!(bytesmut != bytes2);
+}
+
+#[test]
+fn unsplit_basic() {
+    let mut buf = BytesMut::with_capacity(64);
+    buf.extend_from_slice(b"aaabbbcccddd");
+
+    let splitted = buf.split_off(6);
+    assert_eq!(b"aaabbb", &buf[..]);
+    assert_eq!(b"cccddd", &splitted[..]);
+
+    buf.unsplit(splitted);
+    assert_eq!(b"aaabbbcccddd", &buf[..]);
+}
+
+#[test]
+fn unsplit_empty_other() {
+    let mut buf = BytesMut::with_capacity(64);
+    buf.extend_from_slice(b"aaabbbcccddd");
+
+    // empty other
+    let other = BytesMut::new();
+
+    buf.unsplit(other);
+    assert_eq!(b"aaabbbcccddd", &buf[..]);
+}
+
+#[test]
+fn unsplit_empty_self() {
+    // empty self
+    let mut buf = BytesMut::new();
+
+    let mut other = BytesMut::with_capacity(64);
+    other.extend_from_slice(b"aaabbbcccddd");
+
+    buf.unsplit(other);
+    assert_eq!(b"aaabbbcccddd", &buf[..]);
+}
+
+#[test]
+fn unsplit_inline_arc() {
+    let mut buf = BytesMut::with_capacity(8); //inline
+    buf.extend_from_slice(b"aaaabbbb");
+
+    let mut buf2 = BytesMut::with_capacity(64);
+    buf2.extend_from_slice(b"ccccddddeeee");
+
+    buf2.split_off(8); //arc
+
+    buf.unsplit(buf2);
+    assert_eq!(b"aaaabbbbccccdddd", &buf[..]);
+}
+
+#[test]
+fn unsplit_arc_inline() {
+    let mut buf = BytesMut::with_capacity(64);
+    buf.extend_from_slice(b"aaaabbbbeeee");
+
+    buf.split_off(8); //arc
+
+    let mut buf2 = BytesMut::with_capacity(8); //inline
+    buf2.extend_from_slice(b"ccccdddd");
+
+    buf.unsplit(buf2);
+    assert_eq!(b"aaaabbbbccccdddd", &buf[..]);
+
+}
+
+#[test]
+fn unsplit_both_inline() {
+    let mut buf = BytesMut::with_capacity(16); //inline
+    buf.extend_from_slice(b"aaaabbbbccccdddd");
+
+    let splitted = buf.split_off(8); // both inline
+    assert_eq!(b"aaaabbbb", &buf[..]);
+    assert_eq!(b"ccccdddd", &splitted[..]);
+
+    buf.unsplit(splitted);
+    assert_eq!(b"aaaabbbbccccdddd", &buf[..]);
+}
+
+
+#[test]
+fn unsplit_arc_different() {
+    let mut buf = BytesMut::with_capacity(64);
+    buf.extend_from_slice(b"aaaabbbbeeee");
+
+    buf.split_off(8); //arc
+
+    let mut buf2 = BytesMut::with_capacity(64);
+    buf2.extend_from_slice(b"ccccddddeeee");
+
+    buf2.split_off(8); //arc
+
+    buf.unsplit(buf2);
+    assert_eq!(b"aaaabbbbccccdddd", &buf[..]);
+}
+
+#[test]
+fn unsplit_arc_non_contiguous() {
+    let mut buf = BytesMut::with_capacity(64);
+    buf.extend_from_slice(b"aaaabbbbeeeeccccdddd");
+
+    let mut buf2 = buf.split_off(8); //arc
+
+    let buf3 = buf2.split_off(4); //arc
+
+    buf.unsplit(buf3);
+    assert_eq!(b"aaaabbbbccccdddd", &buf[..]);
+}
+
+#[test]
+fn unsplit_two_split_offs() {
+    let mut buf = BytesMut::with_capacity(64);
+    buf.extend_from_slice(b"aaaabbbbccccdddd");
+
+    let mut buf2 = buf.split_off(8); //arc
+    let buf3 = buf2.split_off(4); //arc
+
+    buf2.unsplit(buf3);
+    buf.unsplit(buf2);
+    assert_eq!(b"aaaabbbbccccdddd", &buf[..]);
+}
+
+#[test]
+fn from_iter_no_size_hint() {
+    use std::iter;
+
+    let mut expect = vec![];
+
+    let actual: Bytes = iter::repeat(b'x')
+        .scan(100, |cnt, item| {
+            if *cnt >= 1 {
+                *cnt -= 1;
+                expect.push(item);
+                Some(item)
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    assert_eq!(&actual[..], &expect[..]);
 }

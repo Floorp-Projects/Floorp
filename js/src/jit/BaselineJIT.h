@@ -22,7 +22,7 @@ namespace js {
 namespace jit {
 
 class StackValue;
-class BaselineICEntry;
+class ICEntry;
 class ICStub;
 class ControlFlowGraph;
 
@@ -355,8 +355,8 @@ struct BaselineScript
         return method_->raw() + postDebugPrologueOffset_;
     }
 
-    BaselineICEntry* icEntryList() {
-        return (BaselineICEntry*)(reinterpret_cast<uint8_t*>(this) + icEntriesOffset_);
+    ICEntry* icEntryList() {
+        return (ICEntry*)(reinterpret_cast<uint8_t*>(this) + icEntriesOffset_);
     }
     uint8_t** yieldEntryList() {
         return (uint8_t**)(reinterpret_cast<uint8_t*>(this) + yieldEntriesOffset_);
@@ -391,25 +391,25 @@ struct BaselineScript
         return method()->raw() <= addr && addr <= method()->raw() + method()->instructionsSize();
     }
 
-    BaselineICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
-    BaselineICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
-                                              BaselineICEntry* prevLookedUpEntry);
+    ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
+    ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
+                                              ICEntry* prevLookedUpEntry);
 
-    BaselineICEntry& icEntry(size_t index);
-    BaselineICEntry& icEntryFromReturnOffset(CodeOffset returnOffset);
-    BaselineICEntry& icEntryFromPCOffset(uint32_t pcOffset);
-    BaselineICEntry& icEntryFromPCOffset(uint32_t pcOffset, BaselineICEntry* prevLookedUpEntry);
-    BaselineICEntry& callVMEntryFromPCOffset(uint32_t pcOffset);
-    BaselineICEntry& stackCheckICEntry(bool earlyCheck);
-    BaselineICEntry& warmupCountICEntry();
-    BaselineICEntry& icEntryFromReturnAddress(uint8_t* returnAddr);
-    uint8_t* returnAddressForIC(const BaselineICEntry& ent);
+    ICEntry& icEntry(size_t index);
+    ICEntry& icEntryFromReturnOffset(CodeOffset returnOffset);
+    ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
+    ICEntry& icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry);
+    ICEntry& callVMEntryFromPCOffset(uint32_t pcOffset);
+    ICEntry& stackCheckICEntry(bool earlyCheck);
+    ICEntry& warmupCountICEntry();
+    ICEntry& icEntryFromReturnAddress(uint8_t* returnAddr);
+    uint8_t* returnAddressForIC(const ICEntry& ent);
 
     size_t numICEntries() const {
         return icEntries_;
     }
 
-    void copyICEntries(JSScript* script, const BaselineICEntry* entries);
+    void copyICEntries(JSScript* script, const ICEntry* entries);
     void adoptFallbackStubs(FallbackICStubSpace* stubSpace);
 
     void copyYieldAndAwaitEntries(JSScript* script, Vector<uint32_t>& yieldAndAwaitOffsets);

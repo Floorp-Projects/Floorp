@@ -287,7 +287,7 @@ RegExpObject::createShared(JSContext* cx, Handle<RegExpObject*> regexp)
 {
     MOZ_ASSERT(!regexp->hasShared());
     RootedAtom source(cx, regexp->getSource());
-    RegExpShared* shared = cx->zone()->regExps.get(cx, source, regexp->getFlags());
+    RegExpShared* shared = cx->zone()->regExps().get(cx, source, regexp->getFlags());
     if (!shared)
         return nullptr;
 

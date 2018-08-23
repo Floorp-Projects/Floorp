@@ -11,7 +11,7 @@
 //!
 //! And then you can connect to it via:
 //!
-//!     nc -4 localhost 8080 > /dev/null
+//!     cargo run --example connect 127.0.0.1:8080 > /dev/null
 //!
 //! You should see your CPUs light up as data's being shove into the ether.
 
@@ -35,23 +35,22 @@ fn main() {
     let addr = env::args().nth(1).unwrap_or("127.0.0.1:8080".to_string());
     let addr = addr.parse::<SocketAddr>().unwrap();
 
-    let mut l = Core::new().unwrap();
-    let socket = TcpListener::bind(&addr, &l.handle()).unwrap();
+    let mut core = Core::new().unwrap();
+    let handle = core.handle();
+    let socket = TcpListener::bind(&addr, &handle).unwrap();
     println!("Listening on: {}", addr);
-    let server = socket.incoming().and_then(|(socket, addr)| {
+    let server = socket.incoming().for_each(|(socket, addr)| {
         println!("got a socket: {}", addr);
-        write(socket).or_else(|_| Ok(()))
-    }).for_each(|()| {
-        println!("lost the socket");
+        handle.spawn(write(socket).or_else(|_| Ok(())));
         Ok(())
     });
-    l.run(server).unwrap();
+    core.run(server).unwrap();
 }
 
 fn write(socket: TcpStream) -> IoFuture<()> {
     static BUF: &'static [u8] = &[0; 64 * 1024];
-    let iter = iter::repeat(()).map(|()| Ok(()));
-    stream::iter(iter).fold(socket, |socket, ()| {
+    let iter = iter::repeat(());
+    Box::new(stream::iter_ok(iter).fold(socket, |socket, ()| {
         tokio_io::io::write_all(socket, BUF).map(|(socket, _)| socket)
-    }).map(|_| ()).boxed()
+    }).map(|_| ()))
 }

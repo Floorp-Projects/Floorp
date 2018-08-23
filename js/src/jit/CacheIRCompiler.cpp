@@ -3798,3 +3798,37 @@ CacheIRCompiler::emitLoadObject()
     emitLoadStubField(obj, reg);
     return true;
 }
+
+void
+js::jit::LoadTypedThingData(MacroAssembler& masm, TypedThingLayout layout, Register obj, Register result)
+{
+    switch (layout) {
+      case Layout_TypedArray:
+        masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), result);
+        break;
+      case Layout_OutlineTypedObject:
+        masm.loadPtr(Address(obj, OutlineTypedObject::offsetOfData()), result);
+        break;
+      case Layout_InlineTypedObject:
+        masm.computeEffectiveAddress(Address(obj, InlineTypedObject::offsetOfDataStart()), result);
+        break;
+      default:
+        MOZ_CRASH();
+    }
+}
+
+void
+js::jit::LoadTypedThingLength(MacroAssembler& masm, TypedThingLayout layout, Register obj, Register result)
+{
+    switch (layout) {
+      case Layout_TypedArray:
+        masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), result);
+        break;
+      case Layout_OutlineTypedObject:
+      case Layout_InlineTypedObject:
+        masm.loadTypedObjectLength(obj, result);
+        break;
+      default:
+        MOZ_CRASH();
+    }
+}

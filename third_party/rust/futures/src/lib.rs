@@ -153,7 +153,7 @@
 //! Some more information can also be found in the [README] for now, but
 //! otherwise feel free to jump in to the docs below!
 //!
-//! [README]: https://github.com/alexcrichton/futures-rs#futures-rs
+//! [README]: https://github.com/rust-lang-nursery/futures-rs#futures-rs
 
 #![no_std]
 #![deny(missing_docs, missing_debug_implementations)]

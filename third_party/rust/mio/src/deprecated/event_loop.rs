@@ -1,4 +1,5 @@
-use {channel, Evented, Poll, Events, Token};
+use {channel, Poll, Events, Token};
+use event::Evented;
 use deprecated::{Handler, NotifyError};
 use event_imp::{Event, Ready, PollOpt};
 use timer::{self, Timer, Timeout};
@@ -109,7 +110,7 @@ impl<H: Handler> EventLoop<H> {
 
     fn configured(config: Config) -> io::Result<EventLoop<H>> {
         // Create the IO poller
-        let poll = try!(Poll::new());
+        let poll = Poll::new()?;
 
         let timer = timer::Builder::default()
             .tick_duration(config.timer_tick)
@@ -121,8 +122,8 @@ impl<H: Handler> EventLoop<H> {
         let (tx, rx) = channel::sync_channel(config.notify_capacity);
 
         // Register the notification wakeup FD with the IO poller
-        try!(poll.register(&rx, NOTIFY, Ready::readable(), PollOpt::edge() | PollOpt::oneshot()));
-        try!(poll.register(&timer, TIMER, Ready::readable(), PollOpt::edge()));
+        poll.register(&rx, NOTIFY, Ready::readable(), PollOpt::edge() | PollOpt::oneshot())?;
+        poll.register(&timer, TIMER, Ready::readable(), PollOpt::edge())?;
 
         Ok(EventLoop {
             run: true,
@@ -260,7 +261,7 @@ impl<H: Handler> EventLoop<H> {
 
         while self.run {
             // Execute ticks as long as the event loop is running
-            try!(self.run_once(handler, None));
+            self.run_once(handler, None)?;
         }
 
         Ok(())
@@ -335,7 +336,7 @@ impl<H: Handler> EventLoop<H> {
     }
 
     fn io_event(&mut self, handler: &mut H, evt: Event) {
-        handler.ready(self, evt.token(), evt.kind());
+        handler.ready(self, evt.token(), evt.readiness());
     }
 
     fn notify(&mut self, handler: &mut H) {
@@ -390,7 +391,7 @@ impl<M> Sender<M> {
     }
 
     pub fn send(&self, msg: M) -> Result<(), NotifyError<M>> {
-        try!(self.tx.try_send(msg));
+        self.tx.try_send(msg)?;
         Ok(())
     }
 }

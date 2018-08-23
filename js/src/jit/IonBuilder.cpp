@@ -6114,9 +6114,8 @@ IonBuilder::compareTryBinaryStub(bool* emitted, MDefinition* left, MDefinition* 
 {
     MOZ_ASSERT(*emitted == false);
 
-    // Try to emit a shared stub cache.
-
-    if (JitOptions.disableSharedStubs)
+    // Try to emit a CacheIR Stub.
+    if (JitOptions.disableCacheIR)
         return Ok();
 
     if (JSOp(*pc) == JSOP_CASE || IsCallPC(pc))
@@ -6490,10 +6489,7 @@ IonBuilder::initializeArrayElement(MDefinition* obj, size_t index, MDefinition* 
     if (needsPostBarrier(value))
         current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
-    if ((obj->isNewArray() && obj->toNewArray()->convertDoubleElements()) ||
-        (obj->isNullarySharedStub() &&
-         obj->resultTypeSet()->convertDoubleElements(constraints()) == TemporaryTypeSet::AlwaysConvertToDoubles))
-    {
+    if (obj->isNewArray() && obj->toNewArray()->convertDoubleElements()) {
         MInstruction* valueDouble = MToDouble::New(alloc(), value);
         current->add(valueDouble);
         value = valueDouble;

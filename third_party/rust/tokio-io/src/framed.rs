@@ -1,9 +1,12 @@
+#![allow(deprecated)]
+
 use std::io::{self, Read, Write};
 use std::fmt;
 
 use {AsyncRead, AsyncWrite};
-use framed_read::{framed_read2, framed_read2_with_buffer, FramedRead2, Decoder};
-use framed_write::{framed_write2, framed_write2_with_buffer, FramedWrite2, Encoder};
+use codec::{Decoder, Encoder};
+use framed_read::{framed_read2, framed_read2_with_buffer, FramedRead2};
+use framed_write::{framed_write2, framed_write2_with_buffer, FramedWrite2};
 
 use futures::{Stream, Sink, StartSend, Poll};
 use bytes::{BytesMut};
@@ -12,10 +15,14 @@ use bytes::{BytesMut};
 /// the `Encoder` and `Decoder` traits to encode and decode frames.
 ///
 /// You can create a `Framed` instance by using the `AsyncRead::framed` adapter.
+#[deprecated(since = "0.1.7", note = "Moved to tokio-codec")]
+#[doc(hidden)]
 pub struct Framed<T, U> {
     inner: FramedRead2<FramedWrite2<Fuse<T, U>>>,
 }
 
+#[deprecated(since = "0.1.7", note = "Moved to tokio-codec")]
+#[doc(hidden)]
 pub struct Fuse<T, U>(pub T, pub U);
 
 pub fn framed<T, U>(inner: T, codec: U) -> Framed<T, U>

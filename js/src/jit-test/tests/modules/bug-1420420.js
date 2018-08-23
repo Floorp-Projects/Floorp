@@ -14,5 +14,5 @@ moduleRepo["a"] = parseModule(`import {x} from "good"; import {y} from "bad";`);
 let b = moduleRepo["b"] = parseModule(`import "a";`);
 let c = moduleRepo["c"] = parseModule(`import "a";`);
 
-assertThrowsInstanceOf(() => b.declarationInstantiation(), SyntaxError);
-assertThrowsInstanceOf(() => c.declarationInstantiation(), SyntaxError);
+assertThrowsInstanceOf(() => instantiateModule(b), SyntaxError);
+assertThrowsInstanceOf(() => instantiateModule(c), SyntaxError);

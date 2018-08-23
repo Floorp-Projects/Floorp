@@ -29,6 +29,7 @@ impl IoVec {
 
 impl<'a> From<&'a [u8]> for &'a IoVec {
     fn from(src: &'a [u8]) -> Self {
+        assert!(src.len() > 0);
         assert!(src.len() <= MAX_LENGTH);
 
         unsafe {
@@ -42,6 +43,7 @@ impl<'a> From<&'a [u8]> for &'a IoVec {
 
 impl<'a> From<&'a mut [u8]> for &'a mut IoVec {
     fn from(src: &'a mut [u8]) -> Self {
+        assert!(src.len() > 0);
         assert!(src.len() <= MAX_LENGTH);
 
         unsafe {

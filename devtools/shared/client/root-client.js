@@ -6,6 +6,7 @@
 
 const { Ci } = require("chrome");
 const { arg, DebuggerClient } = require("devtools/shared/client/debugger-client");
+loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
 
 /**
  * A RootClient object represents a root actor on the server. Each
@@ -32,6 +33,23 @@ function RootClient(client, greeting) {
   this.actor = greeting.from;
   this.applicationType = greeting.applicationType;
   this.traits = greeting.traits;
+
+  // Cache root form as this will always be the same value.
+  //
+  // Note that rootForm is overloaded by DebuggerClient.checkRuntimeVersion
+  // in order to support <FF59 that doesn't support getRoot request.
+  Object.defineProperty(this, "rootForm", {
+    get() {
+      delete this.rootForm;
+      this.rootForm = this._getRoot();
+      return this.rootForm;
+    },
+    configurable: true
+  });
+
+  // Cache of already created global scoped fronts
+  // [typeName:string => Front instance]
+  this.fronts = new Map();
 }
 exports.RootClient = RootClient;
 
@@ -43,7 +61,7 @@ RootClient.prototype = {
    * browser.  This can replace usages of `listTabs` that only wanted the global actors
    * and didn't actually care about tabs.
    */
-  getRoot: DebuggerClient.requester({ type: "getRoot" }),
+  _getRoot: DebuggerClient.requester({ type: "getRoot" }),
 
    /**
    * List the open tabs.
@@ -257,6 +275,24 @@ RootClient.prototype = {
     };
 
     return this.request(packet);
+  },
+
+  /*
+   * This function returns a protocol.js Front for any root actor.
+   * i.e. the one directly served from RootActor.listTabs or getRoot.
+   *
+   * @param String typeName
+   *        The type name used in protocol.js's spec for this actor.
+   */
+  async getFront(typeName) {
+    let front = this.fronts.get(typeName);
+    if (front) {
+      return front;
+    }
+    const rootForm = await this.rootForm;
+    front = getFront(this._client, typeName, rootForm);
+    this.fronts.set(typeName, front);
+    return front;
   },
 
   /**

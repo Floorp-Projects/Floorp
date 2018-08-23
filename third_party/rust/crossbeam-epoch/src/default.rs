@@ -14,7 +14,7 @@ lazy_static! {
 
 thread_local! {
     /// The per-thread participant for the default garbage collector.
-    static HANDLE: Handle = COLLECTOR.handle();
+    static HANDLE: Handle = COLLECTOR.register();
 }
 
 /// Pins the current thread.
@@ -37,4 +37,10 @@ pub fn is_pinned() -> bool {
 #[inline]
 pub fn default_handle() -> Handle {
     HANDLE.with(|handle| handle.clone())
+}
+
+/// Returns the default handle associated with the current thread.
+#[inline]
+pub fn default_collector() -> &'static Collector {
+    &COLLECTOR
 }

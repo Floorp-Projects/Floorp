@@ -1354,7 +1354,7 @@ JSContext::getPendingException(MutableHandleValue rval)
     clearPendingException();
     if (!compartment()->wrap(this, rval))
         return false;
-    assertSameCompartment(this, rval);
+    this->check(rval);
     setPendingException(rval);
     overRecursed_ = wasOverRecursed;
     return true;
@@ -1562,17 +1562,10 @@ JS::AutoCheckRequestDepth::~AutoCheckRequestDepth()
 
 #ifdef JS_CRASH_DIAGNOSTICS
 void
-CompartmentChecker::check(InterpreterFrame* fp, int argIndex)
-{
-    if (fp)
-        check(fp->environmentChain(), argIndex);
-}
-
-void
-CompartmentChecker::check(AbstractFramePtr frame, int argIndex)
+ContextChecks::check(AbstractFramePtr frame, int argIndex)
 {
     if (frame)
-        check(frame.environmentChain(), argIndex);
+        check(frame.realm(), argIndex);
 }
 #endif
 

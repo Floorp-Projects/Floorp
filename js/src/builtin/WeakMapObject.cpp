@@ -204,7 +204,7 @@ JS::GetWeakMapEntry(JSContext* cx, HandleObject mapObj, HandleObject key,
                     MutableHandleValue rval)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, key);
+    cx->check(key);
     rval.setUndefined();
     ObjectValueMap* map = mapObj->as<WeakMapObject>().getMap();
     if (!map)
@@ -223,7 +223,7 @@ JS::SetWeakMapEntry(JSContext* cx, HandleObject mapObj, HandleObject key,
                     HandleValue val)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, key, val);
+    cx->check(key, val);
     Handle<WeakMapObject*> rootedMap = mapObj.as<WeakMapObject>();
     return WeakCollectionPutEntryInternal(cx, rootedMap, key, val);
 }

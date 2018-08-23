@@ -13,7 +13,6 @@ namespace js {
 namespace jit {
 
 inline void EmitBaselineTailCallVM(TrampolinePtr, MacroAssembler&, uint32_t) { MOZ_CRASH(); }
-inline void EmitIonTailCallVM(TrampolinePtr, MacroAssembler&, uint32_t) { MOZ_CRASH(); }
 inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler&, Register, uint32_t) { MOZ_CRASH(); }
 inline void EmitBaselineCallVM(TrampolinePtr, MacroAssembler&) { MOZ_CRASH(); }
 

@@ -33,10 +33,13 @@
           const docRuntime = getRuntimeDocument(win);
           win.AppManager.update("runtime-list");
 
+          const onGlobalActors = waitForUpdate(win, "runtime-global-actors");
+          const onRuntimeTargets = waitForUpdate(win, "runtime-targets");
           connectToLocal(win, docRuntime);
+          await onGlobalActors;
+          await onRuntimeTargets;
 
           // Select main process
-          await waitForUpdate(win, "runtime-targets");
           SimpleTest.executeSoon(() => {
             docProject.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
           });

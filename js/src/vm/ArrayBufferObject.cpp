@@ -479,7 +479,7 @@ NoteViewBufferWasDetached(ArrayBufferViewObject* view,
 ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                           BufferContents newContents)
 {
-    assertSameCompartment(cx, buffer);
+    cx->check(buffer);
     MOZ_ASSERT(!buffer->isPreparedForAsmJS());
 
     // When detaching buffers where we don't know all views, the new data must
@@ -1350,7 +1350,7 @@ ArrayBufferObject::stealContents(JSContext* cx, Handle<ArrayBufferObject*> buffe
     // stealContents() is used internally by the impl of memory growth.
     MOZ_ASSERT_IF(hasStealableContents, buffer->hasStealableContents() ||
                                         (buffer->isWasm() && !buffer->isPreparedForAsmJS()));
-    assertSameCompartment(cx, buffer);
+    cx->check(buffer);
 
     BufferContents oldContents = buffer->contents();
 
@@ -1813,7 +1813,7 @@ JS_DetachArrayBuffer(JSContext* cx, HandleObject obj)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
 
     if (!obj->is<ArrayBufferObject>()) {
         JS_ReportErrorASCII(cx, "ArrayBuffer object required");
@@ -1930,7 +1930,7 @@ JS_ExternalizeArrayBufferContents(JSContext* cx, HandleObject obj)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+    cx->check(obj);
 
     if (!obj->is<ArrayBufferObject>()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
@@ -1962,7 +1962,7 @@ JS_StealArrayBufferContents(JSContext* cx, HandleObject objArg)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, objArg);
+    cx->check(objArg);
 
     JSObject* obj = CheckedUnwrap(objArg);
     if (!obj)
@@ -2050,7 +2050,7 @@ JS_GetArrayBufferViewBuffer(JSContext* cx, HandleObject objArg, bool* isSharedMe
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, objArg);
+    cx->check(objArg);
 
     JSObject* obj = CheckedUnwrap(objArg);
     if (!obj)

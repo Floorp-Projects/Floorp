@@ -1,19 +1,18 @@
 use serde_json;
-use std::io::Read;
 use std::marker::PhantomData;
-use std::net::SocketAddr;
+use std::net::{SocketAddr, TcpListener as StdTcpListener};
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Duration;
 
-use hyper::header::{CacheControl, CacheDirective, ContentType};
-use hyper::method::Method;
-use hyper::mime::{Attr, Mime, SubLevel, TopLevel, Value};
-use hyper::server::{Handler, Listening, Request, Response, Server};
-use hyper::status::StatusCode;
-use hyper::uri::RequestUri::AbsolutePath;
-use hyper::Result;
+use futures::{future, Future, Stream};
+use hyper::{self, Body, Method, Request, Response, StatusCode};
+use hyper::service::Service;
+use hyper::server::conn::Http;
+use http;
+use tokio::runtime::current_thread::Runtime;
+use tokio::reactor::Handle;
+use tokio::net::TcpListener;
 
 use command::{WebDriverCommand, WebDriverMessage};
 use error::{ErrorStatus, WebDriverError, WebDriverResult};
@@ -93,7 +92,7 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
                     };
                 }
                 Ok(DispatchMessage::Quit) => break,
-                Err(_) => panic!("Error receiving message in handler"),
+                Err(e) => panic!("Error receiving message in handler: {:?}", e),
             }
         }
     }
@@ -152,96 +151,101 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct HttpHandler<U: WebDriverExtensionRoute> {
-    chan: Mutex<Sender<DispatchMessage<U>>>,
-    api: Mutex<WebDriverHttpApi<U>>,
+    chan: Arc<Mutex<Sender<DispatchMessage<U>>>>,
+    api: Arc<Mutex<WebDriverHttpApi<U>>>,
 }
 
-impl<U: WebDriverExtensionRoute> HttpHandler<U> {
-    fn new(api: WebDriverHttpApi<U>, chan: Sender<DispatchMessage<U>>) -> HttpHandler<U> {
+impl <U: WebDriverExtensionRoute> HttpHandler<U> {
+    fn new(api: Arc<Mutex<WebDriverHttpApi<U>>>, chan: Sender<DispatchMessage<U>>) -> HttpHandler<U> {
         HttpHandler {
-            chan: Mutex::new(chan),
-            api: Mutex::new(api),
+            chan: Arc::new(Mutex::new(chan)),
+            api: api,
         }
     }
 }
 
-impl<U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
-    fn handle(&self, req: Request, res: Response) {
-        let mut req = req;
-        let mut res = res;
+impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
+    type ReqBody = Body;
+    type ResBody = Body;
 
-        let mut body = String::new();
-        if let Method::Post = req.method {
-            req.read_to_string(&mut body).unwrap();
-        }
+    type Error = hyper::Error;
+    type Future = Box<future::Future<Item=Response<Self::ResBody>, Error=hyper::Error> + Send>;
 
-        debug!("-> {} {} {}", req.method, req.uri, body);
+    fn call(&mut self, req: Request<Self::ReqBody>) -> Self::Future {
+        let uri = req.uri().clone();
+        let method = req.method().clone();
+        let api = self.api.clone();
+        let chan = self.chan.clone();
 
-        match req.uri {
-            AbsolutePath(path) => {
-                let msg_result = {
-                    // The fact that this locks for basically the whole request doesn't
-                    // matter as long as we are only handling one request at a time.
-                    match self.api.lock() {
-                        Ok(ref api) => api.decode_request(req.method, &path[..], &body[..]),
-                        Err(_) => return,
-                    }
-                };
-                let (status, resp_body) = match msg_result {
-                    Ok(message) => {
-                        let (send_res, recv_res) = channel();
-                        match self.chan.lock() {
-                            Ok(ref c) => {
-                                let res =
-                                    c.send(DispatchMessage::HandleWebDriver(message, send_res));
-                                match res {
-                                    Ok(x) => x,
-                                    Err(_) => {
-                                        error!("Something terrible happened");
-                                        return;
-                                    }
-                                }
-                            }
-                            Err(_) => {
-                                error!("Something terrible happened");
-                                return;
-                            }
-                        }
-                        match recv_res.recv() {
-                            Ok(data) => match data {
-                                Ok(response) => {
-                                    (StatusCode::Ok, serde_json::to_string(&response).unwrap())
-                                }
-                                Err(err) => {
-                                    (err.http_status(), serde_json::to_string(&err).unwrap())
-                                }
-                            },
-                            Err(e) => panic!("Error reading response: {:?}", e),
-                        }
-                    }
-                    Err(err) => (err.http_status(), serde_json::to_string(&err).unwrap()),
-                };
+        Box::new(req.into_body().concat2().and_then(move |body| {
+            let body = String::from_utf8(body.to_vec()).unwrap();
+            debug!("-> {} {} {}", method, uri, body);
 
-                debug!("<- {} {}", status, resp_body);
-
-                {
-                    let resp_status = res.status_mut();
-                    *resp_status = status;
+            let msg_result = {
+                // The fact that this locks for basically the whole request doesn't
+                // matter as long as we are only handling one request at a time.
+                match api.lock() {
+                    Ok(ref api) => api.decode_request(method, &uri.path(), &body[..]),
+                    Err(_) => panic!("Something terrible happened"),
                 }
-                res.headers_mut().set(ContentType(Mime(
-                    TopLevel::Application,
-                    SubLevel::Json,
-                    vec![(Attr::Charset, Value::Utf8)],
-                )));
-                res.headers_mut()
-                    .set(CacheControl(vec![CacheDirective::NoCache]));
+            };
 
-                res.send(&resp_body.as_bytes()).unwrap();
-            }
-            _ => {}
-        }
+            let (status, resp_body) = match msg_result {
+                Ok(message) => {
+                    let (send_res, recv_res) = channel();
+                    match chan.lock() {
+                        Ok(ref c) => {
+                            let res =
+                                c.send(DispatchMessage::HandleWebDriver(message, send_res));
+                            match res {
+                                Ok(x) => x,
+                                Err(_) => {
+                                    panic!("Something terrible happened");
+                                }
+                            }
+                        }
+                        Err(e) => panic!("Error reading response: {:?}", e),
+                    }
+
+                    match recv_res.recv() {
+                        Ok(data) => match data {
+                            Ok(response) => {
+                                (StatusCode::OK, serde_json::to_string(&response).unwrap())
+                            }
+                            Err(err) => {
+                                (err.http_status(), serde_json::to_string(&err).unwrap())
+                            }
+                        },
+                        Err(e) => panic!("Error reading response: {:?}", e),
+                    }
+                }
+                Err(err) => (err.http_status(), serde_json::to_string(&err).unwrap()),
+            };
+
+            debug!("<- {} {}", status, resp_body);
+
+            let response = Response::builder()
+                .status(status)
+                .header(http::header::CONTENT_TYPE, "application/json; charset=utf8")
+                .header(http::header::CACHE_CONTROL, "no-cache")
+                .body(resp_body.into())
+                .unwrap();
+
+            Ok(response)
+        }))
+    }
+}
+
+pub struct Listener {
+    _guard: Option<thread::JoinHandle<()>>,
+    pub socket: SocketAddr,
+}
+
+impl Drop for Listener {
+    fn drop(&mut self) {
+        let _ = self._guard.take().map(|j| j.join());
     }
 }
 
@@ -249,17 +253,35 @@ pub fn start<T, U>(
     address: SocketAddr,
     handler: T,
     extension_routes: &[(Method, &str, U)],
-) -> Result<Listening>
+) -> ::std::io::Result<Listener>
 where
     T: 'static + WebDriverHandler<U>,
     U: 'static + WebDriverExtensionRoute,
 {
+    let listener = StdTcpListener::bind(address)?;
+    let addr = listener.local_addr()?;
     let (msg_send, msg_recv) = channel();
 
-    let api = WebDriverHttpApi::new(extension_routes);
-    let http_handler = HttpHandler::new(api, msg_send);
-    let mut server = Server::http(address)?;
-    server.keep_alive(Some(Duration::from_secs(90)));
+    let api = Arc::new(Mutex::new(WebDriverHttpApi::new(extension_routes)));
+
+    let builder = thread::Builder::new().name("webdriver server".to_string());
+    let handle = builder.spawn(move || {
+        let mut rt = Runtime::new().unwrap();
+        let listener = TcpListener::from_std(listener, &Handle::default()).unwrap();
+
+        let http_handler = HttpHandler::new(api, msg_send.clone());
+        let http = Http::new();
+        let handle = rt.handle();
+
+        let fut = listener.incoming()
+            .for_each(move |socket| {
+                let fut = http.serve_connection(socket, http_handler.clone()).map_err(|_| ());
+                handle.spawn(fut).unwrap();
+                Ok(())
+            });
+
+        rt.block_on(fut).unwrap();
+    })?;
 
     let builder = thread::Builder::new().name("webdriver dispatcher".to_string());
     builder.spawn(move || {
@@ -267,5 +289,5 @@ where
         dispatcher.run(msg_recv);
     })?;
 
-    server.handle(http_handler)
+    Ok(Listener { _guard: Some(handle), socket: addr })
 }

@@ -110,7 +110,11 @@ impl<T> Drop for Sender<T> {
             Some(shared) => shared,
             None => return,
         };
-        if Rc::weak_count(&shared) == 0 {
+        // The number of existing `Weak` indicates if we are possibly the last
+        // `Sender`. If we are the last, we possibly must notify a blocked
+        // `Receiver`. `self.shared` is always one of the `Weak` to this shared
+        // data. Therefore the smallest possible Rc::weak_count(&shared) is 1.
+        if Rc::weak_count(&shared) == 1 {
             if let Some(task) = shared.borrow_mut().blocked_recv.take() {
                 // Wake up receiver as its stream has ended
                 task.notify();

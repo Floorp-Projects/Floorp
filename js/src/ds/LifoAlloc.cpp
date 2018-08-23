@@ -41,15 +41,6 @@ BumpChunk::newWithCapacity(size_t size, bool protect)
     return result;
 }
 
-bool
-BumpChunk::canAlloc(size_t n)
-{
-    uint8_t* aligned = AlignPtr(bump_);
-    uint8_t* newBump = aligned + n;
-    // bump_ <= newBump, is necessary to catch overflow.
-    return bump_ <= newBump && newBump <= capacity_;
-}
-
 #ifdef LIFO_CHUNK_PROTECT
 
 static const uint8_t*
@@ -186,24 +177,24 @@ LifoAlloc::newChunkWithCapacity(size_t n)
     MOZ_ASSERT(fallibleScope_, "[OOM] Cannot allocate a new chunk in an infallible scope.");
 
     // Compute the size which should be requested in order to be able to fit |n|
-    // bytes in the newly allocated chunk, or default the |defaultChunkSize_|.
-    size_t defaultChunkFreeSpace = defaultChunkSize_ - detail::BumpChunkReservedSpace;
-    size_t chunkSize;
-    if (n > defaultChunkFreeSpace) {
-        MOZ_ASSERT(defaultChunkFreeSpace < defaultChunkSize_);
-        size_t allocSizeWithCanaries = n + (defaultChunkSize_ - defaultChunkFreeSpace);
+    // bytes in a newly allocated chunk, or default to |defaultChunkSize_|.
+    uint8_t* u8begin = nullptr;
+    uint8_t* u8end = u8begin + detail::BumpChunkReservedSpace;
+    u8end = detail::BumpChunk::nextAllocEnd(detail::BumpChunk::nextAllocBase(u8end), n);
+    size_t allocSizeWithCanaries = u8end - u8begin;
 
-        // Guard for overflow.
-        if (allocSizeWithCanaries < n ||
-            (allocSizeWithCanaries & (size_t(1) << (BitSize<size_t>::value - 1))))
-        {
-            return nullptr;
-        }
-
-        chunkSize = RoundUpPow2(allocSizeWithCanaries);
-    } else {
-        chunkSize = defaultChunkSize_;
+    // Guard for overflow.
+    if (allocSizeWithCanaries < n ||
+        (allocSizeWithCanaries & (size_t(1) << (BitSize<size_t>::value - 1))))
+    {
+        return nullptr;
     }
+
+    size_t chunkSize;
+    if (allocSizeWithCanaries > defaultChunkSize_)
+        chunkSize = RoundUpPow2(allocSizeWithCanaries);
+    else
+        chunkSize = defaultChunkSize_;
 
     bool protect = false;
 #ifdef LIFO_CHUNK_PROTECT
