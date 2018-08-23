@@ -602,6 +602,7 @@ talos-xperf:
     try-name: xperf
     treeherder-symbol: T(x)
     virtualization: virtual
+    os-groups: ['Administrators']
     run-on-projects:
         by-test-platform:
             windows7-32-msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']

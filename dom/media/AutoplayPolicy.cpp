@@ -143,7 +143,19 @@ IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement)
   nsIDocument* topDocument = ApproverDocOf(*aElement.OwnerDoc());
   if (topDocument &&
       topDocument->MediaDocumentKind() == nsIDocument::MediaDocumentKind::Video) {
-    AUTOPLAY_LOG("Allow video document %p to autoplay\n", &aElement);
+    AUTOPLAY_LOG("Allow video document %p to autoplay", &aElement);
+    return true;
+  }
+
+  if (!aElement.HasAudio() &&
+      aElement.ReadyState() >= HTMLMediaElement_Binding::HAVE_METADATA) {
+    AUTOPLAY_LOG("Allow media %p without audio track to autoplay", &aElement);
+    return true;
+  }
+
+  if (!aElement.HasAudio() &&
+      aElement.ReadyState() >= HTMLMediaElement_Binding::HAVE_METADATA) {
+    AUTOPLAY_LOG("Allow media without audio track %p to autoplay\n", &aElement);
     return true;
   }
 

@@ -215,7 +215,7 @@ class TraceLoggerGraph
     TraceLoggerGraph() {}
     ~TraceLoggerGraph();
 
-    bool init(uint64_t timestamp);
+    bool init(uint64_t timestamp, bool graphFileEnabled);
 
     // Link a textId with a particular text.
     void addTextId(uint32_t id, const char* text);

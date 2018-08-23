@@ -1761,6 +1761,9 @@ protected:
   // before attaching to the DOM tree.
   bool mUnboundFromTree = false;
 
+  // True if the autoplay media was blocked because it hadn't loaded metadata yet.
+  bool mBlockedAsWithoutMetadata = false;
+
 public:
   // Helper class to measure times for MSE telemetry stats
   class TimeDurationAccumulator
@@ -1814,7 +1817,7 @@ private:
 
   already_AddRefed<PlayPromise> CreatePlayPromise(ErrorResult& aRv) const;
 
-  void UpdateHadAudibleAutoplayState() const;
+  void UpdateHadAudibleAutoplayState();
 
   /**
    * This function is called by AfterSetAttr and OnAttrSetButNotChanged.
