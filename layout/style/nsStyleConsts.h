@@ -145,12 +145,6 @@ enum class StyleGeometryBox : uint8_t {
                          // background-clip only.
 };
 
-// fill-rule
-enum class StyleFillRule : uint8_t {
-  Nonzero,
-  Evenodd,
-};
-
 // float
 // https://developer.mozilla.org/en-US/docs/Web/CSS/float
 enum class StyleFloat : uint8_t {
