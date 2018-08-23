@@ -8,6 +8,7 @@ exports.selectSourceURL = selectSourceURL;
 exports.selectSource = selectSource;
 exports.selectLocation = selectLocation;
 exports.selectSpecificLocation = selectSpecificLocation;
+exports.selectSpecificSource = selectSpecificSource;
 exports.jumpToMappedLocation = jumpToMappedLocation;
 exports.jumpToMappedSelectedLocation = jumpToMappedSelectedLocation;
 
@@ -105,7 +106,7 @@ function selectSource(sourceId) {
     const location = (0, _location.createLocation)({
       sourceId
     });
-    return await dispatch(selectSpecificLocation(location));
+    return await dispatch(selectLocation(location));
   };
 }
 /**
@@ -188,6 +189,22 @@ function selectSpecificLocation(location) {
   return selectLocation(location, {
     keepContext: false
   });
+}
+/**
+ * @memberof actions/sources
+ * @static
+ */
+
+
+function selectSpecificSource(sourceId) {
+  return async ({
+    dispatch
+  }) => {
+    const location = (0, _location.createLocation)({
+      sourceId
+    });
+    return await dispatch(selectSpecificLocation(location));
+  };
 }
 /**
  * @memberof actions/sources
