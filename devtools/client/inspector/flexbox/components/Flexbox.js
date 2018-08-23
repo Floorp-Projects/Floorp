@@ -12,6 +12,9 @@ const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 loader.lazyGetter(this, "FlexContainerList", function() {
   return createFactory(require("./FlexContainerList"));
 });
+loader.lazyGetter(this, "FlexContainerProperties", function() {
+  return createFactory(require("./FlexContainerProperties"));
+});
 
 const Types = require("../types");
 
@@ -59,7 +62,10 @@ class Flexbox extends PureComponent {
             onToggleFlexboxHighlighter,
             setSelectedNode,
           })
-        )
+        ),
+        FlexContainerProperties({
+          properties: flexbox.properties,
+        })
       )
     );
   }
