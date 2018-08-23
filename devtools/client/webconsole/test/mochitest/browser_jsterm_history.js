@@ -16,11 +16,8 @@ const {
 } = require("devtools/client/webconsole/constants");
 
 add_task(async function() {
-  // Run test with legacy JsTerm
+  // Only run in legacy JsTerm - fixme in Bug 1485510.
   await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await testHistory();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
   await testHistory();
 });
 
