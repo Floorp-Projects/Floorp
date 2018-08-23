@@ -44,7 +44,7 @@
       },
       {
         "id": "ExtensionType",
-        "description": "The type of this extension. Will always be 'extension'.",
+        "description": "The type of this extension, 'extension' or 'theme'.",
         "type": "string",
         "enum": ["extension", "theme"]
       },
@@ -99,7 +99,7 @@
             "optional": true
           },
           "type": {
-            "description": "The type of this extension. Will always return 'extension'.",
+            "description": "The type of this extension, 'extension' or 'theme'.",
             "$ref": "ExtensionType"
           },
           "homepageUrl": {
@@ -191,6 +191,48 @@
               {
                 "name": "result",
                 "$ref": "ExtensionInfo"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "install",
+        "type": "function",
+        "requireUserInput": true,
+        "permissions": ["management"],
+        "description": "Installs and enables a theme extension from the given url.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "options",
+            "type": "object",
+            "properties": {
+              "url": {
+                "$ref": "manifest.HttpURL",
+                "description": "URL pointing to the XPI file on addons.mozilla.org or similar."
+              },
+              "hash": {
+                "type": "string",
+                "optional": true,
+                "pattern": "^(sha256|sha512):[0-9a-fA-F]{64,128}$",
+                "description": "A hash of the XPI file, using sha256 or stronger."
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": [
+              {
+                "name": "result",
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "manifest.ExtensionID"
+                  }
+                }
               }
             ]
           }
