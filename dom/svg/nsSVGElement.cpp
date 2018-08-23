@@ -1128,49 +1128,56 @@ nsSVGElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse)
 
 namespace {
 
-class MOZ_STACK_CLASS MappedAttrParser
-{
+class MOZ_STACK_CLASS MappedAttrParser {
 public:
-  explicit MappedAttrParser(nsSVGElement& aElement)
-    : mElement(aElement)
-  { }
+  MappedAttrParser(css::Loader* aLoader,
+                   nsIURI* aDocURI,
+                   already_AddRefed<nsIURI> aBaseURI,
+                   nsSVGElement* aElement);
+  ~MappedAttrParser();
 
-  ~MappedAttrParser()
-  {
-    MOZ_ASSERT(!mDecl,
-               "If mDecl was initialized, it should have been returned via "
-               "TakeDeclarationBlock (and have its pointer cleared)");
-  }
-
+  // Parses a mapped attribute value.
   void ParseMappedAttrValue(nsAtom* aMappedAttrName,
                             const nsAString& aMappedAttrValue);
 
   // If we've parsed any values for mapped attributes, this method returns the
-  // already_AddRefed css::Declaration that incorporates the parsed values.
-  // Otherwise, this method returns null.
-  already_AddRefed<DeclarationBlock> TakeDeclarationBlock()
-  {
-    return mDecl.forget();
-  }
-
-  URLExtraData& EnsureExtraData()
-  {
-    if (!mExtraData) {
-      nsIDocument& doc = *mElement.OwnerDoc();
-      mExtraData = new URLExtraData(mElement.GetBaseURI(),
-                                    do_AddRef(doc.GetDocumentURI()),
-                                    do_AddRef(mElement.NodePrincipal()));
-    }
-    return *mExtraData;
-  }
+  // already_AddRefed css::Declaration that incorporates the parsed
+  // values. Otherwise, this method returns null.
+  already_AddRefed<DeclarationBlock> GetDeclarationBlock();
 
 private:
-  // Declaration for storing parsed values (lazily initialized).
+  // MEMBER DATA
+  // -----------
+  css::Loader*      mLoader;
+
+  // Arguments for nsCSSParser::ParseProperty
+  nsIURI*           mDocURI;
+  nsCOMPtr<nsIURI>  mBaseURI;
+
+  // Declaration for storing parsed values (lazily initialized)
   RefPtr<DeclarationBlock> mDecl;
-  // URL data for parsing stuff. Also lazy.
-  RefPtr<URLExtraData> mExtraData;
-  nsSVGElement& mElement;
+
+  // For reporting use counters
+  nsSVGElement*     mElement;
 };
+
+MappedAttrParser::MappedAttrParser(css::Loader* aLoader,
+                                   nsIURI* aDocURI,
+                                   already_AddRefed<nsIURI> aBaseURI,
+                                   nsSVGElement* aElement)
+  : mLoader(aLoader)
+  , mDocURI(aDocURI)
+  , mBaseURI(aBaseURI)
+  , mElement(aElement)
+{
+}
+
+MappedAttrParser::~MappedAttrParser()
+{
+  MOZ_ASSERT(!mDecl,
+             "If mDecl was initialized, it should have been returned via "
+             "GetDeclarationBlock (and had its pointer cleared)");
+}
 
 void
 MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
@@ -1180,20 +1187,38 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
     mDecl = new DeclarationBlock();
   }
 
+  // Get the nsCSSPropertyID ID for our mapped attribute.
   nsCSSPropertyID propertyID =
     nsCSSProps::LookupProperty(nsDependentAtomString(aMappedAttrName));
   if (propertyID != eCSSProperty_UNKNOWN) {
+    bool changed = false; // outparam for ParseProperty.
     NS_ConvertUTF16toUTF8 value(aMappedAttrValue);
-    nsIDocument& doc = *mElement.OwnerDoc();
-    Servo_DeclarationBlock_SetPropertyById(mDecl->Raw(),
-                                           propertyID,
-                                           &value,
-                                           false,
-                                           &EnsureExtraData(),
-                                           ParsingMode::AllowUnitlessLength,
-                                           doc.GetCompatibilityMode(),
-                                           doc.CSSLoader(),
-                                           { });
+    // FIXME (bug 1343964): Figure out a better solution for sending the base uri to servo
+    RefPtr<URLExtraData> data = new URLExtraData(mBaseURI, mDocURI,
+                                                 mElement->NodePrincipal());
+    changed = Servo_DeclarationBlock_SetPropertyById(
+      mDecl->Raw(), propertyID, &value, false, data,
+      ParsingMode::AllowUnitlessLength,
+      mElement->OwnerDoc()->GetCompatibilityMode(), mLoader, { });
+
+    if (changed) {
+      // The normal reporting of use counters by the nsCSSParser won't happen
+      // since it doesn't have a sheet.
+      if (nsCSSProps::IsShorthand(propertyID)) {
+        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, propertyID,
+                                             CSSEnabledState::eForAllContent) {
+          UseCounter useCounter = nsCSSProps::UseCounterFor(*subprop);
+          if (useCounter != eUseCounter_UNKNOWN) {
+            mElement->OwnerDoc()->SetDocumentAndPageUseCounter(useCounter);
+          }
+        }
+      } else {
+        UseCounter useCounter = nsCSSProps::UseCounterFor(propertyID);
+        if (useCounter != eUseCounter_UNKNOWN) {
+          mElement->OwnerDoc()->SetDocumentAndPageUseCounter(useCounter);
+        }
+      }
+    }
     return;
   }
   MOZ_ASSERT(aMappedAttrName == nsGkAtoms::lang,
@@ -1206,6 +1231,12 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
   }
 }
 
+already_AddRefed<DeclarationBlock>
+MappedAttrParser::GetDeclarationBlock()
+{
+  return mDecl.forget();
+}
+
 } // namespace
 
 //----------------------------------------------------------------------
@@ -1214,20 +1245,24 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
 void
 nsSVGElement::UpdateContentDeclarationBlock()
 {
-  MOZ_ASSERT(!mContentDeclarationBlock,
-             "we already have a content declaration block");
+  NS_ASSERTION(!mContentDeclarationBlock,
+               "we already have a content declaration block");
 
-  MappedAttrParser parser(*this);
+  uint32_t attrCount = mAttrs.AttrCount();
+  if (!attrCount) {
+    // nothing to do
+    return;
+  }
 
-  uint32_t i = 0;
-  while (BorrowedAttrInfo info = GetAttrInfoAt(i++)) {
-    const nsAttrName* attrName = info.mName;
-    if (!attrName->IsAtom() || !IsAttributeMapped(attrName->Atom())) {
+  nsIDocument* doc = OwnerDoc();
+  MappedAttrParser mappedAttrParser(doc->CSSLoader(), doc->GetDocumentURI(),
+                                    GetBaseURI(), this);
+
+  for (uint32_t i = 0; i < attrCount; ++i) {
+    const nsAttrName* attrName = mAttrs.AttrNameAt(i);
+    if (!attrName->IsAtom() || !IsAttributeMapped(attrName->Atom()))
       continue;
-    }
 
-    // FIXME(emilio): This check is dead, since IsAtom() implies that
-    // NamespaceID() == None.
     if (attrName->NamespaceID() != kNameSpaceID_None &&
         !attrName->Equals(nsGkAtoms::lang, kNameSpaceID_XML)) {
       continue;
@@ -1235,8 +1270,7 @@ nsSVGElement::UpdateContentDeclarationBlock()
 
     if (attrName->Equals(nsGkAtoms::lang, kNameSpaceID_None) &&
         HasAttr(kNameSpaceID_XML, nsGkAtoms::lang)) {
-      // xml:lang has precedence, and will get set via Gecko_GetXMLLangValue().
-      continue;
+      continue; // xml:lang has precedence
     }
 
     if (IsSVGElement(nsGkAtoms::svg)) {
@@ -1258,11 +1292,10 @@ nsSVGElement::UpdateContentDeclarationBlock()
     }
 
     nsAutoString value;
-    info.mValue->ToString(value);
-    parser.ParseMappedAttrValue(attrName->Atom(), value);
+    mAttrs.AttrAt(i)->ToString(value);
+    mappedAttrParser.ParseMappedAttrValue(attrName->Atom(), value);
   }
-
-  mContentDeclarationBlock = parser.TakeDeclarationBlock();
+  mContentDeclarationBlock = mappedAttrParser.GetDeclarationBlock();
 }
 
 const DeclarationBlock*
