@@ -19,16 +19,24 @@ class DebugTargetList extends PureComponent {
       actionComponent: PropTypes.any.isRequired,
       detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
+      isCollapsed: PropTypes.bool.isRequired,
       targets: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
   }
 
   render() {
-    const { actionComponent, detailComponent, dispatch, targets } = this.props;
+    const {
+      actionComponent,
+      detailComponent,
+      dispatch,
+      isCollapsed,
+      targets,
+    } = this.props;
 
     return dom.ul(
       {
-        className: "debug-target-list",
+        className: "debug-target-list" +
+                   (isCollapsed ? " debug-target-list--collapsed" : ""),
       },
       targets.map(target =>
         DebugTargetItem({ actionComponent, detailComponent, dispatch, target })),
