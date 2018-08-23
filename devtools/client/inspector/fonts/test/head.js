@@ -99,20 +99,44 @@ async function updatePreviewText(view, text) {
 }
 
 /**
- * Get all of the <li> elements for the fonts used on the currently selected element.
+*  Get all of the <li> elements for the fonts used on the currently selected element.
+*
+*  NOTE: This method is used by tests which check the old Font Inspector. It, along with
+*  the tests should be removed once the Font Editor reaches Firefox Stable.
+*  @see https://bugzilla.mozilla.org/show_bug.cgi?id=1485324
+*
+* @param  {Document} viewDoc
+* @return {NodeList}
+*/
+function getUsedFontsEls_obsolete(viewDoc) {
+  return viewDoc.querySelectorAll("#font-editor .fonts-list li");
+}
+
+/**
+ * Get all of the elements with names of fonts used on the currently selected element.
  *
- * @param  {document} viewDoc
- * @return {Array}
+ * @param  {Document} viewDoc
+ * @return {NodeList}
  */
 function getUsedFontsEls(viewDoc) {
-  return viewDoc.querySelectorAll("#font-editor .fonts-list li");
+  return viewDoc.querySelectorAll("#font-editor .font-control-used-fonts .font-name");
+}
+
+/**
+ * Get all of the elements with groups of fonts used on the currently selected element.
+ *
+ * @param  {Document} viewDoc
+ * @return {NodeList}
+ */
+function getUsedFontGroupsEls(viewDoc) {
+  return viewDoc.querySelectorAll("#font-editor .font-control-used-fonts .font-group");
 }
 
 /**
  * Get the DOM element for the accordion widget that contains the fonts used elsewhere in
  * the document.
  *
- * @param  {document} viewDoc
+ * @param  {Document} viewDoc
  * @return {DOMNode}
  */
 function getFontsAccordion(viewDoc) {
@@ -139,7 +163,7 @@ async function expandAccordion(accordion) {
 /**
  * Expand the fonts accordion.
  *
- * @param  {document} viewDoc
+ * @param  {Document} viewDoc
  */
 async function expandFontsAccordion(viewDoc) {
   info("Expanding the other fonts section");
@@ -149,8 +173,8 @@ async function expandFontsAccordion(viewDoc) {
 /**
  * Get all of the <li> elements for the fonts used elsewhere in the document.
  *
- * @param  {document} viewDoc
- * @return {Array}
+ * @param  {Document} viewDoc
+ * @return {NodeList}
  */
 function getAllFontsEls(viewDoc) {
   return getFontsAccordion(viewDoc).querySelectorAll(".fonts-list > li");
@@ -195,7 +219,7 @@ function getFamilyName(fontEl) {
 /**
  * Get the value and unit of a CSS font property or font axis from the font editor.
  *
- * @param  {document} viewDoc
+ * @param  {Document} viewDoc
  *         Host document of the font inspector panel.
  * @param  {String} name
  *         Font property name or axis tag

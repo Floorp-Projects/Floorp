@@ -26,13 +26,13 @@ add_task(async function() {
   // highlighted in the page.
   // The reason why these numbers vary is because the highlighter may create more than
   // 1 selection range object, depending on the number of text-runs found.
-  const expectedSelectionChangeEvents = [1, 2, 2, 1, 1];
+  const expectedSelectionChangeEvents = [2, 2, 2, 1, 1];
 
   for (let i = 0; i < fontEls.length; i++) {
     info(`Mousing over and out of font number ${i} in the list`);
 
     // Simulating a mouse over event on the font name and expecting a selectionchange.
-    const nameEl = fontEls[i].querySelector(".font-name");
+    const nameEl = fontEls[i];
     let onEvents = waitForNSelectionEvents(tab, expectedSelectionChangeEvents[i]);
     EventUtils.synthesizeMouse(nameEl, 2, 2, {type: "mouseover"}, viewDoc.defaultView);
     await onEvents;
@@ -41,7 +41,7 @@ add_task(async function() {
       `${expectedSelectionChangeEvents[i]} selectionchange events detected on mouseover`);
 
     // Simulating a mouse out event on the font name and expecting a selectionchange.
-    const otherEl = fontEls[i].querySelector(".font-origin");
+    const otherEl = viewDoc.querySelector("body");
     onEvents = waitForNSelectionEvents(tab, 1);
     EventUtils.synthesizeMouse(otherEl, 2, 2, {type: "mouseover"}, viewDoc.defaultView);
     await onEvents;
