@@ -307,7 +307,7 @@ function parseQueryString(query) {
     const param = e.split("=");
     return {
       name: param[0] ? getUnicodeUrlPath(param[0]) : "",
-      value: param[1] ? getUnicodeUrlPath(param[1]) : "",
+      value: param[1] ? getUnicodeUrlPath(param.slice(1).join("=")) : "",
     };
   });
 }
