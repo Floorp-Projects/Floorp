@@ -22,16 +22,14 @@ function runTests() {
 
   SimpleTest.waitForExplicitFinish();
 
-  const {getPreferenceFront} = require("devtools/shared/fronts/preference");
-
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
     client.listTabs().then(function onListTabs(response) {
-      const p = getPreferenceFront(client, response);
-
+      return client.mainRoot.getFront("preference");
+    }).then(function(p) {
       const prefs = {};
 
       const localPref = {

@@ -5,6 +5,6 @@ let a = moduleRepo['a'] = parseModule(`
 `);
 
 let m = parseModule("import { get } from 'a'; export { get };");
-m.declarationInstantiation();
-m.evaluation()
+instantiateModule(m);
+evaluateModule(m)
 assertEq(getModuleEnvironmentValue(m, "get").x, "foo");

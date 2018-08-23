@@ -499,7 +499,7 @@ JSContext::requestInterrupt(InterruptReason reason)
         // not regularly polled.
         FutexThread::lock();
         if (fx.isWaiting())
-            fx.wake(FutexThread::WakeForJSInterrupt);
+            fx.notify(FutexThread::NotifyForJSInterrupt);
         fx.unlock();
         wasm::InterruptRunningCode(this);
     }

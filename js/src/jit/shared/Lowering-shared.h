@@ -176,7 +176,6 @@ class LIRGeneratorShared
     inline void defineSinCos(LInstructionHelper<2, Ops, Temps> *lir, MDefinition *mir,
                              LDefinition::Policy policy = LDefinition::REGISTER);
 
-    inline void defineSharedStubReturn(LInstruction* lir, MDefinition* mir);
     inline void defineReturn(LInstruction* lir, MDefinition* mir);
 
     template <size_t X>

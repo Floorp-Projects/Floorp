@@ -106,6 +106,46 @@ enum AsmJSMathBuiltinFunction
     AsmJSMathBuiltin_clz32
 };
 
+// LitValPOD is a restricted version of LitVal suitable for asm.js that is
+// always POD.
+
+struct LitValPOD
+{
+    PackedTypeCode valType_;
+    union U {
+        uint32_t  u32_;
+        uint64_t  u64_;
+        float     f32_;
+        double    f64_;
+    } u;
+
+    LitValPOD() = default;
+
+    explicit LitValPOD(uint32_t u32) : valType_(ValType(ValType::I32).packed()) { u.u32_ = u32; }
+    explicit LitValPOD(uint64_t u64) : valType_(ValType(ValType::I64).packed()) { u.u64_ = u64; }
+
+    explicit LitValPOD(float f32) : valType_(ValType(ValType::F32).packed()) { u.f32_ = f32; }
+    explicit LitValPOD(double f64) : valType_(ValType(ValType::F64).packed()) { u.f64_ = f64; }
+
+    LitVal asLitVal() const {
+        switch (UnpackTypeCodeType(valType_)) {
+          case TypeCode::I32:
+            return LitVal(u.u32_);
+          case TypeCode::I64:
+            return LitVal(u.u64_);
+          case TypeCode::F32:
+            return LitVal(u.f32_);
+          case TypeCode::F64:
+            return LitVal(u.f64_);
+          default:
+            MOZ_CRASH("Can't happen");
+        }
+    }
+};
+
+static_assert(std::is_pod<LitValPOD>::value,
+              "must be POD to be simply serialized/deserialized");
+
 // An AsmJSGlobal represents a JS global variable in the asm.js module function.
 class AsmJSGlobal
 {
@@ -121,9 +161,8 @@ class AsmJSGlobal
             struct {
                 VarInitKind initKind_;
                 union U {
-                    ValType importType_;
-                    LitVal val_;
-                    U() : val_(LitVal()) {}
+                    PackedTypeCode importValType_;
+                    LitValPOD val_;
                 } u;
             } var;
             uint32_t ffiIndex_;
@@ -133,7 +172,6 @@ class AsmJSGlobal
                 ConstantKind kind_;
                 double value_;
             } constant;
-            V() : ffiIndex_(0) {}
         } u;
     } pod;
     CacheableChars field_;
@@ -157,7 +195,7 @@ class AsmJSGlobal
         MOZ_ASSERT(pod.which_ == Variable);
         return pod.u.var.initKind_;
     }
-    LitVal varInitVal() const {
+    LitValPOD varInitVal() const {
         MOZ_ASSERT(pod.which_ == Variable);
         MOZ_ASSERT(pod.u.var.initKind_ == InitConstant);
         return pod.u.var.u.val_;
@@ -165,7 +203,7 @@ class AsmJSGlobal
     ValType varInitImportType() const {
         MOZ_ASSERT(pod.which_ == Variable);
         MOZ_ASSERT(pod.u.var.initKind_ == InitImport);
-        return pod.u.var.u.importType_;
+        return ValType(pod.u.var.u.importValType_);
     }
     uint32_t ffiIndex() const {
         MOZ_ASSERT(pod.which_ == FFI);
@@ -851,16 +889,16 @@ class NumLit
         return false;
     }
 
-    LitVal value() const {
+    LitValPOD value() const {
         switch (which_) {
           case NumLit::Fixnum:
           case NumLit::NegativeInt:
           case NumLit::BigUnsigned:
-            return LitVal(toUint32());
+            return LitValPOD(toUint32());
           case NumLit::Float:
-            return LitVal(toFloat());
+            return LitValPOD(toFloat());
           case NumLit::Double:
-            return LitVal(toDouble());
+            return LitValPOD(toDouble());
           case NumLit::OutOfRangeInt:;
         }
         MOZ_CRASH("bad literal");
@@ -1691,7 +1729,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
 
         AsmJSGlobal g(AsmJSGlobal::Variable, std::move(fieldChars));
         g.pod.u.var.initKind_ = AsmJSGlobal::InitImport;
-        g.pod.u.var.u.importType_ = valType;
+        g.pod.u.var.u.importValType_ = valType.packed();
         return asmJSMetadata_->asmJSGlobals.append(std::move(g));
     }
     bool addArrayView(PropertyName* var, Scalar::Type vt, PropertyName* maybeField) {
@@ -5791,7 +5829,7 @@ HasPureCoercion(JSContext* cx, HandleValue v)
 
 static bool
 ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue importVal,
-                       Maybe<LitVal>* val)
+                       Maybe<LitValPOD>* val)
 {
     switch (global.varInitKind()) {
       case AsmJSGlobal::InitConstant:
@@ -6013,10 +6051,10 @@ GetImports(JSContext* cx, const AsmJSMetadata& metadata, HandleValue globalVal,
     for (const AsmJSGlobal& global : metadata.asmJSGlobals) {
         switch (global.which()) {
           case AsmJSGlobal::Variable: {
-            Maybe<LitVal> litVal;
+            Maybe<LitValPOD> litVal;
             if (!ValidateGlobalVariable(cx, global, importVal, &litVal))
                 return false;
-            if (!valImports.append(Val(*litVal)))
+            if (!valImports.append(Val(litVal->asLitVal())))
                 return false;
             break;
           }

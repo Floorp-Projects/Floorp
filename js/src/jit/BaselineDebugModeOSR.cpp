@@ -218,7 +218,7 @@ CollectJitStackScripts(JSContext* cx, const Debugger::ExecutionObservableSet& ob
             } else {
                 // The frame must be settled on a pc with an ICEntry.
                 uint8_t* retAddr = frame.returnAddressToFp();
-                BaselineICEntry& icEntry = script->baselineScript()->icEntryFromReturnAddress(retAddr);
+                ICEntry& icEntry = script->baselineScript()->icEntryFromReturnAddress(retAddr);
                 if (!entries.append(DebugModeOSREntry(script, icEntry)))
                     return false;
             }
@@ -498,7 +498,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 // callVMs which can trigger debug mode OSR are the *only*
                 // callVMs generated for their respective pc locations in the
                 // baseline JIT code.
-                BaselineICEntry& callVMEntry = bl->callVMEntryFromPCOffset(pcOffset);
+                ICEntry& callVMEntry = bl->callVMEntryFromPCOffset(pcOffset);
                 recompInfo->resumeAddr = bl->returnAddressForIC(callVMEntry);
                 popFrameReg = false;
                 break;
@@ -510,7 +510,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 // Patching mechanism is identical to a CallVM. This is
                 // handled especially only because the warmup counter VM call is
                 // part of the prologue, and not tied an opcode.
-                BaselineICEntry& warmupCountEntry = bl->warmupCountICEntry();
+                ICEntry& warmupCountEntry = bl->warmupCountICEntry();
                 recompInfo->resumeAddr = bl->returnAddressForIC(warmupCountEntry);
                 popFrameReg = false;
                 break;
@@ -524,7 +524,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 // handled especially only because the stack check VM call is
                 // part of the prologue, and not tied an opcode.
                 bool earlyCheck = kind == ICEntry::Kind_EarlyStackCheck;
-                BaselineICEntry& stackCheckEntry = bl->stackCheckICEntry(earlyCheck);
+                ICEntry& stackCheckEntry = bl->stackCheckICEntry(earlyCheck);
                 recompInfo->resumeAddr = bl->returnAddressForIC(stackCheckEntry);
                 popFrameReg = false;
                 break;
@@ -782,8 +782,8 @@ CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t ent
         }
     }
 
-    ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForStub(oldStub->makesGCCalls(), entry.script,
-                                                              ICStubCompiler::Engine::Baseline);
+    ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForStub(oldStub->makesGCCalls(),
+                                                              entry.script);
 
     // Clone the existing stub into the recompiled IC.
     //

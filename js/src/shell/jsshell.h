@@ -14,6 +14,7 @@
 
 #include "jsapi.h"
 
+#include "gc/WeakMap.h"
 #include "js/GCVector.h"
 #include "threading/ConditionVariable.h"
 #include "threading/LockGuard.h"
@@ -175,6 +176,7 @@ struct ShellContext
     UniquePtr<ProfilingStack> geckoProfilingStack;
 
     JS::UniqueChars moduleLoadPath;
+
     UniquePtr<MarkBitObservers> markObservers;
 
     // Off-thread parse state.

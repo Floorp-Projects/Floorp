@@ -7,21 +7,21 @@ load(libdir + "dummyModuleResolveHook.js");
 
 function checkModuleEval(source) {
     let m = parseModule(source);
-    m.declarationInstantiation();
-    m.evaluation();
+    instantiateModule(m);
+    evaluateModule(m);
     return m;
 }
 
 function checkModuleSyntaxError(source) {
     let m = parseModule(source);
-    assertThrowsInstanceOf(() => m.declarationInstantiation(), SyntaxError);
+    assertThrowsInstanceOf(() => instantiateModule(m), SyntaxError);
 }
 
 let a = moduleRepo['a'] = parseModule("export var a = 1; export var b = 2;");
 let b = moduleRepo['b'] = parseModule("export var b = 3; export var c = 4;");
 let c = moduleRepo['c'] = parseModule("export * from 'a'; export * from 'b';");
-c.declarationInstantiation();
-c.evaluation();
+instantiateModule(c);
+evaluateModule(c);
 
 // Check importing/exporting non-ambiguous name works.
 let d = checkModuleEval("import { a } from 'c';");
@@ -34,9 +34,9 @@ checkModuleSyntaxError("export { b } from 'c';");
 
 // Check that namespace objects include only non-ambiguous names.
 let m = parseModule("import * as ns from 'c';");
-m.declarationInstantiation();
-m.evaluation();
-let ns = c.namespace;
+instantiateModule(m);
+evaluateModule(m);
+let ns = getModuleObject(c).namespace;
 let names = Object.keys(ns);
 assertEq(names.length, 2);
 assertEq('a' in ns, true);

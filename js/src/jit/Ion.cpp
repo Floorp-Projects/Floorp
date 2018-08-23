@@ -830,13 +830,10 @@ IonScript::IonScript(IonCompilationId compilationId)
     recoversSize_(0),
     constantTable_(0),
     constantEntries_(0),
-    sharedStubList_(0),
-    sharedStubEntries_(0),
     invalidationCount_(0),
     compilationId_(compilationId),
     optimizationLevel_(OptimizationLevel::Normal),
-    osrPcMismatchCounter_(0),
-    fallbackStubSpace_()
+    osrPcMismatchCounter_(0)
 {
 }
 
@@ -848,7 +845,7 @@ IonScript::New(JSContext* cx, IonCompilationId compilationId,
                size_t constants, size_t safepointIndices,
                size_t osiIndices, size_t icEntries,
                size_t runtimeSize,  size_t safepointsSize,
-               size_t sharedStubEntries, OptimizationLevel optimizationLevel)
+               OptimizationLevel optimizationLevel)
 {
     constexpr size_t DataAlignment = sizeof(void*);
 
@@ -871,7 +868,6 @@ IonScript::New(JSContext* cx, IonCompilationId compilationId,
     size_t paddedICEntriesSize = AlignBytes(icEntries * sizeof(uint32_t), DataAlignment);
     size_t paddedRuntimeSize = AlignBytes(runtimeSize, DataAlignment);
     size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
-    size_t paddedSharedStubSize = AlignBytes(sharedStubEntries * sizeof(IonICEntry), DataAlignment);
 
     size_t bytes = paddedSnapshotsSize +
                    paddedRecoversSize +
@@ -881,8 +877,7 @@ IonScript::New(JSContext* cx, IonCompilationId compilationId,
                    paddedOsiIndicesSize +
                    paddedICEntriesSize +
                    paddedRuntimeSize +
-                   paddedSafepointSize +
-                   paddedSharedStubSize;
+                   paddedSafepointSize;
     IonScript* script = cx->pod_malloc_with_extra<IonScript, uint8_t>(bytes);
     if (!script)
         return nullptr;
@@ -927,10 +922,6 @@ IonScript::New(JSContext* cx, IonCompilationId compilationId,
     script->constantEntries_ = constants;
     offsetCursor += paddedConstantsSize;
 
-    script->sharedStubList_ = offsetCursor;
-    script->sharedStubEntries_ = sharedStubEntries;
-    offsetCursor += paddedSharedStubSize;
-
     script->frameSlots_ = frameSlots;
     script->argumentSlots_ = argumentSlots;
 
@@ -942,13 +933,6 @@ IonScript::New(JSContext* cx, IonCompilationId compilationId,
 }
 
 void
-IonScript::adoptFallbackStubs(FallbackICStubSpace* stubSpace)
-
-{
-    fallbackStubSpace()->adoptFrom(stubSpace);
-}
-
-void
 IonScript::trace(JSTracer* trc)
 {
     if (method_)
@@ -956,12 +940,6 @@ IonScript::trace(JSTracer* trc)
 
     for (size_t i = 0; i < numConstants(); i++)
         TraceEdge(trc, &getConstant(i), "constant");
-
-    // Mark all IC stub codes hanging off the IC stub entries.
-    for (size_t i = 0; i < numSharedStubs(); i++) {
-        IonICEntry& ent = sharedStubList()[i];
-        ent.trace(trc);
-    }
 
     // Trace caches so that the JSScript pointer can be updated if moved.
     for (size_t i = 0; i < numICs(); i++)
@@ -1131,16 +1109,6 @@ IonScript::Trace(JSTracer* trc, IonScript* script)
 void
 IonScript::Destroy(FreeOp* fop, IonScript* script)
 {
-    /*
-     * When the script contains pointers to nursery things, the store buffer can
-     * contain entries that point into the fallback stub space. Since we can
-     * destroy scripts outside the context of a GC, this situation could result
-     * in us trying to mark invalid store buffer entries.
-     *
-     * Defer freeing any allocated blocks until after the next minor GC.
-     */
-    script->fallbackStubSpace_.freeAllAfterMinorGC(script->method()->zone());
-
     fop->delete_(script);
 }
 
@@ -1148,62 +1116,6 @@ void
 JS::DeletePolicy<js::jit::IonScript>::operator()(const js::jit::IonScript* script)
 {
     IonScript::Destroy(rt_->defaultFreeOp(), const_cast<IonScript*>(script));
-}
-
-void
-IonScript::purgeOptimizedStubs(Zone* zone)
-{
-    for (size_t i = 0; i < numSharedStubs(); i++) {
-        IonICEntry& entry = sharedStubList()[i];
-        if (!entry.hasStub())
-            continue;
-
-        ICStub* lastStub = entry.firstStub();
-        while (lastStub->next())
-            lastStub = lastStub->next();
-
-        if (lastStub->isFallback()) {
-            // Unlink all stubs allocated in the optimized space.
-            ICStub* stub = entry.firstStub();
-            ICStub* prev = nullptr;
-
-            while (stub->next()) {
-                if (!stub->allocatedInFallbackSpace()) {
-                    lastStub->toFallbackStub()->unlinkStub(zone, prev, stub);
-                    stub = stub->next();
-                    continue;
-                }
-
-                prev = stub;
-                stub = stub->next();
-            }
-
-            lastStub->toFallbackStub()->setInvalid();
-
-            MOZ_ASSERT(!lastStub->isMonitoredFallback(),
-                       "None of the shared stubs used in Ion are monitored");
-        } else if (lastStub->isTypeMonitor_Fallback()) {
-            lastStub->toTypeMonitor_Fallback()->resetMonitorStubChain(zone);
-            lastStub->toTypeMonitor_Fallback()->setInvalid();
-        } else {
-            MOZ_ASSERT(lastStub->isTableSwitch());
-        }
-    }
-
-#ifdef DEBUG
-    // All remaining stubs must be allocated in the fallback space.
-    for (size_t i = 0; i < numSharedStubs(); i++) {
-        IonICEntry& entry = sharedStubList()[i];
-        if (!entry.hasStub())
-            continue;
-
-        ICStub* stub = entry.firstStub();
-        while (stub->next()) {
-            MOZ_ASSERT(stub->allocatedInFallbackSpace());
-            stub = stub->next();
-        }
-    }
-#endif
 }
 
 void
@@ -2733,7 +2645,6 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
         // prevent lastJump_ from appearing to be a bogus pointer, just
         // in case anyone tries to read it.
         ionScript->purgeICs(script->zone());
-        ionScript->purgeOptimizedStubs(script->zone());
 
         // This frame needs to be invalidated. We do the following:
         //

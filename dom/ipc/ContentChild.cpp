@@ -109,6 +109,8 @@
 #include "CubebUtils.h"
 #elif defined(XP_MACOSX)
 #include "mozilla/Sandbox.h"
+#elif defined(__OpenBSD__)
+#include <unistd.h>
 #endif
 #endif
 
@@ -1783,6 +1785,8 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
   mozilla::SandboxTarget::Instance()->StartSandbox();
 #elif defined(XP_MACOSX)
   sandboxEnabled = StartMacOSContentSandbox();
+#elif defined(__OpenBSD__)
+  sandboxEnabled = StartOpenBSDSandbox(GeckoProcessType_Content);
 #endif
 
   CrashReporter::AnnotateCrashReport(
@@ -3920,6 +3924,55 @@ ContentChild::OnMessageReceived(const Message& aMsg, Message*& aReply)
 #endif
 
 } // namespace dom
+
+#if defined(__OpenBSD__) && defined(MOZ_CONTENT_SANDBOX)
+#include <unistd.h>
+
+static LazyLogModule sPledgeLog("SandboxPledge");
+
+bool
+StartOpenBSDSandbox(GeckoProcessType type)
+{
+  nsAutoCString promisesString;
+  nsAutoCString processTypeString;
+
+  switch (type) {
+    case GeckoProcessType_Default:
+      processTypeString = "main";
+      Preferences::GetCString("security.sandbox.pledge.main",
+                              promisesString);
+      break;
+
+    case GeckoProcessType_Content:
+      processTypeString = "content";
+      Preferences::GetCString("security.sandbox.pledge.content",
+                              promisesString);
+      break;
+
+    default:
+      MOZ_ASSERT(false, "unknown process type");
+      return false;
+  };
+
+  if (pledge(promisesString.get(), NULL) == -1) {
+    if (errno == EINVAL) {
+        MOZ_LOG(sPledgeLog, LogLevel::Error,
+               ("pledge promises for %s process is a malformed string: '%s'\n",
+                processTypeString.get(), promisesString.get()));
+    } else if (errno == EPERM) {
+        MOZ_LOG(sPledgeLog, LogLevel::Error,
+               ("pledge promises for %s process can't elevate privileges: '%s'\n",
+                processTypeString.get(), promisesString.get()));
+    }
+    return false;
+  } else {
+      MOZ_LOG(sPledgeLog, LogLevel::Debug,
+             ("pledged %s process with promises: '%s'\n",
+              processTypeString.get(), promisesString.get()));
+  }
+  return true;
+}
+#endif
 
 #if !defined(XP_WIN)
 bool IsDevelopmentBuild()

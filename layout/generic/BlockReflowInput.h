@@ -381,6 +381,10 @@ public:
   // being N^2.
   nsFloatCacheFreeList mBelowCurrentLineFloats;
 
+  // The list of floats that are waiting on a break opportunity in order to be
+  // placed, since we're on a nowrap context.
+  nsTArray<nsIFrame*> mNoWrapFloats;
+
   nscoord mMinLineHeight;
 
   int32_t mLineNumber;

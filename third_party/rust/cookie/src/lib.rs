@@ -10,7 +10,7 @@
 //! Add the following to the `[dependencies]` section of your `Cargo.toml`:
 //!
 //! ```ignore
-//! cookie = "0.10"
+//! cookie = "0.11"
 //! ```
 //!
 //! Then add the following line to your crate root:
@@ -58,7 +58,7 @@
 //! features = ["secure", "percent-encode"]
 //! ```
 
-#![doc(html_root_url = "https://docs.rs/cookie/0.10")]
+#![doc(html_root_url = "https://docs.rs/cookie/0.11")]
 #![deny(missing_docs)]
 
 #[cfg(feature = "percent-encode")] extern crate url;
@@ -74,9 +74,11 @@ mod draft;
 #[cfg(feature = "secure")] pub use secure::*;
 
 use std::borrow::Cow;
-use std::ascii::AsciiExt;
 use std::fmt;
 use std::str::FromStr;
+
+#[allow(unused_imports, deprecated)]
+use std::ascii::AsciiExt;
 
 #[cfg(feature = "percent-encode")]
 use url::percent_encoding::{USERINFO_ENCODE_SET, percent_encode};
@@ -164,7 +166,7 @@ pub struct Cookie<'c> {
     name: CookieStr,
     /// The cookie's value.
     value: CookieStr,
-    /// The cookie's experiation, if any.
+    /// The cookie's expiration, if any.
     expires: Option<Tm>,
     /// The cookie's maximum age, if any.
     max_age: Option<Duration>,
@@ -172,10 +174,10 @@ pub struct Cookie<'c> {
     domain: Option<CookieStr>,
     /// The cookie's path domain, if any.
     path: Option<CookieStr>,
-    /// Whether this cookie was marked secure.
-    secure: bool,
-    /// Whether this cookie was marked httponly.
-    http_only: bool,
+    /// Whether this cookie was marked Secure.
+    secure: Option<bool>,
+    /// Whether this cookie was marked HttpOnly.
+    http_only: Option<bool>,
     /// The draft `SameSite` attribute.
     same_site: Option<SameSite>,
 }
@@ -203,8 +205,8 @@ impl Cookie<'static> {
             max_age: None,
             domain: None,
             path: None,
-            secure: false,
-            http_only: false,
+            secure: None,
+            http_only: None,
             same_site: None,
         }
     }
@@ -256,7 +258,7 @@ impl<'c> Cookie<'c> {
     ///
     /// let c = Cookie::parse("foo=bar%20baz; HttpOnly").unwrap();
     /// assert_eq!(c.name_value(), ("foo", "bar%20baz"));
-    /// assert_eq!(c.http_only(), true);
+    /// assert_eq!(c.http_only(), Some(true));
     /// ```
     pub fn parse<S>(s: S) -> Result<Cookie<'c>, ParseError>
         where S: Into<Cow<'c, str>>
@@ -278,7 +280,7 @@ impl<'c> Cookie<'c> {
     ///
     /// let c = Cookie::parse_encoded("foo=bar%20baz; HttpOnly").unwrap();
     /// assert_eq!(c.name_value(), ("foo", "bar baz"));
-    /// assert_eq!(c.http_only(), true);
+    /// assert_eq!(c.http_only(), Some(true));
     /// ```
     #[cfg(feature = "percent-encode")]
     pub fn parse_encoded<S>(s: S) -> Result<Cookie<'c>, ParseError>
@@ -379,7 +381,10 @@ impl<'c> Cookie<'c> {
         (self.name(), self.value())
     }
 
-    /// Returns whether this cookie was marked `HttpOnly` or not.
+    /// Returns whether this cookie was marked `HttpOnly` or not. Returns
+    /// `Some(true)` when the cookie was explicitly set (manually or parsed) as
+    /// `HttpOnly`, `Some(false)` when `http_only` was manually set to `false`,
+    /// and `None` otherwise.
     ///
     /// # Example
     ///
@@ -387,14 +392,31 @@ impl<'c> Cookie<'c> {
     /// use cookie::Cookie;
     ///
     /// let c = Cookie::parse("name=value; httponly").unwrap();
-    /// assert_eq!(c.http_only(), true);
+    /// assert_eq!(c.http_only(), Some(true));
+    ///
+    /// let mut c = Cookie::new("name", "value");
+    /// assert_eq!(c.http_only(), None);
+    ///
+    /// let mut c = Cookie::new("name", "value");
+    /// assert_eq!(c.http_only(), None);
+    ///
+    /// // An explicitly set "false" value.
+    /// c.set_http_only(false);
+    /// assert_eq!(c.http_only(), Some(false));
+    ///
+    /// // An explicitly set "true" value.
+    /// c.set_http_only(true);
+    /// assert_eq!(c.http_only(), Some(true));
     /// ```
     #[inline]
-    pub fn http_only(&self) -> bool {
+    pub fn http_only(&self) -> Option<bool> {
         self.http_only
     }
 
-    /// Returns whether this cookie was marked `Secure` or not.
+    /// Returns whether this cookie was marked `Secure` or not. Returns
+    /// `Some(true)` when the cookie was explicitly set (manually or parsed) as
+    /// `Secure`, `Some(false)` when `secure` was manually set to `false`, and
+    /// `None` otherwise.
     ///
     /// # Example
     ///
@@ -402,10 +424,24 @@ impl<'c> Cookie<'c> {
     /// use cookie::Cookie;
     ///
     /// let c = Cookie::parse("name=value; Secure").unwrap();
-    /// assert_eq!(c.secure(), true);
+    /// assert_eq!(c.secure(), Some(true));
+    ///
+    /// let mut c = Cookie::parse("name=value").unwrap();
+    /// assert_eq!(c.secure(), None);
+    ///
+    /// let mut c = Cookie::new("name", "value");
+    /// assert_eq!(c.secure(), None);
+    ///
+    /// // An explicitly set "false" value.
+    /// c.set_secure(false);
+    /// assert_eq!(c.secure(), Some(false));
+    ///
+    /// // An explicitly set "true" value.
+    /// c.set_secure(true);
+    /// assert_eq!(c.secure(), Some(true));
     /// ```
     #[inline]
-    pub fn secure(&self) -> bool {
+    pub fn secure(&self) -> Option<bool> {
         self.secure
     }
 
@@ -549,14 +585,14 @@ impl<'c> Cookie<'c> {
     /// use cookie::Cookie;
     ///
     /// let mut c = Cookie::new("name", "value");
-    /// assert_eq!(c.http_only(), false);
+    /// assert_eq!(c.http_only(), None);
     ///
     /// c.set_http_only(true);
-    /// assert_eq!(c.http_only(), true);
+    /// assert_eq!(c.http_only(), Some(true));
     /// ```
     #[inline]
     pub fn set_http_only(&mut self, value: bool) {
-        self.http_only = value;
+        self.http_only = Some(value);
     }
 
     /// Sets the value of `secure` in `self` to `value`.
@@ -567,14 +603,14 @@ impl<'c> Cookie<'c> {
     /// use cookie::Cookie;
     ///
     /// let mut c = Cookie::new("name", "value");
-    /// assert_eq!(c.secure(), false);
+    /// assert_eq!(c.secure(), None);
     ///
     /// c.set_secure(true);
-    /// assert_eq!(c.secure(), true);
+    /// assert_eq!(c.secure(), Some(true));
     /// ```
     #[inline]
     pub fn set_secure(&mut self, value: bool) {
-        self.secure = value;
+        self.secure = Some(value);
     }
 
     /// Sets the value of `same_site` in `self` to `value`.
@@ -708,16 +744,18 @@ impl<'c> Cookie<'c> {
     }
 
     fn fmt_parameters(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.http_only() {
+        if let Some(true) = self.http_only() {
             write!(f, "; HttpOnly")?;
         }
 
-        if self.secure() {
+        if let Some(true) = self.secure() {
             write!(f, "; Secure")?;
         }
 
         if let Some(same_site) = self.same_site() {
-            write!(f, "; SameSite={}", same_site)?;
+            if !same_site.is_none() {
+                write!(f, "; SameSite={}", same_site)?;
+            }
         }
 
         if let Some(path) = self.path() {
@@ -1002,6 +1040,10 @@ mod tests {
         let cookie = Cookie::build("foo", "bar")
             .same_site(SameSite::Lax).finish();
         assert_eq!(&cookie.to_string(), "foo=bar; SameSite=Lax");
+
+        let cookie = Cookie::build("foo", "bar")
+            .same_site(SameSite::None).finish();
+        assert_eq!(&cookie.to_string(), "foo=bar");
     }
 
     #[test]

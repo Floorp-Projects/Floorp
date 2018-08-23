@@ -43,7 +43,6 @@ JS::Zone::Zone(JSRuntime* rt)
     weakCaches_(this),
     gcWeakKeys_(this, SystemAllocPolicy(), rt->randomHashCodeScrambler()),
     typeDescrObjects_(this, this),
-    regExps(this),
     markedAtoms_(this),
     atomCache_(this),
     externalStringCache_(this),
@@ -97,7 +96,7 @@ Zone::~Zone()
     // if the embedding leaked GC things.
     if (!rt->gc.shutdownCollectedEverything()) {
         gcWeakMapList().clear();
-        regExps.clear();
+        regExps().clear();
     }
 #endif
 }
@@ -106,7 +105,8 @@ bool
 Zone::init(bool isSystemArg)
 {
     isSystem = isSystemArg;
-    return gcWeakKeys().init();
+    regExps_.ref() = make_unique<RegExpZone>(this);
+    return regExps_.ref() && gcWeakKeys().init();
 }
 
 void
@@ -357,7 +357,7 @@ Zone::nextZone() const
 void
 Zone::clearTables()
 {
-    MOZ_ASSERT(regExps.empty());
+    MOZ_ASSERT(regExps().empty());
 
     baseShapes().clear();
     initialShapes().clear();

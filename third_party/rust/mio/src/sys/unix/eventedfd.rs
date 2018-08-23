@@ -10,7 +10,7 @@ use std::os::unix::io::RawFd;
 
 #[derive(Debug)]
 
-/// Adapter for [`RawFd`] providing an [`Evented`] implementation.
+/// Adapter for `RawFd` providing an [`Evented`] implementation.
 ///
 /// `EventedFd` enables registering any type with an FD with [`Poll`].
 ///
@@ -29,6 +29,8 @@ use std::os::unix::io::RawFd;
 /// Basic usage
 ///
 /// ```
+/// # use std::error::Error;
+/// # fn try_main() -> Result<(), Box<Error>> {
 /// use mio::{Ready, Poll, PollOpt, Token};
 /// use mio::unix::EventedFd;
 ///
@@ -36,13 +38,19 @@ use std::os::unix::io::RawFd;
 /// use std::net::TcpListener;
 ///
 /// // Bind a std listener
-/// let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+/// let listener = TcpListener::bind("127.0.0.1:0")?;
 ///
-/// let poll = Poll::new().unwrap();
+/// let poll = Poll::new()?;
 ///
 /// // Register the listener
 /// poll.register(&EventedFd(&listener.as_raw_fd()),
-///              Token(0), Ready::readable(), PollOpt::edge()).unwrap();
+///              Token(0), Ready::readable(), PollOpt::edge())?;
+/// #     Ok(())
+/// # }
+/// #
+/// # fn main() {
+/// #     try_main().unwrap();
+/// # }
 /// ```
 ///
 /// Implementing `Evented` for a custom type backed by a `RawFd`.
@@ -78,9 +86,9 @@ use std::os::unix::io::RawFd;
 /// }
 /// ```
 ///
-/// [`RawFd`]: #
-/// [`Evented`]: #
-/// [`Poll`]: #
+/// [`Evented`]: ../event/trait.Evented.html
+/// [`Poll`]: ../struct.Poll.html
+/// [`Poll::register`]: ../struct.Poll.html#method.register
 pub struct EventedFd<'a>(pub &'a RawFd);
 
 impl<'a> Evented for EventedFd<'a> {

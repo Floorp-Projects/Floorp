@@ -945,7 +945,7 @@ class JS_PUBLIC_API(AutoGCRooter)
     /* No copy or assignment semantics. */
     AutoGCRooter(AutoGCRooter& ida) = delete;
     void operator=(AutoGCRooter& ida) = delete;
-};
+} JS_HAZ_ROOTED_BASE;
 
 namespace detail {
 

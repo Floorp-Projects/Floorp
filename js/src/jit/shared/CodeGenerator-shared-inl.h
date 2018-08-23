@@ -222,7 +222,7 @@ int32_t
 CodeGeneratorShared::SlotToStackOffset(int32_t slot) const
 {
     MOZ_ASSERT(slot > 0 && slot <= int32_t(graph.localSlotCount()));
-    int32_t offset = masm.framePushed() - frameInitialAdjustment_ - slot;
+    int32_t offset = masm.framePushed() - slot;
     MOZ_ASSERT(offset >= 0);
     return offset;
 }
@@ -236,7 +236,7 @@ CodeGeneratorShared::StackOffsetToSlot(int32_t offset) const
     // offset = framePushed - frameInitialAdjustment - slot
     // offset + slot = framePushed - frameInitialAdjustment
     // slot = framePushed - frameInitialAdjustement - offset
-    return masm.framePushed() - frameInitialAdjustment_ - offset;
+    return masm.framePushed() - offset;
 }
 
 // For argument construction for calls. Argslots are Value-sized.

@@ -1151,7 +1151,7 @@ fuzzy-if(skiaContent,0-1,0-3280) == 438987-2c.html 438987-2-ref.html
 fuzzy-if(skiaContent,0-1,0-1) == 440112.html 440112-ref.html
 == 440149-1.html 440149-1-ref.html
 == 441259-1.html 441259-1-ref.html
-fails == 441259-2.html 441259-2-ref.html # bug 441400
+== 441259-2.html 441259-2-ref.html
 fuzzy-if(skiaContent,0-1,0-3) == 442542-1.html 442542-1-ref.html
 == 444015-1.html 444015-1-ref.html
 == 444375-1.html 444375-1-ref.html

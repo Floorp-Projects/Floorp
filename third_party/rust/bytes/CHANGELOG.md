@@ -1,3 +1,27 @@
+# 0.4.9 (July 12, 2018)
+
+* Add 128 bit number support behind a feature flag (#209).
+* Implement `IntoBuf` for `&mut [u8]`
+
+# 0.4.8 (May 25, 2018)
+
+* Fix panic in `BytesMut` `FromIterator` implementation.
+* Bytes: Recycle space when reserving space in vec mode (#197).
+* Bytes: Add resize fn (#203).
+
+# 0.4.7 (April 27, 2018)
+
+* Make `Buf` and `BufMut` usable as trait objects (#186).
+* impl BorrowMut for BytesMut (#185).
+* Improve accessor performance (#195).
+
+# 0.4.6 (Janary 8, 2018)
+
+* Implement FromIterator for Bytes/BytesMut (#148).
+* Add `advance` fn to Bytes/BytesMut (#166).
+* Add `unsplit` fn to `BytesMut` (#162, #173).
+* Improvements to Bytes split fns (#92).
+
 # 0.4.5 (August 12, 2017)
 
 * Fix range bug in `Take::bytes`

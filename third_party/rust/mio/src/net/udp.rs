@@ -10,6 +10,7 @@
 use {io, sys, Ready, Poll, PollOpt, Token};
 use event::Evented;
 use poll::SelectorId;
+use std::fmt;
 use std::net::{self, Ipv4Addr, Ipv6Addr, SocketAddr};
 
 /// A User Datagram Protocol socket.
@@ -17,7 +18,74 @@ use std::net::{self, Ipv4Addr, Ipv6Addr, SocketAddr};
 /// This is an implementation of a bound UDP socket. This supports both IPv4 and
 /// IPv6 addresses, and there is no corresponding notion of a server because UDP
 /// is a datagram protocol.
-#[derive(Debug)]
+///
+/// # Examples
+///
+/// ```
+/// # use std::error::Error;
+/// #
+/// # fn try_main() -> Result<(), Box<Error>> {
+/// // An Echo program:
+/// // SENDER -> sends a message.
+/// // ECHOER -> listens and prints the message received.
+///
+/// use mio::net::UdpSocket;
+/// use mio::{Events, Ready, Poll, PollOpt, Token};
+/// use std::time::Duration;
+///
+/// const SENDER: Token = Token(0);
+/// const ECHOER: Token = Token(1);
+///
+/// // This operation will fail if the address is in use, so we select different ports for each
+/// // socket.
+/// let sender_socket = UdpSocket::bind(&"127.0.0.1:0".parse()?)?;
+/// let echoer_socket = UdpSocket::bind(&"127.0.0.1:0".parse()?)?;
+///
+/// // If we do not use connect here, SENDER and ECHOER would need to call send_to and recv_from
+/// // respectively.
+/// sender_socket.connect(echoer_socket.local_addr().unwrap())?;
+///
+/// // We need a Poll to check if SENDER is ready to be written into, and if ECHOER is ready to be
+/// // read from.
+/// let poll = Poll::new()?;
+///
+/// // We register our sockets here so that we can check if they are ready to be written/read.
+/// poll.register(&sender_socket, SENDER, Ready::writable(), PollOpt::edge())?;
+/// poll.register(&echoer_socket, ECHOER, Ready::readable(), PollOpt::edge())?;
+///
+/// let msg_to_send = [9; 9];
+/// let mut buffer = [0; 9];
+///
+/// let mut events = Events::with_capacity(128);
+/// loop {
+///     poll.poll(&mut events, Some(Duration::from_millis(100)))?;
+///     for event in events.iter() {
+///         match event.token() {
+///             // Our SENDER is ready to be written into.
+///             SENDER => {
+///                 let bytes_sent = sender_socket.send(&msg_to_send)?;
+///                 assert_eq!(bytes_sent, 9);
+///                 println!("sent {:?} -> {:?} bytes", msg_to_send, bytes_sent);
+///             },
+///             // Our ECHOER is ready to be read from.
+///             ECHOER => {
+///                 let num_recv = echoer_socket.recv(&mut buffer)?;
+///                 println!("echo {:?} -> {:?}", buffer, num_recv);
+///                 buffer = [0; 9];
+///                 # return Ok(());
+///             }
+///             _ => unreachable!()
+///         }
+///     }
+/// }
+/// #
+/// #   Ok(())
+/// # }
+/// #
+/// # fn main() {
+/// #   try_main().unwrap();
+/// # }
+/// ```
 pub struct UdpSocket {
     sys: sys::UdpSocket,
     selector_id: SelectorId,
@@ -25,8 +93,34 @@ pub struct UdpSocket {
 
 impl UdpSocket {
     /// Creates a UDP socket from the given address.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// #
+    /// # fn try_main() -> Result<(), Box<Error>> {
+    /// use mio::net::UdpSocket;
+    ///
+    /// // We must bind it to an open address.
+    /// let socket = match UdpSocket::bind(&"127.0.0.1:0".parse()?) {
+    ///     Ok(new_socket) => new_socket,
+    ///     Err(fail) => {
+    ///         // We panic! here, but you could try to bind it again on another address.
+    ///         panic!("Failed to bind socket. {:?}", fail);
+    ///     }
+    /// };
+    ///
+    /// // Our socket was created, but we should not use it before checking it's readiness.
+    /// #    Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #   try_main().unwrap();
+    /// # }
+    /// ```
     pub fn bind(addr: &SocketAddr) -> io::Result<UdpSocket> {
-        let socket = try!(net::UdpSocket::bind(addr));
+        let socket = net::UdpSocket::bind(addr)?;
         UdpSocket::from_socket(socket)
     }
 
@@ -42,12 +136,34 @@ impl UdpSocket {
     /// options like `reuse_address` or binding to multiple addresses.
     pub fn from_socket(socket: net::UdpSocket) -> io::Result<UdpSocket> {
         Ok(UdpSocket {
-            sys: try!(sys::UdpSocket::new(socket)),
+            sys: sys::UdpSocket::new(socket)?,
             selector_id: SelectorId::new(),
         })
     }
 
     /// Returns the socket address that this socket was created from.
+    ///
+    /// # Examples
+    ///
+    // This assertion is almost, but not quite, universal.  It fails on
+    // shared-IP FreeBSD jails.  It's hard for mio to know whether we're jailed,
+    // so simply disable the test on FreeBSD.
+    #[cfg_attr(not(target_os = "freebsd"), doc = " ```")]
+    #[cfg_attr(target_os = "freebsd", doc = " ```no_run")]
+    /// # use std::error::Error;
+    /// #
+    /// # fn try_main() -> Result<(), Box<Error>> {
+    /// use mio::net::UdpSocket;
+    ///
+    /// let addr = "127.0.0.1:0".parse()?;
+    /// let socket = UdpSocket::bind(&addr)?;
+    /// #    Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #   try_main().unwrap();
+    /// # }
+    /// ```
     pub fn local_addr(&self) -> io::Result<SocketAddr> {
         self.sys.local_addr()
     }
@@ -57,6 +173,28 @@ impl UdpSocket {
     /// The returned `UdpSocket` is a reference to the same socket that this
     /// object references. Both handles will read and write the same port, and
     /// options set on one socket will be propagated to the other.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// #
+    /// # fn try_main() -> Result<(), Box<Error>> {
+    /// use mio::net::UdpSocket;
+    ///
+    /// // We must bind it to an open address.
+    /// let socket = UdpSocket::bind(&"127.0.0.1:0".parse()?)?;
+    /// let cloned_socket = socket.try_clone()?;
+    ///
+    /// assert_eq!(socket.local_addr()?, cloned_socket.local_addr()?);
+    ///
+    /// #    Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #   try_main().unwrap();
+    /// # }
+    /// ```
     pub fn try_clone(&self) -> io::Result<UdpSocket> {
         self.sys.try_clone()
             .map(|s| {
@@ -72,21 +210,66 @@ impl UdpSocket {
     ///
     /// Address type can be any implementor of `ToSocketAddrs` trait. See its
     /// documentation for concrete examples.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use std::error::Error;
+    /// # fn try_main() -> Result<(), Box<Error>> {
+    /// use mio::net::UdpSocket;
+    ///
+    /// let socket = UdpSocket::bind(&"127.0.0.1:0".parse()?)?;
+    ///
+    /// // We must check if the socket is writable before calling send_to,
+    /// // or we could run into a WouldBlock error.
+    ///
+    /// let bytes_sent = socket.send_to(&[9; 9], &"127.0.0.1:11100".parse()?)?;
+    /// assert_eq!(bytes_sent, 9);
+    /// #
+    /// #    Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #   try_main().unwrap();
+    /// # }
+    /// ```
     pub fn send_to(&self, buf: &[u8], target: &SocketAddr) -> io::Result<usize> {
         self.sys.send_to(buf, target)
     }
 
     /// Receives data from the socket. On success, returns the number of bytes
     /// read and the address from whence the data came.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use std::error::Error;
+    /// #
+    /// # fn try_main() -> Result<(), Box<Error>> {
+    /// use mio::net::UdpSocket;
+    ///
+    /// let socket = UdpSocket::bind(&"127.0.0.1:0".parse()?)?;
+    ///
+    /// // We must check if the socket is readable before calling recv_from,
+    /// // or we could run into a WouldBlock error.
+    ///
+    /// let mut buf = [0; 9];
+    /// let (num_recv, from_addr) = socket.recv_from(&mut buf)?;
+    /// println!("Received {:?} -> {:?} bytes from {:?}", buf, num_recv, from_addr);
+    /// #
+    /// #    Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #   try_main().unwrap();
+    /// # }
+    /// ```
     pub fn recv_from(&self, buf: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
         self.sys.recv_from(buf)
     }
 
     /// Sends data on the socket to the address previously bound via connect(). On success,
     /// returns the number of bytes written.
-    ///
-    /// Address type can be any implementor of `ToSocketAddrs` trait. See its
-    /// documentation for concrete examples.
     pub fn send(&self, buf: &[u8]) -> io::Result<usize> {
         self.sys.send(buf)
     }
@@ -104,32 +287,64 @@ impl UdpSocket {
         self.sys.connect(addr)
     }
 
+    /// Sets the value of the `SO_BROADCAST` option for this socket.
+    ///
+    /// When enabled, this socket is allowed to send packets to a broadcast
+    /// address.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// #
+    /// # fn try_main() -> Result<(), Box<Error>> {
+    /// use mio::net::UdpSocket;
+    ///
+    /// let broadcast_socket = UdpSocket::bind(&"127.0.0.1:0".parse()?)?;
+    /// if broadcast_socket.broadcast()? == false {
+    ///     broadcast_socket.set_broadcast(true)?;
+    /// }
+    ///
+    /// assert_eq!(broadcast_socket.broadcast()?, true);
+    /// #
+    /// #    Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #   try_main().unwrap();
+    /// # }
+    /// ```
+    pub fn set_broadcast(&self, on: bool) -> io::Result<()> {
+        self.sys.set_broadcast(on)
+    }
+
     /// Gets the value of the `SO_BROADCAST` option for this socket.
     ///
     /// For more information about this option, see
     /// [`set_broadcast`][link].
     ///
     /// [link]: #method.set_broadcast
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// #
+    /// # fn try_main() -> Result<(), Box<Error>> {
+    /// use mio::net::UdpSocket;
+    ///
+    /// let broadcast_socket = UdpSocket::bind(&"127.0.0.1:0".parse()?)?;
+    /// assert_eq!(broadcast_socket.broadcast()?, false);
+    /// #
+    /// #    Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #   try_main().unwrap();
+    /// # }
+    /// ```
     pub fn broadcast(&self) -> io::Result<bool> {
         self.sys.broadcast()
-    }
-
-    /// Sets the value of the `SO_BROADCAST` option for this socket.
-    ///
-    /// When enabled, this socket is allowed to send packets to a broadcast
-    /// address.
-    pub fn set_broadcast(&self, on: bool) -> io::Result<()> {
-        self.sys.set_broadcast(on)
-    }
-
-    /// Gets the value of the `IP_MULTICAST_LOOP` option for this socket.
-    ///
-    /// For more information about this option, see
-    /// [`set_multicast_loop_v4`][link].
-    ///
-    /// [link]: #method.set_multicast_loop_v4
-    pub fn multicast_loop_v4(&self) -> io::Result<bool> {
-        self.sys.multicast_loop_v4()
     }
 
     /// Sets the value of the `IP_MULTICAST_LOOP` option for this socket.
@@ -140,14 +355,14 @@ impl UdpSocket {
         self.sys.set_multicast_loop_v4(on)
     }
 
-    /// Gets the value of the `IP_MULTICAST_TTL` option for this socket.
+    /// Gets the value of the `IP_MULTICAST_LOOP` option for this socket.
     ///
     /// For more information about this option, see
-    /// [`set_multicast_ttl_v4`][link].
+    /// [`set_multicast_loop_v4`][link].
     ///
-    /// [link]: #method.set_multicast_ttl_v4
-    pub fn multicast_ttl_v4(&self) -> io::Result<u32> {
-        self.sys.multicast_ttl_v4()
+    /// [link]: #method.set_multicast_loop_v4
+    pub fn multicast_loop_v4(&self) -> io::Result<bool> {
+        self.sys.multicast_loop_v4()
     }
 
     /// Sets the value of the `IP_MULTICAST_TTL` option for this socket.
@@ -161,14 +376,14 @@ impl UdpSocket {
         self.sys.set_multicast_ttl_v4(ttl)
     }
 
-    /// Gets the value of the `IPV6_MULTICAST_LOOP` option for this socket.
+    /// Gets the value of the `IP_MULTICAST_TTL` option for this socket.
     ///
     /// For more information about this option, see
-    /// [`set_multicast_loop_v6`][link].
+    /// [`set_multicast_ttl_v4`][link].
     ///
-    /// [link]: #method.set_multicast_loop_v6
-    pub fn multicast_loop_v6(&self) -> io::Result<bool> {
-        self.sys.multicast_loop_v6()
+    /// [link]: #method.set_multicast_ttl_v4
+    pub fn multicast_ttl_v4(&self) -> io::Result<u32> {
+        self.sys.multicast_ttl_v4()
     }
 
     /// Sets the value of the `IPV6_MULTICAST_LOOP` option for this socket.
@@ -179,21 +394,75 @@ impl UdpSocket {
         self.sys.set_multicast_loop_v6(on)
     }
 
-    /// Gets the value of the `IP_TTL` option for this socket.
+    /// Gets the value of the `IPV6_MULTICAST_LOOP` option for this socket.
     ///
-    /// For more information about this option, see [`set_ttl`][link].
+    /// For more information about this option, see
+    /// [`set_multicast_loop_v6`][link].
     ///
-    /// [link]: #method.set_ttl
-    pub fn ttl(&self) -> io::Result<u32> {
-        self.sys.ttl()
+    /// [link]: #method.set_multicast_loop_v6
+    pub fn multicast_loop_v6(&self) -> io::Result<bool> {
+        self.sys.multicast_loop_v6()
     }
 
     /// Sets the value for the `IP_TTL` option on this socket.
     ///
     /// This value sets the time-to-live field that is used in every packet sent
     /// from this socket.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// #
+    /// # fn try_main() -> Result<(), Box<Error>> {
+    /// use mio::net::UdpSocket;
+    ///
+    /// let socket = UdpSocket::bind(&"127.0.0.1:0".parse()?)?;
+    /// if socket.ttl()? < 255 {
+    ///     socket.set_ttl(255)?;
+    /// }
+    ///
+    /// assert_eq!(socket.ttl()?, 255);
+    /// #
+    /// #    Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #   try_main().unwrap();
+    /// # }
+    /// ```
     pub fn set_ttl(&self, ttl: u32) -> io::Result<()> {
         self.sys.set_ttl(ttl)
+    }
+
+    /// Gets the value of the `IP_TTL` option for this socket.
+    ///
+    /// For more information about this option, see [`set_ttl`][link].
+    ///
+    /// [link]: #method.set_ttl
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// #
+    /// # fn try_main() -> Result<(), Box<Error>> {
+    /// use mio::net::UdpSocket;
+    ///
+    /// let socket = UdpSocket::bind(&"127.0.0.1:0".parse()?)?;
+    /// socket.set_ttl(255)?;
+    ///
+    /// assert_eq!(socket.ttl()?, 255);
+    /// #
+    /// #    Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #   try_main().unwrap();
+    /// # }
+    /// ```
+    pub fn ttl(&self) -> io::Result<u32> {
+        self.sys.ttl()
     }
 
     /// Executes an operation of the `IP_ADD_MEMBERSHIP` type.
@@ -244,6 +513,27 @@ impl UdpSocket {
         self.sys.leave_multicast_v6(multiaddr, interface)
     }
 
+    /// Sets the value for the `IPV6_V6ONLY` option on this socket.
+    ///
+    /// If this is set to `true` then the socket is restricted to sending and
+    /// receiving IPv6 packets only. In this case two IPv4 and IPv6 applications
+    /// can bind the same port at the same time.
+    ///
+    /// If this is set to `false` then the socket can be used to send and
+    /// receive packets from an IPv4-mapped IPv6 address.
+    pub fn set_only_v6(&self, only_v6: bool) -> io::Result<()> {
+        self.sys.set_only_v6(only_v6)
+    }
+
+    /// Gets the value of the `IPV6_V6ONLY` option for this socket.
+    ///
+    /// For more information about this option, see [`set_only_v6`][link].
+    ///
+    /// [link]: #method.set_only_v6
+    pub fn only_v6(&self) -> io::Result<bool> {
+        self.sys.only_v6()
+    }
+
     /// Get the value of the `SO_ERROR` option on this socket.
     ///
     /// This will retrieve the stored error in the underlying socket, clearing
@@ -256,7 +546,7 @@ impl UdpSocket {
 
 impl Evented for UdpSocket {
     fn register(&self, poll: &Poll, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()> {
-        try!(self.selector_id.associate_selector(poll));
+        self.selector_id.associate_selector(poll)?;
         self.sys.register(poll, token, interest, opts)
     }
 
@@ -269,30 +559,36 @@ impl Evented for UdpSocket {
     }
 }
 
+impl fmt::Debug for UdpSocket {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(&self.sys, f)
+    }
+}
+
 /*
  *
  * ===== UNIX ext =====
  *
  */
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 use std::os::unix::io::{IntoRawFd, AsRawFd, FromRawFd, RawFd};
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 impl IntoRawFd for UdpSocket {
     fn into_raw_fd(self) -> RawFd {
         self.sys.into_raw_fd()
     }
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 impl AsRawFd for UdpSocket {
     fn as_raw_fd(&self) -> RawFd {
         self.sys.as_raw_fd()
     }
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 impl FromRawFd for UdpSocket {
     unsafe fn from_raw_fd(fd: RawFd) -> UdpSocket {
         UdpSocket {

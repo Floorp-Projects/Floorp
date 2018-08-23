@@ -11,6 +11,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/DeletePolicy.h"
+#include "gc/Zone.h"
 #include "js/HashTable.h"
 
 namespace JS {

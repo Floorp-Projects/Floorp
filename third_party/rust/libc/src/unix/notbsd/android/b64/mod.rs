@@ -154,31 +154,6 @@ pub const UT_LINESIZE: usize = 32;
 pub const UT_NAMESIZE: usize = 32;
 pub const UT_HOSTSIZE: usize = 256;
 
-// Some weirdness in Android
-extern {
-    // address_len should be socklen_t, but it is c_int!
-    pub fn bind(socket: ::c_int, address: *const ::sockaddr,
-                address_len: ::c_int) -> ::c_int;
-
-    // the return type should be ::ssize_t, but it is c_int!
-    pub fn writev(fd: ::c_int,
-                  iov: *const ::iovec,
-                  iovcnt: ::c_int) -> ::c_int;
-
-    // the return type should be ::ssize_t, but it is c_int!
-    pub fn readv(fd: ::c_int,
-                 iov: *const ::iovec,
-                 iovcnt: ::c_int) -> ::c_int;
-
-    // the return type should be ::ssize_t, but it is c_int!
-    pub fn sendmsg(fd: ::c_int,
-                   msg: *const ::msghdr,
-                   flags: ::c_int) -> ::c_int;
-
-    // the return type should be ::ssize_t, but it is c_int!
-    pub fn recvmsg(fd: ::c_int, msg: *mut ::msghdr, flags: ::c_int) -> ::c_int;
-}
-
 cfg_if! {
     if #[cfg(target_arch = "x86_64")] {
         mod x86_64;

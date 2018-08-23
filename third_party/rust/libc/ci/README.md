@@ -128,32 +128,72 @@ QEMU is available, and if so mount it, run a script (it'll specifically be
 `run-qemu.sh` in this folder which is copied into the generated image talked
 about above), and then shut down.
 
-### QEMU setup - FreeBSD
+### QEMU Setup - FreeBSD
 
-1. Download CD installer (most minimal is fine)
-2. `qemu-img create -f qcow2 foo.qcow2 2G`
-3. `qemu -cdrom foo.iso -drive if=virtio,file=foo.qcow2 -net nic,model=virtio -net user`
-4. run installer
-5. `echo 'console="comconsole"' >> /boot/loader.conf`
-6. `echo 'autoboot_delay="0"' >> /boot/loader.conf`
-7. look at /etc/ttys, see what getty argument is for ttyu0
-8. edit /etc/gettytab, look for ttyu0 argument, prepend `:al=root` to line
-   beneath
+1. [Download the latest stable amd64-bootonly release ISO](https://www.freebsd.org/where.html).
+   E.g. FreeBSD-11.1-RELEASE-amd64-bootonly.iso
+2. Create the disk image: `qemu-img create -f qcow2 FreeBSD-11.1-RELEASE-amd64.qcow2 2G`
+3. Boot the machine: `qemu-system-x86_64 -cdrom FreeBSD-11.1-RELEASE-amd64-bootonly.iso -drive if=virtio,file=FreeBSD-11.1-RELEASE-amd64.qcow2 -net nic,model=virtio -net user`
+4. Run the installer, and install FreeBSD:
+   1. Install
+   1. Continue with default keymap
+   1. Set Hostname: freebsd-ci
+   1. Distribution Select:
+      1. Uncheck lib32
+      1. Uncheck ports
+   1. Network Configuration: vtnet0
+   1. Configure IPv4? Yes
+   1. DHCP? Yes
+   1. Configure IPv6? No
+   1. Resolver Configuration: Ok
+   1. Mirror Selection: Main Site
+   1. Partitioning: Auto (UFS)
+   1. Partition: Entire Disk
+   1. Partition Scheme: MBR
+   1. App Partition: Ok
+   1. Partition Editor: Finish
+   1. Confirmation: Commit
+   1. Wait for sets to install
+   1. Set the root password to nothing (press enter twice)
+   1. Set time zone to UTC
+   1. Set Date: Skip
+   1. Set Time: Skip
+   1. System Configuration:
+      1. Disable sshd
+      1. Disable dumpdev
+   1. System Hardening
+      1. Disable Sendmail service
+   1. Add User Accounts: No
+   1. Final Configuration: Exit
+   1. Manual Configuration: Yes
+   1. `echo 'console="comconsole"' >> /boot/loader.conf`
+   1. `echo 'autoboot_delay="0"' >> /boot/loader.conf`
+   1. `echo 'ext2fs_load="YES"' >> /boot/loader.conf`
+   1. Look at `/etc/ttys`, see what getty argument is for `ttyu0` (E.g. `3wire`)
+   1. Edit `/etc/gettytab` (with `vi` for example), look for `ttyu0` argument,
+      prepend `:al=root` to the line beneath to have the machine auto-login as
+      root. E.g.
 
-(note that the current image has a `freebsd` user, but this isn't really
-necessary)
+          3wire:\
+                   :np:nc:sp#0:
+      becomes:
 
-Once that's done, arrange for this script to run at login:
+          3wire:\
+                   :al=root:np:nc:sp#0:
 
-```
-#!/bin/sh
+   1. Edit `/root/.login` and put this in it:
 
-sudo kldload ext2fs
-[ -e /dev/vtbd1 ] || exit 0
-sudo mount -t ext2fs /dev/vtbd1 /mnt
-sh /mnt/run.sh /mnt
-sudo poweroff
-```
+          [ -e /dev/vtbd1 ] || exit 0
+          mount -t ext2fs /dev/vtbd1 /mnt
+          sh /mnt/run.sh /mnt
+          poweroff
+
+   1. Exit the post install shell: `exit`
+   1. Back in in the installer choose Reboot
+   1. If all went well the machine should reboot and show a login prompt.
+      If you switch to the serial console by choosing View > serial0 in
+      the qemu menu, you should be logged in as root.
+   1. Shutdown the machine: `shutdown -p now`
 
 Helpful links
 

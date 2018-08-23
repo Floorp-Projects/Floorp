@@ -43,7 +43,7 @@ class BaselineInspector
 {
   private:
     JSScript* script;
-    BaselineICEntry* prevLookedUpEntry;
+    ICEntry* prevLookedUpEntry;
 
   public:
     explicit BaselineInspector(JSScript* script)
@@ -67,20 +67,20 @@ class BaselineInspector
     }
 #endif
 
-    BaselineICEntry& icEntryFromPC(jsbytecode* pc) {
+    ICEntry& icEntryFromPC(jsbytecode* pc) {
         MOZ_ASSERT(hasBaselineScript());
         MOZ_ASSERT(isValidPC(pc));
-        BaselineICEntry& ent =
+        ICEntry& ent =
             baselineScript()->icEntryFromPCOffset(script->pcToOffset(pc), prevLookedUpEntry);
         MOZ_ASSERT(ent.isForOp());
         prevLookedUpEntry = &ent;
         return ent;
     }
 
-    BaselineICEntry* maybeICEntryFromPC(jsbytecode* pc) {
+    ICEntry* maybeICEntryFromPC(jsbytecode* pc) {
         MOZ_ASSERT(hasBaselineScript());
         MOZ_ASSERT(isValidPC(pc));
-        BaselineICEntry* ent =
+        ICEntry* ent =
             baselineScript()->maybeICEntryFromPCOffset(script->pcToOffset(pc), prevLookedUpEntry);
         if (!ent)
             return nullptr;
@@ -91,7 +91,7 @@ class BaselineInspector
 
     template <typename ICInspectorType>
     ICInspectorType makeICInspector(jsbytecode* pc, ICStub::Kind expectedFallbackKind) {
-        BaselineICEntry* ent = nullptr;
+        ICEntry* ent = nullptr;
         if (hasBaselineScript()) {
             ent = &icEntryFromPC(pc);
             MOZ_ASSERT(ent->fallbackStub()->kind() == expectedFallbackKind);

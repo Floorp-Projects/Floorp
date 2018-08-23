@@ -19,7 +19,6 @@ const {
 loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth");
 loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socket", true);
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "getDeviceFront", "devtools/shared/fronts/device", true);
 
 loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/shared/webconsole/client", true);
 loader.lazyRequireGetter(this, "AddonClient", "devtools/shared/client/addon-client");
@@ -204,9 +203,7 @@ DebuggerClient.prototype = {
   async checkRuntimeVersion(listTabsForm) {
     let incompatible = null;
 
-    // Instead of requiring to pass `listTabsForm` here,
-    // we can call getRoot() instead, but only once Firefox ESR59 is released
-    const deviceFront = await getDeviceFront(this, listTabsForm);
+    const deviceFront = await this.mainRoot.getFront("device");
     const desc = await deviceFront.getDescription();
 
     // 1) Check for Firefox too recent on device.

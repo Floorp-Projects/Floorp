@@ -2529,22 +2529,6 @@ LIRGenerator::visitBinaryCache(MBinaryCache* ins)
     assignSafepoint(lir, ins);
 }
 
-
-void
-LIRGenerator::visitBinarySharedStub(MBinarySharedStub* ins)
-{
-    MDefinition* lhs = ins->getOperand(0);
-    MDefinition* rhs = ins->getOperand(1);
-
-    MOZ_ASSERT(ins->type() == MIRType::Value);
-    MOZ_ASSERT(ins->type() == MIRType::Value);
-
-    LBinarySharedStub* lir = new(alloc()) LBinarySharedStub(useBoxFixedAtStart(lhs, R0),
-                                                            useBoxFixedAtStart(rhs, R1));
-    defineSharedStubReturn(lir, ins);
-    assignSafepoint(lir, ins);
-}
-
 void
 LIRGenerator::visitUnaryCache(MUnaryCache* ins)
 {
@@ -2553,17 +2537,6 @@ LIRGenerator::visitUnaryCache(MUnaryCache* ins)
 
     LUnaryCache* lir = new(alloc()) LUnaryCache(useBox(input));
     defineBox(lir, ins);
-    assignSafepoint(lir, ins);
-}
-
-void
-LIRGenerator::visitNullarySharedStub(MNullarySharedStub* ins)
-{
-    MOZ_ASSERT(ins->type() == MIRType::Value);
-
-    LNullarySharedStub* lir = new(alloc()) LNullarySharedStub();
-
-    defineSharedStubReturn(lir, ins);
     assignSafepoint(lir, ins);
 }
 

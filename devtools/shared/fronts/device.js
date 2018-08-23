@@ -36,29 +36,4 @@ const DeviceFront = protocol.FrontClassWithSpec(deviceSpec, {
   },
 });
 
-const _knownDeviceFronts = new WeakMap();
-
-/**
- * Retrieve the device front already created for the provided client, if available.
- */
-exports.getKnownDeviceFront = function(client) {
-  return _knownDeviceFronts.get(client);
-};
-
-/**
- * Only one DeviceFront is created for a given client, afterwards the instance is cached
- * and returned immediately.
- */
-exports.getDeviceFront = function(client, form) {
-  if (!form.deviceActor) {
-    return null;
-  }
-
-  if (_knownDeviceFronts.has(client)) {
-    return _knownDeviceFronts.get(client);
-  }
-
-  const front = new DeviceFront(client, form);
-  _knownDeviceFronts.set(client, front);
-  return front;
-};
+exports.DeviceFront = DeviceFront;

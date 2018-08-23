@@ -7,4 +7,4 @@ g.eval(`
 let m = parseModule(`
   import {} from './foo.js';
 `);
-m.declarationInstantiation();
+instantiateModule(m);

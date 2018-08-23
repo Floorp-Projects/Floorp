@@ -21,9 +21,9 @@ use std::{fmt, io, ops};
 /// [`Registration`] and [`SetReadiness`]. In this case, the implementer takes
 /// responsibility for driving the readiness state changes.
 ///
-/// [`Poll`]: struct.Poll.html
-/// [`Registration`]: struct.Registration.html
-/// [`SetReadiness`]: struct.SetReadiness.html
+/// [`Poll`]: ../struct.Poll.html
+/// [`Registration`]: ../struct.Registration.html
+/// [`SetReadiness`]: ../struct.SetReadiness.html
 ///
 /// # Examples
 ///
@@ -32,7 +32,7 @@ use std::{fmt, io, ops};
 /// ```
 /// use mio::{Ready, Poll, PollOpt, Token};
 /// use mio::event::Evented;
-/// use mio::tcp::TcpStream;
+/// use mio::net::TcpStream;
 ///
 /// use std::io;
 ///
@@ -127,39 +127,73 @@ pub trait Evented {
     /// instead. Implementors should handle registration by either delegating
     /// the call to another `Evented` type or creating a [`Registration`].
     ///
-    /// See [struct] documentation for more details.
-    ///
-    /// [`Poll::register`]: struct.Poll.html#method.register
-    /// [`Registration`]: struct.Registration.html
-    /// [struct]: #
+    /// [`Poll::register`]: ../struct.Poll.html#method.register
+    /// [`Registration`]: ../struct.Registration.html
     fn register(&self, poll: &Poll, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()>;
 
     /// Re-register `self` with the given `Poll` instance.
     ///
     /// This function should not be called directly. Use [`Poll::reregister`]
     /// instead. Implementors should handle re-registration by either delegating
-    /// the call to another `Evented` type or calling [`Registration::update`].
+    /// the call to another `Evented` type or calling
+    /// [`SetReadiness::set_readiness`].
     ///
-    /// See [struct] documentation for more details.
-    ///
-    /// [`Poll::reregister`]: struct.Poll.html#method.register
-    /// [`Registration::update`]: struct.Registration.html#method.update
-    /// [struct]: #
+    /// [`Poll::reregister`]: ../struct.Poll.html#method.reregister
+    /// [`SetReadiness::set_readiness`]: ../struct.SetReadiness.html#method.set_readiness
     fn reregister(&self, poll: &Poll, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()>;
 
     /// Deregister `self` from the given `Poll` instance
     ///
     /// This function should not be called directly. Use [`Poll::deregister`]
-    /// instead. Implementors shuld handle deregistration by either delegating
+    /// instead. Implementors should handle deregistration by either delegating
     /// the call to another `Evented` type or by dropping the [`Registration`]
     /// associated with `self`.
     ///
-    /// See [struct] documentation for more details.
-    ///
-    /// [`Poll::deregister`]: struct.Poll.html#method.deregister
-    /// [`Registration`]: struct.Registration.html
-    /// [struct]: #
+    /// [`Poll::deregister`]: ../struct.Poll.html#method.deregister
+    /// [`Registration`]: ../struct.Registration.html
     fn deregister(&self, poll: &Poll) -> io::Result<()>;
+}
+
+impl Evented for Box<Evented> {
+    fn register(&self, poll: &Poll, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()> {
+        self.as_ref().register(poll, token, interest, opts)
+    }
+
+    fn reregister(&self, poll: &Poll, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()> {
+        self.as_ref().reregister(poll, token, interest, opts)
+    }
+
+    fn deregister(&self, poll: &Poll) -> io::Result<()> {
+        self.as_ref().deregister(poll)
+    }
+}
+
+impl<T: Evented> Evented for Box<T> {
+    fn register(&self, poll: &Poll, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()> {
+        self.as_ref().register(poll, token, interest, opts)
+    }
+
+    fn reregister(&self, poll: &Poll, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()> {
+        self.as_ref().reregister(poll, token, interest, opts)
+    }
+
+    fn deregister(&self, poll: &Poll) -> io::Result<()> {
+        self.as_ref().deregister(poll)
+    }
+}
+
+impl<T: Evented> Evented for ::std::sync::Arc<T> {
+    fn register(&self, poll: &Poll, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()> {
+        self.as_ref().register(poll, token, interest, opts)
+    }
+
+    fn reregister(&self, poll: &Poll, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()> {
+        self.as_ref().reregister(poll, token, interest, opts)
+    }
+
+    fn deregister(&self, poll: &Poll) -> io::Result<()> {
+        self.as_ref().deregister(poll)
+    }
 }
 
 /// Options supplied when registering an `Evented` handle with `Poll`
@@ -478,6 +512,9 @@ impl ops::Sub for PollOpt {
     }
 }
 
+#[deprecated(since = "0.6.10", note = "removed")]
+#[cfg(feature = "with-deprecated")]
+#[doc(hidden)]
 impl ops::Not for PollOpt {
     type Output = PollOpt;
 
@@ -497,15 +534,27 @@ impl fmt::Debug for PollOpt {
 
         for &(flag, msg) in &flags {
             if self.contains(flag) {
-                if one { try!(write!(fmt, " | ")) }
-                try!(write!(fmt, "{}", msg));
+                if one { write!(fmt, " | ")? }
+                write!(fmt, "{}", msg)?;
 
                 one = true
             }
         }
 
+        if !one {
+            fmt.write_str("(empty)")?;
+        }
+
         Ok(())
     }
+}
+
+#[test]
+fn test_debug_pollopt() {
+    assert_eq!("(empty)", format!("{:?}", PollOpt::empty()));
+    assert_eq!("Edge-Triggered", format!("{:?}", PollOpt::edge()));
+    assert_eq!("Level-Triggered", format!("{:?}", PollOpt::level()));
+    assert_eq!("OneShot", format!("{:?}", PollOpt::oneshot()));
 }
 
 /// A set of readiness event kinds
@@ -545,8 +594,10 @@ pub struct Ready(usize);
 
 const READABLE: usize = 0b00001;
 const WRITABLE: usize = 0b00010;
-const ERROR: usize    = 0b00100;
-const HUP: usize      = 0b01000;
+
+// These are deprecated and are moved into platform specific implementations.
+const ERROR: usize = 0b00100;
+const HUP: usize = 0b01000;
 
 impl Ready {
     /// Returns the empty `Ready` set.
@@ -631,13 +682,28 @@ impl Ready {
         Ready(HUP)
     }
 
-    #[deprecated(since = "0.6.5", note = "removed")]
-    #[cfg(feature = "with-deprecated")]
-    #[doc(hidden)]
+    /// Returns a `Ready` representing readiness for all operations.
+    ///
+    /// This includes platform specific operations as well (`hup`, `aio`,
+    /// `error`, `lio`).
+    ///
+    /// See [`Poll`] for more documentation on polling.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use mio::Ready;
+    ///
+    /// let ready = Ready::all();
+    ///
+    /// assert!(ready.is_readable());
+    /// assert!(ready.is_writable());
+    /// ```
+    ///
+    /// [`Poll`]: struct.Poll.html
     #[inline]
     pub fn all() -> Ready {
-        Ready::readable() |
-            Ready::writable()
+        Ready(READABLE | WRITABLE | ::sys::READY_ALL)
     }
 
     /// Returns true if `Ready` is the empty set
@@ -804,7 +870,6 @@ impl Ready {
     ///
     /// assert!(!Ready::readable().contains(readiness));
     /// assert!(readiness.contains(readiness));
-    /// assert!((readiness | Ready::hup()).contains(readiness));
     /// ```
     ///
     /// [`Poll`]: struct.Poll.html
@@ -812,6 +877,59 @@ impl Ready {
     pub fn contains<T: Into<Self>>(&self, other: T) -> bool {
         let other = other.into();
         (*self & other) == other
+    }
+
+    /// Create a `Ready` instance using the given `usize` representation.
+    ///
+    /// The `usize` representation must have been obtained from a call to
+    /// `Ready::as_usize`.
+    ///
+    /// The `usize` representation must be treated as opaque. There is no
+    /// guaranteed correlation between the returned value and platform defined
+    /// constants. Also, there is no guarantee that the `usize` representation
+    /// will remain constant across patch releases of Mio.
+    ///
+    /// This function is mainly provided to allow the caller to loa a
+    /// readiness value from an `AtomicUsize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use mio::Ready;
+    ///
+    /// let ready = Ready::readable();
+    /// let ready_usize = ready.as_usize();
+    /// let ready2 = Ready::from_usize(ready_usize);
+    ///
+    /// assert_eq!(ready, ready2);
+    /// ```
+    pub fn from_usize(val: usize) -> Ready {
+        Ready(val)
+    }
+
+    /// Returns a `usize` representation of the `Ready` value.
+    ///
+    /// This `usize` representation must be treated as opaque. There is no
+    /// guaranteed correlation between the returned value and platform defined
+    /// constants. Also, there is no guarantee that the `usize` representation
+    /// will remain constant across patch releases of Mio.
+    ///
+    /// This function is mainly provided to allow the caller to store a
+    /// readiness value in an `AtomicUsize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use mio::Ready;
+    ///
+    /// let ready = Ready::readable();
+    /// let ready_usize = ready.as_usize();
+    /// let ready2 = Ready::from_usize(ready_usize);
+    ///
+    /// assert_eq!(ready, ready2);
+    /// ```
+    pub fn as_usize(&self) -> usize {
+        self.0
     }
 }
 
@@ -824,12 +942,26 @@ impl<T: Into<Ready>> ops::BitOr<T> for Ready {
     }
 }
 
+impl<T: Into<Ready>> ops::BitOrAssign<T> for Ready {
+    #[inline]
+    fn bitor_assign(&mut self, other: T) {
+        self.0 |= other.into().0;
+    }
+}
+
 impl<T: Into<Ready>> ops::BitXor<T> for Ready {
     type Output = Ready;
 
     #[inline]
     fn bitxor(self, other: T) -> Ready {
         Ready(self.0 ^ other.into().0)
+    }
+}
+
+impl<T: Into<Ready>> ops::BitXorAssign<T> for Ready {
+    #[inline]
+    fn bitxor_assign(&mut self, other: T) {
+        self.0 ^= other.into().0;
     }
 }
 
@@ -842,6 +974,13 @@ impl<T: Into<Ready>> ops::BitAnd<T> for Ready {
     }
 }
 
+impl<T: Into<Ready>> ops::BitAndAssign<T> for Ready {
+    #[inline]
+    fn bitand_assign(&mut self, other: T) {
+        self.0 &= other.into().0
+    }
+}
+
 impl<T: Into<Ready>> ops::Sub<T> for Ready {
     type Output = Ready;
 
@@ -851,6 +990,16 @@ impl<T: Into<Ready>> ops::Sub<T> for Ready {
     }
 }
 
+impl<T: Into<Ready>> ops::SubAssign<T> for Ready {
+    #[inline]
+    fn sub_assign(&mut self, other: T) {
+        self.0 &= !other.into().0;
+    }
+}
+
+#[deprecated(since = "0.6.10", note = "removed")]
+#[cfg(feature = "with-deprecated")]
+#[doc(hidden)]
 impl ops::Not for Ready {
     type Output = Ready;
 
@@ -860,7 +1009,6 @@ impl ops::Not for Ready {
     }
 }
 
-// TODO: impl Debug for UnixReady
 impl fmt::Debug for Ready {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let mut one = false;
@@ -870,21 +1018,28 @@ impl fmt::Debug for Ready {
             (Ready(ERROR), "Error"),
             (Ready(HUP), "Hup")];
 
-        try!(write!(fmt, "Ready {{"));
-
         for &(flag, msg) in &flags {
             if self.contains(flag) {
-                if one { try!(write!(fmt, " | ")) }
-                try!(write!(fmt, "{}", msg));
+                if one { write!(fmt, " | ")? }
+                write!(fmt, "{}", msg)?;
 
                 one = true
             }
         }
 
-        try!(write!(fmt, "}}"));
+        if !one {
+            fmt.write_str("(empty)")?;
+        }
 
         Ok(())
     }
+}
+
+#[test]
+fn test_debug_ready() {
+    assert_eq!("(empty)", format!("{:?}", Ready::empty()));
+    assert_eq!("Readable", format!("{:?}", Ready::readable()));
+    assert_eq!("Writable", format!("{:?}", Ready::writable()));
 }
 
 /// An readiness event returned by [`Poll::poll`].
@@ -897,18 +1052,19 @@ impl fmt::Debug for Ready {
 /// # Examples
 ///
 /// ```
-/// use mio::{Event, Ready, Token};
+/// use mio::{Ready, Token};
+/// use mio::event::Event;
 ///
-/// let event = Event::new(Ready::all(), Token(0));
+/// let event = Event::new(Ready::readable() | Ready::writable(), Token(0));
 ///
-/// assert_eq!(event.readiness(), Ready::all());
+/// assert_eq!(event.readiness(), Ready::readable() | Ready::writable());
 /// assert_eq!(event.token(), Token(0));
 /// ```
 ///
-/// [`Poll::poll`]: struct.Poll.html#method.poll
-/// [`Poll`]: struct.Poll.html
-/// [readiness state ]: struct.Ready.html
-/// [`Token`]: struct.Token.html
+/// [`Poll::poll`]: ../struct.Poll.html#method.poll
+/// [`Poll`]: ../struct.Poll.html
+/// [readiness state]: ../struct.Ready.html
+/// [`Token`]: ../struct.Token.html
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct Event {
     kind: Ready,
@@ -921,11 +1077,12 @@ impl Event {
     /// # Examples
     ///
     /// ```
-    /// use mio::{Event, Ready, Token};
+    /// use mio::{Ready, Token};
+    /// use mio::event::Event;
     ///
-    /// let event = Event::new(Ready::all(), Token(0));
+    /// let event = Event::new(Ready::readable() | Ready::writable(), Token(0));
     ///
-    /// assert_eq!(event.readiness(), Ready::all());
+    /// assert_eq!(event.readiness(), Ready::readable() | Ready::writable());
     /// assert_eq!(event.token(), Token(0));
     /// ```
     pub fn new(readiness: Ready, token: Token) -> Event {
@@ -940,11 +1097,12 @@ impl Event {
     /// # Examples
     ///
     /// ```
-    /// use mio::{Event, Ready, Token};
+    /// use mio::{Ready, Token};
+    /// use mio::event::Event;
     ///
-    /// let event = Event::new(Ready::all(), Token(0));
+    /// let event = Event::new(Ready::readable() | Ready::writable(), Token(0));
     ///
-    /// assert_eq!(event.readiness(), Ready::all());
+    /// assert_eq!(event.readiness(), Ready::readable() | Ready::writable());
     /// ```
     pub fn readiness(&self) -> Ready {
         self.kind
@@ -962,9 +1120,10 @@ impl Event {
     /// # Examples
     ///
     /// ```
-    /// use mio::{Event, Ready, Token};
+    /// use mio::{Ready, Token};
+    /// use mio::event::Event;
     ///
-    /// let event = Event::new(Ready::all(), Token(0));
+    /// let event = Event::new(Ready::readable() | Ready::writable(), Token(0));
     ///
     /// assert_eq!(event.token(), Token(0));
     /// ```

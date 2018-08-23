@@ -731,7 +731,7 @@ bool
 JS::OrdinaryHasInstance(JSContext* cx, HandleObject objArg, HandleValue v, bool* bp)
 {
     AssertHeapIsIdle();
-    assertSameCompartment(cx, objArg, v);
+    cx->check(objArg, v);
 
     RootedObject obj(cx, objArg);
 

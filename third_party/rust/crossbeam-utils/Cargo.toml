@@ -12,7 +12,7 @@
 
 [package]
 name = "crossbeam-utils"
-version = "0.2.2"
+version = "0.3.2"
 authors = ["The Crossbeam Project Developers"]
 description = "Utilities for concurrent programming"
 homepage = "https://github.com/crossbeam-rs/crossbeam-utils"

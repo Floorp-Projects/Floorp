@@ -4,6 +4,7 @@
 /// libc and hence we should provide them here.
 
 pub type l4_umword_t = ::c_ulong; // Unsigned machine word.
+pub type pthread_t = *mut ::c_void;
 
 s! {
     /// CPU sets.
