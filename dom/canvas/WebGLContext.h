@@ -95,7 +95,6 @@ class VRLayerChild;
 } // namespace gfx
 
 namespace gl {
-class GLScreenBuffer;
 class MozFramebuffer;
 } // namespace gl
 
@@ -499,10 +498,10 @@ public:
 
     bool IsPreservingDrawingBuffer() const { return mOptions.preserveDrawingBuffer; }
 
-    bool PresentScreenBuffer(gl::GLScreenBuffer* const screen = nullptr);
+    bool PresentScreenBuffer();
 
     // Prepare the context for capture before compositing
-    void BeginComposition(gl::GLScreenBuffer* const screen = nullptr);
+    void BeginComposition();
     // Clean up the context after captured for compositing
     void EndComposition();
 
@@ -1981,9 +1980,6 @@ protected:
     bool mNeedsIndexValidation = false;
 
     const bool mAllowFBInvalidation;
-#if defined(MOZ_WIDGET_ANDROID)
-    UniquePtr<gl::GLScreenBuffer> mVRScreen;
-#endif
 
     bool Has64BitTimestamps() const;
 

@@ -83,7 +83,7 @@
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
-#include "mozilla/layers/ImageBridgeChild.h"
+    #include "../../gfx/vr/gfxVRExternal.h"
 #endif
 
 // Generated
@@ -236,9 +236,6 @@ WebGLContext::DestroyResourcesAndContext()
     mDefaultVertexArray = nullptr;
     mBoundTransformFeedback = nullptr;
     mDefaultTransformFeedback = nullptr;
-#if defined(MOZ_WIDGET_ANDROID)
-    mVRScreen = nullptr;
-#endif
 
     mQuerySlot_SamplesPassed = nullptr;
     mQuerySlot_TFPrimsWritten = nullptr;
@@ -791,7 +788,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
             return NS_OK;
 
         // If we've already drawn, we should commit the current buffer.
-        PresentScreenBuffer(gl->Screen());
+        PresentScreenBuffer();
 
         if (IsContextLost()) {
             GenerateWarning("WebGL context was lost due to swap failure.");
@@ -1466,7 +1463,7 @@ WebGLContext::BlitBackbufferToCurDriverFB() const
 // For an overview of how WebGL compositing works, see:
 // https://wiki.mozilla.org/Platform/GFX/WebGL/Compositing
 bool
-WebGLContext::PresentScreenBuffer(GLScreenBuffer* const targetScreen)
+WebGLContext::PresentScreenBuffer()
 {
     const FuncScope funcScope(*this, "<PresentScreenBuffer>");
     if (IsContextLost())
@@ -1478,8 +1475,8 @@ WebGLContext::PresentScreenBuffer(GLScreenBuffer* const targetScreen)
     if (!ValidateAndInitFB(nullptr))
         return false;
 
-    const auto& screen = targetScreen ? targetScreen : gl->Screen();
-    if ((!screen->IsReadBufferReady() || screen->Size() != mDefaultFB->mSize) &&
+    const auto& screen = gl->Screen();
+    if (screen->Size() != mDefaultFB->mSize &&
         !screen->Resize(mDefaultFB->mSize))
     {
         GenerateWarning("screen->Resize failed. Losing context.");
@@ -1523,10 +1520,10 @@ WebGLContext::PresentScreenBuffer(GLScreenBuffer* const targetScreen)
 
 // Prepare the context for capture before compositing
 void
-WebGLContext::BeginComposition(GLScreenBuffer* const screen)
+WebGLContext::BeginComposition()
 {
     // Present our screenbuffer, if needed.
-    PresentScreenBuffer(screen);
+    PresentScreenBuffer();
     mDrawCallsSinceLastFlush = 0;
 }
 
@@ -2304,40 +2301,47 @@ WebGLContext::GetUnpackSize(bool isFunc3D, uint32_t width, uint32_t height,
 already_AddRefed<layers::SharedSurfaceTextureClient>
 WebGLContext::GetVRFrame()
 {
-    if (!gl)
-        return nullptr;
-    
-    // Create a custom GLScreenBuffer for VR.
-    if (!mVRScreen) {
-        auto caps = gl->Screen()->mCaps;
-        mVRScreen = GLScreenBuffer::Create(gl, gfx::IntSize(1, 1), caps);
+  if (!gl)
+    return nullptr;
 
-        RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton();
-        if (imageBridge) {
-            TextureFlags flags = TextureFlags::ORIGIN_BOTTOM_LEFT;
-            UniquePtr<gl::SurfaceFactory> factory = gl::GLScreenBuffer::CreateFactory(gl, caps, imageBridge.get(), flags);
-            mVRScreen->Morph(std::move(factory));
-        }
-    }
+  int frameId = gfx::impl::VRDisplayExternal::sPushIndex;
+  static int lastFrameId = -1;
+  /**
+   * Android doesn't like duplicated GetVRFrame within the same gfxVRExternal frame.
+   * Ballout forced composition calls if we are in the same VRExternal push frame index.
+   * Also discard frameId 0 because sometimes compositor is not paused yet due to channel communication delays.
+   */
+  const bool ignoreFrame = lastFrameId == frameId || frameId == 0;
+  lastFrameId = frameId;
+  if (!ignoreFrame) {
+      BeginComposition();
+      EndComposition();
+  }
 
-    // Swap buffers as though composition has occurred.
-    // We will then share the resulting front buffer to be submitted to the VR compositor.
-    BeginComposition(mVRScreen.get());
-    EndComposition();
+  if (!gl) {
+    return nullptr;
+  }
 
-    if (IsContextLost())
-        return nullptr;
+  gl::GLScreenBuffer* screen = gl->Screen();
+  if (!screen) {
+    return nullptr;
+  }
 
-    RefPtr<SharedSurfaceTextureClient> sharedSurface = mVRScreen->Front();
-    if (!sharedSurface || !sharedSurface->Surf())
-        return nullptr;
+  RefPtr<SharedSurfaceTextureClient> sharedSurface = screen->Front();
+  if (!sharedSurface || !sharedSurface->Surf()) {
+    return nullptr;
+  }
 
-    // Make sure that the WebGL buffer is committed to the attached SurfaceTexture on Android.
+  /**
+   * Make sure that the WebGL buffer is committed to the attached SurfaceTexture on Android.
+   */
+  if (!ignoreFrame) {
     sharedSurface->Surf()->ProducerAcquire();
     sharedSurface->Surf()->Commit();
     sharedSurface->Surf()->ProducerRelease();
+  }
 
-    return sharedSurface.forget();
+  return sharedSurface.forget();
 }
 #else
 already_AddRefed<layers::SharedSurfaceTextureClient>

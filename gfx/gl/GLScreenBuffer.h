@@ -222,10 +222,6 @@ public:
         return mRead->Size();
     }
 
-    bool IsReadBufferReady() const {
-        return mRead.get() != nullptr;
-    }
-
     void BindAsFramebuffer(GLContext* const gl, GLenum target) const;
 
     void RequireBlit();
