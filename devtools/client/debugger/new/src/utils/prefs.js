@@ -20,7 +20,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const prefsSchemaVersion = "1.0.4";
+const prefsSchemaVersion = "1.0.3";
 const pref = _devtoolsServices2.default.pref;
 
 if ((0, _devtoolsEnvironment.isDevelopment)()) {
@@ -128,6 +128,5 @@ const asyncStore = exports.asyncStore = (0, _asyncStoreHelper.asyncStoreHelper)(
 if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
   // clear pending Breakpoints
   prefs.pendingBreakpoints = {};
-  prefs.tabs = [];
   prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
 }
