@@ -60,7 +60,7 @@ class Locale {
      *  * Underscore delimiters replaced with dashed (e.g. "en_US" -> "en-US")
      *
      * If the input language tag string is not well-formed, the Locale will be
-     * created with its flag `mValid` set to false which will make the Locale never match.
+     * created with its flag `mWellFormed` set to false which will make the Locale never match.
      */
     explicit Locale(const nsACString& aLocale);
     explicit Locale(const char* aLocale)
@@ -76,8 +76,8 @@ class Locale {
      * Returns a `true` if the locale is well-formed, such that the
      * Locale object can validly be matched against others.
      */
-    bool IsValid() const {
-      return mIsValid;
+    bool IsWellFormed() const {
+      return mIsWellFormed;
     }
 
     /**
@@ -129,17 +129,18 @@ class Locale {
      * it to be skipped by most LocaleService operations.
      */
     void Invalidate() {
-      mIsValid = false;
+      mIsWellFormed = false;
     }
 
     /**
      * Compares two locales expecting all fields to match each other.
      */
     bool operator== (const Locale& aOther) {
-      // Note: invalid Locale objects are never treated as equal to anything
-      // (even other invalid ones).
-      return IsValid() &&
-             aOther.IsValid() &&
+      // Note: non-well-formed Locale objects are never
+      // treated as equal to anything
+      // (even other non-well-formed ones).
+      return IsWellFormed() &&
+             aOther.IsWellFormed() &&
              mLanguage.Equals(aOther.mLanguage) &&
              mScript.Equals(aOther.mScript) &&
              mRegion.Equals(aOther.mRegion) &&
@@ -153,7 +154,7 @@ class Locale {
     nsAutoCStringN<2> mRegion;
     nsTArray<nsCString> mVariants;
     nsTArray<nsCString> mPrivateUse;
-    bool mIsValid = true;
+    bool mIsWellFormed = true;
 };
 
 } // intl

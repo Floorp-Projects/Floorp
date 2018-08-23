@@ -23,7 +23,7 @@ Locale::Locale(const nsACString& aLocale)
   int32_t position = 0;
 
   if (!IsASCII(aLocale)) {
-    mIsValid = false;
+    mIsWellFormed = false;
     return;
   }
 
@@ -60,7 +60,7 @@ Locale::Locale(const nsACString& aLocale)
   for (const nsACString& subTag : normLocale.Split('-')) {
     auto slen = subTag.Length();
     if (slen > 8) {
-      mIsValid = false;
+      mIsWellFormed = false;
       return;
     } else if (position == 6) {
       ToLowerCase(*mPrivateUse.AppendElement(subTag));
@@ -68,7 +68,7 @@ Locale::Locale(const nsACString& aLocale)
       position = 6;
     } else if (position == 0) {
       if (slen < 2 || slen > 3) {
-        mIsValid = false;
+        mIsWellFormed = false;
         return;
       }
       mLanguage = subTag;
@@ -97,7 +97,7 @@ Locale::AsString() const
 {
   nsCString tag;
 
-  if (!mIsValid) {
+  if (!mIsWellFormed) {
     tag.AppendLiteral("und");
     return tag;
   }
@@ -161,7 +161,7 @@ Locale::GetVariants() const
 bool
 Locale::Matches(const Locale& aOther, bool aThisRange, bool aOtherRange) const
 {
-  if (!IsValid() || !aOther.IsValid()) {
+  if (!IsWellFormed() || !aOther.IsWellFormed()) {
     return false;
   }
 
