@@ -7,6 +7,9 @@
 const TEST_URI = "data:text/html;charset=utf-8,Test content focus after closing console";
 
 add_task(async function() {
+  // Only run in legacy JsTerm - fixme in Bug 1485510.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
+
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const inputNode = hud.jsterm.inputNode;
