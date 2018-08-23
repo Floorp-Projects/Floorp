@@ -172,11 +172,6 @@ class CodeGeneratorShared : public LElementVisitor
     // spills.
     int32_t frameDepth_;
 
-    // In some cases, we force stack alignment to platform boundaries, see
-    // also CodeGeneratorShared constructor. This value records the adjustment
-    // we've done.
-    int32_t frameInitialAdjustment_;
-
     // Frame class this frame's size falls into (see IonFrame.h).
     FrameSizeClass frameClass_;
 
