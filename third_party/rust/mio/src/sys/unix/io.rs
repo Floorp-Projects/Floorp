@@ -38,7 +38,7 @@ pub struct Io {
 impl Io {
     /// Try to clone the FD
     pub fn try_clone(&self) -> io::Result<Io> {
-        Ok(Io { fd: try!(self.fd.try_clone()) })
+        Ok(Io { fd: self.fd.try_clone()? })
     }
 }
 

@@ -2,14 +2,14 @@
 
 function parseAndEvaluate(source) {
     let m = parseModule(source);
-    m.declarationInstantiation();
-    return m.evaluation();
+    instantiateModule(m);
+    return evaluateModule(m);
 }
 
 assertEq(typeof(parseAndEvaluate("this")), "undefined");
 
 let m = parseModule("export function getThis() { return this; }");
-m.declarationInstantiation();
-m.evaluation();
+instantiateModule(m);
+evaluateModule(m);
 let f = getModuleEnvironmentValue(m, "getThis");
 assertEq(typeof(f()), "undefined");

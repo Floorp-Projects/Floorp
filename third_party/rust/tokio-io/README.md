@@ -26,11 +26,12 @@ online at [https://tokio.rs](https://tokio.rs). The [API
 documentation](https://docs.rs/tokio-io) is also a great place to get started
 for the nitty-gritty.
 
+## License
 
-# License
+This project is licensed under the [MIT license](LICENSE).
 
-`tokio-io` is primarily distributed under the terms of both the MIT license
-and the Apache License (Version 2.0), with portions covered by various BSD-like
-licenses.
+### Contribution
 
-See LICENSE-APACHE, and LICENSE-MIT for details.
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in Tokio by you, shall be licensed as MIT, without any additional
+terms or conditions.

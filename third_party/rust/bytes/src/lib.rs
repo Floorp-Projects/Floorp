@@ -18,8 +18,8 @@
 //! using a reference count to track when the memory is no longer needed and can
 //! be freed.
 //!
-//! A `Bytes` handle can be created directly from an existing byte store (such as &[u8]
-//! or Vec<u8>), but usually a `BytesMut` is used first and written to. For
+//! A `Bytes` handle can be created directly from an existing byte store (such as `&[u8]`
+//! or `Vec<u8>`), but usually a `BytesMut` is used first and written to. For
 //! example:
 //!
 //! ```rust
@@ -69,7 +69,7 @@
 //! and `BufMut` are infallible.
 
 #![deny(warnings, missing_docs, missing_debug_implementations)]
-#![doc(html_root_url = "https://docs.rs/bytes/0.4")]
+#![doc(html_root_url = "https://docs.rs/bytes/0.4.9")]
 
 extern crate byteorder;
 extern crate iovec;
@@ -92,6 +92,7 @@ mod bytes;
 mod debug;
 pub use bytes::{Bytes, BytesMut};
 
+#[deprecated]
 pub use byteorder::{ByteOrder, BigEndian, LittleEndian};
 
 // Optional Serde support

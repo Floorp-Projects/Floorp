@@ -76,10 +76,9 @@ key:
                     ["VariableNode", "x", []],
                        ["NumberNode", "1", []]
                     ]],
-                     ["ListNode", None,
-                      [["ValueNode", "value1", []],
-                       ["ValueNode", "value2", []],
-                      ]],
+                  ["ListNode", None,
+                   [["ValueNode", "value1", []],
+                    ["ValueNode", "value2", []]]],
                   ]]]]]]
         )
 

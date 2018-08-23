@@ -29,7 +29,7 @@ pub struct UdpSocket {
 impl UdpSocket {
     /// Creates a UDP socket from the given address.
     pub fn bind(addr: &SocketAddr) -> io::Result<UdpSocket> {
-        let socket = try!(net::UdpSocket::bind(addr));
+        let socket = net::UdpSocket::bind(addr)?;
         UdpSocket::from_socket(socket)
     }
 
@@ -45,7 +45,7 @@ impl UdpSocket {
     /// options like `reuse_address` or binding to multiple addresses.
     pub fn from_socket(socket: net::UdpSocket) -> io::Result<UdpSocket> {
         Ok(UdpSocket {
-            sys: try!(sys::UdpSocket::new(socket)),
+            sys: sys::UdpSocket::new(socket)?,
             selector_id: SelectorId::new(),
         })
     }
@@ -80,8 +80,17 @@ impl UdpSocket {
         self.sys.send_to(buf, target).map_non_block()
     }
 
-    /// Receives data from the socket. On success, returns the number of bytes
-    /// read and the address from whence the data came.
+    /// Receives data from the socket and stores data in the supplied buffer `buf`. On success,
+    /// returns the number of bytes read and the address from whence the data came.
+    ///
+    /// The function must be called with valid byte array `buf` of sufficient size to
+    /// hold the message bytes. If a message is too long to fit in the supplied buffer,
+    /// excess bytes may be discarded.
+    ///
+    /// The function does not read from `buf`, but is overwriting previous content of `buf`.
+    ///
+    /// Assuming the function has read `n` bytes, slicing `&buf[..n]` provides
+    /// efficient access with iterators and boundary checks.
     pub fn recv_from(&self, buf: &mut [u8])
                      -> io::Result<Option<(usize, SocketAddr)>> {
         self.sys.recv_from(buf).map_non_block()
@@ -89,16 +98,22 @@ impl UdpSocket {
 
     /// Sends data on the socket to the address previously bound via connect(). On success,
     /// returns the number of bytes written.
-    ///
-    /// Address type can be any implementor of `ToSocketAddrs` trait. See its
-    /// documentation for concrete examples.
     pub fn send(&self, buf: &[u8])
                    -> io::Result<Option<usize>> {
         self.sys.send(buf).map_non_block()
     }
 
-    /// Receives data from the socket previously bound with connect(). On success, returns
-    /// the number of bytes read and the address from whence the data came.
+    /// Receives data from the socket previously bound with connect() and stores data in
+    /// the supplied buffer `buf`. On success, returns the number of bytes read.
+    ///
+    /// The function must be called with valid byte array `buf` of sufficient size to
+    /// hold the message bytes. If a message is too long to fit in the supplied buffer,
+    /// excess bytes may be discarded.
+    ///
+    /// The function does not read from `buf`, but is overwriting previous content of `buf`.
+    ///
+    /// Assuming the function has read `n` bytes, slicing `&buf[..n]` provides
+    /// efficient access with iterators and boundary checks.
     pub fn recv(&self, buf: &mut [u8])
                      -> io::Result<Option<usize>> {
         self.sys.recv(buf).map_non_block()
@@ -264,7 +279,7 @@ impl UdpSocket {
 
 impl Evented for UdpSocket {
     fn register(&self, poll: &Poll, token: Token, interest: Ready, opts: PollOpt) -> io::Result<()> {
-        try!(self.selector_id.associate_selector(poll));
+        self.selector_id.associate_selector(poll)?;
         self.sys.register(poll, token, interest, opts)
     }
 
@@ -283,24 +298,24 @@ impl Evented for UdpSocket {
  *
  */
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 use std::os::unix::io::{IntoRawFd, AsRawFd, FromRawFd, RawFd};
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 impl IntoRawFd for UdpSocket {
     fn into_raw_fd(self) -> RawFd {
         self.sys.into_raw_fd()
     }
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 impl AsRawFd for UdpSocket {
     fn as_raw_fd(&self) -> RawFd {
         self.sys.as_raw_fd()
     }
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 impl FromRawFd for UdpSocket {
     unsafe fn from_raw_fd(fd: RawFd) -> UdpSocket {
         UdpSocket {

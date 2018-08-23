@@ -15,7 +15,7 @@ let c = moduleRepo['c'] = parseModule("export * from 'a'; export * from 'b';");
 let e1;
 let threw = false;
 try {
-    c.declarationInstantiation();
+    instantiateModule(c);
 } catch (exc) {
     threw = true;
     e1 = exc;
@@ -28,7 +28,7 @@ let d = moduleRepo['d'] = parseModule("import { a } from 'c'; a;");
 
 threw = false;
 try {
-    d.declarationInstantiation();
+    instantiateModule(d);
 } catch (exc) {
     threw = true;
 }

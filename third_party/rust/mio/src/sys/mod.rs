@@ -1,4 +1,4 @@
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 pub use self::unix::{
     Awakener,
     EventedFd,
@@ -12,11 +12,14 @@ pub use self::unix::{
     set_nonblock,
 };
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
+pub use self::unix::READY_ALL;
+
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 #[cfg(feature = "with-deprecated")]
 pub use self::unix::UnixSocket;
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "fuchsia")))]
 pub mod unix;
 
 #[cfg(windows)]
@@ -33,3 +36,21 @@ pub use self::windows::{
 
 #[cfg(windows)]
 mod windows;
+
+#[cfg(target_os = "fuchsia")]
+pub use self::fuchsia::{
+    Awakener,
+    Events,
+    EventedHandle,
+    Selector,
+    TcpStream,
+    TcpListener,
+    UdpSocket,
+    set_nonblock,
+};
+
+#[cfg(target_os = "fuchsia")]
+pub mod fuchsia;
+
+#[cfg(not(all(unix, not(target_os = "fuchsia"))))]
+pub const READY_ALL: usize = 0;

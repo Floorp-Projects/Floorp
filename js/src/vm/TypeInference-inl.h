@@ -636,7 +636,7 @@ TypeScript::MonitorAssign(JSContext* cx, HandleObject obj, jsid id)
 /* static */ inline void
 TypeScript::SetThis(JSContext* cx, JSScript* script, TypeSet::Type type)
 {
-    assertSameCompartment(cx, script, type);
+    cx->check(script, type);
 
     AutoSweepTypeScript sweep(script);
     StackTypeSet* types = ThisTypes(script);
@@ -661,7 +661,7 @@ TypeScript::SetThis(JSContext* cx, JSScript* script, const js::Value& value)
 /* static */ inline void
 TypeScript::SetArgument(JSContext* cx, JSScript* script, unsigned arg, TypeSet::Type type)
 {
-    assertSameCompartment(cx, script, type);
+    cx->check(script, type);
 
     AutoSweepTypeScript sweep(script);
     StackTypeSet* types = ArgTypes(script, arg);

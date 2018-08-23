@@ -1,5 +1,7 @@
 //! 32-bit specific definitions for linux-like values
 
+use pthread_mutex_t;
+
 pub type c_long = i32;
 pub type c_ulong = u32;
 pub type clock_t = i32;
@@ -42,6 +44,22 @@ s! {
         pub st_ctime_nsec: ::c_long,
         __unused4: ::c_long,
         __unused5: ::c_long,
+    }
+
+    pub struct statvfs {
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_blocks: ::fsblkcnt_t,
+        pub f_bfree: ::fsblkcnt_t,
+        pub f_bavail: ::fsblkcnt_t,
+        pub f_files: ::fsfilcnt_t,
+        pub f_ffree: ::fsfilcnt_t,
+        pub f_favail: ::fsfilcnt_t,
+        pub f_fsid: ::c_ulong,
+        __f_unused: ::c_int,
+        pub f_flag: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+        __f_spare: [::c_int; 6],
     }
 
     pub struct pthread_attr_t {
@@ -282,6 +300,57 @@ pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 24;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 32;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
+
+align_const! {
+    #[cfg(target_endian = "little")]
+    pub const PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP: ::pthread_mutex_t =
+        pthread_mutex_t {
+            size: [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0,
+            ],
+        };
+    #[cfg(target_endian = "little")]
+    pub const PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP: ::pthread_mutex_t =
+        pthread_mutex_t {
+            size: [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0,
+            ],
+        };
+    #[cfg(target_endian = "little")]
+    pub const PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP: ::pthread_mutex_t =
+        pthread_mutex_t {
+            size: [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0,
+            ],
+        };
+    #[cfg(target_endian = "big")]
+    pub const PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP: ::pthread_mutex_t =
+        pthread_mutex_t {
+            size: [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+                0, 0, 0,
+            ],
+        };
+    #[cfg(target_endian = "big")]
+    pub const PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP: ::pthread_mutex_t =
+        pthread_mutex_t {
+            size: [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0,
+                0, 0, 0,
+            ],
+        };
+    #[cfg(target_endian = "big")]
+    pub const PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP: ::pthread_mutex_t =
+        pthread_mutex_t {
+            size: [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0,
+                0, 0, 0,
+            ],
+        };
+}
 
 pub const PTRACE_GETFPREGS: ::c_uint = 14;
 pub const PTRACE_SETFPREGS: ::c_uint = 15;

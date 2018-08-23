@@ -136,11 +136,13 @@
           ok(!isStopActive(), "stop button is disabled");
 
           connectionsChanged = waitForConnectionChange("opened", 2);
+          const onGlobalActors = waitForUpdate(win, "runtime-global-actors");
+          const onRuntimeTargets = waitForUpdate(win, "runtime-targets");
           docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
-
-          await waitForUpdate(win, "runtime-targets");
-
           await connectionsChanged;
+          await onGlobalActors;
+          await onRuntimeTargets;
+
           is(Object.keys(DebuggerServer._connections).length, 2, "Locally connected");
 
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");

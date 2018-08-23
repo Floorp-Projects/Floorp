@@ -7,6 +7,7 @@ import("//build/rust/rust_library.gni")
 rust_library("fuchsia-zircon") {
   deps = [
     "//garnet/public/rust/crates/fuchsia-zircon/fuchsia-zircon-sys",
+    "//third_party/rust-crates:bitflags-0.7.0",
   ]
 
   with_tests = true

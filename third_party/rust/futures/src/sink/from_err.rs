@@ -5,7 +5,7 @@ use {Sink, Poll, StartSend};
 /// A sink combinator to change the error type of a sink.
 ///
 /// This is created by the `Sink::from_err` method.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[must_use = "futures do nothing unless polled"]
 pub struct SinkFromErr<S, E> {
     sink: S,

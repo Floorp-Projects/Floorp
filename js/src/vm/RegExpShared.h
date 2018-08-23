@@ -19,6 +19,7 @@
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
 #include "gc/Marking.h"
+#include "gc/Zone.h"
 #include "js/AllocPolicy.h"
 #include "js/UbiNode.h"
 #include "js/Vector.h"

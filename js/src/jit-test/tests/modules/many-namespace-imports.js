@@ -13,5 +13,5 @@ for (let i = 0; i < count; i++) {
 }
 let b = moduleRepo['b'] = parseModule(s);
 
-b.declarationInstantiation();
-b.evaluation();
+instantiateModule(b);
+evaluateModule(b);
