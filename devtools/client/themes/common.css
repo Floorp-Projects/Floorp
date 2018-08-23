@@ -780,6 +780,12 @@ checkbox:-moz-focusring {
   transform: scaleX(1);
 }
 
+@media (prefers-reduced-motion) {
+  .devtools-tab-line {
+    transition: none;
+  }
+}
+
 .devtools-tab:not(.selected):focus .devtools-tab-line {
   background: var(--tab-line-hover-color);
   opacity: 1;

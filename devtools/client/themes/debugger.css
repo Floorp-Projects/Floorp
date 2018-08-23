@@ -285,10 +285,16 @@
 }
 
 .dbg-expression-arrow {
-  background-image: var(--theme-command-line-image-focus);
-  width: 16px;
-  height: 16px;
-  margin: 2px;
+  background-image: var(--theme-console-input-image);
+  width: 12px;
+  height: 12px;
+  margin: 4px;
+  -moz-context-properties: fill;
+  fill: #75BFFF;
+}
+
+.theme-light .dbg-expression-arrow {
+  fill: #0060DF;
 }
 
 .dbg-expression-input {

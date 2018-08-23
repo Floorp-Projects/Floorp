@@ -29,9 +29,6 @@ public class GeckoResultTest {
     private static class MockException extends RuntimeException {
     }
 
-    @Rule
-    public UiThreadTestRule mUiThreadTestRule = new UiThreadTestRule();
-
     private boolean mDone;
 
     private void waitUntilDone() {

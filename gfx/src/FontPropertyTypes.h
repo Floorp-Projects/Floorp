@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/TextUtils.h"
 #include "nsString.h"
 
 /*
@@ -342,7 +343,7 @@ public:
     } else if (strcmp(aString, "italic") == 0) {
       return Italic();
     } else {
-      if (isdigit(aString[0]) && strstr(aString, "deg")) {
+      if (mozilla::IsAsciiDigit(aString[0]) && strstr(aString, "deg")) {
         float angle = strtof(aString, nullptr);
         return Oblique(angle);
       }

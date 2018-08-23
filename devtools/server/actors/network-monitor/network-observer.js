@@ -313,7 +313,7 @@ NetworkObserver.prototype = {
     this.openResponses.set(channel, response);
 
     if (topic === "http-on-examine-cached-response") {
-      // Service worker requests emits cached-reponse notification on non-e10s,
+      // Service worker requests emits cached-response notification on non-e10s,
       // and we fake one on e10s.
       const fromServiceWorker = this.interceptedChannels.has(channel);
       this.interceptedChannels.delete(channel);
@@ -491,6 +491,7 @@ NetworkObserver.prototype = {
       .toISOString();
     event.fromCache = fromCache;
     event.fromServiceWorker = fromServiceWorker;
+    event.isTrackingResource = channel.isTrackingResource;
     httpActivity.fromServiceWorker = fromServiceWorker;
 
     if (extraStringData) {

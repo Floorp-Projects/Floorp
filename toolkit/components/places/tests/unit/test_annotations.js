@@ -54,11 +54,6 @@ add_task(async function test_execute() {
     do_throw("unable to get item annotation");
   }
 
-  // get annotation that doesn't exist
-  try {
-    annosvc.getPageAnnotation(testURI, "blah");
-    do_throw("fetching page-annotation that doesn't exist, should've thrown");
-  } catch (ex) {}
   try {
     annosvc.getItemAnnotation(testURI, "blah");
     do_throw("fetching item-annotation that doesn't exist, should've thrown");

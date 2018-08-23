@@ -1,10 +1,14 @@
+function getScriptUrl() {
+  return new URL(location.href).searchParams.get('script');
+}
+
 // Hold the nested worker alive until this parent worker closes.
 var worker;
 
 addEventListener('message', function nestedWorkerWrapperOnMessage(evt) {
   removeEventListener('message', nestedWorkerWrapperOnMessage);
 
-  worker = new Worker('worker_wrapper.js');
+  worker = new Worker('worker_wrapper.js?script=' + getScriptUrl());
 
   worker.addEventListener('message', function(evt) {
     self.postMessage({

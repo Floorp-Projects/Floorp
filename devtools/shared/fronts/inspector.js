@@ -203,28 +203,14 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
    * @param {String} query
    * @param {Object} options
    *    - "reverse": search backwards
-   *    - "selectorOnly": treat input as a selector string (don't search text
-   *                      tags, attributes, etc)
    */
   search: custom(async function(query, options = { }) {
-    let nodeList;
-    let searchType;
     const searchData = this.searchData = this.searchData || { };
-    const selectorOnly = !!options.selectorOnly;
-
-    if (selectorOnly) {
-      searchType = "selector";
-      nodeList = await this.multiFrameQuerySelectorAll(query);
-    } else {
-      searchType = "search";
-      const result = await this._search(query, options);
-      nodeList = result.list;
-    }
+    const result = await this._search(query, options);
+    const nodeList = result.list;
 
     // If this is a new search, start at the beginning.
-    if (searchData.query !== query ||
-        searchData.selectorOnly !== selectorOnly) {
-      searchData.selectorOnly = selectorOnly;
+    if (searchData.query !== query) {
       searchData.query = query;
       searchData.index = -1;
     }
@@ -246,7 +232,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
     // Send back the single node, along with any relevant search data
     const node = await nodeList.item(searchData.index);
     return {
-      type: searchType,
+      type: "search",
       node: node,
       resultsLength: nodeList.length,
       resultsIndex: searchData.index,

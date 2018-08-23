@@ -1066,6 +1066,68 @@ protected: // Shouldn't be used by friend classes
   };
 
   /**
+   * TableSize stores and computes number of rows and columns of a <table>
+   * element.
+   */
+  struct MOZ_STACK_CLASS TableSize final
+  {
+    int32_t mRowCount;
+    int32_t mColumnCount;
+
+    /**
+     * @param aHTMLEditor               The editor which creates the instance.
+     * @param aTableOrElementInTable    If a <table> element, computes number
+     *                                  of rows and columns of it.
+     *                                  If another element in a <table> element,
+     *                                  computes number of rows and columns
+     *                                  of nearest ancestor <table> element.
+     *                                  Otherwise, i.e., non-<table> element
+     *                                  not in <table>, returns error.
+     * @param aRv                       Returns error if the element is not
+     *                                  in <table> or layout information is
+     *                                  not available.
+     */
+    TableSize(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
+              ErrorResult& aRv)
+      : mRowCount(-1)
+      , mColumnCount(-1)
+    {
+      MOZ_ASSERT(!aRv.Failed());
+      Update(aHTMLEditor, aTableOrElementInTable, aRv);
+    }
+
+    /**
+     * Update mRowCount and mColumnCount for aTableOrElementInTable.
+     * See above for the detail.
+     */
+    void Update(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
+                ErrorResult& aRv);
+  };
+
+  /**
+   * GetTableCellElementAt() returns a <td> or <th> element of aTableElement
+   * if there is a cell at the indexes.
+   *
+   * @param aTableElement       Must be a <table> element.
+   * @param aCellIndexes        Indexes of cell which you want.
+   *                            If rowspan and/or colspan is specified 2 or
+   *                            larger, any indexes are allowed to retrieve
+   *                            the cell in the area.
+   * @return                    The cell element if there is in the <table>.
+   *                            Returns nullptr without error if the indexes
+   *                            are out of bounds.
+   */
+  Element* GetTableCellElementAt(Element& aTableElement,
+                                 const CellIndexes& aCellIndexes) const
+  {
+    return GetTableCellElementAt(aTableElement, aCellIndexes.mRow,
+                                 aCellIndexes.mColumn);
+  }
+  Element* GetTableCellElementAt(Element& aTableElement,
+                                 int32_t aRowIndex,
+                                 int32_t aColumnIndex) const;
+
+  /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.
@@ -1345,7 +1407,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * Helper used to get nsTableWrapperFrame for a table.
    */
-  nsTableWrapperFrame* GetTableFrame(Element* aTable);
+  static nsTableWrapperFrame* GetTableFrame(Element* aTable);
 
   /**
    * Needed to do appropriate deleting when last cell or row is about to be

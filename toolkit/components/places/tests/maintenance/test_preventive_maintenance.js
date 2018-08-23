@@ -2175,7 +2175,8 @@ tests.push({
 
     Assert.equal(ts.getTagsForURI(this._uri1).length, 1);
     Assert.equal((await PlacesUtils.keywords.fetch({ url: this._uri1.spec })).keyword, "testkeyword");
-    Assert.equal(as.getPageAnnotation(this._uri2, "anno"), "anno");
+    let pageInfo = await PlacesUtils.history.fetch(this._uri2, {includeAnnotations: true});
+    Assert.equal(pageInfo.annotations.get("anno"), "anno");
     Assert.equal(as.getItemAnnotation(this._bookmarkId, "anno"), "anno");
 
     await new Promise(resolve => {
