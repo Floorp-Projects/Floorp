@@ -1310,10 +1310,6 @@ protected:
   // For nsAsyncEventRunner.
   nsresult DispatchEvent(const nsAString& aName);
 
-  // Open unsupported types media with the external app when the media element
-  // triggers play() after loaded fail. eg. preload the data before start play.
-  void OpenUnsupportedMediaWithExternalAppIfNeeded() const;
-
   // This method moves the mPendingPlayPromises into a temperate object. So the
   // mPendingPlayPromises is cleared after this method call.
   nsTArray<RefPtr<PlayPromise>> TakePendingPlayPromises();
