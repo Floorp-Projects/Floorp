@@ -547,10 +547,6 @@ ExtensionPolicyService::CheckContentScripts(const DocInfo& aDocInfo, bool aIsPre
   }
 
   for (auto iter = mExtensions.Iter(); !iter.Done(); iter.Next()) {
-    if (!win->IsCurrentInnerWindow()) {
-      break;
-    }
-
     RefPtr<WebExtensionPolicy> policy = iter.Data();
 
     for (auto& script : policy->ContentScripts()) {
@@ -558,6 +554,9 @@ ExtensionPolicyService::CheckContentScripts(const DocInfo& aDocInfo, bool aIsPre
         if (aIsPreload) {
           ProcessScript().PreloadContentScript(script);
         } else {
+          if (!win->IsCurrentInnerWindow()) {
+            break;
+          }
           RefPtr<Promise> promise;
           ProcessScript().LoadContentScript(script, win, getter_AddRefs(promise));
         }
