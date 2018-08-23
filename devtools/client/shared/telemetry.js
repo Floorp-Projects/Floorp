@@ -13,6 +13,7 @@
 const Services = require("Services");
 const { TelemetryStopwatch } = require("resource://gre/modules/TelemetryStopwatch.jsm");
 const { getNthPathExcluding } = require("devtools/shared/platform/stack");
+const { TelemetryEnvironment } = require("resource://gre/modules/TelemetryEnvironment.jsm");
 
 // Object to be shared among all instances.
 const PENDING_EVENTS = new Map();
@@ -34,6 +35,22 @@ class Telemetry {
     this.addEventProperty = this.addEventProperty.bind(this);
     this.toolOpened = this.toolOpened.bind(this);
     this.toolClosed = this.toolClosed.bind(this);
+  }
+
+  get osNameAndVersion() {
+    const osInfo = TelemetryEnvironment.currentEnvironment.system.os;
+
+    if (!osInfo) {
+      return "Unknown OS";
+    }
+
+    let osVersion = `${osInfo.name} ${osInfo.version}`;
+
+    if (osInfo.windowsBuildNumber) {
+      osVersion += `.${osInfo.windowsBuildNumber}`;
+    }
+
+    return osVersion;
   }
 
   /**
@@ -557,6 +574,19 @@ class Telemetry {
       return;
     }
 
+    if (charts.useTimedEvent) {
+      if (id === "newanimationinspector") {
+        id = "animationinspector";
+      }
+
+      this.preparePendingEvent("devtools.main", "tool_timer", id, null, [
+        "os",
+        "time_open",
+        "session_id"
+      ]);
+      this.addEventProperty("devtools.main", "tool_timer", id, null,
+                            "time_open", this.msSystemNow());
+    }
     if (charts.timerHist) {
       this.start(charts.timerHist, this);
     }
@@ -573,15 +603,38 @@ class Telemetry {
    *
    * @param {String} id
    *        The ID of the tool opened.
+   * @param {String} sessionId
+   *        Optional toolbox session id used only when a tool's chart has a
+   *        useTimedEvent property set to true.
    *
    * NOTE: This method is designed for tools that send multiple probes on open,
    *       one of those probes being a counter and the other a timer. If you
    *       only have one probe you should be using another method.
    */
-  toolClosed(id) {
+  toolClosed(id, sessionId) {
     const charts = getChartsFromToolId(id);
 
-    if (charts && charts.timerHist) {
+    if (!charts) {
+      return;
+    }
+
+    if (charts.useTimedEvent) {
+      if (id === "newanimationinspector") {
+        id = "animationinspector";
+      }
+
+      const sig = `devtools.main,tool_timer,${id},null`;
+      const event = PENDING_EVENTS.get(sig);
+      const time = this.msSystemNow() - event.extra.time_open;
+
+      this.addEventProperties("devtools.main", "tool_timer", id, null, {
+        "time_open": time,
+        "os": this.osNameAndVersion,
+        "session_id": sessionId
+      });
+    }
+
+    if (charts.timerHist) {
       this.finish(charts.timerHist, this);
     }
   }
@@ -601,6 +654,7 @@ function getChartsFromToolId(id) {
 
   const lowerCaseId = id.toLowerCase();
 
+  let useTimedEvent = null;
   let timerHist = null;
   let countHist = null;
   let countScalar = null;
@@ -616,24 +670,19 @@ function getChartsFromToolId(id) {
 
   switch (id) {
     case "ABOUTDEBUGGING":
-    case "ANIMATIONINSPECTOR":
     case "BROWSERCONSOLE":
     case "CANVASDEBUGGER":
-    case "COMPUTEDVIEW":
     case "DEVELOPERTOOLBAR":
     case "DOM":
-    case "FONTINSPECTOR":
     case "INSPECTOR":
     case "JSBROWSERDEBUGGER":
     case "JSDEBUGGER":
     case "JSPROFILER":
-    case "LAYOUTVIEW":
     case "MEMORY":
     case "NETMONITOR":
     case "OPTIONS":
     case "PAINTFLASHING":
     case "RESPONSIVE":
-    case "RULEVIEW":
     case "SCRATCHPAD":
     case "SHADEREDITOR":
     case "STORAGE":
@@ -654,6 +703,15 @@ function getChartsFromToolId(id) {
       timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
       countScalar = `devtools.accessibility.picker_used_count`;
       break;
+    case "ANIMATIONINSPECTOR":
+    case "COMPUTEDVIEW":
+    case "FONTINSPECTOR":
+    case "LAYOUTVIEW":
+    case "RULEVIEW":
+      useTimedEvent = true;
+      timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
+      countHist = `DEVTOOLS_${id}_OPENED_COUNT`;
+      break;
     default:
       timerHist = `DEVTOOLS_CUSTOM_TIME_ACTIVE_SECONDS`;
       countHist = `DEVTOOLS_CUSTOM_OPENED_COUNT`;
@@ -665,6 +723,7 @@ function getChartsFromToolId(id) {
   }
 
   return {
+    useTimedEvent: useTimedEvent,
     timerHist: timerHist,
     countHist: countHist,
     countScalar: countScalar

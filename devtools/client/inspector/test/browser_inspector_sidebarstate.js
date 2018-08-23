@@ -5,8 +5,49 @@
 
 const TEST_URI = "data:text/html;charset=UTF-8," +
   "<h1>browser_inspector_sidebarstate.js</h1>";
+const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+
+const TELEMETRY_DATA = [
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "tool_timer",
+    object: "computedview",
+    value: null,
+    extra: {
+      time_open: ""
+    }
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "tool_timer",
+    object: "layoutview",
+    value: null,
+    extra: {
+      time_open: ""
+    }
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "tool_timer",
+    object: "ruleview",
+    value: null,
+    extra: {
+      time_open: ""
+    }
+  }
+];
 
 add_task(async function() {
+  // Let's reset the counts.
+  Services.telemetry.clearEvents();
+
+  // Ensure no events have been logged
+  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  ok(!snapshot.parent, "No events have been logged for the main process");
+
   let { inspector, toolbox } = await openInspectorForURL(TEST_URI);
 
   info("Selecting computed view.");
@@ -34,4 +75,26 @@ add_task(async function() {
 
   is(inspector.sidebar.getCurrentTabID(), "layoutview",
      "Layout view is selected by default.");
+
+  checkTelemetryResults();
 });
+
+function checkTelemetryResults() {
+  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
+                                                 event[2] === "tool_timer"
+  );
+
+  for (const i in TELEMETRY_DATA) {
+    const [ timestamp, category, method, object, value, extra ] = events[i];
+    const expected = TELEMETRY_DATA[i];
+
+    // ignore timestamp
+    ok(timestamp > 0, "timestamp is greater than 0");
+    ok(extra.time_open > 0, "time_open is greater than 0");
+    is(category, expected.category, "category is correct");
+    is(method, expected.method, "method is correct");
+    is(object, expected.object, "object is correct");
+    is(value, expected.value, "value is correct");
+  }
+}

@@ -335,15 +335,17 @@ ToolSidebar.prototype = {
     currentToolId = this.getTelemetryPanelNameOrOther(currentToolId);
 
     if (previousToolId) {
-      previousToolId = this.getTelemetryPanelNameOrOther(previousToolId);
+      const sessionId = this._toolPanel._toolbox.sessionId;
 
-      this._telemetry.toolClosed(previousToolId);
+      previousToolId = this.getTelemetryPanelNameOrOther(previousToolId);
+      this._telemetry.toolClosed(previousToolId, sessionId);
 
       this._telemetry.recordEvent("devtools.main", "sidepanel_changed", "inspector", null,
         {
           "oldpanel": previousToolId,
           "newpanel": currentToolId,
-          "session_id": this._toolPanel._toolbox.sessionId
+          "os": this._telemetry.osNameAndVersion,
+          "session_id": sessionId
         }
       );
     }

@@ -342,7 +342,7 @@ const { Toolbox } = require("devtools/client/framework/toolbox");
 const URL = "data:text/html;charset=utf8,browser_toolbox_telemetry_close.js";
 const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
 const { SIDE, BOTTOM } = Toolbox.HostType;
-const DATA = [
+const TELEMETRY_DATA = [
   {
     timestamp: null,
     category: "devtools.main",
@@ -398,9 +398,9 @@ function checkResults() {
                                                  event[4] === null
   );
 
-  for (let i in DATA) {
+  for (const i in TELEMETRY_DATA) {
     const [ timestamp, category, method, object, value, extra ] = events[i];
-    const expected = DATA[i];
+    const expected = TELEMETRY_DATA[i];
 
     // ignore timestamp
     ok(timestamp > 0, "timestamp is greater than 0");
