@@ -29,7 +29,7 @@ class DebugTargetPane extends PureComponent {
 
     return dom.section(
       {},
-      dom.h2({}, name),
+      dom.h2({}, dom.a({ className: "debug-target-pane__title" }, name)),
       DebugTargetList({ actionComponent, detailComponent, dispatch, targets }),
     );
   }
