@@ -78,7 +78,7 @@ function test() {
   Services.obs.addObserver(observer, "browser-search-engine-modified");
   gCUITestUtils.addSearchBar().then(function() {
     Services.search.addEngine("http://mochi.test:8888/browser/browser/components/search/test/testEngine.xml",
-                              null, "data:image/x-icon,%00", false);
+                              "data:image/x-icon,%00", false);
   });
 }
 
