@@ -7036,7 +7036,7 @@
               Pop $R4
               ${GetLongPath} "$R4" $R4
               ${If} "$R4" == "$R9" ; link path == install path
-                ApplicationID::Set "$SMPROGRAMS\$R5" "$R8"
+                ApplicationID::Set "$SMPROGRAMS\$R5" "$R8" "true"
                 Pop $R4
               ${EndIf}
             ${EndIf}
@@ -7057,7 +7057,7 @@
               Pop $R4
               ${GetLongPath} "$R4" $R4
               ${If} "$R4" == "$R9" ; link path == install path
-                ApplicationID::Set "$QUICKLAUNCH\$R5" "$R8"
+                ApplicationID::Set "$QUICKLAUNCH\$R5" "$R8" "true"
                 Pop $R4
               ${EndIf}
             ${EndIf}
@@ -7083,7 +7083,7 @@
                   Pop $R4
                   ${GetLongPath} "$R4" $R4
                   ${If} "$R4" == "$R9" ; link path == install path
-                    ApplicationID::Set "$R7\$R5" "$R8"
+                    ApplicationID::Set "$R7\$R5" "$R8" "true"
                     Pop $R4
                   ${EndIf}
                 ${EndIf}
@@ -7109,7 +7109,7 @@
             ShellLink::GetShortCutTarget "$R7\TaskBar\$R5"
             Pop $R4
             ${If} "$R4" == "$R9" ; link path == install path
-              ApplicationID::Set "$R7\TaskBar\$R5" "$R8"
+              ApplicationID::Set "$R7\TaskBar\$R5" "$R8" "true"
               Pop $R4 ; pop Set result off the stack
               StrCpy $R3 "true"
             ${EndIf}
@@ -7129,7 +7129,7 @@
             ShellLink::GetShortCutTarget "$R7\StartMenu\$R5"
             Pop $R4
             ${If} "$R4" == "$R9" ; link path == install path
-              ApplicationID::Set "$R7\StartMenu\$R5" "$R8"
+              ApplicationID::Set "$R7\StartMenu\$R5" "$R8" "true"
               Pop $R4 ; pop Set result off the stack
               StrCpy $R3 "true"
             ${EndIf}

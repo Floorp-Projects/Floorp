@@ -206,7 +206,10 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     installer_url = get_artifact_url(upstream_task, mozharness['build-artifact-name'])
 
     taskdesc['scopes'].extend(
-        ['generic-worker:os-group:{}'.format(group) for group in test['os-groups']])
+        ['generic-worker:os-group:{}/{}'.format(
+            job['worker-type'],
+            group
+        ) for group in test['os-groups']])
 
     worker['os-groups'] = test['os-groups']
 

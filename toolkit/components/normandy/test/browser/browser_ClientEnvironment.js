@@ -105,7 +105,9 @@ add_task(async function testExperiments() {
 add_task(withDriver(Assert, async function testAddonsInContext(driver) {
   // Create before install so that the listener is added before startup completes.
   const startupPromise = AddonTestUtils.promiseWebExtensionStartup("normandydriver@example.com");
-  const addonId = await driver.addons.install(TEST_XPI_URL);
+  const addonInstall = await AddonManager.getInstallForURL(TEST_XPI_URL, "application/x-xpinstall");
+  await addonInstall.install();
+  const addonId = addonInstall.addon.id;
   await startupPromise;
 
   const addons = await ClientEnvironment.addons;
@@ -118,7 +120,8 @@ add_task(withDriver(Assert, async function testAddonsInContext(driver) {
     type: "extension",
   }, "addons should be available in context");
 
-  await driver.addons.uninstall(addonId);
+  const addon = await AddonManager.getAddonByID(addonId);
+  await addon.uninstall();
 }));
 
 add_task(async function isFirstRun() {

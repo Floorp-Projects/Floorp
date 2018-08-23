@@ -1300,6 +1300,7 @@ public:
 
   /**
    * Performs an in-place edge padding operation.
+   * aRegion is specified in device space.
    */
   virtual void PadEdges(const IntRegion& aRegion);
 
