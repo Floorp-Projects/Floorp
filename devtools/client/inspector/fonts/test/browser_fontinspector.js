@@ -19,17 +19,35 @@ add_task(async function() {
 });
 
 async function testBodyFonts(inspector, viewDoc) {
+  const FONTS = [{
+    familyName: "bar",
+    name: ["Ostrich Sans Medium", "Ostrich Sans Black"],
+  }, {
+    familyName: "barnormal",
+    name: "Ostrich Sans Medium",
+  }, {
+    // On Linux, Arial does not exist. Liberation Sans is used instead.
+    familyName: ["Arial", "Liberation Sans"],
+    name: ["Arial", "Liberation Sans"],
+  }];
+
   await selectNode("body", inspector);
 
-  const lis = getUsedFontsEls(viewDoc);
-  // test system font
-  const localFontName = getName(lis[0]);
-  // On Linux test machines, the Arial font doesn't exist.
-  // The fallback is "Liberation Sans"
-  is(lis.length, 1, "Found 1 font on BODY");
-  ok((localFontName == "Arial") || (localFontName == "Liberation Sans"),
-     "local font right font name");
-  ok(!isRemote(lis[0]), "local font is local");
+  const groups = getUsedFontGroupsEls(viewDoc);
+  is(groups.length, 3, "Found 3 font families used on BODY");
+
+  for (let i = 0; i < FONTS.length; i++) {
+    const groupEL = groups[i];
+    const font = FONTS[i];
+
+    const familyName = getFamilyName(groupEL);
+    ok(font.familyName.includes(familyName),
+      `Font families used on BODY include: ${familyName}`);
+
+    const fontName = getName(groupEL);
+    ok(font.name.includes(fontName),
+      `Fonts used on BODY include: ${fontName}`);
+  }
 }
 
 async function testDivFonts(inspector, viewDoc) {
@@ -37,40 +55,28 @@ async function testDivFonts(inspector, viewDoc) {
     selector: "div",
     familyName: "bar",
     name: "Ostrich Sans Medium",
-    remote: true,
-    url: URL_ROOT + "ostrich-regular.ttf",
-  },
-  {
+  }, {
     selector: ".normal-text",
     familyName: "barnormal",
     name: "Ostrich Sans Medium",
-    remote: true,
-    url: URL_ROOT + "ostrich-regular.ttf",
-  },
-  {
+  }, {
     selector: ".bold-text",
     familyName: "bar",
     name: "Ostrich Sans Black",
-    remote: true,
-    url: URL_ROOT + "ostrich-black.ttf",
   }, {
     selector: ".black-text",
     familyName: "bar",
     name: "Ostrich Sans Black",
-    remote: true,
-    url: URL_ROOT + "ostrich-black.ttf",
   }];
 
   for (let i = 0; i < FONTS.length; i++) {
     await selectNode(FONTS[i].selector, inspector);
-    const lis = getUsedFontsEls(viewDoc);
-    const li = lis[0];
+    const groups = getUsedFontGroupsEls(viewDoc);
+    const groupEl = groups[0];
     const font = FONTS[i];
 
-    is(lis.length, 1, `Found 1 font on ${FONTS[i].selector}`);
-    is(getName(li), font.name, "The DIV font has the right name");
-    is(getFamilyName(li), font.familyName, `font has the right family name`);
-    is(isRemote(li), font.remote, `font remote value correct`);
-    is(getURL(li), font.url, `font url correct`);
+    is(groups.length, 1, `Found 1 font on ${FONTS[i].selector}`);
+    is(getName(groupEl), font.name, "The DIV font has the right name");
+    is(getFamilyName(groupEl), font.familyName, `font has the right family name`);
   }
 }

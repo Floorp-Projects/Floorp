@@ -7,6 +7,9 @@
 // the fonts *not* used in the currently selected element.
 // Check that it's collapsed by default, but can be expanded. That it does not contain
 // the fonts listed in the previous section.
+//
+// NOTE: this test should be removed once Bug 1485324 is fixed.
+// @see https://bugzilla.mozilla.org/show_bug.cgi?id=1485324
 
 const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 
@@ -35,7 +38,8 @@ add_task(async function() {
   allFontsEls = getAllFontsEls(viewDoc);
 
   for (const otherFontEl of allFontsEls) {
-    ok(![...getUsedFontsEls(viewDoc)].some(el => getName(el) === getName(otherFontEl)),
+    ok(![...getUsedFontsEls_obsolete(viewDoc)].some(el =>
+      getName(el) === getName(otherFontEl)),
        "Other font isn't listed in the main fonts section");
   }
 });
