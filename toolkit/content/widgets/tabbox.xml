@@ -8,7 +8,12 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
+
   <binding id="tabbox">
+    <resources>
+      <stylesheet src="chrome://global/skin/tabbox.css"/>
+    </resources>
+
     <implementation>
       <property name="handleCtrlTab">
         <setter>
@@ -212,6 +217,10 @@
 
   <binding id="tabs"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
+    <resources>
+      <stylesheet src="chrome://global/skin/tabbox.css"/>
+    </resources>
+
     <content>
       <xul:spacer class="tabs-left"/>
       <children/>
@@ -524,6 +533,10 @@
   </binding>
 
   <binding id="tabpanels">
+    <resources>
+      <stylesheet src="chrome://global/skin/tabbox.css"/>
+    </resources>
+
     <implementation implements="nsIDOMXULRelatedElement">
       <!-- nsIDOMXULRelatedElement -->
       <method name="getRelatedElement">
@@ -636,6 +649,10 @@
 
   <binding id="tab" display="xul:button"
            extends="chrome://global/content/bindings/general.xml#basetext">
+    <resources>
+      <stylesheet src="chrome://global/skin/tabbox.css"/>
+    </resources>
+
     <content>
       <xul:hbox class="tab-middle box-inherit" xbl:inherits="align,dir,pack,orient,selected,visuallyselected" flex="1">
         <xul:image class="tab-icon"
