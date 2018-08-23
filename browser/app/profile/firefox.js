@@ -1082,6 +1082,16 @@ pref("security.sandbox.content.read_path_whitelist", "");
 pref("security.sandbox.content.syscall_whitelist", "");
 #endif
 
+#if defined(XP_OPENBSD) && defined(MOZ_SANDBOX)
+// default pledge strings for the main & content processes, cf bug 1457092
+// broad list for now, has to be refined over time
+pref("security.sandbox.pledge.main", "stdio rpath wpath cpath inet proc exec prot_exec flock ps sendfd recvfd dns vminfo tty drm unix fattr getpw mcast");
+#if defined(MOZ_CONTENT_SANDBOX)
+pref("security.sandbox.content.level", 1);
+pref("security.sandbox.pledge.content", "stdio rpath wpath cpath inet recvfd sendfd prot_exec unix drm ps");
+#endif
+#endif
+
 #if defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
 // ID (a UUID when set by gecko) that is used to form the name of a
 // sandbox-writable temporary directory to be used by content processes
