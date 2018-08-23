@@ -3912,11 +3912,9 @@ RemoveReferencedNames(JSContext* cx, HandleScript script, PropertyNameSet& remai
     }
 
     if (script->hasObjects()) {
-        ObjectArray* objects = script->objects();
         RootedFunction fun(cx);
         RootedScript innerScript(cx);
-        for (size_t i = 0; i < objects->length; i++) {
-            JSObject* obj = objects->vector[i];
+        for (JSObject* obj : script->objects()) {
             if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
                 fun = &obj->as<JSFunction>();
                 innerScript = JSFunction::getOrCreateScript(cx, fun);
@@ -3984,11 +3982,9 @@ AnalyzeEntrainedVariablesInScript(JSContext* cx, HandleScript script, HandleScri
     }
 
     if (innerScript->hasObjects()) {
-        ObjectArray* objects = innerScript->objects();
         RootedFunction fun(cx);
         RootedScript innerInnerScript(cx);
-        for (size_t i = 0; i < objects->length; i++) {
-            JSObject* obj = objects->vector[i];
+        for (JSObject* obj : script->objects()) {
             if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
                 fun = &obj->as<JSFunction>();
                 innerInnerScript = JSFunction::getOrCreateScript(cx, fun);
@@ -4022,11 +4018,9 @@ js::AnalyzeEntrainedVariables(JSContext* cx, HandleScript script)
         return true;
     }
 
-    ObjectArray* objects = script->objects();
     RootedFunction fun(cx);
     RootedScript innerScript(cx);
-    for (size_t i = 0; i < objects->length; i++) {
-        JSObject* obj = objects->vector[i];
+    for (JSObject* obj : script->objects()) {
         if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
             fun = &obj->as<JSFunction>();
             innerScript = JSFunction::getOrCreateScript(cx, fun);

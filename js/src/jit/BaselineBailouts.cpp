@@ -489,21 +489,20 @@ HasLiveStackValueAtDepth(JSScript* script, jsbytecode* pc, uint32_t stackDepth)
         return false;
     }
 
-    JSTryNote* tn = script->trynotes()->vector;
-    JSTryNote* tnEnd = tn + script->trynotes()->length;
     uint32_t pcOffset = uint32_t(pc - script->main());
-    for (; tn != tnEnd; ++tn) {
-        if (pcOffset < tn->start) {
+
+    for (const JSTryNote& tn : script->trynotes()) {
+        if (pcOffset < tn.start) {
             continue;
         }
-        if (pcOffset >= tn->start + tn->length) {
+        if (pcOffset >= tn.start + tn.length) {
             continue;
         }
 
-        switch (tn->kind) {
+        switch (tn.kind) {
           case JSTRY_FOR_IN:
             // For-in loops have only the iterator on stack.
-            if (stackDepth == tn->stackDepth) {
+            if (stackDepth == tn.stackDepth) {
                 return true;
             }
             break;
@@ -513,7 +512,7 @@ HasLiveStackValueAtDepth(JSScript* script, jsbytecode* pc, uint32_t stackDepth)
             // result.value on stack.
             // The iterator is below the result.value, the next method below
             // the iterator.
-            if (stackDepth == tn->stackDepth - 1 || stackDepth == tn->stackDepth - 2) {
+            if (stackDepth == tn.stackDepth - 1 || stackDepth == tn.stackDepth - 2) {
                 return true;
             }
             break;
@@ -521,7 +520,7 @@ HasLiveStackValueAtDepth(JSScript* script, jsbytecode* pc, uint32_t stackDepth)
           case JSTRY_DESTRUCTURING_ITERCLOSE:
             // Destructuring code that need to call IteratorClose have both
             // the iterator and the "done" value on the stack.
-            if (stackDepth == tn->stackDepth || stackDepth == tn->stackDepth - 1) {
+            if (stackDepth == tn.stackDepth || stackDepth == tn.stackDepth - 1) {
                 return true;
             }
             break;
