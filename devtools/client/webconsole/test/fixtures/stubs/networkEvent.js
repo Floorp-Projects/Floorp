@@ -266,6 +266,7 @@ stubPackets.set(`GET request`, {
   "timings": {},
   "updates": [],
   "private": false,
+  "isTrackingResource": false,
   "from": "server1.conn0.child1/consoleActor2"
 });
 
@@ -317,6 +318,7 @@ stubPackets.set(`XHR GET request`, {
   "timings": {},
   "updates": [],
   "private": false,
+  "isTrackingResource": false,
   "from": "server1.conn1.child1/consoleActor2"
 });
 
@@ -368,6 +370,7 @@ stubPackets.set(`XHR POST request`, {
   "timings": {},
   "updates": [],
   "private": false,
+  "isTrackingResource": false,
   "from": "server1.conn2.child1/consoleActor2"
 });
 

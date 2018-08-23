@@ -185,6 +185,14 @@ add_task(async function test_change_description_and_preview_saved() {
   Assert.equal(previewImageURL, previewImageURLInDB, "previewImageURL should not be updated");
 });
 
+/**
+ * Gets annotation information from the database for the specified URL and
+ * annotation name.
+ *
+ * @param {String} pageUrl The URL to search for.
+ * @param {String} annoName The name of the annotation to search for.
+ * @return {Array} An array of objects containing the annotations found.
+ */
 async function getAnnotationInfoFromDB(pageUrl, annoName) {
   let db = await PlacesUtils.promiseDBConnection();
 

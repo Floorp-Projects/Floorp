@@ -973,3 +973,23 @@ function getItemsWithAnnotation(name) {
     return rows.map(row => row.getResultByName("guid"));
   });
 }
+
+/**
+ * Checks there are no orphan page annotations in the database, and no
+ * orphan anno attribute names.
+ */
+async function assertNoOrphanPageAnnotations() {
+  let db = await PlacesUtils.promiseDBConnection();
+
+  let rows = await db.execute(`
+    SELECT place_id FROM moz_annos
+    WHERE place_id NOT IN (SELECT id FROM moz_places)
+  `);
+
+  Assert.equal(rows.length, 0, "Should not have any orphan page annotations");
+
+  rows = await db.execute(`
+    SELECT id FROM moz_anno_attributes
+    WHERE id NOT IN (SELECT anno_attribute_id FROM moz_annos) AND
+          id NOT IN (SELECT anno_attribute_id FROM moz_items_annos)`);
+}

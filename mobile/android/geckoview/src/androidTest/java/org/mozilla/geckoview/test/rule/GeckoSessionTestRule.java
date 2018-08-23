@@ -7,7 +7,6 @@ package org.mozilla.geckoview.test.rule;
 
 import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.geckoview.BuildConfig;
-import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoResult.OnExceptionListener;
 import org.mozilla.geckoview.GeckoResult.OnValueListener;
@@ -32,6 +31,7 @@ import org.hamcrest.Matcher;
 import org.json.JSONObject;
 
 import org.junit.rules.ErrorCollector;
+import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -42,17 +42,12 @@ import android.net.LocalSocketAddress;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
-import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
-import android.os.MessageQueue;
 import android.os.Process;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.rule.UiThreadTestRule;
-import android.util.Log;
 import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -77,6 +72,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import kotlin.jvm.JvmClassMappingKt;
@@ -88,7 +84,7 @@ import kotlin.reflect.KClass;
  * for waiting on particular callbacks to be called, and methods for asserting that
  * callbacks are called in the proper order.
  */
-public class GeckoSessionTestRule extends UiThreadTestRule {
+public class GeckoSessionTestRule implements TestRule {
     private static final String LOGTAG = "GeckoSessionTestRule";
 
     private static final long DEFAULT_TIMEOUT_MILLIS = 10000;
@@ -1478,23 +1474,35 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     @Override
     public Statement apply(final Statement base, final Description description) {
-        return super.apply(new Statement() {
+        return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                try {
-                    prepareStatement(description);
-                    base.evaluate();
-                    performTestEndCheck();
-                } finally {
-                    cleanupStatement();
+                final AtomicReference<Throwable> exceptionRef = new AtomicReference<>();
+                mInstrumentation.runOnMainSync(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            prepareStatement(description);
+                            base.evaluate();
+                            performTestEndCheck();
+                        } catch (Throwable t) {
+                            exceptionRef.set(t);
+                        } finally {
+                            try {
+                                cleanupStatement();
+                            } catch (Throwable t) {
+                                exceptionRef.set(t);
+                            }
+                        }
+                    }
+                });
+
+                Throwable throwable = exceptionRef.get();
+                if (throwable != null) {
+                    throw throwable;
                 }
             }
-        }, description);
-    }
-
-    @Override
-    protected boolean shouldRunOnUiThread(final Description description) {
-        return true;
+        };
     }
 
     /**
