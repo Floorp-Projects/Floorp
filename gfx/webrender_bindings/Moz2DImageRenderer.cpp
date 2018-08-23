@@ -307,8 +307,10 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     }
 
   };
-  //XXX: Make safe
+
+  MOZ_RELEASE_ASSERT(aBlob.length() > sizeof(size_t));
   size_t indexOffset = *(size_t*)(aBlob.end().get()-sizeof(size_t));
+  MOZ_RELEASE_ASSERT(indexOffset + sizeof(size_t) <= aBlob.length());
   Reader reader(aBlob.begin().get()+indexOffset, aBlob.length()-sizeof(size_t)-indexOffset);
 
   bool ret;
