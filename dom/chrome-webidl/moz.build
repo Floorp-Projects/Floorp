@@ -43,7 +43,6 @@ WEBIDL_FILES = [
     'MozStorageStatementParams.webidl',
     'MozStorageStatementRow.webidl',
     'PrecompiledScript.webidl',
-    'PrioEncoder.webidl',
     'PromiseDebugging.webidl',
     'StructuredCloneHolder.webidl',
     'WebExtensionContentScript.webidl',
@@ -51,6 +50,11 @@ WEBIDL_FILES = [
     'XULFrameElement.webidl',
     'XULScrollElement.webidl'
 ]
+
+if CONFIG['OS_TARGET'] != 'Android':
+    WEBIDL_FILES += [
+        'PrioEncoder.webidl',
+    ]
 
 if CONFIG['MOZ_PLACES']:
     WEBIDL_FILES += [
