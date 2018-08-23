@@ -16,6 +16,7 @@ const Flexbox = createFactory(require("devtools/client/inspector/flexbox/compone
 const Grid = createFactory(require("devtools/client/inspector/grids/components/Grid"));
 
 const BoxModelTypes = require("devtools/client/inspector/boxmodel/types");
+const FlexboxTypes = require("devtools/client/inspector/flexbox/types");
 const GridTypes = require("devtools/client/inspector/grids/types");
 
 const Accordion = createFactory(require("./Accordion"));
@@ -35,6 +36,7 @@ class LayoutApp extends PureComponent {
   static get propTypes() {
     return {
       boxModel: PropTypes.shape(BoxModelTypes.boxModel).isRequired,
+      flexbox: PropTypes.shape(FlexboxTypes.flexbox).isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       grids: PropTypes.arrayOf(PropTypes.shape(GridTypes.grid)).isRequired,
       highlighterSettings: PropTypes.shape(GridTypes.highlighterSettings).isRequired,
@@ -44,7 +46,11 @@ class LayoutApp extends PureComponent {
       onShowBoxModelEditor: PropTypes.func.isRequired,
       onShowBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      onShowGridOutlineHighlight: PropTypes.func.isRequired,
+      onToggleFlexboxHighlighter: PropTypes.func.isRequired,
+      onToggleGeometryEditor: PropTypes.func.isRequired,
       onToggleGridHighlighter: PropTypes.func.isRequired,
+      onToggleShowGridAreas: PropTypes.func.isRequired,
       onToggleShowGridLineNumbers: PropTypes.func.isRequired,
       onToggleShowInfiniteLines: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,

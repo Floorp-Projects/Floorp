@@ -9,7 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-const ComputedProperty = createFactory(require("./ComputedProperty"));
+const ComputedProperty = createFactory(require("devtools/client/inspector/layout/components/ComputedProperty"));
 
 const Types = require("../types");
 
@@ -86,8 +86,8 @@ class BoxModelProperties extends PureComponent {
       const { referenceElement, referenceElementType } = this.getReferenceElement(info);
 
       return ComputedProperty({
-        name: info,
         key: info,
+        name: info,
         onHideBoxModelHighlighter,
         onShowBoxModelHighlighterForNode,
         referenceElement,
@@ -97,15 +97,15 @@ class BoxModelProperties extends PureComponent {
       });
     });
 
-    return dom.div({ className: "boxmodel-properties" },
+    return dom.div({ className: "layout-properties" },
       dom.div(
         {
-          className: "boxmodel-properties-header",
+          className: "layout-properties-header",
           onDoubleClick: this.onToggleExpander,
         },
         dom.span(
           {
-            className: "boxmodel-properties-expander theme-twisty",
+            className: "layout-properties-expander theme-twisty",
             open: this.state.isOpen,
             onClick: this.onToggleExpander,
           }
@@ -114,7 +114,7 @@ class BoxModelProperties extends PureComponent {
       ),
       dom.div(
         {
-          className: "boxmodel-properties-wrapper devtools-monospace",
+          className: "layout-properties-wrapper devtools-monospace",
           hidden: !this.state.isOpen,
           tabIndex: 0,
         },

@@ -459,6 +459,14 @@ description#identity-popup-content-verifier,
   list-style-image: url(chrome://browser/skin/controlcenter/trackers-disabled.svg);
 }
 
+.thirdpartycookies-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
+}
+
+#identity-popup-content-blocking-category-3rdpartycookies.blocked > .thirdpartycookies-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies-disabled.svg);
+}
+
 /* Content Blocking action button */
 
 .tracking-protection-button {

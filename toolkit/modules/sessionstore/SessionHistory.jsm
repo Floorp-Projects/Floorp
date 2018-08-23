@@ -228,10 +228,6 @@ var SessionHistoryInternal = {
       entry.structuredCloneVersion = shEntry.stateData.formatVersion;
     }
 
-    if (!(shEntry instanceof Ci.nsISHContainer)) {
-      return entry;
-    }
-
     if (shEntry.childCount > 0 && !shEntry.hasDynamicallyAddedChild()) {
       let children = [];
       for (let i = 0; i < shEntry.childCount; i++) {
@@ -457,7 +453,7 @@ var SessionHistoryInternal = {
       shEntry.principalToInherit = Utils.deserializePrincipal(entry.principalToInherit_base64);
     }
 
-    if (entry.children && shEntry instanceof Ci.nsISHContainer) {
+    if (entry.children) {
       for (var i = 0; i < entry.children.length; i++) {
         // XXXzpao Wallpaper patch for bug 514751
         if (!entry.children[i].url)

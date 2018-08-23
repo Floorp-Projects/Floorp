@@ -89,6 +89,18 @@ addIntlExtras(Intl);
   assertEq(rtf.format(1, "year"), "next year");
 }
 
+{
+  // Plural specifier
+  rtf = new Intl.RelativeTimeFormat("en-US");
+  assertEq(rtf.format(1, "seconds"), "in 1 second");
+  assertEq(rtf.format(1, "minutes"), "in 1 minute");
+  assertEq(rtf.format(1, "hours"), "in 1 hour");
+  assertEq(rtf.format(1, "days"), "in 1 day");
+  assertEq(rtf.format(1, "weeks"), "in 1 week");
+  assertEq(rtf.format(1, "months"), "in 1 month");
+  assertEq(rtf.format(1, "years"), "in 1 year");
+}
+
 rtf = new Intl.RelativeTimeFormat("de", {numeric: "auto"});
 assertEq(rtf.format(-1, "day"), "gestern");
 assertEq(rtf.format(1, "day"), "morgen");

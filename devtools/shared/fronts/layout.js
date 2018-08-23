@@ -27,6 +27,13 @@ const FlexboxFront = FrontClassWithSpec(flexboxSpec, {
 
     return this.conn.getActor(this._form.containerNodeActorID);
   },
+
+  /**
+   * Get the computed style properties for the flex container.
+   */
+  get properties() {
+    return this._form.properties;
+  },
 });
 
 const GridFront = FrontClassWithSpec(gridSpec, {

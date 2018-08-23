@@ -20,6 +20,8 @@ const INITIAL_FLEXBOX = {
   highlighted: false,
   // The NodeFront of the flex container.
   nodeFront: null,
+  // The computed style properties of the flex container.
+  properties: {},
 };
 
 const reducers = {
