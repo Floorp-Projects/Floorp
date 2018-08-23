@@ -287,44 +287,44 @@ this.TopStoriesFeed = class TopStoriesFeed {
   }
 
   maybeAddSpoc(target) {
-    if (!this.shouldShowSpocs()) {
-      return;
-    }
-
-    if (Math.random() <= this.spocsPerNewTabs) {
-      const updateContent = () => {
-        if (!this.spocs || !this.spocs.length) {
-          // We have stories but no spocs so there's nothing to do and this update can be
-          // removed from the queue.
-          return false;
-        }
-
-        // Filter spocs based on frequency caps
-        const impressions = this.readImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF);
-        const spocs = this.spocs.filter(s => this.isBelowFrequencyCap(impressions, s));
-
-        if (!spocs.length) {
-          // There's currently no spoc left to display
-          return false;
-        }
-
-        // Create a new array with a spoc inserted at index 2
-        const section = this.store.getState().Sections.find(s => s.id === SECTION_ID);
-        let rows = section.rows.slice(0, this.stories.length);
-        rows.splice(2, 0, Object.assign(spocs[0], {pinned: true}));
-
-        // Send a content update to the target tab
-        const action = {type: at.SECTION_UPDATE, data: Object.assign({rows}, {id: SECTION_ID})};
-        this.store.dispatch(ac.OnlyToOneContent(action, target));
+    const updateContent = () => {
+      if (!this.shouldShowSpocs()) {
         return false;
-      };
-
-      if (this.stories) {
-        updateContent();
-      } else {
-        // Delay updating tab content until initial data has been fetched
-        this.contentUpdateQueue.push(updateContent);
       }
+      if (Math.random() > this.spocsPerNewTabs) {
+        return false;
+      }
+      if (!this.spocs || !this.spocs.length) {
+        // We have stories but no spocs so there's nothing to do and this update can be
+        // removed from the queue.
+        return false;
+      }
+
+      // Filter spocs based on frequency caps
+      const impressions = this.readImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF);
+      const spocs = this.spocs.filter(s => this.isBelowFrequencyCap(impressions, s));
+
+      if (!spocs.length) {
+        // There's currently no spoc left to display
+        return false;
+      }
+
+      // Create a new array with a spoc inserted at index 2
+      const section = this.store.getState().Sections.find(s => s.id === SECTION_ID);
+      let rows = section.rows.slice(0, this.stories.length);
+      rows.splice(2, 0, Object.assign(spocs[0], {pinned: true}));
+
+      // Send a content update to the target tab
+      const action = {type: at.SECTION_UPDATE, data: Object.assign({rows}, {id: SECTION_ID})};
+      this.store.dispatch(ac.OnlyToOneContent(action, target));
+      return false;
+    };
+
+    if (this.stories) {
+      updateContent();
+    } else {
+      // Delay updating tab content until initial data has been fetched
+      this.contentUpdateQueue.push(updateContent);
     }
   }
 
