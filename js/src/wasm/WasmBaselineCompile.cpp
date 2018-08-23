@@ -1012,7 +1012,7 @@ BaseLocalIter::BaseLocalIter(const ValTypeVector& locals, size_t argsLength, boo
     index_(0),
     localSize_(debugEnabled ? DebugFrame::offsetOfFrame() : 0),
     reservedSize_(localSize_),
-    frameOffset_(0),
+    frameOffset_(UINT32_MAX),
     mirType_(MIRType::Undefined),
     done_(false)
 {
