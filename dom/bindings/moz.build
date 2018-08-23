@@ -95,7 +95,6 @@ LOCAL_INCLUDES += [
     '/media/webrtc/signaling/src/common/time_profiling',
     '/media/webrtc/signaling/src/peerconnection',
     '/media/webrtc/trunk/',
-    '/third_party/msgpack/include',
 ]
 
 DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
