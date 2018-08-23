@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="org.mozilla.geckoview_example">
 
@@ -8,42 +9,50 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.CAMERA"/>
 
-    <application android:allowBackup="true"
-                 android:label="@string/app_name"
-                 android:supportsRtl="true">
+    <application
+            android:allowBackup="true"
+            android:label="@string/app_name"
+            android:supportsRtl="true">
+        <uses-library android:name="android.test.runner"/>
 
-        <uses-library android:name="android.test.runner" />
-
-        <activity android:name="org.mozilla.geckoview_example.GeckoViewActivity"
-                  android:label="GeckoView Example"
-                  android:windowSoftInputMode="stateUnspecified|adjustResize"
-                  android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-                  android:launchMode="singleTop">
+        <activity
+                android:name=".GeckoViewActivity"
+                android:label="GeckoView Example"
+                android:launchMode="singleTop"
+                android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+                android:windowSoftInputMode="stateUnspecified|adjustResize">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
                 <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER"/>
-                <category android:name="android.intent.category.APP_BROWSER" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.APP_BROWSER"/>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
-
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data android:scheme="about" />
-                <data android:scheme="javascript" />
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+                <data android:scheme="about"/>
+                <data android:scheme="javascript"/>
             </intent-filter>
         </activity>
-
-        <activity android:name="org.mozilla.geckoview_example.SessionActivity"
-                  android:label="GeckoView Example"
-                  android:windowSoftInputMode="stateUnspecified|adjustResize"
-                  android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <activity
+                android:name=".SessionActivity"
+                android:label="GeckoView Example"
+                android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+                android:windowSoftInputMode="stateUnspecified|adjustResize">
         </activity>
 
+        <service
+                android:name=".ExampleCrashHandler"
+                android:exported="false"
+                android:process=":crash">
+        </service>
     </application>
 
 </manifest>
