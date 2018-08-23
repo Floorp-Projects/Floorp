@@ -22,18 +22,122 @@ import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.SupportUtils
 
-class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val deepLink: () -> Unit)
+class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val deepLink: () -> Unit) {
+    companion object {
+        fun createTrackingProtectionTip(context: Context): Tip {
+            val id = tip_disable_tracking_protection
+            val name = context.resources.getString(id)
+
+            val shouldDisplayTrackingProtection = {
+                Settings.getInstance(context).shouldBlockOtherTrackers() ||
+                        Settings.getInstance(context).shouldBlockAdTrackers() ||
+                        Settings.getInstance(context).shouldBlockAnalyticTrackers()
+            }
+
+            val deepLinkTrackingProtection = {
+                val activity = context as Activity
+                (activity as LocaleAwareAppCompatActivity).openPrivacySecuritySettings()
+                TelemetryWrapper.pressTipEvent(id)
+            }
+
+            return Tip(id, name, shouldDisplayTrackingProtection, deepLinkTrackingProtection)
+        }
+
+        fun createHomescreenTip(context: Context): Tip {
+            val id = tip_add_to_homescreen
+            val name = context.resources.getString(id)
+            val ADD_HOMESCREEN_URL =
+                    "https://support.mozilla.org/en-US/kb/add-web-page-shortcuts-your-home-screen"
+
+            val shouldDisplayAddToHomescreen = {
+                !Settings.getInstance(context).hasAddedToHomescreen()
+            }
+
+            val deepLinkAddToHomescreen = {
+                SessionManager.getInstance().createSession(Source.MENU, ADD_HOMESCREEN_URL)
+                TelemetryWrapper.pressTipEvent(id)
+            }
+
+            return Tip(id, name, shouldDisplayAddToHomescreen, deepLinkAddToHomescreen)
+        }
+
+        fun createDefaultBrowserTip(context: Context): Tip {
+            val appName = context.resources.getString(app_name)
+            val id = tip_set_default_browser
+            val name = context.resources.getString(id, appName)
+
+            val shouldDisplayDefaultBrowser = {
+                !Settings.getInstance(context).isDefaultBrowser()
+            }
+
+            val deepLinkDefaultBrowser = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    SupportUtils.openDefaultAppsSettings(context)
+                } else {
+                    SupportUtils.openDefaultBrowserSumoPage(context)
+                }
+                TelemetryWrapper.pressTipEvent(id)
+            }
+
+            return Tip(id, name, shouldDisplayDefaultBrowser, deepLinkDefaultBrowser)
+        }
+
+        fun createAutocompleteURLTip(context: Context): Tip {
+            val id = tip_autocomplete_url
+            val name = context.resources.getString(id)
+            val autocompleteURL =
+                    "https://support.mozilla.org/en-US/kb/autocomplete-settings-firefox-focus-address-bar"
+            val shouldDisplayAutocompleteUrl = {
+                !Settings.getInstance(context).shouldAutocompleteFromCustomDomainList()
+            }
+
+            val deepLinkAutocompleteUrl = {
+                SessionManager.getInstance().createSession(Source.MENU, autocompleteURL)
+                TelemetryWrapper.pressTipEvent(id)
+            }
+
+            return Tip(id, name, shouldDisplayAutocompleteUrl, deepLinkAutocompleteUrl)
+        }
+
+        fun createOpenInNewTabTip(context: Context): Tip {
+            val id = tip_open_in_new_tab
+            val name = context.resources.getString(id)
+            val newTabURL =
+                    "https://support.mozilla.org/en-US/kb/open-new-tab-firefox-focus-android"
+
+            val shouldDisplayOpenInNewTab = {
+                !Settings.getInstance(context).hasOpenedInNewTab()
+            }
+
+            val deepLinkOpenInNewTab = {
+                SessionManager.getInstance().createSession(Source.MENU, newTabURL)
+                TelemetryWrapper.pressTipEvent(id)
+            }
+
+            return Tip(id, name, shouldDisplayOpenInNewTab, deepLinkOpenInNewTab)
+        }
+
+        fun createRequestDesktopTip(context: Context): Tip {
+            val id = tip_request_desktop
+            val name = context.resources.getString(id)
+            val requestDesktopURL =
+                    "https://support.mozilla.org/en-US/kb/switch-desktop-view-firefox-focus-android"
+
+            val shouldDisplayOpenInNewTab = {
+                !Settings.getInstance(context).hasRequestedDesktop()
+            }
+
+            val deepLinkOpenInNewTab = {
+                SessionManager.getInstance().createSession(Source.MENU, requestDesktopURL)
+                TelemetryWrapper.pressTipEvent(id)
+            }
+
+            return Tip(id, name, shouldDisplayOpenInNewTab, deepLinkOpenInNewTab)
+        }
+    }
+}
 
 object TipManager {
-
-    private const val NEW_TAB_URL =
-        "https://support.mozilla.org/en-US/kb/open-new-tab-firefox-focus-android"
-    private const val ADD_HOMESCREEN_URL =
-        "https://support.mozilla.org/en-US/kb/add-web-page-shortcuts-your-home-screen"
-    private const val AUTOCOMPLETE_URL =
-        "https://support.mozilla.org/en-US/kb/autocomplete-settings-firefox-focus-address-bar"
-    private const val REQUEST_DESKTOP_URL =
-        "https://support.mozilla.org/en-US/kb/switch-desktop-view-firefox-focus-android"
     private const val MAX_TIPS_TO_DISPLAY = 3
 
     private val listOfTips = mutableListOf<Tip>()
@@ -83,108 +187,32 @@ object TipManager {
     }
 
     private fun addTrackingProtectionTip(context: Context) {
-        val id = tip_disable_tracking_protection
-        val name = context.resources.getString(id)
-
-        val shouldDisplayTrackingProtection = {
-            Settings.getInstance(context).shouldBlockOtherTrackers() ||
-                    Settings.getInstance(context).shouldBlockAdTrackers() ||
-                    Settings.getInstance(context).shouldBlockAnalyticTrackers()
-        }
-
-        val deepLinkTrackingProtection = {
-            val activity = context as Activity
-            (activity as LocaleAwareAppCompatActivity).openPrivacySecuritySettings()
-            TelemetryWrapper.pressTipEvent(id)
-        }
-
-        listOfTips.add(Tip(id, name, shouldDisplayTrackingProtection, deepLinkTrackingProtection))
+        val tip = Tip.createTrackingProtectionTip(context)
+        listOfTips.add(tip)
     }
 
     private fun addHomescreenTip(context: Context) {
-        val id = tip_add_to_homescreen
-        val name = context.resources.getString(id)
-        val shouldDisplayAddToHomescreen = {
-            !Settings.getInstance(context).hasAddedToHomescreen()
-        }
-
-        val deepLinkAddToHomescreen = {
-            SessionManager.getInstance().createSession(Source.MENU, ADD_HOMESCREEN_URL)
-            TelemetryWrapper.pressTipEvent(id)
-        }
-
-        listOfTips.add(Tip(id, name, shouldDisplayAddToHomescreen, deepLinkAddToHomescreen))
+        val tip = Tip.createHomescreenTip(context)
+        listOfTips.add(tip)
     }
 
     private fun addDefaultBrowserTip(context: Context) {
-        val appName = context.resources.getString(app_name)
-        val id = tip_set_default_browser
-        val name = context.resources.getString(id, appName)
-
-        val shouldDisplayDefaultBrowser = {
-            !Settings.getInstance(context).isDefaultBrowser()
-        }
-
-        val deepLinkDefaultBrowser = {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                SupportUtils.openDefaultAppsSettings(context)
-            } else {
-                SupportUtils.openDefaultBrowserSumoPage(context)
-            }
-            TelemetryWrapper.pressTipEvent(id)
-        }
-
-        listOfTips.add(Tip(id,
-            name,
-            shouldDisplayDefaultBrowser,
-            deepLinkDefaultBrowser))
+        val tip = Tip.createDefaultBrowserTip(context)
+        listOfTips.add(tip)
     }
 
     private fun addAutocompleteUrlTip(context: Context) {
-        val id = tip_autocomplete_url
-        val name = context.resources.getString(id)
-
-        val shouldDisplayAutocompleteUrl = {
-            !Settings.getInstance(context).shouldAutocompleteFromCustomDomainList()
-        }
-
-        val deepLinkAutocompleteUrl = {
-            SessionManager.getInstance().createSession(Source.MENU, AUTOCOMPLETE_URL)
-            TelemetryWrapper.pressTipEvent(id)
-        }
-
-        listOfTips.add(Tip(id, name, shouldDisplayAutocompleteUrl, deepLinkAutocompleteUrl))
+        val tip = Tip.createAutocompleteURLTip(context)
+        listOfTips.add(tip)
     }
 
     private fun addOpenInNewTabTip(context: Context) {
-        val id = tip_open_in_new_tab
-        val name = context.resources.getString(id)
-
-        val shouldDisplayOpenInNewTab = {
-            !Settings.getInstance(context).hasOpenedInNewTab()
-        }
-
-        val deepLinkOpenInNewTab = {
-            SessionManager.getInstance().createSession(Source.MENU, NEW_TAB_URL)
-            TelemetryWrapper.pressTipEvent(id)
-        }
-
-        listOfTips.add(Tip(id, name, shouldDisplayOpenInNewTab, deepLinkOpenInNewTab))
+        val tip = Tip.createOpenInNewTabTip(context)
+        listOfTips.add(tip)
     }
 
     private fun addRequestDesktopTip(context: Context) {
-        val id = tip_request_desktop
-        val name = context.resources.getString(id)
-
-        val shouldDisplayOpenInNewTab = {
-            !Settings.getInstance(context).hasRequestedDesktop()
-        }
-
-        val deepLinkOpenInNewTab = {
-            SessionManager.getInstance().createSession(Source.MENU, REQUEST_DESKTOP_URL)
-            TelemetryWrapper.pressTipEvent(id)
-        }
-
-        listOfTips.add(Tip(id, name, shouldDisplayOpenInNewTab, deepLinkOpenInNewTab))
+        val tip = Tip.createRequestDesktopTip(context)
+        listOfTips.add(tip)
     }
 }

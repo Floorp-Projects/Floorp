@@ -46,7 +46,9 @@ import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.tips.Tip
 import org.mozilla.focus.tips.TipManager
+import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.StatusBarUtils
@@ -195,6 +197,10 @@ class UrlInputFragment :
     private fun updateTipsLabel() {
         val context = context ?: return
         val tip = TipManager.getNextTipIfAvailable(context)
+        updateSubtitle(tip)
+    }
+
+    private fun updateSubtitle(tip: Tip?) {
         keyboardLinearLayout.homeViewTipsLabel.alpha = TIPS_ALPHA
 
         if (tip != null) {
@@ -577,6 +583,7 @@ class UrlInputFragment :
             ViewUtils.hideKeyboard(urlView)
 
             if (handleExperimentsTrigger(input)) return
+            if (handleL10NTrigger(input)) return
 
             val (isUrl, url, searchTerms) = normalizeUrlAndSearchTerms(input)
 
@@ -584,6 +591,25 @@ class UrlInputFragment :
 
             TelemetryWrapper.urlBarEvent(isUrl, urlView.autocompleteResult)
         }
+    }
+
+    private fun handleL10NTrigger(input: String): Boolean {
+        if (!AppConstants.isDevBuild) return false
+
+        var triggerHandled = true
+
+        when (input) {
+            "l10n:tip:1" -> updateSubtitle(Tip.createTrackingProtectionTip(context!!))
+            "l10n:tip:2" -> updateSubtitle(Tip.createHomescreenTip(context!!))
+            "l10n:tip:3" -> updateSubtitle(Tip.createDefaultBrowserTip(context!!))
+            "l10n:tip:4" -> updateSubtitle(Tip.createAutocompleteURLTip(context!!))
+            "l10n:tip:5" -> updateSubtitle(Tip.createOpenInNewTabTip(context!!))
+            "l10n:tip:6" -> updateSubtitle(Tip.createRequestDesktopTip(context!!))
+            else -> triggerHandled = false
+        }
+
+        if (triggerHandled) clear()
+        return triggerHandled
     }
 
     private fun handleExperimentsTrigger(input: String): Boolean {
