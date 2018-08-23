@@ -282,13 +282,12 @@ HashStore::CheckChecksum(uint32_t aFileSize)
   // comparing the stored checksum to actual checksum of data
   nsAutoCString hash;
   nsAutoCString compareHash;
-  char *data;
   uint32_t read;
 
   nsresult rv = CalculateChecksum(hash, aFileSize, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  compareHash.GetMutableData(&data, hash.Length());
+  compareHash.SetLength(hash.Length());
 
   if (hash.Length() > aFileSize) {
     NS_WARNING("SafeBrowing file not long enough to store its hash");
@@ -298,7 +297,7 @@ HashStore::CheckChecksum(uint32_t aFileSize)
   rv = seekIn->Seek(nsISeekableStream::NS_SEEK_SET, aFileSize - hash.Length());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mInputStream->Read(data, hash.Length(), &read);
+  rv = mInputStream->Read(compareHash.BeginWriting(), hash.Length(), &read);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(read == hash.Length(), "Could not read hash bytes");
 

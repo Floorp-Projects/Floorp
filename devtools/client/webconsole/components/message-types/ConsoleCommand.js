@@ -7,7 +7,7 @@
 "use strict";
 
 // React & Redux
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Message = createFactory(require("devtools/client/webconsole/components/Message"));
 
@@ -34,9 +34,12 @@ function ConsoleCommand(props) {
     source,
     type,
     level,
-    messageText: messageBody,
+    messageText,
   } = message;
 
+  // This uses a Custom Element to syntax highlight when possible. If it's not
+  // (no CodeMirror editor), then it will just render text.
+  const messageBody = createElement("syntax-highlighted", null, messageText);
   return Message({
     source,
     type,
