@@ -21,3 +21,7 @@ Before you attempt to make a contribution please read the [Community Participati
 ### Process
 
 * [Release checklist]({{ site.baseurl }}/contributing/release-checklist)
+
+### Presentations
+
+* [GeckoView and Android components (June 2018)](https://onlinexperiences.com/Launch/Event.htm?ShowKey=44908&DisplayItem=E271804) **[Mozilla internal only]**
