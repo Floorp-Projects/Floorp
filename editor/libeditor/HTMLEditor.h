@@ -1105,6 +1105,29 @@ protected: // Shouldn't be used by friend classes
   };
 
   /**
+   * GetTableCellElementAt() returns a <td> or <th> element of aTableElement
+   * if there is a cell at the indexes.
+   *
+   * @param aTableElement       Must be a <table> element.
+   * @param aCellIndexes        Indexes of cell which you want.
+   *                            If rowspan and/or colspan is specified 2 or
+   *                            larger, any indexes are allowed to retrieve
+   *                            the cell in the area.
+   * @return                    The cell element if there is in the <table>.
+   *                            Returns nullptr without error if the indexes
+   *                            are out of bounds.
+   */
+  Element* GetTableCellElementAt(Element& aTableElement,
+                                 const CellIndexes& aCellIndexes) const
+  {
+    return GetTableCellElementAt(aTableElement, aCellIndexes.mRow,
+                                 aCellIndexes.mColumn);
+  }
+  Element* GetTableCellElementAt(Element& aTableElement,
+                                 int32_t aRowIndex,
+                                 int32_t aColumnIndex) const;
+
+  /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.
@@ -1384,7 +1407,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * Helper used to get nsTableWrapperFrame for a table.
    */
-  nsTableWrapperFrame* GetTableFrame(Element* aTable);
+  static nsTableWrapperFrame* GetTableFrame(Element* aTable);
 
   /**
    * Needed to do appropriate deleting when last cell or row is about to be

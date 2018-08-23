@@ -185,22 +185,26 @@ interface nsITableEditor : nsISupports
   void getTableSize(in Element aTableOrElementInTable,
                     out long aRowCount, out long aColCount);
 
-  /** Get a cell element at cellmap grid coordinates
-    * A cell that spans across multiple cellmap locations will
-    *   be returned multiple times, once for each location it occupies
-    *
-    * @param aTable                   A table in the document
-    * @param aRowIndex, aColIndex     The 0-based cellmap indexes
-    *
-    * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    *  passes NS_SUCCEEDED macro)
-    *
-    *   You can scan for all cells in a row or column
-    *   by iterating through the appropriate indexes
-    *   until the returned aCell is null
-    */
-  Element getCellAt(in Element aTable,
-                    in long aRowIndex, in long aColIndex);
+  /**
+   * getCellAt() returns a <td> or <th> element in a <table> if there is a
+   * cell at the indexes.
+   *
+   * @param aTableElement       If not null, must be a <table> element.
+   *                            If null, looks for the nearest ancestor <table>
+   *                            to look for a cell.
+   * @param aRowIndex           Row index of the cell.
+   * @param aColumnIndex        Column index of the cell.
+   * @return                    Returns a <td> or <th> element if there is.
+   *                            Otherwise, returns null without throwing
+   *                            exception.
+   *                            If aTableElement is not null and not a <table>
+   *                            element, throwing an exception.
+   *                            If aTableElement is null and anchor of Selection
+   *                            is not in any <table> element, throwing an
+   *                            exception.
+   */
+  Element getCellAt(in Element aTableElement,
+                    in long aRowIndex, in long aColumnIndex);
 
   /** Get a cell at cellmap grid coordinates and associated data
     * A cell that spans across multiple cellmap locations will
