@@ -17,7 +17,7 @@
 const CB_PREF = "browser.contentblocking.enabled";
 const CB_UI_PREF = "browser.contentblocking.ui.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
-const TP_PB_PREF = "privacy.trackingprotection.enabled";
+const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 var ContentBlocking = null;
@@ -276,8 +276,13 @@ add_task(async function testNormalBrowsing() {
 
   await testContentBlockingEnabled(tab);
 
-  Services.prefs.setBoolPref(CB_PREF, false);
-  ok(!ContentBlocking.enabled, "CB is disabled after setting the pref");
+  if (Services.prefs.getBoolPref(CB_UI_PREF)) {
+    Services.prefs.setBoolPref(CB_PREF, false);
+    ok(!ContentBlocking.enabled, "CB is disabled after setting the pref");
+  } else {
+    Services.prefs.setBoolPref(TP_PREF, false);
+    ok(!TrackingProtection.enabled, "TP is disabled after setting the pref");
+  }
 
   await testContentBlockingDisabled(tab);
 
@@ -288,6 +293,9 @@ add_task(async function testPrivateBrowsing() {
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
   tabbrowser = privateWin.gBrowser;
   let tab = tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser);
+
+  // Set the normal mode pref to false to check the pbmode pref.
+  Services.prefs.setBoolPref(TP_PREF, false);
 
   ContentBlocking = tabbrowser.ownerGlobal.ContentBlocking;
   ok(ContentBlocking, "CB is attached to the private window");
@@ -303,8 +311,13 @@ add_task(async function testPrivateBrowsing() {
 
   await testContentBlockingEnabled(tab);
 
-  Services.prefs.setBoolPref(CB_PREF, false);
-  ok(!ContentBlocking.enabled, "CB is disabled after setting the pref");
+  if (Services.prefs.getBoolPref(CB_UI_PREF)) {
+    Services.prefs.setBoolPref(CB_PREF, false);
+    ok(!ContentBlocking.enabled, "CB is disabled after setting the pref");
+  } else {
+    Services.prefs.setBoolPref(TP_PB_PREF, false);
+    ok(!TrackingProtection.enabled, "TP is disabled after setting the pref");
+  }
 
   await testContentBlockingDisabled(tab);
 
