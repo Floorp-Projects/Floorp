@@ -460,17 +460,6 @@ var BrowserPageActions = {
       urlbarNode: node,
     });
     action.onPlacedInUrlbar(node);
-
-    // urlbar buttons should always have tooltips, so if the node doesn't have
-    // one, then as a last resort use the label of the corresponding panel
-    // button.  Why not set tooltiptext to action.title when the node is
-    // created?  Because the consumer may set a title dynamically.
-    if (!node.hasAttribute("tooltiptext")) {
-      let panelNode = this.panelButtonNodeForActionID(action.id);
-      if (panelNode) {
-        node.setAttribute("tooltiptext", panelNode.getAttribute("label"));
-      }
-    }
   },
 
   _makeUrlbarButtonNode(action) {
@@ -979,7 +968,7 @@ BrowserPageActions.bookmark = {
 
 // copy URL
 BrowserPageActions.copyURL = {
-  onPlacedInPanel(buttonNode) {
+  onBeforePlacedInWindow(browserWindow) {
     let action = PageActions.actionForID("copyURL");
     BrowserPageActions.takeActionTitleFromPanel(action);
   },
@@ -996,7 +985,7 @@ BrowserPageActions.copyURL = {
 
 // email link
 BrowserPageActions.emailLink = {
-  onPlacedInPanel(buttonNode) {
+  onBeforePlacedInWindow(browserWindow) {
     let action = PageActions.actionForID("emailLink");
     BrowserPageActions.takeActionTitleFromPanel(action);
   },
@@ -1009,7 +998,7 @@ BrowserPageActions.emailLink = {
 
 // send to device
 BrowserPageActions.sendToDevice = {
-  onPlacedInPanel(buttonNode) {
+  onBeforePlacedInWindow(browserWindow) {
     let action = PageActions.actionForID("sendToDevice");
     BrowserPageActions.takeActionTitleFromPanel(action);
   },
@@ -1210,7 +1199,7 @@ BrowserPageActions.shareURL = {
     this._cached = false;
   },
 
-  onPlacedInPanel(buttonNode) {
+  onBeforePlacedInWindow(browserWindow) {
     let action = PageActions.actionForID("shareURL");
     BrowserPageActions.takeActionTitleFromPanel(action);
   },
