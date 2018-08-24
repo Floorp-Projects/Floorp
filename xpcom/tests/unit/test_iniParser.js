@@ -44,17 +44,11 @@ function checkParserOutput(parser, expected) {
 function getParserOutput(parser) {
     let output = {};
 
-    let sections = parser.getSections();
-    Assert.ok(!!sections);
-    while (sections.hasMore()) {
-        let section = sections.getNext();
+    for (let section of parser.getSections()) {
         Assert.equal(false, section in output); // catch dupes
         output[section] = {};
 
-        let keys = parser.getKeys(section);
-        Assert.ok(!!keys);
-        while (keys.hasMore()) {
-            let key = keys.getNext();
+        for (let key of parser.getKeys(section)) {
             Assert.equal(false, key in output[section]); // catch dupes
             let value = parser.getString(section, key);
             output[section][key] = value;

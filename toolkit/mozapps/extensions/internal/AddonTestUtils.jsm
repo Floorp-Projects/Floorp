@@ -1172,9 +1172,7 @@ var AddonTestUtils = {
       dir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
       let zip = ZipReader(xpiFile);
-      let entries = zip.findEntries(null);
-      while (entries.hasMore()) {
-        let entry = entries.getNext();
+      for (let entry of zip.findEntries(null)) {
         let target = dir.clone();
         for (let part of entry.split("/"))
           target.append(part);
