@@ -15,7 +15,6 @@
             android:name="android.hardware.location.gps"
             android:required="false"/>
     <uses-feature android:name="android.hardware.touchscreen"/>
-
     <uses-feature
             android:name="android.hardware.camera"
             android:required="false"/>
