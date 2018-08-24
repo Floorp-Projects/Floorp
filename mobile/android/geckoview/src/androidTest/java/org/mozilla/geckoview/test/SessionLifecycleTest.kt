@@ -47,7 +47,7 @@ class SessionLifecycleTest : BaseSessionTest() {
     @Test fun open_allowCallsWhileClosed() {
         sessionRule.session.close()
 
-        sessionRule.session.loadUri(HELLO_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.reload()
 
         sessionRule.session.open()
