@@ -59,9 +59,8 @@ const IS_MAC = navigator.platform.match(/Mac/);
  */
 function getBrowserWindowsCount() {
   let open = 0;
-  let e = Services.wm.getEnumerator("navigator:browser");
-  while (e.hasMoreElements()) {
-    if (!e.getNext().closed)
+  for (let win of Services.wm.getEnumerator("navigator:browser")) {
+    if (!win.closed)
       ++open;
   }
 

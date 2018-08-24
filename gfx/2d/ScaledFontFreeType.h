@@ -27,7 +27,7 @@ public:
   FontType GetType() const override { return FontType::FREETYPE; }
 
 #ifdef USE_SKIA
-  virtual SkTypeface* GetSkTypeface() override;
+  virtual SkTypeface* CreateSkTypeface() override;
 #endif
 
   bool CanSerialize() override { return true; }

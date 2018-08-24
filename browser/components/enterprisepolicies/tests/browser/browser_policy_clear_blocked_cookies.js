@@ -26,9 +26,7 @@ add_task(async function setup() {
 
 function retrieve_all_cookies(host) {
   const values = [];
-  const cookies = Services.cookies.getCookiesFromHost(host, {});
-  while (cookies.hasMoreElements()) {
-    const cookie = cookies.getNext().QueryInterface(Ci.nsICookie);
+  for (let cookie of Services.cookies.getCookiesFromHost(host, {})) {
     values.push({
       host: cookie.host,
       name: cookie.name,

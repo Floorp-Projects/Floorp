@@ -200,24 +200,16 @@ function getDialogDoc() {
   // Trudge through all the open windows, until we find the one
   // that has either commonDialog.xul or selectDialog.xul loaded.
   // var enumerator = Services.wm.getEnumerator("navigator:browser");
-  var enumerator = Services.wm.getXULWindowEnumerator(null);
-
-  while (enumerator.hasMoreElements()) {
-    var win = enumerator.getNext();
-    var windowDocShell = win.QueryInterface(Ci.nsIXULWindow).docShell;
-
-    var containedDocShells = windowDocShell.getDocShellEnumerator(
-                                      Ci.nsIDocShellTreeItem.typeChrome,
-                                      Ci.nsIDocShell.ENUMERATE_FORWARDS);
-    while (containedDocShells.hasMoreElements()) {
+  for (let {docShell} of Services.wm.getEnumerator(null)) {
+    var containedDocShells = docShell.getDocShellEnumerator(
+                                      docShell.typeChrome,
+                                      docShell.ENUMERATE_FORWARDS);
+    for (let childDocShell of containedDocShells) {
         // Get the corresponding document for this docshell
-        var childDocShell = containedDocShells.getNext();
         // We don't want it if it's not done loading.
         if (childDocShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE)
           continue;
-        var childDoc = childDocShell.QueryInterface(Ci.nsIDocShell)
-                                    .contentViewer
-                                    .DOMDocument;
+        var childDoc = childDocShell.contentViewer.DOMDocument;
 
         if (childDoc.location.href != "chrome://global/content/commonDialog.xul" &&
             childDoc.location.href != "chrome://global/content/selectDialog.xul")

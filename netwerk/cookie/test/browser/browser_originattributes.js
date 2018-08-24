@@ -84,8 +84,7 @@ async function checkCookies(expectedValues, time) {
 function getCookiesFromManager(userContextId) {
   let cookies = {};
   let enumerator = cm.getCookiesWithOriginAttributes(JSON.stringify({userContextId}));
-  while (enumerator.hasMoreElements()) {
-    let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+  for (let cookie of enumerator) {
     cookies[cookie.name] = cookie.value;
   }
   return cookies;

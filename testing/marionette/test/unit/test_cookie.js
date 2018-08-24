@@ -42,21 +42,8 @@ cookie.manager = {
   getCookiesFromHost(host) {
     let hostCookies = this.cookies.filter(c => c.host === host ||
        c.host === "." + host);
-    let nextIndex = 0;
 
-    return {
-      hasMoreElements() {
-        return nextIndex < hostCookies.length;
-      },
-
-      getNext() {
-        return {
-          QueryInterface() {
-            return hostCookies[nextIndex++];
-          },
-        };
-      },
-    };
+    return hostCookies;
   },
 };
 

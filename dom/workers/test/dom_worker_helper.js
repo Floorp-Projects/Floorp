@@ -38,12 +38,8 @@ function assertThrows(fun, message) {
   ok(throws, message);
 }
 
-function* generateDebuggers() {
-  let e = wdm.getWorkerDebuggerEnumerator();
-  while (e.hasMoreElements()) {
-    let dbg = e.getNext().QueryInterface(Ci.nsIWorkerDebugger);
-    yield dbg;
-  }
+function generateDebuggers() {
+  return wdm.getWorkerDebuggerEnumerator();
 }
 
 function findDebugger(url) {

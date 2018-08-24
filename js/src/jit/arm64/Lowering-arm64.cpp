@@ -82,7 +82,10 @@ LIRGenerator::visitUnbox(MUnbox* unbox)
         // avoid multiple loads.
         lir = new(alloc()) LUnbox(useRegisterAtStart(box));
     } else {
-        lir = new(alloc()) LUnbox(useAtStart(box));
+        // FIXME: It should be possible to useAtStart() here, but the DEBUG
+        // code in CodeGenerator::visitUnbox() needs to handle non-Register
+        // cases. ARM64 doesn't have an Operand type.
+        lir = new(alloc()) LUnbox(useRegisterAtStart(box));
     }
 
     if (unbox->fallible())
@@ -178,21 +181,23 @@ LIRGeneratorARM64::lowerForBitAndAndBranch(LBitAndAndBranch* baab, MInstruction*
 void
 LIRGeneratorARM64::defineUntypedPhi(MPhi* phi, size_t lirIndex)
 {
-    MOZ_CRASH("defineUntypedPhi");
+    defineTypedPhi(phi, lirIndex);
 }
 
 void
 LIRGeneratorARM64::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition,
                                         LBlock* block, size_t lirIndex)
 {
-    MOZ_CRASH("lowerUntypedPhiInput");
+    lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
 }
 
 void
 LIRGeneratorARM64::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
                                  MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
 {
-    MOZ_CRASH("lowerForShift");
+    ins->setOperand(0, useRegister(lhs));
+    ins->setOperand(1, useRegisterOrConstant(rhs));
+    define(ins, mir);
 }
 
 void

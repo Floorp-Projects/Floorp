@@ -458,9 +458,7 @@ var TabCrashHandler = {
   },
 
   removeSubmitCheckboxesForSameCrash(childID) {
-    let enumerator = Services.wm.getEnumerator("navigator:browser");
-    while (enumerator.hasMoreElements()) {
-      let window = enumerator.getNext();
+    for (let window of Services.wm.getEnumerator("navigator:browser")) {
       if (!window.gMultiProcessBrowser)
         continue;
 
@@ -1069,9 +1067,7 @@ var PluginCrashReporter = {
   },
 
   broadcastState(runID, state) {
-    let enumerator = Services.wm.getEnumerator("navigator:browser");
-    while (enumerator.hasMoreElements()) {
-      let window = enumerator.getNext();
+    for (let window of Services.wm.getEnumerator("navigator:browser")) {
       let mm = window.messageManager;
       mm.broadcastAsyncMessage("BrowserPlugins:CrashReportSubmitted",
                                { runID, state });

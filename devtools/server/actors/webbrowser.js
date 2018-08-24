@@ -25,20 +25,6 @@ loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.j
  */
 
 /**
- * Yield all windows of type |windowType|, from the oldest window to the
- * youngest, using nsIWindowMediator::getEnumerator. We're usually
- * interested in "navigator:browser" windows.
- */
-function* allAppShellDOMWindows(windowType) {
-  const e = Services.wm.getEnumerator(windowType);
-  while (e.hasMoreElements()) {
-    yield e.getNext();
-  }
-}
-
-exports.allAppShellDOMWindows = allAppShellDOMWindows;
-
-/**
  * Retrieve the window type of the top-level window |window|.
  */
 function appShellDOMWindowType(window) {
@@ -50,7 +36,7 @@ function appShellDOMWindowType(window) {
  * Send Debugger:Shutdown events to all "navigator:browser" windows.
  */
 function sendShutdownEvent() {
-  for (const win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
+  for (const win of Services.wm.getEnumerator(DebuggerServer.chromeWindowType)) {
     const evt = win.document.createEvent("Event");
     evt.initEvent("Debugger:Shutdown", true, false);
     win.document.documentElement.dispatchEvent(evt);
@@ -228,7 +214,7 @@ BrowserTabList.prototype._getSelectedBrowser = function(window) {
  */
 BrowserTabList.prototype._getBrowsers = function* () {
   // Iterate over all navigator:browser XUL windows.
-  for (const win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
+  for (const win of Services.wm.getEnumerator(DebuggerServer.chromeWindowType)) {
     // For each tab in this XUL window, ensure that we have an actor for
     // it, reusing existing actors where possible.
     for (const browser of this._getChildren(win)) {
@@ -488,7 +474,7 @@ BrowserTabList.prototype._listenForEventsIf =
   function(shouldListen, guard, eventNames) {
     if (!shouldListen !== !this[guard]) {
       const op = shouldListen ? "addEventListener" : "removeEventListener";
-      for (const win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
+      for (const win of Services.wm.getEnumerator(DebuggerServer.chromeWindowType)) {
         for (const name of eventNames) {
           win[op](name, this, false);
         }
@@ -512,7 +498,7 @@ BrowserTabList.prototype._listenForMessagesIf =
   function(shouldListen, guard, messageNames) {
     if (!shouldListen !== !this[guard]) {
       const op = shouldListen ? "addMessageListener" : "removeMessageListener";
-      for (const win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
+      for (const win of Services.wm.getEnumerator(DebuggerServer.chromeWindowType)) {
         for (const name of messageNames) {
           win.messageManager[op](name, this);
         }

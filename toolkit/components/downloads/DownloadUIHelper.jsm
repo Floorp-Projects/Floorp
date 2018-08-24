@@ -63,9 +63,7 @@ var DownloadUIHelper = {
 XPCOMUtils.defineLazyGetter(DownloadUIHelper, "strings", function() {
   let strings = {};
   let sb = Services.strings.createBundle(kStringBundleUrl);
-  let enumerator = sb.getSimpleEnumeration();
-  while (enumerator.hasMoreElements()) {
-    let string = enumerator.getNext().QueryInterface(Ci.nsIPropertyElement);
+  for (let string of sb.getSimpleEnumeration()) {
     let stringName = string.key;
     if (stringName in kStringsRequiringFormatting) {
       strings[stringName] = function() {

@@ -62,9 +62,7 @@ obs.prototype = {
 
 function getCookieCount(cs) {
   let count = 0;
-  let list = cs.enumerator;
-  while (list.hasMoreElements()) {
-    let cookie = list.getNext().QueryInterface(Ci.nsICookie);
+  for (let cookie of cs.enumerator) {
     info("cookie: " + cookie);
     info("cookie host " + cookie.host + " path " + cookie.path + " name " + cookie.name +
          " value " + cookie.value + " isSecure " + cookie.isSecure + " expires " + cookie.expires);

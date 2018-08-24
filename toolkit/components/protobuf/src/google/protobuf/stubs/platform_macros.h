@@ -50,7 +50,7 @@
 #elif defined(_M_ARM) || defined(__ARMEL__)
 #define GOOGLE_PROTOBUF_ARCH_ARM 1
 #define GOOGLE_PROTOBUF_ARCH_32_BIT 1
-#elif defined(__aarch64__)
+#elif defined(__aarch64__) || defined(_M_ARM64)
 #define GOOGLE_PROTOBUF_ARCH_AARCH64 1
 #define GOOGLE_PROTOBUF_ARCH_64_BIT 1
 #elif defined(__MIPSEL__)

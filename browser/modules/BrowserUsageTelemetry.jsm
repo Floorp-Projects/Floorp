@@ -95,9 +95,7 @@ function getOpenTabsAndWinsCounts() {
   let tabCount = 0;
   let winCount = 0;
 
-  let browserEnum = Services.wm.getEnumerator("navigator:browser");
-  while (browserEnum.hasMoreElements()) {
-    let win = browserEnum.getNext();
+  for (let win of Services.wm.getEnumerator("navigator:browser")) {
     winCount++;
     tabCount += win.gBrowser.tabs.length;
   }
@@ -659,9 +657,8 @@ let BrowserUsageTelemetry = {
     Services.obs.addObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC, true);
 
     // Attach the tabopen handlers to the existing Windows.
-    let browserEnum = Services.wm.getEnumerator("navigator:browser");
-    while (browserEnum.hasMoreElements()) {
-      this._registerWindow(browserEnum.getNext());
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
+      this._registerWindow(win);
     }
 
     // Get the initial tab and windows max counts.

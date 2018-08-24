@@ -808,17 +808,15 @@ function ProcessSnapshot({xpcom, probes}) {
   this.componentsData = [];
 
   let subgroups = new Map();
-  let enumeration = xpcom.getComponentsData().enumerate();
-  while (enumeration.hasMoreElements()) {
-    let xpcom = enumeration.getNext().QueryInterface(Ci.nsIPerformanceStats);
-    let stat = (new PerformanceDataLeaf({xpcom, probes}));
+  for (let data of xpcom.getComponentsData().enumerate(Ci.nsIPerformanceStats)) {
+    let stat = (new PerformanceDataLeaf({xpcom: data, probes}));
 
-    if (!xpcom.parentId) {
+    if (!data.parentId) {
       this.componentsData.push(stat);
     } else {
-      let siblings = subgroups.get(xpcom.parentId);
+      let siblings = subgroups.get(data.parentId);
       if (!siblings) {
-        subgroups.set(xpcom.parentId, (siblings = []));
+        subgroups.set(data.parentId, (siblings = []));
       }
       siblings.push(stat);
     }

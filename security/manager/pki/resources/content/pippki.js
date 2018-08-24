@@ -288,13 +288,7 @@ function getChainForUsage(results, usage) {
   for (let result of results) {
     if (certificateUsages[result.usageString] == usage &&
         result.errorCode == PRErrorCodeSuccess) {
-      let array = [];
-      let enumerator = result.chain.getEnumerator();
-      while (enumerator.hasMoreElements()) {
-        let cert = enumerator.getNext().QueryInterface(Ci.nsIX509Cert);
-        array.push(cert);
-      }
-      return array;
+      return Array.from(result.chain.getEnumerator());
     }
   }
   return null;

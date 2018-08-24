@@ -34,7 +34,7 @@ public:
 
   FontType GetType() const override { return FontType::MAC; }
 #ifdef USE_SKIA
-  SkTypeface* GetSkTypeface() override;
+  SkTypeface* CreateSkTypeface() override;
 #endif
   already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget) override;
 

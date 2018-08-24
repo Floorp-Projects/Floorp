@@ -43,13 +43,9 @@ ScaledFontFontconfig::~ScaledFontFontconfig()
 }
 
 #ifdef USE_SKIA
-SkTypeface* ScaledFontFontconfig::GetSkTypeface()
+SkTypeface* ScaledFontFontconfig::CreateSkTypeface()
 {
-  if (!mTypeface) {
-    mTypeface = SkCreateTypefaceFromCairoFTFontWithFontconfig(mScaledFont, mPattern);
-  }
-
-  return mTypeface;
+  return SkCreateTypefaceFromCairoFTFontWithFontconfig(mScaledFont, mPattern);
 }
 #endif
 

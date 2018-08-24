@@ -40,9 +40,7 @@ function doConfirm(msg) {
 }
 
 function RefreshDeviceList() {
-  let modules = secmoddb.listModules();
-  for (let module of XPCOMUtils.IterSimpleEnumerator(modules,
-                                                     Ci.nsIPKCS11Module)) {
+  for (let module of secmoddb.listModules()) {
     let slots = module.listSlots();
     AddModule(module, slots);
   }
@@ -81,7 +79,7 @@ function AddModule(module, slots) {
   row.appendChild(cell);
   item.appendChild(row);
   var parent = document.createElement("treechildren");
-  for (let slot of XPCOMUtils.IterSimpleEnumerator(slots, Ci.nsIPKCS11Slot)) {
+  for (let slot of slots) {
     var child_item = document.createElement("treeitem");
     var child_row = document.createElement("treerow");
     var child_cell = document.createElement("treecell");

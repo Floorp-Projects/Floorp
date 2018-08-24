@@ -167,7 +167,7 @@ nsMIMEInfoWin::GetEnumerator(nsISimpleEnumerator* *_retval)
   if (variant)
     properties.AppendObject(variant);
 
-  return NS_NewArrayEnumerator(_retval, properties);
+  return NS_NewArrayEnumerator(_retval, properties, NS_GET_IID(nsIVariant));
 }
 
 static nsresult GetIconURLVariant(nsIFile* aApplication, nsIVariant* *_retval)

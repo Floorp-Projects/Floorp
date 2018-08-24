@@ -246,11 +246,8 @@ function addAccessibleTask(doc, task) {
     }
 
     registerCleanupFunction(() => {
-      let observers = Services.obs.enumerateObservers("accessible-event");
-      while (observers.hasMoreElements()) {
-        Services.obs.removeObserver(
-          observers.getNext().QueryInterface(Ci.nsIObserver),
-          "accessible-event");
+      for (let observer of Services.obs.enumerateObservers("accessible-event")) {
+        Services.obs.removeObserver(observer, "accessible-event");
       }
     });
 

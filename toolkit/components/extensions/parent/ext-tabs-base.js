@@ -648,9 +648,9 @@ class TabBase {
    */
   _execute(context, details, kind, method) {
     let options = {
-      js: [],
-      css: [],
-      remove_css: method == "removeCSS",
+      jsPaths: [],
+      cssPaths: [],
+      removeCSS: method == "removeCSS",
     };
 
     // We require a `code` or a `file` property, but we can't accept both.
@@ -673,26 +673,26 @@ class TabBase {
       if (!this.extension.isExtensionURL(url)) {
         return Promise.reject({message: "Files to be injected must be within the extension"});
       }
-      options[kind].push(url);
+      options[`${kind}Paths`].push(url);
     }
     if (details.allFrames) {
-      options.all_frames = details.allFrames;
+      options.allFrames = details.allFrames;
     }
     if (details.frameId !== null) {
-      options.frame_id = details.frameId;
+      options.frameID = details.frameId;
     }
     if (details.matchAboutBlank) {
-      options.match_about_blank = details.matchAboutBlank;
+      options.matchAboutBlank = details.matchAboutBlank;
     }
     if (details.runAt !== null) {
-      options.run_at = details.runAt;
+      options.runAt = details.runAt;
     } else {
-      options.run_at = "document_idle";
+      options.runAt = "document_idle";
     }
     if (details.cssOrigin !== null) {
-      options.css_origin = details.cssOrigin;
+      options.cssOrigin = details.cssOrigin;
     } else {
-      options.css_origin = "author";
+      options.cssOrigin = "author";
     }
 
     options.wantReturnValue = true;
@@ -1354,10 +1354,7 @@ class WindowTrackerBase extends EventEmitter {
     // fires for browser windows when they're in that in-between state, and just
     // before we register our own "domwindowcreated" listener.
 
-    let e = Services.wm.getEnumerator("");
-    while (e.hasMoreElements()) {
-      let window = e.getNext();
-
+    for (let window of Services.wm.getEnumerator("")) {
       let ok = includeIncomplete;
       if (window.document.readyState === "complete") {
         ok = this.isBrowserWindow(window);

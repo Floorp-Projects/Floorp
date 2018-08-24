@@ -53,9 +53,7 @@ WorkerTargetActorList.prototype = {
   getList() {
     // Create a set of debuggers.
     const dbgs = new Set();
-    const e = wdm.getWorkerDebuggerEnumerator();
-    while (e.hasMoreElements()) {
-      const dbg = e.getNext().QueryInterface(Ci.nsIWorkerDebugger);
+    for (const dbg of wdm.getWorkerDebuggerEnumerator()) {
       if (matchWorkerDebugger(dbg, this._options)) {
         dbgs.add(dbg);
       }

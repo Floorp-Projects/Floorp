@@ -64,8 +64,7 @@ const CookieCleaner = {
 
     return new Promise((aResolve, aReject) => {
       let count = 0;
-      while (aEnumerator.hasMoreElements()) {
-        let cookie = aEnumerator.getNext().QueryInterface(Ci.nsICookie2);
+      for (let cookie of aEnumerator) {
         if (aCb(cookie)) {
           Services.cookies.remove(cookie.host, cookie.name, cookie.path,
                                   false, cookie.originAttributes);
@@ -514,9 +513,7 @@ const AuthCacheCleaner = {
 const PermissionsCleaner = {
   deleteByHost(aHost, aOriginAttributes) {
     return new Promise(aResolve => {
-      let enumerator = Services.perms.enumerator;
-      while (enumerator.hasMoreElements()) {
-        let perm = enumerator.getNext().QueryInterface(Ci.nsIPermission);
+      for (let perm of Services.perms.enumerator) {
         try {
           if (eTLDService.hasRootDomain(perm.principal.URI.host, aHost)) {
             Services.perms.removePermission(perm);
@@ -590,10 +587,8 @@ const SecuritySettingsCleaner = {
                         Ci.nsISiteSecurityService.HEADER_HPKP]) {
         // Also remove HSTS/HPKP/OMS information for subdomains by enumerating
         // the information in the site security service.
-        let enumerator = sss.enumerate(type);
-        while (enumerator.hasMoreElements()) {
-          let entry = enumerator.getNext();
-          let hostname = entry.QueryInterface(Ci.nsISiteSecurityState).hostname;
+        for (let entry of sss.enumerate(type)) {
+          let hostname = entry.hostname;
           if (eTLDService.hasRootDomain(hostname, aHost)) {
             // This uri is used as a key to remove the state.
             let uri = Services.io.newURI("https://" + hostname);

@@ -153,14 +153,10 @@ add_task(async function test_localStorage_on_session_lifetimePolicy() {
     domStorageStoredValue,
   } = await ContentTask.spawn(addonBrowser, {uuid, isRemoteBrowser}, (params) => {
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-    let windowEnumerator = Services.ww.getWindowEnumerator();
-
     let bgPageWindow;
 
     // Search the background page window in the process where the extension is running.
-    while (windowEnumerator.hasMoreElements()) {
-      let win = windowEnumerator.getNext();
-
+    for (let win of Services.ww.getWindowEnumerator()) {
       // When running in remote-webextension mode the window enumerator
       // will only include top level windows related to the extension process
       // (the background page and the "about:blank" related to the addonBrowser

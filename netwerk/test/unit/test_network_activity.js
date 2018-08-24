@@ -44,10 +44,7 @@ function run_test() {
   // setting up an observer
   let networkActivity = function(subject, topic, value) {
     subject.QueryInterface(Ci.nsIMutableArray);
-    let enumerator = subject.enumerate();
-    while (enumerator.hasMoreElements()) {
-        let data = enumerator.getNext();
-        data.QueryInterface(Ci.nsINetworkActivityData);
+    for (let data of subject.enumerate()) {
         results.push(data);
     }
   };

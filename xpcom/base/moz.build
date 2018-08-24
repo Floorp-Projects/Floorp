@@ -122,6 +122,7 @@ EXPORTS.mozilla += [
     'StaticMonitor.h',
     'StaticMutex.h',
     'StaticPtr.h',
+    'TupleCycleCollection.h',
 ]
 
 # nsDebugImpl isn't unified because we disable PGO so that NS_ABORT_OOM isn't

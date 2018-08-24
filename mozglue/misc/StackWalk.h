@@ -47,7 +47,8 @@ MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
              uint32_t aMaxFrames, void* aClosure);
 
 #if defined(_WIN32) && \
-    (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_IA64))
+    (defined(_M_IX86) || defined(_M_AMD64) || \
+     defined(_M_IA64) || defined(_M_ARM64))
 
 #include <windows.h>
 

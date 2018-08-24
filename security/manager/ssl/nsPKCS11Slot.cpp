@@ -290,5 +290,5 @@ nsPKCS11Module::ListSlots(nsISimpleEnumerator** _retval)
     }
   }
 
-  return array->Enumerate(_retval);
+  return array->Enumerate(_retval, NS_GET_IID(nsIPKCS11Slot));
 }

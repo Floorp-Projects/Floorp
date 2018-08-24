@@ -1880,7 +1880,7 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
                op == JSOP_INITELEM_ARRAY ||
                op == JSOP_INITELEM_INC);
 
-    RootedObject obj(cx, ToObjectFromStack(cx, objv));
+    RootedObject obj(cx, ToObjectFromStackForPropertyAccess(cx, objv, index));
     if (!obj)
         return false;
 
@@ -2769,7 +2769,7 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
         name = script->getName(pc);
     RootedId id(cx, NameToId(name));
 
-    RootedObject obj(cx, ToObjectFromStack(cx, lhs));
+    RootedObject obj(cx, ToObjectFromStackForPropertyAccess(cx, lhs, id));
     if (!obj)
         return false;
     RootedShape oldShape(cx, obj->maybeShape());

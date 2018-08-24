@@ -67,6 +67,68 @@ Proto()
 }
 
 
+bool
+ParseGlobs(GlobalObject& aGlobal, Sequence<OwningMatchGlobOrString> aGlobs,
+           nsTArray<RefPtr<MatchGlob>>& aResult, ErrorResult& aRv)
+{
+  for (auto& elem : aGlobs) {
+    if (elem.IsMatchGlob()) {
+      aResult.AppendElement(elem.GetAsMatchGlob());
+    } else {
+      RefPtr<MatchGlob> glob = MatchGlob::Constructor(aGlobal,
+                                                      elem.GetAsString(),
+                                                      true, aRv);
+      if (aRv.Failed()) {
+        return false;
+      }
+      aResult.AppendElement(glob);
+    }
+  }
+  return true;
+}
+
+enum class ErrorBehavior {
+  CreateEmptyPattern,
+  Fail,
+};
+
+already_AddRefed<MatchPatternSet>
+ParseMatches(GlobalObject& aGlobal,
+             const OwningMatchPatternSetOrStringSequence& aMatches,
+             const MatchPatternOptions& aOptions,
+             ErrorBehavior aErrorBehavior,
+             ErrorResult& aRv)
+{
+  if (aMatches.IsMatchPatternSet()) {
+    return do_AddRef(aMatches.GetAsMatchPatternSet().get());
+  }
+
+  const auto& strings = aMatches.GetAsStringSequence();
+
+  nsTArray<OwningStringOrMatchPattern> patterns;
+  if (!patterns.SetCapacity(strings.Length(), fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  for (auto& string : strings) {
+    OwningStringOrMatchPattern elt;
+    elt.SetAsString() = string;
+    patterns.AppendElement(elt);
+  }
+
+  RefPtr<MatchPatternSet> result = MatchPatternSet::Constructor(
+    aGlobal, patterns, aOptions, aRv);
+
+  if (aRv.Failed() && aErrorBehavior == ErrorBehavior::CreateEmptyPattern) {
+    aRv.SuppressException();
+    result = MatchPatternSet::Constructor(aGlobal, {}, aOptions, aRv);
+  }
+
+  return result.forget();
+}
+
+
 /*****************************************************************************
  * WebExtensionPolicy
  *****************************************************************************/
@@ -80,9 +142,20 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
   , mContentSecurityPolicy(aInit.mContentSecurityPolicy)
   , mLocalizeCallback(aInit.mLocalizeCallback)
   , mPermissions(new AtomSet(aInit.mPermissions))
-  , mHostPermissions(aInit.mAllowedOrigins)
 {
-  mWebAccessiblePaths.AppendElements(aInit.mWebAccessibleResources);
+  if (!ParseGlobs(aGlobal, aInit.mWebAccessibleResources, mWebAccessiblePaths,
+                  aRv)) {
+    return;
+  }
+
+  MatchPatternOptions options;
+  options.mRestrictSchemes = HasPermission(nsGkAtoms::mozillaAddons);
+
+  mHostPermissions = ParseMatches(aGlobal, aInit.mAllowedOrigins, options,
+                                  ErrorBehavior::CreateEmptyPattern, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
 
   if (!aInit.mBackgroundScripts.IsNull()) {
     mBackgroundScripts.SetValue().AppendElements(aInit.mBackgroundScripts.Value());
@@ -102,7 +175,7 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
     }
 
     RefPtr<WebExtensionContentScript> contentScript =
-      new WebExtensionContentScript(*this, scriptInit, aRv);
+      new WebExtensionContentScript(aGlobal, *this, scriptInit, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -256,6 +329,15 @@ WebExtensionPolicy::UnregisterContentScript(const WebExtensionContentScript& scr
   }
 
   WebExtensionPolicy_Binding::ClearCachedContentScriptsValue(this);
+}
+
+void
+WebExtensionPolicy::InjectContentScripts(ErrorResult& aRv)
+{
+  nsresult rv = EPS().InjectContentScripts(this);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
 }
 
 /* static */ bool
@@ -437,7 +519,8 @@ MozDocumentMatcher::Constructor(GlobalObject& aGlobal,
                                 const dom::MozDocumentMatcherInit& aInit,
                                 ErrorResult& aRv)
 {
-  RefPtr<MozDocumentMatcher> matcher = new MozDocumentMatcher(aInit, aRv);
+  RefPtr<MozDocumentMatcher> matcher = new MozDocumentMatcher(aGlobal, aInit,
+                                                              false, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -450,42 +533,67 @@ WebExtensionContentScript::Constructor(GlobalObject& aGlobal,
                                        const ContentScriptInit& aInit,
                                        ErrorResult& aRv)
 {
-  RefPtr<WebExtensionContentScript> script = new WebExtensionContentScript(aExtension, aInit, aRv);
+  RefPtr<WebExtensionContentScript> script = new WebExtensionContentScript(
+      aGlobal, aExtension, aInit, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
   return script.forget();
 }
 
-MozDocumentMatcher::MozDocumentMatcher(const dom::MozDocumentMatcherInit& aInit,
+MozDocumentMatcher::MozDocumentMatcher(GlobalObject& aGlobal,
+                                       const dom::MozDocumentMatcherInit& aInit,
+                                       bool aRestricted,
                                        ErrorResult& aRv)
   : mHasActiveTabPermission(aInit.mHasActiveTabPermission)
-  , mRestricted(false)
-  , mMatches(aInit.mMatches)
-  , mExcludeMatches(aInit.mExcludeMatches)
+  , mRestricted(aRestricted)
   , mAllFrames(aInit.mAllFrames)
   , mFrameID(aInit.mFrameID)
   , mMatchAboutBlank(aInit.mMatchAboutBlank)
 {
+  MatchPatternOptions options;
+  options.mRestrictSchemes = mRestricted;
+
+  mMatches = ParseMatches(aGlobal, aInit.mMatches, options,
+                          ErrorBehavior::CreateEmptyPattern, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (!aInit.mExcludeMatches.IsNull()) {
+    mExcludeMatches = ParseMatches(aGlobal, aInit.mExcludeMatches.Value(),
+                                   options, ErrorBehavior::CreateEmptyPattern,
+                                   aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+  }
+
   if (!aInit.mIncludeGlobs.IsNull()) {
-    mIncludeGlobs.SetValue().AppendElements(aInit.mIncludeGlobs.Value());
+    if (!ParseGlobs(aGlobal, aInit.mIncludeGlobs.Value(), mIncludeGlobs.SetValue(),
+                    aRv)) {
+      return;
+    }
   }
 
   if (!aInit.mExcludeGlobs.IsNull()) {
-    mExcludeGlobs.SetValue().AppendElements(aInit.mExcludeGlobs.Value());
+    if (!ParseGlobs(aGlobal, aInit.mExcludeGlobs.Value(), mExcludeGlobs.SetValue(),
+                    aRv)) {
+      return;
+    }
   }
 }
 
-WebExtensionContentScript::WebExtensionContentScript(WebExtensionPolicy& aExtension,
+WebExtensionContentScript::WebExtensionContentScript(GlobalObject& aGlobal,
+                                                     WebExtensionPolicy& aExtension,
                                                      const ContentScriptInit& aInit,
                                                      ErrorResult& aRv)
-  : MozDocumentMatcher(aInit, aRv)
+  : MozDocumentMatcher(aGlobal, aInit, !aExtension.HasPermission(nsGkAtoms::mozillaAddons), aRv)
   , mCssPaths(aInit.mCssPaths)
   , mJsPaths(aInit.mJsPaths)
   , mRunAt(aInit.mRunAt)
 {
   mExtension = &aExtension;
-  mRestricted = !aExtension.HasPermission(nsGkAtoms::mozillaAddons);
 }
 
 bool

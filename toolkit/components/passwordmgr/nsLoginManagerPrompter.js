@@ -1435,9 +1435,7 @@ LoginManagerPrompter.prototype = {
       return { win: chromeWin, browser };
     }
 
-    let windows = Services.wm.getEnumerator(null);
-    while (windows.hasMoreElements()) {
-      let win = windows.getNext();
+    for (let win of Services.wm.getEnumerator(null)) {
       let tabbrowser = win.gBrowser || win.getBrowser();
       let browser = tabbrowser.getBrowserForContentWindow(aWindow);
       if (browser) {

@@ -273,6 +273,13 @@ nsFieldSetFrame::PaintBorder(
     // border looks.
     nsRect legendRect = legend->GetNormalRect() + aPt;
 
+    // Make sure we clip all of the border in case the legend is smaller.
+    nscoord borderTopWidth = GetUsedBorder().top;
+    if (legendRect.height < borderTopWidth) {
+      legendRect.height = borderTopWidth;
+      legendRect.y = aPt.y;
+    }
+
     DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
     // We set up a clip path which has our rect clockwise and the legend rect
     // counterclockwise, with FILL_WINDING as the fill rule.  That will allow us

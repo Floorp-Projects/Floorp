@@ -102,6 +102,12 @@
 # define USE_MOZ_STACK_WALK
 #endif
 
+// AArch64 Win64 builds use frame pointers.
+#if defined(GP_PLAT_arm64_windows)
+# define HAVE_NATIVE_UNWIND
+# define USE_FRAME_POINTER_STACK_WALK
+#endif
+
 // Mac builds only have frame pointers when MOZ_PROFILING is specified, so
 // FramePointerStackWalk() only works in that case. We don't use MozStackWalk()
 // on Mac.

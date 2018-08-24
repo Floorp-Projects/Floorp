@@ -294,24 +294,15 @@ async function loadBadCertPage(url) {
 // Utility function to get a handle on the certificate exception dialog.
 // Modified from toolkit/components/passwordmgr/test/prompt_common.js
 function getCertExceptionDialog(aLocation) {
-  let enumerator = Services.wm.getXULWindowEnumerator(null);
-
-  while (enumerator.hasMoreElements()) {
-    let win = enumerator.getNext();
-    let windowDocShell = win.QueryInterface(Ci.nsIXULWindow).docShell;
+  for (let win of Services.wm.getXULWindowEnumerator(null)) {
+    let windowDocShell = win.docShell;
 
     let containedDocShells = windowDocShell.getDocShellEnumerator(
                                       Ci.nsIDocShellTreeItem.typeChrome,
                                       Ci.nsIDocShell.ENUMERATE_FORWARDS);
-    while (containedDocShells.hasMoreElements()) {
-      // Get the corresponding document for this docshell
-      let childDocShell = containedDocShells.getNext();
-      let childDoc = childDocShell.QueryInterface(Ci.nsIDocShell)
-                                  .contentViewer
-                                  .DOMDocument;
-
-      if (childDoc.location.href == aLocation) {
-        return childDoc;
+    for (let {domWindow} of containedDocShells) {
+      if (domWindow.location.href == aLocation) {
+        return domWindow.document;
       }
     }
   }

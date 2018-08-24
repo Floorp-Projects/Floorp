@@ -17,15 +17,13 @@ add_task(async () => {
   const paymentSrv = Cc[
     "@mozilla.org/dom/payments/payment-request-service;1"
   ].getService(Ci.nsIPaymentRequestService);
-  ok(paymentSrv, "Fail to get PaymentRequestService.");
   const paymentEnum = paymentSrv.enumerate();
   ok(
     paymentEnum.hasMoreElements(),
     "PaymentRequestService should have at least one payment request."
   );
   const payments = new Set();
-  while (paymentEnum.hasMoreElements()) {
-    const payment = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
+  for (let payment of paymentEnum) {
     ok(payment, "Fail to get existing payment request.");
     checkSimplePayment(payment);
     payments.add(payment);
