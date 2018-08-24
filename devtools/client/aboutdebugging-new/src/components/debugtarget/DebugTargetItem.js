@@ -4,17 +4,9 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-
-const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
-const TabDetail = createFactory(require("./debugtarget/TabDetail"));
-const TemporaryExtensionAction =
-  createFactory(require("./debugtarget/TemporaryExtensionAction"));
-
-const Actions = require("../actions/index");
-const { DEBUG_TARGETS } = require("../constants");
 
 /**
  * This component displays debug target.
@@ -22,45 +14,21 @@ const { DEBUG_TARGETS } = require("../constants");
 class DebugTargetItem extends PureComponent {
   static get propTypes() {
     return {
+      actionComponent: PropTypes.any.isRequired,
+      detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
       target: PropTypes.object.isRequired,
     };
   }
 
-  inspect() {
-    const { dispatch, target } = this.props;
-    dispatch(Actions.inspectDebugTarget(target.type, target.id));
-  }
-
   renderAction() {
-    const { dispatch, target } = this.props;
-
-    return dom.div(
-      {},
-      dom.button(
-        {
-          onClick: e => this.inspect(),
-          className: "aboutdebugging-button",
-        },
-        "Inspect"
-      ),
-      target.details.temporarilyInstalled
-        ? TemporaryExtensionAction({ dispatch, target }) : null,
-    );
+    const { actionComponent, dispatch, target } = this.props;
+    return actionComponent({ dispatch, target });
   }
 
   renderDetail() {
-    const { target } = this.props;
-
-    switch (target.type) {
-      case DEBUG_TARGETS.EXTENSION:
-        return ExtensionDetail({ target });
-      case DEBUG_TARGETS.TAB:
-        return TabDetail({ target });
-
-      default:
-        return null;
-    }
+    const { detailComponent, target } = this.props;
+    return detailComponent({ target });
   }
 
   renderIcon() {
@@ -71,8 +39,6 @@ class DebugTargetItem extends PureComponent {
   }
 
   renderInfo() {
-    const { target } = this.props;
-
     return dom.div(
       {
         className: "debug-target-item__info",
@@ -80,9 +46,9 @@ class DebugTargetItem extends PureComponent {
       dom.div(
         {
           className: "debug-target-item__info__name ellipsis-text",
-          title: target.name,
+          title: this.props.target.name,
         },
-        target.name
+        this.props.target.name
       ),
       this.renderDetail(),
     );

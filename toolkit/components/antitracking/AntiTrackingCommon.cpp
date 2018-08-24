@@ -445,7 +445,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
     return false;
   }
 
-  int32_t behavior = CookiesBehavior(channelPrincipal);
+  int32_t behavior = CookiesBehavior(toplevelPrincipal);
   if (behavior == nsICookieService::BEHAVIOR_ACCEPT) {
     LOG(("The cookie behavior pref mandates accepting all cookies!"));
     return true;
@@ -495,7 +495,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
       return false;
     }
 
-    parentPrincipal = loadInfo->TriggeringPrincipal();
+    parentPrincipal = toplevelPrincipal;
     if (NS_WARN_IF(!parentPrincipal)) {
       LOG(("No triggering principal, this shouldn't be happening! Bail out early"));
       // Why we are here?!?

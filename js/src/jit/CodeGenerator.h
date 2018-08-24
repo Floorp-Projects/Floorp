@@ -219,6 +219,9 @@ class CodeGenerator final : public CodeGeneratorSpecific
 
     void emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck);
 
+    template<size_t NumDefs>
+    void emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir);
+
     IonScriptCounts* maybeCreateScriptCounts();
 
     // This function behaves like testValueTruthy with the exception that it can
