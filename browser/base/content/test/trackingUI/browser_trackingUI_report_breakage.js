@@ -162,10 +162,8 @@ add_task(async function testReportBreakage() {
 
     let submitButton = document.getElementById("identity-popup-breakageReportView-submit");
     let reportURL = document.getElementById("identity-popup-breakageReportView-collection-url").textContent;
-    let reportUA = document.getElementById("identity-popup-breakageReportView-collection-userAgent").textContent;
 
     is(reportURL, TRACKING_PAGE, "Shows the correct URL in the report UI.");
-    is(reportUA, navigator.userAgent, "Shows the correct user agent in the report UI.");
 
     // Make sure that sending the report closes the identity popup.
     let popuphidden = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popuphidden");
@@ -207,7 +205,7 @@ add_task(async function testReportBreakage() {
           "Content-Disposition: form-data; name=\"title\"\r\n\r\ntracking.example.org\r\n",
           "Content-Disposition: form-data; name=\"body\"\r\n\r\n" +
           `Full URL: ${reportURL + "?"}\r\n` +
-          `userAgent: ${reportUA}\r\n\r\n` +
+          `userAgent: ${navigator.userAgent}\r\n\r\n` +
           "**Preferences**\r\n" +
           `${prefsBody}\r\n` +
           "**Comments**\r\n" +

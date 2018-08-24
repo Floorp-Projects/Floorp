@@ -313,7 +313,6 @@ mobile/android/locales/
 
 # Non-standard `(catch ex if ...)`
 mobile/android/chrome/content/browser.js
-mobile/android/components/Snippets.js
 
 # Only contains non-standard test files.
 python/**
