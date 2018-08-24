@@ -867,6 +867,12 @@ EqualGivenSameType(JSContext* cx, HandleValue lval, HandleValue rval, bool* equa
         *equal = (lval.toDouble() == rval.toDouble());
         return true;
     }
+#ifdef ENABLE_BIGINT
+    if (lval.isBigInt()) {
+        *equal = BigInt::equal(lval.toBigInt(), rval.toBigInt());
+        return true;
+    }
+#endif
     if (lval.isGCThing()) {  // objects or symbols
         *equal = (lval.toGCThing() == rval.toGCThing());
         return true;
@@ -969,6 +975,24 @@ js::LooselyEqual(JSContext* cx, HandleValue lval, HandleValue rval, bool* result
             return false;
         return LooselyEqual(cx, lvalue, rval, result);
     }
+
+#ifdef ENABLE_BIGINT
+    if (lval.isBigInt()) {
+        RootedBigInt lbi(cx, lval.toBigInt());
+        bool tmpResult;
+        JS_TRY_VAR_OR_RETURN_FALSE(cx, tmpResult, BigInt::looselyEqual(cx, lbi, rval));
+        *result = tmpResult;
+        return true;
+    }
+
+    if (rval.isBigInt()) {
+        RootedBigInt rbi(cx, rval.toBigInt());
+        bool tmpResult;
+        JS_TRY_VAR_OR_RETURN_FALSE(cx, tmpResult, BigInt::looselyEqual(cx, rbi, lval));
+        *result = tmpResult;
+        return true;
+    }
+#endif
 
     // Step 12.
     *result = false;
