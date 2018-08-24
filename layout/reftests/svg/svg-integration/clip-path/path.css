@@ -1,0 +1,7 @@
+.path_nonzero_rect {
+  clip-path: path(nonzero, 'M10,10h80v80h-80zM25,25h50v50h-50z');
+}
+
+.path_evenodd_rect {
+  clip-path: path(evenodd, 'M10,10h80v80h-80zM25,25h50v50h-50z');
+}

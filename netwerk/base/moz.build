@@ -176,6 +176,7 @@ EXPORTS.mozilla.net += [
     'MemoryDownloader.h',
     'PartiallySeekableInputStream.h',
     'Predictor.h',
+    'RedirectChannelRegistrar.h',
     'ReferrerPolicy.h',
     'SimpleChannelParent.h',
     'TCPFastOpen.h',

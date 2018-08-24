@@ -119,7 +119,7 @@ class JSJitFrameIter
 
     // A constructor specialized for jit->wasm frames, which starts at a
     // specific FP.
-    JSJitFrameIter(const JitActivation* activation, uint8_t* fp);
+    JSJitFrameIter(const JitActivation* activation, FrameType frameType, uint8_t* fp);
 
     // Used only by DebugModeOSRVolatileJitFrameIter.
     void exchangeReturnAddressIfMatch(uint8_t* oldAddr, uint8_t* newAddr) {
