@@ -23,6 +23,19 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity-alias>
+
+        <!-- These are needed for CrashTest -->
+        <service
+                android:name=".crash.RemoteGeckoService"
+                android:enabled="true"
+                android:exported="false"
+                android:process=":gecko">
+        </service>
+        <service
+                android:name=".crash.CrashTestHandler"
+                android:enabled="true"
+                android:exported="false">
+        </service>
     </application>
 
 </manifest>
