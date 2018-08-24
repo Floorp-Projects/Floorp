@@ -63,8 +63,8 @@ class DebugTargetList extends PureComponent {
                    (isCollapsed ? " debug-target-list--collapsed" : ""),
         ref: this.listRef,
       },
-      targets.map(target =>
-        DebugTargetItem({ actionComponent, detailComponent, dispatch, target })),
+      targets.map((target, key) =>
+        DebugTargetItem({ actionComponent, detailComponent, dispatch, key, target })),
     );
   }
 }
