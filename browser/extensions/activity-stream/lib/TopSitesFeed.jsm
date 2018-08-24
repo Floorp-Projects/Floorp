@@ -4,6 +4,7 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {TippyTopProvider} = ChromeUtils.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
@@ -76,7 +77,7 @@ this.TopSitesFeed = class TopSitesFeed {
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
     this.refresh({broadcast: true});
     Services.obs.addObserver(this, "browser-search-engine-modified");
-    this._currentSearchHostname = getShortURLForCurrentSearch();
+    XPCOMUtils.defineLazyGetter(this, "_currentSearchHostname", getShortURLForCurrentSearch);
   }
 
   uninit() {
@@ -214,6 +215,9 @@ this.TopSitesFeed = class TopSitesFeed {
   async getLinksWithDefaults() {
     const numItems = this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
     const searchShortcutsExperiment = this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT];
+    // We must wait for search services to initialize in order to access default
+    // search engine properties without triggering a synchronous initialization
+    await new Promise(resolve => Services.search.init(resolve));
 
     // Get all frecent sites from history
     const frecent = (await this.frecentCache.request({
