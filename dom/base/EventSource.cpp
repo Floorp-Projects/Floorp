@@ -154,7 +154,7 @@ public:
 
   bool IsTargetThread() const
   {
-    return NS_IsMainThread() == mIsMainThread;
+    return NS_GetCurrentThread() == mTargetThread;
   }
 
   uint16_t ReadyState()
@@ -312,6 +312,14 @@ public:
   uint64_t mInnerWindowID;
 
 private:
+
+  // Pointer to the target thread for checking whether we are
+  // on the target thread. This is intentionally a non-owning
+  // pointer in order not to affect the thread destruction
+  // sequence. This pointer must only be compared for equality
+  // and must not be dereferenced.
+  nsIThread* mTargetThread;
+
   // prevent bad usage
   EventSourceImpl(const EventSourceImpl& x) = delete;
   EventSourceImpl& operator=(const EventSourceImpl& x) = delete;
@@ -348,6 +356,7 @@ EventSourceImpl::EventSourceImpl(EventSource* aEventSource)
   , mScriptLine(0)
   , mScriptColumn(0)
   , mInnerWindowID(0)
+  , mTargetThread(NS_GetCurrentThread())
 {
   MOZ_ASSERT(mEventSource);
   if (!mIsMainThread) {
