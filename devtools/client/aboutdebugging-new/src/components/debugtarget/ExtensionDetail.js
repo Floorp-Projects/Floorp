@@ -18,12 +18,13 @@ class ExtensionDetail extends PureComponent {
     };
   }
 
-  renderField(name, value, title) {
+  renderField(key, name, value, title) {
     return [
-      dom.dt({}, name),
+      dom.dt({ key: `${ key }-dt` }, name),
       dom.dd(
         {
           className: "ellipsis-text",
+          key: `${ key }-dd`,
           title: title || value,
         },
         value,
@@ -40,6 +41,7 @@ class ExtensionDetail extends PureComponent {
       dom.a(
         {
           className: "extension-detail__manifest",
+          key: "manifest",
           href: manifestURL,
           target: "_blank",
         },
@@ -47,7 +49,7 @@ class ExtensionDetail extends PureComponent {
       )
     ];
 
-    return this.renderField("Internal UUID", value, uuid);
+    return this.renderField("uuid", "Internal UUID", value, uuid);
   }
 
   render() {
@@ -59,8 +61,8 @@ class ExtensionDetail extends PureComponent {
       {
         className: "extension-detail",
       },
-      location ? this.renderField("Location", location) : null,
-      this.renderField("Extension ID", id),
+      location ? this.renderField("location", "Location", location) : null,
+      this.renderField("extension", "Extension ID", id),
       uuid ? this.renderUUID() : null,
     );
   }
