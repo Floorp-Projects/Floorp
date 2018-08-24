@@ -295,6 +295,9 @@ interface nsIBrowserSearchService : nsISupports
    * @param engineURL
    *        The URL to the search engine's description file.
    *
+   * @param dataType
+   *        Obsolete, the value is ignored.
+   *
    * @param iconURL
    *        A URL string to an icon file to be used as the search engine's
    *        icon. This value may be overridden by an icon specified in the
@@ -317,8 +320,8 @@ interface nsIBrowserSearchService : nsISupports
    * @throws NS_ERROR_FAILURE if the description file cannot be successfully
    *         loaded.
    */
-  void addEngine(in AString engineURL, in AString iconURL, in boolean confirm,
-                 [optional] in nsISearchInstallCallback callback,
+  void addEngine(in AString engineURL, in long dataType, in AString iconURL,
+                 in boolean confirm, [optional] in nsISearchInstallCallback callback,
                  [optional] in AString extensionID);
 
   /**

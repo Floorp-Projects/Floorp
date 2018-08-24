@@ -415,7 +415,8 @@ var addTestEngines = async function(aItems) {
       }, "browser-search-engine-modified");
 
       if (item.xmlFileName) {
-        Services.search.addEngine(gDataUrl + item.xmlFileName, null, false);
+        Services.search.addEngine(gDataUrl + item.xmlFileName,
+                                  null, null, false);
       } else {
         Services.search.addEngineWithDetails(item.name, ...item.details);
       }
