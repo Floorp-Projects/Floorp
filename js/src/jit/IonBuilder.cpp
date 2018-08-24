@@ -11703,7 +11703,7 @@ IonBuilder::setPropTryTypedObject(bool* emitted, MDefinition* obj,
     TypedObjectPrediction fieldPrediction;
     size_t fieldOffset;
     size_t fieldIndex;
-    bool fieldMutable;
+    bool fieldMutable = false;
     if (!typedObjectHasField(obj, name, &fieldOffset, &fieldPrediction, &fieldIndex, &fieldMutable))
         return Ok();
 
