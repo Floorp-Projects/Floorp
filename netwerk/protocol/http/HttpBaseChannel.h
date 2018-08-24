@@ -50,6 +50,7 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "nsStringEnumerator.h"
 
 #define HTTP_BASE_CHANNEL_IID \
 { 0x9d5cde03, 0xe6e9, 0x4612, \
@@ -322,11 +323,13 @@ public:
   void
   ClearConsoleReports() override;
 
-  class nsContentEncodings : public nsIUTF8StringEnumerator
+  class nsContentEncodings : public nsStringEnumeratorBase
     {
     public:
         NS_DECL_ISUPPORTS
         NS_DECL_NSIUTF8STRINGENUMERATOR
+
+        using nsStringEnumeratorBase::GetNext;
 
         nsContentEncodings(nsIHttpChannel* aChannel, const char* aEncodingHeader);
 

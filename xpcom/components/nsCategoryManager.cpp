@@ -14,7 +14,7 @@
 #include "nsTHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsIFactory.h"
-#include "nsIStringEnumerator.h"
+#include "nsStringEnumerator.h"
 #include "nsSupportsPrimitives.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -54,12 +54,14 @@ class nsIComponentLoaderManager;
 
 class CategoryEnumerator
   : public nsSimpleEnumerator
-  , private nsIUTF8StringEnumerator
+  , private nsStringEnumeratorBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISIMPLEENUMERATOR
   NS_DECL_NSIUTF8STRINGENUMERATOR
+
+  using nsStringEnumeratorBase::GetNext;
 
   const nsID& DefaultInterface() override
   {
