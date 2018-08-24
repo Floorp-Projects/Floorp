@@ -1770,12 +1770,12 @@ pub extern "C" fn wr_dp_define_clipchain(state: &mut WrState,
                                          -> u64 {
     debug_assert!(unsafe { is_in_main_thread() });
     let parent = unsafe { parent_clipchain_id.as_ref() }.map(|id| ClipChainId(*id, state.pipeline_id));
-    let clips_slice : Vec<ClipId> = make_slice(clips, clips_count)
+    let pipeline_id = state.pipeline_id;
+    let clips = make_slice(clips, clips_count)
         .iter()
-        .map(|id| unpack_clip_id(*id, state.pipeline_id))
-        .collect();
+        .map(|id| unpack_clip_id(*id, pipeline_id));
 
-    let clipchain_id = state.frame_builder.dl_builder.define_clip_chain(parent, clips_slice);
+    let clipchain_id = state.frame_builder.dl_builder.define_clip_chain(parent, clips);
     assert!(clipchain_id.1 == state.pipeline_id);
     clipchain_id.0
 }
