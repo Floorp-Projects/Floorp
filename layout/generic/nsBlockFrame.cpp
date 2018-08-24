@@ -4612,7 +4612,7 @@ nsBlockFrame::PlaceLine(BlockReflowInput& aState,
         0 == mLines.front()->BSize() &&
         aLine == mLines.begin().next()))) {
     ReflowOutput metrics(aState.mReflowInput);
-    nsIFrame* bullet = GetOutsideBullet();
+    nsBulletFrame* bullet = GetOutsideBullet();
     ReflowBullet(bullet, aState, metrics, aState.mBCoord);
     NS_ASSERTION(!BulletIsEmpty() || metrics.BSize(wm) == 0,
                  "empty bullet took up space");
