@@ -210,7 +210,10 @@ import java.lang.reflect.Proxy;
                 }
                 break;
             case android.R.id.paste:
-                commitText(Clipboard.getText(view.getContext()), 1);
+                String text = Clipboard.getText(view.getContext());
+                if (text != null) {
+                    commitText(text, 1);
+                }
                 break;
             case android.R.id.copy:
                 // Copy the current selection or the empty string if nothing is selected.
