@@ -906,14 +906,6 @@ xmlns="http://www.w3.org/1999/xhtml"
                 <label id="extension" class="urlbar-display urlbar-display-extension" value="&urlbar.extension.label;"/>
               </box>
               <hbox id="page-action-buttons" context="pageActionContextMenu">
-                <hbox id="contextual-feature-recommendation" role="button" hidden="true">
-                  <hbox id="cfr-label-container">
-                    <label id="cfr-label"/>
-                  </hbox>
-                  <image id="cfr-button"
-                         class="urlbar-icon urlbar-page-action"
-                         role="presentation"/>
-                </hbox>
                 <hbox id="userContext-icons" hidden="true">
                   <label id="userContext-label"/>
                   <image id="userContext-indicator"/>
