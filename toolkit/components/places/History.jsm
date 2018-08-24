@@ -170,6 +170,32 @@ var History = Object.freeze({
   },
 
   /**
+   * Fetches all pages which have one or more of the specified annotations.
+   *
+   * @param annotations: An array of strings containing the annotation names to
+   *                     find.
+   * @return (Promise)
+   *      A promise resolved once the operation is complete.
+   * @resolves (Map)
+   *      A Map containing the annotations, pages and their contents, e.g.
+   *      Map("anno1" => [{page, content}, {page, content}]), "anno2" => ....);
+   * @rejects (Error) XXX
+   *      Rejects if the insert was unsuccessful.
+   */
+  fetchAnnotatedPages(annotations) {
+    // See if options exists and make sense
+    if (!annotations || !Array.isArray(annotations)) {
+      throw new TypeError("annotations should be an Array and not null");
+    }
+    if (annotations.some(name => typeof name !== "string")) {
+      throw new TypeError("all annotation values should be strings");
+    }
+
+    return PlacesUtils.promiseDBConnection()
+                      .then(db => fetchAnnotatedPages(db, annotations));
+  },
+
+  /**
    * Adds a number of visits for a single page.
    *
    * Any change may be observed through nsINavHistoryObserver
@@ -1065,6 +1091,41 @@ var fetch = async function(db, guidOrURL, options) {
     ));
   }
   return pageInfo;
+};
+
+// Inner implementation of History.fetchAnnotatedPages.
+var fetchAnnotatedPages = async function(db, annotations) {
+  let result = new Map();
+  let rows = await db.execute(`
+    SELECT n.name, h.url, a.content FROM moz_anno_attributes n
+    JOIN moz_annos a ON n.id = a.anno_attribute_id
+    JOIN moz_places h ON h.id = a.place_id
+    WHERE n.name IN (${new Array(annotations.length).fill("?").join(",")})
+  `, annotations);
+
+  for (let row of rows) {
+    let uri;
+    try {
+      uri = new URL(row.getResultByName("url"));
+    } catch (ex) {
+      Cu.reportError("Invalid URL read from database in fetchAnnotatedPages");
+      continue;
+    }
+
+    let anno = {
+      uri,
+      content: row.getResultByName("content"),
+    };
+    let annoName = row.getResultByName("name");
+    let pageAnnos = result.get(annoName);
+    if (!pageAnnos) {
+      pageAnnos = [];
+      result.set(annoName, pageAnnos);
+    }
+    pageAnnos.push(anno);
+  }
+
+  return result;
 };
 
 // Inner implementation of History.removeVisitsByFilter.
