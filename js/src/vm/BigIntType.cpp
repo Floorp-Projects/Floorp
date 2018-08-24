@@ -409,7 +409,6 @@ js::ToBigInt(JSContext* cx, HandleValue val)
         return nullptr;
 
     // Step 2.
-    // String conversions are not yet supported.
     if (v.isBigInt())
         return v.toBigInt();
 
@@ -418,7 +417,14 @@ js::ToBigInt(JSContext* cx, HandleValue val)
 
     if (v.isString()) {
         RootedString str(cx, v.toString());
-        return StringToBigInt(cx, str, 0);
+        BigInt* bi;
+        JS_TRY_VAR_OR_RETURN_NULL(cx, bi, StringToBigInt(cx, str, 0));
+        if (!bi) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                      JSMSG_BIGINT_INVALID_SYNTAX);
+            return nullptr;
+        }
+        return bi;
     }
 
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_BIGINT);
@@ -519,28 +525,28 @@ js::StringToBigIntImpl(const Range<const CharT>& chars, uint8_t radix,
     return true;
 }
 
-BigInt*
+JS::Result<BigInt*, JS::OOM&>
 js::StringToBigInt(JSContext* cx, HandleString str, uint8_t radix)
 {
     RootedBigInt res(cx, BigInt::create(cx));
+    if (!res)
+        return cx->alreadyReportedOOM();
 
     JSLinearString* linear = str->ensureLinear(cx);
     if (!linear)
-        return nullptr;
+        return cx->alreadyReportedOOM();
 
     {
         JS::AutoCheckCannotGC nogc;
         if (linear->hasLatin1Chars()) {
             if (StringToBigIntImpl(linear->latin1Range(nogc), radix, res))
-                return res;
+                return res.get();
         } else {
             if (StringToBigIntImpl(linear->twoByteRange(nogc), radix, res))
-                return res;
+                return res.get();
         }
     }
 
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_BIGINT_INVALID_SYNTAX);
     return nullptr;
 }
 
