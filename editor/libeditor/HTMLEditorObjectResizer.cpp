@@ -358,10 +358,13 @@ HTMLEditor::ShowResizersInner(Element& aResizedElement)
 NS_IMETHODIMP
 HTMLEditor::HideResizers()
 {
-  NS_ENSURE_TRUE(mResizedObject, NS_OK);
+  if (NS_WARN_IF(!mResizedObject)) {
+    return NS_OK;
+  }
 
   // get the presshell's document observer interface.
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  NS_WARNING_ASSERTION(presShell, "There is no presShell");
   // We allow the pres shell to be null; when it is, we presume there
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
@@ -369,34 +372,34 @@ HTMLEditor::HideResizers()
   NS_NAMED_LITERAL_STRING(mousedown, "mousedown");
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             std::move(mTopLeftHandle), ps);
+                             std::move(mTopLeftHandle), presShell);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             std::move(mTopHandle), ps);
+                             std::move(mTopHandle), presShell);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             std::move(mTopRightHandle), ps);
+                             std::move(mTopRightHandle), presShell);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             std::move(mLeftHandle), ps);
+                             std::move(mLeftHandle), presShell);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             std::move(mRightHandle), ps);
+                             std::move(mRightHandle), presShell);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             std::move(mBottomLeftHandle), ps);
+                             std::move(mBottomLeftHandle), presShell);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             std::move(mBottomHandle), ps);
+                             std::move(mBottomHandle), presShell);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             std::move(mBottomRightHandle), ps);
+                             std::move(mBottomRightHandle), presShell);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             std::move(mResizingShadow), ps);
+                             std::move(mResizingShadow), presShell);
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             std::move(mResizingInfo), ps);
+                             std::move(mResizingInfo), presShell);
 
   if (mActivatedHandle) {
     mActivatedHandle->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_moz_activated,
@@ -408,6 +411,7 @@ HTMLEditor::HideResizers()
 
   // nsCOMPtr so we can do_QueryInterface into it.
   nsCOMPtr<EventTarget> target = GetDOMEventTarget();
+  NS_WARNING_ASSERTION(target, "GetDOMEventTarget() returned nullptr");
 
   if (target && mMouseMotionListenerP) {
     target->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
@@ -416,11 +420,12 @@ HTMLEditor::HideResizers()
   mMouseMotionListenerP = nullptr;
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
-  if (!doc) {
+  if (NS_WARN_IF(!doc)) {
     return NS_ERROR_NULL_POINTER;
   }
+  NS_WARNING_ASSERTION(doc->GetWindow(), "There should be a window");
   target = do_QueryInterface(doc->GetWindow());
-  if (!target) {
+  if (NS_WARN_IF(!target)) {
     return NS_ERROR_NULL_POINTER;
   }
 
