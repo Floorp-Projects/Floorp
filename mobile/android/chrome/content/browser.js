@@ -4848,6 +4848,7 @@ var BrowserEventHandler = {
 
     BrowserApp.deck.addEventListener("DOMUpdateBlockedPopups", PopupBlockerObserver.onUpdateBlockedPopups);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
+    BrowserApp.deck.addEventListener("OpenMediaWithExternalApp", this, true);
 
     // ReaderViews support backPress listeners.
     WindowEventDispatcher.registerListener((event, data, callback) => {
@@ -4865,6 +4866,16 @@ var BrowserEventHandler = {
       case 'MozMouseHittest':
         this._handleRetargetedTouchStart(aEvent);
         break;
+      case 'OpenMediaWithExternalApp': {
+        let mediaSrc = aEvent.target.currentSrc || aEvent.target.src;
+        let uuid = uuidgen.generateUUID().toString();
+        GlobalEventDispatcher.sendRequest({
+          type: "Video:Play",
+          uri: mediaSrc,
+          uuid: uuid
+        });
+        break;
+      }
     }
   },
 
