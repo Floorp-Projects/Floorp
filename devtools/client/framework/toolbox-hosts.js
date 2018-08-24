@@ -154,7 +154,13 @@ class SidebarHost {
       this._sidebar.clientWidth - MIN_PAGE_SIZE
     );
 
-    if (this.type == "right") {
+    // We should consider the direction when changing the dock position.
+    const topWindow = this.hostTab.ownerDocument.defaultView.top;
+    const topDoc = topWindow.document.documentElement;
+    const isLTR = topWindow.getComputedStyle(topDoc).direction === "ltr";
+
+    if (isLTR && this.type == "right" ||
+        !isLTR && this.type == "left") {
       this._sidebar.appendChild(this._splitter);
       this._sidebar.appendChild(this.frame);
     } else {
