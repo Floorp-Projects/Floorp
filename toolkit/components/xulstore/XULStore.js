@@ -292,6 +292,9 @@ function nsStringEnumerator(items) {
 nsStringEnumerator.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIStringEnumerator]),
   _nextIndex: 0,
+  [Symbol.iterator]() {
+    return this._items.values();
+  },
   hasMore() {
     return this._nextIndex < this._items.length;
   },

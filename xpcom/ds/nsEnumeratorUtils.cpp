@@ -28,6 +28,7 @@ public:
   // nsISimpleEnumerator
   NS_DECL_NSISIMPLEENUMERATOR
   NS_DECL_NSIUTF8STRINGENUMERATOR
+  NS_DECL_NSISTRINGENUMERATORBASE
   // can't use NS_DECL_NSISTRINGENUMERATOR because they share the
   // HasMore() signature
   NS_IMETHOD GetNext(nsAString& aResult) override;
@@ -86,6 +87,12 @@ NS_IMETHODIMP
 EmptyEnumeratorImpl::GetNext(nsAString& aResult)
 {
   return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+EmptyEnumeratorImpl::StringIterator(nsIJSEnumerator** aRetVal)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult

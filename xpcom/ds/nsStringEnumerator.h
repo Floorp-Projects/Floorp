@@ -4,9 +4,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsStringEnumerator_h
+#define nsStringEnumerator_h
+
 #include "nsIStringEnumerator.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
+
+class nsStringEnumeratorBase : public nsIStringEnumerator
+                             , public nsIUTF8StringEnumerator
+{
+public:
+  NS_DECL_NSISTRINGENUMERATORBASE
+
+  NS_IMETHOD GetNext(nsAString&) override;
+
+  using nsIUTF8StringEnumerator::GetNext;
+
+protected:
+  virtual ~nsStringEnumeratorBase() = default;
+};
 
 // nsIStringEnumerator/nsIUTF8StringEnumerator implementations
 //
@@ -89,3 +106,5 @@ MOZ_MUST_USE nsresult
 NS_NewUTF8StringEnumerator(nsIUTF8StringEnumerator** aResult,
                            const nsTArray<nsCString>* aArray,
                            nsISupports* aOwner);
+
+#endif // defined nsStringEnumerator_h
