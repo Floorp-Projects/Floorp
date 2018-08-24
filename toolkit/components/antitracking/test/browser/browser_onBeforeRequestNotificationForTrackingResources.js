@@ -21,7 +21,7 @@ add_task(async function() {
         // We would use TEST_3RD_PARTY_DOMAIN_TP here, but the variable is inaccessible
         // since it is defined in head.js!
         if (!spec.startsWith("https://tracking.example.com/")) {
-          return;
+          return undefined;
         }
         if (spec.endsWith("empty.js")) {
           browser.test.succeed("Correct resource observed");
