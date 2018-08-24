@@ -100,6 +100,10 @@ class BigInt final : public js::gc::TenuredCell
     static double numberValue(BigInt* x);
     static JSLinearString* toString(JSContext* cx, BigInt* x, uint8_t radix);
 
+    static bool equal(BigInt* lhs, BigInt* rhs);
+    static bool equal(BigInt* lhs, double rhs);
+    static JS::Result<bool> looselyEqual(JSContext* cx, HandleBigInt lhs, HandleValue rhs);
+
     // Return the length in bytes of the representation used by
     // writeBytes.
     static size_t byteLength(BigInt* x);
