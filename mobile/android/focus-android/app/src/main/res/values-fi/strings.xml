@@ -191,6 +191,7 @@
   <string name="find_in_page">Etsi sivulta</string>
   <string name="find_in_page_input">Etsi sivulta</string>
   <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d/%2$d</string>
   <string name="accessibility_next_result">Etsi seuraava tulos</string>
   <string name="accessibility_previous_result">Etsi edellinen tulos</string>
   <string name="accessibility_dismiss_find_in_page">Sulje sivulta etsiminen</string>
@@ -199,4 +200,11 @@
   <string name="http_auth_dialog_password">Salasana</string>
   <string name="preference_performance_request_desktop_site">Sivuston työpöytäversio</string>
   <string name="custom_tab_copy_url_action">Osoite kopioitu</string>
+  <string name="preference_advanced_summary">Kehittäjätyökalut</string>
+  <string name="biometric_auth_new_session">Uusi istunto</string>
+  <string name="enable_search_suggestion_title">Haluatko ottaa hakuehdotukset käyttöön?</string>
+  <string name="enable_search_suggestions_no">Ei</string>
+  <string name="enable_search_suggestions_yes">Kyllä</string>
+  <string name="no_suggestions_message">Jotkin hakukoneet eivät voi näyttää ehdotuksia.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Hylkää</string>
 </resources>

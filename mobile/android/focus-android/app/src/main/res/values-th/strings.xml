@@ -38,6 +38,7 @@
   <string name="preference_category_data_collection_use">การเก็บรวบรวมและใช้ข้อมูล</string>
   <string name="preference_category_search">ค้นหา</string>
   <string name="preference_show_search_suggestions">รับข้อเสนอแนะการค้นหา</string>
+  <string name="preference_show_search_suggestions_summary">%1$s จะส่งสิ่งที่คุณพิมพ์ในแถบที่อยู่ไปยังเครื่องมือค้นหาของคุณ</string>
   <string name="preference_search_engine_default">ค่าเริ่มต้น</string>
   <string name="preference_state_on">เปิด</string>
   <string name="preference_state_off">ปิด</string>
@@ -79,7 +80,8 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">ปิดกั้นคุกกี้จากบุคคลที่สามเท่านั้น</string>
   <string name="preference_privacy_should_block_cookies_yes_option">ใช่</string>
   <string name="preference_security_biometric">ใช้ลายนิ้วมือเพื่อปลดล็อคแอป</string>
-  <string name="preference_privacy_secure_mode">พรางตัว</string>
+  <string name="preference_security_biometric_summary">ลายนิ้วมือของคุณสามารถปลดล็อค %1$s หาก URL ถูกเปิดอยู่แล้วในแอป การพรางตัวจะถูกเปิด</string>
+  <string name="preference_privacy_secure_mode">การพรางตัว</string>
   <string name="preference_privacy_stealth_summary">ซ่อนหน้าเว็บเมื่อสลับแอปและปิดกั้นการจับภาพหน้าจอ</string>
   <string name="preference_category_security">ความปลอดภัย</string>
   <string name="preference_category_performance">ประสิทธิภาพ</string>
@@ -99,6 +101,7 @@
   <string name="preference_search_add2">+ เพิ่มเครื่องมือค้นหาอื่น</string>
   <string name="preference_search_remove_title">เอาเครื่องมือค้นหาออก</string>
   <string name="preference_search_remove">เอาออก</string>
+  <string name="preference_homescreen_tips">แสดงเคล็ดลับหน้าจอหลัก</string>
   <string name="action_option_add_search_engine">เพิ่มเครื่องมือค้นหา</string>
   <string name="search_add_manually_name_hint">ชื่อเครื่องมือค้นหา</string>
   <string name="search_add_manually_string">สตริงการค้นหาที่จะใช้</string>
@@ -211,9 +214,14 @@
   <string name="biometric_auth_description">สัมผัสเซนเซอร์ลายนิ้วมือเพื่อดำเนินการต่อ</string>
   <string name="biometric_auth_new_session">วาระใหม่</string>
   <string name="biometric_auth_image_description">ไอคอนลายนิ้วมือ</string>
+  <string name="biometric_auth_not_recognized_error">ไม่รู้จักลายนิ้วมือ ลองอีกครั้ง</string>
+  <string name="biometric_auth_moved_too_quickly">ขยับนิ้วเร็วเกินไป ลองอีกครั้ง</string>
+  <string name="enable_search_suggestion_title">คุณต้องการเปิดข้อเสนอแนะการค้นหาหรือไม่?</string>
   <string name="enable_search_suggestion_subtitle_learnmore">เรียนรู้เพิ่มเติม</string>
   <string name="enable_search_suggestions_no">ไม่</string>
   <string name="enable_search_suggestions_yes">ใช่</string>
   <string name="no_suggestions_message">เครื่องมือค้นหาบางตัวไม่สามารถแสดงข้อเสนอแนะ</string>
   <string name="dismiss_no_suggestions_prompt_button">ยกเลิก</string>
+  <string name="tip_disable_tracking_protection">ไซต์ทำงานอย่างไม่คาดคิด?\n ลองปิดการป้องกันการติดตาม</string>
+  <string name="tip_set_default_browser">เปิดทุกลิงก์ใน %1$s\n ตั้ง %1$s เป็นเบราว์เซอร์เริ่มต้น</string>
 </resources>

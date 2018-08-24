@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">འདོར་བ།</string>
+  <string name="action_ok">ཆོག</string>
+  <string name="action_save">ཉར་ཚགས།</string>
+  <string name="urlbar_hint">འཚོལ་ཞིབ་ཡང་ན་དྲ་ཚིཊ་ཁ་བྱང་འདིར་འཇུག་རོཊ།</string>
+  <string name="teaser">རང་འགུལ་དྲྭ་འཚོལ། དྲྭ་འཚོལ། བསུབ་པ། བསྐྱར་འཚོལ།</string>
+  <string name="feedback_erase">འཚོལ་རབས་འདོར་སུབ་བྱས་ཟིན།</string>
+  <string name="search_hint">འཚོལ་བྱའི་ནང་དོན་ %1$s</string>
+  <string name="menu_share">འགྲེམ་སྤེལ་་་</string>
+  <string name="menu_report_site_issue">དྲ་ཚིགས་གནད་དོན་སྙན་སེང་ཞུ་བ།</string>
+  <string name="menu_add_to_home_screen">ཁ་པའི་མདུན་ངོས་ཞོག་ཅིག</string>
+  <string name="menu_settings">སྒྲིག་བཟོ།</string>
+  <string name="menu_about">ངོ་སྤྲོད།</string>
+  <string name="menu_help">རོགས་རམ།</string>
+  <string name="menu_rights">ཁྱེད་ཀྱི་བདག་དབང</string>
+  <string name="notification_erase_text">འཚོལ་རབས་འདོར་སུབ་བྱོས།</string>
+  <string name="notification_action_open">ཁ་ཕྱེ་བ།</string>
+  <string name="notification_action_erase_and_open">འདོར་སུབ་དང་འཆར་བ།</string>
+  <string name="shortcut_erase_short_label">འདོར་སུབ།</string>
+  <string name="shortcut_erase_long_label">ཁྱོད་ཀྱི་འཚོལ་རབས་འདོར་སུབ་བྱས་ཟིན།</string>
+  <string name="text_selection_search_action">ཕྱིར་མི་བསྒྲགས་པའི་ཐོག་འཚོལ་བཤེར།</string>
+  <string name="preference_privacy_and_security_header">སྒེར་དབང་དང་ཉེན་སྲུང་།</string>
+  <string name="preference_mozilla_summary">%1$s ངོ་སྤྲོད། རོགས་རམ།</string>
+  <string name="preference_category_search">འཚོལ་བཤེར།</string>
+  <string name="preference_language">སྐད་ཡིག</string>
+  <string name="preference_category_privacy">སྒེར་དབང་</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">འགྲིག</string>
+  <string name="download_firefox">Firefox ཕབ་ལེན།</string>
+  <string name="gv_prompt_username_hint">ཐོ་མིང་།</string>
+  <string name="gv_prompt_password_hint">གསང་གྲངས།</string>
+  <string name="gv_prompt_clear">གཙང་བཟོ།</string>
+  <string name="http_auth_dialog_username">ཐོ་མིང་།</string>
+  <string name="http_auth_dialog_password">གསང་གྲངས།</string>
+  <string name="custom_tab_copy_url_action">URL བཤུས་ཟིན།</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">དེ་བས་མང་།</string>
+  <string name="enable_search_suggestions_no">མིན།</string>
+  <string name="enable_search_suggestions_yes">རེད།</string>
+  <string name="dismiss_no_suggestions_prompt_button">འདོར་བ།</string>
+</resources>

@@ -79,6 +79,7 @@
   <string name="preference_privacy_should_block_cookies_yes_option">Si</string>
   <string name="preference_privacy_secure_mode">Invisibile</string>
   <string name="preference_privacy_stealth_summary">Celar le paginas web quando on cambia de applicationes e blocar le prisa de instantaneos.</string>
+  <string name="preference_category_security">Securitate</string>
   <string name="preference_category_performance">Rendimento</string>
   <string name="preference_performance_block_webfonts">Blocar le typos de character de web</string>
   <string name="preference_performance_block_webfonts_summary">Pote resultar in icones o imagines mancante</string>
@@ -200,4 +201,10 @@
   <string name="http_auth_dialog_password">Contrasigno</string>
   <string name="preference_performance_request_desktop_site">Requirer le sito del scriptorio</string>
   <string name="custom_tab_copy_url_action">URL copiate</string>
+  <string name="preference_category_advanced">Avantiate</string>
+  <string name="biometric_auth_new_session">Nove session</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Saper plus</string>
+  <string name="enable_search_suggestions_no">No</string>
+  <string name="enable_search_suggestions_yes">Si</string>
+  <string name="dismiss_no_suggestions_prompt_button">Dimitter</string>
 </resources>
