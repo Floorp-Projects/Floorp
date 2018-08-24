@@ -132,11 +132,7 @@ exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine,
  */
 exports.viewSourceInScratchpad = async function(sourceURL, sourceLine) {
   // Check for matching top level scratchpad window.
-  const wins = Services.wm.getEnumerator("devtools:scratchpad");
-
-  while (wins.hasMoreElements()) {
-    const win = wins.getNext();
-
+  for (const win of Services.wm.getEnumerator("devtools:scratchpad")) {
     if (!win.closed && win.Scratchpad.uniqueName === sourceURL) {
       win.focus();
       win.Scratchpad.editor.setCursor({ line: sourceLine, ch: 0 });

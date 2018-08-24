@@ -2611,7 +2611,7 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
     }
   }
 
-  return NS_NewArrayEnumerator(aEnum, array);
+  return NS_NewArrayEnumerator(aEnum, array, NS_GET_IID(nsIPermission));
 }
 
 NS_IMETHODIMP nsPermissionManager::GetAllForURI(nsIURI* aURI, nsISimpleEnumerator **aEnum)
@@ -2660,7 +2660,7 @@ nsPermissionManager::GetAllForPrincipal(nsIPrincipal* aPrincipal,
     }
   }
 
-  return NS_NewArrayEnumerator(aEnum, array);
+  return NS_NewArrayEnumerator(aEnum, array, NS_GET_IID(nsIPermission));
 }
 
 NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)

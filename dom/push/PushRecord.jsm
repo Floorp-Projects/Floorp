@@ -182,9 +182,7 @@ PushRecord.prototype = {
   },
 
   isTabOpen() {
-    let windows = Services.wm.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements()) {
-      let window = windows.getNext();
+    for (let window of Services.wm.getEnumerator("navigator:browser")) {
       if (window.closed || PrivateBrowsingUtils.isWindowPrivate(window)) {
         continue;
       }

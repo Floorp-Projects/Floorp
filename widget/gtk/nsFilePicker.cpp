@@ -346,7 +346,7 @@ nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
   NS_ENSURE_ARG_POINTER(aFiles);
 
   if (mMode == nsIFilePicker::modeOpenMultiple) {
-    return NS_NewArrayEnumerator(aFiles, mFiles);
+    return NS_NewArrayEnumerator(aFiles, mFiles, NS_GET_IID(nsIFile));
   }
 
   return NS_ERROR_FAILURE;

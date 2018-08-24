@@ -26,6 +26,7 @@
 #include "nsContentUtils.h"
 #include "nsPersistentProperties.h"
 #include "nsQueryObject.h"
+#include "nsSimpleEnumerator.h"
 #include "nsStringStream.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ResultExtensions.h"
@@ -261,14 +262,19 @@ private:
 NS_DEFINE_STATIC_IID_ACCESSOR(SharedStringBundle, SHAREDSTRINGBUNDLE_IID)
 
 
-class StringMapEnumerator final : public nsISimpleEnumerator
+class StringMapEnumerator final : public nsSimpleEnumerator
 {
-  NS_DECL_ISUPPORTS
+public:
   NS_DECL_NSISIMPLEENUMERATOR
 
   explicit StringMapEnumerator(SharedStringMap* aStringMap)
     : mStringMap(aStringMap)
   {}
+
+  const nsID& DefaultInterface() override
+  {
+    return NS_GET_IID(nsIPropertyElement);
+  }
 
 protected:
   virtual ~StringMapEnumerator() = default;
@@ -278,8 +284,6 @@ private:
 
   uint32_t mIndex = 0;
 };
-
-NS_IMPL_ISUPPORTS(StringMapEnumerator, nsISimpleEnumerator)
 
 template <typename T, typename... Args>
 already_AddRefed<T>

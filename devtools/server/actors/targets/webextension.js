@@ -188,10 +188,7 @@ webExtensionTargetPrototype._destroyFallbackWindow = function() {
 // windowless browser when running in non-oop mode, and the background page
 // is set later using _onNewExtensionWindow.
 webExtensionTargetPrototype._searchForExtensionWindow = function() {
-  const e = Services.ww.getWindowEnumerator(null);
-  while (e.hasMoreElements()) {
-    const window = e.getNext();
-
+  for (const window of Services.ww.getWindowEnumerator(null)) {
     if (window.document.nodePrincipal.addonId == this.id) {
       return window;
     }

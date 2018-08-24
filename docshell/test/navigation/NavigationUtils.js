@@ -102,12 +102,10 @@ function xpcEnumerateContentWindows(callback) {
   var Ci = SpecialPowers.Ci;
   var ww = SpecialPowers.Cc["@mozilla.org/embedcomp/window-watcher;1"]
                         .getService(Ci.nsIWindowWatcher);
-  var enumerator = ww.getWindowEnumerator();
 
   var contentWindows = [];
 
-  while (enumerator.hasMoreElements()) {
-    var win = enumerator.getNext();
+  for (let win of ww.getWindowEnumerator()) {
     if (win.isChromeWindow) {
       var docshellTreeNode = win.docShell;
       var childCount = docshellTreeNode.childCount;

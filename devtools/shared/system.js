@@ -175,9 +175,7 @@ function getProfileLocation() {
     const profd = Services.dirsvc.get("ProfD", Ci.nsIFile);
     const profservice = Cc["@mozilla.org/toolkit/profile-service;1"]
                         .getService(Ci.nsIToolkitProfileService);
-    const profiles = profservice.profiles;
-    while (profiles.hasMoreElements()) {
-      const profile = profiles.getNext().QueryInterface(Ci.nsIToolkitProfile);
+    for (const profile of profservice.profiles) {
       if (profile.rootDir.path == profd.path) {
         return profile.name;
       }

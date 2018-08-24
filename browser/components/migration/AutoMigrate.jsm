@@ -276,9 +276,7 @@ const AutoMigrate = {
   },
 
   _removeNotificationBars() {
-    let browserWindows = Services.wm.getEnumerator("navigator:browser");
-    while (browserWindows.hasMoreElements()) {
-      let win = browserWindows.getNext();
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
       if (!win.closed) {
         for (let browser of win.gBrowser.browsers) {
           let nb = win.gBrowser.getNotificationBox(browser);

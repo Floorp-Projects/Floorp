@@ -63,14 +63,14 @@ class ContentScriptParent {
 
     const options = {
       matches: details.matches,
-      exclude_matches: details.excludeMatches,
-      include_globs: details.includeGlobs,
-      exclude_globs: details.excludeGlobs,
-      all_frames: details.allFrames,
-      match_about_blank: details.matchAboutBlank,
-      run_at: details.runAt || "document_idle",
-      js: [],
-      css: [],
+      excludeMatches: details.excludeMatches,
+      includeGlobs: details.includeGlobs,
+      excludeGlobs: details.excludeGlobs,
+      allFrames: details.allFrames,
+      matchAboutBlank: details.matchAboutBlank,
+      runAt: details.runAt || "document_idle",
+      jsPaths: [],
+      cssPaths: [],
     };
 
     const convertCodeToURL = (data, mime) => {
@@ -83,7 +83,7 @@ class ContentScriptParent {
     };
 
     if (details.js && details.js.length > 0) {
-      options.js = details.js.map(data => {
+      options.jsPaths = details.js.map(data => {
         if (data.file) {
           return data.file;
         }
@@ -93,7 +93,7 @@ class ContentScriptParent {
     }
 
     if (details.css && details.css.length > 0) {
-      options.css = details.css.map(data => {
+      options.cssPaths = details.css.map(data => {
         if (data.file) {
           return data.file;
         }

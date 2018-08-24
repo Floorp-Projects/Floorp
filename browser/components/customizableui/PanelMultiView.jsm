@@ -516,6 +516,15 @@ var PanelMultiView = class extends AssociatedToNode {
       try {
         canCancel = false;
         this._panel.openPopup(...args);
+
+        // On Windows, if another popup is hiding while we call openPopup, the
+        // call won't fail but the popup won't open. In this case, we have to
+        // dispatch an artificial "popuphidden" event to reset our state.
+        if (this._panel.state == "closed" && this.openViews.length) {
+          this.dispatchCustomEvent("popuphidden");
+          return false;
+        }
+
         return true;
       } catch (ex) {
         this.dispatchCustomEvent("popuphidden");
@@ -1056,8 +1065,10 @@ var PanelMultiView = class extends AssociatedToNode {
   }
 
   handleEvent(aEvent) {
-    if (aEvent.type.startsWith("popup") && aEvent.target != this._panel) {
-      // Shouldn't act on e.g. context menus being shown from within the panel.
+    // Only process actual popup events from the panel or events we generate
+    // ourselves, but not from menus being shown from within the panel.
+    if (aEvent.type.startsWith("popup") && aEvent.target != this._panel &&
+                                           aEvent.target != this.node) {
       return;
     }
     switch (aEvent.type) {

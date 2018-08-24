@@ -162,9 +162,9 @@ impl LocalRectBuilder {
                 CoordinateSpaceMapping::Offset(offset)
             } else {
                 let transform = clip_scroll_tree.get_relative_transform(
-                    self.ref_spatial_node_index,
                     target_node_index,
-                );
+                    self.ref_spatial_node_index,
+                ).expect("bug: should have already been culled");
                 CoordinateSpaceMapping::Transform(transform)
             };
         }
@@ -1620,7 +1620,7 @@ impl PrimitiveStore {
                 local_rect,
                 prim.metadata.local_clip_rect,
                 prim_context.spatial_node_index,
-                &frame_context.clip_scroll_tree.spatial_nodes,
+                &frame_context.clip_scroll_tree,
                 frame_state.gpu_cache,
                 frame_state.resource_cache,
                 frame_context.device_pixel_scale,

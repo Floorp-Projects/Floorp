@@ -23,11 +23,8 @@ add_task(async function() {
   let state = ss.getBrowserState();
 
   // verify our cookie got set during pageload
-  let enumerator = Services.cookies.enumerator;
-  let cookie;
   let i = 0;
-  while (enumerator.hasMoreElements()) {
-    cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+  for (var cookie of Services.cookies.enumerator) {
     i++;
   }
   Assert.equal(i, 1, "expected one cookie");
@@ -39,10 +36,7 @@ add_task(async function() {
   await setBrowserState(state);
 
   // at this point, the cookie should be restored...
-  enumerator = Services.cookies.enumerator;
-  let cookie2;
-  while (enumerator.hasMoreElements()) {
-    cookie2 = enumerator.getNext().QueryInterface(Ci.nsICookie);
+  for (var cookie2 of Services.cookies.enumerator) {
     if (cookie.name == cookie2.name)
       break;
   }

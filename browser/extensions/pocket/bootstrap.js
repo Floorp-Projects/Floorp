@@ -538,9 +538,6 @@ function install() {
 function uninstall() {
 }
 
-function* browserWindows() {
-  let windows = Services.wm.getEnumerator("navigator:browser");
-  while (windows.hasMoreElements()) {
-    yield windows.getNext();
-  }
+function browserWindows() {
+  return Services.wm.getEnumerator("navigator:browser");
 }

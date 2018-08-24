@@ -135,6 +135,12 @@ interface WebExtensionPolicy {
   void unregisterContentScript(WebExtensionContentScript script);
 
   /**
+   * Injects the extension's content script into all existing matching windows.
+   */
+  [Throws]
+  void injectContentScripts();
+
+  /**
    * Returns the list of currently active extension policies.
    */
   static sequence<WebExtensionPolicy> getActiveExtensions();
@@ -176,11 +182,11 @@ dictionary WebExtensionInit {
 
   required WebExtensionLocalizeCallback localizeCallback;
 
-  required MatchPatternSet allowedOrigins;
+  required MatchPatternSetOrStringSequence allowedOrigins;
 
   sequence<DOMString> permissions = [];
 
-  sequence<MatchGlob> webAccessibleResources = [];
+  sequence<MatchGlobOrString> webAccessibleResources = [];
 
   sequence<WebExtensionContentScriptInit> contentScripts = [];
 

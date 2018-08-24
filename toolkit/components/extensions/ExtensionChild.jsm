@@ -594,13 +594,12 @@ var ExtensionManager = {
 
 // Represents a browser extension in the content process.
 class BrowserExtensionContent extends EventEmitter {
-  constructor(data) {
+  constructor(policy) {
     super();
 
-    this.data = data;
-    this.id = data.id;
-    this.uuid = data.uuid;
-    this.instanceId = data.instanceId;
+    this.policy = policy;
+    this.instanceId = policy.instanceId;
+    this.optionalPermissions = policy.optionalPermissions;
 
     if (WebExtensionPolicy.isExtensionProcess) {
       Object.assign(this, this.getSharedData("extendedData"));
@@ -609,13 +608,7 @@ class BrowserExtensionContent extends EventEmitter {
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
     Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
-    this.webAccessibleResources = data.webAccessibleResources.map(res => new MatchGlob(res));
-    this.permissions = data.permissions;
-    this.optionalPermissions = data.optionalPermissions;
-
     let restrictSchemes = !this.hasPermission("mozillaAddons");
-
-    this.whiteListedHosts = new MatchPatternSet(data.whiteListedHosts, {restrictSchemes, ignorePath: true});
 
     this.apiManager = this.getAPIManager();
 
@@ -637,48 +630,63 @@ class BrowserExtensionContent extends EventEmitter {
     /* eslint-disable mozilla/balanced-listeners */
     this.on("add-permissions", (ignoreEvent, permissions) => {
       if (permissions.permissions.length > 0) {
+        let perms = new Set(this.policy.permissions);
         for (let perm of permissions.permissions) {
-          this.permissions.add(perm);
+          perms.add(perm);
         }
+        this.policy.permissions = perms;
       }
 
       if (permissions.origins.length > 0) {
         let patterns = this.whiteListedHosts.patterns.map(host => host.pattern);
 
-        this.whiteListedHosts = new MatchPatternSet([...patterns, ...permissions.origins],
-                                                    {restrictSchemes, ignorePath: true});
-      }
-
-      if (this.policy) {
-        this.policy.permissions = Array.from(this.permissions);
-        this.policy.allowedOrigins = this.whiteListedHosts;
+        this.policy.allowedOrigins =
+          new MatchPatternSet([...patterns, ...permissions.origins],
+                              {restrictSchemes, ignorePath: true});
       }
     });
 
     this.on("remove-permissions", (ignoreEvent, permissions) => {
       if (permissions.permissions.length > 0) {
+        let perms = new Set(this.policy.permissions);
         for (let perm of permissions.permissions) {
-          this.permissions.delete(perm);
+          perms.delete(perm);
         }
+        this.policy.permissions = perms;
       }
 
       if (permissions.origins.length > 0) {
         let origins = permissions.origins.map(
           origin => new MatchPattern(origin, {ignorePath: true}).pattern);
 
-        this.whiteListedHosts = new MatchPatternSet(
+        this.policy.allowedOrigins = new MatchPatternSet(
           this.whiteListedHosts.patterns
               .filter(host => !origins.includes(host.pattern)));
-      }
-
-      if (this.policy) {
-        this.policy.permissions = Array.from(this.permissions);
-        this.policy.allowedOrigins = this.whiteListedHosts;
       }
     });
     /* eslint-enable mozilla/balanced-listeners */
 
     ExtensionManager.extensions.set(this.id, this);
+  }
+
+  get id() {
+    return this.policy.id;
+  }
+
+  get uuid() {
+    return this.policy.mozExtensionHostname;
+  }
+
+  get permissions() {
+    return new Set(this.policy.permissions);
+  }
+
+  get whiteListedHosts() {
+    return this.policy.allowedOrigins;
+  }
+
+  get webAccessibleResources() {
+    return this.policy.webAccessibleResources;
   }
 
   getSharedData(key, value) {

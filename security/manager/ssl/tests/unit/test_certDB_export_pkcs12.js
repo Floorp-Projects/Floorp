@@ -17,9 +17,7 @@ const TEST_CERT_PASSWORD = "黒い";
 const TEST_OUTPUT_PASSWORD = "other password";
 
 function findCertByCommonName(commonName) {
-  let certEnumerator = gCertDB.getCerts().getEnumerator();
-  while (certEnumerator.hasMoreElements()) {
-    let cert = certEnumerator.getNext().QueryInterface(Ci.nsIX509Cert);
+  for (let cert of gCertDB.getCerts().getEnumerator()) {
     if (cert.commonName == commonName) {
       return cert;
     }

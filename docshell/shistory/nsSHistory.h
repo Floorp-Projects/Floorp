@@ -11,9 +11,9 @@
 #include "nsExpirationTracker.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
-#include "nsISimpleEnumerator.h"
 #include "nsIWebNavigation.h"
 #include "nsSHEntryShared.h"
+#include "nsSimpleEnumerator.h"
 #include "nsTObserverArray.h"
 #include "nsWeakReference.h"
 

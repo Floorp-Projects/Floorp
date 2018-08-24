@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIJSIID;
 interface nsISimpleEnumerator;
 
 /**
@@ -31,7 +32,7 @@ interface nsISimpleEnumerator;
  * null is a valid entry in the array, and as such any nsISupports
  * parameters may be null, except where noted.
  */
-[scriptable, uuid(114744d9-c369-456e-b55a-52fe52880d2d)]
+[scriptable, builtinclass, uuid(114744d9-c369-456e-b55a-52fe52880d2d)]
 interface nsIArray : nsISupports
 {
     /**
@@ -87,5 +88,17 @@ interface nsIArray : nsISupports
      * @throws NS_ERROR_FAILURE if the array is empty (to make it easy
      *         to detect errors), or NS_ERROR_OUT_OF_MEMORY if out of memory.
      */
-    nsISimpleEnumerator enumerate();
+    [binaryname(ScriptedEnumerate), optional_argc]
+    nsISimpleEnumerator enumerate([optional] in nsIJSIID aElemIID);
+
+    [noscript]
+    nsISimpleEnumerator enumerateImpl(in nsIDRef aElemIID);
+
+    %{C++
+    nsresult
+    Enumerate(nsISimpleEnumerator** aRetVal, const nsID& aElemIID = NS_GET_IID(nsISupports))
+    {
+      return EnumerateImpl(aElemIID, aRetVal);
+    }
+    %}
 };

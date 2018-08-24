@@ -46,7 +46,7 @@
 #include "nsIComponentManager.h"
 #include "prproces.h"
 #include "nsIDirectoryEnumerator.h"
-#include "nsISimpleEnumerator.h"
+#include "nsSimpleEnumerator.h"
 #include "private/pprio.h"
 #include "prlink.h"
 
@@ -91,13 +91,14 @@ using namespace mozilla;
 
 /* directory enumerator */
 class nsDirEnumeratorUnix final
-  : public nsIDirectoryEnumerator
+  : public nsSimpleEnumerator
+  , public nsIDirectoryEnumerator
 {
 public:
   nsDirEnumeratorUnix();
 
   // nsISupports interface
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsISimpleEnumerator interface
   NS_DECL_NSISIMPLEENUMERATOR
@@ -107,8 +108,12 @@ public:
 
   NS_IMETHOD Init(nsLocalFile* aParent, bool aIgnored);
 
+  NS_FORWARD_NSISIMPLEENUMERATORBASE(nsSimpleEnumerator::)
+
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIFile); }
+
 private:
-  ~nsDirEnumeratorUnix();
+  ~nsDirEnumeratorUnix() override;
 
 protected:
   NS_IMETHOD GetNextEntry();
@@ -129,8 +134,8 @@ nsDirEnumeratorUnix::~nsDirEnumeratorUnix()
   Close();
 }
 
-NS_IMPL_ISUPPORTS(nsDirEnumeratorUnix, nsISimpleEnumerator,
-                  nsIDirectoryEnumerator)
+NS_IMPL_ISUPPORTS_INHERITED(nsDirEnumeratorUnix, nsSimpleEnumerator,
+                            nsIDirectoryEnumerator)
 
 NS_IMETHODIMP
 nsDirEnumeratorUnix::Init(nsLocalFile* aParent,
@@ -177,6 +182,9 @@ nsDirEnumeratorUnix::GetNext(nsISupports** aResult)
   nsresult rv = GetNextFile(getter_AddRefs(file));
   if (NS_FAILED(rv)) {
     return rv;
+  }
+  if (!file) {
+    return NS_ERROR_FAILURE;
   }
   file.forget(aResult);
   return NS_OK;
@@ -1096,7 +1104,7 @@ nsLocalFile::Remove(bool aRecursive)
   if (aRecursive) {
     auto* dir = new nsDirEnumeratorUnix();
 
-    nsCOMPtr<nsISimpleEnumerator> dirRef(dir); // release on exit
+    RefPtr<nsSimpleEnumerator> dirRef(dir); // release on exit
 
     rv = dir->Init(this, false);
     if (NS_FAILED(rv)) {

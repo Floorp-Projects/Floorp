@@ -34,6 +34,7 @@ WEBIDL_FILES = [
     'DominatorTree.webidl',
     'HeapSnapshot.webidl',
     'InspectorUtils.webidl',
+    'IteratorResult.webidl',
     'MatchGlob.webidl',
     'MatchPattern.webidl',
     'MessageManager.webidl',
