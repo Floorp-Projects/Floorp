@@ -16,6 +16,7 @@ import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.test.util.Environment;
+import org.mozilla.geckoview.test.TestCrashHandler;
 import org.mozilla.geckoview.test.util.UiThreadUtils;
 import org.mozilla.geckoview.test.rdp.Actor;
 import org.mozilla.geckoview.test.rdp.Promise;
@@ -1198,6 +1199,10 @@ public class GeckoSessionTestRule implements TestRule {
                     .extras(InstrumentationRegistry.getArguments())
                     .remoteDebuggingEnabled(true)
                     .consoleOutput(true);
+
+            if (env.isAutomation()) {
+                runtimeSettingsBuilder.crashHandler(TestCrashHandler.class);
+            }
 
             sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
