@@ -19,13 +19,50 @@ let {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/Url
 this.AntiTracking = {
   runTest(name, callbackTracking, callbackNonTracking, cleanupFunction, extraPrefs, windowOpenTest = true, userInteractionTest = true) {
     // Here we want to test that a 3rd party context is simply blocked.
-    this._createTask(name, true, callbackTracking, extraPrefs);
+    this._createTask(name, true, true, callbackTracking, extraPrefs);
     this._createCleanupTask(cleanupFunction);
 
     if (callbackNonTracking) {
+      let runExtraTests = true;
+      let options = {};
+      if (typeof callbackNonTracking == "object") {
+        callbackNonTracking = callbackNonTracking.callback;
+        runExtraTests = callbackNonTracking.runExtraTests;
+        if ("blockingByCookieBehavior" in callbackNonTracking) {
+          options.blockingByCookieBehavior =
+            callbackNonTracking.blockingByCookieBehavior;
+        } else {
+          options.blockingByCookieBehavior = false;
+        }
+        if ("blockingByContentBlocking" in callbackNonTracking) {
+          options.blockingByContentBlocking =
+            callbackNonTracking.blockingByContentBlocking;
+        } else {
+          options.blockingByContentBlocking = false;
+        }
+      }
+
       // Phase 1: Here we want to test that a 3rd party context is not blocked if pref is off.
-      this._createTask(name, false, callbackNonTracking);
-      this._createCleanupTask(cleanupFunction);
+      if (runExtraTests) {
+        // There are three ways in which the third-party context may be blocked:
+        //   * If the cookieBehavior pref causes it to not be blocked.
+        //   * If the contentBlocking pref causes it to not be blocked.
+        //   * If both of these prefs cause it to not be blocked.
+        // All of these cases are tested here.
+        this._createTask(name, false, true, callbackNonTracking);
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask(name, true, false, callbackNonTracking);
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask(name, false, false, callbackNonTracking);
+        this._createCleanupTask(cleanupFunction);
+      } else {
+        this._createTask(name, options.blockingByCookieBehavior,
+                         options.blockingByContentBlocking,
+                         callbackNonTracking);
+        this._createCleanupTask(cleanupFunction);
+      }
 
       // Phase 2: Here we want to test that a third-party context doesn't
       // get blocked with when the same origin is opened through window.open().
@@ -43,13 +80,14 @@ this.AntiTracking = {
     }
   },
 
-  async _setupTest(blocking, extraPrefs) {
+  async _setupTest(blockingByCookieBehavior, blockingByContentBlocking, extraPrefs) {
     await SpecialPowers.flushPrefEnv();
     await SpecialPowers.pushPrefEnv({"set": [
-      ["network.cookie.cookieBehavior", blocking ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER : Ci.nsICookieService.BEHAVIOR_ACCEPT],
+      ["browser.contentblocking.enabled", blockingByContentBlocking],
+      ["network.cookie.cookieBehavior", blockingByCookieBehavior ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER : Ci.nsICookieService.BEHAVIOR_ACCEPT],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", false],
-      ["privacy.trackingprotection.annotate_channels", blocking],
+      ["privacy.trackingprotection.annotate_channels", blockingByCookieBehavior],
     ]});
 
     if (extraPrefs && Array.isArray(extraPrefs) && extraPrefs.length) {
@@ -59,11 +97,12 @@ this.AntiTracking = {
     await UrlClassifierTestUtils.addTestTrackers();
   },
 
-  _createTask(name, blocking, callback, extraPrefs) {
+  _createTask(name, blockingByCookieBehavior, blockingByContentBlocking, callback, extraPrefs) {
     add_task(async function() {
-      info("Starting " + (blocking ? "blocking" : "non-blocking") + " test " + name);
+      info("Starting " + (blockingByCookieBehavior ? "blocking" : "non-blocking") + " cookieBehavior and " +
+                         (blockingByContentBlocking ? "blocking" : "non-blocking") + " contentBlocking test " + name);
 
-      await AntiTracking._setupTest(blocking, extraPrefs);
+      await AntiTracking._setupTest(blockingByCookieBehavior, blockingByContentBlocking, extraPrefs);
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
@@ -128,7 +167,7 @@ this.AntiTracking = {
   _createWindowOpenTask(name, blockingCallback, nonBlockingCallback, extraPrefs) {
     add_task(async function() {
       info("Starting window-open test " + name);
-      await AntiTracking._setupTest(true, extraPrefs);
+      await AntiTracking._setupTest(true, true, extraPrefs);
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
@@ -191,7 +230,7 @@ this.AntiTracking = {
   _createUserInteractionTask(name, blockingCallback, nonBlockingCallback, extraPrefs) {
     add_task(async function() {
       info("Starting user-interaction test " + name);
-      await AntiTracking._setupTest(true, extraPrefs);
+      await AntiTracking._setupTest(true, true, extraPrefs);
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
