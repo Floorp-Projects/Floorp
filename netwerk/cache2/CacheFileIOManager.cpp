@@ -3854,7 +3854,7 @@ CacheFileIOManager::IsEmptyDirectory(nsIFile *aFile, bool *_retval)
 
   nsresult rv;
 
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  nsCOMPtr<nsIDirectoryEnumerator> enumerator;
   rv = aFile->GetDirectoryEntries(getter_AddRefs(enumerator));
   NS_ENSURE_SUCCESS(rv, rv);
 
