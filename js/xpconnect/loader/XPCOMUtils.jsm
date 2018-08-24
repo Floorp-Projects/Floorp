@@ -413,10 +413,9 @@ var XPCOMUtils = {
    * @param e The string enumerator (nsIUTF8StringEnumerator or
    *          nsIStringEnumerator) over which to iterate.
    */
-  IterStringEnumerator: function* XPCU_IterStringEnumerator(e)
+  IterStringEnumerator: function XPCU_IterStringEnumerator(e)
   {
-    while (e.hasMore())
-      yield e.getNext();
+    return e;
   },
 
   /**

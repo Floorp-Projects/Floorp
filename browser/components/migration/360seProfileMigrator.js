@@ -63,14 +63,10 @@ function parseINIStrings(file) {
                 getService(Ci.nsIINIParserFactory);
   let parser = factory.createINIParser(file);
   let obj = {};
-  let sections = parser.getSections();
-  while (sections.hasMore()) {
-    let section = sections.getNext();
+  for (let section of parser.getSections()) {
     obj[section] = {};
 
-    let keys = parser.getKeys(section);
-    while (keys.hasMore()) {
-      let key = keys.getNext();
+    for (let key of parser.getKeys(section)) {
       obj[section][key] = parser.getString(section, key);
     }
   }
