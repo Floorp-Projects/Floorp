@@ -562,6 +562,10 @@ description#identity-popup-content-verifier,
   margin-top: -0.1em;
 }
 
+.identity-popup-content-blocking-category-label {
+  max-width: 200px;
+}
+
 .identity-popup-content-blocking-category-label,
 .identity-popup-permission-label {
   margin-inline-start: 1em;
