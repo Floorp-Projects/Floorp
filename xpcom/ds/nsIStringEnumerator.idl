@@ -5,19 +5,32 @@
 
 #include "nsISupports.idl"
 
+interface nsIJSEnumerator;
+
 /**
  * Used to enumerate over an ordered list of strings.
  */
 
+/**
+ * Base class for C++-implemented string iterators. JS implementors need not
+ * be queryable to it.
+ */
+[scriptable, uuid(f5213d15-a4d1-4fb7-8a48-d69ccb7fb0eb)]
+interface nsIStringEnumeratorBase : nsISupports
+{
+    [symbol, binaryname(StringIterator)]
+    nsIJSEnumerator iterator();
+};
+
 [scriptable, uuid(50d3ef6c-9380-4f06-9fb2-95488f7d141c)]
-interface nsIStringEnumerator : nsISupports
+interface nsIStringEnumerator : nsIStringEnumeratorBase
 {
     boolean hasMore();
     AString getNext();
 };
 
 [scriptable, uuid(9bdf1010-3695-4907-95ed-83d0410ec307)]
-interface nsIUTF8StringEnumerator : nsISupports
+interface nsIUTF8StringEnumerator : nsIStringEnumeratorBase
 {
     boolean hasMore();
     AUTF8String getNext();
