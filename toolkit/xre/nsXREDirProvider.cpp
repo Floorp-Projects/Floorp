@@ -854,7 +854,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     LoadDirsIntoArray(mAppBundleDirectories,
                       kAppendNothing, directories);
 
-    rv = NS_NewArrayEnumerator(aResult, directories);
+    rv = NS_NewArrayEnumerator(aResult, directories, NS_GET_IID(nsIFile));
   }
   else if (!strcmp(aProperty, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
@@ -863,7 +863,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     LoadDirsIntoArray(mAppBundleDirectories,
                       kAppendPrefDir, directories);
 
-    rv = NS_NewArrayEnumerator(aResult, directories);
+    rv = NS_NewArrayEnumerator(aResult, directories, NS_GET_IID(nsIFile));
   }
   else if (!strcmp(aProperty, NS_APP_CHROME_DIR_LIST)) {
     // NS_APP_CHROME_DIR_LIST is only used to get default (native) icons
@@ -878,7 +878,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
                       kAppendChromeDir,
                       directories);
 
-    rv = NS_NewArrayEnumerator(aResult, directories);
+    rv = NS_NewArrayEnumerator(aResult, directories, NS_GET_IID(nsIFile));
   }
   else if (!strcmp(aProperty, NS_APP_PLUGINS_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
@@ -908,7 +908,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
                         directories);
     }
 
-    rv = NS_NewArrayEnumerator(aResult, directories);
+    rv = NS_NewArrayEnumerator(aResult, directories, NS_GET_IID(nsIFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = NS_SUCCESS_AGGREGATE_RESULT;

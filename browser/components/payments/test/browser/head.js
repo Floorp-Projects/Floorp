@@ -24,12 +24,7 @@ const {PaymentTestUtils: PTU} = ChromeUtils.import(
   "resource://testing-common/PaymentTestUtils.jsm", {});
 
 function getPaymentRequests() {
-  let requestsEnum = paymentSrv.enumerate();
-  let requests = [];
-  while (requestsEnum.hasMoreElements()) {
-    requests.push(requestsEnum.getNext().QueryInterface(Ci.nsIPaymentRequest));
-  }
-  return requests;
+  return Array.from(paymentSrv.enumerate());
 }
 
 /**

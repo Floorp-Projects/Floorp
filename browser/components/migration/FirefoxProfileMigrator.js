@@ -37,12 +37,9 @@ FirefoxProfileMigrator.prototype = Object.create(MigratorPrototype);
 
 FirefoxProfileMigrator.prototype._getAllProfiles = function() {
   let allProfiles = new Map();
-  let profiles =
-    Cc["@mozilla.org/toolkit/profile-service;1"]
-      .getService(Ci.nsIToolkitProfileService)
-      .profiles;
-  while (profiles.hasMoreElements()) {
-    let profile = profiles.getNext().QueryInterface(Ci.nsIToolkitProfile);
+  let profileService = Cc["@mozilla.org/toolkit/profile-service;1"]
+      .getService(Ci.nsIToolkitProfileService);
+  for (let profile of profileService.profiles) {
     let rootDir = profile.rootDir;
 
     if (rootDir.exists() && rootDir.isReadable() &&

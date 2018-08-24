@@ -31,10 +31,7 @@ function startup() {
 
     var profilesElement = document.getElementById("profiles");
 
-    var profileList = gProfileService.profiles;
-    while (profileList.hasMoreElements()) {
-      var profile = profileList.getNext().QueryInterface(I.nsIToolkitProfile);
-
+    for (let profile of gProfileService.profiles.entries(I.nsIToolkitProfile)) {
       var listitem = profilesElement.appendItem(profile.name, "");
 
       var tooltiptext =

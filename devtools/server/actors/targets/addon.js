@@ -185,20 +185,14 @@ AddonTargetActor.prototype = {
   },
 
   preNest: function() {
-    const e = Services.wm.getEnumerator(null);
-    while (e.hasMoreElements()) {
-      const win = e.getNext();
-      const windowUtils = win.windowUtils;
+    for (const {windowUtils} of Services.wm.getEnumerator(null)) {
       windowUtils.suppressEventHandling(true);
       windowUtils.suspendTimeouts();
     }
   },
 
   postNest: function() {
-    const e = Services.wm.getEnumerator(null);
-    while (e.hasMoreElements()) {
-      const win = e.getNext();
-      const windowUtils = win.windowUtils;
+    for (const {windowUtils} of Services.wm.getEnumerator(null)) {
       windowUtils.resumeTimeouts();
       windowUtils.suppressEventHandling(false);
     }

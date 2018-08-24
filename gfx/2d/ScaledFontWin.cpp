@@ -122,12 +122,9 @@ ScaledFontWin::GetDefaultAAMode()
 }
 
 #ifdef USE_SKIA
-SkTypeface* ScaledFontWin::GetSkTypeface()
+SkTypeface* ScaledFontWin::CreateSkTypeface()
 {
-  if (!mTypeface) {
-    mTypeface = SkCreateTypefaceFromLOGFONT(mLogFont);
-  }
-  return mTypeface;
+  return SkCreateTypefaceFromLOGFONT(mLogFont);
 }
 #endif
 

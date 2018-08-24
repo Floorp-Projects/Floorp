@@ -219,10 +219,8 @@ add_task(async function checkAllTheProperties() {
 
   for (let uri of uris) {
     let bundle = Services.strings.createBundle(uri.spec);
-    let enumerator = bundle.getSimpleEnumeration();
 
-    while (enumerator.hasMoreElements()) {
-      let entity = enumerator.getNext().QueryInterface(Ci.nsIPropertyElement);
+    for (let entity of bundle.getSimpleEnumeration()) {
       testForErrors(uri.spec, entity.key, entity.value);
     }
   }

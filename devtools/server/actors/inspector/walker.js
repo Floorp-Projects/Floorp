@@ -186,9 +186,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *    enumerator of nsIEventListenerChange
    */
   _onEventListenerChange: function(changesEnum) {
-    const changes = changesEnum.enumerate();
-    while (changes.hasMoreElements()) {
-      const current = changes.getNext().QueryInterface(Ci.nsIEventListenerChange);
+    for (const current of changesEnum.enumerate(Ci.nsIEventListenerChange)) {
       const target = current.target;
 
       if (this._refMap.has(target)) {

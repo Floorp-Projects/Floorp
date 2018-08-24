@@ -3,9 +3,7 @@ addMessageListener("getCookieFromManager", ({ host, path }) => {
              .getService(Ci.nsICookieManager);
   let values = [];
   path = path.substring(0, path.lastIndexOf("/") + 1);
-  let e = cm.enumerator;
-  while (e.hasMoreElements()) {
-    let cookie = e.getNext().QueryInterface(Ci.nsICookie);
+  for (let cookie of cm.enumerator) {
     if (!cookie) {
       break;
     }

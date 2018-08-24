@@ -6,7 +6,7 @@
 
 
 #include "nsStringEnumerator.h"
-#include "nsISimpleEnumerator.h"
+#include "nsSimpleEnumerator.h"
 #include "nsSupportsPrimitives.h"
 #include "mozilla/Attributes.h"
 #include "nsTArray.h"
@@ -16,9 +16,9 @@
 //
 
 class nsStringEnumerator final
-  : public nsIStringEnumerator
+  : public nsSimpleEnumerator
+  , public nsIStringEnumerator
   , public nsIUTF8StringEnumerator
-  , public nsISimpleEnumerator
 {
 public:
   nsStringEnumerator(const nsTArray<nsString>* aArray, bool aOwnsArray)
@@ -51,13 +51,21 @@ public:
     , mIsUnicode(false)
   {}
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIUTF8STRINGENUMERATOR
 
   // have to declare nsIStringEnumerator manually, because of
   // overlapping method names
   NS_IMETHOD GetNext(nsAString& aResult) override;
   NS_DECL_NSISIMPLEENUMERATOR
+
+  const nsID& DefaultInterface() override
+  {
+    if (mIsUnicode) {
+      return NS_GET_IID(nsISupportsString);
+    }
+    return NS_GET_IID(nsISupportsCString);
+  }
 
 private:
   ~nsStringEnumerator()
@@ -96,10 +104,10 @@ private:
   bool mIsUnicode;
 };
 
-NS_IMPL_ISUPPORTS(nsStringEnumerator,
-                  nsIStringEnumerator,
-                  nsIUTF8StringEnumerator,
-                  nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS_INHERITED(nsStringEnumerator,
+                            nsSimpleEnumerator,
+                            nsIStringEnumerator,
+                            nsIUTF8StringEnumerator)
 
 NS_IMETHODIMP
 nsStringEnumerator::HasMore(bool* aResult)
@@ -117,6 +125,10 @@ nsStringEnumerator::HasMoreElements(bool* aResult)
 NS_IMETHODIMP
 nsStringEnumerator::GetNext(nsISupports** aResult)
 {
+  if (mIndex >= mArray->Length()) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (mIsUnicode) {
     nsSupportsString* stringImpl = new nsSupportsString();
     if (!stringImpl) {

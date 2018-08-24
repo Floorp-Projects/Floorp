@@ -23,6 +23,7 @@
 #undef GP_PLAT_amd64_darwin
 #undef GP_PLAT_x86_windows
 #undef GP_PLAT_amd64_windows
+#undef GP_PLAT_arm64_windows
 
 #undef GP_ARCH_x86
 #undef GP_ARCH_amd64
@@ -93,6 +94,11 @@
       (defined(_M_X64) || defined(__x86_64__))
 # define GP_PLAT_amd64_windows 1
 # define GP_ARCH_amd64 1
+# define GP_OS_windows 1
+
+#elif defined(_MSC_VER) && defined(_M_ARM64)
+# define GP_PLAT_arm64_windows 1
+# define GP_ARCH_arm64 1
 # define GP_OS_windows 1
 
 #else

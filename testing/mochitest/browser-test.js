@@ -537,9 +537,7 @@ Tester.prototype = {
   },
 
   waitForGraphicsTestWindowToBeGone(aCallback) {
-    let windowsEnum = Services.wm.getEnumerator(null);
-    while (windowsEnum.hasMoreElements()) {
-      let win = windowsEnum.getNext();
+    for (let win of Services.wm.getEnumerator(null)) {
       if (win != window && !win.closed &&
           win.document.documentURI == "chrome://gfxsanity/content/sanityparent.html") {
         this.BrowserTestUtils.domWindowClosed(win).then(aCallback);
@@ -586,9 +584,7 @@ Tester.prototype = {
 
     // Remove stale windows
     this.structuredLogger.info("checking window state");
-    let windowsEnum = Services.wm.getEnumerator(null);
-    while (windowsEnum.hasMoreElements()) {
-      let win = windowsEnum.getNext();
+    for (let win of Services.wm.getEnumerator(null)) {
       if (win != window && !win.closed &&
           win.document.documentElement.getAttribute("id") != "browserTestHarness") {
         let type = win.document.documentElement.getAttribute("windowtype");

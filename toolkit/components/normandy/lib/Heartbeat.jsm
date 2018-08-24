@@ -30,9 +30,7 @@ let anyWindowsWithInjectedCss = false;
 // Add cleanup handler for CSS injected into windows by Heartbeat
 CleanupManager.addCleanupHandler(() => {
   if (anyWindowsWithInjectedCss) {
-    const windowEnumerator = Services.wm.getEnumerator("navigator:browser");
-    while (windowEnumerator.hasMoreElements()) {
-      const window = windowEnumerator.getNext();
+    for (let window of Services.wm.getEnumerator("navigator:browser")) {
       if (windowsWithInjectedCss.has(window)) {
         const utils = window.windowUtils;
         utils.removeSheet(HEARTBEAT_CSS_URI, window.AGENT_SHEET);

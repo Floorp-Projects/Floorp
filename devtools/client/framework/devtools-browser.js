@@ -743,9 +743,7 @@ Services.obs.addObserver(gDevToolsBrowser, "devtools:loader:destroy");
 
 // Fake end of browser window load event for all already opened windows
 // that is already fully loaded.
-const enumerator = Services.wm.getEnumerator(gDevTools.chromeWindowType);
-while (enumerator.hasMoreElements()) {
-  const win = enumerator.getNext();
+for (const win of Services.wm.getEnumerator(gDevTools.chromeWindowType)) {
   if (win.gBrowserInit && win.gBrowserInit.delayedStartupFinished) {
     gDevToolsBrowser._registerBrowserWindow(win);
   }

@@ -223,10 +223,8 @@ async function test_basic_eviction(base_host, subdomain_host, other_subdomain_ho
 // Verify that the given cookie names exist, and are ordered from least to most recently accessed
 function verifyCookies(names, uri) {
     Assert.equal(cm.countCookiesFromHost(uri.host), names.length);
-    let cookies = cm.getCookiesFromHost(uri.host, {});
     let actual_cookies = [];
-    while (cookies.hasMoreElements()) {
-        let cookie = cookies.getNext().QueryInterface(Ci.nsICookie2);
+    for (let cookie of cm.getCookiesFromHost(uri.host, {})) {
         actual_cookies.push(cookie);
     }
     if (names.length != actual_cookies.length) {

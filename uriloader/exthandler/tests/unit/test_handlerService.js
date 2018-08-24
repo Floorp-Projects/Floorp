@@ -240,9 +240,7 @@ function run_test() {
     handlerTypes.push("irc");
     handlerTypes.push("ircs");
   }
-  var handlers = handlerSvc.enumerate();
-  while (handlers.hasMoreElements()) {
-    var handler = handlers.getNext().QueryInterface(Ci.nsIHandlerInfo);
+  for (let handler of handlerSvc.enumerate()) {
     Assert.notEqual(handlerTypes.indexOf(handler.type), -1);
     handlerTypes.splice(handlerTypes.indexOf(handler.type), 1);
   }

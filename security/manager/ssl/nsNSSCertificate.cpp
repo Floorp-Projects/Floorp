@@ -1220,8 +1220,6 @@ nsNSSCertList::GetRootCertificate(/* out */ nsCOMPtr<nsIX509Cert>& aRoot)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsNSSCertListEnumerator, nsISimpleEnumerator)
-
 nsNSSCertListEnumerator::nsNSSCertListEnumerator(
   const UniqueCERTCertList& certList)
 {

@@ -30,13 +30,9 @@ var gAppManagerDialog = {
     }
 
     var list = document.getElementById("appList");
-    var apps = this.handlerInfo.possibleApplicationHandlers.enumerate();
-    while (apps.hasMoreElements()) {
-      let app = apps.getNext();
+    for (let app of this.handlerInfo.possibleApplicationHandlers.enumerate()) {
       if (!gMainPane.isValidHandlerApp(app))
         continue;
-
-      app.QueryInterface(Ci.nsIHandlerApp);
 
       // Ensure the XBL binding is created eagerly.
       // eslint-disable-next-line no-undef

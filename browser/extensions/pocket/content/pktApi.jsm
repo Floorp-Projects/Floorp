@@ -155,10 +155,8 @@ var pktApi = (function() {
      *  The return format: { cookieName:cookieValue, cookieName:cookieValue, ... }
     */
     function getCookiesFromPocket() {
-        var pocketCookies = Services.cookies.getCookiesFromHost(pocketSiteHost, {});
         var cookies = {};
-        while (pocketCookies.hasMoreElements()) {
-            var cookie = pocketCookies.getNext().QueryInterface(Ci.nsICookie2);
+        for (let cookie of Services.cookies.getCookiesFromHost(pocketSiteHost, {})) {
             cookies[cookie.name] = cookie.value;
         }
         return cookies;

@@ -217,9 +217,7 @@ nsUnknownContentTypeDialog.prototype = {
       // because the original one is definitely gone (and nsIFilePicker doesn't like
       // a null parent):
       gDownloadLastDir = this._mDownloadDir;
-      let windowsEnum = Services.wm.getEnumerator("");
-      while (windowsEnum.hasMoreElements()) {
-        let someWin = windowsEnum.getNext();
+      for (let someWin of Services.wm.getEnumerator("")) {
         // We need to make sure we don't end up with this dialog, because otherwise
         // that's going to go away when the user clicks "Save", and that breaks the
         // windows file picker that's supposed to show up if we let the user choose

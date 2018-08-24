@@ -345,9 +345,7 @@ var GeckoViewUtils = {
       return [dispatcher, win];
     }
 
-    let iter = Services.wm.getEnumerator(/* windowType */ null);
-    while (iter.hasMoreElements()) {
-      win = iter.getNext().QueryInterface(Ci.nsIDOMWindow);
+    for (let win of Services.wm.getEnumerator(/* windowType */ null)) {
       dispatcher = this.getDispatcherForWindow(win);
       if (dispatcher) {
         return [dispatcher, win];

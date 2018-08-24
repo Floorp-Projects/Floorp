@@ -5,10 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function macWindowMenuDidShow() {
-  let windows = Services.wm.getEnumerator("");
   let frag = document.createDocumentFragment();
-  while (windows.hasMoreElements()) {
-    let win = windows.getNext();
+  for (let win of Services.wm.getEnumerator("")) {
     if (win.document.documentElement.getAttribute("inwindowmenu") == "false") {
       continue;
     }

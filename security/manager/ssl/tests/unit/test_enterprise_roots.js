@@ -31,11 +31,9 @@ function check_no_enterprise_roots_imported(certDB, dbKey = undefined) {
 function check_some_enterprise_roots_imported(certDB) {
   let enterpriseRoots = certDB.getEnterpriseRoots();
   notEqual(enterpriseRoots, null, "should have imported some enterprise roots");
-  let enumerator = enterpriseRoots.getEnumerator();
   let foundNonBuiltIn = false;
   let savedDBKey = null;
-  while (enumerator.hasMoreElements()) {
-    let cert = enumerator.getNext().QueryInterface(Ci.nsIX509Cert);
+  for (let cert of enterpriseRoots.getEnumerator()) {
     if (!cert.isBuiltInRoot && !savedDBKey) {
       foundNonBuiltIn = true;
       savedDBKey = cert.dbKey;

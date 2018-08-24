@@ -1513,7 +1513,7 @@ XPCShellDirProvider::GetFiles(const char* prop, nsISimpleEnumerator* *result)
         if (NS_SUCCEEDED(rv))
             dirs.AppendObject(file);
 
-        return NS_NewArrayEnumerator(result, dirs);
+        return NS_NewArrayEnumerator(result, dirs, NS_GET_IID(nsIFile));
     } else if (!strcmp(prop, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
         nsCOMArray<nsIFile> dirs;
         nsCOMPtr<nsIFile> appDir;
@@ -1524,7 +1524,7 @@ XPCShellDirProvider::GetFiles(const char* prop, nsISimpleEnumerator* *result)
             NS_SUCCEEDED(appDir->AppendNative(NS_LITERAL_CSTRING("preferences"))) &&
             NS_SUCCEEDED(appDir->Exists(&exists)) && exists) {
             dirs.AppendObject(appDir);
-            return NS_NewArrayEnumerator(result, dirs);
+            return NS_NewArrayEnumerator(result, dirs, NS_GET_IID(nsIFile));
         }
         return NS_ERROR_FAILURE;
     } else if (!strcmp(prop, NS_APP_PLUGINS_DIR_LIST)) {
@@ -1549,7 +1549,7 @@ XPCShellDirProvider::GetFiles(const char* prop, nsISimpleEnumerator* *result)
                 }
             }
         }
-        return NS_NewArrayEnumerator(result, dirs);
+        return NS_NewArrayEnumerator(result, dirs, NS_GET_IID(nsIFile));
     }
     return NS_ERROR_FAILURE;
 }

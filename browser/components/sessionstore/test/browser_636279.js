@@ -50,10 +50,7 @@ function test() {
 
 function countTabs() {
   let needsRestore = 0, isRestoring = 0;
-  let windowsEnum = Services.wm.getEnumerator("navigator:browser");
-
-  while (windowsEnum.hasMoreElements()) {
-    let window = windowsEnum.getNext();
+  for (let window of Services.wm.getEnumerator("navigator:browser")) {
     if (window.closed)
       continue;
 

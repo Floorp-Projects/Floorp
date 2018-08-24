@@ -570,7 +570,7 @@ nsPersistentProperties::Enumerate(nsISimpleEnumerator** aResult)
     }
   }
 
-  return NS_NewArrayEnumerator(aResult, props);
+  return NS_NewArrayEnumerator(aResult, props, NS_GET_IID(nsIPropertyElement));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

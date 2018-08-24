@@ -99,9 +99,7 @@ function getLocalizedStrings(path) {
     Services.strings.createBundle("chrome://pdf.js/locale/" + path);
 
   var map = {};
-  var enumerator = stringBundle.getSimpleEnumeration();
-  while (enumerator.hasMoreElements()) {
-    var string = enumerator.getNext().QueryInterface(Ci.nsIPropertyElement);
+  for (let string of stringBundle.getSimpleEnumeration()) {
     var key = string.key, property = "textContent";
     var i = key.lastIndexOf(".");
     if (i >= 0) {

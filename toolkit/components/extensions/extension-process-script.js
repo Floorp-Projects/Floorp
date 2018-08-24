@@ -42,53 +42,10 @@ function getData(extension, key = "") {
 const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
 const isContentProcess = appinfo.processType == appinfo.PROCESS_TYPE_CONTENT;
 
-function tryMatchPatternSet(patterns, options) {
-  try {
-    return new MatchPatternSet(patterns, options);
-  } catch (e) {
-    Cu.reportError(e);
-    return new MatchPatternSet([]);
-  }
-}
-
-function parseScriptOptions(options, restrictSchemes = true) {
-  return {
-    allFrames: options.all_frames,
-    matchAboutBlank: options.match_about_blank,
-    frameID: options.frame_id,
-    runAt: options.run_at,
-    hasActiveTabPermission: options.hasActiveTabPermission,
-
-    matches: tryMatchPatternSet(options.matches, {restrictSchemes}),
-    excludeMatches: tryMatchPatternSet(options.exclude_matches || [], {restrictSchemes}),
-    includeGlobs: options.include_globs && options.include_globs.map(glob => new MatchGlob(glob)),
-    excludeGlobs: options.exclude_globs && options.exclude_globs.map(glob => new MatchGlob(glob)),
-
-    jsPaths: options.js || [],
-    cssPaths: options.css || [],
-  };
-}
-
 var extensions = new DefaultWeakMap(policy => {
-  let data = policy.initData;
-  if (data.serialize) {
-    // We have an actual Extension rather than serialized extension
-    // data, so serialize it now to make sure we have consistent inputs
-    // between parent and child processes.
-    data = data.serialize();
-  }
-
-  let extension = new ExtensionChild.BrowserExtensionContent(data);
-  extension.policy = policy;
-  return extension;
+  return new ExtensionChild.BrowserExtensionContent(policy);
 });
 
-var contentScripts = new DefaultWeakMap(matcher => {
-  return new ExtensionContent.Script(extensions.get(matcher.extension),
-                                     matcher);
-});
-
-var DocumentManager;
 var ExtensionManager;
 
 class ExtensionGlobal {
@@ -118,7 +75,7 @@ class ExtensionGlobal {
     return this.frameData;
   }
 
-  async receiveMessage({target, messageName, recipient, data, name}) {
+  receiveMessage({target, messageName, recipient, data, name}) {
     switch (name) {
       case "Extension:SetFrameData":
         if (this.frameData) {
@@ -132,161 +89,15 @@ class ExtensionGlobal {
         return;
     }
 
-    switch (messageName) {
-      case "Extension:Capture":
-        return ExtensionContent.handleExtensionCapture(this.global, data.width, data.height, data.options);
-      case "Extension:DetectLanguage":
-        return ExtensionContent.handleDetectLanguage(this.global, target);
-      case "Extension:Execute":
-        let policy = WebExtensionPolicy.getByID(recipient.extensionId);
-
-        let matcher = new WebExtensionContentScript(policy, parseScriptOptions(data.options, !policy.hasPermission("mozillaAddons")));
-
-        Object.assign(matcher, {
-          wantReturnValue: data.options.wantReturnValue,
-          removeCSS: data.options.remove_css,
-          cssOrigin: data.options.css_origin,
-          jsCode: data.options.jsCode,
-        });
-
-        let script = contentScripts.get(matcher);
-
-        // Add the cssCode to the script, so that it can be converted into a cached URL.
-        await script.addCSSCode(data.options.cssCode);
-        delete data.options.cssCode;
-
-        return ExtensionContent.handleExtensionExecute(this.global, target, data.options, script);
-      case "WebNavigation:GetFrame":
-        return ExtensionContent.handleWebNavigationGetFrame(this.global, data.options);
-      case "WebNavigation:GetAllFrames":
-        return ExtensionContent.handleWebNavigationGetAllFrames(this.global);
-    }
+    return ExtensionContent.receiveMessage(this.global, messageName, target, data, recipient);
   }
 }
-
-// Responsible for creating ExtensionContexts and injecting content
-// scripts into them when new documents are created.
-DocumentManager = {
-  globals: new Map(),
-
-  // Initialize listeners that we need regardless of whether extensions are
-  // enabled.
-  earlyInit() {
-    Services.obs.addObserver(this, "tab-content-frameloader-created"); // eslint-disable-line mozilla/balanced-listeners
-  },
-
-  // Initialize a frame script global which extension contexts may be loaded
-  // into.
-  initGlobal(global) {
-    this.globals.set(global, new ExtensionGlobal(global));
-    // eslint-disable-next-line mozilla/balanced-listeners
-    global.addEventListener("unload", () => {
-      this.globals.delete(global);
-    });
-  },
-
-  initExtension(policy) {
-    this.injectExtensionScripts(policy);
-  },
-
-  // Listeners
-
-  observe(subject, topic, data) {
-    if (topic == "tab-content-frameloader-created") {
-      this.initGlobal(subject);
-    }
-  },
-
-  // Script loading
-
-  injectExtensionScripts(policy) {
-    for (let window of this.enumerateWindows()) {
-      let runAt = {document_start: [], document_end: [], document_idle: []};
-
-      for (let script of policy.contentScripts) {
-        if (script.matchesWindow(window)) {
-          runAt[script.runAt].push(script);
-        }
-      }
-
-      let inject = matcher => contentScripts.get(matcher).injectInto(window);
-      let injectAll = matchers => Promise.all(matchers.map(inject));
-
-      // Intentionally using `.then` instead of `await`, we only need to
-      // chain injecting other scripts into *this* window, not all windows.
-      injectAll(runAt.document_start)
-        .then(() => injectAll(runAt.document_end))
-        .then(() => injectAll(runAt.document_idle));
-    }
-  },
-
-  /**
-   * Checks that all parent frames for the given withdow either have the
-   * same add-on ID, or are special chrome-privileged documents such as
-   * about:addons or developer tools panels.
-   *
-   * @param {Window} window
-   *        The window to check.
-   * @param {string} addonId
-   *        The add-on ID to check.
-   * @returns {boolean}
-   */
-  checkParentFrames(window, addonId) {
-    while (window.parent !== window) {
-      window = window.parent;
-
-      let principal = window.document.nodePrincipal;
-
-      if (Services.scriptSecurityManager.isSystemPrincipal(principal)) {
-        // The add-on manager is a special case, since it contains extension
-        // options pages in same-type <browser> frames.
-        if (window.location.href === "about:addons") {
-          return true;
-        }
-      }
-
-      if (principal.addonId !== addonId) {
-        return false;
-      }
-    }
-
-    return true;
-  },
-
-  loadInto(policy, window) {
-    let extension = extensions.get(policy);
-    if (WebExtensionPolicy.isExtensionProcess && this.checkParentFrames(window, policy.id)) {
-      // We're in a top-level extension frame, or a sub-frame thereof,
-      // in the extension process. Inject the full extension page API.
-      ExtensionPageChild.initExtensionContext(extension, window);
-    } else {
-      // We're in a content sub-frame or not in the extension process.
-      // Only inject a minimal content script API.
-      ExtensionContent.initExtensionContext(extension, window);
-    }
-  },
-
-  // Helpers
-
-  * enumerateWindows(docShell) {
-    if (docShell) {
-      let enum_ = docShell.getDocShellEnumerator(docShell.typeContent,
-                                                 docShell.ENUMERATE_FORWARDS);
-
-      for (let docShell of XPCOMUtils.IterSimpleEnumerator(enum_, Ci.nsIDocShell)) {
-        yield docShell.domWindow;
-      }
-    } else {
-      for (let global of this.globals.keys()) {
-        yield* this.enumerateWindows(global.docShell);
-      }
-    }
-  },
-};
 
 ExtensionManager = {
   // WeakMap<WebExtensionPolicy, Map<string, WebExtensionContentScript>>
   registeredContentScripts: new DefaultWeakMap((policy) => new Map()),
+
+  globals: new WeakMap(),
 
   init() {
     MessageChannel.setupMessageManagers([Services.cpmm]);
@@ -297,6 +108,11 @@ ExtensionManager = {
     Services.cpmm.addMessageListener("Extension:RegisterContentScript", this);
     Services.cpmm.addMessageListener("Extension:UnregisterContentScripts", this);
 
+    // eslint-disable-next-line mozilla/balanced-listeners
+    Services.obs.addObserver(
+      global => this.globals.set(global, new ExtensionGlobal(global)),
+      "tab-content-frameloader-created");
+
     for (let id of sharedData.get("extensions/activeIDs") || []) {
       this.initExtension(getData({id}));
     }
@@ -305,19 +121,13 @@ ExtensionManager = {
   initExtensionPolicy(extension) {
     let policy = WebExtensionPolicy.getByID(extension.id);
     if (!policy) {
-      let localizeCallback, allowedOrigins, webAccessibleResources;
-      let restrictSchemes = !extension.permissions.has("mozillaAddons");
-
+      let localizeCallback;
       if (extension.localize) {
         // We have a real Extension object.
         localizeCallback = extension.localize.bind(extension);
-        allowedOrigins = extension.whiteListedHosts;
-        webAccessibleResources = extension.webAccessibleResources;
       } else {
         // We have serialized extension data;
         localizeCallback = str => extensions.get(policy).localize(str);
-        allowedOrigins = new MatchPatternSet(extension.whiteListedHosts, {restrictSchemes});
-        webAccessibleResources = extension.webAccessibleResources.map(host => new MatchGlob(host));
       }
 
       let {backgroundScripts} = extension;
@@ -331,9 +141,9 @@ ExtensionManager = {
         name: extension.name,
         baseURL: extension.resourceURL,
 
-        permissions: Array.from(extension.permissions),
-        allowedOrigins,
-        webAccessibleResources,
+        permissions: extension.permissions,
+        allowedOrigins: extension.whiteListedHosts,
+        webAccessibleResources: extension.webAccessibleResources,
 
         contentSecurityPolicy: extension.contentSecurityPolicy,
 
@@ -341,7 +151,7 @@ ExtensionManager = {
 
         backgroundScripts,
 
-        contentScripts: extension.contentScripts.map(script => parseScriptOptions(script, restrictSchemes)),
+        contentScripts: extension.contentScripts,
       });
 
       policy.debugName = `${JSON.stringify(policy.name)} (ID: ${policy.id}, ${policy.getURL()})`;
@@ -352,14 +162,14 @@ ExtensionManager = {
       const registeredContentScripts = this.registeredContentScripts.get(policy);
 
       for (let [scriptId, options] of getData(extension, "contentScripts") || []) {
-        const parsedOptions = parseScriptOptions(options, restrictSchemes);
-        const script = new WebExtensionContentScript(policy, parsedOptions);
+        const script = new WebExtensionContentScript(policy, options);
         policy.registerContentScript(script);
         registeredContentScripts.set(scriptId, script);
       }
 
       policy.active = true;
-      policy.initData = extension;
+      policy.instanceId = extension.instanceId;
+      policy.optionalPermissions = extension.optionalPermissions;
     }
     return policy;
   },
@@ -370,108 +180,91 @@ ExtensionManager = {
     }
     let policy = this.initExtensionPolicy(data);
 
-    DocumentManager.initExtension(policy);
+    policy.injectContentScripts();
   },
 
   receiveMessage({name, data}) {
-    switch (name) {
-      case "Extension:Startup": {
-        this.initExtension(data);
+    try {
+      switch (name) {
+        case "Extension:Startup":
+          this.initExtension(data);
+          break;
 
-        Services.cpmm.sendAsyncMessage("Extension:StartupComplete");
-        break;
-      }
+        case "Extension:Shutdown": {
+          let policy = WebExtensionPolicy.getByID(data.id);
+          if (policy) {
+            if (extensions.has(policy)) {
+              extensions.get(policy).shutdown();
+            }
 
-      case "Extension:Shutdown": {
-        let policy = WebExtensionPolicy.getByID(data.id);
-
-        if (policy) {
-          if (extensions.has(policy)) {
-            extensions.get(policy).shutdown();
-          }
-
-          if (isContentProcess) {
-            policy.active = false;
-          }
-        }
-        Services.cpmm.sendAsyncMessage("Extension:ShutdownComplete");
-        break;
-      }
-
-      case "Extension:FlushJarCache": {
-        ExtensionUtils.flushJarCache(data.path);
-        Services.cpmm.sendAsyncMessage("Extension:FlushJarCacheComplete");
-        break;
-      }
-
-      case "Extension:RegisterContentScript": {
-        let policy = WebExtensionPolicy.getByID(data.id);
-
-        if (policy) {
-          const registeredContentScripts = this.registeredContentScripts.get(policy);
-
-          if (registeredContentScripts.has(data.scriptId)) {
-            Cu.reportError(new Error(
-              `Registering content script ${data.scriptId} on ${data.id} more than once`));
-          } else {
-            try {
-              const parsedOptions = parseScriptOptions(data.options, !policy.hasPermission("mozillaAddons"));
-              const script = new WebExtensionContentScript(policy, parsedOptions);
-              policy.registerContentScript(script);
-              registeredContentScripts.set(data.scriptId, script);
-            } catch (e) {
-              Cu.reportError(e);
+            if (isContentProcess) {
+              policy.active = false;
             }
           }
+          break;
         }
 
-        Services.cpmm.sendAsyncMessage("Extension:RegisterContentScriptComplete");
-        break;
-      }
+        case "Extension:FlushJarCache":
+          ExtensionUtils.flushJarCache(data.path);
+          break;
 
-      case "Extension:UnregisterContentScripts": {
-        let policy = WebExtensionPolicy.getByID(data.id);
+        case "Extension:RegisterContentScript": {
+          let policy = WebExtensionPolicy.getByID(data.id);
 
-        if (policy) {
-          const registeredContentScripts = this.registeredContentScripts.get(policy);
+          if (policy) {
+            const registeredContentScripts = this.registeredContentScripts.get(policy);
 
-          for (const scriptId of data.scriptIds) {
-            const script = registeredContentScripts.get(scriptId);
-            if (script) {
-              try {
+            if (registeredContentScripts.has(data.scriptId)) {
+              Cu.reportError(new Error(
+                `Registering content script ${data.scriptId} on ${data.id} more than once`));
+            } else {
+              const script = new WebExtensionContentScript(policy, data.options);
+              policy.registerContentScript(script);
+              registeredContentScripts.set(data.scriptId, script);
+            }
+          }
+          break;
+        }
+
+        case "Extension:UnregisterContentScripts": {
+          let policy = WebExtensionPolicy.getByID(data.id);
+
+          if (policy) {
+            const registeredContentScripts = this.registeredContentScripts.get(policy);
+
+            for (const scriptId of data.scriptIds) {
+              const script = registeredContentScripts.get(scriptId);
+              if (script) {
                 policy.unregisterContentScript(script);
                 registeredContentScripts.delete(scriptId);
-              } catch (e) {
-                Cu.reportError(e);
               }
             }
           }
+          break;
         }
-
-        Services.cpmm.sendAsyncMessage("Extension:UnregisterContentScriptsComplete");
-        break;
       }
+    } catch (e) {
+      Cu.reportError(e);
     }
+    Services.cpmm.sendAsyncMessage(`${name}Complete`);
   },
 };
 
 function ExtensionProcessScript() {
-  if (!ExtensionProcessScript.singleton) {
-    ExtensionProcessScript.singleton = this;
-  }
-  return ExtensionProcessScript.singleton;
 }
-
-ExtensionProcessScript.singleton = null;
 
 ExtensionProcessScript.prototype = {
   classID: Components.ID("{21f9819e-4cdf-49f9-85a0-850af91a5058}"),
   QueryInterface: ChromeUtils.generateQI([Ci.mozIExtensionProcessScript]),
 
+  _xpcom_factory: XPCOMUtils.generateSingletonFactory(ExtensionProcessScript),
+
   get wrappedJSObject() { return this; },
 
+  extensions,
+
   getFrameData(global, force) {
-    let extGlobal = DocumentManager.globals.get(global);
+    let extGlobal = ExtensionManager.globals.get(global);
     return extGlobal && extGlobal.getFrameData(force);
   },
 
@@ -479,9 +272,12 @@ ExtensionProcessScript.prototype = {
     return ExtensionManager.initExtensionPolicy(extension);
   },
 
-  initExtensionDocument(policy, doc) {
-    if (DocumentManager.globals.has(doc.defaultView.docShell.messageManager)) {
-      DocumentManager.loadInto(policy, doc.defaultView);
+  initExtensionDocument(policy, doc, privileged) {
+    let extension = extensions.get(policy);
+    if (privileged) {
+      ExtensionPageChild.initExtensionContext(extension, doc.defaultView);
+    } else {
+      ExtensionContent.initExtensionContext(extension, doc.defaultView);
     }
   },
 
@@ -493,17 +289,14 @@ ExtensionProcessScript.prototype = {
   },
 
   preloadContentScript(contentScript) {
-    contentScripts.get(contentScript).preload();
+    ExtensionContent.contentScripts.get(contentScript).preload();
   },
 
   loadContentScript(contentScript, window) {
-    if (DocumentManager.globals.has(window.docShell.messageManager)) {
-      contentScripts.get(contentScript).injectInto(window);
-    }
+    return ExtensionContent.contentScripts.get(contentScript).injectInto(window);
   },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ExtensionProcessScript]);
 
-DocumentManager.earlyInit();
 ExtensionManager.init();

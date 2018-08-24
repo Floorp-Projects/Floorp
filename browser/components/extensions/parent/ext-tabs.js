@@ -50,9 +50,7 @@ XPCOMUtils.defineLazyGetter(this, "tabHidePopup", () => {
 });
 
 function showHiddenTabs(id) {
-  let windowsEnum = Services.wm.getEnumerator("navigator:browser");
-  while (windowsEnum.hasMoreElements()) {
-    let win = windowsEnum.getNext();
+  for (let win of Services.wm.getEnumerator("navigator:browser")) {
     if (win.closed || !win.gBrowser) {
       continue;
     }

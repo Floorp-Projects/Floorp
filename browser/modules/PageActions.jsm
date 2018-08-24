@@ -1204,10 +1204,7 @@ function* allBrowserWindows(browserWindow = null) {
     yield browserWindow;
     return;
   }
-  let windows = Services.wm.getEnumerator("navigator:browser");
-  while (windows.hasMoreElements()) {
-    yield windows.getNext();
-  }
+  yield* Services.wm.getEnumerator("navigator:browser");
 }
 
 /**

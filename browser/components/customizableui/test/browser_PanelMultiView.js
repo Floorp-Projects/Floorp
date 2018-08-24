@@ -406,6 +406,7 @@ add_task(async function test_cancel_mainview_event_sequence() {
   Assert.deepEqual(recordArray, [
     "panelview-0: ViewShowing",
     "panelview-0: ViewHiding",
+    "panelmultiview-0: PanelMultiViewHidden",
     "panelmultiview-0: popuphidden",
   ]);
 });
@@ -475,8 +476,9 @@ add_task(async function test_close_while_showing_mainview_event_sequence() {
 
   Assert.deepEqual(recordArray, [
     "panelview-0: ViewShowing",
-    "panelview-0: ViewShowing > panelmultiview-0: popuphidden",
     "panelview-0: ViewShowing > panelview-0: ViewHiding",
+    "panelview-0: ViewShowing > panelmultiview-0: PanelMultiViewHidden",
+    "panelview-0: ViewShowing > panelmultiview-0: popuphidden",
   ]);
 });
 

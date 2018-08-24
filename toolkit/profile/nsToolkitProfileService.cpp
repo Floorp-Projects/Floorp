@@ -24,7 +24,7 @@
 #include "nsIToolkitProfile.h"
 #include "nsIFactory.h"
 #include "nsIFile.h"
-#include "nsISimpleEnumerator.h"
+#include "nsSimpleEnumerator.h"
 
 #ifdef XP_MACOSX
 #include <CoreFoundation/CoreFoundation.h>
@@ -144,16 +144,19 @@ private:
 
     static nsToolkitProfileService *gService;
 
-    class ProfileEnumerator final : public nsISimpleEnumerator
+    class ProfileEnumerator final : public nsSimpleEnumerator
     {
     public:
-        NS_DECL_ISUPPORTS
         NS_DECL_NSISIMPLEENUMERATOR
+
+        const nsID& DefaultInterface() override
+        {
+          return NS_GET_IID(nsIToolkitProfile);
+        }
 
         explicit ProfileEnumerator(nsToolkitProfile *first)
           { mCurrent = first; }
     private:
-        ~ProfileEnumerator() { }
         RefPtr<nsToolkitProfile> mCurrent;
     };
 };
@@ -594,9 +597,6 @@ nsToolkitProfileService::GetProfiles(nsISimpleEnumerator* *aResult)
     NS_ADDREF(*aResult);
     return NS_OK;
 }
-
-NS_IMPL_ISUPPORTS(nsToolkitProfileService::ProfileEnumerator,
-                  nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsToolkitProfileService::ProfileEnumerator::HasMoreElements(bool* aResult)

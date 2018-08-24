@@ -28,20 +28,16 @@ var setPaymentNums = 0;
 
 addMessageListener("payment-num-set", function() {
   setPaymentNums = 0;
-  const paymentEnum = paymentSrv.enumerate();
-  while (paymentEnum.hasMoreElements()) {
+  for (let payment of paymentSrv.enumerate()) {
     setPaymentNums = setPaymentNums + 1;
-    paymentEnum.getNext();
   }
   sendAsyncMessage("payment-num-set-complete");
 });
 
 addMessageListener("payment-num-check", function(expectedNumPayments) {
-  const paymentEnum = paymentSrv.enumerate();
   let numPayments = 0;
-  while (paymentEnum.hasMoreElements()) {
+  for (let payment of paymentSrv.enumerate()) {
     numPayments = numPayments + 1;
-    paymentEnum.getNext();
   }
   if (numPayments !== expectedNumPayments + setPaymentNums) {
     emitTestFail("Expected '" + expectedNumPayments +

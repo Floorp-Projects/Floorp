@@ -55,12 +55,10 @@ function checkCookie(cookie, cookieObj) {
 
 function countCookies(enumerator) {
   let cnt = 0;
-
-  while (enumerator.hasMoreElements()) {
+  for (let cookie of enumerator) {
+    void cookie;
     cnt++;
-    enumerator.getNext();
   }
-
   return cnt;
 }
 

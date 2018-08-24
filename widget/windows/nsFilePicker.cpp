@@ -688,7 +688,7 @@ NS_IMETHODIMP
 nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 {
   NS_ENSURE_ARG_POINTER(aFiles);
-  return NS_NewArrayEnumerator(aFiles, mFiles);
+  return NS_NewArrayEnumerator(aFiles, mFiles, NS_GET_IID(nsIFile));
 }
 
 // Get the file + path
