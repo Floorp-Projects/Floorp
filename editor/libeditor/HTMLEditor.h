@@ -1901,7 +1901,7 @@ protected:
   ManualNACPtr mBottomHandle;
   ManualNACPtr mBottomRightHandle;
 
-  nsCOMPtr<Element> mActivatedHandle;
+  RefPtr<Element> mActivatedHandle;
 
   ManualNACPtr mResizingShadow;
   ManualNACPtr mResizingInfo;
