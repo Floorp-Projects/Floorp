@@ -19,10 +19,13 @@ namespace js {
 namespace jit {
 
 struct AnyRegister {
-    typedef uint32_t Code;
+    typedef uint8_t Code;
 
-    static const uint32_t Total = Registers::Total + FloatRegisters::Total;
-    static const uint32_t Invalid = UINT_MAX;
+    static const uint8_t Total = Registers::Total + FloatRegisters::Total;
+    static const uint8_t Invalid = UINT8_MAX;
+
+    static_assert(size_t(Registers::Total) + FloatRegisters::Total <= UINT8_MAX,
+                  "Number of registers must fit in uint8_t");
 
   private:
     Code code_;
@@ -36,7 +39,7 @@ struct AnyRegister {
     explicit AnyRegister(FloatRegister fpu) {
         code_ = fpu.code() + Registers::Total;
     }
-    static AnyRegister FromCode(uint32_t i) {
+    static AnyRegister FromCode(uint8_t i) {
         MOZ_ASSERT(i < Total);
         AnyRegister r;
         r.code_ = i;
@@ -72,7 +75,7 @@ struct AnyRegister {
     bool volatile_() const {
         return isFloat() ? fpu().volatile_() : gpr().volatile_();
     }
-    AnyRegister aliased(uint32_t aliasIdx) const {
+    AnyRegister aliased(uint8_t aliasIdx) const {
         AnyRegister ret;
         if (isFloat())
             ret = AnyRegister(fpu().aliased(aliasIdx));
@@ -81,7 +84,7 @@ struct AnyRegister {
         MOZ_ASSERT_IF(aliasIdx == 0, ret == *this);
         return ret;
     }
-    uint32_t numAliased() const {
+    uint8_t numAliased() const {
         if (isFloat())
             return fpu().numAliased();
         return gpr().numAliased();
