@@ -241,11 +241,10 @@ var ContentBlocking = {
     this.identityPopupMultiView = $("#identity-popup-multiView");
     this.reportBreakageButton = $("#identity-popup-content-blocking-report-breakage");
     this.reportBreakageURL = $("#identity-popup-breakageReportView-collection-url");
-    this.reportBreakageUA = $("#identity-popup-breakageReportView-collection-userAgent");
     this.reportBreakageLearnMore = $("#identity-popup-breakageReportView-learn-more");
 
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-    this.reportBreakageLearnMore.href = baseURL + "tracking-protection-pbm";
+    this.reportBreakageLearnMore.href = baseURL + "blocking-breakage";
 
     this.updateReportBreakageUI = () => {
       this.reportBreakageButton.hidden = !Services.prefs.getBoolPref(this.PREF_REPORT_BREAKAGE_ENABLED);
@@ -356,7 +355,7 @@ var ContentBlocking = {
     // Leave the ? at the end of the URL to signify that this URL had its query stripped.
     let urlWithoutQuery = this.reportURI.asciiSpec.replace(this.reportURI.query, "");
     let body = `Full URL: ${urlWithoutQuery}\n`;
-    body += `userAgent: ${this.reportBreakageUA.textContent}\n`;
+    body += `userAgent: ${navigator.userAgent}\n`;
 
     body += "\n**Preferences**\n";
     body += `${TrackingProtection.PREF_ENABLED_GLOBALLY}: ${Services.prefs.getBoolPref(TrackingProtection.PREF_ENABLED_GLOBALLY)}\n`;
@@ -395,7 +394,6 @@ var ContentBlocking = {
     this.reportURI = gBrowser.currentURI;
     let urlWithoutQuery = this.reportURI.asciiSpec.replace("?" + this.reportURI.query, "");
     this.reportBreakageURL.textContent = urlWithoutQuery;
-    this.reportBreakageUA.textContent = navigator.userAgent;
     this.identityPopupMultiView.showSubView("identity-popup-breakageReportView");
   },
 

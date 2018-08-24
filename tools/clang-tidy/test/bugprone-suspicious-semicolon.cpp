@@ -1,5 +1,5 @@
 
-// misc-suspicious-semicolon
+// bugprone-suspicious-semicolon
 void nop();
 void fail1()
 {

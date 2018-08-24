@@ -50,22 +50,38 @@ VRLayerChild::Initialize(dom::HTMLCanvasElement* aCanvasElement,
 }
 
 void
-VRLayerChild::SubmitFrame(uint64_t aFrameId)
+VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo)
 {
+  uint64_t frameId = aDisplayInfo.GetFrameId();
+
   // aFrameId will not increment unless the previuosly submitted
   // frame was received by the VR thread and submitted to the VR
   // compositor.  We early-exit here in the event that SubmitFrame
   // was called twice for the same aFrameId.
-  if (!mCanvasElement || aFrameId == mLastSubmittedFrameId) {
+  if (!mCanvasElement || frameId == mLastSubmittedFrameId) {
     return;
   }
-  mLastSubmittedFrameId = aFrameId;
 
   // Keep the SharedSurfaceTextureClient alive long enough for
   // 1 extra frame, accomodating overlapped asynchronous rendering.
   mLastFrameTexture = mThisFrameTexture;
 
+#if defined(MOZ_WIDGET_ANDROID)
+  /**
+   * Do not blit WebGL to a SurfaceTexture until the last submitted frame is already processed
+   * and the new frame poses are ready. SurfaceTextures need to be released in the VR render thread 
+   * in order to allow to be used again in the WebGLContext GLScreenBuffer producer.
+   * Not doing so causes some freezes, crashes or other undefined behaviour.
+   */
+  if (!mThisFrameTexture || aDisplayInfo.mDisplayState.mLastSubmittedFrameId == mLastSubmittedFrameId) {
+      mThisFrameTexture = mCanvasElement->GetVRFrame();
+  }
+#else
   mThisFrameTexture = mCanvasElement->GetVRFrame();
+#endif // defined(MOZ_WIDGET_ANDROID)
+
+  mLastSubmittedFrameId = frameId;
+
   if (!mThisFrameTexture) {
     return;
   }
@@ -90,7 +106,7 @@ VRLayerChild::SubmitFrame(uint64_t aFrameId)
     return;
   }
 
-  SendSubmitFrame(desc, aFrameId, mLeftEyeRect, mRightEyeRect);
+  SendSubmitFrame(desc, frameId, mLeftEyeRect, mRightEyeRect);
 }
 
 bool

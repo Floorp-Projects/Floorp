@@ -152,7 +152,22 @@ IsLowPriority(uint16_t flags)
 // this macro filters out any flags that are not used when constructing the
 // host key.  the significant flags are those that would affect the resulting
 // host record (i.e., the flags that are passed down to PR_GetAddrInfoByName).
-#define RES_KEY_FLAGS(_f) ((_f) & nsHostResolver::RES_CANON_NAME)
+#define RES_KEY_FLAGS(_f) ((_f) & (nsHostResolver::RES_CANON_NAME |     \
+                                   nsHostResolver::RES_DISABLE_TRR))
+
+nsHostKey::nsHostKey(const nsACString& aHost, uint16_t aFlags,
+                     uint16_t aAf, bool aPb, const nsACString& aOriginsuffix)
+  : host(aHost)
+  , flags(aFlags)
+  , af(aAf)
+  , pb(aPb)
+  , originSuffix(aOriginsuffix)
+{
+  if (TRR_DISABLED(gTRRService->Mode())) {
+    // When not using TRR, lookup all answers as TRR-disabled
+    flags |= nsHostResolver::RES_DISABLE_TRR;
+  }
+}
 
 bool
 nsHostKey::operator==(const nsHostKey& other) const
