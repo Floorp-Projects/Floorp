@@ -2206,7 +2206,10 @@ HyperTextAccessible::GetSpellTextAttr(nsINode* aNode,
                                      prevRange->EndOffset());
     }
 
-    if (startOffset > *aStartOffset)
+    // The previous range might not be within this accessible. In that case,
+    // DOMPointToOffset returns length as a fallback. We don't want to use
+    // that offset if so, hence the startOffset < *aEndOffset check.
+    if (startOffset > *aStartOffset && startOffset < *aEndOffset)
       *aStartOffset = startOffset;
 
     if (endOffset < *aEndOffset)
@@ -2223,7 +2226,10 @@ HyperTextAccessible::GetSpellTextAttr(nsINode* aNode,
   startOffset = DOMPointToOffset(prevRange->GetEndContainer(),
                                  prevRange->EndOffset());
 
-  if (startOffset > *aStartOffset)
+  // The previous range might not be within this accessible. In that case,
+  // DOMPointToOffset returns length as a fallback. We don't want to use
+  // that offset if so, hence the startOffset < *aEndOffset check.
+  if (startOffset > *aStartOffset && startOffset < *aEndOffset)
     *aStartOffset = startOffset;
 }
 
