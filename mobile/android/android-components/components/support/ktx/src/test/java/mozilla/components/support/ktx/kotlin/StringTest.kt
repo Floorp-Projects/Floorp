@@ -35,4 +35,34 @@ class StringTest {
         assertFalse("mozilla android".isUrl())
         assertFalse(" mozilla android ".isUrl())
     }
+
+    @Test
+    fun testIsPhone() {
+        assertTrue("tel:+1234567890".isPhone())
+        assertTrue(" tel:+1234567890".isPhone())
+        assertTrue("tel:+1234567890 ".isPhone())
+        assertTrue("tel:+1234567890 ".isPhone())
+        assertTrue("TEL:+1234567890".isPhone())
+        assertTrue("Tel:+1234567890".isPhone())
+    }
+
+    @Test
+    fun testIsEmail() {
+        assertTrue("mailto:asa@mozilla.com".isEmail())
+        assertTrue(" mailto:asa@mozilla.com".isEmail())
+        assertTrue("mailto:asa@mozilla.com ".isEmail())
+        assertTrue("MAILTO:asa@mozilla.com".isEmail())
+        assertTrue("Mailto:asa@mozilla.com".isEmail())
+    }
+
+    @Test
+    fun testGeoLocation() {
+        assertTrue("geo:1,-1".isGeoLocation())
+        assertTrue("geo:1,-1;u=1".isGeoLocation())
+        assertTrue("geo:1,-1,0.5;u=1".isGeoLocation())
+        assertTrue(" geo:1,-1".isGeoLocation())
+        assertTrue("geo:1,-1 ".isGeoLocation())
+        assertTrue("GEO:1,-1".isGeoLocation())
+        assertTrue("Geo:1,-1".isGeoLocation())
+    }
 }

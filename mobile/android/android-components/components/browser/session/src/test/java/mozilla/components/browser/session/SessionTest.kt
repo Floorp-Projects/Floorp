@@ -6,6 +6,7 @@ package mozilla.components.browser.session
 
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -267,6 +268,45 @@ class SessionTest {
 
         assertTrue(callbackExecuted)
         assertTrue(session.download.isConsumed())
+    }
+
+    @Test
+    fun `HitResult will be set on Session`() {
+        val hitResult: HitResult = mock()
+        `when`(hitResult.src).thenReturn("https://mozilla.org")
+
+        val session = Session("http://firefox.com")
+        session.hitResult = Consumable.from(hitResult)
+
+        assertFalse(session.hitResult.isConsumed())
+
+        var hitResultIsSet = false
+        session.hitResult.consume { consumable ->
+            hitResultIsSet = consumable.src == "https://mozilla.org"
+            true
+        }
+
+        assertTrue(hitResultIsSet)
+        assertTrue(session.hitResult.isConsumed())
+    }
+
+    @Test
+    fun `HitResult will not be set on Session if consued by observer`() {
+        var callbackExecuted = false
+
+        val session = Session("https://www.mozilla.org")
+        session.register(object : Session.Observer {
+            override fun onLongPress(session: Session, hitResult: HitResult): Boolean {
+                callbackExecuted = true
+                return true // Consume HitResult
+            }
+        })
+
+        val hitResult: HitResult = mock()
+        session.hitResult = Consumable.from(hitResult)
+
+        assertTrue(callbackExecuted)
+        assertTrue(session.hitResult.isConsumed())
     }
 
     @Test

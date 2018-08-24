@@ -8,10 +8,18 @@ import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.HitResult
+import mozilla.components.support.ktx.kotlin.isPhone
+import mozilla.components.support.ktx.kotlin.isEmail
+import mozilla.components.support.ktx.kotlin.isGeoLocation
 import org.mozilla.gecko.util.ThreadUtils
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_AUDIO
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_IMAGE
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_NONE
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_VIDEO
 import org.mozilla.geckoview.GeckoSessionSettings
 
 /**
@@ -226,15 +234,20 @@ class GeckoEngineSession(
         }
     }
 
-    private fun createContentDelegate() = object : GeckoSession.ContentDelegate {
+    internal fun createContentDelegate() = object : GeckoSession.ContentDelegate {
         override fun onContextMenu(
             session: GeckoSession,
             screenX: Int,
             screenY: Int,
-            uri: String,
+            uri: String?,
             elementType: Int,
-            elementSrc: String
-        ) = Unit
+            elementSrc: String?
+        ) {
+            val hitResult = handleLongClick(elementSrc, elementType, uri)
+            hitResult?.let {
+                notifyObservers { onLongPress(it) }
+            }
+        }
 
         override fun onCrash(session: GeckoSession?) = Unit
 
@@ -262,6 +275,42 @@ class GeckoEngineSession(
     private fun createTrackingProtectionDelegate() = GeckoSession.TrackingProtectionDelegate {
         session, uri, _ ->
             session?.let { uri?.let { notifyObservers { onTrackerBlocked(it) } } }
+    }
+
+    @Suppress("ComplexMethod")
+    fun handleLongClick(elementSrc: String?, elementType: Int, uri: String? = null): HitResult? {
+        return when (elementType) {
+            ELEMENT_TYPE_AUDIO ->
+                elementSrc?.let {
+                    HitResult.AUDIO(it)
+                }
+            ELEMENT_TYPE_VIDEO ->
+                elementSrc?.let {
+                    HitResult.VIDEO(it)
+                }
+            ELEMENT_TYPE_IMAGE -> {
+                when {
+                    elementSrc != null && uri != null ->
+                        HitResult.IMAGE_SRC(elementSrc, uri)
+                    elementSrc != null ->
+                        HitResult.IMAGE(elementSrc)
+                    else -> HitResult.UNKNOWN("")
+                }
+            }
+            ELEMENT_TYPE_NONE -> {
+                elementSrc?.let {
+                    when {
+                        it.isPhone() -> HitResult.PHONE(it)
+                        it.isEmail() -> HitResult.EMAIL(it)
+                        it.isGeoLocation() -> HitResult.GEO(it)
+                        else -> HitResult.UNKNOWN(it)
+                    }
+                } ?: uri?.let {
+                    HitResult.UNKNOWN(it)
+                }
+            }
+            else -> HitResult.UNKNOWN("")
+        }
     }
 
     companion object {

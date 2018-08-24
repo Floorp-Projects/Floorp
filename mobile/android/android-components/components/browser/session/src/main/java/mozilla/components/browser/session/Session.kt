@@ -6,6 +6,7 @@ package mozilla.components.browser.session
 
 import mozilla.components.browser.session.engine.EngineSessionHolder
 import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -44,6 +45,7 @@ class Session(
         fun onDownload(session: Session, download: Download): Boolean = false
         fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) = Unit
         fun onTrackerBlocked(session: Session, blocked: String, all: List<String>) = Unit
+        fun onLongPress(session: Session, hitResult: HitResult): Boolean = false
     }
 
     /**
@@ -194,6 +196,11 @@ class Session(
                 onTrackerBlocked(this@Session, trackersBlocked.last(), trackersBlocked)
             }
         }
+    }
+
+    var hitResult: Consumable<HitResult> by Delegates.vetoable(Consumable.empty()) { _, _, result ->
+        val consumers = wrapConsumers<HitResult> { onLongPress(this@Session, it) }
+        !result.consumeBy(consumers)
     }
 
     /**

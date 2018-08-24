@@ -7,6 +7,7 @@ package mozilla.components.browser.session.engine
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.HitResult
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -161,5 +162,20 @@ class EngineObserverTest {
 
         observer.onLoadingStateChange(true)
         assertEquals(emptyList<String>(), session.trackersBlocked)
+    }
+
+    @Test
+    fun testEngineObserverPassingHitResult() {
+        val session = Session("https://www.mozilla.org")
+        val observer = EngineObserver(session)
+        val hitResult = HitResult.UNKNOWN("data://foobar")
+
+        observer.onLongPress(hitResult)
+
+        session.hitResult.consume {
+            assertEquals("data://foobar", it.src)
+            assertTrue(it is HitResult.UNKNOWN)
+            true
+        }
     }
 }

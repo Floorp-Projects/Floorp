@@ -30,3 +30,9 @@ fun String.isUrl(): Boolean {
 
     return trimmedUrl.contains(".") || trimmedUrl.contains(":")
 }
+
+fun String.isPhone(): Boolean = contains("tel:", true)
+
+fun String.isEmail(): Boolean = contains("mailto:", true)
+
+fun String.isGeoLocation(): Boolean = contains("geo:", true)

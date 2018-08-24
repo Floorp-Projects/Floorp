@@ -7,18 +7,28 @@ package mozilla.components.browser.engine.system
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Handler
+import android.os.Message
 import android.util.AttributeSet
+import android.view.View
 import android.webkit.CookieManager
 import android.webkit.DownloadListener
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
+import android.webkit.WebView.HitTestResult.EMAIL_TYPE
+import android.webkit.WebView.HitTestResult.GEO_TYPE
+import android.webkit.WebView.HitTestResult.IMAGE_TYPE
+import android.webkit.WebView.HitTestResult.PHONE_TYPE
+import android.webkit.WebView.HitTestResult.SRC_ANCHOR_TYPE
+import android.webkit.WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.utils.DownloadUtils
 import java.lang.ref.WeakReference
 import java.net.URI
@@ -30,7 +40,7 @@ class SystemEngineView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), EngineView {
+) : FrameLayout(context, attrs, defStyleAttr), EngineView, View.OnLongClickListener {
     internal val currentWebView = createWebView(context)
     internal var currentUrl = ""
     private var session: SystemEngineSession? = null
@@ -60,6 +70,11 @@ class SystemEngineView @JvmOverloads constructor(
             currentWebView.loadUrl(it)
             internalSession.scheduledLoad = ScheduledLoad()
         }
+    }
+
+    override fun onLongClick(view: View?): Boolean {
+        val result = currentWebView.hitTestResult
+        return handleLongClick(result.type, result.extra)
     }
 
     private fun createWebView(context: Context): WebView {
@@ -144,6 +159,54 @@ class SystemEngineView @JvmOverloads constructor(
                 val cookie = CookieManager.getInstance().getCookie(url)
                 onExternalResource(url, fileName, contentLength, mimetype, cookie, userAgent)
             }
+        }
+    }
+
+    internal fun handleLongClick(type: Int, extra: String): Boolean {
+        val result: HitResult? = when (type) {
+            EMAIL_TYPE -> {
+                HitResult.EMAIL(extra)
+            }
+            GEO_TYPE -> {
+                HitResult.GEO(extra)
+            }
+            PHONE_TYPE -> {
+                HitResult.PHONE(extra)
+            }
+            IMAGE_TYPE -> {
+                HitResult.IMAGE(extra)
+            }
+            SRC_ANCHOR_TYPE -> {
+                HitResult.UNKNOWN(extra)
+            }
+            SRC_IMAGE_ANCHOR_TYPE -> {
+                // HitTestResult.getExtra() contains only the image URL, and not the link
+                // URL. Internally, WebView's HitTestData contains both, but they only
+                // make it available via requestFocusNodeHref...
+                val message = Message()
+                message.target = ImageHandler(session)
+                currentWebView.requestFocusNodeHref(message)
+                null
+            }
+            else -> null
+        }
+        result?.let {
+            session?.internalNotifyObservers { onLongPress(it) }
+            return true
+        }
+        return false
+    }
+
+    class ImageHandler(val session: SystemEngineSession?) : Handler() {
+        override fun handleMessage(msg: Message) {
+            val url = msg.data.getString("url")
+            val src = msg.data.getString("src")
+
+            if (url == null || src == null) {
+                throw IllegalStateException("WebView did not supply url or src for image link")
+            }
+
+            session?.internalNotifyObservers { onLongPress(HitResult.IMAGE_SRC(src, url)) }
         }
     }
 

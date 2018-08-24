@@ -23,6 +23,7 @@ android {
 
 dependencies {
     implementation project(':concept-engine')
+    implementation project(':support-ktx')
 
     // We only compile against the ARM artifact. We let the app decide which artifact to actually
     // use at runtime. As the Kotlin/Java API is the same for all ABIs it is not important which one

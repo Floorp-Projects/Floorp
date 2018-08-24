@@ -29,6 +29,7 @@ abstract class EngineSession(
         fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null) = Unit
         fun onTrackerBlockingEnabledChange(enabled: Boolean) = Unit
         fun onTrackerBlocked(url: String) = Unit
+        fun onLongPress(hitResult: HitResult) = Unit
 
         @Suppress("LongParameterList")
         fun onExternalResource(

@@ -6,13 +6,18 @@ package mozilla.components.browser.engine.system
 
 import android.net.Uri
 import android.net.http.SslCertificate
+import android.os.Bundle
+import android.os.Message
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import android.webkit.WebView.HitTestResult
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -82,6 +87,100 @@ class SystemEngineViewTest {
         doReturn(certificate).`when`(view).certificate
         engineView.currentWebView.webViewClient.onPageFinished(view, "http://mozilla.org")
         assertEquals(Triple(true, "mozilla.org", "testCA"), observedSecurityChange)
+    }
+
+    @Test
+    fun testHitResultTypeHandling() {
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        var hitTestResult: HitResult = HitResult.UNKNOWN("")
+        engineView.render(engineSession)
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLongPress(hitResult: HitResult) {
+                hitTestResult = hitResult
+            }
+        })
+
+        engineView.handleLongClick(HitTestResult.EMAIL_TYPE, "mailto:asa@mozilla.com")
+        assertTrue(hitTestResult is HitResult.EMAIL)
+        assertEquals("mailto:asa@mozilla.com", hitTestResult.src)
+
+        engineView.handleLongClick(HitTestResult.GEO_TYPE, "geo:1,-1")
+        assertTrue(hitTestResult is HitResult.GEO)
+        assertEquals("geo:1,-1", hitTestResult.src)
+
+        engineView.handleLongClick(HitTestResult.PHONE_TYPE, "tel:+123456789")
+        assertTrue(hitTestResult is HitResult.PHONE)
+        assertEquals("tel:+123456789", hitTestResult.src)
+
+        engineView.handleLongClick(HitTestResult.IMAGE_TYPE, "image.png")
+        assertTrue(hitTestResult is HitResult.IMAGE)
+        assertEquals("image.png", hitTestResult.src)
+
+        engineView.handleLongClick(HitTestResult.SRC_ANCHOR_TYPE, "https://mozilla.org")
+        assertTrue(hitTestResult is HitResult.UNKNOWN)
+        assertEquals("https://mozilla.org", hitTestResult.src)
+
+        var result = engineView.handleLongClick(HitTestResult.SRC_IMAGE_ANCHOR_TYPE, "image.png")
+        assertFalse(result) // Intentional for image links; see ImageHandler tests.
+
+        result = engineView.handleLongClick(HitTestResult.EDIT_TEXT_TYPE, "https://mozilla.org")
+        assertFalse(result)
+    }
+
+    @Test
+    fun testImageHandler() {
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        val handler = SystemEngineView.ImageHandler(engineSession)
+        val message = mock(Message::class.java)
+        val bundle = mock(Bundle::class.java)
+        var observerNotified = false
+
+        `when`(message.data).thenReturn(bundle)
+        `when`(message.data.getString("url")).thenReturn("https://mozilla.org")
+        `when`(message.data.getString("src")).thenReturn("file.png")
+
+        engineView.render(engineSession)
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLongPress(hitResult: HitResult) {
+                observerNotified = true
+            }
+        })
+
+        handler.handleMessage(message)
+        assertTrue(observerNotified)
+
+        observerNotified = false
+        val nullHandler = SystemEngineView.ImageHandler(null)
+        nullHandler.handleMessage(message)
+        assertFalse(observerNotified)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testNullImageSrc() {
+        val engineSession = SystemEngineSession()
+        val handler = SystemEngineView.ImageHandler(engineSession)
+        val message = mock(Message::class.java)
+        val bundle = mock(Bundle::class.java)
+
+        `when`(message.data).thenReturn(bundle)
+        `when`(message.data.getString("url")).thenReturn("https://mozilla.org")
+
+        handler.handleMessage(message)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testNullImageUri() {
+        val engineSession = SystemEngineSession()
+        val handler = SystemEngineView.ImageHandler(engineSession)
+        val message = mock(Message::class.java)
+        val bundle = mock(Bundle::class.java)
+
+        `when`(message.data).thenReturn(bundle)
+        `when`(message.data.getString("src")).thenReturn("file.png")
+
+        handler.handleMessage(message)
     }
 
     @Test

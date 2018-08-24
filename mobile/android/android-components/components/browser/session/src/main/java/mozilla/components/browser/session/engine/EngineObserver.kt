@@ -8,6 +8,7 @@ import android.os.Environment
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.base.observer.Consumable
 
 internal class EngineObserver(val session: Session) : EngineSession.Observer {
@@ -49,6 +50,10 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
 
     override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
         session.trackerBlockingEnabled = enabled
+    }
+
+    override fun onLongPress(hitResult: HitResult) {
+        session.hitResult = Consumable.from(hitResult)
     }
 
     override fun onExternalResource(

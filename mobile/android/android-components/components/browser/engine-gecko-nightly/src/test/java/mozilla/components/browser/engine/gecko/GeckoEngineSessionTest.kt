@@ -7,10 +7,12 @@ package mozilla.components.browser.engine.gecko
 import android.os.Handler
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,6 +29,10 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_AUDIO
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_IMAGE
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_NONE
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_VIDEO
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.createMockedWebResponseInfo
@@ -394,5 +400,78 @@ class GeckoEngineSessionTest {
     @Test(expected = UnsupportedOperationException::class)
     fun testSettings() {
         GeckoEngineSession(mock(GeckoRuntime::class.java)).settings
+    }
+
+    @Test
+    fun testContentDelegate() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        val geckoSession = mock(GeckoSession::class.java)
+        val delegate = engineSession.createContentDelegate()
+
+        var observedChanged = false
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLongPress(hitResult: HitResult) {
+                observedChanged = true
+            }
+        })
+
+        delegate.onContextMenu(geckoSession, 0, 0, null, ELEMENT_TYPE_AUDIO, "file.mp3")
+        assertTrue(observedChanged)
+
+        observedChanged = false
+        delegate.onContextMenu(geckoSession, 0, 0, null, ELEMENT_TYPE_AUDIO, null)
+        assertFalse(observedChanged)
+
+        observedChanged = false
+        delegate.onContextMenu(geckoSession, 0, 0, null, ELEMENT_TYPE_NONE, null)
+        assertFalse(observedChanged)
+    }
+
+    @Test
+    fun testHandleLongClick() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+
+        var result = engineSession.handleLongClick("file.mp3", ELEMENT_TYPE_AUDIO)
+        assertNotNull(result)
+        assertTrue(result is HitResult.AUDIO && result.src == "file.mp3")
+
+        result = engineSession.handleLongClick("file.mp4", ELEMENT_TYPE_VIDEO)
+        assertNotNull(result)
+        assertTrue(result is HitResult.VIDEO && result.src == "file.mp4")
+
+        result = engineSession.handleLongClick("file.png", ELEMENT_TYPE_IMAGE)
+        assertNotNull(result)
+        assertTrue(result is HitResult.IMAGE && result.src == "file.png")
+
+        result = engineSession.handleLongClick("file.png", ELEMENT_TYPE_IMAGE, "https://mozilla.org")
+        assertNotNull(result)
+        assertTrue(result is HitResult.IMAGE_SRC && result.src == "file.png" && result.uri == "https://mozilla.org")
+
+        result = engineSession.handleLongClick(null, ELEMENT_TYPE_IMAGE)
+        assertNotNull(result)
+        assertTrue(result is HitResult.UNKNOWN && result.src == "")
+
+        result = engineSession.handleLongClick("tel:+1234567890", ELEMENT_TYPE_NONE)
+        assertNotNull(result)
+        assertTrue(result is HitResult.PHONE && result.src == "tel:+1234567890")
+
+        result = engineSession.handleLongClick("geo:1,-1", ELEMENT_TYPE_NONE)
+        assertNotNull(result)
+        assertTrue(result is HitResult.GEO && result.src == "geo:1,-1")
+
+        result = engineSession.handleLongClick("mailto:asa@mozilla.com", ELEMENT_TYPE_NONE)
+        assertNotNull(result)
+        assertTrue(result is HitResult.EMAIL && result.src == "mailto:asa@mozilla.com")
+
+        result = engineSession.handleLongClick(null, ELEMENT_TYPE_NONE, "https://mozilla.org")
+        assertNotNull(result)
+        assertTrue(result is HitResult.UNKNOWN && result.src == "https://mozilla.org")
+
+        result = engineSession.handleLongClick("data://foobar", ELEMENT_TYPE_NONE, "https://mozilla.org")
+        assertNotNull(result)
+        assertTrue(result is HitResult.UNKNOWN && result.src == "data://foobar")
+
+        result = engineSession.handleLongClick(null, ELEMENT_TYPE_NONE, null)
+        assertNull(result)
     }
 }
