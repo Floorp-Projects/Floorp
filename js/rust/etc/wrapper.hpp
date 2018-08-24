@@ -13,6 +13,7 @@ typedef uint32_t HashNumber;
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/CompileOptions.h"
 #include "js/Conversions.h"
 #include "js/Initialization.h"
 #include "js/MemoryMetrics.h"
