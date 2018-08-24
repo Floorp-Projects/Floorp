@@ -294,3 +294,37 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
   }
 });
 
+
+// Checks that the warnings in the Content Blocking Third-Party Cookies section correctly appear based on
+// the selections in the Cookies and Site Data section.
+add_task(async function testContentBlockingThirdPartyCookiesWarning() {
+  await SpecialPowers.pushPrefEnv({set: [
+    [CB_PREF, true],
+    [CB_UI_PREF, true],
+    [CB_RT_UI_PREF, true],
+  ]});
+
+  let expectedDeckIndex = new Map([
+    [Ci.nsICookieService.BEHAVIOR_ACCEPT, 0],
+    [Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, 0],
+    [Ci.nsICookieService.BEHAVIOR_REJECT, 1],
+    [Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN, 2],
+    [Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, 0],
+  ]);
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+
+  let deck = doc.getElementById("blockCookiesCBDeck");
+
+  for (let obj of expectedDeckIndex) {
+    Services.prefs.setIntPref(NCB_PREF, obj[0]);
+
+    is(deck.selectedIndex, obj[1], "Correct deck index is being displayed");
+
+    Services.prefs.clearUserPref(NCB_PREF);
+  }
+
+  gBrowser.removeCurrentTab();
+});
+
