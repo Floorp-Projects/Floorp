@@ -443,6 +443,65 @@ BigInt::numberValue(BigInt* x)
     return ldexp(d, exp);
 }
 
+bool
+BigInt::equal(BigInt* lhs, BigInt* rhs)
+{
+    if (lhs == rhs)
+        return true;
+    if (mpz_cmp(lhs->num_, rhs->num_) == 0)
+        return true;
+    return false;
+}
+
+bool
+BigInt::equal(BigInt* lhs, double rhs)
+{
+    // The result of mpz_cmp_d is undefined for comparisons to NaN.
+    if (mozilla::IsNaN(rhs))
+        return false;
+    if (mpz_cmp_d(lhs->num_, rhs) == 0)
+        return true;
+    return false;
+}
+
+// BigInt proposal section 3.2.5
+JS::Result<bool>
+BigInt::looselyEqual(JSContext* cx, HandleBigInt lhs, HandleValue rhs)
+{
+    // Step 1.
+    if (rhs.isBigInt())
+        return equal(lhs, rhs.toBigInt());
+
+    // Steps 2-5 (not applicable).
+
+    // Steps 6-7.
+    if (rhs.isString()) {
+        RootedBigInt rhsBigInt(cx);
+        RootedString rhsString(cx, rhs.toString());
+        MOZ_TRY_VAR(rhsBigInt, StringToBigInt(cx, rhsString, 0));
+        if (!rhsBigInt)
+            return false;
+        return equal(lhs, rhsBigInt);
+    }
+
+    // Steps 8-9 (not applicable).
+
+    // Steps 10-11.
+    if (rhs.isObject()) {
+        RootedValue rhsPrimitive(cx, rhs);
+        if (!ToPrimitive(cx, &rhsPrimitive))
+            return cx->alreadyReportedError();
+        return looselyEqual(cx, lhs, rhsPrimitive);
+    }
+
+    // Step 12.
+    if (rhs.isNumber())
+        return equal(lhs, rhs.toNumber());
+
+    // Step 13.
+    return false;
+}
+
 JSLinearString*
 BigInt::toString(JSContext* cx, BigInt* x, uint8_t radix)
 {
