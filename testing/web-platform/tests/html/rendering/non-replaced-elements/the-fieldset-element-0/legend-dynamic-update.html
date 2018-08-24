@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html class=reftest-wait>
 <title>legend and dynamic update</title>
 <link rel=fieldset-foo-ref.html>
 <p>There should be a normal fieldset below with the legend "Foo".</p>
@@ -6,5 +7,13 @@
   <legend>F</legend>
 </fieldset>
 <script>
-  document.querySelector('legend').textContent += "oo";
+  const legend = document.querySelector('legend');
+  // force layout
+  legend.offsetTop;
+  requestAnimationFrame(() => {
+    legend.textContent += "oo";
+    requestAnimationFrame(() => {
+      document.documentElement.removeAttribute('class');
+    });
+  });
 </script>
