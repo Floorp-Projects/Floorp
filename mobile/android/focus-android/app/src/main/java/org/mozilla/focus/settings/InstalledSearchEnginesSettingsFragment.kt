@@ -68,6 +68,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
         CustomSearchEngineStore.restoreDefaultSearchEngines(activity!!)
         refetchSearchEngines()
         TelemetryWrapper.menuRestoreEnginesEvent()
+        languageChanged = false
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
