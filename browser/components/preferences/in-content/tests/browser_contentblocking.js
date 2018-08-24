@@ -48,7 +48,7 @@ add_task(async function testContentBlockingToggle() {
   ok(!contentBlockingCheckbox.checked, "Checkbox is not checked when CB is off");
   is(contentBlockingToggle.getAttribute("aria-pressed"), "false", "toggle button has correct aria attribute");
 
-  Services.prefs.clearUserPref("browser.contentblocking.enabled");
+  Services.prefs.clearUserPref(CB_PREF);
   gBrowser.removeCurrentTab();
 });
 
@@ -153,6 +153,63 @@ add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlle
   gBrowser.removeCurrentTab();
 });
 
+function checkControlStateWorker(doc, dependentControls, enabled) {
+  for (let selector of dependentControls) {
+    let controls = doc.querySelectorAll(selector);
+    for (let control of controls) {
+      if (enabled) {
+        ok(!control.hasAttribute("disabled"), `${selector} is enabled because CB is on.`);
+      } else {
+        is(control.getAttribute("disabled"), "true", `${selector} is disabled because CB is off`);
+      }
+    }
+  }
+}
+
+function checkControlState(doc, dependentControls) {
+  let enabled = Services.prefs.getBoolPref(CB_PREF);
+  return checkControlStateWorker(doc, dependentControls, enabled);
+}
+
+async function doDependentControlChecks(dependentControls,
+                                        alwaysDisabledControls = []) {
+  Services.prefs.setBoolPref(CB_PREF, true);
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+
+  is(Services.prefs.getBoolPref(CB_PREF), true, "Content Blocking is on");
+  checkControlState(doc, dependentControls);
+  checkControlStateWorker(doc, alwaysDisabledControls, false);
+
+  gBrowser.removeCurrentTab();
+
+  Services.prefs.setBoolPref(CB_PREF, false);
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  doc = gBrowser.contentDocument;
+
+  is(Services.prefs.getBoolPref(CB_PREF), false, "Content Blocking is off");
+  checkControlState(doc, dependentControls);
+  checkControlStateWorker(doc, alwaysDisabledControls, false);
+
+  let contentBlockingToggle = doc.getElementById("contentBlockingToggle");
+  contentBlockingToggle.click();
+
+  is(Services.prefs.getBoolPref(CB_PREF), true, "Content Blocking is on");
+  checkControlState(doc, dependentControls);
+  checkControlStateWorker(doc, alwaysDisabledControls, false);
+
+  contentBlockingToggle.click();
+
+  is(Services.prefs.getBoolPref(CB_PREF), false, "Content Blocking is off");
+  checkControlState(doc, dependentControls);
+  checkControlStateWorker(doc, alwaysDisabledControls, false);
+
+  Services.prefs.clearUserPref(CB_PREF);
+  gBrowser.removeCurrentTab();
+}
+
 // Checks that the granular controls are disabled or enabled depending on the master pref for CB.
 add_task(async function testContentBlockingDependentControls() {
   SpecialPowers.pushPrefEnv({set: [
@@ -170,50 +227,70 @@ add_task(async function testContentBlockingDependentControls() {
     "#blockCookiesCB, #blockCookiesCB > radio",
   ];
 
-  function checkControlState(doc) {
-    let enabled = Services.prefs.getBoolPref(CB_PREF);
-    for (let selector of dependentControls) {
-      let controls = doc.querySelectorAll(selector);
-      for (let control of controls) {
-        if (enabled) {
-          ok(!control.hasAttribute("disabled"), `${selector} is enabled because CB is on.`);
-        } else {
-          is(control.getAttribute("disabled"), "true", `${selector} is disabled because CB is off`);
-        }
-      }
-    }
+  await doDependentControlChecks(dependentControls);
+});
+
+
+// Checks that the granular controls are disabled or enabled depending on the master pref for CB
+// when the Cookies and Site Data section is set to block either "All Cookies" or "Cookies from
+// unvisited websites".
+add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
+  let prefValuesToTest = [
+    Ci.nsICookieService.BEHAVIOR_REJECT,        // Block All Cookies
+    Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN, // Block Cookies from unvisited websites
+  ];
+  for (let value of prefValuesToTest) {
+    await SpecialPowers.pushPrefEnv({set: [
+      [CB_UI_PREF, true],
+      [CB_RT_UI_PREF, true],
+      [NCB_PREF, value],
+    ]});
+
+    let dependentControls = [
+      "#content-blocking-categories-label",
+      ".fastblock-icon",
+      ".tracking-protection-icon",
+      "#fastBlockMenu",
+      "#trackingProtectionMenu",
+      "[control=fastBlockMenu]",
+      "[control=trackingProtectionMenu]",
+      "#changeBlockListLink",
+      "#contentBlockingChangeCookieSettings",
+    ];
+    let alwaysDisabledControls = [
+      ".reject-trackers-icon",
+      "[control=blockCookiesCB]",
+      "#blockCookiesCBDeck",
+      "#blockCookiesCB, #blockCookiesCB > radio",
+    ];
+
+    await doDependentControlChecks(dependentControls, alwaysDisabledControls);
   }
 
-  Services.prefs.setBoolPref(CB_PREF, true);
+  // The rest of the values
+  prefValuesToTest = [
+    Ci.nsICookieService.BEHAVIOR_ACCEPT,         // Accept All Cookies
+    Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, // Block All Third-Party Cookies
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, // Block Cookies from third-party trackers
+  ];
+  for (let value of prefValuesToTest) {
+    await SpecialPowers.pushPrefEnv({set: [
+      [CB_UI_PREF, true],
+      [CB_RT_UI_PREF, true],
+      [NCB_PREF, value],
+    ]});
 
-  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
-  let doc = gBrowser.contentDocument;
+    let dependentControls = [
+      "#content-blocking-categories-label",
+      ".content-blocking-icon",
+      ".content-blocking-category-menu",
+      ".content-blocking-category-name",
+      "#changeBlockListLink",
+      "#contentBlockingChangeCookieSettings",
+      "#blockCookiesCB, #blockCookiesCB > radio",
+    ];
 
-  is(Services.prefs.getBoolPref(CB_PREF), true, "Content Blocking is on");
-  checkControlState(doc);
-
-  gBrowser.removeCurrentTab();
-
-  Services.prefs.setBoolPref(CB_PREF, false);
-
-  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
-  doc = gBrowser.contentDocument;
-
-  is(Services.prefs.getBoolPref(CB_PREF), false, "Content Blocking is off");
-  checkControlState(doc);
-
-  let contentBlockingToggle = doc.getElementById("contentBlockingToggle");
-  contentBlockingToggle.click();
-
-  is(Services.prefs.getBoolPref(CB_PREF), true, "Content Blocking is on");
-  checkControlState(doc);
-
-  contentBlockingToggle.click();
-
-  is(Services.prefs.getBoolPref(CB_PREF), false, "Content Blocking is off");
-  checkControlState(doc);
-
-  Services.prefs.clearUserPref("browser.contentblocking.enabled");
-  gBrowser.removeCurrentTab();
+    await doDependentControlChecks(dependentControls);
+  }
 });
 
