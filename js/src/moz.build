@@ -169,6 +169,7 @@ EXPORTS.js += [
     '../public/TraceKind.h',
     '../public/TracingAPI.h',
     '../public/TrackedOptimizationInfo.h',
+    '../public/Transcoding.h',
     '../public/TypeDecls.h',
     '../public/UbiNode.h',
     '../public/UbiNodeBreadthFirst.h',
