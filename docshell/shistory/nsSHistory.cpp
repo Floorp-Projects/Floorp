@@ -19,7 +19,7 @@
 #include "nsIObserverService.h"
 #include "nsISHEntry.h"
 #include "nsISHistoryListener.h"
-#include "nsISHTransaction.h"
+#include "nsSHTransaction.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsTArray.h"
@@ -650,9 +650,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
     return NS_OK;
   }
 
-  nsCOMPtr<nsISHTransaction> txn(
-    do_CreateInstance(NS_SHTRANSACTION_CONTRACTID));
-  NS_ENSURE_TRUE(txn, NS_ERROR_FAILURE);
+  nsCOMPtr<nsISHTransaction> txn(new nsSHTransaction());
 
   nsCOMPtr<nsIURI> uri;
   aSHEntry->GetURI(getter_AddRefs(uri));
