@@ -175,6 +175,18 @@ MISSING_LOCALES = {
         'local_name': 'Basa Sunda',
         'plural_rule': 'ja',
         'team': 'anp <LL@li.org>\n'
+    },
+    'hus': {
+        'name': 'Huastec',
+        'local_name': 'Tének',
+        'plural_rule': 'ja',
+        'team': 'anp <LL@li.org>\n'
+    },
+    'yua': {
+        'name': 'Yucatec',
+        'local_name': 'Maaya',
+        'plural_rule': 'az',
+        'team': 'anp <LL@li.org>\n'
     }
 }
 
