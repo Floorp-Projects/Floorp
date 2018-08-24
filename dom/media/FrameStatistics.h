@@ -39,16 +39,11 @@ struct FrameStatisticsData
   uint64_t mInterKeyFrameMax_us = 0;
 
   FrameStatisticsData() = default;
-  FrameStatisticsData(uint64_t aParsed,
-                      uint64_t aDecoded,
-                      uint64_t aDropped,
-                      uint64_t aPresented)
+  FrameStatisticsData(uint64_t aParsed, uint64_t aDecoded, uint64_t aDropped)
     : mParsedFrames(aParsed)
     , mDecodedFrames(aDecoded)
-    , mPresentedFrames(aPresented)
     , mDroppedFrames(aDropped)
-  {
-  }
+  {}
 
   void
   Accumulate(const FrameStatisticsData& aStats)
@@ -120,7 +115,7 @@ public:
 
   // Increments the parsed and decoded frame counters by the passed in counts.
   // Can be called on any thread.
-  void Accumulate(const FrameStatisticsData& aStats)
+  void NotifyDecodedFrames(const FrameStatisticsData& aStats)
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mFrameStatisticsData.Accumulate(aStats);
@@ -147,7 +142,7 @@ public:
     ~AutoNotifyDecoded()
     {
       if (mFrameStats) {
-        mFrameStats->Accumulate(mStats);
+        mFrameStats->NotifyDecodedFrames(mStats);
       }
     }
 
