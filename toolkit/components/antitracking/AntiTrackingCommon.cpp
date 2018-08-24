@@ -150,6 +150,11 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
+    LOG(("The content blocking pref has been disabled, bail out early"));
+    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
+  }
+
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal;
   nsAutoCString trackingOrigin;
 
@@ -324,6 +329,14 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
   }
 
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
+
+  // Now, we have to also honour the Content Blocking pref.
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
+    LOG(("The content blocking pref has been disabled, bail out early by "
+         "by pretending our window isn't a tracking window"));
+    return true;
+  }
+
   if (!nsContentUtils::IsTrackingResourceWindow(aWindow)) {
     LOG(("Our window isn't a tracking window"));
     return true;
@@ -484,6 +497,13 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
 
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
+  // Now, we have to also honour the Content Blocking pref.
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
+    LOG(("The content blocking pref has been disabled, bail out early by "
+         "pretending our channel isn't a tracking channel"));
+    return true;
+  }
+
   nsIPrincipal* parentPrincipal = loadInfo->TopLevelStorageAreaPrincipal();
   if (!parentPrincipal) {
     LOG(("No top-level storage area principal at hand"));
@@ -588,6 +608,12 @@ AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner*
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     LOG(("Disabled by the pref (%d), bail out early",
          StaticPrefs::network_cookie_cookieBehavior()));
+    return true;
+  }
+
+  // Now, we have to also honour the Content Blocking pref.
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
+    LOG(("The content blocking pref has been disabled, bail out early"));
     return true;
   }
 
