@@ -28,6 +28,9 @@
 
 #if defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/layers/CompositorThread.h"
+// Max frame duration on Android before the watchdog submits a new one.
+// Probably we can get rid of this when we enforce that SubmitFrame can only be called in a VRDisplay loop.
+#define ANDROID_MAX_FRAME_DURATION 4000
 #endif // defined(MOZ_WIDGET_ANDROID)
 
 
@@ -79,6 +82,11 @@ VRDisplayHost::VRDisplayHost(VRDeviceType aType)
   mDisplayInfo.mFrameId = 0;
   mDisplayInfo.mDisplayState.mPresentingGeneration = 0;
   mDisplayInfo.mDisplayState.mDisplayName[0] = '\0';
+
+#if defined(MOZ_WIDGET_ANDROID)
+  mLastSubmittedFrameId = 0;
+  mLastStartedFrame = 0;
+#endif // defined(MOZ_WIDGET_ANDROID)
 }
 
 VRDisplayHost::~VRDisplayHost()
@@ -200,10 +208,24 @@ VRDisplayHost::StartFrame()
 {
   AUTO_PROFILER_TRACING("VR", "GetSensorState");
 
+#if defined(MOZ_WIDGET_ANDROID)
+  const bool isPresenting = mLastUpdateDisplayInfo.GetPresentingGroups() != 0;
+  double duration = mLastFrameStart.IsNull() ? 0.0 : (TimeStamp::Now() - mLastFrameStart).ToMilliseconds();
+  /**
+   * Do not start more VR frames until the last submitted frame is already processed.
+   */
+  if (isPresenting && mLastStartedFrame > 0 && mDisplayInfo.mDisplayState.mLastSubmittedFrameId < mLastStartedFrame && duration < (double)ANDROID_MAX_FRAME_DURATION) {
+    return;
+  }
+#endif // !defined(MOZ_WIDGET_ANDROID)
+
   mLastFrameStart = TimeStamp::Now();
   ++mDisplayInfo.mFrameId;
   mDisplayInfo.mLastSensorState[mDisplayInfo.mFrameId % kVRMaxLatencyFrames] = GetSensorState();
   mFrameStarted = true;
+#if defined(MOZ_WIDGET_ANDROID)
+  mLastStartedFrame = mDisplayInfo.mFrameId;
+#endif // !defined(MOZ_WIDGET_ANDROID)  
 }
 
 void
@@ -315,6 +337,19 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
   if (!mFrameStarted || aFrameId != mDisplayInfo.mFrameId) {
     return;
   }
+
+#if defined(MOZ_WIDGET_ANDROID)
+  /**
+   * Do not queue more submit frames until the last submitted frame is already processed 
+   * and the new WebGL texture is ready.
+   */
+  if (mLastSubmittedFrameId > 0 && mLastSubmittedFrameId != mDisplayInfo.mDisplayState.mLastSubmittedFrameId) {
+    mLastStartedFrame = 0;
+    return;
+  }
+
+  mLastSubmittedFrameId = aFrameId;
+#endif // !defined(MOZ_WIDGET_ANDROID)
 
   mFrameStarted = false;
 

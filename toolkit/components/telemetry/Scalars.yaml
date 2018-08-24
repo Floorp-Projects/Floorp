@@ -1994,7 +1994,7 @@ browser.errors:
       - 1444554
     description: >
       The count of all browser chrome JS errors that were collected locally.
-    expires: "64"
+    expires: "67"
     kind: uint
     notification_emails:
       - nightly-js-errors@mozilla.com
@@ -2008,7 +2008,7 @@ browser.errors:
     description: >
       The count of browser chrome JS errors that were collected locally and had
       a usable stack trace.
-    expires: "64"
+    expires: "67"
     kind: uint
     notification_emails:
       - nightly-js-errors@mozilla.com
@@ -2022,7 +2022,7 @@ browser.errors:
     description: >
       The count of all browser chrome JS errors that were reported to the
       remote collection service.
-    expires: "64"
+    expires: "67"
     kind: uint
     notification_emails:
       - nightly-js-errors@mozilla.com
@@ -2036,7 +2036,7 @@ browser.errors:
     description: >
       The count of all browser chrome JS errors that we attempted to report to
       the remote collection service, but failed to.
-    expires: "64"
+    expires: "67"
     kind: uint
     notification_emails:
       - nightly-js-errors@mozilla.com
@@ -2049,7 +2049,7 @@ browser.errors:
       - 1444554
     description: >
       The sample rate at which collected errors were reported.
-    expires: "64"
+    expires: "67"
     kind: string
     notification_emails:
       - nightly-js-errors@mozilla.com
@@ -2067,7 +2067,7 @@ browser.errors:
       chrome:// protocols; non-matching filenames are reported as "FILTERED".
       Long filenames are truncated to the first 70 characters.
     keyed: true
-    expires: "64"
+    expires: "67"
     kind: uint
     notification_emails:
       - nightly-js-errors@mozilla.com

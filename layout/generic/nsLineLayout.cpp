@@ -13,6 +13,7 @@
 #include "LayoutLogging.h"
 #include "SVGTextFrame.h"
 #include "nsBlockFrame.h"
+#include "nsBulletFrame.h"
 #include "nsFontMetrics.h"
 #include "nsStyleConsts.h"
 #include "nsContainerFrame.h"
@@ -1448,7 +1449,7 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, ReflowOutput& aMetrics)
 }
 
 void
-nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
+nsLineLayout::AddBulletFrame(nsBulletFrame* aFrame,
                              const ReflowOutput& aMetrics)
 {
   NS_ASSERTION(mCurrentSpan == mRootSpan, "bad linelayout user");
@@ -1464,7 +1465,14 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
 
   WritingMode lineWM = mRootSpan->mWritingMode;
   PerFrameData* pfd = NewPerFrameData(aFrame);
-  mRootSpan->AppendFrame(pfd);
+  PerSpanData* psd = mRootSpan;
+
+  MOZ_ASSERT(psd->mFirstFrame, "adding bullet to an empty line?");
+  // Prepend the bullet frame to the line.
+  psd->mFirstFrame->mPrev = pfd;
+  pfd->mNext = psd->mFirstFrame;
+  psd->mFirstFrame = pfd;
+
   pfd->mIsBullet = true;
   if (aMetrics.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE) {
     pfd->mAscent = aFrame->GetLogicalBaseline(lineWM);
@@ -1475,6 +1483,21 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
   // Note: block-coord value will be updated during block-direction alignment
   pfd->mBounds = LogicalRect(lineWM, aFrame->GetRect(), ContainerSize());
   pfd->mOverflowAreas = aMetrics.mOverflowAreas;
+}
+
+void
+nsLineLayout::RemoveBulletFrame(nsBulletFrame* aFrame)
+{
+  PerSpanData* psd = mCurrentSpan;
+  MOZ_ASSERT(psd == mRootSpan, "bullet on non-root span?");
+  MOZ_ASSERT(psd->mFirstFrame->mFrame == aFrame,
+             "bullet is not the first frame?");
+  PerFrameData* pfd = psd->mFirstFrame;
+  MOZ_ASSERT(pfd != psd->mLastFrame,
+             "bullet is the only frame?");
+  pfd->mNext->mPrev = nullptr;
+  psd->mFirstFrame = pfd->mNext;
+  FreeFrame(pfd);
 }
 
 #ifdef DEBUG
@@ -3286,7 +3309,15 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
 
   if (mPresContext->BidiEnabled() &&
       (!mPresContext->IsVisualMode() || !lineWM.IsBidiLTR())) {
-    nsBidiPresUtils::ReorderFrames(psd->mFirstFrame->mFrame,
+    PerFrameData* startFrame = psd->mFirstFrame;
+    MOZ_ASSERT(startFrame, "empty line?");
+    if (startFrame->mIsBullet) {
+      // Bullet shouldn't participate in bidi reordering.
+      startFrame = startFrame->mNext;
+      MOZ_ASSERT(startFrame, "no frame after bullet?");
+      MOZ_ASSERT(!startFrame->mIsBullet, "multiple bullets?");
+    }
+    nsBidiPresUtils::ReorderFrames(startFrame->mFrame,
                                    aLine->GetChildCount(),
                                    lineWM, mContainerSize,
                                    psd->mIStart + mTextIndent + dx);

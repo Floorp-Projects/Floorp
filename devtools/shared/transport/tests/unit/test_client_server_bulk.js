@@ -105,31 +105,31 @@ var replyHandlers = {
 
   json: function(request) {
     // Receive JSON reply from server
-    const replyDeferred = defer();
-    request.on("json-reply", (reply) => {
-      Assert.ok(reply.allDone);
-      replyDeferred.resolve();
+    return new Promise((resolve) => {
+      request.on("json-reply", (reply) => {
+        Assert.ok(reply.allDone);
+        resolve();
+      });
     });
-    return replyDeferred.promise;
   },
 
   bulk: function(request) {
     // Receive bulk data reply from server
-    const replyDeferred = defer();
-    request.on("bulk-reply", ({length, copyTo}) => {
-      Assert.equal(length, really_long().length);
+    return new Promise((resolve) => {
+      request.on("bulk-reply", ({length, copyTo}) => {
+        Assert.equal(length, really_long().length);
 
-      const outputFile = getTestTempFile("bulk-output", true);
-      outputFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
+        const outputFile = getTestTempFile("bulk-output", true);
+        outputFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
-      const output = FileUtils.openSafeFileOutputStream(outputFile);
+        const output = FileUtils.openSafeFileOutputStream(outputFile);
 
-      copyTo(output).then(() => {
-        FileUtils.closeSafeFileOutputStream(output);
-        replyDeferred.resolve(verify_files());
+        copyTo(output).then(() => {
+          FileUtils.closeSafeFileOutputStream(output);
+          resolve(verify_files());
+        });
       });
     });
-    return replyDeferred.promise;
   }
 
 };
@@ -141,16 +141,27 @@ var test_bulk_request_cs = async function(transportFactory, actorType, replyType
   cleanup_files();
   writeTestTempFile("bulk-input", really_long());
 
-  const clientDeferred = defer();
-  const serverDeferred = defer();
-  const bulkCopyDeferred = defer();
+  let clientResolve;
+  const clientDeferred = new Promise((resolve) => {
+    clientResolve = resolve;
+  });
+
+  let serverResolve;
+  const serverDeferred = new Promise((resolve) => {
+    serverResolve = resolve;
+  });
+
+  let bulkCopyResolve;
+  const bulkCopyDeferred = new Promise((resolve) => {
+    bulkCopyResolve = resolve;
+  });
 
   const transport = await transportFactory();
 
   const client = new DebuggerClient(transport);
   client.connect().then(([app, traits]) => {
     Assert.equal(traits.bulk, true);
-    client.listTabs().then(clientDeferred.resolve);
+    client.listTabs().then(clientResolve);
   });
 
   function bulkSendReadyCallback({copyFrom}) {
@@ -160,12 +171,12 @@ var test_bulk_request_cs = async function(transportFactory, actorType, replyType
     }, input => {
       copyFrom(input).then(() => {
         input.close();
-        bulkCopyDeferred.resolve();
+        bulkCopyResolve();
       });
     });
   }
 
-  clientDeferred.promise.then(response => {
+  clientDeferred.then(response => {
     const request = client.startBulkRequest({
       actor: response.testBulk,
       type: actorType,
@@ -184,14 +195,14 @@ var test_bulk_request_cs = async function(transportFactory, actorType, replyType
 
   DebuggerServer.on("connectionchange", type => {
     if (type === "closed") {
-      serverDeferred.resolve();
+      serverResolve();
     }
   });
 
-  return promise.all([
-    clientDeferred.promise,
-    bulkCopyDeferred.promise,
-    serverDeferred.promise
+  return Promise.all([
+    clientDeferred,
+    bulkCopyDeferred,
+    serverDeferred
   ]);
 };
 
@@ -200,18 +211,25 @@ var test_json_request_cs = async function(transportFactory, actorType, replyType
   cleanup_files();
   writeTestTempFile("bulk-input", really_long());
 
-  const clientDeferred = defer();
-  const serverDeferred = defer();
+  let clientResolve;
+  const clientDeferred = new Promise((resolve) => {
+    clientResolve = resolve;
+  });
+
+  let serverResolve;
+  const serverDeferred = new Promise((resolve) => {
+    serverResolve = resolve;
+  });
 
   const transport = await transportFactory();
 
   const client = new DebuggerClient(transport);
   client.connect((app, traits) => {
     Assert.equal(traits.bulk, true);
-    client.listTabs().then(clientDeferred.resolve);
+    client.listTabs().then(clientResolve);
   });
 
-  clientDeferred.promise.then(response => {
+  clientDeferred.then(response => {
     const request = client.request({
       to: response.testBulk,
       type: actorType
@@ -226,13 +244,13 @@ var test_json_request_cs = async function(transportFactory, actorType, replyType
 
   DebuggerServer.on("connectionchange", type => {
     if (type === "closed") {
-      serverDeferred.resolve();
+      serverResolve();
     }
   });
 
-  return promise.all([
-    clientDeferred.promise,
-    serverDeferred.promise
+  return Promise.all([
+    clientDeferred,
+    serverDeferred
   ]);
 };
 
@@ -248,19 +266,18 @@ function verify_files() {
   Assert.equal(outputFile.fileSize, reallyLong.length);
 
   // Ensure output file contents actually match
-  const compareDeferred = defer();
-  NetUtil.asyncFetch({
-    uri: NetUtil.newURI(getTestTempFile("bulk-output")),
-    loadUsingSystemPrincipal: true
-  }, input => {
-    const outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
-      // Avoid do_check_eq here so we don't log the contents
-    Assert.ok(outputData === reallyLong);
-    input.close();
-    compareDeferred.resolve();
-  });
-
-  return compareDeferred.promise.then(cleanup_files);
+  return new Promise((resolve) => {
+    NetUtil.asyncFetch({
+      uri: NetUtil.newURI(getTestTempFile("bulk-output")),
+      loadUsingSystemPrincipal: true
+    }, input => {
+      const outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
+        // Avoid do_check_eq here so we don't log the contents
+      Assert.ok(outputData === reallyLong);
+      input.close();
+      resolve();
+    });
+  }).then(cleanup_files);
 }
 
 function cleanup_files() {

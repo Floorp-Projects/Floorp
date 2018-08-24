@@ -474,7 +474,8 @@ if __name__ == "__main__":
     clang_repo = config["clang_repo"]
     extra_repo = config.get("extra_repo")
     lld_repo = config.get("lld_repo")
-    compiler_repo = config["compiler_repo"]
+    # On some packages we don't use compiler_repo
+    compiler_repo = config.get("compiler_repo")
     libcxx_repo = config["libcxx_repo"]
     libcxxabi_repo = config.get("libcxxabi_repo")
     stages = 3
@@ -543,7 +544,8 @@ if __name__ == "__main__":
     if not args.skip_checkout:
         checkout_or_update(llvm_repo, llvm_source_dir)
         checkout_or_update(clang_repo, clang_source_dir)
-        checkout_or_update(compiler_repo, compiler_rt_source_dir)
+        if compiler_repo is not None:
+            checkout_or_update(compiler_repo, compiler_rt_source_dir)
         checkout_or_update(libcxx_repo, libcxx_source_dir)
         if lld_repo:
             checkout_or_update(lld_repo, lld_source_dir)

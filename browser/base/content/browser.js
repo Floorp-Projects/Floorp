@@ -5455,7 +5455,13 @@ nsBrowserAccess.prototype = {
         }
         // Pass all params to openDialog to ensure that "url" isn't passed through
         // loadOneOrMoreURIs, which splits based on "|"
-        newWindow = openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", features, url, null, null, null);
+        try {
+          newWindow = openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", features,
+                      // window.arguments
+                      url, null, null, null, null, null, null, null, aTriggeringPrincipal);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
         // If we have an opener, that means that the caller is expecting access
