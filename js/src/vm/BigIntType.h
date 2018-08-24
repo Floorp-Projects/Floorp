@@ -17,6 +17,7 @@
 #include "gc/Heap.h"
 #include "js/AllocPolicy.h"
 #include "js/GCHashTable.h"
+#include "js/Result.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "vm/StringType.h"
@@ -121,7 +122,8 @@ BigIntToAtom(JSContext* cx, JS::BigInt* bi);
 extern JS::BigInt*
 NumberToBigInt(JSContext* cx, double d);
 
-extern JS::BigInt*
+// Convert a string to a BigInt, returning nullptr if parsing fails.
+extern JS::Result<JS::BigInt*, JS::OOM&>
 StringToBigInt(JSContext* cx, JS::Handle<JSString*> str, uint8_t radix);
 
 extern JS::BigInt*
