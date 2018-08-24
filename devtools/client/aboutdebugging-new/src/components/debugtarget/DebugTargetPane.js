@@ -24,7 +24,7 @@ class DebugTargetPane extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       isCollapsed: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
-      targets: PropTypes.arrayOf(PropTypes.Object).isRequired,
+      targets: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
   }
 
