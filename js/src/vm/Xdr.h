@@ -14,6 +14,7 @@
 #include "jsfriendapi.h"
 #include "NamespaceImports.h"
 
+#include "js/Transcoding.h"
 #include "js/TypeDecls.h"
 #include "vm/JSAtom.h"
 
