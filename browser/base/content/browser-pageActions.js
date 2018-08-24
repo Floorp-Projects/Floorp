@@ -575,7 +575,14 @@ var BrowserPageActions = {
       panelNode.setAttribute("label", title);
     }
     if (urlbarNode) {
-      urlbarNode.setAttribute("aria-label", title);
+      // Some actions (e.g. Save Page to Pocket) have a wrapper node with the
+      // actual controls inside that wrapper. The wrapper is semantically
+      // meaningless, so it doesn't get reflected in the accessibility tree.
+      // In these cases, we don't want to set aria-label because that will
+      // force the element to be exposed to accessibility.
+      if (urlbarNode.nodeName != "hbox") {
+        urlbarNode.setAttribute("aria-label", title);
+      }
       // tooltiptext falls back to the title, so update it too if necessary.
       let tooltip = action.getTooltip(window);
       if (!tooltip && title) {
