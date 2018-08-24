@@ -311,7 +311,7 @@ PlacesViewBase.prototype = {
   function PVB__setEmptyPopupStatus(aPopup, aEmpty) {
     if (!aPopup._emptyMenuitem) {
       let label = PlacesUIUtils.getString("bookmarksMenuEmptyFolder");
-      aPopup._emptyMenuitem = document.createElement("menuitem");
+      aPopup._emptyMenuitem = document.createXULElement("menuitem");
       aPopup._emptyMenuitem.setAttribute("label", label);
       aPopup._emptyMenuitem.setAttribute("disabled", true);
       aPopup._emptyMenuitem.className = "bookmark-item";
@@ -340,17 +340,17 @@ PlacesViewBase.prototype = {
     let element;
     let type = aPlacesNode.type;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
-      element = document.createElement("menuseparator");
+      element = document.createXULElement("menuseparator");
       element.setAttribute("class", "small-separator");
     } else {
       let itemId = aPlacesNode.itemId;
       if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_URI) {
-        element = document.createElement("menuitem");
+        element = document.createXULElement("menuitem");
         element.className = "menuitem-iconic bookmark-item menuitem-with-favicon";
         element.setAttribute("scheme",
                              PlacesUIUtils.guessUrlSchemeForUI(aPlacesNode.uri));
       } else if (PlacesUtils.containerTypes.includes(type)) {
-        element = document.createElement("menu");
+        element = document.createXULElement("menu");
         element.setAttribute("container", "true");
 
         if (aPlacesNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
@@ -375,7 +375,7 @@ PlacesViewBase.prototype = {
             }, () => undefined);
         }
 
-        let popup = document.createElement("menupopup");
+        let popup = document.createXULElement("menupopup");
         popup._placesNode = PlacesUtils.asContainer(aPlacesNode);
 
         if (!this._nativeView) {
@@ -431,7 +431,7 @@ PlacesViewBase.prototype = {
       aPopup._siteURIMenuseparator = null;
     } else if (siteUrl && !aPopup._siteURIMenuitem) {
       // Add "Open (Feed Name)" menuitem.
-      aPopup._siteURIMenuitem = document.createElement("menuitem");
+      aPopup._siteURIMenuitem = document.createXULElement("menuitem");
       aPopup._siteURIMenuitem.className = "openlivemarksite-menuitem";
       if (typeof this.options.extraClasses.entry == "string") {
         aPopup._siteURIMenuitem.classList.add(this.options.extraClasses.entry);
@@ -453,7 +453,7 @@ PlacesViewBase.prototype = {
       aPopup._siteURIMenuitem.setAttribute("label", label);
       aPopup.insertBefore(aPopup._siteURIMenuitem, aPopup._startMarker);
 
-      aPopup._siteURIMenuseparator = document.createElement("menuseparator");
+      aPopup._siteURIMenuseparator = document.createXULElement("menuseparator");
       aPopup.insertBefore(aPopup._siteURIMenuseparator, aPopup._startMarker);
     }
   },
@@ -470,7 +470,7 @@ PlacesViewBase.prototype = {
     let statusMenuitem = aPopup._statusMenuitem;
     if (!statusMenuitem) {
       // Create the status menuitem and cache it in the popup object.
-      statusMenuitem = document.createElement("menuitem");
+      statusMenuitem = document.createXULElement("menuitem");
       statusMenuitem.className = "livemarkstatus-menuitem";
       if (typeof this.options.extraClasses.entry == "string") {
         statusMenuitem.classList.add(this.options.extraClasses.entry);
@@ -845,12 +845,12 @@ PlacesViewBase.prototype = {
       }
     } else if (!aPopup._endOptOpenAllInTabs) {
       // Create a separator before options.
-      aPopup._endOptSeparator = document.createElement("menuseparator");
+      aPopup._endOptSeparator = document.createXULElement("menuseparator");
       aPopup._endOptSeparator.className = "bookmarks-actions-menuseparator";
       aPopup.appendChild(aPopup._endOptSeparator);
 
       // Add the "Open All in Tabs" menuitem.
-      aPopup._endOptOpenAllInTabs = document.createElement("menuitem");
+      aPopup._endOptOpenAllInTabs = document.createXULElement("menuitem");
       aPopup._endOptOpenAllInTabs.className = "openintabs-menuitem";
 
       if (typeof this.options.extraClasses.entry == "string")
@@ -880,7 +880,7 @@ PlacesViewBase.prototype = {
       return;
 
     // _startMarker is an hidden menuseparator that lives before places nodes.
-    aPopup._startMarker = document.createElement("menuseparator");
+    aPopup._startMarker = document.createXULElement("menuseparator");
     aPopup._startMarker.hidden = true;
     aPopup.insertBefore(aPopup._startMarker, aPopup.firstElementChild);
 
@@ -891,7 +891,7 @@ PlacesViewBase.prototype = {
     if (node) {
       aPopup._endMarker = node;
     } else {
-      aPopup._endMarker = document.createElement("menuseparator");
+      aPopup._endMarker = document.createXULElement("menuseparator");
       aPopup._endMarker.hidden = true;
     }
     aPopup.appendChild(aPopup._endMarker);
@@ -1109,9 +1109,9 @@ PlacesToolbar.prototype = {
     let type = aChild.type;
     let button;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
-      button = document.createElement("toolbarseparator");
+      button = document.createXULElement("toolbarseparator");
     } else {
-      button = document.createElement("toolbarbutton");
+      button = document.createXULElement("toolbarbutton");
       button.className = "bookmark-item";
       button.setAttribute("label", aChild.title || "");
 
@@ -1131,7 +1131,7 @@ PlacesToolbar.prototype = {
             }, () => undefined);
         }
 
-        let popup = document.createElement("menupopup");
+        let popup = document.createXULElement("menupopup");
         popup.setAttribute("placespopup", "true");
         button.appendChild(popup);
         popup._placesNode = PlacesUtils.asContainer(aChild);
@@ -2007,10 +2007,10 @@ PlacesPanelMenuView.prototype = {
     let type = aChild.type;
     let button;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
-      button = document.createElement("toolbarseparator");
+      button = document.createXULElement("toolbarseparator");
       button.setAttribute("class", "small-separator");
     } else {
-      button = document.createElement("toolbarbutton");
+      button = document.createXULElement("toolbarbutton");
       button.className = "bookmark-item";
       if (typeof this.options.extraClasses.entry == "string")
         button.classList.add(this.options.extraClasses.entry);
@@ -2231,12 +2231,12 @@ this.PlacesPanelview = class extends PlacesViewBase {
     let element;
     let type = placesNode.type;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
-      element = document.createElement("toolbarseparator");
+      element = document.createXULElement("toolbarseparator");
     } else {
       if (type != Ci.nsINavHistoryResultNode.RESULT_TYPE_URI)
         throw "Unexpected node";
 
-      element = document.createElement("toolbarbutton");
+      element = document.createXULElement("toolbarbutton");
       element.classList.add("subviewbutton", "subviewbutton-iconic", "bookmark-item");
       element.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(placesNode.uri));
       element.setAttribute("label", PlacesUIUtils.getBestTitle(placesNode));
@@ -2256,7 +2256,7 @@ this.PlacesPanelview = class extends PlacesViewBase {
   _setEmptyPopupStatus(panelview, empty = false) {
     if (!panelview._emptyMenuitem) {
       let label = PlacesUIUtils.getString("bookmarksMenuEmptyFolder");
-      panelview._emptyMenuitem = document.createElement("toolbarbutton");
+      panelview._emptyMenuitem = document.createXULElement("toolbarbutton");
       panelview._emptyMenuitem.setAttribute("label", label);
       panelview._emptyMenuitem.setAttribute("disabled", true);
       panelview._emptyMenuitem.className = "subviewbutton";
