@@ -191,7 +191,7 @@ def extract_archive(path, dest_dir, typ):
     elif typ == 'zip':
         # unzip from stdin has wonky behavior. We don't use a pipe for it.
         ifh = open(os.devnull, 'rb')
-        args = ['unzip', str(path)]
+        args = ['unzip', '-o', str(path)]
         pipe_stdin = False
     else:
         raise ValueError('unknown archive format: %s' % path)
