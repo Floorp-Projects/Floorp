@@ -171,7 +171,13 @@ const TEST_GLOBAL = {
     wm: {getMostRecentWindow: () => window}
   },
   XPCOMUtils: {
-    defineLazyGetter(_1, _2, f) { f(); },
+    defineLazyGetter(object, name, f) {
+      if (object && name) {
+        object[name] = f();
+      } else {
+        f();
+      }
+    },
     defineLazyGlobalGetters() {},
     defineLazyModuleGetter() {},
     defineLazyServiceGetter() {},
