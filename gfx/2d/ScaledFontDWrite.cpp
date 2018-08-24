@@ -172,29 +172,26 @@ ScaledFontDWrite::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget 
 
 #ifdef USE_SKIA
 SkTypeface*
-ScaledFontDWrite::GetSkTypeface()
+ScaledFontDWrite::CreateSkTypeface()
 {
-  if (!mTypeface) {
-    RefPtr<IDWriteFactory> factory = Factory::GetDWriteFactory();
-    if (!factory) {
-      return nullptr;
-    }
-
-    Float gamma = mGamma;
-    // Skia doesn't support a gamma value outside of 0-4, so default to 2.2
-    if (gamma < 0.0f || gamma > 4.0f) {
-      gamma = 2.2f;
-    }
-
-    Float contrast = mContrast;
-    // Skia doesn't support a contrast value outside of 0-1, so default to 1.0
-    if (contrast < 0.0f || contrast > 1.0f) {
-      contrast = 1.0f;
-    }
-
-    mTypeface = SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle, mForceGDIMode, gamma, contrast);
+  RefPtr<IDWriteFactory> factory = Factory::GetDWriteFactory();
+  if (!factory) {
+    return nullptr;
   }
-  return mTypeface;
+
+  Float gamma = mGamma;
+  // Skia doesn't support a gamma value outside of 0-4, so default to 2.2
+  if (gamma < 0.0f || gamma > 4.0f) {
+    gamma = 2.2f;
+  }
+
+  Float contrast = mContrast;
+  // Skia doesn't support a contrast value outside of 0-1, so default to 1.0
+  if (contrast < 0.0f || contrast > 1.0f) {
+    contrast = 1.0f;
+  }
+
+  return SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle, mForceGDIMode, gamma, contrast);
 }
 #endif
 

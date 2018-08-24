@@ -146,9 +146,7 @@ function parsePropertyBag2(bag) {
   }
 
   let attributes = [];
-  let enumerator = bag.enumerator;
-  while (enumerator.hasMoreElements()) {
-    let name = enumerator.getNext().QueryInterface(Ci.nsIProperty).name;
+  for (let {name} of bag.enumerator) {
     let value = bag.getPropertyAsACString(name);
     attributes.push({
       "name": name,

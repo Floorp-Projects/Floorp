@@ -54,9 +54,7 @@ function promiseCrashReport(expectedExtra = {}) {
     }
 
     info("Iterating crash report extra keys");
-    let enumerator = extra.enumerator;
-    while (enumerator.hasMoreElements()) {
-      let key = enumerator.getNext().QueryInterface(Ci.nsIProperty).name;
+    for (let {name: key} of extra.enumerator) {
       let value = extra.getPropertyAsAString(key);
       if (key in expectedExtra) {
         if (expectedExtra[key] == null) {

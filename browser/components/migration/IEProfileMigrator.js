@@ -38,10 +38,8 @@ History.prototype = {
   migrate: function H_migrate(aCallback) {
     let pageInfos = [];
     let typedURLs = MSMigrationUtils.getTypedURLs("Software\\Microsoft\\Internet Explorer");
-    let historyEnumerator = Cc["@mozilla.org/profile/migrator/iehistoryenumerator;1"].
-                            createInstance(Ci.nsISimpleEnumerator);
-    while (historyEnumerator.hasMoreElements()) {
-      let entry = historyEnumerator.getNext().QueryInterface(Ci.nsIPropertyBag2);
+    for (let entry of Cc["@mozilla.org/profile/migrator/iehistoryenumerator;1"]
+            .createInstance(Ci.nsISimpleEnumerator)) {
       let url = entry.get("uri").QueryInterface(Ci.nsIURI);
       // MSIE stores some types of URLs in its history that we don't handle,
       // like HTMLHelp and others.  Since we don't properly map handling for
@@ -115,11 +113,9 @@ IE7FormPasswords.prototype = {
   },
 
   async migrate(aCallback) {
-    let historyEnumerator = Cc["@mozilla.org/profile/migrator/iehistoryenumerator;1"].
-                            createInstance(Ci.nsISimpleEnumerator);
     let uris = []; // the uris of the websites that are going to be migrated
-    while (historyEnumerator.hasMoreElements()) {
-      let entry = historyEnumerator.getNext().QueryInterface(Ci.nsIPropertyBag2);
+    for (let entry of Cc["@mozilla.org/profile/migrator/iehistoryenumerator;1"]
+            .createInstance(Ci.nsISimpleEnumerator)) {
       let uri = entry.get("uri").QueryInterface(Ci.nsIURI);
       // MSIE stores some types of URLs in its history that we don't handle, like HTMLHelp
       // and others. Since we are not going to import the logins that are performed in these URLs

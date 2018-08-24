@@ -218,9 +218,7 @@ add_task(async function test() {
   await PlacesTestUtils.addVisits(Services.io.newURI("ftp://some.subdomain.of.foo.com:8000/some/subdirectory"));
 
   // Force initialization of the nsPermissionManager
-  let enumerator = Services.perms.enumerator;
-  while (enumerator.hasMoreElements()) {
-    let permission = enumerator.getNext().QueryInterface(Ci.nsIPermission);
+  for (let permission of Services.perms.enumerator) {
     let isExpected = false;
 
     expected.forEach((it, i) => {

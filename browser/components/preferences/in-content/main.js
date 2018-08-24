@@ -1397,10 +1397,7 @@ var gMainPane = {
    * Load the set of handlers defined by the application datastore.
    */
   _loadApplicationHandlers() {
-    var wrappedHandlerInfos = gHandlerService.enumerate();
-    while (wrappedHandlerInfos.hasMoreElements()) {
-      let wrappedHandlerInfo =
-        wrappedHandlerInfos.getNext().QueryInterface(Ci.nsIHandlerInfo);
+    for (let wrappedHandlerInfo of gHandlerService.enumerate()) {
       let type = wrappedHandlerInfo.type;
 
       let handlerInfoWrapper;
@@ -1661,10 +1658,8 @@ var gMainPane = {
 
     // Create menu items for possible handlers.
     let preferredApp = handlerInfo.preferredApplicationHandler;
-    let possibleApps = handlerInfo.possibleApplicationHandlers.enumerate();
     var possibleAppMenuItems = [];
-    while (possibleApps.hasMoreElements()) {
-      let possibleApp = possibleApps.getNext();
+    for (let possibleApp of handlerInfo.possibleApplicationHandlers.enumerate()) {
       if (!this.isValidHandlerApp(possibleApp))
         continue;
 
@@ -1692,10 +1687,8 @@ var gMainPane = {
       let gIOSvc = Cc["@mozilla.org/gio-service;1"].
                    getService(Ci.nsIGIOService);
       var gioApps = gIOSvc.getAppsForURIScheme(handlerInfo.type);
-      let enumerator = gioApps.enumerate();
       let possibleHandlers = handlerInfo.possibleApplicationHandlers;
-      while (enumerator.hasMoreElements()) {
-        let handler = enumerator.getNext().QueryInterface(Ci.nsIHandlerApp);
+      for (let handler of gioApps.enumerate()) {
         // OS handler share the same name, it's most likely the same app, skipping...
         if (handler.name == handlerInfo.defaultDescription) {
           continue;
@@ -2400,6 +2393,10 @@ function ArrayEnumerator(aItems) {
 ArrayEnumerator.prototype = {
   _index: 0,
 
+  [Symbol.iterator]() {
+    return this._contents.values();
+  },
+
   hasMoreElements() {
     return this._index < this._contents.length;
   },
@@ -2710,9 +2707,8 @@ class HandlerInfoWrapper {
   }
 
   addPossibleApplicationHandler(aNewHandler) {
-    var possibleApps = this.possibleApplicationHandlers.enumerate();
-    while (possibleApps.hasMoreElements()) {
-      if (possibleApps.getNext().equals(aNewHandler))
+    for (let app of this.possibleApplicationHandlers.enumerate()) {
+      if (app.equals(aNewHandler))
         return;
     }
     this.possibleApplicationHandlers.appendElement(aNewHandler);

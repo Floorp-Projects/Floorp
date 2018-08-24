@@ -241,14 +241,7 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
     },
   });
 
-  return {
-    hasMoreElements() {
-      return elements.length;
-    },
-    getNext() {
-      return elements.shift();
-    },
-  };
+  return elements.values();
 }
 
 // Helper function to get the sync telemetry and add the typically used test

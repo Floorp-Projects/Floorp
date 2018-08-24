@@ -24,14 +24,11 @@ const EXPORTED_SYMBOLS = ["WebNavigationFrames"];
  * A generator function which iterates over a docShell tree, given a root docShell.
  *
  * @param   {nsIDocShell} docShell - the root docShell object
+ * @returns {Iterator<nsIDocShell>}
  */
-function* iterateDocShellTree(docShell) {
-  let docShellsEnum = docShell.getDocShellEnumerator(
+function iterateDocShellTree(docShell) {
+  return docShell.getDocShellEnumerator(
     docShell.typeContent, docShell.ENUMERATE_FORWARDS);
-
-  while (docShellsEnum.hasMoreElements()) {
-    yield docShellsEnum.getNext().QueryInterface(Ci.nsIDocShell);
-  }
 }
 
 /**

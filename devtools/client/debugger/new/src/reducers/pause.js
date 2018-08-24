@@ -410,12 +410,20 @@ function getFrameScope(state, sourceId, frameId) {
 }
 
 function getSelectedScope(state) {
-  const sourceRecord = (0, _sources.getSelectedSource)(state);
+  const source = (0, _sources.getSelectedSource)(state);
   const frameId = getSelectedFrameId(state);
-  const {
-    scope
-  } = getFrameScope(state, sourceRecord && sourceRecord.id, frameId) || {};
-  return scope || null;
+
+  if (!source) {
+    return null;
+  }
+
+  const frameScope = getFrameScope(state, source.id, frameId);
+
+  if (!frameScope) {
+    return null;
+  }
+
+  return frameScope.scope || null;
 }
 
 function getSelectedScopeMappings(state) {

@@ -68,9 +68,7 @@ class ShieldFrameChild extends ActorChild {
         break;
       case "GetRemoteValue:ShieldTranslations":
         const strings = {};
-        const e = gStringBundle.getSimpleEnumeration();
-        while (e.hasMoreElements()) {
-          var str = e.getNext().QueryInterface(Ci.nsIPropertyElement);
+        for (let str of gStringBundle.getSimpleEnumeration()) {
           strings[str.key] = str.value;
         }
         const brandName = gBrandBundle.GetStringFromName("brandShortName");

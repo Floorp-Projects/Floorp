@@ -1090,9 +1090,7 @@ function updateIndicators(data, target) {
     indicators.showScreenSharingIndicator = data.showScreenSharingIndicator;
   }
 
-  let browserWindowEnum = Services.wm.getEnumerator("navigator:browser");
-  while (browserWindowEnum.hasMoreElements()) {
-    let chromeWin = browserWindowEnum.getNext();
+  for (let chromeWin of Services.wm.getEnumerator("navigator:browser")) {
     if (webrtcUI.showGlobalIndicator) {
       showOrCreateMenuForWindow(chromeWin);
     } else {

@@ -186,12 +186,10 @@ var dataProviders = {
 
     data.numTotalWindows = 0;
     data.numRemoteWindows = 0;
-    let winEnumer = Services.wm.getEnumerator("navigator:browser");
-    while (winEnumer.hasMoreElements()) {
+    for (let {docShell} of Services.wm.getEnumerator("navigator:browser")) {
       data.numTotalWindows++;
-      let remote = winEnumer.getNext().docShell.
-                   QueryInterface(Ci.nsILoadContext).
-                   useRemoteTabs;
+      let remote = docShell.QueryInterface(Ci.nsILoadContext)
+                   .useRemoteTabs;
       if (remote) {
         data.numRemoteWindows++;
       }
@@ -357,9 +355,8 @@ var dataProviders = {
 
     data.numTotalWindows = 0;
     data.numAcceleratedWindows = 0;
-    let winEnumer = Services.ww.getWindowEnumerator();
-    while (winEnumer.hasMoreElements()) {
-      let winUtils = winEnumer.getNext().windowUtils;
+    for (let win of Services.ww.getWindowEnumerator()) {
+      let winUtils = win.windowUtils;
       try {
         // NOTE: windowless browser's windows should not be reported in the graphics troubleshoot report
         if (winUtils.layerManagerType == "None" || !winUtils.layerManagerRemote) {

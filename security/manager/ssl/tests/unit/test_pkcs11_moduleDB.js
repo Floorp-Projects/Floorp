@@ -30,8 +30,7 @@ function run_test() {
     Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
   let rootsModuleName = bundle.GetStringFromName("RootCertModuleName");
   let foundRootsModule = false;
-  for (let module of XPCOMUtils.IterSimpleEnumerator(moduleDB.listModules(),
-                                                     Ci.nsIPKCS11Module)) {
+  for (let module of moduleDB.listModules()) {
     if (module.name == rootsModuleName) {
       foundRootsModule = true;
       break;

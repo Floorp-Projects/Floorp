@@ -16,9 +16,7 @@ function allow_all_plugins() {
 
 // Finds the test plugin library
 function get_test_plugin(secondplugin=false) {
-  var pluginEnum = gDirSvc.get("APluginsDL", Ci.nsISimpleEnumerator);
-  while (pluginEnum.hasMoreElements()) {
-    let dir = pluginEnum.getNext().QueryInterface(Ci.nsIFile);
+  for (let dir of gDirSvc.get("APluginsDL", Ci.nsISimpleEnumerator)) {
     let name = get_platform_specific_plugin_name(secondplugin);
     let plugin = dir.clone();
     plugin.append(name);
@@ -100,9 +98,7 @@ function get_platform_specific_plugin_suffix() {
 function get_test_plugin_no_symlink() {
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties);
-  let pluginEnum = dirSvc.get("APluginsDL", Ci.nsISimpleEnumerator);
-  while (pluginEnum.hasMoreElements()) {
-    let dir = pluginEnum.getNext().QueryInterface(Ci.nsIFile);
+  for (let dir of dirSvc.get("APluginsDL", Ci.nsISimpleEnumerator)) {
     let plugin = dir.clone();
     plugin.append(get_platform_specific_plugin_name());
     if (plugin.exists()) {

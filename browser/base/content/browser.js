@@ -336,10 +336,8 @@ function isInitialPage(url) {
   return gInitialPages.includes(url) || url == BROWSER_NEW_TAB_URL;
 }
 
-function* browserWindows() {
-  let windows = Services.wm.getEnumerator("navigator:browser");
-  while (windows.hasMoreElements())
-    yield windows.getNext();
+function browserWindows() {
+  return Services.wm.getEnumerator("navigator:browser");
 }
 
 function UpdateBackForwardCommands(aWebNavigation) {
@@ -2636,13 +2634,11 @@ function BrowserPageInfo(documentURL, initialTab, imageElement, frameOuterWindow
   }
 
   let args = { initialTab, imageElement, frameOuterWindowID, browser };
-  var windows = Services.wm.getEnumerator("Browser:page-info");
 
   documentURL = documentURL || window.gBrowser.selectedBrowser.currentURI.spec;
 
   // Check for windows matching the url
-  while (windows.hasMoreElements()) {
-    var currentWindow = windows.getNext();
+  for (let currentWindow of Services.wm.getEnumerator("Browser:page-info")) {
     if (currentWindow.closed) {
       continue;
     }
@@ -3309,10 +3305,7 @@ function getDetailedCertErrorInfo(location, securityInfo) {
 
   let certChain = "";
   if (securityInfo.failedCertChain) {
-    let certs = securityInfo.failedCertChain.getEnumerator();
-    while (certs.hasMoreElements()) {
-      let cert = certs.getNext();
-      cert.QueryInterface(Ci.nsIX509Cert);
+    for (let cert of securityInfo.failedCertChain.getEnumerator()) {
       certChain += getPEMString(cert);
     }
   }

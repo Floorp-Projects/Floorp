@@ -7,7 +7,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
-#include "nsISimpleEnumerator.h"
+#include "nsSimpleEnumerator.h"
 #include "nsXPCOM.h"
 #include "nsSupportsPrimitives.h"
 #include "nsIComponentManager.h"
@@ -15,17 +15,21 @@
 #include "nsIControllerCommand.h"
 #include "nsCRT.h"
 
-class nsGroupsEnumerator : public nsISimpleEnumerator
+class nsGroupsEnumerator : public nsSimpleEnumerator
 {
 public:
   explicit nsGroupsEnumerator(
     nsControllerCommandGroup::GroupsHashtable& aInHashTable);
 
-  NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
 
+  const nsID& DefaultInterface() override
+  {
+    return NS_GET_IID(nsISupportsCString);
+  }
+
 protected:
-  virtual ~nsGroupsEnumerator();
+  ~nsGroupsEnumerator() override;
 
   nsresult Initialize();
 
@@ -35,9 +39,6 @@ protected:
   const char** mGroupNames;  // array of pointers to char16_t* in the hash table
   bool mInitted;
 };
-
-/* Implementation file */
-NS_IMPL_ISUPPORTS(nsGroupsEnumerator, nsISimpleEnumerator)
 
 nsGroupsEnumerator::nsGroupsEnumerator(
       nsControllerCommandGroup::GroupsHashtable& aInHashTable)
@@ -125,16 +126,20 @@ nsGroupsEnumerator::Initialize()
   return NS_OK;
 }
 
-class nsNamedGroupEnumerator : public nsISimpleEnumerator
+class nsNamedGroupEnumerator : public nsSimpleEnumerator
 {
 public:
   explicit nsNamedGroupEnumerator(nsTArray<nsCString>* aInArray);
 
-  NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
 
+  const nsID& DefaultInterface() override
+  {
+    return NS_GET_IID(nsISupportsCString);
+  }
+
 protected:
-  virtual ~nsNamedGroupEnumerator();
+  ~nsNamedGroupEnumerator() override;
 
   nsTArray<nsCString>* mGroupArray;
   int32_t mIndex;
@@ -149,8 +154,6 @@ nsNamedGroupEnumerator::nsNamedGroupEnumerator(nsTArray<nsCString>* aInArray)
 nsNamedGroupEnumerator::~nsNamedGroupEnumerator()
 {
 }
-
-NS_IMPL_ISUPPORTS(nsNamedGroupEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsNamedGroupEnumerator::HasMoreElements(bool* aResult)

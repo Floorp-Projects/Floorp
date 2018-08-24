@@ -90,6 +90,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIStringBundle.h"
 #include "nsIWorkerDebuggerManager.h"
+#include "nsGeolocation.h"
 
 #if !defined(XP_WIN)
 #include "mozilla/Omnijar.h"
@@ -2626,8 +2627,8 @@ ContentChild::RecvUpdateSharedData(const FileDescriptor& aMapFile,
 mozilla::ipc::IPCResult
 ContentChild::RecvGeolocationUpdate(nsIDOMGeoPosition* aPosition)
 {
-  nsCOMPtr<nsIGeolocationUpdate> gs =
-    do_GetService("@mozilla.org/geolocation/service;1");
+  RefPtr<nsGeolocationService> gs =
+    nsGeolocationService::GetGeolocationService();
   if (!gs) {
     return IPC_OK();
   }
@@ -2638,8 +2639,8 @@ ContentChild::RecvGeolocationUpdate(nsIDOMGeoPosition* aPosition)
 mozilla::ipc::IPCResult
 ContentChild::RecvGeolocationError(const uint16_t& errorCode)
 {
-  nsCOMPtr<nsIGeolocationUpdate> gs =
-    do_GetService("@mozilla.org/geolocation/service;1");
+  RefPtr<nsGeolocationService> gs =
+    nsGeolocationService::GetGeolocationService();
   if (!gs) {
     return IPC_OK();
   }

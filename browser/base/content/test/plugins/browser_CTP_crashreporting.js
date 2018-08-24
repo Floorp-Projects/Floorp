@@ -17,9 +17,7 @@ const PLUGIN_SMALL_PAGE = gTestRoot + "plugin_small.html";
  */
 function convertPropertyBag(aBag) {
   let result = {};
-  let enumerator = aBag.enumerator;
-  while (enumerator.hasMoreElements()) {
-    let { name, value } = enumerator.getNext().QueryInterface(Ci.nsIProperty);
+  for (let { name, value } of aBag.enumerator) {
     if (value instanceof Ci.nsIPropertyBag) {
       value = convertPropertyBag(value);
     }

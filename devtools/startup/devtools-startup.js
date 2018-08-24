@@ -500,9 +500,7 @@ DevToolsStartup.prototype = {
    * item.
    */
   onEnabledPrefChanged() {
-    const enumerator = Services.wm.getEnumerator("navigator:browser");
-    while (enumerator.hasMoreElements()) {
-      const window = enumerator.getNext();
+    for (const window of Services.wm.getEnumerator("navigator:browser")) {
       if (window.gBrowserInit && window.gBrowserInit.delayedStartupFinished) {
         this.updateDevToolsMenuItems(window);
       }

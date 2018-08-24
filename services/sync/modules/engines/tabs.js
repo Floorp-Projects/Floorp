@@ -135,9 +135,7 @@ TabStore.prototype = {
 
     let allTabs = [];
 
-    let winEnum = this.getWindowEnumerator();
-    while (winEnum.hasMoreElements()) {
-      let win = winEnum.getNext();
+    for (let win of this.getWindowEnumerator()) {
       if (this.shouldSkipWindow(win)) {
         continue;
       }
@@ -235,9 +233,8 @@ TabStore.prototype = {
     // first syncs.
     let ids = {};
     let allWindowsArePrivate = false;
-    let wins = Services.wm.getEnumerator("navigator:browser");
-    while (wins.hasMoreElements()) {
-      if (PrivateBrowsingUtils.isWindowPrivate(wins.getNext())) {
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
+      if (PrivateBrowsingUtils.isWindowPrivate(win)) {
         // Ensure that at least there is a private window.
         allWindowsArePrivate = true;
       } else {
@@ -320,17 +317,15 @@ TabTracker.prototype = {
 
   onStart() {
     Svc.Obs.add("domwindowopened", this.asyncObserver);
-    let wins = Services.wm.getEnumerator("navigator:browser");
-    while (wins.hasMoreElements()) {
-      this._registerListenersForWindow(wins.getNext());
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
+      this._registerListenersForWindow(win);
     }
   },
 
   onStop() {
     Svc.Obs.remove("domwindowopened", this.asyncObserver);
-    let wins = Services.wm.getEnumerator("navigator:browser");
-    while (wins.hasMoreElements()) {
-      this._unregisterListenersForWindow(wins.getNext());
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
+      this._unregisterListenersForWindow(win);
     }
   },
 

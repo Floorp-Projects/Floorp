@@ -12,9 +12,7 @@ server.registerPathHandler("/return_headers.sjs", (request, response) => {
   response.setHeader("Content-Type", "text/plain", false);
 
   let headers = {};
-  // Why on earth is this a nsISimpleEnumerator...
-  for (let {data: header} of XPCOMUtils.IterSimpleEnumerator(request.headers,
-                                                             Ci.nsISupportsString)) {
+  for (let {data: header} of request.headers) {
     headers[header.toLowerCase()] = request.getHeader(header);
   }
 

@@ -120,7 +120,8 @@ nsHashPropertyBagBase::GetEnumerator(nsISimpleEnumerator** aResult)
     propertyArray->AppendElement(sprop);
   }
 
-  return NS_NewArrayEnumerator(aResult, propertyArray);
+  return NS_NewArrayEnumerator(aResult, propertyArray,
+                               NS_GET_IID(nsIProperty));
 }
 
 #define IMPL_GETSETPROPERTY_AS(Name, Type) \

@@ -142,9 +142,7 @@ var DownloadsCommon = {
   get strings() {
     let strings = {};
     let sb = Services.strings.createBundle(kDownloadsStringBundleUrl);
-    let enumerator = sb.getSimpleEnumeration();
-    while (enumerator.hasMoreElements()) {
-      let string = enumerator.getNext().QueryInterface(Ci.nsIPropertyElement);
+    for (let string of sb.getSimpleEnumeration()) {
       let stringName = string.key;
       if (stringName in kDownloadsStringsRequiringFormatting) {
         strings[stringName] = function() {

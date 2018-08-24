@@ -332,9 +332,7 @@ function run_test() {
   gPref.setBoolPref(PREF_APP_UPDATE_LOG_ALL, true);
 
   // Remove existing update timers to prevent them from being notified
-  let entries = gCatMan.enumerateCategory(CATEGORY_UPDATE_TIMER);
-  while (entries.hasMoreElements()) {
-    let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
+  for (let {data: entry} of gCatMan.enumerateCategory(CATEGORY_UPDATE_TIMER)) {
     gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, entry, false);
   }
 
@@ -474,13 +472,11 @@ function check_test0thru7() {
   gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[1].desc, true);
   gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[2].desc, true);
   gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[3].desc, true);
-  let entries = gCatMan.enumerateCategory(CATEGORY_UPDATE_TIMER);
-  while (entries.hasMoreElements()) {
-    let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
+  for (let {data: entry} of gCatMan.enumerateCategory(CATEGORY_UPDATE_TIMER)) {
     gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, entry, false);
   }
 
-  entries = gCatMan.enumerateCategory(CATEGORY_UPDATE_TIMER);
+  let entries = gCatMan.enumerateCategory(CATEGORY_UPDATE_TIMER);
   Assert.ok(!entries.hasMoreElements(),
             "no " + CATEGORY_UPDATE_TIMER + " categories should still be " +
             "registered");

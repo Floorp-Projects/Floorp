@@ -29,9 +29,7 @@ add_task(async function() {
   // check the extension.
   var mimeType = gHandlerSvc.getTypeFromExtension("abc");
   is(mimeType, launcher.MIMEInfo.type, "Got correct mime type.");
-  var handlerInfos = gHandlerSvc.enumerate();
-  while (handlerInfos.hasMoreElements()) {
-    let handlerInfo = handlerInfos.getNext().QueryInterface(Ci.nsIHandlerInfo);
+  for (let handlerInfo of gHandlerSvc.enumerate()) {
     if (handlerInfo.type == launcher.MIMEInfo.type) {
       // check the alwaysAskBeforeHandling
       ok(!handlerInfo.alwaysAskBeforeHandling,

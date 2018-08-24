@@ -28,7 +28,7 @@ public:
   FontType GetType() const override { return FontType::FONTCONFIG; }
 
 #ifdef USE_SKIA
-  SkTypeface* GetSkTypeface() override;
+  SkTypeface* CreateSkTypeface() override;
 #endif
 
   bool CanSerialize() override { return true; }
