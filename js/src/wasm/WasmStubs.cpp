@@ -20,6 +20,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include "jit/RegisterAllocator.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"
@@ -501,7 +502,8 @@ GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize)
     MoveSPForJitABI(masm);
 
     masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, cx)), ScratchIonEntry);
-    masm.enterFakeExitFrameForWasm(ScratchIonEntry, ScratchIonEntry, ExitFrameType::WasmJitEntry);
+    masm.enterFakeExitFrameForWasm(ScratchIonEntry, ScratchIonEntry,
+                                   ExitFrameType::WasmGenericJitEntry);
 
     masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, instance)), ScratchIonEntry);
     masm.loadPtr(Address(ScratchIonEntry, Instance::offsetOfJSJitExceptionHandler()),
@@ -842,6 +844,164 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
     GenerateJitEntryThrow(masm, frameSize);
 
     return FinishOffsets(masm, offsets);
+}
+
+void
+wasm::GenerateDirectCallFromJit(MacroAssembler& masm,
+                                const FuncExport& fe,
+                                const Instance& inst,
+                                const JitCallStackArgVector& stackArgs,
+                                bool profilingEnabled,
+                                bool wasmGcEnabled,
+                                Register scratch,
+                                uint32_t* callOffset)
+{
+    MOZ_ASSERT(!IsCompilingWasm());
+
+    size_t framePushedAtStart = masm.framePushed();
+
+    if (profilingEnabled) {
+        // FramePointer isn't volatile, manually preserve it because it will be
+        // clobbered below.
+        masm.Push(FramePointer);
+    } else {
+#ifdef DEBUG
+        // Ensure that the FramePointer is actually Ion-volatile. This might
+        // assert when bug 1426134 lands.
+        AllocatableRegisterSet set(RegisterSet::All());
+        TakeJitRegisters(/* profiling */ false, &set);
+        MOZ_ASSERT(set.has(FramePointer),
+                   "replace the whole if branch by the then body when this fails");
+#endif
+    }
+
+    // Push a special frame descriptor that indicates the frame size so we can
+    // directly iterate from the current JIT frame without an extra call.
+    *callOffset = masm.buildFakeExitFrame(scratch);
+    masm.loadJSContext(scratch);
+
+    masm.moveStackPtrTo(FramePointer);
+    masm.enterFakeExitFrame(scratch, scratch, ExitFrameType::DirectWasmJitCall);
+    masm.orPtr(Imm32(ExitOrJitEntryFPTag), FramePointer);
+
+    // Move stack arguments to their final locations.
+    unsigned bytesNeeded = StackArgBytes(fe.funcType().args());
+    bytesNeeded = StackDecrementForCall(WasmStackAlignment, masm.framePushed(), bytesNeeded);
+    if (bytesNeeded)
+        masm.reserveStack(bytesNeeded);
+
+    for (ABIArgValTypeIter iter(fe.funcType().args()); !iter.done(); iter++) {
+        MOZ_ASSERT_IF(iter->kind() == ABIArg::GPR, iter->gpr() != scratch);
+        MOZ_ASSERT_IF(iter->kind() == ABIArg::GPR, iter->gpr() != FramePointer);
+        if (iter->kind() != ABIArg::Stack)
+            continue;
+
+        Address dst(masm.getStackPointer(), iter->offsetFromArgBase());
+
+        const JitCallStackArg& stackArg = stackArgs[iter.index()];
+        switch (stackArg.tag()) {
+          case JitCallStackArg::Tag::Imm32:
+            masm.storePtr(ImmWord(stackArg.imm32()), dst);
+            break;
+          case JitCallStackArg::Tag::GPR:
+            MOZ_ASSERT(stackArg.gpr() != scratch);
+            MOZ_ASSERT(stackArg.gpr() != FramePointer);
+            masm.storePtr(stackArg.gpr(), dst);
+            break;
+          case JitCallStackArg::Tag::FPU:
+            switch (iter.mirType()) {
+              case MIRType::Double:
+                masm.storeDouble(stackArg.fpu(), dst);
+                break;
+              case MIRType::Float32:
+                masm.storeFloat32(stackArg.fpu(), dst);
+                break;
+              default:
+                MOZ_CRASH("unexpected MIR type for a float register in wasm fast call");
+            }
+            break;
+          case JitCallStackArg::Tag::Address: {
+            // The address offsets were valid *before* we pushed our frame.
+            Address src = stackArg.addr();
+            src.offset += masm.framePushed() - framePushedAtStart;
+            switch (iter.mirType()) {
+              case MIRType::Double:
+                masm.loadDouble(src, ScratchDoubleReg);
+                masm.storeDouble(ScratchDoubleReg, dst);
+                break;
+              case MIRType::Float32:
+                masm.loadFloat32(src, ScratchFloat32Reg);
+                masm.storeFloat32(ScratchFloat32Reg, dst);
+                break;
+              case MIRType::Int32:
+                masm.loadPtr(src, scratch);
+                masm.storePtr(scratch, dst);
+                break;
+              default:
+                MOZ_CRASH("unexpected MIR type for a stack slot in wasm fast call");
+            }
+            break;
+          }
+          case JitCallStackArg::Tag::Undefined: {
+            MOZ_CRASH("can't happen because of arg.kind() check");
+          }
+        }
+    }
+
+    // Load tls; from now on, WasmTlsReg is live.
+    masm.movePtr(ImmPtr(inst.tlsData()), WasmTlsReg);
+    masm.loadWasmPinnedRegsFromTls();
+
+#ifdef ENABLE_WASM_GC
+    if (wasmGcEnabled)
+        SuppressGC(masm, 1, ABINonArgReg0);
+#endif
+
+    // Actual call.
+    const wasm::CodeTier& codeTier = inst.code().codeTier(inst.code().bestTier());
+    uint32_t offset = codeTier.metadata().codeRanges[fe.funcCodeRangeIndex()].funcNormalEntry();
+    void* callee = codeTier.segment().base() + offset;
+
+    masm.assertStackAlignment(WasmStackAlignment);
+    masm.callJit(ImmPtr(callee));
+    masm.assertStackAlignment(WasmStackAlignment);
+
+#ifdef ENABLE_WASM_GC
+    if (wasmGcEnabled)
+        SuppressGC(masm, -1, WasmTlsReg);
+#endif
+
+    masm.branchPtr(Assembler::Equal, FramePointer, Imm32(wasm::FailFP), masm.exceptionLabel());
+
+    // Store the return value in the appropriate place.
+    switch (fe.funcType().ret().code()) {
+      case wasm::ExprType::Void:
+        masm.moveValue(UndefinedValue(), JSReturnOperand);
+        break;
+      case wasm::ExprType::I32:
+        break;
+      case wasm::ExprType::F32:
+        masm.canonicalizeFloat(ReturnFloat32Reg);
+        break;
+      case wasm::ExprType::F64:
+        masm.canonicalizeDouble(ReturnDoubleReg);
+        break;
+      case wasm::ExprType::Ref:
+      case wasm::ExprType::AnyRef:
+      case wasm::ExprType::I64:
+        MOZ_CRASH("unexpected return type when calling from ion to wasm");
+      case wasm::ExprType::Limit:
+        MOZ_CRASH("Limit");
+    }
+
+    // Free args + frame descriptor.
+    masm.leaveExitFrame(bytesNeeded + ExitFrameLayout::Size());
+
+    // If we pushed it, free FramePointer.
+    if (profilingEnabled)
+        masm.Pop(FramePointer);
+
+    MOZ_ASSERT(framePushedAtStart == masm.framePushed());
 }
 
 static void
