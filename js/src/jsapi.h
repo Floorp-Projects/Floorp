@@ -34,6 +34,7 @@
 #include "js/HashTable.h"
 #include "js/Id.h"
 #include "js/MemoryFunctions.h"
+#include "js/OffThreadScriptCompilation.h"
 #include "js/Principals.h"
 #include "js/Realm.h"
 #include "js/RefCounted.h"
@@ -3089,79 +3090,6 @@ CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options
 extern JS_PUBLIC_API(bool)
 CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
                             const char* filename, JS::MutableHandleScript script);
-
-extern JS_PUBLIC_API(bool)
-CanCompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
-
-extern JS_PUBLIC_API(bool)
-CanDecodeOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
-
-/*
- * Off thread compilation control flow.
- *
- * After successfully triggering an off thread compile of a script, the
- * callback will eventually be invoked with the specified data and a token
- * for the compilation. The callback will be invoked while off thread,
- * so must ensure that its operations are thread safe. Afterwards, one of the
- * following functions must be invoked on the runtime's main thread:
- *
- * - FinishOffThreadScript, to get the result script (or nullptr on failure).
- * - CancelOffThreadScript, to free the resources without creating a script.
- *
- * The characters passed in to CompileOffThread must remain live until the
- * callback is invoked, and the resulting script will be rooted until the call
- * to FinishOffThreadScript.
- */
-
-extern JS_PUBLIC_API(bool)
-CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
-                 JS::SourceBufferHolder& srcBuf,
-                 OffThreadCompileCallback callback, void* callbackData);
-
-extern JS_PUBLIC_API(JSScript*)
-FinishOffThreadScript(JSContext* cx, OffThreadToken* token);
-
-extern JS_PUBLIC_API(void)
-CancelOffThreadScript(JSContext* cx, OffThreadToken* token);
-
-extern JS_PUBLIC_API(bool)
-CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                       JS::SourceBufferHolder& srcBuf,
-                       OffThreadCompileCallback callback, void* callbackData);
-
-extern JS_PUBLIC_API(JSScript*)
-FinishOffThreadModule(JSContext* cx, OffThreadToken* token);
-
-extern JS_PUBLIC_API(void)
-CancelOffThreadModule(JSContext* cx, OffThreadToken* token);
-
-extern JS_PUBLIC_API(bool)
-DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-                      mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
-                      OffThreadCompileCallback callback, void* callbackData);
-
-extern JS_PUBLIC_API(bool)
-DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-                      const mozilla::Range<uint8_t>& range /* TranscodeRange& */,
-                      OffThreadCompileCallback callback, void* callbackData);
-
-extern JS_PUBLIC_API(JSScript*)
-FinishOffThreadScriptDecoder(JSContext* cx, OffThreadToken* token);
-
-extern JS_PUBLIC_API(void)
-CancelOffThreadScriptDecoder(JSContext* cx, OffThreadToken* token);
-
-extern JS_PUBLIC_API(bool)
-DecodeMultiOffThreadScripts(JSContext* cx, const ReadOnlyCompileOptions& options,
-                            mozilla::Vector<TranscodeSource>& sources,
-                            OffThreadCompileCallback callback, void* callbackData);
-
-extern JS_PUBLIC_API(bool)
-FinishMultiOffThreadScriptsDecoder(JSContext* cx, OffThreadToken* token,
-                                   JS::MutableHandle<JS::ScriptVector> scripts);
-
-extern JS_PUBLIC_API(void)
-CancelMultiOffThreadScriptsDecoder(JSContext* cx, OffThreadToken* token);
 
 /**
  * Compile a function with envChain plus the global as its scope chain.
