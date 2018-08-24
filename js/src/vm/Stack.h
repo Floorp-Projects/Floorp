@@ -1622,13 +1622,10 @@ class BailoutFrameInfo;
 // A JitActivation is used for frames running in Baseline or Ion.
 class JitActivation : public Activation
 {
-  public:
-    static const uintptr_t ExitFpWasmBit = 0x1;
-
-  private:
     // If Baseline, Ion or Wasm code is on the stack, and has called into C++,
     // this will be aligned to an ExitFrame. The last bit indicates if it's a
-    // wasm frame (bit set to ExitFpWasmBit) or not (bit set to !ExitFpWasmBit).
+    // wasm frame (bit set to wasm::ExitOrJitEntryFPTag) or not
+    // (bit set to ~wasm::ExitOrJitEntryFPTag).
     uint8_t* packedExitFP_;
 
     // When hasWasmExitFP(), encodedWasmExitReason_ holds ExitReason.
@@ -1704,14 +1701,14 @@ class JitActivation : public Activation
         return !!packedExitFP_;
     }
     uint8_t* jsOrWasmExitFP() const {
-        return (uint8_t*)(uintptr_t(packedExitFP_) & ~ExitFpWasmBit);
+        return (uint8_t*)(uintptr_t(packedExitFP_) & ~wasm::ExitOrJitEntryFPTag);
     }
     static size_t offsetOfPackedExitFP() {
         return offsetof(JitActivation, packedExitFP_);
     }
 
     bool hasJSExitFP() const {
-        return !(uintptr_t(packedExitFP_) & ExitFpWasmBit);
+        return !(uintptr_t(packedExitFP_) & wasm::ExitOrJitEntryFPTag);
     }
     uint8_t* jsExitFP() const {
         MOZ_ASSERT(hasJSExitFP());
@@ -1802,16 +1799,16 @@ class JitActivation : public Activation
 
     // WebAssembly specific attributes.
     bool hasWasmExitFP() const {
-        return uintptr_t(packedExitFP_) & ExitFpWasmBit;
+        return uintptr_t(packedExitFP_) & wasm::ExitOrJitEntryFPTag;
     }
     wasm::Frame* wasmExitFP() const {
         MOZ_ASSERT(hasWasmExitFP());
-        return (wasm::Frame*)(uintptr_t(packedExitFP_) & ~ExitFpWasmBit);
+        return (wasm::Frame*)(uintptr_t(packedExitFP_) & ~wasm::ExitOrJitEntryFPTag);
     }
     void setWasmExitFP(const wasm::Frame* fp) {
         if (fp) {
-            MOZ_ASSERT(!(uintptr_t(fp) & ExitFpWasmBit));
-            packedExitFP_ = (uint8_t*)(uintptr_t(fp) | ExitFpWasmBit);
+            MOZ_ASSERT(!(uintptr_t(fp) & wasm::ExitOrJitEntryFPTag));
+            packedExitFP_ = (uint8_t*)(uintptr_t(fp) | wasm::ExitOrJitEntryFPTag);
             MOZ_ASSERT(hasWasmExitFP());
         } else {
             packedExitFP_ = nullptr;

@@ -750,6 +750,7 @@ class IonBuilder
     InliningResult inlineObjectHasPrototype(CallInfo& callInfo);
     InliningResult inlineFinishBoundFunctionInit(CallInfo& callInfo);
     InliningResult inlineIsPackedArray(CallInfo& callInfo);
+    InliningResult inlineWasmCall(CallInfo& callInfo, JSFunction* target);
 
     // Testing functions.
     InliningResult inlineBailout(CallInfo& callInfo);
