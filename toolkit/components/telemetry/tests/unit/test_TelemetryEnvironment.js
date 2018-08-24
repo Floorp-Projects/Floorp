@@ -1610,7 +1610,7 @@ add_task(async function test_defaultSearchEngine() {
       }
     }, "browser-search-engine-modified");
     Services.search.addEngine("file://" + do_get_cwd().path + "/engine.xml",
-                              null, false);
+                              null, null, false);
   });
   Services.search.defaultEngine = engine;
   await promise;

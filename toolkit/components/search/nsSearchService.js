@@ -3848,8 +3848,8 @@ SearchService.prototype = {
     }
   },
 
-  addEngine: function SRCH_SVC_addEngine(aEngineURL, aIconURL, aConfirm,
-                                         aCallback, aExtensionID) {
+  addEngine: function SRCH_SVC_addEngine(aEngineURL, aDataType, aIconURL,
+                                         aConfirm, aCallback, aExtensionID) {
     LOG("addEngine: Adding \"" + aEngineURL + "\".");
     this._ensureInitialized();
     try {
