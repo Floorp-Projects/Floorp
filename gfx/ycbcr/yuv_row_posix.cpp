@@ -61,14 +61,13 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,  // rdi
   "packuswb %%xmm1,%%xmm1\n"
   "movd   %%xmm1,0x0(%[rgb_buf])\n"
 "3:"
-  :
-  : [y_buf] "r"(y_buf),
-    [u_buf] "r"(u_buf),
-    [v_buf] "r"(v_buf),
-    [rgb_buf] "r"(rgb_buf),
-    [width] "r"(width),
-    [kCoefficientsRgbY] "r" (kCoefficientsRgbY)
-  : "memory", "r10", "r11", "xmm0", "xmm1", "xmm2", "xmm3"
+  : [y_buf] "+r"(y_buf),
+    [u_buf] "+r"(u_buf),
+    [v_buf] "+r"(v_buf),
+    [rgb_buf] "+r"(rgb_buf),
+    [width] "+r"(width)
+  : [kCoefficientsRgbY] "r" (kCoefficientsRgbY)
+  : "cc", "memory", "r10", "r11", "xmm0", "xmm1", "xmm2", "xmm3"
 );
 }
 
@@ -129,15 +128,14 @@ void ScaleYUVToRGB32Row(const uint8* y_buf,  // rdi
   "movd   %%xmm1,0x0(%[rgb_buf])\n"
 
 "2:"
-  :
+  : [rgb_buf] "+r"(rgb_buf),
+    [width] "+r"(width)
   : [y_buf] "r"(y_buf),
     [u_buf] "r"(u_buf),
     [v_buf] "r"(v_buf),
-    [rgb_buf] "r"(rgb_buf),
-    [width] "r"(width),
     [kCoefficientsRgbY] "r" (kCoefficientsRgbY),
     [source_dx] "r"(static_cast<long>(source_dx))
-  : "memory", "r10", "r11", "rax", "xmm0", "xmm1", "xmm2"
+  : "cc", "memory", "r10", "r11", "rax", "xmm0", "xmm1", "xmm2"
 );
 }
 
@@ -246,15 +244,14 @@ void LinearScaleYUVToRGB32Row(const uint8* y_buf,
   "movd   %%xmm1,0x0(%[rgb_buf])\n"
 
 "3:"
-  :
+  : [rgb_buf] "+r"(rgb_buf),
+    [width] "+r"(width)
   : [y_buf] "r"(y_buf),
     [u_buf] "r"(u_buf),
     [v_buf] "r"(v_buf),
-    [rgb_buf] "r"(rgb_buf),
-    [width] "r"(width),
     [kCoefficientsRgbY] "r" (kCoefficientsRgbY),
     [source_dx] "r"(static_cast<long>(source_dx))
-  : "memory", "r10", "r11", "r13", "r14", "rax", "xmm0", "xmm1", "xmm2"
+  : "cc", "memory", "r10", "r11", "r13", "r14", "rax", "xmm0", "xmm1", "xmm2"
 );
 }
 
