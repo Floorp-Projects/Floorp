@@ -4,6 +4,7 @@
 
 :root {
   --in-field-label-size: .8em;
+  --grid-column-row-gap: 8px;
   /* Use the animation-easing-function that is defined in xul.css. */
   --animation-easing-function: cubic-bezier(.07,.95,0,1);
 }
@@ -13,11 +14,14 @@
   padding: 2px;
 }
 
+/* The overly specific input attributes are required to override
+   padding from common.css */
 form input[type="email"],
 form input[type="tel"],
 form input[type="text"],
 form textarea,
 form select {
+  flex-grow: 1;
   padding-top: calc(var(--in-field-label-size) + .4em);
 }
 
@@ -27,11 +31,11 @@ select {
 }
 
 form :-moz-any(label, div) {
+  /* Positioned so that the .label-text and .error-text children will be
+     positioned relative to this. */
   position: relative;
   display: block;
   line-height: 1em;
-  margin-left: 0;
-  margin-right: 0;
 }
 
 form :-moz-any(label, div) > .label-text {
@@ -63,6 +67,21 @@ form :-moz-any(input, select, textarea):focus:-moz-ui-invalid ~ .label-text {
 form div[required] > label > .label-text::after,
 form :-moz-any(label, div)[required] > .label-text::after {
   content: attr(fieldRequiredSymbol);
+}
+
+.persist-checkbox label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: var(--grid-column-row-gap);
+  margin-bottom: var(--grid-column-row-gap);
+}
+
+:root[subdialog] form {
+  /* Match the margin-inline-start of the #controls-container buttons
+     and provide enough padding at the top of the form so button outlines
+     don't get clipped. */
+  padding: 4px 4px 0;
 }
 
 #controls-container {
