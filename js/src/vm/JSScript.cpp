@@ -414,13 +414,13 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
         nsrcnotes = script->numNotes();
 
+        nscopes = script->scopes().size();
         if (script->hasConsts()) {
             nconsts = script->consts().size();
         }
         if (script->hasObjects()) {
             nobjects = script->objects().size();
         }
-        nscopes = script->scopes().size();
         if (script->hasTrynotes()) {
             ntrynotes = script->trynotes().size();
         }
@@ -732,9 +732,11 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         }
     }
 
+    js::PrivateScriptData* data = script->data_;
+
     if (nconsts) {
         RootedValue val(cx);
-        for (GCPtrValue& elem : script->consts()) {
+        for (GCPtrValue& elem : data->consts()) {
             if (mode == XDR_ENCODE) {
                 val = elem.get();
             }
@@ -747,7 +749,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     {
         MOZ_ASSERT(nscopes != 0);
-        GCPtrScope* vector = script->scopes().data();
+        GCPtrScope* vector = data->scopes().data();
         RootedScope scope(cx);
         RootedScope enclosing(cx);
         ScopeKind scopeKind;
@@ -844,7 +846,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
      * after the enclosing block has been XDR'd.
      */
     if (nobjects) {
-        for (GCPtrObject& elem : script->objects()) {
+        for (GCPtrObject& elem : data->objects()) {
             XDRClassKind classk;
 
             if (mode == XDR_ENCODE) {
@@ -939,7 +941,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     MOZ_TRY(xdr->codeMarker(0xF83B989A));
 
     if (ntrynotes) {
-        for (JSTryNote& elem : script->trynotes()) {
+        for (JSTryNote& elem : data->tryNotes()) {
             MOZ_TRY(xdr->codeUint8(&elem.kind));
             MOZ_TRY(xdr->codeUint32(&elem.stackDepth));
             MOZ_TRY(xdr->codeUint32(&elem.start));
@@ -948,7 +950,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     if (nscopenotes) {
-        for (ScopeNote& elem : script->scopeNotes()) {
+        for (ScopeNote& elem : data->scopeNotes()) {
             MOZ_TRY(xdr->codeUint32(&elem.index));
             MOZ_TRY(xdr->codeUint32(&elem.start));
             MOZ_TRY(xdr->codeUint32(&elem.length));
@@ -957,7 +959,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     if (nyieldoffsets) {
-        for (uint32_t& elem : script->yieldAndAwaitOffsets()) {
+        for (uint32_t& elem : data->yieldAndAwaitOffsets()) {
             MOZ_TRY(xdr->codeUint32(&elem));
         }
     }
@@ -3239,125 +3241,6 @@ PrivateScriptData::traceChildren(JSTracer* trc)
     }
 }
 
-/*
- * [SMDOC] JSScript data layout (unshared)
- *
- * JSScript::data and SharedScriptData::data have complex,
- * manually-controlled, memory layouts.
- *
- * JSScript::data begins with some optional array headers. They are optional
- * because they often aren't needed, i.e. the corresponding arrays often have
- * zero elements. Each header has a bit in JSScript::hasArrayBits that
- * indicates if it's present within |data|; from this the offset of each
- * present array header can be computed. Each header has an accessor function
- * in JSScript that encapsulates this offset computation.
- *
- * Array type      Array elements  Accessor
- * ----------      --------------  --------
- * ConstArray      Consts          consts()
- * ObjectArray     Objects         objects()
- * ObjectArray     Regexps         regexps()
- * TryNoteArray    Try notes       trynotes()
- * ScopeNoteArray  Scope notes     scopeNotes()
- *
- * Then are the elements of several arrays.
- * - Most of these arrays have headers listed above (if present). For each of
- *   these, the array pointer and the array length is stored in the header.
- * - The remaining arrays have pointers and lengths that are stored directly in
- *   JSScript. This is because, unlike the others, they are nearly always
- *   non-zero length and so the optional-header space optimization isn't
- *   worthwhile.
- *
- * Array elements   Pointed to by         Length
- * --------------   -------------         ------
- * Consts           consts()->vector      consts()->length
- * Objects          objects()->vector     objects()->length
- * Regexps          regexps()->vector     regexps()->length
- * Try notes        trynotes()->vector    trynotes()->length
- * Scope notes      scopeNotes()->vector  scopeNotes()->length
- *
- * IMPORTANT: This layout has two key properties.
- * - It ensures that everything has sufficient alignment; in particular, the
- *   consts() elements need Value alignment.
- * - It ensures there are no gaps between elements, which saves space and makes
- *   manual layout easy. In particular, in the second part, arrays with larger
- *   elements precede arrays with smaller elements.
- *
- * The following static assertions check JSScript::data's alignment properties.
- */
-
-template<class T>
-constexpr bool
-KeepsValueAlignment() {
-    return alignof(JS::Value) % alignof(T) == 0 &&
-           sizeof(T) % sizeof(JS::Value) == 0;
-}
-
-template<class T>
-constexpr bool
-HasValueAlignment() {
-    return alignof(JS::Value) == alignof(T) &&
-           sizeof(T) == sizeof(JS::Value);
-}
-
-template<class T1, class T2>
-constexpr bool
-NoPaddingBetweenEntries() {
-    return alignof(T1) % alignof(T2) == 0;
-}
-
-/*
- * These assertions ensure that there is no padding between the array headers,
- * and also that the consts() elements (which follow immediately afterward) are
- * Value-aligned.  (There is an assumption that |data| itself is Value-aligned;
- * we check this below).
- */
-JS_STATIC_ASSERT(KeepsValueAlignment<ConstArray>());
-JS_STATIC_ASSERT(KeepsValueAlignment<ObjectArray>());       /* there are two of these */
-JS_STATIC_ASSERT(KeepsValueAlignment<TryNoteArray>());
-JS_STATIC_ASSERT(KeepsValueAlignment<ScopeNoteArray>());
-
-/* These assertions ensure there is no padding required between array elements. */
-JS_STATIC_ASSERT(HasValueAlignment<GCPtrValue>());
-JS_STATIC_ASSERT((NoPaddingBetweenEntries<GCPtrValue, GCPtrObject>()));
-JS_STATIC_ASSERT((NoPaddingBetweenEntries<GCPtrObject, GCPtrObject>()));
-JS_STATIC_ASSERT((NoPaddingBetweenEntries<GCPtrObject, JSTryNote>()));
-JS_STATIC_ASSERT((NoPaddingBetweenEntries<JSTryNote, uint32_t>()));
-JS_STATIC_ASSERT((NoPaddingBetweenEntries<uint32_t, uint32_t>()));
-
-JS_STATIC_ASSERT((NoPaddingBetweenEntries<GCPtrValue, ScopeNote>()));
-JS_STATIC_ASSERT((NoPaddingBetweenEntries<ScopeNote, ScopeNote>()));
-JS_STATIC_ASSERT((NoPaddingBetweenEntries<JSTryNote, ScopeNote>()));
-JS_STATIC_ASSERT((NoPaddingBetweenEntries<GCPtrObject, ScopeNote>()));
-JS_STATIC_ASSERT((NoPaddingBetweenEntries<ScopeNote, uint32_t>()));
-
-static inline size_t
-ScriptDataSize(uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
-               uint32_t ntrynotes, uint32_t nscopenotes, uint32_t nyieldoffsets)
-{
-    size_t size = 0;
-
-    MOZ_ASSERT(nscopes != 0);
-    size += sizeof(ScopeArray) + nscopes * sizeof(Scope*);
-    if (nconsts != 0) {
-        size += sizeof(ConstArray) + nconsts * sizeof(Value);
-    }
-    if (nobjects != 0) {
-        size += sizeof(ObjectArray) + nobjects * sizeof(NativeObject*);
-    }
-    if (ntrynotes != 0) {
-        size += sizeof(TryNoteArray) + ntrynotes * sizeof(JSTryNote);
-    }
-    if (nscopenotes != 0) {
-        size += sizeof(ScopeNoteArray) + nscopenotes * sizeof(ScopeNote);
-    }
-    if (nyieldoffsets != 0) {
-        size += sizeof(YieldAndAwaitOffsetArray) + nyieldoffsets * sizeof(uint32_t);
-    }
-
-     return size;
-}
-
 JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry, const ReadOnlyCompileOptions& options,
                    HandleObject sourceObject, uint32_t bufStart, uint32_t bufEnd,
                    uint32_t toStringStart, uint32_t toStringEnd)
@@ -3491,92 +3374,16 @@ JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
 {
     cx->check(script);
 
-    size_t size = ScriptDataSize(nscopes, nconsts, nobjects, ntrynotes,
-                                 nscopenotes, nyieldoffsets);
-    script->data = AllocScriptData(cx, size);
-    if (size && !script->data) {
+    uint32_t dataSize;
+
+    PrivateScriptData* data = PrivateScriptData::new_(cx, nscopes, nconsts, nobjects, ntrynotes,
+                                                      nscopenotes, nyieldoffsets, &dataSize);
+    if (!data) {
         return false;
     }
 
-    script->dataSize_ = size;
-
-    uint8_t* cursor = script->data;
-
-    // There must always be at least 1 scope, the body scope.
-    MOZ_ASSERT(nscopes != 0);
-    cursor += sizeof(ScopeArray);
-
-    if (nconsts != 0) {
-        script->setHasArray(CONSTS);
-        cursor += sizeof(ConstArray);
-    }
-    if (nobjects != 0) {
-        script->setHasArray(OBJECTS);
-        cursor += sizeof(ObjectArray);
-    }
-
-    if (ntrynotes != 0) {
-        script->setHasArray(TRYNOTES);
-        cursor += sizeof(TryNoteArray);
-    }
-    if (nscopenotes != 0) {
-        script->setHasArray(SCOPENOTES);
-        cursor += sizeof(ScopeNoteArray);
-    }
-
-    YieldAndAwaitOffsetArray* yieldAndAwaitOffsets = nullptr;
-    if (nyieldoffsets != 0) {
-        yieldAndAwaitOffsets = reinterpret_cast<YieldAndAwaitOffsetArray*>(cursor);
-        cursor += sizeof(YieldAndAwaitOffsetArray);
-    }
-
-    if (nconsts != 0) {
-        MOZ_ASSERT(reinterpret_cast<uintptr_t>(cursor) % sizeof(JS::Value) == 0);
-        script->constsRaw()->length = nconsts;
-        script->constsRaw()->vector = (GCPtrValue*)cursor;
-        cursor += nconsts * sizeof(script->constsRaw()->vector[0]);
-    }
-
-    script->scopesRaw()->length = nscopes;
-    script->scopesRaw()->vector = (GCPtrScope*)cursor;
-    cursor += nscopes * sizeof(script->scopesRaw()->vector[0]);
-
-    if (nobjects != 0) {
-        script->objectsRaw()->length = nobjects;
-        script->objectsRaw()->vector = (GCPtrObject*)cursor;
-        cursor += nobjects * sizeof(script->objectsRaw()->vector[0]);
-    }
-
-    if (ntrynotes != 0) {
-        script->trynotesRaw()->length = ntrynotes;
-        script->trynotesRaw()->vector = reinterpret_cast<JSTryNote*>(cursor);
-        size_t vectorSize = ntrynotes * sizeof(script->trynotesRaw()->vector[0]);
-#ifdef DEBUG
-        memset(cursor, 0, vectorSize);
-#endif
-        cursor += vectorSize;
-    }
-
-    if (nscopenotes != 0) {
-        script->scopeNotesRaw()->length = nscopenotes;
-        script->scopeNotesRaw()->vector = reinterpret_cast<ScopeNote*>(cursor);
-        size_t vectorSize = nscopenotes * sizeof(script->scopeNotesRaw()->vector[0]);
-#ifdef DEBUG
-        memset(cursor, 0, vectorSize);
-#endif
-        cursor += vectorSize;
-    }
-
-    if (nyieldoffsets != 0) {
-        yieldAndAwaitOffsets->init(reinterpret_cast<uint32_t*>(cursor), nyieldoffsets);
-        size_t vectorSize = nyieldoffsets * sizeof(script->yieldAndAwaitOffsetsRaw()[0]);
-#ifdef DEBUG
-        memset(cursor, 0, vectorSize);
-#endif
-        cursor += vectorSize;
-    }
-
-    MOZ_ASSERT(cursor == script->data + size);
+    script->data_ = data;
+    script->dataSize_ = dataSize;
     return true;
 }
 
@@ -3604,7 +3411,9 @@ JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
     if (!functionProtoScope) {
         return false;
     }
-    script->scopesRaw()->vector[0].init(functionProtoScope);
+
+    js::PrivateScriptData* data = script->data_;
+    data->scopes()[0].init(functionProtoScope);
 
     uint32_t codeLength = 1;
     uint32_t srcNotesLength = 1;
@@ -3742,21 +3551,23 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
         return false;
     }
 
+    js::PrivateScriptData* data = script->data_;
     if (bce->numberList.length() != 0) {
-        bce->numberList.finish(script->consts());
+        bce->numberList.finish(data->consts());
     }
     if (bce->objectList.length != 0) {
-        bce->objectList.finish(script->objects());
+        bce->objectList.finish(data->objects());
     }
     if (bce->scopeList.length() != 0) {
-        bce->scopeList.finish(script->scopes());
+        bce->scopeList.finish(data->scopes());
     }
     if (bce->tryNoteList.length() != 0) {
-        bce->tryNoteList.finish(script->trynotes(), prologueLength);
+        bce->tryNoteList.finish(data->tryNotes(), prologueLength);
     }
     if (bce->scopeNoteList.length() != 0) {
-        bce->scopeNoteList.finish(script->scopeNotes(), prologueLength);
+        bce->scopeNoteList.finish(data->scopeNotes(), prologueLength);
     }
+
     script->bitFields_.strict_ = bce->sc->strict();
     script->bitFields_.explicitUseStrict_ = bce->sc->hasExplicitUseStrict();
     script->bitFields_.bindingsAccessedDynamically_ = bce->sc->bindingsAccessedDynamically();
@@ -3780,7 +3591,7 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
     // Copy yield offsets last, as the generator kind is set in
     // initFromFunctionBox.
     if (bce->yieldAndAwaitOffsetList.length() != 0) {
-        bce->yieldAndAwaitOffsetList.finish(script->yieldAndAwaitOffsets(), prologueLength);
+        bce->yieldAndAwaitOffsetList.finish(data->yieldAndAwaitOffsets(), prologueLength);
     }
 
 #ifdef DEBUG
@@ -3861,7 +3672,7 @@ JSScript::computedSizeOfData() const
 size_t
 JSScript::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    return mallocSizeOf(data);
+    return mallocSizeOf(data_);
 }
 
 size_t
@@ -3903,9 +3714,9 @@ JSScript::finalize(FreeOp* fop)
     destroyScriptCounts();
     destroyDebugScript(fop);
 
-    if (data) {
-        JS_POISON(data, 0xdb, computedSizeOfData(), MemCheckKind::MakeNoAccess);
-        fop->free_(data);
+    if (data_) {
+        JS_POISON(data_, 0xdb, computedSizeOfData(), MemCheckKind::MakeNoAccess);
+        fop->free_(data_);
     }
 
     if (scriptData_) {
@@ -4157,14 +3968,6 @@ js::DescribeScriptedCallerForCompilation(JSContext* cx, MutableHandleScript mayb
     }
 }
 
-template <class T>
-static inline T*
-Rebase(JSScript* dst, JSScript* src, T* srcp)
-{
-    size_t off = reinterpret_cast<uint8_t*>(srcp) - src->data;
-    return reinterpret_cast<T*>(dst->data + off);
-}
-
 static JSObject*
 CloneInnerInterpretedFunction(JSContext* cx, HandleScope enclosingScope, HandleFunction srcFun)
 {
@@ -4227,18 +4030,17 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     /* Some embeddings are not careful to use ExposeObjectToActiveJS as needed. */
     MOZ_ASSERT(!src->sourceObject()->isMarkedGray());
 
-    uint32_t nconsts = src->hasConsts() ? src->consts().size() : 0;
-    uint32_t nobjects = src->hasObjects() ? src->objects().size() : 0;
     uint32_t nscopes = src->scopes().size();
-    uint32_t ntrynotes = src->hasTrynotes() ? src->trynotes().size() : 0;
-    uint32_t nscopenotes = src->hasScopeNotes() ? src->scopeNotes().size() : 0;
-    uint32_t nyieldoffsets = src->hasYieldAndAwaitOffsets() ? src->yieldAndAwaitOffsets().size() : 0;
+#ifdef DEBUG
+    uint32_t nconsts = src->hasConsts() ? src->consts().size() : 0;
+#endif
+    uint32_t nobjects = src->hasObjects() ? src->objects().size() : 0;
 
     /* Script data */
 
     size_t size = src->dataSize();
     UniquePtr<uint8_t, JS::FreePolicy> data(AllocScriptData(cx, size));
-    if (size && !data) {
+    if (!data) {
         return false;
     }
 
@@ -4304,13 +4106,9 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
         }
     }
 
-    /* This assignment must occur before all the Rebase calls. */
-    dst->data = data.release();
+    dst->data_ = reinterpret_cast<js::PrivateScriptData*>(data.release());
     dst->dataSize_ = size;
-    MOZ_ASSERT(bool(dst->data) == bool(src->data));
-    if (dst->data) {
-        memcpy(dst->data, src->data, size);
-    }
+    memcpy(dst->data_, src->data_, size);
 
     if (cx->zone() != src->zoneFromAnyThread()) {
         for (size_t i = 0; i < src->scriptData()->natoms(); i++) {
@@ -4337,7 +4135,6 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->bitFields_.hasMappedArgsObj_ = src->hasMappedArgsObj();
     dst->bitFields_.functionHasThisBinding_ = src->functionHasThisBinding();
     dst->bitFields_.functionHasExtraBodyVarScope_ = src->functionHasExtraBodyVarScope();
-    dst->cloneHasArray(src);
     dst->bitFields_.strict_ = src->strict();
     dst->bitFields_.explicitUseStrict_ = src->explicitUseStrict();
     dst->bitFields_.hasNonSyntacticScope_ = scopes[0]->hasOnChain(ScopeKind::NonSyntactic);
@@ -4355,37 +4152,26 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->bitFields_.hasRest_ = src->bitFields_.hasRest_;
     dst->bitFields_.hideScriptFromDebugger_ = src->bitFields_.hideScriptFromDebugger_;
 
-    if (nconsts != 0) {
-        GCPtrValue* vector = Rebase<GCPtrValue>(dst, src, src->constsRaw()->vector);
-        dst->constsRaw()->vector = vector;
+    {
+        auto array = dst->data_->scopes();
+        for (uint32_t i = 0; i < nscopes; ++i) {
+            array[i].init(scopes[i]);
+        }
+    }
+#ifdef DEBUG
+    if (nconsts) {
+        auto array = dst->data_->consts();
         for (unsigned i = 0; i < nconsts; ++i) {
             // We don't support GCThings here and thus don't need to call |init|.
-            MOZ_ASSERT(!vector[i].isGCThing());
+            MOZ_ASSERT(!array[i].isGCThing());
         }
     }
-    if (nobjects != 0) {
-        GCPtrObject* vector = Rebase<GCPtrObject>(dst, src, src->objectsRaw()->vector);
-        dst->objectsRaw()->vector = vector;
+#endif
+    if (nobjects) {
+        auto array = dst->data_->objects();
         for (unsigned i = 0; i < nobjects; ++i) {
-            vector[i].init(&objects[i]->as<NativeObject>());
+            array[i].init(objects[i]);
         }
-    }
-    {
-        GCPtrScope* vector = Rebase<GCPtrScope>(dst, src, src->scopesRaw()->vector);
-        dst->scopesRaw()->vector = vector;
-        for (uint32_t i = 0; i < nscopes; ++i) {
-            vector[i].init(scopes[i]);
-        }
-    }
-    if (ntrynotes != 0) {
-        dst->trynotesRaw()->vector = Rebase<JSTryNote>(dst, src, src->trynotesRaw()->vector);
-    }
-    if (nscopenotes != 0) {
-        dst->scopeNotesRaw()->vector = Rebase<ScopeNote>(dst, src, src->scopeNotesRaw()->vector);
-    }
-    if (nyieldoffsets != 0) {
-        dst->yieldAndAwaitOffsetsRaw().vector_ =
-            Rebase<uint32_t>(dst, src, src->yieldAndAwaitOffsetsRaw().vector_);
     }
 
     return true;
@@ -4730,23 +4516,12 @@ JSScript::traceChildren(JSTracer* trc)
                   GCMarker::fromTracer(trc)->shouldCheckCompartments(),
                   zone()->isCollecting());
 
+    if (data_) {
+        data_->traceChildren(trc);
+    }
+
     if (scriptData()) {
         scriptData()->traceChildren(trc);
-    }
-
-    if (data) {
-        auto array = scopes();
-        TraceRange(trc, array.size(), array.data(), "scopes");
-    }
-
-    if (hasConsts()) {
-        auto array = consts();
-        TraceRange(trc, array.size(), array.data(), "consts");
-    }
-
-    if (hasObjects()) {
-        auto array = objects();
-        TraceRange(trc, array.size(), array.data(), "objects");
     }
 
     MOZ_ASSERT_IF(sourceObject(), MaybeForwarded(sourceObject())->compartment() == compartment());

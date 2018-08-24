@@ -147,53 +147,6 @@ struct ScopeNote {
     uint32_t        parent;     // Index of parent block scope in notes, or NoScopeNote.
 };
 
-struct ConstArray {
-    js::GCPtrValue* vector;     // array of indexed constant values
-    uint32_t length;
-};
-
-struct ObjectArray {
-    js::GCPtrObject* vector;    // Array of indexed objects.
-    uint32_t length;            // Count of indexed objects.
-};
-
-struct ScopeArray {
-    js::GCPtrScope* vector;     // Array of indexed scopes.
-    uint32_t        length;     // Count of indexed scopes.
-};
-
-struct TryNoteArray {
-    JSTryNote*      vector;     // Array of indexed try notes.
-    uint32_t        length;     // Count of indexed try notes.
-};
-
-struct ScopeNoteArray {
-    ScopeNote* vector;          // Array of indexed ScopeNote records.
-    uint32_t   length;          // Count of indexed try notes.
-};
-
-class YieldAndAwaitOffsetArray {
-    friend bool
-    detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
-                       MutableHandle<GCVector<Scope*>> scopes);
-
-    uint32_t*       vector_;    // Array of bytecode offsets.
-    uint32_t        length_;    // Count of bytecode offsets.
-
-  public:
-    void init(uint32_t* vector, uint32_t length) {
-        vector_ = vector;
-        length_ = length;
-    }
-    uint32_t& operator[](uint32_t index) {
-        MOZ_ASSERT(index < length_);
-        return vector_[index];
-    }
-    uint32_t length() const {
-        return length_;
-    }
-};
-
 class ScriptCounts
 {
   public:
@@ -1580,13 +1533,13 @@ class JSScript : public js::gc::TenuredCell
     uint8_t* jitCodeRaw_ = nullptr;
     uint8_t* jitCodeSkipArgCheck_ = nullptr;
 
+    // Shareable script data
     js::SharedScriptData* scriptData_ = nullptr;
 
-  public:
-    // Pointer to variable-length data array (see comment above Create() for
-    // details).
-    uint8_t* data = nullptr;
+    // Unshared variable-length data
+    js::PrivateScriptData* data_ = nullptr;
 
+  public:
     JS::Realm* realm_ = nullptr;
 
   private:
@@ -1713,14 +1666,6 @@ class JSScript : public js::gc::TenuredCell
          * C++20, so we can't initialize these to zero in place.  Instead we
          * braced-init this to all zeroes in the JSScript constructor, then
          * custom-assign particular bit-fields in the constructor body.
-         */
-
-        // The bits in this field indicate the presence/non-presence of several
-        // optional arrays in |data|.  See the comments above Create() for details.
-        uint8_t hasArrayBits_ : ARRAY_KIND_BITS;
-
-        /*
-         * All remaining bit-fields are single-bit bools.
          */
 
         // No need for result value of last expression statement.
@@ -2568,99 +2513,43 @@ class JSScript : public js::gc::TenuredCell
     size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const;
     size_t sizeOfTypeScript(mozilla::MallocSizeOf mallocSizeOf) const;
 
-    bool hasArray(ArrayKind kind) const {
-        return bitFields_.hasArrayBits_ & (1 << kind);
-    }
-    void setHasArray(ArrayKind kind) { bitFields_.hasArrayBits_ |= (1 << kind); }
-    void cloneHasArray(JSScript* script) {
-        bitFields_.hasArrayBits_ = script->bitFields_.hasArrayBits_;
-    }
-
-    bool hasConsts() const       { return hasArray(CONSTS); }
-    bool hasObjects() const      { return hasArray(OBJECTS); }
-    bool hasTrynotes() const     { return hasArray(TRYNOTES); }
-    bool hasScopeNotes() const   { return hasArray(SCOPENOTES); }
-    bool hasYieldAndAwaitOffsets() const {
-        return isGenerator() || isAsync();
-    }
-
-#define OFF(fooOff, hasFoo, t)   (fooOff() + (hasFoo() ? sizeof(t) : 0))
-
-    size_t scopesOffset() const       { return 0; }
-    size_t constsOffset() const       { return scopesOffset() + sizeof(js::ScopeArray); }
-    size_t objectsOffset() const      { return OFF(constsOffset,     hasConsts,     js::ConstArray); }
-    size_t trynotesOffset() const     { return OFF(objectsOffset,    hasObjects,    js::ObjectArray); }
-    size_t scopeNotesOffset() const   { return OFF(trynotesOffset,   hasTrynotes,   js::TryNoteArray); }
-    size_t yieldAndAwaitOffsetsOffset() const {
-        return OFF(scopeNotesOffset, hasScopeNotes, js::ScopeNoteArray);
-    }
-
-#undef OFF
-
     size_t dataSize() const { return dataSize_; }
 
-  private:
+    bool hasConsts() const       { return data_->hasConsts(); }
+    bool hasObjects() const      { return data_->hasObjects(); }
+    bool hasTrynotes() const     { return data_->hasTryNotes(); }
+    bool hasScopeNotes() const   { return data_->hasScopeNotes(); }
+    bool hasYieldAndAwaitOffsets() const {
+        return data_->hasYieldOffsets();
+    }
 
-    js::ConstArray* constsRaw() const {
+    mozilla::Span<const js::GCPtrScope> scopes() const {
+        return data_->scopes();
+    }
+
+    mozilla::Span<const js::GCPtrValue> consts() const {
         MOZ_ASSERT(hasConsts());
-        return reinterpret_cast<js::ConstArray*>(data + constsOffset());
+        return data_->consts();
     }
 
-    js::ObjectArray* objectsRaw() const {
+    mozilla::Span<const js::GCPtrObject> objects() const {
         MOZ_ASSERT(hasObjects());
-        return reinterpret_cast<js::ObjectArray*>(data + objectsOffset());
+        return data_->objects();
     }
 
-    js::ScopeArray* scopesRaw() const {
-        return reinterpret_cast<js::ScopeArray*>(data + scopesOffset());
-    }
-
-    js::TryNoteArray* trynotesRaw() const {
+    mozilla::Span<const JSTryNote> trynotes() const {
         MOZ_ASSERT(hasTrynotes());
-        return reinterpret_cast<js::TryNoteArray*>(data + trynotesOffset());
+        return data_->tryNotes();
     }
 
-    js::ScopeNoteArray* scopeNotesRaw() const {
+    mozilla::Span<const js::ScopeNote> scopeNotes() const {
         MOZ_ASSERT(hasScopeNotes());
-        return reinterpret_cast<js::ScopeNoteArray*>(data + scopeNotesOffset());
+        return data_->scopeNotes();
     }
 
-    js::YieldAndAwaitOffsetArray& yieldAndAwaitOffsetsRaw() const {
+    mozilla::Span<const uint32_t> yieldAndAwaitOffsets() const {
         MOZ_ASSERT(hasYieldAndAwaitOffsets());
-        return *reinterpret_cast<js::YieldAndAwaitOffsetArray*>(data +
-                                                                yieldAndAwaitOffsetsOffset());
-    }
-
-  public:
-
-    mozilla::Span<js::GCPtrValue> consts() const {
-        js::ConstArray* array = constsRaw();
-        return mozilla::MakeSpan(array->vector, array->length);
-    }
-
-    mozilla::Span<js::GCPtrObject> objects() const {
-        js::ObjectArray* array = objectsRaw();
-        return mozilla::MakeSpan(array->vector, array->length);
-    }
-
-    mozilla::Span<js::GCPtrScope> scopes() const {
-        js::ScopeArray* array = scopesRaw();
-        return mozilla::MakeSpan(array->vector, array->length);
-    }
-
-    mozilla::Span<JSTryNote> trynotes() const {
-        js::TryNoteArray* array = trynotesRaw();
-        return mozilla::MakeSpan(array->vector, array->length);
-    }
-
-    mozilla::Span<js::ScopeNote> scopeNotes() const {
-        js::ScopeNoteArray* array = scopeNotesRaw();
-        return mozilla::MakeSpan(array->vector, array->length);
-    }
-
-    mozilla::Span<uint32_t> yieldAndAwaitOffsets() const {
-        js::YieldAndAwaitOffsetArray& array = yieldAndAwaitOffsetsRaw();
-        return mozilla::MakeSpan(&array[0], array.length());
+        return data_->yieldAndAwaitOffsets();
     }
 
     bool hasLoops();

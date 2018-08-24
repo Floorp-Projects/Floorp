@@ -796,7 +796,7 @@ BaselineScript::computeYieldAndAwaitNativeOffsets(JSScript* script)
         return nativeCode;
     };
 
-    mozilla::Span<uint32_t> pcOffsets = script->yieldAndAwaitOffsets();
+    mozilla::Span<const uint32_t> pcOffsets = script->yieldAndAwaitOffsets();
     uint8_t** nativeOffsets = yieldEntryList();
     std::transform(pcOffsets.begin(), pcOffsets.end(), nativeOffsets, computeNative);
 }
