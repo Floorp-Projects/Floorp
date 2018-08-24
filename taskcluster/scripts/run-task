@@ -737,11 +737,11 @@ def main(args):
         print('task should be defined in terms of non-symbolic revision')
         return 1
 
-    fetches = os.environ.get('MOZ_FETCHES')
-    if fetches:
-        fetch_artifacts(fetches)
-
     try:
+        fetches = os.environ.get('MOZ_FETCHES')
+        if fetches:
+            fetch_artifacts(fetches)
+
         return run_and_prefix_output(b'task', task_args)
     finally:
         fetches_dir = os.environ.get('MOZ_FETCHES_DIR')

@@ -1,7 +1,6 @@
 use std::ffi::{CStr, CString};
-use std::{mem, slice};
+use std::{mem, slice, ptr, env};
 use std::path::PathBuf;
-use std::ptr;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::os::raw::{c_void, c_char, c_float};
@@ -884,6 +883,10 @@ pub extern "C" fn wr_renderer_update_program_cache(renderer: &mut Renderer, prog
     renderer.update_program_cache(program_cache);
 }
 
+fn env_var_to_bool(key: &'static str) -> bool {
+    env::var(key).ok().map_or(false, |v| v.parse::<usize>().unwrap_or(1) != 0)
+}
+
 // Call MakeCurrent before this.
 #[no_mangle]
 pub extern "C" fn wr_window_new(window_id: WrWindowId,
@@ -951,6 +954,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         sampler: Some(Box::new(SamplerCallback::new(window_id))),
         max_texture_size: Some(8192), // Moz2D doesn't like textures bigger than this
         clear_color: Some(ColorF::new(0.0, 0.0, 0.0, 0.0)),
+        precache_shaders: env_var_to_bool("MOZ_WR_PRECACHE_SHADERS"),
         ..Default::default()
     };
 
@@ -1770,12 +1774,12 @@ pub extern "C" fn wr_dp_define_clipchain(state: &mut WrState,
                                          -> u64 {
     debug_assert!(unsafe { is_in_main_thread() });
     let parent = unsafe { parent_clipchain_id.as_ref() }.map(|id| ClipChainId(*id, state.pipeline_id));
-    let clips_slice : Vec<ClipId> = make_slice(clips, clips_count)
+    let pipeline_id = state.pipeline_id;
+    let clips = make_slice(clips, clips_count)
         .iter()
-        .map(|id| unpack_clip_id(*id, state.pipeline_id))
-        .collect();
+        .map(|id| unpack_clip_id(*id, pipeline_id));
 
-    let clipchain_id = state.frame_builder.dl_builder.define_clip_chain(parent, clips_slice);
+    let clipchain_id = state.frame_builder.dl_builder.define_clip_chain(parent, clips);
     assert!(clipchain_id.1 == state.pipeline_id);
     clipchain_id.0
 }

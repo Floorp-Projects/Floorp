@@ -938,7 +938,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
      the type of content blocking is currently not enabled. -->
 <!ENTITY contentBlocking.fastBlock.add.label "Add Blocking…">
 
-<!ENTITY contentBlocking.trackingProtection.label "Trackers">
+<!ENTITY contentBlocking.trackingProtection2.label "All Detected Trackers">
 <!-- LOCALIZATION NOTE (contentBlocking.trackingProtection.blocked.label):
      This label signals that this type of content blocking is turned
      ON and is successfully blocking tracker content, so this is
@@ -964,12 +964,11 @@ you can use these alternative items. Otherwise, their values should be empty.  -
      the type of content blocking is currently not enabled. -->
 <!ENTITY contentBlocking.3rdPartyCookies.add.label "Add Blocking…">
 
-<!ENTITY contentBlocking.openBreakageReportView.label "Report Problems">
+<!ENTITY contentBlocking.openBreakageReportView2.label "Report a problem">
 <!ENTITY contentBlocking.breakageReportView.label "Report Problems">
-<!ENTITY contentBlocking.breakageReportView.description "Content blocking can cause problems with some websites. When you report problems, you’ll help make &brandShortName; better for everyone. (This will send a URL as well as information about your privacy and content blocking settings to Mozilla.)">
+<!ENTITY contentBlocking.breakageReportView2.description "Content blocking can cause problems with some websites. When you report problems, you’ll help make &brandShortName; better for everyone. (This will send a URL as well as information about your browser settings to Mozilla.)">
 <!ENTITY contentBlocking.breakageReportView.learnMore "Learn More">
 <!ENTITY contentBlocking.breakageReportView.collection.url.label "URL">
-<!ENTITY contentBlocking.breakageReportView.collection.userAgent.label "&brandShortName; Version Number">
 <!ENTITY contentBlocking.breakageReportView.collection.comments.label "What problems did you have? (Optional)">
 <!ENTITY contentBlocking.breakageReportView.sendReport.label "Send Report">
 <!ENTITY contentBlocking.breakageReportView.cancel.label "Cancel">
