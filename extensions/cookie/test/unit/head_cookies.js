@@ -123,8 +123,8 @@ function do_set_cookies(uri, channel, session, expected) {
 
 function do_count_enumerator(enumerator) {
   let i = 0;
-  while (enumerator.hasMoreElements()) {
-    enumerator.getNext();
+  for (let cookie of enumerator) {
+    void cookie;
     ++i;
   }
   return i;

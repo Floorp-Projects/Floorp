@@ -24,7 +24,7 @@
  * itself, possibly getting rid of the Count() method, as it duplicates
  * nsIArray functionality.
  */
-[scriptable, uuid(261d442e-050c-453d-8aaa-b3f23bcc528b)]
+[scriptable, builtinclass, uuid(261d442e-050c-453d-8aaa-b3f23bcc528b)]
 interface nsIArrayExtensions : nsIArray
 {
   /**

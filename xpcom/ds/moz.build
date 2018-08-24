@@ -64,6 +64,7 @@ EXPORTS += [
     'nsPointerHashKeys.h',
     'nsQuickSort.h',
     'nsRefPtrHashtable.h',
+    'nsSimpleEnumerator.h',
     'nsStaticAtomUtils.h',
     'nsStaticNameTable.h',
     'nsStringEnumerator.h',
@@ -87,6 +88,7 @@ EXPORTS.mozilla += [
     'Dafsa.h',
     'IncrementalTokenizer.h',
     'Observer.h',
+    'SimpleEnumerator.h',
     'StickyTimeDuration.h',
     'Tokenizer.h',
 ]
@@ -109,6 +111,7 @@ UNIFIED_SOURCES += [
     'nsPersistentProperties.cpp',
     'nsProperties.cpp',
     'nsQuickSort.cpp',
+    'nsSimpleEnumerator.cpp',
     'nsStaticNameTable.cpp',
     'nsStringEnumerator.cpp',
     'nsSupportsPrimitives.cpp',

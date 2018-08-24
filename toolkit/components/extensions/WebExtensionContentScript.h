@@ -148,8 +148,9 @@ protected:
 
   virtual ~MozDocumentMatcher() = default;
 
-  MozDocumentMatcher(const dom::MozDocumentMatcherInit& aInit,
-                     ErrorResult& aRv);
+  MozDocumentMatcher(dom::GlobalObject& aGlobal,
+                     const dom::MozDocumentMatcherInit& aInit,
+                     bool aRestricted, ErrorResult& aRv);
 
   RefPtr<WebExtensionPolicy> mExtension;
 
@@ -210,7 +211,8 @@ protected:
 
   virtual ~WebExtensionContentScript() = default;
 
-  WebExtensionContentScript(WebExtensionPolicy& aExtension,
+  WebExtensionContentScript(dom::GlobalObject& aGlobal,
+                            WebExtensionPolicy& aExtension,
                             const ContentScriptInit& aInit,
                             ErrorResult& aRv);
 

@@ -9,8 +9,7 @@
 do_get_profile();
 
 function find_slot_by_name(module, name) {
-  for (let slot of XPCOMUtils.IterSimpleEnumerator(module.listSlots(),
-                                                   Ci.nsIPKCS11Slot)) {
+  for (let slot of module.listSlots()) {
     if (slot.name == name) {
       return slot;
     }
@@ -19,8 +18,7 @@ function find_slot_by_name(module, name) {
 }
 
 function find_module_by_name(moduleDB, name) {
-  for (let slot of XPCOMUtils.IterSimpleEnumerator(moduleDB.listModules(),
-                                                   Ci.nsIPKCS11Module)) {
+  for (let slot of moduleDB.listModules()) {
     if (slot.name == name) {
       return slot;
     }

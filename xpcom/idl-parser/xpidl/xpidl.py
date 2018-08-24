@@ -912,6 +912,7 @@ class Attribute(object):
     kind = 'attribute'
     noscript = False
     readonly = False
+    symbol = False
     implicit_jscontext = False
     nostdcall = False
     must_use = False
@@ -963,6 +964,8 @@ class Attribute(object):
 
                 if name == 'noscript':
                     self.noscript = True
+                elif name == 'symbol':
+                    self.symbol = True
                 elif name == 'implicit_jscontext':
                     self.implicit_jscontext = True
                 elif name == 'nostdcall':
@@ -1019,6 +1022,7 @@ class Method(object):
     kind = 'method'
     noscript = False
     notxpcom = False
+    symbol = False
     binaryname = None
     implicit_jscontext = False
     nostdcall = False
@@ -1050,6 +1054,8 @@ class Method(object):
                 self.noscript = True
             elif name == 'notxpcom':
                 self.notxpcom = True
+            elif name == 'symbol':
+                self.symbol = True
             elif name == 'implicit_jscontext':
                 self.implicit_jscontext = True
             elif name == 'optional_argc':

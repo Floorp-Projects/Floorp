@@ -785,9 +785,7 @@ var AddonManagerInternal = {
       // Load any providers registered in the category manager
       let catman = Cc["@mozilla.org/categorymanager;1"].
                    getService(Ci.nsICategoryManager);
-      let entries = catman.enumerateCategory(CATEGORY_PROVIDER_MODULE);
-      while (entries.hasMoreElements()) {
-        let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
+      for (let {data: entry} of catman.enumerateCategory(CATEGORY_PROVIDER_MODULE)) {
         let url = catman.getCategoryEntry(CATEGORY_PROVIDER_MODULE, entry);
 
         try {

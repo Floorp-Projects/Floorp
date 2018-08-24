@@ -318,9 +318,7 @@ function r() {
 }
 
 function* BrowserWindowIterator() {
-  let windowsEnum = Services.wm.getEnumerator("navigator:browser");
-  while (windowsEnum.hasMoreElements()) {
-    let currentWindow = windowsEnum.getNext();
+  for (let currentWindow of Services.wm.getEnumerator("navigator:browser")) {
     if (!currentWindow.closed) {
       yield currentWindow;
     }

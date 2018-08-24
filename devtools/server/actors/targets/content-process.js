@@ -38,14 +38,8 @@ function ContentProcessTargetActor(connection) {
 
   const sandboxPrototype = {
     get tabs() {
-      const tabs = [];
-      const windowEnumerator = Services.ww.getWindowEnumerator();
-      while (windowEnumerator.hasMoreElements()) {
-        const window = windowEnumerator.getNext().QueryInterface(Ci.nsIDOMWindow);
-        const tabChildGlobal = window.docShell.messageManager;
-        tabs.push(tabChildGlobal);
-      }
-      return tabs;
+      return Array.from(Services.ww.getWindowEnumerator(),
+                        win => win.docShell.messageManager);
     },
   };
 

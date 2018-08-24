@@ -383,9 +383,7 @@ class MarionetteParentProcess {
         // When Firefox starts on Windows, an additional GFX sanity test
         // window may appear off-screen.  Marionette should wait for it
         // to close.
-        let winEn = Services.wm.getEnumerator(null);
-        while (winEn.hasMoreElements()) {
-          let win = winEn.getNext();
+        for (let win of Services.wm.getEnumerator(null)) {
           if (win.document.documentURI == "chrome://gfxsanity/content/sanityparent.html") {
             this.gfxWindow = win;
             break;

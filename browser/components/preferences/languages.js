@@ -54,15 +54,10 @@ var gLanguagesDialog = {
     }
 
     // 1) Read the available languages out of language.properties
-    var strings = bundleAccepted.strings;
 
     let localeCodes = [];
     let localeValues = [];
-    while (strings.hasMoreElements()) {
-      var currString = strings.getNext();
-      if (!(currString instanceof Ci.nsIPropertyElement))
-        break;
-
+    for (let currString of bundleAccepted.strings) {
       var property = currString.key.split("."); // ab[-cd].accept
       if (property[1] == "accept") {
         localeCodes.push(property[0]);

@@ -319,10 +319,7 @@ function testAttrsInternal(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs,
 function compareAttrs(aErrorMsg, aAttrs, aExpectedAttrs, aSkipUnexpectedAttrs,
                       aAbsentAttrs) {
   // Check if all obtained attributes are expected and have expected value.
-  var enumerate = aAttrs.enumerate();
-  while (enumerate.hasMoreElements()) {
-    let prop = enumerate.getNext().QueryInterface(nsIPropertyElement);
-
+  for (let prop of aAttrs.enumerate()) {
     if (!(prop.key in aExpectedAttrs)) {
       if (!aSkipUnexpectedAttrs)
         ok(false, "Unexpected attribute '" + prop.key + "' having '" +
@@ -355,9 +352,7 @@ function compareAttrs(aErrorMsg, aAttrs, aExpectedAttrs, aSkipUnexpectedAttrs,
     for (var name in aAbsentAttrs) {
       var wasFound = false;
 
-      enumerate = aAttrs.enumerate();
-      while (enumerate.hasMoreElements()) {
-        let prop = enumerate.getNext().QueryInterface(nsIPropertyElement);
+      for (let prop of aAttrs.enumerate()) {
         if (prop.key == name)
           wasFound = true;
       }

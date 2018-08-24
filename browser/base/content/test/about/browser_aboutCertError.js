@@ -496,10 +496,7 @@ function getCertChain(securityInfoAsString) {
                        .getService(Ci.nsISerializationHelper);
   let securityInfo = serhelper.deserializeObject(securityInfoAsString);
   securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-  let certs = securityInfo.failedCertChain.getEnumerator();
-  while (certs.hasMoreElements()) {
-    let cert = certs.getNext();
-    cert.QueryInterface(Ci.nsIX509Cert);
+  for (let cert of securityInfo.failedCertChain.getEnumerator()) {
     certChain += getPEMString(cert);
   }
   return certChain;

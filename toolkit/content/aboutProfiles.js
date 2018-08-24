@@ -29,9 +29,7 @@ function findCurrentProfile() {
   } catch (e) {}
 
   if (cpd) {
-    let itr = ProfileService.profiles;
-    while (itr.hasMoreElements()) {
-      let profile = itr.getNext().QueryInterface(Ci.nsIToolkitProfile);
+    for (let profile of ProfileService.profiles) {
       if (profile.rootDir.path == cpd.path) {
         return profile;
       }
@@ -60,9 +58,7 @@ function refreshUI() {
 
   let currentProfile = findCurrentProfile();
 
-  let iter = ProfileService.profiles;
-  while (iter.hasMoreElements()) {
-    let profile = iter.getNext().QueryInterface(Ci.nsIToolkitProfile);
+  for (let profile of ProfileService.profiles) {
     let isCurrentProfile = profile == currentProfile;
     let isInUse = isCurrentProfile;
     if (!isInUse) {
@@ -290,9 +286,7 @@ function removeProfile(profile) {
   } catch (e) {}
 
   if (isSelected || isDefault) {
-    let itr = ProfileService.profiles;
-    while (itr.hasMoreElements()) {
-      let p = itr.getNext().QueryInterface(Ci.nsIToolkitProfile);
+    for (let p of ProfileService.profiles) {
       if (profile == p) {
         continue;
       }

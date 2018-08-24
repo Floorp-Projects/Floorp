@@ -729,9 +729,7 @@ var AeroPeek = {
     // (rather than this code running on startup because the pref was
     // already set to true), we must initialize previews for open windows:
     if (this.initialized) {
-      let browserWindows = Services.wm.getEnumerator("navigator:browser");
-      while (browserWindows.hasMoreElements()) {
-        let win = browserWindows.getNext();
+      for (let win of Services.wm.getEnumerator("navigator:browser")) {
         if (!win.closed) {
           this.onOpenWindow(win);
         }

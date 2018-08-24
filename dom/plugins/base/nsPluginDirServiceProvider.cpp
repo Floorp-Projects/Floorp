@@ -62,7 +62,7 @@ nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator
   GetPLIDDirectoriesWithRootKey(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, dirs);
   GetPLIDDirectoriesWithRootKey(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, dirs);
 
-  return NS_NewArrayEnumerator(aEnumerator, dirs);
+  return NS_NewArrayEnumerator(aEnumerator, dirs, NS_GET_IID(nsIFile));
 }
 
 nsresult

@@ -95,10 +95,8 @@ function promiseFocus(window) {
 
 // Helper to register test failures and close windows if any are left open
 function checkOpenWindows(aWindowID) {
-  let windows = Services.wm.getEnumerator(aWindowID);
   let found = false;
-  while (windows.hasMoreElements()) {
-    let win = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+  for (let win of Services.wm.getEnumerator(aWindowID)) {
     if (!win.closed) {
       found = true;
       win.close();

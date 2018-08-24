@@ -110,9 +110,7 @@ async function assertWebRTCIndicatorStatus(expected) {
   is(ui.showMicrophoneIndicator, expectAudio, "microphone global indicator as expected");
   is(ui.showScreenSharingIndicator, expectScreen, "screen global indicator as expected");
 
-  let windows = Services.wm.getEnumerator("navigator:browser");
-  while (windows.hasMoreElements()) {
-    let win = windows.getNext();
+  for (let win of Services.wm.getEnumerator("navigator:browser")) {
     let menu = win.document.getElementById("tabSharingMenu");
     is(!!menu && !menu.hidden, !!expected, "WebRTC menu should be " + expectedState);
   }

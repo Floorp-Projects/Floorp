@@ -262,13 +262,10 @@ SpecialPowersObserverAPI.prototype = {
     // First create observers from the category manager.
     let cm =
       Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-    let enumerator = cm.enumerateCategory(topic);
 
     let observers = [];
 
-    while (enumerator.hasMoreElements()) {
-      let entry =
-        enumerator.getNext().QueryInterface(Ci.nsISupportsCString).data;
+    for (let {data: entry} of cm.enumerateCategory(topic)) {
       let contractID = cm.getCategoryEntry(topic, entry);
 
       let factoryFunction;
@@ -289,14 +286,11 @@ SpecialPowersObserverAPI.prototype = {
     }
 
     // Next enumerate the registered observers.
-    enumerator = Services.obs.enumerateObservers(topic);
-    while (enumerator.hasMoreElements()) {
-      try {
-        let observer = enumerator.getNext().QueryInterface(Ci.nsIObserver);
-        if (!observers.includes(observer)) {
-          observers.push(observer);
-        }
-      } catch (e) { }
+    for (let observer of Services.obs.enumerateObservers(topic)) {
+      if (observer instanceof Ci.nsIObserver &&
+          !observers.includes(observer)) {
+        observers.push(observer);
+      }
     }
 
     observers.forEach(function(observer) {

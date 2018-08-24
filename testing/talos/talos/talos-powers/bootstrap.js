@@ -245,9 +245,7 @@ TalosPowersService.prototype = {
       });
     }
 
-    let enumerator = Services.wm.getEnumerator(null);
-    while (enumerator.hasMoreElements()) {
-      let domWindow = enumerator.getNext();
+    for (let domWindow of Services.wm.getEnumerator(null)) {
       domWindow.close();
     }
 

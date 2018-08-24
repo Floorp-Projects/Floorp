@@ -200,9 +200,7 @@ function moveWindowToReplace(aReplacedAlert) {
 
   // Move windows that come after the replaced alert if the height is different.
   if (heightDelta != 0) {
-    let windows = Services.wm.getEnumerator("alert:alert");
-    while (windows.hasMoreElements()) {
-      let alertWindow = windows.getNext();
+    for (let alertWindow of Services.wm.getEnumerator("alert:alert")) {
       // boolean to determine if the alert window is after the replaced alert.
       let alertIsAfter = gOrigin & NS_ALERT_TOP ?
                          alertWindow.screenY > aReplacedAlert.screenY :
@@ -230,9 +228,7 @@ function moveWindowToEnd() {
           screen.availTop + screen.availHeight - window.outerHeight;
 
   // Position the window at the end of all alerts.
-  let windows = Services.wm.getEnumerator("alert:alert");
-  while (windows.hasMoreElements()) {
-    let alertWindow = windows.getNext();
+  for (let alertWindow of Services.wm.getEnumerator("alert:alert")) {
     if (alertWindow != window) {
       if (gOrigin & NS_ALERT_TOP) {
         y = Math.max(y, alertWindow.screenY + alertWindow.outerHeight - WINDOW_SHADOW_SPREAD);
@@ -253,9 +249,7 @@ function onAlertBeforeUnload() {
   if (!gIsReplaced) {
     // Move other alert windows to fill the gap left by closing alert.
     let heightDelta = window.outerHeight + WINDOW_MARGIN - WINDOW_SHADOW_SPREAD;
-    let windows = Services.wm.getEnumerator("alert:alert");
-    while (windows.hasMoreElements()) {
-      let alertWindow = windows.getNext();
+    for (let alertWindow of Services.wm.getEnumerator("alert:alert")) {
       if (alertWindow != window) {
         if (gOrigin & NS_ALERT_TOP) {
           if (alertWindow.screenY > window.screenY) {

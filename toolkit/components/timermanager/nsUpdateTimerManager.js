@@ -153,9 +153,7 @@ TimerManager.prototype = {
 
     var catMan = Cc["@mozilla.org/categorymanager;1"].
                  getService(Ci.nsICategoryManager);
-    var entries = catMan.enumerateCategory(CATEGORY_UPDATE_TIMER);
-    while (entries.hasMoreElements()) {
-      let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
+    for (let {data: entry} of catMan.enumerateCategory(CATEGORY_UPDATE_TIMER)) {
       let value = catMan.getCategoryEntry(CATEGORY_UPDATE_TIMER, entry);
       let [cid, method, timerID, prefInterval, defaultInterval, maxInterval] = value.split(",");
 

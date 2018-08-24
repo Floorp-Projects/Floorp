@@ -183,7 +183,7 @@ const SecurityInfo = {
 
   getCertificateChain(certChain, options = {}) {
     let certificates = [];
-    for (let cert of XPCOMUtils.IterSimpleEnumerator(certChain.getEnumerator(), Ci.nsIX509Cert)) {
+    for (let cert of certChain.getEnumerator()) {
       certificates.push(this.parseCertificateInfo(cert, options));
     }
     return certificates;

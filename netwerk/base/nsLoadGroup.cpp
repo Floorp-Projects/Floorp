@@ -654,7 +654,7 @@ nsLoadGroup::GetRequests(nsISimpleEnumerator * *aRequests)
       requests.AppendObject(e->mKey);
     }
 
-    return NS_NewArrayEnumerator(aRequests, requests);
+    return NS_NewArrayEnumerator(aRequests, requests, NS_GET_IID(nsIRequest));
 }
 
 NS_IMETHODIMP

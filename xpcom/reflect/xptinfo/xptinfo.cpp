@@ -9,6 +9,8 @@
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/ArrayUtils.h"
 
+#include "jsfriendapi.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace xpt::detail;
@@ -167,4 +169,23 @@ nsXPTInterfaceInfo::IsMainProcessScriptableOnly(bool* aRetval) const
 {
   *aRetval = IsMainProcessScriptableOnly();
   return NS_OK;
+}
+
+////////////////////////////////////
+// nsXPTMethodInfo symbol helpers //
+////////////////////////////////////
+
+void
+nsXPTMethodInfo::GetSymbolDescription(JSContext* aCx, nsACString& aID) const
+{
+  JS::RootedSymbol symbol(aCx, GetSymbol(aCx));
+  JSString* desc = JS::GetSymbolDescription(symbol);
+  MOZ_ASSERT(JS_StringHasLatin1Chars(desc));
+
+  JS::AutoAssertNoGC nogc(aCx);
+  size_t length;
+  const JS::Latin1Char* chars = JS_GetLatin1StringCharsAndLength(
+    aCx, nogc, desc, &length);
+
+  aID.AssignASCII(reinterpret_cast<const char*>(chars), length);
 }

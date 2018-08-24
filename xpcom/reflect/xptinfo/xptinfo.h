@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include "nsID.h"
 #include "mozilla/Assertions.h"
+#include "jsapi.h"
 #include "js/Value.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -440,11 +441,13 @@ struct nsXPTMethodInfo
   bool IsSetter() const { return mSetter; }
   bool IsNotXPCOM() const { return mNotXPCOM; }
   bool IsHidden() const { return mHidden; }
+  bool IsSymbol() const { return mIsSymbol; }
   bool WantsOptArgc() const { return mOptArgc; }
   bool WantsContext() const { return mContext; }
   uint8_t ParamCount() const { return mNumParams; }
 
   const char* Name() const {
+    MOZ_ASSERT(!IsSymbol());
     return xpt::detail::GetString(mName);
   }
   const nsXPTParamInfo& Param(uint8_t aIndex) const {
@@ -478,6 +481,20 @@ struct nsXPTMethodInfo
   /////////////////////////////////////////////
 
   const char* GetName() const { return Name(); }
+
+  JS::SymbolCode GetSymbolCode() const
+  {
+    MOZ_ASSERT(IsSymbol());
+    return JS::SymbolCode(mName);
+  }
+
+  JS::Symbol* GetSymbol(JSContext* aCx) const
+  {
+    return JS::GetWellKnownSymbol(aCx, GetSymbolCode());
+  }
+
+  void GetSymbolDescription(JSContext* aCx, nsACString& aID) const;
+
   uint8_t GetParamCount() const { return ParamCount(); }
   const nsXPTParamInfo& GetParam(uint8_t aIndex) const {
     return Param(aIndex);
@@ -498,7 +515,7 @@ struct nsXPTMethodInfo
   uint8_t mOptArgc : 1;
   uint8_t mContext : 1;
   uint8_t mHasRetval : 1;
-  // uint8_t unused : 1;
+  uint8_t mIsSymbol : 1;
 };
 
 // The fields in nsXPTMethodInfo were carefully ordered to minimize size.

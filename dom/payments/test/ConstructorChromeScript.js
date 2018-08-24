@@ -353,8 +353,7 @@ function checkSimplestRequestHandler() {
   if (!paymentEnum.hasMoreElements()) {
     emitTestFail("PaymentRequestService should have at least one payment request.");
   }
-  while (paymentEnum.hasMoreElements()) {
-    let payRequest = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
+  for (let payRequest of paymentEnum) {
     if (!payRequest) {
       emitTestFail("Fail to get existing payment request.");
       break;
@@ -370,8 +369,7 @@ function checkComplexRequestHandler() {
   if (!paymentEnum.hasMoreElements()) {
     emitTestFail("PaymentRequestService should have at least one payment request.");
   }
-  while (paymentEnum.hasMoreElements()) {
-    let payRequest = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
+  for (let payRequest of paymentEnum) {
     if (!payRequest) {
       emitTestFail("Fail to get existing payment request.");
       break;
@@ -387,8 +385,7 @@ function checkNonBasicCardRequestHandler() {
   if (!paymentEnum.hasMoreElements()) {
     emitTestFail("PaymentRequestService should have at least one payment request.");
   }
-  while (paymentEnum.hasMoreElements()) {
-    let payRequest = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
+  for (let payRequest of paymentEnum) {
     if (!payRequest) {
       emitTestFail("Fail to get existing payment request.");
       break;
@@ -404,8 +401,7 @@ function checkMultipleRequestsHandler () {
   if (!paymentEnum.hasMoreElements()) {
     emitTestFail("PaymentRequestService should have at least one payment request.");
   }
-  while (paymentEnum.hasMoreElements()) {
-    let payRequest = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
+  for (let payRequest of paymentEnum) {
     if (!payRequest) {
       emitTestFail("Fail to get existing payment request.");
       break;
@@ -425,8 +421,7 @@ function checkCrossOriginTopLevelPrincipalHandler() {
   if (!paymentEnum.hasMoreElements()) {
     emitTestFail("PaymentRequestService should have at least one payment request.");
   }
-  while (paymentEnum.hasMoreElements()) {
-    let payRequest = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
+  for (let payRequest of paymentEnum) {
     if (!payRequest) {
       emitTestFail("Fail to get existing payment request.");
       break;

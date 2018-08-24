@@ -35,14 +35,9 @@ var HandlerServiceTestUtils = {
    *         alphabetically regardless of category.
    */
   getAllHandlerInfoTypes() {
-    let handlerInfoTypes = [];
-    let handlerInfoEnumerator = gHandlerService.enumerate();
-    while (handlerInfoEnumerator.hasMoreElements()) {
-      let handlerInfo = handlerInfoEnumerator.getNext()
-                                             .QueryInterface(Ci.nsIHandlerInfo);
-      handlerInfoTypes.push(handlerInfo.type);
-    }
-    return handlerInfoTypes.sort();
+    return Array.from(gHandlerService.enumerate(),
+                      info => info.type)
+                .sort();
   },
 
   /**

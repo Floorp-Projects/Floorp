@@ -351,9 +351,7 @@ var Sanitizer = {
         TelemetryStopwatch.start("FX_SANITIZE_FORMDATA", refObj);
         try {
           // Clear undo history of all search bars.
-          let windows = Services.wm.getEnumerator("navigator:browser");
-          while (windows.hasMoreElements()) {
-            let currentWindow = windows.getNext();
+          for (let currentWindow of Services.wm.getEnumerator("navigator:browser")) {
             let currentDocument = currentWindow.document;
 
             // searchBar.textbox may not exist due to the search bar binding
@@ -466,10 +464,8 @@ var Sanitizer = {
         let startDate = existingWindow.performance.now();
 
         // First check if all these windows are OK with being closed:
-        let windowEnumerator = Services.wm.getEnumerator("navigator:browser");
         let windowList = [];
-        while (windowEnumerator.hasMoreElements()) {
-          let someWin = windowEnumerator.getNext();
+        for (let someWin of Services.wm.getEnumerator("navigator:browser")) {
           windowList.push(someWin);
           // If someone says "no" to a beforeunload prompt, we abort here:
           if (!this._canCloseWindow(someWin)) {
@@ -690,9 +686,7 @@ async function sanitizeOnShutdown(progress) {
   await sanitizeSessionPrincipals();
 
   // Let's see if we have to forget some particular site.
-  let enumerator = Services.perms.enumerator;
-  while (enumerator.hasMoreElements()) {
-    let permission = enumerator.getNext().QueryInterface(Ci.nsIPermission);
+  for (let permission of Services.perms.enumerator) {
     if (permission.type == "cookie" && permission.capability == Ci.nsICookiePermission.ACCESS_SESSION) {
       await sanitizeSessionPrincipal(permission.principal);
     }

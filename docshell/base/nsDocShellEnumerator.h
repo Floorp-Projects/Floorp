@@ -7,7 +7,7 @@
 #ifndef nsDocShellEnumerator_h___
 #define nsDocShellEnumerator_h___
 
-#include "nsISimpleEnumerator.h"
+#include "nsSimpleEnumerator.h"
 #include "nsTArray.h"
 #include "nsIWeakReferenceUtils.h"
 
@@ -29,7 +29,7 @@ class nsIDocShellTreeItem;
 "@mozilla.org/docshell/enumerator-backwards;1"
 */
 
-class nsDocShellEnumerator : public nsISimpleEnumerator
+class nsDocShellEnumerator : public nsSimpleEnumerator
 {
 protected:
   enum
@@ -43,11 +43,10 @@ protected:
 public:
   explicit nsDocShellEnumerator(int32_t aEnumerationDirection);
 
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
   // nsISimpleEnumerator
   NS_DECL_NSISIMPLEENUMERATOR
+
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIDocShell); }
 
 public:
   nsresult GetEnumerationRootItem(nsIDocShellTreeItem** aEnumerationRootItem);

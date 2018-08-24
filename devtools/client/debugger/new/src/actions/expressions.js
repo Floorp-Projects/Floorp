@@ -217,9 +217,15 @@ function getMappedExpression(expression) {
     sourceMaps
   }) {
     const mappings = (0, _selectors.getSelectedScopeMappings)(getState());
-    const bindings = (0, _selectors.getSelectedFrameBindings)(getState());
+    const bindings = (0, _selectors.getSelectedFrameBindings)(getState()); // We bail early if we do not need to map the expression. This is important
+    // because mapping an expression can be slow if the parser worker is
+    // busy doing other work.
+    //
+    // 1. there are no mappings - we do not need to map original expressions
+    // 2. does not contain `await` - we do not need to map top level awaits
+    // 3. does not contain `=` - we do not need to map assignments
 
-    if (!mappings && !bindings && !expression.includes("await")) {
+    if (!mappings && !expression.match(/(await|=)/)) {
       return expression;
     }
 

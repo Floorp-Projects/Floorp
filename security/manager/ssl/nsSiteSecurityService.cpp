@@ -473,7 +473,7 @@ SiteHPKPState::GetSha256Keys(nsISimpleEnumerator** aSha256Keys)
       return NS_ERROR_FAILURE;
     }
   }
-  return NS_NewArrayEnumerator(aSha256Keys, keys);
+  return NS_NewArrayEnumerator(aSha256Keys, keys, NS_GET_IID(nsIVariant));
 }
 
 NS_IMETHODIMP
@@ -1895,7 +1895,7 @@ nsSiteSecurityService::Enumerate(uint32_t aType,
     states.AppendObject(state);
   }
 
-  NS_NewArrayEnumerator(aEnumerator, states);
+  NS_NewArrayEnumerator(aEnumerator, states, NS_GET_IID(nsISiteSecurityState));
   return NS_OK;
 }
 

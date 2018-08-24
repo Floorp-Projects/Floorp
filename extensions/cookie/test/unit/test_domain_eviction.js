@@ -56,10 +56,7 @@ function* do_run_test()
   setCookies("tasty.horse.radish", 50, futureExpiry);
   Assert.equal(countCookies("horse.radish", "horse.radish"), 50);
 
-  let enumerator = Services.cookiemgr.enumerator;
-  while (enumerator.hasMoreElements()) {
-    let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-
+  for (let cookie of Services.cookiemgr.enumerator) {
     if (cookie.host == "horse.radish")
       do_throw("cookies not evicted by lastAccessed order");
   }
@@ -77,9 +74,7 @@ function* do_run_test()
     false, false, false, futureExpiry, {});
   Assert.equal(countCookies("captchart.com", "captchart.com"), 50);
 
-  enumerator = Services.cookiemgr.getCookiesFromHost("captchart.com", {});
-  while (enumerator.hasMoreElements()) {
-    let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
+  for (let cookie of Services.cookiemgr.getCookiesFromHost("captchart.com", {})) {
     Assert.ok(cookie.expiry == futureExpiry);
   }
 
@@ -104,14 +99,10 @@ setCookies(aHost, aNumber, aExpiry)
 function
 countCookies(aBaseDomain, aHost)
 {
-  let enumerator = Services.cookiemgr.enumerator;
-
   // count how many cookies are within domain 'aBaseDomain' using the cookie
   // enumerator.
   let cookies = [];
-  while (enumerator.hasMoreElements()) {
-    let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-
+  for (let cookie of Services.cookiemgr.enumerator) {
     if (cookie.host.length >= aBaseDomain.length &&
         cookie.host.slice(cookie.host.length - aBaseDomain.length) == aBaseDomain)
       cookies.push(cookie);
@@ -123,10 +114,7 @@ countCookies(aBaseDomain, aHost)
     cookies.length);
   Assert.equal(Services.cookiemgr.countCookiesFromHost(aHost), cookies.length);
 
-  enumerator = Services.cookiemgr.getCookiesFromHost(aHost, {});
-  while (enumerator.hasMoreElements()) {
-    let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-
+  for (let cookie of Services.cookiemgr.getCookiesFromHost(aHost, {})) {
     if (cookie.host.length >= aBaseDomain.length &&
         cookie.host.slice(cookie.host.length - aBaseDomain.length) == aBaseDomain) {
       let found = false;
