@@ -78,8 +78,10 @@
 
 	setTimeout(animate, 20);
 
-	addEventListener('transitionend', function() {
-		parent.postMessage('testBoxWithTransition', '*');
+	addEventListener('transitionend', event => {
+		if (event.propertyName == 'width') {
+			parent.postMessage('testBoxWithTransition', '*');
+		}
 	}, false);
 	var transitionedTestBoxStyle = document.getElementById('testBoxWithTransition').style;
 	transitionedTestBoxStyle.height = "60px";
