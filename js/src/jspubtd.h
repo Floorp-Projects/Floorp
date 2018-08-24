@@ -104,10 +104,6 @@ namespace JS {
 
 struct JS_PUBLIC_API(PropertyDescriptor);
 
-class OffThreadToken;
-
-typedef void (*OffThreadCompileCallback)(OffThreadToken* token, void* callbackData);
-
 enum class HeapState {
     Idle,             // doing nothing with the GC heap
     Tracing,          // tracing the GC heap without collecting, e.g. IterateCompartments()
