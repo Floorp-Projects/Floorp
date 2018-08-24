@@ -340,8 +340,24 @@ public:
   /**
    * writing iterators
    *
+   * BeginWriting() makes the string mutable (if it isn't
+   * already) and returns (or writes into an outparam) a
+   * pointer that provides write access to the string's buffer.
+   *
    * Note: Consider if BulkWrite() suits your use case better
    * than BeginWriting() combined with SetLength().
+   *
+   * Note: Strings autoconvert into writable mozilla::Span,
+   * which may suit your use case better than calling
+   * BeginWriting() directly.
+   *
+   * When writing via the pointer obtained from BeginWriting(),
+   * you are allowed to write at most the number of code units
+   * indicated by Length() or, alternatively, write up to, but
+   * not including, the position indicated by EndWriting().
+   *
+   * In particular, calling SetCapacity() does not affect what
+   * the above paragraph says.
    */
 
   char_iterator BeginWriting()
@@ -820,10 +836,29 @@ public:
 
   /**
    * Attempts to set the capacity to the given size in number of
-   * characters, without affecting the length of the string.
+   * code units without affecting the length of the string, in
+   * order to avoid reallocation during subsequent calls to Append()
+   * or subsequent converting appends where the conversion is between
+   * UTF-16 and Latin1 (in either direction).
+   *
+   * Calling SetCapacity() is a pessimization ahead of a converting
+   * append where the conversion is between UTF-16 and UTF-8 (in
+   * either direction), so please don't call SetCapacity() ahead
+   * of that kind of converting append.
+   *
+   * If your string is an nsAuto[C]String and you are calling
+   * SetCapacity() with a constant N, please instead declare the
+   * string as nsAuto[C]StringN<N+1> without calling SetCapacity().
+   *
    * There is no need to include room for the null terminator: it is
    * the job of the string class.
    * Also ensures that the buffer is mutable.
+   *
+   * Note: Calling SetCapacity() does not give you permission to
+   * use the pointer obtained from BeginWriting() to write
+   * past the current length (as returned by Length()) of the
+   * string. Please use either BulkWrite() or SetLength()
+   * instead.
    */
   void NS_FASTCALL SetCapacity(size_type aNewCapacity);
   MOZ_MUST_USE bool NS_FASTCALL SetCapacity(size_type aNewCapacity,
