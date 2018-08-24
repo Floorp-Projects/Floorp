@@ -114,6 +114,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("search", {"text-input-type": "search"}, true);
       testAttrs("tel", {"text-input-type": "tel"}, true);
       testAttrs("url", {"text-input-type": "url"}, true);
+      testAttrs(getAccessible("number").firstChild, {"text-input-type": "number"}, true);
 
       // ARIA
       testAttrs("searchbox", {"text-input-type": "search"}, true);
@@ -220,6 +221,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <input id="search" type="search"/>
   <input id="tel" type="tel"/>
   <input id="url" type="url"/>
+  <input id="number" type="number"/>
   <div id="searchbox" role="searchbox"></div>
 
   <!-- html -->
