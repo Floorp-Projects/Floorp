@@ -49,6 +49,7 @@ DevToolsModules(
     'stylesheet-utils.js',
     'suggestion-picker.js',
     'telemetry.js',
+    'TelemetryStopwatch.jsm',
     'theme.js',
     'undo.js',
     'unicode-url.js',

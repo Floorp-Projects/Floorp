@@ -530,6 +530,28 @@ protected: // May be called by friends.
    */
   Element* GetSelectionContainerElement(Selection& aSelection) const;
 
+  /**
+   * GetFirstSelectedTableCellElement() returns a <td> or <th> element if
+   * first range of Selection (i.e., result of Selection::GetRangeAt(0))
+   * selects a <td> element or <th> element.  Even if Selection is in
+   * a cell element, this returns nullptr.  And even if 2nd or later
+   * range of Selection selects a cell element, also returns nullptr.
+   * Note that when this looks for a cell element, this resets the internal
+   * index of ranges of Selection.  When you call GetNextSelectedCell() after
+   * a call of this, it'll return 2nd selected cell if there is.
+   *
+   * @param aSelection          Selection for this editor.
+   * @param aRv                 Returns error if there is no selection or
+   *                            first range of Selection is unexpected.
+   * @return                    A <td> or <th> element is selected by first
+   *                            range of Selection.  Note that the range must
+   *                            be: startContaienr and endContainer are same
+   *                            <tr> element, startOffset + 1 equals endOffset.
+   */
+  already_AddRefed<Element>
+  GetFirstSelectedTableCellElement(Selection& aSelection,
+                                   ErrorResult& aRv) const;
+
   void IsNextCharInNodeWhitespace(nsIContent* aContent,
                                   int32_t aOffset,
                                   bool* outIsSpace,
@@ -1214,7 +1236,7 @@ protected: // Shouldn't be used by friend classes
   nsresult GetLastCellInRow(nsINode* aRowNode,
                             nsINode** aCellNode);
 
-  nsresult GetCellFromRange(nsRange* aRange, Element** aCell);
+  static nsresult GetCellFromRange(nsRange* aRange, Element** aCell);
 
   /**
    * This sets background on the appropriate container element (table, cell,)
@@ -1855,8 +1877,9 @@ protected:
   bool mCSSAware;
   UniquePtr<CSSEditUtils> mCSSEditUtils;
 
-  // Used by GetFirstSelectedCell and GetNextSelectedCell
-  int32_t  mSelectedCellIndex;
+  // mSelectedCellIndex is reset by GetFirstSelectedTableCellElement(),
+  // then, it'll be referred and incremented by GetNextSelectedCell().
+  mutable int32_t mSelectedCellIndex;
 
   nsString mLastStyleSheetURL;
   nsString mLastOverrideStyleSheetURL;

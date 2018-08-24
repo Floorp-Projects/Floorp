@@ -167,7 +167,6 @@ config = {
         "mochitest-webgl2-deqp": ["--subsuite=webgl2-deqp"],
         "mochitest-devtools-chrome": ["--flavor=browser", "--subsuite=devtools"],
         "mochitest-devtools-chrome-chunked": ["--flavor=browser", "--subsuite=devtools", "--chunk-by-runtime"],
-        "mochitest-metro-chrome": ["--flavor=browser", "--metro-immersive"],
         "a11y": ["--flavor=a11y"],
     },
     # local reftest suites

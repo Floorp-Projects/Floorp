@@ -25,8 +25,15 @@ function run_test() {
 var test_bulk_transfer_transport = async function(transportFactory) {
   info("Starting bulk transfer test at " + new Date().toTimeString());
 
-  const clientDeferred = defer();
-  const serverDeferred = defer();
+  let clientResolve;
+  const clientDeferred = new Promise((resolve) => {
+    clientResolve = resolve;
+  });
+
+  let serverResolve;
+  const serverDeferred = new Promise((resolve) => {
+    serverResolve = resolve;
+  });
 
   // Ensure test files are not present from a failed run
   cleanup_files();
@@ -66,7 +73,7 @@ var test_bulk_transfer_transport = async function(transportFactory) {
     }).then(() => {
       // It's now safe to close
       transport.hooks.onClosed = () => {
-        clientDeferred.resolve();
+        clientResolve();
       };
       transport.close();
     });
@@ -87,7 +94,7 @@ var test_bulk_transfer_transport = async function(transportFactory) {
 
       DebuggerServer.on("connectionchange", type => {
         if (type === "closed") {
-          serverDeferred.resolve();
+          serverResolve();
         }
       });
 
@@ -105,7 +112,7 @@ var test_bulk_transfer_transport = async function(transportFactory) {
 
   transport.ready();
 
-  return promise.all([clientDeferred.promise, serverDeferred.promise]);
+  return Promise.all([clientDeferred, serverDeferred]);
 };
 
 /** * Test Utils ***/
@@ -120,19 +127,19 @@ function verify() {
   Assert.equal(outputFile.fileSize, reallyLong.length);
 
   // Ensure output file contents actually match
-  const compareDeferred = defer();
-  NetUtil.asyncFetch({
-    uri: NetUtil.newURI(getTestTempFile("bulk-output")),
-    loadUsingSystemPrincipal: true
-  }, input => {
-    const outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
-      // Avoid do_check_eq here so we don't log the contents
-    Assert.ok(outputData === reallyLong);
-    input.close();
-    compareDeferred.resolve();
-  });
-
-  return compareDeferred.promise.then(cleanup_files);
+  return new Promise((resolve) => {
+    NetUtil.asyncFetch({
+      uri: NetUtil.newURI(getTestTempFile("bulk-output")),
+      loadUsingSystemPrincipal: true
+    }, input => {
+      const outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
+        // Avoid do_check_eq here so we don't log the contents
+      Assert.ok(outputData === reallyLong);
+      input.close();
+      resolve();
+    });
+  })
+  .then(cleanup_files);
 }
 
 function cleanup_files() {

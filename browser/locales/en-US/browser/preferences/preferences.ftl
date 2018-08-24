@@ -405,7 +405,7 @@ browsing-search-on-start-typing =
 
 ## General Section - Proxy
 
-network-proxy-title = Network Proxy
+network-settings-title = Network Settings
 
 network-proxy-connection-description = Configure how { -brand-short-name } connects to the internet.
 

@@ -1264,7 +1264,7 @@ class PackageFrontend(MachCommandBase):
         help='Use the given url as tooltool server')
     @CommandArgument('--no-unpack', action='store_true',
         help='Do not unpack any downloaded file')
-    @CommandArgument('--retry', type=int, default=0,
+    @CommandArgument('--retry', type=int, default=4,
         help='Number of times to retry failed downloads')
     @CommandArgument('--artifact-manifest', metavar='FILE',
         help='Store a manifest about the downloaded taskcluster artifacts')
