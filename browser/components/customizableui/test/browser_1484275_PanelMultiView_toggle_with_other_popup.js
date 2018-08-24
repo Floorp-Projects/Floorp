@@ -8,8 +8,8 @@ const TEST_URL = "data:text/html,<html><body></body></html>";
 // This code can be consolidated in the EventUtils module (bug 1126772).
 const isWindows = AppConstants.platform == "win";
 const isMac = AppConstants.platform == "macosx";
-const mouseDown = isWindows ? 2 : isMac ? 1 : 4;
-const mouseUp = isWindows ? 4 : isMac ? 2 : 7;
+const mouseDown = isWindows ? 2 : isMac ? 1 : 4; // eslint-disable-line no-nested-ternary
+const mouseUp = isWindows ? 4 : isMac ? 2 : 7;  // eslint-disable-line no-nested-ternary
 const utils = window.windowUtils;
 const scale = utils.screenPixelsPerCSSPixel;
 function synthesizeNativeMouseClick(aElement) {
