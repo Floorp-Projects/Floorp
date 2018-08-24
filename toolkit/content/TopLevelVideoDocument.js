@@ -28,6 +28,14 @@
   // Focus on the video in the newly created document.
   setFocusToVideoElement();
 
+  // Opt out of moving focus away if the DOM tree changes (from add-on or web content)
+  let observer = new MutationObserver(
+    () => {
+      observer.disconnect();
+      document.removeEventListener("focus", setFocusToVideoElement, true);
+    });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+
   // Handle fullscreen mode
   document.addEventListener("keypress", ev => {
     // Maximize the standalone video when pressing F11,
