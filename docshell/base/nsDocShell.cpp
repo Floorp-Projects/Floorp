@@ -29,6 +29,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
@@ -13115,23 +13116,21 @@ nsDocShell::GetUseTrackingProtection(bool* aUseTrackingProtection)
 {
   *aUseTrackingProtection  = false;
 
-  static bool sCBEnabled = false;
+  bool cbEnabled = StaticPrefs::browser_contentblocking_enabled();
   static bool sTPEnabled = false;
   static bool sTPInPBEnabled = false;
   static bool sPrefsInit = false;
 
   if (!sPrefsInit) {
     sPrefsInit = true;
-    Preferences::AddBoolVarCache(&sCBEnabled,
-      "browser.contentblocking.enabled", true);
     Preferences::AddBoolVarCache(&sTPEnabled,
       "privacy.trackingprotection.enabled", false);
     Preferences::AddBoolVarCache(&sTPInPBEnabled,
       "privacy.trackingprotection.pbmode.enabled", false);
   }
 
-  if (mUseTrackingProtection || (sCBEnabled && sTPEnabled) ||
-      (sCBEnabled && UsePrivateBrowsing() && sTPInPBEnabled)) {
+  if (mUseTrackingProtection || (cbEnabled && sTPEnabled) ||
+      (cbEnabled && UsePrivateBrowsing() && sTPInPBEnabled)) {
     *aUseTrackingProtection = true;
     return NS_OK;
   }
