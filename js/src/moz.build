@@ -129,6 +129,7 @@ EXPORTS.js += [
     '../public/CallNonGenericMethod.h',
     '../public/CharacterEncoding.h',
     '../public/Class.h',
+    '../public/CompileOptions.h',
     '../public/Conversions.h',
     '../public/Date.h',
     '../public/Debug.h',

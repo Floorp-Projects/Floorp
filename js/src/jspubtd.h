@@ -31,10 +31,10 @@ using AutoObjectVector = AutoVector<JSObject*>;
 
 class CallArgs;
 
-class JS_FRIEND_API(CompileOptions);
-class JS_FRIEND_API(ReadOnlyCompileOptions);
-class JS_FRIEND_API(OwningCompileOptions);
-class JS_FRIEND_API(TransitiveCompileOptions);
+class JS_PUBLIC_API(CompileOptions);
+class JS_PUBLIC_API(ReadOnlyCompileOptions);
+class JS_PUBLIC_API(OwningCompileOptions);
+class JS_PUBLIC_API(TransitiveCompileOptions);
 class JS_PUBLIC_API(RealmOptions);
 
 } // namespace JS
