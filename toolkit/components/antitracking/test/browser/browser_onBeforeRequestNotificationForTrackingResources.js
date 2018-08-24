@@ -1,12 +1,11 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
- * This test ensures that http-on-modify-request is dispatched for channels that
+ * This test ensures that onBeforeRequest is dispatched for webRequest loads that
  * are blocked by tracking protection.  It sets up a page with a third-party script
- * resource on it that is blocked by TP, and sets up an http-on-modify-request
- * observer which waits to be notified about that resource.  The test would time out
- * if the http-on-modify-request notification isn't dispatched before the channel is
- * canceled.
+ * resource on it that is blocked by TP, and sets up an onBeforeRequest listener
+ * which waits to be notified about that resource.  The test would time out if the
+ * onBeforeRequest listener isn't called dispatched before the load is canceled.
  */
 
 let extension;
