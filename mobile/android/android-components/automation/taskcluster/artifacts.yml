@@ -8,6 +8,11 @@
           name: lib-dataprotect
           old_artifact_id: dataprotect
           new_group_id: org.mozilla.components
+        public/build/lib.jexl.maven.zip:
+          path: /build/android-components/components/lib/jexl/build/target.maven.zip
+          name: lib-jexl
+          old_artifact_id: lib-jexl
+          new_group_id: org.mozilla.components
         public/build/support.test.maven.zip:
           path: /build/android-components/components/support/test/build/target.maven.zip
           name: support-test

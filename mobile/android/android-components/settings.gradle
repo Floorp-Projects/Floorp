@@ -144,6 +144,9 @@ project(':lib-crash').projectDir = new File(rootDir, 'components/lib/crash')
 include ':lib-dataprotect'
 project(':lib-dataprotect').projectDir = new File(rootDir, 'components/lib/dataprotect')
 
+include ':lib-jexl'
+project(':lib-jexl').projectDir = new File(rootDir, 'components/lib/jexl')
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Tooling
 ////////////////////////////////////////////////////////////////////////////////////////////////////
