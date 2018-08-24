@@ -118,7 +118,10 @@ ADDITIONAL_SCREENSHOT_LOCALES = [
 	"ppl",
 	"su",
 	"mr",
-	"gl"
+	"gl",
+	"bo",
+	"yua",
+	"hus"
 ]
 
 # Those are locales that we take automated screenshots of.
