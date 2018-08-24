@@ -65,9 +65,7 @@ function getCertAsByteArray(certPath) {
 }
 
 function commonFindCertBy(propertyName, value) {
-  let certEnumerator = gCertDB.getCerts().getEnumerator();
-  while (certEnumerator.hasMoreElements()) {
-    let cert = certEnumerator.getNext().QueryInterface(Ci.nsIX509Cert);
+  for (let cert of gCertDB.getCerts().getEnumerator()) {
     if (cert[propertyName] == value) {
       return cert;
     }

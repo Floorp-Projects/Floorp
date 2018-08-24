@@ -207,7 +207,7 @@ WalkStackMain64(struct WalkStackData* aData)
     context = aData->context;
   }
 
-#if defined(_M_IX86) || defined(_M_IA64)
+#if defined(_M_IX86) || defined(_M_IA64) || defined(_M_ARM64)
   // Setup initial stack frame to walk from.
   STACKFRAME64 frame64;
   memset(&frame64, 0, sizeof(frame64));
@@ -219,6 +219,10 @@ WalkStackMain64(struct WalkStackData* aData)
   frame64.AddrPC.Offset    = context->StIIP;
   frame64.AddrStack.Offset = context->SP;
   frame64.AddrFrame.Offset = context->RsBSP;
+#elif defined _M_ARM64
+  frame64.AddrPC.Offset    = context->Pc;
+  frame64.AddrStack.Offset = context->Sp;
+  frame64.AddrFrame.Offset = context->Fp;
 #endif
   frame64.AddrPC.Mode      = AddrModeFlat;
   frame64.AddrStack.Mode   = AddrModeFlat;
@@ -226,7 +230,7 @@ WalkStackMain64(struct WalkStackData* aData)
   frame64.AddrReturn.Mode  = AddrModeFlat;
 #endif
 
-#ifdef _WIN64
+#ifdef _M_AMD64
   // If there are any active suppressions, then at least one thread (we don't
   // know which) is holding a lock that can deadlock RtlVirtualUnwind. Since
   // that thread may be the one that we're trying to unwind, we can't proceed.
@@ -254,7 +258,7 @@ WalkStackMain64(struct WalkStackData* aData)
     DWORD64 addr;
     DWORD64 spaddr;
 
-#if defined(_M_IX86) || defined(_M_IA64)
+#if defined(_M_IX86) || defined(_M_IA64) || defined(_M_ARM64)
     // 32-bit frame unwinding.
     // Debug routines are not threadsafe, so grab the lock.
     EnterCriticalSection(&gDbgHelpCS);
@@ -263,6 +267,8 @@ WalkStackMain64(struct WalkStackData* aData)
       IMAGE_FILE_MACHINE_IA64,
 #elif defined _M_IX86
       IMAGE_FILE_MACHINE_I386,
+#elif defined _M_ARM64
+      IMAGE_FILE_MACHINE_ARM64,
 #endif
       aData->process,
       aData->thread,

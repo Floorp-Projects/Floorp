@@ -14,8 +14,39 @@
  * @version 1.0
  */
 
+/**
+ * A wrapper for an nsISimpleEnumerator instance which implements the
+ * JavaScript iteration protocol.
+ */
+[scriptable, uuid(4432e8ae-d4d3-42a6-a4d1-829f1c29512b)]
+interface nsIJSEnumerator : nsISupports {
+  [symbol]
+  nsIJSEnumerator iterator();
+
+  [implicit_jscontext]
+  jsval next();
+};
+
+[scriptable, uuid(796f340d-0a2a-490b-9c60-640765e99782)]
+interface nsISimpleEnumeratorBase : nsISupports {
+  /**
+   * Returns a JavaScript iterator for all remaining entries in the enumerator.
+   * Each entry is typically queried to the appropriate interface for the
+   * enumerator.
+   */
+  [symbol]
+  nsIJSEnumerator iterator();
+
+  /**
+   * Returns JavaScript iterator for all remaining entries in the enumerator.
+   * Each entry is queried only to the supplied interface. If any element
+   * fails to query to that interface, the error is propagated to the caller.
+   */
+  nsIJSEnumerator entries(in nsIIDRef aIface);
+};
+
 [scriptable, uuid(D1899240-F9D2-11D2-BDD6-000064657374)]
-interface nsISimpleEnumerator : nsISupports {
+interface nsISimpleEnumerator : nsISimpleEnumeratorBase {
   /**
    * Called to determine whether or not the enumerator has
    * any elements that can be returned via getNext(). This method
@@ -27,7 +58,7 @@ interface nsISimpleEnumerator : nsISupports {
    * @see getNext()
    * @return true if there are remaining elements in the enumerator.
    *         false if there are no more elements in the enumerator.
-   */                                            
+   */
   boolean hasMoreElements();
 
   /**

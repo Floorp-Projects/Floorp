@@ -65,9 +65,7 @@ function checkCookies(ignoreContext = null) {
 function deleteCookies(onlyContext = null) {
   // Using getCookiesWithOriginAttributes() to get all cookies for a certain
   // domain by using the originAttributes pattern, and clear all these cookies.
-  let enumerator = Services.cookies.getCookiesWithOriginAttributes(JSON.stringify({}), TEST_HOST);
-  while (enumerator.hasMoreElements()) {
-    let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+  for (let cookie of Services.cookies.getCookiesWithOriginAttributes(JSON.stringify({}), TEST_HOST)) {
     if (!onlyContext || cookie.originAttributes.userContextId == onlyContext) {
       Services.cookies.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
     }

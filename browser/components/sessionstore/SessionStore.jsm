@@ -597,9 +597,7 @@ var SessionStoreInternal = {
       // in one of the currently open windows that was closed after the
       // last-closed window.
       let tabTimestamps = [];
-      let windowsEnum = Services.wm.getEnumerator("navigator:browser");
-      while (windowsEnum.hasMoreElements()) {
-        let window = windowsEnum.getNext();
+      for (let window of Services.wm.getEnumerator("navigator:browser")) {
         let windowState = this._windows[window.__SSi];
         if (windowState && windowState._closedTabs[0]) {
           tabTimestamps.push(windowState._closedTabs[0].closedAt);
@@ -2722,9 +2720,7 @@ var SessionStoreInternal = {
     }
 
     // Check for a tab.
-    let windowsEnum = Services.wm.getEnumerator("navigator:browser");
-    while (windowsEnum.hasMoreElements()) {
-      let window = windowsEnum.getNext();
+    for (let window of Services.wm.getEnumerator("navigator:browser")) {
       let windowState = this._windows[window.__SSi];
       if (windowState) {
         for (let j = 0, l = windowState._closedTabs.length; j < l; j++) {
@@ -2785,9 +2781,7 @@ var SessionStoreInternal = {
 
   // This method deletes all the closedTabs matching userContextId.
   _forgetTabsWithUserContextId(userContextId) {
-    let windowsEnum = Services.wm.getEnumerator("navigator:browser");
-    while (windowsEnum.hasMoreElements()) {
-      let window = windowsEnum.getNext();
+    for (let window of Services.wm.getEnumerator("navigator:browser")) {
       let windowState = this._windows[window.__SSi];
       if (windowState) {
         // In order to remove the tabs in the correct order, we store the
@@ -2972,9 +2966,7 @@ var SessionStoreInternal = {
    * Revive all crashed tabs and reset the crashed tabs count to 0.
    */
   reviveAllCrashedTabs() {
-    let windowsEnum = Services.wm.getEnumerator("navigator:browser");
-    while (windowsEnum.hasMoreElements()) {
-      let window = windowsEnum.getNext();
+    for (let window of Services.wm.getEnumerator("navigator:browser")) {
       for (let tab of window.gBrowser.tabs) {
         this.reviveCrashedTab(tab);
       }
@@ -4329,11 +4321,8 @@ var SessionStoreInternal = {
    * setBrowserState to treat them as open windows.
    */
   _handleClosedWindows: function ssi_handleClosedWindows() {
-    var windowsEnum = Services.wm.getEnumerator("navigator:browser");
-
     let promises = [];
-    while (windowsEnum.hasMoreElements()) {
-      var window = windowsEnum.getNext();
+    for (let window of Services.wm.getEnumerator("navigator:browser")) {
       if (window.closed) {
         promises.push(this.onClose(window));
       }

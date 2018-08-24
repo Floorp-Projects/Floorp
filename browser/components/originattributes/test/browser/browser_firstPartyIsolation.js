@@ -47,11 +47,9 @@ add_task(async function cookie_test() {
   let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "test_firstParty_cookie.html");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, true);
 
-  let iter = Services.cookies.enumerator;
   let count = 0;
-  while (iter.hasMoreElements()) {
+  for (let cookie of Services.cookies.enumerator) {
     count++;
-    let cookie = iter.getNext().QueryInterface(Ci.nsICookie2);
     Assert.equal(cookie.value, "foo", "Cookie value should be foo");
     Assert.equal(cookie.originAttributes.firstPartyDomain, BASE_DOMAIN, "Cookie's origin attributes should be " + BASE_DOMAIN);
   }

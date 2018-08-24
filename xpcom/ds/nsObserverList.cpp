@@ -8,7 +8,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
-#include "nsISimpleEnumerator.h"
 #include "xpcpublic.h"
 
 nsresult
@@ -113,8 +112,6 @@ nsObserverList::NotifyObservers(nsISupports* aSubject,
   }
 }
 
-NS_IMPL_ISUPPORTS(nsObserverEnumerator, nsISimpleEnumerator)
-
 nsObserverEnumerator::nsObserverEnumerator(nsObserverList* aObserverList)
   : mIndex(0)
 {
@@ -132,8 +129,7 @@ NS_IMETHODIMP
 nsObserverEnumerator::GetNext(nsISupports** aResult)
 {
   if (mIndex == mObservers.Count()) {
-    NS_ERROR("Enumerating after HasMoreElements returned false.");
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_FAILURE;
   }
 
   NS_ADDREF(*aResult = mObservers[mIndex]);

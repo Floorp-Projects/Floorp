@@ -100,6 +100,9 @@ struct TupleImpl<Index> {
   {
     return true;
   }
+
+  template <typename F>
+  void ForEach(const F& aFunc) {}
 };
 
 /*
@@ -190,6 +193,27 @@ struct TupleImpl<Index, HeadT, TailT...>
   bool operator==(const TupleImpl& aOther) const
   {
     return Head(*this) == Head(aOther) && Tail(*this) == Tail(aOther);
+  }
+
+  template <typename F>
+  void ForEach(const F& aFunc) const &
+  {
+    aFunc(Head(*this));
+    Tail(*this).ForEach(aFunc);
+  }
+
+  template <typename F>
+  void ForEach(const F& aFunc) &
+  {
+    aFunc(Head(*this));
+    Tail(*this).ForEach(aFunc);
+  }
+
+  template <typename F>
+  void ForEach(const F& aFunc) &&
+  {
+    aFunc(std::move(Head(*this)));
+    std::move(Tail(*this)).ForEach(aFunc);
   }
 private:
   HeadT mHead;  // The element stored at this index in the tuple.
@@ -418,6 +442,50 @@ auto Get(Tuple<Elements...>&& aTuple)
   // We need a 'mozilla::' qualification here to avoid
   // name lookup only finding the current function.
   return std::move(mozilla::Get<Index>(aTuple));
+}
+
+/**
+ * Helpers which call a function for each member of the tuple in turn. This will
+ * typically be used with a lambda function with an `auto&` argument:
+ *
+ *   Tuple<Foo*, Bar*, SmartPtr<Baz>> tuple{a, b, c};
+ *
+ *   ForEach(tuple, [](auto& aElem) {
+ *     aElem = nullptr;
+ *   });
+ */
+
+template <typename F>
+inline void
+ForEach(const Tuple<>& aTuple, const F& aFunc)
+{
+}
+
+template <typename F>
+inline void
+ForEach(Tuple<>& aTuple, const F& aFunc)
+{
+}
+
+template <typename F, typename... Elements>
+void
+ForEach(const Tuple<Elements...>& aTuple, const F& aFunc)
+{
+  aTuple.ForEach(aTuple, aFunc);
+}
+
+template <typename F, typename... Elements>
+void
+ForEach(Tuple<Elements...>& aTuple, const F& aFunc)
+{
+  aTuple.ForEach(aFunc);
+}
+
+template <typename F, typename... Elements>
+void
+ForEach(Tuple<Elements...>&& aTuple, const F& aFunc)
+{
+  std::forward<Tuple<Elements...>>(aTuple).ForEach(aFunc);
 }
 
 /**

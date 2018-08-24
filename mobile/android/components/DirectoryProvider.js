@@ -140,6 +140,9 @@ DirectoryProvider.prototype = {
 
     return {
       QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
+      [Symbol.iterator]() {
+        return result.values();
+      },
       hasMoreElements: function() {
         return result.length > 0;
       },

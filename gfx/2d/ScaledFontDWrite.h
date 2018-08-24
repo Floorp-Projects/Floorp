@@ -67,7 +67,7 @@ public:
   bool ForceGDIMode() { return mForceGDIMode; }
 
 #ifdef USE_SKIA
-  SkTypeface* GetSkTypeface() override;
+  SkTypeface* CreateSkTypeface() override;
   SkFontStyle mStyle;
 #endif
 

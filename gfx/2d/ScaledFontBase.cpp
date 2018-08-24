@@ -54,7 +54,7 @@ ScaledFont::GetDefaultAAMode()
 ScaledFontBase::~ScaledFontBase()
 {
 #ifdef USE_SKIA
-  SkSafeUnref(mTypeface);
+  SkSafeUnref<SkTypeface>(mTypeface);
 #endif
 #ifdef USE_CAIRO_SCALED_FONT
   cairo_scaled_font_destroy(mScaledFont);
@@ -64,15 +64,29 @@ ScaledFontBase::~ScaledFontBase()
 ScaledFontBase::ScaledFontBase(const RefPtr<UnscaledFont>& aUnscaledFont,
                                Float aSize)
   : ScaledFont(aUnscaledFont)
-  , mSize(aSize)
-{
 #ifdef USE_SKIA
-  mTypeface = nullptr;
+  , mTypeface(nullptr)
 #endif
 #ifdef USE_CAIRO_SCALED_FONT
-  mScaledFont = nullptr;
+  , mScaledFont(nullptr)
 #endif
+  , mSize(aSize)
+{
 }
+
+#ifdef USE_SKIA
+SkTypeface*
+ScaledFontBase::GetSkTypeface()
+{
+  if (!mTypeface) {
+    SkTypeface* typeface = CreateSkTypeface();
+    if (!mTypeface.compareExchange(nullptr, typeface)) {
+        SkSafeUnref(typeface);
+    }
+  }
+  return mTypeface;
+}
+#endif
 
 #ifdef USE_CAIRO_SCALED_FONT
 bool

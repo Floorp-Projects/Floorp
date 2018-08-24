@@ -25,6 +25,7 @@
 class nsIGlobalObject;
 
 namespace mozilla {
+
 namespace dom {
 
 class AnyCallback;
@@ -141,6 +142,40 @@ public:
        AnyCallback* aResolveCallback, AnyCallback* aRejectCallback,
        JS::MutableHandle<JS::Value> aRetval,
        ErrorResult& aRv);
+
+  template <typename Callback, typename... Args>
+  using IsHandlerCallback =
+      IsSame<already_AddRefed<Promise>,
+             decltype(DeclVal<Callback>()(
+                (JSContext*)(nullptr),
+                DeclVal<JS::Handle<JS::Value>>(),
+                DeclVal<Args>()...))>;
+
+  // Similar to the JavaScript Then() function. Accepts a single lambda function
+  // argument, which it attaches as a native resolution handler, and returns a
+  // new promise which resolves with that handler's return value, or propagates
+  // any rejections from this promise.
+  //
+  // Any additional arguments passed after the callback function are stored and
+  // passed as additional arguments to the function when it is called. These
+  // values will participate in cycle collection for the promise handler, and
+  // therefore may safely form reference cycles with the promise chain.
+  //
+  // Any strong references required by the callback should be passed in this
+  // manner, rather than using lambda capture, lambda captures do not support
+  // cycle collection, and can easily lead to leaks.
+  //
+  // Does not currently support rejection handlers.
+  template <typename Callback, typename... Args>
+  typename EnableIf<
+    IsHandlerCallback<Callback, Args...>::value,
+    Result<RefPtr<Promise>, nsresult>>::Type
+  ThenWithCycleCollectedArgs(Callback&& aOnResolve, Args&&... aArgs);
+
+  Result<RefPtr<Promise>, nsresult>
+  ThenWithoutCycleCollection(
+    const std::function<already_AddRefed<Promise>(JSContext*,
+                                                  JS::HandleValue)>& aCallback);
 
   JSObject* PromiseObj() const
   {

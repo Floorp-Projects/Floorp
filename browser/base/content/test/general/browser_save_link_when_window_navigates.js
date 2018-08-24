@@ -65,9 +65,7 @@ function triggerSave(aWindow, aCallback) {
   }
 
   function continueDownloading() {
-    let windows = Services.wm.getEnumerator("");
-    while (windows.hasMoreElements()) {
-      let win = windows.getNext();
+    for (let win of Services.wm.getEnumerator("")) {
       if (win.location && win.location.href == UCT_URI) {
         win.document.documentElement._fireButtonEvent("accept");
         win.close();

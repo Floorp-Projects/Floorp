@@ -1174,17 +1174,18 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, const SECItem *ticket,
                                   &decryptedTicket.len,
                                   decryptedTicket.len);
     if (rv != SECSuccess) {
-        SECITEM_ZfreeItem(&decryptedTicket, PR_FALSE);
-
-        /* Fail with no ticket if we're not a recipient. Otherwise
-         * it's a hard failure. */
-        if (PORT_GetError() != SEC_ERROR_NOT_A_RECIPIENT) {
-            SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
-            return SECFailure;
+        /* Ignore decryption failure if we are doing TLS 1.3; that
+         * means the server rejects the client's resumption
+         * attempt. In TLS 1.2, however, it's a hard failure, unless
+         * it's just because we're not the recipient of the ticket. */
+        if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 ||
+            PORT_GetError() == SEC_ERROR_NOT_A_RECIPIENT) {
+            SECITEM_ZfreeItem(&decryptedTicket, PR_FALSE);
+            return SECSuccess;
         }
 
-        /* We didn't have the right key, so pretend we don't have a
-         * ticket. */
+        SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
+        goto loser;
     }
 
     rv = ssl_ParseSessionTicket(ss, &decryptedTicket, &parsedTicket);

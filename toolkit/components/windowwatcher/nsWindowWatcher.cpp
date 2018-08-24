@@ -58,6 +58,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsSandboxFlags.h"
+#include "nsSimpleEnumerator.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
@@ -146,7 +147,7 @@ nsWatcherWindowEntry::ReferenceSelf()
  ****************** nsWatcherWindowEnumerator *******************
  ****************************************************************/
 
-class nsWatcherWindowEnumerator : public nsISimpleEnumerator
+class nsWatcherWindowEnumerator : public nsSimpleEnumerator
 {
 
 public:
@@ -154,10 +155,8 @@ public:
   NS_IMETHOD HasMoreElements(bool* aResult) override;
   NS_IMETHOD GetNext(nsISupports** aResult) override;
 
-  NS_DECL_ISUPPORTS
-
 protected:
-  virtual ~nsWatcherWindowEnumerator();
+  ~nsWatcherWindowEnumerator() override;
 
 private:
   friend class nsWindowWatcher;
@@ -168,10 +167,6 @@ private:
   nsWindowWatcher* mWindowWatcher;
   nsWatcherWindowEntry* mCurrentPosition;
 };
-
-NS_IMPL_ADDREF(nsWatcherWindowEnumerator)
-NS_IMPL_RELEASE(nsWatcherWindowEnumerator)
-NS_IMPL_QUERY_INTERFACE(nsWatcherWindowEnumerator, nsISimpleEnumerator)
 
 nsWatcherWindowEnumerator::nsWatcherWindowEnumerator(nsWindowWatcher* aWatcher)
   : mWindowWatcher(aWatcher)
@@ -210,8 +205,9 @@ nsWatcherWindowEnumerator::GetNext(nsISupports** aResult)
   if (mCurrentPosition) {
     CallQueryInterface(mCurrentPosition->mWindow, aResult);
     mCurrentPosition = FindNext();
+    return NS_OK;
   }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 nsWatcherWindowEntry*

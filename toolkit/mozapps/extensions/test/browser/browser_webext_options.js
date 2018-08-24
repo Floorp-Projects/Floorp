@@ -31,13 +31,17 @@ async function runTest(installer) {
      "Current view should scroll to preferences");
 
   var browser = mgrWindow.document.querySelector("#detail-grid > rows > stack > .inline-options-browser");
-  var rows = browser.parentNode;
-
-  let url = await ContentTask.spawn(browser, {}, () => content.location.href);
-
   ok(browser, "Grid should have a browser descendant");
   is(browser.localName, "browser", "Grid should have a browser descendant");
-  is(url, element.mAddon.optionsURL, "Browser has the expected options URL loaded");
+
+  var rows = browser.parentNode;
+
+  await ContentTask.spawn(browser, element.mAddon.optionsURL,
+                          async url => {
+    await ContentTaskUtils.waitForCondition(() =>
+      content.location.href == url,
+      "Browser has the expected options URL loaded");
+  });
 
   is(browser.clientWidth, browser.parentNode.clientWidth,
      "Browser should be the same width as its direct parent");

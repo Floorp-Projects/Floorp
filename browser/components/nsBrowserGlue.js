@@ -642,9 +642,8 @@ BrowserGlue.prototype = {
     // delays are in seconds
     const MAX_DELAY = 300;
     let delay = 3;
-    let browserEnum = Services.wm.getEnumerator("navigator:browser");
-    while (browserEnum.hasMoreElements()) {
-      delay += browserEnum.getNext().gBrowser.tabs.length;
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
+      delay += win.gBrowser.tabs.length;
     }
     delay = delay <= MAX_DELAY ? delay : MAX_DELAY;
 

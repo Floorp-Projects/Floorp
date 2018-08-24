@@ -1242,9 +1242,7 @@ var gViewController = {
             return;
 
           let browser = getBrowserElement();
-          let files = fp.files;
-          while (files.hasMoreElements()) {
-            let file = files.getNext();
+          for (let file of fp.files) {
             let install = await AddonManager.getInstallForFile(file);
             AddonManager.installAddonFromAOM(browser, document.documentURIObject, install);
           }

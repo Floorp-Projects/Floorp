@@ -209,9 +209,8 @@ cookie.iter = function* (host, currentPath = "/") {
 
   const isForCurrentPath = path => currentPath.includes(path);
 
-  let en = cookie.manager.getCookiesFromHost(host, {});
-  while (en.hasMoreElements()) {
-    let cookie = en.getNext().QueryInterface(Ci.nsICookie2);
+  let cookies = cookie.manager.getCookiesFromHost(host, {});
+  for (let cookie of cookies) {
     // take the hostname and progressively shorten
     let hostname = host;
     do {

@@ -31,10 +31,5 @@ function getChildDocShells() {
     Ci.nsIDocShell.ENUMERATE_FORWARDS
   );
 
-  let docShells = [];
-  while (docShellsEnum.hasMoreElements()) {
-    let ds = docShellsEnum.getNext();
-    docShells.push(ds);
-  }
-  return docShells;
+  return Array.from(docShellsEnum);
 }

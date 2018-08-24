@@ -227,10 +227,9 @@ add_task(async function test_logFileError() {
 function countLogFiles() {
   let logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
   let count = 0;
-  let entries = logsdir.directoryEntries;
-  while (entries.hasMoreElements()) {
+  for (let entry of logsdir.directoryEntries) {
+    void entry;
     count += 1;
-    entries.getNext();
   }
   return count;
 }

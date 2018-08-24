@@ -15,9 +15,7 @@ server.registerPathHandler("/return_headers.sjs", (request, response) => {
   response.setHeader("Content-Type", "text/plain", false);
 
   let headers = {};
-  // Why on earth is this a nsISimpleEnumerator...
-  for (let {data: header} of XPCOMUtils.IterSimpleEnumerator(request.headers,
-                                                             Ci.nsISupportsString)) {
+  for (let {data: header} of request.headers) {
     headers[header.toLowerCase()] = request.getHeader(header);
   }
 
@@ -184,7 +182,6 @@ add_task(async function test_set_responseHeaders() {
   let headerPromise = new Promise(resolve => { resolveHeaderPromise = resolve; });
   {
     ChromeUtils.import("resource://gre/modules/Services.jsm");
-    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
     let ssm = Services.scriptSecurityManager;
 

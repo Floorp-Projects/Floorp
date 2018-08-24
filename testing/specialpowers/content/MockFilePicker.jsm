@@ -214,12 +214,15 @@ MockFilePickerInstance.prototype = {
     return {
       index: 0,
       QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
+      [Symbol.iterator]() {
+        return Array.from(MockFilePicker.returnData, d => d.nsIFile).values();
+      },
       hasMoreElements() {
         return this.index < MockFilePicker.returnData.length;
       },
       getNext() {
         if (!MockFilePicker.returnData[this.index].nsIFile) {
-          return null;
+          throw Components.Exception("", Cr.NS_ERROR_FAILURE);
         }
         return MockFilePicker.returnData[this.index++].nsIFile;
       }

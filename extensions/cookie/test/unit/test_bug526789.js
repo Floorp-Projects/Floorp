@@ -185,10 +185,7 @@ function run_test() {
 function getCookieCount() {
   var count = 0;
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
-  var enumerator = cm.enumerator;
-  while (enumerator.hasMoreElements()) {
-    if (!(enumerator.getNext() instanceof Ci.nsICookie2))
-      throw new Error("not a cookie");
+  for (let cookie of cm.enumerator) {
     ++count;
   }
   return count;

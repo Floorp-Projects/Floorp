@@ -217,7 +217,7 @@ HandlerService.prototype = {
       );
       handlers.appendElement(handler);
     }
-    return handlers.enumerate();
+    return handlers.enumerate(Ci.nsIHandlerInfo);
   },
 
   // nsIHandlerService
@@ -252,9 +252,7 @@ HandlerService.prototype = {
     if (handlerInfo.preferredApplicationHandler) {
       handlers.push(handlerInfo.preferredApplicationHandler);
     }
-    let enumerator = handlerInfo.possibleApplicationHandlers.enumerate();
-    while (enumerator.hasMoreElements()) {
-      let handler = enumerator.getNext().QueryInterface(Ci.nsIHandlerApp);
+    for (let handler of handlerInfo.possibleApplicationHandlers.enumerate(Ci.nsIHandlerApp)) {
       // If the caller stored duplicate handlers, we save them only once.
       if (!handlers.some(h => h.equals(handler))) {
         handlers.push(handler);

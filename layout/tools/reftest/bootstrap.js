@@ -24,9 +24,7 @@ var WindowListener = {
     let win = xulWin.docShell.domWindow;
     win.addEventListener("load", function listener() {
       // Load into any existing windows.
-      let windows = Services.wm.getEnumerator("navigator:browser");
-      while (windows.hasMoreElements()) {
-        win = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+      for (win of Services.wm.getEnumerator("navigator:browser")) {
         break;
       }
 

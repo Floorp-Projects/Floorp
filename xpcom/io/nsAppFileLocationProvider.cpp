@@ -11,7 +11,7 @@
 #include "nsAtom.h"
 #include "nsIFile.h"
 #include "nsString.h"
-#include "nsISimpleEnumerator.h"
+#include "nsSimpleEnumerator.h"
 #include "prenv.h"
 #include "nsCRT.h"
 #if defined(MOZ_WIDGET_COCOA)
@@ -375,10 +375,9 @@ nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsIFile** aLocalFile,
 // nsAppFileLocationProvider::nsIDirectoryServiceProvider2
 //*****************************************************************************
 
-class nsAppDirectoryEnumerator : public nsISimpleEnumerator
+class nsAppDirectoryEnumerator : public nsSimpleEnumerator
 {
 public:
-  NS_DECL_ISUPPORTS
 
   /**
    * aKeyList is a null-terminated list of properties which are provided by aProvider
@@ -390,6 +389,8 @@ public:
     mCurrentKey(aKeyList)
   {
   }
+
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIFile); }
 
   NS_IMETHOD HasMoreElements(bool* aResult) override
   {
@@ -431,15 +432,7 @@ protected:
   nsCOMPtr<nsIDirectoryServiceProvider> mProvider;
   const char** mCurrentKey;
   nsCOMPtr<nsIFile> mNext;
-
-  // Virtual destructor since subclass nsPathsDirectoryEnumerator
-  // does not re-implement Release()
-  virtual ~nsAppDirectoryEnumerator()
-  {
-  }
 };
-
-NS_IMPL_ISUPPORTS(nsAppDirectoryEnumerator, nsISimpleEnumerator)
 
 /* nsPathsDirectoryEnumerator and PATH_SEPARATOR
  * are not used on MacOS/X. */

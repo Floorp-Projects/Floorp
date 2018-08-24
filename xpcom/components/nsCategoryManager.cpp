@@ -29,7 +29,7 @@
 #include "mozilla/Services.h"
 
 #include "ManifestParser.h"
-#include "nsISimpleEnumerator.h"
+#include "nsSimpleEnumerator.h"
 
 using namespace mozilla;
 class nsIComponentLoaderManager;
@@ -51,13 +51,18 @@ class nsIComponentLoaderManager;
 // CategoryEnumerator
 //
 class BaseStringEnumerator
-  : public nsISimpleEnumerator
+  : public nsSimpleEnumerator
   , private nsIUTF8StringEnumerator
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISIMPLEENUMERATOR
   NS_DECL_NSIUTF8STRINGENUMERATOR
+
+  const nsID& DefaultInterface() override
+  {
+    return NS_GET_IID(nsISupportsCString);
+  }
 
 protected:
   // Callback function for NS_QuickSort to sort mArray
@@ -87,8 +92,8 @@ protected:
   uint32_t mStringCurItem;
 };
 
-NS_IMPL_ISUPPORTS(BaseStringEnumerator, nsISimpleEnumerator,
-                  nsIUTF8StringEnumerator)
+NS_IMPL_ISUPPORTS_INHERITED(BaseStringEnumerator, nsSimpleEnumerator,
+                            nsIUTF8StringEnumerator)
 
 NS_IMETHODIMP
 BaseStringEnumerator::HasMoreElements(bool* aResult)

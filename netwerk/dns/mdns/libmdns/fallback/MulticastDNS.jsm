@@ -838,9 +838,7 @@ function _propertyBagToObject(propBag) {
   let result = {};
   if (propBag.QueryInterface) {
     propBag.QueryInterface(Ci.nsIPropertyBag2);
-    let propEnum = propBag.enumerator;
-    while (propEnum.hasMoreElements()) {
-      let prop = propEnum.getNext().QueryInterface(Ci.nsIProperty);
+    for (let prop of propBag.enumerator) {
       result[prop.name] = prop.value.toString();
     }
   } else {

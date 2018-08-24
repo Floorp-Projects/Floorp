@@ -2448,6 +2448,9 @@ void
 DocAccessible::DispatchScrollingEvent(uint32_t aEventType)
 {
   nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollable();
+  if (!sf) {
+    return;
+  }
 
   int32_t appUnitsPerDevPixel = mPresShell->GetPresContext()->AppUnitsPerDevPixel();
   LayoutDevicePoint scrollPoint = LayoutDevicePoint::FromAppUnits(

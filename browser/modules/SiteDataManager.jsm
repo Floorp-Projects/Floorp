@@ -173,9 +173,7 @@ var SiteDataManager = {
   },
 
   _getAllCookies() {
-    let cookiesEnum = Services.cookies.enumerator;
-    while (cookiesEnum.hasMoreElements()) {
-      let cookie = cookiesEnum.getNext().QueryInterface(Ci.nsICookie2);
+    for (let cookie of Services.cookies.enumerator) {
       let site = this._getOrInsertSite(cookie.rawHost);
       site.cookies.push(cookie);
       if (site.lastAccessed < cookie.lastAccessed) {
