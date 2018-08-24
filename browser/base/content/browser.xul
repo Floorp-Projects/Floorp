@@ -82,8 +82,13 @@ xmlns="http://www.w3.org/1999/xhtml"
   window.onload = gBrowserInit.onLoad.bind(gBrowserInit);
   window.onunload = gBrowserInit.onUnload.bind(gBrowserInit);
   window.onclose = WindowIsClosing;
+#ifdef BROWSER_XHTML
+  window.addEventListener("DOMContentLoaded",
+    gBrowserInit.onBeforeInitialXULLayout.bind(gBrowserInit), { once: true });
+#else
   window.addEventListener("MozBeforeInitialXULLayout",
     gBrowserInit.onBeforeInitialXULLayout.bind(gBrowserInit), { once: true });
+#endif
   // The listener of DOMContentLoaded must be set on window, rather than
   // document, because the window can go away before the event is fired.
   // In that case, we don't want to initialize anything, otherwise we
