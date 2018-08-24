@@ -11,7 +11,7 @@
  *
  * It works like this:
  * For every combination of two different widgets (where widget is one of
- * label, radio, checkbox, button, textbox, menulist, menulist[editable="true"]),
+ * label, radio, checkbox, button, textbox, menulist)
  * there's a stack with two layers. The back layer in the stack is
  * just a vertically centered label with a bunch of underscores. This is the
  * baseline that the text on the widgets should hit.

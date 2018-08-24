@@ -9,15 +9,11 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
 
-<label accesskey="a" control="menulist"/>
-<label accesskey="b" control="textbox"/>
+<label accesskey="a" control="textbox"/>
+<label accesskey="b" control="textbox2"/>
 
-<menulist id="menulist" editable="true">
-  <menupopup>
-    <menuitem label="One"/>
-  </menupopup>
-</menulist>
 <textbox id="textbox"/>
+<textbox id="textbox2"/>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
@@ -44,32 +40,32 @@ function runTests()
   addEventListener("blur", blurOccurred, true);
 
   gExpectedBlur = null;
-  gExpectedFocus = $("menulist").inputField;
-  $("menulist").focus();
-
-  gExpectedBlur = gExpectedFocus;
   gExpectedFocus = $("textbox").inputField;
   $("textbox").focus();
+
+  gExpectedBlur = gExpectedFocus;
+  gExpectedFocus = $("textbox2").inputField;
+  $("textbox2").focus();
 
   var accessKeyDetails = (navigator.platform.includes("Mac")) ?
                          {altKey: true, ctrlKey: true} :
                          {altKey: true, shiftKey: true};
 
   gExpectedBlur = gExpectedFocus;
-  gExpectedFocus = $("menulist").inputField;
+  gExpectedFocus = $("textbox").inputField;
   synthesizeKey("a", accessKeyDetails);
 
   gExpectedBlur = gExpectedFocus;
-  gExpectedFocus = $("textbox").inputField;
+  gExpectedFocus = $("textbox2").inputField;
   synthesizeKey("b", accessKeyDetails);
 
   if (!navigator.platform.includes("Mac")) {
     gExpectedBlur = gExpectedFocus;
-    gExpectedFocus = $("menulist").inputField;
+    gExpectedFocus = $("textbox").inputField;
     synthesizeKey("KEY_Tab", {shiftKey: true});
 
     gExpectedBlur = gExpectedFocus;
-    gExpectedFocus = $("textbox").inputField;
+    gExpectedFocus = $("textbox2").inputField;
     synthesizeKey("KEY_Tab");
 
     is(gBlurs, 5, "correct number of blurs");
