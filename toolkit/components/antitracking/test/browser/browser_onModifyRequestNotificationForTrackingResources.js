@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
@@ -37,7 +38,7 @@ async function onModifyRequest() {
         Services.obs.removeObserver(observer, "http-on-modify-request");
         resolve();
       }
-    }, "http-on-modify-request", false);
+    }, "http-on-modify-request");
   });
 }
 
