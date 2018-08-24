@@ -55,48 +55,6 @@
       testAccessibleTree("menulist", accTree);
 
       //////////////////////////////////////////////////////////////////////////
-      // editable menulist
-
-      accTree = {
-        role: ROLE_COMBOBOX,
-        children: [
-          {
-            role: ROLE_ENTRY,
-            children: [
-              // no text leaf accessible for text node
-            ]
-          },
-          {
-            role: ROLE_COMBOBOX_LIST, // context menu
-            children: []
-          },
-          {
-            role: ROLE_PUSHBUTTON, // dropmarker
-            children: []
-          },
-          {
-            role: ROLE_COMBOBOX_LIST, // option list
-            children: [
-              {
-                role: ROLE_COMBOBOX_OPTION,
-                children: []
-              },
-              {
-                role: ROLE_COMBOBOX_OPTION,
-                children: []
-              }
-            ]
-          }
-        ]
-      };
-
-      if (!MAC) {
-        testAccessibleTree("menulist2", accTree);
-      } else {
-        todo(false, "Make this test pass on OSX (bug 551957)");
-      }
-
-      //////////////////////////////////////////////////////////////////////////
       // textbox@type=autocomplete #1 (history)
 
       accTree = {
@@ -189,13 +147,6 @@
 
     <vbox flex="1">
       <menulist id="menulist">
-        <menupopup>
-          <menuitem label="item"/>
-          <menuitem label="item"/>
-        </menupopup>
-      </menulist>
-
-      <menulist id="menulist2" editable="true">
         <menupopup>
           <menuitem label="item"/>
           <menuitem label="item"/>
