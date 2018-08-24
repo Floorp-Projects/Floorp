@@ -1,7 +1,6 @@
 use std::ffi::{CStr, CString};
-use std::{mem, slice};
+use std::{mem, slice, ptr, env};
 use std::path::PathBuf;
-use std::ptr;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::os::raw::{c_void, c_char, c_float};
@@ -884,6 +883,10 @@ pub extern "C" fn wr_renderer_update_program_cache(renderer: &mut Renderer, prog
     renderer.update_program_cache(program_cache);
 }
 
+fn env_var_to_bool(key: &'static str) -> bool {
+    env::var(key).ok().map_or(false, |v| v.parse::<usize>().unwrap_or(1) != 0)
+}
+
 // Call MakeCurrent before this.
 #[no_mangle]
 pub extern "C" fn wr_window_new(window_id: WrWindowId,
@@ -951,6 +954,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         sampler: Some(Box::new(SamplerCallback::new(window_id))),
         max_texture_size: Some(8192), // Moz2D doesn't like textures bigger than this
         clear_color: Some(ColorF::new(0.0, 0.0, 0.0, 0.0)),
+        precache_shaders: env_var_to_bool("MOZ_WR_PRECACHE_SHADERS"),
         ..Default::default()
     };
 
