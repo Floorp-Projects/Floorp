@@ -88,7 +88,7 @@ public class ExampleCrashHandler extends Service {
             }
 
             try {
-                CrashReporter.sendCrashReport(this, mCrashIntent);
+                CrashReporter.sendCrashReport(this, mCrashIntent, "GeckoViewExample");
             } catch (Exception e) {
                 Log.e(LOGTAG, "Failed to send crash report", e);
             }

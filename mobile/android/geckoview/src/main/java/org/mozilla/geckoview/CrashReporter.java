@@ -24,7 +24,9 @@ import java.net.URLDecoder;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
@@ -39,64 +41,86 @@ public class CrashReporter {
     private static final String PAGE_URL_KEY = "URL";
     private static final String NOTES_KEY = "Notes";
     private static final String SERVER_URL_KEY = "ServerURL";
+    private static final String PRODUCT_NAME_KEY = "ProductName";
+    private static final String PRODUCT_ID_KEY = "ProductID";
+    private static final String PRODUCT_ID = "{eeb82917-e434-4870-8148-5c03d4caa81b}";
+    private static final List<String> IGNORE_KEYS = Arrays.asList(
+            SERVER_URL_KEY, NOTES_KEY, PAGE_URL_KEY
+    );
 
     /**
      * Sends a crash report to the Mozilla  <a href="https://wiki.mozilla.org/Socorro">Socorro</a>
      * crash report server.
+     * <br>
+     * The {@code appName} needs to be whitelisted for the server to accept the crash.
+     * <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Socorro">File a bug</a>
+     * if you would like to get your app added to the whitelist.
      *
      * @param context The current Context
      * @param intent The Intent sent to the {@link GeckoRuntime} crash handler
+     * @param appName A human-readable app name.
      * @throws IOException This can be thrown if there was a networking error while sending the report.
      * @throws URISyntaxException This can be thrown if the crash server URI from the extra data was invalid.
      * @see GeckoRuntimeSettings.Builder#crashHandler(Class)
      * @see GeckoRuntime#ACTION_CRASHED
      */
-    public static void sendCrashReport(Context context, Intent intent)
+    public static void sendCrashReport(Context context, Intent intent, String appName)
             throws IOException, URISyntaxException {
-        sendCrashReport(context, intent.getExtras());
+        sendCrashReport(context, intent.getExtras(), appName);
     }
 
     /**
      * Sends a crash report to the Mozilla  <a href="https://wiki.mozilla.org/Socorro">Socorro</a>
      * crash report server.
+     * <br>
+     * The {@code appName} needs to be whitelisted for the server to accept the crash.
+     * <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Socorro">File a bug</a>
+     * if you would like to get your app added to the whitelist.
      *
      * @param context The current Context
      * @param intentExtras The Bundle of extras attached to the Intent received by a crash handler.
+     * @param appName A human-readable app name.
      * @throws IOException This can be thrown if there was a networking error while sending the report.
      * @throws URISyntaxException This can be thrown if the crash server URI from the extra data was invalid.
      * @see GeckoRuntimeSettings.Builder#crashHandler(Class)
      * @see GeckoRuntime#ACTION_CRASHED
      */
-    public static void sendCrashReport(Context context, Bundle intentExtras)
+    public static void sendCrashReport(Context context, Bundle intentExtras, String appName)
             throws IOException, URISyntaxException {
         final File dumpFile = new File(intentExtras.getString(GeckoRuntime.EXTRA_MINIDUMP_PATH));
         final File extrasFile = new File(intentExtras.getString(GeckoRuntime.EXTRA_EXTRAS_PATH));
         final boolean success = intentExtras.getBoolean(GeckoRuntime.EXTRA_MINIDUMP_SUCCESS, false);
 
-        sendCrashReport(context, dumpFile, extrasFile, success);
+        sendCrashReport(context, dumpFile, extrasFile, success, appName);
     }
 
     /**
      * Sends a crash report to the Mozilla  <a href="https://wiki.mozilla.org/Socorro">Socorro</a>
      * crash report server.
+     * <br>
+     * The {@code appName} needs to be whitelisted for the server to accept the crash.
+     * <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Socorro">File a bug</a>
+     * if you would like to get your app added to the whitelist.
      *
      * @param context The current {@link Context}
      * @param minidumpFile A {@link File} referring to the minidump.
      * @param extrasFile A {@link File} referring to the extras file.
      * @param success A boolean indicating whether the dump was successfully generated.
+     * @param appName A human-readable app name.
      * @throws IOException This can be thrown if there was a networking error while sending the report.
      * @throws URISyntaxException This can be thrown if the crash server URI from the extra data was invalid.
      * @see GeckoRuntimeSettings.Builder#crashHandler(Class)
      * @see GeckoRuntime#ACTION_CRASHED
      */
-    public static void sendCrashReport(Context context, File minidumpFile, File extrasFile, boolean success) throws IOException, URISyntaxException {
+    public static void sendCrashReport(Context context, File minidumpFile, File extrasFile,
+                                       boolean success, String appName) throws IOException, URISyntaxException {
         // Compute the minidump hash and generate the stack traces
         computeMinidumpHash(extrasFile, minidumpFile);
 
         // Extract the annotations from the .extra file
         HashMap<String, String> extrasMap = readStringsFromFile(extrasFile.getPath());
 
-        sendCrashReport(context, minidumpFile, extrasMap, success);
+        sendCrashReport(context, minidumpFile, extrasMap, success, appName);
     }
 
     /**
@@ -107,18 +131,25 @@ public class CrashReporter {
      * @param minidumpFile A {@link File} referring to the minidump.
      * @param extras A {@link HashMap} with the parsed key-value pairs from the extras file.
      * @param success A boolean indicating whether the dump was successfully generated.
+     * @param appName A human-readable app name.
      * @throws IOException This can be thrown if there was a networking error while sending the report.
      * @throws URISyntaxException This can be thrown if the crash server URI from the extra data was invalid.
      * @see GeckoRuntimeSettings.Builder#crashHandler(Class)
      * @see GeckoRuntime#ACTION_CRASHED
      */
-    public static void sendCrashReport(Context context, File minidumpFile, Map<String, String> extras, boolean success) throws IOException, URISyntaxException {
-        Log.i(LOGTAG, "sendCrashReport: " + minidumpFile.getPath());
+    public static void sendCrashReport(Context context, File minidumpFile,
+                                       Map<String, String> extras, boolean success,
+                                       String appName) throws IOException, URISyntaxException {
+        Log.d(LOGTAG, "Sending crash report: " + minidumpFile.getPath());
 
         String spec = extras.get(SERVER_URL_KEY);
         if (spec == null) {
             return;
         }
+
+        extras.put(PRODUCT_NAME_KEY, appName);
+        extras.put(PRODUCT_ID_KEY, PRODUCT_ID);
+
         HttpURLConnection conn = null;
         try {
             final URL url = new URL(URLDecoder.decode(spec, "UTF-8"));
@@ -134,13 +165,12 @@ public class CrashReporter {
 
             OutputStream os = new GZIPOutputStream(conn.getOutputStream());
             for (String key : extras.keySet()) {
-                if (key.equals(PAGE_URL_KEY)) {
+                if (IGNORE_KEYS.contains(key)) {
+                    Log.d(LOGTAG, "Ignoring: " + key);
                     continue;
                 }
 
-                if (!key.equals(SERVER_URL_KEY) && !key.equals(NOTES_KEY)) {
-                    sendPart(os, boundary, key, extras.get(key));
-                }
+                sendPart(os, boundary, key, extras.get(key));
             }
 
             StringBuilder sb = new StringBuilder();
@@ -180,7 +210,11 @@ public class CrashReporter {
 
                 if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     String crashid = responseMap.get("CrashID");
-                    Log.i(LOGTAG, "Successfully sent crash report: " + crashid);
+                    if (crashid != null) {
+                        Log.i(LOGTAG, "Successfully sent crash report: " + crashid);
+                    } else {
+                        Log.i(LOGTAG, "Server rejected crash report");
+                    }
                 } else {
                     Log.w(LOGTAG, "Received failure HTTP response code from server: " + conn.getResponseCode());
                 }
