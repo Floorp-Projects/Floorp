@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsISupportsPrimitives.idl"
 
 interface nsISimpleEnumerator;
 
@@ -14,6 +15,14 @@ interface nsISimpleEnumerator;
 /*
  * nsICategoryManager
  */
+
+[scriptable, uuid(de021d54-57a3-4025-ae63-4c8eedbe74c0)]
+interface nsICategoryEntry : nsISupportsCString
+{
+  readonly attribute ACString entry;
+
+  readonly attribute ACString value;
+};
 
 [builtinclass, scriptable, uuid(3275b2cd-af6d-429a-80d7-f0c5120342ac)]
 interface nsICategoryManager : nsISupports
@@ -58,9 +67,10 @@ interface nsICategoryManager : nsISupports
      * Enumerate the entries in a category.
      * @param aCategory The category to be enumerated.
      * @return a simple enumerator, each result QIs to
-     *         nsISupportsCString.
+     *         nsICategoryEntry.
      */
     nsISimpleEnumerator enumerateCategory(in ACString aCategory);
+
 
     /**
      * Enumerate all existing categories
