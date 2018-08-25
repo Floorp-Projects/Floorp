@@ -28,7 +28,6 @@
 #include "js/CallArgs.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
-#include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/ErrorReport.h"
 #include "js/GCVector.h"

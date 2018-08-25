@@ -79,6 +79,7 @@
 #include "jit/JitRealm.h"
 #include "jit/shared/CodeGenerator-shared.h"
 #include "js/AutoByteString.h"
+#include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/Debug.h"
 #include "js/GCVector.h"

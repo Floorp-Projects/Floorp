@@ -42,6 +42,7 @@
 #include "jit/InlinableNatives.h"
 #include "jit/JitRealm.h"
 #include "js/AutoByteString.h"
+#include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
