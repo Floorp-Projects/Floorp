@@ -13,6 +13,7 @@
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIStringEnumerator.h"
+#include "mozilla/SimpleEnumerator.h"
 
 #include "nsCOMPtr.h"
 #include "mozilla/ModuleUtils.h"
@@ -44,6 +45,8 @@
 
 #define NS_COMMANDLINE_CID \
   { 0x23bcc750, 0xdc20, 0x460b, { 0xb2, 0xd4, 0x74, 0xd8, 0xf5, 0x8d, 0x36, 0x15 } }
+
+using mozilla::SimpleEnumerator;
 
 class nsCommandLine final : public nsICommandLineRunner
 {
@@ -506,22 +509,15 @@ nsCommandLine::EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClo
                                  getter_AddRefs(entenum));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIUTF8StringEnumerator> strenum (do_QueryInterface(entenum));
-  NS_ENSURE_TRUE(strenum, NS_ERROR_UNEXPECTED);
-
-  nsAutoCString entry;
-  bool hasMore;
-  while (NS_SUCCEEDED(strenum->HasMore(&hasMore)) && hasMore) {
-    strenum->GetNext(entry);
-
-    nsCString contractID;
-    rv = catman->GetCategoryEntry("command-line-handler", entry,
-				  contractID);
-    if (NS_FAILED(rv))
-      continue;
+  for (auto& categoryEntry : SimpleEnumerator<nsICategoryEntry>(entenum)) {
+    nsAutoCString contractID;
+    categoryEntry->GetValue(contractID);
 
     nsCOMPtr<nsICommandLineHandler> clh(do_GetService(contractID.get()));
     if (!clh) {
+      nsCString entry;
+      categoryEntry->GetEntry(entry);
+
       LogConsoleMessage(u"Contract ID '%s' was registered as a command line handler for entry '%s', but could not be created.",
                         contractID.get(), entry.get());
       continue;
@@ -554,16 +550,9 @@ nsCommandLine::EnumerateValidators(EnumerateValidatorsCallback aCallback, void *
   nsCOMPtr<nsIUTF8StringEnumerator> strenum (do_QueryInterface(entenum));
   NS_ENSURE_TRUE(strenum, NS_ERROR_UNEXPECTED);
 
-  nsAutoCString entry;
-  bool hasMore;
-  while (NS_SUCCEEDED(strenum->HasMore(&hasMore)) && hasMore) {
-    strenum->GetNext(entry);
-
-    nsCString contractID;
-    rv = catman->GetCategoryEntry("command-line-validator",
-				  entry, contractID);
-    if (contractID.IsVoid())
-      continue;
+  for (auto& categoryEntry : SimpleEnumerator<nsICategoryEntry>(entenum)) {
+    nsAutoCString contractID;
+    categoryEntry->GetValue(contractID);
 
     nsCOMPtr<nsICommandLineValidator> clv(do_GetService(contractID.get()));
     if (!clv)
