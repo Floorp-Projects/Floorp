@@ -793,7 +793,7 @@ var gMainPane = {
 
     let fragment = document.createDocumentFragment();
     for (let {code, name} of locales) {
-      let menuitem = document.createElement("menuitem");
+      let menuitem = document.createXULElement("menuitem");
       menuitem.setAttribute("value", code);
       menuitem.setAttribute("label", name);
       fragment.appendChild(menuitem);
@@ -1586,7 +1586,7 @@ var gMainPane = {
     let internalMenuItem;
     // Add the "Preview in Firefox" option for optional internal handlers.
     if (handlerInfo instanceof InternalHandlerInfoWrapper) {
-      internalMenuItem = document.createElement("menuitem");
+      internalMenuItem = document.createXULElement("menuitem");
       internalMenuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
       let label = gMainPane._prefsBundle.getFormattedString("previewInApp",
         [this._brandShortName]);
@@ -1597,7 +1597,7 @@ var gMainPane = {
     }
 
     {
-      var askMenuItem = document.createElement("menuitem");
+      var askMenuItem = document.createXULElement("menuitem");
       askMenuItem.setAttribute("action", Ci.nsIHandlerInfo.alwaysAsk);
       let label;
       if (isFeedType(handlerInfo.type))
@@ -1617,7 +1617,7 @@ var gMainPane = {
     // available to feeds, since the feed code doesn't implement the capability.
     if ((handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) &&
       !isFeedType(handlerInfo.type)) {
-      var saveMenuItem = document.createElement("menuitem");
+      var saveMenuItem = document.createXULElement("menuitem");
       saveMenuItem.setAttribute("action", Ci.nsIHandlerInfo.saveToDisk);
       let label = gMainPane._prefsBundle.getString("saveFile");
       saveMenuItem.setAttribute("label", label);
@@ -1628,7 +1628,7 @@ var gMainPane = {
 
     // If this is the feed type, add a Live Bookmarks item.
     if (isFeedType(handlerInfo.type)) {
-      internalMenuItem = document.createElement("menuitem");
+      internalMenuItem = document.createXULElement("menuitem");
       internalMenuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
       let label = gMainPane._prefsBundle.getFormattedString("addLiveBookmarksInApp",
         [this._brandShortName]);
@@ -1640,12 +1640,12 @@ var gMainPane = {
 
     // Add a separator to distinguish these items from the helper app items
     // that follow them.
-    let menuseparator = document.createElement("menuseparator");
+    let menuseparator = document.createXULElement("menuseparator");
     menuPopup.appendChild(menuseparator);
 
     // Create a menu item for the OS default application, if any.
     if (handlerInfo.hasDefaultHandler) {
-      var defaultMenuItem = document.createElement("menuitem");
+      var defaultMenuItem = document.createXULElement("menuitem");
       defaultMenuItem.setAttribute("action", Ci.nsIHandlerInfo.useSystemDefault);
       let label = gMainPane._prefsBundle.getFormattedString("useDefault",
         [handlerInfo.defaultDescription]);
@@ -1663,7 +1663,7 @@ var gMainPane = {
       if (!this.isValidHandlerApp(possibleApp))
         continue;
 
-      let menuItem = document.createElement("menuitem");
+      let menuItem = document.createXULElement("menuitem");
       menuItem.setAttribute("action", Ci.nsIHandlerInfo.useHelperApp);
       let label;
       if (possibleApp instanceof Ci.nsILocalHandlerApp)
@@ -1704,7 +1704,7 @@ var gMainPane = {
           }
         }
         if (!appAlreadyInHandlers) {
-          let menuItem = document.createElement("menuitem");
+          let menuItem = document.createXULElement("menuitem");
           menuItem.setAttribute("action", Ci.nsIHandlerInfo.useHelperApp);
           let label = gMainPane._prefsBundle.getFormattedString("useApp", [handler.name]);
           menuItem.setAttribute("label", label);
@@ -1723,7 +1723,7 @@ var gMainPane = {
 
     // Create a menu item for the plugin.
     if (handlerInfo.pluginName) {
-      var pluginMenuItem = document.createElement("menuitem");
+      var pluginMenuItem = document.createXULElement("menuitem");
       pluginMenuItem.setAttribute("action", kActionUsePlugin);
       let label = gMainPane._prefsBundle.getFormattedString("usePluginIn",
         [handlerInfo.pluginName,
@@ -1744,7 +1744,7 @@ var gMainPane = {
       canOpenWithOtherApp = handlerInfo.type != executableType;
     }
     if (canOpenWithOtherApp) {
-      let menuItem = document.createElement("menuitem");
+      let menuItem = document.createXULElement("menuitem");
       menuItem.className = "choose-app-item";
       menuItem.addEventListener("command", function(e) {
         gMainPane.chooseApp(e);
@@ -1757,9 +1757,9 @@ var gMainPane = {
 
     // Create a menu item for managing applications.
     if (possibleAppMenuItems.length) {
-      let menuItem = document.createElement("menuseparator");
+      let menuItem = document.createXULElement("menuseparator");
       menuPopup.appendChild(menuItem);
-      menuItem = document.createElement("menuitem");
+      menuItem = document.createXULElement("menuitem");
       menuItem.className = "manage-app-item";
       menuItem.addEventListener("command", function(e) {
         gMainPane.manageApp(e);

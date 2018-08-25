@@ -25,6 +25,7 @@ let { add } = wasmEvalText(`(module
 
 const SLOW_ENTRY_STACK = ['', '!>', '0,!>', '!>', ''];
 const FAST_ENTRY_STACK = ['', '>', '0,>', '>', ''];
+const INLINED_CALL_STACK = ['', '0', ''];
 
 function main() {
     for (let i = 0; i < 50; i++) {
@@ -37,7 +38,7 @@ function main() {
             assertStackTrace(e, ['wasm-function[0]', 'main', '']);
         }
         let stack = endProfiling();
-        assertEqPreciseStacks(stack, [FAST_ENTRY_STACK, SLOW_ENTRY_STACK]);
+        assertEqPreciseStacks(stack, [INLINED_CALL_STACK, FAST_ENTRY_STACK, SLOW_ENTRY_STACK]);
     }
 }
 

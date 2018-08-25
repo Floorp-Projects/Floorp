@@ -45,7 +45,7 @@
 #include "nsCORSListenerProxy.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsIPrompt.h"
-#include "nsIRedirectChannelRegistrar.h"
+#include "mozilla/net/RedirectChannelRegistrar.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDocument.h"
 #include "nsStreamUtils.h"
@@ -972,7 +972,7 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& aResult,
 
   // Wait for background channel ready on target channel
   nsCOMPtr<nsIRedirectChannelRegistrar> redirectReg =
-    do_GetService(NS_REDIRECTCHANNELREGISTRAR_CONTRACTID);
+    RedirectChannelRegistrar::GetOrCreate();
   MOZ_ASSERT(redirectReg);
 
   nsCOMPtr<nsIParentChannel> redirectParentChannel;

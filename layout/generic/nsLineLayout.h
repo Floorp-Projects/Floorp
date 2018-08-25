@@ -16,6 +16,7 @@
 #include "BlockReflowInput.h"
 #include "nsLineBox.h"
 
+class nsBulletFrame;
 class nsFloatManager;
 struct nsStyleText;
 
@@ -101,11 +102,9 @@ public:
                    ReflowOutput* aMetrics,
                    bool& aPushedFrame);
 
-  void AddBulletFrame(nsIFrame* aFrame, const ReflowOutput& aMetrics);
+  void AddBulletFrame(nsBulletFrame* aFrame, const ReflowOutput& aMetrics);
 
-  void RemoveBulletFrame(nsIFrame* aFrame) {
-    PushFrame(aFrame);
-  }
+  void RemoveBulletFrame(nsBulletFrame* aFrame);
 
   /**
    * Place frames in the block direction (CSS property vertical-align)
@@ -547,10 +546,9 @@ protected:
     nscoord* mBaseline;
 
     void AppendFrame(PerFrameData* pfd) {
-      if (nullptr == mLastFrame) {
+      if (!mLastFrame) {
         mFirstFrame = pfd;
-      }
-      else {
+      } else {
         mLastFrame->mNext = pfd;
         pfd->mPrev = mLastFrame;
       }

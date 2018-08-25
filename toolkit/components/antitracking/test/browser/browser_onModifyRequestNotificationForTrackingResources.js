@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
@@ -9,6 +10,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
  * canceled.
  */
 
+let gExpectedResourcesSeen = 0;
 async function onModifyRequest() {
   return new Promise((resolve, reject) => {
     Services.obs.addObserver(function observer(subject, topic, data) {
@@ -18,9 +20,24 @@ async function onModifyRequest() {
       if (httpChannel.URI.prePath + "/" != TEST_3RD_PARTY_DOMAIN_TP) {
         return;
       }
-      ok(spec.endsWith("empty.js"), "Correct resource observed");
-      Services.obs.removeObserver(observer, "http-on-modify-request");
-      resolve();
+      if (spec.endsWith("empty.js")) {
+        ok(true, "Correct resource observed");
+        ++gExpectedResourcesSeen;
+      } else if (spec.endsWith("empty.js?redirect")) {
+        httpChannel.redirectTo(Services.io.newURI(spec.replace("empty.js?redirect", "head.js")));
+      } else if (spec.endsWith("empty.js?redirect2")) {
+        httpChannel.suspend();
+        setTimeout(() => {
+          httpChannel.redirectTo(Services.io.newURI(spec.replace("empty.js?redirect2", "head.js")));
+          httpChannel.resume();
+        }, 100);
+      } else if (spec.endsWith("head.js")) {
+        ++gExpectedResourcesSeen;
+      }
+      if (gExpectedResourcesSeen == 3) {
+        Services.obs.removeObserver(observer, "http-on-modify-request");
+        resolve();
+      }
     }, "http-on-modify-request");
   });
 }
@@ -52,6 +69,14 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(browser);
 
   await promise;
+
+  info("Verify the number of tracking nodes found");
+  await ContentTask.spawn(browser,
+                          { expected: gExpectedResourcesSeen,
+                          },
+                          async function(obj) {
+    is(content.document.blockedTrackingNodeCount, obj.expected, "Expected tracking nodes found");
+  });
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);

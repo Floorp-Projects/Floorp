@@ -98,8 +98,7 @@ function check_mp4(v, enabled) {
   });
   // AV1 is temporarily disabled on Win32 due to linker issues
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1475564
-  if (!(manifestNavigator().userAgent.includes("Windows") &&
-      !manifestNavigator().userAgent.includes("x64"))) {
+  if (!isWindows32() && !isAndroid()) {
     check("video/mp4; codecs=\"av1\"", "probably");
   } else {
     check("video/mp4; codecs=\"av1\"", "");

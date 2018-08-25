@@ -9,7 +9,6 @@ const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpv } = DevToolsUtils;
 const EventEmitter = require("devtools/shared/event-emitter");
-const defer = require("devtools/shared/defer");
 
 DevToolsUtils.defineLazyGetter(this, "IOUtil", () => {
   return Cc["@mozilla.org/io-util;1"].getService(Ci.nsIIOUtil);
@@ -75,7 +74,14 @@ function StreamCopier(input, output, length) {
   }
   this._length = length;
   this._amountLeft = length;
-  this._deferred = defer();
+  let _resolve;
+  let _reject;
+  this._deferred = new Promise((resolve, reject) => {
+    _resolve = resolve;
+    _reject = reject;
+  });
+  this._deferred.resolve = _resolve;
+  this._deferred.reject = _reject;
 
   this._copy = this._copy.bind(this);
   this._flush = this._flush.bind(this);
@@ -85,7 +91,7 @@ function StreamCopier(input, output, length) {
   // Allows the copier to offer a promise interface for the simple succeed or
   // fail scenarios, but also emit events (due to the EventEmitter) for other
   // states, like progress.
-  this.then = this._deferred.promise.then.bind(this._deferred.promise);
+  this.then = this._deferred.then.bind(this._deferred);
   this.then(this._destroy, this._destroy);
 
   // Stream ready callback starts as |_copy|, but may switch to |_flush| at end

@@ -12,6 +12,7 @@ const EXCEPTION_ITER = TRIGGER + 5;
 
 const SLOW_ENTRY_STACK = ['', '!>', '0,!>', '!>', ''];
 const FAST_ENTRY_STACK = ['', '>', '0,>', '>', ''];
+const INLINED_CALL_STACK = ['', '0', ''];
 const FAST_OOL_ENTRY_STACK = ['', '>', '<,>', 'ool>,>', '<,>', '>', '0,>', '>', ''];
 const EXCEPTION_ENTRY_STACK = ['', '>', '<,>', 'ool>,>', '<,>', '>', ''];
 
@@ -44,7 +45,7 @@ for (let type of ['i32', 'f32', 'f64']) {
         for (var i = 0; i < ITER; i++) {
             startProfiling();
             loopBody(i + 1, i + EXCEPTION_ITER + 1);
-            assertEqPreciseStacks(endProfiling(), [FAST_ENTRY_STACK, SLOW_ENTRY_STACK]);
+            assertEqPreciseStacks(endProfiling(), [INLINED_CALL_STACK, FAST_ENTRY_STACK, SLOW_ENTRY_STACK]);
 
             if (i === EXCEPTION_ITER) {
                 x = { valueOf: function innerValueOf() { throw new Error("ph34r"); }};

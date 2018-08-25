@@ -17,38 +17,38 @@ function initFeedTab(feeds) {
 }
 
 function addRow(name, type, url) {
-  const item = document.createElement("richlistitem");
+  const item = document.createXULElement("richlistitem");
 
-  const top = document.createElement("hbox");
+  const top = document.createXULElement("hbox");
   top.setAttribute("flex", "1");
   item.appendChild(top);
 
-  const bottom = document.createElement("hbox");
+  const bottom = document.createXULElement("hbox");
   bottom.setAttribute("flex", "1");
   item.appendChild(bottom);
 
-  const nameLabel = document.createElement("label");
+  const nameLabel = document.createXULElement("label");
   nameLabel.className = "feedTitle";
   nameLabel.textContent = name;
   nameLabel.setAttribute("flex", "1");
   top.appendChild(nameLabel);
 
-  const typeLabel = document.createElement("label");
+  const typeLabel = document.createXULElement("label");
   typeLabel.textContent = type;
   top.appendChild(typeLabel);
 
-  const urlContainer = document.createElement("hbox");
+  const urlContainer = document.createXULElement("hbox");
   urlContainer.setAttribute("flex", "1");
   bottom.appendChild(urlContainer);
 
-  const urlLabel = document.createElement("label");
+  const urlLabel = document.createXULElement("label");
   urlLabel.className = "text-link";
   urlLabel.textContent = url;
   urlLabel.setAttribute("tooltiptext", url);
   urlLabel.addEventListener("click", ev => openUILink(this.value, ev, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})}));
   urlContainer.appendChild(urlLabel);
 
-  const subscribeButton = document.createElement("button");
+  const subscribeButton = document.createXULElement("button");
   subscribeButton.className = "feed-subscribe";
   subscribeButton.addEventListener("click",
     () => openWebLinkIn(url, "current", { ignoreAlt: true }));

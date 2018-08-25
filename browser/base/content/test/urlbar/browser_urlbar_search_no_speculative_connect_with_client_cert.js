@@ -81,7 +81,6 @@ function startServer(cert) {
     }
   };
 
-  tlsServer.setSessionCache(false);
   tlsServer.setSessionTickets(false);
   tlsServer.setRequestClientCertificate(Ci.nsITLSServerSocket.REQUEST_ALWAYS);
 

@@ -39,6 +39,7 @@
 #include "Predictor.h"
 #include "nsIThreadPool.h"
 #include "mozilla/net/NeckoChild.h"
+#include "RedirectChannelRegistrar.h"
 
 #include "nsNetCID.h"
 
@@ -130,10 +131,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsEffectiveTLDService, Init)
 
 #include "nsSerializationHelper.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSerializationHelper)
-
-#include "RedirectChannelRegistrar.h"
-typedef mozilla::net::RedirectChannelRegistrar RedirectChannelRegistrar;
-NS_GENERIC_FACTORY_CONSTRUCTOR(RedirectChannelRegistrar)
 
 #include "CacheStorageService.h"
 typedef mozilla::net::CacheStorageService CacheStorageService;
@@ -652,6 +649,8 @@ static void nsNetShutdown()
 
     mozilla::net::Http2CompressionCleanup();
 
+    mozilla::net::RedirectChannelRegistrar::Shutdown();
+
     delete gNetSniffers;
     gNetSniffers = nullptr;
     delete gDataSniffers;
@@ -768,7 +767,6 @@ NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_SERIALIZATION_HELPER_CID);
-NS_DEFINE_NAMED_CID(NS_REDIRECTCHANNELREGISTRAR_CID);
 NS_DEFINE_NAMED_CID(NS_CACHE_STORAGE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NSILOADCONTEXTINFOFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_NETWORKPREDICTOR_CID);
@@ -893,7 +891,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_NETWORK_LINK_SERVICE_CID, false, nullptr, nsNotifyAddrListenerConstructor },
 #endif
     { &kNS_SERIALIZATION_HELPER_CID, false, nullptr, nsSerializationHelperConstructor },
-    { &kNS_REDIRECTCHANNELREGISTRAR_CID, false, nullptr, RedirectChannelRegistrarConstructor },
     { &kNS_CACHE_STORAGE_SERVICE_CID, false, nullptr, CacheStorageServiceConstructor },
     { &kNS_NSILOADCONTEXTINFOFACTORY_CID, false, nullptr, LoadContextInfoFactoryConstructor },
     { &kNS_NETWORKPREDICTOR_CID, false, nullptr, mozilla::net::Predictor::Create },
@@ -1017,7 +1014,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_NETWORK_LINK_SERVICE_CONTRACTID, &kNS_NETWORK_LINK_SERVICE_CID },
 #endif
     { NS_SERIALIZATION_HELPER_CONTRACTID, &kNS_SERIALIZATION_HELPER_CID },
-    { NS_REDIRECTCHANNELREGISTRAR_CONTRACTID, &kNS_REDIRECTCHANNELREGISTRAR_CID },
     { NS_CACHE_STORAGE_SERVICE_CONTRACTID, &kNS_CACHE_STORAGE_SERVICE_CID },
     { NS_CACHE_STORAGE_SERVICE_CONTRACTID2, &kNS_CACHE_STORAGE_SERVICE_CID },
     { NS_NSILOADCONTEXTINFOFACTORY_CONTRACTID, &kNS_NSILOADCONTEXTINFOFACTORY_CID },

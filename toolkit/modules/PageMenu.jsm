@@ -105,7 +105,7 @@ PageMenu.prototype = {
             continue; // Ignore children without ids
           }
 
-          menuitem = document.createElement("menuitem");
+          menuitem = document.createXULElement("menuitem");
           if (child.checkbox) {
             menuitem.setAttribute("type", "checkbox");
             if (child.checked) {
@@ -127,16 +127,16 @@ PageMenu.prototype = {
           break;
 
         case "separator":
-          menuitem = document.createElement("menuseparator");
+          menuitem = document.createXULElement("menuseparator");
           break;
 
         case "menu":
-          menuitem = document.createElement("menu");
+          menuitem = document.createXULElement("menu");
           if (child.label) {
             menuitem.setAttribute("label", child.label);
           }
 
-          let menupopup = document.createElement("menupopup");
+          let menupopup = document.createXULElement("menupopup");
           menuitem.appendChild(menupopup);
 
           this.buildXULMenu(child, menupopup);

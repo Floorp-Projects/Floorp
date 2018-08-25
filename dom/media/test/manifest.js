@@ -633,6 +633,15 @@ var gUnseekableTests = [
   { name:"bogus.duh", type:"bogus/duh"}
 ];
 
+function isWindows32() {
+    return navigator.userAgent.includes("Windows") &&
+        !navigator.userAgent.includes("Win64");
+}
+
+function isAndroid() {
+    return navigator.userAgent.includes("Android");
+}
+
 var androidVersion = -1; // non-Android platforms
 if (manifestNavigator().userAgent.includes("Mobile") ||
     manifestNavigator().userAgent.includes("Tablet")) {

@@ -297,6 +297,7 @@ add_task(async function test_restricted_address_fields() {
      "tel should be visible");
 
   fillField(form.form.querySelector("#given-name"), "John");
+  fillField(form.form.querySelector("#family-name"), "Smith");
   ok(form.saveButton.disabled, "Save button should be disabled due to empty fields");
   fillField(form.form.querySelector("#email"), "john@example.com");
   todo(form.saveButton.disabled,

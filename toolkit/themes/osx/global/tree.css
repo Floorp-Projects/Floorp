@@ -4,15 +4,6 @@
 
 %include ../../shared/tree.inc.css
 
-/* ::::: tree focusring ::::: */
-
-.focusring > .tree-stack > .tree-rows > .tree-bodybox {
-  border: 1px solid transparent;
-}
-
-.focusring:focus > .tree-stack > .tree-rows > .tree-bodybox {
-  border: 1px solid -moz-mac-focusring;
-}
 
 /* ::::: editable tree ::::: */
 

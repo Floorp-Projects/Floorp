@@ -8,6 +8,7 @@ reftest.jar:
   content/PerTestCoverageUtils.jsm (../../../tools/code-coverage/PerTestCoverageUtils.jsm)
   content/input.css (../../../editor/reftests/xul/input.css)
   content/moz-bool-pref.css (../../../layout/reftests/css-parsing/moz-bool-pref.css)
+  content/path.css (../../../layout/reftests/svg/svg-integration/clip-path/path.css)
   content/progress.css (../../../layout/reftests/forms/progress/style.css)
 *  content/manifest.jsm (manifest.jsm)
 *  content/reftest.jsm (reftest.jsm)

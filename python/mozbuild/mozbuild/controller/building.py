@@ -6,6 +6,7 @@ from __future__ import absolute_import, unicode_literals
 
 import errno
 import getpass
+import glob
 import io
 import json
 import logging
@@ -1047,6 +1048,16 @@ class BuildDriver(MozbuildObject):
             status = None
             active_backend = config.substs.get('BUILD_BACKENDS', [None])[0]
             if active_backend and 'Make' not in active_backend:
+                for backend_file in glob.iglob(mozpath.join(self.topobjdir,
+                                                            'backend.*Backend')):
+                    if 'Make' in backend_file:
+                        self.log(logging.ERROR, 'backend',
+                                 {'objdir': self.topobjdir},
+                                 "The active objdir, {objdir}, was previously "
+                                 "used to build with a Make-based backend. "
+                                 "Change objdirs (by setting MOZ_OBJDIR in "
+                                 "your mozconfig) to continue.\n")
+                        return 1
                 # Record whether a clobber was requested so we can print
                 # a special message later if the build fails.
                 clobber_requested = False

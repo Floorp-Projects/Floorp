@@ -471,18 +471,19 @@ class IonICCallFrameLayout : public CommonFrameLayout
 
 enum class ExitFrameType : uint8_t
 {
-    CallNative        = 0x0,
-    ConstructNative   = 0x1,
-    IonDOMGetter      = 0x2,
-    IonDOMSetter      = 0x3,
-    IonDOMMethod      = 0x4,
-    IonOOLNative      = 0x5,
-    IonOOLProxy       = 0x6,
-    WasmJitEntry      = 0x7,
-    InterpreterStub   = 0xFC,
-    VMFunction        = 0xFD,
-    LazyLink          = 0xFE,
-    Bare              = 0xFF,
+    CallNative          = 0x0,
+    ConstructNative     = 0x1,
+    IonDOMGetter        = 0x2,
+    IonDOMSetter        = 0x3,
+    IonDOMMethod        = 0x4,
+    IonOOLNative        = 0x5,
+    IonOOLProxy         = 0x6,
+    WasmGenericJitEntry = 0x7,
+    DirectWasmJitCall   = 0x8,
+    InterpreterStub     = 0xFC,
+    VMFunction          = 0xFD,
+    LazyLink            = 0xFE,
+    Bare                = 0xFF,
 };
 
 // GC related data used to keep alive data surrounding the Exit frame.
@@ -855,10 +856,10 @@ class InterpreterStubExitFrameLayout : public CalledFromJitExitFrameLayout
     static ExitFrameType Type() { return ExitFrameType::InterpreterStub; }
 };
 
-class WasmExitFrameLayout : CalledFromJitExitFrameLayout
+class WasmGenericJitEntryFrameLayout : CalledFromJitExitFrameLayout
 {
   public:
-    static ExitFrameType Type() { return ExitFrameType::WasmJitEntry; }
+    static ExitFrameType Type() { return ExitFrameType::WasmGenericJitEntry; }
 };
 
 template<>
@@ -867,7 +868,7 @@ ExitFrameLayout::is<CalledFromJitExitFrameLayout>()
 {
     return is<InterpreterStubExitFrameLayout>() ||
            is<LazyLinkExitFrameLayout>() ||
-           is<WasmExitFrameLayout>();
+           is<WasmGenericJitEntryFrameLayout>();
 }
 
 template <>
@@ -879,6 +880,15 @@ ExitFrameLayout::as<CalledFromJitExitFrameLayout>()
     sp -= CalledFromJitExitFrameLayout::offsetOfExitFrame();
     return reinterpret_cast<CalledFromJitExitFrameLayout*>(sp);
 }
+
+class DirectWasmJitCallFrameLayout
+{
+  protected: // silence clang warning about unused private fields
+    ExitFooterFrame footer_;
+    ExitFrameLayout exit_;
+  public:
+    static ExitFrameType Type() { return ExitFrameType::DirectWasmJitCall; }
+};
 
 class ICStub;
 

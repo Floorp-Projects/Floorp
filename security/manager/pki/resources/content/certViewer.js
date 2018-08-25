@@ -59,7 +59,7 @@ function AddCertChain(node, chain) {
  */
 function AddUsage(usage) {
   let verifyInfoBox = document.getElementById("verify_info_box");
-  let text = document.createElement("textbox");
+  let text = document.createXULElement("textbox");
   text.setAttribute("value", usage);
   text.setAttribute("style", "margin: 2px 5px");
   text.setAttribute("readonly", "true");
@@ -177,7 +177,7 @@ function displayUsages(results) {
 }
 
 function addChildrenToTree(parentTree, label, value, addTwistie) {
-  let treeChild1 = document.createElement("treechildren");
+  let treeChild1 = document.createXULElement("treechildren");
   let treeElement = addTreeItemToTreeChild(treeChild1, label, value,
                                            addTwistie);
   parentTree.appendChild(treeChild1);
@@ -185,13 +185,13 @@ function addChildrenToTree(parentTree, label, value, addTwistie) {
 }
 
 function addTreeItemToTreeChild(treeChild, label, value, addTwistie) {
-  let treeElem1 = document.createElement("treeitem");
+  let treeElem1 = document.createXULElement("treeitem");
   if (addTwistie) {
     treeElem1.setAttribute("container", "true");
     treeElem1.setAttribute("open", "true");
   }
-  let treeRow = document.createElement("treerow");
-  let treeCell = document.createElement("treecell");
+  let treeRow = document.createXULElement("treerow");
+  let treeCell = document.createXULElement("treecell");
   treeCell.setAttribute("label", label);
   if (value) {
     treeCell.setAttribute("display", value);

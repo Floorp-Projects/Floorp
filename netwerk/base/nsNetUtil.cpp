@@ -47,7 +47,7 @@
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsIPropertyBag2.h"
 #include "nsIProtocolProxyService.h"
-#include "nsIRedirectChannelRegistrar.h"
+#include "mozilla/net/RedirectChannelRegistrar.h"
 #include "nsIRequestObserverProxy.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISensitiveInfoHiddenURI.h"
@@ -2757,11 +2757,9 @@ NS_LinkRedirectChannels(uint32_t channelId,
                         nsIParentChannel *parentChannel,
                         nsIChannel **_result)
 {
-  nsresult rv;
-
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
-      do_GetService("@mozilla.org/redirectchannelregistrar;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+      RedirectChannelRegistrar::GetOrCreate();
+  MOZ_ASSERT(registrar);
 
   return registrar->LinkChannels(channelId,
                                  parentChannel,

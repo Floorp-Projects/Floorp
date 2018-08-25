@@ -75,7 +75,7 @@ var gMenuBuilder = {
     menu.addEventListener("popuphidden", this);
 
     if (visible.length) {
-      const separator = menu.ownerDocument.createElement("menuseparator");
+      const separator = menu.ownerDocument.createXULElement("menuseparator");
       menu.insertBefore(separator, menu.firstElementChild);
       this.itemsToCleanUp.add(separator);
 
@@ -139,7 +139,7 @@ var gMenuBuilder = {
 
   appendTopLevelElement(rootElement) {
     if (this.itemsToCleanUp.size === 0) {
-      const separator = this.xulMenu.ownerDocument.createElement("menuseparator");
+      const separator = this.xulMenu.ownerDocument.createXULElement("menuseparator");
       this.itemsToCleanUp.add(separator);
       this.xulMenu.append(separator);
     }
@@ -183,18 +183,18 @@ var gMenuBuilder = {
     if (item.children.length > 0) {
       element = this.createMenuElement(doc, item);
     } else if (item.type == "separator") {
-      element = doc.createElement("menuseparator");
+      element = doc.createXULElement("menuseparator");
     } else {
-      element = doc.createElement("menuitem");
+      element = doc.createXULElement("menuitem");
     }
 
     return this.customizeElement(element, item, contextData);
   },
 
   createMenuElement(doc, item) {
-    let element = doc.createElement("menu");
+    let element = doc.createXULElement("menu");
     // Menu elements need to have a menupopup child for its menu items.
-    let menupopup = doc.createElement("menupopup");
+    let menupopup = doc.createXULElement("menupopup");
     element.appendChild(menupopup);
     return element;
   },

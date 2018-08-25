@@ -31,6 +31,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/TypedArrayObject.h"
+#include "wasm/WasmInstance.h"
 
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/JSScript-inl.h"
@@ -40,6 +41,7 @@
 
 using mozilla::ArrayLength;
 using mozilla::AssertedCast;
+using mozilla::Maybe;
 
 using JS::DoubleNaNValue;
 using JS::TrackedOutcome;
@@ -57,7 +59,11 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return InliningStatus_NotInlined;
     }
 
-    if (!target->hasJitInfo() || target->jitInfo()->type() != JSJitInfo::InlinableNative) {
+    bool isWasmCall = target->isWasmOptimized();
+    if (!isWasmCall &&
+        (!target->hasJitInfo() ||
+        target->jitInfo()->type() != JSJitInfo::InlinableNative))
+    {
         // Reaching here means we tried to inline a native for which there is no
         // Ion specialization.
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoSpecialization);
@@ -80,6 +86,9 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         if (shouldAbortOnPreliminaryGroups(callInfo.getArg(i)))
             return InliningStatus_NotInlined;
     }
+
+    if (isWasmCall)
+        return inlineWasmCall(callInfo, target);
 
     switch (InlinableNative inlNative = target->jitInfo()->inlinableNative) {
       // Array natives.
@@ -3769,6 +3778,83 @@ IonBuilder::inlineConstructTypedObject(CallInfo& callInfo, TypeDescr* descr)
                                                 templateObject->group()->initialHeap(constraints()));
     current->add(ins);
     current->push(ins);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult
+IonBuilder::inlineWasmCall(CallInfo& callInfo, JSFunction* target)
+{
+    MOZ_ASSERT(target->isWasmOptimized());
+    MOZ_ASSERT(target->realm() == script()->realm());
+
+    // Don't inline wasm constructors.
+    if (callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    wasm::Instance& inst = wasm::ExportedFunctionToInstance(target);
+    uint32_t funcIndex = inst.code().getFuncIndex(target);
+
+    auto bestTier = inst.code().bestTier();
+    const wasm::FuncExport& funcExport = inst.metadata(bestTier).lookupFuncExport(funcIndex);
+    const wasm::FuncType& sig = funcExport.funcType();
+
+    // Check that the function doesn't take or return non-compatible JS
+    // argument types before adding nodes to the MIR graph, otherwise they'd be
+    // dead code.
+    if (sig.hasI64ArgOrRet() || sig.temporarilyUnsupportedAnyRef())
+        return InliningStatus_NotInlined;
+
+    // If there are too many arguments, don't inline (we won't be able to store
+    // the arguments in the LIR node).
+    static constexpr size_t MaxNumInlinedArgs = 8;
+    static_assert(MaxNumInlinedArgs <= MaxNumLInstructionOperands,
+                  "inlined arguments can all be LIR operands");
+    if (sig.args().length() > MaxNumInlinedArgs)
+        return InliningStatus_NotInlined;
+
+    auto* call = MIonToWasmCall::New(alloc(), inst.object(), funcExport);
+    if (!call)
+        return abort(AbortReason::Alloc);
+
+    Maybe<MDefinition*> undefined;
+    for (size_t i = 0; i < sig.args().length(); i++) {
+        if (!alloc().ensureBallast())
+            return abort(AbortReason::Alloc);
+
+        // Add undefined if an argument is missing.
+        if (i >= callInfo.argc() && !undefined)
+            undefined.emplace(constant(UndefinedValue()));
+
+        MDefinition* arg = i >= callInfo.argc() ? *undefined : callInfo.getArg(i);
+
+        MInstruction* conversion = nullptr;
+        switch (sig.args()[i].code()) {
+          case wasm::ValType::I32:
+            conversion = MTruncateToInt32::New(alloc(), arg);
+            break;
+          case wasm::ValType::F32:
+            conversion = MToFloat32::New(alloc(), arg);
+            break;
+          case wasm::ValType::F64:
+            conversion = MToDouble::New(alloc(), arg);
+            break;
+          case wasm::ValType::I64:
+          case wasm::ValType::AnyRef:
+          case wasm::ValType::Ref:
+            MOZ_CRASH("impossible per above check");
+        }
+
+        current->add(conversion);
+        call->initArg(i, conversion);
+    }
+
+    current->push(call);
+    current->add(call);
+
+    callInfo.setImplicitlyUsedUnchecked();
 
     return InliningStatus_Inlined;
 }

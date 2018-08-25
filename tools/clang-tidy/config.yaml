@@ -11,7 +11,29 @@ platforms:
 clang_checkers:
   - name: -*
     publish: !!bool no
+  - name: bugprone-argument-comment
+    publish: !!bool yes
+  - name: bugprone-assert-side-effect
+    publish: !!bool yes
+  - name: bugprone-bool-pointer-implicit-conversion
+    publish: !!bool yes
+  - name: bugprone-forward-declaration-namespace
+    publish: !!bool yes
+  - name: bugprone-macro-repeated-side-effects
+    publish: !!bool yes
+  - name: bugprone-string-constructor
+    publish: !!bool yes
+  - name: bugprone-string-integer-assignment
+    publish: !!bool yes
   - name: bugprone-suspicious-memset-usage
+    publish: !!bool yes
+  - name: bugprone-suspicious-missing-comma
+    publish: !!bool yes
+  - name: bugprone-suspicious-semicolon
+    publish: !!bool yes
+  - name: bugprone-swapped-arguments
+    publish: !!bool yes
+  - name: bugprone-unused-raii
     publish: !!bool yes
   - name: clang-analyzer-cplusplus.NewDelete
     publish: !!bool yes
@@ -42,33 +64,7 @@ clang_checkers:
     publish: !!bool yes
   - name: clang-analyzer-unix.cstring.NullArg
     publish: !!bool yes
-  - name: misc-argument-comment
-    # Name with clang tidy 6.0
-    # - name: bugprone-argument-comment
-    publish: !!bool yes
-  - name: misc-assert-side-effect
-    publish: !!bool yes
-  - name: misc-bool-pointer-implicit-conversion
-    publish: !!bool yes
-  - name: misc-forward-declaration-namespace
-    # Name with clang tidy 6.0. We are currently using 5.0
-    # - name: bugprone-forward-declaration-namespace
-    publish: !!bool yes
-  - name: misc-macro-repeated-side-effects
-    publish: !!bool yes
-  - name: misc-string-constructor
-    publish: !!bool yes
-  - name: misc-string-integer-assignment
-    publish: !!bool yes
-  - name: misc-suspicious-missing-comma
-    publish: !!bool yes
-  - name: misc-suspicious-semicolon
-    publish: !!bool yes
-  - name: misc-swapped-arguments
-    publish: !!bool yes
   - name: misc-unused-alias-decls
-    publish: !!bool yes
-  - name: misc-unused-raii
     publish: !!bool yes
   - name: misc-unused-using-decls
     publish: !!bool yes

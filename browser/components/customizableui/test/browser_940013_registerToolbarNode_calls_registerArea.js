@@ -12,7 +12,7 @@ registerCleanupFunction(cleanup);
 add_task(async function() {
   ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
   let btn = createDummyXULButton(kButtonId);
-  let toolbar = document.createElement("toolbar");
+  let toolbar = document.createXULElement("toolbar");
   toolbar.id = kToolbarId;
   toolbar.setAttribute("customizable", true);
   toolbar.setAttribute("defaultset", kButtonId);
@@ -34,7 +34,7 @@ add_task(async function() {
 add_task(async function() {
   ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
   let btn = createDummyXULButton(kButtonId);
-  let toolbar = document.createElement("toolbar");
+  let toolbar = document.createXULElement("toolbar");
   toolbar.id = kToolbarId;
   toolbar.setAttribute("customizable", true);
   gNavToolbox.appendChild(toolbar);

@@ -222,17 +222,6 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
     return nullptr;
   }
 
-  if (RefPtr<ServiceWorkerGlobalScope> serviceWorkerGlobal =
-        do_QueryObject(global)) {
-    WorkerPrivate* wp;
-    if (serviceWorkerGlobal->Registration() == this &&
-        (wp = GetCurrentThreadWorkerPrivate()) &&
-        wp->IsLoadingWorkerScript()) {
-      outer->MaybeResolve(*this);
-      return outer.forget();
-    }
-  }
-
   RefPtr<ServiceWorkerRegistration> self = this;
 
   mPendingUpdatePromises += 1;

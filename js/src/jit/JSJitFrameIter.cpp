@@ -32,14 +32,15 @@ JSJitFrameIter::JSJitFrameIter(const JitActivation* activation)
     }
 }
 
-JSJitFrameIter::JSJitFrameIter(const JitActivation* activation, uint8_t* fp)
+JSJitFrameIter::JSJitFrameIter(const JitActivation* activation, FrameType frameType, uint8_t* fp)
   : current_(fp),
-    type_(JitFrame_JSJitToWasm),
+    type_(frameType),
     returnAddressToFp_(nullptr),
     frameSize_(0),
     cachedSafepointIndex_(nullptr),
     activation_(activation)
 {
+    MOZ_ASSERT(type_ == JitFrame_JSJitToWasm || type_ == JitFrame_Exit);
     MOZ_ASSERT(!activation_->bailoutData());
     MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
 }

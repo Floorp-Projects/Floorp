@@ -723,7 +723,7 @@ var DownloadsView = {
     DownloadsCommon.log("Adding a new DownloadsViewItem to the downloads list.",
                         "aNewest =", aNewest);
 
-    let element = document.createElement("richlistitem");
+    let element = document.createXULElement("richlistitem");
     let viewItem = new DownloadsViewItem(download, element);
     this._visibleViewItems.set(download, viewItem);
     this._itemsForElements.set(element, viewItem);

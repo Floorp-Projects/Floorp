@@ -829,6 +829,10 @@ ArrayEnumerator.prototype = {
   _index: 0,
   _contents: [],
 
+  [Symbol.iterator]() {
+    return this._contents.values();
+  },
+
   hasMoreElements: function ArrayEnumerator_hasMoreElements() {
     return this._index < this._contents.length;
   },

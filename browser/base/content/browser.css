@@ -597,13 +597,19 @@ html|input.urlbar-scheme[textoverflow="start"]:not([focused]):valid {
   visibility: visible;
 }
 
-/* Fade out URL on overflow */
+/* Fade out URL on overflow
+   This mask may be overriden when a Contextual Feature Recommendation is shown,
+   see browser/themes/shared/urlbar-searchbar.inc.css for details */
 html|input.urlbar-input[textoverflow="end"]:not([focused]) {
   mask-image: linear-gradient(to left, transparent, black 3ch);
 }
 
 html|input.urlbar-input[textoverflow="start"]:not([focused]) {
   mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
+}
+
+html|input.urlbar-input:not([focused]) {
+  mask-repeat: no-repeat;
 }
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */

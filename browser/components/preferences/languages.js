@@ -92,7 +92,7 @@ var gLanguagesDialog = {
       let localeCode = locale.code;
       if (locale.isVisible &&
           (!(localeCode in this._acceptLanguages) || !this._acceptLanguages[localeCode])) {
-        var menuitem = document.createElement("menuitem");
+        var menuitem = document.createXULElement("menuitem");
         menuitem.id = localeCode;
         document.l10n.setAttributes(menuitem, "languages-code-format", {
           locale: locale.name,
@@ -133,8 +133,8 @@ var gLanguagesDialog = {
       return;
     var languages = preference.value.toLowerCase().split(/\s*,\s*/);
     for (var i = 0; i < languages.length; ++i) {
-      var listitem = document.createElement("richlistitem");
-      var label = document.createElement("label");
+      var listitem = document.createXULElement("richlistitem");
+      var label = document.createXULElement("label");
       listitem.appendChild(label);
       listitem.id = languages[i];
       if (languages[i] == this._selectedItemID)

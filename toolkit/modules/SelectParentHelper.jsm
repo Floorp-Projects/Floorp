@@ -342,7 +342,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
 
   for (let option of options) {
     let isOptGroup = (option.tagName == "OPTGROUP");
-    let item = element.ownerDocument.createElement(isOptGroup ? "menucaption" : "menuitem");
+    let item = element.ownerDocument.createXULElement(isOptGroup ? "menucaption" : "menuitem");
 
     item.setAttribute("label", option.textContent);
     item.style.direction = option.textDirection;
@@ -449,7 +449,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
       && element.childElementCount > SEARCH_MINIMUM_ELEMENTS) {
 
     // Add a search text field as the first element of the dropdown
-    let searchbox = element.ownerDocument.createElement("textbox");
+    let searchbox = element.ownerDocument.createXULElement("textbox");
     searchbox.setAttribute("type", "search");
     searchbox.addEventListener("input", onSearchInput);
     searchbox.addEventListener("focus", onSearchFocus);

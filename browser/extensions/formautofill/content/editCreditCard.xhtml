@@ -18,17 +18,20 @@
 </head>
 <body dir="&locale.dir;">
   <form id="form" class="editCreditCardForm" autocomplete="off">
+    <!--
+        The <span class="label-text" …/> needs to be after the form field in the same element in
+        order to get proper label styling with :focus and :moz-ui-invalid.
+      -->
     <label>
-      <span data-localization="cardNumber" class="label-text"/>
       <span id="invalidCardNumberString" hidden="hidden" data-localization="invalidCardNumber"></span>
       <input id="cc-number" type="text" required="required" minlength="9" pattern="[- 0-9]+"/>
+      <span data-localization="cardNumber" class="label-text"/>
     </label>
     <label>
-      <span data-localization="nameOnCard" class="label-text"/>
       <input id="cc-name" type="text" required="required"/>
+      <span data-localization="nameOnCard" class="label-text"/>
     </label>
     <label>
-      <span data-localization="cardExpiresMonth" class="label-text"/>
       <select id="cc-exp-month">
         <option/>
         <option value="1">01</option>
@@ -44,17 +47,18 @@
         <option value="11">11</option>
         <option value="12">12</option>
       </select>
+      <span data-localization="cardExpiresMonth" class="label-text"/>
     </label>
     <label>
-      <span data-localization="cardExpiresYear" class="label-text"/>
       <select id="cc-exp-year">
         <option/>
       </select>
+      <span data-localization="cardExpiresYear" class="label-text"/>
     </label>
     <label class="billingAddressRow">
-      <span data-localization="billingAddress" class="label-text"/>
       <select id="billingAddressGUID">
       </select>
+      <span data-localization="billingAddress" class="label-text"/>
     </label>
   </form>
   <div id="controls-container">

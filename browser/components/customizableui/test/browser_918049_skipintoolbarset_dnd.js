@@ -10,7 +10,7 @@ var skippedItem;
 // Attempting to drag a skipintoolbarset item should work.
 add_task(async function() {
   navbar = document.getElementById("nav-bar");
-  skippedItem = document.createElement("toolbarbutton");
+  skippedItem = document.createXULElement("toolbarbutton");
   skippedItem.id = "test-skipintoolbarset-item";
   skippedItem.setAttribute("label", "Test");
   skippedItem.setAttribute("skipintoolbarset", "true");

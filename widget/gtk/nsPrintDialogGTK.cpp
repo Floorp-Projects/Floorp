@@ -662,6 +662,7 @@ nsFlatpakPrintPortal::nsFlatpakPrintPortal(nsPrintSettingsGTK* aPrintSettings):
   mPrintAndPageSettings(aPrintSettings),
   mProxy(nullptr),
   mLoop(nullptr),
+  mResponseSignalId(0),
   mParentWindow(nullptr)
 {
 }
@@ -789,8 +790,10 @@ nsFlatpakPrintPortal::PreparePrint(GtkWindow* aWindow, const char* aWindowHandle
   if (strcmp (aWindowHandleStr, handle) != 0)
   {
     aWindowHandleStr = g_strdup (handle);
-    g_dbus_connection_signal_unsubscribe(
-        g_dbus_proxy_get_connection(G_DBUS_PROXY(mProxy)), mResponseSignalId);
+    if (mResponseSignalId) {
+      g_dbus_connection_signal_unsubscribe(
+          g_dbus_proxy_get_connection(G_DBUS_PROXY(mProxy)), mResponseSignalId);
+    }
   }
   mResponseSignalId =
     g_dbus_connection_signal_subscribe(
@@ -976,8 +979,13 @@ nsFlatpakPrintPortal::Observe(nsISupports *aObject, const char * aTopic,
 }
 
 nsFlatpakPrintPortal::~nsFlatpakPrintPortal() {
-  if (mProxy)
+  if (mProxy) {
+    if (mResponseSignalId) {
+      g_dbus_connection_signal_unsubscribe(
+          g_dbus_proxy_get_connection(G_DBUS_PROXY(mProxy)), mResponseSignalId);
+    }
     g_object_unref(mProxy);
+  }
   if (mLoop)
     g_main_loop_quit(mLoop);
 }

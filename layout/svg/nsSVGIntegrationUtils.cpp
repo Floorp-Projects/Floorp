@@ -809,13 +809,13 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
 
   // Paint clip-path-basic-shape onto ctx
   gfxContextAutoSaveRestore basicShapeSR;
-  if (maskUsage.shouldApplyBasicShape) {
+  if (maskUsage.shouldApplyBasicShapeOrPath) {
     matSR.SetContext(&ctx);
 
     MoveContextOriginToUserSpace(firstFrame, aParams);
 
     basicShapeSR.SetContext(&ctx);
-    nsCSSClipPathInstance::ApplyBasicShapeClip(ctx, frame);
+    nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(ctx, frame);
     if (!maskUsage.shouldGenerateMaskLayer) {
       // Only have basic-shape clip-path effect. Fill clipped region by
       // opaque white.
@@ -997,17 +997,17 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so
    * we can just do normal painting and get it clipped appropriately.
    */
-  if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShape) {
+  if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShapeOrPath) {
     gfxContextMatrixAutoSaveRestore matSR(&context);
 
     MoveContextOriginToUserSpace(firstFrame, aParams);
 
     MOZ_ASSERT(!maskUsage.shouldApplyClipPath ||
-               !maskUsage.shouldApplyBasicShape);
+               !maskUsage.shouldApplyBasicShapeOrPath);
     if (maskUsage.shouldApplyClipPath) {
       clipPathFrame->ApplyClipPath(context, frame, cssPxToDevPxMatrix);
     } else {
-      nsCSSClipPathInstance::ApplyBasicShapeClip(context, frame);
+      nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(context, frame);
     }
   }
 
@@ -1036,7 +1036,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
         maskUsage.shouldGenerateClipMaskLayer) {
       overlayColor.g = 1.0f; // green represents clip-path:<clip-source>.
     }
-    if (maskUsage.shouldApplyBasicShape) {
+    if (maskUsage.shouldApplyBasicShapeOrPath) {
       overlayColor.b = 1.0f; // blue represents
                              // clip-path:<basic-shape>||<geometry-box>.
     }
@@ -1045,7 +1045,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
     context.Fill();
   }
 
-  if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShape) {
+  if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShapeOrPath) {
     context.PopClip();
   }
 

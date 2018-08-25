@@ -12,7 +12,6 @@
 #include "nsWidgetsCID.h"
 
 #include "nsChildView.h"
-#include "nsCocoaWindow.h"
 #include "nsAppShell.h"
 #include "nsAppShellSingleton.h"
 #include "nsFilePicker.h"
@@ -65,7 +64,6 @@ nsClipboardConstructor(nsISupports *aOuter, REFNSIID aIID,
   return inst->QueryInterface(aIID, aResult);
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCocoaWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsColorPicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
@@ -113,7 +111,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
 } // namespace widget
 } // namespace mozilla
 
-NS_DEFINE_NAMED_CID(NS_POPUP_CID);
 NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_COLORPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
@@ -141,7 +138,6 @@ NS_DEFINE_NAMED_CID(NS_MACSYSTEMSTATUSBAR_CID);
 NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
-  { &kNS_POPUP_CID, false, NULL, nsCocoaWindowConstructor },
   { &kNS_FILEPICKER_CID, false, NULL, nsFilePickerConstructor,
     mozilla::Module::MAIN_PROCESS_ONLY },
   { &kNS_COLORPICKER_CID, false, NULL, nsColorPickerConstructor,
@@ -178,7 +174,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
 };
 
 static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
-  { "@mozilla.org/widgets/popup/mac;1", &kNS_POPUP_CID },
   { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID,
     mozilla::Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/colorpicker;1", &kNS_COLORPICKER_CID,

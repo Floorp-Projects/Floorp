@@ -36,6 +36,10 @@
 
 namespace js {
 
+namespace wasm {
+class FuncExport;
+}
+
 class StringObject;
 
 namespace jit {
@@ -13964,6 +13968,47 @@ class MUnknownValue : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(UnknownValue)
     TRIVIAL_NEW_WRAPPERS
+};
+
+class MIonToWasmCall final :
+    public MVariadicInstruction,
+    public NoTypePolicy::Data
+{
+    CompilerGCPointer<WasmInstanceObject*> instanceObj_;
+    const wasm::FuncExport& funcExport_;
+
+    MIonToWasmCall(WasmInstanceObject* instanceObj, MIRType resultType,
+                   const wasm::FuncExport& funcExport)
+      : MVariadicInstruction(classOpcode),
+        instanceObj_(instanceObj),
+        funcExport_(funcExport)
+    {
+        setResultType(resultType);
+    }
+
+  public:
+    INSTRUCTION_HEADER(IonToWasmCall);
+
+    static MIonToWasmCall* New(TempAllocator& alloc, WasmInstanceObject* instanceObj,
+                               const wasm::FuncExport& funcExport);
+
+    void initArg(size_t i, MDefinition* arg) {
+        initOperand(i, arg);
+    }
+
+    WasmInstanceObject* instanceObject() const {
+        return instanceObj_;
+    }
+    const wasm::FuncExport& funcExport() const {
+        return funcExport_;
+    }
+    bool possiblyCalls() const override {
+        return true;
+    }
+    bool appendRoots(MRootList& roots) const override;
+#ifdef DEBUG
+    bool isConsistentFloat32Use(MUse* use) const override;
+#endif
 };
 
 #undef INSTRUCTION_HEADER

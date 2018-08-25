@@ -266,13 +266,13 @@ var gPermissionManager = {
   },
 
   _createPermissionListItem(permission) {
-    let richlistitem = document.createElement("richlistitem");
+    let richlistitem = document.createXULElement("richlistitem");
     richlistitem.setAttribute("origin", permission.origin);
-    let row = document.createElement("hbox");
+    let row = document.createXULElement("hbox");
     row.setAttribute("flex", "1");
 
-    let hbox = document.createElement("hbox");
-    let website = document.createElement("label");
+    let hbox = document.createXULElement("hbox");
+    let website = document.createXULElement("label");
     website.setAttribute("value", permission.origin);
     hbox.setAttribute("width", "0");
     hbox.setAttribute("class", "website-name");
@@ -281,8 +281,8 @@ var gPermissionManager = {
     row.appendChild(hbox);
 
     if (!this._hideStatusColumn) {
-      hbox = document.createElement("hbox");
-      let capability = document.createElement("label");
+      hbox = document.createXULElement("hbox");
+      let capability = document.createXULElement("label");
       capability.setAttribute("class", "website-capability-value");
       capability.setAttribute("value", permission.capability);
       hbox.setAttribute("width", "0");

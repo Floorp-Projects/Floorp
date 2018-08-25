@@ -1866,6 +1866,15 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   if (IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType))
     return false;
 
+  if (IsWidgetScrollbarPart(aWidgetType)) {
+    ComputedStyle* cs = nsLayoutUtils::StyleForScrollbar(aFrame);
+    if (cs->StyleUI()->HasCustomScrollbars() ||
+        // We cannot handle thin scrollbar on GTK+ widget directly as well.
+        cs->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin) {
+      return false;
+    }
+  }
+
   if (aWidgetType == StyleAppearance::MenulistButton &&
       StaticPrefs::layout_css_webkit_appearance_enabled()) {
     aWidgetType = StyleAppearance::Menulist;

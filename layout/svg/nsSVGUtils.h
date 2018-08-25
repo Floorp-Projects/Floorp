@@ -606,19 +606,22 @@ public:
     bool shouldGenerateMaskLayer;
     bool shouldGenerateClipMaskLayer;
     bool shouldApplyClipPath;
-    bool shouldApplyBasicShape;
+    bool shouldApplyBasicShapeOrPath;
     float opacity;
 
     MaskUsage()
-      : shouldGenerateMaskLayer(false), shouldGenerateClipMaskLayer(false),
-        shouldApplyClipPath(false), shouldApplyBasicShape(false), opacity(0.0)
+      : shouldGenerateMaskLayer(false)
+      , shouldGenerateClipMaskLayer(false)
+      , shouldApplyClipPath(false)
+      , shouldApplyBasicShapeOrPath(false)
+      , opacity(0.0)
     { }
 
     bool shouldDoSomething() {
       return shouldGenerateMaskLayer
           || shouldGenerateClipMaskLayer
           || shouldApplyClipPath
-          || shouldApplyBasicShape
+          || shouldApplyBasicShapeOrPath
           || opacity != 1.0;
     }
   };

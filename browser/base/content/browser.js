@@ -1141,19 +1141,6 @@ function RedirectLoad({ target: browser, data }) {
   }
 }
 
-if (document.documentElement.getAttribute("windowtype") == "navigator:browser") {
-  window.addEventListener("MozBeforeInitialXULLayout", () => {
-    gBrowserInit.onBeforeInitialXULLayout();
-  }, { once: true });
-  // The listener of DOMContentLoaded must be set on window, rather than
-  // document, because the window can go away before the event is fired.
-  // In that case, we don't want to initialize anything, otherwise we
-  // may be leaking things because they will never be destroyed after.
-  window.addEventListener("DOMContentLoaded", () => {
-    gBrowserInit.onDOMContentLoaded();
-  }, { once: true });
-}
-
 let _resolveDelayedStartup;
 var delayedStartupPromise = new Promise(resolve => {
   _resolveDelayedStartup = resolve;
@@ -5455,7 +5442,13 @@ nsBrowserAccess.prototype = {
         }
         // Pass all params to openDialog to ensure that "url" isn't passed through
         // loadOneOrMoreURIs, which splits based on "|"
-        newWindow = openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", features, url, null, null, null);
+        try {
+          newWindow = openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", features,
+                      // window.arguments
+                      url, null, null, null, null, null, null, null, aTriggeringPrincipal);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
         // If we have an opener, that means that the caller is expecting access

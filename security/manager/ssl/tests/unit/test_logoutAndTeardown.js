@@ -138,7 +138,6 @@ function getStartedServer(cert) {
                     .createInstance(Ci.nsITLSServerSocket);
   tlsServer.init(-1, true, -1);
   tlsServer.serverCert = cert;
-  tlsServer.setSessionCache(false);
   tlsServer.setSessionTickets(false);
   tlsServer.asyncListen(new ServerSocketListener());
   return tlsServer;

@@ -178,7 +178,8 @@ public:
   BuildPath(const nsTArray<StylePathCommand>& aPath,
             PathBuilder* aBuilder,
             uint8_t aCapStyle,
-            Float aStrokeWidth);
+            Float aStrokeWidth,
+            float aZoomFactor = 1.0);
 
   const_iterator begin() const { return mData.Elements(); }
   const_iterator end() const { return mData.Elements() + mData.Length(); }

@@ -26,6 +26,7 @@
 #include "jit/RangeAnalysis.h"
 #include "js/Conversions.h"
 #include "util/Text.h"
+#include "wasm/WasmCode.h"
 
 #include "builtin/Boolean-inl.h"
 
@@ -6305,3 +6306,33 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator& alloc, CompilerConstraintList*
     *pobj = AddGroupGuard(alloc, current, *pobj, excluded, /* bailOnEquality = */ true);
     return false;
 }
+
+MIonToWasmCall*
+MIonToWasmCall::New(TempAllocator& alloc, WasmInstanceObject* instanceObj,
+                    const wasm::FuncExport& funcExport)
+{
+    wasm::ExprType retType = funcExport.funcType().ret();
+
+    MIRType resultType = retType.code() == wasm::ExprType::Void
+                       ? MIRType::Value
+                       : ToMIRType(retType);
+
+    auto* ins = new(alloc) MIonToWasmCall(instanceObj, resultType, funcExport);
+    if (!ins->init(alloc, funcExport.funcType().args().length()))
+        return nullptr;
+    return ins;
+}
+
+bool
+MIonToWasmCall::appendRoots(MRootList& roots) const
+{
+    return roots.append(instanceObj_);
+}
+
+#ifdef DEBUG
+bool
+MIonToWasmCall::isConsistentFloat32Use(MUse* use) const
+{
+    return funcExport_.funcType().args()[use->index()].code() == wasm::ValType::F32;
+}
+#endif

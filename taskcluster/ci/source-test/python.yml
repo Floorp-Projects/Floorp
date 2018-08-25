@@ -74,8 +74,10 @@ mochitest-harness:
     fetches:
         build:
             - target.tar.bz2
-            - target.common.tests.tar.gz>tests
-            - target.mochitest.tests.tar.gz>tests
+            - artifact: target.common.tests.tar.gz
+              dest: tests
+            - artifact: target.mochitest.tests.tar.gz
+              dest: tests
     when:
         files-changed:
             - 'testing/mochitest/**'
@@ -187,8 +189,10 @@ reftest-harness:
     fetches:
         build:
             - target.tar.bz2
-            - target.common.tests.tar.gz>tests
-            - target.reftest.tests.tar.gz>tests
+            - artifact: target.common.tests.tar.gz
+              dest: tests
+            - artifact: target.reftest.tests.tar.gz
+              dest: tests
     when:
         files-changed:
             - 'layout/tools/reftest/**'

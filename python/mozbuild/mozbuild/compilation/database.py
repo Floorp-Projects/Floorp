@@ -126,6 +126,12 @@ class CompileDBBackend(CommonBackend):
             json.dump(db, jsonout, indent=0)
 
     def _process_unified_sources(self, obj):
+        if not obj.have_unified_mapping:
+            for f in list(sorted(obj.files)):
+                self._build_db_line(obj.objdir, obj.relsrcdir, obj.config, f,
+                                    obj.canonical_suffix)
+            return
+
         # For unified sources, only include the unified source file.
         # Note that unified sources are never used for host sources.
         for f in obj.unified_source_mapping:

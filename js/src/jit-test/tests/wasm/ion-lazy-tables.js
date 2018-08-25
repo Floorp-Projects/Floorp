@@ -12,6 +12,8 @@ const EXCEPTION_ITER = TRIGGER + 5;
 
 const SLOW_ENTRY_STACK = ['', '!>', '0,!>', '!>', ''];
 const FAST_ENTRY_STACK = ['', '>', '0,>', '>', ''];
+const INLINED_CALL_STACK = ['', '0', ''];
+const EXPECTED_STACKS = [SLOW_ENTRY_STACK, FAST_ENTRY_STACK, INLINED_CALL_STACK];
 
 function main() {
     var { table } = wasmEvalText(`(module
@@ -27,7 +29,7 @@ function main() {
     for (var i = 0; i < ITER; i++) {
         startProfiling();
         assertEq(table.get(0)(i, i+1), i*2+1);
-        assertEqPreciseStacks(endProfiling(), [FAST_ENTRY_STACK, SLOW_ENTRY_STACK]);
+        assertEqPreciseStacks(endProfiling(), EXPECTED_STACKS);
     }
 }
 
@@ -50,13 +52,13 @@ function withTier2() {
         i++;
         startProfiling();
         assertEq(table.get(0)(i, i+1), i*2+1);
-        assertEqPreciseStacks(endProfiling(), [FAST_ENTRY_STACK, SLOW_ENTRY_STACK]);
+        assertEqPreciseStacks(endProfiling(), EXPECTED_STACKS);
     } while (!wasmHasTier2CompilationCompleted(module));
 
     for (i = 0; i < ITER; i++) {
         startProfiling();
         assertEq(table.get(0)(i, i+1), i*2+1);
-        assertEqPreciseStacks(endProfiling(), [FAST_ENTRY_STACK, SLOW_ENTRY_STACK]);
+        assertEqPreciseStacks(endProfiling(), EXPECTED_STACKS);
     }
 
     setJitCompilerOption('wasm.delay-tier2', 0);

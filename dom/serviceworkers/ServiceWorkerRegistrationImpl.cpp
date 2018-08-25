@@ -826,8 +826,13 @@ ServiceWorkerRegistrationWorkerThread::Update(ServiceWorkerRegistrationCallback&
     return;
   }
 
-  // This is ensured by the binding layer.
-  MOZ_ASSERT(!workerRef->Private()->IsLoadingWorkerScript());
+  // Avoid infinite update loops by ignoring update() calls during top
+  // level script evaluation.  See:
+  // https://github.com/slightlyoff/ServiceWorker/issues/800
+  if (workerRef->Private()->IsLoadingWorkerScript()) {
+    aSuccessCB(mDescriptor);
+    return;
+  }
 
   auto promise = MakeRefPtr<ServiceWorkerRegistrationPromise::Private>(__func__);
   auto holder =

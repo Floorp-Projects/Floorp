@@ -569,7 +569,7 @@ function prompt(aBrowser, aRequest) {
         addDeviceToList(menupopup,
                         stringBundle.getString("getUserMedia.pick" + typeName + ".label"),
                         "-1");
-        menupopup.appendChild(doc.createElement("menuseparator"));
+        menupopup.appendChild(doc.createXULElement("menuseparator"));
 
         // Build the list of 'devices'.
         let monitorIndex = 1;
@@ -638,7 +638,7 @@ function prompt(aBrowser, aRequest) {
             let baseURL =
               Services.urlFormatter.formatURLPref("app.support.baseURL");
 
-            let learnMore = chromeWin.document.createElement("label");
+            let learnMore = chromeWin.document.createXULElement("label");
             learnMore.className = "text-link";
             learnMore.setAttribute("href", baseURL + "screenshare-safety");
             learnMore.textContent = learnMoreText;
@@ -685,7 +685,7 @@ function prompt(aBrowser, aRequest) {
       }
 
       function addDeviceToList(menupopup, deviceName, deviceIndex, type) {
-        let menuitem = doc.createElement("menuitem");
+        let menuitem = doc.createXULElement("menuitem");
         menuitem.setAttribute("value", deviceIndex);
         menuitem.setAttribute("label", deviceName);
         menuitem.setAttribute("tooltiptext", deviceName);
@@ -910,14 +910,14 @@ function getGlobalIndicator() {
       if (activeStreams.length == 1) {
         let stream = activeStreams[0];
 
-        let menuitem = this.ownerDocument.createElement("menuitem");
+        let menuitem = this.ownerDocument.createXULElement("menuitem");
         let labelId = "webrtcIndicator.sharing" + type + "With.menuitem";
         let label = stream.browser.contentTitle || stream.uri;
         menuitem.setAttribute("label", bundle.formatStringFromName(labelId, [label], 1));
         menuitem.setAttribute("disabled", "true");
         this.appendChild(menuitem);
 
-        menuitem = this.ownerDocument.createElement("menuitem");
+        menuitem = this.ownerDocument.createXULElement("menuitem");
         menuitem.setAttribute("label",
                               bundle.GetStringFromName("webrtcIndicator.controlSharing.menuitem"));
         menuitem.stream = stream;
@@ -928,7 +928,7 @@ function getGlobalIndicator() {
       }
 
       // We show a different menu when there are several active streams.
-      let menuitem = this.ownerDocument.createElement("menuitem");
+      let menuitem = this.ownerDocument.createXULElement("menuitem");
       let labelId = "webrtcIndicator.sharing" + type + "WithNTabs.menuitem";
       let count = activeStreams.length;
       let label = PluralForm.get(count, bundle.GetStringFromName(labelId)).replace("#1", count);
@@ -937,7 +937,7 @@ function getGlobalIndicator() {
       this.appendChild(menuitem);
 
       for (let stream of activeStreams) {
-        let item = this.ownerDocument.createElement("menuitem");
+        let item = this.ownerDocument.createXULElement("menuitem");
         labelId = "webrtcIndicator.controlSharingOn.menuitem";
         label = stream.browser.contentTitle || stream.uri;
         item.setAttribute("label", bundle.formatStringFromName(labelId, [label], 1));
@@ -957,7 +957,7 @@ function getGlobalIndicator() {
     _setIndicatorState(aName, aState) {
       let field = "_" + aName.toLowerCase();
       if (aState && !this[field]) {
-        let menu = this._hiddenDoc.createElement("menu");
+        let menu = this._hiddenDoc.createXULElement("menu");
         menu.setAttribute("id", "webRTC-sharing" + aName + "-menu");
 
         // The CSS will only be applied if the menu is actually inserted in the DOM.
@@ -965,7 +965,7 @@ function getGlobalIndicator() {
 
         this._statusBar.addItem(menu);
 
-        let menupopup = this._hiddenDoc.createElement("menupopup");
+        let menupopup = this._hiddenDoc.createXULElement("menupopup");
         menupopup.setAttribute("type", aName);
         menupopup.addEventListener("popupshowing", this._popupShowing);
         menupopup.addEventListener("popuphiding", this._popupHiding);
@@ -1011,7 +1011,7 @@ function onTabSharingMenuPopupShowing(e) {
     let bundle = doc.defaultView.gNavigatorBundle;
 
     let origin = getHostOrExtensionName(null, streamInfo.uri);
-    let menuitem = doc.createElement("menuitem");
+    let menuitem = doc.createXULElement("menuitem");
     menuitem.setAttribute("label", bundle.getFormattedString(stringName, [origin]));
     menuitem.stream = streamInfo;
     menuitem.addEventListener("command", onTabSharingMenuPopupCommand);
@@ -1033,7 +1033,7 @@ function showOrCreateMenuForWindow(aWindow) {
   let menu = document.getElementById("tabSharingMenu");
   if (!menu) {
     let stringBundle = aWindow.gNavigatorBundle;
-    menu = document.createElement("menu");
+    menu = document.createXULElement("menu");
     menu.id = "tabSharingMenu";
     let labelStringId = "getUserMedia.sharingMenu.label";
     menu.setAttribute("label", stringBundle.getString(labelStringId));
@@ -1042,7 +1042,7 @@ function showOrCreateMenuForWindow(aWindow) {
     if (AppConstants.platform == "macosx") {
       container = document.getElementById("windowPopup");
       insertionPoint = document.getElementById("sep-window-list");
-      let separator = document.createElement("menuseparator");
+      let separator = document.createXULElement("menuseparator");
       separator.id = "tabSharingSeparator";
       container.insertBefore(separator, insertionPoint);
     } else {
@@ -1051,7 +1051,7 @@ function showOrCreateMenuForWindow(aWindow) {
       container = document.getElementById("main-menubar");
       insertionPoint = document.getElementById("helpMenu");
     }
-    let popup = document.createElement("menupopup");
+    let popup = document.createXULElement("menupopup");
     popup.id = "tabSharingMenuPopup";
     popup.addEventListener("popupshowing", onTabSharingMenuPopupShowing);
     popup.addEventListener("popuphiding", onTabSharingMenuPopupHiding);

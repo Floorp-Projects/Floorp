@@ -3,7 +3,7 @@
 
 "use strict";
 
-/* exported Cr, CC, NetUtil, defer, errorCount, initTestDebuggerServer,
+/* exported Cr, CC, NetUtil, errorCount, initTestDebuggerServer,
             writeTestTempFile, socket_transport, local_transport, really_long
 */
 
@@ -12,7 +12,6 @@ var CC = Components.Constructor;
 const { require } =
   ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
-const promise = require("promise");
 const defer = require("devtools/shared/defer");
 
 const Services = require("Services");
@@ -148,7 +147,7 @@ var socket_transport = async function() {
 };
 
 function local_transport() {
-  return promise.resolve(DebuggerServer.connectPipe());
+  return Promise.resolve(DebuggerServer.connectPipe());
 }
 
 /** * Sample Data ***/

@@ -2350,18 +2350,21 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
   }
 
   // First check for table selection mode.  If so, hand off to table editor.
-  RefPtr<Element> cell;
-  nsresult rv =
-    HTMLEditorRef().GetFirstSelectedCell(nullptr, getter_AddRefs(cell));
-  if (NS_SUCCEEDED(rv) && cell) {
-    rv = HTMLEditorRef().DeleteTableCellContents();
+  ErrorResult error;
+  RefPtr<Element> cellElement =
+    HTMLEditorRef().GetFirstSelectedTableCellElement(SelectionRef(),
+                                                     error);
+  if (cellElement) {
+    error.SuppressException();
+    nsresult rv = HTMLEditorRef().DeleteTableCellContents();
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     *aHandled = true;
     return rv;
   }
-  cell = nullptr;
+  nsresult rv = error.StealNSResult();
+  cellElement = nullptr;
 
   // origCollapsed is used later to determine whether we should join blocks. We
   // don't really care about bCollapsed because it will be modified by
@@ -2443,7 +2446,8 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
     if (!visNode) {
       // Can't find anything to delete!
       *aCancel = true;
-      // XXX This is the result of HTMLEditorRef().GetFirstSelectedCell().
+      // XXX This is the result of
+      //     HTMLEditorRef().GetFirstSelectedTableCellElement().
       //     The value could be both an error and NS_OK.
       return rv;
     }

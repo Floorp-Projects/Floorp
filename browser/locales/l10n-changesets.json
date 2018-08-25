@@ -783,6 +783,7 @@
             "macosx64-devedition"
         ],
         "revision": "7f61ec50b1c3"
+        "revision": "default"
     },
     "ka": {
         "platforms": [
@@ -1427,7 +1428,6 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "7673a6208f62"
     },
     "xh": {
         "platforms": [

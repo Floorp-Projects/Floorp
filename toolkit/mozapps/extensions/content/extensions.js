@@ -1446,7 +1446,7 @@ function shouldShowVersionNumber(aAddon) {
 }
 
 function createItem(aObj, aIsInstall) {
-  let item = document.createElement("richlistitem");
+  let item = document.createXULElement("richlistitem");
 
   item.setAttribute("class", "addon addon-view");
   item.setAttribute("name", aObj.name);
@@ -1704,7 +1704,7 @@ var gCategories = {
     if (document.getElementById("category-" + aId))
       return;
 
-    var category = document.createElement("richlistitem");
+    var category = document.createXULElement("richlistitem");
     category.setAttribute("id", "category-" + aId);
     category.setAttribute("value", aView);
     category.setAttribute("class", "category");
@@ -3019,10 +3019,10 @@ var gDetailView = {
       stack.remove();
     }
 
-    stack = document.createElement("stack");
+    stack = document.createXULElement("stack");
     stack.setAttribute("id", containerId);
 
-    let browser = document.createElement("browser");
+    let browser = document.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
     browser.setAttribute("id", "addon-options");

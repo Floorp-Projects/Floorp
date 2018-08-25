@@ -37,7 +37,6 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="gBrowserInit.onLoad()" onunload="gBrowserInit.onUnload()" onclose="return WindowIsClosing();"
         title="&mainWindow.title;"
         title_normal="&mainWindow.title;"
 #ifdef XP_MACOSX
@@ -79,6 +78,23 @@ xmlns="http://www.w3.org/1999/xhtml"
 >
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser.js", this);
+
+  window.onload = gBrowserInit.onLoad.bind(gBrowserInit);
+  window.onunload = gBrowserInit.onUnload.bind(gBrowserInit);
+  window.onclose = WindowIsClosing;
+#ifdef BROWSER_XHTML
+  window.addEventListener("DOMContentLoaded",
+    gBrowserInit.onBeforeInitialXULLayout.bind(gBrowserInit), { once: true });
+#else
+  window.addEventListener("MozBeforeInitialXULLayout",
+    gBrowserInit.onBeforeInitialXULLayout.bind(gBrowserInit), { once: true });
+#endif
+  // The listener of DOMContentLoaded must be set on window, rather than
+  // document, because the window can go away before the event is fired.
+  // In that case, we don't want to initialize anything, otherwise we
+  // may be leaking things because they will never be destroyed after.
+  window.addEventListener("DOMContentLoaded",
+    gBrowserInit.onDOMContentLoaded.bind(gBrowserInit), { once: true });
 </script>
 
 # All sets except for popupsets (commands, keys, and stringbundles)
@@ -906,6 +922,14 @@ xmlns="http://www.w3.org/1999/xhtml"
                 <label id="extension" class="urlbar-display urlbar-display-extension" value="&urlbar.extension.label;"/>
               </box>
               <hbox id="page-action-buttons" context="pageActionContextMenu">
+                <hbox id="contextual-feature-recommendation" role="button" hidden="true">
+                  <hbox id="cfr-label-container">
+                    <label id="cfr-label"/>
+                  </hbox>
+                  <image id="cfr-button"
+                         class="urlbar-icon urlbar-page-action"
+                         role="presentation"/>
+                </hbox>
                 <hbox id="userContext-icons" hidden="true">
                   <label id="userContext-label"/>
                   <image id="userContext-indicator"/>

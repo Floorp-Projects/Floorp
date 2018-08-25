@@ -167,9 +167,15 @@ class TestCapabilityMatching(MarionetteTestCase):
                 self.marionette.start_session({"setWindowRect": True})
 
     def test_timeouts(self):
-        timeouts = {u"implicit": 123, u"pageLoad": 456, u"script": 789}
-        caps = {"timeouts": timeouts}
-        self.marionette.start_session(caps)
+        for value in ["", 2.5, {}, []]:
+            print("  type {}".format(type(value)))
+            with self.assertRaises(SessionNotCreatedException):
+                self.marionette.start_session({"timeouts": {"pageLoad": value}})
+
+        self.delete_session()
+
+        timeouts = {"implicit": 0, "pageLoad": 2.0, "script": 2**53 - 1}
+        self.marionette.start_session({"timeouts": timeouts})
         self.assertIn("timeouts", self.marionette.session_capabilities)
         self.assertDictEqual(self.marionette.session_capabilities["timeouts"], timeouts)
         self.assertDictEqual(self.marionette._send_message("WebDriver:GetTimeouts"), timeouts)

@@ -137,7 +137,7 @@ function setSort(aOrganizerWin, aTree, aUnsortFirst, aShouldFail, aCol, aDir) {
  */
 function testInvalid(aOrganizerWin, aPlaceContentTree) {
   // Invalid column should fail by throwing an exception.
-  let bogusCol = document.createElement("treecol");
+  let bogusCol = document.createXULElement("treecol");
   bogusCol.setAttribute("anonid", "bogusColumn");
   setSort(aOrganizerWin, aPlaceContentTree, true, true, bogusCol, "ascending");
 
