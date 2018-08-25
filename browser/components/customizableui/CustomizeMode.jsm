@@ -816,7 +816,7 @@ CustomizeMode.prototype = {
       wrapper = aNode.parentNode;
       aPlace = wrapper.getAttribute("place");
     } else {
-      wrapper = this.document.createElement("toolbarpaletteitem");
+      wrapper = this.document.createXULElement("toolbarpaletteitem");
       // "place" is used to show the label when it's sitting in the palette.
       wrapper.setAttribute("place", aPlace);
     }
@@ -1361,7 +1361,7 @@ CustomizeMode.prototype = {
     let doc = this.window.document;
 
     function buildToolbarButton(aTheme) {
-      let tbb = doc.createElement("toolbarbutton");
+      let tbb = doc.createXULElement("toolbarbutton");
       tbb.theme = aTheme;
       tbb.setAttribute("label", aTheme.name);
       tbb.setAttribute("image", aTheme.iconURL);
@@ -2650,7 +2650,7 @@ CustomizeMode.prototype = {
     document.addEventListener("keyup", onkeyup);
 
     for (let id of ["player1", "player2", "ball", "score", "lives"]) {
-      let el = document.createElement("box");
+      let el = document.createXULElement("box");
       el.id = "wp-" + id;
       elements[el.id] = elements.arena.appendChild(el);
     }
