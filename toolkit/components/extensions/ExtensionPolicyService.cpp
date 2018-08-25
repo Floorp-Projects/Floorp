@@ -356,7 +356,9 @@ ExtensionPolicyService::ExecuteContentScripts(JSContext* aCx, nsPIDOMWindowInner
   AutoTArray<RefPtr<Promise>, 8> promises;
 
   for (auto& script : aScripts) {
-    promises.AppendElement(ExecuteContentScript(aWindow, *script));
+    if (RefPtr<Promise> promise = ExecuteContentScript(aWindow, *script)) {
+      promises.AppendElement(std::move(promise));
+    }
   }
 
   RefPtr<Promise> promise = Promise::All(aCx, promises, IgnoreErrors());
