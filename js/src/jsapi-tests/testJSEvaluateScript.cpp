@@ -2,6 +2,7 @@
  * vim: set ts=8 sts=4 et sw=4 tw=99:
  */
 
+#include "js/SourceBufferHolder.h"
 #include "jsapi-tests/tests.h"
 
 using mozilla::ArrayLength;

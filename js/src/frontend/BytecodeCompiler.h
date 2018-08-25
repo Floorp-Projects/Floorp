@@ -32,7 +32,7 @@ class ParseNode;
 JSScript*
 CompileGlobalScript(JSContext* cx, LifoAlloc& alloc, ScopeKind scopeKind,
                     const ReadOnlyCompileOptions& options,
-                    SourceBufferHolder& srcBuf,
+                    JS::SourceBufferHolder& srcBuf,
                     ScriptSourceObject** sourceObjectOut = nullptr);
 
 #if defined(JS_BUILD_BINAST)
@@ -49,16 +49,16 @@ JSScript*
 CompileEvalScript(JSContext* cx, LifoAlloc& alloc,
                   HandleObject scopeChain, HandleScope enclosingScope,
                   const ReadOnlyCompileOptions& options,
-                  SourceBufferHolder& srcBuf,
+                  JS::SourceBufferHolder& srcBuf,
                   ScriptSourceObject** sourceObjectOut = nullptr);
 
 JSScript*
 CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-              SourceBufferHolder& srcBuf);
+              JS::SourceBufferHolder& srcBuf);
 
 JSScript*
 CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-              SourceBufferHolder& srcBuf, LifoAlloc& alloc,
+              JS::SourceBufferHolder& srcBuf, LifoAlloc& alloc,
               ScriptSourceObject** sourceObjectOut = nullptr);
 
 MOZ_MUST_USE bool
