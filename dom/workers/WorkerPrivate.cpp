@@ -6,6 +6,7 @@
 
 #include "WorkerPrivate.h"
 
+#include "js/CompilationAndEvaluation.h"
 #include "js/LocaleSensitive.h"
 #include "js/MemoryMetrics.h"
 #include "js/SourceBufferHolder.h"

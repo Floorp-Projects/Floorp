@@ -29,6 +29,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsIScriptSecurityManager.h"
 #include "xpcpublic.h"
+#include "js/CompilationAndEvaluation.h"
 #include "js/JSON.h"
 #include "js/SourceBufferHolder.h"
 #include "mozilla/ClearOnShutdown.h"

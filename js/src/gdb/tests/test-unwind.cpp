@@ -3,6 +3,7 @@
 
 #include "jit/JitOptions.h" // js::jit::JitOptions
 #include "js/CallArgs.h" // JS::CallArgs, JS::CallArgsFromVp
+#include "js/CompilationAndEvaluation.h" // JS::Evaluate
 #include "js/CompileOptions.h" // JS::CompileOptions
 #include "js/RootingAPI.h" // JS::Rooted
 #include "js/Value.h" // JS::Value
