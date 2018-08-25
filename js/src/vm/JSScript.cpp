@@ -36,6 +36,7 @@
 #include "jit/Ion.h"
 #include "jit/IonCode.h"
 #include "jit/JitRealm.h"
+#include "js/CompileOptions.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
 #include "js/SourceBufferHolder.h"
@@ -75,6 +76,8 @@ using namespace js::frontend;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 
+using JS::CompileOptions;
+using JS::ReadOnlyCompileOptions;
 using JS::SourceBufferHolder;
 
 template<XDRMode mode>

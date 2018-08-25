@@ -28,6 +28,7 @@ using mozilla::RangedPtr;
 
 using JS::AutoCheckCannotGC;
 using JS::AutoStableStringChars;
+using JS::CompileOptions;
 using JS::SourceBufferHolder;
 
 // We should be able to assert this for *any* fp->environmentChain().

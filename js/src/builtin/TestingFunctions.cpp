@@ -42,6 +42,7 @@
 #include "jit/InlinableNatives.h"
 #include "jit/JitRealm.h"
 #include "js/AutoByteString.h"
+#include "js/CompileOptions.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
 #include "js/LocaleSensitive.h"
@@ -90,6 +91,7 @@ using mozilla::ArrayLength;
 using mozilla::Maybe;
 
 using JS::AutoStableStringChars;
+using JS::CompileOptions;
 using JS::SourceBufferHolder;
 
 // If fuzzingSafe is set, remove functionality that could cause problems with
