@@ -6,13 +6,15 @@
 
 html {
   height: 100%;
+  box-sizing: border-box;
 }
 
 body {
   height: 100%;
   margin: 0;
   font: message-box;
-  color: #333333;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
   -moz-user-select: none;
 }
 

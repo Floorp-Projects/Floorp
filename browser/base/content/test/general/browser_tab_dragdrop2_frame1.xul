@@ -81,12 +81,12 @@ function popupShown(event)
 
 function createPanel(attrs)
 {
-  var panel = document.createElement("panel");
+  var panel = document.createXULElement("panel");
   for (var a in attrs) {
     panel.setAttribute(a, attrs[a]);
   }
 
-  var button = document.createElement("button");
+  var button = document.createXULElement("button");
   panel.appendChild(button);
   button.label = "OK";
   button.width = 120;

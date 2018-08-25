@@ -254,6 +254,15 @@ class InstructionDataMap
     }
 };
 
+inline void
+TakeJitRegisters(bool isProfiling, AllocatableRegisterSet* set)
+{
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
+    if (isProfiling)
+        set->take(AnyRegister(FramePointer));
+#endif
+}
+
 // Common superclass for register allocators.
 class RegisterAllocator
 {
@@ -280,14 +289,10 @@ class RegisterAllocator
         graph(graph),
         allRegisters_(RegisterSet::All())
     {
-        if (mir->compilingWasm()) {
+        if (mir->compilingWasm())
             takeWasmRegisters(allRegisters_);
-        } else {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
-            if (mir->instrumentedProfiling())
-                allRegisters_.take(AnyRegister(FramePointer));
-#endif
-        }
+        else
+            TakeJitRegisters(mir->instrumentedProfiling(), &allRegisters_);
     }
 
     MOZ_MUST_USE bool init();

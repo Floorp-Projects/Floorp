@@ -8,6 +8,12 @@
   margin: 0;
 }
 
+#name-container,
+:root[subdialog] form label,
+:root[subdialog] form > p {
+  margin: 0 0 0.5em !important;
+}
+
 #given-name-container,
 #additional-name-container,
 #address-level1-container,
@@ -22,13 +28,73 @@
   flex: 0 1 50%;
 }
 
+
+/* Begin name field rules */
+
+#name-container input {
+  /* Override the default @size="20" on <input>, which acts like a min-width, not
+   * allowing the fields to shrink with flexbox as small as they need to to match
+   * the other rows. This is noticeable on narrow viewports e.g. in the
+   * PaymentRequest dialog on Linux due to the larger font-size. */
+  width: 0;
+}
+
+/* When there is focus within any of the name fields, the border of the inputs
+ * should be the focused color, except for inner ones which get overriden below. */
+#name-container:focus-within input {
+  border-color: var(--in-content-border-focus);
+}
+
+/* Invalid name fields should show the error outline instead of the focus border */
+#name-container:focus-within input:-moz-ui-invalid {
+  border-color: transparent;
+}
+
 #given-name-container,
 #additional-name-container,
 #family-name-container {
   display: flex;
+  /* Remove the bottom margin from the name containers so that the outer
+     #name-container provides the margin on the outside */
+  margin-bottom: 0 !important;
   margin-left: 0;
   margin-right: 0;
 }
+
+/* The name fields are placed adjacent to each other.
+   Remove the border-radius on adjacent fields. */
+#given-name:dir(ltr),
+#family-name:dir(rtl) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right-width: 0;
+}
+
+#given-name:dir(rtl),
+#family-name:dir(ltr) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left-width: 0;
+}
+
+#additional-name {
+  border-radius: 0;
+  /* This provides the inner separators between the fields and should never
+   * change to the focused color. */
+  border-left-color: var(--in-content-box-border-color) !important;
+  border-right-color: var(--in-content-box-border-color) !important;
+}
+
+/* Since the name fields are adjacent, there isn't room for the -moz-ui-invalid
+   box-shadow so raise invalid name fields and their labels above the siblings
+   so the shadow is shown around all 4 sides. */
+#name-container input:-moz-ui-invalid,
+#name-container input:-moz-ui-invalid ~ .label-text {
+  z-index: 1;
+}
+
+/* End name field rules */
+
 
 #name-container,
 #street-address-container,

@@ -253,6 +253,9 @@ FilePicker.prototype = {
       QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
       mFiles: files,
       mIndex: 0,
+      [Symbol.iterator]() {
+        return this.mFiles.values();
+      },
       hasMoreElements: function() {
         return (this.mIndex < this.mFiles.length);
       },

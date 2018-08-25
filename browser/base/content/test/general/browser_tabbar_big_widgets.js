@@ -8,7 +8,7 @@ function test() {
   registerCleanupFunction(cleanup);
   let titlebar = document.getElementById("titlebar");
   let originalHeight = titlebar.getBoundingClientRect().height;
-  let button = document.createElement("toolbarbutton");
+  let button = document.createXULElement("toolbarbutton");
   button.id = kButtonId;
   button.setAttribute("style", "min-height: 100px");
   gNavToolbox.palette.appendChild(button);

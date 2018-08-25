@@ -307,10 +307,15 @@ class TupBackend(CommonBackend):
             args += ['-j%d' % jobs]
         else:
             args += ['-j%d' % multiprocessing.cpu_count()]
+
+        tiers = output.monitor.tiers
+        tiers.set_tiers(('tup',))
+        tiers.begin_tier('tup')
         status = config.run_process(args=args,
                                   line_handler=output.on_line,
                                   ensure_exit_code=False,
                                   append_env=self._get_mozconfig_env(config))
+        tiers.finish_tier('tup')
         if not status and self.environment.substs.get('MOZ_AUTOMATION'):
             src = mozpath.join(self.environment.topsrcdir, '.tup')
             dst = os.environ['UPLOAD_PATH']

@@ -139,7 +139,6 @@ function startServer(cert, minServerVersion, maxServerVersion) {
   tlsServer.init(-1, true, -1);
   tlsServer.serverCert = cert;
   tlsServer.setVersionRange(minServerVersion, maxServerVersion);
-  tlsServer.setSessionCache(false);
   tlsServer.setSessionTickets(false);
   tlsServer.asyncListen(new ServerSocketListener());
   return tlsServer;

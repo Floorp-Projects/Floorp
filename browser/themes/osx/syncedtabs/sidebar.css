@@ -11,20 +11,11 @@
   -moz-font-smoothing-background-color: -moz-mac-source-list;
 }
 
-.item {
-  color: -moz-DialogText;
-}
-
 .item-title-container {
   box-sizing: border-box;
   align-items: center;
   height: 24px;
   font-size: 12px;
-}
-
-.item.selected > .item-title-container {
-  color: HighlightText;
-  font-weight: bold;
 }
 
 .item.selected > .item-title-container {
@@ -37,14 +28,10 @@
   -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
 }
 
-@media (-moz-mac-yosemite-theme) {
+@media (-moz-mac-yosemite-theme: 0) {
   .item.selected > .item-title-container {
-    color: -moz-dialogtext;
-    font-weight: 500;
-  }
-
-  .item.selected:focus > .item-title-container {
     color: #fff;
+    font-weight: bold;
   }
 }
 

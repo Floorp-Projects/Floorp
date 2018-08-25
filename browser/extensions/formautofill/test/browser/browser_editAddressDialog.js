@@ -208,3 +208,89 @@ add_task(async function test_saveAddressDE() {
   }
   await removeAllRecords();
 });
+
+add_task(async function test_combined_name_fields() {
+  await testDialog(EDIT_ADDRESS_DIALOG_URL, async win => {
+    let doc = win.document;
+    let givenNameField = doc.querySelector("#given-name");
+    let addtlNameField = doc.querySelector("#additional-name");
+    let familyNameField = doc.querySelector("#family-name");
+
+    function getComputedPropertyValue(field, property) {
+      return win.getComputedStyle(field).getPropertyValue(property);
+    }
+    function checkNameComputedPropertiesMatch(field, property, value, checkFn = is) {
+      checkFn(getComputedPropertyValue(field, property), value,
+              `Check ${field.id}'s ${property} is ${value}`);
+    }
+    function checkNameFieldBorders(borderColorUnfocused, borderColorFocused) {
+      info("checking the perimeter colors");
+      checkNameComputedPropertiesMatch(givenNameField, "border-top-color", borderColorFocused);
+      checkNameComputedPropertiesMatch(addtlNameField, "border-top-color", borderColorFocused);
+      checkNameComputedPropertiesMatch(familyNameField, "border-top-color", borderColorFocused);
+      checkNameComputedPropertiesMatch(familyNameField, "border-right-color", borderColorFocused);
+      checkNameComputedPropertiesMatch(givenNameField, "border-bottom-color", borderColorFocused);
+      checkNameComputedPropertiesMatch(addtlNameField, "border-bottom-color", borderColorFocused);
+      checkNameComputedPropertiesMatch(familyNameField, "border-bottom-color", borderColorFocused);
+      checkNameComputedPropertiesMatch(givenNameField, "border-left-color", borderColorFocused);
+
+      info("checking the internal borders");
+      checkNameComputedPropertiesMatch(givenNameField, "border-right-width", "0px");
+      checkNameComputedPropertiesMatch(addtlNameField, "border-left-width", "2px");
+      checkNameComputedPropertiesMatch(addtlNameField, "border-left-color", borderColorFocused, isnot);
+      checkNameComputedPropertiesMatch(addtlNameField, "border-right-width", "2px");
+      checkNameComputedPropertiesMatch(addtlNameField, "border-right-color", borderColorFocused, isnot);
+      checkNameComputedPropertiesMatch(familyNameField, "border-left-width", "0px");
+    }
+
+    // Set these variables since the test doesn't run from a subdialog and
+    // therefore doesn't get the additional common CSS files injected.
+    let borderColor = "rgb(0, 255, 0)";
+    let borderColorFocused = "rgb(0, 0, 255)";
+    doc.body.style.setProperty("--in-content-box-border-color", borderColor);
+    doc.body.style.setProperty("--in-content-border-focus", borderColorFocused);
+
+    givenNameField.focus();
+    checkNameFieldBorders(borderColor, borderColorFocused);
+
+    addtlNameField.focus();
+    checkNameFieldBorders(borderColor, borderColorFocused);
+
+    familyNameField.focus();
+    checkNameFieldBorders(borderColor, borderColorFocused);
+
+    info("unfocusing the name fields");
+    let cancelButton = doc.querySelector("#cancel");
+    cancelButton.focus();
+    borderColor = getComputedPropertyValue(givenNameField, "border-top-color");
+    isnot(borderColor, borderColorFocused, "Check that the border color is different");
+    checkNameFieldBorders(borderColor, borderColor);
+
+    cancelButton.click();
+  });
+});
+
+add_task(async function test_combined_name_fields_error() {
+  await testDialog(EDIT_ADDRESS_DIALOG_URL, async win => {
+    let doc = win.document;
+    let givenNameField = doc.querySelector("#given-name");
+    info("mark the given name field as invalid");
+    givenNameField.value = "";
+    givenNameField.focus();
+    ok(givenNameField.matches(":-moz-ui-invalid"), "Check field is visually invalid");
+
+    let givenNameLabel = doc.querySelector("#given-name-container .label-text");
+    // Override pointer-events so that we can use elementFromPoint to know if
+    // the label text is visible.
+    givenNameLabel.style.pointerEvents = "auto";
+    let givenNameLabelRect = givenNameLabel.getBoundingClientRect();
+    // Get the center of the label
+    let el = doc.elementFromPoint(givenNameLabelRect.left + givenNameLabelRect.width / 2,
+                                  givenNameLabelRect.top + givenNameLabelRect.height / 2);
+
+    is(el, givenNameLabel, "Check that the label text is visible in the error state");
+    is(win.getComputedStyle(givenNameField).getPropertyValue("border-top-color"),
+       "rgba(0, 0, 0, 0)", "Border should be transparent so that only the error outline shows");
+    doc.querySelector("#cancel").click();
+  });
+});

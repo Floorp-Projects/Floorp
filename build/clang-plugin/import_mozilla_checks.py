@@ -114,7 +114,7 @@ def do_import(mozilla_path, clang_tidy_path):
                               'LINK_LIBS', 'clangTidyMozillaModule')
     add_item_to_cmake_section(os.path.join(module_path, '..', 'tool',
                                            'CMakeLists.txt'),
-                              'target_link_libraries', 'clangTidyMozillaModule')
+                              'PRIVATE', 'clangTidyMozillaModule')
     with open(os.path.join(module_path, '..', 'CMakeLists.txt'), 'a') as f:
         f.write('add_subdirectory(%s)\n' % module)
     with open(os.path.join(module_path, '..', 'tool', 'ClangTidyMain.cpp'), 'a') as f:

@@ -77,15 +77,15 @@ AppPicker.prototype =
             continue;
           }
 
-          var item = document.createElement("richlistitem");
+          var item = document.createXULElement("richlistitem");
           item.handlerApp = file;
           list.appendChild(item);
 
-          var image = document.createElement("image");
+          var image = document.createXULElement("image");
           image.setAttribute("src", this.getFileIconURL(file.executable));
           item.appendChild(image);
 
-          var label = document.createElement("label");
+          var label = document.createXULElement("label");
           label.setAttribute("value", this.getFileDisplayName(file.executable));
           item.appendChild(label);
 

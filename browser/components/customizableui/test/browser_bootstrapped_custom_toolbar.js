@@ -10,7 +10,7 @@ const kTestBarID = "testBar";
 const kWidgetID = "characterencoding-button";
 
 function createTestBar(aLegacy) {
-  let testBar = document.createElement("toolbar");
+  let testBar = document.createXULElement("toolbar");
   testBar.id = kTestBarID;
   testBar.setAttribute("customizable", "true");
   CustomizableUI.registerArea(kTestBarID, {

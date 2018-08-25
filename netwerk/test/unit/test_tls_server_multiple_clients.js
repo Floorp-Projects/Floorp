@@ -66,7 +66,6 @@ function startServer(cert) {
     onStopListening: function() {}
   };
 
-  tlsServer.setSessionCache(true);
   tlsServer.setSessionTickets(false);
 
   tlsServer.asyncListen(listener);

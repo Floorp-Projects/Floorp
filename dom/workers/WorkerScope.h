@@ -302,9 +302,6 @@ public:
   IMPL_EVENT_HANDLER(connect)
 };
 
-#define NS_DOM_SERVICEWORKERGLOBALSCOPE_IID \
-  {0x552bfa7e, 0x0dd5, 0x4e94, {0xa0, 0x43, 0xff, 0x34, 0x6b, 0x6e, 0x04, 0x46}}
-
 class ServiceWorkerGlobalScope final : public WorkerGlobalScope
 {
   const nsString mScope;
@@ -314,7 +311,6 @@ class ServiceWorkerGlobalScope final : public WorkerGlobalScope
   ~ServiceWorkerGlobalScope();
 
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_SERVICEWORKERGLOBALSCOPE_IID)
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerGlobalScope,
                                            WorkerGlobalScope)
@@ -358,8 +354,6 @@ public:
 
   void EventListenerAdded(nsAtom* aType) override;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorkerGlobalScope, NS_DOM_SERVICEWORKERGLOBALSCOPE_IID)
 
 class WorkerDebuggerGlobalScope final : public DOMEventTargetHelper,
                                         public nsIGlobalObject

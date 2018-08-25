@@ -2,7 +2,7 @@
 // addon-scope paths here.
 var ifr;
 function test() {
-  ifr = document.createElement('iframe');
+  ifr = document.createXULElement('iframe');
   document.getElementById('main-window').appendChild(ifr);
   is(ifr.contentDocument.nodePrincipal.origin, "[System Principal]");
   ifr.contentDocument.open();

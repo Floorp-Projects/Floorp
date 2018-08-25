@@ -13,8 +13,8 @@ let gSiteDataRemoveSelected = {
     let list = document.getElementById("removalList");
     let fragment = document.createDocumentFragment();
     for (let host of hosts) {
-      let listItem = document.createElement("richlistitem");
-      let label = document.createElement("label");
+      let listItem = document.createXULElement("richlistitem");
+      let label = document.createXULElement("label");
       label.setAttribute("value", host);
       listItem.appendChild(label);
       fragment.appendChild(listItem);

@@ -110,7 +110,6 @@ import org.mozilla.gecko.icons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.media.PictureInPictureController;
-import org.mozilla.gecko.media.VideoPlayer;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mma.MmaDelegate;
@@ -232,7 +231,6 @@ public class BrowserApp extends GeckoApp
     public ViewGroup mBrowserChrome;
     public ViewFlipper mActionBarFlipper;
     public ActionModeCompatView mActionBar;
-    private VideoPlayer mVideoPlayer;
     private PictureInPictureController mPipController;
     private BrowserToolbar mBrowserToolbar;
     private View doorhangerOverlay;
@@ -374,10 +372,6 @@ public class BrowserApp extends GeckoApp
         Log.d(LOGTAG, "BrowserApp.onTabChanged: " + tab.getId() + ": " + msg);
         switch (msg) {
             case SELECTED:
-                if (mVideoPlayer.isPlaying()) {
-                    mVideoPlayer.stop();
-                }
-
                 if (Tabs.getInstance().isSelectedTab(tab) && mDynamicToolbar.isEnabled()) {
                     final VisibilityTransition transition = (tab.getShouldShowToolbarWithoutAnimationOnFirstSelection()) ?
                             VisibilityTransition.IMMEDIATE : VisibilityTransition.ANIMATE;
@@ -653,16 +647,6 @@ public class BrowserApp extends GeckoApp
         mBrowserChrome = (ViewGroup) findViewById(R.id.browser_chrome);
         mActionBarFlipper = (ViewFlipper) findViewById(R.id.browser_actionbar);
         mActionBar = (ActionModeCompatView) findViewById(R.id.actionbar);
-
-        mVideoPlayer = (VideoPlayer) findViewById(R.id.video_player);
-        mVideoPlayer.setFullScreenListener(new VideoPlayer.FullScreenListener() {
-            @Override
-            public void onFullScreenChanged(boolean fullScreen) {
-                mVideoPlayer.setFullScreen(fullScreen);
-                setFullScreen(fullScreen);
-            }
-        });
-
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
         mBrowserToolbar.setTouchEventInterceptor(new TouchEventInterceptor() {
             @Override
@@ -781,7 +765,6 @@ public class BrowserApp extends GeckoApp
             "Menu:Open",
             "LightweightTheme:Update",
             "Tab:Added",
-            "Video:Play",
             "CharEncoding:Data",
             "CharEncoding:State",
             "Settings:Show",
@@ -971,17 +954,6 @@ public class BrowserApp extends GeckoApp
         }
 
         if (hideFirstrunPager(TelemetryContract.Method.BACK)) {
-            return;
-        }
-
-        if (mVideoPlayer.isFullScreen()) {
-            mVideoPlayer.setFullScreen(false);
-            setFullScreen(false);
-            return;
-        }
-
-        if (mVideoPlayer.isPlaying()) {
-            mVideoPlayer.stop();
             return;
         }
 
@@ -1516,7 +1488,6 @@ public class BrowserApp extends GeckoApp
             "Menu:Open",
             "LightweightTheme:Update",
             "Tab:Added",
-            "Video:Play",
             "CharEncoding:Data",
             "CharEncoding:State",
             "Settings:Show",
@@ -1797,14 +1768,6 @@ public class BrowserApp extends GeckoApp
                     // mode exit) in lieu of the tab that we're going to open and select.
                     mTargetTabForEditingMode = null;
                     mBrowserToolbar.cancelEdit();
-                }
-                break;
-
-            case "Video:Play":
-                if (SwitchBoard.isInExperiment(this, Experiments.HLS_VIDEO_PLAYBACK)) {
-                    mVideoPlayer.start(Uri.parse(message.getString("uri")));
-                    Telemetry.sendUIEvent(TelemetryContract.Event.SHOW,
-                                          TelemetryContract.Method.CONTENT, "playhls");
                 }
                 break;
 

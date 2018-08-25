@@ -506,6 +506,15 @@ xul|textbox[focused] {
   border-color: var(--in-content-border-focus);
 }
 
+/* Don't show the field error outlines and focus borders at the same time */
+html|input[type="email"]:-moz-ui-invalid:focus,
+html|input[type="tel"]:-moz-ui-invalid:focus,
+html|input[type="text"]:-moz-ui-invalid:focus,
+html|textarea:-moz-ui-invalid:focus,
+xul|textbox[focused] {
+  border-color: transparent;
+}
+
 html|input[type="email"]:disabled,
 html|input[type="tel"]:disabled,
 html|input[type="text"]:disabled,

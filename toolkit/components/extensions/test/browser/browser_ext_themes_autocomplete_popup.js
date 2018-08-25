@@ -239,7 +239,7 @@ add_task(async function test_popup_url() {
                "darktext should not be set!");
 
   // Calculate what GrayText should be. May differ between platforms.
-  let span = document.createElement("span");
+  let span = document.createXULElement("span");
   span.style.color = "GrayText";
   let GRAY_TEXT = window.getComputedStyle(span).color;
 

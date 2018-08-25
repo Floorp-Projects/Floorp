@@ -26,6 +26,13 @@
    ...
 }
 {
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793549.)
+   Memcheck:Leak
+   ...
+   fun:SaveWordToEnv
+   ...
+}
+{
    PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 944133.)
    Memcheck:Leak
    ...

@@ -203,7 +203,7 @@ nsNSSComponent::nsNSSComponent()
   , mLoadableRootsLoadedResult(NS_ERROR_FAILURE)
   , mMutex("nsNSSComponent.mMutex")
   , mMitmDetecionEnabled(false)
-  , mNonIdempotentCleanupMustHappen(false)
+  , mLoadLoadableRootsTaskDispatched(false)
 {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::ctor\n"));
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -1945,17 +1945,6 @@ nsNSSComponent::InitializeNSS()
       MOZ_ALWAYS_SUCCEEDS(handle->TrustLoaded3rdPartyRoots());
     }));
 
-    // TLSServerSocket may be run with the session cache enabled. It is
-    // necessary to call this once before that can happen. This specifies a
-    // maximum of 1000 cache entries (the default number of cache entries is
-    // 10000, which seems a little excessive as there probably won't be that
-    // many clients connecting to any TLSServerSockets the browser runs.) Note
-    // that this must occur before any calls to SSL_ClearSessionCache (otherwise
-    // memory will leak).
-    if (SSL_ConfigServerSessionIDCache(1000, 0, 0, nullptr) != SECSuccess) {
-      return NS_ERROR_FAILURE;
-    }
-
     // Set dynamic options from prefs. This has to run after
     // SSL_ConfigServerSessionIDCache.
     setValidationOptions(true, lock);
@@ -1967,7 +1956,7 @@ nsNSSComponent::InitializeNSS()
       return rv;
     }
 
-    mNonIdempotentCleanupMustHappen = true;
+    mLoadLoadableRootsTaskDispatched = true;
     return NS_OK;
   }
 }
@@ -1986,16 +1975,9 @@ nsNSSComponent::ShutdownNSS()
   // it to fail to find the roots it is expecting. However, if initialization
   // failed, we won't have dispatched the load loadable roots background task.
   // In that case, we don't want to block on an event that will never happen.
-  if (mNonIdempotentCleanupMustHappen) {
+  if (mLoadLoadableRootsTaskDispatched) {
     Unused << BlockUntilLoadableRootsLoaded();
-
-    // We can only run SSL_ShutdownServerSessionIDCache once (the rest of
-    // these operations are idempotent).
-    SSL_ClearSessionCache();
-    // TLSServerSocket may be run with the session cache enabled. This ensures
-    // those resources are cleaned up.
-    Unused << SSL_ShutdownServerSessionIDCache();
-    mNonIdempotentCleanupMustHappen = false;
+    mLoadLoadableRootsTaskDispatched = false;
   }
 
   ::mozilla::psm::UnloadLoadableRoots();

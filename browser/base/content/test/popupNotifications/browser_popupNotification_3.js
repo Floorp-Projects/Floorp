@@ -197,7 +197,7 @@ var tests = [
       await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       let originalTab = gBrowser.selectedTab;
       let bgTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
-      let anchor = document.createElement("box");
+      let anchor = document.createXULElement("box");
       anchor.id = "test26-anchor";
       anchor.className = "notification-anchor-icon";
       PopupNotifications.iconBox.appendChild(anchor);

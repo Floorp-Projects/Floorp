@@ -376,7 +376,7 @@ const PanelUI = {
     } else if (!aAnchor.open) {
       aAnchor.open = true;
 
-      let tempPanel = document.createElement("panel");
+      let tempPanel = document.createXULElement("panel");
       tempPanel.setAttribute("type", "arrow");
       tempPanel.setAttribute("id", "customizationui-widget-panel");
       tempPanel.setAttribute("class", "cui-widget-panel");
@@ -394,7 +394,7 @@ const PanelUI = {
       tempPanel.classList.toggle("cui-widget-panelWithFooter",
                                  viewNode.querySelector(".panel-subview-footer"));
 
-      let multiView = document.createElement("panelmultiview");
+      let multiView = document.createXULElement("panelmultiview");
       multiView.setAttribute("id", "customizationui-widget-multiview");
       multiView.setAttribute("viewCacheId", "appMenu-viewCache");
       multiView.setAttribute("mainViewId", viewNode.id);
@@ -512,7 +512,7 @@ const PanelUI = {
       container.previousElementSibling.previousElementSibling.hidden = false;
     let fragment = document.createDocumentFragment();
     for (let highlight of highlights) {
-      let button = document.createElement("toolbarbutton");
+      let button = document.createXULElement("toolbarbutton");
       button.classList.add("subviewbutton", "highlight", "subviewbutton-iconic", "bookmark-item");
       let title = highlight.title || highlight.url;
       button.setAttribute("label", title);

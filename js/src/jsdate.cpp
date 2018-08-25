@@ -36,6 +36,7 @@
 #include "builtin/String.h"
 #include "js/Conversions.h"
 #include "js/Date.h"
+#include "js/LocaleSensitive.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"

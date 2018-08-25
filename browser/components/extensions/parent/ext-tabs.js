@@ -40,7 +40,7 @@ XPCOMUtils.defineLazyGetter(this, "tabHidePopup", () => {
     descriptionId: "extension-tab-hide-notification-description",
     descriptionMessageId: "tabHideControlled.message",
     getLocalizedDescription: (doc, message, addonDetails) => {
-      let image = doc.createElement("image");
+      let image = doc.createXULElement("image");
       image.setAttribute("class", "extension-controlled-icon alltabs-icon");
       return BrowserUtils.getLocalizedFragment(doc, message, addonDetails, image);
     },

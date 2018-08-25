@@ -66,12 +66,12 @@
     macro(Dec,          "'--'")   /* decrement */ \
     macro(Dot,          "'.'")    /* member operator */ \
     macro(TripleDot,    "'...'")  /* rest arguments and spread operator */ \
-    macro(Lb,           "'['") \
-    macro(Rb,           "']'") \
-    macro(Lc,           "'{'") \
-    macro(Rc,           "'}'") \
-    macro(Lp,           "'('") \
-    macro(Rp,           "')'") \
+    macro(LeftBracket,  "'['") \
+    macro(RightBracket, "']'") \
+    macro(LeftCurly,    "'{'") \
+    macro(RightCurly,   "'}'") \
+    macro(LeftParen,    "'('") \
+    macro(RightParen,   "')'") \
     macro(Name,         "identifier") \
     macro(Number,       "numeric literal") \
     macro(String,       "string literal") \

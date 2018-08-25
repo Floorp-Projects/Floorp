@@ -2713,8 +2713,8 @@ ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder, nsIFrame* aMaskedFrame,
   aBuilder->FindReferenceFrameFor(aMaskedFrame, &toReferenceFrame);
 
   Maybe<gfxRect> combinedClip;
-  if (maskUsage.shouldApplyBasicShape) {
-    Rect result = nsCSSClipPathInstance::GetBoundingRectForBasicShapeClip(
+  if (maskUsage.shouldApplyBasicShapeOrPath) {
+    Rect result = nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
         aMaskedFrame, svgReset->mClipPath);
     combinedClip = Some(ThebesRect(result));
   } else if (maskUsage.shouldApplyClipPath) {

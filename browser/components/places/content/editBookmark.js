@@ -349,7 +349,7 @@ var gEditItemOverlay = {
     // First make sure the folders-separator is visible
     this._element("foldersSeparator").hidden = false;
 
-    var folderMenuItem = document.createElement("menuitem");
+    var folderMenuItem = document.createXULElement("menuitem");
     folderMenuItem.folderGuid = aFolderGuid;
     folderMenuItem.setAttribute("label", aTitle);
     folderMenuItem.className = "menuitem-iconic folder-icon";
@@ -760,9 +760,9 @@ var gEditItemOverlay = {
     let fragment = document.createDocumentFragment();
     for (let i = 0; i < allTags.length; i++) {
       let tag = allTags[i].name;
-      let elt = document.createElement("richlistitem");
-      elt.appendChild(document.createElement("image"));
-      let label = document.createElement("label");
+      let elt = document.createXULElement("richlistitem");
+      elt.appendChild(document.createXULElement("image"));
+      let label = document.createXULElement("label");
       label.setAttribute("value", tag);
       elt.appendChild(label);
       if (tagsInField.includes(tag))

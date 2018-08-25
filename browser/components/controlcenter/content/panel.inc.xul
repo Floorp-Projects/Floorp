@@ -89,7 +89,7 @@
             <hbox id="identity-popup-content-blocking-category-tracking-protection"
                   class="identity-popup-content-blocking-category" align="center" role="group">
               <image class="identity-popup-content-blocking-category-icon tracking-protection-icon"/>
-              <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.trackingProtection.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.trackingProtection2.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.trackingProtection.blocked.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
                      onclick="ContentBlocking.openPreferences('identityPopup-CB-tracking-protection');">&contentBlocking.trackingProtection.add.label;</label>
@@ -122,7 +122,7 @@
           <label id="identity-popup-content-blocking-report-breakage"
                  onclick="ContentBlocking.showReportBreakageSubview();"
                  class="text-link subviewkeynav"
-                 flex="1">&contentBlocking.openBreakageReportView.label;</label>
+                 flex="1">&contentBlocking.openBreakageReportView2.label;</label>
         </vbox>
       </hbox>
 
@@ -251,7 +251,7 @@
                title="&contentBlocking.breakageReportView.label;"
                descriptionheightworkaround="true">
         <vbox id="identity-popup-breakageReportView-heading">
-          <description>&contentBlocking.breakageReportView.description;</description>
+          <description>&contentBlocking.breakageReportView2.description;</description>
           <label id="identity-popup-breakageReportView-learn-more"
                  class="text-link">&contentBlocking.breakageReportView.learnMore;</label>
         </vbox>
@@ -259,10 +259,6 @@
           <vbox class="identity-popup-breakageReportView-collection-section">
             <label class="identity-popup-breakageReportView-collection-label">&contentBlocking.breakageReportView.collection.url.label;</label>
             <label id="identity-popup-breakageReportView-collection-url"/>
-          </vbox>
-          <vbox class="identity-popup-breakageReportView-collection-section">
-            <label class="identity-popup-breakageReportView-collection-label">&contentBlocking.breakageReportView.collection.userAgent.label;</label>
-            <label id="identity-popup-breakageReportView-collection-userAgent"/>
           </vbox>
           <vbox class="identity-popup-breakageReportView-collection-section">
             <label class="identity-popup-breakageReportView-collection-label">&contentBlocking.breakageReportView.collection.comments.label;</label>

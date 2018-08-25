@@ -108,6 +108,16 @@
     "labels": ["OtherBinaryFile", "DmgFile", "RarFile", "ZipFile"],
     "description": "Whether a binary file examined by download protection is one of the common archive formats."
   },
+  "APPLICATION_REPUTATION_HASH_LENGTH": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "bug_numbers": [1485180],
+    "expires_in_version": "69",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": ["ValidHash", "OriginalHashEmpty", "OriginalHashTooShort", "OriginalHashTooLong", "MissingDigest", "MissingSha256", "InvalidSha256"],
+    "description": "Whether the hash included in application reputation lookups is valid or broken in some way."
+  },
   "APPLICATION_REPUTATION_SHOULD_BLOCK": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],

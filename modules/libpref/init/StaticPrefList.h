@@ -441,6 +441,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Does arbitrary ::-webkit-* pseudo-element parsed?
+VARCACHE_PREF(
+  "layout.css.unknown-webkit-pseudo-element",
+   layout_css_unknown_webkit_pseudo_element,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // JavaScript prefs
 //---------------------------------------------------------------------------

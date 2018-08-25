@@ -16,7 +16,7 @@ ChromeUtils.defineModuleGetter(this, "ExtensionControlledPopup",
 
 function createMarkup(doc) {
   let panel = doc.getElementById("extension-notification-panel");
-  let popupnotification = doc.createElement("popupnotification");
+  let popupnotification = doc.createXULElement("popupnotification");
   let attributes = {
     id: "extension-controlled-notification",
     class: "extension-controlled-notification",
@@ -34,9 +34,9 @@ function createMarkup(doc) {
   Object.entries(attributes).forEach(([key, value]) => {
     popupnotification.setAttribute(key, value);
   });
-  let content = doc.createElement("popupnotificationcontent");
+  let content = doc.createXULElement("popupnotificationcontent");
   content.setAttribute("orient", "vertical");
-  let description = doc.createElement("description");
+  let description = doc.createXULElement("description");
   description.setAttribute("id", "extension-controlled-description");
   content.appendChild(description);
   popupnotification.appendChild(content);

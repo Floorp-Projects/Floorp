@@ -14,7 +14,7 @@ add_task(async function testAddOnBeforeCreatedWidget() {
     type: "view",
     viewId: kWidgetId + "idontexistyet",
     onBeforeCreated(doc) {
-      let view = doc.createElement("panelview");
+      let view = doc.createXULElement("panelview");
       view.id = kWidgetId + "idontexistyet";
       document.getElementById("appMenu-viewCache").appendChild(view);
       onBeforeCreatedCalled = true;

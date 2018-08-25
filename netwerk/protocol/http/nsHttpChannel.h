@@ -628,6 +628,11 @@ private:
     // the next authentication request can be sent on a whole new connection
     uint32_t                          mAuthConnectionRestartable : 1;
 
+    // True if the channel classifier has marked the channel to be cancelled
+    // due to the tracking protection rules, but the asynchronous cancellation
+    // process hasn't finished yet.
+    uint32_t                          mTrackingProtectionCancellationPending : 1;
+
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
     // Needed for accurate DNS timing

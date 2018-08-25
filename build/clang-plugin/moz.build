@@ -68,7 +68,6 @@ HOST_COMPILE_FLAGS['VISIBILITY'] = []
 # libc++ is required to build plugins against clang on OS X.
 if CONFIG['HOST_OS_ARCH'] == 'Darwin':
     HOST_CXXFLAGS += ['-stdlib=libc++']
-    HOST_LDFLAGS += ['-lc++']
 
 DIRS += [
     'tests',

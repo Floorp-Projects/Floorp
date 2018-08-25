@@ -560,7 +560,8 @@ SVGPathData::BuildPathForMeasuring() const
 SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
                        PathBuilder* aBuilder,
                        uint8_t aStrokeLineCap,
-                       Float aStrokeWidth)
+                       Float aStrokeWidth,
+                       float aZoomFactor)
 {
   if (aPath.IsEmpty() || !aPath[0].IsMoveTo()) {
     return nullptr; // paths without an initial moveto are invalid
@@ -592,6 +593,10 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
   Point cp1, cp2;            // previous bezier's control points
   Point tcp1, tcp2;          // temporaries
 
+  auto scale = [aZoomFactor](const Point& p) {
+    return Point(p.x * aZoomFactor, p.y * aZoomFactor);
+  };
+
   // Regarding cp1 and cp2: If the previous segment was a cubic bezier curve,
   // then cp2 is its second control point. If the previous segment was a
   // quadratic curve, then cp1 is its (only) control point.
@@ -610,7 +615,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
         MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
         const Point& p = toGfxPoint(cmd.move_to.point);
         pathStart = segEnd = cmd.move_to.absolute ? p : segStart + p;
-        aBuilder->MoveTo(segEnd);
+        aBuilder->MoveTo(scale(segEnd));
         subpathHasLength = false;
         break;
       }
@@ -619,7 +624,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
         segEnd = cmd.line_to.absolute ? p : segStart + p;
         if (segEnd != segStart) {
           subpathHasLength = true;
-          aBuilder->LineTo(segEnd);
+          aBuilder->LineTo(scale(segEnd));
         }
         break;
       }
@@ -636,7 +641,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
 
         if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
           subpathHasLength = true;
-          aBuilder->BezierTo(cp1, cp2, segEnd);
+          aBuilder->BezierTo(scale(cp1), scale(cp2), scale(segEnd));
         }
         break;
 
@@ -655,7 +660,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
 
         if (segEnd != segStart || segEnd != cp1) {
           subpathHasLength = true;
-          aBuilder->BezierTo(tcp1, tcp2, segEnd);
+          aBuilder->BezierTo(scale(tcp1), scale(tcp2), scale(segEnd));
         }
         break;
 
@@ -669,12 +674,12 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
         if (segEnd != segStart) {
           subpathHasLength = true;
           if (radii.x == 0.0f || radii.y == 0.0f) {
-            aBuilder->LineTo(segEnd);
+            aBuilder->LineTo(scale(segEnd));
           } else {
             nsSVGArcConverter converter(segStart, segEnd, radii, arc.angle,
                                         arc.large_arc_flag, arc.sweep_flag);
             while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
-              aBuilder->BezierTo(cp1, cp2, segEnd);
+              aBuilder->BezierTo(scale(cp1), scale(cp2), scale(segEnd));
             }
           }
         }
@@ -689,7 +694,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
 
         if (segEnd != segStart) {
           subpathHasLength = true;
-          aBuilder->LineTo(segEnd);
+          aBuilder->LineTo(scale(segEnd));
         }
         break;
 
@@ -702,7 +707,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
 
         if (segEnd != segStart) {
           subpathHasLength = true;
-          aBuilder->LineTo(segEnd);
+          aBuilder->LineTo(scale(segEnd));
         }
         break;
 
@@ -718,7 +723,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
 
         if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
           subpathHasLength = true;
-          aBuilder->BezierTo(cp1, cp2, segEnd);
+          aBuilder->BezierTo(scale(cp1), scale(cp2), scale(segEnd));
         }
         break;
 
@@ -734,7 +739,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
 
         if (segEnd != segStart || segEnd != cp1) {
           subpathHasLength = true;
-          aBuilder->BezierTo(tcp1, tcp2, segEnd);
+          aBuilder->BezierTo(scale(tcp1), scale(tcp2), scale(segEnd));
         }
         break;
       }

@@ -94,9 +94,7 @@ using mozilla::dom::PushNotifier;
 using mozilla::dom::AudioChannelAgent;
 
 // Editor stuff
-#include "nsEditorCID.h"
 #include "mozilla/EditorController.h" //CID
-#include "mozilla/HTMLEditor.h"
 
 #include "nsScriptSecurityManager.h"
 #include "ExpandedPrincipal.h"
@@ -179,11 +177,7 @@ using mozilla::gmp::GeckoMediaPluginService;
 { 0x1f15dbc8, 0xbfaa, 0x45de, \
   { 0x8a, 0x46, 0x08, 0xe2, 0xe2, 0x63, 0x26, 0xb0 } }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(TextEditor)
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserUtils)
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(HTMLEditor)
 
 // PresentationDeviceManager
 /* e1e79dec-4085-4994-ac5b-744b016697e6 */
@@ -533,7 +527,6 @@ NS_DEFINE_NAMED_CID(NS_HOSTOBJECTURIMUTATOR_CID);
 NS_DEFINE_NAMED_CID(NS_SDBCONNECTION_CID);
 NS_DEFINE_NAMED_CID(NS_DOMSESSIONSTORAGEMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DOMLOCALSTORAGEMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_TEXTEDITOR_CID);
 NS_DEFINE_NAMED_CID(DOMREQUEST_SERVICE_CID);
 NS_DEFINE_NAMED_CID(QUOTAMANAGER_SERVICE_CID);
 NS_DEFINE_NAMED_CID(SERVICEWORKERMANAGER_CID);
@@ -542,7 +535,6 @@ NS_DEFINE_NAMED_CID(NOTIFICATIONTELEMETRYSERVICE_CID);
 NS_DEFINE_NAMED_CID(PUSHNOTIFIER_CID);
 NS_DEFINE_NAMED_CID(WORKERDEBUGGERMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_AUDIOCHANNELAGENT_CID);
-NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITINGCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORCOMMANDTABLE_CID);
@@ -770,7 +762,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_SDBCONNECTION_CID, false, nullptr, SDBConnection::Create },
   { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, SessionStorageManagerConstructor },
   { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, nullptr, LocalStorageManagerConstructor },
-  { &kNS_TEXTEDITOR_CID, false, nullptr, TextEditorConstructor },
   { &kDOMREQUEST_SERVICE_CID, false, nullptr, DOMRequestServiceConstructor },
   { &kQUOTAMANAGER_SERVICE_CID, false, nullptr, QuotaManagerServiceConstructor },
   { &kSERVICEWORKERMANAGER_CID, false, nullptr, ServiceWorkerManagerConstructor },
@@ -779,7 +770,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kPUSHNOTIFIER_CID, false, nullptr, PushNotifierConstructor },
   { &kWORKERDEBUGGERMANAGER_CID, true, nullptr, WorkerDebuggerManagerConstructor },
   { &kNS_AUDIOCHANNELAGENT_CID, true, nullptr, AudioChannelAgentConstructor },
-  { &kNS_HTMLEDITOR_CID, false, nullptr, HTMLEditorConstructor },
   { &kNS_EDITORCONTROLLER_CID, false, nullptr, EditorControllerConstructor },
   { &kNS_EDITINGCONTROLLER_CID, false, nullptr, nsEditingControllerConstructor },
   { &kNS_EDITORCOMMANDTABLE_CID, false, nullptr, nsEditorCommandTableConstructor },
@@ -872,7 +862,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   // Keeping the old ContractID for backward compatibility
   { "@mozilla.org/dom/storagemanager;1", &kNS_DOMLOCALSTORAGEMANAGER_CID },
   { "@mozilla.org/dom/sessionStorage-manager;1", &kNS_DOMSESSIONSTORAGEMANAGER_CID },
-  { "@mozilla.org/editor/texteditor;1", &kNS_TEXTEDITOR_CID },
   { DOMREQUEST_SERVICE_CONTRACTID, &kDOMREQUEST_SERVICE_CID },
   { QUOTAMANAGER_SERVICE_CONTRACTID, &kQUOTAMANAGER_SERVICE_CID },
   { SERVICEWORKERMANAGER_CONTRACTID, &kSERVICEWORKERMANAGER_CID },
@@ -881,7 +870,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { PUSHNOTIFIER_CONTRACTID, &kPUSHNOTIFIER_CID },
   { WORKERDEBUGGERMANAGER_CONTRACTID, &kWORKERDEBUGGERMANAGER_CID },
   { NS_AUDIOCHANNELAGENT_CONTRACTID, &kNS_AUDIOCHANNELAGENT_CID },
-  { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },
   { "@mozilla.org/editor/editorcontroller;1", &kNS_EDITORCONTROLLER_CID },
   { "@mozilla.org/editor/editingcontroller;1", &kNS_EDITINGCONTROLLER_CID },
   { "@mozilla.org/geolocation;1", &kNS_GEOLOCATION_CID },

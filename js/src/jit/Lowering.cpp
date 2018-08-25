@@ -5343,5 +5343,58 @@ LIRGenerator::visitUnknownValue(MUnknownValue* ins)
     MOZ_CRASH("Can not lower unknown value.");
 }
 
+void
+LIRGenerator::visitIonToWasmCall(MIonToWasmCall* ins)
+{
+    // The instruction needs a temp register:
+    // - that's not the FramePointer, since wasm is going to use it in the
+    // function.
+    // - that's not aliasing an input register.
+    LDefinition scratch = tempFixed(ABINonArgReg0);
+
+    // Also prevent register allocation from using wasm's FramePointer, in
+    // non-profiling mode.
+    LDefinition fp = gen->isProfilerInstrumentationEnabled()
+                   ? LDefinition::BogusTemp()
+                   : tempFixed(FramePointer);
+
+    // Note that since this is a LIR call instruction, regalloc will prevent
+    // the use*AtStart below from reusing any of the temporaries.
+
+    LInstruction* lir;
+    if (ins->type() == MIRType::Value)
+        lir = allocateVariadic<LIonToWasmCallV>(ins->numOperands(), scratch, fp);
+    else
+        lir = allocateVariadic<LIonToWasmCall>(ins->numOperands(), scratch, fp);
+    if (!lir) {
+        abort(AbortReason::Alloc, "Couldn't allocate for LIonToWasmCallBase");
+        return;
+    }
+
+    ABIArgGenerator abi;
+    for (unsigned i = 0; i < ins->numOperands(); i++) {
+        MDefinition* argDef = ins->getOperand(i);
+        ABIArg arg = abi.next(ToMIRType(argDef->type()));
+        switch (arg.kind()) {
+          case ABIArg::GPR:
+          case ABIArg::FPU:
+            lir->setOperand(i, useFixedAtStart(argDef, arg.reg()));
+            break;
+          case ABIArg::Stack:
+            lir->setOperand(i, useAtStart(argDef));
+            break;
+#ifdef JS_CODEGEN_REGISTER_PAIR
+          case ABIArg::GPR_PAIR:
+            MOZ_CRASH("no way to pass i64, and wasm uses hardfp for function calls");
+#endif
+          case ABIArg::Uninitialized:
+            MOZ_CRASH("Uninitialized ABIArg kind");
+        }
+    }
+
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
 static_assert(!std::is_polymorphic<LIRGenerator>::value,
               "LIRGenerator should not have any virtual methods");

@@ -141,7 +141,7 @@ const CustomizableWidgets = [
       if (!elementCount)
         return;
 
-      let body = document.createElement("vbox");
+      let body = document.createXULElement("vbox");
       body.className = "panel-subview-body";
       body.appendChild(fragment);
       let footer;

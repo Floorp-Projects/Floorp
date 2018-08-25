@@ -999,7 +999,7 @@ Toolbox.prototype = {
       }
       const { toolId, shortcut, modifiers } = item;
 
-      const key = doc.createElement("key");
+      const key = doc.createXULElement("key");
 
       key.id = "key_" + toolId;
 
@@ -1020,7 +1020,7 @@ Toolbox.prototype = {
 
     // Add key for toggling the browser console from the detached window
     if (!doc.getElementById("key_browserconsole")) {
-      const key = doc.createElement("key");
+      const key = doc.createXULElement("key");
       key.id = "key_browserconsole";
 
       key.setAttribute("key", L10N.getStr("browserConsoleCmd.commandkey"));
@@ -1440,7 +1440,7 @@ Toolbox.prototype = {
     if (!toolDefinition.bgTheme) {
       toolDefinition.bgTheme = "theme-toolbar";
     }
-    const panel = this.doc.createElement("vbox");
+    const panel = this.doc.createXULElement("vbox");
     panel.className = "toolbox-panel " + toolDefinition.bgTheme;
 
     // There is already a container for the webconsole frame.
@@ -1650,7 +1650,7 @@ Toolbox.prototype = {
         return;
       }
 
-      iframe = this.doc.createElement("iframe");
+      iframe = this.doc.createXULElement("iframe");
       iframe.className = "toolbox-panel-iframe";
       iframe.id = "toolbox-panel-iframe-" + id;
       iframe.setAttribute("flex", 1);

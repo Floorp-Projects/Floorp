@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 function HistoryDownloadElementShell(download) {
   this._download = download;
 
-  this.element = document.createElement("richlistitem");
+  this.element = document.createXULElement("richlistitem");
   this.element._shell = this;
 
   this.element.classList.add("download");

@@ -303,19 +303,22 @@ interface nsITableEditor : nsISupports
     */
   uint32_t getSelectedCellsType(in Element aElement);
 
-  /** Get first selected element from first selection range.
-    *   (If multiple cells were selected this is the first in the order they were selected)
-    * Assumes cell-selection model where each cell
-    * is in a separate range (selection parent node is table row)
-    * @param aCell     [OUT] Selected cell or null if ranges don't contain
-    *                  cell selections
-    * @param aRange    [OUT] Optional: if not null, return the selection range
-    *                     associated with the cell
-    * Returns the DOM cell element
-    *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    *    passes NS_SUCCEEDED macro)
-    */
-  Element getFirstSelectedCell(out Range aRange);
+  /**
+   * getFirstSelectedCell() returns a <td> or <th> element if first range of
+   * Selection selects only one table cell element (i.e., startContainer and
+   * endContainer are same <tr> element and startOffset + 1 equals endOffset).
+   * If first range of Selection does not select a table cell element, this
+   * returns null.  However, if Selection has no range, this throws an
+   * exception.
+   *
+   * @param aFirstRangeOfSelection [OUT] Returns the first range of Selection
+   *                               only when this returns a <td> or <th>
+   *                               element.  Otherwise, returns null.
+   * @return                       A <td> or <th> element if first range of
+   *                               Selection selects only one table cell
+   *                               element.
+   */
+  Element getFirstSelectedCell(out Range aFirstRangeOfSelection);
 
   /** Get first selected element in the table
     *   This is the upper-left-most selected cell in table,

@@ -90,7 +90,6 @@ PresentationControlService.prototype = {
 
       if (aCert) {
         this._serverSocket.serverCert = aCert;
-        this._serverSocket.setSessionCache(false);
         this._serverSocket.setSessionTickets(false);
         let requestCert = Ci.nsITLSServerSocket.REQUEST_NEVER;
         this._serverSocket.setRequestClientCertificate(requestCert);

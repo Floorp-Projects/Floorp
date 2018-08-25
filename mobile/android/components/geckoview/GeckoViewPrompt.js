@@ -873,6 +873,14 @@ FilePickerDelegate.prototype = {
       QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
       _owner: this,
       _index: 0,
+      * [Symbol.iterator]() {
+        for (let file of this._owner._files) {
+          if (aDOMFile) {
+            yield this._owner._getDOMFile(file);
+          }
+          yield new FileUtils.File(file);
+        }
+      },
       hasMoreElements: function() {
         return this._index < this._owner._files.length;
       },

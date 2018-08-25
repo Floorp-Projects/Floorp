@@ -10,9 +10,9 @@
 add_task(async function() {
   let tab1 = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/#0");
   let tab2 = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/#1");
-  let specificPanel = document.createElement("panel");
+  let specificPanel = document.createXULElement("panel");
   specificPanel.setAttribute("tabspecific", "true");
-  let generalPanel = document.createElement("panel");
+  let generalPanel = document.createXULElement("panel");
   let anchor = document.getElementById(CustomizableUI.AREA_NAVBAR);
 
   anchor.appendChild(specificPanel);

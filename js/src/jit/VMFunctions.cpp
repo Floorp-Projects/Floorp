@@ -781,7 +781,7 @@ GetIndexFromString(JSString* str)
     if (!str->isFlat())
         return -1;
 
-    uint32_t index;
+    uint32_t index = UINT32_MAX;
     if (!str->asFlat().isIndex(&index) || index > INT32_MAX)
         return -1;
 

@@ -532,9 +532,9 @@ GetScrollbarWidthNoTheme(nsIFrame* aBox)
     switch (scrollbarStyle->StyleUIReset()->mScrollbarWidth) {
       default:
       case StyleScrollbarWidth::Auto:
-        return 16 * AppUnitsPerCSSPixel();
+        return 12 * AppUnitsPerCSSPixel();
       case StyleScrollbarWidth::Thin:
-        return 8 * AppUnitsPerCSSPixel();
+        return 6 * AppUnitsPerCSSPixel();
       case StyleScrollbarWidth::None:
         return 0;
     }

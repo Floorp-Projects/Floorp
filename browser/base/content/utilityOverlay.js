@@ -621,7 +621,7 @@ function createUserContextMenu(event, {
 
   // If we are excluding a userContextId, we want to add a 'no-container' item.
   if (excludeUserContextId || showDefaultTab) {
-    let menuitem = document.createElement("menuitem");
+    let menuitem = document.createXULElement("menuitem");
     menuitem.setAttribute("data-usercontextid", "0");
     menuitem.setAttribute("label", bundle.GetStringFromName("userContextNone.label"));
     menuitem.setAttribute("accesskey", bundle.GetStringFromName("userContextNone.accesskey"));
@@ -632,7 +632,7 @@ function createUserContextMenu(event, {
 
     docfrag.appendChild(menuitem);
 
-    let menuseparator = document.createElement("menuseparator");
+    let menuseparator = document.createXULElement("menuseparator");
     docfrag.appendChild(menuseparator);
   }
 
@@ -641,7 +641,7 @@ function createUserContextMenu(event, {
       return;
     }
 
-    let menuitem = document.createElement("menuitem");
+    let menuitem = document.createXULElement("menuitem");
     menuitem.setAttribute("data-usercontextid", identity.userContextId);
     menuitem.setAttribute("label", ContextualIdentityService.getUserContextLabel(identity.userContextId));
 
@@ -662,9 +662,9 @@ function createUserContextMenu(event, {
   });
 
   if (!isContextMenu) {
-    docfrag.appendChild(document.createElement("menuseparator"));
+    docfrag.appendChild(document.createXULElement("menuseparator"));
 
-    let menuitem = document.createElement("menuitem");
+    let menuitem = document.createXULElement("menuitem");
     menuitem.setAttribute("label",
                           bundle.GetStringFromName("userContext.aboutPage.label"));
     if (useAccessKeys) {

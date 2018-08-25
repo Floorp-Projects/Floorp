@@ -138,10 +138,19 @@ class JitCompileOptions
         return offThreadCompilationAvailable_;
     }
 
+#ifdef ENABLE_WASM_GC
+    bool wasmGcEnabled() const {
+        return wasmGcEnabled_;
+    }
+#endif
+
   private:
     bool cloneSingletons_;
     bool profilerSlowAssertionsEnabled_;
     bool offThreadCompilationAvailable_;
+#ifdef ENABLE_WASM_GC
+    bool wasmGcEnabled_;
+#endif
 };
 
 } // namespace jit

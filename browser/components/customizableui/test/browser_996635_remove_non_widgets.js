@@ -11,7 +11,7 @@ function test() {
   // but not in the customizable part of it (the customization target) but
   // next to the main (hamburger) menu button.
   const buttonID = "Test-non-widget-non-removable-button";
-  let btn = document.createElement("toolbarbutton");
+  let btn = document.createXULElement("toolbarbutton");
   btn.id = buttonID;
   btn.label = "Hi";
   btn.setAttribute("style", "width: 20px; height: 20px; background-color: red");
