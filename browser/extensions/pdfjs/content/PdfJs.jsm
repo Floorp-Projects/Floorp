@@ -107,6 +107,10 @@ var PdfJs = {
     Services.ppmm.sharedData.set("pdfjs.enabled", this.checkEnabled());
   },
 
+  earlyInit() {
+    Services.ppmm.sharedData.set("pdfjs.enabled", this.checkEnabled());
+  },
+
   initPrefs: function initPrefs() {
     if (this._initialized) {
       return;
