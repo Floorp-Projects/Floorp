@@ -14,6 +14,8 @@
 #include "prsystem.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/CompilationAndEvaluation.h"
+#include "js/OffThreadScriptCompilation.h"
 #include "js/SourceBufferHolder.h"
 #include "js/Utility.h"
 #include "xpcpublic.h"

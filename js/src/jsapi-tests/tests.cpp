@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 
+#include "js/CompilationAndEvaluation.h"
 #include "js/Initialization.h"
 #include "js/RootingAPI.h"
 

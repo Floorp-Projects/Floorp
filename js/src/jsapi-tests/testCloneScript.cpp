@@ -13,6 +13,7 @@
 #include "jsfriendapi.h"
 #include "jspubtd.h" // JS::AutoObjectVector
 
+#include "js/CompilationAndEvaluation.h" // JS::CompileFunction
 #include "js/CompileOptions.h" // JS::CompileOptions
 #include "js/RootingAPI.h" // JS::Rooted
 #include "js/TypeDecls.h" // JSFunction, JSObject
