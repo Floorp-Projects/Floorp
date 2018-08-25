@@ -19,6 +19,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "xpcprivate.h" // For xpc::OptionsBase
+#include "js/SourceBufferHolder.h"
 #include "js/Wrapper.h"
 
 #include "mozilla/ContentPrincipal.h"

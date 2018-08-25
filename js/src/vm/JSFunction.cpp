@@ -34,6 +34,7 @@
 #include "js/AutoByteString.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Proxy.h"
+#include "js/SourceBufferHolder.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
@@ -67,6 +68,7 @@ using mozilla::Maybe;
 using mozilla::Some;
 
 using JS::AutoStableStringChars;
+using JS::SourceBufferHolder;
 
 static bool
 fun_enumerate(JSContext* cx, HandleObject obj)

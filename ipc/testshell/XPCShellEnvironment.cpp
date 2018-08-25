@@ -17,6 +17,7 @@
 
 #include "jsapi.h"
 #include "js/AutoByteString.h"
+#include "js/SourceBufferHolder.h"
 
 #include "xpcpublic.h"
 

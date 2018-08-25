@@ -14,6 +14,7 @@
 #include "nsJSUtils.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/SourceBufferHolder.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptElement.h"
 #include "nsIScriptGlobalObject.h"

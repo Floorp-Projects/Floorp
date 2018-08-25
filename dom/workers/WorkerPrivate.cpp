@@ -8,6 +8,7 @@
 
 #include "js/LocaleSensitive.h"
 #include "js/MemoryMetrics.h"
+#include "js/SourceBufferHolder.h"
 #include "MessageEventRunnable.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs.h"

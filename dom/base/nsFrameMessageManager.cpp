@@ -30,6 +30,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "xpcpublic.h"
 #include "js/JSON.h"
+#include "js/SourceBufferHolder.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Preferences.h"

@@ -40,7 +40,6 @@
 #include "js/Realm.h"
 #include "js/RefCounted.h"
 #include "js/RootingAPI.h"
-#include "js/SourceBufferHolder.h"
 #include "js/Stream.h"
 #include "js/TracingAPI.h"
 #include "js/Transcoding.h"
@@ -53,6 +52,7 @@
 
 namespace JS {
 
+class SourceBufferHolder;
 class TwoByteChars;
 
 #ifdef JS_DEBUG

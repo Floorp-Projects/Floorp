@@ -25,6 +25,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/SourceBufferHolder.h"
 #include "nsError.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
