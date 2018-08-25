@@ -21,6 +21,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/SHA1.h"
+#include "mozilla/Unused.h"
 
 #include <algorithm>
 #include <thread>
@@ -39,6 +40,7 @@ using namespace js::wasm;
 
 using mozilla::CheckedInt;
 using mozilla::MakeEnumeratedRange;
+using mozilla::Unused;
 
 bool
 CompiledCode::swap(MacroAssembler& masm)
@@ -200,24 +202,22 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
 
     // Pre-reserve space for large Vectors to avoid the significant cost of the
     // final reallocs. In particular, the MacroAssembler can be enormous, so be
-    // extra conservative. Note, podResizeToFit calls at the end will trim off
-    // unneeded capacity.
+    // extra conservative. Since large over-reservations may fail when the
+    // actual allocations will succeed, ignore OOM failures. Note,
+    // podResizeToFit calls at the end will trim off unneeded capacity.
 
     size_t codeSectionSize = env_->codeSection ? env_->codeSection->size : 0;
-    size_t estimatedCodeSize = 1.2 * EstimateCompiledCodeSize(tier(), codeSectionSize);
-    if (!masm_.reserve(Min(estimatedCodeSize, MaxCodeBytesPerProcess)))
-        return false;
 
-    if (!metadataTier_->codeRanges.reserve(2 * env_->numFuncDefs()))
-        return false;
+    size_t estimatedCodeSize = 1.2 * EstimateCompiledCodeSize(tier(), codeSectionSize);
+    Unused << masm_.reserve(Min(estimatedCodeSize, MaxCodeBytesPerProcess));
+
+    Unused << metadataTier_->codeRanges.reserve(2 * env_->numFuncDefs());
 
     const size_t ByteCodesPerCallSite = 50;
-    if (!metadataTier_->callSites.reserve(codeSectionSize / ByteCodesPerCallSite))
-        return false;
+    Unused << metadataTier_->callSites.reserve(codeSectionSize / ByteCodesPerCallSite);
 
     const size_t ByteCodesPerOOBTrap = 10;
-    if (!metadataTier_->trapSites[Trap::OutOfBounds].reserve(codeSectionSize / ByteCodesPerOOBTrap))
-        return false;
+    Unused << metadataTier_->trapSites[Trap::OutOfBounds].reserve(codeSectionSize / ByteCodesPerOOBTrap);
 
     // Allocate space in TlsData for declarations that need it.
 
