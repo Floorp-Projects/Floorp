@@ -28,7 +28,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <children includes="image|deck|stack|box"/>
         <xul:moz-input-box anonid="moz-input-box"
                   class="urlbar-input-box"
-                  flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
+                  flex="1">
           <children/>
           <html:input anonid="scheme"
                       class="urlbar-scheme textbox-input"
@@ -38,7 +38,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                       class="autocomplete-textbox urlbar-input textbox-input"
                       allowevents="true"
                       inputmode="mozAwesomebar"
-                      xbl:inherits="tooltiptext=inputtooltiptext,value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>
+                      xbl:inherits="value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>
         </xul:moz-input-box>
         <xul:image anonid="urlbar-go-button"
                    class="urlbar-go-button urlbar-icon"
@@ -1058,13 +1058,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body><![CDATA[
           if (this.focused || !this.hasAttribute("textoverflow"))
             return;
-          this.inputField.setAttribute("tooltiptext", this.value);
+          // We set the tooltip text on the parent node instead of the input
+          // field because XUL tooltips only work on XUL elements.
+          //
+          // FIXME(bug 1486716): title should work on chrome documents instead.
+          this.inputField.parentNode.setAttribute("tooltiptext", this.value);
         ]]></body>
       </method>
 
       <method name="_hideURLTooltip">
         <body><![CDATA[
-          this.inputField.removeAttribute("tooltiptext");
+          this.inputField.parentNode.removeAttribute("tooltiptext");
         ]]></body>
       </method>
 
