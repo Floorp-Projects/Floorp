@@ -3,11 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* BA7DE611-6088-11d3-A83E-00105A183419 */
-#define NS_POPUP_CID \
-{ 0xba7de611, 0x6088, 0x11d3,  \
-    { 0xa8, 0x3e, 0x0, 0x10, 0x5a, 0x18, 0x34, 0x19 } }
-
 /* bd57cee8-1dd1-11b2-9fe7-95cf4709aea3 */
 #define NS_FILEPICKER_CID \
 { 0xbd57cee8, 0x1dd1, 0x11b2, \

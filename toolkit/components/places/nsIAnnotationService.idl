@@ -7,7 +7,6 @@
 
 interface nsIURI;
 interface nsIVariant;
-interface mozIAnnotatedResult;
 
 /**
  *
@@ -104,18 +103,6 @@ interface nsIAnnotationService : nsISupports
                                out unsigned short aType);
 
     /**
-     * Returns a list of mozIAnnotation(s), having a given annotation name.
-     *
-     * @param name
-     *        The annotation to search for.
-     * @return list of mozIAnnotation objects.
-     */
-    void getAnnotationsWithName(
-        in AUTF8String name,
-        [optional] out unsigned long count,
-        [retval, array, size_is(count)] out mozIAnnotatedResult results);
-
-    /**
      * Get the names of all annotations for this URI.
      *
      * example JS:
@@ -142,45 +129,4 @@ interface nsIAnnotationService : nsISupports
     void removeItemAnnotation(in long long aItemId,
                               in AUTF8String aName,
                               [optional] in unsigned short aSource);
-};
-
-/**
- * Represents a place annotated with a given annotation.  If a place has
- * multiple annotations, it can be represented by multiple
- * mozIAnnotatedResult(s).
- */
-[scriptable, uuid(81fd0188-db6a-492e-80b6-f6414913b396)]
-interface mozIAnnotatedResult : nsISupports
-{
-    /**
-     * The globally unique identifier of the place with this annotation.
-     *
-     * @note if itemId is valid this is the guid of the bookmark, otherwise
-     *       of the page.
-     */
-    readonly attribute AUTF8String guid;
-
-    /**
-     * The URI of the place with this annotation, if available, null otherwise.
-     */
-    readonly attribute nsIURI uri;
-
-    /**
-     * The bookmark id of the place with this annotation, if available,
-     * -1 otherwise.
-     *
-     * @note if itemId is -1, it doesn't mean the page is not bookmarked, just
-     *       that this annotation is relative to the page, not to the bookmark.
-     */
-    readonly attribute long long itemId;
-
-    /**
-     * Name of the annotation.
-     */
-    readonly attribute AUTF8String annotationName;
-
-    /**
-     * Value of the annotation.
-     */
-    readonly attribute nsIVariant annotationValue;
 };

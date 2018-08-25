@@ -1,6 +1,6 @@
 add_task(async function test_reserved_shortcuts() {
-  let keyset = document.createElement("keyset");
-  let key1 = document.createElement("key");
+  let keyset = document.createXULElement("keyset");
+  let key1 = document.createXULElement("key");
   key1.setAttribute("id", "kt_reserved");
   key1.setAttribute("modifiers", "shift");
   key1.setAttribute("key", "O");
@@ -13,7 +13,7 @@ add_task(async function test_reserved_shortcuts() {
     key1.setAttribute("count", Number(attribute) + 1);
   });
 
-  let key2 = document.createElement("key");
+  let key2 = document.createXULElement("key");
   key2.setAttribute("id", "kt_notreserved");
   key2.setAttribute("modifiers", "shift");
   key2.setAttribute("key", "P");
@@ -26,7 +26,7 @@ add_task(async function test_reserved_shortcuts() {
     key2.setAttribute("count", Number(attribute) + 1);
   });
 
-  let key3 = document.createElement("key");
+  let key3 = document.createXULElement("key");
   key3.setAttribute("id", "kt_reserveddefault");
   key3.setAttribute("modifiers", "shift");
   key3.setAttribute("key", "Q");
@@ -41,7 +41,7 @@ add_task(async function test_reserved_shortcuts() {
   keyset.appendChild(key1);
   keyset.appendChild(key2);
   keyset.appendChild(key3);
-  let container = document.createElement("box");
+  let container = document.createXULElement("box");
   container.appendChild(keyset);
   document.documentElement.appendChild(container);
 

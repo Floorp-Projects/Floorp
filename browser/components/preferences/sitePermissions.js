@@ -198,21 +198,21 @@ var gSitePermissionsManager = {
   },
 
   _createPermissionListItem(permission) {
-    let richlistitem = document.createElement("richlistitem");
+    let richlistitem = document.createXULElement("richlistitem");
     richlistitem.setAttribute("origin", permission.origin);
-    let row = document.createElement("hbox");
+    let row = document.createXULElement("hbox");
     row.setAttribute("flex", "1");
 
-    let hbox = document.createElement("hbox");
-    let website = document.createElement("label");
+    let hbox = document.createXULElement("hbox");
+    let website = document.createXULElement("label");
     website.setAttribute("value", permission.origin);
     website.setAttribute("width", "50");
     hbox.setAttribute("class", "website-name");
     hbox.setAttribute("flex", "3");
     hbox.appendChild(website);
 
-    let menulist = document.createElement("menulist");
-    let menupopup = document.createElement("menupopup");
+    let menulist = document.createXULElement("menulist");
+    let menupopup = document.createXULElement("menupopup");
     menulist.setAttribute("flex", "1");
     menulist.setAttribute("width", "50");
     menulist.setAttribute("class", "website-status");
@@ -228,7 +228,7 @@ var gSitePermissionsManager = {
       } else if (state == SitePermissions.UNKNOWN) {
         continue;
       }
-      let m = document.createElement("menuitem");
+      let m = document.createXULElement("menuitem");
       document.l10n.setAttributes(m, this._getCapabilityString(state));
       m.setAttribute("value", state);
       menupopup.appendChild(m);

@@ -54,6 +54,7 @@
 #include "vm/TraceLogging.h"
 #include "vm/TypedArrayObject.h"
 #include "vtune/VTuneWrapper.h"
+#include "wasm/WasmStubs.h"
 
 #include "builtin/Boolean-inl.h"
 #include "jit/MacroAssembler-inl.h"
@@ -13554,6 +13555,133 @@ CodeGenerator::visitGetPrototypeOf(LGetPrototypeOf* lir)
     masm.tagValue(JSVAL_TYPE_OBJECT, scratch, out);
 
     masm.bind(ool->rejoin());
+}
+
+template <size_t NumDefs>
+void
+CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir)
+{
+    wasm::JitCallStackArgVector stackArgs;
+    masm.propagateOOM(stackArgs.reserve(lir->numOperands()));
+    if (masm.oom())
+        return;
+
+    const wasm::FuncExport& funcExport = lir->mir()->funcExport();
+    const wasm::FuncType& sig = funcExport.funcType();
+
+    ABIArgGenerator abi;
+    for (size_t i = 0; i < lir->numOperands(); i++) {
+        MIRType argMir;
+        switch (sig.args()[i].code()) {
+          case wasm::ValType::I32:
+          case wasm::ValType::F32:
+          case wasm::ValType::F64:
+            argMir = ToMIRType(sig.args()[i]);
+            break;
+          case wasm::ValType::I64:
+          case wasm::ValType::Ref:
+          case wasm::ValType::AnyRef:
+            // Don't forget to trace GC type arguments in TraceJitExitFrames
+            // when they're enabled.
+            MOZ_CRASH("unexpected argument type when calling from ion to wasm");
+        }
+
+        ABIArg arg = abi.next(argMir);
+        switch (arg.kind()) {
+          case ABIArg::GPR:
+          case ABIArg::FPU: {
+            MOZ_ASSERT(ToAnyRegister(lir->getOperand(i)) == arg.reg());
+            stackArgs.infallibleEmplaceBack(wasm::JitCallStackArg());
+            break;
+          }
+          case ABIArg::Stack: {
+            const LAllocation* larg = lir->getOperand(i);
+            if (larg->isConstant())
+                stackArgs.infallibleEmplaceBack(ToInt32(larg));
+            else if (larg->isGeneralReg())
+                stackArgs.infallibleEmplaceBack(ToRegister(larg));
+            else if (larg->isFloatReg())
+                stackArgs.infallibleEmplaceBack(ToFloatRegister(larg));
+            else
+                stackArgs.infallibleEmplaceBack(ToAddress(larg));
+            break;
+          }
+#ifdef JS_CODEGEN_REGISTER_PAIR
+          case ABIArg::GPR_PAIR: {
+            MOZ_CRASH("no way to pass i64, and wasm uses hardfp for function calls");
+          }
+#endif
+          case ABIArg::Uninitialized: {
+            MOZ_CRASH("Uninitialized ABIArg kind");
+          }
+        }
+    }
+
+    switch (sig.ret().code()) {
+      case wasm::ExprType::Void:
+        MOZ_ASSERT(lir->mir()->type() == MIRType::Value);
+        break;
+      case wasm::ExprType::I32:
+        MOZ_ASSERT(lir->mir()->type() == MIRType::Int32);
+        MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
+        break;
+      case wasm::ExprType::F32:
+        MOZ_ASSERT(lir->mir()->type() == MIRType::Float32);
+        MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnFloat32Reg);
+        break;
+      case wasm::ExprType::F64:
+        MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
+        MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
+        break;
+      case wasm::ExprType::Ref:
+      case wasm::ExprType::AnyRef:
+      case wasm::ExprType::I64:
+        // Don't forget to trace GC type return value in TraceJitExitFrames
+        // when they're enabled.
+        MOZ_CRASH("unexpected return type when calling from ion to wasm");
+      case wasm::ExprType::Limit:
+        MOZ_CRASH("Limit");
+    }
+
+    bool profilingEnabled = isProfilerInstrumentationEnabled();
+    WasmInstanceObject* instObj = lir->mir()->instanceObject();
+
+    bool wasmGcEnabled = false;
+#ifdef ENABLE_WASM_GC
+    wasmGcEnabled = gen->options.wasmGcEnabled();
+#endif
+
+    Register scratch = ToRegister(lir->temp());
+
+    uint32_t callOffset;
+    GenerateDirectCallFromJit(masm,
+                              funcExport,
+                              instObj->instance(),
+                              stackArgs,
+                              profilingEnabled,
+                              wasmGcEnabled,
+                              scratch,
+                              &callOffset);
+
+    // Add the instance object to the constant pool, so it is transferred to
+    // the owning IonScript and so that it gets traced as long as the IonScript
+    // lives.
+
+    uint32_t unused;
+    masm.propagateOOM(graph.addConstantToPool(ObjectValue(*instObj), &unused));
+
+    markSafepointAt(callOffset, lir);
+}
+
+void
+CodeGenerator::visitIonToWasmCall(LIonToWasmCall* lir)
+{
+    emitIonToWasmCallBase(lir);
+}
+void
+CodeGenerator::visitIonToWasmCallV(LIonToWasmCallV* lir)
+{
+    emitIonToWasmCallBase(lir);
 }
 
 static_assert(!std::is_polymorphic<CodeGenerator>::value,

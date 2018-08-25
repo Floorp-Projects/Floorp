@@ -13,11 +13,6 @@
   padding: 2px;
 }
 
-:root[subdialog] form label,
-:root[subdialog] form > p {
-  margin: 0 0 0.5em !important;
-}
-
 form input[type="email"],
 form input[type="tel"],
 form input[type="text"],
@@ -55,8 +50,14 @@ form :-moz-any(label, div) > .label-text[field-populated] {
   font-size: var(--in-field-label-size);
 }
 
-form :-moz-any(label, div):focus-within > .label-text {
+form :-moz-any(input, select, textarea):focus ~ .label-text {
   color: var(--in-content-item-selected);
+}
+
+/* Focused error fields should get a darker text but not the blue one since it
+ * doesn't look good with the red error outline. */
+form :-moz-any(input, select, textarea):focus:-moz-ui-invalid ~ .label-text {
+  color: var(--in-content-text-color);
 }
 
 form div[required] > label > .label-text::after,

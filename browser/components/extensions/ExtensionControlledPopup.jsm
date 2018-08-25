@@ -270,7 +270,7 @@ class ExtensionControlledPopup {
   getAddonDetails(doc, addon) {
     const defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 
-    let image = doc.createElement("image");
+    let image = doc.createXULElement("image");
     image.setAttribute("src", addon.iconURL || defaultIcon);
     image.classList.add("extension-controlled-icon");
 
@@ -295,7 +295,7 @@ class ExtensionControlledPopup {
         BrowserUtils.getLocalizedFragment(doc, message, addonDetails));
     }
 
-    let link = doc.createElement("label");
+    let link = doc.createXULElement("label");
     link.setAttribute("class", "learnMore text-link");
     link.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + this.learnMoreLink;
     link.textContent = strBundle.GetStringFromName(this.learnMoreMessageId);

@@ -307,7 +307,11 @@ HTMLTextFieldAccessible::NativeAttributes()
   // Expose type for text input elements as it gives some useful context,
   // especially for mobile.
   nsAutoString type;
-  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
+  // In the case of input[type=number], mContent is anonymous and is an
+  // input[type=text]. Getting the root not-anonymous content will give
+  // us the right type. In case of other input types, this returns the same node.
+  nsIContent* content = mContent->FindFirstNonChromeOnlyAccessContent();
+  if (content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textInputType, type);
     if (!ARIARoleMap() && type.EqualsLiteral("search")) {
       nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,

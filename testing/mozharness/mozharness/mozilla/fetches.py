@@ -4,6 +4,7 @@
 
 import os
 from distutils.spawn import find_executable
+import json
 
 import mozfile
 
@@ -30,30 +31,31 @@ class FetchesMixin(object):
             self.warning('no fetches to download')
             return
 
-        fetches = os.environ['MOZ_FETCHES'].split()
-
         if not self.fetch_script or not os.path.isfile(self.fetch_script):
             self.warning("fetch-content script not found, downloading manually")
-            self._download_fetches(fetches)
+            self._download_fetches()
             return
 
-        cmd = [self.fetch_script, 'task-artifacts'] + fetches
+        cmd = [self.fetch_script, 'task-artifacts']
         self.run_command(cmd, env=os.environ, throw_exception=True)
 
-    def _download_fetches(self, fetches):
+    def _download_fetches(self):
         # TODO: make sure fetch-content script is available everywhere
         #       so this isn't needed
-        for word in fetches:
-            artifact, task = word.split('@', 1)
-            extdir = os.environ['MOZ_FETCHES_DIR']
+        fetches_dir = os.environ['MOZ_FETCHES_DIR']
 
-            if '>' in artifact:
-                artifact, subdir = artifact.rsplit('>', 1)
-                extdir = os.path.join(extdir, subdir)
+        fetches = json.loads(os.environ.get('MOZ_FETCHES', '{}'))
+        for fetch in fetches:
+            extdir = fetches_dir
+            if 'dest' in 'fetch':
+                extdir = os.path.join(extdir, fetch['dest'])
+            artifact = fetch['artifact']
+            if not artifact.startswith('public/'):
+                raise Exception('Private artifacts in `MOZ_FETCHES` not supported.')
+            url = ARTIFACT_URL.format(artifact=artifact, task=fetch['task'])
 
-            url = ARTIFACT_URL.format(artifact=artifact, task=task)
-            self.download_file(url)
+            path = self.download_file(url, parent_dir=extdir)
 
-            filename = os.path.basename(artifact)
-            mozfile.extract(filename, extdir)
-            os.remove(filename)
+            if fetch['extract']:
+                mozfile.extract(path, extdir)
+                os.remove(path)

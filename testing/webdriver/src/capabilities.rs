@@ -1,3 +1,4 @@
+use common::MAX_SAFE_INTEGER;
 use error::{ErrorStatus, WebDriverError, WebDriverResult};
 use serde_json::{Map, Value};
 use std::convert::From;
@@ -324,14 +325,26 @@ impl SpecNewSessionParameters {
             match &**key {
                 x @ "script" | x @ "pageLoad" | x @ "implicit" => {
                     let timeout = try_opt!(
-                        value.as_i64(),
+                        value.as_f64(),
                         ErrorStatus::InvalidArgument,
-                        format!("{} timeouts value is not an integer: {}", x, value)
+                        format!("{} timeouts value is not a number: {}", x, value)
                     );
-                    if timeout < 0 {
+                    if timeout < 0.0 || timeout.fract() != 0.0 {
                         return Err(WebDriverError::new(
                             ErrorStatus::InvalidArgument,
-                            format!("{} timeouts value is negative: {}", x, timeout),
+                            format!(
+                                "'{}' timeouts value is not a positive Integer: {}",
+                                x, timeout
+                            ),
+                        ));
+                    }
+                    if (timeout as u64) > MAX_SAFE_INTEGER {
+                        return Err(WebDriverError::new(
+                            ErrorStatus::InvalidArgument,
+                            format!(
+                                "'{}' timeouts value is greater than maximum safe integer: {}",
+                                x, timeout
+                            ),
                         ));
                     }
                 }

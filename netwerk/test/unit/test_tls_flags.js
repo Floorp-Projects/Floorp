@@ -118,7 +118,6 @@ function startServer(cert, minServerVersion, maxServerVersion, expectedVersion) 
   tlsServer.init(-1, true, -1);
   tlsServer.serverCert = cert;
   tlsServer.setVersionRange(minServerVersion, maxServerVersion);
-  tlsServer.setSessionCache(false);
   tlsServer.setSessionTickets(false);
 
   let listener = {

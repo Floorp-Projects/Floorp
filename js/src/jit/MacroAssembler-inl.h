@@ -218,6 +218,14 @@ MacroAssembler::callJit(TrampolinePtr code)
     return currentOffset();
 }
 
+uint32_t
+MacroAssembler::callJit(ImmPtr callee)
+{
+    AutoProfilerCallInstrumentation profiler(*this);
+    call(callee);
+    return currentOffset();
+}
+
 void
 MacroAssembler::makeFrameDescriptor(Register frameSizeReg, FrameType type, uint32_t headerSize)
 {

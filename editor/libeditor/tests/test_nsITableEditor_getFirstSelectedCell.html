@@ -1,0 +1,198 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsITableEditor.getFirstSelectedCell()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+  let selection = document.getSelection();
+
+  selection.collapse(editor, 0);
+  let rangeWrapper = {};
+  let cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
+  is(cell, null,
+     "nsITableEditor.getFirstSelectedCell() should return null if Selection does not select cells");
+  is(rangeWrapper.value, null,
+     "nsITableEditor.getFirstSelectedCell() should return null range if Selection does not select cells");
+
+  editor.innerHTML =
+    '<table id="table">' +
+      '<tr id="r1"><td id="c1-1">cell1-1</td><td id="c1-2">cell1-2</td><td id="c1-3">cell1-3</td><td id="c1-4" colspan="2" rowspan="2">cell1-4</td></tr>' +
+      '<tr id="r2"><th id="c2-1" rowspan="2">cell2-1</th><td id="c2-2">cell2-2<td id="c2-3">cell2-3</td></tr>' +
+      '<tr id="r3"><td id="c3-2">cell3-2</td><td id="c3-3">cell3-3</td><td id="c3-4" colspan="2">cell3-4</td></tr>' +
+      '<tr id="r4"><td id="c4-1" rowspan="4">cell4-1</td><td id="c4-2">cell4-2</td><td id="c4-3">cell4-3</td><th id="c4-4">cell4-4</th><td id="c4-5">cell4-5</td></tr>' +
+      '<tr id="r5"><th id="c5-2">cell5-2</th><th id="c5-3" colspan="2">cell5-3</th><td id="c5-5">cell5-5</td></tr>' +
+      '<tr id="r6"><td id="c6-2">cell6-2</td><td id="c6-3">cell6-3</td><td id="c6-4"><p>cell6-4</p></td><td id="c6-5">cell6-5</td></tr>' +
+      '<tr id="r7"><td id="c7-2" colspan="4">cell7-2</td></tr>' +
+    '</table>';
+
+  let tr = document.getElementById("r1");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
+  is(cell, document.getElementById("c1-1"),
+     "#1-1 nsITableEditor.getFirstSelectedCell() should return the first cell element in the first row");
+  is(rangeWrapper.value.startContainer, tr,
+     "#1-1 nsITableEditor.getFirstSelectedCell() should return the first <tr> element as start container of the range");
+  is(rangeWrapper.value.startOffset, 0,
+     "#1-1 nsITableEditor.getFirstSelectedCell() should return 0 as start offset of the range");
+  is(rangeWrapper.value.endContainer, tr,
+     "#1-1 nsITableEditor.getFirstSelectedCell() should return the first <tr> element as end container of the range");
+  is(rangeWrapper.value.endOffset, 1,
+     "#1-1 nsITableEditor.getFirstSelectedCell() should return 1 as end offset of the range");
+
+  tr = document.getElementById("r1");
+  selection.setBaseAndExtent(tr, 3, tr, 4);
+  cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
+  is(cell, document.getElementById("c1-4"),
+     "#1-4 nsITableEditor.getFirstSelectedCell() should return the last cell element whose colspan and rowspan are 2 in the first row");
+  is(rangeWrapper.value.startContainer, tr,
+     "#1-4 nsITableEditor.getFirstSelectedCell() should return the first <tr> element as start container of the range");
+  is(rangeWrapper.value.startOffset, 3,
+     "#1-4 nsITableEditor.getFirstSelectedCell() should return 3 as start offset of the range");
+  is(rangeWrapper.value.endContainer, tr,
+     "#1-4 nsITableEditor.getFirstSelectedCell() should return the first <tr> element as end container of the range");
+  is(rangeWrapper.value.endOffset, 4,
+     "#1-4 nsITableEditor.getFirstSelectedCell() should return 4 as end offset of the range");
+
+  tr = document.getElementById("r2");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
+  is(cell, document.getElementById("c2-1"),
+     "#2-1 nsITableEditor.getFirstSelectedCell() should return the first cell element in the second row");
+  is(rangeWrapper.value.startContainer, tr,
+     "#2-1 nsITableEditor.getFirstSelectedCell() should return the second <tr> element as start container of the range");
+  is(rangeWrapper.value.startOffset, 0,
+     "#2-1 nsITableEditor.getFirstSelectedCell() should return 0 as start offset of the range");
+  is(rangeWrapper.value.endContainer, tr,
+     "#2-1 nsITableEditor.getFirstSelectedCell() should return the second <tr> element as end container of the range");
+  is(rangeWrapper.value.endOffset, 1,
+     "#2-1 nsITableEditor.getFirstSelectedCell() should return 1 as end offset of the range");
+
+  tr = document.getElementById("r7");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
+  is(cell, document.getElementById("c7-2"),
+     "#7-2 nsITableEditor.getFirstSelectedCell() should return the second cell element in the last row");
+  is(rangeWrapper.value.startContainer, tr,
+     "#7-2 nsITableEditor.getFirstSelectedCell() should return the last <tr> element as start container of the range");
+  is(rangeWrapper.value.startOffset, 0,
+     "#7-2 nsITableEditor.getFirstSelectedCell() should return 0 as start offset of the range");
+  is(rangeWrapper.value.endContainer, tr,
+     "#7-2 nsITableEditor.getFirstSelectedCell() should return the last <tr> element as end container of the range");
+  is(rangeWrapper.value.endOffset, 1,
+     "#7-2 nsITableEditor.getFirstSelectedCell() should return 1 as end offset of the range");
+
+  tr = document.getElementById("r2");
+  selection.removeAllRanges();
+  let range = document.createRange();
+  range.setStart(tr, 1);
+  range.setEnd(tr, 2);
+  selection.addRange(range);
+  range = document.createRange();
+  range.setStart(tr, 2);
+  range.setEnd(tr, 3);
+  selection.addRange(range);
+  cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
+  is(cell, document.getElementById("c2-2"),
+     "#2-2 nsITableEditor.getFirstSelectedCell() should return the second cell element in the second row");
+  is(rangeWrapper.value.startContainer, tr,
+     "#2-2 nsITableEditor.getFirstSelectedCell() should return the second <tr> element as start container of the range");
+  is(rangeWrapper.value.startOffset, 1,
+     "#2-2 nsITableEditor.getFirstSelectedCell() should return 1 as start offset of the range");
+  is(rangeWrapper.value.endContainer, tr,
+     "#2-2 nsITableEditor.getFirstSelectedCell() should return the second <tr> element as end container of the range");
+  is(rangeWrapper.value.endOffset, 2,
+     "#2-2 nsITableEditor.getFirstSelectedCell() should return 2 as end offset of the range");
+
+  tr = document.getElementById("r3");
+  selection.removeAllRanges();
+  range = document.createRange();
+  range.setStart(tr, 2);
+  range.setEnd(tr, 3);
+  selection.addRange(range);
+  range = document.createRange();
+  range.setStart(document.getElementById("r5"), 0);
+  range.setEnd(document.getElementById("r5"), 1);
+  selection.addRange(range);
+  cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
+  is(cell, document.getElementById("c3-4"),
+     "#3-4 nsITableEditor.getFirstSelectedCell() should return the last cell element in the third row");
+  is(rangeWrapper.value.startContainer, tr,
+     "#3-4 nsITableEditor.getFirstSelectedCell() should return the third <tr> element as start container of the range");
+  is(rangeWrapper.value.startOffset, 2,
+     "#3-4 nsITableEditor.getFirstSelectedCell() should return 2 as start offset of the range");
+  is(rangeWrapper.value.endContainer, tr,
+     "#3-4 nsITableEditor.getFirstSelectedCell() should return the third <tr> element as end container of the range");
+  is(rangeWrapper.value.endOffset, 3,
+     "#3-4 nsITableEditor.getFirstSelectedCell() should return 3 as end offset of the range");
+
+  cell = document.getElementById("c6-4");
+  selection.selectAllChildren(cell);
+  cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
+  is(cell, null,
+     "nsITableEditor.getFirstSelectedCell() should return null if neither <td> nor <th> element node is selected");
+  is(rangeWrapper.value, null,
+     "nsITableEditor.getFirstSelectedCell() should return null for the range if neither <td> nor <th> element node is selected");
+
+  cell = document.getElementById("c6-5");
+  selection.setBaseAndExtent(cell.firstChild, 0, cell.firstChild, 0);
+  cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
+  is(cell, null,
+     "nsITableEditor.getFirstSelectedCell() should return null if a text node is selected");
+  is(rangeWrapper.value, null,
+     "nsITableEditor.getFirstSelectedCell() should return null for the range if a text node is selected");
+
+  // XXX If cell is not selected, nsITableEditor.getFirstSelectedCell() returns null
+  //     without throwing exception, however, if there is no selection ranges,
+  //     throwing an exception.  This inconsistency is odd.
+  selection.removeAllRanges();
+  try {
+    cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
+    ok(false, "nsITableEditor.getFirstSelectedCell() should throw an exception if there is no selection ranges");
+  } catch (e) {
+    ok(true, "nsITableEditor.getFirstSelectedCell() should throw an exception if there is no selection ranges");
+  }
+
+  tr = document.getElementById("r6");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  try {
+    cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell());
+    ok(false, "nsITableEditor.getFirstSelectedCell() should throw an exception if it does not have argument");
+  } catch (e) {
+    ok(true, "nsITableEditor.getFirstSelectedCell() should throw an exception if it does not have argument");
+  }
+
+  tr = document.getElementById("r6");
+  selection.setBaseAndExtent(tr, 0, tr, 1);
+  try {
+    cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(null));
+    ok(false, "nsITableEditor.getFirstSelectedCell() should throw an exception if its argument is null");
+  } catch (e) {
+    ok(true, "nsITableEditor.getFirstSelectedCell() should throw an exception if its argument is null");
+  }
+
+  SimpleTest.finish();
+});
+
+function getTableEditor() {
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsITableEditor);
+}
+
+</script>
+</body>
+
+</html>

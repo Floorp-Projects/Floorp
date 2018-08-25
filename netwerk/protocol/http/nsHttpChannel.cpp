@@ -336,6 +336,7 @@ nsHttpChannel::nsHttpChannel()
     , mStronglyFramed(false)
     , mUsedNetwork(0)
     , mAuthConnectionRestartable(0)
+    , mTrackingProtectionCancellationPending(0)
     , mPushedStream(nullptr)
     , mLocalBlocklist(false)
     , mOnTailUnblock(nullptr)
@@ -6058,8 +6059,16 @@ nsHttpChannel::CancelForTrackingProtection()
     if (mSuspendCount) {
         LOG(("Waiting until resume in Cancel [this=%p]\n", this));
         MOZ_ASSERT(!mCallOnResume);
+        mTrackingProtectionCancellationPending = 1;
         mCallOnResume = &nsHttpChannel::HandleContinueCancelledByTrackingProtection;
         return NS_OK;
+    }
+
+    // Check to see if we should redirect this channel elsewhere by
+    // nsIHttpChannel.redirectTo API request
+    if (mAPIRedirectToURI) {
+        mTrackingProtectionCancellationPending = 1;
+        return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
     }
 
     return CancelInternal(NS_ERROR_TRACKING_URI);
@@ -6079,12 +6088,25 @@ nsHttpChannel::ContinueCancelledByTrackingProtection()
         return;
     }
 
+    // Check to see if we should redirect this channel elsewhere by
+    // nsIHttpChannel.redirectTo API request
+    if (mAPIRedirectToURI) {
+        Unused << AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
+        return;
+    }
+
     Unused << CancelInternal(NS_ERROR_TRACKING_URI);
 }
 
 nsresult
 nsHttpChannel::CancelInternal(nsresult status)
 {
+    bool trackingProtectionCancellationPending =
+      !!mTrackingProtectionCancellationPending;
+    if (status == NS_ERROR_TRACKING_URI) {
+      mTrackingProtectionCancellationPending = 0;
+    }
+
     mCanceled = true;
     mStatus = status;
     if (mProxyRequest)
@@ -6101,6 +6123,10 @@ nsHttpChannel::CancelInternal(nsresult status)
         mOnTailUnblock = nullptr;
         mRequestContext->CancelTailedRequest(this);
         CloseCacheEntry(false);
+        Unused << AsyncAbort(status);
+    } else if (trackingProtectionCancellationPending) {
+        // If we're coming from an asynchronous path when canceling a channel due
+        // to tracking protection, we need to AsyncAbort the channel now.
         Unused << AsyncAbort(status);
     }
     return NS_OK;
@@ -6561,6 +6587,14 @@ nsHttpChannel::BeginConnectActual()
 {
     if (mCanceled) {
         return mStatus;
+    }
+
+    if (mTrackingProtectionCancellationPending) {
+        LOG(("Waiting for tracking protection cancellation in BeginConnectActual [this=%p]\n", this));
+        MOZ_ASSERT(!mCallOnResume ||
+                   mCallOnResume == &nsHttpChannel::HandleContinueCancelledByTrackingProtection,
+                   "We should be paused waiting for cancellation from tracking protection");
+        return NS_OK;
     }
 
     if (!mConnectionInfo->UsingHttpProxy() &&

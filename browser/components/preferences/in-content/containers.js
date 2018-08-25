@@ -30,14 +30,14 @@ let gContainersPane = {
       this._list.firstChild.remove();
     }
     for (let container of containers) {
-      let item = document.createElement("richlistitem");
+      let item = document.createXULElement("richlistitem");
 
-      let outer = document.createElement("hbox");
+      let outer = document.createXULElement("hbox");
       outer.setAttribute("flex", 1);
       outer.setAttribute("align", "center");
       item.appendChild(outer);
 
-      let userContextIcon = document.createElement("hbox");
+      let userContextIcon = document.createXULElement("hbox");
       userContextIcon.className = "userContext-icon";
       userContextIcon.setAttribute("width", 24);
       userContextIcon.setAttribute("height", 24);
@@ -45,25 +45,25 @@ let gContainersPane = {
       userContextIcon.setAttribute("data-identity-color", container.color);
       outer.appendChild(userContextIcon);
 
-      let label = document.createElement("label");
+      let label = document.createXULElement("label");
       label.setAttribute("flex", 1);
       label.setAttribute("crop", "end");
       label.textContent = ContextualIdentityService.getUserContextLabel(container.userContextId);
       outer.appendChild(label);
 
-      let containerButtons = document.createElement("hbox");
+      let containerButtons = document.createXULElement("hbox");
       containerButtons.className = "container-buttons";
       containerButtons.setAttribute("flex", 1);
       containerButtons.setAttribute("align", "right");
       item.appendChild(containerButtons);
 
-      let prefsButton = document.createElement("button");
+      let prefsButton = document.createXULElement("button");
       prefsButton.setAttribute("oncommand", "gContainersPane.onPreferenceCommand(event.originalTarget)");
       prefsButton.setAttribute("value", container.userContextId);
       document.l10n.setAttributes(prefsButton, "containers-preferences-button");
       containerButtons.appendChild(prefsButton);
 
-      let removeButton = document.createElement("button");
+      let removeButton = document.createXULElement("button");
       removeButton.setAttribute("oncommand", "gContainersPane.onRemoveCommand(event.originalTarget)");
       removeButton.setAttribute("value", container.userContextId);
       document.l10n.setAttributes(removeButton, "containers-remove-button");

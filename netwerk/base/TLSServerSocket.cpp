@@ -49,12 +49,12 @@ TLSServerSocket::SetSocketDefaults()
   SSL_OptionSet(mFD, SSL_SECURITY, true);
   SSL_OptionSet(mFD, SSL_HANDSHAKE_AS_CLIENT, false);
   SSL_OptionSet(mFD, SSL_HANDSHAKE_AS_SERVER, true);
+  SSL_OptionSet(mFD, SSL_NO_CACHE, true);
 
   // We don't currently notify the server API consumer of renegotiation events
   // (to revalidate peer certs, etc.), so disable it for now.
   SSL_OptionSet(mFD, SSL_ENABLE_RENEGOTIATION, SSL_RENEGOTIATE_NEVER);
 
-  SetSessionCache(true);
   SetSessionTickets(true);
   SetRequestClientCertificate(REQUEST_NEVER);
 
@@ -165,18 +165,6 @@ TLSServerSocket::SetServerCert(nsIX509Cert* aCert)
     return NS_ERROR_IN_PROGRESS;
   }
   mServerCert = aCert;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TLSServerSocket::SetSessionCache(bool aEnabled)
-{
-  // If AsyncListen was already called (and set mListener), it's too late to set
-  // this.
-  if (NS_WARN_IF(mListener)) {
-    return NS_ERROR_IN_PROGRESS;
-  }
-  SSL_OptionSet(mFD, SSL_NO_CACHE, !aEnabled);
   return NS_OK;
 }
 

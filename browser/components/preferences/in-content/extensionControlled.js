@@ -223,14 +223,14 @@ function showEnableExtensionMessage(settingName) {
     img.className = "extension-controlled-icon";
     return img;
   };
-  let label = document.createElement("label");
+  let label = document.createXULElement("label");
   let addonIcon = icon("chrome://mozapps/skin/extensions/extensionGeneric-16.svg", "addons-icon");
   let toolbarIcon = icon("chrome://browser/skin/menu.svg", "menu-icon");
   label.appendChild(addonIcon);
   label.appendChild(toolbarIcon);
   document.l10n.setAttributes(label, "extension-controlled-enable");
   elements.description.appendChild(label);
-  let dismissButton = document.createElement("image");
+  let dismissButton = document.createXULElement("image");
   dismissButton.setAttribute("class", "extension-controlled-icon close-icon");
   dismissButton.addEventListener("click", function dismissHandler() {
     hideControllingExtension(settingName);

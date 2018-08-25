@@ -72,17 +72,17 @@ function SetFIPSButton() {
  */
 function AddModule(module, slots) {
   var tree = document.getElementById("device_list");
-  var item  = document.createElement("treeitem");
-  var row  = document.createElement("treerow");
-  var cell = document.createElement("treecell");
+  var item  = document.createXULElement("treeitem");
+  var row  = document.createXULElement("treerow");
+  var cell = document.createXULElement("treecell");
   cell.setAttribute("label", module.name);
   row.appendChild(cell);
   item.appendChild(row);
-  var parent = document.createElement("treechildren");
+  var parent = document.createXULElement("treechildren");
   for (let slot of slots) {
-    var child_item = document.createElement("treeitem");
-    var child_row = document.createElement("treerow");
-    var child_cell = document.createElement("treecell");
+    var child_item = document.createXULElement("treeitem");
+    var child_row = document.createXULElement("treerow");
+    var child_cell = document.createXULElement("treecell");
     child_cell.setAttribute("label", slot.name);
     child_row.appendChild(child_cell);
     child_item.appendChild(child_row);
@@ -257,13 +257,13 @@ function showModuleInfo() {
 // add a row to the info list, as [col1 col2] (ex.: ["status" "logged in"])
 function AddInfoRow(col1, col2, cell_id) {
   var tree = document.getElementById("info_list");
-  var item  = document.createElement("treeitem");
-  var row  = document.createElement("treerow");
-  var cell1 = document.createElement("treecell");
+  var item  = document.createXULElement("treeitem");
+  var row  = document.createXULElement("treerow");
+  var cell1 = document.createXULElement("treecell");
   cell1.setAttribute("label", col1);
   cell1.setAttribute("crop", "never");
   row.appendChild(cell1);
-  var cell2 = document.createElement("treecell");
+  var cell2 = document.createXULElement("treecell");
   cell2.setAttribute("label", col2);
   cell2.setAttribute("crop", "never");
   cell2.setAttribute("id", cell_id);

@@ -51,3 +51,11 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
     '/netwerk/protocol/data', # for nsDataHandler.h
 ]
+
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
+
+if CONFIG['FUZZING_INTERFACES']:
+    TEST_DIRS += [
+        'fuzztest'
+    ]
+

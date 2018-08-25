@@ -166,28 +166,28 @@ add_task(async function test_setup() {
   let navBar = document.getElementById("nav-bar");
 
   for (let i = 0; i < PANELS_COUNT; i++) {
-    gPanelAnchors[i] = document.createElement("toolbarbutton");
+    gPanelAnchors[i] = document.createXULElement("toolbarbutton");
     gPanelAnchors[i].classList.add("toolbarbutton-1",
                                    "chromeclass-toolbar-additional");
     navBar.appendChild(gPanelAnchors[i]);
 
-    gPanels[i] = document.createElement("panel");
+    gPanels[i] = document.createXULElement("panel");
     gPanels[i].id = "panel-" + i;
     gPanels[i].setAttribute("type", "arrow");
     gPanels[i].setAttribute("photon", true);
     navBar.appendChild(gPanels[i]);
 
-    gPanelMultiViews[i] = document.createElement("panelmultiview");
+    gPanelMultiViews[i] = document.createXULElement("panelmultiview");
     gPanelMultiViews[i].id = "panelmultiview-" + i;
     gPanels[i].appendChild(gPanelMultiViews[i]);
   }
 
   for (let i = 0; i < PANELVIEWS_COUNT; i++) {
-    gPanelViews[i] = document.createElement("panelview");
+    gPanelViews[i] = document.createXULElement("panelview");
     gPanelViews[i].id = "panelview-" + i;
     navBar.appendChild(gPanelViews[i]);
 
-    gPanelViewLabels[i] = document.createElement("label");
+    gPanelViewLabels[i] = document.createXULElement("label");
     gPanelViewLabels[i].setAttribute("value", "PanelView " + i);
     gPanelViews[i].appendChild(gPanelViewLabels[i]);
   }

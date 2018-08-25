@@ -12,7 +12,7 @@ add_task(async function() {
     let placements = CustomizableUI.getWidgetIdsInArea(toolbar);
     Assert.deepEqual(placements.slice(-2), ["real-button", "moved-button-not-here"],
       "Should have correct placements");
-    let otherButton = document.createElement("toolbarbutton");
+    let otherButton = document.createXULElement("toolbarbutton");
     otherButton.id = "moved-button-not-here";
     if (toolbar == "nav-bar") {
       gURLBar.parentNode.appendChild(otherButton);

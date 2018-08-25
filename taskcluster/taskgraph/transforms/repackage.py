@@ -17,7 +17,7 @@ from taskgraph.util.schema import (
     resolve_keyed_by,
     Schema,
 )
-from taskgraph.util.taskcluster import get_taskcluster_artifact_prefix, get_artifact_prefix
+from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
 
@@ -165,8 +165,6 @@ def make_job_description(config, jobs):
             dependencies['build'] = "build-{}/opt".format(
                 dependencies[build_task][13:dependencies[build_task].rfind('-')])
             build_task = 'build'
-        signing_task_ref = "<{}>".format(signing_task)
-        build_task_ref = "<{}>".format(build_task)
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes['repackage_type'] = 'repackage'
@@ -184,24 +182,27 @@ def make_job_description(config, jobs):
             'using': 'mozharness',
             'script': 'mozharness/scripts/repackage.py',
             'job-script': 'taskcluster/scripts/builder/repackage.sh',
-            'actions': ['download_input', 'setup', 'repackage'],
+            'actions': ['setup', 'repackage'],
             'extra-workspace-cache-key': 'repackage',
         })
 
         worker = {
-            'env': _generate_task_env(dep_job, build_platform, build_task_ref,
-                                      signing_task_ref, locale=locale,
-                                      project=config.params["project"]),
             'artifacts': _generate_task_output_files(dep_job, build_platform,
                                                      locale=locale,
                                                      project=config.params["project"]),
             'chain-of-trust': True,
             'max-run-time': 7200 if build_platform.startswith('win') else 3600,
+            # Don't add generic artifact directory.
+            'skip-artifacts': True,
         }
 
         if locale:
             # Make sure we specify the locale-specific upload dir
-            worker['env'].update(LOCALE=locale)
+            worker.setdefault('env', {}).update(LOCALE=locale)
+
+        use_stub = attributes.get('stub-installer')
+        if not use_stub:
+            worker.setdefault('env', {})['NO_STUB_INSTALLER'] = '1'
 
         if build_platform.startswith('win'):
             worker_type = 'aws-provisioner-v1/gecko-%s-b-win2012' % level
@@ -238,6 +239,9 @@ def make_job_description(config, jobs):
             'extra': job.get('extra', {}),
             'worker': worker,
             'run': run,
+            'fetches': _generate_download_config(dep_job, build_platform, build_task,
+                                                 signing_task, locale=locale,
+                                                 project=config.params["project"]),
         }
 
         if build_platform.startswith('macosx'):
@@ -249,38 +253,42 @@ def make_job_description(config, jobs):
         yield task
 
 
-def _generate_task_env(task, build_platform, build_task_ref, signing_task_ref, locale=None,
-                       project=None):
-    mar_prefix = get_taskcluster_artifact_prefix(
-        task, build_task_ref, postfix='host/bin/', locale=None
-    )
-    signed_prefix = get_taskcluster_artifact_prefix(task, signing_task_ref, locale=locale)
+def _generate_download_config(task, build_platform, build_task, signing_task, locale=None,
+                              project=None):
+    locale_path = '{}/'.format(locale) if locale else ''
 
     if build_platform.startswith('linux') or build_platform.startswith('macosx'):
         tarball_extension = 'bz2' if build_platform.startswith('linux') else 'gz'
         return {
-            'SIGNED_INPUT': {'task-reference': '{}target.tar.{}'.format(
-                signed_prefix, tarball_extension
-            )},
-            'UNSIGNED_MAR': {'task-reference': '{}mar'.format(mar_prefix)},
+            signing_task: [
+                {
+                    'artifact': '{}target.tar.{}'.format(locale_path, tarball_extension),
+                    'extract': False,
+                },
+            ],
+            build_task: [
+                'host/bin/mar',
+            ],
         }
     elif build_platform.startswith('win'):
-        task_env = {
-            'SIGNED_ZIP': {'task-reference': '{}target.zip'.format(signed_prefix)},
-            'SIGNED_SETUP': {'task-reference': '{}setup.exe'.format(signed_prefix)},
-            'UNSIGNED_MAR': {'task-reference': '{}mar.exe'.format(mar_prefix)},
+        fetch_config = {
+            signing_task: [
+                {
+                    'artifact': '{}target.zip'.format(locale_path),
+                    'extract': False,
+                },
+                '{}setup.exe'.format(locale_path),
+            ],
+            build_task: [
+                'host/bin/mar.exe',
+            ],
         }
 
         use_stub = task.attributes.get('stub-installer')
         if use_stub:
-            task_env['SIGNED_SETUP_STUB'] = {
-                'task-reference': '{}setup-stub.exe'.format(signed_prefix),
-            }
-        elif '32' in build_platform:
-            # Stub installer is only attempted on win32
-            task_env['NO_STUB_INSTALLER'] = '1'
+            fetch_config[signing_task].append('{}setup-stub.exe'.format(locale_path))
 
-        return task_env
+        return fetch_config
 
     raise NotImplementedError('Unsupported build_platform: "{}"'.format(build_platform))
 
@@ -292,7 +300,7 @@ def _generate_task_output_files(task, build_platform, locale=None, project=None)
     if build_platform.startswith('linux') or build_platform.startswith('macosx'):
         output_files = [{
             'type': 'file',
-            'path': '/builds/worker/workspace/build/artifacts/{}target.complete.mar'
+            'path': '/builds/worker/workspace/build/outputs/{}target.complete.mar'
                     .format(locale_output_path),
             'name': '{}/{}target.complete.mar'.format(artifact_prefix, locale_output_path),
         }]
@@ -300,7 +308,7 @@ def _generate_task_output_files(task, build_platform, locale=None, project=None)
         if build_platform.startswith('macosx'):
             output_files.append({
                 'type': 'file',
-                'path': '/builds/worker/workspace/build/artifacts/{}target.dmg'
+                'path': '/builds/worker/workspace/build/outputs/{}target.dmg'
                         .format(locale_output_path),
                 'name': '{}/{}target.dmg'.format(artifact_prefix, locale_output_path),
             })
@@ -308,11 +316,11 @@ def _generate_task_output_files(task, build_platform, locale=None, project=None)
     elif build_platform.startswith('win'):
         output_files = [{
             'type': 'file',
-            'path': '{}/{}target.installer.exe'.format(artifact_prefix, locale_output_path),
+            'path': 'build/outputs/{}target.installer.exe'.format(locale_output_path),
             'name': '{}/{}target.installer.exe'.format(artifact_prefix, locale_output_path),
         }, {
             'type': 'file',
-            'path': '{}/{}target.complete.mar'.format(artifact_prefix, locale_output_path),
+            'path': 'build/outputs/{}target.complete.mar'.format(locale_output_path),
             'name': '{}/{}target.complete.mar'.format(artifact_prefix, locale_output_path),
         }]
 
@@ -320,8 +328,8 @@ def _generate_task_output_files(task, build_platform, locale=None, project=None)
         if use_stub:
             output_files.append({
                 'type': 'file',
-                'path': '{}/{}target.stub-installer.exe'.format(
-                    artifact_prefix, locale_output_path
+                'path': 'build/outputs/{}target.stub-installer.exe'.format(
+                    locale_output_path
                 ),
                 'name': '{}/{}target.stub-installer.exe'.format(
                     artifact_prefix, locale_output_path

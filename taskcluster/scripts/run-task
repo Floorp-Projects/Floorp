@@ -480,7 +480,7 @@ def vcs_checkout(source_repo, dest, store_path,
     return revision
 
 
-def fetch_artifacts(fetches):
+def fetch_artifacts():
     print_line(b'fetches', b'fetching artifacts\n')
 
     fetch_content = shutil.which('fetch-content')
@@ -492,7 +492,7 @@ def fetch_artifacts(fetches):
         print(FETCH_CONTENT_NOT_FOUND)
         sys.exit(1)
 
-    cmd = [fetch_content, 'task-artifacts'] + fetches.split()
+    cmd = [fetch_content, 'task-artifacts']
     subprocess.run(cmd, check=True, env=os.environ)
     print_line(b'fetches', b'finished fetching artifacts\n')
 
@@ -737,11 +737,10 @@ def main(args):
         print('task should be defined in terms of non-symbolic revision')
         return 1
 
-    fetches = os.environ.get('MOZ_FETCHES')
-    if fetches:
-        fetch_artifacts(fetches)
-
     try:
+        if 'MOZ_FETCHES' in os.environ:
+            fetch_artifacts()
+
         return run_and_prefix_output(b'task', task_args)
     finally:
         fetches_dir = os.environ.get('MOZ_FETCHES_DIR')

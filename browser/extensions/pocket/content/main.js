@@ -150,7 +150,7 @@ var pktUI = (function() {
         if (pktApi.getSignupPanelTabTestVariant() == "v2") {
             let site = Services.prefs.getCharPref("extensions.pocket.site");
             openTabWithUrl("https://" + site + "/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext",
-                           Services.scriptSecurityManager.getSystemPrincipal());
+                           Services.scriptSecurityManager.createNullPrincipal({}));
 
             // force the panel closed before it opens
             getPanel().hidePopup();

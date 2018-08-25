@@ -10,6 +10,7 @@ const { BrowserToolboxProcess } =
 const { Cc, Ci } = require("chrome");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
+const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
 
 const {
   CONNECT_RUNTIME_FAILURE,
@@ -25,6 +26,9 @@ const {
   REQUEST_TABS_FAILURE,
   REQUEST_TABS_START,
   REQUEST_TABS_SUCCESS,
+  REQUEST_WORKERS_FAILURE,
+  REQUEST_WORKERS_START,
+  REQUEST_WORKERS_SUCCESS,
 } = require("../constants");
 
 let browserToolboxProcess = null;
@@ -43,6 +47,7 @@ function connectRuntime() {
       dispatch({ type: CONNECT_RUNTIME_SUCCESS, client });
       dispatch(requestExtensions());
       dispatch(requestTabs());
+      dispatch(requestWorkers());
     } catch (e) {
       dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e.message });
     }
@@ -67,26 +72,39 @@ function disconnectRuntime() {
 }
 
 function inspectDebugTarget(type, id) {
-  if (type === DEBUG_TARGETS.TAB) {
-    window.open(`about:devtools-toolbox?type=tab&id=${ id }`);
-  } else if (type === DEBUG_TARGETS.EXTENSION) {
-    // Close previous addon debugging toolbox.
-    if (browserToolboxProcess) {
-      browserToolboxProcess.close();
-    }
-
-    browserToolboxProcess = BrowserToolboxProcess.init({
-      addonID: id,
-      onClose: () => {
-        browserToolboxProcess = null;
+  return async (_, getState) => {
+    switch (type) {
+      case DEBUG_TARGETS.TAB: {
+        // Open tab debugger in new window.
+        window.open(`about:devtools-toolbox?type=tab&id=${ id }`);
+        break;
       }
-    });
-  } else {
-    console.error(`Failed to inspect the debug target of type: ${ type } id: ${ id }`);
-  }
+      case DEBUG_TARGETS.EXTENSION: {
+        // Close current debugging toolbox and open a new one.
+        if (browserToolboxProcess) {
+          browserToolboxProcess.close();
+        }
 
-  // We cancel the redux flow here since the inspection does not need to update the state.
-  return () => {};
+        browserToolboxProcess = BrowserToolboxProcess.init({
+          addonID: id,
+          onClose: () => {
+            browserToolboxProcess = null;
+          }
+        });
+        break;
+      }
+      case DEBUG_TARGETS.WORKER: {
+        // Open worker toolbox in new window.
+        gDevToolsBrowser.openWorkerToolbox(getState().runtime.client, id);
+        break;
+      }
+
+      default: {
+        console.error("Failed to inspect the debug target of " +
+                      `type: ${ type } id: ${ id }`);
+      }
+    }
+  };
 }
 
 function installTemporaryExtension() {
@@ -114,6 +132,18 @@ function installTemporaryExtension() {
   });
 
   return () => {};
+}
+
+function pushServiceWorker(actor) {
+  return async (_, getState) => {
+    const client = getState().runtime.client;
+
+    try {
+      await client.request({ to: actor, type: "push" });
+    } catch (e) {
+      console.error(e);
+    }
+  };
 }
 
 function reloadTemporaryExtension(actor) {
@@ -181,13 +211,53 @@ function requestExtensions() {
   };
 }
 
+function requestWorkers() {
+  return async (dispatch, getState) => {
+    dispatch({ type: REQUEST_WORKERS_START });
+
+    const client = getState().runtime.client;
+
+    try {
+      const {
+        other: otherWorkers,
+        service: serviceWorkers,
+        shared: sharedWorkers,
+      } = await client.mainRoot.listAllWorkers();
+
+      dispatch({
+        type: REQUEST_WORKERS_SUCCESS,
+        otherWorkers,
+        serviceWorkers,
+        sharedWorkers,
+      });
+    } catch (e) {
+      dispatch({ type: REQUEST_WORKERS_FAILURE, error: e.message });
+    }
+  };
+}
+
+function startServiceWorker(actor) {
+  return async (_, getState) => {
+    const client = getState().runtime.client;
+
+    try {
+      await client.request({ to: actor, type: "start" });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+}
+
 module.exports = {
   connectRuntime,
   disconnectRuntime,
   inspectDebugTarget,
   installTemporaryExtension,
+  pushServiceWorker,
   reloadTemporaryExtension,
   removeTemporaryExtension,
   requestTabs,
   requestExtensions,
+  requestWorkers,
+  startServiceWorker,
 };

@@ -185,7 +185,13 @@ const TEST_GLOBAL = {
     appinfo: {appBuildID: "20180710100040"}
   },
   XPCOMUtils: {
-    defineLazyGetter(_1, _2, f) { f(); },
+    defineLazyGetter(object, name, f) {
+      if (object && name) {
+        object[name] = f();
+      } else {
+        f();
+      }
+    },
     defineLazyGlobalGetters() {},
     defineLazyModuleGetter() {},
     defineLazyServiceGetter() {},

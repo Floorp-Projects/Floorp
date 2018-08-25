@@ -1170,6 +1170,12 @@ TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame)
         return;
     }
 
+    if (frame.isExitFrameLayout<DirectWasmJitCallFrameLayout>()) {
+        // Nothing to do: we can't have object arguments (yet!) and the callee
+        // is traced elsewhere.
+        return;
+    }
+
     if (frame.isBareExit()) {
         // Nothing to trace. Fake exit frame pushed for VM functions with
         // nothing to trace on the stack.

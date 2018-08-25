@@ -48,7 +48,7 @@ function l10n(key) {
  * @return XULMenuItemElement
  */
 function createMenuItem({ doc, id, label, accesskey, isCheckbox }) {
-  const menuitem = doc.createElement("menuitem");
+  const menuitem = doc.createXULElement("menuitem");
   menuitem.id = id;
   menuitem.setAttribute("label", label);
   if (accesskey) {
@@ -214,7 +214,7 @@ function addTopLevelItems(doc) {
   const { menuitems } = require("../menus");
   for (const item of menuitems) {
     if (item.separator) {
-      const separator = doc.createElement("menuseparator");
+      const separator = doc.createXULElement("menuseparator");
       separator.id = item.id;
       menuItems.appendChild(separator);
     } else {

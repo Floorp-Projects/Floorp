@@ -17,17 +17,6 @@ tree {
   -moz-appearance: listbox;
 }
 
-/* ::::: tree focusring ::::: */
-
-.focusring > .tree-stack > .tree-rows > .tree-bodybox {
-  border: 1px solid transparent;
-}
-
-.focusring:focus > .tree-stack > .tree-rows > .tree-bodybox {
-  border: 1px solid #000000;
-}
-
-
 /* ::::: tree rows ::::: */
 
 treechildren::-moz-tree-row {

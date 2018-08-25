@@ -652,12 +652,12 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="network-proxy-title"/>
+  <label class="header-name" flex="1" data-l10n-id="network-settings-title"/>
 </hbox>
 
-<!-- Network Proxy-->
+<!-- Network Settings-->
 <groupbox id="connectionGroup" data-category="paneGeneral" hidden="true">
-  <caption class="search-header" hidden="true"><label data-l10n-id="network-proxy-title"/></caption>
+  <caption class="search-header" hidden="true"><label data-l10n-id="network-settings-title"/></caption>
 
   <hbox align="center">
     <hbox align="center" flex="1">
@@ -694,7 +694,9 @@
                 connection-proxy-autotype.label,
                 connection-proxy-reload.label,
                 connection-proxy-autologin.label,
-                connection-proxy-socks-remote-dns.label
+                connection-proxy-socks-remote-dns.label,
+                connection-dns-over-https,
+                connection-dns-over-https-url
             " />
     </hbox>
   </hbox>

@@ -24,10 +24,13 @@ void ExplicitImplicitChecker::check(const MatchFinder::MatchResult &Result) {
   const CXXRecordDecl *Declaration =
       Result.Nodes.getNodeAs<CXXRecordDecl>("class");
 
+  FixItHint FixItHint =
+      FixItHint::CreateInsertion(Ctor->getLocation(), "explicit ");
   diag(Ctor->getLocation(), "bad implicit conversion constructor for %0",
        DiagnosticIDs::Error)
       << Declaration->getDeclName();
   diag(Ctor->getLocation(),
        "consider adding the explicit keyword to the constructor",
-       DiagnosticIDs::Note);
+       DiagnosticIDs::Note)
+      << FixItHint;
 }

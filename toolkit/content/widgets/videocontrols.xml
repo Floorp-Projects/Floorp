@@ -1618,7 +1618,7 @@
 
         const label = tt.label || "";
         const ttText = document.createTextNode(label);
-        const ttBtn = document.createElement("button");
+        const ttBtn = document.createXULElement("button");
 
         ttBtn.classList.add("textTrackItem");
         ttBtn.setAttribute("index", tt.index);

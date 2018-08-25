@@ -94,8 +94,8 @@ function onLoad() {
   let box = document.getElementById("certlist");
   let certTreeItems = window.arguments[1];
   for (let certTreeItem of certTreeItems) {
-    let listItem = document.createElement("richlistitem");
-    let label = document.createElement("label");
+    let listItem = document.createXULElement("richlistitem");
+    let label = document.createXULElement("label");
     label.setAttribute("value", certTreeItemToString(certTreeItem));
     listItem.appendChild(label);
     box.appendChild(listItem);

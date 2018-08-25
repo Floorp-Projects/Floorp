@@ -64,8 +64,8 @@ var DownloadHistory = {
    * @resolves The requested DownloadHistoryList object.
    * @rejects JavaScript exception.
    */
-  getList({type = Downloads.PUBLIC, maxHistoryResults} = {}) {
-    DownloadCache.ensureInitialized();
+  async getList({type = Downloads.PUBLIC, maxHistoryResults} = {}) {
+    await DownloadCache.ensureInitialized();
 
     let key = `${type}|${maxHistoryResults ? maxHistoryResults : -1}`;
     if (!this._listPromises[key]) {
@@ -170,34 +170,48 @@ var DownloadHistory = {
  */
 var DownloadCache = {
   _data: new Map(),
-  _initialized: false,
+  _initializePromise: null,
 
   /**
    * Initializes the cache, loading the data from the places database.
+   *
+   * @return {Promise} Returns a promise that is resolved once the
+   *                   initialization is complete.
    */
   ensureInitialized() {
-    if (this._initialized) {
-      return;
+    if (this._initializePromise) {
+      return this._initializePromise;
     }
-    this._initialized = true;
+    this._initializePromise = (async () => {
+      PlacesUtils.history.addObserver(this, true);
 
-    PlacesUtils.history.addObserver(this, true);
+      let pageAnnos = await PlacesUtils.history.fetchAnnotatedPages([
+        METADATA_ANNO,
+        DESTINATIONFILEURI_ANNO
+      ]);
 
-    // Read the metadata annotations first, but ignore invalid JSON.
-    for (let result of PlacesUtils.annotations.getAnnotationsWithName(
-                                               METADATA_ANNO)) {
-      try {
-        this._data.set(result.uri.spec, JSON.parse(result.annotationValue));
-      } catch (ex) {}
-    }
+      let metaDataPages = pageAnnos.get(METADATA_ANNO);
+      if (metaDataPages) {
+        for (let {uri, content} of metaDataPages) {
+          try {
+            this._data.set(uri.href, JSON.parse(content));
+          } catch (ex) {
+            // Do nothing - JSON.parse could throw.
+          }
+        }
+      }
 
-    // Add the target file annotations to the metadata.
-    for (let result of PlacesUtils.annotations.getAnnotationsWithName(
-                                               DESTINATIONFILEURI_ANNO)) {
-      let newData = this.get(result.uri.spec);
-      newData.targetFileSpec = result.annotationValue;
-      this._data.set(result.uri.spec, newData);
-    }
+      let destinationFilePages = pageAnnos.get(DESTINATIONFILEURI_ANNO);
+      if (destinationFilePages) {
+        for (let {uri, content} of destinationFilePages) {
+          let newData = this.get(uri.href);
+          newData.targetFileSpec = content;
+          this._data.set(uri.href, newData);
+        }
+      }
+    })();
+
+    return this._initializePromise;
   },
 
   /**
@@ -224,7 +238,7 @@ var DownloadCache = {
    * @param {Download} download The download to add to the database and cache.
    */
   async addDownload(download) {
-    this.ensureInitialized();
+    await this.ensureInitialized();
 
     let targetFile = new FileUtils.File(download.target.path);
     let targetUri = Services.io.newFileURI(targetFile);
@@ -270,7 +284,7 @@ var DownloadCache = {
    * @param {Object} metadata The new metaData to save in the cache.
    */
   async setMetadata(url, metadata) {
-    this.ensureInitialized();
+    await this.ensureInitialized();
 
     // This should be executed before any async parts, to ensure the cache is
     // updated before any notifications are activated.

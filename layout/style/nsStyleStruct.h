@@ -1978,9 +1978,14 @@ struct StyleSVGPath final
     return mPath;
   }
 
+  StyleFillRule FillRule() const
+  {
+    return mFillRule;
+  }
+
   bool operator==(const StyleSVGPath& aOther) const
   {
-    return mPath == aOther.mPath;
+    return mPath == aOther.mPath && mFillRule == aOther.mFillRule;
   }
 
   bool operator!=(const StyleSVGPath& aOther) const
@@ -1990,6 +1995,7 @@ struct StyleSVGPath final
 
 private:
   nsTArray<StylePathCommand> mPath;
+  StyleFillRule mFillRule = StyleFillRule::Nonzero;
 };
 
 struct StyleShapeSource final

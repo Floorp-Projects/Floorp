@@ -12,13 +12,13 @@ const {
 } = require("../constants");
 const Actions = require("../actions/index");
 
-function debugTargetListenerMiddleware(state) {
+function debugTargetListenerMiddleware(store) {
   const onExtensionsUpdated = () => {
-    state.dispatch(Actions.requestExtensions());
+    store.dispatch(Actions.requestExtensions());
   };
 
   const onTabsUpdated = () => {
-    state.dispatch(Actions.requestTabs());
+    store.dispatch(Actions.requestTabs());
   };
 
   const extensionsListener = {
@@ -47,16 +47,32 @@ function debugTargetListenerMiddleware(state) {
     },
   };
 
+  const onWorkersUpdated = () => {
+    store.dispatch(Actions.requestWorkers());
+  };
+
   return next => action => {
     switch (action.type) {
       case CONNECT_RUNTIME_SUCCESS: {
-        action.client.addListener("tabListChanged", onTabsUpdated);
+        const { client } = action;
+        client.addListener("tabListChanged", onTabsUpdated);
         AddonManager.addAddonListener(extensionsListener);
+        client.addListener("workerListChanged", onWorkersUpdated);
+        client.addListener("serviceWorkerRegistrationListChanged", onWorkersUpdated);
+        client.addListener("processListChanged", onWorkersUpdated);
+        client.addListener("registration-changed", onWorkersUpdated);
+        client.addListener("push-subscription-modified", onWorkersUpdated);
         break;
       }
       case DISCONNECT_RUNTIME_START: {
-        state.getState().runtime.client.removeListener("tabListChanged", onTabsUpdated);
+        const { client } = store.getState().runtime;
+        client.removeListener("tabListChanged", onTabsUpdated);
         AddonManager.removeAddonListener(extensionsListener);
+        client.removeListener("workerListChanged", onWorkersUpdated);
+        client.removeListener("serviceWorkerRegistrationListChanged", onWorkersUpdated);
+        client.removeListener("processListChanged", onWorkersUpdated);
+        client.removeListener("registration-changed", onWorkersUpdated);
+        client.removeListener("push-subscription-modified", onWorkersUpdated);
         break;
       }
     }

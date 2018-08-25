@@ -31,7 +31,6 @@ class VRDisplayExternal : public VRDisplayHost
 {
 public:
   void ZeroSensor() override;
-  static int sPushIndex;
 
 protected:
   VRHMDSensorState GetSensorState() override;

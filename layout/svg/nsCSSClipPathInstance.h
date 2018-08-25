@@ -23,14 +23,16 @@ class nsCSSClipPathInstance
   typedef mozilla::gfx::Rect Rect;
 
 public:
-  static void ApplyBasicShapeClip(gfxContext& aContext,
-                                  nsIFrame* aFrame);
+  static void ApplyBasicShapeOrPathClip(gfxContext& aContext,
+                                        nsIFrame* aFrame);
   // aPoint is in CSS pixels.
-  static bool HitTestBasicShapeClip(nsIFrame* aFrame,
-                                    const gfxPoint& aPoint);
+  static bool HitTestBasicShapeOrPathClip(nsIFrame* aFrame,
+                                          const gfxPoint& aPoint);
 
-  static Rect GetBoundingRectForBasicShapeClip(nsIFrame* aFrame,
-                                               const StyleShapeSource& aClipPathStyle);
+  static Rect GetBoundingRectForBasicShapeOrPathClip(
+    nsIFrame* aFrame,
+    const StyleShapeSource& aClipPathStyle);
+
 private:
   explicit nsCSSClipPathInstance(nsIFrame* aFrame,
                                  const StyleShapeSource aClipPathStyle)
@@ -53,6 +55,7 @@ private:
   already_AddRefed<Path> CreateClipPathInset(DrawTarget* aDrawTarget,
                                              const nsRect& aRefBox);
 
+  already_AddRefed<Path> CreateClipPathPath(DrawTarget* aDrawTarget);
 
   /**
    * The frame for the element that is currently being clipped.

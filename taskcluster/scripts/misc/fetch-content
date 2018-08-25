@@ -8,6 +8,7 @@ import bz2
 import concurrent.futures
 import gzip
 import hashlib
+import json
 import lzma
 import multiprocessing
 import os
@@ -24,8 +25,10 @@ except ImportError:
     zstandard = None
 
 
-ARTIFACT_URL = ('https://queue.taskcluster.net/v1/task/{task}/artifacts/'
-                '{artifact}')
+PUBLIC_ARTIFACT_URL = ('https://queue.taskcluster.net/v1/task/{task}/artifacts/'
+                       '{artifact}')
+PRIVATE_ARTIFACT_URL = ('https://taskcluster/queue/v1/task/{task}/artifacts/'
+                        '{artifact}')
 
 CONCURRENCY = multiprocessing.cpu_count()
 
@@ -59,6 +62,9 @@ def stream_download(url, sha256=None, size=None):
 
     t0 = time.time()
     with urllib.request.urlopen(url) as fh:
+        if not url.endswith('.gz') and fh.info().get('Content-Encoding') == 'gzip':
+            fh = gzip.GzipFile(fileobj=fh)
+
         while True:
             chunk = fh.read(65536)
             if not chunk:
@@ -191,7 +197,7 @@ def extract_archive(path, dest_dir, typ):
     elif typ == 'zip':
         # unzip from stdin has wonky behavior. We don't use a pipe for it.
         ifh = open(os.devnull, 'rb')
-        args = ['unzip', str(path)]
+        args = ['unzip', '-o', str(path)]
         pipe_stdin = False
     else:
         raise ValueError('unknown archive format: %s' % path)
@@ -217,7 +223,7 @@ def extract_archive(path, dest_dir, typ):
     log('%s extracted in %.3fs' % (path, time.time() - t0))
 
 
-def fetch_and_extract(url, dest_dir, sha256=None, size=None):
+def fetch_and_extract(url, dest_dir, extract=True, sha256=None, size=None):
     """Fetch a URL and extract it to a destination path.
 
     If the downloaded URL is an archive, it is extracted automatically
@@ -229,6 +235,9 @@ def fetch_and_extract(url, dest_dir, sha256=None, size=None):
     dest_path = dest_dir / basename
 
     download_to_path(url, dest_path, sha256=sha256, size=size)
+
+    if not extract:
+        return
 
     typ = archive_type(dest_path)
     if typ:
@@ -280,20 +289,20 @@ def command_static_url(args):
 
 
 def command_task_artifacts(args):
+    fetches = json.loads(os.environ['MOZ_FETCHES'])
     downloads = []
-    for word in args.artifacts:
-        # Format is name[>dest]@task
-        artifact, task_id = word.split('@', 1)
+    for fetch in fetches:
         extdir = pathlib.Path(args.dest)
-
-        if '>' in artifact:
-            artifact, subdir = artifact.rsplit('>', 1)
-            extdir = extdir.joinpath(subdir)
-
+        if 'dest' in fetch:
+            extdir = extdir.joinpath(fetch['dest'])
         extdir.mkdir(parents=True, exist_ok=True)
-        url = ARTIFACT_URL.format(task=task_id,
-                                  artifact=artifact)
-        downloads.append((url, extdir))
+        if fetch['artifact'].startswith('public/'):
+            url = PUBLIC_ARTIFACT_URL.format(task=fetch['task'],
+                                             artifact=fetch['artifact'])
+        else:
+            url = PRIVATE_ARTIFACT_URL.format(task=fetch['task'],
+                                              artifact=fetch['artifact'])
+        downloads.append((url, extdir, fetch['extract']))
 
     fetch_urls(downloads)
 
@@ -322,8 +331,6 @@ def main():
     artifacts.add_argument('-d', '--dest', default=os.environ.get('MOZ_FETCHES_DIR'),
                            help='Destination directory which will contain all '
                                 'artifacts (defaults to $MOZ_FETCHES_DIR)')
-    artifacts.add_argument('artifacts', nargs='+',
-                           help='Artifacts to fetch. Of form path@task_id')
 
     args = parser.parse_args()
 

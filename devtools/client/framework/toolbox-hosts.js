@@ -53,12 +53,12 @@ BottomHost.prototype = {
     const ownerDocument = gBrowser.ownerDocument;
     this._nbox = gBrowser.getNotificationBox(this.hostTab.linkedBrowser);
 
-    this._splitter = ownerDocument.createElement("splitter");
+    this._splitter = ownerDocument.createXULElement("splitter");
     this._splitter.setAttribute("class", "devtools-horizontal-splitter");
     // Avoid resizing notification containers
     this._splitter.setAttribute("resizebefore", "flex");
 
-    this.frame = ownerDocument.createElement("iframe");
+    this.frame = ownerDocument.createXULElement("iframe");
     this.frame.flex = 1; // Required to be able to shrink when the window shrinks
     this.frame.className = "devtools-toolbox-bottom-iframe";
     this.frame.height = Math.min(
@@ -141,10 +141,10 @@ class SidebarHost {
     this._browser = gBrowser.getBrowserContainer(this.hostTab.linkedBrowser);
     this._sidebar = gBrowser.getSidebarContainer(this.hostTab.linkedBrowser);
 
-    this._splitter = ownerDocument.createElement("splitter");
+    this._splitter = ownerDocument.createXULElement("splitter");
     this._splitter.setAttribute("class", "devtools-side-splitter");
 
-    this.frame = ownerDocument.createElement("iframe");
+    this.frame = ownerDocument.createXULElement("iframe");
     this.frame.flex = 1; // Required to be able to shrink when the window shrinks
     this.frame.className = "devtools-toolbox-side-iframe";
 

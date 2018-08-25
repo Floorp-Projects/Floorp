@@ -3003,18 +3003,31 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
   RefPtr<nsAtom> bgColorAtom = NS_Atomize("bgcolor");
   if (element) {
     if (selectedCount > 0) {
-      // Traverse all selected cells
-      RefPtr<Element> cell;
-      rv = GetFirstSelectedCell(nullptr, getter_AddRefs(cell));
-      if (NS_SUCCEEDED(rv) && cell) {
-        while (cell) {
-          rv = setColor ?
-                 SetAttributeWithTransaction(*cell, *bgColorAtom, aColor) :
-                 RemoveAttributeWithTransaction(*cell, *bgColorAtom);
+      RefPtr<Selection> selection = GetSelection();
+      if (NS_WARN_IF(!selection)) {
+        return NS_ERROR_FAILURE;
+      }
+      IgnoredErrorResult ignoredError;
+      RefPtr<Element> cellElement =
+        GetFirstSelectedTableCellElement(*selection, ignoredError);
+      if (cellElement) {
+        if (setColor) {
+          while (cellElement) {
+            rv =
+              SetAttributeWithTransaction(*cellElement, *bgColorAtom, aColor);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
+            GetNextSelectedCell(nullptr, getter_AddRefs(cellElement));
+          }
+          return NS_OK;
+        }
+        while (cellElement) {
+          rv = RemoveAttributeWithTransaction(*cellElement, *bgColorAtom);
           if (NS_FAILED(rv)) {
             return rv;
           }
-          GetNextSelectedCell(nullptr, getter_AddRefs(cell));
+          GetNextSelectedCell(nullptr, getter_AddRefs(cellElement));
         }
         return NS_OK;
       }

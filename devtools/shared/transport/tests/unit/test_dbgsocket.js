@@ -50,27 +50,27 @@ async function test_socket_conn() {
   Assert.equal(settings.host, "127.0.0.1");
   Assert.equal(settings.port, gPort);
 
-  const closedDeferred = defer();
-  transport.hooks = {
-    onPacket: function(packet) {
-      this.onPacket = function({unicode}) {
-        Assert.equal(unicode, unicodeString);
-        transport.close();
-      };
-      // Verify that things work correctly when bigger than the output
-      // transport buffers and when transporting unicode...
-      transport.send({to: "root",
-                      type: "echo",
-                      reallylong: really_long(),
-                      unicode: unicodeString});
-      Assert.equal(packet.from, "root");
-    },
-    onClosed: function(status) {
-      closedDeferred.resolve();
-    },
-  };
-  transport.ready();
-  return closedDeferred.promise;
+  return new Promise((resolve) => {
+    transport.hooks = {
+      onPacket: function(packet) {
+        this.onPacket = function({unicode}) {
+          Assert.equal(unicode, unicodeString);
+          transport.close();
+        };
+        // Verify that things work correctly when bigger than the output
+        // transport buffers and when transporting unicode...
+        transport.send({to: "root",
+                        type: "echo",
+                        reallylong: really_long(),
+                        unicode: unicodeString});
+        Assert.equal(packet.from, "root");
+      },
+      onClosed: function(status) {
+        resolve();
+      },
+    };
+    transport.ready();
+  });
 }
 
 async function test_socket_shutdown() {

@@ -1,0 +1,52 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.worker-detail {
+  --worker-status-font-size: 10px;
+}
+
+/*
+ * The current layout of worker detail is
+ *
+ *  +----------------+--------------------+
+ *  | detail name dt | detail value dd    |
+ *  | (60px )        | (auto)             |
+ *  +----------------+--------------------+
+ *  | detail name dt | detail value dd    |
+ *  +----------------+--------------------+
+ *  | detail name dt | detail value dd    |
+ *  +----------------+--------------------+
+ */
+.worker-detail {
+  display: grid;
+  grid-template-columns: 60px auto;
+  margin-block-start: 4px;
+}
+
+/*
+ * worker-detail__status has a ui like badge and the color change by the status.
+ * For now, the background-color of running status is palegreen, stopped is lightgrey
+ * though, might be changed since this is not Photon color.
+ */
+.worker-detail__status {
+  border-style: solid;
+  border-width: 1px;
+  box-sizing: border-box;
+  display: inline-block;
+  font-size: var(--worker-status-font-size);
+  margin-block-start: 6px;
+  padding-block-start: 2px;
+  padding-block-end: 2px;
+  text-align: center;
+}
+
+.worker-detail__status--running {
+  border-color: limegreen;
+  background-color: palegreen;
+}
+
+.worker-detail__status--stopped {
+  border-color: grey;
+  background-color: lightgrey;
+}

@@ -52,8 +52,6 @@ using namespace mozilla::gfx::impl;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 
-int VRDisplayExternal::sPushIndex = 0;
-
 VRDisplayExternal::VRDisplayExternal(const VRDisplayState& aDisplayState)
   : VRDisplayHost(VRDeviceType::External)
   , mBrowserState{}
@@ -108,7 +106,6 @@ VRDisplayExternal::StartPresentation()
   if (mBrowserState.presentationActive) {
     return;
   }
-  sPushIndex = 0;
   mTelemetry.Clear();
   mTelemetry.mPresentationStart = TimeStamp::Now();
 
@@ -118,6 +115,8 @@ VRDisplayExternal::StartPresentation()
   PushState();
 
 #if defined(MOZ_WIDGET_ANDROID)
+  mLastSubmittedFrameId = 0;
+  mLastStartedFrame = 0;
   /**
    * Android compositor is paused when presentation starts. That causes VRManager::NotifyVsync() not to be called.
    * We post a VRTask to call VRManager::NotifyVsync() while the compositor is paused on Android.
@@ -162,7 +161,6 @@ VRDisplayExternal::StopPresentation()
   if (!mBrowserState.presentationActive) {
     return;
   }
-  sPushIndex = 0;
 
   // Indicate that we have stopped immersive mode
   mBrowserState.presentationActive = false;
@@ -276,7 +274,6 @@ VRDisplayExternal::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
   layer.mRightEyeRect.height = aRightEyeRect.height;
 
   PushState(true);
-  sPushIndex++;
 
 #if defined(MOZ_WIDGET_ANDROID)
   PullState([&]() {

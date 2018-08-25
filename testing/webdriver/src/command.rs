@@ -1,7 +1,7 @@
 use actions::ActionSequence;
 use capabilities::{BrowserCapabilities, Capabilities, CapabilitiesMatching,
                    LegacyNewSessionParameters, SpecNewSessionParameters};
-use common::{Date, FrameId, LocatorStrategy, WebElement};
+use common::{Date, FrameId, LocatorStrategy, WebElement, MAX_SAFE_INTEGER};
 use error::{ErrorStatus, WebDriverError, WebDriverResult};
 use httpapi::{Route, VoidWebDriverExtensionRoute, WebDriverExtensionRoute};
 use regex::Captures;
@@ -492,13 +492,54 @@ pub struct TakeScreenshotParameters {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct TimeoutsParameters {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_to_u64"
+    )]
     pub implicit: Option<u64>,
-    #[serde(rename = "pageLoad", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "pageLoad",
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_u64"
+    )]
     pub page_load: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_to_u64"
+    )]
     pub script: Option<u64>,
+}
+
+fn deserialize_to_u64<'de, D>(deserializer: D) -> Result<Option<u64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = Option::deserialize(deserializer)?.map(|value: f64| value);
+    let value = match opt {
+        Some(n) => {
+            if n < 0.0 || n.fract() != 0.0 {
+                return Err(de::Error::custom(format!(
+                    "'{}' is not a positive Integer",
+                    n
+                )));
+            }
+            if (n as u64) > MAX_SAFE_INTEGER {
+                return Err(de::Error::custom(format!(
+                    "'{}' is greater than maximum safe integer",
+                    n
+                )));
+            }
+            Some(n as u64)
+        }
+        None => {
+            return Err(de::Error::custom(format!(
+                "'null' is not a positive Integer"
+            )));
+        }
+    };
+
+    Ok(value)
 }
 
 /// A top-level browsing context’s window rect is a dictionary of the
@@ -972,26 +1013,27 @@ mod tests {
 
     #[test]
     fn test_json_timeout_parameters_with_values() {
-        let json = r#"{"implicit":1,"pageLoad":2,"script":3}"#;
+        let json = r#"{"implicit":0,"pageLoad":2.0,"script":9007199254740991}"#;
         let data = TimeoutsParameters {
-            implicit: Some(1u64),
+            implicit: Some(0u64),
             page_load: Some(2u64),
-            script: Some(3u64),
+            script: Some(9007199254740991u64),
         };
 
         check_deserialize(&json, &data);
     }
 
     #[test]
+    fn test_json_timeout_parameters_with_invalid_values() {
+        let json = r#"{"implicit":-1,"pageLoad":2.5,"script":9007199254740992}"#;
+        assert!(serde_json::from_str::<TimeoutsParameters>(&json).is_err());
+    }
+
+    #[test]
     fn test_json_timeout_parameters_with_optional_null_field() {
         let json = r#"{"implicit":null,"pageLoad":null,"script":null}"#;
-        let data = TimeoutsParameters {
-            implicit: None,
-            page_load: None,
-            script: None,
-        };
 
-        check_deserialize(&json, &data);
+        assert!(serde_json::from_str::<TimeoutsParameters>(&json).is_err());
     }
 
     #[test]
@@ -1004,24 +1046,6 @@ mod tests {
         };
 
         check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_timeout_parameters_with_invalid_implicit_value() {
-        let json = r#"{"implicit":1.1}"#;
-        assert!(serde_json::from_str::<TimeoutsParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_timeout_parameters_with_invalid_page_load_value() {
-        let json = r#"{"pageLoad":1.2}"#;
-        assert!(serde_json::from_str::<TimeoutsParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_timeout_parameters_with_invalid_script_value() {
-        let json = r#"{"script":1.3}"#;
-        assert!(serde_json::from_str::<TimeoutsParameters>(&json).is_err());
     }
 
     #[test]

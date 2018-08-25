@@ -12,3 +12,4 @@ asserts(1) == ol-reversed-1b.html ol-reversed-1-ref.html # bug 478135
 == bullet-space-2.html bullet-space-2-ref.html
 == bullet-intrinsic-isize-1.html bullet-intrinsic-isize-1-ref.html
 == bullet-intrinsic-isize-2.html bullet-intrinsic-isize-2-ref.html
+== bullet-justify-1.html bullet-justify-1-ref.html

@@ -11,7 +11,6 @@
 #include "nsIPresShell.h"
 #include "nsView.h"
 #include "nsCaret.h"
-#include "nsEditorCID.h"
 #include "nsLayoutCID.h"
 #include "nsITextControlFrame.h"
 #include "nsContentCreatorFunctions.h"
