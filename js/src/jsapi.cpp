@@ -57,6 +57,7 @@
 #include "jit/JitSpewer.h"
 #include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
+#include "js/CompileOptions.h"
 #include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/Initialization.h"
@@ -114,6 +115,8 @@ using mozilla::PodCopy;
 using mozilla::Some;
 
 using JS::AutoStableStringChars;
+using JS::CompileOptions;
+using JS::ReadOnlyCompileOptions;
 using JS::SourceBufferHolder;
 
 #ifdef HAVE_VA_LIST_AS_ARRAY

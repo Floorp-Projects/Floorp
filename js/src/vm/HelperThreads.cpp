@@ -40,6 +40,9 @@ using mozilla::Unused;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
+using JS::CompileOptions;
+using JS::ReadOnlyCompileOptions;
+
 namespace js {
 
 GlobalHelperThreadState* gHelperThreadState = nullptr;

@@ -35,6 +35,8 @@ using namespace js::frontend;
 using mozilla::Maybe;
 using mozilla::Nothing;
 
+using JS::CompileOptions;
+using JS::ReadOnlyCompileOptions;
 using JS::SourceBufferHolder;
 
 // The BytecodeCompiler class contains resources common to compiling scripts and
@@ -712,7 +714,7 @@ frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInpu
 }
 
 JSScript*
-frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
+frontend::CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                         SourceBufferHolder& srcBuf)
 {
     AutoAssertReportedException assertException(cx);
@@ -790,7 +792,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     Rooted<JSFunction*> fun(cx, lazy->functionNonDelazifying());
     AutoAssertFunctionDelazificationCompletion delazificationCompletion(cx, fun);
 
-    CompileOptions options(cx);
+    JS::CompileOptions options(cx);
     options.setMutedErrors(lazy->mutedErrors())
            .setFileAndLine(lazy->filename(), lazy->lineno())
            .setColumn(lazy->column())
@@ -857,7 +859,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 
 bool
 frontend::CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
-                                    const ReadOnlyCompileOptions& options,
+                                    const JS::ReadOnlyCompileOptions& options,
                                     JS::SourceBufferHolder& srcBuf,
                                     const Maybe<uint32_t>& parameterListEnd,
                                     HandleScope enclosingScope /* = nullptr */)
@@ -882,7 +884,7 @@ frontend::CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
 
 bool
 frontend::CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
-                                     const ReadOnlyCompileOptions& options,
+                                     const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceBufferHolder& srcBuf,
                                      const Maybe<uint32_t>& parameterListEnd)
 {

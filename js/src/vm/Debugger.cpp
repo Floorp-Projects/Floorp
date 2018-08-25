@@ -59,6 +59,7 @@
 using namespace js;
 
 using JS::AutoStableStringChars;
+using JS::CompileOptions;
 using JS::dbg::AutoEntryMonitor;
 using JS::dbg::Builder;
 using js::frontend::IsIdentifier;
