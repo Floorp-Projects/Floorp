@@ -64,6 +64,7 @@
 #include "js/LocaleSensitive.h"
 #include "js/Proxy.h"
 #include "js/SliceBudget.h"
+#include "js/SourceBufferHolder.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/Utility.h"
@@ -113,6 +114,7 @@ using mozilla::PodCopy;
 using mozilla::Some;
 
 using JS::AutoStableStringChars;
+using JS::SourceBufferHolder;
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list*)(ap))

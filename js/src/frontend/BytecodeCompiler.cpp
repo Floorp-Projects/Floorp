@@ -17,6 +17,7 @@
 #include "frontend/ErrorReporter.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/Parser.h"
+#include "js/SourceBufferHolder.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
@@ -30,8 +31,11 @@
 
 using namespace js;
 using namespace js::frontend;
+
 using mozilla::Maybe;
 using mozilla::Nothing;
+
+using JS::SourceBufferHolder;
 
 // The BytecodeCompiler class contains resources common to compiling scripts and
 // function bodies.

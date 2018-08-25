@@ -38,6 +38,7 @@
 #include "jit/JitRealm.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
+#include "js/SourceBufferHolder.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
@@ -74,6 +75,7 @@ using namespace js::frontend;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 
+using JS::SourceBufferHolder;
 
 template<XDRMode mode>
 XDRResult

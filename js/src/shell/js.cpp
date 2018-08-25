@@ -84,6 +84,7 @@
 #include "js/Initialization.h"
 #include "js/JSON.h"
 #include "js/Printf.h"
+#include "js/SourceBufferHolder.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/SweepingAPI.h"
@@ -4411,8 +4412,8 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     const char16_t* chars = stableChars.twoByteRange().begin().get();
-    SourceBufferHolder srcBuf(chars, scriptContents->length(),
-                              SourceBufferHolder::NoOwnership);
+    JS::SourceBufferHolder srcBuf(chars, scriptContents->length(),
+                                  JS::SourceBufferHolder::NoOwnership);
 
     RootedScript script(cx, frontend::CompileModule(cx, options, srcBuf));
     if (!script)
