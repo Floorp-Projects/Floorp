@@ -21,7 +21,7 @@ add_task(async function() {
   is(focusedId, "checkbox", "checkbox accesskey");
 
   // Add an element with an accesskey to the chrome and press its accesskey while the chrome is focused.
-  let newButton = document.createElement("button");
+  let newButton = document.createXULElement("button");
   newButton.id = "chromebutton";
   newButton.setAttribute("accesskey", "z");
   document.documentElement.appendChild(newButton);

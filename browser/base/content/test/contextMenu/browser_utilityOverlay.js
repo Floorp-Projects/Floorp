@@ -36,7 +36,7 @@ function test_eventMatchesKey() {
   document.addEventListener("keypress", checkEvent);
 
   try {
-    key = document.createElement("key");
+    key = document.createXULElement("key");
     let keyset = document.getElementById("mainKeyset");
     key.setAttribute("key", "t");
     key.setAttribute("modifiers", "accel");
@@ -45,7 +45,7 @@ function test_eventMatchesKey() {
     is(eventMatchResult, true, "eventMatchesKey: one modifier");
     keyset.removeChild(key);
 
-    key = document.createElement("key");
+    key = document.createXULElement("key");
     key.setAttribute("key", "g");
     key.setAttribute("modifiers", "accel,shift");
     keyset.appendChild(key);
@@ -53,7 +53,7 @@ function test_eventMatchesKey() {
     is(eventMatchResult, true, "eventMatchesKey: combination modifiers");
     keyset.removeChild(key);
 
-    key = document.createElement("key");
+    key = document.createXULElement("key");
     key.setAttribute("key", "w");
     key.setAttribute("modifiers", "accel");
     keyset.appendChild(key);
@@ -61,7 +61,7 @@ function test_eventMatchesKey() {
     is(eventMatchResult, false, "eventMatchesKey: mismatch keys");
     keyset.removeChild(key);
 
-    key = document.createElement("key");
+    key = document.createXULElement("key");
     key.setAttribute("keycode", "VK_DELETE");
     keyset.appendChild(key);
     EventUtils.synthesizeKey("VK_DELETE", {accelKey: true});

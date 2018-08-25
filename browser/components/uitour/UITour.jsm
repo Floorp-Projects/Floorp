@@ -1140,7 +1140,7 @@ var UITour = {
 
       for (let button of aButtons) {
         let isButton = button.style != "text";
-        let el = document.createElement(isButton ? "button" : "label");
+        let el = document.createXULElement(isButton ? "button" : "label");
         el.setAttribute(isButton ? "label" : "value", button.label);
 
         if (isButton) {
