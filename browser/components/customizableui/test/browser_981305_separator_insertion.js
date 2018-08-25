@@ -10,14 +10,14 @@ function insertTempItemsIntoMenu(parentMenu) {
   // Last element is null to insert at the end:
   let beforeEls = [parentMenu.firstElementChild, parentMenu.lastElementChild, null];
   for (let i = 0; i < beforeEls.length; i++) {
-    let sep = document.createElement("menuseparator");
+    let sep = document.createXULElement("menuseparator");
     tempElements.push(sep);
     parentMenu.insertBefore(sep, beforeEls[i]);
-    let menu = document.createElement("menu");
+    let menu = document.createXULElement("menu");
     tempElements.push(menu);
     parentMenu.insertBefore(menu, beforeEls[i]);
     // And another separator for good measure:
-    sep = document.createElement("menuseparator");
+    sep = document.createXULElement("menuseparator");
     tempElements.push(sep);
     parentMenu.insertBefore(sep, beforeEls[i]);
   }

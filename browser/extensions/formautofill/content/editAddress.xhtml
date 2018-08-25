@@ -18,57 +18,61 @@
 </head>
 <body dir="&locale.dir;">
   <form id="form" class="editAddressForm" autocomplete="off">
+    <!--
+        The <span class="label-text" …/> needs to be after the form field in the same element in
+        order to get proper label styling with :focus and :moz-ui-invalid.
+      -->
     <div>
       <div id="name-container">
         <label id="given-name-container">
-          <span data-localization="givenName" class="label-text"/>
           <input id="given-name" type="text" required="required"/>
+          <span data-localization="givenName" class="label-text"/>
         </label>
         <label id="additional-name-container">
-          <span data-localization="additionalName" class="label-text"/>
           <input id="additional-name" type="text"/>
+          <span data-localization="additionalName" class="label-text"/>
         </label>
         <label id="family-name-container">
+          <input id="family-name" type="text" required="required"/>
           <span data-localization="familyName" class="label-text"/>
-          <input id="family-name" type="text"/>
         </label>
       </div>
       <label id="organization-container">
-        <span data-localization="organization2" class="label-text"/>
         <input id="organization" type="text"/>
+        <span data-localization="organization2" class="label-text"/>
       </label>
       <label id="street-address-container">
-        <span data-localization="streetAddress" class="label-text"/>
         <textarea id="street-address" rows="3" required="required"/>
+        <span data-localization="streetAddress" class="label-text"/>
       </label>
       <label id="address-level2-container">
-        <span data-localization="city" class="label-text"/>
         <input id="address-level2" type="text" required="required"/>
+        <span data-localization="city" class="label-text"/>
       </label>
       <label id="address-level1-container">
-        <span class="label-text"/>
         <input id="address-level1" type="text" required="required"/>
+        <span class="label-text"/>
       </label>
       <label id="postal-code-container">
-        <span class="label-text"/>
         <input id="postal-code" type="text" required="required"/>
+        <span class="label-text"/>
       </label>
       <div id="country-container">
         <label id="country-label">
-          <span data-localization="country" class="label-text"/>
           <select id="country" required="required">
             <option/>
           </select>
+          <span data-localization="country" class="label-text"/>
         </label>
         <p id="country-warning-message" data-localization="countryWarningMessage2"/>
       </div>
       <label id="tel-container">
-        <span data-localization="tel" class="label-text"/>
         <input id="tel" type="tel"/>
+        <span data-localization="tel" class="label-text"/>
       </label>
       <label id="email-container">
-        <span data-localization="email" class="label-text"/>
         <input id="email" type="email" required="required"/>
+        <span data-localization="email" class="label-text"/>
       </label>
     </div>
   </form>

@@ -73,6 +73,7 @@ function createLoginsFragment(url, content, elementQuery) {
   MockDocument.mockOwnerDocumentProperty(inputElement, document, url);
 
   // We also need a simple mock Browser object for this test.
+  document.createXULElement = document.createElement.bind(document);
   let browser = {
     ownerDocument: document
   };

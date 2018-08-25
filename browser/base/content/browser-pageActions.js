@@ -1236,7 +1236,7 @@ BrowserPageActions.shareURL = {
       fragment.appendChild(item);
     });
 
-    let item = document.createElement("toolbarbutton");
+    let item = document.createXULElement("toolbarbutton");
     item.setAttribute("label", BrowserPageActions.panelNode.getAttribute("shareMore-label"));
     item.classList.add("subviewbutton", "subviewbutton-iconic", "share-more-button");
     item.addEventListener("command", onCommand);
