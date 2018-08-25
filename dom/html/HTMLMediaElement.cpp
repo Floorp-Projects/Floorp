@@ -1377,7 +1377,6 @@ class HTMLMediaElement::ErrorSink
 public:
   explicit ErrorSink(HTMLMediaElement* aOwner)
     : mOwner(aOwner)
-    , mSrcIsUnsupportedTypeMedia(false)
   {
     MOZ_ASSERT(mOwner);
   }
@@ -1396,59 +1395,29 @@ public:
       return;
     }
 
-    // TODO : remove unsupported type related codes after finishing native
-    // support for HLS, see bug 1350842.
-    if (CanOwnerPlayUnsupportedTypeMedia() &&
-        aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED) {
-      // On Fennec, we do some hack for unsupported type media, we don't set
-      // its error state in order to open it with external app.
-      mSrcIsUnsupportedTypeMedia = true;
-      mOwner->ChangeNetworkState(NETWORK_NO_SOURCE);
-      MaybeOpenUnsupportedMediaForOwner();
-    } else {
-      mError = new MediaError(mOwner, aErrorCode, aErrorDetails);
-      mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("error"));
-      if (mOwner->ReadyState() == HAVE_NOTHING &&
-          aErrorCode == MEDIA_ERR_ABORTED) {
-        // https://html.spec.whatwg.org/multipage/embedded-content.html#media-data-processing-steps-list
-        // "If the media data fetching process is aborted by the user"
-        mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
-        mOwner->ChangeNetworkState(NETWORK_EMPTY);
-        mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
-        if (mOwner->mDecoder) {
-          mOwner->ShutdownDecoder();
-        }
-      } else if (aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED) {
-        mOwner->ChangeNetworkState(NETWORK_NO_SOURCE);
-      } else {
-        mOwner->ChangeNetworkState(NETWORK_IDLE);
+
+    mError = new MediaError(mOwner, aErrorCode, aErrorDetails);
+    mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("error"));
+    if (mOwner->ReadyState() == HAVE_NOTHING &&
+        aErrorCode == MEDIA_ERR_ABORTED) {
+      // https://html.spec.whatwg.org/multipage/embedded-content.html#media-data-processing-steps-list
+      // "If the media data fetching process is aborted by the user"
+      mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
+      mOwner->ChangeNetworkState(NETWORK_EMPTY);
+      mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
+      if (mOwner->mDecoder) {
+        mOwner->ShutdownDecoder();
       }
+    } else if (aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED) {
+      mOwner->ChangeNetworkState(NETWORK_NO_SOURCE);
+    } else {
+      mOwner->ChangeNetworkState(NETWORK_IDLE);
     }
   }
 
   void ResetError()
   {
     mError = nullptr;
-    mSrcIsUnsupportedTypeMedia = false;
-  }
-
-  void MaybeOpenUnsupportedMediaForOwner() const
-  {
-    // Src is supported type or we don't open the pref for external app.
-    if (!mSrcIsUnsupportedTypeMedia || !CanOwnerPlayUnsupportedTypeMedia()) {
-      return;
-    }
-
-    // If media doesn't start playing, we don't need to open it.
-    if (mOwner->Paused()) {
-      return;
-    }
-
-    nsContentUtils::DispatchTrustedEvent(
-      mOwner->OwnerDoc(),
-      static_cast<nsIContent*>(mOwner),
-      NS_LITERAL_STRING("OpenMediaWithExternalApp"),
-      CanBubble::eYes, Cancelable::eYes);
   }
 
   RefPtr<MediaError> mError;
@@ -1461,19 +1430,9 @@ private:
             aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED);
   }
 
-  bool CanOwnerPlayUnsupportedTypeMedia() const
-  {
-#if defined(MOZ_WIDGET_ANDROID)
-    // On Fennec, we will use an external app to open unsupported media types.
-    return Preferences::GetBool("media.openUnsupportedTypeWithExternalApp");
-#endif
-    return false;
-  }
-
   // Media elememt's life cycle would be longer than error sink, so we use the
   // raw pointer and this class would only be referenced by media element.
   HTMLMediaElement* mOwner;
-  bool mSrcIsUnsupportedTypeMedia;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLMediaElement)
@@ -7018,12 +6977,6 @@ HTMLMediaElement::GetError() const
 }
 
 void
-HTMLMediaElement::OpenUnsupportedMediaWithExternalAppIfNeeded() const
-{
-  mErrorSink->MaybeOpenUnsupportedMediaForOwner();
-}
-
-void
 HTMLMediaElement::GetCurrentSpec(nsCString& aString)
 {
   if (mLoadingSrc) {
@@ -7967,7 +7920,6 @@ HTMLMediaElement::MarkAsContentSource(CallerAPI aAPI)
 void
 HTMLMediaElement::UpdateCustomPolicyAfterPlayed()
 {
-  OpenUnsupportedMediaWithExternalAppIfNeeded();
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->NotifyPlayStateChanged();
   }
