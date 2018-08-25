@@ -79,6 +79,7 @@
 #include "jit/JitRealm.h"
 #include "jit/shared/CodeGenerator-shared.h"
 #include "js/AutoByteString.h"
+#include "js/CompileOptions.h"
 #include "js/Debug.h"
 #include "js/GCVector.h"
 #include "js/Initialization.h"
@@ -132,6 +133,7 @@ using namespace js::cli;
 using namespace js::shell;
 
 using JS::AutoStableStringChars;
+using JS::CompileOptions;
 
 using js::shell::RCFile;
 
