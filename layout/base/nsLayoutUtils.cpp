@@ -6143,7 +6143,7 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
       wrShadow.color = wr::ToColorF(ToDeviceColor(shadowColor));
 
       textDrawer->AppendShadow(wrShadow);
-      continue;
+      return;
     }
 
     gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, 0, blurRadius,
