@@ -378,6 +378,9 @@ ExtensionPolicyService::InjectContentScripts(WebExtensionPolicy* aExtension)
 
     auto result = ForEachDocShell(docShell, [&](nsIDocShell* aDocShell) -> nsresult {
       nsCOMPtr<nsPIDOMWindowOuter> win = aDocShell->GetWindow();
+      if (!win->GetDocumentURI()) {
+        return NS_OK;
+      }
       DocInfo docInfo(win);
 
       using RunAt = dom::ContentScriptRunAt;
