@@ -260,13 +260,11 @@ SpecialPowersObserverAPI.prototype = {
     const serviceMarker = "service,";
 
     // First create observers from the category manager.
-    let cm =
-      Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
 
     let observers = [];
 
-    for (let {data: entry} of cm.enumerateCategory(topic)) {
-      let contractID = cm.getCategoryEntry(topic, entry);
+    for (let {data: entry} of Services.catMan.enumerateCategory(topic)) {
+      let contractID = Services.catMan.getCategoryEntry(topic, entry);
 
       let factoryFunction;
       if (contractID.substring(0, serviceMarker.length) == serviceMarker) {

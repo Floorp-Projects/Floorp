@@ -113,10 +113,8 @@ LoginManager.prototype = {
       contractID = "@mozilla.org/login-manager/storage/json;1";
     }
     try {
-      let catMan = Cc["@mozilla.org/categorymanager;1"].
-                   getService(Ci.nsICategoryManager);
-      contractID = catMan.getCategoryEntry("login-manager-storage",
-                                           "nsILoginManagerStorage");
+      contractID = Services.catMan.getCategoryEntry("login-manager-storage",
+                                                    "nsILoginManagerStorage");
       log.debug("Found alternate nsILoginManagerStorage with contract ID:", contractID);
     } catch (e) {
       log.debug("No alternate nsILoginManagerStorage registered");
