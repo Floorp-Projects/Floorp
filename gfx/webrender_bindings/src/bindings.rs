@@ -883,8 +883,9 @@ pub extern "C" fn wr_renderer_update_program_cache(renderer: &mut Renderer, prog
     renderer.update_program_cache(program_cache);
 }
 
+// This matches IsEnvSet in gfxEnv.h
 fn env_var_to_bool(key: &'static str) -> bool {
-    env::var(key).ok().map_or(false, |v| v.parse::<usize>().unwrap_or(1) != 0)
+    env::var(key).ok().map_or(false, |v| !v.is_empty())
 }
 
 // Call MakeCurrent before this.
