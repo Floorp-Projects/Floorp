@@ -386,7 +386,7 @@ BasePopup.instances = new DefaultWeakMap(() => new WeakMap());
 
 class PanelPopup extends BasePopup {
   constructor(extension, document, popupURL, browserStyle) {
-    let panel = document.createElement("panel");
+    let panel = document.createXULElement("panel");
     panel.setAttribute("id", makeWidgetId(extension.id) + "-panel");
     panel.setAttribute("class", "browser-extension-panel");
     panel.setAttribute("tabspecific", "true");
@@ -434,7 +434,7 @@ class ViewPopup extends BasePopup {
     let document = window.document;
 
     let createPanel = remote => {
-      let panel = document.createElement("panel");
+      let panel = document.createXULElement("panel");
       panel.setAttribute("type", "arrow");
       if (remote) {
         panel.setAttribute("remote", "true");
