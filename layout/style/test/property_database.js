@@ -7949,34 +7949,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-align-unsafe-value.enabled")) {
 
 gCSSProperties["display"].other_values.push("flow-root");
 
-// Copy aliased properties' fields from their alias targets.
-for (var prop in gCSSProperties) {
-  var entry = gCSSProperties[prop];
-  if (entry.alias_for) {
-    var aliasTargetEntry = gCSSProperties[entry.alias_for];
-    if (!aliasTargetEntry) {
-      ok(false,
-         "Alias '" + prop + "' alias_for field, '" + entry.alias_for + "', " +
-         "must be set to a recognized CSS property in gCSSProperties");
-    } else {
-      // Copy 'values' fields & 'prerequisites' field from aliasTargetEntry:
-      var fieldsToCopy =
-          ["initial_values", "other_values", "invalid_values",
-           "quirks_values", "unbalanced_values",
-           "prerequisites"];
-
-      fieldsToCopy.forEach(function(fieldName) {
-        // (Don't copy the field if the alias already has something there,
-        // or if the aliased property doesn't have anything to copy.)
-        if (!(fieldName in entry) &&
-            fieldName in aliasTargetEntry) {
-          entry[fieldName] = aliasTargetEntry[fieldName]
-        }
-      });
-    }
-  }
-}
-
 if (IsCSSPropertyPrefEnabled("layout.css.column-span.enabled")) {
   gCSSProperties["column-span"] = {
     domProp: "columnSpan",
@@ -8218,3 +8190,34 @@ if (IsCSSPropertyPrefEnabled("layout.css.overflow.moz-scrollbars.enabled")) {
 } else {
   gCSSProperties["overflow"].invalid_values.push(...OVERFLOW_MOZKWS);
 }
+
+// Copy aliased properties' fields from their alias targets. Keep this logic
+// at the bottom of this file to ensure all the aliased properties are
+// processed.
+for (var prop in gCSSProperties) {
+  var entry = gCSSProperties[prop];
+  if (entry.alias_for) {
+    var aliasTargetEntry = gCSSProperties[entry.alias_for];
+    if (!aliasTargetEntry) {
+      ok(false,
+         "Alias '" + prop + "' alias_for field, '" + entry.alias_for + "', " +
+         "must be set to a recognized CSS property in gCSSProperties");
+    } else {
+      // Copy 'values' fields & 'prerequisites' field from aliasTargetEntry:
+      var fieldsToCopy =
+          ["initial_values", "other_values", "invalid_values",
+           "quirks_values", "unbalanced_values",
+           "prerequisites"];
+
+      fieldsToCopy.forEach(function(fieldName) {
+        // (Don't copy the field if the alias already has something there,
+        // or if the aliased property doesn't have anything to copy.)
+        if (!(fieldName in entry) &&
+            fieldName in aliasTargetEntry) {
+          entry[fieldName] = aliasTargetEntry[fieldName]
+        }
+      });
+    }
+  }
+}
+

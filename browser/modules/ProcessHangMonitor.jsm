@@ -458,7 +458,7 @@ var ProcessHangMonitor = {
       let linkText = bundle.getString("processHang.add-on.learn-more.text");
       let linkURL = "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes";
 
-      let link = doc.createElement("label");
+      let link = doc.createXULElement("label");
       link.setAttribute("class", "text-link");
       link.setAttribute("role", "link");
       link.setAttribute("onclick", `openTrustedLinkIn(${JSON.stringify(linkURL)}, "tab")`);
