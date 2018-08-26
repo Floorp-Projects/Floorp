@@ -138,7 +138,7 @@ FilePicker.prototype = {
   },
 
   get files() {
-    return this.getEnumerator([this.file]);
+    return [this.file].values();
   },
 
   // We don't support directory selection yet.
@@ -147,7 +147,7 @@ FilePicker.prototype = {
   },
 
   get domFileOrDirectoryEnumerator() {
-    return this.getEnumerator([this._domFile]);
+    return [this._domFile].values();
   },
 
   get addToRecentDocs() {
@@ -246,26 +246,6 @@ FilePicker.prototype = {
       }
       delete this._callback;
     });
-  },
-
-  getEnumerator: function(files) {
-    return {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
-      mFiles: files,
-      mIndex: 0,
-      [Symbol.iterator]() {
-        return this.mFiles.values();
-      },
-      hasMoreElements: function() {
-        return (this.mIndex < this.mFiles.length);
-      },
-      getNext: function() {
-        if (this.mIndex >= this.mFiles.length) {
-          throw Cr.NS_ERROR_FAILURE;
-        }
-        return this.mFiles[this.mIndex++];
-      }
-    };
   },
 
   fireDialogEvent: function(aDomWin, aEventName) {
