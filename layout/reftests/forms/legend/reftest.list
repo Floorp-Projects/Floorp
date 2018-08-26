@@ -1,3 +1,5 @@
 == legend.html legend-ref.html
+== legend-padding-1.html legend-padding-1-ref.html
+== legend-padding-2.html legend-padding-2-ref.html
 fuzzy-if(Android,0-255,0-41) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1273433.html 1273433-ref.html # Bug 1392106
 fails == 1339287.html 1339287-ref.html # bug 1383868

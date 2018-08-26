@@ -56,13 +56,13 @@
 /* miscellaneous form elements */
 
 fieldset > legend {
-  padding-inline-start: 2px;
-  padding-inline-end: 2px;
   inline-size: -moz-fit-content;
 }
 
 legend {
   display: block;
+  padding-inline-start: 2px;
+  padding-inline-end: 2px;
 }
 
 fieldset {

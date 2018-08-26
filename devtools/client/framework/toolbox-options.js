@@ -456,7 +456,7 @@ OptionsPanel.prototype = {
       });
     }
 
-    if (this.target.activeTab) {
+    if (this.target.activeTab && !this.target.chrome) {
       const [ response ] = await this.target.client.attachTab(this.target.activeTab._actor);
       this._origJavascriptEnabled = !response.javascriptEnabled;
       this.disableJSNode.checked = this._origJavascriptEnabled;
