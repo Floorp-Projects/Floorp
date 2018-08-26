@@ -149,7 +149,7 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
   }
 
   MatchPatternOptions options;
-  options.mRestrictSchemes = HasPermission(nsGkAtoms::mozillaAddons);
+  options.mRestrictSchemes = !HasPermission(nsGkAtoms::mozillaAddons);
 
   mHostPermissions = ParseMatches(aGlobal, aInit.mAllowedOrigins, options,
                                   ErrorBehavior::CreateEmptyPattern, aRv);

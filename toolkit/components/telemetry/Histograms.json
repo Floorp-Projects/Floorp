@@ -8653,6 +8653,15 @@
     "n_buckets": 20,
     "description": "The length of time (in milliseconds) it took for a server DTLS handshake to complete, given that it failed."
   },
+  "WEBRTC_DTLS_CIPHER": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com", "nohlmeier@mozilla.com"],
+    "bug_numbers": [1484024],
+    "expires_in_version": "66",
+    "kind": "enumerated",
+    "n_values": 14,
+    "description": "The DTLS cipher (as integer) negotiated for a RTCPeerConnection. See TransportLayerDtls::RecordCipherTelemetry for the meaning of the values"
+  },
   "WEBRTC_ICE_FINAL_CONNECTION_STATE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],

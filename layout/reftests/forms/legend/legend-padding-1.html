@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Testcase for bug 1483499</title>
+  <style>
+    legend {
+      background: yellow;
+      border: 1px solid brown;
+    }
+  </style>
+</head>
+<body>
+<!-- Test: legend default styling shouldn't be affected
+     by presence of a display:contents wrapper: -->
+<fieldset>
+  <div style="display: contents">
+    <legend>DisplayContentsWrapper</legend>
+  </div>
+</fieldset>
+<br>
+
+<!-- Test: legend should get the same 2px of inline-axis padding, even
+     if it's not inside of a fieldset at all. -->
+<legend>JustALegend</legend>
+<br>
+
+<!-- ...and if it's nested, each nesting level will add 2px of padding. -->
+<legend>
+  <legend>NestedLegend</legend>
+</legend>
+<br>
+
+<fieldset>
+  <legend>
+    <legend>
+      <legend>NestedLegendInFieldset</legend>
+    </legend>
+  </legend>
+</fieldset>
+
+</body>
+</html>
