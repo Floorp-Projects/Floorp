@@ -180,11 +180,23 @@ ReplayDebugger.prototype = {
   /////////////////////////////////////////////////////////
 
   _getSource(id) {
-    if (!this._scriptSources[id]) {
-      const data = this._sendRequest({ type: "getSource", id });
-      this._scriptSources[id] = new ReplayDebuggerScriptSource(this, data);
+    const source = this._scriptSources[id];
+    if (source) {
+      return source;
     }
-    return this._scriptSources[id];
+    return this._addSource(this._sendRequest({ type: "getSource", id }));
+  },
+
+  _addSource(data) {
+    if (!this._scriptSources[data.id]) {
+      this._scriptSources[data.id] = new ReplayDebuggerScriptSource(this, data);
+    }
+    return this._scriptSources[data.id];
+  },
+
+  findSources() {
+    const data = this._sendRequest({ type: "findSources" });
+    return data.map(source => this._addSource(source));
   },
 
   /////////////////////////////////////////////////////////
