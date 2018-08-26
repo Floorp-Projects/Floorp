@@ -706,11 +706,15 @@ TextPropertyEditor.prototype = {
       li.classList.add("ruleview-overridden");
     }
 
-    createChild(li, "span", {
+    const nameContainer = createChild(li, "span", {
+      class: "ruleview-namecontainer"
+    });
+
+    createChild(nameContainer, "span", {
       class: "ruleview-propertyname theme-fg-color5",
       textContent: computed.name
     });
-    appendText(li, ": ");
+    appendText(nameContainer, ": ");
 
     const outputParser = this.ruleView._outputParser;
     const frag = outputParser.parseCssProperty(
@@ -725,12 +729,15 @@ TextPropertyEditor.prototype = {
     // Store the computed property value that was parsed for output
     computed.parsedValue = frag.textContent;
 
-    createChild(li, "span", {
+    const propertyContainer = createChild(li, "span", {
+      class: "ruleview-propertyvaluecontainer"
+    });
+
+    createChild(propertyContainer, "span", {
       class: "ruleview-propertyvalue theme-fg-color1",
       child: frag
     });
-
-    appendText(li, ";");
+    appendText(propertyContainer, ";");
 
     return li;
   },
