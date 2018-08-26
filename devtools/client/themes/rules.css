@@ -154,6 +154,10 @@
   margin-left: -25px;
 }
 
+.ruleview-computed > .ruleview-namecontainer {
+  margin: 0;
+}
+
 .ruleview-propertyvaluecontainer {
   cursor: text;
   padding-right: 5px;
@@ -523,8 +527,11 @@
   border-left-color: var(--theme-highlight-green);
 }
 
+.ruleview-highlight > .ruleview-expander,
 .ruleview-highlight > .ruleview-namecontainer,
-.ruleview-highlight > .ruleview-propertyvaluecontainer {
+.ruleview-highlight > .ruleview-propertyvaluecontainer,
+.ruleview-highlight > .ruleview-rule-source-label,
+.ruleview-highlight > .ruleview-selector {
   background-color: var(--rule-highlight-background-color);
 }
 
