@@ -32,6 +32,10 @@ function debug(msg) {
 var Utils = Object.freeze({
   get SERIALIZED_SYSTEMPRINCIPAL() { return SERIALIZED_SYSTEMPRINCIPAL; },
 
+  makeURI(url) {
+    return Services.io.newURI(url);
+  },
+
   makeInputStream(data) {
     if (typeof data == "string") {
       let stream = Cc["@mozilla.org/io/string-input-stream;1"].
@@ -83,7 +87,7 @@ var Utils = Object.freeze({
     let host;
 
     try {
-      host = Services.io.newURI(url).host;
+      host = this.makeURI(url).host;
     } catch (e) {
       // The given URL probably doesn't have a host.
       return false;
