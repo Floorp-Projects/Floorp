@@ -96,21 +96,11 @@ function installAddonEngine(name = "engine-addon") {
     },
 
     getFiles(prop) {
-      let result = [];
-
-      switch (prop) {
-      case XRE_EXTENSIONS_DIR_LIST:
-        result.push(addonDir);
-        break;
-      default:
-        throw Cr.NS_ERROR_FAILURE;
+      if (prop == XRE_EXTENSIONS_DIR_LIST) {
+        return [addonDir].values();
       }
 
-      return {
-        QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
-        hasMoreElements: () => result.length > 0,
-        getNext: () => result.shift(),
-      };
+      throw Cr.NS_ERROR_FAILURE;
     },
   });
 }
