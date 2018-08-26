@@ -682,8 +682,10 @@ var SitePermissions = {
       case this.ALLOW_COOKIES_FOR_SESSION:
         return gStringBundle.GetStringFromName("state.current.allowedForSession");
       case this.BLOCK:
-        if (scope && scope != this.SCOPE_PERSISTENT && scope != this.SCOPE_POLICY)
+        if (scope && scope != this.SCOPE_PERSISTENT && scope != this.SCOPE_POLICY &&
+            scope != this.SCOPE_GLOBAL) {
           return gStringBundle.GetStringFromName("state.current.blockedTemporarily");
+        }
         return gStringBundle.GetStringFromName("state.current.blocked");
       default:
         return null;
