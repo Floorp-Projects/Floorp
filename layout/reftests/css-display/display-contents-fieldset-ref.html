@@ -14,7 +14,6 @@ legend { border: 1px solid; }
 .before::before { content:"::before"; }
 .nb legend.static  { border: 1px solid; }
 .nb legend { border-style:none; }
-.p0 legend { padding:0; }
 </style>
 </head>
 <body>
@@ -30,11 +29,11 @@ legend { border: 1px solid; }
 <fieldset class="test2 after"></fieldset>
 <fieldset class="test2"><legend class="static"></legend></fieldset>
 <fieldset class="test2"><legend class="static contents"></legend></fieldset>
-<fieldset class="test2"><legend class="static" style="padding:0"></legend></fieldset>
-<fieldset class="test2 p0"></fieldset>
-<fieldset class="test3 p0"></fieldset>
-<fieldset class="test2 p0"><legend class="static"></legend></fieldset>
-<fieldset class="test3 p0"><legend class="static"></legend></fieldset>
+<fieldset class="test2"><legend class="static"></legend></fieldset>
+<fieldset class="test2"></fieldset>
+<fieldset class="test3"></fieldset>
+<fieldset class="test2"><legend class="static"></legend></fieldset>
+<fieldset class="test3"><legend class="static"></legend></fieldset>
 <script>
 document.body.offsetHeight;
 var tests = document.querySelectorAll('.test');

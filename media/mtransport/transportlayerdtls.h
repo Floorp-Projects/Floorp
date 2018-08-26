@@ -161,6 +161,7 @@ class TransportLayerDtls final : public TransportLayer {
                         UniqueCERTCertificate& cert) const;
 
   void RecordHandshakeCompletionTelemetry(TransportLayer::State endState);
+  void RecordCipherTelemetry();
 
   RefPtr<DtlsIdentity> identity_;
   // What ALPN identifiers are permitted.

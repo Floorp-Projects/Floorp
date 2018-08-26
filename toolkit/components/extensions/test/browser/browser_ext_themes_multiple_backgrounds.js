@@ -102,7 +102,7 @@ add_task(async function test_support_backgrounds_repeat() {
                toolboxCS.backgroundImage, "The backgroundImage should use face.png three times.");
   Assert.equal(rootCS.backgroundPosition, "100% 0%",
                "The backgroundPosition should use the default value for root.");
-  Assert.equal(toolboxCS.backgroundPosition, "0% 0%",
+  Assert.equal(toolboxCS.backgroundPosition, "100% 0%",
                "The backgroundPosition should use the default value for navigator-toolbox.");
   Assert.equal(rootCS.backgroundRepeat, "no-repeat",
                "The backgroundRepeat should use the default values for root.");
