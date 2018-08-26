@@ -902,13 +902,17 @@ impl<'ctx> PulseStream<'ctx> {
 
 fn stream_success(_: &pulse::Stream, success: i32, u: *mut c_void) {
     let stm = unsafe { &*(u as *mut PulseStream) };
-    debug_assert_ne!(success, 0);
+    if success != 1 {
+        cubeb_log!("stream_success ignored failure: {}", success);
+    }
     stm.context.mainloop.signal();
 }
 
 fn context_success(_: &pulse::Context, success: i32, u: *mut c_void) {
     let ctx = unsafe { &*(u as *mut PulseContext) };
-    debug_assert_ne!(success, 0);
+    if success != 1 {
+        cubeb_log!("context_success ignored failure: {}", success);
+    }
     ctx.mainloop.signal();
 }
 
