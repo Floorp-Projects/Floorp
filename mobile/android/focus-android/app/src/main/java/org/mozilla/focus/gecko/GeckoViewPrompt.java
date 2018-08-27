@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.text.InputType;
@@ -111,7 +112,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             callback.dismiss();
             return;
         }
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity)
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.DialogStyle)
                 .setTitle(title)
                 .setMessage(msg)
                 .setPositiveButton(android.R.string.ok, /* onClickListener */ null);
@@ -128,7 +129,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             callback.dismiss();
             return;
         }
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity)
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.DialogStyle)
                 .setTitle(title)
                 .setMessage(msg);
         final DialogInterface.OnClickListener listener =
@@ -186,6 +187,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
     private AlertDialog createStandardDialog(final AlertDialog.Builder builder,
                                              final AlertCallback callback) {
         final AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(final DialogInterface dialog) {
@@ -204,7 +206,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             callback.dismiss();
             return;
         }
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.DialogStyle);
         final LinearLayout container = addStandardLayout(builder, title, msg);
         final EditText editText = new EditText(builder.getContext());
         editText.setText(value);
@@ -230,7 +232,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             return;
         }
 
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.DialogStyle);
         final LinearLayout container = addStandardLayout(builder, s, s1);
 
         final int flags = authOptions.flags;
@@ -313,7 +315,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             callback.dismiss();
             return;
         }
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.DialogStyle);
         addStandardLayout(builder, title, msg);
 
         final ListView list = new ListView(builder.getContext());
@@ -494,7 +496,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             callback.dismiss();
             return;
         }
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.DialogStyle);
         addStandardLayout(builder, title, /* msg */ null);
 
         final int initial = parseColor(value, /* def */ 0);
@@ -625,7 +627,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         final Calendar cal = formatter.getCalendar();
         cal.setTime(date);
 
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.DialogStyle);
         final LayoutInflater inflater = LayoutInflater.from(builder.getContext());
         final DatePicker datePicker;
         if (type == DATETIME_TYPE_DATE || type == DATETIME_TYPE_MONTH ||
@@ -803,7 +805,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             callback.reject();
             return;
         }
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.DialogStyle);
         builder.setTitle(title)
                 .setNegativeButton(android.R.string.cancel, /* onClickListener */ null)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -814,6 +816,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                 });
 
         final AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(final DialogInterface dialog) {
@@ -865,7 +868,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             callback.reject();
             return;
         }
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.DialogStyle);
         final LinearLayout container = addStandardLayout(builder, title, /* msg */ null);
 
         final Spinner videoSpinner;
@@ -896,6 +899,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                         });
 
         final AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(final DialogInterface dialog) {
