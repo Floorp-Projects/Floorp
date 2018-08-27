@@ -18,6 +18,7 @@ const { LongStringActor } = require("devtools/server/actors/object/long-string")
 const { createValueGrip, stringIsLong } = require("devtools/server/actors/object/utils");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const ErrorDocs = require("devtools/server/actors/errordocs");
+const { evalWithDebugger } = require("devtools/server/actors/webconsole/eval-with-debugger");
 
 loader.lazyRequireGetter(this, "NetworkMonitorActor", "devtools/server/actors/network-monitor", true);
 loader.lazyRequireGetter(this, "ConsoleProgressListener", "devtools/server/actors/webconsole/listeners/console-progress", true);
@@ -32,8 +33,6 @@ loader.lazyRequireGetter(this, "CONSOLE_WORKER_IDS", "devtools/server/actors/web
 loader.lazyRequireGetter(this, "WebConsoleUtils", "devtools/server/actors/webconsole/utils", true);
 loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
-+loader.lazyRequireGetter(this, "evalWithDebugger",
-                          "devtools/server/actors/webconsole/eval-with-debugger", true);
 
 // Overwrite implemented listeners for workers so that we don't attempt
 // to load an unsupported module.
