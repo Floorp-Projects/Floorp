@@ -41,7 +41,8 @@ class ADBAndroid(ADBDevice):
                  timeout=300,
                  verbose=False,
                  device_ready_retry_wait=20,
-                 device_ready_retry_attempts=3):
+                 device_ready_retry_attempts=3,
+                 require_root=True):
         """Initializes the ADBAndroid object.
 
         :param device: When a string is passed, it is interpreted as the
@@ -78,6 +79,7 @@ class ADBAndroid(ADBDevice):
             reboot.
         :param integer device_ready_retry_attempts: number of attempts when
             checking if a device is ready.
+        :param bool require_root: check that we have root permissions on device
 
         :raises: * ADBError
                  * ADBTimeoutError
@@ -89,20 +91,23 @@ class ADBAndroid(ADBDevice):
                            logger_name=logger_name, timeout=timeout,
                            verbose=verbose,
                            device_ready_retry_wait=device_ready_retry_wait,
-                           device_ready_retry_attempts=device_ready_retry_attempts)
+                           device_ready_retry_attempts=device_ready_retry_attempts,
+                           require_root=require_root)
         # https://source.android.com/devices/tech/security/selinux/index.html
         # setenforce
         # usage:  setenforce [ Enforcing | Permissive | 1 | 0 ]
         # getenforce returns either Enforcing or Permissive
 
+        self.selinux = False
         try:
-            self.selinux = True
-            if self.shell_output('getenforce', timeout=timeout) != 'Permissive':
+            enforce = self.shell_output('getenforce', timeout=timeout)
+            self.selinux = (enforce == 'enforcing' or enforce == '1')
+            if self._require_root and enforce:
                 self._logger.info('Setting SELinux Permissive Mode')
                 self.shell_output("setenforce Permissive", timeout=timeout, root=True)
+                self.selinux = True
         except (ADBError, ADBRootError) as e:
             self._logger.warning('Unable to set SELinux Permissive due to %s.' % e)
-            self.selinux = False
 
         self.version = int(self.shell_output("getprop ro.build.version.sdk",
                                              timeout=timeout))
@@ -260,8 +265,9 @@ class ADBAndroid(ADBDevice):
                     failure = "Device state: %s" % state
                     success = False
                 else:
-                    if (self.selinux and self.shell_output('getenforce',
-                                                           timeout=timeout) != 'Permissive'):
+                    if (self._require_root and
+                        self.selinux and
+                        self.shell_output('getenforce', timeout=timeout) != 'Permissive'):
                         self._logger.info('Setting SELinux Permissive Mode')
                         self.shell_output("setenforce Permissive", timeout=timeout, root=True)
                     if self.is_dir(ready_path, timeout=timeout):
