@@ -360,7 +360,7 @@ class ADBHost(ADBCommand):
         """
         ADBCommand.__init__(self, adb=adb, adb_host=adb_host,
                             adb_port=adb_port, logger_name=logger_name,
-                            timeout=timeout, verbose=verbose)
+                            timeout=timeout, verbose=verbose, require_root=False)
 
     def command(self, cmds, timeout=None):
         """Executes an adb command on the host.
@@ -539,7 +539,8 @@ class ADBDevice(ADBCommand):
                  timeout=300,
                  verbose=False,
                  device_ready_retry_wait=20,
-                 device_ready_retry_attempts=3):
+                 device_ready_retry_attempts=3,
+                 require_root=True):
         """Initializes the ADBDevice object.
 
         :param device: When a string is passed, it is interpreted as the
@@ -576,6 +577,7 @@ class ADBDevice(ADBCommand):
             reboot.
         :param integer device_ready_retry_attempts: number of attempts when
             checking if a device is ready.
+        :param bool require_root: check that we have root permissions on device
 
         :raises: * ADBError
                  * ADBTimeoutError
@@ -583,7 +585,8 @@ class ADBDevice(ADBCommand):
         """
         ADBCommand.__init__(self, adb=adb, adb_host=adb_host,
                             adb_port=adb_port, logger_name=logger_name,
-                            timeout=timeout, verbose=verbose)
+                            timeout=timeout, verbose=verbose,
+                            require_root=require_root)
         self._logger.info('Using adb %s' % self._adb_version)
         self._device_serial = self._get_device_serial(device)
         self._initial_test_root = test_root
@@ -613,7 +616,8 @@ class ADBDevice(ADBCommand):
         uid = 'uid=0'
         # Do we have a 'Superuser' sh like su?
         try:
-            if self.shell_output("su -c id", timeout=timeout).find(uid) != -1:
+            if (self._require_root and
+                self.shell_output("su -c id", timeout=timeout).find(uid) != -1):
                 self._have_su = True
                 self._logger.info("su -c supported")
         except ADBError:
@@ -624,7 +628,8 @@ class ADBDevice(ADBCommand):
         # rooted via magisk. If we already have detected su -c support,
         # we can skip this check.
         try:
-            if (not self._have_su and
+            if (self._require_root and
+                not self._have_su and
                 self.shell_output("su 0 id", timeout=timeout).find(uid) != -1):
                 self._have_android_su = True
                 self._logger.info("su 0 supported")
