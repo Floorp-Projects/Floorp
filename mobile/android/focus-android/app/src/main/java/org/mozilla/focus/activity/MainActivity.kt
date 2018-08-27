@@ -233,7 +233,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val fragmentManager = supportFragmentManager
 
         val fragment = fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
-        if (fragment != null && fragment.session.isSameAs(currentSession)) {
+        if (fragment != null && fragment.session == currentSession) {
             // There's already a BrowserFragment displaying this session.
             return
         }
