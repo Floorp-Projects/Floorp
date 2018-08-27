@@ -24,8 +24,6 @@ protected:
   virtual ~nsSHTransaction();
 
 protected:
-  nsISHTransaction* mPrev;  // Weak Reference
-  nsCOMPtr<nsISHTransaction> mNext;
   nsCOMPtr<nsISHEntry> mSHEntry;
   bool mPersist;
 };
