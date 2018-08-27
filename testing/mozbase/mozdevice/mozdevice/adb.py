@@ -150,6 +150,12 @@ class ADBCommand(object):
         :param adb_port: port of the adb server.
         :type adb_port: integer or None
         :param str logger_name: logging logger name. Defaults to 'adb'.
+        :param timeout: The default maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value defaults to 300.
+        :type timeout: integer or None
         :param bool verbose: provide verbose output
         :param bool require_root: check that we have root permissions on device
 
@@ -341,6 +347,13 @@ class ADBHost(ADBCommand):
         :param adb_port: port of the adb server.
         :type adb_port: integer or None
         :param str logger_name: logging logger name. Defaults to 'adb'.
+        :param timeout: The default maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value defaults to 300.
+        :type timeout: integer or None
+        :param bool verbose: provide verbose output
 
         :raises: * ADBError
                  * ADBTimeoutError
@@ -551,6 +564,13 @@ class ADBDevice(ADBCommand):
         :param adb_port: port of the adb server to connect to.
         :type adb_port: integer or None
         :param str logger_name: logging logger name. Defaults to 'adb'.
+        :param timeout: The default maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value defaults to 300.
+        :type timeout: integer or None
+        :param bool verbose: provide verbose output
         :param integer device_ready_retry_wait: number of seconds to wait
             between attempts to check if the device is ready after a
             reboot.
