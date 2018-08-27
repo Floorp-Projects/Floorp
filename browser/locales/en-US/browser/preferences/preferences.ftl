@@ -824,20 +824,15 @@ content-blocking-category-label = Choose what to block
 content-blocking-fastblock-label = Slow Tracking Elements
   .accesskey = S
 content-blocking-fastblock-description = Blocks third-party content that takes longer than 5 seconds to load.
-content-blocking-fastblock-option-enabled =
-  .label = Always block
-content-blocking-fastblock-option-disabled =
-  .label = Never block
-
 content-blocking-tracking-protection-label = Trackers
   .accesskey = T
 content-blocking-tracking-protection-description = Blocks all known trackers (Note: may also prevent some pages from loading).
-content-blocking-tracking-protection-option-enabled =
-  .label = Always block
-content-blocking-tracking-protection-option-pbm =
-  .label = Block only in private windows
-content-blocking-tracking-protection-option-disabled =
-  .label = Never block
+content-blocking-tracking-protection-option-always =
+  .label = Always
+  .accesskey = A
+content-blocking-tracking-protection-option-private =
+  .label = Only in private windows
+  .accesskey = p
 content-blocking-tracking-protection-change-blocklist = Change Block List…
 
 content-blocking-reject-trackers-label = Third-Party Cookies

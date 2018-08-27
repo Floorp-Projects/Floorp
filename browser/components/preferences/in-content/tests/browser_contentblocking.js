@@ -194,13 +194,17 @@ async function doDependentControlChecks(dependentControls,
   checkControlStateWorker(doc, alwaysDisabledControls, false);
 
   let contentBlockingToggle = doc.getElementById("contentBlockingToggle");
-  contentBlockingToggle.click();
+  contentBlockingToggle.doCommand();
+
+  await TestUtils.topicObserved("privacy-pane-tp-ui-updated");
 
   is(Services.prefs.getBoolPref(CB_PREF), true, "Content Blocking is on");
   checkControlState(doc, dependentControls);
   checkControlStateWorker(doc, alwaysDisabledControls, false);
 
-  contentBlockingToggle.click();
+  contentBlockingToggle.doCommand();
+
+  await TestUtils.topicObserved("privacy-pane-tp-ui-updated");
 
   is(Services.prefs.getBoolPref(CB_PREF), false, "Content Blocking is off");
   checkControlState(doc, dependentControls);
@@ -212,15 +216,40 @@ async function doDependentControlChecks(dependentControls,
 
 // Checks that the granular controls are disabled or enabled depending on the master pref for CB.
 add_task(async function testContentBlockingDependentControls() {
+  // In Accept All Cookies mode, the radiogroup under Third-Party Cookies is always disabled
+  // since the checkbox next to Third-Party Cookies would be unchecked.
   SpecialPowers.pushPrefEnv({set: [
     [CB_UI_PREF, true],
     [CB_RT_UI_PREF, true],
+    [NCB_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT],
   ]});
 
   let dependentControls = [
     "#content-blocking-categories-label",
+    ".content-blocking-checkbox",
     ".content-blocking-icon",
-    ".content-blocking-category-menu",
+    ".content-blocking-category-name",
+    "#changeBlockListLink",
+    "#contentBlockingChangeCookieSettings",
+  ];
+  let alwaysDisabledControls = [
+    "#blockCookiesCB, #blockCookiesCB > radio",
+  ];
+
+  await doDependentControlChecks(dependentControls, alwaysDisabledControls);
+
+  // In Block Cookies from Trackers (or Block Cookies from All Third-Parties) mode, the
+  // radiogroup's disabled status must obey the content blocking enabled state.
+  SpecialPowers.pushPrefEnv({set: [
+    [CB_UI_PREF, true],
+    [CB_RT_UI_PREF, true],
+    [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
+  ]});
+
+  dependentControls = [
+    "#content-blocking-categories-label",
+    ".content-blocking-checkbox",
+    ".content-blocking-icon",
     ".content-blocking-category-name",
     "#changeBlockListLink",
     "#contentBlockingChangeCookieSettings",
@@ -228,6 +257,33 @@ add_task(async function testContentBlockingDependentControls() {
   ];
 
   await doDependentControlChecks(dependentControls);
+});
+
+// Checks that the controls for tracking protection are disabled when all TP prefs are off.
+add_task(async function testContentBlockingDependentTPControls() {
+  SpecialPowers.pushPrefEnv({set: [
+    [CB_UI_PREF, true],
+    [CB_RT_UI_PREF, true],
+    [TP_PREF, false],
+    [TP_PBM_PREF, false],
+    [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
+  ]});
+
+  let dependentControls = [
+    "#content-blocking-categories-label",
+    ".content-blocking-checkbox",
+    ".content-blocking-icon",
+    ".content-blocking-category-name",
+    "#changeBlockListLink",
+    "#contentBlockingChangeCookieSettings",
+    "#blockCookiesCB, #blockCookiesCB > radio",
+  ];
+  let alwaysDisabledControls = [
+    "#trackingProtectionMenu",
+    "[control=trackingProtectionMenu]",
+  ];
+
+  await doDependentControlChecks(dependentControls, alwaysDisabledControls);
 });
 
 
@@ -243,21 +299,24 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
     await SpecialPowers.pushPrefEnv({set: [
       [CB_UI_PREF, true],
       [CB_RT_UI_PREF, true],
+      [TP_PREF, false],
+      [TP_PBM_PREF, true],
       [NCB_PREF, value],
     ]});
 
     let dependentControls = [
       "#content-blocking-categories-label",
+      "#contentBlockingFastBlockCheckbox",
+      "#contentBlockingTrackingProtectionCheckbox",
       ".fastblock-icon",
       ".tracking-protection-icon",
-      "#fastBlockMenu",
       "#trackingProtectionMenu",
-      "[control=fastBlockMenu]",
       "[control=trackingProtectionMenu]",
       "#changeBlockListLink",
       "#contentBlockingChangeCookieSettings",
     ];
     let alwaysDisabledControls = [
+      ".reject-trackers-checkbox",
       ".reject-trackers-icon",
       "[control=blockCookiesCB]",
       "#blockCookiesCBDeck",
@@ -267,9 +326,37 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
     await doDependentControlChecks(dependentControls, alwaysDisabledControls);
   }
 
-  // The rest of the values
   prefValuesToTest = [
     Ci.nsICookieService.BEHAVIOR_ACCEPT,         // Accept All Cookies
+  ];
+  for (let value of prefValuesToTest) {
+    await SpecialPowers.pushPrefEnv({set: [
+      [CB_UI_PREF, true],
+      [CB_RT_UI_PREF, true],
+      [TP_PREF, false],
+      [TP_PBM_PREF, true],
+      [NCB_PREF, value],
+    ]});
+
+    let dependentControls = [
+      "#content-blocking-categories-label",
+      ".content-blocking-checkbox",
+      ".content-blocking-icon",
+      ".content-blocking-category-name",
+      "#trackingProtectionMenu",
+      "[control=trackingProtectionMenu]",
+      "#changeBlockListLink",
+      "#contentBlockingChangeCookieSettings",
+    ];
+    let alwaysDisabledControls = [
+      "#blockCookiesCB, #blockCookiesCB > radio",
+    ];
+
+    await doDependentControlChecks(dependentControls, alwaysDisabledControls);
+  }
+
+  // The rest of the values
+  prefValuesToTest = [
     Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, // Block All Third-Party Cookies
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, // Block Cookies from third-party trackers
   ];
@@ -277,14 +364,18 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
     await SpecialPowers.pushPrefEnv({set: [
       [CB_UI_PREF, true],
       [CB_RT_UI_PREF, true],
+      [TP_PREF, false],
+      [TP_PBM_PREF, true],
       [NCB_PREF, value],
     ]});
 
     let dependentControls = [
       "#content-blocking-categories-label",
+      ".content-blocking-checkbox",
       ".content-blocking-icon",
-      ".content-blocking-category-menu",
       ".content-blocking-category-name",
+      "#trackingProtectionMenu",
+      "[control=trackingProtectionMenu]",
       "#changeBlockListLink",
       "#contentBlockingChangeCookieSettings",
       "#blockCookiesCB, #blockCookiesCB > radio",
