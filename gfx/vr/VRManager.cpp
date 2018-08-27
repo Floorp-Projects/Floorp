@@ -177,7 +177,8 @@ VRManager::Shutdown()
   if (mVRService) {
     mVRService->Stop();
   }
-  if (gfxPrefs::VRProcessEnabled()) {
+  if (gfxPrefs::VRProcessEnabled() &&
+      VRGPUChild::IsCreated()) {
     RefPtr<Runnable> task = NS_NewRunnableFunction(
       "VRGPUChild::SendStopVRService",
       [] () -> void {
