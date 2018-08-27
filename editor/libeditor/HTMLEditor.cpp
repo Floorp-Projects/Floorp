@@ -3018,7 +3018,8 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
             if (NS_WARN_IF(NS_FAILED(rv))) {
               return rv;
             }
-            GetNextSelectedCell(nullptr, getter_AddRefs(cellElement));
+            cellElement =
+              GetNextSelectedTableCellElement(*selection, ignoredError);
           }
           return NS_OK;
         }
@@ -3027,7 +3028,8 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
           if (NS_FAILED(rv)) {
             return rv;
           }
-          GetNextSelectedCell(nullptr, getter_AddRefs(cellElement));
+          cellElement =
+            GetNextSelectedTableCellElement(*selection, ignoredError);
         }
         return NS_OK;
       }
