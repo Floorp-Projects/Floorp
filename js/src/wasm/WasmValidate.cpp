@@ -1129,6 +1129,16 @@ ValidateRefType(Decoder& d, TypeStateVector* typeState, ValType type)
     return true;
 }
 
+#ifdef WASM_PRIVATE_REFTYPES
+static bool
+FuncTypeIsJSCompatible(Decoder& d, const FuncType& ft)
+{
+    if (ft.exposesRef())
+        return d.fail("cannot expose reference type");
+    return true;
+}
+#endif
+
 static bool
 DecodeFuncType(Decoder& d, ModuleEnvironment* env, TypeStateVector* typeState, uint32_t typeIndex)
 {
@@ -1391,6 +1401,10 @@ GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
       case ValType::I64:
       case ValType::AnyRef:
         break;
+#ifdef WASM_PRIVATE_REFTYPES
+      case ValType::Ref:
+        return d.fail("cannot expose reference type");
+#endif
       default:
         return d.fail("unexpected variable type in global import/export");
     }
@@ -1495,6 +1509,10 @@ DecodeImport(Decoder& d, ModuleEnvironment* env)
         uint32_t funcTypeIndex;
         if (!DecodeSignatureIndex(d, env->types, &funcTypeIndex))
             return false;
+#ifdef WASM_PRIVATE_REFTYPES
+        if (!FuncTypeIsJSCompatible(d, env->types[funcTypeIndex].funcType()))
+            return false;
+#endif
         if (!env->funcTypes.append(&env->types[funcTypeIndex].funcType()))
             return false;
         if (env->funcTypes.length() > MaxFuncs)
@@ -1505,6 +1523,9 @@ DecodeImport(Decoder& d, ModuleEnvironment* env)
         if (!DecodeTableLimits(d, &env->tables))
             return false;
         env->tables.back().external = true;
+#ifdef WASM_PRIVATE_REFTYPES
+        env->tables.back().importedOrExported = true;
+#endif
         break;
       }
       case DefinitionKind::Memory: {
@@ -1805,6 +1826,10 @@ DecodeExport(Decoder& d, ModuleEnvironment* env, CStringSet* dupSet)
 
         if (funcIndex >= env->numFuncs())
             return d.fail("exported function index out of bounds");
+#ifdef WASM_PRIVATE_REFTYPES
+        if (!FuncTypeIsJSCompatible(d, *env->funcTypes[funcIndex]))
+            return false;
+#endif
 
         return env->exports.emplaceBack(std::move(fieldName), funcIndex, DefinitionKind::Function);
       }
@@ -1818,6 +1843,9 @@ DecodeExport(Decoder& d, ModuleEnvironment* env, CStringSet* dupSet)
 
         MOZ_ASSERT(env->tables.length() == 1);
         env->tables[tableIndex].external = true;
+#ifdef WASM_PRIVATE_REFTYPES
+        env->tables[tableIndex].importedOrExported = true;
+#endif
 
         return env->exports.emplaceBack(std::move(fieldName), DefinitionKind::Table);
       }
@@ -1963,6 +1991,14 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             // external.
             if (env->funcIsImport(funcIndex))
                 env->tables[tableIndex].external = true;
+
+#ifdef WASM_PRIVATE_REFTYPES
+            if (env->tables[tableIndex].importedOrExported &&
+                !FuncTypeIsJSCompatible(d, *env->funcTypes[elemFuncIndices[i]]))
+            {
+                return false;
+            }
+#endif
         }
 
         if (!env->elemSegments.emplaceBack(tableIndex, offset, std::move(elemFuncIndices)))

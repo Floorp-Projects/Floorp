@@ -763,6 +763,15 @@ class FuncType
         }
         return false;
     }
+#ifdef WASM_PRIVATE_REFTYPES
+    bool exposesRef() const {
+        for (const ValType& arg : args()) {
+            if (arg.isRef())
+                return true;
+        }
+        return ret().isRef();
+    }
+#endif
 
     WASM_DECLARE_SERIALIZABLE(FuncType)
 };
@@ -1868,6 +1877,9 @@ struct TableDesc
     // imported or exported or if it is initialized with an imported function.
 
     TableKind kind;
+#ifdef WASM_PRIVATE_REFTYPES
+    bool importedOrExported;
+#endif
     bool external;
     uint32_t globalDataOffset;
     Limits limits;
@@ -1875,6 +1887,9 @@ struct TableDesc
     TableDesc() = default;
     TableDesc(TableKind kind, const Limits& limits)
      : kind(kind),
+#ifdef WASM_PRIVATE_REFTYPES
+       importedOrExported(false),
+#endif
        external(false),
        globalDataOffset(UINT32_MAX),
        limits(limits)
