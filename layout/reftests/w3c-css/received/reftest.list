@@ -1121,10 +1121,10 @@ fuzzy-if(OSX||winWidget,0-255,0-480) == css-writing-modes/text-indent-vrl-014.xh
 fuzzy-if(OSX||winWidget,0-255,0-480) == css-writing-modes/text-indent-vrl-016.xht css-writing-modes/text-indent-vrl-012-ref.xht
 fuzzy-if(OSX||winWidget,0-226,0-960) fails-if(webrender&&cocoaWidget) == css-writing-modes/text-orientation-016.xht css-writing-modes/text-orientation-016-ref.xht
 == css-writing-modes/text-orientation-mixed-srl-016.xht css-writing-modes/text-orientation-mixed-srl-016-ref.xht
-== css-writing-modes/text-orientation-mixed-vlr-100.html css-writing-modes/text-orientation-mixed-vlr-100-ref.html
-== css-writing-modes/text-orientation-mixed-vrl-100.html css-writing-modes/text-orientation-mixed-vrl-100-ref.html
-== css-writing-modes/text-orientation-sideways-vlr-100.html css-writing-modes/text-orientation-sideways-vlr-100-ref.html
-== css-writing-modes/text-orientation-sideways-vrl-100.html css-writing-modes/text-orientation-sideways-vrl-100-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-orientation-mixed-vlr-100.html css-writing-modes/text-orientation-mixed-vlr-100-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-orientation-mixed-vrl-100.html css-writing-modes/text-orientation-mixed-vrl-100-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-orientation-sideways-vlr-100.html css-writing-modes/text-orientation-sideways-vlr-100-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-orientation-sideways-vrl-100.html css-writing-modes/text-orientation-sideways-vrl-100-ref.html
 == css-writing-modes/text-orientation-upright-srl-018.xht css-writing-modes/text-orientation-mixed-srl-016-ref.xht
 == css-writing-modes/text-orientation-upright-vlr-100.html css-writing-modes/text-orientation-upright-vlr-100-ref.html
 == css-writing-modes/text-orientation-upright-vrl-100.html css-writing-modes/text-orientation-upright-vrl-100-ref.html
@@ -1159,10 +1159,10 @@ fails == css-writing-modes/wm-propagation-body-011.xht css-writing-modes/wm-prop
 fails == css-writing-modes/wm-propagation-body-015.xht css-writing-modes/block-flow-direction-025-ref.xht
 == css-writing-modes/writing-mode-horizontal-001l.html css-writing-modes/reference/writing-mode-horizontal-001l-ref.html
 == css-writing-modes/writing-mode-horizontal-001r.html css-writing-modes/reference/writing-mode-horizontal-001r-ref.html
-fuzzy-if(OSX||winWidget,0-158,0-624) == css-writing-modes/writing-mode-vertical-lr-002.xht css-writing-modes/reftest/writing-mode-vertical-lr-002-ref.xht
-fuzzy-if(OSX||winWidget,0-158,0-624) == css-writing-modes/writing-mode-vertical-rl-001.xht css-writing-modes/reftest/writing-mode-vertical-rl-001-ref.xht
-fuzzy-if(OSX||winWidget,0-158,0-624) == css-writing-modes/writing-mode-vertical-rl-002.xht css-writing-modes/reftest/writing-mode-vertical-rl-002-ref.xht
-fuzzy-if(OSX||winWidget,0-158,0-624) == css-writing-modes/writing-mode-vertical-rl-003.htm css-writing-modes/writing-mode-vertical-rl-003-ref.htm
+fuzzy-if(OSX||winWidget,0-158,0-624) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-lr-002.xht css-writing-modes/reftest/writing-mode-vertical-lr-002-ref.xht
+fuzzy-if(OSX||winWidget,0-158,0-624) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-001.xht css-writing-modes/reftest/writing-mode-vertical-rl-001-ref.xht
+fuzzy-if(OSX||winWidget,0-158,0-624) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-002.xht css-writing-modes/reftest/writing-mode-vertical-rl-002-ref.xht
+fuzzy-if(OSX||winWidget,0-158,0-624) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-003.htm css-writing-modes/writing-mode-vertical-rl-003-ref.htm
 skip == selectors/any-link-dynamic-001.html selectors/any-link-dynamic-001-ref.html
 needs-focus == selectors/focus-within-001.html selectors/focus-within-001-ref.html
 needs-focus == selectors/focus-within-002.html selectors/focus-within-001-ref.html
