@@ -596,6 +596,7 @@ class ADBDevice(ADBCommand):
         self._have_root_shell = False
         self._have_su = False
         self._have_android_su = False
+        self._re_internal_storage = None
 
         # Catch exceptions due to the potential for segfaults
         # calling su when using an improperly rooted device.
@@ -795,6 +796,33 @@ class ADBDevice(ADBCommand):
             exitcode = None
 
         return exitcode
+
+    def is_path_internal_storage(self, path, timeout=None):
+        """
+        Return True if the path matches an internal storage path
+        as defined by either '/sdcard', '/mnt/sdcard', or any of the
+        .*_STORAGE environment variables on the device otherwise False.
+        :param str path: The path to test.
+        :param timeout: The maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value set in the ADBDevice constructor is used.
+        :returns: boolean
+
+        :raises: * ADBTimeoutError
+                 * ADBError
+        """
+        if not self._re_internal_storage:
+            storage_dirs = set(['/mnt/sdcard', '/sdcard'])
+            re_STORAGE = re.compile('([^=]+STORAGE)=(.*)')
+            lines = self.shell_output('set', timeout=timeout).split()
+            for line in lines:
+                m = re_STORAGE.match(line.strip())
+                if m and m.group(2):
+                    storage_dirs.add(m.group(2))
+            self._re_internal_storage = re.compile('/|'.join(list(storage_dirs)) + '/')
+        return self._re_internal_storage.match(path) is not None
 
     @property
     def test_root(self):
@@ -1544,6 +1572,13 @@ class ADBDevice(ADBCommand):
         path = posixpath.normpath(path.strip())
         self._logger.debug('chmod: path=%s, recursive=%s, mask=%s, root=%s' %
                            (path, recursive, mask, root))
+        if self.is_path_internal_storage(path, timeout=timeout):
+            # External storage on Android is case-insensitive and permissionless
+            # therefore even with the proper privileges it is not possible
+            # to change modes.
+            self._logger.warning('Ignoring attempt to chmod external storage')
+            return
+
         if not recursive:
             self.shell_output("chmod %s %s" % (mask, path),
                               timeout=timeout, root=root)
