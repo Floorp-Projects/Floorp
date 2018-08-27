@@ -1003,20 +1003,6 @@ Event::DefaultPrevented(CallerType aCallerType) const
          aCallerType == CallerType::System;
 }
 
-bool
-Event::ReturnValue(CallerType aCallerType) const
-{
-  return !DefaultPrevented(aCallerType);
-}
-
-void
-Event::SetReturnValue(bool aReturnValue, CallerType aCallerType)
-{
-  if (!aReturnValue) {
-    PreventDefaultInternal(aCallerType == CallerType::System);
-  }
-}
-
 double
 Event::TimeStamp()
 {
