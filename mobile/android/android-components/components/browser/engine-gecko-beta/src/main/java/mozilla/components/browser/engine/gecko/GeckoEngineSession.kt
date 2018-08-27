@@ -28,13 +28,15 @@ import org.mozilla.geckoview.GeckoSessionSettings
 @Suppress("TooManyFunctions")
 class GeckoEngineSession(
     runtime: GeckoRuntime,
-    privateMode: Boolean = false
+    privateMode: Boolean = false,
+    defaultSettings: Settings? = null
 ) : EngineSession() {
 
     internal var geckoSession = GeckoSession()
     private var initialLoad = true
 
     init {
+        defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
         geckoSession.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, privateMode)
         geckoSession.open(runtime)
 

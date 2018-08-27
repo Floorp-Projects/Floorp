@@ -65,6 +65,17 @@ abstract class EngineSession(
             fun select(vararg categories: Int): TrackingProtectionPolicy =
                 TrackingProtectionPolicy(categories.sum())
         }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is TrackingProtectionPolicy) return false
+            if (categories != other.categories) return false
+            return true
+        }
+
+        override fun hashCode(): Int {
+            return categories
+        }
     }
 
     /**

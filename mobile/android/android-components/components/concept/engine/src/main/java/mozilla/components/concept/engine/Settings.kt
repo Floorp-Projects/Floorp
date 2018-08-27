@@ -4,6 +4,8 @@
 
 package mozilla.components.concept.engine
 
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+
 /**
  * Holds settings of an engine or session. Concrete engine
  * implementations define how these settings are applied i.e.
@@ -23,7 +25,23 @@ interface Settings {
     var domStorageEnabled: Boolean
         get() = throw UnsupportedSettingException()
         set(_) = throw UnsupportedSettingException()
+
+    /**
+     * Setting to control tracking protection.
+     */
+    var trackingProtectionPolicy: TrackingProtectionPolicy?
+        get() = throw UnsupportedSettingException()
+        set(_) = throw UnsupportedSettingException()
 }
+
+/**
+ * [Settings] implementation used to set defaults for [Engine] and [EngineSession].
+ */
+data class DefaultSettings(
+    override var javascriptEnabled: Boolean = true,
+    override var domStorageEnabled: Boolean = true,
+    override var trackingProtectionPolicy: TrackingProtectionPolicy? = null
+) : Settings
 
 /**
  * Exception thrown by default if a setting is not supported by an engine or session.

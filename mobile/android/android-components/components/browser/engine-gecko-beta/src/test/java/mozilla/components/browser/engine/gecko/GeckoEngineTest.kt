@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.engine.gecko
 
+import mozilla.components.concept.engine.DefaultSettings
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -43,12 +45,17 @@ class GeckoEngineTest {
         val runtime = mock(GeckoRuntime::class.java)
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
+        `when`(runtimeSettings.trackingProtectionCategories).thenReturn(TrackingProtectionPolicy.none().categories)
         `when`(runtime.settings).thenReturn(runtimeSettings)
         val engine = GeckoEngine(runtime)
 
         assertTrue(engine.settings.javascriptEnabled)
         engine.settings.javascriptEnabled = false
         verify(runtimeSettings).javaScriptEnabled = false
+
+        assertEquals(TrackingProtectionPolicy.none(), engine.settings.trackingProtectionPolicy)
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.all()
+        verify(runtimeSettings).trackingProtectionCategories = TrackingProtectionPolicy.all().categories
 
         try {
             engine.settings.domStorageEnabled
@@ -59,5 +66,20 @@ class GeckoEngineTest {
             engine.settings.domStorageEnabled = false
             fail("Expected UnsupportedOperationException")
         } catch (e: UnsupportedSettingException) { }
+    }
+
+    @Test
+    fun testDefaultSettings() {
+        val runtime = mock(GeckoRuntime::class.java)
+        val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
+        `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
+        `when`(runtime.settings).thenReturn(runtimeSettings)
+
+        GeckoEngine(runtime, DefaultSettings(
+                trackingProtectionPolicy = TrackingProtectionPolicy.all(),
+                javascriptEnabled = false))
+
+        verify(runtimeSettings).javaScriptEnabled = false
+        verify(runtimeSettings).trackingProtectionCategories = TrackingProtectionPolicy.all().categories
     }
 }

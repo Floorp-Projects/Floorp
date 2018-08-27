@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko
 
+import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.UnsupportedSettingException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -59,5 +60,16 @@ class GeckoEngineTest {
             engine.settings.domStorageEnabled = false
             fail("Expected UnsupportedOperationException")
         } catch (e: UnsupportedSettingException) { }
+    }
+
+    @Test
+    fun testDefaultSettings() {
+        val runtime = mock(GeckoRuntime::class.java)
+        val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
+        `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
+        `when`(runtime.settings).thenReturn(runtimeSettings)
+
+        GeckoEngine(runtime, DefaultSettings(javascriptEnabled = false))
+        verify(runtimeSettings).javaScriptEnabled = false
     }
 }

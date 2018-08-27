@@ -16,7 +16,7 @@ import mozilla.components.concept.engine.Settings
  * WebView-based EngineSession implementation.
  */
 @Suppress("TooManyFunctions")
-class SystemEngineSession : EngineSession() {
+class SystemEngineSession(private val defaultSettings: Settings? = null) : EngineSession() {
     internal var view: WeakReference<SystemEngineView>? = null
     internal var scheduledLoad = ScheduledLoad(null)
     @Volatile internal var trackingProtectionEnabled = false
@@ -105,7 +105,8 @@ class SystemEngineSession : EngineSession() {
      * Note that specifying tracking protection policies at run-time is
      * not supported by [SystemEngine]. Tracking protection is always active
      * for all URLs provided in domain_blacklist.json and domain_overrides.json,
-     * which both support specifying categories.
+     * which both support specifying categories. See [UrlMatcher] for how to
+     * enable/disable specific categories.
      */
     override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
         currentView()?.let {
@@ -129,8 +130,13 @@ class SystemEngineSession : EngineSession() {
      * See [EngineSession.settings]
      */
     override val settings: Settings
-        get() = currentView()?.settings?.let {
-            return object : Settings {
+        get() = _settings ?: run { initSettings() }
+
+    private var _settings: Settings? = null
+
+    internal fun initSettings(): Settings {
+        currentView()?.settings?.let {
+            _settings = object : Settings {
                 override var javascriptEnabled: Boolean
                     get() = it.javaScriptEnabled
                     set(value) { it.javaScriptEnabled = value }
@@ -138,8 +144,24 @@ class SystemEngineSession : EngineSession() {
                 override var domStorageEnabled: Boolean
                     get() = it.domStorageEnabled
                     set(value) { it.domStorageEnabled = value }
+
+                override var trackingProtectionPolicy: TrackingProtectionPolicy?
+                    get() = if (trackingProtectionEnabled)
+                        TrackingProtectionPolicy.all()
+                    else
+                        TrackingProtectionPolicy.none()
+
+                    set(value) = value?.let { enableTrackingProtection(it) } ?: disableTrackingProtection()
+            }.apply {
+                defaultSettings?.let {
+                    this.javascriptEnabled = defaultSettings.javascriptEnabled
+                    this.domStorageEnabled = defaultSettings.domStorageEnabled
+                    this.trackingProtectionPolicy = defaultSettings.trackingProtectionPolicy
+                }
             }
-        } ?: throw IllegalStateException("System engine not initialized")
+            return _settings as Settings
+        } ?: throw IllegalStateException("System engine session not initialized")
+    }
 
     internal fun currentView(): WebView? {
         return view?.get()?.currentWebView

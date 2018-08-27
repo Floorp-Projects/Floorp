@@ -5,8 +5,10 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
+import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -205,6 +207,7 @@ class SystemEngineSessionTest {
     fun testSettings() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
+        `when`(webView.context).thenReturn(RuntimeEnvironment.application)
         val webViewSettings = mock(WebSettings::class.java)
         `when`(webViewSettings.javaScriptEnabled).thenReturn(false)
         `when`(webViewSettings.domStorageEnabled).thenReturn(false)
@@ -223,5 +226,29 @@ class SystemEngineSessionTest {
         assertFalse(engineSession.settings.domStorageEnabled)
         engineSession.settings.domStorageEnabled = true
         verify(webViewSettings).domStorageEnabled = true
+
+        assertEquals(EngineSession.TrackingProtectionPolicy.none(), engineSession.settings.trackingProtectionPolicy)
+        engineSession.settings.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
+        verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
+
+        engineSession.settings.trackingProtectionPolicy = null
+        verify(engineSession).disableTrackingProtection()
+    }
+
+    @Test
+    fun testDefaultSettings() {
+        val defaultSettings = DefaultSettings(false, false, EngineSession.TrackingProtectionPolicy.all())
+        val engineSession = spy(SystemEngineSession(defaultSettings))
+        val webView = mock(WebView::class.java)
+        `when`(webView.context).thenReturn(RuntimeEnvironment.application)
+        `when`(engineSession.currentView()).thenReturn(webView)
+
+        val webViewSettings = mock(WebSettings::class.java)
+        `when`(webView.settings).thenReturn(webViewSettings)
+
+        engineSession.initSettings()
+        verify(webViewSettings).domStorageEnabled = false
+        verify(webViewSettings).javaScriptEnabled = false
+        verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
     }
 }

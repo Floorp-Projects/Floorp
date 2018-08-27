@@ -60,6 +60,7 @@ class SystemEngineView @JvmOverloads constructor(
         this.session = internalSession
 
         internalSession.view = WeakReference(this)
+        internalSession.initSettings()
 
         internalSession.scheduledLoad.data?.let {
             currentWebView.loadData(it, internalSession.scheduledLoad.mimeType, "UTF-8")

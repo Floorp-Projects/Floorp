@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko
 
 import android.os.Handler
+import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
@@ -400,6 +401,16 @@ class GeckoEngineSessionTest {
     @Test(expected = UnsupportedOperationException::class)
     fun testSettings() {
         GeckoEngineSession(mock(GeckoRuntime::class.java)).settings
+    }
+
+    @Test
+    fun testDefaultSettings() {
+        val runtime = mock(GeckoRuntime::class.java)
+        `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
+
+        val defaultSettings = DefaultSettings(trackingProtectionPolicy = TrackingProtectionPolicy.all())
+        val session = GeckoEngineSession(runtime, false, defaultSettings)
+        assertTrue(session.geckoSession.settings.getBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION))
     }
 
     @Test

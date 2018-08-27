@@ -16,7 +16,8 @@ import org.mozilla.geckoview.GeckoRuntime
  * Gecko-based implementation of Engine interface.
  */
 class GeckoEngine(
-    private val runtime: GeckoRuntime
+    private val runtime: GeckoRuntime,
+    defaultSettings: Settings? = null
 ) : Engine {
 
     /**
@@ -45,5 +46,9 @@ class GeckoEngine(
         override var javascriptEnabled: Boolean
             get() = runtime.settings.javaScriptEnabled
             set(value) { runtime.settings.javaScriptEnabled = value }
+    }.apply {
+        defaultSettings?.let {
+            this.javascriptEnabled = defaultSettings.javascriptEnabled
+        }
     }
 }
