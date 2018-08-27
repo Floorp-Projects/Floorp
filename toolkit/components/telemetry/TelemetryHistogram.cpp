@@ -2558,13 +2558,6 @@ TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext* aCx,
 }
 
 size_t
-TelemetryHistogram::GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf
-                                                      aMallocSizeOf)
-{
-  return 0;
-}
-
-size_t
 TelemetryHistogram::GetHistogramSizesOfIncludingThis(mozilla::MallocSizeOf
                                                      aMallocSizeOf)
 {
