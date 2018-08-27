@@ -75,31 +75,24 @@
   color: var(--theme-highlight-red);
 }
 
-.theme-dark .opt-icon::before {
-  background-image: url(chrome://devtools/skin/images/webconsole.svg);
-}
-.theme-light .opt-icon::before {
-  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
-}
-
 .opt-icon::before {
-  display: inline-block;
   content: "";
-  background-repeat: no-repeat;
-  background-size: 72px 60px;
-  /* show grey "i" bubble by default */
-  background-position: -36px -36px;
-  width: 10px;
-  height: 10px;
+  display: inline-block;
+  vertical-align: -2px;
+  width: 12px;
+  height: 12px;
   max-height: 12px;
-}
-
-.opt-icon::before {
-  margin: 1px 6px 0 0;
+  margin-inline-end: 5px;
+  background-image: var(--theme-console-info-image);
+  background-repeat: no-repeat;
+  background-size: contain;
+  -moz-context-properties: fill;
+  fill: #808080;
 }
 
 .opt-icon.warning::before {
-  background-position: -24px -24px;
+  background-image: var(--theme-console-alert-image);
+  fill: #ec8633;
 }
 
 /* Frame Component */
