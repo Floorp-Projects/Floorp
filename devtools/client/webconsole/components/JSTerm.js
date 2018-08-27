@@ -18,7 +18,7 @@ loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools"
 loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
 loader.lazyRequireGetter(this, "Editor", "devtools/client/sourceeditor/editor");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
-loader.lazyRequireGetter(this, "processScreenshot", "devtools/shared/webconsole/screenshot-helper");
+loader.lazyRequireGetter(this, "saveScreenshot", "devtools/shared/screenshot/save");
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
@@ -473,7 +473,7 @@ class JSTerm extends Component {
           break;
         case "screenshotOutput":
           const { args, value } = helperResult;
-          const results = await processScreenshot(this.hud.window, args, value);
+          const results = await saveScreenshot(this.hud.window, args, value);
           this.screenshotNotify(results);
           // early return as screenshot notify has dispatched all necessary messages
           return null;
