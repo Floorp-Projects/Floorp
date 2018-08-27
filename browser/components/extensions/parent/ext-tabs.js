@@ -712,9 +712,12 @@ this.tabs = class extends ExtensionAPI {
             if (updateProperties.highlighted) {
               if (!nativeTab.selected && !nativeTab.multiselected) {
                 tabbrowser.addToMultiSelectedTabs(nativeTab, false);
-                // Select the highlighted tab, this matches Chrome's behavior.
-                tabbrowser.lockClearMultiSelectionOnce();
-                tabbrowser.selectedTab = nativeTab;
+                // Select the highlighted tab unless active:false is provided.
+                // Note that Chrome selects it even in that case.
+                if (updateProperties.active !== false) {
+                  tabbrowser.lockClearMultiSelectionOnce();
+                  tabbrowser.selectedTab = nativeTab;
+                }
               }
             } else {
               tabbrowser.removeFromMultiSelectedTabs(nativeTab, true);
