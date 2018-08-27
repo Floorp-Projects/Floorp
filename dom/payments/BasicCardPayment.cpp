@@ -40,7 +40,6 @@ namespace dom {
 #define DependentLocality NS_LITERAL_STRING("dependentLocality")
 #define PostalCode NS_LITERAL_STRING("postalCode")
 #define SortingCode NS_LITERAL_STRING("sortingCode")
-#define LanguageCode NS_LITERAL_STRING("languageCode")
 #define Organization NS_LITERAL_STRING("organization")
 #define Recipient NS_LITERAL_STRING("recipient")
 #define Phone NS_LITERAL_STRING("phone")
@@ -119,7 +118,6 @@ bool IsAddressKey(const nsAString& aKey)
          DependentLocality.Equals(aKey) ||
          PostalCode.Equals(aKey) ||
          SortingCode.Equals(aKey) ||
-         LanguageCode.Equals(aKey) ||
          Organization.Equals(aKey) ||
          Recipient.Equals(aKey) ||
          Phone.Equals(aKey);
@@ -264,7 +262,6 @@ BasicCardService::EncodeBasicCardData(const nsAString& aCardholderName,
   EncodeAddressProperty(aBillingAddress, DependentLocality, aResult);
   EncodeAddressProperty(aBillingAddress, PostalCode, aResult);
   EncodeAddressProperty(aBillingAddress, SortingCode, aResult);
-  EncodeAddressProperty(aBillingAddress, LanguageCode, aResult);
   EncodeAddressProperty(aBillingAddress, Organization, aResult);
   EncodeAddressProperty(aBillingAddress, Recipient, aResult);
   EncodeAddressProperty(aBillingAddress, Phone, aResult);
@@ -285,7 +282,6 @@ BasicCardService::DecodeBasicCardData(const nsAString& aData,
   nsAutoString dependentLocality;
   nsAutoString postalCode;
   nsAutoString sortingCode;
-  nsAutoString languageCode;
   nsAutoString organization;
   nsAutoString recipient;
   nsAutoString phone;
@@ -319,7 +315,6 @@ BasicCardService::DecodeBasicCardData(const nsAString& aData,
     DecodeAddressProperty(key, value, DependentLocality, dependentLocality);
     DecodeAddressProperty(key, value, PostalCode, postalCode);
     DecodeAddressProperty(key, value, SortingCode, sortingCode);
-    DecodeAddressProperty(key, value, LanguageCode, languageCode);
     DecodeAddressProperty(key, value, Organization, organization);
     DecodeAddressProperty(key, value, Recipient, recipient);
     DecodeAddressProperty(key, value, Phone, phone);
@@ -341,7 +336,6 @@ BasicCardService::DecodeBasicCardData(const nsAString& aData,
                                                            dependentLocality,
                                                            postalCode,
                                                            sortingCode,
-                                                           languageCode,
                                                            organization,
                                                            recipient,
                                                            phone);
@@ -376,7 +370,6 @@ BasicCardService::DecodeBasicCardData(const nsAString& aData,
 #undef DependentLocality
 #undef PostalCode
 #undef SortingCode
-#undef LanguageCode
 #undef Organization
 #undef Recipient
 #undef Phone
