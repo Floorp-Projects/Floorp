@@ -626,7 +626,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
         'skia/src/ports/SkFontHost_FreeType_common.cpp',
     ]
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    if CONFIG['CC_TYPE'] not in ('gcc', 'clang'):
+    if CONFIG['CC_TYPE'] not in ('gcc', 'clang') and CONFIG['CPU_ARCH'] != 'aarch64':
         SOURCES += [
             'skia/src/jumper/SkJumper_generated_win.S',
         ]
