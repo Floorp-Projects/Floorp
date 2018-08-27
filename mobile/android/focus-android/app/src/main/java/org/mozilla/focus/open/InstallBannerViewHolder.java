@@ -30,6 +30,6 @@ public class InstallBannerViewHolder extends RecyclerView.ViewHolder implements 
 
     @Override
     public void onClick(View view) {
-        InstallFirefoxActivity.open(view.getContext());
+        InstallFirefoxActivity.Companion.open(view.getContext());
     }
 }

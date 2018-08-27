@@ -19,7 +19,7 @@ class CustomTabActivity : MainActivity() {
         SessionManager.getInstance().getCustomTabSessionByCustomTabIdOrThrow(customTabId)
     }
 
-    override fun isCustomTabMode(): Boolean = true
+    override val isCustomTabMode: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,5 +43,5 @@ class CustomTabActivity : MainActivity() {
         }
     }
 
-    override fun getCurrentSessionForActivity() = customTabSession
+    override val currentSessionForActivity = customTabSession
 }

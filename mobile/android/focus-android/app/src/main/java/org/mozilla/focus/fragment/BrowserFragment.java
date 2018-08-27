@@ -1195,7 +1195,7 @@ public class BrowserFragment extends WebFragment implements LifecycleObserver, V
                 final ActivityInfo[] apps = browsers.getInstalledBrowsers();
                 final ActivityInfo store = browsers.hasFirefoxBrandedBrowserInstalled()
                         ? null
-                        : InstallFirefoxActivity.resolveAppStore(getContext());
+                        : InstallFirefoxActivity.Companion.resolveAppStore(getContext());
 
                 final OpenWithFragment fragment = OpenWithFragment.newInstance(
                         apps,
