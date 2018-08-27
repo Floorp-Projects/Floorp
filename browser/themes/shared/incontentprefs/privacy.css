@@ -5,10 +5,15 @@
 /* Permissions */
 
 .content-blocking-icon,
-.permission-icon {
-  height: 20px;
+.permission-icon,
+.content-blocking-checkbox {
   width: 20px;
+  height: 20px;
   vertical-align: middle;
+}
+
+.content-blocking-icon,
+.permission-icon {
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -108,7 +113,11 @@
 }
 
 .content-blocking-category {
-  margin: 8px 0;
+  margin: 16px 0;
+}
+
+.content-blocking-category-checkbox {
+  padding: 4px;
 }
 
 .content-blocking-category-icon {
@@ -119,18 +128,20 @@
   padding-inline-start: 4px;
 }
 
+#trackingProtectionMenu,
+#blockCookiesCB {
+  margin-top: 0.75em;
+}
+
 #changeBlockListLink {
   font-size: 90%;
+  /* In order to override the margins set in preferences.inc.css, we have to use !important. */
+  margin-top: 1em !important;
 }
 
 .content-blocking-category-description {
   font-size: 90%;
   opacity: 0.6;
-}
-
-.content-blocking-category-menu {
-  margin-top: -2px;
-  min-width: 250px;
 }
 
 .fastblock-icon {

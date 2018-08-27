@@ -196,6 +196,11 @@ var gPrivacyPane = {
     function setInputsDisabledState(isControlled) {
       let disabled = isLocked || isControlled;
       if (contentBlockingUiEnabled) {
+        let tpCheckbox =
+          document.getElementById("contentBlockingTrackingProtectionCheckbox");
+        if (!tpCheckbox.checked) {
+          disabled = true;
+        }
         // Only enable the TP menu if content blocking is enabled.
         document.getElementById("trackingProtectionMenu").disabled = disabled ||
           !contentBlockingEnabled;
@@ -207,6 +212,11 @@ var gPrivacyPane = {
         document.querySelector("#trackingProtectionDesc > label")
           .disabled = disabled;
       }
+
+      // Notify observers that the TP UI has been updated.
+      // This is needed since our tests need to be notified about the
+      // trackingProtectionMenu element getting disabled/enabled at the right time.
+      Services.obs.notifyObservers(window, "privacy-pane-tp-ui-updated");
     }
 
     if (isLocked) {
@@ -458,13 +468,26 @@ var gPrivacyPane = {
     let contentBlockingCheckbox = document.getElementById("contentBlockingCheckbox");
     setEventListener("contentBlockingToggle", "command",
       () => contentBlockingCheckbox.click());
+    setEventListener("contentBlockingToggle", "command",
+      this.updateContentBlockingControls);
     setEventListener("changeBlockListLink", "click", this.showBlockLists);
     setEventListener("contentBlockingRestoreDefaults", "command",
       this.restoreContentBlockingPrefs);
+    setEventListener("contentBlockingTrackingProtectionCheckbox", "command",
+      this.trackingProtectionWritePrefs);
+    setEventListener("contentBlockingTrackingProtectionCheckbox", "command",
+      this._updateTrackingProtectionUI);
     setEventListener("trackingProtectionMenu", "command",
       this.trackingProtectionWritePrefs);
     setEventListener("contentBlockingChangeCookieSettings", "command",
       this.changeCookieSettings);
+    setEventListener("contentBlockingBlockCookiesCheckbox", "command",
+      this.writeBlockCookiesCheckbox);
+
+    Preferences.get("network.cookie.cookieBehavior").on("change",
+      gPrivacyPane.readBlockCookiesCheckbox.bind(gPrivacyPane));
+
+    this.readBlockCookiesCheckbox();
 
     let link = document.getElementById("contentBlockingLearnMore");
     let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection";
@@ -575,8 +598,8 @@ var gPrivacyPane = {
   updateContentBlockingControls() {
     let dependentControls = [
       "#content-blocking-categories-label",
+      ".content-blocking-checkbox",
       ".content-blocking-icon",
-      ".content-blocking-category-menu",
       ".content-blocking-category-name",
       "#changeBlockListLink",
       "#contentBlockingChangeCookieSettings",
@@ -589,9 +612,9 @@ var gPrivacyPane = {
     this._updateTrackingProtectionUI();
 
     // If we are turning Content Blocking on, we may need to keep some parts of the Third-Party Cookies
-    // UI off, depending on the value of the cookieBehavior pref.  readBlockCookiesCB() can do the work
-    // that is needed for that.
-    this.readBlockCookiesCB();
+    // UI off, depending on the value of the cookieBehavior pref.  readBlockCookiesCheckbox() can do
+    // the work that is needed for that.
+    this.readBlockCookiesCheckbox();
   },
 
   _toggleControls(dependentControls, enabled) {
@@ -616,9 +639,11 @@ var gPrivacyPane = {
   trackingProtectionReadPrefs() {
     let enabledPref = Preferences.get("privacy.trackingprotection.enabled");
     let pbmPref = Preferences.get("privacy.trackingprotection.pbmode.enabled");
-    let tpControl;
+    let tpControl,
+        tpCheckbox;
     if (contentBlockingUiEnabled) {
       tpControl = document.getElementById("trackingProtectionMenu");
+      tpCheckbox = document.getElementById("contentBlockingTrackingProtectionCheckbox");
     } else {
       tpControl = document.getElementById("trackingProtectionRadioGroup");
     }
@@ -628,10 +653,18 @@ var gPrivacyPane = {
     // Global enable takes precedence over enabled in Private Browsing.
     if (enabledPref.value) {
       tpControl.value = "always";
+      if (tpCheckbox) {
+        tpCheckbox.checked = true;
+      }
     } else if (pbmPref.value) {
       tpControl.value = "private";
-    } else {
+      if (tpCheckbox) {
+        tpCheckbox.checked = true;
+      }
+    } else if (!tpCheckbox) {
       tpControl.value = "never";
+    } else {
+      tpCheckbox.checked = false;
     }
   },
 
@@ -686,14 +719,27 @@ var gPrivacyPane = {
   trackingProtectionWritePrefs() {
     let enabledPref = Preferences.get("privacy.trackingprotection.enabled");
     let pbmPref = Preferences.get("privacy.trackingprotection.pbmode.enabled");
-    let tpControl;
+    let tpControl,
+        tpCheckbox;
     if (contentBlockingUiEnabled) {
       tpControl = document.getElementById("trackingProtectionMenu");
+      tpCheckbox = document.getElementById("contentBlockingTrackingProtectionCheckbox");
     } else {
       tpControl = document.getElementById("trackingProtectionRadioGroup");
     }
 
-    switch (tpControl.value) {
+    let value;
+    if (tpCheckbox) {
+      if (tpCheckbox.checked) {
+        value = tpControl.value;
+      } else {
+        value = "never";
+      }
+    } else {
+      value = tpControl.value;
+    }
+
+    switch (value) {
       case "always":
         enabledPref.value = true;
         pbmPref.value = true;
@@ -1075,10 +1121,10 @@ var gPrivacyPane = {
     document.getElementById("contentBlockingChangeCookieSettings").hidden = true;
 
     let dependentControls = [
+      ".reject-trackers-ui .content-blocking-checkbox",
       ".reject-trackers-ui .content-blocking-icon",
-      ".reject-trackers-ui .content-blocking-category-menu",
       ".reject-trackers-ui .content-blocking-category-name",
-      "#blockCookiesCB > radio",
+      "#blockCookiesCB, #blockCookiesCB > radio",
       "#blockCookiesCBDeck",
     ];
 
@@ -1099,10 +1145,10 @@ var gPrivacyPane = {
     document.getElementById("contentBlockingChangeCookieSettings").hidden = false;
 
     let dependentControls = [
+      ".reject-trackers-ui .content-blocking-checkbox",
       ".reject-trackers-ui .content-blocking-icon",
-      ".reject-trackers-ui .content-blocking-category-menu",
       ".reject-trackers-ui .content-blocking-category-name",
-      "#blockCookiesCB > radio",
+      "#blockCookiesCB, #blockCookiesCB > radio",
       "#blockCookiesCBDeck",
     ];
 
@@ -1116,14 +1162,8 @@ var gPrivacyPane = {
     let pref = Preferences.get("network.cookie.cookieBehavior");
     switch (pref.value) {
       case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
-        this.enableThirdPartyCookiesUI();
         return "all-third-parties";
-      case Ci.nsICookieService.BEHAVIOR_REJECT:
-        return this.disableThirdPartyCookiesUI("always");
-      case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
-        return this.disableThirdPartyCookiesUI("unvisited");
       case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
-        this.enableThirdPartyCookiesUI();
         return "trackers";
       default:
         return undefined;
@@ -1139,6 +1179,63 @@ var gPrivacyPane = {
         return Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
       default:
         return undefined;
+    }
+  },
+
+  writeBlockCookiesCheckbox() {
+    let pref = Preferences.get("network.cookie.cookieBehavior");
+    let bcCheckbox = document.getElementById("contentBlockingBlockCookiesCheckbox");
+    let bcControl = document.getElementById("blockCookiesCB");
+
+    let value;
+    if (bcCheckbox.checked) {
+      value = bcControl.selectedItem.value;
+    } else {
+      value = "none";
+    }
+
+    switch (value) {
+      case "trackers":
+      case "all-third-parties":
+        bcControl.disabled = false;
+        pref.value = this.writeBlockCookiesCB();
+        break;
+      default:
+        bcControl.disabled = true;
+        pref.value = Ci.nsICookieService.BEHAVIOR_ACCEPT;
+        break;
+    }
+  },
+
+  readBlockCookiesCheckbox() {
+    let pref = Preferences.get("network.cookie.cookieBehavior");
+    let bcCheckbox = document.getElementById("contentBlockingBlockCookiesCheckbox");
+    let bcControl = document.getElementById("blockCookiesCB");
+
+    switch (pref.value) {
+      case Ci.nsICookieService.BEHAVIOR_ACCEPT:
+        this.enableThirdPartyCookiesUI();
+        bcCheckbox.checked = false;
+        bcControl.disabled = true;
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT:
+        this.disableThirdPartyCookiesUI("always");
+        break;
+      case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
+        this.disableThirdPartyCookiesUI("unvisited");
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+        this.enableThirdPartyCookiesUI();
+        bcCheckbox.checked = true;
+        bcControl.disabled = !contentBlockingEnabled;
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+        this.enableThirdPartyCookiesUI();
+        bcCheckbox.checked = true;
+        bcControl.disabled = !contentBlockingEnabled;
+        break;
+      default:
+        break;
     }
   },
 
