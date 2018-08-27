@@ -24,8 +24,8 @@ class MozXULElement extends XULElement {
    * This process is required instead of calling the createElement method directly
    * because bindings get attached when:
    *
-   * 1) the node gets a layout frame constructed, or
-   * 2) the node gets its JavaScript reflector created, if it's in the document,
+   * 1. the node gets a layout frame constructed, or
+   * 2. the node gets its JavaScript reflector created, if it's in the document,
    *
    * whichever happens first. The createElement method would return a JavaScript
    * reflector, but the element wouldn't be in the document, so the node wouldn't
@@ -33,18 +33,24 @@ class MozXULElement extends XULElement {
    * document, it won't get XBL attached until either the frame is constructed or
    * the reflector is garbage collected and the element is touched again.
    *
-   * @param str
+   * @param {string} str
    *        String with the XML representation of XUL elements.
-   * @param preamble
-   *        String to be inserted above any markup. This can be used
-   *        to insert XML entity text, for instance.
+   * @param {string[]} [entities]
+   *        An array of DTD URLs containing entity definitions.
    *
-   * @return DocumentFragment containing the corresponding element tree, including
-   *         element nodes but excluding any text node.
+   * @return {DocumentFragment} `DocumentFragment` instance containing
+   *         the corresponding element tree, including element nodes
+   *         but excluding any text node.
    */
-  static parseXULToFragment(str, preamble = "") {
+  static parseXULToFragment(str, entities = []) {
     let doc = gXULDOMParser.parseFromString(`
-      ${preamble}
+      ${entities.length ? `<!DOCTYPE bindings [
+        ${entities.reduce((preamble, url, index) => {
+          return preamble + `<!ENTITY % _dtd-${index} SYSTEM "${url}">
+            %_dtd-${index};
+            `;
+        }, "")}
+      ]>` : ""}
       <box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
         ${str}
       </box>

@@ -65,11 +65,9 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
       <toolbarseparator class="toolbarseparator-primary"/>
       <button label="&close.label;" accesskey="&close.accesskey;" oncommand="PrintUtils.exitPrintPreview();" icon="close"/>
       <data id="print-preview-prompt-title" value="&customPrompt.title;"/>
-    `, `
-    <!DOCTYPE bindings [
-      <!ENTITY % printPreviewDTD SYSTEM "chrome://global/locale/printPreview.dtd" >
-      %printPreviewDTD;
-    ]>`));
+    `, [
+      "chrome://global/locale/printPreview.dtd",
+    ]));
 
     this.mPrintButton = document.getElementById("print-preview-print");
 
