@@ -10,7 +10,7 @@ use ellipse::Ellipse;
 use display_list_flattener::DisplayListFlattener;
 use gpu_types::{BorderInstance, BorderSegment, BrushFlags};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegment};
-use prim_store::{BorderSource, EdgeAaSegmentMask, PrimitiveContainer, ScrollNodeAndClipChain};
+use prim_store::{EdgeAaSegmentMask, PrimitiveContainer, ScrollNodeAndClipChain};
 use util::{lerp, RectHelpers};
 
 // Using 2048 as the maximum radius in device space before which we
@@ -116,6 +116,20 @@ pub struct BorderCacheKey {
     pub scale: Au,
 }
 
+impl BorderCacheKey {
+    pub fn new(border: &NormalBorder, widths: &BorderWidths) -> Self {
+        BorderCacheKey {
+            left: border.left.into(),
+            top: border.top.into(),
+            right: border.right.into(),
+            bottom: border.bottom.into(),
+            widths: (*widths).into(),
+            radius: border.radius.into(),
+            scale: Au::from_f32_px(0.0),
+        }
+    }
+}
+
 pub fn ensure_no_corner_overlap(
     radius: &mut BorderRadius,
     rect: &LayoutRect,
@@ -173,23 +187,7 @@ impl<'a> DisplayListFlattener<'a> {
         ensure_no_corner_overlap(&mut border.radius, &info.rect);
 
         let prim = BrushPrimitive::new(
-            BrushKind::Border {
-                source: BorderSource::Border {
-                    border,
-                    widths: *widths,
-                    cache_key: BorderCacheKey {
-                        left: border.left.into(),
-                        top: border.top.into(),
-                        right: border.right.into(),
-                        bottom: border.bottom.into(),
-                        widths: (*widths).into(),
-                        radius: border.radius.into(),
-                        scale: Au::from_f32_px(0.0),
-                    },
-                    task_info: None,
-                    handle: None,
-                },
-            },
+            BrushKind::new_border(border, *widths),
             None,
         );
 
