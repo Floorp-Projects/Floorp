@@ -650,8 +650,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
     return NS_OK;
   }
 
-  nsCOMPtr<nsISHTransaction> txn(new nsSHTransaction());
-
+  nsCOMPtr<nsISHTransaction> txn = new nsSHTransaction();
   nsCOMPtr<nsIURI> uri;
   aSHEntry->GetURI(getter_AddRefs(uri));
   NOTIFY_LISTENERS(OnHistoryNewEntry, (uri, currentIndex));
