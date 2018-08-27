@@ -33,6 +33,7 @@ loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer
 loader.lazyRequireGetter(this, "CommandState", "devtools/shared/gcli/command-state", true);
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
+loader.lazyRequireGetter(this, "getScreenshotFront", "resource://devtools/shared/fronts/screenshot", true);
 
 const {MultiLocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new MultiLocalizationHelper(
@@ -594,16 +595,17 @@ exports.ToolboxButtons = [
   },
   { id: "command-button-screenshot",
     description: l10n("toolbox.buttons.screenshot"),
-    isTargetSupported: target => target.isLocalTab,
-    onClick(event, toolbox) {
+    isTargetSupported: target => !target.chrome && target.hasActor("screenshot"),
+    async onClick(event, toolbox) {
       // Special case for screenshot button to check for clipboard preference
       const clipboardEnabled = Services.prefs
         .getBoolPref("devtools.screenshot.clipboard.enabled");
-      let args = "--fullpage --file";
+      const args = { fullpage: true, file: true };
       if (clipboardEnabled) {
-        args += " --clipboard";
+        args.clipboard = true;
       }
-      CommandUtils.executeOnTarget(toolbox.target, "screenshot " + args);
+      const screenshotFront = getScreenshotFront(toolbox.target);
+      await screenshotFront.captureAndSave(toolbox.win, args);
     }
   },
   { id: "command-button-rulers",
