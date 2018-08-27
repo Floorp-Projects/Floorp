@@ -37,7 +37,8 @@
   <string name="preference_category_general">Payt</string>
   <string name="preference_category_data_collection_use">Tñur kabwik ñum tchech chu chyunk</string>
   <string name="preference_category_search">Ŕmee</string>
-  <string name="preference_show_search_suggestions">Caden chŕmechu ukjabch</string>
+  <string name="preference_show_search_suggestions">Kabwik chŕmecuhu mukunabchu</string>
+  <string name="preference_show_search_suggestions_summary">%1$s ey ñukwee ñumtñurum bar chŕmechuhal kwiima</string>
   <string name="preference_search_engine_default">Ñub ik chmiich</string>
   <string name="preference_state_on">Chubowu</string>
   <string name="preference_state_off">Ŕ\'am</string>
@@ -78,8 +79,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">Pem</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Cookies jkayha paa t´tkyat</string>
   <string name="preference_privacy_should_block_cookies_yes_option">E\'e</string>
+  <string name="preference_security_biometric">Ŕalum mchknaa sak muyok mjab hikyawa</string>
   <string name="preference_privacy_secure_mode">Ŕpoobtem</string>
   <string name="preference_privacy_stealth_summary">Jabchu web ha tjoot aplicación jkaay chkwa ñwam</string>
+  <string name="preference_category_security">Kryek janu</string>
   <string name="preference_category_performance">Kabyuk trchech chu</string>
   <string name="preference_performance_block_webfonts">Tñur web wi tkat</string>
   <string name="preference_performance_block_webfonts_summary">Icon ee paa tñurch hal chapayt kamjwilchuhal aaw yome</string>
@@ -97,6 +100,7 @@
   <string name="preference_search_add2">+ Motor jkaay chŕmeech kyaaw jkaay sal chmii</string>
   <string name="preference_search_remove_title">Motor chŕmeechu ujiñ</string>
   <string name="preference_search_remove">Ujiiñ</string>
+  <string name="preference_homescreen_tips">Pantallhak paa chknauwch sak chmiich</string>
   <string name="action_option_add_search_engine">Chŕmeechu sal chmii</string>
   <string name="search_add_manually_name_hint">Motor chŕmechu muul</string>
   <string name="search_add_manually_string">Caden ŕmee ñum trchech hi kyawa</string>
@@ -120,11 +124,16 @@
   <string name="content_description_back">Sal amchu tkweek jabch</string>
   <string name="content_description_stop">Web jabchuha chubŕkwich</string>
   <string name="content_description_customtab_exit">Aplicación jubo kyakhal tkweek</string>
+  <string name="content_description_trackers_blocked">Chŕibchu chapayt ŕmeechuy ŕ´ap kyo</string>
   <string name="content_description_blocking_switch">Chkŕmeech paa tketch</string>
   <string name="your_rights">Mir mir mwii</string>
   <string name="external_app_prompt_title">Jabchu aplicación jkayk solch</string>
+  <string name="external_app_prompt">%1$s hal mchpaa pay jabchu %2$s msol.</string>
+  <string name="external_app_prompt_no_app_title">Aplicacion ŕit jabchu solum mŕmee</string>
   <string name="external_multiple_apps_matched_exit">Sal amchu jabch tpaay al chpaa?</string>
+  <string name="download_snackbar_finished">%1$s byir</string>
   <string name="download_snackbar_open">Sol</string>
+  <string name="download_dialog_title">Tñur unal</string>
   <string name="download_dialog_action_cancel">Tubspach</string>
   <string name="download_dialog_action_download">Unaalch</string>
   <string name="errorpage_title">Jachuyal jabch hay upar</string>

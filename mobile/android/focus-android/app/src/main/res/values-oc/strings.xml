@@ -37,6 +37,8 @@
   <string name="preference_category_general">General</string>
   <string name="preference_category_data_collection_use">Collecta de donadas e utilizacion</string>
   <string name="preference_category_search">Recèrca</string>
+  <string name="preference_show_search_suggestions">Mostrar las suggestions de recèrca</string>
+  <string name="preference_show_search_suggestions_summary">%1$s enviarà çò que picatz dins la barra d’adreça al motor de recèrca</string>
   <string name="preference_search_engine_default">Per defaut</string>
   <string name="preference_state_on">Activat</string>
   <string name="preference_state_off">Desactivat</string>
@@ -77,8 +79,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">Non</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blocar solament los cookies tèrces</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Òc</string>
+  <string name="preference_security_biometric">Utilizar una emprenta digitala per desblocar l’aplicacion</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
-  <string name="preference_privacy_stealth_summary">Rescondre las paginas web en cambiar d’aplicacions</string>
+  <string name="preference_privacy_stealth_summary">Amagar las paginas web en cambiar d’aplicacions e blocar la presa de capturas d’ecran.</string>
+  <string name="preference_category_security">Seguretat</string>
   <string name="preference_category_performance">Performanças</string>
   <string name="preference_performance_block_webfonts">Blocar las polissas Web</string>
   <string name="preference_performance_block_webfonts_summary">Pòt far mancar d’imatges o icònas</string>
@@ -96,6 +100,7 @@
   <string name="preference_search_add2">+ Apondre un motor de recèrca mai</string>
   <string name="preference_search_remove_title">Levar de motors de recèrca</string>
   <string name="preference_search_remove">Levar</string>
+  <string name="preference_homescreen_tips">Mostrar las astúcias per l’ecran d’acuèlh</string>
   <string name="action_option_add_search_engine">Apondre un motor de recèrca</string>
   <string name="search_add_manually_name_hint">Nom del motor de recèrca</string>
   <string name="search_add_manually_string">Motor de recèrca d’emplegar</string>
@@ -119,6 +124,7 @@
   <string name="content_description_back">Tornar</string>
   <string name="content_description_stop">Quitar de cargar lo site web</string>
   <string name="content_description_customtab_exit">Tornar a l’aplicacion precedenta</string>
+  <string name="content_description_trackers_blocked">Nombre de traçadors blocats</string>
   <string name="content_description_blocking_switch">Blocar los traçadors</string>
   <string name="your_rights">Vòstres dreches</string>
   <string name="external_app_prompt_title">Dobrir lo ligam dins una autra aplicacion</string>
@@ -200,4 +206,16 @@
   <string name="http_auth_dialog_password">Senhal</string>
   <string name="preference_performance_request_desktop_site">Veire version ordenador</string>
   <string name="custom_tab_copy_url_action">URL copiada</string>
+  <string name="preference_advanced_summary">Aisinas pels desvolopaires</string>
+  <string name="preference_category_advanced">Avançat</string>
+  <string name="preference_remote_debugging">Desbugatge alonhat per USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Desblocar %1$s</string>
+  <string name="biometric_auth_description">Tocatz lo captaire d’emprentas digitalas per contunhar.</string>
+  <string name="biometric_auth_new_session">Session novèla</string>
+  <string name="biometric_auth_image_description">Icòna d’emprentas digitalas</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Ne saber mai</string>
+  <string name="enable_search_suggestions_no">Non</string>
+  <string name="enable_search_suggestions_yes">Òc</string>
+  <string name="no_suggestions_message">Unes motor de recèrca pòdon pas mostrar de suggestions.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Tampar</string>
 </resources>

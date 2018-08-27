@@ -80,6 +80,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Sewḥel kan inagan n tuqqna n ufecku wis 3</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ih</string>
   <string name="preference_security_biometric">Seqdec adsil umḍin akken ad tserḥeḍ i usnas</string>
+  <string name="preference_security_biometric_summary">Aḍaḍ-ik izmer ad ikkes asewḥel i %1$s ma URL yeldin yakan deg usnas. Askar uffir ad ittwarmed.</string>
   <string name="preference_privacy_secure_mode">Tusligt</string>
   <string name="preference_privacy_stealth_summary">Ffer isebtar web ticki tettbeddileḍ gar isnasen</string>
   <string name="preference_category_security">Taɣellist</string>
@@ -208,9 +209,14 @@
   <string name="custom_tab_copy_url_action">Tansa URL tettwanγel</string>
   <string name="preference_advanced_summary">Ifecka n tneflit</string>
   <string name="preference_category_advanced">Talqayt</string>
+  <string name="preference_remote_debugging">Taseɣtit tanmeggagt s USB/Wi-Fii</string>
   <string name="biometric_auth_title">Serreḥ %1$s</string>
+  <string name="biometric_auth_description">Nnal amaṭṭaf n uḍaḍ akken ad tkemleḍ.</string>
   <string name="biometric_auth_new_session">Tiɣimit tamaynut</string>
   <string name="biometric_auth_image_description">Tagnit n udsil umḍin</string>
+  <string name="biometric_auth_not_recognized_error">Ur yaêqil ara aḍaḍ. Ԑreḍ tikkelt-nniḍen.</string>
+  <string name="biometric_auth_moved_too_quickly">TƐherkeḍ aḍaḍ s lweǧlan. Ԑreḍ tikelt-nniḍen.</string>
+  <string name="enable_search_suggestion_title">Tebɣiḍ ad tekkseḍ armad n isumren n unadi?</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Issin ugar</string>
   <string name="enable_search_suggestions_no">Ala</string>
   <string name="enable_search_suggestions_yes">Ih</string>

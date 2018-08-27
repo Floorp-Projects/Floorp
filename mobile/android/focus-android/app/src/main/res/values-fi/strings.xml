@@ -201,10 +201,12 @@
   <string name="preference_performance_request_desktop_site">Sivuston työpöytäversio</string>
   <string name="custom_tab_copy_url_action">Osoite kopioitu</string>
   <string name="preference_advanced_summary">Kehittäjätyökalut</string>
+  <string name="preference_remote_debugging">Etävianjäljitys USB:n/Wi-Fi:n välityksellä</string>
   <string name="biometric_auth_new_session">Uusi istunto</string>
   <string name="enable_search_suggestion_title">Haluatko ottaa hakuehdotukset käyttöön?</string>
   <string name="enable_search_suggestions_no">Ei</string>
   <string name="enable_search_suggestions_yes">Kyllä</string>
   <string name="no_suggestions_message">Jotkin hakukoneet eivät voi näyttää ehdotuksia.</string>
   <string name="dismiss_no_suggestions_prompt_button">Hylkää</string>
+  <string name="tip_set_default_browser">Avaa jokainen linkki selaimella %1$s\n Aseta %1$s oletusselaimeksi</string>
 </resources>

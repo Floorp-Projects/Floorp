@@ -101,7 +101,7 @@
   <string name="preference_search_add2">+Agregar otro buscador</string>
   <string name="preference_search_remove_title">Eliminar los motores de búsqueda</string>
   <string name="preference_search_remove">Eliminar</string>
-  <string name="preference_homescreen_tips">Mostar consejos para la página de inicio</string>
+  <string name="preference_homescreen_tips">Mostrar consejos para la página de inicio</string>
   <string name="action_option_add_search_engine">Agregar buscador</string>
   <string name="search_add_manually_name_hint">Nombre del buscador</string>
   <string name="search_add_manually_string">Cadena de búsqueda para usar</string>

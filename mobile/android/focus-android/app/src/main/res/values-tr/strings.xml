@@ -80,7 +80,7 @@
   <string name="preference_privacy_should_block_cookies_yes_option">Evet</string>
   <string name="preference_security_biometric">Uygulama kilidini açmak için parmak izimi kullan</string>
   <string name="preference_privacy_secure_mode">Görünmezlik</string>
-  <string name="preference_privacy_stealth_summary">Uygulama değiştirirken web sayfalarını gizle</string>
+  <string name="preference_privacy_stealth_summary">Uygulama değiştirirken web sayfalarını gizle ve ekran görüntüsü almayı engelle.</string>
   <string name="preference_category_security">Güvenlik</string>
   <string name="preference_category_performance">Performans</string>
   <string name="preference_performance_block_webfonts">Web fontlarını engelle</string>

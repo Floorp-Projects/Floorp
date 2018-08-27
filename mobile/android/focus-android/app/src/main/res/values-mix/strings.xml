@@ -38,6 +38,7 @@
   <string name="preference_category_data_collection_use">Satutu kue tutu cha nchi vai</string>
   <string name="preference_category_search">Nduku</string>
   <string name="preference_show_search_suggestions">A Kuncheu nixi ndukuku</string>
+  <string name="preference_show_search_suggestions_summary">%1$s ku chachuin nchi ña ku nchau nu barra de direcciones tsi ña ku ndukuku</string>
   <string name="preference_search_engine_default">Tsa sa\'an yee</string>
   <string name="preference_state_on">Kuna</string>
   <string name="preference_state_off">Kasi</string>
@@ -78,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">No</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Kasi cookies ña inkana</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Va\'a</string>
-  <string name="preference_privacy_secure_mode">Sèè kivu</string>
-  <string name="preference_privacy_stealth_summary">Chika sèè pagina ta ku ndasamu aplicaciòn</string>
+  <string name="preference_security_biometric">Kuchun huella digital tava kunu aplicación</string>
+  <string name="preference_security_biometric_summary">Tsi huella digital ku kunu %1$s tatu nuna iin URL nu aplicación. Ku nchikasii ña ncheu.</string>
+  <string name="preference_privacy_secure_mode">Sèè</string>
+  <string name="preference_privacy_stealth_summary">Chika sèè pagina ta ku ndasamu aplicaciòn.</string>
+  <string name="preference_category_security">Vaá</string>
   <string name="preference_category_performance">Nixi sachu\'in</string>
   <string name="preference_performance_block_webfonts">Makuau kuni siin ña\'a</string>
   <string name="preference_performance_block_webfonts_summary">Kuu kuncheu ika ña\'a icono a tutu ndatavana ña tsa koo</string>
@@ -97,6 +101,7 @@
   <string name="preference_search_add2">+ Chika´a inka motor nduku</string>
   <string name="preference_search_remove_title">Sto\'o ña ntuku</string>
   <string name="preference_search_remove">Xitaá</string>
+  <string name="preference_homescreen_tips">Snaa tu\'un tava kitsau</string>
   <string name="action_option_add_search_engine">Chikaa tsi ña ndukuku</string>
   <string name="search_add_manually_name_hint">SIvi ña nduku</string>
   <string name="search_add_manually_string">Nduku tu\'un kunu kuachu\'un</string>
@@ -120,6 +125,7 @@
   <string name="content_description_back">Nduku sata</string>
   <string name="content_description_stop">Ma ntu tsaa pagina web</string>
   <string name="content_description_customtab_exit">Nchiko sata</string>
+  <string name="content_description_trackers_blocked">Kavi nisa rastreador ndasia</string>
   <string name="content_description_blocking_switch">Kasi ña ndukuyo</string>
   <string name="your_rights">Yee yu\'u</string>
   <string name="external_app_prompt_title">Kuna nu ndukuku inka tsio</string>
@@ -201,10 +207,24 @@
   <string name="http_auth_dialog_password">Tu\'un seè</string>
   <string name="preference_performance_request_desktop_site">Kaka sitio nu escritorio</string>
   <string name="custom_tab_copy_url_action">Ndatava URL</string>
+  <string name="preference_advanced_summary">Nu ndasamu</string>
+  <string name="preference_category_advanced">Nchichi</string>
+  <string name="preference_remote_debugging">Nta sa vaà tsi USBWi-Fi</string>
   <string name="biometric_auth_title">Kuna %1$s</string>
+  <string name="biometric_auth_description">Katavi sensor ña huella digital tava kitasu.</string>
   <string name="biometric_auth_new_session">Kitsaa tuku</string>
+  <string name="biometric_auth_image_description">Huellas digitales</string>
+  <string name="biometric_auth_not_recognized_error">Kue ndakuinia huella digital. Kitsa tuku.</string>
+  <string name="biometric_auth_moved_too_quickly">Vichi nchua ni kanta ndau. Kitsa tuku.</string>
+  <string name="enable_search_suggestion_title">¿A kunu kuncheu ña kuu ndadunkuku?</string>
+  <string name="enable_search_suggestion_subtitle">Tava kuncheu nchi ku ndukuku, %1$s tsiniñuú chachun ña ku nchau nu barra de direcciones tsi ña ni katsiku tava ndukuku. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Skua\'a kuakaa</string>
   <string name="enable_search_suggestions_no">No</string>
   <string name="enable_search_suggestions_yes">Va\'a</string>
+  <string name="no_suggestions_message">Yee kue motor de búsqueda kue ku snai ña ku kuncheu.</string>
   <string name="dismiss_no_suggestions_prompt_button">Chika seé</string>
+  <string name="tip_set_default_browser">Kuna iin enlace tsi %1$s\n Chikay %1$s tana navegador xina</string>
+  <string name="tip_autocomplete_url">Ntasa URLs ña sitio ña kuaka chichu\'un\n Katavi URL niku nu barra ña direcciones</string>
+  <string name="tip_open_in_new_tab">Kuna enlace nu xikua tsaá\n Katavi nchi enlace niku nu página</string>
+  <string name="tip_request_desktop">"¿A kunu kuncheu sitio nu escritorio?\n    Menú &gt; Kaka sitio de escritorio"</string>
 </resources>

@@ -11,7 +11,7 @@
   <string name="menu_report_site_issue">Informa d\'un problema amb el lloc</string>
   <string name="menu_open_with_default_browser2">Obre amb el %1$s</string>
   <string name="menu_open_with_a_browser2">Obre amb…</string>
-  <string name="menu_add_to_home_screen">Afegeix a la pantalla d\'inici</string>
+  <string name="menu_add_to_home_screen">Afegeix a pantalla d\'inici</string>
   <string name="menu_whats_new">Novetats</string>
   <string name="menu_settings">Paràmetres</string>
   <string name="menu_about">Quant a</string>
@@ -38,6 +38,7 @@
   <string name="preference_category_data_collection_use">Ús i recollida de dades</string>
   <string name="preference_category_search">Cerca</string>
   <string name="preference_show_search_suggestions">Mostra suggeriments de cerca</string>
+  <string name="preference_show_search_suggestions_summary">El %1$s enviarà al motor de cerca tot allò que escriviu a la barra d\'adreces</string>
   <string name="preference_search_engine_default">Per defecte</string>
   <string name="preference_state_on">Activat</string>
   <string name="preference_state_off">Desactivat</string>
@@ -78,8 +79,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">No</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloca només les galetes de tercers</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
+  <string name="preference_security_biometric">Utilitza l\'empremta digital per desblocar l\'aplicació</string>
+  <string name="preference_security_biometric_summary">L\'empremta digital pot desblocar el %1$s si ja hi ha un URL obert en l\'aplicació. S\'activarà el mode invisible.</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
-  <string name="preference_privacy_stealth_summary">Amaga les pàgines web en canviar d\'aplicacions</string>
+  <string name="preference_privacy_stealth_summary">Amaga les pàgines web en canviar d\'aplicacions i bloca les captures de pantalles.</string>
   <string name="preference_category_security">Seguretat</string>
   <string name="preference_category_performance">Rendiment</string>
   <string name="preference_performance_block_webfonts">Bloca tipus de lletra web</string>
@@ -98,6 +101,7 @@
   <string name="preference_search_add2">+ Afegeix un altre motor de cerca</string>
   <string name="preference_search_remove_title">Elimina motors de cerca</string>
   <string name="preference_search_remove">Elimina</string>
+  <string name="preference_homescreen_tips">Mostra consells a la pantalla d\'inici</string>
   <string name="action_option_add_search_engine">Afegeix un motor de cerca</string>
   <string name="search_add_manually_name_hint">Nom del motor de cerca</string>
   <string name="search_add_manually_string">Cadena de cerca que s\'utilitzarà</string>
@@ -164,7 +168,7 @@
   <string name="firstrun_search_title">Cerqueu com vulgueu</string>
   <string name="firstrun_search_text">Busqueu una altra cosa? Trieu un altre motor de cerca per defecte als Paràmetres.</string>
   <string name="firstrun_shortcut_title">Afegiu dreceres a la pantalla d\'inici</string>
-  <string name="firstrun_shortcut_text">Retorneu ràpidament als vostres llocs preferits amb el %1$s. Trieu «Afegeix a la pantalla d\'inici» en el menú del %1$s.</string>
+  <string name="firstrun_shortcut_text">Retorneu ràpidament als vostres llocs preferits amb el %1$s. Trieu «Afegeix a pantalla d\'inici» en el menú del %1$s.</string>
   <string name="firstrun_privacy_title">Feu de la privadesa un hàbit</string>
   <string name="firstrun_privacy_text">Definiu el %1$s com a navegador per defecte i gaudiu de navegació privada en obrir pàgines web des d\'altres aplicacions.</string>
   <string name="firstrun_close_button">Entesos</string>
@@ -201,16 +205,28 @@
   <string name="http_auth_dialog_title">Cal autenticació</string>
   <string name="http_auth_dialog_username">Nom d\'usuari</string>
   <string name="http_auth_dialog_password">Contrasenya</string>
-  <string name="preference_performance_request_desktop_site">Mostra lloc d\'escriptori</string>
+  <string name="preference_performance_request_desktop_site">Mostra el lloc d\'escriptori</string>
   <string name="custom_tab_copy_url_action">S\'ha copiat l\'URL</string>
   <string name="preference_advanced_summary">Eines per a desenvolupadors</string>
   <string name="preference_category_advanced">Avançat</string>
   <string name="preference_remote_debugging">Depuració remota per USB/Wi-Fi</string>
   <string name="biometric_auth_title">Desbloca el %1$s</string>
+  <string name="biometric_auth_description">Toqueu el sensor d\'empremta digital per continuar.</string>
   <string name="biometric_auth_new_session">Sessió nova</string>
+  <string name="biometric_auth_image_description">Icona d\'empremta digital</string>
+  <string name="biometric_auth_not_recognized_error">No s\'ha reconegut l\'empremta digital. Torneu-ho a provar.</string>
+  <string name="biometric_auth_moved_too_quickly">El dit s\'ha mogut massa ràpid. Torneu-ho a provar.</string>
   <string name="enable_search_suggestion_title">Voleu activar els suggeriments de cerca?</string>
+  <string name="enable_search_suggestion_subtitle">Ver obtenir els suggeriments de cerca, el %1$s ha d\'enviar al motor de cerca que heu triat tot allò que escriviu a la barra d\'adreces. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Més informació</string>
   <string name="enable_search_suggestions_no">No</string>
   <string name="enable_search_suggestions_yes">Sí</string>
+  <string name="no_suggestions_message">No tots els motors de cerca poden mostrar suggeriments.</string>
   <string name="dismiss_no_suggestions_prompt_button">Tanca</string>
+  <string name="tip_disable_tracking_protection">El lloc té un comportament inesperat?\n Proveu de desactivar la protecció contra el seguiment</string>
+  <string name="tip_add_to_homescreen">"Accediu amb un sol toc als llocs que més utilitzeu\n        Menú &gt; Afegeix a pantalla d\'inici"</string>
+  <string name="tip_set_default_browser">Obriu tots els enllaços amb el %1$s\n Definiu el %1$s com a navegador per defecte</string>
+  <string name="tip_autocomplete_url">Emplenament automàtic dels URL dels llocs que més utilitzeu\n Manteniu premut qualsevol URL de la barra d\'adreces</string>
+  <string name="tip_open_in_new_tab">Obriu un enllaç en una pestanya nova\n Manteniu premut qualsevol enllaç de la pàgina</string>
+  <string name="tip_request_desktop">"Preferiu veure el lloc com es mostra en l\'escriptori?\n    Menú &gt; Mostra el lloc d\'escriptori"</string>
 </resources>

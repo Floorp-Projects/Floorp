@@ -17,7 +17,7 @@
   <string name="menu_about">關於</string>
   <string name="menu_help">說明</string>
   <string name="menu_rights">您的權利</string>
-  <string name="menu_trackers_blocked_title">封鎖的追蹤器數量</string>
+  <string name="menu_trackers_blocked_title">追蹤器封鎖數量</string>
   <string name="menu_custom_tab_branding">由 %1$s 提供</string>
   <string name="share_dialog_title">透過下列程式分享</string>
   <string name="notification_erase_text">清除瀏覽紀錄</string>
@@ -80,7 +80,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">僅封鎖第三方 Cookie</string>
   <string name="preference_privacy_should_block_cookies_yes_option">是</string>
   <string name="preference_security_biometric">使用指紋解鎖程式</string>
-  <string name="preference_security_biometric_summary">若已在程式中開啟網址，可使用您的指紋直接解鎖 %1$s。也會同時開啟隱私模式。</string>
+  <string name="preference_security_biometric_summary">若已在程式中開啟網頁，可使用您的指紋直接解鎖 %1$s。也會開啟隱私模式。</string>
   <string name="preference_privacy_secure_mode">秘密行動</string>
   <string name="preference_privacy_stealth_summary">切換程式時，隱藏網頁內容並防止拍攝擷圖。</string>
   <string name="preference_category_security">安全性</string>
@@ -101,7 +101,7 @@
   <string name="preference_search_add2">+ 新增其他搜尋引擎</string>
   <string name="preference_search_remove_title">移除搜尋引擎</string>
   <string name="preference_search_remove">移除</string>
-  <string name="preference_homescreen_tips">顯示主畫面小秘訣</string>
+  <string name="preference_homescreen_tips">在主畫面顯示小秘訣</string>
   <string name="action_option_add_search_engine">新增搜尋引擎</string>
   <string name="search_add_manually_name_hint">搜尋引擎名稱</string>
   <string name="search_add_manually_string">要使用的搜尋字串</string>
@@ -162,7 +162,7 @@
   <string name="contextmenu_image_copy">複製圖片網址</string>
   <string name="contextmenu_image_save">儲存圖片</string>
   <string name="contextmenu_open_in_new_tab">用新分頁開啟鏈結</string>
-  <string name="contextmenu_image_warning"><![CDATA[清除 %1$s 瀏覽紀錄時，已儲存並分享的圖片將<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#26371;&#34987;&#21034;&#38500;</b>。]]></string>
+  <string name="contextmenu_image_warning"><![CDATA[清除 %1$s 瀏覽紀錄時，將<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#26371;&#21034;&#38500;</b>儲存或分享的圖片。]]></string>
   <string name="firstrun_defaultbrowser_title">加強您的隱私</string>
   <string name="firstrun_defaultbrowser_text2">隱私瀏覽功能變得更強大了。現在可封鎖廣告，以及其他可在不同網站間追蹤您的上網紀錄，又拖慢網頁載入的追蹤器。</string>
   <string name="firstrun_search_title">用你的方式搜尋</string>
@@ -216,7 +216,7 @@
   <string name="biometric_auth_image_description">指紋圖示</string>
   <string name="biometric_auth_not_recognized_error">無法識別指紋，請再試一次。</string>
   <string name="biometric_auth_moved_too_quickly">手指移動得太快，請再試一次。</string>
-  <string name="enable_search_suggestion_title">您想要開啟搜尋建議嗎？</string>
+  <string name="enable_search_suggestion_title">想要開啟搜尋建議嗎？</string>
   <string name="enable_search_suggestion_subtitle">為了取得搜尋建議，%1$s 需要將您在網址列當中輸入的文字傳送至您選擇的搜尋引擎。%2$s。</string>
   <string name="enable_search_suggestion_subtitle_learnmore">了解更多</string>
   <string name="enable_search_suggestions_no">不要</string>
@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">某些搜尋引擎無法提供建議。</string>
   <string name="dismiss_no_suggestions_prompt_button">知道了！</string>
   <string name="tip_disable_tracking_protection">網站變得怪怪的？試試關閉追蹤保護功能</string>
-  <string name="tip_add_to_homescreen">"一點就能快速開啟您最常用的網站\n        選單 &gt; 新增至裝置主畫面"</string>
-  <string name="tip_set_default_browser">使用 %1$s 開啟所有鏈結\n 將 %1$s 設為預設瀏覽器</string>
+  <string name="tip_add_to_homescreen">一點就能快速開啟您最常用的網站\n選單 &gt; 新增至裝置主畫面</string>
+  <string name="tip_set_default_browser">使用 %1$s 開啟所有鏈結\n將 %1$s 設為預設瀏覽器</string>
   <string name="tip_autocomplete_url">自動完成您最常造訪的網站網址\n 長按網址列中的任何網址</string>
-  <string name="tip_open_in_new_tab">使用新分頁開啟鏈結\n 長按頁面上的任何鏈結</string>
-  <string name="tip_request_desktop">"還是想看到桌機版的頁面嗎？\n    選單 &gt; 開啟桌面版網站"</string>
+  <string name="tip_open_in_new_tab">使用新分頁開啟鏈結\n長按頁面上的任何鏈結</string>
+  <string name="tip_request_desktop">還是想看到桌機版的頁面嗎？\n選單 &gt; 開啟桌面版網站</string>
 </resources>

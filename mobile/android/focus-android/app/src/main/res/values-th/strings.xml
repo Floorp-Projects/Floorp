@@ -217,11 +217,14 @@
   <string name="biometric_auth_not_recognized_error">ไม่รู้จักลายนิ้วมือ ลองอีกครั้ง</string>
   <string name="biometric_auth_moved_too_quickly">ขยับนิ้วเร็วเกินไป ลองอีกครั้ง</string>
   <string name="enable_search_suggestion_title">คุณต้องการเปิดข้อเสนอแนะการค้นหาหรือไม่?</string>
+  <string name="enable_search_suggestion_subtitle">เพื่อรับข้อเสนอแนะการค้นหา %1$s จำเป็นต้องส่งสิ่งที่คุณพิมพ์ในแถบที่อยู่ไปยังเครื่องมือค้นหาที่คุณเลือก %2$s</string>
   <string name="enable_search_suggestion_subtitle_learnmore">เรียนรู้เพิ่มเติม</string>
   <string name="enable_search_suggestions_no">ไม่</string>
   <string name="enable_search_suggestions_yes">ใช่</string>
   <string name="no_suggestions_message">เครื่องมือค้นหาบางตัวไม่สามารถแสดงข้อเสนอแนะ</string>
   <string name="dismiss_no_suggestions_prompt_button">ยกเลิก</string>
   <string name="tip_disable_tracking_protection">ไซต์ทำงานอย่างไม่คาดคิด?\n ลองปิดการป้องกันการติดตาม</string>
+  <string name="tip_add_to_homescreen">"รับการเข้าถึงด้วยการแตะครั้งเดียวไปยังไซต์ที่คุณใช้มากที่สุด\n        เมนู &gt; เพิ่มไปยังหน้าจอหลัก"</string>
   <string name="tip_set_default_browser">เปิดทุกลิงก์ใน %1$s\n ตั้ง %1$s เป็นเบราว์เซอร์เริ่มต้น</string>
+  <string name="tip_request_desktop">"ต้องการเห็นไซต์สำหรับเดสก์ท็อปแบบเต็ม?\n    เมนู &gt; ขอไซต์สำหรับเดสก์ท็อป"</string>
 </resources>
