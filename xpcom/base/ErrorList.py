@@ -639,7 +639,6 @@ with modules["DOM"]:
     errors["NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED"] = FAILURE(1011)
     errors["NS_ERROR_DOM_BAD_URI"] = FAILURE(1012)
     errors["NS_ERROR_DOM_RETVAL_UNDEFINED"] = FAILURE(1013)
-    errors["NS_ERROR_DOM_QUOTA_REACHED"] = FAILURE(1014)
 
     # A way to represent uncatchable exceptions
     errors["NS_ERROR_UNCATCHABLE_EXCEPTION"] = FAILURE(1015)
