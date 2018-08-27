@@ -3207,6 +3207,8 @@ GeckoDriver.prototype.sendKeysToDialog = async function(cmd) {
 
   // see toolkit/components/prompts/content/commonDialog.js
   let {loginTextbox} = this.dialog.ui;
+  loginTextbox.value = "";
+
   await interaction.sendKeysToElement(
       loginTextbox, cmd.parameters.text, this.a11yChecks);
 };
