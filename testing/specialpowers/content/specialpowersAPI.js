@@ -2261,7 +2261,7 @@ SpecialPowersAPI.prototype = {
     };
 
     return classifierService.asyncClassifyLocalWithTables(unwrapIfWrapped(uri),
-                                                          tables,
+                                                          tables, [], [],
                                                           wrapCallback);
   },
 
