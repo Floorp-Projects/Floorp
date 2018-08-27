@@ -321,6 +321,7 @@ namespace recordreplay {
   MACRO(CGPathGetCurrentPoint)                  \
   MACRO(CGPathIsEmpty)                          \
   MACRO(CGSSetDebugOptions)                     \
+  MACRO(CGSShutdownServerConnections)           \
   MACRO(CTFontCopyFamilyName)                   \
   MACRO(CTFontCopyFontDescriptor)               \
   MACRO(CTFontCopyGraphicsFont)                 \
@@ -2349,6 +2350,7 @@ RR_CTFontGetBoundingRectsForGlyphs(CTFontRef aFont, CTFontOrientation aOrientati
 RRFunctionTypes1(CGPathGetCurrentPoint, CGPoint, CGPathRef)
 RRFunction1(CGPathIsEmpty)
 RRFunction1(CGSSetDebugOptions)
+RRFunctionVoid0(CGSShutdownServerConnections)
 RRFunction1(CTFontCopyFamilyName)
 RRFunction1(CTFontCopyFontDescriptor)
 RRFunction2(CTFontCopyGraphicsFont)
