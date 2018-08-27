@@ -774,7 +774,7 @@ impl MarionetteSession {
 
                 WebDriverResponse::Timeouts(TimeoutsResponse {
                     script: script,
-                    pageLoad: page_load,
+                    page_load: page_load,
                     implicit: implicit,
                 })
             }
