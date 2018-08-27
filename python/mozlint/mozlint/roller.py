@@ -49,6 +49,10 @@ def _run_worker(config, paths, **lintargs):
             result.failed_run.add(config['name'])
     else:
         for r in res:
+            if not lintargs.get('show_warnings') and r.level == 'warning':
+                result.suppressed_warnings[r.path] += 1
+                continue
+
             result.issues[r.path].append(r)
     return result
 
