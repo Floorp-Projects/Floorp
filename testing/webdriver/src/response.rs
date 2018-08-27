@@ -84,16 +84,17 @@ impl NewSessionResponse {
 #[derive(Debug, PartialEq, Serialize)]
 pub struct TimeoutsResponse {
     pub script: u64,
-    pub pageLoad: u64,
+    #[serde(rename = "pageLoad")]
+    pub page_load: u64,
     pub implicit: u64,
 }
 
 impl TimeoutsResponse {
     pub fn new(script: u64, page_load: u64, implicit: u64) -> TimeoutsResponse {
         TimeoutsResponse {
-            script: script,
-            pageLoad: page_load,
-            implicit: implicit,
+            script,
+            page_load,
+            implicit,
         }
     }
 }
