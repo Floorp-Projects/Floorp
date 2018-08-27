@@ -70,14 +70,14 @@ PlatformChild::PlatformChild()
 
   UniquePtr<mozilla::mscom::RegisteredProxy> customProxy;
   mozilla::mscom::EnsureMTA([&customProxy]() -> void {
-    customProxy = std::move(mozilla::mscom::RegisterProxy());
+    customProxy = mozilla::mscom::RegisterProxy();
   });
   mCustomProxy = std::move(customProxy);
 
   // IA2 needs to be registered in both the main thread's STA as well as the MTA
   UniquePtr<mozilla::mscom::RegisteredProxy> ia2ProxyMTA;
   mozilla::mscom::EnsureMTA([&ia2ProxyMTA]() -> void {
-    ia2ProxyMTA = std::move(mozilla::mscom::RegisterProxy(L"ia2marshal.dll"));
+    ia2ProxyMTA = mozilla::mscom::RegisterProxy(L"ia2marshal.dll");
   });
   mIA2ProxyMTA = std::move(ia2ProxyMTA);
 }
