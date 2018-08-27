@@ -156,8 +156,6 @@ add_task(async function() {
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
-
-  UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
 add_task(async function() {

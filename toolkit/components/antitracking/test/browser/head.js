@@ -150,8 +150,6 @@ this.AntiTracking = {
 
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);
-
-      UrlClassifierTestUtils.cleanupTestTrackers();
     });
   },
 
@@ -222,8 +220,6 @@ this.AntiTracking = {
 
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);
-
-      UrlClassifierTestUtils.cleanupTestTrackers();
     });
   },
 
@@ -319,8 +315,6 @@ this.AntiTracking = {
 
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);
-
-      UrlClassifierTestUtils.cleanupTestTrackers();
     });
   }
 };

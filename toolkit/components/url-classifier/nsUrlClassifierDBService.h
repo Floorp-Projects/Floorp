@@ -57,7 +57,9 @@
 #define MALWARE_TABLE_PREF              "urlclassifier.malwareTable"
 #define PHISH_TABLE_PREF                "urlclassifier.phishTable"
 #define TRACKING_TABLE_PREF             "urlclassifier.trackingTable"
+#define TRACKING_TABLE_TEST_ENTRIES_PREF "urlclassifier.trackingTable.testEntries"
 #define TRACKING_WHITELIST_TABLE_PREF   "urlclassifier.trackingWhitelistTable"
+#define TRACKING_WHITELIST_TABLE_TEST_ENTRIES_PREF "urlclassifier.trackingWhitelistTable.testEntries"
 #define BLOCKED_TABLE_PREF              "urlclassifier.blockedTable"
 #define DOWNLOAD_BLOCK_TABLE_PREF       "urlclassifier.downloadBlockTable"
 #define DOWNLOAD_ALLOW_TABLE_PREF       "urlclassifier.downloadAllowTable"
@@ -122,7 +124,9 @@ private:
     NS_LITERAL_CSTRING(MALWARE_TABLE_PREF),
     NS_LITERAL_CSTRING(PHISH_TABLE_PREF),
     NS_LITERAL_CSTRING(TRACKING_TABLE_PREF),
+    NS_LITERAL_CSTRING(TRACKING_TABLE_TEST_ENTRIES_PREF),
     NS_LITERAL_CSTRING(TRACKING_WHITELIST_TABLE_PREF),
+    NS_LITERAL_CSTRING(TRACKING_WHITELIST_TABLE_TEST_ENTRIES_PREF),
     NS_LITERAL_CSTRING(BLOCKED_TABLE_PREF),
     NS_LITERAL_CSTRING(DOWNLOAD_BLOCK_TABLE_PREF),
     NS_LITERAL_CSTRING(DOWNLOAD_ALLOW_TABLE_PREF),
@@ -137,6 +141,8 @@ private:
 
   nsresult LookupURI(nsIPrincipal* aPrincipal,
                      const nsACString& tables,
+                     const nsTArray<nsCString>& extraTablesByPrefs,
+                     const nsTArray<nsCString>& extraEntriesByPrefs,
                      nsIUrlClassifierCallback* c,
                      bool forceCheck, bool *didCheck);
 
@@ -180,6 +186,10 @@ private:
   // Comma-separated list of tables to use in lookups.
   nsCString mTrackingProtectionTables;
   nsCString mBaseTables;
+
+  // Comma-separated hosts set by prefs to use in lookups.
+  nsCString mTrackingProtectionWhitelistExtraEntriesByPrefs;
+  nsCString mTrackingProtectionBlacklistExtraEntriesByPrefs;
 
   // Thread that we do the updates on.
   static nsIThread* gDbBackgroundThread;
