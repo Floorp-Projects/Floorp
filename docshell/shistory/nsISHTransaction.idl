@@ -16,24 +16,9 @@ interface nsISHTransaction : nsISupports
   attribute nsISHEntry sHEntry;
 
   /**
-   * The parent of this transaction.
-   */
-  attribute nsISHTransaction prev;
-
-  /**
-   * The legitimate child of this transaction.
-   */
-  attribute nsISHTransaction next;
-
-  /**
    * Specifies if this transaction should persist. If not it will be replaced
    * by new additions to the list.
    */
   attribute boolean persist;
-
-  /**
-   * Create a transaction with parent and History Entry.
-   */
-  void create(in nsISHEntry aSHEntry, in nsISHTransaction aPrev);
 };
 
