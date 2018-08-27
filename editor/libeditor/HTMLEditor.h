@@ -354,6 +354,33 @@ public:
   }
 
   /**
+   * GetFontColorState() returns foreground color information in first
+   * range of Selection.
+   * If first range of Selection is collapsed and there is a cache of style for
+   * new text, aIsMixed is set to false and aColor is set to the cached color.
+   * If first range of Selection is collapsed and there is no cached color,
+   * this returns the color of the node, aIsMixed is set to false and aColor is
+   * set to the color.
+   * If first range of Selection is not collapsed, this collects colors of
+   * each node in the range.  If there are two or more colors, aIsMixed is set
+   * to true and aColor is truncated.  If only one color is set to all of the
+   * range, aIsMixed is set to false and aColor is set to the color.
+   * If there is no Selection ranges, aIsMixed is set to false and aColor is
+   * truncated.
+   *
+   * @param aIsMixed            Must not be nullptr.  This is set to true
+   *                            if there is two or more colors in first
+   *                            range of Selection.
+   * @param aColor              Returns the color if only one color is set to
+   *                            all of first range in Selection.  Otherwise,
+   *                            returns empty string.
+   * @return                    Returns error only when illegal cases, e.g.,
+   *                            Selection instance has gone, first range
+   *                            Selection is broken.
+   */
+  nsresult GetFontColorState(bool* aIsMixed, nsAString& aColor);
+
+  /**
    * SetComposerCommandsUpdater() sets or unsets mComposerCommandsUpdater.
    * This will crash in debug build if the editor already has an instance
    * but called with another instance.
