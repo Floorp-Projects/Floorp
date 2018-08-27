@@ -43,7 +43,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-1) fuzzy-if(skiaConten
 
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html
-fuzzy-if(true,0-1,0-20) fuzzy-if(d2d,0-72,0-196) fuzzy-if(cocoaWidget,0-1,0-180) fuzzy-if(Android,0-140,0-237) == clipping-4-canvas.html clipping-4-ref.html # bug 732535
+fuzzy-if(true,0-1,0-20) fuzzy-if(d2d,0-72,0-196) fuzzy-if(cocoaWidget,0-1,0-180) fuzzy-if(Android,0-140,0-237) fuzzy-if(webrender&&cocoaWidget,8-8,1-1) == clipping-4-canvas.html clipping-4-ref.html # bug 732535
 fuzzy-if(Android,0-5,0-54) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-10) fuzzy-if(skiaContent,0-1,0-172) == clipping-4-image.html clipping-4-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-10) fuzzy-if(skiaContent,0-1,0-77) == clipping-4-overflow-hidden.html clipping-4-ref.html
 == clipping-5-canvas.html clipping-5-refc.html

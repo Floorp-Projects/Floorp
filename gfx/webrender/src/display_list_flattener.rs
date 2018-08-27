@@ -24,7 +24,7 @@ use hit_test::{HitTestingItem, HitTestingRun};
 use image::simplify_repeated_primitive;
 use internal_types::{FastHashMap, FastHashSet};
 use picture::{PictureCompositeMode, PictureId, PicturePrimitive};
-use prim_store::{BrushClipMaskKind, BrushKind, BrushPrimitive, BrushSegmentDescriptor};
+use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor};
 use prim_store::{EdgeAaSegmentMask, ImageSource};
 use prim_store::{BorderSource, BrushSegment, PrimitiveContainer, PrimitiveIndex, PrimitiveStore};
 use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitive};
@@ -1706,7 +1706,6 @@ impl<'a> DisplayListFlattener<'a> {
                 );
                 let descriptor = BrushSegmentDescriptor {
                     segments,
-                    clip_mask_kind: BrushClipMaskKind::Unknown,
                 };
 
                 let brush_kind = match border.source {
