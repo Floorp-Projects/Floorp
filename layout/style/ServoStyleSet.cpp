@@ -1411,6 +1411,7 @@ ServoStyleSet::ResolveStyleLazilyInternal(Element* aElement,
 bool
 ServoStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
 {
+  // TODO(emilio): Can we make this so this asserts instead?
   UpdateStylistIfNeeded();
   Servo_StyleSet_GetFontFaceRules(mRawSet.get(), &aArray);
   return true;
@@ -1426,9 +1427,7 @@ ServoStyleSet::CounterStyleRuleForName(nsAtom* aName)
 already_AddRefed<gfxFontFeatureValueSet>
 ServoStyleSet::BuildFontFeatureValueSet()
 {
-  // FIXME(emilio): This should assert once we update the stylist from
-  // FlushPendingNotifications explicitly.
-  UpdateStylistIfNeeded();
+  MOZ_ASSERT(!StylistNeedsUpdate());
   RefPtr<gfxFontFeatureValueSet> set =
     Servo_StyleSet_BuildFontFeatureValueSet(mRawSet.get());
   return set.forget();
