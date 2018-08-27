@@ -64,7 +64,7 @@ Request::Request(nsIGlobalObject* aOwner, InternalRequest* aRequest,
   if (aSignal) {
     // If we don't have a signal as argument, we will create it when required by
     // content, otherwise the Request's signal must follow what has been passed.
-    mSignal = new AbortSignal(aSignal->Aborted());
+    mSignal = new AbortSignal(aOwner, aSignal->Aborted());
     if (!mSignal->Aborted()) {
       mSignal->Follow(aSignal);
     }
@@ -626,14 +626,14 @@ AbortSignal*
 Request::GetOrCreateSignal()
 {
   if (!mSignal) {
-    mSignal = new AbortSignal(false);
+    mSignal = new AbortSignal(mOwner, false);
   }
 
   return mSignal;
 }
 
-AbortSignal*
-Request::GetSignal() const
+AbortSignalImpl*
+Request::GetSignalImpl() const
 {
   return mSignal;
 }

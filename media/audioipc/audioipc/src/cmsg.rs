@@ -108,6 +108,8 @@ impl ControlMsgBuilder {
 
             let cmsghdr = cmsghdr {
                 cmsg_len: cmsg_len as _,
+                #[cfg(target_env = "musl")]
+                __pad1: 0,
                 cmsg_level: level,
                 cmsg_type: kind,
             };

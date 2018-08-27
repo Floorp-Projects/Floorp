@@ -53,8 +53,8 @@ pub struct ClientStream<'ctx> {
 }
 
 struct CallbackServer {
-    input_shm: SharedMemSlice,
-    output_shm: SharedMemMutSlice,
+    input_shm: Option<SharedMemSlice>,
+    output_shm: Option<SharedMemMutSlice>,
     data_cb: ffi::cubeb_data_callback,
     state_cb: ffi::cubeb_state_callback,
     user_ptr: usize,
@@ -77,21 +77,33 @@ impl rpc::Server for CallbackServer {
                 );
 
                 // Clone values that need to be moved into the cpu pool thread.
-                let input_shm = unsafe { self.input_shm.clone_view() };
-                let mut output_shm = unsafe { self.output_shm.clone_view() };
+                let input_shm = match self.input_shm {
+                    Some(ref shm) => unsafe { Some(shm.clone_view()) },
+                    None => None,
+                };
+                let mut output_shm = match self.output_shm {
+                    Some(ref shm) => unsafe { Some(shm.clone_view()) },
+                    None => None,
+                };
                 let user_ptr = self.user_ptr;
                 let cb = self.data_cb.unwrap();
 
                 self.cpu_pool.spawn_fn(move || {
                     // TODO: This is proof-of-concept. Make it better.
-                    let input_ptr: *const u8 = input_shm
-                        .get_slice(nframes as usize * frame_size)
-                        .unwrap()
-                        .as_ptr();
-                    let output_ptr: *mut u8 = output_shm
-                        .get_mut_slice(nframes as usize * frame_size)
-                        .unwrap()
-                        .as_mut_ptr();
+                    let input_ptr: *const u8 = match input_shm {
+                        Some(shm) => shm
+                            .get_slice(nframes as usize * frame_size)
+                            .unwrap()
+                            .as_ptr(),
+                        None => ptr::null()
+                    };
+                    let output_ptr: *mut u8 = match output_shm {
+                        Some(ref mut shm) => shm
+                            .get_mut_slice(nframes as usize * frame_size)
+                            .unwrap()
+                            .as_mut_ptr(),
+                        None => ptr::null_mut()
+                    };
 
                     set_in_callback(true);
                     let nframes = unsafe {
@@ -136,6 +148,9 @@ impl<'ctx> ClientStream<'ctx> {
     ) -> Result<Stream> {
         assert_not_in_callback();
 
+        let has_input = init_params.input_stream_params.is_some();
+        let has_output = init_params.output_stream_params.is_some();
+
         let rpc = ctx.rpc();
         let data = try!(send_recv!(rpc, StreamInit(init_params) => StreamCreated()));
 
@@ -146,11 +161,19 @@ impl<'ctx> ClientStream<'ctx> {
 
         let input = data.fds[1];
         let input_file = unsafe { File::from_raw_fd(input) };
-        let input_shm = SharedMemSlice::from(&input_file, SHM_AREA_SIZE).unwrap();
+        let input_shm = if has_input {
+            Some(SharedMemSlice::from(&input_file, SHM_AREA_SIZE).unwrap())
+        } else {
+            None
+        };
 
         let output = data.fds[2];
         let output_file = unsafe { File::from_raw_fd(output) };
-        let output_shm = SharedMemMutSlice::from(&output_file, SHM_AREA_SIZE).unwrap();
+        let output_shm = if has_output {
+            Some(SharedMemMutSlice::from(&output_file, SHM_AREA_SIZE).unwrap())
+        } else {
+            None
+        };
 
         let user_data = user_ptr as usize;
 

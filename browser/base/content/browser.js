@@ -7299,10 +7299,6 @@ function checkEmptyPageOrigin(browser = gBrowser.selectedBrowser,
   return ssm.isSystemPrincipal(contentPrincipal);
 }
 
-function BrowserOpenSyncTabs() {
-  gSync.openSyncedTabsPanel();
-}
-
 function ReportFalseDeceptiveSite() {
   let docURI = gBrowser.selectedBrowser.documentURI;
   let isPhishingPage =

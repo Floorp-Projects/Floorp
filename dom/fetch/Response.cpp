@@ -37,7 +37,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Response)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Response)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHeaders)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSignal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchStreamReader)
 
   tmp->mReadableStreamBody = nullptr;
@@ -49,7 +49,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Response)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHeaders)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSignal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchStreamReader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -66,10 +66,10 @@ NS_INTERFACE_MAP_END
 
 Response::Response(nsIGlobalObject* aGlobal,
                    InternalResponse* aInternalResponse,
-                   AbortSignal* aSignal)
+                   AbortSignalImpl* aSignalImpl)
   : FetchBody<Response>(aGlobal)
   , mInternalResponse(aInternalResponse)
-  , mSignal(aSignal)
+  , mSignalImpl(aSignalImpl)
 {
   MOZ_ASSERT(aInternalResponse->Headers()->Guard() == HeadersGuardEnum::Immutable ||
              aInternalResponse->Headers()->Guard() == HeadersGuardEnum::Response);
@@ -344,7 +344,7 @@ Response::Clone(JSContext* aCx, ErrorResult& aRv)
       ? InternalResponse::eDontCloneInputStream
       : InternalResponse::eCloneInputStream);
 
-  RefPtr<Response> response = new Response(mOwner, ir, mSignal);
+  RefPtr<Response> response = new Response(mOwner, ir, GetSignalImpl());
 
   if (body) {
     // Maybe we have a body, but we receive null from MaybeTeeReadableStreamBody
@@ -387,7 +387,7 @@ Response::CloneUnfiltered(JSContext* aCx, ErrorResult& aRv)
       : InternalResponse::eCloneInputStream);
 
   RefPtr<InternalResponse> ir = clone->Unfiltered();
-  RefPtr<Response> ref = new Response(mOwner, ir, mSignal);
+  RefPtr<Response> ref = new Response(mOwner, ir, GetSignalImpl());
 
   if (body) {
     // Maybe we have a body, but we receive null from MaybeTeeReadableStreamBody

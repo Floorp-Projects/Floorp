@@ -91,6 +91,7 @@ const SEC_ERROR_REUSED_ISSUER_AND_SERIAL           = SEC_ERROR_BASE + 138;
 const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED  = SEC_ERROR_BASE + 176;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
+const MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED = MOZILLA_PKIX_ERROR_BASE + 13;
 
 
 const SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;
@@ -203,6 +204,11 @@ var AboutCertErrorListener = {
         case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
           msg += gPipNSSBundle.GetStringFromName("certErrorTrust_ExpiredIssuer") + "\n";
           break;
+        // This error code currently only exists for the Symantec distrust, we may need to adjust
+        // it to fit other distrusts later.
+        case MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
+          msg += gPipNSSBundle.formatStringFromName("certErrorTrust_Symantec", [hostString], 1) + "\n";
+          break;
         case SEC_ERROR_UNTRUSTED_CERT:
         default:
           msg += gPipNSSBundle.GetStringFromName("certErrorTrust_Untrusted") + "\n";
@@ -232,6 +238,23 @@ var AboutCertErrorListener = {
     let hostString = uri.host;
     if (uri.port != 443 && uri.port != -1) {
       hostString += ":" + uri.port;
+    }
+
+    // This error code currently only exists for the Symantec distrust
+    // in Firefox 63, so we add copy explaining that to the user.
+    // In case of future distrusts of that scale we might need to add
+    // additional parameters that allow us to identify the affected party
+    // without replicating the complex logic from certverifier code.
+    if (securityInfo.errorCode == MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED) {
+      let introContent = doc.getElementById("introContent");
+      let description = doc.createElement("p");
+      description.textContent = gPipNSSBundle.formatStringFromName(
+        "certErrorSymantecDistrustDescription", [hostString], 1);
+      introContent.append(description);
+
+      // The regular "what should I do" message does not make sense in this case.
+      doc.getElementById("whatShouldIDoContentText").textContent =
+        gPipNSSBundle.GetStringFromName("certErrorSymantecDistrustAdministrator");
     }
 
     this._setTechDetailsMsgPart1(hostString, sslStatus, securityInfo, technicalInfo, doc);

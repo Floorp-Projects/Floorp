@@ -4,10 +4,13 @@
 
 :root {
   --markup-badge-active-background-color: var(--blue-50);
-  --markup-badge-background-color: var(--grey-20);
+  --markup-badge-active-border-color: #FFFFFFB3;
+  --markup-badge-background-color: white;
   --markup-badge-border-color: #CACAD1;
-  --markup-badge-color: var(--grey-90);
+  --markup-badge-color: var(--grey-60);
   --markup-badge-hover-background-color: #DFDFE8;
+  --markup-badge-interactive-background-color: var(--grey-20);
+  --markup-badge-interactive-color: var(--grey-90);
   --markup-hidden-attr-name-color: #BA89B8;
   --markup-hidden-attr-value-color: #5C6D87;
   --markup-hidden-punctuation-color: #909090;
@@ -17,10 +20,13 @@
 
 .theme-dark:root {
   --markup-badge-active-background-color: var(--blue-60);
-  --markup-badge-background-color: var(--grey-70);
+  --markup-badge-active-border-color: #FFF6;
+  --markup-badge-background-color: var(--grey-80);
   --markup-badge-border-color: var(--grey-50);
-  --markup-badge-color: var(--grey-30);
+  --markup-badge-color: var(--grey-40);
   --markup-badge-hover-background-color: var(--grey-80);
+  --markup-badge-interactive-background-color: var(--grey-70);
+  --markup-badge-interactive-color: var(--grey-30);
   --markup-hidden-attr-name-color: #B07EB3;
   --markup-hidden-attr-value-color: #9893A3;
   --markup-hidden-punctuation-color: #909090;
@@ -229,18 +235,21 @@ ul.children + .tag-line::before {
 
 .expandable.collapsed .close::before {
   /* Display an ellipsis character in collapsed nodes that can be expanded. */
-  content: "\2026";
+  content: "";
+  background-color: var(--markup-badge-interactive-background-color);
+  background-image: url(chrome://devtools/skin/images/more.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  border: 1px solid var(--markup-badge-border-color);
+  fill: var(--markup-badge-interactive-color);
+  vertical-align: middle;
   display: inline-block;
   width: 12px;
   height: 8px;
   margin: 0 2px;
   line-height: 3px;
-  color: var(--theme-body-color-inactive);
   border-radius: 3px;
-  border-style: solid;
-  border-width: 1px;
-  text-align: center;
-  vertical-align: middle;
+  -moz-context-properties: fill;
 }
 
 /* Hide HTML void elements (img, hr, br, …) closing tag when the element is not
@@ -413,30 +422,33 @@ ul.children + .tag-line::before {
   }
 }
 
-.markup-badge.active {
-  background-color: var(--markup-badge-active-background-color);
-  border-color: var(--theme-selection-color);
-  color: var(--theme-selection-color);
-}
-
+/* Markup badges that are interactive/clickable */
 .markup-badge[data-custom],
 .markup-badge[data-display="flex"].interactive,
 .markup-badge[data-display="grid"],
 .markup-badge[data-display="inline-flex"],
 .markup-badge[data-display="inline-grid"],
 .markup-badge[data-event] {
+  background-color: var(--markup-badge-interactive-background-color);
+  color: var(--markup-badge-interactive-color);
   cursor: pointer;
 }
 
-.markup-badge[data-display="flex"].interactive:focus,
-.markup-badge[data-display="flex"].interactive:hover,
-.markup-badge[data-display="grid"]:focus,
-.markup-badge[data-display="grid"]:hover,
-.markup-badge[data-display="inline-flex"].interactive:focus,
-.markup-badge[data-display="inline-flex"].interactive:hover,
-.markup-badge[data-display="inline-grid"]:focus,
-.markup-badge[data-display="inline-grid"]:hover,
+.markup-badge[data-display="flex"]:not(.active).interactive:focus,
+.markup-badge[data-display="flex"]:not(.active).interactive:hover,
+.markup-badge[data-display="grid"]:not(.active):focus,
+.markup-badge[data-display="grid"]:not(.active):hover,
+.markup-badge[data-display="inline-flex"]:not(.active).interactive:focus,
+.markup-badge[data-display="inline-flex"]:not(.active).interactive:hover,
+.markup-badge[data-display="inline-grid"]:not(.active):focus,
+.markup-badge[data-display="inline-grid"]:not(.active):hover,
 .markup-badge[data-event]:focus,
 .markup-badge[data-event]:hover {
   background-color: var(--markup-badge-hover-background-color);
+}
+
+.markup-badge.active {
+  background-color: var(--markup-badge-active-background-color);
+  border-color: var(--markup-badge-active-border-color);
+  color: var(--theme-selection-color);
 }
