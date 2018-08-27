@@ -546,6 +546,9 @@ task_description_schema = Schema({
         Optional('rules-to-update'): optionally_keyed_by('project', [basestring]),
         Optional('archive-domain'): optionally_keyed_by('project', basestring),
         Optional('download-domain'): optionally_keyed_by('project', basestring),
+        Optional('blob-suffix'): basestring,
+        Optional('complete-mar-filename-pattern'): basestring,
+        Optional('complete-mar-bouncer-product-pattern'): basestring,
 
         # list of artifact URLs for the artifacts that should be beetmoved
         Optional('upstream-artifacts'): [{
@@ -1145,6 +1148,10 @@ def build_balrog_payload(config, task, task_def):
             'product': worker['product'],
             'version': release_config['version'],
         }
+        for prop in ('blob-suffix', 'complete-mar-filename-pattern',
+                     'complete-mar-bouncer-product-pattern'):
+            if prop in worker:
+                task_def['payload'][prop.replace('-', '_')] = worker[prop]
         if worker['balrog-action'] == 'submit-toplevel':
             task_def['payload'].update({
                 'app_version': release_config['appVersion'],
