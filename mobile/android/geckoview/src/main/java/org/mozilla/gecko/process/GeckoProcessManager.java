@@ -175,7 +175,10 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     public void crashChild() {
         try {
-            mConnections.get("tab").bind().crash();
+            IChildProcess childProcess = mConnections.get("tab").bind();
+            if (childProcess != null) {
+                childProcess.crash();
+            }
         } catch (RemoteException e) {
         }
     }

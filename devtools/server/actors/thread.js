@@ -1111,22 +1111,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   /**
-   * Get the script and source lists from the debugger.
+   * Get the source lists from the debugger.
    */
   _discoverSources: function() {
-    // Only get one script per Debugger.Source.
-    const sourcesToScripts = new Map();
-    const scripts = this.dbg.findScripts();
-
-    for (let i = 0, len = scripts.length; i < len; i++) {
-      const s = scripts[i];
-      if (s.source) {
-        sourcesToScripts.set(s.source, s);
-      }
-    }
-
-    return Promise.all([...sourcesToScripts.values()].map(script => {
-      return this.sources.createSourceActors(script.source);
+    const sources = this.dbg.findSources();
+    return Promise.all(sources.map(source => {
+      return this.sources.createSourceActors(source);
     }));
   },
 

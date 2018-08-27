@@ -12,14 +12,63 @@
 namespace mozilla {
 namespace dom {
 
+// AbortSignalImpl
+// ----------------------------------------------------------------------------
+
+AbortSignalImpl::AbortSignalImpl(bool aAborted)
+  : mAborted(aAborted)
+{}
+
+bool
+AbortSignalImpl::Aborted() const
+{
+  return mAborted;
+}
+
+void
+AbortSignalImpl::Abort()
+{
+  if (mAborted) {
+    return;
+  }
+
+  mAborted = true;
+
+  // Let's inform the followers.
+  for (AbortFollower* follower : mFollowers) {
+    follower->Abort();
+  }
+}
+
+void
+AbortSignalImpl::AddFollower(AbortFollower* aFollower)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aFollower);
+  if (!mFollowers.Contains(aFollower)) {
+    mFollowers.AppendElement(aFollower);
+  }
+}
+
+void
+AbortSignalImpl::RemoveFollower(AbortFollower* aFollower)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aFollower);
+  mFollowers.RemoveElement(aFollower);
+}
+
+// AbortSignal
+// ----------------------------------------------------------------------------
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(AbortSignal)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AbortSignal,
                                                   DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFollowingSignal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AbortSignal,
                                                 DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFollowingSignal)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AbortSignal)
@@ -31,11 +80,7 @@ NS_IMPL_RELEASE_INHERITED(AbortSignal, DOMEventTargetHelper)
 AbortSignal::AbortSignal(nsIGlobalObject* aGlobalObject,
                          bool aAborted)
   : DOMEventTargetHelper(aGlobalObject)
-  , mAborted(aAborted)
-{}
-
-AbortSignal::AbortSignal(bool aAborted)
-  : mAborted(aAborted)
+  , AbortSignalImpl(aAborted)
 {}
 
 JSObject*
@@ -44,22 +89,10 @@ AbortSignal::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return AbortSignal_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-bool
-AbortSignal::Aborted() const
-{
-  return mAborted;
-}
-
 void
 AbortSignal::Abort()
 {
-  MOZ_ASSERT(!mAborted);
-  mAborted = true;
-
-  // Let's inform the followers.
-  for (uint32_t i = 0; i < mFollowers.Length(); ++i) {
-    mFollowers[i]->Abort();
-  }
+  AbortSignalImpl::Abort();
 
   EventInit init;
   init.mBubbles = false;
@@ -72,22 +105,6 @@ AbortSignal::Abort()
   DispatchEvent(*event);
 }
 
-void
-AbortSignal::AddFollower(AbortFollower* aFollower)
-{
-  MOZ_DIAGNOSTIC_ASSERT(aFollower);
-  if (!mFollowers.Contains(aFollower)) {
-    mFollowers.AppendElement(aFollower);
-  }
-}
-
-void
-AbortSignal::RemoveFollower(AbortFollower* aFollower)
-{
-  MOZ_DIAGNOSTIC_ASSERT(aFollower);
-  mFollowers.RemoveElement(aFollower);
-}
-
 // AbortFollower
 // ----------------------------------------------------------------------------
 
@@ -97,7 +114,7 @@ AbortFollower::~AbortFollower()
 }
 
 void
-AbortFollower::Follow(AbortSignal* aSignal)
+AbortFollower::Follow(AbortSignalImpl* aSignal)
 {
   MOZ_DIAGNOSTIC_ASSERT(aSignal);
 

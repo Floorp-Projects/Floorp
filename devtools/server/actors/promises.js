@@ -65,8 +65,8 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
     this._newPromises = [];
     this._promisesSettled = [];
 
-    this.dbg.findScripts().forEach(s => {
-      this.parentActor.sources.createSourceActors(s.source);
+    this.dbg.findSources().forEach(source => {
+      this.parentActor.sources.createSourceActors(source);
     });
 
     this.dbg.onNewScript = s => {

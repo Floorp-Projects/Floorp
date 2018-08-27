@@ -58,8 +58,8 @@ var gTests = [
       await closeStream();
 
       // TODO(Bug 1304997): Fix the race in closeStream() and remove this
-      // promiseWaitForCondition().
-      await promiseWaitForCondition(() => !tab.getAttribute("sharing"));
+      // TestUtils.waitForCondition().
+      await TestUtils.waitForCondition(() => !tab.getAttribute("sharing"));
       is(tab.getAttribute("sharing"), "",
          "the tab no longer has the 'sharing' attribute after closing the stream");
     }

@@ -802,6 +802,9 @@ public final class GeckoProfile {
 
             final INIParser parser = GeckoProfileDirectories.getProfilesINI(mMozillaDir);
             final Hashtable<String, INISection> sections = parser.getSections();
+            if (sections == null) {
+                return false;
+            }
             for (Enumeration<INISection> e = sections.elements(); e.hasMoreElements();) {
                 final INISection section = e.nextElement();
                 String name = section.getStringProperty("Name");

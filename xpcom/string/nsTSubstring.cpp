@@ -92,18 +92,24 @@ nsTSubstring<T>::StartBulkWrite(size_type aCapacity,
   }
 
   // Note! Capacity() returns 0 when the string is immutable.
-  size_type curCapacity = Capacity();
+  const size_type curCapacity = Capacity();
+
+  bool shrinking = false;
 
   // We've established that aCapacity > 0.
   // |curCapacity == 0| means that the buffer is immutable or 0-sized, so we
   // need to allocate a new buffer. We cannot use the existing buffer even
   // though it might be large enough.
 
-  if (!aAllowShrinking && aCapacity <= curCapacity) {
-    char_traits::move(this->mData + aNewSuffixStart,
-                      this->mData + aOldSuffixStart,
-                      aSuffixLength);
-    return curCapacity;
+  if (aCapacity <= curCapacity) {
+    if (aAllowShrinking) {
+      shrinking = true;
+    } else {
+      char_traits::move(this->mData + aNewSuffixStart,
+                        this->mData + aOldSuffixStart,
+                        aSuffixLength);
+      return curCapacity;
+    }
   }
 
   char_type* oldData = this->mData;
@@ -167,6 +173,7 @@ nsTSubstring<T>::StartBulkWrite(size_type aCapacity,
       MOZ_ASSERT(aAllowShrinking, "How come we didn't return earlier?");
       // We're already close enough to the right size.
       newData = oldData;
+      newCapacity = curCapacity;
     } else {
       size_type storageSize = (newCapacity + 1) * sizeof(char_type);
       // Since we allocate only by powers of 2 we always fit into a full mozjemalloc
@@ -174,7 +181,18 @@ nsTSubstring<T>::StartBulkWrite(size_type aCapacity,
       // copying too much.
       nsStringBuffer* newHdr = nsStringBuffer::Alloc(storageSize).take();
       if (!newHdr) {
-        return mozilla::Err(NS_ERROR_OUT_OF_MEMORY); // we are still in a consistent state
+        // we are still in a consistent state
+        if (shrinking) {
+          // Since shrinking is just a memory footprint optimization, we
+          // don't propagate OOM if we tried to shrink in order to avoid
+          // OOM crashes from infallible callers. If we're lucky, soon enough
+          // a fallible caller reaches OOM and is able to deal or we end up
+          // disposing of this string before reaching OOM again.
+          newData = oldData;
+          newCapacity = curCapacity;
+        } else {
+          return mozilla::Err(NS_ERROR_OUT_OF_MEMORY);
+        }
       }
 
       newData = (char_type*)newHdr->Data();
