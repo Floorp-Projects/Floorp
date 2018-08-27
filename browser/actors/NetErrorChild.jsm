@@ -42,6 +42,7 @@ const SEC_ERROR_OCSP_INVALID_SIGNING_CERT          = SEC_ERROR_BASE + 144;
 const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED  = SEC_ERROR_BASE + 176;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
+const MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED = MOZILLA_PKIX_ERROR_BASE + 13;
 const MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT          = MOZILLA_PKIX_ERROR_BASE + 14;
 const MOZILLA_PKIX_ERROR_MITM_DETECTED             = MOZILLA_PKIX_ERROR_BASE + 15;
 
@@ -145,6 +146,11 @@ class NetErrorChild extends ActorChild {
           break;
         case MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT:
           msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_SelfSigned") + "\n";
+          break;
+        // This error code currently only exists for the Symantec distrust, we may need to adjust
+        // it to fit other distrusts later.
+        case MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
+          msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_Symantec", [hostString], 1) + "\n";
           break;
         default:
           msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_Untrusted") + "\n";
@@ -365,6 +371,26 @@ class NetErrorChild extends ActorChild {
         updateContainerPosition();
         break;
 
+      // This error code currently only exists for the Symantec distrust
+      // in Firefox 63, so we add copy explaining that to the user.
+      // In case of future distrusts of that scale we might need to add
+      // additional parameters that allow us to identify the affected party
+      // without replicating the complex logic from certverifier code.
+      case MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
+        let description = gPipNSSBundle.formatStringFromName(
+          "certErrorSymantecDistrustDescription", [doc.location.hostname], 1);
+        let descriptionContainer = doc.getElementById("errorShortDescText2");
+        descriptionContainer.textContent = description;
+
+        let adminDescription = doc.createElement("p");
+        adminDescription.textContent =
+          gPipNSSBundle.GetStringFromName("certErrorSymantecDistrustAdministrator");
+        descriptionContainer.append(adminDescription);
+
+        learnMoreLink.href = baseURL + "symantec-warning";
+
+        updateContainerPosition();
+        break;
       case MOZILLA_PKIX_ERROR_MITM_DETECTED:
       case MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT:
         learnMoreLink.href = baseURL + "security-error";
