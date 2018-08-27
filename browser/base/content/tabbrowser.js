@@ -1014,7 +1014,6 @@ window._gBrowser = {
         }
       });
       newTab.dispatchEvent(event);
-      Services.telemetry.recordEvent("savant", "tab", "select", null, { subcategory: "frame" });
 
       this._tabAttrModified(oldTab, ["selected"]);
       this._tabAttrModified(newTab, ["selected"]);
@@ -2472,7 +2471,6 @@ window._gBrowser = {
     // even if the event listener opens or closes tabs.
     let evt = new CustomEvent("TabOpen", { bubbles: true, detail: eventDetail || {} });
     t.dispatchEvent(evt);
-    Services.telemetry.recordEvent("savant", "tab", "open", null, { subcategory: "frame" });
 
     if (!usingPreloadedContent && originPrincipal && aURI) {
       let { URI_INHERITS_SECURITY_CONTEXT } = Ci.nsIProtocolHandler;
@@ -2886,7 +2884,6 @@ window._gBrowser = {
     // inspect the tab that's about to close.
     var evt = new CustomEvent("TabClose", { bubbles: true, detail: { adoptedBy: aAdoptedByTab } });
     aTab.dispatchEvent(evt);
-    Services.telemetry.recordEvent("savant", "tab", "close", null, { subcategory: "frame" });
 
     if (this.tabs.length == 2) {
       // We're closing one of our two open tabs, inform the other tab that its
