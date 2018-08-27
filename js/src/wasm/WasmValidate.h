@@ -77,10 +77,10 @@ struct ModuleEnvironment
     ImportVector              imports;
     ExportVector              exports;
     Maybe<uint32_t>           startFuncIndex;
+    ElemSegmentVector         elemSegments;
     MaybeSectionRange         codeSection;
 
     // Fields decoded as part of the wasm module tail:
-    ElemSegmentVector         elemSegments;
     DataSegmentVector         dataSegments;
     Maybe<NameInBytecode>     moduleName;
     NameInBytecodeVector      funcNames;

@@ -1863,6 +1863,10 @@ enum class TableKind
 
 struct TableDesc
 {
+    // If a table is marked 'external' it is because it can contain functions
+    // from multiple instances; a table is therefore marked external if it is
+    // imported or exported or if it is initialized with an imported function.
+
     TableKind kind;
     bool external;
     uint32_t globalDataOffset;
