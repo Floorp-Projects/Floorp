@@ -486,7 +486,9 @@ impl ContextOps for PulseContext {
 
         fn success(_: &pulse::Context, success: i32, user_data: *mut c_void) {
             let ctx = unsafe { &*(user_data as *mut PulseContext) };
-            debug_assert_ne!(success, 0);
+            if success != 1 {
+                cubeb_log!("subscribe_success ignored failure: {}", success);
+            }
             ctx.mainloop.signal();
         }
 

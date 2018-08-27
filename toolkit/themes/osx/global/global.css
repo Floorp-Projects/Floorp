@@ -218,10 +218,6 @@ label[disabled="true"] {
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-.toolbar-focustarget {
-  -moz-user-focus: ignore !important;
-}
-
 notification > button {
   margin: 0 3px;
   padding: 1px 10px;

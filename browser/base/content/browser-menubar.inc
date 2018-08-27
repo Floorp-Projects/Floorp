@@ -341,7 +341,7 @@
                 <menuseparator id="sanitizeSeparator"/>
                 <menuitem id="sync-tabs-menuitem"
                           label="&syncTabsMenu3.label;"
-                          oncommand="BrowserOpenSyncTabs();"
+                          oncommand="gSync.openSyncedTabsPanel();"
                           hidden="true"/>
                 <menuitem id="historyRestoreLastSession"
                           label="&historyRestoreLastSession.label;"

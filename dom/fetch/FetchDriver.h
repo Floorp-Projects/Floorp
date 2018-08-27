@@ -113,7 +113,7 @@ public:
               PerformanceStorage* aPerformanceStorage,
               bool aIsTrackingFetch);
 
-  nsresult Fetch(AbortSignal* aSignal,
+  nsresult Fetch(AbortSignalImpl* aSignalImpl,
                  FetchDriverObserver* aObserver);
 
   void

@@ -122,10 +122,6 @@ sidebarheader > label {
   padding-inline-start: 4px;
 }
 
-.toolbar-focustarget {
-  -moz-user-focus: ignore !important;
-}
-
 toolbar[mode="text"] .toolbarbutton-text {
   padding: 0 !important;
   margin: 3px 5px !important;

@@ -119,7 +119,9 @@ public final class GeckoHLSDemuxerWrapper {
         assertTrue(callback != null);
         try {
             mPlayer = GeckoPlayerFactory.getPlayer(id);
-            mPlayer.addDemuxerWrapperCallbackListener(callback);
+            if (mPlayer != null) {
+                mPlayer.addDemuxerWrapperCallbackListener(callback);
+            }
         } catch (Exception e) {
             Log.e(LOGTAG, "Constructing GeckoHLSDemuxerWrapper ... error", e);
             callback.onError(BaseHlsPlayer.DemuxerError.UNKNOWN.code());

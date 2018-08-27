@@ -566,7 +566,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     uint32_t traceLoggerScriptedCallsLastDrainedSize;
     uint32_t traceLoggerScriptedCallsLastDrainedIteration;
 
+    class QueryBase;
     class ScriptQuery;
+    class SourceQuery;
     class ObjectQuery;
 
     MOZ_MUST_USE bool addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> obj);
@@ -718,6 +720,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool getNewestFrame(JSContext* cx, unsigned argc, Value* vp);
     static bool clearAllBreakpoints(JSContext* cx, unsigned argc, Value* vp);
     static bool findScripts(JSContext* cx, unsigned argc, Value* vp);
+    static bool findSources(JSContext* cx, unsigned argc, Value* vp);
     static bool findObjects(JSContext* cx, unsigned argc, Value* vp);
     static bool findAllGlobals(JSContext* cx, unsigned argc, Value* vp);
     static bool makeGlobalObjectReference(JSContext* cx, unsigned argc, Value* vp);

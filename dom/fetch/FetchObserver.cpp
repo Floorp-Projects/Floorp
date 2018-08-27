@@ -27,12 +27,12 @@ NS_IMPL_ADDREF_INHERITED(FetchObserver, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(FetchObserver, DOMEventTargetHelper)
 
 FetchObserver::FetchObserver(nsIGlobalObject* aGlobal,
-                             AbortSignal* aSignal)
+                             AbortSignalImpl* aSignalImpl)
   : DOMEventTargetHelper(aGlobal)
   , mState(FetchState::Requesting)
 {
-  if (aSignal) {
-    Follow(aSignal);
+  if (aSignalImpl) {
+    Follow(aSignalImpl);
   }
 }
 

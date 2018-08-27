@@ -187,7 +187,7 @@ void nestegg_destroy(nestegg * context);
 int nestegg_duration(nestegg * context, uint64_t * duration);
 
 /** Query the tstamp scale of the media stream in nanoseconds.
-    @note Timecodes presented by nestegg have been scaled by this value
+    @note Timestamps presented by nestegg have been scaled by this value
           before presentation to the caller.
     @param context Stream context initialized by #nestegg_init.
     @param scale   Storage for the queried scale factor.
@@ -366,7 +366,7 @@ int nestegg_packet_has_keyframe(nestegg_packet * packet);
     @retval -1 Error. */
 int nestegg_packet_track(nestegg_packet * packet, unsigned int * track);
 
-/** Query the time stamp in nanoseconds of @a packet.
+/** Query the timestamp in nanoseconds of @a packet.
     @param packet Packet initialized by #nestegg_read_packet.
     @param tstamp Storage for the queried timestamp in nanoseconds.
     @retval  0 Success.

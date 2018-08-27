@@ -167,9 +167,9 @@ public:
   AbortSignal*
   GetOrCreateSignal();
 
-  // This can return a null AbortSignal.
-  AbortSignal*
-  GetSignal() const override;
+  // This can return a null AbortSignalImpl.
+  AbortSignalImpl*
+  GetSignalImpl() const override;
 
 private:
   ~Request();
