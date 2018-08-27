@@ -121,6 +121,7 @@ GENERATED_FILES = [
     'TelemetryEventEnums.h',
     'TelemetryHistogramData.inc',
     'TelemetryHistogramEnums.h',
+    'TelemetryHistogramNameMap.h',
     'TelemetryProcessData.h',
     'TelemetryProcessEnums.h',
     'TelemetryScalarData.h',
@@ -141,6 +142,10 @@ data.inputs = histogram_files
 enums = GENERATED_FILES['TelemetryHistogramEnums.h']
 enums.script = 'gen_histogram_enum.py'
 enums.inputs = histogram_files
+
+data = GENERATED_FILES['TelemetryHistogramNameMap.h']
+data.script = 'gen_histogram_phf.py'
+data.inputs = histogram_files
 
 # Generate scalar files.
 scalar_files = [
