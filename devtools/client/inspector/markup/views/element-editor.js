@@ -702,11 +702,13 @@ ElementEditor.prototype = {
 
     if (Services.prefs.getBoolPref("devtools.inspector.flexboxHighlighter.enabled") &&
         (target.dataset.display === "flex" || target.dataset.display === "inline-flex")) {
+      this._displayBadge.classList.add("active");
       this.highlighters.toggleFlexboxHighlighter(this.inspector.selection.nodeFront,
         "markup");
     }
 
     if (target.dataset.display === "grid" || target.dataset.display === "inline-grid") {
+      this._displayBadge.classList.add("active");
       this.highlighters.toggleGridHighlighter(this.inspector.selection.nodeFront,
         "markup");
     }
