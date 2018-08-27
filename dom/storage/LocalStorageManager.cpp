@@ -142,7 +142,7 @@ LocalStorageManager::CreateOrigin(const nsACString& aOriginSuffix,
   scope.Append(aOriginSuffix);
   scope.Append(':');
   scope.Append(aOriginNoSuffix);
-  return std::move(scope);
+  return scope;
 }
 
 LocalStorageCache*
