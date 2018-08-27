@@ -10,9 +10,8 @@ with Files('rust/**'):
 with Files('webkit/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
-if CONFIG['MOZ_LIBPRIO']:
-    with Files('prio/**'):
-        BUG_COMPONENT = ('Firefox Build System', 'General')
+with Files('prio/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-    with Files('msgpack/**'):
-        BUG_COMPONENT = ('Firefox Build System', 'General')
+with Files('msgpack/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
