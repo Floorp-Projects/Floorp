@@ -68,15 +68,16 @@ pub struct ElementRectResponse {
 
 #[derive(Debug, PartialEq, Serialize)]
 pub struct NewSessionResponse {
-    pub sessionId: String,
+    #[serde(rename = "sessionId")]
+    pub session_id: String,
     pub capabilities: Value,
 }
 
 impl NewSessionResponse {
     pub fn new(session_id: String, capabilities: Value) -> NewSessionResponse {
         NewSessionResponse {
-            capabilities: capabilities,
-            sessionId: session_id,
+            capabilities,
+            session_id,
         }
     }
 }
