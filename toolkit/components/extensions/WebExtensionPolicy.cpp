@@ -459,7 +459,7 @@ WebExtensionPolicy::BackgroundPageHTML() const
 
   if (mBackgroundScripts.IsNull()) {
     result.SetIsVoid(true);
-    return result;
+    return std::move(result);
   }
 
   result.AppendLiteral(kBackgroundPageHTMLStart);
@@ -472,7 +472,7 @@ WebExtensionPolicy::BackgroundPageHTML() const
   }
 
   result.AppendLiteral(kBackgroundPageHTMLEnd);
-  return result;
+  return std::move(result);
 }
 
 void
