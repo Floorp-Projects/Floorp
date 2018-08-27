@@ -24,7 +24,6 @@
 #include "nsContentCID.h"
 #include "mozilla/dom/XMLDocument.h"
 #include "nsGkAtoms.h"
-#include "nsIMemory.h"
 #include "nsIObserverService.h"
 #include "nsXBLContentSink.h"
 #include "nsXBLBinding.h"
