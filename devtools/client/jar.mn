@@ -149,7 +149,6 @@ devtools.jar:
     skin/images/editor-error.png (themes/images/editor-error.png)
     skin/images/breakpoint.svg (themes/images/breakpoint.svg)
     skin/webconsole.css (themes/webconsole.css)
-    skin/images/webconsole.svg (themes/images/webconsole.svg)
     skin/images/webconsole/alert.svg (themes/images/webconsole/alert.svg)
     skin/images/webconsole/info.svg (themes/images/webconsole/info.svg)
     skin/images/webconsole/input.svg (themes/images/webconsole/input.svg)
