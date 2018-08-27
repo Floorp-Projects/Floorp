@@ -716,26 +716,31 @@ class ADBDevice(ADBCommand):
 
         raise ValueError("Unable to get device serial")
 
-    def _check_adb_root(self, timeout=None):
-        self._have_root_shell = False
+    def _check_root_user(self, timeout=None):
         uid = 'uid=0'
         # Is shell already running as root?
         try:
             if self.shell_output("id", timeout=timeout).find(uid) != -1:
-                self._have_root_shell = True
                 self._logger.info("adbd running as root")
+                return True
         except ADBError:
-            self._logger.debug("Check for root shell failed")
+            self._logger.debug("Check for root user failed")
+        return False
+
+    def _check_adb_root(self, timeout=None):
+        self._have_root_shell = self._check_root_user(timeout=timeout)
 
         # Do we need to run adb root to get a root shell?
-        try:
-            if (not self._have_root_shell and self.command_output(
-                    ["root"],
-                    timeout=timeout).find("cannot run as root") == -1):
-                self._have_root_shell = True
-                self._logger.info("adbd restarted as root")
-        except ADBError:
-            self._logger.debug("Check for root adbd failed")
+        if not self._have_root_shell:
+            try:
+                self.command_output(["root"], timeout=timeout)
+                self._have_root_shell = self._check_root_user(timeout=timeout)
+                if self._have_root_shell:
+                    self._logger.info("adbd restarted as root")
+                else:
+                    self._logger.info("adbd not restarted as root")
+            except ADBError:
+                self._logger.debug("Check for root adbd failed")
 
     @staticmethod
     def _escape_command_line(cmd):
