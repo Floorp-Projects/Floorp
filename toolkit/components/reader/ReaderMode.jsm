@@ -141,8 +141,7 @@ var ReaderMode = {
       Cu.reportError(e);
       return;
     }
-    let flags =  webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL |
-      webNav.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+    let flags = webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
     webNav.loadURI(originalURL, flags, referrerURI, null, null, principal);
   },
 
