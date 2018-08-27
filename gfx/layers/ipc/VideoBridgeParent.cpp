@@ -64,6 +64,11 @@ VideoBridgeParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData,
 {
   PTextureParent* parent =
     TextureHost::CreateIPDLActor(this, aSharedData, aReadLock, aLayersBackend, aFlags, aSerial, Nothing());
+
+  if (!parent) {
+    return nullptr;
+  }
+
   mTextureMap[aSerial] = parent;
   return parent;
 }
