@@ -104,7 +104,7 @@ SessionStorageCache::SetItem(DataSetType aDataSetType, const nsAString& aKey,
   }
 
   if (!dataSet->ProcessUsageDelta(delta)) {
-    return NS_ERROR_DOM_QUOTA_REACHED;
+    return NS_ERROR_DOM_QUOTA_EXCEEDED_ERR;
   }
 
   dataSet->mKeys.Put(aKey, nsString(aValue));
