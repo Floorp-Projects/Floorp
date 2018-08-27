@@ -294,8 +294,6 @@ const getRelativeRect = function(node, relativeTo) {
  *        - {String} type
  *          Display type of the tooltip. Possible values: "normal", "arrow", and
  *          "doorhanger".
- *        - {Boolean} autofocus
- *          Defaults to false. Should the tooltip be focused when opening it.
  *        - {Boolean} consumeOutsideClicks
  *          Defaults to true. The tooltip is closed when clicking outside.
  *          Should this event be stopped and consumed or not.
@@ -307,7 +305,6 @@ function HTMLTooltip(toolboxDoc, {
     id = "",
     className = "",
     type = "normal",
-    autofocus = false,
     consumeOutsideClicks = true,
     useXulWrapper = false,
   } = {}) {
@@ -317,7 +314,6 @@ function HTMLTooltip(toolboxDoc, {
   this.id = id;
   this.className = className;
   this.type = type;
-  this.autofocus = autofocus;
   this.consumeOutsideClicks = consumeOutsideClicks;
   this.useXulWrapper = this._isXUL() && useXulWrapper;
   this.preferredWidth = "auto";
@@ -451,9 +447,6 @@ HTMLTooltip.prototype = {
 
     this.doc.defaultView.clearTimeout(this.attachEventsTimer);
     this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
-      if (this.autofocus) {
-        this.focus();
-      }
       // Update the top window reference each time in case the host changes.
       this.topWindow = this._getTopWindow();
       this.topWindow.addEventListener("click", this._onClick, true);
