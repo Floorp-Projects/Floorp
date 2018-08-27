@@ -336,18 +336,27 @@ interface nsITableEditor : nsISupports
     */
   Element getFirstSelectedCellInTable(out long aRowIndex, out long aColIndex);
 
-  /** Get next selected cell element from first selection range.
-    * Assumes cell-selection model where each cell
-    * is in a separate range (selection parent node is table row)
-    * Always call GetFirstSelectedCell() to initialize stored index of "next" cell
-    * @param aCell     Selected cell or null if no more selected cells
-    *                     or ranges don't contain cell selections
-    * @param aRange    Optional: if not null, return the selection range
-    *                     associated with the cell
-    *
-    * Returns the DOM cell element
-    *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    *    passes NS_SUCCEEDED macro)
-    */
-  Element getNextSelectedCell(out Range aRange);
+  /**
+   * getNextSelectedCell() is a stateful method to retrieve selected table
+   * cell elements which are selected by 2nd or later ranges of Selection.
+   * When you call getFirstSelectedCell(), it resets internal counter of
+   * this method.  Then, following calls of getNextSelectedCell() scans the
+   * remaining ranges of Selection.  If a range selects a <td> or <th>
+   * element, returns the cell element.  If a range selects an element but
+   * neither <td> nor <th> element, this ignores the range.  If a range is
+   * in a text node, returns null without throwing exception, but stops
+   * scanning the remaining ranges even you call this again.
+   * Note that this may cross <table> boundaries since this method just
+   * scans all ranges of Selection.  Therefore, returning cells which
+   * belong to different <table> elements.
+   *
+   * @param aNextSelectedCellRange [OUT] Returns null if this method returns
+   *                               null.  Otherwise, i.e., found a range which
+   *                               selects a <td> or <th> element, returns the
+   *                               range.
+   * @return                       A <td> or <th> element if one of remaining
+   *                               ranges selects a <td> or <th> element unless
+   *                               this does not meet a range in a text node.
+   */
+  Element getNextSelectedCell(out Range aNextSelectedCellRange);
 };
