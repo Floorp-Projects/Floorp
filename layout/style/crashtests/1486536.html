@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+  function start () {
+    try { o1 = document.createElement('div') } catch (e) {}
+    try { document.writeln('') } catch (e) {}
+    try { document.appendChild(o1) } catch (e) {}
+    try { document.write('>') } catch (e) {}
+  }
+  document.addEventListener('DOMContentLoaded', start)
+  </script>
+</head>
+</html>
