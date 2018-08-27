@@ -65,8 +65,8 @@ TEST-UNEXPECTED-WARNING | d/e/f.txt:4:2 | oh no bar (bar-not-allowed)
     'summary': {
         'kwargs': {},
         'format': """
-{cwd}/a: 2
-{cwd}/d: 1
+{cwd}/a: 2 errors
+{cwd}/d: 0 errors, 1 warning
 """.format(**NORMALISED_PATHS).strip(),
     },
 }
