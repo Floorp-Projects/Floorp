@@ -545,7 +545,7 @@ DisplayItemClip::ToString() const
                        r.mRadii[4], r.mRadii[5], r.mRadii[6], r.mRadii[7]);
     }
   }
-  return std::move(str);
+  return str;
 }
 
 void
