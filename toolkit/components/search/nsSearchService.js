@@ -3140,6 +3140,11 @@ SearchService.prototype = {
 
   _blackList: [
     "blacklist=true",
+    "hspart=lvs",
+    "form=CONBDF",
+    "clid=2308146",
+    "fr=mcafee",
+    "PC=MC0",
   ],
 
   _addEngineToStore: function SRCH_SVC_addEngineToStore(aEngine) {
