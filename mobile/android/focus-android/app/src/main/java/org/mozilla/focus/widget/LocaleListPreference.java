@@ -35,6 +35,7 @@ public class LocaleListPreference extends ListPreference {
     private static final String LOG_TAG = "GeckoLocaleList";
 
     private static final Map<String, String> languageCodeToNameMap = new HashMap<>();
+    private static final Map<String, String> localeToNameMap = new HashMap<>();
 
     static {
         // Only ICU 57 actually contains the Asturian name for Asturian, even Android 7.1 is still
@@ -64,6 +65,10 @@ public class LocaleListPreference extends ListPreference {
         languageCodeToNameMap.put("jv", "Basa Jawa");
         languageCodeToNameMap.put("ppl", "Náhuat Pipil");
         languageCodeToNameMap.put("su", "Basa Sunda");
+    }
+    static {
+        // Override the native name for certain locale regions based on language community needs.
+        localeToNameMap.put("zh-CN", "中文 (中国大陆)");
     }
 
     public LocaleListPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
@@ -197,6 +202,8 @@ public class LocaleListPreference extends ListPreference {
 
             if (languageCodeToNameMap.containsKey(locale.getLanguage())) {
                 displayName = languageCodeToNameMap.get(locale.getLanguage());
+            } else if (localeToNameMap.containsKey(locale)) {
+                displayName = localeToNameMap.get(locale);
             } else {
                 displayName = locale.getDisplayName(locale);
             }
