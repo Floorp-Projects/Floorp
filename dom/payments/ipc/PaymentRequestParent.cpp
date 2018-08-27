@@ -314,10 +314,6 @@ PaymentRequestParent::ChangeShippingAddress(const nsAString& aRequestId,
   rv = aAddress->GetSortingCode(sortingCode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString languageCode;
-  rv = aAddress->GetLanguageCode(languageCode);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsAutoString organization;
   rv = aAddress->GetOrganization(organization);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -345,7 +341,7 @@ PaymentRequestParent::ChangeShippingAddress(const nsAString& aRequestId,
 
   IPCPaymentAddress ipcAddress(country, addressLine, region, city,
                                dependentLocality, postalCode, sortingCode,
-                               languageCode, organization, recipient, phone);
+                               organization, recipient, phone);
 
   nsAutoString requestId(aRequestId);
   if (!SendChangeShippingAddress(requestId, ipcAddress)) {
