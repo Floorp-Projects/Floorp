@@ -880,7 +880,9 @@ FontColorStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   bool outMixed;
   nsAutoString outStateString;
   nsresult rv = aHTMLEditor->GetFontColorState(&outMixed, outStateString);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   nsAutoCString tOutStateString;
   LossyCopyUTF16toASCII(outStateString, tOutStateString);
