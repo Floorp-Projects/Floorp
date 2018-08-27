@@ -191,7 +191,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun cleanup() {
-            // We're running in a private browsing window, so nothing to do
+            geckoSession.close()
         }
 
         override fun setBlockingEnabled(enabled: Boolean) {
