@@ -1180,9 +1180,16 @@ class JSTerm extends Component {
     // - there are at least 2 matching results
     // - OR, if there's 1 result, but whose label does not start like the input (this can
     //   happen with insensitive search: `num` will match `Number`).
-    if (items.length >= minimumAutoCompleteLength || (
-      items.length === 1 && items[0].preLabel !== matchProp
-    )) {
+    // - OR, if there's 1 result, but we can't show the completionText (because there's
+    // some text after the cursor), unless the text in the popup is the same as the input.
+    if (items.length >= minimumAutoCompleteLength
+      || (items.length === 1 && items[0].preLabel !== matchProp)
+      || (
+        items.length === 1
+        && !this.canDisplayAutoCompletionText()
+        && items[0].label !== matchProp
+      )
+    ) {
       let popupAlignElement;
       let xOffset;
       let yOffset;
