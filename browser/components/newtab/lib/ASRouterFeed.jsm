@@ -39,9 +39,10 @@ class ASRouterFeed {
   enableOrDisableBasedOnPref() {
     const prefs = this.store.getState().Prefs.values;
     const isExperimentEnabled = prefs.asrouterExperimentEnabled;
-    if (!this.router.initialized && isExperimentEnabled) {
+    const isOnboardingExperimentEnabled = prefs.asrouterOnboardingCohort;
+    if (!this.router.initialized && (isExperimentEnabled || isOnboardingExperimentEnabled > 0)) {
       this.enable();
-    } else if (!isExperimentEnabled && this.router.initialized) {
+    } else if ((!isExperimentEnabled || isOnboardingExperimentEnabled === 0) && this.router.initialized) {
       this.disable();
     }
   }
@@ -52,7 +53,7 @@ class ASRouterFeed {
         this.enableOrDisableBasedOnPref();
         break;
       case at.PREF_CHANGED:
-        if (action.data.name === "asrouterExperimentEnabled") {
+        if (["asrouterOnboardingCohort", "asrouterExperimentEnabled"].includes(action.data.name)) {
           this.enableOrDisableBasedOnPref();
         }
         break;
