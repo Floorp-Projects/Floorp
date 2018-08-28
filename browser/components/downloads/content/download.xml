@@ -55,9 +55,6 @@
           <xul:description class="downloadDetails downloadDetailsFull"
                            crop="end"
                            xbl:inherits="value=fullStatus,tooltiptext=fullStatus"/>
-          <xul:description class="downloadDetails downloadShowMoreInfo"
-                           crop="end"
-                           value="&showMoreInformation.label;"/>
           <xul:description class="downloadDetails downloadDetailsButtonHover"
                            crop="end"
                            xbl:inherits="value=buttonHoverStatus"/>

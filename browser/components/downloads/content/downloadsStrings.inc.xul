@@ -17,4 +17,5 @@
   string-download-show="&cmd.show.label;"
   string-download-show-description="&cmd.show.label;"
 #endif
+  string-download-show-more-information-description="&showMoreInformation.label;"
 />
