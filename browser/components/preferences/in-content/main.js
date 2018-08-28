@@ -854,7 +854,6 @@ var gMainPane = {
     let locales = Array.from(new Set([
       locale,
       ...Services.locale.getRequestedLocales(),
-      ...Services.locale.getAvailableLocales(),
     ]).values());
     this.showConfirmLanguageChangeMessageBar(locales);
   },
@@ -981,6 +980,26 @@ var gMainPane = {
    */
   showLanguages() {
     gSubDialog.open("chrome://browser/content/preferences/languages.xul");
+  },
+
+  showBrowserLanguages() {
+    gSubDialog.open(
+      "chrome://browser/content/preferences/browserLanguages.xul",
+      null, null, this.browserLanguagesClosed);
+  },
+
+  /* Show or hide the confirm change message bar based on the updated ordering. */
+  browserLanguagesClosed() {
+    let requesting = this.gBrowserLanguagesDialog.requestedLocales;
+    let requested = Services.locale.getRequestedLocales();
+    let defaultBrowserLanguage = document.getElementById("defaultBrowserLanguage");
+    if (requesting && requesting.join(",") != requested.join(",")) {
+      gMainPane.showConfirmLanguageChangeMessageBar(requesting);
+      defaultBrowserLanguage.value = requesting[0];
+      return;
+    }
+    defaultBrowserLanguage.value = Services.locale.getRequestedLocale();
+    gMainPane.hideConfirmLanguageChangeMessageBar();
   },
 
   /**
