@@ -22,7 +22,6 @@ bool JSAPITest::init()
     js::UseInternalJobQueues(cx);
     if (!JS::InitSelfHostedCode(cx))
         return false;
-    JS_BeginRequest(cx);
     global.init(cx);
     createGlobal();
     if (!global)
@@ -38,7 +37,6 @@ void JSAPITest::uninit()
         global = nullptr;
     }
     if (cx) {
-        JS_EndRequest(cx);
         destroyContext();
         cx = nullptr;
     }

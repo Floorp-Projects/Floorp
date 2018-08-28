@@ -468,12 +468,6 @@ extern JS_PUBLIC_API(JSRuntime*)
 JS_GetRuntime(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
-JS_BeginRequest(JSContext* cx);
-
-extern JS_PUBLIC_API(void)
-JS_EndRequest(JSContext* cx);
-
-extern JS_PUBLIC_API(void)
 JS_SetFutexCanWait(JSContext* cx);
 
 namespace js {
@@ -482,31 +476,6 @@ void
 AssertHeapIsIdle();
 
 } /* namespace js */
-
-class MOZ_RAII JSAutoRequest
-{
-  public:
-    explicit JSAutoRequest(JSContext* cx
-                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mContext(cx)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_BeginRequest(mContext);
-    }
-    ~JSAutoRequest() {
-        JS_EndRequest(mContext);
-    }
-
-  protected:
-    JSContext* mContext;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-#if 0
-  private:
-    static void* operator new(size_t) CPP_THROW_NEW { return 0; }
-    static void operator delete(void*, size_t) { }
-#endif
-};
 
 namespace JS {
 
