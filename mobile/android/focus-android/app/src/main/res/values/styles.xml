@@ -29,6 +29,7 @@
     <style name="DialogStyle" parent="Theme.AppCompat.Dialog.Alert">
         <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
         <item name="dialogPreferredPadding">24dp</item>
+        <item name="android:windowBackground">@drawable/dialog_background</item>
         <item name="android:background">@drawable/dialog_background</item>
         <item name="android:colorAccent">@color/colorAccent</item>
     </style>
@@ -46,8 +47,12 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
         <item name="dialogPreferredPadding">24dp</item>
-        <item name="android:background">@drawable/dialog_background</item>
         <item name="actionButtonStyle">@style/SettingsActionButtonStyle</item>
+        <item name="android:dialogTheme">@style/DialogStyle</item>
+        <item name="alertDialogTheme">@style/DialogStyle</item>
+        <item name="android:alertDialogStyle">@style/DialogStyle</item>
+        <item name="android:alertDialogTheme">@style/DialogStyle</item>
+        <item name="android:dialogPreferenceStyle">@style/DialogStyle</item>
     </style>
 
     <style name="SettingsActionButtonStyle" parent="@style/Widget.AppCompat.ActionButton">
