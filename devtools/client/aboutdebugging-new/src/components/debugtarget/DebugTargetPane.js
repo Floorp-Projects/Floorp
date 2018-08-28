@@ -54,7 +54,8 @@ class DebugTargetPane extends PureComponent {
             href: "#",
             onClick: e => this.toggleCollapsibility(),
           },
-          name
+          name,
+          isCollapsed ? dom.span({}, `(${ targets.length })`) : null,
         )
       ),
       DebugTargetList({
