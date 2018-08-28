@@ -853,20 +853,21 @@ namespace
 } // namespace
 
 bool
-nsSMILTimedElement::SetAttr(nsAtom* aAttribute, const nsAString& aValue,
+nsSMILTimedElement::SetAttr(nsAtom* aAttribute,
+                            const nsAString& aValue,
                             nsAttrValue& aResult,
-                            Element* aContextNode,
+                            Element& aContextElement,
                             nsresult* aParseResult)
 {
   bool foundMatch = true;
   nsresult parseResult = NS_OK;
 
   if (aAttribute == nsGkAtoms::begin) {
-    parseResult = SetBeginSpec(aValue, aContextNode, RemoveNonDOM);
+    parseResult = SetBeginSpec(aValue, aContextElement, RemoveNonDOM);
   } else if (aAttribute == nsGkAtoms::dur) {
     parseResult = SetSimpleDuration(aValue);
   } else if (aAttribute == nsGkAtoms::end) {
-    parseResult = SetEndSpec(aValue, aContextNode, RemoveNonDOM);
+    parseResult = SetEndSpec(aValue, aContextElement, RemoveNonDOM);
   } else if (aAttribute == nsGkAtoms::fill) {
     parseResult = SetFillMode(aValue);
   } else if (aAttribute == nsGkAtoms::max) {
@@ -928,10 +929,10 @@ nsSMILTimedElement::UnsetAttr(nsAtom* aAttribute)
 
 nsresult
 nsSMILTimedElement::SetBeginSpec(const nsAString& aBeginSpec,
-                                 Element* aContextNode,
+                                 Element& aContextElement,
                                  RemovalTestFunction aRemove)
 {
-  return SetBeginOrEndSpec(aBeginSpec, aContextNode, true /*isBegin*/,
+  return SetBeginOrEndSpec(aBeginSpec, aContextElement, true /*isBegin*/,
                            aRemove);
 }
 
@@ -944,10 +945,10 @@ nsSMILTimedElement::UnsetBeginSpec(RemovalTestFunction aRemove)
 
 nsresult
 nsSMILTimedElement::SetEndSpec(const nsAString& aEndSpec,
-                               Element* aContextNode,
+                               Element& aContextElement,
                                RemovalTestFunction aRemove)
 {
-  return SetBeginOrEndSpec(aEndSpec, aContextNode, false /*!isBegin*/,
+  return SetBeginOrEndSpec(aEndSpec, aContextElement, false /*!isBegin*/,
                            aRemove);
 }
 
@@ -1205,7 +1206,7 @@ nsSMILTimedElement::IsTimeDependent(const nsSMILTimedElement& aOther) const
 }
 
 void
-nsSMILTimedElement::BindToTree(nsIContent* aContextNode)
+nsSMILTimedElement::BindToTree(Element& aContextElement)
 {
   // Reset previously registered milestone since we may be registering with
   // a different time container now.
@@ -1225,12 +1226,12 @@ nsSMILTimedElement::BindToTree(nsIContent* aContextNode)
     // Resolve references to other parts of the tree
     uint32_t count = mBeginSpecs.Length();
     for (uint32_t i = 0; i < count; ++i) {
-      mBeginSpecs[i]->ResolveReferences(aContextNode);
+      mBeginSpecs[i]->ResolveReferences(aContextElement);
     }
 
     count = mEndSpecs.Length();
     for (uint32_t j = 0; j < count; ++j) {
-      mEndSpecs[j]->ResolveReferences(aContextNode);
+      mEndSpecs[j]->ResolveReferences(aContextElement);
     }
   }
 
@@ -1304,7 +1305,7 @@ nsSMILTimedElement::Unlink()
 
 nsresult
 nsSMILTimedElement::SetBeginOrEndSpec(const nsAString& aSpec,
-                                      Element* aContextNode,
+                                      Element& aContextElement,
                                       bool aIsBegin,
                                       RemovalTestFunction aRemove)
 {
@@ -1323,7 +1324,7 @@ nsSMILTimedElement::SetBeginOrEndSpec(const nsAString& aSpec,
   bool hadFailure = false;
   while (tokenizer.hasMoreTokens()) {
     auto spec = MakeUnique<nsSMILTimeValueSpec>(*this, aIsBegin);
-    nsresult rv = spec->SetSpec(tokenizer.nextToken(), aContextNode);
+    nsresult rv = spec->SetSpec(tokenizer.nextToken(), aContextElement);
     if (NS_SUCCEEDED(rv)) {
       timeSpecsList.AppendElement(std::move(spec));
     } else {
@@ -1481,13 +1482,13 @@ nsSMILTimedElement::RebuildTimingState(RemovalTestFunction aRemove)
   if (mAnimationElement->HasAttr(nsGkAtoms::begin)) {
     nsAutoString attValue;
     mAnimationElement->GetAttr(nsGkAtoms::begin, attValue);
-    SetBeginSpec(attValue, mAnimationElement, aRemove);
+    SetBeginSpec(attValue, *mAnimationElement, aRemove);
   }
 
   if (mAnimationElement->HasAttr(nsGkAtoms::end)) {
     nsAutoString attValue;
     mAnimationElement->GetAttr(nsGkAtoms::end, attValue);
-    SetEndSpec(attValue, mAnimationElement, aRemove);
+    SetEndSpec(attValue, *mAnimationElement, aRemove);
   }
 
   mPrevRegisteredMilestone = sMaxMilestone;
