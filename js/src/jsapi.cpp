@@ -541,7 +541,6 @@ StartRequest(JSContext* cx)
     } else {
         /* Indicate that a request is running. */
         cx->requestDepth = 1;
-        cx->triggerActivityCallback(true);
     }
 }
 
@@ -555,7 +554,6 @@ StopRequest(JSContext* cx)
         cx->requestDepth--;
     } else {
         cx->requestDepth = 0;
-        cx->triggerActivityCallback(false);
     }
 }
 

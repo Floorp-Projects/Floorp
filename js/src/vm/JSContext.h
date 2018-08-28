@@ -470,10 +470,6 @@ struct JSContext : public JS::RootingContext,
      */
     js::ThreadData<js::EnterDebuggeeNoExecute*> noExecuteDebuggerTop;
 
-    js::ThreadData<js::ActivityCallback> activityCallback;
-    js::ThreadData<void*>                activityCallbackArg;
-    void triggerActivityCallback(bool active);
-
     /* The request depth for this thread. */
     js::ThreadData<unsigned> requestDepth;
 
