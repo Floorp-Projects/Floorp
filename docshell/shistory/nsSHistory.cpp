@@ -827,6 +827,14 @@ nsSHistory::SetMaxLength(int32_t aMaxSize)
   return NS_OK;
 }
 
+void
+nsSHistory::WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
+                          int32_t* aOutEndIndex)
+{
+  *aOutStartIndex = std::max(0, aIndex - nsISHistory::VIEWER_WINDOW);
+  *aOutEndIndex = std::min(Length() - 1, aIndex + nsISHistory::VIEWER_WINDOW);
+}
+
 NS_IMETHODIMP
 nsSHistory::PurgeHistory(int32_t aNumEntries)
 {
@@ -1111,9 +1119,8 @@ nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex)
   NS_ENSURE_TRUE_VOID(aIndex < Length());
 
   // Calculate the range that's safe from eviction.
-  int32_t startSafeIndex = std::max(0, aIndex - nsISHistory::VIEWER_WINDOW);
-  int32_t endSafeIndex =
-    std::min(Length() - 1, aIndex + nsISHistory::VIEWER_WINDOW);
+  int32_t startSafeIndex, endSafeIndex;
+  WindowIndices(aIndex, &startSafeIndex, &endSafeIndex);
 
   LOG(("EvictOutOfRangeWindowContentViewers(index=%d), "
        "Length()=%d. Safe range [%d, %d]",
@@ -1219,9 +1226,8 @@ nsSHistory::GloballyEvictContentViewers()
     //     SHistory object in question, we'll do a full search of its history
     //     and evict the out-of-range content viewers, so we don't bother here.
     //
-    int32_t startIndex = std::max(0, shist->mIndex - nsISHistory::VIEWER_WINDOW);
-    int32_t endIndex =
-      std::min(shist->Length() - 1, shist->mIndex + nsISHistory::VIEWER_WINDOW);
+    int32_t startIndex, endIndex;
+    shist->WindowIndices(shist->mIndex, &startIndex, &endIndex);
     for (int32_t i = startIndex; i <= endIndex; i++) {
       nsCOMPtr<nsISHTransaction> trans = shist->mTransactions[i];
       nsCOMPtr<nsIContentViewer> contentViewer =
@@ -1285,9 +1291,8 @@ nsSHistory::FindTransactionForBFCache(nsIBFCacheEntry* aEntry,
   *aResult = nullptr;
   *aResultIndex = -1;
 
-  int32_t startIndex = std::max(0, mIndex - nsISHistory::VIEWER_WINDOW);
-  int32_t endIndex =
-    std::min(Length() - 1, mIndex + nsISHistory::VIEWER_WINDOW);
+  int32_t startIndex, endIndex;
+  WindowIndices(mIndex, &startIndex, &endIndex);
 
   for (int32_t i = startIndex; i <= endIndex; ++i) {
     nsCOMPtr<nsISHTransaction> trans = mTransactions[i];
