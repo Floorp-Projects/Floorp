@@ -1027,6 +1027,16 @@ protected:
     DumpTransceivers(*mSessionOff);
   }
 
+  std::string GetTransportId(const JsepSession& session, size_t level)
+  {
+    for (const auto& transceiver : session.GetTransceivers()) {
+      if (transceiver->HasLevel() && transceiver->GetLevel() == level) {
+        return transceiver->mTransport.mTransportId;
+      }
+    }
+    return std::string();
+  }
+
   typedef enum {
     RTP = 1,
     RTCP = 2
@@ -1037,32 +1047,36 @@ protected:
       CandidateSet() {}
 
       void Gather(JsepSession& session,
-                  const std::vector<SdpMediaSection::MediaType>& types,
                   ComponentType maxComponent = RTCP)
       {
-        for (size_t level = 0; level < types.size(); ++level) {
-          Gather(session, level, RTP);
-          if (types[level] != SdpMediaSection::kApplication &&
-              maxComponent == RTCP) {
-            Gather(session, level, RTCP);
+        for (const auto& transceiver : session.GetTransceivers()) {
+          if (transceiver->HasOwnTransport()) {
+            Gather(session, transceiver->mTransport.mTransportId, RTP);
+            if (transceiver->mTransport.mComponents > 1) {
+              Gather(session, transceiver->mTransport.mTransportId, RTCP);
+            }
           }
         }
         FinishGathering(session);
       }
 
-      void Gather(JsepSession& session, size_t level, ComponentType component)
+      void Gather(JsepSession& session, const std::string& transportId,
+                  ComponentType component)
       {
         static uint16_t port = 1000;
         std::vector<std::string> candidates;
+
         for (size_t i = 0; i < kNumCandidatesPerComponent; ++i) {
           ++port;
           std::ostringstream candidate;
           candidate << "0 " << static_cast<uint16_t>(component)
                     << " UDP 9999 192.168.0.1 " << port << " typ host";
           std::string mid;
+          uint16_t level = 0;
           bool skipped;
           session.AddLocalIceCandidate(kAEqualsCandidate + candidate.str(),
-                                       level, &mid, &skipped);
+                                       transportId,
+                                       &level, &mid, &skipped);
           if (!skipped) {
             mCandidatesToTrickle.push_back(
                 Tuple<Level, Mid, Candidate>(
@@ -1072,37 +1086,37 @@ protected:
         }
 
         // Stomp existing candidates
-        mCandidates[level][component] = candidates;
+        mCandidates[transportId][component] = candidates;
 
         // Stomp existing defaults
-        mDefaultCandidates[level][component] =
+        mDefaultCandidates[transportId][component] =
           std::make_pair("192.168.0.1", port);
         session.UpdateDefaultCandidate(
-            mDefaultCandidates[level][RTP].first,
-            mDefaultCandidates[level][RTP].second,
+            mDefaultCandidates[transportId][RTP].first,
+            mDefaultCandidates[transportId][RTP].second,
             // Will be empty string if not present, which is how we indicate
             // that there is no default for RTCP
-            mDefaultCandidates[level][RTCP].first,
-            mDefaultCandidates[level][RTCP].second,
-            level);
+            mDefaultCandidates[transportId][RTCP].first,
+            mDefaultCandidates[transportId][RTCP].second,
+            transportId);
       }
 
       void FinishGathering(JsepSession& session) const
       {
         // Copy so we can be terse and use []
-        for (auto levelAndCandidates : mDefaultCandidates) {
-          ASSERT_EQ(1U, levelAndCandidates.second.count(RTP));
+        for (auto idAndCandidates : mDefaultCandidates) {
+          ASSERT_EQ(1U, idAndCandidates.second.count(RTP));
           // do a final UpdateDefaultCandidate here in case candidates were
           // cleared during renegotiation.
           session.UpdateDefaultCandidate(
-              levelAndCandidates.second[RTP].first,
-              levelAndCandidates.second[RTP].second,
+              idAndCandidates.second[RTP].first,
+              idAndCandidates.second[RTP].second,
               // Will be empty string if not present, which is how we indicate
               // that there is no default for RTCP
-              levelAndCandidates.second[RTCP].first,
-              levelAndCandidates.second[RTCP].second,
-              levelAndCandidates.first);
-          session.EndOfLocalCandidates(levelAndCandidates.first);
+              idAndCandidates.second[RTCP].first,
+              idAndCandidates.second[RTCP].second,
+              idAndCandidates.first);
+          session.EndOfLocalCandidates(idAndCandidates.first);
         }
       }
 
@@ -1113,15 +1127,16 @@ protected:
           Mid mid;
           Candidate candidate;
           Tie(level, mid, candidate) = levelMidAndCandidate;
-  std::cerr << "trickeling candidate: " << candidate << " level: " << level << " mid: " << mid << std::endl;
-          session.AddRemoteIceCandidate(candidate, mid, level);
+          std::cerr << "trickling candidate: " << candidate << " level: " << level << " mid: " << mid << std::endl;
+          std::string transportId;
+          session.AddRemoteIceCandidate(candidate, mid, level, &transportId);
         }
         mCandidatesToTrickle.clear();
       }
 
       void CheckRtpCandidates(bool expectRtpCandidates,
                               const SdpMediaSection& msection,
-                              size_t transportLevel,
+                              const std::string& transportId,
                               const std::string& context) const
       {
         auto& attrs = msection.GetAttributeList();
@@ -1134,13 +1149,13 @@ protected:
           // Copy so we can be terse and use []
           auto expectedCandidates = mCandidates;
           ASSERT_LE(kNumCandidatesPerComponent,
-                    expectedCandidates[transportLevel][RTP].size());
+                    expectedCandidates[transportId][RTP].size());
 
           auto& candidates = attrs.GetCandidate();
           ASSERT_LE(kNumCandidatesPerComponent, candidates.size())
             << context << " (level " << msection.GetLevel() << ")";
           for (size_t i = 0; i < kNumCandidatesPerComponent; ++i) {
-            ASSERT_EQ(expectedCandidates[transportLevel][RTP][i], candidates[i])
+            ASSERT_EQ(expectedCandidates[transportId][RTP][i], candidates[i])
               << context << " (level " << msection.GetLevel() << ")";
           }
         }
@@ -1148,7 +1163,7 @@ protected:
 
       void CheckRtcpCandidates(bool expectRtcpCandidates,
                                const SdpMediaSection& msection,
-                               size_t transportLevel,
+                               const std::string& transportId,
                                const std::string& context) const
       {
         auto& attrs = msection.GetAttributeList();
@@ -1157,7 +1172,7 @@ protected:
           // Copy so we can be terse and use []
           auto expectedCandidates = mCandidates;
           ASSERT_LE(kNumCandidatesPerComponent,
-                    expectedCandidates[transportLevel][RTCP].size());
+                    expectedCandidates[transportId][RTCP].size());
 
           ASSERT_TRUE(attrs.HasAttribute(SdpAttribute::kCandidateAttribute))
             << context << " (level " << msection.GetLevel() << ")";
@@ -1165,7 +1180,7 @@ protected:
           ASSERT_EQ(kNumCandidatesPerComponent * 2, candidates.size())
             << context << " (level " << msection.GetLevel() << ")";
           for (size_t i = 0; i < kNumCandidatesPerComponent; ++i) {
-            ASSERT_EQ(expectedCandidates[transportLevel][RTCP][i],
+            ASSERT_EQ(expectedCandidates[transportId][RTCP][i],
                       candidates[i + kNumCandidatesPerComponent])
               << context << " (level " << msection.GetLevel() << ")";
           }
@@ -1174,7 +1189,7 @@ protected:
 
       void CheckDefaultRtpCandidate(bool expectDefault,
                                     const SdpMediaSection& msection,
-                                    size_t transportLevel,
+                                    const std::string& transportId,
                                     const std::string& context) const
       {
         Address expectedAddress = "0.0.0.0";
@@ -1183,8 +1198,8 @@ protected:
         if (expectDefault) {
           // Copy so we can be terse and use []
           auto defaultCandidates = mDefaultCandidates;
-          expectedAddress = defaultCandidates[transportLevel][RTP].first;
-          expectedPort = defaultCandidates[transportLevel][RTP].second;
+          expectedAddress = defaultCandidates[transportId][RTP].first;
+          expectedPort = defaultCandidates[transportId][RTP].second;
         }
 
         // if bundle-only attribute is present, expect port 0
@@ -1201,7 +1216,7 @@ protected:
 
       void CheckDefaultRtcpCandidate(bool expectDefault,
                                      const SdpMediaSection& msection,
-                                     size_t transportLevel,
+                                     const std::string& transportId,
                                      const std::string& context) const
       {
         if (expectDefault) {
@@ -1211,14 +1226,14 @@ protected:
                 SdpAttribute::kRtcpAttribute))
             << context << " (level " << msection.GetLevel() << ")";
           auto& rtcpAttr = msection.GetAttributeList().GetRtcp();
-          ASSERT_EQ(defaultCandidates[transportLevel][RTCP].second,
+          ASSERT_EQ(defaultCandidates[transportId][RTCP].second,
                     rtcpAttr.mPort)
             << context << " (level " << msection.GetLevel() << ")";
           ASSERT_EQ(sdp::kInternet, rtcpAttr.mNetType)
             << context << " (level " << msection.GetLevel() << ")";
           ASSERT_EQ(sdp::kIPv4, rtcpAttr.mAddrType)
             << context << " (level " << msection.GetLevel() << ")";
-          ASSERT_EQ(defaultCandidates[transportLevel][RTCP].first,
+          ASSERT_EQ(defaultCandidates[transportId][RTCP].first,
                     rtcpAttr.mAddress)
             << context << " (level " << msection.GetLevel() << ")";
         } else {
@@ -1230,16 +1245,17 @@ protected:
 
     private:
       typedef size_t Level;
+      typedef std::string TransportId;
       typedef std::string Mid;
       typedef std::string Candidate;
       typedef std::string Address;
       typedef uint16_t Port;
       // Default candidates are put into the m-line, c-line, and rtcp
       // attribute for endpoints that don't support ICE.
-      std::map<Level,
+      std::map<TransportId,
                std::map<ComponentType,
                         std::pair<Address, Port>>> mDefaultCandidates;
-      std::map<Level,
+      std::map<TransportId,
                std::map<ComponentType,
                         std::vector<Candidate>>> mCandidates;
       // Level/mid/candidate tuples that need to be trickled
@@ -1427,6 +1443,13 @@ protected:
   }
 
   void
+  DumpTransport(const JsepTransport& transport)
+  {
+    std::cerr << "  id=" << transport.mTransportId << std::endl;
+    std::cerr << "  components=" << transport.mComponents << std::endl;
+  }
+
+  void
   DumpTransceivers(const JsepSessionImpl& session)
   {
     for (const auto& transceiver : session.GetTransceivers()) {
@@ -1448,6 +1471,8 @@ protected:
         std::cerr << "Receiving-->" << std::endl;
         DumpTrack(transceiver->mRecvTrack);
       }
+      std::cerr << "Transport-->" << std::endl;
+      DumpTransport(transceiver->mTransport);
     }
   }
 
@@ -2533,19 +2558,19 @@ TEST_P(JsepSessionTest, RenegotiationOffererEnablesBundle)
     ASSERT_FALSE(origOffererTransceivers[i]->HasBundleLevel());
     ASSERT_FALSE(origAnswererTransceivers[i]->HasBundleLevel());
     if (i != 0) {
-      ASSERT_NE(origOffererTransceivers[0]->mTransport.get(),
-                origOffererTransceivers[i]->mTransport.get());
-      ASSERT_NE(origAnswererTransceivers[0]->mTransport.get(),
-                origAnswererTransceivers[i]->mTransport.get());
+      ASSERT_FALSE(Equals(origOffererTransceivers[0]->mTransport,
+                          origOffererTransceivers[i]->mTransport));
+      ASSERT_FALSE(Equals(origAnswererTransceivers[0]->mTransport,
+                          origAnswererTransceivers[i]->mTransport));
     }
 
     // Verify that bundle worked after renegotiation
     ASSERT_TRUE(newOffererTransceivers[i]->HasBundleLevel());
     ASSERT_TRUE(newAnswererTransceivers[i]->HasBundleLevel());
-    ASSERT_EQ(newOffererTransceivers[0]->mTransport.get(),
-              newOffererTransceivers[i]->mTransport.get());
-    ASSERT_EQ(newAnswererTransceivers[0]->mTransport.get(),
-              newAnswererTransceivers[i]->mTransport.get());
+    ASSERT_TRUE(Equals(newOffererTransceivers[0]->mTransport,
+                       newOffererTransceivers[i]->mTransport));
+    ASSERT_TRUE(Equals(newAnswererTransceivers[0]->mTransport,
+                       newAnswererTransceivers[i]->mTransport));
   }
 }
 
@@ -2581,15 +2606,15 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesBundleTransport)
   ASSERT_FALSE(ot0->HasBundleLevel());
   ASSERT_FALSE(at0->HasBundleLevel());
 
-  ASSERT_NE(
-      ot0->mTransport.get(),
-      GetTransceiverByLevel(origOffererTransceivers, 0)->mTransport.get());
-  ASSERT_NE(
-      at0->mTransport.get(),
-      GetTransceiverByLevel(origAnswererTransceivers, 0)->mTransport.get());
+  ASSERT_FALSE(Equals(
+      ot0->mTransport,
+      GetTransceiverByLevel(origOffererTransceivers, 0)->mTransport));
+  ASSERT_FALSE(Equals(
+      at0->mTransport,
+      GetTransceiverByLevel(origAnswererTransceivers, 0)->mTransport));
 
-  ASSERT_EQ(0U, ot0->mTransport->mComponents);
-  ASSERT_EQ(0U, at0->mTransport->mComponents);
+  ASSERT_EQ(0U, ot0->mTransport.mComponents);
+  ASSERT_EQ(0U, at0->mTransport.mComponents);
 
   for (size_t i = 1; i < types.size() - 1; ++i) {
     JsepTransceiver* ot = GetTransceiverByLevel(newOffererTransceivers, i);
@@ -2598,8 +2623,8 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesBundleTransport)
     ASSERT_TRUE(at->HasBundleLevel());
     ASSERT_EQ(1U, ot->BundleLevel());
     ASSERT_EQ(1U, at->BundleLevel());
-    ASSERT_NE(ot0->mTransport.get(), ot->mTransport.get());
-    ASSERT_NE(at0->mTransport.get(), at->mTransport.get());
+    ASSERT_FALSE(Equals(ot0->mTransport, ot->mTransport));
+    ASSERT_FALSE(Equals(at0->mTransport, at->mTransport));
   }
 }
 
@@ -2635,25 +2660,31 @@ TEST_P(JsepSessionTest, RenegotiationAnswererDisablesBundleTransport)
   ASSERT_FALSE(ot0->HasBundleLevel());
   ASSERT_FALSE(at0->HasBundleLevel());
 
-  ASSERT_NE(
-      ot0->mTransport.get(),
-      GetTransceiverByLevel(origOffererTransceivers, 0)->mTransport.get());
-  ASSERT_NE(
-      at0->mTransport.get(),
-      GetTransceiverByLevel(origAnswererTransceivers, 0)->mTransport.get());
+  ASSERT_FALSE(Equals(
+      ot0->mTransport,
+      GetTransceiverByLevel(origOffererTransceivers, 0)->mTransport));
+  ASSERT_FALSE(Equals(
+      at0->mTransport,
+      GetTransceiverByLevel(origAnswererTransceivers, 0)->mTransport));
 
-  ASSERT_EQ(0U, ot0->mTransport->mComponents);
-  ASSERT_EQ(0U, at0->mTransport->mComponents);
+  ASSERT_EQ(0U, ot0->mTransport.mComponents);
+  ASSERT_EQ(0U, at0->mTransport.mComponents);
 
   for (size_t i = 1; i < newOffererTransceivers.size(); ++i) {
     JsepTransceiver* ot = GetTransceiverByLevel(newOffererTransceivers, i);
     JsepTransceiver* at = GetTransceiverByLevel(newAnswererTransceivers, i);
+    JsepTransceiver* ot1 = GetTransceiverByLevel(newOffererTransceivers, 1);
+    JsepTransceiver* at1 = GetTransceiverByLevel(newAnswererTransceivers, 1);
     ASSERT_TRUE(ot->HasBundleLevel());
     ASSERT_TRUE(at->HasBundleLevel());
     ASSERT_EQ(1U, ot->BundleLevel());
     ASSERT_EQ(1U, at->BundleLevel());
-    ASSERT_NE(ot0->mTransport.get(), ot->mTransport.get());
-    ASSERT_NE(at0->mTransport.get(), at->mTransport.get());
+    // TODO: When creating an answer where we have rejected the bundle
+    // transport, we do not do a good job of creating a sensible SDP. Mainly,
+    // when we remove the rejected mid from the bundle group, we can leave a
+    // bundle-only mid as the first one when others are available.
+    ASSERT_TRUE(Equals(ot1->mTransport, ot->mTransport));
+    ASSERT_TRUE(Equals(at1->mTransport, at->mTransport));
   }
 }
 
@@ -2677,29 +2708,36 @@ TEST_P(JsepSessionTest, FullCallWithCandidates)
   AddTracks(*mSessionOff);
   std::string offer = CreateOffer();
   SetLocalOffer(offer);
-  mOffCandidates->Gather(*mSessionOff, types);
+  mOffCandidates->Gather(*mSessionOff);
 
   UniquePtr<Sdp> localOffer(Parse(
         mSessionOff->GetLocalDescription(kJsepDescriptionPending)));
   for (size_t i = 0; i < localOffer->GetMediaSectionCount(); ++i) {
+    std::string id = GetTransportId(*mSessionOff, i);
+    bool bundleOnly =
+       localOffer->GetMediaSection(i).GetAttributeList().HasAttribute(
+         SdpAttribute::kBundleOnlyAttribute);
     mOffCandidates->CheckRtpCandidates(
-        true, localOffer->GetMediaSection(i), i,
-        "Local offer after gathering should have RTP candidates.");
+        !bundleOnly, localOffer->GetMediaSection(i), id,
+        "Local offer after gathering should have RTP candidates "
+        "(unless bundle-only)");
     mOffCandidates->CheckDefaultRtpCandidate(
-        true, localOffer->GetMediaSection(i), i,
-        "Local offer after gathering should have a default RTP candidate.");
+        !bundleOnly, localOffer->GetMediaSection(i), id,
+        "Local offer after gathering should have a default RTP candidate "
+        "(unless bundle-only)");
     mOffCandidates->CheckRtcpCandidates(
-        types[i] != SdpMediaSection::kApplication,
-        localOffer->GetMediaSection(i), i,
+        !bundleOnly && types[i] != SdpMediaSection::kApplication,
+        localOffer->GetMediaSection(i), id,
         "Local offer after gathering should have RTCP candidates "
-        "(unless m=application)");
+        "(unless m=application or bundle-only)");
     mOffCandidates->CheckDefaultRtcpCandidate(
-        types[i] != SdpMediaSection::kApplication,
-        localOffer->GetMediaSection(i), i,
+        !bundleOnly && types[i] != SdpMediaSection::kApplication,
+        localOffer->GetMediaSection(i), id,
         "Local offer after gathering should have a default RTCP candidate "
-        "(unless m=application)");
-    CheckEndOfCandidates(true, localOffer->GetMediaSection(i),
-        "Local offer after gathering should have an end-of-candidates.");
+        "(unless m=application or bundle-only)");
+    CheckEndOfCandidates(!bundleOnly, localOffer->GetMediaSection(i),
+        "Local offer after gathering should have an end-of-candidates "
+        "(unless bundle-only)");
   }
 
   SetRemoteOffer(offer);
@@ -2708,19 +2746,24 @@ TEST_P(JsepSessionTest, FullCallWithCandidates)
   UniquePtr<Sdp> remoteOffer(Parse(
         mSessionAns->GetRemoteDescription(kJsepDescriptionPending)));
   for (size_t i = 0; i < remoteOffer->GetMediaSectionCount(); ++i) {
+    std::string id = GetTransportId(*mSessionOff, i);
+    bool bundleOnly =
+       remoteOffer->GetMediaSection(i).GetAttributeList().HasAttribute(
+         SdpAttribute::kBundleOnlyAttribute);
     mOffCandidates->CheckRtpCandidates(
-        true, remoteOffer->GetMediaSection(i), i,
-        "Remote offer after trickle should have RTP candidates.");
+        !bundleOnly, remoteOffer->GetMediaSection(i), id,
+        "Remote offer after trickle should have RTP candidates "
+        "(unless bundle-only)");
     mOffCandidates->CheckDefaultRtpCandidate(
-        false, remoteOffer->GetMediaSection(i), i,
+        false, remoteOffer->GetMediaSection(i), id,
         "Initial remote offer should not have a default RTP candidate.");
     mOffCandidates->CheckRtcpCandidates(
-        types[i] != SdpMediaSection::kApplication,
-        remoteOffer->GetMediaSection(i), i,
+        !bundleOnly && types[i] != SdpMediaSection::kApplication,
+        remoteOffer->GetMediaSection(i), id,
         "Remote offer after trickle should have RTCP candidates "
-        "(unless m=application)");
+        "(unless m=application or bundle-only)");
     mOffCandidates->CheckDefaultRtcpCandidate(
-        false, remoteOffer->GetMediaSection(i), i,
+        false, remoteOffer->GetMediaSection(i), id,
         "Initial remote offer should not have a default RTCP candidate.");
     CheckEndOfCandidates(false, remoteOffer->GetMediaSection(i),
         "Initial remote offer should not have an end-of-candidates.");
@@ -2731,24 +2774,26 @@ TEST_P(JsepSessionTest, FullCallWithCandidates)
   SetLocalAnswer(answer);
   // This will gather candidates that mSessionAns knows it doesn't need.
   // They should not be present in the SDP.
-  mAnsCandidates->Gather(*mSessionAns, types);
+  mAnsCandidates->Gather(*mSessionAns);
 
   UniquePtr<Sdp> localAnswer(Parse(
         mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)));
+  std::string id0 = GetTransportId(*mSessionAns, 0);
   for (size_t i = 0; i < localAnswer->GetMediaSectionCount(); ++i) {
+    std::string id = GetTransportId(*mSessionAns, i);
     mAnsCandidates->CheckRtpCandidates(
-        i == 0, localAnswer->GetMediaSection(i), i,
+        i == 0, localAnswer->GetMediaSection(i), id,
         "Local answer after gathering should have RTP candidates on level 0.");
     mAnsCandidates->CheckDefaultRtpCandidate(
-        true, localAnswer->GetMediaSection(i), 0,
+        true, localAnswer->GetMediaSection(i), id0,
         "Local answer after gathering should have a default RTP candidate "
         "on all levels that matches transport level 0.");
     mAnsCandidates->CheckRtcpCandidates(
-        false, localAnswer->GetMediaSection(i), i,
+        false, localAnswer->GetMediaSection(i), id,
         "Local answer after gathering should not have RTCP candidates "
         "(because we're answering with rtcp-mux)");
     mAnsCandidates->CheckDefaultRtcpCandidate(
-        false, localAnswer->GetMediaSection(i), i,
+        false, localAnswer->GetMediaSection(i), id,
         "Local answer after gathering should not have a default RTCP candidate "
         "(because we're answering with rtcp-mux)");
     CheckEndOfCandidates(i == 0, localAnswer->GetMediaSection(i),
@@ -2762,18 +2807,19 @@ TEST_P(JsepSessionTest, FullCallWithCandidates)
   UniquePtr<Sdp> remoteAnswer(Parse(
         mSessionOff->GetRemoteDescription(kJsepDescriptionCurrent)));
   for (size_t i = 0; i < remoteAnswer->GetMediaSectionCount(); ++i) {
+    std::string id = GetTransportId(*mSessionAns, i);
     mAnsCandidates->CheckRtpCandidates(
-        i == 0, remoteAnswer->GetMediaSection(i), i,
+        i == 0, remoteAnswer->GetMediaSection(i), id,
         "Remote answer after trickle should have RTP candidates on level 0.");
     mAnsCandidates->CheckDefaultRtpCandidate(
-        false, remoteAnswer->GetMediaSection(i), i,
+        false, remoteAnswer->GetMediaSection(i), id,
         "Remote answer after trickle should not have a default RTP candidate.");
     mAnsCandidates->CheckRtcpCandidates(
-        false, remoteAnswer->GetMediaSection(i), i,
+        false, remoteAnswer->GetMediaSection(i), id,
         "Remote answer after trickle should not have RTCP candidates "
         "(because we're answering with rtcp-mux)");
     mAnsCandidates->CheckDefaultRtcpCandidate(
-        false, remoteAnswer->GetMediaSection(i), i,
+        false, remoteAnswer->GetMediaSection(i), id,
         "Remote answer after trickle should not have a default RTCP "
         "candidate.");
     CheckEndOfCandidates(false, remoteAnswer->GetMediaSection(i),
@@ -2786,13 +2832,13 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
   AddTracks(*mSessionOff);
   std::string offer = CreateOffer();
   SetLocalOffer(offer);
-  mOffCandidates->Gather(*mSessionOff, types);
+  mOffCandidates->Gather(*mSessionOff);
   SetRemoteOffer(offer);
   mOffCandidates->Trickle(*mSessionAns);
   AddTracks(*mSessionAns);
   std::string answer = CreateAnswer();
   SetLocalAnswer(answer);
-  mAnsCandidates->Gather(*mSessionAns, types);
+  mAnsCandidates->Gather(*mSessionAns);
   SetRemoteAnswer(answer);
   mAnsCandidates->Trickle(*mSessionOff);
 
@@ -2800,20 +2846,22 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
   SetLocalOffer(offer);
 
   UniquePtr<Sdp> parsedOffer(Parse(offer));
+  std::string id0 = GetTransportId(*mSessionOff, 0);
   for (size_t i = 0; i < parsedOffer->GetMediaSectionCount(); ++i) {
+    std::string id = GetTransportId(*mSessionOff, i);
     mOffCandidates->CheckRtpCandidates(
-        i == 0, parsedOffer->GetMediaSection(i), i,
+        i == 0, parsedOffer->GetMediaSection(i), id,
         "Local reoffer before gathering should have RTP candidates on level 0"
         " only.");
     mOffCandidates->CheckDefaultRtpCandidate(
-        i == 0, parsedOffer->GetMediaSection(i), 0,
+        i == 0, parsedOffer->GetMediaSection(i), id0,
         "Local reoffer before gathering should have a default RTP candidate "
         "on level 0 only.");
     mOffCandidates->CheckRtcpCandidates(
-        false, parsedOffer->GetMediaSection(i), i,
+        false, parsedOffer->GetMediaSection(i), id,
         "Local reoffer before gathering should not have RTCP candidates.");
     mOffCandidates->CheckDefaultRtcpCandidate(
-        false, parsedOffer->GetMediaSection(i), i,
+        false, parsedOffer->GetMediaSection(i), id,
         "Local reoffer before gathering should not have a default RTCP "
         "candidate.");
     CheckEndOfCandidates(false, parsedOffer->GetMediaSection(i),
@@ -2826,21 +2874,23 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
   nsresult rv = mSessionAns->CreateOffer(defaultOptions, &otherOffer);
   ASSERT_EQ(NS_OK, rv);
   parsedOffer = Parse(otherOffer);
+  id0 = GetTransportId(*mSessionAns, 0);
   for (size_t i = 0; i < parsedOffer->GetMediaSectionCount(); ++i) {
+    std::string id = GetTransportId(*mSessionAns, i);
     mAnsCandidates->CheckRtpCandidates(
-        i == 0, parsedOffer->GetMediaSection(i), i,
+        i == 0, parsedOffer->GetMediaSection(i), id,
         "Local reoffer before gathering should have RTP candidates on level 0"
         " only. (previous answerer)");
     mAnsCandidates->CheckDefaultRtpCandidate(
-        i == 0, parsedOffer->GetMediaSection(i), 0,
+        i == 0, parsedOffer->GetMediaSection(i), id0,
         "Local reoffer before gathering should have a default RTP candidate "
         "on level 0 only. (previous answerer)");
     mAnsCandidates->CheckRtcpCandidates(
-        false, parsedOffer->GetMediaSection(i), i,
+        false, parsedOffer->GetMediaSection(i), id,
         "Local reoffer before gathering should not have RTCP candidates."
         " (previous answerer)");
     mAnsCandidates->CheckDefaultRtcpCandidate(
-        false, parsedOffer->GetMediaSection(i), i,
+        false, parsedOffer->GetMediaSection(i), id,
         "Local reoffer before gathering should not have a default RTCP "
         "candidate. (previous answerer)");
     CheckEndOfCandidates(false, parsedOffer->GetMediaSection(i),
@@ -2854,60 +2904,78 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
   // PeerConnection will not re-gather for RTP, but it will for RTCP in case
   // the answerer decides to turn off rtcp-mux.
   if (types[0] != SdpMediaSection::kApplication) {
-    mOffCandidates->Gather(*mSessionOff, 0, RTCP);
+    mOffCandidates->Gather(*mSessionOff, GetTransportId(*mSessionOff, 0), RTCP);
   }
 
   // Since the remaining levels were bundled, PeerConnection will re-gather for
-  // both RTP and RTCP, in case the answerer rejects bundle.
+  // both RTP and RTCP, in case the answerer rejects bundle, provided
+  // bundle-only isn't being used.
+  UniquePtr<Sdp> localOffer(Parse(
+        mSessionOff->GetLocalDescription(kJsepDescriptionPending)));
   for (size_t level = 1; level < types.size(); ++level) {
-    mOffCandidates->Gather(*mSessionOff, level, RTP);
-    if (types[level] != SdpMediaSection::kApplication) {
-      mOffCandidates->Gather(*mSessionOff, level, RTCP);
+    std::string id = GetTransportId(*mSessionOff, level);
+    if (!id.empty()) {
+      mOffCandidates->Gather(*mSessionOff, id, RTP);
+      if (types[level] != SdpMediaSection::kApplication) {
+        mOffCandidates->Gather(*mSessionOff, id, RTCP);
+      }
     }
   }
   mOffCandidates->FinishGathering(*mSessionOff);
+  localOffer = Parse(mSessionOff->GetLocalDescription(kJsepDescriptionPending));
 
   mOffCandidates->Trickle(*mSessionAns);
 
-  UniquePtr<Sdp> localOffer(Parse(
-        mSessionOff->GetLocalDescription(kJsepDescriptionPending)));
   for (size_t i = 0; i < localOffer->GetMediaSectionCount(); ++i) {
+    std::string id = GetTransportId(*mSessionOff, i);
+    bool bundleOnly =
+       localOffer->GetMediaSection(i).GetAttributeList().HasAttribute(
+         SdpAttribute::kBundleOnlyAttribute);
     mOffCandidates->CheckRtpCandidates(
-        true, localOffer->GetMediaSection(i), i,
-        "Local reoffer after gathering should have RTP candidates.");
+        !bundleOnly, localOffer->GetMediaSection(i), id,
+        "Local reoffer after gathering should have RTP candidates "
+        "(unless bundle-only)");
     mOffCandidates->CheckDefaultRtpCandidate(
-        true, localOffer->GetMediaSection(i), i,
-        "Local reoffer after gathering should have a default RTP candidate.");
+        !bundleOnly, localOffer->GetMediaSection(i), id,
+        "Local reoffer after gathering should have a default RTP candidate "
+        "(unless bundle-only)");
     mOffCandidates->CheckRtcpCandidates(
-        types[i] != SdpMediaSection::kApplication,
-        localOffer->GetMediaSection(i), i,
+        !bundleOnly && (types[i] != SdpMediaSection::kApplication),
+        localOffer->GetMediaSection(i), id,
         "Local reoffer after gathering should have RTCP candidates "
-        "(unless m=application)");
+        "(unless m=application or bundle-only)");
     mOffCandidates->CheckDefaultRtcpCandidate(
-        types[i] != SdpMediaSection::kApplication,
-        localOffer->GetMediaSection(i), i,
+        !bundleOnly && (types[i] != SdpMediaSection::kApplication),
+        localOffer->GetMediaSection(i), id,
         "Local reoffer after gathering should have a default RTCP candidate "
-        "(unless m=application)");
-    CheckEndOfCandidates(true, localOffer->GetMediaSection(i),
-        "Local reoffer after gathering should have an end-of-candidates.");
+        "(unless m=application or bundle-only)");
+    CheckEndOfCandidates(!bundleOnly, localOffer->GetMediaSection(i),
+        "Local reoffer after gathering should have an end-of-candidates "
+        "(unless bundle-only)");
   }
 
   UniquePtr<Sdp> remoteOffer(Parse(
         mSessionAns->GetRemoteDescription(kJsepDescriptionPending)));
   for (size_t i = 0; i < remoteOffer->GetMediaSectionCount(); ++i) {
+    bool bundleOnly =
+       remoteOffer->GetMediaSection(i).GetAttributeList().HasAttribute(
+         SdpAttribute::kBundleOnlyAttribute);
+    std::string id = GetTransportId(*mSessionOff, i);
     mOffCandidates->CheckRtpCandidates(
-        true, remoteOffer->GetMediaSection(i), i,
-        "Remote reoffer after trickle should have RTP candidates.");
+        !bundleOnly, remoteOffer->GetMediaSection(i), id,
+        "Remote reoffer after trickle should have RTP candidates "
+        "(unless bundle-only)");
     mOffCandidates->CheckDefaultRtpCandidate(
-        i == 0, remoteOffer->GetMediaSection(i), i,
+        i == 0, remoteOffer->GetMediaSection(i), id,
         "Remote reoffer should have a default RTP candidate on level 0 "
         "(because it was gathered last offer/answer).");
     mOffCandidates->CheckRtcpCandidates(
-        types[i] != SdpMediaSection::kApplication,
-        remoteOffer->GetMediaSection(i), i,
-        "Remote reoffer after trickle should have RTCP candidates.");
+        !bundleOnly && types[i] != SdpMediaSection::kApplication,
+        remoteOffer->GetMediaSection(i), id,
+        "Remote reoffer after trickle should have RTCP candidates "
+        "(unless m=application or bundle-only)");
     mOffCandidates->CheckDefaultRtcpCandidate(
-        false, remoteOffer->GetMediaSection(i), i,
+        false, remoteOffer->GetMediaSection(i), id,
         "Remote reoffer should not have a default RTCP candidate.");
     CheckEndOfCandidates(false, remoteOffer->GetMediaSection(i),
         "Remote reoffer should not have an end-of-candidates.");
@@ -2922,21 +2990,23 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
 
   UniquePtr<Sdp> localAnswer(Parse(
         mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)));
+  id0 = GetTransportId(*mSessionAns, 0);
   for (size_t i = 0; i < localAnswer->GetMediaSectionCount(); ++i) {
+    std::string id = GetTransportId(*mSessionAns, 0);
     mAnsCandidates->CheckRtpCandidates(
-        i == 0, localAnswer->GetMediaSection(i), i,
+        i == 0, localAnswer->GetMediaSection(i), id,
         "Local reanswer after gathering should have RTP candidates on level "
         "0.");
     mAnsCandidates->CheckDefaultRtpCandidate(
-        true, localAnswer->GetMediaSection(i), 0,
+        true, localAnswer->GetMediaSection(i), id0,
         "Local reanswer after gathering should have a default RTP candidate "
         "on all levels that matches transport level 0.");
     mAnsCandidates->CheckRtcpCandidates(
-        false, localAnswer->GetMediaSection(i), i,
+        false, localAnswer->GetMediaSection(i), id,
         "Local reanswer after gathering should not have RTCP candidates "
         "(because we're reanswering with rtcp-mux)");
     mAnsCandidates->CheckDefaultRtcpCandidate(
-        false, localAnswer->GetMediaSection(i), i,
+        false, localAnswer->GetMediaSection(i), id,
         "Local reanswer after gathering should not have a default RTCP "
         "candidate (because we're reanswering with rtcp-mux)");
     CheckEndOfCandidates(i == 0, localAnswer->GetMediaSection(i),
@@ -2947,19 +3017,20 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
   UniquePtr<Sdp> remoteAnswer(Parse(
         mSessionOff->GetRemoteDescription(kJsepDescriptionCurrent)));
   for (size_t i = 0; i < localAnswer->GetMediaSectionCount(); ++i) {
+    std::string id = GetTransportId(*mSessionAns, 0);
     mAnsCandidates->CheckRtpCandidates(
-        i == 0, remoteAnswer->GetMediaSection(i), i,
+        i == 0, remoteAnswer->GetMediaSection(i), id,
         "Remote reanswer after trickle should have RTP candidates on level 0.");
     mAnsCandidates->CheckDefaultRtpCandidate(
-        i == 0, remoteAnswer->GetMediaSection(i), i,
+        i == 0, remoteAnswer->GetMediaSection(i), id,
         "Remote reanswer should have a default RTP candidate on level 0 "
         "(because it was gathered last offer/answer).");
     mAnsCandidates->CheckRtcpCandidates(
-        false, remoteAnswer->GetMediaSection(i), i,
+        false, remoteAnswer->GetMediaSection(i), id,
         "Remote reanswer after trickle should not have RTCP candidates "
         "(because we're reanswering with rtcp-mux)");
     mAnsCandidates->CheckDefaultRtcpCandidate(
-        false, remoteAnswer->GetMediaSection(i), i,
+        false, remoteAnswer->GetMediaSection(i), id,
         "Remote reanswer after trickle should not have a default RTCP "
         "candidate.");
     CheckEndOfCandidates(false, remoteAnswer->GetMediaSection(i),
@@ -4704,7 +4775,7 @@ size_t GetActiveTransportCount(const JsepSession& session)
   for (const auto& transceiver : session.GetTransceivers()) {
     if (!transceiver->HasBundleLevel() ||
         (transceiver->BundleLevel() == transceiver->GetLevel())) {
-      activeTransportCount += transceiver->mTransport->mComponents;
+      activeTransportCount += transceiver->mTransport.mComponents;
     }
   }
   return activeTransportCount;
@@ -4953,21 +5024,25 @@ TEST_F(JsepSessionTest, CreateOfferAddCandidate)
   std::string offer = CreateOffer();
   SetLocalOffer(offer);
 
+  uint16_t level;
   std::string mid;
   bool skipped;
   nsresult rv;
   rv = mSessionOff->AddLocalIceCandidate(strSampleCandidate,
-                                        nSamplelevel, &mid, &skipped);
+                                         GetTransportId(*mSessionOff, 0),
+                                         &level, &mid, &skipped);
   ASSERT_EQ(NS_OK, rv);
 }
 
 TEST_F(JsepSessionTest, AddIceCandidateEarly)
 {
+  uint16_t level;
   std::string mid;
   bool skipped;
   nsresult rv;
   rv = mSessionOff->AddLocalIceCandidate(strSampleCandidate,
-                                        nSamplelevel, &mid, &skipped);
+                                         GetTransportId(*mSessionOff, 0),
+                                         &level, &mid, &skipped);
 
   // This can't succeed without a local description
   ASSERT_NE(NS_OK, rv);
@@ -5054,8 +5129,10 @@ TEST_F(JsepSessionTest, AddCandidateInHaveLocalOffer) {
 
   nsresult rv;
   std::string mid;
+  std::string transportId;
   rv = mSessionOff->AddRemoteIceCandidate(strSampleCandidate,
-                                         mid, nSamplelevel);
+                                          mid, nSamplelevel,
+                                          &transportId);
   ASSERT_EQ(NS_ERROR_UNEXPECTED, rv);
 }
 
@@ -5593,9 +5670,9 @@ TEST_F(JsepSessionTest, AudioCallMismatchDtlsRoles)
 
   // This is as good as it gets in a JSEP test (w/o starting DTLS)
   ASSERT_EQ(JsepDtlsTransport::kJsepDtlsClient,
-      mSessionOff->GetTransceivers()[0]->mTransport->mDtls->GetRole());
+      mSessionOff->GetTransceivers()[0]->mTransport.mDtls->GetRole());
   ASSERT_EQ(JsepDtlsTransport::kJsepDtlsClient,
-      mSessionAns->GetTransceivers()[0]->mTransport->mDtls->GetRole());
+      mSessionAns->GetTransceivers()[0]->mTransport.mDtls->GetRole());
 }
 
 // Verify that missing a=setup in offer gets rejected
@@ -5645,9 +5722,9 @@ TEST_F(JsepSessionTest, AudioCallAnswerNoSetup)
 
   // This is as good as it gets in a JSEP test (w/o starting DTLS)
   ASSERT_EQ(JsepDtlsTransport::kJsepDtlsServer,
-      mSessionOff->GetTransceivers()[0]->mTransport->mDtls->GetRole());
+      mSessionOff->GetTransceivers()[0]->mTransport.mDtls->GetRole());
   ASSERT_EQ(JsepDtlsTransport::kJsepDtlsClient,
-      mSessionAns->GetTransceivers()[0]->mTransport->mDtls->GetRole());
+      mSessionAns->GetTransceivers()[0]->mTransport.mDtls->GetRole());
 }
 
 // Verify that 'holdconn' gets rejected
@@ -6455,7 +6532,7 @@ TEST_F(JsepSessionTest, JsStopsTransceiverBeforeAnswer)
   SetRemoteAnswer(answer, CHECK_SUCCESS);
 
   ASSERT_TRUE(mSessionOff->GetTransceivers()[0]->IsStopped());
-  ASSERT_EQ(1U, mSessionOff->GetTransceivers()[0]->mTransport->mComponents);
+  ASSERT_EQ(1U, mSessionOff->GetTransceivers()[0]->mTransport.mComponents);
   ASSERT_FALSE(mSessionOff->GetTransceivers()[0]->mSendTrack.GetActive());
   ASSERT_FALSE(mSessionOff->GetTransceivers()[0]->mRecvTrack.GetActive());
 }
