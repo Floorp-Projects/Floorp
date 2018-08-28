@@ -102,7 +102,6 @@
   --theme-arrowpanel-dimmed-further: hsla(0,0%,80%,.45);
   --theme-arrowpanel-disabled-color: GrayText;
 
-  --theme-codemirror-gutter-background: #f4f4f4;
   --theme-messageCloseButtonFilter: invert(0);
 }
 
@@ -205,7 +204,6 @@
   --theme-arrowpanel-dimmed-further: rgba(249,249,250,.15);
   --theme-arrowpanel-disabled-color: rgba(249,249,250,.5);
 
-  --theme-codemirror-gutter-background: #262b37;
   --theme-messageCloseButtonFilter: invert(1);
 }
 

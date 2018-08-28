@@ -8,10 +8,9 @@
 
 const cachedFragments = {
   get entities() {
-    return `<!DOCTYPE bindings [
-      <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd">
-      %textcontextDTD;
-    ]>`;
+    return [
+      "chrome://global/locale/textcontext.dtd",
+    ];
   },
   get editMenuItems() {
     return `

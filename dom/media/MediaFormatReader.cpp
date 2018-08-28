@@ -2808,7 +2808,7 @@ MediaFormatReader::DropDecodedSamples(TrackType aTrack)
   decoder.mOutput.Clear();
   decoder.mSizeOfQueue -= lengthDecodedQueue;
   if (aTrack == TrackInfo::kVideoTrack && mFrameStats) {
-    mFrameStats->NotifyDecodedFrames({ 0, 0, lengthDecodedQueue });
+    mFrameStats->Accumulate({ 0, 0, lengthDecodedQueue, 0 });
   }
 }
 
@@ -2840,7 +2840,7 @@ MediaFormatReader::VideoSkipReset(uint32_t aSkipped)
   DropDecodedSamples(TrackInfo::kVideoTrack);
   // Report the pending frames as dropped.
   if (mFrameStats) {
-    mFrameStats->NotifyDecodedFrames({ 0, 0, SizeOfVideoQueueInFrames() });
+    mFrameStats->Accumulate({ 0, 0, SizeOfVideoQueueInFrames(), 0 });
   }
 
   // Cancel any pending demux request and pending demuxed samples.
@@ -2848,7 +2848,7 @@ MediaFormatReader::VideoSkipReset(uint32_t aSkipped)
   Reset(TrackType::kVideoTrack);
 
   if (mFrameStats) {
-    mFrameStats->NotifyDecodedFrames({ aSkipped, 0, aSkipped });
+    mFrameStats->Accumulate({ aSkipped, 0, aSkipped, 0 });
   }
 
   mVideo.mNumSamplesSkippedTotal += aSkipped;

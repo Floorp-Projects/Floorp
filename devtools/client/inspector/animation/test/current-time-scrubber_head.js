@@ -59,7 +59,7 @@ async function testCurrentTimeScrubber(isRTL) {
   info("Checking draggable on scrubber over animation list");
   await clickOnPauseResumeButton(animationInspector, panel);
   previousX = scrubberEl.getBoundingClientRect().x;
-  await dragOnCurrentTimeScrubber(animationInspector, panel, 0.5, 2, 30);
+  await dragOnCurrentTimeScrubber(animationInspector, panel, 5, 30);
   currentX = scrubberEl.getBoundingClientRect().x;
   isnot(previousX, currentX, "Scrubber should be draggable");
 

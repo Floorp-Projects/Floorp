@@ -6,6 +6,7 @@
 
 #include <MediaStreamGraphImpl.h>
 #include "mozilla/dom/AudioContext.h"
+#include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"

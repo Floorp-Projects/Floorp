@@ -1760,20 +1760,25 @@ HTMLEditor::GetFontFaceState(bool* aMixed,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::GetFontColorState(bool* aMixed,
                               nsAString& aOutColor)
 {
-  NS_ENSURE_TRUE(aMixed, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aMixed)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   *aMixed = true;
   aOutColor.Truncate();
 
   bool first, any, all;
-
   nsresult rv =
     GetInlinePropertyBase(*nsGkAtoms::font, nsGkAtoms::color, nullptr,
                           &first, &any, &all, &aOutColor);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   if (any && !all) {
     return NS_OK; // mixed
   }

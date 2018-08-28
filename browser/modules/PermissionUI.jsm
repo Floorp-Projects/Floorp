@@ -800,13 +800,12 @@ AutoplayPermissionPrompt.prototype = {
   get popupOptions() {
     let learnMoreURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "block-autoplay";
-    let checkbox = {
-      show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal) &&
-        !this.principal.URI.schemeIs("file")
-    };
+    let checkbox = {show: !this.principal.URI.schemeIs("file")};
     if (checkbox.show) {
       checkbox.checked = true;
-      checkbox.label = gBrowserBundle.GetStringFromName("autoplay.remember");
+      checkbox.label = PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal) ?
+        gBrowserBundle.GetStringFromName("autoplay.remember-private") :
+        gBrowserBundle.GetStringFromName("autoplay.remember");
     }
     return {
       checkbox,

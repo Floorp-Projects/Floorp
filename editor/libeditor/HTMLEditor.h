@@ -354,6 +354,33 @@ public:
   }
 
   /**
+   * GetFontColorState() returns foreground color information in first
+   * range of Selection.
+   * If first range of Selection is collapsed and there is a cache of style for
+   * new text, aIsMixed is set to false and aColor is set to the cached color.
+   * If first range of Selection is collapsed and there is no cached color,
+   * this returns the color of the node, aIsMixed is set to false and aColor is
+   * set to the color.
+   * If first range of Selection is not collapsed, this collects colors of
+   * each node in the range.  If there are two or more colors, aIsMixed is set
+   * to true and aColor is truncated.  If only one color is set to all of the
+   * range, aIsMixed is set to false and aColor is set to the color.
+   * If there is no Selection ranges, aIsMixed is set to false and aColor is
+   * truncated.
+   *
+   * @param aIsMixed            Must not be nullptr.  This is set to true
+   *                            if there is two or more colors in first
+   *                            range of Selection.
+   * @param aColor              Returns the color if only one color is set to
+   *                            all of first range in Selection.  Otherwise,
+   *                            returns empty string.
+   * @return                    Returns error only when illegal cases, e.g.,
+   *                            Selection instance has gone, first range
+   *                            Selection is broken.
+   */
+  nsresult GetFontColorState(bool* aIsMixed, nsAString& aColor);
+
+  /**
    * SetComposerCommandsUpdater() sets or unsets mComposerCommandsUpdater.
    * This will crash in debug build if the editor already has an instance
    * but called with another instance.
@@ -537,8 +564,9 @@ protected: // May be called by friends.
    * a cell element, this returns nullptr.  And even if 2nd or later
    * range of Selection selects a cell element, also returns nullptr.
    * Note that when this looks for a cell element, this resets the internal
-   * index of ranges of Selection.  When you call GetNextSelectedCell() after
-   * a call of this, it'll return 2nd selected cell if there is.
+   * index of ranges of Selection.  When you call
+   * GetNextSelectedTableCellElement() after a call of this, it'll return 2nd
+   * selected cell if there is.
    *
    * @param aSelection          Selection for this editor.
    * @param aRv                 Returns error if there is no selection or
@@ -551,6 +579,32 @@ protected: // May be called by friends.
   already_AddRefed<Element>
   GetFirstSelectedTableCellElement(Selection& aSelection,
                                    ErrorResult& aRv) const;
+
+  /**
+   * GetNextSelectedTableCellElement() is a stateful method to retrieve
+   * selected table cell elements which are selected by 2nd or later ranges
+   * of Selection.  When you call GetFirstSelectedTableCellElement(), it
+   * resets internal counter of this method.  Then, following calls of
+   * GetNextSelectedTableCellElement() scans the remaining ranges of Selection.
+   * If a range selects a <td> or <th> element, returns the cell element.
+   * If a range selects an element but neither <td> nor <th> element, this
+   * ignores the range.  If a range is in a text node, returns null without
+   * throwing exception, but stops scanning the remaining ranges even you
+   * call this again.
+   * Note that this may cross <table> boundaries since this method just
+   * scans all ranges of Selection.  Therefore, returning cells which
+   * belong to different <table> elements.
+   *
+   * @param Selection           Selection for this editor.
+   * @param aRv                 Returns error if Selection doesn't have
+   *                            range properly.
+   * @return                    A <td> or <th> element if one of remaining
+   *                            ranges selects a <td> or <th> element unless
+   *                            this does not meet a range in a text node.
+   */
+  already_AddRefed<Element>
+  GetNextSelectedTableCellElement(Selection& aSelection,
+                                  ErrorResult& aRv) const;
 
   void IsNextCharInNodeWhitespace(nsIContent* aContent,
                                   int32_t aOffset,
@@ -1878,8 +1932,9 @@ protected:
   UniquePtr<CSSEditUtils> mCSSEditUtils;
 
   // mSelectedCellIndex is reset by GetFirstSelectedTableCellElement(),
-  // then, it'll be referred and incremented by GetNextSelectedCell().
-  mutable int32_t mSelectedCellIndex;
+  // then, it'll be referred and incremented by
+  // GetNextSelectedTableCellElement().
+  mutable uint32_t mSelectedCellIndex;
 
   nsString mLastStyleSheetURL;
   nsString mLastOverrideStyleSheetURL;

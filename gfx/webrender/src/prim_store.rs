@@ -28,7 +28,7 @@ use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
 use scene::SceneProperties;
 use segment::SegmentBuilder;
-use std::{mem, usize};
+use std::{cmp, mem, usize};
 use util::{MatrixHelpers, calculate_screen_bounding_rect};
 use util::{pack_as_float, recycle_vec, TransformedRectKind};
 
@@ -420,6 +420,41 @@ impl BrushKind {
             opacity_binding: OpacityBinding::new(),
         }
     }
+
+    // Construct a brush that is a border with `border` style and `widths`
+    // dimensions.
+    pub fn new_border(border: NormalBorder, widths: BorderWidths) -> BrushKind {
+        let cache_key = BorderCacheKey::new(&border, &widths);
+        BrushKind::Border {
+            source: BorderSource::Border {
+                border,
+                widths,
+                cache_key,
+                task_info: None,
+                handle: None,
+            }
+        }
+    }
+
+    // Construct a brush that is an image wisth `stretch_size` dimensions and
+    // `color`.
+    pub fn new_image(
+        request: ImageRequest,
+        stretch_size: LayoutSize,
+        color: ColorF
+    ) -> BrushKind {
+        BrushKind::Image {
+            request,
+            alpha_type: AlphaType::PremultipliedAlpha,
+            stretch_size,
+            tile_spacing: LayoutSize::new(0., 0.),
+            color,
+            source: ImageSource::Default,
+            sub_rect: None,
+            opacity_binding: OpacityBinding::new(),
+            visible_tiles: Vec::new(),
+        }
+    }
 }
 
 bitflags! {
@@ -482,17 +517,9 @@ impl BrushSegment {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum BrushClipMaskKind {
-    Unknown,
-    Individual,
-    Global,
-}
-
 #[derive(Debug)]
 pub struct BrushSegmentDescriptor {
     pub segments: Vec<BrushSegment>,
-    pub clip_mask_kind: BrushClipMaskKind,
 }
 
 #[derive(Debug)]
@@ -1242,11 +1269,35 @@ impl PrimitiveContainer {
                             None,
                         ))
                     }
+                    BrushKind::Border { ref source } => {
+                        let source = match *source {
+                            BorderSource::Image(request) => {
+                                BrushKind::Border {
+                                    source: BorderSource::Image(request)
+                                }
+                            },
+                            BorderSource::Border { border, widths, .. } => {
+                                let border = border.with_color(shadow.color);
+                                BrushKind::new_border(border, widths)
+
+                            }
+                        };
+                        PrimitiveContainer::Brush(BrushPrimitive::new(
+                            source,
+                            None,
+                        ))
+                    }
+                    BrushKind::Image { request, stretch_size, .. } => {
+                        PrimitiveContainer::Brush(BrushPrimitive::new(
+                            BrushKind::new_image(request.clone(),
+                                                 stretch_size.clone(),
+                                                 shadow.color),
+                            None,
+                        ))
+                    }
                     BrushKind::Clear |
                     BrushKind::Picture { .. } |
-                    BrushKind::Image { .. } |
                     BrushKind::YuvImage { .. } |
-                    BrushKind::Border { .. } |
                     BrushKind::RadialGradient { .. } |
                     BrushKind::LinearGradient { .. } => {
                         panic!("bug: other brush kinds not expected here yet");
@@ -1659,21 +1710,9 @@ impl PrimitiveStore {
             }
         };
 
-        let clipped_device_rect = match calculate_screen_bounding_rect(
-            &prim_context.spatial_node.world_content_transform,
-            &clip_chain.local_bounding_rect,
-            frame_context.device_pixel_scale,
-            None,
-        ) {
-            Some(rect) => rect,
-            None => {
-                if cfg!(debug_assertions) && is_chased {
-                    println!("\tculled for being behind the near plane of transform: {:?}",
-                        prim_context.spatial_node.world_content_transform);
-                }
-                return None
-            }
-        };
+        let clipped_device_rect = (clip_chain.world_clip_rect * frame_context.device_pixel_scale)
+            .round_out()
+            .to_i32();
 
         let clipped_device_rect = match clipped_device_rect.intersection(&frame_context.screen_rect) {
             Some(clipped_device_rect) => clipped_device_rect,
@@ -1971,12 +2010,9 @@ fn write_brush_segment_description(
     frame_state: &mut FrameBuildingState,
 ) {
     match brush.segment_desc {
-        Some(ref segment_desc) => {
-            // If we already have a segment descriptor, only run through the
-            // clips list if we haven't already determined the mask kind.
-            if segment_desc.clip_mask_kind == clip_chain.clip_mask_kind {
-                return;
-            }
+        Some(..) => {
+            // If we already have a segment descriptor, skip segment build.
+            return;
         }
         None => {
             // If no segment descriptor built yet, see if it is a brush
@@ -2006,6 +2042,7 @@ fn write_brush_segment_description(
     );
 
     // Segment the primitive on all the local-space clip sources that we can.
+    let mut local_clip_count = 0;
     for i in 0 .. clip_chain.clips_range.count {
         let (clip_node, flags) = frame_state.clip_store.get_node_from_range(&clip_chain.clips_range, i);
 
@@ -2017,6 +2054,8 @@ fn write_brush_segment_description(
         if !flags.contains(ClipNodeFlags::SAME_SPATIAL_NODE) {
             continue;
         }
+
+        local_clip_count += 1;
 
         let (local_clip_rect, radius, mode) = match clip_node.item {
             ClipItem::RoundedRectangle(rect, radii, clip_mode) => {
@@ -2063,10 +2102,40 @@ fn write_brush_segment_description(
     }
 
     if is_large || rect_clips_only {
-        match brush.segment_desc {
-            Some(ref mut segment_desc) => {
-                segment_desc.clip_mask_kind = clip_chain.clip_mask_kind;
+        // If there were no local clips, then we will subdivide the primitive into
+        // a uniform grid (up to 8x8 segments). This will typically result in
+        // a significant number of those segments either being completely clipped,
+        // or determined to not need a clip mask for that segment.
+        if local_clip_count == 0 && clip_chain.clips_range.count > 0 {
+            let x_clip_count = cmp::min(8, (metadata.local_rect.size.width / 128.0).ceil() as i32);
+            let y_clip_count = cmp::min(8, (metadata.local_rect.size.height / 128.0).ceil() as i32);
+
+            for y in 0 .. y_clip_count {
+                let y0 = metadata.local_rect.size.height * y as f32 / y_clip_count as f32;
+                let y1 = metadata.local_rect.size.height * (y+1) as f32 / y_clip_count as f32;
+
+                for x in 0 .. x_clip_count {
+                    let x0 = metadata.local_rect.size.width * x as f32 / x_clip_count as f32;
+                    let x1 = metadata.local_rect.size.width * (x+1) as f32 / x_clip_count as f32;
+
+                    let rect = LayoutRect::new(
+                        LayoutPoint::new(
+                            x0 + metadata.local_rect.origin.x,
+                            y0 + metadata.local_rect.origin.y,
+                        ),
+                        LayoutSize::new(
+                            x1 - x0,
+                            y1 - y0,
+                        ),
+                    );
+
+                    segment_builder.push_mask_region(rect, LayoutRect::zero(), None);
+                }
             }
+        }
+
+        match brush.segment_desc {
+            Some(..) => panic!("bug: should not already have descriptor"),
             None => {
                 // TODO(gw): We can probably make the allocation
                 //           patterns of this and the segment
@@ -2088,7 +2157,6 @@ fn write_brush_segment_description(
 
                 brush.segment_desc = Some(BrushSegmentDescriptor {
                     segments,
-                    clip_mask_kind: clip_chain.clip_mask_kind,
                 });
             }
         }
@@ -2099,7 +2167,7 @@ impl Primitive {
     fn update_clip_task_for_brush(
         &mut self,
         prim_context: &PrimitiveContext,
-        clip_chain: &ClipChainInstance,
+        prim_clip_chain: &ClipChainInstance,
         combined_outer_rect: &DeviceIntRect,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
@@ -2115,7 +2183,7 @@ impl Primitive {
         write_brush_segment_description(
             brush,
             &self.metadata,
-            clip_chain,
+            prim_clip_chain,
             frame_state,
         );
 
@@ -2123,42 +2191,51 @@ impl Primitive {
             Some(ref mut description) => description,
             None => return false,
         };
-        let clip_mask_kind = segment_desc.clip_mask_kind;
 
         for segment in &mut segment_desc.segments {
-            if !segment.may_need_clip_mask && clip_mask_kind != BrushClipMaskKind::Global {
-                segment.clip_task_id = BrushSegmentTaskId::Opaque;
-                continue;
-            }
-
-            let intersected_rect = calculate_screen_bounding_rect(
-                &prim_context.spatial_node.world_content_transform,
-                &segment.local_rect,
-                frame_context.device_pixel_scale,
-                Some(&combined_outer_rect),
-            );
-
-            let bounds = match intersected_rect {
-                Some(bounds) => bounds,
-                None => {
-                    segment.clip_task_id = BrushSegmentTaskId::Empty;
-                    continue;
-                }
-            };
-
-            if clip_chain.clips_range.count > 0 {
-                let clip_task = RenderTask::new_mask(
-                    bounds,
-                    clip_chain.clips_range,
-                    frame_state.clip_store,
+            // Build a clip chain for the smaller segment rect. This will
+            // often manage to eliminate most/all clips, and sometimes
+            // clip the segment completely.
+            let segment_clip_chain = frame_state
+                .clip_store
+                .build_clip_chain_instance(
+                    self.metadata.clip_chain_id,
+                    segment.local_rect,
+                    self.metadata.local_clip_rect,
+                    prim_context.spatial_node_index,
+                    &frame_context.clip_scroll_tree,
                     frame_state.gpu_cache,
                     frame_state.resource_cache,
-                    frame_state.render_tasks,
+                    frame_context.device_pixel_scale,
                 );
 
-                let clip_task_id = frame_state.render_tasks.add(clip_task);
-                pic_state.tasks.push(clip_task_id);
-                segment.clip_task_id = BrushSegmentTaskId::RenderTaskId(clip_task_id);
+            match segment_clip_chain {
+                Some(segment_clip_chain) => {
+                    if segment_clip_chain.clips_range.count == 0 {
+                        segment.clip_task_id = BrushSegmentTaskId::Opaque;
+                        continue;
+                    }
+
+                    let bounds = (segment_clip_chain.world_clip_rect * frame_context.device_pixel_scale)
+                        .round_out()
+                        .to_i32();
+
+                    let clip_task = RenderTask::new_mask(
+                        bounds,
+                        segment_clip_chain.clips_range,
+                        frame_state.clip_store,
+                        frame_state.gpu_cache,
+                        frame_state.resource_cache,
+                        frame_state.render_tasks,
+                    );
+
+                    let clip_task_id = frame_state.render_tasks.add(clip_task);
+                    pic_state.tasks.push(clip_task_id);
+                    segment.clip_task_id = BrushSegmentTaskId::RenderTaskId(clip_task_id);
+                }
+                None => {
+                    segment.clip_task_id = BrushSegmentTaskId::Empty;
+                }
             }
         }
 
@@ -2754,7 +2831,6 @@ impl Primitive {
             if needs_update {
                 brush.segment_desc = Some(BrushSegmentDescriptor {
                     segments: new_segments,
-                    clip_mask_kind: BrushClipMaskKind::Unknown,
                 });
 
                 // The segments have changed, so force the GPU cache to
