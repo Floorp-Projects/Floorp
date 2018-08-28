@@ -52,6 +52,9 @@ public:
     size_t nBytes = 1 + sizeof(intptr_t);
 #elif defined(_M_X64)
     size_t nBytes = 2 + sizeof(intptr_t);
+#elif defined(_M_ARM64)
+    size_t nBytes = 4;
+    MOZ_RELEASE_ASSERT(false, "Shouldn't get here");
 #else
 #error "Unknown processor type"
 #endif
@@ -130,6 +133,8 @@ public:
       if (!origBytes) {
         continue;
       }
+#elif defined(_M_ARM64)
+      MOZ_RELEASE_ASSERT(false, "Shouldn't get here")
 #else
 #error "Unknown processor type"
 #endif
@@ -963,6 +968,8 @@ protected:
         return;
       }
     }
+#elif defined(_M_ARM64)
+      MOZ_RELEASE_ASSERT(false, "Shouldn't get here")
 #else
 #error "Unknown processor type"
 #endif
