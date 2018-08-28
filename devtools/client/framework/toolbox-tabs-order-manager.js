@@ -19,7 +19,6 @@ class ToolboxTabsOrderManager {
 
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
-    this.onMouseOut = this.onMouseOut.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
 
     Services.prefs.addObserver(PREFERENCE_NAME, this.onOrderUpdated);
@@ -54,10 +53,10 @@ class ToolboxTabsOrderManager {
     this.toolboxContainerElement = this.dragTarget.closest("#toolbox-container");
     this.toolboxTabsElement = this.dragTarget.closest(".toolbox-tabs");
     this.isOrderUpdated = false;
+    this.eventTarget = this.dragTarget.ownerGlobal.top;
 
-    this.dragTarget.ownerDocument.addEventListener("mousemove", this.onMouseMove);
-    this.dragTarget.ownerDocument.addEventListener("mouseout", this.onMouseOut);
-    this.dragTarget.ownerDocument.addEventListener("mouseup", this.onMouseUp);
+    this.eventTarget.addEventListener("mousemove", this.onMouseMove);
+    this.eventTarget.addEventListener("mouseup", this.onMouseUp);
 
     this.toolboxContainerElement.classList.add("tabs-reordering");
   }
@@ -111,14 +110,6 @@ class ToolboxTabsOrderManager {
     this.previousPageX = e.pageX;
   }
 
-  onMouseOut(e) {
-    const documentElement = this.dragTarget.ownerDocument.documentElement;
-    if (e.pageX <= 0 || documentElement.clientWidth <= e.pageX ||
-        e.pageY <= 0 || documentElement.clientHeight <= e.pageY) {
-      this.onMouseUp();
-    }
-  }
-
   onMouseUp() {
     if (!this.dragTarget) {
       // The case in here has two type:
@@ -146,15 +137,15 @@ class ToolboxTabsOrderManager {
       this.telemetry.keyedScalarAdd(TABS_REORDERED_SCALAR, toolId, 1);
     }
 
-    this.dragTarget.ownerDocument.removeEventListener("mousemove", this.onMouseMove);
-    this.dragTarget.ownerDocument.removeEventListener("mouseout", this.onMouseOut);
-    this.dragTarget.ownerDocument.removeEventListener("mouseup", this.onMouseUp);
+    this.eventTarget.removeEventListener("mousemove", this.onMouseMove);
+    this.eventTarget.removeEventListener("mouseup", this.onMouseUp);
 
     this.toolboxContainerElement.classList.remove("tabs-reordering");
     this.dragTarget.style.left = null;
     this.dragTarget = null;
     this.toolboxContainerElement = null;
     this.toolboxTabsElement = null;
+    this.eventTarget = null;
   }
 }
 
