@@ -12,7 +12,6 @@
 #include "nsIDOMWindow.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
-#include "nsIStringEnumerator.h"
 #include "mozilla/SimpleEnumerator.h"
 
 #include "nsCOMPtr.h"
@@ -546,9 +545,6 @@ nsCommandLine::EnumerateValidators(EnumerateValidatorsCallback aCallback, void *
   rv = catman->EnumerateCategory("command-line-validator",
                                  getter_AddRefs(entenum));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIUTF8StringEnumerator> strenum (do_QueryInterface(entenum));
-  NS_ENSURE_TRUE(strenum, NS_ERROR_UNEXPECTED);
 
   for (auto& categoryEntry : SimpleEnumerator<nsICategoryEntry>(entenum)) {
     nsAutoCString contractID;
