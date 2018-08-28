@@ -61,14 +61,6 @@ const TEST_DATA = [
     expectedOrder: ["inspector", "jsdebugger", "styleeditor", "performance",
                     "memory", "netmonitor", "storage", "webconsole", "accessibility"],
   },
-  {
-    description: "Mouse was out from the document while dragging",
-    dragTarget: "webconsole",
-    passedTargets: ["inspector"],
-    dropTarget: null,
-    expectedOrder: ["webconsole", "inspector", "jsdebugger", "styleeditor",
-                    "performance", "memory", "netmonitor", "storage", "accessibility"],
-  },
 ];
 
 add_task(async function() {
