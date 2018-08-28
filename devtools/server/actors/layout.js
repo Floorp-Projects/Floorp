@@ -102,7 +102,14 @@ const FlexboxActor = ActorClassWithSpec(flexboxSpec, {
 
     for (const line of flex.getLines()) {
       for (const item of line.getItems()) {
-        flexItemActors.push(new FlexItemActor(this, item.node));
+        flexItemActors.push(new FlexItemActor(this, item.node, {
+          crossMaxSize: item.crossMaxSize,
+          crossMinSize: item.crossMinSize,
+          mainBaseSize: item.mainBaseSize,
+          mainDeltaSize: item.mainDeltaSize,
+          mainMaxSize: item.mainMaxSize,
+          mainMinSize: item.mainMinSize,
+        }));
       }
     }
 
@@ -119,18 +126,24 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
    *         The FlexboxActor instance.
    * @param  {DOMNode} element
    *         The flex item element.
+   * @param  {Object} flexItemSizing
+   *         The flex item sizing data.
    */
-  initialize(flexboxActor, element) {
+  initialize(flexboxActor, element, flexItemSizing) {
     Actor.prototype.initialize.call(this, flexboxActor.conn);
 
+    this.containerEl = flexboxActor.containerEl;
     this.element = element;
+    this.flexItemSizing = flexItemSizing;
     this.walker = flexboxActor.walker;
   },
 
   destroy() {
     Actor.prototype.destroy.call(this);
 
+    this.containerEl = null;
     this.element = null;
+    this.flexItemSizing = null;
     this.walker = null;
   },
 
@@ -139,8 +152,27 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
       return this.actorID;
     }
 
+    const { flexDirection } = CssLogic.getComputedStyle(this.containerEl);
+    const styles = CssLogic.getComputedStyle(this.element);
+    const clientRect = this.element.getBoundingClientRect();
+    const dimension = flexDirection.startsWith("row") ? "width" : "height";
+
     const form = {
       actor: this.actorID,
+      // The flex item sizing data.
+      flexItemSizing: this.flexItemSizing,
+      // The computed style properties of the flex item.
+      properties: {
+        "flex-basis": styles.flexBasis,
+        "flex-grow": styles.flexGrow,
+        "flex-shrink": styles.flexShrink,
+        // min-width/height computed style.
+        [`min-${dimension}`]: styles[`min-${dimension}`],
+        // max-width/height computed style.
+        [`max-${dimension}`]: styles[`max-${dimension}`],
+        // Computed width/height of the flex item element.
+        [dimension]: parseFloat(clientRect[dimension.toLowerCase()].toPrecision(6)),
+      },
     };
 
     // If the WalkerActor already knows the flex item element, then also return its
