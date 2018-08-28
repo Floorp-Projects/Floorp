@@ -15,6 +15,9 @@
 #include "tls_filter.h"
 #include "tls_parser.h"
 
+// This is an internal header, used to get DTLS_1_3_DRAFT_VERSION.
+#include "ssl3prot.h"
+
 extern "C" {
 // This is not something that should make you happy.
 #include "libssl_internals.h"
@@ -53,7 +56,7 @@ static const uint8_t kCannedTls13ServerHello[] = {
     0x00, 0x1d, 0x00, 0x20, 0xc2, 0xcf, 0x23, 0x17, 0x64, 0x23, 0x03,
     0xf0, 0xfb, 0x45, 0x98, 0x26, 0xd1, 0x65, 0x24, 0xa1, 0x6c, 0xa9,
     0x80, 0x8f, 0x2c, 0xac, 0x0a, 0xea, 0x53, 0x3a, 0xcb, 0xe3, 0x08,
-    0x84, 0xae, 0x19, 0x00, 0x2b, 0x00, 0x02, 0x7f, kD13};
+    0x84, 0xae, 0x19, 0x00, 0x2b, 0x00, 0x02, 0x03, 0x04};
 
 TlsAgent::TlsAgent(const std::string& nm, Role rl, SSLProtocolVariant var)
     : name_(nm),
@@ -1174,6 +1177,11 @@ DataBuffer TlsAgentTestBase::MakeCannedTls13ServerHello() {
   DataBuffer sh(kCannedTls13ServerHello, sizeof(kCannedTls13ServerHello));
   if (variant_ == ssl_variant_datagram) {
     sh.Write(0, SSL_LIBRARY_VERSION_DTLS_1_2_WIRE, 2);
+    // The version should be at the end.
+    uint32_t v;
+    EXPECT_TRUE(sh.Read(sh.len() - 2, 2, &v));
+    EXPECT_EQ(static_cast<uint32_t>(SSL_LIBRARY_VERSION_TLS_1_3), v);
+    sh.Write(sh.len() - 2, 0x7f00 | DTLS_1_3_DRAFT_VERSION, 2);
   }
   return sh;
 }

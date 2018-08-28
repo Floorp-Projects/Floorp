@@ -52,7 +52,6 @@
 #include "mozilla/DeferredFinalize.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/ShadowRoot.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -104,7 +103,6 @@ static const JSClass gPrototypeJSClass = {
 nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
   : mMarkedForDeath(false)
   , mUsingContentXBLScope(false)
-  , mIsShadowRootBinding(false)
   , mPrototypeBinding(aBinding)
   , mBoundElement(nullptr)
 {
@@ -113,26 +111,9 @@ nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
   NS_ADDREF(mPrototypeBinding->XBLDocumentInfo());
 }
 
-// Constructor used by web components.
-nsXBLBinding::nsXBLBinding(ShadowRoot* aShadowRoot, nsXBLPrototypeBinding* aBinding)
-  : mMarkedForDeath(false),
-    mUsingContentXBLScope(false),
-    mIsShadowRootBinding(true),
-    mPrototypeBinding(aBinding),
-    mContent(aShadowRoot),
-    mBoundElement(nullptr)
+nsXBLBinding::~nsXBLBinding()
 {
-  NS_ASSERTION(mPrototypeBinding, "Must have a prototype binding!");
-  // Grab a ref to the document info so the prototype binding won't die
-  NS_ADDREF(mPrototypeBinding->XBLDocumentInfo());
-}
-
-nsXBLBinding::~nsXBLBinding(void)
-{
-  if (mContent && !mIsShadowRootBinding) {
-    // It is unnecessary to uninstall anonymous content in a shadow tree
-    // because the ShadowRoot itself is a DocumentFragment and does not
-    // need any additional cleanup.
+  if (mContent) {
     nsXBLBinding::UnbindAnonymousContent(mContent->OwnerDoc(), mContent);
   }
   nsXBLDocumentInfo* info = mPrototypeBinding->XBLDocumentInfo();
@@ -144,7 +125,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLBinding)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLBinding)
   // XXX Probably can't unlink mPrototypeBinding->XBLDocumentInfo(), because
   //     mPrototypeBinding is weak.
-  if (tmp->mContent && !tmp->mIsShadowRootBinding) {
+  if (tmp->mContent) {
     nsXBLBinding::UnbindAnonymousContent(tmp->mContent->OwnerDoc(),
                                          tmp->mContent);
   }
@@ -419,9 +400,7 @@ nsXBLBinding::GenerateAnonymousContent()
 
     // Conserve space by wiping the attributes off the clone.
     //
-    // FIXME(emilio): It'd be nice to make `mContent` a `RefPtr<Element>`, but
-    // as of right now it can also be a ShadowRoot (we don't enter in this
-    // codepath though). Move Shadow DOM outside XBL and then fix that.
+    // FIXME(emilio): It'd be nice to make `mContent` a `RefPtr<Element>`.
     if (mContent)
       mContent->AsElement()->UnsetAttr(namespaceID, name, false);
   }
@@ -802,7 +781,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
 
     // Update the anonymous content.
     // XXXbz why not only for style bindings?
-    if (mContent && !mIsShadowRootBinding) {
+    if (mContent) {
       nsXBLBinding::UnbindAnonymousContent(aOldDocument, mContent);
     }
 

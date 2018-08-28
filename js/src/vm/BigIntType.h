@@ -17,6 +17,7 @@
 #include "gc/Heap.h"
 #include "js/AllocPolicy.h"
 #include "js/GCHashTable.h"
+#include "js/Result.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "vm/StringType.h"
@@ -99,6 +100,10 @@ class BigInt final : public js::gc::TenuredCell
     static double numberValue(BigInt* x);
     static JSLinearString* toString(JSContext* cx, BigInt* x, uint8_t radix);
 
+    static bool equal(BigInt* lhs, BigInt* rhs);
+    static bool equal(BigInt* lhs, double rhs);
+    static JS::Result<bool> looselyEqual(JSContext* cx, HandleBigInt lhs, HandleValue rhs);
+
     // Return the length in bytes of the representation used by
     // writeBytes.
     static size_t byteLength(BigInt* x);
@@ -121,7 +126,8 @@ BigIntToAtom(JSContext* cx, JS::BigInt* bi);
 extern JS::BigInt*
 NumberToBigInt(JSContext* cx, double d);
 
-extern JS::BigInt*
+// Convert a string to a BigInt, returning nullptr if parsing fails.
+extern JS::Result<JS::BigInt*, JS::OOM&>
 StringToBigInt(JSContext* cx, JS::Handle<JSString*> str, uint8_t radix);
 
 extern JS::BigInt*
