@@ -46,6 +46,7 @@
         android:layout_height="@dimen/urlinput_height"
         android:orientation="horizontal"
         android:elevation="4dp"
+        android:clickable="true"
         android:clipChildren="false">
 
         <View
@@ -135,7 +136,6 @@
         android:id="@+id/dismissView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="@dimen/urlinput_height"
         android:background="@color/colorOverlay"
         android:contentDescription="@string/content_description_dismiss_input" />
 
