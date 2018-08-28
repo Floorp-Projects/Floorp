@@ -4,21 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.gfx;
+package org.mozilla.geckoview;
 
 import android.view.Surface;
 
 /**
- * Applications use a GeckoDisplay instance to provide GeckoSession with a Surface for
- * displaying content. To ensure drawing only happens on a valid Surface, GeckoSession
- * will only use the provided Surface after {@link #surfaceChanged(Surface, int, int)} is
+ * Applications use a GeckoDisplay instance to provide {@link GeckoSession} with a {@link Surface} for
+ * displaying content. To ensure drawing only happens on a valid {@link Surface}, {@link GeckoSession}
+ * will only use the provided {@link Surface} after {@link #surfaceChanged(Surface, int, int)} is
  * called and before {@link #surfaceDestroyed()} returns.
  */
 public class GeckoDisplay {
-    private final LayerSession mSession;
+    private final GeckoSession session;
 
-    /* package */ GeckoDisplay(final LayerSession session) {
-        mSession = session;
+    /* package */ GeckoDisplay(final GeckoSession session) {
+        this.session = session;
     }
 
     /**
@@ -31,7 +31,9 @@ public class GeckoDisplay {
      * @param height New height of the Surface.
      */
     public void surfaceChanged(Surface surface, int width, int height) {
-        mSession.onSurfaceChanged(surface, width, height);
+        if (session.getDisplay() == this) {
+            session.onSurfaceChanged(surface, width, height);
+        }
     }
 
     /**
@@ -40,7 +42,9 @@ public class GeckoDisplay {
      * valid while pausing drawing.
      */
     public void surfaceDestroyed() {
-        mSession.onSurfaceDestroyed();
+        if (session.getDisplay() == this) {
+            session.onSurfaceDestroyed();
+        }
     }
 
     /**
@@ -51,6 +55,8 @@ public class GeckoDisplay {
      * @param top The Y coordinate of the display on the screen, in screen pixels.
      */
     public void screenOriginChanged(final int left, final int top) {
-        mSession.onScreenOriginChanged(left, top);
+        if (session.getDisplay() == this) {
+            session.onScreenOriginChanged(left, top);
+        }
     }
 }
