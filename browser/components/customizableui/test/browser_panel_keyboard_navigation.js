@@ -45,6 +45,27 @@ add_task(async function testUpDownKeys() {
   await gCUITestUtils.hideMainMenu();
 });
 
+add_task(async function testHomeEndKeys() {
+  await gCUITestUtils.openMainMenu();
+
+  let buttons = getEnabledNavigableElementsForView(PanelUI.mainView);
+  let enabledButtons = buttons.filter(btn => !btn.disabled);
+  let firstButton = enabledButtons[0];
+  let lastButton = enabledButtons.pop();
+
+  Assert.ok(firstButton != lastButton, "There is more than one button");
+
+  EventUtils.synthesizeKey("KEY_End");
+  Assert.equal(document.commandDispatcher.focusedElement, lastButton,
+    "The last button should be focused after pressing End");
+
+  EventUtils.synthesizeKey("KEY_Home");
+  Assert.equal(document.commandDispatcher.focusedElement, firstButton,
+    "The first button should be focused after pressing Home");
+
+  await gCUITestUtils.hideMainMenu();
+});
+
 add_task(async function testEnterKeyBehaviors() {
   await gCUITestUtils.openMainMenu();
 
