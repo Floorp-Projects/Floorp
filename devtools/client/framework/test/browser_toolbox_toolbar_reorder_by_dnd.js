@@ -59,7 +59,7 @@ const TEST_DATA = [
                     "memory", "netmonitor", "storage"],
     dropTarget: "#toolbox-buttons-end",
     expectedOrder: ["inspector", "jsdebugger", "styleeditor", "performance",
-                    "memory", "netmonitor", "storage", "webconsole", "accessibility"],
+                    "memory", "netmonitor", "storage", "accessibility", "webconsole"],
   },
 ];
 
