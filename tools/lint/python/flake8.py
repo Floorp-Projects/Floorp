@@ -54,7 +54,7 @@ LINE_OFFSETS = {
 """Maps a flake8 error to a lineoffset tuple.
 
 The offset is of the form (lineno_offset, num_lines) and is passed
-to the lineoffset property of `ResultContainer`.
+to the lineoffset property of an `Issue`.
 """
 
 # We use sys.prefix to find executables as that gets modified with

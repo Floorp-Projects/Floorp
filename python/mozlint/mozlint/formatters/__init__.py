@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 import json
 
-from ..result import ResultEncoder
+from ..result import IssueEncoder
 from .compact import CompactFormatter
 from .stylish import StylishFormatter
 from .summary import SummaryFormatter
@@ -15,8 +15,8 @@ from .unix import UnixFormatter
 
 
 class JSONFormatter(object):
-    def __call__(self, results, **kwargs):
-        return json.dumps(results, cls=ResultEncoder)
+    def __call__(self, result):
+        return json.dumps(result.issues, cls=IssueEncoder)
 
 
 all_formatters = {
