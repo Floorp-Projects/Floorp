@@ -1493,10 +1493,7 @@ nsDiscriminatedUnion::SetFromStringWithSize(uint32_t aSize,
   if (!aValue) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (!(u.str.mStringValue =
-        (char*)nsMemory::Clone(aValue, (aSize + 1) * sizeof(char)))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  u.str.mStringValue = (char*) moz_xmemdup(aValue, (aSize + 1) * sizeof(char));
   u.str.mStringLength = aSize;
   DATA_SETTER_EPILOGUE(VTYPE_STRING_SIZE_IS);
   return NS_OK;
@@ -1509,10 +1506,8 @@ nsDiscriminatedUnion::SetFromWStringWithSize(uint32_t aSize,
   if (!aValue) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (!(u.wstr.mWStringValue =
-        (char16_t*)nsMemory::Clone(aValue, (aSize + 1) * sizeof(char16_t)))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  u.wstr.mWStringValue =
+    (char16_t*) moz_xmemdup(aValue, (aSize + 1) * sizeof(char16_t));
   u.wstr.mWStringLength = aSize;
   DATA_SETTER_EPILOGUE(VTYPE_WSTRING_SIZE_IS);
   return NS_OK;

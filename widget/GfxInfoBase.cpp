@@ -1105,15 +1105,9 @@ NS_IMETHODIMP GfxInfoBase::GetFailures(uint32_t* failureCount,
     LoggingRecord::const_iterator it;
     uint32_t i=0;
     for(it = loggedStrings.begin() ; it != loggedStrings.end(); ++it, i++) {
-      (*failures)[i] = (char*)nsMemory::Clone(Get<1>(*it).c_str(), Get<1>(*it).size() + 1);
+      (*failures)[i] =
+        (char*) moz_xmemdup(Get<1>(*it).c_str(), Get<1>(*it).size() + 1);
       if (indices) (*indices)[i] = Get<0>(*it);
-
-      if (!(*failures)[i]) {
-        /* <sarcasm> I'm too afraid to use an inline function... </sarcasm> */
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, (*failures));
-        *failureCount = i;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
     }
   }
 
