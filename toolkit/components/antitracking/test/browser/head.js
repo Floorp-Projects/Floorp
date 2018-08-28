@@ -53,7 +53,7 @@ this.AntiTracking = {
 
       // Phase 1: Here we want to test that a 3rd party context is not blocked if pref is off.
       if (runExtraTests) {
-        // There are four ways in which the third-party context may be blocked:
+        // There are four ways in which the third-party context may not be blocked:
         //   * If the cookieBehavior pref causes it to not be blocked.
         //   * If the contentBlocking pref causes it to not be blocked.
         //   * If both of these prefs cause it to not be blocked.
@@ -62,7 +62,16 @@ this.AntiTracking = {
         this._createTask(name, BEHAVIOR_ACCEPT, true, false, callbackNonTracking);
         this._createCleanupTask(cleanupFunction);
 
+        this._createTask(name, BEHAVIOR_REJECT_FOREIGN, false, false, callbackNonTracking);
+        this._createCleanupTask(cleanupFunction);
+
         this._createTask(name, BEHAVIOR_REJECT_TRACKER, false, false, callbackNonTracking);
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask(name, BEHAVIOR_REJECT_FOREIGN, false, true, callbackNonTracking);
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask(name, BEHAVIOR_REJECT_TRACKER, false, true, callbackNonTracking);
         this._createCleanupTask(cleanupFunction);
 
         this._createTask(name, BEHAVIOR_ACCEPT, false, false, callbackNonTracking);
