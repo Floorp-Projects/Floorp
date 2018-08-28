@@ -133,8 +133,7 @@ LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
 
   nsTAutoString<char_type> nameAux(mProfileDirectory);
   nameAux.AppendLiteral(NS_SLASH "Telemetry.LateWriteTmpXXXXXX");
-  char_type* name;
-  nameAux.GetMutableData(&name);
+  char_type* name = nameAux.BeginWriting();
 
   // We want the sha1 of the entire file, so please don't write to fd
   // directly; use sha1Stream.
