@@ -68,7 +68,7 @@ pref("devtools.new-animationinspector.enabled", true);
 // Enable the Font Editor
 pref("devtools.inspector.fonteditor.enabled", true);
 // Enable the font highlight-on-hover feature
-pref("devtools.inspector.fonthighlighter.enabled", false);
+pref("devtools.inspector.fonthighlighter.enabled", true);
 
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);
