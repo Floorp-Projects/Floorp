@@ -13,17 +13,19 @@ const { PAGES } = require("../../constants");
 const SidebarItem = createFactory(require("./SidebarItem"));
 const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
 const CONNECT_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
+const GLOBE_ICON = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
 
 class Sidebar extends PureComponent {
   static get propTypes() {
     return {
+      networkLocations: PropTypes.array.isRequired,
       dispatch: PropTypes.func.isRequired,
       selectedPage: PropTypes.string.isRequired,
     };
   }
 
   render() {
-    const { dispatch, selectedPage } = this.props;
+    const { dispatch, networkLocations, selectedPage } = this.props;
 
     return dom.aside(
       {
@@ -37,6 +39,7 @@ class Sidebar extends PureComponent {
           icon: FIREFOX_ICON,
           isSelected: PAGES.THIS_FIREFOX === selectedPage,
           name: "This Firefox",
+          selectable: true,
         }),
         SidebarItem({
           id: PAGES.CONNECT,
@@ -44,7 +47,19 @@ class Sidebar extends PureComponent {
           icon: CONNECT_ICON,
           isSelected: PAGES.CONNECT === selectedPage,
           name: "Connect",
-        })
+          selectable: true,
+        }),
+        dom.hr(),
+        networkLocations.map(location => SidebarItem(
+          {
+            id: "networklocation-" + location,
+            dispatch,
+            icon: GLOBE_ICON,
+            isSelected: false,
+            name: location,
+            selectable: false,
+          }
+        ))
       )
     );
   }
