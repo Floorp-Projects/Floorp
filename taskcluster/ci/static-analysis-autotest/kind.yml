@@ -42,6 +42,7 @@ jobs:
         run:
             config:
                 - builds/releng_base_firefox.py
+                - builds/releng_sub_linux_configs/64_stat_and_debug.py
             tooltool-downloads: public
             keep-artifacts: false
         toolchains:
