@@ -16,6 +16,8 @@ const INITIAL_FLEXBOX = {
   actorID: null,
   // The color of the flexbox highlighter overlay.
   color: "",
+  // An array of flex items belonging to the current flex container.
+  flexItems: [],
   // Whether or not the flexbox highlighter is highlighting the flex container.
   highlighted: false,
   // The NodeFront of the flex container.
