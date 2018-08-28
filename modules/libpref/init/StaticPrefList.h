@@ -461,6 +461,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Is support for CSS column-span enabled?
+VARCACHE_PREF(
+  "layout.css.column-span.enabled",
+   layout_css_column_span_enabled,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // JavaScript prefs
 //---------------------------------------------------------------------------

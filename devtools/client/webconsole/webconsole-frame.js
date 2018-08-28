@@ -24,10 +24,6 @@ const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
 const PREF_SIDEBAR_ENABLED = "devtools.webconsole.sidebarToggle";
 
-// XXX: This file is incomplete (see bug 1326937).
-// It's used when loading the webconsole with devtools-launchpad, but will ultimately be
-// the entry point for the new frontend
-
 /**
  * A WebConsoleFrame instance is an interactive console initialized *per target*
  * that displays console log data as well as provides an interactive terminal to
@@ -236,10 +232,8 @@ WebConsoleFrame.prototype = {
 
     const toolbox = gDevTools.getToolbox(this.owner.target);
 
-    // Handle both launchpad and toolbox loading
-    const Wrapper = this.owner.WebConsoleOutputWrapper || this.window.WebConsoleOutput;
-    this.consoleOutput =
-      new Wrapper(this.outputNode, this, toolbox, this.owner, this.document);
+    this.consoleOutput = new this.window.WebConsoleOutput(
+      this.outputNode, this, toolbox, this.owner, this.document);
     // Toggle the timestamp on preference change
     Services.prefs.addObserver(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
     this._onToolboxPrefChanged();
