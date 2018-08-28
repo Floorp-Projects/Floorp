@@ -2902,7 +2902,7 @@ ReflectorNode::edges(JSContext* cx, bool wantNames) const
         if (node) {
             char16_t* edgeName = nullptr;
             if (wantNames) {
-                edgeName = NS_strdup(u"Reflected Node");
+                edgeName = NS_xstrdup(u"Reflected Node");
             }
             if (!range->addEdge(Edge(edgeName, node.get()))){
                 return nullptr;
