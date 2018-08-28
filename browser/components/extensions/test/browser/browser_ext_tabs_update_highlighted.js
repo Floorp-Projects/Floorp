@@ -115,25 +115,24 @@ add_task(async function test_update_highlighted() {
 
       await expectResults(async () => {
         await browser.tabs.update(tab2, {highlighted: true, active: false});
-        return {active: tab2, highlighted: [tab1, tab2], events: [
-          ["onActivated", {tabId: tab2, windowId}],
+        return {active: tab1, highlighted: [tab1, tab2], events: [
           ["onHighlighted", {tabIds: [tab1, tab2], windowId}],
         ]};
-      }, "highlighting and (not really) inactivating non-highlighted tab");
+      }, "highlighting without activating non-highlighted tab");
 
       await expectResults(async () => {
-        await browser.tabs.update(tab1, {highlighted: true, active: true});
-        return {active: tab1, highlighted: [tab1], events: [
-          ["onActivated", {tabId: tab1, windowId}],
-          ["onHighlighted", {tabIds: [tab1], windowId}],
+        await browser.tabs.update(tab2, {highlighted: true, active: true});
+        return {active: tab2, highlighted: [tab2], events: [
+          ["onActivated", {tabId: tab2, windowId}],
+          ["onHighlighted", {tabIds: [tab2], windowId}],
         ]};
       }, "highlighting and activating inactive highlighted tab");
 
       await expectResults(async () => {
-        await browser.tabs.update(tab2, {active: true, highlighted: true});
-        return {active: tab2, highlighted: [tab2], events: [
-          ["onActivated", {tabId: tab2, windowId}],
-          ["onHighlighted", {tabIds: [tab2], windowId}],
+        await browser.tabs.update(tab1, {active: true, highlighted: true});
+        return {active: tab1, highlighted: [tab1], events: [
+          ["onActivated", {tabId: tab1, windowId}],
+          ["onHighlighted", {tabIds: [tab1], windowId}],
         ]};
       }, "highlighting and activating non-highlighted tab");
 

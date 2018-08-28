@@ -33,6 +33,7 @@ public final class PrefsHelper {
         INT_TO_STRING_PREFS.add("network.cookie.cookieBehavior");
         INT_TO_STRING_PREFS.add("home.sync.updateMode");
         INT_TO_STRING_PREFS.add("browser.image_blocking");
+        INT_TO_STRING_PREFS.add("media.autoplay.default");
         INT_TO_BOOL_PREFS.add("browser.display.use_document_fonts");
     }
 

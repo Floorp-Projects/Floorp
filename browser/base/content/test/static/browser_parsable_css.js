@@ -100,9 +100,6 @@ let propNameWhitelist = [
   // Bug 1441929
   {propName: "--theme-search-overlays-semitransparent",
    isFromDevTools: true},
-  // Bug 1441878
-  {propName: "--theme-codemirror-gutter-background",
-   isFromDevTools: true},
   // These custom properties are retrieved directly from CSSOM
   // in videocontrols.xml to get pre-defined style instead of computed
   // dimensions, which is why they are not referenced by CSS.

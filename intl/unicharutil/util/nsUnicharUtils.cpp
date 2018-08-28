@@ -86,6 +86,33 @@ ToLowerCaseASCII(char32_t aChar)
   return aChar;
 }
 
+char
+ToUpperCaseASCII(char aChar)
+{
+  if (aChar >= 'a' && aChar <= 'z') {
+    return aChar - 0x20;
+  }
+  return aChar;
+}
+
+char16_t
+ToUpperCaseASCII(char16_t aChar)
+{
+  if (aChar >= 'a' && aChar <= 'z') {
+    return aChar - 0x20;
+  }
+  return aChar;
+}
+
+char32_t
+ToUpperCaseASCII(char32_t aChar)
+{
+  if (aChar >= 'a' && aChar <= 'z') {
+    return aChar - 0x20;
+  }
+  return aChar;
+}
+
 void
 ToLowerCase(const nsAString& aSource,
             nsAString& aDest)

@@ -456,7 +456,7 @@ def write_mozbuild(sources):
   write_sources(f, sources['linux'], 4)
 
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':\n")
-  f.write("    if CONFIG['CC_TYPE'] not in ('gcc', 'clang'):\n")
+  f.write("    if CONFIG['CC_TYPE'] not in ('gcc', 'clang') and CONFIG['CPU_ARCH'] != 'aarch64':\n")
   write_list(f, "SOURCES", sources['no-mingw'], 8)
   # Windows-specific files don't get unification because of nasty headers.
   # Luckily there are not many files in this.

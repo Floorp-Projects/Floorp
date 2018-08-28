@@ -104,11 +104,11 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 /* Current Time Scrubber */
 .current-time-scrubber-area {
   grid-column: 2 / 3;
+  position: relative;
   z-index: 2;
 }
 
-.current-time-scrubber-area:dir(ltr)::before,
-.current-time-scrubber-area:dir(rtl)::after {
+.current-time-scrubber-area::before {
   content: "";
   cursor: col-resize;
   height: var(--devtools-toolbar-height);
@@ -118,7 +118,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   width: calc(100% + 1px);
 }
 
-.current-time-scrubber-area:dir(rtl)::after {
+.current-time-scrubber-area:dir(rtl)::before {
   /* In order to click on the start edge of current-time-scrubber-area element on RTL */
   margin-inline-start: -1px;
 }
@@ -126,22 +126,22 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 .indication-bar.current-time-scrubber {
   cursor: col-resize;
   pointer-events: auto;
-  width: 12px;
-  transform: translateX(-6px);
 }
 
-.indication-bar.current-time-scrubber:dir(rtl) {
+.indication-bar.current-time-scrubber:dir(rtl)::before {
   transform: translateX(6px);
+}
+
+.indication-bar.current-time-scrubber:dir(rtl)::after {
+  transform: translateX(1px);
 }
 
 .indication-bar.current-time-scrubber::before {
   border-top-color: var(--scrubber-color);
-  left: 0;
 }
 
 .indication-bar.current-time-scrubber::after {
-  border-inline-start-color: var(--scrubber-color);
-  left: 5px;
+  background-color: var(--scrubber-color);
 }
 
 /* Animation Item */
@@ -427,6 +427,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   background: none;
   grid-column: 2 / 3;
   pointer-events: none;
+  position: relative;
   z-index: 2;
 }
 
@@ -435,7 +436,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .indication-bar.keyframes-progress-bar::after {
-  border-inline-start-color: var(--progress-bar-color);
+  background-color: var(--progress-bar-color);
 }
 
 /* Animated Property Item */
@@ -664,7 +665,6 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 /* Indication Bar */
 .indication-bar {
-  height: 100%;
   position: absolute;
 }
 
@@ -673,19 +673,18 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   border-inline-end: 5px solid transparent;
   border-top: 5px solid;
   content: "";
-  left: -5px;
-  position: absolute;
-  top: 0;
-  width: 0;
+  height: 100vh;
+  position: fixed;
+  transform: translateX(-6px);
+  width: 1px;
 }
 
 .indication-bar::after {
-  border-inline-start: 1px solid;
   content: "";
-  height: 100%;
-  position: absolute;
-  top: 0;
-  width: 0;
+  height: 100vh;
+  position: fixed;
+  transform: translateX(-1px);
+  width: 1px;
 }
 
 /* No Animation Panel */

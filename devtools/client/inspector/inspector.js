@@ -619,14 +619,17 @@ Inspector.prototype = {
     if (window.closed) {
       return;
     }
+
     // Use window.top because promiseDocumentFlushed() in a subframe doesn't
     // work, see https://bugzilla.mozilla.org/show_bug.cgi?id=1441173
     const useLandscapeMode = await window.top.promiseDocumentFlushed(() => {
       return this.useLandscapeMode();
     });
+
     if (window.closed) {
       return;
     }
+
     this.splitBox.setState({ vert: useLandscapeMode });
     this.emit("inspector-resize");
   },
@@ -636,6 +639,10 @@ Inspector.prototype = {
    * to `horizontal` to support portrait view.
    */
   onPanelWindowResize: function() {
+    if (this.toolbox.currentToolId !== "inspector") {
+      return;
+    }
+
     if (!this._lazyResizeHandler) {
       this._lazyResizeHandler = new DeferredTask(this._onLazyPanelResize.bind(this),
                                                  LAZY_RESIZE_INTERVAL_MS, 0);

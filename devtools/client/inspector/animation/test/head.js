@@ -291,34 +291,23 @@ const clickOnTargetNode = async function(animationInspector, panel, index) {
  *
  * @param {DOMElement} panel
  *        #animation-container element.
- * @param {Number} mouseDownPosition
- *        rate on scrubber controller pane.
- *        This method calculates
- *        `mouseDownPosition * offsetWidth + offsetLeft of scrubber controller pane`
- *        as the clientX of MouseEvent.
- * @param {Number} mouseMovePosition
+ * @param {Number} mouseMovePixel
  *        Dispatch mousemove event with mouseMovePosition after mousedown.
- *        Calculation for clinetX is same to above.
  * @param {Number} mouseYPixel
  *        Y of mouse in pixel.
  */
 const dragOnCurrentTimeScrubber = async function(animationInspector,
                                                  panel,
-                                                 mouseDownPosition,
-                                                 mouseMovePosition,
+                                                 mouseMovePixel,
                                                  mouseYPixel) {
   const controllerEl = panel.querySelector(".current-time-scrubber");
-  const bounds = controllerEl.getBoundingClientRect();
-  const mousedonwX = bounds.width * mouseDownPosition;
-  const mousemoveX = bounds.width * mouseMovePosition;
-
-  info(`Drag on scrubber from ${ mousedonwX } to ${ mousemoveX }`);
-  EventUtils.synthesizeMouse(controllerEl, mousedonwX, mouseYPixel,
+  info(`Drag scrubber to X ${ mouseMovePixel }`);
+  EventUtils.synthesizeMouse(controllerEl, 0, mouseYPixel,
                              { type: "mousedown" }, controllerEl.ownerGlobal);
   await waitForSummaryAndDetail(animationInspector);
-  EventUtils.synthesizeMouse(controllerEl, mousemoveX, mouseYPixel,
+  EventUtils.synthesizeMouse(controllerEl, mouseMovePixel, mouseYPixel,
                              { type: "mousemove" }, controllerEl.ownerGlobal);
-  EventUtils.synthesizeMouse(controllerEl, mousemoveX, mouseYPixel,
+  EventUtils.synthesizeMouse(controllerEl, mouseMovePixel, mouseYPixel,
                              { type: "mouseup" }, controllerEl.ownerGlobal);
   await waitForSummaryAndDetail(animationInspector);
 };

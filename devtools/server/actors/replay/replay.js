@@ -465,22 +465,6 @@ function getScriptData(id) {
   };
 }
 
-function getSourceData(id) {
-  const source = gScriptSources.getObject(id);
-  const introductionScript = gScripts.getId(source.introductionScript);
-  return {
-    id: id,
-    text: source.text,
-    url: source.url,
-    displayURL: source.displayURL,
-    elementAttributeName: source.elementAttributeName,
-    introductionScript,
-    introductionOffset: introductionScript ? source.introductionOffset : undefined,
-    introductionType: source.introductionType,
-    sourceMapURL: source.sourceMapURL,
-  };
-}
-
 function forwardToScript(name) {
   return request => gScripts.getObject(request.id)[name](request.value);
 }
@@ -511,16 +495,20 @@ const gRequestHandlers = {
     return RecordReplayControl.getContent(request.url);
   },
 
-  findSources(request) {
-    const sources = [];
-    gScriptSources.forEach((id) => {
-      sources.push(getSourceData(id));
-    });
-    return sources;
-  },
-
   getSource(request) {
-    return getSourceData(request.id);
+    const source = gScriptSources.getObject(request.id);
+    const introductionScript = gScripts.getId(source.introductionScript);
+    return {
+      id: request.id,
+      text: source.text,
+      url: source.url,
+      displayURL: source.displayURL,
+      elementAttributeName: source.elementAttributeName,
+      introductionScript,
+      introductionOffset: introductionScript ? source.introductionOffset : undefined,
+      introductionType: source.introductionType,
+      sourceMapURL: source.sourceMapURL,
+    };
   },
 
   getObject(request) {

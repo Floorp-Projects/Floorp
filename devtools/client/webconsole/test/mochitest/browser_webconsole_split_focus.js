@@ -8,9 +8,16 @@
 const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for splitting</p>";
 
 add_task(async function() {
-  // Only run in legacy JsTerm - fixme in Bug 1485510.
+  // Run in legacy JsTerm.
   await pushPref("devtools.webconsole.jsterm.codeMirror", false);
+  await testHistory();
 
+  // And then in codeMirror JsTerm.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await testHistory();
+});
+
+async function testHistory() {
   info("Test that the split console input is focused and restores the focus properly.");
 
   const toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
@@ -27,16 +34,15 @@ add_task(async function() {
 
   ok(toolbox.splitConsole, "Split console is now visible");
 
-  activeElement = getActiveElement(toolbox.doc);
-  const inputNode = toolbox.getPanel("webconsole").hud.jsterm.inputNode;
-  is(activeElement, inputNode, "Split console input is focused by default");
+  const {jsterm} = toolbox.getPanel("webconsole").hud;
+  ok(isJstermFocused(jsterm), "Split console input is focused by default");
 
   await toolbox.closeSplitConsole();
 
   info("Making sure that the search box is refocused after closing the split console");
   activeElement = getActiveElement(inspector.panelDoc);
   is(activeElement, inspector.searchBox, "Search box is focused");
-});
+}
 
 function getActiveElement(doc) {
   let activeElement = doc.activeElement;

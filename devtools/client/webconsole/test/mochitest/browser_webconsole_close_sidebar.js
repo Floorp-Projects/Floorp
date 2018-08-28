@@ -10,8 +10,6 @@
 const TEST_URI = "data:text/html;charset=utf8,";
 
 add_task(async function() {
-  // Only run in legacy JsTerm - fixme in Bug 1485510.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
   // Should be removed when sidebar work is complete
   await pushPref("devtools.webconsole.sidebarToggle", true);
 
@@ -69,8 +67,7 @@ add_task(async function() {
   await onSidebarShown;
   sidebar = hud.ui.document.querySelector(".sidebar");
   ok(!sidebar, "Sidebar hidden after sending esc");
-  const inputNode = hud.jsterm.inputNode;
-  ok(hasFocus(inputNode), "console input is focused after closing the sidebar");
+  ok(isJstermFocused(hud.jsterm), "console input is focused after closing the sidebar");
 });
 
 async function showSidebar(hud) {

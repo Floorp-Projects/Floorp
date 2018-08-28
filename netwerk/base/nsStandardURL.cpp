@@ -26,6 +26,7 @@
 #include "prprf.h"
 #include "nsReadableUtils.h"
 #include "mozilla/net/MozURL_ffi.h"
+#include "mozilla/TextUtils.h"
 
 //
 // setenv MOZ_LOG nsStandardURL:5
@@ -435,10 +436,10 @@ ParseIPv4Number(const nsACString& input, int32_t base, uint32_t& number, uint32_
     for (; current < end; ++current) {
         value *= base;
         char c = *current;
-        MOZ_ASSERT((base == 10 && isdigit(c)) ||
+        MOZ_ASSERT((base == 10 && IsAsciiDigit(c)) ||
                    (base == 8 && c >= '0' && c <= '7') ||
-                   (base == 16 && isxdigit(c)));
-        if (isdigit(c)) {
+                   (base == 16 && IsAsciiHexDigit(c)));
+        if (IsAsciiDigit(c)) {
             value += c - '0';
         } else if (c >= 'a' && c <= 'f') {
             value += c - 'a' + 10;

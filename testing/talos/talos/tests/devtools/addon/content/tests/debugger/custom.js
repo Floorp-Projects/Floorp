@@ -11,8 +11,9 @@ const { createContext, openDebuggerAndLog, pauseDebugger, reloadDebuggerAndLog,
         removeBreakpoints, resume, step } = require("./debugger-helpers");
 
 const EXPECTED = {
-  sources: 7,
+  sources: 107,
   file: "App.js",
+  sourceURL: `${PAGES_BASE_URL}custom/debugger/static/js/App.js`,
   text: "import React, { Component } from 'react';"
 };
 

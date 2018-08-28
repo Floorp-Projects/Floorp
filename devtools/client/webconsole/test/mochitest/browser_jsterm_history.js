@@ -10,55 +10,51 @@
 const TEST_URI = "data:text/html;charset=UTF-8,test";
 const COMMANDS = ["document", "window", "window.location"];
 
-const {
-  HISTORY_BACK,
-  HISTORY_FORWARD,
-} = require("devtools/client/webconsole/constants");
-
 add_task(async function() {
-  // Only run in legacy JsTerm - fixme in Bug 1485510.
   await pushPref("devtools.webconsole.jsterm.codeMirror", false);
+  await testHistory();
+
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
   await testHistory();
 });
 
 async function testHistory() {
-  const { jsterm, ui } = await openNewTabAndConsole(TEST_URI);
-  ui.clearOutput();
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
+  jsterm.focus();
 
   for (const command of COMMANDS) {
     info(`Executing command ${command}`);
-    jsterm.setInputValue(command);
-    await jsterm.execute();
+    await jsterm.execute(command);
   }
 
   for (let x = COMMANDS.length - 1; x != -1; x--) {
-    jsterm.historyPeruse(HISTORY_BACK);
+    EventUtils.synthesizeKey("KEY_ArrowUp");
     is(jsterm.getInputValue(), COMMANDS[x], "check history previous idx:" + x);
   }
 
-  jsterm.historyPeruse(HISTORY_BACK);
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(jsterm.getInputValue(), COMMANDS[0], "test that item is still index 0");
 
-  jsterm.historyPeruse(HISTORY_BACK);
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(jsterm.getInputValue(), COMMANDS[0], "test that item is still still index 0");
 
   for (let i = 1; i < COMMANDS.length; i++) {
-    jsterm.historyPeruse(HISTORY_FORWARD);
+    EventUtils.synthesizeKey("KEY_ArrowDown");
     is(jsterm.getInputValue(), COMMANDS[i], "check history next idx:" + i);
   }
 
-  jsterm.historyPeruse(HISTORY_FORWARD);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(jsterm.getInputValue(), "", "check input is empty again");
 
   // Simulate pressing Arrow_Down a few times and then if Arrow_Up shows
   // the previous item from history again.
-  jsterm.historyPeruse(HISTORY_FORWARD);
-  jsterm.historyPeruse(HISTORY_FORWARD);
-  jsterm.historyPeruse(HISTORY_FORWARD);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(jsterm.getInputValue(), "", "check input is still empty");
 
   const idxLast = COMMANDS.length - 1;
-  jsterm.historyPeruse(HISTORY_BACK);
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(jsterm.getInputValue(), COMMANDS[idxLast], "check history next idx:" + idxLast);
 }
