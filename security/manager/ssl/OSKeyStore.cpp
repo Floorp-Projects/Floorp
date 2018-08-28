@@ -201,9 +201,6 @@ OSKeyStore::DecryptBytes(const nsACString& aLabel,
   }
 
   *outBytes = (uint8_t*)moz_xmalloc(plaintextBytes.size());
-  if (!*outBytes) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   memcpy(*outBytes, plaintextBytes.data(), plaintextBytes.size());
   *outLen = plaintextBytes.size();
   return NS_OK;

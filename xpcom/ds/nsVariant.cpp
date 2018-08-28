@@ -329,9 +329,6 @@ CloneArray(uint16_t aInType, const nsIID* aInIID,
 
   allocSize = aInCount * elementSize;
   *aOutValue = moz_xmalloc(allocSize);
-  if (!*aOutValue) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   // Clone the elements.
 

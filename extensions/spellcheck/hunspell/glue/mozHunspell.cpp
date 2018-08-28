@@ -471,52 +471,44 @@ mozHunspell::Suggest(const nsAString& aWord, char16_t*** aSuggestions,
 
   if (*aSuggestionCount) {
     *aSuggestions  = (char16_t **)moz_xmalloc(*aSuggestionCount * sizeof(char16_t *));
-    if (*aSuggestions) {
-      uint32_t index = 0;
-      for (index = 0; index < *aSuggestionCount && NS_SUCCEEDED(rv); ++index) {
-        // If the IDL used an array of AString, we could use
-        // Encoding::DecodeWithoutBOMHandling() here.
-        // Convert the suggestion to utf16
-        Span<const char> charSrc(suggestions[index]);
-        auto src = AsBytes(charSrc);
-        CheckedInt<size_t> needed =
-          mDecoder->MaxUTF16BufferLength(src.Length());
-        if (!needed.isValid()) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
-        }
-        size_t dstLen = needed.value();
-        needed += 1;
-        needed *= sizeof(char16_t);
-        if (!needed.isValid()) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
-        }
-        (*aSuggestions)[index] = (char16_t*)moz_xmalloc(needed.value());
-        if (!((*aSuggestions)[index])) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
-        }
-        auto dst = MakeSpan((*aSuggestions)[index], dstLen);
-        uint32_t result;
-        size_t read;
-        size_t written;
-        bool hadErrors;
-        Tie(result, read, written, hadErrors) =
-          mDecoder->DecodeToUTF16(src, dst, true);
-        MOZ_ASSERT(result == kInputEmpty);
-        MOZ_ASSERT(read == src.Length());
-        MOZ_ASSERT(written <= dstLen);
-        Unused << hadErrors;
-        (*aSuggestions)[index][written] = 0;
-        mDecoder->Encoding()->NewDecoderWithoutBOMHandlingInto(*mDecoder);
+    uint32_t index = 0;
+    for (index = 0; index < *aSuggestionCount && NS_SUCCEEDED(rv); ++index) {
+      // If the IDL used an array of AString, we could use
+      // Encoding::DecodeWithoutBOMHandling() here.
+      // Convert the suggestion to utf16
+      Span<const char> charSrc(suggestions[index]);
+      auto src = AsBytes(charSrc);
+      CheckedInt<size_t> needed =
+        mDecoder->MaxUTF16BufferLength(src.Length());
+      if (!needed.isValid()) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        break;
       }
-
-      if (NS_FAILED(rv))
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(index, *aSuggestions); // free the char16_t strings up to the point at which the error occurred
+      size_t dstLen = needed.value();
+      needed += 1;
+      needed *= sizeof(char16_t);
+      if (!needed.isValid()) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        break;
+      }
+      (*aSuggestions)[index] = (char16_t*)moz_xmalloc(needed.value());
+      auto dst = MakeSpan((*aSuggestions)[index], dstLen);
+      uint32_t result;
+      size_t read;
+      size_t written;
+      bool hadErrors;
+      Tie(result, read, written, hadErrors) =
+        mDecoder->DecodeToUTF16(src, dst, true);
+      MOZ_ASSERT(result == kInputEmpty);
+      MOZ_ASSERT(read == src.Length());
+      MOZ_ASSERT(written <= dstLen);
+      Unused << hadErrors;
+      (*aSuggestions)[index][written] = 0;
+      mDecoder->Encoding()->NewDecoderWithoutBOMHandlingInto(*mDecoder);
     }
-    else // if (*aSuggestions)
-      rv = NS_ERROR_OUT_OF_MEMORY;
+
+    if (NS_FAILED(rv))
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(index, *aSuggestions); // free the char16_t strings up to the point at which the error occurred
   }
 
   return rv;
