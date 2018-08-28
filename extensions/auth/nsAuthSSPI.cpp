@@ -542,10 +542,8 @@ nsAuthSSPI::Unwrap(const void *inToken,
             *outToken = ib[1].pvBuffer;
         }
         else {
-            *outToken = nsMemory::Clone(ib[1].pvBuffer, ib[1].cbBuffer);
+            *outToken = moz_xmemdup(ib[1].pvBuffer, ib[1].cbBuffer);
             free(ib[0].pvBuffer);
-            if (!*outToken)
-                return NS_ERROR_OUT_OF_MEMORY;
         }
         *outTokenLen = ib[1].cbBuffer;
     }

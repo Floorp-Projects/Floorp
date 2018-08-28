@@ -306,8 +306,8 @@ NS_IMETHODIMP nsJSIID::GetNumber(char * *aNumber)
     const nsIID* id;
     mInfo->GetIIDShared(&id);
     id->ToProvidedString(str);
-    *aNumber = (char*) nsMemory::Clone(str, NSID_LENGTH);
-    return *aNumber ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aNumber = (char*) moz_xmemdup(str, NSID_LENGTH);
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(const nsID*) nsJSIID::GetID()
