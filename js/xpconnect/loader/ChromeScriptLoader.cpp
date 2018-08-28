@@ -17,6 +17,7 @@
 #include "js/SourceBufferHolder.h"
 #include "js/Utility.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptLoader.h"
@@ -43,23 +44,19 @@ public:
     AsyncScriptCompiler(JSContext* aCx,
                         nsIGlobalObject* aGlobal,
                         const nsACString& aURL,
-                        const CompileScriptOptionsDictionary& aOptions,
                         Promise* aPromise)
       : mozilla::Runnable("AsyncScriptCompiler")
       , mOptions(aCx)
       , mURL(aURL)
       , mGlobalObject(aGlobal)
       , mPromise(aPromise)
-      , mCharset(aOptions.mCharset)
       , mToken(nullptr)
       , mScriptLength(0)
-    {
-        mOptions.setNoScriptRval(!aOptions.mHasReturnValue)
-                .setCanLazilyParse(aOptions.mLazilyParse)
-                .setFile(aCx, mURL.get());
-    }
+    {}
 
-    nsresult Start(nsIPrincipal* aPrincipal);
+    MOZ_MUST_USE nsresult Start(JSContext* aCx,
+                                const CompileScriptOptionsDictionary& aOptions,
+                                nsIPrincipal* aPrincipal);
 
     inline void
     SetToken(JS::OffThreadToken* aToken)
@@ -97,8 +94,19 @@ NS_IMPL_ADDREF_INHERITED(AsyncScriptCompiler, Runnable)
 NS_IMPL_RELEASE_INHERITED(AsyncScriptCompiler, Runnable)
 
 nsresult
-AsyncScriptCompiler::Start(nsIPrincipal* aPrincipal)
+AsyncScriptCompiler::Start(JSContext* aCx,
+                           const CompileScriptOptionsDictionary& aOptions,
+                           nsIPrincipal* aPrincipal)
 {
+    mCharset = aOptions.mCharset;
+
+    mOptions.setNoScriptRval(!aOptions.mHasReturnValue)
+            .setCanLazilyParse(aOptions.mLazilyParse);
+
+    if (NS_WARN_IF(!mOptions.setFile(aCx, mURL.get()))) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), mURL);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -279,9 +287,9 @@ ChromeUtils::CompileScript(GlobalObject& aGlobal,
     }
 
     NS_ConvertUTF16toUTF8 url(aURL);
-    RefPtr<AsyncScriptCompiler> compiler = new AsyncScriptCompiler(aGlobal.Context(), global, url, aOptions, promise);
+    RefPtr<AsyncScriptCompiler> compiler = new AsyncScriptCompiler(aGlobal.Context(), global, url, promise);
 
-    nsresult rv = compiler->Start(aGlobal.GetSubjectPrincipal());
+    nsresult rv = compiler->Start(aGlobal.Context(), aOptions, aGlobal.GetSubjectPrincipal());
     if (NS_FAILED(rv)) {
         promise->MaybeReject(rv);
     }
