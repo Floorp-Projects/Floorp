@@ -5,7 +5,7 @@
 
 package org.mozilla.geckoview.test.rule;
 
-import org.mozilla.gecko.gfx.GeckoDisplay;
+import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoResult.OnExceptionListener;

@@ -5,8 +5,7 @@
 
 package org.mozilla.geckoview.test;
 
-import org.mozilla.gecko.gfx.GeckoDisplay;
-import org.mozilla.geckoview.GeckoResponse;
+import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
