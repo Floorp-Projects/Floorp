@@ -6,7 +6,6 @@
 
 DevToolsModules(
     'Flexbox.js',
-    'FlexContainerItem.js',
-    'FlexContainerList.js',
+    'FlexContainer.js',
     'FlexContainerProperties.js',
 )
