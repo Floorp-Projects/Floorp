@@ -14,8 +14,14 @@ const flexItem = exports.flexItem = {
   // The actor ID of the flex item.
   actorID: PropTypes.string,
 
+  // The flex item sizing data.
+  flexItemSizing: PropTypes.object,
+
   // The NodeFront of the flex item.
   nodeFront: PropTypes.object,
+
+  // The computed style properties of the flex item.
+  properties: PropTypes.object,
 
 };
 
