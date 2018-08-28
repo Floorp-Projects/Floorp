@@ -959,6 +959,7 @@ window._gBrowser = {
 
       newTab.removeAttribute("titlechanged");
       newTab.removeAttribute("attention");
+      this._tabAttrModified(newTab, ["attention"]);
 
       // The tab has been selected, it's not unselected anymore.
       // (1) Call the current tab's finishUnselectedTabHoverTimer()
@@ -4432,9 +4433,11 @@ window._gBrowser = {
         // At least one of these should/will be non-null:
         let promptPrincipal = event.detail.promptPrincipal || docPrincipal ||
           tabForEvent.linkedBrowser.contentPrincipal;
+
         // For null principals, we bail immediately and don't show the checkbox:
         if (!promptPrincipal || promptPrincipal.isNullPrincipal) {
           tabForEvent.setAttribute("attention", "true");
+          this._tabAttrModified(tabForEvent, ["attention"]);
           return;
         }
 
@@ -4448,6 +4451,7 @@ window._gBrowser = {
             let tabPrompt = this.getTabModalPromptBox(tabForEvent.linkedBrowser);
             tabPrompt.onNextPromptShowAllowFocusCheckboxFor(promptPrincipal);
             tabForEvent.setAttribute("attention", "true");
+            this._tabAttrModified(tabForEvent, ["attention"]);
             return;
           }
         }

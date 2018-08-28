@@ -679,6 +679,10 @@ class Tab extends TabBase {
     return this.window.gBrowser.getIcon(this.nativeTab);
   }
 
+  get attention() {
+    return this.nativeTab.getAttribute("attention") === "true";
+  }
+
   get audible() {
     return this.nativeTab.soundPlaying;
   }
