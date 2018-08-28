@@ -73,12 +73,8 @@ class Flake8Process(ProcessHandlerMixin):
             print('Non JSON output from linter, will not be processed: {}'.format(line))
             return
 
-        if 'code' in res:
-            if res['code'].startswith('W'):
-                res['level'] = 'warning'
-
-            if res['code'] in LINE_OFFSETS:
-                res['lineoffset'] = LINE_OFFSETS[res['code']]
+        if res.get('code') in LINE_OFFSETS:
+            res['lineoffset'] = LINE_OFFSETS[res['code']]
 
         results.append(result.from_config(self.config, **res))
 
