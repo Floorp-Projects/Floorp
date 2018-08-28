@@ -13,6 +13,7 @@ const TEST_3RD_PARTY_PAGE_UI = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyUI.h
 const TEST_3RD_PARTY_PAGE_WITH_SVG = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartySVG.html";
 
 const BEHAVIOR_ACCEPT         = Ci.nsICookieService.BEHAVIOR_ACCEPT;
+const BEHAVIOR_REJECT_FOREIGN = Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
 const BEHAVIOR_REJECT_TRACKER = Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
 
 var gFeatures = undefined;
@@ -67,6 +68,10 @@ this.AntiTracking = {
         this._createTask(name, BEHAVIOR_ACCEPT, false, false, callbackNonTracking);
         this._createCleanupTask(cleanupFunction);
 
+        // Try testing using the allow list with both reject foreign and reject tracker cookie behaviors
+        this._createTask(name, BEHAVIOR_REJECT_FOREIGN, true, true, callbackNonTracking);
+        this._createCleanupTask(cleanupFunction);
+
         this._createTask(name, BEHAVIOR_REJECT_TRACKER, true, true, callbackNonTracking);
         this._createCleanupTask(cleanupFunction);
       } else {
@@ -114,7 +119,7 @@ this.AntiTracking = {
   _createTask(name, cookieBehavior, blockingByContentBlocking,
               allowList, callback, extraPrefs) {
     add_task(async function() {
-      info("Starting " + (cookieBehavior != BEHAVIOR_ACCEPT ? "blocking" : "non-blocking") + " cookieBehavior and " +
+      info("Starting " + (cookieBehavior != BEHAVIOR_ACCEPT ? "blocking" : "non-blocking") + " cookieBehavior (" + cookieBehavior + ") and " +
                          (blockingByContentBlocking ? "blocking" : "non-blocking") + " contentBlocking with" +
                          (allowList ? "" : "out") + " allow list test " + name);
 
