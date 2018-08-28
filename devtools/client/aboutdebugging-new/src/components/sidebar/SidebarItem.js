@@ -8,7 +8,7 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Actions = require("../actions/index");
+const Actions = require("../../actions/index");
 
 /**
  * This component displays an item of the Sidebar component.
