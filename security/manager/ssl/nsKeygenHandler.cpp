@@ -327,10 +327,6 @@ GetSlotWithMechanism(uint32_t aMechanism, nsIInterfaceRequestor* m_ctx,
 
         // Allocate the slot name buffer //
         tokenNameList = static_cast<char16_t**>(moz_xmalloc(sizeof(char16_t *) * numSlots));
-        if (!tokenNameList) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto loser;
-        }
 
         i = 0;
         slotElement = PK11_GetFirstSafe(slotList);

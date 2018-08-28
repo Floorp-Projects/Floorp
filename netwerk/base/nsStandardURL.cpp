@@ -1110,11 +1110,9 @@ nsStandardURL::AppendToSubstring(uint32_t pos,
         return nullptr;
 
     char *result = (char *) moz_xmalloc(len + tailLen + 1);
-    if (result) {
-        memcpy(result, mSpec.get() + pos, len);
-        memcpy(result + len, tail, tailLen);
-        result[len + tailLen] = '\0';
-    }
+    memcpy(result, mSpec.get() + pos, len);
+    memcpy(result + len, tail, tailLen);
+    result[len + tailLen] = '\0';
     return result;
 }
 
@@ -3627,8 +3625,6 @@ NS_IMETHODIMP
 nsStandardURL::GetClassID(nsCID * *aClassID)
 {
     *aClassID = (nsCID*) moz_xmalloc(sizeof(nsCID));
-    if (!*aClassID)
-        return NS_ERROR_OUT_OF_MEMORY;
     return GetClassIDNoAlloc(*aClassID);
 }
 

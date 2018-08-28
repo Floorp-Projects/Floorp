@@ -1333,10 +1333,6 @@ nsCompressOutputStreamWrapper::Write(const char * buf,
         // a stream buffer size proportional to request buffers.
         mWriteBufferLen = std::max(count*2, (uint32_t)kMinCompressWriteBufLen);
         mWriteBuffer = (unsigned char*)moz_xmalloc(mWriteBufferLen);
-        if (!mWriteBuffer) {
-            mWriteBufferLen = 0;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
         mZstream.next_out = mWriteBuffer;
         mZstream.avail_out = mWriteBufferLen;
     }
