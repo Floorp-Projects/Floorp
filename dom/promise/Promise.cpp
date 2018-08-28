@@ -533,12 +533,6 @@ Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise)
 
   JS::Rooted<JS::Value> result(aCx, JS::GetPromiseResult(aPromise));
 
-  js::ErrorReport report(aCx);
-  if (!report.init(aCx, result, js::ErrorReport::NoSideEffects)) {
-    JS_ClearPendingException(aCx);
-    return;
-  }
-
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   bool isMainThread = MOZ_LIKELY(NS_IsMainThread());
   bool isChrome = isMainThread ? nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(aPromise))
@@ -546,8 +540,23 @@ Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise)
   nsGlobalWindowInner* win = isMainThread
     ? xpc::WindowGlobalOrNull(aPromise)
     : nullptr;
-  xpcReport->Init(report.report(), report.toStringResult().c_str(), isChrome,
-                  win ? win->AsInner()->WindowID() : 0);
+
+  js::ErrorReport report(aCx);
+  if (report.init(aCx, result, js::ErrorReport::NoSideEffects)) {
+    xpcReport->Init(report.report(), report.toStringResult().c_str(), isChrome,
+                    win ? win->AsInner()->WindowID() : 0);
+  } else {
+    JS_ClearPendingException(aCx);
+
+    RefPtr<Exception> exn;
+    if (result.isObject() &&
+        (NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, &result, exn)) ||
+         NS_SUCCEEDED(UNWRAP_OBJECT(Exception, &result, exn)))) {
+      xpcReport->Init(aCx, exn, isChrome, win ? win->AsInner()->WindowID() : 0);
+    } else {
+      return;
+    }
+  }
 
   // Now post an event to do the real reporting async
   RefPtr<nsIRunnable> event = new AsyncErrorReporter(xpcReport);

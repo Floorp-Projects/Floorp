@@ -1,3 +1,5 @@
+/* import-globals-from head.js */
+/* import-globals-from browser_imageCache1.js */
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 AntiTracking.runTest("Image cache - should load the image twice.",
@@ -18,19 +20,25 @@ AntiTracking.runTest("Image cache - should load the image twice.",
   },
 
   // non-blocking callback
-  async _ => {
-    // Let's load the image twice here as well.
-    let img = document.createElement("img");
-    document.body.appendChild(img);
-    img.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/image.sjs",
-    await new Promise(resolve => { img.onload = resolve; });
-    ok(true, "Image 3 loaded");
+  {
+    runExtraTests: false,
+    blockingByCookieBehavior,
+    blockingByContentBlocking,
+    blockingByAllowList,
+    callback: async _ => {
+      // Let's load the image twice here as well.
+      let img = document.createElement("img");
+      document.body.appendChild(img);
+      img.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/image.sjs",
+      await new Promise(resolve => { img.onload = resolve; });
+      ok(true, "Image 3 loaded");
 
-    img = document.createElement("img");
-    document.body.appendChild(img);
-    img.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/image.sjs",
-    await new Promise(resolve => { img.onload = resolve; });
-    ok(true, "Image 4 loaded");
+      img = document.createElement("img");
+      document.body.appendChild(img);
+      img.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/image.sjs",
+      await new Promise(resolve => { img.onload = resolve; });
+      ok(true, "Image 4 loaded");
+    },
   },
   null, // cleanup function
   null, // no extra prefs
