@@ -142,9 +142,7 @@ module.exports = function(config) {
               path.resolve("vendor"),
               path.resolve("lib/ASRouterTargeting.jsm"),
               path.resolve("lib/ASRouterTriggerListeners.jsm"),
-              path.resolve("lib/OnboardingMessageProvider.jsm"),
-              path.resolve("lib/CFRMessageProvider.jsm"),
-              path.resolve("lib/CFRPageActions.jsm")
+              path.resolve("lib/OnboardingMessageProvider.jsm")
             ]
           }
         ]

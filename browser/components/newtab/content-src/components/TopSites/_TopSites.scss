@@ -8,7 +8,6 @@ $default-icon-wrapper-size: 42px;
 $default-icon-size: 32px;
 $default-icon-offset: 6px;
 $half-base-gutter: $base-gutter / 2;
-$hover-transition-duration: 150ms;
 
 .top-sites {
   // Take back the margin from the bottom row of vertical spacing as well as the
@@ -137,7 +136,6 @@ $hover-transition-duration: 150ms;
     font-weight: 200;
     justify-content: center;
     text-transform: uppercase; // sass-lint:disable-line no-disallowed-properties
-    transition: box-shadow $hover-transition-duration;
 
     &::before {
       content: attr(data-fallback);
@@ -204,24 +202,10 @@ $hover-transition-duration: 150ms;
     background-image: url('#{$image-path}glyph-search-16.svg');
     background-size: 26px;
     background-color: $blue-60;
-    border-radius: $default-icon-wrapper-size;
+    border-radius: 42px;
     -moz-context-properties: fill;
     fill: $white;
-    box-shadow: var(--newtab-card-shadow);
-    transition-duration: $hover-transition-duration;
-    transition-property: background-size, bottom, inset-inline-end, height, width;
-  }
-
-  &:hover .search-topsite {
-    $hover-icon-wrapper-size: $default-icon-wrapper-size + 4;
-    $hover-icon-offset: -$default-icon-offset - 3;
-
-    background-size: 28px;
-    border-radius: $hover-icon-wrapper-size;
-    bottom: $hover-icon-offset;
-    height: $hover-icon-wrapper-size;
-    inset-inline-end: $hover-icon-offset;
-    width: $hover-icon-wrapper-size;
+    box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color), var(--newtab-card-shadow);
   }
 
   // We want all search shortcuts to have a white background in case they have transparency.
@@ -592,6 +576,13 @@ $hover-transition-duration: 150ms;
     }
   }
 
+  // when unselected, higlight the tile on hover
+  [type='checkbox']:not(:checked) + label {
+    .tile:hover {
+      @include fade-in;
+    }
+  }
+
   // checkmark changes
   [type='checkbox']:not(:checked) + label::after {
     opacity: 0;
@@ -599,6 +590,11 @@ $hover-transition-duration: 150ms;
 
   [type='checkbox']:checked + label::after {
     opacity: 1;
+  }
+
+  // hover
+  [type='checkbox'] + label:hover::before {
+    border: 1px solid var(--newtab-link-primary-color);
   }
 
   // accessibility

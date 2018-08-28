@@ -37,8 +37,7 @@ const INITIAL_STATE = {
     visible: false,
     data: {}
   },
-  Sections: [],
-  Pocket: {waitingForSpoc: true}
+  Sections: []
 };
 
 function App(prevState = INITIAL_STATE.App, action) {
@@ -382,19 +381,10 @@ function Snippets(prevState = INITIAL_STATE.Snippets, action) {
   }
 }
 
-function Pocket(prevState = INITIAL_STATE.Pocket, action) {
-  switch (action.type) {
-    case at.POCKET_WAITING_FOR_SPOC:
-      return {...prevState, waitingForSpoc: action.data};
-    default:
-      return prevState;
-  }
-}
-
 this.INITIAL_STATE = INITIAL_STATE;
 this.TOP_SITES_DEFAULT_ROWS = TOP_SITES_DEFAULT_ROWS;
 this.TOP_SITES_MAX_SITES_PER_ROW = TOP_SITES_MAX_SITES_PER_ROW;
 
-this.reducers = {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket};
+this.reducers = {TopSites, App, Snippets, Prefs, Dialog, Sections};
 
 const EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE", "insertPinned", "TOP_SITES_DEFAULT_ROWS", "TOP_SITES_MAX_SITES_PER_ROW"];
