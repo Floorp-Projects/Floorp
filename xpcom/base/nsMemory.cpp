@@ -31,9 +31,7 @@ void*
 nsMemory::Clone(const void* aPtr, size_t aSize)
 {
   void* newPtr = moz_xmalloc(aSize);
-  if (newPtr) {
-    memcpy(newPtr, aPtr, aSize);
-  }
+  memcpy(newPtr, aPtr, aSize);
   return newPtr;
 }
 

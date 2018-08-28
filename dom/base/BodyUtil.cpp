@@ -258,10 +258,6 @@ private:
       // going to free it. We also need fallible alloc, so we can't just use
       // ToNewCString().
       char* copy = static_cast<char*>(moz_xmalloc(body.Length()));
-      if (!copy) {
-        NS_WARNING("Failed to copy File entry body.");
-        return false;
-      }
       nsCString::const_iterator bodyIter, bodyEnd;
       body.BeginReading(bodyIter);
       body.EndReading(bodyEnd);

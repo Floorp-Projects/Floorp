@@ -508,15 +508,10 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 if (numFiles > 0) {
                   UINT fileNameLen = ::DragQueryFileW(dropFiles, aIndex, nullptr, 0);
                   wchar_t* buffer = reinterpret_cast<wchar_t*>(moz_xmalloc((fileNameLen + 1) * sizeof(wchar_t)));
-                  if ( buffer ) {
-                    ::DragQueryFileW(dropFiles, aIndex, buffer, fileNameLen + 1);
-                    *aData = buffer;
-                    *aLen = fileNameLen * sizeof(char16_t);
-                    result = NS_OK;
-                  }
-                  else {
-                    result = NS_ERROR_OUT_OF_MEMORY;
-                  }
+                  ::DragQueryFileW(dropFiles, aIndex, buffer, fileNameLen + 1);
+                  *aData = buffer;
+                  *aLen = fileNameLen * sizeof(char16_t);
+                  result = NS_OK;
                 }
                 GlobalUnlock (stm.hGlobal) ;
 

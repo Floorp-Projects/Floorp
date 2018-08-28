@@ -132,10 +132,8 @@ CharT*
 NS_strndup(const CharT* aString, uint32_t aLen)
 {
   auto newBuf = (CharT*)moz_xmalloc((aLen + 1) * sizeof(CharT));
-  if (newBuf) {
-    memcpy(newBuf, aString, aLen * sizeof(CharT));
-    newBuf[aLen] = '\0';
-  }
+  memcpy(newBuf, aString, aLen * sizeof(CharT));
+  newBuf[aLen] = '\0';
   return newBuf;
 }
 
@@ -147,10 +145,8 @@ NS_strdup(const char* aString)
 {
   uint32_t len = strlen(aString);
   char* str = (char*)moz_xmalloc(len + 1);
-  if (str) {
-    memcpy(str, aString, len);
-    str[len] = '\0';
-  }
+  memcpy(str, aString, len);
+  str[len] = '\0';
   return str;
 }
 

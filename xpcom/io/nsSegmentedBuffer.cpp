@@ -33,9 +33,6 @@ nsSegmentedBuffer::AppendNewSegment()
   if (!mSegmentArray) {
     uint32_t bytes = mSegmentArrayCount * sizeof(char*);
     mSegmentArray = (char**)moz_xmalloc(bytes);
-    if (!mSegmentArray) {
-      return nullptr;
-    }
     memset(mSegmentArray, 0, bytes);
   }
 

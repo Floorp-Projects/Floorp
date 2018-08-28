@@ -231,31 +231,26 @@ char *combineContinuations(nsTArray<Continuation>& aArray)
   char *result = (char *) moz_xmalloc(length + 1);
 
   // Concatenate
-  if (result) {
-    *result = '\0';
+  *result = '\0';
 
-    for (uint32_t i = 0; i < aArray.Length(); i++) {
-      Continuation cont = aArray[i];
-      if (! cont.value) break;
+  for (uint32_t i = 0; i < aArray.Length(); i++) {
+    Continuation cont = aArray[i];
+    if (! cont.value) break;
 
-      char *c = result + strlen(result);
-      strncat(result, cont.value, cont.length);
-      if (cont.needsPercentDecoding) {
-        nsUnescape(c);
-      }
-      if (cont.wasQuotedString) {
-        RemoveQuotedStringEscapes(c);
-      }
+    char *c = result + strlen(result);
+    strncat(result, cont.value, cont.length);
+    if (cont.needsPercentDecoding) {
+      nsUnescape(c);
     }
-
-    // return null if empty value
-    if (*result == '\0') {
-      free(result);
-      result = nullptr;
+    if (cont.wasQuotedString) {
+      RemoveQuotedStringEscapes(c);
     }
-  } else {
-    // Handle OOM
-    NS_WARNING("Out of memory\n");
+  }
+
+  // return null if empty value
+  if (*result == '\0') {
+    free(result);
+    result = nullptr;
   }
 
   return result;
@@ -815,9 +810,6 @@ bool IsRFC5987AttrChar(char aChar)
 bool PercentDecode(nsACString& aValue)
 {
   char *c = (char *) moz_xmalloc(aValue.Length() + 1);
-  if (!c) {
-    return false;
-  }
 
   strcpy(c, PromiseFlatCString(aValue).get());
   nsUnescape(c);
