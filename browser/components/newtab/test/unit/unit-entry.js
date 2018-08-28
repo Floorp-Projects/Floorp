@@ -180,7 +180,7 @@ const TEST_GLOBAL = {
       createNullPrincipal() {},
       getSystemPrincipal() {}
     },
-    wm: {getMostRecentWindow: () => window, getEnumerator: () => ({hasMoreElements: () => false})},
+    wm: {getMostRecentWindow: () => window, getEnumerator: () => []},
     ww: {registerNotification() {}, unregisterNotification() {}},
     appinfo: {appBuildID: "20180710100040"}
   },
@@ -194,6 +194,7 @@ const TEST_GLOBAL = {
     },
     defineLazyGlobalGetters() {},
     defineLazyModuleGetter() {},
+    defineLazyModuleGetters() {},
     defineLazyServiceGetter() {},
     generateQI() { return {}; }
   },

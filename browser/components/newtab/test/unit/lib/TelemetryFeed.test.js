@@ -486,6 +486,21 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "source", "SNIPPETS");
       assert.propertyVal(ping, "event", "CLICK");
     });
+    it("should drop the default client_id if includeClientID presents", async () => {
+      const data = {
+        action: "snippet_user_event",
+        source: "SNIPPETS",
+        event: "CLICK",
+        message_id: "snippets_message_01",
+        includeClientID: true
+      };
+      const action = ac.ASRouterUserEvent(data);
+      const ping = await instance.createASRouterEvent(action);
+
+      assert.isUndefined(ping.client_id);
+      assert.isUndefined(ping.includeClientID);
+      assert.propertyVal(ping, "impression_id", "n/a");
+    });
   });
   describe("#sendEvent", () => {
     it("should call PingCentre", async () => {
