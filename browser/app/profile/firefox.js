@@ -1737,10 +1737,6 @@ pref("app.shield.optoutstudies.enabled", true);
 pref("app.shield.optoutstudies.enabled", false);
 #endif
 
-// Savant Shield study preferences
-pref("shield.savant.enabled", false);
-pref("shield.savant.loglevel", "warn");
-
 // Multi-lingual preferences
 pref("intl.multilingual.enabled", false);
 

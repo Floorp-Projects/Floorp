@@ -30,6 +30,37 @@ SUPPORTED_PRODUCTS = {
     'all': 'All',
 }
 
+SUPPORTED_OPERATING_SYSTEMS = [
+    'mac',
+    'linux',
+    'windows',
+    'android',
+    'unix',
+    'all',
+]
+
+# mozinfo identifies linux, BSD variants, Solaris and SunOS as unix
+# Solaris and SunOS are identified as "unix" OS.
+UNIX_LIKE_OS = [
+    "unix",
+    "linux",
+    "bsd",
+]
+
+CANONICAL_OPERATING_SYSTEMS = {
+    'darwin': 'mac',
+    'linux': 'linux',
+    'winnt': 'windows',
+    'android': 'android',
+    # for simplicity we treat all BSD and Solaris systems as unix
+    'gnu/kfreebsd': 'unix',
+    'sunos': 'unix',
+    'dragonfly': 'unix',
+    'freeunix': 'unix',
+    'netunix': 'unix',
+    'openunix': 'unix'
+}
+
 PROCESS_ENUM_PREFIX = "mozilla::Telemetry::Common::RecordedProcessType::"
 PRODUCT_ENUM_PREFIX = "mozilla::Telemetry::Common::SupportedProduct::"
 
@@ -73,6 +104,16 @@ def process_name_to_enum(name):
 
 def is_valid_product(name):
     return (name in SUPPORTED_PRODUCTS)
+
+
+def is_valid_os(name):
+    return (name in SUPPORTED_OPERATING_SYSTEMS)
+
+
+def canonical_os(os):
+    """Translate possible OS_TARGET names to their canonical value."""
+
+    return CANONICAL_OPERATING_SYSTEMS.get(os.lower()) or "unknown"
 
 
 def product_name_to_enum(product):

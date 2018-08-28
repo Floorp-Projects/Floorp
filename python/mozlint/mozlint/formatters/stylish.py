@@ -6,7 +6,7 @@ from __future__ import absolute_import, unicode_literals
 
 from mozterm import Terminal
 
-from ..result import ResultContainer
+from ..result import Issue
 
 
 class StylishFormatter(object):
@@ -54,19 +54,19 @@ class StylishFormatter(object):
             s += 's'
         return str(num) + ' ' + s
 
-    def __call__(self, result, failed=None, **kwargs):
+    def __call__(self, result):
         message = []
-        failed = failed or []
+        failed = result.failed
 
         num_errors = 0
         num_warnings = 0
-        for path, errors in sorted(result.iteritems()):
+        for path, errors in sorted(result.issues.iteritems()):
             self._reset_max()
 
             message.append(self.term.underline(path))
             # Do a first pass to calculate required padding
             for err in errors:
-                assert isinstance(err, ResultContainer)
+                assert isinstance(err, Issue)
                 self._update_max(err)
                 if err.level == 'error':
                     num_errors += 1

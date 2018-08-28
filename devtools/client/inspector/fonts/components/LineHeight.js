@@ -61,7 +61,7 @@ class LineHeight extends PureComponent {
       : max;
 
     return FontPropertyValue({
-      allowAutoIncrement: true,
+      autoIncrement: true,
       label: getStr("fontinspector.lineHeightLabel"),
       min: 0,
       max: this.historicMax[unit],
