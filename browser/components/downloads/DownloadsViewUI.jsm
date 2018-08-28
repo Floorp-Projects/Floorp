@@ -385,7 +385,7 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
         let sizeStrings = this.sizeStrings;
         stateLabel = sizeStrings.stateLabel;
         status = sizeStrings.status;
-        hoverStatus = status;
+        hoverStatus = this.string("download-open-file-description");
       } else if (this.download.canceled) {
         stateLabel = s.stateCanceled;
       } else if (this.download.error.becauseBlockedByParentalControls) {
