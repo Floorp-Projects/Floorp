@@ -29,6 +29,7 @@ class SessionViewHolder internal constructor(
     private var sessionReference: WeakReference<Session> = WeakReference<Session>(null)
 
     init {
+        textView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_link, 0, 0, 0)
         textView.setOnClickListener(this)
     }
 

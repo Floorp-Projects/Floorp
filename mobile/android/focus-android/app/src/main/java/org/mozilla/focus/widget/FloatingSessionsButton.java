@@ -52,6 +52,8 @@ public class FloatingSessionsButton extends FloatingActionButton {
         textPaint = new TextPaint(paint);
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(textSize);
+
+        setImageResource(R.drawable.tab_number_border);
     }
 
     public void updateSessionsCount(int tabCount) {
