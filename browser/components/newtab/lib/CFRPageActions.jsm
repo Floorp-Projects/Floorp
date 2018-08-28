@@ -34,14 +34,10 @@ class PageAction {
     this.button = win.document.getElementById("cfr-button");
     this.label = win.document.getElementById("cfr-label");
 
-    // This should NOT be use directly to dispatch message-defined actions attached to buttons.
-    // Please use dispatchUserAction instead.
     this._dispatchToASRouter = dispatchToASRouter;
-
     this._popupStateChange = this._popupStateChange.bind(this);
     this._collapse = this._collapse.bind(this);
     this._handleClick = this._handleClick.bind(this);
-    this.dispatchUserAction = this.dispatchUserAction.bind(this);
 
     // Saved timeout IDs for scheduled state changes, so they can be cancelled
     this.stateTransitionTimeoutIDs = [];
@@ -76,13 +72,6 @@ class PageAction {
     this.container.hidden = true;
     this._clearScheduledStateChanges();
     this.urlbar.removeAttribute("cfr-recommendation-state");
-  }
-
-  dispatchUserAction(action) {
-    this._dispatchToASRouter(
-      {type: "USER_ACTION", data: action},
-      {browser: this.window.gBrowser.selectedBrowser}
-    );
   }
 
   _expand(delay = 0) {
@@ -155,7 +144,7 @@ class PageAction {
     const mainAction = {
       label: primary.label,
       accessKey: primary.accessKey,
-      callback: () => this.dispatchUserAction(primary.action)
+      callback: () => this._dispatchToASRouter(primary.action)
     };
 
     const secondaryActions = [{
@@ -221,35 +210,17 @@ const CFRPageActions = {
   },
 
   /**
-   * Force a recommendation to be shown. Should only happen via the Admin page.
-   * @param browser             The browser for the recommendation
-   * @param recommendation      The recommendation to show
-   * @param dispatchToASRouter  A function to dispatch resulting actions to
-   * @return                    Did adding the recommendation succeed?
-   */
-  async forceRecommendation(browser, recommendation, dispatchToASRouter) {
-    // If we are forcing via the Admin page, the browser comes in a different format
-    const win = browser.browser.ownerGlobal;
-    const {id, content} = recommendation;
-    RecommendationMap.set(browser.browser, {id, content});
-    if (!PageActionMap.has(win)) {
-      PageActionMap.set(win, new PageAction(win, dispatchToASRouter));
-    }
-    await PageActionMap.get(win).show(recommendation.content.notification_text, true);
-    return true;
-  },
-
-  /**
    * Add a recommendation specific to the given browser and host.
    * @param browser             The browser for the recommendation
    * @param host                The host for the recommendation
    * @param recommendation      The recommendation to show
    * @param dispatchToASRouter  A function to dispatch resulting actions to
+   * @param force               Force the recommendation to appear if the host doesn't match
    * @return                    Did adding the recommendation succeed?
    */
-  async addRecommendation(browser, host, recommendation, dispatchToASRouter) {
+  async addRecommendation(browser, host, recommendation, dispatchToASRouter, force = false) {
     const win = browser.ownerGlobal;
-    if (browser !== win.gBrowser.selectedBrowser || !isHostMatch(browser, host)) {
+    if (browser !== win.gBrowser.selectedBrowser || !(force || isHostMatch(browser, host))) {
       return false;
     }
     const {id, content} = recommendation;
@@ -272,6 +243,5 @@ const CFRPageActions = {
     RecommendationMap.clear();
   }
 };
-this.CFRPageActions = CFRPageActions;
 
 const EXPORTED_SYMBOLS = ["CFRPageActions"];
