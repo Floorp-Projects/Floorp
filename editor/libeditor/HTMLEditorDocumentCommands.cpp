@@ -444,9 +444,7 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
     if (NS_WARN_IF(!htmlEditor)) {
       return NS_ERROR_INVALID_ARG;
     }
-    bool isCSS;
-    htmlEditor->GetIsCSSEnabled(&isCSS);
-    rv = params->SetBool(STATE_ALL, isCSS);
+    rv = params->SetBool(STATE_ALL, htmlEditor->IsCSSEnabled());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
