@@ -204,15 +204,14 @@ class UrlInputFragment :
         keyboardLinearLayout.homeViewTipsLabel.alpha = TIPS_ALPHA
 
         if (tip != null) {
-            keyboardLinearLayout.homeViewTipsLabel.text = tip.text
+            val tipText = String.format(tip.text, System.getProperty("line.separator"))
 
             // Only make the second line clickable if applicable
             val linkStartIndex =
-                if (tip.text.contains("\n")) tip.text.indexOf("\n") + 2 else 0
-            val textWithDeepLink = SpannableString(tip.text)
+                if (tipText.contains("\n")) tipText.indexOf("\n") + 2 else 0
 
             keyboardLinearLayout.homeViewTipsLabel.movementMethod = LinkMovementMethod()
-            homeViewTipsLabel.setText(tip.text, TextView.BufferType.SPANNABLE)
+            homeViewTipsLabel.setText(tipText, TextView.BufferType.SPANNABLE)
 
             val deepLinkAction = object : ClickableSpan() {
                 override fun onClick(widget: View?) {
@@ -220,15 +219,12 @@ class UrlInputFragment :
                 }
             }
 
-            textWithDeepLink.setSpan(deepLinkAction,
-                linkStartIndex,
-                tip.text.length,
-                0)
+            val textWithDeepLink = SpannableString(tipText).apply {
+                setSpan(deepLinkAction, linkStartIndex, tipText.length, 0)
 
-            textWithDeepLink.setSpan(ForegroundColorSpan(homeViewTipsLabel.currentTextColor),
-                linkStartIndex,
-                tip.text.length,
-                0)
+                val colorSpan = ForegroundColorSpan(homeViewTipsLabel.currentTextColor)
+                setSpan(colorSpan, linkStartIndex, tipText.length, 0)
+            }
 
             homeViewTipsLabel.text = textWithDeepLink
         } else {
