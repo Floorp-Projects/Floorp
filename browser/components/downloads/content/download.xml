@@ -61,22 +61,9 @@
           <xul:description class="downloadDetails downloadShowMoreInfo"
                            crop="end"
                            value="&showMoreInformation.label;"/>
-          <xul:stack class="downloadButtonLabels">
-            <xul:description class="downloadDetails downloadShow"
-                             crop="end"
-#ifdef XP_MACOSX
-                             value="&cmd.showMac.label;"
-#else
-                             value="&cmd.show.label;"
-#endif
-                             />
-            <xul:description class="downloadDetails downloadCancel"
-                             crop="end"
-                             value="&cancelDownload.label;"/>
-            <xul:description class="downloadDetails downloadRetry"
-                             crop="end"
-                             value="&retryDownload.label;"/>
-          </xul:stack>
+          <xul:description class="downloadDetails downloadDetailsButtonHover"
+                           crop="end"
+                           xbl:inherits="value=buttonHoverStatus"/>
         </xul:vbox>
       </xul:hbox>
       <xul:toolbarseparator />

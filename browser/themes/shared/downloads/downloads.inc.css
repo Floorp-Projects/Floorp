@@ -202,7 +202,7 @@
 /* When hovering the action button in particular, instead of the usual hover
    message we display the command associated with the button. */
 @item@.downloadHoveringButton > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
-@item@:not(.downloadHoveringButton) > .downloadMainArea > .downloadContainer > .downloadButtonLabels {
+@item@:not(.downloadHoveringButton) > .downloadMainArea > .downloadContainer > .downloadDetailsButtonHover {
   display: none;
 }
 
@@ -218,7 +218,7 @@
 /* When hovering items blocked by Application Reputation, instead of the other
    hover messages we display the "Show more information" label. */
 @item@[verdict] > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
-@item@[verdict] > .downloadMainArea > .downloadContainer > .downloadButtonLabels,
+@item@[verdict] > .downloadMainArea > .downloadContainer > .downloadDetailsButtonHover,
 @item@:not([verdict]) > .downloadMainArea > .downloadContainer > .downloadShowMoreInfo,
 @item@:not(:hover) > .downloadMainArea > .downloadContainer > .downloadShowMoreInfo {
   display: none;
