@@ -10038,6 +10038,7 @@ public:
       parser->BlockParser();
       mParser = do_GetWeakReference(parser);
       mDocument = aDocument;
+      mDocument->BlockOnload();
     }
   }
 
@@ -10076,6 +10077,7 @@ private:
       if (parser == docParser) {
         parser->UnblockParser();
         parser->ContinueInterruptedParsingAsync();
+        mDocument->UnblockOnload(false);
       }
     }
     mParser = nullptr;
