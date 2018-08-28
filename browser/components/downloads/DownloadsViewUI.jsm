@@ -332,9 +332,13 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     }
 
     let labels = this.statusLabels;
-    this.element.setAttribute("status", labels.status);
-    this.element.setAttribute("hoverStatus", labels.hoverStatus);
-    this.element.setAttribute("fullStatus", labels.fullStatus);
+    if (this.isPanel) {
+      this.element.setAttribute("status", labels.status);
+      this.element.setAttribute("hoverStatus", labels.hoverStatus);
+    } else {
+      this.element.setAttribute("status", labels.fullStatus);
+      this.element.setAttribute("fullStatus", labels.fullStatus);
+    }
   },
 
   lastEstimatedSecondsLeft: Infinity,

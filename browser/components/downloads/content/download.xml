@@ -48,13 +48,10 @@
                              xbl:inherits="mode=progressmode,value=progress,paused=progresspaused"/>
           <xul:description class="downloadDetails downloadDetailsNormal"
                            crop="end"
-                           xbl:inherits="value=status"/>
+                           xbl:inherits="value=status,tooltiptext=fullStatus"/>
           <xul:description class="downloadDetails downloadDetailsHover"
                            crop="end"
                            xbl:inherits="value=hoverStatus"/>
-          <xul:description class="downloadDetails downloadDetailsFull"
-                           crop="end"
-                           xbl:inherits="value=fullStatus,tooltiptext=fullStatus"/>
           <xul:description class="downloadDetails downloadDetailsButtonHover"
                            crop="end"
                            xbl:inherits="value=buttonHoverStatus"/>
