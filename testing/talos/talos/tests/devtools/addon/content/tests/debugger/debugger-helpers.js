@@ -122,6 +122,14 @@ function waitForSources(dbg, expectedSources) {
   return waitForState(dbg, countSources, "count sources");
 }
 
+function waitForSource(dbg, sourceURL) {
+  const { selectors } = dbg;
+  function hasSource(state) {
+    return selectors.getSourceByURL(state, sourceURL);
+  }
+  return waitForState(dbg, hasSource, `has source ${sourceURL}`);
+}
+
 async function waitForPaused(dbg) {
   const onLoadedScope = waitForLoadedScopes(dbg);
   const onStateChange =  waitForState(
@@ -201,7 +209,7 @@ function evalInContent(dbg, tab, testFunction) {
 async function openDebuggerAndLog(label, expected) {
   const onLoad = async (toolbox, panel) => {
     const dbg = await createContext(panel);
-    await waitForSources(dbg, expected.sources);
+    await waitForSource(dbg, expected.sourceURL);
     await selectSource(dbg, expected.file);
     await waitForText(dbg, expected.file, expected.text);
     await waitForMetaData(dbg);

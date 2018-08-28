@@ -224,14 +224,7 @@ interface nsIHTMLEditor : nsISupports
   AString getFontFaceState(out boolean aMixed);
 
   /**
-   * getFontColorState returns what font face is in the selection.
-   * @param aMixed     True if there is more than one font color
-   * @return           Color string. "" is returned for none.
-   */
-  AString getFontColorState(out boolean aMixed);
-
-  /**
-   * getFontColorState returns what font face is in the selection.
+   * getBackgroundColorState returns what the background color of the selection.
    * @param aMixed     True if there is more than one font color
    * @return           Color string. "" is returned for none.
    */

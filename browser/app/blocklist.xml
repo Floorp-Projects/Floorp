@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1534781959544" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1535153064735" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2333,6 +2333,18 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="01c22882-868b-43e1-bb23-29d5dc7bc11b" id="/(({a4d84dae-7906-4064-911b-3ad2b1ec178b})|({d7e388c5-1cd0-4aa6-8888-9172f90951fb})|({a67f4004-855f-4e6f-8ef0-2ac735614967})|({25230eb3-db35-4613-8c03-e9a3912b7004})|({37384122-9046-4ff9-a31f-963767d9fe33})|({f1479b0b-0762-4ba2-97fc-010ea9dd4e73})|({53804e15-69e5-4b24-8883-c8f68bd98cf6})|({0f2aec80-aade-46b8-838c-54eeb595aa96})|({b65d6378-6840-4da6-b30e-dee113f680aa})|({e8fc3f33-14b7-41aa-88a1-d0d7b5641a50})|({c49ee246-d3d2-4e88-bfdb-4a3b4de9f974}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ee2d12a4-ea1d-4f3d-9df1-4303e8993f18" id="@testpilot-addon">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="2.0.8-dev-259fe19" severity="1"/>
+    </emItem>
+    <emItem blockID="ab029019-0e93-450a-8c11-ac31556c2a77" id="/^(({aeac6f90-5e17-46fe-8e81-9007264b907d})|({6ee25421-1bd5-4f0c-9924-79eb29a8889d})|({b317fa11-c23d-45b9-9fd8-9df41a094525})|({16ac3e8f-507a-4e04-966b-0247a196c0b4}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="46779b5a-2369-4007-bff0-857a657626ba" id="/^((fastplayer@fastsearch\.me)|(ff-search-flash-unlisted@mozilla\.com)|(inspiratiooo-unlisted@mozilla\.com)|(lite-search-ff-unlisted@mozilla\.com)|(mysearchprotect-unlisted@mozilla\.com)|(pdfconverter-unlisted@mozilla\.com)|(plugin-search-ff-unlisted@mozilla\.com)|(pro-search-ff-unlisted@mozilla\.com)|(pro-search-unlisted@mozilla\.com)|(searchincognito-unlisted@mozilla\.com)|(socopoco-search@mozilla\.com)|(socopoco-unlisted@mozilla\.com)|(\{08ea1e08-e237-42e7-ad60-811398c21d58\})|(\{0a56e2a0-a374-48b6-9afc-976680fab110\})|(\{193b040d-2a00-4406-b9ae-e0d345b53201\})|(\{1ffa2e79-7cd4-4fbf-8034-20bcb3463d20\})|(\{528cbbe2-3cde-4331-9344-e348cb310783\})|(\{6f7c2a42-515a-4797-b615-eaa9d78e8c80\})|(\{be2a3fba-7ea2-48b9-bbae-dffa7ae45ef8\})|(\{c0231a6b-c8c8-4453-abc9-c4a999a863bd\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>

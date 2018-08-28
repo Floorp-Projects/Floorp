@@ -300,24 +300,37 @@ class JSTerm extends Component {
             "PageUp": () => {
               if (this.autocompletePopup.isOpen) {
                 this.autocompletePopup.selectPreviousPageItem();
-                return null;
+              } else {
+                this.hud.outputScroller.scrollTop = Math.max(
+                  0,
+                  this.hud.outputScroller.scrollTop - this.hud.outputScroller.clientHeight
+                );
               }
 
-              return "CodeMirror.Pass";
+              return null;
             },
 
             "PageDown": () => {
               if (this.autocompletePopup.isOpen) {
                 this.autocompletePopup.selectNextPageItem();
-                return null;
+              } else {
+                this.hud.outputScroller.scrollTop = Math.min(
+                  this.hud.outputScroller.scrollHeight,
+                  this.hud.outputScroller.scrollTop + this.hud.outputScroller.clientHeight
+                );
               }
 
-              return "CodeMirror.Pass";
+              return null;
             },
 
             "Home": () => {
               if (this.autocompletePopup.isOpen) {
                 this.autocompletePopup.selectedIndex = 0;
+                return null;
+              }
+
+              if (!this.getInputValue()) {
+                this.hud.outputScroller.scrollTop = 0;
                 return null;
               }
 
@@ -331,10 +344,17 @@ class JSTerm extends Component {
                 return null;
               }
 
+              if (!this.getInputValue()) {
+                this.hud.outputScroller.scrollTop = this.hud.outputScroller.scrollHeight;
+                return null;
+              }
+
               return "CodeMirror.Pass";
             },
 
             "Esc": false,
+            "Cmd-F": false,
+            "Ctrl-F": false,
           }
         });
 

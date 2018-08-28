@@ -10,6 +10,7 @@ const { openDebuggerAndLog, reloadDebuggerAndLog } = require("./debugger-helpers
 const EXPECTED = {
   sources: 14,
   file: "ga.js",
+  sourceURL: COMPLICATED_URL,
   text: "Math;function ga(a,b){return a.name=b}"
 };
 

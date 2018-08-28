@@ -6,8 +6,6 @@
 
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 
 /**
@@ -19,55 +17,21 @@ class IndicationBar extends PureComponent {
     return {
       className: PropTypes.string.isRequired,
       position: PropTypes.number.isRequired,
-      sidebarWidth: PropTypes.number.isRequired,
     };
-  }
-
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      // offset of the position for this bar
-      offset: 0,
-    };
-  }
-
-  componentDidMount() {
-    this.updateState(this.props);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    this.updateState(nextProps);
-  }
-
-  updateState(props) {
-    const { position } = props;
-
-    const parentEl = findDOMNode(this).parentNode;
-    const offset = parentEl.offsetWidth * position;
-
-    this.setState({ offset });
   }
 
   render() {
-    const { className } = this.props;
-    const { offset } = this.state;
+    const { className, position } = this.props;
 
     return dom.div(
       {
         className: `indication-bar ${ className }`,
         style: {
-          marginInlineStart: offset + "px",
+          marginInlineStart: `${ position * 100 }%`,
         },
       }
     );
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    sidebarWidth: state.animations.sidebarSize ? state.animations.sidebarSize.width : 0
-  };
-};
-
-module.exports = connect(mapStateToProps)(IndicationBar);
+module.exports = IndicationBar;

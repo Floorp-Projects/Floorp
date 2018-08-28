@@ -44,6 +44,10 @@ char ToLowerCaseASCII(const char aChar);
 char16_t ToLowerCaseASCII(const char16_t aChar);
 char32_t ToLowerCaseASCII(const char32_t aChar);
 
+char ToUpperCaseASCII(const char aChar);
+char16_t ToUpperCaseASCII(const char16_t aChar);
+char32_t ToUpperCaseASCII(const char32_t aChar);
+
 inline bool IsUpperCase(uint32_t c) {
   return ToLowerCase(c) != c;
 }

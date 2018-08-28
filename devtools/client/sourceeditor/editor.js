@@ -82,6 +82,7 @@ const CM_MAPPING = [
 const editors = new WeakMap();
 
 Editor.modes = {
+  cljs: { name: "text/x-clojure" },
   css: { name: "css" },
   fs: { name: "x-shader/x-fragment" },
   haxe: { name: "haxe" },

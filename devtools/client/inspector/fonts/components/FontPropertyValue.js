@@ -19,8 +19,8 @@ class FontPropertyValue extends PureComponent {
       className: PropTypes.string,
       defaultValue: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
       label: PropTypes.string.isRequired,
-      min: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
-      max: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
+      min: PropTypes.number.isRequired,
+      max: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
       onChange: PropTypes.func.isRequired,
       step: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
@@ -44,12 +44,18 @@ class FontPropertyValue extends PureComponent {
     this.state = {
       // Whether the user is dragging the slider thumb or pressing on the numeric stepper.
       interactive: false,
-      value: null,
+      // Snapshot of the value from props before the user starts editing the number input.
+      // Used to restore the value when the input is left invalid.
+      initialValue: this.props.value,
+      // Snapshot of the value from props. Reconciled with props on blur.
+      // Used while the user is interacting with the inputs.
+      value: this.props.value,
     };
 
     this.autoIncrement = this.autoIncrement.bind(this);
     this.onBlur = this.onBlur.bind(this);
     this.onChange = this.onChange.bind(this);
+    this.onFocus = this.onFocus.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
@@ -91,73 +97,137 @@ class FontPropertyValue extends PureComponent {
     return value >= Math.floor(this.props.max);
   }
 
+  /**
+   * Check if the given value is valid according to the constraints of this component.
+   * Ensure it is a number and that it does not go outside the min/max limits, unless
+   * allowed by the `allowAutoIncrement` props flag.
+   *
+   * @param  {Number} value
+   *         Numeric value
+   * @return {Boolean}
+   *         Whether the value conforms to the components contraints.
+   */
+  isValueValid(value) {
+    const { allowAutoIncrement, min, max } = this.props;
+
+    if (typeof value !== "number" || isNaN(value)) {
+      return false;
+    }
+
+    if (min !== undefined && value < min) {
+      return false;
+    }
+
+    // Ensure it does not exceed maximum value, unless auto-incrementing is permitted.
+    if (max !== undefined && value > this.props.max && !allowAutoIncrement) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Handler for "blur" events from the range and number input fields.
+   * Reconciles the value between internal state and props.
+   * Marks the input as non-interactive so it may update in response to changes in props.
+   */
   onBlur() {
+    const isValid = this.isValueValid(this.state.value);
+    let value;
+
+    if (isValid) {
+      value = this.state.value;
+    } else if (this.state.value !== null) {
+      value = Math.max(this.props.min, Math.min(this.state.value, this.props.max));
+    } else {
+      value = this.state.initialValue;
+    }
+
+    this.updateValue(value);
     this.toggleInteractiveState(false);
   }
 
   /**
    * Handler for "change" events from the range and number input fields. Calls the change
    * handler provided with props and updates internal state with the current value.
-   * Begins auto-incrementing if the value is already at the upper bound.
+   *
+   * Number inputs in Firefox can't be trusted to filter out non-digit characters,
+   * therefore we must implement our own validation.
+   * @see https://bugzilla.mozilla.org/show_bug.cgi?id=1398528
    *
    * @param {Event} e
    *        Change event.
    */
   onChange(e) {
-    const value = parseFloat(e.target.value);
+    // Regular expresion to check for positive floating point or integer numbers.
+    // Whitespace and non-digit characters are invalid (aside from a single dot).
+    const regex = /^[0-9]+(.[0-9]+)?$/;
+    let string = e.target.value.trim();
+
+    if (e.target.validity.badInput) {
+      return;
+    }
+
+    // Prefix with zero if the string starts with a dot: .5 => 0.5
+    if (string.charAt(0) === "." && string.length > 1) {
+      string = "0" + string;
+      e.target.value = string;
+    }
+
+    // Accept empty strings to allow the input value to be completely erased while typing.
+    // A null value will be handled on blur. @see this.onBlur()
+    if (string === "") {
+      this.setState((prevState) => {
+        return {
+          ...prevState,
+          value: null,
+        };
+      });
+
+      return;
+    }
+
+    // Catch any negative or irrational numbers.
+    if (!regex.test(string)) {
+      return;
+    }
+
+    const value = parseFloat(string);
     this.updateValue(value);
+  }
 
-    // Stop auto-incrementing when dragging back down from the upper bound.
-    if (value < this.props.max && this.interval) {
-      this.stopAutoIncrement();
+  onFocus(e) {
+    if (e.target.type === "number") {
+      e.target.select();
     }
 
-    // Begin auto-incrementing when reaching the upper bound.
-    if (this.isAtUpperBound(value) && this.state.interactive) {
-      this.startAutoIncrement();
-    }
+    this.setState((prevState) => {
+      return {
+        ...prevState,
+        interactive: true,
+        initialValue: this.props.value,
+      };
+    });
   }
 
   /**
-   * Handler for "keydown" events from the range and number input fields.
-   * Toggles on the "interactive" state. @See toggleInteractiveState();
-   * Begins auto-incrementing if the value is already at the upper bound.
+   * Handler for "keydown" events from the range input field.
+   * Begin auto-incrementing if the slider value is already at the upper boun and the
+   * keyboard gesture requests a higher value.
    *
    * @param {Event} e
    *        KeyDown event.
    */
   onKeyDown(e) {
-    const inputType = e.target.type;
-
-    if ([
-      KeyCodes.DOM_VK_UP,
-      KeyCodes.DOM_VK_DOWN,
-      KeyCodes.DOM_VK_RIGHT,
-      KeyCodes.DOM_VK_LEFT
-    ].includes(e.keyCode)) {
-      this.toggleInteractiveState(true);
-    }
-
-    // Begin auto-incrementing if the value is already at the upper bound
-    // and the user gesture requests a higher value.
-    if (this.isAtUpperBound(this.props.value)) {
-      if ((inputType === "range" &&
-            e.keyCode === KeyCodes.DOM_VK_UP || e.keyCode === KeyCodes.DOM_VK_RIGHT) ||
-          (inputType === "number" &&
-            e.keyCode === KeyCodes.DOM_VK_UP)) {
-        this.startAutoIncrement();
-      }
+    if (this.isAtUpperBound(this.props.value) &&
+        e.keyCode === KeyCodes.DOM_VK_UP || e.keyCode === KeyCodes.DOM_VK_RIGHT) {
+      this.startAutoIncrement();
     }
   }
 
   onKeyUp(e) {
-    if ([
-      KeyCodes.DOM_VK_UP,
-      KeyCodes.DOM_VK_DOWN,
-      KeyCodes.DOM_VK_RIGHT,
-      KeyCodes.DOM_VK_LEFT
-    ].includes(e.keyCode)) {
-      this.toggleInteractiveState(false);
+    if (e.keyCode === KeyCodes.DOM_VK_UP || e.keyCode === KeyCodes.DOM_VK_RIGHT) {
+      this.stopAutoIncrement();
     }
   }
 
@@ -225,15 +295,22 @@ class FontPropertyValue extends PureComponent {
   }
 
   /**
-   * Calls the given `onChange` callback with the current property, value and unit.
-   * Updates the internal state with the current value which will be used while
-   * interactive to prevent jittering when receiving debounced props from outside.
+   * Calls the given `onChange` callback with the current property name, value and unit
+   * if the value is valid according to the constraints of this component (min, max).
+   * Updates the internal state with the current value. This will be used to render the
+   * UI while the input is interactive and the user may be typing a value that's not yet
+   * valid.
+   *
+   * @see this.onBlur() for logic reconciling the internal state with props.
    *
    * @param {Number} value
    *        Numeric property value.
    */
   updateValue(value) {
-    this.props.onChange(this.props.name, value, this.props.unit);
+    if (this.isValueValid(value)) {
+      this.props.onChange(this.props.name, value, this.props.unit);
+    }
+
     this.setState((prevState) => {
       return {
         ...prevState,
@@ -282,11 +359,10 @@ class FontPropertyValue extends PureComponent {
       max: this.props.max,
       onBlur: this.onBlur,
       onChange: this.onChange,
-      onKeyUp: this.onKeyUp,
-      onKeyDown: this.onKeyDown,
+      onFocus: this.onFocus,
       step: this.props.step || 1,
-      // While interacting with the slider or numeric stepper, prevent updating value from
-      // outside props which may be debounced and could cause jitter when rendering.
+      // While interacting with the range and number inputs, prevent updating value from
+      // outside props which is debounced and causes jitter on successive renders.
       value: this.state.interactive
         ? this.state.value
         : this.props.value || this.props.defaultValue,
@@ -295,6 +371,8 @@ class FontPropertyValue extends PureComponent {
     const range = dom.input(
       {
         ...defaults,
+        onKeyDown: this.onKeyDown,
+        onKeyUp: this.onKeyUp,
         onMouseDown: this.onMouseDown,
         onMouseUp: this.onMouseUp,
         className: "font-value-slider",
@@ -307,6 +385,8 @@ class FontPropertyValue extends PureComponent {
     const input = dom.input(
       {
         ...defaults,
+        // Remove upper limit from number input if it is allowed to auto-increment.
+        max: this.props.allowAutoIncrement ? null : this.props.max,
         name: this.props.name,
         className: "font-value-input",
         type: "number",

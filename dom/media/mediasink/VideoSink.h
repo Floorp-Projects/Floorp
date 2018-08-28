@@ -132,7 +132,8 @@ private:
   // The presentation end time of the last video frame which has been displayed.
   TimeUnit mVideoFrameEndTime;
 
-  uint32_t mOldDroppedCount;
+  uint32_t mOldCompositorDroppedCount;
+  uint32_t mPendingDroppedCount;
 
   // Event listeners for VideoQueue
   MediaEventListener mPushListener;
