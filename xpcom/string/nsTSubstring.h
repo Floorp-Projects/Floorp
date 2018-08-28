@@ -15,6 +15,7 @@
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Result.h"
 #include "mozilla/Span.h"
+#include "mozilla/Unused.h"
 
 #include "nsTStringRepr.h"
 
@@ -24,6 +25,264 @@
 
 template <typename T> class nsTSubstringSplitter;
 template <typename T> class nsTString;
+template <typename T> class nsTSubstring;
+
+namespace mozilla {
+
+/**
+ * This handle represents permission to perform low-level writes
+ * the storage buffer of a string in a manner that's aware of the
+ * actual capacity of the storage buffer allocation and that's
+ * cache-friendly in the sense that the writing of zero terminator
+ * for C compatibility can happen in linear memory access order
+ * (i.e. the zero terminator write takes place after writing
+ * new content to the string as opposed to the zero terminator
+ * write happening first causing a non-linear memory write for
+ * cache purposes).
+ *
+ * If you requested a prefix to be preserved when starting
+ * or restarting the bulk write, the prefix is present at the
+ * start of the buffer exposed by this handle as Span or
+ * as a raw pointer, and it's your responsibility to start
+ * writing after after the preserved prefix (which you
+ * presumably wanted not to overwrite since you asked for
+ * it to be preserved).
+ *
+ * In a success case, you must call Finish() with the new
+ * length of the string. In failure cases, it's OK to return
+ * early from the function whose local variable this handle is.
+ * The destructor of this class takes care of putting the
+ * string in a valid and mostly harmless state in that case
+ * by setting the value of a non-empty string to a single
+ * REPLACEMENT CHARACTER or in the case of nsACString that's
+ * too short for a REPLACEMENT CHARACTER to fit, an ASCII
+ * SUBSTITUTE.
+ *
+ * You must not allow this handle to outlive the string you
+ * obtained it from.
+ *
+ * You must not access the string you obtained this handle
+ * from in any way other than through this handle until
+ * you call Finish() on the handle or the handle goes out
+ * of scope.
+ *
+ * Once you've called Finish(), you must not call any
+ * methods on this handle and must not use values previously
+ * obtained.
+ *
+ * Once you call RestartBulkWrite(), you must not use
+ * values previously obtained from this handle and must
+ * reobtain the new corresponding values.
+ */
+template <typename T>
+class BulkWriteHandle final {
+  friend class nsTSubstring<T>;
+public:
+  typedef typename mozilla::detail::nsTStringRepr<T> base_string_type;
+  typedef typename base_string_type::size_type size_type;
+
+  /**
+   * Pointer to the start of the writable buffer. Never nullptr.
+   *
+   * This pointer is valid until whichever of these happens first:
+   *  1) Finish() is called
+   *  2) RestartBulkWrite() is called
+   *  3) BulkWriteHandle goes out of scope
+   */
+  T* Elements() const
+  {
+    MOZ_ASSERT(mString);
+    return mString->mData;
+  }
+
+  /**
+   * How many code units can be written to the buffer.
+   * (Note: This is not the same as the string's Length().)
+   *
+   * This value is valid until whichever of these happens first:
+   *  1) Finish() is called
+   *  2) RestartBulkWrite() is called
+   *  3) BulkWriteHandle goes out of scope
+   */
+  size_type Length() const
+  {
+    MOZ_ASSERT(mString);
+    return mCapacity;
+  }
+
+  /**
+   * Pointer past the end of the buffer.
+   *
+   * This pointer is valid until whichever of these happens first:
+   *  1) Finish() is called
+   *  2) RestartBulkWrite() is called
+   *  3) BulkWriteHandle goes out of scope
+   */
+  T* End() const
+  {
+    return Elements() + Length();
+  }
+
+  /**
+   * The writable buffer as Span.
+   *
+   * This Span is valid until whichever of these happens first:
+   *  1) Finish() is called
+   *  2) RestartBulkWrite() is called
+   *  3) BulkWriteHandle goes out of scope
+   */
+  mozilla::Span<T> AsSpan() const
+  {
+    return mozilla::MakeSpan(Elements(), Length());
+  }
+
+  /**
+   * Autoconvert to the buffer as writable Span.
+   *
+   * This Span is valid until whichever of these happens first:
+   *  1) Finish() is called
+   *  2) RestartBulkWrite() is called
+   *  3) BulkWriteHandle goes out of scope
+   */
+  operator mozilla::Span<T>() const
+  {
+    return AsSpan();
+  }
+
+  /**
+   * Restart the bulk write with a different capacity.
+   *
+   * This method invalidates previous return values
+   * of the other methods above.
+   *
+   * Can fail if out of memory leaving the buffer
+   * in the state before this call.
+   *
+   * @param aCapacity the new requested capacity
+   * @param aPrefixToPreserve the number of code units at
+   *                          the start of the string to
+   *                          copy over to the new buffer
+   * @param aAllowShrinking whether the string is
+   *                        allowed to attempt to
+   *                        allocate a smaller buffer
+   *                        for its content and copy
+   *                        the data over.
+   */
+  mozilla::Result<mozilla::Ok, nsresult> RestartBulkWrite(size_type aCapacity,
+                                                          size_type aPrefixToPreserve,
+                                                          bool aAllowShrinking)
+  {
+    MOZ_ASSERT(mString);
+    auto r = mString->StartBulkWriteImpl(aCapacity, aPrefixToPreserve, aAllowShrinking);
+    if (MOZ_UNLIKELY(r.isErr())) {
+      nsresult rv = r.unwrapErr();
+      // MOZ_TRY or manual unwrapErr() without the intermediate
+      // assignment complains about an incomplete type.
+      // andThen() is not enabled on r.
+      return mozilla::Err(rv);
+    }
+    mCapacity = r.unwrap();
+    return mozilla::Ok();
+  }
+
+  /**
+   * Indicate that the bulk write finished successfully.
+   *
+   * @param aLength the number of code units written;
+   *                must not exceed Length()
+   * @param aAllowShrinking whether the string is
+   *                        allowed to attempt to
+   *                        allocate a smaller buffer
+   *                        for its content and copy
+   *                        the data over.
+   */
+  void Finish(size_type aLength, bool aAllowShrinking)
+  {
+    MOZ_ASSERT(mString);
+    MOZ_ASSERT(aLength <= mCapacity);
+    if (!aLength) {
+      // Truncate is safe even when the string is in an invalid state
+      mString->Truncate();
+      mString = nullptr;
+      return;
+    }
+    if (aAllowShrinking) {
+      mozilla::Unused << mString->StartBulkWriteImpl(aLength, aLength, true);
+    }
+    mString->FinishBulkWriteImpl(aLength);
+    mString = nullptr;
+  }
+
+  BulkWriteHandle(BulkWriteHandle&& aOther)
+   : mString(aOther.Forget())
+   , mCapacity(aOther.mCapacity)
+  {
+  }
+
+  ~BulkWriteHandle()
+  {
+    if (!mString || !mCapacity) {
+      return;
+    }
+    // The old zero terminator may be gone by now, so we need
+    // to write a new one somewhere and make length match.
+    // We can use a length between 1 and self.capacity.
+    // The contents of the string can be partially uninitialized
+    // or partially initialized in a way that would be dangerous
+    // if parsed by some recipient. It's prudent to write something
+    // same as the contents of the string. U+FFFD is the safest
+    // placeholder, but when it doesn't fit, let's use ASCII
+    // substitute. Merely truncating the string to a zero-length
+    // string might be dangerous in some scenarios. See
+    // https://www.unicode.org/reports/tr36/#Substituting_for_Ill_Formed_Subsequences
+    // for closely related scenario.
+    auto ptr = Elements();
+    // Cast the pointer below to silence warnings
+    if (sizeof(T) == 1) {
+      unsigned char* charPtr = reinterpret_cast<unsigned char*>(ptr);
+      if (mCapacity >= 3) {
+        *charPtr++ = 0xEF;
+        *charPtr++ = 0xBF;
+        *charPtr++ = 0xBD;
+        mString->mLength = 3;
+      } else {
+        *charPtr++ = 0x1A;
+        mString->mLength = 1;
+      }
+      *charPtr = 0;
+    } else if (sizeof(T) == 2){
+      char16_t* charPtr = reinterpret_cast<char16_t*>(ptr);
+      *charPtr++ = 0xFFFD;
+      *charPtr = 0;
+      mString->mLength = 1;
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Only 8-bit and 16-bit code units supported.");
+    }
+  }
+
+  BulkWriteHandle() = delete;
+  BulkWriteHandle(const BulkWriteHandle&) = delete;
+  BulkWriteHandle& operator=(const BulkWriteHandle&) = delete;
+
+private:
+
+  BulkWriteHandle(nsTSubstring<T>* aString, size_type aCapacity)
+   : mString(aString)
+   , mCapacity(aCapacity)
+  {}
+
+  nsTSubstring<T>* Forget()
+  {
+    auto string = mString;
+    mString = nullptr;
+    return string;
+  }
+
+  nsTSubstring<T>* mString; // nullptr upon finish
+  size_type        mCapacity;
+};
+
+} // namespace mozilla
 
 /**
  * nsTSubstring is an abstract string class. From an API perspective, this
@@ -40,6 +299,7 @@ template <typename T> class nsTString;
 template <typename T>
 class nsTSubstring : public mozilla::detail::nsTStringRepr<T>
 {
+  friend class mozilla::BulkWriteHandle<T>;
 public:
   typedef nsTSubstring<T> self_type;
 
@@ -79,6 +339,9 @@ public:
 
   /**
    * writing iterators
+   *
+   * Note: Consider if BulkWrite() suits your use case better
+   * than BeginWriting() combined with SetLength().
    */
 
   char_iterator BeginWriting()
@@ -888,6 +1151,50 @@ protected:
   void NS_FASTCALL Finalize();
 
 public:
+
+  /**
+   * Starts a low-level write transaction to the string.
+   *
+   * Prepares the string for mutation such that the capacity
+   * of the string is at least aCapacity. The returned handle
+   * exposes the actual, potentially larger, capacity.
+   *
+   * If meeting the capacity or mutability requirement requires
+   * reallocation, aPrefixToPreserve code units are copied from the
+   * start of the old buffer to the start of the new buffer.
+   * aPrefixToPreserve must not be greater than the string's current
+   * length or greater than aCapacity.
+   *
+   * aAllowShrinking indicates whether an allocation may be
+   * performed when the string is already mutable and the requested
+   * capacity is smaller than the current capacity.
+   *
+   * aRv takes a reference to an nsresult that will be set to
+   * NS_OK on success or to NS_ERROR_OUT_OF_MEMORY on failure,
+   * because mozilla::Result cannot wrap move-only types at
+   * this time.
+   *
+   * If this method returns successfully, you must not access
+   * the string except through the returned BulkWriteHandle
+   * until either the BulkWriteHandle goes out of scope or
+   * you call Finish() on the BulkWriteHandle.
+   *
+   * Compared to SetLength() and BeginWriting(), this more
+   * complex API accomplishes two things:
+   *  1) It exposes the actual capacity which may be larger
+   *     than the requested capacity, which is useful in some
+   *     multi-step write operations that don't allocate for
+   *     the worst case up front.
+   *  2) It writes the zero terminator after the string
+   *     content has been written, which results in a
+   *     cache-friendly linear write pattern.
+   */
+  mozilla::BulkWriteHandle<T>
+  NS_FASTCALL BulkWrite(size_type aCapacity,
+                        size_type aPrefixToPreserve,
+                        bool aAllowShrinking,
+                        nsresult& aRv);
+
   /**
    * THIS IS NOT REALLY A PUBLIC METHOD! DO NOT CALL FROM OUTSIDE
    * THE STRING IMPLEMENTATION. (It's public only because friend
@@ -936,12 +1243,12 @@ public:
    *
    */
   mozilla::Result<uint32_t, nsresult>
-  NS_FASTCALL StartBulkWrite(size_type aCapacity,
-                             size_type aPrefixToPreserve = 0,
-                             bool aAllowShrinking = true,
-                             size_type aSuffixLength = 0,
-                             size_type aOldSuffixStart = 0,
-                             size_type aNewSuffixStart = 0);
+  NS_FASTCALL StartBulkWriteImpl(size_type aCapacity,
+                                 size_type aPrefixToPreserve = 0,
+                                 bool aAllowShrinking = true,
+                                 size_type aSuffixLength = 0,
+                                 size_type aOldSuffixStart = 0,
+                                 size_type aNewSuffixStart = 0);
 
 protected:
   /**
@@ -950,7 +1257,7 @@ protected:
    * must be less than or equal to the value returned by the most recent
    * StartBulkWrite() call.
    */
-  void NS_FASTCALL FinishBulkWrite(size_type aLength);
+  void NS_FASTCALL FinishBulkWriteImpl(size_type aLength);
 
   /**
    * this function prepares a section of mData to be modified.  if

@@ -66,13 +66,32 @@ AsAutoString(const nsTSubstring<T>* aStr)
 }
 
 template<typename T>
+mozilla::BulkWriteHandle<T>
+nsTSubstring<T>::BulkWrite(size_type aCapacity,
+                           size_type aPrefixToPreserve,
+                           bool aAllowShrinking,
+                           nsresult& aRv)
+{
+  auto r = StartBulkWriteImpl(aCapacity,
+                              aPrefixToPreserve,
+                              aAllowShrinking);
+  if (MOZ_UNLIKELY(r.isErr())) {
+    aRv = r.unwrapErr();
+    return mozilla::BulkWriteHandle<T>(nullptr, 0);
+  }
+  aRv = NS_OK;
+  return mozilla::BulkWriteHandle<T>(this, r.unwrap());
+}
+
+
+template<typename T>
 mozilla::Result<uint32_t, nsresult>
-nsTSubstring<T>::StartBulkWrite(size_type aCapacity,
-                                size_type aPrefixToPreserve,
-                                bool aAllowShrinking,
-                                size_type aSuffixLength,
-                                size_type aOldSuffixStart,
-                                size_type aNewSuffixStart)
+nsTSubstring<T>::StartBulkWriteImpl(size_type aCapacity,
+                                    size_type aPrefixToPreserve,
+                                    bool aAllowShrinking,
+                                    size_type aSuffixLength,
+                                    size_type aOldSuffixStart,
+                                    size_type aNewSuffixStart)
 {
   // Note! Capacity does not include room for the terminating null char.
 
@@ -218,7 +237,7 @@ nsTSubstring<T>::StartBulkWrite(size_type aCapacity,
 
 template<typename T>
 void
-nsTSubstring<T>::FinishBulkWrite(size_type aLength)
+nsTSubstring<T>::FinishBulkWriteImpl(size_type aLength)
 {
   MOZ_ASSERT(aLength != UINT32_MAX, "OOM magic value passed as length.");
   if (aLength) {
@@ -274,12 +293,12 @@ nsTSubstring<T>::ReplacePrepInternal(index_type aCutStart, size_type aCutLen,
   size_type oldSuffixStart = aCutStart + aCutLen;
   size_type suffixLength = this->mLength - oldSuffixStart;
 
-  mozilla::Result<uint32_t, nsresult> r = StartBulkWrite(
+  mozilla::Result<uint32_t, nsresult> r = StartBulkWriteImpl(
     aNewLen, aCutStart, false, suffixLength, oldSuffixStart, newSuffixStart);
   if (r.isErr()) {
     return false;
   }
-  FinishBulkWrite(aNewLen);
+  FinishBulkWriteImpl(aNewLen);
   return true;
 }
 
@@ -566,14 +585,14 @@ nsTSubstring<T>::Assign(const substring_tuple_type& aTuple,
 
   size_type length = aTuple.Length();
 
-  mozilla::Result<uint32_t, nsresult> r = StartBulkWrite(length);
+  mozilla::Result<uint32_t, nsresult> r = StartBulkWriteImpl(length);
   if (r.isErr()) {
     return false;
   }
 
   aTuple.WriteTo(this->mData, length);
 
-  FinishBulkWrite(length);
+  FinishBulkWriteImpl(length);
   return true;
 }
 
@@ -789,7 +808,7 @@ nsTSubstring<T>::SetCapacity(size_type aCapacity, const fallible_t&)
     preserve = aCapacity;
   }
 
-  mozilla::Result<uint32_t, nsresult> r = StartBulkWrite(aCapacity, preserve);
+  mozilla::Result<uint32_t, nsresult> r = StartBulkWriteImpl(aCapacity, preserve);
   if (r.isErr()) {
     return false;
   }
