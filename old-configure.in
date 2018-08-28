@@ -2933,11 +2933,18 @@ case "$CPU_ARCH" in
       fi
   ;;
   arm*|aarch64)
-      MOZ_FFVPX=1
-      MOZ_FFVPX_FLACONLY=1
-      dnl Use same conditional as MOZ_LIBVPX to enable FFmpeg's ffvpx assembly decoder.
-      dnl aarch 64 FLAC decoder for now will be C only.
-      FFVPX_ASFLAGS=$VPX_ASFLAGS
+      case "$OS_TARGET" in
+        WINNT)
+          dnl don't set up anything special
+          ;;
+        *)
+          MOZ_FFVPX=1
+          MOZ_FFVPX_FLACONLY=1
+          dnl Use same conditional as MOZ_LIBVPX to enable FFmpeg's ffvpx assembly decoder.
+          dnl aarch 64 FLAC decoder for now will be C only.
+          FFVPX_ASFLAGS=$VPX_ASFLAGS
+          ;;
+      esac
   ;;
 esac
 

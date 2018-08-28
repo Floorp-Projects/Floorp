@@ -4434,3 +4434,22 @@ nsDOMWindowUtils::GetSystemFont(nsACString& aFontName)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::IsCssPropertyRecordedInUseCounter(const nsACString& aPropName,
+                                                    bool* aRecorded)
+{
+  *aRecorded = false;
+
+  nsIDocument* doc = GetDocument();
+  if (!doc || !doc->GetStyleUseCounters()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool knownProp = false;
+  *aRecorded =
+    Servo_IsCssPropertyRecordedInUseCounter(doc->GetStyleUseCounters(),
+                                            &aPropName,
+                                            &knownProp);
+  return knownProp ? NS_OK : NS_ERROR_FAILURE;
+}
+
