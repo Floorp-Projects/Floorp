@@ -7,18 +7,18 @@
 
 interface nsISHEntry;
 
-[scriptable, uuid(2EDF705F-D252-4971-9F09-71DD0F760DC6)]
+[builtinclass, scriptable, uuid(2EDF705F-D252-4971-9F09-71DD0F760DC6)]
 interface nsISHTransaction : nsISupports
 {
   /**
    * The nsISHEntry for the current transaction.
    */
-  attribute nsISHEntry sHEntry;
+  [infallible] attribute nsISHEntry sHEntry;
 
   /**
    * Specifies if this transaction should persist. If not it will be replaced
    * by new additions to the list.
    */
-  attribute boolean persist;
+  [infallible] attribute boolean persist;
 };
 
