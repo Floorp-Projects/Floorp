@@ -221,17 +221,35 @@ const CFRPageActions = {
   },
 
   /**
+   * Force a recommendation to be shown. Should only happen via the Admin page.
+   * @param browser             The browser for the recommendation
+   * @param recommendation      The recommendation to show
+   * @param dispatchToASRouter  A function to dispatch resulting actions to
+   * @return                    Did adding the recommendation succeed?
+   */
+  async forceRecommendation(browser, recommendation, dispatchToASRouter) {
+    // If we are forcing via the Admin page, the browser comes in a different format
+    const win = browser.browser.ownerGlobal;
+    const {id, content} = recommendation;
+    RecommendationMap.set(browser.browser, {id, content});
+    if (!PageActionMap.has(win)) {
+      PageActionMap.set(win, new PageAction(win, dispatchToASRouter));
+    }
+    await PageActionMap.get(win).show(recommendation.content.notification_text, true);
+    return true;
+  },
+
+  /**
    * Add a recommendation specific to the given browser and host.
    * @param browser             The browser for the recommendation
    * @param host                The host for the recommendation
    * @param recommendation      The recommendation to show
    * @param dispatchToASRouter  A function to dispatch resulting actions to
-   * @param force               Force the recommendation to appear if the host doesn't match
    * @return                    Did adding the recommendation succeed?
    */
-  async addRecommendation(browser, host, recommendation, dispatchToASRouter, force = false) {
+  async addRecommendation(browser, host, recommendation, dispatchToASRouter) {
     const win = browser.ownerGlobal;
-    if (browser !== win.gBrowser.selectedBrowser || !(force || isHostMatch(browser, host))) {
+    if (browser !== win.gBrowser.selectedBrowser || !isHostMatch(browser, host)) {
       return false;
     }
     const {id, content} = recommendation;

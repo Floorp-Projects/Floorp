@@ -641,14 +641,23 @@ describe("ASRouter", () => {
       assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_MESSAGE", data: testMessage});
     });
 
-    it("should call CFRPageActions.addRecommendation if the template is cfr_action", async () => {
-      sandbox.stub(CFRPageActions, "addRecommendation");
+    it("should call CFRPageActions.forceRecommendation if the template is cfr_action and force is true", async () => {
+      sandbox.stub(CFRPageActions, "forceRecommendation");
       const testMessage = {id: "foo", template: "cfr_doorhanger"};
       await Router.setState({messages: [testMessage]});
       const msg = fakeAsyncMessage({type: "OVERRIDE_MESSAGE", data: {id: testMessage.id}});
       await Router.onMessage(msg);
 
       assert.notCalled(msg.target.sendAsyncMessage);
+      assert.calledOnce(CFRPageActions.forceRecommendation);
+    });
+
+    it("should call CFRPageActions.addRecommendation if the template is cfr_action and force is false", async () => {
+      sandbox.stub(CFRPageActions, "addRecommendation");
+      const testMessage = {id: "foo", template: "cfr_doorhanger"};
+      await Router.setState({messages: [testMessage]});
+      await Router._sendMessageToTarget(testMessage, {}, {}, false);
+
       assert.calledOnce(CFRPageActions.addRecommendation);
     });
 
