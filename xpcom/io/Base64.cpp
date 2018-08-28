@@ -391,16 +391,14 @@ Base64EncodeHelper(const T& aBinary, T& aBase64)
 
   uint32_t base64Len = ((aBinary.Length() + 2) / 3) * 4;
 
-  // Add one byte for null termination.
-  if (!aBase64.SetCapacity(base64Len + 1, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv;
+  auto handle = aBase64.BulkWrite(base64Len, 0, false, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  typename T::char_type* base64 = aBase64.BeginWriting();
-  Encode(aBinary.BeginReading(), aBinary.Length(), base64);
-  base64[base64Len] = '\0';
-
-  aBase64.SetLength(base64Len);
+  Encode(aBinary.BeginReading(), aBinary.Length(), handle.Elements());
+  handle.Finish(base64Len, false);
   return NS_OK;
 }
 
@@ -575,20 +573,19 @@ Base64DecodeString(const T& aBase64, T& aBinary)
 
   uint32_t binaryLen = ((aBase64.Length() * 3) / 4);
 
-  // Add one byte for null termination.
-  if (!aBinary.SetCapacity(binaryLen + 1, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  typename T::char_type* binary = aBinary.BeginWriting();
-  nsresult rv = Base64DecodeHelper(aBase64.BeginReading(), aBase64.Length(),
-                                   binary, &binaryLen);
-  if (NS_FAILED(rv)) {
-    aBinary.Truncate();
+  nsresult rv;
+  auto handle = aBinary.BulkWrite(binaryLen, 0, false, rv);
+  if(NS_FAILED(rv)) {
     return rv;
   }
 
-  aBinary.SetLength(binaryLen);
+  rv = Base64DecodeHelper(aBase64.BeginReading(), aBase64.Length(),
+                          handle.Elements(), &binaryLen);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  handle.Finish(binaryLen, true);
   return NS_OK;
 }
 
