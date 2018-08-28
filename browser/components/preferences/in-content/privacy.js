@@ -29,6 +29,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingCookiesAndSiteDataRe
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingCookiesAndSiteDataRejectTrackersEnabled",
                                       "browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingFastBlockUiEnabled",
+                                      "browser.contentblocking.fastblock.ui.enabled");
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingTrackingProtectionUiEnabled",
+                                      "browser.contentblocking.trackingprotection.ui.enabled");
+
 XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingRejectTrackersUiEnabled",
                                       "browser.contentblocking.rejecttrackers.ui.enabled");
 
@@ -493,11 +499,21 @@ var gPrivacyPane = {
     let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection";
     link.setAttribute("href", url);
 
-    // Disable the Content Blocking Third-Party Cookies UI based on a pref
-    if (!contentBlockingRejectTrackersUiEnabled) {
-      let elements = document.querySelectorAll(".reject-trackers-ui");
-      for (let element of elements) {
-        element.hidden = true;
+    // Honour our Content Blocking category UI prefs. If each pref is set to false,
+    // Make all descendants of the corresponding selector hidden.
+    let selectorPrefMap = {
+      ".fast-block-ui": contentBlockingFastBlockUiEnabled,
+      ".tracking-protection-ui": contentBlockingTrackingProtectionUiEnabled,
+      ".reject-trackers-ui": contentBlockingRejectTrackersUiEnabled,
+    };
+
+    for (let selector in selectorPrefMap) {
+      let pref = selectorPrefMap[selector];
+      if (!pref) {
+        let elements = document.querySelectorAll(selector);
+        for (let element of elements) {
+          element.hidden = true;
+        }
       }
     }
 
