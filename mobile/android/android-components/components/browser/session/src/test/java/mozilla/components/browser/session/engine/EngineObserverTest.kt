@@ -31,6 +31,7 @@ class EngineObserverTest {
             override fun restoreState(state: Map<String, Any>) {}
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
+            override fun setDesktopMode(enable: Boolean, reload: Boolean) {}
             override fun saveState(): Map<String, Any> {
                 return emptyMap()
             }
@@ -73,6 +74,7 @@ class EngineObserverTest {
             override fun restoreState(state: Map<String, Any>) {}
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
+            override fun setDesktopMode(enable: Boolean, reload: Boolean) {}
             override fun saveState(): Map<String, Any> {
                 return emptyMap()
             }
@@ -113,6 +115,8 @@ class EngineObserverTest {
             override fun disableTrackingProtection() {
                 notifyObservers { onTrackerBlockingEnabledChange(false) }
             }
+
+            override fun setDesktopMode(enable: Boolean, reload: Boolean) {}
             override fun saveState(): Map<String, Any> {
                 return emptyMap()
             }

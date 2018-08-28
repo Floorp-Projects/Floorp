@@ -155,10 +155,32 @@ class GeckoEngineSession(
             Use Engine.settings instead""".trimIndent())
 
     /**
+     * See [EngineSession.settings]
+     */
+    override fun setDesktopMode(enable: Boolean, reload: Boolean) {
+        val currentMode = geckoSession.settings.getInt(GeckoSessionSettings.USER_AGENT_MODE)
+        val newMode = if (enable) {
+            GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
+        } else {
+            GeckoSessionSettings.USER_AGENT_MODE_MOBILE
+        }
+
+        if (newMode != currentMode) {
+            geckoSession.settings.setInt(GeckoSessionSettings.USER_AGENT_MODE, newMode)
+            notifyObservers { onDesktopModeEnabled(enable) }
+        }
+
+        if (reload) {
+            geckoSession.reload()
+        }
+    }
+
+    /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
-        override fun onLoadError(session: GeckoSession?, uri: String?, category: Int, error: Int) = Unit
+        override fun onLoadError(session: GeckoSession?, uri: String?, category: Int, error: Int) =
+            Unit
 
         override fun onLocationChange(session: GeckoSession?, url: String) {
             // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
@@ -194,8 +216,8 @@ class GeckoEngineSession(
     }
 
     /**
-    * ProgressDelegate implementation for forwarding callbacks to observers of the session.
-    */
+     * ProgressDelegate implementation for forwarding callbacks to observers of the session.
+     */
     private fun createProgressDelegate() = object : GeckoSession.ProgressDelegate {
         override fun onProgressChange(session: GeckoSession?, progress: Int) {
             notifyObservers { onProgress(progress) }

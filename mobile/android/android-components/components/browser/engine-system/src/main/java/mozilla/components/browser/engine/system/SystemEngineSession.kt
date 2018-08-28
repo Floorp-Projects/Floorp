@@ -163,6 +163,29 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
         } ?: throw IllegalStateException("System engine session not initialized")
     }
 
+    /**
+     * See [EngineSession.setDesktopMode]
+     */
+    override fun setDesktopMode(enable: Boolean, reload: Boolean) {
+        currentView()?.let { view ->
+            val webSettings = view.settings
+            webSettings.userAgentString = toggleDesktopUA(webSettings.userAgentString, enable)
+            webSettings.useWideViewPort = enable
+
+            if (reload) {
+                view.reload()
+            }
+        }
+    }
+
+    internal fun toggleDesktopUA(userAgent: String, requestDesktop: Boolean): String {
+        return if (requestDesktop) {
+            userAgent.replace("Mobile", "eliboM").replace("Android", "diordnA")
+        } else {
+            userAgent.replace("eliboM", "Mobile").replace("diordnA", "Android")
+        }
+    }
+
     internal fun currentView(): WebView? {
         return view?.get()?.currentWebView
     }

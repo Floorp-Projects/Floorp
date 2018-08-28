@@ -10,6 +10,7 @@ import kotlinx.coroutines.experimental.async
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
+import mozilla.components.browser.menu.item.SimpleBrowserMenuCheckbox
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
@@ -70,6 +71,9 @@ class Components(private val applicationContext: Context) {
             },
             SimpleBrowserMenuItem("Settings") {
                 Toast.makeText(applicationContext, "Settings", Toast.LENGTH_SHORT).show()
+            },
+            SimpleBrowserMenuCheckbox("Request desktop site") { checked ->
+                sessionUseCases.requestDesktopSite.invoke(checked)
             }
         )
     }

@@ -151,6 +151,13 @@ class GeckoEngineSession(
             Use Engine.settings instead""".trimIndent())
 
     /**
+     * See [EngineSession.settings]
+     */
+    override fun setDesktopMode(enable: Boolean, reload: Boolean) {
+        // no-op (requires v63+)
+    }
+
+    /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {

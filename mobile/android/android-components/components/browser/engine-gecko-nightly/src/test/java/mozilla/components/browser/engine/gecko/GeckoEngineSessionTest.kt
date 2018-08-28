@@ -485,4 +485,30 @@ class GeckoEngineSessionTest {
         result = engineSession.handleLongClick(null, ELEMENT_TYPE_NONE, null)
         assertNull(result)
     }
+
+    @Test
+    fun testSetDesktopMode() {
+        val runtime = mock(GeckoRuntime::class.java)
+        val engineSession = GeckoEngineSession(runtime)
+
+        var desktopModeEnabled = false
+        engineSession.register(object : EngineSession.Observer {
+            override fun onDesktopModeEnabled(enabled: Boolean) {
+                desktopModeEnabled = true
+            }
+        })
+        engineSession.setDesktopMode(true)
+        assertTrue(desktopModeEnabled)
+
+        desktopModeEnabled = false
+        engineSession.setDesktopMode(true)
+        assertFalse(desktopModeEnabled)
+
+        engineSession.geckoSession.settings.setInt(GeckoSessionSettings.USER_AGENT_MODE, GeckoSessionSettings.USER_AGENT_MODE_DESKTOP)
+        engineSession.setDesktopMode(true)
+        assertFalse(desktopModeEnabled)
+
+        engineSession.setDesktopMode(false)
+        assertTrue(desktopModeEnabled)
+    }
 }

@@ -88,4 +88,18 @@ class SessionUseCasesTest {
         useCases.goForward.invoke()
         verify(selectedEngineSession).goForward()
     }
+
+    @Test
+    fun testRequestDesktopSite() {
+        val engineSession = mock(EngineSession::class.java)
+        val session = mock(Session::class.java)
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+
+        useCases.requestDesktopSite.invoke(true, session)
+        verify(engineSession).setDesktopMode(true, true)
+
+        `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
+        useCases.requestDesktopSite.invoke(true)
+        verify(selectedEngineSession).setDesktopMode(true, true)
+    }
 }

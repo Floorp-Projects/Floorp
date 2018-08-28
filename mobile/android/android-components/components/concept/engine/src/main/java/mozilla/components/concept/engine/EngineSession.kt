@@ -30,6 +30,7 @@ abstract class EngineSession(
         fun onTrackerBlockingEnabledChange(enabled: Boolean) = Unit
         fun onTrackerBlocked(url: String) = Unit
         fun onLongPress(hitResult: HitResult) = Unit
+        fun onDesktopModeEnabled(enabled: Boolean) = Unit
 
         @Suppress("LongParameterList")
         fun onExternalResource(
@@ -150,6 +151,11 @@ abstract class EngineSession(
      * Disables tracking protection for this engine session.
      */
     abstract fun disableTrackingProtection()
+
+    /**
+     * Enables/disables Desktop Mode with an optional ability to reload the session right after.
+     */
+    abstract fun setDesktopMode(enable: Boolean, reload: Boolean = false)
 
     /**
      * Close the session. This may free underlying objects. Call this when you are finished using
