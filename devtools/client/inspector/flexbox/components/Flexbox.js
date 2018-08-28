@@ -15,6 +15,9 @@ loader.lazyGetter(this, "FlexContainer", function() {
 loader.lazyGetter(this, "FlexContainerProperties", function() {
   return createFactory(require("./FlexContainerProperties"));
 });
+loader.lazyGetter(this, "FlexItemList", function() {
+  return createFactory(require("./FlexItemList"));
+});
 
 const Types = require("../types");
 
@@ -29,6 +32,22 @@ class Flexbox extends PureComponent {
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
+  }
+
+  renderFlexItemList() {
+    const { flexbox } = this.props;
+    const {
+      flexItems,
+      highlighted,
+    } = flexbox;
+
+    if (!highlighted || !flexItems.length) {
+      return null;
+    }
+
+    return FlexItemList({
+      flexItems,
+    });
   }
 
   render() {
@@ -61,6 +80,7 @@ class Flexbox extends PureComponent {
           onToggleFlexboxHighlighter,
           setSelectedNode,
         }),
+        this.renderFlexItemList(),
         FlexContainerProperties({
           properties: flexbox.properties,
         })

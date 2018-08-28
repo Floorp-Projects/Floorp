@@ -41,8 +41,9 @@
   padding: 0;
 }
 
-.grid-container li {
+#layout-container li {
   padding: 3px 0;
+  -moz-user-select: none;
 }
 
 .flex-container input,
@@ -104,6 +105,19 @@
   padding: 5px 0;
   padding-inline-start: 20px;
 }
+
+/**
+ * Flex Item List
+ */
+
+#flex-item-list {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  font-size: 12px;
+  margin: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
 /**
  * Flex Container Properties
  */
