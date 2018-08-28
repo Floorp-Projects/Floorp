@@ -199,22 +199,21 @@ nsTSubstring<T>::StartBulkWriteImpl(size_type aCapacity,
       // bucket, it's not useful to use realloc, which may spend time uselessly
       // copying too much.
       nsStringBuffer* newHdr = nsStringBuffer::Alloc(storageSize).take();
-      if (!newHdr) {
-        // we are still in a consistent state
-        if (shrinking) {
-          // Since shrinking is just a memory footprint optimization, we
-          // don't propagate OOM if we tried to shrink in order to avoid
-          // OOM crashes from infallible callers. If we're lucky, soon enough
-          // a fallible caller reaches OOM and is able to deal or we end up
-          // disposing of this string before reaching OOM again.
-          newData = oldData;
-          newCapacity = curCapacity;
-        } else {
-          return mozilla::Err(NS_ERROR_OUT_OF_MEMORY);
-        }
+      if (newHdr) {
+        newData = (char_type*)newHdr->Data();
+      } else if (shrinking) {
+        // We're still in a consistent state.
+        //
+        // Since shrinking is just a memory footprint optimization, we
+        // don't propagate OOM if we tried to shrink in order to avoid
+        // OOM crashes from infallible callers. If we're lucky, soon enough
+        // a fallible caller reaches OOM and is able to deal or we end up
+        // disposing of this string before reaching OOM again.
+        newData = oldData;
+        newCapacity = curCapacity;
+      } else {
+        return mozilla::Err(NS_ERROR_OUT_OF_MEMORY);
       }
-
-      newData = (char_type*)newHdr->Data();
     }
     newDataFlags = DataFlags::TERMINATED | DataFlags::REFCOUNTED;
   }
