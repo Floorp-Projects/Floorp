@@ -4,6 +4,7 @@
 <stringbundleset id="downloadsStrings"
   string-download-cancel="&cmd.cancel.label;"
   string-download-cancel-description="&cancelDownload.label;"
+  string-download-open-file-description="&openFile.label;"
   string-download-open-or-remove-file="&cmd.chooseOpen.label;"
   string-download-remove-file="&cmd.removeFile.label;"
   string-download-remove-file-or-allow="&cmd.chooseUnblock.label;"
