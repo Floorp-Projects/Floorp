@@ -22,12 +22,16 @@
         The <span class="label-text" …/> needs to be after the form field in the same element in
         order to get proper label styling with :focus and :moz-ui-invalid.
       -->
-    <label id="cc-number-container" class="container">
+    <label>
       <span id="invalidCardNumberString" hidden="hidden" data-localization="invalidCardNumber"></span>
       <input id="cc-number" type="text" required="required" minlength="9" pattern="[- 0-9]+"/>
       <span data-localization="cardNumber" class="label-text"/>
     </label>
-    <label id="cc-exp-month-container" class="container">
+    <label>
+      <input id="cc-name" type="text" required="required"/>
+      <span data-localization="nameOnCard" class="label-text"/>
+    </label>
+    <label>
       <select id="cc-exp-month">
         <option/>
         <option value="1">01</option>
@@ -45,22 +49,13 @@
       </select>
       <span data-localization="cardExpiresMonth" class="label-text"/>
     </label>
-    <label id="cc-exp-year-container" class="container">
+    <label>
       <select id="cc-exp-year">
         <option/>
       </select>
       <span data-localization="cardExpiresYear" class="label-text"/>
     </label>
-    <label id="cc-name-container" class="container">
-      <input id="cc-name" type="text" required="required"/>
-      <span data-localization="nameOnCard" class="label-text"/>
-    </label>
-    <label id="cc-type-container" class="container">
-      <select id="cc-type">
-      </select>
-      <span class="label-text">Card Type</span>
-    </label>
-    <label id="billingAddressGUID-container" class="billingAddressRow container">
+    <label class="billingAddressRow">
       <select id="billingAddressGUID">
       </select>
       <span data-localization="billingAddress" class="label-text"/>
