@@ -1269,13 +1269,6 @@ js::DumpHeap(JSContext* cx, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehavi
 }
 
 JS_FRIEND_API(void)
-js::SetActivityCallback(JSContext* cx, ActivityCallback cb, void* arg)
-{
-    cx->activityCallback = cb;
-    cx->activityCallbackArg = arg;
-}
-
-JS_FRIEND_API(void)
 JS::NotifyGCRootsRemoved(JSContext* cx)
 {
     cx->runtime()->gc.notifyRootsRemoved();

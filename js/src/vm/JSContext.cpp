@@ -1269,8 +1269,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     nativeStackBase(GetNativeStackBase()),
     entryMonitor(nullptr),
     noExecuteDebuggerTop(nullptr),
-    activityCallback(nullptr),
-    activityCallbackArg(nullptr),
     requestDepth(0),
 #ifdef DEBUG
     checkRequestDepth(0),
