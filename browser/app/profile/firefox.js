@@ -1501,6 +1501,8 @@ pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended",
 pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
 pref("browser.contentblocking.rejecttrackers.ui.recommended", true);
+pref("browser.contentblocking.fastblock.ui.enabled", true);
+pref("browser.contentblocking.trackingprotection.ui.enabled", true);
 #ifdef NIGHTLY_BUILD
 pref("browser.contentblocking.ui.enabled", true);
 pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", true);

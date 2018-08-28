@@ -331,7 +331,7 @@
     </hbox>
     <vbox id="contentBlockingCategories">
       <label id="content-blocking-categories-label" data-l10n-id="content-blocking-category-label"/>
-      <hbox class="content-blocking-category">
+      <hbox class="content-blocking-category fast-block-ui">
         <vbox class="content-blocking-category-checkbox">
           <checkbox id="contentBlockingFastBlockCheckbox"
                     class="content-blocking-checkbox"
@@ -356,7 +356,7 @@
                   class="extension-controlled-button accessory-button"
                   data-l10n-id="disable-extension"/>
         </hbox>
-        <hbox class="content-blocking-category">
+        <hbox class="content-blocking-category tracking-protection-ui">
           <vbox class="content-blocking-category-checkbox">
             <checkbox id="contentBlockingTrackingProtectionCheckbox" class="content-blocking-checkbox" />
           </vbox>

@@ -42,6 +42,8 @@ add_task(async function test_change_cookie_settings() {
   await SpecialPowers.pushPrefEnv({set: [
     ["browser.contentblocking.enabled", true],
     ["browser.contentblocking.ui.enabled", true],
+    ["browser.contentblocking.fastblock.ui.enabled", true],
+    ["browser.contentblocking.trackingprotection.ui.enabled", true],
     ["browser.contentblocking.rejecttrackers.ui.enabled", true],
   ]});
   let prefs = await openPreferencesViaOpenPreferencesAPI("privacy-trackingprotection", {leaveOpen: true});
