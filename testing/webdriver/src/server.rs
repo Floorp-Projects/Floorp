@@ -74,7 +74,7 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
 
                     match resp {
                         Ok(WebDriverResponse::NewSession(ref new_session)) => {
-                            self.session = Some(Session::new(new_session.sessionId.clone()));
+                            self.session = Some(Session::new(new_session.session_id.clone()));
                         }
                         Ok(WebDriverResponse::CloseWindow(CloseWindowResponse(ref handles))) => {
                             if handles.len() == 0 {

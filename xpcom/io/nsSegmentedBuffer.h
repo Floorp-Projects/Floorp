@@ -7,8 +7,6 @@
 #ifndef nsSegmentedBuffer_h__
 #define nsSegmentedBuffer_h__
 
-#include "nsIMemory.h"
-
 class nsSegmentedBuffer
 {
 public:
