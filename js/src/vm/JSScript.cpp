@@ -75,21 +75,6 @@ using mozilla::Maybe;
 using mozilla::PodCopy;
 
 
-// Check that JSScript::data hasn't experienced obvious memory corruption.
-// This is a diagnositic for Bug 1367896.
-static void
-CheckScriptDataIntegrity(JSScript* script)
-{
-    ScopeArray* sa = script->scopes();
-    uint8_t* ptr = reinterpret_cast<uint8_t*>(sa->vector);
-
-    // Check that scope data - who's pointer is stored in data region - also
-    // points within the data region.
-    MOZ_RELEASE_ASSERT(ptr >= script->data &&
-                       ptr + sa->length <= script->data + script->dataSize(),
-                       "Corrupt JSScript::data");
-}
-
 template<XDRMode mode>
 XDRResult
 js::XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp)
@@ -370,8 +355,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         script = scriptp.get();
         MOZ_ASSERT(script->functionNonDelazifying() == fun);
 
-        CheckScriptDataIntegrity(script);
-
         if (!fun && script->treatAsRunOnce() && script->hasRunOnce()) {
             // This is a toplevel or eval script that's runOnce.  We want to
             // make sure that we're not XDR-saving an object we emitted for
@@ -550,7 +533,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     if (mode == XDR_DECODE) {
         if (!JSScript::partiallyInit(cx, script, nscopes, nconsts, nobjects, ntrynotes,
-                                     nscopenotes, nyieldoffsets, nTypeSets))
+                                     nscopenotes, nyieldoffsets))
         {
             return xdr->fail(JS::TranscodeResult_Throw);
         }
@@ -558,6 +541,9 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         MOZ_ASSERT(!script->mainOffset());
         script->mainOffset_ = prologueLength;
         script->funLength_ = funLength;
+
+        MOZ_ASSERT(nTypeSets <= UINT16_MAX);
+        script->nTypeSets_ = uint16_t(nTypeSets);
 
         scriptp.set(script);
 
@@ -887,8 +873,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     if (mode == XDR_DECODE) {
-        CheckScriptDataIntegrity(script);
-
         scriptp.set(script);
 
         /* see BytecodeEmitter::tellDebuggerAboutCompiledScript */
@@ -2751,7 +2735,7 @@ AllocScriptData(JSContext* cx, size_t size)
 /* static */ bool
 JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
                         uint32_t nconsts, uint32_t nobjects, uint32_t ntrynotes,
-                        uint32_t nscopenotes, uint32_t nyieldoffsets, uint32_t nTypeSets)
+                        uint32_t nscopenotes, uint32_t nyieldoffsets)
 {
     cx->check(script);
 
@@ -2762,9 +2746,6 @@ JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
         return false;
 
     script->dataSize_ = size;
-
-    MOZ_ASSERT(nTypeSets <= UINT16_MAX);
-    script->nTypeSets_ = uint16_t(nTypeSets);
 
     uint8_t* cursor = script->data;
 
@@ -2856,12 +2837,13 @@ JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
     uint32_t numTryNotes = 0;
     uint32_t numScopeNotes = 0;
     uint32_t numYieldAndAwaitOffsets = 0;
-    uint32_t numTypeSets = 0;
     if (!partiallyInit(cx, script, numScopes, numConsts, numObjects, numTryNotes,
-                       numScopeNotes, numYieldAndAwaitOffsets, numTypeSets))
+                       numScopeNotes, numYieldAndAwaitOffsets))
     {
         return false;
     }
+
+    script->nTypeSets_ = 0;
 
     RootedScope enclosing(cx, &cx->global()->emptyGlobalScope());
     Scope* functionProtoScope = FunctionScope::create(cx, nullptr, false, false, functionProto,
@@ -2971,14 +2953,14 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, BytecodeEmitt
     if (!partiallyInit(cx, script,
                        bce->scopeList.length(), bce->constList.length(), bce->objectList.length,
                        bce->tryNoteList.length(), bce->scopeNoteList.length(),
-                       bce->yieldAndAwaitOffsetList.length(), bce->typesetCount))
+                       bce->yieldAndAwaitOffsetList.length()))
     {
         return false;
     }
 
     MOZ_ASSERT(script->mainOffset() == 0);
     script->mainOffset_ = prologueLength;
-
+    script->nTypeSets_ = bce->typesetCount;
     script->lineno_ = bce->firstLine;
 
     if (!script->createScriptData(cx, prologueLength + mainLength, nsrcnotes, natoms))
@@ -3456,8 +3438,6 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     }
 
     /* NB: Keep this in sync with XDRScript. */
-
-    CheckScriptDataIntegrity(src);
 
     /* Some embeddings are not careful to use ExposeObjectToActiveJS as needed. */
     MOZ_ASSERT(!src->sourceObject()->isMarkedGray());

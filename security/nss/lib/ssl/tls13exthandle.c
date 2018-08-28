@@ -751,7 +751,9 @@ tls13_ClientSendSupportedVersionsXtn(const sslSocket *ss, TLSExtensionData *xtnD
     }
 
     for (version = ss->vrange.max; version >= ss->vrange.min; --version) {
-        rv = sslBuffer_AppendNumber(buf, tls13_EncodeDraftVersion(version), 2);
+        PRUint16 wire = tls13_EncodeDraftVersion(version,
+                                                 ss->protocolVariant);
+        rv = sslBuffer_AppendNumber(buf, wire, 2);
         if (rv != SECSuccess) {
             return SECFailure;
         }
@@ -779,8 +781,9 @@ tls13_ServerSendSupportedVersionsXtn(const sslSocket *ss, TLSExtensionData *xtnD
     SSL_TRC(3, ("%d: TLS13[%d]: server send supported_versions extension",
                 SSL_GETPID(), ss->fd));
 
-    rv = sslBuffer_AppendNumber(
-        buf, tls13_EncodeDraftVersion(SSL_LIBRARY_VERSION_TLS_1_3), 2);
+    PRUint16 ver = tls13_EncodeDraftVersion(SSL_LIBRARY_VERSION_TLS_1_3,
+                                            ss->protocolVariant);
+    rv = sslBuffer_AppendNumber(buf, ver, 2);
     if (rv != SECSuccess) {
         return SECFailure;
     }

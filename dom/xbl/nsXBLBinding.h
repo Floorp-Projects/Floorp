@@ -25,7 +25,6 @@ struct RawServoAuthorStyles;
 namespace mozilla {
 namespace dom {
 
-class ShadowRoot;
 class XBLChildrenElement;
 
 } // namespace dom
@@ -40,7 +39,6 @@ class nsXBLBinding final
 {
 public:
   explicit nsXBLBinding(nsXBLPrototypeBinding* aProtoBinding);
-  nsXBLBinding(mozilla::dom::ShadowRoot* aShadowRoot, nsXBLPrototypeBinding* aProtoBinding);
 
   /**
    * XBLBindings are refcounted.  They are held onto in 3 ways:
@@ -165,7 +163,6 @@ protected:
 
   bool mMarkedForDeath;
   bool mUsingContentXBLScope;
-  bool mIsShadowRootBinding;
 
   nsXBLPrototypeBinding* mPrototypeBinding; // Weak, but we're holding a ref to the docinfo
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.

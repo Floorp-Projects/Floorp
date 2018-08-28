@@ -61,6 +61,7 @@
   skin/classic/browser/illustrations/error-session-restore.svg (../shared/illustrations/error-session-restore.svg)
 
   skin/classic/browser/notification-icons/autoplay-media.svg                (../shared/notification-icons/autoplay-media.svg)
+  skin/classic/browser/notification-icons/autoplay-media-detailed.svg       (../shared/notification-icons/autoplay-media-detailed.svg)
   skin/classic/browser/notification-icons/autoplay-media-blocked.svg        (../shared/notification-icons/autoplay-media-blocked.svg)
   skin/classic/browser/notification-icons/camera-blocked.svg                (../shared/notification-icons/camera-blocked.svg)
   skin/classic/browser/notification-icons/camera.svg                        (../shared/notification-icons/camera.svg)

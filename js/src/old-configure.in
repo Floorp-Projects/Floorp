@@ -1109,7 +1109,7 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS([getc_unlocked _getc_nolock gmtime_r localtime_r pthread_getname_np])
+AC_CHECK_FUNCS([getc_unlocked _getc_nolock gmtime_r localtime_r pthread_getname_np pthread_get_name_np])
 
 dnl check for clock_gettime(), the CLOCK_MONOTONIC clock
 dnl avoid this on Darwin, since depending on your system config, we may think
