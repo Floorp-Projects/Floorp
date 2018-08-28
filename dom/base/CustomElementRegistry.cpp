@@ -42,13 +42,6 @@ public:
     aCb.NoteNativeChild(mDefinition,
       NS_CYCLE_COLLECTION_PARTICIPANT(CustomElementDefinition));
   }
-
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
-    // We don't really own mDefinition.
-    return aMallocSizeOf(this);
-  }
-
 private:
   virtual void Invoke(Element* aElement, ErrorResult& aRv) override
   {
@@ -74,15 +67,6 @@ class CustomElementCallbackReaction final : public CustomElementReaction
       mCustomElementCallback->Traverse(aCb);
     }
 
-    size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-    {
-      size_t n = aMallocSizeOf(this);
-
-      n += mCustomElementCallback->SizeOfIncludingThis(aMallocSizeOf);
-
-      return n;
-    }
-
   private:
     virtual void Invoke(Element* aElement, ErrorResult& aRv) override
     {
@@ -94,16 +78,6 @@ class CustomElementCallbackReaction final : public CustomElementReaction
 
 //-----------------------------------------------------
 // CustomElementCallback
-
-size_t
-LifecycleCallbackArgs::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  size_t n = name.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  n += oldValue.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  n += newValue.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  n += namespaceURI.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  return n;
-}
 
 void
 CustomElementCallback::Call()
@@ -137,24 +111,6 @@ CustomElementCallback::Traverse(nsCycleCollectionTraversalCallback& aCb) const
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mCallback");
   aCb.NoteXPCOMChild(mCallback);
-}
-
-size_t
-CustomElementCallback::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  size_t n = aMallocSizeOf(this);
-
-  // We don't uniquely own mThisObject.
-
-  // We own mCallback but it doesn't have any special memory reporting we can do
-  // for it other than report its own size.
-  n += aMallocSizeOf(mCallback);
-
-  n += mArgs.SizeOfExcludingThis(aMallocSizeOf);
-
-  // mAdoptedCallbackArgs doesn't really uniquely own its members.
-
-  return n;
 }
 
 CustomElementCallback::CustomElementCallback(Element* aThisObject,
@@ -256,20 +212,6 @@ CustomElementData::Unlink()
 {
   mReactionQueue.Clear();
   mCustomElementDefinition = nullptr;
-}
-
-size_t
-CustomElementData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  size_t n = aMallocSizeOf(this);
-
-  n += mReactionQueue.ShallowSizeOfExcludingThis(aMallocSizeOf);
-
-  for (auto& reaction : mReactionQueue) {
-    n += reaction->SizeOfIncludingThis(aMallocSizeOf);
-  }
-
-  return n;
 }
 
 //-----------------------------------------------------
