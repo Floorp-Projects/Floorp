@@ -56,9 +56,9 @@
       <span data-localization="nameOnCard" class="label-text"/>
     </label>
     <label id="cc-type-container" class="container">
-      <select id="cc-type" disabled="disabled">
+      <select id="cc-type">
       </select>
-      <span class="label-text">Card Type</span>
+      <span data-localization="cardNetwork" class="label-text"/>
     </label>
     <label id="billingAddressGUID-container" class="billingAddressRow container">
       <select id="billingAddressGUID">
@@ -76,6 +76,7 @@
     let {
       getAddressLabel,
       isCCNumber,
+      getCreditCardNetworks,
     } = FormAutofillUtils;
     let record = window.arguments && window.arguments[0];
     let addresses = {};
@@ -90,6 +91,7 @@
       {
         getAddressLabel: getAddressLabel.bind(FormAutofillUtils),
         isCCNumber: isCCNumber.bind(FormAutofillUtils),
+        getSupportedNetworks: getCreditCardNetworks.bind(FormAutofillUtils),
       });
 
     /* import-globals-from editDialog.js */

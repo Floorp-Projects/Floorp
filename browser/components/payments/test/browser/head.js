@@ -22,6 +22,7 @@ const {formAutofillStorage} = ChromeUtils.import(
   "resource://formautofill/FormAutofillStorage.jsm", {});
 const {PaymentTestUtils: PTU} = ChromeUtils.import(
   "resource://testing-common/PaymentTestUtils.jsm", {});
+ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
 
 function getPaymentRequests() {
   return Array.from(paymentSrv.enumerate());
@@ -357,6 +358,9 @@ add_task(async function setup_head() {
     Services.prefs.clearUserPref(SAVE_CREDITCARD_DEFAULT_PREF);
     Services.prefs.clearUserPref(SAVE_ADDRESS_DEFAULT_PREF);
     SpecialPowers.postConsoleSentinel();
+    // CreditCard.jsm is imported into the global scope. It needs to be deleted
+    // else it outlives the test and is reported as a leak.
+    delete window.CreditCard;
   });
 });
 
@@ -472,6 +476,25 @@ async function verifyPersistCheckbox(frame, aOptions = {}) {
       is(persistCheckbox.checked, options.expectPersist,
          `persist checkbox state is expected to be ${options.expectPersist}`);
     }
+  }, {options: aOptions});
+}
+
+async function verifyCardNetwork(frame, aOptions = {}) {
+  aOptions.supportedNetworks = CreditCard.SUPPORTED_NETWORKS;
+
+  await spawnPaymentDialogTask(frame, async (args) => {
+    let {options = {}} = args;
+    // ensure the network picker is visible, has the right contents and expected value
+    let networkSelect = Cu.waiveXrays(
+        content.document.querySelector(options.networkSelector));
+    ok(content.isVisible(networkSelect),
+       "The network selector should always be visible");
+    is(networkSelect.childElementCount, options.supportedNetworks.length + 1,
+       "Should have one more than the number of supported networks");
+    is(networkSelect.children[0].value, "",
+       "The first option should be the blank/empty option");
+    is(networkSelect.value, options.expectedNetwork,
+       `The network picker should have the expected value`);
   }, {options: aOptions});
 }
 
