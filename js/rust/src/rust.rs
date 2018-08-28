@@ -196,8 +196,6 @@ impl Runtime {
 
             JS::SetWarningReporter(js_context, Some(report_warning));
 
-            JS_BeginRequest(js_context);
-
             Ok(Runtime {
                 cx: js_context,
             })
@@ -256,7 +254,6 @@ impl Runtime {
 impl Drop for Runtime {
     fn drop(&mut self) {
         unsafe {
-            JS_EndRequest(self.cx);
             JS_DestroyContext(self.cx);
 
             CONTEXT.with(|context| {

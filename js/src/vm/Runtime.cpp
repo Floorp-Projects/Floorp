@@ -404,7 +404,6 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 static bool
 HandleInterrupt(JSContext* cx, bool invokeCallback)
 {
-    MOZ_ASSERT(cx->requestDepth >= 1);
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
     // Interrupts can occur at different points between recording and replay,
