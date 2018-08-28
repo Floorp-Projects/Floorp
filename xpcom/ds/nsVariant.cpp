@@ -401,7 +401,7 @@ CloneArray(uint16_t aInType, const nsIID* aInIID,
       for (i = aInCount; i > 0; i--) {
         char16_t* str = *(inp++);
         if (str) {
-          *(outp++) = NS_strdup(str);
+          *(outp++) = NS_xstrdup(str);
         } else {
           *(outp++) = nullptr;
         }

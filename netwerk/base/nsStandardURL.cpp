@@ -2425,7 +2425,7 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
             if (strncmp(relpath + scheme.mPos + scheme.mLen, "://", 3) == 0) {
                 // now this is really absolute
                 // because a :// follows the scheme
-                result = NS_strdup(relpath);
+                result = NS_xstrdup(relpath);
             } else {
                 // This is a deprecated form of relative urls like
                 // http:file or http:/path/file
@@ -2436,7 +2436,7 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
         } else {
             // the schemes are not the same, we are also done
             // because we have to assume this is absolute
-            result = NS_strdup(relpath);
+            result = NS_xstrdup(relpath);
         }
     } else {
         // add some flags to coalesceFlag if it is an ftp-url

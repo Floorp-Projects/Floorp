@@ -429,7 +429,7 @@ GetShutdownTimeFileName()
 
     mozFile->AppendNative(NS_LITERAL_CSTRING("Telemetry.ShutdownTime.txt"));
 
-    gRecordedShutdownTimeFileName = NS_strdup(mozFile->NativePath().get());
+    gRecordedShutdownTimeFileName = NS_xstrdup(mozFile->NativePath().get());
   }
 
   return gRecordedShutdownTimeFileName;

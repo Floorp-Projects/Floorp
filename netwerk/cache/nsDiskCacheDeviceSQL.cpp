@@ -2344,11 +2344,7 @@ nsOfflineCacheDevice::RunSimpleQuery(mozIStorageStatement * statement,
   char **ret = static_cast<char **>(moz_xmalloc(*count * sizeof(char*)));
 
   for (uint32_t i = 0; i <  *count; i++) {
-    ret[i] = NS_strdup(valArray[i].get());
-    if (!ret[i]) {
-      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, ret);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    ret[i] = NS_xstrdup(valArray[i].get());
   }
 
   *values = ret;
