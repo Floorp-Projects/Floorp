@@ -1,7 +1,7 @@
 {
     "DisabledTests": {
         "### These tests break whenever we rev versions, so just leave them here for easy uncommenting":"",
-        "*TLS13Draft23*":"NSS supports draft 28 only.",
+        "*TLS13Draft*":"NSS supports RFC 8446 only.",
         "IgnoreClientVersionOrder":"Uses draft23",
         "DuplicateCertCompressionExt*":"BoGo expects that an alert is sent if more than one compression algorithm is sent.",
         "ServerBogusVersion":"Check that SH.legacy_version=TLS12 when the server picks TLS 1.3 (Bug 1443761)",
@@ -18,6 +18,7 @@
         "Resume-Server-BinderWrongLength":"Alert disagreement (Bug 1317633)",
         "Resume-Server-NoPSKBinder":"Alert disagreement (Bug 1317633)",
         "CheckRecordVersion-TLS*":"Bug 1317634",
+        "GarbageInitialRecordVersion-TLS*":"NSS doesn't strictly check the ClientHello record version",
         "GREASE-Server-TLS13":"BoringSSL GREASEs without a flag, but we ignore it",
         "TLS13-ExpectNoSessionTicketOnBadKEMode-Server":"Bug in NSS. Don't send ticket when not permitted by KE modes (Bug 1317635)",
         "*KeyUpdate*":"KeyUpdate Unimplemented",

@@ -48,7 +48,6 @@ TEST_P(TlsConnectGeneric, ServerNegotiateTls12) {
                            SSL_LIBRARY_VERSION_TLS_1_2);
   Connect();
 }
-#ifndef TLS_1_3_DRAFT_VERSION
 
 // Test the ServerRandom version hack from
 // [draft-ietf-tls-tls13-11 Section 6.3.1.1].
@@ -56,71 +55,116 @@ TEST_P(TlsConnectGeneric, ServerNegotiateTls12) {
 // two validate that we can also detect fallback using the
 // SSL_SetDowngradeCheckVersion() API.
 TEST_F(TlsConnectTest, TestDowngradeDetectionToTls11) {
+  client_->SetOption(SSL_ENABLE_HELLO_DOWNGRADE_CHECK, PR_TRUE);
   MakeTlsFilter<TlsClientHelloVersionSetter>(client_,
                                              SSL_LIBRARY_VERSION_TLS_1_1);
-  ConnectExpectFail();
-  ASSERT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
 }
 
-/* Attempt to negotiate the bogus DTLS 1.1 version. */
+// Attempt to negotiate the bogus DTLS 1.1 version.
 TEST_F(DtlsConnectTest, TestDtlsVersion11) {
   MakeTlsFilter<TlsClientHelloVersionSetter>(client_, ((~0x0101) & 0xffff));
-  ConnectExpectFail();
+  ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
   // It's kind of surprising that SSL_ERROR_NO_CYPHER_OVERLAP is
   // what is returned here, but this is deliberate in ssl3_HandleAlert().
-  EXPECT_EQ(SSL_ERROR_NO_CYPHER_OVERLAP, client_->error_code());
-  EXPECT_EQ(SSL_ERROR_UNSUPPORTED_VERSION, server_->error_code());
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
 }
 
-// Disabled as long as we have draft version.
 TEST_F(TlsConnectTest, TestDowngradeDetectionToTls12) {
-  EnsureTlsSetup();
-  MakeTlsFilter<TlsClientHelloVersionSetter>(client_,
-                                             SSL_LIBRARY_VERSION_TLS_1_2);
+  client_->SetOption(SSL_ENABLE_HELLO_DOWNGRADE_CHECK, PR_TRUE);
+  MakeTlsFilter<TlsExtensionDropper>(client_, ssl_tls13_supported_versions_xtn);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
                            SSL_LIBRARY_VERSION_TLS_1_3);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
                            SSL_LIBRARY_VERSION_TLS_1_3);
-  ConnectExpectFail();
-  ASSERT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+}
+
+// Disabling downgrade checks will be caught when the Finished MAC check fails.
+TEST_F(TlsConnectTest, TestDisableDowngradeDetection) {
+  client_->SetOption(SSL_ENABLE_HELLO_DOWNGRADE_CHECK, PR_FALSE);
+  MakeTlsFilter<TlsExtensionDropper>(client_, ssl_tls13_supported_versions_xtn);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  ConnectExpectAlert(server_, kTlsAlertDecryptError);
+  client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
+  server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
 }
 
 // TLS 1.1 clients do not check the random values, so we should
 // instead get a handshake failure alert from the server.
 TEST_F(TlsConnectTest, TestDowngradeDetectionToTls10) {
+  // Setting the option here has no effect.
+  client_->SetOption(SSL_ENABLE_HELLO_DOWNGRADE_CHECK, PR_TRUE);
   MakeTlsFilter<TlsClientHelloVersionSetter>(client_,
                                              SSL_LIBRARY_VERSION_TLS_1_0);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
                            SSL_LIBRARY_VERSION_TLS_1_1);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
                            SSL_LIBRARY_VERSION_TLS_1_2);
-  ConnectExpectFail();
-  ASSERT_EQ(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE, server_->error_code());
-  ASSERT_EQ(SSL_ERROR_DECRYPT_ERROR_ALERT, client_->error_code());
+  ConnectExpectAlert(server_, kTlsAlertDecryptError);
+  server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
+  client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
 }
 
 TEST_F(TlsConnectTest, TestFallbackFromTls12) {
-  EnsureTlsSetup();
+  client_->SetOption(SSL_ENABLE_HELLO_DOWNGRADE_CHECK, PR_TRUE);
   client_->SetDowngradeCheckVersion(SSL_LIBRARY_VERSION_TLS_1_2);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_1);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_2);
-  ConnectExpectFail();
-  ASSERT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+}
+
+static SECStatus AllowFalseStart(PRFileDesc* fd, void* arg,
+                                 PRBool* can_false_start) {
+  bool* false_start_attempted = reinterpret_cast<bool*>(arg);
+  *false_start_attempted = true;
+  *can_false_start = PR_TRUE;
+  return SECSuccess;
+}
+
+// If we disable the downgrade check, the sentinel is still generated, and we
+// disable false start instead.
+TEST_F(TlsConnectTest, DisableFalseStartOnFallback) {
+  // Don't call client_->EnableFalseStart(), because that sets the client up for
+  // success, and we want false start to fail.
+  client_->SetOption(SSL_ENABLE_FALSE_START, PR_TRUE);
+  bool false_start_attempted = false;
+  EXPECT_EQ(SECSuccess,
+            SSL_SetCanFalseStartCallback(client_->ssl_fd(), AllowFalseStart,
+                                         &false_start_attempted));
+
+  client_->SetDowngradeCheckVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  Connect();
+  EXPECT_FALSE(false_start_attempted);
 }
 
 TEST_F(TlsConnectTest, TestFallbackFromTls13) {
-  EnsureTlsSetup();
+  client_->SetOption(SSL_ENABLE_HELLO_DOWNGRADE_CHECK, PR_TRUE);
   client_->SetDowngradeCheckVersion(SSL_LIBRARY_VERSION_TLS_1_3);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
                            SSL_LIBRARY_VERSION_TLS_1_2);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
-  ConnectExpectFail();
-  ASSERT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
 }
-#endif
 
 TEST_P(TlsConnectGeneric, TestFallbackSCSVVersionMatch) {
   client_->SetOption(SSL_ENABLE_FALLBACK_SCSV, PR_TRUE);
@@ -132,6 +176,7 @@ TEST_P(TlsConnectGenericPre13, TestFallbackSCSVVersionMismatch) {
   server_->SetVersionRange(version_, version_ + 1);
   ConnectExpectAlert(server_, kTlsAlertInappropriateFallback);
   client_->CheckErrorCode(SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT);
+  server_->CheckErrorCode(SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT);
 }
 
 // The TLS v1.3 spec section C.4 states that 'Implementations MUST NOT send or
