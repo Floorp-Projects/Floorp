@@ -7346,7 +7346,7 @@ ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
   // only one heap-allocated rect per frame and it will be cleaned up when
   // the frame dies.
 
-  if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame)) {
+  if (nsSVGIntegrationUtils::UsingOverflowAffectingEffects(aFrame)) {
     aFrame->SetProperty
       (nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
     r = nsSVGIntegrationUtils::ComputePostEffectsVisualOverflowRect(aFrame, r);

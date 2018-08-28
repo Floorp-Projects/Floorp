@@ -1287,9 +1287,6 @@ nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aNewData) const
   if (mClipPath != aNewData.mClipPath) {
     hint |= nsChangeHint_UpdateEffects |
             nsChangeHint_RepaintFrame;
-    // clip-path changes require that we update the PreEffectsBBoxProperty,
-    // which is done during overflow computation.
-    hint |= nsChangeHint_UpdateOverflow;
   }
 
   if (mDominantBaseline != aNewData.mDominantBaseline) {
@@ -3245,14 +3242,6 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
 
     if (!maybeSVGMask && aNewLayer.mImage.GetURLValue()) {
       maybeSVGMask = aNewLayer.mImage.GetURLValue()->MightHaveRef();
-    }
-
-    // Return nsChangeHint_UpdateOverflow if either URI might link to an SVG
-    // mask.
-    if (maybeSVGMask) {
-      // Mask changes require that we update the PreEffectsBBoxProperty,
-      // which is done during overflow computation.
-      hint |= nsChangeHint_UpdateOverflow;
     }
   } else if (mAttachment != aNewLayer.mAttachment ||
              mClip != aNewLayer.mClip ||
