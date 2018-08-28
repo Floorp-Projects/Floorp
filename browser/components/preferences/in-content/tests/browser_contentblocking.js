@@ -2,6 +2,8 @@
 
 const CB_PREF = "browser.contentblocking.enabled";
 const CB_UI_PREF = "browser.contentblocking.ui.enabled";
+const CB_FB_UI_PREF = "browser.contentblocking.fastblock.ui.enabled";
+const CB_TP_UI_PREF = "browser.contentblocking.trackingprotection.ui.enabled";
 const CB_RT_UI_PREF = "browser.contentblocking.rejecttrackers.ui.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PBM_PREF = "privacy.trackingprotection.pbmode.enabled";
@@ -220,6 +222,8 @@ add_task(async function testContentBlockingDependentControls() {
   // since the checkbox next to Third-Party Cookies would be unchecked.
   SpecialPowers.pushPrefEnv({set: [
     [CB_UI_PREF, true],
+    [CB_FB_UI_PREF, true],
+    [CB_TP_UI_PREF, true],
     [CB_RT_UI_PREF, true],
     [NCB_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT],
   ]});
@@ -242,6 +246,8 @@ add_task(async function testContentBlockingDependentControls() {
   // radiogroup's disabled status must obey the content blocking enabled state.
   SpecialPowers.pushPrefEnv({set: [
     [CB_UI_PREF, true],
+    [CB_FB_UI_PREF, true],
+    [CB_TP_UI_PREF, true],
     [CB_RT_UI_PREF, true],
     [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
   ]});
@@ -263,6 +269,8 @@ add_task(async function testContentBlockingDependentControls() {
 add_task(async function testContentBlockingDependentTPControls() {
   SpecialPowers.pushPrefEnv({set: [
     [CB_UI_PREF, true],
+    [CB_FB_UI_PREF, true],
+    [CB_TP_UI_PREF, true],
     [CB_RT_UI_PREF, true],
     [TP_PREF, false],
     [TP_PBM_PREF, false],
@@ -298,6 +306,8 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
   for (let value of prefValuesToTest) {
     await SpecialPowers.pushPrefEnv({set: [
       [CB_UI_PREF, true],
+      [CB_FB_UI_PREF, true],
+      [CB_TP_UI_PREF, true],
       [CB_RT_UI_PREF, true],
       [TP_PREF, false],
       [TP_PBM_PREF, true],
@@ -332,6 +342,8 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
   for (let value of prefValuesToTest) {
     await SpecialPowers.pushPrefEnv({set: [
       [CB_UI_PREF, true],
+      [CB_FB_UI_PREF, true],
+      [CB_TP_UI_PREF, true],
       [CB_RT_UI_PREF, true],
       [TP_PREF, false],
       [TP_PBM_PREF, true],
@@ -363,6 +375,8 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
   for (let value of prefValuesToTest) {
     await SpecialPowers.pushPrefEnv({set: [
       [CB_UI_PREF, true],
+      [CB_FB_UI_PREF, true],
+      [CB_TP_UI_PREF, true],
       [CB_RT_UI_PREF, true],
       [TP_PREF, false],
       [TP_PBM_PREF, true],
@@ -392,6 +406,8 @@ add_task(async function testContentBlockingThirdPartyCookiesWarning() {
   await SpecialPowers.pushPrefEnv({set: [
     [CB_PREF, true],
     [CB_UI_PREF, true],
+    [CB_FB_UI_PREF, true],
+    [CB_TP_UI_PREF, true],
     [CB_RT_UI_PREF, true],
   ]});
 
