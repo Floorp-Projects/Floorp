@@ -15,6 +15,7 @@ class GatherV2ClientHelloTest : public TlsConnectTestBase {
 
   void ConnectExpectMalformedClientHello(const DataBuffer &data) {
     EnsureTlsSetup();
+    server_->SetOption(SSL_ENABLE_V2_COMPATIBLE_HELLO, PR_TRUE);
     server_->ExpectSendAlert(kTlsAlertIllegalParameter);
     client_->SendDirect(data);
     server_->StartConnect();

@@ -584,6 +584,8 @@ std::unique_ptr<const Config> ReadConfig(int argc, char** argv) {
   cfg->AddEntry<bool>("write-then-read", false);
   cfg->AddEntry<bool>("require-any-client-certificate", false);
   cfg->AddEntry<bool>("verify-peer", false);
+  cfg->AddEntry<bool>("is-handshaker-supported", false);
+  cfg->AddEntry<std::string>("handshaker-path", "");  // Ignore this
   cfg->AddEntry<std::string>("advertise-alpn", "");
   cfg->AddEntry<std::string>("expect-alpn", "");
   cfg->AddEntry<std::vector<int>>("signing-prefs", std::vector<int>());
@@ -626,6 +628,11 @@ int main(int argc, char** argv) {
   std::unique_ptr<const Config> cfg = ReadConfig(argc, argv);
   if (!cfg) {
     return GetExitCode(false);
+  }
+
+  if (cfg->get<bool>("is-handshaker-supported")) {
+    std::cout << "No\n";
+    return 0;
   }
 
   if (cfg->get<bool>("server")) {
