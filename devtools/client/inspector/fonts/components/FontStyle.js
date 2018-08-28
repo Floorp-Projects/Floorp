@@ -46,7 +46,7 @@ class FontStyle extends PureComponent {
         dom.input(
           {
             checked: this.props.value === "italic" || this.props.value === "oblique",
-            className: "font-value-toggle",
+            className: "devtools-checkbox-toggle",
             name: this.name,
             onChange: this.onToggle,
             type: "checkbox",

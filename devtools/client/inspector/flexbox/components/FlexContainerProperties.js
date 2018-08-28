@@ -18,27 +18,6 @@ class FlexContainerProperties extends PureComponent {
     };
   }
 
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      // Whether or not the properties are shown.
-      isShown: true,
-    };
-
-    this.onToggleExpander = this.onToggleExpander.bind(this);
-  }
-
-  onToggleExpander(event) {
-    event.stopPropagation();
-
-    this.setState((prevState) => {
-      return {
-        isShown: !prevState.isShown,
-      };
-    });
-  }
-
   render() {
     const { properties } =  this.props;
 
@@ -48,24 +27,12 @@ class FlexContainerProperties extends PureComponent {
           id: "flex-container-properties",
           className: "flexbox-container",
         },
-        dom.div(
-          {
-            className: "layout-properties-header",
-            onDoubleClick: this.onToggleExpander,
-          },
-          dom.span(
-            {
-              className: "layout-properties-expander theme-twisty",
-              open: this.state.isShown,
-              onClick: this.onToggleExpander,
-            }
-          ),
+        dom.div({ className: "layout-properties-header" },
           getStr("flexbox.flexContainerProperties")
         ),
         dom.div(
           {
             className: "layout-properties-wrapper devtools-monospace",
-            hidden: !this.state.isShown,
             tabIndex: 0,
           },
           Object.entries(properties).map(([name, value]) => ComputedProperty({

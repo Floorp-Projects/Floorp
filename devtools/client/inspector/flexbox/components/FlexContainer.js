@@ -17,7 +17,7 @@ const ElementNode = REPS.ElementNode;
 
 const Types = require("../types");
 
-class FlexContainerItem extends PureComponent {
+class FlexContainer extends PureComponent {
   static get propTypes() {
     return {
       flexbox: PropTypes.shape(Types.flexbox).isRequired,
@@ -103,21 +103,20 @@ class FlexContainerItem extends PureComponent {
       onShowBoxModelHighlighterForNode,
     } = this.props;
     const {
-      actorID,
       color,
       highlighted,
       nodeFront,
     } = flexbox;
 
     return (
-      dom.li({},
+      dom.div({ className: "flex-container devtools-monospace" },
         dom.label({},
           dom.input(
             {
-              type: "checkbox",
-              value: actorID,
+              className: "devtools-checkbox-toggle",
               checked: highlighted,
               onChange: this.onFlexboxCheckboxClick,
+              type: "checkbox",
             }
           ),
           Rep(
@@ -150,4 +149,4 @@ class FlexContainerItem extends PureComponent {
   }
 }
 
-module.exports = FlexContainerItem;
+module.exports = FlexContainer;

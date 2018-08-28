@@ -9,8 +9,8 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
-loader.lazyGetter(this, "FlexContainerList", function() {
-  return createFactory(require("./FlexContainerList"));
+loader.lazyGetter(this, "FlexContainer", function() {
+  return createFactory(require("./FlexContainer"));
 });
 loader.lazyGetter(this, "FlexContainerProperties", function() {
   return createFactory(require("./FlexContainerProperties"));
@@ -52,17 +52,15 @@ class Flexbox extends PureComponent {
 
     return (
       dom.div({ id: "layout-flexbox-container" },
-        dom.div({ className: "flexbox-content" },
-          FlexContainerList({
-            flexbox,
-            getSwatchColorPickerTooltip,
-            onHideBoxModelHighlighter,
-            onSetFlexboxOverlayColor,
-            onShowBoxModelHighlighterForNode,
-            onToggleFlexboxHighlighter,
-            setSelectedNode,
-          })
-        ),
+        FlexContainer({
+          flexbox,
+          getSwatchColorPickerTooltip,
+          onHideBoxModelHighlighter,
+          onSetFlexboxOverlayColor,
+          onShowBoxModelHighlighterForNode,
+          onToggleFlexboxHighlighter,
+          setSelectedNode,
+        }),
         FlexContainerProperties({
           properties: flexbox.properties,
         })
