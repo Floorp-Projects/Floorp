@@ -39,11 +39,7 @@ nsSegmentedBuffer::AppendNewSegment()
   if (IsFull()) {
     uint32_t newArraySize = mSegmentArrayCount * 2;
     uint32_t bytes = newArraySize * sizeof(char*);
-    char** newSegArray = (char**)moz_xrealloc(mSegmentArray, bytes);
-    if (!newSegArray) {
-      return nullptr;
-    }
-    mSegmentArray = newSegArray;
+    mSegmentArray = (char**)moz_xrealloc(mSegmentArray, bytes);
     // copy wrapped content to new extension
     if (mFirstSegmentIndex > mLastSegmentIndex) {
       // deal with wrap around case

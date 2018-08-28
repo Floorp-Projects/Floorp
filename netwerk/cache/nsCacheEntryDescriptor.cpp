@@ -921,13 +921,8 @@ nsDecompressInputStreamWrapper::Read(char *    buf,
         // to the request size is not necessary, but helps minimize the
         // number of read requests to the input stream.
         uint32_t newBufLen = std::max(count, (uint32_t)kMinDecompressReadBufLen);
-        unsigned char* newBuf;
-        newBuf = (unsigned char*)moz_xrealloc(mReadBuffer,
-            newBufLen);
-        if (newBuf) {
-            mReadBuffer = newBuf;
-            mReadBufferLen = newBufLen;
-        }
+        mReadBuffer = (unsigned char*)moz_xrealloc(mReadBuffer, newBufLen);
+        mReadBufferLen = newBufLen;
         if (!mReadBuffer) {
             mReadBufferLen = 0;
             return NS_ERROR_OUT_OF_MEMORY;
