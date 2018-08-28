@@ -21,6 +21,7 @@ class SidebarItem extends PureComponent {
       id: PropTypes.string.isRequired,
       isSelected: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
+      selectable: PropTypes.boolean,
     };
   }
 
@@ -29,12 +30,14 @@ class SidebarItem extends PureComponent {
   }
 
   render() {
-    const { icon, isSelected, name } = this.props;
+    const { icon, isSelected, name, selectable } = this.props;
 
     return dom.li(
       {
-        className: "sidebar-item" + (isSelected ? " sidebar-item--selected" : ""),
-        onClick: () => this.onItemClick()
+        className: "sidebar-item" +
+                   (isSelected ? " sidebar-item--selected" : "") +
+                   (selectable ? " sidebar-item--selectable" : ""),
+        onClick: selectable ? () => this.onItemClick() : null
       },
       dom.img({
         className: "sidebar-item__icon" +
