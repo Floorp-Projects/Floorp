@@ -128,6 +128,28 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
     }
 
     /**
+     * See [EngineSession.findAll]
+     */
+    override fun findAll(text: String) {
+        notifyObservers { onFind(text) }
+        currentView()?.findAllAsync(text)
+    }
+
+    /**
+     * See [EngineSession.findNext]
+     */
+    override fun findNext(forward: Boolean) {
+        currentView()?.findNext(forward)
+    }
+
+    /**
+     * See [EngineSession.clearFindResults]
+     */
+    override fun clearFindMatches() {
+        currentView()?.clearMatches()
+    }
+
+    /**
      * See [EngineSession.settings]
      */
     override val settings: Settings

@@ -376,4 +376,47 @@ class SystemEngineSessionTest {
         assertEquals(engineSession.toggleDesktopUA(userAgentMobile, false), userAgentMobile)
         assertEquals(engineSession.toggleDesktopUA(userAgentMobile, true), userAgentDesktop)
     }
+
+    @Test
+    fun testFindAll() {
+        val engineSession = spy(SystemEngineSession())
+        val webView = mock(WebView::class.java)
+        engineSession.findAll("mozilla")
+        verify(webView, never()).findAllAsync(anyString())
+
+        `when`(engineSession.currentView()).thenReturn(webView)
+        var findObserved: String? = null
+        engineSession.register(object : EngineSession.Observer {
+            override fun onFind(text: String) {
+                findObserved = text
+            }
+        })
+        engineSession.findAll("mozilla")
+        verify(webView).findAllAsync("mozilla")
+        assertEquals("mozilla", findObserved)
+    }
+
+    @Test
+    fun testFindNext() {
+        val engineSession = spy(SystemEngineSession())
+        val webView = mock(WebView::class.java)
+        engineSession.findNext(true)
+        verify(webView, never()).findNext(any(Boolean::class.java))
+
+        `when`(engineSession.currentView()).thenReturn(webView)
+        engineSession.findNext(true)
+        verify(webView).findNext(true)
+    }
+
+    @Test
+    fun testClearFindMatches() {
+        val engineSession = spy(SystemEngineSession())
+        val webView = mock(WebView::class.java)
+        engineSession.clearFindMatches()
+        verify(webView, never()).clearMatches()
+
+        `when`(engineSession.currentView()).thenReturn(webView)
+        engineSession.clearFindMatches()
+        verify(webView).clearMatches()
+    }
 }

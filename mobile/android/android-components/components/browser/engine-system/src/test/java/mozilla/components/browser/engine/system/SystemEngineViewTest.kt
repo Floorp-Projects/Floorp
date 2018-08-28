@@ -292,4 +292,26 @@ class SystemEngineViewTest {
         assertNull(response.encoding)
         assertNull(response.mimeType)
     }
+
+    @Test
+    fun testFindListenerNotifiesObservers() {
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.render(engineSession)
+
+        var observerNotified = false
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) {
+                assertEquals(0, activeMatchOrdinal)
+                assertEquals(1, numberOfMatches)
+                assertTrue(isDoneCounting)
+                observerNotified = true
+            }
+        })
+
+        val listener = engineView.createFindListener()
+        listener.onFindResultReceived(0, 1, true)
+        assertTrue(observerNotified)
+    }
 }

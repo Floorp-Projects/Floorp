@@ -158,6 +158,27 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.findAll]
+     */
+    override fun findAll(text: String) {
+        // no-op (requires v62+)
+    }
+
+    /**
+     * See [EngineSession.findNext]
+     */
+    override fun findNext(forward: Boolean) {
+        // no-op (requires v62+)
+    }
+
+    /**
+     * See [EngineSession.clearFindMatches]
+     */
+    override fun clearFindMatches() {
+        // no-op (requires v62+)
+    }
+
+    /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {

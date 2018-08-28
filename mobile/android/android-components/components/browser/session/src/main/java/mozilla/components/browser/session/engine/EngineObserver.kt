@@ -11,6 +11,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.base.observer.Consumable
 
+@Suppress("TooManyFunctions")
 internal class EngineObserver(val session: Session) : EngineSession.Observer {
 
     override fun onLocationChange(url: String) {
@@ -30,6 +31,7 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
     override fun onLoadingStateChange(loading: Boolean) {
         session.loading = loading
         if (loading) {
+            session.findResults = emptyList()
             session.trackersBlocked = emptyList()
         }
     }
@@ -54,6 +56,14 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
 
     override fun onLongPress(hitResult: HitResult) {
         session.hitResult = Consumable.from(hitResult)
+    }
+
+    override fun onFind(text: String) {
+        session.findResults = emptyList()
+    }
+
+    override fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) {
+        session.findResults += Session.FindResult(activeMatchOrdinal, numberOfMatches, isDoneCounting)
     }
 
     override fun onExternalResource(

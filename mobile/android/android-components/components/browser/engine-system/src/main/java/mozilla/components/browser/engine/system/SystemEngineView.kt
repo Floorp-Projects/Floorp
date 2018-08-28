@@ -83,6 +83,7 @@ class SystemEngineView @JvmOverloads constructor(
         webView.webViewClient = createWebViewClient(webView)
         webView.webChromeClient = createWebChromeClient()
         webView.setDownloadListener(createDownloadListener())
+        webView.setFindListener(createFindListener())
         return webView
     }
 
@@ -170,6 +171,14 @@ class SystemEngineView @JvmOverloads constructor(
                 val fileName = DownloadUtils.guessFileName(contentDisposition, url, mimetype)
                 val cookie = CookieManager.getInstance().getCookie(url)
                 onExternalResource(url, fileName, contentLength, mimetype, cookie, userAgent)
+            }
+        }
+    }
+
+    internal fun createFindListener(): WebView.FindListener {
+        return WebView.FindListener { activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean ->
+            session?.internalNotifyObservers {
+                onFindResult(activeMatchOrdinal, numberOfMatches, isDoneCounting)
             }
         }
     }

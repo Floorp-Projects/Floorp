@@ -21,6 +21,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
@@ -41,6 +42,7 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_NONE
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_VIDEO
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
+import org.mozilla.geckoview.SessionFinder
 import org.mozilla.geckoview.createMockedWebResponseInfo
 import org.robolectric.RobolectricTestRunner
 
@@ -586,5 +588,82 @@ class GeckoEngineSessionTest {
 
         engineSession.setDesktopMode(false)
         assertTrue(desktopModeEnabled)
+    }
+
+    @Test
+    fun testFindAll() {
+        val finderResult = mock(GeckoSession.FinderResult::class.java)
+        val sessionFinder = mock(SessionFinder::class.java)
+        `when`(sessionFinder.find("mozilla", 0)).thenReturn(GeckoResult.fromValue(finderResult))
+
+        val geckoSession = mock(GeckoSession::class.java)
+        `when`(geckoSession.finder).thenReturn(sessionFinder)
+
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        engineSession.geckoSession = geckoSession
+
+        var findObserved: String? = null
+        var findResultObserved = false
+        engineSession.register(object : EngineSession.Observer {
+            override fun onFind(text: String) {
+                findObserved = text
+            }
+
+            override fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) {
+                assertEquals(0, activeMatchOrdinal)
+                assertEquals(0, numberOfMatches)
+                assertTrue(isDoneCounting)
+                findResultObserved = true
+            }
+        })
+
+        engineSession.findAll("mozilla")
+        assertEquals("mozilla", findObserved)
+        assertTrue(findResultObserved)
+        verify(sessionFinder).find("mozilla", 0)
+    }
+
+    @Test
+    fun testFindNext() {
+        val finderResult = mock(GeckoSession.FinderResult::class.java)
+        val sessionFinder = mock(SessionFinder::class.java)
+        `when`(sessionFinder.find(eq(null), anyInt())).thenReturn(GeckoResult.fromValue(finderResult))
+
+        val geckoSession = mock(GeckoSession::class.java)
+        `when`(geckoSession.finder).thenReturn(sessionFinder)
+
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        engineSession.geckoSession = geckoSession
+
+        var findResultObserved = false
+        engineSession.register(object : EngineSession.Observer {
+            override fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) {
+                assertEquals(0, activeMatchOrdinal)
+                assertEquals(0, numberOfMatches)
+                assertTrue(isDoneCounting)
+                findResultObserved = true
+            }
+        })
+
+        engineSession.findNext(true)
+        assertTrue(findResultObserved)
+        verify(sessionFinder).find(null, 0)
+
+        engineSession.findNext(false)
+        assertTrue(findResultObserved)
+        verify(sessionFinder).find(null, GeckoSession.FINDER_FIND_BACKWARDS)
+    }
+
+    @Test
+    fun testClearFindMatches() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        var clearMatchesReceived = false
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
+                BundleEventListener { _, _, _ -> clearMatchesReceived = true },
+                "GeckoView:ClearMatches"
+        )
+
+        engineSession.clearFindMatches()
+        assertTrue(clearMatchesReceived)
     }
 }

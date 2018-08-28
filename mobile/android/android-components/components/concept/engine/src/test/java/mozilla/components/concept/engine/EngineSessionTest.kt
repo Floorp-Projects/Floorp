@@ -34,6 +34,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onTrackerBlocked("tracker") }
         session.notifyInternalObservers { onLongPress(unknownHitResult) }
         session.notifyInternalObservers { onDesktopModeEnabled(true) }
+        session.notifyInternalObservers { onFind("search") }
+        session.notifyInternalObservers { onFindResult(0, 1, true) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onLocationChange("https://www.firefox.com")
@@ -45,6 +47,8 @@ class EngineSessionTest {
         verify(observer).onTrackerBlocked("tracker")
         verify(observer).onLongPress(unknownHitResult)
         verify(observer).onDesktopModeEnabled(true)
+        verify(observer).onFind("search")
+        verify(observer).onFindResult(0, 1, true)
         verifyNoMoreInteractions(observer)
     }
 
@@ -63,6 +67,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onTrackerBlocked("tracker") }
         session.notifyInternalObservers { onLongPress(unknownHitResult) }
         session.notifyInternalObservers { onDesktopModeEnabled(true) }
+        session.notifyInternalObservers { onFind("search") }
+        session.notifyInternalObservers { onFindResult(0, 1, true) }
 
         session.unregister(observer)
 
@@ -74,6 +80,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(false) }
         session.notifyInternalObservers { onLongPress(otherHitResult) }
         session.notifyInternalObservers { onDesktopModeEnabled(false) }
+        session.notifyInternalObservers { onFind("search2") }
+        session.notifyInternalObservers { onFindResult(0, 1, false) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -83,6 +91,8 @@ class EngineSessionTest {
         verify(observer).onTrackerBlocked("tracker")
         verify(observer).onLongPress(unknownHitResult)
         verify(observer).onDesktopModeEnabled(true)
+        verify(observer).onFind("search")
+        verify(observer).onFindResult(0, 1, true)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -91,6 +101,8 @@ class EngineSessionTest {
         verify(observer, never()).onTrackerBlocked("tracker2")
         verify(observer, never()).onLongPress(otherHitResult)
         verify(observer, never()).onDesktopModeEnabled(false)
+        verify(observer, never()).onFind("search2")
+        verify(observer, never()).onFindResult(0, 1, false)
         verifyNoMoreInteractions(observer)
     }
 
@@ -111,6 +123,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onTrackerBlocked("tracker") }
         session.notifyInternalObservers { onLongPress(unknownHitResult) }
         session.notifyInternalObservers { onDesktopModeEnabled(true) }
+        session.notifyInternalObservers { onFind("search") }
+        session.notifyInternalObservers { onFindResult(0, 1, true) }
 
         session.unregisterObservers()
 
@@ -122,6 +136,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(false) }
         session.notifyInternalObservers { onLongPress(otherHitResult) }
         session.notifyInternalObservers { onDesktopModeEnabled(false) }
+        session.notifyInternalObservers { onFind("search2") }
+        session.notifyInternalObservers { onFindResult(0, 1, false) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -131,6 +147,8 @@ class EngineSessionTest {
         verify(observer).onTrackerBlocked("tracker")
         verify(observer).onLongPress(unknownHitResult)
         verify(observer).onDesktopModeEnabled(true)
+        verify(observer).onFind("search")
+        verify(observer).onFindResult(0, 1, true)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -139,6 +157,8 @@ class EngineSessionTest {
         verify(observer, never()).onTrackerBlocked("tracker2")
         verify(observer, never()).onLongPress(otherHitResult)
         verify(observer, never()).onDesktopModeEnabled(false)
+        verify(observer, never()).onFind("search2")
+        verify(observer, never()).onFindResult(0, 1, false)
         verify(otherObserver, never()).onLocationChange("https://www.firefox.com")
         verify(otherObserver, never()).onProgress(100)
         verify(otherObserver, never()).onLoadingStateChange(false)
@@ -147,6 +167,8 @@ class EngineSessionTest {
         verify(otherObserver, never()).onTrackerBlocked("tracker2")
         verify(otherObserver, never()).onLongPress(otherHitResult)
         verify(otherObserver, never()).onDesktopModeEnabled(false)
+        verify(otherObserver, never()).onFind("search2")
+        verify(otherObserver, never()).onFindResult(0, 1, false)
     }
 
     @Test
@@ -164,6 +186,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onTrackerBlocked("tracker") }
         session.notifyInternalObservers { onLongPress(unknownHitResult) }
         session.notifyInternalObservers { onDesktopModeEnabled(true) }
+        session.notifyInternalObservers { onFind("search") }
+        session.notifyInternalObservers { onFindResult(0, 1, true) }
 
         session.close()
 
@@ -175,6 +199,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onTrackerBlockingEnabledChange(false) }
         session.notifyInternalObservers { onLongPress(otherHitResult) }
         session.notifyInternalObservers { onDesktopModeEnabled(false) }
+        session.notifyInternalObservers { onFind("search2") }
+        session.notifyInternalObservers { onFindResult(0, 1, false) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -184,6 +210,8 @@ class EngineSessionTest {
         verify(observer).onTrackerBlocked("tracker")
         verify(observer).onLongPress(unknownHitResult)
         verify(observer).onDesktopModeEnabled(true)
+        verify(observer).onFind("search")
+        verify(observer).onFindResult(0, 1, true)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -192,6 +220,8 @@ class EngineSessionTest {
         verify(observer, never()).onTrackerBlocked("tracker2")
         verify(observer, never()).onLongPress(otherHitResult)
         verify(observer, never()).onDesktopModeEnabled(false)
+        verify(observer, never()).onFind("search2")
+        verify(observer, never()).onFindResult(0, 1, false)
         verifyNoMoreInteractions(observer)
     }
 
@@ -212,6 +242,8 @@ class EngineSessionTest {
         otherSession.notifyInternalObservers { onTrackerBlocked("tracker") }
         otherSession.notifyInternalObservers { onLongPress(unknownHitResult) }
         otherSession.notifyInternalObservers { onDesktopModeEnabled(true) }
+        otherSession.notifyInternalObservers { onFind("search") }
+        otherSession.notifyInternalObservers { onFindResult(0, 1, true) }
         verify(observer, never()).onLocationChange("https://www.mozilla.org")
         verify(observer, never()).onProgress(25)
         verify(observer, never()).onLoadingStateChange(true)
@@ -220,6 +252,8 @@ class EngineSessionTest {
         verify(observer, never()).onTrackerBlocked("tracker")
         verify(observer, never()).onLongPress(unknownHitResult)
         verify(observer, never()).onDesktopModeEnabled(true)
+        verify(observer, never()).onFind("search")
+        verify(observer, never()).onFindResult(0, 1, true)
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
         session.notifyInternalObservers { onProgress(25) }
@@ -229,6 +263,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onTrackerBlocked("tracker") }
         session.notifyInternalObservers { onLongPress(unknownHitResult) }
         session.notifyInternalObservers { onDesktopModeEnabled(false) }
+        session.notifyInternalObservers { onFind("search") }
+        session.notifyInternalObservers { onFindResult(0, 1, true) }
         verify(observer, times(1)).onLocationChange("https://www.mozilla.org")
         verify(observer, times(1)).onProgress(25)
         verify(observer, times(1)).onLoadingStateChange(true)
@@ -237,6 +273,8 @@ class EngineSessionTest {
         verify(observer, times(1)).onTrackerBlocked("tracker")
         verify(observer, times(1)).onLongPress(unknownHitResult)
         verify(observer, times(1)).onDesktopModeEnabled(false)
+        verify(observer, times(1)).onFind("search")
+        verify(observer, times(1)).onFindResult(0, 1, true)
         verifyNoMoreInteractions(observer)
     }
 
@@ -316,6 +354,26 @@ class EngineSessionTest {
                 TrackingProtectionPolicy.CONTENT,
                 TrackingProtectionPolicy.SOCIAL).categories)
     }
+
+    @Test
+    fun `engine observer has default methods`() {
+        val defaultObserver = object : EngineSession.Observer {}
+
+        defaultObserver.onTitleChange("")
+        defaultObserver.onLocationChange("")
+        defaultObserver.onLongPress(HitResult.UNKNOWN(""))
+        defaultObserver.onExternalResource("")
+        defaultObserver.onDesktopModeEnabled(true)
+        defaultObserver.onSecurityChange(true)
+        defaultObserver.onTrackerBlocked("")
+        defaultObserver.onTrackerBlockingEnabledChange(true)
+        defaultObserver.onFindResult(0, 0, false)
+        defaultObserver.onFind("text")
+        defaultObserver.onExternalResource("")
+        defaultObserver.onNavigationStateChange()
+        defaultObserver.onProgress(123)
+        defaultObserver.onLoadingStateChange(true)
+    }
 }
 
 open class DummyEngineSession : EngineSession() {
@@ -343,6 +401,12 @@ open class DummyEngineSession : EngineSession() {
     override fun disableTrackingProtection() {}
 
     override fun setDesktopMode(enable: Boolean, reload: Boolean) {}
+
+    override fun findAll(text: String) {}
+
+    override fun findNext(forward: Boolean) {}
+
+    override fun clearFindMatches() {}
 
     // Helper method to access the protected method from test cases.
     fun notifyInternalObservers(block: Observer.() -> Unit) {

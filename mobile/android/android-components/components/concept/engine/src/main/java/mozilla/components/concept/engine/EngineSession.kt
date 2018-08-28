@@ -31,6 +31,8 @@ abstract class EngineSession(
         fun onTrackerBlocked(url: String) = Unit
         fun onLongPress(hitResult: HitResult) = Unit
         fun onDesktopModeEnabled(enabled: Boolean) = Unit
+        fun onFind(text: String) = Unit
+        fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) = Unit
 
         @Suppress("LongParameterList")
         fun onExternalResource(
@@ -156,6 +158,26 @@ abstract class EngineSession(
      * Enables/disables Desktop Mode with an optional ability to reload the session right after.
      */
     abstract fun setDesktopMode(enable: Boolean, reload: Boolean = false)
+
+    /**
+     * Finds and highlights all occurrences of the provided String and highlights them asynchronously.
+     *
+     * @param text the String to search for
+     */
+    abstract fun findAll(text: String)
+
+    /**
+     * Finds and highlights the next or previous match found by [findAll].
+     *
+     * @param forward true if the next match should be highlighted, false for
+     * the previous match.
+     */
+    abstract fun findNext(forward: Boolean)
+
+    /**
+     * Clears the highlighted results of previous calls to [findAll] / [findNext].
+     */
+    abstract fun clearFindMatches()
 
     /**
      * Close the session. This may free underlying objects. Call this when you are finished using

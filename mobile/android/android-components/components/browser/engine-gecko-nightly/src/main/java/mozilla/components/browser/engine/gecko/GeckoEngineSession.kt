@@ -179,6 +179,39 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.findAll]
+     */
+    override fun findAll(text: String) {
+        notifyObservers { onFind(text) }
+        geckoSession.finder.find(text, 0).then { result: GeckoSession.FinderResult? ->
+            result?.let {
+                notifyObservers { onFindResult(it.current, it.total, true) }
+            }
+            GeckoResult<Void>()
+        }
+    }
+
+    /**
+     * See [EngineSession.findNext]
+     */
+    override fun findNext(forward: Boolean) {
+        val findFlags = if (forward) 0 else GeckoSession.FINDER_FIND_BACKWARDS
+        geckoSession.finder.find(null, findFlags).then { result: GeckoSession.FinderResult? ->
+            result?.let {
+                notifyObservers { onFindResult(it.current, it.total, true) }
+            }
+            GeckoResult<Void>()
+        }
+    }
+
+    /**
+     * See [EngineSession.clearFindMatches]
+     */
+    override fun clearFindMatches() {
+        geckoSession.finder.clear()
+    }
+
+    /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
