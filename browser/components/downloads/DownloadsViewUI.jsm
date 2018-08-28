@@ -47,6 +47,7 @@ var gDownloadElementButtons = {
   subviewOpenOrRemoveFile: {
     commandName: "downloadsCmd_showBlockedInfo",
     l10nId: "download-open-or-remove-file",
+    descriptionL10nId: "download-show-more-information-description",
     iconClass: "downloadIconSubviewArrow",
   },
   askOpenOrRemoveFile: {
@@ -392,6 +393,10 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
         stateLabel = s.stateBlockedParentalControls;
       } else if (this.download.error.becauseBlockedByReputationCheck) {
         stateLabel = this.rawBlockedTitleAndDetails[0];
+        if (this.download.hasBlockedData) {
+          hoverStatus = this.string(
+            "download-show-more-information-description");
+        }
       } else {
         stateLabel = s.stateFailed;
       }

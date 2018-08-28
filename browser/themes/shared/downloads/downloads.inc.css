@@ -206,15 +206,6 @@
   display: none;
 }
 
-/* When hovering items blocked by Application Reputation, instead of the other
-   hover messages we display the "Show more information" label. */
-@item@[verdict] > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
-@item@[verdict] > .downloadMainArea > .downloadContainer > .downloadDetailsButtonHover,
-@item@:not([verdict]) > .downloadMainArea > .downloadContainer > .downloadShowMoreInfo,
-@item@:not(:hover) > .downloadMainArea > .downloadContainer > .downloadShowMoreInfo {
-  display: none;
-}
-
 @item@[verdict] > toolbarseparator {
   visibility: hidden;
 }
