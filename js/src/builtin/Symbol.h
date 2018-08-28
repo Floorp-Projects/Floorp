@@ -54,6 +54,10 @@ class SymbolObject : public NativeObject
     static MOZ_MUST_USE bool valueOf(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool toPrimitive(JSContext* cx, unsigned argc, Value* vp);
 
+    // Properties defined on Symbol.prototype.
+    static MOZ_MUST_USE bool descriptionGetter_impl(JSContext* cx, const CallArgs& args);
+    static MOZ_MUST_USE bool descriptionGetter(JSContext* cx, unsigned argc, Value *vp);
+
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
     static const JSFunctionSpec staticMethods[];
