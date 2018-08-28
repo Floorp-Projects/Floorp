@@ -2,17 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'debugtarget',
-    'sidebar',
-]
-
 DevToolsModules(
-    'App.css',
-    'App.js',
-    'ConnectPage.css',
-    'ConnectPage.js',
-    'RuntimeInfo.css',
-    'RuntimeInfo.js',
-    'RuntimePage.js',
+    'Sidebar.css',
+    'Sidebar.js',
+    'SidebarItem.css',
+    'SidebarItem.js',
 )
