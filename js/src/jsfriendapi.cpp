@@ -110,7 +110,7 @@ JS_SplicePrototype(JSContext* cx, HandleObject obj, HandleObject proto)
      * and does not share its type with another object. Unlike JS_SetPrototype,
      * does not nuke type information for the object.
      */
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj, proto);
 
     if (!obj->isSingleton()) {
@@ -252,7 +252,7 @@ JS_DefineFunctionsWithHelp(JSContext* cx, HandleObject obj, const JSFunctionSpec
 {
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj);
     for (; fs->name; fs++) {
         JSAtom* atom = Atomize(cx, fs->name, strlen(fs->name));
@@ -444,7 +444,7 @@ js::DefineFunctionWithReserved(JSContext* cx, JSObject* objArg, const char* name
 {
     RootedObject obj(cx, objArg);
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj);
     JSAtom* atom = Atomize(cx, name, strlen(name));
     if (!atom)
@@ -459,7 +459,7 @@ js::NewFunctionWithReserved(JSContext* cx, JSNative native, unsigned nargs, unsi
 {
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
 
     RootedAtom atom(cx);
     if (name) {
@@ -479,7 +479,7 @@ js::NewFunctionByIdWithReserved(JSContext* cx, JSNative native, unsigned nargs, 
 {
     MOZ_ASSERT(JSID_IS_STRING(id));
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(id);
 
     RootedAtom atom(cx, JSID_TO_ATOM(id));
@@ -1121,7 +1121,7 @@ extern JS_FRIEND_API(bool)
 JS::ForceLexicalInitialization(JSContext *cx, HandleObject obj)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj);
 
     bool initializedAny = false;
@@ -1484,7 +1484,7 @@ JS_FRIEND_API(void)
 js::SetWindowProxy(JSContext* cx, HandleObject global, HandleObject windowProxy)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
 
     cx->check(global, windowProxy);
 
