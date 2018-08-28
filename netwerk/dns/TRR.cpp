@@ -139,9 +139,8 @@ TRR::DohEncode(nsCString &aBody, bool aDisableECS)
     aBody += '\0'; // upper 8 bit OPTION-LENGTH
     aBody += 4;    // OPTION-LENGTH, 2 octets, contains the length of the payload
                    // after OPTION-LENGTH
-    aBody += '\0'; // upper 8 bit FAMILY. IANA Address Family Numbers registry, not the
-                   // AF_* constants!
-    aBody += 1;    // FAMILY (Ipv4), 2 octets
+    aBody += '\0'; // upper 8 bit FAMILY
+    aBody += AF_INET; // FAMILY, 2 octets
 
     aBody += '\0'; // SOURCE PREFIX-LENGTH      |     SCOPE PREFIX-LENGTH       |
     aBody += '\0';
