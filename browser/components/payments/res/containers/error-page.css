@@ -16,7 +16,10 @@
   margin-inline-start: 0;
 }
 
-.error-page#completion-timeout-error > .page-body,
+.error-page#completion-timeout-error > .page-body {
+  background-image: url("./timeout.svg");
+}
+
 .error-page#completion-fail-error > .page-body {
-  background-image: url("./placeholder.svg");
+  background-image: url("./warning.svg");
 }
