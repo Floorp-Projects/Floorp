@@ -188,14 +188,19 @@ function GetModuleNamespace(module)
     // Step 1
     assert(IsObject(module) && IsModule(module), "GetModuleNamespace called with non-module");
 
-    // Step 2
+    // Until issue https://github.com/tc39/ecma262/issues/1155 is resolved,
+    // violate the spec here and throw if called on an errored module.
+    if (module.status === MODULE_STATUS_EVALUATED_ERROR)
+        throw GetModuleEvaluationError(module);
+
+    // Steps 2-3
     assert(module.status !== MODULE_STATUS_UNINSTANTIATED,
            "Bad module state in GetModuleNamespace");
 
-    // Step 3
+    // Step 4
     let namespace = module.namespace;
 
-    // Step 4
+    // Step 3
     if (typeof namespace === "undefined") {
         let exportedNames = callFunction(module.getExportedNames, module);
         let unambiguousNames = [];
@@ -208,7 +213,7 @@ function GetModuleNamespace(module)
         namespace = ModuleNamespaceCreate(module, unambiguousNames);
     }
 
-    // Step 5
+    // Step 4
     return namespace;
 }
 
