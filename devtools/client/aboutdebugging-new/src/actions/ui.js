@@ -14,6 +14,12 @@ const Actions = require("./index");
 
 function selectPage(page) {
   return async (dispatch, getState) => {
+    const currentPage = getState().ui.selectedPage;
+    if (page === currentPage) {
+      // Nothing to dispatch if the page is the same as the current page.
+      return;
+    }
+
     dispatch({ type: PAGE_SELECTED, page });
 
     if (page === PAGES.THIS_FIREFOX) {
