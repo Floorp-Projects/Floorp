@@ -142,9 +142,7 @@ ArgValueArray::GetBlob(uint32_t aIndex,
   ENSURE_INDEX_VALUE(aIndex, mArgc);
 
   int size = ::sqlite3_value_bytes(mArgv[aIndex]);
-  void *blob = nsMemory::Clone(::sqlite3_value_blob(mArgv[aIndex]), size);
-  NS_ENSURE_TRUE(blob, NS_ERROR_OUT_OF_MEMORY);
-
+  void* blob = moz_xmemdup(::sqlite3_value_blob(mArgv[aIndex]), size);
   *_blob = static_cast<uint8_t *>(blob);
   *_size = size;
   return NS_OK;

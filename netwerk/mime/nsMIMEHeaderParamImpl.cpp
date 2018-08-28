@@ -407,8 +407,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
       if (str == start)
         return NS_ERROR_FIRST_HEADER_FIELD_COMPONENT_EMPTY;
 
-      *aResult = (char *) nsMemory::Clone(start, (str - start) + 1);
-      NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+      *aResult = (char*) moz_xmemdup(start, (str - start) + 1);
       (*aResult)[str - start] = '\0';  // null-terminate
       return NS_OK;
     }
@@ -630,10 +629,8 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
             }
 
             // allocate buffer for the raw value
-            char *tmpResult = (char *) nsMemory::Clone(rawValStart, rawValLength + 1);
-            if (!tmpResult) {
-              goto increment_str;
-            }
+            char* tmpResult =
+              (char*) moz_xmemdup(rawValStart, rawValLength + 1);
             *(tmpResult + rawValLength) = 0;
 
             nsUnescape(tmpResult);
@@ -724,17 +721,13 @@ increment_str:
     // then return charset and lang as well
     if (aLang && !lang.IsEmpty()) {
       uint32_t len = lang.Length();
-      *aLang = (char *) nsMemory::Clone(lang.BeginReading(), len + 1);
-      if (*aLang) {
-        *(*aLang + len) = 0;
-      }
+      *aLang = (char*) moz_xmemdup(lang.BeginReading(), len + 1);
+      *(*aLang + len) = 0;
    }
     if (aCharset && !charset.IsEmpty()) {
       uint32_t len = charset.Length();
-      *aCharset = (char *) nsMemory::Clone(charset.BeginReading(), len + 1);
-      if (*aCharset) {
-        *(*aCharset + len) = 0;
-      }
+      *aCharset = (char*) moz_xmemdup(charset.BeginReading(), len + 1);
+      *(*aCharset + len) = 0;
     }
   }
 

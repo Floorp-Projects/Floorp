@@ -34,7 +34,6 @@ class nsMemory
 {
 public:
   static nsresult   HeapMinimize(bool aImmediate);
-  static void*      Clone(const void* aPtr, size_t aSize);
   static nsIMemory* GetGlobalMemoryService();       // AddRefs
 };
 
