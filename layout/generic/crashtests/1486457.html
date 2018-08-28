@@ -1,0 +1,19 @@
+<style>
+* 	{ display: ruby-text-container }
+div { float: right }
+</style>
+<script>
+function start() {
+    try { o1 = document.createElement('div') } catch (e) {}
+    try { o2 = document.createElement('img') } catch (e) {}
+    try { o3 = document.createElement('img') } catch (e) {}
+    try { o4 = document.createElement('img') } catch (e) {}
+    try { o3.innerText = '%\n' } catch (e) {}
+    try { o4.align = 'right' } catch (e) {}
+    try { o3.appendChild(o4) } catch (e) {}
+    try { o2.appendChild(o3) } catch (e) {}
+    try { document.documentElement.appendChild(o1) } catch (e) {}
+    try { document.documentElement.appendChild(o2) } catch (e) {}
+}
+window.addEventListener('load', start)
+</script>
