@@ -29,16 +29,19 @@ var gDownloadElementButtons = {
   cancel: {
     commandName: "downloadsCmd_cancel",
     l10nId: "download-cancel",
+    descriptionL10nId: "download-cancel-description",
     iconClass: "downloadIconCancel",
   },
   retry: {
     commandName: "downloadsCmd_retry",
     l10nId: "download-retry",
+    descriptionL10nId: "download-retry-description",
     iconClass: "downloadIconRetry",
   },
   show: {
     commandName: "downloadsCmd_show",
     l10nId: "download-show",
+    descriptionL10nId: "download-show-description",
     iconClass: "downloadIconShow",
   },
   subviewOpenOrRemoveFile: {
@@ -195,11 +198,16 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   showButton(type) {
-    let { commandName, l10nId, iconClass } = gDownloadElementButtons[type];
+    let { commandName, l10nId, descriptionL10nId,
+          iconClass } = gDownloadElementButtons[type];
 
     this.buttonCommandName = commandName;
     let labelAttribute = this.isPanel ? "buttonarialabel" : "buttontooltiptext";
     this.element.setAttribute(labelAttribute, this.string(l10nId));
+    if (this.isPanel && descriptionL10nId) {
+      this.element.setAttribute("buttonHoverStatus",
+                                this.string(descriptionL10nId));
+    }
     this.element.setAttribute("buttonclass", "downloadButton " + iconClass);
     this.element.removeAttribute("buttonhidden");
   },
