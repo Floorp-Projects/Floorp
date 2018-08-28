@@ -15,12 +15,12 @@ class SummaryFormatter(object):
     def __init__(self, depth=None):
         self.depth = depth or int(os.environ.get('MOZLINT_SUMMARY_DEPTH', 1))
 
-    def __call__(self, result, **kwargs):
-        commonprefix = mozpath.commonprefix([mozpath.abspath(p) for p in result])
+    def __call__(self, result):
+        commonprefix = mozpath.commonprefix([mozpath.abspath(p) for p in result.issues])
         commonprefix = commonprefix.rsplit('/', 1)[0] + '/'
 
         summary = defaultdict(int)
-        for path, errors in result.iteritems():
+        for path, errors in result.issues.iteritems():
             path = mozpath.abspath(path)
             assert path.startswith(commonprefix)
 

@@ -1770,7 +1770,7 @@ AccessibleWrap::InvalidateHandlers()
     if (hr == CO_E_OBJNOTCONNECTED || hr == kErrorServerDied) {
       sHandlerControllers->RemoveElement(controller);
     } else {
-      NS_WARN_IF(FAILED(hr));
+      Unused << NS_WARN_IF(FAILED(hr));
     }
   }
 }

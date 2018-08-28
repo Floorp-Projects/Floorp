@@ -8,7 +8,6 @@ import os
 import signal
 import sys
 import traceback
-from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from math import ceil
 from multiprocessing import cpu_count
@@ -21,6 +20,7 @@ from mozversioncontrol import get_repository_object, MissingUpstreamRepo, Invali
 from .errors import LintersNotConfigured
 from .parser import Parser
 from .pathutils import findobject
+from .result import ResultSummary
 from .types import supported_types
 
 SHUTDOWN = False
@@ -28,11 +28,10 @@ orig_sigint = signal.getsignal(signal.SIGINT)
 
 
 def _run_worker(config, paths, **lintargs):
-    results = defaultdict(list)
-    failed = []
+    result = ResultSummary()
 
     if SHUTDOWN:
-        return results, failed
+        return result
 
     func = supported_types[config['type']]
     try:
@@ -41,17 +40,17 @@ def _run_worker(config, paths, **lintargs):
         traceback.print_exc()
         res = 1
     except (KeyboardInterrupt, SystemExit):
-        return results, failed
+        return result
     finally:
         sys.stdout.flush()
 
     if not isinstance(res, (list, tuple)):
         if res:
-            failed.append(config['name'])
+            result.failed_run.add(config['name'])
     else:
         for r in res:
-            results[r.path].append(r)
-    return results, failed
+            result.issues[r.path].append(r)
+    return result
 
 
 class InterruptableQueue(Queue):
@@ -102,9 +101,7 @@ class LintRoller(object):
         self.lintargs['root'] = root
 
         # result state
-        self.failed = None
-        self.failed_setup = None
-        self.results = None
+        self.result = ResultSummary()
 
         self.root = root
 
@@ -124,7 +121,6 @@ class LintRoller(object):
         if not self.linters:
             raise LintersNotConfigured
 
-        self.failed_setup = set()
         for linter in self.linters:
             if 'setup' not in linter:
                 continue
@@ -136,12 +132,12 @@ class LintRoller(object):
                 res = 1
 
             if res:
-                self.failed_setup.add(linter['name'])
+                self.result.failed_setup.add(linter['name'])
 
-        if self.failed_setup:
+        if self.result.failed_setup:
             print("error: problem with lint setup, skipping {}".format(
-                    ', '.join(sorted(self.failed_setup))))
-            self.linters = [l for l in self.linters if l['name'] not in self.failed_setup]
+                    ', '.join(sorted(self.result.failed_setup))))
+            self.linters = [l for l in self.linters if l['name'] not in self.result.failed_setup]
             return 1
         return 0
 
@@ -168,11 +164,8 @@ class LintRoller(object):
         if future.cancelled():
             return
 
-        results, failed = future.result()
-        if failed:
-            self.failed.update(set(failed))
-        for k, v in results.iteritems():
-            self.results[k].extend(v)
+        # Merge this job's results with our global ones.
+        self.result.update(future.result())
 
     def roll(self, paths=None, outgoing=None, workdir=None, num_procs=None):
         """Run all of the registered linters against the specified file paths.
@@ -182,14 +175,12 @@ class LintRoller(object):
         :param workdir: Lint all files touched in the working directory.
         :param num_procs: The number of processes to use. Default: cpu count
         :return: A dictionary with file names as the key, and a list of
-                 :class:`~result.ResultContainer`s as the value.
+                 :class:`~result.Issue`s as the value.
         """
         if not self.linters:
             raise LintersNotConfigured
 
-        # reset result state
-        self.results = defaultdict(list)
-        self.failed = set()
+        self.result.reset()
 
         # Need to use a set in case vcs operations specify the same file
         # more than once.
@@ -262,4 +253,4 @@ class LintRoller(object):
         signal.signal(signal.SIGINT, _parent_sigint_handler)
         executor.shutdown()
         signal.signal(signal.SIGINT, orig_sigint)
-        return self.results
+        return self.result

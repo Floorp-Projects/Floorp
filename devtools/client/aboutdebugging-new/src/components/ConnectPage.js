@@ -142,8 +142,11 @@ class ConnectPage extends PureComponent {
         {
           className: "connect-page__network-form",
           onSubmit: (e) => {
-            addNetworkLocation(this.state.locationInputValue);
-            this.setState({ locationInputValue: "" });
+            const locationInputValue = this.state.locationInputValue;
+            if (locationInputValue) {
+              addNetworkLocation(locationInputValue);
+              this.setState({ locationInputValue: "" });
+            }
             e.preventDefault();
           }
         },
@@ -155,9 +158,7 @@ class ConnectPage extends PureComponent {
           value: this.state.locationInputValue,
           onChange: (e) => {
             const locationInputValue = e.target.value;
-            if (locationInputValue) {
-              this.setState({ locationInputValue });
-            }
+            this.setState({ locationInputValue });
           }
         }),
         dom.button({

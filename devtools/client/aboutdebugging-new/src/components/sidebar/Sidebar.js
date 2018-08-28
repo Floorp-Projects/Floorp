@@ -8,7 +8,7 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { PAGES } = require("../constants");
+const { PAGES } = require("../../constants");
 
 const SidebarItem = createFactory(require("./SidebarItem"));
 const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";

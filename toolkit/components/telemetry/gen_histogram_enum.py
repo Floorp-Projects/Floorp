@@ -18,6 +18,7 @@ from shared_telemetry_utils import ParserError
 import parse_histograms
 import itertools
 import sys
+import buildconfig
 
 
 banner = """/* This file is auto-generated, see gen_histogram_enum.py.  */
@@ -72,12 +73,8 @@ def main(output, *filenames):
             print("  HistogramDUMMY1 = HistogramFirstUseCounter - 1,", file=output)
 
         for histogram in histograms:
-            cpp_guard = histogram.cpp_guard()
-            if cpp_guard:
-                print("#if defined(%s)" % cpp_guard, file=output)
-            print("  %s," % histogram.name(), file=output)
-            if cpp_guard:
-                print("#endif", file=output)
+            if histogram.record_on_os(buildconfig.substs["OS_TARGET"]):
+                print("  %s," % histogram.name(), file=output)
 
         if use_counter_group:
             print("  HistogramDUMMY2,", file=output)

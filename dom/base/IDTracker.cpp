@@ -144,11 +144,8 @@ IDTracker::Reset(nsIContent* aFromContent,
 }
 
 void
-IDTracker::ResetWithID(nsIContent* aFromContent,
-                       nsAtom* aID,
-                       bool aWatch)
+IDTracker::ResetWithID(Element& aFrom, nsAtom* aID, bool aWatch)
 {
-  MOZ_ASSERT(aFromContent);
   MOZ_ASSERT(aID);
 
   if (aWatch) {
@@ -158,7 +155,7 @@ IDTracker::ResetWithID(nsIContent* aFromContent,
 
   mReferencingImage = false;
 
-  DocumentOrShadowRoot* docOrShadow = DocOrShadowFromContent(*aFromContent);
+  DocumentOrShadowRoot* docOrShadow = DocOrShadowFromContent(aFrom);
   HaveNewDocumentOrShadowRoot(docOrShadow, aWatch, nsDependentAtomString(aID));
 }
 

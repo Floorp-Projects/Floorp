@@ -13,7 +13,7 @@ const { PAGES } = require("../constants");
 
 const ConnectPage = createFactory(require("./ConnectPage"));
 const RuntimePage = createFactory(require("./RuntimePage"));
-const Sidebar = createFactory(require("./Sidebar"));
+const Sidebar = createFactory(require("./sidebar/Sidebar"));
 
 class App extends PureComponent {
   static get propTypes() {

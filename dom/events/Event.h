@@ -281,6 +281,10 @@ public:
     return mEvent->mFlags.mMultipleActionsPrevented;
   }
 
+  bool ReturnValue(CallerType aCallerType) const;
+
+  void SetReturnValue(bool aReturnValue, CallerType aCallerType);
+
   bool IsTrusted() const
   {
     return mEvent->IsTrusted();
