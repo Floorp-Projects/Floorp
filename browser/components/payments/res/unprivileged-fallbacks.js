@@ -30,6 +30,22 @@ var PaymentDialogUtils = {
     }
     return `${address.name} (${address.guid})`;
   },
+
+  getCreditCardNetworks(address) {
+    // Shim for list of known and supported credit card network ids as exposed by
+    // toolkit/modules/CreditCard.jsm
+    return [
+      "amex",
+      "cartebancaire",
+      "diners",
+      "discover",
+      "jcb",
+      "mastercard",
+      "mir",
+      "unionpay",
+      "visa",
+    ];
+  },
   isCCNumber(str) {
     return !!str.replace(/[-\s]/g, "").match(/^\d{9,}$/);
   },

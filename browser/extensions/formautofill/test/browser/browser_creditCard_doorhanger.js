@@ -60,6 +60,7 @@ add_task(async function test_submit_creditCard_saved() {
         form.querySelector("#cc-number").setUserInput("5038146897157463");
         form.querySelector("#cc-exp-month").setUserInput("12");
         form.querySelector("#cc-exp-year").setUserInput("2017");
+        form.querySelector("#cc-type").value = "mastercard";
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -74,6 +75,7 @@ add_task(async function test_submit_creditCard_saved() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
   is(creditCards[0]["cc-name"], "User 1", "Verify the name field");
+  is(creditCards[0]["cc-type"], "mastercard", "Verify the cc-type field");
   is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 2, "User has seen the doorhanger");
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
@@ -176,6 +178,7 @@ add_task(async function test_submit_duplicate_creditCard_form() {
         form.querySelector("#cc-number").setUserInput("4111111111111111");
         form.querySelector("#cc-exp-month").setUserInput("4");
         form.querySelector("#cc-exp-year").setUserInput(new Date().getFullYear());
+        form.querySelector("#cc-type").value = "visa";
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -213,6 +216,7 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
         form.querySelector("#cc-exp-month").setUserInput("4");
         // Set unnormalized year
         form.querySelector("#cc-exp-year").setUserInput(new Date().getFullYear().toString().substr(2, 2));
+        form.querySelector("#cc-type").value = "visa";
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -636,3 +640,39 @@ add_task(async function test_update_duplicate_autofill_form() {
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
+
+add_task(async function test_submit_creditCard_with_invalid_network() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
+                                                       "popupshown");
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+        name.setUserInput("User 1");
+
+        form.querySelector("#cc-number").setUserInput("5038146897157463");
+        form.querySelector("#cc-exp-month").setUserInput("12");
+        form.querySelector("#cc-exp-year").setUserInput("2017");
+        form.querySelector("#cc-type").value = "gringotts";
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      await clickDoorhangerButton(MAIN_BUTTON);
+    }
+  );
+
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "1 credit card in storage");
+  is(creditCards[0]["cc-name"], "User 1", "Verify the name field");
+  is(creditCards[0]["cc-type"], undefined, "Invalid network/cc-type was not saved");
+
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
+  await removeAllRecords();
+});
+
