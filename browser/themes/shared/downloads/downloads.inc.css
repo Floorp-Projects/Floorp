@@ -182,16 +182,6 @@
   margin: 4px 0 calc(1em / var(--downloads-item-font-size-factor) - 1em);
 }
 
-/* The following rules control which message is shown under the name of the
-   download, using a set of elements that share the class ".downloadDetails".
-   At any given time, only one of these elements is displayed. We use a set of
-   rules to hide the elements that shouldn't be displayed in each case. */
-
-/* The full status message is only displayed in the Downloads View. */
-.downloadDetailsFull {
-  display: none;
-}
-
 /* When hovering the mouse pointer over the item, instead of the normal message
    we display a more detailed one. */
 @item@:hover > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
