@@ -549,6 +549,13 @@ define EXPAND_CC_OR_CXX
 $(if $(PROG_IS_C_ONLY_$(1)),$(CC),$(CCC))
 endef
 
+# Workaround a bug of MSVC 2017 Update 8 (see bug 1485224)
+ifeq ($(CC_TYPE)_$(HOST_OS_ARCH)_$(MOZ_PROFILE_GENERATE),msvc_WINNT_1)
+LINKER_OUT=$(subst /,\,$1)
+else
+LINKER_OUT=$1
+endif
+
 #
 # PROGRAM = Foo
 # creates OBJS, links with LIBS to create Foo
@@ -557,7 +564,7 @@ $(PROGRAM): $(PROGOBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(RESFILE) $(GLOBAL_DEPS) $
 	$(REPORT_BUILD)
 	@$(RM) $@.manifest
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-	$(LINKER) -NOLOGO -OUT:$@ -PDB:$(LINK_PDBFILE) -IMPLIB:$(basename $(@F)).lib $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $($(notdir $@)_$(OBJS_VAR_SUFFIX)) $(RESFILE) $(STATIC_LIBS) $(SHARED_LIBS) $(OS_LIBS)
+	$(LINKER) -NOLOGO -OUT:$(call LINKER_OUT,$@) -PDB:$(LINK_PDBFILE) -IMPLIB:$(basename $(@F)).lib $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $($(notdir $@)_$(OBJS_VAR_SUFFIX)) $(RESFILE) $(STATIC_LIBS) $(SHARED_LIBS) $(OS_LIBS)
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		if test -f '$(srcdir)/$(notdir $@).manifest'; then \
