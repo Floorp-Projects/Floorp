@@ -474,7 +474,6 @@ struct JSContext : public JS::RootingContext,
     js::ThreadData<unsigned> requestDepth;
 
 #ifdef DEBUG
-    js::ThreadData<unsigned> checkRequestDepth;
     js::ThreadData<uint32_t> inUnsafeCallWithABI;
     js::ThreadData<bool> hasAutoUnsafeCallWithABI;
 #endif
@@ -1336,5 +1335,8 @@ struct MOZ_RAII AutoSetThreadIsSweeping
 } // namespace gc
 
 } /* namespace js */
+
+#define CHECK_THREAD(cx) \
+    MOZ_ASSERT_IF(cx && !cx->helperThread(), CurrentThreadCanAccessRuntime(cx->runtime()))
 
 #endif /* vm_JSContext_h */

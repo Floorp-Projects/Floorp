@@ -1059,41 +1059,41 @@ JS::InitRealmStandardClasses(JSContext* cx)
 {
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     return GlobalObject::initStandardClasses(cx, cx->global());
 }
 
 JS_PUBLIC_API(JSObject*)
 JS::GetRealmObjectPrototype(JSContext* cx)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     return GlobalObject::getOrCreateObjectPrototype(cx, cx->global());
 }
 
 JS_PUBLIC_API(JSObject*)
 JS::GetRealmFunctionPrototype(JSContext* cx)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     return GlobalObject::getOrCreateFunctionPrototype(cx, cx->global());
 }
 
 JS_PUBLIC_API(JSObject*)
 JS::GetRealmArrayPrototype(JSContext* cx)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     return GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
 }
 
 JS_PUBLIC_API(JSObject*)
 JS::GetRealmErrorPrototype(JSContext* cx)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     return GlobalObject::getOrCreateCustomErrorPrototype(cx, cx->global(), JSEXN_ERR);
 }
 
 JS_PUBLIC_API(JSObject*)
 JS::GetRealmIteratorPrototype(JSContext* cx)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     return GlobalObject::getOrCreateIteratorPrototype(cx, cx->global());
 }
