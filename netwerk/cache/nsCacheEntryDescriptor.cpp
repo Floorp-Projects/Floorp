@@ -611,8 +611,7 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result)
     value = mCacheEntry->GetMetaDataElement(key);
     if (!value) return NS_ERROR_NOT_AVAILABLE;
 
-    *result = NS_strdup(value);
-    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+    *result = NS_xstrdup(value);
 
     return NS_OK;
 }
