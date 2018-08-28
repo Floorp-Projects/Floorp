@@ -7,13 +7,16 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 
+XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
 this.EXPORTED_SYMBOLS = ["capture"];
 
 const CONTEXT_2D = "2d";
 const BG_COLOUR = "rgb(255,255,255)";
+const MAX_SKIA_DIMENSIONS = 32767;
 const PNG_MIME = "image/png";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -112,9 +115,24 @@ capture.canvas = function(win, left, top, width, height,
   const scale = win.devicePixelRatio;
 
   if (canvas === null) {
+    let canvasWidth = width * scale;
+    let canvasHeight = height * scale;
+
+    if (canvasWidth > MAX_SKIA_DIMENSIONS) {
+      logger.warn("Reducing screenshot width because it exceeds " +
+          MAX_SKIA_DIMENSIONS + " pixels");
+      canvasWidth = MAX_SKIA_DIMENSIONS;
+    }
+
+    if (canvasHeight > MAX_SKIA_DIMENSIONS) {
+      logger.warn("Reducing screenshot height because it exceeds " +
+          MAX_SKIA_DIMENSIONS + " pixels");
+      canvasHeight = MAX_SKIA_DIMENSIONS;
+    }
+
     canvas = win.document.createElementNS(XHTML_NS, "canvas");
-    canvas.width = width * scale;
-    canvas.height = height * scale;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
   }
 
   let ctx = canvas.getContext(CONTEXT_2D);
