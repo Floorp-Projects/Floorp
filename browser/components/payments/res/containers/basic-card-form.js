@@ -312,11 +312,11 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
   }
 
   updateRequiredState() {
-    for (let field of this.form.elements) {
-      let container = field.closest(".container");
-      let span = container.querySelector(".label-text");
+    for (let formElement of this.form.elements) {
+      let container = formElement.closest("label") || formElement.closest("div");
+      let span = container.querySelector("span");
       span.setAttribute("fieldRequiredSymbol", this.dataset.fieldRequiredSymbol);
-      let required = field.required && !field.disabled;
+      let required = formElement.required && !formElement.disabled;
       if (required) {
         container.setAttribute("required", "true");
       } else {

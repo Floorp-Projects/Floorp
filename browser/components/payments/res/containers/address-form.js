@@ -273,7 +273,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
       if (field.localName == "button" || !container) {
         continue;
       }
-      let span = container.querySelector(".label-text");
+      let span = container.querySelector("span");
       span.setAttribute("fieldRequiredSymbol", this.dataset.fieldRequiredSymbol);
       let required = field.required && !field.disabled;
       if (required) {
