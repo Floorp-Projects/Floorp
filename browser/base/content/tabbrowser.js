@@ -282,49 +282,39 @@ window._gBrowser = {
     return this._selectedBrowser;
   },
 
-  get initialBrowser() {
-    delete this.initialBrowser;
-    return this.initialBrowser = document.getElementById("tabbrowser-initialBrowser");
-  },
-
   _setupInitialBrowserAndTab() {
-    let browser = this.initialBrowser;
-    this._selectedBrowser = browser;
-
-    browser.permanentKey = {};
+    // Bug 1362774 will adjust this to only set `uriIsAboutBlank` when
+    // necessary. For now, we always pass it.
+    let browser = this._createBrowser({uriIsAboutBlank: true});
+    browser.setAttribute("primary", "true");
+    browser.setAttribute("blank", "true");
     browser.droppedLinkHandler = handleDroppedLink;
     browser.loadURI = _loadURI.bind(null, browser);
 
-    let autoScrollPopup = browser._createAutoScrollPopup();
-    autoScrollPopup.id = "autoscroller";
-    document.getElementById("mainPopupSet").appendChild(autoScrollPopup);
-    browser.setAttribute("autoscrollpopup", autoScrollPopup.id);
-
-    this._defaultBrowserAttributes = {
-      autoscrollpopup: "",
-      contextmenu: "",
-      datetimepicker: "",
-      message: "",
-      messagemanagergroup: "",
-      selectmenulist: "",
-      tooltip: "",
-      type: "",
-    };
-    for (let attribute in this._defaultBrowserAttributes) {
-      this._defaultBrowserAttributes[attribute] = browser.getAttribute(attribute);
-    }
+    let uniqueId = this._generateUniquePanelID();
+    let notificationbox = this.getNotificationBox(browser);
+    notificationbox.id = uniqueId;
+    this.tabpanels.appendChild(notificationbox);
 
     let tab = this.tabs[0];
-    this._selectedTab = tab;
-
-    let uniqueId = this._generateUniquePanelID();
-    this.tabpanels.children[0].id = uniqueId;
     tab.linkedPanel = uniqueId;
+    this._selectedTab = tab;
+    this._selectedBrowser = browser;
     tab.permanentKey = browser.permanentKey;
     tab._tPos = 0;
     tab._fullyOpen = true;
     tab.linkedBrowser = browser;
     this._tabForBrowser.set(browser, tab);
+
+    this._appendStatusPanel();
+
+    this.initialBrowser = browser;
+
+    let autoScrollPopup = browser._createAutoScrollPopup();
+    autoScrollPopup.id = "autoscroller";
+    document.getElementById("mainPopupSet").appendChild(autoScrollPopup);
+    browser.setAttribute("autoscrollpopup", autoScrollPopup.id);
+    this._autoScrollPopup = autoScrollPopup;
 
     // Hook the browser up with a progress listener.
     let tabListener = new TabProgressListener(tab, browser, true, false);
@@ -1811,8 +1801,17 @@ window._gBrowser = {
     let b = document.createXULElement("browser");
     b.permanentKey = {};
 
-    for (let attribute in this._defaultBrowserAttributes) {
-      b.setAttribute(attribute, this._defaultBrowserAttributes[attribute]);
+    const defaultBrowserAttributes = {
+      contextmenu: "contentAreaContextMenu",
+      datetimepicker: "DateTimePickerPanel",
+      message: "true",
+      messagemanagergroup: "browsers",
+      selectmenulist: "ContentSelectDropdown",
+      tooltip: "aHTMLTooltip",
+      type: "content",
+    };
+    for (let attribute in defaultBrowserAttributes) {
+      b.setAttribute(attribute, defaultBrowserAttributes[attribute]);
     }
 
     if (userContextId) {
@@ -1842,6 +1841,10 @@ window._gBrowser = {
     if (!isPreloadBrowser) {
       b.setAttribute("autocompletepopup", "PopupAutoComplete");
     }
+    if (this._autoScrollPopup) {
+      b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
+    }
+
 
     /*
      * This attribute is meant to describe if the browser is the
@@ -1888,13 +1891,17 @@ window._gBrowser = {
     stack.appendChild(b);
     stack.setAttribute("flex", "1");
 
-    // Create the browserContainer
+    // We set large flex on both containers to allow the devtools toolbox to
+    // set a flex attribute. We don't want the toolbox to actually take up free
+    // space, but we do want it to collapse when the window shrinks, and with
+    // flex=0 it can't. When the toolbox is on the bottom it's a sibling of
+    // browserSidebarContainer, and when it's on the side it's a sibling of
+    // browserContainer.
     let browserContainer = document.createXULElement("vbox");
     browserContainer.className = "browserContainer";
     browserContainer.appendChild(stack);
     browserContainer.setAttribute("flex", "10000");
 
-    // Create the sidebar container
     let browserSidebarContainer = document.createXULElement("hbox");
     browserSidebarContainer.className = "browserSidebarContainer";
     browserSidebarContainer.appendChild(browserContainer);
