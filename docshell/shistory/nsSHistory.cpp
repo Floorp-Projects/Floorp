@@ -187,8 +187,7 @@ namespace {
 already_AddRefed<nsIContentViewer>
 GetContentViewerForTransaction(nsISHTransaction* aTrans)
 {
-  nsCOMPtr<nsISHEntry> entry;
-  aTrans->GetSHEntry(getter_AddRefs(entry));
+  nsCOMPtr<nsISHEntry> entry = aTrans->GetSHEntry();
   if (!entry) {
     return nullptr;
   }
@@ -205,8 +204,7 @@ GetContentViewerForTransaction(nsISHTransaction* aTrans)
 void
 nsSHistory::EvictContentViewerForTransaction(nsISHTransaction* aTrans)
 {
-  nsCOMPtr<nsISHEntry> entry;
-  aTrans->GetSHEntry(getter_AddRefs(entry));
+  nsCOMPtr<nsISHEntry> entry = aTrans->GetSHEntry();
   nsCOMPtr<nsIContentViewer> viewer;
   nsCOMPtr<nsISHEntry> ownerEntry;
   entry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
@@ -630,12 +628,12 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
 
   bool currentPersist = true;
   if (currentTxn) {
-    currentTxn->GetPersist(&currentPersist);
+    currentPersist = currentTxn->GetPersist();
   }
 
   if (!currentPersist) {
     NOTIFY_LISTENERS(OnHistoryReplaceEntry, (mIndex));
-    NS_ENSURE_SUCCESS(currentTxn->SetSHEntry(aSHEntry), NS_ERROR_FAILURE);
+    currentTxn->SetSHEntry(aSHEntry);
     currentTxn->SetPersist(aPersist);
     return NS_OK;
   }
@@ -705,8 +703,8 @@ nsSHistory::GetEntryAtIndex(int32_t aIndex, bool aModifyIndex,
   rv = GetTransactionAtIndex(aIndex, getter_AddRefs(txn));
   if (NS_SUCCEEDED(rv) && txn) {
     // Get the Entry from the transaction
-    rv = txn->GetSHEntry(aResult);
-    if (NS_SUCCEEDED(rv) && (*aResult)) {
+    txn->GetSHEntry(aResult);
+    if (*aResult) {
       // Set mIndex to the requested index, if asked to do so..
       if (aModifyIndex) {
         mIndex = aIndex;
@@ -741,9 +739,8 @@ nsSHistory::GetIndexOfEntry(nsISHEntry* aSHEntry, int32_t* aResult)
   *aResult = -1;
 
   for (int32_t i = 0; i < Length(); i++) {
-    nsCOMPtr<nsISHEntry> entry;
-    nsresult rv = mTransactions[i]->GetSHEntry(getter_AddRefs(entry));
-    if (NS_FAILED(rv) || !entry) {
+    nsCOMPtr<nsISHEntry> entry = mTransactions[i]->GetSHEntry();
+    if (!entry) {
       return NS_ERROR_FAILURE;
     }
 
@@ -762,9 +759,8 @@ nsSHistory::PrintHistory()
 {
   for (int32_t i = 0; i < Length(); i++) {
     nsCOMPtr<nsISHTransaction> txn = mTransactions[i];
-    nsCOMPtr<nsISHEntry> entry;
-    nsresult rv = txn->GetSHEntry(getter_AddRefs(entry));
-    if (NS_FAILED(rv) && !entry) {
+    nsCOMPtr<nsISHEntry> entry = txn->GetSHEntry();
+    if (!entry) {
       return NS_ERROR_FAILURE;
     }
 
@@ -917,8 +913,8 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry* aReplaceEntry)
     NOTIFY_LISTENERS(OnHistoryReplaceEntry, (aIndex));
 
     // Set the replacement entry in the transaction
-    rv = currentTxn->SetSHEntry(aReplaceEntry);
-    rv = currentTxn->SetPersist(true);
+    currentTxn->SetSHEntry(aReplaceEntry);
+    currentTxn->SetPersist(true);
   }
   return rv;
 }
@@ -1092,9 +1088,7 @@ public:
     mViewer = GetContentViewerForTransaction(aTrans);
     NS_ASSERTION(mViewer, "Transaction should have a content viewer");
 
-    nsCOMPtr<nsISHEntry> shentry;
-    mTransaction->GetSHEntry(getter_AddRefs(shentry));
-
+    nsCOMPtr<nsISHEntry> shentry = mTransaction->GetSHEntry();
     shentry->GetLastTouched(&mLastTouched);
   }
 
@@ -1226,8 +1220,7 @@ nsSHistory::FindTransactionForBFCache(nsIBFCacheEntry* aEntry,
 
   for (int32_t i = startIndex; i <= endIndex; ++i) {
     nsCOMPtr<nsISHTransaction> trans = mTransactions[i];
-    nsCOMPtr<nsISHEntry> entry;
-    trans->GetSHEntry(getter_AddRefs(entry));
+    nsCOMPtr<nsISHEntry> entry = trans->GetSHEntry();
 
     // Does entry have the same BFCacheEntry as the argument to this method?
     if (entry->HasBFCacheEntry(aEntry)) {
@@ -1489,8 +1482,7 @@ nsSHistory::RemoveDynEntriesForBFCacheEntry(nsIBFCacheEntry* aEntry)
   nsCOMPtr<nsISHTransaction> trans;
   FindTransactionForBFCache(aEntry, getter_AddRefs(trans), &index);
   if (trans) {
-    nsCOMPtr<nsISHEntry> entry;
-    trans->GetSHEntry(getter_AddRefs(entry));
+    nsCOMPtr<nsISHEntry> entry = trans->GetSHEntry();
     RemoveDynEntries(index, entry);
   }
 }
