@@ -154,6 +154,7 @@ use style::timer::Timer;
 use style::traversal::DomTraversal;
 use style::traversal::resolve_style;
 use style::traversal_flags::{self, TraversalFlags};
+use style::use_counters::UseCounters;
 use style::values::{CustomIdent, KeyframesName};
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::{Context, ToComputedValue};
@@ -1195,7 +1196,8 @@ pub extern "C" fn Servo_StyleSheet_Empty(mode: SheetParsingMode) -> RawServoStyl
             /* loader = */ None,
             None,
             QuirksMode::NoQuirks,
-            0
+            0,
+            /* use_counters = */ None,
         )
     ).into_strong()
 }
@@ -1214,6 +1216,7 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
     line_number_offset: u32,
     quirks_mode: nsCompatibility,
     reusable_sheets: *mut LoaderReusableStyleSheets,
+    use_counters: bindings::StyleUseCountersBorrowedOrNull,
 ) -> RawServoStyleSheetContentsStrong {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let input: &str = unsafe { (*bytes).as_str_unchecked() };
@@ -1232,7 +1235,6 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
         Some(ref s) => Some(s),
     };
 
-
     Arc::new(StylesheetContents::from_str(
         input,
         url_data.clone(),
@@ -1242,6 +1244,7 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
         reporter.as_ref().map(|r| r as &ParseErrorReporter),
         quirks_mode.into(),
         line_number_offset,
+        use_counters.map(UseCounters::from_ffi),
     )).into_strong()
 }
 
@@ -1253,19 +1256,22 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
     mode: SheetParsingMode,
     line_number_offset: u32,
     quirks_mode: nsCompatibility,
+    should_record_use_counters: bool,
 ) {
     let load_data = RefPtr::new(load_data);
     let extra_data = UrlExtraData(RefPtr::new(extra_data));
 
     let mut sheet_bytes = nsCString::new();
     sheet_bytes.assign(&*bytes);
+
     let async_parser = AsyncStylesheetParser::new(
         load_data,
         extra_data,
         sheet_bytes,
         mode_to_origin(mode),
         quirks_mode.into(),
-        line_number_offset
+        line_number_offset,
+        should_record_use_counters,
     );
 
     if let Some(thread_pool) = STYLE_THREAD_POOL.style_thread_pool.as_ref() {
@@ -2559,6 +2565,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_SetDescriptor(
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
         None,
+        None,
     );
 
     write_locked_arc(rule, |rule: &mut FontFaceRule| {
@@ -2768,6 +2775,7 @@ macro_rules! counter_style_descriptors {
                 Some(CssRuleType::CounterStyle),
                 ParsingMode::DEFAULT,
                 QuirksMode::NoQuirks,
+                None,
                 None,
             );
 
@@ -3329,6 +3337,7 @@ pub extern "C" fn Servo_ParseEasing(
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
         None,
+        None,
     );
     let easing = unsafe { (*easing).to_string() };
     let mut input = ParserInput::new(&easing);
@@ -3405,16 +3414,16 @@ pub extern "C" fn Servo_MatrixTransform_Operate(matrix_operator: MatrixTransform
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ParseStyleAttribute(
+pub unsafe extern "C" fn Servo_ParseStyleAttribute(
     data: *const nsACString,
     raw_extra_data: *mut URLExtraData,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
 ) -> RawServoDeclarationBlockStrong {
     let global_style_data = &*GLOBAL_STYLE_DATA;
-    let value = unsafe { data.as_ref().unwrap().as_str_unchecked() };
+    let value = (*data).as_str_unchecked();
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, raw_extra_data);
-    let url_data = unsafe { UrlExtraData::from_ptr_ref(&raw_extra_data) };
+    let url_data = UrlExtraData::from_ptr_ref(&raw_extra_data);
     Arc::new(global_style_data.shared_lock.wrap(
         parse_style_attribute(
             value,
@@ -3813,6 +3822,7 @@ pub unsafe extern "C" fn Servo_MediaList_SetText(
         QuirksMode::NoQuirks,
         // TODO(emilio): Looks like error reporting could be useful here?
         None,
+        None,
     );
 
     write_locked_arc(list, |list: &mut MediaList| {
@@ -3854,6 +3864,7 @@ pub extern "C" fn Servo_MediaList_AppendMedium(
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
         None,
+        None,
     );
     write_locked_arc(list, |list: &mut MediaList| {
         list.append_medium(&context, new_medium);
@@ -3872,6 +3883,7 @@ pub extern "C" fn Servo_MediaList_DeleteMedium(
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
         None,
     );
     write_locked_arc(list, |list: &mut MediaList| list.delete_medium(&context, old_medium))
@@ -4315,6 +4327,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
         None,
+        None,
     );
     let url = SpecifiedImageUrl::parse_from_string(string.into(), &context);
     let decl = PropertyDeclaration::BackgroundImage(BackgroundImage(
@@ -4368,12 +4381,13 @@ pub extern "C" fn Servo_CSSSupports(cond: *const nsACString) -> bool {
     if let Ok(cond) = cond {
         let url_data = unsafe { dummy_url_data() };
         // NOTE(emilio): The supports API is not associated to any stylesheet,
-        // so the fact that there are no namespace map here is fine.
+        // so the fact that there is no namespace map here is fine.
         let context = ParserContext::new_for_cssom(
             url_data,
             Some(CssRuleType::Style),
             ParsingMode::DEFAULT,
             QuirksMode::NoQuirks,
+            None,
             None,
         );
 
@@ -5464,6 +5478,7 @@ fn parse_color(
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
         error_reporter,
+        None,
     );
 
     let start_position = parser.position();
@@ -5568,6 +5583,7 @@ pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_Parse(
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
         None,
+        None,
     );
 
     let margin = parser.parse_entirely(|p| {
@@ -5612,6 +5628,7 @@ pub extern "C" fn Servo_ParseTransformIntoMatrix(
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
         None,
+        None,
     );
 
     let transform = match parser.parse_entirely(|t| transform::parse(&context, t)) {
@@ -5654,6 +5671,7 @@ pub extern "C" fn Servo_ParseFontShorthandForMatching(
         Some(CssRuleType::FontFace),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
         None,
     );
 
@@ -5712,6 +5730,7 @@ pub unsafe extern "C" fn Servo_SourceSizeList_Parse(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
         None,
     );
 
@@ -5795,4 +5814,37 @@ pub unsafe extern "C" fn Servo_PseudoClass_GetStates(name: *const nsACString) ->
         Some(NonTSPseudoClass::AnyLink) => 0,
         Some(pseudo_class) => pseudo_class.state_flag().bits(),
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_UseCounters_Create() -> *mut structs::StyleUseCounters {
+    Box::into_raw(Box::<UseCounters>::default()) as *mut _
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_UseCounters_Drop(c: bindings::StyleUseCountersOwned) {
+    let _ = c.into_box::<UseCounters>();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_UseCounters_Merge(
+    doc_counters: bindings::StyleUseCountersBorrowed,
+    sheet_counters: bindings::StyleUseCountersBorrowed,
+) {
+    UseCounters::from_ffi(doc_counters).merge(UseCounters::from_ffi(sheet_counters))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_IsCssPropertyRecordedInUseCounter(
+    use_counters: bindings::StyleUseCountersBorrowed,
+    property: *const nsACString,
+    known_prop: *mut bool,
+) -> bool {
+    let prop_id = parse_enabled_property_name!(property, known_prop, false);
+    let non_custom_id = match prop_id.non_custom_id() {
+        Some(id) => id,
+        None => return false,
+    };
+
+    UseCounters::from_ffi(use_counters).non_custom_properties.recorded(non_custom_id)
 }

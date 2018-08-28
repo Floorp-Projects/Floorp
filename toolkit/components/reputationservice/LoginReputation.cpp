@@ -145,7 +145,11 @@ LoginWhitelist::QueryLoginWhitelist(nsILoginReputationQuery* aParam)
 
   // AsyncClassifyLocalWithTables API won't trigger a gethash request on
   // a full-length match, so this API call should only include local operation.
-  rv = uriClassifier->AsyncClassifyLocalWithTables(uri, mTables, this);
+  // We don't support prefs overwrite for this classification.
+  rv = uriClassifier->AsyncClassifyLocalWithTables(uri, mTables,
+                                                   nsTArray<nsCString>(),
+                                                   nsTArray<nsCString>(),
+                                                   this);
   if (NS_FAILED(rv)) {
     return p;
   }

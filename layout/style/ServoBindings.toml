@@ -515,6 +515,7 @@ structs-types = [
     "RawServoSourceSizeList",
     "RefPtr",
     "RustString",
+    "StyleUseCounters",
     "CSSPseudoElementType",
     "ServoTraversalFlags",
     "ComputedTimingFunction_BeforeFlag",
@@ -627,6 +628,7 @@ servo-owned-types = [
     { name = "RawServoAuthorStyles", opaque = true },
     { name = "RawServoSelectorList", opaque = false },
     { name = "RawServoSourceSizeList", opaque = false },
+    { name = "StyleUseCounters", opaque = false },
     { name = "ServoElementSnapshot", opaque = false },
     { name = "RawServoAnimationValueMap", opaque = true },
 ]
