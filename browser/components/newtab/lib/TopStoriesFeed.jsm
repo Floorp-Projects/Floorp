@@ -311,17 +311,25 @@ this.TopStoriesFeed = class TopStoriesFeed {
     return this.show_spocs && this.store.getState().Prefs.values.showSponsored;
   }
 
+  dispatchSpocDone(target) {
+    const action = {type: at.POCKET_WAITING_FOR_SPOC, data: false};
+    this.store.dispatch(ac.OnlyToOneContent(action, target));
+  }
+
   maybeAddSpoc(target) {
     const updateContent = () => {
       if (!this.shouldShowSpocs()) {
+        this.dispatchSpocDone(target);
         return false;
       }
       if (Math.random() > this.spocsPerNewTabs) {
+        this.dispatchSpocDone(target);
         return false;
       }
       if (!this.spocs || !this.spocs.length) {
         // We have stories but no spocs so there's nothing to do and this update can be
         // removed from the queue.
+        this.dispatchSpocDone(target);
         return false;
       }
 
@@ -331,6 +339,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
 
       if (!spocs.length) {
         // There's currently no spoc left to display
+        this.dispatchSpocDone(target);
         return false;
       }
 
@@ -342,6 +351,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       // Send a content update to the target tab
       const action = {type: at.SECTION_UPDATE, data: Object.assign({rows}, {id: SECTION_ID})};
       this.store.dispatch(ac.OnlyToOneContent(action, target));
+      this.dispatchSpocDone(target);
       return false;
     };
 
