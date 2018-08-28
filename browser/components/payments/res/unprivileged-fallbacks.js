@@ -34,8 +34,32 @@ var PaymentDialogUtils = {
     return !!str.replace(/[-\s]/g, "").match(/^\d{9,}$/);
   },
   DEFAULT_REGION: "US",
-  supportedCountries: ["US", "CA"],
+  supportedCountries: ["US", "CA", "DE"],
   getFormFormat(country) {
+    if (country == "DE") {
+      return {
+        addressLevel1Label: "province",
+        postalCodeLabel: "postalCode",
+        fieldsOrder: [
+          {
+            fieldId: "name",
+            newLine: true,
+          },
+          {
+            fieldId: "organization",
+            newLine: true,
+          },
+          {
+            fieldId: "street-address",
+            newLine: true,
+          },
+          {fieldId: "postal-code"},
+          {fieldId: "address-level2"},
+        ],
+        postalCodePattern: "\\d{5}",
+      };
+    }
+
     return {
       "addressLevel1Label": country == "US" ? "state" : "province",
       "postalCodeLabel": country == "US" ? "zip" : "postalCode",

@@ -24,11 +24,11 @@ add_task(async function test_saveCreditCard() {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-number"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-name"], {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("0" + TEST_CREDIT_CARD_1["cc-exp-month"].toString(), {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-exp-year"].toString(), {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-name"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -53,11 +53,11 @@ add_task(async function test_saveCreditCardWithMaxYear() {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-number"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-name"], {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-exp-month"].toString(), {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-exp-year"].toString(), {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-name"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -91,11 +91,11 @@ add_task(async function test_saveCreditCardWithBillingAddress() {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD["cc-number"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey(TEST_CREDIT_CARD["cc-name"], {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD["cc-exp-month"].toString(), {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD["cc-exp-year"].toString(), {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey(TEST_CREDIT_CARD["cc-name"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(billingAddress["given-name"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -127,6 +127,8 @@ add_task(async function test_editCreditCard() {
   await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("VK_RIGHT", {}, win);
     EventUtils.synthesizeKey("test", {}, win);
     win.document.querySelector("#save").click();
@@ -155,6 +157,8 @@ add_task(async function test_editCreditCardWithMissingBillingAddress() {
   await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("VK_RIGHT", {}, win);
     EventUtils.synthesizeKey("test", {}, win);
     win.document.querySelector("#save").click();
@@ -179,6 +183,8 @@ add_task(async function test_addInvalidCreditCard() {
 
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("test", {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("test name", {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
