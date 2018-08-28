@@ -41,8 +41,6 @@ struct LifecycleCallbackArgs
   nsString oldValue;
   nsString newValue;
   nsString namespaceURI;
-
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 };
 
 struct LifecycleAdoptedCallbackArgs
@@ -58,7 +56,6 @@ public:
                         nsIDocument::ElementCallbackType aCallbackType,
                         CallbackFunction* aCallback);
   void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
   void Call();
   void SetArgs(LifecycleCallbackArgs& aArgs)
   {
@@ -133,7 +130,6 @@ struct CustomElementData
 
   void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
   void Unlink();
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   nsAtom* GetIs(Element* aElement)
   {
@@ -212,7 +208,6 @@ public:
   virtual ~CustomElementReaction() = default;
   virtual void Invoke(Element* aElement, ErrorResult& aRv) = 0;
   virtual void Traverse(nsCycleCollectionTraversalCallback& aCb) const = 0;
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const = 0;
 
   bool IsUpgradeReaction()
   {

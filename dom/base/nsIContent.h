@@ -797,8 +797,6 @@ protected:
     virtual void TraverseExtendedSlots(nsCycleCollectionTraversalCallback&);
     virtual void UnlinkExtendedSlots();
 
-    virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
     /**
      * The nearest enclosing content node with a binding that created us.
      * TODO(emilio): This should be an Element*.
