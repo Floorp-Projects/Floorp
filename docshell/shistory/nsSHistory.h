@@ -178,6 +178,9 @@ private:
   int32_t mIndex;           // -1 means "no index"
   int32_t mRequestedIndex;  // -1 means "no requested index"
 
+  void WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
+                     int32_t* aOutEndIndex);
+
   // Length of mTransactions.
   int32_t Length() { return int32_t(mTransactions.Length()); }
 
