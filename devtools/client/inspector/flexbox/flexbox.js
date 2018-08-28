@@ -338,12 +338,13 @@ class FlexboxInspector {
     const flexItems = [];
     const flexItemFronts = await flexboxFront.getFlexItems();
 
-    for (const item of flexItemFronts) {
-      let itemNodeFront = item.nodeFront;
+    for (const flexItemFront of flexItemFronts) {
+      let itemNodeFront = flexItemFront.nodeFront;
 
       if (!itemNodeFront) {
         try {
-          itemNodeFront = await this.walker.getNodeFromActor(item.actorID, ["element"]);
+          itemNodeFront = await this.walker.getNodeFromActor(flexItemFront.actorID,
+            ["element"]);
         } catch (e) {
           // This call might fail if called asynchrously after the toolbox is finished
           // closing.
@@ -352,8 +353,10 @@ class FlexboxInspector {
       }
 
       flexItems.push({
-        actorID: item.actorID,
+        actorID: flexItemFront.actorID,
+        flexItemSizing: flexItemFront.flexItemSizing,
         nodeFront: itemNodeFront,
+        properties: flexItemFront.properties,
       });
     }
 

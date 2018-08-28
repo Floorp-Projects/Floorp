@@ -51,6 +51,13 @@ const FlexItemFront = FrontClassWithSpec(flexItemSpec, {
   },
 
   /**
+   * Get the flex item sizing data.
+   */
+  get flexItemSizing() {
+    return this._form.flexItemSizing;
+  },
+
+  /**
    * In some cases, the FlexItemActor already knows the NodeActor ID of the node where the
    * flex item is located. In such cases, this getter returns the NodeFront for it.
    */
@@ -60,6 +67,13 @@ const FlexItemFront = FrontClassWithSpec(flexItemSpec, {
     }
 
     return this.conn.getActor(this._form.nodeActorID);
+  },
+
+  /**
+   * Get the computed style properties for the flex item.
+   */
+  get properties() {
+    return this._form.properties;
   },
 });
 
