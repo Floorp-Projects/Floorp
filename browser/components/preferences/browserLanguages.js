@@ -118,7 +118,10 @@ var gBrowserLanguagesDialog = {
       upButton: document.getElementById("up"),
       downButton: document.getElementById("down"),
     });
-    this._orderedListBox.setItems(
-      getLocaleDisplayInfo(Services.locale.getRequestedLocales()));
+    // Maintain the previously requested locales even if we cancel out.
+    this.requestedLocales = window.arguments[0];
+    let locales = window.arguments[0]
+      || Services.locale.getRequestedLocales();
+    this._orderedListBox.setItems(getLocaleDisplayInfo(locales));
   },
 };
