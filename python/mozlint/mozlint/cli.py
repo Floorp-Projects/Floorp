@@ -147,7 +147,7 @@ def find_linters(linters=None):
 def run(paths, linters, fmt, outgoing, workdir, edit,
         setup=False, list_linters=False, **lintargs):
     from mozlint import LintRoller, formatters
-    from mozlint.editor import edit_results
+    from mozlint.editor import edit_issues
 
     if list_linters:
         lint_paths = find_linters(linters)
@@ -165,21 +165,20 @@ def run(paths, linters, fmt, outgoing, workdir, edit,
         return ret
 
     # run all linters
-    results = lint.roll(paths, outgoing=outgoing, workdir=workdir)
+    result = lint.roll(paths, outgoing=outgoing, workdir=workdir)
 
-    if edit and results:
-        edit_results(results)
-        results = lint.roll(results.keys())
+    if edit and result.issues:
+        edit_issues(result.issues)
+        result = lint.roll(result.issues.keys())
 
     formatter = formatters.get(fmt)
 
     # Encode output with 'replace' to avoid UnicodeEncodeErrors on
     # environments that aren't using utf-8.
-    out = formatter(results, failed=lint.failed | lint.failed_setup).encode(
-                    sys.stdout.encoding or 'ascii', 'replace')
+    out = formatter(result).encode(sys.stdout.encoding or 'ascii', 'replace')
     if out:
         print(out)
-    return 1 if results or lint.failed else 0
+    return result.returncode
 
 
 if __name__ == '__main__':

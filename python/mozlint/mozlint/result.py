@@ -4,11 +4,42 @@
 
 from __future__ import absolute_import
 
+from collections import defaultdict
 from json import dumps, JSONEncoder
 
 
-class ResultContainer(object):
-    """Represents a single lint error and its related metadata.
+class ResultSummary(object):
+    """Represents overall result state from an entire lint run."""
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.issues = defaultdict(list)
+        self.failed_run = set()
+        self.failed_setup = set()
+
+    @property
+    def returncode(self):
+        if self.issues or self.failed:
+            return 1
+        return 0
+
+    @property
+    def failed(self):
+        return self.failed_setup | self.failed_run
+
+    def update(self, other):
+        """Merge results from another ResultSummary into this one."""
+        for path, obj in other.issues.items():
+            self.issues[path].extend(obj)
+
+        self.failed_run |= other.failed_run
+        self.failed_setup |= other.failed_setup
+
+
+class Issue(object):
+    """Represents a single lint issue and its related metadata.
 
     :param linter: name of the linter that flagged this error
     :param path: path to the file containing the error
@@ -50,35 +81,36 @@ class ResultContainer(object):
         self.lineoffset = lineoffset
 
     def __repr__(self):
-        s = dumps(self, cls=ResultEncoder, indent=2)
-        return "ResultContainer({})".format(s)
+        s = dumps(self, cls=IssueEncoder, indent=2)
+        return "Issue({})".format(s)
 
 
-class ResultEncoder(JSONEncoder):
-    """Class for encoding :class:`~result.ResultContainer`s to json.
+class IssueEncoder(JSONEncoder):
+    """Class for encoding :class:`~result.Issue`s to json.
 
     Usage:
 
-        json.dumps(results, cls=ResultEncoder)
+        json.dumps(results, cls=IssueEncoder)
     """
+
     def default(self, o):
-        if isinstance(o, ResultContainer):
+        if isinstance(o, Issue):
             return {a: getattr(o, a) for a in o.__slots__}
         return JSONEncoder.default(self, o)
 
 
 def from_config(config, **kwargs):
-    """Create a :class:`~result.ResultContainer` from a linter config.
+    """Create a :class:`~result.Issue` from a linter config.
 
     Convenience method that pulls defaults from a linter
     config and forwards them.
 
     :param config: linter config as defined in a .yml file
-    :param kwargs: same as :class:`~result.ResultContainer`
-    :returns: :class:`~result.ResultContainer` object
+    :param kwargs: same as :class:`~result.Issue`
+    :returns: :class:`~result.Issue` object
     """
     attrs = {}
-    for attr in ResultContainer.__slots__:
+    for attr in Issue.__slots__:
         attrs[attr] = kwargs.get(attr, config.get(attr))
 
     if not attrs['linter']:
@@ -87,4 +119,4 @@ def from_config(config, **kwargs):
     if not attrs['message']:
         attrs['message'] = config.get('description')
 
-    return ResultContainer(**attrs)
+    return Issue(**attrs)
