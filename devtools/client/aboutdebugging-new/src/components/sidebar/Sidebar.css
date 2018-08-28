@@ -6,3 +6,11 @@
   padding-block-start: 70px;
   padding-inline-start: 24px;
 }
+
+.sidebar__devices__no-devices-message {
+  color: var(--grey-40);
+  display: inline-block;
+  padding: 12px 0;
+  text-align: center;
+  width: 100%;
+}

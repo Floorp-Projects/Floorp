@@ -24,8 +24,28 @@ class Sidebar extends PureComponent {
     };
   }
 
+  renderDevices() {
+    const { dispatch, networkLocations } = this.props;
+    if (!networkLocations.length) {
+      return dom.span(
+        {
+          className: "sidebar__devices__no-devices-message"
+        },
+        "No devices discovered"
+      );
+    }
+    return networkLocations.map(location => SidebarItem({
+      id: "networklocation-" + location,
+      dispatch,
+      icon: GLOBE_ICON,
+      isSelected: false,
+      name: location,
+      selectable: false,
+    }));
+  }
+
   render() {
-    const { dispatch, networkLocations, selectedPage } = this.props;
+    const { dispatch, selectedPage } = this.props;
 
     return dom.aside(
       {
@@ -50,16 +70,7 @@ class Sidebar extends PureComponent {
           selectable: true,
         }),
         dom.hr(),
-        networkLocations.map(location => SidebarItem(
-          {
-            id: "networklocation-" + location,
-            dispatch,
-            icon: GLOBE_ICON,
-            isSelected: false,
-            name: location,
-            selectable: false,
-          }
-        ))
+        this.renderDevices()
       )
     );
   }
