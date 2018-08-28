@@ -44,6 +44,7 @@
     <string name="has_opened_new_tab" translatable="false"><xliff:g id="preference_key">has_opened_new_tab</xliff:g></string>
     <string name="has_added_to_home_screen" translatable="false"><xliff:g id="preference_key">has_added_to_home_screen</xliff:g></string>
     <string name="has_requested_desktop" translatable="false"><xliff:g id="preference_key">has_requested_desktop</xliff:g></string>
+    <string name="app_launch_count" translatable="false"><xliff:g id="preference_key">app_launch_count</xliff:g></string>
 
     <string name="pref_key_homescreen_tips" translatable="false"><xliff:g id="preference_key">pref_key_tips</xliff:g></string>
 

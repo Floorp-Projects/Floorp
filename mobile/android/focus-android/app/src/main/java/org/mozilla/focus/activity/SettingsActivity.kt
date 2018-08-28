@@ -10,6 +10,7 @@ import kotlinx.android.synthetic.main.activity_settings.*
 import org.mozilla.focus.R
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.settings.BaseSettingsFragment
+import org.mozilla.focus.settings.MozillaSettingsFragment
 import org.mozilla.focus.settings.SettingsFragment
 import org.mozilla.focus.settings.PrivacySecuritySettingsFragment
 
@@ -19,6 +20,7 @@ class SettingsActivity : LocaleAwareAppCompatActivity(), BaseSettingsFragment.Ac
         @JvmField
         val ACTIVITY_RESULT_LOCALE_CHANGED = 1
         const val SHOULD_OPEN_PRIVACY_EXTRA = "shouldOpenPrivacy"
+        const val SHOULD_OPEN_MOZILLA_EXTRA = "shouldOpenMozilla"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +36,10 @@ class SettingsActivity : LocaleAwareAppCompatActivity(), BaseSettingsFragment.Ac
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.container, PrivacySecuritySettingsFragment())
                     .commit()
+            } else if (intent?.extras?.getBoolean(SHOULD_OPEN_MOZILLA_EXTRA) == true) {
+                supportFragmentManager.beginTransaction()
+                        .replace(R.id.container, MozillaSettingsFragment())
+                        .commit()
             }
         } else if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()

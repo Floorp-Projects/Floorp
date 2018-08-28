@@ -69,6 +69,12 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         registerSessionObserver()
 
         WebViewProvider.preload(this)
+
+        val launchCount = Settings.getInstance(this).getAppLaunchCount()
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .edit()
+                .putInt(getString(R.string.app_launch_count), launchCount + 1)
+                .apply()
     }
 
     private fun initViewModel() {
