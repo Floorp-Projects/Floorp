@@ -64,7 +64,7 @@
 .downloadDetailsHover,
 .downloadOpenFile,
 .downloadShowMoreInfo,
-.downloadButtonLabels {
+.downloadDetailsButtonHover {
   display: none;
 }
 
