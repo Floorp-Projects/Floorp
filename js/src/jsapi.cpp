@@ -531,47 +531,6 @@ JS_SetFutexCanWait(JSContext* cx)
     cx->fx.setCanWait(true);
 }
 
-static void
-StartRequest(JSContext* cx)
-{
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-
-    if (cx->requestDepth) {
-        cx->requestDepth++;
-    } else {
-        /* Indicate that a request is running. */
-        cx->requestDepth = 1;
-    }
-}
-
-static void
-StopRequest(JSContext* cx)
-{
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-
-    MOZ_ASSERT(cx->requestDepth != 0);
-    if (cx->requestDepth != 1) {
-        cx->requestDepth--;
-    } else {
-        cx->requestDepth = 0;
-    }
-}
-
-JS_PUBLIC_API(void)
-JS_BeginRequest(JSContext* cx)
-{
-    cx->outstandingRequests++;
-    StartRequest(cx);
-}
-
-JS_PUBLIC_API(void)
-JS_EndRequest(JSContext* cx)
-{
-    MOZ_ASSERT(cx->outstandingRequests != 0);
-    cx->outstandingRequests--;
-    StopRequest(cx);
-}
-
 JS_PUBLIC_API(JSRuntime*)
 JS_GetParentRuntime(JSContext* cx)
 {
@@ -600,7 +559,6 @@ JS::InitSelfHostedCode(JSContext* cx)
 
     JSRuntime* rt = cx->runtime();
 
-    JSAutoRequest ar(cx);
     if (!rt->initializeAtoms(cx))
         return false;
 
@@ -1592,7 +1550,7 @@ JS_PUBLIC_API(void)
 JS_SetNativeStackQuota(JSContext* cx, size_t systemCodeStackSize, size_t trustedScriptStackSize,
                        size_t untrustedScriptStackSize)
 {
-    MOZ_ASSERT(cx->requestDepth == 0);
+    MOZ_ASSERT(!cx->activation());
 
     if (!trustedScriptStackSize)
         trustedScriptStackSize = systemCodeStackSize;

@@ -2678,7 +2678,6 @@ js::PrintTypes(JSContext* cx, Compartment* comp, bool force)
 {
 #ifdef DEBUG
     gc::AutoSuppressGC suppressGC(cx);
-    JSAutoRequest request(cx);
 
     Zone* zone = comp->zone();
     AutoEnterAnalysis enter(nullptr, zone);

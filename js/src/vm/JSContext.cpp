@@ -194,9 +194,6 @@ js::DestroyContext(JSContext* cx)
 {
     JS_AbortIfWrongThread(cx);
 
-    if (cx->outstandingRequests != 0)
-        MOZ_CRASH("Attempted to destroy a context while it is in a request.");
-
     cx->checkNoGCRooters();
 
     // Cancel all off thread Ion compiles. Completed Ion compiles may try to
@@ -1269,7 +1266,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     nativeStackBase(GetNativeStackBase()),
     entryMonitor(nullptr),
     noExecuteDebuggerTop(nullptr),
-    requestDepth(0),
 #ifdef DEBUG
     inUnsafeCallWithABI(false),
     hasAutoUnsafeCallWithABI(false),
@@ -1316,7 +1312,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     generatingError(false),
     cycleDetectorVector_(this),
     data(nullptr),
-    outstandingRequests(0),
     jitIsBroken(false),
     asyncCauseForNewActivations(nullptr),
     asyncCallIsExplicit(false),
