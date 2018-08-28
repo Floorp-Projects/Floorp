@@ -104,7 +104,7 @@ private:
                  "GetVisualOverflowRect() won't return the pre-effects rect!");
     }
 #endif
-    return aFrame->GetVisualOverflowRect();
+    return aFrame->GetVisualOverflowRectRelativeToSelf();
   }
 
   nsIFrame*     mFirstContinuation;
