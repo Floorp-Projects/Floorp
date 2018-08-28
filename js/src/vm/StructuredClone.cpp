@@ -2923,7 +2923,7 @@ JS_ReadStructuredClone(JSContext* cx, JSStructuredCloneData& buf,
                        void* closure)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
 
     if (version > JS_STRUCTURED_CLONE_VERSION) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_BAD_CLONE_VERSION);
@@ -2941,7 +2941,7 @@ JS_WriteStructuredClone(JSContext* cx, HandleValue value, JSStructuredCloneData*
                         void* closure, HandleValue transferable)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(value);
 
     const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
@@ -2963,7 +2963,7 @@ JS_StructuredClone(JSContext* cx, HandleValue value, MutableHandleValue vp,
                    void* closure)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
 
     // Strings are associated with zones, not compartments,
     // so we copy the string by wrapping it.

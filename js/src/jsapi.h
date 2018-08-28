@@ -54,26 +54,6 @@ namespace JS {
 class SourceBufferHolder;
 class TwoByteChars;
 
-#ifdef JS_DEBUG
-
-class JS_PUBLIC_API(AutoCheckRequestDepth)
-{
-    JSContext* cx;
-  public:
-    explicit AutoCheckRequestDepth(JSContext* cx);
-    ~AutoCheckRequestDepth();
-};
-
-# define CHECK_REQUEST(cx) \
-    JS::AutoCheckRequestDepth _autoCheckRequestDepth(cx)
-
-#else
-
-# define CHECK_REQUEST(cx) \
-    ((void) 0)
-
-#endif /* JS_DEBUG */
-
 /** AutoValueArray roots an internal fixed-size array of Values. */
 template <size_t N>
 class MOZ_RAII AutoValueArray : public AutoGCRooter
