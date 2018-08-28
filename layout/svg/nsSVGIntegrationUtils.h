@@ -45,6 +45,13 @@ class nsSVGIntegrationUtils final
 
 public:
   /**
+   * Returns true if SVG effects that affect the overflow of the given frame
+   * are currently applied to the frame.
+   */
+  static bool
+  UsingOverflowAffectingEffects(const nsIFrame* aFrame);
+
+  /**
    * Returns true if SVG effects are currently applied to this frame.
    */
   static bool

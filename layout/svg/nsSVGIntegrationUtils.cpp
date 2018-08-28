@@ -96,7 +96,8 @@ private:
     // This function may be called during reflow or painting. We should only
     // do this check in painting process since the PreEffectsBBoxProperty of
     // continuations are not set correctly while reflowing.
-    if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame) && !aInReflow) {
+    if (nsSVGIntegrationUtils::UsingOverflowAffectingEffects(aFrame) &&
+        !aInReflow) {
       nsOverflowAreas* preTransformOverflows =
         aFrame->GetProperty(aFrame->PreTransformOverflowAreasProperty());
 
@@ -155,6 +156,14 @@ GetPreEffectsVisualOverflow(nsIFrame* aFirstContinuation,
   nsLayoutUtils::AddBoxesForFrame(aCurrentFrame, &collector);
   // Return the result in user space:
   return collector.GetResult() + aFirstContinuationToUserSpace;
+}
+
+bool
+nsSVGIntegrationUtils::UsingOverflowAffectingEffects(const nsIFrame* aFrame)
+{
+  // Currently overflow don't take account of SVG or other non-absolute
+  // positioned clipping, or masking.
+  return aFrame->StyleEffects()->HasFilters();
 }
 
 bool
