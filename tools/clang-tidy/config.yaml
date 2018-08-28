@@ -43,12 +43,6 @@ clang_checkers:
     publish: !!bool yes
   - name: clang-analyzer-security.FloatLoopCounter
     publish: !!bool yes
-  - name: clang-analyzer-security.insecureAPI.bcmp
-    publish: !!bool yes
-  - name: clang-analyzer-security.insecureAPI.bcopy
-    publish: !!bool yes
-  - name: clang-analyzer-security.insecureAPI.bzero
-    publish: !!bool yes
   - name: clang-analyzer-security.insecureAPI.getpw
     publish: !!bool yes
   # We don't add clang-analyzer-security.insecureAPI.gets here; it's deprecated.
@@ -107,19 +101,12 @@ clang_checkers:
     publish: !!bool yes
   - name: performance-for-range-copy
     publish: !!bool yes
-  - name: performance-implicit-conversion-in-loop
-    publish: !!bool yes
-  - name: performance-inefficient-algorithm
-    publish: !!bool yes
+  # Only available from clang tidy 6.0. We are currently using 5.0
+  # - name: performance-implicit-conversion-in-loop
+  #   publish: !!bool yes
   - name: performance-inefficient-string-concatenation
     publish: !!bool yes
   - name: performance-inefficient-vector-operation
-    publish: !!bool yes
-  - name: performance-move-const-arg
-    publish: !!bool yes
-  - name: performance-move-constructor-init
-    publish: !!bool yes
-  - name: performance-noexcept-move-constructor
     publish: !!bool yes
   - name: performance-type-promotion-in-math-fn
     publish: !!bool yes
@@ -143,8 +130,9 @@ clang_checkers:
     publish: !!bool yes
   - name: readability-uniqueptr-delete-release
     publish: !!bool yes
-  - name: readability-static-accessed-through-instance
-    publish: !!bool yes
+# Only available from clang tidy 6.0. We are currently using 5.0
+# - name: readability-static-accessed-through-instance
+#   publish: !!bool yes
 
 # Third party files from mozilla-central
 third_party: tools/rewriting/ThirdPartyPaths.txt
