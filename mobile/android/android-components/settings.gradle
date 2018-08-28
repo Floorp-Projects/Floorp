@@ -97,6 +97,9 @@ project(':ui-tabcounter').projectDir = new File('components/ui/tabcounter')
 include ':service-firefox-accounts'
 project(':service-firefox-accounts').projectDir = new File('components/service/firefox-accounts')
 
+include ':service-sync-logins'
+project(':service-sync-logins').projectDir = new File('components/service/sync-logins')
+
 include ':service-fretboard'
 project(':service-fretboard').projectDir = new File('components/service/fretboard')
 
@@ -143,6 +146,9 @@ project(':samples-browser').projectDir = new File(rootDir, 'samples/browser')
 
 include ':samples-firefox-accounts'
 project(':samples-firefox-accounts').projectDir = new File(rootDir, 'samples/firefox-accounts')
+
+include ':samples-sync-logins'
+project(':samples-sync-logins').projectDir = new File(rootDir, 'samples/sync-logins')
 
 include ':samples-toolbar'
 project(':samples-toolbar').projectDir = new File(rootDir, 'samples/toolbar')
