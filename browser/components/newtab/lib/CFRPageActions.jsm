@@ -34,10 +34,14 @@ class PageAction {
     this.button = win.document.getElementById("cfr-button");
     this.label = win.document.getElementById("cfr-label");
 
+    // This should NOT be use directly to dispatch message-defined actions attached to buttons.
+    // Please use dispatchUserAction instead.
     this._dispatchToASRouter = dispatchToASRouter;
+
     this._popupStateChange = this._popupStateChange.bind(this);
     this._collapse = this._collapse.bind(this);
     this._handleClick = this._handleClick.bind(this);
+    this.dispatchUserAction = this.dispatchUserAction.bind(this);
 
     // Saved timeout IDs for scheduled state changes, so they can be cancelled
     this.stateTransitionTimeoutIDs = [];
@@ -72,6 +76,13 @@ class PageAction {
     this.container.hidden = true;
     this._clearScheduledStateChanges();
     this.urlbar.removeAttribute("cfr-recommendation-state");
+  }
+
+  dispatchUserAction(action) {
+    this._dispatchToASRouter(
+      {type: "USER_ACTION", data: action},
+      {browser: this.window.gBrowser.selectedBrowser}
+    );
   }
 
   _expand(delay = 0) {
@@ -144,7 +155,7 @@ class PageAction {
     const mainAction = {
       label: primary.label,
       accessKey: primary.accessKey,
-      callback: () => this._dispatchToASRouter(primary.action)
+      callback: () => this.dispatchUserAction(primary.action)
     };
 
     const secondaryActions = [{
@@ -243,5 +254,6 @@ const CFRPageActions = {
     RecommendationMap.clear();
   }
 };
+this.CFRPageActions = CFRPageActions;
 
 const EXPORTED_SYMBOLS = ["CFRPageActions"];

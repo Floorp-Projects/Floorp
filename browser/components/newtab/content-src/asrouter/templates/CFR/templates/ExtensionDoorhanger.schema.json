@@ -1,0 +1,147 @@
+{
+  "title": "ExtensionDoorhanger",
+  "description": "A template with a heading, addon icon, title and description. No markup allowed.",
+  "version": "1.0.0",
+  "type": "object",
+  "definitions": {
+    "plainText": {
+      "description": "Plain text (no HTML allowed)",
+      "type": "string"
+    },
+    "linkUrl": {
+      "description": "Target for links or buttons",
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "properties": {
+    "notification_text": {
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Text for location bar chiclet."}
+      ]
+    },
+    "info_icon": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "allOf": [
+            {"$ref": "#/definitions/plainText"},
+            {"description": "Text for button tooltip used to provider information about the doorhanger."}
+          ]
+        },
+        "sumo_path": {
+          "type": "string",
+          "description": "Last part of the path in the URL to the support page with the information about the doorhanger.",
+          "examples": ["extensionpromotions", "extensionrecommendations"]
+        }
+      }
+    },
+    "heading_text": {
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Doorhanger heading describing its purpose."}
+      ]
+    },
+    "addon": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "allOf": [
+            {"$ref": "#/definitions/plainText"},
+            {"description": "Addon name"}
+          ]
+        },
+        "author": {
+          "allOf": [
+            {"$ref": "#/definitions/plainText"},
+            {"description": "Addon author"}
+          ]
+        },
+        "icon": {
+          "allOf": [
+            {"$ref": "#/definitions/linkUrl"},
+            {"description": "Addon icon"}
+          ]
+        },
+        "amo_url": {
+          "allOf": [
+            {"$ref": "#/definitions/linkUrl"},
+            {"description": "Link that offers more information related to the addon."}
+          ]
+        }
+      }
+    },
+    "text": {
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Description for the addon."}
+      ]
+    },
+    "buttons": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "allOf": [
+                {"$ref": "#/definitions/plainText"},
+                {"description": "Text for the primary button of the doorhanger."}
+              ]
+            },
+            "accessKey": {
+              "type": "string",
+              "description": "A single character to be used as a shortcut key for the primary button. This should be one of the characters that appears in the button label."
+            },
+            "action": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Action dispatched by the button."
+                },
+                "data": {
+                  "properties": {
+                    "url": {
+                      "allOf": [
+                        {"$ref": "#/definitions/linkUrl"},
+                        {"description": "URL used in combination with the primary action dispatched."}
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "secondary": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "allOf": [
+                  {"$ref": "#/definitions/plainText"},
+                  {"description": "Text for the secondary button of the doorhanger."}
+                ]
+              },
+              "accessKey": {
+                "type": "string",
+                "description": "A single character to be used as a shortcut key for the secondary button. This should be one of the characters that appears in the button label."
+              },
+              "action": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Action dispatched by the button."
+                  }
+                }
+              } 
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["notification_text", "heading_text", "addon", "text", "buttons"]
+}
