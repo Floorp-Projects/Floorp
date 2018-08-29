@@ -20,7 +20,7 @@ function test() {
   postStream.addHeader("Content-Type", "application/x-www-form-urlencoded");
   postStream.setData(dataStream);
 
-  tab.linkedBrowser.loadURI("http://mochi.test:8888/browser/docshell/test/browser/print_postdata.sjs", {
+  BrowserTestUtils.loadURI(tab.linkedBrowser, "http://mochi.test:8888/browser/docshell/test/browser/print_postdata.sjs", {
     postData: postStream,
   });
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
