@@ -29,7 +29,7 @@ function triggerSave(aWindow, aCallback) {
   let testBrowser = aWindow.gBrowser.selectedBrowser;
   let testURI = "http://mochi.test:8888/browser/browser/base/content/test/general/navigating_window_with_download.html";
   windowObserver.setCallback(onUCTDialog);
-  testBrowser.loadURI(testURI);
+  BrowserTestUtils.loadURI(testBrowser, testURI);
 
   // Create the folder the link will be saved into.
   var destDir = createTemporarySaveDirectory();
