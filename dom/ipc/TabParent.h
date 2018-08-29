@@ -327,6 +327,16 @@ public:
    */
   a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
 
+  virtual PWindowGlobalParent*
+  AllocPWindowGlobalParent(const WindowGlobalInit& aInit) override;
+
+  virtual bool
+  DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPWindowGlobalConstructor(PWindowGlobalParent* aActor,
+                               const WindowGlobalInit& aInit) override;
+
   void LoadURL(nsIURI* aURI);
 
   void InitRendering();
