@@ -4029,9 +4029,6 @@ GetStringValueFromBundlePlist(const nsAString& aKey, nsAutoCString& aValue)
   CFIndex maxLength =
     CFStringGetMaximumSizeForEncoding(valueLength, kCFStringEncodingUTF8) + 1;
   char* valueBuffer = static_cast<char*>(moz_xmalloc(maxLength));
-  if (!valueBuffer) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   if (!CFStringGetCString(value, valueBuffer, maxLength,
                           kCFStringEncodingUTF8)) {

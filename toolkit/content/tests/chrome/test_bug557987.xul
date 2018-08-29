@@ -14,8 +14,7 @@
                                          oncommand="eventReceived('command');">
     <menupopup onpopupshowing="eventReceived('popupshowing'); return false;" />
   </toolbarbutton>
-  <menulist id="menulist" editable="true" value="Test bug 557987" 
-                                          onfocus="eventReceived('focus')" />
+
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
@@ -39,11 +38,6 @@ function test() {
 
   synthesizeMouse(button, rightEdge, centerY, {}, window);
   synthesizeMouse(button, centerX, centerY, {}, window);
-  
-  let menulist = $("menulist");
-  centerX = menulist.getBoundingClientRect().width / 2;
-  centerY = menulist.getBoundingClientRect().height / 2;
-  synthesizeMouse(menulist, centerX, centerY, {}, window);
 
   synthesizeMouse(document.getElementsByTagName("body")[0], 0, 0, {}, window);
 
@@ -56,7 +50,7 @@ function finishTest() {
   is(eventCount.command, 0, "Correct number of command events received");
   is(eventCount.popupshowing, 1, "Correct number of popupshowing events received");
   is(eventCount.click, 2, "Correct number of click events received");
-  is(eventCount.focus, 1, "Correct number of focus events received");
+  is(eventCount.focus, 0, "Correct number of focus events received");
 
   SimpleTest.finish();
 }

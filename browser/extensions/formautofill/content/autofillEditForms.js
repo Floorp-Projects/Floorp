@@ -301,6 +301,7 @@ class EditCreditCard extends EditAutofillForm {
    * @param {object} addresses in an object with guid keys for the billing address picker.
    * @param {object} config
    * @param {function} config.isCCNumber Function to determine if a string is a valid CC number.
+   * @param {function} config.getSupportedNetworks Function to get the list of card networks
    */
   constructor(elements, record, addresses, config) {
     super(elements);
@@ -312,6 +313,7 @@ class EditCreditCard extends EditAutofillForm {
       invalidCardNumberStringElement: this._elements.form.querySelector("#invalidCardNumberString"),
       month: this._elements.form.querySelector("#cc-exp-month"),
       year: this._elements.form.querySelector("#cc-exp-year"),
+      ccType: this._elements.form.querySelector("#cc-type"),
       billingAddress: this._elements.form.querySelector("#billingAddressGUID"),
       billingAddressRow: this._elements.form.querySelector(".billingAddressRow"),
     });
@@ -326,6 +328,8 @@ class EditCreditCard extends EditAutofillForm {
     this._addresses = addresses;
     this.generateBillingAddressOptions();
     if (!preserveFieldValues) {
+      // Re-populating the networks will reset the selected option.
+      this.populateNetworks();
       // Re-generating the years will reset the selected option.
       this.generateYears();
       super.loadRecord(record);
@@ -361,6 +365,23 @@ class EditCreditCard extends EditAutofillForm {
     if (ccExpYear && ccExpYear > currentYear + count) {
       this._elements.year.appendChild(new Option(ccExpYear));
     }
+  }
+
+  populateNetworks() {
+    // Clear the list
+    this._elements.ccType.textContent = "";
+    let frag = document.createDocumentFragment();
+    // include an empty first option
+    frag.appendChild(new Option("", ""));
+
+    let supportedNetworks = this.getSupportedNetworks();
+    for (let id of supportedNetworks) {
+      let option = new Option();
+      option.value = id;
+      option.dataset.localization = "cardNetwork." + id;
+      frag.appendChild(option);
+    }
+    this._elements.ccType.appendChild(frag);
   }
 
   generateBillingAddressOptions() {

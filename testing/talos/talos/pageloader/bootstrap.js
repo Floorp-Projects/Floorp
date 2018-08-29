@@ -43,10 +43,6 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "categoryManager",
-                                   "@mozilla.org/categorymanager;1",
-                                   "nsICategoryManager");
-
 const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 const CATMAN_CONTRACTID         = "@mozilla.org/categorymanager;1";
@@ -67,12 +63,12 @@ PageLoaderCmdLine.prototype =
     Cm.registerFactory(this.classID, this.classDescription,
                        this.contractID, this.factory);
 
-    categoryManager.addCategoryEntry(CATEGORY_NAME, CATEGORY_ENTRY,
+    Services.catMan.addCategoryEntry(CATEGORY_NAME, CATEGORY_ENTRY,
                                      this.contractID, false, true);
   },
 
   unregister() {
-    categoryManager.deleteCategoryEntry(CATEGORY_NAME, CATEGORY_ENTRY,
+    Services.catMan.deleteCategoryEntry(CATEGORY_NAME, CATEGORY_ENTRY,
                                         this.contractID, false);
 
     Cm.unregisterFactory(this.classID, this.factory);

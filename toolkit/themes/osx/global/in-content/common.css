@@ -27,12 +27,12 @@ xul|groupbox > xul|*.groupbox-body {
   padding: 0;
 }
 
-xul|menulist:not([editable="true"]) > xul|menupopup > xul|menuitem[checked="true"]::before,
-xul|menulist:not([editable="true"]) > xul|menupopup > xul|menuitem[selected="true"]::before {
+xul|menulist > xul|menupopup > xul|menuitem[checked="true"]::before,
+xul|menulist > xul|menupopup > xul|menuitem[selected="true"]::before {
   display: none;
 }
 
-xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
+xul|*.menulist-dropmarker {
   display: -moz-box;
   margin-top: 1px;
   margin-bottom: 1px;

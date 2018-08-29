@@ -95,7 +95,7 @@ class LateWriteObserver final : public IOInterposeObserver
   using char_type = filesystem::Path::value_type;
 public:
   explicit LateWriteObserver(const char_type* aProfileDirectory)
-    : mProfileDirectory(NS_strdup(aProfileDirectory))
+    : mProfileDirectory(NS_xstrdup(aProfileDirectory))
   {
   }
   ~LateWriteObserver()

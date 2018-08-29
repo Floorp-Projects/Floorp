@@ -4192,7 +4192,7 @@ nsStyleContentData::nsStyleContentData(const nsStyleContentData& aOther)
       mContent.mAttr = new nsStyleContentAttr(*aOther.mContent.mAttr);
       break;
     case StyleContentType::String:
-      mContent.mString = NS_strdup(aOther.mContent.mString);
+      mContent.mString = NS_xstrdup(aOther.mContent.mString);
       break;
     default:
       MOZ_ASSERT(!aOther.mContent.mString);

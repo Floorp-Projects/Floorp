@@ -13,5 +13,8 @@
 // TODO: We only support the alternative name of US in MVP. We are going to support more countries in
 //       bug 1370193.
 var addressDataExt = {
-  "data/US": {"alternative_names": ["US", "United States of America", "United States", "America", "U.S.", "USA", "U.S.A.", "U.S.A"]},
+  "data/US": {
+    alternative_names: ["US", "United States of America", "United States", "America", "U.S.", "USA", "U.S.A.", "U.S.A"],
+    fmt: "%N%n%A%n%C%S%n%Z%O",
+  },
 };

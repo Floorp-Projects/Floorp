@@ -1165,8 +1165,6 @@ nsPluginHost::GetPluginTags(uint32_t* aPluginCount, nsIPluginTag*** aResults)
 
   *aResults = static_cast<nsIPluginTag**>
                          (moz_xmalloc((fakeCount + count) * sizeof(**aResults)));
-  if (!*aResults)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   *aPluginCount = count + fakeCount;
 
@@ -3643,8 +3641,7 @@ nsPluginHost::ParsePostBufferToFixHeaders(const char *inPostData, uint32_t inPos
     int cntSingleLF = singleLF.Length();
     newBufferLen += cntSingleLF;
 
-    if (!(*outPostData = p = (char*)moz_xmalloc(newBufferLen)))
-      return NS_ERROR_OUT_OF_MEMORY;
+    *outPostData = p = (char*)moz_xmalloc(newBufferLen);
 
     // deal with single LF
     const char *s = inPostData;
@@ -3672,8 +3669,7 @@ nsPluginHost::ParsePostBufferToFixHeaders(const char *inPostData, uint32_t inPos
     // to keep ContentLenHeader+value followed by data
     uint32_t l = sizeof(ContentLenHeader) + sizeof(CRLFCRLF) + 32;
     newBufferLen = dataLen + l;
-    if (!(*outPostData = p = (char*)moz_xmalloc(newBufferLen)))
-      return NS_ERROR_OUT_OF_MEMORY;
+    *outPostData = p = (char*)moz_xmalloc(newBufferLen);
     headersLen = snprintf(p, l,"%s: %u%s", ContentLenHeader, dataLen, CRLFCRLF);
     if (headersLen == l) { // if snprintf has ate all extra space consider this as an error
       free(p);
