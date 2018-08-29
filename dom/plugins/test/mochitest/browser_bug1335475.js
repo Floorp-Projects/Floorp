@@ -17,7 +17,7 @@ add_task(async function() {
     });
 
     let promise = BrowserTestUtils.browserLoaded(browser);
-    browser.loadURI(gTestRoot + "plugin_test.html");
+    BrowserTestUtils.loadURI(browser, gTestRoot + "plugin_test.html");
     await promise;
 
     await ContentTask.spawn(browser, null, async function() {
@@ -50,7 +50,7 @@ add_task(async function() {
     // be wrapped in jar:, but that shouldn't matter for this test
     promise = BrowserTestUtils.browserLoaded(browser);
     let converteduri = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry).convertChromeURL(Services.io.newURI(rootDir + "plugin_test.html"));
-    browser.loadURI(converteduri.spec);
+    BrowserTestUtils.loadURI(browser, converteduri.spec);
     await promise;
 
     await ContentTask.spawn(browser, null, async function() {
