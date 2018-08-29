@@ -558,6 +558,10 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     dt->SetTransform(oldTransform);
   }
 
+  if (!mImage->IsComplete()) {
+    result &= ImgDrawResult::INCOMPLETE;
+  }
+
   return result;
 }
 
@@ -657,7 +661,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
       break;
   }
 
-  return ImgDrawResult::SUCCESS;
+  return mImage->IsComplete() ? ImgDrawResult::SUCCESS : ImgDrawResult::INCOMPLETE;
 }
 
 already_AddRefed<gfxDrawable>
@@ -933,26 +937,41 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     SamplingFilter samplingFilter = nsLayoutUtils::GetSamplingFilterForFrame(mForFrame);
 
     if (!RequiresScaling(aFill, aHFill, aVFill, aUnitSize)) {
-      return nsLayoutUtils::DrawSingleImage(aRenderingContext,
-                                            aPresContext,
-                                            subImage,
-                                            samplingFilter,
-                                            aFill, aDirtyRect,
-                                            /* no SVGImageContext */ Nothing(),
-                                            drawFlags);
+      ImgDrawResult result =
+        nsLayoutUtils::DrawSingleImage(aRenderingContext,
+                                       aPresContext,
+                                       subImage,
+                                       samplingFilter,
+                                       aFill, aDirtyRect,
+                                       /* no SVGImageContext */ Nothing(),
+                                       drawFlags);
+
+      if (!mImage->IsComplete()) {
+        result &= ImgDrawResult::INCOMPLETE;
+      }
+
+      return result;
     }
 
     nsSize repeatSize;
     nsRect fillRect(aFill);
     nsRect tile = ComputeTile(fillRect, aHFill, aVFill, aUnitSize, repeatSize);
     CSSIntSize imageSize(srcRect.width, srcRect.height);
-    return nsLayoutUtils::DrawBackgroundImage(aRenderingContext,
-                                              mForFrame, aPresContext,
-                                              subImage, imageSize, samplingFilter,
-                                              tile, fillRect, repeatSize,
-                                              tile.TopLeft(), aDirtyRect,
-                                              drawFlags,
-                                              ExtendMode::CLAMP, 1.0);
+
+    ImgDrawResult result =
+      nsLayoutUtils::DrawBackgroundImage(aRenderingContext,
+                                         mForFrame, aPresContext,
+                                         subImage, imageSize, samplingFilter,
+                                         tile, fillRect, repeatSize,
+                                         tile.TopLeft(), aDirtyRect,
+                                         drawFlags,
+                                         ExtendMode::CLAMP, 1.0);
+
+      if (!mImage->IsComplete()) {
+        result &= ImgDrawResult::INCOMPLETE;
+      }
+
+      return result;
   }
 
   nsSize repeatSize(aFill.Size());
