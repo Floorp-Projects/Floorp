@@ -332,7 +332,7 @@ html #webconsole-notificationbox {
 
 .jsterm-input-node {
   box-sizing: border-box;
-  height: 100%;
+  min-height: 100%;
   color: var(--theme-content-color1);
   /* input icon */
   background-image: var(--theme-console-input-image);
