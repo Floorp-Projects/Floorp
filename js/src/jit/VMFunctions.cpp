@@ -397,7 +397,7 @@ ArrayPushDense(JSContext* cx, HandleArrayObject arr, HandleValue v, uint32_t* le
     // IonScript. JSJitFrameIter::ionScript works when the script is invalidated
     // so we use that instead.
     JSJitFrameIter frame(cx->activation()->asJit());
-    MOZ_ASSERT(frame.type() == JitFrame_Exit);
+    MOZ_ASSERT(frame.type() == FrameType::Exit);
     ++frame;
     IonScript* ionScript = frame.ionScript();
 
@@ -1299,7 +1299,7 @@ RecompileImpl(JSContext* cx, bool force)
     JitActivationIterator activations(cx);
     JSJitFrameIter frame(activations->asJit());
 
-    MOZ_ASSERT(frame.type() == JitFrame_Exit);
+    MOZ_ASSERT(frame.type() == FrameType::Exit);
     ++frame;
 
     RootedScript script(cx, frame.script());
