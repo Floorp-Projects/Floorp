@@ -1061,7 +1061,7 @@ EngineURL.prototype = {
 
     // Create an application/x-www-form-urlencoded representation of our params
     // (name=value&name=value&name=value)
-    var dataString = "";
+    let dataArray = [];
     for (var i = 0; i < this.params.length; ++i) {
       var param = this.params[i];
 
@@ -1071,8 +1071,9 @@ EngineURL.prototype = {
 
       var value = ParamSubstitution(param.value, aSearchTerms, aEngine);
 
-      dataString += (i > 0 ? "&" : "") + param.name + "=" + value;
+      dataArray.push(param.name + "=" + value);
     }
+    let dataString = dataArray.join("&");
 
     var postData = null;
     if (this.method == "GET") {
