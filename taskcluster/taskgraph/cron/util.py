@@ -7,7 +7,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import requests
 import subprocess
+
+PUSHLOG_TMPL = '{}/json-pushes?version=2&changeset={}&tipsonly=1&full=1'
 
 
 def match_utc(params, sched):
@@ -45,3 +48,20 @@ def calculate_head_rev(root):
     # GECKO_HEAD_REF, so all that remains is to see what the current revision is.
     # Mercurial refers to that as `.`.
     return subprocess.check_output(['hg', 'log', '-r', '.', '-T', '{node}'], cwd=root)
+
+
+def find_pushlog_info(repo, revision):
+    """Given a repo url and a revision, find the pushlog_id of the revision."""
+
+    pushlog_url = PUSHLOG_TMPL.format(repo, revision)
+    r = requests.get(pushlog_url)
+    r.raise_for_status()
+    pushes = r.json()['pushes']
+    if len(pushes) != 1:
+        raise RuntimeError(
+            "Unable to find a single pushlog_id for {} revision {}: {}".format(
+                repo, revision, pushes
+            )
+        )
+    pushid = pushes.keys()[0]
+    return {'pushdate': pushes[pushid]['date'], 'pushid': pushid}
