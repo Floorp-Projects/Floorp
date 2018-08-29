@@ -297,7 +297,12 @@ class nsWindow::GeckoViewSupport final
     , public SupportsWeakPtr<GeckoViewSupport>
 {
     nsWindow& window;
-    GeckoSession::Window::GlobalRef mGeckoViewWindow;
+
+    // We hold a WeakRef because we want to allow the
+    // GeckoSession.Window to be garbage collected.
+    // Callers need to create a LocalRef from this
+    // before calling methods.
+    GeckoSession::Window::WeakRef mGeckoViewWindow;
 
 public:
     typedef GeckoSession::Window::Natives<GeckoViewSupport> Base;
@@ -2128,10 +2133,11 @@ nsWindow::GetEventTimeStamp(int64_t aEventTime)
 void
 nsWindow::GeckoViewSupport::OnReady(jni::Object::Param aQueue)
 {
-    if (!mGeckoViewWindow) {
+    GeckoSession::Window::LocalRef window(mGeckoViewWindow);
+    if (!window) {
         return;
     }
-    mGeckoViewWindow->OnReady(aQueue);
+    window->OnReady(aQueue);
     mIsReady = true;
 }
 
