@@ -438,7 +438,8 @@ public:
                   bool aIsBackfaceVisible,
                   const wr::LayoutSideOffsets& aWidths,
                   const Range<const wr::BorderSide>& aSides,
-                  const wr::BorderRadius& aRadius);
+                  const wr::BorderRadius& aRadius,
+                  wr::AntialiasBorder = wr::AntialiasBorder::Yes);
 
   void PushBorderImage(const wr::LayoutRect& aBounds,
                        const wr::LayoutRect& aClip,

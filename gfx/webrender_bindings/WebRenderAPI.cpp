@@ -1188,14 +1188,16 @@ DisplayListBuilder::PushBorder(const wr::LayoutRect& aBounds,
                                bool aIsBackfaceVisible,
                                const wr::LayoutSideOffsets& aWidths,
                                const Range<const wr::BorderSide>& aSides,
-                               const wr::BorderRadius& aRadius)
+                               const wr::BorderRadius& aRadius,
+                               wr::AntialiasBorder aAntialias)
 {
   MOZ_ASSERT(aSides.length() == 4);
   if (aSides.length() != 4) {
     return;
   }
   wr_dp_push_border(mWrState, aBounds, MergeClipLeaf(aClip), aIsBackfaceVisible,
-                    aWidths, aSides[0], aSides[1], aSides[2], aSides[3], aRadius);
+                    aAntialias, aWidths, aSides[0], aSides[1], aSides[2],
+                    aSides[3], aRadius);
 }
 
 void
