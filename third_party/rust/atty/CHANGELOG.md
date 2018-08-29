@@ -1,3 +1,39 @@
+# 0.2.11
+
+* fix msys detection with `winapi@0.3.5` [#28](https://github.com/softprops/atty/pull/28)
+
+# 0.2.10
+
+* fix wasm regression [#27](https://github.com/softprops/atty/pull/27)
+
+# 0.2.9
+
+* Fix fix pty detection [#25](https://github.com/softprops/atty/pull/25)
+
+# 0.2.8
+
+* Fix an inverted condition on MinGW [#22](https://github.com/softprops/atty/pull/22)
+
+# 0.2.7
+
+* Change `||` to `&&` for whether MSYS is a tty [#24](https://github.com/softprops/atty/pull/24/)
+
+# 0.2.6
+
+* updated winapi dependency to [0.3](https://retep998.github.io/blog/winapi-0.3/) [#18](https://github.com/softprops/atty/pull/18)
+
+# 0.2.5
+
+* added support for Wasm compile targets [#17](https://github.com/softprops/atty/pull/17)
+
+# 0.2.4
+
+* added support for Wasm compile targets [#17](https://github.com/softprops/atty/pull/17)
+
+# 0.2.3
+
+* added support for Redox OS [#14](https://github.com/softprops/atty/pull/14)
+
 # 0.2.2
 
 * use target specific dependencies [#11](https://github.com/softprops/atty/pull/11)
