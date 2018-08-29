@@ -57,6 +57,40 @@ fn bench_naive_no_match<S>(b: &mut Bencher, needles: Vec<S>, haystack: &str)
     b.iter(|| assert!(!naive_find(&needles, haystack)));
 }
 
+#[bench]
+fn bench_construction(b: &mut Bencher) {
+    b.iter(|| {
+        AcAutomaton::new(test::black_box(
+            [
+                "ADL", "ADl", "AdL", "Adl", "BAK", "BAk", "BAK", "BaK", "Bak", "BaK", "HOL",
+                "HOl", "HoL", "Hol", "IRE", "IRe", "IrE", "Ire", "JOH", "JOh", "JoH", "Joh", "SHE",
+                "SHe", "ShE", "She", "WAT", "WAt", "WaT", "Wat", "aDL", "aDl", "adL", "adl", "bAK",
+                "bAk", "bAK", "baK", "bak", "baK", "hOL", "hOl", "hoL", "hol", "iRE", "iRe",
+                "irE", "ire", "jOH", "jOh", "joH", "joh", "sHE", "sHe", "shE", "she", "wAT", "wAt",
+                "waT", "wat", "ſHE", "ſHe", "ſhE", "ſhe",
+            ].iter()
+                .map(|x| *x),
+        ))
+    })
+}
+
+#[bench]
+fn bench_full_construction(b: &mut Bencher) {
+    b.iter(|| {
+        AcAutomaton::new(test::black_box(
+            [
+                "ADL", "ADl", "AdL", "Adl", "BAK", "BAk", "BAK", "BaK", "Bak", "BaK", "HOL",
+                "HOl", "HoL", "Hol", "IRE", "IRe", "IrE", "Ire", "JOH", "JOh", "JoH", "Joh", "SHE",
+                "SHe", "ShE", "She", "WAT", "WAt", "WaT", "Wat", "aDL", "aDl", "adL", "adl", "bAK",
+                "bAk", "bAK", "baK", "bak", "baK", "hOL", "hOl", "hoL", "hol", "iRE", "iRe",
+                "irE", "ire", "jOH", "jOh", "joH", "joh", "sHE", "sHe", "shE", "she", "wAT", "wAt",
+                "waT", "wat", "ſHE", "ſHe", "ſhE", "ſhe",
+            ].iter()
+                .map(|x| *x),
+        )).into_full()
+    })
+}
+
 fn haystack_same(letter: char) -> String {
     iter::repeat(letter).take(10000).collect()
 }
