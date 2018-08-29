@@ -42,13 +42,13 @@ class App extends PureComponent {
   }
 
   render() {
-    const { dispatch, selectedPage } = this.props;
+    const { dispatch, networkLocations, selectedPage } = this.props;
 
     return dom.div(
       {
         className: "app",
       },
-      Sidebar({ dispatch, selectedPage }),
+      Sidebar({ dispatch, networkLocations, selectedPage }),
       this.getSelectedPageComponent(),
     );
   }

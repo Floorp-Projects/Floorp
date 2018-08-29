@@ -1,7 +1,6 @@
 #ifndef mozilla_jni_Types_h__
 #define mozilla_jni_Types_h__
 
-#include <android/ndk-version.h>
 #include <jni.h>
 
 #include "mozilla/jni/Refs.h"
@@ -54,16 +53,20 @@ template<class Cls> struct TypeAdapter<LocalRef<Cls>> {
 #define MOZ_JNICALL_ABI
 #endif
 
-#if __NDK_MAJOR__ >= 18
-#define JVALUE_PTR const jvalue*
-#else
-#define JVALUE_PTR jvalue*
-#endif
+// NDK r18 made jvalue* method parameters const. We detect the change directly
+// instead of using ndk-version.h in order to remain compatible with r15 for
+// now, which doesn't include those headers.
+class CallArgs {
+    static const jvalue* test(void (JNIEnv::*)(jobject, jmethodID, const jvalue*));
+    static jvalue* test(void (JNIEnv::*)(jobject, jmethodID, jvalue*));
+public:
+    using JValueType = decltype(test(&JNIEnv::CallVoidMethodA));
+};
 
 template<class Cls> constexpr jobject
-    (JNIEnv::*TypeAdapter<LocalRef<Cls>>::Call)(jobject, jmethodID, JVALUE_PTR) MOZ_JNICALL_ABI;
+    (JNIEnv::*TypeAdapter<LocalRef<Cls>>::Call)(jobject, jmethodID, CallArgs::JValueType) MOZ_JNICALL_ABI;
 template<class Cls> constexpr jobject
-    (JNIEnv::*TypeAdapter<LocalRef<Cls>>::StaticCall)(jclass, jmethodID, JVALUE_PTR) MOZ_JNICALL_ABI;
+    (JNIEnv::*TypeAdapter<LocalRef<Cls>>::StaticCall)(jclass, jmethodID, CallArgs::JValueType) MOZ_JNICALL_ABI;
 template<class Cls> constexpr jobject
     (JNIEnv::*TypeAdapter<LocalRef<Cls>>::Get)(jobject, jfieldID);
 template<class Cls> constexpr jobject

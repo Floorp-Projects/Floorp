@@ -213,7 +213,6 @@ NrIceMediaStream::NrIceMediaStream(NrIceCtx *ctx,
       name_(name),
       components_(components),
       stream_(nullptr),
-      level_(0),
       has_parsed_attrs_(false)
 {
 }
@@ -264,12 +263,15 @@ nsresult NrIceMediaStream::ParseTrickleCandidate(const std::string& candidate) {
                                               );
   if (r) {
     if (r == R_ALREADY) {
-      MOZ_MTLOG(ML_ERROR, "Trickle candidates are redundant for stream '"
-                << name_ << "' because it is completed");
-
+      MOZ_MTLOG(ML_INFO, "Trickle candidate is redundant for stream '"
+                << name_ << "' because it is completed: " << candidate);
+    } else if (r == R_REJECTED) {
+      MOZ_MTLOG(ML_INFO, "Trickle candidate is ignored for stream '"
+                << name_ << "', probably because it is for an unused component"
+                << ": " << candidate);
     } else {
       MOZ_MTLOG(ML_ERROR, "Couldn't parse trickle candidate for stream '"
-                << name_ << "'");
+                << name_ << "': " << candidate);
       return NS_ERROR_FAILURE;
     }
   }
@@ -442,8 +444,13 @@ nsresult NrIceMediaStream::GetDefaultCandidate(
 
   int r = nr_ice_media_stream_get_default_candidate(stream_, component, &cand);
   if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't get default ICE candidate for '"
-              << name_ << "'");
+    if (r == R_NOT_FOUND) {
+      MOZ_MTLOG(ML_INFO, "Couldn't get default ICE candidate for '"
+                << name_ << "', no candidates.");
+    } else {
+      MOZ_MTLOG(ML_ERROR, "Couldn't get default ICE candidate for '"
+                << name_ << "', " << r);
+    }
     return NS_ERROR_FAILURE;
   }
 

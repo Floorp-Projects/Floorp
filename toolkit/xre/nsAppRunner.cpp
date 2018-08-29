@@ -1862,6 +1862,9 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   }
 
   SaveToEnv("MOZ_LAUNCHED_CHILD=1");
+#if defined(MOZ_LAUNCHER_PROCESS)
+  SaveToEnv("MOZ_LAUNCHER_PROCESS=1");
+#endif // defined(MOZ_LAUNCHER_PROCESS)
 
 #if !defined(MOZ_WIDGET_ANDROID) // Android has separate restart code.
 #if defined(XP_MACOSX)
