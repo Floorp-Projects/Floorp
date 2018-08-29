@@ -4425,6 +4425,7 @@ nsGlobalWindowInner::ResetVRTelemetry(bool aUpdate)
   }
 }
 
+#ifndef XP_WIN // This guard should match the guard at the callsite.
 static bool ShouldShowFocusRingIfFocusedByMouse(nsIContent* aNode)
 {
   if (!aNode) {
@@ -4433,6 +4434,7 @@ static bool ShouldShowFocusRingIfFocusedByMouse(nsIContent* aNode)
   return !nsContentUtils::ContentIsLink(aNode) &&
     !aNode->IsAnyOfHTMLElements(nsGkAtoms::video, nsGkAtoms::audio);
 }
+#endif
 
 void
 nsGlobalWindowInner::SetFocusedElement(Element* aElement,
