@@ -4095,34 +4095,41 @@ window._gBrowser = {
       return;
     }
 
-    let stringWithShortcut = (stringId, keyElemId) => {
+    let stringWithShortcut = (stringId, keyElemId, pluralCount) => {
       let keyElem = document.getElementById(keyElemId);
       let shortcut = ShortcutUtils.prettifyShortcut(keyElem);
-      return gTabBrowserBundle.formatStringFromName(stringId, [shortcut], 1);
+      return PluralForm.get(pluralCount, gTabBrowserBundle.GetStringFromName(stringId))
+                       .replace("%S", shortcut)
+                       .replace("#1", pluralCount);
     };
 
-    var label;
+    let label;
+    const selectedTabs = this.selectedTabs;
+    const contextTabInSelection = selectedTabs.includes(tab);
+    const affectedTabsLength = contextTabInSelection ? selectedTabs.length : 1;
     if (tab.mOverCloseButton) {
       label = tab.selected ?
-        stringWithShortcut("tabs.closeSelectedTab.tooltip", "key_close") :
-        gTabBrowserBundle.GetStringFromName("tabs.closeTab.tooltip");
+        stringWithShortcut("tabs.closeSelectedTabs.tooltip", "key_close", affectedTabsLength) :
+        PluralForm.get(affectedTabsLength, gTabBrowserBundle.GetStringFromName("tabs.closeTabs.tooltip"))
+                  .replace("#1", affectedTabsLength);
     } else if (tab._overPlayingIcon) {
       let stringID;
       if (tab.selected) {
         stringID = tab.linkedBrowser.audioMuted ?
-          "tabs.unmuteAudio.tooltip" :
-          "tabs.muteAudio.tooltip";
-        label = stringWithShortcut(stringID, "key_toggleMute");
+          "tabs.unmuteAudio2.tooltip" :
+          "tabs.muteAudio2.tooltip";
+        label = stringWithShortcut(stringID, "key_toggleMute", affectedTabsLength);
       } else {
         if (tab.hasAttribute("activemedia-blocked")) {
-          stringID = "tabs.unblockAudio.tooltip";
+          stringID = "tabs.unblockAudio2.tooltip";
         } else {
           stringID = tab.linkedBrowser.audioMuted ?
-            "tabs.unmuteAudio.background.tooltip" :
-            "tabs.muteAudio.background.tooltip";
+            "tabs.unmuteAudio2.background.tooltip" :
+            "tabs.muteAudio2.background.tooltip";
         }
 
-        label = gTabBrowserBundle.GetStringFromName(stringID);
+        label = PluralForm.get(affectedTabsLength, gTabBrowserBundle.GetStringFromName(stringID))
+                          .replace("#1", affectedTabsLength);
       }
     } else {
       label = tab._fullLabel || tab.getAttribute("label");
