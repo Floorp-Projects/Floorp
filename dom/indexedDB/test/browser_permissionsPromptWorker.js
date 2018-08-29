@@ -26,7 +26,7 @@ add_task(async function test1() {
   info("creating tab");
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   info("loading test page: " + testWorkerURL);
-  gBrowser.selectedBrowser.loadURI(testWorkerURL);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testWorkerURL);
 
   await waitForMessage("ok", gBrowser);
   is(getPermission(testWorkerURL, "indexedDB"),
@@ -54,7 +54,7 @@ add_task(async function test2() {
 
 
   info("loading test page: " + testSharedWorkerURL);
-  gBrowser.selectedBrowser.loadURI(testSharedWorkerURL);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testSharedWorkerURL);
   await waitForMessage("InvalidStateError", gBrowser);
   is(getPermission(testSharedWorkerURL, "indexedDB"),
      Ci.nsIPermissionManager.UNKNOWN_ACTION,
