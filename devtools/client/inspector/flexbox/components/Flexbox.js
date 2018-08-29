@@ -18,6 +18,9 @@ loader.lazyGetter(this, "FlexContainerProperties", function() {
 loader.lazyGetter(this, "FlexItemList", function() {
   return createFactory(require("./FlexItemList"));
 });
+loader.lazyGetter(this, "FlexItemSizingProperties", function() {
+  return createFactory(require("./FlexItemSizingProperties"));
+});
 
 const Types = require("../types");
 
@@ -30,11 +33,38 @@ class Flexbox extends PureComponent {
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
+      onToggleFlexItemShown: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
   renderFlexItemList() {
+    const {
+      flexbox,
+      onToggleFlexItemShown,
+    } = this.props;
+    const {
+      flexItems,
+      highlighted,
+    } = flexbox;
+
+    if (!highlighted || !flexItems.length) {
+      return null;
+    }
+
+    const selectedFlexItem = flexItems.find(item => item.shown);
+
+    if (selectedFlexItem) {
+      return null;
+    }
+
+    return FlexItemList({
+      flexItems,
+      onToggleFlexItemShown,
+    });
+  }
+
+  renderFlexItemSizingProperties() {
     const { flexbox } = this.props;
     const {
       flexItems,
@@ -45,8 +75,15 @@ class Flexbox extends PureComponent {
       return null;
     }
 
-    return FlexItemList({
-      flexItems,
+    const selectedFlexItem = flexItems.find(item => item.shown);
+
+    if (!selectedFlexItem) {
+      return null;
+    }
+
+    return FlexItemSizingProperties({
+      flexDirection: flexbox.properties["flex-direction"],
+      flexItem: selectedFlexItem,
     });
   }
 
@@ -81,6 +118,7 @@ class Flexbox extends PureComponent {
           setSelectedNode,
         }),
         this.renderFlexItemList(),
+        this.renderFlexItemSizingProperties(),
         FlexContainerProperties({
           properties: flexbox.properties,
         })
