@@ -13,7 +13,7 @@ async function allow_play_for_played_video() {
   info("- open new tab  -");
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
-  tab.linkedBrowser.loadURI(VIDEO_PAGE);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, VIDEO_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- simulate user-click to start video -");
