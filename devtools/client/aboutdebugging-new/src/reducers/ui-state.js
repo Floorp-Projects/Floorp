@@ -7,13 +7,12 @@
 const {
   NETWORK_LOCATIONS_UPDATED,
   PAGE_SELECTED,
-  PAGES,
 } = require("../constants");
 
 function UiState(locations = []) {
   return {
     networkLocations: locations,
-    selectedPage: PAGES.THIS_FIREFOX,
+    selectedPage: null,
   };
 }
 
