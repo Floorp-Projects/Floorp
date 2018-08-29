@@ -17,5 +17,8 @@ self.addEventListener('backgroundfetchsuccess', event => {
   event.waitUntil(
     event.registration.matchAll()
       .then(records => Promise.all(records.map(record => getFetchResult(record))))
-      .then(results => sendMessageToDocument({ type: event.type, results })));
+      .then(results => {
+        const registrationCopy = cloneRegistration(event.registration);
+        sendMessageToDocument({ type: event.type, eventRegistration: registrationCopy, results })
+      }));
 });
