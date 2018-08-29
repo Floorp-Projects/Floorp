@@ -9,6 +9,8 @@ from collections import defaultdict
 
 import mozpack.path as mozpath
 
+from ..util.string import pluralize
+
 
 class SummaryFormatter(object):
 
@@ -16,20 +18,26 @@ class SummaryFormatter(object):
         self.depth = depth or int(os.environ.get('MOZLINT_SUMMARY_DEPTH', 1))
 
     def __call__(self, result):
-        commonprefix = mozpath.commonprefix([mozpath.abspath(p) for p in result.issues])
+        paths = set(result.issues.keys() + result.suppressed_warnings.keys())
+
+        commonprefix = mozpath.commonprefix([mozpath.abspath(p) for p in paths])
         commonprefix = commonprefix.rsplit('/', 1)[0] + '/'
 
-        summary = defaultdict(int)
-        for path, errors in result.issues.iteritems():
-            path = mozpath.abspath(path)
-            assert path.startswith(commonprefix)
+        summary = defaultdict(lambda: [0, 0])
+        for path in paths:
+            abspath = mozpath.abspath(path)
+            assert abspath.startswith(commonprefix)
 
-            if path == commonprefix:
-                summary[path] += len(errors)
-                continue
+            if abspath != commonprefix:
+                parts = mozpath.split(mozpath.relpath(abspath, commonprefix))[:self.depth]
+                abspath = mozpath.join(commonprefix, *parts)
 
-            parts = mozpath.split(mozpath.relpath(path, commonprefix))[:self.depth]
-            path = mozpath.join(commonprefix, *parts)
-            summary[path] += len(errors)
+            summary[abspath][0] += len([r for r in result.issues[path] if r.level == 'error'])
+            summary[abspath][1] += len([r for r in result.issues[path] if r.level == 'warning'])
+            summary[abspath][1] += result.suppressed_warnings[path]
 
-        return '\n'.join(['{}: {}'.format(k, summary[k]) for k in sorted(summary)])
+        msg = []
+        for path, (errors, warnings) in sorted(summary.items()):
+            warning_str = ", {}".format(pluralize('warning', warnings)) if warnings else ''
+            msg.append('{}: {}{}'.format(path, pluralize('error', errors), warning_str))
+        return '\n'.join(msg)

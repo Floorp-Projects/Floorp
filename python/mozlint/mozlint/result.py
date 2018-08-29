@@ -18,6 +18,7 @@ class ResultSummary(object):
         self.issues = defaultdict(list)
         self.failed_run = set()
         self.failed_setup = set()
+        self.suppressed_warnings = defaultdict(int)
 
     @property
     def returncode(self):
@@ -29,6 +30,14 @@ class ResultSummary(object):
     def failed(self):
         return self.failed_setup | self.failed_run
 
+    @property
+    def total_issues(self):
+        return sum([len(v) for v in self.issues.values()])
+
+    @property
+    def total_suppressed_warnings(self):
+        return sum(self.suppressed_warnings.values())
+
     def update(self, other):
         """Merge results from another ResultSummary into this one."""
         for path, obj in other.issues.items():
@@ -36,6 +45,8 @@ class ResultSummary(object):
 
         self.failed_run |= other.failed_run
         self.failed_setup |= other.failed_setup
+        for k, v in other.suppressed_warnings.items():
+            self.suppressed_warnings[k] += v
 
 
 class Issue(object):
