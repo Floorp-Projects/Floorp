@@ -41,9 +41,13 @@ loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scrat
 exports.menuitems = [
   { id: "menu_devToolbox",
     l10nKey: "devToolboxMenuItem",
-    oncommand(event) {
-      const window = event.target.ownerDocument.defaultView;
-      gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, Cu.now());
+    async oncommand(event) {
+      try {
+        const window = event.target.ownerDocument.defaultView;
+        await gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, Cu.now());
+      } catch (e) {
+        console.error(`Exception while opening the toolbox: ${e}\n${e.stack}`);
+      }
     },
     keyId: "toggleToolbox",
     checkbox: true
