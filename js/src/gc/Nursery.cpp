@@ -32,6 +32,7 @@
 #include "vm/TypeInference.h"
 
 #include "gc/Marking-inl.h"
+#include "gc/Zone-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
