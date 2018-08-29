@@ -1,0 +1,58 @@
+diff --git a/gfx/ycbcr/yuv_convert.cpp b/gfx/ycbcr/yuv_convert.cpp
+--- a/gfx/ycbcr/yuv_convert.cpp
++++ b/gfx/ycbcr/yuv_convert.cpp
+@@ -26,16 +26,32 @@ namespace mozilla {
+ 
+ namespace gfx {
+  
+ // 16.16 fixed point arithmetic
+ const int kFractionBits = 16;
+ const int kFractionMax = 1 << kFractionBits;
+ const int kFractionMask = ((1 << kFractionBits) - 1);
+ 
++YUVType TypeFromSize(int ywidth, 
++                     int yheight, 
++                     int cbcrwidth, 
++                     int cbcrheight)
++{
++  if (ywidth == cbcrwidth && yheight == cbcrheight) {
++    return YV24;
++  }
++  else if (ywidth / 2 == cbcrwidth && yheight == cbcrheight) {
++    return YV16;
++  }
++  else {
++    return YV12;
++  }
++}
++
+ // Convert a frame of YUV to 32 bit ARGB.
+ void ConvertYCbCrToRGB32(const uint8* y_buf,
+                          const uint8* u_buf,
+                          const uint8* v_buf,
+                          uint8* rgb_buf,
+                          int pic_x,
+                          int pic_y,
+                          int pic_width,
+diff --git a/gfx/ycbcr/yuv_convert.h b/gfx/ycbcr/yuv_convert.h
+--- a/gfx/ycbcr/yuv_convert.h
++++ b/gfx/ycbcr/yuv_convert.h
+@@ -36,16 +36,18 @@ enum Rotate {
+ // Filter affects how scaling looks.
+ enum ScaleFilter {
+   FILTER_NONE = 0,        // No filter (point sampled).
+   FILTER_BILINEAR_H = 1,  // Bilinear horizontal filter.
+   FILTER_BILINEAR_V = 2,  // Bilinear vertical filter.
+   FILTER_BILINEAR = 3     // Bilinear filter.
+ };
+ 
++YUVType TypeFromSize(int ywidth, int yheight, int cbcrwidth, int cbcrheight);
++
+ // Convert a frame of YUV to 32 bit ARGB.
+ // Pass in YV16/YV12 depending on source format
+ void ConvertYCbCrToRGB32(const uint8* yplane,
+                          const uint8* uplane,
+                          const uint8* vplane,
+                          uint8* rgbframe,
+                          int pic_x,
+                          int pic_y,
