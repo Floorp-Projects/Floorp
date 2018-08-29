@@ -11764,8 +11764,6 @@ nsIDocument::MaybeActiveMediaComponents()
 /* virtual */ void
 nsIDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aSizes) const
 {
-  nsINode::AddSizeOfExcludingThis(aSizes, &aSizes.mDOMOtherSize);
-
   if (mPresShell) {
     mPresShell->AddSizeOfIncludingThis(aSizes);
   }
@@ -11801,21 +11799,6 @@ nsIDocument::DocAddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const
   DocAddSizeOfExcludingThis(aWindowSizes);
 }
 
-static size_t
-SizeOfOwnedSheetArrayExcludingThis(const nsTArray<RefPtr<StyleSheet>>& aSheets,
-                                   MallocSizeOf aMallocSizeOf)
-{
-  size_t n = 0;
-  n += aSheets.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (StyleSheet* sheet : aSheets) {
-    if (!sheet->GetAssociatedDocumentOrShadowRoot()) {
-      // Avoid over-reporting shared sheets.
-      continue;
-    }
-    n += sheet->SizeOfIncludingThis(aMallocSizeOf);
-  }
-  return n;
-}
 
 void
 nsDocument::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
@@ -11828,15 +11811,15 @@ nsDocument::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
   MOZ_CRASH();
 }
 
-static void
-AddSizeOfNodeTree(nsIContent* aNode, nsWindowSizes& aWindowSizes)
+/* static */ void
+nsIDocument::AddSizeOfNodeTree(nsINode& aNode, nsWindowSizes& aWindowSizes)
 {
   size_t nodeSize = 0;
-  aNode->AddSizeOfIncludingThis(aWindowSizes, &nodeSize);
+  aNode.AddSizeOfIncludingThis(aWindowSizes, &nodeSize);
 
   // This is where we transfer the nodeSize obtained from
   // nsINode::AddSizeOfIncludingThis() to a value in nsWindowSizes.
-  switch (aNode->NodeType()) {
+  switch (aNode.NodeType()) {
   case nsINode::ELEMENT_NODE:
     aWindowSizes.mDOMElementNodesSize += nodeSize;
     break;
@@ -11854,30 +11837,50 @@ AddSizeOfNodeTree(nsIContent* aNode, nsWindowSizes& aWindowSizes)
     break;
   }
 
-  if (EventListenerManager* elm = aNode->GetExistingListenerManager()) {
+  if (EventListenerManager* elm = aNode.GetExistingListenerManager()) {
     aWindowSizes.mDOMEventListenersCount += elm->ListenerCount();
   }
 
-  AllChildrenIterator iter(aNode, nsIContent::eAllChildren);
-  for (nsIContent* n = iter.GetNextChild(); n; n = iter.GetNextChild()) {
-    AddSizeOfNodeTree(n, aWindowSizes);
+  if (aNode.IsContent()) {
+    nsTArray<nsIContent*> anonKids;
+    nsContentUtils::AppendNativeAnonymousChildren(aNode.AsContent(),
+                                                  anonKids,
+                                                  nsIContent::eAllChildren);
+    for (nsIContent* anonKid : anonKids) {
+      AddSizeOfNodeTree(*anonKid, aWindowSizes);
+    }
+
+    if (auto* element = Element::FromNode(aNode)) {
+      if (ShadowRoot* shadow = element->GetShadowRoot()) {
+        AddSizeOfNodeTree(*shadow, aWindowSizes);
+      }
+
+      for (nsXBLBinding* binding = element->GetXBLBinding();
+           binding;
+           binding = binding->GetBaseBinding()) {
+        if (nsIContent* anonContent = binding->GetAnonymousContent()) {
+          AddSizeOfNodeTree(*anonContent, aWindowSizes);
+        }
+      }
+    }
+  }
+
+  // NOTE(emilio): If you feel smart and want to change this function to use
+  // GetNextNode(), think twice, since you'd need to handle <xbl:content> in a
+  // sane way, and kids of <content> won't point to the parent, so we'd never
+  // find the root node where we should stop at.
+  for (nsIContent* kid = aNode.GetFirstChild(); kid; kid = kid->GetNextSibling()) {
+    AddSizeOfNodeTree(*kid, aWindowSizes);
   }
 }
 
 void
 nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
 {
-  // We use AllChildrenIterator to iterate over DOM nodes in
-  // AddSizeOfNodeTree(). The obvious place to start is at the document's root
-  // element, using GetRootElement(). However, that will miss comment nodes
-  // that are siblings of the root element. Instead we use
-  // GetFirstChild()/GetNextSibling() to traverse the document's immediate
-  // child nodes, calling AddSizeOfNodeTree() on each to measure them and then
-  // all their descendants. (The comment nodes won't have any descendants).
-  for (nsIContent* node = nsINode::GetFirstChild();
-       node;
-       node = node->GetNextSibling()) {
-    AddSizeOfNodeTree(node, aWindowSizes);
+  nsINode::AddSizeOfExcludingThis(aWindowSizes, &aWindowSizes.mDOMOtherSize);
+
+  for (nsIContent* kid = GetFirstChild(); kid; kid = kid->GetNextSibling()) {
+    AddSizeOfNodeTree(*kid, aWindowSizes);
   }
 
   // IMPORTANT: for our ComputedValues measurements, we want to measure
@@ -11889,13 +11892,9 @@ nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
   // PresShell, which contains the frame tree.
   nsIDocument::DocAddSizeOfExcludingThis(aWindowSizes);
 
-  aWindowSizes.mLayoutStyleSheetsSize +=
-    SizeOfOwnedSheetArrayExcludingThis(mStyleSheets,
-                                       aWindowSizes.mState.mMallocSizeOf);
+  DocumentOrShadowRoot::AddSizeOfExcludingThis(aWindowSizes);
   for (auto& sheetArray : mAdditionalSheets) {
-    aWindowSizes.mLayoutStyleSheetsSize +=
-      SizeOfOwnedSheetArrayExcludingThis(sheetArray,
-                                         aWindowSizes.mState.mMallocSizeOf);
+    AddSizeOfOwnedSheetArrayExcludingThis(aWindowSizes, sheetArray);
   }
   // Lumping in the loader with the style-sheets size is not ideal,
   // but most of the things in there are in fact stylesheets, so it
