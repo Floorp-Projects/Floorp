@@ -650,8 +650,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
     return NS_OK;
   }
 
-  nsCOMPtr<nsISHTransaction> txn(new nsSHTransaction());
-
+  nsCOMPtr<nsISHTransaction> txn = new nsSHTransaction();
   nsCOMPtr<nsIURI> uri;
   aSHEntry->GetURI(getter_AddRefs(uri));
   NOTIFY_LISTENERS(OnHistoryNewEntry, (uri, currentIndex));
@@ -1180,22 +1179,6 @@ nsSHistory::ReloadCurrentEntry()
   }
 
   return LoadEntry(mIndex, LOAD_HISTORY, HIST_CMD_RELOAD);
-}
-
-NS_IMETHODIMP
-nsSHistory::RestoreToEntryAtIndex(int32_t aIndex)
-{
-  mRequestedIndex = aIndex;
-
-  nsCOMPtr<nsISHEntry> nextEntry;
-  GetEntryAtIndex(mRequestedIndex, false, getter_AddRefs(nextEntry));
-  if (!nextEntry) {
-    mRequestedIndex = -1;
-    return NS_ERROR_FAILURE;
-  }
-
-  // XXX We may want to ensure docshell is currently holding about:blank
-  return InitiateLoad(nextEntry, mRootDocShell, LOAD_HISTORY);
 }
 
 void

@@ -84,6 +84,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       }, record, addresses, {
         isCCNumber: PaymentDialogUtils.isCCNumber,
         getAddressLabel: PaymentDialogUtils.getAddressLabel,
+        getSupportedNetworks: PaymentDialogUtils.getCreditCardNetworks,
       });
 
       // The EditCreditCard constructor adds `input` event listeners on the same element,
@@ -312,11 +313,11 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
   }
 
   updateRequiredState() {
-    for (let formElement of this.form.elements) {
-      let container = formElement.closest("label") || formElement.closest("div");
-      let span = container.querySelector("span");
+    for (let field of this.form.elements) {
+      let container = field.closest(".container");
+      let span = container.querySelector(".label-text");
       span.setAttribute("fieldRequiredSymbol", this.dataset.fieldRequiredSymbol);
-      let required = formElement.required && !formElement.disabled;
+      let required = field.required && !field.disabled;
       if (required) {
         container.setAttribute("required", "true");
       } else {

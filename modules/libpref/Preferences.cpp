@@ -2943,14 +2943,8 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
       // back to us because if they do we are going to add mPrefRoot again.
       const nsCString& element = prefArray[dwIndex];
       outArray[dwIndex] =
-        (char*)nsMemory::Clone(element.get() + mPrefRoot.Length(),
-                               element.Length() - mPrefRoot.Length() + 1);
-
-      if (!outArray[dwIndex]) {
-        // We ran out of memory... this is annoying.
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(dwIndex, outArray);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+        (char*) moz_xmemdup(element.get() + mPrefRoot.Length(),
+                            element.Length() - mPrefRoot.Length() + 1);
     }
     *aChildArray = outArray;
   }

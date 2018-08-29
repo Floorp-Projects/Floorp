@@ -1701,15 +1701,13 @@ SpecialPowersAPI.prototype = {
   },
 
   addCategoryEntry(category, entry, value, persists, replace) {
-    Cc["@mozilla.org/categorymanager;1"].
-      getService(Ci.nsICategoryManager).
-      addCategoryEntry(category, entry, value, persists, replace);
+    Services.catMan
+      .addCategoryEntry(category, entry, value, persists, replace);
   },
 
   deleteCategoryEntry(category, entry, persists) {
-    Cc["@mozilla.org/categorymanager;1"].
-      getService(Ci.nsICategoryManager).
-      deleteCategoryEntry(category, entry, persists);
+    Services.catMan
+      .deleteCategoryEntry(category, entry, persists);
   },
   openDialog(win, args) {
     return win.openDialog.apply(win, args);

@@ -21,6 +21,7 @@
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
 #include "jit/IonCode.h"
+#include "js/CompileOptions.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
 #include "vm/BytecodeUtil.h"
@@ -544,7 +545,7 @@ class ScriptSource
             js_delete(this);
     }
     MOZ_MUST_USE bool initFromOptions(JSContext* cx,
-                                      const ReadOnlyCompileOptions& options,
+                                      const JS::ReadOnlyCompileOptions& options,
                                       const mozilla::Maybe<uint32_t>& parameterListEnd = mozilla::Nothing());
     MOZ_MUST_USE bool setSourceCopy(JSContext* cx, JS::SourceBufferHolder& srcBuf);
     void setSourceRetrievable() { sourceRetrievable_ = true; }
@@ -731,7 +732,7 @@ class ScriptSourceObject : public NativeObject
     // Initialize those properties of this ScriptSourceObject whose values
     // are provided by |options|, re-wrapping as necessary.
     static bool initFromOptions(JSContext* cx, HandleScriptSourceObject source,
-                                const ReadOnlyCompileOptions& options);
+                                const JS::ReadOnlyCompileOptions& options);
 
     static bool initElementProperties(JSContext* cx, HandleScriptSourceObject source,
                                       HandleObject element, HandleString elementAttrName);

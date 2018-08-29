@@ -4,28 +4,5 @@ http://code.google.com/chromium/
 
 The code comes from svn revision 63840 on 2010-10-26.
 
-If you just want to check out this individual directory, use:
-
-svn co -r 63840 http://src.chromium.org/svn/trunk/src/media/base
-
-The code was copied from a Chromium svn checkout using the 'update.sh' script which then applies patches for our build and to add dynamic CPU detection.
-
-convert.patch contains the following changes:
-
-  * Change Chromium code to build using Mozilla build system.
-  * Add runtime CPU detection for MMX
-  * Move default C implementation to work on all platforms.
-  * Change Chromium code to allow a picture region.
-  * The YUV conversion will convert within this picture region only.
-  * Add YCbCr 4:4:4 support
-  * Bug 619178 - Update CPU detection in yuv_convert to new SSE.h interface.
-  * Bug 616778 - Split yuv_convert FilterRows vectorized code into separate files so it can
-    be properly guarded with cpuid() calls.
-
-win64.patch: SSE2 optimization for Microsoft Visual C++ x64 version
-
-TypeFromSize.patch: Bug 656185 - Add a method to detect YUVType from plane sizes.
-
-QuellGccWarnings.patch: Bug 711895 - Avoid some GCC compilation warnings.
-
-clang-cl-workaround.patch: Bug 1422368 - Work around a clang-cl unresolved symbol bug.
+It has been superseded upstream by libyuv (which is spawned off it). Bug 791941 is about
+trying to replace this code with libyuv.

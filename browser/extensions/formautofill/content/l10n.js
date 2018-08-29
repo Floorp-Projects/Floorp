@@ -36,9 +36,8 @@ CONTENT_WIN.addEventListener("DOMContentLoaded", function onDCL(evt) {
         }
 
         case "childList": {
-          // We really only care about the <form>s appending inside pages.
-          if (!mutation.addedNodes || !mutation.target.classList ||
-              !mutation.target.classList.contains("page")) {
+          // We really only care about elements appending inside pages.
+          if (!mutation.addedNodes || !mutation.target.closest(".page")) {
             break;
           }
           FormAutofillUtils.localizeMarkup(mutation.target);
