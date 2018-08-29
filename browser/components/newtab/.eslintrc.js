@@ -171,7 +171,6 @@ module.exports = {
     "no-restricted-syntax": 0,
     "no-return-assign": [2, "except-parens"],
     "no-script-url": 2,
-    "no-sequences": 2,
     "no-shadow": 2,
     "no-spaced-func": 2,
     "no-sync": 0,

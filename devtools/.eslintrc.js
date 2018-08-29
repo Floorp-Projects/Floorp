@@ -353,8 +353,6 @@ module.exports = {
     "no-return-assign": "error",
     // Allow use of javascript: urls.
     "no-script-url": "off",
-    // Disallow use of comma operator.
-    "no-sequences": "error",
     // Warn about declaration of variables already declared in the outer scope.
     // This isn't an error because it sometimes is useful to use the same name
     // in a small helper function rather than having to come up with another
