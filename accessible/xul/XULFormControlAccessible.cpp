@@ -17,7 +17,6 @@
 #include "XULMenuAccessible.h"
 
 #include "nsIDOMXULButtonElement.h"
-#include "nsIDOMXULCheckboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIEditor.h"
@@ -274,71 +273,6 @@ XULDropmarkerAccessible::NativeState() const
   return DropmarkerOpen(false) ? states::PRESSED : 0;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// XULCheckboxAccessible
-////////////////////////////////////////////////////////////////////////////////
-
-XULCheckboxAccessible::
-  XULCheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  LeafAccessible(aContent, aDoc)
-{
-}
-
-role
-XULCheckboxAccessible::NativeRole() const
-{
-  return roles::CHECKBUTTON;
-}
-
-uint8_t
-XULCheckboxAccessible::ActionCount() const
-{
-  return 1;
-}
-
-void
-XULCheckboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
-{
-  if (aIndex == eAction_Click) {
-    if (NativeState() & states::CHECKED)
-      aName.AssignLiteral("uncheck");
-    else
-      aName.AssignLiteral("check");
-  }
-}
-
-bool
-XULCheckboxAccessible::DoAction(uint8_t aIndex) const
-{
-  if (aIndex != eAction_Click)
-    return false;
-
-  DoCommand();
-  return true;
-}
-
-uint64_t
-XULCheckboxAccessible::NativeState() const
-{
-  // Possible states: focused, focusable, unavailable(disabled), checked
-  // Get focus and disable status from base class
-  uint64_t state = LeafAccessible::NativeState();
-
-  state |= states::CHECKABLE;
-
-  // Determine Checked state
-  nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement =
-    do_QueryInterface(mContent);
-  if (xulCheckboxElement) {
-    bool checked = false;
-    xulCheckboxElement->GetChecked(&checked);
-    if (checked) {
-      state |= states::CHECKED;
-    }
-  }
-
-  return state;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULGroupboxAccessible
