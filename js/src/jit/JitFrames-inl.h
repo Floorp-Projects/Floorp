@@ -30,7 +30,7 @@ inline BaselineFrame*
 GetTopBaselineFrame(JSContext* cx)
 {
     JSJitFrameIter frame(cx->activation()->asJit());
-    MOZ_ASSERT(frame.type() == JitFrame_Exit);
+    MOZ_ASSERT(frame.type() == FrameType::Exit);
     ++frame;
     if (frame.isBaselineStub())
         ++frame;

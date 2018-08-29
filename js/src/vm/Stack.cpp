@@ -570,7 +570,7 @@ JitFrameIter::settle()
 {
     if (isJSJit()) {
         const jit::JSJitFrameIter& jitFrame = asJSJit();
-        if (jitFrame.type() != jit::JitFrame_WasmToJSJit)
+        if (jitFrame.type() != jit::FrameType::WasmToJSJit)
             return;
 
         // Transition from js jit frames to wasm frames: we're on the
@@ -1913,7 +1913,8 @@ void
 JS::ProfilingFrameIterator::settleFrames()
 {
     // Handle transition frames (see comment in JitFrameIter::operator++).
-    if (isJSJit() && !jsJitIter().done() && jsJitIter().frameType() == jit::JitFrame_WasmToJSJit) {
+    if (isJSJit() && !jsJitIter().done() && jsJitIter().frameType() == jit::FrameType::WasmToJSJit)
+    {
         wasm::Frame* fp = (wasm::Frame*) jsJitIter().fp();
         iteratorDestroy();
         new (storage()) wasm::ProfilingFrameIterator(*activation_->asJit(), fp);
