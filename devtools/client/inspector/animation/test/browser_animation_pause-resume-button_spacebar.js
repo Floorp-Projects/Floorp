@@ -12,10 +12,11 @@ add_task(async function() {
   const { animationInspector, panel } = await openAnimationInspector();
 
   info("Checking spacebar makes animations to pause");
-  await sendSpaceKeyEvent(animationInspector, panel);
-  assertAnimationsPausing(animationInspector, panel);
-  await sendSpaceKeyEvent(animationInspector, panel);
-  assertAnimationsRunning(animationInspector, panel);
+  await testPauseAndResumeBySpacebar(animationInspector, panel);
+
+  info("Checking spacebar makes animations to pause when the button has the focus");
+  const pauseResumeButton = panel.querySelector(".pause-resume-button");
+  await testPauseAndResumeBySpacebar(animationInspector, pauseResumeButton);
 
   info("Checking spacebar works with other UI components");
   // To pause
@@ -31,3 +32,10 @@ add_task(async function() {
   await sendSpaceKeyEvent(animationInspector, panel);
   assertAnimationsPausing(animationInspector, panel);
 });
+
+async function testPauseAndResumeBySpacebar(animationInspector, element) {
+  await sendSpaceKeyEvent(animationInspector, element);
+  assertAnimationsPausing(animationInspector, element);
+  await sendSpaceKeyEvent(animationInspector, element);
+  assertAnimationsRunning(animationInspector, element);
+}
