@@ -29,7 +29,7 @@ add_task(async function test() {
     }
     PlacesObservers.addListener(["page-visited"], onVisits);
   });
-  gBrowser.selectedBrowser.loadURI(TEST_URL);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URL);
   await promiseVisit;
 
   is(await PlacesTestUtils.fieldInDB(TEST_URL, "frecency"), frecency, "Frecency should be unchanged");
