@@ -441,12 +441,11 @@ const selectNodeAndWaitForAnimations = async function(data, inspector, reason = 
  * Send keyboard event of space to given panel.
  *
  * @param {AnimationInspector} animationInspector
- * @param {DOMElement} panel
- *        #animation-container element.
+ * @param {DOMElement} target element.
  */
-const sendSpaceKeyEvent = async function(animationInspector, panel) {
-  panel.focus();
-  EventUtils.sendKey("SPACE", panel.ownerGlobal);
+const sendSpaceKeyEvent = async function(animationInspector, element) {
+  element.focus();
+  EventUtils.sendKey("SPACE", element.ownerGlobal);
   await waitForSummaryAndDetail(animationInspector);
 };
 
