@@ -4127,9 +4127,14 @@ HTMLMediaElement::EnsureAutoplayRequested(bool aHandlingUserInput)
              AUTOPLAY_LOG("%p Autoplay request denied request=%p",
                           self.get(),
                           request.get());
-             LOG(LogLevel::Debug, ("%s rejecting play promimses", __func__));
+             LOG(LogLevel::Debug, ("%s rejecting play promises", __func__));
              self->AsyncRejectPendingPlayPromises(
                NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
+             nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                             NS_LITERAL_CSTRING("Media"),
+                                             self->OwnerDoc(),
+                                             nsContentUtils::eDOM_PROPERTIES,
+                                             "BlockAutoplayError");
            })
     ->Track(mAutoplayPermissionRequest);
 }
