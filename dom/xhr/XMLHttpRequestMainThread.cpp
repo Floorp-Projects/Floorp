@@ -493,7 +493,8 @@ XMLHttpRequestMainThread::DetectCharset()
 }
 
 nsresult
-XMLHttpRequestMainThread::AppendToResponseText(Span<const uint8_t> aBuffer,
+XMLHttpRequestMainThread::AppendToResponseText(const char * aSrcBuffer,
+                                               uint32_t aSrcBufferLen,
                                                bool aLast)
 {
   // Call this with an empty buffer to send the decoder the signal
@@ -501,22 +502,22 @@ XMLHttpRequestMainThread::AppendToResponseText(Span<const uint8_t> aBuffer,
 
   NS_ENSURE_STATE(mDecoder);
 
-  uint32_t len = mResponseText.Length();
-
   CheckedInt<size_t> destBufferLen =
-    mDecoder->MaxUTF16BufferLength(aBuffer.Length());
-  destBufferLen += len;    
-  if (!destBufferLen.isValid() || destBufferLen.value() > UINT32_MAX) {
+    mDecoder->MaxUTF16BufferLength(aSrcBufferLen);
+  if (!destBufferLen.isValid()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  CheckedInt32 size = mResponseText.Length();
+  size += destBufferLen.value();
+  if (!size.isValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   XMLHttpRequestStringWriterHelper helper(mResponseText);
 
-  nsresult rv;
-  BulkWriteHandle<char16_t> handle =
-    helper.BulkWrite(destBufferLen.value(), rv);
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (!helper.AddCapacity(destBufferLen.value())) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   uint32_t result;
@@ -524,15 +525,14 @@ XMLHttpRequestMainThread::AppendToResponseText(Span<const uint8_t> aBuffer,
   size_t written;
   bool hadErrors;
   Tie(result, read, written, hadErrors) = mDecoder->DecodeToUTF16(
-    aBuffer,
-    handle,
+    AsBytes(MakeSpan(aSrcBuffer, aSrcBufferLen)),
+    MakeSpan(helper.EndOfExistingData(), destBufferLen.value()),
     aLast);
   MOZ_ASSERT(result == kInputEmpty);
-  MOZ_ASSERT(read == aBuffer.Length());
-  len += written;
-  MOZ_ASSERT(len <= destBufferLen.value());
+  MOZ_ASSERT(read == aSrcBufferLen);
+  MOZ_ASSERT(written <= destBufferLen.value());
   Unused << hadErrors;
-  handle.Finish(len, false);
+  helper.AddLength(written);
   if (aLast) {
     // Drop the finished decoder to avoid calling into a decoder
     // that has finished.
@@ -597,8 +597,8 @@ XMLHttpRequestMainThread::GetResponseText(XMLHttpRequestStringSnapshot& aSnapsho
   MOZ_ASSERT(mResponseBodyDecodedPos < mResponseBody.Length() ||
              mState == XMLHttpRequest_Binding::DONE,
              "Unexpected mResponseBodyDecodedPos");
-  Span<const uint8_t> span = mResponseBody;
-  aRv = AppendToResponseText(span.From(mResponseBodyDecodedPos),
+  aRv = AppendToResponseText(mResponseBody.get() + mResponseBodyDecodedPos,
+                             mResponseBody.Length() - mResponseBodyDecodedPos,
                              mState == XMLHttpRequest_Binding::DONE);
   if (aRv.Failed()) {
     return;
@@ -1608,7 +1608,7 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
              xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Json) {
     MOZ_ASSERT(!xmlHttpRequest->mResponseXML,
                "We shouldn't be parsing a doc here");
-    rv = xmlHttpRequest->AppendToResponseText(AsBytes(MakeSpan(fromRawSegment, count)));
+    rv = xmlHttpRequest->AppendToResponseText(fromRawSegment, count);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2099,7 +2099,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
       ((mResponseType == XMLHttpRequestResponseType::Text) ||
         (mResponseType == XMLHttpRequestResponseType::Json) ||
         (mResponseType == XMLHttpRequestResponseType::_empty && !mResponseXML))) {
-    AppendToResponseText(Span<const uint8_t>(), true);
+    AppendToResponseText(nullptr, 0, true);
   }
 
   mWaitingForOnStopRequest = false;
