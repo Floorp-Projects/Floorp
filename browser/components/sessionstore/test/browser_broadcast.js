@@ -120,7 +120,7 @@ async function createTabWithStorageData(urls, win = window) {
   let browser = tab.linkedBrowser;
 
   for (let url of urls) {
-    browser.loadURI(url);
+    BrowserTestUtils.loadURI(browser, url);
     await promiseBrowserLoaded(browser);
     await modifySessionStorage(browser, {test: INITIAL_VALUE});
   }
