@@ -285,14 +285,20 @@
 
   <vbox id="browserLanguagesBox" align="start" hidden="true">
     <description flex="1" controls="chooseBrowserLanguage" data-l10n-id="choose-browser-language-description"/>
-    <menulist id="defaultBrowserLanguage" class="accessory-button" oncommand="gMainPane.onBrowserLanguageChange(event)" flex="1">
-      <menupopup/>
-    </menulist>
+    <hbox>
+      <menulist id="defaultBrowserLanguage" oncommand="gMainPane.onBrowserLanguageChange(event)">
+        <menupopup/>
+      </menulist>
+      <button id="manageBrowserLanguagesButton"
+              class="accessory-button"
+              data-l10n-id="manage-browser-languages-button"
+              oncommand="gMainPane.showBrowserLanguages()"/>
+    </hbox>
   </vbox>
   <hbox id="confirmBrowserLanguage" class="message-bar" align="center" hidden="true">
     <image class="message-bar-icon"/>
     <hbox class="message-bar-content" align="center" flex="1">
-      <description flex="1"/>
+      <description class="message-bar-description" flex="1"/>
       <button class="message-bar-button" oncommand="gMainPane.confirmBrowserLanguageChange()"/>
     </hbox>
   </hbox>
@@ -305,7 +311,7 @@
               class="accessory-button"
               data-l10n-id="choose-button"
               search-l10n-ids="
-                languages-window.title,
+                webpage-languages-window.title,
                 languages-description,
                 languages-customize-moveup.label,
                 languages-customize-movedown.label,

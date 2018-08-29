@@ -234,10 +234,10 @@ if (AppConstants.MOZ_UPDATER) {
 // We store this in a global so tests can await it.
 var promiseLoadHandlersList;
 
-// Load the preferences string bundle for a given locale with fallbacks.
-function getBundleForLocale(locale) {
+// Load the preferences string bundle for other locales with fallbacks.
+function getBundleForLocales(newLocales) {
   let locales = Array.from(new Set([
-    locale,
+    ...newLocales,
     ...Services.locale.getRequestedLocales(),
     Services.locale.lastFallbackLocale,
   ]));
@@ -805,30 +805,38 @@ var gMainPane = {
     document.getElementById("browserLanguagesBox").hidden = false;
   },
 
-  /* Show the confirmation message bar to allow a restart into the new language. */
-  async onBrowserLanguageChange(event) {
-    let locale = event.target.value;
+  /* Show the confirmation message bar to allow a restart into the new locales. */
+  async showConfirmLanguageChangeMessageBar(locales) {
     let messageBar = document.getElementById("confirmBrowserLanguage");
-    if (locale == Services.locale.getRequestedLocale()) {
-      messageBar.hidden = true;
-      return;
-    }
     // Set the text in the message bar for the new locale.
-    let newBundle = getBundleForLocale(locale);
-    let description = messageBar.querySelector("description");
+    let newBundle = getBundleForLocales(locales);
+    let description = messageBar.querySelector(".message-bar-description");
     description.textContent = await newBundle.formatValue(
       "confirm-browser-language-change-description");
-    let button = messageBar.querySelector("button");
+    let button = messageBar.querySelector(".message-bar-button");
     button.setAttribute(
       "label", await newBundle.formatValue(
         "confirm-browser-language-change-button"));
+    button.setAttribute("locales", locales.join(","));
     messageBar.hidden = false;
+    gMainPane.requestingLocales = locales;
+  },
+
+  hideConfirmLanguageChangeMessageBar() {
+    let messageBar = document.getElementById("confirmBrowserLanguage");
+    messageBar.hidden = true;
+    messageBar.querySelector(".message-bar-button").removeAttribute("locales");
+    gMainPane.requestingLocales = null;
   },
 
   /* Confirm the locale change and restart the browser in the new locale. */
   confirmBrowserLanguageChange() {
-    let locale = document.getElementById("defaultBrowserLanguage").value;
-    Services.locale.setRequestedLocales([locale]);
+    let localesString = (event.target.getAttribute("locales") || "").trim();
+    if (!localesString || localesString.length == 0) {
+      return;
+    }
+    let locales = localesString.split(",");
+    Services.locale.setRequestedLocales(locales);
 
     // Restart with the new locale.
     let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
@@ -836,6 +844,20 @@ var gMainPane = {
     if (!cancelQuit.data) {
       Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
     }
+  },
+
+  /* Show or hide the confirm change message bar based on the new locale. */
+  onBrowserLanguageChange(event) {
+    let locale = event.target.value;
+    if (locale == Services.locale.getRequestedLocale()) {
+      this.hideConfirmLanguageChangeMessageBar();
+      return;
+    }
+    let locales = Array.from(new Set([
+      locale,
+      ...Services.locale.getRequestedLocales(),
+    ]).values());
+    this.showConfirmLanguageChangeMessageBar(locales);
   },
 
   onBrowserRestoreSessionChange(event) {
@@ -960,6 +982,26 @@ var gMainPane = {
    */
   showLanguages() {
     gSubDialog.open("chrome://browser/content/preferences/languages.xul");
+  },
+
+  showBrowserLanguages() {
+    gSubDialog.open(
+      "chrome://browser/content/preferences/browserLanguages.xul",
+      null, gMainPane.requestingLocales, this.browserLanguagesClosed);
+  },
+
+  /* Show or hide the confirm change message bar based on the updated ordering. */
+  browserLanguagesClosed() {
+    let requesting = this.gBrowserLanguagesDialog.requestedLocales;
+    let requested = Services.locale.getRequestedLocales();
+    let defaultBrowserLanguage = document.getElementById("defaultBrowserLanguage");
+    if (requesting && requesting.join(",") != requested.join(",")) {
+      gMainPane.showConfirmLanguageChangeMessageBar(requesting);
+      defaultBrowserLanguage.value = requesting[0];
+      return;
+    }
+    defaultBrowserLanguage.value = Services.locale.getRequestedLocale();
+    gMainPane.hideConfirmLanguageChangeMessageBar();
   },
 
   /**
