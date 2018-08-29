@@ -145,6 +145,15 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             WebViewProvider.performCleanup(this)
         }
 
+        val fragmentManager = supportFragmentManager
+        val browserFragment =
+            fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
+        browserFragment?.cancelAnimation()
+
+        val urlInputFragment =
+            fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG) as UrlInputFragment?
+        urlInputFragment?.cancelAnimation()
+
         super.onPause()
 
         TelemetryWrapper.stopSession()
