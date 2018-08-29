@@ -60,16 +60,10 @@ function getActiveTab() {
 }
 exports.getActiveTab = getActiveTab;
 
-exports.getToolbox = function() {
+exports.getToolbox = async function() {
   let tab = getActiveTab();
-  let target = TargetFactory.forTab(tab);
+  let target = await TargetFactory.forTab(tab);
   return gDevTools.getToolbox(target);
-};
-
-exports.navigateTo = function(url) {
-  let tab = getActiveTab();
-  let target = TargetFactory.forTab(tab);
-  target.activeTab.navigateTo(url);
 };
 
 /**
@@ -86,7 +80,7 @@ async function waitForPendingPaints(toolbox) {
 
 const openToolbox = async function(tool = "webconsole", onLoad) {
   let tab = getActiveTab();
-  let target = TargetFactory.forTab(tab);
+  let target = await TargetFactory.forTab(tab);
   let onToolboxCreated = gDevTools.once("toolbox-created");
   let showPromise = gDevTools.showToolbox(target, tool);
   let toolbox = await onToolboxCreated;
@@ -103,7 +97,7 @@ exports.openToolbox = openToolbox;
 
 exports.closeToolbox =  async function() {
   let tab = getActiveTab();
-  let target = TargetFactory.forTab(tab);
+  let target = await TargetFactory.forTab(tab);
   await target.client.waitForRequestsToSettle();
   await gDevTools.closeToolbox(target);
 };
