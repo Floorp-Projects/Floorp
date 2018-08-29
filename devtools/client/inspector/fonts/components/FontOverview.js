@@ -22,7 +22,7 @@ class FontOverview extends PureComponent {
     return {
       fontData: PropTypes.shape(Types.fontData).isRequired,
       fontOptions: PropTypes.shape(Types.fontOptions).isRequired,
-      onPreviewTextChange: PropTypes.func.isRequired,
+      onPreviewFonts: PropTypes.func.isRequired,
       onToggleFontHighlight: PropTypes.func.isRequired,
     };
   }
@@ -38,7 +38,7 @@ class FontOverview extends PureComponent {
     const {
       fontData,
       fontOptions,
-      onPreviewTextChange,
+      onPreviewFonts,
       onToggleFontHighlight,
     } = this.props;
     const { fonts } = fontData;
@@ -47,7 +47,7 @@ class FontOverview extends PureComponent {
       FontList({
         fonts,
         fontOptions,
-        onPreviewTextChange,
+        onPreviewFonts,
         onToggleFontHighlight,
       })
       :
@@ -63,7 +63,7 @@ class FontOverview extends PureComponent {
     const {
       fontData,
       fontOptions,
-      onPreviewTextChange,
+      onPreviewFonts,
     } = this.props;
 
     const header = Services.prefs.getBoolPref(PREF_FONT_EDITOR)
@@ -86,7 +86,7 @@ class FontOverview extends PureComponent {
           componentProps: {
             fontOptions,
             fonts,
-            onPreviewTextChange,
+            onPreviewFonts,
             onToggleFontHighlight: this.onToggleFontHighlightGlobal
           },
           opened: false
