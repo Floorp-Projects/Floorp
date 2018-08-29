@@ -16,12 +16,14 @@ import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.DefaultSessionStorage
+import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.samples.browser.request.SampleRequestInterceptor
 
 /**
  * Helper class for lazily instantiating components needed by the application.
@@ -29,8 +31,12 @@ import org.mozilla.geckoview.GeckoRuntime
 class Components(private val applicationContext: Context) {
     // Engine
     val engine: Engine by lazy {
+        val defaultSettings = DefaultSettings().apply {
+            requestInterceptor = SampleRequestInterceptor()
+        }
+
         val runtime = GeckoRuntime.getDefault(applicationContext)
-        GeckoEngine(runtime)
+        GeckoEngine(runtime, defaultSettings)
     }
 
     // Session

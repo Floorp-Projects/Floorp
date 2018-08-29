@@ -41,7 +41,7 @@ class SystemEngineView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView, View.OnLongClickListener {
-    internal val currentWebView = createWebView(context)
+    internal var currentWebView = createWebView(context)
     internal var currentUrl = ""
     private var session: SystemEngineSession? = null
 
@@ -139,6 +139,17 @@ class SystemEngineView @JvmOverloads constructor(
                     return WebResourceResponse(null, null, null)
                 }
             }
+
+            session?.let { session ->
+                session.settings.requestInterceptor?.let { interceptor ->
+                    interceptor.onLoadRequest(
+                        session, request.url.toString()
+                    )?.apply {
+                        return WebResourceResponse(mimeType, encoding, data.byteInputStream())
+                    }
+                }
+            }
+
             return super.shouldInterceptRequest(view, request)
         }
     }

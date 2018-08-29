@@ -9,6 +9,10 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.UnsupportedSettingException
+import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.support.test.expectException
+import mozilla.components.support.test.mock
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -20,6 +24,7 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
@@ -374,19 +379,80 @@ class GeckoEngineSessionTest {
         assertTrue(privateEngineSession.geckoSession.settings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE))
     }
 
-    @Test(expected = UnsupportedOperationException::class)
-    fun testSettings() {
-        GeckoEngineSession(mock(GeckoRuntime::class.java)).settings
+    @Test
+    fun testUnsupportedSettings() {
+        val settings = GeckoEngineSession(mock(GeckoRuntime::class.java)).settings
+
+        expectException(UnsupportedSettingException::class) {
+            settings.javascriptEnabled = true
+        }
+
+        expectException(UnsupportedSettingException::class) {
+            settings.domStorageEnabled = false
+        }
+
+        expectException(UnsupportedSettingException::class) {
+            settings.trackingProtectionPolicy = TrackingProtectionPolicy.all()
+        }
     }
 
     @Test
-    fun testDefaultSettings() {
-        val runtime = mock(GeckoRuntime::class.java)
-        `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
+    fun testSettingRequestInterceptor() {
+        var interceptorCalledWithUri: String? = null
 
-        val defaultSettings = DefaultSettings(trackingProtectionPolicy = TrackingProtectionPolicy.all())
-        val session = GeckoEngineSession(runtime, false, defaultSettings)
-        assertTrue(session.geckoSession.settings.getBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION))
+        val interceptor = object : RequestInterceptor {
+            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+                interceptorCalledWithUri = uri
+                return RequestInterceptor.InterceptionResponse("<h1>Hello World</h1>")
+            }
+        }
+
+        val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
+
+        val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+        engineSession.geckoSession = Mockito.spy(engineSession.geckoSession)
+
+        engineSession.geckoSession.navigationDelegate.onLoadRequest(
+            engineSession.geckoSession, "sample:about", 0, 0)
+
+        assertEquals("sample:about", interceptorCalledWithUri!!)
+        verify(engineSession.geckoSession).loadString("<h1>Hello World</h1>", "text/html")
+    }
+
+    @Test
+    fun testOnLoadRequestWithoutInterceptor() {
+        val defaultSettings = DefaultSettings()
+
+        val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+        engineSession.geckoSession = Mockito.spy(engineSession.geckoSession)
+
+        engineSession.geckoSession.navigationDelegate.onLoadRequest(
+            engineSession.geckoSession, "sample:about", 0, 0)
+
+        verify(engineSession.geckoSession, Mockito.never()).loadString(anyString(), anyString())
+    }
+
+    @Test
+    fun testOnLoadRequestWithInterceptorThatDoesNotIntercept() {
+        var interceptorCalledWithUri: String? = null
+
+        val interceptor = object : RequestInterceptor {
+            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+                interceptorCalledWithUri = uri
+                return null
+            }
+        }
+
+        val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
+
+        val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+        engineSession.geckoSession = Mockito.spy(engineSession.geckoSession)
+
+        engineSession.geckoSession.navigationDelegate.onLoadRequest(
+            engineSession.geckoSession, "sample:about", 0, 0)
+
+        assertEquals("sample:about", interceptorCalledWithUri!!)
+        verify(engineSession.geckoSession, Mockito.never()).loadString(anyString(), anyString())
     }
 
     @Test

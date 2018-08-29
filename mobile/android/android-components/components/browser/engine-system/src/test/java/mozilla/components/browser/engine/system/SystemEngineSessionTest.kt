@@ -1,16 +1,21 @@
 package mozilla.components.browser.engine.system
 
+import android.net.Uri
 import android.os.Bundle
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.support.test.mock
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -19,6 +24,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -250,6 +256,89 @@ class SystemEngineSessionTest {
         verify(webViewSettings).domStorageEnabled = false
         verify(webViewSettings).javaScriptEnabled = false
         verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
+    }
+
+    @Test
+    fun testSettingRequestInterceptor() {
+        var interceptorCalledWithUri: String? = null
+
+        val interceptor = object : RequestInterceptor {
+            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+                interceptorCalledWithUri = uri
+                return RequestInterceptor.InterceptionResponse("<h1>Hello World</h1>")
+            }
+        }
+
+        val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
+
+        val engineSession = SystemEngineSession(defaultSettings)
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.currentWebView = spy(engineView.currentWebView)
+        engineView.render(engineSession)
+
+        val request: WebResourceRequest = mock()
+        doReturn(Uri.parse("sample:about")).`when`(request).url
+
+        val response = engineView.currentWebView.webViewClient.shouldInterceptRequest(
+            engineView.currentWebView,
+            request)
+
+        assertEquals("sample:about", interceptorCalledWithUri)
+
+        assertNotNull(response)
+
+        assertEquals("<h1>Hello World</h1>", response.data.bufferedReader().use { it.readText() })
+        assertEquals("text/html", response.mimeType)
+        assertEquals("UTF-8", response.encoding)
+    }
+
+    @Test
+    fun testOnLoadRequestWithoutInterceptor() {
+        val defaultSettings = DefaultSettings()
+
+        val engineSession = SystemEngineSession(defaultSettings)
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.currentWebView = spy(engineView.currentWebView)
+        engineView.render(engineSession)
+
+        val request: WebResourceRequest = mock()
+        doReturn(Uri.parse("sample:about")).`when`(request).url
+
+        val response = engineView.currentWebView.webViewClient.shouldInterceptRequest(
+            engineView.currentWebView,
+            request)
+
+        assertNull(response)
+    }
+
+    @Test
+    fun testOnLoadRequestWithInterceptorThatDoesNotIntercept() {
+        var interceptorCalledWithUri: String? = null
+
+        val interceptor = object : RequestInterceptor {
+            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+                interceptorCalledWithUri = uri
+                return null
+            }
+        }
+
+        val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
+
+        val engineSession = SystemEngineSession(defaultSettings)
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.currentWebView = spy(engineView.currentWebView)
+        engineView.render(engineSession)
+
+        val request: WebResourceRequest = mock()
+        doReturn(Uri.parse("sample:about")).`when`(request).url
+
+        val response = engineView.currentWebView.webViewClient.shouldInterceptRequest(
+            engineView.currentWebView,
+            request)
+
+        assertEquals("sample:about", interceptorCalledWithUri)
+
+        assertNull(response)
     }
 
     @Test

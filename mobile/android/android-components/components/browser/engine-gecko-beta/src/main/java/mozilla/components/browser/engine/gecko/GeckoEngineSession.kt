@@ -7,15 +7,16 @@ package mozilla.components.browser.engine.gecko
 import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
 import org.mozilla.gecko.util.ThreadUtils
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_AUDIO
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_IMAGE
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_NONE
@@ -33,10 +34,20 @@ class GeckoEngineSession(
 ) : EngineSession() {
 
     internal var geckoSession = GeckoSession()
+
+    /**
+     * See [EngineSession.settings]
+     */
+    override val settings: Settings = object : Settings {
+        override var requestInterceptor: RequestInterceptor? = null
+    }
+
     private var initialLoad = true
 
     init {
         defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
+        defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
+
         geckoSession.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, privateMode)
         geckoSession.open(runtime)
 
@@ -149,13 +160,6 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.settings]
      */
-    override val settings: Settings
-        get() = throw UnsupportedOperationException("""Not supported by this implementation:
-            Use Engine.settings instead""".trimIndent())
-
-    /**
-     * See [EngineSession.settings]
-     */
     override fun setDesktopMode(enable: Boolean, reload: Boolean) {
         // no-op (requires v63+)
     }
@@ -179,8 +183,15 @@ class GeckoEngineSession(
             uri: String,
             target: Int,
             flags: Int
-        ): GeckoResult<Boolean> {
-            return GeckoResult.fromValue(false)
+        ): GeckoResult<Boolean>? {
+            val response = settings.requestInterceptor?.onLoadRequest(
+                this@GeckoEngineSession,
+                uri
+            )?.apply {
+                loadData(data, mimeType, encoding)
+            }
+
+            return GeckoResult.fromValue(response != null)
         }
 
         override fun onCanGoForward(session: GeckoSession?, canGoForward: Boolean) {

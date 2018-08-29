@@ -5,6 +5,7 @@
 package mozilla.components.concept.engine
 
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.request.RequestInterceptor
 
 /**
  * Holds settings of an engine or session. Concrete engine
@@ -32,6 +33,13 @@ interface Settings {
     var trackingProtectionPolicy: TrackingProtectionPolicy?
         get() = throw UnsupportedSettingException()
         set(_) = throw UnsupportedSettingException()
+
+    /**
+     * Setting to intercept and override requests.
+     */
+    var requestInterceptor: RequestInterceptor?
+        get() = throw UnsupportedSettingException()
+        set(_) = throw UnsupportedSettingException()
 }
 
 /**
@@ -40,7 +48,8 @@ interface Settings {
 data class DefaultSettings(
     override var javascriptEnabled: Boolean = true,
     override var domStorageEnabled: Boolean = true,
-    override var trackingProtectionPolicy: TrackingProtectionPolicy? = null
+    override var trackingProtectionPolicy: TrackingProtectionPolicy? = null,
+    override var requestInterceptor: RequestInterceptor? = null
 ) : Settings
 
 /**

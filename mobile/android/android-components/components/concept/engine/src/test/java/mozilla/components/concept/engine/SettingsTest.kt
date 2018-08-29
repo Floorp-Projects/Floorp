@@ -4,33 +4,38 @@
 
 package mozilla.components.concept.engine
 
-import org.junit.Assert.fail
-import org.junit.Test
-
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.support.test.expectException
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Test
 
 class SettingsTest {
 
     @Test
     fun testSettingsThrowByDefault() {
         val settings = object : Settings { }
-        expectUnsupportedSettingException { settings.javascriptEnabled }
-        expectUnsupportedSettingException { settings.javascriptEnabled = false }
-        expectUnsupportedSettingException { settings.domStorageEnabled }
-        expectUnsupportedSettingException { settings.domStorageEnabled = false }
-        expectUnsupportedSettingException { settings.trackingProtectionPolicy }
-        expectUnsupportedSettingException { settings.trackingProtectionPolicy = TrackingProtectionPolicy.all() }
+
+        expectUnsupportedSettingException(
+            { settings.javascriptEnabled },
+            { settings.javascriptEnabled = false },
+            { settings.domStorageEnabled },
+            { settings.domStorageEnabled = false },
+            { settings.trackingProtectionPolicy },
+            { settings.trackingProtectionPolicy = TrackingProtectionPolicy.all() },
+            { settings.requestInterceptor },
+            { settings.requestInterceptor = null }
+        )
     }
 
-    private fun expectUnsupportedSettingException(f: () -> Unit) {
-        try {
-            f()
-            fail("Expected UnsupportedSettingException")
-        } catch (e: UnsupportedSettingException) { }
+    private fun expectUnsupportedSettingException(vararg blocks: () -> Unit) {
+        blocks.forEach { block ->
+            expectException(UnsupportedSettingException::class, block)
+        }
     }
 
     @Test
@@ -39,10 +44,19 @@ class SettingsTest {
         assertTrue(settings.domStorageEnabled)
         assertTrue(settings.javascriptEnabled)
         assertNull(settings.trackingProtectionPolicy)
+        assertNull(settings.requestInterceptor)
 
-        val trackingProtectionSettings = DefaultSettings(false, false, TrackingProtectionPolicy.all())
+        val interceptor: RequestInterceptor = mock()
+
+        val trackingProtectionSettings = DefaultSettings(
+            false,
+            false,
+            TrackingProtectionPolicy.all(),
+            interceptor)
+
         assertFalse(trackingProtectionSettings.domStorageEnabled)
         assertFalse(trackingProtectionSettings.javascriptEnabled)
         assertEquals(TrackingProtectionPolicy.all(), trackingProtectionSettings.trackingProtectionPolicy)
+        assertEquals(interceptor, trackingProtectionSettings.requestInterceptor)
     }
 }

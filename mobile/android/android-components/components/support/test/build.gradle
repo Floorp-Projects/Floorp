@@ -30,6 +30,7 @@ android {
 dependencies {
     implementation Deps.kotlin_stdlib
 
+    implementation Deps.testing_junit
     implementation Deps.testing_mockito
 }
 
