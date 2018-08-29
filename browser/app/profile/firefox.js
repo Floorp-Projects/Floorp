@@ -1082,6 +1082,16 @@ pref("security.sandbox.content.read_path_whitelist", "");
 pref("security.sandbox.content.syscall_whitelist", "");
 #endif
 
+#if defined(XP_OPENBSD) && defined(MOZ_SANDBOX)
+// default pledge strings for the main & content processes, cf bug 1457092
+// broad list for now, has to be refined over time
+pref("security.sandbox.pledge.main", "stdio rpath wpath cpath inet proc exec prot_exec flock ps sendfd recvfd dns vminfo tty drm unix fattr getpw mcast");
+#if defined(MOZ_CONTENT_SANDBOX)
+pref("security.sandbox.content.level", 1);
+pref("security.sandbox.pledge.content", "stdio rpath wpath cpath inet recvfd sendfd prot_exec unix drm ps");
+#endif
+#endif
+
 #if defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
 // ID (a UUID when set by gecko) that is used to form the name of a
 // sandbox-writable temporary directory to be used by content processes
@@ -1490,14 +1500,19 @@ pref("media.gmp-provider.enabled", true);
 pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended", true);
 pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
+pref("browser.contentblocking.rejecttrackers.ui.recommended", true);
+pref("browser.contentblocking.fastblock.ui.enabled", true);
+pref("browser.contentblocking.trackingprotection.ui.enabled", true);
 #ifdef NIGHTLY_BUILD
 pref("browser.contentblocking.ui.enabled", true);
 pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", true);
 pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
+pref("browser.contentblocking.rejecttrackers.ui.enabled", true);
 #else
 pref("browser.contentblocking.ui.enabled", false);
 pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", false);
 pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", false);
+pref("browser.contentblocking.rejecttrackers.ui.enabled", false);
 #endif
 #ifdef NIGHTLY_BUILD
 pref("browser.contentblocking.reportBreakage.enabled", true);

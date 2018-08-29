@@ -320,7 +320,7 @@ def start(**kwargs):
     elif kwargs["list_tests"]:
         list_tests(**kwargs)
     elif kwargs["verify"] or kwargs["stability"]:
-        check_stability(**kwargs)
+        return check_stability(**kwargs)
     else:
         return not run_tests(**kwargs)
 
