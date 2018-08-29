@@ -3623,7 +3623,9 @@ const DOMEventHandler = {
   init() {
     let mm = window.messageManager;
     mm.addMessageListener("Link:AddFeed", this);
+    mm.addMessageListener("Link:LoadingIcon", this);
     mm.addMessageListener("Link:SetIcon", this);
+    mm.addMessageListener("Link:SetFailedIcon", this);
     mm.addMessageListener("Link:AddSearch", this);
     mm.addMessageListener("Meta:SetPageInfo", this);
   },
@@ -3635,9 +3637,21 @@ const DOMEventHandler = {
         FeedHandler.addFeed(link, aMsg.target);
         break;
 
+      case "Link:LoadingIcon":
+        if (aMsg.data.canUseForTab) {
+          this.setPendingIcon(aMsg.target);
+        }
+        break;
+
       case "Link:SetIcon":
         this.setIconFromLink(aMsg.target, aMsg.data.originalURL, aMsg.data.canUseForTab,
                              aMsg.data.expiration, aMsg.data.iconURL);
+        break;
+
+      case "Link:SetFailedIcon":
+        if (aMsg.data.canUseForTab) {
+          this.clearPendingIcon(aMsg.target);
+        }
         break;
 
       case "Link:AddSearch":
@@ -3656,6 +3670,16 @@ const DOMEventHandler = {
     return true;
   },
 
+  setPendingIcon(aBrowser) {
+    let tab = gBrowser.getTabForBrowser(aBrowser);
+    tab.setAttribute("pendingicon", "true");
+  },
+
+  clearPendingIcon(aBrowser) {
+    let tab = gBrowser.getTabForBrowser(aBrowser);
+    tab.removeAttribute("pendingicon");
+  },
+
   setIconFromLink(aBrowser, aOriginalURL, aCanUseForTab, aExpiration, aIconURL) {
     let tab = gBrowser.getTabForBrowser(aBrowser);
     if (!tab)
@@ -3669,6 +3693,7 @@ const DOMEventHandler = {
     }
 
     if (aCanUseForTab) {
+      this.clearPendingIcon(aBrowser);
       gBrowser.setIcon(tab, aIconURL, aOriginalURL);
     }
     return true;

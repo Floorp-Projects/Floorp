@@ -31,7 +31,7 @@ var PKT_SAVED_OVERLAY = function(options) {
     this.justaddedsuggested = false;
     this.fxasignedin = false;
     this.premiumDetailsAdded = false;
-    this.freezeHeight = false;
+    this.ho2 = false;
     this.fillTagContainer = function(tags, container, tagclass) {
         container.children().remove();
         for (var i = 0; i < tags.length; i++) {
@@ -232,12 +232,15 @@ var PKT_SAVED_OVERLAY = function(options) {
                 myself.checkPlaceholderStatus();
             },
             onShowDropdown() {
-                if (!myself.freezeHeight)
+                if (myself.ho2 !== "show_prompt_preview")
                     thePKT_SAVED.sendMessage("expandSavePanel");
             },
             onHideDropdown() {
-                if (!myself.freezeHeight)
+                if (!myself.ho2) {
                     thePKT_SAVED.sendMessage("collapseSavePanel");
+                } else if (myself.ho2 !== "show_prompt_preview") {
+                    thePKT_SAVED.sendMessage("resizePanel", { width: 350, height: 200 });
+                }
             }
         });
         $("body").on("keydown", function(e) {
@@ -386,7 +389,7 @@ var PKT_SAVED_OVERLAY = function(options) {
             && !initobj.accountState.has_mobile
             && !myself.savedUrl.includes("getpocket.com")) {
             myself.createSendToMobilePanel(initobj.ho2, initobj.displayName);
-            myself.freezeHeight = true;
+            myself.ho2 = initobj.ho2;
         }
 
         myself.fillUserTags();

@@ -69,13 +69,18 @@ class StylishFormatter(object):
                 else:
                     num_warnings += 1
 
-            for err in errors:
+            for err in sorted(errors, key=lambda e: (int(e.lineno), int(e.column or 0))):
+                if err.column:
+                    col = ":" + str(err.column).ljust(self.max_column)
+                else:
+                    col = "".ljust(self.max_column+1)
+
                 message.append(self.fmt.format(
                     normal=self.term.normal,
                     c1=self.color('grey'),
                     c2=self.color('red') if err.level == 'error' else self.color('yellow'),
                     lineno=str(err.lineno).rjust(self.max_lineno),
-                    column=(":" + str(err.column).ljust(self.max_column)) if err.column else "",
+                    column=col,
                     level=err.level.ljust(self.max_level),
                     message=err.message.ljust(self.max_message),
                     rule='{} '.format(err.rule) if err.rule else '',

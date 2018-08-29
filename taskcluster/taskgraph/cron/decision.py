@@ -14,6 +14,7 @@ import os
 import slugid
 
 from taskgraph.util.time import current_json_time
+from .util import find_pushlog_info
 
 
 def run_decision_task(job, params, root):
@@ -36,6 +37,12 @@ def make_decision_task(params, root, symbol, arguments=[], head_rev=None):
 
     if not head_rev:
         head_rev = params['head_rev']
+    try:
+        pushlog = find_pushlog_info(
+            params['repository_url'],
+            params['head_rev'])
+    except (IOError, RuntimeError):
+        pushlog = {'pushid': -1, 'pushdate': 0}
 
     slugids = {}
 
@@ -59,8 +66,8 @@ def make_decision_task(params, root, symbol, arguments=[], head_rev=None):
         'push': {
             'revision': params['head_rev'],
             # remainder are fake values, but the decision task expects them anyway
-            'pushlog_id': -1,
-            'pushdate': 0,
+            'pushlog_id': pushlog['pushid'],
+            'pushdate': pushlog['pushdate'],
             'owner': 'cron',
             'comment': '',
         },
