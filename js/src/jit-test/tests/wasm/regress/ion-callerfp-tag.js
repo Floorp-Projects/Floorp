@@ -8,7 +8,7 @@ var lfModule = new WebAssembly.Module(wasmTextToBinary(`
 `));
 
 enableGeckoProfiling();
-enableSingleStepProfiling();
+WasmHelpers.startProfiling();
 setJitCompilerOption("ion.warmup.trigger", 20);
 
 Object.prototype[3] = 3;
