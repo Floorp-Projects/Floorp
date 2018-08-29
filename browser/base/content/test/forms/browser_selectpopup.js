@@ -590,18 +590,24 @@ add_task(async function test_large_popup() {
 
 // This test checks the same as the previous test but in a new smaller window.
 add_task(async function test_large_popup_in_small_window() {
-  let newwin = await BrowserTestUtils.openNewBrowserWindow({ width: 400, height: 400 });
+  let newWin = await BrowserTestUtils.openNewBrowserWindow();
+
+  let resizePromise = BrowserTestUtils.waitForEvent(newWin, "resize", false, e => {
+    return newWin.innerHeight <= 400 && newWin.innerWidth <= 400;
+  });
+  newWin.resizeTo(400, 400);
+  await resizePromise;
 
   const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
-  let browserLoadedPromise = BrowserTestUtils.browserLoaded(newwin.gBrowser.selectedBrowser);
-  await BrowserTestUtils.loadURI(newwin.gBrowser.selectedBrowser, pageUrl);
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(newWin.gBrowser.selectedBrowser);
+  await BrowserTestUtils.loadURI(newWin.gBrowser.selectedBrowser, pageUrl);
   await browserLoadedPromise;
 
-  newwin.gBrowser.selectedBrowser.focus();
+  newWin.gBrowser.selectedBrowser.focus();
 
-  await performLargePopupTests(newwin);
+  await performLargePopupTests(newWin);
 
-  await BrowserTestUtils.closeWindow(newwin);
+  await BrowserTestUtils.closeWindow(newWin);
 });
 
 async function performSelectSearchTests(win) {
