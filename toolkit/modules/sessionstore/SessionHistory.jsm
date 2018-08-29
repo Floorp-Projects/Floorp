@@ -335,7 +335,7 @@ var SessionHistoryInternal = {
     var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].
                   createInstance(Ci.nsISHEntry);
 
-    shEntry.setURI(Utils.makeURI(entry.url));
+    shEntry.setURI(Services.io.newURI(entry.url));
     shEntry.title = entry.title || entry.url;
     if (entry.subframe)
       shEntry.setIsSubFrame(entry.subframe || false);
@@ -343,11 +343,11 @@ var SessionHistoryInternal = {
     if (entry.contentType)
       shEntry.contentType = entry.contentType;
     if (entry.referrer) {
-      shEntry.referrerURI = Utils.makeURI(entry.referrer);
+      shEntry.referrerURI = Services.io.newURI(entry.referrer);
       shEntry.referrerPolicy = entry.referrerPolicy;
     }
     if (entry.originalURI) {
-      shEntry.originalURI = Utils.makeURI(entry.originalURI);
+      shEntry.originalURI = Services.io.newURI(entry.originalURI);
     }
     if (typeof entry.resultPrincipalURI === "undefined" && entry.loadReplace) {
       // This is backward compatibility code for stored sessions saved prior to
@@ -356,7 +356,7 @@ var SessionHistoryInternal = {
       // was set.
       shEntry.resultPrincipalURI = shEntry.URI;
     } else if (entry.resultPrincipalURI) {
-      shEntry.resultPrincipalURI = Utils.makeURI(entry.resultPrincipalURI);
+      shEntry.resultPrincipalURI = Services.io.newURI(entry.resultPrincipalURI);
     }
     if (entry.loadReplace2) {
       shEntry.loadReplace = entry.loadReplace2;
@@ -364,7 +364,7 @@ var SessionHistoryInternal = {
     if (entry.isSrcdocEntry)
       shEntry.srcdocData = entry.srcdocData;
     if (entry.baseURI)
-      shEntry.baseURI = Utils.makeURI(entry.baseURI);
+      shEntry.baseURI = Services.io.newURI(entry.baseURI);
 
     if (entry.cacheKey) {
       shEntry.cacheKey = entry.cacheKey;
