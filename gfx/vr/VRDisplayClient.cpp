@@ -13,6 +13,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
 #include "mozilla/dom/GamepadManager.h"
+#include "mozilla/dom/Gamepad.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "nsServiceManagerUtils.h"
@@ -169,7 +170,8 @@ VRDisplayClient::FireGamepadEvents()
     }
 
     // Send events to notify that new controllers are added
-    if (lastState.controllerName[0] == '\0') {
+    RefPtr<dom::Gamepad> existing = gamepadManager->GetGamepad(gamepadId, dom::GamepadServiceType::VR);
+    if (lastState.controllerName[0] == '\0' || !existing) {
       dom::GamepadAdded info(NS_ConvertUTF8toUTF16(state.controllerName),
                              dom::GamepadMappingType::_empty,
                              state.hand,
