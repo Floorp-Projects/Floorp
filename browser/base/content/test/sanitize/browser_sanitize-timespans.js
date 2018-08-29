@@ -601,7 +601,7 @@ async function setupDownloads() {
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-10-minutes"
   });
-  download.startTime = new Date(now_mSec - 10 * kMsecPerMin), // 10 minutes ago
+  download.startTime = new Date(now_mSec - 10 * kMsecPerMin); // 10 minutes ago
   download.canceled = true;
   await publicList.add(download);
 
@@ -609,7 +609,7 @@ async function setupDownloads() {
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-1-hour"
   });
-  download.startTime = new Date(now_mSec - 45 * kMsecPerMin), // 45 minutes ago
+  download.startTime = new Date(now_mSec - 45 * kMsecPerMin); // 45 minutes ago
   download.canceled = true;
   await publicList.add(download);
 
@@ -617,7 +617,7 @@ async function setupDownloads() {
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-1-hour-10-minutes"
   });
-  download.startTime = new Date(now_mSec - 70 * kMsecPerMin), // 70 minutes ago
+  download.startTime = new Date(now_mSec - 70 * kMsecPerMin); // 70 minutes ago
   download.canceled = true;
   await publicList.add(download);
 
@@ -625,7 +625,7 @@ async function setupDownloads() {
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-2-hour"
   });
-  download.startTime = new Date(now_mSec - 90 * kMsecPerMin), // 90 minutes ago
+  download.startTime = new Date(now_mSec - 90 * kMsecPerMin); // 90 minutes ago
   download.canceled = true;
   await publicList.add(download);
 
@@ -633,7 +633,7 @@ async function setupDownloads() {
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-2-hour-10-minutes"
   });
-  download.startTime = new Date(now_mSec - 130 * kMsecPerMin), // 130 minutes ago
+  download.startTime = new Date(now_mSec - 130 * kMsecPerMin); // 130 minutes ago
   download.canceled = true;
   await publicList.add(download);
 
@@ -641,7 +641,7 @@ async function setupDownloads() {
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-4-hour"
   });
-  download.startTime = new Date(now_mSec - 180 * kMsecPerMin), // 180 minutes ago
+  download.startTime = new Date(now_mSec - 180 * kMsecPerMin); // 180 minutes ago
   download.canceled = true;
   await publicList.add(download);
 
@@ -649,7 +649,7 @@ async function setupDownloads() {
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-4-hour-10-minutes"
   });
-  download.startTime = new Date(now_mSec - 250 * kMsecPerMin), // 250 minutes ago
+  download.startTime = new Date(now_mSec - 250 * kMsecPerMin); // 250 minutes ago
   download.canceled = true;
   await publicList.add(download);
 
@@ -664,7 +664,7 @@ async function setupDownloads() {
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-today"
   });
-  download.startTime = today, // 12:00:01 AM this morning
+  download.startTime = today; // 12:00:01 AM this morning
   download.canceled = true;
   await publicList.add(download);
 
@@ -676,7 +676,7 @@ async function setupDownloads() {
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-old"
   });
-  download.startTime = lastYear,
+  download.startTime = lastYear;
   download.canceled = true;
   await publicList.add(download);
 
