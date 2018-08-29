@@ -5,7 +5,9 @@ extern crate aho_corasick;
 extern crate csv;
 extern crate docopt;
 extern crate memmap;
-extern crate rustc_serialize;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 
 use std::error::Error;
 use std::fs::File;
@@ -14,7 +16,7 @@ use std::process;
 
 use aho_corasick::{Automaton, AcAutomaton, Match};
 use docopt::Docopt;
-use memmap::{Mmap, Protection};
+use memmap::Mmap;
 
 static USAGE: &'static str = "
 Usage: dict-search [options] <input>
@@ -33,7 +35,7 @@ Options:
     -h, --help                 Show this usage message.
 ";
 
-#[derive(Clone, Debug, RustcDecodable)]
+#[derive(Clone, Debug, Deserialize)]
 struct Args {
     arg_input: String,
     flag_dict: String,
@@ -46,7 +48,7 @@ struct Args {
 
 fn main() {
     let args: Args = Docopt::new(USAGE)
-                            .and_then(|d| d.decode())
+                            .and_then(|d| d.deserialize())
                             .unwrap_or_else(|e| e.exit());
     match run(&args) {
         Ok(()) => {}
@@ -70,48 +72,37 @@ fn run(args: &Args) -> Result<(), Box<Error>> {
         return Ok(());
     }
 
+    let rdr = try!(File::open(&args.arg_input));
     if args.flag_full {
         let aut = aut.into_full();
         if args.flag_overlapping {
             if args.flag_count {
-                let mmap = Mmap::open_path(
-                    &args.arg_input, Protection::Read).unwrap();
-                let text = unsafe { mmap.as_slice() };
-                println!("{}", aut.find_overlapping(text).count());
+                let mmap = unsafe { try!(Mmap::map(&rdr)) };
+                println!("{}", aut.find_overlapping(&*mmap).count());
             } else {
-                let rdr = try!(File::open(&args.arg_input));
                 try!(write_matches(&aut, aut.stream_find_overlapping(rdr)));
             }
         } else {
             if args.flag_count {
-                let mmap = Mmap::open_path(
-                    &args.arg_input, Protection::Read).unwrap();
-                let text = unsafe { mmap.as_slice() };
-                println!("{}", aut.find(text).count());
+                let mmap = unsafe { try!(Mmap::map(&rdr)) };
+                println!("{}", aut.find(&*mmap).count());
             } else {
-                let rdr = try!(File::open(&args.arg_input));
                 try!(write_matches(&aut, aut.stream_find(rdr)));
             }
         }
     } else {
         if args.flag_overlapping {
             if args.flag_count {
-                let mmap = Mmap::open_path(
-                    &args.arg_input, Protection::Read).unwrap();
-                let text = unsafe { mmap.as_slice() };
-                println!("{}", aut.find_overlapping(text).count());
+                let mmap = unsafe { try!(Mmap::map(&rdr)) };
+                println!("{}", aut.find_overlapping(&*mmap).count());
             } else {
-                let rdr = try!(File::open(&args.arg_input));
                 try!(write_matches(&aut, aut.stream_find_overlapping(rdr)));
             }
         } else {
             if args.flag_count {
-                let mmap = Mmap::open_path(
-                    &args.arg_input, Protection::Read).unwrap();
-                let text = unsafe { mmap.as_slice() };
-                println!("{}", aut.find(text).count());
+                let mmap = unsafe { try!(Mmap::map(&rdr)) };
+                println!("{}", aut.find(&*mmap).count());
             } else {
-                let rdr = try!(File::open(&args.arg_input));
                 try!(write_matches(&aut, aut.stream_find(rdr)));
             }
         }
@@ -122,14 +113,10 @@ fn run(args: &Args) -> Result<(), Box<Error>> {
 fn write_matches<A, I>(aut: &A, it: I) -> Result<(), Box<Error>>
         where A: Automaton<String>, I: Iterator<Item=io::Result<Match>> {
     let mut wtr = csv::Writer::from_writer(io::stdout());
-    try!(wtr.write(["pattern", "start", "end"].iter()));
+    try!(wtr.serialize(("pattern", "start", "end")));
     for m in it {
         let m = try!(m);
-        try!(wtr.write([
-            aut.pattern(m.pati),
-            &m.start.to_string(),
-            &m.end.to_string(),
-        ].iter()));
+        try!(wtr.serialize((aut.pattern(m.pati), m.start, m.end)));
     }
     try!(wtr.flush());
     Ok(())
