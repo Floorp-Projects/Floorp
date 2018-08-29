@@ -152,7 +152,7 @@ ContentRestoreInternal.prototype = {
     let activePageData = tabData.entries[activeIndex] || {};
     let uri = activePageData.url || null;
     if (uri && !loadArguments) {
-      webNavigation.setCurrentURI(Utils.makeURI(uri));
+      webNavigation.setCurrentURI(Services.io.newURI(uri));
     }
 
     SessionHistory.restore(this.docShell, tabData);
@@ -212,7 +212,7 @@ ContentRestoreInternal.prototype = {
     // load happens. Don't bother doing this if we're restoring immediately
     // due to a process switch.
     if (!isRemotenessUpdate) {
-      webNavigation.setCurrentURI(Utils.makeURI("about:blank"));
+      webNavigation.setCurrentURI(Services.io.newURI("about:blank"));
     }
 
     try {
@@ -220,7 +220,7 @@ ContentRestoreInternal.prototype = {
         // A load has been redirected to a new process so get history into the
         // same state it was before the load started then trigger the load.
         let referrer = loadArguments.referrer ?
-                       Utils.makeURI(loadArguments.referrer) : null;
+                       Services.io.newURI(loadArguments.referrer) : null;
         let referrerPolicy = ("referrerPolicy" in loadArguments
             ? loadArguments.referrerPolicy
             : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
@@ -399,7 +399,7 @@ HistoryListener.prototype = {
 
     // Reset the tab's URL to what it's actually showing. Without this loadURI()
     // would use the current document and change the displayed URL only.
-    this.webNavigation.setCurrentURI(Utils.makeURI("about:blank"));
+    this.webNavigation.setCurrentURI(Services.io.newURI("about:blank"));
 
     // Kick off a new load so that we navigate away from about:blank to the
     // new URL that was passed to loadURI(). The new load will cause a
