@@ -5,9 +5,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ipc/InProcessChild.h"
+#include "mozilla/dom/WindowGlobalChild.h"
+
+using namespace mozilla::dom;
 
 namespace mozilla {
 namespace ipc {
+
+PWindowGlobalChild*
+InProcessChild::AllocPWindowGlobalChild(const WindowGlobalInit& aInit)
+{
+  MOZ_ASSERT_UNREACHABLE("PWindowGlobalChild should not be created manually");
+  return nullptr;
+}
+
+bool
+InProcessChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor)
+{
+  // Free IPC-held reference
+  static_cast<WindowGlobalChild*>(aActor)->Release();
+  return true;
+}
 
 } // namespace ipc
 } // namespace mozilla

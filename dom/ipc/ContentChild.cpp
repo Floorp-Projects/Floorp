@@ -890,9 +890,6 @@ nsresult ContentChild::ProvideWindowCommon(
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
   RefPtr<TabChild> newChild =
       new TabChild(this, tabId, tabGroup, newTabContext, aChromeFlags);
-  if (NS_FAILED(newChild->Init(aParent))) {
-    return NS_ERROR_ABORT;
-  }
 
   if (aTabOpener) {
     MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
@@ -907,6 +904,12 @@ nsresult ContentChild::ProvideWindowCommon(
       // We release this ref in DeallocPBrowserChild
       RefPtr<TabChild>(newChild).forget().take(), tabId, TabId(0), *ipcContext,
       aChromeFlags, GetID(), IsForBrowser());
+
+  // Now that |newChild| has had its IPC link established, call |Init| to set it
+  // up.
+  if (NS_FAILED(newChild->Init(aParent))) {
+    return NS_ERROR_ABORT;
+  }
 
   nsCOMPtr<nsPIDOMWindowInner> parentTopInnerWindow;
   if (aParent) {
