@@ -115,6 +115,22 @@ def test_roll_with_failure_code(lint, lintdir, files):
     assert result.failed == set(['BadReturnCodeLinter'])
 
 
+def test_roll_warnings(lint, lintdir, files):
+    lint.read(os.path.join(lintdir, 'warning.yml'))
+    result = lint.roll(files)
+    assert len(result.issues) == 0
+    assert result.total_issues == 0
+    assert len(result.suppressed_warnings) == 1
+    assert result.total_suppressed_warnings == 2
+
+    lint.lintargs['show_warnings'] = True
+    result = lint.roll(files)
+    assert len(result.issues) == 1
+    assert result.total_issues == 2
+    assert len(result.suppressed_warnings) == 0
+    assert result.total_suppressed_warnings == 0
+
+
 def fake_run_worker(config, paths, **lintargs):
     result = ResultSummary()
     result.issues['count'].append(1)
