@@ -148,9 +148,16 @@ nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
   MOZ_ASSERT(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT,
              "Called on invalid frame type");
 
-  SVGFilterObserverListForCSSProp* observers =
-    SVGObserverUtils::GetFilterObserverList(aFrame);
-  if (!observers || !observers->ReferencesValidResources()) {
+  // Note: we do not return here for eHasNoRefs since we must still handle any
+  // CSS filter functions.
+  // TODO: We currently pass nullptr instead of an nsTArray* here, but we
+  // actually should get the filter frames and then pass them into
+  // GetPostFilterBounds below!  See bug 1494263.
+  // TODO: we should really return an empty rect for eHasRefsSomeInvalid since
+  // in that case we disable painting of the element.
+  if (!aFrame->StyleEffects()->HasFilters() ||
+      SVGObserverUtils::GetAndObserveFilters(aFrame, nullptr) ==
+        SVGObserverUtils::eHasRefsSomeInvalid) {
     return aPreFilterRect;
   }
 
@@ -727,7 +734,12 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
      so make sure all applicable ones are set again. */
   SVGObserverUtils::EffectProperties effectProperties =
     SVGObserverUtils::GetEffectProperties(aFrame);
-  if (effectProperties.HasInvalidEffects()) {
+  // TODO: We currently pass nullptr instead of an nsTArray* here, but we
+  // actually should get the filter frames and then pass them into
+  // PaintFilteredFrame below!  See bug 1494263.
+  if (effectProperties.HasInvalidEffects() ||
+      SVGObserverUtils::GetAndObserveFilters(aFrame, nullptr) ==
+        SVGObserverUtils::eHasRefsSomeInvalid) {
     // Some resource is invalid. We shouldn't paint anything.
     return;
   }
@@ -820,7 +832,11 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   }
 
   /* Paint the child */
-  if (effectProperties.HasValidFilter()) {
+
+  // We know we don't have eHasRefsSomeInvalid due to the check above.  We
+  // don't test for eHasNoRefs here though since even if we have that we may
+  // still have CSS filter functions to handle.  We have to check the style.
+  if (aFrame->StyleEffects()->HasFilters()) {
     nsRegion* dirtyRegion = nullptr;
     nsRegion tmpDirtyRegion;
     if (aDirtyRect) {
