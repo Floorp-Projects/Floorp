@@ -55,6 +55,8 @@ public:
   ShadowRoot(Element* aElement, ShadowRootMode aMode,
              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
+  void AddSizeOfExcludingThis(nsWindowSizes&, size_t* aNodeSize) const final;
+
   // Shadow DOM v1
   Element* Host() const
   {

@@ -15,6 +15,7 @@
 class nsContentList;
 class nsIDocument;
 class nsINode;
+class nsWindowSizes;
 
 namespace mozilla {
 class StyleSheet;
@@ -43,6 +44,11 @@ class DocumentOrShadowRoot
 public:
   explicit DocumentOrShadowRoot(nsIDocument&);
   explicit DocumentOrShadowRoot(mozilla::dom::ShadowRoot&);
+
+  void AddSizeOfExcludingThis(nsWindowSizes&) const;
+  static void AddSizeOfOwnedSheetArrayExcludingThis(
+      nsWindowSizes&,
+      const nsTArray<RefPtr<StyleSheet>>&);
 
   nsINode& AsNode()
   {
