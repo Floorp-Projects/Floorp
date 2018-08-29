@@ -633,7 +633,9 @@ var BrowserTestUtils = {
    */
   async loadURI(browser, uri) {
     // Load the new URI.
-    browser.loadURI(uri);
+    browser.loadURI(uri, {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
 
     // Nothing to do in non-e10s mode.
     if (!browser.ownerGlobal.gMultiProcessBrowser) {
