@@ -4,8 +4,6 @@ Field name | Type     | Required | Description | Example / Note
 ---        | ---      | ---      | ---         | ---
 `id`       | `string` | Yes | A unique identifier for the message that should not conflict with any other previous message | `ONBOARDING_1`
 `template` | `string` | Yes | An id matching an existing Activity Stream Router template | [See example](https://github.com/mozilla/activity-stream/blob/33669c67c2269078a6d3d6d324fb48175d98f634/system-addon/content-src/message-center/templates/SimpleSnippet.jsx)
-`publish_start` | `date` | No | When to start showing the message | `1524474850876`
-`publish_end` | `date` | No | When to stop showing the message | `1524474850876`
 `content` | `object` | Yes | An object containing all variables/props to be rendered in the template. Subset of allowed tags detailed below. | [See example below](#html-subset)
 `bundled` | `integer` | No | The number of messages of the same template this one should be shown with | [See example below](#a-bundled-message-example)
 `order` | `integer` | No | If bundled with other messages of the same template, which order should this one be placed in? Defaults to 0 if no order is desired | [See example below](#a-bundled-message-example)
@@ -96,6 +94,7 @@ Name | Type | Example value | Description
 `isDefaultBrowser` | `Boolean` or `null` | Is Firefox the user's default browser? If we could not determine the default browser, this value is `null`
 `profileAgeCreated` | Number | `1522843725924` | Profile creation timestamp
 `profileAgeReset` | `Number` or `undefined` | `1522843725924` | When (if) the profile was reset
+`currentDate` | `Date` | `Date 2018-08-22T15:48:04.100Z` | Date object of current time in UTC
 `searchEngines` | `Object` | [example below](#searchengines-example) | Information about the current and available search engines
 `browserSettings.attribution` | `Object` or `undefined` | [example below](#attribution-example) | Attribution for the source of of where the browser was downloaded.
 
@@ -169,5 +168,12 @@ Examples:
   "content": {...},
   // targeting addon information
   "targeting": "addonsInfo.addons['activity-stream@mozilla.org'].name == 'Activity Stream'"
+}
+
+{
+  "id": "7866",
+  "content": {...},
+  // targeting based on time
+  "targeting": "currentDate > '2018-08-08'|date"
 }
 ```

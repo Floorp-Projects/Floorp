@@ -959,6 +959,7 @@ window._gBrowser = {
 
       newTab.removeAttribute("titlechanged");
       newTab.removeAttribute("attention");
+      this._tabAttrModified(newTab, ["attention"]);
 
       // The tab has been selected, it's not unselected anymore.
       // (1) Call the current tab's finishUnselectedTabHoverTimer()
@@ -4094,34 +4095,41 @@ window._gBrowser = {
       return;
     }
 
-    let stringWithShortcut = (stringId, keyElemId) => {
+    let stringWithShortcut = (stringId, keyElemId, pluralCount) => {
       let keyElem = document.getElementById(keyElemId);
       let shortcut = ShortcutUtils.prettifyShortcut(keyElem);
-      return gTabBrowserBundle.formatStringFromName(stringId, [shortcut], 1);
+      return PluralForm.get(pluralCount, gTabBrowserBundle.GetStringFromName(stringId))
+                       .replace("%S", shortcut)
+                       .replace("#1", pluralCount);
     };
 
-    var label;
+    let label;
+    const selectedTabs = this.selectedTabs;
+    const contextTabInSelection = selectedTabs.includes(tab);
+    const affectedTabsLength = contextTabInSelection ? selectedTabs.length : 1;
     if (tab.mOverCloseButton) {
       label = tab.selected ?
-        stringWithShortcut("tabs.closeSelectedTab.tooltip", "key_close") :
-        gTabBrowserBundle.GetStringFromName("tabs.closeTab.tooltip");
+        stringWithShortcut("tabs.closeSelectedTabs.tooltip", "key_close", affectedTabsLength) :
+        PluralForm.get(affectedTabsLength, gTabBrowserBundle.GetStringFromName("tabs.closeTabs.tooltip"))
+                  .replace("#1", affectedTabsLength);
     } else if (tab._overPlayingIcon) {
       let stringID;
       if (tab.selected) {
         stringID = tab.linkedBrowser.audioMuted ?
-          "tabs.unmuteAudio.tooltip" :
-          "tabs.muteAudio.tooltip";
-        label = stringWithShortcut(stringID, "key_toggleMute");
+          "tabs.unmuteAudio2.tooltip" :
+          "tabs.muteAudio2.tooltip";
+        label = stringWithShortcut(stringID, "key_toggleMute", affectedTabsLength);
       } else {
         if (tab.hasAttribute("activemedia-blocked")) {
-          stringID = "tabs.unblockAudio.tooltip";
+          stringID = "tabs.unblockAudio2.tooltip";
         } else {
           stringID = tab.linkedBrowser.audioMuted ?
-            "tabs.unmuteAudio.background.tooltip" :
-            "tabs.muteAudio.background.tooltip";
+            "tabs.unmuteAudio2.background.tooltip" :
+            "tabs.muteAudio2.background.tooltip";
         }
 
-        label = gTabBrowserBundle.GetStringFromName(stringID);
+        label = PluralForm.get(affectedTabsLength, gTabBrowserBundle.GetStringFromName(stringID))
+                          .replace("#1", affectedTabsLength);
       }
     } else {
       label = tab._fullLabel || tab.getAttribute("label");
@@ -4432,9 +4440,11 @@ window._gBrowser = {
         // At least one of these should/will be non-null:
         let promptPrincipal = event.detail.promptPrincipal || docPrincipal ||
           tabForEvent.linkedBrowser.contentPrincipal;
+
         // For null principals, we bail immediately and don't show the checkbox:
         if (!promptPrincipal || promptPrincipal.isNullPrincipal) {
           tabForEvent.setAttribute("attention", "true");
+          this._tabAttrModified(tabForEvent, ["attention"]);
           return;
         }
 
@@ -4448,6 +4458,7 @@ window._gBrowser = {
             let tabPrompt = this.getTabModalPromptBox(tabForEvent.linkedBrowser);
             tabPrompt.onNextPromptShowAllowFocusCheckboxFor(promptPrincipal);
             tabForEvent.setAttribute("attention", "true");
+            this._tabAttrModified(tabForEvent, ["attention"]);
             return;
           }
         }

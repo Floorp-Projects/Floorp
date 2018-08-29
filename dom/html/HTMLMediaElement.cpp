@@ -4072,9 +4072,7 @@ HTMLMediaElement::Play(ErrorResult& aRv)
   if (AudioChannelAgentBlockedPlay()) {
     LOG(LogLevel::Debug, ("%p play blocked by AudioChannelAgent.", this));
     promise->MaybeReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
-    if (StaticPrefs::MediaBlockEventEnabled()) {
-      DispatchAsyncEvent(NS_LITERAL_STRING("blocked"));
-    }
+    DispatchEventsWhenPlayWasNotAllowed();
     return promise.forget();
   }
 
@@ -4129,11 +4127,32 @@ HTMLMediaElement::EnsureAutoplayRequested(bool aHandlingUserInput)
              AUTOPLAY_LOG("%p Autoplay request denied request=%p",
                           self.get(),
                           request.get());
-             LOG(LogLevel::Debug, ("%s rejecting play promimses", __func__));
+             LOG(LogLevel::Debug, ("%s rejecting play promises", __func__));
              self->AsyncRejectPendingPlayPromises(
                NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
+             nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                             NS_LITERAL_CSTRING("Media"),
+                                             self->OwnerDoc(),
+                                             nsContentUtils::eDOM_PROPERTIES,
+                                             "BlockAutoplayError");
            })
     ->Track(mAutoplayPermissionRequest);
+}
+
+void
+HTMLMediaElement::DispatchEventsWhenPlayWasNotAllowed()
+{
+  if (StaticPrefs::MediaBlockEventEnabled()) {
+    DispatchAsyncEvent(NS_LITERAL_STRING("blocked"));
+  }
+#if defined(MOZ_WIDGET_ANDROID)
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(OwnerDoc(),
+                             NS_LITERAL_STRING("MozAutoplayMediaBlocked"),
+                             CanBubble::eYes,
+                             ChromeOnlyDispatch::eYes);
+  asyncDispatcher->PostDOMEvent();
+#endif
 }
 
 void
@@ -8009,9 +8028,8 @@ HTMLMediaElement::AsyncRejectPendingPlayPromises(nsresult aError)
     return;
   }
 
-  if (aError == NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR &&
-      Preferences::GetBool("media.autoplay.block-event.enabled", false)) {
-    DispatchAsyncEvent(NS_LITERAL_STRING("blocked"));
+  if (aError == NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR) {
+    DispatchEventsWhenPlayWasNotAllowed();
   }
 
   nsCOMPtr<nsIRunnable> event = new nsResolveOrRejectPendingPlayPromisesRunner(

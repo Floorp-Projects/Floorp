@@ -15,6 +15,11 @@ function mountSectionWithProps(props) {
   return mountWithIntl(<Provider store={store}><Section {...props} /></Provider>);
 }
 
+function mountSectionIntlWithProps(props) {
+  const store = createStore(combineReducers(reducers), INITIAL_STATE);
+  return mountWithIntl(<Provider store={store}><SectionIntl {...props} /></Provider>);
+}
+
 describe("<Sections>", () => {
   let wrapper;
   let FAKE_SECTIONS;
@@ -176,21 +181,33 @@ describe("<Section>", () => {
       };
     });
     it("should not render for empty topics", () => {
-      wrapper = mountSectionWithProps(TOP_STORIES_SECTION);
+      wrapper = mountSectionIntlWithProps(TOP_STORIES_SECTION);
 
       assert.lengthOf(wrapper.find(".topic"), 0);
     });
     it("should render for non-empty topics", () => {
       TOP_STORIES_SECTION.topics = [{name: "topic1", url: "topic-url1"}];
 
-      wrapper = mountSectionWithProps(TOP_STORIES_SECTION);
+      wrapper = mountSectionIntlWithProps(TOP_STORIES_SECTION);
 
       assert.lengthOf(wrapper.find(".topic"), 1);
+    });
+    it("should delay render of third rec to give time for potential spoc", async () => {
+      TOP_STORIES_SECTION.rows = [
+        {guid: 1, link: "http://localhost"},
+        {guid: 2, link: "http://localhost"},
+        {guid: 3, link: "http://localhost"}
+      ];
+      wrapper = shallow(<Section Pocket={{waitingForSpoc: true}} {...TOP_STORIES_SECTION} />);
+      assert.lengthOf(wrapper.find(PlaceholderCard), 1);
+
+      wrapper.setProps({Pocket: {waitingForSpoc: false}});
+      assert.lengthOf(wrapper.find(PlaceholderCard), 0);
     });
     it("should render for uninitialized topics", () => {
       delete TOP_STORIES_SECTION.topics;
 
-      wrapper = mountSectionWithProps(TOP_STORIES_SECTION);
+      wrapper = mountSectionIntlWithProps(TOP_STORIES_SECTION);
 
       assert.lengthOf(wrapper.find(".topic"), 1);
     });

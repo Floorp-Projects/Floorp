@@ -467,6 +467,10 @@ class Tab extends TabBase {
     return undefined;
   }
 
+  get attention() {
+    return false;
+  }
+
   get audible() {
     return this.nativeTab.playingAudio;
   }

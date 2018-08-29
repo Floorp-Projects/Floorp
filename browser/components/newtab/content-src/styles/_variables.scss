@@ -157,7 +157,7 @@ $textbox-shadow-size: 4px;
     position: absolute;
     top: -($context-menu-button-size / 2);
     transform: scale(0.25);
-    transition-duration: 200ms;
+    transition-duration: 150ms;
     transition-property: transform, opacity;
     width: $context-menu-button-size;
 
