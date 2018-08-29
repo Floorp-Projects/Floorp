@@ -576,16 +576,31 @@ This reports the impression of Activity Stream Router.
 
 This reports the user's interaction with Activity Stream Router.
 
+#### Snippets interaction pings
 ```js
 {
   "client_id": "n/a",
-  "action": ["snippets_user_event" | "onboarding_user_event"],
+  "action": "snippets_user_event",
   "addon_version": "20180710100040",
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
   "locale": "en-US",
   "source": "NEWTAB_FOOTER_BAR",
   "message_id": "some_snippet_id",
   "event": ["CLICK_BUTTION" | "BLOCK"]
+}
+```
+
+#### Onboarding interaction pings
+```js
+{
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "action": "onboarding_user_event",
+  "addon_version": "20180710100040",
+  "impression_id": "n/a",
+  "locale": "en-US",
+  "source": "NEWTAB_FOOTER_BAR",
+  "message_id": "onboarding_message_1",
+  "event": "CLICK_BUTTION"
 }
 ```
 
