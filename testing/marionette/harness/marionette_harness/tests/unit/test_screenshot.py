@@ -294,6 +294,7 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
         self.assertRaises(NoSuchWindowException, self.marionette.screenshot)
         self.marionette.switch_to_window(self.start_tab)
 
+    @skip_if_mobile("Bug 1487124 - Android need its own maximum allowed dimensions")
     def test_capture_vertical_bounds(self):
         self.marionette.navigate(inline("<body style='margin-top: 32768px'>foo"))
         screenshot = self.marionette.screenshot()

@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 
-<!-- -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- -->
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
@@ -10,7 +9,7 @@
 
 <dialog id="LanguagesDialog" type="child" class="prefwindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        data-l10n-id="languages-window"
+        data-l10n-id="webpage-languages-window"
         data-l10n-attrs="title, style"
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"

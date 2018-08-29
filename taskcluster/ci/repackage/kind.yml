@@ -40,12 +40,34 @@ job-template:
         config:
             by-build-platform:
                 linux\b.*:
+                    - repackage/base.py
                     - repackage/linux32_signed.py
                 linux64\b.*:
+                    - repackage/base.py
                     - repackage/linux64_signed.py
                 macosx64\b.*:
+                    - repackage/base.py
                     - repackage/osx_signed.py
                 win32\b.*:
+                    - repackage/base.py
                     - repackage/win32_signed.py
                 win64\b.*:
+                    - repackage/base.py
                     - repackage/win64_signed.py
+    package-formats:
+        by-project:
+            # Build bz2 mar's on try to excerise the code
+            (mozilla-esr60|try):
+                by-build-platform:
+                    linux.*: [mar, mar-bz2]
+                    linux4\b.*: [mar, mar-bz2]
+                    macosx64\b.*: [mar, mar-bz2, dmg]
+                    win32\b.*: [mar, mar-bz2, installer]
+                    win64\b.*: [mar, mar-bz2, installer]
+            default:
+                by-build-platform:
+                    linux.*: [mar]
+                    linux4\b.*: [mar]
+                    macosx64\b.*: [mar, dmg]
+                    win32\b.*: [mar, installer]
+                    win64\b.*: [mar, installer]
