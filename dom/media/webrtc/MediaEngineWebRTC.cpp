@@ -11,6 +11,7 @@
 #include "CSFLog.h"
 #include "MediaEngineTabVideoSource.h"
 #include "MediaEngineRemoteVideoSource.h"
+#include "MediaEngineWebRTCAudio.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/dom/MediaDeviceInfo.h"
 #include "mozilla/Logging.h"
