@@ -45,11 +45,6 @@ public:
   explicit DocumentOrShadowRoot(nsIDocument&);
   explicit DocumentOrShadowRoot(mozilla::dom::ShadowRoot&);
 
-  void AddSizeOfExcludingThis(nsWindowSizes&) const;
-  static void AddSizeOfOwnedSheetArrayExcludingThis(
-      nsWindowSizes&,
-      const nsTArray<RefPtr<StyleSheet>>&);
-
   nsINode& AsNode()
   {
     return mAsNode;
@@ -195,6 +190,11 @@ protected:
   // Returns the reference to the sheet, if found in mStyleSheets.
   already_AddRefed<StyleSheet> RemoveSheet(StyleSheet& aSheet);
   void InsertSheetAt(size_t aIndex, StyleSheet& aSheet);
+
+  void AddSizeOfExcludingThis(nsWindowSizes&) const;
+  void AddSizeOfOwnedSheetArrayExcludingThis(
+      nsWindowSizes&,
+      const nsTArray<RefPtr<StyleSheet>>&) const;
 
   nsIContent* Retarget(nsIContent* aContent) const;
 
