@@ -93,6 +93,7 @@
     }
 
     function* testsIterator() {
+      const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
       // Tests 1 + 2:
       //  Back/forward between two simple documents. Bfcache will be used.
@@ -102,33 +103,45 @@
 
       gTestCount++;
       gExpected = [false];
-      gBrowser.loadURI(test1Doc);
+      gBrowser.loadURI(test1Doc, {
+        triggeringPrincipal: systemPrincipal,
+      });
       yield undefined;
 
       gTestCount++;
       gExpected = [true, false];
       var test2Doc = test1Doc.replace(/1/,"2");
-      gBrowser.loadURI(test2Doc);
+      gBrowser.loadURI(test2Doc, {
+        triggeringPrincipal: systemPrincipal,
+      });
       yield undefined;
 
       gTestCount++;
       gExpected = [true, true, false];
-      gBrowser.loadURI(test1Doc);
+      gBrowser.loadURI(test1Doc, {
+        triggeringPrincipal: systemPrincipal,
+      });
       yield undefined;
 
       gTestCount++;
       gExpected = [true, true, true, false];
-      gBrowser.loadURI(test2Doc);
+      gBrowser.loadURI(test2Doc, {
+        triggeringPrincipal: systemPrincipal,
+      });
       yield undefined;
 
       gTestCount++;
       gExpected = [false, true, true, true, false];
-      gBrowser.loadURI(test1Doc);
+      gBrowser.loadURI(test1Doc, {
+        triggeringPrincipal: systemPrincipal,
+      });
       yield undefined;
 
       gTestCount++;
       gExpected = [false, false, true, true, true, false];
-      gBrowser.loadURI(test2Doc);
+      gBrowser.loadURI(test2Doc, {
+        triggeringPrincipal: systemPrincipal,
+      });
       yield undefined;
 
       gTestCount++;
