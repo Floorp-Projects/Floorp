@@ -1972,12 +1972,20 @@ class StaticAnalysis(MachCommandBase):
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = []
             for item in config['clang_checkers']:
-                # Do not test mozilla specific checks nor the default '-*'
-                if not (item['publish'] and ('restricted-platforms' in item
-                                             and platform not in item['restricted-platforms']
-                                             or 'restricted-platforms' not in item)
-                        and item['name'] not in ['mozilla-*', '-*'] and
-                        (checker_names == [] or item['name'] in checker_names)):
+                # Skip if any of the following statements is true:
+                # 1. Checker attribute 'publish' is False.
+                not_published = not bool(item.get('publish', True))
+                # 2. Checker has restricted-platforms and current platform is not of them.
+                ignored_platform = 'restricted-platforms' in item and platform not in item['restricted-platforms']
+                # 3. Checker name is mozilla-* or -*.
+                ignored_checker = item['name'] in ['mozilla-*', '-*']
+                # 4. List checker_names is passed and the current checker is not part of the
+                #    list or 'publish' is False
+                checker_not_in_list = checker_names and (item['name'] not in checker_names or not_published)
+                if not_published or \
+                   ignored_platform or \
+                   ignored_checker or \
+                   checker_not_in_list:
                     continue
                 futures.append(executor.submit(self._verify_checker, item))
 
@@ -2189,7 +2197,7 @@ class StaticAnalysis(MachCommandBase):
             try:
                 config = yaml.safe_load(f)
                 for item in config['clang_checkers']:
-                    if item['publish']:
+                    if item.get('publish', True):
                         checks += ',' + item['name']
             except Exception:
                 print('Looks like config.yaml is not valid, so we are unable to '

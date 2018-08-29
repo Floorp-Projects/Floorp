@@ -141,7 +141,7 @@ html|button, html|select {
 }
 
 /* Rest of the dark and light theme */
-
+.devtools-autocomplete-popup,
 .tooltip-panel.devtools-autocomplete-popup,
 .CodeMirror-hints,
 .CodeMirror-Tern-tooltip {
@@ -519,6 +519,7 @@ checkbox:-moz-focusring {
 
 .devtools-searchbox .devtools-autocomplete-popup {
   position: absolute;
+  left: 0;
   top: 100%;
   width: 100%;
   line-height: initial !important;

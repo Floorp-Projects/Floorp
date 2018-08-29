@@ -28,6 +28,7 @@ _MOZ_UPDATE_CHANNEL_PER_BRANCH = {
     'mozilla-release': '',
     'mozilla-beta': '-beta',
     'mozilla-central': '-nightly',
+    'try': '-nightly-try',
     'maple': '-nightly-maple',
 }
 

@@ -2009,7 +2009,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
   protected:
     bool buildOOLFakeExitFrame(void* fakeReturnAddr) {
-        uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS,
+        uint32_t descriptor = MakeFrameDescriptor(framePushed(), FrameType::IonJS,
                                                   ExitFrameLayout::Size());
         Push(Imm32(descriptor));
         Push(ImmPtr(fakeReturnAddr));
