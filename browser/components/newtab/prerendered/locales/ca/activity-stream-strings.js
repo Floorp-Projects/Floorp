@@ -31,7 +31,7 @@ window.gActivityStreamStrings = {
   "menu_action_open_file": "Obre el fitxer",
   "menu_action_copy_download_link": "Copia l'enllaç de la baixada",
   "menu_action_go_to_download_page": "Vés a la pàgina de la baixada",
-  "menu_action_remove_download": "Suprimeix de l'historial",
+  "menu_action_remove_download": "Elimina de l'historial",
   "search_button": "Cerca",
   "search_header": "Cerca de {search_engine_name}",
   "search_web_placeholder": "Cerca al web",

@@ -578,6 +578,14 @@ var gPrivacyPane = {
       document.getElementById(id).hidden = contentBlockingUiEnabled != visibleState[id];
     }
 
+    // Update the Do Not Track section to not mention "Tracking Protection".
+    if (contentBlockingUiEnabled) {
+      let dntDefaultRadioItem =
+        document.querySelector("#doNotTrackRadioGroup > radio[value=false]");
+      document.l10n.setAttributes(
+        dntDefaultRadioItem, "do-not-track-option-default-content-blocking");
+    }
+
     // Allow turning off the "(recommended)" label using a pref
     let blockCookiesFromTrackers = document.getElementById("blockCookiesFromTrackers");
     if (contentBlockingCookiesAndSiteDataRejectTrackersRecommended) {

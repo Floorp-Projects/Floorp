@@ -771,6 +771,13 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
 #endif
 }
 
+#ifdef DEBUG
+MFBT_API void
+DllBlocklist_Shutdown()
+{
+}
+#endif // DEBUG
+
 static void
 WriteAnnotation(HANDLE aFile, Annotation aAnnotation, const char* aValue,
                 DWORD* aNumBytes)

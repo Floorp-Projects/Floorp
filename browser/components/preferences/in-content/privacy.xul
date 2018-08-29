@@ -341,7 +341,7 @@
           <image class="fastblock-icon content-blocking-icon"/>
         </vbox>
         <vbox class="content-blocking-category-labels" flex="1">
-          <label data-l10n-id="content-blocking-fastblock-label"
+          <label data-l10n-id="content-blocking-fastblock-slow-loading-label"
                  class="content-blocking-category-name"
                  control="contentBlockingFastBlockCheckbox"/>
           <description data-l10n-id="content-blocking-fastblock-description" class="content-blocking-category-description"/>
@@ -364,7 +364,7 @@
             <image class="tracking-protection-icon content-blocking-icon" />
           </vbox>
           <vbox class="content-blocking-category-labels" flex="1">
-            <label data-l10n-id="content-blocking-tracking-protection-label"
+            <label data-l10n-id="content-blocking-tracking-protection-all-label"
                    class="content-blocking-category-name"
                    control="contentBlockingTrackingProtectionCheckbox"/>
             <description data-l10n-id="content-blocking-tracking-protection-description"
