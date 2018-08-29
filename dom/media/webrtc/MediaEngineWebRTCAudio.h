@@ -256,10 +256,9 @@ private:
   // mMutex protects some of our members off the owning thread.
   Mutex mMutex;
 
-  // We append an allocation in Allocate() and remove it in Deallocate().
-  // Both the array and the Allocation members are modified under mMutex on
-  // the owning thread. Accessed under one of the two.
-  nsTArray<Allocation> mAllocations;
+  // We set an allocation in Allocate() and remove it in Deallocate().
+  // Must be set and/or accessed while holding mMutex.
+  UniquePtr<Allocation> mAllocation;
 
   // Current state of the shared resource for this source. Written on the
   // owning thread, read on either the owning thread or the MSG thread.
