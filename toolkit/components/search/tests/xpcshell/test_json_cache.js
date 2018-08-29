@@ -134,21 +134,6 @@ var EXPECTED_ENGINE = {
               "purpose": undefined,
             },
             {
-              "name": "ie",
-              "value": "utf-8",
-              "purpose": undefined,
-            },
-            {
-              "name": "oe",
-              "value": "utf-8",
-              "purpose": undefined,
-            },
-            {
-              "name": "aq",
-              "value": "t",
-              "purpose": undefined,
-            },
-            {
               "name": "channel",
               "value": "fflb",
               "purpose": "keyword",
