@@ -114,13 +114,17 @@ ContentProcessMessageManager::WrapObject(JSContext* aCx,
 JSObject*
 ContentProcessMessageManager::GetOrCreateWrapper()
 {
-  AutoJSAPI jsapi;
-  jsapi.Init();
+  JS::RootedValue val(RootingCx());
+  {
+    // Scope to run ~AutoJSAPI before working with a raw JSObject*.
+    AutoJSAPI jsapi;
+    jsapi.Init();
 
-  JS::RootedValue val(jsapi.cx());
-  if (!GetOrCreateDOMReflectorNoWrap(jsapi.cx(), this, &val)) {
-    return nullptr;
+    if (!GetOrCreateDOMReflectorNoWrap(jsapi.cx(), this, &val)) {
+      return nullptr;
+    }
   }
+  MOZ_ASSERT(val.isObject());
   return &val.toObject();
 }
 

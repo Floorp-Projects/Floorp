@@ -752,7 +752,7 @@ int32_t
 CustomElementRegistry::InferNamespace(JSContext* aCx,
                                       JS::Handle<JSObject*> constructor)
 {
-  JSObject* XULConstructor = XULElement_Binding::GetConstructorObject(aCx);
+  JS::Rooted<JSObject*> XULConstructor(aCx, XULElement_Binding::GetConstructorObject(aCx));
 
   JS::Rooted<JSObject*> proto(aCx, constructor);
   while (proto) {
