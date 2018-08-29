@@ -4,20 +4,29 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const Services = require("Services");
+const {
+  createElement,
+  createFactory,
+  Fragment,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const Font = createFactory(require("./Font"));
+const FontPreviewInput = createFactory(require("./FontPreviewInput"));
 
 const Types = require("../types");
+
+const PREF_FONT_EDITOR = "devtools.inspector.fonteditor.enabled";
 
 class FontList extends PureComponent {
   static get propTypes() {
     return {
       fontOptions: PropTypes.shape(Types.fontOptions).isRequired,
       fonts: PropTypes.arrayOf(PropTypes.shape(Types.font)).isRequired,
-      onPreviewFonts: PropTypes.func.isRequired,
+      onPreviewTextChange: PropTypes.func.isRequired,
       onToggleFontHighlight: PropTypes.func.isRequired,
     };
   }
@@ -26,11 +35,13 @@ class FontList extends PureComponent {
     const {
       fonts,
       fontOptions,
-      onPreviewFonts,
+      onPreviewTextChange,
       onToggleFontHighlight
     } = this.props;
 
-    return dom.ul(
+    const { previewText } = fontOptions;
+
+    const list = dom.ul(
       {
         className: "fonts-list"
       },
@@ -38,10 +49,20 @@ class FontList extends PureComponent {
         key: i,
         font,
         fontOptions,
-        onPreviewFonts,
         onToggleFontHighlight,
       }))
     );
+
+    // Show the font preview input only when the font editor is enabled.
+    const previewInput = Services.prefs.getBoolPref(PREF_FONT_EDITOR) ?
+      FontPreviewInput({
+        onPreviewTextChange,
+        previewText,
+      })
+      :
+      null;
+
+    return createElement(Fragment, null, previewInput, list);
   }
 }
 
