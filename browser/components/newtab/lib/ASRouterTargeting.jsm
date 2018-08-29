@@ -13,12 +13,8 @@ ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm");
 
 const FXA_USERNAME_PREF = "services.sync.username";
-const ONBOARDING_EXPERIMENT_PREF = "browser.newtabpage.activity-stream.asrouterOnboardingCohort";
+const ONBOARDING_MESSAGE_PROVDIER_EXPERIMENT_PREF = "browser.newtabpage.activity-stream.asrouter.messageProviders";
 const MOZ_JEXL_FILEPATH = "mozjexl";
-
-// Max possible cap for any message
-const MAX_LIFETIME_CAP = 100;
-const ONE_DAY = 24 * 60 * 60 * 1000;
 
 const {activityStreamProvider: asProvider} = NewTabUtils;
 
@@ -71,6 +67,9 @@ const TargetingGetters = {
       update: settings.update
     };
   },
+  get currentDate() {
+    return new Date();
+  },
   get profileAgeCreated() {
     return new ProfileAge(null, null).created;
   },
@@ -109,7 +108,6 @@ const TargetingGetters = {
         return {addons: info, isFullData: fullData};
       });
   },
-
   get searchEngines() {
     return new Promise(resolve => {
       // Note: calling init ensures this code is only executed after Search has been initialized
@@ -128,18 +126,15 @@ const TargetingGetters = {
       });
     });
   },
-
   get isDefaultBrowser() {
     try {
       return ShellService.isDefaultBrowser();
     } catch (e) {}
     return null;
   },
-
   get devToolsOpenedCount() {
     return Services.prefs.getIntPref("devtools.selfxss.count");
   },
-
   get topFrecentSites() {
     return TopFrecentSitesCache.topFrecentSites.then(sites => sites.map(site => (
       {
@@ -150,10 +145,16 @@ const TargetingGetters = {
       }
     )));
   },
-
   // Temporary targeting function for the purposes of running the simplified onboarding experience
   get isInExperimentCohort() {
-    return Services.prefs.getIntPref(ONBOARDING_EXPERIMENT_PREF, 0);
+    const allProviders = Services.prefs.getStringPref(ONBOARDING_MESSAGE_PROVDIER_EXPERIMENT_PREF, "");
+    try {
+      const {cohort} = JSON.parse(allProviders).find(i => i.id === "onboarding");
+      return (typeof cohort === "number" ? cohort : 0);
+    } catch (e) {
+      Cu.reportError("Problem parsing JSON message provider pref for ASRouter");
+    }
+    return 0;
   }
 };
 
@@ -176,35 +177,6 @@ this.ASRouterTargeting = {
       return true;
     }
     return candidateMessageTrigger.params.includes(trigger.param);
-  },
-
-  isBelowFrequencyCap(message, impressionsForMessage) {
-    if (!message.frequency || !impressionsForMessage || !impressionsForMessage.length) {
-      return true;
-    }
-
-    if (
-      message.frequency.lifetime &&
-      impressionsForMessage.length >= Math.min(message.frequency.lifetime, MAX_LIFETIME_CAP)
-    ) {
-      return false;
-    }
-
-    if (message.frequency.custom) {
-      const now = Date.now();
-      for (const setting of message.frequency.custom) {
-        let {period} = setting;
-        if (period === "daily") {
-          period = ONE_DAY;
-        }
-        const impressionsInPeriod = impressionsForMessage.filter(t => (now - t) < period);
-        if (impressionsInPeriod.length >= setting.cap) {
-          return false;
-        }
-      }
-    }
-
-    return true;
   },
 
   /**
@@ -244,7 +216,7 @@ this.ASRouterTargeting = {
    * @param {obj|null} context A FilterExpression context. Defaults to TargetingGetters above.
    * @returns {obj} an AS router message
    */
-  async findMatchingMessage({messages, impressions = {}, trigger, context, onError}) {
+  async findMatchingMessage({messages, trigger, context, onError}) {
     const arrayOfItems = [...messages];
     let match;
     let candidate;
@@ -255,7 +227,6 @@ this.ASRouterTargeting = {
       if (
         candidate &&
         (trigger ? this.isTriggerMatch(trigger, candidate.trigger) : !candidate.trigger) &&
-        this.isBelowFrequencyCap(candidate, impressions[candidate.id]) &&
         // If a trigger expression was passed to this function, the message should match it.
         // Otherwise, we should choose a message with no trigger property (i.e. a message that can show up at any time)
         await this.checkMessageTargeting(candidate, context, onError)

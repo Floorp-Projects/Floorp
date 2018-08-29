@@ -87,7 +87,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "अनुभाग प्रबंधित करें",
   "section_menu_action_manage_webext": "विस्तारक प्रबंधित करें",
   "section_menu_action_add_topsite": "शीर्ष साइट जोड़ें",
-  "section_menu_action_add_search_engine": "सर्च इंजन जोड़े",
+  "section_menu_action_add_search_engine": "खोज ईंजन जोड़ें",
   "section_menu_action_move_up": "ऊपर जाएँ",
   "section_menu_action_move_down": "नीचे जाएँ",
   "section_menu_action_privacy_notice": "गोपनीयता नीति",

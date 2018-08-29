@@ -8,6 +8,8 @@
 
 .tab-close-button[pinned],
 #tabbrowser-tabs[closebuttons="activetab"] > .tabbrowser-tab > .tab-stack > .tab-content > .tab-close-button:not([selected="true"]),
+.tab-icon-pending:not([pendingicon]),
+.tab-icon-pending[busy],
 .tab-icon-image:not([src]):not([pinned]):not([crashed])[selected],
 .tab-icon-image:not([src]):not([pinned]):not([crashed]):not([sharing]),
 .tab-icon-image[busy],

@@ -100,7 +100,8 @@
           "cookieStoreId": {"type": "string", "optional": true, "description": "The CookieStoreId used for the tab."},
           "isArticle": {"type": "boolean", "optional": true, "description": "Whether the document in the tab can be rendered in reader mode."},
           "isInReaderMode": {"type": "boolean", "optional": true, "description": "Whether the document in the tab is being rendered in reader mode."},
-          "sharingState": {"$ref": "SharingState", "optional": true, "description": "Current tab sharing state for screen, microphone and camera."}
+          "sharingState": {"$ref": "SharingState", "optional": true, "description": "Current tab sharing state for screen, microphone and camera."},
+          "attention": {"type": "boolean", "optional": true, "description": "Whether the tab is drawing attention."}
         }
       },
       {
