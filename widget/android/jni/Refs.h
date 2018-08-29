@@ -21,6 +21,8 @@ template<class Cls, typename JNIType> class Context;
 template<class Cls> class LocalRef;
 // Wrapped global reference that inherits from Ref.
 template<class Cls> class GlobalRef;
+// Wrapped weak reference that inherits from Ref.
+template<class Cls> class WeakRef;
 // Wrapped dangling reference that's owned by someone else.
 template<class Cls> class DependentRef;
 
@@ -312,6 +314,7 @@ public:
     using Context = jni::Context<Cls, Type>;
     using LocalRef = jni::LocalRef<Cls>;
     using GlobalRef = jni::GlobalRef<Cls>;
+    using WeakRef = jni::WeakRef<Cls>;
     using Param = const Ref&;
 
     static const CallingThread callingThread = CallingThread::ANY;
@@ -671,6 +674,109 @@ public:
     }
 };
 
+template<class Cls>
+class WeakRef : public Ref<Cls, jweak>
+{
+    using Ref = Ref<Cls, jweak>;
+    using JNIType = typename Ref::JNIType;
+
+    static JNIType NewWeakRef(JNIEnv* env, JNIType instance)
+    {
+        return JNIType(instance ? env->NewWeakGlobalRef(instance) : nullptr);
+    }
+
+    WeakRef& swap(WeakRef& other)
+    {
+        auto instance = other.mInstance;
+        other.mInstance = Ref::mInstance;
+        Ref::mInstance = instance;
+        return *this;
+    }
+
+public:
+    WeakRef()
+        : Ref(nullptr)
+    {}
+
+    // Copy constructor
+    WeakRef(const WeakRef& ref)
+        : Ref(NewWeakRef(GetEnvForThread(), ref.mInstance))
+    {}
+
+    // Move constructor
+    WeakRef(WeakRef&& ref)
+        : Ref(ref.mInstance)
+    {
+        ref.mInstance = nullptr;
+    }
+
+    MOZ_IMPLICIT WeakRef(const Ref& ref)
+        : Ref(NewWeakRef(GetEnvForThread(), ref.Get()))
+    {}
+
+    WeakRef(JNIEnv* env, const Ref& ref)
+        : Ref(NewWeakRef(env, ref.Get()))
+    {}
+
+    MOZ_IMPLICIT WeakRef(const LocalRef<Cls>& ref)
+        : Ref(NewWeakRef(ref.Env(), ref.Get()))
+    {}
+
+    // Implicitly converts nullptr to WeakRef.
+    MOZ_IMPLICIT WeakRef(decltype(nullptr))
+        : Ref(nullptr)
+    {}
+
+    ~WeakRef()
+    {
+        if (Ref::mInstance) {
+            Clear(GetEnvForThread());
+        }
+    }
+
+    // Get the raw JNI reference that can be used as a return value.
+    // Returns the same JNI type (jobject, jstring, etc.) as the underlying Ref.
+    typename Ref::JNIType Forget()
+    {
+        const auto obj = Ref::Get();
+        Ref::mInstance = nullptr;
+        return obj;
+    }
+
+    void Clear(JNIEnv* env)
+    {
+        if (Ref::mInstance) {
+            env->DeleteWeakGlobalRef(Ref::mInstance);
+            Ref::mInstance = nullptr;
+        }
+    }
+
+    WeakRef<Cls>& operator=(WeakRef<Cls> ref) &
+    {
+        return swap(ref);
+    }
+
+    WeakRef<Cls>& operator=(const Ref& ref) &
+    {
+        WeakRef<Cls> newRef(ref);
+        return swap(newRef);
+    }
+
+    WeakRef<Cls>& operator=(const LocalRef<Cls>& ref) &
+    {
+        WeakRef<Cls> newRef(ref);
+        return swap(newRef);
+    }
+
+    WeakRef<Cls>& operator=(decltype(nullptr)) &
+    {
+        WeakRef<Cls> newRef(nullptr);
+        return swap(newRef);
+    }
+
+    void operator->() const = delete;
+    void operator*() const = delete;
+};
 
 template<class Cls>
 class DependentRef : public Cls::Ref
