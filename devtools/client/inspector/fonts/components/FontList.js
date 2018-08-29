@@ -8,6 +8,7 @@ const Services = require("Services");
 const {
   createElement,
   createFactory,
+  createRef,
   Fragment,
   PureComponent,
 } = require("devtools/client/shared/vendor/react");
@@ -31,6 +32,21 @@ class FontList extends PureComponent {
     };
   }
 
+  constructor(props) {
+    super(props);
+
+    this.onPreviewClick = this.onPreviewClick.bind(this);
+    this.previewInputRef = createRef();
+  }
+
+  /**
+   * Handler for clicks on the font preview image.
+   * Requests the FontPreviewInput component, if one exists, to focus its input field.
+   */
+  onPreviewClick() {
+    this.previewInputRef.current && this.previewInputRef.current.focus();
+  }
+
   render() {
     const {
       fonts,
@@ -40,6 +56,7 @@ class FontList extends PureComponent {
     } = this.props;
 
     const { previewText } = fontOptions;
+    const { onPreviewClick } = this;
 
     const list = dom.ul(
       {
@@ -48,7 +65,7 @@ class FontList extends PureComponent {
       fonts.map((font, i) => Font({
         key: i,
         font,
-        fontOptions,
+        onPreviewClick,
         onToggleFontHighlight,
       }))
     );
@@ -56,6 +73,7 @@ class FontList extends PureComponent {
     // Show the font preview input only when the font editor is enabled.
     const previewInput = Services.prefs.getBoolPref(PREF_FONT_EDITOR) ?
       FontPreviewInput({
+        ref: this.previewInputRef,
         onPreviewTextChange,
         previewText,
       })
