@@ -206,14 +206,13 @@ MediaEngineWebRTCMicrophoneSource::ReevaluateAllocation(
   AssertIsOnOwningThread();
 
   // aHandle and/or aConstraintsUpdate may be nullptr (see below)
-
   AutoTArray<const NormalizedConstraints*, 10> allConstraints;
-  for (const Allocation& registered : mAllocations) {
-    if (aConstraintsUpdate && registered.mHandle == aHandle) {
-      continue; // Don't count old constraints
+  if (mAllocation) {
+    if (!(aConstraintsUpdate && mAllocation->mHandle == aHandle)) {
+      allConstraints.AppendElement(&mAllocation->mHandle->mConstraints);
     }
-    allConstraints.AppendElement(&registered.mHandle->mConstraints);
   }
+
   if (aConstraintsUpdate) {
     allConstraints.AppendElement(aConstraintsUpdate);
   } else if (aHandle) {
@@ -269,9 +268,7 @@ MediaEngineWebRTCMicrophoneSource::Reconfigure(const RefPtr<AllocationHandle>& a
     return NS_ERROR_UNEXPECTED;
   }
 
-  size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex);
-  ApplySettings(mNetPrefs, mAllocations[i].mStream->GraphImpl());
+  ApplySettings(mNetPrefs, mAllocation->mStream->GraphImpl());
 
   return NS_OK;
 }
@@ -518,7 +515,7 @@ MediaEngineWebRTCMicrophoneSource::SetPassThrough(bool aPassThrough)
 {
   {
     MutexAutoLock lock(mMutex);
-    if (mAllocations.IsEmpty()) {
+    if (!mAllocation) {
       // This can be the case, for now, because we're mixing mutable shared state
       // and linearization via message queue. This is temporary.
       return;
@@ -527,9 +524,8 @@ MediaEngineWebRTCMicrophoneSource::SetPassThrough(bool aPassThrough)
     // mStream is always valid because it's set right before ::Start is called.
     // SetPassThrough cannot be called before that, because it's running on the
     // graph thread, and this cannot happen before the source has been started.
-    MOZ_ASSERT(mAllocations.Length() == 1 &&
-               mAllocations[0].mStream &&
-               mAllocations[0].mStream->GraphImpl()->CurrentDriver()->OnThread(),
+    MOZ_ASSERT(mAllocation->mStream &&
+               mAllocation->mStream->GraphImpl()->CurrentDriver()->OnThread(),
                "Wrong calling pattern, don't call this before ::SetTrack.");
   }
   mSkipProcessing = aPassThrough;
@@ -557,17 +553,14 @@ MediaEngineWebRTCMicrophoneSource::SetRequestedInputChannelCount(
 {
   MutexAutoLock lock(mMutex);
 
-  MOZ_ASSERT(mAllocations.Length() <= 1);
-
-  if (mAllocations.IsEmpty()) {
+  if (!mAllocation) {
       return;
   }
-  MOZ_ASSERT(mAllocations.Length() == 1 &&
-             mAllocations[0].mStream &&
-             mAllocations[0].mStream->GraphImpl()->CurrentDriver()->OnThread(),
+  MOZ_ASSERT(mAllocation->mStream &&
+             mAllocation->mStream->GraphImpl()->CurrentDriver()->OnThread(),
              "Wrong calling pattern, don't call this before ::SetTrack.");
   mRequestedInputChannelCount = aRequestedInputChannelCount;
-  mAllocations[0].mStream->GraphImpl()->ReevaluateInputDevice();
+  mAllocation->mStream->GraphImpl()->ReevaluateInputDevice();
 }
 
 void
@@ -576,12 +569,6 @@ MediaEngineWebRTCMicrophoneSource::ApplySettings(const MediaEnginePrefs& aPrefs,
 {
   AssertIsOnOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(aGraph);
-#ifdef DEBUG
-  {
-    MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(mAllocations.Length() <= 1);
-  }
-#endif
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   NS_DispatchToMainThread(media::NewRunnableFrom([that, graph = std::move(aGraph), aPrefs]() mutable {
@@ -636,13 +623,6 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
   MOZ_ASSERT(aOutHandle);
   auto handle = MakeRefPtr<AllocationHandle>(aConstraints, aPrincipalInfo,
                                              aDeviceId);
-
-#ifdef DEBUG
-  {
-    MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(mAllocations.Length() <= 1);
-  }
-#endif
   LOG(("Mic source %p allocation %p Allocate()", this, handle.get()));
 
   nsresult rv = ReevaluateAllocation(handle, nullptr, aPrefs, aDeviceId,
@@ -653,8 +633,8 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
 
   {
     MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(mAllocations.IsEmpty(), "Only allocate once.");
-    mAllocations.AppendElement(Allocation(handle));
+    MOZ_ASSERT(!mAllocation, "Only allocate once.");
+    mAllocation = MakeUnique<Allocation>(Allocation(handle));
   }
 
   handle.forget(aOutHandle);
@@ -668,32 +648,24 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandl
 
   MOZ_ASSERT(mState == kStopped);
 
-  size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex);
-  MOZ_DIAGNOSTIC_ASSERT(!mAllocations[i].mEnabled,
+  MOZ_DIAGNOSTIC_ASSERT(!mAllocation->mEnabled,
                         "Source should be stopped for the track before removing");
 
-  if (mAllocations[i].mStream && IsTrackIDExplicit(mAllocations[i].mTrackID)) {
-    mAllocations[i].mStream->EndTrack(mAllocations[i].mTrackID);
+  if (mAllocation->mStream && IsTrackIDExplicit(mAllocation->mTrackID)) {
+    mAllocation->mStream->EndTrack(mAllocation->mTrackID);
   }
 
-  {
-    MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(mAllocations.Length() == 1, "Only allocate once.");
-    mAllocations.RemoveElementAt(i);
-  }
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(mAllocation, "Only deallocate once");
+  mAllocation = nullptr;
 
-  if (mAllocations.IsEmpty()) {
-    // If empty, no callbacks to deliver data should be occuring
-    MOZ_ASSERT(mState != kReleased, "Source not allocated");
-    MOZ_ASSERT(mState != kStarted, "Source not stopped");
+  // If empty, no callbacks to deliver data should be occuring
+  MOZ_ASSERT(mState != kReleased, "Source not allocated");
+  MOZ_ASSERT(mState != kStarted, "Source not stopped");
 
-    MutexAutoLock lock(mMutex);
-    mState = kReleased;
-    LOG(("Audio device %s deallocated", NS_ConvertUTF16toUTF8(mDeviceName).get()));
-  } else {
-    LOG(("Audio device %s deallocated but still in use", NS_ConvertUTF16toUTF8(mDeviceName).get()));
-  }
+  mState = kReleased;
+  LOG(("Audio device %s deallocated", NS_ConvertUTF16toUTF8(mDeviceName).get()));
+
   return NS_OK;
 }
 
@@ -707,24 +679,20 @@ MediaEngineWebRTCMicrophoneSource::SetTrack(const RefPtr<const AllocationHandle>
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
 
-  if (mAllocations.Length() == 1 &&
-      mAllocations[0].mStream &&
-      mAllocations[0].mStream->Graph() != aStream->Graph()) {
+  if (mAllocation &&
+      mAllocation->mStream &&
+      mAllocation->mStream->Graph() != aStream->Graph()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  MOZ_ASSERT(mAllocations.Length() == 1, "Only allocate once.");
-
-  size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex);
-  MOZ_ASSERT(!mAllocations[i].mStream);
-  MOZ_ASSERT(mAllocations[i].mTrackID == TRACK_NONE);
-  MOZ_ASSERT(mAllocations[i].mPrincipal == PRINCIPAL_HANDLE_NONE);
+  MOZ_ASSERT(!mAllocation->mStream);
+  MOZ_ASSERT(mAllocation->mTrackID == TRACK_NONE);
+  MOZ_ASSERT(mAllocation->mPrincipal == PRINCIPAL_HANDLE_NONE);
   {
     MutexAutoLock lock(mMutex);
-    mAllocations[i].mStream = aStream;
-    mAllocations[i].mTrackID = aTrackID;
-    mAllocations[i].mPrincipal = aPrincipal;
+    mAllocation->mStream = aStream;
+    mAllocation->mTrackID = aTrackID;
+    mAllocation->mPrincipal = aPrincipal;
   }
 
   AudioSegment* segment = new AudioSegment();
@@ -749,14 +717,9 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
 
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
 
-  size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex,
-                        "Can't start track that hasn't been added");
-  Allocation& allocation = mAllocations[i];
-
   CubebUtils::AudioDeviceID deviceID = mDeviceInfo->DeviceID();
-  if (allocation.mStream->GraphImpl()->InputDeviceID() &&
-      allocation.mStream->GraphImpl()->InputDeviceID() != deviceID) {
+  if (mAllocation->mStream->GraphImpl()->InputDeviceID() &&
+      mAllocation->mStream->GraphImpl()->InputDeviceID() != deviceID) {
     // For now, we only allow opening a single audio input device per document,
     // because we can only have one MSG per document.
     return NS_ERROR_FAILURE;
@@ -778,18 +741,18 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
   sInputStreamsOpen++;
 #endif
 
-  MOZ_ASSERT(!allocation.mEnabled, "Source already started");
+  MOZ_ASSERT(!mAllocation->mEnabled, "Source already started");
   {
     // This spans setting both the enabled state and mState.
     MutexAutoLock lock(mMutex);
-    allocation.mEnabled = true;
+    mAllocation->mEnabled = true;
 
 #ifdef DEBUG
     // Ensure that callback-tracking state is reset when callbacks start coming.
-    allocation.mLastCallbackAppendTime = 0;
+    mAllocation->mLastCallbackAppendTime = 0;
 #endif
-    allocation.mLiveFramesAppended = false;
-    allocation.mLiveSilenceAppended = false;
+    mAllocation->mLiveFramesAppended = false;
+    mAllocation->mLiveSilenceAppended = false;
 
     if (!mListener) {
       mListener = new WebRTCAudioDataListener(this);
@@ -798,13 +761,13 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
     // Make sure logger starts before capture
     AsyncLatencyLogger::Get(true);
 
-    allocation.mStream->OpenAudioInput(deviceID, mListener);
+    mAllocation->mStream->OpenAudioInput(deviceID, mListener);
 
     MOZ_ASSERT(mState != kReleased);
     mState = kStarted;
   }
 
-  ApplySettings(mNetPrefs, allocation.mStream->GraphImpl());
+  ApplySettings(mNetPrefs, mAllocation->mStream->GraphImpl());
 
   return NS_OK;
 }
@@ -812,18 +775,13 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
 nsresult
 MediaEngineWebRTCMicrophoneSource::Stop(const RefPtr<const AllocationHandle>& aHandle)
 {
-  MOZ_ASSERT(mAllocations.Length() <= 1);
   AssertIsOnOwningThread();
 
   LOG(("Mic source %p allocation %p Stop()", this, aHandle.get()));
 
-  size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex,
-                        "Cannot stop track that we don't know about");
-  Allocation& allocation = mAllocations[i];
-  MOZ_ASSERT(allocation.mStream, "SetTrack must have been called before ::Stop");
+  MOZ_ASSERT(mAllocation->mStream, "SetTrack must have been called before ::Stop");
 
-  if (!allocation.mEnabled) {
+  if (!mAllocation->mEnabled) {
     // Already stopped - this is allowed
     return NS_OK;
   }
@@ -831,11 +789,11 @@ MediaEngineWebRTCMicrophoneSource::Stop(const RefPtr<const AllocationHandle>& aH
   {
     // This spans setting both the enabled state and mState.
     MutexAutoLock lock(mMutex);
-    allocation.mEnabled = false;
+    mAllocation->mEnabled = false;
 
     CubebUtils::AudioDeviceID deviceID = mDeviceInfo->DeviceID();
     Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
-    allocation.mStream->CloseAudioInput(id, mListener);
+    mAllocation->mStream->CloseAudioInput(id, mListener);
     mListener = nullptr;
 #ifdef MOZ_PULSEAUDIO
     MOZ_ASSERT(sInputStreamsOpen > 0);
@@ -874,10 +832,8 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
 
   {
     MutexAutoLock lock(mMutex);
-    size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-    if (i == mAllocations.NoIndex) {
-      // This handle must have been deallocated. That's fine, and its track
-      // will already be ended. No need to do anything.
+    if (!mAllocation) {
+      // Deallocation already happened. Just return.
       return;
     }
 
@@ -887,12 +843,12 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
 
     if (delta < 0) {
       LOG_FRAMES(("Not appending silence for allocation %p; %" PRId64 " frames already buffered",
-                  mAllocations[i].mHandle.get(), -delta));
+                  mAllocation->mHandle.get(), -delta));
       return;
     }
 
-    if (!mAllocations[i].mLiveFramesAppended ||
-        !mAllocations[i].mLiveSilenceAppended) {
+    if (!mAllocation->mLiveFramesAppended ||
+        !mAllocation->mLiveSilenceAppended) {
       // These are the iterations after starting or resuming audio capture.
       // Make sure there's at least one extra block buffered until audio
       // callbacks come in. We also allow appending silence one time after
@@ -906,7 +862,7 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
       // right amount of silence, we'll have to append silence once more,
       // failing the other assert below.
       MOZ_ASSERT_IF(!PassThrough(aStream->GraphImpl()) && !mPacketizerInput,
-                    !mAllocations[i].mLiveFramesAppended);
+                    !mAllocation->mLiveFramesAppended);
 
       if (!PassThrough(aStream->GraphImpl()) && mPacketizerInput) {
         // Processing is active and is processed in chunks of 10ms through the
@@ -917,7 +873,7 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
     }
 
     LOG_FRAMES(("Pulling %" PRId64 " frames of silence for allocation %p",
-                delta, mAllocations[i].mHandle.get()));
+                delta, mAllocation->mHandle.get()));
 
     // This assertion fails when we append silence here in the same iteration
     // as there were real audio samples already appended by the audio callback.
@@ -929,14 +885,14 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
     //   before the first graph iteration.
     // And other combinations of order of audio sample sources.
     MOZ_ASSERT_IF(
-      mAllocations[i].mEnabled &&
-      mAllocations[i].mLiveFramesAppended &&
-      mAllocations[i].mLiveSilenceAppended,
+      mAllocation->mEnabled &&
+      mAllocation->mLiveFramesAppended &&
+      mAllocation->mLiveSilenceAppended,
       aStream->GraphImpl()->IterationEnd() >
-      mAllocations[i].mLastCallbackAppendTime);
+      mAllocation->mLastCallbackAppendTime);
 
-    if (mAllocations[i].mLiveFramesAppended) {
-      mAllocations[i].mLiveSilenceAppended = true;
+    if (mAllocation->mLiveFramesAppended) {
+      mAllocation->mLiveSilenceAppended = true;
     }
   }
 
@@ -1130,42 +1086,36 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraphImpl* aGr
     }
 
     AudioSegment segment;
-    for (Allocation& allocation : mAllocations) {
-      if (!allocation.mStream) {
-        continue;
-      }
+    if (!mAllocation->mStream->GraphImpl()) {
+      // The DOMMediaStream that owns mAllocation->mStream has been cleaned up
+      // and MediaStream::DestroyImpl() has run in the MSG. This is fine and
+      // can happen before the MediaManager thread gets to stop capture for
+      // this allocation.
+      continue;
+    }
 
-      if (!allocation.mStream->GraphImpl()) {
-        // The DOMMediaStream that owns allocation.mStream has been cleaned up
-        // and MediaStream::DestroyImpl() has run in the MSG. This is fine and
-        // can happen before the MediaManager thread gets to stop capture for
-        // this allocation.
-        continue;
-      }
+    if (!mAllocation->mEnabled) {
+      continue;
+    }
 
-      if (!allocation.mEnabled) {
-        continue;
-      }
-
-      LOG_FRAMES(("Appending %" PRIu32 " frames of packetized audio for allocation %p",
-                  mPacketizerInput->PacketSize(), allocation.mHandle.get()));
+    LOG_FRAMES(("Appending %" PRIu32 " frames of packetized audio for allocation %p",
+                mPacketizerInput->PacketSize(), mAllocation->mHandle.get()));
 
 #ifdef DEBUG
-      allocation.mLastCallbackAppendTime =
-        allocation.mStream->GraphImpl()->IterationEnd();
+    mAllocation->mLastCallbackAppendTime =
+      mAllocation->mStream->GraphImpl()->IterationEnd();
 #endif
-      allocation.mLiveFramesAppended = true;
+    mAllocation->mLiveFramesAppended = true;
 
-      // We already have planar audio data of the right format. Insert into the
-      // MSG.
-      MOZ_ASSERT(processedOutputChannelPointers.Length() == aChannels);
-      RefPtr<SharedBuffer> other = buffer;
-      segment.AppendFrames(other.forget(),
-                           processedOutputChannelPointersConst,
-                           mPacketizerInput->PacketSize(),
-                           allocation.mPrincipal);
-      allocation.mStream->AppendToTrack(allocation.mTrackID, &segment);
-    }
+    // We already have planar audio data of the right format. Insert into the
+    // MSG.
+    MOZ_ASSERT(processedOutputChannelPointers.Length() == aChannels);
+    RefPtr<SharedBuffer> other = buffer;
+    segment.AppendFrames(other.forget(),
+                         processedOutputChannelPointersConst,
+                         mPacketizerInput->PacketSize(),
+                         mAllocation->mPrincipal);
+    mAllocation->mStream->AppendToTrack(mAllocation->mTrackID, &segment);
   }
 }
 
@@ -1183,9 +1133,9 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
 
   if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
     mTotalFrames += aFrames;
-    if (mAllocations[0].mStream &&
+    if (mAllocation->mStream &&
         mTotalFrames > mLastLogFrames +
-                       mAllocations[0].mStream->GraphRate()) { // ~ 1 second
+                       mAllocation->mStream->GraphRate()) { // ~ 1 second
       MOZ_LOG(AudioLogModule(), LogLevel::Debug,
               ("%p: Inserting %zu samples into graph, total frames = %" PRIu64,
                (void*)this, aFrames, mTotalFrames));
@@ -1193,74 +1143,64 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
     }
   }
 
-  for (Allocation& allocation : mAllocations) {
-    if (!allocation.mStream) {
-      continue;
-    }
+  if (!mAllocation->mStream) {
+    return;
+  }
 
-    if (!allocation.mStream->GraphImpl()) {
-      // The DOMMediaStream that owns allocation.mStream has been cleaned up
-      // and MediaStream::DestroyImpl() has run in the MSG. This is fine and
-      // can happen before the MediaManager thread gets to stop capture for
-      // this allocation.
-      continue;
-    }
+  if (!mAllocation->mStream->GraphImpl()) {
+    // The DOMMediaStream that owns mAllocation->mStream has been cleaned up
+    // and MediaStream::DestroyImpl() has run in the MSG. This is fine and
+    // can happen before the MediaManager thread gets to stop capture for
+    // this mAllocation->
+    return;
+  }
 
-    if (!allocation.mEnabled) {
-      continue;
-    }
+  if (!mAllocation->mEnabled) {
+    return;
+  }
 
 #ifdef DEBUG
-    allocation.mLastCallbackAppendTime =
-      allocation.mStream->GraphImpl()->IterationEnd();
+  mAllocation->mLastCallbackAppendTime =
+    mAllocation->mStream->GraphImpl()->IterationEnd();
 #endif
-    allocation.mLiveFramesAppended = true;
+  mAllocation->mLiveFramesAppended = true;
 
-    TimeStamp insertTime;
-    // Make sure we include the stream and the track.
-    // The 0:1 is a flag to note when we've done the final insert for a given input block.
-    LogTime(AsyncLatencyLogger::AudioTrackInsertion,
-            LATENCY_STREAM_ID(allocation.mStream.get(), allocation.mTrackID),
-            (&allocation != &mAllocations.LastElement()) ? 0 : 1, insertTime);
+  // Bug 971528 - Support stereo capture in gUM
+  MOZ_ASSERT(aChannels >= 1 && aChannels <= 8, "Support up to 8 channels");
 
-    // Bug 971528 - Support stereo capture in gUM
-    MOZ_ASSERT(aChannels >= 1 && aChannels <= 8, "Support up to 8 channels");
+  AudioSegment segment;
+  RefPtr<SharedBuffer> buffer =
+    SharedBuffer::Create(aFrames * aChannels * sizeof(T));
+  AutoTArray<const T*, 8> channels;
+  if (aChannels == 1) {
+    PodCopy(static_cast<T*>(buffer->Data()), aBuffer, aFrames);
+    channels.AppendElement(static_cast<T*>(buffer->Data()));
+  } else {
+    channels.SetLength(aChannels);
+    AutoTArray<T*, 8> write_channels;
+    write_channels.SetLength(aChannels);
+    T * samples = static_cast<T*>(buffer->Data());
 
-    AudioSegment segment;
-    RefPtr<SharedBuffer> buffer =
-      SharedBuffer::Create(aFrames * aChannels * sizeof(T));
-    AutoTArray<const T*, 8> channels;
-    if (aChannels == 1) {
-      PodCopy(static_cast<T*>(buffer->Data()), aBuffer, aFrames);
-      channels.AppendElement(static_cast<T*>(buffer->Data()));
-    } else {
-      channels.SetLength(aChannels);
-      AutoTArray<T*, 8> write_channels;
-      write_channels.SetLength(aChannels);
-      T * samples = static_cast<T*>(buffer->Data());
-
-      size_t offset = 0;
-      for(uint32_t i = 0; i < aChannels; ++i) {
-        channels[i] = write_channels[i] = samples + offset;
-        offset += aFrames;
-      }
-
-      DeinterleaveAndConvertBuffer(aBuffer,
-                                   aFrames,
-                                   aChannels,
-                                   write_channels.Elements());
+    size_t offset = 0;
+    for(uint32_t i = 0; i < aChannels; ++i) {
+      channels[i] = write_channels[i] = samples + offset;
+      offset += aFrames;
     }
 
-    LOG_FRAMES(("Appending %zu frames of raw audio for allocation %p",
-                aFrames, allocation.mHandle.get()));
-
-    MOZ_ASSERT(aChannels == channels.Length());
-    segment.AppendFrames(buffer.forget(), channels, aFrames,
-                          allocation.mPrincipal);
-    segment.GetStartTime(insertTime);
-
-    allocation.mStream->AppendToTrack(allocation.mTrackID, &segment);
+    DeinterleaveAndConvertBuffer(aBuffer,
+        aFrames,
+        aChannels,
+        write_channels.Elements());
   }
+
+  LOG_FRAMES(("Appending %zu frames of raw audio for allocation %p",
+        aFrames, mAllocation->mHandle.get()));
+
+  MOZ_ASSERT(aChannels == channels.Length());
+  segment.AppendFrames(buffer.forget(), channels, aFrames,
+      mAllocation->mPrincipal);
+
+  mAllocation->mStream->AppendToTrack(mAllocation->mTrackID, &segment);
 }
 
 // Called back on GraphDriver thread!
@@ -1277,8 +1217,8 @@ MediaEngineWebRTCMicrophoneSource::NotifyInputData(MediaStreamGraphImpl* aGraph,
 
   {
     MutexAutoLock lock(mMutex);
-    if (mAllocations.IsEmpty()) {
-      // This can happen because mAllocations is not yet using message passing, and
+    if (!mAllocation) {
+      // This can happen because mAllocation is not yet using message passing, and
       // is access both on the media manager thread and the MSG thread. This is to
       // be fixed soon.
       // When deallocating, the listener is removed via message passing, while the
@@ -1341,18 +1281,14 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
   AssertIsOnOwningThread();
 
   if (mState == kStarted) {
-    for (const Allocation& allocation : mAllocations) {
-      if (allocation.mEnabled) {
-        Stop(allocation.mHandle);
-      }
+    if (mAllocation->mEnabled) {
+      Stop(mAllocation->mHandle);
     }
     MOZ_ASSERT(mState == kStopped);
   }
 
-  while (!mAllocations.IsEmpty()) {
-    MOZ_ASSERT(mState == kAllocated || mState == kStopped);
-    Deallocate(mAllocations[0].mHandle);
-  }
+  MOZ_ASSERT(mState == kAllocated || mState == kStopped);
+  Deallocate(mAllocation->mHandle);
   MOZ_ASSERT(mState == kReleased);
 }
 
@@ -1386,12 +1322,8 @@ bool
 MediaEngineWebRTCMicrophoneSource::HasEnabledTrack() const
 {
   AssertIsOnOwningThread();
-  for (const Allocation& allocation : mAllocations) {
-    if (allocation.mEnabled) {
-      return true;
-    }
-  }
-  return false;
+  MOZ_ASSERT(mAllocation);
+  return mAllocation->mEnabled;
 }
 
 nsresult
