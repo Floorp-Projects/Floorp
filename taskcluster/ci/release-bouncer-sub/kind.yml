@@ -62,8 +62,8 @@ jobs:
          by-project:
             default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer']
             # No stub installer in esr60
-            mozilla-esr60: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar']
-            jamun: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar']
+            mozilla-esr60: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar']
+            jamun: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar']
       shipping-product: firefox
       treeherder:
          platform: firefox-release/opt

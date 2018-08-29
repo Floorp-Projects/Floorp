@@ -14,7 +14,30 @@ _renames = {
 }
 
 
+_archive_formats = {
+    'linux': '.tar.bz2',
+    'macosx': '.tar.gz',
+    'windows': '.zip',
+}
+
+_executable_extension = {
+    'linux': '',
+    'macosx': '',
+    'windows': '.exe',
+}
+
+
 def platform_family(build_platform):
     """Given a build platform, return the platform family (linux, macosx, etc.)"""
     family = _platform_re.match(build_platform).group(0)
     return _renames.get(family, family)
+
+
+def archive_format(build_platform):
+    """Given a build platform, return the archive format used on the platform."""
+    return _archive_formats[platform_family(build_platform)]
+
+
+def executable_extension(build_platform):
+    """Given a build platform, return the executable extension used on the platform."""
+    return _executable_extension[platform_family(build_platform)]
