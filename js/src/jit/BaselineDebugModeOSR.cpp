@@ -189,7 +189,7 @@ CollectJitStackScripts(JSContext* cx, const Debugger::ExecutionObservableSet& ob
     for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
         const JSJitFrameIter& frame = iter.frame();
         switch (frame.type()) {
-          case JitFrame_BaselineJS: {
+          case FrameType::BaselineJS: {
             JSScript* script = frame.script();
 
             if (!obs.shouldRecompileOrInvalidate(script)) {
@@ -234,12 +234,12 @@ CollectJitStackScripts(JSContext* cx, const Debugger::ExecutionObservableSet& ob
             break;
           }
 
-          case JitFrame_BaselineStub:
+          case FrameType::BaselineStub:
             prevFrameStubPtr =
                 reinterpret_cast<BaselineStubFrameLayout*>(frame.fp())->maybeStubPtr();
             break;
 
-          case JitFrame_IonJS: {
+          case FrameType::IonJS: {
             InlineFrameIterator inlineIter(cx, &frame);
             while (true) {
                 if (obs.shouldRecompileOrInvalidate(inlineIter.script())) {
@@ -388,7 +388,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
     for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
         const JSJitFrameIter& frame = iter.frame();
         switch (frame.type()) {
-          case JitFrame_BaselineJS: {
+          case FrameType::BaselineJS: {
             // If the script wasn't recompiled or is not observed, there's
             // nothing to patch.
             if (!obs.shouldRecompileOrInvalidate(frame.script()))
@@ -590,7 +590,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
             break;
           }
 
-          case JitFrame_BaselineStub: {
+          case FrameType::BaselineStub: {
             JSJitFrameIter prev(iter.frame());
             ++prev;
             BaselineFrame* prevFrame = prev.baselineFrame();
@@ -633,7 +633,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
             break;
           }
 
-          case JitFrame_IonJS: {
+          case FrameType::IonJS: {
             // Nothing to patch.
             InlineFrameIterator inlineIter(cx, &frame);
             while (true) {

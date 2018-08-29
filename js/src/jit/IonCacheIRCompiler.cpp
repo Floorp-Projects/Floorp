@@ -294,7 +294,7 @@ static void*
 GetReturnAddressToIonCode(JSContext* cx)
 {
     JSJitFrameIter frame(cx->activation()->asJit());
-    MOZ_ASSERT(frame.type() == JitFrame_Exit,
+    MOZ_ASSERT(frame.type() == FrameType::Exit,
                "An exit frame is expected as update functions are called with a VMFunction.");
 
     void* returnAddr = frame.returnAddress();
@@ -309,7 +309,7 @@ GetReturnAddressToIonCode(JSContext* cx)
 void
 IonCacheIRCompiler::prepareVMCall(MacroAssembler& masm, const AutoSaveLiveRegisters&)
 {
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), FrameType::IonJS,
                                               IonICCallFrameLayout::Size());
     pushStubCodePointer();
     masm.Push(Imm32(descriptor));
@@ -328,7 +328,7 @@ IonCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun)
     TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
 
     uint32_t frameSize = fun.explicitStackSlots() * sizeof(void*);
-    uint32_t descriptor = MakeFrameDescriptor(frameSize, JitFrame_IonICCall,
+    uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
                                               ExitFrameLayout::Size());
     masm.Push(Imm32(descriptor));
     masm.callJit(code);
@@ -971,7 +971,7 @@ IonCacheIRCompiler::emitCallScriptedGetterResult()
     uint32_t framePushedBefore = masm.framePushed();
 
     // Construct IonICCallFrameLayout.
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), FrameType::IonJS,
                                               IonICCallFrameLayout::Size());
     pushStubCodePointer();
     masm.Push(Imm32(descriptor));
@@ -995,7 +995,7 @@ IonCacheIRCompiler::emitCallScriptedGetterResult()
 
     masm.movePtr(ImmGCPtr(target), scratch);
 
-    descriptor = MakeFrameDescriptor(argSize + padding, JitFrame_IonICCall,
+    descriptor = MakeFrameDescriptor(argSize + padding, FrameType::IonICCall,
                                      JitFrameLayout::Size());
     masm.Push(Imm32(0)); // argc
     masm.Push(scratch);
@@ -2106,7 +2106,7 @@ IonCacheIRCompiler::emitCallScriptedSetter()
     uint32_t framePushedBefore = masm.framePushed();
 
     // Construct IonICCallFrameLayout.
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), FrameType::IonJS,
                                               IonICCallFrameLayout::Size());
     pushStubCodePointer();
     masm.Push(Imm32(descriptor));
@@ -2132,7 +2132,7 @@ IonCacheIRCompiler::emitCallScriptedSetter()
 
     masm.movePtr(ImmGCPtr(target), scratch);
 
-    descriptor = MakeFrameDescriptor(argSize + padding, JitFrame_IonICCall,
+    descriptor = MakeFrameDescriptor(argSize + padding, FrameType::IonICCall,
                                      JitFrameLayout::Size());
     masm.Push(Imm32(1)); // argc
     masm.Push(scratch);

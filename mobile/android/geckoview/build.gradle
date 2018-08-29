@@ -273,7 +273,7 @@ apply plugin: 'maven'
 
 uploadArchives {
     repositories.mavenDeployer {
-        pom.groupId = 'org.mozilla'
+        pom.groupId = 'org.mozilla.geckoview'
         pom.artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}-${mozconfig.substs.ANDROID_CPU_ARCH}"
 
         if (mozconfig.substs.RELEASE_OR_BETA == 'true') {
