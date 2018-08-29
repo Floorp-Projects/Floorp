@@ -10,7 +10,7 @@ add_task(async function test() {
   info("Creating a normal window...");
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let tab = win.gBrowser.selectedBrowser;
-  tab.loadURI(BASE_URI);
+  BrowserTestUtils.loadURI(tab, BASE_URI);
   await BrowserTestUtils.browserLoaded(tab);
 
   let blobURL;
@@ -25,7 +25,7 @@ add_task(async function test() {
   info("Creating a private window...");
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   let privateTab = privateWin.gBrowser.selectedBrowser;
-  privateTab.loadURI(BASE_URI);
+  BrowserTestUtils.loadURI(privateTab, BASE_URI);
   await BrowserTestUtils.browserLoaded(privateTab);
 
   await ContentTask.spawn(privateTab, blobURL, function(url) {

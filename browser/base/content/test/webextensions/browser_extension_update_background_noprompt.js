@@ -21,12 +21,12 @@ add_task(async function setup() {
 
   // Navigate away from the initial page so that about:addons always
   // opens in a new tab during tests
-  gBrowser.selectedBrowser.loadURI("about:robots");
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   registerCleanupFunction(async function() {
     // Return to about:blank when we're done
-    gBrowser.selectedBrowser.loadURI("about:blank");
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   });
 });
