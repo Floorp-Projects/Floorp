@@ -542,7 +542,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
 
   bool thirdParty = false;
   rv = thirdPartyUtil->IsThirdPartyChannel(aChannel,
-                                           nullptr,
+                                           aURI,
                                            &thirdParty);
   // Grant if it's not a 3rd party.
   // Be careful to check the return value of IsThirdPartyChannel, since
