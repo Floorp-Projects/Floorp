@@ -637,7 +637,7 @@ protected:
 
   nsIntRect mRect;
   ScreenIntSize mDimensions;
-  ScreenOrientationInternal mOrientation;
+  hal::ScreenOrientation mOrientation;
   float mDPI;
   int32_t mRounding;
   CSSToLayoutDeviceScale mDefaultScale;
