@@ -28,6 +28,8 @@
     //
     function* testIterator()
     {
+      const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
+                              .getService(Ci.nsIPrincipal);
       var browser = document.getElementById('content');
       browser.addEventListener("pageshow", nextTestAsync, true);
 
@@ -50,14 +52,18 @@
         getService(Ci.nsIObserverService);
       os.addObserver(observer, "content-document-global-created");
 
-      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html");
+      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html", {
+        triggeringPrincipal: systemPrincipal,
+      });
       yield undefined;
       is(browser.contentWindow.testVar, undefined,
          "variable unexpectedly there already");
       browser.contentWindow.wrappedJSObject.testVar = 1;
       is(notificationCount, 1, "Should notify on first navigation");
 
-      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html?2");
+      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html?2", {
+        triggeringPrincipal: systemPrincipal,
+      });
       yield undefined;
       is(browser.contentWindow.wrappedJSObject.testVar, undefined,
          "variable should no longer be there");
@@ -69,7 +75,9 @@
          "variable should still be there");
       is(notificationCount, 2, "Should not notify on back navigation");
 
-      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_xml.xml");
+      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_xml.xml", {
+        triggeringPrincipal: systemPrincipal,
+      });
       yield undefined;
       is(browser.contentDocument.body.textContent, "xslt result",
          "Transform performed successfully");
