@@ -31,7 +31,7 @@ add_task(async function() {
     expectedURI = uri;
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     PlacesObservers.addListener(["page-visited"], onVisitsListener);
-    gBrowser.loadURI(uri);
+    BrowserTestUtils.loadURI(gBrowser, uri);
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, uri);
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, uri);
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, uri);
