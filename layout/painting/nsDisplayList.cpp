@@ -9269,7 +9269,7 @@ nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
 {
   MOZ_ASSERT(aMaskContext->GetDrawTarget()->GetFormat() == SurfaceFormat::A8);
 
-  imgDrawingParams imgParmas(aBuilder->ShouldSyncDecodeImages()
+  imgDrawingParams imgParams(aBuilder->ShouldSyncDecodeImages()
                              ? imgIContainer::FLAG_SYNC_DECODE
                              : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
@@ -9277,16 +9277,17 @@ nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
                                                   mFrame,  GetBuildingRect(),
                                                   borderArea, aBuilder,
                                                   nullptr,
-                                                  mHandleOpacity, imgParmas);
+                                                  mHandleOpacity, imgParams);
   ComputeMaskGeometry(params);
   bool painted = nsSVGIntegrationUtils::PaintMask(params);
   if (aMaskPainted) {
     *aMaskPainted = painted;
   }
 
-  nsDisplayMaskGeometry::UpdateDrawResult(this, imgParmas.result);
+  nsDisplayMaskGeometry::UpdateDrawResult(this, imgParams.result);
 
-  return imgParmas.result == mozilla::image::ImgDrawResult::SUCCESS;
+  return imgParams.result == ImgDrawResult::SUCCESS ||
+    imgParams.result == ImgDrawResult::SUCCESS_NOT_COMPLETE;
 }
 
 LayerState
