@@ -92,22 +92,6 @@
   --theme-popup-border-color: ThreeDShadow;
   --theme-popup-dimmed: hsla(0,0%,80%,.3);
 
-  /* Tooltips */
-  --theme-tooltip-border: #d9e1e8;
-  --theme-tooltip-background: rgba(255, 255, 255, .9);
-  --theme-tooltip-shadow: rgba(155, 155, 155, 0.26);
-
-  /* Doorhangers */
-  /* These colors are based on the colors used for doorhangers elsewhere in
-   * Firefox. */
-  --theme-arrowpanel-background: var(--theme-popup-background);
-  --theme-arrowpanel-color: var(--theme-popup-color);
-  --theme-arrowpanel-border-color: var(--theme-popup-border-color);
-  --theme-arrowpanel-separator: ThreeDShadow;
-  --theme-arrowpanel-dimmed: var(--theme-popup-dimmed);
-  --theme-arrowpanel-dimmed-further: hsla(0,0%,80%,.45);
-  --theme-arrowpanel-disabled-color: GrayText;
-
   --theme-messageCloseButtonFilter: invert(0);
 }
 
@@ -119,7 +103,6 @@
   --theme-popup-background: hsla(0,0%,99%,.975);
   --theme-popup-color: hsl(0,0%,10%);
   --theme-popup-border-color: hsla(210,4%,10%,.05);
-  --theme-arrowpanel-separator: hsla(210,4%,10%,.14);
 }
 
 :root.theme-dark {
@@ -199,22 +182,6 @@
   --theme-popup-color: rgb(249,249,250);
   --theme-popup-border-color: #27272b;
   --theme-popup-dimmed: rgba(249,249,250,.1);
-
-  /* Tooltips */
-  --theme-tooltip-border: #434850;
-  --theme-tooltip-background: rgba(19, 28, 38, .9);
-  --theme-tooltip-shadow: rgba(25, 25, 25, 0.76);
-
-  /* Doorhangers */
-  /* These colors are based on the colors used for doorhangers elsewhere in
-   * Firefox. */
-  --theme-arrowpanel-background: var(--theme-popup-background);
-  --theme-arrowpanel-color: var(--theme-popup-color);
-  --theme-arrowpanel-border-color: var(--theme-popup-border-color);
-  --theme-arrowpanel-separator: rgba(249,249,250,.1);
-  --theme-arrowpanel-dimmed: var(--theme-popup-dimmed);
-  --theme-arrowpanel-dimmed-further: rgba(249,249,250,.15);
-  --theme-arrowpanel-disabled-color: rgba(249,249,250,.5);
 
   --theme-messageCloseButtonFilter: invert(1);
 }
