@@ -35,6 +35,7 @@
 #include "js/AutoByteString.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
+#include "js/SourceBufferHolder.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
@@ -74,6 +75,7 @@ using mozilla::Unused;
 using JS::AsmJSOption;
 using JS::AutoStableStringChars;
 using JS::GenericNaN;
+using JS::SourceBufferHolder;
 
 /*****************************************************************************/
 
@@ -6153,7 +6155,7 @@ HandleInstantiationFailure(JSContext* cx, CallArgs args, const AsmJSMetadata& me
     if (!fun)
         return false;
 
-    CompileOptions options(cx);
+    JS::CompileOptions options(cx);
     options.setMutedErrors(source->mutedErrors())
            .setFile(source->filename())
            .setNoScriptRval(false);

@@ -18,6 +18,7 @@
 
 #include "jsapi.h"
 #include "js/AutoByteString.h"
+#include "js/CompilationAndEvaluation.h"
 #include "js/Printf.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -1057,7 +1058,7 @@ NS_IMETHODIMP mozJSComponentLoader::LoadedModules(uint32_t* length,
     *aModules = modules;
 
     for (auto iter = mImports.Iter(); !iter.Done(); iter.Next()) {
-        *modules = NS_strdup(iter.Data()->location);
+        *modules = NS_xstrdup(iter.Data()->location);
         modules++;
     }
 
@@ -1072,7 +1073,7 @@ NS_IMETHODIMP mozJSComponentLoader::LoadedComponents(uint32_t* length,
     *aComponents = comp;
 
     for (auto iter = mModules.Iter(); !iter.Done(); iter.Next()) {
-        *comp = NS_strdup(iter.Data()->location);
+        *comp = NS_xstrdup(iter.Data()->location);
         comp++;
     }
 

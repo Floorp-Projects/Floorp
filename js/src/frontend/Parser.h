@@ -181,6 +181,7 @@
 #include "frontend/SharedContext.h"
 #include "frontend/SyntaxParseHandler.h"
 #include "frontend/TokenStream.h"
+#include "js/CompileOptions.h"
 #include "vm/Iteration.h"
 
 namespace js {
@@ -320,7 +321,7 @@ class MOZ_STACK_CLASS ParserBase
     template<class, typename> friend class AutoAwaitIsKeyword;
     template<class, typename> friend class AutoInParametersOfAsyncFunction;
 
-    ParserBase(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
+    ParserBase(JSContext* cx, LifoAlloc& alloc, const JS::ReadOnlyCompileOptions& options,
                bool foldConstants, UsedNameTracker& usedNames,
                ScriptSourceObject* sourceObject, ParseGoal parseGoal);
     ~ParserBase();
@@ -343,7 +344,7 @@ class MOZ_STACK_CLASS ParserBase
         return pc->sc()->setLocalStrictMode(strict);
     }
 
-    const ReadOnlyCompileOptions& options() const {
+    const JS::ReadOnlyCompileOptions& options() const {
         return anyChars.options();
     }
 
@@ -485,14 +486,14 @@ class MOZ_STACK_CLASS PerHandlerParser
     // NOTE: The argument ordering here is deliberately different from the
     //       public constructor so that typos calling the public constructor
     //       are less likely to select this overload.
-    PerHandlerParser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
+    PerHandlerParser(JSContext* cx, LifoAlloc& alloc, const JS::ReadOnlyCompileOptions& options,
                      bool foldConstants, UsedNameTracker& usedNames, LazyScript* lazyOuterFunction,
                      ScriptSourceObject* sourceObject, ParseGoal parseGoal,
                      void* internalSyntaxParser);
 
   protected:
     template<typename CharT>
-    PerHandlerParser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
+    PerHandlerParser(JSContext* cx, LifoAlloc& alloc, const JS::ReadOnlyCompileOptions& options,
                      bool foldConstants, UsedNameTracker& usedNames,
                      GeneralParser<SyntaxParseHandler, CharT>* syntaxParser,
                      LazyScript* lazyOuterFunction, ScriptSourceObject* sourceObject,
@@ -899,7 +900,7 @@ class MOZ_STACK_CLASS GeneralParser
     TokenStream tokenStream;
 
   public:
-    GeneralParser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
+    GeneralParser(JSContext* cx, LifoAlloc& alloc, const JS::ReadOnlyCompileOptions& options,
                   const CharT* chars, size_t length, bool foldConstants,
                   UsedNameTracker& usedNames, SyntaxParser* syntaxParser,
                   LazyScript* lazyOuterFunction,

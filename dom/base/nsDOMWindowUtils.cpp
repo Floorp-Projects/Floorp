@@ -2126,8 +2126,7 @@ nsDOMWindowUtils::GetClassName(JS::Handle<JS::Value> aObject, JSContext* aCx,
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
 
-  *aName = NS_strdup(JS_GetClass(aObject.toObjectOrNull())->name);
-  MOZ_ASSERT(*aName, "NS_strdup should be infallible.");
+  *aName = NS_xstrdup(JS_GetClass(aObject.toObjectOrNull())->name);
   return NS_OK;
 }
 

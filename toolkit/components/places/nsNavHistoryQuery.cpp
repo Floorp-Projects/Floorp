@@ -830,8 +830,6 @@ NS_IMETHODIMP nsNavHistoryQuery::GetTags(nsIVariant **aTags)
     // Note: The resulting nsIVariant dupes both the array and its elements.
     const char16_t **array = reinterpret_cast<const char16_t **>
                               (moz_xmalloc(arrayLen * sizeof(char16_t *)));
-    NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
-
     for (uint32_t i = 0; i < arrayLen; ++i) {
       array[i] = mTags[i].get();
     }
@@ -953,9 +951,7 @@ NS_IMETHODIMP nsNavHistoryQuery::GetParents(uint32_t *aGuidCount,
   uint32_t count = mParents.Length();
   char **guids = nullptr;
   if (count > 0) {
-    guids = static_cast<char**>
-                       (moz_xmalloc(count * sizeof(char*)));
-    NS_ENSURE_TRUE(guids, NS_ERROR_OUT_OF_MEMORY);
+    guids = static_cast<char**>(moz_xmalloc(count * sizeof(char*)));
 
     for (uint32_t i = 0; i < count; ++i) {
       guids[i] = ToNewCString(mParents[i]);
@@ -993,7 +989,6 @@ NS_IMETHODIMP nsNavHistoryQuery::GetTransitions(uint32_t* aCount,
   if (count > 0) {
     transitions = reinterpret_cast<uint32_t*>
                   (moz_xmalloc(count * sizeof(uint32_t)));
-    NS_ENSURE_TRUE(transitions, NS_ERROR_OUT_OF_MEMORY);
     for (uint32_t i = 0; i < count; ++i) {
       transitions[i] = mTransitions[i];
     }

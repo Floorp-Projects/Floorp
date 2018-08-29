@@ -377,7 +377,7 @@ html|*.numberbox-input::-moz-number-spin-down  {
   background-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
 
-xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
+xul|*.menulist-dropmarker {
   -moz-appearance: none;
   margin-inline-end: 4px;
   padding: 0;
@@ -388,12 +388,12 @@ xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
   fill: -moz-DialogText;
 }
 
-xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker > xul|*.dropmarker-icon {
+xul|*.menulist-dropmarker > xul|*.dropmarker-icon {
   width: 18px;
   height: 18px;
 }
 
-xul|menulist[disabled="true"]:not([editable="true"]) > xul|*.menulist-dropmarker {
+xul|menulist[disabled="true"] > xul|*.menulist-dropmarker {
   fill: GrayText;
 }
 

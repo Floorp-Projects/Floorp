@@ -184,7 +184,7 @@ Atomic64 Release_Load(volatile const Atomic64* ptr);
 #include <google/protobuf/stubs/atomicops_internals_tsan.h>
 // MSVC.
 #elif defined(_MSC_VER)
-#if defined(GOOGLE_PROTOBUF_ARCH_IA32) || defined(GOOGLE_PROTOBUF_ARCH_X64) || defined(GOOGLE_PROTOBUF_ARCH_ARM)
+#if defined(GOOGLE_PROTOBUF_ARCH_IA32) || defined(GOOGLE_PROTOBUF_ARCH_X64) || defined(GOOGLE_PROTOBUF_ARCH_ARM) || defined(GOOGLE_PROTOBUF_ARCH_AARCH64)
 #include <google/protobuf/stubs/atomicops_internals_x86_msvc.h>
 #else
 #error GOOGLE_PROTOBUF_ATOMICOPS_ERROR
