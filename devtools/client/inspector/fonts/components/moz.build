@@ -12,7 +12,6 @@ DevToolsModules(
     'FontOrigin.js',
     'FontOverview.js',
     'FontPreview.js',
-    'FontPreviewInput.js',
     'FontPropertyValue.js',
     'FontsApp.js',
     'FontSize.js',

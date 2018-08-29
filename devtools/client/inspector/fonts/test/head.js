@@ -61,7 +61,7 @@ var openFontInspectorForURL = async function(url) {
 };
 
 /**
- * Focus the preview input, clear it, type new text into it and wait for the
+ * Focus one of the preview inputs, clear it, type new text into it and wait for the
  * preview images to be updated.
  *
  * @param {FontInspector} view - The FontInspector instance.
@@ -71,8 +71,15 @@ async function updatePreviewText(view, text) {
   info(`Changing the preview text to '${text}'`);
 
   const doc = view.document;
-  const input = doc.querySelector("#font-preview-input-container input");
-  input.focus();
+  const previewImg = doc.querySelector("#sidebar-panel-fontinspector .font-preview");
+
+  info("Clicking the font preview element to turn it to edit mode");
+  const onClick = once(doc, "click");
+  previewImg.click();
+  await onClick;
+
+  const input = previewImg.parentNode.querySelector("input");
+  is(doc.activeElement, input, "The input was focused.");
 
   info("Blanking the input field.");
   while (input.value.length) {
@@ -82,13 +89,13 @@ async function updatePreviewText(view, text) {
   }
 
   if (text) {
-    info(`Typing "${text}" into the input field.`);
-    const update = view.inspector.once("fontinspector-updated");
+    info("Typing the specified text to the input field.");
+    const update = waitForNEvents(view.inspector, "fontinspector-updated", text.length);
     EventUtils.sendString(text, doc.defaultView);
     await update;
   }
 
-  is(input.value, text, `The input now contains "${text}".`);
+  is(input.value, text, "The input now contains the correct text.");
 }
 
 /**
