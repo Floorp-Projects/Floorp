@@ -639,7 +639,7 @@ AddonDebugger.prototype = {
       customIframe: this.frame
     };
 
-    this.target = TargetFactory.forTab(targetOptions);
+    this.target = yield TargetFactory.forRemoteTab(targetOptions);
     let toolbox = yield gDevTools.showToolbox(this.target, "jsdebugger", Toolbox.HostType.CUSTOM, toolboxOptions);
 
     info("Addon debugger panel shown successfully.");
