@@ -11,6 +11,8 @@
 
 #include "jsapi-tests/tests.h"
 
+#include "gc/Zone-inl.h"
+
 static void
 MinimizeHeap(JSContext* cx)
 {

@@ -331,30 +331,20 @@
     </hbox>
     <vbox id="contentBlockingCategories">
       <label id="content-blocking-categories-label" data-l10n-id="content-blocking-category-label"/>
-      <hbox class="content-blocking-category">
+      <hbox class="content-blocking-category fast-block-ui">
+        <vbox class="content-blocking-category-checkbox">
+          <checkbox id="contentBlockingFastBlockCheckbox"
+                    class="content-blocking-checkbox"
+                    preference="browser.fastblock.enabled" />
+        </vbox>
         <vbox class="content-blocking-category-icon">
           <image class="fastblock-icon content-blocking-icon"/>
         </vbox>
         <vbox class="content-blocking-category-labels" flex="1">
           <label data-l10n-id="content-blocking-fastblock-label"
                  class="content-blocking-category-name"
-                 control="fastBlockMenu"/>
+                 control="contentBlockingFastBlockCheckbox"/>
           <description data-l10n-id="content-blocking-fastblock-description" class="content-blocking-category-description"/>
-        </vbox>
-        <vbox>
-          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-          <hbox>
-            <menulist class="content-blocking-category-menu" id="fastBlockMenu" preference="browser.fastblock.enabled">
-              <menupopup>
-                <menuitem data-l10n-id="content-blocking-fastblock-option-enabled"
-                          value="true"
-                          search-l10n-ids=""/>
-                <menuitem data-l10n-id="content-blocking-fastblock-option-disabled"
-                          value="false"
-                          search-l10n-ids=""/>
-              </menupopup>
-            </menulist>
-          </hbox>
         </vbox>
       </hbox>
       <vbox>
@@ -366,37 +356,89 @@
                   class="extension-controlled-button accessory-button"
                   data-l10n-id="disable-extension"/>
         </hbox>
-        <hbox class="content-blocking-category">
+        <hbox class="content-blocking-category tracking-protection-ui">
+          <vbox class="content-blocking-category-checkbox">
+            <checkbox id="contentBlockingTrackingProtectionCheckbox" class="content-blocking-checkbox" />
+          </vbox>
           <vbox class="content-blocking-category-icon">
             <image class="tracking-protection-icon content-blocking-icon" />
           </vbox>
           <vbox class="content-blocking-category-labels" flex="1">
             <label data-l10n-id="content-blocking-tracking-protection-label"
                    class="content-blocking-category-name"
-                   control="trackingProtectionMenu"/>
-            <description data-l10n-id="content-blocking-tracking-protection-description" class="content-blocking-category-description"/>
+                   control="contentBlockingTrackingProtectionCheckbox"/>
+            <description data-l10n-id="content-blocking-tracking-protection-description"
+                         class="content-blocking-category-description"
+                         id="trackingProtectionMenuDesc"/>
+            <radiogroup id="trackingProtectionMenu"
+                        aria-labelledby="trackingProtectionMenuDesc">
+              <radio value="private"
+                     data-l10n-id="content-blocking-tracking-protection-option-private"
+                     flex="1" />
+              <radio value="always"
+                     data-l10n-id="content-blocking-tracking-protection-option-always"
+                     flex="1" />
+            </radiogroup>
             <label id="changeBlockListLink" data-l10n-id="content-blocking-tracking-protection-change-blocklist" class="text-link"/>
-          </vbox>
-          <vbox>
-            <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-            <hbox>
-              <menulist class="content-blocking-category-menu" id="trackingProtectionMenu">
-                <menupopup>
-                  <menuitem data-l10n-id="content-blocking-tracking-protection-option-enabled"
-                            value="always"
-                            search-l10n-ids=""/>
-                  <menuitem data-l10n-id="content-blocking-tracking-protection-option-pbm"
-                            value="private"
-                            search-l10n-ids=""/>
-                  <menuitem data-l10n-id="content-blocking-tracking-protection-option-disabled"
-                            value="never"
-                            search-l10n-ids=""/>
-                </menupopup>
-              </menulist>
-            </hbox>
           </vbox>
         </hbox>
       </vbox>
+      <hbox class="content-blocking-category reject-trackers-ui">
+        <hbox flex="1">
+          <vbox class="content-blocking-category-checkbox">
+            <checkbox id="contentBlockingBlockCookiesCheckbox" class="content-blocking-checkbox" />
+          </vbox>
+          <vbox class="content-blocking-category-icon">
+            <image class="reject-trackers-icon content-blocking-icon"/>
+          </vbox>
+          <vbox class="content-blocking-category-labels" flex="1">
+            <hbox>
+              <vbox>
+                <label data-l10n-id="content-blocking-reject-trackers-label"
+                       class="content-blocking-category-name"
+                       control="contentBlockingBlockCookiesCheckbox"/>
+                <deck id="blockCookiesCBDeck">
+                  <description id="blockCookiesCBDesc"
+                               data-l10n-id="content-blocking-reject-trackers-description"
+                               class="content-blocking-category-description"/>
+                  <hbox id="warningAllCookiesBlocked">
+                    <image class="reject-trackers-warning-icon"/>
+                    <description data-l10n-id="content-blocking-reject-trackers-warning-all-cookies-blocked"
+                                 class="content-blocking-category-description"/>
+                  </hbox>
+                  <hbox id="warningFromVisitedCookiesBlocked">
+                    <image class="reject-trackers-warning-icon"/>
+                    <description data-l10n-id="content-blocking-reject-trackers-warning-from-unvisited-cookies-blocked"
+                                 class="content-blocking-category-description"/>
+                  </hbox>
+                </deck>
+              </vbox>
+              <hbox align="center">
+                <vbox align="center">
+                  <button id="contentBlockingChangeCookieSettings"
+                          class="accessory-button"
+                          flex="1"
+                          hidden="true"
+                          data-l10n-id="content-blocking-change-cookie-settings"/>
+                </vbox>
+              </hbox>
+            </hbox>
+            <radiogroup id="blockCookiesCB"
+                        aria-labelledby="blockCookiesCBDesc"
+                        preference="network.cookie.cookieBehavior"
+                        onsyncfrompreference="return gPrivacyPane.readBlockCookiesCB();"
+                        onsynctopreference="return gPrivacyPane.writeBlockCookiesCB();">
+              <radio value="trackers"
+                     id="blockCookiesFromTrackersCB"
+                     data-l10n-id="content-blocking-reject-trackers-block-trackers-option"
+                     flex="1" />
+              <radio value="all-third-parties"
+                     data-l10n-id="content-blocking-reject-trackers-all-third-parties-option"
+                     flex="1" />
+            </radiogroup>
+          </vbox>
+        </hbox>
+      </hbox>
     </vbox>
     <hbox id="trackingProtectionBox" hidden="true">
       <vbox flex="1">

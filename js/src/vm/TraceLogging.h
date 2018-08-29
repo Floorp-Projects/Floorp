@@ -14,17 +14,13 @@
 #include <utility>
 
 #include "js/AllocPolicy.h"
+#include "js/CompileOptions.h"
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
 #include "vm/MutexIDs.h"
 #include "vm/TraceLoggingGraph.h"
 #include "vm/TraceLoggingTypes.h"
-
-
-namespace JS {
-class ReadOnlyCompileOptions;
-} // namespace JS
 
 namespace js {
 
