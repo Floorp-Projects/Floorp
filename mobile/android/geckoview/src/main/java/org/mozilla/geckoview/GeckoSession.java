@@ -818,6 +818,12 @@ public class GeckoSession extends LayerSession
                       " - chrome startup finished");
             }
         }
+
+        @Override
+        protected void finalize() throws Throwable {
+            close();
+            disposeNative();
+        }
     }
 
     private class Listener implements BundleEventListener {
