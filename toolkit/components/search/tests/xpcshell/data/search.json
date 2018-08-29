@@ -32,18 +32,6 @@
               "value": "{searchTerms}"
             },
             {
-              "name": "ie",
-              "value": "utf-8"
-            },
-            {
-              "name": "oe",
-              "value": "utf-8"
-            },
-            {
-              "name": "aq",
-              "value": "t"
-            },
-            {
               "name": "channel",
               "value": "fflb",
               "purpose": "keyword"
