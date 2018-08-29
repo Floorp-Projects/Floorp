@@ -110,6 +110,11 @@ public:
 
   RefPtr<MediaPipeline> GetReceivePipeline();
 
+  std::string GetTransportId() const
+  {
+    return mJsepTransceiver->mTransport.mTransportId;
+  }
+
   void AddRIDExtension(unsigned short aExtensionId);
 
   void AddRIDFilter(const nsAString& aRid);

@@ -15,7 +15,7 @@ const {
 
 const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const WIFI_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
-const NETWORK_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-network-icon.svg";
+const GLOBE_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
 
 class ConnectPage extends PureComponent {
   static get propTypes() {
@@ -105,7 +105,7 @@ class ConnectPage extends PureComponent {
         dom.img(
           {
             className: "connect-page__section__icon",
-            src: NETWORK_ICON_SRC
+            src: GLOBE_ICON_SRC
           }
         ),
         "Via Network Location"

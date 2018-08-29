@@ -133,10 +133,7 @@ IDTracker::Reset(nsIContent* aFromContent,
   }
 
   if (aWatch) {
-    RefPtr<nsAtom> atom = NS_Atomize(ref);
-    if (!atom)
-      return;
-    atom.swap(mWatchID);
+    mWatchID = NS_Atomize(ref);
   }
 
   mReferencingImage = aReferenceImage;
@@ -149,8 +146,7 @@ IDTracker::ResetWithID(Element& aFrom, nsAtom* aID, bool aWatch)
   MOZ_ASSERT(aID);
 
   if (aWatch) {
-    RefPtr<nsAtom> atom = aID;
-    atom.swap(mWatchID);
+    mWatchID = aID;
   }
 
   mReferencingImage = false;
