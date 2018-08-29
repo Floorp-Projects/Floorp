@@ -1,0 +1,103 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/ipc/InProcessParent.h"
+#include "mozilla/dom/BrowsingContext.h"
+
+using namespace mozilla::ipc;
+
+namespace mozilla {
+namespace dom {
+
+WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
+                                       bool aInProcess)
+  : mBrowsingContextId(aInit.browsingContextId())
+  , mDocumentPrincipal(aInit.principal())
+  , mInProcess(aInProcess)
+  , mIPCClosed(false)
+{
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "Parent process only");
+  MOZ_RELEASE_ASSERT(mDocumentPrincipal, "Must have a valid principal");
+  MOZ_RELEASE_ASSERT(mBrowsingContextId != 0, "Must be made in BrowsingContext");
+}
+
+void
+WindowGlobalParent::Init()
+{
+  MOZ_ASSERT(Manager(), "Should have a manager!");
+  MOZ_ASSERT(!mFrameLoader, "Cannot Init() a WindowGlobalParent twice!");
+
+  // Determine what toplevel frame element our WindowGlobalParent is being
+  // embedded in.
+  RefPtr<Element> frameElement;
+  if (mInProcess) {
+    // In the in-process case, we can get it from the other side's
+    // WindowGlobalChild.
+    MOZ_ASSERT(Manager()->GetProtocolTypeId() == PInProcessMsgStart);
+    RefPtr<WindowGlobalChild> otherSide = GetOtherSide();
+    if (otherSide && otherSide->WindowGlobal()) {
+      // Get the toplevel window from the other side.
+      RefPtr<nsDocShell> docShell = nsDocShell::Cast(otherSide->WindowGlobal()->GetDocShell());
+      if (docShell) {
+        docShell->GetTopFrameElement(getter_AddRefs(frameElement));
+      }
+    }
+  } else {
+    // In the cross-process case, we can get the frame element from our manager.
+    MOZ_ASSERT(Manager()->GetProtocolTypeId() == PBrowserMsgStart);
+    frameElement = static_cast<TabParent*>(Manager())->GetOwnerElement();
+  }
+
+  // Extract the nsFrameLoader from the current frame element. We may not have a
+  // nsFrameLoader if we are a chrome document.
+  nsCOMPtr<nsIFrameLoaderOwner> flOwner = do_QueryInterface(frameElement);
+  if (flOwner) {
+    mFrameLoader = flOwner->GetFrameLoader();
+  }
+}
+
+already_AddRefed<dom::BrowsingContext>
+WindowGlobalParent::BrowsingContext()
+{
+  return dom::BrowsingContext::Get(mBrowsingContextId);
+}
+
+already_AddRefed<WindowGlobalChild>
+WindowGlobalParent::GetOtherSide()
+{
+  if (mIPCClosed) {
+    return nullptr;
+  }
+  IProtocol* otherSide = InProcessParent::ChildActorFor(this);
+  return do_AddRef(static_cast<WindowGlobalChild*>(otherSide));
+}
+
+IPCResult
+WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI)
+{
+  // XXX(nika): Assert that the URI change was one which makes sense (either
+  // about:blank -> a real URI, or a legal push/popstate URI change?)
+  mDocumentURI = aURI;
+  return IPC_OK();
+}
+
+void
+WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  mIPCClosed = true;
+}
+
+WindowGlobalParent::~WindowGlobalParent()
+{
+}
+
+NS_IMPL_CYCLE_COLLECTION(WindowGlobalParent, mFrameLoader)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WindowGlobalParent, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WindowGlobalParent, Release)
+
+} // namespace dom
+} // namespace mozilla
