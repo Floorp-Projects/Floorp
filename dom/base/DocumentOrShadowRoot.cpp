@@ -30,7 +30,7 @@ DocumentOrShadowRoot::DocumentOrShadowRoot(nsIDocument& aDoc)
 void
 DocumentOrShadowRoot::AddSizeOfOwnedSheetArrayExcludingThis(
   nsWindowSizes& aSizes,
-  const nsTArray<RefPtr<StyleSheet>>& aSheets)
+  const nsTArray<RefPtr<StyleSheet>>& aSheets) const
 {
   size_t n = 0;
   n += aSheets.ShallowSizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
@@ -42,7 +42,11 @@ DocumentOrShadowRoot::AddSizeOfOwnedSheetArrayExcludingThis(
     n += sheet->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
 
-  aSizes.mLayoutStyleSheetsSize += n;
+  if (mKind == Kind::ShadowRoot) {
+    aSizes.mLayoutShadowDomStyleSheetsSize += n;
+  } else {
+    aSizes.mLayoutStyleSheetsSize += n;
+  }
 }
 
 void

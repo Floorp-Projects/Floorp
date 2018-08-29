@@ -10,10 +10,11 @@
 #include "ChildIterator.h"
 #include "nsContentUtils.h"
 #include "nsIStyleSheetLinkingElement.h"
+#include "nsWindowSizes.h"
+#include "nsXBLPrototypeBinding.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLSlotElement.h"
-#include "nsXBLPrototypeBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/StyleSheet.h"
@@ -103,12 +104,19 @@ ShadowRoot::~ShadowRoot()
   SetSubtreeRootPointer(this);
 }
 
+MOZ_DEFINE_MALLOC_SIZE_OF(ShadowRootAuthorStylesMallocSizeOf)
+MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ShadowRootAuthorStylesMallocEnclosingSizeOf)
+
 void
 ShadowRoot::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
 {
   DocumentFragment::AddSizeOfExcludingThis(aSizes, aNodeSize);
   DocumentOrShadowRoot::AddSizeOfExcludingThis(aSizes);
-  // FIXME(emilio, bug 1486728): We should probably report mServoStyles here.
+  aSizes.mLayoutShadowDomAuthorStyles +=
+    Servo_AuthorStyles_SizeOfIncludingThis(
+      ShadowRootAuthorStylesMallocSizeOf,
+      ShadowRootAuthorStylesMallocEnclosingSizeOf,
+      mServoStyles.get());
 }
 
 JSObject*
