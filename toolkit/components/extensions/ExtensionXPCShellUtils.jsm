@@ -131,7 +131,7 @@ class ContentPage {
 
     chromeShell.createAboutBlankContentViewer(system);
     chromeShell.useGlobalHistory = false;
-    chromeShell.loadURI("chrome://extensions/content/dummy.xul", 0, null, null, null);
+    chromeShell.loadURI("chrome://extensions/content/dummy.xul", 0, null, null, null, system);
 
     await promiseObserved("chrome-document-global-created",
                           win => win.document == chromeShell.document);
@@ -182,7 +182,9 @@ class ContentPage {
   async loadURL(url, redirectUrl = undefined) {
     await this.browserReady;
 
-    this.browser.loadURI(url);
+    this.browser.loadURI(url, {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
     return promiseBrowserLoaded(this.browser, url, redirectUrl);
   }
 
