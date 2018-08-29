@@ -2834,7 +2834,6 @@ SourceMediaStream::SourceMediaStream()
   , mUpdateKnownTracksTime(0)
   , mPullEnabled(false)
   , mFinishPending(false)
-  , mNeedsMixing(false)
 {
 }
 
@@ -3426,20 +3425,6 @@ SourceMediaStream::RemoveAllDirectListenersImpl()
 
 SourceMediaStream::~SourceMediaStream()
 {
-}
-
-void
-SourceMediaStream::RegisterForAudioMixing()
-{
-  MutexAutoLock lock(mMutex);
-  mNeedsMixing = true;
-}
-
-bool
-SourceMediaStream::NeedsMixing()
-{
-  MutexAutoLock lock(mMutex);
-  return mNeedsMixing;
 }
 
 bool
