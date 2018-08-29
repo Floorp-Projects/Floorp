@@ -123,6 +123,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsDocShellLoadState.h"
 #include "nsWebBrowser.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PluginWidgetChild.h"
@@ -3432,6 +3433,21 @@ bool
 TabChild::DeallocPPaymentRequestChild(PPaymentRequestChild* actor)
 {
   delete actor;
+  return true;
+}
+
+PWindowGlobalChild*
+TabChild::AllocPWindowGlobalChild(const WindowGlobalInit&)
+{
+  MOZ_CRASH("We should never be manually allocating PWindowGlobalChild actors");
+  return nullptr;
+}
+
+bool
+TabChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor)
+{
+  // This reference was added in WindowGlobalChild::Create.
+  static_cast<WindowGlobalChild*>(aActor)->Release();
   return true;
 }
 

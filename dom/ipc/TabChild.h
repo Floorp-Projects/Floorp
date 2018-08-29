@@ -705,6 +705,10 @@ public:
 protected:
   virtual ~TabChild();
 
+  virtual PWindowGlobalChild* AllocPWindowGlobalChild(const WindowGlobalInit& aInit) override;
+
+  virtual bool DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) override;
+
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
 
   virtual mozilla::ipc::IPCResult RecvSetDocShellIsActive(const bool& aIsActive) override;

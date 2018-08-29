@@ -100,6 +100,7 @@
 #include "ProcessPriorityManager.h"
 #include "nsString.h"
 #include "IHistory.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PluginWidgetParent.h"
@@ -1060,6 +1061,29 @@ TabParent::DeallocPIndexedDBPermissionRequestParent(
 
   return
     mozilla::dom::indexedDB::DeallocPIndexedDBPermissionRequestParent(aActor);
+}
+
+IPCResult
+TabParent::RecvPWindowGlobalConstructor(PWindowGlobalParent* aActor,
+                                        const WindowGlobalInit& aInit)
+{
+  static_cast<WindowGlobalParent*>(aActor)->Init();
+  return IPC_OK();
+}
+
+PWindowGlobalParent*
+TabParent::AllocPWindowGlobalParent(const WindowGlobalInit& aInit)
+{
+  // Reference freed in DeallocPWindowGlobalParent.
+  return do_AddRef(new WindowGlobalParent(aInit, /* inproc */ false)).take();
+}
+
+bool
+TabParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor)
+{
+  // Free reference from AllocPWindowGlobalParent.
+  static_cast<WindowGlobalParent*>(aActor)->Release();
+  return true;
 }
 
 void
