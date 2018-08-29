@@ -132,7 +132,7 @@ class AsyncTabSwitcher {
     // For telemetry, keeps track of what most recently cleared
     // the loadTimer, which can tell us something about the cause
     // of tab switch spinners.
-    this._loadTimerClearedBy = "none",
+    this._loadTimerClearedBy = "none";
 
     this._useDumpForLogging = false;
     this._logInit = false;
