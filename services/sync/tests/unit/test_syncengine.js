@@ -258,7 +258,7 @@ add_task(async function test_wipeServer() {
   try {
     // Some data to reset.
     await engine.setLastSync(123.45);
-    engine.toFetch = guidSetOfSize(3),
+    engine.toFetch = guidSetOfSize(3);
 
     _("Wipe server data and reset client.");
     await engine.wipeServer();

@@ -187,14 +187,14 @@ Preferences.isSet = function(prefName) {
     return prefName.map(this.isSet, this);
 
   return (this.has(prefName) && this._prefBranch.prefHasUserValue(prefName));
-},
+};
 
 /**
  * Whether or not the given pref has a user-set value. Use isSet instead,
  * which is equivalent.
  * @deprecated
  */
-Preferences.modified = function(prefName) { return this.isSet(prefName); },
+Preferences.modified = function(prefName) { return this.isSet(prefName); };
 
 Preferences.reset = function(prefName) {
   if (Array.isArray(prefName)) {
@@ -329,7 +329,7 @@ Preferences.resetBranch = function(prefBranch = "") {
     else
       throw ex;
   }
-},
+};
 
 /**
  * A string identifying the branch of the preferences tree to which this
