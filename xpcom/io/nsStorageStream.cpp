@@ -585,15 +585,13 @@ nsStorageInputStream::Serialize(InputStreamParams& aParams, FileDescriptorArray&
   rv = Available(&remaining);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  auto handle = combined.BulkWrite(remaining, 0, false, rv);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
+  combined.SetCapacity(remaining);
   uint32_t numRead = 0;
 
-  rv = Read(handle.Elements(), remaining, &numRead);
+  rv = Read(combined.BeginWriting(), remaining, &numRead);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   MOZ_ASSERT(numRead == remaining);
-  handle.Finish(numRead, false);
+  combined.SetLength(numRead);
 
   rv = Seek(NS_SEEK_SET, offset);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
