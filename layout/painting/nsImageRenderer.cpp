@@ -559,7 +559,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
   }
 
   if (!mImage->IsComplete()) {
-    result &= ImgDrawResult::INCOMPLETE;
+    result &= ImgDrawResult::SUCCESS_NOT_COMPLETE;
   }
 
   return result;
@@ -661,7 +661,9 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
       break;
   }
 
-  return mImage->IsComplete() ? ImgDrawResult::SUCCESS : ImgDrawResult::INCOMPLETE;
+  return mImage->IsComplete()
+    ? ImgDrawResult::SUCCESS
+    : ImgDrawResult::SUCCESS_NOT_COMPLETE;
 }
 
 already_AddRefed<gfxDrawable>
@@ -947,7 +949,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                        drawFlags);
 
       if (!mImage->IsComplete()) {
-        result &= ImgDrawResult::INCOMPLETE;
+        result &= ImgDrawResult::SUCCESS_NOT_COMPLETE;
       }
 
       return result;
@@ -968,7 +970,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                          ExtendMode::CLAMP, 1.0);
 
       if (!mImage->IsComplete()) {
-        result &= ImgDrawResult::INCOMPLETE;
+        result &= ImgDrawResult::SUCCESS_NOT_COMPLETE;
       }
 
       return result;
