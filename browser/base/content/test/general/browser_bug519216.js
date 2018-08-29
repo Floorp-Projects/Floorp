@@ -3,7 +3,9 @@ function test() {
   gBrowser.addProgressListener(progressListener1);
   gBrowser.addProgressListener(progressListener2);
   gBrowser.addProgressListener(progressListener3);
-  gBrowser.loadURI("data:text/plain,bug519216");
+  BrowserTestUtils.loadURI(gBrowser, "data:text/plain,bug519216", {
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  });
 }
 
 var calledListener1 = false;
