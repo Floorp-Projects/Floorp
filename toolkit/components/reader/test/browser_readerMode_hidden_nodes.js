@@ -45,7 +45,7 @@ add_task(async function test_reader_button() {
       });
     });
   });
-  tab.linkedBrowser.loadURI(url);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, url);
   await paintPromise;
 
   is_element_hidden(readerButton, "Reader mode button is still not present on tab with unreadable content.");
