@@ -32,6 +32,7 @@ using namespace js::frontend;
 
 using JS::AutoStableStringChars;
 using JS::AutoValueArray;
+using JS::CompileOptions;
 using mozilla::DebugOnly;
 
 enum ASTType {

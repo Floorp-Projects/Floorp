@@ -42,9 +42,12 @@
 #include "jit/InlinableNatives.h"
 #include "jit/JitRealm.h"
 #include "js/AutoByteString.h"
+#include "js/CompilationAndEvaluation.h"
+#include "js/CompileOptions.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
 #include "js/LocaleSensitive.h"
+#include "js/SourceBufferHolder.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/UbiNode.h"
@@ -89,6 +92,8 @@ using mozilla::ArrayLength;
 using mozilla::Maybe;
 
 using JS::AutoStableStringChars;
+using JS::CompileOptions;
+using JS::SourceBufferHolder;
 
 // If fuzzingSafe is set, remove functionality that could cause problems with
 // fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.

@@ -37,6 +37,7 @@
 #include "frontend/TDZCheckCache.h"
 #include "frontend/TryEmitter.h"
 #include "frontend/WhileEmitter.h"
+#include "js/CompileOptions.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
@@ -5113,8 +5114,8 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             // parent.  Use default values for the rest.
             Rooted<JSScript*> parent(cx, script);
             MOZ_ASSERT(parent->mutedErrors() == parser->options().mutedErrors());
-            const TransitiveCompileOptions& transitiveOptions = parser->options();
-            CompileOptions options(cx, transitiveOptions);
+            const JS::TransitiveCompileOptions& transitiveOptions = parser->options();
+            JS::CompileOptions options(cx, transitiveOptions);
 
             Rooted<JSObject*> sourceObject(cx, script->sourceObject());
             Rooted<JSScript*> script(cx, JSScript::Create(cx, options, sourceObject,

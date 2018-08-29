@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gc/GCInternals.h"
+#include "js/CompilationAndEvaluation.h"
+#include "js/SourceBufferHolder.h"
 #include "jsapi-tests/tests.h"
 #include "vm/Monitor.h"
 #include "vm/MutexIDs.h"
@@ -10,7 +12,8 @@
 using namespace JS;
 using js::AutoLockMonitor;
 
-struct OffThreadTask {
+struct OffThreadTask
+{
     OffThreadTask()
       : monitor(js::mutexid::ShellOffThreadState),
         token(nullptr)
@@ -68,7 +71,7 @@ testCompile(bool nonSyntactic)
                   "Source buffers must be same length");
 
 
-    SourceBufferHolder buf(src_16, length, SourceBufferHolder::NoOwnership);
+    JS::SourceBufferHolder buf(src_16, length, JS::SourceBufferHolder::NoOwnership);
 
     JS::CompileOptions options(cx);
     options.setNonSyntacticScope(nonSyntactic);
@@ -108,7 +111,7 @@ testCompile(bool nonSyntactic)
     OffThreadTask task;
     OffThreadToken* token;
 
-    SourceBufferHolder srcBuf(src_16, length, SourceBufferHolder::NoOwnership);
+    JS::SourceBufferHolder srcBuf(src_16, length, JS::SourceBufferHolder::NoOwnership);
     CHECK(CompileOffThread(cx, options, srcBuf, task.OffThreadCallback, &task));
     CHECK(token = task.waitUntilDone(cx));
     CHECK(script = FinishOffThreadScript(cx, token));

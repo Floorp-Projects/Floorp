@@ -329,8 +329,8 @@ ForEachDocShell(nsIDocShell* aDocShell,
                                            nsIDocShell::ENUMERATE_FORWARDS,
                                            getter_AddRefs(iter)));
 
-  for (nsIDocShell& docShell : SimpleEnumerator<nsIDocShell>(iter)) {
-    MOZ_TRY(aCallback(&docShell));
+  for (auto& docShell : SimpleEnumerator<nsIDocShell>(iter)) {
+    MOZ_TRY(aCallback(docShell));
   }
   return NS_OK;
 }
