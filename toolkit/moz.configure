@@ -1055,7 +1055,12 @@ set_config('MOZ_UNSIGNED_SYSTEM_SCOPE', unsigned_addon_scopes.system)
 # Launcher process (Windows only)
 # ==============================================================
 
-option('--enable-launcher-process', help='Enable launcher process by default')
+@depends(target, milestone)
+def launcher_process_default(target, milestone):
+    return target.os == 'WINNT' and milestone.is_nightly
+
+option('--enable-launcher-process', default=launcher_process_default,
+       help='Enable launcher process by default')
 
 @depends('--enable-launcher-process', target)
 def launcher(value, target):
