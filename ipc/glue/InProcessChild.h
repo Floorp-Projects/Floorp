@@ -11,6 +11,11 @@
 #include "mozilla/StaticPtr.h"
 
 namespace mozilla {
+namespace dom {
+class PWindowGlobalParent;
+class PWindowGlobalChild;
+} // namespace dom
+
 namespace ipc {
 
 class InProcessParent;
@@ -37,6 +42,13 @@ public:
   // not an in-process actor, or is not connected, this method will return
   // |nullptr|.
   static IProtocol* ParentActorFor(IProtocol* aActor);
+
+protected:
+  virtual mozilla::dom::PWindowGlobalChild*
+  AllocPWindowGlobalChild(const WindowGlobalInit& aInit) override;
+
+  virtual bool
+  DeallocPWindowGlobalChild(mozilla::dom::PWindowGlobalChild* aActor) override;
 
 private:
   // NOTE: PInProcess lifecycle management is declared as staic methods and
