@@ -332,11 +332,11 @@ GetIsSecureContext(JS::Realm* realm);
 } // namespace JS
 
 /**
- * Copies all own properties from |obj| to |target|. |obj| must be a "native"
- * object (that is to say, normal-ish - not an Array or a Proxy).
+ * Copies all own properties from |obj| to |target|. Both |obj| and |target|
+ * must not be cross-compartment wrappers because we have to enter their realms.
  *
- * This function immediately enters a compartment, and does not impose any
- * restrictions on the compartment of |cx|.
+ * This function immediately enters a realm, and does not impose any
+ * restrictions on the realm of |cx|.
  */
 extern JS_FRIEND_API(bool)
 JS_CopyPropertiesFrom(JSContext* cx, JS::HandleObject target, JS::HandleObject obj);
@@ -345,7 +345,8 @@ JS_CopyPropertiesFrom(JSContext* cx, JS::HandleObject target, JS::HandleObject o
  * Single-property version of the above. This function asserts that an |own|
  * property of the given name exists on |obj|.
  *
- * On entry, |cx| must be same-compartment with |obj|.
+ * On entry, |cx| must be same-compartment with |obj|. |target| must not be a
+ * cross-compartment wrapper because we have to enter its realm.
  *
  * The copyBehavior argument controls what happens with
  * non-configurable properties.
