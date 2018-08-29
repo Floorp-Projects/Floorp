@@ -13,7 +13,7 @@ const {
 function UiState(locations = []) {
   return {
     networkLocations: locations,
-    selectedPage: null,
+    selectedPage: PAGES.THIS_FIREFOX,
   };
 }
 
