@@ -24,6 +24,7 @@ import java.util.Locale
 /**
  * Base implementation for fragments that use an IWebView instance. Based on Android's WebViewFragment.
  */
+@Suppress("TooManyFunctions")
 abstract class WebFragment : LocaleAwareFragment() {
     private var webViewInstance: IWebView? = null
     private var isWebViewAvailable: Boolean = false
@@ -65,7 +66,7 @@ abstract class WebFragment : LocaleAwareFragment() {
         }
 
         if (!AppConstants.isGeckoBuild) {
-            restoreStateOrLoadInitialUrl()
+            restoreStateOrLoadUrl()
         }
 
         onCreateViewCalled()
@@ -106,7 +107,7 @@ abstract class WebFragment : LocaleAwareFragment() {
         webViewInstance!!.onResume()
 
         if (AppConstants.isGeckoBuild) {
-            restoreStateOrLoadInitialUrl()
+            restoreStateOrLoadUrl()
         }
 
         super.onResume()
@@ -132,7 +133,7 @@ abstract class WebFragment : LocaleAwareFragment() {
         return if (isWebViewAvailable) webViewInstance else null
     }
 
-    private fun restoreStateOrLoadInitialUrl() {
+    private fun restoreStateOrLoadUrl() {
         val session = session
         if (session == null || !session.hasWebViewState()) {
             val url = initialUrl
