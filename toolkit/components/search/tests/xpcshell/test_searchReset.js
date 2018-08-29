@@ -58,7 +58,7 @@ add_task(async function test_no_prompt_when_valid_loadPathHash() {
   let submission =
     Services.search.currentEngine.getSubmission("foo", null, "searchbar");
   Assert.equal(submission.uri.spec,
-               "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t");
+               "http://www.google.com/search?q=foo");
 });
 
 add_task(async function test_pending() {
@@ -68,7 +68,7 @@ add_task(async function test_pending() {
       Services.search.currentEngine.getSubmission("foo", null, "searchbar");
     Assert.equal(submission.uri.spec,
                  expectPrompt ? "about:searchreset?data=foo&purpose=searchbar" :
-                   "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t");
+                   "http://www.google.com/search?q=foo");
   };
 
   // Should show the reset prompt only if the reset status is 'pending'.
@@ -100,7 +100,7 @@ add_task(async function test_promptURLs() {
   // eslint-disable-next-line no-self-assign
   Services.search.currentEngine = Services.search.currentEngine;
   Assert.equal(url("foo", "searchbar"),
-               "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t");
+               "http://www.google.com/search?q=foo");
 
   // And the loadPathHash should be back.
   await promiseAfterCache();
@@ -120,7 +120,7 @@ add_task(async function test_whitelist() {
   let expectPrompt = shouldPrompt => {
     let expectedURL =
       shouldPrompt ? "about:searchreset?data=foo&purpose=searchbar"
-                   : "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t";
+                   : "http://www.google.com/search?q=foo";
     let url = currentEngine.getSubmission("foo", null, "searchbar").uri.spec;
     Assert.equal(url, expectedURL);
   };
