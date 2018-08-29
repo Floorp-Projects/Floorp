@@ -364,6 +364,12 @@ this.TelemetryFeed = class TelemetryFeed {
     );
   }
 
+  /**
+   * Create a ping for AS router event. The client_id is set to "n/a" by default,
+   * AS router components could change that by including a boolean "includeClientID"
+   * to the payload of the action, impression_id would be set to "n/a" at the same time.
+   * Note that "includeClientID" will not be included in the result ping.
+   */
   createASRouterEvent(action) {
     const ping = {
       client_id: "n/a",
@@ -371,6 +377,12 @@ this.TelemetryFeed = class TelemetryFeed {
       locale: Services.locale.getAppLocaleAsLangTag(),
       impression_id: this._impressionId
     };
+    if (action.data.includeClientID) {
+      // Ping-centre client will fill in the client_id if it's not provided in the ping
+      delete ping.client_id;
+      delete action.data.includeClientID;
+      ping.impression_id = "n/a";
+    }
     return Object.assign(ping, action.data);
   }
 
