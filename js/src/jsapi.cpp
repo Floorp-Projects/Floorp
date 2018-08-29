@@ -691,6 +691,8 @@ JS::EnterRealm(JSContext* cx, JSObject* target)
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
+    MOZ_DIAGNOSTIC_ASSERT(!js::IsCrossCompartmentWrapper(target));
+
     Realm* oldRealm = cx->realm();
     cx->enterRealmOf(target);
     return oldRealm;
@@ -704,44 +706,30 @@ JS::LeaveRealm(JSContext* cx, JS::Realm* oldRealm)
     cx->leaveRealm(oldRealm);
 }
 
-JSAutoRealmAllowCCW::JSAutoRealmAllowCCW(JSContext* cx, JSObject* target
-                                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx_(cx),
-    oldRealm_(cx->realm())
-{
-    AssertHeapIsIdleOrIterating();
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    cx_->enterRealmOf(target);
-}
-
-JSAutoRealmAllowCCW::JSAutoRealmAllowCCW(JSContext* cx, JSScript* target
-                                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx_(cx),
-    oldRealm_(cx->realm())
-{
-    AssertHeapIsIdleOrIterating();
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    cx_->enterRealmOf(target);
-}
-
-JSAutoRealmAllowCCW::~JSAutoRealmAllowCCW()
-{
-    cx_->leaveRealm(oldRealm_);
-}
-
 JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : JSAutoRealmAllowCCW(cx, target)
+  : cx_(cx),
+    oldRealm_(cx->realm())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_DIAGNOSTIC_ASSERT(!js::IsCrossCompartmentWrapper(target));
+    AssertHeapIsIdleOrIterating();
+    cx_->enterRealmOf(target);
 }
 
 JSAutoRealm::JSAutoRealm(JSContext* cx, JSScript* target
                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : JSAutoRealmAllowCCW(cx, target)
+  : cx_(cx),
+    oldRealm_(cx->realm())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    AssertHeapIsIdleOrIterating();
+    cx_->enterRealmOf(target);
+}
+
+JSAutoRealm::~JSAutoRealm()
+{
+    cx_->leaveRealm(oldRealm_);
 }
 
 JSAutoNullableRealm::JSAutoNullableRealm(JSContext* cx,
@@ -750,12 +738,14 @@ JSAutoNullableRealm::JSAutoNullableRealm(JSContext* cx,
   : cx_(cx),
     oldRealm_(cx->realm())
 {
-    AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (targetOrNull)
+    AssertHeapIsIdleOrIterating();
+    if (targetOrNull) {
+        MOZ_DIAGNOSTIC_ASSERT(!js::IsCrossCompartmentWrapper(targetOrNull));
         cx_->enterRealmOf(targetOrNull);
-    else
+    } else {
         cx_->enterNullRealm();
+    }
 }
 
 JSAutoNullableRealm::~JSAutoNullableRealm()
