@@ -735,9 +735,6 @@ MediaEngineWebRTCMicrophoneSource::SetTrack(const RefPtr<const AllocationHandle>
                          segment,
                          SourceMediaStream::ADDTRACK_QUEUED);
 
-  // XXX Make this based on the pref.
-  aStream->RegisterForAudioMixing();
-
   LOG(("Stream %p registered for microphone capture", aStream.get()));
   return NS_OK;
 }
