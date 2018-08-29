@@ -10,11 +10,10 @@ import android.os.Build
 import org.mozilla.focus.R.string.app_name
 import org.mozilla.focus.R.string.tip_add_to_homescreen
 import org.mozilla.focus.R.string.tip_autocomplete_url
+import org.mozilla.focus.R.string.tip_disable_tips
 import org.mozilla.focus.R.string.tip_disable_tracking_protection
 import org.mozilla.focus.R.string.tip_open_in_new_tab
 import org.mozilla.focus.R.string.tip_request_desktop
-import org.mozilla.focus.R.string.tip_disable_tips
-import org.mozilla.focus.R.string.app_name
 import org.mozilla.focus.R.string.tip_set_default_browser
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.session.SessionManager
