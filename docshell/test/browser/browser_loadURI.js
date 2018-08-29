@@ -4,6 +4,8 @@
 const gPostData = "postdata=true";
 
 function test() {
+  const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
+                          .getService(Ci.nsIPrincipal);
   waitForExplicitFinish();
 
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
@@ -21,6 +23,7 @@ function test() {
   postStream.setData(dataStream);
 
   tab.linkedBrowser.loadURI("http://mochi.test:8888/browser/docshell/test/browser/print_postdata.sjs", {
+    triggeringPrincipal: systemPrincipal,
     postData: postStream,
   });
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
