@@ -14335,6 +14335,13 @@ nsDocShell::GetBrowsingContext() const
   return browsingContext.forget();
 }
 
+NS_IMETHODIMP
+nsDocShell::GetBrowsingContext(BrowsingContext** aBrowsingContext)
+{
+  *aBrowsingContext = do_AddRef(mBrowsingContext).take();
+  return NS_OK;
+}
+
 void
 nsIDocShell::AttachBrowsingContext(nsIDocShell* aParentDocShell)
 {

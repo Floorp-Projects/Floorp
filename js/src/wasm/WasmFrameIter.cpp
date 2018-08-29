@@ -910,6 +910,7 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
     // - in the process of tagging/untagging when calling into the JITs;
     // make sure it's untagged.
     // - tagged by an direct JIT call.
+    // - unreliable if it's not been set yet, in prologues.
     DebugOnly<bool> fpWasTagged = uintptr_t(registers.fp) & ExitOrJitEntryFPTag;
     Frame* const fp = (Frame*) (intptr_t(registers.fp) & ~ExitOrJitEntryFPTag);
 
@@ -1109,7 +1110,8 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
         fixedFP = offsetFromEntry < SetJitEntryFP ? (Frame*) sp : fp;
         fixedPC = nullptr;
 
-        // On the error return path, FP might be set to FailFP. Ignore these transient frames.
+        // On the error return path, FP might be set to FailFP. Ignore these
+        // transient frames.
         if (intptr_t(fixedFP) == (FailFP & ~ExitOrJitEntryFPTag))
             return false;
         break;
@@ -1156,18 +1158,26 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
     if (unwoundCaller) {
         callerFP_ = unwindState.fp;
         callerPC_ = unwindState.pc;
-        // If the original FP value is tagged, then we're being called through
-        // a direct JIT call. We can't observe transient tagged values of FP
-        // (during wasm::SetExitFP) here because StartUnwinding would not have
-        // unwound for us in this case.
-        if ((uintptr_t(state.fp) & ExitOrJitEntryFPTag))
+        // In the case of a function call, if the original FP value is tagged,
+        // then we're being called through a direct JIT call (the interpreter
+        // and the jit entry don't set FP's low bit). We can't observe
+        // transient tagged values of FP (during wasm::SetExitFP) here because
+        // StartUnwinding would not have unwound then.
+        if (unwindState.codeRange &&
+            unwindState.codeRange->isFunction() &&
+            (uintptr_t(state.fp) & ExitOrJitEntryFPTag))
+        {
             unwoundIonCallerFP_ = (uint8_t*) callerFP_;
+        }
     } else {
         callerFP_ = unwindState.fp->callerFP;
         callerPC_ = unwindState.fp->returnAddress;
-        // See comment above.
-        if ((uintptr_t(callerFP_) & ExitOrJitEntryFPTag))
+        // See comment above. The only way to get a tagged FP here means that
+        // the caller is a fast JIT caller which called into a wasm function.
+        if ((uintptr_t(callerFP_) & ExitOrJitEntryFPTag)) {
+            MOZ_ASSERT(unwindState.codeRange->isFunction());
             unwoundIonCallerFP_ = (uint8_t*)(uintptr_t(callerFP_) & ~ExitOrJitEntryFPTag);
+        }
     }
 
     if (unwindState.codeRange->isJitEntry()) {

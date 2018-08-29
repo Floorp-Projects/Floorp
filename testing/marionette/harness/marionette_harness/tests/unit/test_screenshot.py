@@ -294,6 +294,11 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
         self.assertRaises(NoSuchWindowException, self.marionette.screenshot)
         self.marionette.switch_to_window(self.start_tab)
 
+    def test_capture_vertical_bounds(self):
+        self.marionette.navigate(inline("<body style='margin-top: 32768px'>foo"))
+        screenshot = self.marionette.screenshot()
+        self.assert_png(screenshot)
+
     def test_capture_element(self):
         self.marionette.navigate(box)
         el = self.marionette.find_element(By.TAG_NAME, "div")
