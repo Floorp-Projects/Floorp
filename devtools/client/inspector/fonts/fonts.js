@@ -83,7 +83,7 @@ class FontInspector {
     this.syncChanges = debounce(this.syncChanges, 100, this);
     this.onInstanceChange = this.onInstanceChange.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
-    this.onPreviewTextChange = debounce(this.onPreviewTextChange, 100, this);
+    this.onPreviewFonts = this.onPreviewFonts.bind(this);
     this.onPropertyChange = this.onPropertyChange.bind(this);
     this.onRulePropertyUpdated = debounce(this.onRulePropertyUpdated, 100, this);
     this.onToggleFontHighlight = this.onToggleFontHighlight.bind(this);
@@ -103,7 +103,7 @@ class FontInspector {
       fontEditorEnabled: Services.prefs.getBoolPref(PREF_FONT_EDITOR),
       onInstanceChange: this.onInstanceChange,
       onToggleFontHighlight: this.onToggleFontHighlight,
-      onPreviewTextChange: this.onPreviewTextChange,
+      onPreviewFonts: this.onPreviewFonts,
       onPropertyChange: this.onPropertyChange,
     });
 
@@ -683,7 +683,7 @@ class FontInspector {
   /**
    * Handler for change in preview input.
    */
-  onPreviewTextChange(value) {
+  onPreviewFonts(value) {
     this.store.dispatch(updatePreviewText(value));
     this.update();
   }

@@ -9,7 +9,7 @@ const {
 } = require("../actions/index");
 
 const INITIAL_FONT_OPTIONS = {
-  previewText: "",
+  previewText: "Abc",
 };
 
 const reducers = {
