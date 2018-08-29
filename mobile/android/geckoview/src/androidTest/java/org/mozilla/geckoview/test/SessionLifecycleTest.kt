@@ -142,12 +142,30 @@ class SessionLifecycleTest : BaseSessionTest() {
         val session = sessionRule.createOpenSession()
 
         session.toParcel { parcel ->
+            assertThat("Session is still open", session.isOpen, equalTo(true))
             session.close()
 
             val newSession = sessionRule.createClosedSession()
             newSession.readFromParcel(parcel)
             assertThat("New session should not be open",
                        newSession.isOpen, equalTo(false))
+        }
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+    }
+
+    @Test fun readFromParcel_closedSessionAfterReadParcel() {
+        val session = sessionRule.createOpenSession()
+
+        session.toParcel { parcel ->
+            assertThat("Session is still open", session.isOpen, equalTo(true))
+            val newSession = sessionRule.createClosedSession()
+            newSession.readFromParcel(parcel)
+            assertThat("New session should be open",
+                    newSession.isOpen, equalTo(true))
+            assertThat("Old session should be closed",
+                    session.isOpen, equalTo(false))
         }
 
         sessionRule.session.reload()

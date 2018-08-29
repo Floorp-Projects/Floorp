@@ -8,6 +8,7 @@ package org.mozilla.geckoview;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.ref.WeakReference;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -686,12 +687,15 @@ public class GeckoSession extends LayerSession
 
     /* package */ static final class Window extends JNIObject implements IInterface {
         public final GeckoRuntime runtime;
+        private WeakReference<GeckoSession> mOwner;
         private NativeQueue mNativeQueue;
         private Binder mBinder;
 
         public Window(final @NonNull GeckoRuntime runtime,
+                      final @NonNull GeckoSession owner,
                       final @NonNull NativeQueue nativeQueue) {
             this.runtime = runtime;
+            mOwner = new WeakReference<>(owner);
             mNativeQueue = nativeQueue;
         }
 
@@ -735,6 +739,7 @@ public class GeckoSession extends LayerSession
                 }
                 mNativeQueue.reset(State.INITIAL);
                 mNativeQueue = null;
+                mOwner = null;
             }
 
             // Detach ourselves from the binder as well, to prevent this window from being
@@ -754,7 +759,8 @@ public class GeckoSession extends LayerSession
 
         // Assign a new set of Java session objects to the underlying Gecko window.
         // This replaces previously assigned objects from open() or transfer() calls.
-        public synchronized void transfer(final NativeQueue queue,
+        public synchronized void transfer(final GeckoSession owner,
+                                          final NativeQueue queue,
                                           final Compositor compositor,
                                           final EventDispatcher dispatcher,
                                           final SessionAccessibility.NativeProvider sessionAccessibility,
@@ -763,6 +769,13 @@ public class GeckoSession extends LayerSession
                 // Already closed.
                 return;
             }
+
+            final GeckoSession oldOwner = mOwner.get();
+            if (oldOwner != null && owner != oldOwner) {
+                oldOwner.abandonWindow();
+            }
+
+            mOwner = new WeakReference<>(owner);
 
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
                 nativeTransfer(queue, compositor, dispatcher, sessionAccessibility, initData);
@@ -872,6 +885,16 @@ public class GeckoSession extends LayerSession
         return mWindow.runtime;
     }
 
+    /* package */ synchronized void abandonWindow() {
+        if (mWindow == null) {
+            return;
+        }
+
+        onWindowChanged(WINDOW_TRANSFER_OUT, /* inProgress */ true);
+        mWindow = null;
+        onWindowChanged(WINDOW_TRANSFER_OUT, /* inProgress */ false);
+    }
+
     private void transferFrom(final Window window,
                               final GeckoSessionSettings settings,
                               final String id) {
@@ -889,26 +912,16 @@ public class GeckoSession extends LayerSession
         mId = id;
 
         if (mWindow != null) {
-            mWindow.transfer(mNativeQueue, mCompositor,
-                             mEventDispatcher, mAccessibility != null ? mAccessibility.nativeProvider : null,
-                             createInitData());
-
+            mWindow.transfer(this, mNativeQueue, mCompositor,
+                    mEventDispatcher, mAccessibility != null ? mAccessibility.nativeProvider : null,
+                    createInitData());
             onWindowChanged(WINDOW_TRANSFER_IN, /* inProgress */ false);
         }
     }
 
     /* package */ void transferFrom(final GeckoSession session) {
-        final boolean changing = (session.mWindow != null);
-        if (changing) {
-            session.onWindowChanged(WINDOW_TRANSFER_OUT, /* inProgress */ true);
-        }
-
         transferFrom(session.mWindow, session.mSettings, session.mId);
         session.mWindow = null;
-
-        if (changing) {
-            session.onWindowChanged(WINDOW_TRANSFER_OUT, /* inProgress */ false);
-        }
     }
 
     @Override // Parcelable
@@ -1012,7 +1025,7 @@ public class GeckoSession extends LayerSession
         final int screenId = mSettings.getInt(GeckoSessionSettings.SCREEN_ID);
         final boolean isPrivate = mSettings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE);
 
-        mWindow = new Window(runtime, mNativeQueue);
+        mWindow = new Window(runtime, this, mNativeQueue);
 
         onWindowChanged(WINDOW_OPEN, /* inProgress */ true);
 
