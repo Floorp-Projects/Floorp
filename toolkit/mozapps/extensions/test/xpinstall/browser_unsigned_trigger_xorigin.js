@@ -20,7 +20,7 @@ function test() {
     },
   })));
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.loadURI(TESTROOT2 + "installtrigger_frame.html?" + inner_url);
+  BrowserTestUtils.loadURI(gBrowser, TESTROOT2 + "installtrigger_frame.html?" + inner_url);
 }
 
 function install_blocked(installInfo) {
