@@ -10,7 +10,7 @@ add_task(async function() {
   let extraTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let haveChanged = waitForFavicon(extraTab.linkedBrowser, TEST_ROOT + "file_bug970276_favicon1.ico");
 
-  extraTab.linkedBrowser.loadURI(TEST_URL);
+  BrowserTestUtils.loadURI(extraTab.linkedBrowser, TEST_URL);
   await BrowserTestUtils.browserLoaded(extraTab.linkedBrowser);
   await haveChanged;
 
