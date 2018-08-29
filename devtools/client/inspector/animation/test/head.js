@@ -632,22 +632,18 @@ function assertAnimationsCurrentTime(animationInspector, time) {
  * Check whether the animations are pausing.
  *
  * @param {AnimationInspector} animationInspector
- * @param {DOMElement} panel
- *        #animation-container element.
  */
-function assertAnimationsPausing(animationInspector, panel) {
-  assertAnimationsPausingOrRunning(animationInspector, panel, true);
+function assertAnimationsPausing(animationInspector) {
+  assertAnimationsPausingOrRunning(animationInspector, true);
 }
 
 /**
  * Check whether the animations are pausing/running.
  *
  * @param {AnimationInspector} animationInspector
- * @param {DOMElement} panel
- *        #animation-container element.
  * @param {boolean} shouldPause
  */
-function assertAnimationsPausingOrRunning(animationInspector, panel, shouldPause) {
+function assertAnimationsPausingOrRunning(animationInspector, shouldPause) {
   const hasRunningAnimation =
     animationInspector.state.animations.some(({state}) => state.playState === "running");
 
@@ -662,11 +658,9 @@ function assertAnimationsPausingOrRunning(animationInspector, panel, shouldPause
  * Check whether the animations are running.
  *
  * @param {AnimationInspector} animationInspector
- * @param {DOMElement} panel
- *        #animation-container element.
  */
-function assertAnimationsRunning(animationInspector, panel) {
-  assertAnimationsPausingOrRunning(animationInspector, panel, false);
+function assertAnimationsRunning(animationInspector) {
+  assertAnimationsPausingOrRunning(animationInspector, false);
 }
 
 /**
