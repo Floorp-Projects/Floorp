@@ -22,6 +22,7 @@ var contentPage2 = "http://example.com/tests/toolkit/components/url-classifier/t
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 function testOnWindow(contentPage) {
@@ -32,7 +33,7 @@ function testOnWindow(contentPage) {
                               subject => subject == win).then(() => {
         win.addEventListener("DOMContentLoaded", function onInnerLoad() {
           if (win.content.location.href != contentPage) {
-            win.gBrowser.loadURI(contentPage);
+            BrowserTestUtils.loadURI(win.gBrowser, contentPage);
             return;
           }
           win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
@@ -45,7 +46,7 @@ function testOnWindow(contentPage) {
           }, false, true);
         }, true);
         SimpleTest.executeSoon(function() {
-          win.gBrowser.loadURI(contentPage);
+          BrowserTestUtils.loadURI(win.gBrowser, contentPage);
         });
       });
     }, {capture: true, once: true});
