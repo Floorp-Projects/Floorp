@@ -138,7 +138,7 @@ def generate_upstream_artifacts(job, dependencies):
         'taskType': 'signing',
         'paths': ['{}/target.apk'.format(artifact_prefix)],
     } for task_kind in dependencies.keys()
-      if task_kind not in ('google-play-strings', 'beetmover-checksums')
+      if 'google-play-strings' not in task_kind
     ]
 
     google_play_strings = [{

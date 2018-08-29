@@ -2577,20 +2577,20 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
     for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter, ++frameno) {
         const JSJitFrameIter& frame = iter.frame();
         MOZ_ASSERT_IF(frameno == 1, frame.isExitFrame() ||
-                                    frame.type() == JitFrame_Bailout ||
-                                    frame.type() == JitFrame_JSJitToWasm);
+                                    frame.type() == FrameType::Bailout ||
+                                    frame.type() == FrameType::JSJitToWasm);
 
 #ifdef JS_JITSPEW
         switch (frame.type()) {
-          case JitFrame_Exit:
+          case FrameType::Exit:
             JitSpew(JitSpew_IonInvalidate, "#%zu exit frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_JSJitToWasm:
+          case FrameType::JSJitToWasm:
             JitSpew(JitSpew_IonInvalidate, "#%zu wasm exit frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_BaselineJS:
-          case JitFrame_IonJS:
-          case JitFrame_Bailout:
+          case FrameType::BaselineJS:
+          case FrameType::IonJS:
+          case FrameType::Bailout:
           {
             MOZ_ASSERT(frame.isScripted());
             const char* type = "Unknown";
@@ -2607,19 +2607,19 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
                     frame.returnAddressToFp());
             break;
           }
-          case JitFrame_BaselineStub:
+          case FrameType::BaselineStub:
             JitSpew(JitSpew_IonInvalidate, "#%zu baseline stub frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_Rectifier:
+          case FrameType::Rectifier:
             JitSpew(JitSpew_IonInvalidate, "#%zu rectifier frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_IonICCall:
+          case FrameType::IonICCall:
             JitSpew(JitSpew_IonInvalidate, "#%zu ion IC call frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_CppToJSJit:
+          case FrameType::CppToJSJit:
             JitSpew(JitSpew_IonInvalidate, "#%zu entry frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_WasmToJSJit:
+          case FrameType::WasmToJSJit:
             JitSpew(JitSpew_IonInvalidate, "#%zu wasm frames @ %p", frameno, frame.fp());
             break;
         }

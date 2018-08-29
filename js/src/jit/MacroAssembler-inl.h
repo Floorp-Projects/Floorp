@@ -235,7 +235,7 @@ MacroAssembler::makeFrameDescriptor(Register frameSizeReg, FrameType type, uint3
     lshiftPtr(Imm32(FRAMESIZE_SHIFT), frameSizeReg);
 
     headerSize = EncodeFrameHeaderSize(headerSize);
-    orPtr(Imm32((headerSize << FRAME_HEADER_SIZE_SHIFT) | type), frameSizeReg);
+    orPtr(Imm32((headerSize << FRAME_HEADER_SIZE_SHIFT) | uint32_t(type)), frameSizeReg);
 }
 
 void
@@ -279,7 +279,7 @@ MacroAssembler::buildFakeExitFrame(Register scratch)
 {
     mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
 
-    pushStaticFrameDescriptor(JitFrame_IonJS, ExitFrameLayout::Size());
+    pushStaticFrameDescriptor(FrameType::IonJS, ExitFrameLayout::Size());
     uint32_t retAddr = pushFakeReturnAddress(scratch);
 
     MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());

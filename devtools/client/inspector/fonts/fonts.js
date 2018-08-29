@@ -147,7 +147,7 @@ class FontInspector {
       throw TypeError(`Invalid value for conversion. Expected Number, got ${value}`);
     }
 
-    if (fromUnit === toUnit) {
+    if (fromUnit === toUnit || value === 0) {
       return value;
     }
 
@@ -273,6 +273,12 @@ class FontInspector {
           ? value * 100 / Math.max(dim.innerWidth, dim.innerHeight)
           : value / 100 * Math.max(dim.innerWidth, dim.innerHeight);
       }
+    }
+
+    // Catch any NaN or Infinity as result of dividing by zero in any
+    // of the relative unit conversions which rely on external values.
+    if (isNaN(out) || Math.abs(out) === Infinity) {
+      out = 0;
     }
 
     // Return rounded pixel values. Limit other values to 3 decimals.
