@@ -22,7 +22,7 @@ loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools"
  *        - `priority`: Priority level for the notification, which affects the icon and
  *                      overall appearance.
  */
-function showNotification(window, tab, { toolboxButton, msg, priority } = {}) {
+async function showNotification(window, tab, { toolboxButton, msg, priority } = {}) {
   // Default to using the browser's per-tab notification box
   let nbox = window.gBrowser.getNotificationBox(tab.linkedBrowser);
 
@@ -30,7 +30,7 @@ function showNotification(window, tab, { toolboxButton, msg, priority } = {}) {
   // toolbox for the tab.  If one exists, use the toolbox's notification box so that the
   // message is placed closer to the action taken by the user.
   if (toolboxButton) {
-    const target = TargetFactory.forTab(tab);
+    const target = await TargetFactory.forTab(tab);
     const toolbox = gDevTools.getToolbox(target);
     if (toolbox) {
       nbox = toolbox.notificationBox;
