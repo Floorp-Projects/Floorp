@@ -23,7 +23,7 @@ function test() {
     "Unsigned XPI": TESTROOT + "amosigned.xpi",
   }));
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.loadURI(xpipath + "installtrigger.html?" + triggers);
+  BrowserTestUtils.loadURI(gBrowser, xpipath + "installtrigger.html?" + triggers);
 }
 
 function allow_blocked(installInfo) {
