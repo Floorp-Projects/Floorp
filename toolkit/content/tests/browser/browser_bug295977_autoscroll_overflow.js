@@ -92,7 +92,7 @@ body > div > div {width: 1000px;height: 1000px;}\
   for (let test of allTests) {
     if (test.dataUri) {
       let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-      gBrowser.loadURI(test.dataUri);
+      BrowserTestUtils.loadURI(gBrowser, test.dataUri);
       await loadedPromise;
       continue;
      }
