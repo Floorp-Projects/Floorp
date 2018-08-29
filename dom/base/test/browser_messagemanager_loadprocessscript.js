@@ -122,7 +122,7 @@ add_task(async function() {
   checkBaseProcessCount("Should still be at the base number of processes at this point");
 
   // Load something in the main process
-  gBrowser.selectedBrowser.loadURI("about:robots");
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   let init = Services.ppmm.initialProcessData;
@@ -146,7 +146,7 @@ add_task(async function() {
     check = checkProcess(Services.ppmm);
     // Reset the default browser to start a new child process
     gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, true);
-    gBrowser.selectedBrowser.loadURI("about:blank");
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
     checkBaseProcessCount("Should be back to the base number of processes at this point");
