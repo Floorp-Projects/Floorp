@@ -25,14 +25,14 @@ const DEVTOOLS_THEME_PREF = "devtools.theme";
  */
 
 async function openToolboxForTab(tab) {
-  const target = gDevTools.getTargetForTab(tab);
+  const target = await gDevTools.getTargetForTab(tab);
   const toolbox = await gDevTools.showToolbox(target, "testBlankPanel");
   info("Developer toolbox opened");
   return {toolbox, target};
 }
 
 async function closeToolboxForTab(tab) {
-  const target = gDevTools.getTargetForTab(tab);
+  const target = await gDevTools.getTargetForTab(tab);
   await gDevTools.closeToolbox(target);
   await target.destroy();
   info("Developer toolbox closed");
