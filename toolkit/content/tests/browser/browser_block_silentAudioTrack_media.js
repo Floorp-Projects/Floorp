@@ -35,7 +35,7 @@ add_task(async function setup_test_preference() {
 add_task(async function unblock_icon_should_disapear_after_resume_tab() {
   info("- open new background tab -");
   let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
-  tab.linkedBrowser.loadURI(PAGE);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- the suspend state of tab should be suspend-block -");
@@ -65,7 +65,7 @@ add_task(async function unblock_icon_should_disapear_after_resume_tab() {
 add_task(async function should_not_show_sound_indicator_after_resume_tab() {
   info("- open new background tab -");
   let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
-  tab.linkedBrowser.loadURI(PAGE);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- the suspend state of tab should be suspend-block -");
