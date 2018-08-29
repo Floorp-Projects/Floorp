@@ -3,7 +3,7 @@ use jsapi::root::*;
 use std::ptr;
 
 #[derive(Debug)]
-pub struct AutoRealm(JSAutoRealmAllowCCW);
+pub struct AutoRealm(JSAutoRealm);
 
 impl AutoRealm {
     #[cfg(feature = "debugmozjs")]
@@ -16,7 +16,7 @@ impl AutoRealm {
         };
 
         AutoRealm(
-            JSAutoRealmAllowCCW::new(
+            JSAutoRealm::new(
                 cx,
                 target,
                 &mut notifier as *mut _))
@@ -27,7 +27,7 @@ impl AutoRealm {
                            target: *mut JSObject)
                            -> AutoRealm
     {
-        AutoRealm(JSAutoRealmAllowCCW::new(cx, target))
+        AutoRealm(JSAutoRealm::new(cx, target))
     }
 
     #[cfg(feature = "debugmozjs")]
@@ -40,7 +40,7 @@ impl AutoRealm {
         };
 
         AutoRealm(
-            JSAutoRealmAllowCCW::new1(
+            JSAutoRealm::new1(
                 cx,
                 target,
                 &mut notifier as *mut _))
@@ -51,6 +51,6 @@ impl AutoRealm {
                               target: *mut JSScript)
                               -> AutoRealm
     {
-        AutoRealm(JSAutoRealmAllowCCW::new1(cx, target))
+        AutoRealm(JSAutoRealm::new1(cx, target))
     }
 }
