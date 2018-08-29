@@ -117,6 +117,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
         debug(`Tab will force a new frameloader on navigation, load about:blank first`);
         await loadURIWithNewFrameLoader(tab.linkedBrowser, "about:blank", {
           flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
+          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
         });
       }
 
@@ -155,6 +156,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       debug("Load container URL");
       containerBrowser.loadURI(containerURL, {
         flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
 
       // Copy tab listener state flags to container tab.  Each tab gets its own tab

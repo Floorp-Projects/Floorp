@@ -46,7 +46,7 @@ var navigateTo = function(url) {
   info(`Navigating to ${url}`);
   const browser = gBrowser.selectedBrowser;
 
-  browser.loadURI(url);
+  BrowserTestUtils.loadURI(browser, url);
   return BrowserTestUtils.browserLoaded(browser);
 };
 
