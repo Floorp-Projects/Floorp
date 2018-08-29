@@ -51,6 +51,7 @@ class Output(object):
                 'extraOptions': test.extra_options,
                 'subtests': subtests,
                 'lowerIsBetter': test.lower_is_better,
+                'unit': test.unit,
                 'alertThreshold': float(test.alert_threshold)
             }
 
@@ -75,10 +76,10 @@ class Output(object):
                     new_subtest = {}
                     new_subtest['name'] = test.name + "-" + measurement_name
                     new_subtest['replicates'] = replicates
-                    new_subtest['lowerIsBetter'] = test.lower_is_better
+                    new_subtest['lowerIsBetter'] = test.subtest_lower_is_better
                     new_subtest['alertThreshold'] = float(test.alert_threshold)
                     new_subtest['value'] = 0
-                    new_subtest['unit'] = test.unit
+                    new_subtest['unit'] = test.subtest_unit
 
                     filtered_values = filter.ignore_first(new_subtest['replicates'], 1)
                     new_subtest['value'] = filter.median(filtered_values)
@@ -146,9 +147,9 @@ class Output(object):
                 # for each pagecycle, build a list of subtests and append all related replicates
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.unit,
+                    _subtests[sub] = {'unit': test.subtest_unit,
                                       'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.lower_is_better,
+                                      'lowerIsBetter': test.subtest_lower_is_better,
                                       'name': sub,
                                       'replicates': []}
                 _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
@@ -183,9 +184,9 @@ class Output(object):
                 sub = item['name']
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.unit,
+                    _subtests[sub] = {'unit': test.subtest_unit,
                                       'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.lower_is_better,
+                                      'lowerIsBetter': test.subtest_lower_is_better,
                                       'name': sub,
                                       'replicates': []}
                 _subtests[sub]['replicates'].append(item['time'])
@@ -230,9 +231,9 @@ class Output(object):
                 replicates = [item['duration']]
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.unit,
+                    _subtests[sub] = {'unit': test.subtest_unit,
                                       'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.lower_is_better,
+                                      'lowerIsBetter': test.subtest_lower_is_better,
                                       'name': sub,
                                       'replicates': []}
                 _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
@@ -285,9 +286,9 @@ class Output(object):
 
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.unit,
+                    _subtests[sub] = {'unit': test.subtest_unit,
                                       'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.lower_is_better,
+                                      'lowerIsBetter': test.subtest_lower_is_better,
                                       'name': sub,
                                       'replicates': []}
                 _subtests[sub]['replicates'].extend([replicate])
@@ -311,17 +312,17 @@ class Output(object):
                 # for each pagecycle, build a list of subtests and append all related replicates
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.unit,
+                    _subtests[sub] = {'unit': test.subtest_unit,
                                       'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.lower_is_better,
+                                      'lowerIsBetter': test.subtest_lower_is_better,
                                       'name': sub,
                                       'replicates': []}
                 _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
 
         total_subtest = {
-            'unit': test.unit,
+            'unit': test.subtest_unit,
             'alertThreshold': float(test.alert_threshold),
-            'lowerIsBetter': test.lower_is_better,
+            'lowerIsBetter': test.subtest_lower_is_better,
             'replicates': [],
             'name': 'benchmark_score',
             'value': 0
@@ -365,9 +366,9 @@ class Output(object):
                 sub = item['benchmark']
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.unit,
+                    _subtests[sub] = {'unit': test.subtest_unit,
                                       'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.lower_is_better,
+                                      'lowerIsBetter': test.subtest_lower_is_better,
                                       'name': sub,
                                       'replicates': []}
                 _subtests[sub]['replicates'].append(item['result'])
@@ -404,9 +405,9 @@ class Output(object):
                 # build a list of subtests and append all related replicates
                 if _sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[_sub] = {'unit': test.unit,
+                    _subtests[_sub] = {'unit': test.subtest_unit,
                                        'alertThreshold': float(test.alert_threshold),
-                                       'lowerIsBetter': test.lower_is_better,
+                                       'lowerIsBetter': test.subtest_lower_is_better,
                                        'name': _sub,
                                        'replicates': []}
                 _subtests[_sub]['replicates'].extend([_value])
