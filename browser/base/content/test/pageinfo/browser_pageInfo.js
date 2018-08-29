@@ -11,7 +11,7 @@ function test() {
     Services.obs.addObserver(observer, "page-info-dialog-loaded");
     pageInfo = BrowserPageInfo();
   });
-  gBrowser.selectedBrowser.loadURI(URI);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, URI);
 
   function observer(win, topic, data) {
     Services.obs.removeObserver(observer, "page-info-dialog-loaded");

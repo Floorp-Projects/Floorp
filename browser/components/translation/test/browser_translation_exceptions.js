@@ -33,7 +33,7 @@ function test() {
     });
    });
 
-  gBrowser.selectedBrowser.loadURI("http://example.com/");
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com/");
 }
 
 function getLanguageExceptions() {
