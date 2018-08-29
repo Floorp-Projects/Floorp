@@ -51,7 +51,7 @@ async function assertStates(animationInspector, panel, shouldRunning) {
       "Current time scrubber position should change");
     ok(!buttonEl.classList.contains("paused"),
       "State of button should be running");
-    assertAnimationsRunning(animationInspector, panel);
+    assertAnimationsRunning(animationInspector);
   } else {
     is(previousLabelContent, currentLabelContent,
       "Current time label Content should not change");
@@ -59,6 +59,6 @@ async function assertStates(animationInspector, panel, shouldRunning) {
       "Current time scrubber position should not change");
     ok(buttonEl.classList.contains("paused"),
       "State of button should be paused");
-    assertAnimationsPausing(animationInspector, panel);
+    assertAnimationsPausing(animationInspector);
   }
 }
