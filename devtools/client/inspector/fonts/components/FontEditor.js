@@ -172,7 +172,7 @@ class FontEditor extends PureComponent {
   }
 
   renderFontSize(value) {
-    return value && FontSize({
+    return value !== null && FontSize({
       key: `${this.props.fontEditor.id}:font-size`,
       onChange: this.props.onPropertyChange,
       value,
@@ -180,7 +180,7 @@ class FontEditor extends PureComponent {
   }
 
   renderLineHeight(value) {
-    return value && LineHeight({
+    return value !== null && LineHeight({
       key: `${this.props.fontEditor.id}:line-height`,
       onChange: this.props.onPropertyChange,
       value,
@@ -195,7 +195,7 @@ class FontEditor extends PureComponent {
   }
 
   renderFontWeight(value) {
-    return value && FontWeight({
+    return value !== null && FontWeight({
       onChange: this.props.onPropertyChange,
       value,
     });
