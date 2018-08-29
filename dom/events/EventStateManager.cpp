@@ -1486,14 +1486,9 @@ EventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
 
   // if content clicked on has a popup, don't even start the timer
   // since we'll end up conflicting and both will show.
-  if (mGestureDownContent) {
-    // check for the |popup| attribute
-    if (nsContentUtils::HasNonEmptyAttr(mGestureDownContent, kNameSpaceID_None,
-                                        nsGkAtoms::popup))
-      return;
-
-    // check for a <menubutton> like bookmarks
-    if (mGestureDownContent->IsXULElement(nsGkAtoms::menubutton))
+  if (mGestureDownContent &&
+      nsContentUtils::HasNonEmptyAttr(mGestureDownContent, kNameSpaceID_None,
+                                      nsGkAtoms::popup)) {
       return;
   }
 
