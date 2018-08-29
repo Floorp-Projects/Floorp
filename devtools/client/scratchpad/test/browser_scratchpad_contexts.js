@@ -11,7 +11,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  gBrowser.loadURI("data:text/html,test context switch in Scratchpad");
+  BrowserTestUtils.loadURI(gBrowser, "data:text/html,test context switch in Scratchpad");
 }
 
 function runTests() {

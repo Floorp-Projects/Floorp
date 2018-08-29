@@ -23,7 +23,7 @@ add_task(async function() {
   const tab = toolbox.target.tab;
 
   let sourceSeen = waitForSourceLoad(toolbox, JS_URL);
-  tab.linkedBrowser.loadURI(PAGE_URL);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE_URL);
   await sourceSeen;
 
   info(`checking original location for ${JS_URL}:${GENERATED_LINE}`);
