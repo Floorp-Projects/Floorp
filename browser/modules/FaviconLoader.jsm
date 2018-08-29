@@ -385,6 +385,12 @@ class IconLoader {
       return;
     }
 
+    // Let the main process that a tab icon is possibly coming.
+    this.mm.sendAsyncMessage("Link:LoadingIcon", {
+      originalURL: iconInfo.iconUri.spec,
+      canUseForTab: !iconInfo.isRichIcon,
+    });
+
     try {
       this._loader = new FaviconLoad(iconInfo);
       let { dataURL, expiration } = await this._loader.load();
