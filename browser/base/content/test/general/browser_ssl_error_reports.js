@@ -64,7 +64,7 @@ async function testSendReportAutomatically(testURL, suffix, errorURISuffix) {
 
   // Load the page and wait for the error report submission.
   let promiseStatus = createReportResponseStatusPromise(URL_REPORTS + suffix);
-  browser.loadURI(testURL);
+  BrowserTestUtils.loadURI(browser, testURL);
   await BrowserTestUtils.waitForErrorPage(browser);
 
   ok(!isErrorStatus(await promiseStatus),
@@ -88,7 +88,7 @@ async function testSetAutomatic(testURL, suffix, errorURISuffix) {
   let browser = tab.linkedBrowser;
 
   // Load the page.
-  browser.loadURI(testURL);
+  BrowserTestUtils.loadURI(browser, testURL);
   await BrowserTestUtils.waitForErrorPage(browser);
 
   // Check that we loaded the right error page.
@@ -129,7 +129,7 @@ async function testSendReportDisabled(testURL, errorURISuffix) {
   let browser = tab.linkedBrowser;
 
   // Load the page.
-  browser.loadURI(testURL);
+  BrowserTestUtils.loadURI(browser, testURL);
   await BrowserTestUtils.waitForErrorPage(browser);
 
   // Check that we loaded the right error page.
