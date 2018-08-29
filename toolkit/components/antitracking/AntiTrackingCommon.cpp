@@ -373,20 +373,6 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
     return true;
   }
 
-  if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
-    // Now, we have to also honour the Content Blocking pref.
-    if (!StaticPrefs::browser_contentblocking_enabled()) {
-      LOG(("The content blocking pref has been disabled, bail out early by "
-           "by pretending our window isn't a third-party window"));
-      return true;
-    }
-
-    if (CheckContentBlockingAllowList(aWindow)) {
-      LOG(("Allowing access even though our behavior is reject foreign"));
-      return true;
-    }
-  }
-
   if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
       behavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN) {
     // XXX For non-cookie forms of storage, we handle BEHAVIOR_LIMIT_FOREIGN by
@@ -556,20 +542,6 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
   if (!thirdParty) {
     LOG(("Our channel isn't a third-party channel"));
     return true;
-  }
-
-  if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
-    // Now, we have to also honour the Content Blocking pref.
-    if (!StaticPrefs::browser_contentblocking_enabled()) {
-      LOG(("The content blocking pref has been disabled, bail out early by "
-           "by pretending our window isn't a third-party window"));
-      return true;
-    }
-
-    if (CheckContentBlockingAllowList(aChannel)) {
-      LOG(("Allowing access even though our behavior is reject foreign"));
-      return true;
-    }
   }
 
   if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
