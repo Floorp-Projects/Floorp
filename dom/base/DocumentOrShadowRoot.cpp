@@ -53,6 +53,8 @@ void
 DocumentOrShadowRoot::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
 {
   AddSizeOfOwnedSheetArrayExcludingThis(aSizes, mStyleSheets);
+  aSizes.mDOMOtherSize +=
+    mIdentifierMap.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
 }
 
 DocumentOrShadowRoot::~DocumentOrShadowRoot()
