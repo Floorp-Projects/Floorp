@@ -6,6 +6,8 @@
 
 #include "mozilla/ipc/InProcessParent.h"
 #include "mozilla/ipc/InProcessChild.h"
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
 
 // This file contains the implementation of core InProcess lifecycle management
 // facilities.
