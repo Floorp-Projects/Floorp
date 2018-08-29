@@ -1056,7 +1056,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <method name="_initURLTooltip">
         <body><![CDATA[
-          if (this.focused || !this.hasAttribute("textoverflow"))
+          if (this.focused || !this._inOverflow)
             return;
           // We set the tooltip text on the parent node instead of the input
           // field because XUL tooltips only work on XUL elements.
