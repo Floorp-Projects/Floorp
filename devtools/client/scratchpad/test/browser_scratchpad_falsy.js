@@ -11,7 +11,7 @@ function test() {
     openScratchpad(testFalsy);
   });
 
-  gBrowser.loadURI("data:text/html,<p>test falsy display() values in Scratchpad");
+  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test falsy display() values in Scratchpad");
 }
 
 function testFalsy() {
