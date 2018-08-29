@@ -26,7 +26,6 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.util.BitmapUtils;
@@ -101,19 +100,20 @@ public final class NotificationHelper implements BundleEventListener {
         /**
          *  Media notification channel
          */
-        MEDIA
+        MEDIA,
     }
 
-    private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>() {{
+    // Holds the mapping between the Channel enum used by the rest of our codebase and the
+    // channel ID used for communication with the system NotificationManager.
+    private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>(4) {{
         final String DEFAULT_CHANNEL_TAG = "default-notification-channel";
         put(Channel.DEFAULT, DEFAULT_CHANNEL_TAG);
 
-        final String MLS_CHANNEL_TAG     = "mls-notification-channel";
+        final String MLS_CHANNEL_TAG = "mls-notification-channel";
         put(Channel.MLS, MLS_CHANNEL_TAG);
 
         final String DOWNLOAD_NOTIFICATION_TAG = "download-notification-channel";
         put(Channel.DOWNLOAD, DOWNLOAD_NOTIFICATION_TAG);
-
 
         final String MEDIA_CHANNEL_TAG = "media-notification-channel";
         put(Channel.MEDIA, MEDIA_CHANNEL_TAG);
@@ -174,27 +174,30 @@ public final class NotificationHelper implements BundleEventListener {
             switch (definedChannel) {
                 case MLS: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
-                            mContext.getString(R.string.mls_notification_channel), NotificationManager.IMPORTANCE_LOW);
+                            mContext.getString(R.string.mls_notification_channel),
+                            NotificationManager.IMPORTANCE_LOW);
                 }
                 break;
 
                 case DOWNLOAD: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
-                            mContext.getString(R.string.download_notification_channel), NotificationManager.IMPORTANCE_LOW);
+                            mContext.getString(R.string.download_notification_channel),
+                            NotificationManager.IMPORTANCE_LOW);
                 }
                 break;
 
                 case MEDIA: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
-                            mContext.getString(R.string.media_notification_channel), NotificationManager.IMPORTANCE_LOW);
+                            mContext.getString(R.string.media_notification_channel),
+                            NotificationManager.IMPORTANCE_LOW);
                 }
                 break;
 
                 case DEFAULT:
-
                 default: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
-                            mContext.getString(R.string.default_notification_channel), NotificationManager.IMPORTANCE_HIGH);
+                            mContext.getString(R.string.default_notification_channel),
+                            NotificationManager.IMPORTANCE_HIGH);
                 }
                 break;
             }

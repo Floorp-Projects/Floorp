@@ -129,6 +129,7 @@ export class Section extends React.PureComponent {
       pref, privacyNoticeURL, isFirst, isLast
     } = this.props;
 
+    const waitingForSpoc = id === "topstories" && this.props.Pocket.waitingForSpoc;
     const maxCardsPerRow = compactCards ? CARDS_PER_ROW_COMPACT_WIDE : CARDS_PER_ROW_DEFAULT;
     const {numRows} = this;
     const maxCards = maxCardsPerRow * numRows;
@@ -152,7 +153,13 @@ export class Section extends React.PureComponent {
         // On narrow viewports, we only show 3 cards per row. We'll mark the rest as
         // .hide-for-narrow to hide in CSS via @media query.
         const className = (i >= maxCardsOnNarrow) ? "hide-for-narrow" : "";
-        cards.push(link ? (
+        let usePlaceholder = !link;
+        // If we are in the third card and waiting for spoc,
+        // use the placeholder.
+        if (!usePlaceholder && i === 2 && waitingForSpoc) {
+          usePlaceholder = true;
+        }
+        cards.push(!usePlaceholder ? (
           <Card key={i}
             index={i}
             className={className}
@@ -218,7 +225,7 @@ Section.defaultProps = {
   title: ""
 };
 
-export const SectionIntl = connect(state => ({Prefs: state.Prefs}))(injectIntl(Section));
+export const SectionIntl = connect(state => ({Prefs: state.Prefs, Pocket: state.Pocket}))(injectIntl(Section));
 
 export class _Sections extends React.PureComponent {
   renderSections() {

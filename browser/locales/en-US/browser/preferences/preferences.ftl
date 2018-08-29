@@ -6,6 +6,8 @@ do-not-track-description = Send websites a “Do Not Track” signal that you do
 do-not-track-learn-more = Learn more
 do-not-track-option-default =
     .label = Only when using Tracking Protection
+do-not-track-option-default-content-blocking =
+    .label = Only when { -brand-short-name } is set to block Detected Trackers
 do-not-track-option-always =
     .label = Always
 
@@ -824,10 +826,10 @@ content-blocking-category-label = Choose what to block
 # "Slow" in this instance means "slow to load on the network".
 # FastBlock is a feature that blocks requests to tracking sites if they
 # have not finished loading after a certain threshold of seconds.
-content-blocking-fastblock-label = Slow Tracking Elements
+content-blocking-fastblock-slow-loading-label = Slow-Loading Trackers
   .accesskey = S
 content-blocking-fastblock-description = Blocks third-party content that takes longer than 5 seconds to load.
-content-blocking-tracking-protection-label = Trackers
+content-blocking-tracking-protection-all-label = All Detected Trackers
   .accesskey = T
 content-blocking-tracking-protection-description = Blocks all known trackers (Note: may also prevent some pages from loading).
 content-blocking-tracking-protection-option-always =

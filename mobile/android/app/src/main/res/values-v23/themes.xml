@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+    <!--
+        Activity based themes for API 23+.
+        This theme completely replaces GeckoAppBase from res/values/themes.xml on API 23+ devices.
+    -->
+    <style name="GeckoAppBase" parent="Gecko">
+        <!-- Following are defaults from res/values/themes.xml#GeckoAppBase -->
+        <item name="android:buttonStyle">@style/Widget.Button</item>
+        <item name="android:dropDownItemStyle">@style/Widget.DropDownItem</item>
+        <item name="android:editTextStyle">@style/Widget.EditText</item>
+        <item name="android:textViewStyle">@style/Widget.TextView</item>
+        <item name="menuItemDefaultStyle">@style/Widget.MenuItemDefault</item>
+
+        <!-- Following are used to apply a Photon theme to date/time pickers only on API >=23 -->
+        <item name="android:timePickerStyle" >@style/PhotonTimePicker</item>
+        <item name="android:datePickerStyle">@style/PhotonDatePicker</item>
+        <item name="android:calendarViewStyle">@style/PhotonCalendarView</item>
+    </style>
+
+</resources>

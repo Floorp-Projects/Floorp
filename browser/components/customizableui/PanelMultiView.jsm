@@ -1416,6 +1416,15 @@ var PanelView = class extends AssociatedToNode {
   }
 
   /**
+   * Focuses and moves keyboard selection to the last navigable element.
+   * This is a no-op if there are no navigable elements.
+   */
+  focusLastNavigableElement() {
+    this.selectedElement = this._navigableElements[this._navigableElements.length - 1];
+    this.focusSelectedElement();
+  }
+
+  /**
    * Based on going up or down, select the previous or next focusable element.
    *
    * @param {Boolean} isDown   whether we're going down (true) or up (false).
@@ -1515,6 +1524,14 @@ var PanelView = class extends AssociatedToNode {
         button.focus();
         break;
       }
+      case "Home":
+        stop();
+        this.focusFirstNavigableElement();
+        break;
+      case "End":
+        stop();
+        this.focusLastNavigableElement();
+        break;
       case "ArrowLeft":
       case "ArrowRight": {
         stop();
