@@ -14,7 +14,7 @@ function triggerSave(aWindow, aCallback) {
   let testBrowser = aWindow.gBrowser.selectedBrowser;
   // This page sets a cookie if and only if a cookie does not exist yet
   let testURI = "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517-2.html";
-  testBrowser.loadURI(testURI);
+  BrowserTestUtils.loadURI(testBrowser, testURI);
   BrowserTestUtils.browserLoaded(testBrowser, false, testURI)
                   .then(() => {
     waitForFocus(function() {

@@ -14,9 +14,9 @@ add_task(async function() {
   let loaded1 = BrowserTestUtils.browserLoaded(deletedURLTab.linkedBrowser, false, testURL);
   let loaded2 = BrowserTestUtils.browserLoaded(fullURLTab.linkedBrowser, false, testURL);
   let loaded3 = BrowserTestUtils.browserLoaded(partialURLTab.linkedBrowser, false, testURL);
-  deletedURLTab.linkedBrowser.loadURI(testURL);
-  fullURLTab.linkedBrowser.loadURI(testURL);
-  partialURLTab.linkedBrowser.loadURI(testURL);
+  BrowserTestUtils.loadURI(deletedURLTab.linkedBrowser, testURL);
+  BrowserTestUtils.loadURI(fullURLTab.linkedBrowser, testURL);
+  BrowserTestUtils.loadURI(partialURLTab.linkedBrowser, testURL);
   await Promise.all([loaded1, loaded2, loaded3]);
 
   testURL = gURLBar.trimValue(testURL);
