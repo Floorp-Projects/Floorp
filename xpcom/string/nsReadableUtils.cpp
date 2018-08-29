@@ -69,9 +69,6 @@ ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count)
   }
   size_t destLenVal = destLen.value();
   char* dest = static_cast<char*>(moz_xmalloc(destLenVal));
-  if (!dest) {
-    return nullptr;
-  }
 
   size_t written = ConvertUTF16toUTF8(aSource, MakeSpan(dest, destLenVal));
   dest[written] = 0;
@@ -146,9 +143,6 @@ UTF8ToNewUnicode(const nsACString& aSource, uint32_t* aUTF16Count)
   }
 
   char16_t* dest = (char16_t*)moz_xmalloc(allocLength.value());
-  if (!dest) {
-    return nullptr;
-  }
 
   size_t written = ConvertUTF8toUTF16(aSource, MakeSpan(dest, lengthPlusOne));
   dest[written] = 0;

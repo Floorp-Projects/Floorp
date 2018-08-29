@@ -55,6 +55,8 @@ using mozilla::Maybe;
 using mozilla::PointerRangeSize;
 using mozilla::Utf8Unit;
 
+using JS::ReadOnlyCompileOptions;
+
 struct ReservedWordInfo
 {
     const char* chars;         // C string with reserved word text

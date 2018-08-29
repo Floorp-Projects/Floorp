@@ -41,14 +41,6 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix) {
   var testid = (testprefix) ? testprefix + " " : "";
   testid += element.localName + " nsIDOMXULSelectControlElement ";
 
-  // editable menulists use the label as the value instead
-  var firstvalue = "first", secondvalue = "second", fourthvalue = "fourth";
-  if (element.localName == "menulist" && element.editable) {
-    firstvalue = "First Item";
-    secondvalue = "Second Item";
-    fourthvalue = "Fourth Item";
-  }
-
   // 'initial' - check if the initial state of the element is correct
   test_nsIDOMXULSelectControlElement_States(element, testid + "initial", 0, null, -1, "");
 
@@ -64,29 +56,29 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix) {
 
   // 'selectedIndex' - check if an item may be selected
   element.selectedIndex = 0;
-  test_nsIDOMXULSelectControlElement_States(element, testid + "selectedIndex", 1, firstitem, 0, firstvalue);
+  test_nsIDOMXULSelectControlElement_States(element, testid + "selectedIndex", 1, firstitem, 0, "first");
 
   // 'appendItem 2' - check if a second item may be added
   var seconditem = element.appendItem("Second Item", "second");
-  test_nsIDOMXULSelectControlElement_States(element, testid + "appendItem 2", 2, firstitem, 0, firstvalue);
+  test_nsIDOMXULSelectControlElement_States(element, testid + "appendItem 2", 2, firstitem, 0, "first");
 
   // 'selectedItem' - check if the second item may be selected
   element.selectedItem = seconditem;
-  test_nsIDOMXULSelectControlElement_States(element, testid + "selectedItem", 2, seconditem, 1, secondvalue);
+  test_nsIDOMXULSelectControlElement_States(element, testid + "selectedItem", 2, seconditem, 1, "second");
 
   // 'selectedIndex 2' - check if selectedIndex may be set to -1 to deselect items
   var selectionRequired = behaviourContains(element.localName, "selection-required");
   element.selectedIndex = -1;
   test_nsIDOMXULSelectControlElement_States(element, testid + "selectedIndex 2", 2,
         selectionRequired ? seconditem : null, selectionRequired ? 1 : -1,
-        selectionRequired ? secondvalue : "");
+        selectionRequired ? "second" : "");
 
   // 'selectedItem 2' - check if the selectedItem property may be set to null
   element.selectedIndex = 1;
   element.selectedItem = null;
   test_nsIDOMXULSelectControlElement_States(element, testid + "selectedItem 2", 2,
         selectionRequired ? seconditem : null, selectionRequired ? 1 : -1,
-        selectionRequired ? secondvalue : "");
+        selectionRequired ? "second" : "");
 
   // 'getIndexOfItem' - check if getIndexOfItem returns the right index
   is(element.getIndexOfItem(firstitem), 0, testid + "getIndexOfItem - first item at index 0");
@@ -102,10 +94,10 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix) {
   is(element.getItemAtIndex(2), null, testid + "getItemAtIndex - index 2 is null");
 
   // check if setting the value changes the selection
-  element.value = firstvalue;
-  test_nsIDOMXULSelectControlElement_States(element, testid + "set value 1", 2, firstitem, 0, firstvalue);
-  element.value = secondvalue;
-  test_nsIDOMXULSelectControlElement_States(element, testid + "set value 2", 2, seconditem, 1, secondvalue);
+  element.value = "first";
+  test_nsIDOMXULSelectControlElement_States(element, testid + "set value 1", 2, firstitem, 0, "first");
+  element.value = "second";
+  test_nsIDOMXULSelectControlElement_States(element, testid + "set value 2", 2, seconditem, 1, "second");
   // setting the value attribute to one not in the list doesn't change the selection.
   // The value is only changed for elements which support having a value other than the
   // selection.
@@ -115,19 +107,19 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix) {
   test_nsIDOMXULSelectControlElement_States(element, testid + "set value other", 2,
                                             otherValueClearsSelection ? null : seconditem,
                                             otherValueClearsSelection ? -1 : 1,
-                                            allowOtherValue ? "other" : secondvalue);
+                                            allowOtherValue ? "other" : "second");
   if (allowOtherValue)
     element.value = "";
 
-  var fourthitem = element.appendItem("Fourth Item", fourthvalue);
+  var fourthitem = element.appendItem("Fourth Item", "fourth");
   element.selectedIndex = 0;
   fourthitem.disabled = true;
   element.selectedIndex = 2;
-  test_nsIDOMXULSelectControlElement_States(element, testid + "selectedIndex disabled", 3, fourthitem, 2, fourthvalue);
+  test_nsIDOMXULSelectControlElement_States(element, testid + "selectedIndex disabled", 3, fourthitem, 2, "fourth");
 
   element.selectedIndex = 0;
   element.selectedItem = fourthitem;
-  test_nsIDOMXULSelectControlElement_States(element, testid + "selectedItem disabled", 3, fourthitem, 2, fourthvalue);
+  test_nsIDOMXULSelectControlElement_States(element, testid + "selectedItem disabled", 3, fourthitem, 2, "fourth");
 
   if (element.menupopup) {
     element.menupopup.textContent = "";
@@ -137,24 +129,19 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix) {
 }
 
 function test_nsIDOMXULSelectControlElement_init(element, testprefix) {
-  // editable menulists use the label as the value
-  var isEditable = (element.localName == "menulist" && element.editable);
-
   var id = element.id;
   element = document.getElementById(id + "-initwithvalue");
   if (element) {
     var seconditem = element.getItemAtIndex(1);
     test_nsIDOMXULSelectControlElement_States(element, testprefix + " value initialization",
-                                              3, seconditem, 1,
-                                              isEditable ? seconditem.label : seconditem.value);
+                                              3, seconditem, 1, seconditem.value);
   }
 
   element = document.getElementById(id + "-initwithselected");
   if (element) {
     var thirditem = element.getItemAtIndex(2);
     test_nsIDOMXULSelectControlElement_States(element, testprefix + " selected initialization",
-                                              3, thirditem, 2,
-                                              isEditable ? thirditem.label : thirditem.value);
+                                              3, thirditem, 2, thirditem.value);
   }
 }
 

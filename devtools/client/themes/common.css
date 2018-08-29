@@ -86,7 +86,7 @@ html|button, html|select {
 .devtools-autocomplete-listbox .autocomplete-item {
   width: 100%;
   background-color: transparent;
-  color: var(--theme-arrowpanel-color);
+  color: var(--theme-popup-color);
   padding: 1px var(--autocomplete-item-padding-inline);
   cursor: default;
   text-overflow: ellipsis;
@@ -145,13 +145,13 @@ html|button, html|select {
 .tooltip-panel.devtools-autocomplete-popup,
 .CodeMirror-hints,
 .CodeMirror-Tern-tooltip {
-  border: 1px solid var(--theme-arrowpanel-border-color);
-  background-color: var(--theme-arrowpanel-background);
-  color: var(--theme-arrowpanel-color);
+  border: 1px solid var(--theme-popup-border-color);
+  background-color: var(--theme-popup-background);
+  color: var(--theme-popup-color);
 }
 
 .devtools-autocomplete-listbox .autocomplete-item:hover {
-  background-color: var(--theme-arrowpanel-dimmed);
+  background-color: var(--theme-popup-dimmed);
 }
 
 .devtools-autocomplete-listbox .autocomplete-selected,

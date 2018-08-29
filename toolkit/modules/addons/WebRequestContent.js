@@ -66,13 +66,13 @@ var ContentPolicy = {
   },
 
   register() {
-    let catMan = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-    catMan.addCategoryEntry("content-policy", this._contractID, this._contractID, false, true);
+    Services.catMan.addCategoryEntry("content-policy",
+                                     this._contractID,
+                                     this._contractID, false, true);
   },
 
   unregister() {
-    let catMan = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-    catMan.deleteCategoryEntry("content-policy", this._contractID, false);
+    Services.catMan.deleteCategoryEntry("content-policy", this._contractID, false);
   },
 
   shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
