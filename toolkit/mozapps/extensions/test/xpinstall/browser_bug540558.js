@@ -9,7 +9,7 @@ function test() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.loadURI(TESTROOT + "bug540558.html");
+  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "bug540558.html");
 }
 
 function check_xpi_install(install, addon) {

@@ -14,7 +14,7 @@ function test() {
     "Unsigned XPI": TESTROOT + "amosigned.xpi",
   }));
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
 }
 
 function download_progress(addon, value, maxValue) {
@@ -46,7 +46,7 @@ function finish_test(count) {
         Harness.finish();
       }
     });
-    tab.linkedBrowser.loadURI("http://example.com/");
+    BrowserTestUtils.loadURI(tab.linkedBrowser, "http://example.com/");
   }
 
   is(count, 0, "No add-ons should have been installed");
