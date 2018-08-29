@@ -46,6 +46,8 @@
     <string name="has_requested_desktop" translatable="false"><xliff:g id="preference_key">has_requested_desktop</xliff:g></string>
     <string name="app_launch_count" translatable="false"><xliff:g id="preference_key">app_launch_count</xliff:g></string>
 
-    <string name="pref_key_homescreen_tips" translatable="false"><xliff:g id="preference_key">pref_key_tips</xliff:g></string>
+    <string name="pref_key_homescreen_tips" translatable="false">
+        <xliff:g id="preference_key">use_homescreen_tips</xliff:g>
+    </string>
 
 </resources>

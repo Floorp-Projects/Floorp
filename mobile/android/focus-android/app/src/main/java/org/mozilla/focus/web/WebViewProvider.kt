@@ -8,7 +8,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.webkit.WebSettings
-import org.mozilla.focus.utils.experimentDescriptor
+import org.mozilla.focus.utils.geckoEngineExperimentDescriptor
 import org.mozilla.focus.utils.isInExperiment
 import org.mozilla.focus.webview.SystemWebView
 
@@ -20,7 +20,7 @@ object WebViewProvider : IWebViewProvider {
 
     fun determineEngine(context: Context): IWebViewProvider {
         val useNewRenderer =
-                if (context.isInExperiment(experimentDescriptor))
+            if (context.isInExperiment(geckoEngineExperimentDescriptor))
                     true
                 else
                     Config.DEFAULT_NEW_RENDERER

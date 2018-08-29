@@ -8,12 +8,10 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.preference.PreferenceManager
-
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.FirstrunFragment
-import org.mozilla.focus.web.GeckoWebViewProvider
-
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
+import org.mozilla.focus.web.GeckoWebViewProvider
 
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
@@ -35,6 +33,7 @@ class Settings private constructor(context: Context) {
 
     private val preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     private val resources: Resources = context.resources
+    val hasAddedToHomeScreen = context.isInExperiment(homeScreenTipsExperimentDescriptor)
 
     val defaultSearchEngineName: String
         get() = preferences.getString(getPreferenceKey(R.string.pref_key_search_engine), "")!!
@@ -137,21 +136,12 @@ class Settings private constructor(context: Context) {
     fun userHasDismissedNoSuggestionsMessage(): Boolean =
             preferences.getBoolean(SearchSuggestionsPreferences.DISMISSED_NO_SUGGESTIONS_PREF, false)
 
-    fun shouldDisplayHomescreenTips() =
-        preferences.getBoolean(
-            getPreferenceKey(R.string.pref_key_homescreen_tips),
-            true)
-
     fun isDefaultBrowser() = preferences.getBoolean(
         getPreferenceKey(R.string.pref_key_default_browser),
         false)
 
     fun hasOpenedInNewTab() = preferences.getBoolean(
         getPreferenceKey(R.string.has_opened_new_tab),
-        false)
-
-    fun hasAddedToHomescreen() = preferences.getBoolean(
-        getPreferenceKey(R.string.has_added_to_home_screen),
         false)
 
     fun hasRequestedDesktop() = preferences.getBoolean(

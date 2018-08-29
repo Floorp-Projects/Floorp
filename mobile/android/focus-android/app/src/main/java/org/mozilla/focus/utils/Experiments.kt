@@ -14,7 +14,8 @@ const val EXPERIMENTS_BASE_URL = "https://settings.prod.mozaws.net/v1"
 const val EXPERIMENTS_BUCKET_NAME = "main"
 const val EXPERIMENTS_COLLECTION_NAME = "focus-experiments"
 
-val experimentDescriptor = ExperimentDescriptor(Config.EXPERIMENT_DESCRIPTOR_GECKOVIEW_ENGINE)
+val geckoEngineExperimentDescriptor = ExperimentDescriptor(Config.EXPERIMENT_DESCRIPTOR_GECKOVIEW_ENGINE)
+val homeScreenTipsExperimentDescriptor = ExperimentDescriptor(Config.EXPERIMENT_DESCIPTOR_HOME_SCREEN_TIPS)
 
 val Context.app: FocusApplication
     get() = applicationContext as FocusApplication

@@ -4,24 +4,27 @@
 
 package org.mozilla.focus.tips
 
-import android.content.Context
-import org.mozilla.focus.utils.Settings
-import java.util.Random
 import android.app.Activity
+import android.content.Context
 import android.os.Build
-import org.mozilla.focus.R.string.tip_open_in_new_tab
-import org.mozilla.focus.R.string.tip_set_default_browser
+import org.mozilla.focus.R.string.app_name
 import org.mozilla.focus.R.string.tip_add_to_homescreen
-import org.mozilla.focus.R.string.tip_disable_tracking_protection
 import org.mozilla.focus.R.string.tip_autocomplete_url
+import org.mozilla.focus.R.string.tip_disable_tracking_protection
+import org.mozilla.focus.R.string.tip_open_in_new_tab
 import org.mozilla.focus.R.string.tip_request_desktop
 import org.mozilla.focus.R.string.tip_disable_tips
 import org.mozilla.focus.R.string.app_name
+import org.mozilla.focus.R.string.tip_set_default_browser
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
+import org.mozilla.focus.utils.homeScreenTipsExperimentDescriptor
+import org.mozilla.focus.utils.isInExperiment
+import java.util.Random
 
 class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val deepLink: (() -> Unit)? = null) {
     companion object {
@@ -45,9 +48,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val id = tip_add_to_homescreen
             val name = context.resources.getString(id)
 
-            val shouldDisplayAddToHomescreen = {
-                !Settings.getInstance(context).hasAddedToHomescreen()
-            }
+            val shouldDisplayAddToHomescreen = { !Settings.getInstance(context).hasAddedToHomeScreen }
 
             return Tip(id, name, shouldDisplayAddToHomescreen)
         }
@@ -163,14 +164,15 @@ object TipManager {
     // Will not return a tip if tips are disabled or if MAX TIPS have already been shown.
     @Suppress("ReturnCount") // Using early returns
     fun getNextTipIfAvailable(context: Context): Tip? {
+        if (!context.isInExperiment(homeScreenTipsExperimentDescriptor)) return null
+
         if (!listInitialized) {
             populateListOfTips(context)
             listInitialized = true
         }
 
         // Only show three tips before going back to the "Focus" branding and if they're enabled
-        if (tipsShown == MAX_TIPS_TO_DISPLAY || listOfTips.count() <= 0 ||
-            !Settings.getInstance(context).shouldDisplayHomescreenTips()) {
+        if (tipsShown == MAX_TIPS_TO_DISPLAY || listOfTips.count() <= 0) {
             return null
         }
 

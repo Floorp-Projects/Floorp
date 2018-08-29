@@ -9,7 +9,6 @@
 
     <SwitchPreference
         android:key="@string/pref_key_homescreen_tips"
-        android:defaultValue="true"
         android:title="@string/preference_homescreen_tips" />
 
     <org.mozilla.focus.widget.AboutPreference

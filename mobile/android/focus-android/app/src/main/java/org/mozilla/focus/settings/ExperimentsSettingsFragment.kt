@@ -6,12 +6,12 @@ package org.mozilla.focus.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.support.v7.preference.SwitchPreferenceCompat
 import android.support.v7.preference.PreferenceFragmentCompat
+import android.support.v7.preference.SwitchPreferenceCompat
 import com.jakewharton.processphoenix.ProcessPhoenix
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.app
-import org.mozilla.focus.utils.experimentDescriptor
+import org.mozilla.focus.utils.geckoEngineExperimentDescriptor
 import org.mozilla.focus.utils.isInExperiment
 import org.mozilla.focus.web.Config
 import org.mozilla.focus.web.ENGINE_PREF_STRING_KEY
@@ -28,7 +28,7 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
         addPreferencesFromResource(R.xml.experiments_settings)
         val enginePref: SwitchPreferenceCompat? = preferenceManager
                 .findPreference(ENGINE_PREF_STRING_KEY) as SwitchPreferenceCompat?
-        enginePref?.isChecked = activity!!.isInExperiment(experimentDescriptor)
+        enginePref?.isChecked = activity!!.isInExperiment(geckoEngineExperimentDescriptor)
     }
 
     override fun onResume() {
@@ -50,7 +50,7 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
             ENGINE_PREF_STRING_KEY -> {
                 rendererPreferenceChanged = true
                 activity!!.app.fretboard.setOverride(
-                        activity!!.app, experimentDescriptor,
+                    activity!!.app, geckoEngineExperimentDescriptor,
                         sharedPreferences!!.getBoolean(key, Config.DEFAULT_NEW_RENDERER))
             }
         }

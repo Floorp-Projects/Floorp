@@ -28,7 +28,7 @@ import android.webkit.URLUtil
 import android.widget.FrameLayout
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_urlinput.*
-import kotlinx.android.synthetic.main.fragment_urlinput.view.homeViewTipsLabel
+import kotlinx.android.synthetic.main.fragment_urlinput.view.*
 import mozilla.components.browser.domains.DomainAutoCompleteProvider
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
