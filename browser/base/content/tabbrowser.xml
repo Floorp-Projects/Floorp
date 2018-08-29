@@ -1675,6 +1675,9 @@
                      class="tab-throbber-fallback"
                      role="presentation"
                      layer="true"/>
+          <xul:hbox xbl:inherits="fadein,pinned,busy,progress,selected=visuallyselected,pendingicon"
+                    anonid="tab-icon-pending"
+                    class="tab-icon-pending"/>
           <xul:image xbl:inherits="src=image,triggeringprincipal=iconloadingprincipal,requestcontextid,fadein,pinned,selected=visuallyselected,busy,crashed,sharing"
                      anonid="tab-icon-image"
                      class="tab-icon-image"

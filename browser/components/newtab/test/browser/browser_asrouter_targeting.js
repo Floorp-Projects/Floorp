@@ -110,6 +110,16 @@ add_task(async function checkProfileAgeReset() {
     "should select correct item by profile age reset");
 });
 
+add_task(async function checkCurrentDate() {
+  let message = {id: "foo", targeting: `currentDate < '${new Date(Date.now() + 1000)}'|date`};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
+    "should select message based on currentDate < timestamp");
+
+  message = {id: "foo", targeting: `currentDate > '${new Date(Date.now() - 1000)}'|date`};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
+    "should select message based on currentDate > timestamp");
+});
+
 add_task(async function checkhasFxAccount() {
   await pushPrefs(["services.sync.username", "someone@foo.com"]);
   is(await ASRouterTargeting.Environment.hasFxAccount, true,
@@ -290,4 +300,13 @@ add_task(async function check_sync() {
     "should return correct mobileDevices info");
   is(await ASRouterTargeting.Environment.sync.totalDevices, Services.prefs.getIntPref("services.sync.numClients", 0),
     "should return correct mobileDevices info");
+});
+
+add_task(async function check_onboarding_cohort() {
+  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", enabled: true, cohort: 1}]));
+  is(await ASRouterTargeting.Environment.isInExperimentCohort, 1);
+  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify(17));
+  is(await ASRouterTargeting.Environment.isInExperimentCohort, 0);
+  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", enabled: true, cohort: "hello"}]));
+  is(await ASRouterTargeting.Environment.isInExperimentCohort, 0);
 });

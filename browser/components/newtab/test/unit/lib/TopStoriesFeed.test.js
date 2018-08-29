@@ -504,7 +504,11 @@ describe("Top Stories Feed", () => {
 
       instance.store.getState = () => ({Sections: [{id: "topstories", rows: response.recommendations}], Prefs: {values: {showSponsored: true}}});
 
-      globals.set("Math", {random: () => 0.4});
+      globals.set("Math", {
+        random: () => 0.4,
+        min: Math.min
+      });
+      instance.dispatchSpocDone = () => {};
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledOnce(instance.store.dispatch);
       let [action] = instance.store.dispatch.firstCall.args;
@@ -518,11 +522,17 @@ describe("Top Stories Feed", () => {
       assert.equal(action.data.rows[2].pinned, true);
 
       // Second new tab shouldn't trigger a section update event (spocsPerNewTab === 0.5)
-      globals.set("Math", {random: () => 0.6});
+      globals.set("Math", {
+        random: () => 0.6,
+        min: Math.min
+      });
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledOnce(instance.store.dispatch);
 
-      globals.set("Math", {random: () => 0.3});
+      globals.set("Math", {
+        random: () => 0.3,
+        min: Math.min
+      });
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledTwice(instance.store.dispatch);
       [action] = instance.store.dispatch.secondCall.args;
@@ -536,6 +546,7 @@ describe("Top Stories Feed", () => {
     });
     it("should delay inserting spoc if stories haven't been fetched", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: true,
@@ -545,7 +556,10 @@ describe("Top Stories Feed", () => {
       });
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
-      globals.set("Math", {random: () => 0.4});
+      globals.set("Math", {
+        random: () => 0.4,
+        min: Math.min
+      });
 
       const response = {
         "settings": {"spocsPerNewTabs": 0.5},
@@ -569,6 +583,7 @@ describe("Top Stories Feed", () => {
     });
     it("should not insert spoc if preffed off", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: false,
@@ -594,8 +609,23 @@ describe("Top Stories Feed", () => {
       assert.calledOnce(instance.shouldShowSpocs);
       assert.notCalled(instance.store.dispatch);
     });
+    it("should call dispatchSpocDone when calling maybeAddSpoc", async () => {
+      instance.dispatchSpocDone = sinon.spy();
+      instance.storiesLoaded = true;
+      await instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.calledOnce(instance.dispatchSpocDone);
+      assert.calledWith(instance.dispatchSpocDone, {});
+    });
+    it("should fire POCKET_WAITING_FOR_SPOC action with false", () => {
+      instance.dispatchSpocDone({});
+      assert.calledOnce(instance.store.dispatch);
+      const [action] = instance.store.dispatch.firstCall.args;
+      assert.equal(action.type, "POCKET_WAITING_FOR_SPOC");
+      assert.equal(action.data, false);
+    });
     it("should not insert spoc if user opted out", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: true,
@@ -620,6 +650,7 @@ describe("Top Stories Feed", () => {
     });
     it("should not fail if there is no spoc", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: true,
@@ -629,7 +660,10 @@ describe("Top Stories Feed", () => {
       });
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
-      globals.set("Math", {random: () => 0.4});
+      globals.set("Math", {
+        random: () => 0.4,
+        min: Math.min
+      });
 
       const response = {
         "settings": {"spocsPerNewTabs": 0.5},
@@ -646,7 +680,10 @@ describe("Top Stories Feed", () => {
       let fetchStub = globals.sandbox.stub();
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
-      globals.set("Math", {random: () => 0.4});
+      globals.set("Math", {
+        random: () => 0.4,
+        min: Math.min
+      });
 
       const response = {
         "settings": {"spocsPerNewTabs": 0.5},
@@ -741,6 +778,7 @@ describe("Top Stories Feed", () => {
     });
     it("should maintain frequency caps when inserting spocs", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: true,
@@ -805,6 +843,7 @@ describe("Top Stories Feed", () => {
     });
     it("should maintain client-side MAX_LIFETIME_CAP", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: true,

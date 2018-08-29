@@ -508,7 +508,7 @@ main {
     position: absolute;
     top: -13.5px;
     transform: scale(0.25);
-    transition-duration: 200ms;
+    transition-duration: 150ms;
     transition-property: transform, opacity;
     width: 27px; }
     .top-site-outer .context-menu-button:-moz-any(:active, :focus) {
@@ -527,7 +527,8 @@ main {
     font-size: 32px;
     font-weight: 200;
     justify-content: center;
-    text-transform: uppercase; }
+    text-transform: uppercase;
+    transition: box-shadow 150ms; }
     .top-site-outer .tile::before {
       content: attr(data-fallback); }
   .top-site-outer .screenshot {
@@ -579,7 +580,16 @@ main {
     border-radius: 42px;
     -moz-context-properties: fill;
     fill: #FFF;
-    box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color), var(--newtab-card-shadow); }
+    box-shadow: var(--newtab-card-shadow);
+    transition-duration: 150ms;
+    transition-property: background-size, bottom, inset-inline-end, height, width; }
+  .top-site-outer:hover .search-topsite {
+    background-size: 28px;
+    border-radius: 46px;
+    bottom: -9px;
+    height: 46px;
+    inset-inline-end: -9px;
+    width: 46px; }
   .top-site-outer.search-shortcut .rich-icon {
     background-color: #FFF; }
   .top-site-outer .title {
@@ -825,18 +835,11 @@ main {
 .topsite-form [type='checkbox']:checked + label .tile {
   box-shadow: 0 0 0 2px var(--newtab-link-primary-color); }
 
-.topsite-form [type='checkbox']:not(:checked) + label .tile:hover {
-  box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color), 0 0 0 5px var(--newtab-card-active-outline-color);
-  transition: box-shadow 150ms; }
-
 .topsite-form [type='checkbox']:not(:checked) + label::after {
   opacity: 0; }
 
 .topsite-form [type='checkbox']:checked + label::after {
   opacity: 1; }
-
-.topsite-form [type='checkbox'] + label:hover::before {
-  border: 1px solid var(--newtab-link-primary-color); }
 
 .topsite-form [type='checkbox']:checked:focus + label::before,
 .topsite-form [type='checkbox']:not(:checked):focus + label::before {
@@ -1461,7 +1464,7 @@ a.firstrun-link {
     position: absolute;
     top: -13.5px;
     transform: scale(0.25);
-    transition-duration: 200ms;
+    transition-duration: 150ms;
     transition-property: transform, opacity;
     width: 27px; }
     .card-outer .context-menu-button:-moz-any(:active, :focus) {
