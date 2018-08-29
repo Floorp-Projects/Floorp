@@ -31,7 +31,7 @@ var TEST_PAGES = [
   {
     url: URL_PREFIX + "developer.mozilla.org/en/XULRunner/Build_Instructions.html",
     expected: {
-      title: "Building XULRunner | MDN",
+      title: "Building XULRunner",
       byline: null,
       excerpt: "XULRunner is built using basically the same process as Firefox or other applications. Please read and follow the general Build Documentation for instructions on how to get sources and set up build prerequisites.",
     }
