@@ -69,6 +69,9 @@ public:
   // To send NotifyTrackingProtectionDisabled message over background channel.
   bool OnNotifyTrackingProtectionDisabled();
 
+  // To send NotifyTrackingCookieBlocked message over background channel.
+  bool OnNotifyTrackingCookieBlocked();
+
   // To send NotifyTrackingResource message over background channel.
   bool OnNotifyTrackingResource(bool aIsThirdParty);
 

@@ -10,6 +10,7 @@
 
 #include "nsHttp.h"
 #include "nsICacheEntry.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DocGroup.h"
@@ -2035,6 +2036,23 @@ HttpChannelChild::ProcessNotifyTrackingProtectionDisabled()
       "nsChannelClassifier::NotifyTrackingProtectionDisabled",
       [self]() {
         nsChannelClassifier::NotifyTrackingProtectionDisabled(self);
+      }),
+    NS_DISPATCH_NORMAL);
+}
+
+void
+HttpChannelChild::ProcessNotifyTrackingCookieBlocked()
+{
+  LOG(("HttpChannelChild::ProcessNotifyTrackingCookieBlocked [this=%p]\n", this));
+  MOZ_ASSERT(OnSocketThread());
+
+  RefPtr<HttpChannelChild> self = this;
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  neckoTarget->Dispatch(
+    NS_NewRunnableFunction(
+      "nsChannelClassifier::NotifyTrackingCookieBlocked",
+      [self]() {
+        AntiTrackingCommon::NotifyRejection(self);
       }),
     NS_DISPATCH_NORMAL);
 }
