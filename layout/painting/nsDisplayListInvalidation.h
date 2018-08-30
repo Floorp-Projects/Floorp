@@ -21,7 +21,7 @@ class nsDisplayItem;
 class nsDisplayListBuilder;
 class nsDisplayTableItem;
 class nsDisplayThemedBackground;
-class nsDisplaySVGEffects;
+class nsDisplayEffectsBase;
 class nsDisplayMask;
 class nsDisplayFilter;
 
@@ -294,7 +294,7 @@ public:
 class nsDisplaySVGEffectGeometry : public nsDisplayItemGeometry
 {
 public:
-  nsDisplaySVGEffectGeometry(nsDisplaySVGEffects* aItem,
+  nsDisplaySVGEffectGeometry(nsDisplayEffectsBase* aItem,
                              nsDisplayListBuilder* aBuilder);
 
   void MoveBy(const nsPoint& aOffset) override;
