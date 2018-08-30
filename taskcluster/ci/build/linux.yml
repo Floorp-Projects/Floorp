@@ -24,6 +24,7 @@ linux64/opt:
     toolchains:
         - linux64-binutils
         - linux64-clang
+        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -359,6 +360,7 @@ linux/opt:
     toolchains:
         - linux64-binutils
         - linux64-clang
+        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
