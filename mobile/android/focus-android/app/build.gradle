@@ -4,7 +4,6 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: "com.github.spotbugs"
 apply plugin: 'jacoco'
-apply plugin: 'jacoco-android'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
 apply plugin: 'kotlin-android-extensions'
@@ -499,13 +498,27 @@ afterEvaluate {
 if (project.hasProperty("coverage")) {
     tasks.withType(Test) {
         jacoco.includeNoLocationClasses = true
-        doLast { jacocoTestReport.execute() }
     }
 
-    jacocoAndroidUnitTestReport {
-        csv.enabled false
-        html.enabled true
-        xml.enabled true
+    android.applicationVariants.all { variant ->
+        task "jacoco${variant.name.capitalize()}TestReport"(type: JacocoReport,
+                dependsOn: ["test${variant.name.capitalize()}UnitTest"]) {
+
+            reports {
+                html.enabled true
+                xml.enabled true
+            }
+
+            def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
+                              '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
+            def debugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/${variant.name}", excludes: fileFilter)
+            def mainSrc = "$project.projectDir/src/main/java"
+            sourceDirectories = files([mainSrc])
+            classDirectories = files([debugTree])
+            executionData = fileTree(dir: project.buildDir, includes: [
+                    "jacoco/test${variant.name.capitalize()}UnitTest.exec", 'outputs/code-coverage/connected/*coverage.ec'
+            ])
+        }
     }
 
     android {
