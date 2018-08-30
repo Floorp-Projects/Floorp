@@ -199,7 +199,7 @@ PathContainsInvalidLinks(wchar_t * const fullPath)
   wchar_t pathCopy[MAXPATHLEN + 1] = L"";
   wcsncpy(pathCopy, fullPath, MAXPATHLEN);
   wchar_t* remainingPath = nullptr;
-  wchar_t* nextToken = wcstok(pathCopy, L"\\", &remainingPath);
+  wchar_t* nextToken = wcstok_s(pathCopy, L"\\", &remainingPath);
   wchar_t* partialPath = nextToken;
 
   while (nextToken) {
@@ -249,7 +249,7 @@ PathContainsInvalidLinks(wchar_t * const fullPath)
       }
     }
 
-    nextToken = wcstok(nullptr, L"\\", &remainingPath);
+    nextToken = wcstok_s(nullptr, L"\\", &remainingPath);
     PathAppendW(partialPath, nextToken);
   }
 
