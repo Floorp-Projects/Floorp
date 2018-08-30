@@ -177,6 +177,10 @@ _Supporting components with generic helper code._
 
 * 🔵 [**Utils**](components/support/utils/README.md) - Generic utility classes to be shared between projects.
 
+## Standalone libraries
+
+* 🔴 [**Dataprotect**](components/lib/dataprotect/README.md) - A component using AndroidKeyStore to protect user data.
+
 ## Tooling
 
 * 🔵 [**Lint**](components/tooling/lint/README.md) - Custom Lint rules for the components repository.

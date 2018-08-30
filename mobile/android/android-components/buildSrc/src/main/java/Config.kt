@@ -10,4 +10,7 @@ object Config {
     const val compileSdkVersion = 27
     const val minSdkVersion = 21
     const val targetSdkVersion = 27
+
+    // Component lib-dataprotect requires functionality from API 23.
+    const val minSdkVersion_dataprotect = 23
 }
