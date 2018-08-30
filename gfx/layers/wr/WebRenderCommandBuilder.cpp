@@ -922,13 +922,13 @@ Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect
     }
     case DisplayItemType::TYPE_FILTER: {
       GP("Paint Filter\n");
-      // We don't currently support doing invalidation inside nsDisplayFilter
+      // We don't currently support doing invalidation inside nsDisplayFilters
       // for now just paint it as a single item
       BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
       if (data->mLayerManager->GetRoot()) {
         data->mLayerManager->BeginTransaction();
-        static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(mDisplayListBuilder,
-                                                           aContext, data->mLayerManager);
+        static_cast<nsDisplayFilters*>(aItem)->PaintAsLayer(mDisplayListBuilder,
+                                                            aContext, data->mLayerManager);
         if (data->mLayerManager->InTransaction()) {
           data->mLayerManager->AbortTransaction();
         }
@@ -1742,8 +1742,8 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
     {
       context->SetMatrix(context->CurrentMatrix().PreTranslate(-aOffset.x, -aOffset.y));
       isInvalidated = PaintByLayer(aItem, aDisplayListBuilder, aManager, context, aScale, [&]() {
-        static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aDisplayListBuilder,
-                                                           context, aManager);
+        static_cast<nsDisplayFilters*>(aItem)->PaintAsLayer(aDisplayListBuilder,
+                                                            context, aManager);
       });
       break;
     }
@@ -1856,7 +1856,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
   LayerRect paintRect = LayerRect(LayerPoint(0, 0), LayerSize(paintSize));
   nsDisplayItemGeometry* geometry = fallbackData->GetGeometry();
 
-  // nsDisplayFilter is rendered via BasicLayerManager which means the invalidate
+  // nsDisplayFilters is rendered via BasicLayerManager which means the invalidate
   // region is unknown until we traverse the displaylist contained by it.
   if (geometry && !fallbackData->IsInvalid() &&
       aItem->GetType() != DisplayItemType::TYPE_FILTER &&

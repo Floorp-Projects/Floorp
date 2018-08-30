@@ -23,7 +23,7 @@ class nsDisplayTableItem;
 class nsDisplayThemedBackground;
 class nsDisplayEffectsBase;
 class nsDisplayMasksAndClipPaths;
-class nsDisplayFilter;
+class nsDisplayFilters;
 
 namespace mozilla {
 namespace gfx {
@@ -322,13 +322,13 @@ public:
   bool mHandleOpacity;
 };
 
-class nsDisplayFilterGeometry
+class nsDisplayFiltersGeometry
   : public nsDisplaySVGEffectGeometry
-  , public nsImageGeometryMixin<nsDisplayFilterGeometry>
+  , public nsImageGeometryMixin<nsDisplayFiltersGeometry>
 {
 public:
-  nsDisplayFilterGeometry(nsDisplayFilter* aItem,
-                          nsDisplayListBuilder* aBuilder);
+  nsDisplayFiltersGeometry(nsDisplayFilters* aItem,
+                           nsDisplayListBuilder* aBuilder);
 
   bool InvalidateForSyncDecodeImages() const override
   {

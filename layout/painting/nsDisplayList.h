@@ -907,7 +907,7 @@ public:
 
   /**
    * Returns true if we're currently building a display list that's
-   * under an nsDisplayFilter.
+   * under an nsDisplayFilters.
    */
   bool IsInFilter() const { return mInFilter; }
 
@@ -6840,31 +6840,35 @@ private:
 /**
  * A display item to paint a stacking context with filter effects set by the
  * stacking context root frame's style.
+ *
+ * Note that the filters may just be simple CSS filter functions.  That is,
+ * they won't necessarily be references to SVG 'filter' elements.
  */
-class nsDisplayFilter : public nsDisplayEffectsBase
+class nsDisplayFilters : public nsDisplayEffectsBase
 {
 public:
-  nsDisplayFilter(nsDisplayListBuilder* aBuilder,
-                  nsIFrame* aFrame,
-                  nsDisplayList* aList,
-                  bool aHandleOpacity);
+  nsDisplayFilters(nsDisplayListBuilder* aBuilder,
+                   nsIFrame* aFrame,
+                   nsDisplayList* aList,
+                   bool aHandleOpacity);
 
-  nsDisplayFilter(nsDisplayListBuilder* aBuilder, const nsDisplayFilter& aOther)
+  nsDisplayFilters(nsDisplayListBuilder* aBuilder,
+                   const nsDisplayFilters& aOther)
     : nsDisplayEffectsBase(aBuilder, aOther)
     , mEffectsBounds(aOther.mEffectsBounds)
   {
   }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-  ~nsDisplayFilter() override { MOZ_COUNT_DTOR(nsDisplayFilter); }
+  ~nsDisplayFilters() override { MOZ_COUNT_DTOR(nsDisplayFilters); }
 #endif
 
   NS_DISPLAY_DECL_NAME("Filter", TYPE_FILTER)
 
   nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
-    MOZ_COUNT_CTOR(nsDisplayFilter);
-    return MakeDisplayItem<nsDisplayFilter>(aBuilder, *this);
+    MOZ_COUNT_CTOR(nsDisplayFilters);
+    return MakeDisplayItem<nsDisplayFilters>(aBuilder, *this);
   }
 
   bool CanMerge(const nsDisplayItem* aItem) const override
@@ -6879,7 +6883,7 @@ public:
   {
     nsDisplayWrapList::Merge(aItem);
 
-    const nsDisplayFilter* other = static_cast<const nsDisplayFilter*>(aItem);
+    const nsDisplayFilters* other = static_cast<const nsDisplayFilters*>(aItem);
     mEffectsBounds.UnionRect(mEffectsBounds,
                              other->mEffectsBounds +
                                other->mFrame->GetOffsetTo(mFrame));
@@ -6906,7 +6910,7 @@ public:
   nsDisplayItemGeometry* AllocateGeometry(
     nsDisplayListBuilder* aBuilder) override
   {
-    return new nsDisplayFilterGeometry(this, aBuilder);
+    return new nsDisplayFiltersGeometry(this, aBuilder);
   }
 
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,

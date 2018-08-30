@@ -211,7 +211,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
 
   if (aItem->GetType() == DisplayItemType::TYPE_FILTER) {
     nsCString str;
-    (static_cast<nsDisplayFilter*>(aItem))->PrintEffects(str);
+    (static_cast<nsDisplayFilters*>(aItem))->PrintEffects(str);
     aStream << str.get();
   }
 #endif

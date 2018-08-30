@@ -152,8 +152,8 @@ nsDisplayMasksAndClipPathsGeometry::nsDisplayMasksAndClipPathsGeometry(
 {
 }
 
-nsDisplayFilterGeometry::nsDisplayFilterGeometry(nsDisplayFilter* aItem,
-                                                 nsDisplayListBuilder* aBuilder)
+nsDisplayFiltersGeometry::nsDisplayFiltersGeometry(nsDisplayFilters* aItem,
+                                                   nsDisplayListBuilder* aBuilder)
   : nsDisplaySVGEffectGeometry(aItem, aBuilder)
   , nsImageGeometryMixin(aItem, aBuilder)
 {
