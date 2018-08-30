@@ -25,9 +25,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 ChromeUtils.import("resource://testing-common/ContentTask.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
-  "resource:///modules/BrowserWindowTracker.jsm");
-
 Services
   .mm
   .loadFrameScript(
@@ -704,19 +701,61 @@ var BrowserTestUtils = {
   },
 
   /**
-   * Open a new browser window from an existing one.
-   * This relies on OpenBrowserWindow in browser.js, and waits for the window
-   * to be completely loaded before resolving.
-   *
+   * @param {Object} options
+   *        {
+   *          private: A boolean indicating if the window should be
+   *                   private
+   *          remote:  A boolean indicating if the window should run
+   *                   remote browser tabs or not. If omitted, the window
+   *                   will choose the profile default state.
+   *          width: Desired width of window
+   *          height: Desired height of window
+   *        }
    * @return {Promise}
    *         Resolves with the new window once it is loaded.
    */
   async openNewBrowserWindow(options = {}) {
-    let currentWin = BrowserWindowTracker.getTopWindow({private: false});
-    if (!currentWin) {
-      throw new Error("Can't open a new browser window from this helper if no non-private window is open.");
+    let argString = Cc["@mozilla.org/supports-string;1"].
+                    createInstance(Ci.nsISupportsString);
+    argString.data = "";
+    let features = "chrome,dialog=no,all";
+    let opener = null;
+
+    if (options.opener) {
+      opener = options.opener;
     }
-    let win = currentWin.OpenBrowserWindow(options);
+
+    if (options.private) {
+      features += ",private";
+    }
+
+    if (options.width) {
+      features += ",width=" + options.width;
+    }
+    if (options.height) {
+      features += ",height=" + options.height;
+    }
+
+    if (options.left) {
+      features += ",left=" + options.left;
+    }
+
+    if (options.top) {
+      features += ",top=" + options.top;
+    }
+
+    if (options.hasOwnProperty("remote")) {
+      let remoteState = options.remote ? "remote" : "non-remote";
+      features += `,${remoteState}`;
+    }
+
+    if (options.url) {
+      argString.data = options.url;
+    }
+
+    let win = Services.ww.openWindow(
+      opener, AppConstants.BROWSER_CHROME_URL, "_blank",
+      features, argString);
 
     // Wait for browser-delayed-startup-finished notification, it indicates
     // that the window has loaded completely and is ready to be used for
