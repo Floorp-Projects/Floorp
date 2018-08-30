@@ -238,14 +238,32 @@ Services.obs.addObserver({
 
     const contents = {};
     for (const id in apiMessage) {
-      if (id != "wrappedJSObject") {
+      if (id != "wrappedJSObject" && id != "arguments") {
         contents[id] = JSON.parse(JSON.stringify(apiMessage[id]));
       }
+    }
+
+    // Message arguments are preserved as debuggee values.
+    if (apiMessage.arguments) {
+      contents.arguments = apiMessage.arguments.map(makeDebuggeeValue);
     }
 
     newConsoleMessage("ConsoleAPI", null, contents);
   },
 }, "console-api-log-event");
+
+function convertConsoleMessage(contents) {
+  const result = {};
+  for (const id in contents) {
+    if (id == "arguments" && contents.messageType == "ConsoleAPI") {
+      // Copy arguments over as debuggee values.
+      result.arguments = contents.arguments.map(convertValue);
+    } else {
+      result[id] = contents[id];
+    }
+  }
+  return result;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Position Handler State
@@ -440,6 +458,16 @@ function convertCompletionValue(value) {
     return { throw: convertValue(value.throw) };
   }
   throw new Error("Unexpected completion value");
+}
+
+function makeDebuggeeValue(value) {
+  if (value && typeof value == "object") {
+    assert(!(value instanceof Debugger.Object));
+    const global = Cu.getGlobalForObject(value);
+    const dbgGlobal = dbg.makeGlobalObjectReference(global);
+    return dbgGlobal.makeDebuggeeValue(value);
+  }
+  return value;
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -647,11 +675,11 @@ const gRequestHandlers = {
   },
 
   findConsoleMessages(request) {
-    return gConsoleMessages;
+    return gConsoleMessages.map(convertConsoleMessage);
   },
 
   getNewConsoleMessage(request) {
-    return gConsoleMessages[gConsoleMessages.length - 1];
+    return convertConsoleMessage(gConsoleMessages[gConsoleMessages.length - 1]);
   },
 };
 

@@ -189,6 +189,7 @@ var BrowserTestUtils = {
       // If DEFAULT_PROCESSSELECTOR_CID is null, we're in non-e10s mode and we
       // should skip this.
       if (options.forceNewProcess && DEFAULT_PROCESSSELECTOR_CID) {
+        Services.ppmm.releaseCachedProcesses();
         registrar.registerFactory(OUR_PROCESSSELECTOR_CID, "",
                                   PROCESSSELECTOR_CONTRACTID, null);
       }
