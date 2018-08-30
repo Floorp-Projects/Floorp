@@ -185,7 +185,6 @@ public:
                       mDtmfEnabled(false),
                       mCodecMutex("AudioConduit codec db"),
                       mCaptureDelay(150),
-                      mLastTimestamp(0),
                       mSamples(0),
                       mLastSyncLog(0)
   {
@@ -338,8 +337,6 @@ private:
 
   // Current "capture" delay (really output plus input delay)
   int32_t mCaptureDelay;
-
-  uint32_t mLastTimestamp;
 
   webrtc::AudioFrame mAudioFrame; // for output pulls
 
