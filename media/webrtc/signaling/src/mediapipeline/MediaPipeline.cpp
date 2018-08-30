@@ -82,8 +82,6 @@ using namespace mozilla::layers;
 mozilla::LazyLogModule gMediaPipelineLog("MediaPipeline");
 
 namespace mozilla {
-extern mozilla::LogModule*
-AudioLogModule();
 
 class VideoConverterListener
 {
@@ -1933,7 +1931,6 @@ public:
     , mTaskQueue(
         new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
                       "AudioPipelineListener"))
-    , mLastLog(0)
   {
     AddTrackToSource(mRate);
   }
@@ -2031,18 +2028,6 @@ private:
       if (mSource->AppendToTrack(mTrackId, &segment)) {
         framesNeeded -= frames;
         mPlayedTicks += frames;
-        if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
-          if (mPlayedTicks > mLastLog + mRate) {
-            MOZ_LOG(AudioLogModule(),
-                    LogLevel::Debug,
-                    ("%p: Inserting samples into track %d, total = "
-                     "%" PRIu64,
-                     (void*)this,
-                     mTrackId,
-                     mPlayedTicks));
-            mLastLog = mPlayedTicks;
-          }
-        }
       } else {
         MOZ_LOG(gMediaPipelineLog, LogLevel::Error, ("AppendToTrack failed"));
         // we can't un-read the data, but that's ok since we don't want to
@@ -2055,8 +2040,6 @@ private:
   RefPtr<MediaSessionConduit> mConduit;
   const TrackRate mRate;
   const RefPtr<TaskQueue> mTaskQueue;
-  // Graph's current sampling rate
-  TrackTicks mLastLog = 0; // mPlayedTicks when we last logged
 };
 
 MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(

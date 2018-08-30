@@ -279,8 +279,6 @@ private:
   // legal channel count for this particular device. This is the number of
   // channels of the input buffer passed as parameter in NotifyInputData.
   uint32_t mRequestedInputChannelCount;
-  uint64_t mTotalFrames;
-  uint64_t mLastLogFrames;
 
   // mSkipProcessing is true if none of the processing passes are enabled,
   // because of prefs or constraints. This allows simply copying the audio into

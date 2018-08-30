@@ -10,7 +10,6 @@
 
 #include "AudioMixer.h"
 #include "GraphDriver.h"
-#include "Latency.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Services.h"
@@ -886,10 +885,6 @@ public:
    * blocking order.
    */
   bool mStreamOrderDirty;
-  /**
-   * Hold a ref to the Latency logger
-   */
-  RefPtr<AsyncLatencyLogger> mLatencyLog;
   AudioMixer mMixer;
   const RefPtr<AbstractThread> mAbstractMainThread;
 

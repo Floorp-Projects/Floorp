@@ -50,11 +50,6 @@ LogModule* GetMediaManagerLog();
 #define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
 #define LOG_FRAMES(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Verbose, msg)
 
-LogModule* AudioLogModule() {
-  static mozilla::LazyLogModule log("AudioLatency");
-  return static_cast<LogModule*>(log);
-}
-
 void
 WebRTCAudioDataListener::NotifyOutputData(MediaStreamGraphImpl* aGraph,
                                           AudioDataValue* aBuffer,
@@ -144,8 +139,6 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
         // It would be great if it did but we're already on the media thread.
         /* aStrict = */ false))
   , mRequestedInputChannelCount(aMaxChannelCount)
-  , mTotalFrames(0)
-  , mLastLogFrames(0)
   , mSkipProcessing(false)
   , mInputDownmixBuffer(MAX_SAMPLING_FREQ * MAX_CHANNELS / 100)
 {
@@ -758,9 +751,6 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
       mListener = new WebRTCAudioDataListener(this);
     }
 
-    // Make sure logger starts before capture
-    AsyncLatencyLogger::Get(true);
-
     mAllocation->mStream->OpenAudioInput(deviceID, mListener);
 
     MOZ_ASSERT(mState != kReleased);
@@ -1129,18 +1119,6 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
 
   if (mState != kStarted) {
     return;
-  }
-
-  if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
-    mTotalFrames += aFrames;
-    if (mAllocation->mStream &&
-        mTotalFrames > mLastLogFrames +
-                       mAllocation->mStream->GraphRate()) { // ~ 1 second
-      MOZ_LOG(AudioLogModule(), LogLevel::Debug,
-              ("%p: Inserting %zu samples into graph, total frames = %" PRIu64,
-               (void*)this, aFrames, mTotalFrames));
-      mLastLogFrames = mTotalFrames;
-    }
   }
 
   if (!mAllocation->mStream) {
