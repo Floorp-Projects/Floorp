@@ -21,9 +21,17 @@ var gFeatures = undefined;
 let {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 this.AntiTracking = {
-  runTest(name, callbackTracking, callbackNonTracking, cleanupFunction, extraPrefs, windowOpenTest = true, userInteractionTest = true) {
+  runTest(name, callbackTracking, callbackNonTracking, cleanupFunction, extraPrefs, windowOpenTest = true, userInteractionTest = true, expectedBlockingNotifications = true) {
     // Here we want to test that a 3rd party context is simply blocked.
-    this._createTask(name, true, true, false, callbackTracking, extraPrefs);
+    this._createTask({
+      name,
+      cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+      blockingByContentBlocking: true,
+      allowList: false,
+      callback: callbackTracking,
+      extraPrefs,
+      expectedBlockingNotifications,
+    });
     this._createCleanupTask(cleanupFunction);
 
     if (callbackNonTracking) {
@@ -59,35 +67,104 @@ this.AntiTracking = {
         //   * If both of these prefs cause it to not be blocked.
         //   * If the top-level page is on the content blocking allow list.
         // All of these cases are tested here.
-        this._createTask(name, BEHAVIOR_ACCEPT, true, false, callbackNonTracking);
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_ACCEPT,
+          blockingByContentBlocking: true,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+        });
         this._createCleanupTask(cleanupFunction);
 
-        this._createTask(name, BEHAVIOR_REJECT_FOREIGN, false, false, callbackNonTracking);
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
+          blockingByContentBlocking: false,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+        });
         this._createCleanupTask(cleanupFunction);
 
-        this._createTask(name, BEHAVIOR_REJECT_TRACKER, false, false, callbackNonTracking);
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlocking: false,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+        });
         this._createCleanupTask(cleanupFunction);
 
-        this._createTask(name, BEHAVIOR_REJECT_FOREIGN, false, true, callbackNonTracking);
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
+          blockingByContentBlocking: false,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+        });
         this._createCleanupTask(cleanupFunction);
 
-        this._createTask(name, BEHAVIOR_REJECT_TRACKER, false, true, callbackNonTracking);
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlocking: false,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+        });
         this._createCleanupTask(cleanupFunction);
 
-        this._createTask(name, BEHAVIOR_ACCEPT, false, false, callbackNonTracking);
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_ACCEPT,
+          blockingByContentBlocking: false,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+        });
         this._createCleanupTask(cleanupFunction);
 
         // Try testing using the allow list with both reject foreign and reject tracker cookie behaviors
-        this._createTask(name, BEHAVIOR_REJECT_FOREIGN, true, true, callbackNonTracking);
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
+          blockingByContentBlocking: true,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+        });
         this._createCleanupTask(cleanupFunction);
 
-        this._createTask(name, BEHAVIOR_REJECT_TRACKER, true, true, callbackNonTracking);
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlocking: true,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+        });
         this._createCleanupTask(cleanupFunction);
       } else {
-        this._createTask(name, options.cookieBehavior,
-                         options.blockingByContentBlocking,
-                         options.blockingByAllowList,
-                         callbackNonTracking);
+        this._createTask({
+          name,
+          cookieBehavior: options.cookieBehavior,
+          blockingByContentBlocking: options.blockingByContentBlocking,
+          allowList: options.blockingByAllowList,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+        });
         this._createCleanupTask(cleanupFunction);
       }
 
@@ -125,14 +202,27 @@ this.AntiTracking = {
     await UrlClassifierTestUtils.addTestTrackers();
   },
 
-  _createTask(name, cookieBehavior, blockingByContentBlocking,
-              allowList, callback, extraPrefs) {
+  _createTask(options) {
     add_task(async function() {
-      info("Starting " + (cookieBehavior != BEHAVIOR_ACCEPT ? "blocking" : "non-blocking") + " cookieBehavior (" + cookieBehavior + ") and " +
-                         (blockingByContentBlocking ? "blocking" : "non-blocking") + " contentBlocking with" +
-                         (allowList ? "" : "out") + " allow list test " + name);
+      info("Starting " + (options.cookieBehavior != BEHAVIOR_ACCEPT ? "blocking" : "non-blocking") + " cookieBehavior (" + options.cookieBehavior + ") and " +
+                         (options.blockingByContentBlocking ? "blocking" : "non-blocking") + " contentBlocking with" +
+                         (options.allowList ? "" : "out") + " allow list test " + options.name);
 
-      await AntiTracking._setupTest(cookieBehavior, blockingByContentBlocking, extraPrefs);
+     requestLongerTimeout(2);
+
+      await AntiTracking._setupTest(options.cookieBehavior,
+                                    options.blockingByContentBlocking,
+                                    options.extraPrefs);
+
+      let cookieBlocked = 0;
+      let listener = {
+        onSecurityChange(webProgress, request, stateFlags, status) {
+          if (stateFlags & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_COOKIES) {
+            ++cookieBlocked;
+          }
+        }
+      };
+      gBrowser.addProgressListener(listener);
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
@@ -141,7 +231,7 @@ this.AntiTracking = {
       let browser = gBrowser.getBrowserForTab(tab);
       await BrowserTestUtils.browserLoaded(browser);
 
-      if (allowList) {
+      if (options.allowList) {
         info("Disabling content blocking for this page");
         ContentBlocking.disableForCurrentPage();
 
@@ -152,7 +242,7 @@ this.AntiTracking = {
       info("Creating a 3rd party content");
       await ContentTask.spawn(browser,
                               { page: TEST_3RD_PARTY_PAGE,
-                                callback: callback.toString() },
+                                callback: options.callback.toString() },
                               async function(obj) {
         await new content.Promise(resolve => {
           let ifr = content.document.createElement("iframe");
@@ -186,13 +276,17 @@ this.AntiTracking = {
         });
       });
 
-      if (allowList) {
+      if (options.allowList) {
         info("Enabling content blocking for this page");
         ContentBlocking.enableForCurrentPage();
 
         // The previous function reloads the browser, so wait for it to load again!
         await BrowserTestUtils.browserLoaded(browser);
       }
+
+      gBrowser.removeProgressListener(listener);
+
+      is(!!cookieBlocked, options.expectedBlockingNotifications, "Checking cookie blocking notifications");
 
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);
@@ -211,6 +305,9 @@ this.AntiTracking = {
   _createWindowOpenTask(name, blockingCallback, nonBlockingCallback, extraPrefs) {
     add_task(async function() {
       info("Starting window-open test " + name);
+
+      requestLongerTimeout(2);
+
       await AntiTracking._setupTest(BEHAVIOR_REJECT_TRACKER, true, extraPrefs);
 
       info("Creating a new tab");
@@ -272,6 +369,9 @@ this.AntiTracking = {
   _createUserInteractionTask(name, blockingCallback, nonBlockingCallback, extraPrefs) {
     add_task(async function() {
       info("Starting user-interaction test " + name);
+
+      requestLongerTimeout(2);
+
       await AntiTracking._setupTest(BEHAVIOR_REJECT_TRACKER, true, extraPrefs);
 
       info("Creating a new tab");
