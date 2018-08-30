@@ -364,17 +364,10 @@ WebRenderAPI::HitTest(const wr::WorldPoint& aPoint,
                       layers::FrameMetrics::ViewID& aOutScrollId,
                       gfx::CompositorHitTestInfo& aOutHitInfo)
 {
-  static_assert(DoesCompositorHitTestInfoFitIntoBits<16>(),
-                "CompositorHitTestFlags MAX value has to be less than number of bits in uint16_t");
-
-  uint16_t serialized = static_cast<uint16_t>(aOutHitInfo.serialize());
-  const bool result = wr_api_hit_test(mDocHandle, aPoint,
-    &aOutPipelineId, &aOutScrollId, &serialized);
-
-  if (result) {
-    aOutHitInfo.deserialize(serialized);
-  }
-  return result;
+  static_assert(sizeof(gfx::CompositorHitTestInfo) == sizeof(uint16_t),
+                "CompositorHitTestInfo should be u16-sized");
+  return wr_api_hit_test(mDocHandle, aPoint,
+          &aOutPipelineId, &aOutScrollId, (uint16_t*)&aOutHitInfo);
 }
 
 void
@@ -1289,10 +1282,9 @@ void
 DisplayListBuilder::SetHitTestInfo(const layers::FrameMetrics::ViewID& aScrollId,
                                    gfx::CompositorHitTestInfo aHitInfo)
 {
-  static_assert(DoesCompositorHitTestInfoFitIntoBits<16>(),
-                "CompositorHitTestFlags MAX value has to be less than number of bits in uint16_t");
-
-  wr_set_item_tag(mWrState, aScrollId, static_cast<uint16_t>(aHitInfo.serialize()));
+  static_assert(sizeof(gfx::CompositorHitTestInfo) == sizeof(uint16_t),
+                "CompositorHitTestInfo should be u16-sized");
+  wr_set_item_tag(mWrState, aScrollId, static_cast<uint16_t>(aHitInfo));
 }
 
 void

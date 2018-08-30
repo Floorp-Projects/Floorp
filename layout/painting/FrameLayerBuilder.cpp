@@ -4062,16 +4062,16 @@ PaintedLayerData::AccumulateHitTestInfo(ContainerState* aState,
     mHitRegion.OrWith(area);
   }
 
-  if (aItem->HitTestInfo().contains(CompositorHitTestFlags::eDispatchToContent)) {
+  if (aItem->HitTestInfo() & CompositorHitTestInfo::eDispatchToContent) {
     mDispatchToContentHitRegion.OrWith(area);
 
-    if (aItem->HitTestInfo().contains(CompositorHitTestFlags::eRequiresTargetConfirmation)) {
+    if (aItem->HitTestInfo() & CompositorHitTestInfo::eRequiresTargetConfirmation) {
       mDTCRequiresTargetConfirmation = true;
     }
   }
 
-  const auto touchFlags = hitTestInfo & CompositorHitTestTouchActionMask;
-  if (!touchFlags.isEmpty()) {
+  auto touchFlags = hitTestInfo & CompositorHitTestInfo::eTouchActionMask;
+  if (touchFlags) {
     // If there are multiple touch-action areas, there are multiple elements with
     // touch-action properties. We don't know what the relationship is between
     // those elements in terms of DOM ancestry, and so we don't know how to
@@ -4080,7 +4080,7 @@ PaintedLayerData::AccumulateHitTestInfo(ContainerState* aState,
     // main thread. See bug 1286957.
     if (mCollapsedTouchActions) {
       mDispatchToContentHitRegion.OrWith(area);
-    } else if (touchFlags == CompositorHitTestTouchActionMask) {
+    } else if (touchFlags == CompositorHitTestInfo::eTouchActionMask) {
       // everything was disabled, so touch-action:none
       mNoActionRegion.OrWith(area);
     } else {
@@ -4099,12 +4099,12 @@ PaintedLayerData::AccumulateHitTestInfo(ContainerState* aState,
       // we still use the event regions, we must collapse these two cases back
       // together. Or add another region to the event regions to fix this
       // properly.
-      if (touchFlags != CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled) {
-        if (!hitTestInfo.contains(CompositorHitTestFlags::eTouchActionPanXDisabled)) {
+      if (touchFlags != CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled) {
+        if (!(hitTestInfo & CompositorHitTestInfo::eTouchActionPanXDisabled)) {
           // pan-x is allowed
           mHorizontalPanRegion.OrWith(area);
         }
-        if (!hitTestInfo.contains(CompositorHitTestFlags::eTouchActionPanYDisabled)) {
+        if (!(hitTestInfo & CompositorHitTestInfo::eTouchActionPanYDisabled)) {
           // pan-y is allowed
           mVerticalPanRegion.OrWith(area);
         }
