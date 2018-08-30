@@ -6659,31 +6659,34 @@ private:
   int32_t mAPD, mParentAPD;
 };
 
-class nsDisplaySVGEffects : public nsDisplayWrapList
+/**
+ * A base class for different effects types.
+ */
+class nsDisplayEffectsBase : public nsDisplayWrapList
 {
 public:
-  nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
-                      nsIFrame* aFrame,
-                      nsDisplayList* aList,
-                      bool aHandleOpacity,
-                      const ActiveScrolledRoot* aActiveScrolledRoot,
-                      bool aClearClipChain = false);
-  nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
-                      nsIFrame* aFrame,
-                      nsDisplayList* aList,
-                      bool aHandleOpacity);
+  nsDisplayEffectsBase(nsDisplayListBuilder* aBuilder,
+                       nsIFrame* aFrame,
+                       nsDisplayList* aList,
+                       bool aHandleOpacity,
+                       const ActiveScrolledRoot* aActiveScrolledRoot,
+                       bool aClearClipChain = false);
+  nsDisplayEffectsBase(nsDisplayListBuilder* aBuilder,
+                       nsIFrame* aFrame,
+                       nsDisplayList* aList,
+                       bool aHandleOpacity);
 
-  nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
-                      const nsDisplaySVGEffects& aOther)
+  nsDisplayEffectsBase(nsDisplayListBuilder* aBuilder,
+                       const nsDisplayEffectsBase& aOther)
     : nsDisplayWrapList(aBuilder, aOther)
     , mEffectsBounds(aOther.mEffectsBounds)
     , mHandleOpacity(aOther.mHandleOpacity)
   {
-    MOZ_COUNT_CTOR(nsDisplaySVGEffects);
+    MOZ_COUNT_CTOR(nsDisplayEffectsBase);
   }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-  ~nsDisplaySVGEffects() override { MOZ_COUNT_DTOR(nsDisplaySVGEffects); }
+  ~nsDisplayEffectsBase() override { MOZ_COUNT_DTOR(nsDisplayEffectsBase); }
 #endif
 
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
@@ -6720,7 +6723,7 @@ protected:
  * A display item to paint a stacking context with mask and clip effects
  * set by the stacking context root frame's style.
  */
-class nsDisplayMask : public nsDisplaySVGEffects
+class nsDisplayMask : public nsDisplayEffectsBase
 {
 public:
   typedef mozilla::layers::ImageLayer ImageLayer;
@@ -6731,7 +6734,7 @@ public:
                 bool aHandleOpacity,
                 const ActiveScrolledRoot* aActiveScrolledRoot);
   nsDisplayMask(nsDisplayListBuilder* aBuilder, const nsDisplayMask& aOther)
-    : nsDisplaySVGEffects(aBuilder, aOther)
+    : nsDisplayEffectsBase(aBuilder, aOther)
     , mDestRects(aOther.mDestRects)
   {
   }
@@ -6828,7 +6831,7 @@ private:
  * A display item to paint a stacking context with filter effects set by the
  * stacking context root frame's style.
  */
-class nsDisplayFilter : public nsDisplaySVGEffects
+class nsDisplayFilter : public nsDisplayEffectsBase
 {
 public:
   nsDisplayFilter(nsDisplayListBuilder* aBuilder,
@@ -6837,7 +6840,7 @@ public:
                   bool aHandleOpacity);
 
   nsDisplayFilter(nsDisplayListBuilder* aBuilder, const nsDisplayFilter& aOther)
-    : nsDisplaySVGEffects(aBuilder, aOther)
+    : nsDisplayEffectsBase(aBuilder, aOther)
     , mEffectsBounds(aOther.mEffectsBounds)
   {
   }
