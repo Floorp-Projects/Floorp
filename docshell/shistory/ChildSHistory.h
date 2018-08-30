@@ -27,7 +27,6 @@
 class nsSHistory;
 class nsDocShell;
 class nsISHistory;
-class nsISHistoryInternal;
 class nsIWebNavigation;
 class nsIGlobalObject;
 
@@ -72,7 +71,6 @@ public:
   void EvictLocalContentViewers();
 
   nsISHistory* LegacySHistory();
-  nsISHistoryInternal* LegacySHistoryInternal();
   nsIWebNavigation* LegacySHistoryWebNav();
 
   ParentSHistory* GetParentIfSameProcess();
