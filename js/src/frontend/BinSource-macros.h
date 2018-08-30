@@ -7,6 +7,7 @@
 #ifndef frontend_BinSource_macros_h
 #define frontend_BinSource_macros_h
 
+#include "vm/JSContext.h"
 
 // Evaluate an expression EXPR, checking that the result is not falsy.
 //
@@ -16,7 +17,6 @@
         if (!EXPR) \
             return cx_->alreadyReportedError(); \
     } while(false)
-
 
 // Evaluate an expression EXPR, checking that the result is not falsy.
 // In case of success, assign the result to VAR.

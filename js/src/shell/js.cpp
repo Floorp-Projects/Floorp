@@ -71,7 +71,6 @@
 #endif // defined(JS_BUILD_BINAST)
 #include "frontend/Parser.h"
 #include "gc/PublicIterators.h"
-#include "gc/Zone.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
@@ -719,7 +718,7 @@ GetLine(FILE* file, const char * prompt)
         if (*t == '\n') {
             /* Line was read. We remove '\n' and exit. */
             *t = '\0';
-            return buffer;
+            break;
         }
 
         if (len + 1 == size) {
@@ -733,7 +732,7 @@ GetLine(FILE* file, const char * prompt)
         }
         current = buffer + len;
     } while (true);
-    return nullptr;
+    return buffer;
 }
 
 static bool
@@ -4310,7 +4309,7 @@ EnsureModuleLoaderScriptObjectMap(JSContext* cx)
     if (priv->moduleLoaderScriptObjectMap)
         return priv->moduleLoaderScriptObjectMap.get();
 
-    Zone* zone = cx->zone();
+    JS::Zone* zone = cx->zone();
     auto* map = cx->new_<ScriptObjectMap>(zone);
     if (!map)
         return nullptr;
@@ -7222,7 +7221,9 @@ WasmLoop(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
+#ifdef __AFL_HAVE_MANUAL_CONTROL  // to silence unreachable code warning
     return true;
+#endif
 }
 
 static const JSFunctionSpecWithHelp shell_functions[] = {

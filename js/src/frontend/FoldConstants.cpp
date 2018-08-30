@@ -9,14 +9,12 @@
 #include "mozilla/FloatingPoint.h"
 
 #include "jslibmath.h"
+#include "jsnum.h"
 
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "js/Conversions.h"
 #include "vm/StringType.h"
-
-#include "vm/JSContext-inl.h"
-#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::frontend;

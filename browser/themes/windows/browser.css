@@ -131,11 +131,11 @@
 }
 
 #navigator-toolbox,
-#navigator-toolbox > toolbar {
+.browser-toolbar {
   -moz-appearance: none;
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+.browser-toolbar:not(.titlebar-color) {
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
   background-clip: padding-box;

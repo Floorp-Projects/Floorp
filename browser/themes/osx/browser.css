@@ -142,7 +142,7 @@
   border-top: 1px solid rgba(0,0,0,0.65);
 }
 
-#navigator-toolbox > toolbar:not(#TabsToolbar) {
+.browser-toolbar:not(#TabsToolbar) {
   -moz-appearance: none;
   background: var(--toolbar-bgcolor);
   color: var(--toolbar-color, inherit);

@@ -324,6 +324,7 @@ pub struct ClipChainInstance {
     pub clips_range: ClipNodeRange,
     pub local_clip_rect: LayoutRect,
     pub has_non_root_coord_system: bool,
+    pub has_non_local_clips: bool,
     pub world_clip_rect: WorldRect,
 }
 
@@ -531,6 +532,7 @@ impl ClipStore {
 
         let first_clip_node_index = self.clip_node_indices.len() as u32;
         let mut has_non_root_coord_system = false;
+        let mut has_non_local_clips = false;
 
         // For each potential clip node
         for node_info in self.clip_node_info.drain(..) {
@@ -542,9 +544,11 @@ impl ClipStore {
                     node.item.get_clip_result(&local_bounding_rect)
                 }
                 ClipSpaceConversion::Offset(offset) => {
+                    has_non_local_clips = true;
                     node.item.get_clip_result(&local_bounding_rect.translate(&-offset))
                 }
                 ClipSpaceConversion::Transform(ref transform) => {
+                    has_non_local_clips = true;
                     node.item.get_clip_result_complex(
                         transform,
                         &world_bounding_rect,
@@ -603,6 +607,7 @@ impl ClipStore {
         Some(ClipChainInstance {
             clips_range,
             has_non_root_coord_system,
+            has_non_local_clips,
             local_clip_rect,
             world_clip_rect,
         })

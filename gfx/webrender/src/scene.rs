@@ -201,6 +201,7 @@ pub trait FilterOpHelpers {
 impl FilterOpHelpers for FilterOp {
     fn is_visible(&self) -> bool {
         match *self {
+            FilterOp::Identity |
             FilterOp::Blur(..) |
             FilterOp::Brightness(..) |
             FilterOp::Contrast(..) |
@@ -219,6 +220,7 @@ impl FilterOpHelpers for FilterOp {
 
     fn is_noop(&self) -> bool {
         match *self {
+            FilterOp::Identity => false, // this is intentional
             FilterOp::Blur(length) => length == 0.0,
             FilterOp::Brightness(amount) => amount == 1.0,
             FilterOp::Contrast(amount) => amount == 1.0,

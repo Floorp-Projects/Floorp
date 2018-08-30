@@ -16,7 +16,6 @@
 #include "frontend/BinSource-macros.h"
 #include "frontend/BinSourceRuntimeSupport.h"
 
-#include "gc/Zone.h"
 #include "js/Result.h"
 
 namespace js {

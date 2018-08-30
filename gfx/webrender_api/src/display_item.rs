@@ -543,6 +543,9 @@ pub enum MixBlendMode {
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum FilterOp {
+    /// Filter that does no transformation of the colors, needed for
+    /// debug purposes only.
+    Identity,
     Blur(f32),
     Brightness(f32),
     Contrast(f32),
