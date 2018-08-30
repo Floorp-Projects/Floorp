@@ -147,10 +147,10 @@ PaymentRequestParent::RecvRequestPayment(const IPCPaymentActionRequest& aRequest
       MOZ_ASSERT(action);
       break;
     }
-    case IPCPaymentActionRequest::TIPCPaymentCleanupActionRequest: {
-      const IPCPaymentCleanupActionRequest& request = aRequest;
+    case IPCPaymentActionRequest::TIPCPaymentCloseActionRequest: {
+      const IPCPaymentCloseActionRequest& request = aRequest;
       rv = CreateActionRequest(request.requestId(),
-                               nsIPaymentActionRequest::CLEANUP_ACTION,
+                               nsIPaymentActionRequest::CLOSE_ACTION,
                                getter_AddRefs(action));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return IPC_FAIL_NO_REASON(this);

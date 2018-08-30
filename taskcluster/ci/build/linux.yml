@@ -22,8 +22,8 @@ linux64/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -54,8 +54,8 @@ linux64-plain/opt:
         tooltool-downloads: public
     run-on-projects: [trunk]
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-node
         - linux64-cbindgen
@@ -86,8 +86,8 @@ linux64-dmd/opt:
         need-xvfb: true
     run-on-projects: []
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -188,8 +188,8 @@ linux64/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-cbindgen
         - linux64-sccache
         - linux64-rust
@@ -220,8 +220,8 @@ linux64-plain/debug:
         tooltool-downloads: public
     run-on-projects: [trunk]
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-node
         - linux64-cbindgen
@@ -357,8 +357,8 @@ linux/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -391,8 +391,8 @@ linux/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -464,8 +464,8 @@ linux-rusttests/opt:
         need-xvfb: true
     run-on-projects: ['trunk', 'try']
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-cbindgen
         - linux64-sccache
@@ -500,8 +500,8 @@ linux-rusttests/debug:
         need-xvfb: true
     run-on-projects: ['trunk', 'try']
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-cbindgen
         - linux64-sccache
@@ -614,8 +614,8 @@ linux64-asan/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -647,8 +647,8 @@ linux64-asan-fuzzing/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -682,8 +682,8 @@ linux64-asan-fuzzing-ccov/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -755,8 +755,8 @@ linux64-asan-reporter-nightly/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -788,8 +788,8 @@ linux64-asan/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -822,8 +822,8 @@ linux64-lto/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -856,8 +856,8 @@ linux64-lto/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -929,8 +929,8 @@ linux64-noopt/debug:
         need-xvfb: true
     run-on-projects: ['trunk', 'try']
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
@@ -965,8 +965,8 @@ linux64-rusttests/opt:
         need-xvfb: true
     run-on-projects: ['trunk', 'try']
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-cbindgen
         - linux64-sccache
@@ -1000,8 +1000,8 @@ linux64-rusttests/debug:
         need-xvfb: true
     run-on-projects: ['trunk', 'try']
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-cbindgen
         - linux64-sccache
@@ -1033,8 +1033,8 @@ linux64-tup/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust-nightly
         - linux64-cbindgen
         - linux64-sccache
@@ -1065,8 +1065,8 @@ linux64-jsdcov/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-cbindgen
         - linux64-sccache
@@ -1165,8 +1165,8 @@ linux64-add-on-devel/opt:
         need-xvfb: true
     run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
     toolchains:
+        - linux64-binutils
         - linux64-clang
-        - linux64-gcc
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen

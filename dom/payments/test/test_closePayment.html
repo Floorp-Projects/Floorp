@@ -5,7 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 1408234</title>
+  <title>Test for closing PaymentRequest</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript">
@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
   "use strict";
   SimpleTest.waitForExplicitFinish();
 
-  var gUrl = SimpleTest.getTestFileURL('CleanupChromeScript.js');
+  var gUrl = SimpleTest.getTestFileURL('ClosePaymentChromeScript.js');
   var gScript = SpecialPowers.loadChromeScript(gUrl);
   var testName = "";
 
@@ -25,40 +25,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
   }
   gScript.addMessageListener("test-fail", testFailHandler);
   gScript.addMessageListener("test-pass", testPassHandler);
-  
-  function cleanupCheck(resolveFunc) {
-    gScript.addMessageListener("cleanup-check-complete", function checkCompleteHandler() {
-      gScript.removeMessageListener("cleanup-check-complete", checkCompleteHandler);
-      resolveFunc();
+
+  async function requestChromeAction(action, params) {
+    gScript.sendAsyncMessage(action, params);
+    await new Promise(resolve => {
+      gScript.addMessageListener(`${action}-complete`, function completeListener() {
+        gScript.removeMessageListener(`${action}-complete`, completeListener);
+        resolve();
+      });
     });
-    gScript.sendAsyncMessage("cleanup-check");
   }
 
-  function paymentNumCheck(resolveFunc, numPayments) {
-    gScript.addMessageListener("payment-num-check-complete", function checkCompleteHandler() {
-      gScript.removeMessageListener("payment-num-check-complete", checkCompleteHandler);
-      resolveFunc();
-    });
-    gScript.sendAsyncMessage("payment-num-check", numPayments);
-  }
-
-  function paymentNumSet() {
-    gScript.addMessageListener("payment-num-set-complete", function setCompleteHandler() {
-      gScript.removeMessageListener("payment-num-set-complete", setCompleteHandler);
-    });
-    gScript.sendAsyncMessage("payment-num-set");
-  }
-
-  function testCleanupByReloading() {
-    paymentNumSet();
-    return new Promise((resolve, reject) => {
-      testName = "testCleanupByReloading";
+  function testCloseByReloading() {
+    return new Promise(async (resolve, reject) => {
+      testName = "testCloseByReloading";
       let expectedResults = ["successful", "successful"];
       let nextStatus = ["creating", "reloading"];
       let currStatus = nextStatus.shift();
       let ifr = document.createElement('iframe');
-      
-      let listener = function(event) {
+      await requestChromeAction("payment-num-set");
+      let listener = async function(event) {
         let expected = expectedResults.shift();
         is(event.data, expected,
           testName + ": Expected '" + expected + "' when " + currStatus +
@@ -67,8 +53,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
           ifr.contentWindow.location.reload();
         } else if (currStatus === "reloading") {
           window.removeEventListener("message", listener);
-          paymentNumCheck(resolve, 1);
+          await requestChromeAction("payment-num-check", 1);
           document.body.removeChild(ifr);
+          resolve();
         }
         currStatus = nextStatus.shift();
       }
@@ -78,14 +65,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
     });
   }
 
-  function testCleanupByRedirecting() {
+  function testCloseByRedirecting() {
     return new Promise((resolve, reject) => {
-      testName = "testCleanupByRedirecting";
+      testName = "testCloseByRedirecting";
       let expectedResults = ["successful", "successful"];
       let nextStatus = ["creating", "redirecting"];
       let currStatus = nextStatus.shift();
       let ifr = document.createElement('iframe');
-      let listener = function(event) {
+      let listener = async function(event) {
         let expected = expectedResults.shift();
         is(event.data, expected,
           testName + ": Expected '" + expected + "' when " + currStatus +
@@ -94,8 +81,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
           ifr.src = "blank_page.html";
         } else if (currStatus === "redirecting"){
           window.removeEventListener("message", listener);
-          cleanupCheck(resolve);
+          await requestChromeAction("close-check");
           document.body.removeChild(ifr);
+          resolve();
         }
         currStatus = nextStatus.shift();
       };
@@ -105,27 +93,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
     });
   }
 
-  function testCleanupByRedirectingAfterShow() {
+  function testCloseByRedirectingAfterShow() {
     return new Promise((resolve, reject) => {
-      testName = "testCleanupByRedirectingAfterShow";
+      testName = "testCloseByRedirectingAfterShow";
       let nextStatus = ["creating", "showing", "redirecting"];
       let currStatus = nextStatus.shift();
       let expectedResults = ["successful", "successful", "successful"];
       let ifr = document.createElement('iframe');
-      let listener = (event) => {
+      let handler = undefined;
+      let listener = async (event) => {
         let expected = expectedResults.shift();
         is(event.data, expected,
           testName + ": Expected '" + expected + "' when " + currStatus +
           ", but got '" + event.data + "'");
-
         if (currStatus === "creating") {
+          handler = SpecialPowers.getDOMWindowUtils(ifr.contentWindow).setHandlingUserInput(true);
           ifr.contentWindow.postMessage("show PaymentRequest", "*");
         } else if (currStatus === "showing") {
+          handler.destruct();
           ifr.src = "blank_page.html";
         } else if (currStatus === "redirecting") {
           window.removeEventListener("message", listener);
-          cleanupCheck(resolve);
+          await requestChromeAction("close-check");
+          await requestChromeAction("reject-payment", true);
           document.body.removeChild(ifr);
+          resolve();
         }
         currStatus = nextStatus.shift();
       }
@@ -135,21 +127,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
     });
   }
 
-  function testCleanupByRemovingIframe() {
+  function testCloseByRemovingIframe() {
     return new Promise((resolve, reject) => {
-      testName = "testCleanupByRemovingIframe";
+      testName = "testCloseByRemovingIframe";
       let expectedResults = ["successful"];
       let nextStatus = ["creating"];
       let currStatus = nextStatus.shift();
       let ifr = document.createElement('iframe');
-      let listener = function(event) {
+      let listener = async function(event) {
         let expected = expectedResults.shift();
         is(event.data, expected,
           testName + ": Expected '" + expected + "' when " + currStatus +
           ", but got '" + event.data + "'");
         document.body.removeChild(ifr);
         window.removeEventListener("message", listener);
-        cleanupCheck(resolve);
+        await requestChromeAction("close-check");
+        resolve();
       };
       window.addEventListener("message", listener);
       ifr.src = "simple_payment_request.html";
@@ -157,18 +150,70 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
     });
   }
 
+  function testUpdateWithRespondedPayment() {
+    return new Promise(resolve => {
+      testName = "testUpdateWithRespondedPayment";
+      let nextStatus = ["creating", "showing", "closing", "updating", "finishing"];
+      let currStatus = nextStatus.shift();
+      let ifr = document.createElement('iframe');
+      let handler = undefined;
+      let listener = async function(event) {
+        is(event.data, "successful",
+          testName + ": Expected 'successful' when " + currStatus +
+          ", but got '" + event.data + "'");
+        switch (currStatus) {
+          case "creating":
+            handler = SpecialPowers.getDOMWindowUtils(ifr.contentWindow).setHandlingUserInput(true);
+            ifr.contentWindow.postMessage("show PaymentRequest", "*");
+            break;
+          case "showing":
+            await requestChromeAction("update-payment");
+            break;
+          case "closing":
+            await requestChromeAction("reject-payment", false);
+            break;
+          case "updating":
+            await requestChromeAction("close-check");
+            ifr.contentWindow.postMessage("updateWith PaymentRequest", "*");
+            break;
+          case "finishing":
+            handler.destruct();
+            document.body.removeChild(ifr);
+            window.removeEventListener("message", listener);
+            resolve();
+            break;
+          default:
+            ok(false, testName + ": Unknown status()" + currStatus);
+            break;
+        }
+        currStatus = nextStatus.shift();
+      }
+      window.addEventListener("message", listener);
+      ifr.src = "simple_payment_request.html";
+      document.body.appendChild(ifr);
+    });
+  }
+
   function teardown() {
-    gScript.removeMessageListener("test-fail", testFailHandler);
-    gScript.removeMessageListener("test-pass", testPassHandler);
-    gScript.destroy();
-    SimpleTest.finish();
+    return new Promise((resolve, reject) => {
+      gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+        gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+        gScript.removeMessageListener("test-fail", testFailHandler);
+        gScript.removeMessageListener("test-pass", testPassHandler);
+        gScript.destroy();
+        SimpleTest.finish();
+        resolve();
+      });
+      gScript.sendAsyncMessage("teardown");
+    });
   }
 
   function runTests() {
-    testCleanupByReloading()
-    .then(testCleanupByRedirecting)
-    .then(testCleanupByRedirectingAfterShow)
-    .then(testCleanupByRemovingIframe)
+    testCloseByReloading()
+    .then(testCloseByRedirecting)
+    .then(testCloseByRedirectingAfterShow)
+    .then(testCloseByRemovingIframe)
+    .then(testUpdateWithRespondedPayment)
     .then(teardown)
     .catch( e => {
       ok(false, "Unexpected error: " + e.name);
@@ -187,5 +232,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1408234">Mozilla Bug 1408234</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1483470">Mozilla Bug 1483470</a>
 </body>
 </html>
