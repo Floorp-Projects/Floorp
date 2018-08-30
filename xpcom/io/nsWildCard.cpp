@@ -241,9 +241,6 @@ _handle_union(const T* aStr, const T* aExpr, bool aCaseInsensitive,
   }
   ++cp;                /* now index of char after closing parenthesis */
   e2 = (T*)moz_xmalloc((1 + nsCharTraits<T>::length(aExpr)) * sizeof(T));
-  if (!e2) {
-    return ABORTED;
-  }
   for (sx = 1; ; ++sx) {
     /* Here, aExpr[sx] is one character past the preceding '(' or '|'. */
     /* Copy everything up to the next delimiter to e2 */
@@ -426,9 +423,6 @@ ns_WildCardMatch(const T* aStr, const T* aXp, bool aCaseInsensitive)
   }
 
   expr = (T*)moz_xmalloc((nsCharTraits<T>::length(aXp) + 1) * sizeof(T));
-  if (!expr) {
-    return NOMATCH;
-  }
   memcpy(expr, aXp, (nsCharTraits<T>::length(aXp) + 1) * sizeof(T));
 
   int x = ::_scan_and_copy(expr, T('~'), T('\0'), static_cast<T*>(nullptr));

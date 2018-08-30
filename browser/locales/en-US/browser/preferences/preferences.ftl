@@ -755,15 +755,15 @@ sitedata-block-desc = Type blocked
     .accesskey = T
 
 sitedata-block-trackers-option-recommended =
-    .label = Third party trackers (recommended)
+    .label = Third-party trackers (recommended)
 sitedata-block-trackers-option =
-    .label = Third party trackers
+    .label = Third-party trackers
 sitedata-block-unvisited-option =
     .label = Cookies from unvisited websites
-sitedata-block-all-third-parties-option =
-    .label = All third-party cookies
-sitedata-block-always-option =
-    .label = All cookies (may cause websites to break)
+sitedata-block-all-third-party-option =
+    .label = All third-party cookies (may cause websites to break)
+sitedata-block-all-option =
+    .label = All cookies (will cause websites to break)
 
 sitedata-clear =
     .label = Clear Data…

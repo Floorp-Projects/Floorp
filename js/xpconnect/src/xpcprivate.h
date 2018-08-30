@@ -2125,8 +2125,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIJSID
 
-    bool InitWithName(const nsID& id, const char* nameString);
-    bool SetName(const char* name);
+    void InitWithName(const nsID& id, const char* nameString);
+    void SetName(const char* name);
     void   SetNameToNoString()
         {MOZ_ASSERT(!mName, "name already set"); mName = const_cast<char*>(gNoString);}
     bool NameIsSet() const {return nullptr != mName;}

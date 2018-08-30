@@ -87,6 +87,9 @@ class ProtectedData
     template <typename U>
     ThisType& operator=(const U& p) { this->ref() = p; return *this; }
 
+    template <typename U>
+    ThisType& operator=(U&& p) { this->ref() = std::move(p); return *this; }
+
     template <typename U> T& operator +=(const U& rhs) { return ref() += rhs; }
     template <typename U> T& operator -=(const U& rhs) { return ref() -= rhs; }
     template <typename U> T& operator *=(const U& rhs) { return ref() *= rhs; }
@@ -132,7 +135,7 @@ class ProtectedData
 template <typename Check, typename T>
 class ProtectedDataNoCheckArgs : public ProtectedData<Check, T>
 {
-    typedef ProtectedDataNoCheckArgs<Check, T> ThisType;
+    using Base = ProtectedData<Check, T>;
 
   public:
     template <typename... Args>
@@ -140,15 +143,14 @@ class ProtectedDataNoCheckArgs : public ProtectedData<Check, T>
       : ProtectedData<Check, T>(Check(), std::forward<Args>(args)...)
     {}
 
-    template <typename U>
-    ThisType& operator=(const U& p) { this->ref() = p; return *this; }
+    using Base::operator=;
 };
 
 // Intermediate class for protected data whose checks take a Zone constructor argument.
 template <typename Check, typename T>
 class ProtectedDataZoneArg : public ProtectedData<Check, T>
 {
-    typedef ProtectedDataZoneArg<Check, T> ThisType;
+    using Base = ProtectedData<Check, T>;
 
   public:
     template <typename... Args>
@@ -156,8 +158,7 @@ class ProtectedDataZoneArg : public ProtectedData<Check, T>
       : ProtectedData<Check, T>(Check(zone), std::forward<Args>(args)...)
     {}
 
-    template <typename U>
-    ThisType& operator=(const U& p) { this->ref() = p; return *this; }
+    using Base::operator=;
 };
 
 class CheckUnprotected

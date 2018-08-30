@@ -37,17 +37,6 @@
 #include <errno.h>
 #include <dlfcn.h>
 
-// Must define before including jprof.h
-void *moz_xmalloc(size_t size)
-{
-    return malloc(size);
-}
-
-void moz_xfree(void *mem)
-{
-    free(mem);
-}
-
 #ifdef NTO
 #include <sys/link.h>
 extern r_debug _r_debug;

@@ -516,7 +516,7 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
 
     *outTokenLen = output_token.length;
     if (output_token.length != 0)
-        *outToken = nsMemory::Clone(output_token.value, output_token.length);
+        *outToken = moz_xmemdup(output_token.value, output_token.length);
     else
         *outToken = nullptr;
 
@@ -565,7 +565,7 @@ nsAuthGSSAPI::Unwrap(const void *inToken,
     *outTokenLen = output_token.length;
 
     if (output_token.length)
-        *outToken = nsMemory::Clone(output_token.value, output_token.length);
+        *outToken = moz_xmemdup(output_token.value, output_token.length);
     else
         *outToken = nullptr;
 
@@ -607,7 +607,7 @@ nsAuthGSSAPI::Wrap(const void *inToken,
     *outTokenLen = output_token.length;
 
     /* it is not possible for output_token.length to be zero */
-    *outToken = nsMemory::Clone(output_token.value, output_token.length);
+    *outToken = moz_xmemdup(output_token.value, output_token.length);
     gss_release_buffer_ptr(&minor_status, &output_token);
 
     return NS_OK;

@@ -1,4 +1,4 @@
-52862
+52869
 0/nm
 0th/pt
 1/n1
@@ -12792,6 +12792,7 @@ WMD
 WNW/M
 WP
 WSW/M
+WTF
 WTO
 WV
 WW
@@ -13622,6 +13623,7 @@ accoutrements
 accredit/SGD
 accreditation/M
 accredited/U
+accrete/SD
 accretion/MS
 accrual/MS
 accrue/GDS
@@ -16328,6 +16330,7 @@ beating/M
 beatitude/SM
 beatnik/MS
 beau/SM
+beaucoup
 beaut/MS
 beauteous/Y
 beautician/SM
@@ -18519,6 +18522,7 @@ cardiac
 cardie/S
 cardigan/SM
 cardinal/SMY
+cardinality/S
 cardio
 cardiogram/SM
 cardiograph/M
@@ -36459,6 +36463,7 @@ newcomer/SM
 newel/SM
 newfangled
 newfound
+newish
 newline/S
 newlywed/SM
 newness/M
@@ -38787,7 +38792,7 @@ pauper/MS
 pauperism/M
 pauperize/DSG
 pause/DSMG
-pave/AGDS
+pave/AGDSRZ
 paved/U
 pavement/MS
 pavilion/SM
@@ -40295,6 +40300,7 @@ possibility/SM
 possible/SM
 possibly
 possum/SM
+post-partum
 post/ZGMDRSJ
 postage/M
 postal
@@ -40393,7 +40399,7 @@ poultice/DSMG
 poultry/M
 pounce/DSMG
 pound's
-pound/KDSG
+pound/KDSGRZ
 poundage/M
 pounding/SM
 pour/GDSJ
@@ -47224,6 +47230,7 @@ stuntman
 stuntmen
 stupefaction/M
 stupefy/DSG
+stupefyingly
 stupendous/Y
 stupid/TMRYS
 stupidity/SM

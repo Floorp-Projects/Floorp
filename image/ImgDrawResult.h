@@ -23,6 +23,12 @@ namespace image {
  * SUCCESS: We successfully drew a completely decoded frame of the requested
  * size. Drawing again with FLAG_SYNC_DECODE would not change the result.
  *
+ * SUCCESS_NOT_COMPLETE: The image was drawn successfully and completely, but
+ * it hasn't notified about the sync-decode yet. This can only happen when
+ * layout pokes at the internal image state beforehand via
+ * nsStyleImage::StartDecoding. This should probably go away eventually,
+ * somehow, see bug 1471583.
+ *
  * INCOMPLETE: We successfully drew a frame that was partially decoded. (Note
  * that successfully drawing a partially decoded frame may not actually draw any
  * pixels!) Drawing again with FLAG_SYNC_DECODE would improve the result.
@@ -49,6 +55,7 @@ namespace image {
 enum class MOZ_MUST_USE_TYPE ImgDrawResult : uint8_t
 {
   SUCCESS,
+  SUCCESS_NOT_COMPLETE,
   INCOMPLETE,
   WRONG_SIZE,
   NOT_READY,
@@ -71,7 +78,11 @@ operator&(const ImgDrawResult aLeft, const ImgDrawResult aRight)
   if (MOZ_LIKELY(aLeft == ImgDrawResult::SUCCESS)) {
     return aRight;
   }
-  if (aLeft == ImgDrawResult::BAD_IMAGE && aRight != ImgDrawResult::SUCCESS) {
+
+  if ((aLeft == ImgDrawResult::BAD_IMAGE ||
+       aLeft == ImgDrawResult::SUCCESS_NOT_COMPLETE) &&
+      aRight != ImgDrawResult::SUCCESS &&
+      aRight != ImgDrawResult::SUCCESS_NOT_COMPLETE) {
     return aRight;
   }
   return aLeft;

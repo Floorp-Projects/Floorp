@@ -43,6 +43,7 @@ public:
         mSessionId(0),
         mSessionVersion(0),
         mMidCounter(0),
+        mTransportIdCounter(0),
         mUuidGen(std::move(uuidgen)),
         mSdpHelper(&mLastError),
         mRunRustParser(false),
@@ -124,10 +125,12 @@ public:
 
   virtual nsresult AddRemoteIceCandidate(const std::string& candidate,
                                          const std::string& mid,
-                                         uint16_t level) override;
+                                         uint16_t level,
+                                         std::string* transportId) override;
 
   virtual nsresult AddLocalIceCandidate(const std::string& candidate,
-                                        uint16_t level,
+                                        const std::string& transportId,
+                                        uint16_t* level,
                                         std::string* mid,
                                         bool* skipped) override;
 
@@ -136,9 +139,10 @@ public:
       uint16_t defaultCandidatePort,
       const std::string& defaultRtcpCandidateAddr,
       uint16_t defaultRtcpCandidatePort,
-      uint16_t level) override;
+      const std::string& transportId) override;
 
-  virtual nsresult EndOfLocalCandidates(uint16_t level) override;
+  virtual nsresult EndOfLocalCandidates(
+      const std::string& transportId) override;
 
   virtual nsresult Close() override;
 
@@ -202,8 +206,10 @@ private:
   nsresult UpdateTransceiversFromRemoteDescription(const Sdp& remote);
   bool WasMsectionDisabledLastNegotiation(size_t level) const;
   JsepTransceiver* GetTransceiverForLevel(size_t level);
+  JsepTransceiver* GetTransceiverForMid(const std::string& mid);
   JsepTransceiver* GetTransceiverForLocal(size_t level);
   JsepTransceiver* GetTransceiverForRemote(const SdpMediaSection& msection);
+  JsepTransceiver* GetTransceiverWithTransport(const std::string& transportId);
   // The w3c and IETF specs have a lot of "magical" behavior that happens when
   // addTrack is used. This was a deliberate design choice. Sadface.
   JsepTransceiver* FindUnassociatedTransceiver(
@@ -239,14 +245,13 @@ private:
                                       SdpSetupAttribute::Role* rolep);
   nsresult MakeNegotiatedTransceiver(const SdpMediaSection& remote,
                                      const SdpMediaSection& local,
-                                     bool usingBundle,
-                                     size_t transportLevel,
                                      JsepTransceiver* transceiverOut);
-  void InitTransport(const SdpMediaSection& msection, JsepTransport* transport);
+  void EnsureHasOwnTransport(const SdpMediaSection& msection,
+                             JsepTransceiver* transceiver);
 
   nsresult FinalizeTransport(const SdpAttributeList& remote,
                              const SdpAttributeList& answer,
-                             const RefPtr<JsepTransport>& transport);
+                             JsepTransport* transport);
 
   nsresult GetNegotiatedBundledMids(SdpHelper::BundledMids* bundledMids);
 
@@ -279,6 +284,7 @@ private:
   uint64_t mSessionVersion;
   size_t mMidCounter;
   std::set<std::string> mUsedMids;
+  size_t mTransportIdCounter;
   std::vector<JsepExtmapMediaType> mRtpExtensions;
   UniquePtr<JsepUuidGenerator> mUuidGen;
   std::string mDefaultRemoteStreamId;

@@ -79,11 +79,14 @@
 #include "jit/JitRealm.h"
 #include "jit/shared/CodeGenerator-shared.h"
 #include "js/AutoByteString.h"
+#include "js/CompilationAndEvaluation.h"
+#include "js/CompileOptions.h"
 #include "js/Debug.h"
 #include "js/GCVector.h"
 #include "js/Initialization.h"
 #include "js/JSON.h"
 #include "js/Printf.h"
+#include "js/SourceBufferHolder.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/SweepingAPI.h"
@@ -131,6 +134,7 @@ using namespace js::cli;
 using namespace js::shell;
 
 using JS::AutoStableStringChars;
+using JS::CompileOptions;
 
 using js::shell::RCFile;
 
@@ -4411,8 +4415,8 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     const char16_t* chars = stableChars.twoByteRange().begin().get();
-    SourceBufferHolder srcBuf(chars, scriptContents->length(),
-                              SourceBufferHolder::NoOwnership);
+    JS::SourceBufferHolder srcBuf(chars, scriptContents->length(),
+                                  JS::SourceBufferHolder::NoOwnership);
 
     RootedScript script(cx, frontend::CompileModule(cx, options, srcBuf));
     if (!script)

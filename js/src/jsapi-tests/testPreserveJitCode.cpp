@@ -5,6 +5,7 @@
 // For js::jit::IsIonEnabled().
 #include "jit/Ion.h"
 
+#include "js/CompilationAndEvaluation.h"
 #include "jsapi-tests/tests.h"
 
 #include "vm/JSObject-inl.h"

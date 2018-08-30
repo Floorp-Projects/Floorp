@@ -6,7 +6,8 @@ from __future__ import absolute_import, unicode_literals
 
 from mozterm import Terminal
 
-from ..result import ResultContainer
+from ..result import Issue
+from ..util.string import pluralize
 
 
 class StylishFormatter(object):
@@ -49,24 +50,19 @@ class StylishFormatter(object):
         self.max_level = max(self.max_level, len(str(err.level)))
         self.max_message = max(self.max_message, len(err.message))
 
-    def _pluralize(self, s, num):
-        if num != 1:
-            s += 's'
-        return str(num) + ' ' + s
-
-    def __call__(self, result, failed=None, **kwargs):
+    def __call__(self, result):
         message = []
-        failed = failed or []
+        failed = result.failed
 
         num_errors = 0
         num_warnings = 0
-        for path, errors in sorted(result.iteritems()):
+        for path, errors in sorted(result.issues.iteritems()):
             self._reset_max()
 
             message.append(self.term.underline(path))
             # Do a first pass to calculate required padding
             for err in errors:
-                assert isinstance(err, ResultContainer)
+                assert isinstance(err, Issue)
                 self._update_max(err)
                 if err.level == 'error':
                     num_errors += 1
@@ -99,10 +95,10 @@ class StylishFormatter(object):
         message.append(self.fmt_summary.format(
             t=self.term,
             c=self.color('brightred') if num_errors or failed else self.color('brightyellow'),
-            problem=self._pluralize('problem', num_errors + num_warnings + len(failed)),
-            error=self._pluralize('error', num_errors),
-            warning=self._pluralize('warning', num_warnings),
-            failure=', {}'.format(self._pluralize('failure', len(failed))) if failed else '',
+            problem=pluralize('problem', num_errors + num_warnings + len(failed)),
+            error=pluralize('error', num_errors),
+            warning=pluralize('warning', num_warnings or result.total_suppressed_warnings),
+            failure=', {}'.format(pluralize('failure', len(failed))) if failed else '',
         ))
 
         return '\n'.join(message)

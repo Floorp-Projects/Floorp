@@ -1100,7 +1100,7 @@
     "high": 1024,
     "n_buckets": 21,
     "description": "Number of low-virtual-memory events fired since last ping",
-    "cpp_guard": "XP_WIN",
+    "operating_systems": ["windows"],
     "bug_numbers": [711490,1451005]
   },
   "LOW_MEMORY_EVENTS_PHYSICAL": {
@@ -1111,7 +1111,7 @@
     "high": 1024,
     "n_buckets": 21,
     "description": "Number of low-physical-memory events fired since last ping",
-    "cpp_guard": "XP_WIN",
+    "operating_systems": ["windows"],
     "bug_numbers": [711490,1451005]
   },
   "LOW_MEMORY_EVENTS_COMMIT_SPACE": {
@@ -1122,7 +1122,7 @@
     "high": 1024,
     "n_buckets": 21,
     "description": "Number of low-commit-space events fired since last ping",
-    "cpp_guard": "XP_WIN",
+    "operating_systems": ["windows"],
     "bug_numbers": [1451005]
   },
   "PAGE_FAULTS_HARD": {
@@ -1133,7 +1133,7 @@
     "high": 65536,
     "n_buckets": 13,
     "description": "Hard page faults (since last telemetry ping)",
-    "cpp_guard": "XP_UNIX"
+    "operating_systems": ["unix"]
   },
   "FONTLIST_INITOTHERFAMILYNAMES": {
     "record_in_processes": ["main", "content"],
@@ -1166,7 +1166,7 @@
     "high": 30000,
     "n_buckets": 10,
     "description": "gfxDWriteFontList::DelayedInitFontList Total (ms)",
-    "cpp_guard": "XP_WIN"
+    "operating_systems": ["windows"]
   },
   "DWRITEFONT_DELAYEDINITFONTLIST_COUNT": {
     "record_in_processes": ["main", "content"],
@@ -1175,7 +1175,7 @@
     "high": 10000,
     "n_buckets": 10,
     "description": "gfxDWriteFontList::DelayedInitFontList Font Family Count",
-    "cpp_guard": "XP_WIN"
+    "operating_systems": ["windows"]
   },
   "DWRITEFONT_DELAYEDINITFONTLIST_COLLECT": {
     "record_in_processes": ["main", "content"],
@@ -1184,7 +1184,7 @@
     "high": 30000,
     "n_buckets": 10,
     "description": "gfxDWriteFontList::DelayedInitFontList GetSystemFontCollection (ms)",
-    "cpp_guard": "XP_WIN"
+    "operating_systems": ["windows"]
   },
   "DWRITEFONT_INIT_PROBLEM": {
     "record_in_processes": ["main", "content"],
@@ -1192,7 +1192,7 @@
     "kind": "enumerated",
     "n_values": 8,
     "description": "DirectWrite system fontlist initialization problem (1=GDI interop, 2=system font collection, 3=no fonts)",
-    "cpp_guard": "XP_WIN"
+    "operating_systems": ["windows"]
   },
   "GDI_INITFONTLIST_TOTAL": {
     "record_in_processes": ["main", "content"],
@@ -1201,7 +1201,7 @@
     "high": 30000,
     "n_buckets": 10,
     "description": "gfxGDIFontList::InitFontList Total (ms)",
-    "cpp_guard": "XP_WIN"
+    "operating_systems": ["windows"]
   },
   "MAC_INITFONTLIST_TOTAL": {
     "record_in_processes": ["main", "content"],
@@ -1210,7 +1210,7 @@
     "high": 30000,
     "n_buckets": 10,
     "description": "gfxMacPlatformFontList::InitFontList Total (ms)",
-    "cpp_guard": "XP_DARWIN"
+    "operating_systems": ["mac"]
   },
   "SYSTEM_FONT_FALLBACK": {
     "record_in_processes": ["main", "content"],
@@ -5033,7 +5033,7 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the referrer intent specified an invalid distribution name",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_DISTRIBUTION_CODE_CATEGORY": {
     "record_in_processes": ["main", "content"],
@@ -5041,7 +5041,7 @@
     "kind": "enumerated",
     "n_values": 20,
     "description": "First digit of HTTP result code, or error category, during distribution download",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_DISTRIBUTION_DOWNLOAD_TIME_MS": {
     "record_in_processes": ["main", "content"],
@@ -5051,7 +5051,7 @@
     "high": 40000,
     "n_buckets": 30,
     "description": "Time taken to download a specified distribution file (msec)",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_BOOKMARKS_COUNT": {
     "record_in_processes": ["main", "content"],
@@ -5067,7 +5067,7 @@
     "record_in_processes": ["main", "content"],
     "expires_in_version": "70",
     "kind": "flag",
-    "cpp_guard": "ANDROID",
+    "operating_systems": ["android"],
     "description": "Whether or not users have Orbot installed",
     "alert_emails": ["seceng@mozilla.org"],
     "bug_numbers": [1314784]
@@ -5078,7 +5078,7 @@
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 10,
-    "cpp_guard": "ANDROID",
+    "operating_systems": ["android"],
     "description": "Number of reading list items stored in the browser DB *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "FENNEC_READER_VIEW_CACHE_SIZE": {
@@ -5102,7 +5102,7 @@
     "n_buckets": 22,
     "description": "Latency in microseconds of UI events in the Android event loop between posting and processing",
     "bug_numbers": [1322574],
-    "cpp_guard": "MOZ_WIDGET_ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_LOOP_OTHER_LATENCY": {
     "record_in_processes": ["main", "content"],
@@ -5114,7 +5114,7 @@
     "n_buckets": 22,
     "description": "Latency in microseconds of non-UI events in the Android event loop between posting and processing",
     "bug_numbers": [1322574],
-    "cpp_guard": "MOZ_WIDGET_ANDROID"
+    "operating_systems": ["android"]
   },
   "PLACES_SORTED_BOOKMARKS_PERC": {
     "record_in_processes": ["main", "content"],
@@ -7626,6 +7626,54 @@
     "description": "a testing histogram; not meant to be touched",
     "products": ["fennec", "geckoview"]
   },
+  "TELEMETRY_TEST_OS_ANDROID_ONLY": {
+    "record_in_processes": ["all"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1477213],
+    "description": "a testing histogram; not meant to be touched",
+    "operating_systems": ["android"]
+  },
+  "TELEMETRY_TEST_OS_WIN_ONLY": {
+    "record_in_processes": ["all"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1477213],
+    "description": "a testing histogram; not meant to be touched",
+    "operating_systems": ["windows"]
+  },
+  "TELEMETRY_TEST_OS_LINUX_ONLY": {
+    "record_in_processes": ["all"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1477213],
+    "description": "a testing histogram; not meant to be touched",
+    "operating_systems": ["linux"]
+  },
+  "TELEMETRY_TEST_OS_MAC_ONLY": {
+    "record_in_processes": ["all"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1477213],
+    "description": "a testing histogram; not meant to be touched",
+    "operating_systems": ["mac"]
+  },
   "STARTUP_CRASH_DETECTED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -7682,7 +7730,7 @@
     "high": 50000,
     "n_buckets": 20,
     "description": "Number of bookmarks in the original XUL places database",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_GLOBALHISTORY_ADD_MS": {
     "record_in_processes": ["main", "content"],
@@ -7692,7 +7740,7 @@
     "high": 20000,
     "n_buckets": 20,
     "description": "Time for a record to be added to history (ms)",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_GLOBALHISTORY_UPDATE_MS": {
     "record_in_processes": ["main", "content"],
@@ -7702,7 +7750,7 @@
     "high": 20000,
     "n_buckets": 20,
     "description": "Time for a record to be updated in history (ms)",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_GLOBALHISTORY_VISITED_BUILD_MS": {
     "record_in_processes": ["main", "content"],
@@ -7712,14 +7760,14 @@
     "high": 20000,
     "n_buckets": 20,
     "description": "Time to update the visited link set (ms)",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_RESTORING_ACTIVITY": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Fennec is starting up but the Gecko thread was still running",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_SEARCH_LOADER_TIME_MS": {
     "record_in_processes": ["main", "content"],
@@ -7729,7 +7777,7 @@
     "high": 20000,
     "n_buckets": 20,
     "description": "Time for a URL bar DB search to return (ms)",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_STARTUP_TIME_GECKOREADY": {
     "record_in_processes": ["main", "content"],
@@ -7739,7 +7787,7 @@
     "high": 20000,
     "n_buckets": 20,
     "description": "Time for the Gecko:Ready message to arrive (ms)",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_STARTUP_TIME_JAVAUI": {
     "record_in_processes": ["main", "content"],
@@ -7749,7 +7797,7 @@
     "high": 5000,
     "n_buckets": 20,
     "description": "Time for the Java UI to load (ms)",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_TOPSITES_LOADER_TIME_MS": {
     "record_in_processes": ["main", "content"],
@@ -7759,7 +7807,7 @@
     "high": 20000,
     "n_buckets": 20,
     "description": "Time for the home screen Top Sites query to return with no filter set (ms)",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_ACTIVITY_STREAM_TOPSITES_LOADER_TIME_MS": {
     "record_in_processes": ["main", "content"],
@@ -7771,7 +7819,7 @@
     "description": "Time for the Activity Stream home screen Top Sites query to return (ms)",
     "alert_emails": ["mobile-frontend@mozilla.com"],
     "bug_numbers": [1293790],
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_ACTIVITY_STREAM_HIGHLIGHTS_LOADER_TIME_MS": {
     "record_in_processes": ["main", "content"],
@@ -7783,7 +7831,7 @@
     "description": "Time for the Activity Stream highlights query to return (ms)",
     "alert_emails": ["mobile-frontend@mozilla.com"],
     "bug_numbers": [1298786],
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_HOMEPANELS_CUSTOM": {
     "record_in_processes": ["main", "content"],
@@ -7791,14 +7839,14 @@
     "kind": "boolean",
     "bug_numbers": [1245368],
     "description": "Whether the user has customized their homepanels",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_WAS_KILLED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Killed, likely due to an OOM condition",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FIPS_ENABLED": {
     "record_in_processes": ["main", "content"],
@@ -7987,7 +8035,7 @@
     "bug_numbers": [795307, 1390269],
     "alert_emails": ["jimm@mozilla.com"],
     "description": "Boolean indicating if a touch input device is detected.",
-    "cpp_guard": "XP_WIN"
+    "operating_systems": ["windows"]
   },
   "COMPONENTS_SHIM_ACCESSED_BY_CONTENT": {
     "record_in_processes": ["main", "content"],
@@ -12579,7 +12627,7 @@
     "bug_numbers": [1098428],
     "expires_in_version": "55",
     "kind": "boolean",
-    "cpp_guard": "XP_LINUX",
+    "operating_systems": ["linux"],
     "description": "Whether the system has seccomp-bpf capability"
   },
   "SANDBOX_HAS_SECCOMP_TSYNC": {
@@ -12588,7 +12636,7 @@
     "bug_numbers": [1098428, 1370578],
     "expires_in_version": "61",
     "kind": "boolean",
-    "cpp_guard": "XP_LINUX",
+    "operating_systems": ["linux"],
     "description": "Whether the system has seccomp-bpf thread-sync capability"
   },
   "SANDBOX_HAS_USER_NAMESPACES": {
@@ -12598,7 +12646,7 @@
     "expires_in_version": "65",
     "releaseChannelCollection": "opt-out",
     "kind": "boolean",
-    "cpp_guard": "XP_LINUX",
+    "operating_systems": ["linux"],
     "description": "Whether our process succedeed in creating a user namespace"
   },
   "SANDBOX_HAS_USER_NAMESPACES_PRIVILEGED": {
@@ -12607,7 +12655,7 @@
     "bug_numbers": [1098428, 1370578],
     "expires_in_version": "61",
     "kind": "boolean",
-    "cpp_guard": "XP_LINUX",
+    "operating_systems": ["linux"],
     "description": "Whether the system has the capability to create privileged user namespaces"
   },
  "SANDBOX_MEDIA_ENABLED": {
@@ -12616,7 +12664,7 @@
     "bug_numbers": [1098428],
     "expires_in_version": "55",
     "kind": "boolean",
-    "cpp_guard": "XP_LINUX",
+    "operating_systems": ["linux"],
     "description": "Whether the sandbox is enabled for media/GMP plugins"
   },
  "SANDBOX_CONTENT_ENABLED": {
@@ -12625,7 +12673,7 @@
     "bug_numbers": [1098428],
     "expires_in_version": "55",
     "kind": "boolean",
-    "cpp_guard": "XP_LINUX",
+    "operating_systems": ["linux"],
     "description": "Whether the sandbox is enabled for the content process"
   },
   "SANDBOX_REJECTED_SYSCALLS": {
@@ -12636,7 +12684,7 @@
     "releaseChannelCollection": "opt-out",
     "kind": "count",
     "keyed": true,
-    "cpp_guard": "XP_LINUX",
+    "operating_systems": ["linux"],
     "description": "System calls blocked by a seccomp-bpf sandbox policy; limited to syscalls where we would crash on Nightly.  The key is generally the architecture and syscall ID but in some cases we include non-personally-identifying information from the syscall arguments; see the function SubmitToTelemetry in security/sandbox/linux/reporter/SandboxReporter.cpp for details."
   },
   "SANDBOX_FAILED_LAUNCH_KEYED": {
@@ -12647,7 +12695,7 @@
     "keyed": true,
     "n_values": 50,
     "bug_numbers": [1368600],
-    "cpp_guard": "XP_WIN",
+    "operating_systems": ["windows"],
     "description": "Error code when a Windows sandboxed process fails to launch, keyed by process type and Windows error code. See https://dxr.mozilla.org/mozilla-central/search?q=ResultCode++path%3Asandbox_types.h&redirect=true for definitions of the error codes."
   },
   "SYNC_WORKER_OPERATION": {
@@ -12819,7 +12867,7 @@
     "kind": "flag",
     "bug_numbers": [1284017],
     "description": "When restoring tabs on startup, reading from sessionstore.js failed, even though the file exists and is not containing an explicitly empty window.",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP": {
     "record_in_processes": ["main", "content"],
@@ -12828,7 +12876,7 @@
     "kind": "flag",
     "bug_numbers": [1190627],
     "description": "When restoring tabs on startup, reading from sessionstore.js failed, but sessionstore.bak was read successfully.",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "FENNEC_SESSIONSTORE_ALL_FILES_DAMAGED": {
     "record_in_processes": ["main", "content"],
@@ -12837,7 +12885,7 @@
     "kind": "flag",
     "bug_numbers": [1337115],
     "description": "Both the main session file and its backup could not be read and and the first run pref is false.",
-    "cpp_guard": "ANDROID"
+    "operating_systems": ["android"]
   },
   "NUMBER_OF_PROFILES": {
     "record_in_processes": ["main", "content"],

@@ -4,6 +4,7 @@
 
 DIRS += [
     'debugtarget',
+    'sidebar',
 ]
 
 DevToolsModules(
@@ -14,8 +15,4 @@ DevToolsModules(
     'RuntimeInfo.css',
     'RuntimeInfo.js',
     'RuntimePage.js',
-    'Sidebar.css',
-    'Sidebar.js',
-    'SidebarItem.css',
-    'SidebarItem.js',
 )

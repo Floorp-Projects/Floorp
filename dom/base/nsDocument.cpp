@@ -1520,6 +1520,10 @@ nsIDocument::nsIDocument()
 {
   SetIsInDocument();
   SetIsConnected(true);
+
+  if (StaticPrefs::layout_css_use_counters_enabled()) {
+    mStyleUseCounters.reset(Servo_UseCounters_Create());
+  }
 }
 
 nsDocument::nsDocument(const char* aContentType)
@@ -12653,7 +12657,8 @@ void
 nsIDocument::MaybeAllowStorageForOpener()
 {
   if (StaticPrefs::network_cookie_cookieBehavior() !=
-        nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+        nsICookieService::BEHAVIOR_REJECT_TRACKER ||
+      !StaticPrefs::browser_contentblocking_enabled()) {
     return;
   }
 
@@ -13164,8 +13169,11 @@ PrincipalFlashClassifier::AsyncClassifyInternal(nsIPrincipal* aPrincipal)
     return FlashClassification::Denied;
   }
 
+  // We don't support extra entries by pref for this classifier.
   rv = mUriClassifier->AsyncClassifyLocalWithTables(mClassificationURI,
                                                     tables,
+                                                    nsTArray<nsCString>(),
+                                                    nsTArray<nsCString>(),
                                                     this);
 
   if (NS_FAILED(rv)) {

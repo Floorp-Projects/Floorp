@@ -145,14 +145,14 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == ignore-padding.svg ignore-prop-ref.svg
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == ignore-vertical-align.svg ignore-vertical-align-ref.svg # Bug 1392106
 == ignore-overflow-scroll.svg ignore-prop-ref.svg
-== ignore-text-align.svg ignore-prop-ref.svg
-== ignore-text-align-2.svg ignore-text-align-2-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == ignore-text-align.svg ignore-prop-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == ignore-text-align-2.svg ignore-text-align-2-ref.svg # Bug 1392106
 
 # pseudo-elements
 == pseudo-first-line.svg pseudo-first-line-ref.svg
 == pseudo-first-line-2.svg pseudo-first-line-2-ref.svg
-== pseudo-first-letter.svg pseudo-first-letter-ref.svg
-== pseudo-first-letter-2.svg pseudo-first-letter-2-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == pseudo-first-letter.svg pseudo-first-letter-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == pseudo-first-letter-2.svg pseudo-first-letter-2-ref.svg # Bug 1392106
 == ignore-before-after.svg ignore-prop-ref.svg
 
 # invalid child nodes
@@ -179,8 +179,8 @@ fuzzy-if(skiaContent&&winWidget,0-53,0-112) == mask-content-2.svg mask-content-2
 
 # text and clipPaths
 == clipPath-applied.svg clipPath-applied-ref.svg
-fuzzy-if(skiaContent&&winWidget,0-105,0-56) == clipPath-content.svg clipPath-content-ref.svg
-fuzzy-if(skiaContent&&winWidget,0-53,0-112) == clipPath-content-2.svg clipPath-content-2-ref.svg
+fuzzy-if(skiaContent&&winWidget,0-105,0-56) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == clipPath-content.svg clipPath-content-ref.svg # Bug 1392106
+fuzzy-if(skiaContent&&winWidget,0-53,0-112) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == clipPath-content-2.svg clipPath-content-2-ref.svg # Bug 1392106
 
 # text and patterns
 fuzzy-if(cocoaWidget,0-1,0-6) fuzzy-if(skiaContent,0-65,0-313) == pattern-content.svg pattern-content-ref.svg

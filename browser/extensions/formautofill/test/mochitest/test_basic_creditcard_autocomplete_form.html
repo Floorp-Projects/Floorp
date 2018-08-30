@@ -23,11 +23,13 @@ const MOCK_STORAGE = [{
   "cc-number": "4929001587121045",
   "cc-exp-month": 4,
   "cc-exp-year": 2017,
+  "cc-type": "visa",
 }, {
   "cc-name": "Timothy Berners-Lee",
   "cc-number": "5103059495477870",
   "cc-exp-month": 12,
   "cc-exp-year": 2022,
+  "cc-type": "mastercard",
 }];
 
 const reducedMockRecord = {
@@ -197,6 +199,12 @@ add_task(async function check_form_autofill_resume() {
     <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
     <p><label>Expiration month: <input id="cc-exp-month" autocomplete="cc-exp-month"></label></p>
     <p><label>Expiration year: <input id="cc-exp-year" autocomplete="cc-exp-year"></label></p>
+    <p><label>Card Type: <select id="cc-type" autocomplete="cc-type">
+      <option value="discover">Discover</option>
+      <option value="jcb">JCB</option>
+      <option value="visa">Visa</option>
+      <option value="mastercard">MasterCard</option>
+    </select></label></p>
     <p><label>CSC: <input id="cc-csc" autocomplete="cc-csc"></label></p>
   </form>
 </div>

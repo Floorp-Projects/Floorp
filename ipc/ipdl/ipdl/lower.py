@@ -153,7 +153,7 @@ def _actorManager(actor):
 
 
 def _actorState(actor):
-    return ExprSelect(actor, '->', 'mState')
+    return ExprSelect(actor, '->', 'mLivenessState')
 
 
 def _backstagePass():
@@ -1182,9 +1182,9 @@ def _subtreeUsesShmem(p):
 
 def _stateType(hasReentrantDelete):
     if hasReentrantDelete:
-        return Type('mozilla::ipc::ReEntrantDeleteState')
+        return Type('mozilla::ipc::ReEntrantDeleteLivenessState')
     else:
-        return Type('mozilla::ipc::State')
+        return Type('mozilla::ipc::LivenessState')
 
 
 def _startState(hasReentrantDelete):
@@ -1310,8 +1310,8 @@ class Protocol(ipdl.ast.Protocol):
 
     def stateVar(self, actorThis=None):
         if actorThis is not None:
-            return ExprSelect(actorThis, '->', 'mState')
-        return ExprVar('mState')
+            return ExprSelect(actorThis, '->', 'mLivenessState')
+        return ExprVar('mLivenessState')
 
     def fqStateType(self):
         return _stateType(self.decl.type.hasReentrantDelete)
@@ -3464,7 +3464,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             if ptype.hasReentrantDelete:
                 msgVar = ExprVar(params[0].name)
                 ifdying = StmtIf(ExprBinary(
-                    ExprBinary(ExprVar('mState'), '==', self.protocol.dyingState()),
+                    ExprBinary(ExprVar('mLivenessState'), '==', self.protocol.dyingState()),
                     '&&',
                     ExprBinary(
                         ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_reply')),

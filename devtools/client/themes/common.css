@@ -8,15 +8,17 @@
 :root {
   font: message-box;
 
-  --tab-line-selected-color: var(--blue-50);
-}
-
-:root.theme-light {
+  --clear-icon-url: url("chrome://devtools/skin/images/clear.svg");
   --tab-line-hover-color: rgba(0,0,0,.2);
+  --tab-line-selected-color: var(--blue-50);
+  --toggle-thumb-color: white;
+  --toggle-track-color: var(--grey-30);
 }
 
 :root.theme-dark {
   --tab-line-hover-color: rgba(255,255,255,.2);
+  --toggle-thumb-color: var(--grey-40);
+  --toggle-track-color: var(--grey-50);
 }
 
 :root[platform="mac"] {
@@ -84,7 +86,7 @@ html|button, html|select {
 .devtools-autocomplete-listbox .autocomplete-item {
   width: 100%;
   background-color: transparent;
-  color: var(--theme-arrowpanel-color);
+  color: var(--theme-popup-color);
   padding: 1px var(--autocomplete-item-padding-inline);
   cursor: default;
   text-overflow: ellipsis;
@@ -143,13 +145,13 @@ html|button, html|select {
 .tooltip-panel.devtools-autocomplete-popup,
 .CodeMirror-hints,
 .CodeMirror-Tern-tooltip {
-  border: 1px solid var(--theme-arrowpanel-border-color);
-  background-color: var(--theme-arrowpanel-background);
-  color: var(--theme-arrowpanel-color);
+  border: 1px solid var(--theme-popup-border-color);
+  background-color: var(--theme-popup-background);
+  color: var(--theme-popup-color);
 }
 
 .devtools-autocomplete-listbox .autocomplete-item:hover {
-  background-color: var(--theme-arrowpanel-dimmed);
+  background-color: var(--theme-popup-dimmed);
 }
 
 .devtools-autocomplete-listbox .autocomplete-selected,
@@ -384,9 +386,6 @@ checkbox:-moz-focusring {
 }
 
 /* Icons */
-:root {
-  --clear-icon-url: url("chrome://devtools/skin/images/clear.svg");
-}
 
 .devtools-button.devtools-clear-icon::before {
   background-image: var(--clear-icon-url);
@@ -799,4 +798,51 @@ checkbox:-moz-focusring {
   padding: 0.5em 21px;
   -moz-user-select: none;
   font-size: 12px;
+}
+
+/* Checkbox Toggle */
+
+.devtools-checkbox-toggle {
+  --x-pos: .15em;
+  /* Reset native checkbox styling. */
+  -moz-appearance: none;
+  background-color: var(--toggle-track-color);
+  cursor: pointer;
+  /* Change font-size to scale. */
+  font-size: 16px;
+  width: 2em;
+  height: 1em;
+  border-radius: 1em;
+  /* Animate the thumb position between states of the checkbox. */
+  transition: background-color .1s ease-out;
+}
+
+.devtools-checkbox-toggle:focus {
+  box-shadow: 0 0 0 1px var(--blue-55);
+}
+
+.devtools-checkbox-toggle:checked:focus {
+  background-color: var(--blue-40);
+  box-shadow: none;
+}
+
+.devtools-checkbox-toggle:checked {
+  --x-pos: 1.15em;
+  background-color: var(--blue-55);
+}
+
+.devtools-checkbox-toggle::before {
+  position: relative;
+  width: calc(1em - .3em);
+  height: calc(1em - .3em);
+  transform: translateY(.15em) translateX(var(--x-pos));
+  border-radius: 100%;
+  display: block;
+  content: "";
+  background-color: var(--toggle-thumb-color);
+  transition: transform .1s ease-out;
+}
+
+.devtools-checkbox-toggle:checked::before {
+  background-color: white;
 }

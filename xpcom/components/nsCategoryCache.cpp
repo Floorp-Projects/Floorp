@@ -6,12 +6,15 @@
 
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include "mozilla/SimpleEnumerator.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIStringEnumerator.h"
 
 #include "nsXPCOMCID.h"
 
 #include "nsCategoryCache.h"
+
+using mozilla::SimpleEnumerator;
 
 nsCategoryObserver::nsCategoryObserver(const nsACString& aCategory)
   : mCategory(aCategory)
@@ -34,21 +37,15 @@ nsCategoryObserver::nsCategoryObserver(const nsACString& aCategory)
     return;
   }
 
-  nsCOMPtr<nsIUTF8StringEnumerator> strings = do_QueryInterface(enumerator);
-  MOZ_ASSERT(strings);
+  for (auto& categoryEntry : SimpleEnumerator<nsICategoryEntry>(enumerator)) {
+    nsAutoCString entryValue;
+    categoryEntry->GetValue(entryValue);
 
-  bool more;
-  while (NS_SUCCEEDED(strings->HasMore(&more)) && more) {
-    nsAutoCString entryName;
-    strings->GetNext(entryName);
+    if (nsCOMPtr<nsISupports> service = do_GetService(entryValue.get())) {
+      nsAutoCString entryName;
+      categoryEntry->GetEntry(entryName);
 
-    nsCString entryValue;
-    rv = catMan->GetCategoryEntry(aCategory, entryName, entryValue);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsISupports> service = do_GetService(entryValue.get());
-      if (service) {
-        mHash.Put(entryName, service);
-      }
+      mHash.Put(entryName, service);
     }
   }
 

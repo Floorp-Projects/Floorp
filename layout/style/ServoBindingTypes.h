@@ -23,6 +23,7 @@ struct RawServoSelectorList;
 struct RawServoSourceSizeList;
 struct RawServoAnimationValueMap;
 struct RustString;
+struct StyleUseCounters;
 
 #define SERVO_ARC_TYPE(name_, type_) struct type_;
 #include "mozilla/ServoArcTypeList.h"
@@ -199,6 +200,10 @@ DECL_BORROWED_REF_TYPE_FOR(RawServoSelectorList)
 DECL_OWNED_REF_TYPE_FOR(RawServoSourceSizeList)
 DECL_BORROWED_REF_TYPE_FOR(RawServoSourceSizeList)
 DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoSourceSizeList)
+DECL_OWNED_REF_TYPE_FOR(StyleUseCounters)
+DECL_NULLABLE_OWNED_REF_TYPE_FOR(StyleUseCounters)
+DECL_BORROWED_REF_TYPE_FOR(StyleUseCounters)
+DECL_NULLABLE_BORROWED_REF_TYPE_FOR(StyleUseCounters)
 
 #undef DECL_ARC_REF_TYPE_FOR
 #undef DECL_OWNED_REF_TYPE_FOR
@@ -244,6 +249,7 @@ DEFINE_BOXED_TYPE(StyleSet, RawServoStyleSet);
 DEFINE_BOXED_TYPE(AuthorStyles, RawServoAuthorStyles);
 DEFINE_BOXED_TYPE(SelectorList, RawServoSelectorList);
 DEFINE_BOXED_TYPE(SourceSizeList, RawServoSourceSizeList);
+DEFINE_BOXED_TYPE(UseCounters, StyleUseCounters);
 
 #undef DEFINE_BOXED_TYPE
 

@@ -589,7 +589,7 @@ function isValidDate(aDate) {
 function waitForAnnotation(sourceUriSpec, annotationName) {
   return TestUtils.waitForCondition(async () => {
     let pageInfo = await PlacesUtils.history.fetch(sourceUriSpec, {includeAnnotations: true});
-    return pageInfo.annotations.has(annotationName);
+    return pageInfo && pageInfo.annotations.has(annotationName);
   }, `Should have found annotation ${annotationName} for ${sourceUriSpec}`);
 }
 

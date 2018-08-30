@@ -5,7 +5,12 @@
 "use strict";
 
 const { FrontClassWithSpec } = require("devtools/shared/protocol");
-const { flexboxSpec, gridSpec, layoutSpec } = require("devtools/shared/specs/layout");
+const {
+  flexboxSpec,
+  flexItemSpec,
+  gridSpec,
+  layoutSpec,
+} = require("devtools/shared/specs/layout");
 
 const FlexboxFront = FrontClassWithSpec(flexboxSpec, {
   form: function(form, detail) {
@@ -30,6 +35,42 @@ const FlexboxFront = FrontClassWithSpec(flexboxSpec, {
 
   /**
    * Get the computed style properties for the flex container.
+   */
+  get properties() {
+    return this._form.properties;
+  },
+});
+
+const FlexItemFront = FrontClassWithSpec(flexItemSpec, {
+  form: function(form, detail) {
+    if (detail === "actorid") {
+      this.actorID = form;
+      return;
+    }
+    this._form = form;
+  },
+
+  /**
+   * Get the flex item sizing data.
+   */
+  get flexItemSizing() {
+    return this._form.flexItemSizing;
+  },
+
+  /**
+   * In some cases, the FlexItemActor already knows the NodeActor ID of the node where the
+   * flex item is located. In such cases, this getter returns the NodeFront for it.
+   */
+  get nodeFront() {
+    if (!this._form.nodeActorID) {
+      return null;
+    }
+
+    return this.conn.getActor(this._form.nodeActorID);
+  },
+
+  /**
+   * Get the computed style properties for the flex item.
    */
   get properties() {
     return this._form.properties;
@@ -92,5 +133,6 @@ const GridFront = FrontClassWithSpec(gridSpec, {
 const LayoutFront = FrontClassWithSpec(layoutSpec, {});
 
 exports.FlexboxFront = FlexboxFront;
+exports.FlexItemFront = FlexItemFront;
 exports.GridFront = GridFront;
 exports.LayoutFront = LayoutFront;

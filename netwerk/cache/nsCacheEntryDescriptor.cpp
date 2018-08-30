@@ -611,8 +611,7 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result)
     value = mCacheEntry->GetMetaDataElement(key);
     if (!value) return NS_ERROR_NOT_AVAILABLE;
 
-    *result = NS_strdup(value);
-    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+    *result = NS_xstrdup(value);
 
     return NS_OK;
 }
@@ -921,13 +920,8 @@ nsDecompressInputStreamWrapper::Read(char *    buf,
         // to the request size is not necessary, but helps minimize the
         // number of read requests to the input stream.
         uint32_t newBufLen = std::max(count, (uint32_t)kMinDecompressReadBufLen);
-        unsigned char* newBuf;
-        newBuf = (unsigned char*)moz_xrealloc(mReadBuffer,
-            newBufLen);
-        if (newBuf) {
-            mReadBuffer = newBuf;
-            mReadBufferLen = newBufLen;
-        }
+        mReadBuffer = (unsigned char*)moz_xrealloc(mReadBuffer, newBufLen);
+        mReadBufferLen = newBufLen;
         if (!mReadBuffer) {
             mReadBufferLen = 0;
             return NS_ERROR_OUT_OF_MEMORY;
@@ -1333,10 +1327,6 @@ nsCompressOutputStreamWrapper::Write(const char * buf,
         // a stream buffer size proportional to request buffers.
         mWriteBufferLen = std::max(count*2, (uint32_t)kMinCompressWriteBufLen);
         mWriteBuffer = (unsigned char*)moz_xmalloc(mWriteBufferLen);
-        if (!mWriteBuffer) {
-            mWriteBufferLen = 0;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
         mZstream.next_out = mWriteBuffer;
         mZstream.avail_out = mWriteBufferLen;
     }

@@ -29,6 +29,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
@@ -13115,23 +13116,21 @@ nsDocShell::GetUseTrackingProtection(bool* aUseTrackingProtection)
 {
   *aUseTrackingProtection  = false;
 
-  static bool sCBEnabled = false;
+  bool cbEnabled = StaticPrefs::browser_contentblocking_enabled();
   static bool sTPEnabled = false;
   static bool sTPInPBEnabled = false;
   static bool sPrefsInit = false;
 
   if (!sPrefsInit) {
     sPrefsInit = true;
-    Preferences::AddBoolVarCache(&sCBEnabled,
-      "browser.contentblocking.enabled", true);
     Preferences::AddBoolVarCache(&sTPEnabled,
       "privacy.trackingprotection.enabled", false);
     Preferences::AddBoolVarCache(&sTPInPBEnabled,
       "privacy.trackingprotection.pbmode.enabled", false);
   }
 
-  if (mUseTrackingProtection || (sCBEnabled && sTPEnabled) ||
-      (sCBEnabled && UsePrivateBrowsing() && sTPInPBEnabled)) {
+  if (mUseTrackingProtection || (cbEnabled && sTPEnabled) ||
+      (cbEnabled && UsePrivateBrowsing() && sTPInPBEnabled)) {
     *aUseTrackingProtection = true;
     return NS_OK;
   }
@@ -14315,10 +14314,6 @@ nsDocShell::GetColorMatrix(uint32_t* aMatrixLen, float** aMatrix)
 
   if (mColorMatrix) {
     *aMatrix = (float*)moz_xmalloc(20 * sizeof(float));
-    if (!*aMatrix) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     MOZ_ASSERT(20 * sizeof(float) == sizeof(mColorMatrix->components));
     *aMatrixLen = 20;
     memcpy(*aMatrix, mColorMatrix->components, 20 * sizeof(float));

@@ -10,12 +10,12 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 // Milliseconds between auto-increment interval iterations.
-const AUTOINCREMENT_DELAY = 300;
+const AUTOINCREMENT_DELAY = 1000;
 
 class FontPropertyValue extends PureComponent {
   static get propTypes() {
     return {
-      allowAutoIncrement: PropTypes.bool,
+      autoIncrement: PropTypes.bool,
       className: PropTypes.string,
       defaultValue: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
       label: PropTypes.string.isRequired,
@@ -23,7 +23,7 @@ class FontPropertyValue extends PureComponent {
       max: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
       onChange: PropTypes.func.isRequired,
-      step: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
+      step: PropTypes.number,
       unit: PropTypes.oneOfType([ PropTypes.string, null ]),
       unitOptions: PropTypes.array,
       value: PropTypes.number,
@@ -32,7 +32,9 @@ class FontPropertyValue extends PureComponent {
 
   static get defaultProps() {
     return {
+      autoIncrement: false,
       className: "",
+      step: 1,
       unitOptions: []
     };
   }
@@ -59,6 +61,7 @@ class FontPropertyValue extends PureComponent {
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
+    this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
     this.onUnitChange = this.onUnitChange.bind(this);
     this.stopAutoIncrement = this.stopAutoIncrement.bind(this);
@@ -100,7 +103,7 @@ class FontPropertyValue extends PureComponent {
   /**
    * Check if the given value is valid according to the constraints of this component.
    * Ensure it is a number and that it does not go outside the min/max limits, unless
-   * allowed by the `allowAutoIncrement` props flag.
+   * allowed by the `autoIncrement` props flag.
    *
    * @param  {Number} value
    *         Numeric value
@@ -108,7 +111,7 @@ class FontPropertyValue extends PureComponent {
    *         Whether the value conforms to the components contraints.
    */
   isValueValid(value) {
-    const { allowAutoIncrement, min, max } = this.props;
+    const { autoIncrement, min, max } = this.props;
 
     if (typeof value !== "number" || isNaN(value)) {
       return false;
@@ -119,7 +122,7 @@ class FontPropertyValue extends PureComponent {
     }
 
     // Ensure it does not exceed maximum value, unless auto-incrementing is permitted.
-    if (max !== undefined && value > this.props.max && !allowAutoIncrement) {
+    if (max !== undefined && value > this.props.max && !autoIncrement) {
       return false;
     }
 
@@ -243,29 +246,33 @@ class FontPropertyValue extends PureComponent {
     });
   }
 
-  /**
-   * Handler for "keydown" events from the sider and input fields.
-   * Toggles on the "interactive" state. @See toggleInteractiveState();
-   * Begins auto-incrementing if the value is already at the upper bound.
-   *
-   * @param {Event} e
-   *        MouseDown event.
-   */
-  onMouseDown(e) {
-    // Begin auto-incrementing if the value is already at the upper bound.
-    if (this.isAtUpperBound(this.props.value) && e.target.type === "range") {
-      this.startAutoIncrement();
-    }
+  onMouseDown() {
     this.toggleInteractiveState(true);
   }
 
-  onMouseUp(e) {
+  /**
+   * Handler for "mousemove" event from range input. If the user is actively interacting
+   * by dragging the slider thumb, start or stop the auto-incrementing behavior depending
+   * on whether the input value is at the upper bound or not.
+   *
+   * @param {MouseEvent} e
+   */
+  onMouseMove(e) {
+    if (this.state.interactive && e.buttons) {
+      this.isAtUpperBound(this.props.value)
+        ? this.startAutoIncrement()
+        : this.stopAutoIncrement();
+    }
+  }
+
+  onMouseUp() {
+    this.stopAutoIncrement();
     this.toggleInteractiveState(false);
   }
 
   startAutoIncrement() {
     // Do not set auto-increment interval if not allowed to or if one is already set.
-    if (!this.props.allowAutoIncrement || this.interval) {
+    if (!this.props.autoIncrement || this.interval) {
       return;
     }
 
@@ -360,7 +367,7 @@ class FontPropertyValue extends PureComponent {
       onBlur: this.onBlur,
       onChange: this.onChange,
       onFocus: this.onFocus,
-      step: this.props.step || 1,
+      step: this.props.step,
       // While interacting with the range and number inputs, prevent updating value from
       // outside props which is debounced and causes jitter on successive renders.
       value: this.state.interactive
@@ -374,6 +381,7 @@ class FontPropertyValue extends PureComponent {
         onKeyDown: this.onKeyDown,
         onKeyUp: this.onKeyUp,
         onMouseDown: this.onMouseDown,
+        onMouseMove: this.onMouseMove,
         onMouseUp: this.onMouseUp,
         className: "font-value-slider",
         name: this.props.name,
@@ -386,7 +394,7 @@ class FontPropertyValue extends PureComponent {
       {
         ...defaults,
         // Remove upper limit from number input if it is allowed to auto-increment.
-        max: this.props.allowAutoIncrement ? null : this.props.max,
+        max: this.props.autoIncrement ? null : this.props.max,
         name: this.props.name,
         className: "font-value-input",
         type: "number",

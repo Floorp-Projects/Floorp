@@ -1032,8 +1032,6 @@ add_task(async function test_sendShutdownPing() {
     return;
   }
 
-  const OSSHUTDOWN_SCALAR = "telemetry.os_shutting_down";
-
   let checkPendingShutdownPing = async function() {
     let pendingPings = await TelemetryStorage.loadPendingPingList();
     Assert.equal(pendingPings.length, 1,
@@ -1043,8 +1041,6 @@ add_task(async function test_sendShutdownPing() {
     Assert.ok(shutdownPing, "The 'shutdown' ping must be saved to disk.");
     Assert.equal("shutdown", shutdownPing.payload.info.reason,
                  "The 'shutdown' ping must be saved to disk.");
-    Assert.ok(shutdownPing.payload.processes.parent.scalars[OSSHUTDOWN_SCALAR],
-              "The OS shutdown scalar must be set to true.");
   };
 
   Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, true);
@@ -1063,8 +1059,6 @@ add_task(async function test_sendShutdownPing() {
   checkPingFormat(ping, ping.type, true, true);
   Assert.equal(ping.payload.info.reason, REASON_SHUTDOWN);
   Assert.equal(ping.clientId, gClientID);
-  Assert.ok(!(OSSHUTDOWN_SCALAR in ping.payload.processes.parent.scalars),
-            "The OS shutdown scalar must not be set.");
   // Try again, this time disable ping upload. The PingSender
   // should not be sending any ping!
   PingServer.registerPingHandler(() => Assert.ok(false, "Telemetry must not send pings if not allowed to."));

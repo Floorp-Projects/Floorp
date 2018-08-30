@@ -88,7 +88,8 @@ extern "C" {
   nsstring_fallible_append_latin1_impl(nsAString* aThis,
                                        const char* aOther,
                                        size_t aOtherLen,
-                                       size_t aOldLen);
+                                       size_t aOldLen,
+                                       bool aAllowShrinking);
 
   bool
   nscstring_fallible_append_utf16_to_utf8_impl(nsACString* aThis,
@@ -100,7 +101,8 @@ extern "C" {
   nscstring_fallible_append_utf16_to_latin1_lossy_impl(nsACString* aThis,
                                                        const char16_t*,
                                                        size_t aOtherLen,
-                                                       size_t aOldLen);
+                                                       size_t aOldLen,
+                                                       bool aAllowShrinking);
 
   bool
   nscstring_fallible_append_utf8_to_latin1_lossy_check(nsACString* aThis,
@@ -256,7 +258,7 @@ CopyASCIItoUTF16(mozilla::Span<const char> aSource,
                  const mozilla::fallible_t&)
 {
   return nsstring_fallible_append_latin1_impl(
-    &aDest, aSource.Elements(), aSource.Length(), 0);
+    &aDest, aSource.Elements(), aSource.Length(), 0, true);
 }
 
 inline void
@@ -273,7 +275,7 @@ AppendASCIItoUTF16(mozilla::Span<const char> aSource,
                    const mozilla::fallible_t&)
 {
   return nsstring_fallible_append_latin1_impl(
-    &aDest, aSource.Elements(), aSource.Length(), aDest.Length());
+    &aDest, aSource.Elements(), aSource.Length(), aDest.Length(), false);
 }
 
 inline void
@@ -335,7 +337,7 @@ LossyCopyUTF16toASCII(mozilla::Span<const char16_t> aSource,
                       const mozilla::fallible_t&)
 {
   return nscstring_fallible_append_utf16_to_latin1_lossy_impl(
-    &aDest, aSource.Elements(), aSource.Length(), 0);
+    &aDest, aSource.Elements(), aSource.Length(), 0, true);
 }
 
 inline void
@@ -352,7 +354,7 @@ LossyAppendUTF16toASCII(mozilla::Span<const char16_t> aSource,
                         const mozilla::fallible_t&)
 {
   return nscstring_fallible_append_utf16_to_latin1_lossy_impl(
-    &aDest, aSource.Elements(), aSource.Length(), aDest.Length());
+    &aDest, aSource.Elements(), aSource.Length(), aDest.Length(), false);
 }
 
 inline void

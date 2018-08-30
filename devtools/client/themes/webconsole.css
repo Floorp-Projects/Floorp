@@ -285,15 +285,18 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: default;
 }
 
 .message.network .status {
   flex: none;
   margin-inline-start: 6px;
+  cursor: default;
 }
 
 .message.network.mixed-content .url {
   color: var(--theme-highlight-red);
+  cursor: default;
 }
 
 .message .learn-more-link {

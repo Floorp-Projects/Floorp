@@ -28,7 +28,7 @@ CPP_IDENTIFIER_PATTERN = '^[a-z][a-z0-9_]+[a-z0-9]$'
 ALWAYS_ALLOWED_KEYS = [
     'kind',
     'description',
-    'cpp_guard',
+    'operating_systems',
     'expires_in_version',
     'alert_emails',
     'keyed',
@@ -122,10 +122,7 @@ definition is a dict-like object that must contain at least the keys:
  - 'description': A textual description of the histogram.
  - 'strict_type_checks': A boolean indicating whether to use the new, stricter type checks.
                          The server-side still has to deal with old, oddly typed submissions,
-                         so we have to skip them there by default.
-
-The key 'cpp_guard' is optional; if present, it denotes a preprocessor
-symbol that should guard C/C++ definitions associated with the histogram."""
+                         so we have to skip them there by default."""
         self._strict_type_checks = strict_type_checks
         self._is_use_counter = name.startswith("USE_COUNTER2_")
         if self._is_use_counter:
@@ -135,12 +132,12 @@ symbol that should guard C/C++ definitions associated with the histogram."""
         self._description = definition['description']
         self._kind = definition['kind']
         self._keys = definition.get('keys', [])
-        self._cpp_guard = definition.get('cpp_guard')
         self._keyed = definition.get('keyed', False)
         self._expiration = definition.get('expires_in_version')
         self._labels = definition.get('labels', [])
         self._record_in_processes = definition.get('record_in_processes')
         self._products = definition.get('products', ["all"])
+        self._operating_systems = definition.get('operating_systems', ["all"])
 
         self.compute_bucket_parameters(definition)
         self.set_nsITelemetry_kind()
@@ -181,11 +178,6 @@ the histogram."""
         """Return the number of buckets in the histogram."""
         return self._n_buckets
 
-    def cpp_guard(self):
-        """Return the preprocessor symbol that should guard C/C++ definitions
-associated with the histogram.  Returns None if no guarding is necessary."""
-        return self._cpp_guard
-
     def keyed(self):
         """Returns True if this a keyed histogram, false otherwise."""
         return self._keyed
@@ -217,6 +209,23 @@ associated with the histogram.  Returns None if no guarding is necessary."""
     def products_enum(self):
         """Get the non-empty list of flags representing products to record data on"""
         return [utils.product_name_to_enum(p) for p in self.products()]
+
+    def operating_systems(self):
+        """Get the list of operating systems to record data on"""
+        return self._operating_systems
+
+    def record_on_os(self, target_os):
+        """Check if this probe should be recorded on the passed os."""
+        os = self.operating_systems()
+        if "all" in os:
+            return True
+
+        canonical_os = utils.canonical_os(target_os)
+
+        if "unix" in os and canonical_os in utils.UNIX_LIKE_OS:
+            return True
+
+        return canonical_os in os
 
     def ranges(self):
         """Return an array of lower bounds for each bucket in the histogram."""
@@ -288,6 +297,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         self.check_label_values(name, definition)
         self.check_record_in_processes(name, definition)
         self.check_products(name, definition)
+        self.check_operating_systems(name, definition)
 
     def check_name(self, name):
         if '#' in name:
@@ -393,6 +403,24 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                 ParserError('Histogram "%s" has unknown product "%s" in %s.\n%s' %
                             (name, product, field, DOC_URL)).handle_later()
 
+    def check_operating_systems(self, name, definition):
+        if not self._strict_type_checks:
+            return
+
+        field = 'operating_systems'
+        operating_systems = definition.get(field)
+
+        DOC_URL = HISTOGRAMS_DOC_URL + "#operating_systems"
+
+        if not operating_systems:
+            # operating_systems is optional
+            return
+
+        for operating_system in operating_systems:
+            if not utils.is_valid_os(operating_system):
+                ParserError('Histogram "%s" has unknown operating system "%s" in %s.\n%s' %
+                            (name, operating_system, field, DOC_URL)).handle_later()
+
     def check_keys_field(self, name, definition):
         keys = definition.get('keys')
         if not self._strict_type_checks or keys is None:
@@ -422,10 +450,9 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         # scalars instead. Allow using these histograms on Android, as we
         # don't support scalars there yet.
         hist_kind = definition.get("kind")
-        android_cpp_guard =\
-            definition.get("cpp_guard") in ["ANDROID", "MOZ_WIDGET_ANDROID"]
+        android_target = "android" in definition.get("operating_systems", [])
 
-        if not android_cpp_guard and \
+        if not android_target and \
            hist_kind in ["flag", "count"] and \
            name not in whitelists["kind"]:
             ParserError(('Unsupported kind "%s" for histogram "%s":\n'
@@ -433,7 +460,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                          ' use scalars instead:\n'
                          '%s\n'
                          'Are you trying to add a histogram on Android?'
-                         ' Add "cpp_guard": "ANDROID" to your histogram definition.')
+                         ' Add "operating_systems": ["android"] to your histogram definition.')
                         % (hist_kind, name, hist_kind, SCALARS_DOC_URL)).handle_now()
 
     # Check for the presence of fields that old histograms are whitelisted for.
@@ -468,7 +495,6 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             "expires_in_version": basestring,
             "kind": basestring,
             "description": basestring,
-            "cpp_guard": basestring,
             "releaseChannelCollection": basestring,
         }
 
@@ -480,6 +506,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             "record_in_processes": basestring,
             "keys": basestring,
             "products": basestring,
+            "operating_systems": basestring,
         }
 
         # For the server-side, where _strict_type_checks==False, we want to

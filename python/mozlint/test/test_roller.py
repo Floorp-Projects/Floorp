@@ -14,8 +14,8 @@ import time
 import mozunit
 import pytest
 
-from mozlint import ResultContainer
 from mozlint.errors import LintersNotConfigured
+from mozlint.result import Issue, ResultSummary
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -32,21 +32,19 @@ def test_roll_no_linters_configured(lint, files):
 def test_roll_successful(lint, linters, files):
     lint.read(linters)
 
-    assert lint.results is None
     result = lint.roll(files)
-    assert len(result) == 1
-    assert lint.results == result
-    assert lint.failed == set([])
+    assert len(result.issues) == 1
+    assert result.failed == set([])
 
-    path = result.keys()[0]
+    path = result.issues.keys()[0]
     assert os.path.basename(path) == 'foobar.js'
 
-    errors = result[path]
+    errors = result.issues[path]
     assert isinstance(errors, list)
     assert len(errors) == 6
 
     container = errors[0]
-    assert isinstance(container, ResultContainer)
+    assert isinstance(container, Issue)
     assert container.rule == 'no-foobar'
 
 
@@ -59,23 +57,27 @@ def test_roll_from_subdir(lint, linters):
 
         # Path relative to cwd works
         result = lint.roll('no_foobar.js')
-        assert len(result) == 0
-        assert len(lint.failed) == 0
+        assert len(result.issues) == 0
+        assert len(result.failed) == 0
+        assert result.returncode == 0
 
         # Path relative to root doesn't work
         result = lint.roll(os.path.join('files', 'no_foobar.js'))
-        assert len(result) == 0
-        assert len(lint.failed) == 3
+        assert len(result.issues) == 0
+        assert len(result.failed) == 3
+        assert result.returncode == 1
 
         # Paths from vcs are always joined to root instead of cwd
         lint.mock_vcs([os.path.join('files', 'no_foobar.js')])
         result = lint.roll(outgoing=True)
-        assert len(result) == 0
-        assert len(lint.failed) == 0
+        assert len(result.issues) == 0
+        assert len(result.failed) == 0
+        assert result.returncode == 0
 
         result = lint.roll(workdir=True)
-        assert len(result) == 0
-        assert len(lint.failed) == 0
+        assert len(result.issues) == 0
+        assert len(result.failed) == 0
+        assert result.returncode == 0
     finally:
         os.chdir(oldcwd)
 
@@ -94,28 +96,45 @@ def test_roll_with_excluded_path(lint, linters, files):
     lint.read(linters)
     result = lint.roll(files)
 
-    assert len(result) == 0
-    assert lint.failed == set([])
+    assert len(result.issues) == 0
+    assert result.failed == set([])
 
 
 def test_roll_with_invalid_extension(lint, lintdir, filedir):
     lint.read(os.path.join(lintdir, 'external.yml'))
     result = lint.roll(os.path.join(filedir, 'foobar.py'))
-    assert len(result) == 0
-    assert lint.failed == set([])
+    assert len(result.issues) == 0
+    assert result.failed == set([])
 
 
 def test_roll_with_failure_code(lint, lintdir, files):
     lint.read(os.path.join(lintdir, 'badreturncode.yml'))
 
-    assert lint.failed is None
     result = lint.roll(files, num_procs=1)
-    assert len(result) == 0
-    assert lint.failed == set(['BadReturnCodeLinter'])
+    assert len(result.issues) == 0
+    assert result.failed == set(['BadReturnCodeLinter'])
+
+
+def test_roll_warnings(lint, lintdir, files):
+    lint.read(os.path.join(lintdir, 'warning.yml'))
+    result = lint.roll(files)
+    assert len(result.issues) == 0
+    assert result.total_issues == 0
+    assert len(result.suppressed_warnings) == 1
+    assert result.total_suppressed_warnings == 2
+
+    lint.lintargs['show_warnings'] = True
+    result = lint.roll(files)
+    assert len(result.issues) == 1
+    assert result.total_issues == 2
+    assert len(result.suppressed_warnings) == 0
+    assert result.total_suppressed_warnings == 0
 
 
 def fake_run_worker(config, paths, **lintargs):
-    return {'count': [1]}, []
+    result = ResultSummary()
+    result.issues['count'].append(1)
+    return result
 
 
 @pytest.mark.skipif(platform.system() == 'Windows',
@@ -125,7 +144,7 @@ def test_number_of_jobs(monkeypatch, lint, linters, files, num_procs):
     monkeypatch.setattr(sys.modules[lint.__module__], '_run_worker', fake_run_worker)
 
     lint.read(linters)
-    num_jobs = len(lint.roll(files, num_procs=num_procs)['count'])
+    num_jobs = len(lint.roll(files, num_procs=num_procs).issues['count'])
 
     if len(files) >= num_procs:
         assert num_jobs == num_procs * len(linters)
@@ -147,7 +166,7 @@ def test_max_paths_per_job(monkeypatch, lint, linters, files, max_paths, expecte
 
     lint.MAX_PATHS_PER_JOB = max_paths
     lint.read(linters)
-    num_jobs = len(lint.roll(files, num_procs=2)['count'])
+    num_jobs = len(lint.roll(files, num_procs=2).issues['count'])
     assert num_jobs == expected_jobs
 
 
@@ -220,7 +239,7 @@ def test_setup(lint, linters, filedir, capfd):
     assert 'setup failed' in out
     assert 'setup raised' in out
     assert 'error: problem with lint setup, skipping' in out
-    assert lint.failed_setup == set(['SetupFailedLinter', 'SetupRaisedLinter'])
+    assert lint.result.failed_setup == set(['SetupFailedLinter', 'SetupRaisedLinter'])
 
 
 if __name__ == '__main__':

@@ -15,6 +15,7 @@
 #include "nsIURLParser.h"
 #include "nsJSUtils.h"
 #include "jsfriendapi.h"
+#include "js/CompilationAndEvaluation.h"
 #include "prnetdb.h"
 #include "nsITimer.h"
 #include "mozilla/net/DNS.h"

@@ -297,35 +297,33 @@ void
 PeerConnectionMedia::EnsureTransports(const JsepSession& aSession)
 {
   for (const auto& transceiver : aSession.GetTransceivers()) {
-    if (!transceiver->HasLevel()) {
-      continue;
+    if (transceiver->HasOwnTransport()) {
+      RUN_ON_THREAD(
+          GetSTSThread(),
+          WrapRunnable(RefPtr<PeerConnectionMedia>(this),
+                       &PeerConnectionMedia::EnsureTransport_s,
+                       transceiver->mTransport.mTransportId,
+                       transceiver->mTransport.mComponents),
+          NS_DISPATCH_NORMAL);
     }
-
-    RefPtr<JsepTransport> transport = transceiver->mTransport;
-    RUN_ON_THREAD(
-        GetSTSThread(),
-        WrapRunnable(RefPtr<PeerConnectionMedia>(this),
-                     &PeerConnectionMedia::EnsureTransport_s,
-                     transceiver->GetLevel(),
-                     transport->mComponents),
-        NS_DISPATCH_NORMAL);
   }
 
   GatherIfReady();
 }
 
 void
-PeerConnectionMedia::EnsureTransport_s(size_t aLevel, size_t aComponentCount)
+PeerConnectionMedia::EnsureTransport_s(const std::string& aTransportId,
+                                       size_t aComponentCount)
 {
-  RefPtr<NrIceMediaStream> stream(mIceCtxHdlr->ctx()->GetStream(aLevel));
+  RefPtr<NrIceMediaStream> stream(mIceCtxHdlr->ctx()->GetStream(aTransportId));
   if (!stream) {
-    CSFLogDebug(LOGTAG, "%s: Creating ICE media stream=%u components=%u",
+    CSFLogDebug(LOGTAG, "%s: Creating ICE media stream=%s components=%u",
                 mParentHandle.c_str(),
-                static_cast<unsigned>(aLevel),
+                aTransportId.c_str(),
                 static_cast<unsigned>(aComponentCount));
 
     std::ostringstream os;
-    os << mParentName << " aLevel=" << aLevel;
+    os << mParentName << " transport-id=" << aTransportId;
     RefPtr<NrIceMediaStream> stream =
       mIceCtxHdlr->CreateStream(os.str(),
                                 aComponentCount);
@@ -335,84 +333,32 @@ PeerConnectionMedia::EnsureTransport_s(size_t aLevel, size_t aComponentCount)
       return;
     }
 
-    stream->SetLevel(aLevel);
+    stream->SetId(aTransportId);
     stream->SignalReady.connect(this, &PeerConnectionMedia::IceStreamReady_s);
     stream->SignalCandidate.connect(this,
                                     &PeerConnectionMedia::OnCandidateFound_s);
-    mIceCtxHdlr->ctx()->SetStream(aLevel, stream);
+    mIceCtxHdlr->ctx()->SetStream(aTransportId, stream);
   }
 }
 
 nsresult
-PeerConnectionMedia::ActivateOrRemoveTransports(const JsepSession& aSession,
-                                                const bool forceIceTcp)
+PeerConnectionMedia::UpdateTransports(const JsepSession& aSession,
+                                      const bool forceIceTcp)
 {
+  std::set<std::string> finalTransports;
   for (const auto& transceiver : aSession.GetTransceivers()) {
-    if (!transceiver->HasLevel()) {
-      continue;
+    if (transceiver->HasOwnTransport()) {
+      finalTransports.insert(transceiver->mTransport.mTransportId);
+      UpdateTransport(*transceiver, forceIceTcp);
     }
-
-    std::string ufrag;
-    std::string pwd;
-    std::vector<std::string> candidates;
-    size_t components = 0;
-
-    RefPtr<JsepTransport> transport = transceiver->mTransport;
-    unsigned level = transceiver->GetLevel();
-
-    if (transport->mComponents &&
-        (!transceiver->HasBundleLevel() ||
-         (transceiver->BundleLevel() == level))) {
-      CSFLogDebug(LOGTAG, "ACTIVATING TRANSPORT! - PC %s: level=%u components=%u",
-                  mParentHandle.c_str(), (unsigned)level,
-                  (unsigned)transport->mComponents);
-
-      ufrag = transport->mIce->GetUfrag();
-      pwd = transport->mIce->GetPassword();
-      candidates = transport->mIce->GetCandidates();
-      components = transport->mComponents;
-      if (forceIceTcp) {
-        candidates.erase(std::remove_if(candidates.begin(),
-                                        candidates.end(),
-                                        [](const std::string & s) {
-                                          return s.find(" UDP ") != std::string::npos ||
-                                                 s.find(" udp ") != std::string::npos; }),
-                         candidates.end());
-      }
-    }
-
-    RUN_ON_THREAD(
-        GetSTSThread(),
-        WrapRunnable(RefPtr<PeerConnectionMedia>(this),
-                     &PeerConnectionMedia::ActivateOrRemoveTransport_s,
-                     transceiver->GetLevel(),
-                     components,
-                     ufrag,
-                     pwd,
-                     candidates),
-        NS_DISPATCH_NORMAL);
   }
 
-  // We can have more streams than m-lines due to rollback.
   RUN_ON_THREAD(
       GetSTSThread(),
       WrapRunnable(RefPtr<PeerConnectionMedia>(this),
-                   &PeerConnectionMedia::RemoveTransportsAtOrAfter_s,
-                   aSession.GetTransceivers().size()),
+                   &PeerConnectionMedia::RemoveTransportsExcept_s,
+                   finalTransports),
       NS_DISPATCH_NORMAL);
-
-  return NS_OK;
-}
-
-nsresult
-PeerConnectionMedia::UpdateTransceiverTransports(const JsepSession& aSession)
-{
-  for (const auto& transceiver : aSession.GetTransceivers()) {
-    nsresult rv = UpdateTransportFlows(*transceiver);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
 
   for (const auto& transceiverImpl : mTransceivers) {
     transceiverImpl->UpdateTransport(*this);
@@ -421,32 +367,74 @@ PeerConnectionMedia::UpdateTransceiverTransports(const JsepSession& aSession)
   return NS_OK;
 }
 
+nsresult
+PeerConnectionMedia::UpdateTransport(const JsepTransceiver& aTransceiver,
+                                     bool aForceIceTcp)
+{
+  nsresult rv = UpdateTransportFlows(aTransceiver);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  std::string ufrag;
+  std::string pwd;
+  std::vector<std::string> candidates;
+  size_t components = 0;
+
+  const JsepTransport& transport = aTransceiver.mTransport;
+  unsigned level = aTransceiver.GetLevel();
+
+  CSFLogDebug(LOGTAG, "ACTIVATING TRANSPORT! - PC %s: level=%u components=%u",
+              mParentHandle.c_str(), (unsigned)level,
+              (unsigned)transport.mComponents);
+
+  ufrag = transport.mIce->GetUfrag();
+  pwd = transport.mIce->GetPassword();
+  candidates = transport.mIce->GetCandidates();
+  components = transport.mComponents;
+  if (aForceIceTcp) {
+    candidates.erase(std::remove_if(candidates.begin(),
+                                    candidates.end(),
+                                    [](const std::string & s) {
+                                      return s.find(" UDP ") != std::string::npos ||
+                                             s.find(" udp ") != std::string::npos; }),
+                     candidates.end());
+  }
+
+  RUN_ON_THREAD(
+      GetSTSThread(),
+      WrapRunnable(RefPtr<PeerConnectionMedia>(this),
+                   &PeerConnectionMedia::ActivateTransport_s,
+                   transport.mTransportId,
+                   components,
+                   ufrag,
+                   pwd,
+                   candidates),
+      NS_DISPATCH_NORMAL);
+
+  return NS_OK;
+}
+
 void
-PeerConnectionMedia::ActivateOrRemoveTransport_s(
-    size_t aMLine,
+PeerConnectionMedia::ActivateTransport_s(
+    const std::string& aTransportId,
     size_t aComponentCount,
     const std::string& aUfrag,
     const std::string& aPassword,
     const std::vector<std::string>& aCandidateList) {
 
-  if (!aComponentCount) {
-    CSFLogDebug(LOGTAG, "%s: Removing ICE media stream=%u",
-                mParentHandle.c_str(),
-                static_cast<unsigned>(aMLine));
-    mIceCtxHdlr->ctx()->SetStream(aMLine, nullptr);
-    return;
-  }
+  MOZ_ASSERT(aComponentCount);
 
-  RefPtr<NrIceMediaStream> stream(mIceCtxHdlr->ctx()->GetStream(aMLine));
+  RefPtr<NrIceMediaStream> stream(mIceCtxHdlr->ctx()->GetStream(aTransportId));
   if (!stream) {
     MOZ_ASSERT(false);
     return;
   }
 
   if (!stream->HasParsedAttributes()) {
-    CSFLogDebug(LOGTAG, "%s: Activating ICE media stream=%u components=%u",
+    CSFLogDebug(LOGTAG, "%s: Activating ICE media stream=%s components=%u",
                 mParentHandle.c_str(),
-                static_cast<unsigned>(aMLine),
+                aTransportId.c_str(),
                 static_cast<unsigned>(aComponentCount));
 
     std::vector<std::string> attrs;
@@ -471,10 +459,13 @@ PeerConnectionMedia::ActivateOrRemoveTransport_s(
 }
 
 void
-PeerConnectionMedia::RemoveTransportsAtOrAfter_s(size_t aMLine)
+PeerConnectionMedia::RemoveTransportsExcept_s(
+    const std::set<std::string>& aIds)
 {
-  for (size_t i = aMLine; i < mIceCtxHdlr->ctx()->GetStreamCount(); ++i) {
-    mIceCtxHdlr->ctx()->SetStream(i, nullptr);
+  for (const auto& stream : mIceCtxHdlr->ctx()->GetStreams()) {
+    if (!aIds.count(stream->GetId())) {
+      mIceCtxHdlr->ctx()->SetStream(stream->GetId(), nullptr);
+    }
   }
 }
 
@@ -509,20 +500,12 @@ PeerConnectionMedia::UpdateMediaPipelines()
 nsresult
 PeerConnectionMedia::UpdateTransportFlows(const JsepTransceiver& aTransceiver)
 {
-  if (!aTransceiver.HasLevel()) {
-    // Nothing to do
-    return NS_OK;
-  }
-
-  size_t transportLevel = aTransceiver.GetTransportLevel();
-
-  nsresult rv =
-    UpdateTransportFlow(transportLevel, false, *aTransceiver.mTransport);
+  nsresult rv = UpdateTransportFlow(false, aTransceiver.mTransport);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  return UpdateTransportFlow(transportLevel, true, *aTransceiver.mTransport);
+  return UpdateTransportFlow(true, aTransceiver.mTransport);
 }
 
 // Accessing the PCMedia should be safe here because we shouldn't
@@ -531,7 +514,8 @@ PeerConnectionMedia::UpdateTransportFlows(const JsepTransceiver& aTransceiver)
 static void
 FinalizeTransportFlow_s(RefPtr<PeerConnectionMedia> aPCMedia,
                         nsAutoPtr<PacketDumper> aPacketDumper,
-                        RefPtr<TransportFlow> aFlow, size_t aLevel,
+                        const RefPtr<TransportFlow>& aFlow,
+                        const std::string& aId,
                         bool aIsRtcp,
                         TransportLayerIce* aIceLayer,
                         TransportLayerDtls* aDtlsLayer,
@@ -540,7 +524,7 @@ FinalizeTransportFlow_s(RefPtr<PeerConnectionMedia> aPCMedia,
   TransportLayerPacketDumper* srtpDumper(new TransportLayerPacketDumper(
         std::move(aPacketDumper), dom::mozPacketDumpType::Srtp));
 
-  aIceLayer->SetParameters(aPCMedia->ice_media_stream(aLevel),
+  aIceLayer->SetParameters(aPCMedia->ice_media_stream(aId),
                            aIsRtcp ? 2 : 1);
   // TODO(bug 854518): Process errors.
   (void)aIceLayer->Init();
@@ -559,43 +543,43 @@ FinalizeTransportFlow_s(RefPtr<PeerConnectionMedia> aPCMedia,
 static void
 AddNewIceStreamForRestart_s(RefPtr<PeerConnectionMedia> aPCMedia,
                             RefPtr<TransportFlow> aFlow,
-                            size_t aLevel,
+                            const std::string& aTransportId,
                             bool aIsRtcp)
 {
   TransportLayerIce* ice =
       static_cast<TransportLayerIce*>(aFlow->GetLayer("ice"));
-  ice->SetParameters(aPCMedia->ice_media_stream(aLevel),
+  ice->SetParameters(aPCMedia->ice_media_stream(aTransportId),
                      aIsRtcp ? 2 : 1);
 }
 
 nsresult
-PeerConnectionMedia::UpdateTransportFlow(
-    size_t aLevel,
-    bool aIsRtcp,
-    const JsepTransport& aTransport)
+PeerConnectionMedia::UpdateTransportFlow(bool aIsRtcp,
+                                         const JsepTransport& aTransport)
 {
   if (aIsRtcp && aTransport.mComponents < 2) {
-    RemoveTransportFlow(aLevel, aIsRtcp);
+    RemoveTransportFlow(aTransport.mTransportId, aIsRtcp);
     return NS_OK;
   }
 
   if (!aIsRtcp && !aTransport.mComponents) {
-    RemoveTransportFlow(aLevel, aIsRtcp);
+    RemoveTransportFlow(aTransport.mTransportId, aIsRtcp);
     return NS_OK;
   }
 
+  MOZ_ASSERT(!aTransport.mTransportId.empty());
+
   nsresult rv;
 
-  RefPtr<TransportFlow> flow = GetTransportFlow(aLevel, aIsRtcp);
+  RefPtr<TransportFlow> flow = GetTransportFlow(aTransport.mTransportId, aIsRtcp);
   if (flow) {
     if (IsIceRestarting()) {
-      CSFLogInfo(LOGTAG, "Flow[%s]: detected ICE restart - level: %u rtcp: %d",
-                 flow->id().c_str(), (unsigned)aLevel, aIsRtcp);
+      CSFLogInfo(LOGTAG, "Flow[%s]: detected ICE restart - id: %s rtcp: %d",
+                 flow->id().c_str(), aTransport.mTransportId.c_str(), aIsRtcp);
 
       RefPtr<PeerConnectionMedia> pcMedia(this);
       rv = GetSTSThread()->Dispatch(
           WrapRunnableNM(AddNewIceStreamForRestart_s,
-                         pcMedia, flow, aLevel, aIsRtcp),
+                         pcMedia, flow, aTransport.mTransportId, aIsRtcp),
           NS_DISPATCH_NORMAL);
       if (NS_FAILED(rv)) {
         CSFLogError(LOGTAG, "Failed to dispatch AddNewIceStreamForRestart_s");
@@ -607,7 +591,8 @@ PeerConnectionMedia::UpdateTransportFlow(
   }
 
   std::ostringstream osId;
-  osId << mParentHandle << ":" << aLevel << "," << (aIsRtcp ? "rtcp" : "rtp");
+  osId << mParentHandle << ":" << aTransport.mTransportId << ","
+    << (aIsRtcp ? "rtcp" : "rtp");
   flow = new TransportFlow(osId.str());
 
   // The media streams are made on STS so we need to defer setup.
@@ -670,7 +655,7 @@ PeerConnectionMedia::UpdateTransportFlow(
   RefPtr<PeerConnectionMedia> pcMedia(this);
   rv = GetSTSThread()->Dispatch(
       WrapRunnableNM(FinalizeTransportFlow_s, pcMedia, packetDumper, flow,
-                     aLevel, aIsRtcp,
+                     aTransport.mTransportId, aIsRtcp,
                      ice.release(), dtls.release(), srtp.release()),
       NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
@@ -678,7 +663,7 @@ PeerConnectionMedia::UpdateTransportFlow(
     return rv;
   }
 
-  AddTransportFlow(aLevel, aIsRtcp, flow);
+  AddTransportFlow(aTransport.mTransportId, aIsRtcp, flow);
 
   return NS_OK;
 }
@@ -925,33 +910,32 @@ PeerConnectionMedia::ConnectSignals(NrIceCtx *aCtx, NrIceCtx *aOldCtx)
 
 void
 PeerConnectionMedia::AddIceCandidate(const std::string& candidate,
-                                     const std::string& mid,
-                                     uint32_t aMLine) {
+                                     const std::string& aTransportId) {
+  MOZ_ASSERT(!aTransportId.empty());
   RUN_ON_THREAD(GetSTSThread(),
                 WrapRunnable(
                     RefPtr<PeerConnectionMedia>(this),
                     &PeerConnectionMedia::AddIceCandidate_s,
                     std::string(candidate), // Make copies.
-                    std::string(mid),
-                    aMLine),
+                    std::string(aTransportId)),
                 NS_DISPATCH_NORMAL);
 }
 
 void
 PeerConnectionMedia::AddIceCandidate_s(const std::string& aCandidate,
-                                       const std::string& aMid,
-                                       uint32_t aMLine) {
-  RefPtr<NrIceMediaStream> stream(mIceCtxHdlr->ctx()->GetStream(aMLine));
+                                       const std::string& aTransportId) {
+  RefPtr<NrIceMediaStream> stream(mIceCtxHdlr->ctx()->GetStream(aTransportId));
   if (!stream) {
-    CSFLogError(LOGTAG, "No ICE stream for candidate at level %u: %s",
-                        static_cast<unsigned>(aMLine), aCandidate.c_str());
+    CSFLogError(LOGTAG, "No ICE stream for candidate with transport id %s: %s",
+                        aTransportId.c_str(), aCandidate.c_str());
     return;
   }
 
   nsresult rv = stream->ParseTrickleCandidate(aCandidate);
   if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "Couldn't process ICE candidate at level %u",
-                static_cast<unsigned>(aMLine));
+    CSFLogError(LOGTAG, "Couldn't process ICE candidate with transport id %s: "
+                        "%s",
+                        aTransportId.c_str(), aCandidate.c_str());
     return;
   }
 }
@@ -1043,13 +1027,14 @@ PeerConnectionMedia::EnsureIceGathering_s(bool aDefaultRouteOnly,
   }
 
   // Start gathering, but only if there are streams
-  for (size_t i = 0; i < mIceCtxHdlr->ctx()->GetStreamCount(); ++i) {
-    if (mIceCtxHdlr->ctx()->GetStream(i)) {
-      mIceCtxHdlr->ctx()->StartGathering(aDefaultRouteOnly, aProxyOnly);
-      return;
-    }
+  if (!mIceCtxHdlr->ctx()->GetStreams().empty()) {
+    mIceCtxHdlr->ctx()->StartGathering(aDefaultRouteOnly, aProxyOnly);
+    return;
   }
 
+  CSFLogWarn(LOGTAG,
+             "%s: No streams to start gathering on. Can happen with rollback",
+             __FUNCTION__);
   // If there are no streams, we're probably in a situation where we've rolled
   // back while still waiting for our proxy configuration to come back. Make
   // sure content knows that the rollback has stuck wrt gathering.
@@ -1185,7 +1170,7 @@ PeerConnectionMedia::AddTransceiver(
 
 void
 PeerConnectionMedia::GetTransmitPipelinesMatching(
-    MediaStreamTrack* aTrack,
+    const MediaStreamTrack* aTrack,
     nsTArray<RefPtr<MediaPipeline>>* aPipelines)
 {
   for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
@@ -1193,15 +1178,11 @@ PeerConnectionMedia::GetTransmitPipelinesMatching(
       aPipelines->AppendElement(transceiver->GetSendPipeline());
     }
   }
-
-  if (!aPipelines->Length()) {
-    CSFLogWarn(LOGTAG, "%s: none found for %p", __FUNCTION__, aTrack);
-  }
 }
 
 void
 PeerConnectionMedia::GetReceivePipelinesMatching(
-    MediaStreamTrack* aTrack,
+    const MediaStreamTrack* aTrack,
     nsTArray<RefPtr<MediaPipeline>>* aPipelines)
 {
   for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
@@ -1209,10 +1190,18 @@ PeerConnectionMedia::GetReceivePipelinesMatching(
       aPipelines->AppendElement(transceiver->GetReceivePipeline());
     }
   }
+}
 
-  if (!aPipelines->Length()) {
-    CSFLogWarn(LOGTAG, "%s: none found for %p", __FUNCTION__, aTrack);
+std::string
+PeerConnectionMedia::GetTransportIdMatching(
+    const dom::MediaStreamTrack& aTrack) const
+{
+  for (const RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
+    if (transceiver->HasReceiveTrack(&aTrack)) {
+      return transceiver->GetTransportId();
+    }
   }
+  return std::string();
 }
 
 nsresult
@@ -1247,12 +1236,7 @@ PeerConnectionMedia::IceGatheringStateChange_s(NrIceCtx* ctx,
 
   if (state == NrIceCtx::ICE_CTX_GATHER_COMPLETE) {
     // Fire off EndOfLocalCandidates for each stream
-    for (size_t i = 0; ; ++i) {
-      RefPtr<NrIceMediaStream> stream(ctx->GetStream(i));
-      if (!stream) {
-        break;
-      }
-
+    for (auto& stream : ctx->GetStreams()) {
       NrIceCandidate candidate;
       NrIceCandidate rtcpCandidate;
       GetDefaultCandidates(*stream, &candidate, &rtcpCandidate);
@@ -1260,7 +1244,7 @@ PeerConnectionMedia::IceGatheringStateChange_s(NrIceCtx* ctx,
                            candidate.cand_addr.port,
                            rtcpCandidate.cand_addr.host,
                            rtcpCandidate.cand_addr.port,
-                           i);
+                           stream->GetId());
     }
   }
 
@@ -1299,6 +1283,7 @@ PeerConnectionMedia::OnCandidateFound_s(NrIceMediaStream *aStream,
 {
   ASSERT_ON_THREAD(mSTSThread);
   MOZ_ASSERT(aStream);
+  MOZ_ASSERT(!aStream->GetId().empty());
   MOZ_RELEASE_ASSERT(mIceCtxHdlr);
 
   CSFLogDebug(LOGTAG, "%s: %s", __FUNCTION__, aStream->name().c_str());
@@ -1319,7 +1304,7 @@ PeerConnectionMedia::OnCandidateFound_s(NrIceMediaStream *aStream,
                  candidate.cand_addr.port,
                  rtcpCandidate.cand_addr.host,
                  rtcpCandidate.cand_addr.port,
-                 aStream->GetLevel()),
+                 aStream->GetId()),
     NS_DISPATCH_NORMAL);
 }
 
@@ -1328,7 +1313,7 @@ PeerConnectionMedia::EndOfLocalCandidates(const std::string& aDefaultAddr,
                                           uint16_t aDefaultPort,
                                           const std::string& aDefaultRtcpAddr,
                                           uint16_t aDefaultRtcpPort,
-                                          uint16_t aMLine)
+                                          const std::string& aTransportId)
 {
   GetMainThread()->Dispatch(
     WrapRunnable(this,
@@ -1337,7 +1322,7 @@ PeerConnectionMedia::EndOfLocalCandidates(const std::string& aDefaultAddr,
                  aDefaultPort,
                  aDefaultRtcpAddr,
                  aDefaultRtcpPort,
-                 aMLine),
+                 aTransportId),
     NS_DISPATCH_NORMAL);
 }
 
@@ -1355,10 +1340,10 @@ PeerConnectionMedia::GetDefaultCandidates(const NrIceMediaStream& aStream,
   if (NS_FAILED(res)) {
     aCandidate->cand_addr.host.clear();
     aCandidate->cand_addr.port = 0;
-    CSFLogError(LOGTAG, "%s: GetDefaultCandidates failed for level %u, "
+    CSFLogError(LOGTAG, "%s: GetDefaultCandidates failed for transport id %s, "
                         "res=%u",
                         __FUNCTION__,
-                        static_cast<unsigned>(aStream.GetLevel()),
+                        aStream.GetId().c_str(),
                         static_cast<unsigned>(res));
   }
 }
@@ -1393,7 +1378,7 @@ PeerConnectionMedia::OnCandidateFound_m(const std::string& aCandidateLine,
                                         uint16_t aDefaultPort,
                                         const std::string& aDefaultRtcpAddr,
                                         uint16_t aDefaultRtcpPort,
-                                        uint16_t aMLine)
+                                        const std::string& aTransportId)
 {
   ASSERT_ON_THREAD(mMainThread);
   if (!aDefaultAddr.empty()) {
@@ -1401,9 +1386,9 @@ PeerConnectionMedia::OnCandidateFound_m(const std::string& aCandidateLine,
                                  aDefaultPort,
                                  aDefaultRtcpAddr,
                                  aDefaultRtcpPort,
-                                 aMLine);
+                                 aTransportId);
   }
-  SignalCandidate(aCandidateLine, aMLine);
+  SignalCandidate(aCandidateLine, aTransportId);
 }
 
 void
@@ -1411,16 +1396,16 @@ PeerConnectionMedia::EndOfLocalCandidates_m(const std::string& aDefaultAddr,
                                             uint16_t aDefaultPort,
                                             const std::string& aDefaultRtcpAddr,
                                             uint16_t aDefaultRtcpPort,
-                                            uint16_t aMLine) {
+                                            const std::string& aTransportId) {
   ASSERT_ON_THREAD(mMainThread);
   if (!aDefaultAddr.empty()) {
     SignalUpdateDefaultCandidate(aDefaultAddr,
                                  aDefaultPort,
                                  aDefaultRtcpAddr,
                                  aDefaultRtcpPort,
-                                 aMLine);
+                                 aTransportId);
   }
-  SignalEndOfLocalCandidates(aMLine);
+  SignalEndOfLocalCandidates(aTransportId);
 }
 
 void
@@ -1450,13 +1435,16 @@ PeerConnectionMedia::DtlsConnected_m(const std::string& aParentHandle,
 }
 
 void
-PeerConnectionMedia::AddTransportFlow(int aIndex, bool aRtcp,
+PeerConnectionMedia::AddTransportFlow(const std::string& aId, bool aRtcp,
                                       const RefPtr<TransportFlow> &aFlow)
 {
-  int index_inner = GetTransportFlowIndex(aIndex, aRtcp);
+  auto& flows = aRtcp ? mRtcpTransportFlows : mTransportFlows;
 
-  MOZ_ASSERT(!mTransportFlows[index_inner]);
-  mTransportFlows[index_inner] = aFlow;
+  if (flows.count(aId)) {
+    MOZ_ASSERT(false);
+    return;
+  }
+  flows[aId] = aFlow;
 
   GetSTSThread()->Dispatch(
     WrapRunnable(this, &PeerConnectionMedia::ConnectDtlsListener_s, aFlow),
@@ -1464,12 +1452,16 @@ PeerConnectionMedia::AddTransportFlow(int aIndex, bool aRtcp,
 }
 
 void
-PeerConnectionMedia::RemoveTransportFlow(int aIndex, bool aRtcp)
+PeerConnectionMedia::RemoveTransportFlow(const std::string& aId, bool aRtcp)
 {
-  int index_inner = GetTransportFlowIndex(aIndex, aRtcp);
-  NS_ProxyRelease(
-    "PeerConnectionMedia::mTransportFlows",
-    GetSTSThread(), mTransportFlows[index_inner].forget());
+  auto& flows = aRtcp ? mRtcpTransportFlows : mTransportFlows;
+  auto it = flows.find(aId);
+  if (it != flows.end()) {
+    NS_ProxyRelease(
+      "PeerConnectionMedia::mTransportFlows[aId] or mRtcpTransportFlows[aId]",
+      GetSTSThread(), it->second.forget());
+    flows.erase(it);
+  }
 }
 
 void

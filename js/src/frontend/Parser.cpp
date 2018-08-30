@@ -65,6 +65,7 @@ using mozilla::Unused;
 using mozilla::Utf8Unit;
 
 using JS::AutoGCRooter;
+using JS::ReadOnlyCompileOptions;
 
 namespace js {
 namespace frontend {

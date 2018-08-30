@@ -986,6 +986,11 @@ Actor.prototype = extend(Pool.prototype, {
   },
 
   _sendEvent: function(name, request, ...args) {
+    if (!this.actorID) {
+      console.error(`Tried to send a '${name}' event on an already destroyed actor` +
+                    ` '${this.typeName}'`);
+      return;
+    }
     let packet;
     try {
       packet = request.write(args, this);

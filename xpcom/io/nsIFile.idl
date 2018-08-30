@@ -350,14 +350,6 @@ interface nsIFile : nsISupports
     readonly attribute nsIDirectoryEnumerator directoryEntries;
 
     %{C++
-    nsresult GetDirectoryEntries(nsISimpleEnumerator** aOut)
-    {
-      nsCOMPtr<nsIDirectoryEnumerator> dirEnum;
-      nsresult rv = GetDirectoryEntries(getter_AddRefs(dirEnum));
-      dirEnum.forget(aOut);
-      return rv;
-    };
-
     nsresult GetDirectoryEntries(nsIDirectoryEnumerator** aOut)
     {
       return GetDirectoryEntriesImpl(aOut);

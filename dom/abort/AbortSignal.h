@@ -8,6 +8,7 @@
 #define mozilla_dom_AbortSignal_h
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "nsTObserverArray.h"
 
 namespace mozilla {
 namespace dom {
@@ -62,7 +63,7 @@ protected:
 
 private:
   // Raw pointers. AbortFollower unregisters itself in the DTOR.
-  nsTArray<AbortFollower*> mFollowers;
+  nsTObserverArray<AbortFollower*> mFollowers;
 
   bool mAborted;
 };

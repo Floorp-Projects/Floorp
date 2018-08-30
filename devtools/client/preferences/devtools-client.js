@@ -57,18 +57,24 @@ pref("devtools.inspector.imagePreviewTooltipSize", 300);
 pref("devtools.inspector.showUserAgentStyles", false);
 // Show all native anonymous content (like controls in <video> tags)
 pref("devtools.inspector.showAllAnonymousContent", false);
-// Enable the Flexbox highlighter
-pref("devtools.inspector.flexboxHighlighter.enabled", false);
 // Enable the CSS shapes highlighter
 pref("devtools.inspector.shapesHighlighter.enabled", true);
-// Enable the Flexbox Inspector panel
-pref("devtools.flexboxinspector.enabled", false);
 // Enable the new Animation Inspector
 pref("devtools.new-animationinspector.enabled", true);
 // Enable the Font Editor
 pref("devtools.inspector.fonteditor.enabled", true);
 // Enable the font highlight-on-hover feature
-pref("devtools.inspector.fonthighlighter.enabled", false);
+pref("devtools.inspector.fonthighlighter.enabled", true);
+
+// Flexbox preferences
+// Enable the Flexbox highlighter in Nightly
+#if defined(NIGHTLY_BUILD)
+pref("devtools.inspector.flexboxHighlighter.enabled", true);
+#else
+pref("devtools.inspector.flexboxHighlighter.enabled", false);
+#endif
+// Enable the Flexbox Inspector panel
+pref("devtools.flexboxinspector.enabled", false);
 
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);

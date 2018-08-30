@@ -761,19 +761,17 @@ menuitem.marker-color-graphs-grey .menu-iconic-left::after,
  */
 menuitem.experimental-option::before {
   content: "";
-  background-image: url(chrome://devtools/skin/images/webconsole.svg);
-  background-repeat: no-repeat;
-  background-size: 72px 60px;
+  display: inline-block;
   width: 12px;
   height: 12px;
-  display: inline-block;
-
-  background-position: -24px -24px;
-  margin: 2px 5px 0 0;
   max-height: 12px;
-}
-.theme-light menuitem.experimental-option::before {
-  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
+  margin-top: 2px;
+  margin-inline-end: 5px;
+  background-image: var(--theme-console-alert-image);
+  background-repeat: no-repeat;
+  background-size: contain;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 #performance-options-menupopup:not(.experimental-enabled) .experimental-option,

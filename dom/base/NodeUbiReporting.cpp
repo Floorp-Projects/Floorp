@@ -35,7 +35,7 @@ JS::ubi::Concrete<nsINode>::edges(JSContext* cx, bool wantNames) const
   if (get().GetParent()) {
     char16_t* edgeName = nullptr;
     if (wantNames) {
-      edgeName = NS_strdup(u"Parent Node");
+      edgeName = NS_xstrdup(u"Parent Node");
     }
     if (!range->addEdge(JS::ubi::Edge(edgeName, get().GetParent()))) {
       return nullptr;
@@ -44,7 +44,7 @@ JS::ubi::Concrete<nsINode>::edges(JSContext* cx, bool wantNames) const
   for (auto curr = get().GetFirstChild(); curr; curr = curr->GetNextSibling()) {
     char16_t* edgeName = nullptr;
     if (wantNames) {
-      edgeName = NS_strdup(u"Child Node");
+      edgeName = NS_xstrdup(u"Child Node");
     }
     if (!range->addEdge(JS::ubi::Edge(edgeName, curr))) {
       return nullptr;

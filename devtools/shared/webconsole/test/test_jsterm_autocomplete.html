@@ -67,6 +67,14 @@
       });
       window.emojiObject = Object.create(null);
       window.emojiObject["😎"] = "😎";
+
+      window.insensitiveTestCase = Object.create(null, Object.getOwnPropertyDescriptors({
+        PROP: "",
+        Prop: "",
+        prop: "",
+        PRÖP: "",
+        pröp: "",
+      }));
     `;
     await state.client.evaluateJSAsync(script);
 
@@ -81,6 +89,7 @@
       doAutocompleteProxyThrowsOwnKeys,
       doAutocompleteDotSurroundedBySpaces,
       doAutocompleteAfterOr,
+      doInsensitiveAutocomplete,
     ];
 
     if (!isWorker) {
@@ -182,7 +191,8 @@
     ok(!response.matchProp, "matchProp");
     let keys = Object.getOwnPropertyNames(Object.prototype).sort();
     is(response.matches.length, keys.length, "matches.length");
-    checkObject(response.matches, keys);
+    // checkObject(response.matches, keys);
+    is(response.matches.join(" - "), keys.join(" - "));
   }
 
   async function doAutocompleteArray(client) {
@@ -241,6 +251,41 @@
     const {matches} = await client.autocomplete("true || foobar");
     is(matches.length, 1, "autocomplete returns expected results");
     is(matches.join("-"), "foobarObject");
+  }
+
+  async function doInsensitiveAutocomplete(client) {
+    info("test autocomplete for 'window.insensitiveTestCase.'");
+    let {matches} = await client.autocomplete("window.insensitiveTestCase.");
+    is(matches.join("-"), "prop-pröp-PROP-PRÖP-Prop",
+      "autocomplete returns the expected items, in the expected order");
+
+    info("test autocomplete for 'window.insensitiveTestCase.p'");
+    matches = (await client.autocomplete("window.insensitiveTestCase.p")).matches;
+    is(matches.join("-"), "prop-pröp-PROP-PRÖP-Prop",
+      "autocomplete is case-insensitive when first letter is lowercased");
+
+    info("test autocomplete for 'window.insensitiveTestCase.pRoP'");
+    matches = (await client.autocomplete("window.insensitiveTestCase.pRoP")).matches;
+    is(matches.join("-"), "prop-PROP-Prop",
+      "autocomplete is case-insensitive when first letter is lowercased");
+
+    info("test autocomplete for 'window.insensitiveTestCase.P'");
+    matches = (await client.autocomplete("window.insensitiveTestCase.P")).matches;
+    is(matches.join("-"), "PROP-PRÖP-Prop",
+      "autocomplete is case-sensitive when first letter is uppercased");
+
+    info("test autocomplete for 'window.insensitiveTestCase.PROP'");
+    matches = (await client.autocomplete("window.insensitiveTestCase.PROP")).matches;
+    is(matches.join("-"), "PROP",
+      "autocomplete is case-sensitive when first letter is uppercased");
+
+    info("test autocomplete for 'window.insensitiveTestCase.prö'");
+    matches = (await client.autocomplete("window.insensitiveTestCase.prö")).matches;
+    is(matches.join("-"), "pröp-PRÖP", "expected result with lowercase diacritic");
+
+    info("test autocomplete for 'window.insensitiveTestCase.PRÖ'");
+    matches = (await client.autocomplete("window.insensitiveTestCase.PRÖ")).matches;
+    is(matches.join("-"), "PRÖP", "expected result with uppercase diacritic");
   }
 </script>
 </body>

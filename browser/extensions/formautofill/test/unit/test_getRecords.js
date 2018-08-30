@@ -36,6 +36,7 @@ let TEST_CREDIT_CARD_1 = {
   "cc-number": "4111111111111111",
   "cc-exp-month": 4,
   "cc-exp-year": 2017,
+  "cc-type": "visa",
 };
 
 let TEST_CREDIT_CARD_2 = {
@@ -43,6 +44,7 @@ let TEST_CREDIT_CARD_2 = {
   "cc-number": "4929001587121045",
   "cc-exp-month": 2,
   "cc-exp-year": 2017,
+  "cc-type": "visa",
 };
 
 let target = {

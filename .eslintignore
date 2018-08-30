@@ -120,8 +120,6 @@ devtools/shared/qrcode/tests/mochitest/test_decode.html
 devtools/shared/tests/mochitest/*.html
 devtools/shared/webconsole/test/test_*.html
 
-# Soon to be removed
-devtools/client/commandline/**
 # Soon to be removed, the new/ directory is explicitly excluded below due to
 # also being an imported repository.
 devtools/client/debugger/**
@@ -135,6 +133,9 @@ devtools/client/preferences/**
 devtools/client/webide/preferences/**
 devtools/shared/preferences/**
 devtools/startup/preferences/devtools-startup.js
+
+# Ignore devtools generated code
+devtools/shared/css/generated/properties-db.js
 
 # Ignore devtools third-party libs
 devtools/shared/jsbeautify/*

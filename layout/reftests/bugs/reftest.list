@@ -968,7 +968,7 @@ fails == 413027-3.html 413027-3-ref.html
 == 413286-3.html 413286-3-ref.html
 == 413286-4a.html 413286-4-ref.html
 == 413286-4b.html 413286-4-ref.html
-== 413286-5.html 413286-5-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 413286-5.html 413286-5-ref.html # Bug 1392106
 == 413286-6.html 413286-6-ref.html
 == 413292-1.html 413292-1-ref.html
 fuzzy-if(Android,0-11,0-17) fuzzy-if(webrender,0-1,0-10) == 413361-1.html 413361-1-ref.html # bug 1128229

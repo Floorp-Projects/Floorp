@@ -23,60 +23,6 @@ job-defaults:
         tier: 1
 
 jobs:
-    linux64-st-an/debug:
-        description: "Linux64 Debug Static Analysis"
-        index:
-            job-name: linux64-st-an-debug
-        treeherder:
-            platform: linux64/debug
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-        worker:
-            max-run-time: 36000
-            env:
-                PERFHERDER_EXTRA_OPTIONS: static-analysis
-        run:
-            using: mozharness
-            actions: [build]
-            config:
-                - builds/releng_base_firefox.py
-                - builds/releng_sub_linux_configs/64_stat_and_debug.py
-            script: "mozharness/scripts/fx_desktop_build.py"
-            tooltool-downloads: public
-            keep-artifacts: false
-        toolchains:
-            - linux64-clang
-            - linux64-rust
-            - linux64-cbindgen
-            - linux64-sccache
-            - linux64-node
-
-    linux64-st-an/opt:
-        description: "Linux64 Opt Static Analysis"
-        index:
-            job-name: linux64-st-an-opt
-        treeherder:
-            platform: linux64/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-        worker:
-            max-run-time: 36000
-            env:
-                PERFHERDER_EXTRA_OPTIONS: static-analysis
-        run:
-            using: mozharness
-            actions: [build]
-            config:
-                - builds/releng_base_firefox.py
-                - builds/releng_sub_linux_configs/64_stat_and_opt.py
-            script: "mozharness/scripts/fx_desktop_build.py"
-            tooltool-downloads: public
-            keep-artifacts: false
-        toolchains:
-            - linux64-clang
-            - linux64-rust
-            - linux64-cbindgen
-            - linux64-sccache
-            - linux64-node
-
     win32-st-an/debug:
         description: "Win32 Static Analysis Debug (clang-cl)"
         index:

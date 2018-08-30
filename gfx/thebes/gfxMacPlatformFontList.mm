@@ -57,7 +57,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsISimpleEnumerator.h"
+#include "nsIDirectoryEnumerator.h"
 #include "nsCharTraits.h"
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
@@ -1877,7 +1877,7 @@ gfxMacPlatformFontList::ActivateFontsFromDir(nsIFile* aDir)
         return;
     }
 
-    nsCOMPtr<nsISimpleEnumerator> e;
+    nsCOMPtr<nsIDirectoryEnumerator> e;
     if (NS_FAILED(aDir->GetDirectoryEntries(getter_AddRefs(e)))) {
         return;
     }

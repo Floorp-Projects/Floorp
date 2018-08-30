@@ -1410,14 +1410,14 @@ GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes)
         hash = PcScriptCache::Hash(retAddr);
 
         // Lazily initialize the cache. The allocation may safely fail and will not GC.
-        if (MOZ_UNLIKELY(cx->ionPcScriptCache == nullptr)) {
-            cx->ionPcScriptCache = js_pod_malloc<PcScriptCache>();
-            if (cx->ionPcScriptCache)
-                cx->ionPcScriptCache->clear(cx->runtime()->gc.gcNumber());
-        }
+        if (MOZ_UNLIKELY(cx->ionPcScriptCache == nullptr))
+            cx->ionPcScriptCache = MakeUnique<PcScriptCache>(cx->runtime()->gc.gcNumber());
 
-        if (cx->ionPcScriptCache && cx->ionPcScriptCache->get(cx->runtime(), hash, retAddr, scriptRes, pcRes))
+        if (cx->ionPcScriptCache.ref() &&
+            cx->ionPcScriptCache->get(cx->runtime(), hash, retAddr, scriptRes, pcRes))
+        {
             return;
+        }
     }
 
     // Lookup failed: undertake expensive process to recover the innermost inlined frame.
@@ -1435,7 +1435,7 @@ GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes)
         *pcRes = pc;
 
     // Add entry to cache.
-    if (retAddr && cx->ionPcScriptCache)
+    if (retAddr && cx->ionPcScriptCache.ref())
         cx->ionPcScriptCache->add(hash, retAddr, pc, *scriptRes);
 }
 

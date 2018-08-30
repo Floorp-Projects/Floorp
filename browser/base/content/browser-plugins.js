@@ -395,7 +395,7 @@ var gPluginHandler = {
       }
       let classifier = Cc["@mozilla.org/url-classifier/dbservice;1"]
         .getService(Ci.nsIURIClassifier);
-      classifier.asyncClassifyLocalWithTables(uri, tableName, (c, list) => {
+      classifier.asyncClassifyLocalWithTables(uri, tableName, [], [], (c, list) => {
         resolve(list.length > 0);
       });
     });

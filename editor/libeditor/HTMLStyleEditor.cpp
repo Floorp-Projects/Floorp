@@ -1798,7 +1798,7 @@ HTMLEditor::GetFontColorState(bool* aMixed,
 // the return value is true only if the instance of the HTML editor we created
 // can handle CSS styles (for instance, Composer can, Messenger can't) and if
 // the CSS preference is checked
-nsresult
+NS_IMETHODIMP
 HTMLEditor::GetIsCSSEnabled(bool* aIsCSSEnabled)
 {
   *aIsCSSEnabled = IsCSSEnabled();

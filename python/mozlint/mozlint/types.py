@@ -29,7 +29,7 @@ class BaseType(object):
         :param config: Linter config the paths are being linted against.
         :param lintargs: External arguments to the linter not defined in
                          the definition, but passed in by a consumer.
-        :returns: A list of :class:`~result.ResultContainer` objects.
+        :returns: A list of :class:`~result.Issue` objects.
         """
         paths = filterpaths(paths, config, **lintargs)
         if not paths:
@@ -112,7 +112,7 @@ class ExternalType(BaseType):
     """Linter type that runs an external function.
 
     The function is responsible for properly formatting the results
-    into a list of :class:`~result.ResultContainer` objects.
+    into a list of :class:`~result.Issue` objects.
     """
     batch = True
 

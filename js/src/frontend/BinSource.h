@@ -25,6 +25,7 @@
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
 
+#include "js/CompileOptions.h"
 #include "js/GCHashTable.h"
 #include "js/GCVector.h"
 #include "js/Result.h"
@@ -187,9 +188,9 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
         ParseNode* directives);
 
   private: // Implement ErrorReporter
-    const ReadOnlyCompileOptions& options_;
+    const JS::ReadOnlyCompileOptions& options_;
 
-    const ReadOnlyCompileOptions& options() const override {
+    const JS::ReadOnlyCompileOptions& options() const override {
         return this->options_;
     }
 

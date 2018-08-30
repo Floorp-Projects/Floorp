@@ -44,10 +44,12 @@ Transaction.prototype = {
 function LoginManagerStorage_mozStorage() { }
 
 LoginManagerStorage_mozStorage.prototype = {
-
   classID: Components.ID("{8c2023b9-175c-477e-9761-44ae7b549756}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsILoginManagerStorage,
                                            Ci.nsIInterfaceRequestor]),
+
+  _xpcom_factory: XPCOMUtils.generateSingletonFactory(this.LoginManagerStorage_mozStorage),
+
   getInterface(aIID) {
     if (aIID.equals(Ci.nsIVariant)) {
       // Allows unwrapping the JavaScript object for regression tests.

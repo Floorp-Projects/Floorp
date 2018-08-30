@@ -432,6 +432,11 @@ private:
   {
     // Generally, code should not call this method directly. Use AddHook unless
     // there is a specific need to avoid nop space patches.
+#if defined(_M_ARM64)
+    // XXX: this is just to get things compiling; we'll have to add real
+    // support at some future point.
+    return false;
+#endif
 
     if (!mModule) {
       return false;

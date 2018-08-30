@@ -84,10 +84,6 @@ iframe {
   -moz-user-focus: normal;
 }
 
-menulist[editable="true"] {
-  -moz-user-focus: ignore;
-}
-
 /******** window & page ******/
 
 window,
@@ -556,7 +552,6 @@ stack {
 /********** tabbox *********/
 
 tabbox {
-  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabbox");
   -moz-box-orient: vertical;
 }
 
@@ -702,18 +697,8 @@ menulist[popuponly="true"] {
   border: 0 !important;
 }
 
-menulist[editable="true"] {
-  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-editable");
-}
-
 menulist > menupopup > menuitem {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic-noaccel");
-}
-
-html|*.menulist-editable-input {
-  -moz-appearance: none !important;
-  background: transparent ! important;
-  -moz-box-flex: 1;
 }
 
 dropmarker > .dropmarker-icon {

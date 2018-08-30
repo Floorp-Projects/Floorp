@@ -18,7 +18,7 @@ const EDIT_ADDRESS_KEYWORDS = [
   "state", "province", "city", "country", "zip", "postalCode", "email", "tel",
 ];
 const MANAGE_CREDITCARDS_KEYWORDS = ["manageCreditCardsTitle", "addNewCreditCardTitle", "showCreditCardsBtnLabel"];
-const EDIT_CREDITCARD_KEYWORDS = ["cardNumber", "nameOnCard", "cardExpiresMonth", "cardExpiresYear"];
+const EDIT_CREDITCARD_KEYWORDS = ["cardNumber", "nameOnCard", "cardExpiresMonth", "cardExpiresYear", "cardNetwork"];
 const FIELD_STATES = {
   NORMAL: "NORMAL",
   AUTO_FILLED: "AUTO_FILLED",
@@ -206,6 +206,7 @@ this.FormAutofillUtils = {
     "cc-exp-month": "creditCard",
     "cc-exp-year": "creditCard",
     "cc-exp": "creditCard",
+    "cc-type": "creditCard",
   },
 
   _collators: {},
@@ -222,6 +223,15 @@ this.FormAutofillUtils = {
   isCCNumber(ccNumber) {
     let card = new CreditCard({number: ccNumber});
     return card.isValidNumber();
+  },
+
+  /**
+   * Get the array of credit card network ids ("types") we expect and offer as valid choices
+   *
+   * @returns {Array}
+   */
+  getCreditCardNetworks() {
+    return CreditCard.SUPPORTED_NETWORKS;
   },
 
   getCategoryFromFieldName(fieldName) {
@@ -696,6 +706,17 @@ this.FormAutofillUtils = {
         for (let option of options) {
           if ([option.text, option.label, option.value].some(
             str => patterns.some(pattern => str.includes(pattern))
+          )) {
+            return option;
+          }
+        }
+        break;
+      }
+      case "cc-type": {
+        let network = creditCard["cc-type"] || "";
+        for (let option of options) {
+          if ([option.text, option.label, option.value].some(
+            s => s.trim().toLowerCase() == network
           )) {
             return option;
           }

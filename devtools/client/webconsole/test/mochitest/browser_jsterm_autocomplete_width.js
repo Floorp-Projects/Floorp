@@ -13,11 +13,11 @@ const TEST_URI = `data:text/html;charset=utf-8,
     /* Create prototype-less object so popup does not contain native
      * Object prototype properties.
      */
-    window.x = Object.create(null, Object.getOwnPropertyDescriptors({
+    window.xx = Object.create(null, Object.getOwnPropertyDescriptors({
       ["y".repeat(10)]: 1,
       ["z".repeat(20)]: 2
     }));
-    window.xx = 1;
+    window.xxx = 1;
   </script>
 </head>
 <body>Test</body>`;
@@ -36,14 +36,14 @@ async function performTests() {
 
   const onPopUpOpen = popup.once("popup-opened");
 
-  info(`wait for completion suggestions for "x"`);
-  EventUtils.sendString("x");
+  info(`wait for completion suggestions for "xx"`);
+  EventUtils.sendString("xx");
 
   await onPopUpOpen;
 
   ok(popup.isOpen, "popup is open");
 
-  const expectedPopupItems = ["x", "xx"];
+  const expectedPopupItems = ["xx", "xxx"];
   is(popup.items.map(i => i.label).join("-"), expectedPopupItems.join("-"),
     "popup has expected items");
 
@@ -51,7 +51,7 @@ async function performTests() {
   ok(originalWidth > 2 * jsterm._inputCharWidth,
     "popup is at least wider than the width of the longest list item");
 
-  info(`wait for completion suggestions for "x."`);
+  info(`wait for completion suggestions for "xx."`);
   let onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString(".");
   await onAutocompleteUpdated;
@@ -63,7 +63,7 @@ async function performTests() {
   ok(newPopupWidth > 20 * jsterm._inputCharWidth,
     "popup is at least wider than the width of the longest list item");
 
-  info(`wait for completion suggestions for "x"`);
+  info(`wait for completion suggestions for "xx"`);
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("KEY_Backspace");
   await onAutocompleteUpdated;

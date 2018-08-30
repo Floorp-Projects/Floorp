@@ -38,7 +38,9 @@
 
 #include "base/time.h"
 
+#ifndef __MINGW32__
 #pragma comment(lib, "winmm.lib")
+#endif
 #include <windows.h>
 #include <mmsystem.h>
 

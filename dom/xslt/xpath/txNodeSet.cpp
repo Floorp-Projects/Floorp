@@ -525,12 +525,8 @@ bool txNodeSet::ensureGrowSize(int32_t aSize)
         newLength *= kTxNodeSetGrowFactor;
     }
 
-    txXPathNode* newArr = static_cast<txXPathNode*>
-                                     (moz_xmalloc(newLength *
-                                                         sizeof(txXPathNode)));
-    if (!newArr) {
-        return false;
-    }
+    txXPathNode* newArr =
+      static_cast<txXPathNode*>(moz_xmalloc(newLength * sizeof(txXPathNode)));
 
     txXPathNode* dest = newArr;
     if (mDirection == kReversed) {

@@ -25,6 +25,7 @@
 
 #include "TelemetryCommon.h"
 #include "TelemetryHistogram.h"
+#include "TelemetryHistogramNameMap.h"
 #include "TelemetryScalar.h"
 #include "ipc/TelemetryIPCAccumulator.h"
 
@@ -45,6 +46,7 @@ using mozilla::Telemetry::KeyedHistogramAccumulation;
 using mozilla::Telemetry::HistogramID;
 using mozilla::Telemetry::ProcessID;
 using mozilla::Telemetry::HistogramCount;
+using mozilla::Telemetry::HistogramIDByNameLookup;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::Common::RecordedProcessType;
 using mozilla::Telemetry::Common::AutoHashtable;
@@ -236,9 +238,6 @@ Histogram** gHistogramStorage;
 // Keyed histograms internally map string keys to individual Histogram instances.
 KeyedHistogram** gKeyedHistogramStorage;
 
-// Cache of histogram name to a histogram id.
-StringToHistogramIdMap gNameToHistogramIDMap(HistogramCount);
-
 // To simplify logic below we use a single histogram instance for all expired histograms.
 Histogram* gExpiredHistogram = nullptr;
 
@@ -253,7 +252,6 @@ bool gHistogramRecordingDisabled[HistogramCount] = {};
 #include "TelemetryHistogramData.inc"
 
 } // namespace
-
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -418,12 +416,18 @@ internal_GetHistogramIdByName(const StaticMutexAutoLock& aLock,
                               const nsACString& name,
                               HistogramID* id)
 {
-  const bool found = gNameToHistogramIDMap.Get(name, id);
-  if (!found) {
-    return NS_ERROR_ILLEGAL_VALUE;
+  const uint32_t idx = HistogramIDByNameLookup(name);
+  MOZ_ASSERT(idx < HistogramCount, "Intermediate lookup should always give a valid index.");
+
+  // The lookup hashes the input and uses it as an index into the value array.
+  // Hash collisions can still happen for unknown values,
+  // therefore we check that the name matches.
+  if (name.Equals(gHistogramInfos[idx].name())) {
+    *id = HistogramID(idx);
+    return NS_OK;
   }
 
-  return NS_OK;
+  return NS_ERROR_ILLEGAL_VALUE;
 }
 
 // Clear a histogram from storage.
@@ -1994,29 +1998,6 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
       new KeyedHistogram*[HistogramCount * size_t(ProcessID::Count)] {};
   }
 
-  // gNameToHistogramIDMap should have been pre-sized correctly at the
-  // declaration point further up in this file.
-
-  // Populate the static histogram name->id cache.
-  // Note that the histogram names come from a static table so we can wrap them
-  // in a literal string to avoid allocations when it gets copied.
-  for (uint32_t i = 0; i < HistogramCount; i++) {
-    auto name = gHistogramInfos[i].name();
-
-    // Make sure the name pointer is in a valid region. See bug 1428612.
-    MOZ_DIAGNOSTIC_ASSERT(name >= gHistogramStringTable);
-    MOZ_DIAGNOSTIC_ASSERT(
-        uintptr_t(name) < (uintptr_t(gHistogramStringTable) + sizeof(gHistogramStringTable)));
-
-    nsCString wrappedName;
-    wrappedName.AssignLiteral(name, strlen(name));
-    gNameToHistogramIDMap.Put(wrappedName, HistogramID(i));
-  }
-
-#ifdef DEBUG
-  gNameToHistogramIDMap.MarkImmutable();
-#endif
-
     // Some Telemetry histograms depend on the value of C++ constants and hardcode
     // their values in Histograms.json.
     // We add static asserts here for those values to match so that future changes
@@ -2046,7 +2027,6 @@ void TelemetryHistogram::DeInitializeGlobalState()
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   gCanRecordBase = false;
   gCanRecordExtended = false;
-  gNameToHistogramIDMap.Clear();
   gInitDone = false;
 
   // FactoryGet `new`s Histograms for us, but requires us to manually delete.
@@ -2575,14 +2555,6 @@ TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext* aCx,
     }
   }
   return NS_OK;
-}
-
-size_t
-TelemetryHistogram::GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf
-                                                      aMallocSizeOf)
-{
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  return gNameToHistogramIDMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 size_t

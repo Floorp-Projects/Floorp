@@ -20,7 +20,6 @@ ChromeUtils.defineModuleGetter(this, "CloudStorage",
   "resource://gre/modules/CloudStorage.jsm");
 
 XPCOMUtils.defineLazyServiceGetters(this, {
-  gCategoryManager: ["@mozilla.org/categorymanager;1", "nsICategoryManager"],
   gHandlerService: ["@mozilla.org/uriloader/handler-service;1", "nsIHandlerService"],
   gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
 });
@@ -2850,7 +2849,7 @@ class HandlerInfoWrapper {
       disabledPluginTypes.join(","));
 
     // Update the category manager so existing browser windows update.
-    gCategoryManager.deleteCategoryEntry("Gecko-Content-Viewers",
+    Services.catMan.deleteCategoryEntry("Gecko-Content-Viewers",
       this.type,
       false);
   }
@@ -2865,7 +2864,7 @@ class HandlerInfoWrapper {
       disabledPluginTypes.join(","));
 
     // Update the category manager so existing browser windows update.
-    gCategoryManager.addCategoryEntry(
+    Services.catMan.addCategoryEntry(
       "Gecko-Content-Viewers",
       this.type,
       "@mozilla.org/content/plugin/document-loader-factory;1",

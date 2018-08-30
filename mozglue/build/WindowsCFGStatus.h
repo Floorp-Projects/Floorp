@@ -6,7 +6,7 @@
 #ifndef mozilla_windowscfgstatus_h
 #define mozilla_windowscfgstatus_h
 
-#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64) || defined(_M_ARM64))
 
 #include <windows.h>
 #include "mozilla/Attributes.h"

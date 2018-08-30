@@ -783,8 +783,7 @@ Statement::GetBlob(uint32_t aIndex,
   int size = ::sqlite3_column_bytes(mDBStatement, aIndex);
   void *blob = nullptr;
   if (size) {
-    blob = nsMemory::Clone(::sqlite3_column_blob(mDBStatement, aIndex), size);
-    NS_ENSURE_TRUE(blob, NS_ERROR_OUT_OF_MEMORY);
+    blob = moz_xmemdup(::sqlite3_column_blob(mDBStatement, aIndex), size);
   }
 
   *_blob = static_cast<uint8_t *>(blob);

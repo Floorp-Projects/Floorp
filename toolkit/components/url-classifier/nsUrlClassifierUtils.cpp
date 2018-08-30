@@ -19,6 +19,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsIDocShell.h"
+#include "mozilla/TextUtils.h"
 
 #define DEFAULT_PROTOCOL_VERSION "2.2"
 
@@ -32,7 +33,7 @@ static bool
 IsDecimal(const nsACString & num)
 {
   for (uint32_t i = 0; i < num.Length(); i++) {
-    if (!isdigit(num[i])) {
+    if (!mozilla::IsAsciiDigit(num[i])) {
       return false;
     }
   }
@@ -52,7 +53,7 @@ IsHex(const nsACString & num)
   }
 
   for (uint32_t i = 2; i < num.Length(); i++) {
-    if (!isxdigit(num[i])) {
+    if (!mozilla::IsAsciiHexDigit(num[i])) {
       return false;
     }
   }
@@ -72,7 +73,7 @@ IsOctal(const nsACString & num)
   }
 
   for (uint32_t i = 1; i < num.Length(); i++) {
-    if (!isdigit(num[i]) || num[i] == '8' || num[i] == '9') {
+    if (!mozilla::IsAsciiDigit(num[i]) || num[i] == '8' || num[i] == '9') {
       return false;
     }
   }
@@ -947,7 +948,7 @@ nsUrlClassifierUtils::ParseIPAddress(const nsACString & host,
   }
 
   for (host.BeginReading(iter); iter != end; iter++) {
-    if (!(isxdigit(*iter) || *iter == 'x' || *iter == 'X' || *iter == '.')) {
+    if (!(mozilla::IsAsciiHexDigit(*iter) || *iter == 'x' || *iter == 'X' || *iter == '.')) {
       // not an IP
       return;
     }

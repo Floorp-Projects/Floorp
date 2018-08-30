@@ -3,6 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsfriendapi.h"
+
+#include "js/CompilationAndEvaluation.h"
+#include "js/SourceBufferHolder.h"
 #include "jsapi-tests/tests.h"
 #include "vm/ErrorReporting.h"
 

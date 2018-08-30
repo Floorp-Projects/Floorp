@@ -7580,9 +7580,15 @@ class CGPerSignatureCall(CGThing):
         elif needScopeObject(returnType, arguments, self.extendedAttributes,
                              descriptor.wrapperCache, True,
                              idlNode.getExtendedAttribute("StoreInSlot")):
-            needsUnwrap = True
-            needsUnwrappedVar = True
-            argsPre.append("unwrappedObj ? *unwrappedObj : obj")
+            # The scope object should always be from the relevant
+            # global.  Make sure to unwrap it as needed.
+            cgThings.append(CGGeneric(dedent(
+                """
+                JS::Rooted<JSObject*> unwrappedObj(cx, js::CheckedUnwrap(obj));
+                // Caller should have ensured that "obj" can be unwrapped already.
+                MOZ_DIAGNOSTIC_ASSERT(unwrappedObj);
+                """)))
+            argsPre.append("unwrappedObj")
 
         if needsUnwrap and needsUnwrappedVar:
             # We cannot assign into obj because it's a Handle, not a

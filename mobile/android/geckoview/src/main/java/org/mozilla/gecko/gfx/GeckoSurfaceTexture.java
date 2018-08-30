@@ -119,6 +119,18 @@ import org.mozilla.gecko.annotation.WrapForJNI;
     }
 
     @Override
+    public synchronized void release() {
+        try {
+            super.release();
+            synchronized (sSurfaceTextures) {
+                sSurfaceTextures.remove(mHandle);
+            }
+        } catch (Exception e) {
+            Log.w(LOGTAG, "release() failed", e);
+        }
+    }
+
+    @Override
     @WrapForJNI
     public synchronized void releaseTexImage() {
         if (!mIsSingleBuffer) {
@@ -185,10 +197,6 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
         for (GeckoSurfaceTexture tex : list) {
             try {
-                synchronized (sSurfaceTextures) {
-                    sSurfaceTextures.remove(tex.mHandle);
-                }
-
                 if (tex.isSingleBuffer()) {
                    tex.releaseTexImage();
                 }

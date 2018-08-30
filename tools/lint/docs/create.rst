@@ -54,7 +54,7 @@ external.  External linters call an arbitrary python function which is
 responsible for not only running the linter, but ensuring the results
 are structured properly. For example, an external type could shell out
 to a 3rd party linter, collect the output and format it into a list of
-:class:`ResultContainer` objects. The signature for this python
+:class:`Issue` objects. The signature for this python
 function is ``lint(files, config, **kwargs)``, where ``files`` is a list of
 files to lint and ``config`` is the linter definition defined in the ``.yml``
 file.
@@ -129,7 +129,7 @@ let's call the file ``flake8_lint.py``:
 
         # Flake8 allows passing in a custom format string. We use
         # this to help mold the default flake8 format into what
-        # mozlint's ResultContainer object expects.
+        # mozlint's Issue object expects.
         cmdargs = [
             binary,
             '--format',
@@ -153,7 +153,7 @@ let's call the file ``flake8_lint.py``:
                 res['level'] = 'warning'
 
             # result.from_linter is a convenience method that
-            # creates a ResultContainer using a LINTER definition
+            # creates a Issue using a LINTER definition
             # to populate some defaults.
             results.append(result.from_config(config, **res))
 

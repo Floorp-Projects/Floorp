@@ -93,6 +93,7 @@ panel[type="arrow"][side="right"] {
 
 menulist > menupopup {
   min-width: 0px;
+  padding: 4px 0;
 }
 
 menulist > menupopup:not([position]) {
@@ -100,16 +101,8 @@ menulist > menupopup:not([position]) {
   margin-top: -2px;
 }
 
-menulist[editable="true"] > menupopup {
-  -moz-appearance: none;
-}
-
 menulist > menupopup > .popup-internal-box {
   padding: 0;
-}
-
-menulist:not([editable="true"]) > menupopup {
-  padding: 4px 0;
 }
 
 menupopup[customoptionstyling="true"] {

@@ -1256,7 +1256,7 @@ WebrtcVideoConduit::Init()
     return result;
   }
 
-  CSFLogError(LOGTAG, "%s Initialization Done", __FUNCTION__);
+  CSFLogDebug(LOGTAG, "%s Initialization Done", __FUNCTION__);
   return kMediaConduitNoError;
 }
 

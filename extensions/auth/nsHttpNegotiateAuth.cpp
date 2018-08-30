@@ -583,10 +583,7 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
     // allocate a buffer sizeof("Negotiate" + " " + b64output_token + "\0")
     const int bufsize = kNegotiateLen + 1 + strlen(encoded_token) + 1;
     *creds = (char *) moz_xmalloc(bufsize);
-    if (MOZ_UNLIKELY(!*creds))
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    else
-        snprintf(*creds, bufsize, "%s %s", kNegotiate, encoded_token);
+    snprintf(*creds, bufsize, "%s %s", kNegotiate, encoded_token);
 
     PR_Free(encoded_token); // PL_Base64Encode() uses PR_Malloc().
     return rv;

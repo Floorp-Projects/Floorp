@@ -39,7 +39,7 @@ xul|menulist {
   font-size: inherit;
 }
 
-xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
+xul|*.menulist-dropmarker {
   display: -moz-box;
   margin-top: 6px;
   margin-bottom: 6px;

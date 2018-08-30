@@ -247,7 +247,7 @@ HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data)
     return FAILED(hr);
   };
 
-  auto cleanup = [this, aOutIA2Data]() -> void {
+  auto cleanup = [aOutIA2Data]() -> void {
     CleanupDynamicIA2Data(*aOutIA2Data);
   };
 

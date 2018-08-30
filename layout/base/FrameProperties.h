@@ -214,8 +214,7 @@ public:
   template<typename T>
   bool Has(Descriptor<T> aProperty) const
   {
-    return mProperties.IndexOf(aProperty, 0, PropertyComparator())
-           != nsTArray<PropertyValue>::NoIndex;
+    return mProperties.Contains(aProperty, PropertyComparator());
   }
 
   /**
@@ -410,18 +409,20 @@ FrameProperties::GetInternal(UntypedDescriptor aProperty,
 {
   MOZ_ASSERT(aProperty, "Null property?");
 
-  auto index = mProperties.IndexOf(aProperty, 0, PropertyComparator());
-  if (index == nsTArray<PropertyValue>::NoIndex) {
-    if (aFoundResult) {
-      *aFoundResult = false;
-    }
-    return nullptr;
-  }
-
-  if (aFoundResult) {
-    *aFoundResult = true;
-  }
-  return mProperties.Elements()[index].mValue;
+  return mProperties.ApplyIf(
+    aProperty, 0, PropertyComparator(),
+    [&aFoundResult](const PropertyValue& aPV) -> void* {
+      if (aFoundResult) {
+        *aFoundResult = true;
+      }
+      return aPV.mValue;
+    },
+    [&aFoundResult]() -> void* {
+      if (aFoundResult) {
+        *aFoundResult = false;
+      }
+      return nullptr;
+    });
 }
 
 inline void
@@ -431,15 +432,15 @@ FrameProperties::SetInternal(UntypedDescriptor aProperty, void* aValue,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aProperty, "Null property?");
 
-  auto index = mProperties.IndexOf(aProperty, 0, PropertyComparator());
-  if (index != nsTArray<PropertyValue>::NoIndex) {
-    PropertyValue* pv = &mProperties.Elements()[index];
-    pv->DestroyValueFor(aFrame);
-    pv->mValue = aValue;
-    return;
-  }
-
-  mProperties.AppendElement(PropertyValue(aProperty, aValue));
+  mProperties.ApplyIf(
+    aProperty, 0, PropertyComparator(),
+    [&](PropertyValue& aPV) {
+      aPV.DestroyValueFor(aFrame);
+      aPV.mValue = aValue;
+    },
+    [&]() {
+      mProperties.AppendElement(PropertyValue(aProperty, aValue));
+    });
 }
 
 inline void

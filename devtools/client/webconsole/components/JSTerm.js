@@ -18,7 +18,7 @@ loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools"
 loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
 loader.lazyRequireGetter(this, "Editor", "devtools/client/sourceeditor/editor");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
-loader.lazyRequireGetter(this, "processScreenshot", "devtools/shared/webconsole/screenshot-helper");
+loader.lazyRequireGetter(this, "saveScreenshot", "devtools/shared/screenshot/save");
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
@@ -473,7 +473,7 @@ class JSTerm extends Component {
           break;
         case "screenshotOutput":
           const { args, value } = helperResult;
-          const results = await processScreenshot(this.hud.window, args, value);
+          const results = await saveScreenshot(this.hud.window, args, value);
           this.screenshotNotify(results);
           // early return as screenshot notify has dispatched all necessary messages
           return null;
@@ -1104,7 +1104,15 @@ class JSTerm extends Component {
         filterBy = input.substring(input.lastIndexOf(lastNonAlpha) + 1);
       }
 
-      const newList = this._autocompleteCache.sort().filter(l => l.startsWith(filterBy));
+      const filterByLc = filterBy.toLocaleLowerCase();
+      const looseMatching = !filterBy || filterBy[0].toLocaleLowerCase() === filterBy[0];
+      const newList = this._autocompleteCache.filter(l => {
+        if (looseMatching) {
+          return l.toLocaleLowerCase().startsWith(filterByLc);
+        }
+
+        return l.startsWith(filterBy);
+      });
 
       this._receiveAutocompleteProperties(null, {
         matches: newList,
@@ -1146,21 +1154,42 @@ class JSTerm extends Component {
       this._autocompleteQuery = inputUntilCursor;
     }
 
-    const matches = message.matches;
-    const lastPart = message.matchProp;
+    const {matches, matchProp} = message;
     if (!matches.length) {
       this.clearCompletion();
       this.emit("autocomplete-updated");
       return;
     }
 
+    const items = matches.map(match => ({
+      preLabel: match.substring(0, matchProp.length),
+      label: match
+    }));
+
+    if (items.length > 0) {
+      const suffix = items[0].label.substring(matchProp.length);
+      this.setAutoCompletionText(suffix);
+    }
+
     const popup = this.autocompletePopup;
-    const items = matches.map(match => ({ preLabel: lastPart, label: match }));
     popup.setItems(items);
 
     const minimumAutoCompleteLength = 2;
 
-    if (items.length >= minimumAutoCompleteLength) {
+    // We want to show the autocomplete popup if:
+    // - there are at least 2 matching results
+    // - OR, if there's 1 result, but whose label does not start like the input (this can
+    //   happen with insensitive search: `num` will match `Number`).
+    // - OR, if there's 1 result, but we can't show the completionText (because there's
+    // some text after the cursor), unless the text in the popup is the same as the input.
+    if (items.length >= minimumAutoCompleteLength
+      || (items.length === 1 && items[0].preLabel !== matchProp)
+      || (
+        items.length === 1
+        && !this.canDisplayAutoCompletionText()
+        && items[0].label !== matchProp
+      )
+    ) {
       let popupAlignElement;
       let xOffset;
       let yOffset;
@@ -1168,12 +1197,12 @@ class JSTerm extends Component {
       if (this.editor) {
         popupAlignElement = this.node.querySelector(".CodeMirror-cursor");
         // We need to show the popup at the ".".
-        xOffset = -1 * lastPart.length * this._inputCharWidth;
+        xOffset = -1 * matchProp.length * this._inputCharWidth;
         yOffset = 5;
       } else if (this.inputNode) {
         const offset = inputUntilCursor.length -
           (inputUntilCursor.lastIndexOf("\n") + 1) -
-          lastPart.length;
+          matchProp.length;
         xOffset = (offset * this._inputCharWidth) + this._chevronWidth;
         popupAlignElement = this.inputNode;
       }
@@ -1185,10 +1214,6 @@ class JSTerm extends Component {
       popup.hidePopup();
     }
 
-    if (items.length > 0) {
-      const suffix = items[0].label.substring(lastPart.length);
-      this.setAutoCompletionText(suffix);
-    }
     this.emit("autocomplete-updated");
   }
 
@@ -1234,22 +1259,21 @@ class JSTerm extends Component {
    */
   acceptProposedCompletion() {
     let completionText = this.getAutoCompletionText();
-    // In some cases the completion text might not be displayed (e.g. there is some text
-    // just after the cursor so we can't display it). In those case, if the popup is
-    // open and has a selectedItem, we use it for completing the input.
-    if (
-      !completionText
-      && this.autocompletePopup.isOpen
-      && this.autocompletePopup.selectedItem
-    ) {
+    let numberOfCharsToReplaceCharsBeforeCursor;
+
+    // If the autocompletion popup is open, we always get the selected element from there,
+    // since the autocompletion text might not be enough (e.g. `dOcUmEn` should
+    // autocomplete to `document`, but the autocompletion text only shows `t`).
+    if (this.autocompletePopup.isOpen && this.autocompletePopup.selectedItem) {
       const {selectedItem} = this.autocompletePopup;
-      completionText = selectedItem.label.substring(selectedItem.preLabel.length);
+      completionText = selectedItem.label;
+      numberOfCharsToReplaceCharsBeforeCursor = selectedItem.preLabel.length;
     }
 
     this.clearCompletion();
 
     if (completionText) {
-      this.insertStringAtCursor(completionText);
+      this.insertStringAtCursor(completionText, numberOfCharsToReplaceCharsBeforeCursor);
     }
   }
 
@@ -1270,16 +1294,21 @@ class JSTerm extends Component {
    * Insert a string into the console at the cursor location,
    * moving the cursor to the end of the string.
    *
-   * @param string str
+   * @param {string} str
+   * @param {int} numberOfCharsToReplaceCharsBeforeCursor - defaults to 0
    */
-  insertStringAtCursor(str) {
+  insertStringAtCursor(str, numberOfCharsToReplaceCharsBeforeCursor = 0) {
     const value = this.getInputValue();
-    const prefix = this.getInputValueBeforeCursor();
+    let prefix = this.getInputValueBeforeCursor();
     const suffix = value.replace(prefix, "");
+
+    if (numberOfCharsToReplaceCharsBeforeCursor) {
+      prefix =
+        prefix.substring(0, prefix.length - numberOfCharsToReplaceCharsBeforeCursor);
+    }
 
     // We need to retrieve the cursor before setting the new value.
     const editorCursor = this.editor && this.editor.getCursor();
-
     this.setInputValue(prefix + str + suffix);
 
     if (this.inputNode) {
@@ -1289,7 +1318,7 @@ class JSTerm extends Component {
       // Set the cursor on the same line it was already at, after the autocompleted text
       this.editor.setCursor({
         line: editorCursor.line,
-        ch: editorCursor.ch + str.length
+        ch: editorCursor.ch + str.length - numberOfCharsToReplaceCharsBeforeCursor
       });
     }
   }

@@ -121,36 +121,32 @@ NS_strncmp(const char16_t* aStrA, const char16_t* aStrB, size_t aLen)
 }
 
 char16_t*
-NS_strdup(const char16_t* aString)
+NS_xstrdup(const char16_t* aString)
 {
   uint32_t len = NS_strlen(aString);
-  return NS_strndup(aString, len);
+  return NS_xstrndup(aString, len);
 }
 
 template<typename CharT>
 CharT*
-NS_strndup(const CharT* aString, uint32_t aLen)
+NS_xstrndup(const CharT* aString, uint32_t aLen)
 {
   auto newBuf = (CharT*)moz_xmalloc((aLen + 1) * sizeof(CharT));
-  if (newBuf) {
-    memcpy(newBuf, aString, aLen * sizeof(CharT));
-    newBuf[aLen] = '\0';
-  }
+  memcpy(newBuf, aString, aLen * sizeof(CharT));
+  newBuf[aLen] = '\0';
   return newBuf;
 }
 
-template char16_t* NS_strndup<char16_t>(const char16_t* aString, uint32_t aLen);
-template char* NS_strndup<char>(const char* aString, uint32_t aLen);
+template char16_t* NS_xstrndup<char16_t>(const char16_t* aString, uint32_t aLen);
+template char* NS_xstrndup<char>(const char* aString, uint32_t aLen);
 
 char*
-NS_strdup(const char* aString)
+NS_xstrdup(const char* aString)
 {
   uint32_t len = strlen(aString);
   char* str = (char*)moz_xmalloc(len + 1);
-  if (str) {
-    memcpy(str, aString, len);
-    str[len] = '\0';
-  }
+  memcpy(str, aString, len);
+  str[len] = '\0';
   return str;
 }
 

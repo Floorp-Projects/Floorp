@@ -13,6 +13,7 @@ if [ -n "$FORCE_GCC" -o -n "$MOZ_PGO" ]; then
 else
     CC="$TOOLTOOL_DIR/clang/bin/clang"
     CXX="$TOOLTOOL_DIR/clang/bin/clang++"
+    export ENABLE_CLANG_PLUGIN=1
 fi
 
 # We want to make sure we use binutils and other binaries in the tooltool

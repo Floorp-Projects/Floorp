@@ -22,5 +22,5 @@ mingw-capitalization:
         - toolkit/crashreporter/google-breakpad/src/common/windows
         - third_party/python/psutil/psutil
     type: external
-    level: warning
+    level: error
     payload: cpp.mingw-capitalization:lint

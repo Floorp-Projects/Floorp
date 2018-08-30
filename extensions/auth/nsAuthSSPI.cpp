@@ -341,8 +341,6 @@ nsAuthSSPI::GetNextToken(const void *inToken,
             mIsFirst = false;
             mCertDERLength = inTokenLen;
             mCertDERData = moz_xmalloc(inTokenLen);
-            if (!mCertDERData)
-                return NS_ERROR_OUT_OF_MEMORY;
             memcpy(mCertDERData, inToken, inTokenLen);
 
             // We are starting a new authentication sequence.
@@ -385,9 +383,6 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                         + pendpoint_binding.dwApplicationDataOffset;
 
                 sspi_cbt = (char *) moz_xmalloc(ib[ibd.cBuffers].cbBuffer);
-                if (!sspi_cbt){
-                    return NS_ERROR_OUT_OF_MEMORY;
-                }
 
                 // Helper to write in the memory block that stores the CBT
                 char* sspi_cbt_ptr = sspi_cbt;
@@ -460,11 +455,6 @@ nsAuthSSPI::GetNextToken(const void *inToken,
     ob.BufferType = SECBUFFER_TOKEN;
     ob.cbBuffer = mMaxTokenLen;
     ob.pvBuffer = moz_xmalloc(ob.cbBuffer);
-    if (!ob.pvBuffer){
-        if (sspi_cbt)
-            free(sspi_cbt);
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
     memset(ob.pvBuffer, 0, ob.cbBuffer);
 
     NS_ConvertUTF8toUTF16 wSN(mServiceName);
@@ -529,8 +519,6 @@ nsAuthSSPI::Unwrap(const void *inToken,
     ib[0].BufferType = SECBUFFER_STREAM;
     ib[0].cbBuffer = inTokenLen;
     ib[0].pvBuffer = moz_xmalloc(ib[0].cbBuffer);
-    if (!ib[0].pvBuffer)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     memcpy(ib[0].pvBuffer, inToken, inTokenLen);
 
@@ -554,10 +542,8 @@ nsAuthSSPI::Unwrap(const void *inToken,
             *outToken = ib[1].pvBuffer;
         }
         else {
-            *outToken = nsMemory::Clone(ib[1].pvBuffer, ib[1].cbBuffer);
+            *outToken = moz_xmemdup(ib[1].pvBuffer, ib[1].cbBuffer);
             free(ib[0].pvBuffer);
-            if (!*outToken)
-                return NS_ERROR_OUT_OF_MEMORY;
         }
         *outTokenLen = ib[1].cbBuffer;
     }
@@ -622,16 +608,10 @@ nsAuthSSPI::Wrap(const void *inToken,
     bufs.ib[0].BufferType = SECBUFFER_TOKEN;
     bufs.ib[0].pvBuffer = moz_xmalloc(sizes.cbSecurityTrailer);
 
-    if (!bufs.ib[0].pvBuffer)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     // APP Data
     bufs.ib[1].BufferType = SECBUFFER_DATA;
     bufs.ib[1].pvBuffer = moz_xmalloc(inTokenLen);
     bufs.ib[1].cbBuffer = inTokenLen;
-
-    if (!bufs.ib[1].pvBuffer)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     memcpy(bufs.ib[1].pvBuffer, inToken, inTokenLen);
 
@@ -640,9 +620,6 @@ nsAuthSSPI::Wrap(const void *inToken,
     bufs.ib[2].cbBuffer = sizes.cbBlockSize;
     bufs.ib[2].pvBuffer = moz_xmalloc(bufs.ib[2].cbBuffer);
 
-    if (!bufs.ib[2].pvBuffer)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     rc = (sspi->EncryptMessage)(&mCtxt,
           confidential ? 0 : KERB_WRAP_NO_ENCRYPT,
          &ibd, 0);
@@ -650,9 +627,6 @@ nsAuthSSPI::Wrap(const void *inToken,
     if (SEC_SUCCESS(rc)) {
         int len  = bufs.ib[0].cbBuffer + bufs.ib[1].cbBuffer + bufs.ib[2].cbBuffer;
         char *p = (char *) moz_xmalloc(len);
-
-        if (!p)
-            return NS_ERROR_OUT_OF_MEMORY;
 
         *outToken = (void *) p;
         *outTokenLen = len;

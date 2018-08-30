@@ -1097,31 +1097,17 @@ NS_IMETHODIMP GfxInfoBase::GetFailures(uint32_t* failureCount,
 
   if (*failureCount != 0) {
     *failures = (char**)moz_xmalloc(*failureCount * sizeof(char*));
-    if (!(*failures)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     if (indices) {
       *indices = (int32_t*)moz_xmalloc(*failureCount * sizeof(int32_t));
-      if (!(*indices)) {
-        free(*failures);
-        *failures = nullptr;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
     }
 
     /* copy over the failure messages into the array we just allocated */
     LoggingRecord::const_iterator it;
     uint32_t i=0;
     for(it = loggedStrings.begin() ; it != loggedStrings.end(); ++it, i++) {
-      (*failures)[i] = (char*)nsMemory::Clone(Get<1>(*it).c_str(), Get<1>(*it).size() + 1);
+      (*failures)[i] =
+        (char*) moz_xmemdup(Get<1>(*it).c_str(), Get<1>(*it).size() + 1);
       if (indices) (*indices)[i] = Get<0>(*it);
-
-      if (!(*failures)[i]) {
-        /* <sarcasm> I'm too afraid to use an inline function... </sarcasm> */
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, (*failures));
-        *failureCount = i;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
     }
   }
 

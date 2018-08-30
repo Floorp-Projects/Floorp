@@ -1005,8 +1005,8 @@ AllowParallelParse(css::Loader* aLoader, nsIURI* aSheetURI)
 
 RefPtr<StyleSheetParsePromise>
 StyleSheet::ParseSheet(css::Loader* aLoader,
-                            const nsACString& aBytes,
-                            css::SheetLoadData* aLoadData)
+                       const nsACString& aBytes,
+                       css::SheetLoadData* aLoadData)
 {
   MOZ_ASSERT(aLoader);
   MOZ_ASSERT(aLoadData);
@@ -1014,6 +1014,10 @@ StyleSheet::ParseSheet(css::Loader* aLoader,
   RefPtr<StyleSheetParsePromise> p = mParsePromise.Ensure(__func__);
   Inner().mURLData =
     new URLExtraData(GetBaseURI(), GetSheetURI(), Principal()); // RefPtr
+
+  const StyleUseCounters* useCounters = aLoader->GetDocument()
+    ? aLoader->GetDocument()->GetStyleUseCounters()
+    : nullptr;
 
   if (!AllowParallelParse(aLoader, GetSheetURI())) {
     RefPtr<RawServoStyleSheetContents> contents =
@@ -1025,7 +1029,8 @@ StyleSheet::ParseSheet(css::Loader* aLoader,
                                      Inner().mURLData,
                                      aLoadData->mLineNumber,
                                      aLoader->GetCompatibilityMode(),
-                                     /* reusable_sheets = */ nullptr)
+                                     /* reusable_sheets = */ nullptr,
+                                     useCounters)
       .Consume();
     FinishAsyncParse(contents.forget());
   } else {
@@ -1036,7 +1041,8 @@ StyleSheet::ParseSheet(css::Loader* aLoader,
                                         &aBytes,
                                         mParsingMode,
                                         aLoadData->mLineNumber,
-                                        aLoader->GetCompatibilityMode());
+                                        aLoader->GetCompatibilityMode(),
+                                        /* should_record_counters = */ !!useCounters);
   }
 
   return p;
@@ -1063,6 +1069,10 @@ StyleSheet::ParseSheetSync(css::Loader* aLoader,
   nsCompatibility compatMode =
     aLoader ? aLoader->GetCompatibilityMode() : eCompatibility_FullStandards;
 
+  const StyleUseCounters* useCounters = aLoader && aLoader->GetDocument()
+    ? aLoader->GetDocument()->GetStyleUseCounters()
+    : nullptr;
+
   Inner().mURLData = new URLExtraData(GetBaseURI(), GetSheetURI(), Principal()); // RefPtr
   Inner().mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
                                                      this,
@@ -1072,7 +1082,8 @@ StyleSheet::ParseSheetSync(css::Loader* aLoader,
                                                      Inner().mURLData,
                                                      aLineNumber,
                                                      compatMode,
-                                                     aReusableSheets)
+                                                     aReusableSheets,
+                                                     useCounters)
                          .Consume();
 
   FinishParse();

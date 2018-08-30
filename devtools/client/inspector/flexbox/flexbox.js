@@ -315,14 +315,14 @@ class FlexboxInspector {
       return;
     }
 
-    let nodeFront = flexboxFront.containerNodeFront;
+    let containerNodeFront = flexboxFront.containerNodeFront;
 
     // If the FlexboxFront doesn't yet have access to the NodeFront for its container,
     // then get it from the walker. This happens when the walker hasn't seen this
     // particular DOM Node in the tree yet or when we are connected to an older server.
-    if (!nodeFront) {
+    if (!containerNodeFront) {
       try {
-        nodeFront = await this.walker.getNodeFromActor(flexboxFront.actorID,
+        containerNodeFront = await this.walker.getNodeFromActor(flexboxFront.actorID,
           ["containerEl"]);
       } catch (e) {
         // This call might fail if called asynchrously after the toolbox is finished
@@ -332,7 +332,33 @@ class FlexboxInspector {
     }
 
     const highlighted = this._highlighters &&
-      nodeFront == this.highlighters.flexboxHighlighterShown;
+      containerNodeFront == this.highlighters.flexboxHighlighterShown;
+
+    // Fetch the flex items for the given flex container and the flex item NodeFronts.
+    const flexItems = [];
+    const flexItemFronts = await flexboxFront.getFlexItems();
+
+    for (const flexItemFront of flexItemFronts) {
+      let itemNodeFront = flexItemFront.nodeFront;
+
+      if (!itemNodeFront) {
+        try {
+          itemNodeFront = await this.walker.getNodeFromActor(flexItemFront.actorID,
+            ["element"]);
+        } catch (e) {
+          // This call might fail if called asynchrously after the toolbox is finished
+          // closing.
+          return;
+        }
+      }
+
+      flexItems.push({
+        actorID: flexItemFront.actorID,
+        flexItemSizing: flexItemFront.flexItemSizing,
+        nodeFront: itemNodeFront,
+        properties: flexItemFront.properties,
+      });
+    }
 
     const currentUrl = this.inspector.target.url;
     // Get the hostname, if there is no hostname, fall back on protocol
@@ -344,8 +370,9 @@ class FlexboxInspector {
     this.store.dispatch(updateFlexbox({
       actorID: flexboxFront.actorID,
       color,
+      flexItems,
       highlighted,
-      nodeFront,
+      nodeFront: containerNodeFront,
       properties: flexboxFront.properties,
     }));
   }

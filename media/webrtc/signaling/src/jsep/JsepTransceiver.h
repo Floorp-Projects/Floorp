@@ -30,7 +30,6 @@ class JsepTransceiver {
       mJsDirection(jsDirection),
       mSendTrack(type, sdp::kSend),
       mRecvTrack(type, sdp::kRecv),
-      mTransport(*(new JsepTransport)),
       mLevel(SIZE_MAX),
       mBundleLevel(SIZE_MAX),
       mAddTrackMagic(false),
@@ -45,7 +44,7 @@ class JsepTransceiver {
       mJsDirection(orig.mJsDirection),
       mSendTrack(orig.mSendTrack),
       mRecvTrack(orig.mRecvTrack),
-      mTransport(*(new JsepTransport(orig.mTransport))),
+      mTransport(orig.mTransport),
       mMid(orig.mMid),
       mLevel(orig.mLevel),
       mBundleLevel(orig.mBundleLevel),
@@ -60,7 +59,7 @@ class JsepTransceiver {
 
     void Rollback(JsepTransceiver& oldTransceiver)
     {
-      *mTransport = *oldTransceiver.mTransport;
+      mTransport = oldTransceiver.mTransport;
       mLevel = oldTransceiver.mLevel;
       mBundleLevel = oldTransceiver.mBundleLevel;
       mRecvTrack = oldTransceiver.mRecvTrack;
@@ -207,12 +206,21 @@ class JsepTransceiver {
       return mRecvTrack.GetMediaType();
     }
 
+    bool HasOwnTransport() const
+    {
+      if (mTransport.mComponents &&
+          (!HasBundleLevel() || (GetLevel() == BundleLevel()))) {
+        return true;
+      }
+      return false;
+    }
+
     // This is the direction JS wants. It might not actually happen.
     SdpDirectionAttribute::Direction mJsDirection;
 
     JsepTrack mSendTrack;
     JsepTrack mRecvTrack;
-    OwningNonNull<JsepTransport> mTransport;
+    JsepTransport mTransport;
 
   private:
     // Stuff that is not negotiated

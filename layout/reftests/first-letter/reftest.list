@@ -76,7 +76,7 @@ random-if(gtkWidget) random-if(winWidget&&!d2d) == font-text-styles-floater.html
 == overflow-inline-overflow.html overflow-inline-overflow-ref.html
 
 == 1385656.html 1385656-ref.html
-== 1404167-1.html 1404167-1-ref.html
-== 1404167-2.html 1404167-2-ref.html
-== 1404167-3.html 1404167-3-ref.html
-== 1404167-4.html 1404167-4-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1404167-1.html 1404167-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1404167-2.html 1404167-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1404167-3.html 1404167-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1404167-4.html 1404167-4-ref.html # Bug 1392106

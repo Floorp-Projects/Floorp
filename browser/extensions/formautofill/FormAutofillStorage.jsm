@@ -66,6 +66,7 @@
  *       cc-exp-month,
  *       cc-exp-year,          // 2-digit year will be converted to 4 digits
  *                             // upon saving
+ *       cc-type,              // Optional card network id (instrument type)
  *
  *       // computed fields (These fields are computed based on the above fields
  *       // and are not allowed to be modified directly.)
@@ -198,6 +199,7 @@ const VALID_CREDIT_CARD_FIELDS = [
   "cc-number",
   "cc-exp-month",
   "cc-exp-year",
+  "cc-type",
 ];
 
 const VALID_CREDIT_CARD_COMPUTED_FIELDS = [

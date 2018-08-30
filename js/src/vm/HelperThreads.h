@@ -24,6 +24,8 @@
 
 #include "ds/Fifo.h"
 #include "jit/Ion.h"
+#include "js/CompileOptions.h"
+#include "js/SourceBufferHolder.h"
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
 #include "vm/JSContext.h"
@@ -603,31 +605,31 @@ CancelOffThreadParses(JSRuntime* runtime);
  * alive until the compilation finishes.
  */
 bool
-StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
+StartOffThreadParseScript(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                           JS::SourceBufferHolder& srcBuf,
                           JS::OffThreadCompileCallback callback, void* callbackData);
 
 bool
-StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& options,
+StartOffThreadParseModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                           JS::SourceBufferHolder& srcBuf,
                           JS::OffThreadCompileCallback callback, void* callbackData);
 
 bool
-StartOffThreadDecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
+StartOffThreadDecodeScript(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                            const JS::TranscodeRange& range,
                            JS::OffThreadCompileCallback callback, void* callbackData);
 
 #if defined(JS_BUILD_BINAST)
 
 bool
-StartOffThreadDecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
+StartOffThreadDecodeBinAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                            const uint8_t* buf, size_t length,
                            JS::OffThreadCompileCallback callback, void* callbackData);
 
 #endif /* JS_BUILD_BINAST */
 
 bool
-StartOffThreadDecodeMultiScripts(JSContext* cx, const ReadOnlyCompileOptions& options,
+StartOffThreadDecodeMultiScripts(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                                  JS::TranscodeSources& sources,
                                  JS::OffThreadCompileCallback callback, void* callbackData);
 
@@ -686,7 +688,7 @@ class MOZ_RAII AutoUnlockHelperThreadState : public UnlockGuard<Mutex>
 struct ParseTask : public mozilla::LinkedListElement<ParseTask>, public JS::OffThreadToken
 {
     ParseTaskKind kind;
-    OwningCompileOptions options;
+    JS::OwningCompileOptions options;
 
     LifoAlloc alloc;
 
@@ -715,7 +717,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>, public JS::OffT
               JS::OffThreadCompileCallback callback, void* callbackData);
     virtual ~ParseTask();
 
-    bool init(JSContext* cx, const ReadOnlyCompileOptions& options, JSObject* global);
+    bool init(JSContext* cx, const JS::ReadOnlyCompileOptions& options, JSObject* global);
 
     void activate(JSRuntime* rt);
     virtual void parse(JSContext* cx) = 0;

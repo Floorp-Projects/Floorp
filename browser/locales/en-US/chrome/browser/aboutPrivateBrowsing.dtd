@@ -30,3 +30,6 @@
 <!ENTITY trackingProtection.title                        "Tracking Protection">
 <!ENTITY trackingProtection.description2                 "Some websites use trackers that can monitor your activity across the Internet. With Tracking Protection Firefox will block many trackers that can collect information about your browsing behavior.">
 <!ENTITY trackingProtection.startTour1                   "See how it works">
+
+<!ENTITY contentBlocking.title                           "Content Blocking">
+<!ENTITY contentBlocking.description                     "Some websites use trackers that can monitor your activity across the Internet. In private windows Firefox Content Blocking automatically blocks many trackers that can collect information about your browsing behavior.">

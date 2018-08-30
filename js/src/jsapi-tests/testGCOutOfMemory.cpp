@@ -6,6 +6,7 @@
  * Contributor: Igor Bukanov
  */
 
+#include "js/CompilationAndEvaluation.h"
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(testGCOutOfMemory)

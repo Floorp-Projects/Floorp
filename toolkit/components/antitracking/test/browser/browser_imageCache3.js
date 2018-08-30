@@ -1,0 +1,15 @@
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+let blockingByCookieBehavior = false;
+let blockingByContentBlocking = false;
+let blockingByAllowList = false;
+
+let rootDir = getRootDirectory(gTestPath);
+let jar = getJar(rootDir);
+if (jar) {
+  let tmpdir = extractJarToTmp(jar);
+  rootDir = "file://" + tmpdir.path + "/";
+}
+/* import-globals-from imageCacheWorker.js */
+Services.scriptloader.loadSubScript(rootDir + "imageCacheWorker.js", this);
+

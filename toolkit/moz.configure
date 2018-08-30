@@ -1064,3 +1064,16 @@ def launcher(value, target):
 
 set_config('MOZ_LAUNCHER_PROCESS', launcher)
 set_define('MOZ_LAUNCHER_PROCESS', launcher)
+
+# Prio
+# ==============================================================
+@depends(c_compiler)
+def libprio(info):
+    if info:
+      if info.type in ('msvc'):
+        return None
+    else:
+      return True
+
+set_config('MOZ_LIBPRIO', libprio)
+

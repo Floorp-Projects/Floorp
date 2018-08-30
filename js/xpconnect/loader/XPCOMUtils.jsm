@@ -420,18 +420,6 @@ var XPCOMUtils = {
   },
 
   /**
-   * Helper which iterates over the entries in a category.
-   * @param aCategory The name of the category over which to iterate.
-   */
-  enumerateCategoryEntries: function* XPCOMUtils_enumerateCategoryEntries(aCategory)
-  {
-    let category = this.categoryManager.enumerateCategory(aCategory);
-    for (let entry of category) {
-      yield [entry.data, this.categoryManager.getCategoryEntry(aCategory, entry.data)];
-    }
-  },
-
-  /**
    * Returns an nsIFactory for |component|.
    */
   _getFactory: function XPCOMUtils__getFactory(component) {
@@ -668,7 +656,3 @@ var XPCU_lazyPreferenceObserverQI = ChromeUtils.generateQI([Ci.nsIObserver, Ci.n
 
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(XPCOMUtils, "categoryManager",
-                                   "@mozilla.org/categorymanager;1",
-                                   "nsICategoryManager");

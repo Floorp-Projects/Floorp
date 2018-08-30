@@ -43,10 +43,6 @@
   </menulist>
 </hbox>
 
-<menulist id="menulist-editable" editable="true">
-  <menupopup id="menulist-popup-editable"/>
-</menulist>
-
 <menulist id="menulist-initwithvalue" value="two">
   <menupopup>
     <menuitem label="One" value="one"/>
@@ -55,20 +51,6 @@
   </menupopup>
 </menulist>
 <menulist id="menulist-initwithselected" value="two">
-  <menupopup>
-    <menuitem label="One" value="one"/>
-    <menuitem label="Two" value="two"/>
-    <menuitem label="Three" value="three" selected="true"/>
-  </menupopup>
-</menulist>
-<menulist id="menulist-editable-initwithvalue" editable="true" value="Two">
-  <menupopup>
-    <menuitem label="One" value="one"/>
-    <menuitem label="Two" value="two"/>
-    <menuitem label="Three" value="three"/>
-  </menupopup>
-</menulist>
-<menulist id="menulist-editable-initwithselected" editable="true" value="two">
   <menupopup>
     <menuitem label="One" value="one"/>
     <menuitem label="Two" value="two"/>
@@ -99,62 +81,33 @@ function testtag_menulists()
   testtag_menulist_UI_start($("menulist"), false);
 }
 
-function testtag_menulist_UI_start(element, editable)
+function testtag_menulist_UI_start(element)
 {
-  var testprefix = editable ? "editable" : "";
-
   // check the menupopup property
   var popup = element.menupopup;
   ok(popup && popup.localName == "menupopup" &&
-              popup.parentNode == element, testprefix + " menupopup");
+              popup.parentNode == element, "menupopup");
 
   // test the interfaces that menulist implements
-  test_nsIDOMXULMenuListElement(element, testprefix, editable);
+  test_nsIDOMXULMenuListElement(element);
 }
 
-function testtag_menulist_UI_finish(element, editable)
+function testtag_menulist_UI_finish(element)
 {
   element.value = "";
 
-  test_nsIDOMXULSelectControlElement(element, "menuitem",
-                                     editable ? "editable" : null);
+  test_nsIDOMXULSelectControlElement(element, "menuitem", null);
 
-  if (!editable) {
-    testtag_menulist_UI_start($("menulist-editable"), true);
-  }
-  else {
-    // bug 566154, the menulist width should account for vertical scrollbar
-    ok(document.getElementById("menulist-size").getBoundingClientRect().width >= 210,
-       "menulist popup width includes scrollbar width");
+  // bug 566154, the menulist width should account for vertical scrollbar
+  ok(document.getElementById("menulist-size").getBoundingClientRect().width >= 210,
+     "menulist popup width includes scrollbar width");
 
-    $("menulist").open = true;
-  }
+  $("menulist").open = true;
 }
 
-function test_nsIDOMXULMenuListElement(element, testprefix, editable)
+function test_nsIDOMXULMenuListElement(element)
 {
-  is(element.open, false, testprefix + " open");
-  is(element.editable, editable, testprefix + " editable");
-
-  if (editable) {
-    var inputField = element.inputField;
-    is(inputField &&
-                  inputField instanceof HTMLInputElement,
-                  true, testprefix + " inputField");
-
-    // check if the select method works
-    inputField.select();
-    is(inputField.selectionStart, 0, testprefix + " empty select selectionStart");
-    is(inputField.selectionEnd, 0, testprefix + " empty select selectionEnd");
-
-    element.value = "Some Text";
-    inputField.select();
-    is(inputField.selectionStart, 0, testprefix + " empty select selectionStart");
-    is(inputField.selectionEnd, 9, testprefix + " empty select selectionEnd");
-  }
-  else {
-    is(element.inputField, null , testprefix + " inputField");
-  }
+  is(element.open, false, "open");
 
   element.appendItem("Item One", "one");
   var seconditem = element.appendItem("Item Two", "two");
@@ -167,46 +120,37 @@ function test_nsIDOMXULMenuListElement(element, testprefix, editable)
   thirditem.setAttribute("description", "This is the third description");
 
   // check the image and description properties
-  // editable menulists don't use the image or description properties currently
-  if (editable) {
-    element.selectedIndex = 1;
-    is(element.image, "", testprefix + " image set to selected");
-    is(element.description, "", testprefix + " description set to selected");
-    test_nsIDOMXULMenuListElement_finish(element, testprefix, editable);
-  }
-  else {
-    element.selectedIndex = 1;
-    is(element.image, "happy.png", testprefix + " image set to selected");
-    is(element.description, "This is the second description", testprefix + " description set to selected");
-    element.selectedIndex = -1;
-    is(element.image, "", testprefix + " image set when none selected");
-    is(element.description, "", testprefix + " description set when none selected");
-    element.selectedIndex = 2;
-    is(element.image, "happy.png", testprefix + " image set to selected again");
-    is(element.description, "This is the third description", testprefix + " description set to selected again");
+  element.selectedIndex = 1;
+  is(element.image, "happy.png", "image set to selected");
+  is(element.description, "This is the second description", "description set to selected");
+  element.selectedIndex = -1;
+  is(element.image, "", "image set when none selected");
+  is(element.description, "", "description set when none selected");
+  element.selectedIndex = 2;
+  is(element.image, "happy.png", "image set to selected again");
+  is(element.description, "This is the third description", "description set to selected again");
 
-    // check that changing the properties of the selected item changes the menulist's properties
-    let properties = [{attr: "label", value: "Item Number Three"},
-                      {attr: "value", value: "item-three"},
-                      {attr: "image", value: "smile.png"},
-                      {attr: "description", value: "Changed description"}];
-    test_nsIDOMXULMenuListElement_properties(element, testprefix, editable, thirditem, properties);
-  }
+  // check that changing the properties of the selected item changes the menulist's properties
+  let properties = [{attr: "label", value: "Item Number Three"},
+                    {attr: "value", value: "item-three"},
+                    {attr: "image", value: "smile.png"},
+                    {attr: "description", value: "Changed description"}];
+  test_nsIDOMXULMenuListElement_properties(element, thirditem, properties);
 }
 
-function test_nsIDOMXULMenuListElement_properties(element, testprefix, editable, thirditem, properties)
+function test_nsIDOMXULMenuListElement_properties(element, thirditem, properties)
 {
   let {attr, value} = properties.shift();
   let last = (properties.length == 0);
 
   let mutObserver = new MutationObserver(() => {
-    is(element.getAttribute(attr), value, `${testprefix} ${attr} modified`);
+    is(element.getAttribute(attr), value, `${attr} modified`);
     done();
   });
   mutObserver.observe(element, { attributeFilter: [attr] });
 
   let failureTimeout = setTimeout(() => {
-    ok(false, `${testprefix} ${attr} should have updated`);
+    ok(false, `${attr} should have updated`);
     done();
   }, 2000);
 
@@ -215,37 +159,37 @@ function test_nsIDOMXULMenuListElement_properties(element, testprefix, editable,
     clearTimeout(failureTimeout);
     mutObserver.disconnect();
     if (!last) {
-      test_nsIDOMXULMenuListElement_properties(element, testprefix, editable, thirditem, properties);
+      test_nsIDOMXULMenuListElement_properties(element, thirditem, properties);
     }
     else {
-      test_nsIDOMXULMenuListElement_unselected(element, testprefix, editable, thirditem);
+      test_nsIDOMXULMenuListElement_unselected(element, thirditem);
     }
   }
 
   thirditem.setAttribute(attr, value)
 }
 
-function test_nsIDOMXULMenuListElement_unselected(element, testprefix, editable, thirditem)
+function test_nsIDOMXULMenuListElement_unselected(element, thirditem)
 {
   let seconditem = thirditem.previousElementSibling;
   seconditem.label = "Changed Label 2";
-  is(element.label, "Item Number Three", testprefix + " label of another item modified");
+  is(element.label, "Item Number Three", "label of another item modified");
 
   element.selectedIndex = 0;
-  is(element.image, "", testprefix + " image set to selected with no image");
-  is(element.description, "", testprefix + " description set to selected with no description");
-  test_nsIDOMXULMenuListElement_finish(element, testprefix, editable);
+  is(element.image, "", "image set to selected with no image");
+  is(element.description, "", "description set to selected with no description");
+  test_nsIDOMXULMenuListElement_finish(element);
 }
 
-function test_nsIDOMXULMenuListElement_finish(element, testprefix, editable)
+function test_nsIDOMXULMenuListElement_finish(element)
 {
   // check the removeAllItems method
   element.appendItem("An Item", "anitem");
   element.appendItem("Another Item", "anotheritem");
   element.removeAllItems();
-  is(element.itemCount, 0, testprefix + " removeAllItems");
+  is(element.itemCount, 0, "removeAllItems");
 
-  testtag_menulist_UI_finish(element, editable);
+  testtag_menulist_UI_finish(element);
 }
 
 function test_menulist_open(element, scroller)
@@ -285,15 +229,6 @@ function checkScrollAndFinish()
 {
   is($("scroller").scrollTop, 0, "mousewheel on menulist does not scroll vbox parent");
   is($("scroller-in-listbox").scrollTop, 0, "mousewheel on menulist does not scroll listbox parent");
-
-  // bug 561243, outline causes the mouse click to be targeted incorrectly
-  var editableMenulist = $("menulist-editable");
-  editableMenulist.className = "outlined";
-
-  synthesizeMouse(editableMenulist.inputField, 25, 8, { type: "mousedown" });
-  synthesizeMouse(editableMenulist.inputField, 25, 8, { type: "mouseup" });
-  isnot(editableMenulist.inputField.selectionStart, editableMenulist.inputField.textLength,
-        "mouse event on editable menulist with outline caret position");
 
   let menulist = $("menulist-size");
   menulist.addEventListener("popupshown", function testAltClose() {
@@ -382,9 +317,6 @@ function dragScroll()
 </script>
 
 <body xmlns="http://www.w3.org/1999/xhtml">
-<style>
-.outlined > .menulist-editable-box { outline: 1px solid black; }
-</style>
 <p id="display">
 </p>
 <div id="content" style="display: none">

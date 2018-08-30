@@ -642,16 +642,6 @@ nsNativeTheme::IsRegularMenuItem(nsIFrame *aFrame)
 }
 
 bool
-nsNativeTheme::IsMenuListEditable(nsIFrame *aFrame)
-{
-  bool isEditable = false;
-  nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aFrame->GetContent());
-  if (menulist)
-    menulist->GetEditable(&isEditable);
-  return isEditable;
-}
-
-bool
 nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
                                               uint32_t aMinimumFrameRate)
 {

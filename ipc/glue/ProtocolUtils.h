@@ -773,7 +773,7 @@ DuplicateHandle(HANDLE aSourceHandle,
  */
 void AnnotateSystemError();
 
-enum class State
+enum class LivenessState
 {
   Dead,
   Null,
@@ -781,9 +781,9 @@ enum class State
 };
 
 bool
-StateTransition(bool aIsDelete, State* aNext);
+StateTransition(bool aIsDelete, LivenessState* aNext);
 
-enum class ReEntrantDeleteState
+enum class ReEntrantDeleteLivenessState
 {
   Dead,
   Null,
@@ -794,7 +794,7 @@ enum class ReEntrantDeleteState
 bool
 ReEntrantDeleteStateTransition(bool aIsDelete,
                                bool aIsDeleteReply,
-                               ReEntrantDeleteState* aNext);
+                               ReEntrantDeleteLivenessState* aNext);
 
 /**
  * An endpoint represents one end of a partially initialized IPDL channel. To

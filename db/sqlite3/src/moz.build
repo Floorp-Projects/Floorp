@@ -98,6 +98,11 @@ elif CONFIG['HAVE_64BIT_BUILD']:
 # This has obviously no effect in case of System Sqlite.
 DEFINES['SQLITE_TEMP_FILE_PREFIX'] = '"mz_etilqs_"'
 
+# Our copy of sqlite3 doesn't know about AArch64 + Windows's endianness yet,
+# help it out.  (This does non-Windows too, but that's OK.)
+if CONFIG['CPU_ARCH'] == 'aarch64':
+    DEFINES['SQLITE_BYTEORDER'] = 1234
+
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [

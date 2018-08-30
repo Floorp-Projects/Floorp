@@ -222,7 +222,6 @@ BlobURL::GetClassID(nsCID * *aClassID)
   // Make sure to modify any subclasses as needed if this ever
   // changes to not call the virtual GetClassIDNoAlloc.
   *aClassID = (nsCID*) moz_xmalloc(sizeof(nsCID));
-  NS_ENSURE_TRUE(*aClassID, NS_ERROR_OUT_OF_MEMORY);
 
   return GetClassIDNoAlloc(*aClassID);
 }
