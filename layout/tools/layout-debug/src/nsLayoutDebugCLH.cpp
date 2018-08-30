@@ -51,13 +51,17 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine)
 
     nsCOMPtr<nsIMutableArray> argsArray = nsArray::Create();
 
-    if (!url.IsEmpty())
-    {
+    if (!url.IsEmpty()) {
+        nsCOMPtr<nsIURI> uri;
+        rv = aCmdLine->ResolveURI(url, getter_AddRefs(uri));
+        NS_ENSURE_SUCCESS(rv, rv);
         nsCOMPtr<nsISupportsString> scriptableURL =
             do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
         NS_ENSURE_TRUE(scriptableURL, NS_ERROR_FAILURE);
-
-        scriptableURL->SetData(url);
+        nsAutoCString resolvedSpec;
+        rv = uri->GetSpec(resolvedSpec);
+        NS_ENSURE_SUCCESS(rv, rv);
+        scriptableURL->SetData(NS_ConvertUTF8toUTF16(resolvedSpec));
         argsArray->AppendElement(scriptableURL);
     }
 

@@ -34,7 +34,6 @@ class nsMemory
 {
 public:
   static nsresult   HeapMinimize(bool aImmediate);
-  static void*      Clone(const void* aPtr, size_t aSize);
   static nsIMemory* GetGlobalMemoryService();       // AddRefs
 };
 
@@ -105,22 +104,6 @@ public:
  */
 #define NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(size, array)                    \
     NS_FREE_XPCOM_POINTER_ARRAY((size), (array), NS_IF_RELEASE)
-
-/**
- * A macro, NS_ALIGNMENT_OF(t_) that determines the alignment
- * requirements of a type.
- */
-namespace mozilla {
-template<class T>
-struct AlignmentTestStruct
-{
-  char c;
-  T t;
-};
-} // namespace mozilla
-
-#define NS_ALIGNMENT_OF(t_) \
-  (sizeof(mozilla::AlignmentTestStruct<t_>) - sizeof(t_))
 
 /**
  * An enumeration type used to represent a method of assignment.

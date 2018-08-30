@@ -87,8 +87,7 @@ class DeserializedEdgeRange : public EdgeRange
 
     auto& edge = node->edges[i];
     auto referent = node->getEdgeReferent(edge);
-    currentEdge = Edge(edge.name
-                ? NS_strdup(edge.name) : nullptr, referent);
+    currentEdge = Edge(edge.name ? NS_xstrdup(edge.name) : nullptr, referent);
     front_ = &currentEdge;
   }
 

@@ -41,6 +41,8 @@ class HighlightersOverlay {
 
     // NodeFront of the flexbox container that is highlighted.
     this.flexboxHighlighterShown = null;
+    // NodeFront of the flex item that is highlighted.
+    this.flexItemHighlighterShown = null;
     // NodeFront of element that is highlighted by the geometry editor.
     this.geometryEditorHighlighterShown = null;
     // NodeFront of the grid container that is highlighted.
@@ -64,9 +66,11 @@ class HighlightersOverlay {
     this.onMouseOut = this.onMouseOut.bind(this);
     this.onWillNavigate = this.onWillNavigate.bind(this);
     this.hideFlexboxHighlighter = this.hideFlexboxHighlighter.bind(this);
+    this.hideFlexItemHighlighter = this.hideFlexItemHighlighter.bind(this);
     this.hideGridHighlighter = this.hideGridHighlighter.bind(this);
     this.hideShapesHighlighter = this.hideShapesHighlighter.bind(this);
     this.showFlexboxHighlighter = this.showFlexboxHighlighter.bind(this);
+    this.showFlexItemHighlighter = this.showFlexItemHighlighter.bind(this);
     this.showGridHighlighter = this.showGridHighlighter.bind(this);
     this.showShapesHighlighter = this.showShapesHighlighter.bind(this);
     this._handleRejection = this._handleRejection.bind(this);
@@ -216,12 +220,10 @@ class HighlightersOverlay {
   }
 
   /**
-   * Create a flexbox highlighter settings object for the provided nodeFront.
-   *
-   * @param  {NodeFront} nodeFront
-   *         The NodeFront for which we need highlighter settings.
+   * Create a flexbox highlighter settings object from the Redux store containing any
+   * highlighter options that should be passed into the highlighter.
    */
-  getFlexboxHighlighterSettings(nodeFront) {
+  getFlexboxHighlighterSettings() {
     const { flexbox } = this.store.getState();
     const color = flexbox.color;
     return { color };
@@ -305,6 +307,62 @@ class HighlightersOverlay {
 
     // Erase flexbox highlighter state.
     this.state.flexbox = null;
+  }
+
+  /**
+   * Toggle the flex item highlighter for the given flex item element.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of the flex item element to highlight.
+   * @param  {Object} options
+   *         Object used for passing options to the flex item highlighter.
+   */
+  async toggleFlexItemHighlighter(node, options = {}) {
+    if (node == this.flexItemHighlighterShown) {
+      await this.hideFlexItemHighlighter(node);
+      return;
+    }
+
+    await this.showFlexItemHighlighter(node, options);
+  }
+
+  /**
+   * Show the flex item highlighter for the given flex item element.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of the flex item element to highlight.
+   * @param  {Object} options
+   *         Object used for passing options to the flex item highlighter.
+   */
+  async showFlexItemHighlighter(node, options) {
+    const highlighter = await this._getHighlighter("FlexItemHighlighter");
+    if (!highlighter) {
+      return;
+    }
+
+    options = Object.assign({}, options, this.getFlexboxHighlighterSettings());
+
+    const isShown = await highlighter.show(node, options);
+    if (!isShown) {
+      return;
+    }
+
+    this.flexItemHighlighterShown = node;
+  }
+
+  /**
+   * Hide the flex item highlighter for the given flex item element.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of the flex item element to unhighlight.
+   */
+  async hideFlexItemHighlighter(node) {
+    if (!this.flexItemHighlighterShown || !this.highlighters.FlexItemHighlighter) {
+      return;
+    }
+
+    await this.highlighters.FlexItemHighlighter.hide();
+    this.flexItemHighlighterShown = null;
   }
 
   /**
@@ -912,6 +970,8 @@ class HighlightersOverlay {
 
     this._hideHighlighterIfDeadNode(this.flexboxHighlighterShown,
       this.hideFlexboxHighlighter);
+    this._hideHighlighterIfDeadNode(this.flexItemHighlighterShown,
+      this.hideFlexItemHighlighter);
     this._hideHighlighterIfDeadNode(this.gridHighlighterShown,
       this.hideGridHighlighter);
     this._hideHighlighterIfDeadNode(this.shapesHighlighterShown,
@@ -922,14 +982,16 @@ class HighlightersOverlay {
    * Clear saved highlighter shown properties on will-navigate.
    */
   onWillNavigate() {
+    this.destroyEditors();
+
     this.boxModelHighlighterShown = null;
     this.flexboxHighlighterShown = null;
+    this.flexItemHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
     this.gridHighlighterShown = null;
     this.hoveredHighlighterShown = null;
     this.selectorHighlighterShown = null;
     this.shapesHighlighterShown = null;
-    this.destroyEditors();
   }
 
   /**
@@ -980,6 +1042,7 @@ class HighlightersOverlay {
 
     this.boxModelHighlighterShown = null;
     this.flexboxHighlighterShown = null;
+    this.flexItemHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
     this.gridHighlighterShown = null;
     this.hoveredHighlighterShown = null;

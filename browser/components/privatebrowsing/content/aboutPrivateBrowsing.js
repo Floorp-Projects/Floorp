@@ -5,8 +5,12 @@
 /* eslint-env mozilla/frame-script */
 
 const FAVICON_QUESTION = "chrome://global/skin/icons/question-32.png";
+const CB_ENABLED_PREF = "browser.contentblocking.enabled";
+const CB_UI_ENABLED_PREF = "browser.contentblocking.ui.enabled";
 const TP_ENABLED_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_ENABLED_PREF = "privacy.trackingprotection.pbmode.enabled";
+
+let contentBlockingUIEnabled = false;
 
 function updateTPInfo() {
   let tpButton = document.getElementById("tpButton");
@@ -15,15 +19,33 @@ function updateTPInfo() {
   let titleTracking = document.getElementById("titleTracking");
   let tpSubHeader = document.getElementById("tpSubHeader");
 
+  let tpTitle = document.getElementById("tpTitle");
+  let cbTitle = document.getElementById("cbTitle");
+  let tpDescription = document.getElementById("tpDescription");
+  let cbDescription = document.getElementById("cbDescription");
+
+  tpTitle.classList.toggle("hide", contentBlockingUIEnabled);
+  tpDescription.classList.toggle("hide", contentBlockingUIEnabled);
+
+  cbTitle.classList.toggle("hide", !contentBlockingUIEnabled);
+  cbDescription.classList.toggle("hide", !contentBlockingUIEnabled);
+
   let globalTrackingEnabled = RPMGetBoolPref(TP_ENABLED_PREF);
   let trackingEnabled = globalTrackingEnabled || RPMGetBoolPref(TP_PB_ENABLED_PREF);
+
+  if (contentBlockingUIEnabled) {
+    let contentBlockingEnabled = RPMGetBoolPref(CB_ENABLED_PREF);
+    trackingEnabled = trackingEnabled && contentBlockingEnabled;
+  } else {
+    title.classList.toggle("hide", trackingEnabled);
+    titleTracking.classList.toggle("hide", !trackingEnabled);
+  }
 
   // if tracking protection is enabled globally we don't even give the user
   // a choice here by hiding the toggle completely.
   tpButton.classList.toggle("hide", globalTrackingEnabled);
   tpToggle.checked = trackingEnabled;
-  title.classList.toggle("hide", trackingEnabled);
-  titleTracking.classList.toggle("hide", !trackingEnabled);
+
   tpSubHeader.classList.toggle("tp-off", !trackingEnabled);
 }
 
@@ -38,6 +60,8 @@ document.addEventListener("DOMContentLoaded", function() {
     return;
   }
 
+  contentBlockingUIEnabled = RPMGetBoolPref(CB_UI_ENABLED_PREF);
+
   document.getElementById("startTour").addEventListener("click", function() {
     RPMSendAsyncMessage("DontShowIntroPanelAgain");
   });
@@ -51,10 +75,17 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("tpButton").addEventListener("click", () => {
     tpToggle.click();
   });
-  tpToggle.addEventListener("change", function() {
-    RPMSetBoolPref(TP_PB_ENABLED_PREF, tpToggle.checked).then(function() {
-      updateTPInfo();
-    });
+  tpToggle.addEventListener("change", async function() {
+    let promises = [];
+    if (tpToggle.checked && contentBlockingUIEnabled) {
+      promises.push(RPMSetBoolPref(CB_ENABLED_PREF, true));
+    }
+
+    promises.push(RPMSetBoolPref(TP_PB_ENABLED_PREF, tpToggle.checked));
+
+    await Promise.all(promises);
+
+    updateTPInfo();
   });
 
   updateTPInfo();

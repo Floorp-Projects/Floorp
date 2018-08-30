@@ -110,8 +110,8 @@ let apiManager = new class extends SchemaAPIManager {
   }
 
   getModuleJSONURLs() {
-    return Array.from(XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_MODULES),
-                      ([name, url]) => url);
+    return Array.from(Services.catMan.enumerateCategory(CATEGORY_EXTENSION_MODULES),
+                      ({value}) => value);
   }
 
   // Loads all the ext-*.js scripts currently registered.
@@ -125,7 +125,7 @@ let apiManager = new class extends SchemaAPIManager {
       () => this.loadModuleJSON(this.getModuleJSONURLs()));
 
     let scriptURLs = [];
-    for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS)) {
+    for (let {value} of Services.catMan.enumerateCategory(CATEGORY_EXTENSION_SCRIPTS)) {
       scriptURLs.push(value);
     }
 
@@ -143,8 +143,8 @@ let apiManager = new class extends SchemaAPIManager {
       // extended by other schemas, so needs to be loaded first.
       return Schemas.load(BASE_SCHEMA).then(() => {
         let promises = [];
-        for (let [/* name */, url] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCHEMAS)) {
-          promises.push(Schemas.load(url));
+        for (let {value} of Services.catMan.enumerateCategory(CATEGORY_EXTENSION_SCHEMAS)) {
+          promises.push(Schemas.load(value));
         }
         for (let [url, {content}] of this.schemaURLs) {
           promises.push(Schemas.load(url, content));

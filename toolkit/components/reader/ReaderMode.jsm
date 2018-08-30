@@ -98,9 +98,6 @@ var ReaderMode = {
    * if not, append the about:reader page in the history instead.
    */
   enterReaderMode(docShell, win) {
-    Services.telemetry.recordEvent("savant", "readermode", "on", null,
-                                  { subcategory: "feature" });
-
     let url = win.document.location.href;
     let readerURL = "about:reader?url=" + encodeURIComponent(url);
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -122,8 +119,6 @@ var ReaderMode = {
    * if not, append the original page in the history instead.
    */
   leaveReaderMode(docShell, win) {
-    Services.telemetry.recordEvent("savant", "readermode", "off", null,
-                                  { subcategory: "feature" });
     let url = win.document.location.href;
     let originalURL = this.getOriginalUrl(url);
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -146,8 +141,7 @@ var ReaderMode = {
       Cu.reportError(e);
       return;
     }
-    let flags =  webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL |
-      webNav.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+    let flags = webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
     webNav.loadURI(originalURL, flags, referrerURI, null, null, principal);
   },
 

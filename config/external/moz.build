@@ -8,11 +8,15 @@ external_dirs = []
 
 DIRS += [
     'lgpllibs',
-    'prio',
     'sqlite',
 ]
 if not CONFIG['MOZ_SYSTEM_JPEG']:
     external_dirs += ['media/libjpeg']
+
+if CONFIG['MOZ_LIBPRIO']:
+    DIRS += [
+        'prio',
+    ]
 
 # There's no "native" brotli or woff2 yet, but probably in the future...
 external_dirs += ['modules/brotli']

@@ -181,10 +181,6 @@ static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream
 
     if(r=nr_ice_peer_candidate_from_attribute(pctx->ctx,candidate,pstream,&cand))
       ABORT(r);
-    if(cand->component_id-1>=pstream->component_ct){
-      r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) specified too many components",pctx->ctx->label,pctx->label);
-      ABORT(R_BAD_DATA);
-    }
 
     /* set the trickled flag on the candidate */
     cand->trickled = trickled;
@@ -199,16 +195,17 @@ static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream
     }
 
     if(!comp){
-      r_log(LOG_ICE,LOG_WARNING,"Peer answered with more components than we offered");
-      ABORT(R_BAD_DATA);
+      /* Very common for the answerer when it uses rtcp-mux */
+      r_log(LOG_ICE,LOG_INFO,"ICE(%s): peer (%s) no such component for candidate %s",pctx->ctx->label,pctx->label, candidate);
+      ABORT(R_REJECTED);
     }
 
     if (comp->state == NR_ICE_COMPONENT_DISABLED) {
-      r_log(LOG_ICE,LOG_WARNING,"Peer offered candidates for disabled remote component");
+      r_log(LOG_ICE,LOG_WARNING,"Peer offered candidate for disabled remote component: %s", candidate);
       ABORT(R_BAD_DATA);
     }
     if (comp->local_component->state == NR_ICE_COMPONENT_DISABLED) {
-      r_log(LOG_ICE,LOG_WARNING,"Peer offered candidates for disabled local component");
+      r_log(LOG_ICE,LOG_WARNING,"Peer offered candidate for disabled local component: %s", candidate);
       ABORT(R_BAD_DATA);
     }
 

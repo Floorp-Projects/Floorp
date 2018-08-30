@@ -102,6 +102,7 @@ toolkit.jar:
    content/global/elements/editor.js           (widgets/editor.js)
    content/global/elements/general.js          (widgets/general.js)
    content/global/elements/stringbundle.js     (widgets/stringbundle.js)
+   content/global/elements/tabbox.js           (widgets/tabbox.js)
    content/global/elements/textbox.js          (widgets/textbox.js)
    content/global/elements/videocontrols.js    (widgets/videocontrols.js)
 #ifdef XP_MACOSX

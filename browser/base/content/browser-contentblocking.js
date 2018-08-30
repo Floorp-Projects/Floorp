@@ -433,17 +433,19 @@ var ContentBlocking = {
     let isAllowing = state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT;
     let detected = isBlocking || isAllowing;
 
-    // We consider the shield state as "active" when any kind of blocking-related
-    // activity occurs on the page (blocking or allowing). Since we have several
-    // content blockers, we need to go through them individually to figure out which
-    // ones are actually turned on or off.
-    // This state will be overriden later if there's an exception set for this site.
-    let active = this.enabled && detected;
+    let anyBlockerEnabled = false;
 
     for (let blocker of this.blockers) {
       blocker.categoryItem.classList.toggle("blocked", this.enabled && blocker.enabled);
       blocker.categoryItem.hidden = !blocker.visible;
+      anyBlockerEnabled = anyBlockerEnabled || blocker.enabled;
     }
+
+    // We consider the shield state "active" when any kind of blocking-related
+    // activity occurs on the page (blocking or allowing) and at least one blocker
+    // is enabled.
+    // This state will be overriden later if there's an exception set for this site.
+    let active = this.enabled && detected && anyBlockerEnabled;
 
     let isBrowserPrivate = PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser);
 

@@ -3065,9 +3065,6 @@ pref("layout.css.shape-outside.enabled", true);
 // Is support for document.fonts enabled?
 pref("layout.css.font-loading-api.enabled", true);
 
-// Is support for column-span enabled?
-pref("layout.css.column-span.enabled", false);
-
 // Are inter-character ruby annotations enabled?
 pref("layout.css.ruby.intercharacter.enabled", false);
 

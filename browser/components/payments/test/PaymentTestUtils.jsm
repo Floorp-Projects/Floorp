@@ -482,12 +482,14 @@ var PaymentTestUtils = {
       "cc-exp-year": (new Date()).getFullYear() + 9,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
+      "cc-type": "visa",
     },
     JaneMasterCard: {
       "cc-exp-month": 12,
       "cc-exp-year": (new Date()).getFullYear() + 9,
       "cc-name": "Jane McMaster-Card",
       "cc-number": "5555555555554444",
+      "cc-type": "mastercard",
     },
     MissingFields: {
       "cc-name": "Missy Fields",
@@ -498,6 +500,7 @@ var PaymentTestUtils = {
       "cc-exp-year": (new Date()).getFullYear() + 9,
       "cc-name": "Temp Name",
       "cc-number": "5105105105105100",
+      "cc-type": "mastercard",
     },
   },
 };

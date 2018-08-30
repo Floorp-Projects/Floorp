@@ -227,10 +227,6 @@ TelemetryImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
   COLLECT_REPORT("explicit/telemetry/impl", aMallocSizeOf(this),
       "Memory used by the Telemetry core implemenation");
 
-  COLLECT_REPORT("explicit/telemetry/histogram/shallow",
-      TelemetryHistogram::GetMapShallowSizesOfExcludingThis(aMallocSizeOf),
-      "Memory used by the Telemetry Histogram implementation");
-
   COLLECT_REPORT("explicit/telemetry/scalar/shallow",
       TelemetryScalar::GetMapShallowSizesOfExcludingThis(aMallocSizeOf),
       "Memory used by the Telemetry Scalar implemenation");
@@ -433,7 +429,7 @@ GetShutdownTimeFileName()
 
     mozFile->AppendNative(NS_LITERAL_CSTRING("Telemetry.ShutdownTime.txt"));
 
-    gRecordedShutdownTimeFileName = NS_strdup(mozFile->NativePath().get());
+    gRecordedShutdownTimeFileName = NS_xstrdup(mozFile->NativePath().get());
   }
 
   return gRecordedShutdownTimeFileName;

@@ -44,6 +44,7 @@ using mozilla::DebugOnly;
 using mozilla::PodCopy;
 using JS::AutoStableStringChars;
 using js::frontend::TokenStream;
+using JS::CompileOptions;
 
 using JS::AutoCheckCannotGC;
 

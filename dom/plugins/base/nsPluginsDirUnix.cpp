@@ -5,7 +5,6 @@
 
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsIMemory.h"
 #include "nsPluginsDir.h"
 #include "nsPluginsDirUtils.h"
 #include "prenv.h"

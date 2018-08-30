@@ -64,9 +64,18 @@ static LazyLogModule gChannelClassifierLog("nsChannelClassifier");
 
 #define URLCLASSIFIER_SKIP_HOSTNAMES       "urlclassifier.skipHostnames"
 #define URLCLASSIFIER_ANNOTATION_TABLE     "urlclassifier.trackingAnnotationTable"
+#define URLCLASSIFIER_ANNOTATION_TABLE_TEST_ENTRIES "urlclassifier.trackingAnnotationTable.testEntries"
 #define URLCLASSIFIER_ANNOTATION_WHITELIST "urlclassifier.trackingAnnotationWhitelistTable"
+#define URLCLASSIFIER_ANNOTATION_WHITELIST_TEST_ENTRIES "urlclassifier.trackingAnnotationWhitelistTable.testEntries"
 #define URLCLASSIFIER_TRACKING_TABLE       "urlclassifier.trackingTable"
+#define URLCLASSIFIER_TRACKING_TABLE_TEST_ENTRIES "urlclassifier.trackingTable.testEntries"
 #define URLCLASSIFIER_TRACKING_WHITELIST   "urlclassifier.trackingWhitelistTable"
+#define URLCLASSIFIER_TRACKING_WHITELIST_TEST_ENTRIES "urlclassifier.trackingWhitelistTable.testEntries"
+
+#define TABLE_TRACKING_BLACKLIST_PREF "tracking-blacklist-pref"
+#define TABLE_TRACKING_WHITELIST_PREF "tracking-whitelist-pref"
+#define TABLE_ANNOTATION_BLACKLIST_PREF "annotation-blacklist-pref"
+#define TABLE_ANNOTATION_WHITELIST_PREF "annotation-whitelist-pref"
 
 static const nsCString::size_type sMaxSpecLength = 128;
 
@@ -91,15 +100,23 @@ public:
 
   nsCString GetSkipHostnames() const { return mSkipHostnames; }
   nsCString GetAnnotationBlackList() const { return mAnnotationBlacklist; }
+  nsCString GetAnnotationBlackListExtraEntries() const { return mAnnotationBlacklistExtraEntries; }
   nsCString GetAnnotationWhiteList() const { return mAnnotationWhitelist; }
+  nsCString GetAnnotationWhiteListExtraEntries() const { return mAnnotationWhitelistExtraEntries; }
   nsCString GetTrackingBlackList() const { return mTrackingBlacklist; }
+  nsCString GetTrackingBlackListExtraEntries() { return mTrackingBlacklistExtraEntries; }
   nsCString GetTrackingWhiteList() const { return mTrackingWhitelist; }
+  nsCString GetTrackingWhiteListExtraEntries() { return mTrackingWhitelistExtraEntries; }
 
   void SetSkipHostnames(const nsACString& aHostnames) { mSkipHostnames = aHostnames; }
   void SetAnnotationBlackList(const nsACString& aList) { mAnnotationBlacklist = aList; }
+  void SetAnnotationBlackListExtraEntries(const nsACString& aList) { mAnnotationBlacklistExtraEntries = aList; }
   void SetAnnotationWhiteList(const nsACString& aList) { mAnnotationWhitelist = aList; }
+  void SetAnnotationWhiteListExtraEntries(const nsACString& aList) { mAnnotationWhitelistExtraEntries = aList; }
   void SetTrackingBlackList(const nsACString& aList) { mTrackingBlacklist = aList; }
+  void SetTrackingBlackListExtraEntries(const nsACString& aList) { mTrackingBlacklistExtraEntries = aList; }
   void SetTrackingWhiteList(const nsACString& aList) { mTrackingWhitelist = aList; }
+  void SetTrackingWhiteListExtraEntries(const nsACString& aList) { mTrackingWhitelistExtraEntries = aList; }
 
 private:
   friend class StaticAutoPtr<CachedPrefs>;
@@ -118,9 +135,13 @@ private:
 
   nsCString mSkipHostnames;
   nsCString mAnnotationBlacklist;
+  nsCString mAnnotationBlacklistExtraEntries;
   nsCString mAnnotationWhitelist;
+  nsCString mAnnotationWhitelistExtraEntries;
   nsCString mTrackingBlacklist;
+  nsCString mTrackingBlacklistExtraEntries;
   nsCString mTrackingWhitelist;
+  nsCString mTrackingWhitelistExtraEntries;
 
   static StaticAutoPtr<CachedPrefs> sInstance;
 };
@@ -145,20 +166,39 @@ CachedPrefs::OnPrefsChange(const char* aPref, CachedPrefs* aPrefs)
     Preferences::GetCString(URLCLASSIFIER_ANNOTATION_TABLE,
                             annotationBlacklist);
     aPrefs->SetAnnotationBlackList(annotationBlacklist);
+  } else if (!strcmp(aPref, URLCLASSIFIER_ANNOTATION_TABLE_TEST_ENTRIES)) {
+    nsAutoCString annotationBlacklistExtraEntries;
+    Preferences::GetCString(URLCLASSIFIER_ANNOTATION_TABLE_TEST_ENTRIES,
+                            annotationBlacklistExtraEntries);
+    aPrefs->SetAnnotationBlackListExtraEntries(annotationBlacklistExtraEntries);
   } else if (!strcmp(aPref, URLCLASSIFIER_ANNOTATION_WHITELIST)) {
     nsAutoCString annotationWhitelist;
     Preferences::GetCString(URLCLASSIFIER_ANNOTATION_WHITELIST,
                             annotationWhitelist);
     aPrefs->SetAnnotationWhiteList(annotationWhitelist);
+  } else if (!strcmp(aPref, URLCLASSIFIER_ANNOTATION_WHITELIST_TEST_ENTRIES)) {
+    nsAutoCString annotationWhitelistExtraEntries;
+    Preferences::GetCString(URLCLASSIFIER_ANNOTATION_WHITELIST_TEST_ENTRIES,
+                            annotationWhitelistExtraEntries);
+    aPrefs->SetAnnotationWhiteListExtraEntries(annotationWhitelistExtraEntries);
   } else if (!strcmp(aPref, URLCLASSIFIER_TRACKING_WHITELIST)) {
     nsCString trackingWhitelist;
     Preferences::GetCString(URLCLASSIFIER_TRACKING_WHITELIST,
                             trackingWhitelist);
     aPrefs->SetTrackingWhiteList(trackingWhitelist);
+  } else if (!strcmp(aPref, URLCLASSIFIER_TRACKING_WHITELIST_TEST_ENTRIES)) {
+    nsCString trackingWhitelistExtraEntries;
+    Preferences::GetCString(URLCLASSIFIER_TRACKING_WHITELIST_TEST_ENTRIES,
+                            trackingWhitelistExtraEntries);
+    aPrefs->SetTrackingWhiteListExtraEntries(trackingWhitelistExtraEntries);
   } else if (!strcmp(aPref, URLCLASSIFIER_TRACKING_TABLE)) {
     nsCString trackingBlacklist;
     Preferences::GetCString(URLCLASSIFIER_TRACKING_TABLE, trackingBlacklist);
     aPrefs->SetTrackingBlackList(trackingBlacklist);
+  } else if (!strcmp(aPref, URLCLASSIFIER_TRACKING_TABLE_TEST_ENTRIES)) {
+    nsCString trackingBlacklistExtraEntries;
+    Preferences::GetCString(URLCLASSIFIER_TRACKING_TABLE_TEST_ENTRIES, trackingBlacklistExtraEntries);
+    aPrefs->SetTrackingBlackListExtraEntries(trackingBlacklistExtraEntries);
   }
 }
 
@@ -176,11 +216,19 @@ CachedPrefs::Init()
   Preferences::RegisterCallbackAndCall(CachedPrefs::OnPrefsChange,
                                        URLCLASSIFIER_ANNOTATION_TABLE, this);
   Preferences::RegisterCallbackAndCall(CachedPrefs::OnPrefsChange,
+                                       URLCLASSIFIER_ANNOTATION_TABLE_TEST_ENTRIES, this);
+  Preferences::RegisterCallbackAndCall(CachedPrefs::OnPrefsChange,
                                        URLCLASSIFIER_ANNOTATION_WHITELIST, this);
+  Preferences::RegisterCallbackAndCall(CachedPrefs::OnPrefsChange,
+                                       URLCLASSIFIER_ANNOTATION_WHITELIST_TEST_ENTRIES, this);
   Preferences::RegisterCallbackAndCall(CachedPrefs::OnPrefsChange,
                                        URLCLASSIFIER_TRACKING_WHITELIST, this);
   Preferences::RegisterCallbackAndCall(CachedPrefs::OnPrefsChange,
+                                       URLCLASSIFIER_TRACKING_WHITELIST_TEST_ENTRIES, this);
+  Preferences::RegisterCallbackAndCall(CachedPrefs::OnPrefsChange,
                                        URLCLASSIFIER_TRACKING_TABLE, this);
+  Preferences::RegisterCallbackAndCall(CachedPrefs::OnPrefsChange,
+                                       URLCLASSIFIER_TRACKING_TABLE_TEST_ENTRIES, this);
 }
 
 // static
@@ -207,9 +255,13 @@ CachedPrefs::~CachedPrefs()
 
   Preferences::UnregisterCallback(CachedPrefs::OnPrefsChange, URLCLASSIFIER_SKIP_HOSTNAMES, this);
   Preferences::UnregisterCallback(CachedPrefs::OnPrefsChange, URLCLASSIFIER_ANNOTATION_TABLE, this);
+  Preferences::UnregisterCallback(CachedPrefs::OnPrefsChange, URLCLASSIFIER_ANNOTATION_TABLE_TEST_ENTRIES, this);
   Preferences::UnregisterCallback(CachedPrefs::OnPrefsChange, URLCLASSIFIER_ANNOTATION_WHITELIST, this);
+  Preferences::UnregisterCallback(CachedPrefs::OnPrefsChange, URLCLASSIFIER_ANNOTATION_WHITELIST_TEST_ENTRIES, this);
   Preferences::UnregisterCallback(CachedPrefs::OnPrefsChange, URLCLASSIFIER_TRACKING_WHITELIST, this);
+  Preferences::UnregisterCallback(CachedPrefs::OnPrefsChange, URLCLASSIFIER_TRACKING_WHITELIST_TEST_ENTRIES, this);
   Preferences::UnregisterCallback(CachedPrefs::OnPrefsChange, URLCLASSIFIER_TRACKING_TABLE, this);
+  Preferences::UnregisterCallback(CachedPrefs::OnPrefsChange, URLCLASSIFIER_TRACKING_TABLE_TEST_ENTRIES, this);
 }
 } // anonymous namespace
 
@@ -974,15 +1026,18 @@ TrackingURICallback::OnClassifyComplete(nsresult aErrorCode,
     bool inTrackingTable = false;
     bool inAnnotationTable = false;
 
+
     nsCCharSeparatedTokenizer tokenizer(aLists, ',');
     while (tokenizer.hasMoreTokens()) {
       const nsACString& list = tokenizer.nextToken();
       if (shouldEnableTrackingProtection && !inTrackingTable &&
-          FindInReadable(list, trackingTable)) {
+          (list == TABLE_TRACKING_BLACKLIST_PREF ||
+           FindInReadable(list, trackingTable))) {
         inTrackingTable = true;
       }
       if (shouldEnableTrackingAnnotation && !inAnnotationTable &&
-          FindInReadable(list, annotationTable)) {
+          (list == TABLE_ANNOTATION_BLACKLIST_PREF ||
+           FindInReadable(list, annotationTable))) {
         inAnnotationTable = true;
       }
     }
@@ -1025,10 +1080,14 @@ TrackingURICallback::OnClassifyComplete(nsresult aErrorCode,
     nsCCharSeparatedTokenizer tokenizer(aLists, ',');
     while (tokenizer.hasMoreTokens() && (isTracker || isAnnotation)) {
       const nsACString& list = tokenizer.nextToken();
-      if (isTracker && FindInReadable(list, trackingWhitelistTable)) {
+      if (isTracker &&
+          (list == TABLE_TRACKING_WHITELIST_PREF ||
+           FindInReadable(list, trackingWhitelistTable))) {
         isTracker = false;
       }
-      if (isAnnotation && FindInReadable(list, annotationWhitelistTable)) {
+      if (isAnnotation &&
+          (list == TABLE_ANNOTATION_WHITELIST_PREF ||
+           FindInReadable(list, annotationWhitelistTable))) {
         isAnnotation = false;
       }
     }
@@ -1299,12 +1358,18 @@ nsChannelClassifier::IsTrackerWhitelisted(nsIURI* aWhiteListURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString whitelist;
+  nsTArray<nsCString> whitelistExtraTables;
+  nsTArray<nsCString> whitelistExtraEntries;
   if (aUseAnnotationTable) {
     whitelist += CachedPrefs::GetInstance()->GetAnnotationWhiteList();
     whitelist += NS_LITERAL_CSTRING(",");
+    whitelistExtraTables.AppendElement(TABLE_ANNOTATION_WHITELIST_PREF);
+    whitelistExtraEntries.AppendElement(CachedPrefs::GetInstance()->GetAnnotationWhiteListExtraEntries());
   }
   if (aUseTrackingTable) {
     whitelist += CachedPrefs::GetInstance()->GetTrackingWhiteList();
+    whitelistExtraTables.AppendElement(TABLE_TRACKING_WHITELIST_PREF);
+    whitelistExtraEntries.AppendElement(CachedPrefs::GetInstance()->GetTrackingWhiteListExtraEntries());
   }
 
   if (whitelist.IsEmpty()) {
@@ -1315,6 +1380,8 @@ nsChannelClassifier::IsTrackerWhitelisted(nsIURI* aWhiteListURI,
   }
 
   return uriClassifier->AsyncClassifyLocalWithTables(aWhiteListURI, whitelist,
+                                                     whitelistExtraTables,
+                                                     whitelistExtraEntries,
                                                      aCallback);
 }
 
@@ -1432,12 +1499,18 @@ nsChannelClassifier::CheckIsTrackerWithLocalTable(std::function<void()>&& aCallb
   }
 
   nsAutoCString blacklist;
+  nsTArray<nsCString> blacklistExtraTables;
+  nsTArray<nsCString> blacklistExtraEntries;
   if (shouldEnableTrackingAnnotation) {
     blacklist += CachedPrefs::GetInstance()->GetAnnotationBlackList();
     blacklist += NS_LITERAL_CSTRING(",");
+    blacklistExtraTables.AppendElement(TABLE_ANNOTATION_BLACKLIST_PREF);
+    blacklistExtraEntries.AppendElement(CachedPrefs::GetInstance()->GetAnnotationBlackListExtraEntries());
   }
   if (shouldEnableTrackingProtection) {
     blacklist += CachedPrefs::GetInstance()->GetTrackingBlackList();
+    blacklistExtraTables.AppendElement(TABLE_TRACKING_BLACKLIST_PREF);
+    blacklistExtraEntries.AppendElement(CachedPrefs::GetInstance()->GetTrackingBlackListExtraEntries());
   }
   if (blacklist.IsEmpty()) {
     LOG_WARN(("nsChannelClassifier[%p]:CheckIsTrackerWithLocalTable blacklist is empty",
@@ -1455,7 +1528,10 @@ nsChannelClassifier::CheckIsTrackerWithLocalTable(std::function<void()>&& aCallb
     LOG(("nsChannelClassifier[%p]: Checking blacklist for uri=%s\n",
          this, spec.get()));
   }
-  return uriClassifier->AsyncClassifyLocalWithTables(uri, blacklist, callback);
+  return uriClassifier->AsyncClassifyLocalWithTables(uri, blacklist,
+                                                     blacklistExtraTables,
+                                                     blacklistExtraEntries,
+                                                     callback);
 }
 
 already_AddRefed<nsIChannel>

@@ -13,7 +13,7 @@ const { PAGES } = require("../constants");
 
 const ConnectPage = createFactory(require("./ConnectPage"));
 const RuntimePage = createFactory(require("./RuntimePage"));
-const Sidebar = createFactory(require("./Sidebar"));
+const Sidebar = createFactory(require("./sidebar/Sidebar"));
 
 class App extends PureComponent {
   static get propTypes() {
@@ -42,13 +42,13 @@ class App extends PureComponent {
   }
 
   render() {
-    const { dispatch, selectedPage } = this.props;
+    const { dispatch, networkLocations, selectedPage } = this.props;
 
     return dom.div(
       {
         className: "app",
       },
-      Sidebar({ dispatch, selectedPage }),
+      Sidebar({ dispatch, networkLocations, selectedPage }),
       this.getSelectedPageComponent(),
     );
   }

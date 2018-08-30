@@ -409,7 +409,6 @@ js::ToBigInt(JSContext* cx, HandleValue val)
         return nullptr;
 
     // Step 2.
-    // String conversions are not yet supported.
     if (v.isBigInt())
         return v.toBigInt();
 
@@ -418,7 +417,14 @@ js::ToBigInt(JSContext* cx, HandleValue val)
 
     if (v.isString()) {
         RootedString str(cx, v.toString());
-        return StringToBigInt(cx, str, 0);
+        BigInt* bi;
+        JS_TRY_VAR_OR_RETURN_NULL(cx, bi, StringToBigInt(cx, str, 0));
+        if (!bi) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                      JSMSG_BIGINT_INVALID_SYNTAX);
+            return nullptr;
+        }
+        return bi;
     }
 
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_BIGINT);
@@ -435,6 +441,65 @@ BigInt::numberValue(BigInt* x)
     signed long int exp;
     double d = mpz_get_d_2exp(&exp, x->num_);
     return ldexp(d, exp);
+}
+
+bool
+BigInt::equal(BigInt* lhs, BigInt* rhs)
+{
+    if (lhs == rhs)
+        return true;
+    if (mpz_cmp(lhs->num_, rhs->num_) == 0)
+        return true;
+    return false;
+}
+
+bool
+BigInt::equal(BigInt* lhs, double rhs)
+{
+    // The result of mpz_cmp_d is undefined for comparisons to NaN.
+    if (mozilla::IsNaN(rhs))
+        return false;
+    if (mpz_cmp_d(lhs->num_, rhs) == 0)
+        return true;
+    return false;
+}
+
+// BigInt proposal section 3.2.5
+JS::Result<bool>
+BigInt::looselyEqual(JSContext* cx, HandleBigInt lhs, HandleValue rhs)
+{
+    // Step 1.
+    if (rhs.isBigInt())
+        return equal(lhs, rhs.toBigInt());
+
+    // Steps 2-5 (not applicable).
+
+    // Steps 6-7.
+    if (rhs.isString()) {
+        RootedBigInt rhsBigInt(cx);
+        RootedString rhsString(cx, rhs.toString());
+        MOZ_TRY_VAR(rhsBigInt, StringToBigInt(cx, rhsString, 0));
+        if (!rhsBigInt)
+            return false;
+        return equal(lhs, rhsBigInt);
+    }
+
+    // Steps 8-9 (not applicable).
+
+    // Steps 10-11.
+    if (rhs.isObject()) {
+        RootedValue rhsPrimitive(cx, rhs);
+        if (!ToPrimitive(cx, &rhsPrimitive))
+            return cx->alreadyReportedError();
+        return looselyEqual(cx, lhs, rhsPrimitive);
+    }
+
+    // Step 12.
+    if (rhs.isNumber())
+        return equal(lhs, rhs.toNumber());
+
+    // Step 13.
+    return false;
 }
 
 JSLinearString*
@@ -519,28 +584,28 @@ js::StringToBigIntImpl(const Range<const CharT>& chars, uint8_t radix,
     return true;
 }
 
-BigInt*
+JS::Result<BigInt*, JS::OOM&>
 js::StringToBigInt(JSContext* cx, HandleString str, uint8_t radix)
 {
     RootedBigInt res(cx, BigInt::create(cx));
+    if (!res)
+        return cx->alreadyReportedOOM();
 
     JSLinearString* linear = str->ensureLinear(cx);
     if (!linear)
-        return nullptr;
+        return cx->alreadyReportedOOM();
 
     {
         JS::AutoCheckCannotGC nogc;
         if (linear->hasLatin1Chars()) {
             if (StringToBigIntImpl(linear->latin1Range(nogc), radix, res))
-                return res;
+                return res.get();
         } else {
             if (StringToBigIntImpl(linear->twoByteRange(nogc), radix, res))
-                return res;
+                return res.get();
         }
     }
 
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_BIGINT_INVALID_SYNTAX);
     return nullptr;
 }
 

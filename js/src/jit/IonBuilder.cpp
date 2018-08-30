@@ -12978,7 +12978,7 @@ IonBuilder::hasOnProtoChain(TypeSet::ObjectKey* key, JSObject* protoObject, bool
 AbortReasonOr<Ok>
 IonBuilder::tryFoldInstanceOf(bool* emitted, MDefinition* lhs, JSObject* protoObject)
 {
-    // Try to fold the js::IsDelegate part of the instanceof operation.
+    // Try to fold the js::IsPrototypeOf part of the instanceof operation.
     MOZ_ASSERT(*emitted == false);
 
     if (!lhs->mightBeType(MIRType::Object)) {

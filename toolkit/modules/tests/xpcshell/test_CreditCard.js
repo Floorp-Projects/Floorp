@@ -272,3 +272,41 @@ add_task(async function test_label() {
        "The expectedMaskedLabel should be shown when showNumbers is false");
   }
 });
+
+add_task(async function test_network() {
+  let supportedNetworks = CreditCard.SUPPORTED_NETWORKS;
+  Assert.ok(supportedNetworks.length, "There are > 0 supported credit card networks");
+
+  let ccNumber = "0000000000000000";
+  let testCases = supportedNetworks.map(network => {
+    return {number: ccNumber, network, expectedNetwork: network};
+  });
+  testCases.push({
+      number: ccNumber,
+      network: "gringotts",
+      expectedNetwork: "gringotts",
+  });
+  testCases.push({
+      number: ccNumber,
+      network: "",
+      expectedNetwork: undefined,
+  });
+
+  for (let testCase of testCases) {
+    let {number, network} = testCase;
+    let card = new CreditCard({number, network});
+    Assert.equal(await card.network, testCase.expectedNetwork,
+      `The expectedNetwork ${card.network} should match the card network ${testCase.expectedNetwork}`);
+  }
+});
+
+add_task(async function test_isValidNetwork() {
+  for (let network of CreditCard.SUPPORTED_NETWORKS) {
+    Assert.ok(CreditCard.isValidNetwork(network), "supported network is valid");
+  }
+  Assert.ok(!CreditCard.isValidNetwork(), "undefined is not a valid network");
+  Assert.ok(!CreditCard.isValidNetwork(""), "empty string is not a valid network");
+  Assert.ok(!CreditCard.isValidNetwork(null), "null is not a valid network");
+  Assert.ok(!CreditCard.isValidNetwork("Visa"), "network validity is case-sensitive");
+  Assert.ok(!CreditCard.isValidNetwork("madeupnetwork"), "unknown network is invalid");
+});

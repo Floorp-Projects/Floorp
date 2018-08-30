@@ -1,0 +1,66 @@
+<!doctype html>
+<title>Test for Bug 1425700: CSS properties use-counters</title>
+<link rel="author" title="Emilio Cobos Álvarez" href="mailto:emilio@crisal.io">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<body>
+<script>
+const utils = SpecialPowers.getDOMWindowUtils(window);
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  { "set": [["layout.css.use-counters.enabled", true ]]},
+  run,
+);
+
+function assert_recorded(recorded, properties) {
+  for (const prop of properties) {
+    try {
+      is(utils.isCssPropertyRecordedInUseCounter(prop), recorded, prop)
+    } catch(ex) {
+      ok(false, "Threw: " + prop);
+    }
+  }
+}
+
+function run() {
+  const style = document.createElement('style');
+  style.textContent = `
+    * {
+      grid-gap: 1px; /* shorthand alias */
+      -webkit-background-size: 100px 100px; /* longhand alias */
+      transform-origin: top left; /* longhand */
+      background: green; /* shorthand */
+    }
+  `;
+
+  document.body.appendChild(style);
+
+  assert_recorded(true, [
+    "grid-gap",
+    "-webkit-background-size",
+    "transform-origin",
+    "background"
+  ]);
+
+  // Should only record the aliases, not the non-aliased property.
+  // Should only record shorthands, not the longhands it expands to.
+  assert_recorded(false, [
+    "gap",
+    "background-size",
+    "-moz-transform-origin",
+    "-webkit-transform-origin",
+    "background-color"
+  ]);
+
+  // TODO(emilio): Make work (and test) inline style and maybe even CSSOM and
+  // such?
+  //
+  // Make sure that something on the lines of the following passes:
+  //
+  //   element.style.webkitTransform = "rotate(1deg)"
+  //   assert_recorded(true, ["-webkit-transform"]);
+  //   assert_recorded(false, ["transform"]);
+  //
+  SimpleTest.finish();
+}
+</script>
+</body>

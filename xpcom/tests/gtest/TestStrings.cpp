@@ -1326,6 +1326,49 @@ TEST_F(Strings, legacy_set_length_semantics)
   EXPECT_TRUE(s.EqualsASCII(foobar));
 }
 
+TEST_F(Strings, bulk_write)
+{
+  nsresult rv;
+  nsCString s;
+  const char* ptrTwoThousand;
+  {
+    auto handle = s.BulkWrite(500, 0, true, rv);
+    EXPECT_EQ(rv, NS_OK);
+    auto span = handle.AsSpan();
+    for (auto&& c: span) {
+      c = 'a';
+    }
+    mozilla::Unused << handle.RestartBulkWrite(2000, 500, false);
+    span = handle.AsSpan().From(500);
+    for (auto&& c: span) {
+      c = 'b';
+    }
+    ptrTwoThousand = handle.Elements();
+    handle.Finish(1000, true);
+  }
+  EXPECT_EQ(s.Length(), 1000U);
+  EXPECT_NE(s.BeginReading(), ptrTwoThousand);
+  EXPECT_EQ(s.BeginReading()[1000], '\0');
+  for (uint32_t i = 0; i < 500; i++) {
+    EXPECT_EQ(s[i], 'a');
+  }
+  for (uint32_t i = 500; i < 1000; i++) {
+    EXPECT_EQ(s[i], 'b');
+  }
+}
+
+TEST_F(Strings, bulk_write_fail)
+{
+  nsresult rv;
+  nsCString s;
+  {
+    auto handle = s.BulkWrite(500, 0, true, rv);
+    EXPECT_EQ(rv, NS_OK);
+  }
+  EXPECT_EQ(s.Length(), 3U);
+  EXPECT_TRUE(s.Equals(u8"\uFFFD"));
+}
+
 TEST_F(Strings, huge_capacity)
 {
   nsString a, b, c, d, e, f, g, h, i, j, k, l, m, n;

@@ -2044,7 +2044,7 @@ nsLocalFile::CopyMove(nsIFile* aParentDir, const nsAString& aNewName,
         return NS_ERROR_FILE_ACCESS_DENIED;
       }
 
-      nsCOMPtr<nsISimpleEnumerator> targetIterator;
+      nsCOMPtr<nsIDirectoryEnumerator> targetIterator;
       rv = target->GetDirectoryEntries(getter_AddRefs(targetIterator));
       if (NS_FAILED(rv)) {
         return rv;

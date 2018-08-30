@@ -53,24 +53,24 @@ int NS_strcmp(const char16_t* aStrA, const char16_t* aStrB);
 int NS_strncmp(const char16_t* aStrA, const char16_t* aStrB, size_t aLen);
 
 /**
- * "strdup" for char16_t strings, uses the moz_xmalloc allocator.
+ * "strdup" for char16_t strings, uses the infallible moz_xmalloc allocator.
  */
-char16_t* NS_strdup(const char16_t* aString);
+char16_t* NS_xstrdup(const char16_t* aString);
 
 /**
- * "strdup", but using the moz_xmalloc allocator.
+ * "strdup", but using the infallible moz_xmalloc allocator.
  */
-char* NS_strdup(const char* aString);
+char* NS_xstrdup(const char* aString);
 
 /**
  * strndup for char16_t or char strings (normal strndup is not available on
  * windows). This function will ensure that the new string is
- * null-terminated. Uses the moz_xmalloc allocator.
+ * null-terminated. Uses the infallible moz_xmalloc allocator.
  *
  * CharT may be either char16_t or char.
  */
 template<typename CharT>
-CharT* NS_strndup(const CharT* aString, uint32_t aLen);
+CharT* NS_xstrndup(const CharT* aString, uint32_t aLen);
 
 // The following case-conversion methods only deal in the ascii repertoire
 // A-Z and a-z

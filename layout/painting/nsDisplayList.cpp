@@ -9269,7 +9269,7 @@ nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
 {
   MOZ_ASSERT(aMaskContext->GetDrawTarget()->GetFormat() == SurfaceFormat::A8);
 
-  imgDrawingParams imgParmas(aBuilder->ShouldSyncDecodeImages()
+  imgDrawingParams imgParams(aBuilder->ShouldSyncDecodeImages()
                              ? imgIContainer::FLAG_SYNC_DECODE
                              : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
@@ -9277,16 +9277,17 @@ nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
                                                   mFrame,  GetBuildingRect(),
                                                   borderArea, aBuilder,
                                                   nullptr,
-                                                  mHandleOpacity, imgParmas);
+                                                  mHandleOpacity, imgParams);
   ComputeMaskGeometry(params);
   bool painted = nsSVGIntegrationUtils::PaintMask(params);
   if (aMaskPainted) {
     *aMaskPainted = painted;
   }
 
-  nsDisplayMaskGeometry::UpdateDrawResult(this, imgParmas.result);
+  nsDisplayMaskGeometry::UpdateDrawResult(this, imgParams.result);
 
-  return imgParmas.result == mozilla::image::ImgDrawResult::SUCCESS;
+  return imgParams.result == ImgDrawResult::SUCCESS ||
+    imgParams.result == ImgDrawResult::SUCCESS_NOT_COMPLETE;
 }
 
 LayerState
@@ -9421,8 +9422,8 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
 {
   bool snap;
   float appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  nsRect displayBound = GetBounds(aDisplayListBuilder, &snap);
-  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(displayBound, appUnitsPerDevPixel);
+  nsRect displayBounds = GetBounds(aDisplayListBuilder, &snap);
+  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(displayBounds, appUnitsPerDevPixel);
 
   Maybe<wr::WrImageMask> mask = aManager->CommandBuilder().BuildWrMaskImage(this, aBuilder, aResources,
                                                                             aSc, aDisplayListBuilder,
@@ -9455,7 +9456,9 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
                   /*aTransformForScrollData: */ Nothing(),
                   /*aClipNodeId: */ &clipId);
     sc = layer.ptr();
-    aManager->CommandBuilder().PushOverrideForASR(GetActiveScrolledRoot(), Some(clipId));
+    // The whole stacking context will be clipped by us, so no need to have any
+    // parent for the children context's clip.
+    aManager->CommandBuilder().PushOverrideForASR(GetActiveScrolledRoot(), Nothing());
   }
 
   nsDisplaySVGEffects::CreateWebRenderCommands(aBuilder, aResources, *sc, aManager, aDisplayListBuilder);
@@ -9735,11 +9738,41 @@ nsDisplayFilter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
     }
   }
 
+  bool snap;
+  float auPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  nsRect displayBounds = GetBounds(aDisplayListBuilder, &snap);
+  auto bounds = LayoutDeviceRect::FromAppUnits(displayBounds, auPerDevPixel);
+  // NOTE(emilio): this clip is going to be intersected with the clip that's
+  // currently on the clip stack for this item.
+  //
+  // FIXME(emilio, bug 1486557): clipping to "bounds" isn't really necessary.
+  wr::WrClipId clipId =
+    aBuilder.DefineClip(Nothing(), wr::ToRoundedLayoutRect(bounds));
+
   float opacity = mFrame->StyleEffects()->mOpacity;
-  StackingContextHelper sc(aSc, aBuilder, wrFilters, LayoutDeviceRect(), nullptr,
-                           nullptr, opacity != 1.0f && mHandleOpacity ? &opacity : nullptr);
+  StackingContextHelper sc(
+      aSc,
+      aBuilder,
+      wrFilters,
+      LayoutDeviceRect(),
+      nullptr,
+      nullptr,
+      opacity != 1.0f && mHandleOpacity ? &opacity : nullptr,
+      nullptr,
+      nullptr,
+      gfx::CompositionOp::OP_OVER,
+      true,
+      false,
+      Nothing(),
+      &clipId);
+
+  // The whole stacking context will be clipped by us, so no need to have any
+  // parent for the children context's clip.
+  aManager->CommandBuilder().PushOverrideForASR(GetActiveScrolledRoot(), Nothing());
 
   nsDisplaySVGEffects::CreateWebRenderCommands(aBuilder, aResources, sc, aManager, aDisplayListBuilder);
+
+  aManager->CommandBuilder().PopOverrideForASR(GetActiveScrolledRoot());
   return true;
 }
 

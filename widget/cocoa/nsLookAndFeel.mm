@@ -32,6 +32,11 @@ typedef NSInteger mozNSScrollerStyle;
 + (mozNSScrollerStyle)preferredScrollerStyle;
 @end
 
+// Available from 10.12 onwards; test availability at runtime before using
+@interface NSWorkspace(AvailableSinceSierra)
+@property (readonly) BOOL accessibilityDisplayShouldReduceMotion;
+@end
+
 nsLookAndFeel::nsLookAndFeel()
  : nsXPLookAndFeel()
  , mUseOverlayScrollbars(-1)
@@ -543,6 +548,14 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       break;
     case eIntID_SystemUsesDarkTheme:
       aResult = SystemWantsDarkTheme();
+      break;
+    case eIntID_PrefersReducedMotion:
+      aResult = 0;
+      if ([[NSWorkspace sharedWorkspace] respondsToSelector:@selector(
+            accessibilityDisplayShouldReduceMotion)]) {
+        aResult =
+          [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldReduceMotion] ? 1 : 0;
+      }
       break;
     default:
       aResult = 0;

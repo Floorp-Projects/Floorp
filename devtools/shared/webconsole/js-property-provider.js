@@ -180,7 +180,7 @@ function findCompletionBeginning(str) {
  *          If no completion valued could be computed, null is returned,
  *          otherwise a object with the following form is returned:
  *            {
- *              matches: [ string, string, string ],
+ *              matches: Set<string>
  *              matchProp: Last part of the inputValue that was used to find
  *                         the matches-strings.
  *            }
@@ -407,16 +407,24 @@ function getMatchedProps(obj, match) {
  * Get all properties in the given object (and its parent prototype chain) that
  * match a given prefix.
  *
- * @param mixed obj
+ * @param {Mixed} obj
  *        Object whose properties we want to filter.
- * @param string match
+ * @param {string} match
  *        Filter for properties that match this string.
- * @return object
- *         Object that contains the matchProp and the list of names.
+ * @returns {object} which holds the following properties:
+ *            - {string} matchProp.
+ *            - {Set} matches: List of matched properties.
  */
 function getMatchedPropsImpl(obj, match, {chainIterator, getProperties}) {
   const matches = new Set();
   let numProps = 0;
+
+  const insensitiveMatching = match && match[0].toUpperCase() !== match[0];
+  const propertyMatches = prop => {
+    return insensitiveMatching
+      ? prop.toLocaleLowerCase().startsWith(match.toLocaleLowerCase())
+      : prop.startsWith(match);
+  };
 
   // We need to go up the prototype chain.
   const iter = chainIterator(obj);
@@ -437,7 +445,7 @@ function getMatchedPropsImpl(obj, match, {chainIterator, getProperties}) {
 
     for (let i = 0; i < props.length; i++) {
       const prop = props[i];
-      if (prop.indexOf(match) != 0) {
+      if (!propertyMatches(prop)) {
         continue;
       }
       if (prop.indexOf("-") > -1) {
@@ -459,7 +467,7 @@ function getMatchedPropsImpl(obj, match, {chainIterator, getProperties}) {
 
   return {
     matchProp: match,
-    matches: [...matches],
+    matches,
   };
 }
 

@@ -3479,7 +3479,7 @@ private:
   static bool sIsBytecodeCacheEnabled;
   static int32_t sBytecodeCacheStrategy;
   static uint32_t sCookiesLifetimePolicy;
-  static bool sShortcutsCustomized;
+  static bool sAntiTrackingControlCenterUIEnabled;
 
   static int32_t sPrivacyMaxInnerWidth;
   static int32_t sPrivacyMaxInnerHeight;

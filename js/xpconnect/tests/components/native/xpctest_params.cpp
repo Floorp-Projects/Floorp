@@ -58,16 +58,12 @@ nsXPCTestParams::~nsXPCTestParams()
     /* Copy b into rv. */                                                     \
     *rvLength = *bLength;                                                     \
     *rv = static_cast<type*>(moz_xmalloc(elemSize * (*bLength + padding)));   \
-    if (!*rv)                                                                 \
-        return NS_ERROR_OUT_OF_MEMORY;                                        \
     memcpy(*rv, *b, elemSize * (*bLength + padding));                         \
                                                                               \
     /* Copy a into b. */                                                      \
     *bLength = aLength;                                                       \
     free(*b);                                                                 \
     *b = static_cast<type*>(moz_xmalloc(elemSize * (aLength + padding)));     \
-    if (!*b)                                                                  \
-        return NS_ERROR_OUT_OF_MEMORY;                                        \
     memcpy(*b, a, elemSize * (aLength + padding));                            \
                                                                               \
     /* We need to take ownership of the data we got from a,                   \
@@ -270,8 +266,6 @@ NS_IMETHODIMP nsXPCTestParams::TestInterfaceIs(const nsIID* aIID, void* a,
     // rvIID is out-only, so nobody allocated an IID buffer for us. Do that now,
     // and store b's IID in the new buffer.
     *rvIID = static_cast<nsIID*>(moz_xmalloc(sizeof(nsID)));
-    if (!*rvIID)
-        return NS_ERROR_OUT_OF_MEMORY;
     **rvIID = **bIID;
 
     // Copy the interface pointer from a to b. Since a is in-only, XPConnect will
@@ -295,8 +289,6 @@ NS_IMETHODIMP nsXPCTestParams::TestInterfaceIsArray(uint32_t aLength, const nsII
     // Transfer the IIDs. See the comments in TestInterfaceIs (above) for an
     // explanation of what we're doing.
     *rvIID = static_cast<nsIID*>(moz_xmalloc(sizeof(nsID)));
-    if (!*rvIID)
-        return NS_ERROR_OUT_OF_MEMORY;
     **rvIID = **bIID;
     **bIID = *aIID;
 

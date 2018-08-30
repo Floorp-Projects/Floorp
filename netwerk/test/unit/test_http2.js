@@ -789,15 +789,29 @@ WrongSuiteListener.prototype = new Http2CheckListener();
 WrongSuiteListener.prototype.shouldBeHttp2 = false;
 WrongSuiteListener.prototype.onStopRequest = function(request, ctx, status) {
   prefs.setBoolPref("security.ssl3.ecdhe_rsa_aes_128_gcm_sha256", true);
+  prefs.clearUserPref("security.tls.version.max");
   Http2CheckListener.prototype.onStopRequest.call(this);
 };
 
-// test that we use h1 without the mandatory cipher suite available
-function test_http2_wrongsuite() {
+// test that we use h1 without the mandatory cipher suite available when
+// offering at most tls1.2
+function test_http2_wrongsuite_tls12() {
+  prefs.setBoolPref("security.ssl3.ecdhe_rsa_aes_128_gcm_sha256", false);
+  prefs.setIntPref("security.tls.version.max", 3);
+  var chan = makeChan("https://localhost:" + serverPort + "/wrongsuite");
+  chan.loadFlags = Ci.nsIRequest.LOAD_FRESH_CONNECTION | Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
+  var listener = new WrongSuiteListener();
+  chan.asyncOpen2(listener);
+}
+
+// test that we use h2 when offering tls1.3 or higher regardless of if the
+// mandatory cipher suite is available
+function test_http2_wrongsuite_tls13() {
   prefs.setBoolPref("security.ssl3.ecdhe_rsa_aes_128_gcm_sha256", false);
   var chan = makeChan("https://localhost:" + serverPort + "/wrongsuite");
   chan.loadFlags = Ci.nsIRequest.LOAD_FRESH_CONNECTION | Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
   var listener = new WrongSuiteListener();
+  listener.shouldBeHttp2 = true;
   chan.asyncOpen2(listener);
 }
 
@@ -1145,7 +1159,8 @@ var tests = [ test_http2_post_big
             , test_http2_h11required_stream
             , test_http2_h11required_session
             , test_http2_retry_rst
-            , test_http2_wrongsuite
+            , test_http2_wrongsuite_tls12
+            , test_http2_wrongsuite_tls13
             , test_http2_push_firstparty1
             , test_http2_push_firstparty2
             , test_http2_push_firstparty3

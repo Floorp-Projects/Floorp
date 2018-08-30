@@ -4269,6 +4269,10 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
       viewManager->FlushDelayedResize(false);
       mPresContext->FlushPendingMediaFeatureValuesChanged();
 
+      // Now that we have flushed media queries, update the rules before looking
+      // up @font-face / @counter-style / @font-feature-values rules.
+      mStyleSet->UpdateStylistIfNeeded();
+
       // Flush any pending update of the user font set, since that could
       // cause style changes (for updating ex/ch units, and to cause a
       // reflow).

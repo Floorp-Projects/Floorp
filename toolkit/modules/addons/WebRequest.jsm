@@ -320,13 +320,13 @@ var ChannelEventSink = {
   },
 
   register() {
-    let catMan = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-    catMan.addCategoryEntry("net-channel-event-sinks", this._contractID, this._contractID, false, true);
+    Services.catMan.addCategoryEntry("net-channel-event-sinks",
+                                     this._contractID,
+                                     this._contractID, false, true);
   },
 
   unregister() {
-    let catMan = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-    catMan.deleteCategoryEntry("net-channel-event-sinks", this._contractID, false);
+    Services.catMan.deleteCategoryEntry("net-channel-event-sinks", this._contractID, false);
   },
 
   // nsIChannelEventSink implementation

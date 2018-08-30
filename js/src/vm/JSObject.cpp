@@ -3173,17 +3173,7 @@ js::ToPropertyKeySlow(JSContext* cx, HandleValue argument, MutableHandleId resul
 /* * */
 
 bool
-js::IsDelegate(JSContext* cx, HandleObject obj, const js::Value& v, bool* result)
-{
-    if (v.isPrimitive()) {
-        *result = false;
-        return true;
-    }
-    return IsDelegateOfObject(cx, obj, &v.toObject(), result);
-}
-
-bool
-js::IsDelegateOfObject(JSContext* cx, HandleObject protoObj, JSObject* obj, bool* result)
+js::IsPrototypeOf(JSContext* cx, HandleObject protoObj, JSObject* obj, bool* result)
 {
     RootedObject obj2(cx, obj);
     for (;;) {

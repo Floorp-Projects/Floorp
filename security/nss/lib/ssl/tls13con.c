@@ -5273,11 +5273,12 @@ tls13_HandleEarlyApplicationData(sslSocket *ss, sslBuffer *origBuf)
 }
 
 PRUint16
-tls13_EncodeDraftVersion(SSL3ProtocolVersion version)
+tls13_EncodeDraftVersion(SSL3ProtocolVersion version, SSLProtocolVariant variant)
 {
-#ifdef TLS_1_3_DRAFT_VERSION
-    if (version == SSL_LIBRARY_VERSION_TLS_1_3) {
-        return 0x7f00 | TLS_1_3_DRAFT_VERSION;
+#ifdef DTLS_1_3_DRAFT_VERSION
+    if (version == SSL_LIBRARY_VERSION_TLS_1_3 &&
+        variant == ssl_variant_datagram) {
+        return 0x7f00 | DTLS_1_3_DRAFT_VERSION;
     }
 #endif
     return (PRUint16)version;
@@ -5287,7 +5288,6 @@ SECStatus
 tls13_ClientReadSupportedVersion(sslSocket *ss)
 {
     PRUint32 temp;
-    SSL3ProtocolVersion v;
     TLSExtension *versionExtension;
     SECItem it;
     SECStatus rv;
@@ -5309,29 +5309,15 @@ tls13_ClientReadSupportedVersion(sslSocket *ss)
         FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_SERVER_HELLO, illegal_parameter);
         return SECFailure;
     }
-    v = (SSL3ProtocolVersion)temp;
 
-    /* You cannot negotiate < TLS 1.3 with supported_versions. */
-    if (v < SSL_LIBRARY_VERSION_TLS_1_3) {
+    if (temp != tls13_EncodeDraftVersion(SSL_LIBRARY_VERSION_TLS_1_3,
+                                         ss->protocolVariant)) {
+        /* You cannot negotiate < TLS 1.3 with supported_versions. */
         FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_SERVER_HELLO, illegal_parameter);
         return SECFailure;
     }
 
-#ifdef TLS_1_3_DRAFT_VERSION
-    if (temp == SSL_LIBRARY_VERSION_TLS_1_3) {
-        FATAL_ERROR(ss, SSL_ERROR_UNSUPPORTED_VERSION, protocol_version);
-        return SECFailure;
-    }
-    if (temp == tls13_EncodeDraftVersion(SSL_LIBRARY_VERSION_TLS_1_3)) {
-        v = SSL_LIBRARY_VERSION_TLS_1_3;
-    } else {
-        v = (SSL3ProtocolVersion)temp;
-    }
-#else
-    v = (SSL3ProtocolVersion)temp;
-#endif
-
-    ss->version = v;
+    ss->version = SSL_LIBRARY_VERSION_TLS_1_3;
     return SECSuccess;
 }
 
@@ -5355,7 +5341,7 @@ tls13_NegotiateVersion(sslSocket *ss, const TLSExtension *supportedVersions)
         return SECFailure;
     }
     for (version = ss->vrange.max; version >= ss->vrange.min; --version) {
-        PRUint16 wire = tls13_EncodeDraftVersion(version);
+        PRUint16 wire = tls13_EncodeDraftVersion(version, ss->protocolVariant);
         unsigned long offset;
 
         for (offset = 0; offset < versions.len; offset += 2) {

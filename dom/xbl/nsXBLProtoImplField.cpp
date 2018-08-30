@@ -34,7 +34,7 @@ nsXBLProtoImplField::nsXBLProtoImplField(const char16_t* aName, const char16_t* 
     mLineNumber(0)
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplField);
-  mName = NS_strdup(aName);  // XXXbz make more sense to use a stringbuffer?
+  mName = NS_xstrdup(aName);  // XXXbz make more sense to use a stringbuffer?
 
   mJSAttributes = JSPROP_ENUMERATE;
   if (aReadOnly) {

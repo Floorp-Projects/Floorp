@@ -2677,7 +2677,7 @@ public:
     MOZ_ASSERT(mType == StyleContentType::Uninitialized,
                "should only initialize nsStyleContentData once");
     mType = aType;
-    mContent.mString = NS_strdup(aString);
+    mContent.mString = NS_xstrdup(aString);
   }
 
   void SetCounters(StyleContentType aType,

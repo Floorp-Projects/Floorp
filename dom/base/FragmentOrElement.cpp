@@ -674,6 +674,14 @@ nsIContent::nsExtendedContentSlots::nsExtendedContentSlots()
 
 nsIContent::nsExtendedContentSlots::~nsExtendedContentSlots() = default;
 
+size_t
+nsIContent::nsExtendedContentSlots::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  // For now, nothing to measure here.  We don't actually own any of our
+  // members.
+  return 0;
+}
+
 FragmentOrElement::nsDOMSlots::nsDOMSlots()
   : nsIContent::nsContentSlots(),
     mDataset(nullptr)
@@ -725,8 +733,14 @@ size_t
 FragmentOrElement::nsDOMSlots::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  if (OwnsExtendedSlots()) {
-    n += aMallocSizeOf(GetExtendedContentSlots());
+
+  nsExtendedContentSlots* extendedSlots = GetExtendedContentSlots();
+  if (extendedSlots) {
+    if (OwnsExtendedSlots()) {
+      n += aMallocSizeOf(extendedSlots);
+    }
+
+    n += extendedSlots->SizeOfExcludingThis(aMallocSizeOf);
   }
 
   if (mAttributeMap) {
@@ -798,6 +812,49 @@ FragmentOrElement::nsExtendedDOMSlots::TraverseExtendedSlots(nsCycleCollectionTr
   if (mCustomElementData) {
     mCustomElementData->Traverse(aCb);
   }
+}
+
+size_t
+FragmentOrElement::nsExtendedDOMSlots::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = nsIContent::nsExtendedContentSlots::SizeOfExcludingThis(aMallocSizeOf);
+
+  // We own mSMILOverrideStyle but there seems to be no memory reporting on CSS
+  // declarations?  At least report the memory the declaration takes up
+  // directly.
+  if (mSMILOverrideStyle) {
+    n += aMallocSizeOf(mSMILOverrideStyle);
+  }
+
+  // We don't really own mSMILOverrideStyleDeclaration.  mSMILOverrideStyle owns
+  // it.
+
+  // We don't seem to have memory reporting for nsXULControllers.  At least
+  // report the memory it's using directly.
+  if (mControllers) {
+    n += aMallocSizeOf(mControllers);
+  }
+
+  // We don't seem to have memory reporting for nsLabelsNodeList.  At least
+  // report the memory it's using directly.
+  if (mLabelsList) {
+    n += aMallocSizeOf(mLabelsList);
+  }
+
+  // mShadowRoot should be handled during normal DOM tree memory reporting, just
+  // like kids, siblings, etc.
+
+  // We don't seem to have memory reporting for nsXBLBinding.  At least
+  // report the memory it's using directly.
+  if (mXBLBinding) {
+    n += aMallocSizeOf(mXBLBinding);
+  }
+
+  if (mCustomElementData) {
+    n += mCustomElementData->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  return n;
 }
 
 FragmentOrElement::FragmentOrElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

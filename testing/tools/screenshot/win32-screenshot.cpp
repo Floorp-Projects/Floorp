@@ -42,7 +42,9 @@
 
 // Link w/ subsystem windows so we don't get a console when executing
 // this binary.
+#ifndef __MINGW32__
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:wmainCRTStartup")
+#endif
 
 using namespace Gdiplus;
 

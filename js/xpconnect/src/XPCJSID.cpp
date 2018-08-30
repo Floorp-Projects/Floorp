@@ -51,13 +51,12 @@ void nsJSID::Reset()
     mNumber = mName = nullptr;
 }
 
-bool
+void
 nsJSID::SetName(const char* name)
 {
-    MOZ_ASSERT(!mName || mName == gNoString ,"name already set");
-    MOZ_ASSERT(name,"null name");
-    mName = NS_strdup(name);
-    return mName ? true : false;
+    MOZ_ASSERT(!mName || mName == gNoString, "name already set");
+    MOZ_ASSERT(name, "null name");
+    mName = NS_xstrdup(name);
 }
 
 NS_IMETHODIMP
@@ -69,8 +68,8 @@ nsJSID::GetName(char * *aName)
     if (!NameIsSet())
         SetNameToNoString();
     MOZ_ASSERT(mName, "name not set");
-    *aName = NS_strdup(mName);
-    return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aName = NS_xstrdup(mName);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -84,8 +83,8 @@ nsJSID::GetNumber(char * *aNumber)
             mNumber = const_cast<char*>(gNoString);
     }
 
-    *aNumber = NS_strdup(mNumber);
-    return *aNumber ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aNumber = NS_xstrdup(mNumber);
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(const nsID*)
@@ -140,13 +139,13 @@ nsJSID::Initialize(const char* idString)
     return NS_ERROR_FAILURE;
 }
 
-bool
+void
 nsJSID::InitWithName(const nsID& id, const char* nameString)
 {
     MOZ_ASSERT(nameString, "no name");
     Reset();
     mID = id;
-    return SetName(nameString);
+    SetName(nameString);
 }
 
 // try to use the name, if no name, then use the number
@@ -307,8 +306,8 @@ NS_IMETHODIMP nsJSIID::GetNumber(char * *aNumber)
     const nsIID* id;
     mInfo->GetIIDShared(&id);
     id->ToProvidedString(str);
-    *aNumber = (char*) nsMemory::Clone(str, NSID_LENGTH);
-    return *aNumber ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aNumber = (char*) moz_xmemdup(str, NSID_LENGTH);
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(const nsID*) nsJSIID::GetID()
@@ -568,10 +567,8 @@ nsJSCID::Initialize(const char* str)
         nsCID* cid;
         if (NS_FAILED(registrar->ContractIDToCID(str, &cid)))
             return NS_ERROR_FAILURE;
-        bool success = mDetails->InitWithName(*cid, str);
+        mDetails->InitWithName(*cid, str);
         free(cid);
-        if (!success)
-            return NS_ERROR_FAILURE;
     }
     return NS_OK;
 }

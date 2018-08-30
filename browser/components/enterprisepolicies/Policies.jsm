@@ -985,6 +985,7 @@ function blockAllChromeURLs() {
                             ChromeURLBlockPolicy.contractID,
                             ChromeURLBlockPolicy);
 
-  let cm = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-  cm.addCategoryEntry("content-policy", ChromeURLBlockPolicy.contractID, ChromeURLBlockPolicy.contractID, false, true);
+  Services.catMan.addCategoryEntry("content-policy",
+                                   ChromeURLBlockPolicy.contractID,
+                                   ChromeURLBlockPolicy.contractID, false, true);
 }

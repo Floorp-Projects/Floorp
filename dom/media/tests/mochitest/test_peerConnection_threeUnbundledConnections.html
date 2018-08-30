@@ -20,8 +20,13 @@
 
   var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
   pc1.onicecandidate = e => {
-    add(pc2, e.candidate, generateErrorCallback())
-    add(pc3, e.candidate, generateErrorCallback())
+    if (e.candidate) {
+      if (e.candidate.sdpMid === "1") {
+        add(pc2, e.candidate, generateErrorCallback())
+      } else {
+        add(pc3, e.candidate, generateErrorCallback())
+      }
+    }
   };
   pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
   pc3.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());

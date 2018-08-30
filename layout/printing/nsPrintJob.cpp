@@ -1153,8 +1153,6 @@ nsPrintJob::EnumerateDocumentNames(uint32_t* aCount,
 
   int32_t     numDocs = mPrt->mPrintDocList.Length();
   char16_t** array   = (char16_t**) moz_xmalloc(numDocs * sizeof(char16_t*));
-  if (!array)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   for (int32_t i=0;i<numDocs;i++) {
     nsPrintObject* po = mPrt->mPrintDocList.ElementAt(i);

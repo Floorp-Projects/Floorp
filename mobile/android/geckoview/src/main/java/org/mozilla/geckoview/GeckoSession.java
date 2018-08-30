@@ -2069,27 +2069,27 @@ public class GeckoSession extends LayerSession
     /**
      * WebResponseInfo contains information about a single web response.
      */
-    public class WebResponseInfo {
+    static public class WebResponseInfo {
         /**
          * The URI of the response. Cannot be null.
          */
-        public final String uri;
+        @NonNull public final String uri;
 
         /**
          * The content type (mime type) of the response. May be null.
          */
-        public final String contentType;
+        @Nullable public final String contentType;
 
         /**
          * The content length of the response. May be 0 if unknokwn.
          */
-        public final long contentLength;
+        @Nullable public final long contentLength;
 
         /**
          * The filename obtained from the content disposition, if any.
          * May be null.
          */
-        public final String filename;
+        @Nullable public final String filename;
 
         /* package */ WebResponseInfo(GeckoBundle message) {
             uri = message.getString("uri");

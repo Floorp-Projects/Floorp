@@ -63,7 +63,6 @@ DIRS += [
     'notification',
     'offline',
     'power',
-    'prio',
     'push',
     'quota',
     'security',
@@ -104,6 +103,9 @@ DIRS += [
     'serviceworkers',
     'simpledb',
 ]
+
+if CONFIG['MOZ_LIBPRIO']:
+    DIRS += ['prio']
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['plugins/ipc/hangui']

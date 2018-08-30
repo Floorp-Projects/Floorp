@@ -1,6 +1,6 @@
 use base64;
+use command::LogOptions;
 use logging::Level;
-use marionette::LogOptions;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::platform::firefox_default_path;

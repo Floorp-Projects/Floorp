@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
-from ..result import ResultContainer
+from ..result import Issue
 
 
 class TreeherderFormatter(object):
@@ -16,11 +16,11 @@ class TreeherderFormatter(object):
     """
     fmt = "TEST-UNEXPECTED-{level} | {path}:{lineno}{column} | {message} ({rule})"
 
-    def __call__(self, result, **kwargs):
+    def __call__(self, result):
         message = []
-        for path, errors in sorted(result.iteritems()):
+        for path, errors in sorted(result.issues.iteritems()):
             for err in errors:
-                assert isinstance(err, ResultContainer)
+                assert isinstance(err, Issue)
 
                 d = {s: getattr(err, s) for s in err.__slots__}
                 d["column"] = ":%s" % d["column"] if d["column"] else ""

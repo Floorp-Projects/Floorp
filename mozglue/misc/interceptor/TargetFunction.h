@@ -361,7 +361,7 @@ private:
   // needs to touch the heap.
 #if defined(_M_IX86)
   static const size_t kInlineStorage = 16;
-#elif defined(_M_X64)
+#elif defined(_M_X64) || defined(_M_ARM64)
   static const size_t kInlineStorage = 32;
 #endif
   Vector<uint8_t, kInlineStorage> mLocalBytes;
@@ -586,7 +586,7 @@ private:
   // needs to touch the heap.
 #if defined(_M_IX86)
   static const size_t kInlineStorage = 16;
-#elif defined(_M_X64)
+#elif defined(_M_X64) || defined(_M_ARM64)
   static const size_t kInlineStorage = 32;
 #endif
 

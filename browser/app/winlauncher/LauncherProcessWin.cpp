@@ -152,12 +152,19 @@ RunAsLauncherProcess(int& argc, wchar_t** argv)
     return true;
   }
 
-  return !isChildOfFirefox.value();
-#else
+  if (!isChildOfFirefox.value()) {
+    return true;
+  }
+#endif // defined(MOZ_LAUNCHER_PROCESS)
+
+  if (mozilla::EnvHasValue("MOZ_LAUNCHER_PROCESS")) {
+    mozilla::SaveToEnv("MOZ_LAUNCHER_PROCESS=");
+    return true;
+  }
+
   return CheckArg(argc, argv, L"launcher",
                   static_cast<const wchar_t**>(nullptr),
-                  CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg) == ARG_FOUND;
-#endif // defined(MOZ_LAUNCHER_PROCESS)
+                  CheckArgFlag::RemoveArg) == ARG_FOUND;
 }
 
 int

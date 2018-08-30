@@ -92,6 +92,8 @@ public:
     *this = orig;
   }
 
+  ~JsepTransport() {}
+
   JsepTransport& operator=(const JsepTransport& orig)
   {
     if (this != &orig) {
@@ -120,11 +122,6 @@ public:
 
   // Number of required components.
   size_t mComponents;
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(JsepTransport);
-
-protected:
-  ~JsepTransport() {}
 };
 
 } // namespace mozilla

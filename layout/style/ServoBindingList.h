@@ -61,7 +61,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes,
                    RawGeckoURLExtraData* extra_data,
                    uint32_t line_number_offset,
                    nsCompatibility quirks_mode,
-                   mozilla::css::LoaderReusableStyleSheets* reusable_sheets)
+                   mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
+                   StyleUseCountersBorrowedOrNull use_counters)
 SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8BytesAsync,
                    void,
                    mozilla::css::SheetLoadDataHolder* load_data,
@@ -69,7 +70,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8BytesAsync,
                    const nsACString* bytes,
                    mozilla::css::SheetParsingMode parsing_mode,
                    uint32_t line_number_offset,
-                   nsCompatibility quirks_mode)
+                   nsCompatibility quirks_mode,
+                   bool should_record_use_counters)
 SERVO_BINDING_FUNC(Servo_StyleSheet_Empty, RawServoStyleSheetContentsStrong,
                    mozilla::css::SheetParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
@@ -906,6 +908,15 @@ SERVO_BINDING_FUNC(Servo_Property_GetCSSValuesForProperty, void,
                    const nsACString* name, bool* found, nsTArray<nsString>* result)
 SERVO_BINDING_FUNC(Servo_PseudoClass_GetStates, uint64_t,
                    const nsACString* name)
+SERVO_BINDING_FUNC(Servo_UseCounters_Create, StyleUseCounters*)
+SERVO_BINDING_FUNC(Servo_UseCounters_Drop, void, StyleUseCountersOwned)
+SERVO_BINDING_FUNC(Servo_UseCounters_Merge, void,
+                   StyleUseCountersBorrowed doc_counters,
+                   StyleUseCountersBorrowed sheet_counters)
+SERVO_BINDING_FUNC(Servo_IsCssPropertyRecordedInUseCounter, bool,
+                   StyleUseCountersBorrowed,
+                   const nsACString* property,
+                   bool* out_known_prop)
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \

@@ -185,7 +185,7 @@ SVGAnimationElement::BindToTree(nsIDocument* aDocument,
       UpdateHrefTarget(hrefStr);
     }
 
-    mTimedElement.BindToTree(aParent);
+    mTimedElement.BindToTree(*this);
   }
 
   AnimationNeedsResample();
@@ -234,7 +234,7 @@ SVGAnimationElement::ParseAttribute(int32_t aNamespaceID,
     // try to parse it.
     if (!foundMatch) {
       foundMatch =
-        mTimedElement.SetAttr(aAttribute, aValue, aResult, this, &rv);
+        mTimedElement.SetAttr(aAttribute, aValue, aResult, *this, &rv);
     }
 
     if (foundMatch) {

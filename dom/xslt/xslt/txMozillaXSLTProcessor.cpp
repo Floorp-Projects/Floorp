@@ -1474,11 +1474,6 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
             nsISupports** values = static_cast<nsISupports**>(array);
 
             RefPtr<txNodeSet> nodeSet = new txNodeSet(nullptr);
-            if (!nodeSet) {
-                NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, values);
-
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
 
             uint32_t i;
             for (i = 0; i < count; ++i) {

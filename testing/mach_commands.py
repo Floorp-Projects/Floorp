@@ -9,9 +9,7 @@ import json
 import logging
 import os
 import sys
-import tempfile
 import subprocess
-import shutil
 
 from mach.decorators import (
     CommandArgument,
@@ -27,7 +25,6 @@ from mozbuild.base import (
     MachCommandConditions as conditions,
 )
 from moztest.resolve import TEST_SUITES
-from argparse import ArgumentParser
 
 UNKNOWN_TEST = '''
 I was unable to find tests from the given argument(s).
@@ -432,155 +429,6 @@ class CramTest(MachCommandBase):
         python = self.virtualenv_manager.python_path
         cmd = [python, '-m', 'cram'] + cram_args + [t['relpath'] for t in tests]
         return subprocess.call(cmd, cwd=self.topsrcdir)
-
-
-def get_parser(argv=None):
-    parser = ArgumentParser()
-    parser.add_argument(dest="suite_name",
-                        nargs=1,
-                        choices=['mochitest'],
-                        type=str,
-                        help="The test for which chunk should be found. It corresponds "
-                             "to the mach test invoked (only 'mochitest' currently).")
-
-    parser.add_argument(dest="test_path",
-                        nargs=1,
-                        type=str,
-                        help="The test (any mochitest) for which chunk should be found.")
-
-    parser.add_argument('--total-chunks',
-                        type=int,
-                        dest='total_chunks',
-                        required=True,
-                        help='Total number of chunks to split tests into.',
-                        default=None)
-
-    parser.add_argument('--chunk-by-runtime',
-                        action='store_true',
-                        dest='chunk_by_runtime',
-                        help='Group tests such that each chunk has roughly the same runtime.',
-                        default=False)
-
-    parser.add_argument('--chunk-by-dir',
-                        type=int,
-                        dest='chunk_by_dir',
-                        help='Group tests together in the same chunk that are in the same top '
-                             'chunkByDir directories.',
-                        default=None)
-
-    parser.add_argument('--disable-e10s',
-                        action='store_false',
-                        dest='e10s',
-                        help='Find test on chunk with electrolysis preferences disabled.',
-                        default=True)
-
-    parser.add_argument('-p', '--platform',
-                        choices=['linux', 'linux64', 'mac',
-                                 'macosx64', 'win32', 'win64'],
-                        dest='platform',
-                        help="Platform for the chunk to find the test.",
-                        default=None)
-
-    parser.add_argument('--debug',
-                        action='store_true',
-                        dest='debug',
-                        help="Find the test on chunk in a debug build.",
-                        default=False)
-
-    return parser
-
-
-def download_mozinfo(platform=None, debug_build=False):
-    temp_dir = tempfile.mkdtemp()
-    temp_path = os.path.join(temp_dir, "mozinfo.json")
-    args = [
-        'mozdownload',
-        '-t', 'tinderbox',
-        '--ext', 'mozinfo.json',
-        '-d', temp_path,
-    ]
-    if platform:
-        if platform == 'macosx64':
-            platform = 'mac64'
-        args.extend(['-p', platform])
-    if debug_build:
-        args.extend(['--debug-build'])
-
-    subprocess.call(args)
-    return temp_dir, temp_path
-
-
-@CommandProvider
-class ChunkFinder(MachCommandBase):
-    @Command('find-test-chunk', category='testing',
-             description='Find which chunk a test belongs to (works for mochitest).',
-             parser=get_parser)
-    def chunk_finder(self, **kwargs):
-        total_chunks = kwargs['total_chunks']
-        test_path = kwargs['test_path'][0]
-        suite_name = kwargs['suite_name'][0]
-        _, dump_tests = tempfile.mkstemp()
-
-        from moztest.resolve import TestResolver
-        resolver = self._spawn(TestResolver)
-        relpath = self._wrap_path_argument(test_path).relpath()
-        tests = list(resolver.resolve_tests(paths=[relpath]))
-        if len(tests) != 1:
-            print('No test found for test_path: %s' % test_path)
-            sys.exit(1)
-
-        flavor = tests[0]['flavor']
-        subsuite = tests[0]['subsuite']
-        args = {
-            'totalChunks': total_chunks,
-            'dump_tests': dump_tests,
-            'chunkByDir': kwargs['chunk_by_dir'],
-            'chunkByRuntime': kwargs['chunk_by_runtime'],
-            'e10s': kwargs['e10s'],
-            'subsuite': subsuite,
-        }
-
-        temp_dir = None
-        if kwargs['platform'] or kwargs['debug']:
-            self._activate_virtualenv()
-            self.virtualenv_manager.install_pip_package('mozdownload==1.17')
-            temp_dir, temp_path = download_mozinfo(
-                kwargs['platform'], kwargs['debug'])
-            args['extra_mozinfo_json'] = temp_path
-
-        found = False
-        for this_chunk in range(1, total_chunks + 1):
-            args['thisChunk'] = this_chunk
-            try:
-                self._mach_context.commands.dispatch(
-                    suite_name, self._mach_context, flavor=flavor, resolve_tests=False, **args)
-            except SystemExit:
-                pass
-            except KeyboardInterrupt:
-                break
-
-            fp = open(os.path.expanduser(args['dump_tests']), 'r')
-            tests = json.loads(fp.read())['active_tests']
-            for test in tests:
-                if test_path == test['path']:
-                    if 'disabled' in test:
-                        print('The test %s for flavor %s is disabled on the given platform' % (
-                            test_path, flavor))
-                    else:
-                        print('The test %s for flavor %s is present in chunk number: %d' % (
-                            test_path, flavor, this_chunk))
-                    found = True
-                    break
-
-            if found:
-                break
-
-        if not found:
-            raise Exception("Test %s not found." % test_path)
-        # Clean up the file
-        os.remove(dump_tests)
-        if temp_dir:
-            shutil.rmtree(temp_dir)
 
 
 @CommandProvider

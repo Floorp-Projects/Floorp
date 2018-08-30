@@ -14,40 +14,20 @@
 #include "nsError.h"                    // for NS_ERROR_NO_AGGREGATION, etc
 #include "nsGfxCIID.h"                  // for NS_FONT_ENUMERATOR_CID, etc
 #include "nsID.h"                       // for NS_DEFINE_NAMED_CID, etc
-#include "nsIScriptableRegion.h"        // for nsIScriptableRegion
 #include "nsISupports.h"                // for NS_DECL_ISUPPORTS, etc
-#include "nsScriptableRegion.h"         // for nsScriptableRegion
 #include "nsThebesFontEnumerator.h"     // for nsThebesFontEnumerator
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesFontEnumerator)
 
-static nsresult
-nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = nullptr;
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
-  nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion();
-  return scriptableRgn->QueryInterface(aIID, aResult);
-}
-
 NS_DEFINE_NAMED_CID(NS_FONT_ENUMERATOR_CID);
-NS_DEFINE_NAMED_CID(NS_SCRIPTABLE_REGION_CID);
 
 static const mozilla::Module::CIDEntry kThebesCIDs[] = {
     { &kNS_FONT_ENUMERATOR_CID, false, nullptr, nsThebesFontEnumeratorConstructor },
-    { &kNS_SCRIPTABLE_REGION_CID, false, nullptr, nsScriptableRegionConstructor },
     { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kThebesContracts[] = {
     { "@mozilla.org/gfx/fontenumerator;1", &kNS_FONT_ENUMERATOR_CID },
-    { "@mozilla.org/gfx/region;1", &kNS_SCRIPTABLE_REGION_CID },
     { nullptr }
 };
 

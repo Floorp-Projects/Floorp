@@ -87,6 +87,8 @@ const ErrorDocs = {
   JSMSG_BAD_INSTANCEOF_RHS: "invalid_right_hand_side_instanceof_operand",
   JSMSG_EMPTY_ARRAY_REDUCE: "Reduce_of_empty_array_with_no_initial_value",
   JSMSG_NOT_ITERABLE: "is_not_iterable",
+  JSMSG_PROPERTY_FAIL: "cant_access_property",
+  JSMSG_PROPERTY_FAIL_EXPR: "cant_access_property",
 };
 
 const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Mixed_content";

@@ -151,6 +151,11 @@ public:
                 DeclVal<JS::Handle<JS::Value>>(),
                 DeclVal<Args>()...))>;
 
+  template <typename Callback, typename... Args>
+  using ThenResult = typename EnableIf<
+    IsHandlerCallback<Callback, Args...>::value,
+    Result<RefPtr<Promise>, nsresult>>::Type;
+
   // Similar to the JavaScript Then() function. Accepts a single lambda function
   // argument, which it attaches as a native resolution handler, and returns a
   // new promise which resolves with that handler's return value, or propagates
@@ -167,9 +172,7 @@ public:
   //
   // Does not currently support rejection handlers.
   template <typename Callback, typename... Args>
-  typename EnableIf<
-    IsHandlerCallback<Callback, Args...>::value,
-    Result<RefPtr<Promise>, nsresult>>::Type
+  ThenResult<Callback, Args...>
   ThenWithCycleCollectedArgs(Callback&& aOnResolve, Args&&... aArgs);
 
   Result<RefPtr<Promise>, nsresult>

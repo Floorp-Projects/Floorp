@@ -366,10 +366,6 @@ let urlbarListener = {
       Services.telemetry
               .getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE")
               .add(actionType, idx);
-      if (actionType === "bookmark" || actionType === "history") {
-        Services.telemetry.recordEvent("savant", "follow_urlbar_link", actionType, null,
-                                      { subcategory: "navigation" });
-      }
     } else {
       Cu.reportError("Unknown FX_URLBAR_SELECTED_RESULT_TYPE type: " +
                      actionType);
@@ -503,9 +499,6 @@ let BrowserUsageTelemetry = {
                                       scalarKey, 1);
     Services.telemetry.recordEvent("navigation", "search", source, action,
                                    { engine: getSearchEngineId(engine) });
-    Services.telemetry.recordEvent("savant", "search", source, action,
-                                   { subcategory: "navigation",
-                                   engine: getSearchEngineId(engine) });
   },
 
   _handleSearchAction(engine, source, details) {

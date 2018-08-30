@@ -2,17 +2,17 @@
 #   and layout/reftests/w3c-css/submitted/multicol3/
 # Pagination tests
 # asserts(3) == abspos-breaking-000.xhtml abspos-breaking-000.ref.xhtml # bug 1067755, 1135556
-== abspos-breaking-001.xhtml abspos-breaking-000.ref.xhtml
-== abspos-breaking-002.xhtml abspos-breaking-000.ref.xhtml
-== abspos-breaking-003.html abspos-breaking-003-ref.html
-== abspos-breaking-004.html abspos-breaking-004-ref.html
-== abspos-breaking-005.html abspos-breaking-005-ref.html
-== abspos-breaking-006.html abspos-breaking-006-ref.html
-pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-007.html abspos-breaking-007-ref.html
-pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-008.html abspos-breaking-008-ref.html
-pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-009.html abspos-breaking-009-ref.html
-pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html abspos-breaking-010-ref.html
-== abspos-breaking-011.html abspos-breaking-011-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-001.xhtml abspos-breaking-000.ref.xhtml # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-002.xhtml abspos-breaking-000.ref.xhtml # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-003.html abspos-breaking-003-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-004.html abspos-breaking-004-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-005.html abspos-breaking-005-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-006.html abspos-breaking-006-ref.html # Bug 1392106
+pref(layout.css.box-decoration-break.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-007.html abspos-breaking-007-ref.html # Bug 1392106
+pref(layout.css.box-decoration-break.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-008.html abspos-breaking-008-ref.html # Bug 1392106
+pref(layout.css.box-decoration-break.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-009.html abspos-breaking-009-ref.html # Bug 1392106
+pref(layout.css.box-decoration-break.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == abspos-breaking-010.html abspos-breaking-010-ref.html # Bug 1392106
+== abspos-breaking-011.html abspos-breaking-011-ref.html # Bug 1392106
 == abspos-breaking-dynamic-001.html abspos-breaking-dynamic-001-ref.html
 == abspos-breaking-dynamic-002.html abspos-breaking-dynamic-002-ref.html
 == abspos-breaking-dynamic-003.html abspos-breaking-dynamic-003-ref.html

@@ -13,7 +13,6 @@ DevToolsModules(
     'content-process-forward.js',
     'eval-with-debugger.js',
     'message-manager-mock.js',
-    'screenshot.js',
     'utils.js',
     'worker-listeners.js',
 )

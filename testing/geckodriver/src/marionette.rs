@@ -1,15 +1,13 @@
-use base64;
-use hyper::Method;
+use command::{AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
+              GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters,
+              CHROME_ELEMENT_KEY, LEGACY_ELEMENT_KEY};
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::{FirefoxProcess, FirefoxRunner, Runner, RunnerProcess};
-use regex::Captures;
 use serde::de::{self, Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
 use serde_json::{self, Map, Value};
-use std::env;
 use std::error::Error;
-use std::fs::File;
 use std::io::prelude::*;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
@@ -19,7 +17,6 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::thread;
 use std::time;
-use uuid::Uuid;
 use webdriver::capabilities::CapabilitiesMatching;
 use webdriver::command::WebDriverCommand::{AcceptAlert, AddCookie, CloseWindow, DeleteCookie,
                                            DeleteCookies, DeleteSession, DismissAlert,
@@ -43,10 +40,9 @@ use webdriver::command::{ActionsParameters, AddCookieParameters, GetNamedCookieP
                          GetParameters, JavascriptCommandParameters, LocatorParameters,
                          NewSessionParameters, SwitchToFrameParameters, SwitchToWindowParameters,
                          TakeScreenshotParameters, TimeoutsParameters, WindowRectParameters};
-use webdriver::command::{WebDriverCommand, WebDriverExtensionCommand, WebDriverMessage};
+use webdriver::command::{WebDriverCommand, WebDriverMessage};
 use webdriver::common::{Cookie, FrameId, WebElement, ELEMENT_KEY, FRAME_KEY, WINDOW_KEY};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
-use webdriver::httpapi::WebDriverExtensionRoute;
 use webdriver::response::{CloseWindowResponse, CookieResponse, CookiesResponse,
                           ElementRectResponse, NewSessionResponse, TimeoutsResponse,
                           ValueResponse, WebDriverResponse, WindowRectResponse};
@@ -60,264 +56,6 @@ use prefs;
 // localhost may be routed to the IPv6 stack on certain systems,
 // and nsIServerSocket in Marionette only supports IPv4
 const DEFAULT_HOST: &'static str = "127.0.0.1";
-
-const CHROME_ELEMENT_KEY: &'static str = "chromeelement-9fc5-4b51-a3c8-01716eedeb04";
-const LEGACY_ELEMENT_KEY: &'static str = "ELEMENT";
-
-pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
-    return vec![
-        (
-            Method::GET,
-            "/session/{sessionId}/moz/context",
-            GeckoExtensionRoute::GetContext,
-        ),
-        (
-            Method::POST,
-            "/session/{sessionId}/moz/context",
-            GeckoExtensionRoute::SetContext,
-        ),
-        (
-            Method::POST,
-            "/session/{sessionId}/moz/xbl/{elementId}/anonymous_children",
-            GeckoExtensionRoute::XblAnonymousChildren,
-        ),
-        (
-            Method::POST,
-            "/session/{sessionId}/moz/xbl/{elementId}/anonymous_by_attribute",
-            GeckoExtensionRoute::XblAnonymousByAttribute,
-        ),
-        (
-            Method::POST,
-            "/session/{sessionId}/moz/addon/install",
-            GeckoExtensionRoute::InstallAddon,
-        ),
-        (
-            Method::POST,
-            "/session/{sessionId}/moz/addon/uninstall",
-            GeckoExtensionRoute::UninstallAddon,
-        ),
-    ];
-}
-
-#[derive(Clone, PartialEq)]
-pub enum GeckoExtensionRoute {
-    GetContext,
-    SetContext,
-    XblAnonymousChildren,
-    XblAnonymousByAttribute,
-    InstallAddon,
-    UninstallAddon,
-}
-
-impl WebDriverExtensionRoute for GeckoExtensionRoute {
-    type Command = GeckoExtensionCommand;
-
-    fn command(
-        &self,
-        params: &Captures,
-        body_data: &Value,
-    ) -> WebDriverResult<WebDriverCommand<GeckoExtensionCommand>> {
-        let command = match self {
-            &GeckoExtensionRoute::GetContext => GeckoExtensionCommand::GetContext,
-            &GeckoExtensionRoute::SetContext => {
-                GeckoExtensionCommand::SetContext(serde_json::from_value(body_data.clone())?)
-            }
-            &GeckoExtensionRoute::XblAnonymousChildren => {
-                let element_id = try_opt!(
-                    params.name("elementId"),
-                    ErrorStatus::InvalidArgument,
-                    "Missing elementId parameter"
-                );
-                let element = WebElement::new(element_id.as_str().to_string());
-                GeckoExtensionCommand::XblAnonymousChildren(element)
-            }
-            &GeckoExtensionRoute::XblAnonymousByAttribute => {
-                let element_id = try_opt!(
-                    params.name("elementId"),
-                    ErrorStatus::InvalidArgument,
-                    "Missing elementId parameter"
-                );
-                GeckoExtensionCommand::XblAnonymousByAttribute(
-                    WebElement::new(element_id.as_str().into()),
-                    serde_json::from_value(body_data.clone())?,
-                )
-            }
-            &GeckoExtensionRoute::InstallAddon => {
-                GeckoExtensionCommand::InstallAddon(serde_json::from_value(body_data.clone())?)
-            }
-            &GeckoExtensionRoute::UninstallAddon => {
-                GeckoExtensionCommand::UninstallAddon(serde_json::from_value(body_data.clone())?)
-            }
-        };
-        Ok(WebDriverCommand::Extension(command))
-    }
-}
-
-#[derive(Clone, PartialEq)]
-pub enum GeckoExtensionCommand {
-    GetContext,
-    SetContext(GeckoContextParameters),
-    XblAnonymousChildren(WebElement),
-    XblAnonymousByAttribute(WebElement, XblLocatorParameters),
-    InstallAddon(AddonInstallParameters),
-    UninstallAddon(AddonUninstallParameters),
-}
-
-impl WebDriverExtensionCommand for GeckoExtensionCommand {
-    fn parameters_json(&self) -> Option<Value> {
-        match self {
-            &GeckoExtensionCommand::GetContext => None,
-            &GeckoExtensionCommand::InstallAddon(ref x) => {
-                Some(serde_json::to_value(x.clone()).unwrap())
-            }
-            &GeckoExtensionCommand::SetContext(ref x) => {
-                Some(serde_json::to_value(x.clone()).unwrap())
-            }
-            &GeckoExtensionCommand::UninstallAddon(ref x) => {
-                Some(serde_json::to_value(x.clone()).unwrap())
-            }
-            &GeckoExtensionCommand::XblAnonymousByAttribute(_, ref x) => {
-                Some(serde_json::to_value(x.clone()).unwrap())
-            }
-            &GeckoExtensionCommand::XblAnonymousChildren(_) => None,
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct AddonInstallParameters {
-    pub path: String,
-    pub temporary: bool,
-}
-
-impl<'de> Deserialize<'de> for AddonInstallParameters {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Debug, Deserialize)]
-        #[serde(deny_unknown_fields)]
-        struct Base64 {
-            addon: String,
-            temporary: bool,
-        };
-
-        #[derive(Debug, Deserialize)]
-        #[serde(deny_unknown_fields)]
-        struct Path {
-            path: String,
-            temporary: bool,
-        };
-
-        #[derive(Debug, Deserialize)]
-        #[serde(untagged)]
-        enum Helper {
-            Base64(Base64),
-            Path(Path),
-        };
-
-        let params = match Helper::deserialize(deserializer)? {
-            Helper::Path(ref mut data) => AddonInstallParameters {
-                path: data.path.clone(),
-                temporary: data.temporary,
-            },
-            Helper::Base64(ref mut data) => {
-                let content = base64::decode(&data.addon).map_err(de::Error::custom)?;
-
-                let path = env::temp_dir()
-                    .as_path()
-                    .join(format!("addon-{}.xpi", Uuid::new_v4()));
-                let mut xpi_file = File::create(&path).map_err(de::Error::custom)?;
-                xpi_file
-                    .write(content.as_slice())
-                    .map_err(de::Error::custom)?;
-
-                let path = match path.to_str() {
-                    Some(path) => path.to_string(),
-                    None => return Err(de::Error::custom("could not write addon to file")),
-                };
-
-                AddonInstallParameters {
-                    path: path,
-                    temporary: data.temporary,
-                }
-            }
-        };
-
-        Ok(params)
-    }
-}
-
-impl ToMarionette for AddonInstallParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut data = Map::new();
-        data.insert("path".to_string(), Value::String(self.path.clone()));
-        data.insert("temporary".to_string(), Value::Bool(self.temporary));
-        Ok(data)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct AddonUninstallParameters {
-    pub id: String,
-}
-
-impl ToMarionette for AddonUninstallParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut data = Map::new();
-        data.insert("id".to_string(), Value::String(self.id.clone()));
-        Ok(data)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum GeckoContext {
-    Content,
-    Chrome,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct GeckoContextParameters {
-    context: GeckoContext,
-}
-
-impl ToMarionette for GeckoContextParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut data = Map::new();
-        data.insert(
-            "value".to_owned(),
-            serde_json::to_value(self.context.clone())?,
-        );
-        Ok(data)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct XblLocatorParameters {
-    name: String,
-    value: String,
-}
-
-impl ToMarionette for XblLocatorParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut value = Map::new();
-        value.insert(self.name.to_owned(), Value::String(self.value.clone()));
-
-        let mut data = Map::new();
-        data.insert(
-            "using".to_owned(),
-            Value::String("anon attribute".to_string()),
-        );
-        data.insert("value".to_owned(), Value::Object(value));
-        Ok(data)
-    }
-}
-
-#[derive(Default, Debug)]
-pub struct LogOptions {
-    pub level: Option<logging::Level>,
-}
 
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct MarionetteHandshake {
@@ -340,9 +78,9 @@ pub struct MarionetteSettings {
 
 #[derive(Default)]
 pub struct MarionetteHandler {
-    connection: Mutex<Option<MarionetteConnection>>,
-    settings: MarionetteSettings,
-    browser: Option<FirefoxProcess>,
+    pub connection: Mutex<Option<MarionetteConnection>>,
+    pub settings: MarionetteSettings,
+    pub browser: Option<FirefoxProcess>,
 }
 
 impl MarionetteHandler {
@@ -354,7 +92,7 @@ impl MarionetteHandler {
         }
     }
 
-    fn create_connection(
+    pub fn create_connection(
         &mut self,
         session_id: &Option<String>,
         new_session_parameters: &NewSessionParameters,
@@ -774,7 +512,7 @@ impl MarionetteSession {
 
                 WebDriverResponse::Timeouts(TimeoutsResponse {
                     script: script,
-                    pageLoad: page_load,
+                    page_load: page_load,
                     implicit: implicit,
                 })
             }
@@ -1512,6 +1250,49 @@ trait ToMarionette {
     fn to_marionette(&self) -> WebDriverResult<Map<String, Value>>;
 }
 
+impl ToMarionette for AddonInstallParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        data.insert("path".to_string(), Value::String(self.path.clone()));
+        data.insert("temporary".to_string(), Value::Bool(self.temporary));
+        Ok(data)
+    }
+}
+
+impl ToMarionette for AddonUninstallParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        data.insert("id".to_string(), Value::String(self.id.clone()));
+        Ok(data)
+    }
+}
+
+impl ToMarionette for GeckoContextParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        data.insert(
+            "value".to_owned(),
+            serde_json::to_value(self.context.clone())?,
+        );
+        Ok(data)
+    }
+}
+
+impl ToMarionette for XblLocatorParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut value = Map::new();
+        value.insert(self.name.to_owned(), Value::String(self.value.clone()));
+
+        let mut data = Map::new();
+        data.insert(
+            "using".to_owned(),
+            Value::String("anon attribute".to_string()),
+        );
+        data.insert("value".to_owned(), Value::Object(value));
+        Ok(data)
+    }
+}
+
 impl ToMarionette for ActionsParameters {
     fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
         Ok(try_opt!(
@@ -1666,231 +1447,4 @@ impl ToMarionette for WindowRectParameters {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs::File;
-    use std::io::Read;
-    use test::check_deserialize;
-
-    #[test]
-    fn test_json_addon_install_parameters_null() {
-        let json = r#""#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_install_parameters_empty() {
-        let json = r#"{}"#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_install_parameters_with_path() {
-        let json = r#"{"path": "/path/to.xpi", "temporary": true}"#;
-        let data = AddonInstallParameters {
-            path: "/path/to.xpi".to_string(),
-            temporary: true,
-        };
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_addon_install_parameters_with_path_invalid_type() {
-        let json = r#"{"path": true, "temporary": true}"#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_install_parameters_with_path_and_temporary_invalid_type() {
-        let json = r#"{"path": "/path/to.xpi", "temporary": "foo"}"#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_install_parameters_with_path_only() {
-        let json = r#"{"path": "/path/to.xpi"}"#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_install_parameters_with_addon() {
-        let json = r#"{"addon": "aGVsbG8=", "temporary": true}"#;
-        let data = serde_json::from_str::<AddonInstallParameters>(&json).unwrap();
-
-        assert_eq!(data.temporary, true);
-        let mut file = File::open(data.path).unwrap();
-        let mut contents = String::new();
-        file.read_to_string(&mut contents).unwrap();
-        assert_eq!(contents, "hello");
-    }
-
-    #[test]
-    fn test_json_addon_install_parameters_with_addon_invalid_type() {
-        let json = r#"{"addon": true, "temporary": true}"#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_install_parameters_with_addon_and_temporary_invalid_type() {
-        let json = r#"{"addon": "aGVsbG8=", "temporary": "foo"}"#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_install_parameters_with_addon_only() {
-        let json = r#"{"addon": "aGVsbG8="}"#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_install_parameters_with_temporary_only() {
-        let json = r#"{"temporary": true}"#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_install_parameters_with_both_path_and_addon() {
-        let json = r#"{
-            "path":"/path/to.xpi",
-            "addon":"aGVsbG8=",
-            "temporary":true
-        }"#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_uninstall_parameters_null() {
-        let json = r#""#;
-
-        assert!(serde_json::from_str::<AddonUninstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_uninstall_parameters_empty() {
-        let json = r#"{}"#;
-
-        assert!(serde_json::from_str::<AddonUninstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_uninstall_parameters() {
-        let json = r#"{"id": "foo"}"#;
-        let data = AddonUninstallParameters {
-            id: "foo".to_string(),
-        };
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_addon_uninstall_parameters_id_invalid_type() {
-        let json = r#"{"id": true}"#;
-
-        assert!(serde_json::from_str::<AddonUninstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_gecko_context_parameters_content() {
-        let json = r#"{"context": "content"}"#;
-        let data = GeckoContextParameters {
-            context: GeckoContext::Content,
-        };
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_gecko_context_parameters_chrome() {
-        let json = r#"{"context": "chrome"}"#;
-        let data = GeckoContextParameters {
-            context: GeckoContext::Chrome,
-        };
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_gecko_context_parameters_context_missing() {
-        let json = r#"{}"#;
-
-        assert!(serde_json::from_str::<GeckoContextParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_gecko_context_parameters_context_null() {
-        let json = r#"{"context": null}"#;
-
-        assert!(serde_json::from_str::<GeckoContextParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_gecko_context_parameters_context_invalid_value() {
-        let json = r#"{"context": "foo"}"#;
-
-        assert!(serde_json::from_str::<GeckoContextParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_xbl_anonymous_by_attribute() {
-        let json = r#"{
-            "name": "foo",
-            "value": "bar"
-        }"#;
-
-        let data = XblLocatorParameters {
-            name: "foo".to_string(),
-            value: "bar".to_string(),
-        };
-
-        check_deserialize(&json, &data);
-    }
-
-    #[test]
-    fn test_json_xbl_anonymous_by_attribute_with_name_missing() {
-        let json = r#"{
-            "value": "bar"
-        }"#;
-
-        assert!(serde_json::from_str::<XblLocatorParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_xbl_anonymous_by_attribute_with_name_invalid_type() {
-        let json = r#"{
-            "name": null,
-            "value": "bar"
-        }"#;
-
-        assert!(serde_json::from_str::<XblLocatorParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_xbl_anonymous_by_attribute_with_value_missing() {
-        let json = r#"{
-            "name": "foo",
-        }"#;
-
-        assert!(serde_json::from_str::<XblLocatorParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_xbl_anonymous_by_attribute_with_value_invalid_type() {
-        let json = r#"{
-            "name": "foo",
-            "value": null
-        }"#;
-
-        assert!(serde_json::from_str::<XblLocatorParameters>(&json).is_err());
-    }
-}
+mod tests {}

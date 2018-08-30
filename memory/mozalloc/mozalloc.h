@@ -72,6 +72,17 @@ MFBT_API void* moz_xrealloc(void* ptr, size_t size)
 MFBT_API char* moz_xstrdup(const char* str)
     MOZ_ALLOCATOR;
 
+#if defined(HAVE_STRNDUP)
+MFBT_API char* moz_xstrndup(const char* str, size_t strsize)
+    MOZ_ALLOCATOR;
+#endif /* if defined(HAVE_STRNDUP) */
+
+MFBT_API void* moz_xmemdup(const void* ptr, size_t size)
+    MOZ_ALLOCATOR;
+
+MFBT_API void* moz_xmemalign(size_t boundary, size_t size)
+    MOZ_ALLOCATOR;
+
 MFBT_API size_t moz_malloc_usable_size(void *ptr);
 
 MFBT_API size_t moz_malloc_size_of(const void *ptr);
@@ -81,14 +92,6 @@ MFBT_API size_t moz_malloc_size_of(const void *ptr);
  * pointers into the middle of a live allocation.
  */
 MFBT_API size_t moz_malloc_enclosing_size_of(const void *ptr);
-
-#if defined(HAVE_STRNDUP)
-MFBT_API char* moz_xstrndup(const char* str, size_t strsize)
-    MOZ_ALLOCATOR;
-#endif /* if defined(HAVE_STRNDUP) */
-
-MFBT_API void* moz_xmemalign(size_t boundary, size_t size)
-    MOZ_ALLOCATOR;
 
 MOZ_END_EXTERN_C
 

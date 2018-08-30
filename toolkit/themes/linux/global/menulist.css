@@ -48,30 +48,3 @@ menulist[disabled="true"]:hover,
 menulist[disabled="true"]:hover:active {
   color: GrayText;
 }
-
-/* ::::: editable menulists ::::: */
-
-menulist[editable="true"] {
-  -moz-appearance: none;
-  color: -moz-FieldText;
-}
-
-.menulist-editable-box {
-  -moz-appearance: menulist-textfield;
-  padding-top: 3px;
-  padding-bottom: 3px;
-  padding-inline-start: 2px;
-  padding-inline-end: 0px;
-}
-
-menulist[editable="true"] > .menulist-dropmarker {
-  display: -moz-box;
-  -moz-appearance: -moz-menulist-button;
-}
-
-html|*.menulist-editable-input {
-  margin: 0px !important;
-  border: none !important;
-  padding: 0px !important;
-  font: inherit;
-}

@@ -187,4 +187,8 @@ def ft
   call $arg0->DumpFrameTree()
 end
 
+def ftl
+  call $arg0->DumpFrameTreeLimited()
+end
+
 source .gdbinit_python

@@ -744,10 +744,8 @@ NrIceStats NrIceCtx::Destroy() {
   // designed to be called more than once so if stats are desired, this can be
   // called just prior to the destructor
   MOZ_MTLOG(ML_DEBUG, "Destroying ICE ctx '" << name_ <<"'");
-  for (auto& stream : streams_) {
-    if (stream) {
-      stream->Close();
-    }
+  for (auto& idAndStream : streams_) {
+    idAndStream.second->Close();
   }
 
   NrIceStats stats;
@@ -795,16 +793,17 @@ NrIceCtx::~NrIceCtx() {
 }
 
 void
-NrIceCtx::SetStream(size_t index, NrIceMediaStream* stream) {
-  if (index >= streams_.size()) {
-    streams_.resize(index + 1);
+NrIceCtx::SetStream(const std::string& id, NrIceMediaStream* stream) {
+  auto it = streams_.find(id);
+  if (it != streams_.end()) {
+    MOZ_ASSERT(!stream, "Transport ids should be unique, and set only once");
+    auto preexisting_stream = it->second;
+    streams_.erase(it);
+    preexisting_stream->Close();
   }
 
-  RefPtr<NrIceMediaStream> oldStream(streams_[index]);
-  streams_[index] = stream;
-
-  if (oldStream) {
-    oldStream->Close();
+  if (stream) {
+    streams_[id] = stream;
   }
 }
 
@@ -977,7 +976,7 @@ nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
     Telemetry::AccumulateTimeDelta(
         Telemetry::WEBRTC_ICE_NR_ICE_GATHER_TIME_IMMEDIATE_SUCCESS, start);
   } else if (r != R_WOULDBLOCK) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't gather ICE candidates for '"
+    MOZ_MTLOG(ML_ERROR, "ICE FAILED: Couldn't gather ICE candidates for '"
                         << name_ << "', error=" << r);
     SetConnectionState(ICE_CTX_FAILED);
     Telemetry::AccumulateTimeDelta(
@@ -991,11 +990,10 @@ nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
   return NS_OK;
 }
 
-RefPtr<NrIceMediaStream> NrIceCtx::FindStream(
-    nr_ice_media_stream *stream) {
-  for (auto& stream_ : streams_) {
-    if (stream_ && (stream_->stream() == stream)) {
-      return stream_;
+RefPtr<NrIceMediaStream> NrIceCtx::FindStream(nr_ice_media_stream *stream) {
+  for (auto& idAndStream : streams_) {
+    if (idAndStream.second->stream() == stream) {
+      return idAndStream.second;
     }
   }
 
@@ -1045,8 +1043,8 @@ nsresult NrIceCtx::ParseGlobalAttributes(std::vector<std::string> attrs) {
 }
 
 bool NrIceCtx::HasStreamsToConnect() const {
-  for (auto& stream : streams_) {
-    if (stream && stream->state() != NrIceMediaStream::ICE_CLOSED) {
+  for (auto& idAndStream : streams_) {
+    if (idAndStream.second->state() != NrIceMediaStream::ICE_CLOSED) {
       return true;
     }
   }
@@ -1065,8 +1063,7 @@ nsresult NrIceCtx::StartChecks(bool offerer) {
 
   r=nr_ice_peer_ctx_pair_candidates(peer_);
   if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't pair candidates on "
-              << name_ << "'");
+    MOZ_MTLOG(ML_ERROR, "ICE FAILED: Couldn't pair candidates on " << name_);
     SetConnectionState(ICE_CTX_FAILED);
     return NS_ERROR_FAILURE;
   }
@@ -1074,11 +1071,11 @@ nsresult NrIceCtx::StartChecks(bool offerer) {
   r = nr_ice_peer_ctx_start_checks2(peer_,1);
   if (r) {
     if (r == R_NOT_FOUND) {
-      MOZ_MTLOG(ML_ERROR, "Couldn't start peer checks on "
-                << name_ << "' assuming trickle ICE");
+      MOZ_MTLOG(ML_INFO, "Couldn't start peer checks on "
+                << name_ << ", assuming trickle ICE");
     } else {
-      MOZ_MTLOG(ML_ERROR, "Couldn't start peer checks on "
-                << name_ << "'");
+      MOZ_MTLOG(ML_ERROR, "ICE FAILED: Couldn't start peer checks on "
+                << name_);
       SetConnectionState(ICE_CTX_FAILED);
       return NS_ERROR_FAILURE;
     }

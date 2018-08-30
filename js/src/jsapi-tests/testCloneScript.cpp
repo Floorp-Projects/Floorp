@@ -7,7 +7,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <string.h> // strlen
+
+#include "jsapi.h" // sundry symbols not moved to more-specific headers yet
 #include "jsfriendapi.h"
+#include "jspubtd.h" // JS::AutoObjectVector
+
+#include "js/CompilationAndEvaluation.h" // JS::CompileFunction
+#include "js/CompileOptions.h" // JS::CompileOptions
+#include "js/RootingAPI.h" // JS::Rooted
+#include "js/TypeDecls.h" // JSFunction, JSObject
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(test_cloneScript)

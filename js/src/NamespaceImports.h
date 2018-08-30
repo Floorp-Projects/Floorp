@@ -100,13 +100,8 @@ using JS::GCHashSet;
 
 using JS::CallArgs;
 using JS::CallNonGenericMethod;
-using JS::CompileOptions;
 using JS::IsAcceptableThis;
 using JS::NativeImpl;
-using JS::OwningCompileOptions;
-using JS::ReadOnlyCompileOptions;
-using JS::SourceBufferHolder;
-using JS::TransitiveCompileOptions;
 
 using JS::Rooted;
 using JS::RootedFunction;

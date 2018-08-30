@@ -147,8 +147,8 @@ struct GetOrInternStringMatcher
     size_t length = str->length() / sizeof(CharT);
     auto tempString = reinterpret_cast<const CharT*>(str->data());
 
-    UniqueFreePtr<CharT[]> owned(NS_strndup(tempString, length));
-    if (!owned || !internedStrings.append(std::move(owned)))
+    UniqueFreePtr<CharT[]> owned(NS_xstrndup(tempString, length));
+    if (!internedStrings.append(std::move(owned)))
       return nullptr;
 
     return internedStrings.back().get();

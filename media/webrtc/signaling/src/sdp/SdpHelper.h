@@ -72,18 +72,8 @@ class SdpHelper {
                        std::string* trackId);
     nsresult AddCandidateToSdp(Sdp* sdp,
                                const std::string& candidate,
-                               const std::string& mid,
                                uint16_t level);
-    void SetIceGatheringComplete(Sdp* sdp,
-                                 uint16_t level,
-                                 BundledMids bundledMids);
-    void SetDefaultAddresses(const std::string& defaultCandidateAddr,
-                             uint16_t defaultCandidatePort,
-                             const std::string& defaultRtcpCandidateAddr,
-                             uint16_t defaultRtcpCandidatePort,
-                             Sdp* sdp,
-                             uint16_t level,
-                             BundledMids bundledMids);
+    void SetIceGatheringComplete(Sdp* sdp, uint16_t level);
     void SetDefaultAddresses(const std::string& defaultCandidateAddr,
                              uint16_t defaultCandidatePort,
                              const std::string& defaultRtcpCandidateAddr,

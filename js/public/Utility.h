@@ -593,13 +593,6 @@ js_pod_malloc(size_t numElems)
 
 template <class T>
 static MOZ_ALWAYS_INLINE T*
-js_pod_malloc()
-{
-    return js_pod_malloc<T>(sizeof(T));
-}
-
-template <class T>
-static MOZ_ALWAYS_INLINE T*
 js_pod_arena_calloc(arena_id_t arena, size_t numElems)
 {
     size_t bytes;
@@ -613,13 +606,6 @@ static MOZ_ALWAYS_INLINE T*
 js_pod_calloc(size_t numElems)
 {
     return js_pod_arena_calloc<T>(js::MallocArena, numElems);
-}
-
-template <class T>
-static MOZ_ALWAYS_INLINE T*
-js_pod_calloc()
-{
-    return js_pod_calloc<T>(sizeof(T));
 }
 
 template <class T>

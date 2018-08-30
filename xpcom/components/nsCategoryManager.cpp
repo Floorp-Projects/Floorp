@@ -9,6 +9,7 @@
 
 #include "prio.h"
 #include "prlock.h"
+#include "nsArrayEnumerator.h"
 #include "nsCOMPtr.h"
 #include "nsTHashtable.h"
 #include "nsClassHashtable.h"
@@ -27,6 +28,7 @@
 #include "mozilla/ArenaAllocatorExtensions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Services.h"
+#include "mozilla/SimpleEnumerator.h"
 
 #include "ManifestParser.h"
 #include "nsSimpleEnumerator.h"
@@ -47,10 +49,10 @@ class nsIComponentLoaderManager;
 */
 
 //
-// BaseStringEnumerator is subclassed by EntryEnumerator and
-// CategoryEnumerator
+// CategoryEnumerator class
 //
-class BaseStringEnumerator
+
+class CategoryEnumerator
   : public nsSimpleEnumerator
   , private nsIUTF8StringEnumerator
 {
@@ -64,11 +66,11 @@ public:
     return NS_GET_IID(nsISupportsCString);
   }
 
-protected:
-  // Callback function for NS_QuickSort to sort mArray
-  static int SortCallback(const void*, const void*, void*);
+  static CategoryEnumerator* Create(nsClassHashtable<nsDepCharHashKey,
+                                                     CategoryNode>& aTable);
 
-  BaseStringEnumerator()
+protected:
+  CategoryEnumerator()
     : mArray(nullptr)
     , mCount(0)
     , mSimpleCurItem(0)
@@ -76,15 +78,10 @@ protected:
   {
   }
 
-  // A virtual destructor is needed here because subclasses of
-  // BaseStringEnumerator do not implement their own Release() method.
-
-  virtual ~BaseStringEnumerator()
+  ~CategoryEnumerator() override
   {
     delete [] mArray;
   }
-
-  void Sort();
 
   const char** mArray;
   uint32_t mCount;
@@ -92,11 +89,11 @@ protected:
   uint32_t mStringCurItem;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(BaseStringEnumerator, nsSimpleEnumerator,
+NS_IMPL_ISUPPORTS_INHERITED(CategoryEnumerator, nsSimpleEnumerator,
                             nsIUTF8StringEnumerator)
 
 NS_IMETHODIMP
-BaseStringEnumerator::HasMoreElements(bool* aResult)
+CategoryEnumerator::HasMoreElements(bool* aResult)
 {
   *aResult = (mSimpleCurItem < mCount);
 
@@ -104,7 +101,7 @@ BaseStringEnumerator::HasMoreElements(bool* aResult)
 }
 
 NS_IMETHODIMP
-BaseStringEnumerator::GetNext(nsISupports** aResult)
+CategoryEnumerator::GetNext(nsISupports** aResult)
 {
   if (mSimpleCurItem >= mCount) {
     return NS_ERROR_FAILURE;
@@ -121,7 +118,7 @@ BaseStringEnumerator::GetNext(nsISupports** aResult)
 }
 
 NS_IMETHODIMP
-BaseStringEnumerator::HasMore(bool* aResult)
+CategoryEnumerator::HasMore(bool* aResult)
 {
   *aResult = (mStringCurItem < mCount);
 
@@ -129,7 +126,7 @@ BaseStringEnumerator::HasMore(bool* aResult)
 }
 
 NS_IMETHODIMP
-BaseStringEnumerator::GetNext(nsACString& aResult)
+CategoryEnumerator::GetNext(nsACString& aResult)
 {
   if (mStringCurItem >= mCount) {
     return NS_ERROR_FAILURE;
@@ -139,59 +136,120 @@ BaseStringEnumerator::GetNext(nsACString& aResult)
   return NS_OK;
 }
 
-int
-BaseStringEnumerator::SortCallback(const void* aE1, const void* aE2,
-                                   void* /*unused*/)
+CategoryEnumerator*
+CategoryEnumerator::Create(nsClassHashtable<nsDepCharHashKey, CategoryNode>&
+                           aTable)
 {
-  char const* const* s1 = reinterpret_cast<char const* const*>(aE1);
-  char const* const* s2 = reinterpret_cast<char const* const*>(aE2);
-
-  return strcmp(*s1, *s2);
-}
-
-void
-BaseStringEnumerator::Sort()
-{
-  NS_QuickSort(mArray, mCount, sizeof(mArray[0]), SortCallback, nullptr);
-}
-
-//
-// EntryEnumerator is the wrapper that allows nsICategoryManager::EnumerateCategory
-//
-class EntryEnumerator
-  : public BaseStringEnumerator
-{
-public:
-  static EntryEnumerator* Create(nsTHashtable<CategoryLeaf>& aTable);
-};
-
-
-EntryEnumerator*
-EntryEnumerator::Create(nsTHashtable<CategoryLeaf>& aTable)
-{
-  auto* enumObj = new EntryEnumerator();
+  auto* enumObj = new CategoryEnumerator();
   if (!enumObj) {
     return nullptr;
   }
 
-  enumObj->mArray = new char const* [aTable.Count()];
+  enumObj->mArray = new const char* [aTable.Count()];
   if (!enumObj->mArray) {
     delete enumObj;
     return nullptr;
   }
 
   for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
-    CategoryLeaf* leaf = iter.Get();
-    if (leaf->value) {
-      enumObj->mArray[enumObj->mCount++] = leaf->GetKey();
+    // if a category has no entries, we pretend it doesn't exist
+    CategoryNode* aNode = iter.UserData();
+    if (aNode->Count()) {
+      enumObj->mArray[enumObj->mCount++] = iter.Key();
     }
   }
-
-  enumObj->Sort();
 
   return enumObj;
 }
 
+class CategoryEntry final : public nsICategoryEntry
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICATEGORYENTRY
+  NS_DECL_NSISUPPORTSCSTRING
+  NS_DECL_NSISUPPORTSPRIMITIVE
+
+  CategoryEntry(const char* aKey, const char* aValue)
+    : mKey(aKey)
+    , mValue(aValue)
+  {}
+
+  const char* Key() const { return mKey; }
+
+  static CategoryEntry* Cast(nsICategoryEntry* aEntry)
+  {
+    return static_cast<CategoryEntry*>(aEntry);
+  }
+
+private:
+  ~CategoryEntry() = default;
+
+  const char* mKey;
+  const char* mValue;
+};
+
+NS_IMPL_ISUPPORTS(CategoryEntry, nsICategoryEntry, nsISupportsCString)
+
+nsresult
+CategoryEntry::ToString(char** aResult)
+{
+  *aResult = moz_xstrdup(mKey);
+  return NS_OK;
+}
+
+nsresult
+CategoryEntry::GetType(uint16_t* aType)
+{
+  *aType = TYPE_CSTRING;
+  return NS_OK;
+}
+
+nsresult
+CategoryEntry::GetData(nsACString& aData)
+{
+  aData = mKey;
+  return NS_OK;
+}
+
+nsresult
+CategoryEntry::SetData(const nsACString& aData)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+CategoryEntry::GetEntry(nsACString& aEntry)
+{
+  aEntry = mKey;
+  return NS_OK;
+}
+
+nsresult
+CategoryEntry::GetValue(nsACString& aValue)
+{
+  aValue = mValue;
+  return NS_OK;
+}
+
+static nsresult
+CreateEntryEnumerator(nsTHashtable<CategoryLeaf>& aTable,
+                      nsISimpleEnumerator** aResult)
+{
+  nsCOMArray<nsICategoryEntry> entries(aTable.Count());
+
+  for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
+    CategoryLeaf* leaf = iter.Get();
+    if (leaf->value) {
+      entries.AppendElement(new CategoryEntry(leaf->GetKey(), leaf->value));
+    }
+  }
+
+  entries.Sort([](nsICategoryEntry* aA, nsICategoryEntry* aB, void*) {
+    return strcmp(CategoryEntry::Cast(aA)->Key(), CategoryEntry::Cast(aB)->Key());
+  }, nullptr);
+
+  return NS_NewArrayEnumerator(aResult, entries, NS_GET_IID(nsICategoryEntry));
+}
 
 //
 // CategoryNode implementations
@@ -284,20 +342,8 @@ CategoryNode::DeleteLeaf(const nsACString& aEntryName)
 nsresult
 CategoryNode::Enumerate(nsISimpleEnumerator** aResult)
 {
-  if (NS_WARN_IF(!aResult)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   MutexAutoLock lock(mLock);
-  EntryEnumerator* enumObj = EntryEnumerator::Create(mTable);
-
-  if (!enumObj) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aResult = enumObj;
-  NS_ADDREF(*aResult);
-  return NS_OK;
+  return CreateEntryEnumerator(mTable, aResult);
 }
 
 size_t
@@ -307,45 +353,6 @@ CategoryNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
   // pointers are non-owning.
   return mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
-
-//
-// CategoryEnumerator class
-//
-
-class CategoryEnumerator
-  : public BaseStringEnumerator
-{
-public:
-  static CategoryEnumerator* Create(nsClassHashtable<nsDepCharHashKey,
-                                                     CategoryNode>& aTable);
-};
-
-CategoryEnumerator*
-CategoryEnumerator::Create(nsClassHashtable<nsDepCharHashKey, CategoryNode>&
-                           aTable)
-{
-  auto* enumObj = new CategoryEnumerator();
-  if (!enumObj) {
-    return nullptr;
-  }
-
-  enumObj->mArray = new const char* [aTable.Count()];
-  if (!enumObj->mArray) {
-    delete enumObj;
-    return nullptr;
-  }
-
-  for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
-    // if a category has no entries, we pretend it doesn't exist
-    CategoryNode* aNode = iter.UserData();
-    if (aNode->Count()) {
-      enumObj->mArray[enumObj->mCount++] = iter.Key();
-    }
-  }
-
-  return enumObj;
-}
-
 
 //
 // nsCategoryManager implementations
@@ -745,26 +752,13 @@ NS_CreateServicesFromCategory(const char* aCategory,
     return;
   }
 
-  nsCOMPtr<nsIUTF8StringEnumerator> senumerator =
-    do_QueryInterface(enumerator);
-  if (!senumerator) {
-    NS_WARNING("Category enumerator doesn't support nsIUTF8StringEnumerator.");
-    return;
-  }
-
-  bool hasMore;
-  while (NS_SUCCEEDED(senumerator->HasMore(&hasMore)) && hasMore) {
+  for (auto& categoryEntry : SimpleEnumerator<nsICategoryEntry>(enumerator)) {
     // From here on just skip any error we get.
     nsAutoCString entryString;
-    if (NS_FAILED(senumerator->GetNext(entryString))) {
-      continue;
-    }
+    categoryEntry->GetEntry(entryString);
 
-    nsCString contractID;
-    rv = categoryManager->GetCategoryEntry(category, entryString, contractID);
-    if (NS_FAILED(rv)) {
-      continue;
-    }
+    nsAutoCString contractID;
+    categoryEntry->GetValue(contractID);
 
     nsCOMPtr<nsISupports> instance = do_GetService(contractID.get());
     if (!instance) {

@@ -783,11 +783,7 @@ var AddonManagerInternal = {
       }
 
       // Load any providers registered in the category manager
-      let catman = Cc["@mozilla.org/categorymanager;1"].
-                   getService(Ci.nsICategoryManager);
-      for (let {data: entry} of catman.enumerateCategory(CATEGORY_PROVIDER_MODULE)) {
-        let url = catman.getCategoryEntry(CATEGORY_PROVIDER_MODULE, entry);
-
+      for (let {entry, value: url} of Services.catMan.enumerateCategory(CATEGORY_PROVIDER_MODULE)) {
         try {
           ChromeUtils.import(url, {});
           logger.debug(`Loaded provider scope for ${url}`);

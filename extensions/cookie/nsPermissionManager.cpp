@@ -135,7 +135,9 @@ static const char* kPreloadPermissions[] = {
   // interception when a user has disabled storage for a specific site.  Once
   // service worker interception moves to the parent process this should be
   // removed.  See bug 1428130.
-  "cookie"
+  "cookie",
+  "trackingprotection",
+  "trackingprotection-pb"
 };
 
 // A list of permissions that can have a fallback default permission

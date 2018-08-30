@@ -196,8 +196,6 @@ public class CrashReporterService extends JobIntentService {
             if (profileName != null) {
                 // Extract the crash dump ID and telemetry client ID, we need profile access for the latter.
                 final String passedMinidumpName = passedMinidumpFile.getName();
-                // Strip the .dmp suffix from the minidump name to obtain the crash ID.
-                final String crashId = passedMinidumpName.substring(0, passedMinidumpName.length() - 4);
                 final GeckoProfile profile = GeckoProfile.get(this, profileName, profileDir);
                 final String clientId = profile.getClientId();
             }

@@ -7,6 +7,7 @@
 
 #include "jsapi.h"
 
+#include "js/CompilationAndEvaluation.h"
 #include "js/HeapAPI.h"
 #include "jsapi-tests/tests.h"
 

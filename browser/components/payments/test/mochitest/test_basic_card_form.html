@@ -42,6 +42,7 @@ function checkCCForm(customEl, expectedCard) {
     "cc-name",
     "cc-exp-month",
     "cc-exp-year",
+    "cc-type",
   ];
   for (let propName of CC_PROPERTY_NAMES) {
     let expectedVal = expectedCard[propName] || "";
@@ -110,6 +111,7 @@ add_task(async function test_saveButton() {
   fillField(form.form.querySelector("#cc-exp-month"), "11");
   let year = (new Date()).getFullYear().toString();
   fillField(form.form.querySelector("#cc-exp-year"), year);
+  fillField(form.form.querySelector("#cc-type"), "visa");
   form.saveButton.focus();
   ok(!form.saveButton.disabled,
      "Save button should be enabled since the required fields are filled");
@@ -143,6 +145,7 @@ add_task(async function test_saveButton() {
       "cc-exp-year": year,
       "cc-name": "J. Smith",
       "cc-number": "4111 1111-1111 1111",
+      "cc-type": "visa",
       "billingAddressGUID": "",
       "isTemporary": true,
     },
@@ -439,6 +442,37 @@ add_task(async function test_numberCustomValidityReset() {
 
   form.remove();
 });
+
+add_task(async function test_noCardNetworkSelected() {
+  let form = new BasicCardForm();
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  info("have an existing card in storage, with no network id");
+  let card1 = deepClone(PTU.BasicCards.JohnDoe);
+  card1.guid = "9864798564";
+  delete card1["cc-type"];
+
+  await form.requestStore.setState({
+    page: {
+      id: "basic-card-page",
+    },
+    "basic-card-page": {
+      guid: card1.guid,
+    },
+    savedBasicCards: {
+      [card1.guid]: deepClone(card1),
+    },
+  });
+  await asyncElementRendered();
+  checkCCForm(form, card1);
+  is(document.getElementById("cc-type").selectedIndex, 0, "Initial empty option is selected");
+
+  form.remove();
+  await form.requestStore.reset();
+});
+
 </script>
 
 </body>

@@ -9,6 +9,7 @@
  */
 
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,11 +176,11 @@ add_test(function test_categoryRegistration()
   ]);
 
   // Verify the correct entries are registered in the "test-cat" category.
-  for (let [name, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_NAME)) {
+  for (let {entry, value} of Services.catMan.enumerateCategory(CATEGORY_NAME)) {
     print("Verify that the name/value pair exists in the expected entries.");
-    ok(EXPECTED_ENTRIES.has(name));
-    Assert.equal(EXPECTED_ENTRIES.get(name), value);
-    EXPECTED_ENTRIES.delete(name);
+    ok(EXPECTED_ENTRIES.has(entry));
+    Assert.equal(EXPECTED_ENTRIES.get(entry), value);
+    EXPECTED_ENTRIES.delete(entry);
   }
   print("Check that all of the expected entries have been deleted.");
   Assert.equal(EXPECTED_ENTRIES.size, 0);

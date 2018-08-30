@@ -30,7 +30,6 @@ UNSUPPORTED_FEATURES = set([
     "Intl.Locale",
     "String.prototype.matchAll",
     "Symbol.matchAll",
-    "Symbol.prototype.description",
     "global",
     "export-star-as-namespace-from-module",
 ])

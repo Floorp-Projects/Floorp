@@ -454,7 +454,6 @@ nsAnnotationService::GetItemAnnotationNames(int64_t aItemId,
 
   *_result = static_cast<nsIVariant**>
                         (moz_xmalloc(sizeof(nsIVariant*) * names.Length()));
-  NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
 
   for (uint32_t i = 0; i < names.Length(); i ++) {
     nsCOMPtr<nsIWritableVariant> var = new nsVariant();

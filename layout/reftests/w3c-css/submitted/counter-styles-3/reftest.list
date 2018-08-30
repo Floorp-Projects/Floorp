@@ -1,6 +1,6 @@
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == system-cyclic.html     system-cyclic-ref.html # Bug 1392106
-== system-fixed.html      system-fixed-ref.html
-== system-symbolic.html   system-symbolic-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == system-fixed.html      system-fixed-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == system-symbolic.html   system-symbolic-ref.html # Bug 1392106
 fails-if(webrender&&cocoaWidget) == system-alphabetic.html system-alphabetic-ref.html
 == system-numeric.html    system-numeric-ref.html
 == system-additive.html   system-additive-ref.html
@@ -13,8 +13,8 @@ fails-if(webrender&&cocoaWidget) == system-alphabetic.html system-alphabetic-ref
 == system-additive-invalid.html   system-common-invalid-ref.html
 == system-extends-invalid.html    system-extends-invalid-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == descriptor-negative.html descriptor-negative-ref.html # Bug 1392106
-== descriptor-prefix.html   descriptor-prefix-ref.html
-== descriptor-suffix.html   descriptor-suffix-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == descriptor-prefix.html   descriptor-prefix-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == descriptor-suffix.html   descriptor-suffix-ref.html # Bug 1392106
 == descriptor-range.html    descriptor-range-ref.html
 fuzzy-if(webrender,0-22,0-3) == descriptor-pad.html      descriptor-pad-ref.html
 == descriptor-fallback.html descriptor-fallback-ref.html

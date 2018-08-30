@@ -6,6 +6,28 @@
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+/**
+ * A flex item data.
+ */
+const flexItem = exports.flexItem = {
+
+  // The actor ID of the flex item.
+  actorID: PropTypes.string,
+
+  // The flex item sizing data.
+  flexItemSizing: PropTypes.object,
+
+  // The NodeFront of the flex item.
+  nodeFront: PropTypes.object,
+
+  // The computed style properties of the flex item.
+  properties: PropTypes.object,
+
+};
+
+/**
+ * A flex container data.
+ */
 exports.flexbox = {
 
   // The actor ID of the flex container.
@@ -13,6 +35,9 @@ exports.flexbox = {
 
   // The color of the flexbox highlighter overlay.
   color: PropTypes.string,
+
+  // Array of flex container's flex items.
+  flexItems: PropTypes.arrayOf(PropTypes.shape(flexItem)),
 
   // Whether or not the flexbox highlighter is highlighting the flex container.
   highlighted: PropTypes.bool,

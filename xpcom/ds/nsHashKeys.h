@@ -599,9 +599,9 @@ public:
   typedef const char16_t* KeyType;
   typedef const char16_t* KeyTypePointer;
 
-  explicit nsUnicharPtrHashKey(const char16_t* aKey) : mKey(NS_strdup(aKey)) {}
+  explicit nsUnicharPtrHashKey(const char16_t* aKey) : mKey(NS_xstrdup(aKey)) {}
   nsUnicharPtrHashKey(const nsUnicharPtrHashKey& aToCopy)
-    : mKey(NS_strdup(aToCopy.mKey))
+    : mKey(NS_xstrdup(aToCopy.mKey))
   {
   }
 

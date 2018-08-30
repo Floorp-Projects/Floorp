@@ -478,7 +478,7 @@ fuzzy-if(skiaContent,0-1,0-610) == textPath-03.svg pass.svg
 == textPath-04.svg pass.svg
 == textPath-05.html pass.svg
 == textPath-06.svg pass.svg
-== textPath-line-01.svg textPath-line-01-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textPath-line-01.svg textPath-line-01-ref.svg # bug 1392106
 == textPath-path-attribute-01.svg textPath-path-attribute-01-ref.svg
 == textPath-side-attribute-01.svg pass.svg
 
@@ -503,7 +503,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-550) == tspan-rotate-04.svg tspan-rotate-04-ref.svg # bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-550) == tspan-rotate-05.svg tspan-rotate-ref.svg # bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-550) == tspan-rotate-06.svg tspan-rotate-ref.svg # bug 1392106
-== tspan-rotate-07.svg tspan-rotate-07-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-07.svg tspan-rotate-07-ref.svg # Bug 1392106
 == tspan-rotate-textPath-01.svg tspan-rotate-textPath-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-100) == tspan-xy-01.svg tspan-xy-ref.svg
 == tspan-xy-02.svg tspan-xy-ref.svg

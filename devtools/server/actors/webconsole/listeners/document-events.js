@@ -32,6 +32,11 @@ DocumentEventsListener.prototype = {
   },
 
   onWindowReady({ window, isTopLevel }) {
+    // Avoid listening if the console actor is already destroyed
+    if (!this.console.conn) {
+      return;
+    }
+
     // Ignore iframes
     if (!isTopLevel) {
       return;
@@ -51,6 +56,11 @@ DocumentEventsListener.prototype = {
   },
 
   onContentLoaded(event) {
+    // Avoid emitting an event when the console actor is already destroyed
+    if (!this.console.conn) {
+      return;
+    }
+
     const window = event.target.defaultView;
     const packet = {
       from: this.console.actorID,
@@ -65,6 +75,11 @@ DocumentEventsListener.prototype = {
   },
 
   onLoad(event) {
+    // Avoid emitting an event when the console actor is already destroyed
+    if (!this.console.conn) {
+      return;
+    }
+
     const window = event.target.defaultView;
     const packet = {
       from: this.console.actorID,

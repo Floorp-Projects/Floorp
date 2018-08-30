@@ -122,6 +122,14 @@ moz_xstrndup(const char* str, size_t strsize)
 }
 #endif  // if defined(HAVE_STRNDUP)
 
+void*
+moz_xmemdup(const void* ptr, size_t size)
+{
+  void* newPtr = moz_xmalloc(size);
+  memcpy(newPtr, ptr, size);
+  return newPtr;
+}
+
 #ifndef HAVE_MEMALIGN
 // We always have a definition of memalign, but system headers don't
 // necessarily come with a declaration.

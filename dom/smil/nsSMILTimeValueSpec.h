@@ -48,9 +48,9 @@ public:
   nsSMILTimeValueSpec(nsSMILTimedElement& aOwner, bool aIsBegin);
   ~nsSMILTimeValueSpec();
 
-  nsresult SetSpec(const nsAString& aStringSpec, Element* aContextNode);
-  void     ResolveReferences(nsIContent* aContextNode);
-  bool     IsEventBased() const;
+  nsresult SetSpec(const nsAString& aStringSpec, Element& aContextElement);
+  void ResolveReferences(Element& aContextElement);
+  bool IsEventBased() const;
 
   void     HandleNewInterval(nsSMILInterval& aInterval,
                              const nsSMILTimeContainer* aSrcContainer);

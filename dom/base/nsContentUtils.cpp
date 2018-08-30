@@ -339,6 +339,8 @@ bool nsContentUtils::sFragmentParsingActive = false;
 
 bool nsContentUtils::sDoNotTrackEnabled = false;
 
+bool nsContentUtils::sAntiTrackingControlCenterUIEnabled = false;
+
 mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
 
 PopupControlState nsContentUtils::sPopupControlState = openAbused;
@@ -736,6 +738,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sDisablePopups,
                                "dom.disable_open_during_load", false);
+
+  Preferences::AddBoolVarCache(&sAntiTrackingControlCenterUIEnabled,
+                               "browser.contentblocking.rejecttrackers.control-center.ui.enabled", false);
 
   Preferences::AddIntVarCache(&sBytecodeCacheStrategy,
                               "dom.script_loader.bytecode_cache.strategy", 0);
@@ -8911,8 +8916,7 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
 {
   bool disabled =
     StorageDisabledByAntiTrackingInternal(aWindow, aChannel, aPrincipal, aURI);
-  if (disabled &&
-      StaticPrefs::privacy_restrict3rdpartystorage_ui_enabled()) {
+  if (disabled && sAntiTrackingControlCenterUIEnabled) {
     nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
     if (!thirdPartyUtil) {
       return false;

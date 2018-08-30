@@ -57,6 +57,9 @@
 #include "nsToolkitCompsCID.h"
 #include "nsIClassifiedChannel.h"
 
+#define TABLE_TRACKING_BLACKLIST_PREF "tracking-blacklist-pref"
+#define TABLE_TRACKING_WHITELIST_PREF "tracking-whitelist-pref"
+
 namespace mozilla {
 namespace safebrowsing {
 
@@ -1537,6 +1540,8 @@ nsUrlClassifierDBService::ReadTablesFromPrefs()
 
   mBaseTables.Truncate();
   mTrackingProtectionTables.Truncate();
+  mTrackingProtectionWhitelistExtraEntriesByPrefs.Truncate();
+  mTrackingProtectionBlacklistExtraEntriesByPrefs.Truncate();
 
   Preferences::GetCString(PHISH_TABLE_PREF, allTables);
   if (mCheckPhishing) {
@@ -1568,9 +1573,15 @@ nsUrlClassifierDBService::ReadTablesFromPrefs()
   AppendTables(tables, allTables);
   AppendTables(tables, mTrackingProtectionTables);
 
+  Preferences::GetCString(TRACKING_TABLE_TEST_ENTRIES_PREF, tables);
+  AppendTables(tables, mTrackingProtectionBlacklistExtraEntriesByPrefs);
+
   Preferences::GetCString(TRACKING_WHITELIST_TABLE_PREF, tables);
   AppendTables(tables, allTables);
   AppendTables(tables, mTrackingProtectionTables);
+
+  Preferences::GetCString(TRACKING_WHITELIST_TABLE_TEST_ENTRIES_PREF, tables);
+  AppendTables(tables, mTrackingProtectionWhitelistExtraEntriesByPrefs);
 
   Classifier::SplitTables(allTables, mGethashTables);
 
@@ -1735,11 +1746,19 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;
 
   nsCString tables = mBaseTables;
+  nsTArray<nsCString> extraTablesByPrefs;
+  nsTArray<nsCString> extraEntriesByPrefs;
   if (aTrackingProtectionEnabled) {
     AppendTables(mTrackingProtectionTables, tables);
+    extraTablesByPrefs.AppendElement(TABLE_TRACKING_WHITELIST_PREF);
+    extraEntriesByPrefs.AppendElement(mTrackingProtectionWhitelistExtraEntriesByPrefs);
+
+    extraTablesByPrefs.AppendElement(TABLE_TRACKING_BLACKLIST_PREF);
+    extraEntriesByPrefs.AppendElement(mTrackingProtectionBlacklistExtraEntriesByPrefs);
   }
 
-  nsresult rv = LookupURI(aPrincipal, tables, callback, false, result);
+  nsresult rv = LookupURI(aPrincipal, tables, extraTablesByPrefs,
+                          extraEntriesByPrefs, callback, false, result);
   if (rv == NS_ERROR_MALFORMED_URI) {
     *result = false;
     // The URI had no hostname, don't try to classify it.
@@ -1775,21 +1794,57 @@ nsUrlClassifierDBService::ClassifyLocal(nsIURI *aURI,
 NS_IMETHODIMP
 nsUrlClassifierDBService::AsyncClassifyLocalWithTables(nsIURI *aURI,
                                                        const nsACString& aTables,
+                                                       const nsTArray<nsCString>& aExtraTablesByPrefs,
+                                                       const nsTArray<nsCString>& aExtraEntriesByPrefs,
                                                        nsIURIClassifierCallback* aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread(), "AsyncClassifyLocalWithTables must be called "
                                 "on main thread");
+
+  nsresult rv;
 
   // We do this check no matter what process we are in to return
   // error as early as possible.
   nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
+  if (aExtraTablesByPrefs.Length() != aExtraEntriesByPrefs.Length()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Let's see if we have special entries set by prefs.
+  if (!aExtraEntriesByPrefs.IsEmpty()) {
+    nsAutoCString host;
+    rv = uri->GetHost(host);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (uint32_t i = 0; i < aExtraEntriesByPrefs.Length(); ++i) {
+      nsTArray<nsCString> entries;
+      Classifier::SplitTables(aExtraEntriesByPrefs[i], entries);
+
+      if (entries.Contains(host)) {
+        nsCString table = aExtraTablesByPrefs[i];
+        nsCOMPtr<nsIURIClassifierCallback> callback(aCallback);
+        nsCOMPtr<nsIRunnable> cbRunnable = NS_NewRunnableFunction(
+          "nsUrlClassifierDBService::AsyncClassifyLocalWithTables",
+          [callback, table]() -> void {
+            callback->OnClassifyComplete(NS_OK, // Not used.
+                                         table,
+                                         EmptyCString(),  // provider. (Not used)
+                                         EmptyCString()); // prefix. (Not used)
+          });
+
+        NS_DispatchToMainThread(cbRunnable);
+        return NS_OK;
+      }
+    }
+  }
+
   nsAutoCString key;
   // Canonicalize the url
   nsCOMPtr<nsIUrlClassifierUtils> utilsService =
     do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
-  nsresult rv = utilsService->GetKeyForURI(uri, key);
+  rv = utilsService->GetKeyForURI(uri, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (XRE_IsContentProcess()) {
@@ -2145,12 +2200,15 @@ nsUrlClassifierDBService::Lookup(nsIPrincipal* aPrincipal,
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   bool dummy;
-  return LookupURI(aPrincipal, tables, c, true, &dummy);
+  return LookupURI(aPrincipal, tables, nsTArray<nsCString>(),
+                   nsTArray<nsCString>(), c, true, &dummy);
 }
 
 nsresult
 nsUrlClassifierDBService::LookupURI(nsIPrincipal* aPrincipal,
                                     const nsACString& tables,
+                                    const nsTArray<nsCString>& aExtraTablesByPrefs,
+                                    const nsTArray<nsCString>& aExtraEntriesByPrefs,
                                     nsIUrlClassifierCallback* c,
                                     bool forceLookup,
                                     bool *didLookup)
@@ -2170,6 +2228,35 @@ nsUrlClassifierDBService::LookupURI(nsIPrincipal* aPrincipal,
 
   uri = NS_GetInnermostURI(uri);
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+  if (aExtraTablesByPrefs.Length() != aExtraEntriesByPrefs.Length()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!aExtraEntriesByPrefs.IsEmpty()) {
+    nsAutoCString host;
+    rv = uri->GetHost(host);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (uint32_t i = 0; i < aExtraEntriesByPrefs.Length(); ++i) {
+      nsTArray<nsCString> entries;
+      Classifier::SplitTables(aExtraEntriesByPrefs[i], entries);
+      if (entries.Contains(host)) {
+        *didLookup = true;
+
+        nsCString table = aExtraTablesByPrefs[i];
+        nsCOMPtr<nsIUrlClassifierCallback> callback(c);
+        nsCOMPtr<nsIRunnable> cbRunnable = NS_NewRunnableFunction(
+          "nsUrlClassifierDBService::AsyncClassifyLocalWithTables",
+          [callback, table]() -> void {
+            callback->HandleEvent(table);
+          });
+
+        NS_DispatchToMainThread(cbRunnable);
+        return NS_OK;
+      }
+    }
+  }
 
   nsAutoCString key;
   // Canonicalize the url

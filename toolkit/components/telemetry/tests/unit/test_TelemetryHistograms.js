@@ -1197,3 +1197,42 @@ async function test_clearHistogramsOnSnapshot() {
                                               false /* clear */).parent;
   Assert.ok(!(COUNT in snapshot));
 });
+
+add_task(async function test_valid_os_smoketest() {
+  let nonExistingProbe;
+  let existingProbe;
+
+  switch (AppConstants.platform) {
+    case "linux":
+      nonExistingProbe = "TELEMETRY_TEST_OS_ANDROID_ONLY";
+      existingProbe = "TELEMETRY_TEST_OS_LINUX_ONLY";
+      break;
+    case "macosx":
+      nonExistingProbe = "TELEMETRY_TEST_OS_ANDROID_ONLY";
+      existingProbe = "TELEMETRY_TEST_OS_MAC_ONLY";
+      break;
+    case "win":
+      nonExistingProbe = "TELEMETRY_TEST_OS_ANDROID_ONLY";
+      existingProbe = "TELEMETRY_TEST_OS_WIN_ONLY";
+      break;
+    case "android":
+      nonExistingProbe = "TELEMETRY_TEST_OS_LINUX_ONLY";
+      existingProbe = "TELEMETRY_TEST_OS_ANDROID_ONLY";
+      break;
+    default:
+      /* Unknown OS. Let's not test OS-specific probes */
+      return;
+  }
+
+  Assert.throws(() => Telemetry.getHistogramById(nonExistingProbe),
+    /NS_ERROR_FAILURE/,
+    `Should throw on ${nonExistingProbe} probe that's not available on ${AppConstants.platform}`);
+
+  let h = Telemetry.getHistogramById(existingProbe);
+  h.clear();
+  h.add(1);
+  let snapshot = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                              false /* clear */).parent;
+  Assert.ok(existingProbe in snapshot, `${existingProbe} should be recorded on ${AppConstants.platform}`);
+  Assert.equal(snapshot[existingProbe].sum, 1);
+});

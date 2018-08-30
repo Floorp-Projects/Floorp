@@ -470,8 +470,8 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
             ssl2Gather ssl2gs = { PR_FALSE, 0 };
             ssl2Gather *ssl2gs_ptr = NULL;
 
-            /* If we're a server and waiting for a client hello, accept v2. */
-            if (ss->sec.isServer && ss->ssl3.hs.ws == wait_client_hello) {
+            if (ss->sec.isServer && ss->opt.enableV2CompatibleHello &&
+                ss->ssl3.hs.ws == wait_client_hello) {
                 ssl2gs_ptr = &ssl2gs;
             }
 
@@ -484,8 +484,8 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
             }
 
             if (!IS_DTLS(ss)) {
-                /* If we're a server waiting for a ClientHello then pass
-                 * ssl2gs to support SSLv2 ClientHello messages. */
+                /* Passing a non-NULL ssl2gs here enables detection of
+                 * SSLv2-compatible ClientHello messages. */
                 rv = ssl3_GatherData(ss, &ss->gs, flags, ssl2gs_ptr);
             } else {
                 rv = dtls_GatherData(ss, &ss->gs, flags);

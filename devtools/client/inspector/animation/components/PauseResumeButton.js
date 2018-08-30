@@ -4,10 +4,9 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 
@@ -26,6 +25,7 @@ class PauseResumeButton extends PureComponent {
     super(props);
 
     this.onKeyDown = this.onKeyDown.bind(this);
+    this.pauseResumeButtonRef = createRef();
 
     this.state = {
       isRunning: false,
@@ -41,8 +41,8 @@ class PauseResumeButton extends PureComponent {
     targetEl.addEventListener("keydown", this.onKeyDown);
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.updateState(nextProps);
+  componentDidUpdate() {
+    this.updateState();
   }
 
   componentWillUnount() {
@@ -51,7 +51,7 @@ class PauseResumeButton extends PureComponent {
   }
 
   getKeyEventTarget() {
-    return ReactDOM.findDOMNode(this).closest("#animation-container");
+    return this.pauseResumeButtonRef.current.closest("#animation-container");
   }
 
   onToggleAnimationsPlayState(event) {
@@ -63,13 +63,15 @@ class PauseResumeButton extends PureComponent {
   }
 
   onKeyDown(event) {
-    if (event.keyCode === KeyCodes.DOM_VK_SPACE) {
+    // Prevent to the duplicated call from the key listener and click listener.
+    if (event.keyCode === KeyCodes.DOM_VK_SPACE &&
+        event.target !== this.pauseResumeButtonRef.current) {
       this.onToggleAnimationsPlayState(event);
     }
   }
 
-  updateState(props) {
-    const { animations } = props;
+  updateState() {
+    const { animations } = this.props;
     const isRunning = hasRunningAnimation(animations);
     this.setState({ isRunning });
   }
@@ -85,6 +87,7 @@ class PauseResumeButton extends PureComponent {
         title: isRunning ?
                  getStr("timeline.resumedButtonTooltip") :
                  getStr("timeline.pausedButtonTooltip"),
+        ref: this.pauseResumeButtonRef,
       }
     );
   }

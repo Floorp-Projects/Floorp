@@ -1,3 +1,4 @@
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
 updateAppInfo({
   name: "XPCShell",
@@ -8,12 +9,9 @@ updateAppInfo({
 
 registerManifests([do_get_file("data/test_abi.manifest")]);
 
-const catman = Cc["@mozilla.org/categorymanager;1"].
-  getService(Ci.nsICategoryManager);
-
 function is_registered(name) {
   try {
-    var d = catman.getCategoryEntry("abitest", name);
+    var d = Services.catMan.getCategoryEntry("abitest", name);
     return d == "found";
   } catch (e) {
     return false;

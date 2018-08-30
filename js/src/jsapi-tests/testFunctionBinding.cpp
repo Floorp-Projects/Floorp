@@ -9,6 +9,7 @@
 
 #include "jsfriendapi.h"
 
+#include "js/CompilationAndEvaluation.h"
 #include "jsapi-tests/tests.h"
 
 using namespace js;

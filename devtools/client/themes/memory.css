@@ -557,20 +557,16 @@ html, body, #app, #memory-tool {
 .error::before {
   content: "";
   display: inline-block;
+  vertical-align: -2px;
   width: 12px;
   height: 12px;
   max-height: 12px;
-  background-image: url(chrome://devtools/skin/images/webconsole.svg);
-  background-size: 72px 60px;
-  background-position: -24px -24px;
-  background-repeat: no-repeat;
-  margin: 0px;
-  margin-top: 2px;
   margin-inline-end: 5px;
-}
-
-.theme-light .error::before {
-  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
+  background-image: var(--theme-console-alert-image);
+  background-repeat: no-repeat;
+  background-size: contain;
+  -moz-context-properties: fill;
+  fill: #ec8633;
 }
 
 /**

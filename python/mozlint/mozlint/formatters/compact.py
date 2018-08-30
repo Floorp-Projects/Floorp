@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
-from ..result import ResultContainer
+from ..result import Issue
 
 
 class CompactFormatter(object):
@@ -19,13 +19,13 @@ class CompactFormatter(object):
     def __init__(self, summary=True):
         self.summary = summary
 
-    def __call__(self, result, **kwargs):
+    def __call__(self, result):
         message = []
         num_problems = 0
-        for path, errors in sorted(result.iteritems()):
+        for path, errors in sorted(result.issues.iteritems()):
             num_problems += len(errors)
             for err in errors:
-                assert isinstance(err, ResultContainer)
+                assert isinstance(err, Issue)
 
                 d = {s: getattr(err, s) for s in err.__slots__}
                 d["column"] = ", col %s" % d["column"] if d["column"] else ""

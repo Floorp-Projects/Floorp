@@ -112,7 +112,7 @@ exports.matchRequest = matchRequest;
  *        logged (OR is applied). If no filter is provided then all requests are
  *        logged.
  * @param object owner
- *        The network monitor owner. This object needs to hold:
+ *        The network observer owner. This object needs to hold:
  *        - onNetworkEvent(requestInfo)
  *          This method is invoked once for every new network request and it is
  *          given the initial network request information as an argument.
@@ -122,13 +122,16 @@ exports.matchRequest = matchRequest;
 function NetworkObserver(filters, owner) {
   this.filters = filters;
   this.owner = owner;
+
   this.openRequests = new Map();
   this.openResponses = new Map();
+
   this._httpResponseExaminer =
     DevToolsUtils.makeInfallible(this._httpResponseExaminer).bind(this);
   this._httpModifyExaminer =
     DevToolsUtils.makeInfallible(this._httpModifyExaminer).bind(this);
   this._serviceWorkerRequest = this._serviceWorkerRequest.bind(this);
+
   this._throttleData = null;
   this._throttler = null;
 }
@@ -1065,8 +1068,8 @@ NetworkObserver.prototype = {
   },
 
   /**
-   * Suspend Web Console activity. This is called when all Web Consoles are
-   * closed.
+   * Suspend observer activity. This is called when the Network monitor actor stops
+   * listening.
    */
   destroy: function() {
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {

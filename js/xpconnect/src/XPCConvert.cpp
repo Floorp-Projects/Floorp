@@ -692,9 +692,6 @@ XPCConvert::JSData2Native(JSContext* cx,
             }
         }
         char* buffer = static_cast<char*>(moz_xmalloc(length + 1));
-        if (!buffer) {
-            return false;
-        }
         if (!JS_EncodeStringToBuffer(cx, str, buffer, length)) {
             free(buffer);
             return false;
@@ -735,10 +732,7 @@ XPCConvert::JSData2Native(JSContext* cx,
         }
 
         size_t byte_len = (len+1)*sizeof(char16_t);
-        if (!(*((void**)d) = moz_xmalloc(byte_len))) {
-            // XXX should report error
-            return false;
-        }
+        *((void**)d) = moz_xmalloc(byte_len);
         mozilla::Range<char16_t> destChars(*((char16_t**)d), len + 1);
         if (!JS_CopyStringChars(cx, destChars, str))
             return false;
@@ -913,11 +907,6 @@ XPCConvert::JSData2Native(JSContext* cx,
 
             // Allocate the backing buffer & return it.
             *dest = moz_xmalloc(*aLength * elty.Stride());
-            if (!*dest) {
-                if (pErr)
-                    *pErr = NS_ERROR_OUT_OF_MEMORY;
-                return nullptr;
-            }
             return *dest;
         });
 

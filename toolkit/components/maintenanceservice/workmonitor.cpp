@@ -8,11 +8,13 @@
 #include <userenv.h>
 #include <shellapi.h>
 
+#ifndef __MINGW32__
 #pragma comment(lib, "wtsapi32.lib")
 #pragma comment(lib, "userenv.lib")
 #pragma comment(lib, "shlwapi.lib")
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "rpcrt4.lib")
+#endif
 
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "nsWindowsHelpers.h"

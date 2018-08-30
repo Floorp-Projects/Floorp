@@ -46,7 +46,7 @@ class YAMLLintProcess(ProcessHandlerMixin):
 
         res = {'path': os.path.relpath(abspath, self.config['root']),
                'message': message,
-               'level': level,
+               'level': 'error',
                'lineno': line,
                'column': col,
                'rule': code,

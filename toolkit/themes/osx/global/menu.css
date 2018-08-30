@@ -147,17 +147,6 @@ menulist > menupopup > menu {
   color: -moz-FieldText;
 }
 
-/* ::::: menuitems in editable menulist popups ::::: */
-
-menulist[editable="true"] > menupopup > menuitem,
-menulist[editable="true"] > menupopup > menucaption {
-  -moz-appearance: none;
-}
-
-menulist[editable="true"] > menupopup > :-moz-any(menuitem, menucaption) > .menu-iconic-left {
-  display: none;
-}
-
 /* ::::: checked menuitems ::::: */
 
 :not(menulist) > menupopup > menuitem[checked="true"],
@@ -165,8 +154,8 @@ menulist[editable="true"] > menupopup > :-moz-any(menuitem, menucaption) > .menu
   -moz-appearance: checkmenuitem;
 }
 
-menulist:not([editable="true"]) > menupopup > menuitem[checked="true"]::before,
-menulist:not([editable="true"]) > menupopup > menuitem[selected="true"]::before {
+menulist > menupopup > menuitem[checked="true"]::before,
+menulist > menupopup > menuitem[selected="true"]::before {
   content: '\2713'; /* a checkmark */
   display: block;
   width: 15px;

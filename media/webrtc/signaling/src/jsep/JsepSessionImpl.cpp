@@ -792,8 +792,15 @@ JsepSessionImpl::SetLocalDescription(JsepSdpType type, const std::string& sdp)
     }
     transceiver->Associate(
         parsed->GetMediaSection(i).GetAttributeList().GetMid());
-    transceiver->mTransport = new JsepTransport;
-    InitTransport(parsed->GetMediaSection(i), transceiver->mTransport.get());
+
+    if (mSdpHelper.MsectionIsDisabled(parsed->GetMediaSection(i)) ||
+        parsed->GetMediaSection(i).GetAttributeList().HasAttribute(
+          SdpAttribute::kBundleOnlyAttribute)) {
+      transceiver->mTransport.Close();
+      continue;
+    }
+
+    EnsureHasOwnTransport(parsed->GetMediaSection(i), transceiver);
   }
 
   switch (type) {
@@ -990,6 +997,17 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
   nsresult rv = mSdpHelper.GetBundledMids(answer, &bundledMids);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // First, set the bundle level on the transceivers
+  for (auto& midAndMaster : bundledMids) {
+    JsepTransceiver* bundledTransceiver =
+      GetTransceiverForMid(midAndMaster.first);
+    if (!bundledTransceiver) {
+      JSEP_SET_ERROR("No transceiver for bundled mid " << midAndMaster.first);
+      return NS_ERROR_INVALID_ARG;
+    }
+    bundledTransceiver->SetBundleLevel(midAndMaster.second->GetLevel());
+  }
+
   // Now walk through the m-sections, perform negotiation, and update the
   // transceivers.
   for (size_t i = 0; i < local->GetMediaSectionCount(); ++i) {
@@ -1002,7 +1020,7 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
 
     // Skip disabled m-sections.
     if (answer.GetMediaSection(i).GetPort() == 0) {
-      transceiver->mTransport->Close();
+      transceiver->mTransport.Close();
       transceiver->Stop();
       transceiver->Disassociate();
       transceiver->ClearBundleLevel();
@@ -1012,27 +1030,8 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
       continue;
     }
 
-    // The transport details are not necessarily on the m-section we're
-    // currently processing.
-    size_t transportLevel = i;
-    bool usingBundle = false;
-    {
-      const SdpMediaSection& answerMsection(answer.GetMediaSection(i));
-      if (answerMsection.GetAttributeList().HasAttribute(
-            SdpAttribute::kMidAttribute)) {
-        if (bundledMids.count(answerMsection.GetAttributeList().GetMid())) {
-          const SdpMediaSection* masterBundleMsection =
-            bundledMids[answerMsection.GetAttributeList().GetMid()];
-          transportLevel = masterBundleMsection->GetLevel();
-          usingBundle = true;
-        }
-      }
-    }
-
     rv = MakeNegotiatedTransceiver(remote->GetMediaSection(i),
                                    local->GetMediaSection(i),
-                                   usingBundle,
-                                   transportLevel,
                                    transceiver);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1052,8 +1051,6 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
 nsresult
 JsepSessionImpl::MakeNegotiatedTransceiver(const SdpMediaSection& remote,
                                            const SdpMediaSection& local,
-                                           bool usingBundle,
-                                           size_t transportLevel,
                                            JsepTransceiver* transceiver)
 {
   const SdpMediaSection& answer = mIsOfferer ? remote : local;
@@ -1080,27 +1077,25 @@ JsepSessionImpl::MakeNegotiatedTransceiver(const SdpMediaSection& remote,
 
   transceiver->SetNegotiated();
 
-  if (usingBundle) {
-    transceiver->SetBundleLevel(transportLevel);
-  } else {
-    transceiver->ClearBundleLevel();
-  }
-
-  if (transportLevel != remote.GetLevel()) {
-    JsepTransceiver* bundleTransceiver(GetTransceiverForLevel(transportLevel));
-    if (!bundleTransceiver) {
+  JsepTransceiver* transportTransceiver = transceiver;
+  if (transceiver->HasBundleLevel()) {
+    size_t transportLevel = transceiver->BundleLevel();
+    transportTransceiver = GetTransceiverForLevel(transportLevel);
+    if (!transportTransceiver) {
       MOZ_ASSERT(false);
       JSEP_SET_ERROR("No transceiver for level " << transportLevel);
       return NS_ERROR_FAILURE;
     }
-    transceiver->mTransport = bundleTransceiver->mTransport;
-  } else {
-    // Ensures we only finalize once, when we process the master level
-    nsresult rv = FinalizeTransport(
-        remote.GetAttributeList(),
-        answer.GetAttributeList(),
-        transceiver->mTransport);
-    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Ensure that this is finalized in case we need to copy it below
+  nsresult rv = FinalizeTransport(remote.GetAttributeList(),
+                                  answer.GetAttributeList(),
+                                  &transceiver->mTransport);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (transportTransceiver != transceiver) {
+    transceiver->mTransport = transportTransceiver->mTransport;
   }
 
   transceiver->mSendTrack.SetActive(sending);
@@ -1121,7 +1116,7 @@ JsepSessionImpl::MakeNegotiatedTransceiver(const SdpMediaSection& remote,
                         "dropped.");
   }
 
-  if (transceiver->mTransport->mComponents == 2) {
+  if (transceiver->mTransport.mComponents == 2) {
     // RTCP MUX or not.
     // TODO(bug 1095743): verify that the PTs are consistent with mux.
     MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: RTCP-MUX is off");
@@ -1129,87 +1124,97 @@ JsepSessionImpl::MakeNegotiatedTransceiver(const SdpMediaSection& remote,
 
   if (local.GetMediaType() != SdpMediaSection::kApplication) {
     Telemetry::Accumulate(Telemetry::WEBRTC_RTCP_MUX,
-        transceiver->mTransport->mComponents == 1);
+        transceiver->mTransport.mComponents == 1);
   }
 
   return NS_OK;
 }
 
 void
-JsepSessionImpl::InitTransport(const SdpMediaSection& msection,
-                               JsepTransport* transport)
+JsepSessionImpl::EnsureHasOwnTransport(const SdpMediaSection& msection,
+                                       JsepTransceiver* transceiver)
 {
-  if (mSdpHelper.MsectionIsDisabled(msection)) {
-    transport->Close();
-    return;
+  JsepTransport& transport = transceiver->mTransport;
+
+  // TODO: Detect ICE restart on a per-msection basis.
+  if (mLocalIceIsRestarting || mRemoteIceIsRestarting ||
+      !transceiver->HasOwnTransport()) {
+    // Transceiver didn't own this transport last time, it won't now either
+    transport.Close();
   }
+
+  transceiver->ClearBundleLevel();
 
   if (mSdpHelper.HasRtcp(msection.GetProtocol())) {
-    transport->mComponents = 2;
+    transport.mComponents = 2;
   } else {
-    transport->mComponents = 1;
+    transport.mComponents = 1;
   }
 
-  if (msection.GetAttributeList().HasAttribute(SdpAttribute::kMidAttribute)) {
-    transport->mTransportId = msection.GetAttributeList().GetMid();
-  } else {
+  if (transport.mTransportId.empty()) {
+    // TODO: Once we use different ICE ufrag/pass for each m-section, we can
+    // use that here.
     std::ostringstream os;
-    os << "no_mid_lvl_" << msection.GetLevel();
-    // This works providing we don't have an msection level higher than 99999.
-    // We need to fit inside the 16 character mid limitation that results from
-    // not having two-byte rtp header extensions support in webrtc.org yet.
-    transport->mTransportId = os.str();
+    os << "transport_" << mTransportIdCounter++;
+    transport.mTransportId = os.str();
   }
-  // This assert can go away when webrtc.org supports 2-byte rtp header exts.
-  MOZ_ASSERT(transport->mTransportId.length() <= 16);
 }
 
 nsresult
 JsepSessionImpl::FinalizeTransport(const SdpAttributeList& remote,
                                    const SdpAttributeList& answer,
-                                   const RefPtr<JsepTransport>& transport)
+                                   JsepTransport* transport)
 {
-  UniquePtr<JsepIceTransport> ice = MakeUnique<JsepIceTransport>();
-
-  // We do sanity-checking for these in ParseSdp
-  ice->mUfrag = remote.GetIceUfrag();
-  ice->mPwd = remote.GetIcePwd();
-  if (remote.HasAttribute(SdpAttribute::kCandidateAttribute)) {
-    ice->mCandidates = remote.GetCandidate();
+  if (!transport->mComponents) {
+    return NS_OK;
   }
 
-  // RFC 5763 says:
-  //
-  //   The endpoint MUST use the setup attribute defined in [RFC4145].
-  //   The endpoint that is the offerer MUST use the setup attribute
-  //   value of setup:actpass and be prepared to receive a client_hello
-  //   before it receives the answer.  The answerer MUST use either a
-  //   setup attribute value of setup:active or setup:passive.  Note that
-  //   if the answerer uses setup:passive, then the DTLS handshake will
-  //   not begin until the answerer is received, which adds additional
-  //   latency. setup:active allows the answer and the DTLS handshake to
-  //   occur in parallel.  Thus, setup:active is RECOMMENDED.  Whichever
-  //   party is active MUST initiate a DTLS handshake by sending a
-  //   ClientHello over each flow (host/port quartet).
-  UniquePtr<JsepDtlsTransport> dtls = MakeUnique<JsepDtlsTransport>();
-  dtls->mFingerprints = remote.GetFingerprint();
-  if (!answer.HasAttribute(mozilla::SdpAttribute::kSetupAttribute)) {
-    dtls->mRole = mIsOfferer ? JsepDtlsTransport::kJsepDtlsServer
-                             : JsepDtlsTransport::kJsepDtlsClient;
-  } else {
-    if (mIsOfferer) {
-      dtls->mRole = (answer.GetSetup().mRole == SdpSetupAttribute::kActive)
-                        ? JsepDtlsTransport::kJsepDtlsServer
-                        : JsepDtlsTransport::kJsepDtlsClient;
-    } else {
-      dtls->mRole = (answer.GetSetup().mRole == SdpSetupAttribute::kActive)
-                        ? JsepDtlsTransport::kJsepDtlsClient
-                        : JsepDtlsTransport::kJsepDtlsServer;
+  if (!transport->mIce) {
+    UniquePtr<JsepIceTransport> ice = MakeUnique<JsepIceTransport>();
+
+    // We do sanity-checking for these in ParseSdp
+    ice->mUfrag = remote.GetIceUfrag();
+    ice->mPwd = remote.GetIcePwd();
+    if (remote.HasAttribute(SdpAttribute::kCandidateAttribute)) {
+      ice->mCandidates = remote.GetCandidate();
     }
+
+    transport->mIce = std::move(ice);
   }
 
-  transport->mIce = std::move(ice);
-  transport->mDtls = std::move(dtls);
+  if (!transport->mDtls) {
+    // RFC 5763 says:
+    //
+    //   The endpoint MUST use the setup attribute defined in [RFC4145].
+    //   The endpoint that is the offerer MUST use the setup attribute
+    //   value of setup:actpass and be prepared to receive a client_hello
+    //   before it receives the answer.  The answerer MUST use either a
+    //   setup attribute value of setup:active or setup:passive.  Note that
+    //   if the answerer uses setup:passive, then the DTLS handshake will
+    //   not begin until the answerer is received, which adds additional
+    //   latency. setup:active allows the answer and the DTLS handshake to
+    //   occur in parallel.  Thus, setup:active is RECOMMENDED.  Whichever
+    //   party is active MUST initiate a DTLS handshake by sending a
+    //   ClientHello over each flow (host/port quartet).
+    UniquePtr<JsepDtlsTransport> dtls = MakeUnique<JsepDtlsTransport>();
+    dtls->mFingerprints = remote.GetFingerprint();
+    if (!answer.HasAttribute(mozilla::SdpAttribute::kSetupAttribute)) {
+      dtls->mRole = mIsOfferer ? JsepDtlsTransport::kJsepDtlsServer
+                               : JsepDtlsTransport::kJsepDtlsClient;
+    } else {
+      if (mIsOfferer) {
+        dtls->mRole = (answer.GetSetup().mRole == SdpSetupAttribute::kActive)
+                          ? JsepDtlsTransport::kJsepDtlsServer
+                          : JsepDtlsTransport::kJsepDtlsClient;
+      } else {
+        dtls->mRole = (answer.GetSetup().mRole == SdpSetupAttribute::kActive)
+                          ? JsepDtlsTransport::kJsepDtlsClient
+                          : JsepDtlsTransport::kJsepDtlsServer;
+      }
+    }
+
+    transport->mDtls = std::move(dtls);
+  }
 
   if (answer.HasAttribute(SdpAttribute::kRtcpMuxAttribute)) {
     transport->mComponents = 1;
@@ -1261,7 +1266,7 @@ JsepSessionImpl::CopyPreviousTransportParams(const Sdp& oldAnswer,
         JSEP_SET_ERROR("No transceiver for level " << i);
         return NS_ERROR_FAILURE;
       }
-      size_t numComponents = transceiver->mTransport->mComponents;
+      size_t numComponents = transceiver->mTransport.mComponents;
       nsresult rv = mSdpHelper.CopyTransportParams(
           numComponents,
           mCurrentLocalDescription->GetMediaSection(i),
@@ -1446,6 +1451,18 @@ JsepSessionImpl::GetTransceiverForLevel(size_t level)
 }
 
 JsepTransceiver*
+JsepSessionImpl::GetTransceiverForMid(const std::string& mid)
+{
+  for (RefPtr<JsepTransceiver>& transceiver : mTransceivers) {
+    if (transceiver->IsAssociated() && (transceiver->GetMid() == mid)) {
+      return transceiver.get();
+    }
+  }
+
+  return nullptr;
+}
+
+JsepTransceiver*
 JsepSessionImpl::GetTransceiverForLocal(size_t level)
 {
   if (JsepTransceiver* transceiver = GetTransceiverForLevel(level)) {
@@ -1517,6 +1534,21 @@ JsepSessionImpl::GetTransceiverForRemote(const SdpMediaSection& msection)
   nsresult rv = AddTransceiver(newTransceiver);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return mTransceivers.back().get();
+}
+
+JsepTransceiver*
+JsepSessionImpl::GetTransceiverWithTransport(const std::string& transportId)
+{
+  for (const auto& transceiver : mTransceivers) {
+    if (transceiver->HasOwnTransport() &&
+        (transceiver->mTransport.mTransportId == transportId)) {
+      MOZ_ASSERT(transceiver->HasLevel(),
+          "Transceiver has a transport, but no level!");
+      return transceiver.get();
+    }
+  }
+
+  return nullptr;
 }
 
 nsresult
@@ -1683,6 +1715,22 @@ JsepSessionImpl::ValidateLocalDescription(const Sdp& description)
         JSEP_SET_ERROR("Why are you trying to set a=end-of-candidates?");
         return NS_ERROR_INVALID_ARG;
       }
+    }
+
+    if (mSdpHelper.MsectionIsDisabled(finalMsection)) {
+      continue;
+    }
+
+    if (!finalMsection.GetAttributeList().HasAttribute(
+          SdpAttribute::kMidAttribute)) {
+      JSEP_SET_ERROR("Local descriptions must have a=mid attributes.");
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    if (finalMsection.GetAttributeList().GetMid() !=
+        origMsection.GetAttributeList().GetMid()) {
+      JSEP_SET_ERROR("Changing the mid of m-sections is not allowed.");
+      return NS_ERROR_INVALID_ARG;
     }
 
     // TODO(bug 1095218): Check msid
@@ -2134,7 +2182,8 @@ JsepSessionImpl::SetState(JsepSignalingState state)
 nsresult
 JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
                                        const std::string& mid,
-                                       uint16_t level)
+                                       uint16_t level,
+                                       std::string* transportId)
 {
   mLastError.clear();
 
@@ -2145,12 +2194,34 @@ JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
     return NS_ERROR_UNEXPECTED;
   }
 
-  return mSdpHelper.AddCandidateToSdp(sdp, candidate, mid, level);
+  JsepTransceiver* transceiver;
+  if (mid.empty()) {
+    transceiver = GetTransceiverForLevel(level);
+  } else {
+    transceiver = GetTransceiverForMid(mid);
+  }
+
+  if (!transceiver) {
+    JSEP_SET_ERROR("Cannot set ICE candidate for level=" << level
+                   << " mid=" << mid << ": No such transceiver.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (transceiver->GetLevel() != level) {
+    JSEP_SET_ERROR("Mismatch between mid and level - \"" << mid
+                   << "\" is not the mid for level " << level);
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *transportId = transceiver->mTransport.mTransportId;
+
+  return mSdpHelper.AddCandidateToSdp(sdp, candidate, level);
 }
 
 nsresult
 JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
-                                      uint16_t level,
+                                      const std::string& transportId,
+                                      uint16_t* level,
                                       std::string* mid,
                                       bool* skipped)
 {
@@ -2163,37 +2234,20 @@ JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (sdp->GetMediaSectionCount() <= level) {
+  JsepTransceiver* transceiver = GetTransceiverWithTransport(transportId);
+  *skipped = !transceiver;
+  if (*skipped) {
     // mainly here to make some testing less complicated, but also just in case
-    *skipped = true;
     return NS_OK;
   }
 
-  if (mSdpHelper.MsectionIsDisabled(sdp->GetMediaSection(level))) {
-    // If m-section has port 0, don't update
-    // (either it is disabled, or bundle-only)
-    *skipped = true;
-    return NS_OK;
-  }
+  MOZ_ASSERT(transceiver->IsAssociated(),
+      "ICE candidate was gathered before the transceiver was associated! "
+      "This should never happen.");
+  *level = transceiver->GetLevel();
+  *mid = transceiver->GetMid();
 
-  if (mState == kJsepStateStable) {
-    const Sdp* answer(GetAnswer());
-    if (mSdpHelper.IsBundleSlave(*answer, level)) {
-      // We do not add candidate attributes to bundled m-sections unless they
-      // are the "master" bundle m-section.
-      *skipped = true;
-      return NS_OK;
-    }
-  }
-
-  nsresult rv = mSdpHelper.GetMidFromLevel(*sdp, level, mid);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *skipped = false;
-
-  return mSdpHelper.AddCandidateToSdp(sdp, candidate, *mid, level);
+  return mSdpHelper.AddCandidateToSdp(sdp, candidate, *level);
 }
 
 nsresult
@@ -2202,7 +2256,7 @@ JsepSessionImpl::UpdateDefaultCandidate(
     uint16_t defaultCandidatePort,
     const std::string& defaultRtcpCandidateAddr,
     uint16_t defaultRtcpCandidatePort,
-    uint16_t level)
+    const std::string& transportId)
 {
   mLastError.clear();
 
@@ -2213,58 +2267,43 @@ JsepSessionImpl::UpdateDefaultCandidate(
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (level >= sdp->GetMediaSectionCount()) {
-    return NS_OK;
-  }
+  for (const auto& transceiver : mTransceivers) {
+    // We set the default address for bundled m-sections, but not candidate
+    // attributes. Ugh.
+    if (transceiver->mTransport.mTransportId == transportId) {
+      MOZ_ASSERT(transceiver->HasLevel(),
+          "Transceiver has a transport, but no level! "
+          "This should never happen.");
+      std::string defaultRtcpCandidateAddrCopy(defaultRtcpCandidateAddr);
+      if (mState == kJsepStateStable) {
+        if (transceiver->mTransport.mComponents == 1) {
+          // We know we're doing rtcp-mux by now. Don't create an rtcp attr.
+          defaultRtcpCandidateAddrCopy = "";
+          defaultRtcpCandidatePort = 0;
+        }
+      }
 
-  if (mSdpHelper.MsectionIsDisabled(sdp->GetMediaSection(level))) {
-    // If m-section has port 0, don't update
-    // (either it is disabled, or bundle-only)
-    return NS_OK;
-  }
+      size_t level = transceiver->GetLevel();
+      if (level >= sdp->GetMediaSectionCount()) {
+        MOZ_ASSERT(false, "Transceiver's level is too large!");
+        JSEP_SET_ERROR("Transceiver's level is too large!");
+        return NS_ERROR_FAILURE;
+      }
 
-  std::string defaultRtcpCandidateAddrCopy(defaultRtcpCandidateAddr);
-  if (mState == kJsepStateStable) {
-    JsepTransceiver* transceiver(GetTransceiverForLevel(level));
-    if (!transceiver) {
-      MOZ_ASSERT(false);
-      JSEP_SET_ERROR("No transceiver for level " << level);
-      return NS_ERROR_FAILURE;
-    }
-
-    if (transceiver->mTransport->mComponents == 1) {
-      // We know we're doing rtcp-mux by now. Don't create an rtcp attr.
-      defaultRtcpCandidateAddrCopy = "";
-      defaultRtcpCandidatePort = 0;
-    }
-  }
-
-  // If offer/answer isn't done, it is too early to tell whether these defaults
-  // need to be applied to other m-sections.
-  SdpHelper::BundledMids bundledMids;
-  if (mState == kJsepStateStable) {
-    nsresult rv = GetNegotiatedBundledMids(&bundledMids);
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT(false);
-      mLastError += " (This should have been caught sooner!)";
-      return NS_ERROR_FAILURE;
+      mSdpHelper.SetDefaultAddresses(
+          defaultCandidateAddr,
+          defaultCandidatePort,
+          defaultRtcpCandidateAddrCopy,
+          defaultRtcpCandidatePort,
+          &sdp->GetMediaSection(level));
     }
   }
-
-  mSdpHelper.SetDefaultAddresses(
-      defaultCandidateAddr,
-      defaultCandidatePort,
-      defaultRtcpCandidateAddrCopy,
-      defaultRtcpCandidatePort,
-      sdp,
-      level,
-      bundledMids);
 
   return NS_OK;
 }
 
 nsresult
-JsepSessionImpl::EndOfLocalCandidates(uint16_t level)
+JsepSessionImpl::EndOfLocalCandidates(const std::string& transportId)
 {
   mLastError.clear();
 
@@ -2276,25 +2315,10 @@ JsepSessionImpl::EndOfLocalCandidates(uint16_t level)
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (level >= sdp->GetMediaSectionCount()) {
-    return NS_OK;
+  JsepTransceiver* transceiver = GetTransceiverWithTransport(transportId);
+  if (transceiver) {
+    mSdpHelper.SetIceGatheringComplete(sdp, transceiver->GetLevel());
   }
-
-  // If offer/answer isn't done, it is too early to tell whether this update
-  // needs to be applied to other m-sections.
-  SdpHelper::BundledMids bundledMids;
-  if (mState == kJsepStateStable) {
-    nsresult rv = GetNegotiatedBundledMids(&bundledMids);
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT(false);
-      mLastError += " (This should have been caught sooner!)";
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  mSdpHelper.SetIceGatheringComplete(sdp,
-                                     level,
-                                     bundledMids);
 
   return NS_OK;
 }

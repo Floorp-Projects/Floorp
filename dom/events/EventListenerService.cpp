@@ -268,9 +268,7 @@ EventListenerService::GetEventTargetChainFor(EventTarget* aEventTarget,
   }
 
   *aOutArray =
-    static_cast<EventTarget**>(
-      moz_xmalloc(sizeof(EventTarget*) * count));
-  NS_ENSURE_TRUE(*aOutArray, NS_ERROR_OUT_OF_MEMORY);
+    static_cast<EventTarget**>(moz_xmalloc(sizeof(EventTarget*) * count));
 
   for (int32_t i = 0; i < count; ++i) {
     NS_ADDREF((*aOutArray)[i] = targets[i]);

@@ -579,7 +579,8 @@ CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
                    aSC, aMaskFrames, maskSurfaceMatrix,
                    aOffsetToUserSpace);
 
-  if (aParams.imgParams.result != ImgDrawResult::SUCCESS) {
+  if (aParams.imgParams.result != ImgDrawResult::SUCCESS &&
+      aParams.imgParams.result != ImgDrawResult::SUCCESS_NOT_COMPLETE) {
     // Now we know the status of mask resource since we used it while painting.
     // According to the return value of PaintMaskSurface, we know whether mask
     // resource is resolvable or not.

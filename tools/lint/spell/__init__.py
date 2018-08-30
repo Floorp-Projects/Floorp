@@ -61,7 +61,7 @@ class CodespellProcess(ProcessHandlerMixin):
             return
         res = {'path': os.path.relpath(abspath, self.config['root']),
                'message': typo + " ==> " + correct,
-               'level': "warning",
+               'level': 'error',
                'lineno': line,
                }
         results.append(result.from_config(self.config, **res))

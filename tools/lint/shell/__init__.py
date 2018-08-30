@@ -48,7 +48,7 @@ class ShellcheckProcess(ProcessHandlerMixin):
             res = {
                 'path': entry['file'],
                 'message': entry['message'],
-                'level': 'error' if entry['level'] == 'error' else 'warning',
+                'level': 'error',
                 'lineno': entry['line'],
                 'column': entry['column'],
                 'rule': entry['code'],

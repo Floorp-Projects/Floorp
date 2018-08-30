@@ -65,7 +65,10 @@ URLClassifierLocalParent::StartClassify(nsIURI* aURI, const nsACString& aTables)
     do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     MOZ_ASSERT(aURI);
-    rv = uriClassifier->AsyncClassifyLocalWithTables(aURI, aTables, this);
+    rv = uriClassifier->AsyncClassifyLocalWithTables(aURI, aTables,
+                                                     nsTArray<nsCString>(),
+                                                     nsTArray<nsCString>(),
+                                                     this);
   }
   if (NS_FAILED(rv)) {
     // Cannot do ClassificationFailed() because the child side

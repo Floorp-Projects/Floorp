@@ -33,7 +33,10 @@
 #include "jit/Ion.h"
 #include "js/AutoByteString.h"
 #include "js/CallNonGenericMethod.h"
+#include "js/CompileOptions.h"
 #include "js/Proxy.h"
+
+#include "js/SourceBufferHolder.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
@@ -67,6 +70,8 @@ using mozilla::Maybe;
 using mozilla::Some;
 
 using JS::AutoStableStringChars;
+using JS::CompileOptions;
+using JS::SourceBufferHolder;
 
 static bool
 fun_enumerate(JSContext* cx, HandleObject obj)
@@ -772,10 +777,10 @@ JS::OrdinaryHasInstance(JSContext* cx, HandleObject objArg, HandleValue v, bool*
 
     /* Step 6. */
     RootedObject pobj(cx, &pval.toObject());
-    bool isDelegate;
-    if (!IsDelegate(cx, pobj, v, &isDelegate))
+    bool isPrototype;
+    if (!IsPrototypeOf(cx, pobj, &v.toObject(), &isPrototype))
         return false;
-    *bp = isDelegate;
+    *bp = isPrototype;
     return true;
 }
 

@@ -187,8 +187,7 @@ const char16_t Concrete<FakeNode>::concreteTypeName[] = u"FakeNode";
 void AddEdge(FakeNode& node, FakeNode& referent, const char16_t* edgeName = nullptr) {
   char16_t* ownedEdgeName = nullptr;
   if (edgeName) {
-    ownedEdgeName = NS_strdup(edgeName);
-    ASSERT_NE(ownedEdgeName, nullptr);
+    ownedEdgeName = NS_xstrdup(edgeName);
   }
 
   JS::ubi::Edge edge(ownedEdgeName, &referent);

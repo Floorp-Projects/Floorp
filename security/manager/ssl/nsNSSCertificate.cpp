@@ -389,9 +389,6 @@ nsNSSCertificate::GetEmailAddresses(uint32_t* aLength, char16_t*** aAddresses)
   }
 
   *aAddresses = (char16_t**) moz_xmalloc(sizeof(char16_t*) * (*aLength));
-  if (!*aAddresses) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   uint32_t iAddr = 0;
   for (const char* aAddr = CERT_GetFirstEmailAddress(mCert.get());
@@ -715,11 +712,9 @@ nsNSSCertificate::GetRawDER(uint32_t* aLength, uint8_t** aArray)
 {
   if (mCert) {
     *aArray = (uint8_t*)moz_xmalloc(mCert->derCert.len);
-    if (*aArray) {
-      memcpy(*aArray, mCert->derCert.data, mCert->derCert.len);
-      *aLength = mCert->derCert.len;
-      return NS_OK;
-    }
+    memcpy(*aArray, mCert->derCert.data, mCert->derCert.len);
+    *aLength = mCert->derCert.len;
+    return NS_OK;
   }
   *aLength = 0;
   return NS_ERROR_FAILURE;
@@ -1337,8 +1332,6 @@ NS_IMETHODIMP
 nsNSSCertificate::GetClassID(nsCID** aClassID)
 {
   *aClassID = (nsCID*) moz_xmalloc(sizeof(nsCID));
-  if (!*aClassID)
-    return NS_ERROR_OUT_OF_MEMORY;
   return GetClassIDNoAlloc(*aClassID);
 }
 

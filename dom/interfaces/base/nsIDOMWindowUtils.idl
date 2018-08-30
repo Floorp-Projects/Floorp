@@ -1928,6 +1928,14 @@ interface nsIDOMWindowUtils : nsISupports {
   void wrCapture();
 
   /**
+   * Returns whether the document we're associated to has recorded a given CSS
+   * property via the use counter mechanism.
+   *
+   * Throws if there's no document or the property is invalid.
+   */
+  bool isCssPropertyRecordedInUseCounter(in ACString aProperty);
+
+  /**
    * NOTE: Currently works only on GTK+.
    */
   attribute ACString systemFont;

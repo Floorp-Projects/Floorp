@@ -6,8 +6,6 @@
 :root {
   --slider-thumb-color: var(--grey-50);
   --slider-track-color: var(--grey-30);
-  --toggle-thumb-color: white;
-  --toggle-track-color: var(--grey-30);
   --input-background-color: white;
   --input-border-color: var(--grey-30);
   --input-text-color: var(--grey-90);
@@ -16,8 +14,6 @@
 :root.theme-dark {
   --slider-thumb-color: var(--grey-40);
   --slider-track-color: var(--grey-50);
-  --toggle-thumb-color: var(--grey-40);
-  --toggle-track-color: var(--grey-50);
   --input-background-color: var(--grey-70);
   --input-border-color: var(--grey-70);
   --input-text-color: var(--grey-40);
@@ -354,58 +350,6 @@
 .font-value-slider::-moz-range-track {
   background-color: var(--slider-track-color);
   height: 3px;
-}
-
-/*
-  Restyle a native checkbox input to look like a toggle with a "thumb".
-  Build the decoration using solid shapes created with radial- and linear-gradient
-  background images. Animate the position of the "thumb" using background-position.
- */
-.font-value-toggle {
-  --x-pos: .15em;
-  /* Reset native checkbox styling. */
-  -moz-appearance: none;
-  background-color: var(--toggle-track-color);
-  cursor: pointer;
-  /* Change font-size to scale. */
-  font-size: 16px;
-  width: 2em;
-  height: 1em;
-  border-radius: 1em;
-  /* Animate the thumb position between states of the checkbox. */
-  transition: background-color .1s ease-out;
-  /* border: 1px solid transparent; */
-  /* box-sizing: content-box; */
-}
-
-.font-value-toggle:focus {
-  box-shadow: 0 0 0 1px var(--blue-55);
-}
-
-.font-value-toggle:checked:focus {
-  background-color: var(--blue-40);
-  box-shadow: none;
-}
-
-.font-value-toggle:checked {
-  --x-pos: 1.15em;
-  background-color: var(--blue-55);
-}
-
-.font-value-toggle::before {
-  position: relative;
-  width: calc(1em - .3em);
-  height: calc(1em - .3em);
-  transform: translateY(.15em) translateX(var(--x-pos));
-  border-radius: 100%;
-  display: block;
-  content: "";
-  background-color: var(--toggle-thumb-color);
-  transition: transform .1s ease-out;
-}
-
-.font-value-toggle:checked::before {
-  background-color: white;
 }
 
 .font-origin {

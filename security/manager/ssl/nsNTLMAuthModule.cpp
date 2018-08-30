@@ -395,8 +395,6 @@ GenerateType1Msg(void **outBuf, uint32_t *outLen)
   //
   *outLen = NTLM_TYPE1_HEADER_LEN;
   *outBuf = moz_xmalloc(*outLen);
-  if (!*outBuf)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   //
   // write out type 1 msg
@@ -878,9 +876,6 @@ GenerateType3Msg(const nsString &domain,
   }
   *outBuf = moz_xmalloc(totalLen.value());
   *outLen = totalLen.value();
-  if (!*outBuf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   //
   // finally, we assemble the Type-3 msg :-)

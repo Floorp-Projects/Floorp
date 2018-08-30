@@ -57,7 +57,7 @@ nsSMILTimeValueSpec::~nsSMILTimeValueSpec()
 
 nsresult
 nsSMILTimeValueSpec::SetSpec(const nsAString& aStringSpec,
-                             Element* aContextNode)
+                             Element& aContextElement)
 {
   nsSMILTimeValueSpecParams params;
 
@@ -80,23 +80,21 @@ nsSMILTimeValueSpec::SetSpec(const nsAString& aStringSpec,
     mParams.mEventSymbol = nsGkAtoms::repeatEvent;
   }
 
-  ResolveReferences(aContextNode);
+  ResolveReferences(aContextElement);
 
   return NS_OK;
 }
 
 void
-nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
+nsSMILTimeValueSpec::ResolveReferences(Element& aContextElement)
 {
-  if (mParams.mType != nsSMILTimeValueSpecParams::SYNCBASE && !IsEventBased())
+  if (mParams.mType != nsSMILTimeValueSpecParams::SYNCBASE && !IsEventBased()) {
     return;
-
-  MOZ_ASSERT(aContextNode,
-             "null context node for resolving timing references against");
+  }
 
   // If we're not bound to the document yet, don't worry, we'll get called again
   // when that happens
-  if (!aContextNode->IsInComposedDoc())
+  if (!aContextElement.IsInComposedDoc())
     return;
 
   // Hold ref to the old element so that it isn't destroyed in between resetting
@@ -105,7 +103,7 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
   RefPtr<Element> oldReferencedElement = mReferencedElement.get();
 
   if (mParams.mDependentElemID) {
-    mReferencedElement.ResetWithID(aContextNode, mParams.mDependentElemID);
+    mReferencedElement.ResetWithID(aContextElement, mParams.mDependentElemID);
   } else if (mParams.mType == nsSMILTimeValueSpecParams::EVENT) {
     Element* target = mOwner->GetTargetElement();
     mReferencedElement.ResetWithElement(target);

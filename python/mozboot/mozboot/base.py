@@ -298,12 +298,15 @@ class BaseBootstrapper(object):
 
         subprocess.check_call(cmd, cwd=state_dir)
 
-    def which(self, name):
+    def which(self, name, *extra_search_dirs):
         """Python implementation of which.
 
         It returns the path of an executable or None if it couldn't be found.
         """
-        for path in os.environ['PATH'].split(os.pathsep):
+        search_dirs = os.environ['PATH'].split(os.pathsep)
+        search_dirs.extend(extra_search_dirs)
+
+        for path in search_dirs:
             test = os.path.join(path, name)
             if os.path.isfile(test) and os.access(test, os.X_OK):
                 return test
@@ -571,8 +574,8 @@ class BaseBootstrapper(object):
         """
         print(PYTHON_UNABLE_UPGRADE % (current, MODERN_PYTHON_VERSION))
 
-    def is_rust_modern(self):
-        rustc = self.which('rustc')
+    def is_rust_modern(self, cargo_bin):
+        rustc = self.which('rustc', cargo_bin)
         if not rustc:
             print('Could not find a Rust compiler.')
             return False, None
@@ -616,30 +619,20 @@ class BaseBootstrapper(object):
         })
 
     def ensure_rust_modern(self):
-        modern, version = self.is_rust_modern()
+        cargo_home, cargo_bin = self.cargo_home()
+        modern, version = self.is_rust_modern(cargo_bin)
 
         if modern:
             print('Your version of Rust (%s) is new enough.' % version)
-            rustup = self.which('rustup')
+            rustup = self.which('rustup', cargo_bin)
             if rustup:
                 self.ensure_rust_targets(rustup)
             return
 
-        if not version:
-            # Rust wasn't in PATH. Check the standard location.
-            cargo_home, cargo_bin = self.cargo_home()
-            try_rustc = os.path.join(cargo_bin, 'rustc' + rust.exe_suffix())
-            try_cargo = os.path.join(cargo_bin, 'cargo' + rust.exe_suffix())
-            have_rustc = os.path.exists(try_rustc)
-            have_cargo = os.path.exists(try_cargo)
-            if have_rustc or have_cargo:
-                self.print_rust_path_advice(RUST_NOT_IN_PATH,
-                                            cargo_home, cargo_bin)
-                sys.exit(1)
-        else:
+        if version:
             print('Your version of Rust (%s) is too old.' % version)
 
-        rustup = self.which('rustup')
+        rustup = self.which('rustup', cargo_bin)
         if rustup:
             rustup_version = self._parse_version(rustup)
             if not rustup_version:
@@ -648,7 +641,7 @@ class BaseBootstrapper(object):
             print('Found rustup. Will try to upgrade.')
             self.upgrade_rust(rustup)
 
-            modern, after = self.is_rust_modern()
+            modern, after = self.is_rust_modern(cargo_bin)
             if not modern:
                 print(RUST_UPGRADE_FAILED % (MODERN_RUST_VERSION, after))
                 sys.exit(1)

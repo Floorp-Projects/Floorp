@@ -49,9 +49,7 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_ArrowRight");
   await onPopupClose;
   ok(true, "popup was closed");
-  let expectedInput = "dump(window.testB)";
-  is(jsterm.getInputValue(), expectedInput, "input wasn't modified");
-  checkJsTermCursor(jsterm, expectedInput.length, "cursor was moved to the right");
+  checkJsTermValueAndCursor(jsterm, "dump(window.testB)|", "input wasn't modified");
 
   await setInitialState(jsterm);
   EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -69,9 +67,8 @@ async function performTests() {
 
   // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
-  expectedInput = "dump(window.testBugBB)";
-  is(jsterm.getInputValue(), expectedInput, "completion was successful after VK_TAB");
-  checkJsTermCursor(jsterm, expectedInput.length - 1, "cursor location is correct");
+  checkJsTermValueAndCursor(jsterm, "dump(window.testBugBB|)",
+    "completion was successful after VK_TAB");
   ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 
   info("Test ENTER key when popup is visible with a selected item");
@@ -82,33 +79,40 @@ async function performTests() {
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open");
-  expectedInput = "dump(window.testBugAA)";
-  is(jsterm.getInputValue(), expectedInput, "completion was successful after Enter");
-  checkJsTermCursor(jsterm, expectedInput.length - 1, "cursor location is correct");
+  checkJsTermValueAndCursor(jsterm, "dump(window.testBugAA|)",
+    "completion was successful after Enter");
   ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 
-  info("Test TAB key when there is no autocomplete suggestion");
+  info("Test autocomplete inside parens");
   jsterm.setInputValue("dump()");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
   const onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("window.testBugA");
   await onAutocompleteUpdated;
+  ok(popup.isOpen, "popup is open");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
+
+  info("Matching the completion proposal should close the popup");
+  onPopupClose = popup.once("popup-closed");
+  EventUtils.sendString("A");
+  await onPopupClose;
+
+  info("Test TAB key when there is no autocomplete suggestion");
   ok(!popup.isOpen, "popup is not open");
   ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 
   EventUtils.synthesizeKey("KEY_Tab");
-
-  expectedInput = "dump(window.testBugAA)";
-  is(jsterm.getInputValue(), "dump(window.testBugA\t)", "Tab inserted a tab char");
-  checkJsTermCursor(jsterm, expectedInput.length - 1, "cursor location is correct");
+  checkJsTermValueAndCursor(jsterm, "dump(window.testBugAA\t|)",
+    "completion was successful after Enter");
 }
 
-function setInitialState(jsterm) {
+async function setInitialState(jsterm) {
   jsterm.focus();
   jsterm.setInputValue("dump()");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
 
   const onPopUpOpen = jsterm.autocompletePopup.once("popup-opened");
   EventUtils.sendString("window.testB");
-  return onPopUpOpen;
+  checkJsTermValueAndCursor(jsterm, "dump(window.testB|)");
+  await onPopUpOpen;
 }

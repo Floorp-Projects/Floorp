@@ -130,10 +130,13 @@ fuzzy-if(OSX,0-23,0-16) css-writing-modes/text-combine-upright-decorations-001.h
 fuzzy-if(OSX||winWidget,0-255,0-480)  css-writing-modes/text-indent-v??-0??.xht
 fuzzy-if(OSX||winWidget,0-226,0-960) fails-if(webrender&&cocoaWidget)  css-writing-modes/text-orientation-016.xht
 fuzzy-if(OSX||winWidget,0-223,0-720)  css-writing-modes/vertical-alignment-*.xht
-fuzzy-if(OSX||winWidget,0-158,0-624)  css-writing-modes/writing-mode-vertical-??-00?.*
+fuzzy-if(OSX||winWidget,0-158,0-624)  random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/writing-mode-vertical-??-00?.*
 fuzzy(0-255,0-960) css-writing-modes/text-combine-upright-value-all-00?.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-combine-upright-compression-00?.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-combine-upright-inherit-all-00?.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-orientation-0??.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-orientation-mixed-v??-1??.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-orientation-sideways-v??-1??.html
 
 # Bug 1167911
 skip css-writing-modes/abs-pos-non-replaced-icb-vlr-021.xht

@@ -8,7 +8,7 @@ xul|caption {
   background-color: transparent;
 }
 
-xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
+xul|*.menulist-dropmarker {
   margin-top: 1px;
   margin-bottom: 1px;
 }

@@ -44,7 +44,6 @@ WEBIDL_FILES = [
     'MozStorageStatementParams.webidl',
     'MozStorageStatementRow.webidl',
     'PrecompiledScript.webidl',
-    'PrioEncoder.webidl',
     'PromiseDebugging.webidl',
     'StructuredCloneHolder.webidl',
     'WebExtensionContentScript.webidl',
@@ -58,3 +57,9 @@ if CONFIG['MOZ_PLACES']:
         'PlacesEvent.webidl',
         'PlacesObservers.webidl',
     ]
+
+if CONFIG['MOZ_LIBPRIO']:
+    WEBIDL_FILES += [
+        'PrioEncoder.webidl',
+    ]
+

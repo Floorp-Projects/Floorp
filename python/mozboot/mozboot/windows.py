@@ -50,8 +50,8 @@ class WindowsBootstrapper(BaseBootstrapper):
                                       'pacman. Get msys2 at http://msys2.github.io/')
         print('Using an experimental bootstrapper for Windows.')
 
-    def which(self, name):
-        return BaseBootstrapper.which(self, name + '.exe')
+    def which(self, name, *extra_search_dirs):
+        return BaseBootstrapper.which(self, name + '.exe', *extra_search_dirs)
 
     def install_system_packages(self):
         self.pacman_install(*self.SYSTEM_PACKAGES)
