@@ -7,7 +7,7 @@
 #define nsAndroidHandlerApp_h
 
 #include "nsMIMEInfoImpl.h"
-#include "nsIExternalSharingAppService.h"
+#include "nsISharingHandlerApp.h"
 
 class nsAndroidHandlerApp : public nsISharingHandlerApp {
 public:

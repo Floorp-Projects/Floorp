@@ -1,0 +1,12 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIMIMEInfo.idl"
+
+[scriptable, uuid(7111f769-53ec-41fd-b314-613661d5b6ba)]
+interface nsISharingHandlerApp : nsIHandlerApp
+{
+  void share(in AString data, [optional] in AString title);
+};
+
