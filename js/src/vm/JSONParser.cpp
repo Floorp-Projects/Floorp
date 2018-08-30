@@ -45,18 +45,11 @@ JSONParserBase::~JSONParserBase()
 void
 JSONParserBase::trace(JSTracer* trc)
 {
-    for (size_t i = 0; i < stack.length(); i++) {
-        if (stack[i].state == FinishArrayElement) {
-            ElementVector& elements = stack[i].elements();
-            for (size_t j = 0; j < elements.length(); j++)
-                TraceRoot(trc, &elements[j], "JSONParser element");
-        } else {
-            PropertyVector& properties = stack[i].properties();
-            for (size_t j = 0; j < properties.length(); j++) {
-                TraceRoot(trc, &properties[j].value, "JSONParser property value");
-                TraceRoot(trc, &properties[j].id, "JSONParser property id");
-            }
-        }
+    for (auto& elem : stack) {
+        if (elem.state == FinishArrayElement)
+            elem.elements().trace(trc);
+        else
+            elem.properties().trace(trc);
     }
 }
 
