@@ -154,7 +154,7 @@ def generate_task(name, description, command, dependencies = [], artifacts = {},
 	            "taskclusterProxy": True
 	        },
 	        "maxRunTime": 7200,
-	        "image": "mozillamobile/focus-android",
+	        "image": "mozillamobile/focus-android:1.0",
 	        "command": [
 	            "/bin/bash",
 	            "--login",

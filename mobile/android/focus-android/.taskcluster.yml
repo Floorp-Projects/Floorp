@@ -26,7 +26,7 @@ tasks:
     payload:
       maxRunTime: 7200
       deadline: "{{ '2 hours' | $fromNow }}"
-      image: 'mozillamobile/focus-android'
+      image: 'mozillamobile/focus-android:1.0'
       command:
         - /bin/bash
         - '--login'
@@ -36,7 +36,6 @@ tasks:
           && git config advice.detachedHead false
           && git checkout {{event.head.sha}}
           && echo "--" > .adjust_token
-          && tools/taskcluster/accept-license.sh
           && python tools/l10n/check_locales.py
           && ./gradlew --no-daemon clean assembleFocusX86Debug assembleKlarX86Nightly assembleRelease detektCheck ktlint lintFocusX86Debug lintKlarX86Nightly pmd checkstyle spotbugs testFocusX86DebugUnitTest testKlarX86NightlyUnitTest
       artifacts:
@@ -79,7 +78,7 @@ tasks:
     payload:
       maxRunTime: 7200
       deadline: "{{ '2 hours' | $fromNow }}"
-      image: 'mozillamobile/focus-android'
+      image: 'mozillamobile/focus-android:1.0'
       command:
         - /bin/bash
         - '--login'
@@ -127,7 +126,7 @@ tasks:
       maxRunTime: 7200
       deadline: "{{ '2 hours' | $fromNow }}"
       expires: "{{ '1 year' | $fromNow }}"
-      image: 'mozillamobile/focus-android'
+      image: 'mozillamobile/focus-android:1.0'
       command:
         - /bin/bash
         - '--login'
