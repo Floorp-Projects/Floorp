@@ -20,13 +20,22 @@ async function setupPrefsAndRecentWindowBehavior() {
   // We need to test behavior when a portal is detected when there is no browser
   // window, but we can't close the default window opened by the test harness.
   // Instead, we deactivate CaptivePortalWatcher in the default window and
-  // exclude it using an attribute to mask its presence.
+  // exclude it from BrowserWindowTracker.getTopWindow in an attempt to
+  // mask its presence.
   window.CaptivePortalWatcher.uninit();
-  window.document.documentElement.setAttribute("ignorecaptiveportal", "true");
+  let getTopWindowCopy = BrowserWindowTracker.getTopWindow;
+  let defaultWindow = window;
+  BrowserWindowTracker.getTopWindow = () => {
+    let win = getTopWindowCopy();
+    if (win == defaultWindow) {
+      return null;
+    }
+    return win;
+  };
 
   registerCleanupFunction(function cleanUp() {
+    BrowserWindowTracker.getTopWindow = getTopWindowCopy;
     window.CaptivePortalWatcher.init();
-    window.document.documentElement.removeAttribute("ignorecaptiveportal");
   });
 }
 
