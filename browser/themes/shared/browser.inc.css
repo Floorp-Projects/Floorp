@@ -165,3 +165,76 @@
 #widget-overflow .webextension-popup-browser {
   background: #fff;
 }
+
+/* Contextual Feature Recommendation popup-notification */
+
+:root {
+  --cfr-notification-header-image: url(resource://activity-stream/data/content/assets/glyph-help-24.svg);
+}
+
+#cfr-notification-header {
+  width: 100%;
+  text-align: center;
+  box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.2);
+}
+
+#cfr-notification-header-stack {
+  width: 100%;
+}
+
+#cfr-notification-header-label {
+  margin: 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#cfr-notification-header-link {
+  margin: 7px;
+  color: var(--lwt-text-color);
+  cursor: default;
+}
+
+#cfr-notification-header-image {
+  width: 19px;
+  height: 19px;
+  padding: 2px;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.6;
+  list-style-image: var(--cfr-notification-header-image);
+}
+
+#cfr-notification-header-image:hover {
+  background-color: hsla(0,0%,70%,.2);
+  border-radius: 2px;
+}
+
+#contextual-feature-recommendation-notification .popup-notification-icon {
+  margin-inline-end: 4px;
+}
+
+#contextual-feature-recommendation-notification .popup-notification-body-container {
+  padding-bottom: 0;
+}
+
+#contextual-feature-recommendation-notification popupnotificationcontent {
+  margin-top: 0;
+}
+
+#contextual-feature-recommendation-notification description {
+  margin-bottom: 0;
+}
+
+#cfr-notification-footer {
+  padding: 10px var(--arrowpanel-padding);
+}
+
+#cfr-notification-footer-text,
+#cfr-notification-footer-learn-more-link {
+  margin: 0;
+}
+
+#cfr-notification-footer-learn-more-link {
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
