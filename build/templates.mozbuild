@@ -58,6 +58,10 @@ def AllowCompilerWarnings():
     COMPILE_FLAGS['WARNINGS_AS_ERRORS'] = []
 
 @template
+def DisableCompilerWarnings():
+    COMPILE_FLAGS['WARNINGS_CFLAGS'] = []
+
+@template
 def RustLibrary(name, features=None, target_dir=None, output_category=None):
     '''Template for Rust libraries.'''
     Library(name)
@@ -65,6 +69,11 @@ def RustLibrary(name, features=None, target_dir=None, output_category=None):
     IS_RUST_LIBRARY = True
     # Some Rust build scripts compile C/C++ sources, don't error on warnings for them.
     AllowCompilerWarnings()
+
+    # And furthermore, don't even show warnings for them, so they don't regress
+    # the Compiler Warnings build metric
+    # <https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Automated_Performance_Testing_and_Sheriffing/Build_Metrics#compiler_warnings>.
+    DisableCompilerWarnings()
 
     if features:
         RUST_LIBRARY_FEATURES = features

@@ -423,8 +423,9 @@ MOZ_ANDROID_STLPORT
 dnl ========================================================
 dnl Suppress Clang Argument Warnings
 dnl ========================================================
+WARNINGS_CFLAGS="$_WARNINGS_CFLAGS"
 if test -n "${CLANG_CC}${CLANG_CL}"; then
-    _WARNINGS_CFLAGS="-Qunused-arguments ${_WARNINGS_CFLAGS}"
+    WARNINGS_CFLAGS="-Qunused-arguments $WARNINGS_CFLAGS"
     CPPFLAGS="-Qunused-arguments ${CPPFLAGS}"
 fi
 if test -n "${CLANG_CXX}${CLANG_CL}"; then
@@ -1756,6 +1757,7 @@ AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST_LIST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
+AC_SUBST_LIST(WARNINGS_CFLAGS)
 AC_SUBST(LIBICONV)
 
 AC_SUBST(ENABLE_STRIP)
@@ -1783,7 +1785,6 @@ MOZ_CONFIG_ICU()
 
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
-	$_WARNINGS_CFLAGS \
 	$_COMPILATION_CFLAGS \
 	$CFLAGS`
 

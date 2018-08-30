@@ -905,13 +905,10 @@ ifdef MOZ_USING_SCCACHE
 sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
 endif
 
-ifneq (WINNT,$(HOST_OS_ARCH))
 ifndef MOZ_ASAN
 ifndef MOZ_TSAN
 ifndef MOZ_CODE_COVERAGE
 # Pass the compilers and flags in use to cargo for use in build scripts.
-# * Don't do this on Windows because msys path translation makes a mess of the paths, and
-#   we put MSVC in PATH there anyway.
 # * Don't do this for ASAN/TSAN builds because we don't pass our custom linker (see below)
 #   which will muck things up.
 # * Don't do this for code coverage builds because the way rustc invokes the linker doesn't
@@ -926,6 +923,14 @@ ifndef MOZ_CODE_COVERAGE
 # https://github.com/alexcrichton/cc-rs/blob/baa71c0e298d9ad7ac30f0ad78f20b4b3b3a8fb2/src/lib.rs#L1715
 rust_cc_env_name := $(subst -,_,$(RUST_TARGET))
 
+ifeq (WINNT,$(HOST_OS_ARCH))
+# Don't do most of this on Windows because msys path translation makes a mess of the paths, and
+# we put MSVC in PATH there anyway.  But we do suppress warnings, since all such warnings
+# are in third-party code.
+cargo_c_compiler_envs := \
+ CFLAGS_$(rust_cc_env_name)="-w" \
+ $(NULL)
+else
 cargo_c_compiler_envs := \
  CC_$(rust_cc_env_name)="$(CC)" \
  CXX_$(rust_cc_env_name)="$(CXX)" \
@@ -933,10 +938,10 @@ cargo_c_compiler_envs := \
  CXXFLAGS_$(rust_cc_env_name)="$(COMPUTED_CXXFLAGS)" \
  AR_$(rust_cc_env_name)="$(AR)" \
  $(NULL)
+endif # WINNT
 endif # MOZ_CODE_COVERAGE
 endif # MOZ_TSAN
 endif # MOZ_ASAN
-endif # WINNT
 
 # We use the + prefix to pass down the jobserver fds to cargo, but we
 # don't use the prefix when make -n is used, so that cargo doesn't run
