@@ -92,6 +92,9 @@ devtools.jar:
     content/aboutdebugging-new/index.html (aboutdebugging-new/index.html)
     content/aboutdebugging-new/aboutdebugging.css (aboutdebugging-new/aboutdebugging.css)
     content/aboutdebugging-new/aboutdebugging.js (aboutdebugging-new/aboutdebugging.js)
+    # The following line is temporary until the strings for the new
+    # about:debugging feature stabilize.
+    content/aboutdebugging-new/tmp-locale/en-US/aboutdebugging.ftl (aboutdebugging-new/tmp-locale/en-US/aboutdebugging.notftl)
     content/responsive.html/index.xhtml (responsive.html/index.xhtml)
     content/dom/index.html (dom/index.html)
     content/dom/main.js (dom/main.js)
