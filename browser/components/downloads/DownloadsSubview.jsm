@@ -370,6 +370,15 @@ DownloadsSubview.Button = class extends DownloadsViewUI.DownloadElementShell {
 
     this.element.classList.add("subviewbutton", "subviewbutton-iconic", "download",
       "download-state");
+
+    let hover = event => {
+      if (event.originalTarget.classList.contains("action-button")) {
+        this.element.classList.toggle("downloadHoveringButton",
+                                      event.type == "mouseover");
+      }
+    };
+    this.element.addEventListener("mouseover", hover);
+    this.element.addEventListener("mouseout", hover);
   }
 
   get browserWindow() {
