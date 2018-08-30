@@ -4,6 +4,7 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -25,7 +26,7 @@ function machine_only_col(text) {
   let icon = document.createElement("span");
   icon.classList.add("icon");
   icon.classList.add("machine-only");
-  icon.title = "Machine-only";
+  icon.setAttribute("data-l10n-id", "gpo-machine-only");
   let column = document.createElement("td");
   let content = document.createTextNode(text);
   column.appendChild(content);
@@ -236,7 +237,8 @@ function generateDocumentation() {
       content.classList.toggle("content");
     });
     let row = document.createElement("tr");
-    if (schema.properties[policyName].machine_only) {
+    if (AppConstants.platform == "win" &&
+        schema.properties[policyName].machine_only) {
       row.appendChild(machine_only_col(policyName));
     } else {
       row.appendChild(col(policyName));
