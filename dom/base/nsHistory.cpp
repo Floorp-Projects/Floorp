@@ -19,7 +19,6 @@
 #include "nsReadableUtils.h"
 #include "nsContentUtils.h"
 #include "nsISHistory.h"
-#include "nsISHistoryInternal.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;

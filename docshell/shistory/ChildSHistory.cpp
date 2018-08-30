@@ -89,12 +89,6 @@ ChildSHistory::LegacySHistory()
   return mHistory;
 }
 
-nsISHistoryInternal*
-ChildSHistory::LegacySHistoryInternal()
-{
-  return mHistory;
-}
-
 nsIWebNavigation*
 ChildSHistory::LegacySHistoryWebNav()
 {
