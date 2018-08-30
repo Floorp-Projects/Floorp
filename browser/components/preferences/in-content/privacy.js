@@ -204,12 +204,13 @@ var gPrivacyPane = {
       if (contentBlockingUiEnabled) {
         let tpCheckbox =
           document.getElementById("contentBlockingTrackingProtectionCheckbox");
-        if (!tpCheckbox.checked) {
-          disabled = true;
-        }
-        // Only enable the TP menu if content blocking is enabled.
+        // Only enable the TP menu if content blocking and Detect All Trackers
+        // are enabled.
         document.getElementById("trackingProtectionMenu").disabled = disabled ||
+          !tpCheckbox.checked ||
           !contentBlockingEnabled;
+        // Only enable the TP category checkbox if content blocking is enabled.
+        tpCheckbox.disabled = disabled || !contentBlockingEnabled;
       } else {
         document.querySelectorAll("#trackingProtectionRadioGroup > radio")
           .forEach((element) => {
