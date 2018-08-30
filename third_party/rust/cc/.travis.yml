@@ -3,7 +3,7 @@ sudo: false
 
 matrix:
   include:
-    - rust: 1.13.0
+    - rust: 1.16.0
       install:
       script: cargo build
     - rust: stable
@@ -33,8 +33,17 @@ install:
 
 script:
   - cargo build --verbose
-  - cargo test --verbose $NO_RUN
-  - cargo test --verbose --features parallel $NO_RUN
+  # FIXME: no idea why `--test-threads=1` is required on the OSX builder, it
+  # just randomly broke one day when the travis image was upgraded, and
+  # debugging turned up no easily found source of bugs...
+  #
+  # good build - https://travis-ci.org/alexcrichton/cc-rs/builds/409602374
+  #  bad build - https://travis-ci.org/alexcrichton/cc-rs/builds/410489079
+  #
+  # Those are using the same compiler, same commit, same... everything. Except
+  # the OSX image! No idea what changed...
+  - cargo test --verbose $NO_RUN -- --test-threads=1
+  - cargo test --verbose --features parallel $NO_RUN -- --test-threads=1
   - cargo test --manifest-path cc-test/Cargo.toml --target $TARGET $NO_RUN
   - cargo test --manifest-path cc-test/Cargo.toml --target $TARGET --features parallel $NO_RUN
   - cargo test --manifest-path cc-test/Cargo.toml --target $TARGET --release $NO_RUN

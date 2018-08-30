@@ -269,13 +269,13 @@ name = "bzip2-sys"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cc 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cc 1.0.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "cc"
-version = "1.0.18"
+version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -330,7 +330,7 @@ name = "cmake"
 version = "0.1.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cc 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cc 1.0.23 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1159,7 +1159,7 @@ name = "libloading"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cc 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cc 1.0.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1211,7 +1211,7 @@ name = "lmdb-sys"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cc 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cc 1.0.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1317,7 +1317,7 @@ name = "miniz_oxide_c_api"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cc 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cc 1.0.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "crc 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "miniz_oxide 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2854,7 +2854,7 @@ dependencies = [
 "checksum bytes 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)" = "e178b8e0e239e844b083d5a0d4a156b2654e67f9f80144d48398fcd736a24fb8"
 "checksum bzip2 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "c3eafc42c44e0d827de6b1c131175098fe7fb53b8ce8a47e65cb3ea94688be24"
 "checksum bzip2-sys 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "2c5162604199bbb17690ede847eaa6120a3f33d5ab4dcc8e7c25b16d849ae79b"
-"checksum cc 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)" = "2119ea4867bd2b8ed3aecab467709720b2d55b1bcfe09f772fd68066eaf15275"
+"checksum cc 1.0.23 (registry+https://github.com/rust-lang/crates.io-index)" = "c37f0efaa4b9b001fa6f02d4b644dee4af97d3414df07c51e3e4f015f3a3e131"
 "checksum cexpr 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "42aac45e9567d97474a834efdee3081b3c942b2205be932092f53354ce503d6c"
 "checksum cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d4c819a1287eb618df47cc647173c5c4c66ba19d888a6e50d605672aed3140de"
 "checksum chrono 0.2.25 (registry+https://github.com/rust-lang/crates.io-index)" = "9213f7cd7c27e95c2b57c49f0e69b1ea65b27138da84a170133fd21b07659c00"
