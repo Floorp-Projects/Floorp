@@ -43,31 +43,38 @@ function generateActivePolicies(data) {
   let new_cont = document.getElementById("activeContent");
   new_cont.classList.add("active-policies");
 
+  let policy_count = 0;
+
   for (let policyName in data) {
+    const color_class = ++policy_count % 2 === 0 ? "even" : "odd";
+
     if (schema.properties[policyName].type == "array") {
       for (let count in data[policyName]) {
         let isFirstRow = (count == 0);
         let isLastRow = (count == data[policyName].length - 1);
         let row = document.createElement("tr");
+        row.classList.add(color_class);
         row.appendChild(col(isFirstRow ? policyName : ""));
-        generatePolicy(data[policyName][count], row, 1, new_cont, isLastRow, !isFirstRow);
+        generatePolicy(data[policyName][count], row, 1, new_cont, isLastRow, data[policyName].length > 1);
       }
     } else if (schema.properties[policyName].type == "object") {
       let count = 0;
       for (let obj in data[policyName]) {
         let isFirstRow = (count == 0);
-        let isLastRow = (count == data[policyName].length - 1);
+        let isLastRow = (count == Object.keys(data[policyName]).length - 1);
         let row = document.createElement("tr");
+        row.classList.add(color_class);
         row.appendChild(col(isFirstRow ? policyName : ""));
         row.appendChild(col(obj));
-        generatePolicy(data[policyName][obj], row, 2, new_cont, isLastRow);
+        generatePolicy(data[policyName][obj], row, 2, new_cont, isLastRow, true);
         count++;
       }
     } else {
       let row = document.createElement("tr");
       row.appendChild(col(policyName));
       row.appendChild(col(JSON.stringify(data[policyName])));
-      row.classList.add("lastpolicyrow");
+      row.appendChild(col(""));
+      row.classList.add(color_class, "last_row");
       new_cont.appendChild(row);
     }
   }
@@ -79,16 +86,20 @@ function generateActivePolicies(data) {
  */
 
 function generatePolicy(data, row, depth, new_cont, islast, arr_sep = false) {
+  const color_class = row.classList.contains("odd") ? "odd" : "even";
+
   if (Array.isArray(data)) {
     for (let count in data) {
       if (count == 0) {
         if (count == data.length - 1) {
-          generatePolicy(data[count], row, depth + 1, new_cont, islast ? islast : false, false);
+          generatePolicy(data[count], row, depth + 1, new_cont, islast ? islast : false, true);
         } else {
-          generatePolicy(data[count], row, depth + 1, new_cont, false, true);
+          generatePolicy(data[count], row, depth + 1, new_cont, false, false);
         }
       } else if (count == data.length - 1) {
         let last_row = document.createElement("tr");
+        last_row.classList.add(color_class, "arr_sep");
+
         for (let i = 0; i < depth; i++) {
             last_row.appendChild(col(""));
         }
@@ -96,11 +107,13 @@ function generatePolicy(data, row, depth, new_cont, islast, arr_sep = false) {
         generatePolicy(data[count], last_row, depth + 1, new_cont, islast ? islast : false, arr_sep);
       } else {
         let new_row = document.createElement("tr");
+        new_row.classList.add(color_class);
+
         for (let i = 0; i < depth; i++) {
           new_row.appendChild(col(""));
         }
 
-        generatePolicy(data[count], new_row, depth + 1, new_cont, false, true);
+        generatePolicy(data[count], new_row, depth + 1, new_cont, false, false);
       }
     }
   } else if (typeof data == "object" && Object.keys(data).length > 0) {
@@ -119,15 +132,17 @@ function generatePolicy(data, row, depth, new_cont, islast, arr_sep = false) {
             last_row.appendChild(col(""));
           }
 
+          last_row.appendChild(col(obj));
+
           if (arr_sep) {
-            last_row.appendChild(col(obj, "array"));
-          } else {
-            last_row.appendChild(col(obj));
+            last_row.classList.add(color_class, "arr_sep");
           }
 
-          generatePolicy(data[obj], last_row, depth + 1, new_cont, islast ? islast : false, arr_sep);
+          generatePolicy(data[obj], last_row, depth + 1, new_cont, islast ? islast : false, false);
         } else {
           let new_row = document.createElement("tr");
+          new_row.classList.add(color_class);
+
           for (let i = 0; i < depth; i++) {
             new_row.appendChild(col(""));
           }
@@ -138,13 +153,13 @@ function generatePolicy(data, row, depth, new_cont, islast, arr_sep = false) {
         count++;
       }
   } else {
+    row.appendChild(col(JSON.stringify(data)));
+
     if (arr_sep) {
-      row.appendChild(col(JSON.stringify(data), "array"));
-    } else {
-      row.appendChild(col(JSON.stringify(data)));
+      row.classList.add("arr_sep");
     }
     if (islast) {
-      row.classList.add("lastpolicyrow");
+      row.classList.add("last_row");
     }
     new_cont.appendChild(row);
   }
@@ -171,7 +186,7 @@ function generateErrors() {
     if (prefixes.includes(err.prefix)) {
       flag = true;
       let row = document.createElement("tr");
-      row.appendChild(col(err.arguments[0], "schema"));
+      row.appendChild(col(err.arguments[0]));
       new_cont.appendChild(row);
     }
   }
