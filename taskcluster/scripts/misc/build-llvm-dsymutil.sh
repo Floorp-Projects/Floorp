@@ -62,11 +62,7 @@ export LD_LIBRARY_PATH=$HOME_DIR/src/gcc/lib64
 
 ninja llvm-dsymutil llvm-symbolizer
 
-# Create a symbolic link since rust doesn't allow to specify a custom dsymutil.
-# This should be dropped once https://github.com/rust-lang/rust/issues/52728 fixed.
-ln -s llvm-dsymutil bin/dsymutil
-tar --xform='s,^,llvm-dsymutil/,S' -Jcf llvm-dsymutil.tar.xz \
-  bin/llvm-dsymutil bin/llvm-symbolizer bin/dsymutil
+tar --xform='s,^,llvm-dsymutil/,' -Jcf llvm-dsymutil.tar.xz bin/llvm-dsymutil bin/llvm-symbolizer
 
 mkdir -p $UPLOAD_DIR
 cp llvm-dsymutil.tar.xz $UPLOAD_DIR

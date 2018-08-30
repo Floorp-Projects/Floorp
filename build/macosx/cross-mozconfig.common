@@ -10,9 +10,6 @@ if [ "x$IS_NIGHTLY" = "xyes" ]; then
 fi
 . "$topsrcdir/build/mozconfig.common"
 
-# Rust requires dsymutil into PATH
-mk_add_options "export PATH=$topsrcdir/llvm-dsymutil/bin:$PATH"
-
 # ld needs libLTO.so from llvm
 mk_add_options "export LD_LIBRARY_PATH=$topsrcdir/clang/lib"
 
