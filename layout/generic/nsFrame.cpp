@@ -3201,8 +3201,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
       /* List now emptied, so add the new list to the top. */
       resultList.AppendToTop(
-        MakeDisplayItem<nsDisplayFilter>(aBuilder, this, &resultList,
-                                       handleOpacity));
+        MakeDisplayItem<nsDisplayFilters>(aBuilder, this, &resultList,
+                                          handleOpacity));
     }
 
     if (usingMask) {

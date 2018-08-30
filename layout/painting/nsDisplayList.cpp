@@ -10071,18 +10071,18 @@ nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo)
 }
 #endif
 
-nsDisplayFilter::nsDisplayFilter(nsDisplayListBuilder* aBuilder,
-                                 nsIFrame* aFrame,
-                                 nsDisplayList* aList,
-                                 bool aHandleOpacity)
+nsDisplayFilters::nsDisplayFilters(nsDisplayListBuilder* aBuilder,
+                                   nsIFrame* aFrame,
+                                   nsDisplayList* aList,
+                                   bool aHandleOpacity)
   : nsDisplayEffectsBase(aBuilder, aFrame, aList, aHandleOpacity)
   , mEffectsBounds(aFrame->GetVisualOverflowRectRelativeToSelf())
 {
-  MOZ_COUNT_CTOR(nsDisplayFilter);
+  MOZ_COUNT_CTOR(nsDisplayFilters);
 }
 
 already_AddRefed<Layer>
-nsDisplayFilter::BuildLayer(
+nsDisplayFilters::BuildLayer(
   nsDisplayListBuilder* aBuilder,
   LayerManager* aManager,
   const ContainerLayerParameters& aContainerParameters)
@@ -10121,16 +10121,16 @@ nsDisplayFilter::BuildLayer(
 }
 
 LayerState
-nsDisplayFilter::GetLayerState(nsDisplayListBuilder* aBuilder,
-                               LayerManager* aManager,
-                               const ContainerLayerParameters& aParameters)
+nsDisplayFilters::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                LayerManager* aManager,
+                                const ContainerLayerParameters& aParameters)
 {
   return LAYER_SVG_EFFECTS;
 }
 
 bool
-nsDisplayFilter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion)
+nsDisplayFilters::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                    nsRegion* aVisibleRegion)
 {
   nsPoint offset = ToReferenceFrame();
   nsRect dirtyRect = nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(
@@ -10147,7 +10147,7 @@ nsDisplayFilter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayFilter::ComputeInvalidationRegion(
+nsDisplayFilters::ComputeInvalidationRegion(
   nsDisplayListBuilder* aBuilder,
   const nsDisplayItemGeometry* aGeometry,
   nsRegion* aInvalidRegion) const
@@ -10155,7 +10155,7 @@ nsDisplayFilter::ComputeInvalidationRegion(
   nsDisplayEffectsBase::ComputeInvalidationRegion(
     aBuilder, aGeometry, aInvalidRegion);
 
-  auto* geometry = static_cast<const nsDisplayFilterGeometry*>(aGeometry);
+  auto* geometry = static_cast<const nsDisplayFiltersGeometry*>(aGeometry);
 
   if (aBuilder->ShouldSyncDecodeImages() &&
       geometry->ShouldInvalidateToSyncDecodeImages()) {
@@ -10166,9 +10166,9 @@ nsDisplayFilter::ComputeInvalidationRegion(
 }
 
 void
-nsDisplayFilter::PaintAsLayer(nsDisplayListBuilder* aBuilder,
-                              gfxContext* aCtx,
-                              LayerManager* aManager)
+nsDisplayFilters::PaintAsLayer(nsDisplayListBuilder* aBuilder,
+                               gfxContext* aCtx,
+                               LayerManager* aManager)
 {
   imgDrawingParams imgParams(aBuilder->ShouldSyncDecodeImages()
                                ? imgIContainer::FLAG_SYNC_DECODE
@@ -10183,7 +10183,7 @@ nsDisplayFilter::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                                                   mHandleOpacity,
                                                   imgParams);
   nsSVGIntegrationUtils::PaintFilter(params);
-  nsDisplayFilterGeometry::UpdateDrawResult(this, imgParams.result);
+  nsDisplayFiltersGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
 static float
@@ -10194,7 +10194,7 @@ ClampStdDeviation(float aStdDeviation)
 }
 
 bool
-nsDisplayFilter::CreateWebRenderCommands(
+nsDisplayFilters::CreateWebRenderCommands(
   mozilla::wr::DisplayListBuilder& aBuilder,
   mozilla::wr::IpcResourceUpdateQueue& aResources,
   const StackingContextHelper& aSc,
@@ -10318,7 +10318,7 @@ nsDisplayFilter::CreateWebRenderCommands(
 
 #ifdef MOZ_DUMP_PAINTING
 void
-nsDisplayFilter::PrintEffects(nsACString& aTo)
+nsDisplayFilters::PrintEffects(nsACString& aTo)
 {
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
