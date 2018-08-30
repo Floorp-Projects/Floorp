@@ -344,7 +344,7 @@
           <label data-l10n-id="content-blocking-fastblock-slow-loading-label"
                  class="content-blocking-category-name"
                  control="contentBlockingFastBlockCheckbox"/>
-          <description data-l10n-id="content-blocking-fastblock-description" class="content-blocking-category-description"/>
+          <description data-l10n-id="content-blocking-fastblock-new-description" class="content-blocking-category-description"/>
         </vbox>
       </hbox>
       <vbox>
@@ -367,7 +367,7 @@
             <label data-l10n-id="content-blocking-tracking-protection-all-label"
                    class="content-blocking-category-name"
                    control="contentBlockingTrackingProtectionCheckbox"/>
-            <description data-l10n-id="content-blocking-tracking-protection-description"
+            <description data-l10n-id="content-blocking-tracking-protection-new-description"
                          class="content-blocking-category-description"
                          id="trackingProtectionMenuDesc"/>
             <radiogroup id="trackingProtectionMenu"
@@ -379,7 +379,7 @@
                      data-l10n-id="content-blocking-tracking-protection-option-always"
                      flex="1" />
             </radiogroup>
-            <label id="changeBlockListLink" data-l10n-id="content-blocking-tracking-protection-change-blocklist" class="text-link"/>
+            <label id="changeBlockListLink" data-l10n-id="content-blocking-tracking-protection-change-block-list" class="text-link"/>
           </vbox>
         </hbox>
       </vbox>
@@ -403,13 +403,13 @@
                                class="content-blocking-category-description"/>
                   <hbox id="warningAllCookiesBlocked">
                     <image class="reject-trackers-warning-icon"/>
-                    <description data-l10n-id="content-blocking-reject-trackers-warning-all-cookies-blocked"
-                                 class="content-blocking-category-description"/>
+                    <description data-l10n-id="content-blocking-reject-trackers-warning-your-settings-prevent-changes"
+                                 class="content-blocking-category-description description-with-side-element"/>
                   </hbox>
                   <hbox id="warningFromVisitedCookiesBlocked">
                     <image class="reject-trackers-warning-icon"/>
-                    <description data-l10n-id="content-blocking-reject-trackers-warning-from-unvisited-cookies-blocked"
-                                 class="content-blocking-category-description"/>
+                    <description data-l10n-id="content-blocking-reject-trackers-warning-your-settings-prevent-changes"
+                                 class="content-blocking-category-description description-with-side-element"/>
                   </hbox>
                 </deck>
               </vbox>
