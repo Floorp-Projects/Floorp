@@ -478,6 +478,15 @@ void
 Thread::NotifyUnrecordedWait(const std::function<void()>& aCallback)
 {
   MonitorAutoLock lock(*gMonitor);
+  if (mUnrecordedWaitCallback) {
+    // Per the documentation for NotifyUnrecordedWait, we need to call the
+    // routine after a notify, even if the routine has been called already
+    // since the main thread started to wait for idle replay threads.
+    mUnrecordedWaitNotified = false;
+  } else {
+    MOZ_RELEASE_ASSERT(!mUnrecordedWaitNotified);
+  }
+
   mUnrecordedWaitCallback = aCallback;
 
   // The main thread might be able to make progress now by calling the routine
