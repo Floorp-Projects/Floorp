@@ -1121,25 +1121,6 @@ nsJARChannel::OnStartRequest(nsIRequest *req, nsISupports *ctx)
 
     mRequest = req;
     nsresult rv = mListener->OnStartRequest(this, mListenerContext);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Restrict loadable content types.
-    nsAutoCString contentType;
-    GetContentType(contentType);
-    auto contentPolicyType = mLoadInfo->GetExternalContentPolicyType();
-    if (contentType.Equals(APPLICATION_HTTP_INDEX_FORMAT) &&
-        contentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) {
-      return NS_ERROR_CORRUPTED_CONTENT;
-    }
-    if (contentPolicyType == nsIContentPolicy::TYPE_STYLESHEET &&
-        !contentType.EqualsLiteral(TEXT_CSS)) {
-      return NS_ERROR_CORRUPTED_CONTENT;
-    }
-    if (contentPolicyType == nsIContentPolicy::TYPE_SCRIPT &&
-        !nsContentUtils::IsJavascriptMIMEType(NS_ConvertUTF8toUTF16(contentType))) {
-      return NS_ERROR_CORRUPTED_CONTENT;
-    }
-
     mRequest = nullptr;
 
     return rv;
