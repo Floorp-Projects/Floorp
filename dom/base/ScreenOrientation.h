@@ -18,18 +18,6 @@ namespace mozilla {
 namespace dom {
 
 class Promise;
-// Make sure that any change to ScreenOrientationInternal values are
-// also made in mobile/android/base/GeckoScreenOrientation.java
-typedef uint32_t ScreenOrientationInternal;
-
-static const ScreenOrientationInternal eScreenOrientation_None               = 0;
-static const ScreenOrientationInternal eScreenOrientation_PortraitPrimary    = 1u << 0;
-static const ScreenOrientationInternal eScreenOrientation_PortraitSecondary  = 1u << 1;
-static const ScreenOrientationInternal eScreenOrientation_LandscapePrimary   = 1u << 2;
-static const ScreenOrientationInternal eScreenOrientation_LandscapeSecondary = 1u << 3;
-//eScreenOrientation_Default will use the natural orientation for the deivce,
-//it could be PortraitPrimary or LandscapePrimary depends on display resolution
-static const ScreenOrientationInternal eScreenOrientation_Default            = 1u << 4;
 
 class ScreenOrientation final : public DOMEventTargetHelper,
                                 public mozilla::hal::ScreenConfigurationObserver
@@ -63,7 +51,7 @@ public:
 
   void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration) override;
 
-  static void UpdateActiveOrientationLock(ScreenOrientationInternal aOrientation);
+  static void UpdateActiveOrientationLock(hal::ScreenOrientation aOrientation);
 
 private:
   virtual ~ScreenOrientation();
@@ -86,7 +74,7 @@ private:
 
   // This method calls into the HAL to lock the device and sets
   // up listeners for full screen change.
-  bool LockDeviceOrientation(ScreenOrientationInternal aOrientation,
+  bool LockDeviceOrientation(hal::ScreenOrientation aOrientation,
                              bool aIsFullscreen, ErrorResult& aRv);
 
   // This method calls in to the HAL to unlock the device and removes
@@ -94,10 +82,10 @@ private:
   void UnlockDeviceOrientation();
 
   // This method performs the same function as |Lock| except it takes
-  // a ScreenOrientationInternal argument instead of an OrientationType.
+  // a hal::ScreenOrientation argument instead of an OrientationType.
   // This method exists in order to share implementation with nsScreen that
-  // uses ScreenOrientationInternal.
-  already_AddRefed<Promise> LockInternal(ScreenOrientationInternal aOrientation,
+  // uses ScreenOrientation.
+  already_AddRefed<Promise> LockInternal(hal::ScreenOrientation aOrientation,
                                          ErrorResult& aRv);
 
   void DispatchChangeEvent();
