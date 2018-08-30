@@ -210,7 +210,9 @@
 #include "util/Text.h"
 #include "util/Unicode.h"
 #include "vm/ErrorReporting.h"
-#include "vm/RegExpShared.h"
+#include "vm/JSAtom.h"
+#include "vm/RegExpConstants.h"
+#include "vm/StringType.h"
 
 struct JSContext;
 struct KeywordInfo;
