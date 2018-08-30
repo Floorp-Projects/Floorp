@@ -636,7 +636,7 @@ ChildProcessInfo::MaybeProcessPendingMessage(ChildProcessInfo* aProcess)
 
 // How many seconds to wait without hearing from an unpaused child before
 // considering that child to be hung.
-static const size_t HangSeconds = 5;
+static const size_t HangSeconds = 30;
 
 void
 ChildProcessInfo::WaitUntil(const std::function<bool()>& aCallback)
