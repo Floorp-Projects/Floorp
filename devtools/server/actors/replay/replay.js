@@ -141,7 +141,11 @@ function addScript(script) {
 const gScriptSources = new IdMap();
 
 function addScriptSource(source) {
-  gScriptSources.add(source);
+  // Tolerate redundant attempts to add the same source, as we might see
+  // onNewScript calls for different scripts with the same source.
+  if (!gScriptSources.getId(source)) {
+    gScriptSources.add(source);
+  }
 }
 
 function considerScript(script) {
