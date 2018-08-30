@@ -1288,7 +1288,7 @@ ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
       RawServoAuthorStyles* authorStyles = nullptr;
       if (owner.is<ShadowRoot*>()) {
         authorStyles = owner.as<ShadowRoot*>()->GetServoStyles();
-      } else {
+      } else if (owner.is<nsXBLPrototypeBinding*>()) {
         authorStyles = owner.as<nsXBLPrototypeBinding*>()->GetServoStyles();
       }
 
