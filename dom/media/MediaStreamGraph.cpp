@@ -783,11 +783,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
     }
     audioOutput.mLastTickWritten = offset;
 
-    // Need unique id for stream & track - and we want it to match the inserter
-    output.WriteTo(LATENCY_STREAM_ID(aStream, track->GetID()),
-                                     mMixer,
-                                     AudioOutputChannelCount(),
-                                     mSampleRate);
+    output.WriteTo(mMixer, AudioOutputChannelCount(), mSampleRate);
   }
   return ticksWritten;
 }
@@ -3714,7 +3710,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
   , mRealtime(aDriverRequested != OFFLINE_THREAD_DRIVER)
   , mNonRealtimeProcessing(false)
   , mStreamOrderDirty(false)
-  , mLatencyLog(AsyncLatencyLogger::Get())
   , mAbstractMainThread(aMainThread)
   , mSelfRef(this)
   , mOutputChannels(std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels()))

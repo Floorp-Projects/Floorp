@@ -18,7 +18,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
-#include "Latency.h"
 #include "mozilla/Telemetry.h"
 
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
@@ -705,10 +704,6 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
     return kMediaConduitSessionNotInited;
   }
 
-  if (MOZ_LOG_TEST(GetLatencyLog(), LogLevel::Debug)) {
-    struct Processing insert = { TimeStamp::Now(), 0 };
-    mProcessing.AppendElement(insert);
-  }
 
   capture_delay = mCaptureDelay;
   // Insert the samples
@@ -807,28 +802,6 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
     mLastSyncLog = mSamples;
   }
 
-  if (MOZ_LOG_TEST(GetLatencyLog(), LogLevel::Debug)) {
-    if (mProcessing.Length() > 0) {
-      unsigned int now;
-      mPtrVoEVideoSync->GetPlayoutTimestamp(mChannel, now);
-      if (static_cast<uint32_t>(now) != mLastTimestamp) {
-        mLastTimestamp = static_cast<uint32_t>(now);
-        // Find the block that includes this timestamp in the network input
-        while (mProcessing.Length() > 0) {
-          // FIX! assumes 20ms @ 48000Hz
-          // FIX handle wrap-around
-          if (mProcessing[0].mRTPTimeStamp + 20*(48000/1000) >= now) {
-            TimeDuration t = TimeStamp::Now() - mProcessing[0].mTimeStamp;
-            // Wrap-around?
-            int64_t delta = t.ToMilliseconds() + (now - mProcessing[0].mRTPTimeStamp)/(48000/1000);
-            LogTime(AsyncLatencyLogger::AudioRecvRTP, ((uint64_t) this), delta);
-            break;
-          }
-          mProcessing.RemoveElementAt(0);
-        }
-      }
-    }
-  }
   CSFLogDebug(LOGTAG,"%s GetAudioFrame:Got samples: length %d ",__FUNCTION__,
                                                                lengthSamples);
   return kMediaConduitNoError;
@@ -842,13 +815,6 @@ WebrtcAudioConduit::ReceivedRTPPacket(const void *data, int len, uint32_t ssrc)
 
   if(mEngineReceiving)
   {
-    if (MOZ_LOG_TEST(GetLatencyLog(), LogLevel::Debug)) {
-      // timestamp is at 32 bits in ([1])
-      struct Processing insert = { TimeStamp::Now(),
-                                   ntohl(static_cast<const uint32_t *>(data)[1]) };
-      mProcessing.AppendElement(insert);
-    }
-
     // XXX we need to get passed the time the packet was received
     if(mPtrVoENetwork->ReceivedRTPPacket(mChannel, data, len) == -1)
     {
@@ -987,16 +953,6 @@ WebrtcAudioConduit::SendRtp(const uint8_t* data,
 {
   CSFLogDebug(LOGTAG,  "%s: len %lu", __FUNCTION__, (unsigned long)len);
 
-  if (MOZ_LOG_TEST(GetLatencyLog(), LogLevel::Debug)) {
-    if (mProcessing.Length() > 0) {
-      TimeStamp started = mProcessing[0].mTimeStamp;
-      mProcessing.RemoveElementAt(0);
-      mProcessing.RemoveElementAt(0); // 20ms packetization!  Could automate this by watching sizes
-      TimeDuration t = TimeStamp::Now() - started;
-      int64_t delta = t.ToMilliseconds();
-      LogTime(AsyncLatencyLogger::AudioSendRTP, ((uint64_t) this), delta);
-    }
-  }
   ReentrantMonitorAutoEnter enter(mTransportMonitor);
   // XXX(pkerr) - the PacketOptions are being ignored. This parameter was added along
   // with the Call API update in the webrtc.org codebase.
