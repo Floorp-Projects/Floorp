@@ -889,6 +889,9 @@ class MOZ_RAII AssertRealmUnchanged
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+// AutoRealm can be used to enter the realm of a JSObject, JSScript or
+// ObjectGroup. It must not be used with cross-compartment wrappers, because
+// CCWs are not associated with a single realm.
 class AutoRealm
 {
     JSContext* const cx_;

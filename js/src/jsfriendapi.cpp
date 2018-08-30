@@ -822,6 +822,8 @@ FormatValue(JSContext* cx, const Value& vArg, JSAutoByteString& bytes)
      */
     RootedString str(cx);
     if (v.isObject()) {
+        if (IsCrossCompartmentWrapper(&v.toObject()))
+            return "[cross-compartment wrapper]";
         AutoRealm ar(cx, &v.toObject());
         str = ToString<CanGC>(cx, v);
     } else {
