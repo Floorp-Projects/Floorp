@@ -116,8 +116,8 @@ pub struct Build {
     shared_flag: Option<bool>,
     static_flag: Option<bool>,
     warnings_into_errors: bool,
-    warnings: bool,
-    extra_warnings: bool,
+    warnings: Option<bool>,
+    extra_warnings: Option<bool>,
 }
 
 /// Represents the types of errors that may occur while using cc-rs.
@@ -175,6 +175,7 @@ pub struct Tool {
     env: Vec<(OsString, OsString)>,
     family: ToolFamily,
     cuda: bool,
+    removed_args: Vec<OsString>,
 }
 
 /// Represents the family of tools this tool belongs to.
@@ -195,10 +196,15 @@ enum ToolFamily {
 
 impl ToolFamily {
     /// What the flag to request debug info for this family of tools look like
-    fn debug_flag(&self) -> &'static str {
+    fn add_debug_flags(&self, cmd: &mut Tool) {
         match *self {
-            ToolFamily::Msvc { .. } => "/Z7",
-            ToolFamily::Gnu | ToolFamily::Clang => "-g",
+            ToolFamily::Msvc { .. } => {
+                cmd.push_cc_arg("/Z7".into());
+            }
+            ToolFamily::Gnu | ToolFamily::Clang => {
+                cmd.push_cc_arg("-g".into());
+                cmd.push_cc_arg("-fno-omit-frame-pointer".into());
+            }
         }
     }
 
@@ -259,6 +265,10 @@ impl ToolFamily {
             ToolFamily::Gnu | ToolFamily::Clang => "-Xcompiler",
         }
     }
+
+    fn verbose_stderr(&self) -> bool {
+        *self == ToolFamily::Clang
+    }
 }
 
 /// Represents an object.
@@ -309,8 +319,8 @@ impl Build {
             cargo_metadata: true,
             pic: None,
             static_crt: None,
-            warnings: true,
-            extra_warnings: true,
+            warnings: None,
+            extra_warnings: None,
             warnings_into_errors: false,
         }
     }
@@ -422,7 +432,14 @@ impl Build {
             .debug(false)
             .cpp(self.cpp)
             .cuda(self.cuda);
-        let compiler = cfg.try_get_compiler()?;
+        let mut compiler = cfg.try_get_compiler()?;
+
+        // Clang uses stderr for verbose output, which yields a false positive
+        // result if the CFLAGS/CXXFLAGS include -v to aid in debugging.
+        if compiler.family.verbose_stderr() {
+            compiler.remove_arg("-v".into());
+        }
+
         let mut cmd = compiler.to_command();
         let is_arm = target.contains("aarch64") || target.contains("arm");
         command_add_output_file(&mut cmd, &obj, target.contains("msvc"), false, is_arm);
@@ -580,8 +597,8 @@ impl Build {
     ///     .compile("libfoo.a");
     /// ```
     pub fn warnings(&mut self, warnings: bool) -> &mut Build {
-        self.warnings = warnings;
-        self.extra_warnings = warnings;
+        self.warnings = Some(warnings);
+        self.extra_warnings = Some(warnings);
         self
     }
 
@@ -603,7 +620,7 @@ impl Build {
     ///     .compile("libfoo.a");
     /// ```
     pub fn extra_warnings(&mut self, warnings: bool) -> &mut Build {
-        self.extra_warnings = warnings;
+        self.extra_warnings = Some(warnings);
         self
     }
 
@@ -1116,8 +1133,8 @@ impl Build {
                 let nvcc_debug_flag = cmd.family.nvcc_debug_flag().into();
                 cmd.args.push(nvcc_debug_flag);
             }
-            let debug_flag = cmd.family.debug_flag().into();
-            cmd.push_cc_arg(debug_flag);
+            let family = cmd.family;
+            family.add_debug_flags(&mut cmd);
         }
 
         // Target flags
@@ -1245,6 +1262,31 @@ impl Build {
                 if target.starts_with("thumbv7m") {
                     cmd.args.push("-march=armv7-m".into());
                 }
+                if target.starts_with("armebv7r") | target.starts_with("armv7r") {
+                    if target.starts_with("armeb") {
+                        cmd.args.push("-mbig-endian".into());
+                    } else {
+                        cmd.args.push("-mlittle-endian".into());
+                    }
+
+                    // ARM mode
+                    cmd.args.push("-marm".into());
+
+                    // R Profile
+                    cmd.args.push("-march=armv7-r".into());
+
+                    if target.ends_with("eabihf") {
+                        // Calling convention
+                        cmd.args.push("-mfloat-abi=hard".into());
+
+                        // lowest common denominator FPU
+                        // (see Cortex-R4 technical reference manual)
+                        cmd.args.push("-mfpu=vfpv3-d16".into())
+                    } else {
+                        // Calling convention
+                        cmd.args.push("-mfloat-abi=soft".into());
+                    }
+                }
             }
         }
 
@@ -1282,12 +1324,17 @@ impl Build {
             cmd.args.push(directory.into());
         }
 
-        if self.warnings {
+        // If warnings and/or extra_warnings haven't been explicitly set,
+        // then we set them only if the environment doesn't already have
+        // CFLAGS/CXXFLAGS, since those variables presumably already contain
+        // the desired set of warnings flags.
+
+        if self.warnings.unwrap_or(if self.has_flags() { false } else { true }) {
             let wflags = cmd.family.warnings_flags().into();
             cmd.push_cc_arg(wflags);
         }
 
-        if self.extra_warnings {
+        if self.extra_warnings.unwrap_or(if self.has_flags() { false } else { true }) {
             if let Some(wflags) = cmd.family.extra_warnings_flags() {
                 cmd.push_cc_arg(wflags.into());
             }
@@ -1322,6 +1369,12 @@ impl Build {
         }
 
         Ok(cmd)
+    }
+
+    fn has_flags(&self) -> bool {
+        let flags_env_var_name = if self.cpp { "CXXFLAGS" } else { "CFLAGS" };
+        let flags_env_var_value = self.get_var(flags_env_var_name);
+        if let Ok(_) = flags_env_var_value { true } else { false }
     }
 
     fn msvc_macro_assembler(&self) -> Result<(Command, String), Error> {
@@ -1537,10 +1590,10 @@ impl Build {
         }
         let host = self.get_host()?;
         let target = self.get_target()?;
-        let (env, msvc, gnu, traditional) = if self.cpp {
-            ("CXX", "cl.exe", "g++", "c++")
+        let (env, msvc, gnu, traditional, clang) = if self.cpp {
+            ("CXX", "cl.exe", "g++", "c++", "clang++")
         } else {
-            ("CC", "cl.exe", "gcc", "cc")
+            ("CC", "cl.exe", "gcc", "cc", "clang")
         };
 
         // On Solaris, c++/cc unlikely to exist or be correct.
@@ -1595,15 +1648,20 @@ impl Build {
                         format!("{}.exe", gnu)
                     }
                 } else if target.contains("android") {
-                    format!(
-                        "{}-{}",
-                        target
-                            .replace("armv7", "arm")
-                            .replace("armv7neon", "arm")
-                            .replace("thumbv7", "arm")
-                            .replace("thumbv7neon", "arm"),
-                        gnu
-                    )
+                    let target = target
+                        .replace("armv7", "arm")
+                        .replace("armv7neon", "arm")
+                        .replace("thumbv7", "arm")
+                        .replace("thumbv7neon", "arm");
+                    let gnu_compiler = format!("{}-{}", target, gnu);
+                    let clang_compiler = format!("{}-{}", target, clang);
+                    // Check if gnu compiler is present
+                    // if not, use clang
+                    if Command::new(&gnu_compiler).spawn().is_ok() {
+                        gnu_compiler
+                    } else {
+                        clang_compiler
+                    }
                 } else if target.contains("cloudabi") {
                     format!("{}-{}", target, traditional)
                 } else if self.get_host()? != target {
@@ -1613,6 +1671,7 @@ impl Build {
                     let prefix = cross_compile.or(match &target[..] {
                         "aarch64-unknown-linux-gnu" => Some("aarch64-linux-gnu"),
                         "aarch64-unknown-linux-musl" => Some("aarch64-linux-musl"),
+                        "aarch64-unknown-netbsd" => Some("aarch64--netbsd"),
                         "arm-unknown-linux-gnueabi" => Some("arm-linux-gnueabi"),
                         "armv4t-unknown-linux-gnueabi" => Some("arm-linux-gnueabi"),
                         "armv5te-unknown-linux-gnueabi" => Some("arm-linux-gnueabi"),
@@ -1649,6 +1708,10 @@ impl Build {
                         "sparc64-unknown-linux-gnu" => Some("sparc64-linux-gnu"),
                         "sparc64-unknown-netbsd" => Some("sparc64--netbsd"),
                         "sparcv9-sun-solaris" => Some("sparcv9-sun-solaris"),
+                        "armebv7r-none-eabi" => Some("arm-none-eabi"),
+                        "armebv7r-none-eabihf" => Some("arm-none-eabi"),
+                        "armv7r-none-eabi" => Some("arm-none-eabi"),
+                        "armv7r-none-eabihf" => Some("arm-none-eabi"),
                         "thumbv6m-none-eabi" => Some("arm-none-eabi"),
                         "thumbv7em-none-eabi" => Some("arm-none-eabi"),
                         "thumbv7em-none-eabihf" => Some("arm-none-eabi"),
@@ -1959,7 +2022,13 @@ impl Tool {
             env: Vec::new(),
             family: family,
             cuda: cuda,
+            removed_args: Vec::new(),
         }
+    }
+
+    /// Add an argument to be stripped from the final command arguments.
+    fn remove_arg(&mut self, flag: OsString) {
+        self.removed_args.push(flag);
     }
 
     /// Add a flag, and optionally prepend the NVCC wrapper flag "-Xcompiler".
@@ -1989,7 +2058,10 @@ impl Tool {
             None => Command::new(&self.path),
         };
         cmd.args(&self.cc_wrapper_args);
-        cmd.args(&self.args);
+
+        let value = self.args.iter().filter(|a| !self.removed_args.contains(a)).collect::<Vec<_>>();
+        cmd.args(&value);
+
         for &(ref k, ref v) in self.env.iter() {
             cmd.env(k, v);
         }
