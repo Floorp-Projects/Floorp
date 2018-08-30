@@ -85,3 +85,21 @@
         <description>&addonPostInstallMessage.label;</description>
       </popupnotificationcontent>
     </popupnotification>
+
+    <popupnotification id="contextual-feature-recommendation-notification" hidden="true">
+      <popupnotificationheader id="cfr-notification-header">
+        <stack id="cfr-notification-header-stack">
+          <description id="cfr-notification-header-label"></description>
+          <label id="cfr-notification-header-link" class="text-link">
+            <xul:image id="cfr-notification-header-image"/>
+          </label>
+        </stack>
+      </popupnotificationheader>
+      <popupnotificationcontent>
+        <description id="cfr-notification-author"></description>
+      </popupnotificationcontent>
+      <popupnotificationfooter id="cfr-notification-footer" orient="vertical">
+        <description id="cfr-notification-footer-text"/>
+        <label id="cfr-notification-footer-learn-more-link" class="text-link"/>
+      </popupnotificationfooter>
+    </popupnotification>

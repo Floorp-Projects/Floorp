@@ -488,6 +488,9 @@
 
   <binding id="popup-notification">
     <content orient="vertical">
+      <xul:hbox class="popup-notification-header-container">
+        <children includes="popupnotificationheader"/>
+      </xul:hbox>
       <xul:hbox align="start" class="popup-notification-body-container">
         <xul:image class="popup-notification-icon"
                    xbl:inherits="popupid,src=icon,class=iconclass"/>
@@ -517,6 +520,9 @@
                         xbl:inherits="hidden=checkboxhidden,checked=checkboxchecked,label=checkboxlabel,oncommand=checkboxcommand" />
           <xul:description class="popup-notification-warning" xbl:inherits="hidden=warninghidden,xbl:text=warninglabel"/>
         </xul:vbox>
+      </xul:hbox>
+      <xul:hbox class="popup-notification-footer-container">
+        <children includes="popupnotificationfooter"/>
       </xul:hbox>
       <xul:hbox class="popup-notification-button-container">
         <children includes="button"/>
