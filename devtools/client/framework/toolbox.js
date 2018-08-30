@@ -41,6 +41,8 @@ loader.lazyRequireGetter(this, "getHighlighterUtils",
   "devtools/client/framework/toolbox-highlighter-utils", true);
 loader.lazyRequireGetter(this, "Selection",
   "devtools/client/framework/selection", true);
+loader.lazyRequireGetter(this, "InspectorFront",
+  "devtools/shared/fronts/inspector", true);
 loader.lazyRequireGetter(this, "flags",
   "devtools/shared/flags");
 loader.lazyRequireGetter(this, "KeyShortcuts",
@@ -2694,7 +2696,7 @@ Toolbox.prototype = {
   initInspector: function() {
     if (!this._initInspector) {
       this._initInspector = (async function() {
-        this._inspector = this.target.getFront("inspector");
+        this._inspector = InspectorFront(this._target.client, this._target.form);
         const pref = "devtools.inspector.showAllAnonymousContent";
         const showAllAnonymousContent = Services.prefs.getBoolPref(pref);
         this._walker = await this._inspector.getWalker({ showAllAnonymousContent });
@@ -2782,6 +2784,7 @@ Toolbox.prototype = {
         await this.highlighterUtils.stopPicker();
       }
 
+      await this._inspector.destroy();
       if (this._highlighter) {
         // Note that if the toolbox is closed, this will work fine, but will fail
         // in case the browser is closed and will trigger a noSuchActor message.
