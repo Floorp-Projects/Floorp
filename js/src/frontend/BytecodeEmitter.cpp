@@ -106,7 +106,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
 #ifdef DEBUG
     unstableEmitterScope(false),
 #endif
-    constList(cx),
+    numberList(cx),
     scopeList(cx),
     tryNoteList(cx),
     scopeNoteList(cx),
@@ -2296,10 +2296,10 @@ BytecodeEmitter::emitNumberOp(double dval)
         return true;
     }
 
-    if (!constList.append(DoubleValue(dval)))
+    if (!numberList.append(dval))
         return false;
 
-    return emitIndex32(JSOP_DOUBLE, constList.length() - 1);
+    return emitIndex32(JSOP_DOUBLE, numberList.length() - 1);
 }
 
 /*
@@ -8549,12 +8549,12 @@ BytecodeEmitter::copySrcNotes(jssrcnote* destination, uint32_t nsrcnotes)
 }
 
 void
-CGConstList::finish(ConstArray* array)
+CGNumberList::finish(ConstArray* array)
 {
     MOZ_ASSERT(length() == array->length);
 
     for (unsigned i = 0; i < length(); i++)
-        array->vector[i] = list[i];
+        array->vector[i] = DoubleValue(list[i]);
 }
 
 /*

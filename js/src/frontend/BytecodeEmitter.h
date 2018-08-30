@@ -25,12 +25,12 @@
 namespace js {
 namespace frontend {
 
-class CGConstList {
-    Vector<Value> list;
+class CGNumberList {
+    Vector<double> list;
+
   public:
-    explicit CGConstList(JSContext* cx) : list(cx) {}
-    MOZ_MUST_USE bool append(const Value& v) {
-        MOZ_ASSERT_IF(v.isString(), v.toString()->isAtom());
+    explicit CGNumberList(JSContext* cx) : list(cx) {}
+    MOZ_MUST_USE bool append(double v) {
         return list.append(v);
     }
     size_t length() const { return list.length(); }
@@ -200,7 +200,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
         return innermostEmitterScope_;
     }
 
-    CGConstList      constList;      /* constants to be included with the script */
+    CGNumberList     numberList;     /* number constants to be included with the script */
     CGObjectList     objectList;     /* list of emitted objects */
     CGScopeList      scopeList;      /* list of emitted scopes */
     CGTryNoteList    tryNoteList;    /* list of emitted try notes */
