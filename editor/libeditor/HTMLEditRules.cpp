@@ -1999,13 +1999,9 @@ HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak)
     }
     // If the container of the break is a link, we need to split it and
     // insert new <br> between the split links.
-    nsCOMPtr<nsINode> linkDOMNode;
-    if (HTMLEditorRef().IsInLink(pointToBreak.GetContainer(),
-                                 address_of(linkDOMNode))) {
-      nsCOMPtr<Element> linkNode = do_QueryInterface(linkDOMNode);
-      if (NS_WARN_IF(!linkNode)) {
-        return NS_ERROR_FAILURE;
-      }
+    RefPtr<Element> linkNode =
+      HTMLEditor::GetLinkElement(pointToBreak.GetContainer());
+    if (linkNode) {
       SplitNodeResult splitLinkNodeResult =
         HTMLEditorRef().SplitNodeDeepWithTransaction(
                           *linkNode, pointToBreak,
