@@ -13,7 +13,7 @@ async function openAboutPrivateBrowsing() {
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   let tab = win.gBrowser.selectedBrowser;
   tab.loadURI("about:privatebrowsing");
-  await BrowserTestUtils.browserLoaded(tab);
+  await BrowserTestUtils.browserLoaded(tab, false, "about:privatebrowsing");
   return { win, tab };
 }
 
