@@ -88,6 +88,22 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Clipboard prefs
+//---------------------------------------------------------------------------
+
+#if !defined(ANDROID) && !defined(XP_MACOSX) && defined(XP_UNIX)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "clipboard.autocopy",
+   clipboard_autocopy,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+//---------------------------------------------------------------------------
 // DOM prefs
 //---------------------------------------------------------------------------
 

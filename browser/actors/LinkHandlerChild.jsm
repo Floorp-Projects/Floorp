@@ -90,7 +90,9 @@ class LinkHandlerChild extends ActorChild {
     }
 
     let rel = link.rel && link.rel.toLowerCase();
-    if (!rel || !link.href)
+    // We also check .getAttribute, since an empty href attribute will give us
+    // a link.href that is the same as the document.
+    if (!rel || !link.href || !link.getAttribute("href"))
       return;
 
     // Note: following booleans only work for the current link, not for the

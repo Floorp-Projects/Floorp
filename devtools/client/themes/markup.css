@@ -241,6 +241,7 @@ ul.children + .tag-line::before {
   background-repeat: no-repeat;
   background-position: center;
   border: 1px solid var(--markup-badge-border-color);
+  color: var(--markup-badge-color);
   fill: var(--markup-badge-interactive-color);
   vertical-align: middle;
   display: inline-block;

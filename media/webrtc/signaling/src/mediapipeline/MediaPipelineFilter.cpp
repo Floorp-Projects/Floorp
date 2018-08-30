@@ -11,13 +11,10 @@
 
 #include "webrtc/common_types.h"
 
-#include "CSFLog.h"
+#include "mozilla/Logging.h"
 
-static const char* mpfLogTag = "MediaPipelineFilter";
-#ifdef LOGTAG
-#undef LOGTAG
-#endif
-#define LOGTAG mpfLogTag
+// defined in MediaPipeline.cpp
+extern mozilla::LazyLogModule gMediaPipelineLog;
 
 namespace mozilla {
 
@@ -45,10 +42,10 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header,
     return true;
   }
   if (!header.extension.rtpStreamId.empty()) {
-    CSFLogDebug(LOGTAG,
-                "MediaPipelineFilter ignoring seq# %u ssrc: %u RID: %s",
-                header.sequenceNumber, header.ssrc,
-                header.extension.rtpStreamId.data());
+    MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
+            ("MediaPipelineFilter ignoring seq# %u ssrc: %u RID: %s",
+             header.sequenceNumber, header.ssrc,
+             header.extension.rtpStreamId.data()));
   }
 
   if (remote_ssrc_set_.count(header.ssrc)) {

@@ -86,6 +86,14 @@ public:
   // match this up with StartBatchChanges
   void EndBatchChanges(int16_t aReason = nsISelectionListener::NO_REASON);
 
+  /**
+   * NotifyAutoCopy() starts to notify AutoCopyListener of selection changes.
+   */
+  void NotifyAutoCopy()
+  {
+    mNotifyAutoCopy = true;
+  }
+
   nsIDocument* GetParentObject() const;
   DocGroup* GetDocGroup() const;
 
@@ -678,6 +686,10 @@ private:
   SelectionType mSelectionType;
   UniquePtr<SelectionCustomColors> mCustomColors;
 
+  // Non-zero if we don't want any changes we make to the selection to be
+  // visible to content. If non-zero, content won't be notified about changes.
+  uint32_t mSelectionChangeBlockerCount;
+
   /**
    * True if the current selection operation was initiated by user action.
    * It determines whether we exclude -moz-user-select:none nodes or not,
@@ -691,9 +703,10 @@ private:
    */
   bool mCalledByJS;
 
-  // Non-zero if we don't want any changes we make to the selection to be
-  // visible to content. If non-zero, content won't be notified about changes.
-  uint32_t mSelectionChangeBlockerCount;
+  /**
+   * true if AutoCopyListner::OnSelectionChange() should be called.
+   */
+  bool mNotifyAutoCopy;
 };
 
 // Stack-class to turn on/off selection batching.

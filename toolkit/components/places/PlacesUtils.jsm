@@ -1062,16 +1062,16 @@ var PlacesUtils = {
       throw new TypeError(`title property of PageInfo object: ${pageInfo.title} must be a string if provided`);
     }
 
-    if (typeof pageInfo.description === "string" || pageInfo.description === null) {
+    if ("description" in pageInfo && (typeof pageInfo.description === "string" || pageInfo.description === null)) {
       info.description = pageInfo.description ? pageInfo.description.slice(0, DB_DESCRIPTION_LENGTH_MAX) : null;
     } else if (pageInfo.description !== undefined) {
       throw new TypeError(`description property of pageInfo object: ${pageInfo.description} must be either a string or null if provided`);
     }
 
-    if (pageInfo.previewImageURL || pageInfo.previewImageURL === null) {
+    if ("previewImageURL" in pageInfo) {
       let previewImageURL = pageInfo.previewImageURL;
 
-      if (previewImageURL === null) {
+      if (!previewImageURL) {
         info.previewImageURL = null;
       } else if (typeof(previewImageURL) === "string" && previewImageURL.length <= DB_URL_LENGTH_MAX) {
         info.previewImageURL = new URL(previewImageURL);
@@ -1276,11 +1276,6 @@ var PlacesUtils = {
   get tagsFolderId() {
     delete this.tagsFolderId;
     return this.tagsFolderId = this.bookmarks.tagsFolder;
-  },
-
-  get unfiledBookmarksFolderId() {
-    delete this.unfiledBookmarksFolderId;
-    return this.unfiledBookmarksFolderId = this.bookmarks.unfiledBookmarksFolder;
   },
 
   /**
