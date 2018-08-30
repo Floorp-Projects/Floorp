@@ -10,11 +10,18 @@
 
 #include "mozilla/dom/Selection.h"
 
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/AutoCopyListener.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/SelectionBinding.h"
+#include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/Telemetry.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -53,7 +60,6 @@
 #include "nsINamed.h"
 
 #include "nsISelectionController.h" //for the enums
-#include "nsAutoCopyListener.h"
 #include "SelectionChangeListener.h"
 #include "nsCopySupport.h"
 #include "nsIClipboard.h"
@@ -62,12 +68,6 @@
 #include "nsIBidiKeyboard.h"
 
 #include "nsError.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/ShadowRoot.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/dom/SelectionBinding.h"
-#include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/Telemetry.h"
 #include "nsViewManager.h"
 
 #include "nsFocusManager.h"
@@ -666,9 +666,10 @@ Selection::Selection()
   , mDirection(eDirNext)
   , mSelectionType(SelectionType::eNormal)
   , mCustomColors(nullptr)
+  , mSelectionChangeBlockerCount(0)
   , mUserInitiated(false)
   , mCalledByJS(false)
-  , mSelectionChangeBlockerCount(0)
+  , mNotifyAutoCopy(false)
 {
 }
 
@@ -678,9 +679,10 @@ Selection::Selection(nsFrameSelection* aList)
   , mDirection(eDirNext)
   , mSelectionType(SelectionType::eNormal)
   , mCustomColors(nullptr)
+  , mSelectionChangeBlockerCount(0)
   , mUserInitiated(false)
   , mCalledByJS(false)
-  , mSelectionChangeBlockerCount(0)
+  , mNotifyAutoCopy(false)
 {
 }
 
@@ -3475,8 +3477,6 @@ Selection::NotifySelectionListeners()
     // If there are no selection listeners, we're done!
     return NS_OK;
   }
-  AutoTArray<nsCOMPtr<nsISelectionListener>, 8>
-    selectionListeners(mSelectionListeners);
 
   nsCOMPtr<nsIDocument> doc;
   nsIPresShell* ps = GetPresShell();
@@ -3484,7 +3484,18 @@ Selection::NotifySelectionListeners()
     doc = ps->GetDocument();
   }
 
-  short reason = frameSelection->PopReason();
+  // We've notified all selection listeners even when some of them are removed
+  // (and may be destroyed) during notifying one of them.  Therefore, we should
+  // copy all listeners to the local variable first.
+  AutoTArray<nsCOMPtr<nsISelectionListener>, 8>
+    selectionListeners(mSelectionListeners);
+
+  int16_t reason = frameSelection->PopReason();
+
+  if (mNotifyAutoCopy) {
+    AutoCopyListener::OnSelectionChange(doc, *this, reason);
+  }
+
   for (auto& listener : selectionListeners) {
     listener->NotifySelectionChanged(doc, this, reason);
   }
