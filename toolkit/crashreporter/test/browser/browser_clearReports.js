@@ -2,23 +2,41 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function clickClearReports() {
-  const doc = content.document;
-  const reportListUnsubmitted = doc.getElementById("reportListUnsubmitted");
-  const reportListSubmitted = doc.getElementById("reportListSubmitted");
-  if (!reportListUnsubmitted || !reportListSubmitted) {
-    Assert.ok(false, "Report list not found");
+function clickClearReports(browser) {
+  let doc = content.document;
+
+  let button = doc.getElementById("clear-reports");
+
+  if (!button) {
+    Assert.ok(false, "Button not found");
+    return Promise.resolve();
   }
 
-  const unsubmittedStyle = doc.defaultView.getComputedStyle(reportListUnsubmitted);
-  const submittedStyle = doc.defaultView.getComputedStyle(reportListSubmitted);
-  Assert.notEqual(unsubmittedStyle.display, "none", "Unsubmitted report list is visible");
-  Assert.notEqual(submittedStyle.display, "none", "Submitted report list is visible");
+  let style = doc.defaultView.getComputedStyle(button);
 
-  const clearUnsubmittedButton = doc.getElementById("clearUnsubmittedReports");
-  const clearSubmittedButton = doc.getElementById("clearSubmittedReports");
-  clearUnsubmittedButton.click();
-  clearSubmittedButton.click();
+  Assert.notEqual(style.display, "none", "Clear reports button visible");
+
+  let deferred = {};
+  deferred.promise = new Promise(resolve => deferred.resolve = resolve);
+  var observer = new content.MutationObserver(function(mutations) {
+    for (let mutation of mutations) {
+      if (mutation.type == "attributes" &&
+          mutation.attributeName == "style") {
+        observer.disconnect();
+        Assert.equal(style.display, "none", "Clear reports button hidden");
+        deferred.resolve();
+      }
+    }
+  });
+  observer.observe(button, {
+      attributes: true,
+      childList: true,
+      characterData: true,
+      attributeFilter: ["style"],
+  });
+
+  button.click();
+  return deferred.promise;
 }
 
 var promptShown = false;
@@ -85,10 +103,7 @@ add_task(async function test() {
       let existing = [ file1.path, file2.path, report1.path, report2.path,
                        report3.path, submitdir.path, pendingdir.path ];
 
-      ContentTask.spawn(browser, null, clickClearReports);
-      await BrowserTestUtils.waitForCondition(() =>
-        content.document.getElementById("reportListUnsubmitted").classList.contains("hidden")
-        && content.document.getElementById("reportListSubmitted").classList.contains("hidden"));
+      await ContentTask.spawn(browser, null, clickClearReports);
 
       for (let dir of dirs) {
         let entries = dir.directoryEntries;

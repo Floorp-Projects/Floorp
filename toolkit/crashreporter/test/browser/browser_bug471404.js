@@ -1,16 +1,16 @@
 function check_clear_visible(browser, aVisible) {
   return ContentTask.spawn(browser, aVisible, function(aVisible) {
-    const doc = content.document;
+    let doc = content.document;
     let visible = false;
-    const reportListSubmitted = doc.getElementById("reportListSubmitted");
-    if (reportListSubmitted) {
-      const style = doc.defaultView.getComputedStyle(reportListSubmitted);
-      if (style.display !== "none" && style.visibility === "visible") {
+    let button = doc.getElementById("clear-reports");
+    if (button) {
+      let style = doc.defaultView.getComputedStyle(button);
+      if (style.display != "none" &&
+          style.visibility == "visible")
         visible = true;
-      }
     }
     Assert.equal(visible, aVisible,
-      "clear submitted reports button is " + (aVisible ? "visible" : "hidden"));
+      "clear reports button is " + (aVisible ? "visible" : "hidden"));
   });
 }
 
