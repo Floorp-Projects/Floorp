@@ -16,7 +16,6 @@
 #include "gc/HashUtil.h"
 #include "gc/Policy.h"
 #include "gc/StoreBuffer.h"
-#include "gc/Zone.h"
 #include "js/CharacterEncoding.h"
 #include "js/UniquePtr.h"
 #include "vm/ArrayObject.h"
