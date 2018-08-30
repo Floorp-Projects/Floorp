@@ -200,36 +200,41 @@ class UrlInputFragment :
     }
 
     private fun updateSubtitle(tip: Tip?) {
+        if (tip == null) {
+            showFocusSubtitle()
+            return
+        }
+
+        val tipText = String.format(tip.text, System.getProperty("line.separator"))
         keyboardLinearLayout.homeViewTipsLabel.alpha = TIPS_ALPHA
 
-        if (tip != null) {
-            val tipText = String.format(tip.text, System.getProperty("line.separator"))
-
-            // Only make the second line clickable if applicable
-            val linkStartIndex =
-                if (tip.deepLink != null &&
-                        tipText.contains("\n")) tipText.indexOf("\n") + 2 else 0
-
-            keyboardLinearLayout.homeViewTipsLabel.movementMethod = LinkMovementMethod()
-            homeViewTipsLabel.setText(tipText, TextView.BufferType.SPANNABLE)
-
-            val deepLinkAction = object : ClickableSpan() {
-                override fun onClick(widget: View?) {
-                    tip.deepLink?.invoke()
-                }
-            }
-
-            val textWithDeepLink = SpannableString(tipText).apply {
-                setSpan(deepLinkAction, linkStartIndex, tipText.length, 0)
-
-                val colorSpan = ForegroundColorSpan(homeViewTipsLabel.currentTextColor)
-                setSpan(colorSpan, linkStartIndex, tipText.length, 0)
-            }
-
-            homeViewTipsLabel.text = textWithDeepLink
-        } else {
-            showFocusSubtitle()
+        if (tip.deepLink == null) {
+            homeViewTipsLabel.text = tipText
+            return
         }
+
+        // Only make the second line clickable if applicable
+        val linkStartIndex =
+                if (tipText.contains("\n")) tipText.indexOf("\n") + 2
+                else tipText.length
+
+        keyboardLinearLayout.homeViewTipsLabel.movementMethod = LinkMovementMethod()
+        homeViewTipsLabel.setText(tipText, TextView.BufferType.SPANNABLE)
+
+        val deepLinkAction = object : ClickableSpan() {
+            override fun onClick(widget: View?) {
+                tip.deepLink.invoke()
+            }
+        }
+
+        val textWithDeepLink = SpannableString(tipText).apply {
+            setSpan(deepLinkAction, linkStartIndex, tipText.length, 0)
+
+            val colorSpan = ForegroundColorSpan(homeViewTipsLabel.currentTextColor)
+            setSpan(colorSpan, linkStartIndex, tipText.length, 0)
+        }
+
+        homeViewTipsLabel.text = textWithDeepLink
     }
 
     private fun showFocusSubtitle() {
