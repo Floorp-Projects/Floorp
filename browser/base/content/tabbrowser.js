@@ -5268,6 +5268,10 @@ var TabContextMenu = {
     let contextUnpinSelectedTabs = document.getElementById("context_unpinSelectedTabs");
     contextUnpinSelectedTabs.hidden = !this.contextTab.pinned || !multiselectionContext;
 
+    // Hide the "Duplicate Tab" if there is a selection present
+    let contextDuplicateTab = document.getElementById("context_duplicateTab");
+    contextDuplicateTab.hidden = multiselectionContext;
+
     // Disable "Close Tabs to the Right" if there are no tabs
     // following it.
     document.getElementById("context_closeTabsToTheEnd").disabled =
