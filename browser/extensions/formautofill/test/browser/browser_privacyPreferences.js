@@ -81,8 +81,13 @@ add_task(async function test_autofillCheckboxes() {
         "Checkbox should be unchecked when Autofill Addresses is disabled");
       is(content.document.querySelector(selectors.creditCardAutofillCheckbox).checked, false,
         "Checkbox should be unchecked when Autofill Credit Cards is disabled");
+<<<<<<< local
       content.document.querySelector(selectors.addressAutofillCheckbox)
         .scrollIntoView({block: "center", behavior: "instant"});
+=======
+      content.document.querySelector(selectors.addressAutofillCheckbox).
+        scrollIntoView({block: "center", behavior: "instant"});
+>>>>>>> graft
     });
 
     info("test toggling the checkboxes");
