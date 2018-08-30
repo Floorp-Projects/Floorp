@@ -19,7 +19,7 @@ body {
 
 .theme-sidebar {
   background: var(--theme-sidebar-background);
-  color: var(--theme-toolbar-color);
+  color: var(--theme-body-color);
 }
 
 ::-moz-selection {
@@ -262,8 +262,9 @@ div.CodeMirror span.eval-text {
 .devtools-textinput,
 .devtools-searchinput,
 .devtools-filterinput {
-  background-color: rgba(24, 29, 32, 1);
-  color: rgba(184, 200, 217, 1);
+  /* in between grey-85 and grey-90 */
+  background-color: #141416;
+  color: var(--theme-highlight-gray);
 }
 
 .CodeMirror-Tern-fname {
