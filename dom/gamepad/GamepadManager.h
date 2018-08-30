@@ -60,6 +60,9 @@ class GamepadManager final : public nsIObserver
   // Returns gamepad object if index exists, null otherwise
   already_AddRefed<Gamepad> GetGamepad(uint32_t aIndex) const;
 
+    // Returns gamepad object if GamepadId exists, null otherwise
+  already_AddRefed<Gamepad> GetGamepad(uint32_t aGamepadId, GamepadServiceType aServiceType) const;
+
   // Receive GamepadChangeEvent messages from parent process to fire DOM events
   void Update(const GamepadChangeEvent& aGamepadEvent);
 
@@ -132,7 +135,7 @@ class GamepadManager final : public nsIObserver
                                bool aHasSeen = true);
   // Our gamepad index has VR_GAMEPAD_IDX_OFFSET while GamepadChannelType
   // is from VRManager.
-  uint32_t GetGamepadIndexWithServiceType(uint32_t aIndex, GamepadServiceType aServiceType);
+  uint32_t GetGamepadIndexWithServiceType(uint32_t aIndex, GamepadServiceType aServiceType) const;
 
   // Gamepads connected to the system. Copies of these are handed out
   // to each window.
