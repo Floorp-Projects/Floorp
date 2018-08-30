@@ -45,6 +45,10 @@ const PAGES = {
   CONNECT: "connect",
 };
 
+const RUNTIMES = {
+  NETWORK: "network",
+};
+
 const SERVICE_WORKER_FETCH_STATES = {
   LISTENING: "LISTENING",
   NOT_LISTENING: "NOT_LISTENING",
@@ -61,6 +65,7 @@ module.exports = Object.assign({}, {
   DEBUG_TARGETS,
   DEBUG_TARGET_PANE,
   PAGES,
+  RUNTIMES,
   SERVICE_WORKER_FETCH_STATES,
   SERVICE_WORKER_STATUSES,
 }, actionTypes);
