@@ -245,5 +245,44 @@ var AddonStudies = {
       addonVersion: study.addonVersion,
       reason,
     });
+
+    await this.onUnenroll(study.addonId);
+  },
+
+  // Maps extension id -> Set(callbacks)
+  _unenrollListeners: new Map(),
+
+  /**
+   * Register a callback to be invoked when a given study ends.
+   *
+   * @param {string} id         The extension id
+   * @param {function} listener The callback
+   */
+  addUnenrollListener(id, listener) {
+    let listeners = this._unenrollListeners.get(id);
+    if (!listeners) {
+      listeners = new Set();
+      this._unenrollListeners.set(id, listeners);
+    }
+    listeners.add(listener);
+  },
+
+  /**
+   * Invoke the unenroll callback (if any) for the given extension
+   *
+   * @param {string} id The extension id
+   *
+   * @returns {Promise} A Promise resolved after the unenroll listener
+   *                    (if any) has finished its unenroll tasks.
+   */
+  onUnenroll(id) {
+    let callbacks = this._unenrollListeners.get(id);
+    let promises = [];
+    if (callbacks) {
+      for (let callback of callbacks) {
+        promises.push(callback());
+      }
+    }
+    return Promise.all(promises);
   },
 };

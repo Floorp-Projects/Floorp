@@ -134,7 +134,6 @@ private:
   virtual ~nsSHistory();
   friend class nsSHistoryObserver;
 
-  nsresult GetTransactionAtIndex(int32_t aIndex, nsISHTransaction** aResult);
   nsresult LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
                                 nsIDocShell* aRootDocShell, long aLoadType,
                                 bool& aDifferenceFound);
@@ -175,10 +174,15 @@ private:
   // Track all bfcache entries and evict on expiration.
   mozilla::UniquePtr<HistoryTracker> mHistoryTracker;
 
-  nsCOMPtr<nsISHTransaction> mListRoot;
-  int32_t mIndex;
-  int32_t mLength;
-  int32_t mRequestedIndex;
+  nsTArray<nsCOMPtr<nsISHTransaction>> mTransactions;
+  int32_t mIndex;           // -1 means "no index"
+  int32_t mRequestedIndex;  // -1 means "no requested index"
+
+  void WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
+                     int32_t* aOutEndIndex);
+
+  // Length of mTransactions.
+  int32_t Length() { return int32_t(mTransactions.Length()); }
 
   // Session History listeners
   nsAutoTObserverArray<nsWeakPtr, 2> mListeners;
