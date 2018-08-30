@@ -6726,6 +6726,13 @@ nsWindow::ClearCachedResources()
 void
 nsWindow::UpdateClientOffsetForCSDWindow()
 {
+    // We update window offset on X11 as the window position is calculated
+    // relatively to mShell. We don't do that on Wayland as our wl_subsurface
+    // is attached to mContainer and mShell is ignored.
+    if (!mIsX11Display) {
+        return;
+    }
+
     // _NET_FRAME_EXTENTS is not set on client decorated windows,
     // so we need to read offset between mContainer and toplevel mShell
     // window.
