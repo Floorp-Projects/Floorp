@@ -10,7 +10,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h>
-typedef int ssize_t;
+typedef intptr_t ssize_t;
 #else
 #include <sys/mman.h>
 #include <unistd.h>
