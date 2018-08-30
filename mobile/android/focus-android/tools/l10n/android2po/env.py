@@ -187,6 +187,12 @@ MISSING_LOCALES = {
         'local_name': 'Maaya',
         'plural_rule': 'az',
         'team': 'anp <LL@li.org>\n'
+    },
+    'ace': {
+        'name': 'Acehnese',
+        'local_name': 'Basa Acèh',
+        'plural_rule': 'id',
+        'team': 'anp <LL@li.org>\n'
     }
 }
 
