@@ -30,6 +30,7 @@ static NS_DEFINE_CID(kPrefServiceCID,   NS_PREFSERVICE_CID);
 
 // various pref strings
 static const char kCookiesPermissions[] = "network.cookie.cookieBehavior";
+static const char kPrefCookieQuotaPerHost[] = "network.cookie.quotaPerHost";
 static const char kCookiesMaxPerHost[] = "network.cookie.maxPerHost";
 static const char kCookieLeaveSecurityAlone[] = "network.cookie.leave-secure-alone";
 
@@ -179,6 +180,9 @@ InitPrefs(nsIPrefBranch *aPrefBranch)
     // however, we don't test third party blocking here.
     aPrefBranch->SetIntPref(kCookiesPermissions, 0); // accept all
     aPrefBranch->SetBoolPref(kCookieLeaveSecurityAlone, true);
+    // Set quotaPerHost to maxPerHost - 1, so there is only one cookie
+    // will be evicted everytime.
+    aPrefBranch->SetIntPref(kPrefCookieQuotaPerHost, 49);
     // Set the base domain limit to 50 so we have a known value.
     aPrefBranch->SetIntPref(kCookiesMaxPerHost, 50);
 }
