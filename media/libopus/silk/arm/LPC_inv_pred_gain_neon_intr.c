@@ -217,13 +217,13 @@ opus_int32 silk_LPC_inverse_pred_gain_neon(         /* O   Returns inverse predi
         {
         case 24:
             t0_s32x4 = vpadalq_s16( t0_s32x4, t2_s16x8 );
-            /* Intend to fall through */
+            /* FALLTHROUGH */
 
         case 16:
             t0_s32x4 = vpadalq_s16( t0_s32x4, t1_s16x8 );
             vst1q_s32( Atmp_QA + 16, vshll_n_s16( vget_low_s16 ( t2_s16x8 ), QA - 12 ) );
             vst1q_s32( Atmp_QA + 20, vshll_n_s16( vget_high_s16( t2_s16x8 ), QA - 12 ) );
-            /* Intend to fall through */
+            /* FALLTHROUGH */
 
         case 8:
         {
@@ -246,17 +246,17 @@ opus_int32 silk_LPC_inverse_pred_gain_neon(         /* O   Returns inverse predi
         case 6:
             DC_resp += (opus_int32)A_Q12[ 5 ];
             DC_resp += (opus_int32)A_Q12[ 4 ];
-            /* Intend to fall through */
+            /* FALLTHROUGH */
 
         case 4:
             DC_resp += (opus_int32)A_Q12[ 3 ];
             DC_resp += (opus_int32)A_Q12[ 2 ];
-            /* Intend to fall through */
+            /* FALLTHROUGH */
 
         case 2:
             DC_resp += (opus_int32)A_Q12[ 1 ];
             DC_resp += (opus_int32)A_Q12[ 0 ];
-            /* Intend to fall through */
+            /* FALLTHROUGH */
 
         default:
             break;
