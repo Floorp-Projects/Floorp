@@ -195,6 +195,12 @@ pref("dom.enable_performance_observer", true);
 // Enable requestIdleCallback API
 pref("dom.requestIdleCallback.enabled", true);
 
+// Enable Pointer Lock API
+// This is added for accessibility purpose. When user has no way to exit
+// pointer lock (e.g. no keyboard available), they can use this pref to
+// disable the Pointer Lock API altogether.
+pref("dom.pointer-lock.enabled", true);
+
 // Whether the Gamepad API is enabled
 pref("dom.gamepad.enabled", true);
 pref("dom.gamepad.test.enabled", false);
