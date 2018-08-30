@@ -77,25 +77,13 @@ button[disabled="true"] {
   }
 }
 
-/* ::::: menu/menu-button buttons ::::: */
+/* ::::: menu buttons ::::: */
 
-button[type="menu-button"] {
-  margin: 0;
-}
-
-.button-menu-dropmarker,
-.button-menubutton-dropmarker {
+.button-menu-dropmarker {
   -moz-appearance: none !important;
   margin: 1px;
   width: 11px;
   height: 11px;
-}
-
-.button-menubutton-dropmarker[open="true"] {
-  margin-top: 2px;
-  margin-bottom: 0px;
-  margin-inline-start: 2px;
-  margin-inline-end: 0px;
 }
 
 /* ::::: plain buttons ::::: */

@@ -1789,14 +1789,10 @@ ConsumeOutsideClicksResult nsMenuPopupFrame::ConsumeOutsideClicks()
         ni->Equals(nsGkAtoms::popupset, kNameSpaceID_XUL) ||
         ((ni->Equals(nsGkAtoms::button, kNameSpaceID_XUL) ||
           ni->Equals(nsGkAtoms::toolbarbutton, kNameSpaceID_XUL)) &&
-         (parentContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                  nsGkAtoms::type,
-                                                  nsGkAtoms::menu,
-                                                  eCaseMatters) ||
-          parentContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                  nsGkAtoms::type,
-                                                  nsGkAtoms::menuButton,
-                                                  eCaseMatters)))) {
+         parentContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                 nsGkAtoms::type,
+                                                 nsGkAtoms::menu,
+                                                 eCaseMatters))) {
       return ConsumeOutsideClicks_Never;
     }
 #endif
