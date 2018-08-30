@@ -13,6 +13,7 @@ const Localized = createFactory(FluentReact.Localized);
 
 const { PAGES } = require("../../constants");
 
+const DeviceSidebarItemAction = createFactory(require("./DeviceSidebarItemAction"));
 const SidebarItem = createFactory(require("./SidebarItem"));
 const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
 const CONNECT_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
@@ -41,14 +42,22 @@ class Sidebar extends PureComponent {
         )
       );
     }
-    return networkLocations.map(location => SidebarItem({
-      id: "networklocation-" + location,
-      dispatch,
-      icon: GLOBE_ICON,
-      isSelected: false,
-      name: location,
-      selectable: false,
-    }));
+
+    return networkLocations.map(location => {
+      const connectComponent = DeviceSidebarItemAction({
+        connected: false
+      });
+
+      return SidebarItem({
+        connectComponent,
+        id: "networklocation-" + location,
+        dispatch,
+        icon: GLOBE_ICON,
+        isSelected: false,
+        name: location,
+        selectable: false,
+      });
+    });
   }
 
   render() {
