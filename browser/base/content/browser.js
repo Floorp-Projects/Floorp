@@ -4281,19 +4281,6 @@ function toOpenWindowByType(inType, uri, features) {
     window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
 }
 
-/**
- * Open a new browser window.
- *
- * @param {Object} options
- *        {
- *          private: A boolean indicating if the window should be
- *                   private
- *          remote:  A boolean indicating if the window should run
- *                   remote browser tabs or not. If omitted, the window
- *                   will choose the profile default state.
- *        }
- * @return a reference to the new window.
- */
 function OpenBrowserWindow(options) {
   var telemetryObj = {};
   TelemetryStopwatch.start("FX_NEW_WINDOW_MS", telemetryObj);
