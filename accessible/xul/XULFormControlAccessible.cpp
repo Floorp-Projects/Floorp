@@ -157,25 +157,9 @@ bool
 XULButtonAccessible::IsAcceptableChild(nsIContent* aEl) const
 {
   // In general XUL button has not accessible children. Nevertheless menu
-  // buttons can have button (@type="menu-button") and popup accessibles
-  // (@type="menu-button", @type="menu" or columnpicker.
-
-  // Get an accessible for menupopup or popup elements.
-  if (aEl->IsXULElement(nsGkAtoms::menupopup) ||
-      aEl->IsXULElement(nsGkAtoms::popup)) {
-    return true;
-  }
-
-  // Button and toolbarbutton are real buttons. Get an accessible
-  // for it. Ignore dropmarker button which is placed as a last child.
-  if ((!aEl->IsXULElement(nsGkAtoms::button) &&
-       !aEl->IsXULElement(nsGkAtoms::toolbarbutton)) ||
-      aEl->IsXULElement(nsGkAtoms::dropMarker)) {
-    return false;
-  }
-
-  return mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                            nsGkAtoms::menuButton, eCaseMatters);
+  // buttons can have popup accessibles (@type="menu" or columnpicker).
+  return aEl->IsXULElement(nsGkAtoms::menupopup) ||
+         aEl->IsXULElement(nsGkAtoms::popup);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,12 +168,8 @@ XULButtonAccessible::IsAcceptableChild(nsIContent* aEl) const
 bool
 XULButtonAccessible::ContainsMenu() const
 {
-  static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::menu, &nsGkAtoms::menuButton, nullptr};
-
-  return mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
-                                                nsGkAtoms::type,
-                                                strings, eCaseMatters) >= 0;
+  return mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                            nsGkAtoms::menu, eCaseMatters);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
