@@ -90,8 +90,8 @@ TransformRect(const IntRect& aRect, const Matrix4x4Flagged& aTransform)
   rect.RoundOut();
 
   IntRect intRect;
-  if (!gfxUtils::GfxRectToIntRect(ThebesRect(rect), &intRect)) {
-    return IntRect();
+  if (!rect.ToIntRect(&intRect)) {
+    intRect = IntRect::MaxIntRect();
   }
 
   return intRect;
@@ -239,13 +239,15 @@ public:
         areaOverflowed = true;
       }
 
-      // We can't bail out early because we need to update mChildrenChanged.
+      // We can't bail out early because we might need to update some internal
+      // layer state.
     }
 
     nsIntRegion internal;
     if (!ComputeChangeInternal(aPrefix, internal, aCallback)) {
       areaOverflowed = true;
     }
+
     LTI_DUMP(internal, "internal");
     AddRegion(result, internal);
     LTI_DUMP(mLayer->GetInvalidRegion().GetRegion(), "invalid");
@@ -534,7 +536,7 @@ public:
         }
         Maybe<IntRect> combined = result.SafeUnion(childBounds.value());
         if (!combined) {
-          LTI_LOG("overflowed bounds of container %p accumulating child %p\n", this, child->mLayer);
+          LTI_LOG("overflowed bounds of container %p accumulating child %p\n", this, child->mLayer.get());
           return Nothing();
         }
         result = combined.value();
@@ -556,7 +558,7 @@ public:
         }
         Maybe<IntRect> combined = result.SafeUnion(childBounds.value());
         if (!combined) {
-          LTI_LOG("overflowed bounds of container %p accumulating child %p\n", this, child->mLayer);
+          LTI_LOG("overflowed bounds of container %p accumulating child %p\n", this, child->mLayer.get());
           return Nothing();
         }
         result = combined.value();

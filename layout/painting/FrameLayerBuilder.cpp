@@ -2868,11 +2868,12 @@ SetOuterVisibleRegion(Layer* aLayer, nsIntRegion* aOuterVisibleRegion,
     nsIntRect outerRect = aOuterVisibleRegion->GetBounds();
     // if 'transform' is not invertible, then nothing will be displayed
     // for the layer, so it doesn't really matter what we do here
-    Rect outerVisible(outerRect.x, outerRect.y, outerRect.width, outerRect.height);
+    Rect outerVisible(outerRect.x, outerRect.y,
+                      outerRect.width, outerRect.height);
     transform.Invert();
 
-    Rect layerContentsVisible(-float(INT32_MAX) / 2, -float(INT32_MAX) / 2,
-                              float(INT32_MAX), float(INT32_MAX));
+    Rect layerContentsVisible = Rect::MaxIntRect();
+
     if (aLayerContentsVisibleRect) {
       NS_ASSERTION(aLayerContentsVisibleRect->width >= 0 &&
                    aLayerContentsVisibleRect->height >= 0,
@@ -2884,14 +2885,18 @@ SetOuterVisibleRegion(Layer* aLayer, nsIntRegion* aOuterVisibleRegion,
           aLayerContentsVisibleRect->x, aLayerContentsVisibleRect->y,
           aLayerContentsVisibleRect->width, aLayerContentsVisibleRect->height);
     }
-    gfxRect layerVisible = ThebesRect(transform.ProjectRectBounds(outerVisible, layerContentsVisible));
+
+    Rect layerVisible =
+      transform.ProjectRectBounds(outerVisible, layerContentsVisible);
+
     layerVisible.RoundOut();
-    nsIntRect visRect;
-    if (gfxUtils::GfxRectToIntRect(layerVisible, &visRect)) {
-      *aOuterVisibleRegion = visRect;
-    } else  {
-      aOuterVisibleRegion->SetEmpty();
+
+    IntRect intRect;
+    if (!layerVisible.ToIntRect(&intRect)) {
+      intRect = IntRect::MaxIntRect();
     }
+
+    *aOuterVisibleRegion = intRect;
   }
 
   aLayer->SetVisibleRegion(LayerIntRegion::FromUnknownRegion(*aOuterVisibleRegion));
