@@ -341,7 +341,7 @@ pref("devtools.aboutdebugging.network-locations", "[]");
 #endif
 
 // Map top-level await expressions in the console
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
+#if defined(NIGHTLY_BUILD)
 pref("devtools.debugger.features.map-await-expression", true);
 #else
 pref("devtools.debugger.features.map-await-expression", false);

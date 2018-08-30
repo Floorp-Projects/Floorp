@@ -160,6 +160,8 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
   this._pingTelemetrySelectTool = this._pingTelemetrySelectTool.bind(this);
   this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
   this.toggleOptions = this.toggleOptions.bind(this);
+  this.togglePaintFlashing = this.togglePaintFlashing.bind(this);
+  this.isPaintFlashing = false;
 
   this._target.on("close", this.destroy);
 
@@ -802,6 +804,7 @@ Toolbox.prototype = {
       onClick(event) {
         if (typeof onClick == "function") {
           onClick(event, toolbox);
+          button.emit("updatechecked");
         }
       },
       onKeyDown(event) {
@@ -1354,6 +1357,19 @@ Toolbox.prototype = {
       button.isVisible = this._commandIsVisible(button);
     });
     this.component.setToolboxButtons(this.toolbarButtons);
+  },
+
+  /**
+   * Set paintflashing to enabled or disabled for this toolbox's tab.
+   */
+  togglePaintFlashing: function() {
+    if (this.isPaintFlashing) {
+      this.telemetry.toolOpened("paintflashing");
+    } else {
+      this.telemetry.toolClosed("paintflashing");
+    }
+    this.isPaintFlashing = !this.isPaintFlashing;
+    this.target.activeTab.reconfigure({"paintFlashing": this.isPaintFlashing});
   },
 
   /**
