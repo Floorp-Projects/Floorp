@@ -22,7 +22,7 @@ before_install:
 script:
   - ./gradlew -Pcoverage --no-daemon clean assembleFocusX86Nightly
   - echo "--" > .adjust_token
-  - ./gradlew -Pcoverage --no-daemon jacocoTestFocusX86NightlyUnitTestReport
+  - ./gradlew -Pcoverage --no-daemon jacocoFocusX86NightlyTestReport
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
