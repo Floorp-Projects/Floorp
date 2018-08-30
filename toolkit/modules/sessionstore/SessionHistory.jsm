@@ -81,10 +81,13 @@ var SessionHistoryInternal = {
     let skippedCount = 0, entryCount = 0;
 
     if (history && history.count > 0) {
-      // Loop over the transaction linked list directly so we can get the
-      // persist property for each transaction.
-      for (let txn = history.legacySHistory.QueryInterface(Ci.nsISHistoryInternal).rootTransaction;
-           txn; entryCount++, txn = txn.next) {
+      // Loop over the transactions so we can get the persist property for each
+      // one.
+      let shistory = history.legacySHistory.QueryInterface(Ci.nsISHistory);
+      let shistoryInternal = history.legacySHistory.QueryInterface(Ci.nsISHistoryInternal);
+      let count = shistory.count;
+      for ( ; entryCount < count; entryCount++) {
+        let txn = shistoryInternal.GetTransactionAtIndex(entryCount);
         if (entryCount <= aFromIdx) {
           skippedCount++;
           continue;
