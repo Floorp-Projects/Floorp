@@ -8,6 +8,7 @@ const { throttle } = require("devtools/client/inspector/shared/utils");
 
 const {
   clearFlexbox,
+  toggleFlexItemShown,
   updateFlexbox,
   updateFlexboxColor,
   updateFlexboxHighlighted,
@@ -31,6 +32,7 @@ class FlexboxInspector {
     this.onSetFlexboxOverlayColor = this.onSetFlexboxOverlayColor.bind(this);
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
     this.onToggleFlexboxHighlighter = this.onToggleFlexboxHighlighter.bind(this);
+    this.onToggleFlexItemShown = this.onToggleFlexItemShown.bind(this);
     this.onUpdatePanel = this.onUpdatePanel.bind(this);
 
     this.init();
@@ -95,6 +97,7 @@ class FlexboxInspector {
     return {
       onSetFlexboxOverlayColor: this.onSetFlexboxOverlayColor,
       onToggleFlexboxHighlighter: this.onToggleFlexboxHighlighter,
+      onToggleFlexItemShown: this.onToggleFlexItemShown,
     };
   }
 
@@ -256,13 +259,26 @@ class FlexboxInspector {
    * Toggles on/off the flexbox highlighter for the provided flex container element.
    *
    * @param  {NodeFront} node
-   *         The NodeFront of the flexb container element for which the flexbox
+   *         The NodeFront of the flex container element for which the flexbox
    *         highlighter is toggled on/off for.
    */
   onToggleFlexboxHighlighter(node) {
     this.highlighters.toggleFlexboxHighlighter(node);
     this.store.dispatch(updateFlexboxHighlighted(node !==
       this.highlighters.flexboxHighlighterShow));
+  }
+
+  /**
+   * Handler for a change in the input checkbox in the FlexItem component.
+   * Toggles on/off the flex item highlighter for the provided flex item element.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of the flex item element for which the flex item is toggled
+   *         on/off for.
+   */
+  onToggleFlexItemShown(node) {
+    this.highlighters.toggleFlexItemHighlighter(node);
+    this.store.dispatch(toggleFlexItemShown(node));
   }
 
   /**
@@ -354,6 +370,7 @@ class FlexboxInspector {
 
       flexItems.push({
         actorID: flexItemFront.actorID,
+        shown: false,
         flexItemSizing: flexItemFront.flexItemSizing,
         nodeFront: itemNodeFront,
         properties: flexItemFront.properties,

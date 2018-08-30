@@ -13,7 +13,7 @@ if [ -f "$TOOLTOOL_DIR/gcc/lib64/libstdc++.so" ]; then
   # We also put both possible 32-bits library paths.
   LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/gcc/lib64:$TOOLTOOL_DIR/gcc/lib32:$TOOLTOOL_DIR/gcc/lib
 elif [ -f "$TOOLTOOL_DIR/clang/lib/libstdc++.so" ]; then
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/clang/lib
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/clang/lib:$TOOLTOOL_DIR/clang/lib32
 fi
 
 mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"

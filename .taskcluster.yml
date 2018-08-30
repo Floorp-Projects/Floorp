@@ -83,9 +83,6 @@ tasks:
                 - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
                 else:  # cron
                 - "index.gecko.v2.${repository.project}.latest.taskgraph.decision-${cron.job_name}"
-                - "index.gecko.v2.${repository.project}.revision.${push.revision}.taskgraph.decision-${cron.job_name}"
-                - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision-${cron.job_name}"
-                # These are the old index routes for the decision task.
                 - "index.gecko.v2.${repository.project}.latest.firefox.decision-${cron.job_name}"
 
         scopes:

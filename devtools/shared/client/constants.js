@@ -62,7 +62,8 @@ const UnsolicitedPauses = {
   "breakpoint": "breakpoint",
   "DOMEvent": "DOMEvent",
   "watchpoint": "watchpoint",
-  "exception": "exception"
+  "exception": "exception",
+  "replayForcedPause": "replayForcedPause",
 };
 
 module.exports = {
