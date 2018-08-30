@@ -283,6 +283,8 @@
 
 #command-button-responsive::before {
   background-image: var(--command-responsive-image);
+  fill: var(--theme-toolbar-photon-icon-color);
+  -moz-context-properties: fill;
 }
 
 #command-button-scratchpad::before {
