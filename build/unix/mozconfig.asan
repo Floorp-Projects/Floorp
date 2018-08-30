@@ -1,18 +1,11 @@
 MOZ_AUTOMATION_L10N_CHECK=0
 
-. "$topsrcdir/build/mozconfig.common"
+. "$topsrcdir/build/unix/mozconfig.linux"
 
-# Use Clang as specified in manifest
-export CC="$topsrcdir/clang/bin/clang -fgnu89-inline"
-export CXX="$topsrcdir/clang/bin/clang++"
+# Enabling the clang plugin triggers leaks. bug 1487622
+unset ENABLE_CLANG_PLUGIN
 export LLVM_SYMBOLIZER="$topsrcdir/clang/bin/llvm-symbolizer"
-
-# Use a newer binutils, if it's there
-if [ -e "$topsrcdir/binutils/bin/ld" ]; then
-    export CC="$CC -B $topsrcdir/binutils/bin"
-    export CXX="$CXX -B $topsrcdir/binutils/bin"
-fi
-
+#
 # Enable ASan specific code and build workarounds
 ac_add_options --enable-address-sanitizer
 
@@ -23,5 +16,3 @@ ac_add_options --disable-install-strip
 ac_add_options --disable-jemalloc
 ac_add_options --disable-crashreporter
 ac_add_options --disable-profiling
-
-. "$topsrcdir/build/unix/mozconfig.stdcxx"
