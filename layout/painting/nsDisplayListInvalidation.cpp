@@ -141,8 +141,9 @@ nsDisplaySVGEffectGeometry::MoveBy(const nsPoint& aOffset)
   mFrameOffsetToReferenceFrame += aOffset;
 }
 
-nsDisplayMaskGeometry::nsDisplayMaskGeometry(nsDisplayMask* aItem,
-                                             nsDisplayListBuilder* aBuilder)
+nsDisplayMasksAndClipPathsGeometry::nsDisplayMasksAndClipPathsGeometry(
+                                      nsDisplayMasksAndClipPaths* aItem,
+                                      nsDisplayListBuilder* aBuilder)
   : nsDisplaySVGEffectGeometry(aItem, aBuilder)
   , nsImageGeometryMixin(aItem, aBuilder)
   , mDestRects(aItem->GetDestRects())

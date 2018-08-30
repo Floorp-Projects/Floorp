@@ -205,7 +205,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
 #ifdef MOZ_DUMP_PAINTING
   if (aItem->GetType() == DisplayItemType::TYPE_MASK) {
     nsCString str;
-    (static_cast<nsDisplayMask*>(aItem))->PrintEffects(str);
+    (static_cast<nsDisplayMasksAndClipPaths*>(aItem))->PrintEffects(str);
     aStream << str.get();
   }
 

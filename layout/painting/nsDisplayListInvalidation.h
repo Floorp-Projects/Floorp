@@ -22,7 +22,7 @@ class nsDisplayListBuilder;
 class nsDisplayTableItem;
 class nsDisplayThemedBackground;
 class nsDisplayEffectsBase;
-class nsDisplayMask;
+class nsDisplayMasksAndClipPaths;
 class nsDisplayFilter;
 
 namespace mozilla {
@@ -304,12 +304,13 @@ public:
   nsPoint mFrameOffsetToReferenceFrame;
 };
 
-class nsDisplayMaskGeometry
+class nsDisplayMasksAndClipPathsGeometry
   : public nsDisplaySVGEffectGeometry
-  , public nsImageGeometryMixin<nsDisplayMaskGeometry>
+  , public nsImageGeometryMixin<nsDisplayMasksAndClipPathsGeometry>
 {
 public:
-  nsDisplayMaskGeometry(nsDisplayMask* aItem, nsDisplayListBuilder* aBuilder);
+  nsDisplayMasksAndClipPathsGeometry(nsDisplayMasksAndClipPaths* aItem,
+                                     nsDisplayListBuilder* aBuilder);
 
   bool InvalidateForSyncDecodeImages() const override
   {

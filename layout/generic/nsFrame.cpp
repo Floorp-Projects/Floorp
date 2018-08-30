@@ -3221,12 +3221,12 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                         : containerItemASR;
       /* List now emptied, so add the new list to the top. */
       resultList.AppendToTop(
-          MakeDisplayItem<nsDisplayMask>(aBuilder, this, &resultList, !useOpacity,
-                                       maskASR));
+        MakeDisplayItem<nsDisplayMasksAndClipPaths>(aBuilder, this, &resultList,
+                                                    !useOpacity, maskASR));
     }
 
     // Also add the hoisted scroll info items. We need those for APZ scrolling
-    // because nsDisplayMask items can't build active layers.
+    // because nsDisplayMasksAndClipPaths items can't build active layers.
     aBuilder->ExitSVGEffectsContents();
     resultList.AppendToTop(&hoistedScrollInfoItemsStorage);
     if (aCreatedContainerItem) {

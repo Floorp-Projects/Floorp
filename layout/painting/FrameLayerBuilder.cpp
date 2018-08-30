@@ -1626,11 +1626,12 @@ protected:
   Maybe<size_t> SetupMaskLayerForScrolledClip(Layer* aLayer,
                                               const DisplayItemClip& aClip);
 
-  /*
+  /**
    * Create/find a mask layer with suitable size for aMaskItem to paint
    * css-positioned-masking onto.
    */
-  void SetupMaskLayerForCSSMask(Layer* aLayer, nsDisplayMask* aMaskItem);
+  void SetupMaskLayerForCSSMask(Layer* aLayer,
+                                nsDisplayMasksAndClipPaths* aMaskItem);
 
   already_AddRefed<Layer> CreateMaskLayer(
     Layer* aLayer,
@@ -4443,7 +4444,8 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   basic->SetTarget(context);
 
   if (aItem->GetType() == DisplayItemType::TYPE_MASK) {
-    static_cast<nsDisplayMask*>(aItem)->PaintAsLayer(aBuilder, aCtx, basic);
+    static_cast<nsDisplayMasksAndClipPaths*>(aItem)->
+      PaintAsLayer(aBuilder, aCtx, basic);
     if (basic->InTransaction()) {
       basic->AbortTransaction();
     }
@@ -4612,7 +4614,7 @@ SetCSSMaskLayerUserData(Layer* aMaskLayer)
 
 void
 ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
-                                         nsDisplayMask* aMaskItem)
+                                         nsDisplayMasksAndClipPaths* aMaskItem)
 {
   RefPtr<ImageLayer> maskLayer =
     CreateOrRecycleMaskImageLayerFor(MaskLayerKey(aLayer, Nothing()),
@@ -5205,7 +5207,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       if (item->GetType() == DisplayItemType::TYPE_MASK) {
         MOZ_ASSERT(itemClip.GetRoundedRectCount() == 0);
 
-        nsDisplayMask* maskItem = static_cast<nsDisplayMask*>(item);
+        nsDisplayMasksAndClipPaths* maskItem =
+          static_cast<nsDisplayMasksAndClipPaths*>(item);
         SetupMaskLayerForCSSMask(ownLayer, maskItem);
 
         if (iter.PeekNext() && iter.PeekNext()->GetType() ==
@@ -7741,9 +7744,9 @@ ContainerState::CreateMaskLayer(Layer* aLayer,
                                 const DisplayItemClip& aClip,
                                 const Maybe<size_t>& aForAncestorMaskLayer)
 {
-  // aLayer will never be the container layer created by an nsDisplayMask
-  // because nsDisplayMask propagates the DisplayItemClip to its contents
-  // and is not clipped itself.
+  // aLayer will never be the container layer created by an
+  // nsDisplayMasksAndClipPaths because nsDisplayMasksAndClipPaths propagates
+  // the DisplayItemClip to its contents and is not clipped itself.
   // This assertion will fail if that ever stops being the case.
   MOZ_ASSERT(!aLayer->GetUserData(&gCSSMaskLayerUserData),
              "A layer contains round clips should not have css-mask on it.");
