@@ -21,8 +21,6 @@
 #include "vm/BytecodeUtil.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
-#include "vm/JSContext.h"
-#include "vm/JSScript.h"
 
 namespace js {
 namespace frontend {
