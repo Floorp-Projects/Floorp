@@ -48,7 +48,7 @@ add_task(async function sidebar_windows() {
 
   // SidebarUI relies on window.opener being set, which is normal behavior when
   // using menu or key commands to open a new browser window.
-  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let win = await BrowserTestUtils.openNewBrowserWindow({opener: window});
 
   await secondSidebar;
   ok(!win.document.getElementById("sidebar-box").hidden, "sidebar box is visible in second window");
