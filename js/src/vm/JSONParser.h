@@ -49,11 +49,11 @@ class MOZ_STACK_CLASS JSONParserBase
 
     // State for an array that is currently being parsed. This includes all
     // elements that have been seen so far.
-    typedef Vector<Value, 20> ElementVector;
+    typedef GCVector<Value, 20> ElementVector;
 
     // State for an object that is currently being parsed. This includes all
     // the key/value pairs that have been seen so far.
-    typedef Vector<IdValuePair, 10> PropertyVector;
+    typedef GCVector<IdValuePair, 10> PropertyVector;
 
     // Possible states the parser can be in between values.
     enum ParserState {
