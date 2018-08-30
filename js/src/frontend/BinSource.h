@@ -75,16 +75,15 @@ class BinASTParserBase: private JS::AutoGCRooter
     LifoAlloc::Mark tempPoolMark_;
     ParseNodeAllocator nodeAlloc_;
 
+    // ---- Parsing-related stuff
+  protected:
     // Root atoms and objects allocated for the parse tree.
     AutoKeepAtoms keepAtoms_;
 
-    // ---- Parsing-related stuff
-  protected:
     ParseContext* parseContext_;
     FullParseHandler factory_;
 
     friend class BinParseContext;
-
 };
 
 /**

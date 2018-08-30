@@ -13,7 +13,6 @@
 
 #include "js/CompileOptions.h"
 #include "vm/Scope.h"
-#include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 
 class JSLinearString;
