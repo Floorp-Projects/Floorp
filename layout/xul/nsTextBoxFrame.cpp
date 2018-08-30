@@ -838,7 +838,7 @@ nsTextBoxFrame::UpdateAccessTitle()
     /*
      * Note that if you change appending access key label spec,
      * you need to maintain same logic in following methods. See bug 324159.
-     * toolkit/content/commonDialog.js (setLabelForNode)
+     * toolkit/components/prompts/src/CommonDialog.jsm (setLabelForNode)
      * toolkit/content/widgets/text.xml (formatAccessKey)
      */
     int32_t menuAccessKey;
@@ -859,6 +859,11 @@ nsTextBoxFrame::UpdateAccessTitle()
     if (mTitle.IsEmpty()) {
         mTitle = accessKeyLabel;
         return;
+    }
+
+    if (StringEndsWith(mTitle, accessKeyLabel)) {
+      // Never append another "(X)" if the title already ends with "(X)".
+      return;
     }
 
     const nsDependentString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();

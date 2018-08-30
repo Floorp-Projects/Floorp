@@ -511,17 +511,35 @@ public:
   }
 
   // AssignLiteral must ONLY be applied to an actual literal string, or
-  // a char array *constant* declared without an explicit size.
-  // Do not attempt to use it with a regular char* pointer, or with a
-  // non-constant char array variable. Use AssignASCII for those.
-  // There are not fallible version of these methods because they only really
-  // apply to small allocations that we wouldn't want to check anyway.
+  // a character array *constant* declared without an explicit size.
+  // Do not attempt to use it with a regular character pointer, or with a
+  // non-constant chararacter array variable. Use AssignASCII for those.
+  //
+  // This method does not need a fallible version, because it uses the
+  // POD buffer of the literal as the string's buffer without allocating.
+  // The literal does not need to be ASCII. If this a 16-bit string, this
+  // method takes a u"" literal. (The overload on 16-bit strings that takes
+  // a "" literal takes only ASCII.)
   template<int N>
   void AssignLiteral(const char_type (&aStr)[N])
   {
     AssignLiteral(aStr, N - 1);
   }
 
+  // AssignLiteral must ONLY be applied to an actual literal string, or
+  // a character array *constant* declared without an explicit size.
+  // Do not attempt to use it with a regular character pointer, or with a
+  // non-constant chararacter array variable. Use AssignASCII for those.
+  //
+  // This method takes an 8-bit (ASCII-only!) string that is expanded
+  // into a 16-bit string at run time causing a run-time allocation.
+  // To avoid the run-time allocation (at the cost of the literal
+  // taking twice the size in the binary), use the above overload that
+  // takes a u"" string instead. Using the overload that takes a u""
+  // literal is generally preferred when working with 16-bit strings.
+  //
+  // There is not a fallible version of this method because it only really
+  // applies to small allocations that we wouldn't want to check anyway.
   template<int N, typename Q = T, typename EnableIfChar16 = typename mozilla::Char16OnlyT<Q>>
   void AssignLiteral(const incompatible_char_type (&aStr)[N])
   {
@@ -735,9 +753,12 @@ public:
   void NS_FASTCALL AppendFloat(double aFloat);
 public:
 
+  // Appends a literal string ("" literal in the 8-bit case and u"" literal
+  // in the 16-bit case) to the string.
+  //
   // AppendLiteral must ONLY be applied to an actual literal string.
-  // Do not attempt to use it with a regular char* pointer, or with a char
-  // array variable. Use Append or AppendASCII for those.
+  // Do not attempt to use it with a regular character pointer, or with a
+  // character array variable. Use Append or AppendASCII for those.
   template<int N>
   void AppendLiteral(const char_type (&aStr)[N])
   {
@@ -745,6 +766,11 @@ public:
   }
 
   // Only enable for T = char16_t
+  //
+  // Appends an 8-bit literal string ("" literal) to a 16-bit string by
+  // expanding it. The literal must only contain ASCII.
+  //
+  // Using u"" literals with 16-bit strings is generally preferred.
   template <int N, typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   void AppendLiteral(const incompatible_char_type (&aStr)[N])
   {

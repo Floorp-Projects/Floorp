@@ -67,19 +67,21 @@ describe("Network message reducer:", () => {
     });
 
     it("adds fetched HTTP post data", () => {
+      const uploadHeaders = Symbol();
       const requestPostData = {
         postData: {
           text: ""
-        }
+        },
+        uploadHeaders,
       };
 
       dispatch(actions.networkUpdateRequest("message1", {
-        requestPostData: requestPostData
+        requestPostData,
       }));
 
-      const networkUpdates = getAllNetworkMessagesUpdateById(getState());
-      expect(networkUpdates.message1.requestPostData).toBe(requestPostData);
-      expect(networkUpdates.message1.requestHeadersFromUploadStream).toExist();
+      const {message1} = getAllNetworkMessagesUpdateById(getState());
+      expect(message1.requestPostData).toBe(requestPostData);
+      expect(message1.requestHeadersFromUploadStream).toBe(uploadHeaders);
     });
   });
 });

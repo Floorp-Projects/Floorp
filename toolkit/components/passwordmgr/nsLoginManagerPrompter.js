@@ -1061,7 +1061,7 @@ LoginManagerPrompter.prototype = {
     // Ugh. We can't use the strings from the popup window, because they
     // have the access key marked in the string (eg "Mo&zilla"), along
     // with some weird rules for handling access keys that do not occur
-    // in the string, for L10N. See commonDialog.js's setLabelForNode().
+    // in the string, for L10N. See CommonDialog.jsm's setLabelForNode().
     var neverButtonText =
           this._getLocalizedString("notifyBarNeverRememberButtonText2");
     var neverButtonAccessKey =

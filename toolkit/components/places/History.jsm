@@ -1515,11 +1515,11 @@ var update = async function(db, pageInfo) {
     baseParams.url = pageInfo.url.href;
   }
 
-  if (pageInfo.description || pageInfo.description === null) {
+  if ("description" in pageInfo) {
     updateFragments.push("description");
     params.description = pageInfo.description;
   }
-  if (pageInfo.previewImageURL || pageInfo.previewImageURL === null) {
+  if ("previewImageURL" in pageInfo) {
     updateFragments.push("preview_image_url");
     params.preview_image_url = pageInfo.previewImageURL ? pageInfo.previewImageURL.href : null;
   }

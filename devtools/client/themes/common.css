@@ -18,7 +18,7 @@
 :root.theme-dark {
   --tab-line-hover-color: rgba(255,255,255,.2);
   --toggle-thumb-color: var(--grey-40);
-  --toggle-track-color: var(--grey-50);
+  --toggle-track-color: var(--grey-60);
 }
 
 :root[platform="mac"] {

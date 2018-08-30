@@ -6726,6 +6726,13 @@ nsWindow::ClearCachedResources()
 void
 nsWindow::UpdateClientOffsetForCSDWindow()
 {
+    // We update window offset on X11 as the window position is calculated
+    // relatively to mShell. We don't do that on Wayland as our wl_subsurface
+    // is attached to mContainer and mShell is ignored.
+    if (!mIsX11Display) {
+        return;
+    }
+
     // _NET_FRAME_EXTENTS is not set on client decorated windows,
     // so we need to read offset between mContainer and toplevel mShell
     // window.
@@ -7147,6 +7154,8 @@ nsWindow::GetSystemCSDSupportLevel() {
         } else if (strstr(currentDesktop, "Pantheon") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
         } else if (strstr(currentDesktop, "LXQt") != nullptr) {
+            sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
+        } else if (strstr(currentDesktop, "Deepin") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
         } else {
 // Release or beta builds are not supposed to be broken
