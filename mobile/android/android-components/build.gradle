@@ -1,12 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    // Synchronized versions numbers of GeckoView (Nightly) artifacts.
-    ext.geckoNightly = [
-        // Discover nightly builds: https://tools.taskcluster.net/index/gecko.v2.mozilla-central.nightly
-        version: '63.0.20180820100132'
-    ]
-
     // Synchronized versions numbers of GeckoView (Beta) artifacts.
     ext.geckoBeta = [
         // mozilla-beta: FENNEC_62_0b15_RELEASE

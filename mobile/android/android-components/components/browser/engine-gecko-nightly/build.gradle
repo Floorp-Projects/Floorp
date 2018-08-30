@@ -28,8 +28,8 @@ dependencies {
     // We only compile against the ARM artifact. We let the app decide which artifact to actually
     // use at runtime. As the Kotlin/Java API is the same for all ABIs it is not important which one
     // we import here.
-    compileOnly "org.mozilla:geckoview-nightly-armeabi-v7a:${rootProject.ext.geckoNightly['version']}"
-    testImplementation "org.mozilla:geckoview-nightly-armeabi-v7a:${rootProject.ext.geckoNightly['version']}"
+    compileOnly Gecko.geckoview_nightly_arm
+    testImplementation Gecko.geckoview_nightly_arm
 
     implementation Deps.kotlin_stdlib
     implementation Deps.kotlin_coroutines

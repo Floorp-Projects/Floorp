@@ -99,9 +99,9 @@ dependencies {
     implementation project(':support-utils')
 
     nightlyImplementation project(':browser-engine-gecko-nightly')
-    nightlyArmImplementation "org.mozilla:geckoview-nightly-armeabi-v7a:${rootProject.ext.geckoNightly['version']}"
-    nightlyX86Implementation "org.mozilla:geckoview-nightly-x86:${rootProject.ext.geckoNightly['version']}"
-    nightlyAarch64Implementation "org.mozilla:geckoview-nightly-arm64-v8a:${rootProject.ext.geckoNightly['version']}"
+    nightlyArmImplementation Gecko.geckoview_nightly_arm
+    nightlyX86Implementation Gecko.geckoview_nightly_x86
+    nightlyAarch64Implementation Gecko.geckoview_nightly_aarch64
 
     betaImplementation project(':browser-engine-gecko-beta')
     betaArmImplementation "org.mozilla:geckoview-beta-armeabi-v7a:${rootProject.ext.geckoBeta['version']}"
