@@ -250,7 +250,7 @@ void silk_NSQ_del_dec_c(
 
                 /* Rewhiten with new A coefs */
                 start_idx = psEncC->ltp_mem_length - lag - psEncC->predictLPCOrder - LTP_ORDER / 2;
-                silk_assert( start_idx > 0 );
+                celt_assert( start_idx > 0 );
 
                 silk_LPC_analysis_filter( &sLTP[ start_idx ], &NSQ->xq[ start_idx + k * psEncC->subfr_length ],
                     A_Q12, psEncC->ltp_mem_length - start_idx, psEncC->predictLPCOrder, psEncC->arch );
@@ -361,7 +361,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec(
     NSQ_sample_struct  *psSS;
     SAVE_STACK;
 
-    silk_assert( nStatesDelayedDecision > 0 );
+    celt_assert( nStatesDelayedDecision > 0 );
     ALLOC( psSampleState, nStatesDelayedDecision, NSQ_sample_pair );
 
     shp_lag_ptr  = &NSQ->sLTP_shp_Q14[ NSQ->sLTP_shp_buf_idx - lag + HARM_SHAPE_FIR_TAPS / 2 ];
@@ -419,7 +419,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec(
             LPC_pred_Q14 = silk_LSHIFT( LPC_pred_Q14, 4 );                              /* Q10 -> Q14 */
 
             /* Noise shape feedback */
-            silk_assert( ( shapingLPCOrder & 1 ) == 0 );   /* check that order is even */
+            celt_assert( ( shapingLPCOrder & 1 ) == 0 );   /* check that order is even */
             /* Output of lowpass section */
             tmp2 = silk_SMLAWB( psDD->Diff_Q14, psDD->sAR2_Q14[ 0 ], warping_Q16 );
             /* Output of allpass section */

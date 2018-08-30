@@ -39,7 +39,7 @@ celt_sources_sse2 = [
 ]
 
 celt_sources_sse4_1 = [
-    'celt/x86/celt_lpc_sse.c',
+    'celt/x86/celt_lpc_sse4_1.c',
     'celt/x86/pitch_sse4_1.c',
 ]
 
@@ -62,17 +62,20 @@ celt_sources_arm_neon_intr = [
 ]
 
 celt_sources_arm_ne10 = [
-    'celt/arm/celt_ne10_fft.c',
-    'celt/arm/celt_ne10_mdct.c',
+    'celt/arm/celt_fft_ne10.c',
+    'celt/arm/celt_mdct_ne10.c',
 ]
 
 opus_sources = [
+    'src/mapping_matrix.c',
     'src/opus.c',
     'src/opus_decoder.c',
     'src/opus_encoder.c',
     'src/opus_multistream.c',
     'src/opus_multistream_decoder.c',
     'src/opus_multistream_encoder.c',
+    'src/opus_projection_decoder.c',
+    'src/opus_projection_encoder.c',
     'src/repacketizer.c',
 ]
 
@@ -161,10 +164,10 @@ silk_sources = [
 ]
 
 silk_sources_sse4_1 = [
-    'silk/x86/NSQ_del_dec_sse.c',
-    'silk/x86/NSQ_sse.c',
-    'silk/x86/VAD_sse.c',
-    'silk/x86/VQ_WMat_EC_sse.c',
+    'silk/x86/NSQ_del_dec_sse4_1.c',
+    'silk/x86/NSQ_sse4_1.c',
+    'silk/x86/VAD_sse4_1.c',
+    'silk/x86/VQ_WMat_EC_sse4_1.c',
     'silk/x86/x86_silk_map.c',
 ]
 
@@ -203,8 +206,8 @@ silk_sources_fixed = [
 ]
 
 silk_sources_fixed_sse4_1 = [
-    'silk/fixed/x86/burg_modified_FIX_sse.c',
-    'silk/fixed/x86/vector_ops_FIX_sse.c',
+    'silk/fixed/x86/burg_modified_FIX_sse4_1.c',
+    'silk/fixed/x86/vector_ops_FIX_sse4_1.c',
 ]
 
 silk_sources_fixed_arm_neon_intr = [
