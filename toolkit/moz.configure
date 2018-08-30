@@ -907,9 +907,9 @@ option('--enable-geckodriver', help='Enable WebDriver implementation')
 @depends('--enable-geckodriver',
          'MOZ_AUTOMATION',
          compile_environment,
-         target,
+         cross_compiling,
          hazard_analysis)
-def geckodriver(enable, automation, compile_env, target, hazard):
+def geckodriver(enable, automation, compile_env, cross_compile, hazard):
     """
     geckodriver is implied on supported platforms when MOZ_AUTOMATION
     is set, but we also provide the --enable-geckodriver option for
@@ -927,8 +927,7 @@ def geckodriver(enable, automation, compile_env, target, hazard):
         return True
 
     if enable.origin == 'default':
-        # Bug 1441656 for Android.
-        broken_platforms = hazard or target.os == 'Android'
+        broken_platforms = cross_compile or hazard
 
         if automation and compile_env and not broken_platforms:
             return True
