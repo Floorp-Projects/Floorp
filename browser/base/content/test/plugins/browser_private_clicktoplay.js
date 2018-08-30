@@ -26,7 +26,8 @@ let createPrivateWindow = async function createPrivateWindow(url) {
   gPrivateBrowser = gPrivateWindow.getBrowser().selectedBrowser;
 
   BrowserTestUtils.loadURI(gPrivateBrowser, url);
-  await BrowserTestUtils.browserLoaded(gPrivateBrowser);
+  await BrowserTestUtils.browserLoaded(gPrivateBrowser, false, url);
+  info("loaded " + url);
 };
 
 add_task(async function test() {

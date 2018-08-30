@@ -21,7 +21,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Observer.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ScreenOrientation.h"
 #include "WindowIdentifier.h"
 
 #ifdef XP_WIN
@@ -539,7 +538,7 @@ NotifyScreenConfigurationChange(const ScreenConfiguration& aScreenConfiguration)
 }
 
 bool
-LockScreenOrientation(const dom::ScreenOrientationInternal& aOrientation)
+LockScreenOrientation(const ScreenOrientation& aOrientation)
 {
   AssertMainThread();
   RETURN_PROXY_IF_SANDBOXED(LockScreenOrientation(aOrientation), false);

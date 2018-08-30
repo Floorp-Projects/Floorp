@@ -36,6 +36,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'uachelper.cpp',
         'updatehelper.cpp',
     ]
+    OS_LIBS += [
+        'rpcrt4',
+    ]
     if CONFIG['MOZ_MAINTENANCE_SERVICE']:
         SOURCES += [
             'certificatecheck.cpp',
@@ -43,7 +46,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         ]
         OS_LIBS += [
             'crypt32',
-            'rpcrt4',
             'wintrust',
         ]
 

@@ -17,26 +17,6 @@
 namespace mozilla {
 namespace wr {
 
-static EGLint
-GetEGLTextureFormat(gfx::SurfaceFormat aFormat)
-{
-  switch (aFormat) {
-    case gfx::SurfaceFormat::B8G8R8A8:
-    case gfx::SurfaceFormat::B8G8R8X8:
-    case gfx::SurfaceFormat::R8G8B8A8:
-    case gfx::SurfaceFormat::R8G8B8X8:
-    case gfx::SurfaceFormat::A8R8G8B8:
-    case gfx::SurfaceFormat::X8R8G8B8:
-      return LOCAL_EGL_TEXTURE_RGBA;
-    case gfx::SurfaceFormat::R8G8B8:
-    case gfx::SurfaceFormat::B8G8R8:
-      return LOCAL_EGL_TEXTURE_RGB;
-    default:
-      gfxCriticalError() << "GetEGLTextureFormat(): unexpected texture format";
-      return LOCAL_EGL_TEXTURE_RGBA;
-  }
-}
-
 RenderDXGITextureHostOGL::RenderDXGITextureHostOGL(WindowsHandle aHandle,
                                                    gfx::SurfaceFormat aFormat,
                                                    gfx::IntSize aSize)
