@@ -268,8 +268,7 @@ static inline bool HasDivergedFromRecording();
 //
 // The callback passed to NotifyUnrecordedWait will be invoked at most once
 // by the main thread whenever the main thread is waiting for other threads to
-// become idle, and at most once after the call to NotifyUnrecordedWait if the
-// main thread is already waiting for other threads to become idle.
+// become idle.
 //
 // The callback should poke the thread so that it is no longer blocked on the
 // resource. The thread must call MaybeWaitForCheckpointSave before blocking

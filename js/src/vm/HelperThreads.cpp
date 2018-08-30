@@ -2420,8 +2420,21 @@ HelperThread::threadLoop()
     cx.setHelperThread(this);
     JS_SetNativeStackQuota(&cx, HELPER_STACK_QUOTA);
 
+    if (mozilla::recordreplay::IsRecordingOrReplaying())
+        mozilla::recordreplay::NotifyUnrecordedWait(WakeupAll);
+
     while (!terminate) {
         MOZ_ASSERT(idle());
+
+        if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+            // Unlock the helper thread state lock before potentially
+            // blocking while the main thread waits for all threads to
+            // become idle. Otherwise we would need to see if we need to
+            // block at every point where a helper thread acquires the
+            // helper thread state lock.
+            AutoUnlockHelperThreadState unlock(lock);
+            mozilla::recordreplay::MaybeWaitForCheckpointSave();
+        }
 
         // The selectors may depend on the HelperThreadState not changing
         // between task selection and task execution, in particular, on new
@@ -2432,19 +2445,6 @@ HelperThread::threadLoop()
         const TaskSpec* task = findHighestPriorityTask(lock);
         if (!task) {
             AUTO_PROFILER_LABEL("HelperThread::threadLoop::wait", IDLE);
-            if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-                // Unlock the helper thread state lock before potentially
-                // blocking while the main thread waits for all threads to
-                // become idle. Otherwise we would need to see if we need to
-                // block at every point where a helper thread acquires the
-                // helper thread state lock.
-                {
-                    AutoUnlockHelperThreadState unlock(lock);
-                    mozilla::recordreplay::MaybeWaitForCheckpointSave();
-                }
-                mozilla::recordreplay::NotifyUnrecordedWait(WakeupAll);
-            }
-
             HelperThreadState().wait(lock, GlobalHelperThreadState::PRODUCER);
             continue;
         }
