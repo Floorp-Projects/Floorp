@@ -125,7 +125,7 @@ nsDisplaySolidColorRegionGeometry::MoveBy(const nsPoint& aOffset)
 }
 
 nsDisplaySVGEffectGeometry::nsDisplaySVGEffectGeometry(
-  nsDisplaySVGEffects* aItem,
+  nsDisplayEffectsBase* aItem,
   nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGeometry(aItem, aBuilder)
   , mBBox(aItem->BBoxInUserSpace())

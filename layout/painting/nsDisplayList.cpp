@@ -9445,7 +9445,7 @@ nsCharClipDisplayItem::ComputeInvalidationRegion(
   }
 }
 
-nsDisplaySVGEffects::nsDisplaySVGEffects(
+nsDisplayEffectsBase::nsDisplayEffectsBase(
   nsDisplayListBuilder* aBuilder,
   nsIFrame* aFrame,
   nsDisplayList* aList,
@@ -9459,32 +9459,32 @@ nsDisplaySVGEffects::nsDisplaySVGEffects(
                       aClearClipChain)
   , mHandleOpacity(aHandleOpacity)
 {
-  MOZ_COUNT_CTOR(nsDisplaySVGEffects);
+  MOZ_COUNT_CTOR(nsDisplayEffectsBase);
 }
 
-nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame,
-                                         nsDisplayList* aList,
-                                         bool aHandleOpacity)
+nsDisplayEffectsBase::nsDisplayEffectsBase(nsDisplayListBuilder* aBuilder,
+                                           nsIFrame* aFrame,
+                                           nsDisplayList* aList,
+                                           bool aHandleOpacity)
   : nsDisplayWrapList(aBuilder, aFrame, aList)
   , mHandleOpacity(aHandleOpacity)
 {
-  MOZ_COUNT_CTOR(nsDisplaySVGEffects);
+  MOZ_COUNT_CTOR(nsDisplayEffectsBase);
 }
 
 nsRegion
-nsDisplaySVGEffects::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                     bool* aSnap) const
+nsDisplayEffectsBase::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                      bool* aSnap) const
 {
   *aSnap = false;
   return nsRegion();
 }
 
 void
-nsDisplaySVGEffects::HitTest(nsDisplayListBuilder* aBuilder,
-                             const nsRect& aRect,
-                             HitTestState* aState,
-                             nsTArray<nsIFrame*>* aOutFrames)
+nsDisplayEffectsBase::HitTest(nsDisplayListBuilder* aBuilder,
+                              const nsRect& aRect,
+                              HitTestState* aState,
+                              nsTArray<nsIFrame*>* aOutFrames)
 {
   nsPoint rectCenter(aRect.x + aRect.width / 2, aRect.y + aRect.height / 2);
   if (nsSVGIntegrationUtils::HitTestFrameForEffects(
@@ -9494,19 +9494,19 @@ nsDisplaySVGEffects::HitTest(nsDisplayListBuilder* aBuilder,
 }
 
 gfxRect
-nsDisplaySVGEffects::BBoxInUserSpace() const
+nsDisplayEffectsBase::BBoxInUserSpace() const
 {
   return nsSVGUtils::GetBBox(mFrame);
 }
 
 gfxPoint
-nsDisplaySVGEffects::UserSpaceOffset() const
+nsDisplayEffectsBase::UserSpaceOffset() const
 {
   return nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(mFrame);
 }
 
 void
-nsDisplaySVGEffects::ComputeInvalidationRegion(
+nsDisplayEffectsBase::ComputeInvalidationRegion(
   nsDisplayListBuilder* aBuilder,
   const nsDisplayItemGeometry* aGeometry,
   nsRegion* aInvalidRegion) const
@@ -9528,7 +9528,7 @@ nsDisplaySVGEffects::ComputeInvalidationRegion(
 }
 
 bool
-nsDisplaySVGEffects::ValidateSVGFrame()
+nsDisplayEffectsBase::ValidateSVGFrame()
 {
   const nsIContent* content = mFrame->GetContent();
   bool hasSVGLayout = (mFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
@@ -9638,12 +9638,12 @@ nsDisplayMask::nsDisplayMask(nsDisplayListBuilder* aBuilder,
                              nsDisplayList* aList,
                              bool aHandleOpacity,
                              const ActiveScrolledRoot* aActiveScrolledRoot)
-  : nsDisplaySVGEffects(aBuilder,
-                        aFrame,
-                        aList,
-                        aHandleOpacity,
-                        aActiveScrolledRoot,
-                        true)
+  : nsDisplayEffectsBase(aBuilder,
+                         aFrame,
+                         aList,
+                         aHandleOpacity,
+                         aActiveScrolledRoot,
+                         true)
 {
   MOZ_COUNT_CTOR(nsDisplayMask);
 
@@ -9830,7 +9830,7 @@ nsDisplayMask::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) const
 {
-  nsDisplaySVGEffects::ComputeInvalidationRegion(
+  nsDisplayEffectsBase::ComputeInvalidationRegion(
     aBuilder, aGeometry, aInvalidRegion);
 
   auto* geometry = static_cast<const nsDisplayMaskGeometry*>(aGeometry);
@@ -9990,7 +9990,7 @@ nsDisplayMask::CreateWebRenderCommands(
                                                   Nothing());
   }
 
-  nsDisplaySVGEffects::CreateWebRenderCommands(
+  nsDisplayEffectsBase::CreateWebRenderCommands(
     aBuilder, aResources, *sc, aManager, aDisplayListBuilder);
 
   if (mask) {
@@ -10070,7 +10070,7 @@ nsDisplayFilter::nsDisplayFilter(nsDisplayListBuilder* aBuilder,
                                  nsIFrame* aFrame,
                                  nsDisplayList* aList,
                                  bool aHandleOpacity)
-  : nsDisplaySVGEffects(aBuilder, aFrame, aList, aHandleOpacity)
+  : nsDisplayEffectsBase(aBuilder, aFrame, aList, aHandleOpacity)
   , mEffectsBounds(aFrame->GetVisualOverflowRectRelativeToSelf())
 {
   MOZ_COUNT_CTOR(nsDisplayFilter);
@@ -10147,7 +10147,7 @@ nsDisplayFilter::ComputeInvalidationRegion(
   const nsDisplayItemGeometry* aGeometry,
   nsRegion* aInvalidRegion) const
 {
-  nsDisplaySVGEffects::ComputeInvalidationRegion(
+  nsDisplayEffectsBase::ComputeInvalidationRegion(
     aBuilder, aGeometry, aInvalidRegion);
 
   auto* geometry = static_cast<const nsDisplayFilterGeometry*>(aGeometry);
@@ -10304,7 +10304,7 @@ nsDisplayFilter::CreateWebRenderCommands(
   aManager->CommandBuilder().PushOverrideForASR(GetActiveScrolledRoot(),
                                                 Nothing());
 
-  nsDisplaySVGEffects::CreateWebRenderCommands(
+  nsDisplayEffectsBase::CreateWebRenderCommands(
     aBuilder, aResources, sc, aManager, aDisplayListBuilder);
 
   aManager->CommandBuilder().PopOverrideForASR(GetActiveScrolledRoot());
