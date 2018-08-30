@@ -2956,7 +2956,7 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, BytecodeEmitt
         return false;
     uint32_t natoms = bce->atomIndices->count();
     if (!partiallyInit(cx, script,
-                       bce->scopeList.length(), bce->constList.length(), bce->objectList.length,
+                       bce->scopeList.length(), bce->numberList.length(), bce->objectList.length,
                        bce->tryNoteList.length(), bce->scopeNoteList.length(),
                        bce->yieldAndAwaitOffsetList.length()))
     {
@@ -2985,8 +2985,8 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, BytecodeEmitt
     if (!script->shareScriptData(cx))
         return false;
 
-    if (bce->constList.length() != 0)
-        bce->constList.finish(script->consts());
+    if (bce->numberList.length() != 0)
+        bce->numberList.finish(script->consts());
     if (bce->objectList.length != 0)
         bce->objectList.finish(script->objects());
     if (bce->scopeList.length() != 0)
