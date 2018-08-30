@@ -69,10 +69,9 @@ struct APZTestDataToJSConverter {
                                dom::APZHitResult& aOutHitResult) {
     aOutHitResult.mScreenX.Construct() = aResult.point.x;
     aOutHitResult.mScreenY.Construct() = aResult.point.y;
-    static_assert(MaxEnumValue<CompositorHitTestInfo::valueType>::value
-                  < std::numeric_limits<uint16_t>::digits,
-                  "CompositorHitTestFlags MAX value have to be less than number of bits in uint16_t");
-    aOutHitResult.mHitResult.Construct() = static_cast<uint16_t>(aResult.result.serialize());
+    static_assert(sizeof(aResult.result) == sizeof(uint16_t),
+        "Expected CompositorHitTestInfo to be 16-bit");
+    aOutHitResult.mHitResult.Construct() = static_cast<uint16_t>(aResult.result);
     aOutHitResult.mScrollId.Construct() = aResult.scrollId;
   }
 };
