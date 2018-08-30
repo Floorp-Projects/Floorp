@@ -363,12 +363,7 @@ public class GeckoView extends FrameLayout {
         if (!mSession.isOpen()) {
             mSession.open(mRuntime);
         }
-        // Temporary solution until we find out why mRuntime can end up as null here. It means we
-        // might miss an orientation change if we were background OOM-killed, but it's better than
-        // crashing. See bug 1484001.
-        if (mRuntime != null) {
-            mRuntime.orientationChanged();
-        }
+        mRuntime.orientationChanged();
 
         super.onAttachedToWindow();
     }
@@ -428,11 +423,36 @@ public class GeckoView extends FrameLayout {
         final SavedState ss = (SavedState) state;
         super.onRestoreInstanceState(ss.getSuperState());
 
-        if (mSession == null && ss.session != null) {
-            setSession(ss.session, ss.session.getRuntime());
-        } else if (ss.session != null) {
-            mSession.transferFrom(ss.session);
-            mRuntime = mSession.getRuntime();
+        restoreSession(ss.session);
+    }
+
+    private void restoreSession(final @Nullable GeckoSession savedSession) {
+        if (savedSession == null) {
+            return;
+        }
+
+        GeckoRuntime runtimeToRestore = savedSession.getRuntime();
+        // Note: setSession sets either both mSession and mRuntime, or none of them. So if we don't
+        // have an mRuntime here, we won't have an mSession, either.
+        if (mRuntime == null) {
+            if (runtimeToRestore == null) {
+                // If the saved session is closed, we fall back to using the default runtime, same
+                // as we do when we don't even have an mSession in onAttachedToWindow().
+                runtimeToRestore = GeckoRuntime.getDefault(getContext());
+            }
+            setSession(savedSession, runtimeToRestore);
+        // We already have a session. We only want to transfer the saved session if its close/open
+        // state is the same or better as our current session.
+        } else if (savedSession.isOpen() || !mSession.isOpen()) {
+            if (mSession.isOpen()) {
+                mSession.close();
+            }
+            mSession.transferFrom(savedSession);
+            if (runtimeToRestore != null) {
+                // If the saved session was open, we transfer its runtime as well. Otherwise we just
+                // keep the runtime we already had in mRuntime.
+                mRuntime = runtimeToRestore;
+            }
         }
     }
 
