@@ -123,11 +123,6 @@ public:
      */
     void ResetDocumentDirection();
 
-    virtual nsIDocument::DocumentTheme GetDocumentLWTheme() override;
-    virtual nsIDocument::DocumentTheme ThreadSafeGetDocumentLWTheme() const override;
-
-    void ResetDocumentLWTheme() { mDocLWTheme = Doc_Theme_Uninitialized; }
-
     NS_IMETHOD OnScriptCompileComplete(JSScript* aScript, nsresult aStatus) override;
 
     NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULDocument, XMLDocument)
@@ -216,12 +211,6 @@ protected:
     bool                       mStillWalking;
 
     uint32_t mPendingSheets;
-
-    /**
-     * document lightweight theme for use with :-moz-lwtheme, :-moz-lwtheme-brighttext
-     * and :-moz-lwtheme-darktext
-     */
-    DocumentTheme                         mDocLWTheme;
 
     /**
      * Context stack, which maintains the state of the Builder and allows
