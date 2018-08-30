@@ -9,11 +9,19 @@
   --sidebar-background-hover: var(--in-content-category-background-hover);
 }
 
+/*
+ * Layout of a sidebar item
+ *
+ *  +--------+----------------+---------------------------+
+ *  | Icon   | Name           | Connect button (optional) |
+ *  +--------+----------------+---------------------------+
+ */
 .sidebar-item {
   align-items: center;
   border-radius: 2px;
   color: var(--sidebar-text-color);
-  display: flex;
+  display: grid;
+  grid-template-columns: 34px auto max-content;
   font-size: 16px;
   height: 48px;
   padding-inline-end: 10px;

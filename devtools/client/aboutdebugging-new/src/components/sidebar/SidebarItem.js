@@ -16,12 +16,14 @@ const Actions = require("../../actions/index");
 class SidebarItem extends PureComponent {
   static get propTypes() {
     return {
+      connectComponent: PropTypes.any,
       dispatch: PropTypes.func.isRequired,
       icon: PropTypes.string.isRequired,
       id: PropTypes.string.isRequired,
       isSelected: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
-      selectable: PropTypes.boolean,
+      selectable: PropTypes.bool.isRequired,
+      type: PropTypes.string.isRequired,
     };
   }
 
@@ -30,7 +32,7 @@ class SidebarItem extends PureComponent {
   }
 
   render() {
-    const { icon, isSelected, name, selectable } = this.props;
+    const { connectComponent, icon, isSelected, name, selectable } = this.props;
 
     return dom.li(
       {
@@ -47,7 +49,13 @@ class SidebarItem extends PureComponent {
                    (isSelected ? " sidebar-item__icon--selected" : ""),
         src: icon,
       }),
-      name
+      dom.span(
+        {
+          className: "ellipsis-text",
+          title: name,
+        },
+        name),
+      connectComponent ? connectComponent : null
     );
   }
 }
