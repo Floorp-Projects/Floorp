@@ -2024,7 +2024,7 @@ Inspector.prototype = {
     this.telemetry.scalarSet(TELEMETRY_EYEDROPPER_OPENED, 1);
     this.eyeDropperButton.classList.add("checked");
     this.startEyeDropperListeners();
-    return this.inspector.pickColorFromPage({copyOnSelect: true})
+    return this.inspector.pickColorFromPage(this.toolbox, {copyOnSelect: true})
                          .catch(console.error);
   },
 
