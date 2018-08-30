@@ -907,7 +907,7 @@ Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect
     }
     case DisplayItemType::TYPE_MASK: {
       GP("Paint Mask\n");
-      auto maskItem = static_cast<nsDisplayMask*>(aItem);
+      auto maskItem = static_cast<nsDisplayMasksAndClipPaths*>(aItem);
       maskItem->SetPaintRect(maskItem->GetClippedBounds(mDisplayListBuilder));
       if (maskItem->IsValidMask()) {
         maskItem->PaintWithContentsPaintCallback(mDisplayListBuilder, aContext, [&] {
@@ -1726,7 +1726,8 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   switch (aItem->GetType()) {
   case DisplayItemType::TYPE_MASK:
     context->SetMatrix(context->CurrentMatrix().PreScale(aScale.width, aScale.height).PreTranslate(-aOffset.x, -aOffset.y));
-    static_cast<nsDisplayMask*>(aItem)->PaintMask(aDisplayListBuilder, context, &isInvalidated);
+    static_cast<nsDisplayMasksAndClipPaths*>(aItem)->
+      PaintMask(aDisplayListBuilder, context, &isInvalidated);
     break;
   case DisplayItemType::TYPE_SVG_WRAPPER:
     {

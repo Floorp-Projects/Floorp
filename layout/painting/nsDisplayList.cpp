@@ -9633,11 +9633,12 @@ ComputeMaskGeometry(PaintFramesParams& aParams)
   aParams.maskRect = result;
 }
 
-nsDisplayMask::nsDisplayMask(nsDisplayListBuilder* aBuilder,
-                             nsIFrame* aFrame,
-                             nsDisplayList* aList,
-                             bool aHandleOpacity,
-                             const ActiveScrolledRoot* aActiveScrolledRoot)
+nsDisplayMasksAndClipPaths::nsDisplayMasksAndClipPaths(
+                              nsDisplayListBuilder* aBuilder,
+                              nsIFrame* aFrame,
+                              nsDisplayList* aList,
+                              bool aHandleOpacity,
+                              const ActiveScrolledRoot* aActiveScrolledRoot)
   : nsDisplayEffectsBase(aBuilder,
                          aFrame,
                          aList,
@@ -9645,7 +9646,7 @@ nsDisplayMask::nsDisplayMask(nsDisplayListBuilder* aBuilder,
                          aActiveScrolledRoot,
                          true)
 {
-  MOZ_COUNT_CTOR(nsDisplayMask);
+  MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
 
   nsPresContext* presContext = mFrame->PresContext();
   uint32_t flags =
@@ -9689,7 +9690,7 @@ CanMergeDisplayMaskFrame(nsIFrame* aFrame)
 }
 
 bool
-nsDisplayMask::CanMerge(const nsDisplayItem* aItem) const
+nsDisplayMasksAndClipPaths::CanMerge(const nsDisplayItem* aItem) const
 {
   // Items for the same content element should be merged into a single
   // compositing group.
@@ -9703,7 +9704,7 @@ nsDisplayMask::CanMerge(const nsDisplayItem* aItem) const
 }
 
 bool
-nsDisplayMask::IsValidMask() {
+nsDisplayMasksAndClipPaths::IsValidMask() {
   if (!ValidateSVGFrame()) {
     return false;
   }
@@ -9728,9 +9729,9 @@ nsDisplayMask::IsValidMask() {
 
 
 already_AddRefed<Layer>
-nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
-                          LayerManager* aManager,
-                          const ContainerLayerParameters& aContainerParameters)
+nsDisplayMasksAndClipPaths::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                       LayerManager* aManager,
+                                       const ContainerLayerParameters& aContainerParameters)
 {
   if (!IsValidMask()) {
     return nullptr;
@@ -9744,9 +9745,9 @@ nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 bool
-nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
-                         gfxContext* aMaskContext,
-                         bool* aMaskPainted)
+nsDisplayMasksAndClipPaths::PaintMask(nsDisplayListBuilder* aBuilder,
+                                      gfxContext* aMaskContext,
+                                      bool* aMaskPainted)
 {
   MOZ_ASSERT(aMaskContext->GetDrawTarget()->GetFormat() == SurfaceFormat::A8);
 
@@ -9768,16 +9769,16 @@ nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
     *aMaskPainted = painted;
   }
 
-  nsDisplayMaskGeometry::UpdateDrawResult(this, imgParams.result);
+  nsDisplayMasksAndClipPathsGeometry::UpdateDrawResult(this, imgParams.result);
 
   return imgParams.result == ImgDrawResult::SUCCESS ||
          imgParams.result == ImgDrawResult::SUCCESS_NOT_COMPLETE;
 }
 
 LayerState
-nsDisplayMask::GetLayerState(nsDisplayListBuilder* aBuilder,
-                             LayerManager* aManager,
-                             const ContainerLayerParameters& aParameters)
+nsDisplayMasksAndClipPaths::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                          LayerManager* aManager,
+                                          const ContainerLayerParameters& aParameters)
 {
   if (CanPaintOnMaskLayer(aManager)) {
     LayerState result = RequiredLayerStateForChildren(
@@ -9794,7 +9795,7 @@ nsDisplayMask::GetLayerState(nsDisplayListBuilder* aBuilder,
 }
 
 bool
-nsDisplayMask::CanPaintOnMaskLayer(LayerManager* aManager)
+nsDisplayMasksAndClipPaths::CanPaintOnMaskLayer(LayerManager* aManager)
 {
   if (!nsSVGIntegrationUtils::IsMaskResourceReady(mFrame)) {
     return false;
@@ -9814,8 +9815,8 @@ nsDisplayMask::CanPaintOnMaskLayer(LayerManager* aManager)
 }
 
 bool
-nsDisplayMask::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                 nsRegion* aVisibleRegion)
+nsDisplayMasksAndClipPaths::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                              nsRegion* aVisibleRegion)
 {
   // Our children may be made translucent or arbitrarily deformed so we should
   // not allow them to subtract area from aVisibleRegion.
@@ -9826,14 +9827,16 @@ nsDisplayMask::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayMask::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion) const
+nsDisplayMasksAndClipPaths::ComputeInvalidationRegion(
+                              nsDisplayListBuilder* aBuilder,
+                              const nsDisplayItemGeometry* aGeometry,
+                              nsRegion* aInvalidRegion) const
 {
   nsDisplayEffectsBase::ComputeInvalidationRegion(
     aBuilder, aGeometry, aInvalidRegion);
 
-  auto* geometry = static_cast<const nsDisplayMaskGeometry*>(aGeometry);
+  auto* geometry =
+    static_cast<const nsDisplayMasksAndClipPathsGeometry*>(aGeometry);
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
 
@@ -9868,9 +9871,9 @@ nsDisplayMask::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
-                            gfxContext* aCtx,
-                            LayerManager* aManager)
+nsDisplayMasksAndClipPaths::PaintAsLayer(nsDisplayListBuilder* aBuilder,
+                                         gfxContext* aCtx,
+                                         LayerManager* aManager)
 {
   // Clip the drawing target by mVisibleRect, which contains the visible
   // region of the target frame and its out-of-flow and inflow descendants.
@@ -9900,13 +9903,14 @@ nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
 
   context->PopClip();
 
-  nsDisplayMaskGeometry::UpdateDrawResult(this, imgParams.result);
+  nsDisplayMasksAndClipPathsGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
 void
-nsDisplayMask::PaintWithContentsPaintCallback(nsDisplayListBuilder* aBuilder,
-                                              gfxContext* aCtx,
-                                              const std::function<void()>& aPaintChildren)
+nsDisplayMasksAndClipPaths::PaintWithContentsPaintCallback(
+                              nsDisplayListBuilder* aBuilder,
+                              gfxContext* aCtx,
+                              const std::function<void()>& aPaintChildren)
 {
   // Clip the drawing target by mVisibleRect, which contains the visible
   // region of the target frame and its out-of-flow and inflow descendants.
@@ -9936,12 +9940,12 @@ nsDisplayMask::PaintWithContentsPaintCallback(nsDisplayListBuilder* aBuilder,
 
   context->PopClip();
 
-  nsDisplayMaskGeometry::UpdateDrawResult(this, imgParams.result);
+  nsDisplayMasksAndClipPathsGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
 
 bool
-nsDisplayMask::CreateWebRenderCommands(
+nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
   mozilla::wr::DisplayListBuilder& aBuilder,
   mozilla::wr::IpcResourceUpdateQueue& aResources,
   const StackingContextHelper& aSc,
@@ -10001,8 +10005,9 @@ nsDisplayMask::CreateWebRenderCommands(
 }
 
 Maybe<nsRect>
-nsDisplayMask::GetClipWithRespectToASR(nsDisplayListBuilder* aBuilder,
-                                       const ActiveScrolledRoot* aASR) const
+nsDisplayMasksAndClipPaths::GetClipWithRespectToASR(
+                              nsDisplayListBuilder* aBuilder,
+                              const ActiveScrolledRoot* aASR) const
 {
   if (const DisplayItemClip* clip =
         DisplayItemClipChain::ClipForASR(GetClipChain(), aASR)) {
@@ -10025,7 +10030,7 @@ nsDisplayMask::GetClipWithRespectToASR(nsDisplayListBuilder* aBuilder,
 
 #ifdef MOZ_DUMP_PAINTING
 void
-nsDisplayMask::PrintEffects(nsACString& aTo)
+nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo)
 {
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
