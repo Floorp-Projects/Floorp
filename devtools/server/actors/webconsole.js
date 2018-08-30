@@ -422,11 +422,9 @@ WebConsoleActor.prototype =
    */
   makeDebuggeeValue: function(value, useObjectGlobal) {
     if (this.dbg.replaying) {
-      if (typeof value == "object") {
-        throw new Error("Object makeDebuggeeValue not supported with replaying debugger");
-      } else {
-        return value;
-      }
+      // If we are replaying then any values we are operating on should already
+      // be debuggee values.
+      return value;
     }
     if (useObjectGlobal && isObject(value)) {
       try {

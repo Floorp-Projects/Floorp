@@ -7,10 +7,10 @@ export CC="$topsrcdir/clang/bin/clang"
 export CXX="$topsrcdir/clang/bin/clang++"
 export LLVM_SYMBOLIZER="$topsrcdir/clang/bin/llvm-symbolizer"
 
-# Use a newer binutils, from the tooltool gcc package, if it's there
-if [ -e "$topsrcdir/gcc/bin/ld" ]; then
-    export CC="$CC -B $topsrcdir/gcc/bin"
-    export CXX="$CXX -B $topsrcdir/gcc/bin"
+# Use a newer binutils, if it's there
+if [ -e "$topsrcdir/binutils/bin/ld" ]; then
+    export CC="$CC -B $topsrcdir/binutils/bin"
+    export CXX="$CXX -B $topsrcdir/binutils/bin"
 fi
 
 # Enable TSan specific code and build workarounds
