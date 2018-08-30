@@ -1193,7 +1193,7 @@ js::RunJobs(JSContext* cx)
             if (i == cx->jobQueue->length() - 1)
                 JS::JobQueueIsEmpty(cx);
 
-            AutoRealm ar(cx, job);
+            AutoRealm ar(cx, &job->as<JSFunction>());
             {
                 if (!JS::Call(cx, UndefinedHandleValue, job, args, &rval)) {
                     // Nothing we can do about uncatchable exceptions.

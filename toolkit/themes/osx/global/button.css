@@ -51,23 +51,14 @@ button[disabled="true"] {
   color: GrayText;
 }
 
-/* ::::: menu/menu-button buttons ::::: */
+/* ::::: menu buttons ::::: */
 
-button[type="menu-button"] {
-  margin: 0;
-  border: none;
-}
-
-.button-menu-dropmarker,
-.button-menubutton-dropmarker {
+.button-menu-dropmarker {
+  display: none;
   -moz-appearance: none !important;
   border: none;
   background-color: transparent !important;
   margin: 1px;
-}
-
-.button-menu-dropmarker {
-  display: none;
 }
 
 /* ::::: plain buttons ::::: */
