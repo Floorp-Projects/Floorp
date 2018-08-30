@@ -100,6 +100,12 @@
       </popupnotificationcontent>
       <popupnotificationfooter id="cfr-notification-footer" orient="vertical">
         <description id="cfr-notification-footer-text"/>
-        <label id="cfr-notification-footer-learn-more-link" class="text-link"/>
+        <hbox id="cfr-notification-footer-addon-info">
+          <hbox id="cfr-notification-footer-filled-stars"/>
+          <hbox id="cfr-notification-footer-empty-stars"/>
+          <label id="cfr-notification-footer-users"/>
+          <spacer id="cfr-notification-footer-spacer" hidden="true"/>
+          <label id="cfr-notification-footer-learn-more-link" class="text-link"/>
+        </hbox>
       </popupnotificationfooter>
     </popupnotification>
