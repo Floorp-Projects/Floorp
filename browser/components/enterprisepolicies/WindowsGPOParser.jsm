@@ -64,15 +64,10 @@ function registryToObject(wrk, policies, isMachineRoot) {
     }
     for (let i = 0; i < wrk.valueCount; i++) {
       let name = wrk.getValueName(i);
-      let value = readRegistryValue(wrk, name);
-
-      if (!isMachineRoot &&
-          schema.properties[name] &&
-          schema.properties[name].machine_only) {
-        log.error(`Policy ${name} is only allowed under the HKEY_LOCAL_MACHINE root`);
+      if (!isMachineRoot && isMachineOnlyPolicy(name)) {
         continue;
       }
-
+      let value = readRegistryValue(wrk, name);
       policies[name] = value;
     }
   }
@@ -82,6 +77,9 @@ function registryToObject(wrk, policies, isMachineRoot) {
       let array = [];
       for (let i = 0; i < wrk.childCount; i++) {
         let name = wrk.getChildName(i);
+        if (!isMachineRoot && isMachineOnlyPolicy(name)) {
+          continue;
+        }
         let childWrk = wrk.openChild(name, wrk.ACCESS_READ);
         array.push(registryToObject(childWrk));
         childWrk.close();
@@ -91,6 +89,9 @@ function registryToObject(wrk, policies, isMachineRoot) {
     }
     for (let i = 0; i < wrk.childCount; i++) {
       let name = wrk.getChildName(i);
+        if (!isMachineRoot && isMachineOnlyPolicy(name)) {
+        continue;
+      }
       let childWrk = wrk.openChild(name, wrk.ACCESS_READ);
       policies[name] = registryToObject(childWrk);
       childWrk.close();
@@ -112,4 +113,13 @@ function readRegistryValue(wrk, value) {
   }
   // unknown type
   return null;
+}
+
+function isMachineOnlyPolicy(name) {
+  if (schema.properties[name] &&
+      schema.properties[name].machine_only) {
+    log.error(`Policy ${name} is only allowed under the HKEY_LOCAL_MACHINE root`);
+    return true;
+  }
+  return false;
 }
