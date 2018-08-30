@@ -1886,6 +1886,9 @@ var gBrowserInit = {
     if (this._boundDelayedStartup) {
       this._cancelDelayedStartup();
     } else {
+      if (Win7Features) {
+        Win7Features.onCloseWindow();
+      }
       Services.prefs.removeObserver(ctrlTab.prefName, ctrlTab);
       ctrlTab.uninit();
       gBrowserThumbnails.uninit();
