@@ -1278,11 +1278,6 @@ var PlacesUtils = {
     return this.tagsFolderId = this.bookmarks.tagsFolder;
   },
 
-  get unfiledBookmarksFolderId() {
-    delete this.unfiledBookmarksFolderId;
-    return this.unfiledBookmarksFolderId = this.bookmarks.unfiledBookmarksFolder;
-  },
-
   /**
    * Checks if item is a root.
    *
