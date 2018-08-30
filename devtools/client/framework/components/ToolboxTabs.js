@@ -198,6 +198,7 @@ class ToolboxTabs extends Component {
     for (const { id, label, icon } of panelDefinitions) {
       if (this.state.overflowedTabIds.includes(id)) {
         items.push(MenuItem({
+          key: id,
           id: "tools-chevron-menupopup-" + id,
           label,
           type: "checkbox",
