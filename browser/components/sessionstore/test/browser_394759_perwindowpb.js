@@ -17,7 +17,8 @@ function promiseTestOpenCloseWindow(aIsPrivate, aTest) {
   return (async function() {
     let win = await BrowserTestUtils.openNewBrowserWindow({ "private": aIsPrivate });
     win.gBrowser.selectedBrowser.loadURI(aTest.url);
-    await promiseBrowserLoaded(win.gBrowser.selectedBrowser, true, aTest.url);
+    await promiseBrowserLoaded(win.gBrowser.selectedBrowser);
+    await Promise.resolve();
     // Mark the window with some unique data to be restored later on.
     ss.setWindowValue(win, aTest.key, aTest.value);
     await TabStateFlusher.flushWindow(win);
