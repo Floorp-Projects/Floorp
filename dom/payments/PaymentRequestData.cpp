@@ -483,7 +483,7 @@ PaymentDetails::GetShippingAddressErrors(JSContext* aCx, JS::MutableHandleValue 
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 PaymentDetails::Update(nsIPaymentDetails* aDetails, const bool aRequestShipping)
 {
   MOZ_ASSERT(aDetails);
@@ -533,15 +533,18 @@ PaymentDetails::Update(nsIPaymentDetails* aDetails, const bool aRequestShipping)
     return rv;
   }
 
-  aDetails->ShippingAddressErrorsJSON(mShippingAddressErrors);
+  PaymentDetails* rowDetails = static_cast<PaymentDetails*>(aDetails);
+  MOZ_ASSERT(rowDetails);
+  mShippingAddressErrors = rowDetails->GetShippingAddressErrors();
+
   return NS_OK;
 
 }
-NS_IMETHODIMP
-PaymentDetails::ShippingAddressErrorsJSON(nsAString& aErrors)
+
+nsString
+PaymentDetails::GetShippingAddressErrors() const
 {
-  aErrors = mShippingAddressErrors;
-  return NS_OK;
+  return mShippingAddressErrors;
 }
 
 /* PaymentOptions */
@@ -701,7 +704,7 @@ PaymentRequest::GetShippingOption(nsAString& aShippingOption)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 PaymentRequest::UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails,
                                      const nsAString& aShippingOption)
 {
@@ -712,14 +715,16 @@ PaymentRequest::UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails,
     return rv;
   }
   mShippingOption = aShippingOption;
-  return mPaymentDetails->Update(aPaymentDetails, requestShipping);
+
+  PaymentDetails* rowDetails = static_cast<PaymentDetails*>(mPaymentDetails.get());
+  MOZ_ASSERT(rowDetails);
+  return rowDetails->Update(aPaymentDetails, requestShipping);
 }
 
-NS_IMETHODIMP
+void
 PaymentRequest::SetCompleteStatus(const nsAString& aCompleteStatus)
 {
   mCompleteStatus = aCompleteStatus;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
