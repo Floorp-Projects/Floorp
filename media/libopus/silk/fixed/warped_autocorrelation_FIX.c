@@ -52,7 +52,7 @@ void silk_warped_autocorrelation_FIX_c(
     opus_int64 corr_QC[  MAX_SHAPE_LPC_ORDER + 1 ] = { 0 };
 
     /* Order must be even */
-    silk_assert( ( order & 1 ) == 0 );
+    celt_assert( ( order & 1 ) == 0 );
     silk_assert( 2 * QS - QC >= 0 );
 
     /* Loop over samples */
