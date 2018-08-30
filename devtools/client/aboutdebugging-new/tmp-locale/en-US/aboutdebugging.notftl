@@ -1,0 +1,14 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+### These strings are used inside the about:debugging panel which is available
+### by setting the preference `devtools.aboutdebugging.new-enabled` to true.
+
+# Sidebar heading for selecting the currently running instance of Firefox
+about-debugging-sidebar-this-firefox =
+  .name = This Firefox
+
+# Sidebar heading for connecting to some remote source
+about-debugging-sidebar-connect =
+  .name = Connect
