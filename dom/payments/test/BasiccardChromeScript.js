@@ -74,6 +74,8 @@ const detailedResponseUI = {
   completePayment: completePaymentResponse,
   updatePayment: function(requestId) {
   },
+  closePayment: function (requestId) {
+  },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
@@ -101,6 +103,8 @@ const simpleResponseUI = {
   abortPayment: abortPaymentResponse,
   completePayment: completePaymentResponse,
   updatePayment: function(requestId) {
+  },
+  closePayment: function(requestId) {
   },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };

@@ -14,7 +14,6 @@
 #include <utility>
 
 #include "js/AllocPolicy.h"
-#include "js/CompileOptions.h"
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
