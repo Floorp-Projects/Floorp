@@ -58,6 +58,8 @@ const AboutDebugging = {
     );
 
     this.actions.selectPage(PAGES.THIS_FIREFOX);
+    this.actions.updateNetworkLocations(getNetworkLocations());
+
     addNetworkLocationsObserver(this.onNetworkLocationsUpdated);
   },
 

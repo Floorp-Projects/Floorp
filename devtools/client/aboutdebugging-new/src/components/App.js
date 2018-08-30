@@ -27,6 +27,7 @@ class App extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       messageContexts: PropTypes.arrayOf(PropTypes.object).isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
+      runtimes: PropTypes.array.isRequired,
       selectedPage: PropTypes.string.isRequired,
     };
   }
@@ -49,7 +50,7 @@ class App extends PureComponent {
     const {
       dispatch,
       messageContexts,
-      networkLocations,
+      runtimes,
       selectedPage,
     } = this.props;
 
@@ -57,7 +58,7 @@ class App extends PureComponent {
       { messages: messageContexts },
       dom.div(
         { className: "app" },
-        Sidebar({ dispatch, networkLocations, selectedPage }),
+        Sidebar({ dispatch, runtimes, selectedPage }),
         this.getSelectedPageComponent()
       )
     );
@@ -66,6 +67,7 @@ class App extends PureComponent {
 
 const mapStateToProps = state => {
   return {
+    runtimes: state.runtimes,
     networkLocations: state.ui.networkLocations,
     selectedPage: state.ui.selectedPage,
   };

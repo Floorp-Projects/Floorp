@@ -6,9 +6,11 @@
 
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
 const { runtimeReducer } = require("./runtime-state");
+const { runtimesReducer } = require("./runtimes-state");
 const { uiReducer } = require("./ui-state");
 
 module.exports = combineReducers({
   runtime: runtimeReducer,
+  runtimes: runtimesReducer,
   ui: uiReducer
 });

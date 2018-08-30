@@ -22,15 +22,15 @@ const GLOBE_ICON = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg"
 class Sidebar extends PureComponent {
   static get propTypes() {
     return {
-      networkLocations: PropTypes.array.isRequired,
       dispatch: PropTypes.func.isRequired,
+      runtimes: PropTypes.array.isRequired,
       selectedPage: PropTypes.string.isRequired,
     };
   }
 
   renderDevices() {
-    const { dispatch, networkLocations } = this.props;
-    if (!networkLocations.length) {
+    const { dispatch, runtimes } = this.props;
+    if (!runtimes.networkRuntimes.length) {
       return Localized(
         {
           id: "about-debugging-sidebar-no-devices"
@@ -43,18 +43,18 @@ class Sidebar extends PureComponent {
       );
     }
 
-    return networkLocations.map(location => {
+    return runtimes.networkRuntimes.map(runtime => {
       const connectComponent = DeviceSidebarItemAction({
-        connected: false
+        connected: false,
       });
 
       return SidebarItem({
         connectComponent,
-        id: "networklocation-" + location,
+        id: "networklocation-" + runtime.id,
         dispatch,
         icon: GLOBE_ICON,
         isSelected: false,
-        name: location,
+        name: runtime.id,
         selectable: false,
       });
     });
