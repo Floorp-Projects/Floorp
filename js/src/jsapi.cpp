@@ -906,7 +906,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
         // destination, then we know that we won't find a wrapper in the
         // destination's cross compartment map and that the same
         // object will continue to work.
-        AutoRealmUnchecked ar(cx, origobj->deprecatedRealm());
+        AutoRealmUnchecked ar(cx, origobj->nonCCWRealm());
         if (!JSObject::swap(cx, origobj, target))
             MOZ_CRASH();
         newIdentity = origobj;
@@ -940,7 +940,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
     // Lastly, update the original object to point to the new one.
     if (origobj->compartment() != destination) {
         RootedObject newIdentityWrapper(cx, newIdentity);
-        AutoRealmUnchecked ar(cx, origobj->deprecatedRealm());
+        AutoRealmUnchecked ar(cx, origobj->nonCCWRealm());
         if (!JS_WrapObject(cx, &newIdentityWrapper))
             MOZ_CRASH();
         MOZ_ASSERT(Wrapper::wrappedObject(newIdentityWrapper) == newIdentity);
@@ -3601,6 +3601,7 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject env, Handle
     // Note that funobj can be in a different compartment.
 
     if (!funobj->is<JSFunction>()) {
+        MOZ_RELEASE_ASSERT(!IsCrossCompartmentWrapper(funobj));
         AutoRealm ar(cx, funobj);
         RootedValue v(cx, ObjectValue(*funobj));
         ReportIsNotFunction(cx, v);
@@ -3609,7 +3610,7 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject env, Handle
 
     RootedFunction fun(cx, &funobj->as<JSFunction>());
     if (fun->isInterpretedLazy()) {
-        AutoRealm ar(cx, funobj);
+        AutoRealm ar(cx, fun);
         if (!JSFunction::getOrCreateScript(cx, fun))
             return nullptr;
     }
