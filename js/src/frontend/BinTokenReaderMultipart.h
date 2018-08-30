@@ -9,6 +9,7 @@
 
 #include "mozilla/Maybe.h"
 
+#include "frontend/BinSourceRuntimeSupport.h"
 #include "frontend/BinToken.h"
 #include "frontend/BinTokenReaderBase.h"
 

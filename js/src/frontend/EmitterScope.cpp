@@ -10,6 +10,8 @@
 #include "frontend/TDZCheckCache.h"
 #include "js/AutoByteString.h"
 
+#include "vm/GlobalObject.h"
+
 using namespace js;
 using namespace js::frontend;
 

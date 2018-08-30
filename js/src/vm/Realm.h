@@ -20,7 +20,6 @@
 
 #include "builtin/Array.h"
 #include "gc/Barrier.h"
-#include "gc/Zone.h"
 #include "js/UniquePtr.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/Compartment.h"

@@ -17,13 +17,14 @@
 
 #include "gc/Barrier.h"
 #include "gc/NurseryAwareHashMap.h"
-#include "gc/Zone.h"
 #include "js/UniquePtr.h"
+#include "vm/JSObject.h"
+#include "vm/JSScript.h"
 
 namespace js {
 
 namespace gc {
-template <typename Node, typename Derived> class ComponentFinder;
+struct ZoneComponentFinder;
 } // namespace gc
 
 class CrossCompartmentKey
@@ -446,7 +447,7 @@ class JS::Compartment
     MOZ_MUST_USE bool wrap(JSContext* cx, js::MutableHandle<JS::BigInt*> bi);
 #endif
     MOZ_MUST_USE bool wrap(JSContext* cx, JS::MutableHandleObject obj);
-    MOZ_MUST_USE bool wrap(JSContext* cx, JS::MutableHandle<js::PropertyDescriptor> desc);
+    MOZ_MUST_USE bool wrap(JSContext* cx, JS::MutableHandle<JS::PropertyDescriptor> desc);
     MOZ_MUST_USE bool wrap(JSContext* cx, JS::MutableHandle<JS::GCVector<JS::Value>> vec);
     MOZ_MUST_USE bool rewrap(JSContext* cx, JS::MutableHandleObject obj, JS::HandleObject existing);
 

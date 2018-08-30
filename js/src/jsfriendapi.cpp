@@ -219,7 +219,7 @@ JS_ScriptHasMutedErrors(JSScript* script)
 }
 
 JS_FRIEND_API(bool)
-JS_WrapPropertyDescriptor(JSContext* cx, JS::MutableHandle<js::PropertyDescriptor> desc)
+JS_WrapPropertyDescriptor(JSContext* cx, JS::MutableHandle<JS::PropertyDescriptor> desc)
 {
     return cx->compartment()->wrap(cx, desc);
 }
