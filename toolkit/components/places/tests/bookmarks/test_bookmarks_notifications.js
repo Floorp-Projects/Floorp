@@ -219,7 +219,7 @@ add_task(async function update_move_different_folder() {
   let folder = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                     parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   let bmItemId = await PlacesUtils.promiseItemId(bm.guid);
-  let bmOldParentId = PlacesUtils.unfiledBookmarksFolderId;
+  let bmOldParentId = await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid);
   let bmOldIndex = bm.index;
 
   let observer = expectNotifications();
@@ -512,14 +512,16 @@ add_task(async function reorder_notification() {
                                       sorted.map(bm => bm.guid));
 
   let expectedNotifications = [];
+  let unfiledBookmarksFolderId =
+    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid);
   for (let i = 0; i < sorted.length; ++i) {
     let child = sorted[i];
     let childId = await PlacesUtils.promiseItemId(child.guid);
     expectedNotifications.push({ name: "onItemMoved",
                                  arguments: [ childId,
-                                              PlacesUtils.unfiledBookmarksFolderId,
+                                              unfiledBookmarksFolderId,
                                               child.index,
-                                              PlacesUtils.unfiledBookmarksFolderId,
+                                              unfiledBookmarksFolderId,
                                               i,
                                               child.type,
                                               child.guid,

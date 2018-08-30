@@ -341,16 +341,6 @@ nsNavBookmarks::GetTagsFolder(int64_t* aRoot)
 
 
 NS_IMETHODIMP
-nsNavBookmarks::GetUnfiledBookmarksFolder(int64_t* aRoot)
-{
-  int64_t id = mDB->GetUnfiledFolderId();
-  NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);
-  *aRoot = id;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsNavBookmarks::GetTotalSyncChanges(int64_t* aTotalSyncChanges)
 {
   *aTotalSyncChanges = sTotalSyncChanges;

@@ -7,6 +7,9 @@ add_task(async function test_livemarks() {
   try {
     let buf = await openMirror("livemarks");
 
+    let unfiledFolderId =
+      await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid);
+
     info("Set up mirror");
     await PlacesUtils.bookmarks.insertTree({
       guid: PlacesUtils.bookmarks.menuGuid,
@@ -264,7 +267,7 @@ add_task(async function test_livemarks() {
     }, {
       name: "onItemAdded",
       params: { itemId: livemarkE.id,
-                parentId: PlacesUtils.unfiledBookmarksFolderId,
+                parentId: unfiledFolderId,
                 index: 0, type: PlacesUtils.bookmarks.TYPE_FOLDER,
                 urlHref: null, title: "E", guid: "livemarkEEEE",
                 parentGuid: "unfiled_____",
@@ -344,7 +347,7 @@ add_task(async function test_livemarks() {
       params: { itemId: livemarkE.id, property: PlacesUtils.LMANNO_FEEDURI,
                 isAnnoProperty: true, newValue: "",
                 type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                parentId: PlacesUtils.unfiledBookmarksFolderId,
+                parentId: unfiledFolderId,
                 guid: "livemarkEEEE",
                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                 oldValue: "",
@@ -354,7 +357,7 @@ add_task(async function test_livemarks() {
       params: { itemId: livemarkE.id, property: PlacesUtils.LMANNO_SITEURI,
                 isAnnoProperty: true, newValue: "",
                 type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                parentId: PlacesUtils.unfiledBookmarksFolderId,
+                parentId: unfiledFolderId,
                 guid: "livemarkEEEE",
                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                 oldValue: "",
