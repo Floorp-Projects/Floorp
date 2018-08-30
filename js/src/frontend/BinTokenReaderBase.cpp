@@ -64,6 +64,13 @@ BinTokenReaderBase::raiseInvalidField(const char* kind, const BinField field)
     return raiseError(out.string());
 }
 
+#ifdef DEBUG
+bool
+BinTokenReaderBase::hasRaisedError() const
+{
+    return cx_->isExceptionPending();
+}
+#endif
 
 size_t
 BinTokenReaderBase::offset() const

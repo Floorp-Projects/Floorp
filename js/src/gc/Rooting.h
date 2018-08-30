@@ -30,6 +30,7 @@ class DebuggerEnvironment;
 class DebuggerFrame;
 class DebuggerObject;
 class Scope;
+class ModuleObject;
 
 // These are internal counterparts to the public types such as HandleObject.
 
@@ -48,6 +49,7 @@ typedef JS::Handle<DebuggerEnvironment*>    HandleDebuggerEnvironment;
 typedef JS::Handle<DebuggerFrame*>          HandleDebuggerFrame;
 typedef JS::Handle<DebuggerObject*>         HandleDebuggerObject;
 typedef JS::Handle<Scope*>                  HandleScope;
+typedef JS::Handle<ModuleObject*>           HandleModuleObject;
 
 typedef JS::MutableHandle<Shape*>               MutableHandleShape;
 typedef JS::MutableHandle<JSAtom*>              MutableHandleAtom;
@@ -59,6 +61,7 @@ typedef JS::MutableHandle<DebuggerEnvironment*> MutableHandleDebuggerEnvironment
 typedef JS::MutableHandle<DebuggerFrame*>       MutableHandleDebuggerFrame;
 typedef JS::MutableHandle<DebuggerObject*>      MutableHandleDebuggerObject;
 typedef JS::MutableHandle<Scope*>               MutableHandleScope;
+typedef JS::MutableHandle<ModuleObject*>        MutableHandleModuleObject;
 
 typedef JS::Rooted<NativeObject*>           RootedNativeObject;
 typedef JS::Rooted<Shape*>                  RootedShape;
@@ -76,6 +79,7 @@ typedef JS::Rooted<DebuggerEnvironment*>    RootedDebuggerEnvironment;
 typedef JS::Rooted<DebuggerFrame*>          RootedDebuggerFrame;
 typedef JS::Rooted<DebuggerObject*>         RootedDebuggerObject;
 typedef JS::Rooted<Scope*>                  RootedScope;
+typedef JS::Rooted<ModuleObject*>           RootedModuleObject;
 
 typedef JS::GCVector<JSFunction*>   FunctionVector;
 typedef JS::GCVector<PropertyName*> PropertyNameVector;
