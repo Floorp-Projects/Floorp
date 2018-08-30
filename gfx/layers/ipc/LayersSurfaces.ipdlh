@@ -151,7 +151,6 @@ union SurfaceDescriptor {
   SurfaceDescriptorMacIOSurface;
   SurfaceDescriptorSharedGLTexture;
   SurfaceDescriptorGPUVideo;
-  SurfaceDescriptorShared;
   null_t;
 };
 
