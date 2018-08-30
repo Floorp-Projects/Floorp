@@ -11,21 +11,32 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.util.Callbacks
+import org.mozilla.geckoview.test.util.UiThreadUtils
 
+import android.os.Debug
 import android.os.Parcelable
+import android.os.SystemClock
 import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
+import android.util.Log
 import android.util.SparseArray
 
 import org.hamcrest.Matchers.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
+import java.io.IOException
+import java.lang.ref.ReferenceQueue
+import java.lang.ref.WeakReference
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 @ReuseSession(false)
 class SessionLifecycleTest : BaseSessionTest() {
+    companion object {
+        val LOGTAG = "SessionLifecycleTest"
+    }
 
     @Test fun open_interleaved() {
         val session1 = sessionRule.createOpenSession()
@@ -370,4 +381,67 @@ class SessionLifecycleTest : BaseSessionTest() {
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
     }
+
+    @Test fun collectClosed() {
+        // We can't use a normal scoped function like `run` because
+        // those are inlined, which leaves a local reference.
+        fun createSession(): QueuedWeakReference<GeckoSession> {
+            return QueuedWeakReference<GeckoSession>(GeckoSession())
+        }
+
+        waitUntilCollected(createSession())
+    }
+
+    @Test fun collectAfterClose() {
+        fun createSession(): QueuedWeakReference<GeckoSession> {
+            val s = GeckoSession()
+            s.open(sessionRule.runtime)
+            s.close()
+            return QueuedWeakReference<GeckoSession>(s)
+        }
+
+        waitUntilCollected(createSession())
+    }
+
+    @Test fun collectOpen() {
+        fun createSession(): QueuedWeakReference<GeckoSession> {
+            val s = GeckoSession()
+            s.open(sessionRule.runtime)
+            return QueuedWeakReference<GeckoSession>(s)
+        }
+
+        waitUntilCollected(createSession())
+    }
+
+    private fun dumpHprof() {
+        try {
+            val dest = File(InstrumentationRegistry.getTargetContext()
+                    .filesDir.parent, "dump.hprof").absolutePath
+            Debug.dumpHprofData(dest)
+            Log.d(LOGTAG, "Dumped hprof to $dest")
+        } catch (e: IOException) {
+            Log.e(LOGTAG, "Failed to dump hprof", e)
+        }
+
+    }
+
+    private fun waitUntilCollected(ref: QueuedWeakReference<*>) {
+        val start = SystemClock.uptimeMillis()
+        while (ref.queue.poll() == null) {
+            val elapsed = SystemClock.uptimeMillis() - start
+            if (elapsed > sessionRule.timeoutMillis) {
+                dumpHprof()
+                throw UiThreadUtils.TimeoutException("Timed out after " + elapsed + "ms")
+            }
+
+            try {
+                UiThreadUtils.loopUntilIdle(100)
+            } catch (e: UiThreadUtils.TimeoutException) {
+            }
+            Runtime.getRuntime().gc()
+        }
+    }
+
+    class QueuedWeakReference<T> @JvmOverloads constructor(obj: T, var queue: ReferenceQueue<T> =
+            ReferenceQueue()) : WeakReference<T>(obj, queue)
 }
