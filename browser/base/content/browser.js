@@ -2686,9 +2686,15 @@ function URLBarSetURI(aURI) {
     valid = true;
   }
 
+  let isDifferentValidValue = valid && value != gURLBar.value;
   gURLBar.value = value;
   gURLBar.valueIsTyped = !valid;
   gURLBar.removeAttribute("usertyping");
+  if (isDifferentValidValue) {
+    // The selection is enforced only for new values, to avoid overriding the
+    // cursor position when the user switches windows while typing.
+    gURLBar.selectionStart = gURLBar.selectionEnd = 0;
+  }
 
   SetPageProxyState(valid ? "valid" : "invalid");
 }
