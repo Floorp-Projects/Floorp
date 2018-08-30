@@ -23,6 +23,7 @@
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
+#include "nsIWebProgressListener.h"
 #include "nsPIDOMWindow.h"
 #include "nsScriptSecurityManager.h"
 #include "prtime.h"
@@ -842,5 +843,49 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel)
     return;
   }
 
-  // TODO: use aState to inform the rest of the world.
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+  if (!thirdPartyUtil) {
+    return;
+  }
+
+  nsCOMPtr<mozIDOMWindowProxy> win;
+  nsresult rv = thirdPartyUtil->GetTopWindowForChannel(httpChannel,
+                                                       getter_AddRefs(win));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsPIDOMWindowOuter> pwin = nsPIDOMWindowOuter::From(win);
+  if (!pwin) {
+    return;
+  }
+
+  pwin->NotifyContentBlockingState(
+    nsIWebProgressListener::STATE_BLOCKED_TRACKING_COOKIES, httpChannel);
+}
+
+/* static */ void
+AntiTrackingCommon::NotifyRejection(nsPIDOMWindowInner* aWindow)
+{
+  MOZ_ASSERT(aWindow);
+
+  nsIDocument* document = aWindow->GetExtantDoc();
+  if (!document) {
+    return;
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel =
+    do_QueryInterface(document->GetChannel());
+  if (!httpChannel) {
+    return;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> pwin;
+  auto* outer = nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
+  if (outer) {
+    pwin = outer->GetTopOuter();
+  }
+
+  if (pwin) {
+    pwin->NotifyContentBlockingState(
+      nsIWebProgressListener::STATE_BLOCKED_TRACKING_COOKIES, httpChannel);
+  }
 }

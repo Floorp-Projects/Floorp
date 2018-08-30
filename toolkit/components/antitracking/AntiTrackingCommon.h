@@ -94,6 +94,9 @@ public:
   // channel proxy.
   static void
   NotifyRejection(nsIChannel* aChannel);
+
+  static void
+  NotifyRejection(nsPIDOMWindowInner* aWindow);
 };
 
 } // namespace mozilla

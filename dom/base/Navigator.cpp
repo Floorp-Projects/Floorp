@@ -542,8 +542,13 @@ Navigator::CookieEnabled()
     return cookieEnabled;
   }
 
-  return AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(mWindow,
-                                                                 codebaseURI);
+  if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(mWindow,
+                                                              codebaseURI)) {
+    return true;
+  }
+
+  AntiTrackingCommon::NotifyRejection(mWindow);
+  return false;
 }
 
 bool
