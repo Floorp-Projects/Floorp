@@ -65,12 +65,6 @@ toolbarbutton[disabled="true"][open="true"] {
   -moz-stack-sizing: ignore;
 }
 
-.toolbarbutton-badge:-moz-window-inactive {
-  background-color: rgb(230,230,230);
-  box-shadow: none;
-  color: rgb(192,192,192);
-}
-
 toolbar[mode="icons"] > *|* > .toolbarbutton-badge {
   margin-inline-end: -10px !important;
 }
