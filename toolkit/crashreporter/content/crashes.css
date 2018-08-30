@@ -8,58 +8,67 @@
   min-width: 30em;
   max-width: 60em;
 }
+
 table {
-  clear: both;
-  width: 90%;
-  margin: 0 auto;
+  width: 100%;
   padding-bottom: 2em;
 }
-th {
-  font-size: 130%;
-  text-align: left;
-  white-space: nowrap;
-}
-th:-moz-locale-dir(rtl) {
-  text-align: right;
-}
-/* name */
-th:first-child {
-  padding-inline-end: 2em;
-}
-/* submitted */
-th:last-child {
-  text-align: center;
-}
-:link, :visited {
-  display: block;
-  min-height: 17px;
-}
-/* date */
-td:first-child + td {
-  width: 0;
-  padding-inline-start: 1em;
-  padding-inline-end: .5em;
-  white-space: nowrap;
-}
-/* time */
-td:last-child {
-  width: 0;
-  padding-inline-start: .5em;
-  white-space: nowrap;
-}
 
-#clear-reports {
+.float-right {
   float: right;
 }
-#clear-reports:-moz-locale-dir(rtl) {
-  float: left;
+.hidden {
+  display: none;
 }
-
+.table-title-container {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+.wide-button {
+  display: block;
+  min-height: 32px;
+  padding-left: 30px;
+  padding-right: 30px;
+}
 .submitting {
   background-image: url(chrome://global/skin/icons/loading.png);
+  background-position: center;
   background-repeat: no-repeat;
-  background-position: right;
   background-size: 16px;
+}
+.submitting .submit-crash-button-label {
+  display: none;
+}
+.failed-to-submit {
+  color: #ca8695;
+}
+
+a.button-as-link {
+  -moz-appearance: none;
+  min-height: 30px;
+  color: var(--in-content-text-color) !important;
+  border: 1px solid var(--in-content-box-border-color) !important;
+  border-radius: 2px;
+  background-color: var(--in-content-page-background);
+  line-height: 30px;
+  margin: 4px 8px;
+  /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
+  font-size: 1em;
+}
+a.button-as-link:hover {
+  background-color: var(--in-content-box-background-hover) !important;
+  text-decoration: none;
+}
+h2.lighter-font-weight {
+  font-weight: lighter;
+}
+
+html[dir=ltr] th {
+  text-align: left;
+}
+html[dir=rtl] th {
+  text-align: right;
 }
 
 @media (min-resolution: 1.1dppx) {
