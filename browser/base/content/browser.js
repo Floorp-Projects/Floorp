@@ -3681,7 +3681,9 @@ const DOMEventHandler = {
 
   setPendingIcon(aBrowser) {
     let tab = gBrowser.getTabForBrowser(aBrowser);
-    tab.setAttribute("pendingicon", "true");
+    if (tab.hasAttribute("busy")) {
+      tab.setAttribute("pendingicon", "true");
+    }
   },
 
   clearPendingIcon(aBrowser) {
