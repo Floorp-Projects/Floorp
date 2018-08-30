@@ -33,6 +33,32 @@ function machine_only_col(text) {
   return column;
 }
 
+function addMissingColumns() {
+  const table = document.getElementById("activeContent");
+  let maxColumns = 0;
+
+  // count the number of columns per row and set the max number of columns
+  for (let i = 0, length = table.rows.length; i < length; i++) {
+    if (maxColumns < table.rows[i].cells.length) {
+      maxColumns = table.rows[i].cells.length;
+    }
+  }
+
+  // add the missing columns
+  for (let i = 0, length = table.rows.length; i < length; i++) {
+    const rowLength = table.rows[i].cells.length;
+
+    if (rowLength < maxColumns) {
+      let missingColumns = maxColumns - rowLength;
+
+      while (missingColumns > 0) {
+        table.rows[i].insertCell();
+        missingColumns--;
+      }
+    }
+  }
+}
+
 /*
  * This function generates the Active Policies content to be displayed by calling
  * a recursive function called generatePolicy() according to the policy schema.
@@ -73,11 +99,12 @@ function generateActivePolicies(data) {
       let row = document.createElement("tr");
       row.appendChild(col(policyName));
       row.appendChild(col(JSON.stringify(data[policyName])));
-      row.appendChild(col(""));
       row.classList.add(color_class, "last_row");
       new_cont.appendChild(row);
     }
   }
+
+  addMissingColumns();
 }
 
 /*
