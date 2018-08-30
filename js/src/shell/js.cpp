@@ -71,7 +71,6 @@
 #endif // defined(JS_BUILD_BINAST)
 #include "frontend/Parser.h"
 #include "gc/PublicIterators.h"
-#include "gc/Zone.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
@@ -4310,7 +4309,7 @@ EnsureModuleLoaderScriptObjectMap(JSContext* cx)
     if (priv->moduleLoaderScriptObjectMap)
         return priv->moduleLoaderScriptObjectMap.get();
 
-    Zone* zone = cx->zone();
+    JS::Zone* zone = cx->zone();
     auto* map = cx->new_<ScriptObjectMap>(zone);
     if (!map)
         return nullptr;
