@@ -43,8 +43,8 @@ jobs:
             tooltool-downloads: public
             need-xvfb: true
         toolchains:
+            - linux64-binutils
             - linux64-clang
-            - linux64-gcc
             - linux64-rust
             - linux64-cbindgen
             - linux64-sccache

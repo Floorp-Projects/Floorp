@@ -1,21 +1,11 @@
 #!/bin/bash
 
 binutils_version=2.28.1
-make_flags='-j12'
+make_flags="-j$(nproc)"
 
 root_dir="$1"
-if [ -z "$root_dir" -o ! -d "$root_dir" ]; then
-  root_dir=$(mktemp -d)
-fi
+
 cd $root_dir
-
-if test -z $TMPDIR; then
-  TMPDIR=/tmp/
-fi
-
-# Download the source of the specified version of binutils
-wget -c --progress=dot:mega -P $TMPDIR ftp://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.xz || exit 1
-tar xJf $TMPDIR/binutils-${binutils_version}.tar.xz
 
 # Build binutils
 mkdir binutils-objdir

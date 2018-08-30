@@ -32,4 +32,5 @@ assertThrowsMyError(() => evaluateModule(c));
 let b = moduleRepo['b'] = parseModule(`
     import * as ns0 from 'a'
 `);
-assertThrowsMyError(() => instantiateModule(b));
+instantiateModule(b);
+assertThrowsMyError(() => evaluateModule(b));
