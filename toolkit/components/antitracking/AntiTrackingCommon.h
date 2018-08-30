@@ -11,6 +11,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 
+class nsIChannel;
 class nsIHttpChannel;
 class nsIPrincipal;
 class nsIURI;
@@ -88,6 +89,14 @@ public:
   static nsresult
   IsOnContentBlockingAllowList(nsIURI* aTopWinURI, bool& aIsAllowListed);
 
+  // This method can be called on the parent process or on the content process.
+  // The notification is propagated to the child channel if aChannel is a parent
+  // channel proxy.
+  static void
+  NotifyRejection(nsIChannel* aChannel);
+
+  static void
+  NotifyRejection(nsPIDOMWindowInner* aWindow);
 };
 
 } // namespace mozilla

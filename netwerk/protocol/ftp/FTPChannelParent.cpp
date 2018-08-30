@@ -577,6 +577,13 @@ FTPChannelParent::NotifyTrackingProtectionDisabled()
 }
 
 NS_IMETHODIMP
+FTPChannelParent::NotifyTrackingCookieBlocked()
+{
+  // One day, this should probably be filled in.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 FTPChannelParent::NotifyTrackingResource(bool aIsThirdParty)
 {
   // One day, this should probably be filled in.

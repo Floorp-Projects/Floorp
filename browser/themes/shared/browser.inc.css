@@ -47,32 +47,32 @@
 
 /* Bookmark toolbar */
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
+#PersonalToolbar {
   overflow: -moz-hidden-unscrollable;
   max-height: 4em;
   padding: 0 6px 2px;
 }
 
-:root[sessionrestored] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
+:root[sessionrestored] #PersonalToolbar {
   transition: min-height 170ms ease-out, max-height 170ms ease-out, @themeTransition@;
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar)[collapsed=true] {
+#PersonalToolbar[collapsed=true] {
   min-height: 0.1px;
   max-height: 0;
 }
 
-:root[sessionrestored] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar)[collapsed=true] {
+:root[sessionrestored] #PersonalToolbar[collapsed=true] {
   transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
 }
 
-#navigator-toolbox > toolbar[customizing]:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
+#PersonalToolbar[customizing] {
   outline: 1px dashed;
   outline-offset: -3px;
   -moz-outline-radius: 2px;
 }
 
-#navigator-toolbox > toolbar[customizing]:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):empty {
+#PersonalToolbar[customizing]:empty {
   /* Avoid the toolbar having no height when there's no items in it */
   min-height: 22px;
 }

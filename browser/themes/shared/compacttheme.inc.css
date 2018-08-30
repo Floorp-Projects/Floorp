@@ -63,7 +63,7 @@ toolbar[brighttext] .toolbarbutton-1 {
   color: var(--chrome-color);
 }
 
-#navigator-toolbox > toolbar:not(#TabsToolbar):not(#toolbar-menubar),
+.browser-toolbar:not(.titlebar-color),
 .browserContainer > findbar,
 #browser-bottombox {
   background-color: var(--chrome-secondary-background-color) !important;

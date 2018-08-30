@@ -9,9 +9,10 @@
 
 #include "mozilla/Attributes.h"
 
-#include "builtin/ModuleObject.h"
 #include "frontend/TokenStream.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/Printer.h"
+#include "vm/Scope.h"
 
 // A few notes on lifetime of ParseNode trees:
 //

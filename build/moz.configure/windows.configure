@@ -462,6 +462,9 @@ set_config('MSMANIFEST_TOOL', depends(valid_mt)(lambda x: bool(x)))
 link = check_prog('LINKER', ('lld-link.exe', 'link.exe'),
                   paths=toolchain_search_path)
 
+host_link = check_prog('HOST_LINKER', ('lld-link.exe', 'link.exe'),
+                       paths=toolchain_search_path)
+
 add_old_configure_assignment('LINKER', link)
 
 

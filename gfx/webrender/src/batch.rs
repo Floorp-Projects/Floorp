@@ -829,6 +829,7 @@ impl AlphaBatchBuilder {
                                                 );
 
                                                 let filter_mode = match filter {
+                                                    FilterOp::Identity => 1, // matches `Contrast(1)`
                                                     FilterOp::Blur(..) => 0,
                                                     FilterOp::Contrast(..) => 1,
                                                     FilterOp::Grayscale(..) => 2,
@@ -843,6 +844,7 @@ impl AlphaBatchBuilder {
                                                 };
 
                                                 let user_data = match filter {
+                                                    FilterOp::Identity => 0x10000i32, // matches `Contrast(1)`
                                                     FilterOp::Contrast(amount) |
                                                     FilterOp::Grayscale(amount) |
                                                     FilterOp::Invert(amount) |

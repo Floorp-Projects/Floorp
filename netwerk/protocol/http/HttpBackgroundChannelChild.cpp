@@ -348,6 +348,21 @@ HttpBackgroundChannelChild::RecvNotifyTrackingProtectionDisabled()
 }
 
 IPCResult
+HttpBackgroundChannelChild::RecvNotifyTrackingCookieBlocked()
+{
+  LOG(("HttpBackgroundChannelChild::RecvNotifyTrackingCookieBlocked [this=%p]\n", this));
+  MOZ_ASSERT(OnSocketThread());
+
+  if (NS_WARN_IF(!mChannelChild)) {
+    return IPC_OK();
+  }
+
+  mChannelChild->ProcessNotifyTrackingCookieBlocked();
+
+  return IPC_OK();
+}
+
+IPCResult
 HttpBackgroundChannelChild::RecvNotifyTrackingResource(const bool& aIsThirdParty)
 {
   LOG(("HttpBackgroundChannelChild::RecvNotifyTrackingResource thirdparty=%d "

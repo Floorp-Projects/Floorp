@@ -2211,7 +2211,8 @@ impl Primitive {
 
             match segment_clip_chain {
                 Some(segment_clip_chain) => {
-                    if segment_clip_chain.clips_range.count == 0 {
+                    if segment_clip_chain.clips_range.count == 0 ||
+                       (!segment.may_need_clip_mask && !segment_clip_chain.has_non_local_clips) {
                         segment.clip_task_id = BrushSegmentTaskId::Opaque;
                         continue;
                     }

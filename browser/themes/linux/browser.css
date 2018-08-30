@@ -69,11 +69,11 @@
   border-top: none;
 }
 
-#navigator-toolbox > toolbar {
+.browser-toolbar {
   padding: 0;
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+.browser-toolbar:not(.titlebar-color) {
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
   color: var(--toolbar-color, inherit);
