@@ -9,7 +9,6 @@
 
 #include "gc/WeakMap.h"
 
-#include "gc/Zone.h"
 #include "vm/JSContext.h"
 
 namespace js {

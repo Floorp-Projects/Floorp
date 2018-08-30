@@ -13169,10 +13169,20 @@ IonBuilder::jsop_implicitthis(PropertyName* name)
 AbortReasonOr<Ok>
 IonBuilder::jsop_importmeta()
 {
+    if (info().analysisMode() == Analysis_ArgumentsUsage) {
+        // The meta object may not have been created yet. Just push a dummy
+        // value, it does not affect the arguments analysis.
+        MUnknownValue* unknown = MUnknownValue::New(alloc());
+        current->add(unknown);
+        current->push(unknown);
+        return Ok();
+    }
+
     ModuleObject* module = GetModuleObjectForScript(script());
     MOZ_ASSERT(module);
 
-    // The object must have been created already when we compiled for baseline.
+    // If we get there then the meta object must already have been created, at
+    // the latest when we compiled for baseline.
     JSObject* metaObject = module->metaObject();
     MOZ_ASSERT(metaObject);
 
