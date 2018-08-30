@@ -2234,7 +2234,7 @@ nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
   // (but not if there was an error)
   switch (cookieStatus) {
   case STATUS_REJECTED:
-    NotifyRejected(aHostURI);
+    NotifyRejected(aHostURI, aChannel);
     if (aIsForeign) {
       NotifyThirdParty(aHostURI, false, aChannel);
     }
@@ -2264,12 +2264,14 @@ nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
 
 // notify observers that a cookie was rejected due to the users' prefs.
 void
-nsCookieService::NotifyRejected(nsIURI *aHostURI)
+nsCookieService::NotifyRejected(nsIURI *aHostURI, nsIChannel* aChannel)
 {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
     os->NotifyObservers(aHostURI, "cookie-rejected", nullptr);
   }
+
+  AntiTrackingCommon::NotifyRejection(aChannel);
 }
 
 // notify observers that a third-party cookie was accepted/rejected
@@ -3608,7 +3610,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
                                      &permission);
     if (!permission) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader, "cookie rejected by permission manager");
-      NotifyRejected(aHostURI);
+      NotifyRejected(aHostURI, aChannel);
       return newCookie;
     }
 

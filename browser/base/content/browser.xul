@@ -672,7 +672,7 @@ xmlns="http://www.w3.org/1999/xhtml"
   <toolbox id="navigator-toolbox">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar"
-             class="chromeclass-menubar titlebar-color"
+             class="browser-toolbar chromeclass-menubar titlebar-color"
              customizable="true"
              mode="icons"
 #ifdef MENUBAR_CAN_AUTOHIDE
@@ -694,7 +694,7 @@ xmlns="http://www.w3.org/1999/xhtml"
     </toolbar>
 
     <toolbar id="TabsToolbar"
-             class="titlebar-color"
+             class="browser-toolbar titlebar-color"
              fullscreentoolbar="true"
              customizable="true"
              mode="icons"
@@ -753,6 +753,7 @@ xmlns="http://www.w3.org/1999/xhtml"
     </toolbar>
 
     <toolbar id="nav-bar"
+             class="browser-toolbar"
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              customizationtarget="nav-bar-customization-target"
@@ -1059,7 +1060,7 @@ xmlns="http://www.w3.org/1999/xhtml"
 
     <toolbar id="PersonalToolbar"
              mode="icons"
-             class="chromeclass-directories"
+             class="browser-toolbar chromeclass-directories"
              context="toolbar-context-menu"
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
              collapsed="true"

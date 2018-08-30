@@ -10,12 +10,10 @@
 
 #include <sys/types.h>
 
-#include "jsapi.h"
-
 #include "frontend/BinSourceRuntimeSupport.h"
 #include "frontend/TokenStream.h"
-#include "gc/Zone.h"
 #include "js/Result.h"
+#include "vm/Runtime.h"
 
 namespace js {
 namespace frontend {

@@ -380,6 +380,33 @@ HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled()
 }
 
 bool
+HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked()
+{
+  LOG(("HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked [this=%p]\n", this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
+    nsresult rv = mBackgroundThread->Dispatch(
+      NewRunnableMethod(
+        "net::HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked",
+        this,
+        &HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked),
+      NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendNotifyTrackingCookieBlocked();
+}
+
+bool
 HttpBackgroundChannelParent::OnNotifyTrackingResource(bool aIsThirdParty)
 {
   LOG(("HttpBackgroundChannelParent::OnNotifyTrackingResource thirdparty=%d "

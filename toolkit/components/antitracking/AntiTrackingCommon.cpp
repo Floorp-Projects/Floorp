@@ -19,10 +19,13 @@
 #include "nsICookieService.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIIOService.h"
+#include "nsIParentChannel.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
+#include "nsIWebProgressListener.h"
+#include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsScriptSecurityManager.h"
 #include "prtime.h"
@@ -832,4 +835,69 @@ AntiTrackingCommon::IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
   }
 
   return NS_OK;
+}
+
+/* static */ void
+AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel)
+{
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (!httpChannel) {
+    return;
+  }
+
+  // Can be called in EITHER the parent or child process.
+  nsCOMPtr<nsIParentChannel> parentChannel;
+  NS_QueryNotificationCallbacks(aChannel, parentChannel);
+  if (parentChannel) {
+    // This channel is a parent-process proxy for a child process request.
+    // Tell the child process channel to do this instead.
+    parentChannel->NotifyTrackingCookieBlocked();
+    return;
+  }
+
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+  if (!thirdPartyUtil) {
+    return;
+  }
+
+  nsCOMPtr<mozIDOMWindowProxy> win;
+  nsresult rv = thirdPartyUtil->GetTopWindowForChannel(httpChannel,
+                                                       getter_AddRefs(win));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsPIDOMWindowOuter> pwin = nsPIDOMWindowOuter::From(win);
+  if (!pwin) {
+    return;
+  }
+
+  pwin->NotifyContentBlockingState(
+    nsIWebProgressListener::STATE_BLOCKED_TRACKING_COOKIES, httpChannel);
+}
+
+/* static */ void
+AntiTrackingCommon::NotifyRejection(nsPIDOMWindowInner* aWindow)
+{
+  MOZ_ASSERT(aWindow);
+
+  nsIDocument* document = aWindow->GetExtantDoc();
+  if (!document) {
+    return;
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel =
+    do_QueryInterface(document->GetChannel());
+  if (!httpChannel) {
+    return;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> pwin;
+  auto* outer = nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
+  if (outer) {
+    pwin = outer->GetTopOuter();
+  }
+
+  if (pwin) {
+    pwin->NotifyContentBlockingState(
+      nsIWebProgressListener::STATE_BLOCKED_TRACKING_COOKIES, httpChannel);
+  }
 }

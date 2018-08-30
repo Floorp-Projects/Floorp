@@ -8917,28 +8917,10 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
   bool disabled =
     StorageDisabledByAntiTrackingInternal(aWindow, aChannel, aPrincipal, aURI);
   if (disabled && sAntiTrackingControlCenterUIEnabled) {
-    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
-    if (!thirdPartyUtil) {
-      return false;
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> pwin;
     if (aWindow) {
-      auto* outer = nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
-      if (outer) {
-        pwin = outer->GetTopOuter();
-      }
+      AntiTrackingCommon::NotifyRejection(aWindow);
     } else if (aChannel) {
-      nsCOMPtr<mozIDOMWindowProxy> win;
-      nsresult rv = thirdPartyUtil->GetTopWindowForChannel(aChannel,
-                                                           getter_AddRefs(win));
-      NS_ENSURE_SUCCESS(rv, false);
-      pwin = nsPIDOMWindowOuter::From(win);
-    }
-
-    if (pwin && aChannel) {
-      pwin->NotifyContentBlockingState(
-        nsIWebProgressListener::STATE_BLOCKED_TRACKING_COOKIES, aChannel);
+      AntiTrackingCommon::NotifyRejection(aChannel);
     }
   }
   return disabled;

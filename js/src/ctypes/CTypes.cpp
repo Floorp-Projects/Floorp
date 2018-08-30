@@ -38,7 +38,6 @@
 #include "ctypes/Library.h"
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
-#include "gc/Zone.h"
 #include "jit/AtomicOperations.h"
 #include "js/AutoByteString.h"
 #include "js/StableStringChars.h"

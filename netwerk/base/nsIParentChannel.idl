@@ -34,6 +34,12 @@ interface nsIParentChannel : nsIStreamListener
    */
   [noscript] void notifyTrackingProtectionDisabled();
 
+  /**
+   * Called to notify the HttpChannelChild that cookie has been blocked for
+   * this load.
+   */
+  [noscript] void notifyTrackingCookieBlocked();
+
    /**
    * Called to set matched information when URL matches SafeBrowsing list.
    * @param aList

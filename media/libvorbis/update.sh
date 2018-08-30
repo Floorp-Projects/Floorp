@@ -84,4 +84,4 @@ cp $1/lib/books/floor/floor_books.h ./lib/books/floor/
 cp $1/lib/books/uncoupled/res_books_uncoupled.h ./lib/books/uncoupled/
 
 # Add any patches against upstream here.
-# ...nothing to apply...
+patch -p1 < ./aarch64-win.patch

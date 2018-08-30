@@ -8,6 +8,8 @@
 
 #include "mozilla/FloatingPoint.h"
 
+#include "jsnum.h"
+
 #include "frontend/Parser.h"
 
 #include "vm/JSContext-inl.h"
