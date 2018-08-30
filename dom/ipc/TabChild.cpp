@@ -408,7 +408,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mDidFakeShow(false)
   , mNotified(false)
   , mTriedBrowserInit(false)
-  , mOrientation(eScreenOrientation_PortraitPrimary)
+  , mOrientation(hal::eScreenOrientation_PortraitPrimary)
   , mIgnoreKeyPressEvent(false)
   , mHasValidInnerSize(false)
   , mDestroyed(false)

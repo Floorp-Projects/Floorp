@@ -3017,6 +3017,10 @@ public:
 
   bool IsSyntheticDocument() const { return mIsSyntheticDocument; }
 
+  // Adds the size of a given node, which must not be a document node, to the
+  // window sizes passed-in.
+  static void AddSizeOfNodeTree(nsINode&, nsWindowSizes&);
+
   // Note: nsIDocument is a sub-class of nsINode, which has a
   // SizeOfExcludingThis function.  However, because nsIDocument objects can
   // only appear at the top of the DOM tree, we have a specialized measurement

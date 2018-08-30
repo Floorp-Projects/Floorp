@@ -93,6 +93,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.inputField.addEventListener("overflow", this);
         this.inputField.addEventListener("underflow", this);
         this.inputField.addEventListener("scrollend", this);
+        window.addEventListener("resize", this);
 
         var textBox = document.getAnonymousElementByAttribute(this,
                                                 "anonid", "moz-input-box");
@@ -158,6 +159,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.inputField.removeEventListener("overflow", this);
         this.inputField.removeEventListener("underflow", this);
         this.inputField.removeEventListener("scrollend", this);
+        window.removeEventListener("resize", this);
 
         if (this._deferredKeyEventTimeout) {
           clearTimeout(this._deferredKeyEventTimeout);
@@ -511,7 +513,19 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       </method>
 
       <field name="_formattingEnabled">true</field>
+
+      <!--
+        If the input value is a URL, the input is not focused, and formatting is
+        enabled, this method highlights the domain, and if mixed content is
+        present, it crosses out the https scheme.  It also ensures that the host
+        is visible (not scrolled out of sight).  Otherwise it removes formatting.
+
+        @param  onlyEnsureFormattedHostVisible
+                Pass true to skip formatting and instead only ensure that the
+                host is visible.
+      -->
       <method name="formatValue">
+        <parameter name="onlyEnsureFormattedHostVisible"/>
         <body><![CDATA[
           // Used to avoid re-entrance in async callbacks.
           let instance = this._formattingInstance = {};
@@ -519,18 +533,21 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           if (!this.editor)
             return;
 
-          // Cleanup previously set styles.
-          this.scheme.value = "";
           let controller, strikeOut, selection;
-          if (this._formattingEnabled) {
-            controller = this.editor.selectionController;
-            strikeOut = controller.getSelection(controller.SELECTION_URLSTRIKEOUT);
-            strikeOut.removeAllRanges();
-            selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
-            selection.removeAllRanges();
-            this.formatScheme(controller.SELECTION_URLSTRIKEOUT, true);
-            this.formatScheme(controller.SELECTION_URLSECONDARY, true);
-            this.inputField.style.setProperty("--urlbar-scheme-size", "0px");
+
+          if (!onlyEnsureFormattedHostVisible) {
+            // Cleanup previously set styles.
+            this.scheme.value = "";
+            if (this._formattingEnabled) {
+              controller = this.editor.selectionController;
+              strikeOut = controller.getSelection(controller.SELECTION_URLSTRIKEOUT);
+              strikeOut.removeAllRanges();
+              selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
+              selection.removeAllRanges();
+              this.formatScheme(controller.SELECTION_URLSTRIKEOUT, true);
+              this.formatScheme(controller.SELECTION_URLSECONDARY, true);
+              this.inputField.style.setProperty("--urlbar-scheme-size", "0px");
+            }
           }
 
           let textNode = this.editor.rootElement.firstChild;
@@ -599,7 +616,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
           });
 
-          if (!this._formattingEnabled)
+          if (onlyEnsureFormattedHostVisible || !this._formattingEnabled)
             return;
 
           this.formatScheme(controller.SELECTION_URLSECONDARY);
@@ -1433,6 +1450,29 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               // to handle cases like backspace, autofill or repeated searches.
               // Ensure to clear those internal caches when switching tabs.
               this.controller.resetInternalState();
+              break;
+            case "resize":
+              // Make sure the host remains visible in the input field when the
+              // window is resized.  We don't want to hurt resize performance,
+              // though, so do this only after resize events have stopped and a
+              // small timeout has elapsed.
+              if (aEvent.target == window) {
+                if (this._resizeThrottleTimeout) {
+                  clearTimeout(this._resizeThrottleTimeout);
+                }
+                this._resizeThrottleTimeout = setTimeout(() => {
+                  this._resizeThrottleTimeout = null;
+
+                  // Close the popup since it would be wrongly sized, we'll
+                  // recalculate a proper size on reopening. For example, this
+                  // may happen when using special OS resize functions like
+                  // Win+Arrow.
+                  this.closePopup();
+
+                  // Make the host visible via formatValue.
+                  this.formatValue(true);
+                }, 100);
+              }
               break;
           }
         ]]></body>
