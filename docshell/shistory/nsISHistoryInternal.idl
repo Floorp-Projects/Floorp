@@ -31,9 +31,9 @@ interface nsISHistoryInternal: nsISupports
    void  addEntry(in nsISHEntry aEntry, in boolean aPersist);
 
   /**
-   * Get the root transaction
+   * Get the transaction at a particular index.
    */
-   readonly attribute nsISHTransaction rootTransaction;
+  nsISHTransaction GetTransactionAtIndex(in int32_t aIndex);
 
   /**
    * Sets the toplevel docshell object to which this SHistory object belongs to.

@@ -1,6 +1,5 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -8,38 +7,18 @@
 
 interface nsISHEntry;
 
-/**
- * The nsISHTransaction.
- */
-
-
 [scriptable, uuid(2EDF705F-D252-4971-9F09-71DD0F760DC6)]
 interface nsISHTransaction : nsISupports
 {
-	/**
-     * The nsISHEntry for the current transaction
-     */
-	attribute nsISHEntry sHEntry;
+  /**
+   * The nsISHEntry for the current transaction.
+   */
+  attribute nsISHEntry sHEntry;
 
-	/**
-	 * The parent of this transaction
-	 */
-	attribute nsISHTransaction prev;
-
-	/**
-	 * The legitimate child of this transaction 
-	 */
-	attribute nsISHTransaction next;
-
-	/**
-	 *	Specifies if this transaction should persist.  If not it will be replaced
-	 * by new additions to the list.
-	 */
-	attribute boolean persist;
-
-	/**
-	 * Create a transaction with parent and History Entry 
-	 */
-	 void create(in nsISHEntry aSHEntry, in nsISHTransaction aPrev);
+  /**
+   * Specifies if this transaction should persist. If not it will be replaced
+   * by new additions to the list.
+   */
+  attribute boolean persist;
 };
 
