@@ -565,16 +565,7 @@ RtlGetProcessHeap()
 {
   PTEB teb = ::NtCurrentTeb();
   PPEB peb = teb->ProcessEnvironmentBlock;
-#if !defined(__MINGW32__)
   return peb->Reserved4[1];
-#else
-  // MinGW treats Reserved4 as an array of bytes, rather than an
-  // array of void*'s. So we need to convert the correct offset
-  // into a void* and return it.
-  void* startOfHeapPtr = &peb->Reserved4[1 * sizeof(HANDLE)];
-  HANDLE* heapPtrPtr = (HANDLE*)startOfHeapPtr;
-  return *heapPtrPtr;
-#endif
 }
 
 inline Maybe<DWORD>
