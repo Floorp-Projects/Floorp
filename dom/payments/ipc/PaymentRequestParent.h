@@ -8,18 +8,24 @@
 #define mozilla_dom_PaymentRequestParent_h
 
 #include "mozilla/dom/PPaymentRequestParent.h"
-#include "nsIPaymentActionRequest.h"
+#include "nsIPaymentAddress.h"
+#include "nsIPaymentActionResponse.h"
 
 namespace mozilla {
 namespace dom {
 
-class PaymentRequestParent final : public nsIPaymentActionCallback
-                                 , public PPaymentRequestParent
+class PaymentRequestParent final : public PPaymentRequestParent
 {
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIPAYMENTACTIONCALLBACK
-
+  NS_INLINE_DECL_REFCOUNTING(PaymentRequestParent)
+public:
   explicit PaymentRequestParent(uint64_t aTabId);
+
+  uint64_t GetTabId();
+  nsresult RespondPayment(nsIPaymentActionResponse* aResponse);
+  nsresult ChangeShippingAddress(const nsAString& aRequestId,
+                                 nsIPaymentAddress* aAddress);
+  nsresult ChangeShippingOption(const nsAString& aRequestId,
+                                const nsAString& aOption);
 
 protected:
   mozilla::ipc::IPCResult
@@ -31,12 +37,9 @@ protected:
 private:
   ~PaymentRequestParent() = default;
 
-  nsresult CreateActionRequest(const nsAString& aRequestId,
-                               uint32_t aActionType,
-                               nsIPaymentActionRequest** aAction);
-
   bool mActorAlive;
   uint64_t mTabId;
+  nsString mRequestId;
 };
 
 } // end of namespace dom

@@ -10,7 +10,7 @@
 #include "nsIPaymentAddress.h"
 #include "nsIPaymentRequest.h"
 #include "nsCOMPtr.h"
-#include "mozilla/dom/PPaymentRequest.h"
+#include "mozilla/dom/PaymentRequestParent.h"
 
 namespace mozilla {
 namespace dom {
@@ -131,6 +131,8 @@ public:
 
   static nsresult Create(const IPCPaymentDetails& aIPCDetails,
                          nsIPaymentDetails** aDetails);
+  nsresult Update(nsIPaymentDetails* aDetails, const bool aRequestShipping);
+  nsString GetShippingAddressErrors() const;
 private:
   PaymentDetails(const nsAString& aId,
                  nsIPaymentItem* aTotalItem,
@@ -189,6 +191,23 @@ public:
                  nsIPaymentOptions* aPaymentOptions,
                  const nsAString& aShippingOption);
 
+  void SetIPC(PaymentRequestParent* aIPC)
+  {
+    mIPC = aIPC;
+  }
+
+  PaymentRequestParent* GetIPC() const
+  {
+    return mIPC;
+  }
+
+  nsresult
+  UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails,
+                       const nsAString& aShippingOption);
+
+  void
+  SetCompleteStatus(const nsAString& aCompleteStatus);
+
 private:
   ~PaymentRequest() = default;
 
@@ -200,6 +219,10 @@ private:
   nsCOMPtr<nsIPaymentDetails> mPaymentDetails;
   nsCOMPtr<nsIPaymentOptions> mPaymentOptions;
   nsString mShippingOption;
+
+  // IPC's life cycle should be controlled by IPC mechanism.
+  // PaymentRequest should not own the reference of it.
+  PaymentRequestParent* mIPC;
 };
 
 class PaymentAddress final : public nsIPaymentAddress
