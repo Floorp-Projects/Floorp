@@ -9,7 +9,7 @@ private object Versions {
 
     const val junit = "4.12"
     const val robolectric = "3.8"
-    const val mockito = "2.19.0"
+    const val mockito = "2.21.0"
     const val mockwebserver = "3.10.0"
 
     const val support_libraries = "27.1.1"
