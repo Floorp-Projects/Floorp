@@ -31,6 +31,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ShadowRoot, DocumentFragment)
   for (StyleSheet* sheet : tmp->mStyleSheets) {
     // mServoStyles keeps another reference to it if applicable.
     if (sheet->IsApplicable()) {
+      MOZ_ASSERT(tmp->mServoStyles);
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mServoStyles->sheets[i]");
       cb.NoteXPCOMChild(sheet);
     }
@@ -63,7 +64,6 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
   : DocumentFragment(aNodeInfo)
   , DocumentOrShadowRoot(*this)
   , mMode(aMode)
-  , mServoStyles(Servo_AuthorStyles_Create())
   , mIsUAWidget(false)
 {
   SetHost(aElement);
@@ -313,10 +313,14 @@ ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot)
 void
 ShadowRoot::RuleAdded(StyleSheet& aSheet, css::Rule& aRule)
 {
+  if (!aSheet.IsApplicable()) {
+    return;
+  }
+
+  MOZ_ASSERT(mServoStyles);
   if (mStyleRuleMap) {
     mStyleRuleMap->RuleAdded(aSheet, aRule);
   }
-
   Servo_AuthorStyles_ForceDirty(mServoStyles.get());
   ApplicableRulesChanged();
 }
@@ -324,16 +328,25 @@ ShadowRoot::RuleAdded(StyleSheet& aSheet, css::Rule& aRule)
 void
 ShadowRoot::RuleRemoved(StyleSheet& aSheet, css::Rule& aRule)
 {
+  if (!aSheet.IsApplicable()) {
+    return;
+  }
+
+  MOZ_ASSERT(mServoStyles);
   if (mStyleRuleMap) {
     mStyleRuleMap->RuleRemoved(aSheet, aRule);
   }
-
   Servo_AuthorStyles_ForceDirty(mServoStyles.get());
   ApplicableRulesChanged();
 }
 
 void
-ShadowRoot::RuleChanged(StyleSheet&, css::Rule*) {
+ShadowRoot::RuleChanged(StyleSheet& aSheet, css::Rule*) {
+  if (!aSheet.IsApplicable()) {
+    return;
+  }
+
+  MOZ_ASSERT(mServoStyles);
   Servo_AuthorStyles_ForceDirty(mServoStyles.get());
   ApplicableRulesChanged();
 }
@@ -365,6 +378,10 @@ ShadowRoot::InsertSheetIntoAuthorData(size_t aIndex, StyleSheet& aSheet)
 {
   MOZ_ASSERT(SheetAt(aIndex) == &aSheet);
   MOZ_ASSERT(aSheet.IsApplicable());
+
+  if (!mServoStyles) {
+    mServoStyles.reset(Servo_AuthorStyles_Create());
+  }
 
   if (mStyleRuleMap) {
     mStyleRuleMap->SheetAdded(aSheet);
@@ -405,6 +422,7 @@ ShadowRoot::StyleSheetApplicableStateChanged(StyleSheet& aSheet, bool aApplicabl
   if (aApplicable) {
     InsertSheetIntoAuthorData(size_t(index), aSheet);
   } else {
+    MOZ_ASSERT(mServoStyles);
     if (mStyleRuleMap) {
       mStyleRuleMap->SheetRemoved(aSheet);
     }
@@ -420,6 +438,7 @@ ShadowRoot::RemoveSheet(StyleSheet* aSheet)
   RefPtr<StyleSheet> sheet = DocumentOrShadowRoot::RemoveSheet(*aSheet);
   MOZ_ASSERT(sheet);
   if (sheet->IsApplicable()) {
+    MOZ_ASSERT(mServoStyles);
     if (mStyleRuleMap) {
       mStyleRuleMap->SheetRemoved(*sheet);
     }

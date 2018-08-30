@@ -14,7 +14,7 @@
 
 :root.theme-dark {
   --slider-thumb-color: var(--grey-40);
-  --slider-track-color: var(--grey-50);
+  --slider-track-color: var(--grey-60);
   --input-background-color: var(--grey-70);
   --input-border-color: var(--grey-70);
   --input-text-color: var(--grey-40);
@@ -207,6 +207,10 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
+}
+
+.font-control-input .devtools-checkbox-toggle {
+  margin: 2px 0;
 }
 
 .font-control-label {
