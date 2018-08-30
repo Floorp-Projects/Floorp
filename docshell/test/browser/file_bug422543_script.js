@@ -76,9 +76,9 @@ let testAPI = {
   },
 
   notifyReload() {
-    let internal = this.shistory.legacySHistory.QueryInterface(Ci.nsISHistoryInternal);
+    let history = this.shistory.legacySHistory;
     let rval =
-      internal.notifyOnHistoryReload(content.document.documentURIObject, 0);
+      history.notifyOnHistoryReload(content.document.documentURIObject, 0);
     sendAsyncMessage("bug422543:notifyReload:return", { rval });
   },
 
