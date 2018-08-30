@@ -80,6 +80,11 @@ let PaymentFrameScript = {
         return FormAutofillUtils.getAddressLabel(address, addressFields);
       },
 
+      getCreditCardNetworks() {
+        let networks = FormAutofillUtils.getCreditCardNetworks();
+        return Cu.cloneInto(networks, waivedContent);
+      },
+
       isCCNumber(value) {
         return FormAutofillUtils.isCCNumber(value);
       },

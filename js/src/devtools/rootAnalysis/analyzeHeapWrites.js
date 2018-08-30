@@ -438,7 +438,7 @@ function ignoreContents(entry)
         /NS_DispatchToMainThread/, /NS_ReleaseOnMainThreadSystemGroup/,
         /NS_NewRunnableFunction/, /NS_Atomize/,
         /nsCSSValue::BufferFromString/,
-        /NS_strdup/,
+        /NS_xstrdup/,
         /Assert_NoQueryNeeded/,
         /AssertCurrentThreadOwnsMe/,
         /PlatformThread::CurrentId/,

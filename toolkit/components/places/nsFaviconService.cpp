@@ -565,8 +565,6 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
   // Read all the decoded data.
   uint8_t* buffer = static_cast<uint8_t*>
                                (moz_xmalloc(sizeof(uint8_t) * available));
-  if (!buffer)
-    return NS_ERROR_OUT_OF_MEMORY;
   uint32_t numRead;
   rv = stream->Read(TO_CHARBUFFER(buffer), available, &numRead);
   if (NS_FAILED(rv) || numRead != available) {

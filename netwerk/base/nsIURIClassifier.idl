@@ -95,6 +95,8 @@ interface nsIURIClassifier : nsISupports
    */
   void asyncClassifyLocalWithTables(in nsIURI aURI,
                                     in ACString aTables,
+                                    in Array<ACString> aExtraTablesByPrefs,
+                                    in Array<ACString> aExtraEntriesByPrefs,
                                     in nsIURIClassifierCallback aCallback);
   /**
    * Same as above, but returns a comma separated list of table names.

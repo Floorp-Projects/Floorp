@@ -67,7 +67,7 @@ public:
     CharPtr& operator=(const char* v)
     {
       if (v) {
-        mValue.reset(NS_strdup(v));
+        mValue.reset(NS_xstrdup(v));
       } else {
         mValue = nullptr;
       }

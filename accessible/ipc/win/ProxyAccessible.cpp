@@ -244,7 +244,7 @@ ProxyAccessible::BoundsInCSSPixels()
   }
 
   nsIntRect rect;
-  HRESULT hr = custom->get_boundsInCSSPixels(&rect.x, &rect.y, &rect.width, &rect.height);
+  Unused << custom->get_boundsInCSSPixels(&rect.x, &rect.y, &rect.width, &rect.height);
   return rect;
 }
 
@@ -416,7 +416,7 @@ ProxyAccessible::RelationByType(RelationType aType) const
   }
   CoTaskMemFree(targets);
 
-  return std::move(proxies);
+  return proxies;
 }
 
 double

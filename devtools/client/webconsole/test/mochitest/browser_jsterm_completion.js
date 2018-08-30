@@ -7,7 +7,10 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,<p>test code completion";
+const TEST_URI = `data:text/html;charset=utf8,<p>test code completion
+  <script>
+    foobar = true;
+  </script>`;
 
 add_task(async function() {
   // Run test with legacy JsTerm
@@ -23,18 +26,18 @@ async function performTests() {
   const {autocompletePopup} = jsterm;
 
   // Test typing 'docu'.
-  await setInputValueForAutocompletion(jsterm, "docu");
-  is(jsterm.getInputValue(), "docu", "'docu' completion (input.value)");
-  checkJsTermCompletionValue(jsterm, "    ment", "'docu' completion (completeNode)");
+  await setInputValueForAutocompletion(jsterm, "foob");
+  is(jsterm.getInputValue(), "foob", "'foob' completion (input.value)");
+  checkJsTermCompletionValue(jsterm, "    ar", "'foob' completion (completeNode)");
   is(autocompletePopup.items.length, 1, "autocomplete popup has 1 item");
   is(autocompletePopup.isOpen, false, "autocomplete popup is not open");
 
   // Test typing 'docu' and press tab.
   EventUtils.synthesizeKey("KEY_Tab");
-  is(jsterm.getInputValue(), "document", "'docu' tab completion");
+  is(jsterm.getInputValue(), "foobar", "'foob' tab completion");
 
-  checkJsTermCursor(jsterm, "document".length, "cursor is at the end of 'document'");
-  is(getJsTermCompletionValue(jsterm).replace(/ /g, ""), "", "'docu' completed");
+  checkJsTermCursor(jsterm, "foobar".length, "cursor is at the end of 'foobar'");
+  is(getJsTermCompletionValue(jsterm).replace(/ /g, ""), "", "'foob' completed");
 
   // Test typing 'window.Ob' and press tab.  Just 'window.O' is
   // ambiguous: could be window.Object, window.Option, etc.

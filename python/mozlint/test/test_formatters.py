@@ -6,13 +6,12 @@ from __future__ import absolute_import, unicode_literals
 
 import json
 import os
-from collections import defaultdict
 
 import mozunit
 import mozpack.path as mozpath
 import pytest
 
-from mozlint import ResultContainer
+from mozlint.result import Issue, ResultSummary
 from mozlint import formatters
 
 NORMALISED_PATHS = {
@@ -66,23 +65,23 @@ TEST-UNEXPECTED-WARNING | d/e/f.txt:4:2 | oh no bar (bar-not-allowed)
     'summary': {
         'kwargs': {},
         'format': """
-{cwd}/a: 2
-{cwd}/d: 1
+{cwd}/a: 2 errors
+{cwd}/d: 0 errors, 1 warning
 """.format(**NORMALISED_PATHS).strip(),
     },
 }
 
 
 @pytest.fixture
-def results(scope='module'):
+def result(scope='module'):
     containers = (
-        ResultContainer(
+        Issue(
             linter='foo',
             path='a/b/c.txt',
             message="oh no foo",
             lineno=1,
         ),
-        ResultContainer(
+        Issue(
             linter='bar',
             path='d/e/f.txt',
             message="oh no bar",
@@ -92,7 +91,7 @@ def results(scope='module'):
             column=2,
             rule="bar-not-allowed",
         ),
-        ResultContainer(
+        Issue(
             linter='baz',
             path='a/b/c.txt',
             message="oh no baz",
@@ -100,26 +99,26 @@ def results(scope='module'):
             source="if baz:",
         ),
     )
-    results = defaultdict(list)
+    result = ResultSummary()
     for c in containers:
-        results[c.path].append(c)
-    return results
+        result.issues[c.path].append(c)
+    return result
 
 
 @pytest.mark.parametrize("name", EXPECTED.keys())
-def test_formatters(results, name):
+def test_formatters(result, name):
     opts = EXPECTED[name]
     fmt = formatters.get(name, **opts['kwargs'])
-    assert fmt(results) == opts['format']
+    assert fmt(result) == opts['format']
 
 
-def test_json_formatter(results):
+def test_json_formatter(result):
     fmt = formatters.get('json')
-    formatted = json.loads(fmt(results))
+    formatted = json.loads(fmt(result))
 
-    assert set(formatted.keys()) == set(results.keys())
+    assert set(formatted.keys()) == set(result.issues.keys())
 
-    slots = ResultContainer.__slots__
+    slots = Issue.__slots__
     for errors in formatted.values():
         for err in errors:
             assert all(s in err for s in slots)

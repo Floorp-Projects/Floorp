@@ -366,9 +366,6 @@ nsProcess::CopyArgsAndRunProcess(bool aBlocking, const char** aArgs,
   // Add one to the aCount for the program name and one for null termination.
   char** my_argv = nullptr;
   my_argv = (char**)moz_xmalloc(sizeof(char*) * (aCount + 2));
-  if (!my_argv) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   my_argv[0] = ToNewUTF8String(mTargetPath);
 
@@ -408,9 +405,6 @@ nsProcess::CopyArgsAndRunProcessw(bool aBlocking, const char16_t** aArgs,
   // Add one to the aCount for the program name and one for null termination.
   char** my_argv = nullptr;
   my_argv = (char**)moz_xmalloc(sizeof(char*) * (aCount + 2));
-  if (!my_argv) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   my_argv[0] = ToNewUTF8String(mTargetPath);
 

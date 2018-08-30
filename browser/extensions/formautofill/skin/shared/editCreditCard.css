@@ -3,27 +3,46 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .editCreditCardForm {
-  justify-content: center;
+  display: grid;
+  grid-template-areas:
+    "cc-number          cc-exp-month       cc-exp-year"
+    "cc-name            cc-type            cc-csc"
+    "billingAddressGUID billingAddressGUID billingAddressGUID";
+  grid-row-gap: var(--grid-column-row-gap);
+  grid-column-gap: var(--grid-column-row-gap);
 }
 
-.editCreditCardForm > label,
-.editCreditCardForm > div {
-  flex: 1 0 100%;
-  align-self: center;
-  margin: 0 0 0.5em !important;
+.editCreditCardForm label {
+  /* Remove the margin on these labels since they are styled on top of
+     the input/select element. */
+  margin-inline-start: 0;
+  margin-inline-end: 0;
 }
 
-.editCreditCardForm #billingAddressGUID,
-.editCreditCardForm input {
-  flex: 1 0 auto;
+.editCreditCardForm .container {
+  display: flex;
 }
 
-.editCreditCardForm select {
-  margin: 0;
-  margin-inline-end: 0.7em;
+#cc-number-container {
+  grid-area: cc-number;
 }
 
-.editCreditCardForm label > span,
-.editCreditCardForm div > span {
-  flex: 0 0 9.5em;
+#cc-exp-month-container {
+  grid-area: cc-exp-month;
+}
+
+#cc-exp-year-container {
+  grid-area: cc-exp-year;
+}
+
+#cc-name-container {
+  grid-area: cc-name;
+}
+
+#cc-type-container {
+  grid-area: cc-type;
+}
+
+#billingAddressGUID-container {
+  grid-area: billingAddressGUID;
 }

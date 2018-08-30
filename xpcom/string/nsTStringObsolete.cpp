@@ -327,7 +327,7 @@ nsTString<T>::ReplaceSubstring(const self_type& aTarget,
   // string.  In other words, we over-allocate in the shrinking case.
   uint32_t oldLen = this->mLength;
   mozilla::Result<uint32_t, nsresult> r =
-    this->StartBulkWrite(XPCOM_MAX(oldLen, newLength.value()), oldLen);
+    this->StartBulkWriteImpl(XPCOM_MAX(oldLen, newLength.value()), oldLen);
   if (r.isErr()) {
     return false;
   }
@@ -367,7 +367,7 @@ nsTString<T>::ReplaceSubstring(const self_type& aTarget,
   }
 
   // Adjust the length and make sure the string is null terminated.
-  this->FinishBulkWrite(newLength.value());
+  this->FinishBulkWriteImpl(newLength.value());
 
   return true;
 }

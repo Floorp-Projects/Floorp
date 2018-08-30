@@ -831,9 +831,7 @@ nsMenuFrame::GetParentMenuListType()
     if (parentMenu) {
       nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(parentMenu->GetContent());
       if (menulist) {
-        bool isEditable = false;
-        menulist->GetEditable(&isEditable);
-        return isEditable ? eEditableMenuList : eReadonlyMenuList;
+        return eReadonlyMenuList;
       }
     }
   }
@@ -1183,10 +1181,6 @@ nsMenuFrame::ShouldBlink()
   int32_t shouldBlink =
     LookAndFeel::GetInt(LookAndFeel::eIntID_ChosenMenuItemsShouldBlink, 0);
   if (!shouldBlink)
-    return false;
-
-  // Don't blink in editable menulists.
-  if (GetParentMenuListType() == eEditableMenuList)
     return false;
 
   return true;

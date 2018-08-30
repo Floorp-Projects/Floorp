@@ -37,6 +37,8 @@ interface Event {
   [Pure]
   readonly attribute boolean cancelable;
   [NeedsCallerType]
+  attribute boolean returnValue;
+  [NeedsCallerType]
   void preventDefault();
   [Pure, NeedsCallerType]
   readonly attribute boolean defaultPrevented;

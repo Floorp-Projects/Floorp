@@ -60,7 +60,7 @@ public:
    * Returns the element targeted by the animation element. Needed for
    * registering event listeners against the appropriate element.
    */
-  mozilla::dom::Element* GetTargetElement();
+  Element* GetTargetElement();
 
   /**
    * Methods for supporting the ElementTimeControl interface.
@@ -265,8 +265,8 @@ public:
    * @param aValue      The attribute value.
    * @param aResult     The nsAttrValue object that may be used for storing the
    *                    parsed result.
-   * @param aContextNode The element to use for context when resolving
-   *                     references to other elements.
+   * @param aContextElement The element to use for context when resolving
+   *                        references to other elements.
    * @param[out] aParseResult The result of parsing the attribute. Will be set
    *                          to NS_OK if parsing is successful.
    *
@@ -274,8 +274,8 @@ public:
    * otherwise.
    */
   bool SetAttr(nsAtom* aAttribute, const nsAString& aValue,
-                 nsAttrValue& aResult, Element* aContextNode,
-                 nsresult* aParseResult = nullptr);
+               nsAttrValue& aResult, Element& aContextElement,
+               nsresult* aParseResult = nullptr);
 
   /**
    * Attempts to unset an attribute on this timed element.
@@ -326,18 +326,17 @@ public:
    * Called when the timed element has been bound to the document so that
    * references from this timed element to other elements can be resolved.
    *
-   * @param aContextNode  The node which provides the necessary context for
-   *                      resolving references. This is typically the element in
-   *                      the host language that owns this timed element. Should
-   *                      not be null.
+   * @param aContextElement The element which provides the necessary context for
+   *                        resolving references. This is typically the element
+   *                        in the host language that owns this timed element.
    */
-  void BindToTree(nsIContent* aContextNode);
+  void BindToTree(Element& aContextElement);
 
   /**
    * Called when the target of the animation has changed so that event
    * registrations can be updated.
    */
-  void HandleTargetElementChange(mozilla::dom::Element* aNewTarget);
+  void HandleTargetElementChange(Element* aNewTarget);
 
   /**
    * Called when the timed element has been removed from a document so that
@@ -377,10 +376,10 @@ protected:
   //
 
   nsresult          SetBeginSpec(const nsAString& aBeginSpec,
-                                 Element* aContextNode,
+                                 Element& aContextElement,
                                  RemovalTestFunction aRemove);
   nsresult          SetEndSpec(const nsAString& aEndSpec,
-                               Element* aContextNode,
+                               Element& aContextElement,
                                RemovalTestFunction aRemove);
   nsresult          SetSimpleDuration(const nsAString& aDurSpec);
   nsresult          SetMin(const nsAString& aMinSpec);
@@ -401,7 +400,7 @@ protected:
   void              UnsetFillMode();
 
   nsresult          SetBeginOrEndSpec(const nsAString& aSpec,
-                                      Element* aContextNode,
+                                      Element& aContextElement,
                                       bool aIsBegin,
                                       RemovalTestFunction aRemove);
   void              ClearSpecs(TimeValueSpecList& aSpecs,

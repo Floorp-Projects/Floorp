@@ -69,17 +69,12 @@ function createMenulist(v) {
   list.appendChild(popup);
   return list;
 }
-function createEditableMenulist(v) {
-  let list = createMenulist(v);
-  list.setAttribute("editable", "true");
-  return list;
-}
 function loaded() {
   let template = document.getElementById("template");
   ["regular", "small"].forEach(function(size) {
     let wrapper = document.querySelectorAll("#wrapper > ." + size)[0];
     allPairs([
-      createButton, createMenulist, createTextField, createEditableMenulist,
+      createButton, createMenulist, createTextField,
     ]).forEach(function(elemList) {
       let newBox = template.cloneNode(true);
       newBox.className = "spacer";

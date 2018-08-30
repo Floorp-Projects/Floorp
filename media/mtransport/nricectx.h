@@ -52,6 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include "sigslot.h"
 
@@ -257,19 +258,22 @@ class NrIceCtx {
   // Testing only.
   void destroy_peer_ctx();
 
-  void SetStream(size_t index, NrIceMediaStream* stream);
+  void SetStream(const std::string& id, NrIceMediaStream* stream);
 
-  RefPtr<NrIceMediaStream> GetStream(size_t index) {
-    if (index < streams_.size()) {
-      return streams_[index];
+  RefPtr<NrIceMediaStream> GetStream(const std::string& id) {
+    auto it = streams_.find(id);
+    if (it != streams_.end()) {
+      return it->second;
     }
     return nullptr;
   }
 
-  // Some might be null
-  size_t GetStreamCount() const
-  {
-    return streams_.size();
+  std::vector<RefPtr<NrIceMediaStream>> GetStreams() const {
+    std::vector<RefPtr<NrIceMediaStream>> result;
+    for (auto& idAndStream : streams_) {
+      result.push_back(idAndStream.second);
+    }
+    return result;
   }
 
   bool HasStreamsToConnect() const;
@@ -399,7 +403,7 @@ private:
   bool offerer_;
   TimeStamp ice_start_time_;
   bool ice_controlling_set_;
-  std::vector<RefPtr<NrIceMediaStream> > streams_;
+  std::map<std::string, RefPtr<NrIceMediaStream> > streams_;
   nr_ice_ctx *ctx_;
   nr_ice_peer_ctx *peer_;
   nr_ice_handler_vtbl* ice_handler_vtbl_;  // Must be pointer

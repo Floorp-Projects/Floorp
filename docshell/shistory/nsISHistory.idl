@@ -77,14 +77,6 @@ interface nsISHistory: nsISupports
    nsISHEntry getEntryAtIndex(in long index, in boolean modifyIndex);
 
   /**
-   * Load the entry at given index to root docshell directly in order to
-   * restore to an entry in grouped session history navigation or session
-   * restore case. This function will not notify nsISHistoryListener, as it's
-   * not considered a normal history navigation.
-   */
-   void restoreToEntryAtIndex(in long index);
-
-  /**
    * Called to purge older documents from history.
    * Documents can be removed from session history for various 
    * reasons. For example to  control memory usage of the browser, to 

@@ -12,21 +12,44 @@
 
 namespace js {
 
+// An async function is implemented using two function objects, which are
+// referred to as the "unwrapped" and the "wrapped" async function object.
+// The unwrapped function is a generator function compiled from the async
+// function's script. |await| expressions within the async function are
+// compiled like |yield| expression for the generator function with dedicated
+// opcode,. The unwrapped function is never exposed to user script.
+// The wrapped function is a native function which wraps the generator function,
+// hence its name, and is the publicly exposed object of the async function.
+//
+// The unwrapped async function is created while compiling the async function,
+// and the wrapped async function is created while executing the async function
+// declaration or expression.
+
+// Returns a wrapped async function from an unwrapped async function.
 JSFunction*
 GetWrappedAsyncFunction(JSFunction* unwrapped);
 
+// Returns an unwrapped async function from a wrapped async function.
 JSFunction*
 GetUnwrappedAsyncFunction(JSFunction* wrapped);
 
+// Returns true if the given function is a wrapped async function.
 bool
 IsWrappedAsyncFunction(JSFunction* fun);
 
+// Create a wrapped async function from unwrapped async function with given
+// prototype object.
 JSObject*
 WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleObject proto);
 
+// Create a wrapped async function from unwrapped async function with default
+// prototype object.
 JSObject*
 WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped);
 
+// Resume the async function when the `await` operand resolves.
+// Split into two functions depending on whether the awaited value was
+// fulfilled or rejected.
 MOZ_MUST_USE bool
 AsyncFunctionAwaitedFulfilled(JSContext* cx, Handle<PromiseObject*> resultPromise,
                               HandleValue generatorVal, HandleValue value);

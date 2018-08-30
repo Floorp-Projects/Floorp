@@ -86,21 +86,11 @@
   /* Icon filters */
   --theme-icon-checked-filter: url(chrome://devtools/skin/images/filters.svg#icon-checked-light);
 
-  /* Tooltips */
-  --theme-tooltip-border: #d9e1e8;
-  --theme-tooltip-background: rgba(255, 255, 255, .9);
-  --theme-tooltip-shadow: rgba(155, 155, 155, 0.26);
-
-  /* Doorhangers */
-  /* These colors are based on the colors used for doorhangers elsewhere in
-   * Firefox. */
-  --theme-arrowpanel-background: -moz-field;
-  --theme-arrowpanel-color: -moz-fieldText;
-  --theme-arrowpanel-border-color: ThreeDShadow;
-  --theme-arrowpanel-separator: ThreeDShadow;
-  --theme-arrowpanel-dimmed: hsla(0,0%,80%,.3);
-  --theme-arrowpanel-dimmed-further: hsla(0,0%,80%,.45);
-  --theme-arrowpanel-disabled-color: GrayText;
+  /* Common popup styles(used by HTMLTooltip and autocomplete) */
+  --theme-popup-background: -moz-field;
+  --theme-popup-color: -moz-fieldText;
+  --theme-popup-border-color: ThreeDShadow;
+  --theme-popup-dimmed: hsla(0,0%,80%,.3);
 
   --theme-messageCloseButtonFilter: invert(0);
 }
@@ -110,10 +100,9 @@
  * system colors.
  */
 :root[platform="mac"].theme-light {
-  --theme-arrowpanel-background: hsla(0,0%,99%,.975);
-  --theme-arrowpanel-color: hsl(0,0%,10%);
-  --theme-arrowpanel-border-color: hsla(210,4%,10%,.05);
-  --theme-arrowpanel-separator: hsla(210,4%,10%,.14);
+  --theme-popup-background: hsla(0,0%,99%,.975);
+  --theme-popup-color: hsl(0,0%,10%);
+  --theme-popup-border-color: hsla(210,4%,10%,.05);
 }
 
 :root.theme-dark {
@@ -188,21 +177,11 @@
   /* Icon filters */
   --theme-icon-checked-filter: url(chrome://devtools/skin/images/filters.svg#icon-checked-dark);
 
-  /* Tooltips */
-  --theme-tooltip-border: #434850;
-  --theme-tooltip-background: rgba(19, 28, 38, .9);
-  --theme-tooltip-shadow: rgba(25, 25, 25, 0.76);
-
-  /* Doorhangers */
-  /* These colors are based on the colors used for doorhangers elsewhere in
-   * Firefox. */
-  --theme-arrowpanel-background: var(--grey-60);
-  --theme-arrowpanel-color: rgb(249,249,250);
-  --theme-arrowpanel-border-color: #27272b;
-  --theme-arrowpanel-separator: rgba(249,249,250,.1);
-  --theme-arrowpanel-dimmed: rgba(249,249,250,.1);
-  --theme-arrowpanel-dimmed-further: rgba(249,249,250,.15);
-  --theme-arrowpanel-disabled-color: rgba(249,249,250,.5);
+  /* Common popup styles(used by HTMLTooltip and autocomplete) */
+  --theme-popup-background: var(--grey-60);
+  --theme-popup-color: rgb(249,249,250);
+  --theme-popup-border-color: #27272b;
+  --theme-popup-dimmed: rgba(249,249,250,.1);
 
   --theme-messageCloseButtonFilter: invert(1);
 }

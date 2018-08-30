@@ -41,7 +41,8 @@ class ADBAndroid(ADBDevice):
                  timeout=300,
                  verbose=False,
                  device_ready_retry_wait=20,
-                 device_ready_retry_attempts=3):
+                 device_ready_retry_attempts=3,
+                 require_root=True):
         """Initializes the ADBAndroid object.
 
         :param device: When a string is passed, it is interpreted as the
@@ -66,11 +67,19 @@ class ADBAndroid(ADBDevice):
         :param adb_port: port of the adb server to connect to.
         :type adb_port: integer or None
         :param str logger_name: logging logger name. Defaults to 'adb'.
+        :param timeout: The default maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value defaults to 300.
+        :type timeout: integer or None
+        :param bool verbose: provide verbose output
         :param integer device_ready_retry_wait: number of seconds to wait
             between attempts to check if the device is ready after a
             reboot.
         :param integer device_ready_retry_attempts: number of attempts when
             checking if a device is ready.
+        :param bool require_root: check that we have root permissions on device
 
         :raises: * ADBError
                  * ADBTimeoutError
@@ -79,24 +88,14 @@ class ADBAndroid(ADBDevice):
         ADBDevice.__init__(self, device=device, adb=adb,
                            adb_host=adb_host, adb_port=adb_port,
                            test_root=test_root,
-                           logger_name=logger_name, timeout=timeout,
+                           logger_name=logger_name,
+                           timeout=timeout,
                            verbose=verbose,
                            device_ready_retry_wait=device_ready_retry_wait,
-                           device_ready_retry_attempts=device_ready_retry_attempts)
-        # https://source.android.com/devices/tech/security/selinux/index.html
-        # setenforce
-        # usage:  setenforce [ Enforcing | Permissive | 1 | 0 ]
-        # getenforce returns either Enforcing or Permissive
-
-        try:
-            self.selinux = True
-            if self.shell_output('getenforce', timeout=timeout) != 'Permissive':
-                self._logger.info('Setting SELinux Permissive Mode')
-                self.shell_output("setenforce Permissive", timeout=timeout, root=True)
-        except (ADBError, ADBRootError) as e:
-            self._logger.warning('Unable to set SELinux Permissive due to %s.' % e)
-            self.selinux = False
-
+                           device_ready_retry_attempts=device_ready_retry_attempts,
+                           require_root=require_root)
+        self._selinux = None
+        self.enforcing = 'Permissive'
         self.version = int(self.shell_output("getprop ro.build.version.sdk",
                                              timeout=timeout))
         # Beginning in Android 8.1 /data/anr/traces.txt no longer contains
@@ -114,6 +113,46 @@ class ADBAndroid(ADBDevice):
             else:
                 stack_trace_dir = '/data/anr'
         self.stack_trace_dir = stack_trace_dir
+
+    # Properties to manage SELinux on the device:
+    # https://source.android.com/devices/tech/security/selinux/index.html
+    # setenforce [ Enforcing | Permissive | 1 | 0 ]
+    # getenforce returns either Enforcing or Permissive
+
+    @property
+    def selinux(self):
+        """Returns True if SELinux is supported, False otherwise.
+        """
+        if self._selinux is None:
+            self._selinux = (self.enforcing != '')
+        return self._selinux
+
+    @property
+    def enforcing(self):
+        try:
+            enforce = self.shell_output('getenforce')
+        except ADBError as e:
+            enforce = ''
+            self._logger.warning('Unable to get SELinux enforcing due to %s.' % e)
+        return enforce
+
+    @enforcing.setter
+    def enforcing(self, value):
+        """Set SELinux mode.
+        :param str value: The new SELinux mode. Should be one of
+            Permissive, 0, Enforcing, 1 but it is not validated.
+
+        We do not attempt to set SELinux when _require_root is False.  This
+        allows experimentation with running unrooted devices.
+        """
+        try:
+            if not self._require_root:
+                self._logger.info('Ignoring attempt to set SELinux %s.' % value)
+            else:
+                self._logger.info('Setting SELinux %s' % value)
+                self.shell_output("setenforce %s" % value, root=True)
+        except (ADBError, ADBRootError) as e:
+            self._logger.warning('Unable to set SELinux Permissive due to %s.' % e)
 
     def reboot(self, timeout=None):
         """Reboots the device.
@@ -253,10 +292,8 @@ class ADBAndroid(ADBDevice):
                     failure = "Device state: %s" % state
                     success = False
                 else:
-                    if (self.selinux and self.shell_output('getenforce',
-                                                           timeout=timeout) != 'Permissive'):
-                        self._logger.info('Setting SELinux Permissive Mode')
-                        self.shell_output("setenforce Permissive", timeout=timeout, root=True)
+                    if self.enforcing != 'Permissive':
+                        self.enforcing = 'Permissive'
                     if self.is_dir(ready_path, timeout=timeout):
                         self.rmdir(ready_path, timeout=timeout)
                     self.mkdir(ready_path, timeout=timeout)

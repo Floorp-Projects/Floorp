@@ -261,6 +261,19 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Are style system use counters enabled?
+#ifdef RELEASE_OR_BETA
+#define PREF_VALUE false
+#else
+#define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "layout.css.use-counters.enabled",
+   layout_css_use_counters_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 // Is CSS error reporting enabled?
 VARCACHE_PREF(
   "layout.css.report_errors",
@@ -445,6 +458,13 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "layout.css.unknown-webkit-pseudo-element",
    layout_css_unknown_webkit_pseudo_element,
+  bool, false
+)
+
+// Is support for CSS column-span enabled?
+VARCACHE_PREF(
+  "layout.css.column-span.enabled",
+   layout_css_column_span_enabled,
   bool, false
 )
 
@@ -1246,10 +1266,11 @@ PREF("preferences.allow.omt-write", bool, true)
 // Privacy prefs
 //---------------------------------------------------------------------------
 
+// Whether Content Blocking has been enabled
 VARCACHE_PREF(
-  "privacy.restrict3rdpartystorage.ui.enabled",
-   privacy_restrict3rdpartystorage_ui_enabled,
-  RelaxedAtomicBool, false
+  "browser.contentblocking.enabled",
+   browser_contentblocking_enabled,
+  bool, true
 )
 
 // Anti-tracking permission expiration

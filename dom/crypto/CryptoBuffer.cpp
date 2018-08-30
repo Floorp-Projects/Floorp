@@ -175,9 +175,6 @@ CryptoBuffer::ToNewUnsignedBuffer(uint8_t** aBuf, uint32_t* aBufLen) const
 
   uint32_t dataLen = Length();
   uint8_t* tmp = reinterpret_cast<uint8_t*>(moz_xmalloc(dataLen));
-  if (NS_WARN_IF(!tmp)) {
-    return false;
-  }
 
   memcpy(tmp, Elements(), dataLen);
   *aBuf = tmp;

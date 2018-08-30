@@ -6,7 +6,6 @@
 
 XPIDL_SOURCES += [
     'nsIFontEnumerator.idl',
-    'nsIScriptableRegion.idl',
 ]
 
 XPIDL_MODULE = 'gfx'
@@ -68,7 +67,6 @@ UNIFIED_SOURCES += [
     'nsFontMetrics.cpp',
     'nsRect.cpp',
     'nsRegion.cpp',
-    'nsScriptableRegion.cpp',
     'nsThebesFontEnumerator.cpp',
     'nsThebesGfxFactory.cpp',
     'nsTransform2D.cpp',

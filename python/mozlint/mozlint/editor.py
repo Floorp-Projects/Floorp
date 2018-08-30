@@ -15,8 +15,8 @@ def get_editor():
     return os.environ.get('EDITOR')
 
 
-def edit_results(results):
-    if not results:
+def edit_issues(issues):
+    if not issues:
         return
 
     editor = get_editor()
@@ -41,7 +41,7 @@ def edit_results(results):
         ]
 
         with tempfile.NamedTemporaryFile() as fh:
-            s = formatters.get('compact', summary=False)(results)
+            s = formatters.get('compact', summary=False)(issues)
             fh.write(s)
             fh.flush()
 
@@ -49,5 +49,5 @@ def edit_results(results):
             subprocess.call(cmd)
 
     else:
-        for path, errors in results.iteritems():
+        for path, errors in issues.iteritems():
             subprocess.call([editor, path])

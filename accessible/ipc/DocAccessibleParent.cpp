@@ -760,7 +760,7 @@ DocAccessibleParent::SendParentCOMProxy()
   }
 
 #if defined(MOZ_CONTENT_SANDBOX)
-  mParentProxyStream = std::move(holder.GetPreservedStream());
+  mParentProxyStream = holder.GetPreservedStream();
 #endif // defined(MOZ_CONTENT_SANDBOX)
 }
 

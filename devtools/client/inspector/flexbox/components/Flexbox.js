@@ -9,11 +9,14 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
-loader.lazyGetter(this, "FlexContainerList", function() {
-  return createFactory(require("./FlexContainerList"));
+loader.lazyGetter(this, "FlexContainer", function() {
+  return createFactory(require("./FlexContainer"));
 });
 loader.lazyGetter(this, "FlexContainerProperties", function() {
   return createFactory(require("./FlexContainerProperties"));
+});
+loader.lazyGetter(this, "FlexItemList", function() {
+  return createFactory(require("./FlexItemList"));
 });
 
 const Types = require("../types");
@@ -29,6 +32,22 @@ class Flexbox extends PureComponent {
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
+  }
+
+  renderFlexItemList() {
+    const { flexbox } = this.props;
+    const {
+      flexItems,
+      highlighted,
+    } = flexbox;
+
+    if (!highlighted || !flexItems.length) {
+      return null;
+    }
+
+    return FlexItemList({
+      flexItems,
+    });
   }
 
   render() {
@@ -52,17 +71,16 @@ class Flexbox extends PureComponent {
 
     return (
       dom.div({ id: "layout-flexbox-container" },
-        dom.div({ className: "flexbox-content" },
-          FlexContainerList({
-            flexbox,
-            getSwatchColorPickerTooltip,
-            onHideBoxModelHighlighter,
-            onSetFlexboxOverlayColor,
-            onShowBoxModelHighlighterForNode,
-            onToggleFlexboxHighlighter,
-            setSelectedNode,
-          })
-        ),
+        FlexContainer({
+          flexbox,
+          getSwatchColorPickerTooltip,
+          onHideBoxModelHighlighter,
+          onSetFlexboxOverlayColor,
+          onShowBoxModelHighlighterForNode,
+          onToggleFlexboxHighlighter,
+          setSelectedNode,
+        }),
+        this.renderFlexItemList(),
         FlexContainerProperties({
           properties: flexbox.properties,
         })

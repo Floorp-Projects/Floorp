@@ -388,8 +388,9 @@ class Redirection
       }
     }
 
+    // Note: we can't use js_new here because the constructor is private.
     js::AutoEnterOOMUnsafeRegion oomUnsafe;
-    Redirection* redir = js_pod_malloc<Redirection>();
+    Redirection* redir = js_pod_malloc<Redirection>(1);
     if (!redir)
         oomUnsafe.crash("Simulator redirection");
     new(redir) Redirection(nativeFunction, type);

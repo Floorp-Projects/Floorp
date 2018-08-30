@@ -24,8 +24,8 @@ using namespace mozilla::net;
 #define SETPROPERTY_REPETITIONS (1000 * 1000)
 #define GETPROPERTY_REPETITIONS (1000 * 1000)
 
-static void ServoParsingBench() {
-
+static void ServoParsingBench(const StyleUseCounters* aCounters)
+{
   auto css = AsBytes(MakeStringSpan(EXAMPLE_STYLESHEET));
   nsCString cssStr;
   cssStr.Append(css);
@@ -43,12 +43,14 @@ static void ServoParsingBench() {
                                      data,
                                      0,
                                      eCompatibility_FullStandards,
-                                     nullptr)
+                                     nullptr,
+                                     aCounters)
         .Consume();
   }
 }
 
-static void ServoSetPropertyByIdBench(const nsACString& css) {
+static void ServoSetPropertyByIdBench(const nsACString& css)
+{
   RefPtr<RawServoDeclarationBlock> block = Servo_DeclarationBlock_CreateEmpty().Consume();
   RefPtr<URLExtraData> data = new URLExtraData(
     NullPrincipalURI::Create(), nullptr, NullPrincipal::CreateWithoutOriginAttributes());
@@ -100,7 +102,14 @@ static void ServoGetPropertyValueById() {
   }
 }
 
-MOZ_GTEST_BENCH(Stylo, Servo_StyleSheet_FromUTF8Bytes_Bench, ServoParsingBench);
+MOZ_GTEST_BENCH(Stylo, Servo_StyleSheet_FromUTF8Bytes_Bench, [] {
+    ServoParsingBench(nullptr);
+});
+
+MOZ_GTEST_BENCH(Stylo, Servo_StyleSheet_FromUTF8Bytes_Bench_UseCounters, [] {
+    UniquePtr<StyleUseCounters> counters(Servo_UseCounters_Create());
+    ServoParsingBench(counters.get());
+});
 
 MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_SetPropertyById_Bench, [] {
   ServoSetPropertyByIdBench(NS_LITERAL_CSTRING("10px"));

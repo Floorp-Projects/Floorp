@@ -15,18 +15,53 @@
 namespace js {
 
 enum PromiseSlots {
+    // Int32 value with PROMISE_FLAG_* flags below.
     PromiseSlot_Flags = 0,
+
+    // * if this promise is pending, reaction objects
+    //     * undefined if there's no reaction
+    //     * maybe-wrapped PromiseReactionRecord if there's only one reacion
+    //     * dense array if there are two or more more reactions
+    // * if this promise is fulfilled, the resolution value
+    // * if this promise is rejected, the reason for the rejection
     PromiseSlot_ReactionsOrResult,
+
+    // * if this promise is pending, resolve/reject functions.
+    //   This slot holds only the reject function. The resolve function is
+    //   reachable from the reject function's extended slot.
+    // * if this promise is either fulfilled or rejected, undefined
+    // * (special case) if this promise is the return value of an async function
+    //   invocation, the generator object for the function's internal generator
     PromiseSlot_RejectFunction,
     PromiseSlot_AwaitGenerator = PromiseSlot_RejectFunction,
+
+    // Promise object's debug info, which is created on demand.
+    // * if this promise has no debug info, undefined
+    // * if this promise contains only its process-unique ID, the ID's number
+    //   value
+    // * otherwise a PromiseDebugInfo object
     PromiseSlot_DebugInfo,
+
     PromiseSlots,
 };
 
+// This promise is either fulfilled or rejected.
+// If this flag is not set, this promise is pending.
 #define PROMISE_FLAG_RESOLVED  0x1
+
+// If this flag and PROMISE_FLAG_RESOLVED are set, this promise is fulfilled.
+// If only PROMISE_FLAG_RESOLVED is set, this promise is rejected.
 #define PROMISE_FLAG_FULFILLED 0x2
+
+// Indicates the promise has ever had a fulfillment or rejection handler;
+// used in unhandled rejection tracking.
 #define PROMISE_FLAG_HANDLED   0x4
+
+// This promise uses the default resolving functions.
+// The PromiseSlot_RejectFunction slot is not used.
 #define PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS 0x08
+
+// This promise is the return value of an async function invocation.
 #define PROMISE_FLAG_ASYNC    0x10
 
 class AutoSetNewObjectMetadata;
@@ -92,7 +127,10 @@ class PromiseObject : public NativeObject
         return resolutionTime() - allocationTime();
     }
     MOZ_MUST_USE bool dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> values);
+
+    // Return the process-unique ID of this promise. Only used by the debugger.
     uint64_t getID();
+
     bool isUnhandled() {
         MOZ_ASSERT(state() == JS::PromiseState::Rejected);
         return !(flags() & PROMISE_FLAG_HANDLED);
@@ -113,9 +151,18 @@ class PromiseObject : public NativeObject
 MOZ_MUST_USE JSObject*
 GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises);
 
+// Whether to create a promise as the return value of Promise#{then,catch}.
+// If the return value is known to be unused, and if the operation is known
+// to be unobservable, we can skip creating the promise.
 enum class CreateDependentPromise {
+    // The return value is not known to be unused.
     Always,
+
+    // The return value is known to be unused.
     SkipIfCtorUnobservable,
+
+    // The return value is known to be unused, and the operation is known
+    // to be unobservable.
     Never
 };
 
@@ -144,9 +191,17 @@ MOZ_MUST_USE JSObject*
 PromiseResolve(JSContext* cx, HandleObject constructor, HandleValue value);
 
 
+/**
+ * Create the promise object which will be used as the return value of an async
+ * function.
+ */
 MOZ_MUST_USE PromiseObject*
 CreatePromiseObjectForAsync(JSContext* cx, HandleValue generatorVal);
 
+/**
+ * Returns true if the given object is a promise created by
+ * CreatePromiseObjectForAsync function.
+ */
 MOZ_MUST_USE bool
 IsPromiseForAsync(JSObject* promise);
 

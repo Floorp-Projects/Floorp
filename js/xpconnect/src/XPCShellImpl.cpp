@@ -8,6 +8,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/AutoByteString.h"
+#include "js/CompilationAndEvaluation.h"
 #include "js/Printf.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/dom/ScriptSettings.h"

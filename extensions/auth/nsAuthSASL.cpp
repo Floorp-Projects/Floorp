@@ -105,10 +105,6 @@ nsAuthSASL::GetNextToken(const void *inToken,
         NS_CopyUnicodeToNative(mUsername, userbuf);
         messageLen = userbuf.Length() + 4 + 1;
         message = (char *)moz_xmalloc(messageLen);
-        if (!message) {
-          Reset();
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
         message[0] = 0x01; // No security layer
         message[1] = 0x00;
         message[2] = 0x00;

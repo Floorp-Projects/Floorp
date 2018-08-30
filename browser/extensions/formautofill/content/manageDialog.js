@@ -346,6 +346,7 @@ class ManageCreditCards extends ManageRecords {
       encryptedNumber: creditCard["cc-number-encrypted"],
       number: creditCard["cc-number"],
       name: creditCard["cc-name"],
+      network: creditCard["cc-type"],
     });
     return cardObj.getLabel({showNumbers: showCreditCards});
   }

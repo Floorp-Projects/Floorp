@@ -3402,6 +3402,11 @@ public:
     }
   }
 
+  const StyleUseCounters* GetStyleUseCounters()
+  {
+    return mStyleUseCounters.get();
+  }
+
   void SetPageUseCounter(mozilla::UseCounter aUseCounter);
 
   void SetDocumentAndPageUseCounter(mozilla::UseCounter aUseCounter)
@@ -4318,6 +4323,9 @@ protected:
   // Flags for whether we've notified our top-level "page" of a use counter
   // for this child document.
   std::bitset<mozilla::eUseCounter_Count> mNotifiedPageForUseCounter;
+
+  // The CSS property use counters.
+  mozilla::UniquePtr<StyleUseCounters> mStyleUseCounters;
 
   // Whether the user has interacted with the document or not:
   bool mUserHasInteracted;

@@ -387,6 +387,7 @@ class IceTestPeer : public sigslot::has_slots<> {
                                        ice_policy)),
       offerer_(offerer),
       candidates_(),
+      stream_counter_(0),
       shutting_down_(false),
       gathering_complete_(false),
       ready_ct_(0),
@@ -430,14 +431,17 @@ class IceTestPeer : public sigslot::has_slots<> {
     PR_Sleep(1000);
   }
 
-  void AddStream_s(int components) {
-    char name[100];
-    snprintf(name, sizeof(name), "%s:stream%d", name_.c_str(),
-             (int)ice_ctx_->ctx()->GetStreamCount());
+  std::string MakeTransportId(size_t index) const {
+    char id[100];
+    snprintf(id, sizeof(id), "%s:stream%d", name_.c_str(), (int)index);
+    return id;
+  }
 
-    RefPtr<NrIceMediaStream> stream =
-        ice_ctx_->CreateStream(static_cast<char *>(name), components);
-    ice_ctx_->ctx()->SetStream(ice_ctx_->ctx()->GetStreamCount(), stream);
+  void AddStream_s(int components) {
+    std::string id = MakeTransportId(stream_counter_++);
+
+    RefPtr<NrIceMediaStream> stream = ice_ctx_->CreateStream(id, components);
+    ice_ctx_->ctx()->SetStream(id, stream);
 
     ASSERT_TRUE(stream);
     stream->SignalCandidate.connect(this, &IceTestPeer::CandidateInitialized);
@@ -454,13 +458,18 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void RemoveStream_s(size_t index) {
-    ice_ctx_->ctx()->SetStream(index, nullptr);
+    ice_ctx_->ctx()->SetStream(MakeTransportId(index), nullptr);
   }
 
   void RemoveStream(size_t index) {
     test_utils_->sts_target()->Dispatch(
         WrapRunnable(this, &IceTestPeer::RemoveStream_s, index),
         NS_DISPATCH_SYNC);
+  }
+
+  RefPtr<NrIceMediaStream> GetStream_s(size_t index) {
+    std::string id = MakeTransportId(index);
+    return ice_ctx_->ctx()->GetStream(id);
   }
 
   void SetStunServer(const std::string addr, uint16_t port,
@@ -601,17 +610,16 @@ class IceTestPeer : public sigslot::has_slots<> {
     return candidate;
   }
 
-  std::vector<std::string> GetCandidates_s(size_t stream) {
+  std::vector<std::string> GetCandidates_s(size_t index) {
     std::vector<std::string> candidates;
 
-    if (stream >= ice_ctx_->ctx()->GetStreamCount() ||
-        !ice_ctx_->ctx()->GetStream(stream)) {
-      EXPECT_TRUE(false) << "No such stream " << stream;
+    auto stream = GetStream_s(index);
+    if (!stream) {
+      EXPECT_TRUE(false) << "No such stream " << index;
       return candidates;
     }
 
-    std::vector<std::string> candidates_in =
-      ice_ctx_->ctx()->GetStream(stream)->GetCandidates();
+    std::vector<std::string> candidates_in = stream->GetCandidates();
 
     for (const auto& a_candidate : candidates_in) {
       std::string candidate(FilterCandidate(a_candidate));
@@ -665,10 +673,10 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   bool gathering_complete() { return gathering_complete_; }
   int ready_ct() { return ready_ct_; }
-  bool is_ready_s(size_t stream) {
-    RefPtr<NrIceMediaStream> media_stream = ice_ctx_->ctx()->GetStream(stream);
+  bool is_ready_s(size_t index) {
+    auto media_stream = GetStream_s(index);
     if (!media_stream) {
-      EXPECT_TRUE(false) << "No such stream " << stream;
+      EXPECT_TRUE(false) << "No such stream " << index;
       return false;
     }
     return media_stream->state() == NrIceMediaStream::ICE_OPEN;
@@ -715,6 +723,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     ice_failed_ = false;
     ice_reached_checking_ = false;
     remote_ = nullptr;
+    stream_counter_ = 0;
   }
 
 
@@ -758,8 +767,8 @@ class IceTestPeer : public sigslot::has_slots<> {
 
     if (trickle_mode == TRICKLE_NONE ||
         trickle_mode == TRICKLE_REAL) {
-      for (size_t i=0; i<ice_ctx_->ctx()->GetStreamCount(); ++i) {
-        RefPtr<NrIceMediaStream> aStream = ice_ctx_->ctx()->GetStream(i);
+      for (size_t i=0; i<stream_counter_; ++i) {
+        auto aStream = GetStream_s(i);
         if (!aStream || aStream->HasParsedAttributes()) {
           continue;
         }
@@ -774,8 +783,8 @@ class IceTestPeer : public sigslot::has_slots<> {
       }
     } else {
       // Parse empty attributes and then trickle them out later
-      for (size_t i=0; i<ice_ctx_->ctx()->GetStreamCount(); ++i) {
-        RefPtr<NrIceMediaStream> aStream = ice_ctx_->ctx()->GetStream(i);
+      for (size_t i=0; i<stream_counter_; ++i) {
+        auto aStream = GetStream_s(i);
         if (!aStream || aStream->HasParsedAttributes()) {
           continue;
         }
@@ -808,10 +817,6 @@ class IceTestPeer : public sigslot::has_slots<> {
     // If we are in trickle deferred mode, now trickle in the candidates
     // for |stream|
 
-    // We should be safe here since stream changes happen on STS thread.
-    ASSERT_GT(remote_->ice_ctx_->ctx()->GetStreamCount(), stream);
-    ASSERT_TRUE(remote_->ice_ctx_->ctx()->GetStream(stream).get());
-
     std::vector<SchedulableTrickleCandidate*>& candidates =
       ControlTrickle(stream);
 
@@ -838,12 +843,13 @@ class IceTestPeer : public sigslot::has_slots<> {
     return controlled_trickle_candidates_[stream];
   }
 
-  nsresult TrickleCandidate_s(const std::string &candidate, size_t stream) {
-    if (!ice_ctx_->ctx()->GetStream(stream)) {
+  nsresult TrickleCandidate_s(const std::string &candidate, size_t index) {
+    auto stream = GetStream_s(index);
+    if (!stream) {
       // stream might have gone away before the trickle timer popped
       return NS_OK;
     }
-    return ice_ctx_->ctx()->GetStream(stream)->ParseTrickleCandidate(candidate);
+    return stream->ParseTrickleCandidate(candidate);
   }
 
   void DumpCandidate(std::string which, const NrIceCandidate& cand) {
@@ -915,21 +921,15 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void DumpAndCheckActiveCandidates_s() {
     std::cerr << name_ << " Active candidates:" << std::endl;
-    for (size_t i=0; i < ice_ctx_->ctx()->GetStreamCount(); ++i) {
-      if (!ice_ctx_->ctx()->GetStream(i)) {
-        continue;
-      }
-
-      for (size_t j=0; j < ice_ctx_->ctx()->GetStream(i)->components(); ++j) {
-        std::cerr << name_ << " Stream " << i
+    for (const auto& stream : ice_ctx_->ctx()->GetStreams()) {
+      for (size_t j=0; j < stream->components(); ++j) {
+        std::cerr << name_ << " Stream " << stream->GetId()
                            << " component " << j+1 << std::endl;
 
         UniquePtr<NrIceCandidate> local;
         UniquePtr<NrIceCandidate> remote;
 
-        nsresult res = ice_ctx_->ctx()->GetStream(i)->GetActivePair(j+1,
-                                                                    &local,
-                                                                    &remote);
+        nsresult res = stream->GetActivePair(j+1, &local, &remote);
         if (res == NS_ERROR_NOT_AVAILABLE) {
           std::cerr << "Component unpaired or disabled." << std::endl;
         } else {
@@ -1027,16 +1027,10 @@ class IceTestPeer : public sigslot::has_slots<> {
     gathering_complete_ = true;
 
     std::cerr << name_ << " CANDIDATES:" << std::endl;
-    for (size_t i=0; i<ice_ctx_->ctx()->GetStreamCount(); ++i) {
-      std::cerr << "Stream " << name_ << std::endl;
+    for (const auto& stream : ice_ctx_->ctx()->GetStreams()) {
+      std::cerr << "Stream " << stream->GetId() << std::endl;
 
-      if (!ice_ctx_->ctx()->GetStream(i)) {
-        std::cerr << "DISABLED" << std::endl;
-        continue;
-      }
-
-      std::vector<std::string> candidates =
-          ice_ctx_->ctx()->GetStream(i)->GetCandidates();
+      std::vector<std::string> candidates = stream->GetCandidates();
 
       for(const auto& candidate : candidates) {
         std::cerr << candidate << std::endl;
@@ -1059,11 +1053,11 @@ class IceTestPeer : public sigslot::has_slots<> {
     if (remote_ && remote_->remote_ && (trickle_mode_ != TRICKLE_SIMULATE)) {
       // first, find the index of the stream we've been given so
       // we can get the corresponding stream on the remote side
-      for (size_t i=0; i<ice_ctx_->ctx()->GetStreamCount(); ++i) {
-        if (ice_ctx_->ctx()->GetStream(i) == stream) {
-          RefPtr<NrIceCtx> ctx = remote_->ice_ctx_->ctx();
-          ASSERT_GT(ctx->GetStreamCount(), i);
-          nsresult res = ctx->GetStream(i)->ParseTrickleCandidate(candidate);
+      for (size_t i=0; i<stream_counter_; ++i) {
+        if (GetStream_s(i) == stream) {
+          ASSERT_GT(remote_->stream_counter_, i);
+          nsresult res =
+            remote_->GetStream_s(i)->ParseTrickleCandidate(candidate);
           ASSERT_TRUE(NS_SUCCEEDED(res));
           return;
         }
@@ -1076,14 +1070,14 @@ class IceTestPeer : public sigslot::has_slots<> {
                                std::vector<NrIceCandidatePair>* pairs)
   {
     MOZ_ASSERT(pairs);
-    if (stream_index >= ice_ctx_->ctx()->GetStreamCount() ||
-        !ice_ctx_->ctx()->GetStream(stream_index)) {
+    auto stream = GetStream_s(stream_index);
+    if (!stream) {
       // Is there a better error for "no such index"?
       ADD_FAILURE() << "No such media stream index: " << stream_index;
       return NS_ERROR_INVALID_ARG;
     }
 
-    return ice_ctx_->ctx()->GetStream(stream_index)->GetCandidatePairs(pairs);
+    return stream->GetCandidatePairs(pairs);
   }
 
   nsresult GetCandidatePairs(size_t stream_index,
@@ -1124,11 +1118,8 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void DumpCandidatePairs_s() {
     std::cerr << "Dumping candidate pairs for all streams [" << std::endl;
-    for (size_t s = 0; s < ice_ctx_->ctx()->GetStreamCount(); ++s) {
-      if (!ice_ctx_->ctx()->GetStream(s)) {
-        continue;
-      }
-      DumpCandidatePairs_s(ice_ctx_->ctx()->GetStream(s).get());
+    for (const auto& stream : ice_ctx_->ctx()->GetStreams()) {
+      DumpCandidatePairs_s(stream.get());
     }
     std::cerr << "]" << std::endl;
   }
@@ -1259,7 +1250,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void SendPacket(int stream, int component, const unsigned char *data,
                   int len) {
-    RefPtr<NrIceMediaStream> media_stream = ice_ctx_->ctx()->GetStream(stream);
+    auto media_stream = GetStream_s(stream);
     if (!media_stream) {
       ADD_FAILURE() << "No such stream " << stream;
       return;
@@ -1272,7 +1263,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void SendFailure(int stream, int component) {
-    RefPtr<NrIceMediaStream> media_stream = ice_ctx_->ctx()->GetStream(stream);
+    auto media_stream = GetStream_s(stream);
     if (!media_stream) {
       ADD_FAILURE() << "No such stream " << stream;
       return;
@@ -1290,12 +1281,13 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void ParseCandidate_s(size_t i, const std::string& candidate) {
-    ASSERT_TRUE(ice_ctx_->ctx()->GetStream(i).get()) << "No such stream " << i;
+    auto media_stream = GetStream_s(i);
+    ASSERT_TRUE(media_stream.get()) << "No such stream " << i;
 
     std::vector<std::string> attributes;
 
     attributes.push_back(candidate);
-    ice_ctx_->ctx()->GetStream(i)->ParseAttributes(attributes);
+    media_stream->ParseAttributes(attributes);
   }
 
   void ParseCandidate(size_t i, const std::string& candidate)
@@ -1308,12 +1300,11 @@ class IceTestPeer : public sigslot::has_slots<> {
         NS_DISPATCH_SYNC);
   }
 
-  void DisableComponent_s(size_t stream, int component_id) {
-    ASSERT_LT(stream, ice_ctx_->ctx()->GetStreamCount());
-    ASSERT_TRUE(ice_ctx_->ctx()->GetStream(stream).get()) << "No such stream "
-                                                          << stream;
-    nsresult res =
-      ice_ctx_->ctx()->GetStream(stream)->DisableComponent(component_id);
+  void DisableComponent_s(size_t index, int component_id) {
+    ASSERT_LT(index, stream_counter_);
+    auto stream = GetStream_s(index);
+    ASSERT_TRUE(stream.get()) << "No such stream " << index;
+    nsresult res = stream->DisableComponent(component_id);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
 
@@ -1327,14 +1318,14 @@ class IceTestPeer : public sigslot::has_slots<> {
         NS_DISPATCH_SYNC);
   }
 
-  void AssertConsentRefresh_s(size_t stream, int component_id, ConsentStatus status) {
-    ASSERT_LT(stream, ice_ctx_->ctx()->GetStreamCount());
-    ASSERT_TRUE(ice_ctx_->ctx()->GetStream(stream).get()) << "No such stream "
-                                                          << stream;
+  void AssertConsentRefresh_s(size_t index, int component_id, ConsentStatus status) {
+    ASSERT_LT(index, stream_counter_);
+    auto stream = GetStream_s(index);
+    ASSERT_TRUE(stream.get()) << "No such stream " << index;
     bool can_send;
     struct timeval timestamp;
-    nsresult res = ice_ctx_->ctx()->GetStream(stream)->
-                    GetConsentStatus(component_id, &can_send, &timestamp);
+    nsresult res =
+      stream->GetConsentStatus(component_id, &can_send, &timestamp);
     ASSERT_TRUE(NS_SUCCEEDED(res));
     if (status == CONSENT_EXPIRED) {
       ASSERT_EQ(can_send, 0);
@@ -1428,8 +1419,8 @@ class IceTestPeer : public sigslot::has_slots<> {
     return rv;
   }
 
-  nsresult GetDefaultCandidate_s(unsigned int stream, NrIceCandidate* cand) {
-    return ice_ctx_->ctx()->GetStream(stream)->GetDefaultCandidate(1, cand);
+  nsresult GetDefaultCandidate_s(unsigned int index, NrIceCandidate* cand) {
+    return GetStream_s(index)->GetDefaultCandidate(1, cand);
   }
 
  private:
@@ -1440,6 +1431,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   // Maps from stream id to list of remote trickle candidates
   std::map<size_t, std::vector<SchedulableTrickleCandidate*> >
     controlled_trickle_candidates_;
+  size_t stream_counter_;
   bool shutting_down_;
   bool gathering_complete_;
   int ready_ct_;

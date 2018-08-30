@@ -1,5 +1,9 @@
 #include "gdb-tests.h"
 #include "jsapi.h"
+#include "js/CompilationAndEvaluation.h"
+#include "js/CompileOptions.h"
+#include "js/RootingAPI.h"
+#include "js/Value.h"
 
 #include <string.h>
 
@@ -25,7 +29,7 @@ FRAGMENT(asmjs, segfault) {
     CompileOptions opts(cx);
     opts.setFileAndLine(__FILE__, line0 + 1);
     opts.asmJSOption = JS::AsmJSOption::Enabled;
-    RootedValue rval(cx);
+    Rooted<Value> rval(cx);
     bool ok;
     ok = false;
 

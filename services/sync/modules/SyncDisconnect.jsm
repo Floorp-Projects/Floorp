@@ -120,6 +120,7 @@ this.SyncDisconnectInternal = {
     // up with Sync configured but FxA not configured, which causes the browser
     // UI to briefly enter a "needs reauth" state.
     let Weave = this.getWeave();
+    await Weave.Service.promiseInitialized;
     await Weave.Service.startOver();
     await fxAccounts.signOut();
     // Sync may have been disabled if we santized, so re-enable it now or

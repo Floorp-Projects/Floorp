@@ -178,10 +178,8 @@ TransceiverImpl::UpdateTransport(PeerConnectionMedia& aTransportManager)
   ASSERT_ON_THREAD(mMainThread);
   nsAutoPtr<MediaPipelineFilter> filter;
 
-  mRtpFlow = aTransportManager.GetTransportFlow(
-      mJsepTransceiver->GetTransportLevel(), false);
-  mRtcpFlow = aTransportManager.GetTransportFlow(
-      mJsepTransceiver->GetTransportLevel(), true);
+  mRtpFlow = aTransportManager.GetTransportFlow(GetTransportId(), false);
+  mRtcpFlow = aTransportManager.GetTransportFlow(GetTransportId(), true);
 
   if (mJsepTransceiver->HasBundleLevel() &&
       mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()) {

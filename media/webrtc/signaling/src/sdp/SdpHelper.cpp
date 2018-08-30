@@ -290,7 +290,6 @@ SdpHelper::GetMidFromLevel(const Sdp& sdp,
 nsresult
 SdpHelper::AddCandidateToSdp(Sdp* sdp,
                              const std::string& candidateUntrimmed,
-                             const std::string& mid,
                              uint16_t level)
 {
 
@@ -309,35 +308,9 @@ SdpHelper::AddCandidateToSdp(Sdp* sdp,
 
   std::string candidate = candidateUntrimmed.substr(begin);
 
-  // https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-11#section-3.4.2.1
-  // Implementations receiving an ICE Candidate object MUST use the MID if
-  // present, or the m= line index, if not (as it could have come from a
-  // non-JSEP endpoint). (bug 1095793)
-  SdpMediaSection* msection = 0;
-  if (!mid.empty()) {
-    // FindMsectionByMid could return nullptr
-    msection = FindMsectionByMid(*sdp, mid);
+  SdpMediaSection& msection = sdp->GetMediaSection(level);
 
-    // Check to make sure mid matches what we'd get by
-    // looking up the m= line using the level. (mjf)
-    std::string checkMid;
-    nsresult rv = GetMidFromLevel(*sdp, level, &checkMid);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (mid != checkMid) {
-      SDP_SET_ERROR("Mismatch between mid and level - \"" << mid
-                     << "\" is not the mid for level " << level
-                     << "; \"" << checkMid << "\" is");
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-  if (!msection) {
-    msection = &(sdp->GetMediaSection(level));
-  }
-
-  SdpAttributeList& attrList = msection->GetAttributeList();
-
+  SdpAttributeList& attrList = msection.GetAttributeList();
   UniquePtr<SdpMultiStringAttribute> candidates;
   if (!attrList.HasAttribute(SdpAttribute::kCandidateAttribute)) {
     // Create new
@@ -356,18 +329,9 @@ SdpHelper::AddCandidateToSdp(Sdp* sdp,
 }
 
 void
-SdpHelper::SetIceGatheringComplete(Sdp* sdp,
-                                   uint16_t level,
-                                   BundledMids bundledMids)
+SdpHelper::SetIceGatheringComplete(Sdp* sdp, uint16_t level)
 {
   SdpMediaSection& msection = sdp->GetMediaSection(level);
-
-  if (kSlaveBundle == GetMsectionBundleType(*sdp,
-                                            level,
-                                            bundledMids,
-                                            nullptr)) {
-    return; // Slave bundle m-section. Skip.
-  }
 
   SdpAttributeList& attrs = msection.GetAttributeList();
   attrs.SetAttribute(
@@ -381,63 +345,12 @@ SdpHelper::SetDefaultAddresses(const std::string& defaultCandidateAddr,
                                uint16_t defaultCandidatePort,
                                const std::string& defaultRtcpCandidateAddr,
                                uint16_t defaultRtcpCandidatePort,
-                               Sdp* sdp,
-                               uint16_t level,
-                               BundledMids bundledMids)
-{
-  SdpMediaSection& msection = sdp->GetMediaSection(level);
-  std::string masterMid;
-
-  MsectionBundleType bundleType = GetMsectionBundleType(*sdp,
-                                                        level,
-                                                        bundledMids,
-                                                        &masterMid);
-  if (kSlaveBundle == bundleType) {
-    return; // Slave bundle m-section. Skip.
-  }
-  if (kMasterBundle == bundleType) {
-    // Master bundle m-section. Set defaultCandidateAddr and
-    // defaultCandidatePort on all bundled m-sections.
-    const SdpMediaSection* masterBundleMsection(bundledMids[masterMid]);
-    for (auto i = bundledMids.begin(); i != bundledMids.end(); ++i) {
-      if (i->second != masterBundleMsection) {
-        continue;
-      }
-      SdpMediaSection* bundledMsection = FindMsectionByMid(*sdp, i->first);
-      if (!bundledMsection) {
-        MOZ_ASSERT(false);
-        continue;
-      }
-      SetDefaultAddresses(defaultCandidateAddr,
-                          defaultCandidatePort,
-                          defaultRtcpCandidateAddr,
-                          defaultRtcpCandidatePort,
-                          bundledMsection);
-    }
-  }
-
-  SetDefaultAddresses(defaultCandidateAddr,
-                      defaultCandidatePort,
-                      defaultRtcpCandidateAddr,
-                      defaultRtcpCandidatePort,
-                      &msection);
-}
-
-void
-SdpHelper::SetDefaultAddresses(const std::string& defaultCandidateAddr,
-                               uint16_t defaultCandidatePort,
-                               const std::string& defaultRtcpCandidateAddr,
-                               uint16_t defaultRtcpCandidatePort,
                                SdpMediaSection* msection)
 {
-  msection->GetConnection().SetAddress(defaultCandidateAddr);
   SdpAttributeList& attrList = msection->GetAttributeList();
 
-  // only set the port if there is no bundle-only attribute
-  if (!attrList.HasAttribute(SdpAttribute::kBundleOnlyAttribute)) {
-    msection->SetPort(defaultCandidatePort);
-  }
-
+  msection->GetConnection().SetAddress(defaultCandidateAddr);
+  msection->SetPort(defaultCandidatePort);
   if (!defaultRtcpCandidateAddr.empty()) {
     sdp::AddrType ipVersion = sdp::kIPv4;
     if (defaultRtcpCandidateAddr.find(':') != std::string::npos) {

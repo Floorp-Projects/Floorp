@@ -165,29 +165,33 @@ class SingleTestMixin(FetchesMixin):
         execfile(paths_file, {"__file__": paths_file})
         import manifest as wptmanifest
         tests_root = os.path.join(dirs['abs_wpttest_dir'], "tests")
-        man_path = os.path.join(dirs['abs_wpttest_dir'], "meta", "MANIFEST.json")
-        man = wptmanifest.manifest.load(tests_root, man_path)
-        self.info("Per-test run updated with manifest %s" % man_path)
 
-        repo_tests_path = os.path.join("testing", "web-platform", "tests")
-        tests_path = os.path.join("tests", "web-platform", "tests")
-        for (type, path, test) in man:
-            if type not in ["testharness", "reftest", "wdspec"]:
-                continue
-            repo_path = os.path.join(repo_tests_path, path)
-            # manifest paths use os.sep (like backslash on Windows) but
-            # automation-relevance uses posixpath.sep
-            repo_path = repo_path.replace(os.sep, posixpath.sep)
-            if repo_path in changed_files:
-                self.info("Per-test run found web-platform test '%s', type %s" % (path, type))
-                suite_files = self.suites.get(type)
-                if not suite_files:
-                    suite_files = []
-                test_path = os.path.join(tests_path, path)
-                suite_files.append(test_path)
-                self.suites[type] = suite_files
-                self._map_test_path_to_source(test_path, repo_path)
-                changed_files.remove(repo_path)
+        for extra in ("", "mozilla"):
+            base_path = os.path.join(dirs['abs_wpttest_dir'], extra)
+            man_path = os.path.join(base_path, "meta", "MANIFEST.json")
+            man = wptmanifest.manifest.load(tests_root, man_path)
+            self.info("Per-test run updated with manifest %s" % man_path)
+
+            repo_tests_path = os.path.join("testing", "web-platform", extra, "tests")
+            tests_path = os.path.join("tests", "web-platform", extra, "tests")
+            for (type, path, test) in man:
+                if type not in ["testharness", "reftest", "wdspec"]:
+                    continue
+                repo_path = os.path.join(repo_tests_path, path)
+                # manifest paths use os.sep (like backslash on Windows) but
+                # automation-relevance uses posixpath.sep
+                repo_path = repo_path.replace(os.sep, posixpath.sep)
+                if repo_path in changed_files:
+                    self.info("Per-test run found web-platform test '%s', type %s" % (path, type))
+                    suite_files = self.suites.get(type)
+                    if not suite_files:
+                        suite_files = []
+                    test_path = os.path.join(tests_path, path)
+                    suite_files.append(test_path)
+                    self.suites[type] = suite_files
+                    self._map_test_path_to_source(test_path, repo_path)
+                    changed_files.remove(repo_path)
+
         if os.environ.get('MOZHARNESS_TEST_PATHS', None) is not None:
             for file in changed_files:
                 self.fatal("Per-test run could not find requested web-platform test '%s'" %

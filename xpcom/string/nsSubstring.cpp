@@ -465,7 +465,7 @@ Gecko_StartBulkWriteCString(nsACString* aThis,
                             uint32_t aUnitsToPreserve,
                             bool aAllowShrinking)
 {
-  return aThis->StartBulkWrite(aCapacity, aUnitsToPreserve, aAllowShrinking).unwrapOr(UINT32_MAX);
+  return aThis->StartBulkWriteImpl(aCapacity, aUnitsToPreserve, aAllowShrinking).unwrapOr(UINT32_MAX);
 }
 
 void Gecko_FinalizeString(nsAString* aThis)
@@ -529,7 +529,7 @@ Gecko_StartBulkWriteString(nsAString* aThis,
                            uint32_t aUnitsToPreserve,
                            bool aAllowShrinking)
 {
-  return aThis->StartBulkWrite(aCapacity, aUnitsToPreserve, aAllowShrinking).unwrapOr(UINT32_MAX);
+  return aThis->StartBulkWriteImpl(aCapacity, aUnitsToPreserve, aAllowShrinking).unwrapOr(UINT32_MAX);
 }
 
 } // extern "C"

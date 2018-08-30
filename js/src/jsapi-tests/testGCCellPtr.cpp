@@ -9,7 +9,7 @@
 #include "jspubtd.h"
 
 #include "gc/Heap.h"
-
+#include "js/CompilationAndEvaluation.h"
 #include "jsapi-tests/tests.h"
 
 JS::GCCellPtr

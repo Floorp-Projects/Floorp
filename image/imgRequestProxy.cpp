@@ -803,7 +803,7 @@ imgRequestProxy::GetMimeType(char** aMimeType)
     return NS_ERROR_FAILURE;
   }
 
-  *aMimeType = NS_strdup(type);
+  *aMimeType = NS_xstrdup(type);
 
   return NS_OK;
 }

@@ -199,11 +199,11 @@ class NrIceMediaStream {
   // the context has been destroyed.
   void Close();
 
-  // So the receiver of SignalCandidate can determine which level
-  // (ie; m-line index) the candidate belongs to.
-  void SetLevel(uint16_t level) { level_ = level; }
+  // So the receiver of SignalCandidate can determine which transport
+  // the candidate belongs to.
+  void SetId(const std::string& id) { id_ = id; }
 
-  uint16_t GetLevel() const { return level_; }
+  const std::string& GetId() const { return id_; }
 
   sigslot::signal2<NrIceMediaStream *, const std::string& >
   SignalCandidate;  // A new ICE candidate:
@@ -230,7 +230,7 @@ class NrIceMediaStream {
   const std::string name_;
   const size_t components_;
   nr_ice_media_stream *stream_;
-  uint16_t level_;
+  std::string id_;
   bool has_parsed_attrs_;
 };
 

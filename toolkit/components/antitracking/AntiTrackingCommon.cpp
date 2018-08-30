@@ -9,6 +9,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozIThirdPartyUtil.h"
@@ -16,6 +17,7 @@
 #include "nsGlobalWindowInner.h"
 #include "nsICookiePermission.h"
 #include "nsICookieService.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIIOService.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
@@ -132,6 +134,55 @@ CookiesBehavior(nsIPrincipal* aPrincipal)
   return StaticPrefs::network_cookie_cookieBehavior();
 }
 
+bool
+CheckContentBlockingAllowList(nsIURI* aTopWinURI)
+{
+  bool isAllowed = false;
+  nsresult rv =
+    AntiTrackingCommon::IsOnContentBlockingAllowList(aTopWinURI, isAllowed);
+  if (NS_SUCCEEDED(rv) && isAllowed) {
+    LOG_SPEC(("The top-level window (%s) is on the content blocking allow list, "
+              "bail out early", _spec), aTopWinURI);
+    return true;
+  }
+  if (NS_FAILED(rv)) {
+    LOG_SPEC(("Checking the content blocking allow list for %s failed with %" PRIx32,
+              _spec, static_cast<uint32_t>(rv)), aTopWinURI);
+  }
+  return false;
+}
+
+bool
+CheckContentBlockingAllowList(nsPIDOMWindowInner* aWindow)
+{
+  nsPIDOMWindowOuter* top = aWindow->GetScriptableTop();
+  if (top) {
+    nsIURI* topWinURI = top->GetDocumentURI();
+    return CheckContentBlockingAllowList(topWinURI);
+  }
+
+  LOG(("Could not check the content blocking allow list because the top "
+       "window wasn't accessible"));
+  return false;
+}
+
+bool
+CheckContentBlockingAllowList(nsIHttpChannel* aChannel)
+{
+  nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel);
+  if (chan) {
+    nsCOMPtr<nsIURI> topWinURI;
+    nsresult rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
+    if (NS_SUCCEEDED(rv)) {
+      return CheckContentBlockingAllowList(topWinURI);
+    }
+  }
+
+  LOG(("Could not check the content blocking allow list because the top "
+       "window wasn't accessible"));
+  return false;
+}
+
 } // anonymous
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
@@ -147,6 +198,15 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     LOG(("Disabled by network.cookie.cookieBehavior pref (%d), bailing out early",
          StaticPrefs::network_cookie_cookieBehavior()));
+    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
+  }
+
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
+    LOG(("The content blocking pref has been disabled, bail out early"));
+    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
+  }
+
+  if (CheckContentBlockingAllowList(aParentWindow)) {
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
@@ -324,6 +384,18 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
   }
 
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
+
+  // Now, we have to also honour the Content Blocking pref.
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
+    LOG(("The content blocking pref has been disabled, bail out early by "
+         "by pretending our window isn't a tracking window"));
+    return true;
+  }
+
+  if (CheckContentBlockingAllowList(aWindow)) {
+    return true;
+  }
+
   if (!nsContentUtils::IsTrackingResourceWindow(aWindow)) {
     LOG(("Our window isn't a tracking window"));
     return true;
@@ -484,6 +556,17 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
 
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
+  // Now, we have to also honour the Content Blocking pref.
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
+    LOG(("The content blocking pref has been disabled, bail out early by "
+         "pretending our channel isn't a tracking channel"));
+    return true;
+  }
+
+  if (CheckContentBlockingAllowList(aChannel)) {
+    return true;
+  }
+
   nsIPrincipal* parentPrincipal = loadInfo->TopLevelStorageAreaPrincipal();
   if (!parentPrincipal) {
     LOG(("No top-level storage area principal at hand"));
@@ -588,6 +671,16 @@ AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner*
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     LOG(("Disabled by the pref (%d), bail out early",
          StaticPrefs::network_cookie_cookieBehavior()));
+    return true;
+  }
+
+  // Now, we have to also honour the Content Blocking pref.
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
+    LOG(("The content blocking pref has been disabled, bail out early"));
+    return true;
+  }
+
+  if (CheckContentBlockingAllowList(aFirstPartyWindow)) {
     return true;
   }
 

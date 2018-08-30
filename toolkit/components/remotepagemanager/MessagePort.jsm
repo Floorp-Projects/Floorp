@@ -23,9 +23,12 @@ let RPMAccessManager = {
   accessMap: {
     "about:privatebrowsing": {
       // "sendAsyncMessage": handled within AboutPrivateBrowsingHandler.jsm
-      // "setBoolPref": handled within AsyncPrefs.jsm and uses the pref
-      //                ["privacy.trackingprotection.pbmode.enabled"],
-      "getBoolPref": ["privacy.trackingprotection.enabled",
+      // "setBoolPref": handled within AsyncPrefs.jsm and uses the prefs
+      //                ["browser.contentblocking.enabled",
+      //                 "privacy.trackingprotection.pbmode.enabled"],
+      "getBoolPref": ["browser.contentblocking.enabled",
+                      "browser.contentblocking.ui.enabled",
+                      "privacy.trackingprotection.enabled",
                       "privacy.trackingprotection.pbmode.enabled"],
       "getFormatURLPref": ["privacy.trackingprotection.introURL",
                            "app.support.baseURL"],

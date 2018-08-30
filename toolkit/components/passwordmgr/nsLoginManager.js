@@ -106,24 +106,8 @@ LoginManager.prototype = {
 
 
   _initStorage() {
-    let contractID;
-    if (AppConstants.platform == "android") {
-      contractID = "@mozilla.org/login-manager/storage/mozStorage;1";
-    } else {
-      contractID = "@mozilla.org/login-manager/storage/json;1";
-    }
-    try {
-      let catMan = Cc["@mozilla.org/categorymanager;1"].
-                   getService(Ci.nsICategoryManager);
-      contractID = catMan.getCategoryEntry("login-manager-storage",
-                                           "nsILoginManagerStorage");
-      log.debug("Found alternate nsILoginManagerStorage with contract ID:", contractID);
-    } catch (e) {
-      log.debug("No alternate nsILoginManagerStorage registered");
-    }
-
-    this._storage = Cc[contractID].
-                    createInstance(Ci.nsILoginManagerStorage);
+    this._storage = Cc["@mozilla.org/login-manager/storage/default;1"]
+                    .createInstance(Ci.nsILoginManagerStorage);
     this.initializationPromise = this._storage.initialize();
   },
 

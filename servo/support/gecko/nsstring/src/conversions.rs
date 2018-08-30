@@ -139,10 +139,10 @@ macro_rules! constant_conversion {
     (name = $name:ident,
      convert = $convert:ident,
      other_ty = $other_ty:ty) => (
-        fn $name(&mut self, other: $other_ty, old_len: usize) -> Result<BulkWriteOk, ()> {
+        fn $name(&mut self, other: $other_ty, old_len: usize, allow_shrinking: bool) -> Result<BulkWriteOk, ()> {
             let new_len = old_len.checked_add(other.len()).ok_or(())?;
             let mut handle = unsafe {
-                self.bulk_write(new_len, old_len, true)?
+                self.bulk_write(new_len, old_len, allow_shrinking)?
             };
             $convert(other, &mut handle.as_mut_slice()[old_len..]);
             Ok(handle.finish(new_len, false))
@@ -281,7 +281,7 @@ impl nsAString {
     /// Convert a Latin1 (i.e. byte value equals scalar value; not windows-1252!)
     /// into UTF-16 and replace the content of this string with the conversion result.
     pub fn assign_latin1(&mut self, other: &[u8]) {
-        self.fallible_append_latin1_impl(other, 0)
+        self.fallible_append_latin1_impl(other, 0, true)
             .expect("Out of memory");
     }
 
@@ -289,14 +289,14 @@ impl nsAString {
     /// into UTF-16 and fallibly replace the content of this string with the
     /// conversion result.
     pub fn fallible_assign_latin1(&mut self, other: &[u8]) -> Result<(), ()> {
-        self.fallible_append_latin1_impl(other, 0).map(|_| ())
+        self.fallible_append_latin1_impl(other, 0, true).map(|_| ())
     }
 
     /// Convert a Latin1 (i.e. byte value equals scalar value; not windows-1252!)
     /// into UTF-16 and append the conversion result to this string.
     pub fn append_latin1(&mut self, other: &[u8]) {
         let len = self.len();
-        self.fallible_append_latin1_impl(other, len)
+        self.fallible_append_latin1_impl(other, len, false)
             .expect("Out of memory");
     }
 
@@ -304,7 +304,7 @@ impl nsAString {
     /// into UTF-16 and fallibly append the conversion result to this string.
     pub fn fallible_append_latin1(&mut self, other: &[u8]) -> Result<(), ()> {
         let len = self.len();
-        self.fallible_append_latin1_impl(other, len).map(|_| ())
+        self.fallible_append_latin1_impl(other, len, false).map(|_| ())
     }
 }
 
@@ -415,7 +415,7 @@ impl nsACString {
     /// release builds. The nature of the garbage may differ based on CPU
     /// architecture and must not be relied upon.
     pub fn assign_utf16_to_latin1_lossy(&mut self, other: &[u16]) {
-        self.fallible_append_utf16_to_latin1_lossy_impl(other, 0)
+        self.fallible_append_utf16_to_latin1_lossy_impl(other, 0, true)
             .expect("Out of memory");
     }
 
@@ -430,7 +430,7 @@ impl nsACString {
     /// release builds. The nature of the garbage may differ based on CPU
     /// architecture and must not be relied upon.
     pub fn fallible_assign_utf16_to_latin1_lossy(&mut self, other: &[u16]) -> Result<(), ()> {
-        self.fallible_append_utf16_to_latin1_lossy_impl(other, 0)
+        self.fallible_append_utf16_to_latin1_lossy_impl(other, 0, true)
             .map(|_| ())
     }
 
@@ -446,7 +446,7 @@ impl nsACString {
     /// architecture and must not be relied upon.
     pub fn append_utf16_to_latin1_lossy(&mut self, other: &[u16]) {
         let len = self.len();
-        self.fallible_append_utf16_to_latin1_lossy_impl(other, len)
+        self.fallible_append_utf16_to_latin1_lossy_impl(other, len, false)
             .expect("Out of memory");
     }
 
@@ -462,7 +462,7 @@ impl nsACString {
     /// architecture and must not be relied upon.
     pub fn fallible_append_utf16_to_latin1_lossy(&mut self, other: &[u16]) -> Result<(), ()> {
         let len = self.len();
-        self.fallible_append_utf16_to_latin1_lossy_impl(other, len)
+        self.fallible_append_utf16_to_latin1_lossy_impl(other, len, false)
             .map(|_| ())
     }
 
@@ -692,10 +692,11 @@ pub unsafe extern "C" fn nsstring_fallible_append_latin1_impl(
     other: *const u8,
     other_len: usize,
     old_len: usize,
+    allow_shrinking: bool,
 ) -> bool {
     let other_slice = slice::from_raw_parts(other, other_len);
     (*this)
-        .fallible_append_latin1_impl(other_slice, old_len)
+        .fallible_append_latin1_impl(other_slice, old_len, allow_shrinking)
         .is_ok()
 }
 
@@ -718,10 +719,11 @@ pub unsafe extern "C" fn nscstring_fallible_append_utf16_to_latin1_lossy_impl(
     other: *const u16,
     other_len: usize,
     old_len: usize,
+    allow_shrinking: bool,
 ) -> bool {
     let other_slice = slice::from_raw_parts(other, other_len);
     (*this)
-        .fallible_append_utf16_to_latin1_lossy_impl(other_slice, old_len)
+        .fallible_append_utf16_to_latin1_lossy_impl(other_slice, old_len, allow_shrinking)
         .is_ok()
 }
 

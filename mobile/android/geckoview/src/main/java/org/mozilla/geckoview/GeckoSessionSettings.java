@@ -96,6 +96,13 @@ public final class GeckoSessionSettings implements Parcelable {
                          Arrays.asList(DISPLAY_MODE_BROWSER, DISPLAY_MODE_MINIMAL_UI,
                                        DISPLAY_MODE_STANDALONE, DISPLAY_MODE_FULLSCREEN));
 
+    /*
+     * Key to specify if media should be suspended when the session is inactive.
+     */
+    public static final Key<Boolean> SUSPEND_MEDIA_WHEN_INACTIVE =
+        new Key<Boolean>("suspendMediaWhenInactive", /* initOnly */ false, /* values */ null);
+
+
     private final GeckoSession mSession;
     private final GeckoBundle mBundle;
 
@@ -122,6 +129,7 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putBoolean(USE_TRACKING_PROTECTION.name, false);
         mBundle.putBoolean(USE_PRIVATE_MODE.name, false);
         mBundle.putBoolean(USE_MULTIPROCESS.name, true);
+        mBundle.putBoolean(SUSPEND_MEDIA_WHEN_INACTIVE.name, false);
         mBundle.putInt(USER_AGENT_MODE.name, USER_AGENT_MODE_MOBILE);
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
     }

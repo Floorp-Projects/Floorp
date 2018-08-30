@@ -14,9 +14,9 @@
 #include "nsGkAtoms.h"
 #include "nsEnumeratorUtils.h"
 
+#include "mozilla/SimpleEnumerator.h"
 #include "nsICategoryManager.h"
 #include "nsISimpleEnumerator.h"
-#include "nsIStringEnumerator.h"
 
 #if defined(XP_WIN)
 #include <windows.h>
@@ -315,25 +315,12 @@ nsDirectoryService::RegisterCategoryProviders()
   catman->EnumerateCategory(XPCOM_DIRECTORY_PROVIDER_CATEGORY,
                             getter_AddRefs(entries));
 
-  nsCOMPtr<nsIUTF8StringEnumerator> strings(do_QueryInterface(entries));
-  if (!strings) {
-    return;
-  }
+  for (auto& categoryEntry : SimpleEnumerator<nsICategoryEntry>(entries)) {
+    nsAutoCString contractID;
+    categoryEntry->GetValue(contractID);
 
-  bool more;
-  while (NS_SUCCEEDED(strings->HasMore(&more)) && more) {
-    nsAutoCString entry;
-    strings->GetNext(entry);
-
-    nsCString contractID;
-    catman->GetCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY, entry,
-                             contractID);
-
-    if (!contractID.IsVoid()) {
-      nsCOMPtr<nsIDirectoryServiceProvider> provider = do_GetService(contractID.get());
-      if (provider) {
-        RegisterProvider(provider);
-      }
+    if (nsCOMPtr<nsIDirectoryServiceProvider> provider = do_GetService(contractID.get())) {
+      RegisterProvider(provider);
     }
   }
 }

@@ -78,7 +78,7 @@ public:
    * changes, so ElementChanged won't fire and get() will always return the same
    * value, the current element for the ID.
    */
-  void ResetWithID(nsIContent* aFrom, nsAtom* aID, bool aWatch = true);
+  void ResetWithID(Element& aFrom, nsAtom* aID, bool aWatch = true);
 
   /**
    * Clears the reference. ElementChanged is not triggered. get() will return

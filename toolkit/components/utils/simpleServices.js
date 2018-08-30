@@ -21,8 +21,6 @@ ChromeUtils.defineModuleGetter(this, "NetUtil",
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "catMan", "@mozilla.org/categorymanager;1",
-                                   "nsICategoryManager");
 XPCOMUtils.defineLazyServiceGetter(this, "streamConv", "@mozilla.org/streamConverters;1",
                                    "nsIStreamConverterService");
 const ArrayBufferInputStream = Components.Constructor(
@@ -130,7 +128,7 @@ HttpIndexViewer.prototype = {
                  aExtraInfo, aDocListenerResult) {
     aChannel.contentType = "text/html";
 
-    let contract = catMan.getCategoryEntry("Gecko-Content-Viewers", "text/html");
+    let contract = Services.catMan.getCategoryEntry("Gecko-Content-Viewers", "text/html");
     let factory = Cc[contract].getService(Ci.nsIDocumentLoaderFactory);
 
     let listener = {};

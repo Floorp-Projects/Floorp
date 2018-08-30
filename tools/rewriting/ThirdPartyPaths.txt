@@ -5,6 +5,10 @@ devtools/client/sourceeditor/codemirror/
 devtools/client/sourceeditor/tern/
 devtools/shared/heapsnapshot/CoreDump.pb.cc
 devtools/shared/heapsnapshot/CoreDump.pb.h
+dom/media/gmp/widevine-adapter/content_decryption_module.h
+dom/media/gmp/widevine-adapter/content_decryption_module_export.h
+dom/media/gmp/widevine-adapter/content_decryption_module_ext.h
+dom/media/gmp/widevine-adapter/content_decryption_module_proxy.h
 editor/libeditor/tests/browserscope/lib/richtext/
 editor/libeditor/tests/browserscope/lib/richtext2/
 extensions/spellcheck/hunspell/src/

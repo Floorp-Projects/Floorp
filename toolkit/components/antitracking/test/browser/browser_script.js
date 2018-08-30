@@ -5,6 +5,7 @@ add_task(async function() {
 
   await SpecialPowers.flushPrefEnv();
   await SpecialPowers.pushPrefEnv({"set": [
+    ["browser.contentblocking.enabled", true],
     ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
     ["privacy.trackingprotection.enabled", false],
     ["privacy.trackingprotection.pbmode.enabled", false],
@@ -118,8 +119,6 @@ add_task(async function() {
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
-
-  UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
 add_task(async function() {

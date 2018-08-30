@@ -207,25 +207,15 @@ static void ParsePlistPluginInfo(nsPluginInfo& info, CFBundleRef bundle)
   // Allocate memory for mime data
   int mimeDataArraySize = mimeDictKeyCount * sizeof(char*);
   info.fMimeTypeArray = static_cast<char**>(moz_xmalloc(mimeDataArraySize));
-  if (!info.fMimeTypeArray)
-    return;
   memset(info.fMimeTypeArray, 0, mimeDataArraySize);
   info.fExtensionArray = static_cast<char**>(moz_xmalloc(mimeDataArraySize));
-  if (!info.fExtensionArray)
-    return;
   memset(info.fExtensionArray, 0, mimeDataArraySize);
   info.fMimeDescriptionArray = static_cast<char**>(moz_xmalloc(mimeDataArraySize));
-  if (!info.fMimeDescriptionArray)
-    return;
   memset(info.fMimeDescriptionArray, 0, mimeDataArraySize);
 
   // Allocate memory for mime dictionary keys and values
   mozilla::UniquePtr<CFTypeRef[]> keys(new CFTypeRef[mimeDictKeyCount]);
-  if (!keys)
-    return;
   mozilla::UniquePtr<CFTypeRef[]> values(new CFTypeRef[mimeDictKeyCount]);
-  if (!values)
-    return;
 
   info.fVariantCount = 0;
 
@@ -334,10 +324,8 @@ static char* p2cstrdup(StringPtr pstr)
 {
   int len = pstr[0];
   char* cstr = static_cast<char*>(moz_xmalloc(len + 1));
-  if (cstr) {
-    memmove(cstr, pstr + 1, len);
-    cstr[len] = '\0';
-  }
+  memmove(cstr, pstr + 1, len);
+  cstr[len] = '\0';
   return cstr;
 }
 
@@ -447,15 +435,9 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   // Fill in the info struct based on the data in the BPSupportedMIMETypes struct
   int variantCount = info.fVariantCount;
   info.fMimeTypeArray = static_cast<char**>(moz_xmalloc(variantCount * sizeof(char*)));
-  if (!info.fMimeTypeArray)
-    return NS_ERROR_OUT_OF_MEMORY;
   info.fExtensionArray = static_cast<char**>(moz_xmalloc(variantCount * sizeof(char*)));
-  if (!info.fExtensionArray)
-    return NS_ERROR_OUT_OF_MEMORY;
   if (mi.infoStrings) {
     info.fMimeDescriptionArray = static_cast<char**>(moz_xmalloc(variantCount * sizeof(char*)));
-    if (!info.fMimeDescriptionArray)
-      return NS_ERROR_OUT_OF_MEMORY;
   }
   short mimeIndex = 2;
   short descriptionIndex = 2;

@@ -628,7 +628,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
         ice_ctx_->CreateStream(static_cast<char *>(name), 1);
 
     ASSERT_TRUE(stream != nullptr);
-    ice_ctx_->ctx()->SetStream(streams_.size(), stream);
+    ice_ctx_->ctx()->SetStream(name, stream);
     streams_.push_back(stream);
 
     // Listen for candidates

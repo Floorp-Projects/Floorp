@@ -22,16 +22,12 @@
         The <span class="label-text" …/> needs to be after the form field in the same element in
         order to get proper label styling with :focus and :moz-ui-invalid.
       -->
-    <label>
+    <label id="cc-number-container" class="container">
       <span id="invalidCardNumberString" hidden="hidden" data-localization="invalidCardNumber"></span>
       <input id="cc-number" type="text" required="required" minlength="9" pattern="[- 0-9]+"/>
       <span data-localization="cardNumber" class="label-text"/>
     </label>
-    <label>
-      <input id="cc-name" type="text" required="required"/>
-      <span data-localization="nameOnCard" class="label-text"/>
-    </label>
-    <label>
+    <label id="cc-exp-month-container" class="container">
       <select id="cc-exp-month">
         <option/>
         <option value="1">01</option>
@@ -49,13 +45,22 @@
       </select>
       <span data-localization="cardExpiresMonth" class="label-text"/>
     </label>
-    <label>
+    <label id="cc-exp-year-container" class="container">
       <select id="cc-exp-year">
         <option/>
       </select>
       <span data-localization="cardExpiresYear" class="label-text"/>
     </label>
-    <label class="billingAddressRow">
+    <label id="cc-name-container" class="container">
+      <input id="cc-name" type="text" required="required"/>
+      <span data-localization="nameOnCard" class="label-text"/>
+    </label>
+    <label id="cc-type-container" class="container">
+      <select id="cc-type">
+      </select>
+      <span data-localization="cardNetwork" class="label-text"/>
+    </label>
+    <label id="billingAddressGUID-container" class="billingAddressRow container">
       <select id="billingAddressGUID">
       </select>
       <span data-localization="billingAddress" class="label-text"/>
@@ -71,6 +76,7 @@
     let {
       getAddressLabel,
       isCCNumber,
+      getCreditCardNetworks,
     } = FormAutofillUtils;
     let record = window.arguments && window.arguments[0];
     let addresses = {};
@@ -85,6 +91,7 @@
       {
         getAddressLabel: getAddressLabel.bind(FormAutofillUtils),
         isCCNumber: isCCNumber.bind(FormAutofillUtils),
+        getSupportedNetworks: getCreditCardNetworks.bind(FormAutofillUtils),
       });
 
     /* import-globals-from editDialog.js */

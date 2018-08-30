@@ -2845,8 +2845,7 @@ nsXPCComponents_Utils::GetClassName(HandleValue aObj, bool aUnwrap, JSContext* a
     RootedObject obj(aCx, &aObj.toObject());
     if (aUnwrap)
         obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
-    *aRv = NS_strdup(js::GetObjectClass(obj)->name);
-    NS_ENSURE_TRUE(*aRv, NS_ERROR_OUT_OF_MEMORY);
+    *aRv = NS_xstrdup(js::GetObjectClass(obj)->name);
     return NS_OK;
 }
 

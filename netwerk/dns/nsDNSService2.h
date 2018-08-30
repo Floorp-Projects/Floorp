@@ -69,7 +69,7 @@ private:
     RefPtr<nsHostResolver>  mResolver;
     nsCOMPtr<nsIIDNService>   mIDN;
 
-    // mLock protects access to mResolver and mIPv4OnlyDomains
+    // mLock protects access to mResolver, mLocalDomains and mIPv4OnlyDomains
     mozilla::Mutex            mLock;
 
     // mIPv4OnlyDomains is a comma-separated list of domains for which only

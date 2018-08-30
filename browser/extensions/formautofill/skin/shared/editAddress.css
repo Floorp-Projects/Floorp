@@ -2,30 +2,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.editAddressForm input,
-.editAddressForm select {
-  flex: 1 0 auto;
-  margin: 0;
-}
-
-#name-container,
-:root[subdialog] form label,
-:root[subdialog] form > p {
-  margin: 0 0 0.5em !important;
-}
-
-#given-name-container,
-#additional-name-container,
-#address-level1-container,
-#postal-code-container,
-#country-label,
-#country-warning-message,
-#family-name-container,
-#organization-container,
-#address-level2-container,
-#tel-container {
+.editAddressForm {
   display: flex;
-  flex: 0 1 50%;
+  flex-wrap: wrap;
+  /* Use space-between so --grid-column-row-gap is in between the elements on a row */
+  justify-content: space-between;
+}
+
+:root:not([subdialog]) .editAddressForm {
+  margin-inline-start: calc(var(--grid-column-row-gap) / -2);
+  margin-inline-end: calc(var(--grid-column-row-gap) / -2);
+}
+
+.editAddressForm .container {
+  /* !important is needed to override preferences.css's generic label rule. */
+  margin-top: var(--grid-column-row-gap) !important;
+  margin-inline-start: calc(var(--grid-column-row-gap) / 2);
+  margin-inline-end: calc(var(--grid-column-row-gap) / 2);
+  flex-grow: 1;
+}
+
+#country-container {
+  /* The country dropdown has a different intrinsic (content) width than the
+     other fields which are <input>. */
+  flex-basis: calc(50% - var(--grid-column-row-gap));
+  flex-grow: 0;
 }
 
 
@@ -54,6 +55,9 @@
 #additional-name-container,
 #family-name-container {
   display: flex;
+  /* The 3 pieces inside the name container don't have the .container class so
+     need to set flex-grow themselves. See `.editAddressForm .container` */
+  flex-grow: 1;
   /* Remove the bottom margin from the name containers so that the outer
      #name-container provides the margin on the outside */
   margin-bottom: 0 !important;
@@ -95,17 +99,10 @@
 
 /* End name field rules */
 
-
 #name-container,
-#street-address-container,
-#country-container,
-#email-container {
+#street-address-container {
+  /* Name and street address are always full-width */
   flex: 0 1 100%;
-}
-
-#street-address,
-#email {
-  flex: 1 0 auto;
 }
 
 #country-warning-message {
@@ -115,4 +112,8 @@
   text-align: start;
   color: #737373;
   padding-inline-start: 1em;
+}
+
+:root:not([subdialog]) #country-warning-message {
+  display: none;
 }

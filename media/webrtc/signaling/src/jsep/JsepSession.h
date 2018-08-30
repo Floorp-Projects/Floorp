@@ -166,9 +166,11 @@ public:
                                         const std::string& sdp) = 0;
   virtual nsresult AddRemoteIceCandidate(const std::string& candidate,
                                          const std::string& mid,
-                                         uint16_t level) = 0;
+                                         uint16_t level,
+                                         std::string* transportId) = 0;
   virtual nsresult AddLocalIceCandidate(const std::string& candidate,
-                                        uint16_t level,
+                                        const std::string& transportId,
+                                        uint16_t* level,
                                         std::string* mid,
                                         bool* skipped) = 0;
   virtual nsresult UpdateDefaultCandidate(
@@ -176,8 +178,8 @@ public:
       uint16_t defaultCandidatePort,
       const std::string& defaultRtcpCandidateAddr,
       uint16_t defaultRtcpCandidatePort,
-      uint16_t level) = 0;
-  virtual nsresult EndOfLocalCandidates(uint16_t level) = 0;
+      const std::string& transportId) = 0;
+  virtual nsresult EndOfLocalCandidates(const std::string& transportId) = 0;
   virtual nsresult Close() = 0;
 
   // ICE controlling or controlled

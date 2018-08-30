@@ -102,8 +102,8 @@ fuzzy-if(skiaContent,0-1,0-43) == 1201272-1.html 1201272-1-ref.html
 == 1303534-1.html 1303534-1-ref.html
 
 == 1304353-text-global-alpha-1.html 1304353-text-global-alpha-1-ref.html
-fuzzy-if(winWidget,0-1,0-578) == 1304353-text-global-alpha-2.html 1304353-text-global-alpha-2-ref.html
-fuzzy-if(winWidget,0-94,0-1575) fuzzy-if(cocoaWidget,0-1,0-24) == 1304353-text-global-composite-op-1.html 1304353-text-global-composite-op-1-ref.html
+fuzzy-if(winWidget,0-1,0-578) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1304353-text-global-alpha-2.html 1304353-text-global-alpha-2-ref.html # Bug 1392106
+fuzzy-if(winWidget,0-94,0-1575) fuzzy-if(cocoaWidget,0-1,0-24) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1304353-text-global-composite-op-1.html 1304353-text-global-composite-op-1-ref.html # Bug 1392106
 
 == text-indent-1a.html text-indent-1-ref.html
 == text-indent-1b.html text-indent-1-ref.html

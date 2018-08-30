@@ -358,15 +358,15 @@ SentinelReadError(const char* aClassName)
 }
 
 bool
-StateTransition(bool aIsDelete, State* aNext)
+StateTransition(bool aIsDelete, LivenessState* aNext)
 {
   switch (*aNext) {
-    case State::Null:
+    case LivenessState::Null:
       if (aIsDelete) {
-        *aNext = State::Dead;
+        *aNext = LivenessState::Dead;
       }
       break;
-    case State::Dead:
+    case LivenessState::Dead:
       return false;
     default:
       return false;
@@ -377,19 +377,19 @@ StateTransition(bool aIsDelete, State* aNext)
 bool
 ReEntrantDeleteStateTransition(bool aIsDelete,
                                bool aIsDeleteReply,
-                               ReEntrantDeleteState* aNext)
+                               ReEntrantDeleteLivenessState* aNext)
 {
   switch (*aNext) {
-    case ReEntrantDeleteState::Null:
+    case ReEntrantDeleteLivenessState::Null:
       if (aIsDelete) {
-        *aNext = ReEntrantDeleteState::Dying;
+        *aNext = ReEntrantDeleteLivenessState::Dying;
       }
       break;
-    case ReEntrantDeleteState::Dead:
+    case ReEntrantDeleteLivenessState::Dead:
       return false;
-    case ReEntrantDeleteState::Dying:
+    case ReEntrantDeleteLivenessState::Dying:
       if (aIsDeleteReply) {
-        *aNext = ReEntrantDeleteState::Dead;
+        *aNext = ReEntrantDeleteLivenessState::Dead;
       }
       break;
     default:

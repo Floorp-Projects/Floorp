@@ -46,10 +46,10 @@ public:
       ++*this;
     }
 
-    T& operator*()
+    const nsCOMPtr<T>& operator*()
     {
       MOZ_ASSERT(mPtr);
-      return *mPtr;
+      return mPtr;
     }
 
     Entry& operator++()

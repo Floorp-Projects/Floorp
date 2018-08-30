@@ -113,9 +113,6 @@ nsEscape(const char* aStr, size_t aLength, size_t* aOutputLength,
   }
 
   char* result = (char*)moz_xmalloc(dstSize);
-  if (!result) {
-    return nullptr;
-  }
 
   unsigned char* dst = (unsigned char*)result;
   src = (const unsigned char*)aStr;

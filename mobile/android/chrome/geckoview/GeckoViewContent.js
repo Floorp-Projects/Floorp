@@ -36,6 +36,8 @@ class GeckoViewContent extends GeckoViewContentModule {
                                            this);
     this.messageManager.addMessageListener("GeckoView:ZoomToInput",
                                            this);
+    this.messageManager.addMessageListener("GeckoView:SetActive",
+                                           this);
 
     const options = {
         mozSystemGroup: true,
@@ -221,6 +223,12 @@ class GeckoViewContent extends GeckoViewContentModule {
 
           restoredHistory.QueryInterface(Ci.nsISHistory).reloadCurrentEntry();
         }
+        break;
+
+      case "GeckoView:SetActive":
+          if (content && aMsg.data.suspendMedia) {
+              content.windowUtils.mediaSuspend = aMsg.data.active ? Ci.nsISuspendedTypes.NONE_SUSPENDED : Ci.nsISuspendedTypes.SUSPENDED_PAUSE;
+          }
         break;
     }
   }

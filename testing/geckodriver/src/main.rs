@@ -38,6 +38,7 @@ macro_rules! try_opt {
 
 mod build;
 mod capabilities;
+mod command;
 mod logging;
 mod marionette;
 mod prefs;
@@ -46,7 +47,8 @@ mod prefs;
 pub mod test;
 
 use build::BuildInfo;
-use marionette::{extension_routes, MarionetteHandler, MarionetteSettings};
+use command::extension_routes;
+use marionette::{MarionetteHandler, MarionetteSettings};
 
 type ProgramResult = std::result::Result<(), (ExitCode, String)>;
 

@@ -7,7 +7,7 @@ protocol PTestSyncHang {
 
 child:
     // Add this unused message so we don't get compiler errors
-    // complaining that mState is an unused private field.
+    // complaining that mLivenessState is an unused private field.
     async UnusedMessage();
 };
 

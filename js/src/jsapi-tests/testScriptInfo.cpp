@@ -7,6 +7,7 @@
 
 #include "jsapi.h"
 
+#include "js/CompilationAndEvaluation.h"
 #include "jsapi-tests/tests.h"
 
 const char code[] =

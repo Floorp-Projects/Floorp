@@ -31,10 +31,6 @@ using AutoObjectVector = AutoVector<JSObject*>;
 
 class CallArgs;
 
-class JS_FRIEND_API(CompileOptions);
-class JS_FRIEND_API(ReadOnlyCompileOptions);
-class JS_FRIEND_API(OwningCompileOptions);
-class JS_FRIEND_API(TransitiveCompileOptions);
 class JS_PUBLIC_API(RealmOptions);
 
 } // namespace JS
@@ -103,10 +99,6 @@ CurrentThreadIsPerformingGC();
 namespace JS {
 
 struct JS_PUBLIC_API(PropertyDescriptor);
-
-class OffThreadToken;
-
-typedef void (*OffThreadCompileCallback)(OffThreadToken* token, void* callbackData);
 
 enum class HeapState {
     Idle,             // doing nothing with the GC heap

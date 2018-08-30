@@ -303,8 +303,7 @@ struct variant_blob_traits<uint8_t[], false>
     }
 
     // Otherwise, we copy the array.
-    *_result = nsMemory::Clone(aData.Elements(), aData.Length() * sizeof(uint8_t));
-    NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
+    *_result = moz_xmemdup(aData.Elements(), aData.Length() * sizeof(uint8_t));
 
     // Set type and size
     *_type = nsIDataType::VTYPE_UINT8;

@@ -15,6 +15,13 @@
 
 static const char* logTag = "sdp_utils";
 
+// Actually checks for ASCII only unlike isdigit() on Windows.
+// Also avoids UB issues with isdigit() sign extension when
+// char is signed.
+int sdp_is_ascii_digit(const char c) {
+  return '0' <= c && c <= '9';
+}
+
 sdp_mca_t *sdp_alloc_mca (uint32_t line) {
     sdp_mca_t           *mca_p;
 
@@ -155,7 +162,7 @@ verify_sdescriptions_mki (char *buf, char *mkiVal, uint16_t *mkiLen)
 
     ptr = buf;
     /* MKI must begin with a digit */
-    if (!ptr || (!isdigit((int) *ptr))) {
+    if (!ptr || (!sdp_is_ascii_digit(*ptr))) {
         return FALSE;
     }
 
@@ -166,7 +173,7 @@ verify_sdescriptions_mki (char *buf, char *mkiVal, uint16_t *mkiLen)
             mkiValBuf[idx] = 0;
             ptr++;
             break;
-        } else if ((isdigit((int) *ptr) && (idx < SDP_SRTP_MAX_MKI_SIZE_BYTES-1))) {
+        } else if ((sdp_is_ascii_digit(*ptr) && (idx < SDP_SRTP_MAX_MKI_SIZE_BYTES-1))) {
              mkiValBuf[idx++] = *ptr;
         } else {
              return FALSE;
@@ -184,7 +191,7 @@ verify_sdescriptions_mki (char *buf, char *mkiVal, uint16_t *mkiLen)
 
     /* verify the mki length (max 3 digits) */
     while (*ptr) {
-        if (isdigit((int) *ptr) && (idx < 3)) {
+        if (sdp_is_ascii_digit(*ptr) && (idx < 3)) {
             mkiLenBuf[idx++] = *ptr;
         } else {
             return FALSE;
@@ -251,7 +258,7 @@ verify_sdescriptions_lifetime (char *buf)
                     return FALSE;
                 }
             }
-        } else if (!isdigit((int) *ptr)) {
+        } else if (!sdp_is_ascii_digit(*ptr)) {
                    return FALSE;
         }
 
@@ -282,13 +289,13 @@ sdp_validate_maxprate(const char *string_parm)
     tinybool retval = FALSE;
 
     if (string_parm && (*string_parm)) {
-        while (isdigit((int)*string_parm)) {
+        while (sdp_is_ascii_digit(*string_parm)) {
             string_parm++;
         }
 
         if (*string_parm == '.') {
             string_parm++;
-            while (isdigit((int)*string_parm)) {
+            while (sdp_is_ascii_digit(*string_parm)) {
                 string_parm++;
             }
         }

@@ -585,8 +585,6 @@ EditorSpellCheck::GetDictionaryList(char16_t*** aDictionaryList,
 
     tmpPtr = (char16_t **)moz_xmalloc(sizeof(char16_t *));
 
-    NS_ENSURE_TRUE(tmpPtr, NS_ERROR_OUT_OF_MEMORY);
-
     *tmpPtr          = 0;
     *aDictionaryList = tmpPtr;
     *aCount          = 0;
@@ -595,8 +593,6 @@ EditorSpellCheck::GetDictionaryList(char16_t*** aDictionaryList,
   }
 
   tmpPtr = (char16_t **)moz_xmalloc(sizeof(char16_t *) * dictList.Length());
-
-  NS_ENSURE_TRUE(tmpPtr, NS_ERROR_OUT_OF_MEMORY);
 
   *aDictionaryList = tmpPtr;
   *aCount          = dictList.Length();

@@ -656,7 +656,7 @@ struct JSContext : public JS::RootingContext,
     js::ThreadData<uint32_t> debuggerMutations;
 
     // Cache for jit::GetPcScript().
-    js::ThreadData<js::jit::PcScriptCache*> ionPcScriptCache;
+    js::ThreadData<js::UniquePtr<js::jit::PcScriptCache>> ionPcScriptCache;
 
   private:
     /* Exception state -- the exception member is a GC root by definition. */

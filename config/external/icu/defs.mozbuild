@@ -30,7 +30,10 @@ if CONFIG['MOZ_DEBUG']:
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-frtti']
 elif CONFIG['OS_TARGET'] == 'WINNT':
-    CXXFLAGS += ['-GR']
+    # Remove the -GR- flag so we don't get a bunch of warning spam.
+    COMPILE_FLAGS['OS_CXXFLAGS'] = [
+        f for f in COMPILE_FLAGS['OS_CXXFLAGS'] if f != '-GR-'
+    ] + ['-GR']
 
 DisableStlWrapping()
 AllowCompilerWarnings()

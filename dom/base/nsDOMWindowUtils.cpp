@@ -2126,8 +2126,7 @@ nsDOMWindowUtils::GetClassName(JS::Handle<JS::Value> aObject, JSContext* aCx,
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
 
-  *aName = NS_strdup(JS_GetClass(aObject.toObjectOrNull())->name);
-  MOZ_ASSERT(*aName, "NS_strdup should be infallible.");
+  *aName = NS_xstrdup(JS_GetClass(aObject.toObjectOrNull())->name);
   return NS_OK;
 }
 
@@ -4432,5 +4431,24 @@ nsDOMWindowUtils::GetSystemFont(nsACString& aFontName)
   widget->GetSystemFont(fontName);
   aFontName.Assign(fontName);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::IsCssPropertyRecordedInUseCounter(const nsACString& aPropName,
+                                                    bool* aRecorded)
+{
+  *aRecorded = false;
+
+  nsIDocument* doc = GetDocument();
+  if (!doc || !doc->GetStyleUseCounters()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool knownProp = false;
+  *aRecorded =
+    Servo_IsCssPropertyRecordedInUseCounter(doc->GetStyleUseCounters(),
+                                            &aPropName,
+                                            &knownProp);
+  return knownProp ? NS_OK : NS_ERROR_FAILURE;
 }
 

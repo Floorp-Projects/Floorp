@@ -68,15 +68,16 @@ pub struct ElementRectResponse {
 
 #[derive(Debug, PartialEq, Serialize)]
 pub struct NewSessionResponse {
-    pub sessionId: String,
+    #[serde(rename = "sessionId")]
+    pub session_id: String,
     pub capabilities: Value,
 }
 
 impl NewSessionResponse {
     pub fn new(session_id: String, capabilities: Value) -> NewSessionResponse {
         NewSessionResponse {
-            capabilities: capabilities,
-            sessionId: session_id,
+            capabilities,
+            session_id,
         }
     }
 }
@@ -84,16 +85,17 @@ impl NewSessionResponse {
 #[derive(Debug, PartialEq, Serialize)]
 pub struct TimeoutsResponse {
     pub script: u64,
-    pub pageLoad: u64,
+    #[serde(rename = "pageLoad")]
+    pub page_load: u64,
     pub implicit: u64,
 }
 
 impl TimeoutsResponse {
     pub fn new(script: u64, page_load: u64, implicit: u64) -> TimeoutsResponse {
         TimeoutsResponse {
-            script: script,
-            pageLoad: page_load,
-            implicit: implicit,
+            script,
+            page_load,
+            implicit,
         }
     }
 }

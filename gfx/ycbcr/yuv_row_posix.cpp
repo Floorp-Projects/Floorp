@@ -19,56 +19,55 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,  // rdi
                               const uint8* v_buf,  // rdx
                               uint8* rgb_buf,      // rcx
                               int width) {         // r8
-  asm(
+  asm volatile(
   "jmp    1f\n"
 "0:"
-  "movzb  (%1),%%r10\n"
-  "add    $0x1,%1\n"
-  "movzb  (%2),%%r11\n"
-  "add    $0x1,%2\n"
-  "movq   2048(%5,%%r10,8),%%xmm0\n"
-  "movzb  (%0),%%r10\n"
-  "movq   4096(%5,%%r11,8),%%xmm1\n"
-  "movzb  0x1(%0),%%r11\n"
+  "movzb  (%[u_buf]),%%r10\n"
+  "add    $0x1,%[u_buf]\n"
+  "movzb  (%[v_buf]),%%r11\n"
+  "add    $0x1,%[v_buf]\n"
+  "movq   2048(%[kCoefficientsRgbY],%%r10,8),%%xmm0\n"
+  "movzb  (%[y_buf]),%%r10\n"
+  "movq   4096(%[kCoefficientsRgbY],%%r11,8),%%xmm1\n"
+  "movzb  0x1(%[y_buf]),%%r11\n"
   "paddsw %%xmm1,%%xmm0\n"
-  "movq   (%5,%%r10,8),%%xmm2\n"
-  "add    $0x2,%0\n"
-  "movq   (%5,%%r11,8),%%xmm3\n"
+  "movq   (%[kCoefficientsRgbY],%%r10,8),%%xmm2\n"
+  "add    $0x2,%[y_buf]\n"
+  "movq   (%[kCoefficientsRgbY],%%r11,8),%%xmm3\n"
   "paddsw %%xmm0,%%xmm2\n"
   "paddsw %%xmm0,%%xmm3\n"
   "shufps $0x44,%%xmm3,%%xmm2\n"
   "psraw  $0x6,%%xmm2\n"
   "packuswb %%xmm2,%%xmm2\n"
-  "movq   %%xmm2,0x0(%3)\n"
-  "add    $0x8,%3\n"
+  "movq   %%xmm2,0x0(%[rgb_buf])\n"
+  "add    $0x8,%[rgb_buf]\n"
 "1:"
-  "sub    $0x2,%4\n"
+  "sub    $0x2,%[width]\n"
   "jns    0b\n"
 
 "2:"
-  "add    $0x1,%4\n"
+  "add    $0x1,%[width]\n"
   "js     3f\n"
 
-  "movzb  (%1),%%r10\n"
-  "movq   2048(%5,%%r10,8),%%xmm0\n"
-  "movzb  (%2),%%r10\n"
-  "movq   4096(%5,%%r10,8),%%xmm1\n"
+  "movzb  (%[u_buf]),%%r10\n"
+  "movq   2048(%[kCoefficientsRgbY],%%r10,8),%%xmm0\n"
+  "movzb  (%[v_buf]),%%r10\n"
+  "movq   4096(%[kCoefficientsRgbY],%%r10,8),%%xmm1\n"
   "paddsw %%xmm1,%%xmm0\n"
-  "movzb  (%0),%%r10\n"
-  "movq   (%5,%%r10,8),%%xmm1\n"
+  "movzb  (%[y_buf]),%%r10\n"
+  "movq   (%[kCoefficientsRgbY],%%r10,8),%%xmm1\n"
   "paddsw %%xmm0,%%xmm1\n"
   "psraw  $0x6,%%xmm1\n"
   "packuswb %%xmm1,%%xmm1\n"
-  "movd   %%xmm1,0x0(%3)\n"
+  "movd   %%xmm1,0x0(%[rgb_buf])\n"
 "3:"
-  :
-  : "r"(y_buf),  // %0
-    "r"(u_buf),  // %1
-    "r"(v_buf),  // %2
-    "r"(rgb_buf),  // %3
-    "r"(width),  // %4
-    "r" (kCoefficientsRgbY)  // %5
-  : "memory", "r10", "r11", "xmm0", "xmm1", "xmm2", "xmm3"
+  : [y_buf] "+r"(y_buf),
+    [u_buf] "+r"(u_buf),
+    [v_buf] "+r"(v_buf),
+    [rgb_buf] "+r"(rgb_buf),
+    [width] "+r"(width)
+  : [kCoefficientsRgbY] "r" (kCoefficientsRgbY)
+  : "cc", "memory", "r10", "r11", "xmm0", "xmm1", "xmm2", "xmm3"
 );
 }
 
@@ -78,66 +77,65 @@ void ScaleYUVToRGB32Row(const uint8* y_buf,  // rdi
                         uint8* rgb_buf,      // rcx
                         int width,           // r8
                         int source_dx) {     // r9
-  asm(
+  asm volatile(
   "xor    %%r11,%%r11\n"
-  "sub    $0x2,%4\n"
+  "sub    $0x2,%[width]\n"
   "js     1f\n"
 
 "0:"
   "mov    %%r11,%%r10\n"
   "sar    $0x11,%%r10\n"
-  "movzb  (%1,%%r10,1),%%rax\n"
-  "movq   2048(%5,%%rax,8),%%xmm0\n"
-  "movzb  (%2,%%r10,1),%%rax\n"
-  "movq   4096(%5,%%rax,8),%%xmm1\n"
-  "lea    (%%r11,%6),%%r10\n"
+  "movzb  (%[u_buf],%%r10,1),%%rax\n"
+  "movq   2048(%[kCoefficientsRgbY],%%rax,8),%%xmm0\n"
+  "movzb  (%[v_buf],%%r10,1),%%rax\n"
+  "movq   4096(%[kCoefficientsRgbY],%%rax,8),%%xmm1\n"
+  "lea    (%%r11,%[source_dx]),%%r10\n"
   "sar    $0x10,%%r11\n"
-  "movzb  (%0,%%r11,1),%%rax\n"
+  "movzb  (%[y_buf],%%r11,1),%%rax\n"
   "paddsw %%xmm1,%%xmm0\n"
-  "movq   (%5,%%rax,8),%%xmm1\n"
-  "lea    (%%r10,%6),%%r11\n"
+  "movq   (%[kCoefficientsRgbY],%%rax,8),%%xmm1\n"
+  "lea    (%%r10,%[source_dx]),%%r11\n"
   "sar    $0x10,%%r10\n"
-  "movzb  (%0,%%r10,1),%%rax\n"
-  "movq   (%5,%%rax,8),%%xmm2\n"
+  "movzb  (%[y_buf],%%r10,1),%%rax\n"
+  "movq   (%[kCoefficientsRgbY],%%rax,8),%%xmm2\n"
   "paddsw %%xmm0,%%xmm1\n"
   "paddsw %%xmm0,%%xmm2\n"
   "shufps $0x44,%%xmm2,%%xmm1\n"
   "psraw  $0x6,%%xmm1\n"
   "packuswb %%xmm1,%%xmm1\n"
-  "movq   %%xmm1,0x0(%3)\n"
-  "add    $0x8,%3\n"
-  "sub    $0x2,%4\n"
+  "movq   %%xmm1,0x0(%[rgb_buf])\n"
+  "add    $0x8,%[rgb_buf]\n"
+  "sub    $0x2,%[width]\n"
   "jns    0b\n"
 
 "1:"
-  "add    $0x1,%4\n"
+  "add    $0x1,%[width]\n"
   "js     2f\n"
 
   "mov    %%r11,%%r10\n"
   "sar    $0x11,%%r10\n"
-  "movzb  (%1,%%r10,1),%%rax\n"
-  "movq   2048(%5,%%rax,8),%%xmm0\n"
-  "movzb  (%2,%%r10,1),%%rax\n"
-  "movq   4096(%5,%%rax,8),%%xmm1\n"
+  "movzb  (%[u_buf],%%r10,1),%%rax\n"
+  "movq   2048(%[kCoefficientsRgbY],%%rax,8),%%xmm0\n"
+  "movzb  (%[v_buf],%%r10,1),%%rax\n"
+  "movq   4096(%[kCoefficientsRgbY],%%rax,8),%%xmm1\n"
   "paddsw %%xmm1,%%xmm0\n"
   "sar    $0x10,%%r11\n"
-  "movzb  (%0,%%r11,1),%%rax\n"
-  "movq   (%5,%%rax,8),%%xmm1\n"
+  "movzb  (%[y_buf],%%r11,1),%%rax\n"
+  "movq   (%[kCoefficientsRgbY],%%rax,8),%%xmm1\n"
   "paddsw %%xmm0,%%xmm1\n"
   "psraw  $0x6,%%xmm1\n"
   "packuswb %%xmm1,%%xmm1\n"
-  "movd   %%xmm1,0x0(%3)\n"
+  "movd   %%xmm1,0x0(%[rgb_buf])\n"
 
 "2:"
-  :
-  : "r"(y_buf),  // %0
-    "r"(u_buf),  // %1
-    "r"(v_buf),  // %2
-    "r"(rgb_buf),  // %3
-    "r"(width),  // %4
-    "r" (kCoefficientsRgbY),  // %5
-    "r"(static_cast<long>(source_dx))  // %6
-  : "memory", "r10", "r11", "rax", "xmm0", "xmm1", "xmm2"
+  : [rgb_buf] "+r"(rgb_buf),
+    [width] "+r"(width)
+  : [y_buf] "r"(y_buf),
+    [u_buf] "r"(u_buf),
+    [v_buf] "r"(v_buf),
+    [kCoefficientsRgbY] "r" (kCoefficientsRgbY),
+    [source_dx] "r"(static_cast<long>(source_dx))
+  : "cc", "memory", "r10", "r11", "rax", "xmm0", "xmm1", "xmm2"
 );
 }
 
@@ -147,11 +145,11 @@ void LinearScaleYUVToRGB32Row(const uint8* y_buf,
                               uint8* rgb_buf,
                               int width,
                               int source_dx) {
-  asm(
+  asm volatile(
   "xor    %%r11,%%r11\n"   // x = 0
-  "sub    $0x2,%4\n"
+  "sub    $0x2,%[width]\n"
   "js     2f\n"
-  "cmp    $0x20000,%6\n"   // if source_dx >= 2.0
+  "cmp    $0x20000,%[source_dx]\n"   // if source_dx >= 2.0
   "jl     0f\n"
   "mov    $0x8000,%%r11\n" // x = 0.5 for 1/2 or less
 "0:"
@@ -160,8 +158,8 @@ void LinearScaleYUVToRGB32Row(const uint8* y_buf,
   "mov    %%r11,%%r10\n"
   "sar    $0x11,%%r10\n"
 
-  "movzb  (%1, %%r10, 1), %%r13 \n"
-  "movzb  1(%1, %%r10, 1), %%r14 \n"
+  "movzb  (%[u_buf], %%r10, 1), %%r13 \n"
+  "movzb  1(%[u_buf], %%r10, 1), %%r14 \n"
   "mov    %%r11, %%rax \n"
   "and    $0x1fffe, %%rax \n"
   "imul   %%rax, %%r14 \n"
@@ -169,10 +167,10 @@ void LinearScaleYUVToRGB32Row(const uint8* y_buf,
   "imul   %%rax, %%r13 \n"
   "add    %%r14, %%r13 \n"
   "shr    $17, %%r13 \n"
-  "movq   2048(%5,%%r13,8), %%xmm0\n"
+  "movq   2048(%[kCoefficientsRgbY],%%r13,8), %%xmm0\n"
 
-  "movzb  (%2, %%r10, 1), %%r13 \n"
-  "movzb  1(%2, %%r10, 1), %%r14 \n"
+  "movzb  (%[v_buf], %%r10, 1), %%r13 \n"
+  "movzb  1(%[v_buf], %%r10, 1), %%r14 \n"
   "mov    %%r11, %%rax \n"
   "and    $0x1fffe, %%rax \n"
   "imul   %%rax, %%r14 \n"
@@ -180,81 +178,80 @@ void LinearScaleYUVToRGB32Row(const uint8* y_buf,
   "imul   %%rax, %%r13 \n"
   "add    %%r14, %%r13 \n"
   "shr    $17, %%r13 \n"
-  "movq   4096(%5,%%r13,8), %%xmm1\n"
+  "movq   4096(%[kCoefficientsRgbY],%%r13,8), %%xmm1\n"
 
   "mov    %%r11, %%rax \n"
-  "lea    (%%r11,%6),%%r10\n"
+  "lea    (%%r11,%[source_dx]),%%r10\n"
   "sar    $0x10,%%r11\n"
   "paddsw %%xmm1,%%xmm0\n"
 
-  "movzb  (%0, %%r11, 1), %%r13 \n"
-  "movzb  1(%0, %%r11, 1), %%r14 \n"
+  "movzb  (%[y_buf], %%r11, 1), %%r13 \n"
+  "movzb  1(%[y_buf], %%r11, 1), %%r14 \n"
   "and    $0xffff, %%rax \n"
   "imul   %%rax, %%r14 \n"
   "xor    $0xffff, %%rax \n"
   "imul   %%rax, %%r13 \n"
   "add    %%r14, %%r13 \n"
   "shr    $16, %%r13 \n"
-  "movq   (%5,%%r13,8),%%xmm1\n"
+  "movq   (%[kCoefficientsRgbY],%%r13,8),%%xmm1\n"
 
   "mov    %%r10, %%rax \n"
-  "lea    (%%r10,%6),%%r11\n"
+  "lea    (%%r10,%[source_dx]),%%r11\n"
   "sar    $0x10,%%r10\n"
 
-  "movzb  (%0,%%r10,1), %%r13 \n"
-  "movzb  1(%0,%%r10,1), %%r14 \n"
+  "movzb  (%[y_buf],%%r10,1), %%r13 \n"
+  "movzb  1(%[y_buf],%%r10,1), %%r14 \n"
   "and    $0xffff, %%rax \n"
   "imul   %%rax, %%r14 \n"
   "xor    $0xffff, %%rax \n"
   "imul   %%rax, %%r13 \n"
   "add    %%r14, %%r13 \n"
   "shr    $16, %%r13 \n"
-  "movq   (%5,%%r13,8),%%xmm2\n"
+  "movq   (%[kCoefficientsRgbY],%%r13,8),%%xmm2\n"
 
   "paddsw %%xmm0,%%xmm1\n"
   "paddsw %%xmm0,%%xmm2\n"
   "shufps $0x44,%%xmm2,%%xmm1\n"
   "psraw  $0x6,%%xmm1\n"
   "packuswb %%xmm1,%%xmm1\n"
-  "movq   %%xmm1,0x0(%3)\n"
-  "add    $0x8,%3\n"
-  "sub    $0x2,%4\n"
+  "movq   %%xmm1,0x0(%[rgb_buf])\n"
+  "add    $0x8,%[rgb_buf]\n"
+  "sub    $0x2,%[width]\n"
   "jns    1b\n"
 
 "2:"
-  "add    $0x1,%4\n"
+  "add    $0x1,%[width]\n"
   "js     3f\n"
 
   "mov    %%r11,%%r10\n"
   "sar    $0x11,%%r10\n"
 
-  "movzb  (%1,%%r10,1), %%r13 \n"
-  "movq   2048(%5,%%r13,8),%%xmm0\n"
+  "movzb  (%[u_buf],%%r10,1), %%r13 \n"
+  "movq   2048(%[kCoefficientsRgbY],%%r13,8),%%xmm0\n"
 
-  "movzb  (%2,%%r10,1), %%r13 \n"
-  "movq   4096(%5,%%r13,8),%%xmm1\n"
+  "movzb  (%[v_buf],%%r10,1), %%r13 \n"
+  "movq   4096(%[kCoefficientsRgbY],%%r13,8),%%xmm1\n"
 
   "paddsw %%xmm1,%%xmm0\n"
   "sar    $0x10,%%r11\n"
 
-  "movzb  (%0,%%r11,1), %%r13 \n"
-  "movq   (%5,%%r13,8),%%xmm1\n"
+  "movzb  (%[y_buf],%%r11,1), %%r13 \n"
+  "movq   (%[kCoefficientsRgbY],%%r13,8),%%xmm1\n"
 
   "paddsw %%xmm0,%%xmm1\n"
   "psraw  $0x6,%%xmm1\n"
   "packuswb %%xmm1,%%xmm1\n"
-  "movd   %%xmm1,0x0(%3)\n"
+  "movd   %%xmm1,0x0(%[rgb_buf])\n"
 
 "3:"
-  :
-  : "r"(y_buf),  // %0
-    "r"(u_buf),  // %1
-    "r"(v_buf),  // %2
-    "r"(rgb_buf),  // %3
-    "r"(width),  // %4
-    "r" (kCoefficientsRgbY),  // %5
-    "r"(static_cast<long>(source_dx))  // %6
-  : "memory", "r10", "r11", "r13", "r14", "rax", "xmm0", "xmm1", "xmm2"
+  : [rgb_buf] "+r"(rgb_buf),
+    [width] "+r"(width)
+  : [y_buf] "r"(y_buf),
+    [u_buf] "r"(u_buf),
+    [v_buf] "r"(v_buf),
+    [kCoefficientsRgbY] "r" (kCoefficientsRgbY),
+    [source_dx] "r"(static_cast<long>(source_dx))
+  : "cc", "memory", "r10", "r11", "r13", "r14", "rax", "xmm0", "xmm1", "xmm2"
 );
 }
 

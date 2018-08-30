@@ -164,8 +164,6 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed
   // True if it's not a menubar item or menulist item
   bool IsRegularMenuItem(nsIFrame *aFrame);
 
-  bool IsMenuListEditable(nsIFrame *aFrame);
-
   nsIPresShell *GetPresShell(nsIFrame* aFrame);
   static bool CheckBooleanAttr(nsIFrame* aFrame, nsAtom* aAtom);
   static int32_t CheckIntAttr(nsIFrame* aFrame, nsAtom* aAtom, int32_t defaultValue);

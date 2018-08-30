@@ -6,4 +6,10 @@ CFLAGS="$CFLAGS -march=pentium-m -msse -msse2 -mfpmath=sse"
 CXXFLAGS="$CXXFLAGS -march=pentium-m -msse -msse2 -mfpmath=sse"
 
 ac_add_options --target=i686-pc-linux
-ac_add_options --host=i686-pc-linux
+
+# The linux32 builds are effectively cross-compilations, and geckodriver
+# is not enabled by default on cross-compilations, because in most cases,
+# the target is not something we can run binaries of, and geckodriver
+# is a target binary instead of a host binary. But for linux32, we actually
+# can run the target binaries, so we can manually enable geckodriver.
+ac_add_options --enable-geckodriver

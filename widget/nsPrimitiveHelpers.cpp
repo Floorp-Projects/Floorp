@@ -104,8 +104,6 @@ nsPrimitiveHelpers :: CreatePrimitiveForCFHTML ( const void* aDataBuff,
   // We need to duplicate the input buffer, since the removal of linebreaks
   // might reallocte it.
   void* utf8 = moz_xmalloc(*aDataLen);
-  if (!utf8)
-    return;
   memcpy(utf8, aDataBuff, *aDataLen);
   int32_t signedLen = static_cast<int32_t>(*aDataLen);
   nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(nsDependentCString(kTextMime), &utf8, &signedLen);

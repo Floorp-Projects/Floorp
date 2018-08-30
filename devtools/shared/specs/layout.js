@@ -9,6 +9,19 @@ const { Arg, generateActorSpec, RetVal } = require("devtools/shared/protocol");
 const flexboxSpec = generateActorSpec({
   typeName: "flexbox",
 
+  methods: {
+    getFlexItems: {
+      request: {},
+      response: {
+        flexitems: RetVal("array:flexitem")
+      }
+    },
+  },
+});
+
+const flexItemSpec = generateActorSpec({
+  typeName: "flexitem",
+
   methods: {},
 });
 
@@ -52,5 +65,6 @@ const layoutSpec = generateActorSpec({
 });
 
 exports.flexboxSpec = flexboxSpec;
+exports.flexItemSpec = flexItemSpec;
 exports.gridSpec = gridSpec;
 exports.layoutSpec = layoutSpec;

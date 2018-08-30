@@ -1487,7 +1487,6 @@ pref("browser.ping-centre.production.endpoint", "https://tiles.services.mozilla.
 // Enable GMP support in the addon manager.
 pref("media.gmp-provider.enabled", true);
 
-pref("browser.contentblocking.enabled", true);
 pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended", true);
 pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
@@ -1737,10 +1736,6 @@ pref("app.shield.optoutstudies.enabled", true);
 #else
 pref("app.shield.optoutstudies.enabled", false);
 #endif
-
-// Savant Shield study preferences
-pref("shield.savant.enabled", false);
-pref("shield.savant.loglevel", "warn");
 
 // Multi-lingual preferences
 pref("intl.multilingual.enabled", false);

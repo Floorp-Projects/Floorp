@@ -386,11 +386,7 @@ nsNSSASN1PrintableItem::SetData(char *data, uint32_t len)
 {
   if (len > 0) {
     if (mLen < len) {
-      unsigned char* newData = (unsigned char*)moz_xrealloc(mData, len);
-      if (!newData)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      mData = newData;
+      mData = (unsigned char*)moz_xrealloc(mData, len);
     }
 
     memcpy(mData, data, len);

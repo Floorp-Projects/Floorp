@@ -9,11 +9,14 @@
   min-width: 200px;
 }
 
+#layout-container .accordion ._content {
+  padding: 0;
+}
+
 /**
  * Common styles for shared components
  */
 
-.flexbox-container,
 .grid-container {
   display: flex;
   flex-direction: column;
@@ -26,32 +29,30 @@
   margin-bottom: 10px;
 }
 
-.flexbox-container > span,
 .grid-container > span {
   font-weight: 600;
   margin-bottom: 5px;
   pointer-events: none;
 }
 
-.flexbox-container > ul,
 .grid-container > ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.flexbox-container li,
-.grid-container li {
+#layout-container li {
   padding: 3px 0;
+  -moz-user-select: none;
 }
 
-.flexbox-container input,
+.flex-container input,
 .grid-container input {
   margin-inline-end: 7px;
   vertical-align: middle;
 }
 
-.flexbox-container label,
+.flex-container label,
 .grid-container label {
   margin-inline-start: -3px;
 }
@@ -59,6 +60,7 @@
 /* Layout Properties: Common styles used for the Box Model and Flexbox Properties */
 
 .layout-properties-header {
+  font-size: 12px;
   padding: 2px 3px;
   -moz-user-select: none;
 }
@@ -89,35 +91,65 @@
   display: block;
 }
 
+#layout-flexbox-container {
+  display: flex;
+  flex-direction: column;
+}
+
+/**
+ * Flex Container
+ */
+
+.flex-container {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 5px 0;
+  padding-inline-start: 20px;
+}
+
+/**
+ * Flex Item List
+ */
+
+#flex-item-list {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  font-size: 12px;
+  margin: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
 /**
  * Flex Container Properties
  */
 
 #flex-container-properties {
-  margin: 0 0 5px 0;
+  margin-bottom: 5px;
+}
+
+#flex-container-properties .layout-properties-header {
+  padding: 5px 0;
+  padding-inline-start: 20px;
 }
 
 /**
  * Grid Container
  */
 
-#layout-flexbox-container,
 #layout-grid-container {
   display: flex;
   flex-direction: column;
-  margin: 5px;
+  padding: 5px;
 }
 
 /**
  * Grid Content
  */
 
-.flexbox-content,
 .grid-content {
   display: flex;
   flex-wrap: wrap;
   flex: 1;
-  margin: 5px 0;
+  padding: 5px 0;
 }
 
 /**

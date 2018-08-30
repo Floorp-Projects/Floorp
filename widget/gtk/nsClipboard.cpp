@@ -671,11 +671,9 @@ void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
         *unicodeData =
             reinterpret_cast<char16_t*>
             (moz_xmalloc((outUnicodeLen + sizeof('\0')) * sizeof(char16_t)));
-        if (*unicodeData) {
-            memcpy(*unicodeData, data + sizeof(char16_t),
-                   outUnicodeLen * sizeof(char16_t));
-            (*unicodeData)[outUnicodeLen] = '\0';
-        }
+        memcpy(*unicodeData, data + sizeof(char16_t),
+               outUnicodeLen * sizeof(char16_t));
+        (*unicodeData)[outUnicodeLen] = '\0';
     } else if (charset.EqualsLiteral("UNKNOWN")) {
         outUnicodeLen = 0;
         return;
@@ -701,27 +699,25 @@ void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
         if (needed.value()) {
           *unicodeData = reinterpret_cast<char16_t*>(
             moz_xmalloc((needed.value() + 1) * sizeof(char16_t)));
-          if (*unicodeData) {
-            uint32_t result;
-            size_t read;
-            size_t written;
-            bool hadErrors;
-            Tie(result, read, written, hadErrors) =
-              decoder->DecodeToUTF16(AsBytes(MakeSpan(data, dataLength)),
-                                     MakeSpan(*unicodeData, needed.value()),
-                                     true);
-            MOZ_ASSERT(result == kInputEmpty);
-            MOZ_ASSERT(read == size_t(dataLength));
-            MOZ_ASSERT(written <= needed.value());
-            Unused << hadErrors;
+          uint32_t result;
+          size_t read;
+          size_t written;
+          bool hadErrors;
+          Tie(result, read, written, hadErrors) =
+            decoder->DecodeToUTF16(AsBytes(MakeSpan(data, dataLength)),
+                                   MakeSpan(*unicodeData, needed.value()),
+                                   true);
+          MOZ_ASSERT(result == kInputEmpty);
+          MOZ_ASSERT(read == size_t(dataLength));
+          MOZ_ASSERT(written <= needed.value());
+          Unused << hadErrors;
 #ifdef DEBUG_CLIPBOARD
-            if (read != dataLength)
-              printf("didn't consume all the bytes\n");
+          if (read != dataLength)
+            printf("didn't consume all the bytes\n");
 #endif
-            outUnicodeLen = written;
-            // null terminate.
-            (*unicodeData)[outUnicodeLen] = '\0';
-            }
+          outUnicodeLen = written;
+          // null terminate.
+          (*unicodeData)[outUnicodeLen] = '\0';
         } // if valid length
     }
 }

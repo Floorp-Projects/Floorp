@@ -4465,7 +4465,17 @@ class Tree extends Component {
         if (focused || !nativeEvent || !this.treeRef) {
           return;
         }
-        this._focus(traversal[0].item);
+
+        const { explicitOriginalTarget } = nativeEvent;
+        // Only set default focus to the first tree node if the focus came
+        // from outside the tree (e.g. by tabbing to the tree from other
+        // external elements).
+        if (
+          explicitOriginalTarget !== this.treeRef &&
+          !this.treeRef.contains(explicitOriginalTarget)
+        ) {
+          this._focus(traversal[0].item);
+        }
       },
       onBlur: this._onBlur,
       "aria-label": this.props.label,

@@ -5943,7 +5943,7 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
   // guaranteed that they will be started before onload fires.
   computedStyle->StartBackgroundImageLoads();
 
-  nsFrameState savedStateBits = aState.mAdditionalStateBits;
+  AutoRestore<nsFrameState> savedStateBits(aState.mAdditionalStateBits);
   if (item.mIsGeneratedContent) {
     // Ensure that frames created here are all tagged with
     // NS_FRAME_GENERATED_CONTENT.
@@ -5962,8 +5962,6 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
     // our generated content flag so we don't release or unbind it ourselves.
     item.mIsGeneratedContent = false;
   }
-
-  aState.mAdditionalStateBits = savedStateBits;
 }
 
 

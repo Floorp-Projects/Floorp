@@ -634,6 +634,16 @@ xmlns="http://www.w3.org/1999/xhtml"
                 accesskey="&syncSyncNowItem.accesskey;"
                 id="syncedTabsRefreshFilter"/>
     </menupopup>
+
+    <hbox id="statuspanel" inactive="true" layer="true">
+      <hbox id="statuspanel-inner">
+        <label id="statuspanel-label"
+               role="status"
+               aria-live="off"
+               flex="1"
+               crop="end"/>
+      </hbox>
+    </hbox>
   </popupset>
   <box id="appMenu-viewCache" hidden="true"/>
 
@@ -1261,37 +1271,7 @@ xmlns="http://www.w3.org/1999/xhtml"
         <tabbox id="tabbrowser-tabbox"
                 flex="1" eventnode="document" tabcontainer="tabbrowser-tabs">
           <tabpanels id="tabbrowser-tabpanels"
-                     flex="1" class="plain" selectedIndex="0">
-            <notificationbox flex="1" notificationside="top">
-              <!-- Set large flex to allow the devtools toolbox to set a flex attribute.
-                   We don't want the toolbox to actually take up free space, but we do want it to collapse when the window shrinks, and with flex=0 it can't.
-                   When the toolbox is on the bottom it's a sibling of browserSidebarContainer,
-                   and when it's on the side it's a sibling of browserContainer.  -->
-              <hbox flex="10000" class="browserSidebarContainer">
-                <vbox flex="10000" class="browserContainer">
-                  <stack flex="1" class="browserStack">
-                    <browser id="tabbrowser-initialBrowser" type="content"
-                             message="true" messagemanagergroup="browsers"
-                             primary="true" blank="true"
-                             tooltip="aHTMLTooltip"
-                             contextmenu="contentAreaContextMenu"
-                             autocompletepopup="PopupAutoComplete"
-                             selectmenulist="ContentSelectDropdown"
-                             datetimepicker="DateTimePickerPanel"/>
-                  </stack>
-                  <hbox id="statuspanel" inactive="true" layer="true">
-                    <hbox id="statuspanel-inner">
-                      <label id="statuspanel-label"
-                             role="status"
-                             aria-live="off"
-                             flex="1"
-                             crop="end"/>
-                    </hbox>
-                  </hbox>
-                </vbox>
-              </hbox>
-            </notificationbox>
-          </tabpanels>
+                     flex="1" class="plain" selectedIndex="0"/>
         </tabbox>
       </vbox>
       <vbox id="browser-border-end" hidden="true" layer="true"/>

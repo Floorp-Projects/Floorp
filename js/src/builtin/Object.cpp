@@ -941,10 +941,10 @@ obj_isPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     /* Step 3. */
-    bool isDelegate;
-    if (!IsDelegate(cx, obj, args[0], &isDelegate))
+    bool isPrototype;
+    if (!IsPrototypeOf(cx, obj, &args[0].toObject(), &isPrototype))
         return false;
-    args.rval().setBoolean(isDelegate);
+    args.rval().setBoolean(isPrototype);
     return true;
 }
 

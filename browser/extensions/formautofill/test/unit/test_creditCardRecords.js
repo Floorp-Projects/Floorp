@@ -21,6 +21,7 @@ const TEST_CREDIT_CARD_1 = {
   "cc-number": "4929001587121045",
   "cc-exp-month": 4,
   "cc-exp-year": 2017,
+  "cc-type": "visa",
 };
 
 const TEST_CREDIT_CARD_2 = {
@@ -28,6 +29,7 @@ const TEST_CREDIT_CARD_2 = {
   "cc-number": "5103059495477870",
   "cc-exp-month": 12,
   "cc-exp-year": 2022,
+  "cc-type": "mastercard",
 };
 
 const TEST_CREDIT_CARD_3 = {
@@ -52,6 +54,7 @@ const TEST_CREDIT_CARD_WITH_EMPTY_FIELD = {
   "cc-name": "",
   "cc-number": "344060747836806",
   "cc-exp-month": 1,
+  "cc-type": "",
 };
 
 const TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD = {
@@ -84,6 +87,14 @@ const TEST_CREDIT_CARD_WITH_INVALID_EXPIRY_DATE = {
 const TEST_CREDIT_CARD_WITH_SPACES_BETWEEN_DIGITS = {
   "cc-name": "John Doe",
   "cc-number": "5103 0594 9547 7870",
+};
+
+const TEST_CREDIT_CARD_WITH_INVALID_NETWORK = {
+  "cc-name": "John Doe",
+  "cc-number": "4929001587121045",
+  "cc-exp-month": 4,
+  "cc-exp-year": 2017,
+  "cc-type": "asiv",
 };
 
 const TEST_CREDIT_CARD_EMPTY_AFTER_NORMALIZE = {
@@ -398,6 +409,7 @@ add_task(async function test_update() {
   creditCard = profileStorage.creditCards._data[0];
   Assert.equal(creditCard["cc-exp-month"], TEST_CREDIT_CARD_WITH_EMPTY_FIELD["cc-exp-month"]);
   Assert.equal(creditCard["cc-name"], undefined);
+  Assert.equal(creditCard["cc-type"], undefined);
   Assert.equal(creditCard.billingAddressGUID, undefined);
 
   // Empty computed fields shouldn't cause any problem.
@@ -446,6 +458,7 @@ add_task(async function test_validate() {
   profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_INVALID_EXPIRY_DATE);
   profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_2_DIGITS_YEAR);
   profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_SPACES_BETWEEN_DIGITS);
+  profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_INVALID_NETWORK);
 
   let creditCards = profileStorage.creditCards.getAll();
 
@@ -460,6 +473,10 @@ add_task(async function test_validate() {
   Assert.equal(creditCards[1]["cc-exp"], year + "-" + month.toString().padStart(2, "0"));
 
   Assert.equal(creditCards[2]["cc-number"].length, 16);
+
+  // dont enforce validity on the card network when storing a record,
+  // to avoid data loss when syncing records between different clients with different rules
+  Assert.equal(creditCards[3]["cc-type"], "asiv");
 });
 
 add_task(async function test_notifyUsed() {

@@ -6,7 +6,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"
-#include "nsISimpleEnumerator.h"
+#include "nsIDirectoryEnumerator.h"
 
 using namespace mozilla;
 
@@ -109,7 +109,7 @@ TEST(TestFilePreferencesUnix, Simple)
   ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
 
   // Check that we can't enumerate the directory
-  nsCOMPtr<nsISimpleEnumerator> dirEnumerator;
+  nsCOMPtr<nsIDirectoryEnumerator> dirEnumerator;
   rv = blacklistedDir->GetDirectoryEntries(getter_AddRefs(dirEnumerator));
   ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
 

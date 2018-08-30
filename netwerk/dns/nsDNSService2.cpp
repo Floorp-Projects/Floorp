@@ -619,6 +619,7 @@ nsDNSService::ReadPrefs(const char *name)
     if (!name || !strcmp(name, kPrefDnsLocalDomains)) {
         nsCString localDomains;
         Preferences::GetCString(kPrefDnsLocalDomains, localDomains);
+        MutexAutoLock lock(mLock);
         mLocalDomains.Clear();
         if (!localDomains.IsEmpty()) {
             nsCCharSeparatedTokenizer tokenizer(localDomains, ',',

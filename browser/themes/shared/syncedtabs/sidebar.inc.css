@@ -69,7 +69,6 @@ body {
   white-space: nowrap;
   overflow: hidden;
   outline: none;
-  color: -moz-FieldText;
 }
 
 .item.selected > .item-title-container {
@@ -295,4 +294,27 @@ body {
 
 .filtered .textbox-search-icons .textbox-search-clear {
   display: block;
+}
+
+/* Themed sidebars */
+
+body[lwt-sidebar] {
+  background-color: var(--lwt-sidebar-background-color);
+  color: var(--lwt-sidebar-text-color);
+}
+
+body[lwt-sidebar] .item.selected > .item-title-container {
+  background-color: hsla(0,0%,80%,.3);
+  color: inherit;
+}
+
+body[lwt-sidebar-brighttext] .item.selected > .item-title-container {
+  -moz-appearance: none;
+  background-color: rgba(249,249,250,.1);
+}
+
+body[lwt-sidebar-highlight] .item.selected:focus > .item-title-container {
+  -moz-appearance: none;
+  background-color: var(--lwt-sidebar-highlight-background-color);
+  color: var(--lwt-sidebar-highlight-text-color);
 }

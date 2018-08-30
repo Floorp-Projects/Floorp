@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "builtin/TestingFunctions.h"
+#include "js/CompilationAndEvaluation.h"
 #include "js/UbiNode.h"
 #include "js/UbiNodeDominatorTree.h"
 #include "js/UbiNodePostOrder.h"

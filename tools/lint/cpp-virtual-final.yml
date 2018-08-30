@@ -2,7 +2,7 @@
 cpp-virtual-final:
     description: "Virtual function declarations should specify only one of
                   `virtual`, `final`, or `override`"
-    level: warning
+    level: error
     include: ['.']
     exclude:
         # Third-party code with cpp-virtual-final warnings:

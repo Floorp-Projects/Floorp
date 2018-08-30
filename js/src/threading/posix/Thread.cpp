@@ -208,6 +208,9 @@ js::ThisThread::GetName(char* nameBuffer, size_t len)
   int rv = -1;
 #ifdef HAVE_PTHREAD_GETNAME_NP
   rv = pthread_getname_np(pthread_self(), nameBuffer, len);
+#elif defined(HAVE_PTHREAD_GET_NAME_NP)
+  pthread_get_name_np(pthread_self(), nameBuffer, len);
+  rv = 0;
 #elif defined(__linux__)
   rv = prctl(PR_GET_NAME, reinterpret_cast<unsigned long>(nameBuffer));
 #endif

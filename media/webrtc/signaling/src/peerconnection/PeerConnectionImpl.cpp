@@ -1097,7 +1097,7 @@ PeerConnectionImpl::GetDatachannelParameters(
     uint16_t* remoteport,
     uint32_t* remotemaxmessagesize,
     bool*     mmsset,
-    uint16_t* level) const {
+    std::string* transportId) const {
 
   for (const auto& transceiver : mJsepSession->GetTransceivers()) {
     bool dataChannel =
@@ -1146,11 +1146,8 @@ PeerConnectionImpl::GetDatachannelParameters(
           (codec)->mRemoteMaxMessageSize;
         *mmsset = static_cast<const JsepApplicationCodecDescription*>
           (codec)->mRemoteMMSSet;
-        if (transceiver->HasBundleLevel()) {
-          *level = static_cast<uint16_t>(transceiver->BundleLevel());
-        } else {
-          *level = static_cast<uint16_t>(transceiver->GetLevel());
-        }
+        MOZ_ASSERT(!transceiver->mTransport.mTransportId.empty());
+        *transportId = transceiver->mTransport.mTransportId;
         return NS_OK;
       }
     }
@@ -1161,7 +1158,7 @@ PeerConnectionImpl::GetDatachannelParameters(
   *remoteport = 0;
   *remotemaxmessagesize = 0;
   *mmsset = false;
-  *level = 0;
+  transportId->clear();
   return NS_ERROR_FAILURE;
 }
 
@@ -1275,9 +1272,9 @@ PeerConnectionImpl::InitializeDataChannel()
   uint16_t remoteport = 0;
   uint32_t remotemaxmessagesize = 0;
   bool mmsset = false;
-  uint16_t level = 0;
+  std::string transportId;
   nsresult rv = GetDatachannelParameters(&channels, &localport, &remoteport,
-                                         &remotemaxmessagesize, &mmsset, &level);
+                                         &remotemaxmessagesize, &mmsset, &transportId);
 
   if (NS_FAILED(rv)) {
     CSFLogDebug(LOGTAG, "%s: We did not negotiate datachannel", __FUNCTION__);
@@ -1291,9 +1288,9 @@ PeerConnectionImpl::InitializeDataChannel()
   rv = EnsureDataConnection(localport, channels, remotemaxmessagesize, mmsset);
   if (NS_SUCCEEDED(rv)) {
     // use the specified TransportFlow
-    RefPtr<TransportFlow> flow = mMedia->GetTransportFlow(level, false).get();
-    CSFLogDebug(LOGTAG, "Transportflow[%u] = %p",
-                        static_cast<unsigned>(level), flow.get());
+    RefPtr<TransportFlow> flow = mMedia->GetTransportFlow(transportId, false).get();
+    CSFLogDebug(LOGTAG, "Transportflow[%s] = %p",
+                        transportId.c_str(), flow.get());
     if (flow) {
       if (mDataConnection->ConnectViaTransportFlow(flow,
                                                    localport,
@@ -2035,14 +2032,16 @@ PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, un
     }
   }
 
-  nsresult res = mJsepSession->AddRemoteIceCandidate(aCandidate, aMid, aLevel);
+  std::string transportId;
+  nsresult res =
+    mJsepSession->AddRemoteIceCandidate(aCandidate, aMid, aLevel, &transportId);
 
   if (NS_SUCCEEDED(res)) {
     // We do not bother PCMedia about this before offer/answer concludes.
     // Once offer/answer concludes, PCMedia will extract these candidates from
     // the remote SDP.
     if (mSignalingState == PCImplSignalingState::SignalingStable) {
-      mMedia->AddIceCandidate(aCandidate, aMid, aLevel);
+      mMedia->AddIceCandidate(aCandidate, transportId);
       mRawTrickledCandidates.push_back(aCandidate);
     }
     pco->OnAddIceCandidateSuccess(rv);
@@ -2849,8 +2848,7 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,
     // If we're rolling back a local offer, we might need to remove some
     // transports, and stomp some MediaPipeline setup, but nothing further
     // needs to be done.
-    mMedia->ActivateOrRemoveTransports(*mJsepSession, mForceIceTcp);
-    mMedia->UpdateTransceiverTransports(*mJsepSession);
+    mMedia->UpdateTransports(*mJsepSession, mForceIceTcp);
     if (NS_FAILED(mMedia->UpdateMediaPipelines())) {
       CSFLogError(LOGTAG, "Error Updating MediaPipelines");
       NS_ASSERTION(false, "Error Updating MediaPipelines in SetSignalingState_m()");
@@ -3005,18 +3003,21 @@ toDomIceGatheringState(NrIceCtx::GatheringState state) {
 
 void
 PeerConnectionImpl::CandidateReady(const std::string& candidate,
-                                   uint16_t level) {
+                                   const std::string& transportId) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
   if (mForceIceTcp && std::string::npos != candidate.find(" UDP ")) {
-    CSFLogError(LOGTAG, "Blocking local UDP candidate: %s", candidate.c_str());
+    CSFLogWarn(LOGTAG, "Blocking local UDP candidate: %s", candidate.c_str());
     return;
   }
 
+  // One of the very few places we still use level; required by the JSEP API
+  uint16_t level = 0;
   std::string mid;
   bool skipped = false;
   nsresult res = mJsepSession->AddLocalIceCandidate(candidate,
-                                                    level,
+                                                    transportId,
+                                                    &level,
                                                     &mid,
                                                     &skipped);
 
@@ -3024,21 +3025,22 @@ PeerConnectionImpl::CandidateReady(const std::string& candidate,
     std::string errorString = mJsepSession->GetLastError();
 
     CSFLogError(LOGTAG, "Failed to incorporate local candidate into SDP:"
-                        " res = %u, candidate = %s, level = %u, error = %s",
+                        " res = %u, candidate = %s, transport-id = %s,"
+                        " error = %s",
                         static_cast<unsigned>(res),
                         candidate.c_str(),
-                        static_cast<unsigned>(level),
+                        transportId.c_str(),
                         errorString.c_str());
     return;
   }
 
   if (skipped) {
-    CSFLogDebug(LOGTAG, "Skipped adding local candidate %s (level %u) to SDP, "
-                        "this typically happens because the m-section is "
-                        "bundled, which means it doesn't make sense for it to "
-                        "have its own transport-related attributes.",
+    CSFLogDebug(LOGTAG, "Skipped adding local candidate %s (transport-id %s) "
+                        "to SDP, this typically happens because the m-section "
+                        "is bundled, which means it doesn't make sense for it "
+                        "to have its own transport-related attributes.",
                         candidate.c_str(),
-                        static_cast<unsigned>(level));
+                        transportId.c_str());
     return;
   }
 
@@ -3224,19 +3226,19 @@ PeerConnectionImpl::UpdateDefaultCandidate(const std::string& defaultAddr,
                                            uint16_t defaultPort,
                                            const std::string& defaultRtcpAddr,
                                            uint16_t defaultRtcpPort,
-                                           uint16_t level) {
+                                           const std::string& transportId) {
   CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
   mJsepSession->UpdateDefaultCandidate(defaultAddr,
                                        defaultPort,
                                        defaultRtcpAddr,
                                        defaultRtcpPort,
-                                       level);
+                                       transportId);
 }
 
 void
-PeerConnectionImpl::EndOfLocalCandidates(uint16_t level) {
+PeerConnectionImpl::EndOfLocalCandidates(const std::string& transportId) {
   CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
-  mJsepSession->EndOfLocalCandidates(level);
+  mJsepSession->EndOfLocalCandidates(transportId);
 }
 
 nsresult
@@ -3304,6 +3306,14 @@ PeerConnectionImpl::BuildStatsQuery_m(
   // Gather up pipelines from mMedia so they may be inspected on STS
   mMedia->GetTransmitPipelinesMatching(aSelector, &query->pipelines);
   mMedia->GetReceivePipelinesMatching(aSelector, &query->pipelines);
+  if (!query->pipelines.Length()) {
+    CSFLogError(LOGTAG,
+        "%s: Found no pipelines matching selector.",
+        __FUNCTION__);
+  }
+  if (aSelector) {
+    query->transportId = mMedia->GetTransportIdMatching(*aSelector);
+  }
 
   if (!aSelector) {
     query->grabAllLevels = true;
@@ -3346,17 +3356,19 @@ static void ToRTCIceCandidateStats(
 }
 
 static void RecordIceStats_s(
-    NrIceMediaStream& mediaStream,
+    const NrIceMediaStream& mediaStream,
     bool internalStats,
     DOMHighResTimeStamp now,
     RTCStatsReportInternal* report) {
 
-  NS_ConvertASCIItoUTF16 transportId(mediaStream.name().c_str());
+  NS_ConvertASCIItoUTF16 transportId(mediaStream.GetId().c_str());
 
   std::vector<NrIceCandidatePair> candPairs;
   nsresult res = mediaStream.GetCandidatePairs(&candPairs);
   if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "%s: Error getting candidate pairs", __FUNCTION__);
+    CSFLogError(LOGTAG,
+        "%s: Error getting candidate pairs for transport id \"%s\"",
+        __FUNCTION__, mediaStream.GetId().c_str());
     return;
   }
 
@@ -3641,28 +3653,20 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
         break;
       }
     }
-
-    if (!query->grabAllLevels) {
-      // If we're grabbing all levels, that means we want datachannels too,
-      // which don't have pipelines.
-      if (query->iceCtx->GetStream(p)) {
-        RecordIceStats_s(*query->iceCtx->GetStream(p),
-                         query->internalStats,
-                         query->now,
-                         query->report);
-      }
-    }
   }
 
   if (query->grabAllLevels) {
-    for (size_t i = 0; i < query->iceCtx->GetStreamCount(); ++i) {
-      if (query->iceCtx->GetStream(i)) {
-        RecordIceStats_s(*query->iceCtx->GetStream(i),
-                         query->internalStats,
-                         query->now,
-                         query->report);
-      }
+    for (const auto& stream : query->iceCtx->GetStreams()) {
+      RecordIceStats_s(*stream,
+                       query->internalStats,
+                       query->now,
+                       query->report);
     }
+  } else if (query->iceCtx->GetStream(query->transportId)) {
+    RecordIceStats_s(*query->iceCtx->GetStream(query->transportId),
+                     query->internalStats,
+                     query->now,
+                     query->report);
   }
 
   // NrIceCtx must be destroyed on STS, so it is not safe

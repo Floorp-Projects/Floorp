@@ -184,9 +184,23 @@ Required for all new histograms. This is an array of integers and should at leas
 ---------------
 Required. A description of the data tracked by the histogram, e.g. _"Resident memory size"_
 
-``cpp_guard``
--------------
+``cpp_guard`` (obsolete, use ``operating_systems``)
+---------------------------------------------------
 Optional. This field inserts an #ifdef directive around the histogram's C++ declaration. This is typically used for platform-specific histograms, e.g. ``"cpp_guard": "ANDROID"``
+
+``operating_systems``
+---------------------
+Optional. This field restricts recording to certain operating systems only. Use that in-place of previous ``cpp_guards`` to avoid inclusion on not-specified operating systems.
+Currently supported values are:
+
+- ``mac``
+- ``linux``
+- ``windows``
+- ``android``
+- ``unix``
+- ``all`` (record on all operating systems)
+
+If this field is left out it defaults to ``all``.
 
 ``releaseChannelCollection``
 ----------------------------

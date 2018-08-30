@@ -447,7 +447,8 @@ ul.children + .tag-line::before {
   background-color: var(--markup-badge-hover-background-color);
 }
 
-.markup-badge.active {
+.markup-badge.active,
+.markup-badge.interactive.active {
   background-color: var(--markup-badge-active-background-color);
   border-color: var(--markup-badge-active-border-color);
   color: var(--theme-selection-color);

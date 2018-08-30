@@ -235,9 +235,7 @@ nsAuthSambaNTLM::GetNextToken(const void *inToken,
 {
     if (!inToken) {
         /* someone wants our initial message */
-        *outToken = nsMemory::Clone(mInitialMessage, mInitialMessageLen);
-        if (!*outToken)
-            return NS_ERROR_OUT_OF_MEMORY;
+        *outToken = moz_xmemdup(mInitialMessage, mInitialMessageLen);
         *outTokenLen = mInitialMessageLen;
         return NS_OK;
     }
@@ -266,11 +264,8 @@ nsAuthSambaNTLM::GetNextToken(const void *inToken,
     uint8_t* buf = ExtractMessage(line, outTokenLen);
     if (!buf)
         return NS_ERROR_FAILURE;
-    *outToken = nsMemory::Clone(buf, *outTokenLen);
+    *outToken = moz_xmemdup(buf, *outTokenLen);
     PR_Free(buf);
-    if (!*outToken) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     // We're done. Close our file descriptors now and reap the helper
     // process.

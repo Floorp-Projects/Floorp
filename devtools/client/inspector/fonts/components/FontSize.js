@@ -58,7 +58,7 @@ class FontSize extends PureComponent {
       : max;
 
     return FontPropertyValue({
-      allowAutoIncrement: true,
+      autoIncrement: true,
       label: getStr("fontinspector.fontSizeLabel"),
       min: 0,
       max: this.historicMax[unit],

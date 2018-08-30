@@ -33,9 +33,10 @@ loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-consta
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
 loader.lazyRequireGetter(this, "ExtensionSidebar", "devtools/client/inspector/extensions/extension-sidebar");
-loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
+loader.lazyRequireGetter(this, "getScreenshotFront", "devtools/shared/fronts/screenshot", true);
+loader.lazyRequireGetter(this, "saveScreenshot", "devtools/shared/screenshot/save");
 
 loader.lazyImporter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 
@@ -2318,21 +2319,22 @@ Inspector.prototype = {
    * Initiate gcli screenshot command on selected node.
    */
   async screenshotNode() {
-    const command = Services.prefs.getBoolPref("devtools.screenshot.clipboard.enabled") ?
-      "screenshot --file --clipboard --selector" :
-      "screenshot --file --selector";
-
     // Bug 1332936 - it's possible to call `screenshotNode` while the BoxModel highlighter
     // is still visible, therefore showing it in the picture.
     // To avoid that, we have to hide it before taking the screenshot. The `hideBoxModel`
     // will do that, calling `hide` for the highlighter only if previously shown.
     await this.highlighter.hideBoxModel();
 
-    // Bug 1180314 -  CssSelector might contain white space so need to make sure it is
-    // passed to screenshot as a single parameter.  More work *might* be needed if
-    // CssSelector could contain escaped single- or double-quotes, backslashes, etc.
-    CommandUtils.executeOnTarget(this._target,
-      `${command} '${this.selectionCssSelector}'`);
+    const clipboardEnabled = Services.prefs
+      .getBoolPref("devtools.screenshot.clipboard.enabled");
+    const args = {
+      file: true,
+      selector: this.selectionCssSelector,
+      clipboard: clipboardEnabled
+    };
+    const screenshotFront = getScreenshotFront(this.target);
+    const screenshot = await screenshotFront.capture(args);
+    await saveScreenshot(this.panelWin, args, screenshot);
   },
 
   /**

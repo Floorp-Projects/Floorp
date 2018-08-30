@@ -7,6 +7,7 @@
 const {Cc, Ci, Cm, Cr, components} = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+const Services = require("Services");
 
 /**
  * This is a nsIChannelEventSink implementation that monitors channel redirects and
@@ -63,7 +64,7 @@ ChannelEventSinkFactory.register = function() {
                             SINK_CONTRACT_ID,
                             ChannelEventSinkFactory);
 
-  XPCOMUtils.categoryManager.addCategoryEntry(SINK_CATEGORY_NAME, SINK_CONTRACT_ID,
+  Services.catMan.addCategoryEntry(SINK_CATEGORY_NAME, SINK_CONTRACT_ID,
     SINK_CONTRACT_ID, false, true);
 };
 
@@ -71,7 +72,7 @@ ChannelEventSinkFactory.unregister = function() {
   const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.unregisterFactory(SINK_CLASS_ID, ChannelEventSinkFactory);
 
-  XPCOMUtils.categoryManager.deleteCategoryEntry(SINK_CATEGORY_NAME, SINK_CONTRACT_ID,
+  Services.catMan.deleteCategoryEntry(SINK_CATEGORY_NAME, SINK_CONTRACT_ID,
     false);
 };
 

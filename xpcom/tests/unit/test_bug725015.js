@@ -20,7 +20,7 @@ function observe_category(subj, topic, data) {
     var thisentry = subj.QueryInterface(Ci.nsISupportsCString).data;
     Assert.equal(thisentry, entry);
 
-    Assert.equal(Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager).getCategoryEntry(category, entry), contract);
+    Assert.equal(Services.catMan.getCategoryEntry(category, entry), contract);
     Assert.ok(Cc[contract].equals(cid));
   } catch (e) {
     do_throw(e);

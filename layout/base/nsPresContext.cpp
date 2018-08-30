@@ -1131,6 +1131,7 @@ nsPresContext::CompatibilityModeChanged()
   }
 
   mQuirkSheetAdded = needsQuirkSheet;
+  mShell->ApplicableStylesChanged();
 }
 
 // Helper function for setting Anim Mode on image

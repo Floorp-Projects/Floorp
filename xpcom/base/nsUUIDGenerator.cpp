@@ -85,9 +85,6 @@ NS_IMETHODIMP
 nsUUIDGenerator::GenerateUUID(nsID** aRet)
 {
   nsID* id = static_cast<nsID*>(moz_xmalloc(sizeof(nsID)));
-  if (!id) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   nsresult rv = GenerateUUIDInPlace(id);
   if (NS_FAILED(rv)) {

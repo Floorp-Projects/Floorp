@@ -95,8 +95,10 @@ LOCAL_INCLUDES += [
     '/media/webrtc/signaling/src/common/time_profiling',
     '/media/webrtc/signaling/src/peerconnection',
     '/media/webrtc/trunk/',
-    '/third_party/msgpack/include',
 ]
+
+if CONFIG['MOZ_LIBPRIO']:
+    LOCAL_INCLUDES += ['/third_party/msgpack/include']
 
 DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True

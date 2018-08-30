@@ -36,7 +36,6 @@
 #include "nsSHEntry.h"
 #include "nsSHEntryShared.h"
 #include "nsSHistory.h"
-#include "nsSHTransaction.h"
 
 // LoadContexts (used for testing)
 #include "LoadContext.h"
@@ -96,7 +95,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ContentHandlerService, Init)
 
 // session history
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHTransaction)
 
 NS_DEFINE_NAMED_CID(NS_DOCSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_DEFAULTURIFIXUP_CID);
@@ -118,7 +116,6 @@ NS_DEFINE_NAMED_CID(NS_EXTERNALSHARINGAPPSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_EXTERNALURLHANDLERSERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_SHENTRY_CID);
-NS_DEFINE_NAMED_CID(NS_SHTRANSACTION_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTHANDLERSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_LOADCONTEXT_CID);
 NS_DEFINE_NAMED_CID(NS_PRIVATELOADCONTEXT_CID);
@@ -146,7 +143,6 @@ const mozilla::Module::CIDEntry kDocShellCIDs[] = {
   { &kNS_EXTERNALURLHANDLERSERVICE_CID, false, nullptr, nsExternalURLHandlerServiceConstructor },
 #endif
   { &kNS_SHENTRY_CID, false, nullptr, nsSHEntryConstructor },
-  { &kNS_SHTRANSACTION_CID, false, nullptr, nsSHTransactionConstructor },
   { &kNS_LOADCONTEXT_CID, false, nullptr, mozilla::CreateTestLoadContext },
   { &kNS_PRIVATELOADCONTEXT_CID, false, nullptr, mozilla::CreatePrivateTestLoadContext },
   { nullptr }
@@ -204,7 +200,6 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
   { NS_EXTERNALURLHANDLERSERVICE_CONTRACTID, &kNS_EXTERNALURLHANDLERSERVICE_CID },
 #endif
   { NS_SHENTRY_CONTRACTID, &kNS_SHENTRY_CID },
-  { NS_SHTRANSACTION_CONTRACTID, &kNS_SHTRANSACTION_CID },
   { NS_LOADCONTEXT_CONTRACTID, &kNS_LOADCONTEXT_CID },
   { NS_PRIVATELOADCONTEXT_CONTRACTID, &kNS_PRIVATELOADCONTEXT_CID },
   { nullptr }

@@ -66,6 +66,10 @@ PopulateRegsFromContext(Registers& aRegs, CONTEXT* aContext)
   aRegs.mPC = reinterpret_cast<Address>(aContext->Eip);
   aRegs.mSP = reinterpret_cast<Address>(aContext->Esp);
   aRegs.mFP = reinterpret_cast<Address>(aContext->Ebp);
+#elif defined(GP_ARCH_arm64)
+  aRegs.mPC = reinterpret_cast<Address>(aContext->Pc);
+  aRegs.mSP = reinterpret_cast<Address>(aContext->Sp);
+  aRegs.mFP = reinterpret_cast<Address>(aContext->Fp);
 #else
  #error "bad arch"
 #endif

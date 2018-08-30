@@ -15,6 +15,7 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/fallible.h"
+#include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
@@ -1186,7 +1187,9 @@ public:
   template<class Item, class Comparator>
   bool Contains(const Item& aItem, const Comparator& aComp) const
   {
-    return IndexOf(aItem, 0, aComp) != NoIndex;
+    return ApplyIf(aItem, 0, aComp,
+                   []() { return true; },
+                   []() { return false; });
   }
 
   // Like Contains(), but assumes a sorted array.
@@ -1204,7 +1207,7 @@ public:
   template<class Item>
   bool Contains(const Item& aItem) const
   {
-    return IndexOf(aItem) != NoIndex;
+    return Contains(aItem, nsDefaultComparator<elem_type, Item>());
   }
 
   // Like Contains(), but assumes a sorted array.
@@ -1945,6 +1948,184 @@ public:
   {
     return Alloc::Result(this->template SwapArrayElements<Alloc>(
       aOther, sizeof(elem_type), MOZ_ALIGNOF(elem_type)));
+  }
+
+private:
+  // Used by ApplyIf functions to invoke a callable that takes either:
+  // - Nothing: F(void)
+  // - Index only: F(size_t)
+  // - Reference to element only: F(maybe-const elem_type&)
+  // - Both index and reference: F(size_t, maybe-const elem_type&)
+  // `elem_type` must be const when called from const method.
+  template<typename T, typename Param0, typename Param1>
+  struct InvokeWithIndexAndOrReferenceHelper
+  {
+    static constexpr bool valid = false;
+  };
+  template<typename T>
+  struct InvokeWithIndexAndOrReferenceHelper<T, void, void>
+  {
+    static constexpr bool valid = true;
+    template<typename F>
+    static auto Invoke(F&& f, size_t, T&) { return f(); }
+  };
+  template<typename T>
+  struct InvokeWithIndexAndOrReferenceHelper<T, size_t, void>
+  {
+    static constexpr bool valid = true;
+    template<typename F>
+    static auto Invoke(F&& f, size_t i, T&) { return f(i); }
+  };
+  template<typename T>
+  struct InvokeWithIndexAndOrReferenceHelper<T, T&, void>
+  {
+    static constexpr bool valid = true;
+    template<typename F>
+    static auto Invoke(F&& f, size_t, T& e) { return f(e); }
+  };
+  template<typename T>
+  struct InvokeWithIndexAndOrReferenceHelper<T, const T&, void>
+  {
+    static constexpr bool valid = true;
+    template<typename F>
+    static auto Invoke(F&& f, size_t, T& e) { return f(e); }
+  };
+  template<typename T>
+  struct InvokeWithIndexAndOrReferenceHelper<T, size_t, T&>
+  {
+    static constexpr bool valid = true;
+    template<typename F>
+    static auto Invoke(F&& f, size_t i, T& e) { return f(i, e); }
+  };
+  template<typename T>
+  struct InvokeWithIndexAndOrReferenceHelper<T, size_t, const T&>
+  {
+    static constexpr bool valid = true;
+    template<typename F>
+    static auto Invoke(F&& f, size_t i, T& e) { return f(i, e); }
+  };
+  template<typename T, typename F>
+  static auto InvokeWithIndexAndOrReference(F&& f, size_t i, T& e)
+  {
+    using Invoker =
+      InvokeWithIndexAndOrReferenceHelper<
+        T,
+        typename mozilla::FunctionTypeTraits<F>::template ParameterType<0>,
+        typename mozilla::FunctionTypeTraits<F>::template ParameterType<1>>;
+    static_assert(Invoker::valid,
+                  "ApplyIf's Function parameters must match either: (void), "
+                  "(size_t), (maybe-const elem_type&), or "
+                  "(size_t, maybe-const elem_type&)");
+    return Invoker::Invoke(std::forward<F>(f), i, e);
+  }
+
+public:
+  // 'Apply' family of methods.
+  //
+  // The advantages of using Apply methods with lambdas include:
+  // - Safety of accessing elements from within the call, when the array cannot
+  //   have been modified between the iteration and the subsequent access.
+  // - Avoiding moot conversions: pointer->index during a search, followed by
+  //   index->pointer after the search when accessing the element.
+  // - Embedding your code into the algorithm, giving the compiler more chances
+  //   to optimize.
+
+  // Search for the first element comparing equal to aItem with the given
+  // comparator (`==` by default).
+  // If such an element exists, return the result of evaluating either:
+  // - `aFunction()`
+  // - `aFunction(index_type)`
+  // - `aFunction(maybe-const? elem_type&)`
+  // - `aFunction(index_type, maybe-const? elem_type&)`
+  // (`aFunction` must have one of the above signatures with these exact types,
+  //  including references; implicit conversions or generic types not allowed.
+  //  If `this` array is const, the referenced `elem_type` must be const too;
+  //  otherwise it may be either const or non-const.)
+  // But if the element is not found, return the result of evaluating
+  // `aFunctionElse()`.
+  template<class Item, class Comparator, class Function, class FunctionElse>
+  auto ApplyIf(const Item& aItem, index_type aStart,
+               const Comparator& aComp,
+               Function&& aFunction, FunctionElse&& aFunctionElse) const
+  {
+    static_assert(
+      mozilla::IsSame<
+        typename mozilla::FunctionTypeTraits<Function>::ReturnType,
+        typename mozilla::FunctionTypeTraits<FunctionElse>::ReturnType>::value,
+      "ApplyIf's `Function` and `FunctionElse` must return the same type.");
+
+    ::detail::CompareWrapper<Comparator, Item> comp(aComp);
+
+    const elem_type* const elements = Elements();
+    const elem_type* const iend = elements + Length();
+    for (const elem_type* iter = elements + aStart; iter != iend; ++iter) {
+      if (comp.Equals(*iter, aItem)) {
+        return InvokeWithIndexAndOrReference<const elem_type>(
+                 std::forward<Function>(aFunction), iter - elements, *iter);
+      }
+    }
+    return aFunctionElse();
+  }
+  template<class Item, class Comparator, class Function, class FunctionElse>
+  auto ApplyIf(const Item& aItem, index_type aStart,
+               const Comparator& aComp,
+               Function&& aFunction, FunctionElse&& aFunctionElse)
+  {
+    static_assert(
+      mozilla::IsSame<
+        typename mozilla::FunctionTypeTraits<Function>::ReturnType,
+        typename mozilla::FunctionTypeTraits<FunctionElse>::ReturnType>::value,
+      "ApplyIf's `Function` and `FunctionElse` must return the same type.");
+
+    ::detail::CompareWrapper<Comparator, Item> comp(aComp);
+
+    elem_type* const elements = Elements();
+    elem_type* const iend = elements + Length();
+    for (elem_type* iter = elements + aStart; iter != iend; ++iter) {
+      if (comp.Equals(*iter, aItem)) {
+        return InvokeWithIndexAndOrReference<elem_type>(
+                 std::forward<Function>(aFunction), iter - elements, *iter);
+      }
+    }
+    return aFunctionElse();
+  }
+  template<class Item, class Function, class FunctionElse>
+  auto ApplyIf(const Item& aItem, index_type aStart,
+               Function&& aFunction, FunctionElse&& aFunctionElse) const
+  {
+    return ApplyIf(aItem,
+                   aStart,
+                   nsDefaultComparator<elem_type, Item>(),
+                   std::forward<Function>(aFunction),
+                   std::forward<FunctionElse>(aFunctionElse));
+  }
+  template<class Item, class Function, class FunctionElse>
+  auto ApplyIf(const Item& aItem, index_type aStart,
+               Function&& aFunction, FunctionElse&& aFunctionElse)
+  {
+    return ApplyIf(aItem,
+                   aStart,
+                   nsDefaultComparator<elem_type, Item>(),
+                   std::forward<Function>(aFunction),
+                   std::forward<FunctionElse>(aFunctionElse));
+  }
+  template<class Item, class Function, class FunctionElse>
+  auto ApplyIf(const Item& aItem,
+               Function&& aFunction, FunctionElse&& aFunctionElse) const
+  {
+    return ApplyIf(aItem,
+                   0,
+                   std::forward<Function>(aFunction),
+                   std::forward<FunctionElse>(aFunctionElse));
+  }
+  template<class Item, class Function, class FunctionElse>
+  auto ApplyIf(const Item& aItem,
+               Function&& aFunction, FunctionElse&& aFunctionElse)
+  {
+    return ApplyIf(aItem,
+                   0,
+                   std::forward<Function>(aFunction),
+                   std::forward<FunctionElse>(aFunctionElse));
   }
 
   //

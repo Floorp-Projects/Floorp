@@ -13,15 +13,6 @@
 #include "nsString.h"
 #include "nsSystemInfo.h"
 
-// This gives us compiler intrinsics for the x86 PAUSE instruction
-#if defined(_MSC_VER)
-#include <intrin.h>
-#pragma intrinsic(_mm_pause)
-#define CPU_PAUSE() _mm_pause()
-#elif defined(__GNUC__) || defined(__clang__)
-#define CPU_PAUSE() __builtin_ia32_pause()
-#endif
-
 namespace mozilla {
 namespace mscom {
 
@@ -68,10 +59,7 @@ SpinEvent::Wait(HANDLE aTargetThread)
       if (elapsed >= kMaxSpinTime) {
         break;
       }
-      // The PAUSE instruction is a hint to the CPU that we're doing a spin
-      // loop. It is a no-op on older processors that don't support it, so
-      // it is safe to use here without any CPUID checks.
-      CPU_PAUSE();
+      YieldProcessor();
     }
     if (mDone) {
       return true;

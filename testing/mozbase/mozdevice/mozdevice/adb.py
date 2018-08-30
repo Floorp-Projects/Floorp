@@ -150,6 +150,12 @@ class ADBCommand(object):
         :param adb_port: port of the adb server.
         :type adb_port: integer or None
         :param str logger_name: logging logger name. Defaults to 'adb'.
+        :param timeout: The default maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value defaults to 300.
+        :type timeout: integer or None
         :param bool verbose: provide verbose output
         :param bool require_root: check that we have root permissions on device
 
@@ -341,13 +347,20 @@ class ADBHost(ADBCommand):
         :param adb_port: port of the adb server.
         :type adb_port: integer or None
         :param str logger_name: logging logger name. Defaults to 'adb'.
+        :param timeout: The default maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value defaults to 300.
+        :type timeout: integer or None
+        :param bool verbose: provide verbose output
 
         :raises: * ADBError
                  * ADBTimeoutError
         """
         ADBCommand.__init__(self, adb=adb, adb_host=adb_host,
                             adb_port=adb_port, logger_name=logger_name,
-                            timeout=timeout, verbose=verbose)
+                            timeout=timeout, verbose=verbose, require_root=False)
 
     def command(self, cmds, timeout=None):
         """Executes an adb command on the host.
@@ -526,7 +539,8 @@ class ADBDevice(ADBCommand):
                  timeout=300,
                  verbose=False,
                  device_ready_retry_wait=20,
-                 device_ready_retry_attempts=3):
+                 device_ready_retry_attempts=3,
+                 require_root=True):
         """Initializes the ADBDevice object.
 
         :param device: When a string is passed, it is interpreted as the
@@ -551,11 +565,19 @@ class ADBDevice(ADBCommand):
         :param adb_port: port of the adb server to connect to.
         :type adb_port: integer or None
         :param str logger_name: logging logger name. Defaults to 'adb'.
+        :param timeout: The default maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value defaults to 300.
+        :type timeout: integer or None
+        :param bool verbose: provide verbose output
         :param integer device_ready_retry_wait: number of seconds to wait
             between attempts to check if the device is ready after a
             reboot.
         :param integer device_ready_retry_attempts: number of attempts when
             checking if a device is ready.
+        :param bool require_root: check that we have root permissions on device
 
         :raises: * ADBError
                  * ADBTimeoutError
@@ -563,7 +585,8 @@ class ADBDevice(ADBCommand):
         """
         ADBCommand.__init__(self, adb=adb, adb_host=adb_host,
                             adb_port=adb_port, logger_name=logger_name,
-                            timeout=timeout, verbose=verbose)
+                            timeout=timeout, verbose=verbose,
+                            require_root=require_root)
         self._logger.info('Using adb %s' % self._adb_version)
         self._device_serial = self._get_device_serial(device)
         self._initial_test_root = test_root
@@ -573,6 +596,7 @@ class ADBDevice(ADBCommand):
         self._have_root_shell = False
         self._have_su = False
         self._have_android_su = False
+        self._re_internal_storage = None
 
         # Catch exceptions due to the potential for segfaults
         # calling su when using an improperly rooted device.
@@ -593,7 +617,8 @@ class ADBDevice(ADBCommand):
         uid = 'uid=0'
         # Do we have a 'Superuser' sh like su?
         try:
-            if self.shell_output("su -c id", timeout=timeout).find(uid) != -1:
+            if (self._require_root and
+                self.shell_output("su -c id", timeout=timeout).find(uid) != -1):
                 self._have_su = True
                 self._logger.info("su -c supported")
         except ADBError:
@@ -604,7 +629,8 @@ class ADBDevice(ADBCommand):
         # rooted via magisk. If we already have detected su -c support,
         # we can skip this check.
         try:
-            if (not self._have_su and
+            if (self._require_root and
+                not self._have_su and
                 self.shell_output("su 0 id", timeout=timeout).find(uid) != -1):
                 self._have_android_su = True
                 self._logger.info("su 0 supported")
@@ -691,26 +717,31 @@ class ADBDevice(ADBCommand):
 
         raise ValueError("Unable to get device serial")
 
-    def _check_adb_root(self, timeout=None):
-        self._have_root_shell = False
+    def _check_root_user(self, timeout=None):
         uid = 'uid=0'
         # Is shell already running as root?
         try:
             if self.shell_output("id", timeout=timeout).find(uid) != -1:
-                self._have_root_shell = True
                 self._logger.info("adbd running as root")
+                return True
         except ADBError:
-            self._logger.debug("Check for root shell failed")
+            self._logger.debug("Check for root user failed")
+        return False
+
+    def _check_adb_root(self, timeout=None):
+        self._have_root_shell = self._check_root_user(timeout=timeout)
 
         # Do we need to run adb root to get a root shell?
-        try:
-            if (not self._have_root_shell and self.command_output(
-                    ["root"],
-                    timeout=timeout).find("cannot run as root") == -1):
-                self._have_root_shell = True
-                self._logger.info("adbd restarted as root")
-        except ADBError:
-            self._logger.debug("Check for root adbd failed")
+        if not self._have_root_shell:
+            try:
+                self.command_output(["root"], timeout=timeout)
+                self._have_root_shell = self._check_root_user(timeout=timeout)
+                if self._have_root_shell:
+                    self._logger.info("adbd restarted as root")
+                else:
+                    self._logger.info("adbd not restarted as root")
+            except ADBError:
+                self._logger.debug("Check for root adbd failed")
 
     @staticmethod
     def _escape_command_line(cmd):
@@ -765,6 +796,33 @@ class ADBDevice(ADBCommand):
             exitcode = None
 
         return exitcode
+
+    def is_path_internal_storage(self, path, timeout=None):
+        """
+        Return True if the path matches an internal storage path
+        as defined by either '/sdcard', '/mnt/sdcard', or any of the
+        .*_STORAGE environment variables on the device otherwise False.
+        :param str path: The path to test.
+        :param timeout: The maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value set in the ADBDevice constructor is used.
+        :returns: boolean
+
+        :raises: * ADBTimeoutError
+                 * ADBError
+        """
+        if not self._re_internal_storage:
+            storage_dirs = set(['/mnt/sdcard', '/sdcard'])
+            re_STORAGE = re.compile('([^=]+STORAGE)=(.*)')
+            lines = self.shell_output('set', timeout=timeout).split()
+            for line in lines:
+                m = re_STORAGE.match(line.strip())
+                if m and m.group(2):
+                    storage_dirs.add(m.group(2))
+            self._re_internal_storage = re.compile('/|'.join(list(storage_dirs)) + '/')
+        return self._re_internal_storage.match(path) is not None
 
     @property
     def test_root(self):
@@ -1514,6 +1572,13 @@ class ADBDevice(ADBCommand):
         path = posixpath.normpath(path.strip())
         self._logger.debug('chmod: path=%s, recursive=%s, mask=%s, root=%s' %
                            (path, recursive, mask, root))
+        if self.is_path_internal_storage(path, timeout=timeout):
+            # External storage on Android is case-insensitive and permissionless
+            # therefore even with the proper privileges it is not possible
+            # to change modes.
+            self._logger.warning('Ignoring attempt to chmod external storage')
+            return
+
         if not recursive:
             self.shell_output("chmod %s %s" % (mask, path),
                               timeout=timeout, root=root)

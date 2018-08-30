@@ -27,6 +27,8 @@ using namespace js;
 using mozilla::CheckedInt;
 using mozilla::IsAsciiDigit;
 
+using JS::CompileOptions;
+
 /*
  * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad 21.2.5.2.2
  * steps 3, 16-25.

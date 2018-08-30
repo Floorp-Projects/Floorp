@@ -552,9 +552,9 @@ if test "$GNU_CC"; then
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
 
-    AC_MSG_CHECKING([for --build-id option to ld])
+    AC_MSG_CHECKING([for --build-id=sha1 option to ld])
     _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -Wl,--build-id"
+    LDFLAGS="$LDFLAGS -Wl,--build-id=sha1"
     AC_TRY_LINK(,,AC_MSG_RESULT([yes]),
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
@@ -2933,11 +2933,18 @@ case "$CPU_ARCH" in
       fi
   ;;
   arm*|aarch64)
-      MOZ_FFVPX=1
-      MOZ_FFVPX_FLACONLY=1
-      dnl Use same conditional as MOZ_LIBVPX to enable FFmpeg's ffvpx assembly decoder.
-      dnl aarch 64 FLAC decoder for now will be C only.
-      FFVPX_ASFLAGS=$VPX_ASFLAGS
+      case "$OS_TARGET" in
+        WINNT)
+          dnl don't set up anything special
+          ;;
+        *)
+          MOZ_FFVPX=1
+          MOZ_FFVPX_FLACONLY=1
+          dnl Use same conditional as MOZ_LIBVPX to enable FFmpeg's ffvpx assembly decoder.
+          dnl aarch 64 FLAC decoder for now will be C only.
+          FFVPX_ASFLAGS=$VPX_ASFLAGS
+          ;;
+      esac
   ;;
 esac
 

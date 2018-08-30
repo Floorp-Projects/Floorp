@@ -42,18 +42,3 @@ menulist[disabled="true"] {
 menulist[disabled="true"] > .menulist-dropmarker {
   padding-inline-start: 7px !important;
 }
-
-/* ::::: editable menulists ::::: */
-
-menulist[editable="true"] {
-  -moz-appearance: menulist-textfield;
-  margin: 4px 2px;
-}
-
-html|*.menulist-editable-input {
-  margin: 0px !important;
-  border: none !important;
-  padding: 0px !important;
-  background: inherit;
-  font: inherit;
-}

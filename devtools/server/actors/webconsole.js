@@ -1175,7 +1175,7 @@ WebConsoleActor.prototype =
         this.dbg.removeDebuggee(this.evalWindow);
       }
 
-      matches = result.matches || [];
+      matches = result.matches || new Set();
       matchProp = result.matchProp;
 
       // We consider '$' as alphanumeric because it is used in the names of some
@@ -1183,18 +1183,26 @@ WebConsoleActor.prototype =
       // be seen as break in the evaled string.
       const lastNonAlphaIsDot = /[.][a-zA-Z0-9$\s]*$/.test(reqText);
       if (!lastNonAlphaIsDot) {
-        matches = matches.concat(this._getWebConsoleCommandsCache().filter(n =>
-          // filter out `screenshot` command as it is inaccessible without
-          // the `:` prefix
-          n !== "screenshot" && n.startsWith(result.matchProp)
-        ));
+        this._getWebConsoleCommandsCache().forEach(n => {
+          // filter out `screenshot` command as it is inaccessible without the `:` prefix
+          if (n !== "screenshot" && n.startsWith(result.matchProp)) {
+            matches.add(n);
+          }
+        });
       }
-    }
 
-    // Make sure we return an array with unique items, since `matches` can hold twice
-    // the same function name if it was defined in the content page and match an helper
-    // function (e.g. $, keys, …).
-    matches = [...new Set(matches)].sort();
+      // Sort the results in order to display lowercased item first (e.g. we want to
+      // display `document` then `Document` as we loosely match the user input if the
+      // first letter they typed was lowercase).
+      matches = Array.from(matches).sort((a, b) => {
+        const lA = a[0].toLocaleLowerCase() === a[0];
+        const lB = b[0].toLocaleLowerCase() === b[0];
+        if (lA === lB) {
+          return a < b ? -1 : 1;
+        }
+        return lA ? -1 : 1;
+      });
+    }
 
     return {
       from: this.actorID,
