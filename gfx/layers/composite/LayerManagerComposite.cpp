@@ -491,8 +491,12 @@ LayerManagerComposite::UpdateAndRender()
     // is also responsible for invalidates intermediate surfaces in
     // ContainerLayers.
     nsIntRegion changed;
-    if (!mClonedLayerTreeProperties->ComputeDifferences(mRoot, changed, nullptr)) {
-      changed = mTargetBounds;
+
+    const bool overflowed =
+      !mClonedLayerTreeProperties->ComputeDifferences(mRoot, changed, nullptr);
+
+    if (overflowed) {
+      changed = mTarget ? mTargetBounds : mRenderBounds;
     }
 
     if (mTarget) {
@@ -1448,8 +1452,8 @@ TransformRect(const LayerIntRect& aRect, const Matrix4x4& aTransform)
   rect.RoundOut();
 
   IntRect intRect;
-  if (!gfxUtils::GfxRectToIntRect(ThebesRect(rect), &intRect)) {
-    return LayerIntRect();
+  if (!rect.ToIntRect(&intRect)) {
+    intRect = IntRect::MaxIntRect();
   }
 
   return ViewAs<LayerPixel>(intRect);
