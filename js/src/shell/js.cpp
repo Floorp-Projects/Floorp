@@ -995,8 +995,8 @@ EnqueueJob(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!IsCallable(args.get(0))) {
-        JS_ReportErrorASCII(cx, "EnqueueJob's first argument must be callable");
+    if (!IsFunctionObject(args.get(0))) {
+        JS_ReportErrorASCII(cx, "EnqueueJob's first argument must be a function");
         return false;
     }
 
@@ -1054,7 +1054,7 @@ SetPromiseRejectionTrackerCallback(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!IsCallable(args.get(0))) {
+    if (!IsFunctionObject(args.get(0))) {
         JS_ReportErrorASCII(cx,
                             "setPromiseRejectionTrackerCallback expects a function as its sole "
                             "argument");
