@@ -18,9 +18,6 @@ namespace mozilla {
 namespace layers {
 
 using gfx::CompositorHitTestInfo;
-using gfx::CompositorHitTestFlags;
-using gfx::CompositorHitTestTouchActionMask;
-using gfx::CompositorHitTestInvisibleToHit;
 
 HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
                                        bool aIsPrimaryHolder,
@@ -294,7 +291,7 @@ HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint,
 CompositorHitTestInfo
 HitTestingTreeNode::HitTest(const LayerPoint& aPoint) const
 {
-  CompositorHitTestInfo result = CompositorHitTestInvisibleToHit;
+  CompositorHitTestInfo result = CompositorHitTestInfo::eInvisibleToHitTest;
 
   if (mOverride & EventRegionsOverride::ForceEmptyHitRegion) {
     return result;
@@ -314,36 +311,36 @@ HitTestingTreeNode::HitTest(const LayerPoint& aPoint) const
     return result;
   }
 
-  result = CompositorHitTestFlags::eVisibleToHitTest;
+  result |= CompositorHitTestInfo::eVisibleToHitTest;
 
   if ((mOverride & EventRegionsOverride::ForceDispatchToContent) ||
       mEventRegions.mDispatchToContentHitRegion.Contains(point.x, point.y))
   {
-    result += CompositorHitTestFlags::eDispatchToContent;
+    result |= CompositorHitTestInfo::eDispatchToContent;
     if (mEventRegions.mDTCRequiresTargetConfirmation) {
-      result += CompositorHitTestFlags::eRequiresTargetConfirmation;
+      result |= CompositorHitTestInfo::eRequiresTargetConfirmation;
     }
   } else if (gfxPrefs::TouchActionEnabled()) {
     if (mEventRegions.mNoActionRegion.Contains(point.x, point.y)) {
       // set all the touch-action flags as disabled
-      result += CompositorHitTestTouchActionMask;
+      result |= CompositorHitTestInfo::eTouchActionMask;
     } else {
       bool panX = mEventRegions.mHorizontalPanRegion.Contains(point.x, point.y);
       bool panY = mEventRegions.mVerticalPanRegion.Contains(point.x, point.y);
       if (panX && panY) {
         // touch-action: pan-x pan-y
-        result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
-        result += CompositorHitTestFlags::eTouchActionPinchZoomDisabled;
+        result |= CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled
+                | CompositorHitTestInfo::eTouchActionPinchZoomDisabled;
       } else if (panX) {
         // touch-action: pan-x
-        result += CompositorHitTestFlags::eTouchActionPanYDisabled;
-        result += CompositorHitTestFlags::eTouchActionPinchZoomDisabled;
-        result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
+        result |= CompositorHitTestInfo::eTouchActionPanYDisabled
+                | CompositorHitTestInfo::eTouchActionPinchZoomDisabled
+                | CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
       } else if (panY) {
         // touch-action: pan-y
-        result += CompositorHitTestFlags::eTouchActionPanXDisabled;
-        result += CompositorHitTestFlags::eTouchActionPinchZoomDisabled;
-        result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
+        result |= CompositorHitTestInfo::eTouchActionPanXDisabled
+                | CompositorHitTestInfo::eTouchActionPinchZoomDisabled
+                | CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
       } // else we're in the touch-action: auto or touch-action: manipulation
         // cases and we'll allow all actions. Technically we shouldn't allow
         // double-tap zooming in the manipulation case but apparently this has

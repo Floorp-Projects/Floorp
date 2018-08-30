@@ -2429,8 +2429,8 @@ pub extern "C" fn wr_api_hit_test(dh: &mut DocumentHandle,
     let result = dh.api.hit_test(dh.document_id, None, point, HitTestFlags::empty());
     for item in &result.items {
         // For now we should never be getting results back for which the tag is
-        // 0 (== CompositorHitTestInvisibleToHit). In the future if we allow this,
-        // we'll want to |continue| on the loop in this scenario.
+        // 0 (== CompositorHitTestInfo::eInvisibleToHitTest). In the future if
+        // we allow this, we'll want to |continue| on the loop in this scenario.
         debug_assert!(item.tag.1 != 0);
         *out_pipeline_id = item.pipeline;
         *out_scroll_id = item.tag.0;

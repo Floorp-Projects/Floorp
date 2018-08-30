@@ -11241,7 +11241,7 @@ nsIFrame::AddSizeOfExcludingThisForTree(nsWindowSizes& aSizes) const
 CompositorHitTestInfo
 nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
 {
-  CompositorHitTestInfo result = CompositorHitTestInvisibleToHit;
+  CompositorHitTestInfo result = CompositorHitTestInfo::eInvisibleToHitTest;
 
   if (aBuilder->IsInsidePointerEventsNoneDoc()) {
     // Somewhere up the parent document chain is a subdocument with pointer-
@@ -11263,7 +11263,7 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
   }
 
   // Anything that didn't match the above conditions is visible to hit-testing.
-  result = CompositorHitTestFlags::eVisibleToHitTest;
+  result |= CompositorHitTestInfo::eVisibleToHitTest;
 
   if (aBuilder->IsBuildingNonLayerizedScrollbar() ||
       aBuilder->GetAncestorHasApzAwareEventHandler()) {
@@ -11272,13 +11272,13 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
     // instead of the intended scrollframe. To address this, we force a d-t-c
     // region on scrollbar frames that won't be placed in their own layer. See
     // bug 1213324 for details.
-    result += CompositorHitTestFlags::eDispatchToContent;
+    result |= CompositorHitTestInfo::eDispatchToContent;
   } else if (IsObjectFrame()) {
     // If the frame is a plugin frame and wants to handle wheel events as
     // default action, we should add the frame to dispatch-to-content region.
     nsPluginFrame* pluginFrame = do_QueryFrame(this);
     if (pluginFrame && pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
-      result += CompositorHitTestFlags::eDispatchToContent;
+      result |= CompositorHitTestInfo::eDispatchToContent;
     }
   }
 
@@ -11292,9 +11292,9 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
     // ancestor DOM elements. Refer to the documentation in TouchActionHelper.cpp
     // for details; this code is meant to be equivalent to that code, but woven
     // into the top-down recursive display list building process.
-    CompositorHitTestInfo inheritedTouchAction = CompositorHitTestInvisibleToHit;
+    CompositorHitTestInfo inheritedTouchAction = CompositorHitTestInfo::eInvisibleToHitTest;
     if (nsDisplayCompositorHitTestInfo* parentInfo = aBuilder->GetCompositorHitTestInfo()) {
-      inheritedTouchAction = parentInfo->HitTestInfo() & CompositorHitTestTouchActionMask;
+      inheritedTouchAction = (parentInfo->HitTestInfo() & CompositorHitTestInfo::eTouchActionMask);
     }
 
     nsIFrame* touchActionFrame = this;
@@ -11305,12 +11305,12 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
       // encounter an element that disables it that's inside the scrollframe.
       // This is equivalent to the |considerPanning| variable in
       // TouchActionHelper.cpp, but for a top-down traversal.
-      CompositorHitTestInfo panMask(CompositorHitTestFlags::eTouchActionPanXDisabled,
-                                    CompositorHitTestFlags::eTouchActionPanYDisabled);
-      inheritedTouchAction -= panMask;
+      CompositorHitTestInfo panMask = CompositorHitTestInfo::eTouchActionPanXDisabled
+                                    | CompositorHitTestInfo::eTouchActionPanYDisabled;
+      inheritedTouchAction &= ~panMask;
     }
 
-    result += inheritedTouchAction;
+    result |= inheritedTouchAction;
 
     const uint32_t touchAction = nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
     // The CSS allows the syntax auto | none | [pan-x || pan-y] | manipulation
@@ -11318,22 +11318,23 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
     if (touchAction == NS_STYLE_TOUCH_ACTION_AUTO) {
       // nothing to do
     } else if (touchAction & NS_STYLE_TOUCH_ACTION_MANIPULATION) {
-      result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
+      result |= CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
     } else {
       // This path handles the cases none | [pan-x || pan-y] and so both
       // double-tap and pinch zoom are disabled in here.
-      result += CompositorHitTestFlags::eTouchActionPinchZoomDisabled;
-      result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
+      result |= CompositorHitTestInfo::eTouchActionPinchZoomDisabled
+              | CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
 
       if (!(touchAction & NS_STYLE_TOUCH_ACTION_PAN_X)) {
-        result += CompositorHitTestFlags::eTouchActionPanXDisabled;
+        result |= CompositorHitTestInfo::eTouchActionPanXDisabled;
       }
       if (!(touchAction & NS_STYLE_TOUCH_ACTION_PAN_Y)) {
-        result += CompositorHitTestFlags::eTouchActionPanYDisabled;
+        result |= CompositorHitTestInfo::eTouchActionPanYDisabled;
       }
       if (touchAction & NS_STYLE_TOUCH_ACTION_NONE) {
         // all the touch-action disabling flags will already have been set above
-        MOZ_ASSERT(result.contains(CompositorHitTestTouchActionMask));
+        MOZ_ASSERT((result & CompositorHitTestInfo::eTouchActionMask)
+                 == CompositorHitTestInfo::eTouchActionMask);
       }
     }
   }
@@ -11344,19 +11345,19 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
       const bool thumbGetsLayer = aBuilder->GetCurrentScrollbarTarget() !=
           layers::FrameMetrics::NULL_SCROLL_ID;
       if (thumbGetsLayer) {
-        result += CompositorHitTestFlags::eScrollbarThumb;
+        result |= CompositorHitTestInfo::eScrollbarThumb;
       } else {
-        result += CompositorHitTestFlags::eDispatchToContent;
+        result |= CompositorHitTestInfo::eDispatchToContent;
       }
     }
 
     if (*scrollDirection == ScrollDirection::eVertical) {
-      result += CompositorHitTestFlags::eScrollbarVertical;
+      result |= CompositorHitTestInfo::eScrollbarVertical;
     }
 
     // includes the ScrollbarFrame, SliderFrame, anything else that
     // might be inside the xul:scrollbar
-    result += CompositorHitTestFlags::eScrollbar;
+    result |= CompositorHitTestInfo::eScrollbar;
   }
 
   return result;
