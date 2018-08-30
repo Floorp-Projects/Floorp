@@ -6720,35 +6720,44 @@ protected:
 };
 
 /**
- * A display item to paint a stacking context with mask and clip effects
- * set by the stacking context root frame's style.
+ * A display item to paint a stacking context with 'mask' and 'clip-path'
+ * effects set by the stacking context root frame's style.  The 'mask' and
+ * 'clip-path' properties may both contain multiple masks and clip paths,
+ * respectively.
+ *
+ * Note that 'mask' and 'clip-path' may just contain CSS simple-images and CSS
+ * basic shapes, respectively.  That is, they don't necessarily reference
+ * resources such as SVG 'mask' and 'clipPath' elements.
  */
-class nsDisplayMask : public nsDisplayEffectsBase
+class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase
 {
 public:
   typedef mozilla::layers::ImageLayer ImageLayer;
 
-  nsDisplayMask(nsDisplayListBuilder* aBuilder,
-                nsIFrame* aFrame,
-                nsDisplayList* aList,
-                bool aHandleOpacity,
-                const ActiveScrolledRoot* aActiveScrolledRoot);
-  nsDisplayMask(nsDisplayListBuilder* aBuilder, const nsDisplayMask& aOther)
+  nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder,
+                             nsIFrame* aFrame,
+                             nsDisplayList* aList,
+                             bool aHandleOpacity,
+                             const ActiveScrolledRoot* aActiveScrolledRoot);
+  nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder,
+                             const nsDisplayMasksAndClipPaths& aOther)
     : nsDisplayEffectsBase(aBuilder, aOther)
     , mDestRects(aOther.mDestRects)
   {
   }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-  ~nsDisplayMask() override { MOZ_COUNT_DTOR(nsDisplayMask); }
+  ~nsDisplayMasksAndClipPaths() override {
+    MOZ_COUNT_DTOR(nsDisplayMasksAndClipPaths);
+  }
 #endif
 
   NS_DISPLAY_DECL_NAME("Mask", TYPE_MASK)
 
   nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
-    MOZ_COUNT_CTOR(nsDisplayMask);
-    return MakeDisplayItem<nsDisplayMask>(aBuilder, *this);
+    MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
+    return MakeDisplayItem<nsDisplayMasksAndClipPaths>(aBuilder, *this);
   }
 
   bool CanMerge(const nsDisplayItem* aItem) const override;
@@ -6757,7 +6766,8 @@ public:
   {
     nsDisplayWrapList::Merge(aItem);
 
-    const nsDisplayMask* other = static_cast<const nsDisplayMask*>(aItem);
+    const nsDisplayMasksAndClipPaths* other =
+      static_cast<const nsDisplayMasksAndClipPaths*>(aItem);
     mEffectsBounds.UnionRect(mEffectsBounds,
                              other->mEffectsBounds +
                                other->mFrame->GetOffsetTo(mFrame));
@@ -6777,7 +6787,7 @@ public:
   nsDisplayItemGeometry* AllocateGeometry(
     nsDisplayListBuilder* aBuilder) override
   {
-    return new nsDisplayMaskGeometry(this, aBuilder);
+    return new nsDisplayMasksAndClipPathsGeometry(this, aBuilder);
   }
 
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
