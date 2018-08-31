@@ -1455,6 +1455,13 @@ CycleCollectedJSRuntime::FinalizeDeferredThings(CycleCollectedJSContext::Deferre
     }
   }
 
+  // When recording or replaying, execute triggers that were activated recently
+  // by mozilla::DeferredFinalize. This will populate the deferred finalizer
+  // table with a consistent set of entries between the recording and replay.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    recordreplay::ExecuteTriggers();
+  }
+
   if (mDeferredFinalizerTable.Count() == 0) {
     return;
   }
