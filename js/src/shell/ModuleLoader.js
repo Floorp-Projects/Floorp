@@ -175,10 +175,11 @@ const ReflectLoader = new class {
     }
 };
 
+setModuleLoadHook((path) => ReflectLoader.importRoot(path));
+
 setModuleResolveHook((module, requestName) => {
     let path = ReflectLoader.resolve(requestName, module);
     return ReflectLoader.loadAndParse(path);
 });
 
-Reflect.Loader = ReflectLoader;
 }
