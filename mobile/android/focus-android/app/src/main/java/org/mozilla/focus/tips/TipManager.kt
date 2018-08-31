@@ -46,10 +46,17 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
         fun createHomescreenTip(context: Context): Tip {
             val id = tip_add_to_homescreen
             val name = context.resources.getString(id)
+            val homescreenURL =
+                    "https://support.mozilla.org/en-US/kb/add-web-page-shortcuts-your-home-screen"
+
+            val deepLinkAddToHomescreen = {
+                SessionManager.getInstance().createSession(Source.MENU, homescreenURL)
+                TelemetryWrapper.pressTipEvent(id)
+            }
 
             val shouldDisplayAddToHomescreen = { !Settings.getInstance(context).hasAddedToHomeScreen }
 
-            return Tip(id, name, shouldDisplayAddToHomescreen)
+            return Tip(id, name, shouldDisplayAddToHomescreen, deepLinkAddToHomescreen)
         }
 
         fun createDefaultBrowserTip(context: Context): Tip {
@@ -76,12 +83,19 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
         fun createAutocompleteURLTip(context: Context): Tip {
             val id = tip_autocomplete_url
             val name = context.resources.getString(id)
+            val autocompleteURL =
+                    "https://support.mozilla.org/en-US/kb/autocomplete-settings-firefox-focus-address-bar"
 
             val shouldDisplayAutocompleteUrl = {
                 !Settings.getInstance(context).shouldAutocompleteFromCustomDomainList()
             }
 
-            return Tip(id, name, shouldDisplayAutocompleteUrl)
+            val deepLinkAutocompleteUrl = {
+                SessionManager.getInstance().createSession(Source.MENU, autocompleteURL)
+                TelemetryWrapper.pressTipEvent(id)
+            }
+
+            return Tip(id, name, shouldDisplayAutocompleteUrl, deepLinkAutocompleteUrl)
         }
 
         fun createOpenInNewTabTip(context: Context): Tip {
@@ -105,12 +119,19 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
         fun createRequestDesktopTip(context: Context): Tip {
             val id = tip_request_desktop
             val name = context.resources.getString(id)
+            val requestDesktopURL =
+                    "https://support.mozilla.org/en-US/kb/switch-desktop-view-firefox-focus-android"
 
-            val shouldDisplayOpenInNewTab = {
+            val shouldDisplayRequestDesktop = {
                 !Settings.getInstance(context).hasRequestedDesktop()
             }
 
-            return Tip(id, name, shouldDisplayOpenInNewTab)
+            val deepLinkRequestDesktop = {
+                SessionManager.getInstance().createSession(Source.MENU, requestDesktopURL)
+                TelemetryWrapper.pressTipEvent(id)
+            }
+
+            return Tip(id, name, shouldDisplayRequestDesktop, deepLinkRequestDesktop)
         }
 
         fun createDisableTipsTip(context: Context): Tip {
