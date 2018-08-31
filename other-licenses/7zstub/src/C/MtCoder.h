@@ -1,10 +1,10 @@
 /* MtCoder.h -- Multi-thread Coder
-2017-06-18 : Igor Pavlov : Public domain */
+2018-02-21 : Igor Pavlov : Public domain */
 
 #ifndef __MT_CODER_H
 #define __MT_CODER_H
 
-#include "Threads.h"
+#include "MtDec.h"
 
 EXTERN_C_BEGIN
 
@@ -24,33 +24,20 @@ EXTERN_C_BEGIN
 #endif
 
 
-typedef struct
-{
-  UInt64 inSize;
-  UInt64 outSize;
-} CMtProgressSizes;
-
-
-typedef struct
-{
-  ICompressProgress *progress;
-  SRes res;
-  UInt64 totalInSize;
-  UInt64 totalOutSize;
-  CCriticalSection cs;
-  CMtProgressSizes sizes[MTCODER__THREADS_MAX];
-} CMtProgress;
+#ifndef _7ZIP_ST
 
 
 typedef struct
 {
   ICompressProgress vt;
   CMtProgress *mtProgress;
-  unsigned index;
+  UInt64 inSize;
+  UInt64 outSize;
 } CMtProgressThunk;
 
 void MtProgressThunk_CreateVTable(CMtProgressThunk *p);
     
+#define MtProgressThunk_Init(p) { (p)->inSize = 0; (p)->outSize = 0; }
 
 
 struct _CMtCoder;
@@ -144,6 +131,9 @@ typedef struct _CMtCoder
 void MtCoder_Construct(CMtCoder *p);
 void MtCoder_Destruct(CMtCoder *p);
 SRes MtCoder_Code(CMtCoder *p);
+
+
+#endif
 
 
 EXTERN_C_END

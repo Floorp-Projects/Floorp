@@ -269,7 +269,7 @@ HRESULT CHashCallbackConsole::SetOperationResult(UInt64 fileSize, const CHashBun
       if (_fileName.IsEmpty())
         *_so << kEmptyFileAlias;
       else
-        *_so << _fileName;
+        _so->NormalizePrint_UString(_fileName);
     }
     *_so << endl;
   }

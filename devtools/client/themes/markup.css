@@ -233,7 +233,7 @@ ul.children + .tag-line::before {
   display: inline;
 }
 
-.expandable.collapsed .close::before {
+.expandable.collapsed .markup-expand-badge::before {
   /* Display an ellipsis character in collapsed nodes that can be expanded. */
   content: "";
   background-color: var(--markup-badge-interactive-background-color);
@@ -391,8 +391,7 @@ ul.children + .tag-line::before {
 .theme-selected ~ .editor .theme-fg-color2,
 .theme-selected ~ .editor .theme-fg-color3,
 .theme-selected ~ .editor .theme-fg-color4,
-.theme-selected ~ .editor .theme-fg-color5,
-.theme-selected ~ .editor .close::before {
+.theme-selected ~ .editor .theme-fg-color5 {
   color: var(--theme-selection-color);
 }
 
@@ -444,7 +443,9 @@ ul.children + .tag-line::before {
 .markup-badge[data-display="inline-grid"]:not(.active):focus,
 .markup-badge[data-display="inline-grid"]:not(.active):hover,
 .markup-badge[data-event]:focus,
-.markup-badge[data-event]:hover {
+.markup-badge[data-event]:hover,
+.expandable.collapsed .markup-expand-badge:focus::before,
+.expandable.collapsed .markup-expand-badge:hover::before {
   background-color: var(--markup-badge-hover-background-color);
 }
 

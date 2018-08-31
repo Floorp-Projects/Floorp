@@ -2926,6 +2926,12 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBG
                       aParams.paintFlags, paintBorderArea,
                       clipState.mBGClipArea, layer, nullptr);
   result &= state.mImageRenderer.PrepareResult();
+
+  // Ensure we get invalidated for loads and animations of the image.
+  // We need to do this here because this might be the only code that
+  // knows about the association of the style data with the frame.
+  aParams.frame->AssociateImage(layer.mImage, &aParams.presCtx, 0);
+
   if (!state.mFillArea.IsEmpty()) {
     return state.mImageRenderer.BuildWebRenderDisplayItemsForLayer(&aParams.presCtx,
                                      aBuilder, aResources, aSc,

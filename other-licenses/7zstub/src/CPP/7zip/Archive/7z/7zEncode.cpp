@@ -154,9 +154,18 @@ HRESULT CEncoder::CreateMixerCoder(
 
     CCreatedCoder cod;
     
-    RINOK(CreateCoder(
+    if (methodFull.CodecIndex >= 0)
+    {
+      RINOK(CreateCoder_Index(
+        EXTERNAL_CODECS_LOC_VARS
+        methodFull.CodecIndex, true, cod));
+    }
+    else
+    {
+      RINOK(CreateCoder_Id(
         EXTERNAL_CODECS_LOC_VARS
         methodFull.Id, true, cod));
+    }
 
     if (cod.NumStreams != methodFull.NumStreams)
       return E_FAIL;
