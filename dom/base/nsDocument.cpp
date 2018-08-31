@@ -1516,7 +1516,8 @@ nsIDocument::nsIDocument()
     mThrowOnDynamicMarkupInsertionCounter(0),
     mIgnoreOpensDuringUnloadCounter(0),
     mNumTrackersFound(0),
-    mNumTrackersBlocked(0)
+    mNumTrackersBlocked(0),
+    mDocLWTheme(Doc_Theme_Uninitialized)
 {
   SetIsInDocument();
   SetIsConnected(true);
@@ -12409,6 +12410,43 @@ nsIDocument::SetStateObject(nsIStructuredCloneContainer *scContainer)
 {
   mStateObjectContainer = scContainer;
   mStateObjectCached = nullptr;
+}
+
+nsIDocument::DocumentTheme
+nsIDocument::GetDocumentLWTheme()
+{
+  if (mDocLWTheme == Doc_Theme_Uninitialized) {
+    mDocLWTheme = ThreadSafeGetDocumentLWTheme();
+  }
+  return mDocLWTheme;
+}
+
+nsIDocument::DocumentTheme
+nsIDocument::ThreadSafeGetDocumentLWTheme() const
+{
+  if (!nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
+    return Doc_Theme_None;
+  }
+
+  if (mDocLWTheme != Doc_Theme_Uninitialized) {
+    return mDocLWTheme;
+  }
+
+  DocumentTheme theme = Doc_Theme_None; // No lightweight theme by default
+  Element* element = GetRootElement();
+  if (element && element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::lwtheme,
+                                      nsGkAtoms::_true, eCaseMatters)) {
+    theme = Doc_Theme_Neutral;
+    nsAutoString lwTheme;
+    element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwthemetextcolor, lwTheme);
+    if (lwTheme.EqualsLiteral("dark")) {
+      theme = Doc_Theme_Dark;
+    } else if (lwTheme.EqualsLiteral("bright")) {
+      theme = Doc_Theme_Bright;
+    }
+  }
+
+  return theme;
 }
 
 already_AddRefed<Element>

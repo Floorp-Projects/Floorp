@@ -19,6 +19,9 @@ function continue_test()
 
 function* do_run_test()
 {
+  // Set quotaPerHost to maxPerHost - 1, so there is only one cookie
+  // will be evicted everytime.
+  Services.prefs.setIntPref("network.cookie.quotaPerHost", 49);
   // Set the base domain limit to 50 so we have a known value.
   Services.prefs.setIntPref("network.cookie.maxPerHost", 50);
 
