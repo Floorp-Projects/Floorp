@@ -43,16 +43,12 @@ async function waitContentVisibilityChange(aIsHidden, aBrowser) {
  */
 add_task(async function() {
   info("creating test window");
-  let winTest = await BrowserTestUtils.openNewBrowserWindow();
   // Specify the width, height, left and top, so that the new window can be
   // fully covered by "window".
-  let resizePromise = BrowserTestUtils.waitForEvent(winTest, "resize", false, e => {
-    return winTest.innerHeight <= 500 && winTest.innerWidth <= 500;
-  });
-  winTest.moveTo(200, 200);
-  winTest.resizeTo(500, 500);
-  await resizePromise;
-
+  let winTest = await BrowserTestUtils.openNewBrowserWindow({ width: 500,
+                                                              height: 500,
+                                                              left: 200,
+                                                              top: 200 });
   let browserTest = winTest.gBrowser;
 
   info(`loading test page: ${testPageURL}`);
