@@ -431,9 +431,10 @@ with only_when('--enable-compile-environment'):
 
     @depends(enable_fuzzing,
              enable_aflfuzzer,
-             c_compiler)
-    def enable_libfuzzer(fuzzing, afl, c_compiler):
-        if fuzzing and not afl and c_compiler.type == 'clang':
+             c_compiler,
+             target)
+    def enable_libfuzzer(fuzzing, afl, c_compiler, target):
+        if fuzzing and not afl and c_compiler.type == 'clang' and target.os != 'Android':
             return True
 
     @depends(enable_fuzzing,
