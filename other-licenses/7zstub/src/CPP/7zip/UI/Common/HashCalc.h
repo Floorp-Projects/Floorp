@@ -9,7 +9,6 @@
 #include "../../Common/MethodProps.h"
 
 #include "DirItem.h"
-#include "Property.h"
 
 const unsigned k_HashCalc_DigestSize_Max = 64;
 

@@ -1115,11 +1115,11 @@ HRESULT CInArchive::ReadAndDecodePackedStreams(
         , dataAfterEnd_Error
         
         _7Z_DECODER_CRYPRO_VARS
-        #if !defined(_7ZIP_ST) && !defined(_SFX)
+        #if !defined(_7ZIP_ST)
           , false // mtMode
           , 1     // numThreads
+          , 0     // memUsage
         #endif
-
       );
     
     RINOK(result);
