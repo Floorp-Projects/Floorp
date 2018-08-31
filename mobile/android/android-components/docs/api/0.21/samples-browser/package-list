@@ -1,0 +1,8 @@
+$dokka.format:jekyll
+$dokka.linkExtension:html
+$dokka.location:org.mozilla.samples.browser.ext$application#android.content.Contextorg.mozilla.samples.browser.ext/android.content.-context/application.html
+$dokka.location:org.mozilla.samples.browser.ext$components#android.content.Contextorg.mozilla.samples.browser.ext/android.content.-context/components.html
+$dokka.location:org.mozilla.samples.browser.ext$components#android.support.v4.app.Fragmentorg.mozilla.samples.browser.ext/android.support.v4.app.-fragment/components.html
+org.mozilla.samples.browser
+org.mozilla.samples.browser.ext
+org.mozilla.samples.browser.request

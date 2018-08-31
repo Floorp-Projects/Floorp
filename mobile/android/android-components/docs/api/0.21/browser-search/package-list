@@ -1,0 +1,8 @@
+$dokka.format:jekyll
+$dokka.linkExtension:html
+
+mozilla.components.browser.search
+mozilla.components.browser.search.provider
+mozilla.components.browser.search.provider.filter
+mozilla.components.browser.search.provider.localization
+mozilla.components.browser.search.suggestions

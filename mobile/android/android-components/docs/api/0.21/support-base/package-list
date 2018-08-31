@@ -1,0 +1,7 @@
+$dokka.format:jekyll
+$dokka.linkExtension:html
+
+mozilla.components.support.base.log
+mozilla.components.support.base.log.logger
+mozilla.components.support.base.log.sink
+mozilla.components.support.base.observer

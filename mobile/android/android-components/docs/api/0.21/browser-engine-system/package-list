@@ -1,0 +1,6 @@
+$dokka.format:jekyll
+$dokka.linkExtension:html
+$dokka.location:mozilla.components.browser.engine.system.matcher$reverse(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reverse.html
+$dokka.location:mozilla.components.browser.engine.system.matcher$reversible(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reversible.html
+mozilla.components.browser.engine.system
+mozilla.components.browser.engine.system.matcher

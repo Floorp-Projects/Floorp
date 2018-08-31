@@ -1,0 +1,14 @@
+$dokka.format:jekyll
+$dokka.linkExtension:html
+
+org.mozilla.telemetry
+org.mozilla.telemetry.config
+org.mozilla.telemetry.event
+org.mozilla.telemetry.measurement
+org.mozilla.telemetry.net
+org.mozilla.telemetry.ping
+org.mozilla.telemetry.schedule
+org.mozilla.telemetry.schedule.jobscheduler
+org.mozilla.telemetry.serialize
+org.mozilla.telemetry.storage
+org.mozilla.telemetry.util

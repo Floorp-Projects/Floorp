@@ -1,0 +1,6 @@
+---
+title: alltypes - 
+---
+
+### All Types
+

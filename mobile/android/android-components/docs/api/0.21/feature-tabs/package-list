@@ -1,0 +1,6 @@
+$dokka.format:jekyll
+$dokka.linkExtension:html
+
+mozilla.components.feature.tabs
+mozilla.components.feature.tabs.tabstray
+mozilla.components.feature.tabs.toolbar
