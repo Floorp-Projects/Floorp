@@ -235,7 +235,7 @@ public class Updater {
 
         if (!AppConstants.Versions.preO) {
             builder.setChannelId(NotificationHelper.getInstance(context)
-                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
+                    .getNotificationChannel(NotificationHelper.Channel.UPDATER).getId());
         }
 
         NotificationManagerCompat.from(context)
@@ -278,7 +278,7 @@ public class Updater {
 
             if (!AppConstants.Versions.preO) {
                 builder.setChannelId(NotificationHelper.getInstance(context)
-                        .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
+                        .getNotificationChannel(NotificationHelper.Channel.UPDATER).getId());
             }
 
             notificationManager.notify(notificationId, builder.build());
@@ -320,7 +320,7 @@ public class Updater {
 
             if (!AppConstants.Versions.preO) {
                 builder.setChannelId(NotificationHelper.getInstance(context)
-                        .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
+                        .getNotificationChannel(NotificationHelper.Channel.UPDATER).getId());
             }
 
             notificationManager.notify(notificationId, builder.build());
@@ -471,11 +471,12 @@ public class Updater {
                 .setContentText(shouldApplyImmediately ? "" : getString(R.string.updater_downloading_select))
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setContentIntent(contentIntent)
-                .setDeleteIntent(deleteIntent);
+                .setDeleteIntent(deleteIntent)
+                .setOnlyAlertOnce(true);
 
         if (!AppConstants.Versions.preO) {
             notifBuilder.setChannelId(NotificationHelper.getInstance(context)
-                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
+                    .getNotificationChannel(NotificationHelper.Channel.UPDATER).getId());
         }
 
         notifBuilder.setProgress(100, 0, true);
@@ -498,7 +499,7 @@ public class Updater {
 
         if (!AppConstants.Versions.preO) {
             builder.setChannelId(NotificationHelper.getInstance(context)
-                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
+                    .getNotificationChannel(NotificationHelper.Channel.UPDATER).getId());
         }
 
         notificationManager.notify(notificationId, builder.build());

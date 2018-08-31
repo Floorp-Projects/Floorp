@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+.popup-notification-header-container,
+.popup-notification-footer-container {
+  display: flex;
+  max-width: calc(2 * var(--arrowpanel-padding) + 32px + 4px + 25em);
+}
+
 .popup-notification-body-container {
   padding: var(--arrowpanel-padding);
 }

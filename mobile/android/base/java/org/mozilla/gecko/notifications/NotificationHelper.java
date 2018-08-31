@@ -101,11 +101,15 @@ public final class NotificationHelper implements BundleEventListener {
          *  Media notification channel
          */
         MEDIA,
+        /**
+         * Built-in updater - use only when <code>AppConstants.MOZ_UPDATER</code> is true.
+         */
+        UPDATER,
     }
 
     // Holds the mapping between the Channel enum used by the rest of our codebase and the
     // channel ID used for communication with the system NotificationManager.
-    private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>(4) {{
+    private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>(5) {{
         final String DEFAULT_CHANNEL_TAG = "default-notification-channel";
         put(Channel.DEFAULT, DEFAULT_CHANNEL_TAG);
 
@@ -117,6 +121,11 @@ public final class NotificationHelper implements BundleEventListener {
 
         final String MEDIA_CHANNEL_TAG = "media-notification-channel";
         put(Channel.MEDIA, MEDIA_CHANNEL_TAG);
+
+        if (AppConstants.MOZ_UPDATER) {
+            final String UPDATER_CHANNEL_TAG = "updater-notification-channel";
+            put(Channel.UPDATER, UPDATER_CHANNEL_TAG);
+        }
     }};
 
     // Holds a list of notifications that should be cleared if the Fennec Activity is shut down.
@@ -189,6 +198,13 @@ public final class NotificationHelper implements BundleEventListener {
                 case MEDIA: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
                             mContext.getString(R.string.media_notification_channel),
+                            NotificationManager.IMPORTANCE_LOW);
+                }
+                break;
+
+                case UPDATER: {
+                    channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
+                            mContext.getString(R.string.updater_notification_channel),
                             NotificationManager.IMPORTANCE_LOW);
                 }
                 break;

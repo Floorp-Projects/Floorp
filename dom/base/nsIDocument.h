@@ -2800,8 +2800,9 @@ public:
    * Doc_Theme_Neutral for any other theme. This is used to determine the state
    * of the pseudoclasses :-moz-lwtheme and :-moz-lwtheme-text.
    */
-  virtual DocumentTheme GetDocumentLWTheme() { return Doc_Theme_None; }
-  virtual DocumentTheme ThreadSafeGetDocumentLWTheme() const { return Doc_Theme_None; }
+  DocumentTheme GetDocumentLWTheme();
+  DocumentTheme ThreadSafeGetDocumentLWTheme() const;
+  void ResetDocumentLWTheme() { mDocLWTheme = Doc_Theme_Uninitialized; }
 
   // Whether we're a media document or not.
   enum class MediaDocumentKind
@@ -4539,6 +4540,10 @@ protected:
   // these two values here and those are shared by TP and FB.
   uint32_t mNumTrackersFound;
   uint32_t mNumTrackersBlocked;
+
+  // document lightweight theme for use with :-moz-lwtheme, :-moz-lwtheme-brighttext
+  // and :-moz-lwtheme-darktext
+  DocumentTheme                         mDocLWTheme;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

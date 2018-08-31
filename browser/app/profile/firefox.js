@@ -1262,11 +1262,7 @@ pref("toolkit.startup.max_resumed_crashes", 3);
 // Whether to use RegisterApplicationRestart to restart the browser and resume
 // the session on next Windows startup
 #if defined(XP_WIN)
-#if defined(NIGHTLY_BUILD)
 pref("toolkit.winRegisterApplicationRestart", true);
-#else
-pref("toolkit.winRegisterApplicationRestart", false);
-#endif
 #endif
 
 // Whether we use pdfium to view content with the pdf mime type.

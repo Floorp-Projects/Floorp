@@ -2577,13 +2577,6 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     }
   }
 
-  if (range.max > SSL_LIBRARY_VERSION_TLS_1_2) {
-    SSL_CipherPrefSet(fd, TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, false);
-    SSL_CipherPrefSet(fd, TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, false);
-    SSL_CipherPrefSet(fd, TLS_DHE_RSA_WITH_AES_128_CBC_SHA, false);
-    SSL_CipherPrefSet(fd, TLS_DHE_RSA_WITH_AES_256_CBC_SHA, false);
-  }
-
   // Include a modest set of named groups.
   // Please change getKeaGroupName in nsNSSCallbacks.cpp when changing the list
   // here.

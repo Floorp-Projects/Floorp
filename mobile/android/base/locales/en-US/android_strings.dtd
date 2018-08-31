@@ -899,3 +899,4 @@ Picture-in-picture mini window -->
 <!ENTITY mls_notification_channel "&vendorShortName; Location Service">
 <!ENTITY download_notification_channel "Downloads">
 <!ENTITY media_notification_channel "Media playback">
+<!ENTITY updater_notification_channel "App updates">
