@@ -32,7 +32,7 @@ add_UITour_task(async function test_info_icon() {
   is(icon.src, imageURL, "Popup should have correct icon shown");
 
   is(buttons.hasChildNodes(), false, "Popup should have no buttons");
-}),
+});
 
 add_UITour_task(async function test_info_buttons_1() {
   let popup = document.getElementById("UITourTooltip");
@@ -119,7 +119,7 @@ add_UITour_task(async function test_info_buttons_2() {
   let returnValue = await waitForCallbackResultPromise();
 
   is(returnValue.result, "button2", "Correct callback should have been called");
-}),
+});
 
 add_UITour_task(async function test_info_close_button() {
   let closeButton = document.getElementById("UITourTooltipClose");
@@ -131,7 +131,7 @@ add_UITour_task(async function test_info_close_button() {
   let returnValue = await waitForCallbackResultPromise();
 
   is(returnValue.result, "closeButton", "Close button callback called");
-}),
+});
 
 add_UITour_task(async function test_info_target_callback() {
   let popup = document.getElementById("UITourTooltip");
@@ -150,7 +150,7 @@ add_UITour_task(async function test_info_target_callback() {
   await hideInfoPromise();
 
   popup.removeAttribute("animate");
-}),
+});
 
 add_UITour_task(async function test_getConfiguration_selectedSearchEngine() {
   await new Promise((resolve) => {

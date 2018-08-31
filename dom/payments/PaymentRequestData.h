@@ -220,7 +220,6 @@ private:
   nsString mDependentLocality;
   nsString mPostalCode;
   nsString mSortingCode;
-  nsString mLanguageCode;
   nsString mOrganization;
   nsString mRecipient;
   nsString mPhone;

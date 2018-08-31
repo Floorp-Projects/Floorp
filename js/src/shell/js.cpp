@@ -187,7 +187,8 @@ enum JSShellExitCode {
 // Define use of application-specific slots on the shell's global object.
 enum GlobalAppSlot
 {
-    GlobalAppSlotModuleResolveHook,
+    GlobalAppSlotModuleLoadHook,           // Shell-specific; load a module graph
+    GlobalAppSlotModuleResolveHook,        // HostResolveImportedModule
     GlobalAppSlotCount
 };
 static_assert(GlobalAppSlotCount <= JSCLASS_GLOBAL_APPLICATION_SLOTS,
@@ -921,58 +922,33 @@ InitModuleLoader(JSContext* cx)
 }
 
 static bool
-GetLoaderObject(JSContext* cx, MutableHandleObject resultOut)
+GetModuleImportHook(JSContext* cx, MutableHandleFunction resultOut)
 {
-    // Look up the |Reflect.Loader| object that has been defined by the module
-    // loader.
-
-    RootedObject object(cx, cx->global());
-    RootedValue value(cx);
-    if (!JS_GetProperty(cx, object, "Reflect", &value) || !value.isObject())
+    Handle<GlobalObject*> global = cx->global();
+    RootedValue hookValue(cx, global->getReservedSlot(GlobalAppSlotModuleLoadHook));
+    if (hookValue.isUndefined()) {
+        JS_ReportErrorASCII(cx, "Module load hook not set");
         return false;
+    }
 
-    object = &value.toObject();
-    if (!JS_GetProperty(cx, object, "Loader", &value) || !value.isObject())
+    if (!hookValue.isObject() || !hookValue.toObject().is<JSFunction>()) {
+        JS_ReportErrorASCII(cx, "Module load hook is not a function");
         return false;
+    }
 
-    resultOut.set(&value.toObject());
-    return true;
-}
-
-static bool
-GetImportRootMethod(JSContext* cx, HandleObject loader, MutableHandleFunction resultOut)
-{
-    // Look up the module loader's |importRoot| method.
-
-    RootedValue value(cx);
-    if (!JS_GetProperty(cx, loader, "importRoot", &value) || !value.isObject())
-        return false;
-
-    RootedObject object(cx, &value.toObject());
-    if (!object->is<JSFunction>())
-        return false;
-
-    resultOut.set(&object->as<JSFunction>());
+    resultOut.set(&hookValue.toObject().as<JSFunction>());
     return true;
 }
 
 static MOZ_MUST_USE bool
 RunModule(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
 {
-    // Execute a module by calling Reflect.Loader.importRoot on the resolved
-    // filename.
-
-    RootedObject loaderObj(cx);
-    if (!GetLoaderObject(cx, &loaderObj)) {
-        JS_ReportErrorASCII(cx, "Failed to get Reflect.Loader");
-        return false;
-    }
+    // Execute a module by calling the module loader's import hook on the
+    // resolved filename.
 
     RootedFunction importFun(cx);
-    if (!GetImportRootMethod(cx, loaderObj, &importFun)) {
-        JS_ReportErrorASCII(cx, "Failed to get Reflect.Loader.importRoot method");
+    if (!GetModuleImportHook(cx, &importFun))
         return false;
-    }
 
     RootedString path(cx, JS_NewStringCopyZ(cx, filename));
     if (!path)
@@ -986,7 +962,7 @@ RunModule(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
     args[0].setString(path);
 
     RootedValue value(cx);
-    return JS_CallFunction(cx, loaderObj, importFun, args, &value);
+    return JS_CallFunction(cx, nullptr, importFun, args, &value);
 }
 
 static bool
@@ -4486,6 +4462,29 @@ EvaluateModule(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+SetModuleLoadHook(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 1) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "setModuleLoadHook", "0", "s");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+        const char* typeName = InformalValueTypeName(args[0]);
+        JS_ReportErrorASCII(cx, "expected hook function, got %s", typeName);
+        return false;
+    }
+
+    Handle<GlobalObject*> global = cx->global();
+    global->setReservedSlot(GlobalAppSlotModuleLoadHook, args[0]);
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -7451,6 +7450,12 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("evaluateModule", EvaluateModule, 1, 0,
 "evaluateModule(moduleScript)",
 "  Evaluate a previously instantiated module script graph."),
+
+    JS_FN_HELP("setModuleLoadHook", SetModuleLoadHook, 1, 0,
+"setModuleLoadHook(function(path))",
+"  Set the shell specific module load hook to |function|.\n"
+"  This hook is used to load a module graph.  It should be implemented by the\n"
+"  module loader."),
 
     JS_FN_HELP("setModuleResolveHook", SetModuleResolveHook, 1, 0,
 "setModuleResolveHook(function(module, specifier) {})",

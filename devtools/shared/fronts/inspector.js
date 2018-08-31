@@ -3,6 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Telemetry = require("devtools/client/shared/telemetry");
+const telemetry = new Telemetry();
+const TELEMETRY_EYEDROPPER_OPENED = "DEVTOOLS_EYEDROPPER_OPENED_COUNT";
+const TELEMETRY_EYEDROPPER_OPENED_MENU = "DEVTOOLS_MENU_EYEDROPPER_OPENED_COUNT";
+
 const {
   Front,
   FrontClassWithSpec,
@@ -17,8 +22,6 @@ const {
 const defer = require("devtools/shared/defer");
 loader.lazyRequireGetter(this, "nodeConstants",
   "devtools/shared/dom-node-constants");
-loader.lazyRequireGetter(this, "CommandUtils",
-  "devtools/client/shared/developer-toolbar", true);
 
 /**
  * Client side of the DOM walker.
@@ -484,14 +487,13 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
     impl: "_getPageStyle"
   }),
 
-  pickColorFromPage: custom(async function(toolbox, options) {
-    if (toolbox) {
-      // If the eyedropper was already started using the gcli command, hide it so we don't
-      // end up with 2 instances of the eyedropper on the page.
-      CommandUtils.executeOnTarget(toolbox.target, "eyedropper --hide");
-    }
-
+  pickColorFromPage: custom(async function(options) {
     await this._pickColorFromPage(options);
+    if (options && options.fromMenu) {
+      telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED_MENU).add(true);
+    } else {
+      telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED).add(true);
+    }
   }, {
     impl: "_pickColorFromPage"
   })

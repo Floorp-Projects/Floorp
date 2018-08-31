@@ -89,6 +89,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mServiceWorkerTaintingSynthesized(false)
   , mIsTracker(false)
   , mIsTrackerBlocked(false)
+  , mDocumentHasUserInteracted(false)
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -167,6 +168,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
     mAncestorPrincipals = aLoadingContext->OwnerDoc()->AncestorPrincipals();
     mAncestorOuterWindowIDs = aLoadingContext->OwnerDoc()->AncestorOuterWindowIDs();
     MOZ_DIAGNOSTIC_ASSERT(mAncestorPrincipals.Length() == mAncestorOuterWindowIDs.Length());
+    mDocumentHasUserInteracted = aLoadingContext->OwnerDoc()->UserHasInteracted();
 
     // When the element being loaded is a frame, we choose the frame's window
     // for the window ID and the frame element's window as the parent
@@ -326,6 +328,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mServiceWorkerTaintingSynthesized(false)
   , mIsTracker(false)
   , mIsTrackerBlocked(false)
+  , mDocumentHasUserInteracted(false)
 {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
@@ -425,6 +428,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mServiceWorkerTaintingSynthesized(false)
   , mIsTracker(rhs.mIsTracker)
   , mIsTrackerBlocked(rhs.mIsTrackerBlocked)
+  , mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted)
 {
 }
 
@@ -470,7 +474,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aForcePreflight,
                    bool aIsPreflight,
                    bool aLoadTriggeredFromExternal,
-                   bool aServiceWorkerTaintingSynthesized)
+                   bool aServiceWorkerTaintingSynthesized,
+                   bool aDocumentHasUserInteracted)
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mPrincipalToInherit(aPrincipalToInherit)
@@ -514,6 +519,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mServiceWorkerTaintingSynthesized(aServiceWorkerTaintingSynthesized)
   , mIsTracker(false)
   , mIsTrackerBlocked(false)
+  , mDocumentHasUserInteracted(aDocumentHasUserInteracted)
 {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal || aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -1363,6 +1369,21 @@ NS_IMETHODIMP
 LoadInfo::SetIsTrackerBlocked(bool aIsTrackerBlocked)
 {
   mIsTrackerBlocked = aIsTrackerBlocked;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetDocumentHasUserInteracted(bool *aDocumentHasUserInteracted)
+{
+  MOZ_ASSERT(aDocumentHasUserInteracted);
+  *aDocumentHasUserInteracted = mDocumentHasUserInteracted;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetDocumentHasUserInteracted(bool aDocumentHasUserInteracted)
+{
+  mDocumentHasUserInteracted = aDocumentHasUserInteracted;
   return NS_OK;
 }
 

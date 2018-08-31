@@ -30,7 +30,7 @@ if (this.Components) {
   let worker = new PromiseWorker.AbstractWorker();
   worker.dispatch = function(method, args = []) {
     return Agent[method](...args);
-  },
+  };
   worker.log = LOG;
   worker.postMessage = function(message, ...transfers) {
     if (timeStamps) {
