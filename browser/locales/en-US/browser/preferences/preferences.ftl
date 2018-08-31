@@ -108,10 +108,6 @@ extension-controlled-privacy-containers = An extension, <img data-l10n-name="ico
 # are being controlled by an extension.
 extension-controlled-websites-tracking-protection-mode = An extension, <img data-l10n-name="icon"/> { $name }, is controlling tracking protection.
 
-# This string is shown to notify the user that their content blocking "All Detected Trackers"
-# preferences are being controlled by an extension.
-extension-controlled-websites-content-blocking-all-trackers = An extension, <img data-l10n-name="icon"/> { $name }, is controlling this setting.
-
 # This string is shown to notify the user that their proxy configuration preferences
 # are being controlled by an extension.
 extension-controlled-proxy-config = An extension, <img data-l10n-name="icon"/> { $name }, is controlling how { -brand-short-name } connects to the internet.
@@ -815,7 +811,7 @@ content-blocking-header = Content Blocking
 
 content-blocking-desc = Block third-party content, like ads or code, that can slow your browsing and track you around the web. Customize your settings for the best balance of protection and performance.
 
-content-blocking-learn-more = Learn more
+content-blocking-learn-more = Learn More
 content-blocking-restore-defaults =
   .label = Restore Defaults
   .accesskey = R
@@ -837,26 +833,29 @@ content-blocking-category-label = Choose what to block
 # have not finished loading after a certain threshold of seconds.
 content-blocking-fastblock-slow-loading-label = Slow-Loading Trackers
   .accesskey = S
-content-blocking-fastblock-new-description = Block just the trackers that keep pages from loading quickly.
+content-blocking-fastblock-description = Blocks third-party content that takes longer than 5 seconds to load.
 content-blocking-tracking-protection-all-label = All Detected Trackers
   .accesskey = T
-content-blocking-tracking-protection-new-description = Block all known trackers. (May prevent some pages from loading.)
+content-blocking-tracking-protection-description = Blocks all known trackers (Note: may also prevent some pages from loading).
 content-blocking-tracking-protection-option-always =
   .label = Always
   .accesskey = A
 content-blocking-tracking-protection-option-private =
   .label = Only in private windows
   .accesskey = p
-content-blocking-tracking-protection-change-block-list = Change block list
+content-blocking-tracking-protection-change-blocklist = Change Block List…
 
 content-blocking-reject-trackers-label = Third-Party Cookies
   .accesskey = C
 content-blocking-reject-trackers-description = Block all third-party cookies or just those set by trackers.
 # This is a warning message shown next to a yellow warning icon when the Third-Party Cookies subsection
-# of the Content Blocking UI in Preferences has been disabled due to the either the "All cookies" option
-# or the "Cookies from unvisited websites" option being selected in the Cookies and Site Data section of
-# the UI.
-content-blocking-reject-trackers-warning-your-settings-prevent-changes = Your settings in Cookies and Site Data are preventing changes to Third-Party Cookies settings.
+# of the Content Blocking UI in Preferences has been disabled due to the "All cookies" option
+# being selected in the Cookies and Site Data section of the UI.
+content-blocking-reject-trackers-warning-all-cookies-blocked = All cookies are currently blocked.
+# This is a warning message shown next to a yellow warning icon when the Third-Party Cookies subsection
+# of the Content Blocking UI in Preferences has been disabled due to the "Cookies from unvisited websites"
+# option being selected in the Cookies and Site Data section of the UI.
+content-blocking-reject-trackers-warning-from-unvisited-cookies-blocked = Cookies from unvisited websites are currently blocked.
 content-blocking-change-cookie-settings =
   .label = Change Cookie Settings
   .accesskey = S
