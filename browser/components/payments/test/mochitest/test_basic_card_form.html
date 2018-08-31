@@ -116,6 +116,17 @@ add_task(async function test_saveButton() {
   ok(!form.saveButton.disabled,
      "Save button should be enabled since the required fields are filled");
 
+  fillField(form.form.querySelector("#cc-exp-month"), "");
+  fillField(form.form.querySelector("#cc-exp-year"), "");
+  form.saveButton.focus();
+  ok(form.saveButton.disabled,
+     "Save button should be disabled since the required fields are empty");
+  fillField(form.form.querySelector("#cc-exp-month"), "11");
+  fillField(form.form.querySelector("#cc-exp-year"), year);
+  form.saveButton.focus();
+  ok(!form.saveButton.disabled,
+     "Save button should be enabled since the required fields are filled again");
+
   info("blanking the cc-number field");
   fillField(form.form.querySelector("#cc-number"), "");
   ok(form.saveButton.disabled, "Save button is disabled after blanking cc-number");
@@ -381,6 +392,8 @@ add_task(async function test_field_validity_updates() {
 
   let ccNumber = form.form.querySelector("#cc-number");
   let nameInput = form.form.querySelector("#cc-name");
+  let monthInput = form.form.querySelector("#cc-exp-month");
+  let yearInput = form.form.querySelector("#cc-exp-year");
 
   info("test with valid cc-number but missing cc-name");
   fillField(ccNumber, "4111111111111111");
@@ -388,10 +401,15 @@ add_task(async function test_field_validity_updates() {
   ok(!nameInput.checkValidity(), "cc-name field is invalid when empty");
   ok(form.saveButton.disabled, "Save button should be disabled with incomplete input");
 
-  info("correct by adding cc-name value");
+  info("correct by adding cc-name and expiration values");
   fillField(nameInput, "First");
+  fillField(monthInput, "11");
+  let year = (new Date()).getFullYear().toString();
+  fillField(yearInput, year);
   ok(ccNumber.checkValidity(), "cc-number field is valid with good input");
   ok(nameInput.checkValidity(), "cc-name field is valid with a value");
+  ok(monthInput.checkValidity(), "cc-exp-month field is valid with a value");
+  ok(yearInput.checkValidity(), "cc-exp-year field is valid with a value");
   ok(!form.saveButton.disabled, "Save button should not be disabled with good input");
 
   info("edit to make the cc-number invalid");
