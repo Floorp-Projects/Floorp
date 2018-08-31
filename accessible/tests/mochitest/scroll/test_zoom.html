@@ -41,7 +41,8 @@
       anchor = getAccessible("bottom3");
       [x, /* y */] = getPos(anchor);
       var [parentX, parentY] = getPos(anchor.parent);
-      scrollToX = parentX - docX, scrollToY = parentY - docY;
+      scrollToX = parentX - docX;
+      scrollToY = parentY - docY;
 
       anchor.scrollToPoint(COORDTYPE_PARENT_RELATIVE, scrollToX, scrollToY);
       testPos(anchor, [x, docY]);

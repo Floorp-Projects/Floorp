@@ -327,7 +327,12 @@ class FlexboxInspector {
     // Clear the flexbox panel if there is no flex container for the current node
     // selection.
     if (!flexboxFront) {
-      this.store.dispatch(clearFlexbox());
+      try {
+        this.store.dispatch(clearFlexbox());
+      } catch (e) {
+        // This call might fail if called asynchrously after the toolbox is finished
+        // closing.
+      }
       return;
     }
 

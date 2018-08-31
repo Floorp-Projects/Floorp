@@ -10558,9 +10558,11 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
         ionScript->copyConstants(vp);
         for (size_t i = 0; i < graph.numConstants(); i++) {
             const Value& v = vp[i];
-            if ((v.isObject() || v.isString()) && IsInsideNursery(v.toGCThing())) {
-                cx->runtime()->gc.storeBuffer().putWholeCell(script);
-                break;
+            if (v.isGCThing()) {
+                if (gc::StoreBuffer* sb = v.toGCThing()->storeBuffer()) {
+                    sb->putWholeCell(script);
+                    break;
+                }
             }
         }
     }

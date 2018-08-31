@@ -17,7 +17,6 @@ interface nsIPaymentAddress : nsISupports
   readonly attribute AString dependentLocality;
   readonly attribute AString postalCode;
   readonly attribute AString sortingCode;
-  readonly attribute AString languageCode;
   readonly attribute AString organization;
   readonly attribute AString recipient;
   readonly attribute AString phone;
@@ -29,7 +28,6 @@ interface nsIPaymentAddress : nsISupports
             in AString aDependentLocality,
             in AString aPostalCode,
             in AString aSortingCode,
-            in AString aLanguageCode,
             in AString aOrganization,
             in AString aRecipient,
             in AString aPhone);
