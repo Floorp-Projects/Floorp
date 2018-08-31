@@ -51,9 +51,6 @@ module.exports = {
     // Disallow use of assignment in return statement.
     "no-return-assign": ["error", "always"],
 
-    // Disallow use of the comma operator.
-    "no-sequences": "error",
-
     // Disallow template literal placeholder syntax in regular strings.
     "no-template-curly-in-string": "error",
 

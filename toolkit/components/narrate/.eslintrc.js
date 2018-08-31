@@ -23,7 +23,6 @@ module.exports = {
     "no-multi-str": "error",
     "no-multiple-empty-lines": ["error", {"max": 1}],
     "no-return-assign": "error",
-    "no-sequences": "error",
     "no-shadow": "error",
     "no-throw-literal": "error",
     "padded-blocks": ["error", "never"],

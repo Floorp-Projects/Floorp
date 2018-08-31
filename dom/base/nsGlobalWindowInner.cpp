@@ -4795,7 +4795,7 @@ nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError)
       return nullptr;
     }
 
-    nsCOMPtr<nsIDOMStorage> storage;
+    RefPtr<Storage> storage;
     aError = storageManager->CreateStorage(this, principal, documentURI,
                                            IsPrivateBrowsing(),
                                            getter_AddRefs(storage));
@@ -4803,7 +4803,7 @@ nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError)
       return nullptr;
     }
 
-    mSessionStorage = static_cast<Storage*>(storage.get());
+    mSessionStorage = storage;
     MOZ_ASSERT(mSessionStorage);
 
     MOZ_LOG(gDOMLeakPRLogInner, LogLevel::Debug,
@@ -4856,7 +4856,7 @@ nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError)
       }
     }
 
-    nsCOMPtr<nsIDOMStorage> storage;
+    RefPtr<Storage> storage;
     aError = storageManager->CreateStorage(this, principal, documentURI,
                                            IsPrivateBrowsing(),
                                            getter_AddRefs(storage));
@@ -4864,7 +4864,7 @@ nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError)
       return nullptr;
     }
 
-    mLocalStorage = static_cast<Storage*>(storage.get());
+    mLocalStorage = storage;
     MOZ_ASSERT(mLocalStorage);
   }
 
@@ -5684,7 +5684,7 @@ nsGlobalWindowInner::ObserveStorageNotification(StorageEvent* aEvent,
   eventType.AssignLiteral("storage");
 
   if (!NS_strcmp(aStorageType, u"sessionStorage")) {
-    nsCOMPtr<nsIDOMStorage> changingStorage = aEvent->GetStorageArea();
+    RefPtr<Storage> changingStorage = aEvent->GetStorageArea();
     MOZ_ASSERT(changingStorage);
 
     bool check = false;

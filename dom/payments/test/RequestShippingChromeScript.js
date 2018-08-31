@@ -24,7 +24,6 @@ shippingAddress.init("",  // country
                      "",  // dependent locality
                      "",  // postal code
                      "",  // sorting code
-                     "",  // language code
                      "",  // organization
                      "",  // recipient
                      ""); // phone

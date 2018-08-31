@@ -326,6 +326,9 @@ module.exports = {
     // No unnecessary comparisons
     "no-self-compare": "error",
 
+    // No comma sequenced statements
+    "no-sequences": "error",
+
     // No declaring variables from an outer scope
     // "no-shadow": "error",
 
