@@ -14,27 +14,28 @@ function caretMoveChecker(target, caretOffset) {
 }
 
 async function checkURLBarCaretEvents() {
-  const kURL = "about:mozilla";
-  let newWin = await BrowserTestUtils.openNewBrowserWindow();
-  newWin.gBrowser.selectedBrowser.loadURI(kURL);
+  let url = "about:mozilla";
 
-  await waitForEvent(
+  let onDocLoad = waitForEvent(
     EVENT_DOCUMENT_LOAD_COMPLETE,
     event => {
       try {
-        return event.accessible.QueryInterface(nsIAccessibleDocument).URL == kURL;
+        return event.accessible.QueryInterface(nsIAccessibleDocument).URL == url;
       } catch (e) {
         return false;
       }
     }
   );
-  info("Loaded " + kURL);
+  let [ newWin ] = await Promise.all([
+    BrowserTestUtils.openNewBrowserWindow({ url }),
+    onDocLoad
+  ]);
 
   let urlbarInputEl = newWin.document.getElementById("urlbar").inputField;
   let urlbarInput = getAccessible(urlbarInputEl, [ nsIAccessibleText ]);
 
   let onCaretMove = waitForEvents([
-    [ EVENT_TEXT_CARET_MOVED, caretMoveChecker(urlbarInput, kURL.length) ],
+    [ EVENT_TEXT_CARET_MOVED, caretMoveChecker(urlbarInput, url.length) ],
     [ EVENT_FOCUS, urlbarInput ]
   ]);
 
