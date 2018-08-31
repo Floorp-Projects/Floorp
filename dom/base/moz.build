@@ -132,6 +132,7 @@ EXPORTS.mozilla += [
     'FeedWriterEnabled.h',
     'FlushType.h',
     'RangeBoundary.h',
+    'SelectionChangeListener.h',
     'TextInputProcessor.h',
     'UseCounter.h',
 ]
