@@ -7,9 +7,9 @@ const testState = {
   windows: [{
     tabs: [
       { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
-      { entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }] }
-    ]
-  }]
+      { entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }] },
+    ],
+  }],
 };
 
 

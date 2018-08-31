@@ -6,8 +6,8 @@ function test() {
 
   var triggers = encodeURIComponent(JSON.stringify({
     "Unsigned XPI": {
-      URL: undefined
-    }
+      URL: undefined,
+    },
   }));
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 

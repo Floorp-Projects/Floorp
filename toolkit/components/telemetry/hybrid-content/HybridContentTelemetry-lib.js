@@ -36,8 +36,8 @@ if (typeof Mozilla == "undefined") {
       bubbles: true,
       detail: {
         name: name,
-        data: data || {}
-      }
+        data: data || {},
+      },
     });
 
     document.dispatchEvent(event);
@@ -81,7 +81,7 @@ if (typeof Mozilla == "undefined") {
   Mozilla.ContentTelemetry.registerEvents = function(category, eventData) {
     _sendMessageToChrome("registerEvents", {
       category: category,
-      eventData: eventData
+      eventData: eventData,
     });
   };
 
@@ -91,7 +91,7 @@ if (typeof Mozilla == "undefined") {
       method: method,
       object: object,
       value: value,
-      extra: extra
+      extra: extra,
     });
   };
 

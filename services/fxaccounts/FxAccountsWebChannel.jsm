@@ -167,7 +167,7 @@ this.FxAccountsWebChannel.prototype = {
         let response = {
           command,
           messageId: message.messageId,
-          data: { ok: canLinkAccount }
+          data: { ok: canLinkAccount },
         };
 
         log.debug("FxAccountsWebChannel response", response);
@@ -189,7 +189,7 @@ this.FxAccountsWebChannel.prototype = {
             let response = {
               command,
               messageId: message.messageId,
-              data: fxaStatus
+              data: fxaStatus,
             };
             this._channel.send(response, sendingContext);
           }).catch(error =>
@@ -255,7 +255,7 @@ this.FxAccountsWebChannel.prototype = {
     this._channel = new WebChannel(this._webChannelId, this._webChannelOrigin);
     this._channel.listen(listener);
     log.debug("FxAccountsWebChannel registered: " + this._webChannelId + " with origin " + this._webChannelOrigin.prePath);
-  }
+  },
 };
 
 this.FxAccountsWebChannelHelpers = function(options) {
@@ -393,7 +393,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
           email: userData.email,
           sessionToken: userData.sessionToken,
           uid: userData.uid,
-          verified: userData.verified
+          verified: userData.verified,
         };
       }
     }
@@ -401,8 +401,8 @@ this.FxAccountsWebChannelHelpers.prototype = {
     return {
       signedInUser,
       capabilities: {
-        engines: this._getAvailableExtraEngines()
-      }
+        engines: this._getAvailableExtraEngines(),
+      },
     };
   },
 
@@ -427,7 +427,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
     // versions to supported field names doesn't buy us much.
     // So we just remove field names we know aren't handled.
     let newCredentials = {
-      device: null // Force a brand new device registration.
+      device: null, // Force a brand new device registration.
     };
     for (let name of Object.keys(credentials)) {
       if (name == "email" || name == "uid" || FxAccountsStorageManagerCanStoreField(name)) {
@@ -519,7 +519,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
                                        continueLabel, null, null, null,
                                        {});
     return pressed === 0; // 0 is the "continue" button
-  }
+  },
 };
 
 var singleton;

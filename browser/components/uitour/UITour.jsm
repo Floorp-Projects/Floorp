@@ -199,7 +199,7 @@ var UITour = {
       widgetName: "urlbar-container",
     }],
     ["pageActionButton", {
-      query: "#pageActionButton"
+      query: "#pageActionButton",
     }],
     ["pageAction-bookmark", {
       query: (aDocument) => {
@@ -240,7 +240,7 @@ var UITour = {
         return aDocument.getElementById("pageAction-urlbar-screenshots") ||
                aDocument.getElementById("pageAction-panel-screenshots");
       },
-    }]
+    }],
   ]),
 
   init() {
@@ -742,8 +742,8 @@ var UITour = {
         events: [
           [ "popuphidden", this.onPanelHidden ],
           [ "popuphiding", this.onAppMenuHiding ],
-          [ "ViewShowing", this.onAppMenuSubviewShowing ]
-        ]
+          [ "ViewShowing", this.onAppMenuSubviewShowing ],
+        ],
       },
       {
         name: "pageActionPanel",
@@ -751,16 +751,16 @@ var UITour = {
         events: [
           [ "popuphidden", this.onPanelHidden ],
           [ "popuphiding", this.onPageActionPanelHiding ],
-          [ "ViewShowing", this.onPageActionPanelSubviewShowing ]
-        ]
+          [ "ViewShowing", this.onPageActionPanelSubviewShowing ],
+        ],
       },
       {
         name: "controlCenter",
         node: aWindow.gIdentityHandler._identityPopup,
         events: [
           [ "popuphidden", this.onPanelHidden ],
-          [ "popuphiding", this.onControlCenterHiding ]
-        ]
+          [ "popuphiding", this.onControlCenterHiding ],
+        ],
       },
     ];
     for (let panel of panels) {
@@ -1258,7 +1258,7 @@ var UITour = {
 
     if (aMenuName == "appMenu" || aMenuName == "pageActionPanel") {
       let menu = {
-        onPanelHidden: this.onPanelHidden
+        onPanelHidden: this.onPanelHidden,
       };
       if (aMenuName == "appMenu") {
         menu.node = aWindow.PanelUI.panel;
@@ -1463,7 +1463,7 @@ var UITour = {
             data = {
               searchEngineIdentifier: Services.search.defaultEngine.identifier,
               engines: engines.filter((engine) => engine.identifier)
-                              .map((engine) => TARGET_SEARCHENGINE_PREFIX + engine.identifier)
+                              .map((engine) => TARGET_SEARCHENGINE_PREFIX + engine.identifier),
             };
           } else {
             data = {engines: [], searchEngineIdentifier: ""};
@@ -1749,5 +1749,5 @@ const UITourHealthReport = {
         addClientId: true,
         addEnvironment: true,
       });
-  }
+  },
 };

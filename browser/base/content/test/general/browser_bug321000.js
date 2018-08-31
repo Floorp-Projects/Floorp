@@ -10,12 +10,12 @@ var gTests = [
 
   { desc: "Urlbar strips newlines and surrounding whitespace",
     element: gURLBar,
-    expected: kTestString.replace(/\s*\n\s*/g, "")
+    expected: kTestString.replace(/\s*\n\s*/g, ""),
   },
 
   { desc: "Searchbar replaces newlines with spaces",
     element: document.getElementById("searchbar"),
-    expected: kTestString.replace(/\n/g, " ")
+    expected: kTestString.replace(/\n/g, " "),
   },
 
 ];
@@ -57,7 +57,7 @@ function test_paste(aCurrentTest) {
       // Clear the field and go to next test.
       element.value = "";
       setTimeout(next_test, 0);
-    }
+    },
   };
   element.addEventListener("input", inputListener);
 

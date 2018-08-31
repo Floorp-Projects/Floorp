@@ -97,7 +97,7 @@ var Observers = {
    * Could we fix that by making this an independent top-level object
    * rather than a property of this object?
    */
-  _cache: []
+  _cache: [],
 };
 
 
@@ -125,7 +125,7 @@ Observer.prototype = {
         this.callback(subject, data);
     } else // typeof this.callback == "object" (nsIObserver)
       this.callback.observe(subject, topic, data);
-  }
+  },
 };
 
 
@@ -140,5 +140,5 @@ function Subject(object) {
 Subject.prototype = {
   QueryInterface: ChromeUtils.generateQI([]),
   getScriptableHelper() {},
-  getInterfaces() {}
+  getInterfaces() {},
 };

@@ -127,7 +127,7 @@ function BasicNotification(testId) {
         this.secondaryActionClicked = true;
         this.secondaryActionSource = source;
       },
-    }
+    },
   ];
   this.options = {
     name: "http://example.com",
@@ -149,7 +149,7 @@ function BasicNotification(testId) {
           this.swappingCallbackTriggered = true;
           break;
       }
-    }
+    },
   };
 }
 

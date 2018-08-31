@@ -31,7 +31,7 @@ function install_addon(aXpi) {
     aInstall.addListener({
       onInstallEnded(aInstall) {
         resolve();
-      }
+      },
     });
     aInstall.install();
   });

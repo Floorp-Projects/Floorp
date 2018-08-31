@@ -32,7 +32,7 @@ var SessionHistory = Object.freeze({
 
   restore(docShell, tabData) {
     return SessionHistoryInternal.restore(docShell, tabData);
-  }
+  },
 });
 
 /**
@@ -116,7 +116,7 @@ var SessionHistoryInternal = {
       if (uri != "about:blank" || (body && body.hasChildNodes())) {
         data.entries.push({
           url: uri,
-          triggeringPrincipal_base64: Utils.SERIALIZED_SYSTEMPRINCIPAL
+          triggeringPrincipal_base64: Utils.SERIALIZED_SYSTEMPRINCIPAL,
         });
         data.index = 1;
       }

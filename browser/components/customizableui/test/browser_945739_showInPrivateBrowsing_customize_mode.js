@@ -12,7 +12,7 @@ const kWidgetId = "test-private-browsing-customize-mode-widget";
 add_task(async function testPrivateBrowsingCustomizeModeWidget() {
   CustomizableUI.createWidget({
     id: kWidgetId,
-    showInPrivateBrowsing: false
+    showInPrivateBrowsing: false,
   });
 
   let normalWidgetArray = CustomizableUI.getUnusedWidgets(gNavToolbox.palette);

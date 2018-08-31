@@ -13,7 +13,7 @@ if (typeof Components != "undefined") {
   ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
   this.EXPORTED_SYMBOLS = [
-    "Lz4"
+    "Lz4",
   ];
   this.exports = {};
 } else if (typeof module != "undefined" && typeof require != "undefined") {
@@ -148,6 +148,6 @@ exports.decompressFileContent = decompressFileContent;
 if (typeof Components != "undefined") {
   this.Lz4 = {
     compressFileContent,
-    decompressFileContent
+    decompressFileContent,
   };
 }

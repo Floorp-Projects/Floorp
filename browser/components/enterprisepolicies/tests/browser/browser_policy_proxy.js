@@ -29,8 +29,8 @@ add_task(async function test_proxy_boolean_settings() {
       "Proxy": {
         "UseProxyForDNS": false,
         "AutoLogin": false,
-      }
-    }
+      },
+    },
   });
 
   checkUnlockedPref("network.proxy.socks_remote_dns", false);
@@ -41,8 +41,8 @@ add_task(async function test_proxy_boolean_settings() {
       "Proxy": {
         "UseProxyForDNS": true,
         "AutoLogin": true,
-      }
-    }
+      },
+    },
   });
 
   checkUnlockedPref("network.proxy.socks_remote_dns", true);
@@ -54,9 +54,9 @@ add_task(async function test_proxy_socks_and_passthrough() {
     "policies": {
       "Proxy": {
         "SOCKSVersion": 4,
-        "Passthrough": "a, b, c"
-      }
-    }
+        "Passthrough": "a, b, c",
+      },
+    },
   });
 
   checkUnlockedPref("network.proxy.socks_version", 4);
@@ -76,8 +76,8 @@ add_task(async function test_proxy_addresses() {
         "FTPProxy": "ftp.proxy.example.com:20",
         "SSLProxy": "ssl.proxy.example.com:30",
         "SOCKSProxy": "socks.proxy.example.com:40",
-      }
-    }
+      },
+    },
   });
 
   checkProxyPref("http", "http.proxy.example.com", 10);
@@ -94,9 +94,9 @@ add_task(async function test_proxy_addresses() {
         "FTPProxy": "ftp.proxy.example.com:20",
         "SSLProxy": "ssl.proxy.example.com:30",
         "SOCKSProxy": "socks.proxy.example.com:40",
-        "UseHTTPProxyForAllProtocols": true
-      }
-    }
+        "UseHTTPProxyForAllProtocols": true,
+      },
+    },
   });
 
 

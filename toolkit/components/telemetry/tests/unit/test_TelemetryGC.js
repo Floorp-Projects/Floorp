@@ -140,8 +140,8 @@ function make_gc() {
           "mark_compartments": 2.27,
           "unmark": 1.063,
           "minor_gcs_to_evict_nursery": 8.701,
-        }
-      }
+        },
+      },
     ],
     "totals": {
       "wait_background_thread": 0.012,
@@ -157,7 +157,7 @@ function make_gc() {
       "mark_compartments": 2.27,
       "unmark": 1.063,
       "minor_gcs_to_evict_nursery": 8.701,
-    }
+    },
   };
   return gc;
 }

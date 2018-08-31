@@ -11,8 +11,8 @@ add_task(async function set_simplify_and_reader_pref() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["print.use_simplify_page", true],
-      ["reader.parse-on-load.enabled", true]
-    ]
+      ["reader.parse-on-load.enabled", true],
+    ],
   });
 });
 

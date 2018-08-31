@@ -7,7 +7,7 @@ var EXPORTED_SYMBOLS = [
   "SyncEngine",
   "Tracker",
   "Store",
-  "Changeset"
+  "Changeset",
 ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -461,7 +461,7 @@ Store.prototype = {
    */
   async wipe() {
     throw new Error("override wipe in a subclass");
-  }
+  },
 };
 
 function EngineManager(service) {
@@ -762,7 +762,7 @@ function SyncEngine(name, service) {
 SyncEngine.kRecoveryStrategy = {
   ignore: "ignore",
   retry:  "retry",
-  error:  "error"
+  error:  "error",
 };
 
 SyncEngine.prototype = {

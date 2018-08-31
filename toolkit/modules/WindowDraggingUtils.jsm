@@ -66,5 +66,5 @@ WindowDraggingElement.prototype = {
         this._window.removeEventListener("mousemove", this);
         break;
     }
-  }
+  },
 };

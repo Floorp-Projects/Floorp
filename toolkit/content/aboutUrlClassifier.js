@@ -313,7 +313,7 @@ var Cache = {
 
             let tds = [table, entries.length, positiveCacheCount, chk];
             createRow(tds, document.getElementById("cache-table-body"), tds.length);
-          }
+          },
         });
       }
     }
@@ -485,5 +485,5 @@ var Debug = {
 
     let curLogFile = document.getElementById("cur-log-file");
     curLogFile.childNodes[0].nodeValue = logFile;
-  }
+  },
 };

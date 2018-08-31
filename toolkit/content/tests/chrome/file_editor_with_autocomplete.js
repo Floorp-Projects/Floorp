@@ -83,7 +83,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("M", { shiftKey: true }, aWindow);
         synthesizeKey("o", {}, aWindow);
         return true;
-      }, popup: true, value: "Mo", searchString: "Mo"
+      }, popup: true, value: "Mo", searchString: "Mo",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: select 'Mozilla' to complete the word",
       completeDefaultIndex: false,
@@ -91,35 +91,35 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("KEY_ArrowDown", {}, aWindow);
         synthesizeKey("KEY_Enter", {}, aWindow);
         return true;
-      }, popup: false, value: "Mozilla", searchString: "Mozilla"
+      }, popup: false, value: "Mozilla", searchString: "Mozilla",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: undo the word, but typed text shouldn't be canceled",
       completeDefaultIndex: false,
       execute(aWindow, aTarget) {
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
-      }, popup: true, value: "Mo", searchString: "Mo"
+      }, popup: true, value: "Mo", searchString: "Mo",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: undo the typed text",
       completeDefaultIndex: false,
       execute(aWindow, aTarget) {
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: redo the typed text",
       completeDefaultIndex: false,
       execute(aWindow, aTarget) {
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
-      }, popup: true, value: "Mo", searchString: "Mo"
+      }, popup: true, value: "Mo", searchString: "Mo",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: redo the word",
       completeDefaultIndex: false,
       execute(aWindow, aTarget) {
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
-      }, popup: true, value: "Mozilla", searchString: "Mozilla"
+      }, popup: true, value: "Mozilla", searchString: "Mozilla",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: removing all text for next test...",
       completeDefaultIndex: false,
@@ -127,7 +127,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("a", { accelKey: true }, aWindow);
         synthesizeKey("KEY_Backspace", {}, aWindow);
         return true;
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
 
     { description: "Undo/Redo behavior check when typed text does not match the case: type 'mo'",
@@ -136,7 +136,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("m", {}, aWindow);
         synthesizeKey("o", {}, aWindow);
         return true;
-      }, popup: true, value: "mo", searchString: "mo"
+      }, popup: true, value: "mo", searchString: "mo",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: select 'Mozilla' to complete the word",
       completeDefaultIndex: false,
@@ -144,35 +144,35 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("KEY_ArrowDown", {}, aWindow);
         synthesizeKey("KEY_Enter", {}, aWindow);
         return true;
-      }, popup: false, value: "Mozilla", searchString: "Mozilla"
+      }, popup: false, value: "Mozilla", searchString: "Mozilla",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: undo the word, but typed text shouldn't be canceled",
       completeDefaultIndex: false,
       execute(aWindow, aTarget) {
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
-      }, popup: true, value: "mo", searchString: "mo"
+      }, popup: true, value: "mo", searchString: "mo",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: undo the typed text",
       completeDefaultIndex: false,
       execute(aWindow, aTarget) {
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: redo the typed text",
       completeDefaultIndex: false,
       execute(aWindow, aTarget) {
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
-      }, popup: true, value: "mo", searchString: "mo"
+      }, popup: true, value: "mo", searchString: "mo",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: redo the word",
       completeDefaultIndex: false,
       execute(aWindow, aTarget) {
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
-      }, popup: true, value: "Mozilla", searchString: "Mozilla"
+      }, popup: true, value: "Mozilla", searchString: "Mozilla",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: removing all text for next test...",
       completeDefaultIndex: false,
@@ -180,7 +180,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("a", { accelKey: true }, aWindow);
         synthesizeKey("KEY_Backspace", {}, aWindow);
         return true;
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
 
     // Testing for nsIAutoCompleteInput.completeDefaultIndex being true.
@@ -194,7 +194,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("M", { shiftKey: true }, aWindow);
         synthesizeKey("o", {}, aWindow);
         return true;
-      }, popup: true, value: "Mozilla", searchString: "Mo"
+      }, popup: true, value: "Mozilla", searchString: "Mo",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): select 'Mozilla' to complete the word",
       completeDefaultIndex: true,
@@ -206,7 +206,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("KEY_ArrowDown", {}, aWindow);
         synthesizeKey("KEY_Enter", {}, aWindow);
         return true;
-      }, popup: false, value: "Mozilla", searchString: "Mozilla"
+      }, popup: false, value: "Mozilla", searchString: "Mozilla",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): undo the word, but typed text shouldn't be canceled",
       completeDefaultIndex: true,
@@ -217,7 +217,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         }
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
-      }, popup: true, value: "Mo", searchString: "Mo"
+      }, popup: true, value: "Mo", searchString: "Mo",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): undo the typed text",
       completeDefaultIndex: true,
@@ -228,7 +228,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         }
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): redo the typed text",
       completeDefaultIndex: true,
@@ -239,7 +239,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         }
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
-      }, popup: true, value: "Mozilla", searchString: "Mo"
+      }, popup: true, value: "Mozilla", searchString: "Mo",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): redo the word",
       completeDefaultIndex: true,
@@ -250,7 +250,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         }
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
-      }, popup: true, value: "Mozilla", searchString: "Mo"
+      }, popup: true, value: "Mozilla", searchString: "Mo",
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): removing all text for next test...",
       completeDefaultIndex: true,
@@ -262,7 +262,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("a", { accelKey: true }, aWindow);
         synthesizeKey("KEY_Backspace", {}, aWindow);
         return true;
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
 
     { description: "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): type 'mo'",
@@ -275,7 +275,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("m", {}, aWindow);
         synthesizeKey("o", {}, aWindow);
         return true;
-      }, popup: true, value: "mozilla", searchString: "mo"
+      }, popup: true, value: "mozilla", searchString: "mo",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): select 'Mozilla' to complete the word",
       completeDefaultIndex: true,
@@ -287,7 +287,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("KEY_ArrowDown", {}, aWindow);
         synthesizeKey("KEY_Enter", {}, aWindow);
         return true;
-      }, popup: false, value: "Mozilla", searchString: "Mozilla"
+      }, popup: false, value: "Mozilla", searchString: "Mozilla",
     },
     // Different from "exactly matches the case" case, modifying the case causes one additional transaction.
     // Although we could make this transaction ignored.
@@ -300,7 +300,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         }
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
-      }, popup: true, value: "mozilla", searchString: "mozilla"
+      }, popup: true, value: "mozilla", searchString: "mozilla",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): undo the word, but typed text shouldn't be canceled",
       completeDefaultIndex: true,
@@ -311,7 +311,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         }
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
-      }, popup: true, value: "mo", searchString: "mo"
+      }, popup: true, value: "mo", searchString: "mo",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): undo the typed text",
       completeDefaultIndex: true,
@@ -322,7 +322,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         }
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
     // XXX This is odd case.  Consistency with undo behavior, this should restore "mo".
     //     However, looks like that autocomplete automatically restores "mozilla".
@@ -337,7 +337,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         }
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
-      }, popup: true, value: "mozilla", searchString: "mo"
+      }, popup: true, value: "mozilla", searchString: "mo",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): redo the default index word",
       completeDefaultIndex: true,
@@ -348,7 +348,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         }
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
-      }, popup: true, value: "mozilla", searchString: "mo"
+      }, popup: true, value: "mozilla", searchString: "mo",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): redo the word",
       completeDefaultIndex: true,
@@ -359,7 +359,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         }
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
-      }, popup: true, value: "mozilla", searchString: "mo"
+      }, popup: true, value: "mozilla", searchString: "mo",
     },
     { description: "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): removing all text for next test...",
       completeDefaultIndex: true,
@@ -371,7 +371,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         synthesizeKey("a", { accelKey: true }, aWindow);
         synthesizeKey("KEY_Backspace", {}, aWindow);
         return true;
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
-  ]
+  ],
 };

@@ -22,7 +22,7 @@ let log = ChromeUtils.import("resource://gre/modules/Log.jsm", {})
             .Log.repository.getLogger("Sync.RemoteTabs");
 
 var EXPORTED_SYMBOLS = [
-  "SyncedTabsDeckComponent"
+  "SyncedTabsDeckComponent",
 ];
 
 /* SyncedTabsDeckComponent
@@ -62,7 +62,7 @@ SyncedTabsDeckComponent.prototype = {
     NOT_AUTHED_INFO: "notAuthedInfo",
     SINGLE_DEVICE_INFO: "singleDeviceInfo",
     TABS_DISABLED: "tabs-disabled",
-    UNVERIFIED: "unverified"
+    UNVERIFIED: "unverified",
   },
 
   get container() {
@@ -90,7 +90,7 @@ SyncedTabsDeckComponent.prototype = {
 
     this._deckView = new this._DeckView(this._window, this.tabListComponent, {
       onConnectDeviceClick: event => this.openConnectDevice(event),
-      onSyncPrefClick: event => this.openSyncPrefs(event)
+      onSyncPrefClick: event => this.openSyncPrefs(event),
     });
 
     this._deckStore.on("change", state => this._deckView.render(state));

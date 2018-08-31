@@ -17,7 +17,7 @@ add_task(async function checkFlashBlockLists() {
   classifierTester.setPrefs({
     setDBs: true,
     flashBlockEnable: true,
-    flashSetting: classifierTester.NEVER_ACTIVATE_PREF_VALUE
+    flashSetting: classifierTester.NEVER_ACTIVATE_PREF_VALUE,
   });
 
   await classifierHelper.waitForInit();

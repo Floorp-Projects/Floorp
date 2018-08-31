@@ -30,7 +30,7 @@ function get_test_collection_info({ totalRecords, batchSize, lastModified,
       limit,
       offset,
       spec: this.spec,
-      headers: Object.assign({}, this.headers)
+      headers: Object.assign({}, this.headers),
     });
     if (--throwAfter === 0) {
       throw new Error("Some Network Error");
@@ -40,7 +40,7 @@ function get_test_collection_info({ totalRecords, batchSize, lastModified,
       obj: body,
       success: true,
       status: 200,
-      headers: {}
+      headers: {},
     };
     if (--interruptedAfter === 0) {
       response.success = false;
@@ -139,7 +139,7 @@ add_task(async function test_412() {
     totalRecords,
     batchSize,
     lastModified,
-    interruptedAfter: 3
+    interruptedAfter: 3,
   });
   let { response, records } = await coll.getBatched(batchSize);
 
@@ -162,7 +162,7 @@ add_task(async function test_get_throws() {
     totalRecords,
     batchSize,
     lastModified,
-    throwAfter: 3
+    throwAfter: 3,
   });
 
   await Assert.rejects(coll.getBatched(batchSize), /Some Network Error/);

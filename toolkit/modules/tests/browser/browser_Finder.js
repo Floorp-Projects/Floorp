@@ -15,7 +15,7 @@ add_task(async function() {
     },
     onHighlightFinished() {
       ok(false, "onHighlightFinished callback wasn't replaced");
-    }
+    },
   };
   finder.addResultListener(listener);
 

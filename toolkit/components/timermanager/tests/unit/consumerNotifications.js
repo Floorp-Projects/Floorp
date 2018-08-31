@@ -29,7 +29,7 @@ const TESTS = [ {
   contractID: "@mozilla.org/test0/timercallback;1",
   method: "createInstance",
   classID: Components.ID("9c7ce81f-98bb-4729-adb4-4d0deb0f59e5"),
-  notified: false
+  notified: false,
 }, {
   desc: "Test Timer Callback 1",
   timerID: "test1-update-timer",
@@ -38,7 +38,7 @@ const TESTS = [ {
   contractID: "@mozilla.org/test2/timercallback;1",
   method: "createInstance",
   classID: Components.ID("512834f3-05bb-46be-84e0-81d881a140b7"),
-  notified: false
+  notified: false,
 }, {
   desc: "Test Timer Callback 2",
   timerID: "test2-update-timer",
@@ -47,7 +47,7 @@ const TESTS = [ {
   contractID: "@mozilla.org/test2/timercallback;1",
   method: "createInstance",
   classID: Components.ID("c8ac5027-8d11-4471-9d7c-fd692501b437"),
-  notified: false
+  notified: false,
 }, {
   desc: "Test Timer Callback 3",
   timerID: "test3-update-timer",
@@ -56,7 +56,7 @@ const TESTS = [ {
   contractID: "@mozilla.org/test3/timercallback;1",
   method: "createInstance",
   classID: Components.ID("6b0e79f3-4ab8-414c-8f14-dde10e185727"),
-  notified: false
+  notified: false,
 }, {
   desc: "Test Timer Callback 4",
   timerID: "test4-update-timer",
@@ -65,7 +65,7 @@ const TESTS = [ {
   contractID: "@mozilla.org/test4/timercallback;1",
   method: "createInstance",
   classID: Components.ID("2f6b7b92-e40f-4874-bfbb-eeb2412c959d"),
-  notified: false
+  notified: false,
 }, {
   desc: "Test Timer Callback 5",
   timerID: "test5-update-timer",
@@ -74,7 +74,7 @@ const TESTS = [ {
   contractID: "@mozilla.org/test5/timercallback;1",
   method: "createInstance",
   classID: Components.ID("8a95f611-b2ac-4c7e-8b73-9748c4839731"),
-  notified: false
+  notified: false,
 }, {
   desc: "Test Timer Callback 6",
   timerID: "test6-update-timer",
@@ -83,7 +83,7 @@ const TESTS = [ {
   contractID: "@mozilla.org/test6/timercallback;1",
   method: "createInstance",
   classID: Components.ID("2d091020-e23c-11e2-a28f-0800200c9a66"),
-  notified: false
+  notified: false,
 }, {
   desc: "Test Timer Callback 7",
   timerID: "test7-update-timer",
@@ -93,7 +93,7 @@ const TESTS = [ {
   contractID: "@mozilla.org/test7/timercallback;1",
   method: "createInstance",
   classID: Components.ID("8e8633ae-1d70-4a7a-8bea-6e1e6c5d7742"),
-  notified: false
+  notified: false,
 }, {
   desc: "Test Timer Callback 8",
   timerID: "test8-update-timer",
@@ -101,7 +101,7 @@ const TESTS = [ {
   contractID: "@mozilla.org/test8/timercallback;1",
   classID: Components.ID("af878d4b-1d12-41f6-9a90-4e687367ecc1"),
   notified: false,
-  lastUpdateTime: 0
+  lastUpdateTime: 0,
 }, {
   desc: "Test Timer Callback 9",
   timerID: "test9-update-timer",
@@ -109,7 +109,7 @@ const TESTS = [ {
   contractID: "@mozilla.org/test9/timercallback;1",
   classID: Components.ID("5136b201-d64c-4328-8cf1-1a63491cc117"),
   notified: false,
-  lastUpdateTime: 0
+  lastUpdateTime: 0,
 }, {
   desc: "Test Timer Callback 10",
   timerID: "test10-update-timer",
@@ -117,7 +117,7 @@ const TESTS = [ {
   contractID: "@mozilla.org/test9/timercallback;1",
   classID: Components.ID("1f42bbb3-d116-4012-8491-3ec4797a97ee"),
   notified: false,
-  lastUpdateTime: 0
+  lastUpdateTime: 0,
 } ];
 
 var gUTM;
@@ -141,7 +141,7 @@ const gTest0TimerCallback = {
     // time to fire so check other timers are successful.
     do_throw("gTest0TimerCallback notify method should not have been called");
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
 };
 
 const gTest0Factory = {
@@ -150,7 +150,7 @@ const gTest0Factory = {
       return gTest0TimerCallback.QueryInterface(aIID);
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
+  },
 };
 
 const gTest1TimerCallback = {
@@ -159,7 +159,7 @@ const gTest1TimerCallback = {
     // time to fire so check other timers are successful.
     do_throw("gTest1TimerCallback notify method should not have been called");
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimer])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimer]),
 };
 
 const gTest1Factory = {
@@ -168,7 +168,7 @@ const gTest1Factory = {
       return gTest1TimerCallback.QueryInterface(aIID);
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
+  },
 };
 
 const gTest2TimerCallback = {
@@ -177,7 +177,7 @@ const gTest2TimerCallback = {
     // time to fire so check other timers are successful.
     do_throw("gTest2TimerCallback notify method should not have been called");
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
 };
 
 const gTest2Factory = {
@@ -186,11 +186,11 @@ const gTest2Factory = {
       return gTest2TimerCallback.QueryInterface(aIID);
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
+  },
 };
 
 const gTest3TimerCallback = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
 };
 
 const gTest3Factory = {
@@ -199,7 +199,7 @@ const gTest3Factory = {
       return gTest3TimerCallback.QueryInterface(aIID);
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
+  },
 };
 
 const gTest4TimerCallback = {
@@ -208,7 +208,7 @@ const gTest4TimerCallback = {
     TESTS[4].notified = true;
     finished_test0thru7();
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
 };
 
 const gTest4Factory = {
@@ -217,7 +217,7 @@ const gTest4Factory = {
       return gTest4TimerCallback.QueryInterface(aIID);
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
+  },
 };
 
 const gTest5TimerCallback = {
@@ -226,7 +226,7 @@ const gTest5TimerCallback = {
     TESTS[5].notified = true;
     finished_test0thru7();
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
 };
 
 const gTest5Factory = {
@@ -235,7 +235,7 @@ const gTest5Factory = {
       return gTest5TimerCallback.QueryInterface(aIID);
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
+  },
 };
 
 const gTest6TimerCallback = {
@@ -244,7 +244,7 @@ const gTest6TimerCallback = {
     TESTS[6].notified = true;
     finished_test0thru7();
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
 };
 
 const gTest6Factory = {
@@ -253,7 +253,7 @@ const gTest6Factory = {
       return gTest6TimerCallback.QueryInterface(aIID);
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
+  },
 };
 
 const gTest7TimerCallback = {
@@ -262,7 +262,7 @@ const gTest7TimerCallback = {
     TESTS[7].notified = true;
     finished_test0thru7();
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
 };
 
 const gTest7Factory = {
@@ -271,7 +271,7 @@ const gTest7Factory = {
       return gTest7TimerCallback.QueryInterface(aIID);
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
+  },
 };
 
 const gTest8TimerCallback = {
@@ -282,7 +282,7 @@ const gTest8TimerCallback = {
       check_test8thru10(gTest8TimerCallback);
     });
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
 };
 
 const gTest8Factory = {
@@ -291,7 +291,7 @@ const gTest8Factory = {
       return gTest8TimerCallback.QueryInterface(aIID);
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
+  },
 };
 
 const gTest9TimerCallback = {
@@ -302,7 +302,7 @@ const gTest9TimerCallback = {
       check_test8thru10(gTest9TimerCallback);
     });
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
 };
 
 const gTest10TimerCallback = {
@@ -311,7 +311,7 @@ const gTest10TimerCallback = {
     // be called.
     do_throw("gTest10TimerCallback notify method should not have been called");
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
 };
 
 const gTest9Factory = {
@@ -320,7 +320,7 @@ const gTest9Factory = {
       return gTest9TimerCallback.QueryInterface(aIID);
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
+  },
 };
 
 function run_test() {

@@ -7,14 +7,14 @@ function createTestState() {
     host: "http://example.com",
     path: "/",
     name: `name${r}`,
-    value: `value${r}`
+    value: `value${r}`,
   };
 
   let state = {
     windows: [{
       tabs: [{entries: [{url: "about:robots", triggeringPrincipal_base64}]}],
-      cookies: [cookie]
-    }]
+      cookies: [cookie],
+    }],
   };
 
   return [state, cookie];

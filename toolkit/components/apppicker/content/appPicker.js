@@ -205,7 +205,7 @@ AppPicker.prototype =
           }
       });
       return true;
-    }
+    },
 };
 
 // Global object

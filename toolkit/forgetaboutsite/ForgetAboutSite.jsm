@@ -29,7 +29,7 @@ var ForgetAboutSite = {
     if (errorCount !== 0) {
       throw new Error(`There were a total of ${errorCount} errors during removal`);
     }
-  }
+  },
 };
 
 function bitCounting(value) {

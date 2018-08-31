@@ -9,7 +9,7 @@ ChromeUtils.defineModuleGetter(this, "ServiceWorkerCleanUp",
                                "resource://gre/modules/ServiceWorkerCleanUp.jsm");
 
 var EXPORTED_SYMBOLS = [
-  "SiteDataManager"
+  "SiteDataManager",
 ];
 
 XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
@@ -113,8 +113,8 @@ var SiteDataManager = {
 
         QueryInterface: ChromeUtils.generateQI([
           Ci.nsICacheStorageConsumptionObserver,
-          Ci.nsISupportsWeakReference
-        ])
+          Ci.nsISupportsWeakReference,
+        ]),
       };
 
       try {
@@ -377,7 +377,7 @@ var SiteDataManager = {
     if (removals) {
       let args = {
         hosts: removals,
-        allowed: false
+        allowed: false,
       };
       let features = "centerscreen,chrome,modal,resizable=no";
       win.openDialog("chrome://browser/content/preferences/siteDataRemoveSelected.xul", "", features, args);

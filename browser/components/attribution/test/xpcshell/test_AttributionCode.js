@@ -25,7 +25,7 @@ let validAttrCodes = [
   {code: "campaign%3Dgoogle.com",
    parsed: {"campaign": "google.com"}},
   {code: "content%3Dgoogle.com",
-   parsed: {"content": "google.com"}}
+   parsed: {"content": "google.com"}},
 ];
 
 let invalidAttrCodes = [
@@ -38,7 +38,7 @@ let invalidAttrCodes = [
   // Unknown key name
   "source%3Dgoogle.com%26medium%3Dorganic%26large%3Dgeneticallymodified",
   // Empty key name
-  "source%3Dgoogle.com%26medium%3Dorganic%26%3Dgeneticallymodified"
+  "source%3Dgoogle.com%26medium%3Dorganic%26%3Dgeneticallymodified",
 ];
 
 async function writeAttributionFile(data) {

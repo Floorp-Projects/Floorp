@@ -68,7 +68,7 @@ var checkUpdates = async function(aData, aReason = AddonManager.UPDATE_WHEN_PERI
 
   let addonData = { updates: [] };
   let manifestJSON = {
-    addons: { [id]: addonData }
+    addons: { [id]: addonData },
   };
 
 
@@ -134,14 +134,14 @@ add_task(async function checkUpdateMetadata() {
       manifest: {
         version: "1.0",
         applications: { gecko: { strict_max_version: "45" } },
-      }
+      },
     },
     updates: {
       "1.0": {
         applications: { gecko: { strict_min_version: "40",
                                  strict_max_version: "48" } },
-      }
-    }
+      },
+    },
   });
 
   ok(update.compatibilityUpdate, "have compat update");
@@ -163,7 +163,7 @@ add_task(async function checkUpdateToWebExt() {
       "1.1": { },
       "1.2": { },
       "1.3": { "applications": { "gecko": { "strict_min_version": "48" } } },
-    }
+    },
   });
 
   ok(!update.compatibilityUpdate, "have no compat update");
@@ -186,7 +186,7 @@ add_task(async function checkUpdateToRDF() {
     addon: { manifest: { version: "1.0" } },
     updates: {
       "1.1": { addon: { rdf: true, bootstrap: true } },
-    }
+    },
   });
 
   ok(!update.compatibilityUpdate, "have no compat update");

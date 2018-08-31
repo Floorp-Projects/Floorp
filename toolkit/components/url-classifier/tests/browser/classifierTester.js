@@ -19,33 +19,33 @@ var classifierTester = {
     {
       url: "flashallow.example.com/",
       db: "test-flashallow-simple",
-      pref: "urlclassifier.flashAllowTable"
+      pref: "urlclassifier.flashAllowTable",
     },
     {
       url: "exception.flashallow.example.com/",
       db: "testexcept-flashallow-simple",
-      pref: "urlclassifier.flashAllowExceptTable"
+      pref: "urlclassifier.flashAllowExceptTable",
     },
     {
       url: "flashblock.example.com/",
       db: "test-flash-simple",
-      pref: "urlclassifier.flashTable"
+      pref: "urlclassifier.flashTable",
     },
     {
       url: "exception.flashblock.example.com/",
       db: "testexcept-flash-simple",
-      pref: "urlclassifier.flashExceptTable"
+      pref: "urlclassifier.flashExceptTable",
     },
     {
       url: "subdocument.example.com/",
       db: "test-flashsubdoc-simple",
-      pref: "urlclassifier.flashSubDocTable"
+      pref: "urlclassifier.flashSubDocTable",
     },
     {
       url: "exception.subdocument.example.com/",
       db: "testexcept-flashsubdoc-simple",
-      pref: "urlclassifier.flashSubDocExceptTable"
-    }
+      pref: "urlclassifier.flashSubDocExceptTable",
+    },
   ],
 
   setPrefs({setDBs = true, flashBlockEnable = true, flashSetting = classifierTester.ALWAYS_ACTIVATE_PREF_VALUE} = {}) {
@@ -88,98 +88,98 @@ var classifierTester = {
     {
       name: "Unknown domain",
       domains: ["http://example.com"],
-      expectedFlashClassification: "unknown"
+      expectedFlashClassification: "unknown",
     },
     {
       name: "Nested unknown domains",
       domains: ["http://example.com", "http://example.org"],
-      expectedFlashClassification: "unknown"
+      expectedFlashClassification: "unknown",
     },
     {
       name: "Allowed domain",
       domains: ["http://flashallow.example.com"],
-      expectedFlashClassification: "allowed"
+      expectedFlashClassification: "allowed",
     },
     {
       name: "Allowed nested domain",
       domains: ["http://example.com", "http://flashallow.example.com"],
-      expectedFlashClassification: "allowed"
+      expectedFlashClassification: "allowed",
     },
     {
       name: "Subdocument of allowed domain",
       domains: ["http://flashallow.example.com", "http://example.com"],
-      expectedFlashClassification: "allowed"
+      expectedFlashClassification: "allowed",
     },
     {
       name: "Exception to allowed domain",
       domains: ["http://exception.flashallow.example.com"],
-      expectedFlashClassification: "unknown"
+      expectedFlashClassification: "unknown",
     },
     {
       name: "Blocked domain",
       domains: ["http://flashblock.example.com"],
-      expectedFlashClassification: "denied"
+      expectedFlashClassification: "denied",
     },
     {
       name: "Nested blocked domain",
       domains: ["http://example.com", "http://flashblock.example.com"],
-      expectedFlashClassification: "denied"
+      expectedFlashClassification: "denied",
     },
     {
       name: "Subdocument of blocked subdocument",
       domains: ["http://example.com", "http://flashblock.example.com", "http://example.com"],
-      expectedFlashClassification: "denied"
+      expectedFlashClassification: "denied",
     },
     {
       name: "Blocked subdocument nested among in allowed documents",
       domains: ["http://flashallow.example.com", "http://flashblock.example.com", "http://flashallow.example.com"],
-      expectedFlashClassification: "denied"
+      expectedFlashClassification: "denied",
     },
     {
       name: "Exception to blocked domain",
       domains: ["http://exception.flashblock.example.com"],
-      expectedFlashClassification: "unknown"
+      expectedFlashClassification: "unknown",
     },
     {
       name: "Sub-document blocked domain in top-level context",
       domains: ["http://subdocument.example.com"],
-      expectedFlashClassification: "unknown"
+      expectedFlashClassification: "unknown",
     },
     {
       name: "Sub-document blocked domain",
       domains: ["http://example.com", "http://subdocument.example.com"],
-      expectedFlashClassification: "denied"
+      expectedFlashClassification: "denied",
     },
     {
       name: "Sub-document blocked domain in non-Third-Party context",
       domains: ["http://subdocument.example.com", "http://subdocument.example.com"],
-      expectedFlashClassification: "unknown"
+      expectedFlashClassification: "unknown",
     },
     {
       name: "Sub-document blocked domain differing only by scheme",
       domains: ["http://subdocument.example.com", "https://subdocument.example.com"],
-      expectedFlashClassification: "denied"
+      expectedFlashClassification: "denied",
     },
     {
       name: "Sub-document blocked subdocument of an allowed domain",
       domains: ["http://flashallow.example.com", "http://subdocument.example.com"],
-      expectedFlashClassification: "denied"
+      expectedFlashClassification: "denied",
     },
     {
       name: "Subdocument of Sub-document blocked domain",
       domains: ["http://example.com", "http://subdocument.example.com", "http://example.com"],
-      expectedFlashClassification: "denied"
+      expectedFlashClassification: "denied",
     },
     {
       name: "Sub-document exception in top-level context",
       domains: ["http://exception.subdocument.example.com"],
-      expectedFlashClassification: "unknown"
+      expectedFlashClassification: "unknown",
     },
     {
       name: "Sub-document blocked domain exception",
       domains: ["http://example.com", "http://exception.subdocument.example.com"],
-      expectedFlashClassification: "unknown"
-    }
+      expectedFlashClassification: "unknown",
+    },
   ],
 
   // Returns null if this value should not be verified given the combination
@@ -302,7 +302,7 @@ var classifierTester = {
         activated: pluginObj.activated,
         hasRunningPlugin: pluginObj.hasRunningPlugin,
         listed: ("Shockwave Flash" in win.navigator.plugins),
-        flashClassification: doc.documentFlashClassification
+        flashClassification: doc.documentFlashClassification,
       };
     });
   },
@@ -342,6 +342,6 @@ var classifierTester = {
       is(pluginInfo.listed, expectedPluginListed,
          "Plugin's existance in navigator.plugins should match expected");
     }
-  }
+  },
 };
 registerCleanupFunction(classifierTester.unsetPrefs);

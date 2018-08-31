@@ -41,7 +41,7 @@ function test_portal_not_found() {
       Assert.ok(success);
       Assert.equal(attempt, 1);
       gServer.stop(function() { dump("server stop\n"); do_test_finished(); });
-    }
+    },
   };
 
   gCaptivePortalDetector.checkCaptivePortal(kInterfaceName, callback);

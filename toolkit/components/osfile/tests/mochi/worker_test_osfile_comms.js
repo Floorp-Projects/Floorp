@@ -66,7 +66,7 @@ self.onmessage = function(msg) {
           is(cast.contents, i % 256, prefix + "Checking that the contents of the C array were preserved, index " + i);
           cast = cast.increment();
         }
-      }
+      },
     },
     { typename: "OS.File.Error",
       valuedescr: "OS Error",
@@ -83,8 +83,8 @@ self.onmessage = function(msg) {
         } catch (x) {
           ok(false, prefix + ".toString() fails " + x);
         }
-      }
-    }
+      },
+    },
   ];
   samples.forEach(function test(sample) {
     let type = sample.type;

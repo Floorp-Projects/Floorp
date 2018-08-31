@@ -30,7 +30,7 @@ addLoadEvent(function() {
       ["TEXT", " feed ("],
       ["ELEMENT", "img", { "src": "baz.png" }],
       ["TEXT", ")"],
-    ]
+    ],
   ]);
 
   checkNode(doc.getElementById("feedSubtitleText"), [
@@ -42,7 +42,7 @@ addLoadEvent(function() {
       ["TEXT", " subtitle ("],
       ["ELEMENT", "img", { "src": "baz.png" }],
       ["TEXT", ")"],
-    ]
+    ],
   ]);
 
   checkNode(doc.querySelector(".entry").firstChild.firstChild.firstChild, [
@@ -54,7 +54,7 @@ addLoadEvent(function() {
       ["TEXT", " examples ("],
       ["ELEMENT", "img", { "src": "baz.png" }],
       ["TEXT", ")"],
-    ]
+    ],
   ]);
 
   checkNode(doc.querySelectorAll(".entry")[1].firstChild.firstChild.firstChild, [
@@ -66,7 +66,7 @@ addLoadEvent(function() {
       ["TEXT", " examples ("],
       ["ELEMENT", "img", { "src": "baz.png" }],
       ["TEXT", ")"],
-    ]
+    ],
   ]);
 });
 

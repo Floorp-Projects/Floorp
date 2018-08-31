@@ -12,7 +12,7 @@ add_task(async function duration() {
     // These fields should be overwritten with the actual duration
     // measurements.
     outSerializationDuration: null,
-    outExecutionDuration: null
+    outExecutionDuration: null,
   };
   let currentDir = await OS.File.getCurrentDirectory();
   let pathSource = OS.Path.join(currentDir, "test_duration.js");
@@ -49,7 +49,7 @@ add_task(async function duration() {
   let readOptions = {
     // We do not check for |outSerializationDuration| since |Scheduler.post|
     // may not be called whenever |read| is called.
-    outExecutionDuration: null
+    outExecutionDuration: null,
   };
   let contents = await OS.File.read(pathSource, undefined, readOptions);
   testOptions(readOptions, "OS.File.read", ["outExecutionDuration"]);
@@ -58,7 +58,7 @@ add_task(async function duration() {
     // This field should be first initialized with the actual
     // duration measurement then progressively incremented.
     outExecutionDuration: null,
-    tmpPath
+    tmpPath,
   };
   // Note that |contents| cannot be reused after this call since it is detached.
   await OS.File.writeAtomic(pathDest, contents, writeAtomicOptions);
@@ -72,7 +72,7 @@ add_task(async function duration() {
     // This field should now be incremented with the actual duration
     // measurement.
     outSerializationDuration: ARBITRARY_BASE_DURATION,
-    outExecutionDuration: ARBITRARY_BASE_DURATION
+    outExecutionDuration: ARBITRARY_BASE_DURATION,
   };
 
   // We need to copy the object, since having a reference would make this pointless.
@@ -91,7 +91,7 @@ add_task(async function duration() {
   writeAtomicOptions = {
     // We do not check for |outSerializationDuration| since |Scheduler.post|
     // may not be called whenever |writeAtomic| is called.
-    outExecutionDuration: ARBITRARY_BASE_DURATION
+    outExecutionDuration: ARBITRARY_BASE_DURATION,
   };
   writeAtomicOptions.tmpPath = tmpPath;
   backupDuration = Object.assign({}, writeAtomicOptions);

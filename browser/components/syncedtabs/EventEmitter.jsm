@@ -5,7 +5,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "EventEmitter"
+  "EventEmitter",
 ];
 
 // Simple event emitter abstraction for storage objects to use.

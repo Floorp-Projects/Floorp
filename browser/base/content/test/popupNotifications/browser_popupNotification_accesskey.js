@@ -38,6 +38,6 @@ var tests = [
     onHidden(popup) {
       window.removeEventListener("command", commandTriggered, true);
       ok(buttonPressed, "button pressed");
-    }
-  }
+    },
+  },
  ];

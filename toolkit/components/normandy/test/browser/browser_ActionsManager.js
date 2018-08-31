@@ -45,7 +45,7 @@ decorate_task(
     };
     manager.remoteActionSandboxes = {
       "test-remote-action-used": sandboxManagerUsed,
-      "test-remote-action-unused": sandboxManagerUnused
+      "test-remote-action-unused": sandboxManagerUnused,
     };
     manager.localActions = {};
 

@@ -207,7 +207,7 @@ async function simulateDropAndCheck(win, dropTarget, urls) {
         if (succeeded.size == urls.length) {
           list.removeView(view).then(resolve);
         }
-      }
+      },
     };
     list.addView(view).then(function() {
       EventUtils.synthesizeDrop(dropTarget, dropTarget, dragData, "link", win);

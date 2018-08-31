@@ -222,5 +222,5 @@ var StartupPerformance = {
       console.error("StartupPerformance error", ex, ex.stack);
       throw ex;
     }
-  }
+  },
 };

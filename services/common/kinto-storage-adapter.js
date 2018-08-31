@@ -462,8 +462,8 @@ function transactionProxy(collection, preloaded) {
         params: {
           collection_name: collection,
           record_id: record.id,
-          record: JSON.stringify(record)
-        }
+          record: JSON.stringify(record),
+        },
       });
     },
 
@@ -473,8 +473,8 @@ function transactionProxy(collection, preloaded) {
         params: {
           collection_name: collection,
           record_id: record.id,
-          record: JSON.stringify(record)
-        }
+          record: JSON.stringify(record),
+        },
       });
     },
 
@@ -483,15 +483,15 @@ function transactionProxy(collection, preloaded) {
         statement: statements.deleteData,
         params: {
           collection_name: collection,
-          record_id: id
-        }
+          record_id: id,
+        },
       });
     },
 
     get(id) {
       // Gecko JS engine outputs undesired warnings if id is not in preloaded.
       return id in preloaded ? preloaded[id] : undefined;
-    }
+    },
   };
 }
 this.FirefoxAdapter = FirefoxAdapter;

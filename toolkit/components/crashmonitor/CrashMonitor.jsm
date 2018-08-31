@@ -45,7 +45,7 @@ const NOTIFICATIONS = [
   "profile-change-net-teardown",
   "profile-change-teardown",
   "profile-before-change",
-  "sessionstore-final-state-write-complete"
+  "sessionstore-final-state-write-complete",
 ];
 
 var CrashMonitorInternal = {
@@ -122,7 +122,7 @@ var CrashMonitorInternal = {
     })();
 
     return this.previousCheckpoints;
-  }
+  },
 };
 
 var CrashMonitor = {
@@ -214,6 +214,6 @@ var CrashMonitor = {
         Services.obs.removeObserver(this, aTopic);
       }, this);
     }
-  }
+  },
 };
 Object.freeze(this.CrashMonitor);

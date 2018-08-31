@@ -74,8 +74,8 @@ function getDummyServerAndClient() {
         username: "quux",
         usernameField: "user",
         httpRealm: null,
-      }
-    ]
+      },
+    ],
   };
 }
 

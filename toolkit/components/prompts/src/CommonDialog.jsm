@@ -168,7 +168,7 @@ CommonDialog.prototype = {
             this.delayHelper = new EnableDelayHelper({
                 disableDialog: () => this.setButtonsEnabledState(false),
                 enableDialog: () => this.setButtonsEnabledState(true),
-                focusTarget: this.ui.focusTarget
+                focusTarget: this.ui.focusTarget,
             });
         }
 

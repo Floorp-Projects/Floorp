@@ -104,6 +104,6 @@ WebsiteFilter.prototype = {
         channel.cancel(Cr.NS_ERROR_BLOCKED_BY_POLICY);
       }
     }
-  }
+  },
 };
 

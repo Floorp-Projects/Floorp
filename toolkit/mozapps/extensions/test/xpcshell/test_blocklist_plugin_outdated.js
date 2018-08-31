@@ -17,19 +17,19 @@ var PLUGINS = [{
   name: "test_bug514327_outdated",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 }, {
   // Used to trigger the blocklist dialog, which indicates the blocklist has updated
   name: "test_bug514327_1",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 }, {
   // Used to trigger the blocklist dialog, which indicates the blocklist has updated
   name: "test_bug514327_2",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 }].map(opts => new MockPluginTag(opts, opts.enabledState));
 
 mockPluginHost(PLUGINS);

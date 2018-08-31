@@ -60,7 +60,7 @@ function run_test() {
   Assert.equal(Win.dirname("c:a\\\\\\\\b"), "c:a");
   Assert.equal(Win.dirname("c:abc"), "c:");
   let options = {
-    winNoDrive: true
+    winNoDrive: true,
   };
   Assert.equal(Win.dirname("c:a\\b", options), "a");
   Assert.equal(Win.dirname("c:a\\b\\", options), "a\\b");

@@ -8,7 +8,7 @@ add_task(async function test_keyword_bookmarklet() {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmarklet",
-    url: "javascript:'1';"
+    url: "javascript:'1';",
   });
 
   registerCleanupFunction(async function() {

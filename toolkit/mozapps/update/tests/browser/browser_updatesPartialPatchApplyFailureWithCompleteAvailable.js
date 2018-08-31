@@ -14,7 +14,7 @@ add_task(async function testPartialPatchApplyFailureWithCompleteAvailable() {
       button: "secondarybutton",
       cleanup() {
         AppMenuNotifications.removeNotification(/.*/);
-      }
+      },
     },
   ]);
 });

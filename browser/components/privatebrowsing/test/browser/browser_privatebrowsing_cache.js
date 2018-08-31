@@ -48,7 +48,7 @@ function getStorageEntryCount(device, goon) {
     },
     onCacheEntryVisitCompleted() {
       goon(this.entryCount);
-    }
+    },
   };
 
   storage.asyncVisitStorage(visitor, true);

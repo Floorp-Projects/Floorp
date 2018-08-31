@@ -210,7 +210,7 @@ add_task(async function test_filter_file_uris() {
   await PlacesTestUtils.addVisits({
     uri,
     visitDate: Date.now() * 1000,
-    transition: PlacesUtils.history.TRANSITION_LINK
+    transition: PlacesUtils.history.TRANSITION_LINK,
   });
   await visitAddedPromise;
 

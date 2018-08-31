@@ -15,9 +15,9 @@ add_task(async function test() {
   let state = { windows: [
     {
       tabs: [
-        { entries: [{ url: "http://example.org#0", triggeringPrincipal_base64 }], extData: { "uniq": r() } }
+        { entries: [{ url: "http://example.org#0", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
       ],
-      selected: 1
+      selected: 1,
     },
     {
       tabs: [
@@ -26,10 +26,10 @@ add_task(async function test() {
         { entries: [{ url: "http://example.com#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
         { entries: [{ url: "http://example.com#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
         { entries: [{ url: "http://example.com#5", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#6", triggeringPrincipal_base64 }], extData: { "uniq": r() } }
+        { entries: [{ url: "http://example.com#6", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
       ],
-      selected: 4
-    }
+      selected: 4,
+    },
   ] };
   let numTabs = state.windows[0].tabs.length + state.windows[1].tabs.length;
 
