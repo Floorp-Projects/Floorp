@@ -33,3 +33,14 @@ function getDebugTargetCollapsibilities() {
   return map;
 }
 exports.getDebugTargetCollapsibilities = getDebugTargetCollapsibilities;
+
+/**
+ * @param collapsibilities - Same format to getDebugTargetCollapsibilities.
+ */
+function setDebugTargetCollapsibilities(collapsibilities) {
+  for (const key of Object.values(DEBUG_TARGET_PANE)) {
+    const isCollapsed = collapsibilities.get(key);
+    Services.prefs.setBoolPref(PREF_PREFIX + key, isCollapsed);
+  }
+}
+exports.setDebugTargetCollapsibilities = setDebugTargetCollapsibilities;
