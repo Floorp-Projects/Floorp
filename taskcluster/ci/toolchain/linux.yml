@@ -308,7 +308,7 @@ linux64-binutils:
         toolchain-artifact: public/build/binutils.tar.xz
     fetches:
         fetch:
-            - binutils-2.28.1
+            - binutils-2.31.1
 
 linux64-cctools-port:
     description: "cctools-port toolchain build"
