@@ -9,6 +9,11 @@ const {
   REQUEST_EXTENSIONS_SUCCESS,
 } = require("../constants");
 
+const {
+  getExtensionUuid,
+  parseFileUri
+} = require("devtools/client/aboutdebugging/modules/addon");
+
 /**
  * This middleware converts extensions object that get from DebuggerClient.listAddons()
  * to data which is used in DebugTargetItem.
@@ -33,16 +38,7 @@ function getFilePath(extension) {
     return null;
   }
 
-  // Strip a leading slash from Windows drive letter URIs.
-  // file:///home/foo ~> /home/foo
-  // file:///C:/foo ~> C:/foo
-  const windowsRegex = /^file:\/\/\/([a-zA-Z]:\/.*)/;
-
-  if (windowsRegex.test(extension.url)) {
-    return windowsRegex.exec(extension.url)[1];
-  }
-
-  return extension.url.slice("file://".length);
+  return parseFileUri(extension.url);
 }
 
 function toComponentData(extensions) {
@@ -51,7 +47,7 @@ function toComponentData(extensions) {
     const { actor, iconURL, id, manifestURL, name } = extension;
     const icon = iconURL || "chrome://mozapps/skin/extensions/extensionGeneric.svg";
     const location = getFilePath(extension);
-    const uuid = manifestURL ? /moz-extension:\/\/([^/]*)/.exec(manifestURL)[1] : null;
+    const uuid = getExtensionUuid(extension);
     return {
       name,
       icon,
