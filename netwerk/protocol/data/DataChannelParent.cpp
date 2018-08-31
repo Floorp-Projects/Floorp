@@ -39,7 +39,7 @@ DataChannelParent::NotifyTrackingProtectionDisabled()
 }
 
 NS_IMETHODIMP
-DataChannelParent::NotifyTrackingCookieBlocked()
+DataChannelParent::NotifyTrackingCookieBlocked(uint32_t aRejectedReason)
 {
     // Nothing to do.
     return NS_OK;
