@@ -1302,7 +1302,7 @@ GeckoDriver.prototype.getIdForBrowser = function(browser) {
     return winId;
   }
   return null;
-},
+};
 
 /**
  * Get the current window's handle. On desktop this typically corresponds

@@ -26,8 +26,6 @@ class GeckoRuntimeRunner(BaseRunner):
 
         # allows you to run an instance of Firefox separately from any other instances
         self.env['MOZ_NO_REMOTE'] = '1'
-        # keeps Firefox attached to the terminal window after it starts
-        self.env['NO_EM_RESTART'] = '1'
 
         # Disable crash reporting dialogs that interfere with debugging
         self.env['GNOME_DISABLE_CRASH_DIALOG'] = '1'

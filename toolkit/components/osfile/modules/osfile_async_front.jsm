@@ -1456,7 +1456,7 @@ var Barriers = {
 };
 
 function setupShutdown(phaseName) {
-  Barriers[phaseName] = new AsyncShutdown.Barrier(`OS.File: Waiting for clients before ${phaseName}`),
+  Barriers[phaseName] = new AsyncShutdown.Barrier(`OS.File: Waiting for clients before ${phaseName}`);
   File[phaseName] = Barriers[phaseName].client;
 
   // Auto-flush OS.File during `phaseName`. This ensures that any I/O

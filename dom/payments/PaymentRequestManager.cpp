@@ -619,7 +619,6 @@ PaymentRequestManager::ChangeShippingAddress(PaymentRequest* aRequest,
                                          aAddress.dependentLocality(),
                                          aAddress.postalCode(),
                                          aAddress.sortingCode(),
-                                         aAddress.languageCode(),
                                          aAddress.organization(),
                                          aAddress.recipient(),
                                          aAddress.phone());

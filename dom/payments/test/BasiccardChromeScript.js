@@ -24,7 +24,6 @@ billingAddress.init("USA",              // country
                      "",                 // dependent locality
                      "94066",            // postal code
                      "123456",           // sorting code
-                     "en",               // language code
                      "",                 // organization
                      "Bill A. Pacheco",  // recipient
                      "+14344413879"); // phone

@@ -973,7 +973,6 @@ PaymentRequest::UpdateShippingAddress(const nsAString& aCountry,
                                       const nsAString& aDependentLocality,
                                       const nsAString& aPostalCode,
                                       const nsAString& aSortingCode,
-                                      const nsAString& aLanguageCode,
                                       const nsAString& aOrganization,
                                       const nsAString& aRecipient,
                                       const nsAString& aPhone)
@@ -981,11 +980,11 @@ PaymentRequest::UpdateShippingAddress(const nsAString& aCountry,
   nsTArray<nsString> emptyArray;
   mShippingAddress = new PaymentAddress(GetOwner(), aCountry, emptyArray,
                                         aRegion, aCity, aDependentLocality,
-                                        aPostalCode, aSortingCode, aLanguageCode,
+                                        aPostalCode, aSortingCode,
                                         EmptyString(), EmptyString(), EmptyString());
   mFullShippingAddress = new PaymentAddress(GetOwner(), aCountry, aAddressLine,
                                             aRegion, aCity, aDependentLocality,
-                                            aPostalCode, aSortingCode, aLanguageCode,
+                                            aPostalCode, aSortingCode,
                                             aOrganization, aRecipient, aPhone);
   // Fire shippingaddresschange event
   return DispatchUpdateEvent(NS_LITERAL_STRING("shippingaddresschange"));
