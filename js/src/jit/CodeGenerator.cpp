@@ -10425,6 +10425,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
                                                allTypes);
             } else {
                 cx->recoverFromOutOfMemory();
+                js_delete(allTypes);
             }
         }
 
