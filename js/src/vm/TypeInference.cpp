@@ -715,9 +715,11 @@ class TypeSetRef : public BufferableRef
 void
 ConstraintTypeSet::postWriteBarrier(JSContext* cx, Type type)
 {
-    if (type.isSingletonUnchecked() && IsInsideNursery(type.singletonNoBarrier())) {
-        cx->runtime()->gc.storeBuffer().putGeneric(TypeSetRef(cx->zone(), this));
-        cx->runtime()->gc.storeBuffer().setShouldCancelIonCompilations();
+    if (type.isSingletonUnchecked()) {
+        if (gc::StoreBuffer* sb = type.singletonNoBarrier()->storeBuffer()) {
+            sb->putGeneric(TypeSetRef(cx->zone(), this));
+            sb->setShouldCancelIonCompilations();
+        }
     }
 }
 
