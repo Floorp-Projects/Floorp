@@ -258,10 +258,12 @@ public:
 
   // Notify Scroll observers when an async panning/zooming transform
   // has started being applied
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void NotifyAsyncPanZoomStarted();
 
   // Notify Scroll observers when an async panning/zooming transform
   // is no longer applied
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void NotifyAsyncPanZoomStopped();
 
   void SetInFrameSwap(bool aInSwap)

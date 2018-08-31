@@ -737,6 +737,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
   // we don't want to notify the listeners during JS GC (they could be
   // in JS!).
   tmp->mNotifyAutoCopy = false;
+  tmp->StopNotifyingAccessibleCaretEventHub();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionListeners)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedRange)
   tmp->RemoveAllRanges(IgnoreErrors());
@@ -2126,7 +2127,8 @@ Selection::AddRangeJS(nsRange& aRange, ErrorResult& aRv)
 void
 Selection::AddRange(nsRange& aRange, ErrorResult& aRv)
 {
-  return AddRangeInternal(aRange, GetParentObject(), aRv);
+  RefPtr<nsIDocument> document(GetParentObject());
+  return AddRangeInternal(aRange, document, aRv);
 }
 
 void
@@ -3495,6 +3497,11 @@ Selection::NotifySelectionListeners()
 
   if (mNotifyAutoCopy) {
     AutoCopyListener::OnSelectionChange(doc, *this, reason);
+  }
+
+  if (mAccessibleCaretEventHub) {
+    RefPtr<AccessibleCaretEventHub> hub(mAccessibleCaretEventHub);
+    hub->OnSelectionChange(doc, this, reason);
   }
 
   for (auto& listener : selectionListeners) {

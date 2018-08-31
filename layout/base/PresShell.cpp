@@ -68,7 +68,7 @@
 #include "nsIPermissionManager.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsCaret.h"
-#include "AccessibleCaretEventHub.h"
+#include "mozilla/AccessibleCaretEventHub.h"
 #include "nsFrameManager.h"
 #include "nsXPCOM.h"
 #include "nsILayoutHistoryState.h"
