@@ -149,32 +149,36 @@ class nsDisplayRemote : public nsDisplayItem
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
 
 public:
-  nsDisplayRemote(nsDisplayListBuilder* aBuilder, nsSubDocumentFrame* aFrame,
-                  RenderFrameParent* aRemoteFrame);
+  nsDisplayRemote(nsDisplayListBuilder* aBuilder,
+                  nsSubDocumentFrame* aFrame);
 
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager,
-                                   const ContainerLayerParameters& aParameters) override
-  { return mozilla::LAYER_ACTIVE_FORCE; }
+  bool HasDeletedFrame() const override;
 
-  virtual already_AddRefed<Layer>
+  LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                           LayerManager* aManager,
+                           const ContainerLayerParameters& aParameters) override
+  {
+    return mozilla::LAYER_ACTIVE_FORCE;
+  }
+
+  already_AddRefed<Layer>
   BuildLayer(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
              const ContainerLayerParameters& aContainerParameters) override;
 
-  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                       mozilla::wr::IpcResourceUpdateQueue& aResources,
-                                       const StackingContextHelper& aSc,
-                                       mozilla::layers::WebRenderLayerManager* aManager,
-                                       nsDisplayListBuilder* aDisplayListBuilder) override;
-  virtual bool UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
-                                mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
-
-  mozilla::layers::LayersId GetRemoteLayersId() const;
+  bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                               mozilla::wr::IpcResourceUpdateQueue& aResources,
+                               const StackingContextHelper& aSc,
+                               mozilla::layers::WebRenderLayerManager* aManager,
+                               nsDisplayListBuilder* aDisplayListBuilder) override;
+  bool UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
+                        mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
 
   NS_DISPLAY_DECL_NAME("Remote", TYPE_REMOTE)
 
 private:
-  RenderFrameParent* mRemoteFrame;
+  mozilla::layers::LayersId GetRemoteLayersId() const;
+  RenderFrameParent* GetRenderFrameParent() const;
+
   mozilla::LayoutDeviceIntPoint mOffset;
   mozilla::layers::EventRegionsOverride mEventRegionsOverride;
 };
