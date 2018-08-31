@@ -9,10 +9,10 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
-#ifdef ANDROID
-#include "mozilla/IHistory.h"
-#else
+#if defined(MOZ_PLACES)
 #include "mozilla/places/History.h"
+#else
+#include "mozilla/IHistory.h"
 #endif
 #include "nsIURL.h"
 #include "nsIURIMutator.h"
@@ -35,7 +35,7 @@
 namespace mozilla {
 namespace dom {
 
-#ifndef ANDROID
+#if defined(MOZ_PLACES)
 using places::History;
 #endif
 
@@ -381,8 +381,10 @@ Link::LinkState() const
     if (mHistory && hrefURI) {
 #ifdef ANDROID
       nsCOMPtr<IHistory> history = services::GetHistoryService();
-#else
+#elseif defined(MOZ_PLACES)
       History* history = History::GetService();
+#else
+      nsCOMPtr<IHistory> history;
 #endif
       if (history) {
         nsresult rv = history->RegisterVisitedCallback(hrefURI, self);
@@ -846,8 +848,10 @@ Link::UnregisterFromHistory()
   if (mHistory && mCachedURI) {
 #ifdef ANDROID
     nsCOMPtr<IHistory> history = services::GetHistoryService();
-#else
+#elseif defined(MOZ_PLACES)
     History* history = History::GetService();
+#else
+    nsCOMPtr<IHistory> history;
 #endif
     if (history) {
       nsresult rv = history->UnregisterVisitedCallback(mCachedURI, this);
