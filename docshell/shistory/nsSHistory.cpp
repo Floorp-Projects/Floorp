@@ -727,7 +727,7 @@ nsSHistory::GetEntryAtIndex(int32_t aIndex, bool aModifyIndex,
 }
 
 /* Get the transaction at a given index */
-nsresult
+NS_IMETHODIMP
 nsSHistory::GetTransactionAtIndex(int32_t aIndex, nsISHTransaction** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -856,13 +856,11 @@ nsSHistory::PurgeHistory(int32_t aNumEntries)
   // Remove the first `aNumEntries` entries.
   mTransactions.RemoveElementsAt(0, aNumEntries);
 
+  // Adjust the indices, but don't let them go below -1.
   mIndex -= aNumEntries;
-
-  // Now if we were not at the end of the history, mIndex could have
-  // become far too negative.  If so, just set it to -1.
-  if (mIndex < -1) {
-    mIndex = -1;
-  }
+  mIndex = std::max(mIndex, -1);
+  mRequestedIndex -= aNumEntries;
+  mRequestedIndex = std::max(mRequestedIndex, -1);
 
   NOTIFY_LISTENERS(OnLengthChanged, (Length()));
   NOTIFY_LISTENERS(OnIndexChanged, (mIndex))

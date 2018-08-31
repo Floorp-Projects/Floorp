@@ -20,7 +20,6 @@
 #include "Logging.h"
 #endif
 
-#include "nsIDOMXULDescriptionElement.h"
 #include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
 #include "nsString.h"

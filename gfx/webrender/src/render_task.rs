@@ -341,7 +341,7 @@ impl RenderTask {
 
     pub fn new_picture(
         location: RenderTaskLocation,
-        unclipped_size: DeviceIntSize,
+        unclipped_size: DeviceSize,
         prim_index: PrimitiveIndex,
         content_origin: DeviceIntPoint,
         children: Vec<RenderTaskId>,
@@ -355,8 +355,8 @@ impl RenderTask {
 
         render_task_sanity_check(&size);
 
-        let can_merge = size.width >= unclipped_size.width &&
-                        size.height >= unclipped_size.height;
+        let can_merge = size.width as f32 >= unclipped_size.width &&
+                        size.height as f32 >= unclipped_size.height;
 
         RenderTask {
             location,
