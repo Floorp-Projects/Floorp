@@ -9,6 +9,8 @@ import android.widget.FrameLayout
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.lang.ClassCastException
@@ -28,6 +30,30 @@ class EngineViewTest {
     fun `asView method fails if class is not a view`() {
         val engineView = BrokenEngineView()
         engineView.asView()
+    }
+
+    @Test
+    fun testLifecycleObserver() {
+        val engineView = spy(createDummyEngineView(RuntimeEnvironment.application))
+        val observer = LifecycleObserver(engineView)
+
+        observer.onCreate()
+        verify(engineView).onCreate()
+
+        observer.onDestroy()
+        verify(engineView).onDestroy()
+
+        observer.onStart()
+        verify(engineView).onStart()
+
+        observer.onStop()
+        verify(engineView).onStop()
+
+        observer.onPause()
+        verify(engineView).onPause()
+
+        observer.onResume()
+        verify(engineView).onResume()
     }
 
     private fun createDummyEngineView(context: Context): EngineView = DummyEngineView(context)

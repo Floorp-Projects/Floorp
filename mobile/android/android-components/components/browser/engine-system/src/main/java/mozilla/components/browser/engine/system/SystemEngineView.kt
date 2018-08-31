@@ -36,6 +36,7 @@ import java.net.URI
 /**
  * WebView-based implementation of EngineView.
  */
+@Suppress("TooManyFunctions")
 class SystemEngineView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -76,6 +77,20 @@ class SystemEngineView @JvmOverloads constructor(
     override fun onLongClick(view: View?): Boolean {
         val result = currentWebView.hitTestResult
         return handleLongClick(result.type, result.extra)
+    }
+
+    override fun onPause() {
+        currentWebView.onPause()
+        currentWebView.pauseTimers()
+    }
+
+    override fun onResume() {
+        currentWebView.onResume()
+        currentWebView.resumeTimers()
+    }
+
+    override fun onDestroy() {
+        currentWebView.destroy()
     }
 
     private fun createWebView(context: Context): WebView {

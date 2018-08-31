@@ -4,6 +4,9 @@
 
 package mozilla.components.concept.engine
 
+import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.LifecycleObserver
+import android.arch.lifecycle.OnLifecycleEvent
 import android.view.View
 
 /**
@@ -20,4 +23,76 @@ interface EngineView {
      * Render the content of the given session.
      */
     fun render(session: EngineSession)
+
+    /**
+     * To be called in response to [Lifecycle.Event.ON_RESUME]. See [EngineView]
+     * implementations for details.
+     */
+    fun onResume() = Unit
+
+    /**
+     * To be called in response to [Lifecycle.Event.ON_PAUSE]. See [EngineView]
+     * implementations for details.
+     */
+    fun onPause() = Unit
+
+    /**
+     * To be called in response to [Lifecycle.Event.ON_START]. See [EngineView]
+     * implementations for details.
+     */
+    fun onStart() = Unit
+
+    /**
+     * To be called in response to [Lifecycle.Event.ON_STOP]. See [EngineView]
+     * implementations for details.
+     */
+    fun onStop() = Unit
+
+    /**
+     * To be called in response to [Lifecycle.Event.ON_CREATE]. See [EngineView]
+     * implementations for details.
+     */
+    fun onCreate() = Unit
+
+    /**
+     * To be called in response to [Lifecycle.Event.ON_DESTROY]. See [EngineView]
+     * implementations for details.
+     */
+    fun onDestroy() = Unit
+}
+
+/**
+ * [LifecycleObserver] which dispatches lifecycle events to an [EngineView].
+ */
+class LifecycleObserver(val engineView: EngineView) : LifecycleObserver {
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+    fun onPause() {
+        engineView.onPause()
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    fun onResume() {
+        engineView.onResume()
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun onStart() {
+        engineView.onStart()
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun onStop() {
+        engineView.onStop()
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
+    fun onCreate() {
+        engineView.onCreate()
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+    fun onDestroy() {
+        engineView.onDestroy()
+    }
 }

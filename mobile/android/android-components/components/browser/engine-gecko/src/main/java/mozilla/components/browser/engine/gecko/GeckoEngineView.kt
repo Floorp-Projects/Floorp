@@ -38,4 +38,12 @@ class GeckoEngineView @JvmOverloads constructor(
             currentGeckoView.session = internalSession.geckoSession
         }
     }
+
+    override fun onStart() {
+        currentGeckoView.session.setActive(true)
+    }
+
+    override fun onStop() {
+        currentGeckoView.session.setActive(false)
+    }
 }

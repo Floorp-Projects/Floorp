@@ -314,4 +314,22 @@ class SystemEngineViewTest {
         listener.onFindResultReceived(0, 1, true)
         assertTrue(observerNotified)
     }
+
+    @Test
+    fun testLifecycleMethods() {
+        val webView = mock(WebView::class.java)
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.currentWebView = webView
+
+        engineView.onPause()
+        verify(webView).onPause()
+        verify(webView).pauseTimers()
+
+        engineView.onResume()
+        verify(webView).onResume()
+        verify(webView).resumeTimers()
+
+        engineView.onDestroy()
+        verify(webView).destroy()
+    }
 }
