@@ -289,7 +289,7 @@ impl SpatialNode {
                             state.coordinate_system_relative_offset.y,
                             0.0,
                         ),
-                        transform: *info.resolved_transform.to_transform(),
+                        transform: relative_transform,
                         parent: Some(state.current_coordinate_system_id),
                     };
                     state.current_coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);

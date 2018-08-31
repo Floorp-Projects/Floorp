@@ -732,10 +732,7 @@ impl<'a> DisplayListFlattener<'a> {
                 unreachable!("Should have returned in parent method.")
             }
             SpecificDisplayItem::PushShadow(shadow) => {
-                let mut prim_info = prim_info.clone();
-                prim_info.rect = LayoutRect::zero();
-                self
-                    .push_shadow(shadow, clip_and_scroll, &prim_info);
+                self.push_shadow(shadow, clip_and_scroll);
             }
             SpecificDisplayItem::PopAllShadows => {
                 self.pop_all_shadows();
@@ -1014,7 +1011,7 @@ impl<'a> DisplayListFlattener<'a> {
             let prim_index = self.prim_store.add_primitive(
                 &LayoutRect::zero(),
                 &max_clip,
-                is_backface_visible,
+                true,
                 clip_chain_id,
                 spatial_node_index,
                 None,
@@ -1064,7 +1061,7 @@ impl<'a> DisplayListFlattener<'a> {
             let src_prim_index = self.prim_store.add_primitive(
                 &LayoutRect::zero(),
                 &max_clip,
-                is_backface_visible,
+                true,
                 clip_chain_id,
                 spatial_node_index,
                 None,
@@ -1095,7 +1092,7 @@ impl<'a> DisplayListFlattener<'a> {
             let src_prim_index = self.prim_store.add_primitive(
                 &LayoutRect::zero(),
                 &max_clip,
-                is_backface_visible,
+                true,
                 clip_chain_id,
                 spatial_node_index,
                 None,
@@ -1153,7 +1150,7 @@ impl<'a> DisplayListFlattener<'a> {
         let sc_prim_index = self.prim_store.add_primitive(
             &LayoutRect::zero(),
             &max_clip,
-            is_backface_visible,
+            true,
             clip_chain_id,
             spatial_node_index,
             None,
@@ -1363,7 +1360,6 @@ impl<'a> DisplayListFlattener<'a> {
         &mut self,
         shadow: Shadow,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayoutPrimitiveInfo,
     ) {
         let pipeline_id = self.sc_stack.last().unwrap().pipeline_id;
         let max_clip = LayoutRect::max_rect();
@@ -1397,7 +1393,7 @@ impl<'a> DisplayListFlattener<'a> {
         let shadow_prim_index = self.prim_store.add_primitive(
             &LayoutRect::zero(),
             &max_clip,
-            info.is_backface_visible,
+            true,
             clip_and_scroll.clip_chain_id,
             clip_and_scroll.spatial_node_index,
             None,
