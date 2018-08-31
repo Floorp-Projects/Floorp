@@ -9,6 +9,7 @@
 #include "HalImpl.h"
 #include "HalLog.h"
 #include "HalSandbox.h"
+#include "HalWakeLockInternal.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
@@ -57,6 +58,8 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace hal {
 
+static bool sInitialized = false;
+
 mozilla::LogModule *
 GetHalLog()
 {
@@ -95,10 +98,35 @@ WindowIsActive(nsPIDOMWindowInner* aWindow)
 
 StaticAutoPtr<WindowIdentifier::IDArrayType> gLastIDToVibrate;
 
-void InitLastIDToVibrate()
+static void
+RecordLastIDToVibrate(const WindowIdentifier& aId)
 {
-  gLastIDToVibrate = new WindowIdentifier::IDArrayType();
-  ClearOnShutdown(&gLastIDToVibrate);
+  if (!InSandbox()) {
+    *gLastIDToVibrate = aId.AsArray();
+  }
+}
+
+static bool
+MayCancelVibration(const WindowIdentifier& aId)
+{
+  // Although only active windows may start vibrations, a window may
+  // cancel its own vibration even if it's no longer active.
+  //
+  // After a window is marked as inactive, it sends a CancelVibrate
+  // request.  We want this request to cancel a playing vibration
+  // started by that window, so we certainly don't want to reject the
+  // cancellation request because the window is now inactive.
+  //
+  // But it could be the case that, after this window became inactive,
+  // some other window came along and started a vibration.  We don't
+  // want this window's cancellation request to cancel that window's
+  // actively-playing vibration!
+  //
+  // To solve this problem, we keep track of the id of the last window
+  // to start a vibration, and only accepts cancellation requests from
+  // the same window.  All other cancellation requests are ignored.
+
+  return InSandbox() || (*gLastIDToVibrate == aId.AsArray());
 }
 
 } // namespace
@@ -125,12 +153,7 @@ Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier &id)
     return;
   }
 
-  if (!InSandbox()) {
-    if (!gLastIDToVibrate) {
-      InitLastIDToVibrate();
-    }
-    *gLastIDToVibrate = id.AsArray();
-  }
+  RecordLastIDToVibrate(id);
 
   // Don't forward our ID if we are not in the sandbox, because hal_impl
   // doesn't need it, and we don't want it to be tempted to read it.  The
@@ -149,24 +172,7 @@ CancelVibrate(const WindowIdentifier &id)
 {
   AssertMainThread();
 
-  // Although only active windows may start vibrations, a window may
-  // cancel its own vibration even if it's no longer active.
-  //
-  // After a window is marked as inactive, it sends a CancelVibrate
-  // request.  We want this request to cancel a playing vibration
-  // started by that window, so we certainly don't want to reject the
-  // cancellation request because the window is now inactive.
-  //
-  // But it could be the case that, after this window became inactive,
-  // some other window came along and started a vibration.  We don't
-  // want this window's cancellation request to cancel that window's
-  // actively-playing vibration!
-  //
-  // To solve this problem, we keep track of the id of the last window
-  // to start a vibration, and only accepts cancellation requests from
-  // the same window.  All other cancellation requests are ignored.
-
-  if (InSandbox() || (gLastIDToVibrate && *gLastIDToVibrate == id.AsArray())) {
+  if (MayCancelVibration(id)) {
     // Don't forward our ID if we are not in the sandbox, because hal_impl
     // doesn't need it, and we don't want it to be tempted to read it.  The
     // empty identifier will assert if it's used.
@@ -179,52 +185,40 @@ class ObserversManager
 {
 public:
   void AddObserver(Observer<InfoType>* aObserver) {
-    if (!mObservers) {
-      mObservers = new mozilla::ObserverList<InfoType>();
-    }
+    mObservers.AddObserver(aObserver);
 
-    mObservers->AddObserver(aObserver);
-
-    if (mObservers->Length() == 1) {
+    if (mObservers.Length() == 1) {
       EnableNotifications();
     }
   }
 
   void RemoveObserver(Observer<InfoType>* aObserver) {
-    bool removed = mObservers && mObservers->RemoveObserver(aObserver);
+    bool removed = mObservers.RemoveObserver(aObserver);
     if (!removed) {
       return;
     }
 
-    if (mObservers->Length() == 0) {
+    if (mObservers.Length() == 0) {
       DisableNotifications();
-
       OnNotificationsDisabled();
-
-      delete mObservers;
-      mObservers = nullptr;
     }
   }
 
   void BroadcastInformation(const InfoType& aInfo) {
-    // It is possible for mObservers to be nullptr here on some platforms,
-    // because a call to BroadcastInformation gets queued up asynchronously
-    // while RemoveObserver is running (and before the notifications are
-    // disabled). The queued call can then get run after mObservers has
-    // been nulled out. See bug 757025.
-    if (!mObservers) {
-      return;
-    }
-    mObservers->Broadcast(aInfo);
+    mObservers.Broadcast(aInfo);
   }
 
 protected:
+  ~ObserversManager() {
+    MOZ_ASSERT(mObservers.Length() == 0);
+  }
+
   virtual void EnableNotifications() = 0;
   virtual void DisableNotifications() = 0;
   virtual void OnNotificationsDisabled() {}
 
 private:
-  mozilla::ObserverList<InfoType>* mObservers;
+  mozilla::ObserverList<InfoType> mObservers;
 };
 
 template <class InfoType>
@@ -262,7 +256,8 @@ private:
   bool                    mHasValidCache;
 };
 
-class BatteryObserversManager : public CachingObserversManager<BatteryInformation>
+class BatteryObserversManager final
+  : public CachingObserversManager<BatteryInformation>
 {
 protected:
   void EnableNotifications() override {
@@ -278,15 +273,8 @@ protected:
   }
 };
 
-static BatteryObserversManager&
-BatteryObservers()
-{
-  static BatteryObserversManager sBatteryObservers;
-  AssertMainThread();
-  return sBatteryObservers;
-}
-
-class NetworkObserversManager : public CachingObserversManager<NetworkInformation>
+class NetworkObserversManager final
+  : public CachingObserversManager<NetworkInformation>
 {
 protected:
   void EnableNotifications() override {
@@ -302,15 +290,8 @@ protected:
   }
 };
 
-static NetworkObserversManager&
-NetworkObservers()
-{
-  static NetworkObserversManager sNetworkObservers;
-  AssertMainThread();
-  return sNetworkObservers;
-}
-
-class WakeLockObserversManager : public ObserversManager<WakeLockInformation>
+class WakeLockObserversManager final
+  : public ObserversManager<WakeLockInformation>
 {
 protected:
   void EnableNotifications() override {
@@ -322,15 +303,8 @@ protected:
   }
 };
 
-static WakeLockObserversManager&
-WakeLockObservers()
-{
-  static WakeLockObserversManager sWakeLockObservers;
-  AssertMainThread();
-  return sWakeLockObservers;
-}
-
-class ScreenConfigurationObserversManager : public CachingObserversManager<ScreenConfiguration>
+class ScreenConfigurationObserversManager final
+  : public CachingObserversManager<ScreenConfiguration>
 {
 protected:
   void EnableNotifications() override {
@@ -346,27 +320,49 @@ protected:
   }
 };
 
-static ScreenConfigurationObserversManager&
-ScreenConfigurationObservers()
-{
+typedef mozilla::ObserverList<SensorData> SensorObserverList;
+StaticAutoPtr<SensorObserverList> sSensorObservers[NUM_SENSOR_TYPE];
+
+static SensorObserverList*
+GetSensorObservers(SensorType sensor_type) {
   AssertMainThread();
-  static ScreenConfigurationObserversManager sScreenConfigurationObservers;
-  return sScreenConfigurationObservers;
+  MOZ_ASSERT(sensor_type < NUM_SENSOR_TYPE);
+
+  if (!sSensorObservers[sensor_type]) {
+    sSensorObservers[sensor_type] = new SensorObserverList();
+  }
+
+  return sSensorObservers[sensor_type];
 }
 
-#define MOZ_IMPL_HAL_OBSERVER(name_)                    \
-void                                                    \
-Register##name_##Observer(name_##Observer* aObserver)   \
-{                                                       \
-  AssertMainThread();                                   \
-  name_##Observers().AddObserver(aObserver);            \
-}                                                       \
-                                                        \
-void                                                    \
-Unregister##name_##Observer(name_##Observer* aObserver) \
-{                                                       \
-  AssertMainThread();                                   \
-  name_##Observers().RemoveObserver(aObserver);         \
+#define MOZ_IMPL_HAL_OBSERVER(name_)                          \
+StaticAutoPtr<name_##ObserversManager> s##name_##Observers;   \
+                                                              \
+static name_##ObserversManager*                               \
+name_##Observers()                                            \
+{                                                             \
+  AssertMainThread();                                         \
+                                                              \
+  if (!s##name_##Observers) {                                 \
+    MOZ_ASSERT(sInitialized);                                 \
+    s##name_##Observers = new name_##ObserversManager();      \
+  }                                                           \
+                                                              \
+  return s##name_##Observers;                                 \
+}                                                             \
+                                                              \
+void                                                          \
+Register##name_##Observer(name_##Observer* aObserver)         \
+{                                                             \
+  AssertMainThread();                                         \
+  name_##Observers()->AddObserver(aObserver);                 \
+}                                                             \
+                                                              \
+void                                                          \
+Unregister##name_##Observer(name_##Observer* aObserver)       \
+{                                                             \
+  AssertMainThread();                                         \
+  name_##Observers()->RemoveObserver(aObserver);              \
 }
 
 MOZ_IMPL_HAL_OBSERVER(Battery)
@@ -374,16 +370,14 @@ MOZ_IMPL_HAL_OBSERVER(Battery)
 void
 GetCurrentBatteryInformation(BatteryInformation* aInfo)
 {
-  AssertMainThread();
-  *aInfo = BatteryObservers().GetCurrentInformation();
+  *aInfo = BatteryObservers()->GetCurrentInformation();
 }
 
 void
 NotifyBatteryChange(const BatteryInformation& aInfo)
 {
-  AssertMainThread();
-  BatteryObservers().CacheInformation(aInfo);
-  BatteryObservers().BroadcastCachedInformation();
+  BatteryObservers()->CacheInformation(aInfo);
+  BatteryObservers()->BroadcastCachedInformation();
 }
 
 void
@@ -398,78 +392,30 @@ DisableSensorNotifications(SensorType aSensor) {
   PROXY_IF_SANDBOXED(DisableSensorNotifications(aSensor));
 }
 
-typedef mozilla::ObserverList<SensorData> SensorObserverList;
-static SensorObserverList* gSensorObservers = nullptr;
-
-static SensorObserverList &
-GetSensorObservers(SensorType sensor_type) {
-  MOZ_ASSERT(sensor_type < NUM_SENSOR_TYPE);
-
-  if(!gSensorObservers) {
-    gSensorObservers = new SensorObserverList[NUM_SENSOR_TYPE];
-  }
-  return gSensorObservers[sensor_type];
-}
-
 void
 RegisterSensorObserver(SensorType aSensor, ISensorObserver *aObserver) {
-  SensorObserverList &observers = GetSensorObservers(aSensor);
+  SensorObserverList* observers = GetSensorObservers(aSensor);
 
-  AssertMainThread();
-
-  observers.AddObserver(aObserver);
-  if(observers.Length() == 1) {
+  observers->AddObserver(aObserver);
+  if (observers->Length() == 1) {
     EnableSensorNotifications(aSensor);
   }
 }
 
 void
 UnregisterSensorObserver(SensorType aSensor, ISensorObserver *aObserver) {
-  AssertMainThread();
-
-  if (!gSensorObservers) {
-    HAL_ERR("Un-registering a sensor when none have been registered");
-    return;
-  }
-
-  SensorObserverList &observers = GetSensorObservers(aSensor);
-  if (!observers.RemoveObserver(aObserver) || observers.Length() > 0) {
+  SensorObserverList* observers = GetSensorObservers(aSensor);
+  if (!observers->RemoveObserver(aObserver) || observers->Length() > 0) {
     return;
   }
   DisableSensorNotifications(aSensor);
-
-  for (int i = 0; i < NUM_SENSOR_TYPE; i++) {
-    if (gSensorObservers[i].Length() > 0) {
-      return;
-    }
-  }
-
-  // We want to destroy gSensorObservers if all observer lists are
-  // empty, but we have to defer the deallocation via a runnable to
-  // mainthread (since we may be inside NotifySensorChange()/Broadcast()
-  // when it calls UnregisterSensorObserver()).
-  SensorObserverList* sensorlists = gSensorObservers;
-  gSensorObservers = nullptr;
-
-  // Unlike DispatchToMainThread, DispatchToCurrentThread doesn't leak a runnable if
-  // it fails (and we assert we're on MainThread).
-  if (NS_FAILED(NS_DispatchToCurrentThread(NS_NewRunnableFunction("UnregisterSensorObserver",
-                                                                  [sensorlists]() -> void {
-      delete [] sensorlists;
-      }))))
-  {
-    // Still need to delete sensorlists if the dispatch fails
-    delete [] sensorlists;
-  }
 }
 
 void
 NotifySensorChange(const SensorData &aSensorData) {
-  SensorObserverList &observers = GetSensorObservers(aSensorData.sensor());
+  SensorObserverList* observers = GetSensorObservers(aSensorData.sensor());
 
-  AssertMainThread();
-
-  observers.Broadcast(aSensorData);
+  observers->Broadcast(aSensorData);
 }
 
 MOZ_IMPL_HAL_OBSERVER(Network)
@@ -477,15 +423,14 @@ MOZ_IMPL_HAL_OBSERVER(Network)
 void
 GetCurrentNetworkInformation(NetworkInformation* aInfo)
 {
-  AssertMainThread();
-  *aInfo = NetworkObservers().GetCurrentInformation();
+  *aInfo = NetworkObservers()->GetCurrentInformation();
 }
 
 void
 NotifyNetworkChange(const NetworkInformation& aInfo)
 {
-  NetworkObservers().CacheInformation(aInfo);
-  NetworkObservers().BroadcastCachedInformation();
+  NetworkObservers()->CacheInformation(aInfo);
+  NetworkObservers()->BroadcastCachedInformation();
 }
 
 MOZ_IMPL_HAL_OBSERVER(WakeLock)
@@ -518,7 +463,7 @@ void
 NotifyWakeLockChange(const WakeLockInformation& aInfo)
 {
   AssertMainThread();
-  WakeLockObservers().BroadcastInformation(aInfo);
+  WakeLockObservers()->BroadcastInformation(aInfo);
 }
 
 MOZ_IMPL_HAL_OBSERVER(ScreenConfiguration)
@@ -526,15 +471,15 @@ MOZ_IMPL_HAL_OBSERVER(ScreenConfiguration)
 void
 GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 {
-  AssertMainThread();
-  *aScreenConfiguration = ScreenConfigurationObservers().GetCurrentInformation();
+  *aScreenConfiguration =
+    ScreenConfigurationObservers()->GetCurrentInformation();
 }
 
 void
 NotifyScreenConfigurationChange(const ScreenConfiguration& aScreenConfiguration)
 {
-  ScreenConfigurationObservers().CacheInformation(aScreenConfiguration);
-  ScreenConfigurationObservers().BroadcastCachedInformation();
+  ScreenConfigurationObservers()->CacheInformation(aScreenConfiguration);
+  ScreenConfigurationObservers()->BroadcastCachedInformation();
 }
 
 bool
@@ -606,6 +551,39 @@ StopDiskSpaceWatcher()
   AssertMainProcess();
   AssertMainThread();
   PROXY_IF_SANDBOXED(StopDiskSpaceWatcher());
+}
+
+void
+Init()
+{
+  MOZ_ASSERT(!sInitialized);
+
+  if (!InSandbox()) {
+    gLastIDToVibrate = new WindowIdentifier::IDArrayType();
+  }
+
+  WakeLockInit();
+
+  sInitialized = true;
+}
+
+void
+Shutdown()
+{
+  MOZ_ASSERT(sInitialized);
+
+  gLastIDToVibrate = nullptr;
+
+  sBatteryObservers = nullptr;
+  sNetworkObservers = nullptr;
+  sWakeLockObservers = nullptr;
+  sScreenConfigurationObservers = nullptr;
+
+  for (auto& sensorObserver : sSensorObservers) {
+    sensorObserver = nullptr;
+  }
+
+  sInitialized = false;
 }
 
 } // namespace hal
