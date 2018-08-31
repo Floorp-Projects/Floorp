@@ -30,7 +30,7 @@ var initializeIdentityWithTokenServerResponse = function(response) {
     async get() {
       this.response = response;
       return response;
-    }
+    },
   };
   // The mocked TokenServer client which will get the response.
   function MockTSC() { }

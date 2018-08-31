@@ -149,7 +149,7 @@ var ContentSearch = {
    */
   focusInput(messageManager) {
     messageManager.sendAsyncMessage(OUTBOUND_MESSAGE, {
-      type: "FocusInput"
+      type: "FocusInput",
     });
   },
 
@@ -246,7 +246,7 @@ var ContentSearch = {
       // UI to prevent further interaction before we start loading.
       this._reply(msg, "Blur");
       browser.loadURI(submission.uri.spec, {
-        postData: submission.postData
+        postData: submission.postData,
       });
     } else {
       let params = {
@@ -345,7 +345,7 @@ var ContentSearch = {
         name: engine.name,
         iconBuffer,
         hidden: hiddenList.includes(engine.name),
-        identifier: engine.identifier
+        identifier: engine.identifier,
       });
     }
     return state;
@@ -456,7 +456,7 @@ var ContentSearch = {
     if (msg.target.contentWindow) {
       engine.speculativeConnect({
         window: msg.target.contentWindow,
-        originAttributes: msg.target.contentPrincipal.originAttributes
+        originAttributes: msg.target.contentPrincipal.originAttributes,
       });
     }
   },

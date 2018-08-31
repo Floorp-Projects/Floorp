@@ -253,7 +253,7 @@
                 vi: ["Nh\xECn n\xE0y! \u0110\u1ED3 m\u1EDBi!",
                      "Gi\u1EDD \u0111\xE2y ch\xFAng ta c\xF3 th\u1EC3 ti\u1EBFp c\u1EADn web d\u1EC5 d\xE0ng h\u01A1n n\u1EEFa v\u1EDBi t\xEDnh n\u0103ng d\u1ECBch ngay trong trang.  Hay nh\u1EA5n n\xFAt d\u1ECBch \u0111\u1EC3 th\u1EED!",
                      "T\xECm hi\u1EC3u th\xEAm.",
-                     "C\u1EA3m \u01A1n"]
+                     "C\u1EA3m \u01A1n"],
               };
 
               let locale = Services.locale.getAppLocaleAsLangTag();

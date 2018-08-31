@@ -218,6 +218,6 @@ var FxAccountsConfig = {
   // For test purposes, returns a Promise.
   getSignedInUser() {
     return fxAccounts.getSignedInUser();
-  }
+  },
 
 };

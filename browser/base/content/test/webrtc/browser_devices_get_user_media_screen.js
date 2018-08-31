@@ -113,7 +113,7 @@ var gTests = [
     await expectObserverCalled("getUserMedia:response:deny");
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     await closeStream();
-  }
+  },
 },
 
 {
@@ -210,7 +210,7 @@ var gTests = [
     await indicator;
     await checkSharingUI({screen: "Window"});
     await closeStream();
-  }
+  },
 },
 
 {
@@ -295,7 +295,7 @@ var gTests = [
     await indicator;
     await checkSharingUI({screen: "Application"});
     await closeStream();
-  }
+  },
 },
 
 {
@@ -347,7 +347,7 @@ var gTests = [
     await indicator;
     await checkSharingUI({audio: true, screen: "Screen"});
     await closeStream();
-  }
+  },
 },
 
 {
@@ -368,7 +368,7 @@ var gTests = [
     await checkNotSharing();
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
-  }
+  },
 },
 
 {
@@ -437,7 +437,7 @@ var gTests = [
 
     info("Stop the camera, this should stop everything.");
     await stopSharing("camera");
-  }
+  },
 },
 
 {
@@ -464,7 +464,7 @@ var gTests = [
     await checkSharingUI({screen: "Screen"});
 
     await reloadAndAssertClosedStreams();
-  }
+  },
 },
 
 {
@@ -506,7 +506,7 @@ var gTests = [
     await expectNoObserverCalled();
 
     await closeStream();
-  }
+  },
 },
 
 {
@@ -581,8 +581,8 @@ var gTests = [
     await expectObserverCalled("getUserMedia:response:deny");
     await expectObserverCalled("recording-window-ended");
     SitePermissions.remove(uri, "screen", browser);
-  }
-}
+  },
+},
 
 ];
 

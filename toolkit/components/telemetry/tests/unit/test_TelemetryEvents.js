@@ -103,7 +103,7 @@ add_task(async function test_event_summary_limit() {
       methods: ["testMethod"],
       objects,
       record_on_release: true,
-    }
+    },
   });
   for (let object of objects) {
     Telemetry.recordEvent("telemetry.test.dynamic", "testMethod", object);
@@ -682,7 +682,7 @@ add_task(async function test_dynamicEventRegisterAgain() {
     "test1": {
       methods: ["test1"],
       objects: ["object1"],
-    }
+    },
   };
 
   // First register the initial event and make sure it can be recorded.
@@ -758,7 +758,7 @@ add_task(async function test_dynamicEventRegisterAgain() {
 });
 
 add_task({
-  skip_if: () => gIsAndroid
+  skip_if: () => gIsAndroid,
 },
 async function test_productSpecificEvents() {
   const EVENT_CATEGORY = "telemetry.test";
@@ -792,7 +792,7 @@ async function test_productSpecificEvents() {
 });
 
 add_task({
-  skip_if: () => !gIsAndroid
+  skip_if: () => !gIsAndroid,
 },
 async function test_mobileSpecificEvents() {
   const EVENT_CATEGORY = "telemetry.test";

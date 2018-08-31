@@ -27,7 +27,7 @@ class BrowserTabChild extends ActorChild {
 
     case "MozDOMPointerLock:Entered":
       this.mm.sendAsyncMessage("PointerLock:Entered", {
-        originNoSuffix: event.target.nodePrincipal.originNoSuffix
+        originNoSuffix: event.target.nodePrincipal.originNoSuffix,
       });
       break;
 

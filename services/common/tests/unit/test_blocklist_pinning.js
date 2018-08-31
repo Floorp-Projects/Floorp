@@ -173,29 +173,29 @@ function getSampleResponse(req, port) {
         "Access-Control-Allow-Methods: GET,HEAD,OPTIONS,POST,DELETE,OPTIONS",
         "Access-Control-Allow-Origin: *",
         "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress"
+        "Server: waitress",
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": "null"
+      "responseBody": "null",
     },
     "GET:/v1/?": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
         "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress"
+        "Server: waitress",
       ],
       "status": {status: 200, statusText: "OK"},
       "responseBody": JSON.stringify({
         "settings": {
-          "batch_max_requests": 25
+          "batch_max_requests": 25,
         },
         "url": `http://localhost:${port}/v1/`,
         "documentation": "https://kinto.readthedocs.org/",
         "version": "1.5.1",
         "commit": "cbc6f58",
-        "hello": "kinto"
-      })
+        "hello": "kinto",
+      }),
     },
     "GET:/v1/buckets/pinning/collections/pins/records?_sort=-last_modified": {
       "sampleHeaders": [
@@ -203,7 +203,7 @@ function getSampleResponse(req, port) {
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
         "Content-Type: application/json; charset=UTF-8",
         "Server: waitress",
-        "Etag: \"3000\""
+        "Etag: \"3000\"",
       ],
       "status": {status: 200, statusText: "OK"},
       "responseBody": JSON.stringify({"data": [{
@@ -215,8 +215,8 @@ function getSampleResponse(req, port) {
                   "M8HztCzM3elUxkcjR2S5P4hhyBNf6lHkmjAHKhpGPWE="],
         "versions": [Services.appinfo.version],
         "id": "78cf8900-fdea-4ce5-f8fb-b78710617718",
-        "last_modified": 3000
-      }]})
+        "last_modified": 3000,
+      }]}),
     },
     "GET:/v1/buckets/pinning/collections/pins/records?_sort=-last_modified&_since=3000": {
       "sampleHeaders": [
@@ -224,7 +224,7 @@ function getSampleResponse(req, port) {
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
         "Content-Type: application/json; charset=UTF-8",
         "Server: waitress",
-        "Etag: \"4000\""
+        "Etag: \"4000\"",
       ],
       "status": {status: 200, statusText: "OK"},
       "responseBody": JSON.stringify({"data": [{
@@ -236,7 +236,7 @@ function getSampleResponse(req, port) {
                   "M8HztCzM3elUxkcjR2S5P4hhyBNf6lHkmjAHKhpGPWE="],
         "versions": [Services.appinfo.version],
         "id": "dabafde9-df4a-ddba-2548-748da04cc02c",
-        "last_modified": 4000
+        "last_modified": 4000,
       }, {
         "pinType": "KeyPin",
         "hostName": "three.example.com",
@@ -246,7 +246,7 @@ function getSampleResponse(req, port) {
                   "M8HztCzM3elUxkcjR2S5P4hhyBNf6lHkmjAHKhpGPWE="],
         "versions": [Services.appinfo.version, "some other version that won't match"],
         "id": "dabafde9-df4a-ddba-2548-748da04cc02d",
-        "last_modified": 4000
+        "last_modified": 4000,
       }, {
         "pinType": "KeyPin",
         "hostName": "four.example.com",
@@ -256,7 +256,7 @@ function getSampleResponse(req, port) {
                   "M8HztCzM3elUxkcjR2S5P4hhyBNf6lHkmjAHKhpGPWE="],
         "versions": ["some version that won't match"],
         "id": "dabafde9-df4a-ddba-2548-748da04cc02e",
-        "last_modified": 4000
+        "last_modified": 4000,
       }, {
         "pinType": "STSPin",
         "hostName": "five.example.com",
@@ -264,8 +264,8 @@ function getSampleResponse(req, port) {
         "expires": new Date().getTime() + 1000000,
         "versions": [Services.appinfo.version, "some version that won't match"],
         "id": "dabafde9-df4a-ddba-2548-748da04cc032",
-        "last_modified": 4000
-      }]})
+        "last_modified": 4000,
+      }]}),
     },
     "GET:/v1/buckets/pinning/collections/pins/records?_sort=-last_modified&_since=4000": {
       "sampleHeaders": [
@@ -273,14 +273,14 @@ function getSampleResponse(req, port) {
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
         "Content-Type: application/json; charset=UTF-8",
         "Server: waitress",
-        "Etag: \"5000\""
+        "Etag: \"5000\"",
       ],
       "status": {status: 200, statusText: "OK"},
       "responseBody": JSON.stringify({"data": [{
         "irrelevant": "this entry looks nothing whatsoever like a pin preload",
         "pinType": "KeyPin",
         "id": "dabafde9-df4a-ddba-2548-748da04cc02f",
-        "last_modified": 5000
+        "last_modified": 5000,
       }, {
         "irrelevant": "this entry has data of the wrong type",
         "pinType": "KeyPin",
@@ -289,7 +289,7 @@ function getSampleResponse(req, port) {
         "expires": "more nonsense",
         "pins": [1, 2, 3, 4],
         "id": "dabafde9-df4a-ddba-2548-748da04cc030",
-        "last_modified": 5000
+        "last_modified": 5000,
       }, {
         "irrelevant": "this entry is missing the actual pins",
         "pinType": "KeyPin",
@@ -298,7 +298,7 @@ function getSampleResponse(req, port) {
         "expires": new Date().getTime() + 1000000,
         "versions": [Services.appinfo.version],
         "id": "dabafde9-df4a-ddba-2548-748da04cc031",
-        "last_modified": 5000
+        "last_modified": 5000,
       }, {
         "pinType": "STSPin",
         "hostName": "five.example.com",
@@ -306,9 +306,9 @@ function getSampleResponse(req, port) {
         "expires": new Date().getTime() + 1000000,
         "versions": [Services.appinfo.version, "some version that won't match"],
         "id": "dabafde9-df4a-ddba-2548-748da04cc032",
-        "last_modified": 5000
-      }]})
-    }
+        "last_modified": 5000,
+      }]}),
+    },
   };
   return responses[`${req.method}:${req.path}?${req.queryString}`] ||
          responses[req.method];

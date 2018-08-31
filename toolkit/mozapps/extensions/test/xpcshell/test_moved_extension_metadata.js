@@ -28,7 +28,7 @@ var dirProvider = {
     return null;
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider]),
 };
 Services.dirsvc.registerProvider(dirProvider);
 
@@ -41,8 +41,8 @@ var addon1 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 const ADDONS = [
@@ -67,7 +67,7 @@ const ADDONS = [
       function shutdown(data, reason) {
         Services.prefs.setIntPref("bootstraptest.active_version", 0);
       }
-    `
+    `,
   },
 ];
 

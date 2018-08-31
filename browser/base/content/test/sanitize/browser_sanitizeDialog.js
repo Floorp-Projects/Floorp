@@ -451,7 +451,7 @@ add_task(async function test_offline_cache() {
     var visitor = {
       onCacheStorageInfo(aEntryCount, aConsumption, aCapacity, aDiskDirectory) {
         size = aConsumption;
-      }
+      },
     };
     storage.asyncVisitStorage(visitor, false);
     // Offline cache visit happens synchronously, since it's forwarded to the old code
@@ -468,7 +468,7 @@ add_task(async function test_offline_cache() {
       stream.close();
       entry.close();
       wh.open();
-    }
+    },
   };
 
   storage.asyncOpenURI(makeURI(URL), "", Ci.nsICacheStorage.OPEN_TRUNCATE, cacheListener);
@@ -700,7 +700,7 @@ async function addDownloadWithMinutesAgo(aExpectedPathList, aMinutesAgo) {
   let name = "fakefile-" + aMinutesAgo + "-minutes-ago";
   let download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
-    target: name
+    target: name,
   });
   download.startTime = new Date(now_mSec - (aMinutesAgo * kMsecPerMin));
   download.canceled = true;
@@ -733,7 +733,7 @@ function promiseAddFormEntryWithMinutesAgo(aMinutesAgo) {
                          },
                          handleCompletion(reason) {
                            resolve(name);
-                         }
+                         },
                        })
    );
 }
@@ -754,7 +754,7 @@ function formNameExists(name) {
                           if (!reason) {
                             resolve(count);
                           }
-                        }
+                        },
                       });
   });
 }
@@ -780,7 +780,7 @@ async function blankSlate() {
       handleError(error) {
         reject(error);
         throw new Error("Error occurred updating form history: " + error);
-      }
+      },
     });
   });
 

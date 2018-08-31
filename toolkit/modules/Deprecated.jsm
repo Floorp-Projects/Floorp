@@ -75,5 +75,5 @@ var Deprecated = {
 
     // Report deprecation warning.
     Cu.reportError(textMessage);
-  }
+  },
 };

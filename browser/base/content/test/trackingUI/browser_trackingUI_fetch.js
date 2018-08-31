@@ -11,7 +11,7 @@ function waitForSecurityChange(numChanges = 1) {
           gBrowser.removeProgressListener(listener);
           resolve();
         }
-      }
+      },
     };
     gBrowser.addProgressListener(listener);
   });

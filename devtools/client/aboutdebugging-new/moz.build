@@ -6,5 +6,9 @@ DIRS += [
     'src',
 ]
 
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/unit/xpcshell.ini'
+]
+
 with Files('**'):
     BUG_COMPONENT = ('DevTools', 'about:debugging')

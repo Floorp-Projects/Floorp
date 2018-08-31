@@ -3,7 +3,7 @@
 
 var state = {windows: [{tabs: [
   {entries: [{url: "http://example.com#1", triggeringPrincipal_base64}]},
-  {entries: [{url: "http://example.com#2", triggeringPrincipal_base64}], hidden: true}
+  {entries: [{url: "http://example.com#2", triggeringPrincipal_base64}], hidden: true},
 ]}]};
 
 function test() {

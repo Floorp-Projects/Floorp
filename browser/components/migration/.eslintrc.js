@@ -3,7 +3,6 @@
 module.exports = {
   "rules": {
     "block-scoped-var": "error",
-    "comma-dangle": ["error", "always-multiline"],
     "complexity": ["error", {"max": 22}],
     "indent-legacy": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
     "max-nested-callbacks": ["error", 3],

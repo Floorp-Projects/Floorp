@@ -292,7 +292,7 @@ class AutoScrollController {
     this._scrollable.scrollBy({
       left: actualScrollX,
       top: actualScrollY,
-      behavior: "instant"
+      behavior: "instant",
     });
 
     this._scrollable.ownerGlobal.requestAnimationFrame(this.autoscrollLoop);

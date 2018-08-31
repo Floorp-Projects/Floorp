@@ -18,14 +18,14 @@ var fakePromptServiceFactory = {
     if (aOuter != null)
       throw Cr.NS_ERROR_NO_AGGREGATION;
     return promptService.QueryInterface(aIid);
-  }
+  },
 };
 
 var promptService = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
   alert() {
     didFail = true;
-  }
+  },
 };
 
 /* FIXME
@@ -56,7 +56,7 @@ var gProgressListener = {
       ok(gBrowser.tabs.length == kURIs.length, "Correctly opened all expected tabs");
       finishTest();
     }
-  }
+  },
 };
 
 function test() {

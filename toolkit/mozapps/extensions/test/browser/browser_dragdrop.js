@@ -47,7 +47,7 @@ async function checkInstallConfirmation(...names) {
       var installInfo = aSubject.wrappedJSObject;
       isnot(installInfo.browser, null, "Notification should have non-null browser");
       notificationCount++;
-    }
+    },
   };
   Services.obs.addObserver(observer, "addon-install-started");
 

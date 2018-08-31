@@ -188,7 +188,7 @@ add_task(async function test_oneOff_enterSelection() {
   let suggestionEngine = await new Promise((resolve, reject) => {
     Services.search.addEngine(url, null, "", false, {
       onSuccess(engine) { resolve(engine); },
-      onError() { reject(); }
+      onError() { reject(); },
     });
   });
 
@@ -256,7 +256,7 @@ add_task(async function test_suggestion_click() {
   let suggestionEngine = await new Promise((resolve, reject) => {
     Services.search.addEngine(url, null, "", false, {
       onSuccess(engine) { resolve(engine); },
-      onError() { reject(); }
+      onError() { reject(); },
     });
   });
 
@@ -313,7 +313,7 @@ add_task(async function test_suggestion_enterSelection() {
   let suggestionEngine = await new Promise((resolve, reject) => {
     Services.search.addEngine(url, null, "", false, {
       onSuccess(engine) { resolve(engine); },
-      onError() { reject(); }
+      onError() { reject(); },
     });
   });
 

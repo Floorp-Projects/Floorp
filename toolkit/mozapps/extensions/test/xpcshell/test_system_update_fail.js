@@ -37,7 +37,7 @@ const TEST_CONDITIONS = {
       { isUpgrade: false, version: null},
       { isUpgrade: false, version: null},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
+      { isUpgrade: false, version: null},
     ],
   },
   // Runs tests with default system add-ons installed
@@ -51,8 +51,8 @@ const TEST_CONDITIONS = {
       { isUpgrade: false, version: "2.0"},
       { isUpgrade: false, version: "2.0"},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
-    ]
+      { isUpgrade: false, version: null},
+    ],
   },
 
   // Runs tests with updated system add-ons installed
@@ -66,8 +66,8 @@ const TEST_CONDITIONS = {
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
-    ]
+      { isUpgrade: false, version: null},
+    ],
   },
 
   // Runs tests with both default and updated system add-ons installed
@@ -81,8 +81,8 @@ const TEST_CONDITIONS = {
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
-    ]
+      { isUpgrade: false, version: null},
+    ],
   },
 };
 
@@ -104,7 +104,7 @@ const TESTS = {
     fails: true,
     updateList: [
       { id: "system2@tests.mozilla.org", version: "4.0", path: "system2_3.xpi" },
-      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi" }
+      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi" },
     ],
   },
 
@@ -113,7 +113,7 @@ const TESTS = {
     fails: true,
     updateList: [
       { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi", size: 2 },
-      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi" }
+      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi" },
     ],
   },
 
@@ -122,7 +122,7 @@ const TESTS = {
     fails: true,
     updateList: [
       { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi" },
-      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi", hashFunction: "sha1", hashValue: "205a4c49bd513ebd30594e380c19e86bba1f83e2" }
+      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi", hashFunction: "sha1", hashValue: "205a4c49bd513ebd30594e380c19e86bba1f83e2" },
     ],
   },
 
@@ -131,7 +131,7 @@ const TESTS = {
     fails: true,
     updateList: [
       { id: "system1@tests.mozilla.org", version: "1.0", path: "system1_1_badcert.xpi" },
-      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
     ],
   },
 
@@ -140,7 +140,7 @@ const TESTS = {
     fails: true,
     updateList: [
       { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_1_unpack.xpi" },
-      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
     ],
   },
 
@@ -149,7 +149,7 @@ const TESTS = {
     fails: true,
     updateList: [
       { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_2_notBootstrap.xpi" },
-      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
     ],
   },
 
@@ -158,9 +158,9 @@ const TESTS = {
     fails: true,
     updateList: [
       { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_3_notMultiprocess.xpi" },
-      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
     ],
-  }
+  },
 };
 
 add_task(async function setup() {

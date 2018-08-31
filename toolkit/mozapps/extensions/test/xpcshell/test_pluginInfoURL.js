@@ -17,7 +17,7 @@ function MockPlugin(name, version, enabledState) {
 MockPlugin.prototype = {
   get disabled() {
     return this.enabledState == Ci.nsIPluginTag.STATE_DISABLED;
-  }
+  },
 };
 
 // The mocked blocked plugin used to test the blocklist.
@@ -26,7 +26,7 @@ const PLUGINS = [
   new MockPlugin("test_with_altInfoURL", "5", Ci.nsIPluginTag.STATE_ENABLED),
   new MockPlugin("test_no_infoURL", "5", Ci.nsIPluginTag.STATE_ENABLED),
   new MockPlugin("test_newVersion", "1", Ci.nsIPluginTag.STATE_ENABLED),
-  new MockPlugin("test_newVersion", "3", Ci.nsIPluginTag.STATE_ENABLED)
+  new MockPlugin("test_newVersion", "3", Ci.nsIPluginTag.STATE_ENABLED),
 ];
 
 /**

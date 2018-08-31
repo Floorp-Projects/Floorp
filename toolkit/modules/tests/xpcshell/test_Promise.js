@@ -1010,7 +1010,7 @@ function wait_for_uncaught(aMustAppear, aTimeout = undefined) {
     let error = new Error("This is an uncaught error " + salt);
     return {
       mustFind: [error.message, error.fileName, error.lineNumber, error.stack],
-      error
+      error,
     };
   };
   let make_exception_rejection = function make_exception_rejection() {
@@ -1019,7 +1019,7 @@ function wait_for_uncaught(aMustAppear, aTimeout = undefined) {
                                        Cr.NS_ERROR_NOT_AVAILABLE);
     return {
       mustFind: [exn.message, exn.filename, exn.lineNumber, exn.location.toString()],
-      error: exn
+      error: exn,
     };
   };
   for (let make_rejection of [make_string_rejection,

@@ -98,7 +98,7 @@ function setupSymLinks() {
         originalFile: null,
         compareFile: null,
         originalPerms: 0o666,
-        comparePerms: 0o666
+        comparePerms: 0o666,
       });
   }
 }

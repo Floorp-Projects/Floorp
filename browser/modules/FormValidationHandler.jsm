@@ -139,5 +139,5 @@ var FormValidationHandler =
     if (this._panel) {
       this._panel.hidePopup();
     }
-  }
+  },
 };

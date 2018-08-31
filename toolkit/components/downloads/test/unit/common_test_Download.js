@@ -2189,7 +2189,7 @@ add_task(async function test_showContainingDirectory() {
 
   let download = await Downloads.createDownload({
     source: { url: httpUrl("source.txt") },
-    target: ""
+    target: "",
   });
 
   let promiseDirectoryShown = waitForDirectoryShown();
@@ -2211,7 +2211,7 @@ add_task(async function test_showContainingDirectory() {
 
   download = await Downloads.createDownload({
     source: { url: httpUrl("source.txt") },
-    target: targetPath
+    target: targetPath,
   });
 
   promiseDirectoryShown = waitForDirectoryShown();
@@ -2235,7 +2235,7 @@ add_task(async function test_launch() {
         source: httpUrl("source.txt"),
         target: getTempFile(TEST_TARGET_FILE_NAME).path,
         launcherPath,
-        launchWhenSucceeded: true
+        launchWhenSucceeded: true,
       });
 
       try {
@@ -2284,7 +2284,7 @@ add_task(async function test_launcherPath_invalid() {
   let download = await Downloads.createDownload({
     source: { url: httpUrl("source.txt") },
     target: { path: getTempFile(TEST_TARGET_FILE_NAME).path },
-    launcherPath: " "
+    launcherPath: " ",
   });
 
   let promiseDownloadLaunched = new Promise(resolve => {

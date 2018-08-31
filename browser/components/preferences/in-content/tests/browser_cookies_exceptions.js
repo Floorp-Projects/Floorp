@@ -321,7 +321,7 @@ function createObserveAllPromise(observances) {
           Services.obs.removeObserver(permObserver, "perm-changed");
           executeSoon(resolve);
         }
-      }
+      },
     };
     Services.obs.addObserver(permObserver, "perm-changed");
   });

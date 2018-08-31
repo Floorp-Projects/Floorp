@@ -48,7 +48,7 @@ SteamEngine.prototype = {
     if (this._errToThrow) {
       throw this._errToThrow;
     }
-  }
+  },
 };
 
 function BogusEngine(service) {
@@ -79,7 +79,7 @@ add_task(async function test_basic() {
   let handlers = {
     "/1.1/johndoe/info/collections": helper.handler,
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
-    "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler())
+    "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler()),
   };
 
   let collections = ["clients", "bookmarks", "forms", "history", "passwords", "prefs", "tabs"];
@@ -203,7 +203,7 @@ add_task(async function test_upload_failed() {
   collection._wbos.flying = new ServerWBO("flying");
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -213,7 +213,7 @@ add_task(async function test_upload_failed() {
   engine._store.items = {
     flying: "LNER Class A3 4472",
     scotsman: "Flying Scotsman",
-    peppercorn: "Peppercorn Class"
+    peppercorn: "Peppercorn Class",
   };
   const FLYING_CHANGED = 12345;
   const SCOTSMAN_CHANGED = 23456;
@@ -257,7 +257,7 @@ add_task(async function test_upload_failed() {
 add_task(async function test_sync_partialUpload() {
   let collection = new ServerCollection();
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
   await SyncTestingInfrastructure(server);
   await generateNewKeys(Service.collectionKeys);
@@ -325,7 +325,7 @@ add_task(async function test_sync_partialUpload() {
     deepEqual(ping.engines[0].incoming, {
       failed: 1,
       newFailed: 1,
-      reconciled: 232
+      reconciled: 232,
     });
     ok(!ping.engines[0].outgoing);
     deepEqual(ping.engines[0].failureReason, uploadFailureError);
@@ -355,7 +355,7 @@ add_task(async function test_generic_engine_fail() {
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
     deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
       name: "unexpectederror",
-      error: String(e)
+      error: String(e),
     });
   } finally {
     await cleanAndGo(engine, server);
@@ -377,14 +377,14 @@ add_task(async function test_engine_fail_weird_errors() {
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
     deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
       name: "unexpectederror",
-      error: "Bad things happened!"
+      error: "Bad things happened!",
     });
     let e = { msg };
     engine._errToThrow = e;
     ping = await sync_and_validate_telem(true);
     deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
       name: "unexpectederror",
-      error: JSON.stringify(e)
+      error: JSON.stringify(e),
     });
   } finally {
     await cleanAndGo(engine, server);
@@ -536,12 +536,12 @@ add_task(async function test_nserror() {
     let ping = await sync_and_validate_telem(true);
     deepEqual(ping.status, {
       service: SYNC_FAILED_PARTIAL,
-      sync: LOGIN_FAILED_NETWORK_ERROR
+      sync: LOGIN_FAILED_NETWORK_ERROR,
     });
     let enginePing = ping.engines.find(e => e.name === "steam");
     deepEqual(enginePing.failureReason, {
       name: "nserror",
-      code: Cr.NS_ERROR_UNKNOWN_HOST
+      code: Cr.NS_ERROR_UNKNOWN_HOST,
     });
   } finally {
     await cleanAndGo(engine, server);
@@ -589,7 +589,7 @@ add_task(async function test_discarding() {
     let handlers = {
       "/1.1/johndoe/info/collections": helper.handler,
       "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
-      "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler())
+      "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler()),
     };
 
     let collections = ["clients", "bookmarks", "forms", "history", "passwords", "prefs", "tabs"];

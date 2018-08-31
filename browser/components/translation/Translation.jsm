@@ -83,7 +83,7 @@ var Translation = {
    */
   supportedEngines: {
     "bing": "http://aka.ms/MicrosoftTranslatorAttribution",
-    "yandex": "http://translate.yandex.com/"
+    "yandex": "http://translate.yandex.com/",
   },
 
   /**
@@ -281,7 +281,7 @@ TranslationUI.prototype = {
   infobarClosed() {
     if (this.state == Translation.STATE_OFFER)
       TranslationTelemetry.recordDeniedTranslationOffer();
-  }
+  },
 };
 
 /**

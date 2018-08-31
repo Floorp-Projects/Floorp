@@ -94,7 +94,7 @@ add_task(async function test_hawk_authenticated_request() {
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
     key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
-    algorithm: "sha256"
+    algorithm: "sha256",
   };
 
   let server = httpd_setup({
@@ -119,13 +119,13 @@ add_task(async function test_hawk_authenticated_request() {
       let message = "yay";
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let url = server.baseURI + "/elysium";
   let extra = {
     now: localTime,
-    localtimeOffsetMsec: timeOffset
+    localtimeOffsetMsec: timeOffset,
   };
 
   let request = new HAWKAuthenticatedRESTRequest(url, credentials, extra);

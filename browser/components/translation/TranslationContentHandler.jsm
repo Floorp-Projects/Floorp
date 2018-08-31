@@ -98,7 +98,7 @@ TranslationContentHandler.prototype = {
       let data = {
         state: STATE_OFFER,
         originalShown: true,
-        detectedLanguage: result.language
+        detectedLanguage: result.language,
       };
       this.global.sendAsyncMessage("Translation:DocumentState", data);
     });
@@ -145,7 +145,7 @@ TranslationContentHandler.prototype = {
               characterCount: result.characterCount,
               from: msg.data.from,
               to: msg.data.to,
-              success: true
+              success: true,
             });
             translationDocument.showTranslation();
           },
@@ -168,5 +168,5 @@ TranslationContentHandler.prototype = {
         this.global.content.translationDocument.showTranslation();
         break;
     }
-  }
+  },
 };

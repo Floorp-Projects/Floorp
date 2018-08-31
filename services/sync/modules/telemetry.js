@@ -228,7 +228,7 @@ class EngineRecord {
     }
 
     this.validation = {
-      failureReason: SyncTelemetry.transformError(e)
+      failureReason: SyncTelemetry.transformError(e),
     };
   }
 
@@ -784,7 +784,7 @@ class SyncTelemetryImpl {
     }
     return {
       name: "unexpectederror",
-      error: cleanErrorMessage(msg)
+      error: cleanErrorMessage(msg),
     };
   }
 

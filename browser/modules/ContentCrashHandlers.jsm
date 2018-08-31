@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   RemotePages: "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm"
+  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {

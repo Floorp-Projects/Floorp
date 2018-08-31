@@ -58,7 +58,7 @@ function dummyLightweightTheme(id) {
     name: id,
     iconURL: "resource:///chrome/browser/content/browser/defaultthemes/light.icon.svg",
     textcolor: "red",
-    accentcolor: "blue"
+    accentcolor: "blue",
   };
 }
 

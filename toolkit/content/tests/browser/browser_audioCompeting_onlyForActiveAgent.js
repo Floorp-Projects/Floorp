@@ -4,7 +4,7 @@ var SuspendedType = {
   NONE_SUSPENDED: 0,
   SUSPENDED_PAUSE: 1,
   SUSPENDED_BLOCK: 2,
-  SUSPENDED_PAUSE_DISPOSABLE: 3
+  SUSPENDED_PAUSE_DISPOSABLE: 3,
 };
 
 function wait_for_event(browser, event) {
@@ -164,13 +164,13 @@ add_task(async function setup_test_preference() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["media.useAudioChannelService.testing", true],
     ["dom.audiochannel.audioCompeting", true],
-    ["dom.audiochannel.audioCompeting.allAgents", true]
+    ["dom.audiochannel.audioCompeting.allAgents", true],
   ]});
 });
 
 add_task(async function test_suspended_pause_disposable() {
   await BrowserTestUtils.withNewTab({
       gBrowser,
-      url: "about:blank"
+      url: "about:blank",
     }, audio_competing_for_active_agent.bind(this, PAGE));
 });

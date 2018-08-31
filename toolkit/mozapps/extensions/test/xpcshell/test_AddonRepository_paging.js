@@ -25,7 +25,7 @@ add_task(async function test_paged_api() {
   });
 
   testserver.registerPrefixHandler("/addons/", (request, response) => {
-    let [page, ] = /\d+/.exec(request.path);
+    let [page ] = /\d+/.exec(request.path);
     page = page ? parseInt(page, 10) : 0;
     page = Math.min(page, MAX_ADDON);
 

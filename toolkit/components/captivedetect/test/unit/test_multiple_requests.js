@@ -70,7 +70,7 @@ function test_multiple_requests() {
       Assert.equal(++step, 6);
       Assert.ok(success);
       gServer.stop(do_test_finished);
-    }
+    },
   };
 
   gCaptivePortalDetector.checkCaptivePortal(kInterfaceName, callback);

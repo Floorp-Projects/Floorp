@@ -26,7 +26,7 @@ add_task(async function test_phase_simple_async() {
                                return {
                                  toJSON() {
                                    throw new Error("State.toJSON BOOM");
-                                 }
+                                 },
                                };
                              }]]) {
             // Asynchronous phase

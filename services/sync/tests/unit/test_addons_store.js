@@ -155,7 +155,7 @@ function createRecordForThisApp(id, addonId, enabled, deleted) {
     enabled,
     deleted:       !!deleted,
     applicationID: Services.appinfo.ID,
-    source:        "amo"
+    source:        "amo",
   };
 }
 
@@ -385,7 +385,7 @@ add_task(async function test_addon_syncability() {
 
   let trusted = [
     "https://addons.mozilla.org/foo",
-    "https://other.example.com/foo"
+    "https://other.example.com/foo",
   ];
 
   let untrusted = [

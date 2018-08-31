@@ -10,7 +10,7 @@
 var EXPORTED_SYMBOLS = [
   "ACTIONS", "Addons", "Addresses", "Bookmarks", "CreditCards",
   "Formdata", "History", "Passwords", "Prefs",
-  "Tabs", "TPS", "Windows"
+  "Tabs", "TPS", "Windows",
 ];
 
 var module = this;
@@ -689,7 +689,7 @@ var TPS = {
     try {
       Logger.logInfo("About to perform bookmark validation");
       let clientTree = await (PlacesUtils.promiseBookmarksTree("", {
-        includeItemIds: true
+        includeItemIds: true,
       }));
       let serverRecords = await getServerBookmarkState();
       // We can't wait until catch to stringify this, since at that point it will have cycles.
@@ -1249,7 +1249,7 @@ var TPS = {
   async EnsureTracking() {
     await this.Login(false);
     await this.waitForTracking();
-  }
+  },
 };
 
 var Addons = {
@@ -1270,7 +1270,7 @@ var Addons = {
   },
   skipValidation() {
     TPS.shouldValidateAddons = false;
-  }
+  },
 };
 
 var Addresses = {
@@ -1288,7 +1288,7 @@ var Addresses = {
   },
   async verifyNot(addresses) {
     await this.HandleAddresses(addresses, ACTION_VERIFY_NOT);
-  }
+  },
 };
 
 var Bookmarks = {
@@ -1309,7 +1309,7 @@ var Bookmarks = {
   },
   skipValidation() {
     TPS.shouldValidateBookmarks = false;
-  }
+  },
 };
 
 var CreditCards = {
@@ -1327,7 +1327,7 @@ var CreditCards = {
   },
   async verifyNot(creditCards) {
     await this.HandleCreditCards(creditCards, ACTION_VERIFY_NOT);
-  }
+  },
 };
 
 var Formdata = {
@@ -1342,7 +1342,7 @@ var Formdata = {
   },
   async verifyNot(formdata) {
     await this.HandleForms(formdata, ACTION_VERIFY_NOT);
-  }
+  },
 };
 
 var History = {
@@ -1357,7 +1357,7 @@ var History = {
   },
   async verifyNot(history) {
     await this.HandleHistory(history, ACTION_VERIFY_NOT);
-  }
+  },
 };
 
 var Passwords = {
@@ -1378,7 +1378,7 @@ var Passwords = {
   },
   skipValidation() {
     TPS.shouldValidatePasswords = false;
-  }
+  },
 };
 
 var Prefs = {
@@ -1387,7 +1387,7 @@ var Prefs = {
   },
   async verify(prefs) {
     await TPS.HandlePrefs(prefs, ACTION_VERIFY);
-  }
+  },
 };
 
 var Tabs = {
@@ -1399,7 +1399,7 @@ var Tabs = {
   },
   async verifyNot(tabs) {
     await TPS.HandleTabs(tabs, ACTION_VERIFY_NOT);
-  }
+  },
 };
 
 var Windows = {

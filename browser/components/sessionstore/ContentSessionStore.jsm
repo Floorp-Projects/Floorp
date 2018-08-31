@@ -935,7 +935,7 @@ class ContentSessionStore {
         // Tell SessionStore.jsm that it may want to restore some more tabs,
         // since it restores a max of MAX_CONCURRENT_TAB_RESTORES at a time.
         this.mm.sendAsyncMessage("SessionStore:restoreTabContentComplete", {epoch});
-      }
+      },
     });
 
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {

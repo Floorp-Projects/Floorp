@@ -60,7 +60,7 @@ var successfulPinningPageListener = {
     BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kBadPinningDomain).then(function() {
       return BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
     }).then(errorPageLoaded);
-  }
+  },
 };
 
 // The browser should load about:neterror, when this happens, proceed

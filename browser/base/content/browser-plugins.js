@@ -503,7 +503,7 @@ var gPluginHandler = {
             Services.perms.addFromPrincipal(principal,
                                             "plugin-hidden-notification",
                                             Services.perms.DENY_ACTION);
-          }
+          },
         },
         {
           label: gNavigatorBundle.getString("pluginActivateTrigger.label"),
@@ -518,8 +518,8 @@ var gPluginHandler = {
             if (curNotification) {
               curNotification.reshow();
             }
-          }
-        }
+          },
+        },
       ];
       function notificationCallback(type) {
         if (type == "dismissed") {

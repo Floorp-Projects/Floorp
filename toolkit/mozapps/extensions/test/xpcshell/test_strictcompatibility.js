@@ -19,8 +19,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "1"
-      }]
+        maxVersion: "1",
+      }],
     },
     expected: {
       strictCompatibility: false,
@@ -41,8 +41,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "0.7",
-        maxVersion: "0.8"
-      }]
+        maxVersion: "0.8",
+      }],
     },
     expected: {
       strictCompatibility: false,
@@ -64,8 +64,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "0.8",
-        maxVersion: "0.9"
-      }]
+        maxVersion: "0.9",
+      }],
     },
     expected: {
       strictCompatibility: true,
@@ -87,8 +87,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "3",
-        maxVersion: "5"
-      }]
+        maxVersion: "5",
+      }],
     },
     expected: {
       strictCompatibility: false,
@@ -110,8 +110,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "0.1",
-        maxVersion: "0.2"
-      }]
+        maxVersion: "0.2",
+      }],
     },
     expected: {
       strictCompatibility: false,
@@ -132,8 +132,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "0.8",
-        maxVersion: "0.9"
-      }]
+        maxVersion: "0.9",
+      }],
     },
     expected: {
       strictCompatibility: false,
@@ -202,8 +202,8 @@ const CHECK_COMPAT_ADDONS = {
       targetApplications: [{
         id: "unknown@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "1"
-      }]
+        maxVersion: "1",
+      }],
     },
     compatible: false,
     canOverride: false,
@@ -220,8 +220,8 @@ const CHECK_COMPAT_ADDONS = {
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "1",
-        maxVersion: "1"
-      }]
+        maxVersion: "1",
+      }],
     },
     compatible: false,
     canOverride: true,
@@ -237,8 +237,8 @@ const CHECK_COMPAT_ADDONS = {
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "1",
-        maxVersion: "2"
-      }]
+        maxVersion: "2",
+      }],
     },
     compatible: true,
   },
@@ -253,8 +253,8 @@ const CHECK_COMPAT_ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     compatible: true,
   },

@@ -26,7 +26,7 @@ function promiseDownloadRemoved(list) {
       onDownloadRemoved(download) {
         list.removeView(view);
         resolve();
-      }
+      },
     };
 
     list.addView(view);
@@ -438,7 +438,7 @@ async function setupHistory() {
       uri: aURI,
       title: aTitle,
       visitDate: aVisitDate,
-      transition: Ci.nsINavHistoryService.TRANSITION_LINK
+      transition: Ci.nsINavHistoryService.TRANSITION_LINK,
     });
   }
 
@@ -474,7 +474,7 @@ async function setupFormHistory() {
                                             reject(error);
                                             throw new Error("Error occurred searching form history: " + error);
                                           },
-                                          handleCompletion(reason) { resolve(results); }
+                                          handleCompletion(reason) { resolve(results); },
                                         });
     });
   }
@@ -485,7 +485,7 @@ async function setupFormHistory() {
                                       reject(error);
                                       throw new Error("Error occurred searching form history: " + error);
                                     },
-                                    handleCompletion(reason) { resolve(); }
+                                    handleCompletion(reason) { resolve(); },
                                   });
     });
   }
@@ -493,44 +493,44 @@ async function setupFormHistory() {
   // Make sure we've got a clean DB to start with, then add the entries we'll be testing.
   await update(
     [{
-        op: "remove"
+        op: "remove",
      },
      {
         op: "add",
         fieldname: "10minutes",
-        value: "10m"
+        value: "10m",
       }, {
         op: "add",
         fieldname: "1hour",
-        value: "1h"
+        value: "1h",
       }, {
         op: "add",
         fieldname: "1hour10minutes",
-        value: "1h10m"
+        value: "1h10m",
       }, {
         op: "add",
         fieldname: "2hour",
-        value: "2h"
+        value: "2h",
       }, {
         op: "add",
         fieldname: "2hour10minutes",
-        value: "2h10m"
+        value: "2h10m",
       }, {
         op: "add",
         fieldname: "4hour",
-        value: "4h"
+        value: "4h",
       }, {
         op: "add",
         fieldname: "4hour10minutes",
-        value: "4h10m"
+        value: "4h10m",
       }, {
         op: "add",
         fieldname: "today",
-        value: "1d"
+        value: "1d",
       }, {
         op: "add",
         fieldname: "b4today",
-        value: "1y"
+        value: "1y",
       }]);
 
   // Artifically age the entries to the proper vintage.
@@ -599,7 +599,7 @@ async function setupDownloads() {
 
   let download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
-    target: "fakefile-10-minutes"
+    target: "fakefile-10-minutes",
   });
   download.startTime = new Date(now_mSec - 10 * kMsecPerMin); // 10 minutes ago
   download.canceled = true;
@@ -607,7 +607,7 @@ async function setupDownloads() {
 
   download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
-    target: "fakefile-1-hour"
+    target: "fakefile-1-hour",
   });
   download.startTime = new Date(now_mSec - 45 * kMsecPerMin); // 45 minutes ago
   download.canceled = true;
@@ -615,7 +615,7 @@ async function setupDownloads() {
 
   download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
-    target: "fakefile-1-hour-10-minutes"
+    target: "fakefile-1-hour-10-minutes",
   });
   download.startTime = new Date(now_mSec - 70 * kMsecPerMin); // 70 minutes ago
   download.canceled = true;
@@ -623,7 +623,7 @@ async function setupDownloads() {
 
   download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
-    target: "fakefile-2-hour"
+    target: "fakefile-2-hour",
   });
   download.startTime = new Date(now_mSec - 90 * kMsecPerMin); // 90 minutes ago
   download.canceled = true;
@@ -631,7 +631,7 @@ async function setupDownloads() {
 
   download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
-    target: "fakefile-2-hour-10-minutes"
+    target: "fakefile-2-hour-10-minutes",
   });
   download.startTime = new Date(now_mSec - 130 * kMsecPerMin); // 130 minutes ago
   download.canceled = true;
@@ -639,7 +639,7 @@ async function setupDownloads() {
 
   download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
-    target: "fakefile-4-hour"
+    target: "fakefile-4-hour",
   });
   download.startTime = new Date(now_mSec - 180 * kMsecPerMin); // 180 minutes ago
   download.canceled = true;
@@ -647,7 +647,7 @@ async function setupDownloads() {
 
   download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
-    target: "fakefile-4-hour-10-minutes"
+    target: "fakefile-4-hour-10-minutes",
   });
   download.startTime = new Date(now_mSec - 250 * kMsecPerMin); // 250 minutes ago
   download.canceled = true;
@@ -662,7 +662,7 @@ async function setupDownloads() {
 
   download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
-    target: "fakefile-today"
+    target: "fakefile-today",
   });
   download.startTime = today; // 12:00:01 AM this morning
   download.canceled = true;
@@ -674,7 +674,7 @@ async function setupDownloads() {
 
   download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
-    target: "fakefile-old"
+    target: "fakefile-old",
   });
   download.startTime = lastYear;
   download.canceled = true;

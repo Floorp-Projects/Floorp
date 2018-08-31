@@ -237,13 +237,13 @@ add_task(async function checkWrongSystemTimeWarning() {
         text: div.textContent,
         systemDate: systemDateDiv.textContent,
         actualDate: actualDateDiv.textContent,
-        learnMoreLink: learnMoreLink.href
+        learnMoreLink: learnMoreLink.href,
       };
     });
   }
 
   let formatter = new Services.intl.DateTimeFormat(undefined, {
-    dateStyle: "short"
+    dateStyle: "short",
   });
 
   // pretend we have a positively skewed (ahead) system time
@@ -354,7 +354,7 @@ add_task(async function checkAdvancedDetails() {
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,
-        securityInfoAsString: serializedSecurityInfo
+        securityInfoAsString: serializedSecurityInfo,
       };
     });
     isnot(message.divDisplay, "none", "Debug information is visible");
@@ -424,7 +424,7 @@ add_task(async function checkAdvancedDetailsForHSTS() {
         ecTextContent: ec.textContent,
         ecTagName: ec.tagName,
         cdlTextContent: cdl.textContent,
-        cdlTagName: cdl.tagName
+        cdlTagName: cdl.tagName,
       };
     });
 
@@ -455,7 +455,7 @@ add_task(async function checkAdvancedDetailsForHSTS() {
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,
-        securityInfoAsString: serializedSecurityInfo
+        securityInfoAsString: serializedSecurityInfo,
       };
     });
     isnot(message.divDisplay, "none", "Debug information is visible");

@@ -123,7 +123,7 @@ Services.cpmm.addMessageListener("performance-stats-service-collect", async func
     // As per protocol, respond `null`.
     Services.cpmm.sendAsyncMessage("performance-stats-service-collect", {
       id,
-      data: null
+      data: null,
     });
     return;
   }
@@ -136,6 +136,6 @@ Services.cpmm.addMessageListener("performance-stats-service-collect", async func
   let data = await gMonitor.promiseSnapshot({probeNames});
   Services.cpmm.sendAsyncMessage("performance-stats-service-collect", {
     id,
-    data
+    data,
   });
 });

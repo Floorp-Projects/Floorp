@@ -78,7 +78,7 @@ add_task(async function test_one_file_valid() {
     clean: invalidSession,
     cleanBackup: validSession,
     recovery: invalidSession,
-    recoveryBackup: invalidSession
+    recoveryBackup: invalidSession,
   });
 
   await SessionFile.read();
@@ -100,7 +100,7 @@ add_task(async function test_all_files_corrupt() {
     clean: invalidSession,
     cleanBackup: invalidSession,
     recovery: invalidSession,
-    recoveryBackup: invalidSession
+    recoveryBackup: invalidSession,
   });
 
   await SessionFile.read();

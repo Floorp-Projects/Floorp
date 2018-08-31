@@ -479,7 +479,7 @@ var ReaderMode = {
       host: doc.baseURIObject.host,
       prePath: doc.baseURIObject.prePath,
       scheme: doc.baseURIObject.scheme,
-      pathBase: Services.io.newURI(".", null, doc.baseURIObject).spec
+      pathBase: Services.io.newURI(".", null, doc.baseURIObject).spec,
     };
 
     let serializer = new XMLSerializer();

@@ -427,7 +427,7 @@ var PingPicker = {
       const pingDate = new Date(p.timestampCreated);
       const datetimeText = new Services.intl.DateTimeFormat(undefined, {
           dateStyle: "short",
-          timeStyle: "medium"
+          timeStyle: "medium",
         }).format(pingDate);
       const pingName = `${datetimeText}, ${p.type}`;
 
@@ -825,7 +825,7 @@ var SlowSQL = {
     let colTextElement = document.createTextNode(aColText);
     colElement.appendChild(colTextElement);
     aRowElement.appendChild(colElement);
-  }
+  },
 };
 
 var StackRenderer = {
@@ -912,7 +912,7 @@ var StackRenderer = {
 
     div.appendChild(titleElement);
     div.appendChild(document.createElement("br"));
-  }
+  },
 };
 
 var RawPayloadData = {
@@ -929,7 +929,7 @@ var RawPayloadData = {
     document.getElementById("payload-json-viewer").addEventListener("click", (e) => {
       openJsonInFirefoxJsonViewer(JSON.stringify(gPingData.payload, null, 2));
     });
-  }
+  },
 };
 
 function SymbolicationRequest(aPrefix, aRenderHeader,
@@ -1029,7 +1029,7 @@ var CapturedStacks = {
     let key = captures[index][0];
     let cardinality = captures[index][2];
     StackRenderer.renderHeader("captured-stacks", [key, cardinality]);
-  }
+  },
 };
 
 var Histogram = {
@@ -1104,7 +1104,7 @@ var Histogram = {
         pretty_average: 0,
         max: 0,
         sample_count: 0,
-        sum: 0
+        sum: 0,
       };
     }
 
@@ -1120,7 +1120,7 @@ var Histogram = {
       pretty_average: average,
       max: max_value,
       sample_count,
-      sum: aHgram.sum
+      sum: aHgram.sum,
     };
 
     return result;
@@ -1204,7 +1204,7 @@ var Search = {
   // A list of ids of sections that do not support search.
   blacklist: [
     "late-writes-section",
-    "raw-payload-section"
+    "raw-payload-section",
   ],
 
   // Pass if: all non-empty array items match (case-sensitive)
@@ -1409,7 +1409,7 @@ var Search = {
       }
     });
     this.updateNoResults(text, noSearchResults);
-  }
+  },
 };
 
 /*
@@ -1504,7 +1504,7 @@ var GenericTable = {
 
   defaultHeadings: [
     bundle.GetStringFromName("keysHeader"),
-    bundle.GetStringFromName("valuesHeader")
+    bundle.GetStringFromName("valuesHeader"),
   ],
 
   /**
@@ -1796,7 +1796,7 @@ function displayProcessesSelector(selectedSection) {
     "keyed-scalars-section",
     "histograms-section",
     "keyed-histograms-section",
-    "events-section"
+    "events-section",
   ];
   let processes = document.getElementById("processes");
   processes.hidden = !whitelist.includes(selectedSection);

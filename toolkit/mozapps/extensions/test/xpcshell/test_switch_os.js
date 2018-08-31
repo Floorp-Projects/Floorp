@@ -18,7 +18,7 @@ const ADDONS = {
     "install.rdf": {
       "id": "bootstrap1@tests.mozilla.org",
     },
-    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   },
 };
 

@@ -28,7 +28,7 @@ add_task(async function test_missing_crypto_collection() {
   let handlers = {
     "/1.1/johndoe/info/collections": maybe_empty(johnHelper.handler),
     "/1.1/johndoe/storage/crypto/keys": johnU("crypto", new ServerWBO("keys").handler()),
-    "/1.1/johndoe/storage/meta/global": johnU("meta", new ServerWBO("global").handler())
+    "/1.1/johndoe/storage/meta/global": johnU("meta", new ServerWBO("global").handler()),
   };
   let collections = ["clients", "bookmarks", "forms", "history",
                      "passwords", "prefs", "tabs"];

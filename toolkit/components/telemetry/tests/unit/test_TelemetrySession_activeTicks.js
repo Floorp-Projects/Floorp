@@ -72,7 +72,7 @@ add_task(async function test_record_activeTicks() {
 });
 
 add_task({
-  skip_if: () => gIsAndroid
+  skip_if: () => gIsAndroid,
 },
 async function test_subsession_activeTicks() {
   await TelemetryController.testReset();

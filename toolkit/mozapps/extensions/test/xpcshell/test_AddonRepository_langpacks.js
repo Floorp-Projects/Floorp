@@ -79,7 +79,7 @@ add_task(async function setup() {
           ],
         },
       },
-    ]
+    ],
   });
 
   let result = await AddonRepository.getAvailableLangpacks();

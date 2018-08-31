@@ -10,7 +10,7 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: PAGE_URL
+    url: PAGE_URL,
   }, async function handler(aBrowser) {
     await TabStateFlusher.flush(aBrowser);
     ok(true, "Flush didn't time out");
