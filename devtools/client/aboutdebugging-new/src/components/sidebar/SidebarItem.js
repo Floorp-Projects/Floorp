@@ -45,8 +45,7 @@ class SidebarItem extends PureComponent {
         onClick: selectable ? () => this.onItemClick() : null
       },
       dom.img({
-        className: "sidebar-item__icon" +
-                   (isSelected ? " sidebar-item__icon--selected" : ""),
+        className: "sidebar-item__icon",
         src: icon,
       }),
       dom.span(
