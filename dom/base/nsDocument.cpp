@@ -12641,6 +12641,11 @@ nsIDocument::SetUserHasInteracted(bool aUserHasInteracted)
           ("Document %p has been interacted by user.", this));
   mUserHasInteracted = aUserHasInteracted;
 
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel ? mChannel->GetLoadInfo() : nullptr;
+  if (loadInfo) {
+    loadInfo->SetDocumentHasUserInteracted(aUserHasInteracted);
+  }
+
   if (aUserHasInteracted) {
     MaybeAllowStorageForOpener();
   }
