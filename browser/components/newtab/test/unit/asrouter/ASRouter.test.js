@@ -725,6 +725,18 @@ describe("ASRouter", () => {
     });
   });
 
+  describe("#onMessage: DOORHANGER_TELEMETRY", () => {
+    it("should dispatch an AS_ROUTER_TELEMETRY_USER_EVENT on DOORHANGER_TELEMETRY message", async () => {
+      const msg = fakeAsyncMessage({type: "DOORHANGER_TELEMETRY", data: {message_id: "foo"}});
+      await Router.onMessage(msg);
+
+      assert.calledOnce(dispatchStub);
+      const [action] = dispatchStub.firstCall.args;
+      assert.equal(action.type, "AS_ROUTER_TELEMETRY_USER_EVENT");
+      assert.equal(action.data.message_id, "foo");
+    });
+  });
+
   describe("_triggerHandler", () => {
     it("should call #onMessage with the correct trigger", () => {
       sinon.spy(Router, "onMessage");

@@ -110,7 +110,7 @@ const TEST_GLOBAL = {
       getAppLocalesAsLangTags() {},
       negotiateLanguages() {}
     },
-    urlFormatter: {formatURL: str => str},
+    urlFormatter: {formatURL: str => str, formatURLPref: str => str},
     mm: {
       addMessageListener: (msg, cb) => cb(),
       removeMessageListener() {}

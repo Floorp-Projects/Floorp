@@ -4,6 +4,8 @@ import {actionCreators as ac} from "common/Actions.jsm";
 import {CollapsibleSection} from "content-src/components/CollapsibleSection/CollapsibleSection";
 import {ComponentPerfTimer} from "content-src/components/ComponentPerfTimer/ComponentPerfTimer";
 import {connect} from "react-redux";
+import {MoreRecommendations} from "content-src/components/MoreRecommendations/MoreRecommendations";
+import {PocketLoggedInCta} from "content-src/components/PocketLoggedInCta/PocketLoggedInCta";
 import React from "react";
 import {Topics} from "content-src/components/Topics/Topics";
 import {TopSites} from "content-src/components/TopSites/TopSites";
@@ -123,9 +125,9 @@ export class Section extends React.PureComponent {
 
   render() {
     const {
-      id, eventSource, title, icon, rows,
-      emptyState, dispatch, compactCards,
-      contextMenuOptions, initialized, disclaimer,
+      id, eventSource, title, icon, rows, Pocket, topics,
+      emptyState, dispatch, compactCards, read_more_endpoint,
+      contextMenuOptions, initialized, learnMore,
       pref, privacyNoticeURL, isFirst, isLast
     } = this.props;
 
@@ -135,10 +137,14 @@ export class Section extends React.PureComponent {
     const maxCards = maxCardsPerRow * numRows;
     const maxCardsOnNarrow = CARDS_PER_ROW_DEFAULT * numRows;
 
+    const shouldShowPocketCta = (id === "topstories" &&
+      Pocket.pocketCta.useCta && !Pocket.isUserLoggedIn);
+
     // Show topics only for top stories and if it's not initialized yet (so
     // content doesn't shift when it is loaded) or has loaded with topics
     const shouldShowTopics = (id === "topstories" &&
-      (!this.props.topics || this.props.topics.length > 0));
+      (!topics || topics.length > 0) &&
+      !shouldShowPocketCta);
 
     const realRows = rows.slice(0, maxCards);
 
@@ -187,13 +193,13 @@ export class Section extends React.PureComponent {
         title={title}
         id={id}
         eventSource={eventSource}
-        disclaimer={disclaimer}
         collapsed={this.props.pref.collapsed}
         showPrefName={(pref && pref.feed) || id}
         privacyNoticeURL={privacyNoticeURL}
         Prefs={this.props.Prefs}
         isFirst={isFirst}
         isLast={isLast}
+        learnMore={learnMore}
         dispatch={this.props.dispatch}
         isWebExtension={this.props.isWebExtension}>
 
@@ -211,7 +217,13 @@ export class Section extends React.PureComponent {
               </p>
             </div>
           </div>}
-        {shouldShowTopics && <Topics topics={this.props.topics} read_more_endpoint={this.props.read_more_endpoint} />}
+        {id === "topstories" &&
+          <div className="top-stories-bottom-container">
+            {shouldShowTopics && <Topics topics={this.props.topics} />}
+            {shouldShowPocketCta && <PocketLoggedInCta />}
+            {read_more_endpoint &&
+              <MoreRecommendations read_more_endpoint={read_more_endpoint} />}
+          </div>}
       </CollapsibleSection>
     </ComponentPerfTimer>);
   }

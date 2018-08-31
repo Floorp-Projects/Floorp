@@ -16,10 +16,13 @@
       vertical-align: middle;
     }
 
-    .click-target {
-      cursor: pointer;
+    .click-target-container {
       vertical-align: top;
-      white-space: nowrap;
+
+      .click-target {
+        cursor: pointer;
+        white-space: nowrap;
+      }
     }
 
     .collapsible-arrow {
@@ -29,7 +32,7 @@
   }
 
   .section-top-bar {
-    height: 19px;
+    min-height: 19px;
     margin-bottom: 13px;
     position: relative;
 
@@ -82,49 +85,17 @@
     }
   }
 
-  .section-disclaimer {
-    $max-button-width: 130px;
-    $min-button-height: 26px;
+  .learn-more-link {
+    font-size: 11px;
 
-    color: var(--newtab-text-conditional-color);
-    font-size: 13px;
-    margin-bottom: 26px;
-    position: relative;
-    display: flex;
-
-    .section-disclaimer-text {
-      display: inline-block;
-      width: calc(100% - #{$max-button-width});
-
-      @media (max-width: $break-point-medium) {
-        width: $card-width;
-      }
+    a span {
+      color: var(--newtab-link-secondary-color);
     }
 
-    a {
-      color: var(--newtab-link-primary-color);
-      font-weight: bold;
-      padding-left: 3px;
-    }
-
-    button {
-      background: var(--newtab-button-secondary-color);
-      border: 1px solid $grey-40;
-      border-radius: 4px;
-      cursor: pointer;
-      max-width: $max-button-width;
-      min-height: $min-button-height;
-      inset-inline-end: 0;
-      align-self: center;
-
-      &:hover:not(.dismiss) {
-        box-shadow: $shadow-primary;
-        transition: box-shadow 150ms;
-      }
-
-      @media (min-width: $break-point-small) {
-        position: absolute;
-      }
+    &::before {
+      content: '•';
+      padding: 8px;
+      color: var(--newtab-section-navigation-text-color);
     }
   }
 

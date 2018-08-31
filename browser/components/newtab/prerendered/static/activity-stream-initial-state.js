@@ -58,6 +58,8 @@ window.gActivityStreamPrerenderedState = {
     }
   ],
   "Pocket": {
+    "isUserLoggedIn": false,
+    "pocketCta": {},
     "waitingForSpoc": true
   }
 };
