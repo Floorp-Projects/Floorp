@@ -114,7 +114,7 @@ protected:
   /**
    * Return a XUL widget element this input is part of.
    */
-  nsIContent* XULWidgetElm() const { return mContent->GetBindingParent(); }
+  nsIContent* BindingParent() const { return mContent->GetBindingParent(); }
 };
 
 
