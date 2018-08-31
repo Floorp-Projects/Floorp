@@ -141,6 +141,11 @@ add_task(async function test_saveButton() {
   is(form.querySelectorAll(":-moz-ui-invalid").length, 0, "Check no fields visibly invalid");
   ok(!form.saveButton.disabled, "Save button is enabled after re-filling street-address");
 
+  fillField(form.form.querySelector("#country"), "CA");
+  ok(form.saveButton.disabled, "Save button is disabled after changing the country to Canada");
+  fillField(form.form.querySelector("#country"), "US");
+  ok(!form.saveButton.disabled, "Save button is enabled after changing the country to US");
+
   let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
   is(form.saveButton.textContent, "Add", "Check label");
   form.saveButton.scrollIntoView();
