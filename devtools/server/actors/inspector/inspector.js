@@ -84,7 +84,6 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
   },
 
   destroy: function() {
-    protocol.Actor.prototype.destroy.call(this);
     this.destroyEyeDropper();
 
     this._highlighterPromise = null;
@@ -92,6 +91,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     this._walkerPromise = null;
     this.walker = null;
     this.targetActor = null;
+    protocol.Actor.prototype.destroy.call(this);
   },
 
   get window() {
