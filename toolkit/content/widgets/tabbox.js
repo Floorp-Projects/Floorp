@@ -14,13 +14,27 @@ class MozTabbox extends MozXULElement {
   }
 
   connectedCallback() {
-    Services.els.addSystemEventListener(document, "keydown", this, false);
+    switch (this.getAttribute("eventnode")) {
+      case "parent":
+        this._eventNode = this.parentNode;
+        break;
+      case "window":
+        this._eventNode = window;
+        break;
+      case "document":
+        this._eventNode = document;
+        break;
+      default:
+        this._eventNode = this;
+    }
+
+    Services.els.addSystemEventListener(this._eventNode, "keydown", this, false);
     window.addEventListener("unload", this.disconnectedCallback, { once: true });
   }
 
   disconnectedCallback() {
     window.removeEventListener("unload", this.disconnectedCallback);
-    Services.els.removeSystemEventListener(document, "keydown", this, false);
+    Services.els.removeSystemEventListener(this._eventNode, "keydown", this, false);
   }
 
   set handleCtrlTab(val) {
@@ -97,6 +111,19 @@ class MozTabbox extends MozXULElement {
   get selectedPanel() {
     var tabpanels = this.tabpanels;
     return tabpanels && tabpanels.selectedPanel;
+  }
+
+  set eventNode(val) {
+    if (val != this._eventNode) {
+      Services.els.addSystemEventListener(val, "keydown", this, false);
+      Services.els.removeSystemEventListener(this._eventNode, "keydown", this, false);
+      this._eventNode = val;
+    }
+    return val;
+  }
+
+  get eventNode() {
+    return this._eventNode;
   }
 
   handleEvent(event) {

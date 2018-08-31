@@ -21,7 +21,7 @@ var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"].
 formHistoryStartup.observe(null, "profile-after-change", null);
 
 var httpServer = new HttpServer();
-var getEngine, postEngine, unresolvableEngine;
+var getEngine, postEngine, unresolvableEngine, alternateJSONEngine;
 
 function run_test() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
@@ -57,7 +57,14 @@ add_task(async function add_test_engines() {
     method: "GET",
   };
 
-  [getEngine, postEngine, unresolvableEngine] = await addTestEngines([
+  let alternateJSONSuggestEngineData = {
+    baseURL: gDataUrl,
+    name: "Alternative JSON suggestion type",
+    method: "GET",
+    alternativeJSONType: true,
+  };
+
+  [getEngine, postEngine, unresolvableEngine, alternateJSONEngine] = await addTestEngines([
     {
       name: getEngineData.name,
       xmlFileName: "engineMaker.sjs?" + JSON.stringify(getEngineData),
@@ -69,6 +76,10 @@ add_task(async function add_test_engines() {
     {
       name: unresolvableEngineData.name,
       xmlFileName: "engineMaker.sjs?" + JSON.stringify(unresolvableEngineData),
+    },
+    {
+      name: alternateJSONSuggestEngineData.name,
+      xmlFileName: "engineMaker.sjs?" + JSON.stringify(alternateJSONSuggestEngineData),
     },
   ]);
 });
@@ -118,6 +129,17 @@ add_task(async function simple_no_result_promise() {
 add_task(async function simple_remote_no_local_result() {
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("mo", false, getEngine);
+  Assert.equal(result.term, "mo");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 3);
+  Assert.equal(result.remote[0], "Mozilla");
+  Assert.equal(result.remote[1], "modern");
+  Assert.equal(result.remote[2], "mom");
+});
+
+add_task(async function simple_remote_no_local_result_alternative_type() {
+  let controller = new SearchSuggestionController();
+  let result = await controller.fetch("mo", false, alternateJSONEngine);
   Assert.equal(result.term, "mo");
   Assert.equal(result.local.length, 0);
   Assert.equal(result.remote.length, 3);
