@@ -1070,10 +1070,9 @@ set_define('MOZ_LAUNCHER_PROCESS', launcher)
 @depends(c_compiler)
 def libprio(info):
     if info:
-      if info.type in ('msvc'):
+      if info.type in ('msvc',):
         return None
-    else:
-      return True
+    return True
 
 set_config('MOZ_LIBPRIO', libprio)
 
