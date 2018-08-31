@@ -695,7 +695,7 @@ struct ProjectLazyFuncIndex
 static constexpr unsigned LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE = 8 * 1024;
 
 bool
-LazyStubTier::createMany(HasGcTypes gcTypesEnabled, const Uint32Vector& funcExportIndices,
+LazyStubTier::createMany(HasGcTypes gcTypesConfigured, const Uint32Vector& funcExportIndices,
                          const CodeTier& codeTier, size_t* stubSegmentIndex)
 {
     MOZ_ASSERT(funcExportIndices.length());
@@ -719,7 +719,7 @@ LazyStubTier::createMany(HasGcTypes gcTypesEnabled, const Uint32Vector& funcExpo
         Maybe<ImmPtr> callee;
         callee.emplace(calleePtr, ImmPtr::NoCheckToken());
         if (!GenerateEntryStubs(masm, funcExportIndex, fe, callee, /* asmjs */ false,
-                                gcTypesEnabled, &codeRanges))
+                                gcTypesConfigured, &codeRanges))
         {
             return false;
         }
@@ -801,7 +801,7 @@ LazyStubTier::createOne(uint32_t funcExportIndex, const CodeTier& codeTier)
         return false;
 
     size_t stubSegmentIndex;
-    if (!createMany(codeTier.code().metadata().temporaryHasGcTypes, funcExportIndexes, codeTier,
+    if (!createMany(codeTier.code().metadata().temporaryGcTypesConfigured, funcExportIndexes, codeTier,
                     &stubSegmentIndex))
     {
         return false;
@@ -828,14 +828,14 @@ LazyStubTier::createOne(uint32_t funcExportIndex, const CodeTier& codeTier)
 }
 
 bool
-LazyStubTier::createTier2(HasGcTypes gcTypesEnabled, const Uint32Vector& funcExportIndices,
+LazyStubTier::createTier2(HasGcTypes gcTypesConfigured, const Uint32Vector& funcExportIndices,
                           const CodeTier& codeTier, Maybe<size_t>* outStubSegmentIndex)
 {
     if (!funcExportIndices.length())
         return true;
 
     size_t stubSegmentIndex;
-    if (!createMany(gcTypesEnabled, funcExportIndices, codeTier, &stubSegmentIndex))
+    if (!createMany(gcTypesConfigured, funcExportIndices, codeTier, &stubSegmentIndex))
         return false;
 
     outStubSegmentIndex->emplace(stubSegmentIndex);
