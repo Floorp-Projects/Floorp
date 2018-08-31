@@ -489,7 +489,7 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
 
   pickColorFromPage: custom(async function(options) {
     await this._pickColorFromPage(options);
-    if (options.fromMenu) {
+    if (options && options.fromMenu) {
       telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED_MENU).add(true);
     } else {
       telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED).add(true);
