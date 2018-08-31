@@ -310,3 +310,9 @@ add_task(async function check_onboarding_cohort() {
   Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", enabled: true, cohort: "hello"}]));
   is(await ASRouterTargeting.Environment.isInExperimentCohort, 0);
 });
+
+add_task(async function check_provider_cohorts() {
+  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", enabled: true, cohort: "foo"}, {id: "cfr", cohort: "bar"}]));
+  is(await ASRouterTargeting.Environment.providerCohorts.onboarding, "foo");
+  is(await ASRouterTargeting.Environment.providerCohorts.cfr, "bar");
+});

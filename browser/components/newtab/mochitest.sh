@@ -21,4 +21,5 @@ cd /mozilla-central && ./mach build \
   browser/components/preferences/in-content/tests/browser_newtab_menu.js \
   browser/components/enterprisepolicies/tests/browser/browser_policy_set_homepage.js \
   browser/components/preferences/in-content/tests/browser_search_subdialogs_within_preferences_1.js \
+  browser/extensions/onboarding/test/browser \
   && ! grep -q TEST-UNEXPECTED test_run_log

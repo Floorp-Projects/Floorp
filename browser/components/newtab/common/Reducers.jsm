@@ -38,7 +38,11 @@ const INITIAL_STATE = {
     data: {}
   },
   Sections: [],
-  Pocket: {waitingForSpoc: true}
+  Pocket: {
+    isUserLoggedIn: false,
+    pocketCta: {},
+    waitingForSpoc: true
+  }
 };
 
 function App(prevState = INITIAL_STATE.App, action) {
@@ -386,6 +390,18 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   switch (action.type) {
     case at.POCKET_WAITING_FOR_SPOC:
       return {...prevState, waitingForSpoc: action.data};
+    case at.POCKET_LOGGED_IN:
+      return {...prevState, isUserLoggedIn: !!action.data};
+    case at.POCKET_CTA:
+      return {
+        ...prevState,
+        pocketCta: {
+          ctaButton: action.data.cta_button,
+          ctaText: action.data.cta_text,
+          ctaUrl: action.data.cta_url,
+          useCta: action.data.use_cta
+        }
+      };
     default:
       return prevState;
   }

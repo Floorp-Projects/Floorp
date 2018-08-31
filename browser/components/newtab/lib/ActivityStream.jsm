@@ -77,6 +77,15 @@ const PREFS_CONFIG = new Map([
     title: "Show sponsored cards in spoc experiment (show_spocs in topstories.options has to be set to true as well)",
     value: true
   }],
+  ["pocketCta", {
+    title: "Pocket cta and button for logged out users.",
+    value: JSON.stringify({
+      cta_button: "",
+      cta_text: "",
+      cta_url: "",
+      use_cta: false
+    })
+  }],
   ["filterAdult", {
     title: "Remove adult pages from sites, highlights, etc.",
     value: true
@@ -142,10 +151,6 @@ const PREFS_CONFIG = new Map([
   ["section.highlights.rows", {
     title: "Number of rows of Highlights to display",
     value: 2
-  }],
-  ["section.topstories.showDisclaimer", {
-    title: "Boolean flag that decides whether or not to show the topstories disclaimer.",
-    value: true
   }],
   ["section.topstories.rows", {
     title: "Number of rows of Top Stories to display",
