@@ -3555,14 +3555,16 @@ public:
     --mIgnoreOpensDuringUnloadCounter;
   }
 
-  void IncrementTrackerCount(bool aIsTrackerBlocked)
+  void IncrementTrackerCount()
   {
     MOZ_ASSERT(!GetSameTypeParentDocument());
-
     ++mNumTrackersFound;
-    if (aIsTrackerBlocked) {
-      ++mNumTrackersBlocked;
-    }
+  }
+
+  void IncrementTrackerBlockedCount()
+  {
+    MOZ_ASSERT(!GetSameTypeParentDocument());
+    ++mNumTrackersBlocked;
   }
 
   uint32_t NumTrackersFound()

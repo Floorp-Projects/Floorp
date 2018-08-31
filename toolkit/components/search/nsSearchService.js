@@ -1778,6 +1778,16 @@ Engine.prototype = {
     var template = aElement.getAttribute("template");
     var resultDomain = aElement.getAttribute("resultdomain");
 
+    let rels = [];
+    if (aElement.hasAttribute("rel")) {
+      rels = aElement.getAttribute("rel").toLowerCase().split(/\s+/);
+    }
+
+    // Support an alternate suggestion type, see bug 1425827 for details.
+    if (type == "application/json" && rels.includes("suggestions")) {
+      type = URLTYPE_SUGGEST_JSON;
+    }
+
     try {
       var url = new EngineURL(type, method, template, resultDomain);
     } catch (ex) {
@@ -1785,8 +1795,9 @@ Engine.prototype = {
            Cr.NS_ERROR_FAILURE);
     }
 
-    if (aElement.hasAttribute("rel"))
-      url.rels = aElement.getAttribute("rel").toLowerCase().split(/\s+/);
+    if (rels.length) {
+      url.rels = rels;
+    }
 
     for (var i = 0; i < aElement.children.length; ++i) {
       var param = aElement.children[i];
