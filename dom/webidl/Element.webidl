@@ -269,7 +269,7 @@ partial interface Element {
 
 // https://w3c.github.io/pointerlock/#extensions-to-the-element-interface
 partial interface Element {
-  [NeedsCallerType]
+  [NeedsCallerType, Pref="dom.pointer-lock.enabled"]
   void requestPointerLock();
 };
 

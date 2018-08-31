@@ -155,7 +155,6 @@ XULDocument::XULDocument(void)
       mDocumentLoaded(false),
       mStillWalking(false),
       mPendingSheets(0),
-      mDocLWTheme(Doc_Theme_Uninitialized),
       mCurrentScriptProto(nullptr),
       mOffThreadCompiling(false),
       mOffThreadCompileStringBuf(nullptr),
@@ -2653,42 +2652,6 @@ XULDocument::DirectionChanged(const char* aPrefName, XULDocument* aDoc)
   if (aDoc) {
       aDoc->ResetDocumentDirection();
   }
-}
-
-nsIDocument::DocumentTheme
-XULDocument::GetDocumentLWTheme()
-{
-    if (mDocLWTheme == Doc_Theme_Uninitialized) {
-        mDocLWTheme = ThreadSafeGetDocumentLWTheme();
-    }
-    return mDocLWTheme;
-}
-
-nsIDocument::DocumentTheme
-XULDocument::ThreadSafeGetDocumentLWTheme() const
-{
-    if (mDocLWTheme != Doc_Theme_Uninitialized) {
-        return mDocLWTheme;
-    }
-
-    DocumentTheme theme = Doc_Theme_None; // No lightweight theme by default
-    Element* element = GetRootElement();
-    nsAutoString hasLWTheme;
-    if (element &&
-        element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwtheme, hasLWTheme) &&
-        !(hasLWTheme.IsEmpty()) &&
-        hasLWTheme.EqualsLiteral("true")) {
-        theme = Doc_Theme_Neutral;
-        nsAutoString lwTheme;
-        element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwthemetextcolor, lwTheme);
-        if (!(lwTheme.IsEmpty())) {
-            if (lwTheme.EqualsLiteral("dark"))
-                theme = Doc_Theme_Dark;
-            else if (lwTheme.EqualsLiteral("bright"))
-                theme = Doc_Theme_Bright;
-        }
-    }
-    return theme;
 }
 
 JSObject*
