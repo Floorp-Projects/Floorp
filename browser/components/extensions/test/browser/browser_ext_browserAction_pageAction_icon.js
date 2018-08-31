@@ -28,7 +28,7 @@ add_task(async function testDetailsObjects() {
       green: getImageData("green"),
     };
 
-    /* eslint-disable comma-dangle, indent, indent-legacy */
+    /* eslint-disable indent, indent-legacy */
     let iconDetails = [
       // Only paths.
       {details: {"path": "a.png"},
@@ -166,6 +166,7 @@ add_task(async function testDetailsObjects() {
           "1": browser.runtime.getURL("data/32.png"),
           "2": browser.runtime.getURL("data/32.png")}},
     ];
+    /* eslint-enable indent, indent-legacy */
 
     // Allow serializing ImageData objects for logging.
     ImageData.prototype.toJSON = () => "<ImageData>";
