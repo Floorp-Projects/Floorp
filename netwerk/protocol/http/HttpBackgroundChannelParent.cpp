@@ -380,7 +380,7 @@ HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled()
 }
 
 bool
-HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked()
+HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked(uint32_t aRejectedReason)
 {
   LOG(("HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked [this=%p]\n", this));
   AssertIsInMainProcess();
@@ -391,11 +391,13 @@ HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked()
 
   if (!IsOnBackgroundThread()) {
     MutexAutoLock lock(mBgThreadMutex);
+    RefPtr<HttpBackgroundChannelParent> self = this;
     nsresult rv = mBackgroundThread->Dispatch(
-      NewRunnableMethod(
+      NS_NewRunnableFunction(
         "net::HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked",
-        this,
-        &HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked),
+        [self, aRejectedReason]() {
+          self->OnNotifyTrackingCookieBlocked(aRejectedReason);
+        }),
       NS_DISPATCH_NORMAL);
 
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -403,7 +405,7 @@ HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked()
     return NS_SUCCEEDED(rv);
   }
 
-  return SendNotifyTrackingCookieBlocked();
+  return SendNotifyTrackingCookieBlocked(aRejectedReason);
 }
 
 bool

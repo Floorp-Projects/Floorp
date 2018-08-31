@@ -39,7 +39,7 @@ SimpleChannelParent::NotifyTrackingProtectionDisabled()
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::NotifyTrackingCookieBlocked()
+SimpleChannelParent::NotifyTrackingCookieBlocked(uint32_t aRejectedReason)
 {
   // Nothing to do.
   return NS_OK;

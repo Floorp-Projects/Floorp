@@ -577,7 +577,7 @@ FTPChannelParent::NotifyTrackingProtectionDisabled()
 }
 
 NS_IMETHODIMP
-FTPChannelParent::NotifyTrackingCookieBlocked()
+FTPChannelParent::NotifyTrackingCookieBlocked(uint32_t aRejectedReason)
 {
   // One day, this should probably be filled in.
   return NS_OK;

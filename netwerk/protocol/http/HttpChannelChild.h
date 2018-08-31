@@ -253,7 +253,7 @@ private:
   void ProcessFlushedForDiversion();
   void ProcessDivertMessages();
   void ProcessNotifyTrackingProtectionDisabled();
-  void ProcessNotifyTrackingCookieBlocked();
+  void ProcessNotifyTrackingCookieBlocked(uint32_t aRejectedReason);
   void ProcessNotifyTrackingResource(bool aIsThirdParty);
   void ProcessSetClassifierMatchedInfo(const nsCString& aList,
                                        const nsCString& aProvider,

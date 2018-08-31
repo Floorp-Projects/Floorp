@@ -65,7 +65,7 @@ protected:
 
   IPCResult RecvNotifyTrackingProtectionDisabled() override;
 
-  IPCResult RecvNotifyTrackingCookieBlocked() override;
+  IPCResult RecvNotifyTrackingCookieBlocked(const uint32_t& aRejectedReason) override;
 
   IPCResult RecvNotifyTrackingResource(const bool& aIsThirdParty) override;
 
