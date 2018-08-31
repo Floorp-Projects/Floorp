@@ -66,4 +66,7 @@
     <dimen name="menu_blocking_switch_height">20dp</dimen>
     <dimen name="menu_blocking_switch_width">46dp</dimen>
     <dimen name="menu_blocking_switch_margin">12dp</dimen>
+
+    <dimen name="search_suggestions_padding_start">56dp</dimen>
+    <dimen name="search_suggestions_padding_with_icon">16dp</dimen>
 </resources>

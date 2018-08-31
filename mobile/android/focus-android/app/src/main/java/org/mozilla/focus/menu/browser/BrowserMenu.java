@@ -65,7 +65,7 @@ public class BrowserMenu extends PopupWindow {
     }
 
     public void show(View anchor) {
-        final int xOffset = ViewUtils.isRTL(anchor) ? -anchor.getWidth() : 0;
+        final int xOffset = ViewUtils.INSTANCE.isRTL(anchor) ? -anchor.getWidth() : 0;
 
         super.showAsDropDown(anchor, xOffset, -(anchor.getHeight() + anchor.getPaddingBottom()));
     }

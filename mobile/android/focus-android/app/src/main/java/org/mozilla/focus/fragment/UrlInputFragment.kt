@@ -174,7 +174,13 @@ class UrlInputFragment :
 
         searchSuggestionsViewModel.selectedSearchSuggestion.observe(this, Observer {
             val isSuggestion = searchSuggestionsViewModel.searchQuery.value != it
-            onSearch(it, isSuggestion)
+            it?.let {
+                if (searchSuggestionsViewModel.alwaysSearch) {
+                    onSearch(it, false, true)
+                } else {
+                    onSearch(it, isSuggestion)
+                }
+            }
         })
     }
 
@@ -660,11 +666,16 @@ class UrlInputFragment :
         return Triple(isUrl, url, searchTerms)
     }
 
-    private fun onSearch(query: String?, isSuggestion: Boolean = false) {
-        val searchTerms = query ?: urlView?.originalText
-        val searchUrl = UrlUtils.createSearchUrl(context, searchTerms)
+    private fun onSearch(query: String, isSuggestion: Boolean = false, alwaysSearch: Boolean = false) {
+        if (alwaysSearch) {
+            openUrl(UrlUtils.createSearchUrl(context, query), query)
+        } else {
+            val searchTerms = if (UrlUtils.isUrl(query)) null else query
+            val searchUrl =
+                if (searchTerms != null) UrlUtils.createSearchUrl(context, searchTerms) else UrlUtils.normalize(query)
 
-        openUrl(searchUrl, searchTerms)
+            openUrl(searchUrl, searchTerms)
+        }
 
         TelemetryWrapper.searchSelectEvent(isSuggestion)
     }

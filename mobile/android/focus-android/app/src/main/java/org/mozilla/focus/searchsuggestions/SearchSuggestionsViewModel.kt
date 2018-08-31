@@ -13,12 +13,11 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
-import mozilla.components.browser.search.SearchEngine
 
 sealed class State {
     data class Disabled(val givePrompt: Boolean) : State()
     data class NoSuggestionsAPI(val givePrompt: Boolean) : State()
-    class ReadyForSuggestions : State()
+    object ReadyForSuggestions : State()
 }
 
 class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(application) {
@@ -34,10 +33,9 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
     private val _state = MutableLiveData<State>()
     val state: LiveData<State> = _state
 
-    private val _searchEngine = MutableLiveData<SearchEngine>()
-    val searchEngine: LiveData<SearchEngine> = _searchEngine
-
     val suggestions: LiveData<List<SpannableStringBuilder>>
+    var alwaysSearch = false
+        private set
 
     init {
         fetcher = SearchSuggestionsFetcher(preferences.getSearchEngine())
@@ -54,8 +52,9 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
         }
     }
 
-    fun selectSearchSuggestion(suggestion: String) {
-        _selectedSearchSuggestion.value = suggestion
+    fun selectSearchSuggestion(suggestion: String, alwaysSearch: Boolean = false) {
+        this.alwaysSearch = alwaysSearch
+        _selectedSearchSuggestion.postValue(suggestion)
     }
 
     fun setSearchQuery(query: String) {
@@ -84,7 +83,6 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
     fun refresh() {
         val engine = preferences.getSearchEngine()
         fetcher.updateSearchEngine(engine)
-        _searchEngine.value = engine
         updateState()
     }
 
@@ -93,7 +91,7 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
 
         val state = if (enabled) {
             if (fetcher.canProvideSearchSuggestions) {
-                State.ReadyForSuggestions()
+                State.ReadyForSuggestions
             } else {
                 val givePrompt = !preferences.userHasDismissedNoSuggestionsMessage()
                 State.NoSuggestionsAPI(givePrompt)

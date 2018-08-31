@@ -10,6 +10,7 @@
         android:id="@+id/suggestion"
         android:layout_width="match_parent"
         android:layout_height="54dp"
+        android:drawablePadding="16dp"
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:lines="1"

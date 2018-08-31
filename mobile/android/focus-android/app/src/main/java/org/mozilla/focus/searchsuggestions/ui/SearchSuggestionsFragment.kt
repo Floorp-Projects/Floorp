@@ -7,7 +7,6 @@ package org.mozilla.focus.searchsuggestions.ui
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
@@ -29,13 +28,13 @@ import kotlinx.android.synthetic.main.fragment_search_suggestions.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-
 import org.mozilla.focus.R
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.State
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.utils.SupportUtils
+import org.mozilla.focus.utils.UrlUtils
 
 class SearchSuggestionsFragment : Fragment() {
     lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
@@ -85,17 +84,6 @@ class SearchSuggestionsFragment : Fragment() {
                     }
             }
         })
-
-        searchSuggestionsViewModel.searchEngine.observe(this, Observer { searchEngine ->
-            val icon = searchEngine?.icon?.let {
-                BitmapDrawable(resources, it)
-            } ?: resources.getDrawable(R.drawable.ic_search, null)
-
-            val size = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
-            icon.setBounds(0, 0, size, size)
-
-            searchView.setCompoundDrawables(icon, null, null, null)
-        })
     }
 
     override fun onCreateView(
@@ -119,7 +107,7 @@ class SearchSuggestionsFragment : Fragment() {
         searchView.setOnClickListener {
             val textView = it
             if (textView is TextView) {
-                searchSuggestionsViewModel.selectSearchSuggestion(textView.text.toString())
+                searchSuggestionsViewModel.selectSearchSuggestion(textView.text.toString(), true)
             }
         }
 
@@ -242,6 +230,23 @@ private class SuggestionViewHolder(
 
     fun bind(suggestion: SpannableStringBuilder) {
         suggestionText.text = suggestion
+        suggestionText.setPaddingRelative(
+            itemView.resources.getDimensionPixelSize(R.dimen.search_suggestions_padding_with_icon),
+            0,
+            0,
+            0
+        )
+        val size = itemView.resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
+
+        if (UrlUtils.isUrl(suggestionText.text.toString())) {
+            val icon = ContextCompat.getDrawable(itemView.context, R.drawable.ic_link)
+            icon?.setBounds(0, 0, size, size)
+            suggestionText.setCompoundDrawables(icon, null, null, null)
+        } else {
+            val icon = ContextCompat.getDrawable(itemView.context, R.drawable.ic_search)
+            icon?.setBounds(0, 0, size, size)
+            suggestionText.setCompoundDrawables(icon, null, null, null)
+        }
         itemView.setOnClickListener { clickListener(suggestion.toString()) }
     }
 }
