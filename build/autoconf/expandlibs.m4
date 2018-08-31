@@ -14,13 +14,9 @@ dnl ========================================================
 AC_CACHE_CHECK(what kind of list files are supported by the linker,
     EXPAND_LIBS_LIST_STYLE,
     [echo "int main() {return 0;}" > conftest.${ac_ext}
-     dnl Because BFD ld doesn't work with LTO + linker scripts, we
-     dnl must pass the LTO CFLAGS to the compile command, and the LTO
-     dnl LDFLAGS to all subsequent link commands.
-     dnl https://sourceware.org/bugzilla/show_bug.cgi?id=23600
-     if AC_TRY_COMMAND(${CC-cc} -o conftest.${OBJ_SUFFIX} -c $MOZ_LTO_CFLAGS $CFLAGS $CPPFLAGS conftest.${ac_ext} 1>&5) && test -s conftest.${OBJ_SUFFIX}; then
+     if AC_TRY_COMMAND(${CC-cc} -o conftest.${OBJ_SUFFIX} -c $CFLAGS $CPPFLAGS conftest.${ac_ext} 1>&5) && test -s conftest.${OBJ_SUFFIX}; then
          echo "INPUT(conftest.${OBJ_SUFFIX})" > conftest.list
-         if AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $MOZ_LTO_LDFLAGS $LDFLAGS conftest.list $LIBS 1>&5) && test -s conftest${ac_exeext}; then
+         if AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.list $LIBS 1>&5) && test -s conftest${ac_exeext}; then
              EXPAND_LIBS_LIST_STYLE=linkerscript
          else
              echo "conftest.${OBJ_SUFFIX}" > conftest.list
@@ -28,12 +24,12 @@ AC_CACHE_CHECK(what kind of list files are supported by the linker,
              dnl first because clang understands @file, but may pass an
              dnl oversized argument list to the linker depending on the
              dnl contents of @file.
-             if AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $MOZ_LTO_LDFLAGS $LDFLAGS [-Wl,-filelist,conftest.list] $LIBS 1>&5) && test -s conftest${ac_exeext}; then
+             if AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS [-Wl,-filelist,conftest.list] $LIBS 1>&5) && test -s conftest${ac_exeext}; then
                  EXPAND_LIBS_LIST_STYLE=filelist
-             elif AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $MOZ_LTO_LDFLAGS $LDFLAGS @conftest.list $LIBS 1>&5) && test -s conftest${ac_exeext}; then
+             elif AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS @conftest.list $LIBS 1>&5) && test -s conftest${ac_exeext}; then
                  EXPAND_LIBS_LIST_STYLE=list
              else
-                 AC_ERROR([Couldn't find one that works])
+                 EXPAND_LIBS_LIST_STYLE=none
              fi
          fi
      else
@@ -42,6 +38,29 @@ AC_CACHE_CHECK(what kind of list files are supported by the linker,
      fi
      rm -rf conftest*])
 
+LIBS_DESC_SUFFIX=desc
+AC_SUBST(LIBS_DESC_SUFFIX)
 AC_SUBST(EXPAND_LIBS_LIST_STYLE)
+
+if test "$GCC_USE_GNU_LD"; then
+    AC_CACHE_CHECK(what kind of ordering can be done with the linker,
+        EXPAND_LIBS_ORDER_STYLE,
+        [> conftest.order
+         _SAVE_LDFLAGS="$LDFLAGS"
+         LDFLAGS="${LDFLAGS} -Wl,--section-ordering-file,conftest.order"
+         AC_TRY_LINK([], [],
+             EXPAND_LIBS_ORDER_STYLE=section-ordering-file,
+             EXPAND_LIBS_ORDER_STYLE=)
+         LDFLAGS="$_SAVE_LDFLAGS"
+         if test -z "$EXPAND_LIBS_ORDER_STYLE"; then
+             if AC_TRY_COMMAND(${CC-cc} ${DSO_LDOPTS} ${LDFLAGS} -o conftest -Wl,--verbose 2> /dev/null | sed -n '/^===/,/^===/p' | grep '\.text'); then
+                 EXPAND_LIBS_ORDER_STYLE=linkerscript
+             else
+                 EXPAND_LIBS_ORDER_STYLE=none
+             fi
+             rm -f ${DLL_PREFIX}conftest${DLL_SUFFIX}
+         fi])
+fi
+AC_SUBST(EXPAND_LIBS_ORDER_STYLE)
 
 ])

@@ -495,6 +495,33 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
         self.assertEqual(self.to_unix_line_ending(sel.selected_content), 'select')
 
+    @skip_if_not_rotatable
+    def test_caret_position_after_changing_orientation_of_device(self):
+        '''Bug 1094072
+        If positions of carets are updated correctly, they should be draggable.
+        '''
+        self.open_test_html(self._longtext_html)
+        body = self.marionette.find_element(By.ID, 'bd')
+        longtext = self.marionette.find_element(By.ID, 'longtext')
+
+        # Select word in portrait mode, then change to landscape mode
+        self.marionette.set_orientation('portrait')
+        self.long_press_on_word(longtext, 12)
+        sel = SelectionManager(body)
+        (p_start_caret_x, p_start_caret_y), (p_end_caret_x, p_end_caret_y) = sel.carets_location()
+        self.marionette.set_orientation('landscape')
+        (l_start_caret_x, l_start_caret_y), (l_end_caret_x, l_end_caret_y) = sel.carets_location()
+
+        # Drag end caret to the start caret to change the selected content
+        self.actions.flick(body, l_end_caret_x, l_end_caret_y,
+                           l_start_caret_x, l_start_caret_y).perform()
+
+        # Change orientation back to portrait mode to prevent affecting
+        # other tests
+        self.marionette.set_orientation('portrait')
+
+        self.assertEqual(self.to_unix_line_ending(sel.selected_content), 'o')
+
     def test_select_word_inside_an_iframe(self):
         '''Bug 1088552
         The scroll offset in iframe should be taken into consideration properly.

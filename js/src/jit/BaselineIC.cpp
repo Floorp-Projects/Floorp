@@ -70,10 +70,9 @@ FallbackICSpew(JSContext* cx, ICFallbackStub* stub, const char* fmt, ...)
         va_end(args);
 
         JitSpew(JitSpew_BaselineICFallback,
-                "Fallback hit for (%s:%u:%u) (pc=%zu,line=%d,uses=%d,stubs=%zu): %s",
+                "Fallback hit for (%s:%u) (pc=%zu,line=%d,uses=%d,stubs=%zu): %s",
                 script->filename(),
                 script->lineno(),
-                script->column(),
                 script->pcToOffset(pc),
                 PCToLineNumber(script, pc),
                 script->getWarmUpCount(),
@@ -96,10 +95,9 @@ TypeFallbackICSpew(JSContext* cx, ICTypeMonitor_Fallback* stub, const char* fmt,
         va_end(args);
 
         JitSpew(JitSpew_BaselineICFallback,
-                "Type monitor fallback hit for (%s:%u:%u) (pc=%zu,line=%d,uses=%d,stubs=%d): %s",
+                "Type monitor fallback hit for (%s:%u) (pc=%zu,line=%d,uses=%d,stubs=%d): %s",
                 script->filename(),
                 script->lineno(),
-                script->column(),
                 script->pcToOffset(pc),
                 PCToLineNumber(script, pc),
                 script->getWarmUpCount(),
@@ -3340,9 +3338,9 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                     fun->native(), constructing ? "yes" : "no", isSpread ? "yes" : "no");
         } else {
             JitSpew(JitSpew_BaselineIC,
-                    "  Generating Call_Scripted stub (fun=%p, %s:%u:%u, cons=%s, spread=%s)",
+                    "  Generating Call_Scripted stub (fun=%p, %s:%u, cons=%s, spread=%s)",
                     fun.get(), fun->nonLazyScript()->filename(), fun->nonLazyScript()->lineno(),
-                    fun->nonLazyScript()->column(), constructing ? "yes" : "no", isSpread ? "yes" : "no");
+                    constructing ? "yes" : "no", isSpread ? "yes" : "no");
         }
 
         bool isCrossRealm = cx->realm() != fun->realm();

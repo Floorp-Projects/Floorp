@@ -647,9 +647,7 @@ InitFromBailout(JSContext* cx, size_t frameNo,
     // |  ReturnAddr   | <-- return into main jitcode after IC
     // +===============+
 
-    JitSpew(JitSpew_BaselineBailouts, "      Unpacking %s:%u:%u", script->filename(),
-                                                                  script->lineno(), 
-                                                                  script->column());
+    JitSpew(JitSpew_BaselineBailouts, "      Unpacking %s:%u", script->filename(), script->lineno());
     JitSpew(JitSpew_BaselineBailouts, "      [BASELINE-JS FRAME]");
 
     // Calculate and write the previous frame pointer value.
@@ -1047,9 +1045,9 @@ InitFromBailout(JSContext* cx, size_t frameNo,
 #endif
 
 #ifdef JS_JITSPEW
-    JitSpew(JitSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%u:%u",
+    JitSpew(JitSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%u",
                 resumeAfter ? "after" : "at", (int) pcOff, CodeName[op],
-                PCToLineNumber(script, pc), script->filename(), script->lineno(), script->column());
+                PCToLineNumber(script, pc), script->filename(), script->lineno());
     JitSpew(JitSpew_BaselineBailouts, "      Bailout kind: %s",
             BailoutKindString(bailoutKind));
 #endif
@@ -1557,8 +1555,8 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     //      |    |||||      |
     //      +---------------+
 
-    JitSpew(JitSpew_BaselineBailouts, "Bailing to baseline %s:%u:%u (IonScript=%p) (FrameType=%d)",
-            iter.script()->filename(), iter.script()->lineno(), iter.script()->column(), (void*) iter.ionScript(),
+    JitSpew(JitSpew_BaselineBailouts, "Bailing to baseline %s:%u (IonScript=%p) (FrameType=%d)",
+            iter.script()->filename(), iter.script()->lineno(), (void*) iter.ionScript(),
             (int) prevFrameType);
 
     bool catchingException;
@@ -1613,8 +1611,8 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     RootedFunction callee(cx, iter.maybeCallee());
     RootedScript scr(cx, iter.script());
     if (callee) {
-        JitSpew(JitSpew_BaselineBailouts, "  Callee function (%s:%u:%u)",
-                scr->filename(), scr->lineno(), scr->column());
+        JitSpew(JitSpew_BaselineBailouts, "  Callee function (%s:%u)",
+                scr->filename(), scr->lineno());
     } else {
         JitSpew(JitSpew_BaselineBailouts, "  No callee!");
     }
@@ -1739,9 +1737,9 @@ InvalidateAfterBailout(JSContext* cx, HandleScript outerScript, const char* reas
 static void
 HandleBoundsCheckFailure(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Bounds check failure %s:%u:%u, inlined into %s:%u:%u",
-            innerScript->filename(), innerScript->lineno(), innerScript->column(),
-            outerScript->filename(), outerScript->lineno(), outerScript->column());
+    JitSpew(JitSpew_IonBailouts, "Bounds check failure %s:%u, inlined into %s:%u",
+            innerScript->filename(), innerScript->lineno(),
+            outerScript->filename(), outerScript->lineno());
 
     if (!innerScript->failedBoundsCheck())
         innerScript->setFailedBoundsCheck();
@@ -1754,9 +1752,9 @@ HandleBoundsCheckFailure(JSContext* cx, HandleScript outerScript, HandleScript i
 static void
 HandleShapeGuardFailure(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Shape guard failure %s:%u:%u, inlined into %s:%u:%u",
-            innerScript->filename(), innerScript->lineno(), innerScript->column(),
-            outerScript->filename(), outerScript->lineno(), outerScript->column());
+    JitSpew(JitSpew_IonBailouts, "Shape guard failure %s:%u, inlined into %s:%u",
+            innerScript->filename(), innerScript->lineno(),
+            outerScript->filename(), outerScript->lineno());
 
     // TODO: Currently this mimic's Ion's handling of this case.  Investigate setting
     // the flag on innerScript as opposed to outerScript, and maybe invalidating both
@@ -1769,9 +1767,9 @@ HandleShapeGuardFailure(JSContext* cx, HandleScript outerScript, HandleScript in
 static void
 HandleBaselineInfoBailout(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Baseline info failure %s:%u:%u, inlined into %s:%u:%u",
-            innerScript->filename(), innerScript->lineno(), innerScript->column(),
-            outerScript->filename(), outerScript->lineno(), outerScript->column());
+    JitSpew(JitSpew_IonBailouts, "Baseline info failure %s:%u, inlined into %s:%u",
+            innerScript->filename(), innerScript->lineno(),
+            outerScript->filename(), outerScript->lineno());
 
     InvalidateAfterBailout(cx, outerScript, "invalid baseline info");
 }
@@ -1779,9 +1777,9 @@ HandleBaselineInfoBailout(JSContext* cx, HandleScript outerScript, HandleScript 
 static void
 HandleLexicalCheckFailure(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Lexical check failure %s:%u:%u, inlined into %s:%u:%u",
-            innerScript->filename(), innerScript->lineno(), innerScript->column(),
-            outerScript->filename(), outerScript->lineno(), outerScript->column());
+    JitSpew(JitSpew_IonBailouts, "Lexical check failure %s:%u, inlined into %s:%u",
+            innerScript->filename(), innerScript->lineno(),
+            outerScript->filename(), outerScript->lineno());
 
     if (!innerScript->failedLexicalCheck())
         innerScript->setFailedLexicalCheck();
@@ -1995,9 +1993,9 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
     }
 
     JitSpew(JitSpew_BaselineBailouts,
-            "  Restored outerScript=(%s:%u:%u,%u) innerScript=(%s:%u:%u,%u) (bailoutKind=%u)",
-            outerScript->filename(), outerScript->lineno(), outerScript->column(), outerScript->getWarmUpCount(),
-            innerScript->filename(), innerScript->lineno(), innerScript->column(), innerScript->getWarmUpCount(),
+            "  Restored outerScript=(%s:%u,%u) innerScript=(%s:%u,%u) (bailoutKind=%u)",
+            outerScript->filename(), outerScript->lineno(), outerScript->getWarmUpCount(),
+            innerScript->filename(), innerScript->lineno(), innerScript->getWarmUpCount(),
             (unsigned) bailoutKind);
 
     switch (bailoutKind) {

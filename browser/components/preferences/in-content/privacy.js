@@ -522,17 +522,6 @@ var gPrivacyPane = {
     if (contentBlockingRejectTrackersRecommended) {
       document.l10n.setAttributes(blockCookiesFromTrackers, "content-blocking-reject-trackers-block-trackers-option-recommended");
     }
-
-    // Reorder the privacy pane to put the Content Blocking section first and the
-    // Cookies & Site Data section right after it.
-    let trackingGroup = document.getElementById("trackingGroup");
-    let siteDataGroup = document.getElementById("siteDataGroup");
-    let browserPrivacyCategory = document.getElementById("browserPrivacyCategory");
-
-    browserPrivacyCategory.parentNode.insertBefore(siteDataGroup,
-                                                   browserPrivacyCategory.nextSibling);
-    browserPrivacyCategory.parentNode.insertBefore(trackingGroup,
-                                                   browserPrivacyCategory.nextSibling);
   },
 
   /**
