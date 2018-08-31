@@ -89,3 +89,28 @@ add_task(async () => {
     is(bounds.x, newBounds.left, "Should have seen the title in the same place.");
   });
 });
+
+// Verify that pinned tabs don't change size when an icon is pending.
+add_task(async () => {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async (browser) => {
+    let tab = gBrowser.getTabForBrowser(browser);
+    gBrowser.pinTab(tab);
+
+    let bounds = tab.getBoundingClientRect();
+    BrowserTestUtils.loadURI(browser, TEST_PATH + "file_with_slow_favicon.html");
+
+    await waitForAttributeChange(tab, "label");
+    ok(tab.hasAttribute("busy"), "Should have seen the busy attribute");
+    let newBounds = tab.getBoundingClientRect();
+    is(bounds.width, newBounds.width, "Should have seen tab remain the same size.");
+
+    await waitForAttributeChange(tab, "busy");
+    ok(!tab.hasAttribute("busy"), "Should have seen the busy attribute removed");
+    newBounds = tab.getBoundingClientRect();
+    is(bounds.width, newBounds.width, "Should have seen tab remain the same size.");
+
+    await waitForFaviconMessage(true);
+    newBounds = tab.getBoundingClientRect();
+    is(bounds.width, newBounds.width, "Should have seen tab remain the same size.");
+  });
+});
