@@ -39,5 +39,27 @@ module.exports = {
     "env": {
       "mozilla/browser-window": true
     }
+  }, {
+    // XXX Bug 1486741 - We've not rolled out comma-dangle to these directories
+    // yet, so turn it off for now.
+    "files": [
+      "accessible/**",
+      "caps/**",
+      "chrome/**",
+      "devtools/**",
+      "dom/**",
+      "extensions/**",
+      "intl/**",
+      "js/**",
+      "mobile/**",
+      "security/**",
+      "storage/**",
+      "testing/**",
+      "tools/**",
+      "xpcom/**",
+    ],
+    "rules": {
+      "comma-dangle": "off",
+    }
   }]
 };

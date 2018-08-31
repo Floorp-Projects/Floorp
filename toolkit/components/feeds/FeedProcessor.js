@@ -172,7 +172,7 @@ var gNamespaces = {
   "http://purl.org/rss/1.0/modules/wiki/": "wiki",
   "http://www.w3.org/XML/1998/namespace": "xml",
   "http://search.yahoo.com/mrss/": "media",
-  "http://search.yahoo.com/mrss": "media"
+  "http://search.yahoo.com/mrss": "media",
 };
 
 // We allow a very small set of namespaces in XHTML content,
@@ -181,7 +181,7 @@ var gAllowedXHTMLNamespaces = {
   "http://www.w3.org/XML/1998/namespace": "xml",
   // if someone ns qualifies XHTML, we have to prefix it to avoid an
   // attribute collision.
-  "http://www.w3.org/1999/xhtml": "xhtml"
+  "http://www.w3.org/1999/xhtml": "xhtml",
 };
 
 function FeedResult() {}
@@ -199,7 +199,7 @@ FeedResult.prototype = {
 
   // XPCOM stuff
   classID: FR_CLASSID,
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFeedResult])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFeedResult]),
 };
 
 function Feed() {
@@ -235,7 +235,7 @@ Feed.prototype = {
     skipDays: ["skipDays"],
     skipHours: ["skipHours"],
     updated: ["pubDate", "lastBuildDate", "atom03:modified", "dc:date",
-              "dcterms:modified", "atom:updated"]
+              "dcterms:modified", "atom:updated"],
   },
 
   normalize: function Feed_normalize() {
@@ -371,7 +371,7 @@ Feed.prototype = {
 
   // XPCOM stuff
   classID: FEED_CLASSID,
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFeed, Ci.nsIFeedContainer])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFeed, Ci.nsIFeedContainer]),
 };
 
 function Entry() {
@@ -407,7 +407,7 @@ Entry.prototype = {
     rights: ["atom03:rights", "atom:rights"],
     published: ["pubDate", "atom03:issued", "dcterms:issued", "atom:published"],
     updated: ["pubDate", "atom03:modified", "dc:date", "dcterms:modified",
-              "atom:updated"]
+              "atom:updated"],
   },
 
   normalize: function Entry_normalize() {
@@ -583,7 +583,7 @@ Entry.prototype = {
   classID: ENTRY_CLASSID,
   QueryInterface: ChromeUtils.generateQI(
     [Ci.nsIFeedEntry, Ci.nsIFeedContainer]
-  )
+  ),
 };
 
 Entry.prototype._atomLinksToURI = Feed.prototype._atomLinksToURI;
@@ -634,7 +634,7 @@ TextConstruct.prototype = {
 
   // XPCOM stuff
   classID: TEXTCONSTRUCT_CLASSID,
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFeedTextConstruct])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFeedTextConstruct]),
 };
 
 // Generator represents the software that produced the feed
@@ -674,7 +674,7 @@ Generator.prototype = {
   classID: GENERATOR_CLASSID,
   QueryInterface: ChromeUtils.generateQI(
     [Ci.nsIFeedGenerator, Ci.nsIFeedElementBase]
-  )
+  ),
 };
 
 function Person() {
@@ -692,7 +692,7 @@ Person.prototype = {
   classID: PERSON_CLASSID,
   QueryInterface: ChromeUtils.generateQI(
     [Ci.nsIFeedPerson, Ci.nsIFeedElementBase]
-  )
+  ),
 };
 
 /**
@@ -1076,7 +1076,7 @@ function FeedProcessor() {
 
     /** ******* RSS2 **********/
     "IN_RSS2": {
-      "channel": new WrapperElementInfo("channel")
+      "channel": new WrapperElementInfo("channel"),
     },
 
     "IN_CHANNEL": {
@@ -1113,20 +1113,20 @@ function FeedProcessor() {
       "media:content": new ElementInfo("mediacontent", null, null, true),
       "media:group": new ElementInfo("mediagroup", null, null, false),
       "media:thumbnail": new ElementInfo("mediathumbnail", null, null, true),
-      "guid": new ElementInfo("guid", null, rssGuid, false)
+      "guid": new ElementInfo("guid", null, rssGuid, false),
     },
 
     "IN_SKIPDAYS": {
-      "day": new ElementInfo("days", null, rssArrayElement, true)
+      "day": new ElementInfo("days", null, rssArrayElement, true),
     },
 
     "IN_SKIPHOURS": {
-      "hour": new ElementInfo("hours", null, rssArrayElement, true)
+      "hour": new ElementInfo("hours", null, rssArrayElement, true),
     },
 
     "IN_MEDIAGROUP": {
       "media:content": new ElementInfo("mediacontent", null, null, true),
-      "media:thumbnail": new ElementInfo("mediathumbnail", null, null, true)
+      "media:thumbnail": new ElementInfo("mediathumbnail", null, null, true),
     },
 
     /** ******* RSS1 **********/
@@ -1161,7 +1161,7 @@ function FeedProcessor() {
       "atom:link": new ElementInfo("links", null, null, true),
       "atom:logo": new ElementInfo("atom:logo", null, atomLogo, false),
       "atom:entry": new ElementInfo("entries", Cc[ENTRY_CONTRACTID],
-                                    null, true)
+                                    null, true),
     },
 
     "IN_ENTRIES": {
@@ -1194,8 +1194,8 @@ function FeedProcessor() {
                                             null, true),
       "atom03:link": new ElementInfo("links", null, null, true),
       "atom03:entry": new ElementInfo("atom03_entries", Cc[ENTRY_CONTRACTID],
-                                      null, true)
-    }
+                                      null, true),
+    },
   };
 }
 
@@ -1726,7 +1726,7 @@ FeedProcessor.prototype = {
   QueryInterface: ChromeUtils.generateQI(
     [Ci.nsIFeedProcessor, Ci.nsISAXContentHandler, Ci.nsISAXErrorHandler,
      Ci.nsIStreamListener, Ci.nsIRequestObserver]
-  )
+  ),
 };
 
 var components = [FeedProcessor, FeedResult, Feed, Entry,

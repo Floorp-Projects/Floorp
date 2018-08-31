@@ -21,8 +21,8 @@ var gTypes = [
     id: "type3",
     name: "Type 3",
     uiPriority: 5200,
-    viewType: AddonManager.VIEW_TYPE_LIST
-  }
+    viewType: AddonManager.VIEW_TYPE_LIST,
+  },
 ];
 
 function go_back(aManager) {

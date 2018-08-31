@@ -10,13 +10,13 @@ add_task(async function test_addon_install() {
     "policies": {
       "Extensions": {
         "Install": [
-          "http://mochi.test:8888/browser/browser/components/enterprisepolicies/tests/browser/policytest.xpi"
+          "http://mochi.test:8888/browser/browser/components/enterprisepolicies/tests/browser/policytest.xpi",
         ],
         "Locked": [
-          addonID
-        ]
-      }
-    }
+          addonID,
+        ],
+      },
+    },
   });
   await installPromise;
   let addon = await AddonManager.getAddonByID(addonID);
@@ -44,10 +44,10 @@ add_task(async function test_addon_uninstall() {
     "policies": {
       "Extensions": {
         "Uninstall": [
-          addonID
-        ]
-      }
-    }
+          addonID,
+        ],
+      },
+    },
   });
   await uninstallPromise;
   let addon = await AddonManager.getAddonByID(addonID);

@@ -13,7 +13,7 @@ const ADDONS = {
   test_bug567173: {
     "install.rdf": {
       "id": "bug567173",
-    }
+    },
   },
 };
 

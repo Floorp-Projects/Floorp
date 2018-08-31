@@ -29,7 +29,7 @@ const kStringsRequiringFormatting = {
   quitCancelDownloadsAlertMsgMultiple: true,
   quitCancelDownloadsAlertMsgMacMultiple: true,
   offlineCancelDownloadsAlertMsgMultiple: true,
-  leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple2: true
+  leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple2: true,
 };
 
 /**
@@ -197,5 +197,5 @@ this.DownloadPrompter.prototype = {
     let rv = this._prompter.confirmEx(title, message, buttonFlags, okButton,
                                       cancelButton, null, null, {});
     return (rv == 1);
-  }
+  },
 };

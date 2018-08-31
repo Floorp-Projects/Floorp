@@ -17,13 +17,13 @@ async function test() {
   gProvider.createAddons([{
     id: "test1@tests.mozilla.org",
     name: "Test add-on 1",
-    description: "foo"
+    description: "foo",
   },
   {
     id: "test2@tests.mozilla.org",
     name: "Test add-on 2",
     description: "bar",
-    optionsURL: addonPrefsURI
+    optionsURL: addonPrefsURI,
   }]);
 
   let aManager = await open_manager("addons://list/extension");

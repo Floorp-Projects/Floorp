@@ -246,7 +246,7 @@ DownloadLegacyTransfer.prototype = {
       saver: "legacy",
       launchWhenSucceeded,
       contentType,
-      launcherPath
+      launcherPath,
     }).then(aDownload => {
       // Legacy components keep partial data when they use a ".part" file.
       if (aTempFile) {

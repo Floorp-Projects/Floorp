@@ -103,5 +103,5 @@ var PrefUtils = {
         this.setPref(branchName, pref, originalValue);
       }
     }
-  }
+  },
 };

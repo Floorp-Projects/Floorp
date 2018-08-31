@@ -25,7 +25,7 @@ EventStore.prototype = {
     } else {
       this["main-window"].push(event);
     }
-  }
+  },
 };
 
 var tab1 = null;

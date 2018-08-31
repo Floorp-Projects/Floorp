@@ -54,8 +54,8 @@ add_task(async function test_pingSender() {
     creationDate: (new Date(1485810000)).toISOString(),
     version: 4,
     payload: {
-      dummy: "stuff"
-    }
+      dummy: "stuff",
+    },
   };
   await TelemetryStorage.savePing(data, true);
 

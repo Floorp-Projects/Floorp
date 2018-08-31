@@ -116,6 +116,9 @@ module.exports = {
     // No newline before open brace for a block
     "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
 
+    // Require trailing commas for easy list extension and consistent style.
+    "comma-dangle": ["error", "always-multiline"],
+
     // No space before always a space after a comma
     "comma-spacing": ["error", {"after": true, "before": false}],
 

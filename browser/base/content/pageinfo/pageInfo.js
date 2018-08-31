@@ -135,7 +135,7 @@ pageInfoTreeView.prototype = {
   isEditable(row, column) { return false; },
   isSelectable(row, column) { return false; },
   performAction(action) { },
-  performActionOnCell(action, row, column) { }
+  performActionOnCell(action, row, column) { },
 };
 
 // mmm, yummy. global variables.
@@ -437,7 +437,7 @@ function doHelpButton() {
     "mediaPanel":    "pageinfo_media",
     "feedPanel":     "pageinfo_feed",
     "permPanel":     "pageinfo_permissions",
-    "securityPanel": "pageinfo_security"
+    "securityPanel": "pageinfo_security",
   };
 
   var deck  = document.getElementById("mainDeck");
@@ -476,7 +476,7 @@ function openCacheEntry(key, cb) {
     },
     onCacheEntryAvailable(entry, isNew, appCache, status) {
       cb(entry);
-    }
+    },
   };
   diskStorage.asyncOpenURI(Services.io.newURI(key), "", nsICacheStorage.OPEN_READONLY, checkCacheListener);
 }
@@ -965,7 +965,7 @@ var imagePermissionObserver = {
         }
       }
     }
-  }
+  },
 };
 
 function getContentTypeFromHeaders(cacheEntryDescriptor) {
@@ -996,7 +996,7 @@ function formatDate(datestr, unknown) {
     return unknown;
 
   const dateTimeFormatter = new Services.intl.DateTimeFormat(undefined, {
-    dateStyle: "long", timeStyle: "long"
+    dateStyle: "long", timeStyle: "long",
   });
   return dateTimeFormatter.format(date);
 }

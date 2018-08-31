@@ -89,7 +89,7 @@ let ShellServiceInternal = {
       return this.shellService.isDefaultBrowser(startupCheck, forAllTypes);
     }
     return false;
-  }
+  },
 };
 
 XPCOMUtils.defineLazyServiceGetter(ShellServiceInternal, "shellService",
@@ -108,5 +108,5 @@ var ShellService = new Proxy(ShellServiceInternal, {
     }
     Services.console.logStringMessage(`${name} not found in ShellService: ${target.shellService}`);
     return undefined;
-  }
+  },
 });

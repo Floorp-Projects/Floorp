@@ -82,7 +82,7 @@ const PERMISSION_SAVE_LOGINS = "login-saving";
 function LoginStore(aPath) {
   JSONFile.call(this, {
     path: aPath,
-    dataPostProcessor: this._dataPostProcessor.bind(this)
+    dataPostProcessor: this._dataPostProcessor.bind(this),
   });
 }
 

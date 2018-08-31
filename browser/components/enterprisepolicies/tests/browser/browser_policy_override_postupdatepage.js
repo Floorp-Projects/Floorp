@@ -49,8 +49,8 @@ add_task(async function test_override_postupdate_page() {
   // Now perform the same action but set the policy to override this page
   await setupPolicyEngineWithJson({
     "policies": {
-      "OverridePostUpdatePage": POLICY_PROVIDED_PAGE
-    }
+      "OverridePostUpdatePage": POLICY_PROVIDED_PAGE,
+    },
   });
 
   is(getPostUpdatePage(), POLICY_PROVIDED_PAGE, "Post-update page was provided by policy.");

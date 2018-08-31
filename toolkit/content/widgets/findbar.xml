@@ -355,7 +355,7 @@
                 this._self.browser.finder.onModalHighlightChange(this._self._useModalHighlight);
               break;
           }
-        }
+        },
       })]]></field>
 
       <field name="_destroyed">false</field>
@@ -1099,7 +1099,7 @@
             caseSensitive: !!this._typeAheadCaseSensitive,
             entireWord: this._entireWord,
             highlightAll: this._highlightAll,
-            findPrevious: aFindPrevious
+            findPrevious: aFindPrevious,
           });
           return this.dispatchEvent(event);
         ]]></body>

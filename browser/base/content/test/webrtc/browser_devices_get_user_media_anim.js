@@ -67,8 +67,8 @@ var gTests = [
     await getStreamAndCheckBackgroundAnim(true, true, "camera");
     await getStreamAndCheckBackgroundAnim(false, true, "camera");
     await getStreamAndCheckBackgroundAnim(true, false, "microphone");
-  }
-}
+  },
+},
 
 ];
 

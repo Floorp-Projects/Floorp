@@ -56,7 +56,7 @@ LoginRec.prototype = {
       o.password = "X".repeat(o.password.length);
     }
     return JSON.stringify(o);
-  }
+  },
 };
 
 Utils.deferGetSet(LoginRec, "cleartext", [

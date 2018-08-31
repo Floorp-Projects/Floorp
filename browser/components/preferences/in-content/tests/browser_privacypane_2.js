@@ -8,7 +8,7 @@ if (jar) {
 Services.scriptloader.loadSubScript(rootDir + "privacypane_tests_perwindow.js", this);
 
 SpecialPowers.pushPrefEnv({"set":
-  [["browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", false]]
+  [["browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", false]],
 });
 
 run_test_subset([

@@ -64,16 +64,16 @@ add_task(async function() {
              // In tab strip
              r.y1 >= tabStripRect.top && r.y2 <= tabStripRect.bottom &&
              // 1px border, 1px before the end of the first tab.
-             r.w == 1 && r.x1 == firstTabRect.right - 1
+             r.w == 1 && r.x1 == firstTabRect.right - 1,
           },
           {name: "bug 1446449 - spurious tab switch spinner",
            condition: r =>
              AppConstants.DEBUG &&
              // In the content area
-             r.y1 >= document.getElementById("appcontent").getBoundingClientRect().top
+             r.y1 >= document.getElementById("appcontent").getBoundingClientRect().top,
           },
-        ]
-      }
+        ],
+      },
      });
 
   BrowserTestUtils.removeTab(otherTab);

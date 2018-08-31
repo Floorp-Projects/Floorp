@@ -250,7 +250,7 @@ add_task(async function test_wipeServer() {
   const PAYLOAD = 42;
   let steamCollection = new ServerWBO("steam", PAYLOAD);
   let steamServer = httpd_setup({
-    "/1.1/foo/storage/steam": steamCollection.handler()
+    "/1.1/foo/storage/steam": steamCollection.handler(),
   });
   await SyncTestingInfrastructure(steamServer);
   do_test_pending();

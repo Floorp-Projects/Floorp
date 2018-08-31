@@ -271,7 +271,7 @@ async function loadBadCertPage(url) {
             resolve();
           });
         }
-      }
+      },
     };
 
     Services.obs.addObserver(certExceptionDialogObserver,

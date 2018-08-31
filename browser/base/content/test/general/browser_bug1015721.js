@@ -28,7 +28,7 @@ function zoomTab1() {
 
     let browser1 = gBrowser.getBrowserForTab(gTab1);
     await BrowserTestUtils.synthesizeMouse(null, 10, 10, {
-      wheel: true, ctrlKey: true, deltaY: -1, deltaMode: WheelEvent.DOM_DELTA_LINE
+      wheel: true, ctrlKey: true, deltaY: -1, deltaMode: WheelEvent.DOM_DELTA_LINE,
     }, browser1);
 
     info("Waiting for tab 1 to be zoomed");

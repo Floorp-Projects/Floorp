@@ -113,7 +113,7 @@ async function testSearchEngine(engineDetails) {
         // Simulate a contextmenu search
         // FIXME: This is a bit "low-level"...
         BrowserSearch._loadSearch("foo", false, "contextmenu", Services.scriptSecurityManager.getSystemPrincipal());
-      }
+      },
     },
     {
       name: "keyword search",
@@ -122,7 +122,7 @@ async function testSearchEngine(engineDetails) {
         gURLBar.value = "? foo";
         gURLBar.focus();
         EventUtils.synthesizeKey("KEY_Enter");
-      }
+      },
     },
     {
       name: "keyword search with alias",
@@ -131,7 +131,7 @@ async function testSearchEngine(engineDetails) {
         gURLBar.value = `${engineDetails.alias} foo`;
         gURLBar.focus();
         EventUtils.synthesizeKey("KEY_Enter");
-      }
+      },
     },
     {
       name: "search bar search",
@@ -140,7 +140,7 @@ async function testSearchEngine(engineDetails) {
         sb.focus();
         sb.value = "foo";
         EventUtils.synthesizeKey("KEY_Enter");
-      }
+      },
     },
     {
       name: "new tab search",
@@ -159,8 +159,8 @@ async function testSearchEngine(engineDetails) {
           input.value = "foo";
         });
         EventUtils.synthesizeKey("KEY_Enter");
-      }
-    }
+      },
+    },
   ];
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);

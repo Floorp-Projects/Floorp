@@ -20,11 +20,11 @@ add_task(async function dblclick() {
 
 add_task(async function dblclickWithPrefSet() {
   await SpecialPowers.pushPrefEnv({set: [
-    [PREF_CLOSE_TAB_BY_DBLCLICK, true]
+    [PREF_CLOSE_TAB_BY_DBLCLICK, true],
   ]});
 
   let tab = BrowserTestUtils.addTab(gBrowser, "about:mozilla", {
-    skipAnimation: true
+    skipAnimation: true,
   });
   isnot(tab, gBrowser.selectedTab, "The new tab is in the background");
 

@@ -26,7 +26,7 @@ var permissionObserver = {
           initRow(permission.type);
       }
     }
-  }
+  },
 };
 
 function onLoadPermission(uri, principal) {

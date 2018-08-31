@@ -153,7 +153,7 @@ add_task(async function test_dupe_bookmark() {
         equal(oldVal, bmk1_guid);
         equal(source, PlacesUtils.bookmarks.SOURCE_SYNC);
         onItemChangedObserved = true;
-      }
+      },
     };
     PlacesUtils.bookmarks.addObserver(obs, false);
 
@@ -521,7 +521,7 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
       parentName: "Folder 1",
       parentid: newParentGUID,
       tags: [],
-      dateAdded: Date.now() - 10000
+      dateAdded: Date.now() - 10000,
     }), Date.now() / 1000 + 500);
 
     _("Syncing so new dupe record is processed");

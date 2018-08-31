@@ -29,7 +29,7 @@ function OSCrypto() {
   this._structs.DATA_BLOB = new ctypes.StructType("DATA_BLOB",
                                                   [
                                                     {cbData: wintypes.DWORD},
-                                                    {pbData: wintypes.PVOID}
+                                                    {pbData: wintypes.PVOID},
                                                   ]);
 
   try {

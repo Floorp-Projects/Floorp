@@ -592,6 +592,7 @@ nsHttpChannel::OnBeforeConnect()
     mConnectionInfo->SetBeConservative((mCaps & NS_HTTP_BE_CONSERVATIVE) || mBeConservative);
     mConnectionInfo->SetTlsFlags(mTlsFlags);
     mConnectionInfo->SetTrrUsed(mTRR);
+    mConnectionInfo->SetTrrDisabled(mCaps & NS_HTTP_DISABLE_TRR);
 
     // notify "http-on-before-connect" observers
     gHttpHandler->OnBeforeConnect(this);

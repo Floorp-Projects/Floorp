@@ -18,7 +18,7 @@ var tests = [
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
-        removeOnDismissal: true
+        removeOnDismissal: true,
       });
       this.notification = showNotification(this.notifyObj);
     },
@@ -29,7 +29,7 @@ var tests = [
     onHidden(popup) {
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
-    }
+    },
   },
   // Test multiple notification icons are shown
   { id: "Test#2",
@@ -62,7 +62,7 @@ var tests = [
 
       this.notification2.remove();
       ok(this.notifyObj2.removedCallbackTriggered, "removed callback triggered");
-    }
+    },
   },
   // Test that multiple notification icons are removed when switching tabs
   { id: "Test#3",
@@ -99,7 +99,7 @@ var tests = [
 
       gBrowser.selectedTab = this.oldSelectedTab;
       this.notificationOld.remove();
-    }
+    },
   },
   // test security delay - too early
   { id: "Test#4",
@@ -123,7 +123,7 @@ var tests = [
     onHidden(popup) {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked because it was too soon");
       ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback was triggered");
-    }
+    },
   },
   // test security delay - after delay
   { id: "Test#5",
@@ -147,7 +147,7 @@ var tests = [
       ok(this.notifyObj.mainActionClicked, "mainAction was clicked after the delay");
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback was not triggered");
       PopupNotifications.buttonDelay = PREF_SECURITY_DELAY_INITIAL;
-    }
+    },
   },
   // reload removes notification
   { id: "Test#6",
@@ -164,7 +164,7 @@ var tests = [
       executeSoon(function() {
         gBrowser.selectedBrowser.reload();
       });
-    }
+    },
   },
   // location change in background tab removes notification
   { id: "Test#7",
@@ -189,7 +189,7 @@ var tests = [
       executeSoon(function() {
         browser.reload();
       });
-    }
+    },
   },
   // Popup notification anchor shouldn't disappear when a notification with the same ID is re-added in a background tab
   { id: "Test#8",
@@ -224,7 +224,7 @@ var tests = [
       fgNotification.remove();
       gBrowser.removeTab(bgTab);
       goNext();
-    }
+    },
   },
   // location change in an embedded frame should not remove a notification
   { id: "Test#9",
@@ -262,7 +262,7 @@ var tests = [
                         .setAttribute("src", "http://example.org/");
       });
     },
-    onHidden() {}
+    onHidden() {},
   },
   // Popup Notifications should catch exceptions from callbacks
   { id: "Test#10",
@@ -295,6 +295,6 @@ var tests = [
     onHidden() {
       this.notification1.remove();
       this.notification2.remove();
-    }
-  }
+    },
+  },
 ];

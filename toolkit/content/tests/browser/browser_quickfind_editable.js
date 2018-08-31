@@ -24,7 +24,7 @@ async function focus_element(browser, query) {
 add_task(async function test_hotkey_on_editable_element() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: PAGE
+    url: PAGE,
   }, async function do_tests(browser) {
     await test_hotkeys(browser, false);
     const ELEMENTS = ["div", "input", "textarea"];
@@ -40,7 +40,7 @@ add_task(async function test_hotkey_on_editable_element() {
 add_task(async function test_hotkey_on_designMode_document() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: DESIGNMODE_PAGE
+    url: DESIGNMODE_PAGE,
   }, async function do_tests(browser) {
     await test_hotkeys(browser, true);
   });

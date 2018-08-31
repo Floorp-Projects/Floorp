@@ -27,7 +27,7 @@ let getScreenshot = function(win) {
           hasMixedActiveContentBlocked: docShell.hasMixedActiveContentBlocked,
           hasMixedDisplayContentBlocked: docShell.hasMixedDisplayContentBlocked,
           url,
-          hasTrackingContentBlocked: docShell.hasTrackingContentBlocked
+          hasTrackingContentBlocked: docShell.hasTrackingContentBlocked,
         });
       });
     } catch (ex) {

@@ -361,7 +361,7 @@ function selectIcons(iconInfos, preferredWidth) {
 
   return {
     richIcon: largestRichIcon,
-    tabIcon
+    tabIcon,
   };
 }
 

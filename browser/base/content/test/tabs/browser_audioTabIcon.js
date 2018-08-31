@@ -352,7 +352,7 @@ async function test_click_on_pinned_tab_after_mute() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: PAGE
+    url: PAGE,
   }, taskFn);
 }
 
@@ -380,7 +380,7 @@ async function test_cross_process_load() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: PAGE
+    url: PAGE,
   }, taskFn);
 }
 
@@ -425,7 +425,7 @@ async function test_mute_keybinding() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: PAGE
+    url: PAGE,
   }, taskFn);
 }
 
@@ -449,7 +449,7 @@ async function test_on_browser(browser) {
   if (gBrowser.selectedBrowser.currentURI.spec == PAGE) {
     await BrowserTestUtils.withNewTab({
       gBrowser,
-      url: "data:text/html,test"
+      url: "data:text/html,test",
     }, () => test_on_browser(browser));
   } else {
     await test_browser_swapping(tab, browser);
@@ -470,7 +470,7 @@ async function test_delayed_tabattr_removal() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: PAGE
+    url: PAGE,
   }, taskFn);
 }
 
@@ -484,7 +484,7 @@ requestLongerTimeout(2);
 add_task(async function test_page() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: PAGE
+    url: PAGE,
   }, test_on_browser);
 });
 

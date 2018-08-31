@@ -16,8 +16,8 @@ function test() {
     "Unsigned XPI": {
       URL: TESTROOT + "amosigned.xpi",
       IconURL: TESTROOT + "icon.png",
-      toString() { return this.URL; }
-    }
+      toString() { return this.URL; },
+    },
   })));
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.loadURI(TESTROOT2 + "installtrigger_frame.html?" + inner_url);

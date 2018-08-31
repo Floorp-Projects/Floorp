@@ -370,7 +370,7 @@ add_task(async function test_archiveCleanup() {
     type: PING_TYPE,
     creationDate: (new Date()).toISOString(),
     // Generate a ~2MB string to use as the payload.
-    payload: generateRandomString(2 * 1024 * 1024)
+    payload: generateRandomString(2 * 1024 * 1024),
   };
   await TelemetryArchive.promiseArchivePing(OVERSIZED_PING);
 

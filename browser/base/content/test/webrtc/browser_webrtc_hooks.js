@@ -61,7 +61,7 @@ const Events = {
       webrtcUI.off(event, this.handlers.get(event));
       this.handlers.delete(event);
     }
-    for (let [event, ] of this.details) {
+    for (let [event ] of this.details) {
       ok(false, `Got unexpected event ${event}`);
     }
   },
@@ -327,6 +327,6 @@ add_task(async function test() {
                  { cleanup() {
                      is(webrtcUI.peerConnectionBlockers.size, 0,
                         "Peer connection blockers list is empty");
-                   }
+                   },
                  });
 });

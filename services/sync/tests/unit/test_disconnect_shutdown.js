@@ -44,8 +44,8 @@ add_task(async function test_shutdown_blocker() {
       },
       errorHandler: {
         resetFileLog: sinon.spy(),
-      }
-    }
+      },
+    },
   };
   let weaveStub = sinon.stub(SyncDisconnectInternal, "getWeave");
   weaveStub.returns(Weave);

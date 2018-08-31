@@ -23,7 +23,7 @@ add_task(async function test_initialization_via_addDownload() {
   const download = {
     source: {
       url: httpUrl(`source1`),
-      isPrivate: false
+      isPrivate: false,
     },
     target: { path: download1FileLocation },
   };

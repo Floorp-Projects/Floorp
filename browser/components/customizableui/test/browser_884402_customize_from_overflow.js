@@ -40,7 +40,7 @@ add_task(async function() {
     [".customize-context-moveToPanel", true],
     [".customize-context-removeFromPanel", true],
     ["---"],
-    [".viewCustomizeToolbar", true]
+    [".viewCustomizeToolbar", true],
   ];
   checkContextMenu(contextMenu, expectedEntries);
 

@@ -22,19 +22,19 @@ var firstLoad = true;
 // URL in test-phish-simple, breaking the tests following this one.
 var testData = [
   { url: "malware.example.com/",
-    db: "test-malware-simple"
+    db: "test-malware-simple",
   },
   { url: "unwanted.example.com/",
-    db: "test-unwanted-simple"
+    db: "test-unwanted-simple",
   },
   { url: "tracking.example.com/",
-    db: "test-track-simple"
+    db: "test-track-simple",
   },
   { url: "blocked.example.com/",
-    db: "test-block-simple"
+    db: "test-block-simple",
   },
   { url: "harmful.example.com/",
-    db: "test-harmful-simple"
+    db: "test-harmful-simple",
   },
 ];
 
@@ -46,12 +46,12 @@ var testURLs = [
   { url: "http://example.com",
     trackingProtection: false,
     table: "",
-    result: Cr.NS_OK
+    result: Cr.NS_OK,
   },
   { url: "http://example.com",
     trackingProtection: true,
     table: "",
-    result: Cr.NS_OK
+    result: Cr.NS_OK,
   },
   { url: "http://malware.example.com",
     trackingProtection: false,
@@ -66,53 +66,53 @@ var testURLs = [
   { url: "http://unwanted.example.com",
     trackingProtection: false,
     table: "test-unwanted-simple",
-    result: Cr.NS_ERROR_UNWANTED_URI
+    result: Cr.NS_ERROR_UNWANTED_URI,
   },
   { url: "http://unwanted.example.com",
     trackingProtection: true,
     table: "test-unwanted-simple",
-    result: Cr.NS_ERROR_UNWANTED_URI
+    result: Cr.NS_ERROR_UNWANTED_URI,
   },
   { url: "http://itisatrap.org/firefox/its-a-trap.html",
     trackingProtection: false,
     table: "test-phish-simple",
-    result: Cr.NS_ERROR_PHISHING_URI
+    result: Cr.NS_ERROR_PHISHING_URI,
   },
   { url: "http://itisatrap.org/firefox/its-a-trap.html",
     trackingProtection: true,
     table: "test-phish-simple",
-    result: Cr.NS_ERROR_PHISHING_URI
+    result: Cr.NS_ERROR_PHISHING_URI,
   },
   { url: "http://harmful.example.com",
     trackingProtection: false,
     table: "test-harmful-simple",
-    result: Cr.NS_ERROR_HARMFUL_URI
+    result: Cr.NS_ERROR_HARMFUL_URI,
   },
   { url: "http://harmful.example.com",
     trackingProtection: true,
     table: "test-harmful-simple",
-    result: Cr.NS_ERROR_HARMFUL_URI
+    result: Cr.NS_ERROR_HARMFUL_URI,
   },
   { url: "http://tracking.example.com",
     trackingProtection: false,
     table: "test-track-simple",
-    result: Cr.NS_OK
+    result: Cr.NS_OK,
   },
   { url: "http://tracking.example.com",
     trackingProtection: true,
     table: "test-track-simple",
-    result: Cr.NS_ERROR_TRACKING_URI
+    result: Cr.NS_ERROR_TRACKING_URI,
   },
   { url: "http://blocked.example.com",
     trackingProtection: false,
     table: "test-block-simple",
-    result: Cr.NS_ERROR_BLOCKED_URI
+    result: Cr.NS_ERROR_BLOCKED_URI,
   },
   { url: "http://blocked.example.com",
     trackingProtection: true,
     table: "test-block-simple",
-    result: Cr.NS_ERROR_BLOCKED_URI
-  }
+    result: Cr.NS_ERROR_BLOCKED_URI,
+  },
 ];
 
 function loadTestFrame() {

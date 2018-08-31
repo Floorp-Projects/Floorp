@@ -45,7 +45,7 @@ var WindowsGPOParser = {
       log.debug(JSON.stringify(policies, null, 2));
     }
     return policies;
-  }
+  },
 };
 
 function registryToObject(wrk, policies, isMachineRoot) {

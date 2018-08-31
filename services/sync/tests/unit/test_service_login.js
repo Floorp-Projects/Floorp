@@ -50,7 +50,7 @@ function setup() {
     "/1.1/johndoe/storage/crypto/keys": johnU("crypto", new ServerWBO("keys").handler()),
     "/1.1/johndoe/storage/meta/global": johnU("meta", new ServerWBO("global").handler()),
     "/1.1/janedoe/storage/crypto/keys": janeU("crypto", new ServerWBO("keys").handler()),
-    "/1.1/janedoe/storage/meta/global": janeU("meta", new ServerWBO("global").handler())
+    "/1.1/janedoe/storage/meta/global": janeU("meta", new ServerWBO("global").handler()),
   });
 
   return server;

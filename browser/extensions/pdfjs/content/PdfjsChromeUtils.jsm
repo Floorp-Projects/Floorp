@@ -177,7 +177,7 @@ var PdfjsChromeUtils = {
     }
     // Only forward the events if the current browser is a registered browser.
     let mm = browser.messageManager;
-    mm.sendAsyncMessage("PDFJS:Child:handleEvent", { type, detail, });
+    mm.sendAsyncMessage("PDFJS:Child:handleEvent", { type, detail });
     aEvent.preventDefault();
   },
 
@@ -305,7 +305,7 @@ var PdfjsChromeUtils = {
     let messageSent = false;
     function sendMessage(download) {
       let mm = browser.messageManager;
-      mm.sendAsyncMessage("PDFJS:Child:fallbackDownload", { download, });
+      mm.sendAsyncMessage("PDFJS:Child:fallbackDownload", { download });
     }
     let buttons = [{
       label: data.label,

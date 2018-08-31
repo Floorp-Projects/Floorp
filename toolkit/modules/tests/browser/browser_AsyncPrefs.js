@@ -61,7 +61,7 @@ async function runTest() {
     return AsyncPrefs.reset(pref).then(() => ok(true, msg), () => ok(false, msg));
   }
 
-  for (let [val, ] of valueResultMap) {
+  for (let [val ] of valueResultMap) {
     await doesFail(kNotWhiteListed, val);
     is(Services.prefs.prefHasUserValue(kNotWhiteListed), false, "Pref shouldn't get changed");
   }

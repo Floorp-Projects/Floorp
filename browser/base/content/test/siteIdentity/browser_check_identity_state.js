@@ -90,7 +90,7 @@ add_task(async function test_webpage_text_warning() {
 async function webpageTestTextWarningCombined(secureCheck) {
   await SpecialPowers.pushPrefEnv({set: [
     [INSECURE_TEXT_PREF, secureCheck],
-    [INSECURE_ICON_PREF, secureCheck]
+    [INSECURE_ICON_PREF, secureCheck],
   ]});
   let oldTab = gBrowser.selectedTab;
 
@@ -404,17 +404,17 @@ async function pbModeTest(prefs, secureCheck) {
 add_task(async function test_pb_mode() {
   let prefs = [
     [INSECURE_ICON_PREF, true],
-    [INSECURE_PBMODE_ICON_PREF, true]
+    [INSECURE_PBMODE_ICON_PREF, true],
   ];
   await pbModeTest(prefs, true);
   prefs = [
     [INSECURE_ICON_PREF, false],
-    [INSECURE_PBMODE_ICON_PREF, true]
+    [INSECURE_PBMODE_ICON_PREF, true],
   ];
   await pbModeTest(prefs, true);
   prefs = [
     [INSECURE_ICON_PREF, false],
-    [INSECURE_PBMODE_ICON_PREF, false]
+    [INSECURE_PBMODE_ICON_PREF, false],
   ];
   await pbModeTest(prefs, false);
 });

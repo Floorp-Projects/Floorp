@@ -39,5 +39,5 @@ var PdfJsDefaultPreferences = Object.freeze({
  "disablePageMode": false,
  "disablePageLabels": false,
  "scrollModeOnLoad": 0,
- "spreadModeOnLoad": 0
+ "spreadModeOnLoad": 0,
 });

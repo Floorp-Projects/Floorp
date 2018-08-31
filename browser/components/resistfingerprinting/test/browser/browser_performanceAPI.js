@@ -69,8 +69,8 @@ let setupTest = async function(tab, resistFingerprinting, reduceTimerPrecision, 
   await SpecialPowers.pushPrefEnv({"set":
     [["privacy.resistFingerprinting", resistFingerprinting],
      ["privacy.reduceTimerPrecision", reduceTimerPrecision],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
-     ]
+     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000],
+     ],
   });
   // No matter what we set the precision to, if we're in ResistFingerprinting mode
   // we use the larger of the precision pref and the constant 100ms
@@ -81,7 +81,7 @@ let setupTest = async function(tab, resistFingerprinting, reduceTimerPrecision, 
       list: PERFORMANCE_TIMINGS,
       precision: expectedPrecision,
       isRoundedFunc: isRounded.toString(),
-      workerCall
+      workerCall,
     },
     runTests);
 };

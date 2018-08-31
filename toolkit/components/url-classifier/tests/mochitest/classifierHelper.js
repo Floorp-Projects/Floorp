@@ -8,7 +8,7 @@ var gScript = SpecialPowers.loadChromeScript(CLASSIFIER_COMMON_URL);
 const PREFS = {
   PROVIDER_LISTS: "browser.safebrowsing.provider.mozilla.lists",
   DISALLOW_COMPLETIONS: "urlclassifier.disallow_completions",
-  PROVIDER_GETHASHURL: "browser.safebrowsing.provider.mozilla.gethashURL"
+  PROVIDER_GETHASHURL: "browser.safebrowsing.provider.mozilla.gethashURL",
 };
 
 classifierHelper._curAddChunkNum = 1;

@@ -27,22 +27,22 @@ add_task(async function test_getSelectionDetails_input() {
       checkSelection({
         id: "url-no-scheme",
         text: "test.example.com",
-        linkURL: "http://test.example.com/"
+        linkURL: "http://test.example.com/",
       });
       checkSelection({
         id: "url-with-scheme",
         text: "https://test.example.com",
-        linkURL: "https://test.example.com/"
+        linkURL: "https://test.example.com/",
       });
       checkSelection({
         id: "not-url",
         text: "foo. bar",
-        linkURL: null
+        linkURL: null,
       });
       checkSelection({
         id: "not-url-number",
         text: "3.5",
-        linkURL: null
+        linkURL: null,
       });
     });
   });

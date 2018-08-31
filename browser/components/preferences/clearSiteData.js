@@ -38,7 +38,7 @@ var gClearSiteDataDialog = {
     ]);
     await document.l10n.translateElements([
       this._clearCacheCheckbox,
-      this._clearSiteDataCheckbox
+      this._clearSiteDataCheckbox,
     ]);
 
     window.addEventListener("keypress", this.onWindowKeyPress);

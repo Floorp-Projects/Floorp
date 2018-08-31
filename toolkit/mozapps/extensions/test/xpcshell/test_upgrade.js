@@ -32,13 +32,13 @@ add_task(async function setup() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon 1",
     targetPlatforms: [
       "XPCShell",
       "WINNT_x86",
-    ]
+    ],
   }, profileDir);
 
   // Works in all tested versions
@@ -49,12 +49,12 @@ add_task(async function setup() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "2"
+      maxVersion: "2",
     }],
     name: "Test Addon 2",
     targetPlatforms: [
-      "XPCShell_noarch-spidermonkey"
-    ]
+      "XPCShell_noarch-spidermonkey",
+    ],
   }, profileDir);
 
   // Will be disabled in the first version and enabled in the second.
@@ -65,7 +65,7 @@ add_task(async function setup() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "2",
-      maxVersion: "2"
+      maxVersion: "2",
     }],
     name: "Test Addon 3",
   }, profileDir);
@@ -78,7 +78,7 @@ add_task(async function setup() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon 4",
   }, globalDir);
@@ -128,7 +128,7 @@ add_task(async function test_2() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "2",
-      maxVersion: "2"
+      maxVersion: "2",
     }],
     name: "Test Addon 4",
   }, globalDir);
@@ -165,7 +165,7 @@ add_task(async function test_3() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "3",
-      maxVersion: "3"
+      maxVersion: "3",
     }],
     name: "Test Addon 4",
   }, globalDir);

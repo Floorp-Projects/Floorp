@@ -83,7 +83,7 @@ var NarrateTestUtils = {
       parent: window,
       navigator: window.navigator,
       KeyboardEvent: window.KeyboardEvent,
-      KeyEvent: window.KeyEvent
+      KeyEvent: window.KeyEvent,
     };
     Services.scriptloader.loadSubScript(
       "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", eventUtils);
@@ -143,5 +143,5 @@ var NarrateTestUtils = {
         left: Number(node.style.left.replace(/px$/, "")),
         top: Number(node.style.top.replace(/px$/, ""))};
     });
-  }
+  },
 };

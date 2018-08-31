@@ -141,7 +141,7 @@ add_task(async function test_working_request() {
   let mockPermissionPrompt = {
     prompt() {
       didPrompt = true;
-    }
+    },
   };
 
   let integration = (base) => ({

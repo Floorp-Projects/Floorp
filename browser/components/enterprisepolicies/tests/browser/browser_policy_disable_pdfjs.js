@@ -9,8 +9,8 @@ add_task(async function test_disable_pdfjs() {
 
   await setupPolicyEngineWithJson({
     "policies": {
-      "DisableBuiltinPDFViewer": true
-    }
+      "DisableBuiltinPDFViewer": true,
+    },
   });
 
   is(PdfJs.enabled, false, "PDFjs should be disabled after policy runs");

@@ -156,7 +156,7 @@ add_task(async function test_reader_view_element_attribute_transform() {
       observer.observe(element, {
         attributes: true,
         attributeOldValue: true,
-        attributeFilter: [attribute]
+        attributeFilter: [attribute],
       });
 
       triggerFn();

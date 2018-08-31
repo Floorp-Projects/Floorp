@@ -65,7 +65,7 @@ function createFxAccounts() {
       async unsubscribe() {
         return true;
       },
-    }
+    },
   });
 }
 
@@ -80,7 +80,7 @@ add_task(async function test_simple() {
     kXCS: "the kXCS value",
     kExtSync: "the kExtSync value",
     kExtKbHash: "the kExtKbHash value",
-    verified: true
+    verified: true,
   };
   await fxa.setSignedInUser(creds);
 
@@ -126,7 +126,7 @@ add_task(async function test_MPLocked() {
     kXCS: "the kXCS value",
     kExtSync: "the kExtSync value",
     kExtKbHash: "the kExtKbHash value",
-    verified: true
+    verified: true,
   };
 
   Assert.strictEqual(getLoginMgrData(), null, "no login mgr at the start");
@@ -166,7 +166,7 @@ add_task(async function test_consistentWithMPEdgeCases() {
     kXCS: "the kXCS value",
     kExtSync: "the kExtSync value",
     kExtKbHash: "the kExtKbHash value",
-    verified: true
+    verified: true,
   };
 
   let creds2 = {

@@ -23,5 +23,5 @@ Object.defineProperty(window.wrappedJSObject, "controllers", {
     return true;
   }, window),
 
-  set: exportFunction(function() {}, window)
+  set: exportFunction(function() {}, window),
 });

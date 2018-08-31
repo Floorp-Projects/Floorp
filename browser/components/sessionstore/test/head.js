@@ -12,7 +12,7 @@ const ROOT = getRootDirectory(gTestPath);
 const HTTPROOT = ROOT.replace("chrome://mochitests/content/", "http://example.com/");
 const FRAME_SCRIPTS = [
   ROOT + "content.js",
-  ROOT + "content-forms.js"
+  ROOT + "content-forms.js",
 ];
 
 for (let script of FRAME_SCRIPTS) {
@@ -349,7 +349,7 @@ var gWebProgressListener = {
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
       this._callback(aBrowser);
     }
-  }
+  },
 };
 
 registerCleanupFunction(function() {
@@ -398,7 +398,7 @@ var gProgressListener = {
       }
     }
     return [needsRestore, isRestoring, wasRestored];
-  }
+  },
 };
 
 registerCleanupFunction(function() {

@@ -41,7 +41,7 @@ function waitForPrefObserver(name) {
           Services.prefs.removeObserver(name, observer);
           resolve();
         }
-      }
+      },
     };
     Services.prefs.addObserver(name, observer);
   });

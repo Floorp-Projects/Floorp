@@ -39,7 +39,7 @@ function make_fake_appdir() {
       dump("WARNING: make_fake_appdir - fake nsIDirectoryServiceProvider - Unexpected getFile for: '" + prop + "'\n");
       return null;
     },
-    QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"])
+    QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
   };
   // register our new provider
   Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)

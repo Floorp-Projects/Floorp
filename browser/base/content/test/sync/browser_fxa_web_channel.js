@@ -36,11 +36,11 @@ var gTests = [
 
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: TEST_BASE_URL + "?profile_change"
+        url: TEST_BASE_URL + "?profile_change",
       }, async function() {
         await promiseObserver;
       });
-    }
+    },
   },
   {
     desc: "fxa web channel - login messages should notify the fxAccounts object",
@@ -64,18 +64,18 @@ var gTests = [
           content_uri: TEST_HTTP_PATH,
           channel_id: TEST_CHANNEL_ID,
           helpers: {
-            login
-          }
+            login,
+          },
         });
       });
 
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: TEST_BASE_URL + "?login"
+        url: TEST_BASE_URL + "?login",
       }, async function() {
         await promiseLogin;
       });
-    }
+    },
   },
   {
     desc: "fxa web channel - can_link_account messages should respond",
@@ -106,18 +106,18 @@ var gTests = [
           helpers: {
             shouldAllowRelink(acctName) {
               return acctName === "testuser@testuser.com";
-            }
-          }
+            },
+          },
         });
       });
 
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: properUrl
+        url: properUrl,
       }, async function() {
         await promiseEcho;
       });
-    }
+    },
   },
   {
     desc: "fxa web channel - logout messages should notify the fxAccounts object",
@@ -134,18 +134,18 @@ var gTests = [
           content_uri: TEST_HTTP_PATH,
           channel_id: TEST_CHANNEL_ID,
           helpers: {
-            logout
-          }
+            logout,
+          },
         });
       });
 
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: TEST_BASE_URL + "?logout"
+        url: TEST_BASE_URL + "?logout",
       }, async function() {
         await promiseLogout;
       });
-    }
+    },
   },
   {
     desc: "fxa web channel - delete messages should notify the fxAccounts object",
@@ -162,19 +162,19 @@ var gTests = [
           content_uri: TEST_HTTP_PATH,
           channel_id: TEST_CHANNEL_ID,
           helpers: {
-            logout
-          }
+            logout,
+          },
         });
       });
 
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: TEST_BASE_URL + "?delete"
+        url: TEST_BASE_URL + "?delete",
       }, async function() {
         await promiseDelete;
       });
-    }
-  }
+    },
+  },
 ]; // gTests
 
 function makeObserver(aObserveTopic, aObserveFunc) {

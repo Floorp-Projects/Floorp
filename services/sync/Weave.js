@@ -110,7 +110,7 @@ WeaveService.prototype = {
         if (isConfigured) {
           this.ensureLoaded();
         }
-      }
+      },
     }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
@@ -124,7 +124,7 @@ WeaveService.prototype = {
    */
   get enabled() {
     return !!syncUsername && Services.prefs.getBoolPref("identity.fxaccounts.enabled");
-  }
+  },
 };
 
 function AboutWeaveLog() {}
@@ -154,7 +154,7 @@ AboutWeaveLog.prototype = {
 
     channel.owner = principal;
     return channel;
-  }
+  },
 };
 
 const components = [WeaveService, AboutWeaveLog];

@@ -23,7 +23,7 @@ add_task(async function home_button_context() {
   let expectedEntries = [
     [".customize-context-moveToPanel", true],
     [".customize-context-removeFromToolbar", true],
-    ["---"]
+    ["---"],
   ];
   if (!isOSX) {
     expectedEntries.push(["#toggle_toolbar-menubar", true]);
@@ -59,7 +59,7 @@ add_task(async function tabstrip_context() {
     ["#toolbar-context-reloadAllTabs", true],
     ["#toolbar-context-bookmarkAllTabs", true],
     ["#toolbar-context-undoCloseTab", !closedTabsAvailable],
-    ["---"]
+    ["---"],
   ];
   if (!isOSX) {
     expectedEntries.push(["#toggle_toolbar-menubar", true]);
@@ -92,7 +92,7 @@ add_task(async function empty_toolbar_context() {
   let expectedEntries = [
     [".customize-context-moveToPanel", false],
     [".customize-context-removeFromToolbar", false],
-    ["---"]
+    ["---"],
   ];
   if (!isOSX) {
     expectedEntries.push(["#toggle_toolbar-menubar", true]);
@@ -125,7 +125,7 @@ add_task(async function urlbar_context() {
   let expectedEntries = [
     [".customize-context-moveToPanel", false],
     [".customize-context-removeFromToolbar", false],
-    ["---"]
+    ["---"],
   ];
   if (!isOSX) {
     expectedEntries.push(["#toggle_toolbar-menubar", true]);
@@ -201,7 +201,7 @@ add_task(async function context_within_panel() {
     [".customize-context-moveToToolbar", true],
     [".customize-context-removeFromPanel", true],
     ["---"],
-    [".viewCustomizeToolbar", true]
+    [".viewCustomizeToolbar", true],
   ];
   checkContextMenu(contextMenu, expectedEntries);
 
@@ -229,7 +229,7 @@ add_task(async function context_home_button_in_customize_mode() {
   let expectedEntries = [
     [".customize-context-moveToPanel", true],
     [".customize-context-removeFromToolbar", true],
-    ["---"]
+    ["---"],
   ];
   if (!isOSX) {
     expectedEntries.push(["#toggle_toolbar-menubar", true]);
@@ -257,7 +257,7 @@ add_task(async function context_click_in_palette() {
 
   let expectedEntries = [
     [".customize-context-addToToolbar", true],
-    [".customize-context-addToPanel", true]
+    [".customize-context-addToPanel", true],
   ];
   checkContextMenu(contextMenu, expectedEntries);
 
@@ -280,7 +280,7 @@ add_task(async function context_click_in_customize_mode() {
     [".customize-context-moveToToolbar", true],
     [".customize-context-removeFromPanel", true],
     ["---"],
-    [".viewCustomizeToolbar", false]
+    [".viewCustomizeToolbar", false],
   ];
   checkContextMenu(contextMenu, expectedEntries);
 
@@ -311,7 +311,7 @@ add_task(async function context_click_customize_mode_panel_not_opened() {
     [".customize-context-moveToToolbar", true],
     [".customize-context-removeFromPanel", true],
     ["---"],
-    [".viewCustomizeToolbar", false]
+    [".viewCustomizeToolbar", false],
   ];
   checkContextMenu(contextMenu, expectedEntries, this.otherWin);
 
@@ -355,7 +355,7 @@ add_task(async function context_combined_buttons_toolbar() {
   let expectedEntries = [
     [".customize-context-moveToPanel", true],
     [".customize-context-removeFromToolbar", true],
-    ["---"]
+    ["---"],
   ];
   if (!isOSX) {
     expectedEntries.push(["#toggle_toolbar-menubar", true]);
@@ -397,7 +397,7 @@ add_task(async function context_after_customization_panel() {
     [".customize-context-moveToToolbar", true],
     [".customize-context-removeFromPanel", true],
     ["---"],
-    [".viewCustomizeToolbar", true]
+    [".viewCustomizeToolbar", true],
   ];
   checkContextMenu(contextMenu, expectedEntries);
 
@@ -454,7 +454,7 @@ add_task(async function flexible_space_context_menu() {
   let expectedEntries = [
     [".customize-context-moveToPanel", false],
     [".customize-context-removeFromToolbar", true],
-    ["---"]
+    ["---"],
   ];
   if (!isOSX) {
     expectedEntries.push(["#toggle_toolbar-menubar", true]);

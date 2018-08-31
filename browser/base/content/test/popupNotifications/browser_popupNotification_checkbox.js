@@ -50,7 +50,7 @@ var tests = [
       checkCheckbox(notification.checkbox, "This is a checkbox");
       triggerMainCommand(popup);
     },
-    onHidden() { }
+    onHidden() { },
   },
 
   // Test checkbox being checked by default
@@ -69,7 +69,7 @@ var tests = [
       checkCheckbox(notification.checkbox, "Check this", true);
       triggerMainCommand(popup);
     },
-    onHidden() { }
+    onHidden() { },
   },
 
   // Test checkbox passing the checkbox state on mainAction
@@ -94,7 +94,7 @@ var tests = [
     },
     onHidden() {
       is(this.mainActionChecked, true, "mainAction callback is passed the correct checkbox value");
-    }
+    },
   },
 
   // Test checkbox passing the checkbox state on secondaryAction
@@ -123,7 +123,7 @@ var tests = [
     },
     onHidden() {
       is(this.secondaryActionChecked, true, "secondaryAction callback is passed the correct checkbox value");
-    }
+    },
   },
 
   // Test checkbox preserving its state through re-opening the doorhanger
@@ -158,7 +158,7 @@ var tests = [
       checkCheckbox(checkbox, "This is a checkbox", true);
       checkMainAction(notification, true);
       gNotification.remove();
-    }
+    },
   },
 
   // Test no checkbox hides warning label
@@ -219,7 +219,7 @@ var tests = [
           }
           triggerMainCommand(popup);
         },
-        onHidden() { }
+        onHidden() { },
       }
     );
   });

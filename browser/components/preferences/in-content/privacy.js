@@ -810,7 +810,7 @@ var gPrivacyPane = {
     "rememberHistory",
     "rememberForms",
     "alwaysClear",
-    "clearDataSettings"
+    "clearDataSettings",
   ],
 
   /**
@@ -1336,7 +1336,7 @@ var gPrivacyPane = {
       let [value, unit] = DownloadUtils.convertByteUnits(totalUsage);
       document.l10n.setAttributes(totalSiteDataSizeLabel, "sitedata-total-size", {
         value,
-        unit
+        unit,
       });
     });
   },
@@ -1449,7 +1449,7 @@ var gPrivacyPane = {
   showAutoplayMediaExceptions() {
     var params = {
       blockVisible: true, sessionVisible: false, allowVisible: true,
-      prefilledHost: "", permissionType: "autoplay-media"
+      prefilledHost: "", permissionType: "autoplay-media",
     };
 
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
@@ -1465,7 +1465,7 @@ var gPrivacyPane = {
   showPopupExceptions() {
     var params = {
       blockVisible: false, sessionVisible: false, allowVisible: true,
-      prefilledHost: "", permissionType: "popup"
+      prefilledHost: "", permissionType: "popup",
     };
 
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
@@ -1746,7 +1746,7 @@ var gPrivacyPane = {
     sessionVisible: false,
     allowVisible: true,
     prefilledHost: "",
-    permissionType: "install"
+    permissionType: "install",
   },
 
   /**
@@ -1974,5 +1974,5 @@ var gPrivacyPane = {
 
     // Revert the checkbox in case we didn't quit
     document.getElementById("a11yPrivacyCheckbox").checked = !checked;
-  }
+  },
 };

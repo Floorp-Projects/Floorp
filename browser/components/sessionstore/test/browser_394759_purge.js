@@ -10,7 +10,7 @@ function promiseClearHistory() {
       observe(aSubject, aTopic, aData) {
         Services.obs.removeObserver(this, "browser:purge-domain-data");
         resolve();
-      }
+      },
     };
     Services.obs.addObserver(observer, "browser:purge-domain-data");
   });
@@ -41,11 +41,11 @@ add_task(async function() {
       {
         tabs: [
           { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: REMEMBER }] },
-          { entries: [{ url: "http://mozilla.org/", triggeringPrincipal_base64, title: FORGET }] }
+          { entries: [{ url: "http://mozilla.org/", triggeringPrincipal_base64, title: FORGET }] },
         ],
         selected: 2,
         title: "mozilla.org",
-        _closedTabs: []
+        _closedTabs: [],
       },
       // _closedWindows[1]
       {
@@ -54,15 +54,15 @@ add_task(async function() {
          { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: REMEMBER }] },
          { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: REMEMBER }] },
          { entries: [{ url: "http://mozilla.org/", triggeringPrincipal_base64, title: FORGET }] },
-         { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: REMEMBER }] }
+         { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: REMEMBER }] },
         ],
         selected: 5,
-        _closedTabs: []
+        _closedTabs: [],
       },
       // _closedWindows[2]
       {
         tabs: [
-          { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: REMEMBER }] }
+          { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: REMEMBER }] },
         ],
         selected: 1,
         _closedTabs: [
@@ -70,23 +70,23 @@ add_task(async function() {
             state: {
               entries: [
                 { url: "http://mozilla.org/", triggeringPrincipal_base64, title: FORGET },
-                { url: "http://mozilla.org/again", triggeringPrincipal_base64, title: "doesn't matter" }
-              ]
+                { url: "http://mozilla.org/again", triggeringPrincipal_base64, title: "doesn't matter" },
+              ],
             },
             pos: 1,
-            title: FORGET
+            title: FORGET,
           },
           {
             state: {
               entries: [
-                { url: "http://example.com", triggeringPrincipal_base64, title: REMEMBER }
-              ]
+                { url: "http://example.com", triggeringPrincipal_base64, title: REMEMBER },
+              ],
             },
-            title: REMEMBER
-          }
-        ]
-      }
-    ]
+            title: REMEMBER,
+          },
+        ],
+      },
+    ],
   };
 
   // set browser to test state

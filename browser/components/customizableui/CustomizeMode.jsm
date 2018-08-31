@@ -2642,7 +2642,7 @@ CustomizeMode.prototype = {
     let document = this.document;
     let rAFHandle = 0;
     let elements = {
-      arena: document.getElementById("customization-pong-arena")
+      arena: document.getElementById("customization-pong-arena"),
     };
     let isRTL = document.documentElement.matches(":-moz-locale-dir(rtl)");
 

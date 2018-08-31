@@ -79,18 +79,18 @@ function test() {
     gProvider.createAddons([{
       id: "test1@tests.mozilla.org",
       name: "Test add-on 1",
-      description: "foo"
+      description: "foo",
     },
     {
       id: "test2@tests.mozilla.org",
       name: "Test add-on 2",
-      description: "bar"
+      description: "bar",
     },
     {
       id: "test3@tests.mozilla.org",
       name: "Test add-on 3",
       type: "theme",
-      description: "bar"
+      description: "bar",
     }]);
   });
 

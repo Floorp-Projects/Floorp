@@ -57,7 +57,7 @@ function generateKeyPair(aAlgorithmName, aCallback) {
       publicKey = {
         algorithm: "RS",
         exponent:  aKeyPair.hexRSAPublicKeyExponent,
-        modulus:   aKeyPair.hexRSAPublicKeyModulus
+        modulus:   aKeyPair.hexRSAPublicKeyModulus,
       };
       break;
 
@@ -67,7 +67,7 @@ function generateKeyPair(aAlgorithmName, aCallback) {
         y: aKeyPair.hexDSAPublicValue,
         p: aKeyPair.hexDSAPrime,
         q: aKeyPair.hexDSASubPrime,
-        g: aKeyPair.hexDSAGenerator
+        g: aKeyPair.hexDSAGenerator,
       };
       break;
 
@@ -77,7 +77,7 @@ function generateKeyPair(aAlgorithmName, aCallback) {
 
     let keyWrapper = {
       serializedPublicKey: JSON.stringify(publicKey),
-      _kp: aKeyPair
+      _kp: aKeyPair,
     };
 
     return aCallback(null, keyWrapper);
@@ -170,7 +170,7 @@ jwcryptoClass.prototype = {
     var payload = {
       exp: this.getExpiration(
                aOptions.duration, aOptions.localtimeOffsetMsec, aOptions.now),
-      aud: aAudience
+      aud: aAudience,
     };
     var payloadBytes = IdentityCryptoService.base64UrlEncode(
                           JSON.stringify(payload));
@@ -183,7 +183,7 @@ jwcryptoClass.prototype = {
       var signedAssertion = headerBytes + "." + payloadBytes + "." + signature;
       return aCallback(null, aCert + "~" + signedAssertion);
     });
-  }
+  },
 
 };
 

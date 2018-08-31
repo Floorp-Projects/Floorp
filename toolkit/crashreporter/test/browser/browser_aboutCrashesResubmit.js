@@ -138,7 +138,7 @@ function test() {
                                       "ProductName": "Test App",
                                       // test that we don't truncate
                                       // at = (bug 512853)
-                                      "Foo": "ABC=XYZ"
+                                      "Foo": "ABC=XYZ",
                                      }));
   crashes.sort((a, b) => b.date - a.date);
 

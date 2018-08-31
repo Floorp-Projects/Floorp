@@ -2,7 +2,7 @@ const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
 
 add_task(async function clickWithoutPrefSet() {
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, false]]
+    set: [[PREF_MULTISELECT_TABS, false]],
   });
 
   let tab = await addTab();
@@ -28,13 +28,13 @@ add_task(async function clickWithoutPrefSet() {
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
-      set: [[PREF_MULTISELECT_TABS, true]]
+      set: [[PREF_MULTISELECT_TABS, true]],
   });
 });
 
 add_task(async function clickWithPrefSet() {
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true]]
+    set: [[PREF_MULTISELECT_TABS, true]],
   });
 
   const initialFocusedTab = await addTab();

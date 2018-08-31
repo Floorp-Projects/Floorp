@@ -13,7 +13,7 @@ function setup_mode(mode) {
   // Complete mode.
   let realMode = {
     read: true,
-    write: true
+    write: true,
   };
   for (let k in mode) {
     realMode[k] = mode[k];
@@ -90,7 +90,7 @@ async function test_no_append(mode) {
 var test_flags = [
   {},
   {create: true},
-  {trunc: true}
+  {trunc: true},
 ];
 function run_test() {
   do_test_pending();

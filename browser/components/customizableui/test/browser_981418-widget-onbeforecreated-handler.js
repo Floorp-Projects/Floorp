@@ -18,7 +18,7 @@ add_task(async function testAddOnBeforeCreatedWidget() {
       view.id = kWidgetId + "idontexistyet";
       document.getElementById("appMenu-viewCache").appendChild(view);
       onBeforeCreatedCalled = true;
-    }
+    },
   };
 
   CustomizableUI.createWidget(widgetSpec);

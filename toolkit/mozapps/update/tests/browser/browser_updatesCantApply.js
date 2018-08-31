@@ -18,7 +18,7 @@ add_task(async function testBasicPrompt() {
            URL_MANUAL_UPDATE, "Landed on manual update page.");
         gBrowser.removeTab(gBrowser.selectedTab);
         getWriteTestFile();
-      }
+      },
     },
   ]);
 });

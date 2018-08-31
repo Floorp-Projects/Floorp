@@ -856,7 +856,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 }
                 const actionDetails = {
                   isSuggestion: !!action.params.searchSuggestion,
-                  isAlias: !!action.params.alias
+                  isAlias: !!action.params.alias,
                 };
                 [url, postData] = this._parseAndRecordSearchEngineLoad(
                   action.params.engineName,
@@ -1307,7 +1307,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                    (aCommand != "cmd_cut" || !this.urlbar.readOnly) &&
                    this.urlbar.selectionStart < this.urlbar.selectionEnd;
           },
-          onEvent(aEventName) {}
+          onEvent(aEventName) {},
         })
       ]]></field>
 
@@ -2902,7 +2902,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             configurable: true,
             enumerable: true,
             writable: true,
-            value: module.DownloadUtils
+            value: module.DownloadUtils,
           });
           return module.DownloadUtils;
         ]]></getter>

@@ -29,7 +29,7 @@ add_task(async function test_working_bid_exchange() {
         duration,
       });
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let client = new TokenServerClient();
@@ -50,7 +50,7 @@ add_task(async function test_invalid_arguments() {
 
   let args = [
     [null, "assertion"],
-    ["http://example.com/", null]
+    ["http://example.com/", null],
   ];
 
   for (let arg of args) {
@@ -77,10 +77,10 @@ add_task(async function test_conditions_required_response_handling() {
 
       let body = JSON.stringify({
         errors: [{description, location: "body", name: ""}],
-        urls: {tos: tosURL}
+        urls: {tos: tosURL},
       });
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let client = new TokenServerClient();
@@ -109,10 +109,10 @@ add_task(async function test_invalid_403_no_content_type() {
 
       let body = JSON.stringify({
         errors: [{description: "irrelevant", location: "body", name: ""}],
-        urls: {foo: "http://bar"}
+        urls: {foo: "http://bar"},
       });
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let client = new TokenServerClient();
@@ -138,10 +138,10 @@ add_task(async function test_invalid_403_bad_json() {
       response.setHeader("Content-Type", "application/json; charset=utf-8");
 
       let body = JSON.stringify({
-        foo: "bar"
+        foo: "bar",
       });
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let client = new TokenServerClient();
@@ -167,7 +167,7 @@ add_task(async function test_403_no_urls() {
 
       let body = "{}";
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let client = new TokenServerClient();
@@ -205,7 +205,7 @@ add_task(async function test_send_extra_headers() {
         duration,
       });
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let client = new TokenServerClient();
@@ -213,7 +213,7 @@ add_task(async function test_send_extra_headers() {
 
   let extra = {
     "X-Foo": 42,
-    "X-Bar": 17
+    "X-Bar": 17,
   };
 
   await client.getTokenFromBrowserIDAssertion(url, "assertion", extra);
@@ -255,7 +255,7 @@ add_task(async function test_error_404_proper_response() {
       });
 
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let client = new TokenServerClient();
@@ -280,7 +280,7 @@ add_task(async function test_bad_json() {
 
       let body = '{"id": "id", baz}';
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let client = new TokenServerClient();
@@ -307,7 +307,7 @@ add_task(async function test_400_response() {
 
       let body = "{}"; // Actual content may not be used.
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let client = new TokenServerClient();
@@ -334,7 +334,7 @@ add_task(async function test_401_with_error_cause() {
 
       let body = JSON.stringify({status: "no-soup-for-you"});
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let client = new TokenServerClient();
@@ -361,7 +361,7 @@ add_task(async function test_unhandled_media_type() {
 
       let body = "hello, world";
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let url = server.baseURI + "/1.0/foo/1.0";
@@ -394,7 +394,7 @@ add_task(async function test_rich_media_types() {
         duration,
       });
       response.bodyOutputStream.write(body, body.length);
-    }
+    },
   });
 
   let url = server.baseURI + "/foo";

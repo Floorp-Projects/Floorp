@@ -28,7 +28,7 @@ var TabAttributes = Object.freeze({
 
   set(tab, data = {}) {
     TabAttributesInternal.set(tab, data);
-  }
+  },
 });
 
 var TabAttributesInternal = {
@@ -67,6 +67,6 @@ var TabAttributesInternal = {
         tab.setAttribute(name, data[name]);
       }
     }
-  }
+  },
 };
 

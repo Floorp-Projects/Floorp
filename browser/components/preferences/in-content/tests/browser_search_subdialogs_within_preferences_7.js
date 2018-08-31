@@ -7,7 +7,7 @@ requestLongerTimeout(2);
 // Enabling Searching functionatily. Will display search bar form this testcase forward.
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [
-    ["browser.preferences.search", true]
+    ["browser.preferences.search", true],
   ]});
 });
 

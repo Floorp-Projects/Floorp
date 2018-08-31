@@ -60,7 +60,7 @@ add_task(async function migratedFile() {
         color: "ping",
         name: "Custom user-created identity",
       },
-    ]
+    ],
   };
 
   await OS.File.writeAtomic(TEST_STORE_FILE_PATH, JSON.stringify(oldFileData),

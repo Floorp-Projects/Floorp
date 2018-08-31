@@ -28,7 +28,7 @@ function test() {
     { entries: [{ url: "http://example.org/#1", triggeringPrincipal_base64 }] },
     { entries: [{ url: "http://example.org/#2", triggeringPrincipal_base64 }] },
     { entries: [{ url: "http://example.org/#3", triggeringPrincipal_base64 }] },
-    { entries: [{ url: "http://example.org/#4", triggeringPrincipal_base64 }] }
+    { entries: [{ url: "http://example.org/#4", triggeringPrincipal_base64 }] },
   ], selected: 1 }] };
 
   let tabsForEnsure = {};
@@ -114,7 +114,7 @@ function checkAutocompleteResults(aExpected, aCallback) {
     QueryInterface: ChromeUtils.generateQI([
       Ci.nsIAutoCompleteInput,
       Ci.nsIAutoCompletePopup,
-    ])
+    ]),
   };
 
   info("Searching open pages.");

@@ -116,7 +116,7 @@ async function runTestForReceiver(receiver) {
 add_task(async function setup() {
   // make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userContext.enabled", true]
+    ["privacy.userContext.enabled", true],
   ]});
 });
 
@@ -130,7 +130,7 @@ add_task(async function test() {
 add_task(async function test() {
   info("Checking broadcast channel with <iframe mozbrowser> receiver");
   await SpecialPowers.pushPrefEnv({"set": [
-    ["dom.mozBrowserFramesEnabled", true]
+    ["dom.mozBrowserFramesEnabled", true],
   ]});
   let receiver = await addBrowserFrameInUserContext(URI, 2);
   await runTestForReceiver(receiver);

@@ -61,7 +61,7 @@ var tests = [
       gBrowser.removeTab(tab);
       next();
     });
-  }
+  },
 ];
 
 function loadTabInWindow(win, callback) {

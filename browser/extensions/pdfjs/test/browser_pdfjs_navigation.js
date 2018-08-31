@@ -13,132 +13,132 @@ const TESTS = [
   {
     action: {
       selector: "button#next",
-      event: "click"
+      event: "click",
     },
     expectedPage: 2,
-    message: "navigated to next page using NEXT button"
+    message: "navigated to next page using NEXT button",
 
   },
   {
     action: {
       selector: "button#previous",
-      event: "click"
+      event: "click",
     },
     expectedPage: 1,
-    message: "navigated to previous page using PREV button"
+    message: "navigated to previous page using PREV button",
   },
   {
     action: {
       selector: "button#next",
-      event: "click"
+      event: "click",
     },
     expectedPage: 2,
-    message: "navigated to next page using NEXT button"
+    message: "navigated to next page using NEXT button",
   },
   {
     action: {
       selector: "input#pageNumber",
       value: 1,
-      event: "change"
+      event: "change",
     },
     expectedPage: 1,
-    message: "navigated to first page using pagenumber"
+    message: "navigated to first page using pagenumber",
   },
   {
     action: {
       selector: "#thumbnailView a:nth-child(4)",
-      event: "click"
+      event: "click",
     },
     expectedPage: 4,
-    message: "navigated to 4th page using thumbnail view"
+    message: "navigated to 4th page using thumbnail view",
   },
   {
     action: {
       selector: "#thumbnailView a:nth-child(2)",
-      event: "click"
+      event: "click",
     },
     expectedPage: 2,
-    message: "navigated to 2nd page using thumbnail view"
+    message: "navigated to 2nd page using thumbnail view",
   },
   {
     action: {
       selector: "#viewer",
       event: "keydown",
-      keyCode: 36
+      keyCode: 36,
     },
     expectedPage: 1,
-    message: "navigated to 1st page using 'home' key"
+    message: "navigated to 1st page using 'home' key",
   },
   {
     action: {
       selector: "#viewer",
       event: "keydown",
-      keyCode: 34
+      keyCode: 34,
     },
     expectedPage: 2,
-    message: "navigated to 2nd page using 'Page Down' key"
+    message: "navigated to 2nd page using 'Page Down' key",
   },
   {
     action: {
       selector: "#viewer",
       event: "keydown",
-      keyCode: 33
+      keyCode: 33,
     },
     expectedPage: 1,
-    message: "navigated to 1st page using 'Page Up' key"
+    message: "navigated to 1st page using 'Page Up' key",
   },
   {
     action: {
       selector: "#viewer",
       event: "keydown",
-      keyCode: 39
+      keyCode: 39,
     },
     expectedPage: 2,
-    message: "navigated to 2nd page using 'right' key"
+    message: "navigated to 2nd page using 'right' key",
   },
   {
     action: {
       selector: "#viewer",
       event: "keydown",
-      keyCode: 37
+      keyCode: 37,
     },
     expectedPage: 1,
-    message: "navigated to 1st page using 'left' key"
+    message: "navigated to 1st page using 'left' key",
   },
   {
     action: {
       selector: "#viewer",
       event: "keydown",
-      keyCode: 35
+      keyCode: 35,
     },
     expectedPage: 5,
-    message: "navigated to last page using 'home' key"
+    message: "navigated to last page using 'home' key",
   },
   {
     action: {
       selector: ".outlineItem:nth-child(1) a",
-      event: "click"
+      event: "click",
     },
     expectedPage: 1,
-    message: "navigated to 1st page using outline view"
+    message: "navigated to 1st page using outline view",
   },
   {
     action: {
       selector: ".outlineItem:nth-child(" + PDF_OUTLINE_ITEMS + ") a",
-      event: "click"
+      event: "click",
     },
     expectedPage: 4,
-    message: "navigated to 4th page using outline view"
+    message: "navigated to 4th page using outline view",
   },
   {
     action: {
       selector: "input#pageNumber",
       value: 5,
-      event: "change"
+      event: "change",
     },
     expectedPage: 5,
-    message: "navigated to 5th page using pagenumber"
-  }
+    message: "navigated to 5th page using pagenumber",
+  },
 ];
 
 add_task(async function test() {

@@ -152,7 +152,7 @@ var PluginProvider = {
           id: tag.name + tag.description,
           name: tag.name,
           description: tag.description,
-          tags: [tag]
+          tags: [tag],
         };
 
         seenPlugins[tag.name][tag.description] = plugin;
@@ -230,7 +230,7 @@ var PluginProvider = {
     // Signal that uninstalls are complete
     for (let plugin of lostPlugins)
       AddonManagerPrivate.callAddonListeners("onUninstalled", plugin);
-  }
+  },
 };
 
 function isFlashPlugin(aPlugin) {
@@ -515,12 +515,12 @@ PluginWrapper.prototype = {
       aListener.onNoUpdateAvailable(this);
     if ("onUpdateFinished" in aListener)
       aListener.onUpdateFinished(this);
-  }
+  },
 };
 
 AddonManagerPrivate.registerProvider(PluginProvider, [
   new AddonManagerPrivate.AddonType("plugin", URI_EXTENSION_STRINGS,
                                     "type.plugin.name",
                                     AddonManager.VIEW_TYPE_LIST, 6000,
-                                    AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE)
+                                    AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE),
 ]);

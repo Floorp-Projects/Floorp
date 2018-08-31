@@ -713,7 +713,7 @@ var Utils = {
       },
       set(value) {
         Services.prefs.setStringPref(prefName, value);
-      }
+      },
     });
   },
 

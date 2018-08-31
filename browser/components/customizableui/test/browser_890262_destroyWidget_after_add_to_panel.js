@@ -15,7 +15,7 @@ add_task(function() {
   CustomizableUI.createWidget({
     id: kWidget1Id,
     removable: true,
-    defaultArea: kLazyAreaId
+    defaultArea: kLazyAreaId,
   });
   let noError = true;
   try {
@@ -32,7 +32,7 @@ add_task(function() {
   CustomizableUI.createWidget({
     id: kWidget2Id,
     removable: true,
-    defaultArea: CustomizableUI.AREA_NAVBAR
+    defaultArea: CustomizableUI.AREA_NAVBAR,
   });
 
   CustomizableUI.addWidgetToArea(kWidget2Id, kLazyAreaId);
@@ -63,6 +63,6 @@ function setupArea() {
   document.getElementById("nav-bar").appendChild(lazyArea);
   CustomizableUI.registerArea(kLazyAreaId, {
     type: CustomizableUI.TYPE_TOOLBAR,
-    defaultPlacements: []
+    defaultPlacements: [],
   });
 }

@@ -31,7 +31,7 @@ const PERSIST_ENABLED = true;
 const PERSIST_BYPASS_CACHE = false;
 const PERSIST_FILES = {
   headerURL: "lightweighttheme-header",
-  footerURL: "lightweighttheme-footer"
+  footerURL: "lightweighttheme-footer",
 };
 
 ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
@@ -707,7 +707,7 @@ AddonWrapper.prototype = {
   // Lightweight themes are never blocklisted
   get blocklistState() {
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
-  }
+  },
 };
 
 ["description", "homepageURL", "iconURL"].forEach(function(prop) {
@@ -906,7 +906,7 @@ var _previewTimer;
 var _previewTimerCallback = {
   notify() {
     LightweightThemeManager.resetPreview();
-  }
+  },
 };
 
 /**
@@ -1000,5 +1000,5 @@ function _persistProgressListener(successCallback) {
 AddonManagerPrivate.registerProvider(LightweightThemeManager, [
   new AddonManagerPrivate.AddonType("theme", URI_EXTENSION_STRINGS,
                                     "type.themes.name",
-                                    AddonManager.VIEW_TYPE_LIST, 5000)
+                                    AddonManager.VIEW_TYPE_LIST, 5000),
 ]);

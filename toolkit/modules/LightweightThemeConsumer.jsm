@@ -19,7 +19,7 @@ const toolkitVariableMap = [
       // Remove the alpha channel
       const {r, g, b} = rgbaChannels;
       return `rgb(${r}, ${g}, ${b})`;
-    }
+    },
   }],
   ["--lwt-text-color", {
     lwtProperty: "textcolor",
@@ -31,10 +31,10 @@ const toolkitVariableMap = [
       const {r, g, b} = rgbaChannels;
       element.setAttribute("lwthemetextcolor", _isTextColorDark(r, g, b) ? "dark" : "bright");
       return `rgba(${r}, ${g}, ${b})`;
-    }
+    },
   }],
   ["--arrowpanel-background", {
-    lwtProperty: "popup"
+    lwtProperty: "popup",
   }],
   ["--arrowpanel-color", {
     lwtProperty: "popup_text",
@@ -60,13 +60,13 @@ const toolkitVariableMap = [
 
       element.style.setProperty(disabledColorVariable, `rgba(${r}, ${g}, ${b}, 0.5)`);
       return `rgba(${r}, ${g}, ${b}, ${a})`;
-    }
+    },
   }],
   ["--arrowpanel-border-color", {
-    lwtProperty: "popup_border"
+    lwtProperty: "popup_border",
   }],
   ["--lwt-toolbar-field-background-color", {
-    lwtProperty: "toolbar_field"
+    lwtProperty: "toolbar_field",
   }],
   ["--lwt-toolbar-field-color", {
     lwtProperty: "toolbar_field_text",
@@ -82,19 +82,19 @@ const toolkitVariableMap = [
         element.setAttribute("lwt-toolbar-field-brighttext", "true");
       }
       return `rgba(${r}, ${g}, ${b}, ${a})`;
-    }
+    },
   }],
   ["--lwt-toolbar-field-border-color", {
-    lwtProperty: "toolbar_field_border"
+    lwtProperty: "toolbar_field_border",
   }],
   ["--lwt-toolbar-field-focus", {
-    lwtProperty: "toolbar_field_focus"
+    lwtProperty: "toolbar_field_focus",
   }],
   ["--lwt-toolbar-field-focus-color", {
-    lwtProperty: "toolbar_field_text_focus"
+    lwtProperty: "toolbar_field_text_focus",
   }],
   ["--toolbar-field-focus-border-color", {
-    lwtProperty: "toolbar_field_border_focus"
+    lwtProperty: "toolbar_field_border_focus",
   }],
 ];
 
@@ -267,7 +267,7 @@ LightweightThemeConsumer.prototype = {
     } else {
       this._lastExperimentData = null;
     }
-  }
+  },
 };
 
 function _getContentProperties(doc, active, data) {
@@ -305,7 +305,7 @@ function _setProperties(root, active, themeData) {
         lwtProperty,
         optionalElementID,
         processColor,
-        isColor = true
+        isColor = true,
       } = definition;
       let elem = optionalElementID ? root.ownerDocument.getElementById(optionalElementID)
                                    : root;

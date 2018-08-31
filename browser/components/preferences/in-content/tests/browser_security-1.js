@@ -5,7 +5,7 @@ const PREFS = [
   "browser.safebrowsing.downloads.enabled",
 
   "browser.safebrowsing.downloads.remote.block_potentially_unwanted",
-  "browser.safebrowsing.downloads.remote.block_uncommon"
+  "browser.safebrowsing.downloads.remote.block_uncommon",
 ];
 
 let originals = PREFS.map(pref => [pref, Services.prefs.getBoolPref(pref)]);

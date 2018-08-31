@@ -14,7 +14,7 @@ const ADDONS = {
       "id": ID,
       "name": "Test Bootstrap 1",
     },
-    "bootstrap.js": EMPTY_BOOTSTRAP_JS
+    "bootstrap.js": EMPTY_BOOTSTRAP_JS,
   },
   test_bootstrap1_2: {
     "install.rdf": {
@@ -22,7 +22,7 @@ const ADDONS = {
       "version": "2.0",
       "name": "Test Bootstrap 1",
     },
-    "bootstrap.js": EMPTY_BOOTSTRAP_JS
+    "bootstrap.js": EMPTY_BOOTSTRAP_JS,
   },
 };
 
@@ -89,7 +89,7 @@ add_task(async function test_new_temporary() {
     },
     onInstallStarted: (aInstall) => {
       do_throw("onInstallStarted called unexpectedly");
-    }
+    },
   });
 
   await AddonManager.installTemporaryAddon(XPIS.test_bootstrap1_1);
@@ -347,10 +347,10 @@ add_task(async function test_samefile() {
       name: "Test WebExtension 1 (temporary)",
       applications: {
         gecko: {
-          id: ID
-        }
-      }
-    }
+          id: ID,
+        },
+      },
+    },
   });
 
   let addon = await AddonManager.installTemporaryAddon(webext);
@@ -375,10 +375,10 @@ add_task(async function test_samefile() {
       name: "Test WebExtension 1 (temporary)",
       applications: {
         gecko: {
-          id: ID
-        }
-      }
-    }
+          id: ID,
+        },
+      },
+    },
   });
 
   addon = await AddonManager.installTemporaryAddon(webext);
@@ -454,7 +454,7 @@ add_task(async function test_replace_permanent() {
     },
     onInstallStarted: (aInstall) => {
       do_throw("onInstallStarted called unexpectedly");
-    }
+    },
   });
 
   let addon = await AddonManager.installTemporaryAddon(unpacked_addon);

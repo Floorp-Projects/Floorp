@@ -22,17 +22,17 @@ function* runTests() {
     url: BASE_URL + "test/sample_image_red_1920x1080.jpg",
     color: [255, 0, 0],
     width: 1920,
-    height: 1080
+    height: 1080,
   }, {
     url: BASE_URL + "test/sample_image_green_1024x1024.jpg",
     color: [0, 255, 0],
     width: 1024,
-    height: 1024
+    height: 1024,
   }, {
     url: BASE_URL + "test/sample_image_blue_300x600.jpg",
     color: [0, 0, 255],
     width: 300,
-    height: 600
+    height: 600,
   }]) {
     dontExpireThumbnailURLs([url]);
     const capturedPromise = new Promise(resolve => {

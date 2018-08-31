@@ -1,7 +1,7 @@
 const TEST_URLS = [
   "about:buildconfig",
   "http://mochi.test:8888/browser/browser/components/sessionstore/test/browser_speculative_connect.html",
-  ""
+  "",
 ];
 
 /**

@@ -10,7 +10,7 @@ const DATAURL = "data:image/x-icon;base64,AAABAAEAEBAAAAAAAABoBQAAFgAAACgAAAAQAA
 let iconDiscoveryTests = [
   {
     text: "rel icon discovered",
-    icons: [{}]
+    icons: [{}],
   }, {
     text: "rel may contain additional rels separated by spaces",
     icons: [{ rel: "abcdefg icon qwerty" }],

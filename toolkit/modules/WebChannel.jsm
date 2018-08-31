@@ -290,7 +290,7 @@ this.WebChannel.prototype = {
     if (message && browser && browser.messageManager && principal) {
       browser.messageManager.sendAsyncMessage("WebChannelMessageToContent", {
         id: this.id,
-        message
+        message,
       }, { eventTarget }, principal);
     } else if (!message) {
       Cu.reportError("Failed to send a WebChannel message. Message not set.");
@@ -322,7 +322,7 @@ this.WebChannel.prototype = {
       } catch (ex) {
         this.send({
           errno: ERRNO_UNKNOWN_ERROR,
-          error: ex.message ? ex.message : ERROR_UNKNOWN
+          error: ex.message ? ex.message : ERROR_UNKNOWN,
         }, sendingContext);
         Cu.reportError("Failed to execute WebChannel callback:");
         Cu.reportError(ex);
@@ -330,5 +330,5 @@ this.WebChannel.prototype = {
     } else {
       Cu.reportError("No callback set for this channel.");
     }
-  }
+  },
 };

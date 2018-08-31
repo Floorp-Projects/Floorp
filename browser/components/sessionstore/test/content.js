@@ -48,8 +48,8 @@ var historyListener = {
 
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsISHistoryListener,
-    Ci.nsISupportsWeakReference
-  ])
+    Ci.nsISupportsWeakReference,
+  ]),
 };
 
 var {sessionHistory} = docShell.QueryInterface(Ci.nsIWebNavigation);

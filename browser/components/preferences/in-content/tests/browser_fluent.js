@@ -36,8 +36,8 @@ add_task(async function() {
   Assert.deepEqual(msg, {
     value: null,
     attributes: [
-      {name: "tooltiptext", value: elem.getAttribute("tooltiptext")}
-    ]
+      {name: "tooltiptext", value: elem.getAttribute("tooltiptext")},
+    ],
   });
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
