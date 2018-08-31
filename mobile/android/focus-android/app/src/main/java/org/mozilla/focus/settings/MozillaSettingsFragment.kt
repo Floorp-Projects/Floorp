@@ -9,7 +9,7 @@ import android.os.Bundle
 import android.support.v14.preference.SwitchPreference
 import android.support.v7.preference.Preference
 import org.mozilla.focus.R
-import org.mozilla.focus.browser.LocalizedContent
+import org.mozilla.focus.activity.InfoActivity
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -50,16 +50,16 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
         // "preference screens" into separate activities.
         when (preference.key) {
             resources.getString(R.string.pref_key_about) -> run {
-                SessionManager.getInstance().createSession(Source.MENU, LocalizedContent.URL_ABOUT)
-                activity!!.finish()
+                val intent = InfoActivity.getAboutIntent(context!!)
+                startActivity(intent)
             }
             resources.getString(R.string.pref_key_help) -> run {
                 SessionManager.getInstance().createSession(Source.MENU, SupportUtils.HELP_URL)
                 activity!!.finish()
             }
             resources.getString(R.string.pref_key_rights) -> run {
-                SessionManager.getInstance().createSession(Source.MENU, LocalizedContent.URL_RIGHTS)
-                activity!!.finish()
+                val intent = InfoActivity.getRightsIntent(context!!)
+                startActivity(intent)
             }
             resources.getString(R.string.pref_key_privacy_notice) -> {
                 SessionManager.getInstance().createSession(Source.MENU, if (AppConstants.isKlarBuild)

@@ -89,6 +89,9 @@
             android:autoRemoveFromRecents="false"
             android:label="@string/app_name" />
 
+        <activity android:name=".activity.InfoActivity"
+            android:theme="@style/InfoTheme"/>
+
         <activity android:name=".activity.TextActionActivity"
             android:label="@string/text_selection_search_action"
             android:exported="true">

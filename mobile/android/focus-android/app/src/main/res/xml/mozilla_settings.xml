@@ -13,7 +13,6 @@
         android:title="@string/preference_homescreen_tips" />
 
     <org.mozilla.focus.widget.AboutPreference
-        android:icon="@drawable/ic_tab_new"
         android:key="@string/pref_key_about"
         android:layout="@layout/focus_preference_new_tab"
         android:title="@string/menu_about" />
@@ -25,7 +24,6 @@
         android:title="@string/menu_help" />
 
     <android.support.v7.preference.Preference
-        android:icon="@drawable/ic_tab_new"
         android:key="@string/pref_key_rights"
         android:layout="@layout/focus_preference_new_tab"
         android:title="@string/menu_rights" />
