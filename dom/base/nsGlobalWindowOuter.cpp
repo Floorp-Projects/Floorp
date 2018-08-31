@@ -5291,7 +5291,7 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
   securityUI->GetState(&state);
   if (aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
     doc->SetHasTrackingContentBlocked(true);
-  } else if (aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_COOKIES) {
+  } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
     doc->SetHasTrackingCookiesBlocked(true);
   } else {
     // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
