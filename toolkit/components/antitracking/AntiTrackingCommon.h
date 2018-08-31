@@ -109,6 +109,7 @@ public:
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
+  //  * nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT
   static void
   NotifyRejection(nsIChannel* aChannel, uint32_t aRejectedReason);
 
