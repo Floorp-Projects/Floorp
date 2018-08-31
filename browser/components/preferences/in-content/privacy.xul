@@ -162,7 +162,7 @@
 </groupbox>
 
 <!-- Site Data -->
-<groupbox id="siteDataGroup" data-category="panePrivacy" hidden="true">
+<groupbox id="siteDataGroup" data-category="panePrivacy" hidden="true" aria-describedby="totalSiteDataSize">
   <caption><label data-l10n-id="sitedata-header"/></caption>
 
   <hbox data-subcategory="sitedata" align="baseline">
@@ -279,7 +279,7 @@
 </groupbox>
 
 <!-- Tracking / Content Blocking -->
-<groupbox id="trackingGroup" data-category="panePrivacy" hidden="true">
+<groupbox id="trackingGroup" data-category="panePrivacy" hidden="true" aria-describedby="contentBlockingDescription">
   <caption>
     <label id="trackingProtectionHeader" hidden="true" data-l10n-id="tracking-header"/>
     <label id="contentBlockingHeader" data-l10n-id="content-blocking-header"/>
@@ -481,7 +481,7 @@
       </vbox>
     </hbox>
     <vbox id="doNotTrackLearnMoreBox">
-      <label><label class="tail-with-learn-more" data-l10n-id="do-not-track-description"></label><label
+      <label><label class="tail-with-learn-more" data-l10n-id="do-not-track-description" id="doNotTrackDesc"></label><label
       class="learnMore text-link" href="https://www.mozilla.org/dnt"
       data-l10n-id="do-not-track-learn-more"></label></label>
       <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
@@ -500,8 +500,8 @@
 </hbox>
 
 <!-- Permissions -->
-<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true" data-subcategory="permissions">
-  <caption class="search-header" hidden="true"><label data-l10n-id="permissions-header"/></caption>
+<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true" data-subcategory="permissions" aria-labelledby="permissionsGroupLabel">
+  <caption class="search-header" hidden="true"><label data-l10n-id="permissions-header" id="permissionsGroupLabel"/></caption>
 
   <grid>
     <columns>
@@ -509,7 +509,7 @@
       <column/>
     </columns>
     <rows>
-      <row id="locationSettingsRow" align="center">
+      <row id="locationSettingsRow" align="center" role="group" aria-labelledby="locationPermissionsLabel">
         <description flex="1">
           <image class="geo-icon permission-icon" />
           <separator orient="vertical" class="thin"/>
@@ -532,7 +532,7 @@
         </hbox>
       </row>
 
-      <row id="cameraSettingsRow" align="center">
+      <row id="cameraSettingsRow" align="center" role="group" aria-labelledby="cameraPermissionsLabel">
         <description flex="1">
           <image class="camera-icon permission-icon" />
           <separator orient="vertical" class="thin"/>
@@ -555,7 +555,7 @@
         </hbox>
       </row>
 
-      <row id="microphoneSettingsRow" align="center">
+      <row id="microphoneSettingsRow" align="center" role="group" aria-labelledby="microphonePermissionsLabel">
         <description flex="1">
           <image class="microphone-icon permission-icon" />
           <separator orient="vertical" class="thin"/>
@@ -578,7 +578,7 @@
         </hbox>
       </row>
 
-      <row id="notificationSettingsRow" align="center">
+      <row id="notificationSettingsRow" align="center" role="group" aria-labelledby="notificationPermissionsLabel">
         <description flex="1">
           <image class="desktop-notification-icon permission-icon" />
           <separator orient="vertical" class="thin"/>
@@ -730,8 +730,8 @@
   <label class="header-name" flex="1" data-l10n-id="collection-header"/>
 </hbox>
 
-<groupbox id="dataCollectionGroup" data-category="panePrivacy" hidden="true">
-  <caption class="search-header" hidden="true"><label data-l10n-id="collection-header"/></caption>
+<groupbox id="dataCollectionGroup" data-category="panePrivacy" hidden="true" aria-labelledby="dataCollectionGroupLabel">
+  <caption class="search-header" hidden="true"><label data-l10n-id="collection-header" id="dataCollectionGroupLabel"/></caption>
 
   <description>
     <label class="tail-with-learn-more" data-l10n-id="collection-description"/>
