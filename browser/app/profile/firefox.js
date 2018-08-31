@@ -1494,29 +1494,32 @@ pref("browser.ping-centre.production.endpoint", "https://tiles.services.mozilla.
 // Enable GMP support in the addon manager.
 pref("media.gmp-provider.enabled", true);
 
-pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended", true);
-pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
-pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
-pref("browser.contentblocking.rejecttrackers.ui.recommended", true);
-pref("browser.contentblocking.fastblock.ui.enabled", true);
-pref("browser.contentblocking.trackingprotection.ui.enabled", true);
+// Enable the new Content Blocking UI only on Nightly.
 #ifdef NIGHTLY_BUILD
 pref("browser.contentblocking.ui.enabled", true);
-pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", true);
-pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
-pref("browser.contentblocking.rejecttrackers.ui.enabled", true);
 #else
 pref("browser.contentblocking.ui.enabled", false);
-pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", false);
-pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", false);
-pref("browser.contentblocking.rejecttrackers.ui.enabled", false);
 #endif
-#ifdef NIGHTLY_BUILD
+
+// Define a set of default features for the Content Blocking UI
+pref("browser.contentblocking.fastblock.ui.enabled", true);
+pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
+pref("browser.contentblocking.trackingprotection.ui.enabled", true);
+pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
+pref("browser.contentblocking.rejecttrackers.ui.enabled", true);
+pref("browser.contentblocking.rejecttrackers.ui.recommended", true);
+pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
+pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended", true);
+pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", true);
+
+// Enable the Report Breakage UI on Nightly and Beta but not on Release yet.
+#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.contentblocking.reportBreakage.enabled", true);
 #else
 pref("browser.contentblocking.reportBreakage.enabled", false);
 #endif
 pref("browser.contentblocking.reportBreakage.url", "https://tracking-protection-issues.herokuapp.com/new");
+
 // Content Blocking has a separate pref for the intro count, since the former TP intro
 // was updated when we introduced content blocking and we want people to see it again.
 pref("browser.contentblocking.introCount", 0);
