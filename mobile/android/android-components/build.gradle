@@ -110,7 +110,7 @@ subprojects {
                 }
 
                 task docs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask) {
-                    outputFormat = 'javadoc'
+                    outputFormat = 'jekyll'
                     reportUndocumented = false
                     outputDirectory = "${project.rootDir}/build/javadoc/${project.name}"
                 }
