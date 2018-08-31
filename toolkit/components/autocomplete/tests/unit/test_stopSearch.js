@@ -41,9 +41,9 @@ AutoCompleteInput.prototype = {
     invalidate() {},
     set selectedIndex(val) { return val; }, // ignore
     get selectedIndex() { return -1; },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup]),
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput]),
 };
 
 
@@ -66,11 +66,11 @@ AutoCompleteSearch.prototype = {
   },
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIFactory,
-    Ci.nsIAutoCompleteSearch
+    Ci.nsIAutoCompleteSearch,
   ]),
   createInstance(outer, iid) {
     return this.QueryInterface(iid);
-  }
+  },
 };
 
 

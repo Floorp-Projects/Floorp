@@ -18,23 +18,23 @@ var phases = { "phase1": "profile1",
 
 var tabs1 = [
   { uri: "about:config",
-    profile: "profile1"
+    profile: "profile1",
   },
   { uri: "about:credits",
-    profile: "profile1"
+    profile: "profile1",
   },
   { uri: "data:text/html,<html><head><title>Apple</title></head><body>Apple</body></html>",
     title: "Apple",
-    profile: "profile1"
-  }
+    profile: "profile1",
+  },
 ];
 
 var tabs_absent = [
   { uri: "about:config",
-    profile: "profile1"
+    profile: "profile1",
   },
   { uri: "about:credits",
-    profile: "profile1"
+    profile: "profile1",
   },
 ];
 
@@ -44,11 +44,11 @@ var tabs_absent = [
 
 Phase("phase1", [
   [Tabs.add, tabs1],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase2", [
   [Sync],
-  [Tabs.verifyNot, tabs_absent]
+  [Tabs.verifyNot, tabs_absent],
 ]);
 

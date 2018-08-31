@@ -429,7 +429,7 @@ async function reloadAndAssertClosedStreams() {
   info("reloading the web page");
   let promises = [
     promiseObserverCalled("recording-device-events"),
-    promiseObserverCalled("recording-window-ended")
+    promiseObserverCalled("recording-window-ended"),
   ];
   await ContentTask.spawn(gBrowser.selectedBrowser, null,
                           "() => content.location.reload()");
@@ -573,7 +573,7 @@ async function runTests(tests, options = {}) {
     [PREF_AUDIO_LOOPBACK, ""],
     [PREF_VIDEO_LOOPBACK, ""],
     [PREF_FAKE_STREAMS, true],
-    [PREF_FOCUS_SOURCE, false]
+    [PREF_FOCUS_SOURCE, false],
   ];
   await SpecialPowers.pushPrefEnv({"set": prefs});
 

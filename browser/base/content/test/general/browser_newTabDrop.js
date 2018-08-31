@@ -182,7 +182,7 @@ add_task(async function multiple_text() {
     non url1
     non url2
 `, [
-  ANY_URL
+  ANY_URL,
 ]);
 });
 

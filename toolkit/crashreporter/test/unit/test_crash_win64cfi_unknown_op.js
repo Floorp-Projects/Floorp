@@ -8,6 +8,6 @@ function run_test() {
       { symbol: "CRASH_X64CFI_UNKNOWN_OPCODE", trust: "context" },
       // Trust may either be scan or frame_pointer; we don't really care as
       // long as the address is expected.
-      { symbol: "CRASH_X64CFI_NO_MANS_LAND", trust: null }
+      { symbol: "CRASH_X64CFI_NO_MANS_LAND", trust: null },
     ]);
 }

@@ -9,7 +9,7 @@ function notify(event, originalMethod, data, reason) {
       installPath: data.installPath.path,
       resourceURI: data.resourceURI.spec,
     }),
-    reason
+    reason,
   };
 
   let subject = {wrappedJSObject: {data}};

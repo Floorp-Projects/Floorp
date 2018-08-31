@@ -27,7 +27,7 @@ function HistoryRec(collection, id) {
 HistoryRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.History",
-  ttl: HISTORY_TTL
+  ttl: HISTORY_TTL,
 };
 
 Utils.deferGetSet(HistoryRec, "cleartext", ["histUri", "title", "visits"]);
@@ -471,7 +471,7 @@ HistoryStore.prototype = {
 
   async wipe() {
     return PlacesSyncUtils.history.wipe();
-  }
+  },
 };
 
 function HistoryTracker(name, engine) {
@@ -498,7 +498,7 @@ HistoryTracker.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavHistoryObserver,
-    Ci.nsISupportsWeakReference
+    Ci.nsISupportsWeakReference,
   ]),
 
   async onDeleteAffectsGUID(uri, guid, reason, source, increment) {

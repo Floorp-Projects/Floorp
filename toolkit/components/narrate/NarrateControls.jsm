@@ -124,7 +124,7 @@ NarrateControls.prototype = {
         return {
           label: this._createVoiceLabel(v),
           value: v.voiceURI,
-          selected: selectedVoice == v.voiceURI
+          selected: selectedVoice == v.voiceURI,
         };
       }).sort((a, b) => comparer(a.label, b.label));
 
@@ -132,7 +132,7 @@ NarrateControls.prototype = {
         options.unshift({
           label: gStrings.GetStringFromName("defaultvoice"),
           value: "automatic",
-          selected: selectedVoice == "automatic"
+          selected: selectedVoice == "automatic",
         });
         this.voiceSelect.addOptions(options);
       }
@@ -281,5 +281,5 @@ NarrateControls.prototype = {
 
   get voice() {
     return this.voiceSelect.value;
-  }
+  },
 };

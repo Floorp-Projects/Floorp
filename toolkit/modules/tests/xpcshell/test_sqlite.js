@@ -863,7 +863,7 @@ add_task(async function test_direct() {
   begin.executeAsync({
     handleCompletion(reason) {
       deferred.resolve();
-    }
+    },
   });
   await deferred.promise;
 
@@ -885,7 +885,7 @@ add_task(async function test_direct() {
     handleCompletion(reason) {
       print("Completed.");
       deferred.resolve();
-    }
+    },
   });
 
   await deferred.promise;
@@ -894,7 +894,7 @@ add_task(async function test_direct() {
   end.executeAsync({
     handleCompletion(reason) {
       deferred.resolve();
-    }
+    },
   });
   await deferred.promise;
 
@@ -1049,7 +1049,7 @@ add_task(async function test_warning_message_on_finalization() {
       if (messageText.includes("Warning: Sqlite connection '" + identifier + "'")) {
         deferred.resolve();
       }
-    }
+    },
   };
   Services.console.registerListener(listener);
 
@@ -1074,7 +1074,7 @@ add_task(async function test_error_message_on_unknown_finalization() {
                               "Sqlite connection: foo")) {
         deferred.resolve();
       }
-    }
+    },
   };
   Services.console.registerListener(listener);
   Services.obs.notifyObservers(null, "sqlite-finalization-witness", "foo");
@@ -1151,7 +1151,7 @@ add_task(async function test_datatypes() {
       text_col: "qwerty",
       blob_col: new Uint8Array(256).map( (value, index) => index % 256 ),
       real_col: 3.14159265359,
-      numeric_col: true
+      numeric_col: true,
     },
     {
       null_col: null,
@@ -1159,8 +1159,8 @@ add_task(async function test_datatypes() {
       text_col: "",
       blob_col: new Uint8Array(256 * 2).map( (value, index) => index % 256 ),
       real_col: Number.NEGATIVE_INFINITY,
-      numeric_col: false
-    }
+      numeric_col: false,
+    },
   ];
 
   await c.execute(`INSERT INTO datatypes VALUES (

@@ -1138,7 +1138,7 @@ nsContextMenu.prototype = {
                                                            aOffset, aCount) {
         this.extListener.onDataAvailable(aRequest, aContext, aInputStream,
                                          aOffset, aCount);
-      }
+      },
     };
 
     function callbacks() {}
@@ -1154,7 +1154,7 @@ nsContextMenu.prototype = {
           channel.cancel(NS_ERROR_SAVE_LINK_AS_TIMEOUT);
         }
         throw Cr.NS_ERROR_NO_INTERFACE;
-      }
+      },
     };
 
     // if it we don't have the headers after a short time, the user
@@ -1164,7 +1164,7 @@ nsContextMenu.prototype = {
     timerCallback.prototype = {
       notify: function sLA_timer_notify(aTimer) {
         channel.cancel(NS_ERROR_SAVE_LINK_AS_TIMEOUT);
-      }
+      },
     };
 
     // setting up a new channel for 'right click - save link as ...'

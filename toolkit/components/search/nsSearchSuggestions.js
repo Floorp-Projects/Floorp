@@ -164,7 +164,7 @@ SuggestAutoComplete.prototype = {
 
   // nsISupports
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteSearch,
-                                          Ci.nsIAutoCompleteObserver])
+                                          Ci.nsIAutoCompleteObserver]),
 };
 
 /**
@@ -180,7 +180,7 @@ function SearchSuggestAutoComplete() {
 SearchSuggestAutoComplete.prototype = {
   classID: Components.ID("{aa892eb4-ffbf-477d-9f9a-06c995ae9f27}"),
   __proto__: SuggestAutoComplete.prototype,
-  serviceURL: ""
+  serviceURL: "",
 };
 
 var component = [SearchSuggestAutoComplete];

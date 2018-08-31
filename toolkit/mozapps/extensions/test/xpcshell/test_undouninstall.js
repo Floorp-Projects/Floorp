@@ -27,18 +27,18 @@ const ADDONS = {
         {
           "id": "xpcshell@tests.mozilla.org",
           "minVersion": "2",
-          "maxVersion": "2"
-        }
-      ]
+          "maxVersion": "2",
+        },
+      ],
     },
-    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   },
   test_undouninstall1: {
     "install.rdf": {
       "id": "undouninstall1@tests.mozilla.org",
       "name": "Test Bootstrap 1",
     },
-    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   },
 };
 
@@ -88,12 +88,12 @@ add_task(async function uninstallRestartless() {
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
       ["onInstalling", false],
-      "onInstalled"
-    ]
+      "onInstalled",
+    ],
   }, [
     "onNewInstall",
     "onInstallStarted",
-    "onInstallEnded"
+    "onInstallEnded",
   ]);
   await AddonTestUtils.promiseInstallXPI(ADDONS.test_undouninstall1);
   ensure_test_completed();
@@ -111,8 +111,8 @@ add_task(async function uninstallRestartless() {
 
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onUninstalling"
-    ]
+      "onUninstalling",
+    ],
   });
   await a1.uninstall(true);
   ensure_test_completed();
@@ -130,8 +130,8 @@ add_task(async function uninstallRestartless() {
   // complete the uinstall
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onUninstalled"
-    ]
+      "onUninstalled",
+    ],
   });
   await a1.uninstall();
   ensure_test_completed();
@@ -147,12 +147,12 @@ add_task(async function cancelUninstallOfRestartless() {
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
       ["onInstalling", false],
-      "onInstalled"
-    ]
+      "onInstalled",
+    ],
   }, [
     "onNewInstall",
     "onInstallStarted",
-    "onInstallEnded"
+    "onInstallEnded",
   ]);
   await AddonTestUtils.promiseInstallXPI(ADDONS.test_undouninstall1);
   ensure_test_completed();
@@ -170,8 +170,8 @@ add_task(async function cancelUninstallOfRestartless() {
 
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onUninstalling"
-    ]
+      "onUninstalling",
+    ],
   });
   await a1.uninstall(true);
   ensure_test_completed();
@@ -188,8 +188,8 @@ add_task(async function cancelUninstallOfRestartless() {
 
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onOperationCancelled"
-    ]
+      "onOperationCancelled",
+    ],
   });
   a1.cancelUninstall();
   ensure_test_completed();
@@ -238,8 +238,8 @@ add_task(async function reinstallAddonAwaitingUninstall() {
 
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onUninstalling"
-    ]
+      "onUninstalling",
+    ],
   });
   await a1.uninstall(true);
   ensure_test_completed();
@@ -257,12 +257,12 @@ add_task(async function reinstallAddonAwaitingUninstall() {
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
       ["onInstalling", false],
-      "onInstalled"
-    ]
+      "onInstalled",
+    ],
   }, [
     "onNewInstall",
     "onInstallStarted",
-    "onInstallEnded"
+    "onInstallEnded",
   ]);
 
   await AddonTestUtils.promiseInstallXPI(ADDONS.test_undouninstall1);
@@ -323,8 +323,8 @@ add_task(async function uninstallDisabledRestartless() {
 
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onUninstalling"
-    ]
+      "onUninstalling",
+    ],
   });
   await a1.uninstall(true);
   ensure_test_completed();
@@ -340,8 +340,8 @@ add_task(async function uninstallDisabledRestartless() {
   // commit the uninstall
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onUninstalled"
-    ]
+      "onUninstalled",
+    ],
   });
   await a1.uninstall();
   ensure_test_completed();
@@ -359,12 +359,12 @@ add_task(async function cancelUninstallDisabledRestartless() {
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
       ["onInstalling", false],
-      "onInstalled"
-    ]
+      "onInstalled",
+    ],
   }, [
     "onNewInstall",
     "onInstallStarted",
-    "onInstallEnded"
+    "onInstallEnded",
   ]);
   await AddonTestUtils.promiseInstallXPI(ADDONS.test_undouninstall1);
   ensure_test_completed();
@@ -383,8 +383,8 @@ add_task(async function cancelUninstallDisabledRestartless() {
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
       ["onDisabling", false],
-      "onDisabled"
-    ]
+      "onDisabled",
+    ],
   });
   await a1.disable();
   ensure_test_completed();
@@ -397,8 +397,8 @@ add_task(async function cancelUninstallDisabledRestartless() {
 
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onUninstalling"
-    ]
+      "onUninstalling",
+    ],
   });
   await a1.uninstall(true);
   ensure_test_completed();
@@ -414,8 +414,8 @@ add_task(async function cancelUninstallDisabledRestartless() {
 
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onOperationCancelled"
-    ]
+      "onOperationCancelled",
+    ],
   });
   a1.cancelUninstall();
   ensure_test_completed();
@@ -465,8 +465,8 @@ add_task(async function reinstallDisabledAddonAwaitingUninstall() {
 
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onUninstalling"
-    ]
+      "onUninstalling",
+    ],
   });
   await a1.uninstall(true);
   ensure_test_completed();
@@ -482,12 +482,12 @@ add_task(async function reinstallDisabledAddonAwaitingUninstall() {
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
       ["onInstalling", false],
-      "onInstalled"
-    ]
+      "onInstalled",
+    ],
   }, [
     "onNewInstall",
     "onInstallStarted",
-    "onInstallEnded"
+    "onInstallEnded",
   ]);
 
   await AddonTestUtils.promiseInstallXPI(ADDONS.test_undouninstall1);
@@ -534,8 +534,8 @@ add_task(async function cancelUninstallTemporary() {
 
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onUninstalling"
-    ]
+      "onUninstalling",
+    ],
   });
   await a1.uninstall(true);
   ensure_test_completed();
@@ -545,8 +545,8 @@ add_task(async function cancelUninstallTemporary() {
 
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
-      "onOperationCancelled"
-    ]
+      "onOperationCancelled",
+    ],
   });
   a1.cancelUninstall();
   ensure_test_completed();
@@ -572,8 +572,8 @@ add_task(async function cancelUninstallIncompatibleRestartless() {
 
   prepare_test({
     "incompatible@tests.mozilla.org": [
-      "onUninstalling"
-    ]
+      "onUninstalling",
+    ],
   });
   await a1.uninstall(true);
   ensure_test_completed();
@@ -585,8 +585,8 @@ add_task(async function cancelUninstallIncompatibleRestartless() {
 
   prepare_test({
     "incompatible@tests.mozilla.org": [
-      "onOperationCancelled"
-    ]
+      "onOperationCancelled",
+    ],
   });
   a1.cancelUninstall();
   ensure_test_completed();

@@ -102,7 +102,7 @@ function OpenCacheEntry(key, where, flags, lci) {
       run() {
         let storage = getCacheStorage(where, lci, this._appCache);
         storage.asyncOpenURI(key, "", flags, this);
-      }
+      },
     };
 
     (new CacheListener()).run();
@@ -305,7 +305,7 @@ async function test_storage_cleared() {
 add_task(async function setup() {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userContext.enabled", true]
+    ["privacy.userContext.enabled", true],
   ]});
 
   // Create a http server for the image cache test.

@@ -27,7 +27,7 @@ add_task(async function test_setup() {
 add_task({
     // The test needs to write a file, and that fails in tests on Android.
     // We don't really need the Android coverage, so skip on Android.
-    skip_if: () => AppConstants.platform == "android"
+    skip_if: () => AppConstants.platform == "android",
   }, async function test_invalidJSON() {
   const INVALID_JSON = "{ invalid,JSON { {1}";
   const FILE_PATH = getDefinitionsPath();
@@ -47,7 +47,7 @@ add_task({
 add_task({
     // The test needs to write a file, and that fails in tests on Android.
     // We don't really need the Android coverage, so skip on Android.
-    skip_if: () => AppConstants.platform == "android"
+    skip_if: () => AppConstants.platform == "android",
   }, async function test_dynamicBuiltin() {
   const DYNAMIC_SCALAR_SPEC =  {
     "telemetry.test": {
@@ -55,15 +55,15 @@ add_task({
         "kind": "nsITelemetry::SCALAR_TYPE_COUNT",
         "expired": false,
         "record_on_release": false,
-        "keyed": false
+        "keyed": false,
       },
       "builtin_dynamic_other": {
         "kind": "nsITelemetry::SCALAR_TYPE_BOOLEAN",
         "expired": false,
         "record_on_release": false,
-        "keyed": false
-      }
-    }
+        "keyed": false,
+      },
+    },
   };
 
   Telemetry.clearScalars();
@@ -113,8 +113,8 @@ add_task(async function test_keyedDynamicBuiltin() {
       "kind": Ci.nsITelemetry.SCALAR_TYPE_COUNT,
       "expired": false,
       "record_on_release": false,
-      "keyed": true
-    }
+      "keyed": true,
+    },
   });
 
   // Store to that scalar.

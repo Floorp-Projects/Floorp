@@ -7139,6 +7139,8 @@ nsWindow::GetSystemCSDSupportLevel() {
         // KDE Plasma
         } else if (strstr(currentDesktop, "KDE") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+        } else if (strstr(currentDesktop, "Enlightenment") != nullptr) {
+            sCSDSupportLevel = CSD_SUPPORT_CLIENT;
         } else if (strstr(currentDesktop, "LXDE") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_CLIENT;
         } else if (strstr(currentDesktop, "openbox") != nullptr) {
@@ -7149,7 +7151,7 @@ nsWindow::GetSystemCSDSupportLevel() {
             sCSDSupportLevel = CSD_SUPPORT_CLIENT;
         // Ubuntu Unity
         } else if (strstr(currentDesktop, "Unity") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+            sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
         // Elementary OS
         } else if (strstr(currentDesktop, "Pantheon") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_SYSTEM;

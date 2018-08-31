@@ -17,7 +17,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://tps/logger.jsm");
 
 async function DumpBookmarks() {
-  let [bookmarks, ] = await PlacesBackups.getBookmarksTree();
+  let [bookmarks ] = await PlacesBackups.getBookmarksTree();
   Logger.logInfo("Dumping Bookmarks...\n" + JSON.stringify(bookmarks, undefined, 2) + "\n\n");
 }
 
@@ -797,7 +797,7 @@ Separator.prototype = {
       "folder, error creating parent folder " + this.props.location);
     let {guid} = await PlacesUtils.bookmarks.insert({
       parentGuid: this.props.parentGuid,
-      type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+      type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
     });
     this.props.guid = guid;
     return guid;

@@ -112,7 +112,7 @@ class AutoCompletePopup {
   selectBy(reverse, page) {
     this._index = this.mm.sendSyncMessage("FormAutoComplete:SelectBy", {
       reverse,
-      page
+      page,
     });
   }
 

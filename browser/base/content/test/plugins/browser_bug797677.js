@@ -20,7 +20,7 @@ add_task(async function() {
     observe(aMessage) {
       if (aMessage.message.includes("NS_ERROR_FAILURE"))
         gConsoleErrors++;
-    }
+    },
   };
   Services.console.registerListener(errorListener);
 

@@ -66,22 +66,22 @@ function test() {
       searchURL: replaceUrl("http://www.bing.com/search?q=foo&pc=MOZI&form=MOZSPG"),
       run() {
         verify_about_home_search("Bing");
-      }
+      },
     },
     {
       name: "Search with Google from about:home",
       searchURL: replaceUrl("https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8"),
       run() {
         verify_about_home_search("Google");
-      }
+      },
     },
     {
       name: "Search with Amazon.com from about:home",
       searchURL: replaceUrl("https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&mode=blended&tag=mozilla-20&sourceid=Mozilla-search"),
       run() {
         verify_about_home_search("Amazon.com");
-      }
-    }
+      },
+    },
   ];
 
   function nextTest() {
@@ -118,7 +118,7 @@ function test() {
       req.cancel(Cr.NS_ERROR_FAILURE);
 
       executeSoon(nextTest);
-    }
+    },
   };
 
   registerCleanupFunction(function() {

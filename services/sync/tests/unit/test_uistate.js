@@ -130,7 +130,7 @@ add_task(async function test_refreshState_unconfigured() {
   let getSignedInUserProfile = sinon.spy();
   UIStateInternal.fxAccounts = {
     getSignedInUser: () => Promise.resolve(null),
-    getSignedInUserProfile
+    getSignedInUserProfile,
   };
 
   let state = await UIState.refresh();
@@ -205,7 +205,7 @@ add_task(async function test_refreshState_loginFailed() {
   let getSignedInUserProfile = sinon.spy();
   UIStateInternal.fxAccounts = {
     getSignedInUser: () => Promise.resolve({ verified: true, email: "foo@bar.com" }),
-    getSignedInUserProfile
+    getSignedInUserProfile,
   };
 
   let state = await UIState.refresh();

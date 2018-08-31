@@ -40,7 +40,7 @@ const startupPhases = {
       "resource://gre/modules/ExtensionUtils.jsm",
       "resource://gre/modules/XPCOMUtils.jsm",
       "resource://gre/modules/Services.jsm",
-    ])
+    ]),
   }},
 
   // For the following phases of startup we have only a black list for now
@@ -48,7 +48,7 @@ const startupPhases = {
   // We are at this phase after creating the first browser window (ie. after final-ui-startup).
   "before opening first browser window": {blacklist: {
     modules: new Set([
-    ])
+    ]),
   }},
 
   // We reach this phase right after showing the first browser window.
@@ -74,7 +74,7 @@ const startupPhases = {
     ]),
     services: new Set([
       "@mozilla.org/browser/search-service;1",
-    ])
+    ]),
   }},
 
   // We are at this phase once we are ready to handle user events.
@@ -102,7 +102,7 @@ const startupPhases = {
     services: new Set([
       "@mozilla.org/browser/annotation-service;1",
       "@mozilla.org/browser/nav-bookmarks-service;1",
-    ])
+    ]),
   }},
 
   // Things that are expected to be completely out of the startup path

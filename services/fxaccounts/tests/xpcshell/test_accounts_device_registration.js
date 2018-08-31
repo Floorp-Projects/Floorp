@@ -53,7 +53,7 @@ MockStorageManager.prototype = {
   deleteAccountData() {
     this.accountData = null;
     return Promise.resolve();
-  }
+  },
 };
 
 function MockFxAccountsClient(device) {
@@ -67,7 +67,7 @@ function MockFxAccountsClient(device) {
     // simulate a call to /recovery_email/status
     return Promise.resolve({
       email: this._email,
-      verified: this._verified
+      verified: this._verified,
     });
   };
 
@@ -82,13 +82,13 @@ function MockFxAccountsClient(device) {
   this.signOut = () => Promise.resolve({});
   this.getDeviceList = (st) =>
     Promise.resolve([
-      { id: deviceId, name: deviceName, type: deviceType, isCurrentDevice: st === sessionToken }
+      { id: deviceId, name: deviceName, type: deviceType, isCurrentDevice: st === sessionToken },
     ]);
 
   FxAccountsClient.apply(this);
 }
 MockFxAccountsClient.prototype = {
-  __proto__: FxAccountsClient.prototype
+  __proto__: FxAccountsClient.prototype,
 };
 
 function MockFxAccounts(device = {}) {
@@ -115,15 +115,15 @@ function MockFxAccounts(device = {}) {
               return ChromeUtils.base64URLDecode(
                 type === "auth" ? BOGUS_AUTHKEY : BOGUS_PUBLICKEY,
                 { padding: "ignore" });
-            }
+            },
           });
         });
       },
       unsubscribe() {
         return Promise.resolve();
-      }
+      },
     },
-    DEVICE_REGISTRATION_VERSION
+    DEVICE_REGISTRATION_VERSION,
   });
 }
 
@@ -140,7 +140,7 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
   const spy = {
     registerDevice: { count: 0, args: [] },
     updateDevice: { count: 0, args: [] },
-    getDeviceList: { count: 0, args: [] }
+    getDeviceList: { count: 0, args: [] },
   };
   const client = fxa.internal.fxAccountsClient;
   client.registerDevice = function() {
@@ -150,7 +150,7 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
       id: "newly-generated device id",
       createdAt: Date.now(),
       name: deviceName,
-      type: deviceType
+      type: deviceType,
     });
   };
   client.updateDevice = function() {
@@ -194,13 +194,13 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
   await fxa.updateUserAccountData({uid: credentials.uid, device: {
     id: deviceId,
     registeredCommandsKeys: [],
-    registrationVersion: 1 // < 42
+    registrationVersion: 1, // < 42
   }});
 
   const spy = {
     registerDevice: { count: 0, args: [] },
     updateDevice: { count: 0, args: [] },
-    getDeviceList: { count: 0, args: [] }
+    getDeviceList: { count: 0, args: [] },
   };
   const client = fxa.internal.fxAccountsClient;
   client.registerDevice = function() {
@@ -213,7 +213,7 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
     spy.updateDevice.args.push(arguments);
     return Promise.resolve({
       id: deviceId,
-      name: deviceName
+      name: deviceName,
     });
   };
   client.getDeviceList = function() {
@@ -252,13 +252,13 @@ add_task(async function test_updateDeviceRegistration_with_unknown_device_error(
   await fxa.updateUserAccountData({uid: credentials.uid, device: {
     id: currentDeviceId,
     registeredCommandsKeys: [],
-    registrationVersion: 1 // < 42
+    registrationVersion: 1, // < 42
   }});
 
   const spy = {
     registerDevice: { count: 0, args: [] },
     updateDevice: { count: 0, args: [] },
-    getDeviceList: { count: 0, args: [] }
+    getDeviceList: { count: 0, args: [] },
   };
   const client = fxa.internal.fxAccountsClient;
   client.registerDevice = function() {
@@ -268,7 +268,7 @@ add_task(async function test_updateDeviceRegistration_with_unknown_device_error(
       id: "a different newly-generated device id",
       createdAt: Date.now(),
       name: deviceName,
-      type: deviceType
+      type: deviceType,
     });
   };
   client.updateDevice = function() {
@@ -276,7 +276,7 @@ add_task(async function test_updateDeviceRegistration_with_unknown_device_error(
     spy.updateDevice.args.push(arguments);
     return Promise.reject({
       code: 400,
-      errno: ERRNO_UNKNOWN_DEVICE
+      errno: ERRNO_UNKNOWN_DEVICE,
     });
   };
   client.getDeviceList = function() {
@@ -317,13 +317,13 @@ add_task(async function test_updateDeviceRegistration_with_device_session_confli
   await fxa.updateUserAccountData({uid: credentials.uid, device: {
     id: currentDeviceId,
     registeredCommandsKeys: [],
-    registrationVersion: 1 // < 42
+    registrationVersion: 1, // < 42
   }});
 
   const spy = {
     registerDevice: { count: 0, args: [] },
     updateDevice: { count: 0, args: [], times: [] },
-    getDeviceList: { count: 0, args: [] }
+    getDeviceList: { count: 0, args: [] },
   };
   const client = fxa.internal.fxAccountsClient;
   client.registerDevice = function() {
@@ -338,12 +338,12 @@ add_task(async function test_updateDeviceRegistration_with_device_session_confli
     if (spy.updateDevice.count === 1) {
       return Promise.reject({
         code: 400,
-        errno: ERRNO_DEVICE_SESSION_CONFLICT
+        errno: ERRNO_DEVICE_SESSION_CONFLICT,
       });
     }
     return Promise.resolve({
       id: conflictingDeviceId,
-      name: deviceName
+      name: deviceName,
     });
   };
   client.getDeviceList = function() {
@@ -352,7 +352,7 @@ add_task(async function test_updateDeviceRegistration_with_device_session_confli
     spy.getDeviceList.time = Date.now();
     return Promise.resolve([
       { id: "ignore", name: "ignore", type: "ignore", isCurrentDevice: false },
-      { id: conflictingDeviceId, name: deviceName, type: deviceType, isCurrentDevice: true }
+      { id: conflictingDeviceId, name: deviceName, type: deviceType, isCurrentDevice: true },
     ]);
   };
 
@@ -390,7 +390,7 @@ add_task(async function test_updateDeviceRegistration_with_unrecoverable_error()
   const spy = {
     registerDevice: { count: 0, args: [] },
     updateDevice: { count: 0, args: [] },
-    getDeviceList: { count: 0, args: [] }
+    getDeviceList: { count: 0, args: [] },
   };
   const client = fxa.internal.fxAccountsClient;
   client.registerDevice = function() {
@@ -398,7 +398,7 @@ add_task(async function test_updateDeviceRegistration_with_unrecoverable_error()
     spy.registerDevice.args.push(arguments);
     return Promise.reject({
       code: 400,
-      errno: ERRNO_TOO_MANY_CLIENT_REQUESTS
+      errno: ERRNO_TOO_MANY_CLIENT_REQUESTS,
     });
   };
   client.updateDevice = function() {
@@ -547,12 +547,12 @@ add_task(async function test_devicelist_pushendpointexpired() {
   await fxa.updateUserAccountData({uid: credentials.uid, device: {
     id: deviceId,
     registeredCommandsKeys: [],
-    registrationVersion: 1 // < 42
+    registrationVersion: 1, // < 42
   }});
 
   const spy = {
     updateDevice: { count: 0, args: [] },
-    getDeviceList: { count: 0, args: [] }
+    getDeviceList: { count: 0, args: [] },
   };
   const client = fxa.internal.fxAccountsClient;
   client.updateDevice = function() {
@@ -591,7 +591,7 @@ function getTestUser(name) {
     sessionToken: name + "'s session token",
     keyFetchToken: name + "'s keyfetch token",
     unwrapBKey: expandHex("44"),
-    verified: false
+    verified: false,
   };
 }
 

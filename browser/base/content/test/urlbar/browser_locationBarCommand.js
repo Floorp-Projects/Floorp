@@ -43,7 +43,7 @@ add_task(async function shift_left_click_test() {
   let destinationURL = "http://" + TEST_VALUE + "/";
   await Promise.all([
     BrowserTestUtils.browserLoaded(browser),
-    BrowserTestUtils.waitForLocationChange(win.gBrowser, destinationURL)
+    BrowserTestUtils.waitForLocationChange(win.gBrowser, destinationURL),
   ]);
 
   info("URL should be loaded in a new window");
@@ -101,7 +101,7 @@ add_task(async function load_in_current_tab_test() {
     {desc: "Simple return keypress"},
     {desc: "Left click on go button", click: true},
     {desc: "Ctrl/Cmd+Return keypress", event: {accelKey: true}},
-    {desc: "Alt+Return keypress in a blank tab", event: {altKey: true}}
+    {desc: "Alt+Return keypress in a blank tab", event: {altKey: true}},
   ];
 
   for (let test of tests) {
@@ -129,7 +129,7 @@ add_task(async function load_in_current_tab_test() {
 add_task(async function load_in_new_tab_test() {
   let tests = [
     {desc: "Ctrl/Cmd left click on go button", click: true, event: {accelKey: true}},
-    {desc: "Alt+Return keypress in a dirty tab", event: {altKey: true}, url: START_VALUE}
+    {desc: "Alt+Return keypress in a dirty tab", event: {altKey: true}, url: START_VALUE},
   ];
 
   for (let test of tests) {
@@ -179,7 +179,7 @@ function promiseLoadStarted() {
           gBrowser.removeTabsProgressListener(this);
           resolve();
         }
-      }
+      },
     });
   });
 }

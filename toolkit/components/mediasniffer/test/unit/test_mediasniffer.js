@@ -61,7 +61,7 @@ var listener = {
   onStopRequest(request, context, status) {
     testRan++;
     runNext();
-  }
+  },
 };
 
 function setupChannel(url, flags) {
@@ -70,7 +70,7 @@ function setupChannel(url, flags) {
   var chan = NetUtil.newChannel({
     uri,
     loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_MEDIA
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_MEDIA,
   });
   chan.loadFlags |= flags;
   var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);

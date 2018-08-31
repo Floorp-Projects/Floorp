@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = [
   "HAWKAuthenticatedRESTRequest",
-  "deriveHawkCredentials"
+  "deriveHawkCredentials",
 ];
 
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
@@ -92,7 +92,7 @@ HAWKAuthenticatedRESTRequest.prototype = {
     this.setHeader("Accept-Language", this._intl.accept_languages);
 
     return super.dispatch(method, data);
-  }
+  },
 };
 
 
@@ -129,7 +129,7 @@ function deriveHawkCredentials(tokenHex,
   let result = {
     algorithm: "sha256",
     key: hexKey ? CommonUtils.bytesAsHex(out.slice(32, 64)) : out.slice(32, 64),
-    id: CommonUtils.bytesAsHex(out.slice(0, 32))
+    id: CommonUtils.bytesAsHex(out.slice(0, 32)),
   };
   if (size > 64) {
     result.extra = out.slice(64);

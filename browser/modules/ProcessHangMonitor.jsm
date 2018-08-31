@@ -305,7 +305,7 @@ var ProcessHangMonitor = {
       }
     }
 
-    for (let [pausedReport, ] of this._pausedReports) {
+    for (let [pausedReport ] of this._pausedReports) {
       if (maybeStopHang(pausedReport)) {
         this.removePausedReport(pausedReport);
       }
@@ -321,7 +321,7 @@ var ProcessHangMonitor = {
 
     this._activeReports = new Set();
 
-    for (let [pausedReport, ] of this._pausedReports) {
+    for (let [pausedReport ] of this._pausedReports) {
       this.stopHang(pausedReport);
       this.removePausedReport(pausedReport);
     }
@@ -345,7 +345,7 @@ var ProcessHangMonitor = {
    */
   findPausedReport(browser) {
     let frameLoader = browser.frameLoader;
-    for (let [report, ] of this._pausedReports) {
+    for (let [report ] of this._pausedReports) {
       if (report.isReportForBrowser(frameLoader)) {
         return report;
       }
@@ -433,14 +433,14 @@ var ProcessHangMonitor = {
         accessKey: bundle.getString("processHang.button_stop.accessKey"),
         callback() {
           ProcessHangMonitor.stopIt(win);
-        }
+        },
       },
       {
         label: bundle.getString("processHang.button_wait.label"),
         accessKey: bundle.getString("processHang.button_wait.accessKey"),
         callback() {
           ProcessHangMonitor.waitLonger(win);
-        }
+        },
       }];
 
     let message = bundle.getString("processHang.label");
@@ -473,7 +473,7 @@ var ProcessHangMonitor = {
         accessKey: bundle.getString("processHang.button_stop_sandbox.accessKey"),
         callback() {
           ProcessHangMonitor.stopGlobal(win);
-        }
+        },
       });
     }
 
@@ -483,7 +483,7 @@ var ProcessHangMonitor = {
         accessKey: bundle.getString("processHang.button_debug.accessKey"),
         callback() {
           ProcessHangMonitor.debugScript(win);
-        }
+        },
       });
     }
 

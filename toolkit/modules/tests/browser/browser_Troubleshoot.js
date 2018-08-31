@@ -83,7 +83,7 @@ var tests = [
       Services.prefs.deleteBranch(name);
       done();
     });
-  }
+  },
 ];
 
 // This is inspired by JSON Schema, or by the example on its Wikipedia page
@@ -493,7 +493,7 @@ const SNAPSHOT_SCHEMA = {
               minLatency: {
                 required: true,
                 type: "number",
-              }
+              },
             },
           },
         },
@@ -558,7 +558,7 @@ const SNAPSHOT_SCHEMA = {
               minLatency: {
                 required: true,
                 type: "number",
-              }
+              },
             },
           },
         },
@@ -588,8 +588,8 @@ const SNAPSHOT_SCHEMA = {
           type: "boolean",
         },
         instantiator: {
-          type: "string"
-        }
+          type: "string",
+        },
       },
     },
     libraryVersions: {
@@ -684,35 +684,35 @@ const SNAPSHOT_SCHEMA = {
       properties: {
         hasSeccompBPF: {
           required: AppConstants.platform == "linux",
-          type: "boolean"
+          type: "boolean",
         },
         hasSeccompTSync: {
           required: AppConstants.platform == "linux",
-          type: "boolean"
+          type: "boolean",
         },
         hasUserNamespaces: {
           required: AppConstants.platform == "linux",
-          type: "boolean"
+          type: "boolean",
         },
         hasPrivilegedUserNamespaces: {
           required: AppConstants.platform == "linux",
-          type: "boolean"
+          type: "boolean",
         },
         canSandboxContent: {
           required: false,
-          type: "boolean"
+          type: "boolean",
         },
         canSandboxMedia: {
           required: false,
-          type: "boolean"
+          type: "boolean",
         },
         contentSandboxLevel: {
           required: AppConstants.MOZ_CONTENT_SANDBOX,
-          type: "number"
+          type: "number",
         },
         effectiveContentSandboxLevel: {
           required: AppConstants.MOZ_CONTENT_SANDBOX,
-          type: "number"
+          type: "number",
         },
         syscallLog: {
           required: AppConstants.platform == "linux",
@@ -762,23 +762,23 @@ const SNAPSHOT_SCHEMA = {
           properties: {
             requested: {
               required: true,
-              type: "array"
+              type: "array",
             },
             available: {
               required: true,
-              type: "array"
+              type: "array",
             },
             supported: {
               required: true,
-              type: "array"
+              type: "array",
             },
             regionalPrefs: {
               required: true,
-              type: "array"
+              type: "array",
             },
             defaultLocale: {
               required: true,
-              type: "string"
+              type: "string",
             },
           },
         },
@@ -788,11 +788,11 @@ const SNAPSHOT_SCHEMA = {
           properties: {
             systemLocales: {
               required: true,
-              type: "array"
+              type: "array",
             },
             regionalPrefsLocales: {
               required: true,
-              type: "array"
+              type: "array",
             },
           },
         },

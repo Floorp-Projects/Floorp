@@ -106,7 +106,7 @@ var ShortcutUtils = {
   findShortcut(aElemCommand) {
     let document = aElemCommand.ownerDocument;
     return document.querySelector("key[command=\"" + aElemCommand.getAttribute("id") + "\"]");
-  }
+  },
 };
 
 Object.freeze(ShortcutUtils);

@@ -13,7 +13,7 @@ const ADDONS = {
       "name": "Test 1",
     },
     "icon.png": "Dummy icon file",
-    "subdir/subfile.txt": "Dummy file in subdirectory"
+    "subdir/subfile.txt": "Dummy file in subdirectory",
   },
 };
 

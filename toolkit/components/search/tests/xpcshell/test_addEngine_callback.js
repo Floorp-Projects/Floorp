@@ -12,11 +12,11 @@ ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 // Only need to stub the methods actually called by nsSearchService
 var promptService = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
-  confirmEx() {}
+  confirmEx() {},
 };
 var prompt = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
-  alert() {}
+  alert() {},
 };
 // Override the prompt service and nsIPrompt, since the search service currently
 // prompts in response to certain installation failures we test here
@@ -47,7 +47,7 @@ add_test(function simple_callback_test() {
     },
     onError(errorCode) {
       do_throw("search callback returned error: " + errorCode);
-    }
+    },
   };
   Services.search.addEngine(gDataUrl + "engine.xml", null,
                             null, false, searchCallback);
@@ -63,7 +63,7 @@ add_test(function duplicate_failure_test() {
       Assert.ok(!!errorCode);
       Assert.equal(errorCode, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
       run_next_test();
-    }
+    },
   };
   // Re-add the same engine added in the previous test
   Services.search.addEngine(gDataUrl + "engine.xml", null,
@@ -80,7 +80,7 @@ add_test(function load_failure_test() {
       Assert.ok(!!errorCode);
       Assert.equal(errorCode, Ci.nsISearchInstallCallback.ERROR_UNKNOWN_FAILURE);
       run_next_test();
-    }
+    },
   };
   // Try adding an engine that doesn't exist
   Services.search.addEngine("http://invalid/data/engine.xml", null,

@@ -854,7 +854,7 @@ AddonWrapper = class {
       return val;
 
     XPIDatabase.setAddonProperties(addon, {
-      applyBackgroundUpdates: val
+      applyBackgroundUpdates: val,
     });
     AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["applyBackgroundUpdates"]);
 
@@ -1563,7 +1563,7 @@ this.XPIDatabase = {
 
       let changes = {
         enabled: [],
-        disabled: []
+        disabled: [],
       };
 
       for (let addon of addons) {
@@ -2190,7 +2190,7 @@ this.XPIDatabase = {
     this.setAddonProperties(aAddon, {
       userDisabled: aUserDisabled,
       appDisabled,
-      softDisabled: aSoftDisabled
+      softDisabled: aSoftDisabled,
     });
 
     let wrapper = aAddon.wrapper;

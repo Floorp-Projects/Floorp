@@ -348,7 +348,7 @@ var CryptoUtils = {
       nonce,
       ts,
       ext,
-      getHeader
+      getHeader,
     };
   },
 

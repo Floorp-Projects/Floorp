@@ -117,25 +117,25 @@ LoginManagerStorage_mozStorage.prototype = {
     indices: {
       moz_logins_hostname_index: {
         table: "moz_logins",
-        columns: ["hostname"]
+        columns: ["hostname"],
       },
       moz_logins_hostname_formSubmitURL_index: {
         table: "moz_logins",
-        columns: ["hostname", "formSubmitURL"]
+        columns: ["hostname", "formSubmitURL"],
       },
       moz_logins_hostname_httpRealm_index: {
           table: "moz_logins",
-          columns: ["hostname", "httpRealm"]
+          columns: ["hostname", "httpRealm"],
       },
       moz_logins_guid_index: {
           table: "moz_logins",
-          columns: ["guid"]
+          columns: ["guid"],
       },
       moz_logins_encType_index: {
           table: "moz_logins",
-          columns: ["encType"]
-      }
-    }
+          columns: ["encType"],
+      },
+    },
   },
   _dbConnection: null,  // The database connection
   _dbStmts: null,  // Database statements for memoization
@@ -252,7 +252,7 @@ LoginManagerStorage_mozStorage.prototype = {
       timeCreated:         loginClone.timeCreated,
       timeLastUsed:        loginClone.timeLastUsed,
       timePasswordChanged: loginClone.timePasswordChanged,
-      timesUsed:           loginClone.timesUsed
+      timesUsed:           loginClone.timesUsed,
     };
 
     let stmt;
@@ -358,7 +358,7 @@ LoginManagerStorage_mozStorage.prototype = {
       timeCreated:         newLogin.timeCreated,
       timeLastUsed:        newLogin.timeLastUsed,
       timePasswordChanged: newLogin.timePasswordChanged,
-      timesUsed:           newLogin.timesUsed
+      timesUsed:           newLogin.timesUsed,
     };
 
     let stmt;
@@ -596,7 +596,7 @@ LoginManagerStorage_mozStorage.prototype = {
     let loginData = {
       hostname,
       formSubmitURL,
-      httpRealm
+      httpRealm,
     };
     let matchData = { };
     for (let field of ["hostname", "formSubmitURL", "httpRealm"])
@@ -968,7 +968,7 @@ LoginManagerStorage_mozStorage.prototype = {
     for (let id of ids) {
       let params = {
         id,
-        guid: this._uuidService.generateUUID().toString()
+        guid: this._uuidService.generateUUID().toString(),
       };
 
       try {
@@ -1082,7 +1082,7 @@ LoginManagerStorage_mozStorage.prototype = {
             "timePasswordChanged = :initTime, timesUsed = 1 WHERE id = :id";
     let params = {
       id:       null,
-      initTime: Date.now()
+      initTime: Date.now(),
     };
     for (let id of ids) {
       params.id = id;
@@ -1241,7 +1241,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
     this._dbClose();
     this._signonsFile.remove(false);
-  }
+  },
 
 }; // end of nsLoginManagerStorage_mozStorage implementation
 

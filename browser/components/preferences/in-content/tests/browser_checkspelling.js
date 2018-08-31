@@ -1,6 +1,6 @@
 add_task(async function() {
   SpecialPowers.pushPrefEnv({set: [
-    ["layout.spellcheckDefault", 2]
+    ["layout.spellcheckDefault", 2],
   ]});
 
   let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});

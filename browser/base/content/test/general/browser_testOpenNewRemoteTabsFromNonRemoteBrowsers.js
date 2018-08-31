@@ -81,7 +81,7 @@ add_task(async function test_new_tab() {
  */
 add_task(async function test_new_window() {
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow({
-    remote: true
+    remote: true,
   }, true);
   let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
     remote: true,

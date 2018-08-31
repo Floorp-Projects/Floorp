@@ -509,7 +509,7 @@ var TestRunner = {
     }
     result.push(envVar.trim());
     return result;
-  }
+  },
 };
 
 /**

@@ -34,14 +34,14 @@ add_task(async function test_enabled() {
   await setupPolicyEngineWithJson({
     "policies": {
       "FlashPlugin": {
-        "Default": true
-      }
-    }
+        "Default": true,
+      },
+    },
   });
 
   await test_flash_status({
     expectedLabelText: labelTextAlwaysActivate,
-    locked: false
+    locked: false,
   });
 
   restore_prefs();
@@ -52,14 +52,14 @@ add_task(async function test_enabled_locked() {
     "policies": {
       "FlashPlugin": {
         "Default": true,
-        "Locked": true
-      }
-    }
+        "Locked": true,
+      },
+    },
   });
 
   await test_flash_status({
     expectedLabelText: labelTextAlwaysActivate,
-    locked: true
+    locked: true,
   });
 
   restore_prefs();
@@ -69,14 +69,14 @@ add_task(async function test_disabled() {
   await setupPolicyEngineWithJson({
     "policies": {
       "FlashPlugin": {
-        "Default": false
-      }
-    }
+        "Default": false,
+      },
+    },
   });
 
   await test_flash_status({
     expectedLabelText: labelTextNeverActivate,
-    locked: false
+    locked: false,
   });
 
   restore_prefs();
@@ -87,14 +87,14 @@ add_task(async function test_disabled_locked() {
     "policies": {
       "FlashPlugin": {
         "Default": false,
-        "Locked": true
-      }
-    }
+        "Locked": true,
+      },
+    },
   });
 
   await test_flash_status({
     expectedLabelText: labelTextNeverActivate,
-    locked: true
+    locked: true,
   });
 
   restore_prefs();
@@ -104,13 +104,13 @@ add_task(async function test_ask() {
   await setupPolicyEngineWithJson({
     "policies": {
       "FlashPlugin": {
-      }
-    }
+      },
+    },
   });
 
   await test_flash_status({
     expectedLabelText: labelTextAskToActivate,
-    locked: false
+    locked: false,
   });
 
   restore_prefs();
@@ -120,14 +120,14 @@ add_task(async function test_ask_locked() {
   await setupPolicyEngineWithJson({
     "policies": {
       "FlashPlugin": {
-        "Locked": true
-      }
-    }
+        "Locked": true,
+      },
+    },
   });
 
   await test_flash_status({
     expectedLabelText: labelTextAskToActivate,
-    locked: true
+    locked: true,
   });
 
   restore_prefs();

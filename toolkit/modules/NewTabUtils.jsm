@@ -195,7 +195,7 @@ LinksStorage.prototype = {
     for (let key in this._prefs) {
       this.remove(key);
     }
-  }
+  },
 };
 
 
@@ -301,7 +301,7 @@ var AllPages = {
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference])
+                                          Ci.nsISupportsWeakReference]),
 };
 
 /**
@@ -530,7 +530,7 @@ var BlockedLinks = {
         }
       }
     }
-  }
+  },
 };
 
 /**
@@ -626,7 +626,7 @@ var PlacesProvider = {
         }
 
         aCallback(links);
-      }
+      },
     };
 
     // Execute the query.
@@ -731,7 +731,7 @@ var PlacesProvider = {
     }
     this._callObservers("onLinkChanged", {
       url: aURI,
-      title: aNewTitle
+      title: aNewTitle,
     });
   },
 
@@ -810,7 +810,7 @@ var ActivityStreamProvider = {
     return Object.assign({
       bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
       limit: this._adjustLimitForBlocked(aOptions),
-      tagsFolderId: PlacesUtils.tagsFolderId
+      tagsFolderId: PlacesUtils.tagsFolderId,
     }, aParams);
   },
 
@@ -833,7 +833,7 @@ var ActivityStreamProvider = {
     // Limit the results to the requested number and set a type corresponding to
     // which query selected it
     return aLinks.slice(0, aOptions.numItems).map(item => Object.assign(item, {
-      type: aType
+      type: aType,
     }));
   },
 
@@ -934,7 +934,7 @@ var ActivityStreamProvider = {
         },
         error(error) {
           reject(error);
-        }
+        },
       });
     });
   },
@@ -951,7 +951,7 @@ var ActivityStreamProvider = {
     const requestData = {
       detailType: "complete",
       count: aOptions.numItems,
-      since: pocketSecondsAgo
+      since: pocketSecondsAgo,
     };
     let data;
     try {
@@ -977,7 +977,7 @@ var ActivityStreamProvider = {
                     title: item.resolved_title,
                     url: item.resolved_url,
                     pocket_id: item.item_id,
-                    open_url: item.open_url
+                    open_url: item.open_url,
                   }));
 
   // Append the query param to let Pocket know this item came from highlights
@@ -1002,7 +1002,7 @@ var ActivityStreamProvider = {
     const options = Object.assign({
       bookmarkSecondsAgo: ACTIVITY_STREAM_DEFAULT_RECENT,
       ignoreBlocked: false,
-      numItems: ACTIVITY_STREAM_DEFAULT_LIMIT
+      numItems: ACTIVITY_STREAM_DEFAULT_LIMIT,
     }, aOptions || {});
 
     const sqlQuery = `
@@ -1031,8 +1031,8 @@ var ActivityStreamProvider = {
     return this._processHighlights(await this.executePlacesQuery(sqlQuery, {
       columns: [...this._highlightsColumns, "date_added"],
       params: this._getCommonParams(options, {
-        dateAddedThreshold: (Date.now() - options.bookmarkSecondsAgo * 1000) * 1000
-      })
+        dateAddedThreshold: (Date.now() - options.bookmarkSecondsAgo * 1000) * 1000,
+      }),
     }), options, "bookmark");
   },
 
@@ -1054,7 +1054,7 @@ var ActivityStreamProvider = {
       params: {
         tags_folder: PlacesUtils.tagsFolderId,
         type_bookmark: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      }
+      },
     });
 
     return result[0][0];
@@ -1091,7 +1091,7 @@ var ActivityStreamProvider = {
 
     return this._processHighlights(await this.executePlacesQuery(sqlQuery, {
       columns: this._highlightsColumns,
-      params: this._getCommonParams(options)
+      params: this._getCommonParams(options),
     }), options, "history");
   },
 
@@ -1150,11 +1150,11 @@ var ActivityStreamProvider = {
         "lastVisitDate",
         "title",
         "url",
-        "type"
+        "type",
       ],
       params: this._getCommonParams(options, {
-        frecencyThreshold: options.topsiteFrecency
-      })
+        frecencyThreshold: options.topsiteFrecency,
+      }),
     });
 
     // Determine if the other link is "better" (larger frecency, more recent,
@@ -1293,7 +1293,7 @@ var ActivityStreamProvider = {
       throw new Error(queryError);
     }
     return items;
-  }
+  },
 };
 
 /**
@@ -1421,7 +1421,7 @@ var ActivityStreamLinks = {
       pktApi.addLink(aUrl, {
         title: aTitle,
         success,
-        error
+        error,
       });
     });
   },
@@ -1498,7 +1498,7 @@ var ActivityStreamLinks = {
    */
   async getTopSites(aOptions = {}) {
     return ActivityStreamProvider.getTopFrecentSites(aOptions);
-  }
+  },
 };
 
 /**
@@ -1982,7 +1982,7 @@ var Links = {
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference])
+                                          Ci.nsISupportsWeakReference]),
 };
 
 Links.compareLinks = Links.compareLinks.bind(Links);
@@ -2013,7 +2013,7 @@ var Telemetry = {
       { histogram: "NEWTAB_PAGE_PINNED_SITES_COUNT",
         value: PinnedLinks.links.length },
       { histogram: "NEWTAB_PAGE_BLOCKED_SITES_COUNT",
-        value: Object.keys(BlockedLinks.links).length }
+        value: Object.keys(BlockedLinks.links).length },
     ];
 
     probes.forEach(function Telemetry_collect_forEach(aProbe) {
@@ -2027,7 +2027,7 @@ var Telemetry = {
    */
   observe: function Telemetry_observe(aSubject, aTopic, aData) {
     this._collect();
-  }
+  },
 };
 
 /**
@@ -2063,7 +2063,7 @@ var LinkChecker = {
       // We got a weird URI or one that would inherit the caller's principal.
       return false;
     }
-  }
+  },
 };
 
 var ExpirationFilter = {
@@ -2089,7 +2089,7 @@ var ExpirationFilter = {
 
       aCallback(urls);
     });
-  }
+  },
 };
 
 /**
@@ -2196,5 +2196,5 @@ var NewTabUtils = {
   blockedLinks: BlockedLinks,
   placesProvider: PlacesProvider,
   activityStreamLinks: ActivityStreamLinks,
-  activityStreamProvider: ActivityStreamProvider
+  activityStreamProvider: ActivityStreamProvider,
 };

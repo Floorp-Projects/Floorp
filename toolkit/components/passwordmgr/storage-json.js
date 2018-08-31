@@ -161,7 +161,7 @@ this.LoginManagerStorage_json.prototype = {
       timeCreated:         loginClone.timeCreated,
       timeLastUsed:        loginClone.timeLastUsed,
       timePasswordChanged: loginClone.timePasswordChanged,
-      timesUsed:           loginClone.timesUsed
+      timesUsed:           loginClone.timesUsed,
     });
     this._store.saveSoon();
 
@@ -393,7 +393,7 @@ this.LoginManagerStorage_json.prototype = {
     let loginData = {
       hostname,
       formSubmitURL,
-      httpRealm
+      httpRealm,
     };
     let matchData = { };
     for (let field of ["hostname", "formSubmitURL", "httpRealm"])
@@ -413,7 +413,7 @@ this.LoginManagerStorage_json.prototype = {
     let loginData = {
       hostname,
       formSubmitURL,
-      httpRealm
+      httpRealm,
     };
     let matchData = { };
     for (let field of ["hostname", "formSubmitURL", "httpRealm"])

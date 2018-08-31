@@ -26,14 +26,14 @@ var passwords_initial = [
      usernameField: "uname",
      passwordField: "pword",
      changes: {
-       password: "SeCrEt$$$"
-     }
+       password: "SeCrEt$$$",
+     },
    },
    { hostname: "http://www.example.com",
      realm: "login",
      username: "jack",
-     password: "secretlogin"
-   }
+     password: "secretlogin",
+   },
 ];
 
 // Password after first modify action has been performed
@@ -45,14 +45,14 @@ var passwords_after_first_change = [
      usernameField: "uname",
      passwordField: "pword",
      changes: {
-        username: "james"
-     }
+        username: "james",
+     },
    },
    { hostname: "http://www.example.com",
      realm: "login",
      username: "jack",
-     password: "secretlogin"
-   }
+     password: "secretlogin",
+   },
 ];
 
 // Password after second modify action has been performed
@@ -62,13 +62,13 @@ var passwords_after_second_change = [
      username: "james",
      password: "SeCrEt$$$",
      usernameField: "uname",
-     passwordField: "pword"
+     passwordField: "pword",
    },
    { hostname: "http://www.example.com",
      realm: "login",
      username: "jack",
-     password: "secretlogin"
-   }
+     password: "secretlogin",
+   },
 ];
 
 /*
@@ -77,7 +77,7 @@ var passwords_after_second_change = [
 
 Phase("phase1", [
   [Passwords.add, passwords_initial],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase2", [
@@ -85,7 +85,7 @@ Phase("phase2", [
   [Passwords.verify, passwords_initial],
   [Passwords.modify, passwords_initial],
   [Passwords.verify, passwords_after_first_change],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase3", [
@@ -94,11 +94,11 @@ Phase("phase3", [
   [Passwords.verify, passwords_after_first_change],
   [Passwords.modify, passwords_after_first_change],
   [Passwords.verify, passwords_after_second_change],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase4", [
   [Sync],
-  [Passwords.verify, passwords_after_second_change]
+  [Passwords.verify, passwords_after_second_change],
 ]);
 

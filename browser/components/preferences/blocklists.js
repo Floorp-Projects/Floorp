@@ -46,7 +46,7 @@ var gBlocklistManager = {
       }
 
       return "";
-    }
+    },
   },
 
   onWindowKeyPress(event) {
@@ -159,5 +159,5 @@ var gBlocklistManager = {
   _getActiveList() {
     let trackingTable = Services.prefs.getCharPref(TRACKING_TABLE_PREF);
     return trackingTable.includes(CONTENT_LIST_ID) ? CONTENT_LIST_ID : BASE_LIST_ID;
-  }
+  },
 };

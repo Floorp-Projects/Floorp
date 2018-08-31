@@ -11,7 +11,7 @@ function run_test() {
     },
     set b(val) {
       this.dst.b = val + "!!!";
-    }
+    },
   };
   let src = new base();
 

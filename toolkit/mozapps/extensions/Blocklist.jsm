@@ -1356,7 +1356,7 @@ var Blocklist = {
 
     var args = {
       restart: false,
-      list: addonList
+      list: addonList,
     };
     // This lets the dialog get the raw js object
     args.wrappedJSObject = args;
@@ -1567,7 +1567,7 @@ BlocklistItemData.prototype = {
     let maxVersion = versionRangeElement.getAttribute("maxVersion");
 
     return { minVersion, maxVersion };
-  }
+  },
 };
 
 Blocklist._init();

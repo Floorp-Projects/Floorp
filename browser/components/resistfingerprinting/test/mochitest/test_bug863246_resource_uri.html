@@ -40,8 +40,8 @@ add_task(async function() {
       false);
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["security.all_resource_uri_content_accessible", true]
-    ]
+      ["security.all_resource_uri_content_accessible", true],
+    ],
   });
   await testResourceUri(
       "security.all_resource_uri_content_accessible = true, resource://gre-resources is now content-accessible",

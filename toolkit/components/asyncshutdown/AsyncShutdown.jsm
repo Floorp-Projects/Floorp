@@ -58,7 +58,7 @@ Object.defineProperty(this, "gCrashReporter", {
       return this.gCrashReporter = null;
     }
   },
-  configurable: true
+  configurable: true,
 });
 
 // `true` if this is a content process, `false` otherwise.
@@ -366,7 +366,7 @@ var AsyncShutdown = {
    */
   get DELAY_CRASH_MS() {
     return DELAY_CRASH_MS;
-  }
+  },
 };
 
 /**
@@ -465,7 +465,7 @@ function getPhase(topic) {
         return () => spinner.observe();
       }
       return undefined;
-    }
+    },
   });
   gPhases.set(topic, phase);
   return phase;
@@ -523,7 +523,7 @@ Spinner.prototype = {
     try {
       promise = this._barrier.wait({
         warnAfterMS: DELAY_WARNING_MS,
-        crashAfterMS: DELAY_CRASH_MS
+        crashAfterMS: DELAY_CRASH_MS,
       }).catch(
         // Additional precaution to be entirely sure that we cannot reject.
       );
@@ -546,7 +546,7 @@ Spinner.prototype = {
       }
     }
     debug(`Finished phase ${ topic }`);
-  }
+  },
 };
 
 /**
@@ -671,7 +671,7 @@ function Barrier(name) {
       }
       if (details && typeof details == "function") {
         details = {
-          fetchState: details
+          fetchState: details,
         };
       } else if (!details) {
         details = {};
@@ -781,7 +781,7 @@ function Barrier(name) {
      */
     removeBlocker: (condition) => {
       return this._removeBlocker(condition);
-    }
+    },
   };
 }
 Barrier.prototype = Object.freeze({
@@ -805,7 +805,7 @@ Barrier.prototype = Object.freeze({
         state: safeGetState(fetchState),
         filename,
         lineNumber,
-        stack
+        stack,
       });
     }
     return frozen;
@@ -947,7 +947,7 @@ Barrier.prototype = Object.freeze({
           if (gCrashReporter && gCrashReporter.enabled) {
             let data = {
               phase: topic,
-              conditions: state
+              conditions: state,
             };
             gCrashReporter.annotateCrashReport("AsyncShutdownTimeout",
               JSON.stringify(data));

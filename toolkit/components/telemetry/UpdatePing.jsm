@@ -104,7 +104,7 @@ var UpdatePing = {
    */
   _handleUpdateReady(aUpdateState) {
     const ALLOWED_STATES = [
-      "applied", "applied-service", "pending", "pending-service", "pending-elevate"
+      "applied", "applied-service", "pending", "pending-service", "pending-elevate",
     ];
     if (!ALLOWED_STATES.includes(aUpdateState)) {
       this._log.trace("Unexpected update state: " + aUpdateState);

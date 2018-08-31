@@ -108,7 +108,7 @@ function toggleHighlightAndWait(shouldHighlight) {
         gFindBar.browser.finder.removeResultListener(listener);
         resolve();
       },
-      onMatchesCountResult() {}
+      onMatchesCountResult() {},
     };
     gFindBar.browser.finder.addResultListener(listener);
     gFindBar.toggleHighlight(shouldHighlight);
@@ -123,7 +123,7 @@ function findAgainAndWait() {
         resolve();
       },
       onHighlightFinished() {},
-      onMatchesCountResult() {}
+      onMatchesCountResult() {},
     };
     gFindBar.browser.finder.addResultListener(listener);
     gFindBar.onFindAgainCommand();

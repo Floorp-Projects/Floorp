@@ -55,6 +55,6 @@ var ScrollbarSampler = {
         iframe.remove();
       }, {once: true});
     });
-  }
+  },
 };
 Object.freeze(this.ScrollbarSampler);

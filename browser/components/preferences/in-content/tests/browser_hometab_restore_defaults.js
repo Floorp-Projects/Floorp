@@ -5,7 +5,7 @@ add_task(async function testRestoreDefaultsBtn_visible() {
     // Hide Pocket pref so we don't trigger network requests when we reset all preferences
     ["browser.newtabpage.activity-stream.feeds.section.topstories.options", JSON.stringify(Object.assign({}, JSON.parse(before), {hidden: true}))],
     // Set a user pref to false to force the Restore Defaults button to be visible
-    ["browser.newtabpage.activity-stream.feeds.topsites", false]
+    ["browser.newtabpage.activity-stream.feeds.topsites", false],
   ]});
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences#home", false);

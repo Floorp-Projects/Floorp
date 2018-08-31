@@ -34,7 +34,7 @@ add_task(async function test_addon_unenroll() {
             script: "api.js",
             paths: [["study"]],
           },
-        }
+        },
       },
     },
 
@@ -48,7 +48,7 @@ add_task(async function test_addon_unenroll() {
               type: "function",
             },
           ],
-        }
+        },
       ]),
 
       // The code below is serialized into a file embedded in an extension.
@@ -72,7 +72,7 @@ add_task(async function test_addon_unenroll() {
                     return () => {};
                   },
                 }).api(),
-              }
+              },
             };
           }
         };
@@ -86,7 +86,7 @@ add_task(async function test_addon_unenroll() {
           browser.test.onMessage.addListener(resolve);
         });
       });
-    }
+    },
   });
 
   const server = AddonTestUtils.createHttpServer({hosts: ["example.com"]});

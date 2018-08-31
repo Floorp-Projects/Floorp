@@ -38,7 +38,7 @@ PrivateBrowsingContentBlockingAllowList.prototype = {
     if (topic == "last-pb-context-exited") {
       Services.perms.removeByType("trackingprotection-pb");
     }
-  }
+  },
 };
 
 const kAutoStartPref = "browser.privatebrowsing.autostart";

@@ -6,7 +6,7 @@ const DUMMY_PATH = "browser/browser/base/content/test/general/dummy_page.html";
 
 const gExpectedHistory = {
   index: -1,
-  entries: []
+  entries: [],
 };
 
 function get_remote_history(browser) {
@@ -15,14 +15,14 @@ function get_remote_history(browser) {
     let sessionHistory = webNav.sessionHistory;
     let result = {
       index: sessionHistory.index,
-      entries: []
+      entries: [],
     };
 
     for (let i = 0; i < sessionHistory.count; i++) {
       let entry = sessionHistory.legacySHistory.getEntryAtIndex(i, false);
       result.entries.push({
         uri: entry.URI.spec,
-        title: entry.title
+        title: entry.title,
       });
     }
 
@@ -70,7 +70,7 @@ var waitForLoad = async function(uri) {
   gExpectedHistory.index++;
   gExpectedHistory.entries.push({
     uri: gBrowser.currentURI.spec,
-    title: gBrowser.contentTitle
+    title: gBrowser.contentTitle,
   });
 };
 
@@ -90,7 +90,7 @@ var waitForLoadWithFlags = async function(uri, flags = Ci.nsIWebNavigation.LOAD_
 
     gExpectedHistory.entries.push({
       uri: gBrowser.currentURI.spec,
-      title: gBrowser.contentTitle
+      title: gBrowser.contentTitle,
     });
   }
 };

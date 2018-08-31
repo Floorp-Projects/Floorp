@@ -104,8 +104,8 @@ add_task(async function test_nested() {
   const FORM_DATA = {
     children: [{
       xpath: {"/xhtml:html/xhtml:body/xhtml:input": "m"},
-      url: "data:text/html;charset=utf-8,<input autofocus=true>"
-    }]
+      url: "data:text/html;charset=utf-8,<input autofocus=true>",
+    }],
   };
 
   // Create a tab with an iframe containing an input field.

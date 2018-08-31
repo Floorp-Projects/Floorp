@@ -18,7 +18,7 @@ async function test() {
     id: "addon1@tests.mozilla.org",
     name: "auto updating addon",
     version: "1.0",
-    applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE,
   }]);
 
   let aWindow = await open_manager("addons://list/extension");
@@ -44,7 +44,7 @@ add_test(function() {
     isCompatible: false,
     operationsRequiringRestart: 0,
     blocklistState: Ci.nsIBlocklistService.STATE_BLOCKED,
-    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE,
   }]);
 
   is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should still be hidden");
@@ -71,7 +71,7 @@ add_test(async function() {
     name: "manually updating addon (new and improved!)",
     existingAddon: gProvider.addons[1],
     version: "1.1",
-    releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml")
+    releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml"),
   }]);
 
   var item = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
@@ -186,7 +186,7 @@ add_test(function() {
         run_next_test();
       else
         installCompleted = true;
-    }
+    },
   };
   install.addTestListener(listener);
   EventUtils.synthesizeMouseAtCenter(updateBtn, { }, gManagerWindow);
@@ -230,6 +230,6 @@ add_test(function() {
     name: "manually updating addon (new and even more improved!)",
     existingAddon: gProvider.addons[1],
     version: "1.2",
-    releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml")
+    releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml"),
   }]);
 });

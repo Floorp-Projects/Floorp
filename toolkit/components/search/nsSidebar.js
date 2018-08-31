@@ -25,7 +25,7 @@ nsSidebar.prototype = {
 
     this.mm.sendAsyncMessage("Search:AddEngine", {
       pageURL: this.window.document.documentURIObject.spec,
-      engineURL
+      engineURL,
     });
   },
 
@@ -37,7 +37,7 @@ nsSidebar.prototype = {
   },
 
   classID: Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSidebar]);

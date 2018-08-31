@@ -16,14 +16,14 @@ var phases = { "phase1": "profile1",
 var bookmarks_initial = {
   "menu": [
     { folder: "testfolder",
-      description: "it's just me, a test folder"
-    }
+      description: "it's just me, a test folder",
+    },
   ],
   "menu/testfolder": [
     { uri: "http://www.mozilla.com",
-      title: "Mozilla"
-    }
-  ]
+      title: "Mozilla",
+    },
+  ],
 };
 
 /*
@@ -34,12 +34,12 @@ var bookmarks_initial = {
 Phase("phase1", [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
-  [Sync]
+  [Sync],
 ]);
 
 // Sync to profile2 and verify that the bookmark folder is created, along
 // with its description.
 Phase("phase2", [
   [Sync],
-  [Bookmarks.verify, bookmarks_initial]
+  [Bookmarks.verify, bookmarks_initial],
 ]);

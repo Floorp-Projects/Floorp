@@ -33,72 +33,72 @@ const BCH_TESTS = [
   {
     description: "no mstone change and no update",
     noPostUpdatePref: true,
-    noMstoneChange: true
+    noMstoneChange: true,
   }, {
     description: "mstone changed and no update",
     noPostUpdatePref: true,
-    prefURL: DEFAULT_PREF_URL
+    prefURL: DEFAULT_PREF_URL,
   }, {
     description: "no mstone change and update with 'showURL' for actions",
     actions: "showURL",
-    noMstoneChange: true
+    noMstoneChange: true,
   }, {
     description: "update without actions",
-    prefURL: DEFAULT_PREF_URL
+    prefURL: DEFAULT_PREF_URL,
   }, {
     description: "update with 'showURL' for actions",
     actions: "showURL",
-    prefURL: DEFAULT_PREF_URL
+    prefURL: DEFAULT_PREF_URL,
   }, {
     description: "update with 'showURL' for actions and openURL",
     actions: "showURL",
-    openURL: DEFAULT_UPDATE_URL
+    openURL: DEFAULT_UPDATE_URL,
     }, {
     description: "update with 'showURL showAlert' for actions",
     actions: "showAlert showURL",
-    prefURL: DEFAULT_PREF_URL
+    prefURL: DEFAULT_PREF_URL,
   }, {
     description: "update with 'showAlert showURL' for actions and openURL",
     actions: "showAlert showURL",
-    openURL: DEFAULT_UPDATE_URL
+    openURL: DEFAULT_UPDATE_URL,
   }, {
     description: "update with 'showURL showNotification' for actions",
     actions: "showURL showNotification",
-    prefURL: DEFAULT_PREF_URL
+    prefURL: DEFAULT_PREF_URL,
   }, {
     description: "update with 'showNotification showURL' for actions and " +
                  "openURL",
     actions: "showNotification showURL",
-    openURL: DEFAULT_UPDATE_URL
+    openURL: DEFAULT_UPDATE_URL,
   }, {
     description: "update with 'showAlert showURL showNotification' for actions",
     actions: "showAlert showURL showNotification",
-    prefURL: DEFAULT_PREF_URL
+    prefURL: DEFAULT_PREF_URL,
   }, {
     description: "update with 'showNotification showURL showAlert' for " +
                  "actions and openURL",
     actions: "showNotification showURL showAlert",
-    openURL: DEFAULT_UPDATE_URL
+    openURL: DEFAULT_UPDATE_URL,
   }, {
     description: "update with 'showAlert' for actions",
-    actions: "showAlert"
+    actions: "showAlert",
   }, {
     description: "update with 'showAlert showNotification' for actions",
-    actions: "showAlert showNotification"
+    actions: "showAlert showNotification",
   }, {
     description: "update with 'showNotification' for actions",
-    actions: "showNotification"
+    actions: "showNotification",
   }, {
     description: "update with 'showNotification showAlert' for actions",
-    actions: "showNotification showAlert"
+    actions: "showNotification showAlert",
   }, {
     description: "update with 'silent' for actions",
-    actions: "silent"
+    actions: "silent",
   }, {
     description: "update with 'silent showURL showAlert showNotification' " +
                  "for actions and openURL",
-    actions: "silent showURL showAlert showNotification"
-  }
+    actions: "silent showURL showAlert showNotification",
+  },
 ];
 
 var gOriginalMStone;
@@ -167,7 +167,7 @@ var gWindowCatcher = {
     win.addEventListener("load", function() {
       gWindowCatcher.windowLoad(win);
     }, {once: true});
-  }
+  },
 };
 
 function finish_test() {
@@ -269,15 +269,15 @@ function testDefaultArgs() {
 const BG_NOTIFY_TESTS = [
   {
     description: "'silent showNotification' actions should not display a notification",
-    actions: "silent showNotification"
+    actions: "silent showNotification",
   }, {
     description: "'showNotification' for actions should display a notification",
-    actions: "showNotification"
+    actions: "showNotification",
   }, {
     description: "no actions and empty updates.xml",
   }, {
     description: "'showAlert' for actions should not display a notification",
-    actions: "showAlert"
+    actions: "showAlert",
   }, {
     // This test MUST be the last test in the array to test opening the url
     // provided by the updates.xml.
@@ -287,8 +287,8 @@ const BG_NOTIFY_TESTS = [
     notificationText: "notification text",
     notificationURL: DEFAULT_UPDATE_URL,
     notificationButtonLabel: "button label",
-    notificationButtonAccessKey: "b"
-  }
+    notificationButtonAccessKey: "b",
+  },
 ];
 
 // Test showing a notification after an update

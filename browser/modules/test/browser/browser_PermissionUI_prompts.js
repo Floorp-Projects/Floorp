@@ -109,7 +109,7 @@ async function testPrompt(Prompt) {
     curPerm = SitePermissions.get(principal.URI, permissionKey);
     Assert.deepEqual(curPerm, {
                        state: SitePermissions.BLOCK,
-                       scope: SitePermissions.SCOPE_PERSISTENT
+                       scope: SitePermissions.SCOPE_PERSISTENT,
                      }, "Should have denied the action permanently");
     Assert.ok(mockRequest._cancelled,
               "The request should have been cancelled");
@@ -133,7 +133,7 @@ async function testPrompt(Prompt) {
     curPerm = SitePermissions.get(principal.URI, permissionKey);
     Assert.deepEqual(curPerm, {
                        state: SitePermissions.ALLOW,
-                       scope: SitePermissions.SCOPE_PERSISTENT
+                       scope: SitePermissions.SCOPE_PERSISTENT,
                      }, "Should have allowed the action permanently");
     Assert.ok(!mockRequest._cancelled,
               "The request should not have been cancelled");
