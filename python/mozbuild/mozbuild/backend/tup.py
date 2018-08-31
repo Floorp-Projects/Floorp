@@ -358,6 +358,14 @@ class TupBackend(CommonBackend):
         return [mozpath.relpath(mozpath.join(l.objdir, l.import_name), objdir)
                 for l in libs]
 
+    def _trim_outputs(self, outputs):
+        # Trim an output list for display to at most 3 entries
+        if len(outputs) > 3:
+            display_outputs = ', '.join(outputs[0:3]) + ', ...'
+        else:
+            display_outputs = ', '.join(outputs)
+        return display_outputs
+
     def _gen_shared_library(self, backend_file):
         shlib = backend_file.shared_lib
 
@@ -771,8 +779,8 @@ class TupBackend(CommonBackend):
         def display_name(invocation):
             output_str = ''
             if invocation['outputs']:
-                output_str = ' -> %s' % ' '.join([os.path.basename(f)
-                                                  for f in invocation['outputs']])
+                outputs = [os.path.basename(f) for f in invocation['outputs']]
+                output_str = ' -> [%s]' % self._trim_outputs(outputs)
             return '{name} v{version} {kind}{output}'.format(
                 name=invocation['package_name'],
                 version=invocation['package_version'],
@@ -929,14 +937,10 @@ class TupBackend(CommonBackend):
                                               'dependendentlibs.list.gtest')):
                 extra_inputs += [self._shlibs]
 
-            if len(outputs) > 3:
-                display_outputs = ', '.join(outputs[0:3]) + ', ...'
-            else:
-                display_outputs = ', '.join(outputs)
             display = 'python {script}:{method} -> [{display_outputs}]'.format(
                 script=obj.script,
                 method=obj.method,
-                display_outputs=display_outputs
+                display_outputs=self._trim_outputs(outputs),
             )
             backend_file.rule(
                 display=display,
