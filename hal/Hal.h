@@ -46,6 +46,17 @@ class WindowIdentifier;
 namespace MOZ_HAL_NAMESPACE {
 
 /**
+ * Initializes the HAL. This must be called before any other HAL function.
+ */
+void Init();
+
+/**
+ * Shuts down the HAL. Besides freeing all the used resources this will check
+ * that all observers have been properly deregistered and assert if not.
+ */
+void Shutdown();
+
+/**
  * Turn the default vibrator device on/off per the pattern specified
  * by |pattern|.  Each element in the pattern is the number of
  * milliseconds to turn the vibrator on or off.  The first element in

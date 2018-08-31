@@ -33,6 +33,7 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "GeckoProfiler.h"
 #include "ScreenHelperCocoa.h"
+#include "mozilla/Hal.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "HeadlessScreenHelper.h"
 #include "pratom.h"
@@ -237,6 +238,8 @@ nsAppShell::~nsAppShell()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  hal::Shutdown();
+
   if (mCFRunLoop) {
     if (mCFRunLoopSource) {
       ::CFRunLoopRemoveSource(mCFRunLoop, mCFRunLoopSource,
@@ -355,6 +358,8 @@ nsAppShell::Init()
   NS_ENSURE_STATE(mCFRunLoopSource);
 
   ::CFRunLoopAddSource(mCFRunLoop, mCFRunLoopSource, kCFRunLoopCommonModes);
+
+  hal::Init();
 
   if (XRE_IsParentProcess()) {
     ScreenManager& screenManager = ScreenManager::GetSingleton();
