@@ -9,26 +9,26 @@ add_task(async function() {
   const initialState = {
     windows: [{
       tabs: [
-        { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] }
+        { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
       ],
       _closedTabs: [
         { state: { entries: [{ ID: 1000, url: "about:blank", triggeringPrincipal_base64 }]} },
-        { state: { entries: [{ ID: 1001, url: "about:blank", triggeringPrincipal_base64 }]} }
-      ]
-    }]
+        { state: { entries: [{ ID: 1001, url: "about:blank", triggeringPrincipal_base64 }]} },
+      ],
+    }],
   };
 
   const restoreState = {
     windows: [{
       tabs: [
-        { entries: [{ url: "about:robots", triggeringPrincipal_base64 }] }
+        { entries: [{ url: "about:robots", triggeringPrincipal_base64 }] },
       ],
       _closedTabs: [
         { state: { entries: [{ ID: 1002, url: "about:robots", triggeringPrincipal_base64 }]} },
         { state: { entries: [{ ID: 1003, url: "about:robots", triggeringPrincipal_base64 }]} },
-        { state: { entries: [{ ID: 1004, url: "about:robots", triggeringPrincipal_base64 }]} }
-      ]
-    }]
+        { state: { entries: [{ ID: 1004, url: "about:robots", triggeringPrincipal_base64 }]} },
+      ],
+    }],
   };
 
   const maxTabsUndo = 4;

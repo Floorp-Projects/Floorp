@@ -72,7 +72,7 @@ startupRecorder.prototype = {
         } catch (e) {
           return false;
         }
-      })
+      }),
     };
   },
 
@@ -172,7 +172,7 @@ startupRecorder.prototype = {
       topicsToNames[firstPaintNotification] = "before first paint";
       this.record(topicsToNames[topic]);
     }
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([startupRecorder]);

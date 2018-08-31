@@ -489,7 +489,7 @@ function dumpGCLogAndCCLog(aVerbose) {
                                { onDump: displayInfo,
                                  onFinish() {
                                    inProgress.remove();
-                                 }
+                                 },
                                });
 }
 
@@ -648,13 +648,13 @@ function loadMemoryReportsFromFile(aFilename, aTitleNote, aFn) {
         } catch (ex) {
           handleException(ex);
         }
-      }
+      },
     }, null);
 
     let file = new nsFile(aFilename);
     let fileChan = NetUtil.newChannel({
                      uri: Services.io.newFileURI(file),
-                     loadUsingSystemPrincipal: true
+                     loadUsingSystemPrincipal: true,
                    });
     fileChan.asyncOpen2(converter);
 
@@ -754,9 +754,9 @@ DReport.prototype = {
       units:       this._units,
       amount:      aAmount,
       description: this._description,
-      _presence:   this._presence
+      _presence:   this._presence,
     };
-  }
+  },
 };
 
 // Constants that indicate if a DReport was present only in one of the data
@@ -912,7 +912,7 @@ function diffJSONObjects(aJson1, aJson2) {
     hasMozMallocUsableSize: simpleProp("hasMozMallocUsableSize"),
 
     reports: makeJSONReports(diffDReportMaps(makeDReportMap(aJson1.reports),
-                                             makeDReportMap(aJson2.reports)))
+                                             makeDReportMap(aJson2.reports))),
   };
 }
 
@@ -1139,7 +1139,7 @@ TreeNode.prototype = {
       default:
         throw "Invalid memory report(s): bad units in TreeNode.toString";
     }
-  }
+  },
 };
 
 // Sort TreeNodes first by size, then by name.  The latter is important for the

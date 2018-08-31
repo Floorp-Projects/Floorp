@@ -33,7 +33,7 @@ var EXPORTED_SYMBOLS = ["JsonSchemaValidator"];
 var JsonSchemaValidator = {
   validateAndParseParameters(param, properties) {
     return validateAndParseParamRecursive(param, properties);
-  }
+  },
 };
 
 function validateAndParseParamRecursive(param, properties) {

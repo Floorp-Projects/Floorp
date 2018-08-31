@@ -309,5 +309,5 @@ var gConnectionsDialog = {
     let uriString = input.value.trim();
     // turn an empty string into `undefined` to clear the pref back to the default
     return uriString.length ? uriString : undefined;
-  }
+  },
 };

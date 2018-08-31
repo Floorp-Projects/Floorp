@@ -34,7 +34,7 @@ function test() {
     ],
     // make sure the first window is focused, otherwise when restoring the
     // old state, the first window is closed and the test harness gets unloaded
-    selectedWindow: 1
+    selectedWindow: 1,
   };
 
   let pass = 1;

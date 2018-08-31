@@ -41,7 +41,7 @@ const gEnv = Cc["@mozilla.org/process/environment;1"].
 const NOTIFICATIONS = [
   "update-available",
   "update-manual",
-  "update-restart"
+  "update-restart",
 ];
 
 /**
@@ -249,7 +249,7 @@ function waitForEvent(topic, status = null) {
         Services.obs.removeObserver(this, topic);
         resolve(innerStatus);
       }
-    }
+    },
   }, topic));
 }
 

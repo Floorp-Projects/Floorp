@@ -35,6 +35,6 @@ add_task(async function test_check_urls_before_restoring() {
 function getState(url) {
   return JSON.stringify({
     entries: [{url: URL, triggeringPrincipal_base64}],
-    formdata: {url, id: {text: "foobar"}}
+    formdata: {url, id: {text: "foobar"}},
   });
 }

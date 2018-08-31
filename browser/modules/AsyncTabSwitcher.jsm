@@ -198,7 +198,7 @@ class AsyncTabSwitcher {
   // dialogs.
   setTimer(callback, timeout) {
     let event = {
-      notify: callback
+      notify: callback,
     };
 
     var timer = Cc["@mozilla.org/timer;1"]
@@ -322,7 +322,7 @@ class AsyncTabSwitcher {
 
     let event = new this.window.CustomEvent("TabSwitchDone", {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
     });
     this.tabbrowser.dispatchEvent(event);
   }
@@ -528,7 +528,7 @@ class AsyncTabSwitcher {
       }
     }
 
-    for (let [tab, ] of this.tabState) {
+    for (let [tab ] of this.tabState) {
       if (!tab.linkedBrowser) {
         this.tabState.delete(tab);
         this.unwarmTab(tab);

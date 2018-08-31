@@ -23,7 +23,7 @@ add_UITour_task(async function test_showMenu_controlCenter() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: "about:blank"
+    url: "about:blank",
   }, function() {
     ok(true, "Tab opened");
   });

@@ -67,7 +67,7 @@ const BLANK_DB = function() {
   return {
     addons: new Map(),
     compatOverrides: new Map(),
-    schema: DB_SCHEMA
+    schema: DB_SCHEMA,
   };
 };
 
@@ -285,7 +285,7 @@ AddonSearchResult.prototype = {
     }
 
     return json;
-  }
+  },
 };
 
 /**

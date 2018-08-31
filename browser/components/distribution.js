@@ -147,7 +147,7 @@ DistributionCustomizer.prototype = {
 
         let folder = await PlacesUtils.bookmarks.insert({
           type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          parentGuid, index, title: item.title
+          parentGuid, index, title: item.title,
         });
 
         await this._parseBookmarksSection(folder.guid,
@@ -160,7 +160,7 @@ DistributionCustomizer.prototype = {
 
         await PlacesUtils.bookmarks.insert({
           type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-          parentGuid, index
+          parentGuid, index,
         });
         break;
 
@@ -173,7 +173,7 @@ DistributionCustomizer.prototype = {
         await PlacesUtils.livemarks.addLivemark({
           feedURI: Services.io.newURI(item.feedLink),
           siteURI: Services.io.newURI(item.siteLink),
-          parentId, index, title: item.title
+          parentId, index, title: item.title,
         });
         break;
 
@@ -183,7 +183,7 @@ DistributionCustomizer.prototype = {
           index = prependIndex++;
 
         await PlacesUtils.bookmarks.insert({
-          parentGuid, index, title: item.title, url: item.link
+          parentGuid, index, title: item.title, url: item.link,
         });
 
         if (item.icon && item.iconData) {
@@ -445,7 +445,7 @@ DistributionCustomizer.prototype = {
         prefDefaultsApplied) {
       Services.obs.notifyObservers(null, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC);
     }
-  }
+  },
 };
 
 function parseValue(value) {

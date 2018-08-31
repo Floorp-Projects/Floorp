@@ -10,7 +10,7 @@ ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
 add_task(async function testDoesNotShowDoorhangerForBackgroundWindow() {
   let options = {
     gBrowser: window.gBrowser,
-    url: "about:blank"
+    url: "about:blank",
   };
 
   await BrowserTestUtils.withNewTab(options, async function(browser) {
@@ -20,7 +20,7 @@ add_task(async function testDoesNotShowDoorhangerForBackgroundWindow() {
     await SimpleTest.promiseFocus(win);
     let mainActionCalled = false;
     let mainAction = {
-      callback: () => { mainActionCalled = true; }
+      callback: () => { mainActionCalled = true; },
     };
     AppMenuNotifications.showNotification("update-manual", mainAction);
     is(PanelUI.notificationPanel.state, "closed", "The background window's doorhanger is closed.");
@@ -51,7 +51,7 @@ add_task(async function testDoesNotShowDoorhangerForBackgroundWindow() {
 add_task(async function testBackgroundWindowNotificationsAreRemovedByForeground() {
   let options = {
     gBrowser: window.gBrowser,
-    url: "about:blank"
+    url: "about:blank",
   };
 
   await BrowserTestUtils.withNewTab(options, async function(browser) {
@@ -82,7 +82,7 @@ add_task(async function testBackgroundWindowNotificationsAreRemovedByForeground(
 add_task(async function testBackgroundWindowNotificationsAreDismissedByForeground() {
   let options = {
     gBrowser: window.gBrowser,
-    url: "about:blank"
+    url: "about:blank",
   };
 
   await BrowserTestUtils.withNewTab(options, async function(browser) {

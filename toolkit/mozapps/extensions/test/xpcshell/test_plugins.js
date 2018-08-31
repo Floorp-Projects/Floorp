@@ -125,7 +125,7 @@ async function run_test_2(p) {
   test[gID] = [
     ["onDisabling", false],
     "onDisabled",
-    ["onPropertyChanged", ["userDisabled"]]
+    ["onPropertyChanged", ["userDisabled"]],
   ];
   prepare_test(test);
 
@@ -152,7 +152,7 @@ async function run_test_3(p) {
   let test = {};
   test[gID] = [
     ["onEnabling", false],
-    "onEnabled"
+    "onEnabled",
   ];
   prepare_test(test);
 

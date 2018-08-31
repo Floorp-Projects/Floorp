@@ -15,7 +15,7 @@ add_task(async function() {
     // so we skip this for now.
     "telemetry",
     // about:downloads causes a shutdown leak with stylo-chrome. bug 1419943.
-    "downloads"
+    "downloads",
   ];
 
   for (let cid in Cc) {

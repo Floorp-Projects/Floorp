@@ -15,7 +15,7 @@ function waitForClear() {
           Services.mm.removeMessageListener(MSG, listener);
           resolve();
         }
-      }
+      },
     };
 
     Services.mm.addMessageListener(MSG, listener, true);
@@ -234,7 +234,7 @@ add_task(makeInstallTest(async function(browser) {
         state: "STATE_CANCELLED",
         error: null,
       },
-    }
+    },
   ];
 
   await testInstall(browser, {url: XPI_URL}, steps, "canceling an install works");
@@ -259,7 +259,7 @@ add_task(makeInstallTest(async function(browser) {
         state: "STATE_DOWNLOAD_FAILED",
         error: "ERROR_NETWORK_FAILURE",
       },
-    }
+    },
   ];
 
   await testInstall(browser, {url: XPI_URL + "bogus"}, steps, "install of a bad url fails");
@@ -284,7 +284,7 @@ add_task(makeInstallTest(async function(browser) {
         state: "STATE_DOWNLOAD_FAILED",
         error: "ERROR_INCORRECT_HASH",
       },
-    }
+    },
   ];
 
   await testInstall(browser, {url: XPI_URL, hash: "sha256:bogus"}, steps, "install with bad hash fails");

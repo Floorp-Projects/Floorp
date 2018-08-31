@@ -27,7 +27,7 @@ function removeNotificationOnEnd(notification, installs) {
       onDownloadCancelled: maybeRemove,
       onDownloadFailed: maybeRemove,
       onInstallFailed: maybeRemove,
-      onInstallEnded: maybeRemove
+      onInstallEnded: maybeRemove,
     });
   }
 }
@@ -254,7 +254,7 @@ var gXPInstallObserver = {
           accessKey: gNavigatorBundle.getString("xpinstallDisabledButton.accesskey"),
           callback: function editPrefs() {
             Services.prefs.setBoolPref("xpinstall.enabled", true);
-          }
+          },
         };
 
         secondaryActions = [{
@@ -292,7 +292,7 @@ var gXPInstallObserver = {
         callback() {
           secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED_CLICK_THROUGH);
           installInfo.install();
-        }
+        },
       };
       let secondaryAction = {
         label: gNavigatorBundle.getString("xpinstallPromptMessage.dontAllow"),
@@ -461,7 +461,7 @@ var gXPInstallObserver = {
     let notification = PopupNotifications.getNotification("addon-progress", aBrowser);
     if (notification)
       notification.remove();
-  }
+  },
 };
 
 var gExtensionsNotifications = {
@@ -619,7 +619,7 @@ var LightWeightThemeWebInstaller = {
       acceptKey: gNavigatorBundle.getString("lwthemeInstallRequest.allowButton.accesskey2"),
       cancelText: gNavigatorBundle.getString("webextPerms.cancel.label"),
       cancelKey: gNavigatorBundle.getString("webextPerms.cancel.accessKey"),
-      msgs: []
+      msgs: [],
     };
     ExtensionsUI.showPermissionsPrompt(gBrowser.selectedBrowser, strings, null,
       "installWeb").then(answer => {
@@ -635,7 +635,7 @@ var LightWeightThemeWebInstaller = {
         if (notify) {
           ExtensionsUI.showInstallNotification(gBrowser.selectedBrowser, newLWTheme);
         }
-      }
+      },
     };
 
     AddonManager.addAddonListener(listener);

@@ -15,42 +15,42 @@ var PLUGINS = [{
   name: "test_plugin_0",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 },
 {
   // severity=0, vulnerabilitystatus=1 -> update available
   name: "test_plugin_1",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 },
 {
   // severity=0, vulnerabilitystatus=2 -> no update
   name: "test_plugin_2",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 },
 {
   // no severity field -> severity=3 by default -> hardblock
   name: "test_plugin_3",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 },
 {
   // severity=1, vulnerabilitystatus=2 -> softblock
   name: "test_plugin_4",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 },
 {
   // not in the blocklist -> not blocked
   name: "test_plugin_5",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 }];
 
 async function updateBlocklist(blocklistURL) {

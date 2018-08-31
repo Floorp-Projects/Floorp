@@ -56,9 +56,9 @@ function test_conversions() {
           d3: .5,
           e3: [2, false, "another string", .3],
           f3: [],
-          g3: {}
-        }]
-      }
+          g3: {},
+        }],
+      },
     }];
 
   for (let sample of SAMPLES) {

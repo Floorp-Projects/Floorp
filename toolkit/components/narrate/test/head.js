@@ -33,7 +33,7 @@ const TEST_PREFS = {
 function setup(voiceUri = "automatic", filterVoices = false) {
   let prefs = Object.assign({}, TEST_PREFS, {
     "narrate.filter-voices": filterVoices,
-    "narrate.voice": JSON.stringify({ en: voiceUri })
+    "narrate.voice": JSON.stringify({ en: voiceUri }),
   });
 
   // Set required test prefs.

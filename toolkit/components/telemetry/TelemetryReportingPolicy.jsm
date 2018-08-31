@@ -5,7 +5,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "TelemetryReportingPolicy"
+  "TelemetryReportingPolicy",
 ];
 
 ChromeUtils.import("resource://gre/modules/Log.jsm", this);
@@ -32,7 +32,7 @@ const DEPRECATED_FHR_PREFS = [
   PREF_BRANCH + "dataSubmissionPolicyAccepted",
   PREF_BRANCH + "dataSubmissionPolicyBypassAcceptance",
   PREF_BRANCH + "dataSubmissionPolicyResponseType",
-  PREF_BRANCH + "dataSubmissionPolicyResponseTime"
+  PREF_BRANCH + "dataSubmissionPolicyResponseTime",
 ];
 
 // How much time until we display the data choices notification bar, on the first run.

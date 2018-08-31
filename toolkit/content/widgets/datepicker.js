@@ -51,7 +51,7 @@ function DatePicker(context) {
               monthStrings, weekdayStrings, locale, dir } = this.props;
       const dateKeeper = new DateKeeper({
         year, month, day, min, max, step, stepBase, firstDayOfWeek, weekends,
-        calViewSize: CAL_VIEW_SIZE
+        calViewSize: CAL_VIEW_SIZE,
       });
 
       document.dir = dir;
@@ -98,7 +98,7 @@ function DatePicker(context) {
         toggleMonthPicker: () => {
           this.state.isMonthPickerVisible = !this.state.isMonthPickerVisible;
           this._update();
-        }
+        },
       };
     },
 
@@ -112,21 +112,21 @@ function DatePicker(context) {
           locale: this.state.locale,
           setSelection: this.state.setSelection,
           getDayString: this.state.getDayString,
-          getWeekHeaderString: this.state.getWeekHeaderString
+          getWeekHeaderString: this.state.getWeekHeaderString,
         }, {
           weekHeader: this.context.weekHeader,
-          daysView: this.context.daysView
+          daysView: this.context.daysView,
         }),
         monthYear: new MonthYear({
           setYear: this.state.setYear,
           setMonth: this.state.setMonth,
           getMonthString: this.state.getMonthString,
           datetimeOrders: this.state.datetimeOrders,
-          locale: this.state.locale
+          locale: this.state.locale,
         }, {
           monthYear: this.context.monthYear,
-          monthYearView: this.context.monthYearView
-        })
+          monthYearView: this.context.monthYearView,
+        }),
       };
     },
 
@@ -149,12 +149,12 @@ function DatePicker(context) {
         months: this.state.months,
         years: this.state.years,
         toggleMonthPicker: this.state.toggleMonthPicker,
-        noSmoothScroll: options.noSmoothScroll
+        noSmoothScroll: options.noSmoothScroll,
       });
       this.components.calendar.setProps({
         isVisible: !isMonthPickerVisible,
         days: this.state.days,
-        weekHeaders: dateKeeper.state.weekHeaders
+        weekHeaders: dateKeeper.state.weekHeaders,
       });
 
       isMonthPickerVisible ?
@@ -167,7 +167,7 @@ function DatePicker(context) {
      */
     _closePopup() {
       window.postMessage({
-        name: "ClosePopup"
+        name: "ClosePopup",
       }, "*");
     },
 
@@ -184,7 +184,7 @@ function DatePicker(context) {
           year,
           month,
           day,
-        }
+        },
       }, "*");
     },
 
@@ -265,13 +265,13 @@ function DatePicker(context) {
       const { dateKeeper } = this.state;
 
       dateKeeper.setCalendarMonth({
-        year, month
+        year, month,
       });
       dateKeeper.setSelection({
-        year, month, day
+        year, month, day,
       });
       this._update({ noSmoothScroll: true });
-    }
+    },
   };
 
   /**
@@ -311,7 +311,7 @@ function DatePicker(context) {
           options.setMonth(month);
         },
         getDisplayString: options.getMonthString,
-        viewportSize: spinnerSize
+        viewportSize: spinnerSize,
       }, context.monthYearView),
       year: new Spinner({
         id: "spinner-year",
@@ -320,8 +320,8 @@ function DatePicker(context) {
           options.setYear(year);
         },
         getDisplayString: year => yearFormat(new Date(new Date(0).setUTCFullYear(year))),
-        viewportSize: spinnerSize
-      }, context.monthYearView)
+        viewportSize: spinnerSize,
+      }, context.monthYearView),
     };
 
     this._attachEventListeners();
@@ -351,14 +351,14 @@ function DatePicker(context) {
           items: props.months,
           isInfiniteScroll: true,
           isValueSet: this.state.isMonthSet,
-          smoothScroll: !(this.state.firstOpened || props.noSmoothScroll)
+          smoothScroll: !(this.state.firstOpened || props.noSmoothScroll),
         });
         this.components.year.setState({
           value: props.dateObj.getUTCFullYear(),
           items: props.years,
           isInfiniteScroll: false,
           isValueSet: this.state.isYearSet,
-          smoothScroll: !(this.state.firstOpened || props.noSmoothScroll)
+          smoothScroll: !(this.state.firstOpened || props.noSmoothScroll),
         });
         this.state.firstOpened = false;
       } else {
@@ -389,6 +389,6 @@ function DatePicker(context) {
      */
     _attachEventListeners() {
       this.context.monthYear.addEventListener("click", this);
-    }
+    },
   };
 }

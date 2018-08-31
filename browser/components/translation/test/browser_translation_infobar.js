@@ -53,7 +53,7 @@ var TranslationStub = {
     this.showTranslatedContent();
     this.state = Translation.STATE_TRANSLATED;
     this._reset();
-  }
+  },
 };
 
 function showTranslationUI(aDetectedLanguage) {

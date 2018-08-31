@@ -219,7 +219,7 @@ add_test(function test_observe_prefs_object() {
     observed: false,
     observe() {
       this.observed = !this.observed;
-    }
+    },
   };
 
   Preferences.observe("test_observe_prefs_object", observer.observe, observer);
@@ -247,7 +247,7 @@ add_test(function test_observe_prefs_nsIObserver() {
       Assert.ok(subject instanceof Ci.nsIPrefBranch);
       Assert.equal(topic, "nsPref:changed");
       Assert.equal(data, "test_observe_prefs_nsIObserver");
-    }
+    },
   };
 
   Preferences.observe("test_observe_prefs_nsIObserver", observer);

@@ -770,7 +770,7 @@
 
          return {
            value: new File.DirectoryIterator.Entry(isDir, isSymLink, name, this._path),
-           done: false
+           done: false,
          };
        }
        this.close();
@@ -884,7 +884,7 @@
         // On other Unix, as the birth date is not available,
         // returns the epoch.
         return this.macBirthDate || new Date(0);
-      }
+      },
      });
 
      /**
@@ -1072,7 +1072,7 @@
          },
          get() {
            return this.getCurrentDirectory();
-         }
+         },
        }
      );
 

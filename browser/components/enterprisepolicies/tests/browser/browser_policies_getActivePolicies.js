@@ -6,12 +6,12 @@
 add_task(async function test_active_policies() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "DisablePrivateBrowsing": true
-    }
+      "DisablePrivateBrowsing": true,
+    },
   });
 
   let expected = {
-    "DisablePrivateBrowsing": true
+    "DisablePrivateBrowsing": true,
   };
 
   Assert.deepEqual(await Services.policies.getActivePolicies(), expected, "Active policies parsed correctly");
@@ -20,8 +20,8 @@ add_task(async function test_active_policies() {
 add_task(async function test_wrong_policies() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "BlockAboutSupport": [true]
-    }
+      "BlockAboutSupport": [true],
+    },
   });
 
   let expected = {};

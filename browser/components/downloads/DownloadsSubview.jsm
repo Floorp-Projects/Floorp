@@ -243,7 +243,7 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
       return;
     instance._downloadsData.removeFinished();
     PlacesUtils.history.removeVisitsByFilter({
-      transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD
+      transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
     }).catch(Cu.reportError);
   }
 

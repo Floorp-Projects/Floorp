@@ -106,5 +106,5 @@ var ProxyPolicies = {
     if (param.SOCKSProxy) {
       setProxyHostAndPort("socks", param.SOCKSProxy);
     }
-  }
+  },
 };

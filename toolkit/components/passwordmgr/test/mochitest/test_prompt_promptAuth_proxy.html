@@ -37,7 +37,7 @@ var proxyAuthinfo = {
 
   flags: Ci.nsIAuthInformation.AUTH_PROXY,
   authenticationScheme: "basic",
-  realm: ""
+  realm: "",
 };
 
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
@@ -77,7 +77,7 @@ proxyChannelListener.prototype = {
   onStartRequest(request, context) {
     startupCompleteResolver();
   },
-  onStopRequest(request, context, status) { }
+  onStopRequest(request, context, status) { },
 };
 
 var resolveCallback = SpecialPowers.wrapCallbackObject({
@@ -109,7 +109,7 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
                                                          Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                                          Ci.nsIContentPolicy.TYPE_OTHER);
     proxyChannel.asyncOpen2(SpecialPowers.wrapCallbackObject(new proxyChannelListener()));
-  }
+  },
 });
 
 function startup() {

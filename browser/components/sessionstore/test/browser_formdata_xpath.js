@@ -35,7 +35,7 @@ const FIELDS = {
   "//textarea[2]":              "Some text... " + Math.random(),
   "//textarea[3]":              "Some more text\n" + new Date(),
   "//input[@type='file'][1]":   [FILE1],
-  "//input[@type='file'][2]":   [FILE1, FILE2]
+  "//input[@type='file'][2]":   [FILE1, FILE2],
 };
 
 add_task(async function test_form_data_restoration() {

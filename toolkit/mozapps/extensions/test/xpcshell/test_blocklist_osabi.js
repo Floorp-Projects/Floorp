@@ -21,8 +21,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // No info in blocklist, shouldn't be blocked
     notBlocklisted: [["1", "1.9"], [null, null]],
@@ -37,8 +37,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Should always be blocked
     blocklisted: [["1", "1.9"], [null, null]],
@@ -53,8 +53,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Only version 1 should be blocked
     blocklisted: [["1", "1.9"], [null, null]],
@@ -69,8 +69,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Only version 1 should be blocked
     notBlocklisted: [["1", "1.9"]],
@@ -85,8 +85,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Should be blocked for app version 1
     blocklisted: [["1", "1.9"], [null, null]],
@@ -102,8 +102,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Not blocklisted because we are a different OS
     notBlocklisted: [["2", "1.9"]],
@@ -118,8 +118,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Blocklisted based on OS
     blocklisted: [["2", "1.9"]],
@@ -134,8 +134,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Blocklisted based on OS
     blocklisted: [["2", "1.9"]],
@@ -150,8 +150,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Not blocklisted because we are a different ABI
     notBlocklisted: [["2", "1.9"]],
@@ -166,8 +166,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Blocklisted based on ABI
     blocklisted: [["2", "1.9"]],
@@ -182,8 +182,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Blocklisted based on ABI
     blocklisted: [["2", "1.9"]],
@@ -198,8 +198,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Doesn't match both os and abi so not blocked
     notBlocklisted: [["2", "1.9"]],
@@ -214,8 +214,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Doesn't match both os and abi so not blocked
     notBlocklisted: [["2", "1.9"]],
@@ -230,8 +230,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Doesn't match both os and abi so not blocked
     notBlocklisted: [["2", "1.9"]],
@@ -246,8 +246,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "3"
-      }]
+        maxVersion: "3",
+      }],
     },
     // Matches both os and abi so blocked
     blocklisted: [["2", "1.9"]],

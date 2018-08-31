@@ -44,7 +44,7 @@ AboutPocketChildListener.prototype = {
       default:
         break;
     }
-  }
+  },
 };
 
 const listener = new AboutPocketChildListener();

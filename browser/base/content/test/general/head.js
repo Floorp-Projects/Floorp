@@ -487,7 +487,7 @@ function promiseOnBookmarkItemAdded(aExpectedURI) {
       onItemMoved() {},
       QueryInterface: ChromeUtils.generateQI([
         Ci.nsINavBookmarkObserver,
-      ])
+      ]),
     };
     info("Waiting for a bookmark to be added");
     PlacesUtils.bookmarks.addObserver(bookmarksObserver);
@@ -510,7 +510,7 @@ async function loadBadCertPage(url) {
             resolve();
           });
         }
-      }
+      },
     };
 
     Services.obs.addObserver(certExceptionDialogObserver,

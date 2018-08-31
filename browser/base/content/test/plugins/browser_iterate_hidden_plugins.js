@@ -38,7 +38,7 @@ add_task(async function test_plugin_is_hidden_on_iteration() {
   // navigator.plugins.
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: "http://example.com"
+    url: "http://example.com",
   }, async function(browser) {
     await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(pluginName) {
       let plugins = Array.from(content.navigator.plugins);
@@ -57,7 +57,7 @@ add_task(async function test_plugin_is_hidden_on_iteration() {
   // caches navigator.plugins after an initial read.
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: "http://example.com"
+    url: "http://example.com",
   }, async function(browser) {
     await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(pluginName) {
       let plugins = Array.from(content.navigator.plugins);
@@ -77,7 +77,7 @@ add_task(async function test_plugin_is_hidden_on_iteration() {
 add_task(async function test_plugin_shows_hidden_notification_on_access() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: "http://example.com"
+    url: "http://example.com",
   }, async function(browser) {
     let notificationPromise = waitForNotificationBar("plugin-hidden", gBrowser.selectedBrowser);
 
@@ -107,7 +107,7 @@ add_task(async function test_plugin_shows_hidden_notification_on_access() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: "http://example.com"
+    url: "http://example.com",
   }, async function(browser) {
     await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(pluginName) {
       let plugins = content.navigator.plugins;

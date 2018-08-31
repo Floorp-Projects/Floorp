@@ -66,7 +66,7 @@ function generateKeyObject(aKid, aKey) {
   };
 
   return new TextEncoder().encode(JSON.stringify({
-    keys: [keyObj]
+    keys: [keyObj],
   }));
 }
 

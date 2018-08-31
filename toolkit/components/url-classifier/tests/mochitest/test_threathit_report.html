@@ -197,7 +197,7 @@ function testOnWindow(aTestData) {
         onSecurityChange(aWebProgress, aRequest, aState) {
           expected = aTestData.reportUrl;
         },
-        QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"])
+        QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
       };
       wp.addProgressListener(progressListener, wp.NOTIFY_SECURITY);
 

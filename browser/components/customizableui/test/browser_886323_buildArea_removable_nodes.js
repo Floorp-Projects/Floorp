@@ -22,7 +22,7 @@ add_task(async function() {
   popupSet.appendChild(gLazyArea);
   CustomizableUI.registerArea(kLazyAreaId, {
     type: CustomizableUI.TYPE_MENU_PANEL,
-    defaultPlacements: []
+    defaultPlacements: [],
   });
   CustomizableUI.addWidgetToArea(kButtonId, kLazyAreaId);
   assertAreaPlacements(kLazyAreaId, [kButtonId],

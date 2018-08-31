@@ -59,10 +59,10 @@ add_task(async function() {
           {name: "the urlbar placeolder moves up and down by a few pixels",
            condition: r =>
              r.x1 >= textBoxRect.left && r.x2 <= textBoxRect.right &&
-             r.y1 >= textBoxRect.top && r.y2 <= textBoxRect.bottom
-          }
-        ]
-      }
+             r.y1 >= textBoxRect.top && r.y2 <= textBoxRect.bottom,
+          },
+        ],
+      },
      });
 
   await removeAllButFirstTab();

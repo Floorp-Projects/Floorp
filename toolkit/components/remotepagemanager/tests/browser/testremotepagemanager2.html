@@ -8,7 +8,7 @@
 RPMAddMessageListener("Ping", function(message) {
   RPMSendAsyncMessage("Pong", {
     str: message.data.str,
-    counter: message.data.counter + 1
+    counter: message.data.counter + 1,
   });
 });
 

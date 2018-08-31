@@ -34,7 +34,7 @@ var AutoScrollListener = {
       }
       this._controller.handleEvent(event);
     }
-  }
+  },
 };
 Services.els.addSystemEventListener(global, "mousedown", AutoScrollListener, true);
 

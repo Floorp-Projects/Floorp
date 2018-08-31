@@ -23,7 +23,7 @@ function test() {
     "//textarea[1]":              "",
     "//textarea[2]":              "Some text... " + Math.random(),
     "//textarea[3]":              "Some more text\n" + new Date(),
-    "//input[@type='file']":      filePath
+    "//input[@type='file']":      filePath,
   };
 
   registerCleanupFunction(async function() {
@@ -131,7 +131,7 @@ function test() {
           let key1 = "key1";
           let value1 = "Value " + Math.random();
           let state1 = {
-            entries: [{ url: testURL2 }], extData: { key1: value1 }
+            entries: [{ url: testURL2 }], extData: { key1: value1 },
           };
 
           let tab_B = BrowserTestUtils.addTab(win.gBrowser, testURL2);

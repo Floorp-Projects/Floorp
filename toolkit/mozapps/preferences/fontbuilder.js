@@ -44,7 +44,7 @@ var FontBuilder = {
       let menuitem = document.createXULElement("menuitem");
       if (defaultFont) {
         document.l10n.setAttributes(menuitem, "fonts-label-default", {
-          name: defaultFont
+          name: defaultFont,
         });
       } else {
         document.l10n.setAttributes(menuitem, "fonts-label-default-unnamed");
@@ -108,5 +108,5 @@ var FontBuilder = {
     // with "font.name-list.*".  If "font.name.*" is empty string, it means
     // "default".  So, return empty string in this case.
     return "";
-  }
+  },
 };

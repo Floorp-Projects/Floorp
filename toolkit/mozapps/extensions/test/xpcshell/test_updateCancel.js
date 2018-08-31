@@ -39,7 +39,7 @@ function makeCancelListener() {
       info("onUpdateCheckFinished: " + aAddon.id + " " + aError);
       updated.resolve(aError);
     },
-    promise: updated.promise
+    promise: updated.promise,
   };
 }
 
@@ -64,7 +64,7 @@ add_task(async function setup() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon 1",
   }, profileDir);

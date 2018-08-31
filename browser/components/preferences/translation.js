@@ -70,7 +70,7 @@ Tree.prototype = {
   getCellProperties(row, column) {
     return "";
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITreeView])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITreeView]),
 };
 
 function Lang(aCode, label) {
@@ -81,7 +81,7 @@ function Lang(aCode, label) {
 Lang.prototype = {
   toString() {
     return this._label;
-  }
+  },
 };
 
 var gTranslationExceptions = {
@@ -239,5 +239,5 @@ var gTranslationExceptions = {
   uninit() {
     Services.obs.removeObserver(this, "perm-changed");
     Services.prefs.removeObserver(kLanguagesPref, this);
-  }
+  },
 };

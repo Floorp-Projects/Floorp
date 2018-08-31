@@ -12,5 +12,5 @@ var OfflineAppCacheHelper = {
     try {
       appCacheStorage.asyncEvictStorage(null);
     } catch (er) {}
-  }
+  },
 };

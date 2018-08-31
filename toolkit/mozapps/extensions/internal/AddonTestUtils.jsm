@@ -1471,7 +1471,7 @@ var AddonTestUtils = {
             result.error = error;
             reject(result);
           }
-        }
+        },
       }, reason, ...args);
     });
   },
@@ -1639,7 +1639,7 @@ var AddonTestUtils = {
        Services.io.newFileURI(file).spec],
     ]);
     Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, prevPrefVal);
-  }
+  },
 };
 
 for (let [key, val] of Object.entries(AddonTestUtils)) {

@@ -149,12 +149,12 @@ var pageActionsHelper = {
       action.pinnedToUrlbar = originalState;
     }
     this._originalStates = null;
-  }
+  },
 };
 
 function ensureScreenshotsEnabled() {
   SpecialPowers.pushPrefEnv({ set: [
-    [ "extensions.screenshots.disabled", false ]
+    [ "extensions.screenshots.disabled", false ],
   ]});
   return BrowserTestUtils.waitForCondition(() => {
     return PageActions.actionForID("screenshots");

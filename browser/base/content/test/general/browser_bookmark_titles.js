@@ -16,7 +16,7 @@ var tests = [
    "data:application/vnd.mozilla.xul+xml,"],
   // about:certerror
   ["https://untrusted.example.com/somepage.html",
-   "https://untrusted.example.com/somepage.html"]
+   "https://untrusted.example.com/somepage.html"],
 ];
 
 SpecialPowers.pushPrefEnv({"set": [["browser.bookmarks.editDialog.showForNewBookmarks", false]]});

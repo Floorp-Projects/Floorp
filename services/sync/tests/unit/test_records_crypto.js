@@ -160,7 +160,7 @@ add_task(async function test_records_crypto() {
     const emptyKeys = new CollectionKeyManager();
     payload = {
       default: Service.collectionKeys._default.keyPairB64,
-      collections: {}
+      collections: {},
     };
     // Verify that not passing `modified` doesn't throw
     emptyKeys.setContents(payload, null);

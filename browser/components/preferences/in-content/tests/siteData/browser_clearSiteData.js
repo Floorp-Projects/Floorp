@@ -63,7 +63,7 @@ async function testClearData(clearSiteData, clearCache) {
     TestUtils.waitForCondition(
       () => clearSiteDataCheckbox.label && clearSiteDataCheckbox.label.includes(convertedTotalUsage), "Should show the quota usage"),
     TestUtils.waitForCondition(
-      () => clearCacheCheckbox.label && clearCacheCheckbox.label.includes(convertedCacheUnit), "Should show the cache usage")
+      () => clearCacheCheckbox.label && clearCacheCheckbox.label.includes(convertedCacheUnit), "Should show the cache usage"),
   ]);
 
   // Check the boxes according to our test input.

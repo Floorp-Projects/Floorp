@@ -9,7 +9,7 @@
 /* eslint-disable mozilla/no-task */
 
 var EXPORTED_SYMBOLS = [
-  "Task"
+  "Task",
 ];
 
 /**
@@ -216,7 +216,7 @@ var Task = {
    */
   Result: function Task_Result(aValue) {
     this.value = aValue;
-  }
+  },
 };
 
 function createAsyncFunction(aTask) {
@@ -471,7 +471,7 @@ TaskImpl.prototype = {
       }
     }
     return "";
-  }
+  },
 };
 
 
@@ -529,5 +529,5 @@ Task.Debugging = {
     }
 
     return lines.join("\n");
-  }
+  },
 };

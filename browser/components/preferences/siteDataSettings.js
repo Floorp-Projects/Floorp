@@ -64,7 +64,7 @@ let gSiteDataSettings = {
       let strName = site.persisted ? "site-usage-persistent" : "site-usage-pattern";
       addColumnItem({
         id: strName,
-        args: { value, unit }
+        args: { value, unit },
       }, "2");
     } else {
       // Pass null to avoid showing "0KB" when there is no site data stored.
@@ -295,5 +295,5 @@ let gSiteDataSettings = {
 
   onSelect() {
     this._updateButtonsState();
-  }
+  },
 };

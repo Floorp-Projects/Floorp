@@ -8,7 +8,7 @@ const ADDONS = {
       "id": "bootstrap1@tests.mozilla.org",
       "name": "Test Bootstrap 1",
     },
-    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   },
 };
 
@@ -24,7 +24,7 @@ add_task(async function() {
 
   await OS.File.makeDir(trashDir, {
     from: profileDir,
-    ignoreExisting: true
+    ignoreExisting: true,
   });
 
   let trashDirExists = await OS.File.exists(trashDir);
@@ -44,7 +44,7 @@ add_task(async function() {
         AddonManager.removeInstallListener(listener);
         ok(true, "extension installation should not have failed");
         resolve();
-      }
+      },
     };
 
     AddonManager.addInstallListener(listener);

@@ -11,7 +11,7 @@ function promiseTimezoneMessage() {
           Services.console.unregisterListener(listener);
           resolve(msg);
         }
-      }
+      },
     };
     Services.console.registerListener(listener);
   });

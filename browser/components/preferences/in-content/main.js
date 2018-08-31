@@ -1069,12 +1069,12 @@ var gMainPane = {
     }
 
     let [
-      title, message, okButton, cancelButton
+      title, message, okButton, cancelButton,
     ] = await document.l10n.formatValues([
       {id: "containers-disable-alert-title"},
       {id: "containers-disable-alert-desc", args: { tabCount: count }},
       {id: "containers-disable-alert-ok-button", args: { tabCount: count }},
-      {id: "containers-disable-alert-cancel-button"}
+      {id: "containers-disable-alert-cancel-button"},
     ]);
 
     let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
@@ -1165,19 +1165,19 @@ var gMainPane = {
         format: aIsSerif ? kFontNameFmtSerif : kFontNameFmtSansSerif,
         type: "fontname",
         element: "defaultFont",
-        fonttype: aIsSerif ? "serif" : "sans-serif"
+        fonttype: aIsSerif ? "serif" : "sans-serif",
       },
       {
         format: aIsSerif ? kFontNameListFmtSerif : kFontNameListFmtSansSerif,
         type: "unichar",
         element: null,
-        fonttype: aIsSerif ? "serif" : "sans-serif"
+        fonttype: aIsSerif ? "serif" : "sans-serif",
       },
       {
         format: kFontSizeFmtVariable,
         type: "int",
         element: "defaultFontSize",
-        fonttype: null
+        fonttype: null,
       }];
       for (var i = 0; i < prefs.length; ++i) {
         var preference = Preferences.get(prefs[i].format.replace(/%LANG%/, aLanguageGroup));
@@ -2387,7 +2387,7 @@ var gMainPane = {
     }
     var currentDirPref = Preferences.get("browser.download.dir");
     return currentDirPref.value;
-  }
+  },
 };
 
 // Utilities
@@ -2444,7 +2444,7 @@ ArrayEnumerator.prototype = {
 
   getNext() {
     return this._contents[this._index++];
-  }
+  },
 };
 
 function isFeedType(t) {
@@ -3009,7 +3009,7 @@ class FeedHandlerInfo extends HandlerInfoWrapper {
 
       queryElementAt(aIndex, aInterface) {
         return this._inner[aIndex].QueryInterface(aInterface);
-      }
+      },
     };
 
     // Add the selected local app if it's different from the OS default handler.
@@ -3179,7 +3179,7 @@ var feedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_FEED, {
   _prefSelectedAction: PREF_FEED_SELECTED_ACTION,
   _prefSelectedReader: PREF_FEED_SELECTED_READER,
   _smallIcon: "chrome://browser/skin/feeds/feedIcon16.png",
-  _appPrefLabel: "webFeed"
+  _appPrefLabel: "webFeed",
 });
 
 var videoFeedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_VIDEO_FEED, {
@@ -3187,7 +3187,7 @@ var videoFeedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_VIDEO_FEED, {
   _prefSelectedAction: PREF_VIDEO_FEED_SELECTED_ACTION,
   _prefSelectedReader: PREF_VIDEO_FEED_SELECTED_READER,
   _smallIcon: "chrome://browser/skin/feeds/videoFeedIcon16.png",
-  _appPrefLabel: "videoPodcastFeed"
+  _appPrefLabel: "videoPodcastFeed",
 });
 
 var audioFeedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_AUDIO_FEED, {
@@ -3195,7 +3195,7 @@ var audioFeedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_AUDIO_FEED, {
   _prefSelectedAction: PREF_AUDIO_FEED_SELECTED_ACTION,
   _prefSelectedReader: PREF_AUDIO_FEED_SELECTED_READER,
   _smallIcon: "chrome://browser/skin/feeds/audioFeedIcon16.png",
-  _appPrefLabel: "audioPodcastFeed"
+  _appPrefLabel: "audioPodcastFeed",
 });
 
 /**

@@ -70,7 +70,7 @@ add_task(async function() {
                          let [value, unit] = DownloadUtils.convertByteUnits(usage + cacheSize);
                          Assert.deepEqual(doc.l10n.getAttributes(totalSiteDataSizeLabel), {
                            id: "sitedata-total-size",
-                           args: {value, unit}
+                           args: {value, unit},
                          }, "Should show the right total site data size");
                        });
 
@@ -79,7 +79,7 @@ add_task(async function() {
   is(settingsButton.disabled, true, "Should disable settings button while updating sites");
   Assert.deepEqual(doc.l10n.getAttributes(totalSiteDataSizeLabel), {
     id: "sitedata-total-size-calculating",
-    args: null
+    args: null,
   }, "Should show the loading message while updating");
 
   Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
@@ -91,7 +91,7 @@ add_task(async function() {
                          let [value, unit] = DownloadUtils.convertByteUnits(usage + cacheSize);
                          Assert.deepEqual(doc.l10n.getAttributes(totalSiteDataSizeLabel), {
                            id: "sitedata-total-size",
-                           args: {value, unit}
+                           args: {value, unit},
                          }, "Should show the right total site data size");
                        });
 

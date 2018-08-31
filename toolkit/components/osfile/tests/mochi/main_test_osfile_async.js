@@ -44,7 +44,7 @@ var maketest = function(prefix, test) {
           utils.ok(false, m);
         }
       );
-    }
+    },
   };
   return function runtest() {
     utils.info("Entering");
@@ -89,7 +89,7 @@ var reference_fetch_file = function reference_fetch_file(path, test) {
     let file = new FileUtils.File(path);
     NetUtil.asyncFetch({
       uri: NetUtil.newURI(file),
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     }, function(stream, status) {
         if (!Components.isSuccessCode(status)) {
           reject(status);
@@ -416,7 +416,7 @@ var test_debug_test = maketest("debug_test", function debug_test(test) {
           return;
         }
         test.ok(true, "DEBUG TEST messages are logged correctly.");
-      }
+      },
     };
     toggleDebugTest(true, consoleListener);
     // Execution of OS.File.exist method will trigger OS.File.LOG several times.

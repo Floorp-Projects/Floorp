@@ -7,7 +7,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "Promise"
+  "Promise",
 ];
 
 /**

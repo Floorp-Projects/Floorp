@@ -21,19 +21,19 @@ var bookmarks_initial = {
   "menu": [
     { folder: "foldera" },
     { uri: "http://www.google.com",
-      title: "Google"
-    }
+      title: "Google",
+    },
   ],
   "menu/foldera": [
     { uri: "http://www.google.com",
-      title: "Google"
-    }
+      title: "Google",
+    },
   ],
   "toolbar": [
     { uri: "http://www.google.com",
-      title: "Google"
-    }
-  ]
+      title: "Google",
+    },
+  ],
 };
 
 /*
@@ -44,19 +44,19 @@ var bookmarks_initial = {
 Phase("phase1", [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
-  [Sync]
+  [Sync],
 ]);
 
 // Sync to profile2 and verify that all three bookmarks are present
 Phase("phase2", [
   [Sync],
-  [Bookmarks.verify, bookmarks_initial]
+  [Bookmarks.verify, bookmarks_initial],
 ]);
 
 // Sync again to profile1 and verify that all three bookmarks are still
 // present.
 Phase("phase3", [
   [Sync],
-  [Bookmarks.verify, bookmarks_initial]
+  [Bookmarks.verify, bookmarks_initial],
 ]);
 

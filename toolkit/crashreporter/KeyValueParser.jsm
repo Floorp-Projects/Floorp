@@ -9,7 +9,7 @@ var EXPORTED_SYMBOLS = [
   "parseKeyValuePairsFromLines",
   "parseKeyValuePairs",
   "parseKeyValuePairsFromFile",
-  "parseKeyValuePairsFromFileAsync"
+  "parseKeyValuePairsFromFileAsync",
 ];
 
 var parseKeyValuePairsFromLines = function(lines) {

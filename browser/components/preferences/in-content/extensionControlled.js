@@ -55,7 +55,7 @@ let extensionControlledContentIds = {
         "contentBlockingTrackingProtectionExtensionContentLabel" :
         "trackingProtectionExtensionContentLabel",
     };
-  }
+  },
 };
 
 const extensionControlledL10nKeys = {
@@ -163,7 +163,7 @@ function setControllingExtensionDescription(elem, addon, settingName) {
   elem.appendChild(image);
   const l10nId = settingNameToL10nID(settingName);
   document.l10n.setAttributes(elem, l10nId, {
-    name: addon.name
+    name: addon.name,
   });
 }
 

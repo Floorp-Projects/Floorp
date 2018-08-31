@@ -138,7 +138,7 @@ window._gBrowser = {
     "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
     "purgeSessionHistory", "stopScroll", "startScroll",
     "userTypedValue", "userTypedClear",
-    "didStartLoadSinceLastUserTyping", "audioMuted"
+    "didStartLoadSinceLastUserTyping", "audioMuted",
   ],
 
   _removingTabs: [],
@@ -187,7 +187,7 @@ window._gBrowser = {
         return gBrowser.tabs[name].linkedBrowser;
       }
       return target[name];
-    }
+    },
   }),
 
   /**
@@ -1001,8 +1001,8 @@ window._gBrowser = {
         bubbles: true,
         cancelable: false,
         detail: {
-          previousTab: oldTab
-        }
+          previousTab: oldTab,
+        },
       });
       newTab.dispatchEvent(event);
 
@@ -1057,7 +1057,7 @@ window._gBrowser = {
 
       let event = new CustomEvent("TabSwitchDone", {
         bubbles: true,
-        cancelable: true
+        cancelable: true,
       });
       this.dispatchEvent(event);
     }
@@ -1178,7 +1178,7 @@ window._gBrowser = {
       cancelable: false,
       detail: {
         changed: aChanged,
-      }
+      },
     });
     aTab.dispatchEvent(event);
   },
@@ -1410,7 +1410,7 @@ window._gBrowser = {
       openerBrowser: aOpenerBrowser,
       nextTabParentId: aNextTabParentId,
       focusUrlBar: aFocusUrlBar,
-      name: aName
+      name: aName,
     });
     if (!bgLoad)
       this.selectedTab = tab;
@@ -2005,7 +2005,7 @@ window._gBrowser = {
         get: getter,
         set: setter,
         configurable: true,
-        enumerable: true
+        enumerable: true,
       });
     }
   },
@@ -2126,7 +2126,7 @@ window._gBrowser = {
     tab._browserParams = {
       uriIsAboutBlank: aBrowser.currentURI.spec == "about:blank",
       remoteType: aBrowser.remoteType,
-      usingPreloadedContent: false
+      usingPreloadedContent: false,
     };
 
     SessionStore.resetBrowserToLazyState(tab);
@@ -4291,7 +4291,7 @@ window._gBrowser = {
               if (browser.messageManager) {
                 browser.messageManager.sendAsyncMessage("RefreshBlocker:Refresh", data);
               }
-            }
+            },
           }];
 
           notificationBox.appendNotification(message, "refresh-blocked",
@@ -5170,7 +5170,7 @@ var StatusPanel = {
       top:    panelRect.top,
       bottom: panelRect.bottom,
       left:   alignRight ? containerRect.right - panelRect.width : containerRect.left,
-      right:  alignRight ? containerRect.right : containerRect.left + panelRect.width
+      right:  alignRight ? containerRect.right : containerRect.left + panelRect.width,
     };
   },
 
@@ -5185,7 +5185,7 @@ var StatusPanel = {
       this.panel.setAttribute("sizelimit", "true");
       this._mouseTargetRect = null;
     }
-  }
+  },
 };
 
 var TabBarVisibility = {
@@ -5211,7 +5211,7 @@ var TabBarVisibility = {
       gTabBrowserBundle.GetStringFromName(collapse ? "tabs.close" : "tabs.closeTab"));
 
     TabsInTitlebar.allowedBy("tabs-visible", !collapse);
-  }
+  },
 };
 
 var TabContextMenu = {
@@ -5389,6 +5389,6 @@ var TabContextMenu = {
         newTab.toggleMuteAudio(this.contextTab.muteReason);
       }
     }
-  }
+  },
 };
 

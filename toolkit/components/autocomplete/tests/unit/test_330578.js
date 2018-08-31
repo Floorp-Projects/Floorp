@@ -13,7 +13,7 @@ var gResultListener = {
     this._lastResult = aResult;
     this._lastValue = aValue;
     this._lastRemoveFromDb = aRemoveFromDb;
-  }
+  },
 };
 
 

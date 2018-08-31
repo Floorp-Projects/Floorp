@@ -6,7 +6,7 @@ add_task(async function() {
   CustomizableUI.createWidget({
     id: BUTTONID,
     label: "Test widget seen post reset",
-    defaultArea: CustomizableUI.AREA_NAVBAR
+    defaultArea: CustomizableUI.AREA_NAVBAR,
   });
 
   const kPrefCustomizationState = "browser.uiCustomization.state";

@@ -125,7 +125,7 @@ add_task(async function test_find_dupe() {
     addonID:       addon.id,
     enabled:       true,
     applicationID: Services.appinfo.ID,
-    source:        "amo"
+    source:        "amo",
   };
 
   let dupe = await engine._findDupe(record);
@@ -197,7 +197,7 @@ add_task(async function test_get_changed_ids() {
     modified:       new Date(),
     type:           "UNSUPPORTED",
     scope:          0,
-    foreignInstall: false
+    foreignInstall: false,
   };
   reconciler.addons.DUMMY = record;
   await reconciler._addChange(record.modified, CHANGE_INSTALLED, record);
@@ -228,7 +228,7 @@ add_task(async function test_disabled_install_semantics() {
   let contents = {
     meta: {global: {engines: {addons: {version: engine.version, syncID}}}},
     crypto: {},
-    addons: {}
+    addons: {},
   };
 
   server.registerUser(USER, "password");

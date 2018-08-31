@@ -36,7 +36,7 @@ add_test(function test_method_observer() {
       this.foo = !this.foo;
       Assert.equal(subject, gSubject);
       Assert.equal(data, "some data");
-    }
+    },
   };
 
   // The observer is notified after being added.
@@ -61,7 +61,7 @@ add_test(function test_object_observer() {
       Assert.equal(subject, gSubject);
       Assert.equal(topic, "foo");
       Assert.equal(data, "some data");
-    }
+    },
   };
 
   Observers.add("foo", obj);

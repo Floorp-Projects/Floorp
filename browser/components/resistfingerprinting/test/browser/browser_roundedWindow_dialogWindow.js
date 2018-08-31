@@ -24,7 +24,7 @@ async function test_dialog_window() {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", true]]
+    [["privacy.resistFingerprinting", true]],
   });
 });
 
@@ -33,7 +33,7 @@ add_task(test_dialog_window);
 add_task(async function test_dialog_window_without_resistFingerprinting() {
   // Test dialog windows with 'privacy.resistFingerprinting' is false.
   await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", false]]
+    [["privacy.resistFingerprinting", false]],
   });
 
   await test_dialog_window();

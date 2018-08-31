@@ -16,7 +16,7 @@ function test() {
     id: "test1@tests.mozilla.org",
     name: "Test add-on 1",
     description: "foo",
-    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
   }]);
 
   run_next_test();

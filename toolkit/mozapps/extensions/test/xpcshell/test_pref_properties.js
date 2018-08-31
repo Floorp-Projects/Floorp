@@ -36,7 +36,7 @@ var gManagerEventsListener = {
       Assert.equal(matchingEvents.length, 1);
     }
     this.seenEvents = [];
-  }
+  },
 };
 
 add_task(async function setup() {

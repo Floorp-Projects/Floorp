@@ -81,7 +81,7 @@ add_task(async function test_isr_deletedParents() {
 add_task(async function test_isr_badChildren() {
   let c = (await inspectServerRecords([
     { id: "A", type: "bookmark", parentid: "places", children: ["B", "C"] },
-    { id: "C", type: "bookmark", parentid: "A" }
+    { id: "C", type: "bookmark", parentid: "A" },
   ])).problemData;
   deepEqual(c.childrenOnNonFolder, ["A"]);
   deepEqual(c.missingChildren, [{parent: "A", child: "B"}]);
@@ -92,7 +92,7 @@ add_task(async function test_isr_badChildren() {
 add_task(async function test_isr_parentChildMismatches() {
   let c = (await inspectServerRecords([
     { id: "A", type: "folder", parentid: "places", children: [] },
-    { id: "B", type: "bookmark", parentid: "A" }
+    { id: "B", type: "bookmark", parentid: "A" },
   ])).problemData;
   deepEqual(c.parentChildMismatches, [{parent: "A", child: "B"}]);
 });
@@ -101,7 +101,7 @@ add_task(async function test_isr_duplicatesAndMissingIDs() {
   let c = (await inspectServerRecords([
     {id: "A", type: "folder", parentid: "places", children: []},
     {id: "A", type: "folder", parentid: "places", children: []},
-    {type: "folder", parentid: "places", children: []}
+    {type: "folder", parentid: "places", children: []},
   ])).problemData;
   equal(c.missingIDs, 1);
   deepEqual(c.duplicates, ["A"]);
@@ -125,7 +125,7 @@ function getDummyServerAndClient() {
       type: "folder",
       parentName: "",
       title: "foo",
-      children: ["bbbbbbbbbbbb", "cccccccccccc"]
+      children: ["bbbbbbbbbbbb", "cccccccccccc"],
     },
     {
       id: "bbbbbbbbbbbb",
@@ -133,7 +133,7 @@ function getDummyServerAndClient() {
       parentid: "menu",
       parentName: "foo",
       title: "bar",
-      bmkUri: "http://baz.com"
+      bmkUri: "http://baz.com",
     },
     {
       id: "cccccccccccc",
@@ -141,8 +141,8 @@ function getDummyServerAndClient() {
       parentName: "foo",
       title: "",
       type: "query",
-      bmkUri: "place:type=6&sort=14&maxResults=10"
-    }
+      bmkUri: "place:type=6&sort=14&maxResults=10",
+    },
   ];
 
   let client = {
@@ -162,18 +162,18 @@ function getDummyServerAndClient() {
             "title": "bar",
             "id": 1001,
             "type": "text/x-moz-place",
-            "uri": "http://baz.com"
+            "uri": "http://baz.com",
           },
           {
             "guid": "cccccccccccc",
             "title": "",
             "id": 1002,
             "type": "text/x-moz-place",
-            "uri": "place:type=6&sort=14&maxResults=10"
-          }
-        ]
-      }
-    ]
+            "uri": "place:type=6&sort=14&maxResults=10",
+          },
+        ],
+      },
+    ],
   };
   return {server, client};
 }
@@ -279,8 +279,8 @@ add_task(async function test_cswc_serverUnexpected() {
       "guid": "eeeeeeeeeeee",
       "title": "History",
       "type": "text/x-moz-place",
-      "uri": "place:type=3&sort=4"
-    }]
+      "uri": "place:type=3&sort=4",
+    }],
   });
   server.push({
     id: "dddddddddddd",
@@ -288,14 +288,14 @@ add_task(async function test_cswc_serverUnexpected() {
     parentName: "",
     title: "",
     type: "folder",
-    children: ["eeeeeeeeeeee"]
+    children: ["eeeeeeeeeeee"],
   }, {
     id: "eeeeeeeeeeee",
     parentid: "dddddddddddd",
     parentName: "",
     title: "History",
     type: "query",
-    bmkUri: "place:type=3&sort=4"
+    bmkUri: "place:type=3&sort=4",
   });
 
   let c = (await compareServerWithClient(server, client)).problemData;
@@ -364,7 +364,7 @@ add_task(async function test_cswc_clientCycles() {
   });
 
   let clientTree = await PlacesUtils.promiseBookmarksTree("", {
-    includeItemIds: true
+    includeItemIds: true,
   });
 
   let c = (await compareServerWithClient([], clientTree)).problemData;

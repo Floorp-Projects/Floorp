@@ -42,7 +42,7 @@ async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
         await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           url: TEST_URL,
-          title: "Home Page"
+          title: "Home Page",
         });
       }
 
@@ -319,7 +319,7 @@ add_task(async function contextmenu_new_bookmark_keypress_no_autoclose() {
                                                            "popuphidden");
       await BrowserTestUtils.synthesizeMouseAtCenter("body", {
         type: "contextmenu",
-        button: 2
+        button: 2,
       }, browser);
       await awaitPopupShown;
       document.getElementById("context-bookmarkpage").click();
