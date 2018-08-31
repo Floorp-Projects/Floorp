@@ -740,6 +740,8 @@ nsHttpChannel::ConnectOnTailUnblock()
 
     bool isTrackingResource = mIsThirdPartyTrackingResource; // is atomic
     if (isTrackingResource && CheckFastBlocked()) {
+        AntiTrackingCommon::NotifyRejection(this,
+                                            nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
         Unused << AsyncAbort(NS_ERROR_ABORT);
         CloseCacheEntry(false);
         return NS_OK;
