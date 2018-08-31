@@ -1282,7 +1282,10 @@ PREF("preferences.allow.omt-write", bool, true)
 // Privacy prefs
 //---------------------------------------------------------------------------
 
-// Whether Content Blocking has been enabled
+// Whether Content Blocking has been enabled.
+// Please note that privacy protections provided by Gecko may depend on this preference.
+// Turning this off may disable some protections.  Please do not turn this pref off without
+// realizing the implications of what you're doing.
 VARCACHE_PREF(
   "browser.contentblocking.enabled",
    browser_contentblocking_enabled,
