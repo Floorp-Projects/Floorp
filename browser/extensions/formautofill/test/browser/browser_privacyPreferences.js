@@ -81,8 +81,8 @@ add_task(async function test_autofillCheckboxes() {
         "Checkbox should be unchecked when Autofill Addresses is disabled");
       is(content.document.querySelector(selectors.creditCardAutofillCheckbox).checked, false,
         "Checkbox should be unchecked when Autofill Credit Cards is disabled");
-      content.document.querySelector(selectors.addressAutofillCheckbox).
-        scrollIntoView({block: "center", behavior: "instant"});
+      content.document.querySelector(selectors.addressAutofillCheckbox)
+        .scrollIntoView({block: "center", behavior: "instant"});
     });
 
     info("test toggling the checkboxes");
@@ -91,8 +91,8 @@ add_task(async function test_autofillCheckboxes() {
        "Check address autofill is now enabled");
 
     await ContentTask.spawn(browser, SELECTORS, (selectors) => {
-      content.document.querySelector(selectors.creditCardAutofillCheckbox).
-        scrollIntoView({block: "center", behavior: "instant"});
+      content.document.querySelector(selectors.creditCardAutofillCheckbox)
+        .scrollIntoView({block: "center", behavior: "instant"});
     });
     await BrowserTestUtils.synthesizeMouseAtCenter(SELECTORS.creditCardAutofillCheckbox, {}, browser);
     is(Services.prefs.getBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF), true,
