@@ -26,7 +26,7 @@ BENCHMARK_REVISION = '4befd28725c687b91ce749420eab29352ecbcab4'
 
 
 class RaptorRunner(MozbuildObject):
-    def run_test(self, raptor_args):
+    def run_test(self, raptor_args, app=None):
         """
         We want to do couple of things before running raptor
         1. Clone mozharness
@@ -34,20 +34,20 @@ class RaptorRunner(MozbuildObject):
         3. Run mozharness
         """
 
-        self.init_variables(raptor_args)
+        self.init_variables(raptor_args, app=app)
         self.setup_benchmarks()
         self.make_config()
         self.write_config()
         self.make_args()
         return self.run_mozharness()
 
-    def init_variables(self, raptor_args):
+    def init_variables(self, raptor_args, app=None):
         self.raptor_dir = os.path.join(self.topsrcdir, 'testing', 'raptor')
         self.mozharness_dir = os.path.join(self.topsrcdir, 'testing',
                                            'mozharness')
         self.config_file_path = os.path.join(self._topobjdir, 'testing',
                                              'raptor-in_tree_conf.json')
-        self.binary_path = self.get_binary_path()
+        self.binary_path = self.get_binary_path() if app != 'geckoview' else None
         self.virtualenv_script = os.path.join(self.topsrcdir, 'third_party', 'python',
                                               'virtualenv', 'virtualenv.py')
         self.virtualenv_path = os.path.join(self._topobjdir, 'testing',
@@ -163,7 +163,7 @@ class MachRaptor(MachCommandBase):
         raptor = self._spawn(RaptorRunner)
 
         try:
-            return raptor.run_test(sys.argv[2:])
+            return raptor.run_test(sys.argv[2:], app=kwargs['app'])
         except Exception as e:
             print(str(e))
             return 1
