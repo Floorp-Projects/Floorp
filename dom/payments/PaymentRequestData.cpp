@@ -741,7 +741,6 @@ PaymentAddress::Init(const nsAString& aCountry,
                      const nsAString& aDependentLocality,
                      const nsAString& aPostalCode,
                      const nsAString& aSortingCode,
-                     const nsAString& aLanguageCode,
                      const nsAString& aOrganization,
                      const nsAString& aRecipient,
                      const nsAString& aPhone)
@@ -753,7 +752,6 @@ PaymentAddress::Init(const nsAString& aCountry,
   mDependentLocality = aDependentLocality;
   mPostalCode = aPostalCode;
   mSortingCode = aSortingCode;
-  mLanguageCode = aLanguageCode;
   mOrganization = aOrganization;
   mRecipient = aRecipient;
   mPhone = aPhone;
@@ -808,13 +806,6 @@ NS_IMETHODIMP
 PaymentAddress::GetSortingCode(nsAString& aSortingCode)
 {
   aSortingCode = mSortingCode;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PaymentAddress::GetLanguageCode(nsAString& aLanguageCode)
-{
-  aLanguageCode = mLanguageCode;
   return NS_OK;
 }
 

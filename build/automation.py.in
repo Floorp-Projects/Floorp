@@ -521,7 +521,6 @@ class Automation(object):
 
     # copy env so we don't munge the caller's environment
     env = dict(env);
-    env["NO_EM_RESTART"] = "1"
     tmpfd, processLog = tempfile.mkstemp(suffix='pidlog')
     os.close(tmpfd)
     env["MOZ_PROCESS_LOG"] = processLog

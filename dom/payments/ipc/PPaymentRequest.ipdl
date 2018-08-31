@@ -167,7 +167,6 @@ struct IPCPaymentAddress
   nsString dependentLocality;
   nsString postalCode;
   nsString sortingCode;
-  nsString languageCode;
   nsString organization;
   nsString recipient;
   nsString phone;
