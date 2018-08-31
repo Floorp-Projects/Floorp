@@ -1553,13 +1553,22 @@ var gMainPane = {
     if (this._filter.value)
       visibleTypes = visibleTypes.filter(this._matchesFilter, this);
 
-    for (let visibleType of visibleTypes) {
-      let item = new HandlerListItem(visibleType);
-      item.connectAndAppendToList(this._list);
-
-      if (visibleType.type === lastSelectedType) {
-        this._list.selectedItem = item.node;
+    let items = visibleTypes.map(visibleType => new HandlerListItem(visibleType));
+    let itemsFragment = document.createDocumentFragment();
+    let lastSelectedItem;
+    for (let item of items) {
+      item.createNode(itemsFragment);
+      if (item.handlerInfoWrapper.type == lastSelectedType) {
+        lastSelectedItem = item;
       }
+    }
+    this._list.appendChild(itemsFragment);
+    for (let item of items) {
+      item.setupNode();
+    }
+
+    if (lastSelectedItem) {
+      this._list.selectedItem = lastSelectedItem.node;
     }
   },
 
@@ -2496,11 +2505,13 @@ class HandlerListItem {
     }
   }
 
-  connectAndAppendToList(list) {
+  createNode(list) {
     list.appendChild(document.importNode(gHandlerListItemFragment, true));
     this.node = list.lastChild;
     gNodeToObjectMap.set(this.node, this);
+  }
 
+  setupNode() {
     this.node.querySelector(".actionsMenu").addEventListener("command",
       event => gMainPane.onSelectAction(event.originalTarget));
 
