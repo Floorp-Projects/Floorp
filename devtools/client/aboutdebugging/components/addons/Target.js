@@ -12,6 +12,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   debugLocalAddon,
   debugRemoteAddon,
+  getExtensionUuid,
   isLegacyTemporaryExtension,
   isTemporaryID,
   parseFileUri,
@@ -65,11 +66,11 @@ function addonIDforTarget(target) {
 }
 
 function internalIDForTarget(target) {
-  if (!target.manifestURL) {
+  const uuid = getExtensionUuid(target);
+  if (!uuid) {
     return [];
   }
-  // Strip off the protocol and rest, leaving us with just the UUID.
-  const uuid = /moz-extension:\/\/([^/]*)/.exec(target.manifestURL)[1];
+
   return [
     dom.dt(
       { className: "addon-target-info-label" },

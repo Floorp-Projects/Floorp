@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Cc, Ci } = require("chrome");
 loader.lazyImporter(this, "BrowserToolboxProcess",
   "resource://devtools/client/framework/ToolboxProcess.jsm");
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
@@ -72,6 +73,10 @@ exports.debugRemoteAddon = async function(addonForm, client) {
   });
 };
 
+/**
+ * Uninstall the addon with the provided id.
+ * Resolves when the addon shutdown has completed.
+ */
 exports.uninstallAddon = async function(addonID) {
   const addon = await AddonManager.getAddonByID(addonID);
   return addon && addon.uninstall();
@@ -103,4 +108,48 @@ exports.parseFileUri = function(url) {
     return windowsRegex.exec(url)[1];
   }
   return url.slice("file://".length);
+};
+
+exports.getExtensionUuid = function(extension) {
+  const { manifestURL } = extension;
+  // Strip off the protocol and rest, leaving us with just the UUID.
+  return manifestURL ? /moz-extension:\/\/([^/]*)/.exec(manifestURL)[1] : null;
+};
+
+/**
+ * Open a file picker to allow the user to locate a temporary extension. A temporary
+ * extension can either be:
+ * - a folder
+ * - a .xpi file
+ * - a .zip file
+ *
+ * @param  {Window} win
+ *         The window object where the filepicker should be opened.
+ *         Note: We cannot use the global window object here because it is undefined if
+ *         this module is loaded from a file outside of devtools/client/aboutdebugging/.
+ *         See browser-loader.js `uri.startsWith(baseURI)` for more details.
+ * @param  {String} message
+ *         The help message that should be displayed to the user in the filepicker.
+ * @return {Promise} returns a promise that resolves a File object corresponding to the
+ *         file selected by the user.
+ */
+exports.openTemporaryExtension = function(win, message) {
+  return new Promise(resolve => {
+    const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    fp.init(win, message, Ci.nsIFilePicker.modeOpen);
+    fp.open(res => {
+      if (res == Ci.nsIFilePicker.returnCancel || !fp.file) {
+        return;
+      }
+      let file = fp.file;
+      // AddonManager.installTemporaryAddon accepts either
+      // addon directory or final xpi file.
+      if (!file.isDirectory() &&
+          !file.leafName.endsWith(".xpi") && !file.leafName.endsWith(".zip")) {
+        file = file.parent;
+      }
+
+      resolve(file);
+    });
+  });
 };
