@@ -196,6 +196,9 @@ class Raptor(object):
                           "--es", "env1", "R_LOG_LEVEL=6"]
 
             try:
+                # make sure the geckoview app is not running before
+                # attempting to start.
+                self.device.stop_application(self.config['binary'])
                 self.device.launch_activity(self.config['binary'],
                                             "GeckoViewActivity",
                                             extra_args=extra_args,
