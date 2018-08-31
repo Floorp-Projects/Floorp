@@ -15,6 +15,7 @@
 #include "mozilla/Logging.h"
 #include "prenv.h"
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/Hal.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WidgetUtils.h"
 #include "GeckoProfiler.h"
@@ -134,6 +135,8 @@ nsAppShell::EventProcessorCallback(GIOChannel *source,
 
 nsAppShell::~nsAppShell()
 {
+    mozilla::hal::Shutdown();
+
     if (mTag)
         g_source_remove(mTag);
     if (mPipeFDs[0])
@@ -150,6 +153,8 @@ nsAppShell::Init()
     // in any code that uses Glib, Gdk, or Gtk. In later versions of Glib, this call
     // is a no-op.
     g_type_init();
+
+    mozilla::hal::Init();
 
 #ifdef MOZ_ENABLE_DBUS
     if (XRE_IsParentProcess()) {
