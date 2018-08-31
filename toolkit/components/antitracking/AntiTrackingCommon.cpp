@@ -882,7 +882,8 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
   MOZ_ASSERT(aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
-             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
+             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
+             aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (!httpChannel) {
@@ -925,7 +926,8 @@ AntiTrackingCommon::NotifyRejection(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
-             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
+             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
+             aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
 
   nsIDocument* document = aWindow->GetExtantDoc();
   if (!document) {
