@@ -83,17 +83,17 @@ describe("<Section>", () => {
       maxRows: 4,
       Prefs: {values: {"section.rows": 2}}
     };
-    wrapper = mountSectionWithProps(FAKE_SECTION);
+    wrapper = mountSectionIntlWithProps(FAKE_SECTION);
   });
 
   describe("context menu", () => {
     it("should render a context menu button", () => {
-      wrapper = mountSectionWithProps(FAKE_SECTION);
+      wrapper = mountSectionIntlWithProps(FAKE_SECTION);
 
       assert.equal(wrapper.find(".section-top-bar .context-menu-button").length, 1);
     });
     it("should render a section menu when button is clicked", () => {
-      wrapper = mountSectionWithProps(FAKE_SECTION);
+      wrapper = mountSectionIntlWithProps(FAKE_SECTION);
 
       const button = wrapper.find(".section-top-bar .context-menu-button");
       assert.equal(wrapper.find(SectionMenu).length, 0);
@@ -190,7 +190,7 @@ describe("<Section>", () => {
 
       wrapper = mountSectionIntlWithProps(TOP_STORIES_SECTION);
 
-      assert.lengthOf(wrapper.find(".topic"), 1);
+      assert.lengthOf(wrapper.find(".topics"), 1);
     });
     it("should delay render of third rec to give time for potential spoc", async () => {
       TOP_STORIES_SECTION.rows = [
@@ -198,10 +198,15 @@ describe("<Section>", () => {
         {guid: 2, link: "http://localhost"},
         {guid: 3, link: "http://localhost"}
       ];
-      wrapper = shallow(<Section Pocket={{waitingForSpoc: true}} {...TOP_STORIES_SECTION} />);
+      wrapper = shallow(<Section Pocket={{waitingForSpoc: true, pocketCta: {}}} {...TOP_STORIES_SECTION} />);
       assert.lengthOf(wrapper.find(PlaceholderCard), 1);
 
-      wrapper.setProps({Pocket: {waitingForSpoc: false}});
+      wrapper.setProps({
+        Pocket: {
+          waitingForSpoc: false,
+          pocketCta: {}
+        }
+      });
       assert.lengthOf(wrapper.find(PlaceholderCard), 0);
     });
     it("should render for uninitialized topics", () => {
@@ -209,7 +214,7 @@ describe("<Section>", () => {
 
       wrapper = mountSectionIntlWithProps(TOP_STORIES_SECTION);
 
-      assert.lengthOf(wrapper.find(".topic"), 1);
+      assert.lengthOf(wrapper.find(".topics"), 1);
     });
   });
 
@@ -409,7 +414,7 @@ describe("<Section>", () => {
   describe("#numRows", () => {
     it("should return maxRows if there is no rowsPref set", () => {
       delete FAKE_SECTION.rowsPref;
-      wrapper = mountSectionWithProps(FAKE_SECTION);
+      wrapper = mountSectionIntlWithProps(FAKE_SECTION);
       assert.equal(wrapper.find(Section).instance().numRows, FAKE_SECTION.maxRows);
     });
 

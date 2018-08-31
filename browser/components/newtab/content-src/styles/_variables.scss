@@ -50,6 +50,7 @@ $black-30: rgba($black, 0.3);
 $white: #FFF;
 $white-10: rgba($white, 0.1);
 $pocket-teal: #50BCB6;
+$pocket-red: #EF4056;
 $bookmark-icon-fill: #0A84FF;
 $download-icon-fill: #12BC00;
 $pocket-icon-fill: #D70022;
@@ -172,6 +173,7 @@ $textbox-shadow-size: 4px;
   .context-menu-button {
     opacity: 1;
     transform: scale(1);
+    transition-delay: 333ms;
   }
 }
 

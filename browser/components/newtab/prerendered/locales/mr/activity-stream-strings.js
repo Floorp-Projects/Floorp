@@ -1,7 +1,7 @@
 // Note - this is a generated mr file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "नवीन टॅब",
-  "header_top_sites": "खास साईट्स",
+  "header_top_sites": "खास साईट",
   "header_highlights": "ठळक",
   "header_recommended_by": "{provider} तर्फे शिफारस",
   "context_menu_button_sr": "{title} साठी संदर्भ मेनू उघडा",
@@ -74,6 +74,10 @@ window.gActivityStreamStrings = {
   "topsites_form_image_validation": "प्रतिमा लोड झाली नाही. वेगळी URL वापरून पहा.",
   "pocket_read_more": "लोकप्रिय विषय:",
   "pocket_read_even_more": "अधिक कथा पहा",
+  "pocket_more_reccommendations": "More Recommendations",
+  "pocket_learn_more": "Learn More",
+  "pocket_cta_button": "Get Pocket",
+  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ब्राउझिंग सुरू करा, आणि आम्ही आपल्याला इथे आपण अलीकडील भेट दिलेले किंवा वाचनखूण लावलेले उत्कृष्ठ लेख, व्हिडिओ, आणि इतर पृष्ठांपैकी काही दाखवू.",
   "topstories_empty_state": "तुम्ही सर्व बघितले. {provider} कडून आणखी महत्वाच्या गोष्टी बघण्यासाठी नंतर परत तपासा. प्रतीक्षा करू शकत नाही? वेबवरील छान गोष्टी शोधण्यासाठी लोकप्रिय विषय निवडा.",
   "manual_migration_explanation2": "दुसऱ्या ब्राऊझरमधील वाचनखूणा, इतिहास आणि पासवर्ड सोबत Firefox ला वापरून पहा.",

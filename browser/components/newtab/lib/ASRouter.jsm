@@ -346,6 +346,8 @@ class _ASRouter {
     for (const listener of ASRouterTriggerListeners.values()) {
       listener.uninit();
     }
+    // If we added any CFR recommendations, they need to be removed
+    CFRPageActions.clearRecommendations();
     this._resetInitialization();
   }
 
@@ -809,6 +811,11 @@ class _ASRouter {
         break;
       case "IMPRESSION":
         await this.addImpression(action.data);
+        break;
+      case "DOORHANGER_TELEMETRY":
+        if (this.dispatchToAS) {
+          this.dispatchToAS(ac.ASRouterUserEvent(action.data));
+        }
         break;
     }
   }

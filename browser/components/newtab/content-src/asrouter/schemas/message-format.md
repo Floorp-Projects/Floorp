@@ -97,7 +97,7 @@ Name | Type | Example value | Description
 `currentDate` | `Date` | `Date 2018-08-22T15:48:04.100Z` | Date object of current time in UTC
 `searchEngines` | `Object` | [example below](#searchengines-example) | Information about the current and available search engines
 `browserSettings.attribution` | `Object` or `undefined` | [example below](#attribution-example) | Attribution for the source of of where the browser was downloaded.
-
+`providerCohorts` | `Object` | `{onboarding: "hello"}` | Cohorts defined for all providers
 #### addonsInfo Example
 
 ```javascript
