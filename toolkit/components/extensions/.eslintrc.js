@@ -109,10 +109,6 @@ module.exports = {
     // since only let and const are used, see "no-var").
     "block-scoped-var": "error",
 
-    // Allow trailing commas for easy list extension.  Having them does not
-    // impair readability, but also not required either.
-    "comma-dangle": ["error", "always-multiline"],
-
     // Warn about cyclomatic complexity in functions.
     "complexity": "error",
 
