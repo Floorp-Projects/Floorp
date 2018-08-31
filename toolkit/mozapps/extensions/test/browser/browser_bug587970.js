@@ -17,17 +17,17 @@ async function test() {
     id: "addon1@tests.mozilla.org",
     name: "addon 1",
     version: "1.0",
-    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE,
   }, {
     id: "addon2@tests.mozilla.org",
     name: "addon 2",
     version: "2.0",
-    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE,
   }, {
     id: "addon3@tests.mozilla.org",
     name: "addon 3",
     version: "3.0",
-    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE,
   }]);
 
 
@@ -56,15 +56,15 @@ add_test(function() {
   gProvider.createInstalls([{
     name: "addon 1",
     version: "1.1",
-    existingAddon: gProvider.addons[0]
+    existingAddon: gProvider.addons[0],
   }, {
     name: "addon 2",
     version: "2.1",
-    existingAddon: gProvider.addons[1]
+    existingAddon: gProvider.addons[1],
   }, {
     name: "addon 3",
     version: "3.1",
-    existingAddon: gProvider.addons[2]
+    existingAddon: gProvider.addons[2],
   }]);
 
   function wait_for_refresh() {
@@ -153,7 +153,7 @@ add_test(function() {
 
         run_next_test();
       });
-    }
+    },
   };
   gProvider.installs[0].addTestListener(listener);
   gProvider.installs[1].addTestListener(listener);

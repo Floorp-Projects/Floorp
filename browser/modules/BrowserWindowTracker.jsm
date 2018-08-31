@@ -15,7 +15,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 // Lazy getters
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm"
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
 // Constants
@@ -182,7 +182,7 @@ var WindowHelper = {
         return win;
     }
     return null;
-  }
+  },
 };
 
 this.BrowserWindowTracker = {
@@ -211,10 +211,10 @@ this.BrowserWindowTracker = {
       // we'd rather have an outdated order than skip/revisit windows.
       for (let window of [..._trackedWindows])
         yield window;
-    }
+    },
   },
 
   track(window) {
     return WindowHelper.addWindow(window);
-  }
+  },
 };

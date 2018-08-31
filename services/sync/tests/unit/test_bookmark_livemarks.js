@@ -43,7 +43,7 @@ const record631361 = {
       "zcZZBGeLnaWW", "B0at8hkQqVZQ", "sgPtgGulbP66", "lwtwGHSCPYaQ",
       "mNTdpgoRZMbW", "-L8Vci6CbkJY", "bVzudKSQERc1", "Gxl9lb4DXsmL",
       "3Qr13GucOtEh"]},
-  collection: "bookmarks"
+  collection: "bookmarks",
 };
 
 function makeLivemark(p, mintGUID) {

@@ -9,7 +9,7 @@ add_task(async function test_unconfigured_no_badge() {
   const oldUIState = UIState.get;
 
   UIState.get = () => ({
-    status: UIState.STATUS_NOT_CONFIGURED
+    status: UIState.STATUS_NOT_CONFIGURED,
   });
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
   checkFxABadge(false);
@@ -23,7 +23,7 @@ add_task(async function test_signedin_no_badge() {
   UIState.get = () => ({
     status: UIState.STATUS_SIGNED_IN,
     lastSync: new Date(),
-    email: "foo@bar.com"
+    email: "foo@bar.com",
   });
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
   checkFxABadge(false);
@@ -36,7 +36,7 @@ add_task(async function test_unverified_badge_shown() {
 
   UIState.get = () => ({
     status: UIState.STATUS_NOT_VERIFIED,
-    email: "foo@bar.com"
+    email: "foo@bar.com",
   });
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
   checkFxABadge(true);
@@ -49,7 +49,7 @@ add_task(async function test_loginFailed_badge_shown() {
 
   UIState.get = () => ({
     status: UIState.STATUS_LOGIN_FAILED,
-    email: "foo@bar.com"
+    email: "foo@bar.com",
   });
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
   checkFxABadge(true);

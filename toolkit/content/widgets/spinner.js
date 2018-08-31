@@ -52,21 +52,21 @@ function Spinner(props, context) {
 
       this.state = {
         items: [],
-        isScrolling: false
+        isScrolling: false,
       };
       this.props = {
         setValue, getDisplayString, viewportSize, rootFontSize,
         // We can assume that the viewportSize is an odd number. Calculate how many
         // items we need to insert on top of the spinner so that the selected is at
         // the center. Ex: if viewportSize is 5, we need 2 items on top.
-        viewportTopOffset: (viewportSize - 1) / 2
+        viewportTopOffset: (viewportSize - 1) / 2,
       };
       this.elements = {
         container: spinnerElement.querySelector(".spinner-container"),
         spinner: spinnerElement.querySelector(".spinner"),
         up: spinnerElement.querySelector(".up"),
         down: spinnerElement.querySelector(".down"),
-        itemsViewElements: []
+        itemsViewElements: [],
       };
 
       this.elements.spinner.style.height = (ITEM_HEIGHT * viewportSize) + "rem";
@@ -289,7 +289,7 @@ function Spinner(props, context) {
           this.state.mouseState = {
             down: true,
             layerX: event.layerX,
-            layerY: event.layerY
+            layerY: event.layerY,
           };
           if (event.target == up) {
             // An "active" class is needed to simulate :active pseudo-class
@@ -440,7 +440,7 @@ function Spinner(props, context) {
       const element = this.elements.spinner.children[index];
       if (element) {
         element.scrollIntoView({
-          behavior: "smooth", block: "start"
+          behavior: "smooth", block: "start",
         });
       }
     },
@@ -500,6 +500,6 @@ function Spinner(props, context) {
         }
       }
       return false;
-    }
+    },
   };
 }

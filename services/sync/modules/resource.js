@@ -145,7 +145,7 @@ Resource.prototype = {
       headers,
       method,
       signal,
-      mozErrors: true // Return nsresult error codes instead of a generic
+      mozErrors: true, // Return nsresult error codes instead of a generic
                       // NetworkError when fetch rejects.
     };
 
@@ -273,5 +273,5 @@ Resource.prototype = {
 
   delete() {
     return this._doRequest("DELETE");
-  }
+  },
 };

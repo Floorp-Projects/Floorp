@@ -144,7 +144,7 @@ function doSimpleUpdate(updateText, success, failure) {
     updateUrlRequested(url) { },
     streamFinished(status) { },
     updateError(errorCode) { failure(errorCode); },
-    updateSuccess(requestedTimeout) { success(requestedTimeout); }
+    updateSuccess(requestedTimeout) { success(requestedTimeout); },
   };
 
   dbservice.beginUpdate(listener, allTables);
@@ -164,7 +164,7 @@ function doErrorUpdate(tables, success, failure) {
     updateUrlRequested(url) { },
     streamFinished(status) { },
     updateError(errorCode) { success(errorCode); },
-    updateSuccess(requestedTimeout) { failure(requestedTimeout); }
+    updateSuccess(requestedTimeout) { failure(requestedTimeout); },
   };
 
   dbservice.beginUpdate(listener, tables, null);
@@ -275,7 +275,7 @@ subsExist(urls, cb) {
 
 urlExistInMultipleTables(data, cb) {
   this.checkTables(data.url, data.tables, cb);
-}
+},
 
 };
 
@@ -354,7 +354,7 @@ Timer.prototype = {
 QueryInterface: ChromeUtils.generateQI(["nsITimerCallback"]),
 notify(timer) {
     this.cb();
-  }
+  },
 };
 
 // LFSRgenerator is a 32-bit linear feedback shift register random number

@@ -80,5 +80,5 @@ Addon.prototype = {
     AddonUtils.updateUserDisabled(this.addon, userDisabled);
 
     return true;
-  }
+  },
 };

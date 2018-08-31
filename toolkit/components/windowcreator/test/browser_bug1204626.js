@@ -17,7 +17,7 @@ function one_test(delay, continuation) {
       onError(status) {
         ok(false, new Components.Exception("startPersistence failed", status));
         continuation();
-      }
+      },
     });
   });
 
@@ -51,7 +51,7 @@ function one_test(delay, continuation) {
         }
         ok(true, "Finished save (" + delayStr + ") but might have crashed.");
         continuation();
-      }
+      },
     };
 
     function doSave() {

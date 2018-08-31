@@ -140,7 +140,7 @@ var Async = {
 
   asyncObserver(log, obj) {
     return new AsyncObserver(log, obj);
-  }
+  },
 };
 
 /**

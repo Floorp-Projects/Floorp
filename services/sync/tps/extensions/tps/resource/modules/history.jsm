@@ -54,7 +54,7 @@ var HistoryEntry = {
       "and 'uri' properties");
     let place = {
       url: item.uri,
-      visits: []
+      visits: [],
     };
     for (let visit of item.visits) {
       let date = new Date(Math.round(msSinceEpoch + visit.date * 60 * 60 * 1000));
@@ -125,7 +125,7 @@ var HistoryEntry = {
     } else if ("begin" in item && "end" in item) {
       let filter = {
         beginDate: new Date(msSinceEpoch + (item.begin * 60 * 60 * 1000)),
-        endDate: new Date(msSinceEpoch + (item.end * 60 * 60 * 1000))
+        endDate: new Date(msSinceEpoch + (item.end * 60 * 60 * 1000)),
       };
       let removedAny = await PlacesUtils.history.removeVisitsByFilter(filter);
       if (!removedAny) {

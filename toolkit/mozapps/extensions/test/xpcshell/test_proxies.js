@@ -11,21 +11,21 @@ var ADDONS = [
   {
     id: "proxy1@tests.mozilla.org",
     dirId: "proxy1@tests.mozilla.com",
-    type: "proxy"
+    type: "proxy",
   },
   {
     id: "proxy2@tests.mozilla.org",
-    type: "proxy"
+    type: "proxy",
   },
   {
     id: "symlink1@tests.mozilla.org",
     dirId: "symlink1@tests.mozilla.com",
-    type: "symlink"
+    type: "symlink",
   },
   {
     id: "symlink2@tests.mozilla.org",
-    type: "symlink"
-  }
+    type: "symlink",
+  },
 ];
 
 var METADATA = {
@@ -34,8 +34,8 @@ var METADATA = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "2",
-    maxVersion: "2"
-  }]
+    maxVersion: "2",
+  }],
 };
 
 const gHaveSymlinks = AppConstants.platform != "win";

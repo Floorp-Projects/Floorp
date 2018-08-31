@@ -13,8 +13,8 @@ async function openLibrary() {
 add_task(async function test_disable_profile_import() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "DisableProfileImport": true
-    }
+      "DisableProfileImport": true,
+    },
   });
   let library = await openLibrary();
 

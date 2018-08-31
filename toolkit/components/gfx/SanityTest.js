@@ -251,7 +251,7 @@ var listener = {
     // Remove the annotation after we've cleaned everything up, to catch any
     // incidental crashes from having performed the sanity test.
     removeCrashReportAnnotation();
-  }
+  },
 };
 
 function SanityTest() {}

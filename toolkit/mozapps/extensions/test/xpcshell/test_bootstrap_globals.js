@@ -40,7 +40,7 @@ function uninstall(data, reason) {}
 
 
 const EXPECTED_GLOBALS = [
-  ["console", "object"]
+  ["console", "object"],
 ];
 
 async function run_test() {
@@ -53,7 +53,7 @@ async function run_test() {
   }, "bootstrap-request-globals");
 
   Services.obs.addObserver(function({ wrappedJSObject: seenGlobals }) {
-    for (let [name, ] of EXPECTED_GLOBALS)
+    for (let [name ] of EXPECTED_GLOBALS)
       Assert.ok(seenGlobals.has(name));
 
     sawGlobals = true;

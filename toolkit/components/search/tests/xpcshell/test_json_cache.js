@@ -97,7 +97,7 @@ add_test(function test_cache_write() {
 
           run_next_test();
         });
-      }
+      },
     };
     Services.obs.addObserver(cacheWriteObserver, "browser-search-service");
 

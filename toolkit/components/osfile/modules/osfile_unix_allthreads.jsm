@@ -103,7 +103,7 @@ OSError.prototype.toMsg = function toMsg() {
 Object.defineProperty(OSError.prototype, "becauseExists", {
   get: function becauseExists() {
     return this.unixErrno == Const.EEXIST;
-  }
+  },
 });
 /**
  * |true| if the error was raised because a file or directory
@@ -112,7 +112,7 @@ Object.defineProperty(OSError.prototype, "becauseExists", {
 Object.defineProperty(OSError.prototype, "becauseNoSuchFile", {
   get: function becauseNoSuchFile() {
     return this.unixErrno == Const.ENOENT;
-  }
+  },
 });
 
 /**
@@ -122,7 +122,7 @@ Object.defineProperty(OSError.prototype, "becauseNoSuchFile", {
  Object.defineProperty(OSError.prototype, "becauseNotEmpty", {
    get: function becauseNotEmpty() {
      return this.unixErrno == Const.ENOTEMPTY;
-   }
+   },
  });
 /**
  * |true| if the error was raised because a file or directory
@@ -131,7 +131,7 @@ Object.defineProperty(OSError.prototype, "becauseNoSuchFile", {
 Object.defineProperty(OSError.prototype, "becauseClosed", {
   get: function becauseClosed() {
     return this.unixErrno == Const.EBADF;
-  }
+  },
 });
 /**
  * |true| if the error was raised because permission is denied to
@@ -140,7 +140,7 @@ Object.defineProperty(OSError.prototype, "becauseClosed", {
 Object.defineProperty(OSError.prototype, "becauseAccessDenied", {
   get: function becauseAccessDenied() {
     return this.unixErrno == Const.EACCES;
-  }
+  },
 });
 /**
  * |true| if the error was raised because some invalid argument was passed,
@@ -149,7 +149,7 @@ Object.defineProperty(OSError.prototype, "becauseAccessDenied", {
 Object.defineProperty(OSError.prototype, "becauseInvalidArgument", {
   get: function becauseInvalidArgument() {
     return this.unixErrno == Const.EINVAL;
-  }
+  },
 });
 
 /**
@@ -164,7 +164,7 @@ OSError.toMsg = function toMsg(error) {
     stack: error.moduleStack,
     operation: error.operation,
     unixErrno: error.unixErrno,
-    path: error.path
+    path: error.path,
   };
 };
 
@@ -274,7 +274,7 @@ AbstractInfo.prototype = {
    */
   get unixMode() {
     return this._unixMode;
-  }
+  },
 };
 exports.AbstractInfo = AbstractInfo;
 
@@ -315,7 +315,7 @@ AbstractEntry.prototype = {
    */
   get path() {
     return this._path;
-  }
+  },
 };
 exports.AbstractEntry = AbstractEntry;
 
@@ -364,7 +364,7 @@ var EXPORTED_SYMBOLS = [
   "Type",
   "POS_START",
   "POS_CURRENT",
-  "POS_END"
+  "POS_END",
 ];
 
 // ////////// Boilerplate

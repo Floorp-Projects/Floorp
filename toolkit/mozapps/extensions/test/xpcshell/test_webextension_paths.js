@@ -22,9 +22,9 @@ add_task(async function test_bad_unpacked_path() {
 
     browser_specific_settings: {
       gecko: {
-        id: MANIFEST_ID
-      }
-    }
+        id: MANIFEST_ID,
+      },
+    },
   };
 
   const directories = [

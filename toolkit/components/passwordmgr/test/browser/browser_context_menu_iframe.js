@@ -31,7 +31,7 @@ add_task(async function test_context_menu_iframe_fill() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", true);
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: TEST_HOSTNAME + IFRAME_PAGE_PATH
+    url: TEST_HOSTNAME + IFRAME_PAGE_PATH,
   }, async function(browser) {
     function getPasswordInput() {
       let frame = content.document.getElementById("test-iframe");

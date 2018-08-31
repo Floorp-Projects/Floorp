@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 
 const CLIENT_OPTIONS = {
   serverURL: "https://127.0.0.1:9010/v1",
-  client_id: "abc123"
+  client_id: "abc123",
 };
 
 const STATUS_SUCCESS = 200;
@@ -26,7 +26,7 @@ var mockResponse = function(response) {
       async post() {
         this.response = response;
         return response;
-      }
+      },
     };
   };
 };
@@ -43,7 +43,7 @@ var mockResponseError = function(error) {
       setHeader() {},
       async post() {
         throw error;
-      }
+      },
     };
   };
 };
@@ -71,7 +71,7 @@ add_test(function successfulResponse() {
     success: true,
     status: STATUS_SUCCESS,
     body: JSON.stringify({access_token: "http://example.com/image.jpeg",
-                          id: "0d5c1a89b8c54580b8e3e8adadae864a"})
+                          id: "0d5c1a89b8c54580b8e3e8adadae864a"}),
   };
 
   client._Request = new mockResponse(response);
@@ -139,7 +139,7 @@ add_task(async function serverErrorResponse() {
 add_task(async function networkErrorResponse() {
   let client = new FxAccountsOAuthGrantClient({
     serverURL: "https://domain.dummy",
-    client_id: "abc123"
+    client_id: "abc123",
   });
   client.getTokenFromAssertion("assertion", "scope")
     .catch(function(e) {
@@ -267,7 +267,7 @@ add_test(function errorTests() {
 add_test(function networkErrorResponse() {
   let client = new FxAccountsOAuthGrantClient({
     serverURL: "https://domain.dummy",
-    client_id: "abc123"
+    client_id: "abc123",
   });
   client.getTokenFromAssertion("assertion", "scope")
     .catch(function(e) {

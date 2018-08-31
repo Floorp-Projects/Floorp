@@ -9,7 +9,7 @@ const kAboutPagesRegistered = Promise.all([
     Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD | Ci.nsIAboutModule.ALLOW_SCRIPT),
   BrowserTestUtils.registerAboutPage(
     registerCleanupFunction, "test-about-principal-parent", kParentPage,
-    Ci.nsIAboutModule.ALLOW_SCRIPT)
+    Ci.nsIAboutModule.ALLOW_SCRIPT),
 ]);
 
 add_task(async function test_principal_click() {

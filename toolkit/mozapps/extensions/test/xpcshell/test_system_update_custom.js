@@ -37,7 +37,7 @@ const TEST_CONDITIONS = {
       { isUpgrade: false, version: null},
       { isUpgrade: false, version: null},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
+      { isUpgrade: false, version: null},
     ],
   },
   // Runs tests with default system add-ons installed
@@ -51,8 +51,8 @@ const TEST_CONDITIONS = {
       { isUpgrade: false, version: "2.0"},
       { isUpgrade: false, version: "2.0"},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
-    ]
+      { isUpgrade: false, version: null},
+    ],
   },
 
   // Runs tests with updated system add-ons installed
@@ -66,8 +66,8 @@ const TEST_CONDITIONS = {
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
-    ]
+      { isUpgrade: false, version: null},
+    ],
   },
 
   // Runs tests with both default and updated system add-ons installed
@@ -81,8 +81,8 @@ const TEST_CONDITIONS = {
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
-    ]
+      { isUpgrade: false, version: null},
+    ],
   },
 };
 
@@ -94,7 +94,7 @@ add_task(async function test_addon_update() {
 
   await updateAllSystemAddons(await buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
   ], root), testserver);
 
   await verifySystemAddonState(TEST_CONDITIONS.blank.initialState, [
@@ -102,7 +102,7 @@ add_task(async function test_addon_update() {
     {isUpgrade: true, version: "2.0"},
     {isUpgrade: true, version: "2.0"},
     {isUpgrade: false, version: null},
-    {isUpgrade: false, version: null}
+    {isUpgrade: false, version: null},
   ], false, distroDir);
 
   await promiseShutdownManager();
@@ -115,7 +115,7 @@ add_task(async function test_app_update_disabled() {
   Services.prefs.setBoolPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED, false);
   await updateAllSystemAddons(await buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
   ], root), testserver);
   Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED);
 
@@ -133,7 +133,7 @@ add_task(async function test_safe_mode() {
   Services.prefs.setBoolPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED, false);
   await updateAllSystemAddons(await buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
   ], root), testserver);
   Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED);
 
@@ -150,7 +150,7 @@ add_task(async function test_match_default() {
 
   await installSystemAddons(await buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
   ], root), testserver);
 
   // Shouldn't have installed an updated set
@@ -165,7 +165,7 @@ add_task(async function test_match_default_revert() {
 
   await installSystemAddons(await buildSystemAddonUpdates([
     { id: "system1@tests.mozilla.org", version: "1.0", path: "system1_1.xpi" },
-    { id: "system2@tests.mozilla.org", version: "1.0", path: "system2_1.xpi" }
+    { id: "system2@tests.mozilla.org", version: "1.0", path: "system2_1.xpi" },
   ], root), testserver);
 
   // This should revert to the default set instead of installing new versions
@@ -175,7 +175,7 @@ add_task(async function test_match_default_revert() {
     {isUpgrade: false, version: "1.0"},
     {isUpgrade: false, version: null},
     {isUpgrade: false, version: null},
-    {isUpgrade: false, version: null}
+    {isUpgrade: false, version: null},
   ], false, distroDir);
 
   await promiseShutdownManager();
@@ -187,7 +187,7 @@ add_task(async function test_match_current() {
 
   await installSystemAddons(await buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
   ], root), testserver);
 
   // This should remain with the current set instead of creating a new copy
@@ -206,7 +206,7 @@ add_task(async function test_no_download() {
   // The missing file here is unneeded since there is a local version already
   await installSystemAddons(await buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "missing.xpi" },
-    { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" }
+    { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" },
   ], root), testserver);
 
   await verifySystemAddonState(TEST_CONDITIONS.withBothSets.initialState, [
@@ -214,7 +214,7 @@ add_task(async function test_no_download() {
     {isUpgrade: true, version: "2.0"},
     {isUpgrade: false, version: null},
     {isUpgrade: true, version: "1.0"},
-    {isUpgrade: false, version: null}
+    {isUpgrade: false, version: null},
   ], false, distroDir);
 
   await promiseShutdownManager();
@@ -226,12 +226,12 @@ add_task(async function test_double_update() {
 
   await installSystemAddons(await buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+    { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
   ], root), testserver);
 
   await installSystemAddons(await buildSystemAddonUpdates([
     { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
-    { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" }
+    { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" },
   ], root), testserver);
 
   await verifySystemAddonState(TEST_CONDITIONS.withAppSet.initialState, [
@@ -239,7 +239,7 @@ add_task(async function test_double_update() {
     {isUpgrade: false, version: "2.0"},
     {isUpgrade: true, version: "2.0"},
     {isUpgrade: true, version: "1.0"},
-    {isUpgrade: false, version: null}
+    {isUpgrade: false, version: null},
   ], true, distroDir);
 
   await promiseShutdownManager();
@@ -251,7 +251,7 @@ add_task(async function test_update_purges() {
 
   await installSystemAddons(await buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+    { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" },
   ], root), testserver);
 
   await verifySystemAddonState(TEST_CONDITIONS.withBothSets.initialState, [
@@ -259,7 +259,7 @@ add_task(async function test_update_purges() {
     {isUpgrade: true, version: "2.0"},
     {isUpgrade: true, version: "1.0"},
     {isUpgrade: false, version: null},
-    {isUpgrade: false, version: null}
+    {isUpgrade: false, version: null},
   ], false, distroDir);
 
   await installSystemAddons(await buildSystemAddonUpdates(null), testserver);

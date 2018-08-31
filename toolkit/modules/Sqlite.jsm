@@ -52,7 +52,7 @@ var Debugging = {
   // Tests should fail if a connection auto closes.  The exception is
   // when finalization itself is tested, in which case this flag
   // should be set to false.
-  failTestsOnAutoClose: true
+  failTestsOnAutoClose: true,
 };
 
 /**
@@ -352,7 +352,7 @@ ConnectionData.prototype = Object.freeze({
           } finally {
             status.isPending = false;
           }
-        }
+        },
       },
       close: {
         value: async () => {
@@ -363,7 +363,7 @@ ConnectionData.prototype = Object.freeze({
           } finally {
             status.isPending = false;
           }
-        }
+        },
       },
       executeCached: {
         value: async (sql, ...rest) => {
@@ -374,7 +374,7 @@ ConnectionData.prototype = Object.freeze({
           } finally {
             status.isPending = false;
           }
-        }
+        },
       },
     });
 
@@ -385,7 +385,7 @@ ConnectionData.prototype = Object.freeze({
     let key = `${this._identifier}: ${name} (${this._getOperationId()})`;
     let promiseComplete = promiseResult.catch(() => {});
     this._barrier.client.addBlocker(key, promiseComplete, {
-      fetchState: () => status
+      fetchState: () => status,
     });
 
     return (async () => {
@@ -880,7 +880,7 @@ ConnectionData.prototype = Object.freeze({
     this._timeoutPromise = timeoutPromise;
     this._timeoutPromiseExpires = Cu.now() + TRANSACTIONS_QUEUE_TIMEOUT_MS * 0.2;
     return this._timeoutPromise;
-  }
+  },
 });
 
 /**

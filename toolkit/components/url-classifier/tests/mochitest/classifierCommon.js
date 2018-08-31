@@ -26,7 +26,7 @@ function doUpdate(update) {
     },
     updateSuccess(requestedTimeout) {
       sendAsyncMessage("updateSuccess");
-    }
+    },
   };
 
   try {

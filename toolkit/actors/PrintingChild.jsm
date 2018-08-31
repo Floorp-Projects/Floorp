@@ -52,7 +52,7 @@ class PrintingChild extends ActorChild {
           info.entered = true;
           this.mm.sendAsyncMessage("Printing:Preview:Entered", {
             failed: false,
-            changingBrowsers: info.changingBrowsers
+            changingBrowsers: info.changingBrowsers,
           });
 
           // If we have another request waiting, dispatch it now.

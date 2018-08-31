@@ -53,7 +53,7 @@ async function run_test_2() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon 1",
   }, profileDir);
@@ -66,7 +66,7 @@ async function run_test_2() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon 2",
   }, profileDir);
@@ -78,7 +78,7 @@ async function run_test_2() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon 3",
   }, profileDir);
@@ -114,7 +114,7 @@ async function run_test_2() {
         Assert.ok(sawCompleteNotification);
         end_test();
       }
-    }
+    },
   });
 
   // Trigger the background update timer handler

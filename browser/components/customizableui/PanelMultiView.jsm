@@ -401,7 +401,7 @@ var PanelMultiView = class extends AssociatedToNode {
     ["goBack", "showSubView"].forEach(method => {
       Object.defineProperty(this.node, method, {
         enumerable: true,
-        value: (...args) => this[method](...args)
+        value: (...args) => this[method](...args),
       });
     });
   }

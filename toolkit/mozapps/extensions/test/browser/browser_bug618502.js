@@ -31,7 +31,7 @@ add_test(async function() {
   new MockProvider().createAddons([{
     id: "addon1@tests.mozilla.org",
     name: "addon 1",
-    version: "1.0"
+    version: "1.0",
   }]);
 
   let aManager = await open_manager("addons://detail/addon1@tests.mozilla.org");

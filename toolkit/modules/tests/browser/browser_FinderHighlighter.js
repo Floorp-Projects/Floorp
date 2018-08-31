@@ -8,7 +8,7 @@ const kPrefModalHighlight = "findbar.modalHighlight";
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({ set: [
     [kPrefHighlightAll, true],
-    [kPrefModalHighlight, true]
+    [kPrefModalHighlight, true],
   ]});
 });
 
@@ -19,7 +19,7 @@ add_task(async function testModalResults() {
       rectCount: 2,
       insertCalls: [2, 4],
       removeCalls: [0, 1],
-      animationCalls: [1, 2]
+      animationCalls: [1, 2],
     }],
     ["their law might propagate their kind", {
       rectCount: 2,
@@ -29,23 +29,23 @@ add_task(async function testModalResults() {
       extraTest: function(maskNode, outlineNode, rects) {
         Assert.equal(outlineNode.getElementsByTagName("div").length, 2,
           "There should be multiple rects drawn");
-      }
+      },
     }],
     ["ro", {
       rectCount: 41,
       insertCalls: [1, 4],
-      removeCalls: [0, 2]
+      removeCalls: [0, 2],
     }],
     ["new", {
       rectCount: 2,
       insertCalls: [1, 4],
-      removeCalls: [0, 2]
+      removeCalls: [0, 2],
     }],
     ["o", {
       rectCount: 492,
       insertCalls: [1, 4],
-      removeCalls: [0, 2]
-    }]
+      removeCalls: [0, 2],
+    }],
   ]);
   let url = kFixtureBaseURL + "file_FinderSample.html";
   await BrowserTestUtils.withNewTab(url, async function(browser) {
@@ -85,7 +85,7 @@ add_task(async function testModalSwitching() {
     let expectedResult = {
       rectCount: 2,
       insertCalls: [2, 4],
-      removeCalls: [0, 1]
+      removeCalls: [0, 1],
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     await promiseEnterStringIntoFindField(findbar, word);
@@ -96,7 +96,7 @@ add_task(async function testModalSwitching() {
     expectedResult = {
       rectCount: 0,
       insertCalls: [0, 0],
-      removeCalls: [0, 0]
+      removeCalls: [0, 0],
     };
     promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     findbar.clear();
@@ -121,7 +121,7 @@ add_task(async function testDarkPageDetection() {
     let expectedResult = {
       rectCount: 2,
       insertCalls: [1, 3],
-      removeCalls: [0, 1]
+      removeCalls: [0, 1],
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult, function(node) {
       Assert.ok(node.style.background.startsWith("rgba(0, 0, 0"),
@@ -142,7 +142,7 @@ add_task(async function testDarkPageDetection() {
     let expectedResult = {
       rectCount: 2,
       insertCalls: [2, 4],
-      removeCalls: [0, 1]
+      removeCalls: [0, 1],
     };
 
     await ContentTask.spawn(browser, null, async function() {
@@ -179,7 +179,7 @@ add_task(async function testHighlightAllToggle() {
     let expectedResult = {
       rectCount: 2,
       insertCalls: [2, 4],
-      removeCalls: [0, 1]
+      removeCalls: [0, 1],
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     await promiseEnterStringIntoFindField(findbar, word);
@@ -190,7 +190,7 @@ add_task(async function testHighlightAllToggle() {
     expectedResult = {
       rectCount: 0,
       insertCalls: [0, 1],
-      removeCalls: [1, 2]
+      removeCalls: [1, 2],
     };
     promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     await SpecialPowers.pushPrefEnv({ "set": [[ kPrefHighlightAll, false ]] });
@@ -200,7 +200,7 @@ add_task(async function testHighlightAllToggle() {
     expectedResult = {
       rectCount: 2,
       insertCalls: [1, 3],
-      removeCalls: [0, 1]
+      removeCalls: [0, 1],
     };
     promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     await SpecialPowers.pushPrefEnv({ "set": [[ kPrefHighlightAll, true ]] });
@@ -223,7 +223,7 @@ add_task(async function testXMLDocument() {
     let expectedResult = {
       rectCount: 0,
       insertCalls: [1, 4],
-      removeCalls: [0, 1]
+      removeCalls: [0, 1],
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     await promiseEnterStringIntoFindField(findbar, word);
@@ -245,7 +245,7 @@ add_task(async function testHideOnLocationChange() {
   let expectedResult = {
     rectCount: 2,
     insertCalls: [2, 4],
-    removeCalls: [0, 1]
+    removeCalls: [0, 1],
   };
   let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
   await promiseEnterStringIntoFindField(findbar, word);
@@ -255,7 +255,7 @@ add_task(async function testHideOnLocationChange() {
   promise = promiseTestHighlighterOutput(browser, word, {
     rectCount: 0,
     insertCalls: [0, 0],
-    removeCalls: [1, 2]
+    removeCalls: [1, 2],
   });
   await BrowserTestUtils.loadURI(browser, url);
   await promise;
@@ -273,7 +273,7 @@ add_task(async function testHideOnClear() {
     let expectedResult = {
       rectCount: 2,
       insertCalls: [2, 4],
-      removeCalls: [0, 2]
+      removeCalls: [0, 2],
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     await promiseEnterStringIntoFindField(findbar, word);
@@ -283,7 +283,7 @@ add_task(async function testHideOnClear() {
     promise = promiseTestHighlighterOutput(browser, "", {
       rectCount: 0,
       insertCalls: [0, 0],
-      removeCalls: [1, 2]
+      removeCalls: [1, 2],
     });
     findbar.clear();
     await promise;
@@ -305,7 +305,7 @@ add_task(async function testRectsAndTexts() {
     let expectedResult = {
       rectCount: 2,
       insertCalls: [2, 4],
-      removeCalls: [0, 2]
+      removeCalls: [0, 2],
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult, (maskNode, outlineNode) => {
       let boxes = outlineNode.getElementsByTagName("span");
@@ -341,7 +341,7 @@ add_task(async function testTooLargeToggle() {
       insertCalls: [2, 4],
       removeCalls: [0, 2],
       // No animations should be triggered when the page is too large.
-      animationCalls: [0, 0]
+      animationCalls: [0, 0],
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     await promiseEnterStringIntoFindField(findbar, word);

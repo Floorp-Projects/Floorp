@@ -458,7 +458,7 @@ HashCompleterRequest.prototype = {
 
     this.request = {
       url: this.gethashUrl,
-      body: ""
+      body: "",
     };
 
     if (this.isV4) {
@@ -470,13 +470,13 @@ HashCompleterRequest.prototype = {
 
     let channel = NetUtil.newChannel({
       uri: this.request.url,
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     });
     channel.loadFlags = loadFlags;
     channel.loadInfo.originAttributes = {
       // The firstPartyDomain value should sync with NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN
       // defined in nsNetUtil.h.
-      firstPartyDomain: "safebrowsing.86868755-6b82-4842-b301-72671a0db32e.mozilla"
+      firstPartyDomain: "safebrowsing.86868755-6b82-4842-b301-72671a0db32e.mozilla",
     };
 
     // Disable keepalive.
@@ -617,7 +617,7 @@ HashCompleterRequest.prototype = {
         this.handleItem({
           completeHash: aCompleteHash,
           tableName: filteredTables[0],
-          cacheDuration: aPerHashCacheDuration
+          cacheDuration: aPerHashCacheDuration,
         });
       },
 
@@ -688,7 +688,7 @@ HashCompleterRequest.prototype = {
       this.handleItem({
         completeHash: data.substr(i * COMPLETE_LENGTH, COMPLETE_LENGTH),
         tableName: list,
-        chunkId: addChunk
+        chunkId: addChunk,
       });
     }
 

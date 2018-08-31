@@ -561,5 +561,5 @@ var gSearchResultsPane = {
       node.removeAttribute("indicator");
     }
     this.listSearchMenuitemIndicators.clear();
-  }
+  },
 };

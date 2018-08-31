@@ -187,7 +187,7 @@ var DownloadCache = {
 
       let pageAnnos = await PlacesUtils.history.fetchAnnotatedPages([
         METADATA_ANNO,
-        DESTINATIONFILEURI_ANNO
+        DESTINATIONFILEURI_ANNO,
       ]);
 
       let metaDataPages = pageAnnos.get(METADATA_ANNO);
@@ -263,7 +263,7 @@ var DownloadCache = {
         date: download.startTime,
         transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
         referrer: download.source.referrer,
-      }]
+      }],
     });
 
     await PlacesUtils.history.update({
@@ -307,7 +307,7 @@ var DownloadCache = {
 
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavHistoryObserver,
-    Ci.nsISupportsWeakReference
+    Ci.nsISupportsWeakReference,
   ]),
 
   // nsINavHistoryObserver

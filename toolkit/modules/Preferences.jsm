@@ -361,7 +361,7 @@ Object.defineProperty(Preferences, "_prefBranch",
     return this._cachedPrefBranch;
   },
   enumerable: true,
-  configurable: true
+  configurable: true,
 });
 
 // Constructor-based access (Preferences.get(...) and set) is preferred over
@@ -408,7 +408,7 @@ PrefObserver.prototype = {
         this.callback(prefValue);
     } else // typeof this.callback == "object" (nsIObserver)
       this.callback.observe(subject, topic, data);
-  }
+  },
 };
 
 function isObject(val) {

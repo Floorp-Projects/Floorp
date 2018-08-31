@@ -34,7 +34,7 @@ add_task(async function test_authenticated_get_request() {
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
     key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
-    algorithm: "sha256"
+    algorithm: "sha256",
   };
   let method = "GET";
 
@@ -43,7 +43,7 @@ add_task(async function test_authenticated_get_request() {
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new FxAccountsClient(server.baseURI);
@@ -58,7 +58,7 @@ add_task(async function test_authenticated_post_request() {
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
     key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
-    algorithm: "sha256"
+    algorithm: "sha256",
   };
   let method = "POST";
 
@@ -68,7 +68,7 @@ add_task(async function test_authenticated_post_request() {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
       response.bodyOutputStream.writeFrom(request.bodyInputStream, request.bodyInputStream.available());
-    }
+    },
   });
 
   let client = new FxAccountsClient(server.baseURI);
@@ -86,7 +86,7 @@ add_task(async function test_500_error() {
   let server = httpd_setup({"/foo": function(request, response) {
       response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new FxAccountsClient(server.baseURI);
@@ -152,12 +152,12 @@ add_task(async function test_backoffError() {
 add_task(async function test_signUp() {
   let creationMessage_noKey = JSON.stringify({
     uid: "uid",
-    sessionToken: "sessionToken"
+    sessionToken: "sessionToken",
   });
   let creationMessage_withKey = JSON.stringify({
     uid: "uid",
     sessionToken: "sessionToken",
-    keyFetchToken: "keyFetchToken"
+    keyFetchToken: "keyFetchToken",
   });
   let errorMessage = JSON.stringify({code: 400, errno: 101, error: "account exists"});
   let created = false;
@@ -236,22 +236,22 @@ add_task(async function test_signUp() {
 
 add_task(async function test_signIn() {
   let sessionMessage_noKey = JSON.stringify({
-    sessionToken: FAKE_SESSION_TOKEN
+    sessionToken: FAKE_SESSION_TOKEN,
   });
   let sessionMessage_withKey = JSON.stringify({
     sessionToken: FAKE_SESSION_TOKEN,
-    keyFetchToken: "keyFetchToken"
+    keyFetchToken: "keyFetchToken",
   });
   let errorMessage_notExistent = JSON.stringify({
     code: 400,
     errno: 102,
-    error: "doesn't exist"
+    error: "doesn't exist",
   });
   let errorMessage_wrongCap = JSON.stringify({
     code: 400,
     errno: 120,
     error: "Incorrect email case",
-    email: "you@example.com"
+    email: "you@example.com",
   });
 
   // Note this strings must be unicode and not already utf-8 encoded.
@@ -484,7 +484,7 @@ add_task(async function test_accountKeys() {
           // Return gibberish to trigger client MAC error
           // Tweak a byte
           let garbageResponse = JSON.stringify({
-            bundle: ACCOUNT_KEYS.response.slice(0, -1) + "1"
+            bundle: ACCOUNT_KEYS.response.slice(0, -1) + "1",
           });
           response.setStatusLine(request.httpVersion, 200, "OK");
           response.bodyOutputStream.write(garbageResponse, garbageResponse.length);
@@ -836,7 +836,7 @@ add_task(async function test_email_case() {
           code: 400,
           errno: 120,
           error: "Incorrect email case",
-          email: canonicalEmail
+          email: canonicalEmail,
         });
       },
     }

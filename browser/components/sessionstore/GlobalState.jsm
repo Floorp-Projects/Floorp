@@ -80,5 +80,5 @@ GlobalStateInternal.prototype = {
    */
   setFromState(aState) {
     this.state = (aState && aState.global) || {};
-  }
+  },
 };

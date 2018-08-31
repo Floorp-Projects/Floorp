@@ -18,7 +18,7 @@ add_task(async function() {
     { entries: [{ url: "http://example.org#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } }, // hiding
     { entries: [{ url: "http://example.org#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } }, // adding
     { entries: [{ url: "http://example.org#5", triggeringPrincipal_base64 }], extData: { "uniq": r() } }, // deleting
-    { entries: [{ url: "http://example.org#6", triggeringPrincipal_base64 }] } // creating
+    { entries: [{ url: "http://example.org#6", triggeringPrincipal_base64 }] }, // creating
   ], selected: 1 }] };
 
   async function progressCallback() {

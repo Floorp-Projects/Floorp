@@ -78,5 +78,5 @@ this.OpenInTabsUtils = {
         resolve(this.confirmOpenInTabs(numTabsToOpen, aWindow));
       });
     });
-  }
+  },
 };

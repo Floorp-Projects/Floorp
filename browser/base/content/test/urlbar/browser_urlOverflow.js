@@ -72,7 +72,7 @@ add_task(async function() {
   info("Test with formatting disabled");
   await SpecialPowers.pushPrefEnv({set: [
     ["browser.urlbar.formatting.enabled", false],
-    ["browser.urlbar.trimURLs", false]
+    ["browser.urlbar.trimURLs", false],
   ]});
 
   await testVal(`https://mozilla.org/`);

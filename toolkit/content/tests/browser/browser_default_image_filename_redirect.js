@@ -15,7 +15,7 @@ add_task(async function() {
   function redirect(requestDetails) {
     info("Redirecting: " + requestDetails.url);
     return {
-      redirectUrl: URL_DOGGY
+      redirectUrl: URL_DOGGY,
     };
   }
   WebRequest.onBeforeRequest.addListener(redirect,

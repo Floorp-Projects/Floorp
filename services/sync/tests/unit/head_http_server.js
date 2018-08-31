@@ -562,7 +562,7 @@ ServerCollection.prototype = {
       response.setStatusLine(request.httpVersion, statusCode, status);
       response.bodyOutputStream.write(body, body.length);
     };
-  }
+  },
 
 };
 
@@ -771,7 +771,7 @@ SyncServer.prototype = {
     }
     this.users[username] = {
       password,
-      collections: {}
+      collections: {},
     };
     return this.user(username);
   },
@@ -887,7 +887,7 @@ SyncServer.prototype = {
       createCollection,
       createContents,
       deleteCollections,
-      modified
+      modified,
     };
   },
 
@@ -1176,7 +1176,7 @@ SyncServer.prototype = {
         case "collections":
           let body = JSON.stringify(this.infoCollections(username));
           this.respond(req, resp, 200, "OK", body, {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           });
           return;
         case "collection_usage":
@@ -1190,8 +1190,8 @@ SyncServer.prototype = {
           this._log.warn("SyncServer: Unknown info operation " + rest);
           throw HTTP_404;
       }
-    }
-  }
+    },
+  },
 };
 
 /**

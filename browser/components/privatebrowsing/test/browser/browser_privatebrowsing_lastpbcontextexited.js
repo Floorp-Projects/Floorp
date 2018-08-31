@@ -16,7 +16,7 @@ function test() {
           is(expectedExiting, true, "notification not expected yet (exiting)");
           expectedExited = true;
           Services.obs.removeObserver(observerExiting, "last-pb-context-exiting");
-        }
+        },
       };
       let observerExited = {
         observe(aSubject, aTopic, aData) {
@@ -24,7 +24,7 @@ function test() {
           is(expectedExited, true, "notification not expected yet (exited)");
           Services.obs.removeObserver(observerExited, "last-pb-context-exited");
           aCallback();
-        }
+        },
       };
       Services.obs.addObserver(observerExiting, "last-pb-context-exiting");
       Services.obs.addObserver(observerExited, "last-pb-context-exited");

@@ -84,7 +84,7 @@ function initTreeView() {
       label: winLabel.replace("%S", (aIx + 1)),
       open: true,
       checked: true,
-      ix: aIx
+      ix: aIx,
     };
     winState.tabs = aWinData.tabs.map(function(aTabData) {
       var entry = aTabData.entries[aTabData.index - 1] || { url: "about:blank" };
@@ -96,7 +96,7 @@ function initTreeView() {
         label: entry.title || entry.url,
         checked: true,
         src: iconURL,
-        parent: winState
+        parent: winState,
       };
     });
     gTreeData.push(winState);
@@ -363,5 +363,5 @@ var treeView = {
   selectionChanged() { },
   performAction(action) { },
   performActionOnCell(action, index, column) { },
-  getColumnProperties(column) { return ""; }
+  getColumnProperties(column) { return ""; },
 };

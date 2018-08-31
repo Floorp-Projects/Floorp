@@ -8,7 +8,7 @@ const TARGET = BASE + "restore_redirect_target.html";
  */
 add_task(async function check_http_redirect() {
   let state = {
-    entries: [{ url: BASE + "restore_redirect_http.html", triggeringPrincipal_base64}]
+    entries: [{ url: BASE + "restore_redirect_http.html", triggeringPrincipal_base64}],
   };
 
   // Open a new tab to restore into.
@@ -34,7 +34,7 @@ add_task(async function check_http_redirect() {
  */
 add_task(async function check_js_redirect() {
   let state = {
-    entries: [{ url: BASE + "restore_redirect_js.html", triggeringPrincipal_base64}]
+    entries: [{ url: BASE + "restore_redirect_js.html", triggeringPrincipal_base64}],
   };
 
   let loadPromise = new Promise(resolve => {

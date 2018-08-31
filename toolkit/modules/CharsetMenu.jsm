@@ -18,7 +18,7 @@ const kAutoDetectors = [
   ["off", ""],
   ["ja", "ja_parallel_state_machine"],
   ["ru", "ruprob"],
-  ["uk", "ukprob"]
+  ["uk", "ukprob"],
 ];
 
 /**
@@ -85,7 +85,7 @@ const kEncodings = new Set([
 // Always at the start of the menu, in this order, followed by a separator.
 const kPinned = [
   "UTF-8",
-  "windows-1252"
+  "windows-1252",
 ];
 
 kPinned.forEach(x => kEncodings.delete(x));
@@ -166,7 +166,7 @@ var CharsetMenu = {
     return {
       detectors: gDetectorInfoCache,
       pinnedCharsets: gPinnedInfoCache,
-      otherCharsets: gCharsetInfoCache
+      otherCharsets: gCharsetInfoCache,
     };
   },
 
@@ -183,7 +183,7 @@ var CharsetMenu = {
       label: this._getDetectorLabel(detectorName),
       accesskey: this._getDetectorAccesskey(detectorName),
       name: "detector",
-      value: nodeId
+      value: nodeId,
     }));
   },
 
@@ -192,7 +192,7 @@ var CharsetMenu = {
       label: this._getCharsetLabel(charset),
       accesskey: this._getCharsetAccessKey(charset),
       name: "charset",
-      value: charset
+      value: charset,
     }));
 
     if (sort) {

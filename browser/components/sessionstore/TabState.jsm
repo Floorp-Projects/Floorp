@@ -188,5 +188,5 @@ var TabStateInternal = {
         tabData[key] = value;
       }
     }
-  }
+  },
 };

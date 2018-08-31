@@ -7,13 +7,13 @@ var gTests = [
   {
     name: "normal search (search service)",
     testText: "test search",
-    searchURL: Services.search.defaultEngine.getSubmission("test search", null, "keyword").uri.spec
+    searchURL: Services.search.defaultEngine.getSubmission("test search", null, "keyword").uri.spec,
   },
   {
     name: "?-prefixed search (search service)",
     testText: "?   foo  ",
-    searchURL: Services.search.defaultEngine.getSubmission("foo", null, "keyword").uri.spec
-  }
+    searchURL: Services.search.defaultEngine.getSubmission("foo", null, "keyword").uri.spec,
+  },
 ];
 
 function test() {
@@ -29,7 +29,7 @@ function test() {
         }, {once: true});
         executeSoon(finish);
       }
-    }
+    },
   };
 
   Services.ww.registerNotification(windowObserver);
@@ -51,7 +51,7 @@ function test() {
         req.cancel(Cr.NS_ERROR_FAILURE);
       },
 
-      QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener", "nsIWebProgressListener2", "nsISupportsWeakReference"])
+      QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener", "nsIWebProgressListener2", "nsISupportsWeakReference"]),
     };
 
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -79,7 +79,7 @@ function test() {
       info("Actual URI: " + req.URI.spec);
 
       executeSoon(nextTest);
-    }
+    },
   };
 
   gBrowser.addProgressListener(listener);

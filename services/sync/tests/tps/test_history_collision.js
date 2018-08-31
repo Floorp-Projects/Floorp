@@ -23,42 +23,42 @@ var history1 = [
      title: "Google",
      visits: [
        { type: 1,
-         date: 0
-       }
-     ]
+         date: 0,
+       },
+     ],
    },
    { uri: "http://www.cnn.com/",
      title: "CNN",
      visits: [
        { type: 1,
-         date: -1
+         date: -1,
        },
        { type: 2,
-         date: -36
-       }
-     ]
+         date: -36,
+       },
+     ],
    },
    { uri: "http://www.mozilla.com/",
      title: "Mozilla",
      visits: [
        { type: 1,
-         date: 0
+         date: 0,
        },
        { type: 2,
-         date: -36
-       }
-     ]
-   }
+         date: -36,
+       },
+     ],
+   },
 ];
 
 // the history to delete
 var history_to_delete = [
    { uri: "http://www.cnn.com/",
-     title: "CNN"
+     title: "CNN",
    },
    { begin: -36,
-     end: -1
-   }
+     end: -1,
+   },
 ];
 
 var history_not = [
@@ -66,13 +66,13 @@ var history_not = [
      title: "CNN",
      visits: [
        { type: 1,
-         date: -1
+         date: -1,
        },
        { type: 2,
-         date: -36
-       }
-     ]
-   }
+         date: -36,
+       },
+     ],
+   },
 ];
 
 var history_after_delete = [
@@ -80,18 +80,18 @@ var history_after_delete = [
      title: "Google",
      visits: [
        { type: 1,
-         date: 0
-       }
-     ]
+         date: 0,
+       },
+     ],
    },
    { uri: "http://www.mozilla.com/",
      title: "Mozilla",
      visits: [
        { type: 1,
-         date: 0
-       }
-     ]
-   }
+         date: 0,
+       },
+     ],
+   },
 ];
 
 /*
@@ -100,13 +100,13 @@ var history_after_delete = [
 
 Phase("phase1", [
   [History.add, history1],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase2", [
   [Sync],
   [History.add, history1],
-  [Sync, SYNC_WIPE_REMOTE]
+  [Sync, SYNC_WIPE_REMOTE],
 ]);
 
 Phase("phase3", [
@@ -115,12 +115,12 @@ Phase("phase3", [
   [History.delete, history_to_delete],
   [History.verify, history_after_delete],
   [History.verifyNot, history_not],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase4", [
   [Sync],
   [History.verify, history_after_delete],
-  [History.verifyNot, history_not]
+  [History.verifyNot, history_not],
 ]);
 

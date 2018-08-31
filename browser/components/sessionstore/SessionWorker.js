@@ -195,7 +195,7 @@ var Agent = {
         // with the guarantees that we erase no important data.
         File.writeAtomic(this.Paths.clean, data, {
           tmpPath: this.Paths.clean + ".tmp",
-          compression: "lz4"
+          compression: "lz4",
         });
         fileStat = File.stat(this.Paths.clean);
       } else if (this.state == STATE_RECOVERY) {
@@ -208,7 +208,7 @@ var Agent = {
         File.writeAtomic(this.Paths.recovery, data, {
           tmpPath: this.Paths.recovery + ".tmp",
           backupTo: this.Paths.recoveryBackup,
-          compression: "lz4"
+          compression: "lz4",
         });
         fileStat = File.stat(this.Paths.recovery);
       } else {
@@ -217,7 +217,7 @@ var Agent = {
         // don't backup $Path.recovery.
         File.writeAtomic(this.Paths.recovery, data, {
           tmpPath: this.Paths.recovery + ".tmp",
-          compression: "lz4"
+          compression: "lz4",
         });
         fileStat = File.stat(this.Paths.recovery);
       }
@@ -299,7 +299,7 @@ var Agent = {
 
     return {
       result: {
-        upgradeBackup: upgradeBackupComplete
+        upgradeBackup: upgradeBackupComplete,
       },
       telemetry,
     };

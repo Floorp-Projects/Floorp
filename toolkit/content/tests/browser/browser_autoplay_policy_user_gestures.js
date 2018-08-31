@@ -5,13 +5,13 @@ const VIDEO_PAGE = "https://example.com/browser/toolkit/content/tests/browser/fi
 var UserGestures = {
   MOUSE_CLICK: "mouse-click",
   MOUSE_MOVE: "mouse-move",
-  KEYBOARD_PRESS: "keyboard-press"
+  KEYBOARD_PRESS: "keyboard-press",
 };
 
 var UserGestureTests = [
   {type: UserGestures.MOUSE_CLICK, isActivationGesture: true},
   {type: UserGestures.MOUSE_MOVE, isActivationGesture: false},
-  {type: UserGestures.KEYBOARD_PRESS, isActivationGesture: true}
+  {type: UserGestures.KEYBOARD_PRESS, isActivationGesture: true},
 ];
 
 function setup_test_preference() {
@@ -19,7 +19,7 @@ function setup_test_preference() {
     ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
     ["media.autoplay.enabled.user-gestures-needed", true],
     ["media.autoplay.block-webaudio", true],
-    ["media.navigator.permission.fake", true]
+    ["media.navigator.permission.fake", true],
   ]});
 }
 

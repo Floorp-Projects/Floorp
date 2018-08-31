@@ -43,6 +43,6 @@ var tests = [
       ok(!notification.button.disabled, "should not be disabled when invalidselection is not present");
       triggerMainCommand(popup);
     },
-    onHidden() { }
+    onHidden() { },
   },
 ];

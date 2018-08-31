@@ -53,7 +53,7 @@ function waitForFavicon(browser, url) {
 
         gBrowser.removeTabsProgressListener(listener);
         resolve();
-      }
+      },
     };
 
     gBrowser.addTabsProgressListener(listener);
@@ -72,7 +72,7 @@ function waitForLinkAvailable(browser) {
 
       gBrowser.removeTabsProgressListener(listener);
       resolve(iconURI);
-    }
+    },
   };
 
   let promise = new Promise((res, rej) => {

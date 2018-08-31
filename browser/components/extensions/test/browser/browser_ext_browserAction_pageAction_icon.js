@@ -227,7 +227,7 @@ add_task(async function testDetailsObjects() {
       "page_action": {},
       "background": {
         "page": "data/background.html",
-      }
+      },
     },
 
     files: {
@@ -331,8 +331,8 @@ add_task(async function testPageActionIconLoadingOnBrowserActionThemedIcon() {
           {
             "dark": "1.png",
             "light": "2.png",
-            "size": 16
-          }
+            "size": 16,
+          },
         ],
       },
 

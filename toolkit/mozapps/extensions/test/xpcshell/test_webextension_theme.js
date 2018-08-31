@@ -34,9 +34,9 @@ add_task(async function setup_to_default_browserish_state() {
     theme: { images: { headerURL: "example.png" } },
     applications: {
       gecko: {
-        id: THEME_IDS[0]
-      }
-    }
+        id: THEME_IDS[0],
+      },
+    },
   }, profileDir);
 
   await promiseStartupManager();
@@ -53,7 +53,7 @@ add_task(async function setup_to_default_browserish_state() {
     previewURL: "http://localhost:8888/data/preview.png",
     iconURL: "http://localhost:8888/data/icon.png",
     textcolor: Math.random().toString(),
-    accentcolor: Math.random().toString()
+    accentcolor: Math.random().toString(),
   };
 
   let [ t1, t2, d ] = await promiseAddonsByIDs(THEME_IDS);
@@ -94,7 +94,7 @@ async function setDisabledStateAndCheck(which, disabled = false) {
 
   let expectedStates = {
     [themeToDisable]: true,
-    [themeToEnable]: false
+    [themeToEnable]: false,
   };
   let expectedEvents = {
     [themeToDisable]: [
@@ -104,7 +104,7 @@ async function setDisabledStateAndCheck(which, disabled = false) {
     [themeToEnable]: [
       [ "onEnabling", false ],
       [ "onEnabled", false ],
-    ]
+    ],
   };
 
   // Set the state of the theme to change.
@@ -207,7 +207,7 @@ add_task(async function uninstall_offers_undo() {
           }
           AddonManager.removeAddonListener(listener);
           resolve();
-        }
+        },
       };
       AddonManager.addAddonListener(listener);
     });
@@ -242,8 +242,8 @@ add_task(async function default_locale_themes() {
         "colors": {
           "accentcolor": "black",
           "textcolor": "white",
-        }
-      }
+        },
+      },
     },
     files: {
       "_locales/en/messages.json": `{
@@ -253,8 +253,8 @@ add_task(async function default_locale_themes() {
         "description": {
           "message": "the description"
         }
-      }`
-    }
+      }`,
+    },
   });
 
   addon = await promiseAddonByID(addon.id);

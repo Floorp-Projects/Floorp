@@ -25,7 +25,7 @@ add_task(async function test_request_permissions_without_prompt() {
     },
     manifest: {
       "optional_permissions": [
-        "activeTab"
+        "activeTab",
       ],
     },
   });

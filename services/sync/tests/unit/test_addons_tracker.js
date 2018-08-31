@@ -162,7 +162,7 @@ add_task(async function test_track_user_disable() {
       },
       onDisabling(disabling) {
         _("onDisabling add-on");
-      }
+      },
     };
     AddonManager.addAddonListener(listener);
   });

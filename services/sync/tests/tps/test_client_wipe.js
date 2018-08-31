@@ -19,41 +19,41 @@ var phases = { "phase1": "profile1",
 var bookmarks_initial = {
   toolbar: [
     { uri: "http://www.google.com",
-      title: "Google"
+      title: "Google",
     },
     { uri: "http://www.cnn.com",
       title: "CNN",
       changes: {
-        position: "Google"
-      }
+        position: "Google",
+      },
     },
     { uri: "http://www.mozilla.com",
-      title: "Mozilla"
+      title: "Mozilla",
     },
     { uri: "http://www.firefox.com",
       title: "Firefox",
       changes: {
-        position: "Mozilla"
-      }
-    }
-  ]
+        position: "Mozilla",
+      },
+    },
+  ],
 };
 
 var bookmarks_after_move = {
   toolbar: [
     { uri: "http://www.cnn.com",
-      title: "CNN"
+      title: "CNN",
     },
     { uri: "http://www.google.com",
-      title: "Google"
+      title: "Google",
     },
     { uri: "http://www.firefox.com",
-      title: "Firefox"
+      title: "Firefox",
     },
     { uri: "http://www.mozilla.com",
-      title: "Mozilla"
-    }
-  ]
+      title: "Mozilla",
+    },
+  ],
 };
 
 /*
@@ -69,14 +69,14 @@ var passwords_initial = [
      usernameField: "uname",
      passwordField: "pword",
      changes: {
-       password: "SeCrEt$$$"
-     }
+       password: "SeCrEt$$$",
+     },
    },
    { hostname: "http://www.example.com",
      realm: "login",
      username: "jack",
-     password: "secretlogin"
-   }
+     password: "secretlogin",
+   },
 ];
 
 // Password after first modify action has been performed
@@ -88,14 +88,14 @@ var passwords_after_change = [
      usernameField: "uname",
      passwordField: "pword",
      changes: {
-        username: "james"
-     }
+        username: "james",
+     },
    },
    { hostname: "http://www.example.com",
      realm: "login",
      username: "jack",
-     password: "secretlogin"
-   }
+     password: "secretlogin",
+   },
 ];
 
 /*
@@ -103,26 +103,26 @@ var passwords_after_change = [
  */
 var prefs1 = [
   { name: "browser.startup.homepage",
-    value: "http://www.getfirefox.com"
+    value: "http://www.getfirefox.com",
   },
   { name: "browser.urlbar.maxRichResults",
-    value: 20
+    value: 20,
   },
   { name: "privacy.clearOnShutdown.siteSettings",
-    value: true
-  }
+    value: true,
+  },
 ];
 
 var prefs2 = [
   { name: "browser.startup.homepage",
-    value: "http://www.mozilla.com"
+    value: "http://www.mozilla.com",
   },
   { name: "browser.urlbar.maxRichResults",
-    value: 18
+    value: 18,
   },
   { name: "privacy.clearOnShutdown.siteSettings",
-    value: false
-  }
+    value: false,
+  },
 ];
 
 /*
@@ -135,7 +135,7 @@ Phase("phase1", [
   [Bookmarks.add, bookmarks_initial],
   [Prefs.modify, prefs1],
   [Prefs.verify, prefs1],
-  [Sync]
+  [Sync],
 ]);
 
 // Sync profile2 and verify same prefs,passwords and bookmarks are present.
@@ -143,7 +143,7 @@ Phase("phase2", [
   [Sync],
   [Prefs.verify, prefs1],
   [Passwords.verify, passwords_initial],
-  [Bookmarks.verify, bookmarks_initial]
+  [Bookmarks.verify, bookmarks_initial],
 ]);
 
 // Using profile1, change some prefs,bookmarks and pwds, then do another sync with wipe-client.
@@ -159,6 +159,6 @@ Phase("phase3", [
   [Sync, SYNC_WIPE_CLIENT],
   [Prefs.verify, prefs1],
   [Passwords.verify, passwords_initial],
-  [Bookmarks.verify, bookmarks_initial]
+  [Bookmarks.verify, bookmarks_initial],
 ]);
 

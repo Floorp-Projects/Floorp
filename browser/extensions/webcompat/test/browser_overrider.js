@@ -16,8 +16,8 @@ add_task(function test() {
   let overrider = new UAOverrider([
     {
       baseDomain: "example.org",
-      uaTransformer: () => "Test UA"
-    }
+      uaTransformer: () => "Test UA",
+    },
   ]);
 
   let finalUA = overrider.lookupUAOverride(getnsIURI("http://www.example.org/foobar/"));
@@ -29,8 +29,8 @@ add_task(function test() {
     {
       baseDomain: "example.org",
       uriMatcher: () => false,
-      uaTransformer: () => "Test UA"
-    }
+      uaTransformer: () => "Test UA",
+    },
   ]);
 
   let finalUA = overrider.lookupUAOverride(getnsIURI("http://www.example.org/foobar/"));

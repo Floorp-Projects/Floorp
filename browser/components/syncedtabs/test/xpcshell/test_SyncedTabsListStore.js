@@ -17,7 +17,7 @@ const FIXTURE = [
         "url": "https://www.mozilla.org/en-US/firefox/ios/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=synced-tabs-sidebar",
         "icon": "moz-anno:favicon:https://www.mozilla.org/media/img/firefox/favicon.dc6635050bf5.ico",
         "client": "2xU5h-4bkWqA",
-        "lastUsed": 1451519425
+        "lastUsed": 1451519425,
       },
       {
         "type": "tab",
@@ -25,9 +25,9 @@ const FIXTURE = [
         "url": "https://www.mozilla.org/en-US/firefox/nightly/firstrun/?oldversion=45.0a1",
         "icon": "moz-anno:favicon:https://www.mozilla.org/media/img/firefox/favicon-nightly.560395bbb2e1.png",
         "client": "2xU5h-4bkWqA",
-        "lastUsed": 1451519420
-      }
-    ]
+        "lastUsed": 1451519420,
+      },
+    ],
   },
   {
     "id": "OL3EJCsdb2JD",
@@ -35,8 +35,8 @@ const FIXTURE = [
     "lastModified": 1492201200,
     "name": "desktop",
     "isMobile": false,
-    "tabs": []
-  }
+    "tabs": [],
+  },
 ];
 
 add_task(async function testGetDataEmpty() {
@@ -56,7 +56,7 @@ add_task(async function testGetDataEmpty() {
     canUpdateAll: false,
     canUpdateInput: false,
     filter: "",
-    inputFocused: false
+    inputFocused: false,
   }));
 
   await store.getData("filter");
@@ -67,7 +67,7 @@ add_task(async function testGetDataEmpty() {
     canUpdateAll: false,
     canUpdateInput: true,
     filter: "filter",
-    inputFocused: false
+    inputFocused: false,
   }));
 
   SyncedTabs.getTabClients.restore();

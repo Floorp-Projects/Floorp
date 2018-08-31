@@ -5,7 +5,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "TelemetryUtils"
+  "TelemetryUtils",
 ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
@@ -51,7 +51,7 @@ function packHistogram(hgram) {
     bucket_count: r.length,
     histogram_type: hgram.histogram_type,
     values: {},
-    sum: hgram.sum
+    sum: hgram.sum,
   };
 
   let first = true;

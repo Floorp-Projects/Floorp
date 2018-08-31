@@ -13,7 +13,7 @@
 add_task(async function test() {
   // allow top level data: URI navigations, otherwise clicking a data: link fails
   await SpecialPowers.pushPrefEnv({
-    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]]
+    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]],
   });
   let dataURIPref = Services.prefs.getBoolPref("security.data_uri.unique_opaque_origin");
   // create a tab that has a CSP

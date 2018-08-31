@@ -79,7 +79,7 @@ var gTests = [
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
-  }
+  },
 },
 
 {
@@ -170,7 +170,7 @@ var gTests = [
 
     // close all streams
     await closeStream();
-  }
+  },
 },
 
 {
@@ -242,8 +242,8 @@ var gTests = [
 
     // close all streams
     await closeStream();
-  }
-}
+  },
+},
 
 ];
 

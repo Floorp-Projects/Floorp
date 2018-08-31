@@ -119,7 +119,7 @@ Object.defineProperty(OSError.prototype, "becauseExists", {
   get: function becauseExists() {
     return this.winLastError == Const.ERROR_FILE_EXISTS ||
       this.winLastError == Const.ERROR_ALREADY_EXISTS;
-  }
+  },
 });
 /**
  * |true| if the error was raised because a file or directory
@@ -129,7 +129,7 @@ Object.defineProperty(OSError.prototype, "becauseNoSuchFile", {
   get: function becauseNoSuchFile() {
     return this.winLastError == Const.ERROR_FILE_NOT_FOUND ||
       this.winLastError == Const.ERROR_PATH_NOT_FOUND;
-  }
+  },
 });
 /**
  * |true| if the error was raised because a directory is not empty
@@ -138,7 +138,7 @@ Object.defineProperty(OSError.prototype, "becauseNoSuchFile", {
 Object.defineProperty(OSError.prototype, "becauseNotEmpty", {
   get: function becauseNotEmpty() {
     return this.winLastError == Const.ERROR_DIR_NOT_EMPTY;
-  }
+  },
 });
 /**
  * |true| if the error was raised because a file or directory
@@ -147,7 +147,7 @@ Object.defineProperty(OSError.prototype, "becauseNotEmpty", {
 Object.defineProperty(OSError.prototype, "becauseClosed", {
   get: function becauseClosed() {
     return this.winLastError == Const.ERROR_INVALID_HANDLE;
-  }
+  },
 });
 /**
  * |true| if the error was raised because permission is denied to
@@ -156,7 +156,7 @@ Object.defineProperty(OSError.prototype, "becauseClosed", {
 Object.defineProperty(OSError.prototype, "becauseAccessDenied", {
   get: function becauseAccessDenied() {
     return this.winLastError == Const.ERROR_ACCESS_DENIED;
-  }
+  },
 });
 /**
  * |true| if the error was raised because some invalid argument was passed,
@@ -166,7 +166,7 @@ Object.defineProperty(OSError.prototype, "becauseInvalidArgument", {
   get: function becauseInvalidArgument() {
     return this.winLastError == Const.ERROR_NOT_SUPPORTED ||
            this.winLastError == Const.ERROR_BAD_ARGUMENTS;
-  }
+  },
 });
 
 /**
@@ -181,7 +181,7 @@ OSError.toMsg = function toMsg(error) {
     stack: error.moduleStack,
     operation: error.operation,
     winLastError: error.winLastError,
-    path: error.path
+    path: error.path,
   };
 };
 
@@ -290,7 +290,7 @@ AbstractInfo.prototype = {
    */
   get winAttributes() {
     return this._winAttributes;
-  }
+  },
 };
 exports.AbstractInfo = AbstractInfo;
 
@@ -358,7 +358,7 @@ AbstractEntry.prototype = {
    */
   get path() {
     return this._path;
-  }
+  },
 };
 exports.AbstractEntry = AbstractEntry;
 
@@ -407,7 +407,7 @@ var EXPORTED_SYMBOLS = [
   "Type",
   "POS_START",
   "POS_CURRENT",
-  "POS_END"
+  "POS_END",
 ];
 
 // ////////// Boilerplate

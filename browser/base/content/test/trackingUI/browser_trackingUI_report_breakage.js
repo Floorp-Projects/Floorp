@@ -210,7 +210,7 @@ add_task(async function testReportBreakage() {
           `${prefsBody}\r\n` +
           "**Comments**\r\n" +
           "This is a comment\r\n",
-          ""
+          "",
         ], "Should send the correct form data");
 
         resolve();

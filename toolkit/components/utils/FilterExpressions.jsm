@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyGetter(this, "jexl", () => {
     preferenceExists: PreferenceFilters.preferenceExists,
     keys,
     length,
-    mapToProperty
+    mapToProperty,
   });
   jexl.addBinaryOp("intersect", 40, operatorIntersect);
   return jexl;

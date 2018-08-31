@@ -387,7 +387,7 @@ let OnboardingTelemetry = {
         return;
       case "onboarding-session-end":
         data = Object.assign({}, data, {
-          type: "onboarding-session"
+          type: "onboarding-session",
         });
         this.state.sessions[session_key].onboarding_session_end = Date.now();
         break;
@@ -397,7 +397,7 @@ let OnboardingTelemetry = {
         return;
       case "overlay-session-end":
         data = Object.assign({}, data, {
-          type: "overlay-session"
+          type: "overlay-session",
         });
         this.state.sessions[session_key].overlay_session_end = Date.now();
         break;
@@ -407,7 +407,7 @@ let OnboardingTelemetry = {
         return;
       case "notification-session-end":
         data = Object.assign({}, data, {
-          type: "notification-session"
+          type: "notification-session",
         });
         this.state.sessions[session_key].notification_session_end = Date.now();
         break;
@@ -574,5 +574,5 @@ let OnboardingTelemetry = {
     if (failed) {
       throw new Error(`Event ${type} contains incorrect data: ${JSON.stringify(results)}, should not be sent.`);
     }
-  }
+  },
 };

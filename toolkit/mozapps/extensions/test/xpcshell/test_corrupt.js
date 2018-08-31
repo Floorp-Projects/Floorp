@@ -85,8 +85,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "2",
-        maxVersion: "2"
-      }]
+        maxVersion: "2",
+      }],
     },
     desiredState: {
       isActive: true,
@@ -106,8 +106,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "2",
-        maxVersion: "2"
-      }]
+        maxVersion: "2",
+      }],
     },
     initialState: {
       userDisabled: true,

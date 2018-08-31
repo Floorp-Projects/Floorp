@@ -220,7 +220,7 @@ this.AntiTracking = {
           if (stateFlags & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_COOKIES) {
             ++cookieBlocked;
           }
-        }
+        },
       };
       gBrowser.addProgressListener(listener);
 
@@ -462,5 +462,5 @@ this.AntiTracking = {
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);
     });
-  }
+  },
 };

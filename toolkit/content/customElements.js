@@ -113,7 +113,7 @@ function getInterfaceProxy(obj) {
           };
         }
         return propOrMethod;
-      }
+      },
     });
   }
 

@@ -110,7 +110,7 @@ AddonUtilsInternal.prototype = {
             install.removeListener(listener);
 
             rej(new Error("Download failed: " + install.error));
-          }
+          },
         };
         install.addListener(listener);
         install.install();
@@ -153,7 +153,7 @@ AddonUtilsInternal.prototype = {
 
           AddonManager.removeAddonListener(listener);
           res(addon);
-        }
+        },
       };
       AddonManager.addAddonListener(listener);
       addon.uninstall();
@@ -205,7 +205,7 @@ AddonUtilsInternal.prototype = {
       installs:     [],
       addons:       [],
       skipped:      [],
-      errors:       []
+      errors:       [],
     };
 
     let toInstall = [];

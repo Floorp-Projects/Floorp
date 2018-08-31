@@ -107,10 +107,10 @@ function getHosts(rawdata) {
 
 function processStsHeader(host, header, status, securityInfo) {
   let maxAge = {
-    value: 0
+    value: 0,
   };
   let includeSubdomains = {
-    value: false
+    value: false,
   };
   let error = ERROR_NONE;
   if (header != null && securityInfo != null) {
@@ -138,7 +138,7 @@ function processStsHeader(host, header, status, securityInfo) {
     includeSubdomains: includeSubdomains.value,
     error,
     retries: host.retries - 1,
-    forceInclude: host.forceInclude
+    forceInclude: host.forceInclude,
   };
 }
 
@@ -164,7 +164,7 @@ RedirectAndAuthStopper.prototype = {
     return this.QueryInterface(iid);
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannelEventSink, Ci.nsIAuthPrompt2])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannelEventSink, Ci.nsIAuthPrompt2]),
 };
 
 function fetchstatus(host) {
@@ -332,14 +332,14 @@ function combineLists(newHosts, currentHosts) {
 const TEST_ENTRIES = [
   {
     name: "includesubdomains.preloaded.test",
-    includeSubdomains: true
+    includeSubdomains: true,
   }, {
     name: "includesubdomains2.preloaded.test",
-    includeSubdomains: true
+    includeSubdomains: true,
   }, {
     name: "noincludesubdomains.preloaded.test",
-    includeSubdomains: false
-  }
+    includeSubdomains: false,
+  },
 ];
 
 function deleteTestHosts(currentHosts) {
@@ -355,7 +355,7 @@ function getTestHosts() {
       name: testEntry.name, maxAge: MINIMUM_REQUIRED_MAX_AGE, includeSubdomains: testEntry.includeSubdomains, error: ERROR_NONE,
       // This deliberately doesn't have a value for `retries` (because we should
       // never attempt to connect to this host).
-      forceInclude: true
+      forceInclude: true,
     });
   }
   return hosts;

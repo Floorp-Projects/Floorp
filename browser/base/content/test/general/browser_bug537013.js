@@ -8,7 +8,7 @@ var texts = [
   "This side up.",
   "The world is coming to an end. Please log off.",
   "Klein bottle for sale. Inquire within.",
-  "To err is human; to forgive is not company policy."
+  "To err is human; to forgive is not company policy.",
 ];
 
 var HasFindClipboard = Services.clipboard.supportsFindClipboard();

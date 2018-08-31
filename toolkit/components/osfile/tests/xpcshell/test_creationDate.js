@@ -22,7 +22,7 @@ add_task(async function test_deprecatedCreationDate() {
           Services.console.unregisterListener(consoleListener);
           resolve();
         }
-      }
+      },
     };
     Services.console.registerListener(consoleListener);
   });

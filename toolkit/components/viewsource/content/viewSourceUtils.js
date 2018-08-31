@@ -373,7 +373,7 @@ var gViewSourceUtils = {
     resolve: null,
     reject: null,
     data: null,
-    file: null
+    file: null,
   },
 
   // returns an nsIFile for the passed document in the system temp directory
@@ -390,5 +390,5 @@ var gViewSourceUtils = {
     var leafName = this._caUtils.getNormalizedLeafName(fileName, extension);
     tempFile.append(leafName);
     return tempFile;
-  }
+  },
 };

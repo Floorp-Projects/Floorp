@@ -15,7 +15,7 @@ add_task(async function test_bug1174036() {
       let listener = {
         onFindResult() {
           ok(false, "callback wasn't replaced");
-        }
+        },
       };
       finder.addResultListener(listener);
 

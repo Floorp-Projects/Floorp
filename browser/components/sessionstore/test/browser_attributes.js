@@ -51,7 +51,7 @@ add_task(async function test() {
   let state = {
     entries: [{url: "about:mozilla", triggeringPrincipal_base64 }],
     attributes: {custom: "foobaz"},
-    image: gBrowser.getIcon(tab)
+    image: gBrowser.getIcon(tab),
   };
 
   // Prepare a pending tab waiting to be restored.

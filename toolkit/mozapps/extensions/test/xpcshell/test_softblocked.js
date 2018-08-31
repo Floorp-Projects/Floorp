@@ -31,7 +31,7 @@ var WindowWatcher = {
     Services.obs.notifyObservers(null, "addon-blocklist-closed");
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIWindowWatcher"])
+  QueryInterface: ChromeUtils.generateQI(["nsIWindowWatcher"]),
 };
 
 MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1", WindowWatcher);
@@ -70,8 +70,8 @@ add_task(async function() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "2",
-      maxVersion: "3"
-    }]
+      maxVersion: "3",
+    }],
   }, profileDir);
 
   await promiseStartupManager();

@@ -75,7 +75,7 @@ this.FxAccountsOAuthGrantClient.prototype = {
       scope,
       client_id: this.parameters.client_id,
       assertion,
-      response_type: "token"
+      response_type: "token",
     };
 
     return this._createRequest(AUTH_ENDPOINT, "POST", params);

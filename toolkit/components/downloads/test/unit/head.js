@@ -70,10 +70,10 @@ const TEST_REFERRER_URL = "https://www.example.com/referrer.html";
 const TEST_DATA_SHORT = "This test string is downloaded.";
 // Generate using gzipCompressString in TelemetryController.jsm.
 const TEST_DATA_SHORT_GZIP_ENCODED_FIRST = [
- 31, 139, 8, 0, 0, 0, 0, 0, 0, 3, 11, 201, 200, 44, 86, 40, 73, 45, 46, 81, 40, 46, 41, 202, 204
+ 31, 139, 8, 0, 0, 0, 0, 0, 0, 3, 11, 201, 200, 44, 86, 40, 73, 45, 46, 81, 40, 46, 41, 202, 204,
 ];
 const TEST_DATA_SHORT_GZIP_ENCODED_SECOND = [
-  75, 87, 0, 114, 83, 242, 203, 243, 114, 242, 19, 83, 82, 83, 244, 0, 151, 222, 109, 43, 31, 0, 0, 0
+  75, 87, 0, 114, 83, 242, 203, 243, 114, 242, 19, 83, 82, 83, 244, 0, 151, 222, 109, 43, 31, 0, 0, 0,
 ];
 const TEST_DATA_SHORT_GZIP_ENCODED =
   TEST_DATA_SHORT_GZIP_ENCODED_FIRST.concat(TEST_DATA_SHORT_GZIP_ENCODED_SECOND);
@@ -332,7 +332,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 
       let channel = NetUtil.newChannel({
         uri: sourceURI,
-        loadUsingSystemPrincipal: true
+        loadUsingSystemPrincipal: true,
       });
 
       // Start the actual download process.

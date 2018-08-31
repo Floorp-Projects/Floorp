@@ -13,8 +13,8 @@ var addon3 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 var addon4 = {
@@ -25,8 +25,8 @@ var addon4 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");

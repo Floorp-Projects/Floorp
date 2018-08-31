@@ -36,7 +36,7 @@ const EHTestsCommon = {
       engines: {clients: {version: clientsEngine.version,
                           syncID: clientsSyncID},
                 catapult: {version: catapultEngine.version,
-                           syncID: catapultSyncID}}
+                           syncID: catapultSyncID}},
     });
     let clientsColl = new ServerCollection({}, true);
 
@@ -76,7 +76,7 @@ const EHTestsCommon = {
         upd("crypto", (new ServerWBO("keys")).handler()),
       "/1.1/broken.wipe/storage": EHTestsCommon.service_unavailable,
       "/1.1/broken.wipe/storage/clients": upd("clients", clientsColl.handler()),
-      "/1.1/broken.wipe/storage/catapult": EHTestsCommon.service_unavailable
+      "/1.1/broken.wipe/storage/catapult": EHTestsCommon.service_unavailable,
     });
   },
 
@@ -91,7 +91,7 @@ const EHTestsCommon = {
         if (this.exception) {
           throw this.exception;
         }
-      }
+      },
     };
 
     return CatapultEngine;
@@ -120,5 +120,5 @@ const EHTestsCommon = {
     await serverKeys.encrypt(Service.identity.syncKeyBundle);
     let response = await serverKeys.upload(Service.resource(Service.cryptoKeysURL));
     return response.success;
-  }
+  },
 };

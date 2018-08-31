@@ -28,7 +28,7 @@ add_task(async function() {
           windowWasHandled = true;
         }, {once: true});
       }
-    }
+    },
   };
 
   Services.ww.registerNotification(observerWindowOpened);

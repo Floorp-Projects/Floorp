@@ -54,7 +54,7 @@ MockStorageManager.prototype = {
   deleteAccountData() {
     this.accountData = null;
     return Promise.resolve();
-  }
+  },
 };
 
 
@@ -77,7 +77,7 @@ function MockFxAccountsClient() {
 }
 
 MockFxAccountsClient.prototype = {
-  __proto__: FxAccountsClient.prototype
+  __proto__: FxAccountsClient.prototype,
 };
 
 function MockFxAccounts(device = {}) {
@@ -96,7 +96,7 @@ function MockFxAccounts(device = {}) {
       registerPushEndpoint() {
         return new Promise((resolve) => {
           resolve({
-            endpoint: "http://mochi.test:8888"
+            endpoint: "http://mochi.test:8888",
           });
         });
       },
@@ -115,7 +115,7 @@ async function createMockFxA() {
     kXCS: "cafe",
     kExtSync: "bacon",
     kExtKbHash: "cheese",
-    verified: true
+    verified: true,
   };
   await fxa.setSignedInUser(credentials);
   return fxa;

@@ -14,38 +14,38 @@ const ADDONS = {
           "description": "fr-FR Description",
           "locale": [
             "fr-FR",
-            ""
+            "",
           ],
           "contributor": [
             "Fr Contributor 1",
             "Fr Contributor 2",
-            "Fr Contributor 3"
-          ]
+            "Fr Contributor 3",
+          ],
         },
         {
           "name": "de-DE Name",
           "locale": [
-            "de-DE"
-          ]
+            "de-DE",
+          ],
         },
         {
           "name": "es-ES Name",
           "description": "es-ES Description",
           "locale": [
-            "es-ES"
-          ]
+            "es-ES",
+          ],
         },
         {
           "name": "Repeated locale",
           "locale": [
-            "fr-FR"
-          ]
+            "fr-FR",
+          ],
         },
         {
-          "name": "Missing locale"
-        }
-      ]
-    }
+          "name": "Missing locale",
+        },
+      ],
+    },
   },
 };
 
@@ -69,7 +69,7 @@ add_task(async function test_1() {
       "addon1@tests.mozilla.org": [
         ["onInstalling", false],
         ["onInstalled", false],
-      ]
+      ],
     }, [
       "onInstallStarted",
       "onInstallEnded",

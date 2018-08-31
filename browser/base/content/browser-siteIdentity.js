@@ -1016,7 +1016,7 @@ var gIdentityHandler = {
     nameLabel.setAttribute("id", nameLabelId);
 
     let isPolicyPermission = [
-      SitePermissions.SCOPE_POLICY, SitePermissions.SCOPE_GLOBAL
+      SitePermissions.SCOPE_POLICY, SitePermissions.SCOPE_GLOBAL,
     ].includes(aPermission.scope);
 
     if (aPermission.id == "popup" && !isPolicyPermission) {

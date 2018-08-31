@@ -63,7 +63,7 @@ async function test() {
     reviewCount: 5,
     reviewURL: "http://example.com/reviews",
     homepageURL: "http://example.com/addon1",
-    applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE,
   }, {
     id: "addon2@tests.mozilla.org",
     name: "Test add-on 2",
@@ -79,7 +79,7 @@ async function test() {
     screenshots: [{
       url: "chrome://branding/content/about.png",
       width: 200,
-      height: 150
+      height: 150,
     }],
   }, {
     id: "addon3@tests.mozilla.org",
@@ -104,7 +104,7 @@ async function test() {
       height: 300,
       thumbnailURL: "chrome://branding/content/icon64.png",
       thumbnailWidth: 160,
-      thumbnailHeight: 120
+      thumbnailHeight: 120,
     }],
   }, {
     id: "addon5@tests.mozilla.org",
@@ -112,12 +112,12 @@ async function test() {
     name: "Test add-on 5",
     isActive: false,
     blocklistState: Ci.nsIBlocklistService.STATE_BLOCKED,
-    appDisabled: true
+    appDisabled: true,
   }, {
     id: "addon8@tests.mozilla.org",
     blocklistURL: "http://example.com/addon8@tests.mozilla.org",
     name: "Test add-on 8",
-    blocklistState: Ci.nsIBlocklistService.STATE_OUTDATED
+    blocklistState: Ci.nsIBlocklistService.STATE_OUTDATED,
   }, {
     id: "addon9@tests.mozilla.org",
     name: "Test add-on 9",
@@ -549,7 +549,7 @@ add_test(function() {
       averageRating: 2,
       optionsURL: "chrome://foo/content/options.xul",
       applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE,
-      operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+      operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
     }]);
 
     is(get("detail-name").textContent, "Test add-on replacement", "Name should be correct");

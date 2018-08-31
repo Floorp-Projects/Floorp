@@ -946,7 +946,7 @@ class BookmarkValidator {
   async validate(engine) {
     let start = Date.now();
     let clientTree = await PlacesUtils.promiseBookmarksTree("", {
-      includeItemIds: true
+      includeItemIds: true,
     });
     let serverState = await this._getServerState(engine);
     let serverRecordCount = serverState.length;
@@ -964,7 +964,7 @@ class BookmarkValidator {
       duration,
       version: this.version,
       problems: result.problemData,
-      recordCount: serverRecordCount
+      recordCount: serverRecordCount,
     };
   }
 

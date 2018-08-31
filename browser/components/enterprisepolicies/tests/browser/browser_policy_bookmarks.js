@@ -20,31 +20,31 @@ const BASE_POLICY = {
       {
         "Title": "Bookmark 1",
         "URL": "https://bookmark1.example.com/",
-        "Favicon": FAVICON_DATA
+        "Favicon": FAVICON_DATA,
       },
       {
         "Title": "Bookmark 2",
         "URL": "https://bookmark2.example.com/",
-        "Folder": "Folder 1"
+        "Folder": "Folder 1",
       },
       {
         "Title": "Bookmark 3",
         "URL": "https://bookmark3.example.com/",
-        "Placement": "menu"
+        "Placement": "menu",
       },
       {
         "Title": "Bookmark 4",
         "URL": "https://bookmark4.example.com/",
-        "Folder": "Folder 1"
+        "Folder": "Folder 1",
       },
       {
         "Title": "Bookmark 5",
         "URL": "https://bookmark5.example.com/",
         "Placement": "menu",
-        "Folder": "Folder 2"
-      }
-    ]
-  }
+        "Folder": "Folder 2",
+      },
+    ],
+  },
 };
 
 /*
@@ -169,7 +169,7 @@ add_task(async function test_initial_bookmarks() {
       itemsToAdd: 7, // 5 bookmarks + 2 folders
       itemsToRemove: 0,
     }),
-    setupPolicyEngineWithJson(CURRENT_POLICY)
+    setupPolicyEngineWithJson(CURRENT_POLICY),
   ]);
 
   await check({ expectedNumberOfFolders: 2 });
@@ -209,7 +209,7 @@ add_task(async function test_remove_Bookmark_2() {
       itemsToAdd: 0,
       itemsToRemove: 1, // 1 bookmark
     }),
-    setupPolicyEngineWithJson(CURRENT_POLICY)
+    setupPolicyEngineWithJson(CURRENT_POLICY),
   ]);
 
   await check({ expectedNumberOfFolders: 2 });
@@ -228,7 +228,7 @@ add_task(async function test_remove_Bookmark_5() {
       itemsToAdd: 0,
       itemsToRemove: 2, // 1 bookmark and 1 folder
     }),
-    setupPolicyEngineWithJson(CURRENT_POLICY)
+    setupPolicyEngineWithJson(CURRENT_POLICY),
   ]);
 
   await check({ expectedNumberOfFolders: 1 });
@@ -248,7 +248,7 @@ add_task(async function test_revert_to_original_policy() {
       itemsToAdd: 3, // 2 bookmarks and 1 folder
       itemsToRemove: 0,
     }),
-    setupPolicyEngineWithJson(CURRENT_POLICY)
+    setupPolicyEngineWithJson(CURRENT_POLICY),
   ]);
 
   await check({ expectedNumberOfFolders: 2 });
@@ -265,7 +265,7 @@ add_task(async function test_empty_all_bookmarks() {
       itemsToAdd: 0,
       itemsToRemove: 7, // 5 bookmarks and 2 folders
     }),
-    setupPolicyEngineWithJson(CURRENT_POLICY)
+    setupPolicyEngineWithJson(CURRENT_POLICY),
   ]);
 
   check({ expectedNumberOfFolders: 0 });

@@ -163,7 +163,7 @@ function publicMessagePort(port) {
     enumerable: true,
     get() {
       return port.portID;
-    }
+    },
   });
 
   if (port instanceof ChromeMessagePort) {
@@ -171,14 +171,14 @@ function publicMessagePort(port) {
       enumerable: true,
       get() {
         return port.browser;
-      }
+      },
     });
 
     Object.defineProperty(clean, "url", {
       enumerable: true,
       get() {
         return port.url;
-      }
+      },
     });
   }
 
@@ -205,13 +205,13 @@ ChromeMessagePort.prototype = Object.create(MessagePort.prototype);
 Object.defineProperty(ChromeMessagePort.prototype, "browser", {
   get() {
     return this._browser;
-  }
+  },
 });
 
 Object.defineProperty(ChromeMessagePort.prototype, "url", {
   get() {
     return this._url;
-  }
+  },
 });
 
 // Called when the docshell is being swapped with another browser. We have to
@@ -326,7 +326,7 @@ var RemotePageManagerInternal = {
 
     let port = new ChromeMessagePort(browser, portID, url);
     callback(port.publicPort);
-  }
+  },
 };
 
 if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {

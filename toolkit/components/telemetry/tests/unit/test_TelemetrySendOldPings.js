@@ -199,7 +199,7 @@ add_task(async function test_old_formats() {
   const PING_NO_INFO = {
     slug: "1234-no-info-ping",
     reason: "test-ping",
-    payload: {}
+    payload: {},
   };
 
   // A ping with no payload.
@@ -211,7 +211,7 @@ add_task(async function test_old_formats() {
   // A ping with no info and no slug.
   const PING_NO_SLUG = {
     reason: "test-ping",
-    payload: {}
+    payload: {},
   };
 
   const PING_FILES_PATHS = [

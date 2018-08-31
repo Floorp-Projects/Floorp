@@ -62,6 +62,6 @@ var DevTools = {
         await gDevTools.showToolbox(getTargetForSelectedTab(), "inspector", "window");
         await new Promise(resolve => setTimeout(resolve, 500));
       },
-    }
+    },
   },
 };

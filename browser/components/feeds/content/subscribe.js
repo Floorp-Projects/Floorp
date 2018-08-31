@@ -19,7 +19,7 @@ var SubscribeHandler = {
 
   uninit: function SH_uninit() {
     this._feedWriter.close();
-  }
+  },
 };
 
 SubscribeHandler.init();

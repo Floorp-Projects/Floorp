@@ -116,7 +116,7 @@ let setupTest = async function(options, testFunction) {
   // Observe these, and also use to count the number of hits
   let observing = {
     "browser-lastwindow-close-requested": 0,
-    "browser-lastwindow-close-granted": 0
+    "browser-lastwindow-close-granted": 0,
   };
 
   /**

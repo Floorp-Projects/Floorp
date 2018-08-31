@@ -38,7 +38,7 @@ add_test(function() {
   let addon = new MockAddon(undefined, EXTENSION_NAME, "extension", true);
   gInstall = new MockInstall(undefined, undefined, addon);
   gInstall.addTestListener({
-    onNewInstall: run_next_test
+    onNewInstall: run_next_test,
   });
   gProvider.addInstall(gInstall);
 });
@@ -62,7 +62,7 @@ add_test(function() {
       }
       ok(false, "Item with correct name was not found");
       run_next_test();
-    }
+    },
   });
   gInstall.install();
 });

@@ -8,12 +8,12 @@ const TEST_PATH = "https://example.com/browser/browser/" +
 
 add_task(async function test() {
   await SpecialPowers.pushPrefEnv({"set":
-    [["extensions.webapi.testing", true]]
+    [["extensions.webapi.testing", true]],
   });
 
   for (let pref of [false, true]) {
     await SpecialPowers.pushPrefEnv({"set":
-      [["privacy.resistFingerprinting.block_mozAddonManager", pref]]
+      [["privacy.resistFingerprinting.block_mozAddonManager", pref]],
     });
 
     let tab = await BrowserTestUtils.openNewForegroundTab(

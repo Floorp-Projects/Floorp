@@ -23,7 +23,7 @@
 function promiseCrashReport(expectedExtra = {}) {
   return (async function() {
     info("Starting wait on crash-report-status");
-    let [subject, ] =
+    let [subject ] =
       await TestUtils.topicObserved("crash-report-status", (unused, data) => {
         return data == "success";
       });

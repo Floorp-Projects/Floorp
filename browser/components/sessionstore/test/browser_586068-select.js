@@ -16,7 +16,7 @@ add_task(async function test() {
     { entries: [{ url: "http://example.org", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
     { entries: [{ url: "http://example.org", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
     { entries: [{ url: "http://example.org", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org", triggeringPrincipal_base64 }], extData: { "uniq": r() } }
+    { entries: [{ url: "http://example.org", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
   ], selected: 1 }] };
 
   let expectedCounts = [
@@ -25,7 +25,7 @@ add_task(async function test() {
     [3, 1, 2],
     [2, 1, 3],
     [1, 1, 4],
-    [0, 1, 5]
+    [0, 1, 5],
   ];
   let tabOrder = [0, 5, 1, 4, 3, 2];
 

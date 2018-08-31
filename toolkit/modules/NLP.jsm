@@ -72,5 +72,5 @@ var NLP = {
     c0 = p1[l2];
 
     return c0;
-  }
+  },
 };

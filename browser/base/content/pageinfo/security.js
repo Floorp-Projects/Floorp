@@ -65,7 +65,7 @@ var security = {
         isMixed,
         isEV,
         cert,
-        certificateTransparency: undefined
+        certificateTransparency: undefined,
       };
 
       var version;
@@ -121,7 +121,7 @@ var security = {
       isMixed,
       isEV,
       cert: null,
-      certificateTransparency: null
+      certificateTransparency: null,
     };
   },
 
@@ -186,7 +186,7 @@ var security = {
     LoginHelper.openPasswordManager(window, this._getSecurityInfo().hostName);
   },
 
-  _cert: null
+  _cert: null,
 };
 
 function securityOnLoad(uri, windowInfo) {

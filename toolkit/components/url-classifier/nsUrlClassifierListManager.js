@@ -707,7 +707,7 @@ RegistrationData.prototype = {
                 throw Cr.NS_ERROR_NO_AGGREGATION;
             Init();
             return (new PROT_ListManager()).QueryInterface(iid);
-        }
+        },
     },
 };
 

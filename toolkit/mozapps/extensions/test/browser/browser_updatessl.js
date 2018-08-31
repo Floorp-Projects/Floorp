@@ -31,7 +31,7 @@ var HTTPObserver = {
 
     dump("*** HTTP Activity 0x" + aType.toString(16) + " 0x" + aSubtype.toString(16) +
          " " + aChannel.URI.spec + "\n");
-  }
+  },
 };
 
 function test() {
@@ -99,7 +99,7 @@ function run_update_tests(callback) {
         is(status, expectedStatus, message);
         info("Update test ran in " + (Date.now() - gLast) + "ms");
         run_next_update_test();
-      }
+      },
     });
   }
 

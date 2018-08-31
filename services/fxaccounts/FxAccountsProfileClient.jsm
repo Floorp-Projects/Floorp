@@ -185,7 +185,7 @@ this.FxAccountsProfileClient.prototype = {
     }
     return {
       body,
-      etag: request.response.headers.etag
+      etag: request.response.headers.etag,
     };
   },
 
@@ -201,7 +201,7 @@ this.FxAccountsProfileClient.prototype = {
   fetchProfile(etag) {
     log.debug("FxAccountsProfileClient: Requested profile");
     return this._createRequest("/profile", "GET", etag);
-  }
+  },
 };
 
 /**

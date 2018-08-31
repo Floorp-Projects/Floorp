@@ -36,7 +36,7 @@ var idleService = {
   removeIdleObserver(observer, time) {
     this._observers.delete(observer);
     this._activity.removeCalls.push(time);
-  }
+  },
 };
 
 add_task(async function testIntervalChanges() {

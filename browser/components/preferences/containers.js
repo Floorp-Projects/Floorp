@@ -14,7 +14,7 @@ function setTitle() {
   let winElem = document.documentElement;
   if (params.userContextId) {
     document.l10n.setAttributes(winElem, "containers-window-update", {
-      name: params.identity.name
+      name: params.identity.name,
     });
   } else {
     document.l10n.setAttributes(winElem, "containers-window-new");
@@ -35,7 +35,7 @@ let gContainersManager = {
     "fruit",
     "pet",
     "tree",
-    "chill"
+    "chill",
   ],
 
   colors: [
@@ -46,7 +46,7 @@ let gContainersManager = {
     "orange",
     "red",
     "pink",
-    "purple"
+    "purple",
   ],
 
   onLoad() {
@@ -173,5 +173,5 @@ let gContainersManager = {
   onWindowKeyPress(aEvent) {
     if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE)
       window.close();
-  }
+  },
 };

@@ -56,35 +56,35 @@ const kModalStyles = {
     ["position", "absolute"],
     ["white-space", "nowrap"],
     ["will-change", "transform"],
-    ["z-index", 2]
+    ["z-index", 2],
   ],
   outlineNodeDebug: [ ["z-index", 2147483647] ],
   outlineText: [
     ["margin", "0 !important"],
     ["padding", "0 !important"],
-    ["vertical-align", "top !important"]
+    ["vertical-align", "top !important"],
   ],
   maskNode: [
     ["background", "rgba(0,0,0,.25)"],
     ["pointer-events", "none"],
     ["position", "absolute"],
-    ["z-index", 1]
+    ["z-index", 1],
   ],
   maskNodeTransition: [
-    ["transition", "background .2s ease-in"]
+    ["transition", "background .2s ease-in"],
   ],
   maskNodeDebug: [
     ["z-index", 2147483646],
     ["top", 0],
-    ["left", 0]
+    ["left", 0],
   ],
-  maskNodeBrightText: [ ["background", "rgba(255,255,255,.25)"] ]
+  maskNodeBrightText: [ ["background", "rgba(255,255,255,.25)"] ],
 };
 const kModalOutlineAnim = {
   "keyframes": [
     { transform: "scaleX(1) scaleY(1)" },
     { transform: "scaleX(1.5) scaleY(1.5)", offset: .5, easing: "ease-in" },
-    { transform: "scaleX(1) scaleY(1)" }
+    { transform: "scaleX(1) scaleY(1)" },
   ],
   duration: 50,
 };
@@ -123,7 +123,7 @@ function mockAnonymousContentNode(domNode) {
     },
     setCutoutRectsForElement(id, rects) {
       // no-op for now.
-    }
+    },
   };
 }
 
@@ -174,7 +174,7 @@ FinderHighlighter.prototype = {
         lastWindowDimensions: { width: 0, height: 0 },
         modalHighlightRectsMap: new Map(),
         previousRangeRectsAndTexts: { rectList: [], textList: [] },
-        repaintSchedulerState: kRepaintSchedulerStopped
+        repaintSchedulerState: kRepaintSchedulerStopped,
       });
     }
     return gWindows.get(window);
@@ -225,7 +225,7 @@ FinderHighlighter.prototype = {
         finder: this.finder,
         listener: this,
         useCache: true,
-        window
+        window,
       };
       if (this.iterator.isAlreadyRunning(params) ||
           (this._modal && this.iterator._areParamsEqual(params, dict.lastIteratorParams))) {
@@ -634,7 +634,7 @@ FinderHighlighter.prototype = {
     let paddingOffset = [parseInt(style.paddingLeft, 10) || 0, parseInt(style.paddingTop, 10) || 0];
     return frameData.offset = {
       x: borderOffset[0] + paddingOffset[0],
-      y: borderOffset[1] + paddingOffset[1]
+      y: borderOffset[1] + paddingOffset[1],
     };
   },
 
@@ -992,7 +992,7 @@ FinderHighlighter.prototype = {
         ["top", rect.top + "px"],
         ["left", rect.left + "px"],
         ["height", rect.height + "px"],
-        ["width", rect.width + "px"]
+        ["width", rect.width + "px"],
       ], borderStyles, kDebug ? kModalStyles.outlineNodeDebug : []);
       fontStyle.lineHeight = rect.height + "px";
       let textStyle = this._getStyleString(kModalStyles.outlineText) + "; " +
@@ -1360,7 +1360,7 @@ FinderHighlighter.prototype = {
           dict.repaintSchedulerState = kRepaintSchedulerRunning;
           this._scheduleRepaintOfMask(window);
         }
-      }
+      },
     ];
     let target = this.iterator._getDocShell(window).chromeEventHandler;
     target.addEventListener("MozAfterPaint", dict.highlightListeners[0]);
@@ -1707,7 +1707,7 @@ FinderHighlighter.prototype = {
 
       // Unimplemented
       notifyDocumentCreated() {},
-      notifyDocumentStateChanged(aDirty) {}
+      notifyDocumentStateChanged(aDirty) {},
     };
-  }
+  },
 };

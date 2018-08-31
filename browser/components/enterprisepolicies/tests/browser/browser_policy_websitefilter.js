@@ -11,13 +11,13 @@ add_task(async function test() {
     "policies": {
       "WebsiteFilter": {
         "Block": [
-          "*://mochi.test/*policy_websitefilter_*"
+          "*://mochi.test/*policy_websitefilter_*",
         ],
         "Exceptions": [
-          "*://mochi.test/*_websitefilter_exception*"
-        ]
-      }
-    }
+          "*://mochi.test/*_websitefilter_exception*",
+        ],
+      },
+    },
   });
 
   await checkBlockedPage(BLOCKED_PAGE, true);

@@ -226,8 +226,8 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     "set": [
       ["dom.select_popup_in_parent.enabled", true],
-      ["dom.forms.select.customstyling", true]
-    ]
+      ["dom.forms.select.customstyling", true],
+    ],
   });
 });
 
@@ -513,7 +513,7 @@ async function performLargePopupTests(win) {
   let positions = [
     "margin-top: 300px;",
     "position: fixed; bottom: 200px;",
-    "width: 100%; height: 9999px;"
+    "width: 100%; height: 9999px;",
   ];
 
   let position;

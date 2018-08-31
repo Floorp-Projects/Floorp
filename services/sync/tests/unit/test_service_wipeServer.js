@@ -27,7 +27,7 @@ FakeCollection.prototype = {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(body, body.length);
     };
-  }
+  },
 };
 
 async function setUpTestFixtures(server) {
@@ -45,7 +45,7 @@ add_task(async function test_wipeServer_list_success() {
   let server = httpd_setup({
     "/1.1/johndoe/storage/steam": steam_coll.handler(),
     "/1.1/johndoe/storage/diesel": diesel_coll.handler(),
-    "/1.1/johndoe/storage/petrol": httpd_handler(404, "Not Found")
+    "/1.1/johndoe/storage/petrol": httpd_handler(404, "Not Found"),
   });
 
   try {
@@ -79,7 +79,7 @@ add_task(async function test_wipeServer_list_503() {
   let server = httpd_setup({
     "/1.1/johndoe/storage/steam": steam_coll.handler(),
     "/1.1/johndoe/storage/petrol": httpd_handler(503, "Service Unavailable"),
-    "/1.1/johndoe/storage/diesel": diesel_coll.handler()
+    "/1.1/johndoe/storage/diesel": diesel_coll.handler(),
   });
 
   try {
@@ -127,7 +127,7 @@ add_task(async function test_wipeServer_all_success() {
   }
 
   let server = httpd_setup({
-    "/1.1/johndoe/storage": storageHandler
+    "/1.1/johndoe/storage": storageHandler,
   });
   await setUpTestFixtures(server);
 
@@ -159,7 +159,7 @@ add_task(async function test_wipeServer_all_404() {
   }
 
   let server = httpd_setup({
-    "/1.1/johndoe/storage": storageHandler
+    "/1.1/johndoe/storage": storageHandler,
   });
   await setUpTestFixtures(server);
 
@@ -186,7 +186,7 @@ add_task(async function test_wipeServer_all_503() {
   }
 
   let server = httpd_setup({
-    "/1.1/johndoe/storage": storageHandler
+    "/1.1/johndoe/storage": storageHandler,
   });
   await setUpTestFixtures(server);
 

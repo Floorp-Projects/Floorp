@@ -282,7 +282,7 @@ XULStore.prototype = {
     }
 
     return new nsStringEnumerator(attrs);
-  }
+  },
 };
 
 function nsStringEnumerator(items) {

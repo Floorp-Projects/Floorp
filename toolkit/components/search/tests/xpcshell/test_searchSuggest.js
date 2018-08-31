@@ -564,7 +564,7 @@ function updateSearchHistory(operation, value) {
                          handleCompletion(reason) {
                            if (!reason)
                              resolve();
-                         }
+                         },
                        });
   });
 }

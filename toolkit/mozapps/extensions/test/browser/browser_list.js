@@ -29,7 +29,7 @@ var gLWTheme = {
                 homepageURL: "http://mochi.test:8888/data/index.html",
                 headerURL: "http://mochi.test:8888/data/header.png",
                 previewURL: "http://mochi.test:8888/data/preview.png",
-                iconURL: "http://mochi.test:8888/data/icon.png"
+                iconURL: "http://mochi.test:8888/data/icon.png",
               };
 
 add_task(async function() {
@@ -41,7 +41,7 @@ add_task(async function() {
     version: "1.0",
     description: "A test add-on",
     longDescription: " A longer description",
-    updateDate: gDate
+    updateDate: gDate,
   }, {
     id: "addon2@tests.mozilla.org",
     name: "Test add-on 2",
@@ -58,19 +58,19 @@ add_task(async function() {
     appDisabled: true,
     permissions: AddonManager.PERM_CAN_ENABLE |
                  AddonManager.PERM_CAN_DISABLE |
-                 AddonManager.PERM_CAN_UPGRADE
+                 AddonManager.PERM_CAN_UPGRADE,
   }, {
     id: "addon5@tests.mozilla.org",
     blocklistURL: "http://example.com/addon5@tests.mozilla.org",
     name: "Test add-on 5",
     isActive: false,
     blocklistState: Ci.nsIBlocklistService.STATE_BLOCKED,
-    appDisabled: true
+    appDisabled: true,
   }, {
     id: "addon6@tests.mozilla.org",
     blocklistURL: "http://example.com/addon6@tests.mozilla.org",
     name: "Test add-on 6",
-    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
   }, {
     id: "addon8@tests.mozilla.org",
     blocklistURL: "http://example.com/addon8@tests.mozilla.org",
@@ -369,7 +369,7 @@ add_task(async function() {
     version: "2.0",
     description: "A test add-on with a new description",
     updateDate: gDate,
-    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
   }, {
     id: "addon14@tests.mozilla.org",
     name: "Test add-on 14",

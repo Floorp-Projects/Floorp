@@ -141,7 +141,7 @@ function decodeRequestPayload(request) {
         for (let offset = 0; offset < result.length; offset += chunkSize) {
           this.buffer += String.fromCharCode.apply(String, result.slice(offset, offset + chunkSize));
         }
-      }
+      },
     };
 
     let scs = Cc["@mozilla.org/streamConverters;1"]

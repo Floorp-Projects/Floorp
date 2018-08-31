@@ -29,7 +29,7 @@ function run_test() {
           }
           throw Cr.NS_ERROR_FAILURE;
         },
-        QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"])
+        QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
       };
       Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
                      .registerProvider(provider);

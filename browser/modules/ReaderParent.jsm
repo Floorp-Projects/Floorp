@@ -28,7 +28,7 @@ var ReaderParent = {
                 iconUri = PlacesUtils.favicons.getFaviconLinkForIcon(iconUri);
                 message.target.messageManager.sendAsyncMessage("Reader:FaviconReturn", {
                   url: message.data.url,
-                  faviconUrl: iconUri.pathQueryRef.replace(/^favicon:/, "")
+                  faviconUrl: iconUri.pathQueryRef.replace(/^favicon:/, ""),
                 });
               }
             }, preferredWidth);
@@ -123,5 +123,5 @@ var ReaderParent = {
       Cu.reportError("Error downloading and parsing document: " + e);
       return null;
     });
-  }
+  },
 };
