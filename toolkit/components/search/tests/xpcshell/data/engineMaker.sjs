@@ -33,20 +33,24 @@ function createOpenSearchEngine(response, engineData) {
   } else {
     queryString = "?q={searchTerms}";
   }
+  let type = "type='application/x-suggestions+json'";
+  if (engineData.alternativeJSONType) {
+    type = "type='application/json' rel='suggestions'";
+  }
 
-  let result = "<?xml version='1.0' encoding='utf-8'?>\
-<OpenSearchDescription xmlns='http://a9.com/-/spec/opensearch/1.1/'>\
-  <ShortName>" + engineData.name + "</ShortName>\
-  <Description>" + engineData.description + "</Description>\
-  <InputEncoding>UTF-8</InputEncoding>\
-  <LongName>" + engineData.name + "</LongName>\
-  <Url type='application/x-suggestions+json' method='" + engineData.method + "'\
-       template='" + engineData.baseURL + "searchSuggestions.sjs" + queryString + "'>\
-    " + params + "\
-  </Url>\
-  <Url type='text/html' method='" + engineData.method + "'\
-       template='" + engineData.baseURL + queryString + "'/>\
-</OpenSearchDescription>\
-";
+  let result = `<?xml version='1.0' encoding='utf-8'?>
+<OpenSearchDescription xmlns='http://a9.com/-/spec/opensearch/1.1/'>
+  <ShortName>${engineData.name}</ShortName>
+  <Description>${engineData.description}</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <LongName>${engineData.name}</LongName>
+  <Url ${type} method='${engineData.method}'
+       template='${engineData.baseURL}searchSuggestions.sjs${queryString}'>
+    ${params}
+  </Url>
+  <Url type='text/html' method='${engineData.method}'
+       template='${engineData.baseURL}${queryString}'/>
+</OpenSearchDescription>
+`;
   response.write(result);
 }
