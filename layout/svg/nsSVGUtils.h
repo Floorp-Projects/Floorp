@@ -228,11 +228,6 @@ public:
    */
   static bool NeedsReflowSVG(nsIFrame *aFrame);
 
-  /*
-   * Update the filter invalidation region for ancestor frames, if relevant.
-   */
-  static void NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame);
-
   /**
    * Percentage lengths in SVG are resolved against the width/height of the
    * nearest viewport (or its viewBox, if set). This helper returns the size
