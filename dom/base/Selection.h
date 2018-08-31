@@ -12,6 +12,7 @@
 #include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/SelectionChangeListener.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
@@ -113,6 +114,18 @@ public:
   void StopNotifyingAccessibleCaretEventHub()
   {
     mAccessibleCaretEventHub = nullptr;
+  }
+
+  /**
+   * EnableSelectionChangeEvent() starts to notify SelectionChangeListener of
+   * selection change to dispatch a selectionchange event at every selection
+   * change.
+   */
+  void EnableSelectionChangeEvent()
+  {
+    if (!mSelectionChangeListener) {
+      mSelectionChangeListener = new SelectionChangeListener();
+    }
   }
 
   nsIDocument* GetParentObject() const;
@@ -718,6 +731,7 @@ private:
   RefPtr<nsRange> mCachedRange;
   RefPtr<nsFrameSelection> mFrameSelection;
   RefPtr<AccessibleCaretEventHub> mAccessibleCaretEventHub;
+  RefPtr<SelectionChangeListener> mSelectionChangeListener;
   RefPtr<nsAutoScrollTimer> mAutoScrollTimer;
   nsTArray<nsCOMPtr<nsISelectionListener>> mSelectionListeners;
   nsRevocableEventPtr<ScrollSelectionIntoViewEvent> mScrollEvent;
