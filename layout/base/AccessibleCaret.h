@@ -101,10 +101,6 @@ public:
            (mAppearance != Appearance::NormalNotShown);
   }
 
-  // Set true to enable the "Text Selection Bar" described in "Text Selection
-  // Visual Spec" in bug 921965.
-  virtual void SetSelectionBarEnabled(bool aEnabled);
-
   // This enumeration representing the result returned by SetPosition().
   enum class PositionChangedResult : uint8_t {
     // Position is not changed.
@@ -140,7 +136,9 @@ public:
     return mImaginaryCaretRect.Center();
   }
 
-  // Element for 'Intersects' test. Container of image and bar elements.
+  // Element for 'Intersects' test. This is the container of the caret image
+  // and text-overlay elements. See CreateCaretElement() for the content
+  // structure.
   dom::Element& CaretElement() const
   {
     return mCaretElementHolder->ContentNode();
@@ -155,7 +153,6 @@ protected:
   void SetCaretElementStyle(const nsRect& aRect, float aZoomLevel);
   void SetTextOverlayElementStyle(const nsRect& aRect, float aZoomLevel);
   void SetCaretImageElementStyle(const nsRect& aRect, float aZoomLevel);
-  void SetSelectionBarElementStyle(const nsRect& aRect, float aZoomLevel);
 
   // Get current zoom level.
   float GetZoomLevel();
@@ -170,12 +167,6 @@ protected:
   dom::Element* CaretImageElement() const
   {
     return mCaretElementHolder->GetElementById(sCaretImageElementId);
-  }
-
-  // Element which represents the text selection bar.
-  dom::Element* SelectionBarElement() const
-  {
-    return mCaretElementHolder->GetElementById(sSelectionBarElementId);
   }
 
   nsIFrame* RootFrame() const
@@ -219,8 +210,6 @@ protected:
   // Member variables
   Appearance mAppearance = Appearance::None;
 
-  bool mSelectionBarEnabled = false;
-
   // AccessibleCaretManager owns us by a UniquePtr. When it's terminated by
   // AccessibleCaretEventHub::Terminate() which is called in
   // PresShell::Destroy(), it frees us automatically. No need to worry if we
@@ -243,10 +232,8 @@ protected:
   static float sWidth;
   static float sHeight;
   static float sMarginLeft;
-  static float sBarWidth;
   static const nsLiteralString sTextOverlayElementId;
   static const nsLiteralString sCaretImageElementId;
-  static const nsLiteralString sSelectionBarElementId;
 
 }; // class AccessibleCaret
 

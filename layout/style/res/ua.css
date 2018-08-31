@@ -373,8 +373,7 @@ div:-moz-native-anonymous.moz-accessiblecaret {
 
 div:-moz-native-anonymous.moz-accessiblecaret,
 div:-moz-native-anonymous.moz-accessiblecaret > #text-overlay,
-div:-moz-native-anonymous.moz-accessiblecaret > #image,
-div:-moz-native-anonymous.moz-accessiblecaret > #bar {
+div:-moz-native-anonymous.moz-accessiblecaret > #image {
   position: absolute;
   z-index: 2147483647;
 }
@@ -395,15 +394,6 @@ div:-moz-native-anonymous.moz-accessiblecaret > #image {
   background-repeat: no-repeat;
   background-origin: content-box;
   height: 100%;
-}
-
-div:-moz-native-anonymous.moz-accessiblecaret > #bar {
-  margin-left: 49%;
-  background-color: #008aa0;
-}
-
-div:-moz-native-anonymous.moz-accessiblecaret.no-bar > #bar {
-  display: none;
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
