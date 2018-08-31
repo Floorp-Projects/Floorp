@@ -137,23 +137,6 @@ SVGFilterElement::IsAttributeMapped(const nsAtom* name) const
     SVGFilterElementBase::IsAttributeMapped(name);
 }
 
-void
-SVGFilterElement::Invalidate()
-{
-  nsAutoTObserverArray<nsIMutationObserver*, 1> *observers = GetMutationObservers();
-
-  if (observers && !observers->IsEmpty()) {
-    nsAutoTObserverArray<nsIMutationObserver*, 1>::ForwardIterator iter(*observers);
-    while (iter.HasMore()) {
-      nsCOMPtr<nsIMutationObserver> obs(iter.GetNext());
-      RefPtr<SVGFilterObserver> filter = do_QueryObject(obs);
-      if (filter) {
-        filter->Invalidate();
-      }
-    }
-  }
-}
-
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
