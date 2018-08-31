@@ -160,6 +160,13 @@ class MachRaptor(MachCommandBase):
              description='Run raptor performance tests.',
              parser=create_parser)
     def run_raptor_test(self, **kwargs):
+
+        from mozrunner.devices.android_device import verify_android_device
+
+        build_obj = MozbuildObject.from_environment(cwd=HERE)
+        if not verify_android_device(build_obj, install=True, app=kwargs['binary']):
+            return 1
+
         raptor = self._spawn(RaptorRunner)
 
         try:
