@@ -217,7 +217,7 @@ this.AntiTracking = {
       let cookieBlocked = 0;
       let listener = {
         onSecurityChange(webProgress, request, stateFlags, status) {
-          if (stateFlags & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_COOKIES) {
+          if (stateFlags & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) {
             ++cookieBlocked;
           }
         },

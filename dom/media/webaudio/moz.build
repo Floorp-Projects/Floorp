@@ -9,8 +9,6 @@ with Files('*'):
 
 DIRS += ['blink']
 
-TEST_DIRS += ['gtest']
-
 MOCHITEST_MANIFESTS += [
     'test/blink/mochitest.ini',
     'test/mochitest.ini',

@@ -542,12 +542,16 @@ Navigator::CookieEnabled()
     return cookieEnabled;
   }
 
+  uint32_t rejectedReason = 0;
   if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(mWindow,
-                                                              codebaseURI)) {
+                                                              codebaseURI,
+                                                              &rejectedReason)) {
     return true;
   }
 
-  AntiTrackingCommon::NotifyRejection(mWindow);
+  if (rejectedReason) {
+    AntiTrackingCommon::NotifyRejection(mWindow, rejectedReason);
+  }
   return false;
 }
 
