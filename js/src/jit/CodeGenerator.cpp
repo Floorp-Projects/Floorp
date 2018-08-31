@@ -10212,9 +10212,10 @@ CodeGenerator::generateWasm(wasm::FuncTypeIdDesc funcTypeId, wasm::BytecodeOffse
 bool
 CodeGenerator::generate()
 {
-    JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%u",
+    JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%u:%u",
             gen->info().script()->filename(),
-            gen->info().script()->lineno());
+            gen->info().script()->lineno(),
+            gen->info().script()->column());
 
     // Initialize native code table with an entry to the start of
     // top-level script.
