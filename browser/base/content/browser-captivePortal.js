@@ -113,12 +113,6 @@ var CaptivePortalWatcher = {
     }
 
     let win = BrowserWindowTracker.getTopWindow();
-    // Used by tests: ignore the main test window in order to enable testing of
-    // the case where we have no open windows.
-    if (win && win.document.documentElement.getAttribute("ignorecaptiveportal")) {
-      win = null;
-    }
-
     // If no browser window has focus, open and show the tab when we regain focus.
     // This is so that if a different application was focused, when the user
     // (re-)focuses a browser window, we open the tab immediately in that window
@@ -142,12 +136,6 @@ var CaptivePortalWatcher = {
     }
 
     let win = BrowserWindowTracker.getTopWindow();
-    // Used by tests: ignore the main test window in order to enable testing of
-    // the case where we have no open windows.
-    if (win && win.document.documentElement.getAttribute("ignorecaptiveportal")) {
-      win = null;
-    }
-
     if (win != Services.ww.activeWindow) {
       // The window that got focused was not a browser window.
       return;

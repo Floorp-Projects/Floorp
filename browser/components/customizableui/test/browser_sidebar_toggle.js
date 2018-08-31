@@ -42,7 +42,7 @@ add_task(async function() {
   is(SidebarUI.currentID, "viewHistorySidebar", "Selected sidebar remembered");
 
   await hideSidebar();
-  let otherWin = await BrowserTestUtils.openNewBrowserWindow();
+  let otherWin = await BrowserTestUtils.openNewBrowserWindow({opener: window});
   await showSidebar(otherWin);
   is(otherWin.SidebarUI.currentID, "viewHistorySidebar", "Selected sidebar remembered across windows");
   await hideSidebar(otherWin);
