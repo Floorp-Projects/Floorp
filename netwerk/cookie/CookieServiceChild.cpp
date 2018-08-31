@@ -188,7 +188,8 @@ CookieServiceChild::TrackCookieLoad(nsIChannel *aChannel)
     // foreign cookie behavior mode.
     if (isForeign &&
         AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
-                                                                uri)) {
+                                                                uri,
+                                                                nullptr)) {
       firstPartyStorageAccessGranted = true;
     }
   }
@@ -382,7 +383,7 @@ CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *a
                                 aIsForeign, aIsTrackingResource,
                                 aFirstPartyStorageAccessGranted, nullptr,
                                 CountCookiesFromHashTable(baseDomain, aOriginAttrs),
-                                aOriginAttrs);
+                                aOriginAttrs, nullptr);
 
   if (cookieStatus != STATUS_ACCEPTED && cookieStatus != STATUS_ACCEPT_SESSION) {
     return;
@@ -589,7 +590,8 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
     // foreign cookie behavior mode.
     if (isForeign &&
         AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
-                                                                aHostURI)) {
+                                                                aHostURI,
+                                                                nullptr)) {
       firstPartyStorageAccessGranted = true;
     }
   }
@@ -649,7 +651,8 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     // foreign cookie behavior mode.
     if (isForeign &&
         AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
-                                                                aHostURI)) {
+                                                                aHostURI,
+                                                                nullptr)) {
       firstPartyStorageAccessGranted = true;
     }
   }
@@ -701,7 +704,7 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
                                 isForeign, isTrackingResource,
                                 firstPartyStorageAccessGranted, aCookieString,
                                 CountCookiesFromHashTable(baseDomain, attrs),
-                                attrs);
+                                attrs, nullptr);
 
   if (cookieStatus != STATUS_ACCEPTED && cookieStatus != STATUS_ACCEPT_SESSION) {
     return NS_OK;

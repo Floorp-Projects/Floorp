@@ -8876,7 +8876,8 @@ static bool
 StorageDisabledByAntiTrackingInternal(nsPIDOMWindowInner* aWindow,
                                       nsIChannel* aChannel,
                                       nsIPrincipal* aPrincipal,
-                                      nsIURI* aURI)
+                                      nsIURI* aURI,
+                                      uint32_t* aRejectedReason)
 {
   MOZ_ASSERT(aWindow || aChannel || aPrincipal);
 
@@ -8884,7 +8885,8 @@ StorageDisabledByAntiTrackingInternal(nsPIDOMWindowInner* aWindow,
     nsIURI* documentURI = aURI ? aURI : aWindow->GetDocumentURI();
     return !documentURI ||
            !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(aWindow,
-                                                                    documentURI);
+                                                                    documentURI,
+                                                                    aRejectedReason);
   }
 
   if (aChannel) {
@@ -8900,7 +8902,8 @@ StorageDisabledByAntiTrackingInternal(nsPIDOMWindowInner* aWindow,
     }
 
     return !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
-                                                                    uri);
+                                                                    uri,
+                                                                    aRejectedReason);
   }
 
   MOZ_ASSERT(aPrincipal);
@@ -8914,13 +8917,15 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                               nsIPrincipal* aPrincipal,
                                               nsIURI* aURI)
 {
+  uint32_t rejectedReason = 0;
   bool disabled =
-    StorageDisabledByAntiTrackingInternal(aWindow, aChannel, aPrincipal, aURI);
-  if (disabled && sAntiTrackingControlCenterUIEnabled) {
+    StorageDisabledByAntiTrackingInternal(aWindow, aChannel, aPrincipal, aURI,
+                                          &rejectedReason);
+  if (disabled && sAntiTrackingControlCenterUIEnabled && rejectedReason) {
     if (aWindow) {
-      AntiTrackingCommon::NotifyRejection(aWindow);
+      AntiTrackingCommon::NotifyRejection(aWindow, rejectedReason);
     } else if (aChannel) {
-      AntiTrackingCommon::NotifyRejection(aChannel);
+      AntiTrackingCommon::NotifyRejection(aChannel, rejectedReason);
     }
   }
   return disabled;
