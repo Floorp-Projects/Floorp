@@ -29,7 +29,7 @@ AC_CACHE_CHECK(what kind of list files are supported by the linker,
              elif AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS @conftest.list $LIBS 1>&5) && test -s conftest${ac_exeext}; then
                  EXPAND_LIBS_LIST_STYLE=list
              else
-                 EXPAND_LIBS_LIST_STYLE=none
+                 AC_ERROR([Couldn't find one that works])
              fi
          fi
      else
