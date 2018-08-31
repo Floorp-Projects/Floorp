@@ -17,7 +17,8 @@ use api::CapturedDocument;
 use clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
 #[cfg(feature = "debugger")]
 use debug_server;
-use display_list_flattener::DisplayListFlattener;
+#[cfg(feature = "replay")]
+use display_list_flattener::build_scene;
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
 use hit_test::{HitTest, HitTester};
@@ -258,60 +259,6 @@ impl Document {
                 DocumentOps::nop()
             }
         }
-    }
-
-    // TODO: We will probably get rid of this soon and always forward to the scene building thread.
-    fn build_scene(&mut self, resource_cache: &mut ResourceCache, scene_id: u64) {
-        let max_texture_size = resource_cache.max_texture_size();
-
-        if self.view.window_size.width > max_texture_size ||
-           self.view.window_size.height > max_texture_size {
-            error!("ERROR: Invalid window dimensions {}x{}. Please call api.set_window_size()",
-                self.view.window_size.width,
-                self.view.window_size.height,
-            );
-
-            return;
-        }
-
-        let old_builder = self.frame_builder.take().unwrap_or_else(FrameBuilder::empty);
-        let root_pipeline_id = match self.pending.scene.root_pipeline_id {
-            Some(root_pipeline_id) => root_pipeline_id,
-            None => return,
-        };
-
-        if !self.pending.scene.pipelines.contains_key(&root_pipeline_id) {
-            return;
-        }
-
-        // The DisplayListFlattener  re-create the up-to-date current scene's pipeline epoch
-        // map and clip scroll tree from the information in the pending scene.
-        self.current.scene.pipeline_epochs.clear();
-        let old_scrolling_states = self.clip_scroll_tree.drain();
-
-        let frame_builder = DisplayListFlattener::create_frame_builder(
-            old_builder,
-            &self.pending.scene,
-            &mut self.clip_scroll_tree,
-            resource_cache.get_font_instances(),
-            &self.view,
-            &self.output_pipelines,
-            &self.frame_builder_config,
-            &mut self.current.scene,
-            scene_id,
-        );
-
-        self.clip_scroll_tree.finalize_and_apply_pending_scroll_offsets(old_scrolling_states);
-
-        if !self.current.removed_pipelines.is_empty() {
-            warn!("Built the scene several times without rendering it.");
-        }
-
-        self.current.removed_pipelines.extend(self.pending.removed_pipelines.drain(..));
-        self.frame_builder = Some(frame_builder);
-
-        // Advance to the next frame.
-        self.frame_id.0 += 1;
     }
 
     fn forward_transaction_to_scene_builder(
@@ -924,8 +871,12 @@ impl RenderBackend {
 
                         // Set for any existing documents.
                         for (_, doc) in &mut self.documents {
-                            doc.frame_builder_config .dual_source_blending_is_enabled = enable;
+                            doc.frame_builder_config.dual_source_blending_is_enabled = enable;
                         }
+
+                        self.scene_tx.send(SceneBuilderRequest::SetFrameBuilderConfig(
+                            self.frame_config.clone()
+                        )).unwrap();
 
                         // We don't want to forward this message to the renderer.
                         return true;
@@ -1025,7 +976,7 @@ impl RenderBackend {
             );
         }
 
-        if transaction_msg.use_scene_builder_thread {
+        if !has_built_scene && (op.build || transaction_msg.use_scene_builder_thread) {
             let scene_id = self.make_unique_scene_id();
             let doc = self.documents.get_mut(&document_id).unwrap();
 
@@ -1046,15 +997,6 @@ impl RenderBackend {
             transaction_msg.resource_updates,
             &mut profile_counters.resources,
         );
-
-        if op.build {
-            let scene_id = self.make_unique_scene_id();
-            let doc = self.documents.get_mut(&document_id).unwrap();
-            let _timer = profile_counters.total_time.timer();
-            profile_scope!("build scene");
-
-            doc.build_scene(&mut self.resource_cache, scene_id);
-        }
 
         // If we have a sampler, get more frame ops from it and add them
         // to the transaction. This is a hook to allow the WR user code to
@@ -1114,7 +1056,7 @@ impl RenderBackend {
                     &mut self.resource_cache,
                     &mut self.gpu_cache,
                     &mut profile_counters.resources,
-                    op.build || has_built_scene,
+                    has_built_scene,
                 );
 
                 debug!("generated frame for document {:?} with {} passes",
@@ -1431,7 +1373,7 @@ impl RenderBackend {
                     scene,
                     removed_pipelines: Vec::new(),
                 },
-                view,
+                view: view.clone(),
                 clip_scroll_tree: ClipScrollTree::new(),
                 frame_id: FrameId(0),
                 frame_builder_config: self.frame_config.clone(),
@@ -1450,7 +1392,15 @@ impl RenderBackend {
                 }
                 None => {
                     last_scene_id += 1;
-                    doc.build_scene(&mut self.resource_cache, last_scene_id);
+                    let built_scene = build_scene(&self.frame_config, SceneRequest {
+                        scene: doc.pending.scene.clone(),
+                        view,
+                        font_instances: self.resource_cache.get_font_instances(),
+                        output_pipelines: doc.output_pipelines.clone(),
+                        removed_pipelines: Vec::new(),
+                        scene_id: last_scene_id,
+                    });
+                    doc.new_async_scene_ready(built_scene);
                     doc.render(
                         &mut self.resource_cache,
                         &mut self.gpu_cache,
