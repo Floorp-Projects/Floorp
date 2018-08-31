@@ -31,6 +31,17 @@ binutils-2.28.1:
       sig-url: "{url}.sig"
       key-path: build/unix/build-gcc/EAF1C276A747E9ED86210CBAC3126D3B4AE55E93.key
 
+binutils-2.31.1:
+  description: binutils 2.31.1 source code
+  fetch:
+    type: static-url
+    url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.31.1.tar.xz
+    sha256: 5d20086ecf5752cc7d9134246e9588fa201740d540f7eb84d795b1f7a93bca86
+    size: 20467996
+    gpg-signature:
+      sig-url: "{url}.sig"
+      key-path: build/unix/build-binutils/3A24BC1E8FB409FA9F14371813FCEF89DD9E3C4F.key
+
 cloog-0.18.1:
   description: cloog source code
   fetch:
