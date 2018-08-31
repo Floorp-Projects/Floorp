@@ -239,7 +239,7 @@ public:
    *  @param aHint will tell the selection which direction geometrically to actually show the caret on.
    *         1 = end of this line 0 = beginning of this line
    */
-  /*unsafe*/
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult HandleClick(nsIContent *aNewFocus,
                        uint32_t aContentOffset,
                        uint32_t aContentEndOffset,
@@ -360,7 +360,7 @@ public:
    *  sets the drag state to aState for resons of drag state.
    * @param aState is the new state of drag
    */
-  /*unsafe*/
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SetDragState(bool aState);
 
   /** GetDragState(bool *);
@@ -524,8 +524,7 @@ public:
   /** Select All will generally be called from the nsiselectioncontroller implementations.
    *  it will select the whole doc
    */
-  /*unsafe*/
-  nsresult SelectAll();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult SelectAll();
 
   /** Sets/Gets The display selection enum.
    */
@@ -573,8 +572,7 @@ public:
   nsIContent* GetLimiter() const { return mLimiter; }
 
   nsIContent* GetAncestorLimiter() const { return mAncestorLimiter; }
-  /*unsafe*/
-  void SetAncestorLimiter(nsIContent *aLimiter);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetAncestorLimiter(nsIContent* aLimiter);
 
   /** This will tell the frame selection that a double click has been pressed
    *  so it can track abort future drags if inside the same selection
@@ -638,6 +636,8 @@ public:
   nsFrameSelection();
 
   void StartBatchChanges();
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void EndBatchChanges(int16_t aReason = nsISelectionListener::NO_REASON);
 
   /*unsafe*/
@@ -651,6 +651,7 @@ public:
 private:
   ~nsFrameSelection();
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult TakeFocus(nsIContent *aNewFocus,
                      uint32_t aContentOffset,
                      uint32_t aContentEndOffset,
@@ -706,6 +707,7 @@ private:
     eVisual,
     eUsePrefStyle
   };
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult     MoveCaret(nsDirection aDirection, bool aContinueSelection,
                          nsSelectionAmount aAmount,
                          CaretMovementStyle aMovementStyle);
@@ -720,6 +722,7 @@ private:
 
   // nsFrameSelection may get deleted when calling this,
   // so remember to use nsCOMPtr when needed.
+  MOZ_CAN_RUN_SCRIPT
   nsresult     NotifySelectionListeners(mozilla::SelectionType aSelectionType);
   // Update the selection cache on repaint when the
   // selection being repainted is not empty.

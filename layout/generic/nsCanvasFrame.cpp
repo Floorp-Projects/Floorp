@@ -8,7 +8,6 @@
 
 #include "nsCanvasFrame.h"
 
-#include "AccessibleCaretEventHub.h"
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "nsContainerFrame.h"
@@ -24,6 +23,7 @@
 #include "nsFrameManager.h"
 #include "gfxPlatform.h"
 #include "nsPrintfCString.h"
+#include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/layers/StackingContextHelper.h"

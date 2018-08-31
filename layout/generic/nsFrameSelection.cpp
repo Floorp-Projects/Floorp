@@ -51,7 +51,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsCaret.h"
-#include "AccessibleCaretEventHub.h"
 
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
@@ -654,13 +653,8 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter,
 
   mAccessibleCaretEnabled = aAccessibleCaretEnabled;
   if (mAccessibleCaretEnabled) {
-    RefPtr<AccessibleCaretEventHub> eventHub = mShell->GetAccessibleCaretEventHub();
-    if (eventHub) {
-      int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-      if (mDomSelections[index]) {
-        mDomSelections[index]->AddSelectionListener(eventHub);
-      }
-    }
+    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+    mDomSelections[index]->MaybeNotifyAccessibleCaretEventHub(aShell);
   }
 
   bool plaintextControl = (aLimiter != nullptr);
@@ -2868,11 +2862,8 @@ void
 nsFrameSelection::DisconnectFromPresShell()
 {
   if (mAccessibleCaretEnabled) {
-    RefPtr<AccessibleCaretEventHub> eventHub = mShell->GetAccessibleCaretEventHub();
-    if (eventHub) {
-      int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-      mDomSelections[index]->RemoveSelectionListener(eventHub);
-    }
+    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+    mDomSelections[index]->StopNotifyingAccessibleCaretEventHub();
   }
 
   StopAutoScrollTimer();
