@@ -236,8 +236,8 @@ HRESULT CDecoder::Decode(
     
     _7Z_DECODER_CRYPRO_VARS_DECL
 
-    #if !defined(_7ZIP_ST) && !defined(_SFX)
-    , bool mtMode, UInt32 numThreads
+    #if !defined(_7ZIP_ST)
+    , bool mtMode, UInt32 numThreads, UInt64 memUsage
     #endif
     )
 {
@@ -312,7 +312,7 @@ HRESULT CDecoder::Decode(
       #endif
   
       CCreatedCoder cod;
-      RINOK(CreateCoder(
+      RINOK(CreateCoder_Id(
           EXTERNAL_CODECS_LOC_VARS
           coderInfo.MethodID, false, cod));
     
@@ -355,10 +355,38 @@ HRESULT CDecoder::Decode(
 
   unsigned i;
 
+  bool mt_wasUsed = false;
+
   for (i = 0; i < folderInfo.Coders.Size(); i++)
   {
     const CCoderInfo &coderInfo = folderInfo.Coders[i];
     IUnknown *decoder = _mixer->GetCoder(i).GetUnknown();
+
+    #if !defined(_7ZIP_ST)
+    if (!mt_wasUsed)
+    {
+      if (mtMode)
+      {
+        CMyComPtr<ICompressSetCoderMt> setCoderMt;
+        decoder->QueryInterface(IID_ICompressSetCoderMt, (void **)&setCoderMt);
+        if (setCoderMt)
+        {
+          mt_wasUsed = true;
+          RINOK(setCoderMt->SetNumberOfThreads(numThreads));
+        }
+      }
+      // if (memUsage != 0)
+      {
+        CMyComPtr<ICompressSetMemLimit> setMemLimit;
+        decoder->QueryInterface(IID_ICompressSetMemLimit, (void **)&setMemLimit);
+        if (setMemLimit)
+        {
+          mt_wasUsed = true;
+          RINOK(setMemLimit->SetMemLimit(memUsage));
+        }
+      }
+    }
+    #endif
 
     {
       CMyComPtr<ICompressSetDecoderProperties2> setDecoderProperties;
@@ -375,18 +403,6 @@ HRESULT CDecoder::Decode(
         RINOK(res);
       }
     }
-
-    #if !defined(_7ZIP_ST) && !defined(_SFX)
-    if (mtMode)
-    {
-      CMyComPtr<ICompressSetCoderMt> setCoderMt;
-      decoder->QueryInterface(IID_ICompressSetCoderMt, (void **)&setCoderMt);
-      if (setCoderMt)
-      {
-        RINOK(setCoderMt->SetNumberOfThreads(numThreads));
-      }
-    }
-    #endif
 
     #ifndef _NO_CRYPTO
     {
