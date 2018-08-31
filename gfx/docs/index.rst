@@ -1,17 +1,9 @@
+========
 Graphics
 ========
 
-This collection of linked pages contains design documents for the
-Mozilla graphics architecture. The design documents live in gfx/docs directory.
+The graphics team's documentation is currently using doxygen. We're tracking the work to integrate it better at https://bugzilla.mozilla.org/show_bug.cgi?id=1150232.
 
-This `wiki page <https://wiki.mozilla.org/Platform/GFX>`__ contains
-information about graphics and the graphics team at Mozilla.
+For now you can read the graphics source code documentation here:
 
-.. toctree::
-   :maxdepth: 1
-
-   GraphicsOverview
-   LayersHistory
-   AsyncPanZoom
-   AdvancedLayers
-   Silk
+http://people.mozilla.org/~bgirard/doxygen/gfx/

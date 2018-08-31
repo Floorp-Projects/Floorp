@@ -538,16 +538,6 @@
     "bug_numbers": [1372042],
     "description": "Percent of the cycle collector's forget skippable done during idle time"
   },
-  "FORGET_SKIPPABLE_FREQUENCY": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["smaug@mozilla.com", "dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 500,
-    "n_buckets": 100,
-    "bug_numbers": [1487271],
-    "description": "Number of forget skippables occurred during a minute"
-  },
   "FULLSCREEN_TRANSITION_BLACK_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["xquan@mozilla.com"],

@@ -1536,15 +1536,14 @@ JitcodeIonTable::WriteIonTable(CompactBufferWriter& writer,
     MOZ_ASSERT(writer.length() == 0);
     MOZ_ASSERT(scriptListSize > 0);
 
-    JitSpew(JitSpew_Profiling, "Writing native to bytecode map for %s:%u:%u (%zu entries)",
-            scriptList[0]->filename(), scriptList[0]->lineno(), scriptList[0]->column(),
+    JitSpew(JitSpew_Profiling, "Writing native to bytecode map for %s:%u (%zu entries)",
+            scriptList[0]->filename(), scriptList[0]->lineno(),
             mozilla::PointerRangeSize(start, end));
 
     JitSpew(JitSpew_Profiling, "  ScriptList of size %d", int(scriptListSize));
     for (uint32_t i = 0; i < scriptListSize; i++) {
-        JitSpew(JitSpew_Profiling, "  Script %d - %s:%u:%u",
-                int(i), scriptList[i]->filename(), 
-                scriptList[i]->lineno(), scriptList[i]->column());
+        JitSpew(JitSpew_Profiling, "  Script %d - %s:%u",
+                int(i), scriptList[i]->filename(), scriptList[i]->lineno());
     }
 
     // Write out runs first.  Keep a vector tracking the positive offsets from payload

@@ -168,7 +168,7 @@ class NetErrorChild extends ActorChild {
           if (newErrorPagesEnabled) {
             technicalInfo.textContent = "";
             let brandName = gBrandBundle.GetStringFromName("brandShortName");
-            msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix1", [brandName, hostString], 2) + " ";
+            msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix1", [brandName, hostString], 2);
             msgPrefix += gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
           } else {
             msgPrefix = gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
