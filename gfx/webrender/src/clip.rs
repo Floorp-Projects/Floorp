@@ -4,20 +4,19 @@
 
 use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, DevicePixelScale, ImageMask};
 use api::{ImageRendering, LayoutRect, LayoutSize, LayoutPoint, LayoutVector2D, LocalClip};
-use api::{BoxShadowClipMode, LayoutToWorldScale, LineOrientation, LineStyle};
-use api::{LayoutToWorldTransform, WorldPixel, WorldRect, WorldPoint, WorldSize};
+use api::{BoxShadowClipMode, LayoutToWorldScale, LineOrientation, LineStyle, PicturePixel, WorldPixel};
+use api::{PictureRect, LayoutPixel, WorldPoint, WorldSize, WorldRect, LayoutToWorldTransform};
 use border::{ensure_no_corner_overlap};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
 use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, SpatialNodeIndex};
 use ellipse::Ellipse;
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
-use gpu_types::BoxShadowStretchMode;
-use plane_split::{Clipper, Polygon};
-use prim_store::{ClipData, ImageMaskData};
+use gpu_types::{BoxShadowStretchMode};
+use prim_store::{ClipData, ImageMaskData, SpaceMapper};
 use render_task::to_cache_size;
 use resource_cache::{ImageRequest, ResourceCache};
 use std::{cmp, u32};
-use util::{extract_inner_rect_safe, pack_as_float, recycle_vec, MaxRect};
+use util::{extract_inner_rect_safe, pack_as_float, project_rect, recycle_vec};
 
 /*
 
@@ -322,10 +321,14 @@ pub struct ClipStore {
 #[derive(Debug)]
 pub struct ClipChainInstance {
     pub clips_range: ClipNodeRange,
+    // Combined clip rect for clips that are in the
+    // same coordinate system as the primitive.
     pub local_clip_rect: LayoutRect,
     pub has_non_root_coord_system: bool,
     pub has_non_local_clips: bool,
-    pub world_clip_rect: WorldRect,
+    // Combined clip rect in picture space (may
+    // be more conservative that local_clip_rect).
+    pub pic_clip_rect: PictureRect,
 }
 
 impl ClipStore {
@@ -416,13 +419,14 @@ impl ClipStore {
         local_prim_rect: LayoutRect,
         local_prim_clip_rect: LayoutRect,
         spatial_node_index: SpatialNodeIndex,
+        prim_to_pic_mapper: &SpaceMapper<LayoutPixel, PicturePixel>,
+        pic_to_world_mapper: &SpaceMapper<PicturePixel, WorldPixel>,
         clip_scroll_tree: &ClipScrollTree,
         gpu_cache: &mut GpuCache,
         resource_cache: &mut ResourceCache,
         device_pixel_scale: DevicePixelScale,
     ) -> Option<ClipChainInstance> {
         let mut local_clip_rect = local_prim_clip_rect;
-        let mut world_clip_rect = WorldRect::max_rect();
         let spatial_nodes = &clip_scroll_tree.spatial_nodes;
 
         // Walk the clip chain to build local rects, and collect the
@@ -480,19 +484,16 @@ impl ClipStore {
                                     None => return None,
                                 };
                             }
-                            ClipSpaceConversion::Transform(ref transform) => {
-                                let world_clip_rect_for_item = match project_rect(
-                                    transform,
-                                    &clip_rect,
-                                ) {
-                                    Some(rect) => rect,
-                                    None => return None,
-                                };
-
-                                world_clip_rect = match world_clip_rect.intersection(&world_clip_rect_for_item) {
-                                    Some(world_clip_rect) => world_clip_rect,
-                                    None => return None,
-                                };
+                            ClipSpaceConversion::Transform(..) => {
+                                // TODO(gw): In the future, we can reduce the size
+                                //           of the pic_clip_rect here. To do this,
+                                //           we can use project_rect or the
+                                //           inverse_rect_footprint method, depending
+                                //           on the relationship of the clip, pic
+                                //           and primitive spatial nodes.
+                                //           I have left this for now until we
+                                //           find some good test cases where this
+                                //           would be a worthwhile perf win.
                             }
                         }
                     }
@@ -512,15 +513,12 @@ impl ClipStore {
             None => return None,
         };
 
-        let world_bounding_rect = match project_rect(
-            &ref_spatial_node.world_content_transform.to_transform(),
-            &local_bounding_rect,
-        ) {
-            Some(world_bounding_rect) => world_bounding_rect,
+        let pic_clip_rect = match prim_to_pic_mapper.map(&local_bounding_rect) {
+            Some(pic_bounding_rect) => pic_bounding_rect,
             None => return None,
         };
 
-        let world_clip_rect = match world_clip_rect.intersection(&world_bounding_rect) {
+        let world_clip_rect = match pic_to_world_mapper.map(&pic_clip_rect) {
             Some(world_clip_rect) => world_clip_rect,
             None => return None,
         };
@@ -551,7 +549,7 @@ impl ClipStore {
                     has_non_local_clips = true;
                     node.item.get_clip_result_complex(
                         transform,
-                        &world_bounding_rect,
+                        &world_clip_rect,
                     )
                 }
             };
@@ -609,7 +607,7 @@ impl ClipStore {
             has_non_root_coord_system,
             has_non_local_clips,
             local_clip_rect,
-            world_clip_rect,
+            pic_clip_rect,
         })
     }
 }
@@ -870,7 +868,7 @@ impl ClipItem {
     fn get_clip_result_complex(
         &self,
         transform: &LayoutToWorldTransform,
-        prim_rect: &WorldRect,
+        prim_world_rect: &WorldRect,
     ) -> ClipResult {
         let (clip_rect, inner_rect) = match *self {
             ClipItem::Rectangle(clip_rect, ClipMode::Clip) => {
@@ -894,7 +892,7 @@ impl ClipItem {
         });
 
         if let Some(inner_clip_rect) = inner_clip_rect {
-            if inner_clip_rect.contains_rect(prim_rect) {
+            if inner_clip_rect.contains_rect(prim_world_rect) {
                 return ClipResult::Accept;
             }
         }
@@ -904,7 +902,7 @@ impl ClipItem {
             None => return ClipResult::Partial,
         };
 
-        match outer_clip_rect.intersection(prim_rect) {
+        match outer_clip_rect.intersection(prim_world_rect) {
             Some(..) => {
                 ClipResult::Partial
             }
@@ -1065,53 +1063,6 @@ pub fn rounded_rectangle_contains_point(
     }
 
     true
-}
-
-fn project_rect(
-    transform: &LayoutToWorldTransform,
-    rect: &LayoutRect,
-) -> Option<WorldRect> {
-    let homogens = [
-        transform.transform_point2d_homogeneous(&rect.origin),
-        transform.transform_point2d_homogeneous(&rect.top_right()),
-        transform.transform_point2d_homogeneous(&rect.bottom_left()),
-        transform.transform_point2d_homogeneous(&rect.bottom_right()),
-    ];
-
-    // Note: we only do the full frustum collision when the polygon approaches the camera plane.
-    // Otherwise, it will be clamped to the screen bounds anyway.
-    if homogens.iter().any(|h| h.w <= 0.0) {
-        let mut clipper = Clipper::new();
-        clipper.add_frustum(
-            transform,
-            None,
-        );
-
-        let polygon = Polygon::from_rect(*rect, 1);
-        let results = clipper.clip(polygon);
-        if results.is_empty() {
-            return None
-        }
-
-        Some(WorldRect::from_points(results
-            .into_iter()
-            // filter out parts behind the view plane
-            .flat_map(|poly| &poly.points)
-            .map(|p| {
-                let mut homo = transform.transform_point2d_homogeneous(&p.to_2d());
-                homo.w = homo.w.max(0.00000001); // avoid infinite values
-                homo.to_point2d().unwrap()
-            })
-        ))
-    } else {
-        // we just checked for all the points to be in positive hemisphere, so `unwrap` is valid
-        Some(WorldRect::from_points(&[
-            homogens[0].to_point2d().unwrap(),
-            homogens[1].to_point2d().unwrap(),
-            homogens[2].to_point2d().unwrap(),
-            homogens[3].to_point2d().unwrap(),
-        ]))
-    }
 }
 
 pub fn project_inner_rect(
