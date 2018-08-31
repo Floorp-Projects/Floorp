@@ -16,6 +16,7 @@
 #include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"
 #include "nsNetUtil.h"
+#include "SVGObserverUtils.h"
 #include "imgIContainer.h"
 #include "gfx2DGlue.h"
 
@@ -356,21 +357,13 @@ SVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect*
   if (aType == imgINotificationObserver::LOAD_COMPLETE ||
       aType == imgINotificationObserver::FRAME_UPDATE ||
       aType == imgINotificationObserver::SIZE_AVAILABLE) {
-    Invalidate();
+    if (GetParent() && GetParent()->IsSVGElement(nsGkAtoms::filter)) {
+      SVGObserverUtils::InvalidateDirectRenderingObservers(
+        static_cast<SVGFilterElement*>(GetParent()));
+    }
   }
 
   return rv;
-}
-
-//----------------------------------------------------------------------
-// helper methods
-
-void
-SVGFEImageElement::Invalidate()
-{
-  if (GetParent() && GetParent()->IsSVGElement(nsGkAtoms::filter)) {
-    static_cast<SVGFilterElement*>(GetParent())->Invalidate();
-  }
 }
 
 } // namespace dom
