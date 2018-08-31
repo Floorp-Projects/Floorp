@@ -287,6 +287,10 @@
   -moz-context-properties: fill;
 }
 
+#command-button-responsive.checked::before {
+  fill: currentColor;
+}
+
 #command-button-scratchpad::before {
   background-image: var(--command-scratchpad-image);
 }
