@@ -1429,14 +1429,6 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
     link.title = "Go to the " + aThere + " of " + aProcess;
     link.style = "text-decoration: none";
 
-    // This jumps to the anchor without the page location getting the anchor
-    // name tacked onto its end, which is what happens with a vanilla link.
-    link.addEventListener("click", function(event) {
-      document.documentElement.scrollTop =
-        document.querySelector(event.target.href).offsetTop;
-      event.preventDefault();
-    });
-
     // This gives nice spacing when we copy and paste.
     appendElementWithText(aP, "span", "", "\n");
   };
