@@ -35,6 +35,8 @@
 #include "nsLayoutUtils.h"
 #include "mozilla/Attributes.h"
 #include "nsUnicodeProperties.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
+#include "TextDrawTarget.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -308,6 +310,12 @@ public:
   void PaintTextToContext(gfxContext* aCtx,
                           nsPoint aOffset,
                           const nscolor* aColor);
+
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                       const StackingContextHelper& aSc,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) override;
 };
 
 static void
@@ -346,6 +354,36 @@ nsDisplayXULTextBox::PaintTextToContext(gfxContext* aCtx,
 {
   static_cast<nsTextBoxFrame*>(mFrame)->
     PaintTitle(*aCtx, GetPaintRect(), ToReferenceFrame() + aOffset, aColor);
+}
+
+bool
+nsDisplayXULTextBox::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                             mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                             const StackingContextHelper& aSc,
+                                             mozilla::layers::WebRenderLayerManager* aManager,
+                                             nsDisplayListBuilder* aDisplayListBuilder)
+{
+
+  bool snap = false;
+  auto bounds = GetBounds(aDisplayListBuilder, &snap);
+
+  if (bounds.IsEmpty()) {
+    return true;
+  }
+
+
+  auto appUnitsPerDevPixel = Frame()->PresContext()->AppUnitsPerDevPixel();
+  gfx::Point deviceOffset = LayoutDevicePoint::FromAppUnits(
+      bounds.TopLeft(), appUnitsPerDevPixel).ToUnknownPoint();
+
+  RefPtr<mozilla::layout::TextDrawTarget> textDrawer = 
+      new mozilla::layout::TextDrawTarget(aBuilder, aResources, aSc, aManager, this, bounds);
+  RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer, deviceOffset);
+
+  Paint(aDisplayListBuilder, captureCtx);
+  textDrawer->TerminateShadows();
+
+  return !textDrawer->HasUnsupportedFeatures();
 }
 
 nsRect
