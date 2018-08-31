@@ -1,0 +1,29 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>EngineSession.loadData - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.concept.engine</a>&nbsp;/&nbsp;<a href="index.html">EngineSession</a>&nbsp;/&nbsp;<a href="./load-data.html">loadData</a><br/>
+<br/>
+<h1>loadData</h1>
+<a name="mozilla.components.concept.engine.EngineSession$loadData(kotlin.String, kotlin.String, kotlin.String)"></a>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">loadData</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$loadData(kotlin.String, kotlin.String, kotlin.String)/data">data</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$loadData(kotlin.String, kotlin.String, kotlin.String)/mimeType">mimeType</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;"text/html"<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$loadData(kotlin.String, kotlin.String, kotlin.String)/encoding">encoding</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;"UTF-8"<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Loads the data with the given mimeType.
+Example:</p>
+<pre><code>engineSession.loadData("&lt;html&gt;&lt;body&gt;Example HTML content here&lt;/body&gt;&lt;/html&gt;", "text/html")
+</code></pre>
+<p>If the data is base64 encoded, you can override the default encoding (UTF-8) with 'base64'.
+Example:</p>
+<pre><code>engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", "text/plain", "base64")
+</code></pre>
+<h3>Parameters</h3>
+<p><a name="data"></a>
+<code>data</code> - The data that should be rendering.</p>
+<p><a name="mimeType"></a>
+<code>mimeType</code> - the data type needed by the engine to know how to render it.</p>
+<p><a name="encoding"></a>
+<code>encoding</code> - specifies whether the data is base64 encoded; use 'base64' else defaults to "UTF-8".</p>
+</BODY>
+</HTML>

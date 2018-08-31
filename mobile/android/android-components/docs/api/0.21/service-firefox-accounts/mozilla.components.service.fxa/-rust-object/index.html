@@ -1,0 +1,136 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>RustObject - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="./index.html">RustObject</a><br/>
+<br/>
+<h1>RustObject</h1>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">RustObject</span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="http://docs.oracle.com/javase/6/docs/api/java/io/Closeable.html"><span class="identifier">Closeable</span></a></code>
+<p>Base class that wraps an non-optional <a href="#">Pointer</a> representing a pointer to a Rust object.
+This class implements <a href="http://docs.oracle.com/javase/6/docs/api/java/io/Closeable.html">Closeable</a> but does not provide an implementation, forcing all
+subclasses to implement it. This ensures that all classes that inherit from RustObject
+will have their <a href="#">Pointer</a> destroyed when the Java wrapper is destroyed.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">RustObject</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>Base class that wraps an non-optional <a href="#">Pointer</a> representing a pointer to a Rust object.
+This class implements <a href="http://docs.oracle.com/javase/6/docs/api/java/io/Closeable.html">Closeable</a> but does not provide an implementation, forcing all
+subclasses to implement it. This ensures that all classes that inherit from RustObject
+will have their <a href="#">Pointer</a> destroyed when the Java wrapper is destroyed.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="is-consumed.html">isConsumed</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">isConsumed</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="raw-pointer.html">rawPointer</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">var </span><span class="identifier">rawPointer</span><span class="symbol">: </span><a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">?</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="close.html">close</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">close</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="consume-pointer.html">consumePointer</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">consumePointer</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="index.html#T"><span class="identifier">T</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="destroy.html">destroy</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">destroy</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.RustObject$destroy(mozilla.components.service.fxa.RustObject.T)/p">p</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="valid-pointer.html">validPointer</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">validPointer</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="index.html#T"><span class="identifier">T</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-and-consume-string.html">getAndConsumeString</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getAndConsumeString</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.RustObject.Companion$getAndConsumeString(com.sun.jna.Pointer)/stringPtr">stringPtr</span><span class="symbol">:</span>&nbsp;<span class="identifier">Pointer</span><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="safe-async.html">safeAsync</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">U</span><span class="symbol">&gt;</span> <span class="identifier">safeAsync</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.RustObject.Companion$safeAsync(kotlin.Function1((mozilla.components.service.fxa.Error.ByReference, mozilla.components.service.fxa.RustObject.Companion.safeAsync.U)))/callback">callback</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="../-error/-by-reference/index.html"><span class="identifier">ByReference</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="safe-async.html#U"><span class="identifier">U</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-fxa-result/index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="safe-async.html#U"><span class="identifier">U</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="safe-sync.html">safeSync</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">U</span><span class="symbol">&gt;</span> <span class="identifier">safeSync</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.RustObject.Companion$safeSync(kotlin.Function1((mozilla.components.service.fxa.Error.ByReference, mozilla.components.service.fxa.RustObject.Companion.safeSync.U)))/callback">callback</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="../-error/-by-reference/index.html"><span class="identifier">ByReference</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="safe-sync.html#U"><span class="identifier">U</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="safe-sync.html#U"><span class="identifier">U</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-config/index.html">Config</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">Config</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">RustObject</span></a><span class="symbol">&lt;</span><a href="../-raw-config/index.html"><span class="identifier">RawConfig</span></a><span class="symbol">&gt;</span></code>
+<p>Config represents the server endpoint configurations needed for the
+authentication flow.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-firefox-account/index.html">FirefoxAccount</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">FirefoxAccount</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">RustObject</span></a><span class="symbol">&lt;</span><a href="../-raw-fx-account/index.html"><span class="identifier">RawFxAccount</span></a><span class="symbol">&gt;</span></code>
+<p>FirefoxAccount represents the authentication state of a client.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

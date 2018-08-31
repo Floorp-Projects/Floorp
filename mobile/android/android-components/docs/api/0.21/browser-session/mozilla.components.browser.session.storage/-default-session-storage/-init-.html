@@ -1,0 +1,29 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>DefaultSessionStorage.<init> - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.browser.session.storage</a>&nbsp;/&nbsp;<a href="index.html">DefaultSessionStorage</a>&nbsp;/&nbsp;<a href="./-init-.html">&lt;init&gt;</a><br/>
+<br/>
+<h1>&lt;init&gt;</h1>
+<a name="mozilla.components.browser.session.storage.DefaultSessionStorage$&lt;init&gt;(android.content.Context, kotlin.Boolean, kotlin.Long, java.util.concurrent.ScheduledExecutorService)"></a>
+<code><span class="identifier">DefaultSessionStorage</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.storage.DefaultSessionStorage$<init>(android.content.Context, kotlin.Boolean, kotlin.Long, java.util.concurrent.ScheduledExecutorService)/context">context</span><span class="symbol">:</span>&nbsp;<span class="identifier">Context</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.DefaultSessionStorage$<init>(android.content.Context, kotlin.Boolean, kotlin.Long, java.util.concurrent.ScheduledExecutorService)/savePeriodically">savePeriodically</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.DefaultSessionStorage$<init>(android.content.Context, kotlin.Boolean, kotlin.Long, java.util.concurrent.ScheduledExecutorService)/saveIntervalInSeconds">saveIntervalInSeconds</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a>&nbsp;<span class="symbol">=</span>&nbsp;300<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.DefaultSessionStorage$<init>(android.content.Context, kotlin.Boolean, kotlin.Long, java.util.concurrent.ScheduledExecutorService)/scheduler">scheduler</span><span class="symbol">:</span>&nbsp;<a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ScheduledExecutorService.html"><span class="identifier">ScheduledExecutorService</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Executors.newSingleThreadScheduledExecutor()<span class="symbol">)</span></code>
+<p>Default implementation of <a href="../-session-storage/index.html">SessionStorage</a> which persists browser and engine
+session states to a JSON file.</p>
+<p>The JSON format used for persisting:
+{
+    "version": <a href="#">version</a>,
+    "selectedSession": "<a href="#">session-uuid</a>",
+    "<a href="#">session-uuid</a>": {
+        "session": {}
+        "engineSession": {}
+    },
+    "<a href="#">session-uuid</a>": {
+        "session": {}
+        "engineSession": {}
+    }
+}</p>
+</BODY>
+</HTML>

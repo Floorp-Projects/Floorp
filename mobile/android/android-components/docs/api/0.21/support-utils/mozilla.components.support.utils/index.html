@@ -1,0 +1,87 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.support.utils - </title>
+<link rel="stylesheet" href="../style.css">
+</HEAD>
+<BODY>
+<a href="./index.html">mozilla.components.support.utils</a><br/>
+<br/>
+<h2>Package mozilla.components.support.utils</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-color-utils/index.html">ColorUtils</a></p>
+</td>
+<td>
+<code><span class="keyword">object </span><span class="identifier">ColorUtils</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-download-utils/index.html">DownloadUtils</a></p>
+</td>
+<td>
+<code><span class="keyword">object </span><span class="identifier">DownloadUtils</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-drawable-utils/index.html">DrawableUtils</a></p>
+</td>
+<td>
+<code><span class="keyword">object </span><span class="identifier">DrawableUtils</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-safe-bundle/index.html">SafeBundle</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SafeBundle</span></code>
+<p>See SafeIntent for more background: applications can put garbage values into Bundles. This is primarily
+experienced when there's garbage in the Intent's Bundle. However that Bundle can contain further bundles,
+and we need to handle those defensively too.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-safe-intent/index.html">SafeIntent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SafeIntent</span></code>
+<p>External applications can pass values into Intents that can cause us to crash: in defense,
+we wrap <a href="#">Intent</a> and catch the exceptions they may force us to throw. See bug 1090385
+for more.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-status-bar-utils/index.html">StatusBarUtils</a></p>
+</td>
+<td>
+<code><span class="keyword">object </span><span class="identifier">StatusBarUtils</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-thread-utils/index.html">ThreadUtils</a></p>
+</td>
+<td>
+<code><span class="keyword">object </span><span class="identifier">ThreadUtils</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-web-u-r-l-finder/index.html">WebURLFinder</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">WebURLFinder</span></code>
+<p>Regular expressions used in this class are taken from Android's Patterns.java.
+We brought them in to standardize URL matching across Android versions, instead of relying
+on Android version-dependent built-ins that can vary across Android versions.
+The original code can be found here:
+http://androidxref.com/8.0.0_r4/xref/frameworks/base/core/java/android/util/Patterns.java</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

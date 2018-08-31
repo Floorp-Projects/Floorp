@@ -1,0 +1,50 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ErrorPages - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.browser.errorpages</a>&nbsp;/&nbsp;<a href="./index.html">ErrorPages</a><br/>
+<br/>
+<h1>ErrorPages</h1>
+<code><span class="keyword">object </span><span class="identifier">ErrorPages</span></code>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-error-type/index.html">ErrorType</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">ErrorType</span></code>
+<p>Enum containing all supported error types that we can display an error page for.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="create-error-page.html">createErrorPage</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createErrorPage</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.errorpages.ErrorPages$createErrorPage(android.content.Context, mozilla.components.browser.errorpages.ErrorPages.ErrorType)/context">context</span><span class="symbol">:</span>&nbsp;<span class="identifier">Context</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.errorpages.ErrorPages$createErrorPage(android.content.Context, mozilla.components.browser.errorpages.ErrorPages.ErrorType)/errorType">errorType</span><span class="symbol">:</span>&nbsp;<a href="-error-type/index.html"><span class="identifier">ErrorType</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Load and generate error page for the given error type.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="map-web-view-error-code-to-error-type.html">mapWebViewErrorCodeToErrorType</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">mapWebViewErrorCodeToErrorType</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.errorpages.ErrorPages$mapWebViewErrorCodeToErrorType(kotlin.Int)/errorCode">errorCode</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="-error-type/index.html"><span class="identifier">ErrorType</span></a></code>
+<p>Map a WebView error code (WebViewClient.ERROR_*) to an element of the ErrorType enum.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

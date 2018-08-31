@@ -1,0 +1,157 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Toolbar - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.concept.toolbar</a>&nbsp;/&nbsp;<a href="./index.html">Toolbar</a><br/>
+<br/>
+<h1>Toolbar</h1>
+<code><span class="keyword">interface </span><span class="identifier">Toolbar</span></code>
+<p>Interface to be implemented by components that provide browser toolbar functionality.</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-action/index.html">Action</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">Action</span></code>
+<p>Generic interface for actions to be added to the toolbar.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-action-button/index.html">ActionButton</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ActionButton</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-action/index.html"><span class="identifier">Action</span></a></code>
+<p>An action button to be added to the toolbar.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-action-image/index.html">ActionImage</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ActionImage</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-action/index.html"><span class="identifier">Action</span></a></code>
+<p>An action that just shows a static, non-clickable image.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-action-space/index.html">ActionSpace</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ActionSpace</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-action/index.html"><span class="identifier">Action</span></a></code>
+<p>An "empty" action with a desired width to be used as "placeholder".</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-action-toggle-button/index.html">ActionToggleButton</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ActionToggleButton</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-action/index.html"><span class="identifier">Action</span></a></code>
+<p>An action button with two states, selected and unselected. When the button is pressed, the
+state changes automatically.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="url.html">url</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">url</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Sets/Gets the URL to be displayed on the toolbar.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="add-browser-action.html">addBrowserAction</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">addBrowserAction</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar$addBrowserAction(mozilla.components.concept.toolbar.Toolbar.Action)/action">action</span><span class="symbol">:</span>&nbsp;<a href="-action/index.html"><span class="identifier">Action</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Adds an action to be displayed on the right side of the toolbar in display mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="add-navigation-action.html">addNavigationAction</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">addNavigationAction</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar$addNavigationAction(mozilla.components.concept.toolbar.Toolbar.Action)/action">action</span><span class="symbol">:</span>&nbsp;<a href="-action/index.html"><span class="identifier">Action</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Adds an action to be displayed on the far left side of the URL in display mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="add-page-action.html">addPageAction</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">addPageAction</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar$addPageAction(mozilla.components.concept.toolbar.Toolbar.Action)/action">action</span><span class="symbol">:</span>&nbsp;<a href="-action/index.html"><span class="identifier">Action</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Adds an action to be displayed on the right side of the URL in display mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="as-view.html">asView</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">asView</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">View</span></code>
+<p>Casts this toolbar to an Android View object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="display-progress.html">displayProgress</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">displayProgress</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar$displayProgress(kotlin.Int)/progress">progress</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Displays the given loading progress. Expects values in the range <a href="#">0,100</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-back-pressed.html">onBackPressed</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onBackPressed</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Should be called by an activity when the user pressed the back key of the device.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-on-url-commit-listener.html">setOnUrlCommitListener</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setOnUrlCommitListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar$setOnUrlCommitListener(kotlin.Function1((kotlin.String, kotlin.Unit)))/listener">listener</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Registers the given function to be invoked when the user selected a new URL i.e. is done
+editing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-search-terms.html">setSearchTerms</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setSearchTerms</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar$setSearchTerms(kotlin.String)/searchTerms">searchTerms</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Displays the currently used search terms as part of this Toolbar.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,71 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Settings - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.concept.engine</a>&nbsp;/&nbsp;<a href="./index.html">Settings</a><br/>
+<br/>
+<h1>Settings</h1>
+<code><span class="keyword">interface </span><span class="identifier">Settings</span></code>
+<p>Holds settings of an engine or session. Concrete engine
+implementations define how these settings are applied i.e.
+whether a setting is applied on an engine or session instance.</p>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="dom-storage-enabled.html">domStorageEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">var </span><span class="identifier">domStorageEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not DOM Storage is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="javascript-enabled.html">javascriptEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">var </span><span class="identifier">javascriptEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not JavaScript is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="request-interceptor.html">requestInterceptor</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">var </span><span class="identifier">requestInterceptor</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine.request/-request-interceptor/index.html"><span class="identifier">RequestInterceptor</span></a><span class="symbol">?</span></code>
+<p>Setting to intercept and override requests.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="tracking-protection-policy.html">trackingProtectionPolicy</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">var </span><span class="identifier">trackingProtectionPolicy</span><span class="symbol">: </span><a href="../-engine-session/-tracking-protection-policy/index.html"><span class="identifier">TrackingProtectionPolicy</span></a><span class="symbol">?</span></code>
+<p>Setting to control tracking protection.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-default-settings/index.html">DefaultSettings</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">DefaultSettings</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Settings</span></a></code>
+<p><a href="./index.html">Settings</a> implementation used to set defaults for <a href="../-engine/index.html">Engine</a> and <a href="../-engine-session/index.html">EngineSession</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

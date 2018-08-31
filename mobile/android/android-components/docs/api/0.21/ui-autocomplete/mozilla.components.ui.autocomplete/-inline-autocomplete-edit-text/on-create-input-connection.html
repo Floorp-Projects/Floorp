@@ -1,0 +1,19 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>InlineAutocompleteEditText.onCreateInputConnection - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.ui.autocomplete</a>&nbsp;/&nbsp;<a href="index.html">InlineAutocompleteEditText</a>&nbsp;/&nbsp;<a href="./on-create-input-connection.html">onCreateInputConnection</a><br/>
+<br/>
+<h1>onCreateInputConnection</h1>
+<a name="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onCreateInputConnection(android.view.inputmethod.EditorInfo)"></a>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onCreateInputConnection</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onCreateInputConnection(android.view.inputmethod.EditorInfo)/outAttrs">outAttrs</span><span class="symbol">:</span>&nbsp;<span class="identifier">EditorInfo</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">InputConnection</span><span class="symbol">?</span></code>
+<p>Code to handle deleting autocomplete first when backspacing.
+If there is no autocomplete text, both removeAutocomplete() and commitAutocomplete()
+are no-ops and return false. Therefore we can use them here without checking explicitly
+if we have autocomplete text or not.</p>
+<p>Also turns off text prediction for private mode tabs.</p>
+</BODY>
+</HTML>

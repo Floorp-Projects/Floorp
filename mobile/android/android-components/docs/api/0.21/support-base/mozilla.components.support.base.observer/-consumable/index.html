@@ -1,0 +1,70 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Consumable - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.support.base.observer</a>&nbsp;/&nbsp;<a href="./index.html">Consumable</a><br/>
+<br/>
+<h1>Consumable</h1>
+<code><span class="keyword">class </span><span class="identifier">Consumable</span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span></code>
+<p>A generic wrapper for values that can get consumed.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="consume.html">consume</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">consume</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.Consumable$consume(kotlin.Function1((mozilla.components.support.base.observer.Consumable.T, kotlin.Boolean)))/consumer">consumer</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="identifier">value</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Invokes the given lambda and marks the value as consumed if the lambda returns true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="consume-by.html">consumeBy</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">consumeBy</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.Consumable$consumeBy(kotlin.collections.List((kotlin.Function1((mozilla.components.support.base.observer.Consumable.T, kotlin.Boolean)))))/consumers">consumers</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><span class="symbol">(</span><a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Invokes the given list of lambdas and marks the value as consumed if at least one lambda
+returned true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-consumed.html">isConsumed</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isConsumed</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns whether the value was consumed.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="empty.html">empty</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span> <span class="identifier">empty</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Consumable</span></a><span class="symbol">&lt;</span><a href="empty.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span></code>
+<p>Returns an empty Consumable with not value as if it was consumed already.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="from.html">from</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span> <span class="identifier">from</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.Consumable.Companion$from(mozilla.components.support.base.observer.Consumable.Companion.from.T)/value">value</span><span class="symbol">:</span>&nbsp;<a href="from.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Consumable</span></a><span class="symbol">&lt;</span><a href="from.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span></code>
+<p>Create a new Consumable wrapping the given value.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

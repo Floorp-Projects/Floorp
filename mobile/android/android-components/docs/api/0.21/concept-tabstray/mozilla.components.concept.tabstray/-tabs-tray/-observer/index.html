@@ -1,0 +1,37 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>TabsTray.Observer - </title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">mozilla.components.concept.tabstray</a>&nbsp;/&nbsp;<a href="../index.html">TabsTray</a>&nbsp;/&nbsp;<a href="./index.html">Observer</a><br/>
+<br/>
+<h1>Observer</h1>
+<code><span class="keyword">interface </span><span class="identifier">Observer</span></code>
+<p>Interface to be implemented by classes that want to observe a tabs tray.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-tab-closed.html">onTabClosed</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onTabClosed</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.tabstray.TabsTray.Observer$onTabClosed(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<span class="identifier">Session</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>A tab has been closed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-tab-selected.html">onTabSelected</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onTabSelected</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.tabstray.TabsTray.Observer$onTabSelected(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<span class="identifier">Session</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>A new tab has been selected.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

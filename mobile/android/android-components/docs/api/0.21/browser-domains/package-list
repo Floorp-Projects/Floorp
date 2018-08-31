@@ -1,4 +1,4 @@
-$dokka.format:jekyll
+$dokka.format:html
 $dokka.linkExtension:html
 
 mozilla.components.browser.domains

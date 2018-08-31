@@ -1,0 +1,34 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>TelemetryEvent.create - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">org.mozilla.telemetry.event</a>&nbsp;/&nbsp;<a href="index.html">TelemetryEvent</a>&nbsp;/&nbsp;<a href="./create.html">create</a><br/>
+<br/>
+<h1>create</h1>
+<a name="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String)"></a>
+<code><span class="identifier">@CheckResult</span> <span class="keyword">open</span> <span class="keyword">static</span> <span class="keyword">fun </span><span class="identifier">create</span><span class="symbol">(</span><span class="identifier">@NonNull</span> <span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String)/category">category</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier">@NonNull</span> <span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String)/method">method</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier">@Nullable</span> <span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String)/object">object</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="index.html"><span class="identifier">TelemetryEvent</span></a></code>
+<p>Create a new event with mandatory category, method and object.</p>
+<h3>Parameters</h3>
+<p><a name="category"></a>
+<code>category</code> - identifier. The category is a group name for events and helps to avoid name conflicts.</p>
+<p><a name="method"></a>
+<code>method</code> - identifier. This describes the type of event that occured, e.g. click, keydown or focus.</p>
+<p><a name="object"></a>
+<code>object</code> - identifier. This is the object the event occured on, e.g. reload_button or urlbar.</p>
+<a name="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String, kotlin.String)"></a>
+<code><span class="identifier">@CheckResult</span> <span class="keyword">open</span> <span class="keyword">static</span> <span class="keyword">fun </span><span class="identifier">create</span><span class="symbol">(</span><span class="identifier">@NonNull</span> <span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String, kotlin.String)/category">category</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier">@NonNull</span> <span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String, kotlin.String)/method">method</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier">@Nullable</span> <span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String, kotlin.String)/object">object</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String, kotlin.String)/value">value</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="index.html"><span class="identifier">TelemetryEvent</span></a></code>
+<p>Create a new event with mandatory category, method, object and value.</p>
+<h3>Parameters</h3>
+<p><a name="category"></a>
+<code>category</code> - identifier. The category is a group name for events and helps to avoid name conflicts.</p>
+<p><a name="method"></a>
+<code>method</code> - identifier. This describes the type of event that occured, e.g. click, keydown or focus.</p>
+<p><a name="object"></a>
+<code>object</code> - identifier. This is the object the event occured on, e.g. reload_button or urlbar.</p>
+<p><a name="value"></a>
+<code>value</code> - This is a user defined value, providing context for the event.</p>
+</BODY>
+</HTML>

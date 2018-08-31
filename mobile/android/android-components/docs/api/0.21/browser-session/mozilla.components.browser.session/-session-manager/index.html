@@ -1,0 +1,190 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SessionManager - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.browser.session</a>&nbsp;/&nbsp;<a href="./index.html">SessionManager</a><br/>
+<br/>
+<h1>SessionManager</h1>
+<code><span class="keyword">class </span><span class="identifier">SessionManager</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">Observable</span><span class="symbol">&lt;</span><a href="-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">&gt;</span></code>
+<p>This class provides access to a centralized registry of all active sessions.</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-observer/index.html">Observer</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">Observer</span></code>
+<p>Interface to be implemented by classes that want to observe the session manager.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SessionManager</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager$<init>(mozilla.components.concept.engine.Engine, mozilla.components.support.base.observer.Observable((mozilla.components.browser.session.SessionManager.Observer)))/engine">engine</span><span class="symbol">:</span>&nbsp;<span class="identifier">Engine</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.SessionManager$<init>(mozilla.components.concept.engine.Engine, mozilla.components.support.base.observer.Observable((mozilla.components.browser.session.SessionManager.Observer)))/delegate">delegate</span><span class="symbol">:</span>&nbsp;<span class="identifier">Observable</span><span class="symbol">&lt;</span><a href="-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;ObserverRegistry()<span class="symbol">)</span></code>
+<p>This class provides access to a centralized registry of all active sessions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="all.html">all</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">all</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">&gt;</span></code>
+<p>Returns a list of all active sessions (including CustomTab sessions).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="engine.html">engine</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">engine</span><span class="symbol">: </span><span class="identifier">Engine</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="selected-session.html">selectedSession</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">selectedSession</span><span class="symbol">: </span><a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">?</span></code>
+<p>Gets the currently selected session if there is one.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="selected-session-or-throw.html">selectedSessionOrThrow</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">selectedSessionOrThrow</span><span class="symbol">: </span><a href="../-session/index.html"><span class="identifier">Session</span></a></code>
+<p>Gets the currently selected session or throws an IllegalStateException if no session is
+selected.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="sessions.html">sessions</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">sessions</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">&gt;</span></code>
+<p>Returns a list of active sessions and filters out sessions used for CustomTabs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="size.html">size</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">size</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Returns the number of session including CustomTab sessions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="add.html">add</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">add</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager$add(mozilla.components.browser.session.Session, kotlin.Boolean, mozilla.components.concept.engine.EngineSession)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.SessionManager$add(mozilla.components.browser.session.Session, kotlin.Boolean, mozilla.components.concept.engine.EngineSession)/selected">selected</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.SessionManager$add(mozilla.components.browser.session.Session, kotlin.Boolean, mozilla.components.concept.engine.EngineSession)/engineSession">engineSession</span><span class="symbol">:</span>&nbsp;<span class="identifier">EngineSession</span><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Adds the provided session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="find-session-by-id.html">findSessionById</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">findSessionById</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager$findSessionById(kotlin.String)/id">id</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">?</span></code>
+<p>Finds and returns the session with the given id. Returns null if no matching session could be
+found.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-engine-session.html">getEngineSession</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getEngineSession</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager$getEngineSession(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a>&nbsp;<span class="symbol">=</span>&nbsp;selectedSessionOrThrow<span class="symbol">)</span><span class="symbol">: </span><span class="identifier">EngineSession</span><span class="symbol">?</span></code>
+<p>Gets the linked engine session for the provided session (if it exists).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-or-create-engine-session.html">getOrCreateEngineSession</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getOrCreateEngineSession</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager$getOrCreateEngineSession(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a>&nbsp;<span class="symbol">=</span>&nbsp;selectedSessionOrThrow<span class="symbol">)</span><span class="symbol">: </span><span class="identifier">EngineSession</span></code>
+<p>Gets the linked engine session for the provided session and creates it if needed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="remove.html">remove</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">remove</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager$remove(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a>&nbsp;<span class="symbol">=</span>&nbsp;selectedSessionOrThrow<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Removes the provided session. If no session is provided then the selected session is removed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="remove-all.html">removeAll</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">removeAll</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Removes all sessions including CustomTab sessions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="remove-sessions.html">removeSessions</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">removeSessions</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Removes all sessions but CustomTab sessions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="select.html">select</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">select</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager$select(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Marks the given session as selected.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-n-o_-s-e-l-e-c-t-i-o-n.html">NO_SELECTION</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">NO_SELECTION</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

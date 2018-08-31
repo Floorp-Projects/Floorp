@@ -1,0 +1,85 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Observable - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.support.base.observer</a>&nbsp;/&nbsp;<a href="./index.html">Observable</a><br/>
+<br/>
+<h1>Observable</h1>
+<code><span class="keyword">interface </span><span class="identifier">Observable</span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span></code>
+<p>Interface for observables. This interface is implemented by ObserverRegistry so that classes that
+want to be observable can implement the interface by delegation:</p>
+<pre><code>    class MyObservableClass : Observable&lt;MyObserverInterface&gt; by registry {
+      ...
+    }</code></pre>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="notify-observers.html">notifyObservers</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">notifyObservers</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.Observable$notifyObservers(kotlin.Function1((mozilla.components.support.base.observer.Observable.T, kotlin.Unit)))/block">block</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Notify all registered observers about a change.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="register.html">register</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">register</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.Observable$register(mozilla.components.support.base.observer.Observable.T)/observer">observer</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code><br/>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">register</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.Observable$register(mozilla.components.support.base.observer.Observable.T, android.arch.lifecycle.LifecycleOwner)/observer">observer</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.observer.Observable$register(mozilla.components.support.base.observer.Observable.T, android.arch.lifecycle.LifecycleOwner)/owner">owner</span><span class="symbol">:</span>&nbsp;<span class="identifier">LifecycleOwner</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code><br/>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">register</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.Observable$register(mozilla.components.support.base.observer.Observable.T, android.view.View)/observer">observer</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.observer.Observable$register(mozilla.components.support.base.observer.Observable.T, android.view.View)/view">view</span><span class="symbol">:</span>&nbsp;<span class="identifier">View</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Registers an observer to get notified about changes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="unregister.html">unregister</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">unregister</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.Observable$unregister(mozilla.components.support.base.observer.Observable.T)/observer">observer</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Unregisters an observer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="unregister-observers.html">unregisterObservers</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">unregisterObservers</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Unregisters all observers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="wrap-consumers.html">wrapConsumers</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">R</span><span class="symbol">&gt;</span> <span class="identifier">wrapConsumers</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.Observable$wrapConsumers(kotlin.Function2((mozilla.components.support.base.observer.Observable.T, mozilla.components.support.base.observer.Observable.wrapConsumers.R, kotlin.Boolean)))/block">block</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">.</span><span class="symbol">(</span><a href="wrap-consumers.html#R"><span class="identifier">R</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><span class="symbol">(</span><a href="wrap-consumers.html#R"><span class="identifier">R</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span></code>
+<p>Returns a list of lambdas wrapping a consuming method of an observer.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-observer-registry/index.html">ObserverRegistry</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ObserverRegistry</span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="../-observer-registry/index.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span></code>
+<p>A helper for classes that want to get observed. This class keeps track of registered observers
+and can automatically unregister observers if a LifecycleOwner is provided.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,61 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.browser.engine.system.matcher - </title>
+<link rel="stylesheet" href="../style.css">
+</HEAD>
+<BODY>
+<a href="./index.html">mozilla.components.browser.engine.system.matcher</a><br/>
+<br/>
+<h2>Package mozilla.components.browser.engine.system.matcher</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-reversible-string/index.html">ReversibleString</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">ReversibleString</span></code>
+<p>A String wrapper utility that allows for efficient string reversal. We
+regularly need to reverse strings. The standard way of doing this in Java
+would be to copy the string to reverse (e.g. using StringBuffer.reverse()).
+This seems wasteful when we only read our Strings character by character,
+in which case can just transpose positions as needed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-trie/index.html">Trie</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">Trie</span></code>
+<p>Simple implementation of a Trie, used for indexing URLs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-url-matcher/index.html">UrlMatcher</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">UrlMatcher</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">OnSharedPreferenceChangeListener</span></code>
+<p>Provides functionality to process categorized URL black/white lists and match
+URLs against these lists.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extensions for External Classes</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="kotlin.-string/index.html">kotlin.String</a></p>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

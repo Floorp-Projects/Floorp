@@ -1,0 +1,72 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SearchEngineManager - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.browser.search</a>&nbsp;/&nbsp;<a href="./index.html">SearchEngineManager</a><br/>
+<br/>
+<h1>SearchEngineManager</h1>
+<code><span class="keyword">class </span><span class="identifier">SearchEngineManager</span></code>
+<p>This class provides access to a centralized registry of search engines.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SearchEngineManager</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.search.SearchEngineManager$<init>(kotlin.collections.List((mozilla.components.browser.search.provider.SearchEngineProvider)))/providers">providers</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.browser.search.provider/-search-engine-provider/index.html"><span class="identifier">SearchEngineProvider</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;listOf(
+            AssetsSearchEngineProvider(LocaleSearchLocalizationProvider()))<span class="symbol">)</span></code>
+<p>This class provides access to a centralized registry of search engines.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-default-search-engine.html">getDefaultSearchEngine</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getDefaultSearchEngine</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.search.SearchEngineManager$getDefaultSearchEngine(android.content.Context, kotlin.String)/context">context</span><span class="symbol">:</span>&nbsp;<span class="identifier">Context</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.search.SearchEngineManager$getDefaultSearchEngine(android.content.Context, kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;EMPTY<span class="symbol">)</span><span class="symbol">: </span><a href="../-search-engine/index.html"><span class="identifier">SearchEngine</span></a></code>
+<p>Returns the default search engine.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-search-engines.html">getSearchEngines</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getSearchEngines</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.search.SearchEngineManager$getSearchEngines(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<span class="identifier">Context</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-search-engine/index.html"><span class="identifier">SearchEngine</span></a><span class="symbol">&gt;</span></code>
+<p>Returns all search engines. If no call to load() has been made then calling this method
+will perform a load.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="load.html">load</a></p>
+</td>
+<td>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">load</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.search.SearchEngineManager$load(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<span class="identifier">Context</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-search-engine/index.html"><span class="identifier">SearchEngine</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span></code>
+<p>Asynchronously load search engines from providers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="register-for-locale-updates.html">registerForLocaleUpdates</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">registerForLocaleUpdates</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.search.SearchEngineManager$registerForLocaleUpdates(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<span class="identifier">Context</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Registers for ACTION_LOCALE_CHANGED broadcasts and automatically reloads the search engines
+whenever the locale changes.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,61 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Session.SecurityInfo - </title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">mozilla.components.browser.session</a>&nbsp;/&nbsp;<a href="../index.html">Session</a>&nbsp;/&nbsp;<a href="./index.html">SecurityInfo</a><br/>
+<br/>
+<h1>SecurityInfo</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">SecurityInfo</span></code>
+<p>A value type holding security information for a Session.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SecurityInfo</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.SecurityInfo$<init>(kotlin.Boolean, kotlin.String, kotlin.String)/secure">secure</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.SecurityInfo$<init>(kotlin.Boolean, kotlin.String, kotlin.String)/host">host</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;""<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.SecurityInfo$<init>(kotlin.Boolean, kotlin.String, kotlin.String)/issuer">issuer</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;""<span class="symbol">)</span></code>
+<p>A value type holding security information for a Session.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="host.html">host</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">host</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>domain for which the SSL certificate was issued.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="issuer.html">issuer</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">issuer</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>name of the certificate authority who issued the SSL certificate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="secure.html">secure</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">secure</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>true if the session is currently pointed to a URL with
+a valid SSL certificate, otherwise false.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

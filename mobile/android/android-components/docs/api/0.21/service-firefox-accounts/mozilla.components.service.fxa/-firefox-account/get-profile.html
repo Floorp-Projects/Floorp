@@ -1,0 +1,27 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FirefoxAccount.getProfile - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="index.html">FirefoxAccount</a>&nbsp;/&nbsp;<a href="./get-profile.html">getProfile</a><br/>
+<br/>
+<h1>getProfile</h1>
+<a name="mozilla.components.service.fxa.FirefoxAccount$getProfile(kotlin.Boolean)"></a>
+<code><span class="keyword">fun </span><span class="identifier">getProfile</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$getProfile(kotlin.Boolean)/ignoreCache">ignoreCache</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-fxa-result/index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="../-profile/index.html"><span class="identifier">Profile</span></a><span class="symbol">&gt;</span></code>
+<p>Fetches the profile object for the current client either from the existing cached account,
+or from the server (requires the client to have access to the profile scope).</p>
+<h3>Parameters</h3>
+<p><a name="ignoreCache"></a>
+<code>ignoreCache</code> - Fetch the profile information directly from the server</p>
+<p><strong>Return</strong><br/>
+FxaResult&lt;<a href="../-profile/index.html">Profile</a>&gt; representing the user's basic profile info</p>
+<a name="mozilla.components.service.fxa.FirefoxAccount$getProfile()"></a>
+<code><span class="keyword">fun </span><span class="identifier">getProfile</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-fxa-result/index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="../-profile/index.html"><span class="identifier">Profile</span></a><span class="symbol">&gt;</span></code>
+<p>Convenience method to fetch the profile from a cached account by default, but fall back
+to retrieval from the server.</p>
+<p><strong>Return</strong><br/>
+FxaResult&lt;<a href="../-profile/index.html">Profile</a>&gt; representing the user's basic profile info</p>
+</BODY>
+</HTML>

@@ -1,0 +1,273 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>BrowserToolbar - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.browser.toolbar</a>&nbsp;/&nbsp;<a href="./index.html">BrowserToolbar</a><br/>
+<br/>
+<h1>BrowserToolbar</h1>
+<code><span class="keyword">class </span><span class="identifier">BrowserToolbar</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">ViewGroup</span><span class="symbol">, </span><span class="identifier">Toolbar</span></code>
+<p>A customizable toolbar for browsers.</p>
+<p>The toolbar can switch between two modes: display and edit. The display mode displays the current
+URL and controls for navigation. In edit mode the current URL can be edited. Those two modes are
+implemented by the DisplayToolbar and EditToolbar classes.</p>
+<pre><code>    +----------------+
+    | BrowserToolbar |
+    +--------+-------+
+             +
+     +-------+-------+
+     |               |</code></pre>
+<p>+---------v------+ +-------v--------+
+| DisplayToolbar | |   EditToolbar  |
++----------------+ +----------------+</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-button/index.html">Button</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">Button</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">ActionButton</span></code>
+<p>An action button to be added to the toolbar.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-toggle-button/index.html">ToggleButton</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ToggleButton</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">ActionToggleButton</span></code>
+<p>An action button with two states, selected and unselected. When the button is pressed, the
+state changes automatically.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">BrowserToolbar</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/context">context</span><span class="symbol">:</span>&nbsp;<span class="identifier">Context</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/attrs">attrs</span><span class="symbol">:</span>&nbsp;<span class="identifier">AttributeSet</span><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/defStyleAttr">defStyleAttr</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;0<span class="symbol">)</span></code>
+<p>A customizable toolbar for browsers.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="browser-action-margin.html">browserActionMargin</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">browserActionMargin</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Gets/Sets the margin to be used between browser actions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="display-site-security-icon.html">displaySiteSecurityIcon</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">displaySiteSecurityIcon</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Set/Get whether a site security icon (usually a lock or globe icon) should be next to the URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="hint.html">hint</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">hint</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Sets the text to be displayed when the URL of the toolbar is empty.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-url-clicked.html">onUrlClicked</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">onUrlClicked</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Sets a lambda that will be invoked whenever the URL in display mode was clicked. Only if this
+lambda returns true the toolbar will switch to editing mode. Return
+false to not switch to editing mode and handle the click manually.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="url.html">url</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">url</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="url-box-margin.html">urlBoxMargin</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">urlBoxMargin</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Gets/Sets horizontal margin of the URL box (surrounding URL and page actions) in display mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="url-box-view.html">urlBoxView</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">urlBoxView</span><span class="symbol">: </span><span class="identifier">View</span><span class="symbol">?</span></code>
+<p>Gets/Sets a custom view that will be drawn as behind the URL and page actions in display mode.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="add-browser-action.html">addBrowserAction</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">addBrowserAction</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$addBrowserAction(mozilla.components.concept.toolbar.Toolbar.Action)/action">action</span><span class="symbol">:</span>&nbsp;<span class="identifier">Action</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Adds an action to be displayed on the right side of the toolbar (outside of the URL bounding
+box) in display mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="add-navigation-action.html">addNavigationAction</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">addNavigationAction</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$addNavigationAction(mozilla.components.concept.toolbar.Toolbar.Action)/action">action</span><span class="symbol">:</span>&nbsp;<span class="identifier">Action</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Adds an action to be display on the far left side of the toolbar. This area is usually used
+on larger devices for navigation actions like "back" and "forward".</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="add-page-action.html">addPageAction</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">addPageAction</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$addPageAction(mozilla.components.concept.toolbar.Toolbar.Action)/action">action</span><span class="symbol">:</span>&nbsp;<span class="identifier">Action</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Adds an action to be displayed on the right side of the URL in display mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="display-mode.html">displayMode</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">displayMode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Switches to URL displaying mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="display-progress.html">displayProgress</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">displayProgress</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$displayProgress(kotlin.Int)/progress">progress</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="edit-mode.html">editMode</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">editMode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Switches to URL editing mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="invalidate-actions.html">invalidateActions</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">invalidateActions</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Declare that the actions (navigation actions, browser actions, page actions) have changed and
+should be updated if needed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-back-pressed.html">onBackPressed</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onBackPressed</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-layout.html">onLayout</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onLayout</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$onLayout(kotlin.Boolean, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/changed">changed</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$onLayout(kotlin.Boolean, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/left">left</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$onLayout(kotlin.Boolean, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/top">top</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$onLayout(kotlin.Boolean, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/right">right</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$onLayout(kotlin.Boolean, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/bottom">bottom</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-measure.html">onMeasure</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onMeasure</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$onMeasure(kotlin.Int, kotlin.Int)/widthMeasureSpec">widthMeasureSpec</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$onMeasure(kotlin.Int, kotlin.Int)/heightMeasureSpec">heightMeasureSpec</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-autocomplete-filter.html">setAutocompleteFilter</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setAutocompleteFilter</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$setAutocompleteFilter(kotlin.Function2((kotlin.String, mozilla.components.ui.autocomplete.InlineAutocompleteEditText, kotlin.Unit)))/filter">filter</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<span class="identifier">InlineAutocompleteEditText</span><span class="symbol">?</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sets autocomplete filter to be used in edit mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-menu-builder.html">setMenuBuilder</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setMenuBuilder</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$setMenuBuilder(mozilla.components.browser.menu.BrowserMenuBuilder)/menuBuilder">menuBuilder</span><span class="symbol">:</span>&nbsp;<span class="identifier">BrowserMenuBuilder</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sets a BrowserMenuBuilder that will be used to create a menu when the menu button is clicked.
+The menu button will only be visible if a builder has been set.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-on-edit-focus-change-listener.html">setOnEditFocusChangeListener</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setOnEditFocusChangeListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$setOnEditFocusChangeListener(kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/listener">listener</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sets a listener to be invoked when focus of the URL input view (in edit mode) changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-on-url-commit-listener.html">setOnUrlCommitListener</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setOnUrlCommitListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$setOnUrlCommitListener(kotlin.Function1((kotlin.String, kotlin.Unit)))/listener">listener</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-search-terms.html">setSearchTerms</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setSearchTerms</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$setSearchTerms(kotlin.String)/searchTerms">searchTerms</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-url-text-padding.html">setUrlTextPadding</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setUrlTextPadding</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$setUrlTextPadding(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/left">left</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;displayToolbar.urlView.paddingLeft<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$setUrlTextPadding(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/top">top</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;displayToolbar.urlView.paddingTop<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$setUrlTextPadding(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/right">right</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;displayToolbar.urlView.paddingRight<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar$setUrlTextPadding(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/bottom">bottom</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;displayToolbar.urlView.paddingBottom<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sets the padding to be applied to the URL text (in display mode).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

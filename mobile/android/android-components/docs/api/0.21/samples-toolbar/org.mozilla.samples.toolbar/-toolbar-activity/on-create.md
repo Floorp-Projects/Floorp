@@ -1,9 +1,0 @@
----
-title: ToolbarActivity.onCreate - 
----
-
-[org.mozilla.samples.toolbar](../index.html) / [ToolbarActivity](index.html) / [onCreate](./on-create.html)
-
-# onCreate
-
-`protected fun onCreate(savedInstanceState: Bundle?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)

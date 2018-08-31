@@ -1,0 +1,58 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>TabViewHolder - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.browser.tabstray</a>&nbsp;/&nbsp;<a href="./index.html">TabViewHolder</a><br/>
+<br/>
+<h1>TabViewHolder</h1>
+<code><span class="keyword">class </span><span class="identifier">TabViewHolder</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">ViewHolder</span><span class="symbol">, </span><span class="identifier">Observer</span></code>
+<p>A RecyclerView ViewHolder implementation for "tab" items.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">TabViewHolder</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabViewHolder$<init>(android.view.View)/itemView">itemView</span><span class="symbol">:</span>&nbsp;<span class="identifier">View</span><span class="symbol">)</span></code>
+<p>A RecyclerView ViewHolder implementation for "tab" items.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="bind.html">bind</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">bind</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabViewHolder$bind(mozilla.components.browser.session.Session, kotlin.Boolean, mozilla.components.support.base.observer.Observable((mozilla.components.concept.tabstray.TabsTray.Observer)))/session">session</span><span class="symbol">:</span>&nbsp;<span class="identifier">Session</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.tabstray.TabViewHolder$bind(mozilla.components.browser.session.Session, kotlin.Boolean, mozilla.components.support.base.observer.Observable((mozilla.components.concept.tabstray.TabsTray.Observer)))/isSelected">isSelected</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.tabstray.TabViewHolder$bind(mozilla.components.browser.session.Session, kotlin.Boolean, mozilla.components.support.base.observer.Observable((mozilla.components.concept.tabstray.TabsTray.Observer)))/observable">observable</span><span class="symbol">:</span>&nbsp;<span class="identifier">Observable</span><span class="symbol">&lt;</span><span class="identifier">Observer</span><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Displays the data of the given session and notifies the given observable about events.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-url-changed.html">onUrlChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onUrlChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.tabstray.TabViewHolder$onUrlChanged(mozilla.components.browser.session.Session, kotlin.String)/session">session</span><span class="symbol">:</span>&nbsp;<span class="identifier">Session</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.tabstray.TabViewHolder$onUrlChanged(mozilla.components.browser.session.Session, kotlin.String)/url">url</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="unbind.html">unbind</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">unbind</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>The attached view no longer needs to display any data.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

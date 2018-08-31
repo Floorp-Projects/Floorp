@@ -1,0 +1,214 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>EngineSession - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.concept.engine</a>&nbsp;/&nbsp;<a href="./index.html">EngineSession</a><br/>
+<br/>
+<h1>EngineSession</h1>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">EngineSession</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">Observable</span><span class="symbol">&lt;</span><a href="-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">&gt;</span></code>
+<p>Class representing a single engine session.</p>
+<p>In browsers usually a session corresponds to a tab.</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-observer/index.html">Observer</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">Observer</span></code>
+<p>Interface to be implemented by classes that want to observe this engine session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-tracking-protection-policy/index.html">TrackingProtectionPolicy</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">TrackingProtectionPolicy</span></code>
+<p>Represents a tracking protection policy which is a combination of
+tracker categories that should be blocked.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">EngineSession</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$<init>(mozilla.components.support.base.observer.Observable((mozilla.components.concept.engine.EngineSession.Observer)))/delegate">delegate</span><span class="symbol">:</span>&nbsp;<span class="identifier">Observable</span><span class="symbol">&lt;</span><a href="-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;ObserverRegistry()<span class="symbol">)</span></code>
+<p>Class representing a single engine session.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="settings.html">settings</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">settings</span><span class="symbol">: </span><a href="../-settings/index.html"><span class="identifier">Settings</span></a></code>
+<p>Provides access to the settings of this engine session.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="clear-find-matches.html">clearFindMatches</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">clearFindMatches</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Clears the highlighted results of previous calls to <a href="find-all.html">findAll</a> / <a href="find-next.html">findNext</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="close.html">close</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">close</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Close the session. This may free underlying objects. Call this when you are finished using
+this session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="disable-tracking-protection.html">disableTrackingProtection</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">disableTrackingProtection</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Disables tracking protection for this engine session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="enable-tracking-protection.html">enableTrackingProtection</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">enableTrackingProtection</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$enableTrackingProtection(mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy)/policy">policy</span><span class="symbol">:</span>&nbsp;<a href="-tracking-protection-policy/index.html"><span class="identifier">TrackingProtectionPolicy</span></a>&nbsp;<span class="symbol">=</span>&nbsp;TrackingProtectionPolicy.all()<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Enables tracking protection for this engine session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="find-all.html">findAll</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">findAll</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$findAll(kotlin.String)/text">text</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Finds and highlights all occurrences of the provided String and highlights them asynchronously.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="find-next.html">findNext</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">findNext</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$findNext(kotlin.Boolean)/forward">forward</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Finds and highlights the next or previous match found by <a href="find-all.html">findAll</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="go-back.html">goBack</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">goBack</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Navigates back in the history of this session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="go-forward.html">goForward</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">goForward</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Navigates forward in the history of this session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="load-data.html">loadData</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">loadData</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$loadData(kotlin.String, kotlin.String, kotlin.String)/data">data</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$loadData(kotlin.String, kotlin.String, kotlin.String)/mimeType">mimeType</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;"text/html"<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$loadData(kotlin.String, kotlin.String, kotlin.String)/encoding">encoding</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;"UTF-8"<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Loads the data with the given mimeType.
+Example:</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="load-url.html">loadUrl</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">loadUrl</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$loadUrl(kotlin.String)/url">url</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Loads the given URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="reload.html">reload</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">reload</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Reloads the current URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="restore-state.html">restoreState</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">restoreState</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$restoreState(kotlin.collections.Map((kotlin.String, kotlin.Any)))/state">state</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Restores the engine state as provided by <a href="save-state.html">saveState</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="save-state.html">saveState</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">saveState</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
+<p>Saves and returns the engine state. Engine implementations are not required
+to persist the state anywhere else than in the returned map. Engines that
+already provide a serialized state can use a single entry in this map to
+provide this state. The only requirement is that the same map can be used
+to restore the original state. See <a href="restore-state.html">restoreState</a> and the specific
+engine implementation for details.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-desktop-mode.html">setDesktopMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setDesktopMode</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$setDesktopMode(kotlin.Boolean, kotlin.Boolean)/enable">enable</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.EngineSession$setDesktopMode(kotlin.Boolean, kotlin.Boolean)/reload">reload</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Enables/disables Desktop Mode with an optional ability to reload the session right after.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="stop-loading.html">stopLoading</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">stopLoading</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Stops loading the current session.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

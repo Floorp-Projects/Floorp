@@ -1,4 +1,4 @@
-$dokka.format:jekyll
+$dokka.format:html
 $dokka.linkExtension:html
 $dokka.location:org.mozilla.samples.browser.ext$application#android.content.Contextorg.mozilla.samples.browser.ext/android.content.-context/application.html
 $dokka.location:org.mozilla.samples.browser.ext$components#android.content.Contextorg.mozilla.samples.browser.ext/android.content.-context/components.html

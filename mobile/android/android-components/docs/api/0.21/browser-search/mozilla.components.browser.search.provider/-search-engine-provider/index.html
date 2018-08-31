@@ -1,0 +1,42 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SearchEngineProvider - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.browser.search.provider</a>&nbsp;/&nbsp;<a href="./index.html">SearchEngineProvider</a><br/>
+<br/>
+<h1>SearchEngineProvider</h1>
+<code><span class="keyword">interface </span><span class="identifier">SearchEngineProvider</span></code>
+<p>Interface for classes that load search engines from a specific source.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="load-search-engines.html">loadSearchEngines</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">loadSearchEngines</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.search.provider.SearchEngineProvider$loadSearchEngines(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<span class="identifier">Context</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.browser.search/-search-engine/index.html"><span class="identifier">SearchEngine</span></a><span class="symbol">&gt;</span></code>
+<p>Load search engines from this provider.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-assets-search-engine-provider/index.html">AssetsSearchEngineProvider</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AssetsSearchEngineProvider</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">SearchEngineProvider</span></a></code>
+<p>SearchEngineProvider implementation to load the included search engines from assets.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,4 +1,4 @@
-$dokka.format:jekyll
+$dokka.format:html
 $dokka.linkExtension:html
 
 org.mozilla.components.ui.tabcounter

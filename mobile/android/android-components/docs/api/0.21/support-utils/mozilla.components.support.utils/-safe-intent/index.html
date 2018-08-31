@@ -1,0 +1,161 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SafeIntent - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">mozilla.components.support.utils</a>&nbsp;/&nbsp;<a href="./index.html">SafeIntent</a><br/>
+<br/>
+<h1>SafeIntent</h1>
+<code><span class="keyword">class </span><span class="identifier">SafeIntent</span></code>
+<p>External applications can pass values into Intents that can cause us to crash: in defense,
+we wrap <a href="#">Intent</a> and catch the exceptions they may force us to throw. See bug 1090385
+for more.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SafeIntent</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$<init>(android.content.Intent)/unsafe">unsafe</span><span class="symbol">:</span>&nbsp;<span class="identifier">Intent</span><span class="symbol">)</span></code>
+<p>External applications can pass values into Intents that can cause us to crash: in defense,
+we wrap <a href="#">Intent</a> and catch the exceptions they may force us to throw. See bug 1090385
+for more.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="action.html">action</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">action</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="categories.html">categories</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">categories</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html"><span class="identifier">Set</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="data.html">data</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">data</span><span class="symbol">: </span><span class="identifier">Uri</span><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="data-string.html">dataString</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">dataString</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="extras.html">extras</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">extras</span><span class="symbol">: </span><span class="identifier">Bundle</span><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="flags.html">flags</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">flags</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-launcher-intent.html">isLauncherIntent</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">isLauncherIntent</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="unsafe.html">unsafe</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">unsafe</span><span class="symbol">: </span><span class="identifier">Intent</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-boolean-extra.html">getBooleanExtra</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getBooleanExtra</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$getBooleanExtra(kotlin.String, kotlin.Boolean)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$getBooleanExtra(kotlin.String, kotlin.Boolean)/defaultValue">defaultValue</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-bundle-extra.html">getBundleExtra</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getBundleExtra</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$getBundleExtra(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-safe-bundle/index.html"><span class="identifier">SafeBundle</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-char-sequence-extra.html">getCharSequenceExtra</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getCharSequenceExtra</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$getCharSequenceExtra(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html"><span class="identifier">CharSequence</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-int-extra.html">getIntExtra</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getIntExtra</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$getIntExtra(kotlin.String, kotlin.Int)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$getIntExtra(kotlin.String, kotlin.Int)/defaultValue">defaultValue</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-parcelable-array-list-extra.html">getParcelableArrayListExtra</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">Parcelable</span><span class="symbol">&gt;</span> <span class="identifier">getParcelableArrayListExtra</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$getParcelableArrayListExtra(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html"><span class="identifier">ArrayList</span></a><span class="symbol">&lt;</span><a href="get-parcelable-array-list-extra.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-parcelable-extra.html">getParcelableExtra</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">Parcelable</span><span class="symbol">&gt;</span> <span class="identifier">getParcelableExtra</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$getParcelableExtra(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="get-parcelable-extra.html#T"><span class="identifier">T</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-string-array-list-extra.html">getStringArrayListExtra</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getStringArrayListExtra</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$getStringArrayListExtra(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html"><span class="identifier">ArrayList</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-string-extra.html">getStringExtra</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getStringExtra</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$getStringExtra(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="has-extra.html">hasExtra</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">hasExtra</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeIntent$hasExtra(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

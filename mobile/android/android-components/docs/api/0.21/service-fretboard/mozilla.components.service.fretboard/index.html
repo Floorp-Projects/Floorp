@@ -1,0 +1,117 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.service.fretboard - </title>
+<link rel="stylesheet" href="../style.css">
+</HEAD>
+<BODY>
+<a href="./index.html">mozilla.components.service.fretboard</a><br/>
+<br/>
+<h2>Package mozilla.components.service.fretboard</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-experiment/index.html">Experiment</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Experiment</span></code>
+<p>Represents an A/B test experiment,
+independent of the underlying
+storage mechanism</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-experiment-descriptor/index.html">ExperimentDescriptor</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">ExperimentDescriptor</span></code>
+<p>Class used to identify an experiment</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-experiment-payload/index.html">ExperimentPayload</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ExperimentPayload</span></code>
+<p>Class which represents an experiment associated data</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-experiment-source/index.html">ExperimentSource</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">ExperimentSource</span></code>
+<p>Represents a location where experiments are stored
+(Kinto, a JSON file on a server, etc)</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-experiment-storage/index.html">ExperimentStorage</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">ExperimentStorage</span></code>
+<p>Represents a location where experiments
+are stored locally on the device</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-experiments-snapshot/index.html">ExperimentsSnapshot</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">ExperimentsSnapshot</span></code>
+<p>Represents an experiment sync result</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-fretboard/index.html">Fretboard</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">Fretboard</span></code>
+<p>Entry point of the library</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-j-s-o-n-experiment-parser/index.html">JSONExperimentParser</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">JSONExperimentParser</span></code>
+<p>Default JSON parsing implementation</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-values-provider/index.html">ValuesProvider</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ValuesProvider</span></code>
+<p>Class used to provide
+custom filter values</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Exceptions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-experiment-download-exception/index.html">ExperimentDownloadException</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ExperimentDownloadException</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html"><span class="identifier">Exception</span></a></code>
+<p>Exception while downloading experiments from the server</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

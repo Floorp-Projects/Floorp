@@ -1,0 +1,118 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>TelemetryCorePingBuilder - </title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">org.mozilla.telemetry.ping</a>&nbsp;/&nbsp;<a href="./index.html">TelemetryCorePingBuilder</a><br/>
+<br/>
+<h1>TelemetryCorePingBuilder</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">TelemetryCorePingBuilder</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-telemetry-ping-builder/index.html"><span class="identifier">TelemetryPingBuilder</span></a></code>
+<p>This mobile-specific ping is intended to provide the most critical data in a concise format, allowing for frequent uploads. Since this ping is used to measure retention, it should be sent each time the app is opened. https://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/data/core-ping.html</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">TelemetryCorePingBuilder</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.ping.TelemetryCorePingBuilder$<init>(org.mozilla.telemetry.config.TelemetryConfiguration)/configuration">configuration</span><span class="symbol">:</span>&nbsp;<a href="../../org.mozilla.telemetry.config/-telemetry-configuration/index.html"><span class="identifier">TelemetryConfiguration</span></a><span class="symbol">)</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-t-y-p-e.html">TYPE</a></p>
+</td>
+<td>
+<code><span class="keyword">static</span> <span class="keyword">val </span><span class="identifier">TYPE</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-default-search-measurement.html">getDefaultSearchMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getDefaultSearchMeasurement</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../org.mozilla.telemetry.measurement/-default-search-measurement/index.html"><span class="identifier">DefaultSearchMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-experiments-measurement.html">getExperimentsMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getExperimentsMeasurement</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../org.mozilla.telemetry.measurement/-experiments-measurement/index.html"><span class="identifier">ExperimentsMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-searches-measurement.html">getSearchesMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getSearchesMeasurement</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../org.mozilla.telemetry.measurement/-searches-measurement/index.html"><span class="identifier">SearchesMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-session-count-measurement.html">getSessionCountMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getSessionCountMeasurement</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../org.mozilla.telemetry.measurement/-session-count-measurement/index.html"><span class="identifier">SessionCountMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-session-duration-measurement.html">getSessionDurationMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getSessionDurationMeasurement</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../org.mozilla.telemetry.measurement/-session-duration-measurement/index.html"><span class="identifier">SessionDurationMeasurement</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-telemetry-ping-builder/build.html">build</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">build</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-telemetry-ping/index.html"><span class="identifier">TelemetryPing</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-telemetry-ping-builder/can-build.html">canBuild</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">canBuild</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-telemetry-ping-builder/generate-document-id.html">generateDocumentId</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">generateDocumentId</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-telemetry-ping-builder/get-configuration.html">getConfiguration</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getConfiguration</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../org.mozilla.telemetry.config/-telemetry-configuration/index.html"><span class="identifier">TelemetryConfiguration</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-telemetry-ping-builder/get-type.html">getType</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getType</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

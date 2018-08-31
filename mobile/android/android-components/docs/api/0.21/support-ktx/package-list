@@ -1,4 +1,4 @@
-$dokka.format:jekyll
+$dokka.format:html
 $dokka.linkExtension:html
 $dokka.location:mozilla.components.support.ktx.android.content$appVersionName#android.content.Contextmozilla.components.support.ktx.android.content/android.content.-context/app-version-name.html
 $dokka.location:mozilla.components.support.ktx.android.content$systemService(android.content.Context, kotlin.String)mozilla.components.support.ktx.android.content/android.content.-context/system-service.html

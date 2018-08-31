@@ -1,0 +1,69 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SettingsMeasurement.SettingsProvider - </title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">org.mozilla.telemetry.measurement</a>&nbsp;/&nbsp;<a href="../index.html">SettingsMeasurement</a>&nbsp;/&nbsp;<a href="./index.html">SettingsProvider</a><br/>
+<br/>
+<h1>SettingsProvider</h1>
+<code><span class="keyword">interface </span><span class="identifier">SettingsProvider</span></code>
+<p>A generic interface for implementations that can provide settings values.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="contains-key.html">containsKey</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">containsKey</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.measurement.SettingsMeasurement.SettingsProvider$containsKey(kotlin.String)/key">key</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if a settings value is available for the given key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-value.html">getValue</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getValue</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.measurement.SettingsMeasurement.SettingsProvider$getValue(kotlin.String)/key">key</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a></code>
+<p>Get the setting value for the given key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="release.html">release</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">release</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Notify the provider that we finished reading from it and that it can release resources now.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="update.html">update</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">update</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.measurement.SettingsMeasurement.SettingsProvider$update(org.mozilla.telemetry.config.TelemetryConfiguration)/configuration">configuration</span><span class="symbol">:</span>&nbsp;<a href="../../../org.mozilla.telemetry.config/-telemetry-configuration/index.html"><span class="identifier">TelemetryConfiguration</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Notify this provider that we are going to read values from it. Some providers might need to perform some actions to be able to provide a fresh set of values.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-shared-preference-settings-provider/index.html">SharedPreferenceSettingsProvider</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">SharedPreferenceSettingsProvider</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">SettingsProvider</span></a></code>
+<p>Setting provider implementation that reads values from SharedPreferences.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

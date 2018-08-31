@@ -1,0 +1,114 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.service.fxa - </title>
+<link rel="stylesheet" href="../style.css">
+</HEAD>
+<BODY>
+<a href="./index.html">mozilla.components.service.fxa</a><br/>
+<br/>
+<h2>Package mozilla.components.service.fxa</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-config/index.html">Config</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">Config</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-rust-object/index.html"><span class="identifier">RustObject</span></a><span class="symbol">&lt;</span><a href="-raw-config/index.html"><span class="identifier">RawConfig</span></a><span class="symbol">&gt;</span></code>
+<p>Config represents the server endpoint configurations needed for the
+authentication flow.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-error/index.html">Error</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">Error</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">Structure</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-firefox-account/index.html">FirefoxAccount</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">FirefoxAccount</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-rust-object/index.html"><span class="identifier">RustObject</span></a><span class="symbol">&lt;</span><a href="-raw-fx-account/index.html"><span class="identifier">RawFxAccount</span></a><span class="symbol">&gt;</span></code>
+<p>FirefoxAccount represents the authentication state of a client.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-fxa-result/index.html">FxaResult</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">FxaResult</span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span></code>
+<p>FxaResult is a class that represents an asynchronous result.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-o-auth-info/index.html">OAuthInfo</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">OAuthInfo</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-profile/index.html">Profile</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">Profile</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-raw-config/index.html">RawConfig</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RawConfig</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">PointerType</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-raw-fx-account/index.html">RawFxAccount</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RawFxAccount</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">PointerType</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-rust-object/index.html">RustObject</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">RustObject</span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="http://docs.oracle.com/javase/6/docs/api/java/io/Closeable.html"><span class="identifier">Closeable</span></a></code>
+<p>Base class that wraps an non-optional <a href="#">Pointer</a> representing a pointer to a Rust object.
+This class implements <a href="http://docs.oracle.com/javase/6/docs/api/java/io/Closeable.html">Closeable</a> but does not provide an implementation, forcing all
+subclasses to implement it. This ensures that all classes that inherit from RustObject
+will have their <a href="#">Pointer</a> destroyed when the Java wrapper is destroyed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-sync-keys/index.html">SyncKeys</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SyncKeys</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Exceptions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-fxa-exception/index.html">FxaException</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">FxaException</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html"><span class="identifier">Exception</span></a></code>
+<p>Wrapper class for the exceptions thrown in the Rust library, which ensures that the
+error messages will be consumed and freed properly in Rust.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
