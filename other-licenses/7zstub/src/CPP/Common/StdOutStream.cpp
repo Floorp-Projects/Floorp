@@ -75,6 +75,65 @@ void CStdOutStream::PrintUString(const UString &s, AString &temp)
   *this << (const char *)temp;
 }
 
+
+static const wchar_t kReplaceChar = '_';
+
+void CStdOutStream::Normalize_UString__LF_Allowed(UString &s)
+{
+  unsigned len = s.Len();
+  wchar_t *d = s.GetBuf();
+
+  if (IsTerminalMode)
+    for (unsigned i = 0; i < len; i++)
+    {
+      wchar_t c = d[i];
+      if (c <= 13 && c >= 7 && c != '\n')
+        d[i] = kReplaceChar;
+    }
+}
+
+void CStdOutStream::Normalize_UString(UString &s)
+{
+  unsigned len = s.Len();
+  wchar_t *d = s.GetBuf();
+
+  if (IsTerminalMode)
+    for (unsigned i = 0; i < len; i++)
+    {
+      wchar_t c = d[i];
+      if (c <= 13 && c >= 7)
+        d[i] = kReplaceChar;
+    }
+  else
+    for (unsigned i = 0; i < len; i++)
+    {
+      wchar_t c = d[i];
+      if (c == '\n')
+        d[i] = kReplaceChar;
+    }
+}
+
+void CStdOutStream::NormalizePrint_UString(const UString &s, UString &tempU, AString &tempA)
+{
+  tempU = s;
+  Normalize_UString(tempU);
+  PrintUString(tempU, tempA);
+}
+
+void CStdOutStream::NormalizePrint_UString(const UString &s)
+{
+  NormalizePrint_wstr(s);
+}
+
+void CStdOutStream::NormalizePrint_wstr(const wchar_t *s)
+{
+  UString tempU = s;
+  Normalize_UString(tempU);
+  AString tempA;
+  PrintUString(tempU, tempA);
+}
+
+
 CStdOutStream & CStdOutStream::operator<<(Int32 number) throw()
 {
   char s[32];

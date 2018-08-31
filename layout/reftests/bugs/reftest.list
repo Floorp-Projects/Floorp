@@ -412,7 +412,7 @@ fuzzy-if(Android,0-2,0-18) == 315920-17.html 315920-17-ref.html
 == 320979-1.html 320979-1-ref.html
 != 321402-1.html about:blank
 != 321402-2.html about:blank
-fuzzy-if(webrender&&winWidget,35-35,1-1) == 321402-3.xul 321402-3-ref.xul
+== 321402-3.xul 321402-3-ref.xul
 == 321402-4.xul 321402-4-ref.xul
 == 321402-5.xul 321402-5-ref.xul
 == 321402-6.xul 321402-6-ref.xul
@@ -1002,7 +1002,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 421069-ref.html 421069-ref2.html
 == 421203-1.xul 421203-1-ref.html
 == 421203-2.xul 421203-1-ref.html
-fuzzy-if(webrender&&winWidget,35-35,1-1) == 421203-3.xul 321402-3-ref.xul
+== 421203-3.xul 321402-3-ref.xul
 == 421203-4.xul 321402-4-ref.xul
 == 421203-5.xul 321402-5-ref.xul
 == 421203-6.xul 321402-6-ref.xul

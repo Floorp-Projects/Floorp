@@ -1046,10 +1046,6 @@ static HRESULT EnumerateInArchiveItems(
 
 #endif
 
-#ifdef _WIN32
-void ConvertToLongNames(NWildcard::CCensor &censor);
-#endif
-
 HRESULT UpdateArchive(
     CCodecs *codecs,
     const CObjectVector<COpenType> &types,

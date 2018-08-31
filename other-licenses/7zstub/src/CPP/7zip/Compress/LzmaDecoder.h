@@ -3,6 +3,7 @@
 #ifndef __LZMA_DECODER_H
 #define __LZMA_DECODER_H
 
+// #include "../../../C/Alloc.h"
 #include "../../../C/LzmaDec.h"
 
 #include "../../Common/MyCom.h"
@@ -28,7 +29,6 @@ class CDecoder:
   UInt32 _inPos;
   UInt32 _inLim;
  
-  CLzmaDec _state;
   ELzmaStatus _lzmaStatus;
 
 public:
@@ -44,6 +44,10 @@ private:
   UInt32 _outStep;
   UInt32 _inBufSize;
   UInt32 _inBufSizeNew;
+
+  // CAlignOffsetAlloc _alloc;
+
+  CLzmaDec _state;
 
   HRESULT CreateInputBuffer();
   HRESULT CodeSpec(ISequentialInStream *inStream, ISequentialOutStream *outStream, ICompressProgressInfo *progress);

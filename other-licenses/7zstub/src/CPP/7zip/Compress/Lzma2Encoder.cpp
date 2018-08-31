@@ -22,7 +22,7 @@ namespace NLzma2 {
 CEncoder::CEncoder()
 {
   _encoder = NULL;
-  _encoder = Lzma2Enc_Create(&g_Alloc, &g_BigAlloc);
+  _encoder = Lzma2Enc_Create(&g_AlignedAlloc, &g_BigAlloc);
   if (!_encoder)
     throw 1;
 }
