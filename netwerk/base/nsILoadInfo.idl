@@ -1058,4 +1058,9 @@ interface nsILoadInfo : nsISupports
     */
   [infallible] attribute boolean isTracker;
   [infallible] attribute boolean isTrackerBlocked;
+
+  /**
+    * The top-level document has been user-interacted.
+    */
+  [infallible] attribute boolean documentHasUserInteracted;
 };
