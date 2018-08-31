@@ -534,7 +534,6 @@ add_task(async function testExtensionControlledTrackingProtection() {
   };
 
   let tpEnabledPref = () => Services.prefs.getBoolPref(TP_PREF);
-  let cbUIEnabledPref = () => Services.prefs.getBoolPref(CB_UI_PREF);
 
   await SpecialPowers.pushPrefEnv(
     {"set": [[TP_PREF, TP_DEFAULT], [CB_UI_PREF, true]]});
@@ -554,8 +553,7 @@ add_task(async function testExtensionControlledTrackingProtection() {
     if (isControlled) {
       let controlledDesc = controlledLabel.querySelector("description");
       Assert.deepEqual(doc.l10n.getAttributes(controlledDesc), {
-        id: cbUIEnabledPref() ? "extension-controlled-websites-content-blocking-all-trackers" :
-                                "extension-controlled-websites-tracking-protection-mode",
+        id: "extension-controlled-websites-tracking-protection-mode",
         args: {
           name: "set_tp",
         },
