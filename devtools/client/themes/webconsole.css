@@ -79,6 +79,14 @@ a {
   line-height: var(--console-output-line-height);
 }
 
+/*
+ * By default, prevent any element in message to overflow.
+ * This makes console reflows faster (See Bug 1487457).
+ */
+.message * {
+  overflow: hidden;
+}
+
 .message:hover {
   border-inline-start-color: var(--theme-highlight-blue);
 }
@@ -493,10 +501,6 @@ a.learn-more-link.webconsole-learn-more-link {
   filter: var(--theme-icon-checked-filter) brightness(0.9);
 }
 
-#output-container {
-  height: 100%;
-}
-
 /*
   This element contains the different toolbars in the console
     - primary, containing the clear messages button and the text search input.
@@ -812,24 +816,15 @@ a.learn-more-link.webconsole-learn-more-link {
 
 html,
 body {
-  height: 100%;
+  height: 100vh;
   margin: 0;
   padding: 0;
-}
-
-body {
   overflow: hidden;
 }
 
 #app-wrapper {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-body #output-container {
-  flex: 1;
-  overflow: hidden;
+  height: 100vh;
+  max-height: 100vh;
 }
 
 
@@ -867,10 +862,12 @@ body #output-container {
 
 .webconsole-flex-wrapper .webconsole-filteringbar-wrapper {
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .webconsole-flex-wrapper .webconsole-output {
   flex-shrink: 100000;
+  overflow-x: hidden;
 }
 
 .webconsole-flex-wrapper > .webconsole-output:not(:empty) {
@@ -883,7 +880,8 @@ body #output-container {
 
 .webconsole-output-wrapper .jsterm-input-container {
   min-height: 28px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .jsterm-cm .jsterm-input-container {
