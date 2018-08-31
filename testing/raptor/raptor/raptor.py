@@ -174,6 +174,9 @@ class Raptor(object):
 
         # for geckoview we must copy the profile onto the device and set perms
         if self.config['app'] == "geckoview":
+            if not self.device.is_app_installed(self.config['binary']):
+                raise Exception('%s is not installed' % self.config['binary'])
+
             self.log.info("copying firefox profile onto the android device")
             self.device_profile = "/sdcard/raptor-profile"
             if self.device.is_dir(self.device_profile):
@@ -192,12 +195,15 @@ class Raptor(object):
                           "--es", "env0", "LOG_VERBOSE=1",
                           "--es", "env1", "R_LOG_LEVEL=6"]
 
-            self.device.launch_activity(self.config['binary'],
-                                        "GeckoViewActivity",
-                                        extra_args=extra_args,
-                                        url='about:blank',
-                                        fail_if_running=False)
-
+            try:
+                self.device.launch_activity(self.config['binary'],
+                                            "GeckoViewActivity",
+                                            extra_args=extra_args,
+                                            url='about:blank',
+                                            fail_if_running=False)
+            except Exception:
+                self.log.error("Exception launching %s" % self.config['binary'])
+                raise
             self.control_server.device = self.device
             self.control_server.app_name = self.config['binary']
 
