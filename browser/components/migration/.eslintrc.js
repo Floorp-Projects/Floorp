@@ -11,7 +11,6 @@ module.exports = {
     "no-fallthrough": ["error", { "commentPattern": ".*[Ii]ntentional(?:ly)?\\s+fall(?:ing)?[\\s-]*through.*" }],
     "no-multi-str": "error",
     "no-return-assign": "error",
-    "no-sequences": "error",
     "no-shadow": "error",
     "no-throw-literal": "error",
     "no-unused-vars": ["error", { "args": "after-used", "vars": "all" }],

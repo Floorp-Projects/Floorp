@@ -8,6 +8,7 @@ import base64
 import hashlib
 import imghdr
 import struct
+import tempfile
 import urllib
 
 from marionette_driver import By
@@ -394,6 +395,15 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
                                                                     highlights=[paragraph])
         self.assertNotEqual(screenshot_element, screenshot_highlight_paragraph)
         self.assertNotEqual(screenshot_highlight, screenshot_highlight_paragraph)
+
+    def test_save_screenshot(self):
+        expected = self.marionette.screenshot(format="binary")
+        with tempfile.TemporaryFile('w+b') as fh:
+            self.marionette.save_screenshot(fh)
+            fh.flush()
+            fh.seek(0)
+            content = fh.read()
+            self.assertEqual(expected, content)
 
     def test_scroll_default(self):
         self.marionette.navigate(long)

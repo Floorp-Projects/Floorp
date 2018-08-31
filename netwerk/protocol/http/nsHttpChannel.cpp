@@ -715,10 +715,12 @@ nsHttpChannel::CheckFastBlocked()
 
     if (!StaticPrefs::browser_contentblocking_enabled() ||
         !sIsFastBlockEnabled ||
-        IsContentPolicyTypeWhitelistedForFastBlock(mLoadInfo)) {
+        IsContentPolicyTypeWhitelistedForFastBlock(mLoadInfo)) ||
+        // If the user has interacted with the document, we disable fastblock.
+        (mLoadInfo && mLoadInfo->GetDocumentHasUserInteracted())) {
 
         LOG(("FastBlock passed (invalid) [this=%p]\n", this));
-
+        
         return false;
     }
 

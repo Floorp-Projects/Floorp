@@ -82,7 +82,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoaderFactory.h"
-#include "nsIDOMStorage.h"
 #include "nsIDOMWindow.h"
 #include "nsIEditingSession.h"
 #include "nsIExternalProtocolService.h"
