@@ -89,6 +89,10 @@ subprojects {
 
     afterEvaluate {
         if (it.hasProperty('android')) {
+            jacoco {
+                toolVersion = "0.8.2"
+            }
+
             dependencies {
                 lintChecks project(':tooling-lint')
             }
