@@ -240,9 +240,8 @@ GLBlitTextureImageHelper::UseBlitProgram()
         if (!success) {
             nsAutoCString log;
             gl->fGetShaderiv(shaders[i], LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
-            log.SetCapacity(len);
-            gl->fGetShaderInfoLog(shaders[i], len, (GLint*) &len, (char*) log.BeginWriting());
             log.SetLength(len);
+            gl->fGetShaderInfoLog(shaders[i], len, (GLint*) &len, (char*) log.BeginWriting());
 
             printf_stderr("Shader %d compilation failed:\n%s\n", i, log.get());
             return;
@@ -264,9 +263,8 @@ GLBlitTextureImageHelper::UseBlitProgram()
     if (!success) {
         nsAutoCString log;
         gl->fGetProgramiv(mBlitProgram, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
-        log.SetCapacity(len);
-        gl->fGetProgramInfoLog(mBlitProgram, len, (GLint*) &len, (char*) log.BeginWriting());
         log.SetLength(len);
+        gl->fGetProgramInfoLog(mBlitProgram, len, (GLint*) &len, (char*) log.BeginWriting());
 
         printf_stderr("Program linking failed:\n%s\n", log.get());
         return;
