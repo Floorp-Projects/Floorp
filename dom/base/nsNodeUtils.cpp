@@ -610,13 +610,8 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       if (clone->OwnerDoc()->IsStaticDocument()) {
         ShadowRoot* originalShadowRoot = aNode->AsElement()->GetShadowRoot();
         if (originalShadowRoot) {
-          ShadowRootInit init;
-          init.mMode = originalShadowRoot->Mode();
           RefPtr<ShadowRoot> newShadowRoot =
-            clone->AsElement()->AttachShadow(init, aError);
-          if (NS_WARN_IF(aError.Failed())) {
-            return nullptr;
-          }
+            clone->AsElement()->AttachShadowWithoutNameChecks(originalShadowRoot->Mode());
 
           newShadowRoot->CloneInternalDataFrom(originalShadowRoot);
           for (nsIContent* origChild = originalShadowRoot->GetFirstChild();
