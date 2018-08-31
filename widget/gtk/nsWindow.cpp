@@ -7149,7 +7149,7 @@ nsWindow::GetSystemCSDSupportLevel() {
             sCSDSupportLevel = CSD_SUPPORT_CLIENT;
         // Ubuntu Unity
         } else if (strstr(currentDesktop, "Unity") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+            sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
         // Elementary OS
         } else if (strstr(currentDesktop, "Pantheon") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
