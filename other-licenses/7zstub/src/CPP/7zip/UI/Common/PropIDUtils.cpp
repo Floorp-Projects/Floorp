@@ -369,7 +369,7 @@ static void ParseSid(AString &s, const Byte *p, UInt32 lim, UInt32 &sidSize)
       int index = FindPairIndex(sid_32_Names, ARRAY_SIZE(sid_32_Names), v1);
       if (index >= 0)
       {
-        s += sid_32_Names[index].sz;
+        s += sid_32_Names[(unsigned)index].sz;
         return;
       }
     }
@@ -379,7 +379,7 @@ static void ParseSid(AString &s, const Byte *p, UInt32 lim, UInt32 &sidSize)
       int index = FindPairIndex(sid_21_Names, ARRAY_SIZE(sid_21_Names), v4);
       if (index >= 0)
       {
-        s += sid_21_Names[index].sz;
+        s += sid_21_Names[(unsigned)index].sz;
         return;
       }
     }
@@ -630,7 +630,7 @@ bool ConvertNtReparseToString(const Byte *data, UInt32 size, UString &s)
   {
     int index = FindPairIndex(k_ReparseTags, ARRAY_SIZE(k_ReparseTags), tag);
     if (index >= 0)
-      s += k_ReparseTags[index].sz;
+      s += k_ReparseTags[(unsigned)index].sz;
     else
     {
       s += "REPARSE:";

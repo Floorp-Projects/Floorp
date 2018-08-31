@@ -43,6 +43,7 @@ CODER_INTERFACE(ICompressCoder2, 0x18)
     S_OK     : OK
     S_FALSE  : data error (for decoders)
     E_OUTOFMEMORY : memory allocation error
+    E_NOTIMPL : unsupported encoding method (for decoders)
     another error code : some error. For example, it can be error code received from inStream or outStream function.
   
   Parameters:
@@ -129,7 +130,8 @@ namespace NCoderPropID
 
     kBlockSize2,        // VT_UI4 or VT_UI8
     kCheckSize,         // VT_UI4 : size of digest in bytes
-    kFilter             // VT_BSTR
+    kFilter,            // VT_BSTR
+    kMemUse             // VT_UI8
   };
 }
 
@@ -189,6 +191,12 @@ CODER_INTERFACE(ICompressGetInStreamProcessedSize2, 0x27)
 {
   STDMETHOD(GetInStreamProcessedSize2)(UInt32 streamIndex, UInt64 *value) PURE;
 };
+
+CODER_INTERFACE(ICompressSetMemLimit, 0x28)
+{
+  STDMETHOD(SetMemLimit)(UInt64 memUsage) PURE;
+};
+
 
 
 CODER_INTERFACE(ICompressGetSubStreamSize, 0x30)

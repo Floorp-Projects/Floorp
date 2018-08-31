@@ -1,2 +1,0 @@
-#define IDD_LISTVIEW  99
-#define IDL_LISTVIEW 100

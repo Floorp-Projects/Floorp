@@ -18,4 +18,24 @@ HRESULT EnumerateItems(
     const UString &addPathPrefix,
     CDirItems &dirItems);
 
+
+struct CMessagePathException: public UString
+{
+  CMessagePathException(const char *a, const wchar_t *u = NULL);
+};
+
+
+HRESULT EnumerateDirItemsAndSort(
+    NWildcard::CCensor &censor,
+    NWildcard::ECensorPathMode pathMode,
+    const UString &addPathPrefix,
+    UStringVector &sortedPaths,
+    UStringVector &sortedFullPaths,
+    CDirItemsStat &st,
+    IDirItemsCallback *callback);
+
+#ifdef _WIN32
+void ConvertToLongNames(NWildcard::CCensor &censor);
+#endif
+
 #endif
