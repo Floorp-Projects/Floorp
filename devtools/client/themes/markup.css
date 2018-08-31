@@ -233,6 +233,13 @@ ul.children + .tag-line::before {
   display: inline;
 }
 
+.expandable.collapsed .markup-expand-badge {
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: -3px;
+  padding: 2px;
+}
+
 .expandable.collapsed .markup-expand-badge::before {
   /* Display an ellipsis character in collapsed nodes that can be expanded. */
   content: "";
@@ -243,11 +250,9 @@ ul.children + .tag-line::before {
   border: 1px solid var(--markup-badge-border-color);
   color: var(--markup-badge-color);
   fill: var(--markup-badge-interactive-color);
-  vertical-align: middle;
-  display: inline-block;
+  display: block;
   width: 12px;
   height: 8px;
-  margin: 0 2px;
   line-height: 3px;
   border-radius: 3px;
   -moz-context-properties: fill;
@@ -403,10 +408,11 @@ ul.children + .tag-line::before {
 /* Markup Badges */
 .markup-badge {
   display: inline-block;
+  /* 9px text is too blurry on low-resolution screens */
   font-size: 10px;
   font-weight: normal;
   line-height: 11px;
-  vertical-align: 1px;
+  vertical-align: 0.5px;
   border: 1px solid var(--markup-badge-border-color);
   border-radius: 3px;
   padding: 0px 2px;
@@ -419,6 +425,7 @@ ul.children + .tag-line::before {
 @media (min-resolution: 1.1dppx) {
   .markup-badge {
     font-size: 9px;
+    vertical-align: 1px;
   }
 }
 
