@@ -409,6 +409,10 @@ DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize)
 {
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
 
+  if (aSize.IsEmpty()) {
+    return nullptr;
+  }
+
   gPaintMessage = Some(PaintMessage(aSize.width, aSize.height));
 
   gfx::IntSize size(aSize.width, aSize.height);
