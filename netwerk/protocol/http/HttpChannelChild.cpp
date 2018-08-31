@@ -2041,7 +2041,7 @@ HttpChannelChild::ProcessNotifyTrackingProtectionDisabled()
 }
 
 void
-HttpChannelChild::ProcessNotifyTrackingCookieBlocked()
+HttpChannelChild::ProcessNotifyTrackingCookieBlocked(uint32_t aRejectedReason)
 {
   LOG(("HttpChannelChild::ProcessNotifyTrackingCookieBlocked [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
@@ -2051,8 +2051,8 @@ HttpChannelChild::ProcessNotifyTrackingCookieBlocked()
   neckoTarget->Dispatch(
     NS_NewRunnableFunction(
       "nsChannelClassifier::NotifyTrackingCookieBlocked",
-      [self]() {
-        AntiTrackingCommon::NotifyRejection(self);
+      [self, aRejectedReason]() {
+        AntiTrackingCommon::NotifyRejection(self, aRejectedReason);
       }),
     NS_DISPATCH_NORMAL);
 }
