@@ -6,8 +6,6 @@ categories: releases
 author: csadilek
 ---
 
-# 0.20 (2018-08-24)
-
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.19.1...v0.20),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/19?closed=1),
 [API reference](https://mozilla-mobile.github.io/android-components/api/0.20/index)
