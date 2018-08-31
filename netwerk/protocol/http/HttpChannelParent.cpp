@@ -1811,12 +1811,12 @@ HttpChannelParent::NotifyTrackingProtectionDisabled()
 }
 
 NS_IMETHODIMP
-HttpChannelParent::NotifyTrackingCookieBlocked()
+HttpChannelParent::NotifyTrackingCookieBlocked(uint32_t aRejectedReason)
 {
   LOG(("HttpChannelParent::NotifyTrackingCookieBlocked [this=%p]\n", this));
   if (!mIPCClosed) {
     MOZ_ASSERT(mBgParent);
-    Unused << NS_WARN_IF(!mBgParent->OnNotifyTrackingCookieBlocked());
+    Unused << NS_WARN_IF(!mBgParent->OnNotifyTrackingCookieBlocked(aRejectedReason));
   }
   return NS_OK;
 }
