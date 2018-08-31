@@ -84,7 +84,7 @@ connection-proxy-socks-remote-dns =
 
 connection-dns-over-https =
     .label = Enable DNS over HTTPS
-    .accesskey = H
+    .accesskey = b
 
 connection-dns-over-https-url = URL
     .accesskey = U

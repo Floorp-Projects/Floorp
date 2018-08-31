@@ -178,8 +178,7 @@ class LintRoller(object):
         :param outgoing: Lint files touched by commits that are not on the remote repository.
         :param workdir: Lint all files touched in the working directory.
         :param num_procs: The number of processes to use. Default: cpu count
-        :return: A dictionary with file names as the key, and a list of
-                 :class:`~result.Issue`s as the value.
+        :return: A :class:`~result.ResultSummary` instance.
         """
         if not self.linters:
             raise LintersNotConfigured
@@ -215,7 +214,7 @@ class LintRoller(object):
 
         if not (paths or vcs_paths) and (workdir or outgoing):
             print("warning: no files linted")
-            return {}
+            return self.result
 
         # Make sure all paths are absolute. Join `paths` to cwd and `vcs_paths` to root.
         paths = set(map(os.path.abspath, paths))

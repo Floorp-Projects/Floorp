@@ -556,6 +556,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".osas", // AppleScript
     ".osax", // AppleScript
     //".out", // Linux binary
+    ".oxt", // OpenOffice extension, can execute arbitrary code
     //".paf", // PortableApps package
     //".paq8f",
     //".paq8jd",
