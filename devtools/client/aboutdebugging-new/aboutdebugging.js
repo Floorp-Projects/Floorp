@@ -61,12 +61,14 @@ const AboutDebugging = {
     // XXX Until the strings for the updated about:debugging stabilize, we
     // locate them outside the regular directory for locale resources so that
     // they don't get picked up by localization tools.
-    const temporarySource = new FileSource(
-      "aboutdebugging",
-      ["en-US"],
-      "chrome://devtools/content/aboutdebugging-new/tmp-locale/{locale}/"
-    );
-    L10nRegistry.registerSource(temporarySource);
+    if (!L10nRegistry.sources.has("aboutdebugging")) {
+      const temporarySource = new FileSource(
+        "aboutdebugging",
+        ["en-US"],
+        "chrome://devtools/content/aboutdebugging-new/tmp-locale/{locale}/"
+      );
+      L10nRegistry.registerSource(temporarySource);
+    }
 
     const locales = Services.locale.getAppLocalesAsBCP47();
     const generator =
