@@ -694,6 +694,7 @@ bool
 nsHttpChannel::CheckFastBlocked()
 {
     LOG(("nsHttpChannel::CheckFastBlocked [this=%p]\n", this));
+    MOZ_ASSERT(mIsThirdPartyTrackingResource);
 
     static bool sFastBlockInited = false;
     static bool sIsFastBlockEnabled = false;
@@ -706,23 +707,26 @@ nsHttpChannel::CheckFastBlocked()
     }
 
     TimeStamp timestamp;
-    if (NS_FAILED(GetNavigationStartTimeStamp(&timestamp))) {
+    if (NS_FAILED(GetNavigationStartTimeStamp(&timestamp)) || !timestamp) {
+        LOG(("FastBlock passed (no timestamp) [this=%p]\n", this));
+
         return false;
     }
 
     if (!StaticPrefs::browser_contentblocking_enabled() ||
         !sIsFastBlockEnabled ||
-        IsContentPolicyTypeWhitelistedForFastBlock(mLoadInfo) ||
-        !timestamp) {
+        IsContentPolicyTypeWhitelistedForFastBlock(mLoadInfo)) {
+
+        LOG(("FastBlock passed (invalid) [this=%p]\n", this));
+
         return false;
     }
 
     TimeDuration duration = TimeStamp::NowLoRes() - timestamp;
     bool isFastBlocking = duration.ToMilliseconds() >= sFastBlockTimeout;
 
-    if (mLoadInfo) {
-        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTracker(true));
-        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(isFastBlocking));
+    if (isFastBlocking && mLoadInfo) {
+        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(true));
     }
 
     LOG(("FastBlock %s (%lf) [this=%p]\n",
@@ -6105,6 +6109,10 @@ nsHttpChannel::CancelInternal(nsresult status)
       !!mTrackingProtectionCancellationPending;
     if (status == NS_ERROR_TRACKING_URI) {
       mTrackingProtectionCancellationPending = 0;
+      if (mLoadInfo) {
+        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTracker(true));
+        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(true));
+      }
     }
 
     mCanceled = true;
