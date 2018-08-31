@@ -348,7 +348,7 @@ HttpBackgroundChannelChild::RecvNotifyTrackingProtectionDisabled()
 }
 
 IPCResult
-HttpBackgroundChannelChild::RecvNotifyTrackingCookieBlocked()
+HttpBackgroundChannelChild::RecvNotifyTrackingCookieBlocked(const uint32_t& aRejectedReason)
 {
   LOG(("HttpBackgroundChannelChild::RecvNotifyTrackingCookieBlocked [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
@@ -357,7 +357,7 @@ HttpBackgroundChannelChild::RecvNotifyTrackingCookieBlocked()
     return IPC_OK();
   }
 
-  mChannelChild->ProcessNotifyTrackingCookieBlocked();
+  mChannelChild->ProcessNotifyTrackingCookieBlocked(aRejectedReason);
 
   return IPC_OK();
 }

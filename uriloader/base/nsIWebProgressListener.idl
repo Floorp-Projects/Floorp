@@ -218,14 +218,10 @@ interface nsIWebProgressListener : nsISupports
    *
    * STATE_BLOCKED_UNSAFE_CONTENT
    *   Content which againts SafeBrowsing list has been blocked from loading.
-   *
-   * STATE_BLOCKED_TRACKING_COOKIES
-   *   Tracking cookies has been blocked from loading.
    */
   const unsigned long STATE_BLOCKED_TRACKING_CONTENT         = 0x00001000;
   const unsigned long STATE_LOADED_TRACKING_CONTENT          = 0x00002000;
   const unsigned long STATE_BLOCKED_UNSAFE_CONTENT           = 0x00004000;
-  const unsigned long STATE_BLOCKED_TRACKING_COOKIES         = 0x00008000;
 
   /**
    * Diagnostic flags
@@ -294,6 +290,29 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_USES_SSL_3                = 0x01000000;
   const unsigned long STATE_USES_WEAK_CRYPTO          = 0x02000000;
   const unsigned long STATE_CERT_USER_OVERRIDDEN      = 0x04000000;
+
+  /**
+   * Cookie Jar blocking
+   *
+   * These flags describe the reason of cookie jar rejection.
+   *
+   * STATE_COOKIES_BLOCKED_BY_PERMISSION
+   *   Rejected for custom site permission.
+   *
+   * STATE_COOKIES_BLOCKED_TRACKER
+   *   Rejected because the resource is a tracker and cookie policy doesn't
+   *   allow its loading.
+   *
+   * STATE_COOKIES_BLOCKED_ALL
+   *   Rejected because cookie policy blocks all cookies.
+   *
+   * STATE_COOKIES_BLOCKED_FOREIGN
+   *   Rejected because cookie policy blocks 3rd party cookies.
+   */
+  const unsigned long STATE_COOKIES_BLOCKED_BY_PERMISSION = 0x10000000;
+  const unsigned long STATE_COOKIES_BLOCKED_TRACKER       = 0x20000000;
+  const unsigned long STATE_COOKIES_BLOCKED_ALL           = 0x40000000;
+  const unsigned long STATE_COOKIES_BLOCKED_FOREIGN       = 0x80000000;
 
   /**
    * Notification indicating the state has changed for one of the requests

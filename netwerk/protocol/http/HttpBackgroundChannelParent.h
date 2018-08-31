@@ -70,7 +70,7 @@ public:
   bool OnNotifyTrackingProtectionDisabled();
 
   // To send NotifyTrackingCookieBlocked message over background channel.
-  bool OnNotifyTrackingCookieBlocked();
+  bool OnNotifyTrackingCookieBlocked(uint32_t aRejectedReason);
 
   // To send NotifyTrackingResource message over background channel.
   bool OnNotifyTrackingResource(bool aIsThirdParty);

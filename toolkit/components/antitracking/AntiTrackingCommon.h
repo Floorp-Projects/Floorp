@@ -33,9 +33,17 @@ public:
   // loaded inside the passed 3rd party context tracking resource window.
   // If the window is first party context, please use
   // MaybeIsFirstPartyStorageAccessGrantedFor();
+  //
+  // aRejectedReason could be set to one of these values if passed and if the
+  // storage permission is not granted:
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
   static bool
   IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* a3rdPartyTrackingWindow,
-                                      nsIURI* aURI);
+                                      nsIURI* aURI,
+                                      uint32_t* aRejectedReason);
 
   // Note: you should use IsFirstPartyStorageAccessGrantedFor() passing the
   // nsIHttpChannel! Use this method _only_ if the channel is not available.
@@ -49,8 +57,11 @@ public:
 
   // It returns true if the URI has access to the first party storage.
   // aChannel can be a 3rd party channel, or not.
+  // See IsFirstPartyStorageAccessGrantedFor(window) to see the possible values
+  // of aRejectedReason.
   static bool
-  IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel, nsIURI* aURI);
+  IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel, nsIURI* aURI,
+                                      uint32_t* aRejectedReason);
 
   // This method checks if the principal has the permission to access to the
   // first party storage.
@@ -92,11 +103,17 @@ public:
   // This method can be called on the parent process or on the content process.
   // The notification is propagated to the child channel if aChannel is a parent
   // channel proxy.
+  //
+  // aRejectedReason must be one of these values:
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
   static void
-  NotifyRejection(nsIChannel* aChannel);
+  NotifyRejection(nsIChannel* aChannel, uint32_t aRejectedReason);
 
   static void
-  NotifyRejection(nsPIDOMWindowInner* aWindow);
+  NotifyRejection(nsPIDOMWindowInner* aWindow, uint32_t aRejectedReason);
 };
 
 } // namespace mozilla
