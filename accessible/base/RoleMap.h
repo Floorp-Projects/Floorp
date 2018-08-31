@@ -491,7 +491,7 @@ ROLE(SPINBUTTON,
      NSAccessibilityIncrementorRole,  //Subroles: Increment/Decrement.
      ROLE_SYSTEM_SPINBUTTON,
      ROLE_SYSTEM_SPINBUTTON,
-     "android.widget.EditText",
+     "android.view.View", // A composite widget
      eNameFromValueRule)
 
 ROLE(DIAGRAM,
