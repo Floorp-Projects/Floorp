@@ -14,9 +14,13 @@ dnl ========================================================
 AC_CACHE_CHECK(what kind of list files are supported by the linker,
     EXPAND_LIBS_LIST_STYLE,
     [echo "int main() {return 0;}" > conftest.${ac_ext}
-     if AC_TRY_COMMAND(${CC-cc} -o conftest.${OBJ_SUFFIX} -c $CFLAGS $CPPFLAGS conftest.${ac_ext} 1>&5) && test -s conftest.${OBJ_SUFFIX}; then
+     dnl Because BFD ld doesn't work with LTO + linker scripts, we
+     dnl must pass the LTO CFLAGS to the compile command, and the LTO
+     dnl LDFLAGS to all subsequent link commands.
+     dnl https://sourceware.org/bugzilla/show_bug.cgi?id=23600
+     if AC_TRY_COMMAND(${CC-cc} -o conftest.${OBJ_SUFFIX} -c $MOZ_LTO_CFLAGS $CFLAGS $CPPFLAGS conftest.${ac_ext} 1>&5) && test -s conftest.${OBJ_SUFFIX}; then
          echo "INPUT(conftest.${OBJ_SUFFIX})" > conftest.list
-         if AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.list $LIBS 1>&5) && test -s conftest${ac_exeext}; then
+         if AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $MOZ_LTO_LDFLAGS $LDFLAGS conftest.list $LIBS 1>&5) && test -s conftest${ac_exeext}; then
              EXPAND_LIBS_LIST_STYLE=linkerscript
          else
              echo "conftest.${OBJ_SUFFIX}" > conftest.list
@@ -24,9 +28,9 @@ AC_CACHE_CHECK(what kind of list files are supported by the linker,
              dnl first because clang understands @file, but may pass an
              dnl oversized argument list to the linker depending on the
              dnl contents of @file.
-             if AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS [-Wl,-filelist,conftest.list] $LIBS 1>&5) && test -s conftest${ac_exeext}; then
+             if AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $MOZ_LTO_LDFLAGS $LDFLAGS [-Wl,-filelist,conftest.list] $LIBS 1>&5) && test -s conftest${ac_exeext}; then
                  EXPAND_LIBS_LIST_STYLE=filelist
-             elif AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS @conftest.list $LIBS 1>&5) && test -s conftest${ac_exeext}; then
+             elif AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $MOZ_LTO_LDFLAGS $LDFLAGS @conftest.list $LIBS 1>&5) && test -s conftest${ac_exeext}; then
                  EXPAND_LIBS_LIST_STYLE=list
              else
                  AC_ERROR([Couldn't find one that works])
