@@ -3,7 +3,7 @@
 "use strict";
 
 const { parseFileUri } =
-  require("devtools/client/aboutdebugging/modules/addon");
+  require("devtools/client/aboutdebugging-new/src/modules/extensions-helper");
 
 add_task(async function testParseFileUri() {
   equal(
