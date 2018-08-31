@@ -167,6 +167,10 @@ class MachRaptor(MachCommandBase):
         if not verify_android_device(build_obj, install=True, app=kwargs['binary']):
             return 1
 
+        debug_command = '--debug-command'
+        if debug_command in sys.argv:
+            sys.argv.remove(debug_command)
+
         raptor = self._spawn(RaptorRunner)
 
         try:
