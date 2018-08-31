@@ -3143,7 +3143,7 @@ GeckoDriver.prototype.dismissDialog = async function() {
 
   await new Promise(resolve => {
     win.addEventListener("DOMModalDialogClosed", whenIdle(win, () => {
-      this.dialog = modal.findModalDialogs(this.curBrowser);
+      this.dialog = null;
       resolve();
     }), {once: true});
 
@@ -3162,7 +3162,7 @@ GeckoDriver.prototype.acceptDialog = async function() {
 
   await new Promise(resolve => {
     win.addEventListener("DOMModalDialogClosed", whenIdle(win, () => {
-      this.dialog = modal.findModalDialogs(this.curBrowser);
+      this.dialog = null;
       resolve();
     }), {once: true});
 

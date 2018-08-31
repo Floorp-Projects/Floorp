@@ -1046,36 +1046,6 @@ impl<'a> DisplayListFlattener<'a> {
             *self.picture_stack.last().unwrap()
         };
 
-        // Same for mix-blend-mode.
-        if let Some(mix_blend_mode) = composite_ops.mix_blend_mode {
-            let picture = PicturePrimitive::new_image(
-                self.get_next_picture_id(),
-                Some(PictureCompositeMode::MixBlend(mix_blend_mode)),
-                false,
-                pipeline_id,
-                None,
-                true,
-            );
-
-            let src_prim = BrushPrimitive::new_picture(picture);
-
-            let src_prim_index = self.prim_store.add_primitive(
-                &LayoutRect::zero(),
-                &max_clip,
-                true,
-                clip_chain_id,
-                spatial_node_index,
-                None,
-                PrimitiveContainer::Brush(src_prim),
-            );
-
-            let parent_pic = self.prim_store.get_pic_mut(parent_prim_index);
-            parent_prim_index = src_prim_index;
-            parent_pic.add_primitive(src_prim_index);
-
-            self.picture_stack.push(src_prim_index);
-        }
-
         // For each filter, create a new image with that composite mode.
         for filter in composite_ops.filters.iter().rev() {
             let picture = PicturePrimitive::new_image(
@@ -1101,6 +1071,36 @@ impl<'a> DisplayListFlattener<'a> {
             let parent_pic = self.prim_store.get_pic_mut(parent_prim_index);
             parent_prim_index = src_prim_index;
 
+            parent_pic.add_primitive(src_prim_index);
+
+            self.picture_stack.push(src_prim_index);
+        }
+
+        // Same for mix-blend-mode.
+        if let Some(mix_blend_mode) = composite_ops.mix_blend_mode {
+            let picture = PicturePrimitive::new_image(
+                self.get_next_picture_id(),
+                Some(PictureCompositeMode::MixBlend(mix_blend_mode)),
+                false,
+                pipeline_id,
+                None,
+                true,
+            );
+
+            let src_prim = BrushPrimitive::new_picture(picture);
+
+            let src_prim_index = self.prim_store.add_primitive(
+                &LayoutRect::zero(),
+                &max_clip,
+                true,
+                clip_chain_id,
+                spatial_node_index,
+                None,
+                PrimitiveContainer::Brush(src_prim),
+            );
+
+            let parent_pic = self.prim_store.get_pic_mut(parent_prim_index);
+            parent_prim_index = src_prim_index;
             parent_pic.add_primitive(src_prim_index);
 
             self.picture_stack.push(src_prim_index);
