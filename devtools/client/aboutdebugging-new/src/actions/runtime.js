@@ -13,7 +13,7 @@ const {
   debugLocalAddon,
   openTemporaryExtension,
   uninstallAddon,
-} = require("devtools/client/aboutdebugging/modules/addon");
+} = require("devtools/client/aboutdebugging-new/src/modules/extensions-helper");
 
 const {
   CONNECT_RUNTIME_FAILURE,
