@@ -36,23 +36,15 @@ typedef nsClassHashtable<nsStringHashKey, ProcessLockTable> LockTable;
 
 int sActiveListeners = 0;
 StaticAutoPtr<LockTable> sLockTable;
-bool sInitialized = false;
 bool sIsShuttingDown = false;
 
 WakeLockInformation
 WakeLockInfoFromLockCount(const nsAString& aTopic, const LockCount& aLockCount)
 {
-  // TODO: Once we abandon b2g18, we can switch this to use the
-  // WakeLockInformation constructor, which is better because it doesn't let us
-  // forget to assign a param.  For now we have to do it this way, because
-  // b2g18 doesn't have the nsTArray <--> InfallibleTArray conversion (bug
-  // 819791).
+  nsString topic(aTopic);
+  WakeLockInformation info(topic, aLockCount.numLocks, aLockCount.numHidden,
+                           aLockCount.processes);
 
-  WakeLockInformation info;
-  info.topic() = aTopic;
-  info.numLocks() = aLockCount.numLocks;
-  info.numHidden() = aLockCount.numHidden;
-  info.lockingProcesses().AppendElements(aLockCount.processes);
   return info;
 }
 
@@ -146,11 +138,16 @@ CleanupOnContentShutdown::Observe(nsISupports* aSubject, const char* aTopic, con
   return NS_OK;
 }
 
+} // namespace
+
+namespace mozilla {
+
+namespace hal {
+
 void
-Init()
+WakeLockInit()
 {
   sLockTable = new LockTable();
-  sInitialized = true;
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -159,11 +156,6 @@ Init()
   }
 }
 
-} // namespace
-
-namespace mozilla {
-
-namespace hal {
 
 WakeLockState
 ComputeWakeLockState(int aNumLocks, int aNumHidden)
@@ -204,9 +196,6 @@ ModifyWakeLock(const nsAString& aTopic,
 
   if (sIsShuttingDown) {
     return;
-  }
-  if (!sInitialized) {
-    Init();
   }
 
   ProcessLockTable* table = sLockTable->Get(aTopic);
@@ -263,9 +252,6 @@ GetWakeLockInfo(const nsAString& aTopic, WakeLockInformation* aWakeLockInfo)
     NS_WARNING("You don't want to get wake lock information during xpcom-shutdown!");
     *aWakeLockInfo = WakeLockInformation();
     return;
-  }
-  if (!sInitialized) {
-    Init();
   }
 
   ProcessLockTable* table = sLockTable->Get(aTopic);

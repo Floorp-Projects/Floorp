@@ -257,6 +257,8 @@ protected:
 
     } mEventQueue;
 
+private:
+
     mozilla::CondVar mSyncRunFinished;
     bool mSyncRunQuit;
 

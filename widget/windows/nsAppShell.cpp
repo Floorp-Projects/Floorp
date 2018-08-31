@@ -16,6 +16,7 @@
 #include "WinIMEHandler.h"
 #include "mozilla/widget/AudioSession.h"
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/Hal.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
 #include "mozilla/StaticPtr.h"
@@ -210,6 +211,8 @@ nsAppShell::EventWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 nsAppShell::~nsAppShell()
 {
+  hal::Shutdown();
+
   if (mEventWnd) {
     // DestroyWindow doesn't do anything when called from a non UI thread.
     // Since mEventWnd was created on the UI thread, it must be destroyed on
@@ -326,6 +329,8 @@ nsresult
 nsAppShell::Init()
 {
   LSPAnnotate();
+
+  hal::Init();
 
   mozilla::ipc::windows::InitUIThread();
 

@@ -405,6 +405,8 @@ nsAppShell::nsAppShell()
         sAppShell = this;
     }
 
+    hal::Init();
+
     if (!XRE_IsParentProcess()) {
         if (jni::IsAvailable()) {
             GeckoThreadSupport::Init();
@@ -472,6 +474,8 @@ nsAppShell::~nsAppShell()
         sPowerManagerService = nullptr;
         sWakeLockListener = nullptr;
     }
+
+    hal::Shutdown();
 
     if (jni::IsAvailable() && XRE_IsParentProcess()) {
         DestroyAndroidUiThread();
