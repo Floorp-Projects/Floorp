@@ -348,14 +348,6 @@
         </vbox>
       </hbox>
       <vbox>
-        <hbox id="contentBlockingTrackingProtectionExtensionContentLabel" align="center" hidden="true">
-          <description control="contentBlockingDisableTrackingProtectionExtension" flex="1"/>
-        </hbox>
-        <hbox id="contentBlockingTrackingProtectionExtensionContentButton" hidden="true">
-          <button id="contentBlockingDisableTrackingProtectionExtension"
-                  class="extension-controlled-button accessory-button"
-                  data-l10n-id="disable-extension"/>
-        </hbox>
         <hbox class="content-blocking-category tracking-protection-ui">
           <vbox class="content-blocking-category-checkbox">
             <checkbox id="contentBlockingTrackingProtectionCheckbox" class="content-blocking-checkbox" />
@@ -367,6 +359,13 @@
             <label data-l10n-id="content-blocking-tracking-protection-all-label"
                    class="content-blocking-category-name"
                    control="contentBlockingTrackingProtectionCheckbox"/>
+            <hbox id="contentBlockingTrackingProtectionExtensionContentLabel"
+                  align="center" hidden="true" class="extension-controlled">
+              <description control="contentBlockingDisableTrackingProtectionExtension" flex="1"/>
+              <button id="contentBlockingDisableTrackingProtectionExtension"
+                      class="extension-controlled-button accessory-button"
+                      data-l10n-id="disable-extension" hidden="true"/>
+            </hbox>
             <description data-l10n-id="content-blocking-tracking-protection-new-description"
                          class="content-blocking-category-description"
                          id="trackingProtectionMenuDesc"/>
