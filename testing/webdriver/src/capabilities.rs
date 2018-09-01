@@ -502,7 +502,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                     }
                 }
 
-                return Some(merged);
+                Some(merged)
             })
             .next()
             .map(|x| x.clone());
