@@ -1021,7 +1021,7 @@ pub fn parse_tokens<'a>(tokenizer: &mut PrefTokenizer<'a>) -> Result<Preferences
 pub fn serialize<W: Write>(prefs: &Preferences, output: &mut W) -> io::Result<()> {
     let mut p: Vec<_> = prefs.iter().collect();
     p.sort_by(|a, b| a.0.cmp(&b.0));
-    for &(key, pref) in p.iter() {
+    for &(key, pref) in &p {
         let func = if pref.sticky {
             "sticky_pref("
         } else {
