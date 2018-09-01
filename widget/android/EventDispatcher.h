@@ -54,12 +54,10 @@ public:
                                 jni::Object::Param aData,
                                 JS::MutableHandleValue aOut);
 
-    static void DisposeNative(const java::EventDispatcher::LocalRef& aInstance);
-
+    using NativesBase::DisposeNative;
 private:
-    java::EventDispatcher::GlobalRef mDispatcher;
+    java::EventDispatcher::WeakRef mDispatcher;
     nsCOMPtr<nsPIDOMWindowOuter> mDOMWindow;
-    int32_t mAttachCount{0};
 
     virtual ~EventDispatcher() {}
 
