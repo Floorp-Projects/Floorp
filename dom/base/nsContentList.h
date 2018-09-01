@@ -27,6 +27,7 @@
 #include "nsWrapperCache.h"
 #include "nsHashKeys.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 
 namespace mozilla {
@@ -93,6 +94,11 @@ public:
   }
 
   virtual void LastRelease() {}
+
+  // Memory reporting.  For now, subclasses of nsBaseContentList don't really
+  // need to report any members that are not part of the object itself, so we
+  // don't need to make this virtual.
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 protected:
   virtual ~nsBaseContentList();
