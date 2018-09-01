@@ -59,13 +59,6 @@ BasePrincipal::GetOriginNoSuffix(nsACString& aOrigin)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BasePrincipal::GetSiteOrigin(nsACString& aSiteOrigin)
-{
-  MOZ_ASSERT(mInitialized);
-  return GetOrigin(aSiteOrigin);
-}
-
 bool
 BasePrincipal::Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration)
 {

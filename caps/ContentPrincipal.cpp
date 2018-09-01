@@ -17,7 +17,6 @@
 #include "nsIURL.h"
 #include "nsIStandardURL.h"
 #include "nsIURIWithSpecialOrigin.h"
-#include "nsIURIMutator.h"
 #include "nsJSPrincipals.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIClassInfoImpl.h"
@@ -248,18 +247,7 @@ ContentPrincipal::SubsumesInternal(nsIPrincipal* aOther,
     // If either has .domain set, we have equality i.f.f. the domains match.
     // Otherwise, we fall through to the non-document-domain-considering case.
     if (thisDomain || otherDomain) {
-      bool isMatch =
-        nsScriptSecurityManager::SecurityCompareURIs(thisDomain, otherDomain);
-#ifdef DEBUG
-      if (isMatch) {
-        nsAutoCString thisSiteOrigin, otherSiteOrigin;
-        MOZ_ALWAYS_SUCCEEDS(GetSiteOrigin(thisSiteOrigin));
-        MOZ_ALWAYS_SUCCEEDS(aOther->GetSiteOrigin(otherSiteOrigin));
-        MOZ_ASSERT(thisSiteOrigin == otherSiteOrigin,
-          "SubsumesConsideringDomain passed with mismatched siteOrigin!");
-      }
-#endif
-      return isMatch;
+      return nsScriptSecurityManager::SecurityCompareURIs(thisDomain, otherDomain);
     }
   }
 
@@ -400,50 +388,6 @@ ContentPrincipal::GetBaseDomain(nsACString& aBaseDomain)
     return thirdPartyUtil->GetBaseDomain(mCodebase, aBaseDomain);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ContentPrincipal::GetSiteOrigin(nsACString& aSiteOrigin)
-{
-  // Get the eTLDService & determine our base domain. If we don't have a valid
-  // BaseDomain, we can fall-back to GetOrigin.
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-  if (NS_WARN_IF(!tldService)) {
-    return GetOrigin(aSiteOrigin);
-  }
-
-  nsAutoCString baseDomain;
-  nsresult rv = tldService->GetBaseDomain(mCodebase, 0, baseDomain);
-  if (NS_FAILED(rv)) {
-    return GetOrigin(aSiteOrigin);
-  }
-
-  nsCOMPtr<nsIURI> siteUri;
-  rv = NS_MutateURI(mCodebase)
-    .SetUserPass(EmptyCString())
-    .SetHostPort(baseDomain)
-    .Finalize(siteUri);
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to create siteUri");
-  if (NS_FAILED(rv)) {
-    return GetOrigin(aSiteOrigin);
-  }
-
-  rv = GenerateOriginNoSuffixFromURI(siteUri, aSiteOrigin);
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to create siteOriginNoSuffix");
-  if (NS_FAILED(rv)) {
-    return GetOrigin(aSiteOrigin);
-  }
-
-  nsAutoCString suffix;
-  rv = GetOriginSuffix(suffix);
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to create suffix");
-  if (NS_FAILED(rv)) {
-    return GetOrigin(aSiteOrigin);
-  }
-
-  aSiteOrigin.Append(suffix);
   return NS_OK;
 }
 
