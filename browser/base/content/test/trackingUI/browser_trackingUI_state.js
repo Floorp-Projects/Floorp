@@ -98,25 +98,40 @@ function testBenignPageWithException() {
   }
 }
 
+function areTrackersBlocked(isPrivateBrowsing) {
+  let cbEnabled = Services.prefs.getBoolPref(CB_PREF);
+  let blockedByTP = cbEnabled &&
+                    Services.prefs.getBoolPref(isPrivateBrowsing ? TP_PB_PREF : TP_PREF);
+  return blockedByTP;
+}
+
 function testTrackingPage(window) {
   info("Tracking content must be blocked");
   ok(ContentBlocking.content.hasAttribute("detected"), "trackers are detected");
   ok(!ContentBlocking.content.hasAttribute("hasException"), "content shows no exception");
 
-  ok(BrowserTestUtils.is_visible(ContentBlocking.iconBox), "icon box is visible");
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
+  let isPrivateBrowsing = PrivateBrowsingUtils.isWindowPrivate(window);
+  let blockedByTP = areTrackersBlocked(isPrivateBrowsing);
+  is(BrowserTestUtils.is_visible(ContentBlocking.iconBox), blockedByTP,
+     "icon box is" + (blockedByTP ? "" : " not") + " visible");
+  is(ContentBlocking.iconBox.hasAttribute("active"), blockedByTP,
+      "shield is" + (blockedByTP ? "" : " not") + " active");
   ok(!ContentBlocking.iconBox.hasAttribute("hasException"), "icon box shows no exception");
   is(ContentBlocking.iconBox.getAttribute("tooltiptext"),
-     gNavigatorBundle.getString("trackingProtection.icon.activeTooltip"), "correct tooltip");
+     blockedByTP ? gNavigatorBundle.getString("trackingProtection.icon.activeTooltip") : "",
+     "correct tooltip");
 
   ok(hidden("#tracking-action-block"), "blockButton is hidden");
 
+  let cbEnabled = Services.prefs.getBoolPref(CB_PREF);
   if (PrivateBrowsingUtils.isWindowPrivate(window)) {
     ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
-    ok(!hidden("#tracking-action-unblock-private"), "unblockButtonPrivate is visible");
+    is(hidden("#tracking-action-unblock-private"), !cbEnabled,
+       "unblockButtonPrivate is" + (cbEnabled ? "" : " not") + " visible");
   } else {
     ok(!hidden("#tracking-action-unblock"), "unblockButton is visible");
-    ok(hidden("#tracking-action-unblock-private"), "unblockButtonPrivate is hidden");
+    is(hidden("#tracking-action-unblock-private"), cbEnabled,
+       "unblockButtonPrivate is" + (cbEnabled ? "" : " not") + " hidden");
   }
 
   ok(hidden("#identity-popup-content-blocking-not-detected"), "blocking not detected label is hidden");
@@ -124,25 +139,29 @@ function testTrackingPage(window) {
 
   if (Services.prefs.getBoolPref(CB_UI_PREF)) {
     ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
-    ok(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-add-blocking"),
-      "TP category item is not showing add blocking");
-    ok(!hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-state-label"),
-      "TP category item is set to blocked");
+    is(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
+      "TP category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
+    is(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-state-label"), !blockedByTP,
+      "TP category item is" + (blockedByTP ? "" : " not") + " set to blocked");
   }
 }
 
-function testTrackingPageUnblocked() {
+function testTrackingPageUnblocked(blockedByTP) {
   info("Tracking content must be white-listed and not blocked");
   ok(ContentBlocking.content.hasAttribute("detected"), "trackers are detected");
   ok(ContentBlocking.content.hasAttribute("hasException"), "content shows exception");
 
+  let cbEnabled = Services.prefs.getBoolPref(CB_PREF);
   ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
-  ok(ContentBlocking.iconBox.hasAttribute("hasException"), "shield shows exception");
+  is(ContentBlocking.iconBox.hasAttribute("hasException"), cbEnabled,
+     "shield" + (cbEnabled ? " shows" : " doesn't show") + " exception");
   is(ContentBlocking.iconBox.getAttribute("tooltiptext"),
      gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip"), "correct tooltip");
 
-  ok(BrowserTestUtils.is_visible(ContentBlocking.iconBox), "icon box is visible");
-  ok(!hidden("#tracking-action-block"), "blockButton is visible");
+  is(BrowserTestUtils.is_visible(ContentBlocking.iconBox), cbEnabled,
+     "icon box is" + (cbEnabled ? "" : " not") + " visible");
+  is(hidden("#tracking-action-block"), !cbEnabled,
+     "blockButton is" + (cbEnabled ? " not" : "") + " visible");
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
   ok(!hidden("#identity-popup-content-blocking-disabled-label"), "disabled label is visible");
 
@@ -151,8 +170,9 @@ function testTrackingPageUnblocked() {
 
   if (Services.prefs.getBoolPref(CB_UI_PREF)) {
     ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
-    ok(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-add-blocking"),
-      "TP category item is not showing add blocking");
+    is(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
+      "TP category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
+    // Always hidden no matter if blockedByTP or not, since we have an exception.
     ok(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-state-label"),
       "TP category item is not set to blocked");
   }
@@ -217,7 +237,8 @@ async function testContentBlockingEnabled(tab) {
   let tabReloadPromise = promiseTabLoadEvent(tab);
   clickButton("#tracking-action-unblock");
   await tabReloadPromise;
-  testTrackingPageUnblocked();
+  let blockedByTP = areTrackersBlocked(isPrivateBrowsing);
+  testTrackingPageUnblocked(blockedByTP);
 
   info("Re-enable TP for the page (which reloads the page)");
   tabReloadPromise = promiseTabLoadEvent(tab);
@@ -269,6 +290,18 @@ add_task(async function testNormalBrowsing() {
   is(TrackingProtection.enabled, Services.prefs.getBoolPref(TP_PREF),
      "TP.enabled is based on the original pref value");
 
+  await testContentBlockingEnabled(tab);
+
+  if (Services.prefs.getBoolPref(CB_UI_PREF)) {
+    Services.prefs.setBoolPref(CB_PREF, false);
+    ok(!ContentBlocking.enabled, "CB is disabled after setting the pref");
+  } else {
+    Services.prefs.setBoolPref(TP_PREF, false);
+    ok(!TrackingProtection.enabled, "TP is disabled after setting the pref");
+  }
+
+  await testContentBlockingDisabled(tab);
+
   Services.prefs.setBoolPref(TP_PREF, true);
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
   Services.prefs.setBoolPref(CB_PREF, true);
@@ -303,6 +336,18 @@ add_task(async function testPrivateBrowsing() {
   ok(TrackingProtection, "TP is attached to the private window");
   is(TrackingProtection.enabled, Services.prefs.getBoolPref(TP_PB_PREF),
      "TP.enabled is based on the pb pref value");
+
+  await testContentBlockingEnabled(tab);
+
+  if (Services.prefs.getBoolPref(CB_UI_PREF)) {
+    Services.prefs.setBoolPref(CB_PREF, false);
+    ok(!ContentBlocking.enabled, "CB is disabled after setting the pref");
+  } else {
+    Services.prefs.setBoolPref(TP_PREF, false);
+    ok(!TrackingProtection.enabled, "TP is disabled after setting the pref");
+  }
+
+  await testContentBlockingDisabled(tab);
 
   Services.prefs.setBoolPref(TP_PB_PREF, true);
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
