@@ -893,7 +893,7 @@ pub fn parse_tokens<'a>(tokenizer: &mut PrefTokenizer<'a>) -> Result<Preferences
         // First deal with comments and errors
         match token {
             PrefToken::Error(msg, position) => {
-                return Err(PrefReaderError::new(msg.into(), position, None));
+                return Err(PrefReaderError::new(msg, position, None));
             }
             PrefToken::CommentBashLine(_, _)
             | PrefToken::CommentLine(_, _)
@@ -914,7 +914,7 @@ pub fn parse_tokens<'a>(tokenizer: &mut PrefTokenizer<'a>) -> Result<Preferences
                     }
                     _ => {
                         return Err(PrefReaderError::new(
-                            "Expected pref function".into(),
+                            "Expected pref function",
                             token.position(),
                             None,
                         ));
@@ -925,7 +925,7 @@ pub fn parse_tokens<'a>(tokenizer: &mut PrefTokenizer<'a>) -> Result<Preferences
                     Some(PrefToken::Paren('(', _)) => ParserState::Key,
                     _ => {
                         return Err(PrefReaderError::new(
-                            "Expected open paren".into(),
+                            "Expected open paren",
                             next.map(|x| x.position()).unwrap_or(tokenizer.position),
                             None,
                         ))
