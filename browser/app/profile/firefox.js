@@ -1759,3 +1759,8 @@ pref("intl.multilingual.enabled", false);
 // Curve25519 public keys for Prio servers
 pref("prio.publicKeyA", "35AC1C7576C7C6EDD7FED6BCFC337B34D48CB4EE45C86BEEFB40BD8875707733");
 pref("prio.publicKeyB", "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35DD135AF50");
+
+#ifdef NIGHTLY_BUILD
+pref("browser.fastblock.enabled", true);
+#endif
+
