@@ -382,7 +382,7 @@ class nsWindow::NPZCSupport final
     static bool sNegateWheelScroll;
 
     WindowPtr<NPZCSupport> mWindow;
-    PanZoomController::GlobalRef mNPZC;
+    PanZoomController::WeakRef mNPZC;
     int mPreviousButtons;
 
     template<typename Lambda>
@@ -490,10 +490,14 @@ public:
         // the race condition.
 
         if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+            auto npzc = PanZoomController::GlobalRef(mNPZC);
+            if (!npzc) {
+                return;
+            }
+
             uiThread->Dispatch(NS_NewRunnableFunction(
                         "NPZCSupport::OnDetach",
-                        [npzc = PanZoomController::GlobalRef(mNPZC),
-                         disposer = RefPtr<Runnable>(aDisposer)] {
+                        [npzc, disposer = RefPtr<Runnable>(aDisposer)] {
                             npzc->SetAttached(false);
                             disposer->Run();
                         }));
