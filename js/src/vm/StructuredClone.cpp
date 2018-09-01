@@ -478,7 +478,9 @@ struct JSStructuredCloneWriter {
                                      void* cbClosure,
                                      const Value& tVal)
         : out(cx, scope), objs(out.context()),
-          counts(out.context()), entries(out.context()),
+          counts(out.context()),
+          objectEntries(out.context()),
+          otherEntries(out.context()),
           memory(out.context()),
           transferable(out.context(), tVal),
           transferableObjects(out.context(), TransferableObjectsSet(cx)),
@@ -547,10 +549,12 @@ struct JSStructuredCloneWriter {
     Vector<size_t> counts;
 
     // For JSObject: Property IDs as value
+    AutoIdVector objectEntries;
+
     // For Map: Key followed by value
     // For Set: Key
     // For SavedFrame: parent SavedFrame
-    AutoValueVector entries;
+    AutoValueVector otherEntries;
 
     // The "memory" list described in the HTML5 internal structured cloning
     // algorithm.  memory is a superset of objs; items are never removed from
@@ -1218,9 +1222,9 @@ JSStructuredCloneWriter::checkStack()
         total += counts[i];
     }
     if (counts.length() <= MAX)
-        MOZ_ASSERT(total == entries.length());
+        MOZ_ASSERT(total == objectEntries.length() + otherEntries.length());
     else
-        MOZ_ASSERT(total <= entries.length());
+        MOZ_ASSERT(total <= objectEntries.length() + otherEntries.length());
 
     size_t j = objs.length();
     for (size_t i = 0; i < limit; i++) {
@@ -1370,7 +1374,7 @@ JSStructuredCloneWriter::startObject(HandleObject obj, bool* backref)
 }
 
 static bool
-TryAppendNativeProperties(JSContext* cx, HandleObject obj, AutoValueVector& entries, size_t* properties,
+TryAppendNativeProperties(JSContext* cx, HandleObject obj, AutoIdVector& entries, size_t* properties,
                           bool* optimized)
 {
     *optimized = false;
@@ -1401,7 +1405,7 @@ TryAppendNativeProperties(JSContext* cx, HandleObject obj, AutoValueVector& entr
             continue;
 
         MOZ_ASSERT(JSID_IS_STRING(id));
-        if (!entries.append(StringValue(JSID_TO_STRING(id))))
+        if (!entries.append(id))
             return false;
 
         count++;
@@ -1412,7 +1416,7 @@ TryAppendNativeProperties(JSContext* cx, HandleObject obj, AutoValueVector& entr
         if (nobj->getDenseElement(i - 1).isMagic(JS_ELEMENTS_HOLE))
             continue;
 
-        if (!entries.append(Int32Value(i - 1)))
+        if (!entries.append(INT_TO_JSID(i - 1)))
             return false;
 
         count++;
@@ -1427,7 +1431,7 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj, ESClass cls)
 {
     size_t count;
     bool optimized = false;
-    if (!TryAppendNativeProperties(context(), obj, entries, &count, &optimized))
+    if (!TryAppendNativeProperties(context(), obj, objectEntries, &count, &optimized))
         return false;
 
     if (!optimized) {
@@ -1438,13 +1442,11 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj, ESClass cls)
             return false;
 
         for (size_t i = properties.length(); i > 0; --i) {
-            MOZ_ASSERT(JSID_IS_STRING(properties[i - 1]) || JSID_IS_INT(properties[i - 1]));
+            jsid id = properties[i - 1];
 
-            // JSStructuredCloneWriter::write relies on this.
-            RootedValue val(context(), IdToValue(properties[i - 1]));
-            if (!entries.append(val))
+            MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id));
+            if (!objectEntries.append(id))
                 return false;
-
         }
 
         count = properties.length();
@@ -1491,7 +1493,7 @@ JSStructuredCloneWriter::traverseMap(HandleObject obj)
         return false;
 
     for (size_t i = newEntries.length(); i > 0; --i) {
-        if (!entries.append(newEntries[i - 1]))
+        if (!otherEntries.append(newEntries[i - 1]))
             return false;
     }
 
@@ -1521,7 +1523,7 @@ JSStructuredCloneWriter::traverseSet(HandleObject obj)
         return false;
 
     for (size_t i = keys.length(); i > 0; --i) {
-        if (!entries.append(keys[i - 1]))
+        if (!otherEntries.append(keys[i - 1]))
             return false;
     }
 
@@ -1567,7 +1569,7 @@ JSStructuredCloneWriter::traverseSavedFrame(HandleObject obj)
         return false;
 
     if (!objs.append(ObjectValue(*obj)) ||
-        !entries.append(parent ? ObjectValue(*parent) : NullValue()) ||
+        !otherEntries.append(parent ? ObjectValue(*parent) : NullValue()) ||
         !counts.append(1))
     {
         return false;
@@ -1946,32 +1948,31 @@ JSStructuredCloneWriter::write(HandleValue v)
         context()->check(obj);
         if (counts.back()) {
             counts.back()--;
-            key = entries.back();
-            entries.popBack();
-            checkStack();
 
             ESClass cls;
             if (!GetBuiltinClass(context(), obj, &cls))
                 return false;
 
             if (cls == ESClass::Map) {
+                key = otherEntries.popCopy();
+                checkStack();
+
                 counts.back()--;
-                val = entries.back();
-                entries.popBack();
+                val = otherEntries.popCopy();
                 checkStack();
 
                 if (!startWrite(key) || !startWrite(val))
                     return false;
             } else if (cls == ESClass::Set || SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj)) {
+                key = otherEntries.popCopy();
+                checkStack();
+
                 if (!startWrite(key))
                     return false;
             } else {
-                // This relies on the way JSStructuredCloneWriter::traverseObject
-                // converts JSIDs to Value.
-                if (key.isString())
-                    id = AtomToId(&key.toString()->asAtom());
-                else
-                    id = INT_TO_JSID(key.toInt32());
+                id = objectEntries.popCopy();
+                key = IdToValue(id);
+                checkStack();
 
                 // If obj still has an own property named id, write it out.
                 bool found;

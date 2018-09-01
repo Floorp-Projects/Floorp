@@ -34,6 +34,14 @@ const inContentVariableMap = [
   }],
   ["--lwt-sidebar-background-color", {
     lwtProperty: "sidebar",
+    processColor(rgbaChannels) {
+      if (!rgbaChannels) {
+        return null;
+      }
+      const {r, g, b} = rgbaChannels;
+      // Drop alpha channel
+      return `rgb(${r}, ${g}, ${b})`;
+    },
   }],
   ["--lwt-sidebar-text-color", {
     lwtProperty: "sidebar_text",
