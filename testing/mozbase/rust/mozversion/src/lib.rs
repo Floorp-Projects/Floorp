@@ -3,8 +3,8 @@ extern crate regex;
 extern crate semver;
 
 use ini::Ini;
-use regex::Regex;
 use platform::ini_path;
+use regex::Regex;
 use std::default::Default;
 use std::error;
 use std::fmt::{self, Display, Formatter};
@@ -92,8 +92,8 @@ impl Version {
     fn to_semver(&self) -> semver::Version {
         // The way the semver crate handles prereleases isn't what we want here
         // This should be fixed in the long term by implementing our own comparison
-        // operators, but for now just act as if prerelease metadata was missing, otherwise
-        // it is almost impossible to use this with nightly
+        // operators, but for now just act as if prerelease metadata was missing,
+        // otherwise it is almost impossible to use this with nightly
         semver::Version {
             major: self.major,
             minor: self.minor,
@@ -104,7 +104,7 @@ impl Version {
     }
 
     pub fn matches(&self, version_req: &str) -> Result<bool, Error> {
-        let req = try!(semver::VersionReq::parse(version_req));
+        let req = semver::VersionReq::parse(version_req)?;
         Ok(req.matches(&self.to_semver()))
     }
 }
@@ -116,46 +116,61 @@ impl FromStr for Version {
         let mut version: Version = Default::default();
         let version_re = Regex::new(r"^(?P<major>\d+)\.(?P<minor>\d+)(?:\.(?P<patch>\d+))?(?:(?P<pre0>[a-z]+)(?P<pre1>\d*))?$").unwrap();
         if let Some(captures) = version_re.captures(version_string) {
-            match captures.name("major")
-                .and_then(|x| u64::from_str(x.as_str()).ok()) {
-                    Some(x) => version.major = x,
-                    None => return Err(Error::VersionError("No major version number found".into()))
-                }
-            match captures.name("minor")
-                .and_then(|x| u64::from_str(x.as_str()).ok()) {
-                    Some(x) => version.minor = x,
-                    None => return Err(Error::VersionError("No minor version number found".into()))
-                }
-            if let Some(x) = captures.name("patch")
-                .and_then(|x| u64::from_str(x.as_str()).ok()) { version.patch = x }
+            match captures
+                .name("major")
+                .and_then(|x| u64::from_str(x.as_str()).ok())
+            {
+                Some(x) => version.major = x,
+                None => return Err(Error::VersionError("No major version number found".into())),
+            }
+            match captures
+                .name("minor")
+                .and_then(|x| u64::from_str(x.as_str()).ok())
+            {
+                Some(x) => version.minor = x,
+                None => return Err(Error::VersionError("No minor version number found".into())),
+            }
+            if let Some(x) = captures
+                .name("patch")
+                .and_then(|x| u64::from_str(x.as_str()).ok())
+            {
+                version.patch = x
+            }
             if let Some(pre_0) = captures.name("pre0").map(|x| x.as_str().to_string()) {
                 if captures.name("pre1").is_some() {
-                    if let Some(pre_1) = captures.name("pre1")
-                        .and_then(|x| u64::from_str(x.as_str()).ok()) {
-                            version.pre = Some((pre_0, pre_1))
-                        } else {
-                            return Err(Error::VersionError("Failed to convert prelease number to u64".into()));
-                        }
+                    if let Some(pre_1) = captures
+                        .name("pre1")
+                        .and_then(|x| u64::from_str(x.as_str()).ok())
+                    {
+                        version.pre = Some((pre_0, pre_1))
+                    } else {
+                        return Err(Error::VersionError(
+                            "Failed to convert prelease number to u64".into(),
+                        ));
+                    }
                 } else {
-                    return Err(Error::VersionError("Failed to convert prelease number to u64".into()));
+                    return Err(Error::VersionError(
+                        "Failed to convert prelease number to u64".into(),
+                    ));
                 }
             }
         } else {
-            return Err(Error::VersionError("Failed to parse input as version string".into()))
+            return Err(Error::VersionError(
+                "Failed to parse input as version string".into(),
+            ));
         }
         Ok(version)
     }
 }
 
-
 impl Display for Version {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self.patch {
-            0 => try!(write!(f, "{}.{}", self.major, self.minor)),
-            _ => try!(write!(f, "{}.{}.{}", self.major, self.minor, self.patch))
+            0 => write!(f, "{}.{}", self.major, self.minor)?,
+            _ => write!(f, "{}.{}.{}", self.major, self.minor, self.patch)?,
         }
         if let Some(ref pre) = self.pre {
-            try!(write!(f, "{}{}", pre.0, pre.1));
+            write!(f, "{}{}", pre.0, pre.1)?;
         };
         Ok(())
     }
@@ -166,7 +181,7 @@ impl Display for Version {
 /// Given the path to a Firefox binary, read the associated application.ini
 /// and platform.ini files to extract information about the version of Firefox
 /// at that path.
-pub fn firefox_version(binary: &Path) -> Result<AppVersion, Error>  {
+pub fn firefox_version(binary: &Path) -> Result<AppVersion, Error> {
     let mut version = AppVersion::new();
     let mut updated = false;
 
@@ -194,10 +209,12 @@ pub fn firefox_version(binary: &Path) -> Result<AppVersion, Error>  {
         }
 
         if !updated {
-            return Err(Error::MetadataError("Neither platform.ini nor application.ini found".into()))
+            return Err(Error::MetadataError(
+                "Neither platform.ini nor application.ini found".into(),
+            ));
         }
     } else {
-        return Err(Error::MetadataError("Invalid binary path".into()))
+        return Err(Error::MetadataError("Invalid binary path".into()));
     }
     Ok(version)
 }
@@ -209,22 +226,22 @@ pub enum Error {
     /// Error reading application metadata
     MetadataError(String),
     /// Error processing a string as a semver comparator
-    SemVerError(semver::ReqParseError)
+    SemVerError(semver::ReqParseError),
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Error::VersionError(ref x) => {
-                try!("VersionError: ".fmt(f));
+                "VersionError: ".fmt(f)?;
                 x.fmt(f)
-            },
+            }
             Error::MetadataError(ref x) => {
-                try!("MetadataError: ".fmt(f));
+                "MetadataError: ".fmt(f)?;
                 x.fmt(f)
-            },
+            }
             Error::SemVerError(ref e) => {
-                try!("SemVerError: ".fmt(f));
+                "SemVerError: ".fmt(f)?;
                 e.fmt(f)
             }
         }
@@ -259,7 +276,9 @@ mod platform {
     use std::path::{Path, PathBuf};
 
     pub fn ini_path(binary: &Path) -> Option<PathBuf> {
-        binary.canonicalize().ok()
+        binary
+            .canonicalize()
+            .ok()
             .as_ref()
             .and_then(|dir| dir.parent())
             .and_then(|dir| dir.parent())
@@ -272,7 +291,9 @@ mod platform {
     use std::path::{Path, PathBuf};
 
     pub fn ini_path(binary: &Path) -> Option<PathBuf> {
-        binary.canonicalize().ok()
+        binary
+            .canonicalize()
+            .ok()
             .as_ref()
             .and_then(|dir| dir.parent())
             .map(|dir| dir.to_path_buf())
@@ -281,8 +302,8 @@ mod platform {
 
 #[cfg(test)]
 mod test {
+    use super::Version;
     use std::str::FromStr;
-    use super::{Version};
 
     fn parse_version(input: &str) -> String {
         Version::from_str(input).unwrap().to_string()
@@ -316,7 +337,7 @@ mod test {
         assert!(compare("50.1.0", ">=50,<51"));
         assert!(compare("50.0a1", ">49.0"));
         assert!(compare("50.0a2", "=50"));
-        //This is the weird one
+        // This is the weird one
         assert!(!compare("50.0a2", ">50.0"));
     }
 }
