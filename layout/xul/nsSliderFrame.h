@@ -162,7 +162,7 @@ private:
   void DragThumb(bool aGrabMouseEvents);
   void AddListener();
   void RemoveListener();
-  bool isDraggingThumb();
+  bool isDraggingThumb() const;
 
   void SuppressDisplayport();
   void UnsuppressDisplayport();
