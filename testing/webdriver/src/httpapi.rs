@@ -333,8 +333,8 @@ impl<U: WebDriverExtensionRoute> RequestMatcher<U> {
         rv.push_str("^");
         let components = path.split('/');
         for component in components {
-            if component.starts_with("{") {
-                if !component.ends_with("}") {
+            if component.starts_with('{') {
+                if !component.ends_with('}') {
                     panic!("Invalid url pattern")
                 }
                 rv.push_str(&format!("(?P<{}>[^/]+)/", &component[1..component.len() - 1])[..]);
