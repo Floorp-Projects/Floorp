@@ -862,15 +862,39 @@ public:
 
   /**
    * Attempts to set the capacity to the given size in number of
-   * code units without affecting the length of the string, in
-   * order to avoid reallocation during subsequent calls to Append()
-   * or subsequent converting appends where the conversion is between
-   * UTF-16 and Latin1 (in either direction).
+   * code units without affecting the length of the string in
+   * order to avoid reallocation during a subsequent sequence of
+   * appends.
    *
-   * Calling SetCapacity() is a pessimization ahead of a converting
-   * append where the conversion is between UTF-16 and UTF-8 (in
-   * either direction), so please don't call SetCapacity() ahead
-   * of that kind of converting append.
+   * This method is appropriate to use before a sequence of multiple
+   * operations from the following list (without operations that are
+   * not on the list between the SetCapacity() call and operations
+   * from the list):
+   *
+   * Append()
+   * AppendASCII()
+   * AppendLiteral() (except if the string is empty: bug 1487606)
+   * AppendPrintf()
+   * AppendInt()
+   * AppendFloat()
+   * LossyAppendUTF16toASCII()
+   * AppendASCIItoUTF16()
+   *
+   * DO NOT call SetCapacity() if the subsequent operations on the
+   * string do not meet the criteria above. Operations that undo
+   * the benefits of SetCapacity() include but are not limited to:
+   *
+   * SetLength()
+   * Truncate()
+   * Assign()
+   * AssignLiteral()
+   * Adopt()
+   * CopyASCIItoUTF16()
+   * LossyCopyUTF16toASCII()
+   * AppendUTF16toUTF8()
+   * AppendUTF8toUTF16()
+   * CopyUTF16toUTF8()
+   * CopyUTF8toUTF16()
    *
    * If your string is an nsAuto[C]String and you are calling
    * SetCapacity() with a constant N, please instead declare the
@@ -878,7 +902,6 @@ public:
    *
    * There is no need to include room for the null terminator: it is
    * the job of the string class.
-   * Also ensures that the buffer is mutable.
    *
    * Note: Calling SetCapacity() does not give you permission to
    * use the pointer obtained from BeginWriting() to write
