@@ -845,7 +845,7 @@ class nsWindow::LayerViewSupport final
     using LockedWindowPtr = WindowPtr<LayerViewSupport>::Locked;
 
     WindowPtr<LayerViewSupport> mWindow;
-    LayerSession::Compositor::GlobalRef mCompositor;
+    LayerSession::Compositor::WeakRef mCompositor;
     Atomic<bool, ReleaseAcquire> mCompositorPaused;
     jni::Object::GlobalRef mSurface;
 
@@ -909,10 +909,14 @@ public:
     void OnDetach(already_AddRefed<Runnable> aDisposer)
     {
         if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+            LayerSession::Compositor::GlobalRef compositor(mCompositor);
+            if (!compositor) {
+                return;
+            }
+
             uiThread->Dispatch(NS_NewRunnableFunction(
                     "LayerViewSupport::OnDetach",
-                    [compositor =
-                            LayerSession::Compositor::GlobalRef(mCompositor),
+                    [compositor,
                      disposer = RefPtr<Runnable>(aDisposer)] {
                         compositor->OnCompositorDetached();
                         disposer->Run();
@@ -1125,7 +1129,10 @@ public:
 
     void RecvToolbarAnimatorMessage(int32_t aMessage)
     {
-        mCompositor->RecvToolbarAnimatorMessage(aMessage);
+        auto compositor = LayerSession::Compositor::LocalRef(mCompositor);
+        if (compositor) {
+            compositor->RecvToolbarAnimatorMessage(aMessage);
+        }
     }
 
     void SetDefaultClearColor(int32_t aColor)
@@ -1149,7 +1156,10 @@ public:
         MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
         auto pixels = mozilla::jni::IntArray::New(aMem.get<int>(), aMem.Size<int>());
-        mCompositor->RecvScreenPixels(aSize.width, aSize.height, pixels);
+        auto compositor = LayerSession::Compositor::LocalRef(mCompositor);
+        if (compositor) {
+            compositor->RecvScreenPixels(aSize.width, aSize.height, pixels);
+        }
 
         // Pixels have been copied, so Dealloc Shmem
         if (RefPtr<UiCompositorControllerChild> child = GetUiCompositorControllerChild()) {
