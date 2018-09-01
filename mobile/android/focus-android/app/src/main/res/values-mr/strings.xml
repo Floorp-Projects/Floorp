@@ -3,7 +3,7 @@
   <string name="action_cancel">रद्द करा</string>
   <string name="action_ok">ठीक आहे</string>
   <string name="action_save">साठवा</string>
-  <string name="urlbar_hint">पत्ता शोधा किंवा द्या</string>
+  <string name="urlbar_hint">शोधा किंवा पत्ता द्या</string>
   <string name="teaser">स्वयंचलित खाजगी ब्राउझिंग.\nब्राउझ करा. मिटवा. पुन: करा.</string>
   <string name="feedback_erase">आपला ब्राउझिंग इतिहास मिटवला आहे.</string>
   <string name="search_hint">%1$s करिता शोधा</string>
@@ -54,7 +54,7 @@
   <string name="preference_category_cookies">कूकीज आणि संकेतस्थळाची माहिती</string>
   <string name="preference_category_data_choices">माहिती पर्याय</string>
   <string name="preference_autocomplete_title_remove">सानुकूल URLs काढा</string>
-  <string name="preference_autocomplete_learn_more">अधिक जाणून घ्या</string>
+  <string name="preference_autocomplete_learn_more">अधिक जाणा</string>
   <string name="preference_autocomplete_custom_summary">सानुकूल स्वयंपूर्ण URLs जोडा आणि व्यवस्थापित करा.</string>
   <string name="preference_autocomplete_add_title">जोडायची URL</string>
   <string name="preference_autocomplete_add_hint">चिकटवा किंवा URL प्रविष्ट करा</string>
@@ -92,7 +92,7 @@
   <string name="preference_default_browser2">मुलभूत ब्राउझर म्हणून %1$s वापरा</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">वापर डेटा पाठवा</string>
-  <string name="preference_mozilla_telemetry_summary">आणखी शिका</string>
+  <string name="preference_mozilla_telemetry_summary">अधिक जाणा</string>
   <string name="preference_mozilla_telemetry_summary2">सर्वांसाठी %1$s उपलब्ध करण्यासाठी व सुधारण्यास जी गरजेची आहे फक्त तीच माहिती जमा करण्यास Mozilla तत्पर आहे.</string>
   <string name="preference_privacy_notice">गोपनीयता सूचना</string>
   <string name="preference_about">%1$s विषयी</string>
@@ -218,7 +218,7 @@
   <string name="biometric_auth_moved_too_quickly">बोट पटकन हलवले. पुन्हा प्रयत्न करा.</string>
   <string name="enable_search_suggestion_title">आपण शोध सूचना सुरु करु इच्छिता?</string>
   <string name="enable_search_suggestion_subtitle">शोध सूचना मिळवण्यासाठी, %1$s ला आपण निवडलेल्या शोध इंजिनला आपण काय टाईप करता ते पाठवावे लागेल. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">आणखी शिका</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">अधिक जाणा</string>
   <string name="enable_search_suggestions_no">नाही</string>
   <string name="enable_search_suggestions_yes">होय</string>
   <string name="no_suggestions_message">काही शोध इंजिन सूचना दाखवू शकत नाहीत.</string>

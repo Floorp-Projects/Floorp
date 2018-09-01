@@ -229,4 +229,5 @@
   <string name="tip_autocomplete_url">Аутоматско завршавање URLs за сајтове које користите највише\n Дуго држите URL у адресној траци</string>
   <string name="tip_open_in_new_tab">Отвори везу у новом језичку\n Дуго држите на било којој вези на страници</string>
   <string name="tip_request_desktop">Радије бисте видели цео десктоп сајт?%1$s Мени &gt; Захтевај десктоп сајт</string>
+  <string name="tip_disable_tips">Искључите савете на %1$s почетном екрану</string>
 </resources>
