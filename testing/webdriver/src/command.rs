@@ -100,7 +100,7 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
     }
 
     pub fn from_http(
-        match_type: Route<U>,
+        match_type: &Route<U>,
         params: &Captures,
         raw_body: &str,
         requires_body: bool,
