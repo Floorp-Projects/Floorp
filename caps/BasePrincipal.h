@@ -86,6 +86,7 @@ public:
   NS_IMETHOD GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement) final;
   NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
   NS_IMETHOD GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) final;
+  NS_IMETHOD GetSiteOrigin(nsACString& aOrigin) override;
 
   virtual bool AddonHasPermission(const nsAtom* aPerm);
 
