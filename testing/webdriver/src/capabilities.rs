@@ -145,7 +145,7 @@ impl SpecNewSessionParameters {
                     SpecNewSessionParameters::validate_unhandled_prompt_behaviour(value)?
                 }
                 x => {
-                    if !x.contains(":") {
+                    if !x.contains(':') {
                         return Err(WebDriverError::new(
                             ErrorStatus::InvalidArgument,
                             format!(
@@ -488,7 +488,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                             }
                         }
                         name => {
-                            if name.contains(":") {
+                            if name.contains(':') {
                                 if !browser_capabilities
                                     .accept_custom(name, value, merged)
                                     .unwrap_or(false)
