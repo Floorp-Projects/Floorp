@@ -17,9 +17,9 @@ impl PrefReaderError {
         parent: Option<Box<Error>>,
     ) -> PrefReaderError {
         PrefReaderError {
-            message: message,
-            position: position,
-            parent: parent,
+            message,
+            position,
+            parent,
         }
     }
 }
@@ -157,11 +157,11 @@ struct TokenData<'a> {
 impl<'a> TokenData<'a> {
     fn new(token_type: TokenType, position: Position, start_pos: usize) -> TokenData<'a> {
         TokenData {
-            token_type: token_type,
+            token_type,
             complete: false,
-            position: position,
+            position,
             data: Cow::Borrowed(""),
-            start_pos: start_pos,
+            start_pos,
         }
     }
 
@@ -213,7 +213,7 @@ pub struct PrefTokenizer<'a> {
 impl<'a> PrefTokenizer<'a> {
     pub fn new(data: &'a [u8]) -> PrefTokenizer<'a> {
         PrefTokenizer {
-            data: data,
+            data,
             pos: 0,
             cur: None,
             position: Position::new(),
