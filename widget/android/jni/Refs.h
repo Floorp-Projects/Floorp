@@ -266,8 +266,8 @@ public:
     bool operator==(const Ref& other) const
     {
         // Treat two references of the same object as being the same.
-        return Ref::mInstance == other.mInstance || JNI_FALSE !=
-                mEnv->IsSameObject(Ref::mInstance, other.mInstance);
+        return Ref::mInstance == other.Get() || JNI_FALSE !=
+                mEnv->IsSameObject(Ref::mInstance, other.Get());
     }
 
     bool operator!=(const Ref& other) const
