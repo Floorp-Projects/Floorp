@@ -816,7 +816,7 @@ pub fn serialize_token<T: Write>(token: &PrefToken, output: &mut T) -> Result<()
         }
         &PrefToken::Error(data, pos) => return Err(PrefReaderError::new(data, pos, None)),
     };
-    output.write(data.as_bytes())?;
+    output.write_all(data.as_bytes())?;
     Ok(())
 }
 
@@ -1027,25 +1027,25 @@ pub fn serialize<W: Write>(prefs: &Preferences, output: &mut W) -> io::Result<()
         } else {
             "user_pref("
         }.as_bytes();
-        output.write(func)?;
-        output.write(b"\"")?;
-        output.write(escape_quote(key).as_bytes())?;
-        output.write(b"\"")?;
-        output.write(b", ")?;
+        output.write_all(func)?;
+        output.write_all(b"\"")?;
+        output.write_all(escape_quote(key).as_bytes())?;
+        output.write_all(b"\"")?;
+        output.write_all(b", ")?;
         match pref.value {
             PrefValue::Bool(x) => {
-                output.write(if x { b"true" } else { b"false" })?;
+                output.write_all(if x { b"true" } else { b"false" })?;
             }
             PrefValue::Int(x) => {
-                output.write(x.to_string().as_bytes())?;
+                output.write_all(x.to_string().as_bytes())?;
             }
             PrefValue::String(ref x) => {
-                output.write(b"\"")?;
-                output.write(escape_quote(x).as_bytes())?;
-                output.write(b"\"")?;
+                output.write_all(b"\"")?;
+                output.write_all(escape_quote(x).as_bytes())?;
+                output.write_all(b"\"")?;
             }
         };
-        output.write(b");\n")?;
+        output.write_all(b");\n")?;
     }
     Ok(())
 }
