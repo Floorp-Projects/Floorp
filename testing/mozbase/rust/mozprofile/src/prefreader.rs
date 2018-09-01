@@ -833,9 +833,8 @@ where
 
 fn escape_quote(data: &str) -> Cow<str> {
     // Not very efficient…
-    if data.contains("\"") || data.contains("\\") {
-        let new_data = Cow::Owned(data.replace(r#"\"#, r#"\\"#).replace(r#"""#, r#"\""#));
-        new_data
+    if data.contains('"') || data.contains('\\') {
+        Cow::Owned(data.replace(r#"\"#, r#"\\"#).replace(r#"""#, r#"\""#))
     } else {
         Cow::Borrowed(data)
     }
