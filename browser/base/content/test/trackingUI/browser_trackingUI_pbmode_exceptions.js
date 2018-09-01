@@ -75,7 +75,7 @@ function testTrackingPageUnblocked() {
   ok(ContentBlocking.content.hasAttribute("detected"), "trackers are detected");
   ok(ContentBlocking.content.hasAttribute("hasException"), "content shows exception");
 
-  ok(ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
+  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
   ok(ContentBlocking.iconBox.hasAttribute("hasException"), "shield shows exception");
   is(ContentBlocking.iconBox.getAttribute("tooltiptext"),
      gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip"), "correct tooltip");
