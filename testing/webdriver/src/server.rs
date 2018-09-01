@@ -63,7 +63,7 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
         }
     }
 
-    fn run(&mut self, msg_chan: Receiver<DispatchMessage<U>>) {
+    fn run(&mut self, msg_chan: &Receiver<DispatchMessage<U>>) {
         loop {
             match msg_chan.recv() {
                 Ok(DispatchMessage::HandleWebDriver(msg, resp_chan)) => {
@@ -190,7 +190,8 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
                 // The fact that this locks for basically the whole request doesn't
                 // matter as long as we are only handling one request at a time.
                 match api.lock() {
-                    Ok(ref api) => api.decode_request(method, &uri.path(), &body[..]),
+
+                    Ok(ref api) => api.decode_request(&method, &uri.path(), &body[..]),
                     Err(e) => panic!("Error decoding request: {:?}", e),
                 }
             };
@@ -284,7 +285,7 @@ where
     let builder = thread::Builder::new().name("webdriver dispatcher".to_string());
     builder.spawn(move || {
         let mut dispatcher = Dispatcher::new(handler);
-        dispatcher.run(msg_recv);
+        dispatcher.run(&msg_recv);
     })?;
 
     Ok(Listener { _guard: Some(handle), socket: addr })
