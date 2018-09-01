@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Некоторые поисковые системы не могут показывать предложения.</string>
   <string name="dismiss_no_suggestions_prompt_button">Закрыть</string>
   <string name="tip_disable_tracking_protection">Сайт ведёт себя неожиданно?\n Попробуйте отключить защиту от отслеживания</string>
-  <string name="tip_add_to_homescreen">"Получайте доступ к нужным сайтам в одно касание\n        Меню &gt; Добавить на домашний экран"</string>
+  <string name="tip_add_to_homescreen">Получайте доступ к нужным сайтам в одно касание%1$s Меню &gt; Добавить на домашний экран</string>
   <string name="tip_set_default_browser">Открывайте все ссылки в %1$s\n Установить %1$s браузером по умолчанию</string>
   <string name="tip_autocomplete_url">Автодополнение URL для часто посещаемых сайтов\n Произведите долгое нажатие на любой URL в адресной строке</string>
   <string name="tip_open_in_new_tab">Открывайте ссылки в новых вкладках\n Произведите долгое нажатие на любую ссылку на странице</string>
-  <string name="tip_request_desktop">"Хотите увидеть полную версию сайта?\n    Меню &gt; Полная версия сайта"</string>
+  <string name="tip_request_desktop">Хотите увидеть полную версию сайта?%1$s Меню &gt; Полная версия сайта</string>
 </resources>

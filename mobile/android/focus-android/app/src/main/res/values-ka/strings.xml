@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">ზოგიერთ საძიებო სისტემას, არ აქვს შემოთავაზებების ჩვენების შესაძლებლობა.</string>
   <string name="dismiss_no_suggestions_prompt_button">დახურვა</string>
   <string name="tip_disable_tracking_protection">საიტი ხარვეზებით მუშაობს?\n სცადეთ თვალთვალისგან დაცვის გამორთვა</string>
-  <string name="tip_add_to_homescreen">"მიიღეთ წვდომა სასურველ საიტებზე ერთი შეხებით\n        მენიუ &gt; მთავარ ეკრანზე დამატება"</string>
+  <string name="tip_add_to_homescreen">მარტივი წვდომა სასურველ საიტებზე ერთი შეხებით%1$s მენიუ &gt; მთავარ ეკრანზე დამატება</string>
   <string name="tip_set_default_browser">გახსნეთი ყველა ბმული %1$s-ით\n დააყენეთ %1$s ნაგულისხმევ ბრაუზერად</string>
   <string name="tip_autocomplete_url">URL-ბმულების თვითშევსება სასურველი საიტებისთვის\n ნებისმიერ URL-ბმულზე ხანგრძლივი დაჭერით მისამართების ველში</string>
   <string name="tip_open_in_new_tab">გახსენით ბმული ახალ ჩანართში\n გვერდის ნებისმიერ ბმულზე ხანგრძლივი დაჭერით</string>
-  <string name="tip_request_desktop">"გირჩევნიათ საიტის სრული ვერსიის ნახვა?\n    მენიუ &gt; სრული საიტის მოთხოვნა"</string>
+  <string name="tip_request_desktop">საიტის სრული ვერსიის ნახვას ამჯობინებთ?%1$s მენიუ &gt; სრული საიტის მოთხოვნა</string>
+  <string name="tip_disable_tips">რჩევების ჩვენება %1$s-ის მთავარ ეკრანზე</string>
 </resources>

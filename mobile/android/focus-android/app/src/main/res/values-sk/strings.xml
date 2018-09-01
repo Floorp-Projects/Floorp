@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Niektoré vyhľadávacie moduly nedokážu zobrazovať návrhy vyhľadávania.</string>
   <string name="dismiss_no_suggestions_prompt_button">Zavrieť</string>
   <string name="tip_disable_tracking_protection">Správa sa stránka neočakávane?\n Skúste vypnúť Ochranu pred sledovaním</string>
-  <string name="tip_add_to_homescreen">"Získajte jednoduchý prístup ku svojim obľúbeným stránkam\n        Ponuka &gt; Pridať na úvodnú obrazovku"</string>
+  <string name="tip_add_to_homescreen">Získajte jednoduchý prístup ku svojim obľúbeným stránkam%1$s Ponuka &gt; Pridať na úvodnú obrazovku</string>
   <string name="tip_set_default_browser">Otvárajte každý odkaz v aplikácii %1$s\n Nastavte si %1$s ako predvolený prehliadač</string>
   <string name="tip_autocomplete_url">Automatické dopĺňanie URL adries je tu\n Podržte prst na akejkoľvek adrese v paneli s adresou</string>
   <string name="tip_open_in_new_tab">Otvorte odkaz na novej karte\n Podržte prst na akomkoľvek odkaze na stránke</string>
-  <string name="tip_request_desktop">"Chceli by ste radšej vidieť verziu stránky pre počítače?\n    Ponuka &gt; Verzia stránky pre počítače"</string>
+  <string name="tip_request_desktop">Chceli by ste radšej vidieť verziu stránky pre počítače?%1$s Ponuka &gt; Verzia stránky pre počítače</string>
 </resources>

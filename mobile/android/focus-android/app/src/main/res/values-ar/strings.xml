@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">لا تعرض بعض محركات البحث أية اقتراحات.</string>
   <string name="dismiss_no_suggestions_prompt_button">أهمِل</string>
   <string name="tip_disable_tracking_protection">أترى أن سلوك الموقع غريب؟\nجرّب تعطيل الحماية من التعقّب</string>
-  <string name="tip_add_to_homescreen">اصنع زرًا لتفتح المواقع التي تزورها باستمرار بسرعة\nالقائمة &gt; أضِف إلى شاشة البداية</string>
+  <string name="tip_add_to_homescreen">اصنع زرًا لتفتح المواقع التي تزورها باستمرار بسرعة%1$s القائمة &gt; أضِف إلى شاشة البداية</string>
   <string name="tip_set_default_browser">افتح كل الروابط في %1$s\nاضبط %1$s ليكون المتصفح المبدئي</string>
   <string name="tip_autocomplete_url">أكمِل تلقائيًا عناوين المواقع التي تزورها باستمرار\nاضغط مطوّلًا على أي عنوان في شريط العنوان</string>
   <string name="tip_open_in_new_tab">افتح الرابط في لسان جديد\nانقر مطوّلًا على أي رابط في الصفحة</string>
-  <string name="tip_request_desktop">أتفضّل عرض نسخة سطح المكتب؟\nالقائمة &gt; اطلب موقع سطح المكتب</string>
+  <string name="tip_request_desktop">أتفضّل عرض نسخة سطح المكتب؟%1$s القائمة &gt; اطلب موقع سطح المكتب</string>
 </resources>

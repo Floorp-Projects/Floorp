@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">تعدادی از موتورهای ‌جست‌وجو امکان نمایش پیشنهادات را ندارند.</string>
   <string name="dismiss_no_suggestions_prompt_button">رد کردن</string>
   <string name="tip_disable_tracking_protection">سایت رفتار غیرمنتظره‌ای دارد؟\n محافظت از دنبال کردن را خاموش کنید</string>
-  <string name="tip_add_to_homescreen">"با اشاره یک انگشت به سایت های پربازدید خود دسترسی داشته باشید\n        فهرست&gt; اضافه کردن به صفحه خانگی"</string>
+  <string name="tip_add_to_homescreen">با اشاره یک انگشت به سایت های پربازدید خود دسترسی داشته باشید%1$s فهرست&gt; اضافه کردن به صفحه خانگی</string>
   <string name="tip_set_default_browser">بازکردن هر پیوندی در %1$s\n تنظیم%1$s به عنوان مرورگر پیش فرض</string>
   <string name="tip_autocomplete_url">پرکردن خودکارURLs برای سایت های پربازدید شما\n نگاه داشتن بیشتر انگشت بر روی هر URL در نوار آدرس برای انجام این کار</string>
   <string name="tip_open_in_new_tab">بازکردن یک پیوند در زبانه جدید\n نگاه داشتن بیشتر انگشت برای باز کردن پیوند در صفحه</string>
-  <string name="tip_request_desktop">"ترجیح به دیدن نسخه رومیزی وب‌سایت؟\n    فهرست &gt; درخواست نسخه رومیزی وب‌سایت"</string>
+  <string name="tip_request_desktop">ترجیح به دیدن نسخه رومیزی وب‌سایت؟%1$s فهرست &gt; درخواست نسخه رومیزی وب‌سایت</string>
 </resources>

@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Unele motoare de căutare nu pot afișa sugestii.</string>
   <string name="dismiss_no_suggestions_prompt_button">Înlătură</string>
   <string name="tip_disable_tracking_protection">Site-ul se comportă neașteptat?\n Încearcă să dezactivezi protecția față de urmărire</string>
-  <string name="tip_add_to_homescreen">"Obține acces cu o singură atingere la site-urile frecvent vizitate\n        Meniu &gt; Adaugă la ecranul principal"</string>
+  <string name="tip_add_to_homescreen">Obține acces cu o singură atingere la site-urile frecvent vizitate%1$s Meniu &gt; Adaugă la ecranul principal</string>
   <string name="tip_set_default_browser">Deschide fiecare link în %1$s\n Setează %1$s ca browser implicit</string>
   <string name="tip_autocomplete_url">Autocompletează adrese pentru site-uri frecvent vizitate\n Apasă lung pe orice adreesă din bara de adrese</string>
   <string name="tip_open_in_new_tab">Deschide un link într-o filă nouă\n Apasă lung pe orice link din pagină</string>
-  <string name="tip_request_desktop">"Vrei să vezi site-ul de desktop?\n    Meniu &gt; Cere versiune de desktop"</string>
+  <string name="tip_request_desktop">Vrei să vezi site-ul de desktop?%1$s Meniu &gt; Cere versiune de desktop</string>
 </resources>

@@ -37,6 +37,8 @@
   <string name="preference_category_general">Chung</string>
   <string name="preference_category_data_collection_use">Thu thập &amp; sử dụng dữ liệu</string>
   <string name="preference_category_search">Tìm kiếm</string>
+  <string name="preference_show_search_suggestions">Nhận gợi ý tìm kiếm</string>
+  <string name="preference_show_search_suggestions_summary">%1$s sẽ gửi nội dung bạn nhập vào thanh địa chỉ đến công cụ tìm kiếm của bạn</string>
   <string name="preference_search_engine_default">Mặc định</string>
   <string name="preference_state_on">Bật</string>
   <string name="preference_state_off">Tắt</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Không</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Chỉ chặn cookie bên thứ ba</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Có</string>
+  <string name="preference_security_biometric">Sử dụng vân tay để mở khóa ứng dụng</string>
+  <string name="preference_security_biometric_summary">Cảm biến vân tay của bạn có thể mở khóa %1$s nếu một URL đã được mở trong ứng dụng. Riêng tư sẽ được kích hoạt.</string>
   <string name="preference_privacy_secure_mode">Chế độ ẩn</string>
-  <string name="preference_privacy_stealth_summary">Ẩn trang web khi chuyển ứng dụng khác</string>
+  <string name="preference_privacy_stealth_summary">Ẩn trang web khi chuyển sang ứng dụng khác và chặn chụp ảnh màn hình.</string>
+  <string name="preference_category_security">Bảo mật</string>
   <string name="preference_category_performance">Hiệu suất</string>
   <string name="preference_performance_block_webfonts">Chặn phông chữ trang Web</string>
   <string name="preference_performance_block_webfonts_summary">Có thể dẫn đến thiếu biểu tượng hoặc hình ảnh</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Thêm công cụ tìm kiếm khác</string>
   <string name="preference_search_remove_title">Gỡ bỏ công cụ tìm kiếm</string>
   <string name="preference_search_remove">Gỡ bỏ</string>
+  <string name="preference_homescreen_tips">Hiện mẹo trên màn hình chính</string>
   <string name="action_option_add_search_engine">Thêm công cụ tìm kiếm</string>
   <string name="search_add_manually_name_hint">Tên công cụ tìm kiếm</string>
   <string name="search_add_manually_string">Chuỗi tìm kiếm để sử dụng</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Điều hướng lùi</string>
   <string name="content_description_stop">Dừng tải trang web</string>
   <string name="content_description_customtab_exit">Quay về ứng dụng trước đó</string>
+  <string name="content_description_trackers_blocked">Số trình theo dõi bị chặn</string>
   <string name="content_description_blocking_switch">Chặn theo dõi</string>
   <string name="your_rights">Quyền lợi của bạn</string>
   <string name="external_app_prompt_title">Mở đường dẫn trong ứng dụng khác</string>
@@ -200,4 +207,27 @@
   <string name="http_auth_dialog_password">Mật khẩu</string>
   <string name="preference_performance_request_desktop_site">Yêu cầu trang web trên máy tính</string>
   <string name="custom_tab_copy_url_action">Đã sao chép URL</string>
+  <string name="preference_advanced_summary">Công cụ nhà phát triển</string>
+  <string name="preference_category_advanced">Nâng cao</string>
+  <string name="preference_remote_debugging">Gỡ lỗi từ xa qua USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Mở khóa %1$s</string>
+  <string name="biometric_auth_description">Chạm vào cảm biến vân tay để tiếp tục.</string>
+  <string name="biometric_auth_new_session">Phiên mới</string>
+  <string name="biometric_auth_image_description">Biểu tượng vân tay</string>
+  <string name="biometric_auth_not_recognized_error">Không thể nhận dạng vân tay. Vui lòng thử lại.</string>
+  <string name="biometric_auth_moved_too_quickly">Ngón tay đã di chuyển quá nhanh. Vui lòng thử lại.</string>
+  <string name="enable_search_suggestion_title">Bạn có muốn bật gợi ý tìm kiếm không?</string>
+  <string name="enable_search_suggestion_subtitle">Để nhận được các đề xuất tìm kiếm, %1$s cần gửi những gì bạn gõ vào thanh địa chỉ đến công cụ tìm kiếm bạn đã chọn. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Tìm hiểu thêm</string>
+  <string name="enable_search_suggestions_no">Không</string>
+  <string name="enable_search_suggestions_yes">Có</string>
+  <string name="no_suggestions_message">Một vài công cụ tìm kiếm có thể không hiện gợi ý.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Bỏ qua</string>
+  <string name="tip_disable_tracking_protection">Trang web hoạt động không như mong đợi?\n Hay thử tắt Trình chống theo dõi</string>
+  <string name="tip_add_to_homescreen">Truy cập một chạm vào các trang web bạn sử dụng nhiều nhất%1$s Menu &gt; Thêm vào Màn hình chính</string>
+  <string name="tip_set_default_browser">Mở mọi liên kết trong %1$s\n Đặt %1$s làm trình duyệt mặc định</string>
+  <string name="tip_autocomplete_url">Tự động điền URLs cho các trang web bạn sử dụng\n Nhấp và giữ bất kỳ URL trong thanh địa chỉ</string>
+  <string name="tip_open_in_new_tab">Mở liên kết trên thẻ mới\n Nhấp và giữ bất kì liên kết nào trên trang</string>
+  <string name="tip_request_desktop">Muốn xem phiên bản máy tính?%1$s Menu &gt; Yêu cầu trang web trên máy tính</string>
+  <string name="tip_disable_tips">Tắt mẹo trên màn hình bắt đầu của %1$s</string>
 </resources>

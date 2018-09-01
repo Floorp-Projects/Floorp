@@ -80,6 +80,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blocar solament los cookies tèrces</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Òc</string>
   <string name="preference_security_biometric">Utilizar una emprenta digitala per desblocar l’aplicacion</string>
+  <string name="preference_security_biometric_summary">Vòstras detadas pòdon desblocar %1$s s’una URL es ja dobèrta dins l’aplicacion. S’activarà en mòde invisible.</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
   <string name="preference_privacy_stealth_summary">Amagar las paginas web en cambiar d’aplicacions e blocar la presa de capturas d’ecran.</string>
   <string name="preference_category_security">Seguretat</string>
@@ -213,9 +214,14 @@
   <string name="biometric_auth_description">Tocatz lo captaire d’emprentas digitalas per contunhar.</string>
   <string name="biometric_auth_new_session">Session novèla</string>
   <string name="biometric_auth_image_description">Icòna d’emprentas digitalas</string>
+  <string name="biometric_auth_not_recognized_error">Detadas pas reconegudas. Tornatz ensajar.</string>
+  <string name="biometric_auth_moved_too_quickly">Lo det a bolegat tròp rapidament. Tornatz ensajar.</string>
+  <string name="enable_search_suggestion_title">Volètz activar las suggestions de recèrca ?</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Ne saber mai</string>
   <string name="enable_search_suggestions_no">Non</string>
   <string name="enable_search_suggestions_yes">Òc</string>
   <string name="no_suggestions_message">Unes motor de recèrca pòdon pas mostrar de suggestions.</string>
   <string name="dismiss_no_suggestions_prompt_button">Tampar</string>
+  <string name="tip_request_desktop">Vos aimatz mai lo site en version ordenador ? Menú %1$s &gt; Veire version ordenador</string>
+  <string name="tip_disable_tips">Quitar de mostrar las astúcias quand %1$s se lança</string>
 </resources>

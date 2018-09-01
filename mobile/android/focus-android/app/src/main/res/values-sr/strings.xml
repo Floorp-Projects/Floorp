@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Неки претраживачи не могу приказивати предлоге.</string>
   <string name="dismiss_no_suggestions_prompt_button">Склони</string>
   <string name="tip_disable_tracking_protection">Сајт се понаша чудно?\n Покушајте искључити заштиту од праћења</string>
-  <string name="tip_add_to_homescreen">"Подесите приступ сајтовима које користите највише, једним кликом\n        Мени &gt; Додај на почетни екран"</string>
+  <string name="tip_add_to_homescreen">Подесите приступ сајтовима које користите највише, једним кликом%1$s Мени &gt; Додај на почетни екран</string>
   <string name="tip_set_default_browser">Отвори сваку везу у %1$s-у\n Постави %1$s као подразумевани прегледач</string>
   <string name="tip_autocomplete_url">Аутоматско завршавање URLs за сајтове које користите највише\n Дуго држите URL у адресној траци</string>
   <string name="tip_open_in_new_tab">Отвори везу у новом језичку\n Дуго држите на било којој вези на страници</string>
-  <string name="tip_request_desktop">"Радије бисте видели цео десктоп сајт?\n    Мени &gt; Захтевај десктоп сајт"</string>
+  <string name="tip_request_desktop">Радије бисте видели цео десктоп сајт?%1$s Мени &gt; Захтевај десктоп сајт</string>
 </resources>

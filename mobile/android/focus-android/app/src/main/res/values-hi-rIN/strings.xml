@@ -37,6 +37,8 @@
   <string name="preference_category_general">सामान्य</string>
   <string name="preference_category_data_collection_use">आँकड़ा संग्रह व उपयोग</string>
   <string name="preference_category_search">खोजें</string>
+  <string name="preference_show_search_suggestions">खोज सुझाव पायें</string>
+  <string name="preference_show_search_suggestions_summary">%1$s उन्हें आपके खोज इंजन में भेजेगा जिन्हें आप पता बार में टाइप करेंगे</string>
   <string name="preference_search_engine_default">मूलभूत</string>
   <string name="preference_state_on">चालू</string>
   <string name="preference_state_off">बंद</string>
@@ -77,8 +79,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">नहीं</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">केवल तीसरे पक्ष की कुकीज़ बाधित करें</string>
   <string name="preference_privacy_should_block_cookies_yes_option">हाँ</string>
+  <string name="preference_security_biometric">ऐप्प को अनलॉक करने के लिए फिंगरप्रिंट का इस्तेमाल करें</string>
+  <string name="preference_security_biometric_summary">यदि ऐप्प में पहले ही कोई URL खुली हो तो आपकी फिंगरप्रिंट %1$s को अनलॉक कर सकती है. गोपनीयता चालू हो जायेगी.</string>
   <string name="preference_privacy_secure_mode">तरक़ीब</string>
-  <string name="preference_privacy_stealth_summary">ऐप्स को स्विच करते समय वेबपेज छिपाएं</string>
+  <string name="preference_privacy_stealth_summary">एक ऐप्प से दुसरे ऐप्प पर जाते समय वेबपृष्ठों को छिपाएं तथा स्क्रीनशॉट लेना ब्लॉक करें.</string>
   <string name="preference_category_security">सुरक्षा</string>
   <string name="preference_category_performance">प्रदर्शन</string>
   <string name="preference_performance_block_webfonts">वेब लिपियों को अवरुद्ध करें</string>
@@ -210,9 +214,20 @@
   <string name="biometric_auth_description">जारी रखने के लिए फिंगरप्रिंट संवेदक स्पर्श करें।</string>
   <string name="biometric_auth_new_session">नया सत्र</string>
   <string name="biometric_auth_image_description">फिंगरप्रिंट चिन्ह</string>
+  <string name="biometric_auth_not_recognized_error">फिंगरप्रिंट अमान्य. पुनः प्रयास करें.</string>
+  <string name="biometric_auth_moved_too_quickly">ऊँगली काफी जल्दी हटा ली गयी. पुनः प्रयास करें.</string>
+  <string name="enable_search_suggestion_title">क्या आप खोज सुझावों को चालू करना चाहेंगे?</string>
+  <string name="enable_search_suggestion_subtitle">खोज सुझावों को पाने के लिए, %1$s उन चीजों को जिन्हें आप पता बार में टाइप करते हैं आपके द्वारा चयनित खोज इंजन को भेजना चाहता है. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">अधिक जानें</string>
   <string name="enable_search_suggestions_no">नहीं</string>
   <string name="enable_search_suggestions_yes">हाँ</string>
   <string name="no_suggestions_message">कुछ खोज इंजन सुझाव नहीं दिखा सकते हैं।</string>
   <string name="dismiss_no_suggestions_prompt_button">निरस्त करें</string>
+  <string name="tip_disable_tracking_protection">साइट अनपेक्षित ढंग से पेश आ रहा है?\n ट्रैकिंग सुरक्षा बंद कर के देखें</string>
+  <string name="tip_add_to_homescreen">आपके द्वारा अधिक इस्तेमाल किये साइटों तक एक टैप में पहुँचें %1$s मेन्यु &gt; होम स्क्रीन में जोड़ें</string>
+  <string name="tip_set_default_browser">प्रत्येक लिंक %1$s में खोलें\n %1$s को डिफ़ॉल्ट ब्राउज़र बनायें</string>
+  <string name="tip_autocomplete_url">स्वतः पूर्ण URLs उन साइटों के लिए जिन्हें आप अधिक इस्तेमाल करते हैं\n पता बार में किसी URL पर कुछ देर दबा कर रखें</string>
+  <string name="tip_open_in_new_tab">कोई लिंक एक नये टैब में खोलें\n पृष्ठ पर किसी लिंक पर कुछ देर दबा कर रखें</string>
+  <string name="tip_request_desktop">इसके बदले पूर्ण डेस्कटॉप साइट देखें?%1$s मेन्यु &gt; डेस्कटॉप साइट कि अनुरोध करें</string>
+  <string name="tip_disable_tips">%1$s प्रारंभ स्क्रीन पर सलाह को बंद करें</string>
 </resources>

@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Część wyszukiwarek nie może wyświetlać podpowiedzi.</string>
   <string name="dismiss_no_suggestions_prompt_button">Zamknij</string>
   <string name="tip_disable_tracking_protection">Strona zachowuje się nie tak, jak powinna?\n Spróbuj wyłączyć ochronę przed śledzeniem</string>
-  <string name="tip_add_to_homescreen">"Otwieraj najczęściej odwiedzane strony jednym stuknięciem\n        Menu → Dodaj do ekranu głównego"</string>
+  <string name="tip_add_to_homescreen">Otwieraj najczęściej odwiedzane strony jednym stuknięciem%1$s Menu → Dodaj do ekranu głównego</string>
   <string name="tip_set_default_browser">Otwieraj każdy odnośnik w %1$s\n Ustaw %1$s jako domyślną przeglądarkę</string>
   <string name="tip_autocomplete_url">Automatycznie uzupełniaj adresy najczęściej odwiedzanych stron\n Przytrzymaj dowolny adres na pasku adresu</string>
   <string name="tip_open_in_new_tab">Otwórz odnośnik w nowej karcie\n Przytrzymaj dowolny odnośnik na stronie</string>
-  <string name="tip_request_desktop">"Wolisz pełną wersję strony jak na komputerze?\n    Menu → Tryb stacjonarny"</string>
+  <string name="tip_request_desktop">Wolisz pełną wersję strony jak na komputerze?%1$s Menu → Tryb stacjonarny</string>
+  <string name="tip_disable_tips">Wyłącz wskazówki na ekranie głównym %1$s</string>
 </resources>

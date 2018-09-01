@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Beberapa mesin pencari tidak dapat menampilkan saran pencarian.</string>
   <string name="dismiss_no_suggestions_prompt_button">Tutup</string>
   <string name="tip_disable_tracking_protection">Situs bertindak tidak terduga?\n Matikan Perlindungan Pelacakan</string>
-  <string name="tip_add_to_homescreen">"Akses satu ketukan ke situs yang sering digunakan\n        Menu &gt; Tambahkan ke Beranda"</string>
+  <string name="tip_add_to_homescreen">Akses satu ketukan ke situs yang sering digunakan%1$s Menu &gt; Tambahkan ke Beranda</string>
   <string name="tip_set_default_browser">Buka setiap tautan di %1$s\n Atur %1$s sebagai peramban baku</string>
   <string name="tip_autocomplete_url">Lengkapi otomatis URL untuk situs yang sering dikunjungi\n Ketuk lama URL di bilah alamat</string>
   <string name="tip_open_in_new_tab">Buka tautan di tab baru\n Tekan lama tautan di laman</string>
-  <string name="tip_request_desktop">"Lebih suka melihat situs desktop?\n    Menu &gt; Minta situs desktop"</string>
+  <string name="tip_request_desktop">Lebih suka melihat situs desktop?%1$s Menu &gt; Minta situs desktop</string>
+  <string name="tip_disable_tips">Matikan tips pada layar awal %1$s</string>
 </resources>

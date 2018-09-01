@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Bateue</string>
+  <string name="action_ok">OK</string>
+  <string name="action_save">Keubah</string>
+  <string name="urlbar_hint">Mita atawa pasoe alamat</string>
+  <string name="teaser">Browsing bék na soe kalen.\nPeuhah. Sampôh. Gisa Keulayi.</string>
+  <string name="feedback_erase">Seujarah browsing droen ka jisampôh.</string>
+  <string name="search_hint">Mita keu %1$s</string>
+  <string name="menu_share">Bulueng…</string>
+  <string name="menu_report_site_issue">Bri Thèe Isu Situs</string>
+  <string name="menu_open_with_default_browser2">Peuhah lam %1$s</string>
+  <string name="menu_open_with_a_browser2">Peuhah lam…</string>
+  <string name="menu_add_to_home_screen">Tamah lam layeue Keue</string>
+  <string name="menu_whats_new">Pue Nyang Barô</string>
+  <string name="menu_settings">Peuatô</string>
+  <string name="menu_about">Bhaih</string>
+  <string name="menu_help">Beunantu</string>
+  <string name="menu_rights">Hak Droeneuh</string>
+  <string name="menu_trackers_blocked_title">Peulacak jitham</string>
+  <string name="menu_custom_tab_branding">Jikuasa lé %1$s</string>
+  <string name="share_dialog_title">Bulueng röt</string>
+  <string name="notification_erase_text">Sampôh riwayat browsing</string>
+  <string name="notification_action_open">Peuhah</string>
+  <string name="notification_action_erase_and_open">Sampôh ngön Peuhah</string>
+  <string name="shortcut_erase_short_label">Sampôh</string>
+  <string name="shortcut_erase_long_label">Sampôh riwayat browsing</string>
+  <string name="text_selection_search_action">Mita deungön Rahsia</string>
+  <string name="preference_category_tracking_protection">Peulindông seutöt</string>
+  <string name="preference_category_web_content">Asoe Web</string>
+  <string name="preference_category_switching_apps">Tuka App</string>
+  <string name="preference_category_general">Awam</string>
+  <string name="preference_category_data_collection_use">Peusapat Data &amp; Ngui</string>
+  <string name="preference_category_search">Mita</string>
+</resources>

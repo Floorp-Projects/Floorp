@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Kelkaj serĉiloj ne povas montri serĉajn sugestojn.</string>
   <string name="dismiss_no_suggestions_prompt_button">Ignori</string>
   <string name="tip_disable_tracking_protection">Ĉu la retejo neatendite kondutas?\n Provu malŝalti la protekton kontraŭ spurado</string>
-  <string name="tip_add_to_homescreen">"Atingu viajn plej vizititajn retejojn per nura tuŝeto\n        Menuo &gt; Aldoni al hejmekrano"</string>
+  <string name="tip_add_to_homescreen">Atingu viajn plej vizititajn retejojn per nura tuŝeto%1$s Menuo &gt; Aldoni al hejmekrano</string>
   <string name="tip_set_default_browser">Malfermi ĉiun ligilon per %1$s\n Igu %1$s via norma retumilo</string>
   <string name="tip_autocomplete_url">Aŭtomate kompletigi restadresojn por la retejoj, kiujn vi plej multe uzas\n Longe premu iun ajn retadreson en la adresa strio</string>
   <string name="tip_open_in_new_tab">Malfermu ligilon en nova langeto\n Longe premu iun ajn ligilon en paĝo</string>
-  <string name="tip_request_desktop">"Ĉu vi preferus vidi la version de la retejo por komputiloj?\n    Menuo &gt; Peti version por komputiloj"</string>
+  <string name="tip_request_desktop">Ĉu vi preferus vidi la version de la retejo por komputiloj?%1$s Menuo &gt; Peti version por komputiloj</string>
 </resources>

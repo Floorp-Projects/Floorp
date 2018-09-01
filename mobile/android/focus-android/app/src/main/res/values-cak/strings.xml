@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Jujun taq kanob\'än man yatikïr ta yekik\'üt ta chilab\'enïk.</string>
   <string name="dismiss_no_suggestions_prompt_button">Tichup ruwäch</string>
   <string name="tip_disable_tracking_protection">¿La man pa rub\'eyal ta nisamäj re ruxaq k\'amaya\'l re\'?\n Tatojtob\'ej rik\'in nachüp ri Chajinïk chuwäch Ojqanem</string>
-  <string name="tip_add_to_homescreen">"Katok rik\'in jun chapoj pa ri taq ruxaq yalan ye\'awokisaj\n        Molsamajib\'äl &gt; Titz\'aqatisäx pa Tikirib\'äl tzuwäch"</string>
+  <string name="tip_add_to_homescreen">"Katok rik\'in jun chapoj pa ri taq ruxaq yalan ye\'awokisaj%1$s\n        Molsamajib\'äl &gt; Titz\'aqatisäx pa Tikirib\'äl tzuwäch"</string>
   <string name="tip_set_default_browser">Kejaq konojel ri taq ximonel pa %1$s\n Tib\'an runuk\'ulem %1$s achi\'el ri awokik\'amaya\'l k\'o wi</string>
   <string name="tip_autocomplete_url">Ruyon ke\'atz\'aqatisaj ri taq URLs kichin ri taq ruxan yalan ye\'awokisaj\n Tapitz\'itz\'ej xa b\'achike URL pa rukajtz\'ik ochochib\'äl</string>
   <string name="tip_open_in_new_tab">Tijaq jun ximonel pa jun k\'ak\'a\' ruwi\'\n Tapitz\'itz\'ej xab\'achike ximonel pa jun ruxaq</string>
-  <string name="tip_request_desktop">"¿La nawajo\' natzu\' ri ruxaq ruk\'amaya\'l ruwa kematz\'ib\'?\n    K\'utsamajib\'äl &gt; Tik\'utüx jun ruxaq ruk\'amaya\'l ruwa kematz\'ib\'"</string>
+  <string name="tip_request_desktop">"¿La nawajo\' natzu\' ri ruxaq ruk\'amaya\'l ruwa kematz\'ib\'?%1$s\n    K\'utsamajib\'äl &gt; Tik\'utüx jun ruxaq ruk\'amaya\'l ruwa kematz\'ib\'"</string>
+  <string name="tip_disable_tips">Tichup ri taq chilab\'enïk pa ri tikirib\'äl ruwäch %1$s</string>
 </resources>

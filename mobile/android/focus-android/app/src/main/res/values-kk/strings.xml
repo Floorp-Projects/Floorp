@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Кейбір іздеу жүйелері ұсыныстарды көрсете алмайды.</string>
   <string name="dismiss_no_suggestions_prompt_button">Тайдыру</string>
   <string name="tip_disable_tracking_protection">Әлі де күтпегендей әрекет жасайды ма?\n Бақылаудан қорғанысты сөндіріп көріңіз</string>
-  <string name="tip_add_to_homescreen">"Жиірек қолданылатын сайттарға бір шертумен қатынаңыз\n        Мәзір &gt; Үй бетіне қосу"</string>
+  <string name="tip_add_to_homescreen">Жиірек қолданылатын сайттарға бір шертумен қатынаңыз%1$s Мәзір &gt; Үй бетіне қосу</string>
   <string name="tip_set_default_browser">Әр сілтемені %1$s ішінде ашыңыз\n %1$s негізгі браузер ретінде орнатыңыз</string>
   <string name="tip_autocomplete_url">Жиірек қолданылатын сайттар үшін сілтемелерді автотолықтырыңыз\n Адрестік жолақта кез келген сілтемеге ұзақ шертіңіз</string>
   <string name="tip_open_in_new_tab">Сілтемені жаңа бетте ашу\n Беттегі кез келген сілтемеге ұзақ шертіңіз</string>
-  <string name="tip_request_desktop">"Жұмыс үстелге арналған толық өлшемді көргіңіз келе ме?\n    Мәзір &gt; Сайттың толық нұсқасы"</string>
+  <string name="tip_request_desktop">Жұмыс үстелге арналған толық өлшемді көргіңіз келе ме?%1$s Мәзір &gt; Сайттың толық нұсқасы</string>
+  <string name="tip_disable_tips">%1$s іске қосу экранында кеңестерді сөндіру</string>
 </resources>

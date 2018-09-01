@@ -9,7 +9,7 @@
   <string name="search_hint">搜索 %1$s</string>
   <string name="menu_share">分享…</string>
   <string name="menu_report_site_issue">反馈网站问题</string>
-  <string name="menu_open_with_default_browser2">在 %1$s 中打开</string>
+  <string name="menu_open_with_default_browser2">用 %1$s 打开</string>
   <string name="menu_open_with_a_browser2">打开于…</string>
   <string name="menu_add_to_home_screen">添加到主屏幕</string>
   <string name="menu_whats_new">新版变化</string>
@@ -17,7 +17,7 @@
   <string name="menu_about">关于</string>
   <string name="menu_help">帮助</string>
   <string name="menu_rights">您的权利</string>
-  <string name="menu_trackers_blocked_title">拦截的跟踪器数量</string>
+  <string name="menu_trackers_blocked_title">已屏蔽跟踪器</string>
   <string name="menu_custom_tab_branding">由 %1$s 提供</string>
   <string name="share_dialog_title">分享方式</string>
   <string name="notification_erase_text">清除浏览记录</string>
@@ -29,7 +29,7 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35753;&#24744;&#25484;&#25511;&#32447;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#29992;&#20316;&#38544;&#31169;&#27983;&#35272;&#22120;&#65292;&#21487;&#20197;&#65306;\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#24212;&#29992;&#20013;&#25628;&#32034;&#21644;&#27983;&#35272;</li>"\n    "<li>&#25318;&#25130;&#36319;&#36394;&#22120;&#65288;&#20063;&#21487;&#35843;&#25972;&#20026;&#20801;&#35768;&#36319;&#36394;&#22120;&#65289;</li>"\n    "<li>&#33258;&#21160;&#28165;&#38500; Cookie&#12289;&#25628;&#32034;&#35760;&#24405;&#21644;&#27983;&#35272;&#35760;&#24405;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#30001; Mozilla &#20986;&#21697;&#12290;&#25105;&#20204;&#30340;&#20351;&#21629;&#26159;&#20419;&#25104;&#20581;&#24247;&#12289;&#24320;&#25918;&#30340;&#20114;&#32852;&#32593;&#12290;<br/>\n<a href="%2$s">&#35814;&#32454;&#20102;&#35299;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">隐私与安全</string>
   <string name="preference_privacy_and_security_summary">跟踪、Cookie、数据反馈</string>
-  <string name="preference_search_summary">设为默认并自动补全</string>
+  <string name="preference_search_summary">设置默认引擎、自动补全</string>
   <string name="preference_mozilla_summary">关于 %1$s、使用说明</string>
   <string name="preference_category_tracking_protection">跟踪保护</string>
   <string name="preference_category_web_content">网络内容</string>
@@ -45,7 +45,7 @@
   <string name="preference_subitem_autocomplete">网址自动补全</string>
   <string name="preference_switch_autocomplete">自动补全</string>
   <string name="preference_category_autocomplete_preinstalled">默认网址列表</string>
-  <string name="preference_autocomplete_preinstalled_summary">开启后，可在 %1$s 地址栏自动补全超过 450 个流行网址。</string>
+  <string name="preference_autocomplete_preinstalled_summary">开启之后，%1$s 地址栏可以自动补全超过 450 个热门网站。</string>
   <string name="preference_category_autocomplete_custom_urls">自定义网址</string>
   <string name="preference_autocomplete_subitem_customlist">自定义网址</string>
   <string name="preference_autocomplete_action_add">+ 添加自定义网址</string>
@@ -80,9 +80,9 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">仅阻止第三方 Cookie</string>
   <string name="preference_privacy_should_block_cookies_yes_option">是</string>
   <string name="preference_security_biometric">使用指纹解锁应用</string>
-  <string name="preference_security_biometric_summary">如果应用内有已打开的网址，则需用您的指纹解锁 %1$s。隐藏模式将被打开。</string>
+  <string name="preference_security_biometric_summary">如果应用内有已打开的网址，您需用指纹解锁 %1$s。隐形模式将被开启。</string>
   <string name="preference_privacy_secure_mode">隐形</string>
-  <string name="preference_privacy_stealth_summary">切换应用时隐藏网页内容并阻止截屏。</string>
+  <string name="preference_privacy_stealth_summary">切换应用时隐藏网页内容，并阻止截屏、投屏。</string>
   <string name="preference_category_security">安全</string>
   <string name="preference_category_performance">性能</string>
   <string name="preference_performance_block_webfonts">拦截网络字体</string>
@@ -161,7 +161,7 @@
   <string name="contextmenu_image_share">分享图像</string>
   <string name="contextmenu_image_copy">复制图像地址</string>
   <string name="contextmenu_image_save">保存图像</string>
-  <string name="contextmenu_open_in_new_tab">在新标签页打开链接</string>
+  <string name="contextmenu_open_in_new_tab">新建标签页打开链接</string>
   <string name="contextmenu_image_warning"><![CDATA[清除 %1$s 的历史记录时，<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#20250;&#21024;&#38500;</b>已保存和已分享的图像。]]></string>
   <string name="firstrun_defaultbrowser_title">强化您的隐私</string>
   <string name="firstrun_defaultbrowser_text2">隐私浏览模式变得更强大了。能拦截广告，还能拦截在不同网站跟踪您，又拖慢网页载入的内容。</string>
@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">某些搜索引擎无法显示建议。</string>
   <string name="dismiss_no_suggestions_prompt_button">关闭</string>
   <string name="tip_disable_tracking_protection">网站表现异常？\n 尝试关闭跟踪保护</string>
-  <string name="tip_add_to_homescreen">"一键访问您的常用网站\n        菜单 &gt; 添加到主屏幕"</string>
+  <string name="tip_add_to_homescreen">一键访问您的常用网站%1$s菜单 &gt; 添加到主屏幕</string>
   <string name="tip_set_default_browser">在 %1$s 中打开链接\n 将 %1$s 设为默认浏览器</string>
   <string name="tip_autocomplete_url">自动补全您的常用网站地址\n 长按地址栏的中任一链接</string>
   <string name="tip_open_in_new_tab">新建标签页打开链接\n 长按页面上的任一链接</string>
-  <string name="tip_request_desktop">"想查看更完整的桌面版网站？\n    菜单 &gt; 要求桌面版网站"</string>
+  <string name="tip_request_desktop">想查看更完整的桌面版网站？%1$s菜单 &gt; 要求桌面版网站</string>
+  <string name="tip_disable_tips">关闭 %1$s 启动页上的小提示</string>
 </resources>

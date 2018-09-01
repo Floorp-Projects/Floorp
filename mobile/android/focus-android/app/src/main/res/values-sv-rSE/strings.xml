@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Vissa sökmotorer kan inte visa förslag.</string>
   <string name="dismiss_no_suggestions_prompt_button">Ignorera</string>
   <string name="tip_disable_tracking_protection">Beter sig webbplatsen konstigt?\n Försök att stänga av spårningsskydd</string>
-  <string name="tip_add_to_homescreen">"Få tillgång de mest besökta webbplatserna med en knapptryckning\n        Meny &gt; Lägg till på startsidan"</string>
+  <string name="tip_add_to_homescreen">Få tillgång de mest besökta webbplatserna med en knapptryckning%1$s Meny &gt; Lägg till på startsidan</string>
   <string name="tip_set_default_browser">Öppna varje länk i %1$s\n Ange %1$s som standardwebbläsare</string>
   <string name="tip_autocomplete_url">Autokomplettera webbadresser för webbplatser som du använder mest\n Tryck länge på vilken URL som helst i adressfältet</string>
   <string name="tip_open_in_new_tab">Öppna en länk i en ny flik\n Tryck länge på en länk på en sida</string>
-  <string name="tip_request_desktop">"Vill du hellre se webbplatsen anpassad för datorer?\n    Meny &gt; Begär datorwebbplats"</string>
+  <string name="tip_request_desktop">Vill du hellre se webbplatsen anpassad för datorer?%1$s Meny &gt; Begär datorwebbplats</string>
+  <string name="tip_disable_tips">Stäng av tips på startskärmen för %1$s</string>
 </resources>

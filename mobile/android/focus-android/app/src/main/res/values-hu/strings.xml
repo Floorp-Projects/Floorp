@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Néhány keresőszolgáltatás nem tud javaslatokat megjeleníteni.</string>
   <string name="dismiss_no_suggestions_prompt_button">Eltüntetés</string>
   <string name="tip_disable_tracking_protection">Az oldal váratlanul viselkedik?\nPróbálja kikapcsolni a követésvédelmet</string>
-  <string name="tip_add_to_homescreen">"Érje el a leggyakrabban használt oldalakat egy koppintással\n        Menü &gt; Hozzáadás a kezdőképernyőhöz"</string>
+  <string name="tip_add_to_homescreen">Érje el a leggyakrabban használt oldalakat egy koppintással%1$s Menü &gt; Hozzáadás a kezdőképernyőhöz</string>
   <string name="tip_set_default_browser">Nyisson meg minden hivatkozást a %1$sban\nÁllítsa be a %1$st alapértelmezett böngészőnek</string>
   <string name="tip_autocomplete_url">URL-ek automatikus kiegészítése a leggyakrabban használt oldalaknál\nNyomja meg hosszan az URL-t a címsorban</string>
   <string name="tip_open_in_new_tab">Nyissa meg a hivatkozást új lapon\nNyomja meg hosszan bármelyik hivatkozást az oldalon</string>
-  <string name="tip_request_desktop">Inkább az asztali oldalt látná?\nMenü &gt; Asztali oldal kérése</string>
+  <string name="tip_request_desktop">Inkább az asztali oldalt látná?%1$s Menü &gt; Asztali oldal kérése</string>
+  <string name="tip_disable_tips">A tippek kikapcsolása a %1$s kezdőképernyőjén</string>
 </resources>

@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">No tots els motors de cerca poden mostrar suggeriments.</string>
   <string name="dismiss_no_suggestions_prompt_button">Tanca</string>
   <string name="tip_disable_tracking_protection">El lloc té un comportament inesperat?\n Proveu de desactivar la protecció contra el seguiment</string>
-  <string name="tip_add_to_homescreen">"Accediu amb un sol toc als llocs que més utilitzeu\n        Menú &gt; Afegeix a pantalla d\'inici"</string>
+  <string name="tip_add_to_homescreen">Accediu amb un sol toc als llocs que més utilitzeu%1$s Menú &gt; Afegeix a pantalla d\'inici</string>
   <string name="tip_set_default_browser">Obriu tots els enllaços amb el %1$s\n Definiu el %1$s com a navegador per defecte</string>
   <string name="tip_autocomplete_url">Emplenament automàtic dels URL dels llocs que més utilitzeu\n Manteniu premut qualsevol URL de la barra d\'adreces</string>
   <string name="tip_open_in_new_tab">Obriu un enllaç en una pestanya nova\n Manteniu premut qualsevol enllaç de la pàgina</string>
-  <string name="tip_request_desktop">"Preferiu veure el lloc com es mostra en l\'escriptori?\n    Menú &gt; Mostra el lloc d\'escriptori"</string>
+  <string name="tip_request_desktop">Preferiu veure el lloc com es mostra en l\'escriptori?%1$s Menú &gt; Mostra el lloc d\'escriptori</string>
 </resources>

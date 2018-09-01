@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Kai kurios ieškyklės negali rodyti paieškos žodžių siūlymų.</string>
   <string name="dismiss_no_suggestions_prompt_button">Paslėpti</string>
   <string name="tip_disable_tracking_protection">Svetainė veikia netinkamai?\n Pabandykite išjungti apsaugą nuo stebėjimo</string>
-  <string name="tip_add_to_homescreen">"Pasiekite lankomiausias svetaines vienu spustelėjimu\n        Meniu &gt; Įtraukti į pradžios ekraną"</string>
+  <string name="tip_add_to_homescreen">Pasiekite lankomiausias svetaines vienu spustelėjimu%1$s Meniu &gt; Įtraukti į pradžios ekraną</string>
   <string name="tip_set_default_browser">Atverkite visus saitus per „%1$s“\n Paskirkite „%1$s“ numatytąja naršykle</string>
   <string name="tip_autocomplete_url">Automatiškai užbaikite lankomiausių svetainių adresus\n Spustelėkite ir palaikykite bet kurį URL adreso lauke</string>
   <string name="tip_open_in_new_tab">Atverkite saitą naujoje kortelėje\n Spustelėkite ir palaikykite bet kurį saitą puslapyje</string>
-  <string name="tip_request_desktop">"Norite tradicinės svetainės versijos?\n    Meniu &gt; Prašyti ne mob. svetainės"</string>
+  <string name="tip_request_desktop">Norite tradicinės svetainės versijos?%1$s Meniu &gt; Prašyti ne mob. svetainės</string>
 </resources>

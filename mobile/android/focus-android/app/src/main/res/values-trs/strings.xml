@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Hua da\'j nej na nà\'na\'ui\' nī nū diganj da rugujñu\'unj</string>
   <string name="dismiss_no_suggestions_prompt_button">Si gi\'iaj guendo\'</string>
   <string name="tip_disable_tracking_protection">Na\'ue si\'iaj sun hue\'ê sitio na an\'\nGuxun sa arrán guendà naga\'naj ma</string>
-  <string name="tip_add_to_homescreen">"Hiò doj gatut riña nej sitio rajsunt doj\n\n        Menû &gt; Nuto\' ma riña pantayâ ayi\'ij"</string>
+  <string name="tip_add_to_homescreen">Hiò doj gatut riña nej sitio rajsunt doj%1$s Menû &gt; Nuto\' ma riña pantayâ ayi\'ij</string>
   <string name="tip_set_default_browser">Na\'nïn\' datan nej enlase riña %1$s\nNagi\'iaj %1$s navegador yitïnj in</string>
   <string name="tip_autocomplete_url">"Nagi\'iaj chre\' nej URL guenda nej sitio rajsun yitïnjt\nRu\'ma ra\'à riña URL \'na\' riña dukuán direksiôn "</string>
   <string name="tip_open_in_new_tab">Na\'nïn a\'ngo enlase riña a\'ngo rakïj ñanj nakàa\nRu\'ma ra\'à riña ahuin nanj ma\'an enlase \'na riña pajinâ</string>
-  <string name="tip_request_desktop">"Ruat ni\'iaj sitio \'na\' riña eskritorio aj\n    Menú &gt; gachinj ni\'iaj"</string>
+  <string name="tip_request_desktop">Ruat ni\'iaj sitio \'na\' riña eskritorio aj%1$s Menú &gt; gachinj ni\'iaj</string>
 </resources>

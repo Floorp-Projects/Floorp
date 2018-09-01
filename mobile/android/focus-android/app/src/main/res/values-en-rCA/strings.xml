@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Some search engines cannot show suggestions.</string>
   <string name="dismiss_no_suggestions_prompt_button">Dismiss</string>
   <string name="tip_disable_tracking_protection">Site behaving unexpectedly?\n Try turning off Tracking Protection</string>
-  <string name="tip_add_to_homescreen">"Get one-tap access to sites you use most\n        Menu &gt; Add to Home screen"</string>
+  <string name="tip_add_to_homescreen">Get one-tap access to sites you use most%1$s Menu &gt; Add to Home screen</string>
   <string name="tip_set_default_browser">Open every link in %1$s\n Set %1$s as default browser</string>
   <string name="tip_autocomplete_url">Autocomplete URLs for sites you use most\n Long-press any URL in the address bar</string>
   <string name="tip_open_in_new_tab">Open a link in a new tab\n Long-press any link on a page</string>
-  <string name="tip_request_desktop">"Rather see the full desktop site?\n    Menu &gt; Request desktop site"</string>
+  <string name="tip_request_desktop">Rather see the full desktop site?%1$s Menu &gt; Request desktop site</string>
+  <string name="tip_disable_tips">Turn off tips on the %1$s start screen</string>
 </resources>

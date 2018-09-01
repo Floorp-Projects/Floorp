@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Деякі засоби пошуку не можуть показувати пропозиції.</string>
   <string name="dismiss_no_suggestions_prompt_button">Відхилити</string>
   <string name="tip_disable_tracking_protection">Неочікувана поведінка сайту?\n Спробуйте вимкнути захист від стеження</string>
-  <string name="tip_add_to_homescreen">"Швидкий доступ до популярних сайтів\n        Меню &gt; Додати на головний екран"</string>
+  <string name="tip_add_to_homescreen">Швидкий доступ до популярних сайтів%1$s Меню &gt; Додати на головний екран</string>
   <string name="tip_set_default_browser">Відкривайте всі посилання в %1$s\n Встановіть %1$s типовим браузером</string>
   <string name="tip_autocomplete_url">Автозавершення популярних URL-адрес\n Тривалий дотик до URL в адресному рядку</string>
   <string name="tip_open_in_new_tab">Відкривайте посилання в новій вкладці\n Тривалий дотик до посилання на сторінці</string>
-  <string name="tip_request_desktop">"Бажаєте бачити повну версію сайту?\n    Меню &gt; Повна версія сайту"</string>
+  <string name="tip_request_desktop">Бажаєте бачити повну версію сайту?%1$s Меню &gt; Повна версія сайту</string>
+  <string name="tip_disable_tips">Вимкнути поради у домівці %1$s</string>
 </resources>

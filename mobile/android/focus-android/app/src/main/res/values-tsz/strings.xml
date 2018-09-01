@@ -225,5 +225,5 @@
   <string name="tip_disable_tracking_protection">Eranharhikwa nántarkuni úxaki?\nTsek\'u Kwatakwa Estakwaeri p\'atani</string>
   <string name="tip_set_default_browser">Yámu miyukwaechani mítani %1$s rhu\n %1$s Pékurhintsï</string>
   <string name="tip_open_in_new_tab">Miyukwani jimpanhi eranharhikwarhu mítani \n Nákintaru ma miyukwani puchanharhiku</string>
-  <string name="tip_request_desktop">"Wékapirinkiri etsakwanharhitani?\n    Jatakwa &gt; Etsakwanharhikata kurhak\'urhini"</string>
+  <string name="tip_request_desktop">Wékapirinkiri etsakwanharhitani?%1$s Jatakwa &gt; Etsakwanharhikata kurhak\'urhini</string>
 </resources>

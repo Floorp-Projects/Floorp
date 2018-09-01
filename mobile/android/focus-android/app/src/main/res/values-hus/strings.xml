@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Wa\'ats i alimtaláb axi yab in olnál jant\'oj u awil ka aliy.</string>
   <string name="dismiss_no_suggestions_prompt_button">Yab ka t\'aja\' ti kwentaj</string>
   <string name="tip_disable_tracking_protection">An xeklek yab u alwa\' t\'ojnal \n Ka exa\' ka kuba\' an k\'anix abal yab kit kedhmayat</string>
-  <string name="tip_add_to_homescreen">"Ka ela\' k\'al jun i takaxtaláb an xeklek axi a lej eyendhál \n        Takuxtaláb&gt; Ka punuw ti ok\'ox xeklek"</string>
+  <string name="tip_add_to_homescreen">Ka ela\' k\'al jun i takaxtaláb an xeklek axi a lej eyendhál%1$s Takuxtaláb&gt; Ka punuw ti ok\'ox xeklek</string>
   <string name="tip_set_default_browser">Ka japiy patal an ne\'dhom %1$s Ka t\'aja\' %1$s ta ok\'ox eyendhom</string>
   <string name="tip_autocomplete_url">"Ka eyendha\' an kweten putundhach URLs abal an xeklek axi a eyendal\n Ka ni\'a\' jawakits tum URLs ti alimtaláb\n "</string>
   <string name="tip_open_in_new_tab">Ka japiy jun i ne\'dhach al jun i it xeklek\n Ka jila\' ni\'adh jawakitsk\'ij tum ne\'dhach al jun i xeklek</string>
-  <string name="tip_request_desktop">"A le\' ka meta\' an xeklek ta mexajil\n    Takuxtaláb&gt;Ka konoy an xeklek ta mexajil"</string>
+  <string name="tip_request_desktop">A le\' ka meta\' an xeklek ta mexajil%1$s Takuxtaláb &gt; Ka konoy an xeklek ta mexajil</string>
 </resources>

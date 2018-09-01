@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Sommige zoekmachines kunnen geen suggesties tonen.</string>
   <string name="dismiss_no_suggestions_prompt_button">Verwijderen</string>
   <string name="tip_disable_tracking_protection">Gedraagt een website zich onverwacht?\n Probeer Bescherming tegen volgen uit te schakelen</string>
-  <string name="tip_add_to_homescreen">"Toegang via één tik tot meestgebruikte websites\n        Menu &gt; Toevoegen aan startscherm"</string>
+  <string name="tip_add_to_homescreen">Toegang via één tik tot uw meestgebruikte websites%1$s Menu &gt; Toevoegen aan startscherm</string>
   <string name="tip_set_default_browser">Alle koppelingen in %1$s openen\n Stel %1$s in als uw standaardbrowser</string>
   <string name="tip_autocomplete_url">URL’s voor meestgebruikte websites automatisch aanvullen\n Houd uw vinger op een URL in de adresbalk</string>
   <string name="tip_open_in_new_tab">Een koppeling in een nieuw tabblad openen\n Houd uw vinger op een koppeling op een pagina</string>
-  <string name="tip_request_desktop">"Ziet u liever de volledige desktopwebsite?\n    Menu &gt; Desktopwebsite opvragen"</string>
+  <string name="tip_request_desktop">Ziet u liever de volledige desktopwebsite?%1$s Menu &gt; Desktopwebsite opvragen</string>
+  <string name="tip_disable_tips">Tips op het startscherm van %1$s uitschakelen</string>
 </resources>

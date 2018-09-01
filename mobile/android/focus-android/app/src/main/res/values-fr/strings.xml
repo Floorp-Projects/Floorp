@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Certains moteurs de recherche ne peuvent pas afficher de suggestions.</string>
   <string name="dismiss_no_suggestions_prompt_button">Ignorer</string>
   <string name="tip_disable_tracking_protection">Ce site ne se comporte pas comme prévu ?\nEssayer de désactiver la protection contre le pistage</string>
-  <string name="tip_add_to_homescreen">"Accédez rapidement à vos sites favoris \n        Menu &gt; Ajouter à l’écran d’accueil"</string>
+  <string name="tip_add_to_homescreen">Accédez rapidement à vos sites favoris%1$s Menu &gt; Ajouter à l’écran d’accueil</string>
   <string name="tip_set_default_browser">Ouvrir tous les liens dans %1$s\n Définir %1$s comme navigateur par défaut</string>
   <string name="tip_autocomplete_url">Compléter automatiquement les URL des sites les plus visités\n Effectuez un appui long sur une URL dans la barre d’adresse</string>
   <string name="tip_open_in_new_tab">Ouvrir un lien dans un nouvel onglet\n Effectuez un appui long sur un lien dans une page</string>
-  <string name="tip_request_desktop">"Préférez-vous voir la version pour ordinateur du site ?\n    Menu &gt; Voir version ordinateur"</string>
+  <string name="tip_request_desktop">Préférez-vous voir la version pour ordinateur du site ?%1$s Menu &gt; Voir version ordinateur</string>
 </resources>

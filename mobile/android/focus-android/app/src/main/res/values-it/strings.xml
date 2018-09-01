@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">I suggerimenti non sono disponibili per tutti i motori di ricerca.</string>
   <string name="dismiss_no_suggestions_prompt_button">Ignora</string>
   <string name="tip_disable_tracking_protection">Un sito mostra un comportamento anomalo?\n Prova a disattivare la protezione antitracciamento</string>
-  <string name="tip_add_to_homescreen">"Accedi in un solo tocco ai siti che visiti più spesso\n        Menu &gt; Aggiungi alla schermata iniziale"</string>
+  <string name="tip_add_to_homescreen">Accedi con un solo tocco ai siti che visiti più spesso%1$s Menu &gt; Agg. a schermata principale</string>
   <string name="tip_set_default_browser">Apri ogni link in %1$s\n Imposta %1$s come browser predefinito</string>
   <string name="tip_autocomplete_url">Completamento automatico degli indirizzi per i siti che visiti più spesso\n Tieni premuto più a lungo un indirizzo URL nella barra degli indirizzi</string>
   <string name="tip_open_in_new_tab">Apri un link in una nuova scheda\n Tieni premuto a lungo un link in una pagina</string>
-  <string name="tip_request_desktop">"Preferisci visualizzare il sito in modalità desktop?\n    Menu &gt; Modalità desktop"</string>
+  <string name="tip_request_desktop">Preferisci visualizzare il sito in modalità desktop?%1$s Menu &gt; Modalità desktop</string>
+  <string name="tip_disable_tips">Disattiva i suggerimenti nella %1$s schermata iniziale</string>
 </resources>

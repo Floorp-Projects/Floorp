@@ -37,6 +37,8 @@
   <string name="preference_category_general">Algemien</string>
   <string name="preference_category_data_collection_use">Gegevenssamling en gebrûk</string>
   <string name="preference_category_search">Sykje</string>
+  <string name="preference_show_search_suggestions">Syksuggesties krije</string>
+  <string name="preference_show_search_suggestions_summary">%1$s sil wat jo yn de adresbalke yntype nei jo sykmasine stjoere</string>
   <string name="preference_search_engine_default">Standert</string>
   <string name="preference_state_on">Oan</string>
   <string name="preference_state_off">Ut</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Nee</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Allinnich cookies fan tredden</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
+  <string name="preference_security_biometric">Fingerôfdruk foar ûntskoatteljen fan app brûke</string>
+  <string name="preference_security_biometric_summary">Jo fingerôfdruk kin %1$s ûntskoattelje as der al in URL yn de app iepene is. Stealth wurdt ynskeakele.</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
-  <string name="preference_privacy_stealth_summary">Websiden ferstopje by wikseljen fan apps</string>
+  <string name="preference_privacy_stealth_summary">Websiden ferstopje by wikseljen fan apps en meitsjen fan skermôfdrukken blokkearje.</string>
+  <string name="preference_category_security">Befeiliging</string>
   <string name="preference_category_performance">Prestaasjes</string>
   <string name="preference_performance_block_webfonts">Weblettertypen blokkearje</string>
   <string name="preference_performance_block_webfonts_summary">Kin ta ûntbrekkende piktogrammen of ôfbyldingen liede</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ In oare sykmasine tafoegje</string>
   <string name="preference_search_remove_title">Sykmasinen fuortsmite</string>
   <string name="preference_search_remove">Fuortsmite</string>
+  <string name="preference_homescreen_tips">Tips op startskerm toane</string>
   <string name="action_option_add_search_engine">Sykmasine tafoegje</string>
   <string name="search_add_manually_name_hint">Namme sykmasine</string>
   <string name="search_add_manually_string">Te brûken sykterm</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Werom blêdzje</string>
   <string name="content_description_stop">Laden fan website stopje</string>
   <string name="content_description_customtab_exit">Tebek nei foarige app</string>
+  <string name="content_description_trackers_blocked">Oantal blokkearre trackers</string>
   <string name="content_description_blocking_switch">Trackers blokkearje</string>
   <string name="your_rights">Jo rjochten</string>
   <string name="external_app_prompt_title">Keppeling yn oare app iepenje</string>
@@ -200,4 +207,27 @@
   <string name="http_auth_dialog_password">Wachtwurd</string>
   <string name="preference_performance_request_desktop_site">Desktopwebsite opfreegje</string>
   <string name="custom_tab_copy_url_action">URL kopiearre</string>
+  <string name="preference_advanced_summary">Untwikkelersark</string>
+  <string name="preference_category_advanced">Avansearre</string>
+  <string name="preference_remote_debugging">Remote debugging fia USB/wifi</string>
+  <string name="biometric_auth_title">%1$s ûntskoattelje</string>
+  <string name="biometric_auth_description">Reitsje de fingerôfdruksensor oan om troch te gean.</string>
+  <string name="biometric_auth_new_session">Nije sesje</string>
+  <string name="biometric_auth_image_description">Fingerôfdrukpiktogram</string>
+  <string name="biometric_auth_not_recognized_error">Fingerôfdruk net werkend. Probearje it opnij.</string>
+  <string name="biometric_auth_moved_too_quickly">Finger te fluch beweegd. Probearje it opnij.</string>
+  <string name="enable_search_suggestion_title">Wolle jo syksuggestjes oansette?</string>
+  <string name="enable_search_suggestion_subtitle">Om syksuggestjes te krijen, moat %1$s wat jo yn de adresbalke yntype nei de keazen sykmasine stjoere. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Mear ynfo</string>
+  <string name="enable_search_suggestions_no">Nee</string>
+  <string name="enable_search_suggestions_yes">Ja</string>
+  <string name="no_suggestions_message">Guon sykmasinen kinne gjin suggestjes toane.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Fuortsmite</string>
+  <string name="tip_disable_tracking_protection">Wuket in website frjemd?\n Probearje Beskerming tsjin folgjen út te skeakeljen</string>
+  <string name="tip_add_to_homescreen">Tagong ta de meastbesochte websites mei ien tik%1$s Menu &gt; Tafoegje oan startskerm</string>
+  <string name="tip_set_default_browser">Alle keppelingen yn %1$s iepenje\n Stel %1$s yn as jo standertbrowser</string>
+  <string name="tip_autocomplete_url">URL’s foar meastbrûkte websites automatysk oanfolje\n Hâld jo finger op in URL yn de adresbalke</string>
+  <string name="tip_open_in_new_tab">In keppeling yn in nij ljepblêd iepenje\n Hâld jo finger op in keppeling op in side</string>
+  <string name="tip_request_desktop">Leaver de folsleine Desktop-website besjen?%1$s Menu &gt; Desktopwebsite opfreegje</string>
+  <string name="tip_disable_tips">Tips op it %1$s-startskerm útskeakelje</string>
 </resources>

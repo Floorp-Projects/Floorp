@@ -77,6 +77,7 @@
   <string name="preference_privacy_should_block_cookies_no_option">Ei</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Estä vain kolmannen osapuolen evästeet</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Kyllä</string>
+  <string name="preference_security_biometric">Avaa sovellus sormenjäljellä</string>
   <string name="preference_privacy_secure_mode">Häivetila</string>
   <string name="preference_privacy_stealth_summary">Piilota verkkosivut vaihdettaessa sovellusta ja estä kuvakaappaukset.</string>
   <string name="preference_category_performance">Suorituskyky</string>
@@ -202,6 +203,7 @@
   <string name="custom_tab_copy_url_action">Osoite kopioitu</string>
   <string name="preference_advanced_summary">Kehittäjätyökalut</string>
   <string name="preference_remote_debugging">Etävianjäljitys USB:n/Wi-Fi:n välityksellä</string>
+  <string name="biometric_auth_description">Jatka koskettamalla sormenjälkilukijaa.</string>
   <string name="biometric_auth_new_session">Uusi istunto</string>
   <string name="enable_search_suggestion_title">Haluatko ottaa hakuehdotukset käyttöön?</string>
   <string name="enable_search_suggestions_no">Ei</string>

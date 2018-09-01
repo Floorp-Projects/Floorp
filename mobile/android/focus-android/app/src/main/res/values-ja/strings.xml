@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">一部の検索エンジンは候補表示に対応していません。</string>
   <string name="dismiss_no_suggestions_prompt_button">閉じる</string>
   <string name="tip_disable_tracking_protection">サイトが予期せぬ挙動をしますか？\n トラッキング防止機能を無効化してみてください</string>
-  <string name="tip_add_to_homescreen">"よく使うサイトへワンタップでアクセスするには\n        メニュー &gt; ホーム画面に追加"</string>
+  <string name="tip_add_to_homescreen">よく使うサイトへワンタップでアクセスするには%1$s メニュー &gt; ホーム画面に追加</string>
   <string name="tip_set_default_browser">すべてのリンクを %1$s で開くには\n %1$s を既定のブラウザーに設定してください</string>
   <string name="tip_autocomplete_url">よく使うサイトで URL を自動補完するには\n アドレスバー内で URL を長押しします</string>
   <string name="tip_open_in_new_tab">リンクを新しいタブで開くには\n ページ上でリンクを長押しします</string>
-  <string name="tip_request_desktop">"完全なデスクトップ向けサイトを見たいですか？\n    メニュー &gt; デスクトップ版を見る"</string>
+  <string name="tip_request_desktop">完全なデスクトップ向けサイトを見たいですか？%1$s メニュー &gt; デスクトップ版を見る</string>
 </resources>

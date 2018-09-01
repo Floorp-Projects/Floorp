@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">某些搜尋引擎無法提供建議。</string>
   <string name="dismiss_no_suggestions_prompt_button">知道了！</string>
   <string name="tip_disable_tracking_protection">網站變得怪怪的？試試關閉追蹤保護功能</string>
-  <string name="tip_add_to_homescreen">一點就能快速開啟您最常用的網站\n選單 &gt; 新增至裝置主畫面</string>
+  <string name="tip_add_to_homescreen">快速開啟您最常用的網站%1$s選單 &gt; 新增至裝置主畫面</string>
   <string name="tip_set_default_browser">使用 %1$s 開啟所有鏈結\n將 %1$s 設為預設瀏覽器</string>
   <string name="tip_autocomplete_url">自動完成您最常造訪的網站網址\n 長按網址列中的任何網址</string>
   <string name="tip_open_in_new_tab">使用新分頁開啟鏈結\n長按頁面上的任何鏈結</string>
-  <string name="tip_request_desktop">還是想看到桌機版的頁面嗎？\n選單 &gt; 開啟桌面版網站</string>
+  <string name="tip_request_desktop">還是想看到桌機版頁面嗎？%1$s選單 &gt; 開啟桌面版網站</string>
+  <string name="tip_disable_tips">關閉 %1$s 啟動畫面上的秘訣</string>
 </resources>

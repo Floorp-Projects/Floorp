@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Μερικές μηχανές αναζήτησης δεν μπορούν να εμφανίσουν προτάσεις.</string>
   <string name="dismiss_no_suggestions_prompt_button">Απόρριψη</string>
   <string name="tip_disable_tracking_protection">Απρόσμενη συμπεριφορά ιστοσελίδας;\n Δοκιμάστε να απενεργοποιήσετε την προστασία από καταγραφή</string>
-  <string name="tip_add_to_homescreen">"Πρόσβαση με ένα πάτημα σε ιστοσελίδες συχνής χρήσης\n        Μενού &gt; Προσθήκη στην αρχική οθόνη"</string>
+  <string name="tip_add_to_homescreen">Πρόσβαση με ένα πάτημα σε ιστοσελίδες συχνής χρήσης%1$s Μενού &gt; Προσθήκη στην αρχική οθόνη</string>
   <string name="tip_set_default_browser">Άνοιγμα κάθε συνδέσμου στο %1$s\n Ορίστε το %1$s ως το προεπιλεγμένο πρόγραμμα περιήγησης</string>
   <string name="tip_autocomplete_url">Αυτόματη συμπλήρωση URLs για τις ιστοσελίδες συχνής χρήσης\n Πατήστε παρατεταμένα οποιοδήποτε URL στη γραμμή διευθύνσεων</string>
   <string name="tip_open_in_new_tab">Άνοιγμα συνδέσμου σε νέα καρτέλα\n Πατήστε παρατεταμένα οποιοδήποτε σύνδεσμο σε μια σελίδα</string>
-  <string name="tip_request_desktop">"Προτιμάτε την πλήρη έκδοση για υπολογιστές;\n    Μενού &gt; Απαίτηση ιστοσελίδας για υπολογιστές"</string>
+  <string name="tip_request_desktop">Προτιμάτε την πλήρη έκδοση για υπολογιστές;%1$s Μενού &gt; Απαίτηση ιστοσελίδας για υπολογιστές</string>
 </resources>

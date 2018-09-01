@@ -221,8 +221,9 @@
   <string name="no_suggestions_message">Nekateri iskalniki ne morejo prikazovati predlogov.</string>
   <string name="dismiss_no_suggestions_prompt_button">V redu</string>
   <string name="tip_disable_tracking_protection">Ali stran deluje nepravilno?\n Poskusite izklopiti zaščito pred sledenjem</string>
-  <string name="tip_add_to_homescreen">"Nastavite si hiter dostop do priljubljenih strani\n        Meni &gt; Dodaj na domači zaslon"</string>
+  <string name="tip_add_to_homescreen">Nastavite si hiter dostop do priljubljenih strani%1$s Meni &gt; Dodaj na domači zaslon</string>
   <string name="tip_set_default_browser">Odpiraj vse povezave v %1$su\n Nastavite %1$s za privzeti brskalnik</string>
   <string name="tip_open_in_new_tab">Odprite povezavo v novem zavihku\n Pridržite prst na katerikoli povezavi na strani</string>
-  <string name="tip_request_desktop">"Želite uporabljati polno različico strani?\n    Meni &gt; Zahtevaj stran za namizja"</string>
+  <string name="tip_request_desktop">Želite uporabljati polno različico strani?%1$s Meni &gt; Zahtevaj stran za namizja</string>
+  <string name="tip_disable_tips">Izključi namige na začetnem zaslonu %1$sa</string>
 </resources>

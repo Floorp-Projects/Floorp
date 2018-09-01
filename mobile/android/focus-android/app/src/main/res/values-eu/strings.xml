@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Zenbait bilaketa-motorrek ezin dituzte iradokizunak erakutsi.</string>
   <string name="dismiss_no_suggestions_prompt_button">Baztertu</string>
   <string name="tip_disable_tracking_protection">Guneak espero gabeko portaera du?\n Saiatu jarraipenaren babesa itzaltzen</string>
-  <string name="tip_add_to_homescreen">"Eskuratu behin sakatuta gehien bisitatzen dituzun webguneetarako sarbidea\n        Menua &gt; Gehitu hasierako pantailan"</string>
+  <string name="tip_add_to_homescreen">Eskuratu behin sakatuta gehien bisitatzen dituzun webguneetarako sarbidea%1$s Menua &gt; Gehitu hasierako pantailan</string>
   <string name="tip_set_default_browser">Ireki lotura guztiak %1$s aplikazioarekin\n Egin %1$s nabigatzaile lehenetsia</string>
   <string name="tip_autocomplete_url">Osatu automatikoki gehien bisitatzen dituzun guneetako URLak\n Mantendu sakatuta helbide-barran edozein URL</string>
   <string name="tip_open_in_new_tab">Ireki lotura fitxa berri batean\n Mantendu sakatuta orri bateko edozein lotura</string>
-  <string name="tip_request_desktop">"Nahiago duzu mahaigaineko gune osoa ikusi?\n    Menua &gt; Mahaigaineko gunea"</string>
+  <string name="tip_request_desktop">Nahiago duzu mahaigaineko gune osoa ikusi?%1$s Menua &gt; Mahaigaineko gunea</string>
 </resources>

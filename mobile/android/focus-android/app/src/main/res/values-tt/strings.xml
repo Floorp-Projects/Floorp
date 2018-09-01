@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Кайбер эзләү машиналары тәкъдимнәр ясамый.</string>
   <string name="dismiss_no_suggestions_prompt_button">Яшерү</string>
   <string name="tip_disable_tracking_protection">Сайт көтелгәнчә эшләмиме?\nКүзәтүчеләрдән саклауны сүндереп карагыз</string>
-  <string name="tip_add_to_homescreen">"Иң еш кулланылган сайтларга бер орыну белән күчү өчен\n        Меню &gt; Төп экранга өстәү"</string>
+  <string name="tip_add_to_homescreen">Иң еш кулланылган сайтларга бер орыну белән күчү өчен%1$s Меню &gt; Өй экранга өстәү</string>
   <string name="tip_set_default_browser">Һәр сылтаманы да %1$s\'та ачу\n%1$s\'ны төп гизгеч итегез</string>
   <string name="tip_autocomplete_url">Иң еш кулланылган сайтларның адресларын автотөгәлләү өчен\nАдрес юлындагы URL\'га озак итеп басып торыгыз</string>
   <string name="tip_open_in_new_tab">Сылтаманы яңа биттә ачу өчен\nСылтамага озак итеп басып торыгыз</string>
-  <string name="tip_request_desktop">"Сайтның өстәл өсте компьютерлары өчен эшләнгән версиясен карыйсыгыз киләме?\n    Меню → Өстәл өсте компьютеры"</string>
+  <string name="tip_request_desktop">Сайтның өстәл өсте компьютерлары өчен эшләнгән версиясен карыйсыгыз киләме?%1$sМеню → Өстәл өсте компьютеры</string>
+  <string name="tip_disable_tips">%1$s өй экрандагы киңәшләрне сүндерү</string>
 </resources>

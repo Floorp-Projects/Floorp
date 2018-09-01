@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Nid yw rhai peiriannau chwilio\'n gallu dangos awgrymiadau.</string>
   <string name="dismiss_no_suggestions_prompt_button">Cau</string>
   <string name="tip_disable_tracking_protection">Gwefan yn ymddwyn yn anisgwyl?\n Ceisiwch ddiffodd Diogelwch rhag Tracio</string>
-  <string name="tip_add_to_homescreen">"Mynediad un tap i\'ch hoff wefannau\n        Dewislen &gt; Ychwanegu i\'r Dudalen Cartref"</string>
+  <string name="tip_add_to_homescreen">Mynediad un tap i\'r gwefannau rydych yn eu defnyddio amlaf%1$s Dewislen &gt; Ychwanegu i\'r Dudalen Cartref</string>
   <string name="tip_set_default_browser">Agor pob dolen yn %1$s\n Gosod %1$s fel y porwr rhagosodedig</string>
   <string name="tip_autocomplete_url">Gosod URLau awtogwblhau i\'ch gwefannau gorau\n Pwyso\'n hir unrhyw URL yn y bar cyfeiriad</string>
   <string name="tip_open_in_new_tab">Agor dolen mewn tab newydd\n Pwyso\'n hir ar unrhyw ddolen ar dudalen</string>
-  <string name="tip_request_desktop">"Gwell gweld gwefan bwrdd gwaith lawn?\n    Dewislen &gt; Gwefan bwrdd gwaith"</string>
+  <string name="tip_request_desktop">Gwell gweld gwefan bwrdd gwaith lawn?%1$s Dewislen &gt; Gwefan bwrdd gwaith</string>
+  <string name="tip_disable_tips">Diffodd awgrymiadau ar sgrin cychwyn %1$s</string>
 </resources>

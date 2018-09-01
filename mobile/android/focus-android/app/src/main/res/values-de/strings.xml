@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Einige Suchmaschinen können keine Vorschläge anzeigen.</string>
   <string name="dismiss_no_suggestions_prompt_button">Schließen</string>
   <string name="tip_disable_tracking_protection">Verhält sich die Website ungewohnt?\n Deaktivieren Sie den Schutz vor Aktivitätenverfolgung</string>
-  <string name="tip_add_to_homescreen">"Zugriff auf die meistbesuchten Websites mit einer Berührung\n        Menü → Zum Startbildschirm hinzufügen"</string>
+  <string name="tip_add_to_homescreen">Zugriff auf die meistbesuchten Websites mit einer Berührung%1$s Menü → Zum Startbildschirm hinzufügen</string>
   <string name="tip_set_default_browser">Jeden Link in %1$s öffnen\n Stellen Sie %1$s als Standardbrowser ein</string>
   <string name="tip_autocomplete_url">Autovervollständigung für meistbesuchte Websites\n Drücken Sie lange auf eine URL in der Adressleiste</string>
   <string name="tip_open_in_new_tab">Einen Link in einem neuen Tab öffnen\n Drücken Sie lange auf einen Link in einer Seite</string>
-  <string name="tip_request_desktop">"Lieber die gesamte Desktop-Website ansehen?\n    Menü → Desktop-Seite anfordern"</string>
+  <string name="tip_request_desktop">Lieber die gesamte Desktop-Website ansehen?%1$s Menü → Desktop-Seite anfordern</string>
+  <string name="tip_disable_tips">Tipps im %1$s-Startbildschirm abschalten</string>
 </resources>

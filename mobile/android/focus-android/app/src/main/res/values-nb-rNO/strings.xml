@@ -38,6 +38,7 @@
   <string name="preference_category_data_collection_use">Datainnsamling og bruk</string>
   <string name="preference_category_search">Søk</string>
   <string name="preference_show_search_suggestions">Få søkeforslag</string>
+  <string name="preference_show_search_suggestions_summary">%1$s sender det du skriver i adressefeltet til din søkemotor</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_state_on">På</string>
   <string name="preference_state_off">Av</string>
@@ -79,8 +80,10 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokker bare tredjepartsinfokapsler</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
   <string name="preference_security_biometric">Brug fingeravtrykk til å låse opp appen</string>
+  <string name="preference_security_biometric_summary">Ditt fingeravtrykk kan låse opp %1$s, hvis en URL allerede er åpen i appen. Skjult tilstand vil bli slått på.</string>
   <string name="preference_privacy_secure_mode">Usynlig</string>
   <string name="preference_privacy_stealth_summary">Skjul nettsider når du bytter appar</string>
+  <string name="preference_category_security">Sikkerhet</string>
   <string name="preference_category_performance">Ytelse</string>
   <string name="preference_performance_block_webfonts">Blokker nettfonter</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilder mangler</string>
@@ -98,6 +101,7 @@
   <string name="preference_search_add2">+ Legg til en annen søkemotor</string>
   <string name="preference_search_remove_title">Fjern søkemotorer</string>
   <string name="preference_search_remove">Fjern</string>
+  <string name="preference_homescreen_tips">Vis tips på starskjermen</string>
   <string name="action_option_add_search_engine">Legg til søkemotor</string>
   <string name="search_add_manually_name_hint">Søkemotornavn</string>
   <string name="search_add_manually_string">Søkestreng å bruke</string>
@@ -121,6 +125,7 @@
   <string name="content_description_back">Naviger tilbake</string>
   <string name="content_description_stop">Stopp lasting av nettside</string>
   <string name="content_description_customtab_exit">Gå tilbake til forrige app</string>
+  <string name="content_description_trackers_blocked">Antall blokkerte sporings-tjenester</string>
   <string name="content_description_blocking_switch">Blokker sporere</string>
   <string name="your_rights">Dine rettigheter</string>
   <string name="external_app_prompt_title">Åpne lenke i en annen app</string>
@@ -202,9 +207,17 @@
   <string name="http_auth_dialog_password">Passord</string>
   <string name="preference_performance_request_desktop_site">Vis skrivebordsversjon</string>
   <string name="custom_tab_copy_url_action">URL kopiert</string>
+  <string name="preference_advanced_summary">Utviklerverktøy</string>
   <string name="preference_category_advanced">Avansert</string>
+  <string name="preference_remote_debugging">Ekstern debugging via USB/Wi-Fi</string>
   <string name="biometric_auth_title">Lås opp %1$s</string>
+  <string name="biometric_auth_description">Trykk på fingeravtrykks-sensoren for å fortsette.</string>
   <string name="biometric_auth_new_session">Ny programøkt</string>
+  <string name="biometric_auth_image_description">Fingeravtrykkikon</string>
+  <string name="biometric_auth_not_recognized_error">Fingeravtrykk ikke gjenkjent. Prøv igjen.</string>
+  <string name="biometric_auth_moved_too_quickly">Fingeren rørte seg for fort. Prøv igjen.</string>
+  <string name="enable_search_suggestion_title">Vil du skru på søkeforslag?</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Les mer</string>
   <string name="enable_search_suggestions_no">Nei</string>
   <string name="enable_search_suggestions_yes">Ja</string>
   <string name="no_suggestions_message">Noen søkmotorer kan ikke vise forslag.</string>

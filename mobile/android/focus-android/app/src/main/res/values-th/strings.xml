@@ -22,7 +22,7 @@
   <string name="share_dialog_title">แบ่งปันผ่าน</string>
   <string name="notification_erase_text">ล้างประวัติการท่องเว็บ</string>
   <string name="notification_action_open">เปิด</string>
-  <string name="notification_action_erase_and_open">ล้างและเปิด</string>
+  <string name="notification_action_erase_and_open">ล้างแล้วเปิด</string>
   <string name="shortcut_erase_short_label">ล้าง</string>
   <string name="shortcut_erase_long_label">ล้างประวัติการท่องเว็บ</string>
   <string name="text_selection_search_action">ค้นหาแบบส่วนตัว</string>
@@ -224,7 +224,10 @@
   <string name="no_suggestions_message">เครื่องมือค้นหาบางตัวไม่สามารถแสดงข้อเสนอแนะ</string>
   <string name="dismiss_no_suggestions_prompt_button">ยกเลิก</string>
   <string name="tip_disable_tracking_protection">ไซต์ทำงานอย่างไม่คาดคิด?\n ลองปิดการป้องกันการติดตาม</string>
-  <string name="tip_add_to_homescreen">"รับการเข้าถึงด้วยการแตะครั้งเดียวไปยังไซต์ที่คุณใช้มากที่สุด\n        เมนู &gt; เพิ่มไปยังหน้าจอหลัก"</string>
+  <string name="tip_add_to_homescreen">รับการเข้าถึงด้วยการแตะครั้งเดียวไปยังไซต์ที่คุณใช้มากที่สุด%1$s เมนู &gt; เพิ่มไปยังหน้าจอหลัก</string>
   <string name="tip_set_default_browser">เปิดทุกลิงก์ใน %1$s\n ตั้ง %1$s เป็นเบราว์เซอร์เริ่มต้น</string>
-  <string name="tip_request_desktop">"ต้องการเห็นไซต์สำหรับเดสก์ท็อปแบบเต็ม?\n    เมนู &gt; ขอไซต์สำหรับเดสก์ท็อป"</string>
+  <string name="tip_autocomplete_url">เติม URL โดยอัตโนมัติสำหรับไซต์ที่คุณใช้มากที่สุด\n แตะค้างที่ URL ใด ๆ ในแถบที่อยู่</string>
+  <string name="tip_open_in_new_tab">เปิดลิงก์ในแท็บใหม่\n แตะค้างที่ลิงก์ใด ๆ ในหน้า</string>
+  <string name="tip_request_desktop">ต้องการเห็นไซต์สำหรับเดสก์ท็อปแบบเต็ม?%1$s เมนู &gt; ขอไซต์สำหรับเดสก์ท็อป</string>
+  <string name="tip_disable_tips">ปิดเคล็ดลับในหน้าจอเริ่มต้นของ %1$s</string>
 </resources>

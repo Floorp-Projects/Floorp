@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Sesetengah enjin carian tidak dapat menunjukkan cadangan.</string>
   <string name="dismiss_no_suggestions_prompt_button">Abai</string>
   <string name="tip_disable_tracking_protection">Laman berkelakuan tidak dijangka?\n Cuba nyahaktifkan Perlindungan Penjejakan</string>
-  <string name="tip_add_to_homescreen">"Akses sekali-sentuh ke laman yang kerap dilawati\n        Menu &gt; Tambah ke skrin Utama"</string>
+  <string name="tip_add_to_homescreen">Dapatkan akses sekali-sentuh ke laman yang kerap dilawati%1$s Menu &gt; Tambah ke skrin Utama</string>
   <string name="tip_set_default_browser">Buka pautan dalam %1$s\n Tetapkan %1$s sebagai pelayar piawai</string>
   <string name="tip_autocomplete_url">Autolengkap URL untuk laman yang kerap dilawati\n Tekan lama-lama URL dalam bar alamat</string>
   <string name="tip_open_in_new_tab">Buka pautan dalam tab baru\n Tekan lama-lama pautan atau halaman</string>
-  <string name="tip_request_desktop">"Mahu paparan laman desktop?\n    Menu &gt; Pinta laman desktop"</string>
+  <string name="tip_request_desktop">Mahu paparan laman desktop?%1$s Menu &gt; Pinta laman desktop</string>
+  <string name="tip_disable_tips">Nyahaktifkan panduan pada skrin mula %1$s</string>
 </resources>

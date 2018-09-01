@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">काही शोध इंजिन सूचना दाखवू शकत नाहीत.</string>
   <string name="dismiss_no_suggestions_prompt_button">रद्द करा</string>
   <string name="tip_disable_tracking_protection">साइट अनपेक्षितरित्या वागत आहे?\n ट्रॅकिंग संरक्षण बंद करण्याचा प्रयत्न करा</string>
-  <string name="tip_add_to_homescreen">"आपण सर्वात जास्त वापरणाऱ्या साईट एका टॅप मध्ये मिळवा\n        मेनू &gt; मुख्य पृष्ठावर जोडा"</string>
+  <string name="tip_add_to_homescreen">आपण सर्वात जास्त वापरता त्या साईट एका टॅप मध्ये मिळवा%1$sमेनू &gt; मुख्य पृष्ठावर जोडा</string>
   <string name="tip_set_default_browser">प्रत्येक दुवा %1$s मध्ये उघडा\n%1$s ला पूर्वनिर्धारित ब्राउझर करा</string>
   <string name="tip_autocomplete_url">सर्वात जास्त वापरलेल्या साईट च्या URL स्वयंपूर्ण करा\nकोणतीही URL पत्ता पट्टी मध्ये दीर्घकाळ दाबून धरा</string>
   <string name="tip_open_in_new_tab">एका नवीन टॅबमध्ये एक दुवा उघडा\n एका पृष्ठावर कोणताही दुवा दीर्घ-दाबून ठेवा</string>
-  <string name="tip_request_desktop">"याऐवजी पूर्ण डेस्कटॉप साईट पाहायची का?\n    मेनू &gt; डेस्कटॉप साईटची विनंती करा"</string>
+  <string name="tip_request_desktop">याऐवजी पूर्ण डेस्कटॉप साईट पाहायची का?%1$s मेनू &gt; डेस्कटॉप साईटची विनंती करा</string>
+  <string name="tip_disable_tips">%1$s च्या आरंभ पटलावर सूचना बंद करा</string>
 </resources>

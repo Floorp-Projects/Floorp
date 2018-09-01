@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Bəzi axtarış mühərrikləri məsləhətləri göstərə bilmirlər.</string>
   <string name="dismiss_no_suggestions_prompt_button">Qapat</string>
   <string name="tip_disable_tracking_protection">Sayt gözlənilməyən hərəkətlər edir?\n İzləmə Qorumasınını söndürməyi yoxlayın</string>
-  <string name="tip_add_to_homescreen">"Çox işlətdiyiniz saytları tək toxunuşla açın\n        Menyu &gt; Ana Ekrana əlavə et"</string>
+  <string name="tip_add_to_homescreen">Çox işlətdiyiniz saytları tək toxunuşla açın%1$s Menyu &gt; Ana Ekrana əlavə et</string>
   <string name="tip_set_default_browser">Bütün keçidləri %1$s ilə açın\n %1$s əsas səyyahınız olsun</string>
   <string name="tip_autocomplete_url">Çox işlətdiyiniz saytlar üçün avto doldurma\n Ünvan sətrindəki hər hansı bir ünvana uzun basın</string>
   <string name="tip_open_in_new_tab">Keçidi yeni vərəqdə açın\n Səhifədə hər hansı bir keçidə uzun basın</string>
-  <string name="tip_request_desktop">"Bütöv masaüstü saytını görmək istərdiz?\n    Menyu &gt; Masaüstü saytını istə"</string>
+  <string name="tip_request_desktop">Bütöv masaüstü saytını görmək istəyirsiniz?%1$s Menyu &gt; Masaüstü saytını istə</string>
+  <string name="tip_disable_tips">%1$s ana ekranındakı məsləhətləri söndür</string>
 </resources>

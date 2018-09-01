@@ -224,9 +224,9 @@
   <string name="no_suggestions_message">Nogle søgetjenester kan ikke vise forslag.</string>
   <string name="dismiss_no_suggestions_prompt_button">Luk</string>
   <string name="tip_disable_tracking_protection">Opfører siden sig uventet?\n Prøv at deaktivere beskyttelse mod sporing</string>
-  <string name="tip_add_to_homescreen">"Få adgang til dine mest brugte sider med et enkelt tryk\n        Menu &gt; Føj til startskærmen"</string>
+  <string name="tip_add_to_homescreen">Få adgang til dine mest brugte sider med et enkelt tryk%1$s Menu &gt; Føj til startskærmen</string>
   <string name="tip_set_default_browser">Åbn alle links i %1$s\n Angiv %1$s som standard-browser</string>
   <string name="tip_autocomplete_url">Autofuldfør URL\'er for de sider, du bruger mest\n Tryk og hold en URL i adressefeltet</string>
   <string name="tip_open_in_new_tab">Åbn link i et nyt faneblad\n Tryk og hold links på en side</string>
-  <string name="tip_request_desktop">"Foretrækker du at se desktopversionen?\n    Menu &gt; Anmod om desktopversion"</string>
+  <string name="tip_request_desktop">Foretrækker du at se desktopversionen?%1$s Menu &gt; Anmod om desktopversion</string>
 </resources>

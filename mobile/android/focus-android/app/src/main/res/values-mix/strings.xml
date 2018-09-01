@@ -226,5 +226,5 @@
   <string name="tip_set_default_browser">Kuna iin enlace tsi %1$s\n Chikay %1$s tana navegador xina</string>
   <string name="tip_autocomplete_url">Ntasa URLs ña sitio ña kuaka chichu\'un\n Katavi URL niku nu barra ña direcciones</string>
   <string name="tip_open_in_new_tab">Kuna enlace nu xikua tsaá\n Katavi nchi enlace niku nu página</string>
-  <string name="tip_request_desktop">"¿A kunu kuncheu sitio nu escritorio?\n    Menú &gt; Kaka sitio de escritorio"</string>
+  <string name="tip_request_desktop">¿A kunu kuncheu sitio nu escritorio?%1$s Menú &gt; Kaka sitio de escritorio</string>
 </resources>

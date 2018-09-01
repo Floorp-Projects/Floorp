@@ -224,9 +224,10 @@
   <string name="no_suggestions_message">Algunos motores de búsqueda no pueden mostrar sugerencias.</string>
   <string name="dismiss_no_suggestions_prompt_button">Ocultar</string>
   <string name="tip_disable_tracking_protection">¿El sitio se comporta de forma inesperada?\n Intenta desactivar la protección de seguimiento</string>
-  <string name="tip_add_to_homescreen">"Obtén acceso a un toque a los sitios que más usas\n        Menú &gt; Añadir a la pantalla de inicio"</string>
+  <string name="tip_add_to_homescreen">Obtén acceso a un toque a los sitios que más usas%1$s Menú &gt; Añadir a la pantalla de inicio</string>
   <string name="tip_set_default_browser">Abre todos los enlaces en %1$s\n Configura %1$s como tu navegador predeterminado</string>
   <string name="tip_autocomplete_url">Autocompleta las URLs para los sitios que más usas\n Manten presionada cualquier URL en la barra de direcciones</string>
   <string name="tip_open_in_new_tab">Abre un enlace en una nueva pestaña\n Mantén presionado cualquier enlace en una página</string>
-  <string name="tip_request_desktop">"¿Prefieres ver el sitio de escritorio?\n    Menú &gt; Solicitar sitio de escritorio"</string>
+  <string name="tip_request_desktop">¿Prefieres ver el sitio de escritorio?%1$s Menú &gt; Solicitar sitio de escritorio</string>
+  <string name="tip_disable_tips">Desactivar los consejos en la pantalla de inicio de %1$s</string>
 </resources>

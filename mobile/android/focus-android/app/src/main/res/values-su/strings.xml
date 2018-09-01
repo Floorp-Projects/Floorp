@@ -37,6 +37,8 @@
   <string name="preference_category_general">Umum</string>
   <string name="preference_category_data_collection_use">Pangumpulan &amp; Pamakéan Data</string>
   <string name="preference_category_search">Paluruh</string>
+  <string name="preference_show_search_suggestions">Cokot bongbolongan maluruh</string>
+  <string name="preference_show_search_suggestions_summary">%1$s bakal ngirim naon anu diketikkeun dina bilah alamat kana mesin pamaluruh anjeun</string>
   <string name="preference_search_engine_default">Baku</string>
   <string name="preference_state_on">Hurung</string>
   <string name="preference_state_off">Pareum</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Ulah</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Peungpeuk kuki pihak katilu hungkul</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Okéh</string>
+  <string name="preference_security_biometric">Paké sidik ramo pikeun muka konci app</string>
+  <string name="preference_security_biometric_summary">Sidik ramo anjeun bisa muka konci %1$s lamun aya URL nu geus dibuka dina appna. Nyiliwuri bakal dihurungkeun.</string>
   <string name="preference_privacy_secure_mode">Nyiliwuri</string>
-  <string name="preference_privacy_stealth_summary">Samunikeun kaca raramat nalika pindah aplikasi</string>
+  <string name="preference_privacy_stealth_summary">Sumputkeun kaca raramat nalika mindahkeun app sarta meungpeuk nyokot téwakan layar.</string>
+  <string name="preference_category_security">Kaamanan</string>
   <string name="preference_category_performance">Kinerja</string>
   <string name="preference_performance_block_webfonts">Peungpeuk aksara Raramat</string>
   <string name="preference_performance_block_webfonts_summary">Matak leungit ikon atawa gambar</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Tambah mesin pamaluruh séjén</string>
   <string name="preference_search_remove_title">Piceun mesin pamaluruh</string>
   <string name="preference_search_remove">Piceun</string>
+  <string name="preference_homescreen_tips">Témbongkeun weling layar tepas</string>
   <string name="action_option_add_search_engine">Tambah mesin pamaluruh</string>
   <string name="search_add_manually_name_hint">Ngaran mesin pamaluruh</string>
   <string name="search_add_manually_string">Tambah string pakéeun</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Mundur</string>
   <string name="content_description_stop">Eureunan ngamuat raramatloka</string>
   <string name="content_description_customtab_exit">Balik deui ka aplikasi saméméhna</string>
+  <string name="content_description_trackers_blocked">Jumlah palacak nu dipeungpeuk</string>
   <string name="content_description_blocking_switch">Peungpeuk palacak</string>
   <string name="your_rights">Hak Anjeun</string>
   <string name="external_app_prompt_title">Buka tutumbu di aplikasi séjén</string>
@@ -200,4 +207,27 @@
   <string name="http_auth_dialog_password">Kecap sandi</string>
   <string name="preference_performance_request_desktop_site">Pénta loka déstop</string>
   <string name="custom_tab_copy_url_action">URL ditiron</string>
+  <string name="preference_advanced_summary">Parabot pamekar</string>
+  <string name="preference_category_advanced">Leuwih lengkep</string>
+  <string name="preference_remote_debugging">Debugging ti kajauhan liwat USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Buka konci %1$s</string>
+  <string name="biometric_auth_description">Tapelkeun ka sénsor sidik ramo pikeun neruskeun.</string>
+  <string name="biometric_auth_new_session">Rintakan Anyar</string>
+  <string name="biometric_auth_image_description">Ikon sidik ramo</string>
+  <string name="biometric_auth_not_recognized_error">Sidik ramo teu dipikawanoh. Pecakan deui.</string>
+  <string name="biometric_auth_moved_too_quickly">Napelkeun ramona téréh teuing. Pecakan deui.</string>
+  <string name="enable_search_suggestion_title">Arék ngahurungkeun saran sungsian?</string>
+  <string name="enable_search_suggestion_subtitle">Pikeun nampa saran sungsian, %1$s kudu ngirim naon anu diketikkeun dina bilah alamat kana mesin panyungsi pilihan anjeun. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Lenyepan</string>
+  <string name="enable_search_suggestions_no">Moal</string>
+  <string name="enable_search_suggestions_yes">Enya</string>
+  <string name="no_suggestions_message">Sababaraha mesin panyungsi teu bisa némbongkeun saran.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Tutup</string>
+  <string name="tip_disable_tracking_protection">Lokana ngaco?\n Coba pareuman Salindung Palacak</string>
+  <string name="tip_add_to_homescreen">Hontal aksés sakali toél ka loka-loka anu pangmindengna dianjangan%1$s Menu &gt; Tambahkeun ka layar Tepas</string>
+  <string name="tip_set_default_browser">Buka sakur tutumbu di %1$s\n Setél %1$s minangka panyungsi baku</string>
+  <string name="tip_autocomplete_url">Otokumplit URLs pikeun loka anu mindeng dianjangan\n Pencét lila URL dina bilah alamat</string>
+  <string name="tip_open_in_new_tab">Muka hiji tutumbu dina hiji tab anyar\n Pencét lila tutumbu dina kacana</string>
+  <string name="tip_request_desktop">Leuwih resep nempo loka déstop weuteuh?%1$s Menu &gt; Pilih loka déstop</string>
+  <string name="tip_disable_tips">Pareuman weling dina %1$s layar mimiti</string>
 </resources>
