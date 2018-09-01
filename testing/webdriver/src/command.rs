@@ -471,8 +471,8 @@ impl CapabilitiesMatching for NewSessionParameters {
         browser_capabilities: &mut T,
     ) -> WebDriverResult<Option<Capabilities>> {
         match self {
-            &NewSessionParameters::Spec(ref x) => x.match_browser(browser_capabilities),
-            &NewSessionParameters::Legacy(ref x) => x.match_browser(browser_capabilities),
+            NewSessionParameters::Spec(x) => x.match_browser(browser_capabilities),
+            NewSessionParameters::Legacy(x) => x.match_browser(browser_capabilities),
         }
     }
 }

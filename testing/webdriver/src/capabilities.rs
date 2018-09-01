@@ -163,7 +163,7 @@ impl SpecNewSessionParameters {
 
     fn validate_page_load_strategy(value: &Value) -> WebDriverResult<()> {
         match value {
-            &Value::String(ref x) => match &**x {
+            Value::String(x) => match &**x {
                 "normal" | "eager" | "none" => {}
                 x => {
                     return Err(WebDriverError::new(
