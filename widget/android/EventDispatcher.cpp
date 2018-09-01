@@ -615,6 +615,7 @@ class JavaCallbackDelegate final : public nsIAndroidEventCallback
         NS_ENSURE_SUCCESS(rv, JS_IsExceptionPending(cx) ? NS_OK : rv);
 
         dom::AutoNoJSAPI nojsapi;
+
         (java::EventCallback(*mCallback).*aCall)(data);
         return NS_OK;
     }
@@ -834,7 +835,8 @@ EventDispatcher::Dispatch(JS::HandleValue aEvent, JS::HandleValue aData,
         return DispatchOnGecko(list, event, aData, callback);
     }
 
-    if (!mDispatcher) {
+    java::EventDispatcher::LocalRef dispatcher(mDispatcher);
+    if (!dispatcher) {
         return NS_OK;
     }
 
@@ -843,8 +845,8 @@ EventDispatcher::Dispatch(JS::HandleValue aEvent, JS::HandleValue aData,
     NS_ENSURE_SUCCESS(rv, JS_IsExceptionPending(aCx) ? NS_OK : rv);
 
     dom::AutoNoJSAPI nojsapi;
-    mDispatcher->DispatchToThreads(event, data,
-                                   WrapCallback(aCallback, aFinalizer));
+    dispatcher->DispatchToThreads(event, data,
+                                  WrapCallback(aCallback, aFinalizer));
     return NS_OK;
 }
 
@@ -872,11 +874,12 @@ EventDispatcher::Dispatch(const char16_t* aEvent,
         return DispatchOnGecko(list, event, data, aCallback);
     }
 
-    if (!mDispatcher) {
+    java::EventDispatcher::LocalRef dispatcher(mDispatcher);
+    if (!dispatcher) {
         return NS_OK;
     }
 
-    mDispatcher->DispatchToThreads(event, aData, WrapCallback(aCallback));
+    dispatcher->DispatchToThreads(event, aData, WrapCallback(aCallback));
     return NS_OK;
 }
 
@@ -1001,24 +1004,23 @@ EventDispatcher::Attach(java::EventDispatcher::Param aDispatcher,
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aDispatcher);
 
-    if (mDispatcher) {
-        if (mDispatcher == aDispatcher) {
+    java::EventDispatcher::LocalRef dispatcher(mDispatcher);
+
+    if (dispatcher) {
+        if (dispatcher == aDispatcher) {
             // Only need to update the window.
             mDOMWindow = aDOMWindow;
             return;
         }
-        mAttachCount--;
-        mDispatcher->SetAttachedToGecko(java::EventDispatcher::REATTACHING);
+        dispatcher->SetAttachedToGecko(java::EventDispatcher::REATTACHING);
     }
 
-    java::EventDispatcher::LocalRef dispatcher(aDispatcher);
-
+    dispatcher = java::EventDispatcher::LocalRef(aDispatcher);
     NativesBase::AttachNative(dispatcher, this);
     mDispatcher = dispatcher;
     mDOMWindow = aDOMWindow;
 
     dispatcher->SetAttachedToGecko(java::EventDispatcher::ATTACHED);
-    mAttachCount++;
 }
 
 void
@@ -1027,28 +1029,16 @@ EventDispatcher::Detach()
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mDispatcher);
 
-    // SetAttachedToGecko will call disposeNative for us. disposeNative will be
-    // called later on the Gecko thread to make sure all pending
-    // dispatchToGecko calls have completed.
-    mAttachCount--;
-    mDispatcher->SetAttachedToGecko(java::EventDispatcher::DETACHED);
+    java::EventDispatcher::GlobalRef dispatcher(mDispatcher);
+
+    // SetAttachedToGecko will call disposeNative for us later on the Gecko
+    // thread to make sure all pending dispatchToGecko calls have completed.
+    if (dispatcher) {
+        dispatcher->SetAttachedToGecko(java::EventDispatcher::DETACHED);
+    }
+
     mDispatcher = nullptr;
     mDOMWindow = nullptr;
-}
-
-void
-EventDispatcher::DisposeNative(const java::EventDispatcher::LocalRef& aInstance)
-{
-    JNIEnv* const env = jni::GetGeckoThreadEnv();
-    const auto natives = reinterpret_cast<RefPtr<EventDispatcher>*>(
-            jni::GetNativeHandle(env, aInstance.Get()));
-    MOZ_CATCH_JNI_EXCEPTION(env);
-
-    if (!(*natives)->mAttachCount) {
-        // Only actually dispose if we haven't attached again between calling
-        // Detach() and calling DisposeNative().
-        NativesBase::DisposeNative(aInstance);
-    }
 }
 
 bool
