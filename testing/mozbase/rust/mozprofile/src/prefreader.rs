@@ -1028,24 +1028,24 @@ pub fn serialize<W: Write>(prefs: &Preferences, output: &mut W) -> io::Result<()
             "user_pref("
         }.as_bytes();
         output.write(func)?;
-        output.write("\"".as_bytes())?;
+        output.write(b"\"")?;
         output.write(escape_quote(key).as_bytes())?;
-        output.write("\"".as_bytes())?;
-        output.write(", ".as_bytes())?;
+        output.write(b"\"")?;
+        output.write(b", ")?;
         match pref.value {
             PrefValue::Bool(x) => {
-                output.write((if x { "true" } else { "false" }).as_bytes())?;
+                output.write(if x { b"true" } else { b"false" })?;
             }
             PrefValue::Int(x) => {
                 output.write(x.to_string().as_bytes())?;
             }
             PrefValue::String(ref x) => {
-                output.write("\"".as_bytes())?;
+                output.write(b"\"")?;
                 output.write(escape_quote(x).as_bytes())?;
-                output.write("\"".as_bytes())?;
+                output.write(b"\"")?;
             }
         };
-        output.write(");\n".as_bytes())?;
+        output.write(b");\n")?;
     }
     Ok(())
 }
