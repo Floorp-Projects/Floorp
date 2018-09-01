@@ -89,43 +89,6 @@ pub struct Version {
 }
 
 impl Version {
-    pub fn from_str(version_string: &str) -> Result<Version, Error> {
-        let mut version: Version = Default::default();
-        let version_re = Regex::new(r"^(?P<major>\d+)\.(?P<minor>\d+)(?:\.(?P<patch>\d+))?(?:(?P<pre0>[a-z]+)(?P<pre1>\d*))?$").unwrap();
-        if let Some(captures) = version_re.captures(version_string) {
-            match captures.name("major")
-                .and_then(|x| u64::from_str(x.as_str()).ok()) {
-                    Some(x) => version.major = x,
-                    None => return Err(Error::VersionError("No major version number found".into()))
-                }
-            match captures.name("minor")
-                .and_then(|x| u64::from_str(x.as_str()).ok()) {
-                    Some(x) => version.minor = x,
-                    None => return Err(Error::VersionError("No minor version number found".into()))
-                }
-            match captures.name("patch")
-                .and_then(|x| u64::from_str(x.as_str()).ok()) {
-                    Some(x) => version.patch = x,
-                    None => {}
-                }
-            if let Some(pre_0) = captures.name("pre0").map(|x| x.as_str().to_string()) {
-                if captures.name("pre1").is_some() {
-                    if let Some(pre_1) = captures.name("pre1")
-                        .and_then(|x| u64::from_str(x.as_str()).ok()) {
-                            version.pre = Some((pre_0, pre_1))
-                        } else {
-                            return Err(Error::VersionError("Failed to convert prelease number to u64".into()));
-                        }
-                } else {
-                    return Err(Error::VersionError("Failed to convert prelease number to u64".into()));
-                }
-            }
-        } else {
-            return Err(Error::VersionError("Failed to parse input as version string".into()))
-        }
-        Ok(version)
-    }
-
     fn to_semver(&self) -> semver::Version {
         // The way the semver crate handles prereleases isn't what we want here
         // This should be fixed in the long term by implementing our own comparison
@@ -145,6 +108,45 @@ impl Version {
         Ok(req.matches(&self.to_semver()))
     }
 }
+
+impl FromStr for Version {
+    type Err = Error;
+
+    fn from_str(version_string: &str) -> Result<Version, Error> {
+        let mut version: Version = Default::default();
+        let version_re = Regex::new(r"^(?P<major>\d+)\.(?P<minor>\d+)(?:\.(?P<patch>\d+))?(?:(?P<pre0>[a-z]+)(?P<pre1>\d*))?$").unwrap();
+        if let Some(captures) = version_re.captures(version_string) {
+            match captures.name("major")
+                .and_then(|x| u64::from_str(x.as_str()).ok()) {
+                    Some(x) => version.major = x,
+                    None => return Err(Error::VersionError("No major version number found".into()))
+                }
+            match captures.name("minor")
+                .and_then(|x| u64::from_str(x.as_str()).ok()) {
+                    Some(x) => version.minor = x,
+                    None => return Err(Error::VersionError("No minor version number found".into()))
+                }
+            if let Some(x) = captures.name("patch")
+                .and_then(|x| u64::from_str(x.as_str()).ok()) { version.patch = x }
+            if let Some(pre_0) = captures.name("pre0").map(|x| x.as_str().to_string()) {
+                if captures.name("pre1").is_some() {
+                    if let Some(pre_1) = captures.name("pre1")
+                        .and_then(|x| u64::from_str(x.as_str()).ok()) {
+                            version.pre = Some((pre_0, pre_1))
+                        } else {
+                            return Err(Error::VersionError("Failed to convert prelease number to u64".into()));
+                        }
+                } else {
+                    return Err(Error::VersionError("Failed to convert prelease number to u64".into()));
+                }
+            }
+        } else {
+            return Err(Error::VersionError("Failed to parse input as version string".into()))
+        }
+        Ok(version)
+    }
+}
+
 
 impl Display for Version {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
@@ -212,16 +214,16 @@ pub enum Error {
 
 impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &Error::VersionError(ref x) => {
+        match *self {
+            Error::VersionError(ref x) => {
                 try!("VersionError: ".fmt(f));
                 x.fmt(f)
             },
-            &Error::MetadataError(ref x) => {
+            Error::MetadataError(ref x) => {
                 try!("MetadataError: ".fmt(f));
                 x.fmt(f)
             },
-            &Error::SemVerError(ref e) => {
+            Error::SemVerError(ref e) => {
                 try!("SemVerError: ".fmt(f));
                 e.fmt(f)
             }
@@ -237,17 +239,17 @@ impl From<semver::ReqParseError> for Error {
 
 impl error::Error for Error {
     fn description(&self) -> &str {
-        match self {
-            &Error::VersionError(ref x) => &*x,
-            &Error::MetadataError(ref x) => &*x,
-            &Error::SemVerError(ref e) => e.description(),
+        match *self {
+            Error::VersionError(ref x) => &*x,
+            Error::MetadataError(ref x) => &*x,
+            Error::SemVerError(ref e) => e.description(),
         }
     }
 
     fn cause(&self) -> Option<&error::Error> {
-        match self {
-            &Error::SemVerError(ref e) => Some(e),
-            _ => None,
+        match *self {
+            Error::SemVerError(ref e) => Some(e),
+            Error::VersionError(_) | Error::MetadataError(_) => None,
         }
     }
 }
@@ -279,6 +281,7 @@ mod platform {
 
 #[cfg(test)]
 mod test {
+    use std::str::FromStr;
     use super::{Version};
 
     fn parse_version(input: &str) -> String {
