@@ -5465,6 +5465,13 @@ IonBuilder::testShouldDOMCall(TypeSet* inTypes, JSFunction* func, JSJitInfo::OpT
     if (!func->isNative() || !func->hasJitInfo())
         return false;
 
+    // Some DOM optimizations cause execution to skip over recorded events such
+    // as wrapper cache accesses, e.g. through GVN or loop hoisting of the
+    // expression which performs the event. Disable DOM optimizations when
+    // recording or replaying to avoid this problem.
+    if (mozilla::recordreplay::IsRecordingOrReplaying())
+        return false;
+
     // If all the DOM objects flowing through are legal with this
     // property, we can bake in a call to the bottom half of the DOM
     // accessor

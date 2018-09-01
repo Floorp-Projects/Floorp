@@ -446,13 +446,8 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 
 %include ../shared/sidebar.inc.css
 
-#sidebar-box {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-}
-
-#sidebar-header {
-  border-bottom: 1px solid ThreeDShadow;
+#browser {
+  --sidebar-border-color: ThreeDShadow;
 }
 
 .sidebar-splitter {

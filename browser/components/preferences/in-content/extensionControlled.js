@@ -63,7 +63,9 @@ const extensionControlledL10nKeys = {
   "newTabURL": "new-tab-url",
   "defaultSearch": "default-search",
   "privacy.containers": "privacy-containers",
-  "websites.trackingProtectionMode": "websites-tracking-protection-mode",
+  "websites.trackingProtectionMode": contentBlockingUiEnabled ?
+                                       "websites-content-blocking-all-trackers" :
+                                       "websites-tracking-protection-mode",
   "proxy.settings": "proxy-config",
 };
 

@@ -94,8 +94,8 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
         command: WebDriverCommand<U::Command>,
     ) -> WebDriverMessage<U> {
         WebDriverMessage {
-            session_id: session_id,
-            command: command,
+            session_id,
+            command,
         }
     }
 
