@@ -159,7 +159,7 @@ def generate_task(name, description, command, dependencies = [], artifacts = {},
 	            "/bin/bash",
 	            "--login",
 	            "-c",
-				"git fetch %s %s && git config advice.detachedHead false && git checkout %s && tools/taskcluster/accept-license.sh && %s" % (REPO_URL, BRANCH, COMMIT, command)
+				"git fetch %s %s && git config advice.detachedHead false && git checkout %s && %s" % (REPO_URL, BRANCH, COMMIT, command)
 	        ],
 	        "artifacts": artifacts,
 	        "deadline": taskcluster.stringDate(deadline)
