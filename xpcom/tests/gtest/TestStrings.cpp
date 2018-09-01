@@ -1289,7 +1289,7 @@ TEST_F(Strings, append_with_capacity)
 {
   nsAutoString s;
   const char16_t* origPtr = s.BeginReading();
-  s.SetCapacity(100);
+  s.SetCapacity(8000);
   const char16_t* ptr = s.BeginReading();
   EXPECT_NE(origPtr, ptr);
   for (int i = 0; i < 100; i++) {
@@ -1306,11 +1306,25 @@ TEST_F(Strings, append_string_with_capacity)
   aa.Append(u'a');
   nsAutoString s;
   const char16_t* origPtr = s.BeginReading();
-  s.SetCapacity(200);
+  s.SetCapacity(8000);
   const char16_t* ptr = s.BeginReading();
   EXPECT_NE(origPtr, ptr);
   for (int i = 0; i < 100; i++) {
     s.Append(aa);
+    EXPECT_EQ(s.BeginReading(), ptr);
+    EXPECT_EQ(s.Length(), uint32_t(2 * (i + 1)));
+  }
+}
+
+TEST_F(Strings, append_literal_with_capacity)
+{
+  nsAutoString s;
+  const char16_t* origPtr = s.BeginReading();
+  s.SetCapacity(8000);
+  const char16_t* ptr = s.BeginReading();
+  EXPECT_NE(origPtr, ptr);
+  for (int i = 0; i < 100; i++) {
+    s.AppendLiteral(u"aa");
     EXPECT_EQ(s.BeginReading(), ptr);
     EXPECT_EQ(s.Length(), uint32_t(2 * (i + 1)));
   }

@@ -72,7 +72,7 @@ add_task(async function testContentBlockingRestoreDefaults() {
   ];
 
   Services.prefs.setBoolPref(CB_PREF, false);
-  Services.prefs.setBoolPref(FB_PREF, true);
+  Services.prefs.setBoolPref(FB_PREF, !Services.prefs.getBoolPref(FB_PREF));
   Services.prefs.setStringPref(TP_LIST_PREF, "test-track-simple,base-track-digest256,content-track-digest256");
   Services.prefs.setBoolPref(TP_PREF, true);
   Services.prefs.setBoolPref(TP_PBM_PREF, false);
@@ -128,7 +128,7 @@ add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlle
   ];
 
   Services.prefs.setBoolPref(CB_PREF, false);
-  Services.prefs.setBoolPref(FB_PREF, true);
+  Services.prefs.setBoolPref(FB_PREF, !Services.prefs.getBoolPref(FB_PREF));
   Services.prefs.setStringPref(TP_LIST_PREF, "test-track-simple,base-track-digest256,content-track-digest256");
   Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
 
