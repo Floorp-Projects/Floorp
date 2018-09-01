@@ -29,8 +29,8 @@ impl Profile {
         };
 
         Ok(Profile {
-            path: path,
-            temp_dir: temp_dir,
+            path,
+            temp_dir,
             prefs: None,
             user_prefs: None,
         })
@@ -74,10 +74,7 @@ impl PrefFile {
             parse(buf.as_bytes())?
         };
 
-        Ok(PrefFile {
-            path: path,
-            prefs: prefs,
-        })
+        Ok(PrefFile { path, prefs })
     }
 
     pub fn write(&self) -> IoResult<()> {
