@@ -20,21 +20,27 @@ const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const FB_PREF = "browser.fastblock.enabled";
 const FB_TIMEOUT_PREF = "browser.fastblock.timeout";
+const TPC_PREF = "network.cookie.cookieBehavior";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+const COOKIE_PAGE = "http://not-tracking.example.com/browser/browser/base/content/test/trackingUI/cookiePage.html";
 var ContentBlocking = null;
 var FastBlock = null;
 var TrackingProtection = null;
+var ThirdPartyCookies = null;
 var tabbrowser = null;
+var gTrackingPageURL = TRACKING_PAGE;
 
 registerCleanupFunction(function() {
-  TrackingProtection = ContentBlocking = FastBlock = tabbrowser = null;
+  TrackingProtection = ContentBlocking = FastBlock =
+    ThirdPartyCookies = tabbrowser = null;
   UrlClassifierTestUtils.cleanupTestTrackers();
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(TP_PB_PREF);
   Services.prefs.clearUserPref(CB_PREF);
   Services.prefs.clearUserPref(FB_PREF);
   Services.prefs.clearUserPref(FB_TIMEOUT_PREF);
+  Services.prefs.clearUserPref(TPC_PREF);
 });
 
 // This is a special version of "hidden" that doesn't check for item
@@ -112,7 +118,9 @@ function areTrackersBlocked(isPrivateBrowsing) {
                     // The timeout pref is only checked for completeness,
                     // checking it is technically unneeded for this test.
                     Services.prefs.getIntPref(FB_TIMEOUT_PREF) == 0;
-  return blockedByTP || blockedByFB;
+  let blockedByTPC = cbEnabled &&
+                     Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
+  return blockedByTP || blockedByFB || blockedByTPC;
 }
 
 function testTrackingPage(window) {
@@ -149,9 +157,14 @@ function testTrackingPage(window) {
 
   if (Services.prefs.getBoolPref(CB_UI_PREF)) {
     ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
-    let category = Services.prefs.getBoolPref(FB_PREF) ?
-      "#identity-popup-content-blocking-category-fastblock" :
-      "#identity-popup-content-blocking-category-tracking-protection";
+    let category;
+    if (Services.prefs.getBoolPref(FB_PREF)) {
+      category = "#identity-popup-content-blocking-category-fastblock";
+    } else {
+      category = Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ?
+                   "#identity-popup-content-blocking-category-3rdpartycookies" :
+                   "#identity-popup-content-blocking-category-tracking-protection";
+    }
     is(hidden(category + " > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
       "Category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
     is(hidden(category + " > .identity-popup-content-blocking-category-state-label"), !blockedByTP,
@@ -183,9 +196,14 @@ function testTrackingPageUnblocked(blockedByTP) {
 
   if (Services.prefs.getBoolPref(CB_UI_PREF)) {
     ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
-    let category = Services.prefs.getBoolPref(FB_PREF) ?
-      "#identity-popup-content-blocking-category-fastblock" :
-      "#identity-popup-content-blocking-category-tracking-protection";
+    let category;
+    if (Services.prefs.getBoolPref(FB_PREF)) {
+      category = "#identity-popup-content-blocking-category-fastblock";
+    } else {
+      category = Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ?
+                   "#identity-popup-content-blocking-category-3rdpartycookies" :
+                   "#identity-popup-content-blocking-category-tracking-protection";
+    }
     is(hidden(category + " > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
       "Category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
     // Always hidden no matter if blockedByTP or not, since we have an exception.
@@ -246,7 +264,7 @@ async function testContentBlockingEnabled(tab) {
   }
 
   info("Load a test page containing tracking elements");
-  await promiseTabLoadEvent(tab, TRACKING_PAGE);
+  await promiseTabLoadEvent(tab, gTrackingPageURL);
   testTrackingPage(tab.ownerGlobal);
 
   info("Disable CB for the page (which reloads the page)");
@@ -289,7 +307,7 @@ async function testContentBlockingDisabled(tab) {
   }
 
   info("Load a test page containing tracking elements");
-  await promiseTabLoadEvent(tab, TRACKING_PAGE);
+  await promiseTabLoadEvent(tab, gTrackingPageURL);
   testTrackingPageWithCBDisabled();
 }
 
@@ -429,5 +447,52 @@ add_task(async function testFastBlock() {
 
   Services.prefs.setBoolPref(FB_PREF, false);
   Services.prefs.clearUserPref(FB_TIMEOUT_PREF);
+  gBrowser.removeCurrentTab();
+});
+
+add_task(async function testThirdPartyCookies() {
+  if (!SpecialPowers.getBoolPref(CB_UI_PREF)) {
+    info("The ThirdPartyCookies test is disabled when the Content Blocking UI is disabled");
+    return;
+  }
+
+  await UrlClassifierTestUtils.addTestTrackers();
+  gTrackingPageURL = COOKIE_PAGE;
+
+  tabbrowser = gBrowser;
+  let tab = tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser);
+
+  ContentBlocking = gBrowser.ownerGlobal.ContentBlocking;
+  ok(ContentBlocking, "CB is attached to the browser window");
+  ThirdPartyCookies = gBrowser.ownerGlobal.ThirdPartyCookies;
+  ok(ThirdPartyCookies, "TP is attached to the browser window");
+  is(ThirdPartyCookies.enabled,
+     Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+     "TPC.enabled is based on the original pref value");
+  Services.prefs.setBoolPref(CB_PREF, true);
+  ok(ContentBlocking.enabled, "CB is enabled after setting the pref");
+
+  await testContentBlockingEnabled(tab);
+
+  ok(Services.prefs.getBoolPref(CB_UI_PREF), "CB UI must be enabled here");
+  Services.prefs.setBoolPref(CB_PREF, false);
+  ok(!ContentBlocking.enabled, "CB is disabled after setting the pref");
+
+  await testContentBlockingDisabled(tab);
+
+  Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
+  ok(ThirdPartyCookies.enabled, "TPC is enabled after setting the pref");
+  Services.prefs.setBoolPref(CB_PREF, true);
+  ok(ContentBlocking.enabled, "CB is enabled after setting the pref");
+
+  await testContentBlockingEnabled(tab);
+
+  ok(Services.prefs.getBoolPref(CB_UI_PREF), "CB UI must be enabled here");
+  Services.prefs.setBoolPref(CB_PREF, false);
+  ok(!ContentBlocking.enabled, "CB is disabled after setting the pref");
+
+  await testContentBlockingDisabled(tab);
+
+  Services.prefs.clearUserPref(TPC_PREF);
   gBrowser.removeCurrentTab();
 });
