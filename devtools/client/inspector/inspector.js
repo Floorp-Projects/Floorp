@@ -1705,7 +1705,13 @@ Inspector.prototype = {
       click: () => this.showAccessibilityProperties(),
       disabled: true
     });
-    this._updateA11YMenuItem(showA11YPropsItem);
+    // Only attempt to determine if a11y props menu item needs to be enabled iff
+    // AccessibilityFront is enabled.
+    const accessibilityFront = this.target.getFront("accessibility");
+    if (accessibilityFront.enabled) {
+      this._updateA11YMenuItem(showA11YPropsItem);
+    }
+
     menu.append(showA11YPropsItem);
   },
 

@@ -238,11 +238,14 @@ HTMLTextFieldAccessible::NativeAttributes()
   // Expose type for text input elements as it gives some useful context,
   // especially for mobile.
   nsAutoString type;
-  // In the case of input[type=number], mContent is anonymous and is an
-  // input[type=text]. Getting the root not-anonymous content will give
-  // us the right type. In case of other input types, this returns the same node.
-  nsIContent* content = mContent->FindFirstNonChromeOnlyAccessContent();
-  if (content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
+  // In the case of this element being part of a binding, the binding's
+  // parent's type should have precedence. For example an input[type=number]
+  // has an embedded anonymous input[type=text] (along with spinner buttons).
+  // In that case, we would want to take the input type from the parent
+  // and not the anonymous content.
+  nsIContent* widgetElm = BindingParent();
+  if ((widgetElm && widgetElm->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) ||
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textInputType, type);
     if (!ARIARoleMap() && type.EqualsLiteral("search")) {
       nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
@@ -261,7 +264,7 @@ HTMLTextFieldAccessible::NativeName(nsString& aName) const
     return nameFlag;
 
   // If part of compound of XUL widget then grab a name from XUL widget element.
-  nsIContent* widgetElm = XULWidgetElm();
+  nsIContent* widgetElm = BindingParent();
   if (widgetElm)
     XULElmName(mDoc, widgetElm, aName);
 
@@ -302,7 +305,7 @@ HTMLTextFieldAccessible::ApplyARIAState(uint64_t* aState) const
 
   // If part of compound of XUL widget then pick up ARIA stuff from XUL widget
   // element.
-  nsIContent* widgetElm = XULWidgetElm();
+  nsIContent* widgetElm = BindingParent();
   if (widgetElm)
     aria::MapToState(aria::eARIAAutoComplete, widgetElm->AsElement(), aState);
 }
@@ -347,7 +350,7 @@ HTMLTextFieldAccessible::NativeState() const
     return state | states::SUPPORTS_AUTOCOMPLETION | states::HASPOPUP;
 
   // Ordinal XUL textboxes don't support autocomplete.
-  if (!XULWidgetElm() && Preferences::GetBool("browser.formfill.enable")) {
+  if (!BindingParent() && Preferences::GetBool("browser.formfill.enable")) {
     // Check to see if autocompletion is allowed on this input. We don't expose
     // it for password fields even though the entire password can be remembered
     // for a page if the user asks it to be. However, the kind of autocomplete
