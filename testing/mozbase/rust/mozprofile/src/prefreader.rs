@@ -760,7 +760,7 @@ impl<'a> Iterator for PrefTokenizer<'a> {
     }
 }
 
-pub fn tokenize<'a>(data: &'a [u8]) -> PrefTokenizer<'a> {
+pub fn tokenize(data: &[u8]) -> PrefTokenizer {
     PrefTokenizer::new(data)
 }
 
@@ -831,7 +831,7 @@ where
     Ok(())
 }
 
-fn escape_quote<'a>(data: &'a str) -> Cow<'a, str> {
+fn escape_quote(data: &str) -> Cow<str> {
     // Not very efficient…
     if data.contains("\"") || data.contains("\\") {
         let new_data = Cow::Owned(data.replace(r#"\"#, r#"\\"#).replace(r#"""#, r#"\""#));
@@ -1050,7 +1050,7 @@ pub fn serialize<W: Write>(prefs: &Preferences, output: &mut W) -> io::Result<()
     Ok(())
 }
 
-pub fn parse<'a>(data: &'a [u8]) -> Result<Preferences, PrefReaderError> {
+pub fn parse(data: &[u8]) -> Result<Preferences, PrefReaderError> {
     let mut tokenizer = tokenize(data);
     parse_tokens(&mut tokenizer)
 }
