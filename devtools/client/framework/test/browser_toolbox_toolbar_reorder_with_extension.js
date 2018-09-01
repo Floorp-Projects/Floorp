@@ -12,7 +12,8 @@ const { Toolbox } = require("devtools/client/framework/toolbox");
 const EXTENSION = "@reorder.test";
 
 const TEST_STARTING_ORDER = ["inspector", "webconsole", "jsdebugger", "styleeditor",
-                             "performance", "memory", "netmonitor", "storage", EXTENSION];
+                             "performance", "memory", "netmonitor", "storage",
+                             "accessibility", EXTENSION];
 
 add_task(async function() {
   const extension = ExtensionTestUtils.loadExtension({
@@ -60,7 +61,7 @@ add_task(async function() {
   let dragTarget = EXTENSION;
   let dropTarget = "webconsole";
   let expectedOrder = ["inspector", EXTENSION, "webconsole", "jsdebugger", "styleeditor",
-                       "performance", "memory", "netmonitor", "storage"];
+                       "performance", "memory", "netmonitor", "storage", "accessibility"];
   prepareToolTabReorderTest(toolbox, TEST_STARTING_ORDER);
   await dndToolTab(toolbox, dragTarget, dropTarget);
   assertToolTabOrder(toolbox, expectedOrder);
@@ -73,8 +74,8 @@ add_task(async function() {
   await toolbox.selectTool("storage");
   dragTarget = "storage";
   dropTarget = "inspector";
-  expectedOrder = ["storage", "inspector", "webconsole", "jsdebugger",
-                   "styleeditor", "performance", "memory", "netmonitor", EXTENSION];
+  expectedOrder = ["storage", "inspector", "webconsole", "jsdebugger", "styleeditor",
+                   "performance", "memory", "netmonitor", "accessibility", EXTENSION];
   await dndToolTab(toolbox, dragTarget, dropTarget);
   assertToolTabPreferenceOrder(expectedOrder);
 
@@ -84,5 +85,6 @@ add_task(async function() {
   await gDevTools.closeToolbox(target);
   await target.destroy();
   assertToolTabPreferenceOrder(["storage", "inspector", "webconsole", "jsdebugger",
-                                "styleeditor", "performance", "memory", "netmonitor"]);
+                                "styleeditor", "performance", "memory", "netmonitor",
+                                "accessibility"]);
 });

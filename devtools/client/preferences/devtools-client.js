@@ -228,8 +228,8 @@ pref("devtools.scratchpad.enabled", false);
 // Make sure the DOM panel is hidden by default
 pref("devtools.dom.enabled", false);
 
-// Make sure the Accessibility panel is hidden by default
-pref("devtools.accessibility.enabled", false);
+// Enable the Accessibility panel.
+pref("devtools.accessibility.enabled", true);
 // Counter to promote the Accessibility panel.
 // @remove after release 63 (See Bug 1482461)
 pref("devtools.promote.accessibility", 1);
