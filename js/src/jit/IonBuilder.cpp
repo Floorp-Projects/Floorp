@@ -326,8 +326,9 @@ IonBuilder::InliningDecision
 IonBuilder::DontInline(JSScript* targetScript, const char* reason)
 {
     if (targetScript) {
-        JitSpew(JitSpew_Inlining, "Cannot inline %s:%u: %s",
-                targetScript->filename(), targetScript->lineno(), reason);
+        JitSpew(JitSpew_Inlining, "Cannot inline %s:%u:%u %s",
+                targetScript->filename(), targetScript->lineno(), 
+                targetScript->column(), reason);
     } else {
         JitSpew(JitSpew_Inlining, "Cannot inline: %s", reason);
     }
@@ -752,14 +753,14 @@ IonBuilder::build()
 
 #ifdef JS_JITSPEW
     if (info().isAnalysis()) {
-        JitSpew(JitSpew_IonScripts, "Analyzing script %s:%u (%p) %s",
-                script()->filename(), script()->lineno(), (void*)script(),
-                AnalysisModeString(info().analysisMode()));
+        JitSpew(JitSpew_IonScripts, "Analyzing script %s:%u:%u (%p) %s",
+                script()->filename(), script()->lineno(), script()->column(),
+                (void*)script(), AnalysisModeString(info().analysisMode()));
     } else {
-        JitSpew(JitSpew_IonScripts, "%sompiling script %s:%u (%p) (warmup-counter=%" PRIu32 ", level=%s)",
+        JitSpew(JitSpew_IonScripts, "%sompiling script %s:%u:%u (%p) (warmup-counter=%" PRIu32 ", level=%s)",
                 (script()->hasIonScript() ? "Rec" : "C"),
-                script()->filename(), script()->lineno(), (void*)script(),
-                script()->getWarmUpCount(), OptimizationLevelString(optimizationInfo().level()));
+                script()->filename(), script()->lineno(), script()->column(), 
+                (void*)script(), script()->getWarmUpCount(), OptimizationLevelString(optimizationInfo().level()));
     }
 #endif
 
@@ -926,8 +927,8 @@ IonBuilder::buildInline(IonBuilder* callerBuilder, MResumePoint* callerResumePoi
 
     MOZ_TRY(init());
 
-    JitSpew(JitSpew_IonScripts, "Inlining script %s:%u (%p)",
-            script()->filename(), script()->lineno(), (void*)script());
+    JitSpew(JitSpew_IonScripts, "Inlining script %s:%u:%u (%p)",
+            script()->filename(), script()->lineno(), script()->column(), (void*)script());
 
     callerBuilder_ = callerBuilder;
     callerResumePoint_ = callerResumePoint;
@@ -1223,8 +1224,8 @@ IonBuilder::initEnvironmentChain(MDefinition* callee)
 void
 IonBuilder::initArgumentsObject()
 {
-    JitSpew(JitSpew_IonMIR, "%s:%u - Emitting code to initialize arguments object! block=%p",
-            script()->filename(), script()->lineno(), current);
+    JitSpew(JitSpew_IonMIR, "%s:%u:%u - Emitting code to initialize arguments object! block=%p",
+            script()->filename(), script()->lineno(), script()->column(), current);
     MOZ_ASSERT(info().needsArgsObj());
 
     bool mapped = script()->hasMappedArgsObj();
@@ -1435,8 +1436,8 @@ GetOrCreateControlFlowGraph(TempAllocator& tempAlloc, JSScript* script,
     }
 
     if (JitSpewEnabled(JitSpew_CFG)) {
-        JitSpew(JitSpew_CFG, "Generating graph for %s:%u",
-                             script->filename(), script->lineno());
+        JitSpew(JitSpew_CFG, "Generating graph for %s:%u:%u",
+                             script->filename(), script->lineno(), script->column());
         Fprinter& print = JitSpewPrinter();
         cfg->dump(print, script);
     }
@@ -4034,8 +4035,8 @@ IonBuilder::makeInliningDecision(JSObject* targetArg, CallInfo& callInfo)
         info().analysisMode() != Analysis_DefiniteProperties)
     {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNotHot);
-        JitSpew(JitSpew_Inlining, "Cannot inline %s:%u: callee is insufficiently hot.",
-                targetScript->filename(), targetScript->lineno());
+        JitSpew(JitSpew_Inlining, "Cannot inline %s:%u:%u: callee is insufficiently hot.",
+                targetScript->filename(), targetScript->lineno(), targetScript->column());
         return InliningDecision_WarmUpCountTooLow;
     }
 

@@ -29,7 +29,7 @@ AC_CACHE_CHECK(what kind of list files are supported by the linker,
              elif AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS @conftest.list $LIBS 1>&5) && test -s conftest${ac_exeext}; then
                  EXPAND_LIBS_LIST_STYLE=list
              else
-                 EXPAND_LIBS_LIST_STYLE=none
+                 AC_ERROR([Couldn't find one that works])
              fi
          fi
      else
@@ -38,29 +38,6 @@ AC_CACHE_CHECK(what kind of list files are supported by the linker,
      fi
      rm -rf conftest*])
 
-LIBS_DESC_SUFFIX=desc
-AC_SUBST(LIBS_DESC_SUFFIX)
 AC_SUBST(EXPAND_LIBS_LIST_STYLE)
-
-if test "$GCC_USE_GNU_LD"; then
-    AC_CACHE_CHECK(what kind of ordering can be done with the linker,
-        EXPAND_LIBS_ORDER_STYLE,
-        [> conftest.order
-         _SAVE_LDFLAGS="$LDFLAGS"
-         LDFLAGS="${LDFLAGS} -Wl,--section-ordering-file,conftest.order"
-         AC_TRY_LINK([], [],
-             EXPAND_LIBS_ORDER_STYLE=section-ordering-file,
-             EXPAND_LIBS_ORDER_STYLE=)
-         LDFLAGS="$_SAVE_LDFLAGS"
-         if test -z "$EXPAND_LIBS_ORDER_STYLE"; then
-             if AC_TRY_COMMAND(${CC-cc} ${DSO_LDOPTS} ${LDFLAGS} -o conftest -Wl,--verbose 2> /dev/null | sed -n '/^===/,/^===/p' | grep '\.text'); then
-                 EXPAND_LIBS_ORDER_STYLE=linkerscript
-             else
-                 EXPAND_LIBS_ORDER_STYLE=none
-             fi
-             rm -f ${DLL_PREFIX}conftest${DLL_SUFFIX}
-         fi])
-fi
-AC_SUBST(EXPAND_LIBS_ORDER_STYLE)
 
 ])

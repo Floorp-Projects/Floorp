@@ -354,9 +354,8 @@ function teardown(monitor) {
     await waitForAllNetworkUpdateEvents();
     info("All pending requests finished.");
 
-    const onDestroyed = monitor.once("destroyed");
+    await monitor.toolbox.destroy();
     await removeTab(tab);
-    await onDestroyed;
   })();
 }
 
