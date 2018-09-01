@@ -174,7 +174,7 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
     type ResBody = Body;
 
     type Error = hyper::Error;
-    type Future = Box<future::Future<Item=Response<Self::ResBody>, Error=hyper::Error> + Send>;
+    type Future = Box<future::Future<Item = Response<Self::ResBody>, Error = hyper::Error> + Send>;
 
     fn call(&mut self, req: Request<Self::ReqBody>) -> Self::Future {
         let uri = req.uri().clone();
@@ -191,7 +191,7 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
                 // matter as long as we are only handling one request at a time.
                 match api.lock() {
                     Ok(ref api) => api.decode_request(method, &uri.path(), &body[..]),
-                    Err(_) => panic!("Something terrible happened"),
+                    Err(e) => panic!("Error decoding request: {:?}", e),
                 }
             };
 
@@ -200,13 +200,10 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
                     let (send_res, recv_res) = channel();
                     match chan.lock() {
                         Ok(ref c) => {
-                            let res =
-                                c.send(DispatchMessage::HandleWebDriver(message, send_res));
+                            let res = c.send(DispatchMessage::HandleWebDriver(message, send_res));
                             match res {
                                 Ok(x) => x,
-                                Err(_) => {
-                                    panic!("Something terrible happened");
-                                }
+                                Err(e) => panic!("Error: {:?}", e),
                             }
                         }
                         Err(e) => panic!("Error reading response: {:?}", e),
@@ -217,14 +214,12 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
                             Ok(response) => {
                                 (StatusCode::OK, serde_json::to_string(&response).unwrap())
                             }
-                            Err(err) => {
-                                (err.http_status(), serde_json::to_string(&err).unwrap())
-                            }
+                            Err(e) => (e.http_status(), serde_json::to_string(&e).unwrap()),
                         },
                         Err(e) => panic!("Error reading response: {:?}", e),
                     }
                 }
-                Err(err) => (err.http_status(), serde_json::to_string(&err).unwrap()),
+                Err(e) => (e.http_status(), serde_json::to_string(&e).unwrap()),
             };
 
             debug!("<- {} {}", status, resp_body);
