@@ -171,6 +171,7 @@ SpecialPowers.pushPrefEnv(
            ["urlclassifier.downloadBlockTable", "test-block-simple"],
            ["urlclassifier.trackingTable", "test-track-simple"],
            ["browser.safebrowsing.debug", true],
+           ["browser.fastblock.enabled", false],
            ["privacy.trackingprotection.annotate_channels", true]]},
   function() {
     classifierHelper.waitForInit()

@@ -131,6 +131,7 @@
   SpecialPowers.pushPrefEnv({"set": [
     ["browser.send_pings", true],
     ["urlclassifier.trackingTable", "test-track-simple"],
+    ["browser.fastblock.enabled", false],
   ]}, runTest);
 
 </script>
