@@ -346,9 +346,9 @@ impl<'a> PrefTokenizer<'a> {
                 ))
             }
         };
-        Ok(Some(char::from_u32(escape_char).ok_or(
-            PrefReaderError::new("Invalid codepoint decoded from escape", self.position, None),
-        )?))
+        Ok(Some(char::from_u32(escape_char).ok_or_else(|| {
+            PrefReaderError::new("Invalid codepoint decoded from escape", self.position, None)
+        })?))
     }
 
     fn read_hex_escape(&mut self, hex_chars: isize, first: bool) -> Result<u32, PrefReaderError> {
