@@ -767,54 +767,54 @@ pub fn tokenize(data: &[u8]) -> PrefTokenizer {
 pub fn serialize_token<T: Write>(token: &PrefToken, output: &mut T) -> Result<(), PrefReaderError> {
     let mut data_buf = String::new();
 
-    let data = match token {
-        &PrefToken::PrefFunction(_) => "pref",
-        &PrefToken::UserPrefFunction(_) => "user_pref",
-        &PrefToken::StickyPrefFunction(_) => "sticky_pref",
-        &PrefToken::CommentBlock(ref data, _) => {
+    let data = match *token {
+        PrefToken::PrefFunction(_) => "pref",
+        PrefToken::UserPrefFunction(_) => "user_pref",
+        PrefToken::StickyPrefFunction(_) => "sticky_pref",
+        PrefToken::CommentBlock(ref data, _) => {
             data_buf.reserve(data.len() + 4);
             data_buf.push_str("/*");
             data_buf.push_str(data.borrow());
             data_buf.push_str("*");
             &*data_buf
         }
-        &PrefToken::CommentLine(ref data, _) => {
+        PrefToken::CommentLine(ref data, _) => {
             data_buf.reserve(data.len() + 2);
             data_buf.push_str("//");
             data_buf.push_str(data.borrow());
             &*data_buf
         }
-        &PrefToken::CommentBashLine(ref data, _) => {
+        PrefToken::CommentBashLine(ref data, _) => {
             data_buf.reserve(data.len() + 1);
             data_buf.push_str("#");
             data_buf.push_str(data.borrow());
             &*data_buf
         }
-        &PrefToken::Paren(data, _) => {
+        PrefToken::Paren(data, _) => {
             data_buf.push(data);
             &*data_buf
         }
-        &PrefToken::Comma(_) => ",",
-        &PrefToken::Semicolon(_) => ";\n",
-        &PrefToken::String(ref data, _) => {
+        PrefToken::Comma(_) => ",",
+        PrefToken::Semicolon(_) => ";\n",
+        PrefToken::String(ref data, _) => {
             data_buf.reserve(data.len() + 2);
             data_buf.push('"');
             data_buf.push_str(escape_quote(data.borrow()).borrow());
             data_buf.push('"');
             &*data_buf
         }
-        &PrefToken::Int(data, _) => {
+        PrefToken::Int(data, _) => {
             data_buf.push_str(&*data.to_string());
             &*data_buf
         }
-        &PrefToken::Bool(data, _) => {
+        PrefToken::Bool(data, _) => {
             if data {
                 "true"
             } else {
                 "false"
             }
         }
-        &PrefToken::Error(data, pos) => return Err(PrefReaderError::new(data, pos, None)),
+        PrefToken::Error(data, pos) => return Err(PrefReaderError::new(data, pos, None)),
     };
     output.write_all(data.as_bytes())?;
     Ok(())
