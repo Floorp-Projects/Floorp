@@ -18,18 +18,23 @@ const CB_PREF = "browser.contentblocking.enabled";
 const CB_UI_PREF = "browser.contentblocking.ui.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
+const FB_PREF = "browser.fastblock.enabled";
+const FB_TIMEOUT_PREF = "browser.fastblock.timeout";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 var ContentBlocking = null;
+var FastBlock = null;
 var TrackingProtection = null;
 var tabbrowser = null;
 
 registerCleanupFunction(function() {
-  TrackingProtection = ContentBlocking = tabbrowser = null;
+  TrackingProtection = ContentBlocking = FastBlock = tabbrowser = null;
   UrlClassifierTestUtils.cleanupTestTrackers();
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(TP_PB_PREF);
   Services.prefs.clearUserPref(CB_PREF);
+  Services.prefs.clearUserPref(FB_PREF);
+  Services.prefs.clearUserPref(FB_TIMEOUT_PREF);
 });
 
 // This is a special version of "hidden" that doesn't check for item
@@ -102,7 +107,12 @@ function areTrackersBlocked(isPrivateBrowsing) {
   let cbEnabled = Services.prefs.getBoolPref(CB_PREF);
   let blockedByTP = cbEnabled &&
                     Services.prefs.getBoolPref(isPrivateBrowsing ? TP_PB_PREF : TP_PREF);
-  return blockedByTP;
+  let blockedByFB = cbEnabled &&
+                    Services.prefs.getBoolPref(FB_PREF) &&
+                    // The timeout pref is only checked for completeness,
+                    // checking it is technically unneeded for this test.
+                    Services.prefs.getIntPref(FB_TIMEOUT_PREF) == 0;
+  return blockedByTP || blockedByFB;
 }
 
 function testTrackingPage(window) {
@@ -139,10 +149,13 @@ function testTrackingPage(window) {
 
   if (Services.prefs.getBoolPref(CB_UI_PREF)) {
     ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
-    is(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
-      "TP category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
-    is(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-state-label"), !blockedByTP,
-      "TP category item is" + (blockedByTP ? "" : " not") + " set to blocked");
+    let category = Services.prefs.getBoolPref(FB_PREF) ?
+      "#identity-popup-content-blocking-category-fastblock" :
+      "#identity-popup-content-blocking-category-tracking-protection";
+    is(hidden(category + " > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
+      "Category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
+    is(hidden(category + " > .identity-popup-content-blocking-category-state-label"), !blockedByTP,
+      "Category item is" + (blockedByTP ? "" : " not") + " set to blocked");
   }
 }
 
@@ -170,8 +183,11 @@ function testTrackingPageUnblocked(blockedByTP) {
 
   if (Services.prefs.getBoolPref(CB_UI_PREF)) {
     ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
-    is(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
-      "TP category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
+    let category = Services.prefs.getBoolPref(FB_PREF) ?
+      "#identity-popup-content-blocking-category-fastblock" :
+      "#identity-popup-content-blocking-category-tracking-protection";
+    is(hidden(category + " > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
+      "Category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
     // Always hidden no matter if blockedByTP or not, since we have an exception.
     ok(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-state-label"),
       "TP category item is not set to blocked");
@@ -367,4 +383,51 @@ add_task(async function testPrivateBrowsing() {
   await testContentBlockingDisabled(tab);
 
   privateWin.close();
+});
+
+add_task(async function testFastBlock() {
+  if (!SpecialPowers.getBoolPref(CB_UI_PREF)) {
+    info("The FastBlock test is disabled when the Content Blocking UI is disabled");
+    return;
+  }
+
+  await UrlClassifierTestUtils.addTestTrackers();
+
+  tabbrowser = gBrowser;
+  let tab = tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser);
+
+  ContentBlocking = gBrowser.ownerGlobal.ContentBlocking;
+  ok(ContentBlocking, "CB is attached to the browser window");
+  FastBlock = gBrowser.ownerGlobal.FastBlock;
+  ok(FastBlock, "TP is attached to the browser window");
+  is(FastBlock.enabled, Services.prefs.getBoolPref(FB_PREF),
+     "FB.enabled is based on the original pref value");
+  Services.prefs.setBoolPref(CB_PREF, true);
+  ok(ContentBlocking.enabled, "CB is enabled after setting the pref");
+
+  await testContentBlockingEnabled(tab);
+
+  ok(Services.prefs.getBoolPref(CB_UI_PREF), "CB UI must be enabled here");
+  Services.prefs.setBoolPref(CB_PREF, false);
+  ok(!ContentBlocking.enabled, "CB is disabled after setting the pref");
+
+  await testContentBlockingDisabled(tab);
+
+  Services.prefs.setBoolPref(FB_PREF, true);
+  Services.prefs.setIntPref(FB_TIMEOUT_PREF, 0);
+  ok(FastBlock.enabled, "FB is enabled after setting the pref");
+  Services.prefs.setBoolPref(CB_PREF, true);
+  ok(ContentBlocking.enabled, "CB is enabled after setting the pref");
+
+  await testContentBlockingEnabled(tab);
+
+  ok(Services.prefs.getBoolPref(CB_UI_PREF), "CB UI must be enabled here");
+  Services.prefs.setBoolPref(CB_PREF, false);
+  ok(!ContentBlocking.enabled, "CB is disabled after setting the pref");
+
+  await testContentBlockingDisabled(tab);
+
+  Services.prefs.setBoolPref(FB_PREF, false);
+  Services.prefs.clearUserPref(FB_TIMEOUT_PREF);
+  gBrowser.removeCurrentTab();
 });
