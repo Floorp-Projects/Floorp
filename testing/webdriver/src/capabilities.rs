@@ -510,7 +510,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                 Some(merged)
             })
             .next()
-            .map(|x| x.clone());
+            .cloned();
         Ok(selected)
     }
 }
