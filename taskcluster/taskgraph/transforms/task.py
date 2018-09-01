@@ -1275,7 +1275,7 @@ def build_treescript_payload(config, task, task_def):
         task_def['payload']['dry_run'] = True
 
     if worker.get('dontbuild'):
-        task_def['payload']['dont_build'] = True
+        task_def['payload']['dontbuild'] = True
 
 
 @payload_builder('invalid')
