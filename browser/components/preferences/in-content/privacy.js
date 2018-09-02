@@ -529,10 +529,15 @@ var gPrivacyPane = {
     let siteDataGroup = document.getElementById("siteDataGroup");
     let browserPrivacyCategory = document.getElementById("browserPrivacyCategory");
 
-    browserPrivacyCategory.parentNode.insertBefore(siteDataGroup,
-                                                   browserPrivacyCategory.nextSibling);
-    browserPrivacyCategory.parentNode.insertBefore(trackingGroup,
-                                                   browserPrivacyCategory.nextSibling);
+    // If we do this without a timeout, trackingProtectionReadPrefs will set the checked
+    // attribute on our checkbox element before the XBL binding has had a chance to have
+    // been re-applied to it.
+    setTimeout(() => {
+      browserPrivacyCategory.parentNode.insertBefore(siteDataGroup,
+                                                     browserPrivacyCategory.nextSibling);
+      browserPrivacyCategory.parentNode.insertBefore(trackingGroup,
+                                                     browserPrivacyCategory.nextSibling);
+    }, 0);
   },
 
   /**
