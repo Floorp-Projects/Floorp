@@ -71,7 +71,7 @@ public:
   void EvictLocalContentViewers();
 
   nsISHistory* LegacySHistory();
-  nsIWebNavigation* LegacySHistoryWebNav();
+  nsSHistory* LegacySHistoryImpl();
 
   ParentSHistory* GetParentIfSameProcess();
 

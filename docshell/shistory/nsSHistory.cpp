@@ -253,7 +253,6 @@ NS_IMPL_RELEASE(nsSHistory)
 NS_INTERFACE_MAP_BEGIN(nsSHistory)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHistory)
   NS_INTERFACE_MAP_ENTRY(nsISHistory)
-  NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -960,31 +959,7 @@ nsSHistory::EvictAllContentViewers()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHistory::GetCanGoBack(bool* aCanGoBack)
-{
-  MOZ_CRASH("nsSHistory::GetCanGoBack");
-}
-
-NS_IMETHODIMP
-nsSHistory::GetCanGoForward(bool* aCanGoForward)
-{
-  MOZ_CRASH("nsSHistory::GetCanGoForward");
-}
-
-NS_IMETHODIMP
-nsSHistory::GoBack()
-{
-  MOZ_CRASH("nsSHistory::GoBack");
-}
-
-NS_IMETHODIMP
-nsSHistory::GoForward()
-{
-  MOZ_CRASH("nsSHistory::GoForward");
-}
-
-NS_IMETHODIMP
+nsresult
 nsSHistory::Reload(uint32_t aReloadFlags)
 {
   uint32_t loadType;
@@ -1538,19 +1513,7 @@ nsSHistory::UpdateIndex()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHistory::Stop(uint32_t aStopFlags)
-{
-  MOZ_CRASH("nsSHistory::Stop");
-}
-
-NS_IMETHODIMP
-nsSHistory::GetDocument(nsIDocument** aDocument)
-{
-  MOZ_CRASH("nsSHistory::GetDocument");
-}
-
-NS_IMETHODIMP
+nsresult
 nsSHistory::GetCurrentURI(nsIURI** aResultURI)
 {
   NS_ENSURE_ARG_POINTER(aResultURI);
@@ -1565,50 +1528,7 @@ nsSHistory::GetCurrentURI(nsIURI** aResultURI)
   return rv;
 }
 
-NS_IMETHODIMP
-nsSHistory::GetReferringURI(nsIURI** aURI)
-{
-  MOZ_CRASH("nsSHistory::GetReferringURI");
-}
-
-NS_IMETHODIMP
-nsSHistory::GetSessionHistoryXPCOM(nsISupports** aSessionHistory)
-{
-  MOZ_CRASH("nsSHistory::GetSessionHistoryXPCOM");
-}
-
-NS_IMETHODIMP
-nsSHistory::LoadURIWithOptions(const char16_t* aURI,
-                               uint32_t aLoadFlags,
-                               nsIURI* aReferringURI,
-                               uint32_t aReferrerPolicy,
-                               nsIInputStream* aPostStream,
-                               nsIInputStream* aExtraHeaderStream,
-                               nsIURI* aBaseURI,
-                               nsIPrincipal* aTriggeringPrincipal)
-{
-  MOZ_CRASH("nsSHistory::LoadURIWithOptions");
-}
-
-NS_IMETHODIMP
-nsSHistory::SetOriginAttributesBeforeLoading(JS::HandleValue aOriginAttributes,
-                                             JSContext* aCx)
-{
-  MOZ_CRASH("nsSHistory::SetOriginAttributesBeforeLoading");
-}
-
-NS_IMETHODIMP
-nsSHistory::LoadURI(const char16_t* aURI,
-                    uint32_t aLoadFlags,
-                    nsIURI* aReferringURI,
-                    nsIInputStream* aPostStream,
-                    nsIInputStream* aExtraHeaderStream,
-                    nsIPrincipal* aTriggeringPrincipal)
-{
-  MOZ_CRASH("nsSHistory::LoadURI");
-}
-
-NS_IMETHODIMP
+nsresult
 nsSHistory::GotoIndex(int32_t aIndex)
 {
   return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX);
