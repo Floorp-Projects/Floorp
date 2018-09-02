@@ -65,9 +65,6 @@ ChildSHistory::CanGo(int32_t aOffset)
 void
 ChildSHistory::Go(int32_t aOffset, ErrorResult& aRv)
 {
-  // XXX(nika): Should we turn Go(-1) and Go(1) to call GoForward and GoBack?
-  // They technically fire different change events but I couldn't find anyone
-  // who cares, so I'm inclined not to.
   CheckedInt<int32_t> index = Index();
   index += aOffset;
   if (!index.isValid()) {
