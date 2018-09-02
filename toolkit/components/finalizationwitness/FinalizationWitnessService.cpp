@@ -102,10 +102,7 @@ ExtractFinalizationEvent(JSObject *objSelf)
 void Finalize(JSFreeOp *fop, JSObject *objSelf)
 {
   RefPtr<FinalizationEvent> event = ExtractFinalizationEvent(objSelf);
-
-  // Finalize witnesses are not notified when recording or replaying, as
-  // finalizations occur non-deterministically in the recording.
-  if (event == nullptr || gShuttingDown || recordreplay::IsRecordingOrReplaying()) {
+  if (event == nullptr || gShuttingDown) {
     // NB: event will be null if Forget() has been called
     return;
   }
@@ -203,6 +200,12 @@ FinalizationWitnessService::Make(const char* aTopic,
                                  JSContext* aCx,
                                  JS::MutableHandle<JS::Value> aRetval)
 {
+  // Finalize witnesses are not created when recording or replaying, as
+  // finalizations occur non-deterministically in the recording.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   JS::Rooted<JSObject*> objResult(aCx, JS_NewObject(aCx, &sWitnessClass));
   if (!objResult) {
     return NS_ERROR_OUT_OF_MEMORY;
