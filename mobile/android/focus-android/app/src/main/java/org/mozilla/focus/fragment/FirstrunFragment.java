@@ -147,7 +147,6 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
         final UrlInputFragment inputFragment = (UrlInputFragment) fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG);
         if (inputFragment != null) {
             fragmentManager.beginTransaction().attach(inputFragment).commit();
-            inputFragment.showKeyboard();
         }
     }
 
