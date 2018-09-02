@@ -4106,7 +4106,7 @@ nsDocShell::GotoIndex(int32_t aIndex)
   }
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
-  return rootSH->LegacySHistoryWebNav()->GotoIndex(aIndex);
+  return rootSH->LegacySHistoryImpl()->GotoIndex(aIndex);
 }
 
 NS_IMETHODIMP
