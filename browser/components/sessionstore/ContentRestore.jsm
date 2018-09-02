@@ -381,8 +381,6 @@ HistoryListener.prototype = {
     }
   },
 
-  OnHistoryGoBack(backURI) { return true; },
-  OnHistoryGoForward(forwardURI) { return true; },
   OnHistoryGotoIndex(index, gotoURI) { return true; },
   OnHistoryPurge(numEntries) { return true; },
   OnHistoryReplaceEntry(index) {},

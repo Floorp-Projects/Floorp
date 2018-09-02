@@ -11,16 +11,6 @@ SHistoryListener.prototype = {
     this.last = "newentry";
   },
 
-  OnHistoryGoBack: function (aBackURI) {
-    this.last = "goback";
-    return this.retval;
-  },
-
-  OnHistoryGoForward: function (aForwardURI) {
-    this.last = "goforward";
-    return this.retval;
-  },
-
   OnHistoryGotoIndex: function (aIndex, aGotoURI) {
     this.last = "gotoindex";
     return this.retval;
