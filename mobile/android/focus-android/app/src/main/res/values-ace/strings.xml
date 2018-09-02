@@ -4,7 +4,7 @@
   <string name="action_ok">OK</string>
   <string name="action_save">Keubah</string>
   <string name="urlbar_hint">Mita atawa pasoe alamat</string>
-  <string name="teaser">Browsing bék na soe kalen.\nPeuhah. Sampôh. Gisa Keulayi.</string>
+  <string name="teaser">Browsing bèk na soe kalön.\nPeuhah. Sampôh. Gisa Keulayi.</string>
   <string name="feedback_erase">Seujarah browsing droen ka jisampôh.</string>
   <string name="search_hint">Mita keu %1$s</string>
   <string name="menu_share">Bulueng…</string>
@@ -32,4 +32,6 @@
   <string name="preference_category_general">Awam</string>
   <string name="preference_category_data_collection_use">Peusapat Data &amp; Ngui</string>
   <string name="preference_category_search">Mita</string>
+  <string name="preference_state_on">Udép</string>
+  <string name="preference_state_off">Maté</string>
 </resources>

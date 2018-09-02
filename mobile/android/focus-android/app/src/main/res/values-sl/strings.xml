@@ -38,6 +38,7 @@
   <string name="preference_category_data_collection_use">Zbiranje in uporaba podatkov</string>
   <string name="preference_category_search">Iskanje</string>
   <string name="preference_show_search_suggestions">Prejemaj predloge iskanja</string>
+  <string name="preference_show_search_suggestions_summary">%1$s bo natipkano v naslovno vrstico poslal iskalniku</string>
   <string name="preference_search_engine_default">Privzet</string>
   <string name="preference_state_on">Vključeno</string>
   <string name="preference_state_off">Izklopljeno</string>
@@ -79,6 +80,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Zavračaj samo piškotke tretjih strani</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Da</string>
   <string name="preference_security_biometric">Uporabljaj prstni odtis za odklepanje aplikacije</string>
+  <string name="preference_security_biometric_summary">Če je v %1$su odprt spletni naslov, lahko aplikacijo odklenete s prstnim odtisom. Skrivni način bo vključen.</string>
   <string name="preference_privacy_secure_mode">Skrivni način</string>
   <string name="preference_privacy_stealth_summary">Skrij strani pri preklapljanju med aplikacijami in prepreči zajemanje posnetkov zaslona.</string>
   <string name="preference_category_security">Varnost</string>
@@ -215,6 +217,7 @@
   <string name="biometric_auth_not_recognized_error">Prstni odtis ni prepoznan. Poskusite ponovno.</string>
   <string name="biometric_auth_moved_too_quickly">Prst se je premaknil prehitro. Poskusite znova.</string>
   <string name="enable_search_suggestion_title">Želite vključiti predloge iskalnika?</string>
+  <string name="enable_search_suggestion_subtitle">Da pridobi predloge iskanja, mora %1$s besede, ki jih natipkate v naslovno vrstico, poslati izbranemu iskalniku. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Več o tem</string>
   <string name="enable_search_suggestions_no">Ne</string>
   <string name="enable_search_suggestions_yes">Da</string>
@@ -223,6 +226,7 @@
   <string name="tip_disable_tracking_protection">Ali stran deluje nepravilno?\n Poskusite izklopiti zaščito pred sledenjem</string>
   <string name="tip_add_to_homescreen">Nastavite si hiter dostop do priljubljenih strani%1$s Meni &gt; Dodaj na domači zaslon</string>
   <string name="tip_set_default_browser">Odpiraj vse povezave v %1$su\n Nastavite %1$s za privzeti brskalnik</string>
+  <string name="tip_autocomplete_url">Samodejno dokončajte spletne naslove za strani, ki jih najpogosteje obiskujete\n Pridržite prst na kateremkoli spletnem naslovu v naslovni vrstici</string>
   <string name="tip_open_in_new_tab">Odprite povezavo v novem zavihku\n Pridržite prst na katerikoli povezavi na strani</string>
   <string name="tip_request_desktop">Želite uporabljati polno različico strani?%1$s Meni &gt; Zahtevaj stran za namizja</string>
   <string name="tip_disable_tips">Izključi namige na začetnem zaslonu %1$sa</string>

@@ -217,8 +217,17 @@
   <string name="biometric_auth_not_recognized_error">Ur yaêqil ara aḍaḍ. Ԑreḍ tikkelt-nniḍen.</string>
   <string name="biometric_auth_moved_too_quickly">TƐherkeḍ aḍaḍ s lweǧlan. Ԑreḍ tikelt-nniḍen.</string>
   <string name="enable_search_suggestion_title">Tebɣiḍ ad tekkseḍ armad n isumren n unadi?</string>
+  <string name="enable_search_suggestion_subtitle">"Akken ad tawiḍ isumar n unadi, %1$s isra ad ak-yazen  acu n tewsit deg ufeggag n tansa ɣer umsedday n unadi i tferneḍ. %2$s."</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Issin ugar</string>
   <string name="enable_search_suggestions_no">Ala</string>
   <string name="enable_search_suggestions_yes">Ih</string>
+  <string name="no_suggestions_message">Kra n imseddayen n unadi ur zmiren ara ad d-sken isumar.</string>
   <string name="dismiss_no_suggestions_prompt_button">Zgel</string>
+  <string name="tip_disable_tracking_protection">Tigawin ur nettwerǧu sɣur usmel?\n Ɛṛeḍ ad tsenseḍ ammesten n usfuɣel</string>
+  <string name="tip_add_to_homescreen">"Awi anekcum fessusen ɣer ismal  i tseqdaceḍ aṭas %1$s Umuɣ &gt; Rnu ɣer ugdil agejdan"</string>
+  <string name="tip_set_default_browser">Ldi yal aseɣwen deg %1$s\n Sbadu %1$s d iming amezwar</string>
+  <string name="tip_autocomplete_url">Taččarant tawurmant URLs i yismal i tseqdaceḍ aṭas \n Asenned ɣezzifen ɣef URL ibɣu yilli deg ufeggag n tansiwin</string>
+  <string name="tip_open_in_new_tab">Ldi aseɣwen deg iccer amaynut\n Asenned ɣezzifen ɣef useɣwen deg usebter</string>
+  <string name="tip_request_desktop">Iff-itt ma twalaḍ asmel aččuran?%1$s Umuɣ &gt; Suter asmel n tnarit</string>
+  <string name="tip_disable_tips">Sens timahaltin deg %1$s ugdil n tnekra</string>
 </resources>

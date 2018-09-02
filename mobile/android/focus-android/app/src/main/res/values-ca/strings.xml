@@ -229,4 +229,5 @@
   <string name="tip_autocomplete_url">Emplenament automàtic dels URL dels llocs que més utilitzeu\n Manteniu premut qualsevol URL de la barra d\'adreces</string>
   <string name="tip_open_in_new_tab">Obriu un enllaç en una pestanya nova\n Manteniu premut qualsevol enllaç de la pàgina</string>
   <string name="tip_request_desktop">Preferiu veure el lloc com es mostra en l\'escriptori?%1$s Menú &gt; Mostra el lloc d\'escriptori</string>
+  <string name="tip_disable_tips">Desactiva els consells de la pantalla d\'inici del %1$s</string>
 </resources>
