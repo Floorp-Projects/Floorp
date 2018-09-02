@@ -342,7 +342,8 @@ public:
   typedef MozPromise<bool /* aIgnored */, RefPtr<MediaMgrError>, true> InitPromise;
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(SourceListener)
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(SourceListener)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION_AND_RECORDING(SourceListener,
+                                                                                   recordreplay::Behavior::Preserve)
 
   SourceListener();
 
