@@ -36,7 +36,6 @@ def generate_build_task(apks, tag):
         artifacts["public/%s" % os.path.basename(apk)] = artifact
 
     checkout = "git fetch origin && git reset --hard origin/master" if tag is None else "git fetch origin && git checkout %s" % (tag)
-    checkout = checkout + ' && tools/taskcluster/accept-license.sh'
 
     assemble_task = 'assembleNightly'
 
