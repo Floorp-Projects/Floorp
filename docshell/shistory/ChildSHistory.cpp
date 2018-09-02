@@ -86,8 +86,8 @@ ChildSHistory::LegacySHistory()
   return mHistory;
 }
 
-nsIWebNavigation*
-ChildSHistory::LegacySHistoryWebNav()
+nsSHistory*
+ChildSHistory::LegacySHistoryImpl()
 {
   return mHistory;
 }
