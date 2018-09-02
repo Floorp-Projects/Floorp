@@ -653,4 +653,5 @@
   <string name="media_notification_channel">&media_notification_channel;</string>
   <string name="download_notification_channel">&download_notification_channel;</string>
   <string name="updater_notification_channel">&updater_notification_channel;</string>
+  <string name="synced_tabs_notification_channel">&synced_tabs_notification_channel;</string>
 </resources>

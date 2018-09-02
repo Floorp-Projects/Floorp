@@ -900,3 +900,4 @@ Picture-in-picture mini window -->
 <!ENTITY download_notification_channel "Downloads">
 <!ENTITY media_notification_channel "Media playback">
 <!ENTITY updater_notification_channel "App updates">
+<!ENTITY synced_tabs_notification_channel "Synced tabs">
