@@ -277,9 +277,7 @@ ChildProcessInfo::SendMessage(const Message& aMsg)
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   // Update paused state.
-  MOZ_RELEASE_ASSERT(IsPaused() ||
-                     aMsg.mType == MessageType::CreateCheckpoint ||
-                     aMsg.mType == MessageType::Terminate);
+  MOZ_RELEASE_ASSERT(IsPaused() || aMsg.CanBeSentWhileUnpaused());
   switch (aMsg.mType) {
   case MessageType::Resume:
   case MessageType::RestoreCheckpoint:
