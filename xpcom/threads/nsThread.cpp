@@ -1038,17 +1038,11 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  // When recording or replaying, execute triggers that were activated
-  // non-deterministically at some point since the last turn of the event loop.
-  if (recordreplay::IsRecordingOrReplaying()) {
-    recordreplay::ExecuteTriggers();
-
-    // Vsync observers are notified whenever processing events on the main
-    // thread. Waiting for explicit vsync messages from the UI process can
-    // result in paints happening at unexpected times when replaying/rewinding.
-    if (mIsMainThread == MAIN_THREAD) {
-      recordreplay::child::NotifyVsyncObserver();
-    }
+  // When recording or replaying, vsync observers are notified whenever
+  // processing events on the main thread. Waiting for explicit vsync messages
+  // from the UI process can result in paints happening at unexpected times.
+  if (recordreplay::IsRecordingOrReplaying() && mIsMainThread == MAIN_THREAD) {
+    recordreplay::child::NotifyVsyncObserver();
   }
 
   // The toplevel event loop normally blocks waiting for the next event, but

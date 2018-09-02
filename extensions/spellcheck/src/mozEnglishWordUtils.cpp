@@ -67,7 +67,7 @@ mozEnglishWordUtils::FindNextWord(const char16_t *word, uint32_t length,
 
     // before we spend more time looking to see if the word is a url, look for a url identifer
     // and make sure that identifer isn't the last character in the word fragment.
-    if ( (*p == ':' || *p == '@' || *p == '.') &&  p < endbuf - 1) {
+    if ((p < endbuf - 1) && (*p == ':' || *p == '@' || *p == '.')) {
 
         // ok, we have a possible url...do more research to find out if we really have one
         // and determine the length of the url so we can skip over it.
