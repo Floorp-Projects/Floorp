@@ -56,6 +56,36 @@ add_task(async function testContentBlockingToggle() {
   gBrowser.removeCurrentTab();
 });
 
+// Tests that the content blocking main category checkboxes have the correct default state.
+add_task(async function testContentBlockingMainCategory() {
+  SpecialPowers.pushPrefEnv({set: [
+    [CB_UI_PREF, true],
+    [CB_PREF, true],
+    [FB_PREF, true],
+    [TP_PREF, false],
+    [TP_PBM_PREF, true],
+    [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
+  ]});
+
+  let checkboxes = [
+    "#contentBlockingFastBlockCheckbox",
+    "#contentBlockingTrackingProtectionCheckbox",
+    "#contentBlockingBlockCookiesCheckbox",
+  ];
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+
+  for (let selector of checkboxes) {
+    let element = doc.querySelector(selector);
+    ok(element, "checkbox " + selector + " exists");
+    is(element.getAttribute("checked"), "true",
+       "checkbox " + selector + " is checked");
+  }
+
+  gBrowser.removeCurrentTab();
+});
+
 // Tests that the content blocking "Restore Defaults" button does what it's supposed to.
 add_task(async function testContentBlockingRestoreDefaults() {
   SpecialPowers.pushPrefEnv({set: [
