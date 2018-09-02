@@ -965,60 +965,25 @@ nsSHistory::EvictAllContentViewers()
 NS_IMETHODIMP
 nsSHistory::GetCanGoBack(bool* aCanGoBack)
 {
-  NS_ENSURE_ARG_POINTER(aCanGoBack);
-
-  int32_t index = -1;
-  NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
-  if (index > 0) {
-    *aCanGoBack = true;
-    return NS_OK;
-  }
-
-  *aCanGoBack = false;
-  return NS_OK;
+  MOZ_CRASH("nsSHistory::GetCanGoBack");
 }
 
 NS_IMETHODIMP
 nsSHistory::GetCanGoForward(bool* aCanGoForward)
 {
-  NS_ENSURE_ARG_POINTER(aCanGoForward);
-
-  int32_t index = -1;
-  int32_t count = -1;
-  NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(GetCount(&count), NS_ERROR_FAILURE);
-  if (index >= 0 && index < (count - 1)) {
-    *aCanGoForward = true;
-    return NS_OK;
-  }
-
-  *aCanGoForward = false;
-  return NS_OK;
+  MOZ_CRASH("nsSHistory::GetCanGoForward");
 }
 
 NS_IMETHODIMP
 nsSHistory::GoBack()
 {
-  bool canGoBack = false;
-
-  GetCanGoBack(&canGoBack);
-  if (!canGoBack) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  return LoadEntry(mIndex - 1, LOAD_HISTORY, HIST_CMD_BACK);
+  MOZ_CRASH("nsSHistory::GoBack");
 }
 
 NS_IMETHODIMP
 nsSHistory::GoForward()
 {
-  bool canGoForward = false;
-
-  GetCanGoForward(&canGoForward);
-  if (!canGoForward) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  return LoadEntry(mIndex + 1, LOAD_HISTORY,
-                   HIST_CMD_FORWARD);
+  MOZ_CRASH("nsSHistory::GoForward");
 }
 
 NS_IMETHODIMP
@@ -1578,15 +1543,13 @@ nsSHistory::UpdateIndex()
 NS_IMETHODIMP
 nsSHistory::Stop(uint32_t aStopFlags)
 {
-  // Not implemented
-  return NS_OK;
+  MOZ_CRASH("nsSHistory::Stop");
 }
 
 NS_IMETHODIMP
 nsSHistory::GetDocument(nsIDocument** aDocument)
 {
-  // Not implemented
-  return NS_OK;
+  MOZ_CRASH("nsSHistory::GetDocument");
 }
 
 NS_IMETHODIMP
@@ -1607,17 +1570,13 @@ nsSHistory::GetCurrentURI(nsIURI** aResultURI)
 NS_IMETHODIMP
 nsSHistory::GetReferringURI(nsIURI** aURI)
 {
-  *aURI = nullptr;
-  // Not implemented
-  return NS_OK;
+  MOZ_CRASH("nsSHistory::GetReferringURI");
 }
 
 NS_IMETHODIMP
 nsSHistory::GetSessionHistoryXPCOM(nsISupports** aSessionHistory)
 {
-  *aSessionHistory = nullptr;
-  // Not implemented
-  return NS_OK;
+  MOZ_CRASH("nsSHistory::GetSessionHistoryXPCOM");
 }
 
 NS_IMETHODIMP
@@ -1630,14 +1589,14 @@ nsSHistory::LoadURIWithOptions(const char16_t* aURI,
                                nsIURI* aBaseURI,
                                nsIPrincipal* aTriggeringPrincipal)
 {
-  return NS_OK;
+  MOZ_CRASH("nsSHistory::LoadURIWithOptions");
 }
 
 NS_IMETHODIMP
 nsSHistory::SetOriginAttributesBeforeLoading(JS::HandleValue aOriginAttributes,
                                              JSContext* aCx)
 {
-  return NS_OK;
+  MOZ_CRASH("nsSHistory::SetOriginAttributesBeforeLoading");
 }
 
 NS_IMETHODIMP
@@ -1648,7 +1607,7 @@ nsSHistory::LoadURI(const char16_t* aURI,
                     nsIInputStream* aExtraHeaderStream,
                     nsIPrincipal* aTriggeringPrincipal)
 {
-  return NS_OK;
+  MOZ_CRASH("nsSHistory::LoadURI");
 }
 
 NS_IMETHODIMP
