@@ -55,7 +55,7 @@ class FontOverview extends PureComponent {
         {
           className: "devtools-sidepanel-no-result"
         },
-        getStr("fontinspector.noFontsOnSelectedElement")
+        getStr("fontinspector.noFontsUsedOnCurrentElement")
       );
   }
 

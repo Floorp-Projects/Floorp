@@ -16,7 +16,6 @@ DIRS += [
 ]
 DevToolsModules(
     'browser-console.js',
-    'console-commands.js',
     'constants.js',
     'hudservice.js',
     'main.js',
