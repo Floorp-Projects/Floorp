@@ -8,10 +8,10 @@
 # The scalars are defined in files provided as command-line arguments.
 
 from __future__ import print_function
-from shared_telemetry_utils import ParserError
+from parsers.shared_telemetry_utils import ParserError
+from parsers import parse_scalars
 
 import sys
-import parse_scalars
 
 banner = """/* This file is auto-generated, see gen_scalar_enum.py.  */
 """

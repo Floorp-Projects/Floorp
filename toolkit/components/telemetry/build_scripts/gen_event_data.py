@@ -7,10 +7,10 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-from shared_telemetry_utils import StringTable, static_assert, ParserError
+from parsers.shared_telemetry_utils import StringTable, static_assert, ParserError
+from parsers import parse_events
 
 import json
-import parse_events
 import sys
 import itertools
 
@@ -22,7 +22,7 @@ banner = """/* This file is auto-generated, only for internal use in TelemetryEv
 file_header = """\
 #ifndef mozilla_TelemetryEventData_h
 #define mozilla_TelemetryEventData_h
-#include "EventInfo.h"
+#include "core/EventInfo.h"
 namespace {
 """
 
