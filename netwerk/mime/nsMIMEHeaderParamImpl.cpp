@@ -13,7 +13,6 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsEscape.h"
-#include "nsUConvCID.h"
 #include "nsIServiceManager.h"
 #include "nsMIMEHeaderParamImpl.h"
 #include "nsReadableUtils.h"
