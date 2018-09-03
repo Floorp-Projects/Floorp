@@ -140,8 +140,6 @@ static LazyLogModule gSHistoryLog("nsSHistory");
 
 enum HistCmd
 {
-  HIST_CMD_BACK,
-  HIST_CMD_FORWARD,
   HIST_CMD_GOTOINDEX,
   HIST_CMD_RELOAD
 };
@@ -255,8 +253,6 @@ NS_IMPL_RELEASE(nsSHistory)
 NS_INTERFACE_MAP_BEGIN(nsSHistory)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHistory)
   NS_INTERFACE_MAP_ENTRY(nsISHistory)
-  NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
-  NS_INTERFACE_MAP_ENTRY(nsISHistoryInternal)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -963,66 +959,7 @@ nsSHistory::EvictAllContentViewers()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHistory::GetCanGoBack(bool* aCanGoBack)
-{
-  NS_ENSURE_ARG_POINTER(aCanGoBack);
-
-  int32_t index = -1;
-  NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
-  if (index > 0) {
-    *aCanGoBack = true;
-    return NS_OK;
-  }
-
-  *aCanGoBack = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHistory::GetCanGoForward(bool* aCanGoForward)
-{
-  NS_ENSURE_ARG_POINTER(aCanGoForward);
-
-  int32_t index = -1;
-  int32_t count = -1;
-  NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(GetCount(&count), NS_ERROR_FAILURE);
-  if (index >= 0 && index < (count - 1)) {
-    *aCanGoForward = true;
-    return NS_OK;
-  }
-
-  *aCanGoForward = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHistory::GoBack()
-{
-  bool canGoBack = false;
-
-  GetCanGoBack(&canGoBack);
-  if (!canGoBack) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  return LoadEntry(mIndex - 1, LOAD_HISTORY, HIST_CMD_BACK);
-}
-
-NS_IMETHODIMP
-nsSHistory::GoForward()
-{
-  bool canGoForward = false;
-
-  GetCanGoForward(&canGoForward);
-  if (!canGoForward) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  return LoadEntry(mIndex + 1, LOAD_HISTORY,
-                   HIST_CMD_FORWARD);
-}
-
-NS_IMETHODIMP
+nsresult
 nsSHistory::Reload(uint32_t aReloadFlags)
 {
   uint32_t loadType;
@@ -1576,21 +1513,7 @@ nsSHistory::UpdateIndex()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHistory::Stop(uint32_t aStopFlags)
-{
-  // Not implemented
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHistory::GetDocument(nsIDocument** aDocument)
-{
-  // Not implemented
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+nsresult
 nsSHistory::GetCurrentURI(nsIURI** aResultURI)
 {
   NS_ENSURE_ARG_POINTER(aResultURI);
@@ -1605,54 +1528,7 @@ nsSHistory::GetCurrentURI(nsIURI** aResultURI)
   return rv;
 }
 
-NS_IMETHODIMP
-nsSHistory::GetReferringURI(nsIURI** aURI)
-{
-  *aURI = nullptr;
-  // Not implemented
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHistory::GetSessionHistoryXPCOM(nsISupports** aSessionHistory)
-{
-  *aSessionHistory = nullptr;
-  // Not implemented
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHistory::LoadURIWithOptions(const char16_t* aURI,
-                               uint32_t aLoadFlags,
-                               nsIURI* aReferringURI,
-                               uint32_t aReferrerPolicy,
-                               nsIInputStream* aPostStream,
-                               nsIInputStream* aExtraHeaderStream,
-                               nsIURI* aBaseURI,
-                               nsIPrincipal* aTriggeringPrincipal)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHistory::SetOriginAttributesBeforeLoading(JS::HandleValue aOriginAttributes,
-                                             JSContext* aCx)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHistory::LoadURI(const char16_t* aURI,
-                    uint32_t aLoadFlags,
-                    nsIURI* aReferringURI,
-                    nsIInputStream* aPostStream,
-                    nsIInputStream* aExtraHeaderStream,
-                    nsIPrincipal* aTriggeringPrincipal)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+nsresult
 nsSHistory::GotoIndex(int32_t aIndex)
 {
   return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX);
@@ -1709,15 +1585,7 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
 
   // Send appropriate listener notifications.
   bool canNavigate = true;
-  if (aHistCmd == HIST_CMD_BACK) {
-    // We are going back one entry. Send GoBack notifications
-    NOTIFY_LISTENERS_CANCELABLE(OnHistoryGoBack, canNavigate,
-                                (nextURI, &canNavigate));
-  } else if (aHistCmd == HIST_CMD_FORWARD) {
-    // We are going forward. Send GoForward notification
-    NOTIFY_LISTENERS_CANCELABLE(OnHistoryGoForward, canNavigate,
-                                (nextURI, &canNavigate));
-  } else if (aHistCmd == HIST_CMD_GOTOINDEX) {
+  if (aHistCmd == HIST_CMD_GOTOINDEX) {
     // We are going somewhere else. This is not reload either
     NOTIFY_LISTENERS_CANCELABLE(OnHistoryGotoIndex, canNavigate,
                                 (aIndex, nextURI, &canNavigate));
