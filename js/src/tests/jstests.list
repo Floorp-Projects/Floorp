@@ -414,19 +414,6 @@ skip script test262/annexB/built-ins/Function/createdynfn-html-close-comment-par
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1334813
 skip script test262/built-ins/DataView/length.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1440468
-skip script test262/built-ins/Function/prototype/toString/proxy.js
-skip script test262/built-ins/Function/prototype/toString/proxy-async-generator-function.js
-skip script test262/built-ins/Function/prototype/toString/proxy-class.js
-skip script test262/built-ins/Function/prototype/toString/proxy-async-method-definition.js
-skip script test262/built-ins/Function/prototype/toString/proxy-arrow-function.js
-skip script test262/built-ins/Function/prototype/toString/proxy-async-generator-method-definition.js
-skip script test262/built-ins/Function/prototype/toString/proxy-async-function.js
-skip script test262/built-ins/Function/prototype/toString/proxy-bound-function.js
-skip script test262/built-ins/Function/prototype/toString/proxy-method-definition.js
-skip script test262/built-ins/Function/prototype/toString/proxy-function-expression.js
-skip script test262/built-ins/Function/prototype/toString/proxy-generator-function.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1462741
 skip script test262/built-ins/Function/prototype/toString/well-known-intrinsic-object-functions.js
 
