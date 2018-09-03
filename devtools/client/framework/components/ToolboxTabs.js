@@ -51,7 +51,8 @@ class ToolboxTabs extends Component {
     this._resizeTimerId = null;
     this.resizeHandler = this.resizeHandler.bind(this);
 
-    this._tabsOrderManager = new ToolboxTabsOrderManager(props.onTabsOrderUpdated);
+    this._tabsOrderManager =
+      new ToolboxTabsOrderManager(props.onTabsOrderUpdated, props.panelDefinitions);
   }
 
   componentDidMount() {
@@ -72,6 +73,7 @@ class ToolboxTabs extends Component {
     if (this.shouldUpdateToolboxTabs(prevProps, this.props)) {
       this.updateCachedToolTabsWidthMap();
       this.updateOverflowedTabs();
+      this._tabsOrderManager.setCurrentPanelDefinitions(this.props.panelDefinitions);
     }
   }
 
@@ -247,8 +249,6 @@ class ToolboxTabs extends Component {
       panelDefinitions,
       selectTool,
     } = this.props;
-
-    this._tabsOrderManager.setCurrentPanelDefinitions(panelDefinitions);
 
     const tabs = panelDefinitions.map(panelDefinition => {
       // Don't display overflowed tab.
