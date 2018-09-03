@@ -754,7 +754,7 @@ var gPermissionObject = {
 
   "desktop-notification": {
     exactHostMatch: true,
-    labelID: "desktop-notification2",
+    labelID: "desktop-notification3",
   },
 
   "camera": {
