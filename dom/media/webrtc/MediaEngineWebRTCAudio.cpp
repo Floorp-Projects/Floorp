@@ -124,8 +124,6 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
     bool aDelayAgnostic,
     bool aExtendedFilter)
   : mDeviceInfo(std::move(aInfo))
-  , mAudioProcessing(AudioProcessing::Create())
-  , mMutex("WebRTCMic::Mutex")
   , mDelayAgnostic(aDelayAgnostic)
   , mExtendedFilter(aExtendedFilter)
   , mDeviceName(aDeviceName)
@@ -137,6 +135,8 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
         // Non-strict means it won't assert main thread for us.
         // It would be great if it did but we're already on the media thread.
         /* aStrict = */ false))
+  , mMutex("WebRTCMic::Mutex")
+  , mAudioProcessing(AudioProcessing::Create())
   , mRequestedInputChannelCount(aMaxChannelCount)
   , mSkipProcessing(false)
   , mInputDownmixBuffer(MAX_SAMPLING_FREQ * MAX_CHANNELS / 100)
