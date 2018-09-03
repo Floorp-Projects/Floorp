@@ -12,7 +12,7 @@ const CB_UI_ENABLED_PREF = "browser.contentblocking.ui.enabled";
 async function openAboutPrivateBrowsing() {
   let win = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
-    waitForNonAboutBlankLoad: true,
+    waitForTabURL: "about:privatebrowsing",
   });
   let tab = win.gBrowser.selectedBrowser;
   return { win, tab };
