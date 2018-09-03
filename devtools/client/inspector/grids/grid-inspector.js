@@ -6,6 +6,7 @@
 
 const Services = require("Services");
 const { throttle } = require("devtools/client/inspector/shared/utils");
+const flags = require("devtools/shared/flags");
 
 const {
   updateGridColor,
@@ -97,10 +98,16 @@ class GridInspector {
       return;
     }
 
-    this.document.addEventListener("mousemove", () => {
+    if (flags.testing) {
+      // In tests, we start listening immediately to avoid having to simulate a mousemove.
       this.highlighters.on("grid-highlighter-hidden", this.onHighlighterHidden);
       this.highlighters.on("grid-highlighter-shown", this.onHighlighterShown);
-    }, { once: true });
+    } else {
+      this.document.addEventListener("mousemove", () => {
+        this.highlighters.on("grid-highlighter-hidden", this.onHighlighterHidden);
+        this.highlighters.on("grid-highlighter-shown", this.onHighlighterShown);
+      }, { once: true });
+    }
 
     this.inspector.sidebar.on("select", this.onSidebarSelect);
     this.inspector.on("new-root", this.onNavigate);
