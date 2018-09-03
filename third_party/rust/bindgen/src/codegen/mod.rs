@@ -595,6 +595,7 @@ impl CodeGenerator for Type {
             TypeKind::Float(..) |
             TypeKind::Complex(..) |
             TypeKind::Array(..) |
+            TypeKind::Vector(..) |
             TypeKind::Pointer(..) |
             TypeKind::BlockPointer |
             TypeKind::Reference(..) |
@@ -1554,10 +1555,12 @@ impl CodeGenerator for CompInfo {
                         packed = true;
                     } else {
                         explicit_align = Some(layout.align);
-                        let ty = helpers::blob(Layout::new(0, layout.align));
-                        fields.push(quote! {
-                            pub __bindgen_align: #ty ,
-                        });
+                        if !ctx.options().rust_features.repr_align {
+                            let ty = helpers::blob(Layout::new(0, layout.align));
+                            fields.push(quote! {
+                                pub __bindgen_align: #ty ,
+                            });
+                        }
                     }
                 }
             }
@@ -1842,7 +1845,7 @@ impl CodeGenerator for CompInfo {
             }
 
             let mut method_names = Default::default();
-            if ctx.options().codegen_config.methods {
+            if ctx.options().codegen_config.methods() {
                 for method in self.methods() {
                     assert!(method.kind() != MethodKind::Constructor);
                     method.codegen_method(
@@ -1855,7 +1858,7 @@ impl CodeGenerator for CompInfo {
                 }
             }
 
-            if ctx.options().codegen_config.constructors {
+            if ctx.options().codegen_config.constructors() {
                 for sig in self.constructors() {
                     Method::new(
                         MethodKind::Constructor,
@@ -1872,7 +1875,7 @@ impl CodeGenerator for CompInfo {
                 }
             }
 
-            if ctx.options().codegen_config.destructors {
+            if ctx.options().codegen_config.destructors() {
                 if let Some((kind, destructor)) = self.destructor() {
                     debug_assert!(kind.is_destructor());
                     Method::new(kind, destructor, false).codegen_method(
@@ -1978,11 +1981,12 @@ impl MethodCodegen for Method {
         assert!({
             let cc = &ctx.options().codegen_config;
             match self.kind() {
-                MethodKind::Constructor => cc.constructors,
-                MethodKind::Destructor => cc.destructors,
-                MethodKind::VirtualDestructor { .. } => cc.destructors,
-                MethodKind::Static | MethodKind::Normal |
-                MethodKind::Virtual { .. } => cc.methods,
+                MethodKind::Constructor => cc.constructors(),
+                MethodKind::Destructor => cc.destructors(),
+                MethodKind::VirtualDestructor { .. } => cc.destructors(),
+                MethodKind::Static |
+                MethodKind::Normal |
+                MethodKind::Virtual { .. } => cc.methods(),
             }
         });
 
@@ -2645,15 +2649,28 @@ impl CodeGenerator for Enum {
                             };
 
                         let existing_variant_name = entry.get();
-                        add_constant(
-                            ctx,
-                            enum_ty,
-                            &ident,
-                            &*mangled_name,
-                            existing_variant_name,
-                            enum_rust_ty.clone(),
-                            result,
-                        );
+                        // Use associated constants for named enums.
+                        if enum_ty.name().is_some() &&
+                           ctx.options().rust_features().associated_const {
+                            let enum_canonical_name = &ident;
+                            let variant_name = ctx.rust_ident_raw(&*mangled_name);
+                            result.push(quote! {
+                                impl #enum_rust_ty {
+                                    pub const #variant_name : #enum_rust_ty =
+                                        #enum_canonical_name :: #existing_variant_name ;
+                                }
+                            });
+                        } else {
+                            add_constant(
+                                ctx,
+                                enum_ty,
+                                &ident,
+                                &*mangled_name,
+                                existing_variant_name,
+                                enum_rust_ty.clone(),
+                                result,
+                            );
+                        }
                     } else {
                         builder = builder.with_variant(
                             ctx,
@@ -2978,6 +2995,12 @@ impl TryToRustTy for Type {
                     IntKind::ULong => Ok(raw_type(ctx, "c_ulong")),
                     IntKind::LongLong => Ok(raw_type(ctx, "c_longlong")),
                     IntKind::ULongLong => Ok(raw_type(ctx, "c_ulonglong")),
+                    IntKind::WChar { size } => {
+                        let ty = Layout::known_type_for_size(size)
+                            .expect("Non-representable wchar_t?");
+                        let ident = ctx.rust_ident_raw(ty);
+                        Ok(quote! { #ident })
+                    },
 
                     IntKind::I8 => Ok(quote! { i8 }),
                     IntKind::U8 => Ok(quote! { u8 }),
@@ -3030,7 +3053,7 @@ impl TryToRustTy for Type {
                     ::#prefix::option::Option<#ty>
                 })
             }
-            TypeKind::Array(item, len) => {
+            TypeKind::Array(item, len) | TypeKind::Vector(item, len) => {
                 let ty = item.try_to_rust_ty(ctx, &())?;
                 Ok(quote! {
                     [ #ty ; #len ]
@@ -3315,6 +3338,10 @@ impl CodeGenerator for Function {
         let abi = match signature.abi() {
             Abi::ThisCall if !ctx.options().rust_features().thiscall_abi => {
                 warn!("Skipping function with thiscall ABI that isn't supported by the configured Rust target");
+                return;
+            }
+            Abi::Win64 if signature.is_variadic() => {
+                warn!("Skipping variadic function with Win64 ABI that isn't supported");
                 return;
             }
             Abi::Unknown(unknown_abi) => {
