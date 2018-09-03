@@ -664,8 +664,6 @@ RR_mmap(void* aAddress, size_t aSize, int aProt, int aFlags, int aFd, off_t aOff
   if (!(aFlags & MAP_ANON) && !AreThreadEventsPassedThrough()) {
     // Include the data just mapped in the recording.
     MOZ_RELEASE_ASSERT(memory && memory != (void*)-1);
-    RecordReplayAssert("mmap");
-    MOZ_RELEASE_ASSERT(aSize == RecordReplayValue(aSize));
     RecordReplayBytes(memory, aSize);
   }
 
@@ -1177,7 +1175,6 @@ WaitForCvar(pthread_mutex_t* aMutex, bool aRecordReturnValue,
     AutoEnsurePassThroughThreadEvents pt;
     return aCallback();
   }
-  RecordReplayAssert("WaitForCvar %d", (int) lock->Id());
   ssize_t rv = 0;
   if (IsRecording()) {
     AutoPassThroughThreadEvents pt;
@@ -1734,13 +1731,15 @@ extern "C" {
 size_t __attribute__((used))
 RecordReplayInterceptObjCMessage(MessageArguments* aArguments)
 {
-  if (AreThreadEventsPassedThrough()) {
+  Thread* thread = Thread::Current();
+  if (!thread || thread->PassThroughEvents()) {
     aArguments->scratch = (size_t) OriginalFunction(CallEvent_objc_msgSend);
     return 1;
   }
   EnsureNotDivergedFromRecording();
 
-  RecordReplayAssert("objc_msgSend: %s", aArguments->msg);
+  thread->Events().RecordOrReplayThreadEvent(CallIdToThreadEvent(CallEvent_objc_msgSend));
+  thread->Events().CheckInput(aArguments->msg);
 
   size_t rval = 0;
   double floatRval = 0;
