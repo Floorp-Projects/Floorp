@@ -3483,7 +3483,7 @@ wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
                           const FuncCompileInputVector& inputs, CompiledCode* code,
                           UniqueChars* error)
 {
-    MOZ_ASSERT(env.tier == Tier::Ion);
+    MOZ_ASSERT(env.tier() == Tier::Ion);
 
     TempAllocator alloc(&lifo);
     JitContext jitContext(&alloc);
