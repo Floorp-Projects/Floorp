@@ -44,21 +44,8 @@ async function delayedClicks(toolbox, node, clicks) {
       // See TOOL_DELAY for why we need setTimeout here
       setTimeout(() => resolve(), TOOL_DELAY);
     });
-
-    const { CommandState } = require("devtools/shared/gcli/command-state");
-    const clicked = new Promise(resolve => {
-      CommandState.on("changed", function changed({command}) {
-        if (command === "paintflashing") {
-          CommandState.off("changed", changed);
-          resolve();
-        }
-      });
-    });
-
     info("Clicking button " + node.id);
     node.click();
-
-    await clicked;
   }
 }
 
