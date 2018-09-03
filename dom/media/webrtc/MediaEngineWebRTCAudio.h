@@ -266,7 +266,6 @@ private:
 
   bool mDelayAgnostic;
   bool mExtendedFilter;
-  bool mStarted;
 
   const nsString mDeviceName;
   const nsCString mDeviceUUID;
