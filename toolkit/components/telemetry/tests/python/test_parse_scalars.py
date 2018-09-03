@@ -10,8 +10,11 @@ from os import path
 
 TELEMETRY_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir, path.pardir))
 sys.path.append(TELEMETRY_ROOT_PATH)
-from shared_telemetry_utils import ParserError
-import parse_scalars
+# The parsers live in a subdirectory of "build_scripts", account for that.
+# NOTE: if the parsers are moved, this logic will need to be updated.
+sys.path.append(path.join(TELEMETRY_ROOT_PATH, "build_scripts"))
+from parsers.shared_telemetry_utils import ParserError
+from parsers import parse_scalars
 
 
 def load_scalar(scalar):
