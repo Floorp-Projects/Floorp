@@ -7589,7 +7589,10 @@ class MGetFirstDollarIndex
       : MUnaryInstruction(classOpcode, str)
     {
         setResultType(MIRType::Int32);
-        setMovable();
+
+        // Codegen assumes string length > 0. Don't allow LICM to move this
+        // before the .length > 1 check in RegExpReplace in RegExp.js.
+        MOZ_ASSERT(!isMovable());
     }
 
   public:
