@@ -25,7 +25,7 @@ const Assert = {
     if (!result) {
       throw new Error("Assert.equal failed " + a + " != " + b);
     }
-  }
+  },
 };
 
 function do_test_complete() {

@@ -94,5 +94,5 @@ var SelectBookmarkDialog = {
     }
     window.arguments[0].urls = urls;
     window.arguments[0].names = names;
-  }
+  },
 };

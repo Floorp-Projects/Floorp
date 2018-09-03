@@ -56,5 +56,10 @@ window.gActivityStreamPrerenderedState = {
       "order": 2,
       "initialized": false
     }
-  ]
+  ],
+  "Pocket": {
+    "isUserLoggedIn": false,
+    "pocketCta": {},
+    "waitingForSpoc": true
+  }
 };

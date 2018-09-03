@@ -24,42 +24,42 @@ async function test() {
     id: "addon2@tests.mozilla.org",
     name: "Uninstall doesn't need restart 1",
     type: "extension",
-    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
   }, {
     id: "addon3@tests.mozilla.org",
     name: "Uninstall doesn't need restart 2",
     type: "extension",
-    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
   }, {
     id: "addon4@tests.mozilla.org",
     name: "Uninstall doesn't need restart 3",
     type: "extension",
-    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
   }, {
     id: "addon5@tests.mozilla.org",
     name: "Uninstall doesn't need restart 4",
     type: "extension",
-    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
   }, {
     id: "addon6@tests.mozilla.org",
     name: "Uninstall doesn't need restart 5",
     type: "extension",
-    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
   }, {
     id: "addon7@tests.mozilla.org",
     name: "Uninstall doesn't need restart 6",
     type: "extension",
-    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
   }, {
     id: "addon8@tests.mozilla.org",
     name: "Uninstall doesn't need restart 7",
     type: "extension",
-    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
   }, {
     id: "addon9@tests.mozilla.org",
     name: "Uninstall doesn't need restart 8",
     type: "extension",
-    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE,
   }]);
 
   await setup_manager(null);

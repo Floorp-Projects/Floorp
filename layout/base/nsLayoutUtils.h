@@ -2236,7 +2236,6 @@ public:
   }
 
   // There are a bunch of callers of SurfaceFromElement.  Just mark it as
-  // MOZ_CAN_RUN_SCRIPT_BOUNDARY for now.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static SurfaceFromElementResult SurfaceFromElement(nsIImageLoadingContent *aElement,
                                                      uint32_t aSurfaceFlags,

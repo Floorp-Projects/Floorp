@@ -51,7 +51,7 @@ FeedListener.prototype = {
     }
 
     run_next_test();
-  }
+  },
 };
 
 function createTest(data) {

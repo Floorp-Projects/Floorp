@@ -1180,14 +1180,16 @@ WaitForCvar(pthread_mutex_t* aMutex, bool aRecordReturnValue,
   RecordReplayAssert("WaitForCvar %d", (int) lock->Id());
   ssize_t rv = 0;
   if (IsRecording()) {
-    {
-      AutoPassThroughThreadEvents pt;
-      rv = aCallback();
-    }
+    AutoPassThroughThreadEvents pt;
+    rv = aCallback();
   } else {
     DirectUnlockMutex(aMutex);
   }
-  lock->Enter([=]() { DirectLockMutex(aMutex); });
+  lock->Exit();
+  lock->Enter();
+  if (IsReplaying()) {
+    DirectLockMutex(aMutex);
+  }
   if (aRecordReturnValue) {
     return RecordReplayValue(rv);
   }
@@ -1273,11 +1275,20 @@ RR_pthread_mutex_lock(pthread_mutex_t* aMutex)
     AutoEnsurePassThroughThreadEventsUseStackPointer pt;
     return OriginalCall(pthread_mutex_lock, ssize_t, aMutex);
   }
+  ssize_t rv = 0;
   if (IsRecording()) {
-    DirectLockMutex(aMutex);
+    AutoPassThroughThreadEvents pt;
+    rv = OriginalCall(pthread_mutex_lock, ssize_t, aMutex);
   }
-  lock->Enter([=]() { DirectLockMutex(aMutex); });
-  return 0;
+  rv = RecordReplayValue(rv);
+  MOZ_RELEASE_ASSERT(rv == 0 || rv == EDEADLK);
+  if (rv == 0) {
+    lock->Enter();
+    if (IsReplaying()) {
+      DirectLockMutex(aMutex);
+    }
+  }
+  return rv;
 }
 
 static ssize_t
@@ -1296,7 +1307,10 @@ RR_pthread_mutex_trylock(pthread_mutex_t* aMutex)
   rv = RecordReplayValue(rv);
   MOZ_RELEASE_ASSERT(rv == 0 || rv == EBUSY);
   if (rv == 0) {
-    lock->Enter([=]() { DirectLockMutex(aMutex); });
+    lock->Enter();
+    if (IsReplaying()) {
+      DirectLockMutex(aMutex);
+    }
   }
   return rv;
 }
@@ -1304,8 +1318,14 @@ RR_pthread_mutex_trylock(pthread_mutex_t* aMutex)
 static ssize_t
 RR_pthread_mutex_unlock(pthread_mutex_t* aMutex)
 {
-  AutoEnsurePassThroughThreadEventsUseStackPointer pt;
-  return OriginalCall(pthread_mutex_unlock, ssize_t, aMutex);
+  Lock* lock = Lock::Find(aMutex);
+  if (!lock) {
+    AutoEnsurePassThroughThreadEventsUseStackPointer pt;
+    return OriginalCall(pthread_mutex_unlock, ssize_t, aMutex);
+  }
+  lock->Exit();
+  DirectUnlockMutex(aMutex);
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

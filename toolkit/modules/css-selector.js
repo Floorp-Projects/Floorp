@@ -10,7 +10,7 @@ var EXPORTED_SYMBOLS = [
   "findAllCssSelectors",
   "findCssSelector",
   "getCssPath",
-  "getXPath"
+  "getXPath",
 ];
 
 /**
@@ -81,7 +81,7 @@ function findNodeAndContainer(node) {
     // we can find the node via shadowRoot.querySelector(path).
     return {
       containingDocOrShadow: shadowRoot,
-      node
+      node,
     };
   }
 
@@ -90,7 +90,7 @@ function findNodeAndContainer(node) {
   const bindingParent = getRootBindingParent(node);
   return {
     containingDocOrShadow: bindingParent.ownerDocument,
-    node: bindingParent
+    node: bindingParent,
   };
 }
 

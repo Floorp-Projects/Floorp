@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DeviceRect, FilterOp, MixBlendMode, PipelineId, PremultipliedColorF};
+use api::{DeviceRect, FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, PictureRect};
 use api::{DeviceIntRect, DeviceIntSize, DevicePoint, LayoutPoint, LayoutRect};
 use api::{DevicePixelScale, PictureIntPoint, PictureIntRect, PictureIntSize};
 use box_shadow::{BLUR_SAMPLE_SCALE};
@@ -10,14 +10,14 @@ use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState};
 use frame_builder::{PictureContext, PrimitiveContext};
 use gpu_cache::{GpuCacheHandle};
 use gpu_types::UvRectKind;
-use prim_store::{PrimitiveIndex, PrimitiveRun, LocalRectBuilder};
+use prim_store::{PrimitiveIndex, PrimitiveRun};
 use prim_store::{PrimitiveMetadata, Transform};
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
 use scene::{FilterOpHelpers, SceneProperties};
 use std::mem;
 use tiling::RenderTargetKind;
-use util::TransformedRectKind;
+use util::{TransformedRectKind, world_rect_to_device_pixels};
 
 /*
  A picture represents a dynamically rendered image. It consists of:
@@ -122,6 +122,7 @@ pub struct PicturePrimitive {
 
     // List of primitive runs that make up this picture.
     pub runs: Vec<PrimitiveRun>,
+    pub state: Option<PictureState>,
 
     // The pipeline that the primitives on this picture belong to.
     pub pipeline_id: PipelineId,
@@ -156,7 +157,7 @@ pub struct PicturePrimitive {
 }
 
 impl PicturePrimitive {
-    pub fn resolve_scene_properties(&mut self, properties: &SceneProperties) -> bool {
+    fn resolve_scene_properties(&mut self, properties: &SceneProperties) -> bool {
         match self.composite_mode {
             Some(PictureCompositeMode::Filter(ref mut filter)) => {
                 match *filter {
@@ -182,6 +183,7 @@ impl PicturePrimitive {
     ) -> Self {
         PicturePrimitive {
             runs: Vec::new(),
+            state: None,
             surface: None,
             secondary_render_task_id: None,
             composite_mode,
@@ -194,12 +196,39 @@ impl PicturePrimitive {
         }
     }
 
+    pub fn can_draw_directly_to_parent_surface(&self) -> bool {
+        match self.composite_mode {
+            Some(PictureCompositeMode::Filter(filter)) => {
+                filter.is_noop()
+            }
+            Some(PictureCompositeMode::Blit) |
+            Some(PictureCompositeMode::MixBlend(..)) => {
+                false
+            }
+            None => {
+                true
+            }
+        }
+    }
+
     pub fn take_context(
         &mut self,
-        allow_subpixel_aa: bool,
-    ) -> PictureContext {
+        parent_allows_subpixel_aa: bool,
+        scene_properties: &SceneProperties,
+        is_chased: bool,
+    ) -> Option<PictureContext> {
+        if !self.resolve_scene_properties(scene_properties) {
+            if cfg!(debug_assertions) && is_chased {
+                println!("\tculled for carrying an invisible composite filter");
+            }
+
+            return None;
+        }
+
+        // Disallow subpixel AA if an intermediate surface is needed.
         // TODO(lsalzman): allow overriding parent if intermediate surface is opaque
-        let allow_subpixel_aa = allow_subpixel_aa && self.allow_subpixel_aa();
+        let allow_subpixel_aa = parent_allows_subpixel_aa &&
+            self.can_draw_directly_to_parent_surface();
 
         let inflation_factor = match self.composite_mode {
             Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
@@ -212,13 +241,14 @@ impl PicturePrimitive {
             }
         };
 
-        PictureContext {
+        Some(PictureContext {
             pipeline_id: self.pipeline_id,
             prim_runs: mem::replace(&mut self.runs, Vec::new()),
             apply_local_clip_rect: self.apply_local_clip_rect,
             inflation_factor,
             allow_subpixel_aa,
-        }
+            has_surface: !self.can_draw_directly_to_parent_surface(),
+        })
     }
 
     pub fn add_primitive(
@@ -241,55 +271,49 @@ impl PicturePrimitive {
     pub fn restore_context(
         &mut self,
         context: PictureContext,
-        local_rect_builder: LocalRectBuilder,
+        state: PictureState,
+        local_rect: Option<PictureRect>,
     ) -> LayoutRect {
         self.runs = context.prim_runs;
+        self.state = Some(state);
 
-        let local_content_rect = local_rect_builder.local_rect;
+        match local_rect {
+            Some(local_rect) => {
+                let local_content_rect = LayoutRect::from_untyped(&local_rect.to_untyped());
 
-        match self.composite_mode {
-            Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
-                let inflate_size = (blur_radius * BLUR_SAMPLE_SCALE).ceil();
-                local_content_rect.inflate(inflate_size, inflate_size)
-            }
-            Some(PictureCompositeMode::Filter(FilterOp::DropShadow(_, blur_radius, _))) => {
-                let inflate_size = (blur_radius * BLUR_SAMPLE_SCALE).ceil();
-                local_content_rect.inflate(inflate_size, inflate_size)
+                match self.composite_mode {
+                    Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
+                        let inflate_size = (blur_radius * BLUR_SAMPLE_SCALE).ceil();
+                        local_content_rect.inflate(inflate_size, inflate_size)
+                    }
+                    Some(PictureCompositeMode::Filter(FilterOp::DropShadow(_, blur_radius, _))) => {
+                        let inflate_size = (blur_radius * BLUR_SAMPLE_SCALE).ceil();
+                        local_content_rect.inflate(inflate_size, inflate_size)
 
-                // TODO(gw): When we support culling rect being separate from
-                //           the task/screen rect, we should include both the
-                //           content and shadow rect here, which will prevent
-                //           drop-shadows from disappearing if the main content
-                //           rect is not visible. Something like:
-                // let shadow_rect = local_content_rect
-                //     .inflate(inflate_size, inflate_size)
-                //     .translate(&offset);
-                // shadow_rect.union(&local_content_rect)
-            }
-            _ => {
-                local_content_rect
-            }
-        }
-    }
-
-    pub fn can_draw_directly_to_parent_surface(&self) -> bool {
-        match self.composite_mode {
-            Some(PictureCompositeMode::Filter(filter)) => {
-                filter.is_noop()
-            }
-            Some(PictureCompositeMode::Blit) |
-            Some(PictureCompositeMode::MixBlend(..)) => {
-                false
+                        // TODO(gw): When we support culling rect being separate from
+                        //           the task/screen rect, we should include both the
+                        //           content and shadow rect here, which will prevent
+                        //           drop-shadows from disappearing if the main content
+                        //           rect is not visible. Something like:
+                        // let shadow_rect = local_content_rect
+                        //     .inflate(inflate_size, inflate_size)
+                        //     .translate(&offset);
+                        // shadow_rect.union(&local_content_rect)
+                    }
+                    _ => {
+                        local_content_rect
+                    }
+                }
             }
             None => {
-                true
+                assert!(self.can_draw_directly_to_parent_surface());
+                LayoutRect::zero()
             }
         }
     }
 
-    // Disallow subpixel AA if an intermediate surface is needed.
-    fn allow_subpixel_aa(&self) -> bool {
-        self.can_draw_directly_to_parent_surface()
+    pub fn take_state(&mut self) -> PictureState {
+        self.state.take().expect("bug: no state present!")
     }
 
     pub fn prepare_for_render(
@@ -297,20 +321,39 @@ impl PicturePrimitive {
         prim_index: PrimitiveIndex,
         prim_metadata: &mut PrimitiveMetadata,
         prim_context: &PrimitiveContext,
-        mut pic_state_for_children: PictureState,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
     ) {
-        let prim_screen_rect = prim_metadata
-                                .screen_rect
-                                .as_ref()
-                                .expect("bug: trying to draw an off-screen picture!?");
+        let mut pic_state_for_children = self.take_state();
+
         if self.can_draw_directly_to_parent_surface() {
             pic_state.tasks.extend(pic_state_for_children.tasks);
             self.surface = None;
             return;
         }
+
+        let clipped_world_rect = prim_metadata
+                                    .clipped_world_rect
+                                    .as_ref()
+                                    .expect("bug: trying to draw an off-screen picture!?");
+
+        let clipped = world_rect_to_device_pixels(
+            *clipped_world_rect,
+            frame_context.device_pixel_scale,
+        ).to_i32();
+
+        let pic_rect = pic_state.map_local_to_pic
+                                .map(&prim_metadata.local_rect)
+                                .unwrap();
+        let world_rect = pic_state.map_pic_to_world
+                                  .map(&pic_rect)
+                                  .unwrap();
+
+        let unclipped = world_rect_to_device_pixels(
+            world_rect,
+            frame_context.device_pixel_scale,
+        );
 
         // TODO(gw): Almost all of the Picture types below use extra_gpu_cache_data
         //           to store the same type of data. The exception is the filter
@@ -331,10 +374,9 @@ impl PicturePrimitive {
                 // blur results, inflate that clipped area by the blur range, and
                 // then intersect with the total screen rect, to minimize the
                 // allocation size.
-                let device_rect = prim_screen_rect
-                    .clipped
+                let device_rect = clipped
                     .inflate(blur_range, blur_range)
-                    .intersection(&prim_screen_rect.unclipped)
+                    .intersection(&unclipped.to_i32())
                     .unwrap();
 
                 let uv_rect_kind = calculate_uv_rect_kind(
@@ -353,7 +395,7 @@ impl PicturePrimitive {
                 let surface = if pic_state_for_children.has_non_root_coord_system {
                     let picture_task = RenderTask::new_picture(
                         RenderTaskLocation::Dynamic(None, device_rect.size),
-                        prim_screen_rect.unclipped.size,
+                        unclipped.size,
                         prim_index,
                         device_rect.origin,
                         pic_state_for_children.tasks,
@@ -380,8 +422,8 @@ impl PicturePrimitive {
                     // forms part of the cache key.
                     let pic_relative_render_rect = PictureIntRect::new(
                         PictureIntPoint::new(
-                            device_rect.origin.x - prim_screen_rect.unclipped.origin.x,
-                            device_rect.origin.y - prim_screen_rect.unclipped.origin.y,
+                            device_rect.origin.x - unclipped.origin.x as i32,
+                            device_rect.origin.y - unclipped.origin.y as i32,
                         ),
                         PictureIntSize::new(
                             device_rect.size.width,
@@ -397,7 +439,7 @@ impl PicturePrimitive {
                             kind: RenderTaskCacheKeyKind::Picture(PictureCacheKey {
                                 scene_id: frame_context.scene_id,
                                 picture_id: self.id,
-                                unclipped_size: prim_screen_rect.unclipped.size,
+                                unclipped_size: unclipped.size.to_i32(),
                                 pic_relative_render_rect,
                             }),
                         },
@@ -410,7 +452,7 @@ impl PicturePrimitive {
 
                             let picture_task = RenderTask::new_picture(
                                 RenderTaskLocation::Dynamic(None, device_rect.size),
-                                prim_screen_rect.unclipped.size,
+                                unclipped.size,
                                 prim_index,
                                 device_rect.origin,
                                 child_tasks,
@@ -452,10 +494,9 @@ impl PicturePrimitive {
                 // blur results, inflate that clipped area by the blur range, and
                 // then intersect with the total screen rect, to minimize the
                 // allocation size.
-                let device_rect = prim_screen_rect
-                    .clipped
+                let device_rect = clipped
                     .inflate(blur_range, blur_range)
-                    .intersection(&prim_screen_rect.unclipped)
+                    .intersection(&unclipped.to_i32())
                     .unwrap();
 
                 let uv_rect_kind = calculate_uv_rect_kind(
@@ -467,7 +508,7 @@ impl PicturePrimitive {
 
                 let mut picture_task = RenderTask::new_picture(
                     RenderTaskLocation::Dynamic(None, device_rect.size),
-                    prim_screen_rect.unclipped.size,
+                    unclipped.size,
                     prim_index,
                     device_rect.origin,
                     pic_state_for_children.tasks,
@@ -531,21 +572,21 @@ impl PicturePrimitive {
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
                     &prim_context.transform,
-                    &prim_screen_rect.clipped,
+                    &clipped,
                     frame_context.device_pixel_scale,
                 );
 
                 let picture_task = RenderTask::new_picture(
-                    RenderTaskLocation::Dynamic(None, prim_screen_rect.clipped.size),
-                    prim_screen_rect.unclipped.size,
+                    RenderTaskLocation::Dynamic(None, clipped.size),
+                    unclipped.size,
                     prim_index,
-                    prim_screen_rect.clipped.origin,
+                    clipped.origin,
                     pic_state_for_children.tasks,
                     uv_rect_kind,
                 );
 
                 let readback_task_id = frame_state.render_tasks.add(
-                    RenderTask::new_readback(prim_screen_rect.clipped)
+                    RenderTask::new_readback(clipped)
                 );
 
                 self.secondary_render_task_id = Some(readback_task_id);
@@ -567,15 +608,15 @@ impl PicturePrimitive {
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
                     &prim_context.transform,
-                    &prim_screen_rect.clipped,
+                    &clipped,
                     frame_context.device_pixel_scale,
                 );
 
                 let picture_task = RenderTask::new_picture(
-                    RenderTaskLocation::Dynamic(None, prim_screen_rect.clipped.size),
-                    prim_screen_rect.unclipped.size,
+                    RenderTaskLocation::Dynamic(None, clipped.size),
+                    unclipped.size,
                     prim_index,
-                    prim_screen_rect.clipped.origin,
+                    clipped.origin,
                     pic_state_for_children.tasks,
                     uv_rect_kind,
                 );
@@ -588,15 +629,15 @@ impl PicturePrimitive {
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
                     &prim_context.transform,
-                    &prim_screen_rect.clipped,
+                    &clipped,
                     frame_context.device_pixel_scale,
                 );
 
                 let picture_task = RenderTask::new_picture(
-                    RenderTaskLocation::Dynamic(None, prim_screen_rect.clipped.size),
-                    prim_screen_rect.unclipped.size,
+                    RenderTaskLocation::Dynamic(None, clipped.size),
+                    unclipped.size,
                     prim_index,
-                    prim_screen_rect.clipped.origin,
+                    clipped.origin,
                     pic_state_for_children.tasks,
                     uv_rect_kind,
                 );

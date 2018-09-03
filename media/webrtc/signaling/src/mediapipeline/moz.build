@@ -12,7 +12,6 @@ LOCAL_INCLUDES += [
     '/media/libyuv/libyuv/include',
     '/media/mtransport',
     '/media/webrtc',
-    '/media/webrtc/signaling/src/common/browser_logging',
     '/media/webrtc/signaling/src/media-conduit',
     '/media/webrtc/trunk',
     '/netwerk/srtp/src/crypto/include',

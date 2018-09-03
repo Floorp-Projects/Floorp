@@ -10,7 +10,7 @@ function promiseClearHistory() {
       observe(aSubject, aTopic, aData) {
         Services.obs.removeObserver(this, "browser:purge-domain-data");
         resolve();
-      }
+      },
     };
     Services.obs.addObserver(observer, "browser:purge-domain-data");
   });
@@ -32,18 +32,18 @@ add_task(async function() {
     { state: { entries: [{ url: "http://www.example.org/frameset",
                            children: [
                              { url: "http://www.example.org/frame" },
-                             { url: "http://www.example.org:8080/frame2" }
+                             { url: "http://www.example.org:8080/frame2" },
                            ] }] }, title: REMEMBER },
     { state: { entries: [{ url: "http://www.example.org/frameset",
                            children: [
                              { url: "http://www.example.org/frame" },
-                             { url: "http://www.example.net/frame" }
+                             { url: "http://www.example.net/frame" },
                            ] }] }, title: FORGET },
     { state: { entries: [{ url: "http://www.example.org/form",
-                           formdata: { id: { "url": "http://www.example.net/" } }
+                           formdata: { id: { "url": "http://www.example.net/" } },
                          }] }, title: REMEMBER },
     { state: { entries: [{ url: "http://www.example.org/form" }],
-               extData: { "setCustomTabValue": "http://example.net:80" } }, title: REMEMBER }
+               extData: { "setCustomTabValue": "http://example.net:80" } }, title: REMEMBER },
   ] }] };
   let remember_count = 5;
 

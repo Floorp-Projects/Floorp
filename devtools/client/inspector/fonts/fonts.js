@@ -83,7 +83,7 @@ class FontInspector {
     this.syncChanges = debounce(this.syncChanges, 100, this);
     this.onInstanceChange = this.onInstanceChange.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
-    this.onPreviewFonts = this.onPreviewFonts.bind(this);
+    this.onPreviewTextChange = debounce(this.onPreviewTextChange, 100, this);
     this.onPropertyChange = this.onPropertyChange.bind(this);
     this.onRulePropertyUpdated = debounce(this.onRulePropertyUpdated, 100, this);
     this.onToggleFontHighlight = this.onToggleFontHighlight.bind(this);
@@ -103,7 +103,7 @@ class FontInspector {
       fontEditorEnabled: Services.prefs.getBoolPref(PREF_FONT_EDITOR),
       onInstanceChange: this.onInstanceChange,
       onToggleFontHighlight: this.onToggleFontHighlight,
-      onPreviewFonts: this.onPreviewFonts,
+      onPreviewTextChange: this.onPreviewTextChange,
       onPropertyChange: this.onPropertyChange,
     });
 
@@ -147,7 +147,7 @@ class FontInspector {
       throw TypeError(`Invalid value for conversion. Expected Number, got ${value}`);
     }
 
-    if (fromUnit === toUnit) {
+    if (fromUnit === toUnit || value === 0) {
       return value;
     }
 
@@ -273,6 +273,12 @@ class FontInspector {
           ? value * 100 / Math.max(dim.innerWidth, dim.innerHeight)
           : value / 100 * Math.max(dim.innerWidth, dim.innerHeight);
       }
+    }
+
+    // Catch any NaN or Infinity as result of dividing by zero in any
+    // of the relative unit conversions which rely on external values.
+    if (isNaN(out) || Math.abs(out) === Infinity) {
+      out = 0;
     }
 
     // Return rounded pixel values. Limit other values to 3 decimals.
@@ -677,7 +683,7 @@ class FontInspector {
   /**
    * Handler for change in preview input.
    */
-  onPreviewFonts(value) {
+  onPreviewTextChange(value) {
     this.store.dispatch(updatePreviewText(value));
     this.update();
   }

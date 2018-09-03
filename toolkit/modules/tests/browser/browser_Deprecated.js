@@ -16,7 +16,7 @@ function basicDeprecatedFunction() {
 
 function deprecationFunctionBogusCallstack() {
   Deprecated.warning("this method is deprecated.", "http://example.com", {
-    caller: {}
+    caller: {},
   });
   return true;
 }
@@ -39,7 +39,7 @@ var tests = [
     testAMessage(aMessage);
     ok(aMessage.errorMessage.indexOf("basicDeprecatedFunction") > 0,
       "Callstack is correctly logged.");
-  }
+  },
 },
 // Test a reported error when URL to documentation is not passed.
 {
@@ -50,7 +50,7 @@ var tests = [
   expectedObservation(aMessage) {
     ok(aMessage.errorMessage.indexOf("must provide a URL") > 0,
       "Deprecation warning logged an empty URL argument.");
-  }
+  },
 },
 // Test deprecation with a bogus callstack passed as an argument (it will be
 // replaced with the current call stack).
@@ -60,14 +60,14 @@ var tests = [
     testAMessage(aMessage);
     ok(aMessage.errorMessage.indexOf("deprecationFunctionBogusCallstack") > 0,
       "Callstack is correctly logged.");
-  }
+  },
 },
 // When pref is unset Deprecated.warning should not log anything.
 {
   deprecatedFunction: basicDeprecatedFunction,
   expectedObservation: null,
   // Set pref to false.
-  logWarnings: false
+  logWarnings: false,
 },
 // Test deprecation with a valid custom callstack passed as an argument.
 {
@@ -78,7 +78,7 @@ var tests = [
       "Callstack is correctly logged.");
   },
   // Set pref to true.
-  logWarnings: true
+  logWarnings: true,
 }];
 
 // Which test are we running now?
@@ -141,7 +141,7 @@ function nextTest() {
 
       Services.console.unregisterListener(consoleListener);
       executeSoon(nextTest);
-    }
+    },
   };
   Services.console.registerListener(consoleListener);
   test.deprecatedFunction();

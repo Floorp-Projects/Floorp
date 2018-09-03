@@ -51,7 +51,7 @@ add_task(async function() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: TEST_URL,
-    title: "Bug 432599 Test"
+    title: "Bug 432599 Test",
   });
   Assert.equal(BookmarkingUI.status, BookmarkingUI.STATUS_STARRED,
                "The star state should be starred");

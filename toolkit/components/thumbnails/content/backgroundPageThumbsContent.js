@@ -76,7 +76,7 @@ const backgroundPageThumbsContent = {
       url: msg.data.url,
       isImage: msg.data.isImage,
       targetWidth: msg.data.targetWidth,
-      backgroundColor: msg.data.backgroundColor
+      backgroundColor: msg.data.backgroundColor,
     };
     if (this._currentCapture) {
       if (this._state == STATE_LOADING) {

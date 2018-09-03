@@ -75,7 +75,8 @@ async function checkNode(inspector, testActor, {desc, selector, inline, value}) 
   if (inline) {
     textContainer = container.elt.querySelector("pre");
     ok(!!textContainer, "Text container is already rendered for inline text elements");
-    ok(textContainer.parentNode.previousSibling.classList.contains("open"),
+    ok(textContainer.parentNode.previousSibling.previousSibling.classList
+        .contains("open"),
       "Text container is after the open tag");
     ok(textContainer.parentNode.nextSibling.classList.contains("close"),
       "Text container is before the close tag");

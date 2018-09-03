@@ -176,7 +176,7 @@ class CollectionValidator {
           problems.duplicates.push(id);
         } else {
           seenServer.set(id, record);
-          allRecords.set(id, { server: record, client: null, });
+          allRecords.set(id, { server: record, client: null });
         }
         record.understood = this.clientUnderstands(record);
       }
@@ -229,7 +229,7 @@ class CollectionValidator {
       problemData: problems,
       clientRecords,
       records: serverRecords,
-      deletedRecords: [...serverDeleted]
+      deletedRecords: [...serverDeleted],
     };
   }
 
@@ -250,7 +250,7 @@ class CollectionValidator {
       duration,
       version: this.version,
       problems: result.problemData,
-      recordCount: serverRecordCount
+      recordCount: serverRecordCount,
     };
   }
 }

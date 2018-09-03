@@ -477,7 +477,7 @@ public:
     mMaxTouchPoints = aMaxTouchPoints;
   }
 
-  ScreenOrientationInternal GetOrientation() const { return mOrientation; }
+  hal::ScreenOrientation GetOrientation() const { return mOrientation; }
 
   void SetBackgroundColor(const nscolor& aColor);
 
@@ -828,7 +828,7 @@ private:
   bool mDidFakeShow;
   bool mNotified;
   bool mTriedBrowserInit;
-  ScreenOrientationInternal mOrientation;
+  hal::ScreenOrientation mOrientation;
 
   bool mIgnoreKeyPressEvent;
   RefPtr<APZEventState> mAPZEventState;

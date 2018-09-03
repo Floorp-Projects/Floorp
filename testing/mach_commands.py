@@ -74,7 +74,7 @@ class TestConfig(object):
 def get_test_parser():
     from mozlog.commandline import add_logging_group
     parser = argparse.ArgumentParser()
-    parser.add_argument('what', default=None, nargs='*', help=TEST_HELP)
+    parser.add_argument('what', default=None, nargs='+', help=TEST_HELP)
     parser.add_argument('extra_args', default=None, nargs=argparse.REMAINDER,
                         help="Extra arguments to pass to the underlying test command(s). "
                              "If an underlying command doesn't recognize the argument, it "

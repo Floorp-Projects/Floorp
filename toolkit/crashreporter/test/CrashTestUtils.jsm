@@ -35,7 +35,7 @@ var CrashTestUtils = {
   // Constants for dumpHasStream()
   // From google_breakpad/common/minidump_format.h
   MD_THREAD_LIST_STREAM:       3,
-  MD_MEMORY_INFO_LIST_STREAM:  16
+  MD_MEMORY_INFO_LIST_STREAM:  16,
 };
 
 // Grab APIs from the testcrasher shared library

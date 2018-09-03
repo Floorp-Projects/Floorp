@@ -614,5 +614,5 @@ AddonsReconciler.prototype = {
   // InstallListeners
   onInstallEnded: function onInstallEnded(install, addon) {
     this.queueCaller.enqueueCall(() => this._handleListener("onInstallEnded", addon));
-  }
+  },
 };

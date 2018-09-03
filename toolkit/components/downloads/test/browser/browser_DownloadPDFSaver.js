@@ -39,7 +39,7 @@ async function test_createDownload_common(aPrivate, aType) {
   let download = await Downloads.createDownload({
     source: tab.linkedBrowser.contentWindow,
     target: { path: getTempFile(TEST_TARGET_FILE_NAME_PDF).path },
-    saver: { type: aType }
+    saver: { type: aType },
   });
 
   await test_download_windowRef(tab, download);

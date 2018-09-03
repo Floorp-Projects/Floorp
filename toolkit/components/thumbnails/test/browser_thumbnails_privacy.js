@@ -20,7 +20,7 @@ function* runTests() {
     // Capture HTTPS pages if browser.cache.disk_cache_ssl == true.
     {scheme: "https", cacheControl: null, diskCacheSSL: true},
     {scheme: "https", cacheControl: "public", diskCacheSSL: true},
-    {scheme: "https", cacheControl: "private", diskCacheSSL: true}
+    {scheme: "https", cacheControl: "private", diskCacheSSL: true},
   ];
 
   let negative = [
@@ -33,7 +33,7 @@ function* runTests() {
     // Don't capture HTTPS pages by default.
     {scheme: "https", cacheControl: null, diskCacheSSL: false},
     {scheme: "https", cacheControl: "public", diskCacheSSL: false},
-    {scheme: "https", cacheControl: "private", diskCacheSSL: false}
+    {scheme: "https", cacheControl: "private", diskCacheSSL: false},
   ];
 
   yield checkCombinations(positive, true);

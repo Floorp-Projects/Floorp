@@ -370,7 +370,7 @@ const kTestPairs = [
 
 // Cross-check the main quadgram table build date
 // Change the expected language each time it is rebuilt
-  ["az", "AZERBAIJANI", kTeststr_version]   // 2014.01.31
+  ["az", "AZERBAIJANI", kTeststr_version],   // 2014.01.31
 ];
 
 ChromeUtils.import("resource://gre/modules/Timer.jsm");

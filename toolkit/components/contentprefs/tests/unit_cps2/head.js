@@ -144,7 +144,7 @@ async function getOKEx(methodName, args, expectedPrefs, strict, context) {
   let actualPrefs = [];
   await new Promise(resolve => {
     args.push(makeCallback(resolve, {
-      handleResult: pref => actualPrefs.push(pref)
+      handleResult: pref => actualPrefs.push(pref),
     }));
     cps[methodName].apply(cps, args);
   });
@@ -160,7 +160,7 @@ function getCachedOK(args, expectedIsCached, expectedVal, expectedGroup,
   let expectedPref = !expectedIsCached ? null : {
     domain: expectedGroup || args[0],
     name: args[1],
-    value: expectedVal
+    value: expectedVal,
   };
   getCachedOKEx("getCachedByDomainAndName", args, expectedPref, strict);
 }
@@ -187,7 +187,7 @@ function getCachedGlobalOK(args, expectedIsCached, expectedVal) {
   let expectedPref = !expectedIsCached ? null : {
     domain: null,
     name: args[0],
-    value: expectedVal
+    value: expectedVal,
   };
   getCachedOKEx("getCachedGlobal", args, expectedPref);
 }

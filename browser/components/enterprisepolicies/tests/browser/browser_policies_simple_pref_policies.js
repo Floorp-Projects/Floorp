@@ -44,8 +44,8 @@ const POLICIES_TESTS = [
     policies: {
       "DisableSecurityBypass": {
         "InvalidCertificate": true,
-        "SafeBrowsing": true
-      }
+        "SafeBrowsing": true,
+      },
     },
     lockedPrefs: {
       "security.certerror.hideAddException": true,
@@ -64,25 +64,25 @@ const POLICIES_TESTS = [
   {
     policies: {
       "EnableTrackingProtection": {
-        "Value": true
-      }
+        "Value": true,
+      },
     },
     unlockedPrefs: {
       "privacy.trackingprotection.enabled": true,
       "privacy.trackingprotection.pbmode.enabled": true,
-    }
+    },
   },
   {
     policies: {
       "EnableTrackingProtection": {
         "Value": false,
-        "Locked": true
-      }
+        "Locked": true,
+      },
     },
     lockedPrefs: {
       "privacy.trackingprotection.enabled": false,
       "privacy.trackingprotection.pbmode.enabled": false,
-    }
+    },
   },
 
   // POLICY: OverrideFirstRunPage
@@ -102,7 +102,7 @@ const POLICIES_TESTS = [
           "SPNEGO": true,
           "NTLM": true,
         },
-      }
+      },
     },
     lockedPrefs: {
       "network.negotiate-auth.trusted-uris": "a.com, b.com",
@@ -110,7 +110,7 @@ const POLICIES_TESTS = [
       "network.automatic-ntlm-auth.trusted-uris": "a.com, b.com",
       "network.automatic-ntlm-auth.allow-non-fqdn": true,
       "network.negotiate-auth.allow-non-fqdn": true,
-    }
+    },
   },
 
   // POLICY: Certificates
@@ -118,11 +118,11 @@ const POLICIES_TESTS = [
     policies: {
       "Certificates": {
         "ImportEnterpriseRoots": true,
-      }
+      },
     },
     lockedPrefs: {
       "security.enterprise_roots.enabled": true,
-    }
+    },
   },
 
   // POLICY: InstallAddons.Default (block addon installs)
@@ -130,11 +130,11 @@ const POLICIES_TESTS = [
     policies: {
       "InstallAddonsPermission": {
         "Default": false,
-      }
+      },
     },
     lockedPrefs: {
       "xpinstall.enabled": false,
-    }
+    },
   },
 
   // POLICY: SanitizeOnShutdown
@@ -152,14 +152,14 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.sessions": true,
       "privacy.clearOnShutdown.siteSettings": true,
       "privacy.clearOnShutdown.offlineApps": true,
-    }
+    },
   },
 ];
 
 add_task(async function test_policy_remember_passwords() {
   for (let test of POLICIES_TESTS) {
     await setupPolicyEngineWithJson({
-      "policies": test.policies
+      "policies": test.policies,
     });
 
     info("Checking policy: " + Object.keys(test.policies)[0]);

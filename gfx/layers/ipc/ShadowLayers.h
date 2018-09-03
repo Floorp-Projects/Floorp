@@ -13,8 +13,8 @@
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/WidgetUtils.h"        // for ScreenRotation
-#include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
+#include "mozilla/HalScreenConfiguration.h" // for ScreenOrientation
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -158,7 +158,7 @@ public:
    */
   void BeginTransaction(const gfx::IntRect& aTargetBounds,
                         ScreenRotation aRotation,
-                        mozilla::dom::ScreenOrientationInternal aOrientation);
+                        hal::ScreenOrientation aOrientation);
 
   /**
    * The following methods may only be called after BeginTransaction()

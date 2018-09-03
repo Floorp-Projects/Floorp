@@ -430,9 +430,6 @@ class JSObject : public js::gc::Cell
      */
     inline JSObject* enclosingEnvironment() const;
 
-    // Deprecated: call nonCCWGlobal or NativeObject::global() instead!
-    inline js::GlobalObject& deprecatedGlobal() const;
-
     // Cross-compartment wrappers are not associated with a single realm/global,
     // so these methods assert the object is not a CCW.
     inline js::GlobalObject& nonCCWGlobal() const;

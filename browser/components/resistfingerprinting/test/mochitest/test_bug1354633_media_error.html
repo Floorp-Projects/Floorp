@@ -29,8 +29,8 @@ let testPromise = (resistFingerprinting, src, whitelist) => new Promise(resolve 
 async function testBody(resistFingerprinting) {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.resistFingerprinting", resistFingerprinting]
-    ]
+      ["privacy.resistFingerprinting", resistFingerprinting],
+    ],
   });
   await testPromise(
     resistFingerprinting,

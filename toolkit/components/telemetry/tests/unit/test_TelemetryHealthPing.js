@@ -69,10 +69,10 @@ add_task(async function test_sendImmediately() {
   let ping = await PingServer.promiseNextPing();
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.SEND_FAILURE]: {
-      "testProblem": 1
+      "testProblem": 1,
     },
     "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.IMMEDIATE
+    "reason": TelemetryHealthPing.Reason.IMMEDIATE,
   });
 });
 
@@ -100,10 +100,10 @@ add_task(async function test_sendOnDelay() {
   let ping = await PingServer.promiseNextPing();
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.SEND_FAILURE]: {
-      "testFailure": 2
+      "testFailure": 2,
     },
     "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.DELAYED
+    "reason": TelemetryHealthPing.Reason.DELAYED,
   });
 });
 
@@ -118,10 +118,10 @@ add_task(async function test_sendOverSizedPing() {
 
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE]: {
-      [OVER_SIZED_PING_TYPE]: 1
+      [OVER_SIZED_PING_TYPE]: 1,
     },
     "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.IMMEDIATE
+    "reason": TelemetryHealthPing.Reason.IMMEDIATE,
   });
 });
 
@@ -191,10 +191,10 @@ add_task(async function test_sendOnTimeout() {
   let healthPing = pings.find(ping => ping.type === "health");
   checkHealthPingStructure(healthPing, {
     [TelemetryHealthPing.FailureType.SEND_FAILURE]: {
-      "timeout": 1
+      "timeout": 1,
     },
     "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.IMMEDIATE
+    "reason": TelemetryHealthPing.Reason.IMMEDIATE,
   });
   await TelemetryStorage.testClearPendingPings();
 });
@@ -240,8 +240,8 @@ add_task(async function test_sendOnlyTopTenDiscardedPings() {
       [PING_TYPE + 5]: 4,
       [PING_TYPE + 4]: 3,
       [PING_TYPE + 3]: 2,
-      [PING_TYPE + 2]: 1
-    }
+      [PING_TYPE + 2]: 1,
+    },
   });
 });
 
@@ -272,10 +272,10 @@ add_task(async function test_discardedForSizePending() {
   let ping = await PingServer.promiseNextPing();
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE]: {
-      "<unknown>": 1
+      "<unknown>": 1,
     },
     "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.IMMEDIATE
+    "reason": TelemetryHealthPing.Reason.IMMEDIATE,
   });
 
   // Test _scanPendingPings.
@@ -286,10 +286,10 @@ add_task(async function test_discardedForSizePending() {
   ping = await PingServer.promiseNextPing();
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE]: {
-      "<unknown>": 1
+      "<unknown>": 1,
     },
     "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.IMMEDIATE
+    "reason": TelemetryHealthPing.Reason.IMMEDIATE,
   });
 });
 
@@ -322,10 +322,10 @@ add_task(async function test_usePingSenderOnShutdown() {
 
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.SEND_FAILURE]: {
-      "testFailure": 1
+      "testFailure": 1,
     },
     "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.SHUT_DOWN
+    "reason": TelemetryHealthPing.Reason.SHUT_DOWN,
   });
 
   // Check that the health ping is sent at shutdown using the pingsender.

@@ -49,7 +49,7 @@ add_test(function test_nonce_length() {
   function get_mac(length) {
     let uri = CommonUtils.makeURI("http://example.com/");
     return CryptoUtils.computeHTTPMACSHA1("foo", "bar", "GET", uri, {
-      nonce_bytes: length
+      nonce_bytes: length,
     });
   }
 

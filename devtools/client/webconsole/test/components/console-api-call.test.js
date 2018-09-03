@@ -322,7 +322,7 @@ describe("ConsoleAPICall component:", () => {
       const wrapper = render(ConsoleApiCall({ message, serviceContainer, open: true }));
 
       expect(wrapper.find(".message-body").text()).toBe("bar");
-      expect(wrapper.find(".collapse-button.expanded").length).toBe(1);
+      expect(wrapper.find(".collapse-button[aria-expanded=true]").length).toBe(1);
     });
 
     it("renders group with custom style", () => {
@@ -362,7 +362,7 @@ describe("ConsoleAPICall component:", () => {
           serviceContainer,
         })
       ));
-      wrapper.find(".collapse-button.expanded").simulate("click");
+      wrapper.find(".collapse-button[aria-expanded='true']").simulate("click");
       let call = store.dispatch.getCall(0);
       expect(call.args[0]).toEqual({
         id: message.id,

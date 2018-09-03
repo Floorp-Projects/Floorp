@@ -17,10 +17,7 @@ describe("Screenshots", () => {
     fakeServices = {
       wm: {
         getEnumerator() {
-          return {
-            hasMoreElements: () => true,
-            getNext: () => {}
-          };
+          return Array(10);
         }
       }
     };
@@ -124,7 +121,7 @@ describe("Screenshots", () => {
   describe("#_shouldGetScreenshots", () => {
     beforeEach(() => {
       let more = 2;
-      sandbox.stub(global.Services.wm, "getEnumerator").returns({getNext: () => {}, hasMoreElements() { return more--; }});
+      sandbox.stub(global.Services.wm, "getEnumerator").callsFake(() => Array(Math.max(more--, 0)));
     });
     it("should use private browsing utils to determine if a window is private", () => {
       Screenshots._shouldGetScreenshots();

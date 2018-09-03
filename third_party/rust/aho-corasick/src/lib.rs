@@ -121,8 +121,10 @@ assert_eq!(matches, vec![Match { pati: 1, start: 0, end: 1}]);
 #![deny(missing_docs)]
 
 extern crate memchr;
-#[cfg(test)] extern crate quickcheck;
-#[cfg(test)] extern crate rand;
+#[cfg(test)]
+extern crate quickcheck;
+#[cfg(test)]
+extern crate rand;
 
 use std::collections::VecDeque;
 use std::fmt;
@@ -241,11 +243,33 @@ impl<P: AsRef<[u8]>, T: Transitions> AcAutomaton<P, T> {
     pub fn heap_bytes(&self) -> usize {
         self.pats.iter()
             .map(|p| mem::size_of::<P>() + p.as_ref().len())
-            .fold(0, |a, b| a + b)
+            .sum::<usize>()
         + self.states.iter()
               .map(|s| mem::size_of::<State<T>>() + s.heap_bytes())
-              .fold(0, |a, b| a + b)
+              .sum::<usize>()
         + self.start_bytes.len()
+    }
+
+    // The states of `full_automaton` should be set for all states < si
+    fn memoized_next_state(
+        &self,
+        full_automaton: &FullAcAutomaton<P>,
+        current_si: StateIdx,
+        mut si: StateIdx,
+        b: u8,
+    ) -> StateIdx {
+        loop {
+            if si < current_si {
+                return full_automaton.next_state(si, b);
+            }
+            let state = &self.states[si as usize];
+            let maybe_si = state.goto(b);
+            if maybe_si != FAIL_STATE {
+                return maybe_si;
+            } else {
+                si = state.fail;
+            }
+        }
     }
 }
 
@@ -253,12 +277,13 @@ impl<P: AsRef<[u8]>, T: Transitions> Automaton<P> for AcAutomaton<P, T> {
     #[inline]
     fn next_state(&self, mut si: StateIdx, b: u8) -> StateIdx {
         loop {
-            let maybe_si = self.states[si as usize].goto(b);
+            let state = &self.states[si as usize];
+            let maybe_si = state.goto(b);
             if maybe_si != FAIL_STATE {
                 si = maybe_si;
                 break;
             } else {
-                si = self.states[si as usize].fail;
+                si = state.fail;
             }
         }
         si
@@ -297,6 +322,29 @@ impl<P: AsRef<[u8]>, T: Transitions> Automaton<P> for AcAutomaton<P, T> {
     }
 }
 
+// `(0..256).map(|b| b as u8)` optimizes poorly in debug builds so
+// we use this small explicit iterator instead
+struct AllBytesIter(i32);
+impl Iterator for AllBytesIter {
+    type Item = u8;
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.0 < 256 {
+            let b = self.0 as u8;
+            self.0 += 1;
+            Some(b)
+        } else {
+            None
+        }
+    }
+}
+
+impl AllBytesIter {
+    fn new() -> AllBytesIter {
+        AllBytesIter(0)
+    }
+}
+
 // Below contains code for *building* the automaton. It's a reasonably faithful
 // translation of the description/psuedo-code from:
 // http://www.cs.uku.fi/~kilpelai/BSA05/lectures/slides04.pdf
@@ -321,11 +369,14 @@ impl<P: AsRef<[u8]>, T: Transitions> AcAutomaton<P, T> {
             }
             self.states[previ as usize].out.push(pati);
         }
-        for c in (0..256).into_iter().map(|c| c as u8) {
-            if self.states[ROOT_STATE as usize].goto(c) == FAIL_STATE {
-                self.states[ROOT_STATE as usize].set_goto(c, ROOT_STATE);
-            } else {
-                self.start_bytes.push(c);
+        {
+            let root_state = &mut self.states[ROOT_STATE as usize];
+            for c in AllBytesIter::new() {
+                if root_state.goto(c) == FAIL_STATE {
+                    root_state.set_goto(c, ROOT_STATE);
+                } else {
+                    self.start_bytes.push(c);
+                }
             }
         }
         // If any of the start bytes are non-ASCII, then remove them all,
@@ -344,26 +395,45 @@ impl<P: AsRef<[u8]>, T: Transitions> AcAutomaton<P, T> {
         // Fill up the queue with all non-root transitions out of the root
         // node. Then proceed by breadth first traversal.
         let mut q = VecDeque::new();
-        for c in (0..256).into_iter().map(|c| c as u8) {
-            let si = self.states[ROOT_STATE as usize].goto(c);
+        self.states[ROOT_STATE as usize].for_each_transition(|_, si| {
             if si != ROOT_STATE {
                 q.push_front(si);
             }
-        }
+        });
+
+        let mut transitions = Vec::new();
+
         while let Some(si) = q.pop_back() {
-            for c in (0..256).into_iter().map(|c| c as u8) {
-                let u = self.states[si as usize].goto(c);
-                if u != FAIL_STATE {
-                    q.push_front(u);
-                    let mut v = self.states[si as usize].fail;
-                    while self.states[v as usize].goto(c) == FAIL_STATE {
-                        v = self.states[v as usize].fail;
+            self.states[si as usize].for_each_ok_transition(|c, u| {
+                transitions.push((c, u));
+                q.push_front(u);
+            });
+
+            for (c, u) in transitions.drain(..) {
+                let mut v = self.states[si as usize].fail;
+                loop {
+                    let state = &self.states[v as usize];
+                    if state.goto(c) == FAIL_STATE {
+                        v = state.fail;
+                    } else {
+                        break;
                     }
-                    let ufail = self.states[v as usize].goto(c);
-                    self.states[u as usize].fail = ufail;
-                    let ufail_out = self.states[ufail as usize].out.clone();
-                    self.states[u as usize].out.extend(ufail_out);
                 }
+                let ufail = self.states[v as usize].goto(c);
+                self.states[u as usize].fail = ufail;
+
+                fn get_two<T>(xs: &mut [T], i: usize, j: usize) -> (&mut T, &mut T) {
+                    if i < j {
+                        let (before, after) = xs.split_at_mut(j);
+                        (&mut before[i], &mut after[0])
+                    } else {
+                        let (before, after) = xs.split_at_mut(i);
+                        (&mut after[0], &mut before[j])
+                    }
+                }
+
+                let (ufail_out, out) = get_two(&mut self.states, ufail as usize, u as usize);
+                out.out.extend_from_slice(&ufail_out.out);
             }
         }
         self
@@ -398,6 +468,18 @@ impl<T: Transitions> State<T> {
         (self.out.len() * usize_bytes())
         + self.goto.heap_bytes()
     }
+
+    fn for_each_transition<F>(&self, f: F)
+        where F: FnMut(u8, StateIdx)
+    {
+        self.goto.for_each_transition(f)
+    }
+
+    fn for_each_ok_transition<F>(&self, f: F)
+        where F: FnMut(u8, StateIdx)
+    {
+        self.goto.for_each_ok_transition(f)
+    }
 }
 
 /// An abstraction over state transition strategies.
@@ -416,6 +498,27 @@ pub trait Transitions {
     fn set_goto(&mut self, alpha: u8, si: StateIdx);
     /// The memory use in bytes (on the heap) of this set of transitions.
     fn heap_bytes(&self) -> usize;
+
+    /// Iterates over each state
+    fn for_each_transition<F>(&self, mut f: F)
+        where F: FnMut(u8, StateIdx)
+    {
+        for b in AllBytesIter::new() {
+            f(b, self.goto(b));
+        }
+    }
+
+    /// Iterates over each non-fail state
+    fn for_each_ok_transition<F>(&self, mut f: F)
+    where
+        F: FnMut(u8, StateIdx),
+    {
+        self.for_each_transition(|b, si| {
+            if si != FAIL_STATE {
+                f(b, si);
+            }
+        });
+    }
 }
 
 /// State transitions that can be stored either sparsely or densely.
@@ -426,14 +529,14 @@ pub struct Dense(DenseChoice);
 
 #[derive(Clone, Debug)]
 enum DenseChoice {
-    Sparse(Vec<StateIdx>), // indexed by alphabet
+    Sparse(Box<Sparse>),
     Dense(Vec<(u8, StateIdx)>),
 }
 
 impl Transitions for Dense {
     fn new(depth: u32) -> Dense {
         if depth <= DENSE_DEPTH_THRESHOLD {
-            Dense(DenseChoice::Sparse(vec![0; 256]))
+            Dense(DenseChoice::Sparse(Box::new(Sparse::new(depth))))
         } else {
             Dense(DenseChoice::Dense(vec![]))
         }
@@ -441,7 +544,7 @@ impl Transitions for Dense {
 
     fn goto(&self, b1: u8) -> StateIdx {
         match self.0 {
-            DenseChoice::Sparse(ref m) => m[b1 as usize],
+            DenseChoice::Sparse(ref m) => m.goto(b1),
             DenseChoice::Dense(ref m) => {
                 for &(b2, si) in m {
                     if b1 == b2 {
@@ -455,15 +558,50 @@ impl Transitions for Dense {
 
     fn set_goto(&mut self, b: u8, si: StateIdx) {
         match self.0 {
-            DenseChoice::Sparse(ref mut m) => m[b as usize] = si,
+            DenseChoice::Sparse(ref mut m) => m.set_goto(b, si),
             DenseChoice::Dense(ref mut m) => m.push((b, si)),
         }
     }
 
     fn heap_bytes(&self) -> usize {
         match self.0 {
-            DenseChoice::Sparse(ref m) => m.len() * 4,
+            DenseChoice::Sparse(_) => mem::size_of::<Sparse>(),
             DenseChoice::Dense(ref m) => m.len() * (1 + 4),
+        }
+    }
+
+    fn for_each_transition<F>(&self, mut f: F)
+        where F: FnMut(u8, StateIdx)
+    {
+        match self.0 {
+            DenseChoice::Sparse(ref m) => m.for_each_transition(f),
+            DenseChoice::Dense(ref m) => {
+                let mut iter = m.iter();
+                let mut b = 0i32;
+                while let Some(&(next_b, next_si)) = iter.next() {
+                    while (b as u8) < next_b {
+                        f(b as u8, FAIL_STATE);
+                        b += 1;
+                    }
+                    f(b as u8, next_si);
+                    b += 1;
+                }
+                while b < 256 {
+                    f(b as u8, FAIL_STATE);
+                    b += 1;
+                }
+            }
+        }
+    }
+    fn for_each_ok_transition<F>(&self, mut f: F)
+    where
+        F: FnMut(u8, StateIdx),
+    {
+        match self.0 {
+            DenseChoice::Sparse(ref m) => m.for_each_ok_transition(f),
+            DenseChoice::Dense(ref m) => for &(b, si) in m {
+                f(b, si)
+            }
         }
     }
 }
@@ -472,12 +610,23 @@ impl Transitions for Dense {
 ///
 /// This can use enormous amounts of memory when there are many patterns,
 /// but matching is very fast.
-#[derive(Clone, Debug)]
-pub struct Sparse(Vec<StateIdx>);
+pub struct Sparse([StateIdx; 256]);
+
+impl Clone for Sparse {
+    fn clone(&self) -> Sparse {
+        Sparse(self.0)
+    }
+}
+
+impl fmt::Debug for Sparse {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_tuple("Sparse").field(&&self.0[..]).finish()
+    }
+}
 
 impl Transitions for Sparse {
     fn new(_: u32) -> Sparse {
-        Sparse(vec![0; 256])
+        Sparse([0; 256])
     }
 
     #[inline]
@@ -490,7 +639,7 @@ impl Transitions for Sparse {
     }
 
     fn heap_bytes(&self) -> usize {
-        self.0.len() * 4
+        0
     }
 }
 
@@ -525,15 +674,13 @@ impl<T: Transitions> State<T> {
     }
 
     fn goto_string(&self, root: bool) -> String {
-        use std::char::from_u32;
-
         let mut goto = vec![];
-        for b in (0..256).map(|b| b as u8) {
+        for b in AllBytesIter::new() {
             let si = self.goto(b);
             if (!root && si == FAIL_STATE) || (root && si == ROOT_STATE) {
                 continue;
             }
-            goto.push(format!("{} => {}", from_u32(b as u32).unwrap(), si));
+            goto.push(format!("{} => {}", b as char, si));
         }
         goto.join(", ")
     }
@@ -563,13 +710,13 @@ digraph automaton {{
 "#, self.pats.join(", "));
         for (i, s) in self.states.iter().enumerate().skip(1) {
             let i = i as u32;
-            if s.out.len() == 0 {
+            if s.out.is_empty() {
                 w!(out, "    {};\n", i);
             } else {
                 w!(out, "    {} [peripheries=2];\n", i);
             }
             w!(out, "    {} -> {} [style=dashed];\n", i, s.fail);
-            for b in (0..256).map(|b| b as u8) {
+            for b in AllBytesIter::new() {
                 let si = s.goto(b);
                 if si == FAIL_STATE || (i == ROOT_STATE && si == ROOT_STATE) {
                     continue;
@@ -597,8 +744,9 @@ mod tests {
     use std::io;
 
     use quickcheck::{Arbitrary, Gen, quickcheck};
+    use rand::Rng;
 
-    use super::{Automaton, AcAutomaton, Match};
+    use super::{AcAutomaton, Automaton, Match, AllBytesIter};
 
     fn aut_find<S>(xs: &[S], haystack: &str) -> Vec<Match>
             where S: Clone + AsRef<[u8]> {
@@ -870,7 +1018,7 @@ mod tests {
             let size = { let s = g.size(); g.gen_range(0, s) };
             let mut s = String::with_capacity(size);
             for _ in 0..size {
-                if g.gen_weighted_bool(3) {
+                if g.gen_bool(0.3) {
                     s.push(char::arbitrary(g));
                 } else {
                     for _ in 0..5 {
@@ -921,5 +1069,14 @@ mod tests {
             aset == nset
         }
         quickcheck(prop as fn(Vec<SmallAscii>, BiasAscii) -> bool);
+    }
+
+
+    #[test]
+    fn all_bytes_iter() {
+        let all_bytes = AllBytesIter::new().collect::<Vec<_>>();
+        assert_eq!(all_bytes[0], 0);
+        assert_eq!(all_bytes[255], 255);
+        assert!(AllBytesIter::new().enumerate().all(|(i, b)| b as usize == i));
     }
 }

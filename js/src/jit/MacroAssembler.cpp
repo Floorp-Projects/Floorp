@@ -832,12 +832,11 @@ MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind a
 
     bind(&success);
 
-#ifdef NIGHTLY_BUILD
-    // Only burden the nightly population with this.
-    uint32_t* countAddress = GetJitContext()->runtime->addressOfTenuredAllocCount();
-    movePtr(ImmPtr(countAddress), temp);
-    add32(Imm32(1), Address(temp, 0));
-#endif
+    if (GetJitContext()->runtime->geckoProfiler().enabled()) {
+        uint32_t* countAddress = GetJitContext()->runtime->addressOfTenuredAllocCount();
+        movePtr(ImmPtr(countAddress), temp);
+        add32(Imm32(1), Address(temp, 0));
+    }
 }
 
 void
@@ -1001,20 +1000,18 @@ MacroAssembler::bumpPointerAllocate(Register result, Register temp, Label* fail,
     storePtr(result, Address(temp, 0));
     subPtr(Imm32(size), result);
 
-#if defined(NIGHTLY_BUILD)
-    // Only burden the nightly population with this,
-    // since this is the allocation fast path.
-    CompileZone* zone = GetJitContext()->realm->zone();
-    uint32_t* countAddress = zone->addressOfNurseryAllocCount();
-    CheckedInt<int32_t> counterOffset = (CheckedInt<uintptr_t>(uintptr_t(countAddress)) -
-        CheckedInt<uintptr_t>(uintptr_t(posAddr))).toChecked<int32_t>();
-    if (counterOffset.isValid()) {
-        add32(Imm32(1), Address(temp, counterOffset.value()));
-    } else {
-        movePtr(ImmPtr(countAddress), temp);
-        add32(Imm32(1), Address(temp, 0));
+    if (GetJitContext()->runtime->geckoProfiler().enabled()) {
+        CompileZone* zone = GetJitContext()->realm->zone();
+        uint32_t* countAddress = zone->addressOfNurseryAllocCount();
+        CheckedInt<int32_t> counterOffset = (CheckedInt<uintptr_t>(uintptr_t(countAddress)) -
+            CheckedInt<uintptr_t>(uintptr_t(posAddr))).toChecked<int32_t>();
+        if (counterOffset.isValid()) {
+            add32(Imm32(1), Address(temp, counterOffset.value()));
+        } else {
+            movePtr(ImmPtr(countAddress), temp);
+            add32(Imm32(1), Address(temp, 0));
+        }
     }
-#endif
 }
 
 // Inlined equivalent of gc::AllocateString, jumping to fail if nursery
@@ -1886,7 +1883,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         // Enter exit frame for the FinishBailoutToBaseline call.
         loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeFramePtr)), temp);
         load32(Address(temp, BaselineFrame::reverseOffsetOfFrameSize()), temp);
-        makeFrameDescriptor(temp, JitFrame_BaselineJS, ExitFrameLayout::Size());
+        makeFrameDescriptor(temp, FrameType::BaselineJS, ExitFrameLayout::Size());
         push(temp);
         push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)));
         // No GC things to mark on the stack, push a bare token.
@@ -1984,10 +1981,10 @@ MacroAssembler::assertRectifierFrameParentType(Register frameType)
     {
         // Check the possible previous frame types here.
         Label checkOk;
-        branch32(Assembler::Equal, frameType, Imm32(JitFrame_IonJS), &checkOk);
-        branch32(Assembler::Equal, frameType, Imm32(JitFrame_BaselineStub), &checkOk);
-        branch32(Assembler::Equal, frameType, Imm32(JitFrame_WasmToJSJit), &checkOk);
-        branch32(Assembler::Equal, frameType, Imm32(JitFrame_CppToJSJit), &checkOk);
+        branch32(Assembler::Equal, frameType, Imm32(FrameType::IonJS), &checkOk);
+        branch32(Assembler::Equal, frameType, Imm32(FrameType::BaselineStub), &checkOk);
+        branch32(Assembler::Equal, frameType, Imm32(FrameType::WasmToJSJit), &checkOk);
+        branch32(Assembler::Equal, frameType, Imm32(FrameType::CppToJSJit), &checkOk);
         assumeUnreachable("Unrecognized frame type preceding RectifierFrame.");
         bind(&checkOk);
     }

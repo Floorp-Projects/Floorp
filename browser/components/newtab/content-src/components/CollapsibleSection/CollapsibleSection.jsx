@@ -12,40 +12,6 @@ function getFormattedMessage(message) {
   return typeof message === "string" ? <span>{message}</span> : <FormattedMessage {...message} />;
 }
 
-export class Disclaimer extends React.PureComponent {
-  constructor(props) {
-    super(props);
-    this.onAcknowledge = this.onAcknowledge.bind(this);
-  }
-
-  onAcknowledge() {
-    this.props.dispatch(ac.SetPref(this.props.disclaimerPref, false));
-    this.props.dispatch(ac.UserEvent({event: "DISCLAIMER_ACKED", source: this.props.eventSource}));
-  }
-
-  render() {
-    const {disclaimer} = this.props;
-    return (
-      <div className="section-disclaimer">
-          <div className="section-disclaimer-text">
-            {getFormattedMessage(disclaimer.text)}
-            {disclaimer.link &&
-              <a href={disclaimer.link.href} target="_blank" rel="noopener noreferrer">
-                {getFormattedMessage(disclaimer.link.title || disclaimer.link)}
-              </a>
-            }
-          </div>
-
-          <button onClick={this.onAcknowledge}>
-            {getFormattedMessage(disclaimer.button)}
-          </button>
-      </div>
-    );
-  }
-}
-
-export const DisclaimerIntl = injectIntl(Disclaimer);
-
 export class _CollapsibleSection extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -148,9 +114,7 @@ export class _CollapsibleSection extends React.PureComponent {
   render() {
     const isCollapsible = this.props.collapsed !== undefined;
     const {enableAnimation, isAnimating, maxHeight, menuButtonHover, showContextMenu} = this.state;
-    const {id, eventSource, collapsed, disclaimer, title, extraMenuOptions, showPrefName, privacyNoticeURL, dispatch, isFirst, isLast, isWebExtension} = this.props;
-    const disclaimerPref = `section.${id}.showDisclaimer`;
-    const needsDisclaimer = disclaimer && this.props.Prefs.values[disclaimerPref];
+    const {id, eventSource, collapsed, learnMore, title, extraMenuOptions, showPrefName, privacyNoticeURL, dispatch, isFirst, isLast, isWebExtension} = this.props;
     const active = menuButtonHover || showContextMenu;
     return (
       <section
@@ -159,10 +123,23 @@ export class _CollapsibleSection extends React.PureComponent {
         data-section-id={id}>
         <div className="section-top-bar">
           <h3 className="section-title">
-            <span className="click-target" onClick={this.onHeaderClick}>
-              {this.renderIcon()}
-              {getFormattedMessage(title)}
-              {isCollapsible && <span className={`collapsible-arrow icon ${collapsed ? "icon-arrowhead-forward-small" : "icon-arrowhead-down-small"}`} />}
+            <span className="click-target-container">
+              <span className="click-target" onClick={this.onHeaderClick}>
+                {this.renderIcon()}
+                {getFormattedMessage(title)}
+              </span>
+              <span>
+                {learnMore &&
+                  <span className="learn-more-link">
+                    <a href={learnMore.link.href}>
+                      <FormattedMessage id={learnMore.link.id} />
+                    </a>
+                  </span>
+                }
+              </span>
+              <span className="click-target" onClick={this.onHeaderClick}>
+                {isCollapsible && <span className={`collapsible-arrow icon ${collapsed ? "icon-arrowhead-forward-small" : "icon-arrowhead-down-small"}`} />}
+              </span>
             </span>
           </h3>
           <div>
@@ -197,7 +174,6 @@ export class _CollapsibleSection extends React.PureComponent {
             onTransitionEnd={this.onTransitionEnd}
             ref={this.onBodyMount}
             style={isAnimating && !collapsed ? {maxHeight} : null}>
-            {needsDisclaimer && <DisclaimerIntl disclaimerPref={disclaimerPref} disclaimer={disclaimer} eventSource={eventSource} dispatch={this.props.dispatch} />}
             {this.props.children}
           </div>
         </ErrorBoundary>

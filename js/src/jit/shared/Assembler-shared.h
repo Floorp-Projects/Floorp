@@ -104,6 +104,8 @@ struct Imm32
 
     explicit Imm32(int32_t value) : value(value)
     { }
+    explicit Imm32(FrameType type) : Imm32(int32_t(type))
+    { }
 
     static inline Imm32 ShiftOf(enum Scale s) {
         switch (s) {

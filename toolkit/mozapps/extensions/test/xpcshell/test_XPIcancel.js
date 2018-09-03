@@ -17,7 +17,7 @@ function run_test() {
       if (this.isCancelled)
         do_throw("Already cancelled");
       this.isCancelled = true;
-    }
+    },
   };
   XPIInstall.doing(getsCancelled);
   XPIInstall.cancelAll();
@@ -25,7 +25,7 @@ function run_test() {
 
   // Check that if we complete a cancellable, it doesn't get cancelled
   let doesntGetCancelled = {
-    cancel: () => do_throw("This should not have been cancelled")
+    cancel: () => do_throw("This should not have been cancelled"),
   };
   XPIInstall.doing(doesntGetCancelled);
   Assert.ok(XPIInstall.done(doesntGetCancelled));
@@ -40,7 +40,7 @@ function run_test() {
         do_throw("Already cancelled");
       this.isCancelled = true;
       XPIInstall.doing(getsCancelled);
-    }
+    },
   };
   XPIInstall.doing(addsAnother);
   XPIInstall.cancelAll();
@@ -56,7 +56,7 @@ function run_test() {
         do_throw("Already cancelled");
       this.isCancelled = true;
       XPIInstall.done(doesntGetCancelled);
-    }
+    },
   };
   XPIInstall.doing(removesAnother);
   XPIInstall.doing(doesntGetCancelled);

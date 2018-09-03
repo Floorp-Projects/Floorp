@@ -283,7 +283,7 @@ private:
   nsPipe*                         mPipe;
 
   // separate refcnt so that we know when to close the producer
-  mozilla::ThreadSafeAutoRefCnt   mWriterRefCnt;
+  ThreadSafeAutoRefCntWithRecording<recordreplay::Behavior::Preserve> mWriterRefCnt;
   int64_t                         mLogicalOffset;
   bool                            mBlocking;
 

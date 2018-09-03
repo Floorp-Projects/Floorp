@@ -6,8 +6,8 @@
 add_task(async function setup() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "SearchBar": "separate"
-    }
+      "SearchBar": "separate",
+    },
   });
 });
 
@@ -22,8 +22,8 @@ add_task(async function test_menu_shown() {
 add_task(async function setup() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "SearchBar": "unified"
-    }
+      "SearchBar": "unified",
+    },
   });
 });
 

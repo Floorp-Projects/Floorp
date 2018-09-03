@@ -84,7 +84,7 @@ function ContentRestore(chromeGlobal) {
   let EXPORTED_METHODS = ["restoreHistory",
                           "restoreTabContent",
                           "restoreDocument",
-                          "resetRestore"
+                          "resetRestore",
                          ];
 
   for (let method of EXPORTED_METHODS) {
@@ -189,7 +189,7 @@ ContentRestoreInternal.prototype = {
 
         // Notify the parent.
         callbacks.onLoadStarted();
-      }
+      },
     });
   },
 
@@ -298,7 +298,7 @@ ContentRestoreInternal.prototype = {
         this.resetRestore();
 
         finishCallback();
-      }
+      },
     });
   },
 
@@ -353,7 +353,7 @@ ContentRestoreInternal.prototype = {
       this._progressListener.uninstall();
     }
     this._progressListener = null;
-  }
+  },
 };
 
 /*
@@ -371,7 +371,7 @@ function HistoryListener(docShell, callback) {
 HistoryListener.prototype = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsISHistoryListener,
-    Ci.nsISupportsWeakReference
+    Ci.nsISupportsWeakReference,
   ]),
 
   uninstall() {
@@ -381,8 +381,6 @@ HistoryListener.prototype = {
     }
   },
 
-  OnHistoryGoBack(backURI) { return true; },
-  OnHistoryGoForward(forwardURI) { return true; },
   OnHistoryGotoIndex(index, gotoURI) { return true; },
   OnHistoryPurge(numEntries) { return true; },
   OnHistoryReplaceEntry(index) {},
@@ -451,7 +449,7 @@ function ProgressListener(docShell, callbacks) {
 ProgressListener.prototype = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIWebProgressListener,
-    Ci.nsISupportsWeakReference
+    Ci.nsISupportsWeakReference,
   ]),
 
   uninstall() {

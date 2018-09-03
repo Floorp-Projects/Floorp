@@ -8,7 +8,7 @@ add_task(async function() {
       observe(subject, topc, data) {
         Services.obs.removeObserver(observer, "addon-install-failed");
         resolve();
-      }
+      },
     };
     Services.obs.addObserver(observer, "addon-install-failed");
   });

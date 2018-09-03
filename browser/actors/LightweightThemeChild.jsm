@@ -65,7 +65,7 @@ class LightweightThemeChild extends ActorChild {
   update(outerWindowID, content) {
     const event = Cu.cloneInto({
       detail: {
-        data: Services.cpmm.sharedData.get(`theme/${outerWindowID}`)
+        data: Services.cpmm.sharedData.get(`theme/${outerWindowID}`),
       },
     }, content);
     content.dispatchEvent(new content.CustomEvent("LightweightTheme:Set",

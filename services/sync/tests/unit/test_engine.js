@@ -17,7 +17,7 @@ SteamStore.prototype = {
 
   async wipe() {
     this.wasWiped = true;
-  }
+  },
 };
 
 function SteamTracker(name, engine) {
@@ -44,7 +44,7 @@ SteamEngine.prototype = {
 
   async _sync() {
     this.wasSynced = true;
-  }
+  },
 };
 
 var engineObserver = {
@@ -57,7 +57,7 @@ var engineObserver = {
 
   reset() {
     this.topics = [];
-  }
+  },
 };
 Observers.add("weave:engine:reset-client:start", engineObserver);
 Observers.add("weave:engine:reset-client:finish", engineObserver);

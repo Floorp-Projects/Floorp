@@ -159,7 +159,7 @@ var PendingErrors = {
       message: "" + error,
       fileName: null,
       stack: null,
-      lineNumber: null
+      lineNumber: null,
     };
     try { // Defend against non-enumerable values
       if (error && error instanceof Ci.nsIException) {
@@ -287,7 +287,7 @@ var PendingErrors = {
    */
   removeAllObservers() {
     this._observers.clear();
-  }
+  },
 };
 
 // Initialize the warn-upon-finalization mechanism if and only if Cu is defined.
@@ -382,7 +382,7 @@ this.Promise = function Promise(aExecutor) {
      * - {FinalizationWitness} witness A witness broadcasting |id| on
      *   notification "promise-finalization-witness".
      */
-    witness: undefined
+    witness: undefined,
   }});
 
   Object.seal(this);

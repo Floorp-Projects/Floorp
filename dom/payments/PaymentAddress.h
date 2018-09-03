@@ -28,7 +28,6 @@ public:
                  const nsAString& aDependentLocality,
                  const nsAString& aPostalCode,
                  const nsAString& aSortingCode,
-                 const nsAString& aLanguageCode,
                  const nsAString& aOrganization,
                  const nsAString& aRecipient,
                  const nsAString& aPhone);
@@ -56,8 +55,6 @@ public:
 
   void GetSortingCode(nsAString& aRetVal) const;
 
-  void GetLanguageCode(nsAString& aRetVal) const;
-
   void GetOrganization(nsAString& aRetVal) const;
 
   void GetRecipient(nsAString& aRetVal) const;
@@ -74,7 +71,6 @@ private:
   nsString mDependentLocality;
   nsString mPostalCode;
   nsString mSortingCode;
-  nsString mLanguageCode;
   nsString mOrganization;
   nsString mRecipient;
   nsString mPhone;

@@ -98,5 +98,5 @@ var RemotePrompt = {
       PromptUtils.fireDialogEvent(window, "DOMModalDialogClosed", browser);
       browser.messageManager.sendAsyncMessage("Prompt:Close", args);
     }
-  }
+  },
 };

@@ -39,14 +39,14 @@ add_task(async function prefer_svg() {
   let promise = waitIcon(ROOT + "icon.svg");
   await createLinks([
     { href: ROOT + "icon.ico",
-      type: "image/x-icon"
+      type: "image/x-icon",
     },
     { href: ROOT + "icon.svg",
-      type: "image/svg+xml"
+      type: "image/svg+xml",
     },
     { href: ROOT + "icon.png",
       type: "image/png",
-      size: 16 * Math.ceil(window.devicePixelRatio)
+      size: 16 * Math.ceil(window.devicePixelRatio),
     },
   ]);
   await promise;
@@ -56,14 +56,14 @@ add_task(async function prefer_sized() {
   let promise = waitIcon(ROOT + "moz.png");
   await createLinks([
     { href: ROOT + "icon.ico",
-      type: "image/x-icon"
+      type: "image/x-icon",
     },
     { href: ROOT + "moz.png",
       type: "image/png",
-      size: 16 * Math.ceil(window.devicePixelRatio)
+      size: 16 * Math.ceil(window.devicePixelRatio),
     },
     { href: ROOT + "icon2.ico",
-      type: "image/x-icon"
+      type: "image/x-icon",
     },
   ]);
   await promise;
@@ -73,13 +73,13 @@ add_task(async function prefer_last_ico() {
   let promise = waitIcon(ROOT + "file_generic_favicon.ico");
   await createLinks([
     { href: ROOT + "icon.ico",
-      type: "image/x-icon"
+      type: "image/x-icon",
     },
     { href: ROOT + "icon.png",
       type: "image/png",
     },
     { href: ROOT + "file_generic_favicon.ico",
-      type: "image/x-icon"
+      type: "image/x-icon",
     },
   ]);
   await promise;
@@ -89,13 +89,13 @@ add_task(async function fuzzy_ico() {
   let promise = waitIcon(ROOT + "file_generic_favicon.ico");
   await createLinks([
     { href: ROOT + "icon.ico",
-      type: "image/x-icon"
+      type: "image/x-icon",
     },
     { href: ROOT + "icon.png",
       type: "image/png",
     },
     { href: ROOT + "file_generic_favicon.ico",
-      type: "image/vnd.microsoft.icon"
+      type: "image/vnd.microsoft.icon",
     },
   ]);
   await promise;
@@ -107,10 +107,10 @@ add_task(async function guess_svg() {
     { href: ROOT + "icon.svg" },
     { href: ROOT + "icon.png",
       type: "image/png",
-      size: 16 * Math.ceil(window.devicePixelRatio)
+      size: 16 * Math.ceil(window.devicePixelRatio),
     },
     { href: ROOT + "icon.ico",
-      type: "image/x-icon"
+      type: "image/x-icon",
     },
   ]);
   await promise;
@@ -148,18 +148,18 @@ add_task(async function guess_bestSized() {
   await createLinks([
     { href: ROOT + "icon.png",
       type: "image/png",
-      size: preferredWidth - 1
+      size: preferredWidth - 1,
     },
     { href: ROOT + "icon2.png",
       type: "image/png",
     },
     { href: ROOT + "moz.png",
       type: "image/png",
-      size: preferredWidth + 1
+      size: preferredWidth + 1,
     },
     { href: ROOT + "icon4.png",
       type: "image/png",
-      size: preferredWidth + 2
+      size: preferredWidth + 2,
     },
   ]);
   await promise;

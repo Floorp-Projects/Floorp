@@ -158,7 +158,7 @@ LoginManager.prototype = {
       } else {
         log.debug("Oops! Unexpected notification:", topic);
       }
-    }
+    },
   },
 
   /**

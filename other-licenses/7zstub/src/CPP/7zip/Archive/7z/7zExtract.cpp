@@ -152,6 +152,12 @@ STDMETHODIMP CFolderOutStream::Write(const void *data, UInt32 size, UInt32 *proc
     if (_fileIsOpen)
     {
       UInt32 cur = (size < _rem ? size : (UInt32)_rem);
+      if (_calcCrc)
+      {
+        const UInt32 k_Step = (UInt32)1 << 20;
+        if (cur > k_Step)
+          cur = k_Step;
+      }
       HRESULT result = S_OK;
       if (_stream)
         result = _stream->Write(data, cur, &cur);
@@ -363,8 +369,8 @@ STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems,
           , dataAfterEnd_Error
           
           _7Z_DECODER_CRYPRO_VARS
-          #if !defined(_7ZIP_ST) && !defined(_SFX)
-            , true, _numThreads
+          #if !defined(_7ZIP_ST)
+            , true, _numThreads, _memUsage
           #endif
           );
 

@@ -260,7 +260,7 @@ TabStore.prototype = {
   async create(record) {
     this._log.debug("Adding remote tabs from " + record.clientName);
     this._remoteClients[record.id] = Object.assign({}, record.cleartext, {
-      lastModified: record.modified
+      lastModified: record.modified,
     });
   },
 

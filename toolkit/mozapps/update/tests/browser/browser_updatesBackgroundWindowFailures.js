@@ -2,7 +2,7 @@ add_task(async function testBackgroundWindowFailures() {
   const maxBackgroundErrors = 5;
   SpecialPowers.pushPrefEnv({set: [
     [PREF_APP_UPDATE_BACKGROUNDMAXERRORS, maxBackgroundErrors],
-    [PREF_APP_UPDATE_DOWNLOADPROMPTMAXATTEMPTS, 2]
+    [PREF_APP_UPDATE_DOWNLOADPROMPTMAXATTEMPTS, 2],
   ]});
 
   let updateParams = "badURL=1";
@@ -41,7 +41,7 @@ add_task(async function testBackgroundWindowFailures() {
         is(gBrowser.selectedBrowser.currentURI.spec,
            URL_MANUAL_UPDATE, "Landed on manual update page.");
         gBrowser.removeTab(gBrowser.selectedTab);
-      }
+      },
     },
   ]);
 });

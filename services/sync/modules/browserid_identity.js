@@ -149,7 +149,7 @@ function AuthenticationError(details, source) {
 AuthenticationError.prototype = {
   toString() {
     return "AuthenticationError(" + this.details + ")";
-  }
+  },
 };
 
 function BrowserIDManager() {

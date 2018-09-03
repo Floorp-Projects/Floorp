@@ -44,8 +44,7 @@ ExecutionPointToString(const ExecutionPoint& aPoint, nsAutoCString& aStr)
 // At all times, the navigation state will be in exactly one of the following
 // phases:
 //
-// - BreakpointPaused: The process is paused somewhere between two checkpoints.
-// - CheckpointPaused: The process is paused at a normal checkpoint.
+// - Paused: The process is paused somewhere.
 // - Forward: The process is running forward and scanning for breakpoint hits.
 // - ReachBreakpoint: The process is running forward from a checkpoint to a
 //     particular execution point before the next checkpoint.
@@ -149,57 +148,40 @@ typedef InfallibleVector<RequestInfo, 4, UntrackedAllocPolicy> UntrackedRequestV
 
 typedef InfallibleVector<uint32_t> BreakpointVector;
 
-// Phase when the replaying process is paused at a breakpoint.
-class BreakpointPausedPhase final : public NavigationPhase
+// Phase when the replaying process is paused.
+class PausedPhase final : public NavigationPhase
 {
-  // Where the pause is at.
+  // Location of the pause.
   ExecutionPoint mPoint;
+
+  // Whether we are paused at the end of the recording.
+  bool mRecordingEndpoint;
 
   // All debugger requests we have seen while paused here.
   UntrackedRequestVector mRequests;
-
-  // Whether we had to restore a checkpoint to deal with an unhandled
-  // recording divergence, and haven't finished rehandling old requests.
-  bool mRecoveringFromDivergence;
 
   // Index of the request currently being processed. Normally this is the
   // last entry in |mRequests|, though may be earlier if we are recovering
   // from an unhandled divergence.
   size_t mRequestIndex;
 
+  // Whether we have saved a temporary checkpoint.
+  bool mSavedTemporaryCheckpoint;
+
+  // Whether we had to restore a checkpoint to deal with an unhandled
+  // recording divergence, and haven't finished rehandling old requests.
+  bool mRecoveringFromDivergence;
+
   // Set when we were told to resume forward and need to clean up our state.
   bool mResumeForward;
 
 public:
-  void Enter(const ExecutionPoint& aPoint, bool aRecordingEndpoint,
-             const BreakpointVector& aBreakpoints);
+  void Enter(const ExecutionPoint& aPoint,
+             const BreakpointVector& aBreakpoints = BreakpointVector(),
+             bool aRewind = false, bool aRecordingEndpoint = false);
 
   void ToString(nsAutoCString& aStr) override {
-    aStr.AppendPrintf("BreakpointPaused RecoveringFromDivergence %d", mRecoveringFromDivergence);
-  }
-
-  void AfterCheckpoint(const CheckpointId& aCheckpoint) override;
-  void PositionHit(const ExecutionPoint& aPoint) override;
-  void Resume(bool aForward) override;
-  void RestoreCheckpoint(size_t aCheckpoint) override;
-  void HandleDebuggerRequest(js::CharBuffer* aRequestBuffer) override;
-  bool MaybeDivergeFromRecording() override;
-  ExecutionPoint GetRecordingEndpoint() override;
-
-  void RespondAfterRecoveringFromDivergence();
-};
-
-// Phase when the replaying process is paused at a normal checkpoint.
-class CheckpointPausedPhase final : public NavigationPhase
-{
-  size_t mCheckpoint;
-  bool mAtRecordingEndpoint;
-
-public:
-  void Enter(size_t aCheckpoint, bool aRewind, bool aRecordingEndpoint);
-
-  void ToString(nsAutoCString& aStr) override {
-    aStr.AppendPrintf("CheckpointPaused");
+    aStr.AppendPrintf("Paused RecoveringFromDivergence %d", mRecoveringFromDivergence);
   }
 
   void AfterCheckpoint(const CheckpointId& aCheckpoint) override;
@@ -208,7 +190,10 @@ public:
   void RestoreCheckpoint(size_t aCheckpoint) override;
   void RunToPoint(const ExecutionPoint& aTarget) override;
   void HandleDebuggerRequest(js::CharBuffer* aRequestBuffer) override;
+  bool MaybeDivergeFromRecording() override;
   ExecutionPoint GetRecordingEndpoint() override;
+
+  bool EnsureTemporaryCheckpoint();
 };
 
 // Phase when execution is proceeding forwards in search of breakpoint hits.
@@ -363,8 +348,7 @@ public:
     }
   }
 
-  BreakpointPausedPhase mBreakpointPausedPhase;
-  CheckpointPausedPhase mCheckpointPausedPhase;
+  PausedPhase mPausedPhase;
   ForwardPhase mForwardPhase;
   ReachBreakpointPhase mReachBreakpointPhase;
   FindLastHitPhase mFindLastHitPhase;
@@ -407,8 +391,8 @@ public:
 
     MOZ_RELEASE_ASSERT(IsRecording() ||
                        aCheckpoint.mNormal <= mRecordingEndpoint.mCheckpoint);
-    if (aCheckpoint.mNormal == mRecordingEndpoint.mCheckpoint) {
-      MOZ_RELEASE_ASSERT(mRecordingEndpoint.HasPosition());
+    if (aCheckpoint.mNormal == mRecordingEndpoint.mCheckpoint &&
+        mRecordingEndpoint.HasPosition()) {
       js::EnsurePositionHandler(mRecordingEndpoint.mPosition);
     }
   }
@@ -481,13 +465,6 @@ public:
     MOZ_RELEASE_ASSERT(!mTemporaryCheckpoints.empty());
     return mTemporaryCheckpoints.back();
   }
-
-  CheckpointId LastTemporaryCheckpointId() {
-    MOZ_RELEASE_ASSERT(!mTemporaryCheckpoints.empty());
-    size_t normal = mTemporaryCheckpoints.back().mCheckpoint;
-    size_t temporary = mTemporaryCheckpoints.length();
-    return CheckpointId(normal, temporary);
-  }
 };
 
 static NavigationState* gNavigation;
@@ -505,7 +482,7 @@ GetAllBreakpointHits(const ExecutionPoint& aPoint, BreakpointVector& aHitBreakpo
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// BreakpointPaused Phase
+// Paused Phase
 ///////////////////////////////////////////////////////////////////////////////
 
 static bool
@@ -515,81 +492,70 @@ ThisProcessCanRewind()
 }
 
 void
-BreakpointPausedPhase::Enter(const ExecutionPoint& aPoint, bool aRecordingEndpoint,
-                             const BreakpointVector& aBreakpoints)
+PausedPhase::Enter(const ExecutionPoint& aPoint, const BreakpointVector& aBreakpoints,
+                   bool aRewind, bool aRecordingEndpoint)
 {
-  MOZ_RELEASE_ASSERT(aPoint.HasPosition());
-
   mPoint = aPoint;
+  mRecordingEndpoint = aRecordingEndpoint;
   mRequests.clear();
-  mRecoveringFromDivergence = false;
   mRequestIndex = 0;
+  mSavedTemporaryCheckpoint = false;
+  mRecoveringFromDivergence = false;
   mResumeForward = false;
 
   gNavigation->SetPhase(this);
 
-  if (ThisProcessCanRewind()) {
-    // Immediately save a temporary checkpoint and update the point to be
-    // in relation to this checkpoint. If we rewind due to a recording
-    // divergence we will end up here.
-    if (!gNavigation->SaveTemporaryCheckpoint(aPoint)) {
-      // We just restored the checkpoint, and could be in any phase,
-      // including this one.
-      if (gNavigation->mPhase == this) {
-        MOZ_RELEASE_ASSERT(!mRecoveringFromDivergence);
-        // If we are transitioning to the forward phase, avoid hitting
-        // breakpoints at this point.
-        if (mResumeForward) {
-          gNavigation->mForwardPhase.Enter(aPoint);
-          return;
-        }
-        // Otherwise we restored after hitting an unhandled recording
-        // divergence.
-        mRecoveringFromDivergence = true;
-        PauseMainThreadAndInvokeCallback([=]() {
-            RespondAfterRecoveringFromDivergence();
-          });
-        Unreachable();
-      }
-      gNavigation->PositionHit(aPoint);
-      return;
-    }
+  // Breakpoints will never be hit if we are at a checkpoint.
+  MOZ_RELEASE_ASSERT(aPoint.HasPosition() || aBreakpoints.empty());
+
+  if (aRewind) {
+    MOZ_RELEASE_ASSERT(!aPoint.HasPosition());
+    RestoreCheckpointAndResume(CheckpointId(aPoint.mCheckpoint));
+    Unreachable();
   }
 
-  child::HitBreakpoint(aRecordingEndpoint, aBreakpoints.begin(), aBreakpoints.length());
-
-  // When rewinding is allowed we will rewind before resuming to erase side effects.
-  MOZ_RELEASE_ASSERT(!ThisProcessCanRewind());
+  if (aPoint.HasPosition()) {
+    child::HitBreakpoint(aRecordingEndpoint, aBreakpoints.begin(), aBreakpoints.length());
+  } else {
+    child::HitCheckpoint(aPoint.mCheckpoint, aRecordingEndpoint);
+  }
 }
 
 void
-BreakpointPausedPhase::AfterCheckpoint(const CheckpointId& aCheckpoint)
+PausedPhase::AfterCheckpoint(const CheckpointId& aCheckpoint)
 {
-  // We just saved or restored the temporary checkpoint before reaching the
-  // breakpoint.
-  MOZ_RELEASE_ASSERT(ThisProcessCanRewind());
-  MOZ_RELEASE_ASSERT(aCheckpoint == gNavigation->LastTemporaryCheckpointId());
+  MOZ_RELEASE_ASSERT(!mRecoveringFromDivergence);
+  if (!aCheckpoint.mTemporary) {
+    // We just rewound here, and are now where we should pause.
+    MOZ_RELEASE_ASSERT(mPoint == ExecutionPoint(aCheckpoint.mNormal));
+    child::HitCheckpoint(mPoint.mCheckpoint, mRecordingEndpoint);
+  } else {
+    // We just saved or restored the temporary checkpoint taken while
+    // processing debugger requests here.
+    MOZ_RELEASE_ASSERT(ThisProcessCanRewind());
+    MOZ_RELEASE_ASSERT(mSavedTemporaryCheckpoint);
+  }
 }
 
 void
-BreakpointPausedPhase::PositionHit(const ExecutionPoint& aPoint)
+PausedPhase::PositionHit(const ExecutionPoint& aPoint)
 {
   // Ignore positions hit while paused (we're probably doing an eval).
 }
 
 void
-BreakpointPausedPhase::Resume(bool aForward)
+PausedPhase::Resume(bool aForward)
 {
   MOZ_RELEASE_ASSERT(!mRecoveringFromDivergence);
+  MOZ_RELEASE_ASSERT(!mResumeForward);
 
   if (aForward) {
-    // If we are paused at a breakpoint and can rewind, we may have
-    // diverged from the recording. We have to clear any unwanted changes
-    // induced by evals and so forth by restoring the temporary checkpoint
-    // we saved before pausing here.
-    if (ThisProcessCanRewind()) {
+    // If we have saved any temporary checkpoint, we performed an operation
+    // that may have side effects. Clear these unwanted changes by restoring
+    // the temporary checkpoint we saved earlier.
+    if (mSavedTemporaryCheckpoint) {
       mResumeForward = true;
-      RestoreCheckpointAndResume(gNavigation->LastTemporaryCheckpointId());
+      RestoreCheckpointAndResume(gNavigation->LastCheckpoint());
       Unreachable();
     }
 
@@ -601,57 +567,106 @@ BreakpointPausedPhase::Resume(bool aForward)
   }
 
   // Search backwards in the execution space.
-  CheckpointId start = gNavigation->LastTemporaryCheckpointId();
-  start.mTemporary--;
-  gNavigation->mFindLastHitPhase.Enter(start, Some(mPoint));
+  if (mPoint.HasPosition()) {
+    CheckpointId start = gNavigation->LastCheckpoint();
+
+    // Skip over any temporary checkpoint we saved.
+    if (mSavedTemporaryCheckpoint) {
+      MOZ_RELEASE_ASSERT(start.mTemporary);
+      start.mTemporary--;
+    }
+    gNavigation->mFindLastHitPhase.Enter(start, Some(mPoint));
+  } else {
+    // We can't rewind past the beginning of the replay.
+    MOZ_RELEASE_ASSERT(mPoint.mCheckpoint != CheckpointId::First);
+
+    CheckpointId start(mPoint.mCheckpoint - 1);
+    gNavigation->mFindLastHitPhase.Enter(start, Nothing());
+  }
   Unreachable();
 }
 
 void
-BreakpointPausedPhase::RestoreCheckpoint(size_t aCheckpoint)
+PausedPhase::RestoreCheckpoint(size_t aCheckpoint)
 {
-  gNavigation->mCheckpointPausedPhase.Enter(aCheckpoint, /* aRewind = */ true,
-                                            /* aRecordingEndpoint = */ false);
+  ExecutionPoint target(aCheckpoint);
+  bool rewind = target != mPoint;
+  Enter(target, BreakpointVector(), rewind, /* aRecordingEndpoint = */ false);
 }
 
 void
-BreakpointPausedPhase::HandleDebuggerRequest(js::CharBuffer* aRequestBuffer)
+PausedPhase::RunToPoint(const ExecutionPoint& aTarget)
+{
+  // This may only be used when we are paused at a normal checkpoint.
+  MOZ_RELEASE_ASSERT(!mPoint.HasPosition());
+  size_t checkpoint = mPoint.mCheckpoint;
+
+  MOZ_RELEASE_ASSERT(aTarget.mCheckpoint == checkpoint);
+  ResumeExecution();
+  gNavigation->mReachBreakpointPhase.Enter(CheckpointId(checkpoint), /* aRewind = */ false,
+                                           aTarget, /* aTemporaryCheckpoint = */ Nothing());
+}
+
+void
+PausedPhase::HandleDebuggerRequest(js::CharBuffer* aRequestBuffer)
 {
   MOZ_RELEASE_ASSERT(!mRecoveringFromDivergence);
+  MOZ_RELEASE_ASSERT(!mResumeForward);
 
   mRequests.emplaceBack();
-  RequestInfo& info = mRequests.back();
-  mRequestIndex = mRequests.length() - 1;
+  size_t index = mRequests.length() - 1;
+  mRequests[index].mRequestBuffer.append(aRequestBuffer->begin(), aRequestBuffer->length());
 
-  info.mRequestBuffer.append(aRequestBuffer->begin(), aRequestBuffer->length());
+  mRequestIndex = index;
 
   js::CharBuffer responseBuffer;
   js::ProcessRequest(aRequestBuffer->begin(), aRequestBuffer->length(), &responseBuffer);
 
   delete aRequestBuffer;
 
-  info.mResponseBuffer.append(responseBuffer.begin(), responseBuffer.length());
-  child::RespondToRequest(responseBuffer);
-}
+  if (gNavigation->mPhase != this) {
+    // We saved a temporary checkpoint by calling MaybeDivergeFromRecording
+    // within ProcessRequest, then restored it while scanning backwards.
+    ResumeExecution();
+    return;
+  }
 
-void
-BreakpointPausedPhase::RespondAfterRecoveringFromDivergence()
-{
-  MOZ_RELEASE_ASSERT(mRecoveringFromDivergence);
-  MOZ_RELEASE_ASSERT(mRequests.length());
+  if (!mResumeForward && !mRecoveringFromDivergence) {
+    // We processed this request normally. Remember the response and send it to
+    // the middleman process.
+    MOZ_RELEASE_ASSERT(index == mRequestIndex);
+    mRequests[index].mResponseBuffer.append(responseBuffer.begin(), responseBuffer.length());
+    child::RespondToRequest(responseBuffer);
+    return;
+  }
 
-  // Remember that the last request has triggered an unhandled divergence.
+  if (mResumeForward) {
+    // We rewound to erase side effects from the temporary checkpoint we saved
+    // under ProcessRequest. Just start running forward.
+    MOZ_RELEASE_ASSERT(!mRecoveringFromDivergence);
+    gNavigation->mForwardPhase.Enter(mPoint);
+    return;
+  }
+
+  // We rewound after having an unhandled recording divergence while processing
+  // mRequests[index] or some later request. We need to redo all requests up to
+  // the last request we received.
+
+  // Remember that the last request triggered an unhandled divergence.
   MOZ_RELEASE_ASSERT(!mRequests.back().mUnhandledDivergence);
   mRequests.back().mUnhandledDivergence = true;
 
-  // Redo all existing requests.
-  for (size_t i = 0; i < mRequests.length(); i++) {
+  for (size_t i = index; i < mRequests.length(); i++) {
     RequestInfo& info = mRequests[i];
     mRequestIndex = i;
 
-    js::CharBuffer responseBuffer;
-    js::ProcessRequest(info.mRequestBuffer.begin(), info.mRequestBuffer.length(),
-                       &responseBuffer);
+    if (i == index) {
+      // We just performed this request, and responseBuffer has the right contents.
+    } else {
+      responseBuffer.clear();
+      js::ProcessRequest(info.mRequestBuffer.begin(), info.mRequestBuffer.length(),
+                         &responseBuffer);
+    }
 
     if (i < mRequests.length() - 1) {
       // This is an old request, and we don't need to send another
@@ -673,7 +688,7 @@ BreakpointPausedPhase::RespondAfterRecoveringFromDivergence()
 }
 
 bool
-BreakpointPausedPhase::MaybeDivergeFromRecording()
+PausedPhase::MaybeDivergeFromRecording()
 {
   if (!ThisProcessCanRewind()) {
     // Recording divergence is not supported if we can't rewind. We can't
@@ -682,101 +697,79 @@ BreakpointPausedPhase::MaybeDivergeFromRecording()
     // will not be reflected in the recording.
     return false;
   }
-  if (mRequests[mRequestIndex].mUnhandledDivergence) {
+
+  if (!EnsureTemporaryCheckpoint()) {
+    // One of the premature exit cases was hit in EnsureTemporaryCheckpoint.
+    // Don't allow any operations that can diverge from the recording.
     return false;
   }
+
+  if (mRequests[mRequestIndex].mUnhandledDivergence) {
+    // We tried to process this request before and had an unhandled divergence.
+    // Disallow the request handler from doing anything that might diverge from
+    // the recording.
+    return false;
+  }
+
   DivergeFromRecording();
   return true;
 }
 
+bool
+PausedPhase::EnsureTemporaryCheckpoint()
+{
+  if (mSavedTemporaryCheckpoint) {
+    return true;
+  }
+
+  // We need to save a temporary checkpoint that we can restore if we hit
+  // a recording divergence.
+  mSavedTemporaryCheckpoint = true;
+
+  size_t index = mRequestIndex;
+  if (gNavigation->SaveTemporaryCheckpoint(mPoint)) {
+    // We just saved the temporary checkpoint.
+    return true;
+  }
+
+  // We just rewound here.
+  if (gNavigation->mPhase != this) {
+    // We are no longer paused at this point. We should be searching
+    // backwards in the region after this temporary checkpoint was taken.
+    // Return false to ensure we don't perform any side effects before
+    // resuming forward.
+    return false;
+  }
+
+  // We are still paused at this point. Either we had an unhandled
+  // recording divergence, or we intentionally rewound to erase side
+  // effects that occurred while paused here.
+  MOZ_RELEASE_ASSERT(!mRecoveringFromDivergence);
+
+  if (mResumeForward) {
+    // We can't diverge from the recording before resuming forward execution.
+    return false;
+  }
+
+  mRecoveringFromDivergence = true;
+
+  if (index == mRequestIndex) {
+    // We had an unhandled divergence for the same request where we
+    // created the temporary checkpoint. mUnhandledDivergence hasn't been
+    // set yet, but return now to avoid triggering the same divergence
+    // and rewinding again.
+    return false;
+  }
+
+  // Allow the caller to check mUnhandledDivergence.
+  return true;
+}
+
 ExecutionPoint
-BreakpointPausedPhase::GetRecordingEndpoint()
+PausedPhase::GetRecordingEndpoint()
 {
   MOZ_RELEASE_ASSERT(IsRecording());
   return mPoint;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// CheckpointPausedPhase
-///////////////////////////////////////////////////////////////////////////////
-
-void
-CheckpointPausedPhase::Enter(size_t aCheckpoint, bool aRewind, bool aAtRecordingEndpoint)
-{
-  mCheckpoint = aCheckpoint;
-  mAtRecordingEndpoint = aAtRecordingEndpoint;
-
-  gNavigation->SetPhase(this);
-
-  if (aRewind) {
-    RestoreCheckpointAndResume(CheckpointId(mCheckpoint));
-    Unreachable();
-  }
-
-  AfterCheckpoint(CheckpointId(mCheckpoint));
-}
-
-void
-CheckpointPausedPhase::AfterCheckpoint(const CheckpointId& aCheckpoint)
-{
-  MOZ_RELEASE_ASSERT(aCheckpoint == CheckpointId(mCheckpoint));
-  child::HitCheckpoint(mCheckpoint, mAtRecordingEndpoint);
-}
-
-void
-CheckpointPausedPhase::PositionHit(const ExecutionPoint& aPoint)
-{
-  // Ignore positions hit while paused (we're probably doing an eval).
-}
-
-void
-CheckpointPausedPhase::Resume(bool aForward)
-{
-  // We can't rewind past the beginning of the replay.
-  MOZ_RELEASE_ASSERT(aForward || mCheckpoint != CheckpointId::First);
-
-  if (aForward) {
-    // Run forward from the current execution point.
-    js::ClearPausedState();
-    ExecutionPoint search(mCheckpoint);
-    gNavigation->mForwardPhase.Enter(search);
-  } else {
-    CheckpointId start(mCheckpoint - 1);
-    gNavigation->mFindLastHitPhase.Enter(start, Nothing());
-    Unreachable();
-  }
-}
-
-void
-CheckpointPausedPhase::RestoreCheckpoint(size_t aCheckpoint)
-{
-  Enter(aCheckpoint, aCheckpoint != mCheckpoint, /* aRecordingEndpoint = */ false);
-}
-
-void
-CheckpointPausedPhase::RunToPoint(const ExecutionPoint& aTarget)
-{
-  MOZ_RELEASE_ASSERT(aTarget.mCheckpoint == mCheckpoint);
-  ResumeExecution();
-  gNavigation->mReachBreakpointPhase.Enter(CheckpointId(mCheckpoint), /* aRewind = */ false,
-                                           aTarget, /* aTemporaryCheckpoint = */ Nothing());
-}
-
-void
-CheckpointPausedPhase::HandleDebuggerRequest(js::CharBuffer* aRequestBuffer)
-{
-  js::CharBuffer responseBuffer;
-  js::ProcessRequest(aRequestBuffer->begin(), aRequestBuffer->length(), &responseBuffer);
-
-  delete aRequestBuffer;
-
-  child::RespondToRequest(responseBuffer);
-}
-
-ExecutionPoint
-CheckpointPausedPhase::GetRecordingEndpoint()
-{
-  return ExecutionPoint(mCheckpoint);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -805,8 +798,7 @@ ForwardPhase::AfterCheckpoint(const CheckpointId& aCheckpoint)
 {
   MOZ_RELEASE_ASSERT(!aCheckpoint.mTemporary &&
                      aCheckpoint.mNormal == mPoint.mCheckpoint + 1);
-  gNavigation->mCheckpointPausedPhase.Enter(aCheckpoint.mNormal, /* aRewind = */ false,
-                                            /* aRecordingEndpoint = */ false);
+  gNavigation->mPausedPhase.Enter(ExecutionPoint(aCheckpoint.mNormal));
 }
 
 void
@@ -816,22 +808,21 @@ ForwardPhase::PositionHit(const ExecutionPoint& aPoint)
   GetAllBreakpointHits(aPoint, hitBreakpoints);
 
   if (!hitBreakpoints.empty()) {
-    gNavigation->mBreakpointPausedPhase.Enter(aPoint, /* aRecordingEndpoint = */ false,
-                                              hitBreakpoints);
+    gNavigation->mPausedPhase.Enter(aPoint, hitBreakpoints);
   }
 }
 
 void
 ForwardPhase::HitRecordingEndpoint(const ExecutionPoint& aPoint)
 {
-  if (aPoint.HasPosition()) {
-    BreakpointVector emptyBreakpoints;
-    gNavigation->mBreakpointPausedPhase.Enter(aPoint, /* aRecordingEndpoint = */ true,
-                                              emptyBreakpoints);
-  } else {
-    gNavigation->mCheckpointPausedPhase.Enter(aPoint.mCheckpoint, /* aRewind = */ false,
-                                              /* aRecordingEndpoint = */ true);
-  }
+  nsAutoCString str;
+  ExecutionPointToString(aPoint, str);
+
+  // Use an empty vector even if there are breakpoints here. If we started
+  // running forward from aPoint and immediately hit the recording endpoint,
+  // we don't want to hit the breakpoints again.
+  gNavigation->mPausedPhase.Enter(aPoint, BreakpointVector(),
+                                  /* aRewind = */ false, /* aRecordingEndpoint = */ true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -914,9 +905,7 @@ ReachBreakpointPhase::PositionHit(const ExecutionPoint& aPoint)
   if (mPoint == aPoint) {
     BreakpointVector hitBreakpoints;
     GetAllBreakpointHits(aPoint, hitBreakpoints);
-
-    gNavigation->mBreakpointPausedPhase.Enter(aPoint, /* aRecordingEndpoint = */ false,
-                                              hitBreakpoints);
+    gNavigation->mPausedPhase.Enter(aPoint, hitBreakpoints);
   }
 }
 
@@ -1040,14 +1029,20 @@ FindLastHitPhase::OnRegionEnd()
       CheckpointId start = mStart;
       start.mTemporary--;
       ExecutionPoint end = gNavigation->LastTemporaryCheckpointLocation();
-      gNavigation->mFindLastHitPhase.Enter(start, Some(end));
-      Unreachable();
-    } else {
-      // Rewind to the last normal checkpoint and pause.
-      gNavigation->mCheckpointPausedPhase.Enter(mStart.mNormal, /* aRewind = */ true,
-                                                /* aRecordingEndpoint = */ false);
-      Unreachable();
+      if (end.HasPosition()) {
+        gNavigation->mFindLastHitPhase.Enter(start, Some(end));
+        Unreachable();
+      } else {
+        // The last temporary checkpoint may be at the same execution point as
+        // the last normal checkpoint, if it was created while handling
+        // debugger requests there.
+      }
     }
+
+    // Rewind to the last normal checkpoint and pause.
+    gNavigation->mPausedPhase.Enter(ExecutionPoint(mStart.mNormal), BreakpointVector(),
+                                    /* aRewind = */ true);
+    Unreachable();
   }
 
   // When running backwards, we don't want to place temporary checkpoints at

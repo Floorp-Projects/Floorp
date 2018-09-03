@@ -858,9 +858,12 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
  *     {
  *       JSAutoRealm ar(cx, obj);  // constructor enters
  *       // in the realm of 'obj'
- *     }                                 // destructor leaves
+ *     }                           // destructor leaves
  *     // back in realm 'r'
  *   }
+ *
+ * The object passed to JSAutoRealm must *not* be a cross-compartment wrapper,
+ * because CCWs are not associated with a single realm.
  *
  * For more complicated uses that don't neatly fit in a C++ stack frame, the
  * realm can be entered and left using separate function calls:
@@ -882,27 +885,14 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
  * the JSAutoRealm.
  */
 
-// JSAutoRealmAllowCCW is deprecated and will be removed soon, because entering
-// the realm of a CCW doesn't make sense when CCWs are shared by all realms in
-// the compartment. New code should prefer JSAutoRealm below instead (it asserts
-// the object is not a CCW).
-class MOZ_RAII JS_PUBLIC_API(JSAutoRealmAllowCCW)
+class MOZ_RAII JS_PUBLIC_API(JSAutoRealm)
 {
     JSContext* cx_;
     JS::Realm* oldRealm_;
   public:
-    JSAutoRealmAllowCCW(JSContext* cx, JSObject* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    JSAutoRealmAllowCCW(JSContext* cx, JSScript* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~JSAutoRealmAllowCCW();
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class MOZ_RAII JS_PUBLIC_API(JSAutoRealm) : public JSAutoRealmAllowCCW
-{
-  public:
     JSAutoRealm(JSContext* cx, JSObject* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     JSAutoRealm(JSContext* cx, JSScript* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~JSAutoRealm();
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -922,6 +912,9 @@ class MOZ_RAII JS_PUBLIC_API(JSAutoNullableRealm)
 namespace JS {
 
 /** NB: This API is infallible; a nullptr return value does not indicate error.
+ *
+ * |target| must not be a cross-compartment wrapper because CCWs are not
+ * associated with a single realm.
  *
  * Entering a realm roots the realm and its global object until the matching
  * JS::LeaveRealm() call.

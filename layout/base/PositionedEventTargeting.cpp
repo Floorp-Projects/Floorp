@@ -241,7 +241,6 @@ GetClickableAncestor(nsIFrame* aFrame, nsAtom* stopAt = nullptr, nsAutoString* a
                                     nsGkAtoms::checkbox,
                                     nsGkAtoms::radio,
                                     nsGkAtoms::menu,
-                                    nsGkAtoms::menubutton,
                                     nsGkAtoms::menuitem,
                                     nsGkAtoms::menulist,
                                     nsGkAtoms::scrollbarbutton,

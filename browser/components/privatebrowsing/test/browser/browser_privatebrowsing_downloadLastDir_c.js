@@ -41,7 +41,7 @@ function test() {
     contentType: "text/plain",
     saveMode: SAVEMODE_FILEONLY,
     saveAsType: kSaveAsType_Complete,
-    file: null
+    file: null,
   };
 
   prefs.setComplexValue("lastDir", Ci.nsIFile, tmpDir);

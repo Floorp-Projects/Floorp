@@ -93,7 +93,7 @@ async function testOpenedAndDraggedXPI(aBrowser) {
 // Test for bug 1175267.
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [["xpinstall.customConfirmationUI", true]]
+    set: [["xpinstall.customConfirmationUI", true]],
   });
 
   await BrowserTestUtils.withNewTab("http://example.com", testOpenedAndDraggedXPI);

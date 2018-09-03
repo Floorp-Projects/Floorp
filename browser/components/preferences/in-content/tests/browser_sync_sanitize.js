@@ -103,7 +103,7 @@ add_task(async function testDisconnectNoSanitize() {
         lock: sinon.stub().returns(true),
         unlock: sinon.spy(),
         startOver: sinon.spy(),
-      }
+      },
     };
     let weaveStub = sinon.stub(SyncDisconnectInternal, "getWeave");
     weaveStub.returns(Weave);
@@ -163,8 +163,8 @@ add_task(async function testSanitizeSync() {
         },
         errorHandler: {
           resetFileLog: sinon.spy(),
-        }
-      }
+        },
+      },
     };
     let weaveStub = sinon.stub(SyncDisconnectInternal, "getWeave");
     weaveStub.returns(Weave);

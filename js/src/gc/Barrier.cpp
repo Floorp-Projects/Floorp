@@ -18,6 +18,8 @@
 #include "vm/SymbolType.h"
 #include "wasm/WasmJS.h"
 
+#include "gc/Zone-inl.h"
+
 namespace js {
 
 bool

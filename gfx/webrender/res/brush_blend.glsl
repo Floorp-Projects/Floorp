@@ -32,7 +32,10 @@ void brush_vs(
     vec2 uv = snap_device_pos(vi) +
         src_task.common_data.task_rect.p0 -
         src_task.content_origin;
-    vUv = vec3(uv / texture_size, src_task.common_data.texture_layer_index);
+    vUv = vec3(
+        uv * gl_Position.w / texture_size, // multiply by W to compensate for perspective interpolation
+        src_task.common_data.texture_layer_index
+    );
 
     vec2 uv0 = src_task.common_data.task_rect.p0;
     vec2 uv1 = uv0 + src_task.common_data.task_rect.size;
@@ -124,7 +127,8 @@ vec3 Brightness(vec3 Cs, float amount) {
 }
 
 Fragment brush_fs() {
-    vec4 Cs = texture(sColor0, vUv);
+    vec2 base_uv = vUv.xy * gl_FragCoord.w;
+    vec4 Cs = texture(sColor0, vec3(base_uv, vUv.z));
 
     if (Cs.a == 0.0) {
         return Fragment(vec4(0.0)); // could also `discard`
@@ -155,7 +159,7 @@ Fragment brush_fs() {
 
     // Fail-safe to ensure that we don't sample outside the rendered
     // portion of a blend source.
-    alpha *= point_inside_rect(vUv.xy, vUvClipBounds.xy, vUvClipBounds.zw);
+    alpha *= point_inside_rect(base_uv, vUvClipBounds.xy, vUvClipBounds.zw);
 
     // Pre-multiply the alpha into the output value.
     return Fragment(alpha * vec4(color, 1.0));

@@ -1,0 +1,31 @@
+.pocket-logged-in-cta {
+  $max-button-width: 130px;
+  $min-button-height: 18px;
+  font-size: 13px;
+  margin-inline-end: 20px;
+  display: inline-block;
+
+  a {
+    background: $pocket-red;
+    letter-spacing: -0.34px;
+    color: $white;
+    border-radius: 4px;
+    cursor: pointer;
+    max-width: $max-button-width;
+    // The button height is 2px taller than the rest of the cta text.
+    // So I move it up by 1px to align with the rest of the cta text.
+    margin-top: -1px;
+    min-height: $min-button-height;
+    padding: 0 6px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 11px;
+    margin-inline-end: 10px;
+  }
+
+  a,
+  .cta-text {
+    vertical-align: top;
+  }
+}

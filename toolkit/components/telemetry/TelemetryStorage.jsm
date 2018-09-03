@@ -430,7 +430,7 @@ var TelemetryStorage = {
    */
   testClearPendingPings() {
     return TelemetryStorageImpl.runRemovePendingPingsTask();
-  }
+  },
 };
 
 /**

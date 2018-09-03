@@ -4,10 +4,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-.sidebar-header,
+#sidebar-box {
+  --sidebar-background-color: -moz-Field;
+  --sidebar-text-color: -moz-FieldText;
+  background-color: var(--sidebar-background-color);
+  color: var(--sidebar-text-color);
+}
+
 #sidebar-header {
   font-size: 1.333em;
   padding: 8px;
+  border-bottom: 1px solid var(--sidebar-border-color);
+  background-color: transparent;
+  color: inherit;
 }
 
 %ifndef MOZ_WIDGET_GTK
@@ -17,6 +26,7 @@
   -moz-appearance: none;
   border: 0 solid;
   border-inline-end-width: 1px;
+  border-inline-end-color: var(--sidebar-border-color);
   min-width: 1px;
   width: 4px;
   background-image: none !important;
@@ -38,7 +48,6 @@
 }
 
 @media (min-resolution: 2dppx) {
-  .sidebar-throbber[loading="true"],
   #sidebar-throbber[loading="true"] {
     list-style-image: url("chrome://global/skin/icons/loading@2x.png");
     width: 16px;

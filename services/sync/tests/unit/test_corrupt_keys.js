@@ -31,7 +31,7 @@ add_task(async function test_locally_changed_keys() {
   johndoe.createContents({
     meta: {},
     crypto: {},
-    clients: {}
+    clients: {},
   });
   server.start();
 
@@ -48,7 +48,7 @@ add_task(async function test_locally_changed_keys() {
     async function corrupt_local_keys() {
       Service.collectionKeys._default.keyPair = [
         await Weave.Crypto.generateRandomKey(),
-        await Weave.Crypto.generateRandomKey()
+        await Weave.Crypto.generateRandomKey(),
       ];
     }
 

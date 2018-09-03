@@ -21,6 +21,7 @@ class HeapSnapshot;
 namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;
+class BrowsingContext;
 class IdleRequestCallback;
 struct IdleRequestOptions;
 class MozQueryInterface;
@@ -187,6 +188,10 @@ public:
 
   static already_AddRefed<Promise>
   RequestIOActivity(GlobalObject& aGlobal, ErrorResult& aRv);
+
+  static void
+  GetRootBrowsingContexts(GlobalObject& aGlobal,
+                          nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
 };
 
 } // namespace dom

@@ -74,7 +74,7 @@ function checkMenu(contextMenu) {
                    "Radio2",             {type: "checkbox", icon: "", checked: true, disabled: false},
                    "Radio3",             {type: "checkbox", icon: "", checked: false, disabled: false},
                    "---",                 null,
-                   "Checkbox",           {type: "checkbox", icon: "", checked: false, disabled: false}] }
+                   "Checkbox",           {type: "checkbox", icon: "", checked: false, disabled: false}] },
                ];
   checkItems(contextMenu.children[2], items);
 }

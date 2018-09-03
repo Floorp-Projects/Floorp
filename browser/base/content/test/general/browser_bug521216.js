@@ -46,5 +46,5 @@ var progressListener = {
   onLinkIconAvailable: function onLinkIconAvailable(aBrowser) {
     if (aBrowser == tab.linkedBrowser)
       record("onLinkIconAvailable");
-  }
+  },
 };

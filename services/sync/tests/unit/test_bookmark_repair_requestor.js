@@ -89,10 +89,10 @@ add_task(async function test_requestor_no_clients() {
       missingChildren: [
         {parent: "x", child: "a"},
         {parent: "x", child: "b"},
-        {parent: "x", child: "c"}
+        {parent: "x", child: "c"},
       ],
       orphans: [],
-    }
+    },
   };
   let flowID = Utils.makeGUID();
 
@@ -109,7 +109,7 @@ add_task(async function test_requestor_no_clients() {
       method: "finished",
       value: undefined,
       extra: { flowID, numIDs: 4 },
-    }
+    },
   ]);
 });
 
@@ -121,10 +121,10 @@ add_task(async function test_requestor_one_client_no_response() {
       missingChildren: [
         {parent: "x", child: "a"},
         {parent: "x", child: "b"},
-        {parent: "x", child: "c"}
+        {parent: "x", child: "c"},
       ],
       orphans: [],
-    }
+    },
   };
   let flowID = Utils.makeGUID();
   await requestor.startRepairs(validationInfo, flowID);
@@ -170,7 +170,7 @@ add_task(async function test_requestor_one_client_no_response() {
       method: "finished",
       value: undefined,
       extra: { flowID, numIDs: 4 },
-    }
+    },
   ]);
 });
 
@@ -182,10 +182,10 @@ add_task(async function test_requestor_one_client_no_sync() {
       missingChildren: [
         {parent: "x", child: "a"},
         {parent: "x", child: "b"},
-        {parent: "x", child: "c"}
+        {parent: "x", child: "c"},
       ],
       orphans: [],
-    }
+    },
   };
   let flowID = Utils.makeGUID();
   await requestor.startRepairs(validationInfo, flowID);
@@ -222,7 +222,7 @@ add_task(async function test_requestor_one_client_no_sync() {
       method: "finished",
       value: undefined,
       extra: { flowID, numIDs: 4 },
-    }
+    },
   ]);
 });
 
@@ -238,7 +238,7 @@ add_task(async function test_requestor_latest_client_used() {
         { parent: "x", child: "a" },
       ],
       orphans: [],
-    }
+    },
   };
   await requestor.startRepairs(validationInfo, Utils.makeGUID());
   // the repair command should be outgoing to the most-recent client.
@@ -259,10 +259,10 @@ add_task(async function test_requestor_client_vanishes() {
       missingChildren: [
         {parent: "x", child: "a"},
         {parent: "x", child: "b"},
-        {parent: "x", child: "c"}
+        {parent: "x", child: "c"},
       ],
       orphans: [],
-    }
+    },
   };
   let flowID = Utils.makeGUID();
   await requestor.startRepairs(validationInfo, flowID);
@@ -322,7 +322,7 @@ add_task(async function test_requestor_client_vanishes() {
       method: "finished",
       value: undefined,
       extra: { flowID, numIDs: 0 },
-    }
+    },
   ]);
 });
 
@@ -337,10 +337,10 @@ add_task(async function test_requestor_success_responses() {
       missingChildren: [
         {parent: "x", child: "a"},
         {parent: "x", child: "b"},
-        {parent: "x", child: "c"}
+        {parent: "x", child: "c"},
       ],
       orphans: [],
-    }
+    },
   };
   let flowID = Utils.makeGUID();
   await requestor.startRepairs(validationInfo, flowID);
@@ -405,7 +405,7 @@ add_task(async function test_requestor_success_responses() {
       method: "finished",
       value: undefined,
       extra: { flowID, numIDs: 0 },
-    }
+    },
   ]);
 });
 
@@ -432,10 +432,10 @@ add_task(async function test_requestor_already_repairing_at_start() {
       missingChildren: [
         {parent: "x", child: "a"},
         {parent: "x", child: "b"},
-        {parent: "x", child: "c"}
+        {parent: "x", child: "c"},
       ],
       orphans: [],
-    }
+    },
   };
   let flowID = Utils.makeGUID();
 
@@ -449,7 +449,7 @@ add_task(async function test_requestor_already_repairing_continue() {
   let clientB = makeClientRecord("client-b");
   let mockService = new MockService({
     "client-a": makeClientRecord("client-a"),
-    "client-b": clientB
+    "client-b": clientB,
   });
   let requestor = NewBookmarkRepairRequestor(mockService);
   let validationInfo = {
@@ -457,10 +457,10 @@ add_task(async function test_requestor_already_repairing_continue() {
       missingChildren: [
         {parent: "x", child: "a"},
         {parent: "x", child: "b"},
-        {parent: "x", child: "c"}
+        {parent: "x", child: "c"},
       ],
       orphans: [],
-    }
+    },
   };
   let flowID = Utils.makeGUID();
   await requestor.startRepairs(validationInfo, flowID);
@@ -505,7 +505,7 @@ add_task(async function test_requestor_already_repairing_continue() {
       object: "repair",
       value: undefined,
       extra: { flowID, numIDs: "4", reason: "other clients repairing" },
-    }
+    },
   ];
 
   deepEqual(mockService._recordedEvents, expected);

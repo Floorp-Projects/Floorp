@@ -80,7 +80,7 @@
           let formatter = Intl.DateTimeFormat(this.mLocales, {
             year: "numeric",
             month: "numeric",
-            day: "numeric"
+            day: "numeric",
           });
           formatter.formatToParts(Date.now()).map(part => {
             switch (part.type) {
@@ -393,7 +393,7 @@
           let minDigits = aField.getAttribute("mindigits");
           let formatted = value.toLocaleString(this.mLocales, {
             minimumIntegerDigits: minDigits,
-            useGrouping: false
+            useGrouping: false,
           });
 
           aField.textContent = formatted;
@@ -623,7 +623,7 @@
           let options = {
             hour: "numeric",
             minute: "numeric",
-            hour12: this.mHour12
+            hour12: this.mHour12,
           };
 
           this.mHourField = this.createEditField(this.mHourPlaceHolder,
@@ -710,7 +710,7 @@
 
           let result = intlUtils.getDisplayNames(this.mLocales, {
             style: "short",
-            keys
+            keys,
           });
 
           [ amString, pmString ] = keys.map(key => result.values[key]);
@@ -725,7 +725,7 @@
           <body>
           <![CDATA[
             let options = (new Intl.DateTimeFormat(aLocales, {
-              hour: "numeric"
+              hour: "numeric",
             })).resolvedOptions();
 
             return options.hour12;
@@ -1089,7 +1089,7 @@
           let minDigits = aField.getAttribute("mindigits");
           let formatted = value.toLocaleString(this.mLocales, {
             minimumIntegerDigits: minDigits,
-            useGrouping: false
+            useGrouping: false,
           });
 
           aField.textContent = formatted;
@@ -1259,7 +1259,7 @@
         // Handle keypress separately since we need to catch it on capturing.
         this.addEventListener("keypress", this, {
           capture: true,
-          mozSystemGroup: true
+          mozSystemGroup: true,
         }, false);
         // This is to open the picker when input element is clicked (this
         // includes padding area).
@@ -1276,7 +1276,7 @@
         });
         this.removeEventListener("keypress", this, {
           capture: true,
-          mozSystemGroup: true
+          mozSystemGroup: true,
         });
         this.mInputElement.removeEventListener("click", this,
                                                { mozSystemGroup: true });

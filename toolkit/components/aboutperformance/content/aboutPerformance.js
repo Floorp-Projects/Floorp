@@ -122,7 +122,7 @@ let tabFinder = {
       }
     }
     return null;
-  }
+  },
 };
 
 /**
@@ -286,7 +286,7 @@ Delta.prototype = {
   },
   toString() {
     return `[Delta] ${this.diff.key} => ${this.readableName}, ${this.fullName}`;
-  }
+  },
 };
 
 Delta.compare = function(a, b) {
@@ -315,12 +315,12 @@ Delta.MAX_DELTA_FOR_GOOD_RECENT_PERFORMANCE = {
     jank: {
       longestDuration: 3,
       totalUserTime: Number.POSITIVE_INFINITY,
-      totalSystemTime: Number.POSITIVE_INFINITY
+      totalSystemTime: Number.POSITIVE_INFINITY,
     },
     ticks: {
       ticks: Number.POSITIVE_INFINITY,
-    }
-  }
+    },
+  },
 };
 
 /**
@@ -334,12 +334,12 @@ Delta.MAX_DELTA_FOR_AVERAGE_RECENT_PERFORMANCE = {
     jank: {
       longestDuration: 7,
       totalUserTime: Number.POSITIVE_INFINITY,
-      totalSystemTime: Number.POSITIVE_INFINITY
+      totalSystemTime: Number.POSITIVE_INFINITY,
     },
     ticks: {
       ticks: Number.POSITIVE_INFINITY,
-    }
-  }
+    },
+  },
 };
 
 /**
@@ -508,7 +508,7 @@ var State = {
     let result = {
       webpages: [],
       deltas: new Set(),
-      duration: current.date - oldest.date
+      duration: current.date - oldest.date,
     };
 
     for (let kind of ["webpages"]) {
@@ -602,7 +602,7 @@ var State = {
                dispatchesSinceStartOfBuffer: oldest ? dispatches - oldest.dispatchCount : NaN,
                children: tab.children});
     });
-  }
+  },
 };
 
 var View = {
@@ -640,7 +640,7 @@ var View = {
       for (let key of remove) {
         this._map.delete(key);
       }
-    }
+    },
   },
   /**
    * Display the items in a category.
@@ -921,7 +921,7 @@ var View = {
     row.appendChild(elt);
 
     this._fragment.appendChild(row);
-  }
+  },
 };
 
 var Control = {

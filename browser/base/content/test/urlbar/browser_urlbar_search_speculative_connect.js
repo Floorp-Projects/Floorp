@@ -23,7 +23,7 @@ add_task(async function setup() {
 
   gTest = {
     search: gHost.substr(0, 2),
-    autofilledValue: `${gHost}:${gPort}/`
+    autofilledValue: `${gHost}:${gPort}/`,
   };
 
   await SpecialPowers.pushPrefEnv({

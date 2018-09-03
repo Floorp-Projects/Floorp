@@ -1,7 +1,9 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {addSnippetsSubscriber} from "content-src/lib/snippets";
+import {ASRouterContent} from "content-src/asrouter/asrouter-content";
 import {Base} from "content-src/components/Base/Base";
 import {DetectUserSessionStart} from "content-src/lib/detect-user-session-start";
+import {enableASRouterContent} from "content-src/lib/asroutercontent";
 import {initStore} from "content-src/lib/init-store";
 import {Provider} from "react-redux";
 import React from "react";
@@ -9,6 +11,7 @@ import ReactDOM from "react-dom";
 import {reducers} from "common/Reducers.jsm";
 
 const store = initStore(reducers, global.gActivityStreamPrerenderedState);
+const asrouterContent = new ASRouterContent();
 
 new DetectUserSessionStart(store).sendEventOrAddListener();
 
@@ -27,4 +30,5 @@ ReactDOM.hydrate(<Provider store={store}>
     strings={global.gActivityStreamStrings} />
 </Provider>, document.getElementById("root"));
 
+enableASRouterContent(store, asrouterContent);
 addSnippetsSubscriber(store);

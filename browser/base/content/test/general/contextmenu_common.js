@@ -303,7 +303,7 @@ async function test_contextmenu(selector, menuItems, options = {}) {
       type: "contextmenu",
       button: 2,
       shiftkey: options.shiftkey,
-      centered: options.centered
+      centered: options.centered,
     },
     gBrowser.selectedBrowser);
   await awaitPopupShown;
@@ -331,7 +331,7 @@ async function test_contextmenu(selector, menuItems, options = {}) {
         !Services.prefs.getBoolPref("extensions.screenshots.disabled", false)) {
       let screenshotItems = [
         "---", null,
-        "screenshots_mozilla_org_create-screenshot", true
+        "screenshots_mozilla_org_create-screenshot", true,
       ];
 
       menuItems = menuItems.concat(screenshotItems);

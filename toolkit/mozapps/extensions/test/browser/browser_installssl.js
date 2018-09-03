@@ -98,7 +98,7 @@ function run_install_tests(callback) {
         info("Install test ran in " + (Date.now() - gLast) + "ms");
         gPendingInstall = null;
         run_next_install_test();
-      }
+      },
     });
     install.install();
   }

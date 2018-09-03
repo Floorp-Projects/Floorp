@@ -15,7 +15,7 @@ const ADDONS = {
     unsigned: "unsigned_nonbootstrap_2.xpi",
     badid: "signed_nonbootstrap_badid_2.xpi",
     signed: "signed_nonbootstrap_2.xpi",
-  }
+  },
 };
 const ID = "test@tests.mozilla.org";
 

@@ -22,7 +22,7 @@ var expectedLog = [
   "engine-default",
   "engine-current",
   "engine-loaded",
-  "engine-removed"
+  "engine-removed",
 ];
 
 function search_observer(subject, topic, data) {

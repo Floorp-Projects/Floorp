@@ -23,7 +23,7 @@ const ADDONS = {
       "id": "addon1@tests.mozilla.org",
       "version": "2.0",
       "name": "Distributed add-ons test",
-    }
+    },
   },
 };
 
@@ -35,8 +35,8 @@ var addon1_1 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "5"
-  }]
+    maxVersion: "5",
+  }],
 };
 
 var addon1_2 = {
@@ -47,8 +47,8 @@ var addon1_2 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "5"
-  }]
+    maxVersion: "5",
+  }],
 };
 
 var addon1_3 = {
@@ -59,8 +59,8 @@ var addon1_3 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "5"
-  }]
+    maxVersion: "5",
+  }],
 };
 
 async function setOldModificationTime() {

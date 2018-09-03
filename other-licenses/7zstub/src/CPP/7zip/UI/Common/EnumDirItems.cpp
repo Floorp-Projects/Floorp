@@ -16,6 +16,7 @@
 #endif
 
 #include "EnumDirItems.h"
+#include "SortUtils.h"
 
 using namespace NWindows;
 using namespace NFile;
@@ -925,3 +926,161 @@ void CDirItems::FillFixedReparse()
 }
 
 #endif
+
+
+
+static const char * const kCannotFindArchive = "Cannot find archive";
+
+HRESULT EnumerateDirItemsAndSort(
+    NWildcard::CCensor &censor,
+    NWildcard::ECensorPathMode censorPathMode,
+    const UString &addPathPrefix,
+    UStringVector &sortedPaths,
+    UStringVector &sortedFullPaths,
+    CDirItemsStat &st,
+    IDirItemsCallback *callback)
+{
+  FStringVector paths;
+  
+  {
+    CDirItems dirItems;
+    dirItems.Callback = callback;
+    {
+      HRESULT res = EnumerateItems(censor, censorPathMode, addPathPrefix, dirItems);
+      st = dirItems.Stat;
+      RINOK(res);
+    }
+  
+    FOR_VECTOR (i, dirItems.Items)
+    {
+      const CDirItem &dirItem = dirItems.Items[i];
+      if (!dirItem.IsDir())
+        paths.Add(dirItems.GetPhyPath(i));
+    }
+  }
+  
+  if (paths.Size() == 0)
+  {
+    // return S_OK;
+    throw CMessagePathException(kCannotFindArchive);
+  }
+  
+  UStringVector fullPaths;
+  
+  unsigned i;
+  
+  for (i = 0; i < paths.Size(); i++)
+  {
+    FString fullPath;
+    NFile::NDir::MyGetFullPathName(paths[i], fullPath);
+    fullPaths.Add(fs2us(fullPath));
+  }
+  
+  CUIntVector indices;
+  SortFileNames(fullPaths, indices);
+  sortedPaths.ClearAndReserve(indices.Size());
+  sortedFullPaths.ClearAndReserve(indices.Size());
+
+  for (i = 0; i < indices.Size(); i++)
+  {
+    unsigned index = indices[i];
+    sortedPaths.AddInReserved(fs2us(paths[index]));
+    sortedFullPaths.AddInReserved(fullPaths[index]);
+    if (i > 0 && CompareFileNames(sortedFullPaths[i], sortedFullPaths[i - 1]) == 0)
+      throw CMessagePathException("Duplicate archive path:", sortedFullPaths[i]);
+  }
+
+  return S_OK;
+}
+
+
+
+
+#ifdef _WIN32
+
+// This code converts all short file names to long file names.
+
+static void ConvertToLongName(const UString &prefix, UString &name)
+{
+  if (name.IsEmpty() || DoesNameContainWildcard(name))
+    return;
+  NFind::CFileInfo fi;
+  const FString path (us2fs(prefix + name));
+  #ifndef UNDER_CE
+  if (NFile::NName::IsDevicePath(path))
+    return;
+  #endif
+  if (fi.Find(path))
+    name = fs2us(fi.Name);
+}
+
+static void ConvertToLongNames(const UString &prefix, CObjectVector<NWildcard::CItem> &items)
+{
+  FOR_VECTOR (i, items)
+  {
+    NWildcard::CItem &item = items[i];
+    if (item.Recursive || item.PathParts.Size() != 1)
+      continue;
+    if (prefix.IsEmpty() && item.IsDriveItem())
+      continue;
+    ConvertToLongName(prefix, item.PathParts.Front());
+  }
+}
+
+static void ConvertToLongNames(const UString &prefix, NWildcard::CCensorNode &node)
+{
+  ConvertToLongNames(prefix, node.IncludeItems);
+  ConvertToLongNames(prefix, node.ExcludeItems);
+  unsigned i;
+  for (i = 0; i < node.SubNodes.Size(); i++)
+  {
+    UString &name = node.SubNodes[i].Name;
+    if (prefix.IsEmpty() && NWildcard::IsDriveColonName(name))
+      continue;
+    ConvertToLongName(prefix, name);
+  }
+  // mix folders with same name
+  for (i = 0; i < node.SubNodes.Size(); i++)
+  {
+    NWildcard::CCensorNode &nextNode1 = node.SubNodes[i];
+    for (unsigned j = i + 1; j < node.SubNodes.Size();)
+    {
+      const NWildcard::CCensorNode &nextNode2 = node.SubNodes[j];
+      if (nextNode1.Name.IsEqualTo_NoCase(nextNode2.Name))
+      {
+        nextNode1.IncludeItems += nextNode2.IncludeItems;
+        nextNode1.ExcludeItems += nextNode2.ExcludeItems;
+        node.SubNodes.Delete(j);
+      }
+      else
+        j++;
+    }
+  }
+  for (i = 0; i < node.SubNodes.Size(); i++)
+  {
+    NWildcard::CCensorNode &nextNode = node.SubNodes[i];
+    ConvertToLongNames(prefix + nextNode.Name + WCHAR_PATH_SEPARATOR, nextNode);
+  }
+}
+
+void ConvertToLongNames(NWildcard::CCensor &censor)
+{
+  FOR_VECTOR (i, censor.Pairs)
+  {
+    NWildcard::CPair &pair = censor.Pairs[i];
+    ConvertToLongNames(pair.Prefix, pair.Head);
+  }
+}
+
+#endif
+
+
+CMessagePathException::CMessagePathException(const char *a, const wchar_t *u)
+{
+  (*this) += a;
+  if (u)
+  {
+    Add_LF();
+    (*this) += u;
+  }
+}

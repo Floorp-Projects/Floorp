@@ -104,9 +104,9 @@ add_task(async function() {
   let blankState = JSON.stringify({
     windows: [{
       tabs: [{ entries: [{ url: "about:blank", triggeringPrincipal_base64 }] }],
-      _closedTabs: []
+      _closedTabs: [],
     }],
-    _closedWindows: []
+    _closedWindows: [],
   });
   await setBrowserState(blankState);
 

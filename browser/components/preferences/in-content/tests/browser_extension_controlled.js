@@ -32,7 +32,7 @@ function installAddon(xpiName) {
       onDownloadCancelled: reject,
       onInstallFailed: reject,
       onInstallCancelled: reject,
-      onInstallEnded: resolve
+      onInstallEnded: resolve,
     });
     install.install();
   });
@@ -112,7 +112,7 @@ add_task(async function testExtensionControlledHomepage() {
     id: "extension-controlled-homepage-override",
     args: {
       name: "set_homepage",
-    }
+    },
   }, "The user is notified that an extension is controlling the homepage");
   is(controlledContent.hidden, false, "The extension controlled row is hidden");
   is(homeModeEl.disabled, true, "The homepage input is disabled");
@@ -175,7 +175,7 @@ add_task(async function testPrefLockedHomepage() {
     buttonPrefs.map(pref => waitForMutation(getButton(pref), mutationOpts))
       .concat([
         waitForMutation(homeModeEl, mutationOpts),
-        waitForMutation(homePageInput, mutationOpts)
+        waitForMutation(homePageInput, mutationOpts),
       ]));
   let getHomepage = () => Services.prefs.getCharPref("browser.startup.homepage");
 
@@ -322,7 +322,7 @@ add_task(async function testExtensionControlledNewTab() {
     id: "extension-controlled-new-tab-url",
     args: {
       name: "set_newtab",
-    }
+    },
   }, "The user is notified that an extension is controlling the new tab page");
   is(controlledContent.hidden, false, "The extension controlled row is hidden");
 
@@ -367,7 +367,7 @@ add_task(async function testExtensionControlledDefaultSearch() {
         search_url: "https://duckduckgo.com/?q={searchTerms}",
         is_default: true,
       },
-    }
+    },
   };
 
   function setEngine(engine) {
@@ -405,7 +405,7 @@ add_task(async function testExtensionControlledDefaultSearch() {
     id: "extension-controlled-default-search",
     args: {
       name: "set_default_search",
-    }
+    },
   }, "The user is notified that an extension is controlling the default search engine");
   is(controlledContent.hidden, false, "The extension controlled row is shown");
 
@@ -526,14 +526,15 @@ add_task(async function testExtensionControlledTrackingProtection() {
   };
   const CONTROLLED_BUTTON_ID = {
     old: "trackingProtectionExtensionContentButton",
-    new: "contentBlockingTrackingProtectionExtensionContentButton"
+    new: "contentBlockingTrackingProtectionExtensionContentButton",
   };
   const DISABLE_BUTTON_ID = {
     old: "disableTrackingProtectionExtension",
-    new: "contentBlockingDisableTrackingProtectionExtension"
+    new: "contentBlockingDisableTrackingProtectionExtension",
   };
 
   let tpEnabledPref = () => Services.prefs.getBoolPref(TP_PREF);
+  let cbUIEnabledPref = () => Services.prefs.getBoolPref(CB_UI_PREF);
 
   await SpecialPowers.pushPrefEnv(
     {"set": [[TP_PREF, TP_DEFAULT], [CB_UI_PREF, true]]});
@@ -553,10 +554,11 @@ add_task(async function testExtensionControlledTrackingProtection() {
     if (isControlled) {
       let controlledDesc = controlledLabel.querySelector("description");
       Assert.deepEqual(doc.l10n.getAttributes(controlledDesc), {
-        id: "extension-controlled-websites-tracking-protection-mode",
+        id: cbUIEnabledPref() ? "extension-controlled-websites-content-blocking-all-trackers" :
+                                "extension-controlled-websites-tracking-protection-mode",
         args: {
           name: "set_tp",
-        }
+        },
       }, "The user is notified that an extension is controlling TP.");
     }
 
@@ -712,7 +714,7 @@ add_task(async function testExtensionControlledProxyConfig() {
           id: "extension-controlled-proxy-config",
           args: {
             name: "set_proxy",
-          }
+          },
         }, "The user is notified that an extension is controlling proxy settings.");
       }
       function getProxyControls() {

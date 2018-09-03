@@ -3,7 +3,7 @@
 
 function* runTests() {
   yield SpecialPowers.pushPrefEnv({
-    set: [["dom.ipc.processCount", 1]]
+    set: [["dom.ipc.processCount", 1]],
   });
 
   let url1 = "http://example.com/1";

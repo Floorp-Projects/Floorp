@@ -32,7 +32,7 @@ var tests = [
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
       is(this.notifyObj.mainActionSource, undefined, "shouldn't have a main action source.");
       is(this.notifyObj.secondaryActionSource, "esc-press", "secondary action should be from ESC key press");
-    }
+    },
   },
   // Test that for non-persistent notifications, the escape key dismisses the notification.
   { id: "Test#2",
@@ -53,7 +53,7 @@ var tests = [
       is(this.notifyObj.mainActionSource, undefined, "shouldn't have a main action source.");
       is(this.notifyObj.secondaryActionSource, undefined, "shouldn't have a secondary action source.");
       this.notification.remove();
-    }
+    },
   },
   // Test that the space key on an anchor element focuses an active notification
   { id: "Test#3",
@@ -74,7 +74,7 @@ var tests = [
       is(document.activeElement, popup.children[0].closebutton);
       this.notification.remove();
     },
-    onHidden(popup) { }
+    onHidden(popup) { },
   },
   // Test that you can switch between active notifications with the space key
   // and that the notification is focused on selection.
@@ -174,7 +174,7 @@ var tests = [
 
       this.notification.remove();
       notification.remove();
-    }
+    },
   },
   // Test that focus is not moved out of a content element if autofocus is not set.
   { id: "Test#6",

@@ -31,4 +31,8 @@ AntiTracking.runTest("sessionStorage",
     await new Promise(resolve => {
       Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
     });
-  });
+  },
+  [],
+  true,
+  true,
+  false);

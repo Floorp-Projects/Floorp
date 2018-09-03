@@ -45,7 +45,7 @@ let TestAboutPage = {
   unregister() {
     Cm.QueryInterface(Ci.nsIComponentRegistrar).unregisterFactory(
       Components.ID(TESTCLASSID), this);
-  }
+  },
 };
 
 

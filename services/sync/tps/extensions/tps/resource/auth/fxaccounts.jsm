@@ -195,5 +195,5 @@ var Authentication = {
       // Note: This will clean up the device ID.
       await fxAccounts.signOut();
     }
-  }
+  },
 };

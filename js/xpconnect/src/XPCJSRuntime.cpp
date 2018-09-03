@@ -25,6 +25,7 @@
 #include "nsIObserverService.h"
 #include "nsIDebug2.h"
 #include "nsIDocShell.h"
+#include "nsIDocument.h"
 #include "nsIRunnable.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
@@ -2141,39 +2142,33 @@ class OrphanReporter : public JS::ObjectPrivateVisitor
 
     virtual size_t sizeOfIncludingThis(nsISupports* aSupports) override
     {
-        size_t n = 0;
         nsCOMPtr<nsINode> node = do_QueryInterface(aSupports);
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=773533#c11 explains
-        // that we have to skip XBL elements because they violate certain
-        // assumptions.  Yuk.
-        if (node && !node->IsInComposedDoc() &&
-            !(node->IsElement() && node->AsElement()->IsInNamespace(kNameSpaceID_XBL)))
-        {
-            // This is an orphan node.  If we haven't already handled the
-            // sub-tree that this node belongs to, measure the sub-tree's size
-            // and then record its root so we don't measure it again.
-            nsCOMPtr<nsINode> orphanTree = node->SubtreeRoot();
-            if (orphanTree && !mState.HaveSeenPtr(orphanTree.get())) {
-                n += SizeOfTreeIncludingThis(orphanTree);
-            }
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=773533#c11 explains that we have to skip
+        // XBL elements because they violate certain assumptions.  Yuk.
+        if (!node || node->IsInComposedDoc() ||
+            (node->IsElement() && node->AsElement()->IsInNamespace(kNameSpaceID_XBL))) {
+            return 0;
         }
-        return n;
-    }
 
-    size_t SizeOfTreeIncludingThis(nsINode* tree)
-    {
-        size_t nodeSize = 0;
+        // This is an orphan node.  If we haven't already handled the sub-tree that this node
+        // belongs to, measure the sub-tree's size and then record its root so we don't measure it
+        // again.
+        nsCOMPtr<nsINode> orphanTree = node->SubtreeRoot();
+        if (!orphanTree || mState.HaveSeenPtr(orphanTree.get())) {
+            return 0;
+        }
+
         nsWindowSizes sizes(mState);
-        tree->AddSizeOfIncludingThis(sizes, &nodeSize);
-        for (nsIContent* child = tree->GetFirstChild(); child; child = child->GetNextNode(tree))
-            child->AddSizeOfIncludingThis(sizes, &nodeSize);
+        nsIDocument::AddSizeOfNodeTree(*orphanTree, sizes);
 
-        // We combine the node size with nsStyleSizes here. It's not ideal, but
-        // it's hard to get the style structs measurements out to
-        // nsWindowMemoryReporter. Also, we drop mServoData in
-        // UnbindFromTree(), so in theory any non-in-tree element won't have
-        // any style data to measure.
-        return nodeSize + sizes.getTotalSize();
+        // We combine the node size with nsStyleSizes here. It's not ideal, but it's hard to get
+        // the style structs measurements out to nsWindowMemoryReporter. Also, we drop mServoData
+        // in UnbindFromTree(), so in theory any non-in-tree element won't have any style data to
+        // measure.
+        //
+        // FIXME(emilio): We should ideally not do this, since ShadowRoots keep their StyleSheets
+        // alive even when detached from a document, and those could be significant in theory.
+        return sizes.getTotalSize();
     }
 
   private:

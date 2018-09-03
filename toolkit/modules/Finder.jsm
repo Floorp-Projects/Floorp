@@ -105,7 +105,7 @@ Finder.prototype = {
       caseSensitive: this._fastFind.caseSensitive,
       entireWord: this._fastFind.entireWord,
       linksOnly: options.linksOnly,
-      word: options.searchString
+      word: options.searchString,
     })) {
       this.iterator.stop();
     }
@@ -190,7 +190,7 @@ Finder.prototype = {
       findBackwards: false,
       findAgain: false,
       drawOutline: aDrawOutline,
-      linksOnly: aLinksOnly
+      linksOnly: aLinksOnly,
     });
   },
 
@@ -212,7 +212,7 @@ Finder.prototype = {
       findBackwards: aFindBackwards,
       findAgain: true,
       drawOutline: aDrawOutline,
-      linksOnly: aLinksOnly
+      linksOnly: aLinksOnly,
     });
   },
 
@@ -357,7 +357,7 @@ Finder.prototype = {
             ctrlKey: aEvent.ctrlKey,
             altKey: aEvent.altKey,
             shiftKey: aEvent.shiftKey,
-            metaKey: aEvent.metaKey
+            metaKey: aEvent.metaKey,
           }));
         }
         break;
@@ -404,7 +404,7 @@ Finder.prototype = {
         this.searchString == "" || !aWord || !this.matchesCountLimit) {
       this._notifyMatchesCount({
         total: 0,
-        current: 0
+        current: 0,
       });
       return;
     }
@@ -415,7 +415,7 @@ Finder.prototype = {
       caseSensitive: this._fastFind.caseSensitive,
       entireWord: this._fastFind.entireWord,
       linksOnly: aLinksOnly,
-      word: aWord
+      word: aWord,
     };
     if (!this.iterator.continueRunning(params))
       this.iterator.stop();
@@ -462,7 +462,7 @@ Finder.prototype = {
     this._currentMatchesCountResult = {
       total: 0,
       current: 0,
-      _currentFound: false
+      _currentFound: false,
     };
   },
 
@@ -594,7 +594,7 @@ Finder.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                          Ci.nsISupportsWeakReference])
+                                          Ci.nsISupportsWeakReference]),
 };
 
 function GetClipboardSearchString(aLoadContext) {

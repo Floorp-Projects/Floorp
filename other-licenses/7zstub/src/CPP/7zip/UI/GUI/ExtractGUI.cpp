@@ -52,22 +52,9 @@ static void AddValuePair(UString &s, UINT resourceID, UInt64 value, bool addColo
 
 static void AddSizePair(UString &s, UINT resourceID, UInt64 value)
 {
-  {
-    wchar_t sz[32];
-    AddLangString(s, resourceID);
-    s += ": ";
-    ConvertUInt64ToString(value, sz);
-    s += MyFormatNew(IDS_FILE_SIZE, sz);
-  }
-  // s += sz;
-  if (value >= (1 << 20))
-  {
-    char sz[32];
-    ConvertUInt64ToString(value >> 20, sz);
-    s += " (";
-    s += sz;
-    s += " MB)";
-  }
+  AddLangString(s, resourceID);
+  s += ": ";
+  AddSizeValue(s, value);
   s.Add_LF();
 }
 
@@ -86,16 +73,31 @@ public:
   UStringVector *ArchivePathsFull;
   const NWildcard::CCensorNode *WildcardCensor;
   const CExtractOptions *Options;
+
   #ifndef _SFX
   CHashBundle *HashBundle;
+  virtual void ProcessWasFinished_GuiVirt();
   #endif
+
   CMyComPtr<IExtractCallbackUI> ExtractCallback;
   UString Title;
+
+  CPropNameValPairs Pairs;
 };
+
+
+#ifndef _SFX
+void CThreadExtracting::ProcessWasFinished_GuiVirt()
+{
+  if (HashBundle && !Pairs.IsEmpty())
+    ShowHashResults(Pairs, *this);
+}
+#endif
 
 HRESULT CThreadExtracting::ProcessVirt()
 {
   CDecompressStat Stat;
+  
   #ifndef _SFX
   if (HashBundle)
     HashBundle->Init();
@@ -109,16 +111,23 @@ HRESULT CThreadExtracting::ProcessVirt()
         HashBundle,
       #endif
       FinalMessage.ErrorMessage.Message, Stat);
+  
   #ifndef _SFX
-  if (res == S_OK && Options->TestMode && ExtractCallbackSpec->IsOK())
+  if (res == S_OK && ExtractCallbackSpec->IsOK())
   {
-    UString s;
-    
-    AddValuePair(s, IDS_ARCHIVES_COLON, Stat.NumArchives, false);
-    AddSizePair(s, IDS_PROP_PACKED_SIZE, Stat.PackSize);
-
-    if (!HashBundle)
+    if (HashBundle)
     {
+      AddValuePair(Pairs, IDS_ARCHIVES_COLON, Stat.NumArchives);
+      AddSizeValuePair(Pairs, IDS_PROP_PACKED_SIZE, Stat.PackSize);
+      AddHashBundleRes(Pairs, *HashBundle, UString());
+    }
+    else if (Options->TestMode)
+    {
+      UString s;
+    
+      AddValuePair(s, IDS_ARCHIVES_COLON, Stat.NumArchives, false);
+      AddSizePair(s, IDS_PROP_PACKED_SIZE, Stat.PackSize);
+
       if (Stat.NumFolders != 0)
         AddValuePair(s, IDS_PROP_FOLDERS, Stat.NumFolders);
       AddValuePair(s, IDS_PROP_FILES, Stat.NumFiles);
@@ -129,23 +138,18 @@ HRESULT CThreadExtracting::ProcessVirt()
         AddValuePair(s, IDS_PROP_NUM_ALT_STREAMS, Stat.NumAltStreams);
         AddSizePair(s, IDS_PROP_ALT_STREAMS_SIZE, Stat.AltStreams_UnpackSize);
       }
-    }
-    
-    if (HashBundle)
-    {
       s.Add_LF();
-      AddHashBundleRes(s, *HashBundle, UString());
+      AddLangString(s, IDS_MESSAGE_NO_ERRORS);
+      FinalMessage.OkMessage.Title = Title;
+      FinalMessage.OkMessage.Message = s;
     }
-    
-    s.Add_LF();
-    AddLangString(s, IDS_MESSAGE_NO_ERRORS);
-    
-    FinalMessage.OkMessage.Title = Title;
-    FinalMessage.OkMessage.Message = s;
   }
   #endif
+
   return res;
 }
+
+
 
 HRESULT ExtractGUI(
     CCodecs *codecs,
@@ -252,11 +256,11 @@ HRESULT ExtractGUI(
 
   extracter.Title = title;
   extracter.ExtractCallbackSpec = extractCallback;
-  extracter.ExtractCallbackSpec->ProgressDialog = &extracter.ProgressDialog;
+  extracter.ExtractCallbackSpec->ProgressDialog = &extracter;
   extracter.ExtractCallback = extractCallback;
   extracter.ExtractCallbackSpec->Init();
 
-  extracter.ProgressDialog.CompressingMode = false;
+  extracter.CompressingMode = false;
 
   extracter.ArchivePaths = &archivePaths;
   extracter.ArchivePathsFull = &archivePathsFull;
@@ -266,10 +270,9 @@ HRESULT ExtractGUI(
   extracter.HashBundle = hb;
   #endif
 
-  extracter.ProgressDialog.IconID = IDI_ICON;
+  extracter.IconID = IDI_ICON;
 
   RINOK(extracter.Create(title, hwndParent));
-  messageWasDisplayed = extracter.ThreadFinishedOK &
-      extracter.ProgressDialog.MessagesDisplayed;
+  messageWasDisplayed = extracter.ThreadFinishedOK && extracter.MessagesDisplayed;
   return extracter.Result;
 }

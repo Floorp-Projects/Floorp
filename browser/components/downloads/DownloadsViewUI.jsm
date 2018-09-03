@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm"
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 var DownloadsViewUI = {

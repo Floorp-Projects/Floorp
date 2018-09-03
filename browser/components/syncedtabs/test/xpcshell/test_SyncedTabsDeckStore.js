@@ -24,7 +24,7 @@ add_task(async function testSetPanels() {
       { id: "panel1", selected: false },
       { id: "panel2", selected: false },
     ],
-    isUpdatable: false
+    isUpdatable: false,
   }));
 });
 
@@ -42,7 +42,7 @@ add_task(async function testSelectPanel() {
       { id: "panel1", selected: false },
       { id: "panel2", selected: true },
     ],
-    isUpdatable: true
+    isUpdatable: true,
   }));
 
   deckStore.selectPanel("panel2");

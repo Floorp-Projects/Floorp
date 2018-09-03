@@ -212,7 +212,7 @@ this.TranslationDocument.prototype = {
         await maybeYield();
       }
     })();
-  }
+  },
 };
 
 /**
@@ -330,7 +330,7 @@ TranslationItem.prototype = {
    */
   swapText(target) {
     swapTextForItem(this, target);
-  }
+  },
 };
 
 /**
@@ -343,7 +343,7 @@ TranslationItem.prototype = {
 const TranslationItem_NodePlaceholder = {
   toString() {
     return "[object TranslationItem_NodePlaceholder]";
-  }
+  },
 };
 
 /**

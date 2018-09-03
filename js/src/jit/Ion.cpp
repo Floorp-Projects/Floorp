@@ -2032,9 +2032,9 @@ IonCompile(JSContext* cx, JSScript* script,
 
     // If possible, compile the script off thread.
     if (options.offThreadCompilationAvailable()) {
-        JitSpew(JitSpew_IonSyncLogs, "Can't log script %s:%u"
+        JitSpew(JitSpew_IonSyncLogs, "Can't log script %s:%u:%u"
                 ". (Compiled on background thread.)",
-                builderScript->filename(), builderScript->lineno());
+                builderScript->filename(), builderScript->lineno(), builderScript->column());
 
         if (!CreateMIRRootList(*builder))
             return AbortReason::Alloc;
@@ -2227,7 +2227,8 @@ Compile(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode*
     }
 
     if (!CanIonCompileScript(cx, script)) {
-        JitSpew(JitSpew_IonAbort, "Aborted compilation of %s:%u", script->filename(), script->lineno());
+        JitSpew(JitSpew_IonAbort, "Aborted compilation of %s:%u:%u", script->filename(),
+                script->lineno(), script->column());
         return Method_CantCompile;
     }
 
@@ -2497,8 +2498,9 @@ jit::IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame, jsbytecode
 
     // Ensure that Ion-compiled code is available.
     JitSpew(JitSpew_BaselineOSR,
-            "WarmUpCounter for %s:%u reached %d at pc %p, trying to switch to Ion!",
-            script->filename(), script->lineno(), (int) script->getWarmUpCount(), (void*) pc);
+            "WarmUpCounter for %s:%u:%u reached %d at pc %p, trying to switch to Ion!",
+            script->filename(), script->lineno(), script->column(), 
+            (int) script->getWarmUpCount(), (void*) pc);
 
     MethodStatus stat;
     if (isLoopEntry) {
@@ -2577,20 +2579,20 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
     for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter, ++frameno) {
         const JSJitFrameIter& frame = iter.frame();
         MOZ_ASSERT_IF(frameno == 1, frame.isExitFrame() ||
-                                    frame.type() == JitFrame_Bailout ||
-                                    frame.type() == JitFrame_JSJitToWasm);
+                                    frame.type() == FrameType::Bailout ||
+                                    frame.type() == FrameType::JSJitToWasm);
 
 #ifdef JS_JITSPEW
         switch (frame.type()) {
-          case JitFrame_Exit:
+          case FrameType::Exit:
             JitSpew(JitSpew_IonInvalidate, "#%zu exit frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_JSJitToWasm:
+          case FrameType::JSJitToWasm:
             JitSpew(JitSpew_IonInvalidate, "#%zu wasm exit frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_BaselineJS:
-          case JitFrame_IonJS:
-          case JitFrame_Bailout:
+          case FrameType::BaselineJS:
+          case FrameType::IonJS:
+          case FrameType::Bailout:
           {
             MOZ_ASSERT(frame.isScripted());
             const char* type = "Unknown";
@@ -2601,25 +2603,25 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
             else if (frame.isBailoutJS())
                 type = "Bailing";
             JitSpew(JitSpew_IonInvalidate,
-                    "#%zu %s JS frame @ %p, %s:%u (fun: %p, script: %p, pc %p)",
+                    "#%zu %s JS frame @ %p, %s:%u:%u (fun: %p, script: %p, pc %p)",
                     frameno, type, frame.fp(), frame.script()->maybeForwardedFilename(),
-                    frame.script()->lineno(), frame.maybeCallee(), (JSScript*)frame.script(),
-                    frame.returnAddressToFp());
+                    frame.script()->lineno(), frame.script()->column(), frame.maybeCallee(), 
+                    (JSScript*)frame.script(), frame.returnAddressToFp());
             break;
           }
-          case JitFrame_BaselineStub:
+          case FrameType::BaselineStub:
             JitSpew(JitSpew_IonInvalidate, "#%zu baseline stub frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_Rectifier:
+          case FrameType::Rectifier:
             JitSpew(JitSpew_IonInvalidate, "#%zu rectifier frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_IonICCall:
+          case FrameType::IonICCall:
             JitSpew(JitSpew_IonInvalidate, "#%zu ion IC call frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_CppToJSJit:
+          case FrameType::CppToJSJit:
             JitSpew(JitSpew_IonInvalidate, "#%zu entry frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_WasmToJSJit:
+          case FrameType::WasmToJSJit:
             JitSpew(JitSpew_IonInvalidate, "#%zu wasm frames @ %p", frameno, frame.fp());
             break;
         }
@@ -2758,8 +2760,9 @@ jit::Invalidate(TypeZone& types, FreeOp* fop,
         if (!ionScript)
             continue;
 
-        JitSpew(JitSpew_IonInvalidate, " Invalidate %s:%u, IonScript %p",
-                info.script()->filename(), info.script()->lineno(), ionScript);
+        JitSpew(JitSpew_IonInvalidate, " Invalidate %s:%u:%u, IonScript %p",
+                info.script()->filename(), info.script()->lineno(), 
+                info.script()->column(), ionScript);
 
         // Keep the ion script alive during the invalidation and flag this
         // ionScript as being invalidated.  This increment is removed by the
@@ -2850,7 +2853,8 @@ jit::Invalidate(JSContext* cx, JSScript* script, bool resetUses, bool cancelOffT
             filename = "<unknown>";
 
         // Construct the descriptive string.
-        UniqueChars buf = JS_smprintf("Invalidate %s:%u", filename, script->lineno());
+        UniqueChars buf = JS_smprintf("Invalidate %s:%u:%u", filename, 
+                script->lineno(), script->column());
 
         // Ignore the event on allocation failure.
         if (buf) {
@@ -2886,8 +2890,8 @@ jit::FinishInvalidation(FreeOp* fop, JSScript* script)
 void
 jit::ForbidCompilation(JSContext* cx, JSScript* script)
 {
-    JitSpew(JitSpew_IonAbort, "Disabling Ion compilation of script %s:%u",
-            script->filename(), script->lineno());
+    JitSpew(JitSpew_IonAbort, "Disabling Ion compilation of script %s:%u:%u",
+            script->filename(), script->lineno(), script->column());
 
     CancelOffThreadIonCompile(script);
 

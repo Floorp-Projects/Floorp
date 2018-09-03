@@ -49,13 +49,13 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     this.messageManager.addMessageListener("debug:request-stack-available",
       this.onStackTraceAvailable);
     this.onRequestContent = this.onRequestContent.bind(this);
-    this.messageManager.addMessageListener("debug:request-content",
+    this.messageManager.addMessageListener("debug:request-content:request",
       this.onRequestContent);
     this.onSetPreference = this.onSetPreference.bind(this);
     this.messageManager.addMessageListener("debug:netmonitor-preference",
       this.onSetPreference);
     this.onGetNetworkEventActor = this.onGetNetworkEventActor.bind(this);
-    this.messageManager.addMessageListener("debug:get-network-event-actor",
+    this.messageManager.addMessageListener("debug:get-network-event-actor:request",
       this.onGetNetworkEventActor);
     this.onDestroyMessage = this.onDestroyMessage.bind(this);
     this.messageManager.addMessageListener("debug:destroy-network-monitor",
@@ -80,11 +80,11 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     if (this.messageManager) {
       this.messageManager.removeMessageListener("debug:request-stack-available",
         this.onStackTraceAvailable);
-      this.messageManager.removeMessageListener("debug:request-content",
+      this.messageManager.removeMessageListener("debug:request-content:request",
         this.onRequestContent);
       this.messageManager.removeMessageListener("debug:netmonitor-preference",
         this.onSetPreference);
-      this.messageManager.removeMessageListener("debug:get-network-event-actor",
+      this.messageManager.removeMessageListener("debug:get-network-event-actor:request",
         this.onGetNetworkEventActor);
       this.messageManager.removeMessageListener("debug:destroy-network-monitor",
         this.onDestroyMessage);
@@ -133,7 +133,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     // Always reply with a message, but with a null `content` if this instance
     // did not processed this request
     const content = actor ? this.getRequestContentForActor(actor) : null;
-    this.messageManager.sendAsyncMessage("debug:request-content", {
+    this.messageManager.sendAsyncMessage("debug:request-content:response", {
       url,
       content,
     });
@@ -150,7 +150,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
   onGetNetworkEventActor({ data }) {
     const actor = this.getNetworkEventActor(data.channelId);
-    this.messageManager.sendAsyncMessage("debug:get-network-event-actor", {
+    this.messageManager.sendAsyncMessage("debug:get-network-event-actor:response", {
       channelId: data.channelId,
       actor: actor.form()
     });

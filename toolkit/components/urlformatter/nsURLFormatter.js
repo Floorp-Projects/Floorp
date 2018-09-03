@@ -89,7 +89,7 @@ nsURLFormatterService.prototype = {
     BING_API_CLIENTID: () => AppConstants.MOZ_BING_API_CLIENTID,
     BING_API_KEY:     () => AppConstants.MOZ_BING_API_KEY,
     DISTRIBUTION() { return this.distribution.id; },
-    DISTRIBUTION_VERSION() { return this.distribution.version; }
+    DISTRIBUTION_VERSION() { return this.distribution.version; },
   },
 
   formatURL: function uf_formatURL(aFormat) {
@@ -130,7 +130,7 @@ nsURLFormatterService.prototype = {
     return AppConstants.MOZ_GOOGLE_API_KEY ? aMsg.replace(RegExp(AppConstants.MOZ_GOOGLE_API_KEY, "g"),
                                                  "[trimmed-google-api-key]")
                                   : aMsg;
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsURLFormatterService]);

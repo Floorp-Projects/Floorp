@@ -9,14 +9,16 @@
   --input-background-color: white;
   --input-border-color: var(--grey-30);
   --input-text-color: var(--grey-90);
+  --preview-input-background: var(--theme-toolbar-background);
 }
 
 :root.theme-dark {
   --slider-thumb-color: var(--grey-40);
-  --slider-track-color: var(--grey-50);
+  --slider-track-color: var(--grey-60);
   --input-background-color: var(--grey-70);
   --input-border-color: var(--grey-70);
   --input-text-color: var(--grey-40);
+  --preview-input-background: #222225;
 }
 
 #sidebar-panel-fontinspector {
@@ -82,44 +84,25 @@
   vertical-align: bottom;
 }
 
-.font-preview-container {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  overflow: hidden;
-  display: grid;
-  place-items: center end;
-  position: relative;
+#font-preview-input-container {
+  background: var(--preview-input-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  display: flex;
+  height: 23px;
+}
+
+#font-preview-input-container input {
+  background-image: none;
+  flex: 1;
+  padding-left: 14px;
 }
 
 .font-preview {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  object-fit: contain;
   height: 50px;
-  display: block;
-}
-
-.font-preview:hover {
-  cursor: text;
-  background-image: linear-gradient(to right,
-    var(--grey-40) 3px, transparent 3px, transparent);
-  background-size: 6px 1px;
-  background-repeat: repeat-x;
-  background-position-y: 45px;
-}
-
-#font-container .font-preview-input {
-  position: absolute;
-  top: 5px;
-  left: 0;
-  width: calc(100% - 5px);
-  height: calc(100% - 10px);
-  background: transparent;
-  color: transparent;
-  border-radius: 0;
-  padding: 0;
-}
-
-.font-preview-input::-moz-selection {
-  background: transparent;
-  color: transparent;
+  width: 100%;
 }
 
 .font-name,
@@ -224,6 +207,10 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
+}
+
+.font-control-input .devtools-checkbox-toggle {
+  margin: 2px 0;
 }
 
 .font-control-label {

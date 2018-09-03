@@ -41,7 +41,7 @@ function waitForPrefObserver(name) {
           Services.prefs.removeObserver(name, observer);
           resolve();
         }
-      }
+      },
     };
     Services.prefs.addObserver(name, observer);
   });
@@ -58,6 +58,7 @@ async function testWithProperties(props) {
 
   let dialog = await openConnectionsSubDialog();
   let doc = dialog.document;
+  let win = doc.ownerGlobal;
   let dialogClosingPromise = BrowserTestUtils.waitForEvent(doc.documentElement,
                                                            "dialogclosing");
   let modeCheckbox = doc.querySelector(modeCheckboxSelector);
@@ -74,21 +75,14 @@ async function testWithProperties(props) {
   if (props.clickMode) {
     modePrefChangedPromise = waitForPrefObserver(TRR_MODE_PREF);
     modeCheckbox.scrollIntoView();
-    EventUtils.synthesizeMouseAtCenter(modeCheckbox, {},
-                                       modeCheckbox.ownerGlobal);
+    EventUtils.synthesizeMouseAtCenter(modeCheckbox, {}, win);
   }
   if (props.hasOwnProperty("inputUriKeys")) {
     uriPrefChangedPromise = waitForPrefObserver(TRR_URI_PREF);
     uriTextbox.focus();
-    // delete whatever is in there
-    EventUtils.synthesizeKey("a", { accelKey: true }, uriTextbox.ownerGlobal);
-    EventUtils.synthesizeKey("KEY_Backspace", {}, uriTextbox.ownerGlobal);
-    // and type in the new stuff
-    EventUtils.synthesizeKey(props.inputUriKeys, {}, uriTextbox.ownerGlobal);
-    let changePromise = waitForEvent(uriTextbox, "change");
-    // move focus to trigger change event
-    modeCheckbox.focus();
-    await changePromise;
+    uriTextbox.value = props.inputUriKeys;
+    uriTextbox.dispatchEvent(new win.Event("input", {bubbles: true}));
+    uriTextbox.dispatchEvent(new win.Event("change", {bubbles: true}));
   }
 
   doc.documentElement.acceptDialog();

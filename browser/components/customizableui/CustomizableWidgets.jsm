@@ -158,7 +158,7 @@ const CustomizableWidgets = [
       }
       panelview.appendChild(body);
       panelview.appendChild(footer);
-    }
+    },
   }, {
     id: "save-page-button",
     shortcutId: "key_savePage",
@@ -166,7 +166,7 @@ const CustomizableWidgets = [
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       win.saveBrowser(win.gBrowser.selectedBrowser);
-    }
+    },
   }, {
     id: "find-button",
     shortcutId: "key_find",
@@ -176,7 +176,7 @@ const CustomizableWidgets = [
       if (win.gLazyFindCommand) {
         win.gLazyFindCommand("onFindCommand");
       }
-    }
+    },
   }, {
     id: "open-file-button",
     shortcutId: "openFileKb",
@@ -184,7 +184,7 @@ const CustomizableWidgets = [
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       win.BrowserOpenFileWindow();
-    }
+    },
   }, {
     id: "sidebar-button",
     tooltiptext: "sidebar-button.tooltiptext2",
@@ -204,7 +204,7 @@ const CustomizableWidgets = [
 
       aNode.appendChild(obChecked);
       aNode.appendChild(obPosition);
-    }
+    },
   }, {
     id: "add-ons-button",
     shortcutId: "key_openAddons",
@@ -212,7 +212,7 @@ const CustomizableWidgets = [
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       win.BrowserOpenAddonsMgr();
-    }
+    },
   }, {
     id: "zoom-controls",
     type: "custom",
@@ -260,7 +260,7 @@ const CustomizableWidgets = [
         node.appendChild(btnNode);
       });
       return node;
-    }
+    },
   }, {
     id: "edit-controls",
     type: "custom",
@@ -326,7 +326,7 @@ const CustomizableWidgets = [
       CustomizableUI.addListener(listener);
 
       return node;
-    }
+    },
   },
   {
     id: "feed-button",
@@ -365,7 +365,7 @@ const CustomizableWidgets = [
       if (!feeds || !feeds.length) {
         node.setAttribute("disabled", "true");
       }
-    }
+    },
   }, {
     id: "characterencoding-button",
     label: "characterencoding-button2.label",
@@ -522,7 +522,7 @@ const CustomizableWidgets = [
 
           CustomizableUI.removeListener(listener);
           getPanel().removeEventListener("popupshowing", updateButton);
-        }
+        },
       };
       CustomizableUI.addListener(listener);
       this.onInit();
@@ -532,14 +532,14 @@ const CustomizableWidgets = [
       if (!this.charsetInfo) {
         this.charsetInfo = CharsetMenu.getData();
       }
-    }
+    },
   }, {
     id: "email-link-button",
     tooltiptext: "email-link-button.tooltiptext3",
     onCommand(aEvent) {
       let win = aEvent.view;
       win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser);
-    }
+    },
   }];
 
 if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
@@ -737,7 +737,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
       // respects different buttons (eg, to open in a new tab).
       item.addEventListener("click", e => {
         doc.defaultView.openUILink(tabInfo.url, e, {
-          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})
+          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
         });
         if (doc.defaultView.whereToOpenLink(e) != "current") {
           e.preventDefault();
@@ -770,7 +770,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
         this._showTabs({ clientId, maxTabs: showCount });
       });
       return showAllItem;
-    }
+    },
   });
 }
 
@@ -779,7 +779,7 @@ let preferencesButton = {
   onCommand(aEvent) {
     let win = aEvent.target.ownerGlobal;
     win.openPreferences(undefined, {origin: "preferencesButton"});
-  }
+  },
 };
 if (AppConstants.platform == "win") {
   preferencesButton.label = "preferences-button.labelWin";
@@ -802,7 +802,7 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
       let doc = aEvent.target.ownerDocument;
       let group = doc.getElementById("PanelUI-panic-timeSpan");
       let itemsToClear = [
-        "cookies", "history", "openWindows", "formdata", "sessions", "cache", "downloads", "offlineApps"
+        "cookies", "history", "openWindows", "formdata", "sessions", "cache", "downloads", "offlineApps",
       ];
       let newWindowPrivateState = PrivateBrowsingUtils.isWindowPrivate(doc.defaultView) ?
                                   "private" : "non-private";
@@ -851,6 +851,6 @@ if (PrivateBrowsingUtils.enabled) {
     onCommand(e) {
       let win = e.target.ownerGlobal;
       win.OpenBrowserWindow({private: true});
-    }
+    },
   });
 }

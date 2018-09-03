@@ -137,6 +137,10 @@ PaymentUIService.prototype = {
     dialog.paymentDialogWrapper.updateRequest();
   },
 
+  closePayment(requestId) {
+    this.closeDialog(requestId);
+  },
+
   // other helper methods
 
   /**

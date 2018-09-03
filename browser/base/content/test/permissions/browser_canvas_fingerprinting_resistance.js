@@ -50,8 +50,8 @@ function enableResistFingerprinting(autoDeclineNoInput) {
   return SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts", autoDeclineNoInput]
-    ]
+      ["privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts", autoDeclineNoInput],
+    ],
   });
 }
 

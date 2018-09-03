@@ -62,14 +62,14 @@ var listener = {
   onStopRequest(request, context, status) {
     testRan++;
     runNext();
-  }
+  },
 };
 
 function setupChannel(url) {
   var chan = NetUtil.newChannel({
     uri: "http://localhost:" + httpserver.identity.primaryPort + url,
     loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_MEDIA
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_MEDIA,
   });
   var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
   return httpChan;

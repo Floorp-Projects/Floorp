@@ -86,7 +86,7 @@ var AboutReader = function(mm, win, articlePromise) {
     return {
       name: gStrings.GetStringFromName("aboutReader.colorScheme." + value),
       value,
-      itemClass: value + "-button"
+      itemClass: value + "-button",
     };
   });
 
@@ -99,7 +99,7 @@ var AboutReader = function(mm, win, articlePromise) {
     { name: fontTypeSample,
       description: gStrings.GetStringFromName("aboutReader.fontType.sans-serif"),
       value: "sans-serif",
-      itemClass: "sans-serif-button"
+      itemClass: "sans-serif-button",
     },
     { name: fontTypeSample,
       description: gStrings.GetStringFromName("aboutReader.fontType.serif"),
@@ -704,7 +704,7 @@ AboutReader.prototype = {
     this._mm.addMessageListener("Reader:FaviconReturn", handleFaviconReturn);
     this._mm.sendAsyncMessage("Reader:FaviconRequest", {
       url: this._article.url,
-      preferredWidth: 16 * this._win.devicePixelRatio
+      preferredWidth: 16 * this._win.devicePixelRatio,
     });
   },
 
@@ -1044,5 +1044,5 @@ AboutReader.prototype = {
     if (ref) {
       this._win.location.hash = ref;
     }
-  }
+  },
 };

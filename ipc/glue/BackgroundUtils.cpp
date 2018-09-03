@@ -455,7 +455,8 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       aLoadInfo->GetForcePreflight(),
       aLoadInfo->GetIsPreflight(),
       aLoadInfo->GetLoadTriggeredFromExternal(),
-      aLoadInfo->GetServiceWorkerTaintingSynthesized()
+      aLoadInfo->GetServiceWorkerTaintingSynthesized(),
+      aLoadInfo->GetDocumentHasUserInteracted()
       );
 
   return NS_OK;
@@ -616,7 +617,8 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           loadInfoArgs.forcePreflight(),
                           loadInfoArgs.isPreflight(),
                           loadInfoArgs.loadTriggeredFromExternal(),
-                          loadInfoArgs.serviceWorkerTaintingSynthesized()
+                          loadInfoArgs.serviceWorkerTaintingSynthesized(),
+                          loadInfoArgs.documentHasUserInteracted()
                           );
 
    loadInfo.forget(outLoadInfo);
@@ -630,9 +632,11 @@ LoadInfoToParentLoadInfoForwarder(nsILoadInfo* aLoadInfo,
   if (!aLoadInfo) {
     *aForwarderArgsOut = ParentLoadInfoForwarderArgs(false, void_t(),
                                                      nsILoadInfo::TAINTING_BASIC,
-                                                     false,
-                                                     false,
-                                                     false);
+                                                     false, // serviceWorkerTaintingSynthesized
+                                                     false, // isTracker
+                                                     false, // isTrackerBlocked
+                                                     false  // documentHasUserInteracted
+                                                    );
     return;
   }
 
@@ -645,18 +649,14 @@ LoadInfoToParentLoadInfoForwarder(nsILoadInfo* aLoadInfo,
   uint32_t tainting = nsILoadInfo::TAINTING_BASIC;
   Unused << aLoadInfo->GetTainting(&tainting);
 
-  bool isTracker;
-  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetIsTracker(&isTracker));
-  bool isTrackerBlocked;
-  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetIsTrackerBlocked(&isTrackerBlocked));
-
   *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
     aLoadInfo->GetAllowInsecureRedirectToDataURI(),
     ipcController,
     tainting,
     aLoadInfo->GetServiceWorkerTaintingSynthesized(),
-    isTracker,
-    isTrackerBlocked
+    aLoadInfo->GetIsTracker(),
+    aLoadInfo->GetIsTrackerBlocked(),
+    aLoadInfo->GetDocumentHasUserInteracted()
   );
 }
 
@@ -690,6 +690,7 @@ MergeParentLoadInfoForwarder(ParentLoadInfoForwarderArgs const& aForwarderArgs,
 
   MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetIsTracker(aForwarderArgs.isTracker()));
   MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetIsTrackerBlocked(aForwarderArgs.isTrackerBlocked()));
+  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetDocumentHasUserInteracted(aForwarderArgs.documentHasUserInteracted()));
 
   return NS_OK;
 }

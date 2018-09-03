@@ -7,28 +7,28 @@ var PLUGINS = [{
   name: "test_bug468528_1",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 },
 {
   // Normal blocklisted plugin, with an invalid regexp
   name: "test_bug468528_2",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 },
 {
   // Normal blocklisted plugin, after an invalid regexp
   name: "test_bug468528_3",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 },
 {
   // Non-blocklisted plugin
   name: "test_bug468528_4",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 }];
 
 

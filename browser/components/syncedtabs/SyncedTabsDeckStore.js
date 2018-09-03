@@ -7,7 +7,7 @@
 let { EventEmitter } = ChromeUtils.import("resource:///modules/syncedtabs/EventEmitter.jsm", {});
 
 var EXPORTED_SYMBOLS = [
-  "SyncedTabsDeckStore"
+  "SyncedTabsDeckStore",
 ];
 
 /**
@@ -54,5 +54,5 @@ Object.assign(SyncedTabsDeckStore.prototype, EventEmitter.prototype, {
     }
     this._panels = panels || [];
     this._change();
-  }
+  },
 });

@@ -2800,8 +2800,9 @@ public:
    * Doc_Theme_Neutral for any other theme. This is used to determine the state
    * of the pseudoclasses :-moz-lwtheme and :-moz-lwtheme-text.
    */
-  virtual DocumentTheme GetDocumentLWTheme() { return Doc_Theme_None; }
-  virtual DocumentTheme ThreadSafeGetDocumentLWTheme() const { return Doc_Theme_None; }
+  DocumentTheme GetDocumentLWTheme();
+  DocumentTheme ThreadSafeGetDocumentLWTheme() const;
+  void ResetDocumentLWTheme() { mDocLWTheme = Doc_Theme_Uninitialized; }
 
   // Whether we're a media document or not.
   enum class MediaDocumentKind
@@ -3016,6 +3017,10 @@ public:
   void PostVisibilityUpdateEvent();
 
   bool IsSyntheticDocument() const { return mIsSyntheticDocument; }
+
+  // Adds the size of a given node, which must not be a document node, to the
+  // window sizes passed-in.
+  static void AddSizeOfNodeTree(nsINode&, nsWindowSizes&);
 
   // Note: nsIDocument is a sub-class of nsINode, which has a
   // SizeOfExcludingThis function.  However, because nsIDocument objects can
@@ -3550,14 +3555,16 @@ public:
     --mIgnoreOpensDuringUnloadCounter;
   }
 
-  void IncrementTrackerCount(bool aIsTrackerBlocked)
+  void IncrementTrackerCount()
   {
     MOZ_ASSERT(!GetSameTypeParentDocument());
-
     ++mNumTrackersFound;
-    if (aIsTrackerBlocked) {
-      ++mNumTrackersBlocked;
-    }
+  }
+
+  void IncrementTrackerBlockedCount()
+  {
+    MOZ_ASSERT(!GetSameTypeParentDocument());
+    ++mNumTrackersBlocked;
   }
 
   uint32_t NumTrackersFound()
@@ -4535,6 +4542,10 @@ protected:
   // these two values here and those are shared by TP and FB.
   uint32_t mNumTrackersFound;
   uint32_t mNumTrackersBlocked;
+
+  // document lightweight theme for use with :-moz-lwtheme, :-moz-lwtheme-brighttext
+  // and :-moz-lwtheme-darktext
+  DocumentTheme                         mDocLWTheme;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

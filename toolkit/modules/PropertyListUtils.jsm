@@ -204,7 +204,7 @@ var PropertyListUtils = Object.freeze({
     let wrapped = new String(aPrimitive);
     Object.defineProperty(wrapped, "__INT_64_WRAPPER__", { value: true });
     return wrapped;
-  }
+  },
 });
 
 /**
@@ -314,7 +314,7 @@ BinaryPropertyListReader.prototype = {
     UID:                     parseInt("1000", 2),
     ARRAY:                   parseInt("1010", 2),
     SET:                     parseInt("1100", 2),
-    DICTIONARY:              parseInt("1101", 2)
+    DICTIONARY:              parseInt("1101", 2),
   },
 
   ADDITIONAL_INFO_BITS: {
@@ -327,7 +327,7 @@ BinaryPropertyListReader.prototype = {
     DATE:                    parseInt("0011", 2),
     // Applies to OBJECT_TYPE_BITS.DATA, ASCII_STRING, UNICODE_STRING, ARRAY,
     // SET and DICTIONARY.
-    LENGTH_INT_SIZE_FOLLOWS: parseInt("1111", 2)
+    LENGTH_INT_SIZE_FOLLOWS: parseInt("1111", 2),
   },
 
   /**
@@ -489,7 +489,7 @@ BinaryPropertyListReader.prototype = {
           return array[objIndex] = readObjectBound(ref);
         },
         configurable: true,
-        enumerable: true
+        enumerable: true,
       });
     }, this);
     return array;
@@ -634,7 +634,7 @@ BinaryPropertyListReader.prototype = {
     }
 
     return this._objects[aObjectIndex] = value;
-  }
+  },
 };
 
 /**
@@ -754,11 +754,11 @@ XMLPropertyListReader.prototype = {
           return array[elemIndex] = readObjectBound(elem);
         },
         configurable: true,
-        enumerable: true
+        enumerable: true,
       });
     });
     return array;
-  }
+  },
 };
 
 /**
@@ -810,6 +810,6 @@ function LazyMapProxyHandler() {
         default:
           return target[name];
       }
-    }
+    },
   };
 }

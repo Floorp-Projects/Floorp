@@ -598,7 +598,7 @@ APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
   AssertOnSamplerThread();
   MutexAutoLock lock(mMapLock);
 
-  bool activeAnimations = false;
+  // Sample async transforms on scrollable layers.
   for (const auto& mapping : mApzcMap) {
     AsyncPanZoomController* apzc = mapping.second;
 
@@ -621,7 +621,6 @@ APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
         wr::ToLayoutPoint(LayoutDevicePoint::FromUnknownPoint(asyncScrollDelta.ToUnknownPoint())));
 
     apzc->ReportCheckerboard(aSampleTime);
-    activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
   }
 
   // Now collect all the async transforms needed for the scrollthumbs.
@@ -654,6 +653,15 @@ APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
   }
   aTxn.AppendTransformProperties(scrollbarTransforms);
 
+  // Advance animations. It's important that this happens after
+  // sampling all async transforms, because AdvanceAnimations() updates
+  // the effective scroll offset to the value it should have for the *next*
+  // composite after this one (if the APZ frame delay is enabled).
+  bool activeAnimations = false;
+  for (const auto& mapping : mApzcMap) {
+    AsyncPanZoomController* apzc = mapping.second;
+    activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
+  }
   if (activeAnimations) {
     RefPtr<CompositorController> controller;
     CompositorBridgeParent::CallWithIndirectShadowTree(mRootLayersId,

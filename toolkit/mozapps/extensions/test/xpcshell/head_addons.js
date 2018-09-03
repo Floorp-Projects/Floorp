@@ -94,7 +94,7 @@ const {
   promiseWriteProxyFileToDir,
   registerDirectory,
   setExtensionModifiedTime,
-  writeFilesToZip
+  writeFilesToZip,
 } = AddonTestUtils;
 
 // WebExtension wrapper for ease of testing
@@ -371,7 +371,7 @@ this.BootstrapMonitor = {
         resolve();
       this.startupPromises = [];
     }
-  }
+  },
 };
 
 AddonTestUtils.on("addon-manager-shutdown", () => BootstrapMonitor.shutdownCheck());
@@ -1080,7 +1080,7 @@ const AddonListener = {
     let [event] = getExpectedEvent(aAddon.id);
     Assert.equal("onOperationCancelled", event);
     return check_test_completed(arguments);
-  }
+  },
 };
 
 const InstallListener = {
@@ -1159,7 +1159,7 @@ const InstallListener = {
     Assert.equal("onExternalInstall", getExpectedInstall(aAddon));
     Assert.ok(!aRequiresRestart);
     return check_test_completed(arguments);
-  }
+  },
 };
 
 function hasFlag(aBits, aFlag) {
@@ -1472,12 +1472,12 @@ function buildPrefilledUpdatesDir() {
     directory: dir.leafName,
     addons: {
       "system2@tests.mozilla.org": {
-        version: "2.0"
+        version: "2.0",
       },
       "system3@tests.mozilla.org": {
-        version: "2.0"
+        version: "2.0",
       },
-    }
+    },
   }));
 }
 

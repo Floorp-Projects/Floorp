@@ -624,6 +624,7 @@ class GCRuntime
     MOZ_MUST_USE bool findInterZoneEdges();
     void getNextSweepGroup();
     IncrementalProgress endMarkingSweepGroup(FreeOp* fop, SliceBudget& budget);
+    void markIncomingCrossCompartmentPointers(MarkColor color);
     IncrementalProgress beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget);
 #ifdef JS_GC_ZEAL
     IncrementalProgress maybeYieldForSweepingZeal(FreeOp* fop, SliceBudget& budget);
@@ -648,6 +649,7 @@ class GCRuntime
     void startDecommit();
     void queueZonesForBackgroundSweep(ZoneList& zones);
     void maybeStartBackgroundSweep(AutoLockHelperThreadState& lock);
+    void sweepFromBackgroundThread(AutoLockHelperThreadState& lock);
     void sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks);
     void assertBackgroundSweepingFinished();
     bool shouldCompact();

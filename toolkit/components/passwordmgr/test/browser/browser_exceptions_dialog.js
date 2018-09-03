@@ -13,7 +13,7 @@ function openExceptionsDialog() {
       allowVisible: false,
       hideStatusColumn: true,
       prefilledHost: "",
-      permissionType: "login-saving"
+      permissionType: "login-saving",
     }
   );
 }

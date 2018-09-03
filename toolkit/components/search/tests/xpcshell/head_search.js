@@ -109,9 +109,9 @@ function installAddonEngine(name = "engine-addon") {
       return {
         QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
         hasMoreElements: () => result.length > 0,
-        getNext: () => result.shift()
+        getNext: () => result.shift(),
       };
-    }
+    },
   });
 }
 
@@ -143,7 +143,7 @@ function installDistributionEngine() {
       if (aProp == XRE_APP_DISTRIBUTION_DIR)
         return distDir.clone();
       return null;
-    }
+    },
   });
 }
 
@@ -238,7 +238,7 @@ function getDefaultEngineName(isUS) {
   // The list of visibleDefaultEngines needs to match or the cache will be ignored.
   let chan = NetUtil.newChannel({
     uri: "resource://search-plugins/list.json",
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   let searchSettings = parseJsonFromStream(chan.open2());
   let defaultEngineName = searchSettings.default.searchDefault;
@@ -257,7 +257,7 @@ function getDefaultEngineList(isUS) {
   // The list of visibleDefaultEngines needs to match or the cache will be ignored.
   let chan = NetUtil.newChannel({
     uri: "resource://search-plugins/list.json",
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   let json = parseJsonFromStream(chan.open2());
   let visibleDefaultEngines = json.default.visibleDefaultEngines;

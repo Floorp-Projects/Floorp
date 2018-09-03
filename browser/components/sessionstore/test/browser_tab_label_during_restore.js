@@ -12,7 +12,7 @@ add_task(async function() {
     "set": [
       ["browser.sessionstore.restore_on_demand", true],
       ["browser.sessionstore.restore_tabs_lazily", true],
-    ]
+    ],
   });
 
   const BACKUP_STATE = SessionStore.getBrowserState();
@@ -44,8 +44,8 @@ add_task(async function() {
         { entries: [{ url: ABOUT_ROBOTS_URI, triggeringPrincipal_base64 }] },
         { entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }] },
         { entries: [{ url: NO_TITLE_URL, triggeringPrincipal_base64 }] },
-      ]
-    }]
+      ],
+    }],
   });
   let [tab1, tab2, tab3, tab4] = gBrowser.tabs;
   is(gBrowser.selectedTab, tab1, "first tab is selected");

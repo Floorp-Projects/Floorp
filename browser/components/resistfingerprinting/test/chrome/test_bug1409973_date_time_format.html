@@ -25,7 +25,7 @@
 
   let defaultOptions = new Intl.DateTimeFormat(undefined, {
     month: "numeric", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric", second: "numeric",
-    timeZoneName: "long"
+    timeZoneName: "long",
   }).resolvedOptions();
   SimpleTest.is(defaultOptions.locale, "ko-KR", "defaultOptions Intl.DateTimeFormat.format.locale");
   SimpleTest.is(defaultOptions.timeZone, "EST5EDT", "defaultOptions Intl.DateTimeFormat.format.timeZone");
@@ -43,15 +43,15 @@
     set: [
       ["privacy.resistFingerprinting", true],
       // In real world, this will be set if the user decides to spoof preferred languages by en-US.
-      ["javascript.use_us_english_locale", true]
-    ]
+      ["javascript.use_us_english_locale", true],
+    ],
   }, function() {
     // Now confirm that calling toLocaleString with no arguements gives us UTC
     SimpleTest.is(date.toLocaleString(undefined, {timeZoneName: "long"}), referenceLocaleString, "Date.toLocaleString");
     // And that a no-options Intl.DateTimeFormat formatter looks correct too
     let options = new Intl.DateTimeFormat(undefined, {
       month: "numeric", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric", second: "numeric",
-      timeZoneName: "long"
+      timeZoneName: "long",
     }).resolvedOptions();
     SimpleTest.is(options.locale, "en-US", "Resist Fingerprinting Intl.DateTimeFormat.format.locale");
     SimpleTest.is(options.timeZone, "UTC", "Resist Fingerprinting Intl.DateTimeFormat.format.timeZone");

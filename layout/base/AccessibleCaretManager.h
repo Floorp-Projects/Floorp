@@ -331,10 +331,6 @@ protected:
   // AppUnit.h.
   static const int32_t kBoundaryAppUnits = 61;
 
-  // Preference to show selection bars at the two ends in selection mode. The
-  // selection bar is always disabled in cursor mode.
-  static bool sSelectionBarEnabled;
-
   // Preference to allow smarter selection of phone numbers,
   // when user long presses text to start.
   static bool sExtendSelectionForPhoneNumber;

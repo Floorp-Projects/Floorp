@@ -27,7 +27,6 @@ shippingAddress.init("USA",              // country
                      "Test locality",    // dependent locality
                      "94066",            // postal code
                      "123456",           // sorting code
-                     "en",               // language code
                      "Testing Org",      // organization
                      "Bill A. Pacheco",  // recipient
                      "+1-434-441-3879"); // phone
@@ -103,10 +102,6 @@ function checkAddressErrors(errors) {
     emitTestFail("Expect shippingAddressErrors.dependentLocality as 'dependentLocality error', but got" +
                   errors.dependentLocality);
   }
-  if (errors.languageCode != "languageCode error") {
-    emitTestFail("Expect shippingAddressErrors.languageCode as 'languageCode error', but got" +
-                  errors.languageCode);
-  }
   if (errors.organization != "organization error") {
     emitTestFail("Expect shippingAddressErrors.organization as 'organization error', but got" +
                   errors.organization);
@@ -146,6 +141,7 @@ const DummyUIService = {
   abortPayment: abortRequest,
   completePayment: completeRequest,
   updatePayment: updateRequest,
+  closePayment: function(requestId) {},
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 

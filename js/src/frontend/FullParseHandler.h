@@ -14,6 +14,7 @@
 
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
+#include "vm/JSContext.h"
 
 namespace js {
 

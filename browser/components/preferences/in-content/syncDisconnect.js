@@ -56,5 +56,5 @@ let gSyncDisconnectDialog = {
       document.documentElement.dispatchEvent(closingEvent);
       close();
     });
-  }
+  },
 };

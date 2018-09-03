@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gc/Zone.h"
+#include "gc/Zone-inl.h"
 
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
@@ -463,6 +463,41 @@ Zone::traceAtomCache(JSTracer* trc)
         TraceRoot(trc, &atom, "kept atom");
         MOZ_ASSERT(r.front().asPtrUnbarriered() == atom);
     }
+}
+
+void*
+Zone::onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes, void* reallocPtr)
+{
+    if (!js::CurrentThreadCanAccessRuntime(runtime_))
+        return nullptr;
+    return runtimeFromMainThread()->onOutOfMemory(allocFunc, nbytes, reallocPtr);
+}
+
+void
+Zone::reportAllocationOverflow()
+{
+    js::ReportAllocationOverflow(nullptr);
+}
+
+void
+JS::Zone::maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter, TriggerKind trigger)
+{
+    JSRuntime* rt = runtimeFromAnyThread();
+
+    if (!js::CurrentThreadCanAccessRuntime(rt))
+        return;
+
+    bool wouldInterruptGC = rt->gc.isIncrementalGCInProgress() && !isCollecting();
+    if (wouldInterruptGC && !counter.shouldResetIncrementalGC(rt->gc.tunables))
+        return;
+
+    if (!rt->gc.triggerZoneGC(this, JS::gcreason::TOO_MUCH_MALLOC,
+                              counter.bytes(), counter.maxBytes()))
+    {
+        return;
+    }
+
+    counter.recordTrigger(trigger);
 }
 
 ZoneList::ZoneList()

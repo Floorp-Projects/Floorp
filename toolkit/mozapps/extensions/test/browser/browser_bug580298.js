@@ -16,17 +16,17 @@ add_task(async function test() {
     id: "extension@tests.mozilla.org",
     name: "Extension 1",
     type: "extension",
-    version: "123"
+    version: "123",
   }, {
     id: "theme@tests.mozilla.org",
     name: "Theme 2",
     type: "theme",
-    version: "456"
+    version: "456",
   }, {
     id: "lwtheme@personas.mozilla.org",
     name: "Persona 3",
     type: "theme",
-    version: "789"
+    version: "789",
   }]);
 
   gManagerWindow = await open_manager();

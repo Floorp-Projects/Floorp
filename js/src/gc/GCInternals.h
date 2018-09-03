@@ -16,7 +16,6 @@
 
 #include "gc/GC.h"
 #include "gc/RelocationOverlay.h"
-#include "gc/Zone.h"
 #include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
 
@@ -321,7 +320,7 @@ IsOOMReason(JS::gcreason::Reason reason)
 }
 
 TenuredCell*
-AllocateCellInGC(Zone* zone, AllocKind thingKind);
+AllocateCellInGC(JS::Zone* zone, AllocKind thingKind);
 
 } /* namespace gc */
 } /* namespace js */

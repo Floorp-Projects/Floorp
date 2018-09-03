@@ -38,7 +38,7 @@ EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t argS
     // it there through the stub calls), but the VMWrapper code being called
     // expects the return address to also be pushed on the stack.
     MOZ_ASSERT(ICTailCallReg == lr);
-    masm.makeFrameDescriptor(r0, JitFrame_BaselineJS, ExitFrameLayout::Size());
+    masm.makeFrameDescriptor(r0, FrameType::BaselineJS, ExitFrameLayout::Size());
     masm.push(r0);
     masm.push(lr);
     masm.jump(target);
@@ -53,7 +53,7 @@ EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32
     masm.as_add(reg, reg, Imm8(sizeof(void*) * 2));
     masm.ma_sub(BaselineStackReg, reg);
 
-    masm.makeFrameDescriptor(reg, JitFrame_BaselineStub, headerSize);
+    masm.makeFrameDescriptor(reg, FrameType::BaselineStub, headerSize);
 }
 
 inline void
@@ -84,7 +84,7 @@ EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
     // needed.
 
     // Push frame descriptor and return address.
-    masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS, BaselineStubFrameLayout::Size());
+    masm.makeFrameDescriptor(scratch, FrameType::BaselineJS, BaselineStubFrameLayout::Size());
     masm.Push(scratch);
     masm.Push(ICTailCallReg);
 

@@ -30,7 +30,7 @@ var PKT_SIGNUP_OVERLAY = function(options) {
             thePKT_SIGNUP.sendMessage("openTabWithUrl",
             {
                 url: $(this).attr("href"),
-                activate: true
+                activate: true,
             });
             myself.closePopup();
         });
@@ -44,7 +44,7 @@ var PKT_SIGNUP_OVERLAY = function(options) {
             "<": "&lt;",
             ">": "&gt;",
             '"': "&quot;",
-            "'": "&#39;"
+            "'": "&#39;",
         };
         if (typeof s !== "string") {
             return "";
@@ -123,7 +123,7 @@ PKT_SIGNUP_OVERLAY.prototype = {
 
         // close events
         this.initCloseTabEvents();
-    }
+    },
 };
 
 
@@ -154,7 +154,7 @@ PKT_SIGNUP.prototype = {
 
         // tell back end we're ready
         thePKT_SIGNUP.sendMessage("show");
-    }
+    },
 };
 
 $(function() {
@@ -170,8 +170,8 @@ $(function() {
     thePKT_SIGNUP.sendMessage("initL10N", {
             tos: [
                 "https://" + pocketHost + "/tos?s=ffi&t=tos&tv=panel_tryit",
-                "https://" + pocketHost + "/privacy?s=ffi&t=privacypolicy&tv=panel_tryit"
-            ]
+                "https://" + pocketHost + "/privacy?s=ffi&t=privacypolicy&tv=panel_tryit",
+            ],
         }, function(resp) {
         window.pocketStrings = resp.strings;
         window.thePKT_SIGNUP.create();

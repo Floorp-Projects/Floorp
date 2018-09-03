@@ -885,7 +885,7 @@ AuthPromptAdapterFactory.prototype = {
 
     createAdapter(oldPrompter) {
         return new AuthPromptAdapter(oldPrompter);
-    }
+    },
 };
 
 
@@ -922,7 +922,7 @@ AuthPromptAdapter.prototype = {
 
     asyncPromptAuth(channel, callback, context, level, authInfo, checkLabel, checkValue) {
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-    }
+    },
 };
 
 

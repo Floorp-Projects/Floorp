@@ -7,7 +7,7 @@ const WindowWatcher = {
     check_showUpdateAvailable();
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowWatcher])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowWatcher]),
 };
 
 const WindowMediator = {
@@ -16,7 +16,7 @@ const WindowMediator = {
     return { getInterface: ChromeUtils.generateQI([Ci.nsIDOMWindow]) };
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowMediator])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowMediator]),
 };
 
 function run_test() {

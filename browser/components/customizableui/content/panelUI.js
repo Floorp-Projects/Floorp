@@ -491,7 +491,7 @@ const PanelUI = {
       // richer list.
       numItems: 6,
       withFavicons: true,
-      excludePocket: true
+      excludePocket: true,
     }).catch(ex => {
       // Just hide the section if we can't retrieve the items from the database.
       Cu.reportError(ex);
@@ -566,7 +566,7 @@ const PanelUI = {
       CustomizableUI.hidePanelForNode(button);
     }
     window.openUILink(button._highlight.url, event, {
-      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
     });
   },
 

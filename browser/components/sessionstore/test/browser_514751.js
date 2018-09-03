@@ -10,10 +10,10 @@ add_task(async function test_malformedURI() {
       tabs: [{
         entries: [
           { url: "about:mozilla", triggeringPrincipal_base64, title: "Mozilla" },
-          {}
-        ]
-      }]
-    }]
+          {},
+        ],
+      }],
+    }],
   };
 
   var theWin = openDialog(location, "", "chrome,all,dialog=no");

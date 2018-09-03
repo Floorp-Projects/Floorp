@@ -245,10 +245,9 @@ describe("AboutPreferences Feed", () => {
       });
       it("should add a link for top stories", () => {
         const href = "https://disclaimer/";
-        prefStructure = [{disclaimer: {link: {href}}, id: "topstories"}];
+        prefStructure = [{learnMore: {link: {href}}, id: "topstories"}];
 
         testRender();
-
         assert.calledWith(node.setAttribute, "href", href);
       });
     });

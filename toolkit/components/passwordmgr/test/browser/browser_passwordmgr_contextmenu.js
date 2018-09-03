@@ -12,7 +12,7 @@ add_task(async function test() {
         "http://mozilla.org/",
         "http://spreadfirefox.com/",
         "https://support.mozilla.org/",
-        "http://hg.mozilla.org/"
+        "http://hg.mozilla.org/",
     ];
     let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                                  Ci.nsILoginInfo, "init");
@@ -21,7 +21,7 @@ add_task(async function test() {
         new nsLoginInfo(urls[1], urls[1], null, "ehsan", "coded", "u2", "p2"),
         new nsLoginInfo(urls[2], urls[2], null, "this", "awesome", "u3", "p3"),
         new nsLoginInfo(urls[3], urls[3], null, "array of", "logins", "u4", "p4"),
-        new nsLoginInfo(urls[4], urls[4], null, "then", "i wrote the test", "u5", "p5")
+        new nsLoginInfo(urls[4], urls[4], null, "then", "i wrote the test", "u5", "p5"),
     ];
     logins.forEach(login => Services.logins.addLogin(login));
 

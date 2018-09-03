@@ -10,10 +10,10 @@
 loader.lazyImporter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
-const { Cc, Ci } = require("chrome");
 const { createFactory, Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const { openTemporaryExtension } = require("devtools/client/aboutdebugging/modules/addon");
 const Services = require("Services");
 const AddonsInstallError = createFactory(require("./InstallError"));
 
@@ -49,26 +49,10 @@ class AddonsControls extends Component {
     Services.prefs.setBoolPref("devtools.debugger.remote-enabled", enabled);
   }
 
-  loadAddonFromFile() {
-    this.setState({ installError: null });
-    const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window,
-      Strings.GetStringFromName("selectAddonFromFile2"),
-      Ci.nsIFilePicker.modeOpen);
-    fp.open(res => {
-      if (res == Ci.nsIFilePicker.returnCancel || !fp.file) {
-        return;
-      }
-      let file = fp.file;
-      // AddonManager.installTemporaryAddon accepts either
-      // addon directory or final xpi file.
-      if (!file.isDirectory() &&
-          !file.leafName.endsWith(".xpi") && !file.leafName.endsWith(".zip")) {
-        file = file.parent;
-      }
-
-      this.installAddon(file);
-    });
+  async loadAddonFromFile() {
+    const message = Strings.GetStringFromName("selectAddonFromFile2");
+    const file = await openTemporaryExtension(window, message);
+    this.installAddon(file);
   }
 
   retryInstall() {

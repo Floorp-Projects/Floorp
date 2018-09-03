@@ -55,7 +55,7 @@ let MockClientsEngine = {
 
   getClientType(id) {
     return "desktop";
-  }
+  },
 };
 
 function configureClients(clients, clientSettings = {}) {
@@ -107,7 +107,7 @@ add_task(async function test_clientWithTabs() {
     guid_mobile: {
       clientName: "My Phone",
       tabs: [],
-    }
+    },
   });
 
   let clients = await SyncedTabs.getTabClients();

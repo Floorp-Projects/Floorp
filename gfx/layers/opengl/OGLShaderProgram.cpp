@@ -946,9 +946,8 @@ ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
       )
   {
     nsAutoCString log;
-    log.SetCapacity(len);
-    mGL->fGetProgramInfoLog(result, len, (GLint*) &len, (char*) log.BeginWriting());
     log.SetLength(len);
+    mGL->fGetProgramInfoLog(result, len, (GLint*) &len, (char*) log.BeginWriting());
 
     if (!success) {
       printf_stderr("=== PROGRAM LINKING FAILED ===\n");

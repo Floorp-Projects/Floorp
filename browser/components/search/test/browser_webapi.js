@@ -24,7 +24,7 @@ function promiseDialogOpened() {
           else
             reject();
         }, win);
-      }
+      },
     });
   });
 }

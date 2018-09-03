@@ -545,22 +545,22 @@ add_task(async function test_dynamicScalars_registration() {
       "data": {
         "missing_kind": {
           keyed: false,
-          record_on_release: true
+          record_on_release: true,
         },
       },
       "evaluation": /missing 'kind'/,
-      "description": "Registration must fail if required fields are missing"
+      "description": "Registration must fail if required fields are missing",
     },
     {
       "category": "telemetry.test",
       "data": {
         "invalid_collection": {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
-          record_on_release: "opt-in"
+          record_on_release: "opt-in",
         },
       },
       "evaluation": /Invalid 'record_on_release'/,
-      "description": "Registration must fail if 'record_on_release' is of the wrong type"
+      "description": "Registration must fail if 'record_on_release' is of the wrong type",
     },
     {
       "category": "telemetry.test",
@@ -570,7 +570,7 @@ add_task(async function test_dynamicScalars_registration() {
         },
       },
       "evaluation": /Invalid or missing 'kind'/,
-      "description": "Registration must fail if 'kind' is of the wrong type"
+      "description": "Registration must fail if 'kind' is of the wrong type",
     },
     {
       "category": "telemetry.test",
@@ -581,7 +581,7 @@ add_task(async function test_dynamicScalars_registration() {
         },
       },
       "evaluation": /Invalid 'expired'/,
-      "description": "Registration must fail if 'expired' is of the wrong type"
+      "description": "Registration must fail if 'expired' is of the wrong type",
     },
     {
       "category": "telemetry.test",
@@ -589,14 +589,14 @@ add_task(async function test_dynamicScalars_registration() {
         "valid_scalar": {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
           keyed: false,
-          record_on_release: true
+          record_on_release: true,
         },
         "invalid_scalar": {
           expired: false,
         },
       },
       "evaluation": /Invalid or missing 'kind'/,
-      "description": "No scalar must be registered if the batch contains an invalid one"
+      "description": "No scalar must be registered if the batch contains an invalid one",
     },
   ];
 
@@ -613,7 +613,7 @@ add_task(async function test_dynamicScalars_doubleRegistration() {
   Telemetry.registerScalars("telemetry.test.dynamic", {
     "double_registration_1": {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
-      record_on_release: true
+      record_on_release: true,
     },
   });
 
@@ -625,11 +625,11 @@ add_task(async function test_dynamicScalars_doubleRegistration() {
   Telemetry.registerScalars("telemetry.test.dynamic", {
     "double_registration_1": {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
-      record_on_release: true
+      record_on_release: true,
     },
     "double_registration_2": {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
-      record_on_release: true
+      record_on_release: true,
     },
   });
 
@@ -652,7 +652,7 @@ add_task(async function test_dynamicScalars_doubleRegistration() {
     "double_registration_2": {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
       record_on_release: true,
-      expired: true
+      expired: true,
     },
   });
 
@@ -674,21 +674,21 @@ add_task(async function test_dynamicScalars_recording() {
   Telemetry.registerScalars("telemetry.test.dynamic", {
     "record_optout": {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
-      record_on_release: true
+      record_on_release: true,
     },
     "record_keyed": {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
       keyed: true,
-      record_on_release: true
+      record_on_release: true,
     },
     "record_optin": {
       kind: Ci.nsITelemetry.SCALAR_TYPE_BOOLEAN,
-      record_on_release: false
+      record_on_release: false,
     },
     "record_expired": {
       kind: Ci.nsITelemetry.SCALAR_TYPE_STRING,
       expired: true,
-      record_on_release: true
+      record_on_release: true,
     },
   });
 
@@ -737,7 +737,7 @@ add_task(async function test_dynamicScalars_recording() {
 });
 
 add_task({
-  skip_if: () => gIsAndroid
+  skip_if: () => gIsAndroid,
 },
 async function test_productSpecificScalar() {
   const DEFAULT_PRODUCT_SCALAR = "telemetry.test.default_products";
@@ -779,7 +779,7 @@ async function test_productSpecificScalar() {
 });
 
 add_task({
-  skip_if: () => !gIsAndroid
+  skip_if: () => !gIsAndroid,
 },
 async function test_mobileSpecificScalar() {
   const DEFAULT_PRODUCT_SCALAR = "telemetry.test.default_products";
@@ -824,7 +824,7 @@ async function test_mobileSpecificScalar() {
 });
 
 add_task({
-  skip_if: () => !gIsAndroid
+  skip_if: () => !gIsAndroid,
 },
 async function test_geckoviewSpecificScalar() {
   const DEFAULT_PRODUCT_SCALAR = "telemetry.test.default_products";

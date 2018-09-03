@@ -23,7 +23,7 @@ RemoteSettingsTimer.prototype = {
   notify(timer) {
     RemoteSettings.pollChanges()
       .catch(e => Cu.reportError(e));
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RemoteSettingsTimer]);

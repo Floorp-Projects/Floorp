@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
-#include "nsIDOMStorage.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
@@ -22,13 +21,12 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
-class Storage : public nsIDOMStorage
+class Storage : public nsISupports
               , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Storage,
-                                                         nsIDOMStorage)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Storage)
 
   Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
 

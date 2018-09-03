@@ -14,9 +14,9 @@ const FIXTURE = [
         "url": "https://www.mozilla.org/en-US/firefox/android/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=synced-tabs-sidebar",
         "icon": "chrome://mozapps/skin/places/defaultFavicon.svg",
         "client": "7cqCr77ptzX3",
-        "lastUsed": 1452124677
-      }
-    ]
+        "lastUsed": 1452124677,
+      },
+    ],
   },
   {
     "id": "2xU5h-4bkWqA",
@@ -31,7 +31,7 @@ const FIXTURE = [
         "url": "https://www.mozilla.org/en-US/firefox/ios/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=synced-tabs-sidebar",
         "icon": "moz-anno:favicon:https://www.mozilla.org/media/img/firefox/favicon.dc6635050bf5.ico",
         "client": "2xU5h-4bkWqA",
-        "lastUsed": 1451519425
+        "lastUsed": 1451519425,
       },
       {
         "type": "tab",
@@ -39,7 +39,7 @@ const FIXTURE = [
         "url": "https://www.mozilla.org/en-US/firefox/nightly/firstrun/?oldversion=45.0a1",
         "icon": "moz-anno:favicon:https://www.mozilla.org/media/img/firefox/favicon-nightly.560395bbb2e1.png",
         "client": "2xU5h-4bkWqA",
-        "lastUsed": 1451519420
+        "lastUsed": 1451519420,
       },
       {
         // Should appear first for this client.
@@ -48,9 +48,9 @@ const FIXTURE = [
         "url": "https://developer.mozilla.org/en-US/",
         "icon": "moz-anno:favicon:https://developer.cdn.mozilla.net/static/img/favicon32.e02854fdcf73.png",
         "client": "2xU5h-4bkWqA",
-        "lastUsed": 1451519725
-      }
-    ]
+        "lastUsed": 1451519725,
+      },
+    ],
   },
   {
     "id": "OL3EJCsdb2JD",
@@ -58,8 +58,8 @@ const FIXTURE = [
     "lastModified": 1492201200,
     "name": "desktop",
     "clientType": "desktop",
-    "tabs": []
-  }
+    "tabs": [],
+  },
 ];
 
 let originalSyncedTabsInternal = null;

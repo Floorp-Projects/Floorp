@@ -23,7 +23,7 @@ add_task(async function() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Bootstrap 1 (proxy)",
   }, tempdir, ID, {
@@ -81,7 +81,7 @@ add_task(async function() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Bootstrap 1 (proxy)",
   }, tempdir, ID, {

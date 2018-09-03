@@ -170,7 +170,7 @@ menuitem[_moz-menuactive="true"] {
 /* ::::: menu/menuitems in menulist popups ::::: */
 
 menulist > menupopup {
-  font: message-box;
+  font: inherit;
 }
 
 menulist > menupopup > menuitem,

@@ -5,11 +5,16 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource:///modules/UITour.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  UITour: "resource:///modules/UITour.jsm"
+});
 const {ASRouterActions: ra, actionCreators: ac} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
+const {CFRMessageProvider} = ChromeUtils.import("resource://activity-stream/lib/CFRMessageProvider.jsm", {});
 const {OnboardingMessageProvider} = ChromeUtils.import("resource://activity-stream/lib/OnboardingMessageProvider.jsm", {});
+const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
+const {CFRPageActions} = ChromeUtils.import("resource://activity-stream/lib/CFRPageActions.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "ASRouterTargeting",
   "resource://activity-stream/lib/ASRouterTargeting.jsm");
@@ -19,6 +24,7 @@ ChromeUtils.defineModuleGetter(this, "ASRouterTriggerListeners",
 const INCOMING_MESSAGE_NAME = "ASRouter:child-to-parent";
 const OUTGOING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const MESSAGE_PROVIDER_PREF = "browser.newtabpage.activity-stream.asrouter.messageProviders";
+const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 // List of hosts for endpoints that serve router messages.
 // Key is allowed host, value is a name for the endpoint host.
 const DEFAULT_WHITELIST_HOSTS = {
@@ -26,8 +32,10 @@ const DEFAULT_WHITELIST_HOSTS = {
   "snippets-admin.mozilla.org": "preview"
 };
 const SNIPPETS_ENDPOINT_WHITELIST = "browser.newtab.activity-stream.asrouter.whitelistHosts";
+// Max possible impressions cap for any message
+const MAX_MESSAGE_LIFETIME_CAP = 100;
 
-const LOCAL_MESSAGE_PROVIDERS = {OnboardingMessageProvider};
+const LOCAL_MESSAGE_PROVIDERS = {OnboardingMessageProvider, CFRMessageProvider};
 const STARTPAGE_VERSION = "0.1.0";
 
 const MessageLoaderUtils = {
@@ -71,6 +79,29 @@ const MessageLoaderUtils = {
   },
 
   /**
+   * _remoteSettingsLoader - Loads messages for a RemoteSettings provider
+   *
+   * @param {obj} provider An AS router provider
+   * @param {string} provider.bucket The name of the Remote Settings bucket
+   * @returns {Promise} resolves with an array of messages, or an empty array if none could be fetched
+   */
+  async _remoteSettingsLoader(provider) {
+    let messages = [];
+    if (provider.bucket) {
+      try {
+        messages = await MessageLoaderUtils._getRemoteSettingsMessages(provider.bucket);
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+    return messages;
+  },
+
+  _getRemoteSettingsMessages(bucket) {
+    return RemoteSettings(bucket).get({filters: {locale: Services.locale.getAppLocaleAsLangTag()}});
+  },
+
+  /**
    * _getMessageLoader - return the right loading function given the provider's type
    *
    * @param {obj} provider An AS Router provider
@@ -80,6 +111,8 @@ const MessageLoaderUtils = {
     switch (provider.type) {
       case "remote":
         return this._remoteLoader;
+      case "remote-settings":
+        return this._remoteSettingsLoader;
       case "local":
       default:
         return this._localLoader;
@@ -144,8 +177,10 @@ class _ASRouter {
     this._state = {
       lastMessageId: null,
       providers: [],
-      blockList: [],
-      impressions: {},
+      messageBlockList: [],
+      providerBlockList: [],
+      messageImpressions: {},
+      providerImpressions: {},
       messages: []
     };
     this._triggerHandler = this._triggerHandler.bind(this);
@@ -171,7 +206,11 @@ class _ASRouter {
     const providers = existingPreviewProvider ? [existingPreviewProvider] : [];
     const providersJSON = Services.prefs.getStringPref(this._messageProviderPref, "");
     try {
-      JSON.parse(providersJSON).forEach(provider => providers.push(provider));
+      JSON.parse(providersJSON).forEach(provider => {
+        if (provider.enabled) {
+          providers.push(provider);
+        }
+      });
     } catch (e) {
       Cu.reportError("Problem parsing JSON message provider pref for ASRouter");
     }
@@ -283,10 +322,13 @@ class _ASRouter {
     this._storage = storage;
     this.WHITELIST_HOSTS = this._loadSnippetsWhitelistHosts();
     this.dispatchToAS = dispatchToAS;
+    this.dispatch = this.dispatch.bind(this);
 
-    const blockList = await this._storage.get("blockList") || [];
-    const impressions = await this._storage.get("impressions") || {};
-    await this.setState({blockList, impressions});
+    const messageBlockList = await this._storage.get("messageBlockList") || [];
+    const providerBlockList = await this._storage.get("providerBlockList") || [];
+    const messageImpressions = await this._storage.get("messageImpressions") || {};
+    const providerImpressions = await this._storage.get("providerImpressions") || {};
+    await this.setState({messageBlockList, providerBlockList, messageImpressions, providerImpressions});
     this._updateMessageProviders();
     await this.loadMessagesFromAllProviders();
 
@@ -304,6 +346,8 @@ class _ASRouter {
     for (const listener of ASRouterTriggerListeners.values()) {
       listener.uninit();
     }
+    // If we added any CFR recommendations, they need to be removed
+    CFRPageActions.clearRecommendations();
     this._resetInitialization();
   }
 
@@ -336,16 +380,55 @@ class _ASRouter {
     }
   }
 
-  _findMessage(messages, target, trigger) {
-    const {impressions} = this.state;
+  _findMessage(candidateMessages, trigger) {
+    const messages = candidateMessages.filter(m => this.isBelowFrequencyCaps(m));
 
      // Find a message that matches the targeting context as well as the trigger context (if one is provided)
      // If no trigger is provided, we should find a message WITHOUT a trigger property defined.
-    return ASRouterTargeting.findMatchingMessage({messages, impressions, trigger, onError: this._handleTargetingError});
+    return ASRouterTargeting.findMatchingMessage({messages, trigger, onError: this._handleTargetingError});
   }
 
   _orderBundle(bundle) {
     return bundle.sort((a, b) => a.order - b.order);
+  }
+
+  // Work out if a message can be shown based on its and its provider's frequency caps.
+  isBelowFrequencyCaps(message) {
+    const {providers, messageImpressions, providerImpressions} = this.state;
+
+    const provider = providers.find(p => p.id === message.provider);
+    const impressionsForMessage = messageImpressions[message.id];
+    const impressionsForProvider = providerImpressions[message.provider];
+
+    return (this._isBelowItemFrequencyCap(message, impressionsForMessage, MAX_MESSAGE_LIFETIME_CAP) &&
+      this._isBelowItemFrequencyCap(provider, impressionsForProvider));
+  }
+
+  // Helper for isBelowFrecencyCaps - work out if the frequency cap for the given
+  //                                  item has been exceeded or not
+  _isBelowItemFrequencyCap(item, impressions, maxLifetimeCap = Infinity) {
+    if (item && item.frequency && impressions && impressions.length) {
+      if (
+        item.frequency.lifetime &&
+        impressions.length >= Math.min(item.frequency.lifetime, maxLifetimeCap)
+      ) {
+        return false;
+      }
+      if (item.frequency.custom) {
+        const now = Date.now();
+        for (const setting of item.frequency.custom) {
+          let {period} = setting;
+          if (period === "daily") {
+            period = ONE_DAY_IN_MS;
+          }
+          const impressionsInPeriod = impressions.filter(t => (now - t) < period);
+          if (impressionsInPeriod.length >= setting.cap) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
   }
 
   async _getBundledMessages(originalMessage, target, trigger, force = false) {
@@ -367,7 +450,7 @@ class _ASRouter {
     } else {
       while (bundledMessagesOfSameTemplate.length) {
         // Find a message that matches the targeting context - or break if there are no matching messages
-        const message = await this._findMessage(bundledMessagesOfSameTemplate, target, trigger);
+        const message = await this._findMessage(bundledMessagesOfSameTemplate, trigger);
         if (!message) {
           /* istanbul ignore next */ // Code coverage in mochitests
           break;
@@ -393,40 +476,65 @@ class _ASRouter {
 
   _getUnblockedMessages() {
     let {state} = this;
-    return state.messages.filter(item => !state.blockList.includes(item.id));
+    return state.messages.filter(item =>
+      !state.messageBlockList.includes(item.id) &&
+      !state.providerBlockList.includes(item.provider)
+    );
   }
 
   async _sendMessageToTarget(message, target, trigger, force = false) {
-    let bundledMessages;
-    // If this message needs to be bundled with other messages of the same template, find them and bundle them together
-    if (message && message.bundled) {
-      bundledMessages = await this._getBundledMessages(message, target, trigger, force);
-    }
-    if (message && !message.bundled) {
-      // If we only need to send 1 message, send the message
-      target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: message});
-    } else if (bundledMessages) {
-      // If the message we want is bundled with other messages, send the entire bundle
-      target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: bundledMessages});
+    // No message is available, so send CLEAR_ALL.
+    if (!message) {
+      try {
+        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_ALL"});
+      } catch (e) {}
+
+    // For bundled messages, look for the rest of the bundle or else send CLEAR_ALL
+    } else if (message.bundled) {
+      const bundledMessages = await this._getBundledMessages(message, target, trigger, force);
+      const action = bundledMessages ? {type: "SET_BUNDLED_MESSAGES", data: bundledMessages} : {type: "CLEAR_ALL"};
+      target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
+
+    // CFR doorhanger
+    } else if (message.template === "cfr_doorhanger") {
+      if (force) {
+        CFRPageActions.forceRecommendation(target, message, this.dispatch);
+      } else {
+        CFRPageActions.addRecommendation(target, trigger.param, message, this.dispatch);
+      }
+
+    // New tab single messages
     } else {
-      target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_ALL"});
+      target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: message});
     }
   }
 
   async addImpression(message) {
-    // Don't store impressions for messages that don't include any limits on frequency
-    if (!message.frequency) {
-      return;
+    const provider = this.state.providers.find(p => p.id === message.provider);
+    // We only need to store impressions for messages that have frequency, or
+    // that have providers that have frequency
+    if (message.frequency || (provider && provider.frequency)) {
+      const time = Date.now();
+      await this.setState(state => {
+        const messageImpressions = this._addImpressionForItem(state, message, "messageImpressions", time);
+        const providerImpressions = this._addImpressionForItem(state, provider, "providerImpressions", time);
+        return {messageImpressions, providerImpressions};
+      });
     }
-    await this.setState(state => {
-      // The destructuring here is to avoid mutating existing objects in state as in redux
-      // (see https://redux.js.org/recipes/structuring-reducers/prerequisite-concepts#immutable-data-management)
-      const impressions = {...state.impressions};
-      impressions[message.id] = impressions[message.id] ? [...impressions[message.id]] : [];
-      impressions[message.id].push(Date.now());
-      this._storage.set("impressions", impressions);
-      return {impressions};
-    });
+  }
+
+  // Helper for addImpression - calculate the updated impressions object for the given
+  //                            item, then store it and return it
+  _addImpressionForItem(state, item, impressionsString, time) {
+    // The destructuring here is to avoid mutating existing objects in state as in redux
+    // (see https://redux.js.org/recipes/structuring-reducers/prerequisite-concepts#immutable-data-management)
+    const impressions = {...state[impressionsString]};
+    if (item.frequency) {
+      impressions[item.id] = impressions[item.id] ? [...impressions[item.id]] : [];
+      impressions[item.id].push(time);
+      this._storage.set(impressionsString, impressions);
+    }
+    return impressions;
   }
 
   /**
@@ -447,39 +555,49 @@ class _ASRouter {
   /**
    * cleanupImpressions - this function cleans up obsolete impressions whenever
    * messages are refreshed or fetched. It will likely need to be more sophisticated in the future,
-   * but the current behaviour for when impressions are cleared is as follows:
+   * but the current behaviour for when both message impressions and provider impressions are
+   * cleared is as follows (where `item` is either `message` or `provider`):
    *
-   * 1. If the message id for a list of impressions no longer exists in state.messages, it will be cleared.
-   * 2. If the message has time-bound frequency caps but no lifetime cap, any impressions older
+   * 1. If the item id for a list of item impressions no longer exists in the ASRouter state, it
+   *    will be cleared.
+   * 2. If the item has time-bound frequency caps but no lifetime cap, any item impressions older
    *    than the longest time period will be cleared.
    */
   async cleanupImpressions() {
     await this.setState(state => {
-      const impressions = {...state.impressions};
-      let needsUpdate = false;
-      Object.keys(impressions).forEach(id => {
-        const [message] = state.messages.filter(msg => msg.id === id);
-        // Don't keep impressions for messages that no longer exist
-        if (!message || !message.frequency || !Array.isArray(impressions[id])) {
-          delete impressions[id];
-          needsUpdate = true;
-          return;
-        }
-        if (!impressions[id].length) {
-          return;
-        }
-        // If we don't want to store impressions older than the longest period
-        if (message.frequency.custom && !message.frequency.lifetime) {
-          const now = Date.now();
-          impressions[id] = impressions[id].filter(t => (now - t) < this.getLongestPeriod(message));
-          needsUpdate = true;
-        }
-      });
-      if (needsUpdate) {
-        this._storage.set("impressions", impressions);
-      }
-      return {impressions};
+      const messageImpressions = this._cleanupImpressionsForItems(state, state.messages, "messageImpressions");
+      const providerImpressions = this._cleanupImpressionsForItems(state, state.providers, "providerImpressions");
+      return {messageImpressions, providerImpressions};
     });
+  }
+
+  // Helper for cleanupImpressions - calculate the updated impressions object for
+  //                                 the given items, then store it and return it
+  _cleanupImpressionsForItems(state, items, impressionsString) {
+    const impressions = {...state[impressionsString]};
+    let needsUpdate = false;
+    Object.keys(impressions).forEach(id => {
+      const [item] = items.filter(x => x.id === id);
+      // Don't keep impressions for items that no longer exist
+      if (!item || !item.frequency || !Array.isArray(impressions[id])) {
+        delete impressions[id];
+        needsUpdate = true;
+        return;
+      }
+      if (!impressions[id].length) {
+        return;
+      }
+      // If we don't want to store impressions older than the longest period
+      if (item.frequency.custom && !item.frequency.lifetime) {
+        const now = Date.now();
+        impressions[id] = impressions[id].filter(t => (now - t) < this.getLongestPeriod(item));
+        needsUpdate = true;
+      }
+    });
+    if (needsUpdate) {
+      this._storage.set(impressionsString, impressions);
+    }
+    return impressions;
   }
 
   async sendNextMessage(target, trigger) {
@@ -490,7 +608,7 @@ class _ASRouter {
     if (previewMsgs.length) {
       [message] = previewMsgs;
     } else {
-      message = await this._findMessage(msgs, target, trigger);
+      message = await this._findMessage(msgs, trigger);
     }
 
     if (previewMsgs.length) {
@@ -509,33 +627,33 @@ class _ASRouter {
     await this.setState({lastMessageId: id});
     const newMessage = this.getMessageById(id);
 
-    await this._sendMessageToTarget(newMessage, target, force, action.data);
+    await this._sendMessageToTarget(newMessage, target, action.data, force);
   }
 
-  async blockById(idOrIds) {
+  async blockMessageById(idOrIds) {
     const idsToBlock = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
 
     await this.setState(state => {
-      const blockList = [...state.blockList, ...idsToBlock];
+      const messageBlockList = [...state.messageBlockList, ...idsToBlock];
       // When a message is blocked, its impressions should be cleared as well
-      const impressions = {...state.impressions};
-      idsToBlock.forEach(id => delete impressions[id]);
-      this._storage.set("blockList", blockList);
-      return {blockList, impressions};
+      const messageImpressions = {...state.messageImpressions};
+      idsToBlock.forEach(id => delete messageImpressions[id]);
+      this._storage.set("messageBlockList", messageBlockList);
+      return {messageBlockList, messageImpressions};
     });
   }
 
-  openLinkIn(url, target, {isPrivate = false, trusted = false, where = ""}) {
-    const win = target.browser.ownerGlobal;
-    const params = {
-      private: isPrivate,
-      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})
-    };
-    if (trusted) {
-      win.openTrustedLinkIn(url, where);
-    } else {
-      win.openLinkIn(url, where, params);
-    }
+  async blockProviderById(idOrIds) {
+    const idsToBlock = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+
+    await this.setState(state => {
+      const providerBlockList = [...state.providerBlockList, ...idsToBlock];
+      // When a provider is blocked, its impressions should be cleared as well
+      const providerImpressions = {...state.providerImpressions};
+      idsToBlock.forEach(id => delete providerImpressions[id]);
+      this._storage.set("providerBlockList", providerBlockList);
+      return {providerBlockList, providerImpressions};
+    });
   }
 
   _validPreviewEndpoint(url) {
@@ -579,7 +697,7 @@ class _ASRouter {
 
   // To be passed to ASRouterTriggerListeners
   async _triggerHandler(target, trigger) {
-    await this.onMessage({target, data: {type: "TRIGGER", trigger}});
+    await this.onMessage({target, data: {type: "TRIGGER", data: {trigger}}});
   }
 
   _removePreviewEndpoint(state) {
@@ -602,19 +720,13 @@ class _ASRouter {
         target.browser.ownerGlobal.OpenBrowserWindow({private: true});
         break;
       case ra.OPEN_URL:
-        this.openLinkIn(action.data.url, target, {
-          isPrivate: false,
-          where: "tabshifted",
-          triggeringPrincipal: Services.scriptSecurityManager.getNullPrincipal({})
+        target.browser.ownerGlobal.openLinkIn(action.data.url, "tabshifted", {
+          private: false,
+          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})
         });
         break;
       case ra.OPEN_ABOUT_PAGE:
-        this.openLinkIn(`about:${action.data.page}`, target, {
-          isPrivate: false,
-          trusted: true,
-          where: "tab",
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-        });
+        target.browser.ownerGlobal.openTrustedLinkIn(`about:${action.data.page}`, "tab");
         break;
       case ra.OPEN_APPLICATIONS_MENU:
         UITour.showMenu(target.browser.ownerGlobal, action.data.target);
@@ -623,6 +735,10 @@ class _ASRouter {
         await MessageLoaderUtils.installAddonFromURL(target.browser, action.data.url);
         break;
     }
+  }
+
+  dispatch(action, target) {
+    this.onMessage({data: action, target});
   }
 
   async onMessage({data: action, target}) {
@@ -645,29 +761,41 @@ class _ASRouter {
         await this.sendNextMessage(target, (action.data && action.data.trigger) || {});
         break;
       case "BLOCK_MESSAGE_BY_ID":
-        await this.blockById(action.data.id);
+        await this.blockMessageById(action.data.id);
         this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_MESSAGE", data: {id: action.data.id}});
         break;
+      case "BLOCK_PROVIDER_BY_ID":
+        await this.blockProviderById(action.data.id);
+        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_PROVIDER", data: {id: action.data.id}});
+        break;
       case "BLOCK_BUNDLE":
-        await this.blockById(action.data.bundle.map(b => b.id));
+        await this.blockMessageById(action.data.bundle.map(b => b.id));
         this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_BUNDLE"});
         break;
       case "UNBLOCK_MESSAGE_BY_ID":
         await this.setState(state => {
-          const blockList = [...state.blockList];
-          blockList.splice(blockList.indexOf(action.data.id), 1);
-          this._storage.set("blockList", blockList);
-          return {blockList};
+          const messageBlockList = [...state.messageBlockList];
+          messageBlockList.splice(messageBlockList.indexOf(action.data.id), 1);
+          this._storage.set("messageBlockList", messageBlockList);
+          return {messageBlockList};
+        });
+        break;
+      case "UNBLOCK_PROVIDER_BY_ID":
+        await this.setState(state => {
+          const providerBlockList = [...state.providerBlockList];
+          providerBlockList.splice(providerBlockList.indexOf(action.data.id), 1);
+          this._storage.set("providerBlockList", providerBlockList);
+          return {providerBlockList};
         });
         break;
       case "UNBLOCK_BUNDLE":
         await this.setState(state => {
-          const blockList = [...state.blockList];
+          const messageBlockList = [...state.messageBlockList];
           for (let message of action.data.bundle) {
-            blockList.splice(blockList.indexOf(message.id), 1);
+            messageBlockList.splice(messageBlockList.indexOf(message.id), 1);
           }
-          this._storage.set("blockList", blockList);
-          return {blockList};
+          this._storage.set("messageBlockList", messageBlockList);
+          return {messageBlockList};
         });
         break;
       case "OVERRIDE_MESSAGE":
@@ -682,7 +810,12 @@ class _ASRouter {
         }
         break;
       case "IMPRESSION":
-        this.addImpression(action.data);
+        await this.addImpression(action.data);
+        break;
+      case "DOORHANGER_TELEMETRY":
+        if (this.dispatchToAS) {
+          this.dispatchToAS(ac.ASRouterUserEvent(action.data));
+        }
         break;
     }
   }

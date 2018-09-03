@@ -72,7 +72,7 @@ function preparePlugin(browser, pluginFallbackState) {
     Object.defineProperty(plugin, "pluginFallbackType", {
       get() {
         return contentPluginFallbackState;
-      }
+      },
     });
     return plugin.runID;
   }).then((runID) => {

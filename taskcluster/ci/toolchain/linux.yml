@@ -306,6 +306,9 @@ linux64-binutils:
         resources:
             - 'build/unix/build-binutils/build-binutils.sh'
         toolchain-artifact: public/build/binutils.tar.xz
+    fetches:
+        fetch:
+            - binutils-2.31.1
 
 linux64-cctools-port:
     description: "cctools-port toolchain build"

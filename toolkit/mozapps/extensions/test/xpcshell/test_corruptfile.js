@@ -23,12 +23,12 @@ async function run_test_packed() {
   prepare_test({
     "corrupt@tests.mozilla.org": [
       ["onInstalling", false],
-      ["onInstalled", false]
-    ]
+      ["onInstalled", false],
+    ],
   }, [
     "onNewInstall",
     "onInstallStarted",
-    "onInstallEnded"
+    "onInstallEnded",
   ]);
 
   await promiseInstallAllFiles([do_get_file("data/corruptfile.xpi")]);
@@ -44,12 +44,12 @@ async function run_test_unpacked() {
   prepare_test({
     "corrupt@tests.mozilla.org": [
       ["onInstalling", false],
-      "onOperationCancelled"
-    ]
+      "onOperationCancelled",
+    ],
   }, [
     "onNewInstall",
     "onInstallStarted",
-    "onInstallFailed"
+    "onInstallFailed",
   ]);
 
   await promiseInstallAllFiles([do_get_file("data/corruptfile.xpi")]);

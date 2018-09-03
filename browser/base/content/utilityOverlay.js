@@ -14,7 +14,7 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
-  ShellService: "resource:///modules/ShellService.jsm"
+  ShellService: "resource:///modules/ShellService.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
@@ -58,7 +58,7 @@ function getTopWin(skipPopups) {
 
   return BrowserWindowTracker.getTopWindow({
     private: PrivateBrowsingUtils.isWindowPrivate(window),
-    allowPopups: !skipPopups
+    allowPopups: !skipPopups,
   });
 }
 
@@ -518,7 +518,7 @@ function openLinkIn(url, where, params) {
       referrerURI: aNoReferrer ? null : aReferrerURI,
       referrerPolicy: aReferrerPolicy,
       postData: aPostData,
-      userContextId: aUserContextId
+      userContextId: aUserContextId,
     });
 
     // Don't focus the content area if focus is in the address bar and we're
@@ -610,7 +610,7 @@ function createUserContextMenu(event, {
                                         isContextMenu = false,
                                         excludeUserContextId = 0,
                                         showDefaultTab = false,
-                                        useAccessKeys = true
+                                        useAccessKeys = true,
                                       } = {}) {
   while (event.target.hasChildNodes()) {
     event.target.firstChild.remove();

@@ -13,7 +13,7 @@ var state = {entries: [
     triggeringPrincipal_base64,
     children: [{ docIdentifier: 10,
                  url: "http://example.com?10",
-                 triggeringPrincipal_base64 }]
+                 triggeringPrincipal_base64 }],
   },
   {
     docIdentifier: 1,
@@ -21,8 +21,8 @@ var state = {entries: [
     triggeringPrincipal_base64,
     children: [{ docIdentifier: 10,
                  url: "http://example.com?10#aa",
-                 triggeringPrincipal_base64 }]
-  }
+                 triggeringPrincipal_base64 }],
+  },
 ]};
 
 add_task(async function test() {

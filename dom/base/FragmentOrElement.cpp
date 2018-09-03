@@ -747,14 +747,15 @@ FragmentOrElement::nsDOMSlots::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) c
     n += mAttributeMap->SizeOfIncludingThis(aMallocSizeOf);
   }
 
+  if (mChildrenList) {
+    n += mChildrenList->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
   // - Superclass members (nsINode::nsSlots)
   // - mStyle
   // - mDataSet
-  // - mSMILOverrideStyle
-  // - mSMILOverrideStyleDeclaration
-  // - mChildrenList
   // - mClassList
 
   // The following member are not measured:
@@ -835,10 +836,8 @@ FragmentOrElement::nsExtendedDOMSlots::SizeOfExcludingThis(MallocSizeOf aMallocS
     n += aMallocSizeOf(mControllers);
   }
 
-  // We don't seem to have memory reporting for nsLabelsNodeList.  At least
-  // report the memory it's using directly.
   if (mLabelsList) {
-    n += aMallocSizeOf(mLabelsList);
+    n += mLabelsList->SizeOfIncludingThis(aMallocSizeOf);
   }
 
   // mShadowRoot should be handled during normal DOM tree memory reporting, just

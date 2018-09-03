@@ -1,0 +1,282 @@
+{
+  "title": "ExtensionDoorhanger",
+  "description": "A template with a heading, addon icon, title and description. No markup allowed.",
+  "version": "1.0.0",
+  "type": "object",
+  "definitions": {
+    "plainText": {
+      "description": "Plain text (no HTML allowed)",
+      "type": "string"
+    },
+    "linkUrl": {
+      "description": "Target for links or buttons",
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "properties": {
+    "bucket_id": {
+      "type": "string",
+      "description": "Bucket identifier for the addon."
+    },
+    "notification_text": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Message shown in the location bar notification."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string",
+              "description": "Id of localized string for the location bar notification."
+            }
+          },
+          "required": ["string_id"]
+        }
+      ],
+      "description": "Id of localized string or message override."
+    },
+    "info_icon": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Text for button tooltip used to provide information about the doorhanger."
+            },
+            {
+              "type": "object",
+              "properties": {
+                "string_id": {
+                  "type": "string",
+                  "description": "Id of localized string used to provide information about the doorhanger."
+                }
+              },
+              "required": ["string_id"]
+            }
+          ]
+        },
+        "sumo_path": {
+          "type": "string",
+          "description": "Last part of the path in the URL to the support page with the information about the doorhanger.",
+          "examples": ["extensionpromotions", "extensionrecommendations"]
+        }
+      }
+    },
+    "heading_text": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "The message displayed in the title of the extension doorhanger"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string"
+            }
+          },
+          "required": ["string_id"],
+          "description": "Id of localized string for extension doorhanger title"
+        }
+      ],
+      "description": "Id of localized string or message override."
+    },
+    "addon": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "allOf": [
+            {"$ref": "#/definitions/plainText"},
+            {"description": "Addon name"}
+          ]
+        },
+        "author": {
+          "allOf": [
+            {"$ref": "#/definitions/plainText"},
+            {"description": "Addon author"}
+          ]
+        },
+        "icon": {
+          "allOf": [
+            {"$ref": "#/definitions/linkUrl"},
+            {"description": "Addon icon"}
+          ]
+        },
+        "rating": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Star rating"
+        },
+        "users": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Installed users"
+        },
+        "amo_url": {
+          "allOf": [
+            {"$ref": "#/definitions/linkUrl"},
+            {"description": "Link that offers more information related to the addon."}
+          ]
+        }
+      },
+      "required": ["title", "author", "icon", "amo_url"]
+    },
+    "text": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Description message of the addon."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string",
+              "description": "Id of string to localized addon description"
+            }
+          },
+          "required": ["string_id"]
+        }
+      ],
+      "description": "Id of localized string or message override."
+    },
+    "buttons": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "object",
+              "oneOf": [
+                {
+                  "properties": {
+                    "value": {
+                      "allOf": [
+                        {"$ref": "#/definitions/plainText"},
+                        {"description": "Button label override used when a localized version is not available."}
+                      ]
+                    },
+                    "attributes": {
+                      "type": "object",
+                      "properties": {
+                        "accesskey": {
+                          "type": "string",
+                          "description": "A single character to be used as a shortcut key for the secondary button. This should be one of the characters that appears in the button label."
+                        }
+                      },
+                      "required": ["accesskey"],
+                      "description": "Button attributes."
+                    }
+                  },
+                  "required": ["value", "attributes"]
+                },
+                {
+                  "properties": {
+                    "string_id": {
+                      "allOf": [
+                        {"$ref": "#/definitions/plainText"},
+                        {"description": "Id of localized string for button"}
+                      ]
+                    }
+                  },
+                  "required": ["string_id"]
+                }
+              ],
+              "description": "Id of localized string or message override."
+            },
+            "action": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Action dispatched by the button."
+                },
+                "data": {
+                  "properties": {
+                    "url": {
+                      "allOf": [
+                        {"$ref": "#/definitions/linkUrl"},
+                        {"description": "URL used in combination with the primary action dispatched."}
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "secondary": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "object",
+                "oneOf": [
+                  {
+                    "properties": {
+                      "value": {
+                        "allOf": [
+                          {"$ref": "#/definitions/plainText"},
+                          {"description": "Button label override used when a localized version is not available."}
+                        ]
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "properties": {
+                          "accesskey": {
+                            "type": "string",
+                            "description": "A single character to be used as a shortcut key for the secondary button. This should be one of the characters that appears in the button label."
+                          }
+                        },
+                        "required": ["accesskey"],
+                        "description": "Button attributes."
+                      }
+                    },
+                    "required": ["value", "attributes"]
+                  },
+                  {
+                    "properties": {
+                      "string_id": {
+                        "allOf": [
+                          {"$ref": "#/definitions/plainText"},
+                          {"description": "Id of localized string for button"}
+                        ]
+                      }
+                    },
+                    "required": ["string_id"]
+                  }
+                ],
+                "description": "Id of localized string or message override."
+              },
+              "action": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Action dispatched by the button."
+                  },
+                  "data": {
+                    "properties": {
+                      "url": {
+                        "allOf": [
+                          {"$ref": "#/definitions/linkUrl"},
+                          {"description": "URL used in combination with the primary action dispatched."}
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["bucket_id", "notification_text", "heading_text", "addon", "text", "buttons"]
+}

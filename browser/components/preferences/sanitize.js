@@ -27,5 +27,5 @@ var gSanitizeDialog = Object.freeze({
     let downloadsPref = Preferences.get("privacy.clearOnShutdown.downloads");
     let historyPref = Preferences.get("privacy.clearOnShutdown.history");
     downloadsPref.value = historyPref.value;
-  }
+  },
 });

@@ -24,7 +24,7 @@ var tests = [
     },
     onHidden(popup) {
       ok(this.testNotif.mainActionClicked, "main action has been triggered");
-    }
+    },
   },
   // Popup Notifications secondary actions should catch exceptions from callbacks
   { id: "Test#2",
@@ -38,7 +38,7 @@ var tests = [
     },
     onHidden(popup) {
       ok(this.testNotif.secondaryActionClicked, "secondary action has been triggered");
-    }
+    },
   },
   // Existing popup notification shouldn't disappear when adding a dismissed notification
   { id: "Test#3",
@@ -70,7 +70,7 @@ var tests = [
     onHidden(popup) {
       this.notification1.remove();
       this.notification2.remove();
-    }
+    },
   },
   // Showing should be able to modify the popup data
   { id: "Test#4",
@@ -92,7 +92,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       triggerMainCommand(popup);
     },
-    onHidden() { }
+    onHidden() { },
   },
   // Moving a tab to a new window should remove non-swappable notifications.
   { id: "Test#5",
@@ -120,7 +120,7 @@ var tests = [
       await waitForWindowReadyForPopupNotifications(window);
 
       goNext();
-    }
+    },
   },
   // Moving a tab to a new window should preserve swappable notifications.
   { id: "Test#6",
@@ -161,7 +161,7 @@ var tests = [
       await waitForWindowReadyForPopupNotifications(window);
 
       goNext();
-    }
+    },
   },
   // the main action callback can keep the notification.
   { id: "Test#8",
@@ -178,7 +178,7 @@ var tests = [
       ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback was triggered");
       ok(!this.notifyObj.removedCallbackTriggered, "removed callback wasn't triggered");
       this.notification.remove();
-    }
+    },
   },
   // a secondary action callback can keep the notification.
   { id: "Test#9",
@@ -195,7 +195,7 @@ var tests = [
       ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback was triggered");
       ok(!this.notifyObj.removedCallbackTriggered, "removed callback wasn't triggered");
       this.notification.remove();
-    }
+    },
   },
   // returning true in the showing callback should dismiss the notification.
   { id: "Test#10",
@@ -212,7 +212,7 @@ var tests = [
       ok(!notifyObj.shownCallbackTriggered, "the shown callback wasn't triggered");
       notification.remove();
       goNext();
-    }
+    },
   },
   // the main action button should apply non-default(no highlight) style.
   { id: "Test#11",
@@ -226,6 +226,6 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       dismissNotification(popup);
     },
-    onHidden() { }
+    onHidden() { },
   },
 ];

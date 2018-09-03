@@ -7,7 +7,6 @@
 #include "frontend/BinTokenReaderBase.h"
 
 #include "frontend/BinSource-macros.h"
-#include "gc/Zone.h"
 #include "js/Result.h"
 
 namespace js {
@@ -64,6 +63,13 @@ BinTokenReaderBase::raiseInvalidField(const char* kind, const BinField field)
     return raiseError(out.string());
 }
 
+#ifdef DEBUG
+bool
+BinTokenReaderBase::hasRaisedError() const
+{
+    return cx_->isExceptionPending();
+}
+#endif
 
 size_t
 BinTokenReaderBase::offset() const

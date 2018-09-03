@@ -57,7 +57,7 @@ iframe.onload = function iframe_onload1() {
         SimpleTest.finish();
       };
       iframe.src = SpecialPowers.Services.io.newFileURI(tmpFile).spec;
-    }
+    },
   };
   wbp.saveDocument(doc, tmpFile, tmpDir, null, 0, 0);
 

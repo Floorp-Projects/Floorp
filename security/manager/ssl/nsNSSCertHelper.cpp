@@ -777,12 +777,12 @@ ProcessExtKeyUsage(SECItem* extData, nsAString& text)
 void
 LossyUTF8ToUTF16(const char* str, uint32_t len, /*out*/ nsAString& result)
 {
-  nsDependentCSubstring substring(str, len);
-  if (IsUTF8(substring)) {
-    result.Assign(NS_ConvertUTF8toUTF16(substring));
+  auto span = MakeSpan(str, len);
+  if (IsUTF8(span)) {
+    CopyUTF8toUTF16(span, result);
   } else {
-    char16_t* newUTF16(ToNewUnicode(substring));
-    result.Adopt(newUTF16);
+    // Actually Latin1 despite ASCII in the legacy name
+    CopyASCIItoUTF16(span, result);
   }
 }
 

@@ -5,8 +5,8 @@
 add_task(async function setup() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "DisableSetDesktopBackground": true
-    }
+      "DisableSetDesktopBackground": true,
+    },
   });
 });
 
@@ -21,7 +21,7 @@ add_task(async function test_check_set_desktop_background() {
                                          {
                                            type: "contextmenu",
                                            button: 2,
-                                           centered: true
+                                           centered: true,
                                          },
                                          gBrowser.selectedBrowser);
   await promiseContextMenuOpen;

@@ -91,6 +91,9 @@ already_AddRefed<gfxXlibSurface>
 SurfaceDescriptorX11::OpenForeign() const
 {
   Display* display = DefaultXDisplay();
+  if (!display) {
+    return nullptr;
+  }
   Screen* screen = DefaultScreenOfDisplay(display);
 
   RefPtr<gfxXlibSurface> surf;

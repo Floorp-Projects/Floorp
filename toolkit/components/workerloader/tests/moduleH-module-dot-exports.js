@@ -7,7 +7,7 @@
 exports.key = "wrong value";
 
 module.exports = {
-  key: "value"
+  key: "value",
 };
 
 // This should also be overwritten by module.exports

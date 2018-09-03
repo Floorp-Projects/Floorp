@@ -77,7 +77,7 @@ var TestRunner = {
         ok(false, error + "\n" + error.stack);
       });
     }
-  }
+  },
 };
 
 /**

@@ -39,8 +39,8 @@ runWithMSE(async (ms, v) => {
   await fetchAndLoad(sb, "bipbop/bipbop_480_624kbps-video", ["1"], ".m4s");
   ms.endOfStream();
   await Promise.all([once(ms, "sourceended"), once(v, "playing"), once(v, "ended")]);
-  if (v.width, 640, "has proper width");
-  if (v.height, 480, "has proper height");
+  is(v.videoWidth, 640, "has proper width");
+  is(v.videoHeight, 480, "has proper height");
   SimpleTest.finish();
 });
 </script>

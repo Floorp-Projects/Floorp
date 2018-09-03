@@ -153,6 +153,7 @@
 
 .tab-throbber,
 .tab-throbber-fallback,
+.tab-icon-pending,
 .tab-icon-image,
 .tab-sharing-icon-overlay,
 .tab-icon-sound,
@@ -162,6 +163,7 @@
 
 .tab-throbber,
 .tab-throbber-fallback,
+.tab-icon-pending,
 .tab-icon-image,
 .tab-sharing-icon-overlay {
   height: 16px;
@@ -171,6 +173,7 @@
 .tab-throbber:not([pinned]),
 .tab-throbber-fallback:not([pinned]),
 .tab-sharing-icon-overlay:not([pinned]),
+.tab-icon-pending:not([pinned]),
 .tab-icon-image:not([pinned]) {
   margin-inline-end: 6px;
 }

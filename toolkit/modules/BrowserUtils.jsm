@@ -184,7 +184,7 @@ var BrowserUtils = {
       left: x * fullZoom,
       top: y * fullZoom,
       width: rect.width * fullZoom,
-      height: rect.height * fullZoom
+      height: rect.height * fullZoom,
     };
 
     return rect;

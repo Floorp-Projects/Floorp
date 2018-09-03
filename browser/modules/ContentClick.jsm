@@ -80,5 +80,5 @@ var ContentClick = {
     params.allowInheritPrincipal = true;
 
     window.openLinkIn(json.href, where, params);
-  }
+  },
 };

@@ -10,7 +10,7 @@
 add_task(async function() {
   // allow top level data: URI navigations, otherwise clicking a data: link fails
   await SpecialPowers.pushPrefEnv({
-    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]]
+    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]],
   });
   // This URL has the following frames:
   //  + data:text/html,A (static)
@@ -52,7 +52,7 @@ add_task(async function() {
 add_task(async function() {
   // allow top level data: URI navigations, otherwise clicking a data: link fails
   await SpecialPowers.pushPrefEnv({
-    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]]
+    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]],
   });
   // This URL has the following frames:
   //  + data:text/html,A (static)

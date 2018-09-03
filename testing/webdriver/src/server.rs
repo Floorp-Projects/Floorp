@@ -34,7 +34,7 @@ pub struct Session {
 
 impl Session {
     fn new(id: String) -> Session {
-        Session { id: id }
+        Session { id }
     }
 }
 
@@ -57,7 +57,7 @@ struct Dispatcher<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> {
 impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
     fn new(handler: T) -> Dispatcher<T, U> {
         Dispatcher {
-            handler: handler,
+            handler,
             session: None,
             extension_type: PhantomData,
         }
@@ -157,11 +157,14 @@ struct HttpHandler<U: WebDriverExtensionRoute> {
     api: Arc<Mutex<WebDriverHttpApi<U>>>,
 }
 
-impl <U: WebDriverExtensionRoute> HttpHandler<U> {
-    fn new(api: Arc<Mutex<WebDriverHttpApi<U>>>, chan: Sender<DispatchMessage<U>>) -> HttpHandler<U> {
+impl<U: WebDriverExtensionRoute> HttpHandler<U> {
+    fn new(
+        api: Arc<Mutex<WebDriverHttpApi<U>>>,
+        chan: Sender<DispatchMessage<U>>,
+    ) -> HttpHandler<U> {
         HttpHandler {
             chan: Arc::new(Mutex::new(chan)),
-            api: api,
+            api,
         }
     }
 }

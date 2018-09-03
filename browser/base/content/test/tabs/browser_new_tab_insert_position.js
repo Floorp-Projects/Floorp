@@ -18,7 +18,7 @@ function promiseBrowserStateRestored(state) {
   // that the active tab is loaded and restored.
   let promise = Promise.all([
     TestUtils.topicObserved("sessionstore-browser-state-restored"),
-    BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "SSTabRestored")
+    BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "SSTabRestored"),
   ]);
   SessionStore.setBrowserState(state);
   return promise;
@@ -29,7 +29,7 @@ function promiseRemoveThenUndoCloseTab(tab) {
   // that the active tab is loaded and restored.
   let promise = Promise.all([
     TestUtils.topicObserved("sessionstore-closed-objects-changed"),
-    BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "SSTabRestored")
+    BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "SSTabRestored"),
   ]);
   BrowserTestUtils.removeTab(tab);
   SessionStore.undoCloseTab(window, 0);

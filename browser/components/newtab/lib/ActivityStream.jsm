@@ -77,6 +77,15 @@ const PREFS_CONFIG = new Map([
     title: "Show sponsored cards in spoc experiment (show_spocs in topstories.options has to be set to true as well)",
     value: true
   }],
+  ["pocketCta", {
+    title: "Pocket cta and button for logged out users.",
+    value: JSON.stringify({
+      cta_button: "",
+      cta_text: "",
+      cta_url: "",
+      use_cta: false
+    })
+  }],
   ["filterAdult", {
     title: "Remove adult pages from sites, highlights, etc.",
     value: true
@@ -143,10 +152,6 @@ const PREFS_CONFIG = new Map([
     title: "Number of rows of Highlights to display",
     value: 2
   }],
-  ["section.topstories.showDisclaimer", {
-    title: "Boolean flag that decides whether or not to show the topstories disclaimer.",
-    value: true
-  }],
   ["section.topstories.rows", {
     title: "Number of rows of Top Stories to display",
     value: 1
@@ -192,10 +197,6 @@ const PREFS_CONFIG = new Map([
     title: "Is the message center experiment on?",
     value: false
   }],
-  ["asrouterOnboardingCohort", {
-    title: "What cohort is the user in?",
-    value: 0
-  }],
   ["asrouter.messageProviders", {
     title: "Configuration for ASRouter message providers",
 
@@ -203,16 +204,26 @@ const PREFS_CONFIG = new Map([
      * Each provider must have a unique id and a type of "local" or "remote".
      * Local providers must specify the name of an ASRouter message provider.
      * Remote providers must specify a `url` and an `updateCycleInMs`.
+     * Each provider must also have an `enabled` boolean.
      */
     value: JSON.stringify([{
       id: "onboarding",
       type: "local",
-      localProvider: "OnboardingMessageProvider"
+      localProvider: "OnboardingMessageProvider",
+      enabled: false,
+      cohort: 0
     }, {
       id: "snippets",
       type: "remote",
-      url: "https://activity-stream-icons.services.mozilla.com/v1/messages.json.br",
-      updateCycleInMs: ONE_HOUR_IN_MS * 4
+      url: "https://snippets.cdn.mozilla.net/us-west/bundles/bundle_d6d90fb9098ce8b45e60acf601bcb91b68322309.json",
+      updateCycleInMs: ONE_HOUR_IN_MS * 4,
+      enabled: AppConstants.MOZ_UPDATE_CHANNEL !== "release"
+    }, {
+      id: "cfr",
+      type: "local",
+      localProvider: "CFRMessageProvider",
+      enabled: AppConstants.MOZ_UPDATE_CHANNEL !== "release",
+      cohort: 0
     }])
   }]
 ]);

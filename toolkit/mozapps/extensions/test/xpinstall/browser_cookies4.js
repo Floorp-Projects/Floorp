@@ -17,7 +17,7 @@ function test() {
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 1);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "Cookie check": TESTROOT2 + "cookieRedirect.sjs?" + TESTROOT + "amosigned.xpi"
+    "Cookie check": TESTROOT2 + "cookieRedirect.sjs?" + TESTROOT + "amosigned.xpi",
   }));
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);

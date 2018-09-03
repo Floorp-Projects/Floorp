@@ -18,8 +18,7 @@ class Font extends PureComponent {
   static get propTypes() {
     return {
       font: PropTypes.shape(Types.font).isRequired,
-      fontOptions: PropTypes.shape(Types.fontOptions).isRequired,
-      onPreviewFonts: PropTypes.func.isRequired,
+      onPreviewClick: PropTypes.func,
       onToggleFontHighlight: PropTypes.func.isRequired,
     };
   }
@@ -108,12 +107,9 @@ class Font extends PureComponent {
   render() {
     const {
       font,
-      fontOptions,
-      onPreviewFonts,
+      onPreviewClick,
       onToggleFontHighlight,
     } = this.props;
-
-    const { previewText } = fontOptions;
 
     const {
       CSSFamilyName,
@@ -132,7 +128,7 @@ class Font extends PureComponent {
         FontName({ font, onToggleFontHighlight })
       ),
       FontOrigin({ font }),
-      FontPreview({ previewText, previewUrl, onPreviewFonts }),
+      FontPreview({ onPreviewClick, previewUrl }),
       this.renderFontCSSCode(rule, ruleText)
     );
   }

@@ -24,6 +24,15 @@ pub struct Token {
     pub raw: Box<[u8]>,
 }
 
+impl<'a> From<(Kind, &'a [u8])> for Token {
+	fn from((kind, value): (Kind, &'a [u8])) -> Token {
+		Token {
+			kind: kind,
+			raw: value.to_owned().into_boxed_slice()
+		}
+	}
+}
+
 /// Remove all comment tokens from a vector of tokens
 pub fn remove_comments(v: &mut Vec<Token>) -> &mut Vec<Token> {
 	v.retain(|t|t.kind!=Kind::Comment);

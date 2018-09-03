@@ -1876,6 +1876,9 @@ WasmTableObject::create(JSContext* cx, const Limits& limits)
 
     TableDesc td(TableKind::AnyFunction, limits);
     td.external = true;
+#ifdef WASM_PRIVATE_REFTYPES
+    td.importedOrExported = true;
+#endif
 
     SharedTable table = Table::create(cx, td, obj);
     if (!table)

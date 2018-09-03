@@ -110,7 +110,7 @@ var windowObserver = {
         });
       }
     }, {once: true});
-  }
+  },
 };
 
 Services.ww.registerNotification(windowObserver);

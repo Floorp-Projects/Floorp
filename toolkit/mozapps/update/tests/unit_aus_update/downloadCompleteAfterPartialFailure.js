@@ -22,11 +22,11 @@ const WindowWatcher = {
         // shutdown.
         gUpdateManager.cleanupActiveUpdate();
         executeSoon(waitForUpdateXMLFiles);
-      }
+      },
     };
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowWatcher])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowWatcher]),
 };
 
 function run_test() {

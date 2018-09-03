@@ -143,7 +143,9 @@ HRESULT CUpdateCallbackConsole::OpenResult(
       _so->Flush();
     if (_se)
     {
-      *_se << kError << name << endl;
+      *_se << kError;
+      _se->NormalizePrint_wstr(name);
+      *_se << endl;
       HRESULT res = Print_OpenArchive_Error(*_se, codecs, arcLink);
       RINOK(res);
       _se->Flush();
@@ -185,7 +187,9 @@ void CCallbackConsoleBase::CommonError(const FString &path, DWORD systemError, b
 
     *_se << endl << (isWarning ? kWarning : kError)
         << NError::MyFormatMessage(systemError)
-        << endl << fs2us(path) << endl << endl;
+        << endl;
+    _se->NormalizePrint_UString(fs2us(path));
+    *_se << endl << endl;
     _se->Flush();
   }
 }
@@ -281,8 +285,8 @@ HRESULT CUpdateCallbackConsole::StartArchive(const wchar_t *name, bool updating)
   if (_so)
   {
     *_so << (updating ? kUpdatingArchiveMessage : kCreatingArchiveMessage);
-    if (name != 0)
-      *_so << name;
+    if (name)
+      _so->NormalizePrint_wstr(name);
     else
       *_so << k_StdOut_ArcName;
    *_so << endl << endl;
@@ -343,6 +347,7 @@ HRESULT CUpdateCallbackConsole::DeletingAfterArchiving(const FString &path, bool
         _tempA.Add_Space();
         *_so << _tempA;
         _tempU = fs2us(path);
+        _so->Normalize_UString(_tempU);
         _so->PrintUString(_tempU, _tempA);
         *_so << endl;
         if (NeedFlush)
@@ -475,7 +480,10 @@ HRESULT CCallbackConsoleBase::PrintProgress(const wchar_t *name, const char *com
 
     _tempU.Empty();
     if (name)
+    {
       _tempU = name;
+      _so->Normalize_UString(_tempU);
+    }
     _so->PrintUString(_tempU, _tempA);
     *_so << endl;
     if (NeedFlush)
@@ -568,7 +576,9 @@ HRESULT CUpdateCallbackConsole::ReportExtractResult(Int32 opRes, Int32 isEncrypt
 
       AString s;
       SetExtractErrorMessage(opRes, isEncrypted, s);
-      *_se << s << " : " << endl << name << endl << endl;
+      *_se << s << " : " << endl;
+      _se->NormalizePrint_wstr(name);
+      *_se << endl << endl;
       _se->Flush();
     }
     return S_OK;

@@ -27,23 +27,23 @@ var inputDatas = [
   },
   { url: "malware1.example.com/",
     db: "mochi1-malware-simple",
-    provider: "mozilla"
+    provider: "mozilla",
   },
   { url: "malware2.example.com/",
     db: "mochi2-unwanted-simple",
-    provider: "mozilla"
+    provider: "mozilla",
   },
   { url: "malware2.example.com/",
     db: "mochi2-malware-simple",
-    provider: "mozilla"
+    provider: "mozilla",
   },
   { url: "malware3.example.com/",
     db: "mochig3-malware-simple",
-    provider: "google"
+    provider: "google",
   },
   { url: "malware3.example.com/",
     db: "mochim3-malware-simple",
-    provider: "mozilla"
+    provider: "mozilla",
   },
 ];
 
@@ -75,7 +75,7 @@ var testDatas = [
               fullhash: (function() {
                 return hash("malware.example.com/");
               })(),
-            }
+            },
   },
   // Match multiple tables, only one has valid provider
   { url: "http://malware1.example.com",
@@ -85,7 +85,7 @@ var testDatas = [
               fullhash: (function() {
                 return hash("malware1.example.com/");
               })(),
-            }
+            },
   },
   // Match multiple tables, handle order
   { url: "http://malware2.example.com",
@@ -95,7 +95,7 @@ var testDatas = [
               fullhash: (function() {
                 return hash("malware2.example.com/");
               })(),
-            }
+            },
   },
   // Match multiple tables, handle order
   { url: "http://malware3.example.com",
@@ -105,7 +105,7 @@ var testDatas = [
               fullhash: (function() {
                 return hash("malware3.example.com/");
               })(),
-            }
+            },
   },
 
 ];

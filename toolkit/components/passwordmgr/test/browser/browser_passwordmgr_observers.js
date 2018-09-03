@@ -48,7 +48,7 @@ add_task(async function test() {
             break;
         }
       }
-    }
+    },
   };
 
   SimpleTest.waitForFocus(startTest, pmDialog);

@@ -49,7 +49,7 @@ amContentHandler.prototype = {
       icon: null,
       mimetype: XPI_CONTENT_TYPE,
       triggeringPrincipal: aRequest.loadInfo.triggeringPrincipal,
-      callbackID: -1
+      callbackID: -1,
     };
 
     if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
@@ -66,7 +66,7 @@ amContentHandler.prototype = {
         listener.wrappedJSObject.receiveMessage({
           name: MSG_INSTALL_ADDON,
           target: element,
-          data: install
+          data: install,
         });
         return;
       }
@@ -85,7 +85,7 @@ amContentHandler.prototype = {
     let msg = "amContentHandler.js: " + (aMsg.join ? aMsg.join("") : aMsg);
     Services.console.logStringMessage(msg);
     dump(msg + "\n");
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([amContentHandler]);

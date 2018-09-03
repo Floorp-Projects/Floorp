@@ -49,10 +49,10 @@ var messageHandlers = {
       composition: {
         string: data,
         clauses: [
-          { length: data.length, attr: content.COMPOSITION_ATTR_RAW_CLAUSE }
-        ]
+          { length: data.length, attr: content.COMPOSITION_ATTR_RAW_CLAUSE },
+        ],
       },
-      caret: { start: data.length, length: 0 }
+      caret: { start: data.length, length: 0 },
     });
     let wait = arg.waitForSuggestions ? waitForSuggestions : cb => cb();
     wait(ack.bind(null, "changeComposition"));

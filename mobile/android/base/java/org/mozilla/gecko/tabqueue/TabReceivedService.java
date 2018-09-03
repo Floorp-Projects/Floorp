@@ -70,7 +70,7 @@ public class TabReceivedService extends JobIntentService {
 
         if (!AppConstants.Versions.preO) {
             builder.setChannelId(NotificationHelper.getInstance(this)
-                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
+                    .getNotificationChannel(NotificationHelper.Channel.SYNCED_TABS).getId());
         }
 
         // Trigger "heads-up" notification mode on supported Android versions.

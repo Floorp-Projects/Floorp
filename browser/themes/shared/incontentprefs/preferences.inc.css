@@ -923,5 +923,14 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 }
 
 #defaultBrowserLanguage {
+  margin-inline-start: 0;
   min-width: 20em;
+}
+
+#BrowserLanguagesDialog > .dialog-button-box > .dialog-button[dlgtype="help"] {
+  margin-inline-start: 0;
+}
+
+#activeLocales {
+  min-height: 200px;
 }

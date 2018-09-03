@@ -21,7 +21,7 @@ var MockWebChannelBroker = {
   },
   unregisterChannel(channelToRemove) {
     this._channelMap.delete(channelToRemove);
-  }
+  },
 };
 
 /**
@@ -34,7 +34,7 @@ var MockWebChannelBroker = {
 add_task(function test_web_channel_listen() {
   return new Promise((resolve, reject) => {
     let channel = new WebChannel(VALID_WEB_CHANNEL_ID, VALID_WEB_CHANNEL_ORIGIN, {
-      broker: MockWebChannelBroker
+      broker: MockWebChannelBroker,
     });
     let delivered = 0;
     Assert.equal(channel.id, VALID_WEB_CHANNEL_ID);
@@ -59,15 +59,15 @@ add_task(function test_web_channel_listen() {
     channel.deliver({
       id: VALID_WEB_CHANNEL_ID,
       message: {
-        command: "one"
-      }
+        command: "one",
+      },
     }, { sender: true });
 
     channel.deliver({
       id: VALID_WEB_CHANNEL_ID,
       message: {
-        command: "two"
-      }
+        command: "two",
+      },
     }, { sender: true });
   });
 });
@@ -81,7 +81,7 @@ add_task(function test_web_channel_listen_permission() {
     Services.perms.add(VALID_WEB_CHANNEL_ORIGIN, TEST_PERMISSION_NAME, Services.perms.ALLOW_ACTION);
     registerCleanupFunction(() => Services.perms.remove(VALID_WEB_CHANNEL_ORIGIN, TEST_PERMISSION_NAME));
     let channel = new WebChannel(VALID_WEB_CHANNEL_ID, TEST_PERMISSION_NAME, {
-      broker: MockWebChannelBroker
+      broker: MockWebChannelBroker,
     });
     let delivered = 0;
     Assert.equal(channel.id, VALID_WEB_CHANNEL_ID);
@@ -106,15 +106,15 @@ add_task(function test_web_channel_listen_permission() {
     channel.deliver({
       id: VALID_WEB_CHANNEL_ID,
       message: {
-        command: "one"
-      }
+        command: "one",
+      },
     }, { sender: true });
 
     channel.deliver({
       id: VALID_WEB_CHANNEL_ID,
       message: {
-        command: "two"
-      }
+        command: "two",
+      },
     }, { sender: true });
   });
 });

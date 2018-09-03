@@ -16,7 +16,6 @@ DevToolsModules(
 BROWSER_CHROME_MANIFESTS += [
     'test/browser.ini'
 ]
-XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 with Files('**'):
     BUG_COMPONENT = ('DevTools', 'about:debugging')

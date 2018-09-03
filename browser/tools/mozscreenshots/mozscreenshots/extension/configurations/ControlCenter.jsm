@@ -42,7 +42,7 @@ var ControlCenter = {
       async applyConfig() {
         let channel = NetUtil.newChannel({
             uri: "chrome://mozscreenshots/content/lib/mozscreenshots.html",
-            loadUsingSystemPrincipal: true
+            loadUsingSystemPrincipal: true,
         });
         channel = channel.QueryInterface(Ci.nsIFileChannel);
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");

@@ -92,7 +92,7 @@ var SessionSaver = Object.freeze({
    */
   cancel() {
     SessionSaverInternal.cancel();
-  }
+  },
 });
 
 /**

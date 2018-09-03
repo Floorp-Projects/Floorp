@@ -23,7 +23,7 @@ add_task(async function setup() {
   // make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({"set": [
     ["privacy.userContext.enabled", true],
-    ["dom.ipc.processCount", 1]
+    ["dom.ipc.processCount", 1],
   ]});
 });
 
@@ -81,7 +81,7 @@ function promiseAllRegistered() {
           swm.removeListener(listener);
           resolve();
         }
-      }
+      },
     };
     swm.addListener(listener);
   });
@@ -96,7 +96,7 @@ function promiseUnregister(info) {
       },
       unregisterFailed(aState) {
         ok(false, "unregister should succeed");
-      }
+      },
     }, info.scope);
   });
 }

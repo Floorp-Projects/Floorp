@@ -213,6 +213,6 @@ function initialize() {
     AddonBlocklistClient,
     PluginBlocklistClient,
     GfxBlocklistClient,
-    PinningBlocklistClient
+    PinningBlocklistClient,
   };
 }

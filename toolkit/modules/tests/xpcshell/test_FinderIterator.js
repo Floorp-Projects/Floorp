@@ -20,11 +20,11 @@ var gMockWindow = {
   setTimeout(cb, delay) {
     Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer)
       .initWithCallback(cb, delay, Ci.nsITimer.TYPE_ONE_SHOT);
-  }
+  },
 };
 
 var gMockFinder = {
-  _getWindow() { return gMockWindow; }
+  _getWindow() { return gMockWindow; },
 };
 
 function prepareIterator(findText, rangeCount) {
@@ -47,9 +47,9 @@ add_task(async function test_start() {
       onIteratorRangeFound(range) {
         ++count;
         Assert.equal(range.toString(), findText, "Text content should match");
-      }
+      },
     },
-    word: findText
+    word: findText,
   });
 
   Assert.equal(rangeCount, count, "Amount of ranges yielded should match!");
@@ -71,7 +71,7 @@ add_task(async function test_valid_arguments() {
     entireWord: false,
     finder: gMockFinder,
     listener: { onIteratorRangeFound(range) { ++count; } },
-    word: findText
+    word: findText,
   });
 
   let params = FinderIterator._previousParams;
@@ -83,14 +83,14 @@ add_task(async function test_valid_arguments() {
   Assert.throws(() => FinderIterator.start({
     entireWord: false,
     listener: { onIteratorRangeFound(range) { ++count; } },
-    word: findText
+    word: findText,
   }), /Missing required option 'caseSensitive'/, "Should throw when missing an argument");
   FinderIterator.reset();
 
   Assert.throws(() => FinderIterator.start({
     caseSensitive: false,
     listener: { onIteratorRangeFound(range) { ++count; } },
-    word: findText
+    word: findText,
   }), /Missing required option 'entireWord'/, "Should throw when missing an argument");
   FinderIterator.reset();
 
@@ -98,7 +98,7 @@ add_task(async function test_valid_arguments() {
     caseSensitive: false,
     entireWord: false,
     listener: { onIteratorRangeFound(range) { ++count; } },
-    word: findText
+    word: findText,
   }), /Missing required option 'finder'/, "Should throw when missing an argument");
   FinderIterator.reset();
 
@@ -106,7 +106,7 @@ add_task(async function test_valid_arguments() {
     caseSensitive: true,
     entireWord: false,
     finder: gMockFinder,
-    word: findText
+    word: findText,
   }), /Missing valid, required option 'listener'/, "Should throw when missing an argument");
   FinderIterator.reset();
 
@@ -132,7 +132,7 @@ add_task(async function test_stop() {
     entireWord: false,
     finder: gMockFinder,
     listener: { onIteratorRangeFound(range) { ++count; } },
-    word: findText
+    word: findText,
   });
 
   FinderIterator.stop();
@@ -155,7 +155,7 @@ add_task(async function test_reset() {
     entireWord: false,
     finder: gMockFinder,
     listener: { onIteratorRangeFound(range) { ++count; } },
-    word: findText
+    word: findText,
   });
 
   Assert.ok(FinderIterator.running, "Yup, running we are");
@@ -185,7 +185,7 @@ add_task(async function test_parallel_starts() {
     entireWord: false,
     finder: gMockFinder,
     listener: { onIteratorRangeFound(range) { ++count; } },
-    word: findText
+    word: findText,
   });
 
   await new Promise(resolve => gMockWindow.setTimeout(resolve, 120));
@@ -197,7 +197,7 @@ add_task(async function test_parallel_starts() {
     entireWord: false,
     finder: gMockFinder,
     listener: { onIteratorRangeFound(range) { ++count2; } },
-    word: findText
+    word: findText,
   });
 
   // Let the iterator run for a little while longer before we assert the world.
@@ -231,7 +231,7 @@ add_task(async function test_allowDistance() {
     entireWord: false,
     finder: gMockFinder,
     listener: { onIteratorRangeFound(range) { ++count; } },
-    word: findText
+    word: findText,
   });
 
   let count2 = 0;
@@ -240,7 +240,7 @@ add_task(async function test_allowDistance() {
     entireWord: false,
     finder: gMockFinder,
     listener: { onIteratorRangeFound(range) { ++count2; } },
-    word: "gu"
+    word: "gu",
   });
 
   let count3 = 0;
@@ -250,7 +250,7 @@ add_task(async function test_allowDistance() {
     entireWord: false,
     finder: gMockFinder,
     listener: { onIteratorRangeFound(range) { ++count3; } },
-    word: "gu"
+    word: "gu",
   });
 
   await Promise.all([whenDone, whenDone2, whenDone3]);

@@ -35,17 +35,17 @@ function testBug600545() {
         { entries: [{ url: "http://example.com#1", triggeringPrincipal_base64 }] },
         { entries: [{ url: "http://example.com#2", triggeringPrincipal_base64 }] },
       ],
-      selected: 2
+      selected: 2,
     },
     {
       tabs: [
         { entries: [{ url: "http://example.com#3", triggeringPrincipal_base64 }] },
         { entries: [{ url: "http://example.com#4", triggeringPrincipal_base64 }] },
         { entries: [{ url: "http://example.com#5", triggeringPrincipal_base64 }] },
-        { entries: [{ url: "http://example.com#6", triggeringPrincipal_base64 }] }
+        { entries: [{ url: "http://example.com#6", triggeringPrincipal_base64 }] },
       ],
-      selected: 3
-    }
+      selected: 3,
+    },
   ] };
 
   waitForBrowserState(state, function() {

@@ -69,32 +69,32 @@ const ActionSchemas = {
     required: [
       "name",
       "description",
-      "addonUrl"
+      "addonUrl",
     ],
     properties: {
       name: {
         description: "User-facing name of the study",
         type: "string",
-        minLength: 1
+        minLength: 1,
       },
       description: {
         description: "User-facing description of the study",
         type: "string",
-        minLength: 1
+        minLength: 1,
       },
       addonUrl: {
         description: "URL of the add-on XPI file",
         type: "string",
         format: "uri",
-        minLength: 1
+        minLength: 1,
       },
       isEnrollmentPaused: {
         description: "If true, new users will not be enrolled in the study.",
         type: "boolean",
-        default: false
-      }
-    }
-  }
+        default: false,
+      },
+    },
+  },
 };
 
 // Legacy name used on Normandy server

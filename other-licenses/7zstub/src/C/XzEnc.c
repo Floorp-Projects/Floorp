@@ -1,5 +1,5 @@
 /* XzEnc.c -- Xz Encode
-2017-08-25 : Igor Pavlov : Public domain */
+2018-04-28 : Igor Pavlov : Public domain */
 
 #include "Precomp.h"
 
@@ -136,7 +136,7 @@ static void XzEncIndex_Free(CXzEncIndex *p, ISzAllocPtr alloc)
 
 static SRes XzEncIndex_ReAlloc(CXzEncIndex *p, size_t newSize, ISzAllocPtr alloc)
 {
-  Byte *blocks = ISzAlloc_Alloc(alloc, newSize);
+  Byte *blocks = (Byte *)ISzAlloc_Alloc(alloc, newSize);
   if (!blocks)
     return SZ_ERROR_MEM;
   if (p->size != 0)
@@ -329,7 +329,7 @@ static SRes SeqInFilter_Init(CSeqInFilter *p, const CXzFilter *props, ISzAllocPt
 {
   if (!p->buf)
   {
-    p->buf = ISzAlloc_Alloc(alloc, FILTER_BUF_SIZE);
+    p->buf = (Byte *)ISzAlloc_Alloc(alloc, FILTER_BUF_SIZE);
     if (!p->buf)
       return SZ_ERROR_MEM;
   }
@@ -362,13 +362,16 @@ static SRes SeqInFilter_Read(const ISeqInStream *pp, void *data, size_t *size)
     }
     {
       SizeT srcLen = p->endPos - p->curPos;
-      int wasFinished;
+      ECoderStatus status;
       SRes res;
       *size = sizeOriginal;
-      res = p->StateCoder.Code(p->StateCoder.p, data, size, p->buf + p->curPos, &srcLen,
-        p->srcWasFinished, CODER_FINISH_ANY, &wasFinished);
+      res = p->StateCoder.Code2(p->StateCoder.p,
+          data, size,
+          p->buf + p->curPos, &srcLen,
+          p->srcWasFinished, CODER_FINISH_ANY,
+          &status);
       p->curPos += srcLen;
-      if (*size != 0 || srcLen == 0 || res != 0)
+      if (*size != 0 || srcLen == 0 || res != SZ_OK)
         return res;
     }
   }
@@ -1061,7 +1064,7 @@ static SRes XzEnc_MtCallback_Code(void *pp, unsigned coderIndex, unsigned outBuf
 
   if (!dest)
   {
-    dest = ISzAlloc_Alloc(me->alloc, me->outBufSize);
+    dest = (Byte *)ISzAlloc_Alloc(me->alloc, me->outBufSize);
     if (!dest)
       return SZ_ERROR_MEM;
     me->outBufs[outBufIndex] = dest;
@@ -1069,7 +1072,7 @@ static SRes XzEnc_MtCallback_Code(void *pp, unsigned coderIndex, unsigned outBuf
   
   MtProgressThunk_CreateVTable(&progressThunk);
   progressThunk.mtProgress = &me->mtCoder.mtProgress;
-  progressThunk.index = coderIndex;
+  MtProgressThunk_Init(&progressThunk);
 
   {
     CXzEncBlockInfo blockSizes;
@@ -1230,7 +1233,7 @@ SRes XzEnc_Encode(CXzEncHandle pp, ISeqOutStream *outStream, ISeqInStream *inStr
         if (!p->outBufs[0] || t2 != p->outBufSize)
         {
           XzEnc_FreeOutBufs(p);
-          p->outBufs[0] = ISzAlloc_Alloc(p->alloc, t2);
+          p->outBufs[0] = (Byte *)ISzAlloc_Alloc(p->alloc, t2);
           if (!p->outBufs[0])
             return SZ_ERROR_MEM;
           p->outBufSize = t2;
@@ -1251,6 +1254,8 @@ SRes XzEnc_Encode(CXzEncHandle pp, ISeqOutStream *outStream, ISeqInStream *inStr
           && props->reduceSize >= progress2.inOffset)
         rem = props->reduceSize - progress2.inOffset;
       */
+
+      blockSizes.headerSize = 0; // for GCC
       
       RINOK(Xz_CompressBlock(
           &p->lzmaf_Items[0],

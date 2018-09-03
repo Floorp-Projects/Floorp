@@ -81,6 +81,15 @@ ReplayDebugger.prototype = {
     return data;
   },
 
+  // Send a request that requires the child process to perform actions that
+  // diverge from the recording. In such cases we want to be interacting with a
+  // replaying process (if there is one), as recording child processes won't
+  // provide useful responses to such requests.
+  _sendRequestAllowDiverge(request) {
+    RecordReplayControl.maybeSwitchToReplayingChild();
+    return this._sendRequest(request);
+  },
+
   _setBreakpoint(handler, position, data) {
     const id = RecordReplayControl.setBreakpoint(handler, position);
     this._breakpoints.push({id, position, data});
@@ -162,7 +171,8 @@ ReplayDebugger.prototype = {
   },
 
   findAllConsoleMessages() {
-    return this._sendRequest({ type: "findConsoleMessages" });
+    const messages = this._sendRequest({ type: "findConsoleMessages" });
+    return messages.map(this._convertConsoleMessage.bind(this));
   },
 
   /////////////////////////////////////////////////////////
@@ -262,6 +272,21 @@ ReplayDebugger.prototype = {
   },
 
   /////////////////////////////////////////////////////////
+  // Console Message methods
+  /////////////////////////////////////////////////////////
+
+  _convertConsoleMessage(message) {
+    // Console API message arguments need conversion to debuggee values, but
+    // other contents of the message can be left alone.
+    if (message.messageType == "ConsoleAPI" && message.arguments) {
+      for (let i = 0; i < message.arguments.length; i++) {
+        message.arguments[i] = this._convertValue(message.arguments[i]);
+      }
+    }
+    return message;
+  },
+
+  /////////////////////////////////////////////////////////
   // Handlers
   /////////////////////////////////////////////////////////
 
@@ -306,7 +331,10 @@ ReplayDebugger.prototype = {
                                () => handler.call(this, this.getNewestFrame()));
   },
 
-  _getNewConsoleMessage() { return this._sendRequest({ type: "getNewConsoleMessage" }); },
+  _getNewConsoleMessage() {
+    const message = this._sendRequest({ type: "getNewConsoleMessage" });
+    return this._convertConsoleMessage(message);
+  },
 
   get onConsoleMessage() {
     return this._breakpointKindGetter("ConsoleMessage");
@@ -426,8 +454,12 @@ ReplayDebuggerFrame.prototype = {
   get live() { return true; },
 
   eval(text, options) {
-    const rv = this._dbg._sendRequest({ type: "frameEvaluate",
-                                        index: this._data.index, text, options });
+    const rv = this._dbg._sendRequestAllowDiverge({
+      type: "frameEvaluate",
+      index: this._data.index,
+      text,
+      options
+    });
     return this._dbg._convertCompletionValue(rv);
   },
 
@@ -565,7 +597,7 @@ ReplayDebuggerObject.prototype = {
 
   _ensureProperties() {
     if (!this._properties) {
-      const properties = this._dbg._sendRequest({
+      const properties = this._dbg._sendRequestAllowDiverge({
         type: "getObjectProperties",
         id: this._data.id
       });
@@ -598,8 +630,8 @@ ReplayDebuggerObject.prototype = {
   asEnvironment: NYI,
   executeInGlobal: NYI,
   executeInGlobalWithBindings: NYI,
-  makeDebuggeeValue: NYI,
 
+  makeDebuggeeValue: NotAllowed,
   preventExtensions: NotAllowed,
   seal: NotAllowed,
   freeze: NotAllowed,
@@ -633,8 +665,10 @@ ReplayDebuggerEnvironment.prototype = {
 
   _ensureNames() {
     if (!this._names) {
-      const names =
-        this._dbg._sendRequest({ type: "getEnvironmentNames", id: this._data.id });
+      const names = this._dbg._sendRequestAllowDiverge({
+        type: "getEnvironmentNames",
+        id: this._data.id
+      });
       this._names = {};
       names.forEach(({ name, value }) => {
         this._names[name] = this._dbg._convertValue(value);

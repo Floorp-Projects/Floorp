@@ -318,7 +318,7 @@ InlineSpellChecker.prototype = {
       this.mRemote.ignoreWord();
     else
       this.mInlineSpellChecker.ignoreWord(this.mMisspelling);
-  }
+  },
 };
 
 var SpellCheckHelper = {
@@ -507,5 +507,5 @@ RemoteSpellChecker.prototype = {
 
     this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:recheck", {});
   },
-  uninit() { this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:uninit", {}); }
+  uninit() { this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:uninit", {}); },
 };

@@ -25,7 +25,8 @@ class Task(object):
     display, comparison, serialization, etc. It has no functionality of its own.
     """
     def __init__(self, kind, label, attributes, task,
-                 optimization=None, dependencies=None):
+                 optimization=None, dependencies=None,
+                 release_artifacts=None):
         self.kind = kind
         self.label = label
         self.attributes = attributes
@@ -37,6 +38,10 @@ class Task(object):
 
         self.optimization = optimization
         self.dependencies = dependencies or {}
+        if release_artifacts:
+            self.release_artifacts = frozenset(release_artifacts)
+        else:
+            self.release_artifacts = None
 
     def __eq__(self, other):
         return self.kind == other.kind and \
@@ -45,12 +50,14 @@ class Task(object):
             self.task == other.task and \
             self.task_id == other.task_id and \
             self.optimization == other.optimization and \
-            self.dependencies == other.dependencies
+            self.dependencies == other.dependencies and \
+            self.release_artifacts == other.release_artifacts
 
     def __repr__(self):
         return ('Task({kind!r}, {label!r}, {attributes!r}, {task!r}, '
                 'optimization={optimization!r}, '
-                'dependencies={dependencies!r})'.format(**self.__dict__))
+                'dependencies={dependencies!r}, '
+                'release_artifacts={release_artifacts!r})'.format(**self.__dict__))
 
     def to_json(self):
         rv = {
@@ -63,6 +70,8 @@ class Task(object):
         }
         if self.task_id:
             rv['task_id'] = self.task_id
+        if self.release_artifacts:
+            rv['release_artifacts'] = sorted(self.release_artifacts),
         return rv
 
     @classmethod
@@ -78,7 +87,9 @@ class Task(object):
             attributes=task_dict['attributes'],
             task=task_dict['task'],
             optimization=task_dict['optimization'],
-            dependencies=task_dict.get('dependencies'))
+            dependencies=task_dict.get('dependencies'),
+            release_artifacts=task_dict.get('release-artifacts')
+        )
         if 'task_id' in task_dict:
             rv.task_id = task_dict['task_id']
         return rv

@@ -1138,6 +1138,10 @@ JS_FRIEND_API(bool)
 JS_CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
                     HandleObject obj, PropertyCopyBehavior copyBehavior)
 {
+    // |target| must not be a CCW because we need to enter its realm below and
+    // CCWs are not associated with a single realm.
+    MOZ_ASSERT(!IsCrossCompartmentWrapper(target));
+
     // |obj| and |cx| are generally not same-compartment with |target| here.
     cx->check(obj, id);
     Rooted<PropertyDescriptor> desc(cx);
@@ -1157,7 +1161,7 @@ JS_CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
         desc.attributesRef() &= ~JSPROP_PERMANENT;
     }
 
-    JSAutoRealmAllowCCW ar(cx, target);
+    JSAutoRealm ar(cx, target);
     cx->markId(id);
     RootedId wrappedId(cx, id);
     if (!cx->compartment()->wrap(cx, &desc))
@@ -1169,7 +1173,12 @@ JS_CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
 JS_FRIEND_API(bool)
 JS_CopyPropertiesFrom(JSContext* cx, HandleObject target, HandleObject obj)
 {
-    JSAutoRealmAllowCCW ar(cx, obj);
+    // Both |obj| and |target| must not be CCWs because we need to enter their
+    // realms below and CCWs are not associated with a single realm.
+    MOZ_ASSERT(!IsCrossCompartmentWrapper(obj));
+    MOZ_ASSERT(!IsCrossCompartmentWrapper(target));
+
+    JSAutoRealm ar(cx, obj);
 
     AutoIdVector props(cx);
     if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &props))

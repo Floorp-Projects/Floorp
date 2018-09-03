@@ -58,7 +58,6 @@ module.exports = {
     "no-restricted-modules": "off",
     "no-return-assign": "error",
     "no-script-url": "off",
-    "no-sequences": "error",
     "no-shadow": "error",
     "no-space-before-semi": "off",
     "no-sync": "off",

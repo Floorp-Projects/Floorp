@@ -12,7 +12,7 @@ function test() {
     ChromeUtils.import("resource://gre/modules/DownloadLastDir.jsm", {}).DownloadLastDir;
   let MockFilePicker = SpecialPowers.MockFilePicker;
   let launcher = {
-    source: Services.io.newURI("http://test1.com/file")
+    source: Services.io.newURI("http://test1.com/file"),
   };
 
   MockFilePicker.init(window);

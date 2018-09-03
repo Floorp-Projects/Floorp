@@ -38,7 +38,7 @@ function loadContentWindow(webNavigation, uri) {
         }, { once: true });
       },
       QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
-                                              "nsISupportsWeakReference"])
+                                              "nsISupportsWeakReference"]),
     };
     progressListeners.set(progressListener, progressListener);
     webProgress.addProgressListener(progressListener,
@@ -160,5 +160,5 @@ let HeadlessShell = {
       Services.startup.exitLastWindowClosingSurvivalArea();
       Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
     }
-  }
+  },
 };

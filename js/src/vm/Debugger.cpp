@@ -898,6 +898,47 @@ DebuggerFrame_maybeDecrementFrameScriptStepModeCount(FreeOp* fop, AbstractFrameP
                                                      NativeObject* frameobj);
 
 /*
+ * RAII class to mark a generator as "running" temporarily while running
+ * debugger code.
+ *
+ * When Debugger::slowPathOnLeaveFrame is called for a frame that is yielding
+ * or awaiting, its generator is in the "suspended" state. Letting script
+ * observe this state, with the generator on stack yet also reenterable, would
+ * be bad, so we mark it running while we fire events.
+ */
+class MOZ_RAII AutoSetGeneratorRunning
+{
+    int32_t yieldAwaitIndex_;
+    Rooted<GeneratorObject*> genObj_;
+
+  public:
+    AutoSetGeneratorRunning(JSContext* cx, Handle<GeneratorObject*> genObj)
+      : yieldAwaitIndex_(0),
+        genObj_(cx, genObj)
+    {
+        if (genObj) {
+            if (!genObj->isBeforeInitialYield() && !genObj->isClosed() && genObj->isSuspended()) {
+                yieldAwaitIndex_ =
+                    genObj->getFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT).toInt32();
+                genObj->setRunning();
+            } else {
+                // We're returning or throwing, not yielding or awaiting. The
+                // generator is already closed, if it was ever exposed at all.
+                genObj_ = nullptr;
+            }
+        }
+    }
+
+    ~AutoSetGeneratorRunning() {
+        if (genObj_) {
+            MOZ_ASSERT(genObj_->isRunning());
+            genObj_->setFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT,
+                                  Int32Value(yieldAwaitIndex_));
+        }
+    }
+};
+
+/*
  * Handle leaving a frame with debuggers watching. |frameOk| indicates whether
  * the frame is exiting normally or abruptly. Set |cx|'s exception and/or
  * |cx->fp()|'s return value, and return a new success value.
@@ -926,32 +967,11 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
     RootedValue value(cx);
     Debugger::resultToCompletion(cx, frameOk, frame.returnValue(), &resumeMode, &value);
 
-    // If we are yielding or awaiting, the generator is currently in the
-    // "suspended" state.  Letting script observe this state, with the
-    // generator on stack and yet also reenterable, would be bad, so mark
-    // it running while we fire events.
-    int32_t yieldAwaitIndex = 0;
+    // If we are yielding or awaiting, we'll need to mark the generator as
+    // "running" temporarily.
     Rooted<GeneratorObject*> genObj(cx);
-    if (frame.isFunctionFrame() && (frame.callee()->isGenerator() || frame.callee()->isAsync())) {
+    if (frame.isFunctionFrame() && (frame.callee()->isGenerator() || frame.callee()->isAsync()))
         genObj = GetGeneratorObjectForFrame(cx, frame);
-        if (genObj) {
-            if (!genObj->isBeforeInitialYield() && !genObj->isClosed() && genObj->isSuspended()) {
-                yieldAwaitIndex =
-                    genObj->getFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT).toInt32();
-                genObj->setRunning();
-            } else {
-                // We're returning or throwing, not yielding or awaiting. The
-                // generator is already closed, if it was ever exposed at all.
-                genObj = nullptr;
-            }
-        }
-    }
-    auto restoreGenSuspended = MakeScopeExit([&] {
-        if (genObj) {
-            genObj->setFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT,
-                                 Int32Value(yieldAwaitIndex));
-        }
-    });
 
     // This path can be hit via unwinding the stack due to over-recursion or
     // OOM. In those cases, don't fire the frames' onPop handlers, because
@@ -982,7 +1002,11 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
                 // Call the onPop handler.
                 ResumeMode nextResumeMode = resumeMode;
                 RootedValue nextValue(cx, wrappedValue);
-                bool success = handler->onPop(cx, frameobj, nextResumeMode, &nextValue);
+                bool success;
+                {
+                    AutoSetGeneratorRunning asgr(cx, genObj);
+                    success = handler->onPop(cx, frameobj, nextResumeMode, &nextValue);
+                }
                 nextResumeMode = dbg->processParsedHandlerResult(ar, frame, pc, success,
                                                                  nextResumeMode, &nextValue);
 
@@ -1476,7 +1500,7 @@ AdjustGeneratorResumptionValue(JSContext* cx, AbstractFramePtr frame,
             vp.setObject(*pair);
 
             // 2.  The generator must be closed.
-            GeneratorObject::finalSuspend(genObj);
+            genObj->setClosed();
         } else {
             // We're before the initial yield. Carry on with the forced return.
             // The debuggee will see a call to a generator returning the
@@ -2625,10 +2649,10 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
         for (OnlyJSJitFrameIter iter(actIter); !iter.done(); ++iter) {
             const jit::JSJitFrameIter& frame = iter.frame();
             switch (frame.type()) {
-              case JitFrame_BaselineJS:
+              case FrameType::BaselineJS:
                 MarkBaselineScriptActiveIfObservable(frame.script(), obs);
                 break;
-              case JitFrame_IonJS:
+              case FrameType::IonJS:
                 MarkBaselineScriptActiveIfObservable(frame.script(), obs);
                 for (InlineFrameIterator inlineIter(cx, &frame); inlineIter.more(); ++inlineIter)
                     MarkBaselineScriptActiveIfObservable(inlineIter.script(), obs);

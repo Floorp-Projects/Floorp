@@ -66,6 +66,10 @@ main(int argc, char** argv, char** envp)
 
     int result = bootstrap->XRE_XPCShellMain(argc, argv, envp, &shellData);
 
+#if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
+    DllBlocklist_Shutdown();
+#endif
+
 #ifdef XP_MACOSX
     FinishAutoreleasePool();
 #endif

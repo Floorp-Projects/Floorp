@@ -1,5 +1,5 @@
 /* XzIn.c - Xz input
-2017-05-11 : Igor Pavlov : Public domain */
+2018-02-02 : Igor Pavlov : Public domain */
 
 #include "Precomp.h"
 
@@ -103,7 +103,7 @@ static SRes Xz_ReadIndex2(CXzStream *p, const Byte *buf, size_t size, ISzAllocPt
   {
     size_t i;
     p->numBlocks = numBlocks;
-    p->blocks = ISzAlloc_Alloc(alloc, sizeof(CXzBlockSizes) * numBlocks);
+    p->blocks = (CXzBlockSizes *)ISzAlloc_Alloc(alloc, sizeof(CXzBlockSizes) * numBlocks);
     if (!p->blocks)
       return SZ_ERROR_MEM;
     for (i = 0; i < numBlocks; i++)
@@ -131,7 +131,7 @@ static SRes Xz_ReadIndex(CXzStream *p, ILookInStream *stream, UInt64 indexSize, 
   size = (size_t)indexSize;
   if (size != indexSize)
     return SZ_ERROR_UNSUPPORTED;
-  buf = ISzAlloc_Alloc(alloc, size);
+  buf = (Byte *)ISzAlloc_Alloc(alloc, size);
   if (!buf)
     return SZ_ERROR_MEM;
   res = LookInStream_Read2(stream, buf, size, SZ_ERROR_UNSUPPORTED);

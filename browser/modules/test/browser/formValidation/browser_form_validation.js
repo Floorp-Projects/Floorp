@@ -52,7 +52,7 @@ var gObserver = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIFormSubmitObserver]),
 
   notifyInvalidSubmit(aFormElement, aInvalidElements) {
-  }
+  },
 };
 
 var testId = 0;

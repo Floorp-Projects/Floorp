@@ -10,9 +10,9 @@ function test() {
     windows: [{
       tabs: [
         { entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }], extData: { "foo": "bar" } },
-        { entries: [{ url: "http://example.org", triggeringPrincipal_base64 }], extData: { "baz": "qux" } }
-      ]
-    }]
+        { entries: [{ url: "http://example.org", triggeringPrincipal_base64 }], extData: { "baz": "qux" } },
+      ],
+    }],
   };
 
   let busyEventCount = 0,

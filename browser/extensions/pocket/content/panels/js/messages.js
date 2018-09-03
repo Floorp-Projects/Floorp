@@ -41,7 +41,7 @@ var pktPanelMessaging = (function() {
    // { panelId: panelId, data: {} }
    var messagePayload = {
      panelId,
-     data: (payload || {})
+     data: (payload || {}),
    };
 
     // Create a callback to listen for a response
@@ -73,6 +73,6 @@ var pktPanelMessaging = (function() {
       panelIdFromURL,
         addMessageListener,
         removeMessageListener,
-        sendMessage
+        sendMessage,
     };
 }());

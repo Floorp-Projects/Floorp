@@ -1,4 +1,6 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 // The purpose of this test is to test the urlbar popup's add-on iframe.  It has
@@ -133,13 +135,14 @@ add_task(async function() {
   // urlbar.setPanelHeight
   let newHeight = height + 100;
   await promiseUrlbarFunctionCall("setPanelHeight", newHeight);
-  await new Promise(resolve => {
-    // The height change is animated, so give it time to complete.  Again, wait
-    // a sec to be safe.
-    setTimeout(resolve, 1000);
+  // The height change is animated, so give it time to complete.
+  await TestUtils.waitForCondition(
+    () => Math.round(iframe.getBoundingClientRect().height) == newHeight,
+    "Wait for panel height change after setPanelHeight"
+  ).catch(ex => {
+    info("Last detected height: " + Math.round(iframe.getBoundingClientRect().height));
+    throw ex;
   });
-  Assert.equal(iframe.getBoundingClientRect().height, newHeight,
-               "setPanelHeight");
 });
 
 function promiseIframeLoad() {

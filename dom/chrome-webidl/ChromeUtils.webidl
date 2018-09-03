@@ -355,6 +355,9 @@ partial namespace ChromeUtils {
   */
   [Throws]
   Promise<sequence<IOActivityDataDictionary>> requestIOActivity();
+
+  [ChromeOnly]
+  sequence<BrowsingContext> getRootBrowsingContexts();
 };
 
 /**

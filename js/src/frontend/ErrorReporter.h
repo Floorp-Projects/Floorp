@@ -11,7 +11,10 @@
 #include <stddef.h> // for size_t
 #include <stdint.h> // for uint32_t
 
-#include "jsapi.h" // for JS::ReadOnlyCompileOptions
+#include "js/CompileOptions.h"
+#include "js/UniquePtr.h"
+
+class JSErrorNotes;
 
 namespace js {
 namespace frontend {

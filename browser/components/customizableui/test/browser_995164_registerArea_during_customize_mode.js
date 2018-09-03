@@ -69,7 +69,7 @@ add_task(async function() {
       if (aNode == otherTB) {
         wasInformedCorrectlyOfAreaAppearing = true;
       }
-    }
+    },
   };
   CustomizableUI.addListener(listener);
   otherWin.gNavToolbox.appendChild(otherTB);

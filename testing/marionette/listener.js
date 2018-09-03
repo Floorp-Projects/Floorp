@@ -788,6 +788,8 @@ async function releaseActions() {
       action.inputsToCancel.reverse(), 0, curContainer.frame);
   action.inputsToCancel.length = 0;
   action.inputStateMap.clear();
+
+  event.DoubleClickTracker.resetClick();
 }
 
 /**

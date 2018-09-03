@@ -24,55 +24,55 @@ var ADDONS = [{
   id: "test_bug455906_1@tests.mozilla.org",
   name: "Bug 455906 Addon Test 1",
   version: "5",
-  appVersion: "3"
+  appVersion: "3",
 }, {
   // Tests how the blocklist affects an enabled add-on
   id: "test_bug455906_2@tests.mozilla.org",
   name: "Bug 455906 Addon Test 2",
   version: "5",
-  appVersion: "3"
+  appVersion: "3",
 }, {
   // Tests how the blocklist affects an enabled add-on, to be disabled by the notification
   id: "test_bug455906_3@tests.mozilla.org",
   name: "Bug 455906 Addon Test 3",
   version: "5",
-  appVersion: "3"
+  appVersion: "3",
 }, {
   // Tests how the blocklist affects a disabled add-on that was already warned about
   id: "test_bug455906_4@tests.mozilla.org",
   name: "Bug 455906 Addon Test 4",
   version: "5",
-  appVersion: "3"
+  appVersion: "3",
 }, {
   // Tests how the blocklist affects an enabled add-on that was already warned about
   id: "test_bug455906_5@tests.mozilla.org",
   name: "Bug 455906 Addon Test 5",
   version: "5",
-  appVersion: "3"
+  appVersion: "3",
 }, {
   // Tests how the blocklist affects an already blocked add-on
   id: "test_bug455906_6@tests.mozilla.org",
   name: "Bug 455906 Addon Test 6",
   version: "5",
-  appVersion: "3"
+  appVersion: "3",
 }, {
   // Tests how the blocklist affects an incompatible add-on
   id: "test_bug455906_7@tests.mozilla.org",
   name: "Bug 455906 Addon Test 7",
   version: "5",
-  appVersion: "2"
+  appVersion: "2",
 }, {
   // Spare add-on used to ensure we get a notification when switching lists
   id: "dummy_bug455906_1@tests.mozilla.org",
   name: "Dummy Addon 1",
   version: "5",
-  appVersion: "3"
+  appVersion: "3",
 }, {
   // Spare add-on used to ensure we get a notification when switching lists
   id: "dummy_bug455906_2@tests.mozilla.org",
   name: "Dummy Addon 2",
   version: "5",
-  appVersion: "3"
+  appVersion: "3",
 }];
 
 // Copy the initial blocklist into the profile to check add-ons start in the
@@ -93,7 +93,7 @@ var PLUGINS = [
   // Tests how the blocklist affects an enabled plugin that was already warned about
   new MockPluginTag({name: "test_bug455906_5", version: "5"}, Ci.nsIPluginTag.STATE_ENABLED),
   // Tests how the blocklist affects an already blocked plugin
-  new MockPluginTag({name: "test_bug455906_6", version: "5"}, Ci.nsIPluginTag.STATE_ENABLED)
+  new MockPluginTag({name: "test_bug455906_6", version: "5"}, Ci.nsIPluginTag.STATE_ENABLED),
 ];
 
 var gNotificationCheck = null;

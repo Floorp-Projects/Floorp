@@ -46,7 +46,7 @@ var MetricsChecker = {
       detectLang: this.HISTOGRAMS.DETECT_LANG.snapshot().sum || 0,
       // Metrics for Keyed histograms are estimated below.
       opportunitiesCountByLang: {},
-      pageCountByLang: {}
+      pageCountByLang: {},
     };
 
     let opportunities = this.HISTOGRAMS.OPPORTUNITIES_BY_LANG.snapshot();
@@ -81,7 +81,7 @@ var MetricsChecker = {
     let prevMetrics = this._metrics;
     this.updateMetrics();
     this._assertionLoop(prevMetrics, this._metrics, additions);
-  }
+  },
 
 };
 
@@ -154,7 +154,7 @@ add_task(async function setup() {
 
   const prefs = [
     "browser.translation.detectLanguage",
-    "browser.translation.ui.show"
+    "browser.translation.ui.show",
   ];
 
   let prefsBackup = setupPrefs(prefs);
@@ -183,7 +183,7 @@ add_task(async function test_telemetry() {
     pageCount: 1,
     pageCountByLang: { "de -> en": 1 },
     charCount: 21,
-    deniedOffers: 0
+    deniedOffers: 0,
   });
 });
 
@@ -255,7 +255,7 @@ add_task(async function test_language_change() {
   await MetricsChecker.checkAdditions({
     detectedLanguageChangedBefore: 4,
     detectedLanguageChangeAfter: 8,
-    targetLanguageChanged: 12
+    targetLanguageChanged: 12,
   });
 });
 
@@ -277,11 +277,11 @@ add_task(async function test_translation_preferences() {
   let preferenceChecks = {
     "browser.translation.ui.show": [
       {value: false, expected: {showUI: 0}},
-      {value: true, expected: {showUI: 1}}
+      {value: true, expected: {showUI: 1}},
     ],
     "browser.translation.detectLanguage": [
       {value: false, expected: {detectLang: 0}},
-      {value: true, expected: {detectLang: 1}}
+      {value: true, expected: {detectLang: 1}},
     ],
   };
 

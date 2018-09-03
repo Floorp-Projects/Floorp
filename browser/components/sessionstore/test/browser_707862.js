@@ -6,7 +6,7 @@ var tabState = {
   entries: [{
     url: "about:robots",
     triggeringPrincipal_base64,
-    children: [{url: "about:mozilla", triggeringPrincipal_base64, }]}]
+    children: [{url: "about:mozilla", triggeringPrincipal_base64 }]}],
 };
 
 function test() {

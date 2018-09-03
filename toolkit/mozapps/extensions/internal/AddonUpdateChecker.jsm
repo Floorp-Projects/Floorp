@@ -389,7 +389,7 @@ UpdateParser.prototype = {
     this.request = null;
     this._doneAt = new Error("UP_cancel");
     this.notifyError(AddonManager.ERROR_CANCELLED);
-  }
+  },
 };
 
 /**
@@ -541,5 +541,5 @@ var AddonUpdateChecker = {
    */
   checkForUpdates(aId, aUrl, aObserver) {
     return new UpdateParser(aId, aUrl, aObserver);
-  }
+  },
 };

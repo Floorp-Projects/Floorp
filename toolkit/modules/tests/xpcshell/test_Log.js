@@ -13,7 +13,7 @@ var testFormatter = {
     return message.loggerName + "\t" +
       message.levelDesc + "\t" +
       message.message;
-  }
+  },
 };
 
 class MockAppender extends Log.Appender {

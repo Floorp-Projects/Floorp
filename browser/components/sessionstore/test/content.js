@@ -17,16 +17,6 @@ var historyListener = {
     sendAsyncMessage("ss-test:OnHistoryNewEntry");
   },
 
-  OnHistoryGoBack() {
-    sendAsyncMessage("ss-test:OnHistoryGoBack");
-    return true;
-  },
-
-  OnHistoryGoForward() {
-    sendAsyncMessage("ss-test:OnHistoryGoForward");
-    return true;
-  },
-
   OnHistoryGotoIndex() {
     sendAsyncMessage("ss-test:OnHistoryGotoIndex");
     return true;
@@ -48,8 +38,8 @@ var historyListener = {
 
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsISHistoryListener,
-    Ci.nsISupportsWeakReference
-  ])
+    Ci.nsISupportsWeakReference,
+  ]),
 };
 
 var {sessionHistory} = docShell.QueryInterface(Ci.nsIWebNavigation);

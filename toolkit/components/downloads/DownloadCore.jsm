@@ -2215,7 +2215,7 @@ this.DownloadCopySaver.prototype = {
    */
   getRedirects() {
     return this._redirects;
-  }
+  },
 };
 
 /**

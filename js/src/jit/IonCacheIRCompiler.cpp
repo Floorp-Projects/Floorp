@@ -294,7 +294,7 @@ static void*
 GetReturnAddressToIonCode(JSContext* cx)
 {
     JSJitFrameIter frame(cx->activation()->asJit());
-    MOZ_ASSERT(frame.type() == JitFrame_Exit,
+    MOZ_ASSERT(frame.type() == FrameType::Exit,
                "An exit frame is expected as update functions are called with a VMFunction.");
 
     void* returnAddr = frame.returnAddress();
@@ -309,7 +309,7 @@ GetReturnAddressToIonCode(JSContext* cx)
 void
 IonCacheIRCompiler::prepareVMCall(MacroAssembler& masm, const AutoSaveLiveRegisters&)
 {
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), FrameType::IonJS,
                                               IonICCallFrameLayout::Size());
     pushStubCodePointer();
     masm.Push(Imm32(descriptor));
@@ -328,7 +328,7 @@ IonCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun)
     TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
 
     uint32_t frameSize = fun.explicitStackSlots() * sizeof(void*);
-    uint32_t descriptor = MakeFrameDescriptor(frameSize, JitFrame_IonICCall,
+    uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
                                               ExitFrameLayout::Size());
     masm.Push(Imm32(descriptor));
     masm.callJit(code);
@@ -840,58 +840,6 @@ IonCacheIRCompiler::emitGuardSpecificSymbol()
 }
 
 bool
-IonCacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto()
-{
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    bool hasExpando = reader.readBool();
-    JSObject* shapeWrapper = objectStubField(reader.stubOffset());
-    MOZ_ASSERT(hasExpando == !!shapeWrapper);
-
-    AutoScratchRegister scratch(allocator, masm);
-    Maybe<AutoScratchRegister> scratch2, scratch3;
-    if (hasExpando) {
-        scratch2.emplace(allocator, masm);
-        scratch3.emplace(allocator, masm);
-    }
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-
-    masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch);
-    Address holderAddress(scratch, sizeof(Value) * GetXrayJitInfo()->xrayHolderSlot);
-    Address expandoAddress(scratch, NativeObject::getFixedSlotOffset(GetXrayJitInfo()->holderExpandoSlot));
-
-    if (hasExpando) {
-        masm.branchTestObject(Assembler::NotEqual, holderAddress, failure->label());
-        masm.unboxObject(holderAddress, scratch);
-        masm.branchTestObject(Assembler::NotEqual, expandoAddress, failure->label());
-        masm.unboxObject(expandoAddress, scratch);
-
-        // Unwrap the expando before checking its shape.
-        masm.loadPtr(Address(scratch, ProxyObject::offsetOfReservedSlots()), scratch);
-        masm.unboxObject(Address(scratch, detail::ProxyReservedSlots::offsetOfPrivateSlot()), scratch);
-
-        masm.movePtr(ImmGCPtr(shapeWrapper), scratch2.ref());
-        LoadShapeWrapperContents(masm, scratch2.ref(), scratch2.ref(), failure->label());
-        masm.branchTestObjShape(Assembler::NotEqual, scratch, *scratch2, *scratch3, scratch,
-                                failure->label());
-
-        // The reserved slots on the expando should all be in fixed slots.
-        Address protoAddress(scratch, NativeObject::getFixedSlotOffset(GetXrayJitInfo()->expandoProtoSlot));
-        masm.branchTestUndefined(Assembler::NotEqual, protoAddress, failure->label());
-    } else {
-        Label done;
-        masm.branchTestObject(Assembler::NotEqual, holderAddress, &done);
-        masm.unboxObject(holderAddress, scratch);
-        masm.branchTestObject(Assembler::Equal, expandoAddress, failure->label());
-        masm.bind(&done);
-    }
-
-    return true;
-}
-
-bool
 IonCacheIRCompiler::emitLoadValueResult()
 {
    MOZ_CRASH("Baseline-specific op");
@@ -971,7 +919,7 @@ IonCacheIRCompiler::emitCallScriptedGetterResult()
     uint32_t framePushedBefore = masm.framePushed();
 
     // Construct IonICCallFrameLayout.
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), FrameType::IonJS,
                                               IonICCallFrameLayout::Size());
     pushStubCodePointer();
     masm.Push(Imm32(descriptor));
@@ -995,7 +943,7 @@ IonCacheIRCompiler::emitCallScriptedGetterResult()
 
     masm.movePtr(ImmGCPtr(target), scratch);
 
-    descriptor = MakeFrameDescriptor(argSize + padding, JitFrame_IonICCall,
+    descriptor = MakeFrameDescriptor(argSize + padding, FrameType::IonICCall,
                                      JitFrameLayout::Size());
     masm.Push(Imm32(0)); // argc
     masm.Push(scratch);
@@ -2106,7 +2054,7 @@ IonCacheIRCompiler::emitCallScriptedSetter()
     uint32_t framePushedBefore = masm.framePushed();
 
     // Construct IonICCallFrameLayout.
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), FrameType::IonJS,
                                               IonICCallFrameLayout::Size());
     pushStubCodePointer();
     masm.Push(Imm32(descriptor));
@@ -2132,7 +2080,7 @@ IonCacheIRCompiler::emitCallScriptedSetter()
 
     masm.movePtr(ImmGCPtr(target), scratch);
 
-    descriptor = MakeFrameDescriptor(argSize + padding, JitFrame_IonICCall,
+    descriptor = MakeFrameDescriptor(argSize + padding, FrameType::IonICCall,
                                      JitFrameLayout::Size());
     masm.Push(Imm32(1)); // argc
     masm.Push(scratch);

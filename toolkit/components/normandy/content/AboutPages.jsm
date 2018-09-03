@@ -203,7 +203,7 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
     getStudiesEnabled() {
       RecipeRunner.checkPrefs();
       return RecipeRunner.enabled;
-    }
+    },
   });
 
   return aboutStudies;

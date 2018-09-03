@@ -103,7 +103,16 @@ class Instance;
 enum MaybeCheckAliasing { CHECK_ALIASING = true, DONT_CHECK_ALIASING = false };
 enum MaybeCheckTDZ { CheckTDZ = true, DontCheckTDZ = false };
 
+} // namespace js
+
+namespace mozilla {
+template <>
+struct IsPod<js::MaybeCheckTDZ> : TrueType {};
+} // namespace mozilla
+
 /*****************************************************************************/
+
+namespace js {
 
 namespace jit {
     class BaselineFrame;
@@ -2429,4 +2438,5 @@ FrameIter::physicalJitFrame() const
 }
 
 }  /* namespace js */
+
 #endif /* vm_Stack_h */

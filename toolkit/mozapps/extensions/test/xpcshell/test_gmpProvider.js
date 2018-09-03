@@ -43,7 +43,7 @@ function MockGMPInstallManager() {
 MockGMPInstallManager.prototype = {
   checkForAddons: () => Promise.resolve({
     usedFallback: true,
-    gmpAddons: [...gMockAddons.values()]
+    gmpAddons: [...gMockAddons.values()],
   }),
 
   installAddon: addon => {
@@ -381,7 +381,7 @@ add_task(async function test_periodicUpdate() {
     value: MockGMPInstallManager,
     writable: true,
     enumerable: true,
-    configurable: true
+    configurable: true,
   });
 
   let addons = await promiseAddonsByIDs([...gMockAddons.keys()]);

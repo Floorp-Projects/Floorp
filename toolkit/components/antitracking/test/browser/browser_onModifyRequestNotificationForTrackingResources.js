@@ -54,7 +54,7 @@ add_task(async function() {
     // tracking annotations aren't needed in this test, only TP is needed
     ["privacy.trackingprotection.annotate_channels", false],
     // prevent the content blocking on-boarding UI to start mid-way through the test!
-    ["privacy.trackingprotection.introCount", ContentBlocking.MAX_INTROS],
+    [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
   ]});
 
   await UrlClassifierTestUtils.addTestTrackers();

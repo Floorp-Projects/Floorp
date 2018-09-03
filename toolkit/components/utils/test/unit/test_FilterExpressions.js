@@ -152,7 +152,7 @@ add_task(async function testKeys() {
   context = {ctxObject: {
     get ping() {
       return ++pong;
-    }
+    },
   }};
   await FilterExpressions.eval("ctxObject.ping == 0 || ctxObject.ping == 1", context);
   equal(pong, 2, "Properties are not reifed");

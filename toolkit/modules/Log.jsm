@@ -51,7 +51,7 @@ var Log = {
       "DEBUG": 20,
       "TRACE": 10,
       "ALL": -1,
-    }
+    },
   },
 
   get repository() {
@@ -137,7 +137,7 @@ var Log = {
     }
 
     return "No traceback available";
-  }
+  },
 };
 
 /*

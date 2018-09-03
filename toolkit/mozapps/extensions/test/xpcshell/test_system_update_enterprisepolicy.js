@@ -52,7 +52,7 @@ const TEST_CONDITIONS = {
     { isUpgrade: false, version: null},
     { isUpgrade: false, version: null},
     { isUpgrade: false, version: null},
-    { isUpgrade: false, version: null}
+    { isUpgrade: false, version: null},
   ],
 };
 
@@ -61,13 +61,13 @@ add_task(async function test_update_disabled_by_policy() {
 
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({
     "policies": {
-      "DisableSystemAddonUpdate": true
-    }
+      "DisableSystemAddonUpdate": true,
+    },
   });
 
   await updateAllSystemAddons(await buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
-    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
   ], root), testserver);
 
   await verifySystemAddonState(TEST_CONDITIONS.initialState, undefined, false, distroDir);

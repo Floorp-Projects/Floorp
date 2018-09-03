@@ -9,7 +9,7 @@ ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
 add_task(async function testMainActionCalled() {
   let options = {
     gBrowser: window.gBrowser,
-    url: "about:blank"
+    url: "about:blank",
   };
 
   await BrowserTestUtils.withNewTab(options, function(browser) {
@@ -18,7 +18,7 @@ add_task(async function testMainActionCalled() {
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
     let mainActionCalled = false;
     let mainAction = {
-      callback: () => { mainActionCalled = true; }
+      callback: () => { mainActionCalled = true; },
     };
     AppMenuNotifications.showNotification("update-manual", mainAction);
 
@@ -46,7 +46,7 @@ add_task(async function testMainActionCalled() {
 add_task(async function testSecondaryActionWorkflow() {
   let options = {
     gBrowser: window.gBrowser,
-    url: "about:blank"
+    url: "about:blank",
   };
 
   await BrowserTestUtils.withNewTab(options, async function(browser) {
@@ -149,7 +149,7 @@ add_task(async function testAddingBadgeWhileDoorhangerIsShowing() {
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
     let mainActionCalled = false;
     let mainAction = {
-      callback: () => { mainActionCalled = true; }
+      callback: () => { mainActionCalled = true; },
     };
     AppMenuNotifications.showNotification("update-manual", mainAction);
     AppMenuNotifications.showBadgeOnlyNotification("fxa-needs-authentication");

@@ -13,7 +13,6 @@
 #include "mozilla/PodOperations.h"
 
 #include "frontend/BinSource-macros.h"
-#include "gc/Zone.h"
 #include "js/Result.h"
 
 namespace js {

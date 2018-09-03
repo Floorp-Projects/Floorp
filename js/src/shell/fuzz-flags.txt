@@ -3,24 +3,63 @@
 # one. Note the following flag is recommended in ALL the cases: --fuzzing-safe
 
 # general jit flags
---ion-eager
 --baseline-eager
---ion-offthread-compile=off
+--cache-ir-stubs=off
+--cache-ir-stubs=on
 --ion-check-range-analysis
+--ion-eager
+--ion-edgecase-analysis=off
+--ion-edgecase-analysis=on
 --ion-extra-checks
---spectre-mitigations=on
---spectre-mitigations=off
---nursery-strings=on
+--ion-gvn=off
+--ion-gvn=on
+--ion-inlining=off
+--ion-inlining=on
+--ion-instruction-reordering=off
+--ion-instruction-reordering=on
+--ion-licm=off
+--ion-licm=on
+--ion-limit-script-size=off
+--ion-limit-script-size=on
+--ion-loop-unrolling=off
+--ion-loop-unrolling=on
+--ion-offthread-compile=off
+--ion-osr=off
+--ion-osr=on
+--ion-pgo=off
+--ion-pgo=on
+--ion-range-analysis=off
+--ion-range-analysis=on
+--ion-regalloc=testbed
+--ion-scalar-replacement=off
+--ion-scalar-replacement=on
+--ion-sincos=off
+--ion-sincos=on
 --ion-warmup-threshold=100
 --no-native-regexp
---no-sse3
---no-sse4
+--nursery-strings=off
+--nursery-strings=on
+--spectre-mitigations=off
+--spectre-mitigations=on
+
+# GC-related
+--gc-zeal=2
+--gc-zeal=10
+--no-cgc
+--no-ggc
+--no-incremental-gc
 
 # wasm flags
 --wasm-gc
 --no-wasm-baseline
 --no-wasm-ion
 --test-wasm-await-tier2
+
+# CPU instruction set-related
+--enable-avx
+--no-avx
+--no-sse3
+--no-sse4
 
 # arm specific, no-ops on other platforms.
 --arm-sim-icache-checks

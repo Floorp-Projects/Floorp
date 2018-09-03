@@ -6,7 +6,7 @@
 add_task(async function test_menu_with_timeout() {
   await SpecialPowers.pushPrefEnv({"set": [
       ["privacy.userContext.enabled", true],
-      ["privacy.userContext.longPressBehavior", 2]
+      ["privacy.userContext.longPressBehavior", 2],
   ]});
 
   let newTab = document.getElementById("tabbrowser-tabs");
@@ -38,7 +38,7 @@ add_task(async function test_menu_with_timeout() {
 add_task(async function test_menu_without_timeout() {
   await SpecialPowers.pushPrefEnv({"set": [
       ["privacy.userContext.enabled", true],
-      ["privacy.userContext.longPressBehavior", 1]
+      ["privacy.userContext.longPressBehavior", 1],
   ]});
 
   let newTab = document.getElementById("tabbrowser-tabs");
@@ -85,7 +85,7 @@ add_task(async function test_menu_without_timeout() {
 add_task(async function test_no_menu() {
   await SpecialPowers.pushPrefEnv({"set": [
       ["privacy.userContext.enabled", true],
-      ["privacy.userContext.longPressBehavior", 0]
+      ["privacy.userContext.longPressBehavior", 0],
   ]});
 
   let newTab = document.getElementById("tabbrowser-tabs");

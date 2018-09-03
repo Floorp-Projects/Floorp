@@ -374,7 +374,7 @@ def load_wpt_tests(requested_paths, excluded_paths, debug, wasm):
         if script.startswith("/"):
             return os.path.join(wpt, script[1:])
 
-        return os.path.join(test_path, script)
+        return os.path.join(wpt, os.path.dirname(test_path), script)
 
     return [
         RefTestCase(

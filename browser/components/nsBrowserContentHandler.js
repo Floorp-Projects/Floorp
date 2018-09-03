@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
-  UpdatePing: "resource://gre/modules/UpdatePing.jsm"
+  UpdatePing: "resource://gre/modules/UpdatePing.jsm",
 });
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
   "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
@@ -300,7 +300,7 @@ nsBrowserContentHandler.prototype = {
       if (outer)
         throw Cr.NS_ERROR_NO_AGGREGATION;
       return gBrowserContentHandler.QueryInterface(iid);
-    }
+    },
   },
 
   /* nsISupports */

@@ -50,6 +50,13 @@ function checkPrefGetters(stats, max, whitelist = {}) {
     }
   }
 
+  // This pref will be accessed by mozJSComponentLoader when loading modules,
+  // which fails TV runs since they run the test multiple times without restarting.
+  // We just ignore this pref, since it's for testing only anyway.
+  if (whitelist["browser.startup.record"]) {
+    delete whitelist["browser.startup.record"];
+  }
+
   let remainingWhitelist = Object.keys(whitelist);
   is(remainingWhitelist.length, 0, `Should have checked all whitelist items. Remaining: ${remainingWhitelist}`);
 }

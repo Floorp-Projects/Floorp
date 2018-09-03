@@ -27,7 +27,7 @@ const MESSAGES = [
   "Finder:FindbarOpen",
   "Finder:KeyPress",
   "Finder:MatchesCount",
-  "Finder:ModalHighlightChange"
+  "Finder:ModalHighlightChange",
 ];
 
 class FinderChild extends ActorChild {

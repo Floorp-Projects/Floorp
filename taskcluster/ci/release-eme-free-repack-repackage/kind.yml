@@ -27,8 +27,16 @@ job-template:
       config:
          by-build-platform:
             macosx64-.*:
+               - repackage/base.py
                - repackage/osx_partner.py
             win32-.*:
+               - repackage/base.py
                - repackage/win32_partner.py
             win64-.*:
+               - repackage/base.py
                - repackage/win64_partner.py
+   package-formats:
+      by-build-platform:
+         macosx64\b.*: [dmg]
+         win32\b.*: [installer]
+         win64\b.*: [installer]

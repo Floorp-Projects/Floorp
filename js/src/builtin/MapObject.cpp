@@ -584,8 +584,7 @@ WriteBarrierPostImpl(ObjectT* obj, const Value& keyValue)
         if (!keys)
             return false;
 
-        JSRuntime* rt = key->runtimeFromMainThread();
-        rt->gc.storeBuffer().putGeneric(OrderedHashTableRef<ObjectT>(obj));
+        key->storeBuffer()->putGeneric(OrderedHashTableRef<ObjectT>(obj));
     }
 
     if (!keys->append(key))

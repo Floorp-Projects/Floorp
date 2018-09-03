@@ -287,7 +287,7 @@ add_task(async function test_main_crash_event_file_noenv() {
   Assert.equal(crashes[0].type, "main-crash");
   Assert.deepEqual(crashes[0].metadata, {
     ProductName: productName,
-    ProductID: productId
+    ProductID: productId,
   });
   Assert.deepEqual(crashes[0].crashDate, DUMMY_DATE);
 
@@ -487,7 +487,7 @@ add_task(async function test_child_process_crash_ping() {
       StackTraces: stackTraces,
       MinidumpSha256Hash: sha256Hash,
       ipc_channel_error: "ShutDownKill",
-      ThisShouldNot: "end-up-in-the-ping"
+      ThisShouldNot: "end-up-in-the-ping",
     });
     await m._pingPromise;
 
@@ -519,7 +519,7 @@ add_task(async function test_child_process_crash_ping() {
     await m.addCrash(p, m.CRASH_TYPE_CRASH, id, DUMMY_DATE, {
       StackTraces: stackTraces,
       MinidumpSha256Hash: sha256Hash,
-      ThisShouldNot: "end-up-in-the-ping"
+      ThisShouldNot: "end-up-in-the-ping",
     });
     await m._pingPromise;
 

@@ -12,8 +12,6 @@
 
 #include <stdint.h>
 
-#include "jsapi.h"
-
 #include "frontend/BytecodeControlStructures.h"
 #include "frontend/TryEmitter.h"
 #include "vm/Iteration.h"

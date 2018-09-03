@@ -8,9 +8,9 @@
 add_task(async function test_brokenWindowState() {
   let brokenState = {
     windows: [
-      { tabs: [{ entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }] }] }
+      { tabs: [{ entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }] }] },
     ],
-    selectedWindow: 2
+    selectedWindow: 2,
   };
 
   let gotError = false;

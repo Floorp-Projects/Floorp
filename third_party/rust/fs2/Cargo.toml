@@ -12,7 +12,7 @@
 
 [package]
 name = "fs2"
-version = "0.4.2"
+version = "0.4.3"
 authors = ["Dan Burkert <dan@danburkert.com>"]
 description = "Cross-platform file locks and file duplication."
 documentation = "https://docs.rs/fs2"
@@ -21,10 +21,13 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/danburkert/fs2-rs"
 [dev-dependencies.tempdir]
 version = "0.3"
-[target."cfg(windows)".dependencies.winapi]
-version = "0.2"
-
-[target."cfg(windows)".dependencies.kernel32-sys]
-version = "0.2"
 [target."cfg(unix)".dependencies.libc]
-version = "0.2.2"
+version = "0.2.30"
+[target."cfg(windows)".dependencies.winapi]
+version = "0.3"
+features = ["handleapi", "processthreadsapi", "winerror", "fileapi", "winbase", "std"]
+[badges.appveyor]
+repository = "danburkert/fs2-rs"
+
+[badges.travis-ci]
+repository = "danburkert/fs2-rs"

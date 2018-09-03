@@ -181,8 +181,6 @@
 #include "frontend/SharedContext.h"
 #include "frontend/SyntaxParseHandler.h"
 #include "frontend/TokenStream.h"
-#include "js/CompileOptions.h"
-#include "vm/Iteration.h"
 
 namespace js {
 

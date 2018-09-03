@@ -544,6 +544,9 @@ impl YamlHelper for Yaml {
     fn as_filter_op(&self) -> Option<FilterOp> {
         if let Some(s) = self.as_str() {
             match parse_function(s) {
+                ("identity", _, _) => {
+                    Some(FilterOp::Identity)
+                }
                 ("blur", ref args, _) if args.len() == 1 => {
                     Some(FilterOp::Blur(args[0].parse().unwrap()))
                 }

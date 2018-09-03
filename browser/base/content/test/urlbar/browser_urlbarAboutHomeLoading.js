@@ -16,10 +16,7 @@ add_task(async function clearURLBarAfterParentProcessURL() {
     }, {capture: true, once: true});
   });
   document.getElementById("home-button").click();
-  if (!tab.linkedBrowser.isRemoteBrowser) {
-    await BrowserTestUtils.waitForEvent(tab.linkedBrowser, "XULFrameLoaderCreated");
-  }
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, HomePage.get());
   is(gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "The browser should have no recorded userTypedValue");
   BrowserTestUtils.removeTab(tab);
@@ -39,10 +36,7 @@ add_task(async function clearURLBarAfterParentProcessURLInExistingTab() {
     newTabBrowser.loadURI("about:preferences");
   });
   document.getElementById("home-button").click();
-  if (!tab.linkedBrowser.isRemoteBrowser) {
-    await BrowserTestUtils.waitForEvent(tab.linkedBrowser, "XULFrameLoaderCreated");
-  }
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, HomePage.get());
   is(gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "The browser should have no recorded userTypedValue");
   BrowserTestUtils.removeTab(tab);

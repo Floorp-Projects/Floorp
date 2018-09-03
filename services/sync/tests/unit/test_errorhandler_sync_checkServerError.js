@@ -20,7 +20,7 @@ CatapultEngine.prototype = {
   exception: null, // tests fill this in
   async _sync() {
     throw this.exception;
-  }
+  },
 };
 
 async function sync_httpd_setup() {
@@ -43,7 +43,7 @@ async function sync_httpd_setup() {
     "/1.1/johndoe/info/collections":    collectionsHelper.handler,
     "/1.1/johndoe/storage/meta/global": upd("meta", globalWBO.handler()),
     "/1.1/johndoe/storage/clients":     upd("clients", clientsColl.handler()),
-    "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler())
+    "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
   };
   return httpd_setup(handlers);
 }

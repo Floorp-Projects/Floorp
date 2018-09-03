@@ -93,10 +93,10 @@ add_task(async function() {
                          // The reload icon is shifted on devedition builds
                          // where there's an additional devtools toolbar icon.
                          AppConstants.MOZ_DEV_EDITION ? inRange(r.x1, 100, 120) :
-                                                        inRange(r.x1, 65, 100)
+                                                        inRange(r.x1, 65, 100),
         },
-      ]
-    }
+      ],
+    },
   };
 
   await withPerfObserver(async function() {

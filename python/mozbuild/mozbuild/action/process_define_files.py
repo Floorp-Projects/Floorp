@@ -51,8 +51,18 @@ def process_define_file(output, input):
                             raise Exception(
                                 '`#define ALLDEFINES` is not allowed in a '
                                 'CONFIGURE_DEFINE_FILE')
+                        # WebRTC files like to define WINVER and _WIN32_WINNT
+                        # via the command line, which raises a mass of macro
+                        # redefinition warnings.  Just handle those macros
+                        # specially here.
+                        def define_for_name(name, val):
+                            define = "#define {name} {val}".format(name=name, val=val)
+                            if name in ('WINVER', '_WIN32_WINNT'):
+                                return '#if !defined({name})\n{define}\n#endif' \
+                                    .format(name=name, define=define)
+                            return define
                         defines = '\n'.join(sorted(
-                            '#define %s %s' % (name, val)
+                            define_for_name(name, val)
                             for name, val in config.defines['ALLDEFINES'].iteritems()))
                         l = l[:m.start('cmd') - 1] \
                             + defines + l[m.end('name'):]

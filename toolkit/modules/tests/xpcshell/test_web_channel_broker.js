@@ -58,7 +58,7 @@ add_task(function test_web_channel_broker_listener() {
         Assert.notEqual(sender, undefined);
         WebChannelBroker.unregisterChannel(channel);
         resolve();
-      }
+      },
     };
 
     WebChannelBroker.registerChannel(channel);
@@ -67,11 +67,11 @@ add_task(function test_web_channel_broker_listener() {
       data: {
         id: VALID_WEB_CHANNEL_ID,
         message: {
-          command: "hello"
-        }
+          command: "hello",
+        },
       },
       principal: {
-        origin: URL_STRING
+        origin: URL_STRING,
       },
       objects: {
       },

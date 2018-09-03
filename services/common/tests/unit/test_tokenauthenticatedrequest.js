@@ -34,7 +34,7 @@ add_task(async function test_authenticated_request() {
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
   let uri = CommonUtils.makeURI(server.baseURI + "/foo");
   let sig = CryptoUtils.computeHTTPMACSHA1(id, key, method, uri, extra);

@@ -34,30 +34,6 @@ interface nsISHistoryListener : nsISupports
    */
    void OnHistoryNewEntry(in nsIURI aNewURI, in long aOldIndex);
 
-  /**
-   * Called when navigating to a previous session history entry, for example
-   * due to a nsIWebNavigation::goBack() call.
-   *
-   * @param aBackURI    The URI of the session history entry being navigated to.
-   *                    It could be null in case of a grouped session history
-   *                    navigation since we have no URI information of entries
-   *                    existing in other partial histories.
-   * @return            Whether the operation can proceed.
-   */
-   boolean OnHistoryGoBack(in nsIURI aBackURI);
-
-  /**
-   * Called when navigating to a next session history entry, for example
-   * due to a nsIWebNavigation::goForward() call.
-   *
-   * @param aForwardURI   The URI of the session history entry being navigated to.
-   *                      It could be null in case of a grouped session history
-   *                      navigation since we have no URI information of entries
-   *                      existing in other partial histories.
-   * @return              Whether the operation can proceed.
-   */
-   boolean OnHistoryGoForward(in nsIURI aForwardURI);
-
   /** 
    * Called when the current document is reloaded, for example due to a
    * nsIWebNavigation::reload() call.

@@ -1124,7 +1124,7 @@ class RDFDataSource {
     // Suggested prefixes to use for namespaces, index is prefix, value is namespaceURI.
     this._prefixes = {
       rdf: NS_RDF,
-      NC: NS_NC
+      NC: NS_NC,
     };
 
     if (!document) {
@@ -1269,7 +1269,7 @@ class RDFDataSource {
               namespaceURI: this._prefixes[i],
               prefix: i,
               localName: local,
-              qname: i ? `${i}:${local}` : local
+              qname: i ? `${i}:${local}` : local,
             };
           }
         }
@@ -1315,7 +1315,7 @@ class RDFDataSource {
             namespaceURI: attr.value,
             prefix,
             localName: local,
-            qname: prefix ? `${prefix}:${local}` : local
+            qname: prefix ? `${prefix}:${local}` : local,
           };
         }
       }

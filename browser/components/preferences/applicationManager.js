@@ -56,7 +56,7 @@ var gAppManagerDialog = {
     // result will impact the size of the subdialog.
     await document.l10n.translateElements([
       appDescElem,
-      document.getElementById("appType")
+      document.getElementById("appType"),
     ]);
   },
 
@@ -113,5 +113,5 @@ var gAppManagerDialog = {
                                                         : "app-manager-web-app-info";
     const appTypeElem = document.getElementById("appType");
     document.l10n.setAttributes(appTypeElem, l10nId);
-  }
+  },
 };

@@ -209,7 +209,7 @@ if (AppConstants.MOZ_CODE_COVERAGE) {
 const gInterestingCategories = new Set([
   "agent-style-sheets", "addon-provider-module", "webextension-modules",
   "webextension-scripts", "webextension-schemas", "webextension-scripts-addon",
-  "webextension-scripts-content", "webextension-scripts-devtools"
+  "webextension-scripts-content", "webextension-scripts-devtools",
 ]);
 
 var gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
@@ -408,7 +408,7 @@ function parseCodeFile(fileUri) {
             ["devtools/client/locales", "chrome://devtools/locale"],
             ["devtools/shared/locales", "chrome://devtools-shared/locale"],
             ["devtools/shared/platform", "resource://devtools/shared/platform/chrome"],
-            ["devtools", "resource://devtools"]
+            ["devtools", "resource://devtools"],
           ];
 
           match = line.match(/["']((?:devtools|gcli)\/[^\\#"']+)["']/);

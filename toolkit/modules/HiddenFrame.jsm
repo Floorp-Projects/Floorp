@@ -108,5 +108,5 @@ HiddenFrame.prototype = {
     docShell.createAboutBlankContentViewer(Services.scriptSecurityManager.getSystemPrincipal());
     docShell.useGlobalHistory = false;
     this._browser.loadURI(XUL_PAGE, 0, null, null, null);
-  }
+  },
 };

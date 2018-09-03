@@ -5,7 +5,6 @@
 "use strict";
 
 const Services = require("Services");
-const { AccessibilityFront } = require("devtools/shared/fronts/accessibility");
 
 // @remove after release 63 (See Bug 1482461)
 const PROMOTE_COUNT_PREF = "devtools.promote.accessibility";
@@ -18,7 +17,7 @@ class AccessibilityStartup {
   constructor(toolbox) {
     this.toolbox = toolbox;
 
-    this._updateAccessibilityState = this._updateAccessibilityState.bind(this);
+    this._updateToolHighlight = this._updateToolHighlight.bind(this);
 
     // Creates accessibility front.
     this.initAccessibility();
@@ -41,16 +40,14 @@ class AccessibilityStartup {
 
   /**
    * Fully initialize accessibility front. Also add listeners for accessibility
-   * service lifecycle events that affect picker state and the state of the tool tab
-   * highlight.
+   * service lifecycle events that affect the state of the tool tab highlight.
    * @return {Promise}
    *         A promise for when accessibility front is fully initialized.
    */
   initAccessibility() {
     if (!this._initAccessibility) {
       this._initAccessibility = (async function() {
-        this._accessibility = new AccessibilityFront(this.target.client,
-                                                     this.target.form);
+        this._accessibility = this.target.getFront("accessibility");
         // We must call a method on an accessibility front here (such as getWalker), in
         // oreder to be able to check actor's backward compatibility via actorHasMethod.
         // See targe.js@getActorDescription for more information.
@@ -63,9 +60,10 @@ class AccessibilityStartup {
           await this._accessibility.bootstrap();
         }
 
-        this._updateAccessibilityState();
-        this._accessibility.on("init", this._updateAccessibilityState);
-        this._accessibility.on("shutdown", this._updateAccessibilityState);
+        this._updateToolHighlight();
+
+        this._accessibility.on("init", this._updateToolHighlight);
+        this._accessibility.on("shutdown", this._updateToolHighlight);
       }.bind(this))();
     }
 
@@ -92,11 +90,10 @@ class AccessibilityStartup {
       // conditions in the initialization process can throw errors.
       await this._initAccessibility;
 
-      this._accessibility.off("init", this._updateAccessibilityState);
-      this._accessibility.off("shutdown", this._updateAccessibilityState);
+      this._accessibility.off("init", this._updateToolHighlight);
+      this._accessibility.off("shutdown", this._updateToolHighlight);
 
       await this._walker.destroy();
-      await this._accessibility.destroy();
       this._accessibility = null;
       this._walker = null;
     }.bind(this))();
@@ -104,31 +101,14 @@ class AccessibilityStartup {
   }
 
   /**
-   * Update states of the accessibility picker and accessibility tab highlight.
-   * @return {[type]} [description]
-   */
-  _updateAccessibilityState() {
-    this._updateAccessibilityToolHighlight();
-    this._updatePickerButton();
-  }
-
-  /**
-   * Update picker button state and ensure toolbar is re-rendered correctly.
-   */
-  _updatePickerButton() {
-    this.toolbox.updatePickerButton();
-    // Calling setToolboxButtons to make sure toolbar is re-rendered correctly.
-    this.toolbox.component.setToolboxButtons(this.toolbox.toolbarButtons);
-  }
-
-  /**
    * Set the state of the accessibility tab highlight depending on whether the
    * accessibility service is initialized or shutdown.
    */
-  _updateAccessibilityToolHighlight() {
-    if (this._accessibility.enabled) {
+  async _updateToolHighlight() {
+    const isHighlighted = await this.toolbox.isToolHighlighted("accessibility");
+    if (this._accessibility.enabled && !isHighlighted) {
       this.toolbox.highlightTool("accessibility");
-    } else {
+    } else if (!this._accessibility.enabled && isHighlighted) {
       this.toolbox.unhighlightTool("accessibility");
     }
   }

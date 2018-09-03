@@ -97,7 +97,7 @@ RESTRequest.prototype = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIBadCertListener2,
     Ci.nsIInterfaceRequestor,
-    Ci.nsIChannelEventSink
+    Ci.nsIChannelEventSink,
   ]),
 
   /** Public API: **/
@@ -539,7 +539,7 @@ RESTRequest.prototype = {
 
     // We let all redirects proceed.
     callback.onRedirectVerifyCallback(Cr.NS_OK);
-  }
+  },
 };
 
 /**
@@ -630,7 +630,7 @@ RESTResponse.prototype = {
   /**
    * HTTP body (string)
    */
-  body: null
+  body: null,
 
 };
 

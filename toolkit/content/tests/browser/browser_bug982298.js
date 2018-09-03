@@ -15,7 +15,7 @@ add_task(async function() {
           resolve();
         },
         onCurrentSelection() {},
-        onMatchesCountResult() {}
+        onMatchesCountResult() {},
       };
       info("about to add results listener, open find bar, and send 'F' string");
       browser.finder.addResultListener(listener);
@@ -49,7 +49,7 @@ add_task(async function() {
           resolve();
         },
         onCurrentSelection() {},
-        onMatchesCountResult() {}
+        onMatchesCountResult() {},
       };
 
       browser.finder.addResultListener(listener);

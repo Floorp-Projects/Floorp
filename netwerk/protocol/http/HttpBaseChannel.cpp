@@ -331,6 +331,10 @@ HttpBaseChannel::SetIsTrackingResource(bool aIsThirdParty)
     MOZ_ASSERT(!mIsThirdPartyTrackingResource);
     mIsFirstPartyTrackingResource = true;
   }
+
+  if (mLoadInfo) {
+    MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTracker(true));
+  }
 }
 
 nsresult

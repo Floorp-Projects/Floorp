@@ -92,7 +92,7 @@ add_task(async function setup() {
       // easily get ourselves into a predictable tab spinner
       // state.
       ["browser.tabs.remote.force-paint", false],
-    ]
+    ],
   });
 });
 

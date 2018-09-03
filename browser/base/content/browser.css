@@ -185,6 +185,7 @@ panelview[mainview] > .panel-header {
   transition: visibility 0ms 25ms;
 }
 
+.tab-icon-pending:not([fadein]),
 .tab-icon-image:not([fadein]),
 .tab-close-button:not([fadein]),
 .tabbrowser-tab:not([fadein])::after,

@@ -40,7 +40,7 @@ add_task(async function test_findCluster() {
         id: "id",
         key: "key",
         uid: "uid",
-      })
+      }),
   });
 
   cluster = await Service.identity._findCluster();

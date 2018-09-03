@@ -21,11 +21,6 @@
 #include "vm/TraceLoggingGraph.h"
 #include "vm/TraceLoggingTypes.h"
 
-
-namespace JS {
-class ReadOnlyCompileOptions;
-} // namespace JS
-
 namespace js {
 
 namespace jit {

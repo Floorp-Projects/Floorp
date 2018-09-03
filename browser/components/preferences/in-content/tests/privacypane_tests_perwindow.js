@@ -20,7 +20,7 @@ function controlChanged(element) {
 function test_pane_visibility(win) {
   let modes = {
     "remember": "historyRememberPane",
-    "custom": "historyCustomPane"
+    "custom": "historyCustomPane",
   };
 
   let historymode = win.document.getElementById("historyMode");
@@ -54,7 +54,7 @@ function test_dependent_elements(win) {
     ok(control, "the dependent controls should exist");
   });
   let independents = [
-    win.document.getElementById("blockCookies")
+    win.document.getElementById("blockCookies"),
   ];
   independents.forEach(function(control) {
     ok(control, "the independent controls should exist");
@@ -206,7 +206,7 @@ function test_dependent_prefs(win) {
   ok(historymode, "history mode menulist should exist");
   let controls = [
     win.document.getElementById("rememberHistory"),
-    win.document.getElementById("rememberForms")
+    win.document.getElementById("rememberForms"),
   ];
   controls.forEach(function(control) {
     ok(control, "the micro-management controls should exist");

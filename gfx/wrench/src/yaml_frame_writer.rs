@@ -228,6 +228,7 @@ fn write_stacking_context(
     let mut filters = vec![];
     for filter in filter_iter {
         match filter {
+            FilterOp::Identity => { filters.push(Yaml::String("identity".into())) }
             FilterOp::Blur(x) => { filters.push(Yaml::String(format!("blur({})", x))) }
             FilterOp::Brightness(x) => { filters.push(Yaml::String(format!("brightness({})", x))) }
             FilterOp::Contrast(x) => { filters.push(Yaml::String(format!("contrast({})", x))) }

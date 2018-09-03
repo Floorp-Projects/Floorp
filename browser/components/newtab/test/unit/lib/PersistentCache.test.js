@@ -15,7 +15,7 @@ describe("PersistentCache", () => {
       File: {
         exists: async () => true,
         read: async () => ({}),
-        writeAtomic: sinon.spy()
+        writeAtomic: sinon.stub().returns(Promise.resolve())
       },
       Path: {join: () => filename}
     };

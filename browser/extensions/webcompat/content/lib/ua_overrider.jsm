@@ -88,8 +88,7 @@ class UAOverrider {
   getBaseDomainFromURI(uri) {
     try {
       return Services.eTLD.getBaseDomain(uri);
-    } catch (ex) {
-      console.error(`Could not getBaseDomain() for "${uri}"`, ex);
+    } catch (_) {
       return false;
     }
   }

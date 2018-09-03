@@ -643,5 +643,5 @@ var FinderIterator = {
     } while (node);
 
     return isInsideLink;
-  }
+  },
 };

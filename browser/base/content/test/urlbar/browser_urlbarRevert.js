@@ -10,7 +10,7 @@ function test() {
         gBrowser.removeProgressListener(this);
         executeSoon(checkURLBarRevert);
       }
-    }
+    },
   };
 
   gBrowser.addProgressListener(pageLoaded);

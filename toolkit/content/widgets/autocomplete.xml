@@ -139,7 +139,7 @@
             configurable: true,
             enumerable: true,
             writable: true,
-            value: module.PrivateBrowsingUtils
+            value: module.PrivateBrowsingUtils,
           });
           return module.PrivateBrowsingUtils;
         ]]></getter>
@@ -490,7 +490,7 @@
               if (this.popup.selectedIndex >= 0) {
                 this._selectionDetails = {
                   index: this.popup.selectedIndex,
-                  kind: "key"
+                  kind: "key",
                 };
               }
               cancel = this.handleEnter(aEvent);
@@ -586,7 +586,7 @@
             return this._autocomplete.editor.isSelectionEditable &&
                    this._autocomplete.editor.canPaste(this._kGlobalClipboard);
           },
-          onEvent() {}
+          onEvent() {},
         })
       ]]></field>
 

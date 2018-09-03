@@ -286,11 +286,6 @@ interface nsINavBookmarksService : nsISupports
    */
   readonly attribute long long tagsFolder;
 
- /**
-  * The item ID of the unfiled-bookmarks folder.
-  */
-  readonly attribute long long unfiledBookmarksFolder;
-
   /**
    * The item ID of the personal toolbar folder.
    */

@@ -60,7 +60,7 @@ var EXPORTED_SYMBOLS = [
   "isArrayBuffer",
   "isTypedArray",
   "defineLazyGetter",
-  "OS" // Warning: this exported symbol will disappear
+  "OS", // Warning: this exported symbol will disappear
 ];
 
 // //////////////////// Configuration of OS.File
@@ -76,7 +76,7 @@ var Config = {
   /**
    * TEST
    */
-  TEST: false
+  TEST: false,
 };
 exports.Config = Config;
 
@@ -103,10 +103,10 @@ var defineLazyGetter = function defineLazyGetter(object, name, getter) {
       delete this[name];
       let value = getter.call(this);
       Object.defineProperty(object, name, {
-        value
+        value,
       });
       return value;
-    }
+    },
   });
 };
 exports.defineLazyGetter = defineLazyGetter;
@@ -213,7 +213,7 @@ var clone = function(object, refs = []) {
       },
       set(value) {
         object[key] = value;
-      }
+      },
     });
   };
   for (let k in object) {
@@ -298,7 +298,7 @@ Type.prototype = {
     {
       get() {
         return ptr_t;
-      }
+      },
     });
     return ptr_t;
   },
@@ -316,7 +316,7 @@ Type.prototype = {
     {
       get() {
         return ptr_t;
-      }
+      },
     });
     return ptr_t;
   },
@@ -338,7 +338,7 @@ Type.prototype = {
     {
       get() {
         return ptr_t;
-      }
+      },
     });
     return ptr_t;
   },
@@ -399,7 +399,7 @@ Type.prototype = {
    */
   get size() {
     return this.implementation.size;
-  }
+  },
 };
 
 /**
@@ -436,7 +436,7 @@ function PtrType(name, implementation, targetType) {
    * The type of values targeted by this pointer type.
    */
   Object.defineProperty(this, "targetType", {
-    value: targetType
+    value: targetType,
   });
 }
 PtrType.prototype = Object.create(Type.prototype);
@@ -625,7 +625,7 @@ Type.voidptr_t =
 ["in_ptr", "out_ptr", "inout_ptr"].forEach(function(key) {
   Object.defineProperty(Type.void_t, key,
   {
-    value: Type.voidptr_t
+    value: Type.voidptr_t,
   });
 });
 
@@ -936,7 +936,7 @@ HollowStructure.prototype = {
           " (" + result.implementation.toSource() + ")");
     }
     return result;
-  }
+  },
 };
 exports.HollowStructure = HollowStructure;
 
@@ -979,7 +979,7 @@ Library.prototype = Object.freeze({
     this._candidates = null;
     if (library) {
       Object.defineProperty(this, "library", {
-        value: library
+        value: library,
       });
       Object.freeze(this);
       return library;
@@ -988,7 +988,7 @@ Library.prototype = Object.freeze({
     Object.defineProperty(this, "library", {
       get() {
         throw error;
-      }
+      },
     });
     Object.freeze(this);
     throw error;
@@ -1017,7 +1017,7 @@ Library.prototype = Object.freeze({
         return undefined;
       },
       configurable: true,
-      enumerable: true
+      enumerable: true,
     });
   },
 
@@ -1044,7 +1044,7 @@ Library.prototype = Object.freeze({
         return undefined;
       },
       configurable: true,
-      enumerable: true
+      enumerable: true,
     });
   },
 
@@ -1080,13 +1080,13 @@ Library.prototype = Object.freeze({
         return undefined;
       },
       configurable: true,
-      enumerable: true
+      enumerable: true,
     });
   },
 
   toString() {
     return "[Library " + this.name + "]";
-  }
+  },
 });
 exports.Library = Library;
 
@@ -1179,7 +1179,7 @@ function declareLazyFFI(object, field, ...declareFFIArgs) {
       return undefined;
     },
     configurable: true,
-    enumerable: true
+    enumerable: true,
   });
 }
 exports.declareLazyFFI = declareLazyFFI;
@@ -1208,7 +1208,7 @@ function declareLazy(object, field, lib, ...declareArgs) {
         return undefined;
       }
     },
-    configurable: true
+    configurable: true,
   });
 }
 exports.declareLazy = declareLazy;
@@ -1281,8 +1281,8 @@ exports.OS = {
     declareFFI,
     projectValue,
     isTypedArray,
-    defineLazyGetter
-  }
+    defineLazyGetter,
+  },
 };
 
 Object.defineProperty(exports.OS.Shared, "DEBUG", {
@@ -1291,7 +1291,7 @@ Object.defineProperty(exports.OS.Shared, "DEBUG", {
   },
   set(x) {
     return Config.DEBUG = x;
-  }
+  },
 });
 Object.defineProperty(exports.OS.Shared, "TEST", {
   get() {
@@ -1299,7 +1299,7 @@ Object.defineProperty(exports.OS.Shared, "TEST", {
   },
   set(x) {
     return Config.TEST = x;
-  }
+  },
 });
 
 

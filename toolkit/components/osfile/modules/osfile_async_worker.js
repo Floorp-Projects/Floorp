@@ -18,7 +18,7 @@ if (this.Components) {
   // to the main thread.
   let timeStamps = {
     entered: Date.now(),
-    loaded: null
+    loaded: null,
   };
 
   importScripts("resource://gre/modules/osfile.jsm");
@@ -30,7 +30,7 @@ if (this.Components) {
   let worker = new PromiseWorker.AbstractWorker();
   worker.dispatch = function(method, args = []) {
     return Agent[method](...args);
-  },
+  };
   worker.log = LOG;
   worker.postMessage = function(message, ...transfers) {
     if (timeStamps) {
@@ -95,7 +95,7 @@ if (this.Components) {
     */
    listOpenedResources: function listOpenedResources() {
      return Array.from(this._map, ([id, resource]) => resource.info.path);
-   }
+   },
   };
 
  /**
@@ -172,7 +172,7 @@ if (this.Components) {
      let result = {
        openedFiles: OpenedFiles.listOpenedResources(),
        openedDirectoryIterators: OpenedDirectoryIterators.listOpenedResources(),
-       killed: false // Placeholder
+       killed: false, // Placeholder
      };
 
      // Is it safe to kill the worker?
@@ -223,7 +223,7 @@ if (this.Components) {
      return OpenedFiles.add(file, {
        // Adding path information to keep track of opened files
        // to report leaks when debugging.
-       path: filePath
+       path: filePath,
      });
    },
    openUnique: function openUnique(path, options) {
@@ -232,12 +232,12 @@ if (this.Components) {
      let resourceId = OpenedFiles.add(openedFile.file, {
        // Adding path information to keep track of opened files
        // to report leaks when debugging.
-       path: openedFile.path
+       path: openedFile.path,
      });
 
      return {
        path: openedFile.path,
-       file: resourceId
+       file: resourceId,
      };
    },
    read: function read(path, bytes, options) {
@@ -248,9 +248,9 @@ if (this.Components) {
      return new Meta({
          buffer: data.buffer,
          byteOffset: data.byteOffset,
-         byteLength: data.byteLength
+         byteLength: data.byteLength,
      }, {
-       transfers: [data.buffer]
+       transfers: [data.buffer],
      });
    },
    exists: function exists(path) {
@@ -274,7 +274,7 @@ if (this.Components) {
      return OpenedDirectoryIterators.add(iterator, {
        // Adding path information to keep track of opened directory
        // iterators to report leaks when debugging.
-       path: directoryPath
+       path: directoryPath,
      });
    },
    // Methods of OS.File
@@ -313,9 +313,9 @@ if (this.Components) {
          return new Meta({
              buffer: data.buffer,
              byteOffset: data.byteOffset,
-             byteLength: data.byteLength
+             byteLength: data.byteLength,
          }, {
-           transfers: [data.buffer]
+           transfers: [data.buffer],
          });
        }
      );
@@ -389,7 +389,7 @@ if (this.Components) {
        function do_exists() {
          return this.exists();
        });
-   }
+   },
   };
   if (!SharedAll.Constants.Win) {
     Agent.unixSymLink = function unixSymLink(sourcePath, destPath) {

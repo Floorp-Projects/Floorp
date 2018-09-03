@@ -237,7 +237,7 @@
                   popup.addEventListener("popupshowing", event => {
                     createUserContextMenu(event, {
                       useAccessKeys: false,
-                      showDefaultTab: Services.prefs.getIntPref("privacy.userContext.longPressBehavior") == 1
+                      showDefaultTab: Services.prefs.getIntPref("privacy.userContext.longPressBehavior") == 1,
                     });
                   });
                   parent.appendChild(popup);
@@ -545,7 +545,7 @@
               layoutData = this._pinnedTabsLayoutCache = {
                 uiDensity,
                 pinnedTabWidth: this.children[0].getBoundingClientRect().width,
-                scrollButtonWidth: arrowScrollbox._scrollButtonDown.getBoundingClientRect().width
+                scrollButtonWidth: arrowScrollbox._scrollButtonDown.getBoundingClientRect().width,
               };
             }
 
@@ -1313,7 +1313,7 @@
           scrollX: this.arrowScrollbox._scrollbox.scrollLeft,
           screenX: event.screenX,
           movingTabs: (tab.multiselected ? gBrowser.selectedTabs : [tab])
-                      .filter(t => t.pinned == tab.pinned)
+                      .filter(t => t.pinned == tab.pinned),
         };
 
         event.stopPropagation();
@@ -1675,6 +1675,9 @@
                      class="tab-throbber-fallback"
                      role="presentation"
                      layer="true"/>
+          <xul:hbox xbl:inherits="fadein,pinned,busy,progress,selected=visuallyselected,pendingicon"
+                    anonid="tab-icon-pending"
+                    class="tab-icon-pending"/>
           <xul:image xbl:inherits="src=image,triggeringprincipal=iconloadingprincipal,requestcontextid,fadein,pinned,selected=visuallyselected,busy,crashed,sharing"
                      anonid="tab-icon-image"
                      class="tab-icon-image"

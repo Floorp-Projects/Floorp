@@ -11,13 +11,13 @@ add_task(async function() {
       dialogURL = aDialogURL;
       masterPasswordSet = masterPasswordNextState;
       aCallback();
-    }
+    },
   };
   let masterPasswordSet = false;
   win.LoginHelper = {
     isMasterPasswordSet() {
       return masterPasswordSet;
-    }
+    },
   };
 
   let checkbox = doc.querySelector("#useMasterPassword");

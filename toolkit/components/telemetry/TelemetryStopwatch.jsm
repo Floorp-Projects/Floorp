@@ -106,7 +106,7 @@ let Timers = {
     // empty. We accept that trade-off here, given that entries for short-lived
     // objects will go away when they are no longer referenced
     return true;
-  }
+  },
 };
 
 var TelemetryStopwatch = {
@@ -411,5 +411,5 @@ var TelemetryStopwatchImpl = {
     }
 
     return Timers.delete(histogram, object, key);
-  }
+  },
 };

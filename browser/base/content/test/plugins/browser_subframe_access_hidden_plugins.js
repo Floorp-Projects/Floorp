@@ -43,7 +43,7 @@ add_task(async function test_plugin_accessible_in_subframe() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: DOMAIN_1
+    url: DOMAIN_1,
   }, async function(browser) {
     await ContentTask.spawn(browser, [TEST_PLUGIN_NAME, DOMAIN_2],
                             async function([pluginName, domain2]) {

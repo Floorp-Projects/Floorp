@@ -59,8 +59,8 @@ add_task(async function test_setup() {
     set: [
       [TelemetryUtils.Preferences.OverridePreRelease, true],
       [TelemetryUtils.Preferences.HybridContentEnabled, true],
-      [TelemetryUtils.Preferences.LogLevel, "Trace"]
-    ]
+      [TelemetryUtils.Preferences.LogLevel, "Trace"],
+    ],
   });
   // And take care of the already initialized one as well.
   let canRecordExtended = Services.telemetry.canRecordExtended;
@@ -158,7 +158,7 @@ add_task(async function test_trusted_disabled_hybrid_telemetry() {
 
   // This test requires hybrid content telemetry to be disabled.
   await SpecialPowers.pushPrefEnv({
-    set: [[TelemetryUtils.Preferences.HybridContentEnabled, false]]
+    set: [[TelemetryUtils.Preferences.HybridContentEnabled, false]],
   });
 
   // Install a custom handler that intercepts hybrid content telemetry messages

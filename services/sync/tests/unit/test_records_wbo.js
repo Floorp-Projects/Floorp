@@ -43,7 +43,7 @@ add_task(async function test_fetch() {
   let server = httpd_setup({
     "/record":  httpd_handler(200, "OK", JSON.stringify(record)),
     "/record2": httpd_handler(200, "OK", JSON.stringify(record2)),
-    "/coll":    httpd_handler(200, "OK", JSON.stringify(coll))
+    "/coll":    httpd_handler(200, "OK", JSON.stringify(coll)),
   });
 
   try {

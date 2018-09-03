@@ -115,14 +115,14 @@ add_test(function test_disable() {
       Services.prefs.setBoolPref("browser.safebrowsing.passwords.enabled", true);
 
       run_next_test();
-    }
+    },
   });
 });
 
 add_test(function test_nullQuery() {
   try {
     gLoginRep.queryReputation(null, {
-      onComplete(aStatus, aVerdict) {}
+      onComplete(aStatus, aVerdict) {},
     });
     do_throw("Query parameter cannot be null");
   } catch (ex) {
@@ -141,7 +141,7 @@ add_test(function test_local_whitelist() {
       Assert.equal(aVerdict, Ci.nsILoginReputationVerdictType.SAFE);
 
       run_next_test();
-    }
+    },
   });
 });
 
@@ -154,6 +154,6 @@ add_test(function test_notin_local_whitelist() {
       Assert.equal(aVerdict, Ci.nsILoginReputationVerdictType.UNSPECIFIED);
 
       run_next_test();
-    }
+    },
   });
 });

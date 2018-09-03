@@ -19,37 +19,6 @@ namespace a11y {
 typedef ProgressMeterAccessible<1> HTMLProgressMeterAccessible;
 
 /**
- * Accessible for HTML input@type="checkbox".
- */
-class HTMLCheckboxAccessible : public LeafAccessible
-{
-
-public:
-  enum { eAction_Click = 0 };
-
-  HTMLCheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    LeafAccessible(aContent, aDoc)
-  {
-    // Ignore "CheckboxStateChange" DOM event in lieu of document observer
-    // state change notification.
-    mStateFlags |= eIgnoreDOMUIEvent;
-  }
-
-  // Accessible
-  virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() const override;
-
-  // ActionAccessible
-  virtual uint8_t ActionCount() const override;
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) const override;
-
-  // Widgets
-  virtual bool IsWidget() const override;
-};
-
-
-/**
  * Accessible for HTML input@type="radio" element.
  */
 class HTMLRadioButtonAccessible : public RadioButtonAccessible
@@ -145,7 +114,7 @@ protected:
   /**
    * Return a XUL widget element this input is part of.
    */
-  nsIContent* XULWidgetElm() const { return mContent->GetBindingParent(); }
+  nsIContent* BindingParent() const { return mContent->GetBindingParent(); }
 };
 
 

@@ -6,6 +6,7 @@
 
 const {
   CLEAR_FLEXBOX,
+  TOGGLE_FLEX_ITEM_SHOWN,
   UPDATE_FLEXBOX,
   UPDATE_FLEXBOX_COLOR,
   UPDATE_FLEXBOX_HIGHLIGHTED,
@@ -30,6 +31,22 @@ const reducers = {
 
   [CLEAR_FLEXBOX](flexbox, _) {
     return INITIAL_FLEXBOX;
+  },
+
+  [TOGGLE_FLEX_ITEM_SHOWN](flexbox, { nodeFront }) {
+    return Object.assign({}, flexbox, {
+      flexItems: flexbox.flexItems.map(flexItem => {
+        if (flexItem.nodeFront !== nodeFront) {
+          return Object.assign({}, flexItem, {
+            shown: false,
+          });
+        }
+
+        return Object.assign({}, flexItem, {
+          shown: !flexItem.shown,
+        });
+      })
+    });
   },
 
   [UPDATE_FLEXBOX](_, { flexbox }) {

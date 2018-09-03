@@ -13,11 +13,7 @@ describe("ASRouterTriggerListeners", () => {
   function resetEnumeratorStub(windows) {
     windowEnumeratorStub
       .withArgs("navigator:browser")
-      .returns({
-        _count: -1,
-        hasMoreElements() { this._count++; return this._count < windows.length; },
-        getNext() { return windows[this._count]; }
-      });
+      .returns(windows);
   }
 
   beforeEach(async () => {
@@ -121,12 +117,12 @@ describe("ASRouterTriggerListeners", () => {
         const newTriggerHandler = sinon.stub();
         openURLListener.init(newTriggerHandler, hosts);
 
-        const browser = {messageManager: {}};
+        const browser = {};
         const webProgress = {isTopLevel: true};
         const location = "https://www.mozilla.org/something";
         openURLListener.onLocationChange(browser, webProgress, undefined, {spec: location});
         assert.calledOnce(newTriggerHandler);
-        assert.calledWithExactly(newTriggerHandler, browser.messageManager, {id: "openURL", param: "www.mozilla.org"});
+        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: "www.mozilla.org"});
       });
     });
   });

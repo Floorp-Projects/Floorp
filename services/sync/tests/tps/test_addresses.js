@@ -9,7 +9,7 @@ EnableEngines(["addresses"]);
 var phases = {
   "phase1": "profile1",
   "phase2": "profile2",
-  "phase3": "profile1"
+  "phase3": "profile1",
 };
 
 const address1 = [{
@@ -25,8 +25,8 @@ const address1 = [{
   "tel": "+16172535702",
   "email": "timbl@w3.org",
   changes: {
-    "organization": "W3C"
-  }
+    "organization": "W3C",
+  },
 }];
 
 const address1_after = [{
@@ -59,7 +59,7 @@ const address2 = [{
 
 Phase("phase1", [
   [Addresses.add, address1],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase2", [
@@ -67,11 +67,11 @@ Phase("phase2", [
   [Addresses.verify, address1],
   [Addresses.modify, address1],
   [Addresses.add, address2],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase3", [
   [Sync],
   [Addresses.verify, address1_after],
-  [Addresses.verify, address2]
+  [Addresses.verify, address2],
 ]);

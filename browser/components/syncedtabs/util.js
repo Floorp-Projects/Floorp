@@ -5,7 +5,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "getChromeWindow"
+  "getChromeWindow",
 ];
 
 // Get the chrome (ie, browser) window hosting this content.

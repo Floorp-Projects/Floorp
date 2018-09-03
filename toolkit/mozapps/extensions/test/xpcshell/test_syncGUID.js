@@ -62,7 +62,7 @@ add_test(async function test_getter_and_setter() {
 
       run_next_test();
      });
-    }
+    },
   };
 
   AddonManager.addInstallListener(listener);
@@ -109,7 +109,7 @@ add_test(async function test_error_on_duplicate_syncguid_insert() {
         }
        });
       }
-    }
+    },
   };
 
   AddonManager.addInstallListener(listener);

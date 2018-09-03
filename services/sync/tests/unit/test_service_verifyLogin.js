@@ -44,7 +44,7 @@ add_task(async function test_verifyLogin() {
     "/1.1/janedoe/info/collections": service_unavailable,
 
     "/1.1/johndoe/storage/crypto/keys": johnU("crypto", new ServerWBO("keys").handler()),
-    "/1.1/johndoe/storage/meta/global": johnU("meta", new ServerWBO("global").handler())
+    "/1.1/johndoe/storage/meta/global": johnU("meta", new ServerWBO("global").handler()),
   });
 
   try {

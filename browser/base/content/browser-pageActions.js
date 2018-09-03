@@ -1247,7 +1247,7 @@ BrowserPageActions.shareURL = {
     }
     bodyNode.appendChild(fragment);
     this._cached = true;
-  }
+  },
 };
 
 // Attach sharingService here so tests can override the implementation

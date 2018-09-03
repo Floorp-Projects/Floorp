@@ -53,7 +53,7 @@ function promiseFindResult(findbar, str = null) {
           resolve();
         }
       },
-      onMatchesCountResult: () => {}
+      onMatchesCountResult: () => {},
     };
     findbar.browser.finder.addResultListener(listener);
   });
@@ -78,7 +78,7 @@ function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest =
       let callCounts = {
         insertCalls: [],
         removeCalls: [],
-        animationCalls: []
+        animationCalls: [],
       };
       let lastMaskNode, lastOutlineNode;
       let rects = [];

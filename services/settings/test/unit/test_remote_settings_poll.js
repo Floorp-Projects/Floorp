@@ -68,13 +68,13 @@ add_task(async function test_check_success() {
     last_modified: 1100,
     host: "localhost",
     bucket: "some-other-bucket",
-    collection: "test-collection"
+    collection: "test-collection",
   }, {
     id: "254cbb9e-6888-4d9f-8e60-58b74faa8778",
     last_modified: 1000,
     host: "localhost",
     bucket: "test-bucket",
-    collection: "test-collection"
+    collection: "test-collection",
   }]));
 
   // add a test kinto client that will respond to lastModified information
@@ -91,7 +91,7 @@ add_task(async function test_check_success() {
     observe(aSubject, aTopic, aData) {
       Services.obs.removeObserver(this, "remote-settings-changes-polled");
       notificationObserved = true;
-    }
+    },
   };
   Services.obs.addObserver(observer, "remote-settings-changes-polled");
 
@@ -126,7 +126,7 @@ add_task(async function test_update_timer_interface() {
     last_modified: 42,
     host: "localhost",
     bucket: "main",
-    collection: "whatever-collection"
+    collection: "whatever-collection",
   }]));
 
   await new Promise((resolve) => {
@@ -135,7 +135,7 @@ add_task(async function test_update_timer_interface() {
       observe(aSubject, aTopic, aData) {
         Services.obs.removeObserver(this, e);
         resolve();
-      }
+      },
     };
     Services.obs.addObserver(changesPolledObserver, e);
     remoteSettings.notify(null);
@@ -169,7 +169,7 @@ add_task(async function test_check_up_to_date() {
     observe(aSubject, aTopic, aData) {
       Services.obs.removeObserver(this, "remote-settings-changes-polled");
       notificationObserved = true;
-    }
+    },
   };
   Services.obs.addObserver(observer, "remote-settings-changes-polled");
 
@@ -204,22 +204,22 @@ add_task(async function test_success_with_partial_list() {
       last_modified: 43,
       host: "localhost",
       bucket: "main",
-      collection: "cid-1"
+      collection: "cid-1",
     }, {
       id: "98a34576-bcd6-423f-abc2-1d290b776ed8",
       last_modified: 42,
       host: "localhost",
       bucket: "main",
-      collection: "test-collection"
+      collection: "test-collection",
     }];
     if (request.queryString == `_since=${encodeURIComponent('"42"')}`) {
       response.write(JSON.stringify({
-        data: entries.slice(0, 1)
+        data: entries.slice(0, 1),
       }));
       response.setHeader("ETag", '"43"');
     } else {
       response.write(JSON.stringify({
-        data: entries
+        data: entries,
       }));
       response.setHeader("ETag", '"42"');
     }
@@ -282,7 +282,7 @@ add_task(async function test_server_error() {
     observe(aSubject, aTopic, aData) {
       Services.obs.removeObserver(this, "remote-settings-changes-polled");
       notificationObserved = true;
-    }
+    },
   };
   Services.obs.addObserver(observer, "remote-settings-changes-polled");
   Services.prefs.setIntPref(PREF_LAST_UPDATE, 42);
@@ -395,7 +395,7 @@ add_task(async function test_backoff() {
     last_modified: 1300,
     host: "localhost",
     bucket: "some-bucket",
-    collection: "some-collection"
+    collection: "some-collection",
   }]));
   Services.prefs.setCharPref(PREF_SETTINGS_SERVER_BACKOFF, `${Date.now() - 1000}`);
 
@@ -441,19 +441,19 @@ add_task(async function test_syncs_clients_with_local_database() {
     last_modified: 10000,
     host: "localhost",
     bucket: "main",
-    collection: "some-unknown"
+    collection: "some-unknown",
   }, {
     id: "39f57e4e-6023-11e8-8b74-77c8dedfb389",
     last_modified: 9000,
     host: "localhost",
     bucket: "blocklists",
-    collection: "addons"
+    collection: "addons",
   }, {
     id: "9a594c1a-601f-11e8-9c8a-33b2239d9113",
     last_modified: 8000,
     host: "localhost",
     bucket: "main",
-    collection: "recipes"
+    collection: "recipes",
   }]));
 
   // This simulates what remote-settings would do when initializing a local database.
@@ -489,19 +489,19 @@ add_task(async function test_syncs_clients_with_local_dump() {
     last_modified: 10000,
     host: "localhost",
     bucket: "main",
-    collection: "some-unknown"
+    collection: "some-unknown",
   }, {
     id: "39f57e4e-6023-11e8-8b74-77c8dedfb389",
     last_modified: 9000,
     host: "localhost",
     bucket: "blocklists",
-    collection: "addons"
+    collection: "addons",
   }, {
     id: "9a594c1a-601f-11e8-9c8a-33b2239d9113",
     last_modified: 8000,
     host: "localhost",
     bucket: "main",
-    collection: "example"
+    collection: "example",
   }]));
 
   let error;
@@ -528,17 +528,17 @@ add_task(async function test_adding_client_resets_last_etag() {
       last_modified: 42,
       host: "localhost",
       bucket: "main",
-      collection: "a-collection"
+      collection: "a-collection",
     }];
     if (request.queryString == `_since=${encodeURIComponent('"42"')}`) {
       response.write(JSON.stringify({
-        data: entries.slice(0, 1)
+        data: entries.slice(0, 1),
       }));
       response.setHeader("ETag", '"42"');
       response.setStatusLine(null, 304, "Not Modified");
     } else {
       response.write(JSON.stringify({
-        data: entries
+        data: entries,
       }));
       response.setHeader("ETag", '"42"');
       response.setStatusLine(null, 200, "OK");

@@ -24,7 +24,7 @@ function test() {
     let uniq = r();
     let tabData = {
       entries: [{ url: "http://example.com/#" + i, triggeringPrincipal_base64}],
-      extData: { "uniq": uniq, "baz": "qux" }
+      extData: { "uniq": uniq, "baz": "qux" },
     };
     state.windows[0].tabs.push(tabData);
     wasLoaded[uniq] = false;

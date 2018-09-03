@@ -36,7 +36,7 @@ RemoteController.prototype = {
   doCommandWithParams(aCommand, aCommandParams) {
     let cmd = {
       cmd: aCommand,
-      params: null
+      params: null,
     };
     if (aCommand == "cmd_lookUpDictionary") {
       // Although getBoundingClientRect of the element is logical pixel, but
@@ -47,12 +47,12 @@ RemoteController.prototype = {
       cmd.params = {
         x:  {
           type: "long",
-          value: aCommandParams.getLongValue("x") - rect.left * scale
+          value: aCommandParams.getLongValue("x") - rect.left * scale,
         },
         y: {
           type: "long",
-          value: aCommandParams.getLongValue("y") - rect.top * scale
-        }
+          value: aCommandParams.getLongValue("y") - rect.top * scale,
+        },
       };
     } else {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
@@ -84,5 +84,5 @@ RemoteController.prototype = {
     }
 
     this._browser.ownerGlobal.updateCommands(aAction);
-  }
+  },
 };

@@ -20,7 +20,7 @@ Object.defineProperty(window.navigator.wrappedJSObject, "userAgent", {
     return CHROME_UA;
   }, window),
 
-  set: exportFunction(function() {}, window)
+  set: exportFunction(function() {}, window),
 });
 
 Object.defineProperty(window.navigator.wrappedJSObject, "vendor", {
@@ -28,5 +28,5 @@ Object.defineProperty(window.navigator.wrappedJSObject, "vendor", {
     return "Google Inc.";
   }, window),
 
-  set: exportFunction(function() {}, window)
+  set: exportFunction(function() {}, window),
 });

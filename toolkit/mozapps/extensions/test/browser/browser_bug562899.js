@@ -19,7 +19,7 @@ async function test() {
   LightweightThemeManager.currentTheme = {
     id: "test",
     name: "Test lightweight theme",
-    headerURL: "http://example.com/header.png"
+    headerURL: "http://example.com/header.png",
   };
 
   let aWindow = await open_manager(null);

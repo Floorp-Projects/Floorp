@@ -249,7 +249,7 @@ add_task(async function() {
           {
             title: "http://example.com/6",
             lastUsed: 6,
-          }
+          },
         ],
       },
     ]);
@@ -341,7 +341,7 @@ add_task(async function() {
           }
           return allTabsDesktop;
         }(),
-      }
+      },
     ]);
   };
 

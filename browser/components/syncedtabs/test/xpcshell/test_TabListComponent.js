@@ -83,12 +83,12 @@ add_task(async function testActions() {
   let windowMock = {
     top: {
       PlacesCommandHook: {
-        bookmarkLink() { return Promise.resolve(); }
+        bookmarkLink() { return Promise.resolve(); },
       },
-      PlacesUtils: { bookmarksMenuFolderId: "id" }
+      PlacesUtils: { bookmarksMenuFolderId: "id" },
     },
     openDialog() {},
-    openTrustedLinkIn() {}
+    openTrustedLinkIn() {},
   };
   let component = new TabListComponent({
     window: windowMock, store, View: null, SyncedTabs,

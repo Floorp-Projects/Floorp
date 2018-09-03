@@ -54,7 +54,7 @@ let signonReloadDisplay = {
       }
       Services.obs.notifyObservers(null, "passwordmgr-dialog-updated");
     }
-  }
+  },
 };
 
 // Formatter for localization.

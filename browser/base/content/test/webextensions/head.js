@@ -123,7 +123,7 @@ async function waitForUpdate(addon) {
     Management.on("ready", listener);
   });
 
-  let [newAddon, ] = await Promise.all([installPromise, readyPromise]);
+  let [newAddon ] = await Promise.all([installPromise, readyPromise]);
   return newAddon;
 }
 

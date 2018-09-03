@@ -422,11 +422,9 @@ WebConsoleActor.prototype =
    */
   makeDebuggeeValue: function(value, useObjectGlobal) {
     if (this.dbg.replaying) {
-      if (typeof value == "object") {
-        throw new Error("Object makeDebuggeeValue not supported with replaying debugger");
-      } else {
-        return value;
-      }
+      // If we are replaying then any values we are operating on should already
+      // be debuggee values.
+      return value;
     }
     if (useObjectGlobal && isObject(value)) {
       try {
@@ -1515,14 +1513,15 @@ WebConsoleActor.prototype =
         // if we received the responses from all the message managers.
         if (data.content || messagesReceived == this.netmonitors.length) {
           for (const { messageManager } of this.netmonitors) {
-            messageManager.removeMessageListener("debug:request-content", onMessage);
+            messageManager.removeMessageListener("debug:request-content:response",
+              onMessage);
           }
           resolve(data.content);
         }
       };
       for (const { messageManager } of this.netmonitors) {
-        messageManager.addMessageListener("debug:request-content", onMessage);
-        messageManager.sendAsyncMessage("debug:request-content", { url });
+        messageManager.addMessageListener("debug:request-content:response", onMessage);
+        messageManager.sendAsyncMessage("debug:request-content:request", { url });
       }
     });
   },
@@ -1582,15 +1581,17 @@ WebConsoleActor.prototype =
     return new Promise(resolve => {
       const onMessage = ({ data }) => {
         if (data.channelId == channelId) {
-          messageManager.removeMessageListener("debug:get-network-event-actor",
+          messageManager.removeMessageListener("debug:get-network-event-actor:response",
             onMessage);
           resolve({
             eventActor: data.actor
           });
         }
       };
-      messageManager.addMessageListener("debug:get-network-event-actor", onMessage);
-      messageManager.sendAsyncMessage("debug:get-network-event-actor", { channelId });
+      messageManager.addMessageListener("debug:get-network-event-actor:response",
+        onMessage);
+      messageManager.sendAsyncMessage("debug:get-network-event-actor:request",
+        { channelId });
     });
   },
 

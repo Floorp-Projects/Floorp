@@ -7,21 +7,21 @@ var PLUGINS = [{
   name: "test_bug514327_1",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 },
 {
   // outdated - severity of "0"
   name: "test_bug514327_2",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 },
 {
   // outdated - severity of "0"
   name: "test_bug514327_3",
   version: "5",
   disabled: false,
-  blocklisted: false
+  blocklisted: false,
 },
 {
   // not blocklisted, not outdated
@@ -29,7 +29,7 @@ var PLUGINS = [{
   version: "5",
   disabled: false,
   blocklisted: false,
-  outdated: false
+  outdated: false,
 }];
 
 

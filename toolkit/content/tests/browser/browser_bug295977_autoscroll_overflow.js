@@ -86,7 +86,7 @@ body > div > div {width: 1000px;height: 1000px;}\
 <div style="height: 200%; border: 1px solid black;"></div>\
 </body></html>'},
     {elem: "r", expected: expectScrollNone, testwindow: true, middlemousepastepref: true},
-    {elem: "s", expected: expectScrollNone, testwindow: true, middlemousepastepref: true}
+    {elem: "s", expected: expectScrollNone, testwindow: true, middlemousepastepref: true},
   ];
 
   for (let test of allTests) {

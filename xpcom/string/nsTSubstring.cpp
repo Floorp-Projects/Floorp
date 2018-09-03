@@ -765,7 +765,10 @@ nsTSubstring<T>::ReplaceLiteral(index_type aCutStart, size_type aCutLength,
 {
   aCutStart = XPCOM_MIN(aCutStart, this->Length());
 
-  if (!aCutStart && aCutLength == this->Length()) {
+  if (!aCutStart && aCutLength == this->Length() &&
+      !(this->mDataFlags & DataFlags::REFCOUNTED)) {
+    // Check for REFCOUNTED above to avoid undoing the effect of
+    // SetCapacity().
     AssignLiteral(aData, aLength);
   } else if (ReplacePrep(aCutStart, aCutLength, aLength) && aLength > 0) {
     char_traits::copy(this->mData + aCutStart, aData, aLength);

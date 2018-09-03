@@ -244,12 +244,12 @@ var get_tooltip_info = async function(addon) {
   if (expectedName.length == tiptext.length) {
     return {
       name: tiptext,
-      version: undefined
+      version: undefined,
     };
   }
   return {
     name: tiptext.substring(0, expectedName.length),
-    version: tiptext.substring(expectedName.length + 1)
+    version: tiptext.substring(expectedName.length + 1),
   };
 };
 
@@ -601,7 +601,7 @@ CategoryUtilities.prototype = {
 
   openType(aCategoryType, aCallback) {
     return this.open(this.get(aCategoryType), aCallback);
-  }
+  },
 };
 
 function CertOverrideListener(host, bits) {
@@ -626,7 +626,7 @@ CertOverrideListener.prototype = {
               getService(Ci.nsICertOverrideService);
     cos.rememberValidityOverride(this.host, -1, cert, this.bits, false);
     return true;
-  }
+  },
 };
 
 // Add overrides for the bad certificates
@@ -1194,7 +1194,7 @@ MockAddon.prototype = {
         AddonManagerPrivate.callAddonListeners("onDisabled", this);
       }
     }
-  }
+  },
 };
 
 /** *** Mock AddonInstall object for the Mock Provider *****/
@@ -1336,7 +1336,7 @@ MockInstall.prototype = {
     }
 
     return result;
-  }
+  },
 };
 
 function waitForCondition(condition, nextTest, errorMsg) {

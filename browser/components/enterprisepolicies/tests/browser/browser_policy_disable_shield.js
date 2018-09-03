@@ -17,8 +17,8 @@ add_task(async function test_policy_disable_shield() {
 
   await setupPolicyEngineWithJson({
     "policies": {
-      "DisableFirefoxStudies": true
-    }
+      "DisableFirefoxStudies": true,
+    },
   });
 
   RecipeRunner.checkPrefs();

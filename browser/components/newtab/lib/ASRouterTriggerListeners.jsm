@@ -77,7 +77,7 @@ this.ASRouterTriggerListeners = new Map([
         try {
           const host = (new URL(location)).hostname;
           if (this._hosts.has(host)) {
-            this._triggerHandler(aBrowser.messageManager, {id: "openURL", param: host});
+            this._triggerHandler(aBrowser, {id: "openURL", param: host});
           }
         } catch (e) {} // Couldn't parse location URL
       }

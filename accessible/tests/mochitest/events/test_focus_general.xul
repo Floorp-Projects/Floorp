@@ -74,27 +74,6 @@
       // show popup again for the next test
       gQueue.push(new synthClick("popupbutton", new nofocusChecker()));
 
-if (!MAC) {
-      // click menubutton of the 'menubutton' button while popup of button open.
-      gQueue.push(new synthClick("mbb", new focusChecker("mbb"), { where: "right" }));
-      // close popup, focus stays on menubutton, fire focus event
-      gQueue.push(new synthEscapeKey("mbb", new focusChecker("mbb")));
-      // click menubutton, open popup, focus stays on menubutton
-      gQueue.push(new synthClick("mbb", new nofocusChecker(), { where: "right" }));
-      // select first menu item ("item 1"), focus on menu item
-      gQueue.push(new synthDownKey("mbb", new focusChecker("mbb_item1")));
-      // choose select menu item, focus gets back to menubutton
-      gQueue.push(new synthEnterKey("mbb_item1", new focusChecker("mbb")));
-      // open popup, focus stays on menubutton
-      gQueue.push(new synthOpenComboboxKey("mbb", new nofocusChecker()));
-      // select second menu item ("item 2"), focus on menu item
-      gQueue.push(new synthUpKey("menubutton", new focusChecker("mbb_item2")));
-      // click on menu item of menubutton menu, focus menubutton
-      gQueue.push(new synthClick("mbb_item2", new focusChecker("mbb")));
-} else {
-      todo(false, "mbb tests time out on OS X, fix bug 746970 and reenable!");
-}
-
       // focus colorpicker button
       gQueue.push(new synthFocus("colorpicker"));
       // click on button, open popup, focus goes to current color button
@@ -139,8 +118,6 @@ if (!MAC) {
       </radiogroup>
       <checkbox id="checkbox" label="checkbox"/>
       <button id="button" label="button"/>
-      <button id="checkbutton" type="checkbox" label="checkbutton"/>
-      <button id="radiobutton" type="radio" group="rbgroup" label="radio1"/>
 
       <button id="menubutton" type="menu" label="menubutton">
         <menupopup>
@@ -148,12 +125,9 @@ if (!MAC) {
           <menuitem id="mb_item2" label="item2"/>
         </menupopup>
       </button>
-      <button id="mbb" type="menu-button" label="menubutton button">
-        <menupopup>
-          <menuitem id="mbb_item1" label="item1"/>
-          <menuitem id="mbb_item2" label="item2"/>
-        </menupopup>
-      </button>
+
+      <button id="checkbutton" type="checkbox" label="checkbutton"/>
+      <button id="radiobutton" type="radio" group="rbgroup" label="radio1"/>
 
       <colorpicker id="colorpicker" type="button" label="color picker"
                    color="#FFFFFF"/>

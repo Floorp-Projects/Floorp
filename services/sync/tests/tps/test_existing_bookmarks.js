@@ -21,37 +21,37 @@ var bookmarks_initial = {
     { uri: "http://www.google.com",
       title: "Google",
       changes: {
-        title: "google"
-      }
+        title: "google",
+      },
     },
     { uri: "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
-      title: "Bugzilla"
+      title: "Bugzilla",
     },
-    { uri: "http://www.mozilla.com"
+    { uri: "http://www.mozilla.com",
     },
     { uri: "http://www.cnn.com",
       description: "This is a description of the site a at www.cnn.com",
       changes: {
-        description: "Global news"
-      }
-    }
-  ]
+        description: "Global news",
+      },
+    },
+  ],
 };
 
 var bookmarks_after = {
   "menu": [
     { uri: "http://www.google.com",
-      title: "google"
+      title: "google",
     },
     { uri: "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
-      title: "Bugzilla"
+      title: "Bugzilla",
     },
-    { uri: "http://www.mozilla.com"
+    { uri: "http://www.mozilla.com",
     },
     { uri: "http://www.cnn.com",
-      description: "Global news"
-    }
-  ]
+      description: "Global news",
+    },
+  ],
 };
 
 /*
@@ -61,24 +61,24 @@ var bookmarks_after = {
 Phase("phase1", [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase2", [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase3", [
   [Bookmarks.verify, bookmarks_initial],
   [Bookmarks.modify, bookmarks_initial],
   [Bookmarks.verify, bookmarks_after],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase4", [
   [Sync],
-  [Bookmarks.verify, bookmarks_after]
+  [Bookmarks.verify, bookmarks_after],
 ]);
 

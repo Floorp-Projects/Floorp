@@ -136,6 +136,15 @@ add_task(async function test_webRequest_filter_tab() {
     },
   };
 
+  if (AppConstants.platform != "android") {
+    // A favicon request may be initiated, and complete or be aborted.
+    expect["favicon.ico"] = {
+      optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived", "onResponseStarted", "onCompleted", "onErrorOccurred"],
+      type: "image",
+      origin: SimpleTest.getTestFileURL(img),
+    };
+  }
+
   let extension = makeExtension(events);
   await extension.startup();
   extension.sendMessage("set-expected", {expect, origin: location.href});

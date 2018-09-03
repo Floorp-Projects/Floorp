@@ -142,11 +142,13 @@ GetterSetterWriteBarrierPost(AccessorShape* shape)
 
     MOZ_ASSERT(shape);
 
-    if (!(shape->hasGetterObject() && IsInsideNursery(shape->getterObject())) &&
-        !(shape->hasSetterObject() && IsInsideNursery(shape->setterObject())))
-    {
+    gc::StoreBuffer* sb = nullptr;
+    if (shape->hasGetterObject())
+        sb = shape->getterObject()->storeBuffer();
+    if (!sb && shape->hasSetterObject())
+        sb = shape->setterObject()->storeBuffer();
+    if (!sb)
         return;
-    }
 
     auto& nurseryShapes = shape->zone()->nurseryShapes();
 
@@ -156,12 +158,10 @@ GetterSetterWriteBarrierPost(AccessorShape* shape)
             oomUnsafe.crash("GetterSetterWriteBarrierPost");
     }
 
-    auto& storeBuffer = shape->runtimeFromMainThread()->gc.storeBuffer();
-    if (nurseryShapes.length() == 1) {
-        storeBuffer.putGeneric(NurseryShapesRef(shape->zone()));
-    } else if (nurseryShapes.length() == MaxShapeVectorLength) {
-        storeBuffer.setAboutToOverflow(JS::gcreason::FULL_SHAPE_BUFFER);
-    }
+    if (nurseryShapes.length() == 1)
+        sb->putGeneric(NurseryShapesRef(shape->zone()));
+    else if (nurseryShapes.length() == MaxShapeVectorLength)
+        sb->setAboutToOverflow(JS::gcreason::FULL_SHAPE_BUFFER);
 }
 
 inline

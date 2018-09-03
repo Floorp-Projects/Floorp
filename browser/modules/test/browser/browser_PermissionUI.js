@@ -140,7 +140,7 @@ add_task(async function test_with_permission_key() {
       action: SitePermissions.ALLOW,
       callback() {
         allowed = true;
-      }
+      },
     };
 
     let denied = false;
@@ -150,7 +150,7 @@ add_task(async function test_with_permission_key() {
       action: SitePermissions.BLOCK,
       callback() {
         denied = true;
-      }
+      },
     };
 
     let mockRequest = makeMockPermissionRequest(browser);
@@ -170,9 +170,9 @@ add_task(async function test_with_permission_key() {
         checkbox: {
           label: "Remember this decision",
           show: true,
-          checked: true
-        }
-      }
+          checked: true,
+        },
+      },
     };
 
     let shownPromise =
@@ -230,7 +230,7 @@ add_task(async function test_with_permission_key() {
     curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
     Assert.deepEqual(curPerm, {
                        state: SitePermissions.BLOCK,
-                       scope: SitePermissions.SCOPE_PERSISTENT
+                       scope: SitePermissions.SCOPE_PERSISTENT,
                      }, "Should have denied the action");
     Assert.ok(denied, "The secondaryAction callback should have fired");
     Assert.ok(!allowed, "The mainAction callback should not have fired");
@@ -255,7 +255,7 @@ add_task(async function test_with_permission_key() {
     curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
     Assert.deepEqual(curPerm, {
                        state: SitePermissions.ALLOW,
-                       scope: SitePermissions.SCOPE_PERSISTENT
+                       scope: SitePermissions.SCOPE_PERSISTENT,
                      }, "Should have allowed the action");
     Assert.ok(!denied, "The secondaryAction callback should not have fired");
     Assert.ok(allowed, "The mainAction callback should have fired");
@@ -294,7 +294,7 @@ add_task(async function test_on_before_show() {
       promptActions: [mainAction],
       onBeforeShow() {
         beforeShown = true;
-      }
+      },
     };
 
     let shownPromise =
@@ -328,7 +328,7 @@ add_task(async function test_no_request() {
       accessKey: "M",
       callback() {
         allowed = true;
-      }
+      },
     };
 
     let denied = false;
@@ -337,7 +337,7 @@ add_task(async function test_no_request() {
       accessKey: "D",
       callback() {
         denied = true;
-      }
+      },
     };
 
     const kTestMessage = "Test message with no request";
@@ -353,7 +353,7 @@ add_task(async function test_no_request() {
       promptActions: [mainAction, secondaryAction],
       onBeforeShow() {
         beforeShown = true;
-      }
+      },
     };
 
     let shownPromise =

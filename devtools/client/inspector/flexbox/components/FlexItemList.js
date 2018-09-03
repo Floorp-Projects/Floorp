@@ -16,18 +16,23 @@ class FlexItemList extends PureComponent {
   static get propTypes() {
     return {
       flexItems: PropTypes.arrayOf(PropTypes.shape(Types.flexItem)).isRequired,
+      onToggleFlexItemShown: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { flexItems } = this.props;
+    const {
+      flexItems,
+      onToggleFlexItemShown,
+    } = this.props;
 
     return (
       dom.ol(
-        { id: "flex-item-list" },
+        { className: "flex-item-list" },
         flexItems.map(flexItem => FlexItem({
           key: flexItem.actorID,
           flexItem,
+          onToggleFlexItemShown,
         }))
       )
     );

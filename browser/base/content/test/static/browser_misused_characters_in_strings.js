@@ -11,152 +11,152 @@
 let gWhitelist = [{
     file: "netError.dtd",
     key: "certerror.introPara",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "netError.dtd",
     key: "certerror.introPara2",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "netError.dtd",
     key: "certerror.expiredCert.whatCanYouDoAboutIt2",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "netError.dtd",
     key: "certerror.whatShouldIDo.badStsCertExplanation1",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "netError.dtd",
     key: "inadequateSecurityError.longDesc",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "netError.dtd",
     key: "certerror.wrongSystemTime2",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "netError.dtd",
     key: "certerror.wrongSystemTimeWithoutReference",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "netError.dtd",
     key: "clockSkewError.longDesc",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.palm.advisory.desc2",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.malwarePage.errorDesc.override",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.malwarePage.errorDesc.noOverride",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.malwarePage.learnMore",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.unwantedPage.errorDesc.override",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.unwantedPage.errorDesc.noOverride",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.unwantedPage.learnMore",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.phishingPage.errorDesc.override",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.phishingPage.errorDesc.noOverride",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.phishingPage.learnMore",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.harmfulPage.errorDesc.override",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.harmfulPage.errorDesc.noOverride",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.harmfulPage.learnMore",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "mathfont.properties",
     key: "operator.\\u002E\\u002E\\u002E.postfix",
-    type: "ellipsis"
+    type: "ellipsis",
   }, {
     file: "layout_errors.properties",
     key: "ImageMapRectBoundsError",
-    type: "double-quote"
+    type: "double-quote",
   }, {
     file: "layout_errors.properties",
     key: "ImageMapCircleWrongNumberOfCoords",
-    type: "double-quote"
+    type: "double-quote",
   }, {
     file: "layout_errors.properties",
     key: "ImageMapCircleNegativeRadius",
-    type: "double-quote"
+    type: "double-quote",
   }, {
     file: "layout_errors.properties",
     key: "ImageMapPolyWrongNumberOfCoords",
-    type: "double-quote"
+    type: "double-quote",
   }, {
     file: "layout_errors.properties",
     key: "ImageMapPolyOddNumberOfCoords",
-    type: "double-quote"
+    type: "double-quote",
   }, {
     file: "xbl.properties",
     key: "CommandNotInChrome",
-    type: "double-quote"
+    type: "double-quote",
   }, {
     file: "dom.properties",
     key: "PatternAttributeCompileFailure",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "aboutSupport.dtd",
     key: "aboutSupport.pageSubtitle",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "aboutSupport.dtd",
     key: "aboutSupport.userJSDescription",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "netError.dtd",
     key: "inadequateSecurityError.longDesc",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "netErrorApp.dtd",
     key: "securityOverride.warningContent",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "pocket.properties",
     key: "tos",
-    type: "double-quote"
+    type: "double-quote",
   }, {
     file: "aboutNetworking.dtd",
     key: "aboutNetworking.logTutorial",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "aboutdevtools.dtd",
     key: "aboutDevtools.newsletter.privacy.label",
-    type: "single-quote"
+    type: "single-quote",
   }, {
     file: "browser.dtd",
     key: "addonPostInstallMessage.label",
-    type: "single-quote"
-  }
+    type: "single-quote",
+  },
 ];
 
 /**

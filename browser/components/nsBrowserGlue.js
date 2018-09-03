@@ -74,7 +74,7 @@ let ACTORS = {
       group: "browsers",
       events: {
         "click": {capture: true, mozSystemGroup: true},
-      }
+      },
     },
   },
 
@@ -98,7 +98,7 @@ let ACTORS = {
       },
       messages: [
         "ContentSearch",
-      ]
+      ],
     },
   },
 
@@ -116,7 +116,7 @@ let ACTORS = {
       messages: [
         "DOMFullscreen:Entered",
         "DOMFullscreen:CleanUp",
-      ]
+      ],
     },
   },
 
@@ -221,7 +221,7 @@ let ACTORS = {
       messages: [
         "PageStyle:Switch",
         "PageStyle:Disable",
-      ]
+      ],
     },
   },
 
@@ -269,9 +269,9 @@ let ACTORS = {
       events: {
         "UAWidgetBindToTree": {},
         "UAWidgetAttributeChanged": {},
-        "UAWidgetUnbindFromTree": {}
+        "UAWidgetUnbindFromTree": {},
       },
-    }
+    },
   },
 
   UITour: {
@@ -372,7 +372,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
-  aboutNewTabService: ["@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService"]
+  aboutNewTabService: ["@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService"],
 });
 XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
   Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
@@ -570,7 +570,7 @@ const listeners = {
     for (let message of Object.keys(this.ppmm)) {
       Services.ppmm.addMessageListener(message, receiveMessagePPMM);
     }
-  }
+  },
 };
 
 // Seconds of idle before trying to create a bookmarks backup.
@@ -653,7 +653,7 @@ BrowserGlue.prototype = {
   get pingCentre() {
     const MAIN_TOPIC_ID = "main";
     Object.defineProperty(this, "pingCentre", {
-      value: new PingCentre({ topic: MAIN_TOPIC_ID })
+      value: new PingCentre({ topic: MAIN_TOPIC_ID }),
     });
     return this.pingCentre;
   },
@@ -707,7 +707,7 @@ BrowserGlue.prototype = {
 
     const payload = {
       event: "AS_ENABLED",
-      value: newTabSetting | (homePageSetting << 2)
+      value: newTabSetting | (homePageSetting << 2),
     };
     const ACTIVITY_STREAM_ID = "activity-stream";
     const options = {filter: ACTIVITY_STREAM_ID};
@@ -809,7 +809,7 @@ BrowserGlue.prototype = {
           this._initPlaces(false);
         } else if (data == "mock-alerts-service") {
           Object.defineProperty(this, "AlertsService", {
-            value: subject.wrappedJSObject
+            value: subject.wrappedJSObject,
           });
         } else if (data == "places-browser-init-complete") {
           if (this._placesBrowserInitComplete) {
@@ -1047,7 +1047,7 @@ BrowserGlue.prototype = {
       ntp_text: "rgb(249, 249, 250)",
       author: vendorShortName,
     }, {
-      useInDarkMode: true
+      useInDarkMode: true,
     });
 
     Normandy.init();
@@ -1176,15 +1176,15 @@ BrowserGlue.prototype = {
         accessKey: win.gNavigatorBundle.getString("slowStartup.helpButton.accesskey"),
         callback() {
           win.openTrustedLinkIn("https://support.mozilla.org/kb/reset-firefox-easily-fix-most-problems", "tab");
-        }
+        },
       },
       {
         label:     win.gNavigatorBundle.getString("slowStartup.disableNotificationButton.label"),
         accessKey: win.gNavigatorBundle.getString("slowStartup.disableNotificationButton.accesskey"),
         callback() {
           Services.prefs.setBoolPref("browser.slowStartup.notificationDisabled", true);
-        }
-      }
+        },
+      },
     ];
 
     let nb = win.document.getElementById("global-notificationbox");
@@ -1227,7 +1227,7 @@ BrowserGlue.prototype = {
         accessKey: resetBundle.GetStringFromName("refreshProfile.resetButton.accesskey"),
         callback() {
           ResetProfile.openConfirmationDialog(win);
-        }
+        },
       },
     ];
 
@@ -1249,7 +1249,7 @@ BrowserGlue.prototype = {
         accessKey: win.gNavigatorBundle.getString("unsignedAddonsDisabled.learnMore.accesskey"),
         callback() {
           win.BrowserOpenAddonsMgr("addons://list/extension?unsigned=true");
-        }
+        },
       },
     ];
 
@@ -1757,8 +1757,8 @@ BrowserGlue.prototype = {
                         popup:     null,
                         callback(aNotificationBar, aButton) {
                           win.openTrustedLinkIn(url, "tab");
-                        }
-                      }
+                        },
+                      },
                     ];
 
       notifyBox.appendNotification(text, "post-update-notification",
@@ -2037,8 +2037,8 @@ BrowserGlue.prototype = {
                       popup:     null,
                       callback(aNotificationBar, aButton) {
                         win.openTrustedLinkIn(url, "tab");
-                      }
-                    }
+                      },
+                    },
                   ];
 
     var notifyBox = win.gBrowser.getNotificationBox();
@@ -2817,7 +2817,7 @@ BrowserGlue.prototype = {
       accessKey: win.gNavigatorBundle.getString("flashHang.helpButton.accesskey"),
       callback() {
         win.openTrustedLinkIn("https://support.mozilla.org/kb/flash-protected-mode-autodisabled", "tab");
-      }
+      },
     }];
     let nb = win.document.getElementById("global-notificationbox");
     nb.appendNotification(message, "flash-hang", null,
@@ -3083,10 +3083,10 @@ var DefaultBrowserCheck = {
 
       this._createPopup(win, {
         label: notNowButton,
-        accesskey: notNowButtonKey
+        accesskey: notNowButtonKey,
       }, {
         label: neverLabel,
-        accesskey: neverKey
+        accesskey: neverKey,
       });
 
       let buttons = [
@@ -3096,13 +3096,13 @@ var DefaultBrowserCheck = {
           callback: () => {
             this.setAsDefault();
             this.closePrompt();
-          }
+          },
         },
         {
           label: optionsMessage,
           accessKey: optionsKey,
-          popup: this.OPTIONPOPUP
-        }
+          popup: this.OPTIONPOPUP,
+        },
       ];
 
       let iconPixels = win.devicePixelRatio > 1 ? "32" : "16";
@@ -3217,13 +3217,13 @@ var JawsScreenReaderVersionCheck = {
         // If the user invoked the button option remove the notification,
         // otherwise keep the alert icon around in the address bar.
         notification.remove();
-      }
+      },
     };
     let options = {
       popupIconURL: "chrome://browser/skin/e10s-64@2x.png",
       persistWhileVisible: true,
       persistent: true,
-      persistence: 100
+      persistence: 100,
     };
 
     notification =

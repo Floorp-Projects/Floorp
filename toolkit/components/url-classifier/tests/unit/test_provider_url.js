@@ -9,7 +9,7 @@ add_test(function test_provider_url() {
     "browser.safebrowsing.provider.google.updateURL",
     "browser.safebrowsing.provider.google.gethashURL",
     "browser.safebrowsing.provider.mozilla.updateURL",
-    "browser.safebrowsing.provider.mozilla.gethashURL"
+    "browser.safebrowsing.provider.mozilla.gethashURL",
   ];
 
   let versions = [
@@ -18,7 +18,7 @@ add_test(function test_provider_url() {
     "49.0a1",
     "49.0b1",
     "49.0esr",
-    "49.0.1esr"
+    "49.0.1esr",
   ];
 
   for (let version of versions) {

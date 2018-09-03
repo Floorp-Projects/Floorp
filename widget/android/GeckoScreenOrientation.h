@@ -12,7 +12,6 @@
 #include "nsIScreenManager.h"
 
 #include "mozilla/Hal.h"
-#include "mozilla/dom/ScreenOrientation.h"
 
 namespace mozilla {
 
@@ -45,7 +44,7 @@ public:
         }
 
         hal::NotifyScreenConfigurationChange(hal::ScreenConfiguration(
-                rect, static_cast<dom::ScreenOrientationInternal>(aOrientation),
+                rect, static_cast<hal::ScreenOrientation>(aOrientation),
                 aAngle, colorDepth, pixelDepth));
     }
 };

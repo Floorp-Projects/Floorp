@@ -42,9 +42,12 @@ public:
   // When recording, this is called after the lock has been acquired, and
   // records the acquire in the lock's acquire order stream. When replaying,
   // this is called before the lock has been acquired, and blocks the thread
-  // until it is next in line to acquire the lock before acquiring it via
-  // aCallback.
-  void Enter(const std::function<void()>& aCallback);
+  // until it is next in line to acquire the lock.
+  void Enter();
+
+  // This is called before releasing the lock, allowing the next owner to
+  // acquire it while replaying.
+  void Exit();
 
   // Create a new Lock corresponding to a native lock, with a fresh ID.
   static void New(void* aNativeLock);

@@ -56,7 +56,7 @@ function getServicePack() {
       {wServicePackMinor: WORD},
       {wSuiteMask: WORD},
       {wProductType: BYTE},
-      {wReserved: BYTE}
+      {wReserved: BYTE},
       ]);
 
   let kernel32 = ctypes.open("kernel32");
@@ -102,7 +102,7 @@ function getProcArchitecture() {
       {dwProcessorType: DWORD},
       {dwAllocationGranularity: DWORD},
       {wProcessorLevel: WORD},
-      {wProcessorRevision: WORD}
+      {wProcessorRevision: WORD},
       ]);
 
   let kernel32 = ctypes.open("kernel32");

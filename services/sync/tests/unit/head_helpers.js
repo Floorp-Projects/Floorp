@@ -112,7 +112,7 @@ async function installAddonFromInstall(install) {
       onInstallEnded() {
         AddonManager.removeAddonListener(listener);
         res();
-      }
+      },
     };
     AddonManager.addInstallListener(listener);
     install.install();
@@ -161,7 +161,7 @@ async function uninstallAddon(addon, reconciler = null) {
           AddonManager.removeAddonListener(listener);
           res(uninstalled);
         }
-      }
+      },
     };
     AddonManager.addAddonListener(listener);
   });
@@ -197,7 +197,7 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
   function url2entry(urlToConvert) {
     return {
       url: ((typeof urlToConvert == "function") ? urlToConvert() : urlToConvert),
-      title: "title"
+      title: "title",
     };
   }
 
@@ -217,9 +217,9 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
         index: indexes ? indexes() : 1,
         entries: (moreURLs ? [url].concat(moreURLs()) : [url]).map(url2entry),
         attributes: {
-          image: "image"
+          image: "image",
         },
-        lastAccessed: 1499
+        lastAccessed: 1499,
       }, {}));
     }
   }

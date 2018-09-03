@@ -59,8 +59,8 @@ add_task(async function() {
           // that they sometimes get reported in the same rect.
           // So we accept up to the width of n-1 tabs.
           r.w <= (gBrowser.tabs.length - 1) * Math.ceil(tabStripRect.width / gBrowser.tabs.length)
-        ))
-      }
+        )),
+      },
      });
 
   await removeAllButFirstTab();

@@ -45,7 +45,7 @@ add_test(function test_singleCert() {
   var certs = CertUtils.readCertPrefs(PREF_PREFIX);
   test_results(certs, [{
     attribute1: "foo",
-    attribute2: "bar"
+    attribute2: "bar",
   }]);
 
   resetPrefs();
@@ -61,10 +61,10 @@ add_test(function test_multipleCert() {
   var certs = CertUtils.readCertPrefs(PREF_PREFIX);
   test_results(certs, [{
     md5Fingerprint: "cf84a9a2a804e021f27cb5128fe151f4",
-    nickname: "1st cert"
+    nickname: "1st cert",
   }, {
     md5Fingerprint: "9441051b7eb50e5ca2226095af710c1a",
-    nickname: "2nd cert"
+    nickname: "2nd cert",
   }]);
 
   resetPrefs();
@@ -82,10 +82,10 @@ add_test(function test_skippedCert() {
   var certs = CertUtils.readCertPrefs(PREF_PREFIX);
   test_results(certs, [{
     issuerName: "Mozilla",
-    nickname: "1st cert"
+    nickname: "1st cert",
   }, {
     issuerName: "Top CA",
-    nickname: "2nd cert"
+    nickname: "2nd cert",
   }]);
 
   resetPrefs();

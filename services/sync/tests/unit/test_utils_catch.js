@@ -12,7 +12,7 @@ add_task(async function run_test() {
       },
       info(str) {
         wasLocked = str.indexOf("Cannot start sync: already syncing?") == 0;
-      }
+      },
     },
 
     func() {

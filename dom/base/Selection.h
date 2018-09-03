@@ -9,8 +9,10 @@
 
 #include "nsIWeakReference.h"
 
+#include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/SelectionChangeListener.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
@@ -86,6 +88,46 @@ public:
   // match this up with StartBatchChanges
   void EndBatchChanges(int16_t aReason = nsISelectionListener::NO_REASON);
 
+  /**
+   * NotifyAutoCopy() starts to notify AutoCopyListener of selection changes.
+   */
+  void NotifyAutoCopy()
+  {
+    mNotifyAutoCopy = true;
+  }
+
+  /**
+   * MaybeNotifyAccessibleCaretEventHub() starts to notify
+   * AccessibleCaretEventHub of selection change if aPresShell has it.
+   */
+  void MaybeNotifyAccessibleCaretEventHub(nsIPresShell* aPresShell)
+  {
+    if (!mAccessibleCaretEventHub && aPresShell) {
+      mAccessibleCaretEventHub = aPresShell->GetAccessibleCaretEventHub();
+    }
+  }
+
+  /**
+   * StopNotifyingAccessibleCaretEventHub() stops notifying
+   * AccessibleCaretEventHub of selection change.
+   */
+  void StopNotifyingAccessibleCaretEventHub()
+  {
+    mAccessibleCaretEventHub = nullptr;
+  }
+
+  /**
+   * EnableSelectionChangeEvent() starts to notify SelectionChangeListener of
+   * selection change to dispatch a selectionchange event at every selection
+   * change.
+   */
+  void EnableSelectionChangeEvent()
+  {
+    if (!mSelectionChangeListener) {
+      mSelectionChangeListener = new SelectionChangeListener();
+    }
+  }
+
   nsIDocument* GetParentObject() const;
   DocGroup* GetDocGroup() const;
 
@@ -152,7 +194,10 @@ public:
     Collapse(aPoint, result);
     return result.StealNSResult();
   }
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult      Extend(nsINode* aContainer, int32_t aOffset);
+
   nsRange*      GetRangeAt(int32_t aIndex) const;
 
   // Get the anchor-to-focus range if we don't care which end is
@@ -251,6 +296,7 @@ public:
   void CollapseToStartJS(mozilla::ErrorResult& aRv);
   void CollapseToEndJS(mozilla::ErrorResult& aRv);
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void ExtendJS(nsINode& aContainer, uint32_t aOffset,
                 mozilla::ErrorResult& aRv);
 
@@ -270,8 +316,11 @@ public:
 
   nsRange* GetRangeAt(uint32_t aIndex, mozilla::ErrorResult& aRv);
   void AddRangeJS(nsRange& aRange, mozilla::ErrorResult& aRv);
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void RemoveRange(nsRange& aRange, mozilla::ErrorResult& aRv);
-  void RemoveAllRanges(mozilla::ErrorResult& aRv);
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void RemoveAllRanges(mozilla::ErrorResult& aRv);
 
   /**
    * RemoveAllRangesTemporarily() is useful if the caller will add one or more
@@ -378,13 +427,17 @@ public:
   {
     Collapse(RawRangeBoundary(&aContainer, aOffset), aRv);
   }
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv);
+
   /**
    * Collapses the whole selection to a single point at the start
    * of the current selection (irrespective of direction).  If content
    * is focused and editable, the caret will blink there.
    */
   void CollapseToStart(mozilla::ErrorResult& aRv);
+
   /**
    * Collapses the whole selection to a single point at the end
    * of the current selection (irrespective of direction).  If content
@@ -401,13 +454,19 @@ public:
    * @param aContainer The node where the selection will be extended to
    * @param aOffset    Where in aContainer to place the offset of the new selection end.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void Extend(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv);
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void AddRange(nsRange& aRange, mozilla::ErrorResult& aRv);
+
   /**
    * Adds all children of the specified node to the selection.
    * @param aNode the parent of the children to be added to the selection.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SelectAllChildren(nsINode& aNode, mozilla::ErrorResult& aRv);
+
   void SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
                         nsINode& aFocusNode, uint32_t aFocusOffset,
                         mozilla::ErrorResult& aRv);
@@ -481,6 +540,7 @@ private:
   // XXX supporting broken code (bug 1245883) in the following classes:
   friend class ::nsCopySupport;
   friend class ::nsHTMLCopyEncoder;
+  MOZ_CAN_RUN_SCRIPT
   void AddRangeInternal(nsRange& aRange, nsIDocument* aDocument, ErrorResult&);
 
   // This is helper method for GetPrimaryFrameForFocusNode.
@@ -505,8 +565,8 @@ public:
 
   SelectionCustomColors* GetCustomColors() const { return mCustomColors.get(); }
 
-  nsresult NotifySelectionListeners(bool aCalledByJS);
-  nsresult NotifySelectionListeners();
+  MOZ_CAN_RUN_SCRIPT nsresult NotifySelectionListeners(bool aCalledByJS);
+  MOZ_CAN_RUN_SCRIPT nsresult NotifySelectionListeners();
 
   friend struct AutoUserInitiated;
   struct MOZ_RAII AutoUserInitiated
@@ -670,6 +730,8 @@ private:
   // DOM point when we treat it as a range of Selection again.
   RefPtr<nsRange> mCachedRange;
   RefPtr<nsFrameSelection> mFrameSelection;
+  RefPtr<AccessibleCaretEventHub> mAccessibleCaretEventHub;
+  RefPtr<SelectionChangeListener> mSelectionChangeListener;
   RefPtr<nsAutoScrollTimer> mAutoScrollTimer;
   nsTArray<nsCOMPtr<nsISelectionListener>> mSelectionListeners;
   nsRevocableEventPtr<ScrollSelectionIntoViewEvent> mScrollEvent;
@@ -677,6 +739,10 @@ private:
   nsDirection mDirection;
   SelectionType mSelectionType;
   UniquePtr<SelectionCustomColors> mCustomColors;
+
+  // Non-zero if we don't want any changes we make to the selection to be
+  // visible to content. If non-zero, content won't be notified about changes.
+  uint32_t mSelectionChangeBlockerCount;
 
   /**
    * True if the current selection operation was initiated by user action.
@@ -691,9 +757,10 @@ private:
    */
   bool mCalledByJS;
 
-  // Non-zero if we don't want any changes we make to the selection to be
-  // visible to content. If non-zero, content won't be notified about changes.
-  uint32_t mSelectionChangeBlockerCount;
+  /**
+   * true if AutoCopyListner::OnSelectionChange() should be called.
+   */
+  bool mNotifyAutoCopy;
 };
 
 // Stack-class to turn on/off selection batching.

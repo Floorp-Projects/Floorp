@@ -17,7 +17,7 @@ add_task(async function() {
     { element: "button" },
     { element: "select" },
     { element: "option" },
-    { element: "optgroup" }
+    { element: "optgroup" },
   ];
 
   for (let index = 0; index < tests.length; index++) {

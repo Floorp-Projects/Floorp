@@ -10,11 +10,11 @@ var Components = {
   classes: { },
   interfaces: { },
   stack: {
-    caller: null
+    caller: null,
   },
   utils: {
-    import() { }
-  }
+    import() { },
+  },
 };
 
 function do_throw(message, stack) {
@@ -48,7 +48,7 @@ var Assert = {
 
   ok(condition, stack) {
     this.equal(condition, true, stack);
-  }
+  },
 };
 
 function info(text) {
@@ -72,7 +72,7 @@ FileFaker.prototype = {
   },
   append(leaf) {
     this._path = this._path + "/" + leaf;
-  }
+  },
 };
 
 function do_get_file(path, allowNonexistent) {

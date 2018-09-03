@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSMILParserUtils.h"
+#include "mozilla/TextUtils.h"
 #include "nsSMILKeySpline.h"
 #include "nsISMILAttr.h"
 #include "nsSMILValue.h"
@@ -64,22 +65,22 @@ ParseSecondsOrMinutes(RangedPtr<const char16_t>& aIter,
                       const RangedPtr<const char16_t>& aEnd,
                       uint32_t& aValue)
 {
-  if (aIter == aEnd || !SVGContentUtils::IsDigit(*aIter)) {
+  if (aIter == aEnd || !mozilla::IsAsciiDigit(*aIter)) {
     return false;
   }
 
   RangedPtr<const char16_t> iter(aIter);
 
-  if (++iter == aEnd || !SVGContentUtils::IsDigit(*iter)) {
+  if (++iter == aEnd || !mozilla::IsAsciiDigit(*iter)) {
      return false;
   }
 
-  uint32_t value = 10 * SVGContentUtils::DecimalDigitValue(*aIter) +
-                   SVGContentUtils::DecimalDigitValue(*iter);
+  uint32_t value = 10 * mozilla::AsciiAlphanumericToNumber(*aIter) +
+                   mozilla::AsciiAlphanumericToNumber(*iter);
   if (value > 59) {
     return false;
   }
-  if (++iter != aEnd && SVGContentUtils::IsDigit(*iter)) {
+  if (++iter != aEnd && mozilla::IsAsciiDigit(*iter)) {
     return false;
   }
 
@@ -676,7 +677,7 @@ nsSMILParserUtils::CheckForNegativeNumber(const nsAString& aStr)
   if (iter != end && *iter == '-') {
     ++iter;
     // Check for numeric character
-    if (iter != end && SVGContentUtils::IsDigit(*iter)) {
+    if (iter != end && mozilla::IsAsciiDigit(*iter)) {
       absValLocation = iter - start;
     }
   }

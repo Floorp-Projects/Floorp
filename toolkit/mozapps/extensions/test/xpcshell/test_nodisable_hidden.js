@@ -25,7 +25,7 @@ add_task(async function() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test disabling hidden add-ons, non-hidden add-on case.",
   }, profileDir, NORMAL_ID);
@@ -69,7 +69,7 @@ add_task(async function() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test disabling hidden add-ons, hidden system add-on case.",
   }, distroDir, SYSTEM_ID);

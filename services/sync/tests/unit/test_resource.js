@@ -59,7 +59,7 @@ function server_pac(metadata, response) {
 var sample_data = {
   some: "sample_data",
   injson: "format",
-  number: 42
+  number: 42,
 };
 
 function server_upload(metadata, response) {
@@ -168,7 +168,7 @@ add_task(async function test_proxy_auth_redirect() {
     "doesn't break Resource.");
   let server = httpd_setup({
     "/open": server_open,
-    "/pac2": server_pac
+    "/pac2": server_pac,
   });
 
   PACSystemSettings.PACURI = server.baseURI + "/pac2";
@@ -233,7 +233,7 @@ add_test(function setup() {
     "/backoff": server_backoff,
     "/pac2": server_pac,
     "/quota-notice": server_quota_notice,
-    "/quota-error": server_quota_error
+    "/quota-error": server_quota_error,
   });
 
   run_next_test();

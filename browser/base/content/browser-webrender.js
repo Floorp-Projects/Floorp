@@ -14,5 +14,5 @@ var gWebRender = {
    */
   capture() {
     window.windowUtils.wrCapture();
-  }
+  },
 };

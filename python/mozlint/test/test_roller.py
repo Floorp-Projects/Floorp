@@ -100,6 +100,18 @@ def test_roll_with_excluded_path(lint, linters, files):
     assert result.failed == set([])
 
 
+def test_roll_with_no_files_to_lint(lint, linters, capfd):
+    lint.read(linters)
+    lint.mock_vcs([])
+    result = lint.roll([], workdir=True)
+    assert isinstance(result, ResultSummary)
+    assert len(result.issues) == 0
+    assert len(result.failed) == 0
+
+    out, err = capfd.readouterr()
+    assert 'warning: no files linted' in out
+
+
 def test_roll_with_invalid_extension(lint, lintdir, filedir):
     lint.read(os.path.join(lintdir, 'external.yml'))
     result = lint.roll(os.path.join(filedir, 'foobar.py'))

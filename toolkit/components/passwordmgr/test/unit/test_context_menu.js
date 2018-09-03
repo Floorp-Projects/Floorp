@@ -75,7 +75,7 @@ function createLoginsFragment(url, content, elementQuery) {
   // We also need a simple mock Browser object for this test.
   document.createXULElement = document.createElement.bind(document);
   let browser = {
-    ownerDocument: document
+    ownerDocument: document,
   };
 
   let URI = Services.io.newURI(url);

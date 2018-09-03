@@ -6,7 +6,6 @@
 #define mozilla_fallback_FallbackScreenConfiguration_h
 
 #include "Hal.h"
-#include "mozilla/dom/ScreenOrientation.h"
 #include "nsIScreenManager.h"
 #include "nsServiceManagerUtils.h"
 
@@ -25,7 +24,7 @@ GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration)
   }
 
   int32_t colorDepth, pixelDepth, x, y, w, h;
-  dom::ScreenOrientationInternal orientation;
+  ScreenOrientation orientation;
   nsCOMPtr<nsIScreen> screen;
 
   screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
@@ -33,8 +32,8 @@ GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration)
   screen->GetColorDepth(&colorDepth);
   screen->GetPixelDepth(&pixelDepth);
   orientation = w >= h
-                ? dom::eScreenOrientation_LandscapePrimary
-                : dom::eScreenOrientation_PortraitPrimary;
+                ? hal::eScreenOrientation_LandscapePrimary
+                : hal::eScreenOrientation_PortraitPrimary;
 
   *aScreenConfiguration = hal::ScreenConfiguration(nsIntRect(x, y, w, h),
 						   orientation, 0,

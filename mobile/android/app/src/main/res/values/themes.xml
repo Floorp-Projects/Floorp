@@ -92,9 +92,6 @@
         <item name="topSitesGridItemViewStyle">@style/Widget.TopSitesGridItemView</item>
         <item name="topSitesGridViewStyle">@style/Widget.TopSitesGridView</item>
         <item name="topSitesThumbnailViewStyle">@style/Widget.TopSitesThumbnailView</item>
-        <item name="android:timePickerStyle" tools:ignore="NewApi">@style/PhotonTimePicker</item>
-        <item name="android:datePickerStyle">@style/PhotonDatePicker</item>
-        <item name="android:calendarViewStyle">@style/PhotonCalendarView</item>
     </style>
 
     <!-- Make an activity appear like an overlay. -->

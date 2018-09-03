@@ -65,7 +65,6 @@ async function run_drag_test(startBookmarkIndex, newParentGuid) {
     let bookmarkWithId = JSON.stringify(Object.assign({
       id: bookmarkId,
       itemGuid: dragBookmark.guid,
-      parent: PlacesUtils.unfiledBookmarksFolderId,
       uri: dragBookmark.url,
     }, dragBookmark));
 

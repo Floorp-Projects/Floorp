@@ -57,7 +57,7 @@ _TabRemovalObserver.prototype = {
         this._resolver();
       }
     }
-  }
+  },
 };
 
 function _ContextualIdentityService(path) {
@@ -230,7 +230,7 @@ _ContextualIdentityService.prototype = {
     let object = {
       version: LAST_CONTAINERS_JSON_VERSION,
       lastUserContextId: this._lastUserContextId,
-      identities: this._identities
+      identities: this._identities,
     };
 
     let bytes = gTextEncoder.encode(JSON.stringify(object));
@@ -256,7 +256,7 @@ _ContextualIdentityService.prototype = {
       public: true,
       icon,
       color,
-      name
+      name,
     };
 
     this._identities.push(identity);

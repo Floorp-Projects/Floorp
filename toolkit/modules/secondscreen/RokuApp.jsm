@@ -134,7 +134,7 @@ RokuApp.prototype = {
     } else if (callback) {
       callback();
     }
-  }
+  },
 };
 
 /* RemoteMedia provides a wrapper for using TCP socket to control Roku apps.
@@ -227,5 +227,5 @@ RemoteMedia.prototype = {
 
   get status() {
     return this._status;
-  }
+  },
 };

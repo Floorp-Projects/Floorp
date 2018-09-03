@@ -13,8 +13,8 @@ var addon1 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 var addon1_2 = {
@@ -25,8 +25,8 @@ var addon1_2 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 var addon2 = {
@@ -37,8 +37,8 @@ var addon2 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 const profileDir = gProfD.clone();
@@ -137,12 +137,12 @@ add_task(async function test_addon_over_pointer() {
       "addon1@tests.mozilla.org": [
         ["onInstalling", false],
         ["onInstalled", false],
-      ]
+      ],
     }, [
       "onDownloadStarted",
       "onDownloadEnded",
       "onInstallStarted",
-      "onInstallEnded"
+      "onInstallEnded",
     ], callback_soon(resolve));
 
     install.install();

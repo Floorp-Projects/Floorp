@@ -55,7 +55,7 @@ var gTests = [
     await checkSharingUI({audio: true});
     await closeStream();
     Services.prefs.clearUserPref(CAMERA_PREF);
-  }
+  },
 },
 
 {
@@ -81,7 +81,7 @@ var gTests = [
 
     SitePermissions.remove(browser.currentURI, "camera");
     Services.prefs.clearUserPref(CAMERA_PREF);
-  }
+  },
 },
 
 {
@@ -129,7 +129,7 @@ var gTests = [
     await checkSharingUI({video: true});
     await closeStream();
     Services.prefs.clearUserPref(MICROPHONE_PREF);
-  }
+  },
 },
 
 {
@@ -155,7 +155,7 @@ var gTests = [
 
     SitePermissions.remove(browser.currentURI, "microphone");
     Services.prefs.clearUserPref(MICROPHONE_PREF);
-  }
+  },
 },
 
 ];

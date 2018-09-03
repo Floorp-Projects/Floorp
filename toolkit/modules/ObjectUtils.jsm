@@ -9,7 +9,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "ObjectUtils"
+  "ObjectUtils",
 ];
 
 // Used only to cause test failures.
@@ -70,7 +70,7 @@ var ObjectUtils = {
       return false;
     }
     return true;
-  }
+  },
 };
 
 // ... Start of previously MIT-licensed code.
@@ -195,6 +195,6 @@ function _strict(obj) {
       let error = new TypeError(`No such property: "${name}"`);
       Promise.reject(error); // Cause an xpcshell/mochitest failure.
       throw error;
-    }
+    },
   });
 }

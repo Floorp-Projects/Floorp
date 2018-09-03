@@ -2101,6 +2101,15 @@ MessageChannel::MessageTask::Clear()
 NS_IMETHODIMP
 MessageChannel::MessageTask::GetPriority(uint32_t* aPriority)
 {
+  if (recordreplay::IsRecordingOrReplaying()) {
+    // Ignore message priorities in recording/replaying processes. Incoming
+    // messages were sorted in the middleman process according to their
+    // priority before being forwarded here, and reordering them again in this
+    // process can cause problems such as dispatching messages for an actor
+    // before the constructor for that actor.
+    *aPriority = PRIORITY_NORMAL;
+    return NS_OK;
+  }
   switch (mMessage.priority()) {
   case Message::NORMAL_PRIORITY:
     *aPriority = PRIORITY_NORMAL;

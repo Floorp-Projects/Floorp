@@ -38,7 +38,7 @@ cache.set = function CPS_cache_set(group, name, val) {
   let groupCount = this._groups.size;
   if (groupCount >= CACHE_MAX_GROUP_ENTRIES) {
     // Clean half of the entries
-    for (let [group, name, ] of this) {
+    for (let [group, name ] of this) {
       this.remove(group, name);
       groupCount--;
       if (groupCount < CACHE_MAX_GROUP_ENTRIES / 2)
@@ -159,7 +159,7 @@ ContentPrefService2.prototype = {
       },
       onError: nsresult => {
         cbHandleError(callback, nsresult);
-      }
+      },
     });
   },
 
@@ -216,7 +216,7 @@ ContentPrefService2.prototype = {
       },
       onError: nsresult => {
         cbHandleError(callback, nsresult);
-      }
+      },
     });
   },
 
@@ -394,7 +394,7 @@ ContentPrefService2.prototype = {
       },
       onError: nsresult => {
         cbHandleError(callback, nsresult);
-      }
+      },
     });
   },
 
@@ -460,7 +460,7 @@ ContentPrefService2.prototype = {
         if (ok) {
           this._cache.set(group, name, undefined);
           if (isPrivate) {
-            for (let [sgroup, ] of
+            for (let [sgroup ] of
                    this._pbStore.match(group, name, includeSubdomains)) {
               prefs.set(sgroup, name, undefined);
               this._pbStore.remove(sgroup, name);
@@ -476,7 +476,7 @@ ContentPrefService2.prototype = {
       },
       onError: nsresult => {
         cbHandleError(callback, nsresult);
-      }
+      },
     });
   },
 
@@ -493,7 +493,7 @@ ContentPrefService2.prototype = {
         DELETE FROM groups WHERE id NOT IN (
           SELECT DISTINCT groupID FROM prefs WHERE groupID NOTNULL
         )
-      `)
+      `),
     ];
   },
 
@@ -571,7 +571,7 @@ ContentPrefService2.prototype = {
       },
       onDone: (reason, ok) => {
         if (ok && isPrivate) {
-          for (let [sgroup, sname, ] of this._pbStore) {
+          for (let [sgroup, sname ] of this._pbStore) {
             if (!group ||
                 (!includeSubdomains && group == sgroup) ||
                 (includeSubdomains && sgroup && this._pbStore.groupsMatchIncludingSubdomains(group, sgroup))) {
@@ -582,14 +582,14 @@ ContentPrefService2.prototype = {
         }
         cbHandleCompletion(callback, reason);
         if (ok) {
-          for (let [sgroup, sname, ] of prefs) {
+          for (let [sgroup, sname ] of prefs) {
             this._notifyPrefRemoved(sgroup, sname, isPrivate);
           }
         }
       },
       onError: nsresult => {
         cbHandleError(callback, nsresult);
-      }
+      },
     });
   },
 
@@ -639,7 +639,7 @@ ContentPrefService2.prototype = {
         // This nukes all the groups in _pbStore since we don't have their timestamp
         // information.
         if (ok && isPrivate) {
-          for (let [sgroup, sname, ] of this._pbStore) {
+          for (let [sgroup, sname ] of this._pbStore) {
             if (sgroup) {
               prefs.set(sgroup, sname, undefined);
             }
@@ -648,14 +648,14 @@ ContentPrefService2.prototype = {
         }
         cbHandleCompletion(callback, reason);
         if (ok) {
-          for (let [sgroup, sname, ] of prefs) {
+          for (let [sgroup, sname ] of prefs) {
             this._notifyPrefRemoved(sgroup, sname, isPrivate);
           }
         }
       },
       onError: nsresult => {
         cbHandleError(callback, nsresult);
-      }
+      },
     });
   },
 
@@ -673,7 +673,7 @@ ContentPrefService2.prototype = {
 
     // Invalidate the cached values so consumers accessing the cache between now
     // and when the operation finishes don't get old data.
-    for (let [group, sname, ] of this._cache) {
+    for (let [group, sname ] of this._cache) {
       if (sname == name)
         this._cache.remove(group, name);
     }
@@ -728,7 +728,7 @@ ContentPrefService2.prototype = {
       },
       onDone: (reason, ok) => {
         if (ok && isPrivate) {
-          for (let [sgroup, sname, ] of this._pbStore) {
+          for (let [sgroup, sname ] of this._pbStore) {
             if (sname === name) {
               prefs.set(sgroup, name, undefined);
               this._pbStore.remove(sgroup, name);
@@ -744,7 +744,7 @@ ContentPrefService2.prototype = {
       },
       onError: nsresult => {
         cbHandleError(callback, nsresult);
-      }
+      },
     });
   },
 
@@ -994,22 +994,22 @@ ContentPrefService2.prototype = {
                    groupID      INTEGER REFERENCES groups(id), \
                    settingID    INTEGER NOT NULL REFERENCES settings(id), \
                    value        BLOB, \
-                   timestamp    INTEGER NOT NULL DEFAULT 0" // Storage in seconds, API in ms. 0 for migrated values.
+                   timestamp    INTEGER NOT NULL DEFAULT 0", // Storage in seconds, API in ms. 0 for migrated values.
     },
     indices: {
       groups_idx: {
         table: "groups",
-        columns: ["name"]
+        columns: ["name"],
       },
       settings_idx: {
         table: "settings",
-        columns: ["name"]
+        columns: ["name"],
       },
       prefs_idx: {
         table: "prefs",
-        columns: ["timestamp", "groupID", "settingID"]
-      }
-    }
+        columns: ["timestamp", "groupID", "settingID"],
+      },
+    },
   },
 
   _debugLog: false,
@@ -1259,7 +1259,7 @@ HostnameGrouper.prototype = {
     }
 
     return group;
-  }
+  },
 };
 
 // XPCOM Plumbing

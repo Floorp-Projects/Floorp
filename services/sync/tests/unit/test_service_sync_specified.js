@@ -17,7 +17,7 @@ SteamEngine.prototype = {
   __proto__: SyncEngine.prototype,
   async _sync() {
     syncedEngines.push(this.name);
-  }
+  },
 };
 
 function StirlingEngine() {
@@ -27,7 +27,7 @@ StirlingEngine.prototype = {
   __proto__: SteamEngine.prototype,
   async _sync() {
     syncedEngines.push(this.name);
-  }
+  },
 };
 
 // Tracking info/collections.

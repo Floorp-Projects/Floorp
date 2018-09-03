@@ -46,7 +46,7 @@ var basicCompletionSet = [
     expectCompletion: true,
     table: "test",
     chunkId: 1234,
-  }
+  },
 ];
 
 // 3 prefixes with 0 completions to test HashCompleter handling a 204 status.
@@ -62,7 +62,7 @@ var falseCompletionSet = [
   {
     hash: "abc",
     expectCompletion: false,
-  }
+  },
 ];
 
 // The current implementation (as of Mar 2011) sometimes sends duplicate
@@ -90,8 +90,8 @@ var dupedCompletionSet = [
     hash: "5678",
     expectCompletion: false,
     table: "test2",
-    chunkId: 2
-  }
+    chunkId: 2,
+  },
 ];
 
 // It is possible for a hash completion request to return with multiple
@@ -111,9 +111,9 @@ var multipleResponsesCompletionSet = [
         hash: "123478",
         table: "test2",
         chunkId: 4,
-      }
+      },
     ],
-  }
+  },
 ];
 
 function buildCompletionRequest(aCompletionSet) {

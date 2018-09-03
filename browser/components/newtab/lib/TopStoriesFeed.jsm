@@ -16,6 +16,7 @@ const {UserDomainAffinityProvider} = ChromeUtils.import("resource://activity-str
 const {PersistentCache} = ChromeUtils.import("resource://activity-stream/lib/PersistentCache.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "perfService", "resource://activity-stream/common/PerfService.jsm");
+ChromeUtils.defineModuleGetter(this, "pktApi", "chrome://pocket/content/pktApi.jsm");
 
 const STORIES_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const TOPICS_UPDATE_TIME = 3 * 60 * 60 * 1000; // 3 hours
@@ -51,6 +52,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       this.topicsLastUpdated = 0;
       this.storiesLoaded = false;
       this.domainAffinitiesLastUpdated = 0;
+      this.dispatchPocketCta(this._prefs.get("pocketCta"), false);
 
       // Cache is used for new page loads, which shouldn't have changed data.
       // If we have changed data, cache should be cleared,
@@ -86,12 +88,26 @@ this.TopStoriesFeed = class TopStoriesFeed {
     }
   }
 
+  async clearCache() {
+    await this.cache.set("stories", {});
+    await this.cache.set("topics", {});
+    await this.cache.set("spocs", {});
+  }
+
   uninit() {
     this.storiesLoaded = false;
-    this.cache.set("stories", {});
-    this.cache.set("topics", {});
     Services.obs.removeObserver(this, "idle-daily");
     SectionsManager.disableSection(SECTION_ID);
+  }
+
+  getPocketState(target) {
+    const action = {type: at.POCKET_LOGGED_IN, data: pktApi.isUserLoggedIn()};
+    this.store.dispatch(ac.OnlyToOneContent(action, target));
+  }
+
+  dispatchPocketCta(data, shouldBroadcast) {
+    const action = {type: at.POCKET_CTA, data: JSON.parse(data)};
+    this.store.dispatch(shouldBroadcast ? ac.BroadcastToContent(action) : ac.AlsoToPreloaded(action));
   }
 
   doContentUpdate(shouldBroadcast) {
@@ -126,6 +142,8 @@ this.TopStoriesFeed = class TopStoriesFeed {
         this.spocCampaignMap = new Map(body.spocs.map(s => [s.id, `${s.campaign_id}`]));
         this.spocs = this.transform(body.spocs).filter(s => s.score >= s.min_score);
         this.cleanUpCampaignImpressionPref();
+        // Spocs won't exist without stories, so no need to worry about last updated.
+        this.cache.set("spocs", this.spocs);
       }
       this.storiesLastUpdated = Date.now();
       body._timestamp = this.storiesLastUpdated;
@@ -139,6 +157,8 @@ this.TopStoriesFeed = class TopStoriesFeed {
     const data = await this.cache.get();
     let stories = data.stories && data.stories.recommendations;
     let topics = data.topics && data.topics.topics;
+    let {spocs} = data;
+
     let affinities = data.domainAffinities;
     if (this.personalized && affinities && affinities.scores) {
       this.affinityProvider = new UserDomainAffinityProvider(affinities.timeSegments,
@@ -147,9 +167,11 @@ this.TopStoriesFeed = class TopStoriesFeed {
     }
     if (stories && stories.length > 0 && this.storiesLastUpdated === 0) {
       this.updateSettings(data.stories.settings);
-      const rows = this.transform(stories);
-      this.stories = rows;
+      this.stories = this.rotate(this.transform(stories));
       this.storiesLastUpdated = data.stories._timestamp;
+      if (spocs && spocs.length) {
+        this.spocs = spocs;
+      }
     }
     if (topics && topics.length > 0 && this.topicsLastUpdated === 0) {
       this.topics = topics;
@@ -311,17 +333,25 @@ this.TopStoriesFeed = class TopStoriesFeed {
     return this.show_spocs && this.store.getState().Prefs.values.showSponsored;
   }
 
+  dispatchSpocDone(target) {
+    const action = {type: at.POCKET_WAITING_FOR_SPOC, data: false};
+    this.store.dispatch(ac.OnlyToOneContent(action, target));
+  }
+
   maybeAddSpoc(target) {
     const updateContent = () => {
       if (!this.shouldShowSpocs()) {
+        this.dispatchSpocDone(target);
         return false;
       }
       if (Math.random() > this.spocsPerNewTabs) {
+        this.dispatchSpocDone(target);
         return false;
       }
       if (!this.spocs || !this.spocs.length) {
         // We have stories but no spocs so there's nothing to do and this update can be
         // removed from the queue.
+        this.dispatchSpocDone(target);
         return false;
       }
 
@@ -331,6 +361,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
 
       if (!spocs.length) {
         // There's currently no spoc left to display
+        this.dispatchSpocDone(target);
         return false;
       }
 
@@ -342,6 +373,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       // Send a content update to the target tab
       const action = {type: at.SECTION_UPDATE, data: Object.assign({rows}, {id: SECTION_ID})};
       this.store.dispatch(ac.OnlyToOneContent(action, target));
+      this.dispatchSpocDone(target);
       return false;
     };
 
@@ -465,10 +497,11 @@ this.TopStoriesFeed = class TopStoriesFeed {
     this._prefs.set(pref, JSON.stringify(impressions));
   }
 
-  removeSpocs() {
+  async removeSpocs() {
     // Quick hack so that SPOCS are removed from all open and preloaded tabs when
     // they are disabled. The longer term fix should probably be to remove them
     // in the Reducer.
+    await this.clearCache();
     this.uninit();
     this.init();
   }
@@ -492,10 +525,12 @@ this.TopStoriesFeed = class TopStoriesFeed {
         this.uninit();
         break;
       case at.NEW_TAB_REHYDRATED:
+        this.getPocketState(action.meta.fromTarget);
         this.maybeAddSpoc(action.meta.fromTarget);
         break;
       case at.SECTION_OPTIONS_CHANGED:
         if (action.data === SECTION_ID) {
+          await this.clearCache();
           this.uninit();
           this.init();
         }
@@ -533,7 +568,10 @@ this.TopStoriesFeed = class TopStoriesFeed {
       case at.PREF_CHANGED:
         // Check if spocs was disabled. Remove them if they were.
         if (action.data.name === "showSponsored" && !action.data.value) {
-          this.removeSpocs();
+          await this.removeSpocs();
+        }
+        if (action.data.name === "pocketCta") {
+          this.dispatchPocketCta(action.data.value, true);
         }
         break;
     }

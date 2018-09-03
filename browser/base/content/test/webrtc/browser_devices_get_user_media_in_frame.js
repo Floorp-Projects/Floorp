@@ -30,7 +30,7 @@ var gTests = [
     await indicator;
     await checkSharingUI({audio: true, video: true});
     await closeStream(false, "frame1");
-  }
+  },
 },
 
 {
@@ -71,7 +71,7 @@ var gTests = [
 
     // the stream is already closed, but this will do some cleanup anyway
     await closeStream(true, "frame1");
-  }
+  },
 },
 
 {
@@ -104,7 +104,7 @@ var gTests = [
 
     await expectNoObserverCalled();
     await checkNotSharing();
-  }
+  },
 },
 
 {
@@ -124,7 +124,7 @@ var gTests = [
 
     await expectNoObserverCalled();
     await checkNotSharing();
-  }
+  },
 },
 
 {
@@ -185,7 +185,7 @@ var gTests = [
     await closeStream(false, "frame1");
     await expectNoObserverCalled();
     await checkNotSharing();
-  }
+  },
 },
 
 {
@@ -243,7 +243,7 @@ var gTests = [
     await closeStream(false, "frame1");
     await expectNoObserverCalled();
     await checkNotSharing();
-  }
+  },
 },
 
 {
@@ -268,8 +268,8 @@ var gTests = [
     await checkSharingUI({video: true, audio: true});
 
     await reloadAndAssertClosedStreams();
-  }
-}
+  },
+},
 
 ];
 

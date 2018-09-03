@@ -106,6 +106,7 @@ struct LoadInfoArgs
   bool                        isPreflight;
   bool                        loadTriggeredFromExternal;
   bool                        serviceWorkerTaintingSynthesized;
+  bool                        documentHasUserInteracted;
 };
 
 /**
@@ -146,6 +147,7 @@ struct ParentLoadInfoForwarderArgs
   // Tracker information, currently used by FastBlock
   bool isTracker;
   bool isTrackerBlocked;
+  bool documentHasUserInteracted;
 
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder

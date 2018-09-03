@@ -51,7 +51,7 @@ function prepareServer(cbAfterTokenFetch) {
       let expected = config.fxaccount.token.endpoint;
       Assert.ok(full.startsWith(expected),
                 `request made to ${full}, expected ${expected}`);
-    }
+    },
   };
   let server = new SyncServer(callback);
   server.registerUser("johndoe");

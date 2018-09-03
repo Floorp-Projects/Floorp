@@ -99,7 +99,7 @@ function bug523784_test2(win) {
     icon: "chrome://mozapps/skin/plugins/pluginGeneric.svg",
     disable: false,
     blocked: false,
-    url: "http://example.com/bug523784_2"
+    url: "http://example.com/bug523784_2",
   });
   args.list.push({
     name: "Bug 523784 softblocked addon 3",
@@ -107,7 +107,7 @@ function bug523784_test2(win) {
     icon: "chrome://mozapps/skin/plugins/pluginGeneric.svg",
     disable: false,
     blocked: false,
-    url: "http://example.com/bug523784_3"
+    url: "http://example.com/bug523784_3",
   });
 
   args.wrappedJSObject = args;

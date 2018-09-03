@@ -20,7 +20,7 @@ let searchDiscoveryTests = [
   { type: " application/opensearchdescription+xml ", text: "type may contain extra whitespace" },
   { type: "application/opensearchdescription+xml; charset=utf-8", text: "type may have optional parameters (RFC2046)" },
   { type: "aapplication/opensearchdescription+xml", pass: false, text: "type should not be loosely matched" },
-  { rel: "search search search", count: 1, text: "only one engine should be added" }
+  { rel: "search search search", count: 1, text: "only one engine should be added" },
 ];
 
 async function searchDiscovery() {

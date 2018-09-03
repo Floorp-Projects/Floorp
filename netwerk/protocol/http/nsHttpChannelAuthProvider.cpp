@@ -515,13 +515,11 @@ nsHttpChannelAuthProvider::PrepareForAuthentication(bool proxyAuth)
     // We need to remove any Proxy_Authorization header left over from a
     // non-request based authentication handshake (e.g., for NTLM auth).
 
-    nsAutoCString contractId;
-    contractId.AssignLiteral(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
-    contractId.Append(mProxyAuthType);
-
     nsresult rv;
-    nsCOMPtr<nsIHttpAuthenticator> precedingAuth =
-        do_GetService(contractId.get(), &rv);
+    nsCOMPtr<nsIHttpAuthenticator> precedingAuth;
+    nsCString proxyAuthType;
+    rv = GetAuthenticator(mProxyAuthType.get(), proxyAuthType,
+                          getter_AddRefs(precedingAuth));
     if (NS_FAILED(rv))
         return rv;
 

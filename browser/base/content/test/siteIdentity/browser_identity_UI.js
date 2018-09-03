@@ -18,45 +18,45 @@ var tests = [
   {
     name: "normal domain",
     location: "http://test1.example.org/",
-    effectiveHost: "test1.example.org"
+    effectiveHost: "test1.example.org",
   },
   {
     name: "view-source",
     location: "view-source:http://example.com/",
-    effectiveHost: null
+    effectiveHost: null,
   },
   {
     name: "normal HTTPS",
     location: "https://example.com/",
     effectiveHost: "example.com",
-    isHTTPS: true
+    isHTTPS: true,
   },
   {
     name: "IDN subdomain",
     location: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp/",
-    effectiveHost: "sub1." + idnDomain
+    effectiveHost: "sub1." + idnDomain,
   },
   {
     name: "subdomain with port",
     location: "http://sub1.test1.example.org:8000/",
-    effectiveHost: "sub1.test1.example.org"
+    effectiveHost: "sub1.test1.example.org",
   },
   {
     name: "subdomain HTTPS",
     location: "https://test1.example.com/",
     effectiveHost: "test1.example.com",
-    isHTTPS: true
+    isHTTPS: true,
   },
   {
     name: "view-source HTTPS",
     location: "view-source:https://example.com/",
     effectiveHost: null,
-    isHTTPS: true
+    isHTTPS: true,
   },
   {
     name: "IP address",
     location: "http://127.0.0.1:8888/",
-    effectiveHost: "127.0.0.1"
+    effectiveHost: "127.0.0.1",
   },
 ];
 

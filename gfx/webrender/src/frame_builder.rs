@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, DeviceIntPoint, DeviceIntRect, DevicePixelScale};
-use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FontRenderMode};
-use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, WorldPoint};
+use api::{ColorF, DeviceIntPoint, DevicePixelScale, LayoutPixel, PicturePixel};
+use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FontRenderMode, PictureRect};
+use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, WorldPoint, WorldRect, WorldPixel};
 use clip::{ClipStore};
 use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
 use display_list_flattener::{DisplayListFlattener};
@@ -13,7 +13,7 @@ use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap};
 use picture::PictureSurface;
-use prim_store::{PrimitiveIndex, PrimitiveRun, LocalRectBuilder, PrimitiveStore, Transform};
+use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveStore, Transform, SpaceMapper};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_backend::FrameId;
 use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
@@ -71,7 +71,7 @@ pub struct FrameBuildingContext<'a> {
     pub device_pixel_scale: DevicePixelScale,
     pub scene_properties: &'a SceneProperties,
     pub pipelines: &'a FastHashMap<PipelineId, Arc<ScenePipeline>>,
-    pub screen_rect: DeviceIntRect,
+    pub world_rect: WorldRect,
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub transforms: &'a TransformPalette,
     pub max_local_clip: LayoutRect,
@@ -92,20 +92,37 @@ pub struct PictureContext {
     pub apply_local_clip_rect: bool,
     pub inflation_factor: f32,
     pub allow_subpixel_aa: bool,
+    pub has_surface: bool,
 }
 
+#[derive(Debug)]
 pub struct PictureState {
     pub tasks: Vec<RenderTaskId>,
     pub has_non_root_coord_system: bool,
     pub local_rect_changed: bool,
+    pub map_local_to_pic: SpaceMapper<LayoutPixel, PicturePixel>,
+    pub map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel>,
 }
 
 impl PictureState {
-    pub fn new() -> Self {
+    pub fn new(
+        ref_spatial_node_index: SpatialNodeIndex,
+        clip_scroll_tree: &ClipScrollTree,
+    ) -> Self {
+        let map_local_to_pic = SpaceMapper::new(ref_spatial_node_index);
+
+        let mut map_pic_to_world = SpaceMapper::new(SpatialNodeIndex(0));
+        map_pic_to_world.set_target_spatial_node(
+            ref_spatial_node_index,
+            clip_scroll_tree,
+        );
+
         PictureState {
             tasks: Vec::new(),
             has_non_root_coord_system: false,
             local_rect_changed: false,
+            map_local_to_pic,
+            map_pic_to_world,
         }
     }
 }
@@ -113,14 +130,14 @@ impl PictureState {
 pub struct PrimitiveContext<'a> {
     pub spatial_node: &'a SpatialNode,
     pub spatial_node_index: SpatialNodeIndex,
-    pub transform: Transform<'a>,
+    pub transform: Transform,
 }
 
 impl<'a> PrimitiveContext<'a> {
     pub fn new(
         spatial_node: &'a SpatialNode,
         spatial_node_index: SpatialNodeIndex,
-        transform: Transform<'a>,
+        transform: Transform,
     ) -> Self {
         PrimitiveContext {
             spatial_node,
@@ -201,12 +218,14 @@ impl FrameBuilder {
 
         const MAX_CLIP_COORD: f32 = 1.0e9;
 
+        let world_rect = (self.screen_rect.to_f32() / device_pixel_scale).round_out();
+
         let frame_context = FrameBuildingContext {
             scene_id: self.scene_id,
             device_pixel_scale,
             scene_properties,
             pipelines,
-            screen_rect: self.screen_rect.to_i32(),
+            world_rect,
             clip_scroll_tree,
             transforms: transform_palette,
             max_local_clip: LayoutRect::new(
@@ -224,33 +243,46 @@ impl FrameBuilder {
             special_render_passes,
         };
 
-        let mut pic_state = PictureState::new();
+        let mut pic_state = PictureState::new(
+            root_spatial_node_index,
+            &frame_context.clip_scroll_tree,
+        );
 
         let pic_context = self
             .prim_store
             .get_pic_mut(root_prim_index)
-            .take_context(true);
+            .take_context(
+                true,
+                scene_properties,
+                false,
+            )
+            .unwrap();
 
-        let mut local_rect_builder = LocalRectBuilder::new(
-            root_spatial_node_index,
-        );
+        let mut pic_rect = PictureRect::zero();
 
         self.prim_store.prepare_prim_runs(
             &pic_context,
             &mut pic_state,
             &frame_context,
             &mut frame_state,
-            &mut local_rect_builder,
+            root_spatial_node_index,
+            &mut pic_rect,
         );
 
         let pic = self
             .prim_store
             .get_pic_mut(root_prim_index);
-        pic.restore_context(pic_context, local_rect_builder);
+        pic.restore_context(
+            pic_context,
+            pic_state,
+            Some(pic_rect),
+        );
+
+        let pic_state = pic.take_state();
 
         let root_render_task = RenderTask::new_picture(
-            RenderTaskLocation::Fixed(frame_context.screen_rect),
-            frame_context.screen_rect.size,
+            RenderTaskLocation::Fixed(self.screen_rect.to_i32()),
+            self.screen_rect.size.to_f32(),
             root_prim_index,
             DeviceIntPoint::zero(),
             pic_state.tasks,

@@ -7,6 +7,7 @@
 #ifndef MOZILLA_GFX_VR_VRMANAGERCHILD_H
 #define MOZILLA_GFX_VR_VRMANAGERCHILD_H
 
+#include "mozilla/dom/WindowBinding.h" // For FrameRequestCallback
 #include "mozilla/gfx/PVRManagerChild.h"
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"

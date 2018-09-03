@@ -2046,10 +2046,10 @@ nsGlobalWindowOuter::PreloadLocalStorage()
   // private browsing windows do not persist local storage to disk so we should
   // only try to precache storage when we're not a private browsing window.
   if (principal->GetPrivateBrowsingId() == 0) {
-    nsCOMPtr<nsIDOMStorage> storage;
+    RefPtr<Storage> storage;
     rv = storageManager->PrecacheStorage(principal, getter_AddRefs(storage));
     if (NS_SUCCEEDED(rv)) {
-      mLocalStorage = static_cast<Storage*>(storage.get());
+      mLocalStorage = storage;
     }
   }
 }
@@ -5291,7 +5291,7 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
   securityUI->GetState(&state);
   if (aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
     doc->SetHasTrackingContentBlocked(true);
-  } else if (aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_COOKIES) {
+  } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
     doc->SetHasTrackingCookiesBlocked(true);
   } else {
     // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;

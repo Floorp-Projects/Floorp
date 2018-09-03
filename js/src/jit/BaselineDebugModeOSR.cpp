@@ -189,7 +189,7 @@ CollectJitStackScripts(JSContext* cx, const Debugger::ExecutionObservableSet& ob
     for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
         const JSJitFrameIter& frame = iter.frame();
         switch (frame.type()) {
-          case JitFrame_BaselineJS: {
+          case FrameType::BaselineJS: {
             JSScript* script = frame.script();
 
             if (!obs.shouldRecompileOrInvalidate(script)) {
@@ -234,12 +234,12 @@ CollectJitStackScripts(JSContext* cx, const Debugger::ExecutionObservableSet& ob
             break;
           }
 
-          case JitFrame_BaselineStub:
+          case FrameType::BaselineStub:
             prevFrameStubPtr =
                 reinterpret_cast<BaselineStubFrameLayout*>(frame.fp())->maybeStubPtr();
             break;
 
-          case JitFrame_IonJS: {
+          case FrameType::IonJS: {
             InlineFrameIterator inlineIter(cx, &frame);
             while (true) {
                 if (obs.shouldRecompileOrInvalidate(inlineIter.script())) {
@@ -323,9 +323,9 @@ SpewPatchBaselineFrame(uint8_t* oldReturnAddress, uint8_t* newReturnAddress,
                        JSScript* script, ICEntry::Kind frameKind, jsbytecode* pc)
 {
     JitSpew(JitSpew_BaselineDebugModeOSR,
-            "Patch return %p -> %p on BaselineJS frame (%s:%u) from %s at %s",
+            "Patch return %p -> %p on BaselineJS frame (%s:%u:%u) from %s at %s",
             oldReturnAddress, newReturnAddress, script->filename(), script->lineno(),
-            ICEntryKindToString(frameKind), CodeName[(JSOp)*pc]);
+            script->column(), ICEntryKindToString(frameKind), CodeName[(JSOp)*pc]);
 }
 
 static void
@@ -333,9 +333,9 @@ SpewPatchBaselineFrameFromExceptionHandler(uint8_t* oldReturnAddress, uint8_t* n
                                            JSScript* script, jsbytecode* pc)
 {
     JitSpew(JitSpew_BaselineDebugModeOSR,
-            "Patch return %p -> %p on BaselineJS frame (%s:%u) from exception handler at %s",
+            "Patch return %p -> %p on BaselineJS frame (%s:%u:%u) from exception handler at %s",
             oldReturnAddress, newReturnAddress, script->filename(), script->lineno(),
-            CodeName[(JSOp)*pc]);
+            script->column(), CodeName[(JSOp)*pc]);
 }
 
 static void
@@ -388,7 +388,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
     for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
         const JSJitFrameIter& frame = iter.frame();
         switch (frame.type()) {
-          case JitFrame_BaselineJS: {
+          case FrameType::BaselineJS: {
             // If the script wasn't recompiled or is not observed, there's
             // nothing to patch.
             if (!obs.shouldRecompileOrInvalidate(frame.script()))
@@ -590,7 +590,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
             break;
           }
 
-          case JitFrame_BaselineStub: {
+          case FrameType::BaselineStub: {
             JSJitFrameIter prev(iter.frame());
             ++prev;
             BaselineFrame* prevFrame = prev.baselineFrame();
@@ -633,7 +633,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
             break;
           }
 
-          case JitFrame_IonJS: {
+          case FrameType::IonJS: {
             // Nothing to patch.
             InlineFrameIterator inlineIter(cx, &frame);
             while (true) {
@@ -683,8 +683,9 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
     if (oldBaselineScript->hasDebugInstrumentation() == observing)
         return true;
 
-    JitSpew(JitSpew_BaselineDebugModeOSR, "Recompiling (%s:%u) for %s",
-            script->filename(), script->lineno(), observing ? "DEBUGGING" : "NORMAL EXECUTION");
+    JitSpew(JitSpew_BaselineDebugModeOSR, "Recompiling (%s:%u:%u) for %s",
+            script->filename(), script->lineno(), script->column(), 
+            observing ? "DEBUGGING" : "NORMAL EXECUTION");
 
     AutoKeepTypeScripts keepTypes(cx);
     script->setBaselineScript(cx->runtime(), nullptr);

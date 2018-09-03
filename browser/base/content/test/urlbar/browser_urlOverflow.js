@@ -4,9 +4,13 @@
 
 async function testVal(aExpected, overflowSide = "") {
   info(`Testing ${aExpected}`);
-  gURLBar.value = aExpected;
+  URLBarSetURI(makeURI(aExpected));
+
+  Assert.equal(gURLBar.selectionStart, gURLBar.selectionEnd,
+    "Selection sanity check");
 
   gURLBar.focus();
+  Assert.equal(document.activeElement, gURLBar.inputField, "URL Bar should be focused");
   Assert.equal(gURLBar.scheme.value, "", "Check the scheme value");
   Assert.equal(getComputedStyle(gURLBar.scheme).visibility, "hidden",
                "Check the scheme box visibility");
@@ -22,8 +26,6 @@ async function testVal(aExpected, overflowSide = "") {
   if (scheme == "http://" && Services.prefs.getBoolPref("browser.urlbar.trimURLs", true))
     scheme = "";
 
-  Assert.equal(gURLBar.selectionStart, gURLBar.selectionEnd,
-               "Selection sanity check");
   Assert.equal(gURLBar.scheme.value, scheme, "Check the scheme value");
   let isOverflowed = gURLBar.inputField.scrollWidth > gURLBar.inputField.clientWidth;
   Assert.equal(isOverflowed, !!overflowSide, "Check The input field overflow");
@@ -39,8 +41,13 @@ async function testVal(aExpected, overflowSide = "") {
 }
 
 add_task(async function() {
+  // We use a new tab for the test to be sure all the tab switching and loading
+  // is complete before starting, otherwise onLocationChange for this tab could
+  // override the value we set with an empty value.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   registerCleanupFunction(function() {
     URLBarSetURI();
+    BrowserTestUtils.removeTab(tab);
   });
 
   let lotsOfSpaces = new Array(200).fill("%20").join("");
@@ -65,7 +72,7 @@ add_task(async function() {
   info("Test with formatting disabled");
   await SpecialPowers.pushPrefEnv({set: [
     ["browser.urlbar.formatting.enabled", false],
-    ["browser.urlbar.trimURLs", false]
+    ["browser.urlbar.trimURLs", false],
   ]});
 
   await testVal(`https://mozilla.org/`);

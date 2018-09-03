@@ -85,7 +85,7 @@
             case "time": {
               this.postMessageToPicker({
                 name: "PickerSetValue",
-                detail: data.value
+                detail: data.value,
               });
               break;
             }
@@ -97,8 +97,8 @@
                   year,
                   // Month value from input box starts from 1 instead of 0
                   month: month == undefined ? undefined : month - 1,
-                  day
-                }
+                  day,
+                },
               });
               break;
             }
@@ -128,7 +128,7 @@
                   min: detail.min,
                   max: detail.max,
                   step: detail.step,
-                }
+                },
               });
               break;
             }
@@ -179,7 +179,7 @@
                   max: detail.max,
                   step: detail.step,
                   stepBase: detail.stepBase,
-                }
+                },
               });
               break;
             }
@@ -201,7 +201,7 @@
               } else {
                 this.sendPickerValueChanged({
                   hour: isHourSet || isDayPeriodSet ? hour : undefined,
-                  minute: isMinuteSet ? minute : undefined
+                  minute: isMinuteSet ? minute : undefined,
                 });
               }
               break;
@@ -221,8 +221,8 @@
               this.dispatchEvent(new CustomEvent("DateTimePickerValueChanged", {
                 detail: {
                   hour: value.hour,
-                  minute: value.minute
-                }
+                  minute: value.minute,
+                },
               }));
               break;
             }
@@ -232,8 +232,8 @@
                   year: value.year,
                   // Month value from input box starts from 1 instead of 0
                   month: value.month == undefined ? undefined : value.month + 1,
-                  day: value.day
-                }
+                  day: value.day,
+                },
               }));
               break;
             }
@@ -267,7 +267,7 @@
 
           return {
             firstDayOfWeek,
-            weekends
+            weekends,
           };
         ]]></body>
       </method>

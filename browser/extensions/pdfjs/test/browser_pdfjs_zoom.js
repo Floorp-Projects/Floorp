@@ -11,50 +11,50 @@ const TESTS = [
   {
     action: {
       selector: "button#zoomIn",
-      event: "click"
+      event: "click",
     },
     expectedZoom: 1, // 1 - zoom in
-    message: "Zoomed in using the '+' (zoom in) button"
+    message: "Zoomed in using the '+' (zoom in) button",
   },
 
   {
     action: {
       selector: "button#zoomOut",
-      event: "click"
+      event: "click",
     },
     expectedZoom: -1, // -1 - zoom out
-    message: "Zoomed out using the '-' (zoom out) button"
+    message: "Zoomed out using the '-' (zoom out) button",
   },
 
   {
     action: {
       keyboard: true,
       keyCode: 61,
-      event: "+"
+      event: "+",
     },
     expectedZoom: 1, // 1 - zoom in
-    message: "Zoomed in using the CTRL++ keys"
+    message: "Zoomed in using the CTRL++ keys",
   },
 
   {
     action: {
       keyboard: true,
       keyCode: 109,
-      event: "-"
+      event: "-",
     },
     expectedZoom: -1, // -1 - zoom out
-    message: "Zoomed out using the CTRL+- keys"
+    message: "Zoomed out using the CTRL+- keys",
   },
 
   {
     action: {
       selector: "select#scaleSelect",
       index: 5,
-      event: "change"
+      event: "change",
     },
     expectedZoom: -1, // -1 - zoom out
-    message: "Zoomed using the zoom picker"
-  }
+    message: "Zoomed using the zoom picker",
+  },
 ];
 
 add_task(async function test() {

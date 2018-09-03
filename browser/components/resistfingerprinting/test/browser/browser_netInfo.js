@@ -52,8 +52,8 @@ add_task(async function runTest() {
   await SpecialPowers.pushPrefEnv({"set":
     [
       ["privacy.resistFingerprinting", true],
-      ["dom.netinfo.enabled",          true]
-    ]
+      ["dom.netinfo.enabled",          true],
+    ],
   });
 
   await testWindow();

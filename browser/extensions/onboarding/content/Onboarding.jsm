@@ -433,7 +433,7 @@ class Onboarding {
    */
   sendMessageToChrome(action, params) {
     this.mm.sendAsyncMessage("Onboarding:OnContentMessage", {
-      action, params
+      action, params,
     });
   }
 
@@ -595,7 +595,7 @@ class Onboarding {
     if (tourDone) {
       this.sendMessageToChrome("set-prefs", [{
         name: "browser.onboarding.state",
-        value: ICON_STATE_WATERMARK
+        value: ICON_STATE_WATERMARK,
       }]);
     }
   }
@@ -1085,7 +1085,7 @@ class Onboarding {
       if (!this.isTourCompleted(id)) {
         params.push({
           name: `browser.onboarding.tour.${id}.completed`,
-          value: true
+          value: true,
         });
       }
     });
@@ -1161,7 +1161,7 @@ class Onboarding {
     if (lastTourChangeTime <= 0) {
       this.sendMessageToChrome("set-prefs", [{
         name: "browser.onboarding.notification.last-time-of-changing-tour-sec",
-        value: Math.floor(Date.now() / 1000)
+        value: Math.floor(Date.now() / 1000),
       }]);
       return true;
     }
@@ -1188,15 +1188,15 @@ class Onboarding {
     let queue = this._getNotificationQueue();
     params.push({
       name: "browser.onboarding.notification.tour-ids-queue",
-      value: queue.filter(id => id != tourId).join(",")
+      value: queue.filter(id => id != tourId).join(","),
     });
     params.push({
       name: "browser.onboarding.notification.last-time-of-changing-tour-sec",
-      value: 0
+      value: 0,
     });
     params.push({
       name: "browser.onboarding.notification.prompt-count",
-      value: 0
+      value: 0,
     });
     this.sendMessageToChrome("set-prefs", params);
   }
@@ -1217,7 +1217,7 @@ class Onboarding {
       queue = `${ids},${ids}`;
       this.sendMessageToChrome("set-prefs", [{
         name: "browser.onboarding.notification.tour-ids-queue",
-        value: queue
+        value: queue,
       }]);
     }
     return queue ? queue.split(",") : [];
@@ -1259,16 +1259,16 @@ class Onboarding {
       this.sendMessageToChrome("set-prefs", [
         {
           name: NOTIFICATION_FINISHED_PREF,
-          value: true
+          value: true,
         },
         {
           name: "browser.onboarding.notification.tour-ids-queue",
-          value: ""
+          value: "",
         },
         {
           name: "browser.onboarding.state",
-          value: ICON_STATE_WATERMARK
-        }
+          value: ICON_STATE_WATERMARK,
+        },
       ]);
       return;
     }
@@ -1295,27 +1295,27 @@ class Onboarding {
       // We just change tour so update the time, the count and the queue
       params.push({
         name: "browser.onboarding.notification.last-time-of-changing-tour-sec",
-        value: Math.floor(Date.now() / 1000)
+        value: Math.floor(Date.now() / 1000),
       });
       params.push({
         name: PROMPT_COUNT_PREF,
-        value: promptCount
+        value: promptCount,
       });
       params.push({
         name: "browser.onboarding.notification.tour-ids-queue",
-        value: queue.join(",")
+        value: queue.join(","),
       });
     } else {
       promptCount = this._notificationPromptCount + 1;
       params.push({
         name: PROMPT_COUNT_PREF,
-        value: promptCount
+        value: promptCount,
       });
     }
     this.sendMessageToChrome("set-prefs", params);
     this.telemetry({
       type: "notification-session-begin",
-      session_key: this._session_key
+      session_key: this._session_key,
     });
     // since set-perfs is async, pass promptCount directly to avoid gathering the wrong
     // notification_impression.
@@ -1393,12 +1393,12 @@ class Onboarding {
     this.sendMessageToChrome("set-prefs", [
       {
         name: NOTIFICATION_FINISHED_PREF,
-        value: true
+        value: true,
       },
       {
         name: "browser.onboarding.state",
-        value: ICON_STATE_WATERMARK
-      }
+        value: ICON_STATE_WATERMARK,
+      },
     ]);
     this.telemetry({
       type: "overlay-skip-tour",

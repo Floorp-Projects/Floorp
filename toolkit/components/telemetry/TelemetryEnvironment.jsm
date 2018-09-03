@@ -444,7 +444,7 @@ function getWindowsVersionInfo() {
       {wServicePackMinor: WORD},
       {wSuiteMask: WORD},
       {wProductType: BYTE},
-      {wReserved: BYTE}
+      {wReserved: BYTE},
       ]);
 
   let kernel32 = ctypes.open("kernel32");
@@ -829,7 +829,7 @@ EnvironmentAddonBuilder.prototype = {
         this._blocklistObserverAdded = true;
       }
       return {
-        "dummy-gmp": {version: "0.1", userDisabled: false, applyBackgroundUpdates: 1}
+        "dummy-gmp": {version: "0.1", userDisabled: false, applyBackgroundUpdates: 1},
       };
     }
     // Request plugins, asynchronously.
@@ -1767,5 +1767,5 @@ EnvironmentCache.prototype = {
   reset() {
     this._shutdown = false;
     this._delayedInitFinished = false;
-  }
+  },
 };

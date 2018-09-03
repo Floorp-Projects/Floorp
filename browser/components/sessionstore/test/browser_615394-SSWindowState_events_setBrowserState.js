@@ -8,9 +8,9 @@ const lameMultiWindowState = { windows: [
         { entries: [{ url: "http://example.org#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
         { entries: [{ url: "http://example.org#2", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
         { entries: [{ url: "http://example.org#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } }
+        { entries: [{ url: "http://example.org#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
       ],
-      selected: 1
+      selected: 1,
     },
     {
       tabs: [
@@ -19,8 +19,8 @@ const lameMultiWindowState = { windows: [
         { entries: [{ url: "http://example.com#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
         { entries: [{ url: "http://example.com#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
       ],
-      selected: 3
-    }
+      selected: 3,
+    },
   ] };
 
 

@@ -134,12 +134,11 @@ NativeObject::elementsRangeWriteBarrierPost(uint32_t start, uint32_t count)
 {
     for (size_t i = 0; i < count; i++) {
         const Value& v = elements_[start + i];
-        if ((v.isObject() || v.isString()) && IsInsideNursery(v.toGCThing())) {
-            JSRuntime* rt = runtimeFromMainThread();
-            rt->gc.storeBuffer().putSlot(this, HeapSlot::Element,
-                                         unshiftedIndex(start + i),
-                                         count - i);
-            return;
+        if (v.isGCThing()) {
+            if (gc::StoreBuffer* sb = v.toGCThing()->storeBuffer()) {
+                sb->putSlot(this, HeapSlot::Element, unshiftedIndex(start + i), count - i);
+                return;
+            }
         }
     }
 }

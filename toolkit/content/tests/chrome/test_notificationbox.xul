@@ -181,19 +181,11 @@ var tests =
   },
   {
     test: function(nb, ntf) {
-      // Create a popup to be used by a menu-button.
-      var doc = nb.ownerDocument;
-      var menuPopup = doc.createElementNS(NSXUL, "menupopup");
-      var menuItem = menuPopup.appendChild(doc.createElementNS(NSXUL, "menuitem"));
-      menuItem.setAttribute("label", "Menu Item");
-      // Append a notification with a button of type 'menu-button'.
       ntf = nb.appendNotification(
         "Notification", "note", "happy.png",
         nb.PRIORITY_WARNING_LOW,
         [{
           label: "Button",
-          type: "menu-button",
-          popup: menuPopup
         }]
       );
 
@@ -203,14 +195,6 @@ var tests =
       testtag_notificationbox_State(nb, "append", ntf, 1);
       testtag_notification_State(nb, ntf, "append", "Notification", "note",
                                  "happy.png", nb.PRIORITY_WARNING_LOW);
-      var button = ntf.querySelector(".notification-button");
-      SimpleTest.is(button.type, "menu-button", "Button type should be set");
-      var menuPopup = button.getElementsByTagNameNS(NSXUL, "menupopup");
-      SimpleTest.is(menuPopup.length, 1, "There should be a menu attached");
-      var menuItem = menuPopup[0].firstChild;
-      SimpleTest.is(menuItem.localName, "menuitem", "There should be a menu item");
-      SimpleTest.is(menuItem.getAttribute("label"), "Menu Item", "Label should match");
-      // Clean up.
       nb.removeNotification(ntf);
 
       return [1, null];

@@ -25,14 +25,14 @@ var passwords_initial = [
     usernameField: "uname",
     passwordField: "pword",
     changes: {
-      password: "SeCrEt$$$"
-    }
+      password: "SeCrEt$$$",
+    },
   },
   { hostname: "http://www.example.com",
     realm: "login",
     username: "jack",
-    password: "secretlogin"
-  }
+    password: "secretlogin",
+  },
 ];
 
 var passwords_after_first_update = [
@@ -41,13 +41,13 @@ var passwords_after_first_update = [
     username: "joe",
     password: "SeCrEt$$$",
     usernameField: "uname",
-    passwordField: "pword"
+    passwordField: "pword",
   },
   { hostname: "http://www.example.com",
     realm: "login",
     username: "jack",
-    password: "secretlogin"
-  }
+    password: "secretlogin",
+  },
 ];
 
 /*
@@ -56,12 +56,12 @@ var passwords_after_first_update = [
 
 Phase("phase1", [
   [Passwords.add, passwords_initial],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase2", [
   [Passwords.add, passwords_initial],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase3", [
@@ -69,7 +69,7 @@ Phase("phase3", [
   [Passwords.verify, passwords_initial],
   [Passwords.modify, passwords_initial],
   [Passwords.verify, passwords_after_first_update],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase4", [

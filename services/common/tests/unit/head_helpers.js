@@ -139,7 +139,7 @@ var PACSystemSettings = {
   PACURI: null,
   getProxyForURI: function getProxyForURI(aURI) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  }
+  },
 };
 
 var fakePACCID;

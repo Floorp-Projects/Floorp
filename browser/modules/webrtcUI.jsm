@@ -203,7 +203,7 @@ var webrtcUI = {
 
       case "rtcpeer:Request": {
         let params = Object.freeze(Object.assign({
-          origin: aMessage.target.contentPrincipal.origin
+          origin: aMessage.target.contentPrincipal.origin,
         }, aMessage.data));
 
         let blockers = Array.from(this.peerConnectionBlockers);
@@ -240,7 +240,7 @@ var webrtcUI = {
       case "rtcpeer:CancelRequest": {
         let params = Object.freeze({
           origin: aMessage.target.contentPrincipal.origin,
-          callID: aMessage.data
+          callID: aMessage.data,
         });
         this.emitter.emit("peer-request-cancel", params);
         break;
@@ -278,7 +278,7 @@ var webrtcUI = {
           webrtcUI._streams[index] = {
             browser: aMessage.target,
             processMM,
-            state: aMessage.data
+            state: aMessage.data,
           };
         }
         let tabbrowser = aMessage.target.ownerGlobal.gBrowser;
@@ -291,7 +291,7 @@ var webrtcUI = {
         updateIndicators(null, null);
         break;
     }
-  }
+  },
 };
 
 function denyRequest(aBrowser, aRequest) {
@@ -396,7 +396,7 @@ function prompt(aBrowser, aRequest) {
     // The real callback will be set during the "showing" event. The
     // empty function here is so that PopupNotifications.show doesn't
     // reject the action.
-    callback() {}
+    callback() {},
   };
 
   let secondaryActions = [
@@ -415,8 +415,8 @@ function prompt(aBrowser, aRequest) {
         if (videoDevices.length)
           SitePermissions.set(uri, sharingScreen ? "screen" : "camera",
                               SitePermissions.BLOCK, scope, notification.browser);
-      }
-    }
+      },
+    },
   ];
 
   let productName = gBrandBundle.GetStringFromName("brandShortName");
@@ -790,7 +790,7 @@ function prompt(aBrowser, aRequest) {
                                              devices: allowedDevices});
       };
       return false;
-    }
+    },
   };
 
   // Don't offer "always remember" action in PB mode.
@@ -813,7 +813,7 @@ function prompt(aBrowser, aRequest) {
       checkedState: reasonForNoPermanentAllow ? {
         disableMainAction: true,
         warningLabel: stringBundle.getFormattedString(reasonForNoPermanentAllow,
-                                                      [productName])
+                                                      [productName]),
       } : undefined,
     };
   }
@@ -988,7 +988,7 @@ function getGlobalIndicator() {
       this._setIndicatorState("Camera", false);
       this._setIndicatorState("Microphone", false);
       this._setIndicatorState("Screen", false);
-    }
+    },
   };
 
   indicator.updateIndicatorState();

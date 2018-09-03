@@ -27,7 +27,7 @@ function resetBlocklist(aCallback) {
 add_task(async function() {
   SpecialPowers.pushPrefEnv({"set": [
     ["plugins.click_to_play", true],
-    ["extensions.blocklist.suppressUI", true]
+    ["extensions.blocklist.suppressUI", true],
   ]});
   registerCleanupFunction(async function() {
     let pluginTag = getTestPluginTag();

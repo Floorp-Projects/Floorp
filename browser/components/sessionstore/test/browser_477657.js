@@ -10,9 +10,9 @@ add_task(async function test_sizemodeDefaults() {
     tabs: [{ entries: [] }],
     _closedTabs: [{
       state: { entries: [{ url: "about:" }]},
-      title: "About:"
+      title: "About:",
     }],
-    sizemode: "maximized"
+    sizemode: "maximized",
   }] };
 
   let uniqueKey = "bug 477657";

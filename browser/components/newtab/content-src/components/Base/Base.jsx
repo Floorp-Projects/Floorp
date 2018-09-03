@@ -114,7 +114,7 @@ export class _Base extends React.PureComponent {
     const {initialized} = App;
 
     const prefs = props.Prefs.values;
-    if ((prefs.asrouterExperimentEnabled || prefs.asrouterOnboardingCohort > 0) && window.location.hash === "#asrouter") {
+    if (prefs.asrouterExperimentEnabled && window.location.hash === "#asrouter") {
       return (<ASRouterAdmin />);
     }
 
@@ -124,7 +124,12 @@ export class _Base extends React.PureComponent {
 
     // Until we can delete the existing onboarding tour, just hide the onboarding button when users are in
     // the new simplified onboarding experiment. CSS hacks ftw
-    if (prefs.asrouterOnboardingCohort > 0) {
+    let isOnboardingEnabled = false;
+    try {
+      isOnboardingEnabled = JSON.parse(prefs["asrouter.messageProviders"]).find(i => i.id === "onboarding").enabled;
+    } catch (e) {}
+
+    if (isOnboardingEnabled) {
       global.document.body.classList.add("hide-onboarding");
     }
 

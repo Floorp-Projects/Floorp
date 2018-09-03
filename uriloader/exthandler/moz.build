@@ -11,10 +11,10 @@ XPIDL_SOURCES += [
     'nsIContentDispatchChooser.idl',
     'nsIExternalHelperAppService.idl',
     'nsIExternalProtocolService.idl',
-    'nsIExternalSharingAppService.idl',
     'nsIExternalURLHandlerService.idl',
     'nsIHandlerService.idl',
     'nsIHelperAppLauncherDialog.idl',
+    'nsISharingHandlerApp.idl',
 ]
 
 XPIDL_MODULE = 'exthandler'
@@ -40,7 +40,6 @@ EXPORTS += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     EXPORTS += [ '%s/%s' % (osdir, f) for f in [
-        'nsExternalSharingAppService.h',
         'nsExternalURLHandlerService.h',
     ]]
 
@@ -88,7 +87,6 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     UNIFIED_SOURCES += [
         'android/nsAndroidHandlerApp.cpp',
-        'android/nsExternalSharingAppService.cpp',
         'android/nsExternalURLHandlerService.cpp',
         'android/nsMIMEInfoAndroid.cpp',
     ]

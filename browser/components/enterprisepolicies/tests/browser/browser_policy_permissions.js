@@ -59,45 +59,45 @@ add_task(async function test_setup_activate_policies() {
         "Camera": {
           "Allow": [
             "https://www.allow.com",
-            "https://www.pre-existing-deny.com"
+            "https://www.pre-existing-deny.com",
           ],
           "Block": [
             "https://www.deny.com",
-            "https://www.pre-existing-allow.com"
-          ]
+            "https://www.pre-existing-allow.com",
+          ],
         },
         "Microphone": {
           "Allow": [
             "https://www.allow.com",
-            "https://www.pre-existing-deny.com"
+            "https://www.pre-existing-deny.com",
           ],
           "Block": [
             "https://www.deny.com",
-            "https://www.pre-existing-allow.com"
-          ]
+            "https://www.pre-existing-allow.com",
+          ],
         },
         "Location": {
           "Allow": [
             "https://www.allow.com",
-            "https://www.pre-existing-deny.com"
+            "https://www.pre-existing-deny.com",
           ],
           "Block": [
             "https://www.deny.com",
-            "https://www.pre-existing-allow.com"
-          ]
+            "https://www.pre-existing-allow.com",
+          ],
         },
         "Notifications": {
           "Allow": [
             "https://www.allow.com",
-            "https://www.pre-existing-deny.com"
+            "https://www.pre-existing-deny.com",
           ],
           "Block": [
             "https://www.deny.com",
-            "https://www.pre-existing-allow.com"
-          ]
-        }
-      }
-    }
+            "https://www.pre-existing-allow.com",
+          ],
+        },
+      },
+    },
   });
   is(Services.policies.status, Ci.nsIEnterprisePolicies.ACTIVE, "Engine is active");
 });
