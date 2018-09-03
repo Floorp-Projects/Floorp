@@ -297,7 +297,7 @@ CallFuncExport(MacroAssembler& masm, const FuncExport& fe, const Maybe<ImmPtr>& 
 // must map from the ABI of ExportFuncPtr to the export's signature's ABI.
 static bool
 GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe, const Maybe<ImmPtr>& funcPtr,
-                    HasGcTypes gcTypesEnabled, Offsets* offsets)
+                    HasGcTypes gcTypesConfigured, Offsets* offsets)
 {
     AssertExpectedSP(masm);
     masm.haltingAlign(CodeAlignment);
@@ -352,7 +352,7 @@ GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe, const Maybe<ImmP
 
 #ifdef ENABLE_WASM_GC
     WasmPush(masm, WasmTlsReg);
-    if (gcTypesEnabled == HasGcTypes::True)
+    if (gcTypesConfigured == HasGcTypes::True)
         SuppressGC(masm, 1, scratch);
 #endif
 
@@ -411,7 +411,7 @@ GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe, const Maybe<ImmP
 
 #ifdef ENABLE_WASM_GC
     WasmPop(masm, WasmTlsReg);
-    if (gcTypesEnabled == HasGcTypes::True)
+    if (gcTypesConfigured == HasGcTypes::True)
         SuppressGC(masm, -1, WasmTlsReg);
 #endif
 
@@ -519,7 +519,7 @@ GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize)
 
 static bool
 GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport& fe,
-                 const Maybe<ImmPtr>& funcPtr, HasGcTypes gcTypesEnabled, Offsets* offsets)
+                 const Maybe<ImmPtr>& funcPtr, HasGcTypes gcTypesConfigured, Offsets* offsets)
 {
     AssertExpectedSP(masm);
 
@@ -732,7 +732,7 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
     masm.loadWasmPinnedRegsFromTls();
 
 #ifdef ENABLE_WASM_GC
-    if (gcTypesEnabled == HasGcTypes::True) {
+    if (gcTypesConfigured == HasGcTypes::True) {
         masm.storePtr(WasmTlsReg, Address(sp, savedTlsOffset));
         SuppressGC(masm, 1, ScratchIonEntry);
     }
@@ -745,7 +745,7 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
     masm.assertStackAlignment(WasmStackAlignment);
 
 #ifdef ENABLE_WASM_GC
-    if (gcTypesEnabled == HasGcTypes::True) {
+    if (gcTypesConfigured == HasGcTypes::True) {
         masm.loadPtr(Address(sp, savedTlsOffset), WasmTlsReg);
         SuppressGC(masm, -1, WasmTlsReg);
     }
@@ -1848,14 +1848,14 @@ GenerateDebugTrapStub(MacroAssembler& masm, Label* throwLabel, CallableOffsets* 
 
 bool
 wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex, const FuncExport& fe,
-                         const Maybe<ImmPtr>& callee, bool isAsmJS, HasGcTypes gcTypesEnabled,
+                         const Maybe<ImmPtr>& callee, bool isAsmJS, HasGcTypes gcTypesConfigured,
                          CodeRangeVector* codeRanges)
 {
     MOZ_ASSERT(!callee == fe.hasEagerStubs());
     MOZ_ASSERT_IF(isAsmJS, fe.hasEagerStubs());
 
     Offsets offsets;
-    if (!GenerateInterpEntry(masm, fe, callee, gcTypesEnabled, &offsets))
+    if (!GenerateInterpEntry(masm, fe, callee, gcTypesConfigured, &offsets))
         return false;
     if (!codeRanges->emplaceBack(CodeRange::InterpEntry, fe.funcIndex(), offsets))
         return false;
@@ -1863,7 +1863,7 @@ wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex, const Fun
     if (isAsmJS || fe.funcType().temporarilyUnsupportedAnyRef())
         return true;
 
-    if (!GenerateJitEntry(masm, funcExportIndex, fe, callee, gcTypesEnabled, &offsets))
+    if (!GenerateJitEntry(masm, funcExportIndex, fe, callee, gcTypesConfigured, &offsets))
         return false;
     if (!codeRanges->emplaceBack(CodeRange::JitEntry, fe.funcIndex(), offsets))
         return false;
@@ -1914,7 +1914,7 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
         if (!fe.hasEagerStubs())
             continue;
         if (!GenerateEntryStubs(masm, i, fe, noAbsolute, env.isAsmJS(),
-                                env.gcTypesEnabled, &code->codeRanges))
+                                env.gcTypesConfigured, &code->codeRanges))
         {
             return false;
         }
