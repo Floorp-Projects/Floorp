@@ -9,6 +9,7 @@
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/mozalloc.h"           // for operator new
 #include "nsCOMPtr.h"                   // for nsCOMPtr, getter_AddRefs, etc
+#include "nsBaseCommandController.h"    // for nsBaseCommandController
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
 #include "nsComposeTxtSrvFilter.h"      // for nsComposeTxtSrvFilter, etc
 #include "nsDebug.h"                    // for NS_ENSURE_SUCCESS
@@ -99,10 +100,9 @@ nsComposeTxtSrvFilterConstructorForMail(nsISupports *aOuter,
 static nsresult
 CreateControllerWithSingletonCommandTable(const nsCID& inCommandTableCID, nsIController **aResult)
 {
-  nsresult rv;
-  nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
 
+  nsresult rv;
   nsCOMPtr<nsIControllerCommandTable> composerCommandTable = do_GetService(inCommandTableCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
