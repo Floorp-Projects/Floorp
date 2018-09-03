@@ -21,8 +21,10 @@ XPIDL_MODULE = 'necko_cache'
 EXPORTS += [
     'nsApplicationCache.h',
     'nsApplicationCacheService.h',
+    'nsCacheDevice.h',
     'nsCacheService.h',
-    'nsDeleteDir.h'
+    'nsDeleteDir.h',
+    'nsDiskCacheDeviceSQL.h',
 ]
 
 UNIFIED_SOURCES += [
