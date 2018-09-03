@@ -197,6 +197,15 @@ impl<'a> ImplDebug<'a> for Item {
                     ))
                 }
             }
+            TypeKind::Vector(_, len) => {
+                let self_ids = 0..len;
+                Some((
+                    format!("{}({{}})", name),
+                    vec![quote! {
+                        #(format!("{:?}", self.#self_ids)),*
+                    }]
+                ))
+            }
 
             TypeKind::ResolvedTypeRef(t) |
             TypeKind::TemplateAlias(t, _) |

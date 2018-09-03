@@ -115,6 +115,13 @@ fn gen_field(ctx: &BindgenContext, ty_item: &Item, name: &str) -> quote::Tokens 
                 &self. #name_ident [..] == &other. #name_ident [..]
             }
         },
+        TypeKind::Vector(_, len) => {
+            let self_ids = 0..len;
+            let other_ids = 0..len;
+            quote! {
+                #(self.#self_ids == other.#other_ids &&)* true
+            }
+        },
 
         TypeKind::ResolvedTypeRef(t) |
         TypeKind::TemplateAlias(t, _) |
