@@ -219,8 +219,8 @@ FileEscapedString(FILE* fp, const char* chars, size_t length, uint32_t quote)
     return res;
 }
 
-bool
-EncodeURI(JSContext* cx, StringBuffer& sb, const char* chars, size_t length);
+JSString*
+EncodeURI(JSContext* cx, const char* chars, size_t length);
 
 } // namespace js
 
