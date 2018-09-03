@@ -408,7 +408,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mDidFakeShow(false)
   , mNotified(false)
   , mTriedBrowserInit(false)
-  , mOrientation(eScreenOrientation_PortraitPrimary)
+  , mOrientation(hal::eScreenOrientation_PortraitPrimary)
   , mIgnoreKeyPressEvent(false)
   , mHasValidInnerSize(false)
   , mDestroyed(false)
@@ -2302,7 +2302,8 @@ static bool
 LoadScriptInMiddleman(const nsString& aURL)
 {
   return // Middleman processes run devtools server side scripts.
-         StringBeginsWith(aURL, NS_LITERAL_STRING("resource://devtools/"))
+         (StringBeginsWith(aURL, NS_LITERAL_STRING("resource://devtools/")) &&
+          recordreplay::parent::DebuggerRunsInMiddleman())
          // This script includes event listeners needed to propagate document
          // title changes.
       || aURL.EqualsLiteral("chrome://global/content/browser-child.js")

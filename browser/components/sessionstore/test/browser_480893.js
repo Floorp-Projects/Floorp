@@ -8,7 +8,7 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     "set": [
       ["browser.startup.page", 0],
-    ]
+    ],
   });
 
   let tab = BrowserTestUtils.addTab(gBrowser, "about:sessionrestore");
@@ -30,7 +30,7 @@ add_task(async function() {
     "set": [
       ["browser.startup.homepage", homepage],
       ["browser.startup.page", 1],
-    ]
+    ],
   });
 
   browser.loadURI("about:sessionrestore");

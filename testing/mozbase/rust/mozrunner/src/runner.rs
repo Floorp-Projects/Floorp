@@ -180,7 +180,6 @@ impl FirefoxRunner {
     pub fn new(binary: &Path, profile: Profile) -> FirefoxRunner {
         let mut envs: HashMap<OsString, OsString> = HashMap::new();
         envs.insert("MOZ_NO_REMOTE".into(), "1".into());
-        envs.insert("NO_EM_RESTART".into(), "1".into());
 
         FirefoxRunner {
             binary: binary.to_path_buf(),

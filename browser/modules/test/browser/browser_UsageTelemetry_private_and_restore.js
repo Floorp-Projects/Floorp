@@ -61,11 +61,11 @@ add_task(async function test_sessionRestore() {
       {
         tabs: [
           { entries: [{ url: "http://example.org", triggeringPrincipal_base64}],
-            extData: { "uniq": 3785 } }
+            extData: { "uniq": 3785 } },
         ],
-        selected: 1
-      }
-    ]
+        selected: 1,
+      },
+    ],
   };
 
   // Save the current session.

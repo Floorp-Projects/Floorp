@@ -294,5 +294,5 @@ VoiceSelect.prototype = {
   get value() {
     let selected = this.selected;
     return selected ? selected.dataset.value : "";
-  }
+  },
 };

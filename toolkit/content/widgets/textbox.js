@@ -50,7 +50,7 @@ const cachedFragments = {
       </menupopup>
     `, this.entities);
     return this.spellcheck;
-  }
+  },
 };
 
 class MozInputBox extends MozXULElement {

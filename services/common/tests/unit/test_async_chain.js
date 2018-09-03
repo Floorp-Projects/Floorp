@@ -19,7 +19,7 @@ function run_test() {
     },
     neg(x, callback) {
       callback(-x);
-    }
+    },
   };
   methods.chain = Async.chain;
 

@@ -1337,6 +1337,9 @@ static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
 {
   if (!exinfo) {
     mozilla::IOInterposer::Disable();
+#if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
+    DllBlocklist_Shutdown();
+#endif
     FreeBreakpadVM();
     return true;
   }
@@ -1355,6 +1358,9 @@ static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
       return false; // Don't write minidump, continue exception search
   }
   mozilla::IOInterposer::Disable();
+#if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
+  DllBlocklist_Shutdown();
+#endif
   FreeBreakpadVM();
   return true;
 }
@@ -1423,6 +1429,9 @@ static bool
 Filter(void* context)
 {
   mozilla::IOInterposer::Disable();
+#if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
+  DllBlocklist_Shutdown();
+#endif
   return true;
 }
 
@@ -3816,6 +3825,10 @@ bool TakeMinidump(nsIFile** aResult, bool aMoveToPending)
   if (!GetEnabled())
     return false;
 
+#if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
+  DllBlocklist_Shutdown();
+#endif
+
   AutoIOInterposerDisable disableIOInterposition;
 
   xpstring dump_path;
@@ -3937,6 +3950,9 @@ CreateMinidumpsAndPair(ProcessHandle aTargetPid,
     aCallback(false);
     return;
   }
+#if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
+  DllBlocklist_Shutdown();
+#endif
 
   AutoIOInterposerDisable disableIOInterposition;
 

@@ -4,7 +4,7 @@ add_task(async function setup() {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "http://example.com/?q=%s",
-    title: "test"
+    title: "test",
   });
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(bm);

@@ -153,7 +153,7 @@ var ContentPrefServiceChild = {
     }
   },
 
-  extractDomain: NYI
+  extractDomain: NYI,
 };
 
 function forwardMethodToParent(method, signature, ...args) {

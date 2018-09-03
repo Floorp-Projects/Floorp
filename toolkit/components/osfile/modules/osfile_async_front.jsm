@@ -493,7 +493,7 @@ var Scheduler = this.Scheduler = {
 
     let HISTOGRAM_READY = Services.telemetry.getHistogramById("OSFILE_WORKER_READY_MS");
     HISTOGRAM_READY.add(worker.workerTimeStamps.loaded - worker.launchTimeStamp);
-  }
+  },
 };
 
 const PREF_OSFILE_LOG = "toolkit.osfile.log";
@@ -766,7 +766,7 @@ File.prototype = {
   setPermissions: function setPermissions(options = {}) {
     return Scheduler.post("File_prototype_setPermissions",
                           [this._fdmsg, options]);
-  }
+  },
 };
 
 
@@ -831,7 +831,7 @@ File.openUnique = function openUnique(path, options) {
     function onSuccess(msg) {
       return {
         path: msg.path,
-        file: new File(msg.file)
+        file: new File(msg.file),
       };
     }
   );
@@ -1221,7 +1221,7 @@ Object.defineProperty(File.Info.prototype, "creationDate", {
     let {Deprecated} = ChromeUtils.import("resource://gre/modules/Deprecated.jsm", {});
     Deprecated.warning("Field 'creationDate' is deprecated.", "https://developer.mozilla.org/en-US/docs/JavaScript_OS.File/OS.File.Info#Cross-platform_Attributes");
     return this._deprecatedCreationDate;
-  }
+  },
 });
 
 File.Info.fromMsg = function fromMsg(value) {
@@ -1364,7 +1364,7 @@ DirectoryIterator.prototype = {
     let iterator = this._itmsg;
     this._itmsg = null;
     return Scheduler.post("DirectoryIterator_prototype_close", [iterator]);
-  }
+  },
 };
 
 DirectoryIterator.Entry = function Entry(value) {
@@ -1405,7 +1405,7 @@ this.OS.Shared = {
   },
   set DEBUG(x) {
     return SharedAll.Config.DEBUG = x;
-  }
+  },
 };
 Object.freeze(this.OS.Shared);
 this.OS.Path = Path;
@@ -1414,7 +1414,7 @@ this.OS.Path = Path;
 Object.defineProperty(OS.File, "queue", {
   get() {
     return Scheduler.queue;
-  }
+  },
 });
 
 // `true` if this is a content process, `false` otherwise.
@@ -1452,11 +1452,11 @@ var Barriers = {
       }
     }
     return result;
-  }
+  },
 };
 
 function setupShutdown(phaseName) {
-  Barriers[phaseName] = new AsyncShutdown.Barrier(`OS.File: Waiting for clients before ${phaseName}`),
+  Barriers[phaseName] = new AsyncShutdown.Barrier(`OS.File: Waiting for clients before ${phaseName}`);
   File[phaseName] = Barriers[phaseName].client;
 
   // Auto-flush OS.File during `phaseName`. This ensures that any I/O

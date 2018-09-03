@@ -38,7 +38,7 @@ var repo = "glennjones/microformat-shiv",
       ["/test/interface-tests", "/test/interface-tests"],
       ["/test/module-tests", "/test/module-tests"],
       ["/test/standards-tests", "/test/standards-tests"],
-      ["/test/static", "/test/static"]
+      ["/test/static", "/test/static"],
     ];
 
 
@@ -153,8 +153,8 @@ function getLastCommitDate( repo, callback ) {
   var options = {
     url: "https://api.github.com/repos/" + repo + "/commits?per_page=1",
     headers: {
-      "User-Agent": "request"
-    }
+      "User-Agent": "request",
+    },
   };
 
   request(options, function(error, response, body) {
@@ -185,8 +185,8 @@ function getLastBuildState( repo, callback ) {
     url: "https://api.travis-ci.org/repos/" + repo,
     headers: {
       "User-Agent": "request",
-      "Accept": "application/vnd.travis-ci.2+json"
-    }
+      "Accept": "application/vnd.travis-ci.2+json",
+    },
   };
 
   request(options, function(error, response, body) {

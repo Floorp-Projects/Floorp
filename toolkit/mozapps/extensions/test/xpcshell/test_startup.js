@@ -18,12 +18,12 @@ var addon1 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
+    maxVersion: "1",
   }, {                 // Repeated target application entries should be ignored
     id: "xpcshell@tests.mozilla.org",
     minVersion: "2",
-    maxVersion: "2"
-  }]
+    maxVersion: "2",
+  }],
 };
 
 var addon2 = {
@@ -33,12 +33,12 @@ var addon2 = {
   bootstrap: true,
   targetApplications: [{  // Bad target application entries should be ignored
     minVersion: "3",
-    maxVersion: "4"
+    maxVersion: "4",
   }, {
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "2"
-  }]
+    maxVersion: "2",
+  }],
 };
 
 var addon3 = {
@@ -49,8 +49,8 @@ var addon3 = {
   targetApplications: [{
     id: "toolkit@mozilla.org",
     minVersion: "1.9.2",
-    maxVersion: "1.9.2.*"
-  }]
+    maxVersion: "1.9.2.*",
+  }],
 };
 
 // Should be ignored because it has no ID
@@ -61,8 +61,8 @@ var addon4 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 // Should be ignored because it has no version
@@ -74,8 +74,8 @@ var addon5 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 // Should be ignored because it has an invalid type
@@ -88,8 +88,8 @@ var addon6 = {
   targetApplications: [{
     id: "toolkit@mozilla.org",
     minVersion: "1.9.2",
-    maxVersion: "1.9.2.*"
-  }]
+    maxVersion: "1.9.2.*",
+  }],
 };
 
 // Should be ignored because it has an invalid type
@@ -102,8 +102,8 @@ var addon7 = {
   targetApplications: [{
     id: "toolkit@mozilla.org",
     minVersion: "1.9.2",
-    maxVersion: "1.9.2.*"
-  }]
+    maxVersion: "1.9.2.*",
+  }],
 };
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -130,7 +130,7 @@ async function run_test() {
   Services.obs.addObserver({
     observe(aSubject, aTopic, aData) {
       gCachePurged = true;
-    }
+    },
   }, "startupcache-invalidate");
 
   await promiseStartupManager();

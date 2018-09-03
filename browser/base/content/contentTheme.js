@@ -12,7 +12,7 @@ function _isTextColorDark(r, g, b) {
 
 const inContentVariableMap = [
   ["--newtab-background-color", {
-    lwtProperty: "ntp_background"
+    lwtProperty: "ntp_background",
   }],
   ["--newtab-text-primary-color", {
     lwtProperty: "ntp_text",
@@ -34,6 +34,14 @@ const inContentVariableMap = [
   }],
   ["--lwt-sidebar-background-color", {
     lwtProperty: "sidebar",
+    processColor(rgbaChannels) {
+      if (!rgbaChannels) {
+        return null;
+      }
+      const {r, g, b} = rgbaChannels;
+      // Drop alpha channel
+      return `rgb(${r}, ${g}, ${b})`;
+    },
   }],
   ["--lwt-sidebar-text-color", {
     lwtProperty: "sidebar_text",

@@ -64,7 +64,7 @@ var TabStateFlusher = Object.freeze({
    */
   resolveAll(browser, success = true, message = "") {
     TabStateFlusherInternal.resolveAll(browser, success, message);
-  }
+  },
 });
 
 var TabStateFlusherInternal = {
@@ -180,5 +180,5 @@ var TabStateFlusherInternal = {
 
     // Clear active requests.
     perBrowserRequests.clear();
-  }
+  },
 };

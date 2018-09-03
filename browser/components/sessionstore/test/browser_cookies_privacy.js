@@ -20,7 +20,7 @@ function createTestCookie(scheme, secure = false) {
     path: "/",
     name: `name${r}`,
     value: `value${r}`,
-    secure
+    secure,
   };
 
   return cookie;

@@ -106,7 +106,7 @@ add_task(async function test() {
 
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
-    "set": [ [ "privacy.userContext.enabled", true ] ]
+    "set": [ [ "privacy.userContext.enabled", true ] ],
   });
 
   Services.cookies.removeAll();
@@ -122,7 +122,7 @@ add_task(async function test() {
     await Promise.all([
       waitForNewCookie(),
       ContentTask.spawn(browser, cookie,
-        passedCookie => content.document.cookie = passedCookie)
+        passedCookie => content.document.cookie = passedCookie),
     ]);
 
     // Ensure the tab's session history is up-to-date.

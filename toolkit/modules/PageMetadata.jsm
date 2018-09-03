@@ -216,7 +216,7 @@ var PageMetadata = {
           result.alternate.push({
             type: element.getAttribute("type"),
             href: element.getAttribute("href"),
-            title: element.getAttribute("title")
+            title: element.getAttribute("title"),
           });
         }
       }

@@ -29,6 +29,13 @@ MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags = eDllBlocklistInitFla
 MFBT_API void DllBlocklist_WriteNotes(HANDLE file);
 MFBT_API bool DllBlocklist_CheckStatus();
 
+// This export intends to clean up after DllBlocklist_Initialize().
+// It's disabled in release builds for performance and to limit callers' ability
+// to interfere with dll blocking.
+#ifdef DEBUG
+MFBT_API void DllBlocklist_Shutdown();
+#endif // DEBUG
+
 #ifdef ENABLE_TESTS
 typedef void (*DllLoadHookType)(bool aDllLoaded, NTSTATUS aNtStatus,
                                 HANDLE aDllBase, PUNICODE_STRING aDllName);

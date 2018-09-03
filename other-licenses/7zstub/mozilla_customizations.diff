@@ -1,12 +1,8 @@
-diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp
---- a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp
+diff --git a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp
+index b1d740e..61cb260 100644
+--- a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp
 +++ b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp
-@@ -49,17 +49,17 @@ RSC=rc.exe
- # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
- # ADD BASE RSC /l 0x419 /d "NDEBUG"
- # ADD RSC /l 0x419 /d "NDEBUG"
- BSC32=bscmake.exe
- # ADD BASE BSC32 /nologo
+@@ -54,7 +54,7 @@ BSC32=bscmake.exe
  # ADD BSC32 /nologo
  LINK32=link.exe
  # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
@@ -15,17 +11,7 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp b/
  # SUBTRACT LINK32 /pdb:none
  
  !ELSEIF  "$(CFG)" == "SFXSetup - Win32 Debug"
- 
- # PROP BASE Use_MFC 0
- # PROP BASE Use_Debug_Libraries 1
- # PROP BASE Output_Dir "Debug"
- # PROP BASE Intermediate_Dir "Debug"
-@@ -76,17 +76,17 @@ LINK32=link.exe
- # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
- # ADD BASE RSC /l 0x419 /d "_DEBUG"
- # ADD RSC /l 0x419 /d "_DEBUG"
- BSC32=bscmake.exe
- # ADD BASE BSC32 /nologo
+@@ -81,7 +81,7 @@ BSC32=bscmake.exe
  # ADD BSC32 /nologo
  LINK32=link.exe
  # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
@@ -34,17 +20,7 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp b/
  
  !ELSEIF  "$(CFG)" == "SFXSetup - Win32 ReleaseD"
  
- # PROP BASE Use_MFC 0
- # PROP BASE Use_Debug_Libraries 0
- # PROP BASE Output_Dir "ReleaseD"
- # PROP BASE Intermediate_Dir "ReleaseD"
- # PROP BASE Ignore_Export_Lib 0
-@@ -102,19 +102,19 @@ LINK32=link.exe
- # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
- # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
- # ADD BASE RSC /l 0x419 /d "NDEBUG"
- # ADD RSC /l 0x419 /d "NDEBUG"
- BSC32=bscmake.exe
+@@ -107,9 +107,9 @@ BSC32=bscmake.exe
  # ADD BASE BSC32 /nologo
  # ADD BSC32 /nologo
  LINK32=link.exe
@@ -56,20 +32,11 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp b/
  # SUBTRACT LINK32 /pdb:none
  
  !ENDIF 
- 
- # Begin Target
- 
- # Name "SFXSetup - Win32 Release"
- # Name "SFXSetup - Win32 Debug"
-diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
---- a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
+diff --git a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
+index 1705a8d..e3a3bb2 100644
+--- a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
 +++ b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
-@@ -120,31 +120,226 @@ static void ShowErrorMessageSpec(const U
-   if (pos >= 0)
-   {
-     message.Delete(pos, 2);
-     message.Insert(pos, name);
-   }
+@@ -125,6 +125,179 @@ static void ShowErrorMessageSpec(const UString &name)
    ShowErrorMessage(NULL, message);
  }
  
@@ -249,8 +216,7 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
  int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
      #ifdef UNDER_CE
      LPWSTR
-     #else
-     LPSTR
+@@ -133,13 +306,35 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
      #endif
      /* lpCmdLine */,int /* nCmdShow */)
  {
@@ -289,48 +255,26 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
  
    // InitCommonControls();
  
-   UString archiveName, switches;
-   #ifdef _SHELL_EXECUTE
-   UString executeFile, executeParameters;
-   #endif
-   NCommandLineParser::SplitCommandLine(GetCommandLineW(), archiveName, switches);
-@@ -167,16 +362,30 @@ int APIENTRY WinMain(HINSTANCE hInstance
-     if (!assumeYes)
-       ShowErrorMessage(L"Can't load config info");
-     return 1;
-   }
- 
+@@ -172,6 +367,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
    UString dirPrefix ("." STRING_PATH_SEPARATOR);
    UString appLaunched;
    bool showProgress = true;
 +
 +  /* BEGIN Mozilla customizations */
 +  bool extractOnly = false;
-+  if (switches.IsPrefixedBy_NoCase(L"-ms") ||
-+      switches.IsPrefixedBy_NoCase(L"/ini") ||
-+      switches.IsPrefixedBy_NoCase(L"/s")) {
-+    showProgress = false;
-+  } else if (switches.IsPrefixedBy_NoCase(L"/extractdir=")) {
++  if (switches.IsPrefixedBy_NoCase(L"/extractdir=")) {
 +    assumeYes = true;
 +    showProgress = false;
 +    extractOnly = true;
++  } else if (!switches.IsEmpty()) {
++    showProgress = false;
 +  }
 +  /* END Mozilla customizations */
 +
    if (!config.IsEmpty())
    {
      CObjectVector<CTextConfigPair> pairs;
-     if (!GetTextConfig(config, pairs))
-     {
-       if (!assumeYes)
-         ShowErrorMessage(L"Config failed");
-       return 1;
-@@ -199,17 +408,18 @@ int APIENTRY WinMain(HINSTANCE hInstance
-     
-     #ifdef _SHELL_EXECUTE
-     executeFile = GetTextConfigValue(pairs, "ExecuteFile");
-     executeParameters = GetTextConfigValue(pairs, "ExecuteParameters");
-     #endif
+@@ -204,7 +411,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
    }
  
    CTempDir tempDir;
@@ -340,17 +284,7 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
    {
      if (!assumeYes)
        ShowErrorMessage(L"Can not create temp folder archive");
-     return 1;
-   }
- 
-   CCodecs *codecs = new CCodecs;
-   CMyComPtr<IUnknown> compressCodecsInfo = codecs;
-@@ -217,17 +427,19 @@ int APIENTRY WinMain(HINSTANCE hInstance
-     HRESULT result = codecs->Load();
-     if (result != S_OK)
-     {
-       ShowErrorMessage(L"Can not load codecs");
-       return 1;
+@@ -222,7 +430,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
      }
    }
  
@@ -361,17 +295,7 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
    // tempDirPath = L"M:\\1\\"; // to test low disk space
    {
      bool isCorrupt = false;
-     UString errorMessage;
-     HRESULT result = ExtractArchive(codecs, fullPath, tempDirPath, showProgress,
-       isCorrupt, errorMessage);
-     
-     if (result != S_OK)
-@@ -245,16 +457,38 @@ int APIENTRY WinMain(HINSTANCE hInstance
-             errorMessage = NError::MyFormatMessage(result);
-           ::MessageBoxW(0, errorMessage, NWindows::MyLoadString(IDS_EXTRACTION_ERROR_TITLE), MB_ICONERROR);
-         }
-       }
-       return 1;
+@@ -250,6 +460,28 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
      }
    }
  
@@ -400,32 +324,21 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
    #ifndef UNDER_CE
    CCurrentDirRestorer currentDirRestorer;
    if (!SetCurrentDir(tempDirPath))
-     return 1;
-   #endif
-   
-   HANDLE hProcess = 0;
- #ifdef _SHELL_EXECUTE
-diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.h b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.h
---- a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.h
+diff --git a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/resource.h b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.h
+index 533197e..975d779 100644
+--- a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/resource.h
 +++ b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.h
-@@ -1,6 +1,8 @@
- #define IDI_ICON  1
- 
- #define IDS_EXTRACTION_ERROR_TITLE       7
+@@ -4,3 +4,5 @@
  #define IDS_EXTRACTION_ERROR_MESSAGE     8
  #define IDS_CANNOT_CREATE_FOLDER      3003
  #define IDS_PROGRESS_EXTRACTING       3300
 +#define IDS_MIN_OS_TITLE                70
 +#define IDS_MIN_OS_TEXT                 71
-diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.rc b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.rc
---- a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.rc
+diff --git a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/resource.rc b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.rc
+index 9e88fd4..9fda0d0 100644
+--- a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/resource.rc
 +++ b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.rc
-@@ -6,11 +6,13 @@ MY_VERSION_INFO_APP("7z Setup SFX", "7zS
- IDI_ICON  ICON "setup.ico"
- 
- STRINGTABLE
- BEGIN
-   IDS_EXTRACTION_ERROR_TITLE  "Extraction Failed"
+@@ -11,6 +11,8 @@ BEGIN
    IDS_EXTRACTION_ERROR_MESSAGE  "File is corrupt"
    IDS_CANNOT_CREATE_FOLDER  "Cannot create folder '{0}'"
    IDS_PROGRESS_EXTRACTING  "Extracting"
@@ -434,15 +347,11 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.rc b/o
  END
  
  #include "../../UI/FileManager/ProgressDialog.rc"
-diff --git a/other-licenses/7zstub/src/CPP/7zip/UI/FileManager/ProgressDialog.cpp b/other-licenses/7zstub/src/CPP/7zip/UI/FileManager/ProgressDialog.cpp
---- a/other-licenses/7zstub/src/CPP/7zip/UI/FileManager/ProgressDialog.cpp
+diff --git a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/UI/FileManager/ProgressDialog.cpp b/other-licenses/7zstub/src/CPP/7zip/UI/FileManager/ProgressDialog.cpp
+index 27d42b2..9b61369 100644
+--- a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/UI/FileManager/ProgressDialog.cpp
 +++ b/other-licenses/7zstub/src/CPP/7zip/UI/FileManager/ProgressDialog.cpp
-@@ -160,17 +160,18 @@ bool CProgressDialog::OnButtonClicked(in
- {
-   switch (buttonID)
-   {
-     case IDCANCEL:
-     {
+@@ -165,7 +165,8 @@ bool CProgressDialog::OnButtonClicked(int buttonID, HWND buttonHWND)
        bool paused = Sync.GetPaused();
        Sync.SetPaused(true);
        _inCancelMessageBox = true;
@@ -452,8 +361,3 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/UI/FileManager/ProgressDialog.cp
        _inCancelMessageBox = false;
        Sync.SetPaused(paused);
        if (res == IDCANCEL || res == IDNO)
-       {
-         if (_externalCloseMessageWasReceived)
-           OnExternalCloseMessage();
-         return true;
-       }

@@ -12,7 +12,7 @@
 
 [package]
 name = "cc"
-version = "1.0.18"
+version = "1.0.23"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 description = "A build-time dependency for Cargo build scripts to assist in invoking the native\nC compiler to compile native C code into a static archive to be linked into Rust\ncode.\n"
 homepage = "https://github.com/alexcrichton/cc-rs"

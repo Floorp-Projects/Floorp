@@ -105,7 +105,7 @@ add_task(async function test_alarm_clear_non_matching_name() {
   async function backgroundScript() {
     let ALARM_NAME = "test_ext_alarms";
 
-    browser.alarms.create(ALARM_NAME, {when: Date.now() + 2000});
+    browser.alarms.create(ALARM_NAME, {when: Date.now() + 2000000});
 
     let wasCleared = await browser.alarms.clear(ALARM_NAME + "1");
     browser.test.assertFalse(wasCleared, "alarm was not cleared");
@@ -129,7 +129,7 @@ add_task(async function test_alarm_clear_non_matching_name() {
 
 add_task(async function test_alarm_get_and_clear_single_argument() {
   async function backgroundScript() {
-    browser.alarms.create({when: Date.now() + 2000});
+    browser.alarms.create({when: Date.now() + 2000000});
 
     let alarm = await browser.alarms.get();
     browser.test.assertEq("", alarm.name, "expected alarm returned");

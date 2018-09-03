@@ -14,21 +14,21 @@ const TEST_STATE = {
       { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
       { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
       { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
-    ]
-  }]
+    ],
+  }],
 };
 
 const TEST_STATE_2 = {
   windows: [{
     tabs: [
-      { entries: [{ url: "about:robots", triggeringPrincipal_base64 }]
+      { entries: [{ url: "about:robots", triggeringPrincipal_base64 }],
       },
       { entries: [],
         userTypedValue: "http://example.com",
-        userTypedClear: 1
-      }
-    ]
-  }]
+        userTypedClear: 1,
+      },
+    ],
+  }],
 };
 
 function countNonLazyTabs(win) {
@@ -52,7 +52,7 @@ add_task(async function test() {
     "set": [
       ["browser.sessionstore.restore_on_demand", true],
       ["browser.sessionstore.restore_tabs_lazily", true],
-    ]
+    ],
   });
 
   let backupState = SessionStore.getBrowserState();

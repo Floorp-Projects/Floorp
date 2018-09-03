@@ -16,7 +16,6 @@ module.exports = {
 
   "rules": {
     "camelcase": "error",
-    "comma-dangle": ["error", "never"],
     "curly": ["error", "multi-line"],
     "handle-callback-err": ["error", "er"],
     "indent-legacy": ["error", 2, {"SwitchCase": 1}],

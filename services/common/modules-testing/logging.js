@@ -23,7 +23,7 @@ function initTestLogging(level) {
 
       return message.time + "\t" + message.loggerName + "\t" + message.levelDesc + "\t" +
         this.formatText(message) + "\n";
-    }
+    },
   };
   LogStats.prototype.__proto__ = new Log.BasicFormatter();
 

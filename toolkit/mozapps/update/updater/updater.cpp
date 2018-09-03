@@ -2084,7 +2084,6 @@ LaunchCallbackApp(const NS_tchar *workingDir,
                   NS_tchar **argv,
                   bool usingService)
 {
-  putenv(const_cast<char*>("NO_EM_RESTART="));
   putenv(const_cast<char*>("MOZ_LAUNCHED_CHILD=1"));
 
   // Run from the specified working directory (see bug 312360).

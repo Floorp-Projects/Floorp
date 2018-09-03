@@ -30,7 +30,7 @@ public class MediaControlService extends Service {
             currentNotification = new Notification.Builder(this).build();
         } else {
             currentNotification = new Notification.Builder(this, NotificationHelper.getInstance(this)
-                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId()).build();
+                    .getNotificationChannel(NotificationHelper.Channel.MEDIA).getId()).build();
         }
     }
 
@@ -45,17 +45,30 @@ public class MediaControlService extends Service {
 
         startForeground(R.id.mediaControlNotification, currentNotification);
 
-        if (intent.getAction() != null) {
-            final String action = intent.getAction();
-            if (action.equals(GeckoMediaControlAgent.ACTION_SHUTDOWN)) {
-                stopForeground(true);
-                stopSelfResult(startId);
-            } else {
-                GeckoMediaControlAgent.getInstance().handleAction(action);
-            }
-        }
+        handleAction(intent, startId);
 
         return START_NOT_STICKY;
+    }
+
+    private void handleAction(Intent intent, int startId) {
+        if (intent.getAction() != null) {
+            final String action = intent.getAction();
+
+            switch (action) {
+                case GeckoMediaControlAgent.ACTION_SHUTDOWN:
+                    stopForeground(true);
+                    stopSelfResult(startId);
+                    break;
+
+                case GeckoMediaControlAgent.ACTION_STOP_FOREGROUND:
+                    stopForeground(false);
+                    break;
+
+                default:
+                    GeckoMediaControlAgent.getInstance().handleAction(action);
+                    break;
+            }
+        }
     }
 
     @Override

@@ -73,8 +73,8 @@ add_task(async function test_load_logging() {
       },
       debug(msg) {
         debug = msg;
-      }
-    }
+      },
+    },
   };
   let val = await Utils.jsonLoad("log", obj);
   Assert.ok(!val);

@@ -275,7 +275,7 @@ add_task(async function test_bookmark_repair_integration() {
       extra: {
         flowID,
         numIDs: "2",
-      }
+      },
     }], "Should record telemetry events for repair response");
 
     // We should queue the repair response for the initial client.

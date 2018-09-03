@@ -108,10 +108,6 @@ button[type="menu"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
 }
 
-button[type="menu-button"] {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#menu-button");
-}
-
 /********** toolbarbutton **********/
 
 toolbarbutton {

@@ -14,7 +14,7 @@ add_task(async function test() {
   }
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "Unsigned XPI": xpipath
+    "Unsigned XPI": xpipath,
   }));
 
   // In non-e10s the exception in the content page would trigger a test failure

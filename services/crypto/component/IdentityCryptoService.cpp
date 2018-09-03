@@ -33,8 +33,7 @@ namespace {
 void
 HexEncode(const SECItem * it, nsACString & result)
 {
-  const char * digits = "0123456789ABCDEF";
-  result.SetCapacity((it->len * 2) + 1);
+  static const char digits[] = "0123456789ABCDEF";
   result.SetLength(it->len * 2);
   char * p = result.BeginWriting();
   for (unsigned int i = 0; i < it->len; ++i) {

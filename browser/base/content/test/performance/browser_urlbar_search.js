@@ -26,7 +26,7 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openPopup@chrome://global/content/bindings/autocomplete.xml",
-      "set_popupOpen@chrome://global/content/bindings/autocomplete.xml"
+      "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",
     ],
   },
 
@@ -37,7 +37,7 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "_reuseAcItem@chrome://global/content/bindings/autocomplete.xml",
       "_appendCurrentResult@chrome://global/content/bindings/autocomplete.xml",
       "_invalidate@chrome://global/content/bindings/autocomplete.xml",
-      "invalidate@chrome://global/content/bindings/autocomplete.xml"
+      "invalidate@chrome://global/content/bindings/autocomplete.xml",
     ],
     maxCount: 36, // This number should only ever go down - never up.
   },
@@ -74,7 +74,7 @@ const EXPECTED_REFLOWS_SECOND_OPEN = [
       "_reuseAcItem@chrome://global/content/bindings/autocomplete.xml",
       "_appendCurrentResult@chrome://global/content/bindings/autocomplete.xml",
       "_invalidate@chrome://global/content/bindings/autocomplete.xml",
-      "invalidate@chrome://global/content/bindings/autocomplete.xml"
+      "invalidate@chrome://global/content/bindings/autocomplete.xml",
     ],
     maxCount: 24, // This number should only ever go down - never up.
   },
@@ -175,7 +175,7 @@ add_task(async function() {
        r.y1 >= dropmarkerRect.top && r.y2 <= dropmarkerRect.bottom)
       // XXX For some reason the awesomebar panel isn't in our screenshots,
       // but that's where we actually expect many changes.
-    ))
+    )),
   };
 
   info("First opening");

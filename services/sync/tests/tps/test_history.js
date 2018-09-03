@@ -22,61 +22,61 @@ var history1 = [
     title: "Google",
     visits: [
       { type: 1,
-        date: 0
+        date: 0,
       },
       { type: 2,
-        date: -1
-      }
-    ]
+        date: -1,
+      },
+    ],
   },
   { uri: "http://www.cnn.com/",
     title: "CNN",
     visits: [
       { type: 1,
-        date: -1
+        date: -1,
       },
       { type: 2,
-        date: -36
-      }
-    ]
+        date: -36,
+      },
+    ],
   },
   { uri: "http://www.google.com/language_tools?hl=en",
     title: "Language Tools",
     visits: [
       { type: 1,
-        date: 0
+        date: 0,
       },
       { type: 2,
-        date: -40
-      }
-    ]
+        date: -40,
+      },
+    ],
   },
   { uri: "http://www.mozilla.com/",
     title: "Mozilla",
     visits: [
       { type: 1,
-        date: 0
+        date: 0,
       },
       { type: 1,
-        date: -1
+        date: -1,
       },
       { type: 1,
-        date: -20
+        date: -20,
       },
       { type: 2,
-        date: -36
-      }
-    ]
-  }
+        date: -36,
+      },
+    ],
+  },
 ];
 
 // a list of items to delete from the history
 var history_to_delete = [
   { uri: "http://www.cnn.com/" },
   { begin: -24,
-    end: -1
+    end: -1,
   },
-  { host: "www.google.com" }
+  { host: "www.google.com" },
 ];
 
 // a list which reflects items that should be in the history after
@@ -86,13 +86,13 @@ var history2 = [
     title: "Mozilla",
     visits: [
       { type: 1,
-        date: 0
+        date: 0,
       },
       { type: 2,
-        date: -36
-      }
-    ]
-  }
+        date: -36,
+      },
+    ],
+  },
 ];
 
 // a list which includes history entries that should not be present
@@ -102,46 +102,46 @@ var history_not = [
     title: "Google",
     visits: [
       { type: 1,
-        date: 0
+        date: 0,
       },
       { type: 2,
-        date: -1
-      }
-    ]
+        date: -1,
+      },
+    ],
   },
   { uri: "http://www.cnn.com/",
     title: "CNN",
     visits: [
       { type: 1,
-        date: -1
+        date: -1,
       },
       { type: 2,
-        date: -36
-      }
-    ]
+        date: -36,
+      },
+    ],
   },
   { uri: "http://www.google.com/language_tools?hl=en",
     title: "Language Tools",
     visits: [
       { type: 1,
-        date: 0
+        date: 0,
       },
       { type: 2,
-        date: -40
-      }
-    ]
+        date: -40,
+      },
+    ],
   },
   { uri: "http://www.mozilla.com/",
     title: "Mozilla",
     visits: [
       { type: 1,
-        date: -1
+        date: -1,
       },
       { type: 1,
-        date: -20
-      }
-    ]
-  }
+        date: -20,
+      },
+    ],
+  },
 ];
 
 /*
@@ -162,6 +162,6 @@ Phase("phase2", [
   [History.delete, history_to_delete],
   [History.verify, history2],
   [History.verifyNot, history_not],
-  [Sync]
+  [Sync],
 ]);
 

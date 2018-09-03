@@ -298,18 +298,6 @@ class SessionHistoryListener extends Handler {
     this.collectFrom(oldIndex);
   }
 
-  OnHistoryGoBack(backURI) {
-    // We ought to collect the previously current entry as well, see bug 1350567.
-    this.collectFrom(kLastIndex);
-    return true;
-  }
-
-  OnHistoryGoForward(forwardURI) {
-    // We ought to collect the previously current entry as well, see bug 1350567.
-    this.collectFrom(kLastIndex);
-    return true;
-  }
-
   OnHistoryGotoIndex(index, gotoURI) {
     // We ought to collect the previously current entry as well, see bug 1350567.
     this.collectFrom(kLastIndex);
@@ -935,7 +923,7 @@ class ContentSessionStore {
         // Tell SessionStore.jsm that it may want to restore some more tabs,
         // since it restores a max of MAX_CONCURRENT_TAB_RESTORES at a time.
         this.mm.sendAsyncMessage("SessionStore:restoreTabContentComplete", {epoch});
-      }
+      },
     });
 
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {

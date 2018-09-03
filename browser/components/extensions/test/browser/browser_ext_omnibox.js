@@ -118,7 +118,13 @@ add_task(async function() {
     // Wait for the autocomplete search. Note that we cannot wait for the search
     // to be complete, since the add-on doesn't communicate when it's done, so
     // just check matches count.
-    await waitForAutocompleteResultAt(indexToWaitFor);
+    try {
+      await waitForAutocompleteResultAt(indexToWaitFor);
+    } catch (e) {
+      // Print message for debugging. Discard data:-URIs.
+      info(gURLBar.popup.richlistbox.outerHTML.replace(/data:image[^"\s]+/g, "data:image..."));
+      throw e;
+    }
 
     return char;
   }

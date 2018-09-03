@@ -28,7 +28,7 @@
 #include <memory>
 #include <new>
 
-#include "jsapi.h"
+#include "jsnum.h"
 #include "jstypes.h"
 
 #include "builtin/ModuleObject.h"
@@ -50,8 +50,6 @@
 #include "frontend/ParseContext-inl.h"
 #include "frontend/ParseNode-inl.h"
 #include "vm/EnvironmentObject-inl.h"
-#include "vm/JSAtom-inl.h"
-#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -380,6 +378,37 @@ EvalSharedContext::EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
     }
 }
 
+ParseContext::ParseContext(JSContext* cx, ParseContext*& parent, SharedContext* sc,
+                           ErrorReporter& errorReporter, class UsedNameTracker& usedNames,
+                           Directives* newDirectives, bool isFull)
+  : Nestable<ParseContext>(&parent),
+    traceLog_(sc->context,
+              isFull
+              ? TraceLogger_ParsingFull
+              : TraceLogger_ParsingSyntax,
+              errorReporter),
+    sc_(sc),
+    errorReporter_(errorReporter),
+    innermostStatement_(nullptr),
+    innermostScope_(nullptr),
+    varScope_(nullptr),
+    positionalFormalParameterNames_(cx->frontendCollectionPool()),
+    closedOverBindingsForLazy_(cx->frontendCollectionPool()),
+    innerFunctionsForLazy(cx, GCVector<JSFunction*, 8>(cx)),
+    newDirectives(newDirectives),
+    lastYieldOffset(NoYieldOffset),
+    lastAwaitOffset(NoAwaitOffset),
+    scriptId_(usedNames.nextScriptId()),
+    isStandaloneFunctionBody_(false),
+    superScopeNeedsHomeObject_(false)
+{
+    if (isFunctionBox()) {
+        if (functionBox()->function()->isNamedLambda())
+            namedLambdaScope_.emplace(cx, parent, usedNames);
+        functionScope_.emplace(cx, parent, usedNames);
+    }
+}
+
 bool
 ParseContext::init()
 {
@@ -461,6 +490,14 @@ UsedNameTracker::rewind(RewindToken token)
     for (UsedNameMap::Range r = map_.all(); !r.empty(); r.popFront())
         r.front().value().resetToScope(token.scriptId, token.scopeId);
 }
+
+#ifdef DEBUG
+bool
+FunctionBox::atomsAreKept()
+{
+    return context->zone()->hasKeptAtoms();
+}
+#endif
 
 FunctionBox::FunctionBox(JSContext* cx, ObjectBox* traceListHead,
                          JSFunction* fun, uint32_t toStringStart,

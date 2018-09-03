@@ -5,7 +5,25 @@
 Name | Used for | Type | Example value
 ---  | ---      | ---  | ---
 `whitelistHosts` | Whitelist a host in order to fetch messages from its endpoint | `[String]` |  `["gist.github.com", "gist.githubusercontent.com", "localhost:8000"]`
-`snippetsUrl` | The main remote endpoint that serves all snippet messages | `String` | `https://activity-stream-icons.services.mozilla.com/v1/messages.json.br`
+`messageProviders` | Message provider options | `Object` | [see below](#message-providers)
+
+### Message providers
+
+```json
+[
+   {
+      "id" : "onboarding",
+      "type" : "local",
+      "localProvider" : "OnboardingMessageProvider"
+   },
+   {
+      "type" : "remote",
+      "url" : "https://snippets.cdn.mozilla.net/us-west/bundles/bundle_d6d90fb9098ce8b45e60acf601bcb91b68322309.json",
+      "updateCycleInMs" : 14400000,
+      "id" : "snippets"
+   }
+]
+```
 
 ## Admin Interface
 

@@ -23,7 +23,7 @@ function FormRec(collection, id) {
 FormRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Form",
-  ttl: FORMS_TTL
+  ttl: FORMS_TTL,
 };
 
 Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);
@@ -44,7 +44,7 @@ var FormWrapper = {
         },
         handleCompletion(reason) {
           resolve(results);
-        }
+        },
       };
       FormHistory.search(terms, searchData, callbacks);
     });
@@ -58,7 +58,7 @@ var FormWrapper = {
       let callbacks = {
         handleCompletion(reason) {
           resolve();
-        }
+        },
       };
       FormHistory.update(changes, callbacks);
     });
@@ -92,7 +92,7 @@ var FormWrapper = {
       newGuid: newGUID,
     };
     await this._update(changes);
-  }
+  },
 
 };
 
@@ -113,7 +113,7 @@ FormEngine.prototype = {
 
   async _findDupe(item) {
     return FormWrapper.getGUID(item.name, item.value);
-  }
+  },
 };
 
 function FormStore(name, engine) {
@@ -181,7 +181,7 @@ FormStore.prototype = {
       op: "add",
       guid: record.id,
       fieldname: record.name,
-      value: record.value
+      value: record.value,
     };
     await this._processChange(change);
   },
@@ -190,7 +190,7 @@ FormStore.prototype = {
     this._log.trace("Removing form record: " + record.id);
     let change = {
       op: "remove",
-      guid: record.id
+      guid: record.id,
     };
     await this._processChange(change);
   },
@@ -201,10 +201,10 @@ FormStore.prototype = {
 
   async wipe() {
     let change = {
-      op: "remove"
+      op: "remove",
     };
     await FormWrapper._update(change);
-  }
+  },
 };
 
 function FormTracker(name, engine) {

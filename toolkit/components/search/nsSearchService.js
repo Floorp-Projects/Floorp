@@ -126,7 +126,7 @@ const OPENSEARCH_NS_11  = "http://a9.com/-/spec/opensearch/1.1/";
 const OPENSEARCH_NAMESPACES = [
   OPENSEARCH_NS_11, OPENSEARCH_NS_10,
   "http://a9.com/-/spec/opensearchdescription/1.1/",
-  "http://a9.com/-/spec/opensearchdescription/1.0/"
+  "http://a9.com/-/spec/opensearchdescription/1.0/",
 ];
 
 const OPENSEARCH_LOCALNAME = "OpenSearchDescription";
@@ -276,7 +276,7 @@ loadListener.prototype = {
     Ci.nsIStreamListener,
     Ci.nsIChannelEventSink,
     Ci.nsIInterfaceRequestor,
-    Ci.nsIProgressEventSink
+    Ci.nsIProgressEventSink,
   ]),
 
   // nsIRequestObserver
@@ -328,7 +328,7 @@ loadListener.prototype = {
 
   // nsIProgressEventSink
   onProgress(aRequest, aContext, aProgress, aProgressMax) {},
-  onStatus(aRequest, aContext, aStatus, aStatusArg) {}
+  onStatus(aRequest, aContext, aStatus, aStatusArg) {},
 };
 
 /**
@@ -1094,7 +1094,7 @@ EngineURL.prototype = {
     var json = {
       template: this.template,
       rels: this.rels,
-      resultDomain: this.resultDomain
+      resultDomain: this.resultDomain,
     };
 
     if (this.type != URLTYPE_SEARCH_HTML)
@@ -1108,7 +1108,7 @@ EngineURL.prototype = {
     json.params = this.params.map(collapseMozParams, this);
 
     return json;
-  }
+  },
 };
 
 /**
@@ -1485,7 +1485,7 @@ Engine.prototype = {
       // Report an error to the user
       if (ex.result == Cr.NS_ERROR_FILE_CORRUPTED) {
         promptError({ error: "error_invalid_engine_msg2",
-                      title: "error_invalid_format_title"
+                      title: "error_invalid_format_title",
                     });
       } else {
         promptError();
@@ -1519,7 +1519,7 @@ Engine.prototype = {
         // duplicate engine" prompt; otherwise, fail silently.
         if (aEngine._confirm) {
           promptError({ error: "error_duplicate_engine_msg",
-                        title: "error_invalid_engine_title"
+                        title: "error_invalid_engine_title",
                       }, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
         } else {
           onError(Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
@@ -1573,7 +1573,7 @@ Engine.prototype = {
   _getIconKey: function SRCH_ENG_getIconKey(aWidth, aHeight) {
     let keyObj = {
      width: aWidth,
-     height: aHeight
+     height: aHeight,
     };
 
     return JSON.stringify(keyObj);
@@ -1778,6 +1778,16 @@ Engine.prototype = {
     var template = aElement.getAttribute("template");
     var resultDomain = aElement.getAttribute("resultdomain");
 
+    let rels = [];
+    if (aElement.hasAttribute("rel")) {
+      rels = aElement.getAttribute("rel").toLowerCase().split(/\s+/);
+    }
+
+    // Support an alternate suggestion type, see bug 1425827 for details.
+    if (type == "application/json" && rels.includes("suggestions")) {
+      type = URLTYPE_SUGGEST_JSON;
+    }
+
     try {
       var url = new EngineURL(type, method, template, resultDomain);
     } catch (ex) {
@@ -1785,8 +1795,9 @@ Engine.prototype = {
            Cr.NS_ERROR_FAILURE);
     }
 
-    if (aElement.hasAttribute("rel"))
-      url.rels = aElement.getAttribute("rel").toLowerCase().split(/\s+/);
+    if (rels.length) {
+      url.rels = rels;
+    }
 
     for (var i = 0; i < aElement.children.length; ++i) {
       var param = aElement.children[i];
@@ -1965,7 +1976,7 @@ Engine.prototype = {
       _iconURL: this._iconURL,
       _iconMapObj: this._iconMapObj,
       _metaData: this._metaData,
-      _urls: this._urls
+      _urls: this._urls,
     };
 
     if (this._updateInterval)
@@ -2081,7 +2092,7 @@ Engine.prototype = {
     const knownDirs = {
       app: NS_XPCOM_CURRENT_PROCESS_DIR,
       profile: NS_APP_USER_PROFILE_50_DIR,
-      distribution: XRE_APP_DISTRIBUTION_DIR
+      distribution: XRE_APP_DISTRIBUTION_DIR,
     };
 
     let leafName = this._shortName;
@@ -2432,7 +2443,7 @@ Engine.prototype = {
       result.push({
         width: iconSize.width,
         height: iconSize.height,
-        url: this._iconMapObj[key]
+        url: this._iconMapObj[key],
       });
     }
 
@@ -2498,7 +2509,7 @@ Submission.prototype = {
   get postData() {
     return this._postData;
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISearchSubmission])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISearchSubmission]),
 };
 
 // nsISearchParseSubmissionResult
@@ -4507,8 +4518,8 @@ SearchService.prototype = {
       step: "Not started",
       latestError: {
         message: undefined,
-        stack: undefined
-      }
+        stack: undefined,
+      },
     };
     OS.File.profileBeforeChange.addBlocker(
       "Search service: shutting down",
@@ -4547,8 +4558,8 @@ SearchService.prototype = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIBrowserSearchService,
     Ci.nsIObserver,
-    Ci.nsITimerCallback
-  ])
+    Ci.nsITimerCallback,
+  ]),
 };
 
 
@@ -4602,7 +4613,7 @@ var engineUpdateService = {
       // otherwise use the existing engine object.
       (testEngine || engine)._setIcon(engine._iconUpdateURL, true);
     }
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SearchService]);

@@ -1382,6 +1382,10 @@ protected:
   // result. we would report the result when decoder is destroyed.
   void ReportAudioTrackSilenceProportionTelemetry();
 
+  // When the play is not allowed, dispatch related events which are used for
+  // testing or changing control UI.
+  void DispatchEventsWhenPlayWasNotAllowed();
+
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;

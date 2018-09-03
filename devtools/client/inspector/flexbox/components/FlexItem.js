@@ -20,20 +20,32 @@ class FlexItem extends PureComponent {
   static get propTypes() {
     return {
       flexItem: PropTypes.shape(Types.flexItem).isRequired,
+      onToggleFlexItemShown: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { flexItem } = this.props;
+    const {
+      flexItem,
+      onToggleFlexItemShown,
+    } = this.props;
     const { nodeFront } = flexItem;
 
     return (
       dom.li({},
-        Rep({
-          defaultRep: ElementNode,
-          mode: MODE.TINY,
-          object: translateNodeFrontToGrip(nodeFront)
-        })
+        dom.button(
+          {
+            className: "devtools-button devtools-monospace",
+            onClick: () => onToggleFlexItemShown(nodeFront),
+          },
+          Rep(
+            {
+              defaultRep: ElementNode,
+              mode: MODE.TINY,
+              object: translateNodeFrontToGrip(nodeFront)
+            }
+          )
+        )
       )
     );
   }

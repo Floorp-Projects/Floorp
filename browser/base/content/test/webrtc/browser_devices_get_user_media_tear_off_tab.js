@@ -53,8 +53,8 @@ var gTests = [
 
     await expectNoObserverCalled();
     await checkNotSharing();
-  }
-}
+  },
+},
 
 ];
 

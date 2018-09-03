@@ -5,7 +5,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "TelemetryArchive"
+  "TelemetryArchive",
 ];
 
 ChromeUtils.import("resource://gre/modules/Log.jsm", this);

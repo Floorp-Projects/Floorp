@@ -8,7 +8,7 @@ requestLongerTimeout(2);
 
 const TEST_URL_BASES = [
   "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html#tabmatch",
-  "http://example.org/browser/browser/base/content/test/urlbar/moz.png#tabmatch"
+  "http://example.org/browser/browser/base/content/test/urlbar/moz.png#tabmatch",
 ];
 
 const RESTRICT_TOKEN_OPENPAGE = "%";
@@ -205,7 +205,7 @@ function checkAutocompleteResults(aExpected, aCallback) {
     QueryInterface: ChromeUtils.generateQI([
       Ci.nsIAutoCompleteInput,
       Ci.nsIAutoCompletePopup,
-    ])
+    ]),
   };
 
   info("Searching open pages.");

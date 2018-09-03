@@ -231,13 +231,13 @@
     },
 
     "DisableProfileImport": {
-      "description": "Disables the Firefox \"Import data from another browser\" button",
+      "description": "Disables the Firefox \"Import data from another browser\" button.",
 
       "type": "boolean"
     },
 
     "DisableProfileRefresh": {
-      "description": "Disables the \"Refresh Firefox\" button in about:support",
+      "description": "Disables the \"Refresh Firefox\" button in about:support.",
 
       "type": "boolean"
     },
@@ -277,7 +277,7 @@
     },
 
     "DisableTelemetry": {
-      "description": "Turns off telemetry.",
+      "description": "Turns off Telemetry.",
       "machine_only": true,
 
       "type": "boolean"
@@ -404,7 +404,7 @@
     },
 
     "InstallAddonsPermission": {
-      "description": "Allow webites to install add-ons.",
+      "description": "Allow websites to install add-ons.",
 
       "type": "object",
       "properties": {
@@ -657,14 +657,14 @@
     },
 
     "SearchBar": {
-      "description": "Sets the default location of the search bar. Only applies on firtrun, but can be changed.",
+      "description": "Sets the default location of the search bar. Only applies on first run, but can be changed.",
 
       "type": "string",
       "enum": ["unified", "separate"]
     },
 
     "SearchEngines": {
-      "description": "Modifies the list of search engines built into Firefox",
+      "description": "Modifies the list of search engines built into Firefox.",
       "enterprise_only": true,
 
       "type": "object",
@@ -739,3 +739,4 @@
     }
   }
 }
+

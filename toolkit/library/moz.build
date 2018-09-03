@@ -312,6 +312,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'locationapi',
         'sapi',
         'dxguid',
+        'dhcpcsvc',
     ]
     if CONFIG['ACCESSIBILITY']:
         OS_LIBS += [

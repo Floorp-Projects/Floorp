@@ -18,16 +18,16 @@ var gItem;
 
 var gInstallProperties = {
   name: "Bug 591663 Mock Install",
-  type: "mock-addon"
+  type: "mock-addon",
 };
 var gAddonProperties = {
   id: "test1@tests.mozilla.org",
   name: "Bug 591663 Mock Add-on",
-  type: "mock-addon"
+  type: "mock-addon",
 };
 var gExtensionProperties = {
   name: "Bug 591663 Extension Install",
-  type: "extension"
+  type: "extension",
 };
 
 async function test() {
@@ -37,7 +37,7 @@ async function test() {
     id: "mock-addon",
     name: "Mock Add-ons",
     uiPriority: 4500,
-    flags: AddonManager.TYPE_UI_VIEW_LIST
+    flags: AddonManager.TYPE_UI_VIEW_LIST,
   }]);
 
   let aWindow = await open_manager(VIEW_ID);
@@ -97,7 +97,7 @@ add_test(function() {
     onInstallEnded() {
       check_list(gItem);
       run_next_test();
-    }
+    },
   });
 
   gItem.install();
@@ -135,7 +135,7 @@ add_test(function() {
       check_list(null);
       extension.cancel();
       run_next_test();
-    }
+    },
   });
 
   extension.install();

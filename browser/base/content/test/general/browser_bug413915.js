@@ -11,8 +11,8 @@ function test() {
       href: aHref,
       type: aType,
       ownerDocument: {
-        characterSet: "UTF-8"
-      }
+        characterSet: "UTF-8",
+      },
     };
     return Feeds.isValidFeed(link, principal, aKnown);
   }

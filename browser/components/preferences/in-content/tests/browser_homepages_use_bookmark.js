@@ -24,7 +24,7 @@ add_task(async function testSetHomepageFromBookmark() {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     title: "TestHomepage",
-    url: TEST_URL
+    url: TEST_URL,
   });
 
   let doc = gBrowser.contentDocument;

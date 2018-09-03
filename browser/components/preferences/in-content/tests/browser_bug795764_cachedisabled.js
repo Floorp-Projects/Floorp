@@ -16,7 +16,7 @@ function test() {
   });
 
   SpecialPowers.pushPrefEnv({set: [
-    ["privacy.userContext.ui.enabled", true]
+    ["privacy.userContext.ui.enabled", true],
   ]}).then(() => open_preferences(runTest));
 }
 

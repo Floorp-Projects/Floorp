@@ -49,7 +49,7 @@ add_task(async function popup_mousedown_tests() {
   const test = {
     // To not trigger autofill, search keyword starts from the second character.
     search: gHost.substr(1, 4),
-    completeValue: `${gScheme}://${gHost}:${gPort}/`
+    completeValue: `${gScheme}://${gHost}:${gPort}/`,
   };
   info(`Searching for '${test.search}'`);
   await promiseAutocompleteResultPopup(test.search, window, true);

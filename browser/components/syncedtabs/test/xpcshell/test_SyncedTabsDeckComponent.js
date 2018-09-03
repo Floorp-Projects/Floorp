@@ -146,10 +146,10 @@ add_task(async function testPanelStatus() {
   let listStore = new SyncedTabsListStore();
   let listComponent = {};
   let fxAccounts = {
-    getSignedInUser() {}
+    getSignedInUser() {},
   };
   let SyncedTabsMock = {
-    getTabClients() {}
+    getTabClients() {},
   };
 
   sinon.stub(listStore, "getData");
@@ -159,7 +159,7 @@ add_task(async function testPanelStatus() {
     fxAccounts,
     deckStore,
     listComponent,
-    SyncedTabs: SyncedTabsMock
+    SyncedTabs: SyncedTabsMock,
   });
 
   let account = null;
@@ -216,8 +216,8 @@ add_task(async function testActions() {
   let chromeWindowMock = {
     gSync: {
       openPrefs() {},
-      openConnectAnotherDevice() {}
-    }
+      openConnectAnotherDevice() {},
+    },
   };
   sinon.spy(chromeWindowMock.gSync, "openPrefs");
   sinon.spy(chromeWindowMock.gSync, "openConnectAnotherDevice");
@@ -227,7 +227,7 @@ add_task(async function testActions() {
 
   let component = new SyncedTabsDeckComponent({
     window: windowMock,
-    getChromeWindowMock
+    getChromeWindowMock,
   });
 
   component.openConnectDevice();

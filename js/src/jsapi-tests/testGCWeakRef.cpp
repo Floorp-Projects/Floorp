@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gc/Barrier.h"
-#include "gc/Zone.h"
 #include "js/RootingAPI.h"
 
 #include "jsapi-tests/tests.h"

@@ -19,7 +19,7 @@ function AreaPositionManager(aContainer) {
     left: containerRect.left,
     right: containerRect.right,
     top: containerRect.top,
-    width: containerRect.width
+    width: containerRect.width,
   };
   this._horizontalDistance = null;
   this.update(aContainer);
@@ -286,7 +286,7 @@ AreaPositionManager.prototype = {
       rv = rv[aDirection + "Sibling"];
     } while (rv && rv.getAttribute("hidden") == "true");
     return rv;
-  }
+  },
 };
 
 var DragPositionManager = {
@@ -308,7 +308,7 @@ var DragPositionManager = {
 
   getManagerForArea(aArea) {
     return gManagers.get(aArea);
-  }
+  },
 };
 
 Object.freeze(DragPositionManager);

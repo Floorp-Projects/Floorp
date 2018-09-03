@@ -25,7 +25,7 @@ EXPECTED = {
         'kwargs': {},
         'format': """
 a/b/c.txt: line 1, Error - oh no foo (foo)
-a/b/c.txt: line 4, Error - oh no baz (baz)
+a/b/c.txt: line 4, col 10, Error - oh no baz (baz)
 d/e/f.txt: line 4, col 2, Warning - oh no bar (bar-not-allowed)
 
 3 problems
@@ -37,8 +37,8 @@ d/e/f.txt: line 4, col 2, Warning - oh no bar (bar-not-allowed)
         },
         'format': """
 a/b/c.txt
-  1  error  oh no foo  (foo)
-  4  error  oh no baz  (baz)
+  1     error  oh no foo  (foo)
+  4:10  error  oh no baz  (baz)
 
 d/e/f.txt
   4:2  warning  oh no bar  bar-not-allowed (bar)
@@ -50,7 +50,7 @@ d/e/f.txt
         'kwargs': {},
         'format': """
 TEST-UNEXPECTED-ERROR | a/b/c.txt:1 | oh no foo (foo)
-TEST-UNEXPECTED-ERROR | a/b/c.txt:4 | oh no baz (baz)
+TEST-UNEXPECTED-ERROR | a/b/c.txt:4:10 | oh no baz (baz)
 TEST-UNEXPECTED-WARNING | d/e/f.txt:4:2 | oh no bar (bar-not-allowed)
 """.strip(),
     },
@@ -58,7 +58,7 @@ TEST-UNEXPECTED-WARNING | d/e/f.txt:4:2 | oh no bar (bar-not-allowed)
         'kwargs': {},
         'format': """
 {abc}:1: foo error: oh no foo
-{abc}:4: baz error: oh no baz
+{abc}:4:10: baz error: oh no baz
 {def}:4:2: bar-not-allowed warning: oh no bar
 """.format(**NORMALISED_PATHS).strip(),
     },
@@ -96,6 +96,7 @@ def result(scope='module'):
             path='a/b/c.txt',
             message="oh no baz",
             lineno=4,
+            column=10,
             source="if baz:",
         ),
     )
@@ -109,7 +110,8 @@ def result(scope='module'):
 def test_formatters(result, name):
     opts = EXPECTED[name]
     fmt = formatters.get(name, **opts['kwargs'])
-    assert fmt(result) == opts['format']
+    # encoding to str bypasses a UnicodeEncodeError in pytest
+    assert fmt(result).encode('utf-8') == opts['format'].encode('utf-8')
 
 
 def test_json_formatter(result):

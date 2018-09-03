@@ -47,7 +47,7 @@ const OBSERVING = [
   "quit-application-granted", "browser-lastwindow-close-granted",
   "quit-application", "browser:purge-session-history",
   "browser:purge-domain-data",
-  "idle-daily", "clear-origin-attributes-data"
+  "idle-daily", "clear-origin-attributes-data",
 ];
 
 // XUL Window properties to (re)store
@@ -57,7 +57,7 @@ const WINDOW_ATTRIBUTES = ["width", "height", "screenX", "screenY", "sizemode"];
 // Hideable window features to (re)store
 // Restored in restoreWindowFeatures()
 const WINDOW_HIDEABLE_FEATURES = [
-  "menubar", "toolbar", "locationbar", "personalbar", "statusbar", "scrollbars"
+  "menubar", "toolbar", "locationbar", "personalbar", "statusbar", "scrollbars",
 ];
 
 // Messages that will be received via the Frame Message Manager.
@@ -129,7 +129,7 @@ const CLOSED_MESSAGES = new Set([
 // These are tab events that we listen to.
 const TAB_EVENTS = [
   "TabOpen", "TabBrowserInserted", "TabClose", "TabSelect", "TabShow", "TabHide", "TabPinned",
-  "TabUnpinned"
+  "TabUnpinned",
 ];
 
 const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -441,7 +441,7 @@ Object.freeze(SessionStore);
 var SessionStoreInternal = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
-    Ci.nsISupportsWeakReference
+    Ci.nsISupportsWeakReference,
   ]),
 
   _globalState: new GlobalState(),
@@ -966,7 +966,7 @@ var SessionStoreInternal = {
 
           // Remove state we don't need any longer.
           TabStateCache.update(browser, {
-            userTypedValue: null, userTypedClear: null
+            userTypedValue: null, userTypedClear: null,
           });
         }
         break;
@@ -1055,7 +1055,7 @@ var SessionStoreInternal = {
                                     this.getCurrentEpoch(aEvent.otherBrowser));
         this.setCurrentEpoch(target, newEpoch);
         target.messageManager.sendAsyncMessage("SessionStore:becomeActiveProcess", {
-          epoch: newEpoch
+          epoch: newEpoch,
         });
         break;
       default:
@@ -1981,7 +1981,7 @@ var SessionStoreInternal = {
       title: tabTitle,
       image: tabbrowser.getIcon(aTab),
       pos: aTab._tPos,
-      closedAt: Date.now()
+      closedAt: Date.now(),
     };
 
     let closedTabs = this._windows[aWindow.__SSi]._closedTabs;
@@ -2431,7 +2431,7 @@ var SessionStoreInternal = {
 
     let tabOptions = {
       userContextId,
-      ...(aTab == aWindow.gBrowser.selectedTab ? {relatedToCurrent: true, ownerTab: aTab} : {})
+      ...(aTab == aWindow.gBrowser.selectedTab ? {relatedToCurrent: true, ownerTab: aTab} : {}),
     };
     let newTab = aWindow.gBrowser.addTrustedTab(null, tabOptions);
 
@@ -2469,7 +2469,7 @@ var SessionStoreInternal = {
 
       // Restore the state into the new tab.
       this.restoreTab(newTab, tabState, {
-        restoreImmediately: aRestoreImmediately
+        restoreImmediately: aRestoreImmediately,
       });
     });
 
@@ -2890,7 +2890,7 @@ var SessionStoreInternal = {
         // Later, these windows will be restored with newly opened windows.
         this._updateWindowRestoreState(windowToUse, {
           windows: [winState],
-          options: {overwriteTabs: canOverwriteTabs}
+          options: {overwriteTabs: canOverwriteTabs},
         });
         openWindows.push(windowToUse);
       } else {
@@ -3267,7 +3267,7 @@ var SessionStoreInternal = {
     let session = {
       lastUpdate: Date.now(),
       startTime: this._sessionStartTime,
-      recentCrashes: this._recentCrashes
+      recentCrashes: this._recentCrashes,
     };
 
     let state = {
@@ -3276,7 +3276,7 @@ var SessionStoreInternal = {
       selectedWindow: ix + 1,
       _closedWindows: lastClosedWindowsCopy,
       session,
-      global: this._globalState.getState()
+      global: this._globalState.getState(),
     };
 
     // Collect and store session cookies.
@@ -3884,7 +3884,7 @@ var SessionStoreInternal = {
       image: tabData.image || "",
       iconLoadingPrincipal: tabData.iconLoadingPrincipal || null,
       userTypedValue: tabData.userTypedValue || "",
-      userTypedClear: tabData.userTypedClear || 0
+      userTypedClear: tabData.userTypedClear || 0,
     });
 
     // Restore tab attributes.
@@ -3942,7 +3942,7 @@ var SessionStoreInternal = {
         url,
         title,
         userTypedValue: tabData.userTypedValue || "",
-        userTypedClear: tabData.userTypedClear || 0
+        userTypedClear: tabData.userTypedClear || 0,
       });
     }
 
@@ -4304,7 +4304,7 @@ var SessionStoreInternal = {
         if (window.__SSi && !window.closed)
           yield window;
       }
-    }
+    },
   },
 
   /**
@@ -5044,7 +5044,7 @@ var TabRestoreQueue = {
       const PREF = "browser.sessionstore.restore_hidden_tabs";
       Services.prefs.addObserver(PREF, updateValue);
       return updateValue();
-    }
+    },
   },
 
   // Resets the queue and removes all tabs.
@@ -5176,7 +5176,7 @@ var DyingWindowCache = {
 
   remove(window) {
     this._data.delete(window);
-  }
+  },
 };
 
 // A weak set of dirty windows. We use it to determine which windows we need to
@@ -5198,7 +5198,7 @@ var DirtyWindows = {
 
   clear(window) {
     this._data = new WeakMap();
-  }
+  },
 };
 
 // The state from the previous session (after restoring pinned tabs). This
@@ -5226,5 +5226,5 @@ var LastSession = {
       if (!silent)
         Services.obs.notifyObservers(null, NOTIFY_LAST_SESSION_CLEARED);
     }
-  }
+  },
 };

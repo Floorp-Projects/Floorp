@@ -950,6 +950,30 @@ set_define('XP_LINUX', target_is_linux)
 
 
 @depends(target)
+def target_is_openbsd(target):
+    if target.kernel == 'OpenBSD':
+        return True
+
+
+set_define('XP_OPENBSD', target_is_openbsd)
+
+@depends(target)
+def target_is_netbsd(target):
+    if target.kernel == 'NetBSD':
+        return True
+
+
+set_define('XP_NETBSD', target_is_netbsd)
+
+@depends(target)
+def target_is_freebsd(target):
+    if target.kernel == 'FreeBSD':
+        return True
+
+
+set_define('XP_FREEBSD', target_is_freebsd)
+
+@depends(target)
 def target_is_solaris(target):
     if target.kernel == 'SunOS':
         return True

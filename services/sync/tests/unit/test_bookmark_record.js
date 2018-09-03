@@ -45,7 +45,7 @@ add_task(async function test_query_foldername() {
   // Bug 1443388
   let checks = [
     ["foo", "foo"],
-    ["", undefined]
+    ["", undefined],
   ];
   for (let [inVal, outVal] of checks) {
     let bmk1 = new BookmarkQuery("bookmarks", Utils.makeGUID());

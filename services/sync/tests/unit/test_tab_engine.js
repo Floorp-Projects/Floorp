@@ -42,7 +42,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
 
   _("Setting up Sync server");
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/tabs": collection.handler()
+      "/1.1/foo/storage/tabs": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -71,7 +71,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
 });
 
 add_task(async function test_reconcile() {
-  let [engine, ] = await getMocks();
+  let [engine ] = await getMocks();
 
   _("Setup engine for reconciling");
   await engine._syncStartup();

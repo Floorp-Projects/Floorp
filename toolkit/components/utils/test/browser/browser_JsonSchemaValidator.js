@@ -7,7 +7,7 @@ ChromeUtils.import("resource://gre/modules/components-utils/JsonSchemaValidator.
 
 add_task(async function test_boolean_values() {
   let schema = {
-    type: "boolean"
+    type: "boolean",
   };
 
   let valid, parsed;
@@ -34,7 +34,7 @@ add_task(async function test_boolean_values() {
 
 add_task(async function test_number_values() {
   let schema = {
-    type: "number"
+    type: "number",
   };
 
   let valid, parsed;
@@ -51,7 +51,7 @@ add_task(async function test_number_values() {
 add_task(async function test_integer_values() {
   // Integer is an alias for number
   let schema = {
-    type: "integer"
+    type: "integer",
   };
 
   let valid, parsed;
@@ -67,7 +67,7 @@ add_task(async function test_integer_values() {
 
 add_task(async function test_string_values() {
   let schema = {
-    type: "string"
+    type: "string",
   };
 
   let valid, parsed;
@@ -84,7 +84,7 @@ add_task(async function test_string_values() {
 
 add_task(async function test_URL_values() {
   let schema = {
-    type: "URL"
+    type: "URL",
   };
 
   let valid, parsed;
@@ -103,7 +103,7 @@ add_task(async function test_URL_values() {
 
 add_task(async function test_URLorEmpty_values() {
   let schema = {
-    type: "URLorEmpty"
+    type: "URLorEmpty",
   };
 
   let valid, parsed;
@@ -131,7 +131,7 @@ add_task(async function test_URLorEmpty_values() {
 add_task(async function test_origin_values() {
   // Origin is a URL that doesn't contain a path/query string (i.e., it's only scheme + host + port)
   let schema = {
-    type: "origin"
+    type: "origin",
   };
 
   let valid, parsed;
@@ -152,8 +152,8 @@ add_task(async function test_array_values() {
   let schema = {
     type: "array",
     items: {
-      type: "number"
-    }
+      type: "number",
+    },
   };
 
   let valid, parsed;
@@ -182,8 +182,8 @@ add_task(async function test_non_strict_arrays() {
     type: "array",
     strict: false,
     items: {
-      type: "string"
-    }
+      type: "string",
+    },
   };
 
   let valid, parsed;
@@ -206,12 +206,12 @@ add_task(async function test_object_values() {
     type: "object",
     properties: {
       url: {
-        type: "URL"
+        type: "URL",
       },
       title: {
-        type: "string"
-      }
-    }
+        type: "string",
+      },
+    },
   };
 
   let valid, parsed;
@@ -219,7 +219,7 @@ add_task(async function test_object_values() {
     {
       url: "https://www.example.com/foo#bar",
       title: "Foo",
-      alias: "Bar"
+      alias: "Bar",
     },
     schema);
 
@@ -257,10 +257,10 @@ add_task(async function test_array_of_objects() {
           type: "URL",
         },
         title: {
-          type: "string"
-        }
-      }
-    }
+          type: "string",
+        },
+      },
+    },
   };
 
   let valid, parsed;
@@ -294,22 +294,22 @@ add_task(async function test_missing_arrays_inside_objects() {
       allow: {
         type: "array",
         items: {
-          type: "boolean"
-        }
+          type: "boolean",
+        },
       },
       block: {
         type: "array",
         items: {
-          type: "boolean"
-        }
-      }
+          type: "boolean",
+        },
+      },
 
-    }
+    },
   };
 
   let valid, parsed;
   [valid, parsed] = JsonSchemaValidator.validateAndParseParameters({
-    allow: [true, true, true]
+    allow: [true, true, true],
   }, schema);
 
   ok(valid, "Object is valid");
@@ -322,19 +322,19 @@ add_task(async function test_required_vs_nonrequired_properties() {
     type: "object",
     properties: {
       "non-required-property": {
-        type: "number"
+        type: "number",
       },
 
       "required-property": {
-        type: "number"
-      }
+        type: "number",
+      },
     },
-    required: ["required-property"]
+    required: ["required-property"],
   };
 
   let valid, parsed;
   [valid, parsed] = JsonSchemaValidator.validateAndParseParameters({
-    "required-property": 5
+    "required-property": 5,
   }, schema);
 
   ok(valid, "Object is valid since required property is present");
@@ -342,7 +342,7 @@ add_task(async function test_required_vs_nonrequired_properties() {
   is(parsed["non-required-property"], undefined, "non-required property is undefined, as expected");
 
   [valid, parsed] = JsonSchemaValidator.validateAndParseParameters({
-    "non-required-property": 5
+    "non-required-property": 5,
   }, schema);
 
   ok(!valid, "Object is not valid since the required property is missing");
@@ -374,7 +374,7 @@ add_task(async function test_number_or_array_values() {
     type: ["number", "array"],
     items: {
       type: "number",
-    }
+    },
   };
 
   let valid, parsed;

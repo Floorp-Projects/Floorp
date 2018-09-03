@@ -3,7 +3,7 @@ add_task(async function testMalformedXml() {
   const maxBackgroundErrors = 10;
   SpecialPowers.pushPrefEnv({set: [
     [PREF_APP_UPDATE_BACKGROUNDMAXERRORS, maxBackgroundErrors],
-    [PREF_APP_UPDATE_URL_DETAILS, updateDetailsUrl]
+    [PREF_APP_UPDATE_URL_DETAILS, updateDetailsUrl],
   ]});
 
   let updateParams = "xmlMalformed=1";
@@ -22,7 +22,7 @@ add_task(async function testMalformedXml() {
         is(gBrowser.selectedBrowser.currentURI.spec,
            URL_MANUAL_UPDATE, "Landed on manual update page.");
         gBrowser.removeTab(gBrowser.selectedTab);
-      }
+      },
     },
   ]);
 });

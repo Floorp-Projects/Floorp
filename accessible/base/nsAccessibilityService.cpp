@@ -243,7 +243,7 @@ static Accessible* New_HTMLInput(Element* aElement, Accessible* aContext)
 {
   if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                            nsGkAtoms::checkbox, eIgnoreCase)) {
-    return new HTMLCheckboxAccessible(aElement, aContext->Document());
+    return new CheckboxAccessible(aElement, aContext->Document());
   }
   if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                            nsGkAtoms::radio, eIgnoreCase)) {
@@ -1492,7 +1492,7 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       }
       break;
     case eHTMLCheckboxType:
-      newAcc = new HTMLCheckboxAccessible(aContent, document);
+      newAcc = new CheckboxAccessible(aContent, document);
       break;
     case eHTMLComboboxType:
       newAcc = new HTMLComboboxAccessible(aContent, document);

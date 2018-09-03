@@ -1,0 +1,14 @@
+language: rust
+cache: cargo
+rust:
+    - stable
+    - beta
+    - nightly
+os:
+    - linux
+    - osx
+script:
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then FAKETTY="script -q /dev/null"; fi
+    - $FAKETTY cargo build --verbose
+    - $FAKETTY cargo test --verbose
+    - $FAKETTY cargo test --release --verbose

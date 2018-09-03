@@ -307,7 +307,7 @@ GDIFontEntry::TestCharacterMap(uint32_t aCh)
         }
         fakeStyle.weight = Weight().Min();
 
-        RefPtr<gfxFont> tempFont = FindOrMakeFont(&fakeStyle, false);
+        RefPtr<gfxFont> tempFont = FindOrMakeFont(&fakeStyle, nullptr);
         if (!tempFont || !tempFont->Valid())
             return false;
         gfxGDIFont *font = static_cast<gfxGDIFont*>(tempFont.get());

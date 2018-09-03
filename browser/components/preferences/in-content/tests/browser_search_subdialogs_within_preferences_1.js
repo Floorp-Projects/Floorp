@@ -16,7 +16,7 @@ add_task(async function() {
   // Set custom URL so bookmark button will be shown on the page (otherwise it is hidden)
   await SpecialPowers.pushPrefEnv({"set": [
     ["browser.startup.homepage", "about:robots"],
-    ["browser.startup.page", 1]
+    ["browser.startup.page", 1],
   ]});
 
   // Wait for Activity Stream to add its panels

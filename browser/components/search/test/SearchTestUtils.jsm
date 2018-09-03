@@ -12,7 +12,7 @@ var SearchTestUtils = Object.freeze({
   init(Assert, registerCleanupFunction) {
     gTestGlobals = {
       Assert,
-      registerCleanupFunction
+      registerCleanupFunction,
     };
   },
 
@@ -39,5 +39,5 @@ var SearchTestUtils = Object.freeze({
         },
       });
     });
-  }
+  },
 });

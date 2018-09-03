@@ -55,6 +55,8 @@ public:
   ShadowRoot(Element* aElement, ShadowRootMode aMode,
              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
+  void AddSizeOfExcludingThis(nsWindowSizes&, size_t* aNodeSize) const final;
+
   // Shadow DOM v1
   Element* Host() const
   {
@@ -156,12 +158,12 @@ public:
   void RemoveSlot(HTMLSlotElement* aSlot);
   bool HasSlots() const { return !mSlotMap.IsEmpty(); };
 
-  const RawServoAuthorStyles* ServoStyles() const
+  const RawServoAuthorStyles* GetServoStyles() const
   {
     return mServoStyles.get();
   }
 
-  RawServoAuthorStyles* ServoStyles()
+  RawServoAuthorStyles* GetServoStyles()
   {
     return mServoStyles.get();
   }

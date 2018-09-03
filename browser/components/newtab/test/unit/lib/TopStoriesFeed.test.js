@@ -30,9 +30,16 @@ describe("Top Stories Feed", () => {
 
   beforeEach(() => {
     FakePrefs.prototype.prefs.apiKeyPref = "test-api-key";
+    FakePrefs.prototype.prefs.pocketCta = JSON.stringify({
+      cta_button: "",
+      cta_text: "",
+      cta_url: "",
+      use_cta: false
+    });
 
     globals = new GlobalOverrider();
     globals.set("PlacesUtils", {history: {}});
+    globals.set("pktApi", {isUserLoggedIn() {}});
     clock = sinon.useFakeTimers();
     shortURLStub = sinon.stub().callsFake(site => site.url);
     sectionsManagerStub = {
@@ -154,10 +161,56 @@ describe("Top Stories Feed", () => {
       assert.calledOnce(sectionsManagerStub.disableSection);
       assert.calledWith(sectionsManagerStub.disableSection, SECTION_ID);
     });
-    it("should unload stories", () => {
+    it("should unload stories on uninit", async () => {
+      sinon.stub(instance.cache, "set").returns(Promise.resolve());
+      await instance.clearCache();
+      assert.calledWith(instance.cache.set.firstCall, "stories", {});
+      assert.calledWith(instance.cache.set.secondCall, "topics", {});
+      assert.calledWith(instance.cache.set.thirdCall, "spocs", {});
+    });
+  });
+  describe("#cache", () => {
+    it("should clear all cache items when calling clearCache", () => {
+      sinon.stub(instance.cache, "set").returns(Promise.resolve());
       instance.storiesLoaded = true;
-      instance.onAction({type: at.UNINIT});
+      instance.uninit();
       assert.equal(instance.storiesLoaded, false);
+    });
+    it("should set spocs cache on fetch", async () => {
+      const response = {
+        "recommendations":  [{"id": "1"}, {"id": "2"}],
+        "settings": {"timeSegments": {}, "domainAffinityParameterSets": {}},
+        "spocs": [{"id": "spoc1"}]
+      };
+
+      instance.show_spocs = true;
+      instance.personalized = true;
+      instance.stories_endpoint = "stories-endpoint";
+
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: () => {}}});
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+      sinon.spy(instance.cache, "set");
+
+      await instance.fetchStories();
+
+      assert.calledTwice(instance.cache.set);
+      const {args} = instance.cache.set.firstCall;
+      assert.equal(args[0], "spocs");
+      assert.equal(args[1][0].guid, "spoc1");
+    });
+    it("should get spocs on cache load", async () => {
+      instance.cache.get = () => ({
+        stories: {recommendations:  [{"id": "1"}, {"id": "2"}]},
+        spocs: [{"id": "spoc1"}]
+      });
+      instance.storiesLastUpdated = 0;
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: () => {}}});
+
+      await instance.loadCachedData();
+
+      assert.equal(instance.spocs[0].id, "spoc1");
     });
   });
   describe("#fetch", () => {
@@ -504,7 +557,13 @@ describe("Top Stories Feed", () => {
 
       instance.store.getState = () => ({Sections: [{id: "topstories", rows: response.recommendations}], Prefs: {values: {showSponsored: true}}});
 
-      globals.set("Math", {random: () => 0.4});
+      globals.set("Math", {
+        random: () => 0.4,
+        min: Math.min
+      });
+      instance.dispatchSpocDone = () => {};
+      instance.getPocketState = () => {};
+
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledOnce(instance.store.dispatch);
       let [action] = instance.store.dispatch.firstCall.args;
@@ -518,11 +577,17 @@ describe("Top Stories Feed", () => {
       assert.equal(action.data.rows[2].pinned, true);
 
       // Second new tab shouldn't trigger a section update event (spocsPerNewTab === 0.5)
-      globals.set("Math", {random: () => 0.6});
+      globals.set("Math", {
+        random: () => 0.6,
+        min: Math.min
+      });
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledOnce(instance.store.dispatch);
 
-      globals.set("Math", {random: () => 0.3});
+      globals.set("Math", {
+        random: () => 0.3,
+        min: Math.min
+      });
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledTwice(instance.store.dispatch);
       [action] = instance.store.dispatch.secondCall.args;
@@ -536,6 +601,7 @@ describe("Top Stories Feed", () => {
     });
     it("should delay inserting spoc if stories haven't been fetched", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: true,
@@ -545,7 +611,12 @@ describe("Top Stories Feed", () => {
       });
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
-      globals.set("Math", {random: () => 0.4});
+      globals.set("Math", {
+        random: () => 0.4,
+        min: Math.min
+      });
+      instance.getPocketState = () => {};
+      instance.dispatchPocketCta = () => {};
 
       const response = {
         "settings": {"spocsPerNewTabs": 0.5},
@@ -569,6 +640,7 @@ describe("Top Stories Feed", () => {
     });
     it("should not insert spoc if preffed off", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: false,
@@ -578,6 +650,8 @@ describe("Top Stories Feed", () => {
       });
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+      instance.getPocketState = () => {};
+      instance.dispatchPocketCta = () => {};
 
       const response = {
         "settings": {"spocsPerNewTabs": 0.5},
@@ -594,8 +668,23 @@ describe("Top Stories Feed", () => {
       assert.calledOnce(instance.shouldShowSpocs);
       assert.notCalled(instance.store.dispatch);
     });
+    it("should call dispatchSpocDone when calling maybeAddSpoc", async () => {
+      instance.dispatchSpocDone = sinon.spy();
+      instance.storiesLoaded = true;
+      await instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.calledOnce(instance.dispatchSpocDone);
+      assert.calledWith(instance.dispatchSpocDone, {});
+    });
+    it("should fire POCKET_WAITING_FOR_SPOC action with false", () => {
+      instance.dispatchSpocDone({});
+      assert.calledOnce(instance.store.dispatch);
+      const [action] = instance.store.dispatch.firstCall.args;
+      assert.equal(action.type, "POCKET_WAITING_FOR_SPOC");
+      assert.equal(action.data, false);
+    });
     it("should not insert spoc if user opted out", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: true,
@@ -603,6 +692,8 @@ describe("Top Stories Feed", () => {
           stories_endpoint: "stories-endpoint"
         }
       });
+      instance.getPocketState = () => {};
+      instance.dispatchPocketCta = () => {};
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
 
@@ -620,6 +711,7 @@ describe("Top Stories Feed", () => {
     });
     it("should not fail if there is no spoc", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: true,
@@ -627,9 +719,14 @@ describe("Top Stories Feed", () => {
           stories_endpoint: "stories-endpoint"
         }
       });
+      instance.getPocketState = () => {};
+      instance.dispatchPocketCta = () => {};
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
-      globals.set("Math", {random: () => 0.4});
+      globals.set("Math", {
+        random: () => 0.4,
+        min: Math.min
+      });
 
       const response = {
         "settings": {"spocsPerNewTabs": 0.5},
@@ -646,7 +743,10 @@ describe("Top Stories Feed", () => {
       let fetchStub = globals.sandbox.stub();
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
-      globals.set("Math", {random: () => 0.4});
+      globals.set("Math", {
+        random: () => 0.4,
+        min: Math.min
+      });
 
       const response = {
         "settings": {"spocsPerNewTabs": 0.5},
@@ -741,6 +841,7 @@ describe("Top Stories Feed", () => {
     });
     it("should maintain frequency caps when inserting spocs", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: true,
@@ -748,6 +849,8 @@ describe("Top Stories Feed", () => {
           stories_endpoint: "stories-endpoint"
         }
       });
+      instance.getPocketState = () => {};
+      instance.dispatchPocketCta = () => {};
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
 
@@ -805,6 +908,7 @@ describe("Top Stories Feed", () => {
     });
     it("should maintain client-side MAX_LIFETIME_CAP", async () => {
       let fetchStub = globals.sandbox.stub();
+      instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
           show_spocs: true,
@@ -814,6 +918,8 @@ describe("Top Stories Feed", () => {
       });
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+      instance.getPocketState = () => {};
+      instance.dispatchPocketCta = () => {};
 
       const response = {
         "settings": {"spocsPerNewTabs": 1},
@@ -902,6 +1008,8 @@ describe("Top Stories Feed", () => {
       assert.isUndefined(instance.affinityProvider);
     });
     it("should send performance telemetry when updating domain affinities", () => {
+      instance.getPocketState = () => {};
+      instance.dispatchPocketCta = () => {};
       instance.init();
       instance.personalized = true;
       clock.tick(MIN_DOMAIN_AFFINITIES_UPDATE_TIME);
@@ -922,12 +1030,14 @@ describe("Top Stories Feed", () => {
       assert.notCalled(instance.init);
       assert.notCalled(instance.uninit);
     });
-    it("should call init and uninit on options change", () => {
+    it("should call init and uninit on options change", async () => {
+      sinon.stub(instance, "clearCache").returns(Promise.resolve());
       sinon.spy(instance, "init");
       sinon.spy(instance, "uninit");
-      instance.onAction({type: at.SECTION_OPTIONS_CHANGED, data: "topstories"});
+      await instance.onAction({type: at.SECTION_OPTIONS_CHANGED, data: "topstories"});
       assert.calledOnce(sectionsManagerStub.disableSection);
       assert.calledOnce(sectionsManagerStub.enableSection);
+      assert.calledOnce(instance.clearCache);
       assert.calledOnce(instance.init);
       assert.calledOnce(instance.uninit);
     });
@@ -1061,10 +1171,69 @@ describe("Top Stories Feed", () => {
       assert.isUndefined(instance.affinityProvider);
     });
   });
-  it("should call uninit and init on disabling of showSponsored pref", () => {
+  describe("#pocket", () => {
+    it("should call getPocketState when hitting NEW_TAB_REHYDRATED", () => {
+      instance.getPocketState = sinon.spy();
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.calledOnce(instance.getPocketState);
+      assert.calledWith(instance.getPocketState, {});
+    });
+    it("should call dispatch in getPocketState", () => {
+      const isUserLoggedIn = sinon.spy();
+      globals.set("pktApi", {isUserLoggedIn});
+      instance.getPocketState({});
+      assert.calledOnce(instance.store.dispatch);
+      const [action] = instance.store.dispatch.firstCall.args;
+      assert.equal(action.type, "POCKET_LOGGED_IN");
+      assert.calledOnce(isUserLoggedIn);
+    });
+    it("should call dispatchPocketCta when hitting onInit", async () => {
+      instance.dispatchPocketCta = sinon.spy();
+      await instance.onInit();
+      assert.calledOnce(instance.dispatchPocketCta);
+      assert.calledWith(instance.dispatchPocketCta, JSON.stringify({
+        cta_button: "",
+        cta_text: "",
+        cta_url: "",
+        use_cta: false
+      }), false);
+    });
+    it("should call dispatch in dispatchPocketCta", () => {
+      instance.dispatchPocketCta(JSON.stringify({use_cta: true}), false);
+      assert.calledOnce(instance.store.dispatch);
+      const [action] = instance.store.dispatch.firstCall.args;
+      assert.equal(action.type, "POCKET_CTA");
+      assert.equal(action.data.use_cta, true);
+    });
+    it("should call dispatchPocketCta with a pocketCta pref change", () => {
+      instance.dispatchPocketCta = sinon.spy();
+      instance.onAction({
+        type: at.PREF_CHANGED,
+        data: {
+          name: "pocketCta",
+          value: JSON.stringify({
+            cta_button: "",
+            cta_text: "",
+            cta_url: "",
+            use_cta: false
+          })
+        }
+      });
+      assert.calledOnce(instance.dispatchPocketCta);
+      assert.calledWith(instance.dispatchPocketCta, JSON.stringify({
+        cta_button: "",
+        cta_text: "",
+        cta_url: "",
+        use_cta: false
+      }), true);
+    });
+  });
+  it("should call uninit and init on disabling of showSponsored pref", async () => {
+    sinon.stub(instance, "clearCache").returns(Promise.resolve());
     sinon.stub(instance, "uninit");
     sinon.stub(instance, "init");
-    instance.onAction({type: at.PREF_CHANGED, data: {name: "showSponsored", value: false}});
+    await instance.onAction({type: at.PREF_CHANGED, data: {name: "showSponsored", value: false}});
+    assert.calledOnce(instance.clearCache);
     assert.calledOnce(instance.uninit);
     assert.calledOnce(instance.init);
   });

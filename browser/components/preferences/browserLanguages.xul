@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+
+<dialog id="BrowserLanguagesDialog" type="child" class="prefwindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        data-l10n-id="browser-languages-window"
+        data-l10n-attrs="title, style"
+        buttons="accept,cancel,help"
+        persist="screenX screenY"
+        role="dialog"
+        onload="gBrowserLanguagesDialog.onLoad();"
+        onbeforeaccept="return gBrowserLanguagesDialog.beforeAccept();"
+        helpTopic="prefs-languages"
+        ondialoghelp="openPrefsHelp()">
+
+  <link rel="localization" href="branding/brand.ftl"/>
+  <link rel="localization" href="browser/preferences/languages.ftl"/>
+  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
+
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
+  <script type="application/javascript" src="chrome://browser/content/preferences/browserLanguages.js"/>
+
+  <vbox id="BrowserLanguagesDialogPane" class="prefpane largeDialogContainer">
+    <description data-l10n-id="browser-languages-description"/>
+
+    <grid flex="1">
+      <columns>
+        <column flex="1"/>
+        <column/>
+      </columns>
+      <rows>
+        <row flex="1">
+          <richlistbox id="activeLocales" flex="1"/>
+          <vbox>
+            <button id="up" disabled="true" data-l10n-id="languages-customize-moveup"/>
+            <button id="down" disabled="true" data-l10n-id="languages-customize-movedown"/>
+          </vbox>
+        </row>
+      </rows>
+    </grid>
+  </vbox>
+</dialog>

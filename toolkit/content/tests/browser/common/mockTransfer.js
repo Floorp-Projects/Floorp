@@ -52,7 +52,7 @@ MockTransfer.prototype = {
   /* nsITransfer */
   init() {},
   setSha256Hash() {},
-  setSignatureInfo() {}
+  setSignatureInfo() {},
 };
 
 // Create an instance of a MockObjectRegisterer whose methods can be used to

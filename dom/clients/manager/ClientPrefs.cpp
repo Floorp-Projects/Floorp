@@ -6,6 +6,8 @@
 
 #include "ClientPrefs.h"
 
+#include "mozilla/Preferences.h"
+
 namespace mozilla {
 namespace dom {
 

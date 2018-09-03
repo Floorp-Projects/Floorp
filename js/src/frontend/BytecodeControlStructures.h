@@ -19,7 +19,6 @@
 #include "frontend/TDZCheckCache.h"
 #include "gc/Rooting.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/StringType.h"
 
 namespace js {
 namespace frontend {

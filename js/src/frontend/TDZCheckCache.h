@@ -20,6 +20,8 @@ namespace frontend {
 
 struct BytecodeEmitter;
 
+using CheckTDZMap = RecyclableNameMap<MaybeCheckTDZ>;
+
 // A cache that tracks Temporal Dead Zone (TDZ) checks, so that any use of a
 // lexical variable that's dominated by an earlier use, or by evaluation of its
 // declaration (which will initialize it, perhaps to |undefined|), doesn't have

@@ -78,8 +78,8 @@ talos:
     - talos-tps
     - talos-speedometer
     - talos-motionmark
-    - talos-h1
-    - talos-h2
+    # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
+    # - talos-h2 Bug 1487031 - Disabled for not finding actionable regressions
 
 raptor-firefox:
     - raptor-tp6-firefox
@@ -230,7 +230,7 @@ windows-talos:
     - talos-tp6
     - talos-tps
     - talos-motionmark
-    - talos-h1
+    # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
 
 windows-talos-profiling:
     - talos-bcv-profiling

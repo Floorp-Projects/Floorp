@@ -6,7 +6,7 @@ var offlineByDefault = {
   },
   reset() {
     SpecialPowers.Services.prefs.setBoolPref("offline-apps.allow_by_default", this.defaultValue);
-  }
+  },
 };
 
 offlineByDefault.set(false);

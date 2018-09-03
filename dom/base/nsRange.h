@@ -460,7 +460,7 @@ public:
   /**
    * Notify the selection listeners after a range has been modified.
    */
-  void NotifySelectionListenersAfterRangeSet();
+  MOZ_CAN_RUN_SCRIPT void NotifySelectionListenersAfterRangeSet();
 
   typedef nsTHashtable<nsPtrHashKey<nsRange> > RangeHashTable;
 protected:
@@ -488,6 +488,7 @@ protected:
   // and suppress re-registering a range common ancestor node since
   // the new text node of a splitText hasn't been inserted yet.
   // CharacterDataChanged does the re-registering when needed.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void DoSetRange(const RawRangeBoundary& lowerBound,
                   const RawRangeBoundary& upperBound,
                   nsINode* aRoot, bool aNotInsertedYet = false);

@@ -255,7 +255,7 @@
               this.contextMenu = null;
               break;
           }
-        }
+        },
       })]]></field>
 
       <method name="_setInactive">

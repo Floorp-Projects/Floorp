@@ -13,13 +13,13 @@ add_task(async function test_enterprise_only_policies() {
   Policies.NormalPolicy = {
     onProfileAfterChange(manager, param) {
       normalPolicyRan = true;
-    }
+    },
   };
 
   Policies.EnterpriseOnlyPolicy = {
     onProfileAfterChange(manager, param) {
       enterprisePolicyRan = true;
-    }
+    },
   };
 
   Services.prefs.setBoolPref(PREF_DISALLOW_ENTERPRISE, true);
@@ -29,22 +29,22 @@ add_task(async function test_enterprise_only_policies() {
     {
       "policies": {
         "NormalPolicy": true,
-        "EnterpriseOnlyPolicy": true
-      }
+        "EnterpriseOnlyPolicy": true,
+      },
     },
 
     // custom schema
     {
       properties: {
         "NormalPolicy": {
-          "type": "boolean"
+          "type": "boolean",
         },
 
         "EnterpriseOnlyPolicy": {
           "type": "boolean",
-          "enterprise_only": true
+          "enterprise_only": true,
         },
-      }
+      },
     }
   );
 

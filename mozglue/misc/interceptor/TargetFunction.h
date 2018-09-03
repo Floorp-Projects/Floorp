@@ -808,8 +808,8 @@ private:
   template <typename T>
   struct ChasePointerHelper
   {
-    template <typename MMPolicy>
-    static T Result(const MMPolicy&, T aValue)
+    template <typename MMPolicy_>
+    static T Result(const MMPolicy_&, T aValue)
     {
       return aValue;
     }
@@ -818,10 +818,10 @@ private:
   template <typename T>
   struct ChasePointerHelper<T*>
   {
-    template <typename MMPolicy>
-    static auto Result(const MMPolicy& aPolicy, T* aValue)
+    template <typename MMPolicy_>
+    static auto Result(const MMPolicy_& aPolicy, T* aValue)
     {
-      ReadOnlyTargetFunction<MMPolicy> ptr(aPolicy, aValue);
+      ReadOnlyTargetFunction<MMPolicy_> ptr(aPolicy, aValue);
       return ptr.template ChasePointer<T>();
     }
   };

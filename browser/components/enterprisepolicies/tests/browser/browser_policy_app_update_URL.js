@@ -6,8 +6,8 @@
 add_task(async function test_app_update_URL() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "AppUpdateURL": "https://www.example.com/"
-    }
+      "AppUpdateURL": "https://www.example.com/",
+    },
   });
 
   is(Services.policies.status, Ci.nsIEnterprisePolicies.ACTIVE, "Engine is active");

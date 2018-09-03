@@ -33,6 +33,7 @@ mod color;
 mod display_item;
 mod display_list;
 mod font;
+mod gradient_builder;
 mod image;
 mod units;
 
@@ -41,5 +42,6 @@ pub use color::*;
 pub use display_item::*;
 pub use display_list::*;
 pub use font::*;
+pub use gradient_builder::*;
 pub use image::*;
 pub use units::*;

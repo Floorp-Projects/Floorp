@@ -212,7 +212,7 @@ LocalStorageManager::GetStorageInternal(CreateMode aCreateMode,
                                         nsIPrincipal* aPrincipal,
                                         const nsAString& aDocumentURI,
                                         bool aPrivate,
-                                        nsIDOMStorage** aRetval)
+                                        Storage** aRetval)
 {
   nsAutoCString originAttrSuffix;
   nsAutoCString originKey;
@@ -287,7 +287,7 @@ LocalStorageManager::GetStorageInternal(CreateMode aCreateMode,
   if (aRetval) {
     nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
 
-    nsCOMPtr<nsIDOMStorage> storage = new LocalStorage(
+    RefPtr<Storage> storage = new LocalStorage(
       inner, this, cache, aDocumentURI, aPrincipal, aPrivate);
     storage.forget(aRetval);
   }
@@ -297,7 +297,7 @@ LocalStorageManager::GetStorageInternal(CreateMode aCreateMode,
 
 NS_IMETHODIMP
 LocalStorageManager::PrecacheStorage(nsIPrincipal* aPrincipal,
-                                     nsIDOMStorage** aRetval)
+                                     Storage** aRetval)
 {
   return GetStorageInternal(CreateMode::CreateIfShouldPreload, nullptr,
                             aPrincipal, EmptyString(), false, aRetval);
@@ -308,7 +308,7 @@ LocalStorageManager::CreateStorage(mozIDOMWindow* aWindow,
                                    nsIPrincipal* aPrincipal,
                                    const nsAString& aDocumentURI,
                                    bool aPrivate,
-                                   nsIDOMStorage** aRetval)
+                                   Storage** aRetval)
 {
   return GetStorageInternal(CreateMode::CreateAlways, aWindow, aPrincipal,
                             aDocumentURI, aPrivate, aRetval);
@@ -318,14 +318,14 @@ NS_IMETHODIMP
 LocalStorageManager::GetStorage(mozIDOMWindow* aWindow,
                                 nsIPrincipal* aPrincipal,
                                 bool aPrivate,
-                                nsIDOMStorage** aRetval)
+                                Storage** aRetval)
 {
   return GetStorageInternal(CreateMode::UseIfExistsNeverCreate, aWindow,
                             aPrincipal, EmptyString(), aPrivate, aRetval);
 }
 
 NS_IMETHODIMP
-LocalStorageManager::CloneStorage(nsIDOMStorage* aStorage)
+LocalStorageManager::CloneStorage(Storage* aStorage)
 {
   // Cloning is supported only for sessionStorage
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -333,15 +333,14 @@ LocalStorageManager::CloneStorage(nsIDOMStorage* aStorage)
 
 NS_IMETHODIMP
 LocalStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
-                                  nsIDOMStorage* aStorage,
+                                  Storage* aStorage,
                                   bool* aRetval)
 {
-  nsresult rv;
-
-  RefPtr<LocalStorage> storage = static_cast<LocalStorage*>(aStorage);
-  if (!storage) {
+  if (!aStorage || aStorage->Type() != Storage::eLocalStorage) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  RefPtr<LocalStorage> storage = static_cast<LocalStorage*>(aStorage);
 
   *aRetval = false;
 
@@ -351,7 +350,7 @@ LocalStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
 
   nsAutoCString suffix;
   nsAutoCString origin;
-  rv = GenerateOriginKey(aPrincipal, suffix, origin);
+  nsresult rv = GenerateOriginKey(aPrincipal, suffix, origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

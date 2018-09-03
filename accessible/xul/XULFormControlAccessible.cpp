@@ -17,7 +17,6 @@
 #include "XULMenuAccessible.h"
 
 #include "nsIDOMXULButtonElement.h"
-#include "nsIDOMXULCheckboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIEditor.h"
@@ -158,25 +157,9 @@ bool
 XULButtonAccessible::IsAcceptableChild(nsIContent* aEl) const
 {
   // In general XUL button has not accessible children. Nevertheless menu
-  // buttons can have button (@type="menu-button") and popup accessibles
-  // (@type="menu-button", @type="menu" or columnpicker.
-
-  // Get an accessible for menupopup or popup elements.
-  if (aEl->IsXULElement(nsGkAtoms::menupopup) ||
-      aEl->IsXULElement(nsGkAtoms::popup)) {
-    return true;
-  }
-
-  // Button and toolbarbutton are real buttons. Get an accessible
-  // for it. Ignore dropmarker button which is placed as a last child.
-  if ((!aEl->IsXULElement(nsGkAtoms::button) &&
-       !aEl->IsXULElement(nsGkAtoms::toolbarbutton)) ||
-      aEl->IsXULElement(nsGkAtoms::dropMarker)) {
-    return false;
-  }
-
-  return mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                            nsGkAtoms::menuButton, eCaseMatters);
+  // buttons can have popup accessibles (@type="menu" or columnpicker).
+  return aEl->IsXULElement(nsGkAtoms::menupopup) ||
+         aEl->IsXULElement(nsGkAtoms::popup);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,12 +168,8 @@ XULButtonAccessible::IsAcceptableChild(nsIContent* aEl) const
 bool
 XULButtonAccessible::ContainsMenu() const
 {
-  static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::menu, &nsGkAtoms::menuButton, nullptr};
-
-  return mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
-                                                nsGkAtoms::type,
-                                                strings, eCaseMatters) >= 0;
+  return mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                            nsGkAtoms::menu, eCaseMatters);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -274,71 +253,6 @@ XULDropmarkerAccessible::NativeState() const
   return DropmarkerOpen(false) ? states::PRESSED : 0;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// XULCheckboxAccessible
-////////////////////////////////////////////////////////////////////////////////
-
-XULCheckboxAccessible::
-  XULCheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  LeafAccessible(aContent, aDoc)
-{
-}
-
-role
-XULCheckboxAccessible::NativeRole() const
-{
-  return roles::CHECKBUTTON;
-}
-
-uint8_t
-XULCheckboxAccessible::ActionCount() const
-{
-  return 1;
-}
-
-void
-XULCheckboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
-{
-  if (aIndex == eAction_Click) {
-    if (NativeState() & states::CHECKED)
-      aName.AssignLiteral("uncheck");
-    else
-      aName.AssignLiteral("check");
-  }
-}
-
-bool
-XULCheckboxAccessible::DoAction(uint8_t aIndex) const
-{
-  if (aIndex != eAction_Click)
-    return false;
-
-  DoCommand();
-  return true;
-}
-
-uint64_t
-XULCheckboxAccessible::NativeState() const
-{
-  // Possible states: focused, focusable, unavailable(disabled), checked
-  // Get focus and disable status from base class
-  uint64_t state = LeafAccessible::NativeState();
-
-  state |= states::CHECKABLE;
-
-  // Determine Checked state
-  nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement =
-    do_QueryInterface(mContent);
-  if (xulCheckboxElement) {
-    bool checked = false;
-    xulCheckboxElement->GetChecked(&checked);
-    if (checked) {
-      state |= states::CHECKED;
-    }
-  }
-
-  return state;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULGroupboxAccessible

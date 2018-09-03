@@ -27,5 +27,5 @@ var BrowserWindows = {
     win.addEventListener("load", function() {
       fn.call(win);
     }, {once: true});
-  }
+  },
 };

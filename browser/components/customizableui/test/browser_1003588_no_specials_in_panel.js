@@ -42,7 +42,7 @@ add_task(async function checkAddingToToolbar() {
   let expectedPlacements = [...previousPlacements].concat([
     /separator/,
     /spring/,
-    /spacer/
+    /spacer/,
   ]);
   assertAreaPlacements(area, expectedPlacements);
 

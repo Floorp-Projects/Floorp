@@ -2,7 +2,7 @@ const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
 
 add_task(async function prefNotSet() {
     await SpecialPowers.pushPrefEnv({
-        set: [[PREF_MULTISELECT_TABS, false]]
+        set: [[PREF_MULTISELECT_TABS, false]],
     });
 
     let tab1 = await addTab();
@@ -32,7 +32,7 @@ add_task(async function prefNotSet() {
 
 add_task(async function setPref() {
     await SpecialPowers.pushPrefEnv({
-        set: [[PREF_MULTISELECT_TABS, true]]
+        set: [[PREF_MULTISELECT_TABS, true]],
     });
 });
 

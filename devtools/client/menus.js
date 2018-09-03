@@ -31,7 +31,6 @@
 const { Cu } = require("chrome");
 
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
-loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 loader.lazyRequireGetter(this, "openDocLink", "devtools/client/shared/link", true);
@@ -96,11 +95,12 @@ exports.menuitems = [
   },
   { id: "menu_eyedropper",
     l10nKey: "eyedropper",
-    oncommand(event) {
+    async oncommand(event) {
       const window = event.target.ownerDocument.defaultView;
       const target = TargetFactory.forTab(window.gBrowser.selectedTab);
-
-      CommandUtils.executeOnTarget(target, "eyedropper --frommenu");
+      await target.makeRemote();
+      const inspectorFront = await target.getFront("inspector");
+      inspectorFront.pickColorFromPage({copyOnSelect: true, fromMenu: true});
     },
     checkbox: true
   },

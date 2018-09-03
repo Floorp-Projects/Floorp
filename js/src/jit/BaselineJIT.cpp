@@ -1194,17 +1194,17 @@ MarkActiveBaselineScripts(JSContext* cx, const JitActivationIterator& activation
     for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
         const JSJitFrameIter& frame = iter.frame();
         switch (frame.type()) {
-          case JitFrame_BaselineJS:
+          case FrameType::BaselineJS:
             frame.script()->baselineScript()->setActive();
             break;
-          case JitFrame_Exit:
+          case FrameType::Exit:
             if (frame.exitFrame()->is<LazyLinkExitFrameLayout>()) {
                 LazyLinkExitFrameLayout* ll = frame.exitFrame()->as<LazyLinkExitFrameLayout>();
                 ScriptFromCalleeToken(ll->jsFrame()->calleeToken())->baselineScript()->setActive();
             }
             break;
-          case JitFrame_Bailout:
-          case JitFrame_IonJS: {
+          case FrameType::Bailout:
+          case FrameType::IonJS: {
             // Keep the baseline script around, since bailouts from the ion
             // jitcode might need to re-enter into the baseline jitcode.
             frame.script()->baselineScript()->setActive();

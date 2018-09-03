@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 var EXPORTED_SYMBOLS = [
-  "TabListComponent"
+  "TabListComponent",
 ];
 
 /**
@@ -59,7 +59,7 @@ TabListComponent.prototype = {
       onFilter: (...args) => this.onFilter(...args),
       onClearFilter: (...args) => this.onClearFilter(...args),
       onFilterFocus: (...args) => this.onFilterFocus(...args),
-      onFilterBlur: (...args) => this.onFilterBlur(...args)
+      onFilterBlur: (...args) => this.onFilterBlur(...args),
     });
 
     this._store.on("change", state => this._view.render(state));
@@ -137,5 +137,5 @@ TabListComponent.prototype = {
 
   onSyncRefresh() {
     this._SyncedTabs.syncTabs(true);
-  }
+  },
 };

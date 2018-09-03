@@ -26,7 +26,6 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.util.BitmapUtils;
@@ -101,22 +100,39 @@ public final class NotificationHelper implements BundleEventListener {
         /**
          *  Media notification channel
          */
-        MEDIA
+        MEDIA,
+        /**
+         * Built-in updater - use only when <code>AppConstants.MOZ_UPDATER</code> is true.
+         */
+        UPDATER,
+        /**
+         * Synced tabs notification channel
+         */
+        SYNCED_TABS,
     }
 
-    private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>() {{
+    // Holds the mapping between the Channel enum used by the rest of our codebase and the
+    // channel ID used for communication with the system NotificationManager.
+    private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>(6) {{
         final String DEFAULT_CHANNEL_TAG = "default-notification-channel";
         put(Channel.DEFAULT, DEFAULT_CHANNEL_TAG);
 
-        final String MLS_CHANNEL_TAG     = "mls-notification-channel";
+        final String MLS_CHANNEL_TAG = "mls-notification-channel";
         put(Channel.MLS, MLS_CHANNEL_TAG);
 
         final String DOWNLOAD_NOTIFICATION_TAG = "download-notification-channel";
         put(Channel.DOWNLOAD, DOWNLOAD_NOTIFICATION_TAG);
 
-
         final String MEDIA_CHANNEL_TAG = "media-notification-channel";
         put(Channel.MEDIA, MEDIA_CHANNEL_TAG);
+
+        if (AppConstants.MOZ_UPDATER) {
+            final String UPDATER_CHANNEL_TAG = "updater-notification-channel";
+            put(Channel.UPDATER, UPDATER_CHANNEL_TAG);
+        }
+
+        final String SYNCED_TABS_CHANNEL_TAG = "synced-tabs-notification-channel";
+        put(Channel.SYNCED_TABS, SYNCED_TABS_CHANNEL_TAG);
     }};
 
     // Holds a list of notifications that should be cleared if the Fennec Activity is shut down.
@@ -174,27 +190,44 @@ public final class NotificationHelper implements BundleEventListener {
             switch (definedChannel) {
                 case MLS: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
-                            mContext.getString(R.string.mls_notification_channel), NotificationManager.IMPORTANCE_LOW);
+                            mContext.getString(R.string.mls_notification_channel),
+                            NotificationManager.IMPORTANCE_LOW);
                 }
                 break;
 
                 case DOWNLOAD: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
-                            mContext.getString(R.string.download_notification_channel), NotificationManager.IMPORTANCE_LOW);
+                            mContext.getString(R.string.download_notification_channel),
+                            NotificationManager.IMPORTANCE_LOW);
                 }
                 break;
 
                 case MEDIA: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
-                            mContext.getString(R.string.media_notification_channel), NotificationManager.IMPORTANCE_LOW);
+                            mContext.getString(R.string.media_notification_channel),
+                            NotificationManager.IMPORTANCE_LOW);
+                }
+                break;
+
+                case UPDATER: {
+                    channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
+                            mContext.getString(R.string.updater_notification_channel),
+                            NotificationManager.IMPORTANCE_LOW);
+                }
+                break;
+
+                case SYNCED_TABS: {
+                    channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
+                            mContext.getString(R.string.synced_tabs_notification_channel),
+                            NotificationManager.IMPORTANCE_HIGH);
                 }
                 break;
 
                 case DEFAULT:
-
                 default: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
-                            mContext.getString(R.string.default_notification_channel), NotificationManager.IMPORTANCE_HIGH);
+                            mContext.getString(R.string.default_notification_channel),
+                            NotificationManager.IMPORTANCE_HIGH);
                 }
                 break;
             }

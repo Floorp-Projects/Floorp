@@ -3962,7 +3962,7 @@ nsBlockFrame::ReflowInlineFrames(BlockReflowInput& aState,
           aState.FloatManager()->PopState(&floatManagerState);
           // Clear out float lists
           aState.mCurrentLineFloats.DeleteAll();
-          MOZ_ASSERT(aState.mNoWrapFloats.IsEmpty());
+          aState.mNoWrapFloats.Clear();
           aState.mBelowCurrentLineFloats.DeleteAll();
         }
 

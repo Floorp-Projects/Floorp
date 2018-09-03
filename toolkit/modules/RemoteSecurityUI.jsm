@@ -21,5 +21,5 @@ RemoteSecurityUI.prototype = {
   _update(aSecInfo, aState) {
     this._secInfo = aSecInfo;
     this._state = aState;
-  }
+  },
 };

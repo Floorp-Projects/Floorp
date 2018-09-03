@@ -29,9 +29,9 @@ add_task(async () => {
     payments.add(payment);
   }
   is(payments.size, TABS_TO_OPEN, `Should be ${TABS_TO_OPEN} unique objects.`);
-  tabs.forEach(async tab => {
+  for (const tab of tabs) {
     await TestUtils.waitForTick();
     BrowserTestUtils.removeTab(tab);
-  });
+  }
   Services.prefs.setBoolPref("dom.payments.request.enabled", false);
 });

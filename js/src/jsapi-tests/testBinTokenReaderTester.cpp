@@ -18,7 +18,6 @@
 #include "mozilla/Maybe.h"
 
 #include "frontend/BinTokenReaderTester.h"
-#include "gc/Zone.h"
 
 #include "js/Vector.h"
 

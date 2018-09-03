@@ -270,7 +270,7 @@ class nsCookieService final : public nsICookieService
   static bool IsSameSiteEnabled();
   static bool PathMatches(nsCookie* aCookie, const nsACString& aPath);
   static bool CanSetCookie(nsIURI *aHostURI, const nsCookieKey& aKey, nsCookieAttributes &aCookieAttributes, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel, bool aLeaveSercureAlone, bool &aSetCookie, mozIThirdPartyUtil* aThirdPartyUtil);
-  static CookieStatus CheckPrefs(nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior, bool aThirdPartySession, bool aThirdPartyNonsecureSession, nsIURI *aHostURI, bool aIsForeign, bool aIsTrackingResource, bool aIsFirstPartyStorageAccessGranted, const char *aCookieHeader, const int aNumOfCookies, const OriginAttributes& aOriginAttrs);
+  static CookieStatus CheckPrefs(nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior, bool aThirdPartySession, bool aThirdPartyNonsecureSession, nsIURI *aHostURI, bool aIsForeign, bool aIsTrackingResource, bool aIsFirstPartyStorageAccessGranted, const char *aCookieHeader, const int aNumOfCookies, const OriginAttributes& aOriginAttrs, uint32_t* aRejectedReason);
   static int64_t ParseServerTime(const nsCString &aServerTime);
   void GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign, bool aIsTrackingResource, bool aFirstPartyStorageAccessGranted, bool aIsSafeTopLevelNav, bool aIsTopLevelForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsTArray<nsCookie*>& aCookieList);
 
@@ -319,7 +319,7 @@ class nsCookieService final : public nsICookieService
     bool                          FindSecureCookie(const nsCookieKey& aKey, nsCookie* aCookie);
     int64_t                       FindStaleCookie(nsCookieEntry *aEntry, int64_t aCurrentTime, nsIURI* aSource, const mozilla::Maybe<bool> &aIsSecure, nsListIter &aIter);
     void                          TelemetryForEvictingStaleCookie(nsCookie* aEvicted, int64_t oldestCookieTime);
-    void                          NotifyRejected(nsIURI *aHostURI);
+    void                          NotifyRejected(nsIURI *aHostURI, nsIChannel* aChannel, uint32_t aRejectedReason);
     void                          NotifyThirdParty(nsIURI *aHostURI, bool aAccepted, nsIChannel *aChannel);
     void                          NotifyChanged(nsISupports *aSubject, const char16_t *aData, bool aOldCookieIsSession = false, bool aFromHttp = false);
     void                          NotifyPurged(nsICookie2* aCookie);

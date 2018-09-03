@@ -79,7 +79,7 @@ var SessionFile = {
 
   get MaxWriteFailures() {
     return kMaxWriteFailures;
-  }
+  },
 };
 
 Object.freeze(SessionFile);
@@ -185,7 +185,7 @@ var SessionFileInternal = {
   // Object that keeps statistics that should help us make informed decisions
   // about the current status of the worker.
   _workerHealth: {
-    failures: 0
+    failures: 0,
   },
 
   // `true` once we have started initialization of the worker.
@@ -244,7 +244,7 @@ var SessionFileInternal = {
           origin: key,
           source,
           parsed,
-          useOldExtension
+          useOldExtension,
         };
         Telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").
           add(false);
@@ -297,7 +297,7 @@ var SessionFileInternal = {
         origin: "empty",
         source: "",
         parsed: null,
-        useOldExtension: false
+        useOldExtension: false,
       };
     }
     this._readOrigin = result.origin;
@@ -338,7 +338,7 @@ var SessionFileInternal = {
       SessionWorker.post("init", [this._readOrigin, this._usingOldExtension, this.Paths, {
         maxUpgradeBackups: Services.prefs.getIntPref(PREF_MAX_UPGRADE_BACKUPS, 3),
         maxSerializeBack: Services.prefs.getIntPref(PREF_MAX_SERIALIZE_BACK, 10),
-        maxSerializeForward: Services.prefs.getIntPref(PREF_MAX_SERIALIZE_FWD, -1)
+        maxSerializeForward: Services.prefs.getIntPref(PREF_MAX_SERIALIZE_FWD, -1),
       }]).catch(err => {
         // Ensure that we report errors but that they do not stop us.
         Promise.reject(err);
@@ -421,7 +421,7 @@ var SessionFileInternal = {
           attempts: this._attempts,
           successes: this._successes,
           failures: this._failures,
-        })
+        }),
       });
 
     // This code will always be executed because |promise| can't fail anymore.
@@ -461,5 +461,5 @@ var SessionFileInternal = {
         histogram.add(sample);
       }
     }
-  }
+  },
 };

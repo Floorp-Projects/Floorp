@@ -41,7 +41,7 @@ function fakeSvcWinMediator() {
   Services.wm = {
     getEnumerator() {
       return [getNext(), getNext()];
-    }
+    },
   };
   return logs;
 }

@@ -7,7 +7,7 @@ const TELEMETRY_RESULT_ENUM = {
   KEPT_CURRENT: 1,
   CHANGED_ENGINE: 2,
   CLOSED_PAGE: 3,
-  OPENED_SETTINGS: 4
+  OPENED_SETTINGS: 4,
 };
 
 const kSearchStr = "a search";
@@ -74,7 +74,7 @@ var gTests = [
 
     checkTelemetryRecords(TELEMETRY_RESULT_ENUM.KEPT_CURRENT);
     is(Services.prefs.getCharPref(kStatusPref), "declined");
-  }
+  },
 },
 
 {
@@ -104,7 +104,7 @@ var gTests = [
     checkTelemetryRecords(TELEMETRY_RESULT_ENUM.RESTORED_DEFAULT);
     is(Services.prefs.getCharPref(kStatusPref), "accepted");
     Services.search.currentEngine = currentEngine;
-  }
+  },
 },
 
 {
@@ -119,7 +119,7 @@ var gTests = [
 
     checkTelemetryRecords(TELEMETRY_RESULT_ENUM.OPENED_SETTINGS);
     is(Services.prefs.getCharPref(kStatusPref), "customized");
-  }
+  },
 },
 
 {
@@ -130,7 +130,7 @@ var gTests = [
 
     checkTelemetryRecords(TELEMETRY_RESULT_ENUM.CLOSED_PAGE);
     is(Services.prefs.getCharPref(kStatusPref), "pending");
-  }
+  },
 },
 
 ];

@@ -51,8 +51,8 @@ function checkUpdates(aData) {
 
   let manifestJSON = {
     "addons": {
-      [aData.id]: addonData
-    }
+      [aData.id]: addonData,
+    },
   };
 
   mapManifest(path.replace(/\?.*/, ""),
@@ -66,7 +66,7 @@ function checkUpdates(aData) {
 
       onUpdateCheckError(status) {
         reject(new Error("Update check failed with status " + status));
-      }
+      },
     });
   });
 }
@@ -81,8 +81,8 @@ add_task(async function test_default_values() {
     id: "updatecheck-defaults@tests.mozilla.org",
     version: "0.1",
     updates: [{
-      version: "0.2"
-    }]
+      version: "0.2",
+    }],
   });
 
   equal(updates.length, 1);
@@ -109,8 +109,8 @@ add_task(async function test_default_values() {
     version: "0.1",
     updates: [{
       version: "0.2",
-      applications: { "foo": {} }
-    }]
+      applications: { "foo": {} },
+    }],
   });
 
   equal(updates.length, 0);
@@ -140,10 +140,10 @@ add_task(async function test_explicit_values() {
       applications: {
         gecko: {
           strict_min_version: "42.0a2.xpcshell",
-          strict_max_version: "43.xpcshell"
-        }
-      }
-    }]
+          strict_max_version: "43.xpcshell",
+        },
+      },
+    }],
   });
 
   equal(updates.length, 1);
@@ -185,7 +185,7 @@ add_task(async function test_secure_hashes() {
     return checkUpdates({
       id: "updatecheck-hashes@tests.mozilla.org",
       version: "0.1",
-      updates: updateItems
+      updates: updateItems,
     });
   });
 
@@ -225,7 +225,7 @@ add_task(async function test_strict_compat() {
         { version: "0.5",
           applications: { gecko: { advisory_max_version: "43",
                                    strict_max_version: "44" } } },
-      ]
+      ],
     });
   });
 
@@ -262,7 +262,7 @@ add_task(async function test_update_url_security() {
         { version: "0.3",
           update_link: "http://example.com/update.xpi",
           update_hash: "sha256:18ac852190ecd81f40a514ea9299fe9143d9ab5e296b97e73fb2a314de49648a" },
-      ]
+      ],
     });
   });
 
@@ -322,7 +322,7 @@ add_task(async function test_type_detection() {
           version: "0.1",
           contentType: test.contentType,
           manifestExtension: test.extension,
-          updates: [{ version: "0.2" }]
+          updates: [{ version: "0.2" }],
         });
       } catch (e) {
         ok(!test.valid, "update manifest correctly detected as RDF");

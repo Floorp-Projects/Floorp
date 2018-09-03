@@ -16,10 +16,10 @@ function test() {
       windows: [{
         tabs: [
           { entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }] },
-          { entries: [], userTypedValue: "example.com", userTypedClear: 0 }
+          { entries: [], userTypedValue: "example.com", userTypedClear: 0 },
         ],
-        selected: 2
-      }]
+        selected: 2,
+      }],
     };
 
     waitForBrowserState(state, function() {
@@ -64,10 +64,10 @@ function test() {
       windows: [{
         tabs: [
           { entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }] },
-          { entries: [], userTypedValue: "example.org", userTypedClear: 0 }
+          { entries: [], userTypedValue: "example.org", userTypedClear: 0 },
         ],
-        selected: 1
-      }]
+        selected: 1,
+      }],
     };
 
     waitForBrowserState(state, function() {
@@ -118,9 +118,9 @@ function test() {
                     { url: "about:config", triggeringPrincipal_base64 }],
           index: 2,
           userTypedValue: "example.com",
-          userTypedClear: 0
-        }]
-      }]
+          userTypedClear: 0,
+        }],
+      }],
     };
 
     waitForBrowserState(state, function() {
@@ -148,9 +148,9 @@ function test() {
                     { url: "about:config", triggeringPrincipal_base64 }],
           index: 1,
           userTypedValue: "example.org",
-          userTypedClear: 0
-        }]
-      }]
+          userTypedClear: 0,
+        }],
+      }],
     };
 
     waitForBrowserState(state, function() {
@@ -185,7 +185,7 @@ function test() {
           gBrowser.removeTabsProgressListener(this);
           firstLocationChange();
         }
-      }
+      },
     });
 
     function firstLocationChange() {
@@ -217,8 +217,8 @@ function test() {
   function test_getBrowserState_userTypedValue() {
     let state = {
       windows: [{
-        tabs: [{ entries: [] }]
-      }]
+        tabs: [{ entries: [] }],
+      }],
     };
 
     waitForBrowserState(state, function() {
@@ -257,9 +257,9 @@ function test() {
     let state = {
       windows: [{
         tabs: [
-          { entries: [], userTypedValue: "http://example.com", userTypedClear: 2 }
-        ]
-      }]
+          { entries: [], userTypedValue: "http://example.com", userTypedClear: 2 },
+        ],
+      }],
     };
 
     waitForBrowserState(state, function() {
@@ -284,8 +284,8 @@ function test() {
   let originalState = JSON.parse(ss.getBrowserState());
   let state = {
     windows: [{
-      tabs: [{ entries: [{ url: "about:blank", triggeringPrincipal_base64 }] }]
-    }]
+      tabs: [{ entries: [{ url: "about:blank", triggeringPrincipal_base64 }] }],
+    }],
   };
   function runNextTest() {
     if (tests.length) {

@@ -153,6 +153,7 @@ public:
 
     bool UseTextureFromPixmap() { return mUseTextureFromPixmap; }
     bool HasRobustness() { return mHasRobustness; }
+    bool HasVideoMemoryPurge() { return mHasVideoMemoryPurge; }
     bool HasCreateContextAttribs() { return mHasCreateContextAttribs; }
     bool SupportsTextureFromPixmap(gfxASurface* aSurface);
     bool SupportsVideoSync();
@@ -210,6 +211,7 @@ private:
     bool mUseTextureFromPixmap = false;
     bool mDebug = false;
     bool mHasRobustness = false;
+    bool mHasVideoMemoryPurge = false;
     bool mHasCreateContextAttribs = false;
     bool mHasVideoSync = false;
     bool mIsATI = false;

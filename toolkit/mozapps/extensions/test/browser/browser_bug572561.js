@@ -10,7 +10,7 @@ var gCategoryUtilities;
 var gProvider;
 var gInstallProperties = [{
   name: "Locale Category Test",
-  type: "locale"
+  type: "locale",
 }];
 var gInstall;
 var gExpectedCancel = false;
@@ -33,7 +33,7 @@ var gTestInstallListener = {
   onInstallFailed(aInstall) {
     ok(false, "Did not expect onInstallFailed");
     run_next_test();
-  }
+  },
 };
 
 async function test() {

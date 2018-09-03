@@ -110,12 +110,25 @@
  * Flex Item List
  */
 
-#flex-item-list {
+.flex-item-list {
   border-bottom: 1px solid var(--theme-splitter-color);
   font-size: 12px;
   margin: 0;
+  padding-inline-start: 34px;
   padding-top: 5px;
   padding-bottom: 5px;
+}
+
+.flex-item-list .devtools-button {
+  background-color: transparent;
+}
+
+/**
+ * Flex Item Sizing Properties
+ */
+
+#flex-item-sizing-properties span {
+ font-weight: 600;
 }
 
 /**

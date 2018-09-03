@@ -22,7 +22,7 @@ function createAppInfo(ID, name, version, platformVersion = "1.0") {
       if (outer != null)
         throw Cr.NS_ERROR_NO_AGGREGATION;
       return gAppInfo.QueryInterface(iid);
-    }
+    },
   };
 
   let registrar =

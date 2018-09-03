@@ -16,7 +16,7 @@ use time::precise_time_ns;
 use {AlphaType, BorderDetails, BorderDisplayItem, BorderRadius, BorderWidths, BoxShadowClipMode};
 use {BoxShadowDisplayItem, ClipAndScrollInfo, ClipChainId, ClipChainItem, ClipDisplayItem, ClipId};
 use {ColorF, ComplexClipRegion, DisplayItem, ExtendMode, ExternalScrollId, FilterOp};
-use {FontInstanceKey, GlyphInstance, GlyphOptions, GlyphRasterSpace, Gradient};
+use {FontInstanceKey, GlyphInstance, GlyphOptions, GlyphRasterSpace, Gradient, GradientBuilder};
 use {GradientDisplayItem, GradientStop, IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask};
 use {ImageRendering, LayoutPoint, LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform};
 use {LayoutVector2D, LineDisplayItem, LineOrientation, LineStyle, MixBlendMode, PipelineId};
@@ -947,7 +947,12 @@ impl DisplayListBuilder {
         index
     }
 
-    fn push_item(&mut self, item: SpecificDisplayItem, info: &LayoutPrimitiveInfo) {
+    /// Add an item to the display list.
+    ///
+    /// NOTE: It is usually preferable to use the specialized methods to push
+    /// display items. Pushing unexpected or invalid items here may
+    /// result in WebRender panicking or behaving in unexpected ways.
+    pub fn push_item(&mut self, item: SpecificDisplayItem, info: &LayoutPrimitiveInfo) {
         serialize_fast(
             &mut self.data,
             &DisplayItem {
@@ -1018,7 +1023,11 @@ impl DisplayListBuilder {
         debug_assert_eq!(len, count);
     }
 
-    fn push_iter<I>(&mut self, iter: I)
+    /// Push items from an iterator to the display list.
+    ///
+    /// NOTE: Pushing unexpected or invalid items to the display list
+    /// may result in panic and confusion.
+    pub fn push_iter<I>(&mut self, iter: I)
     where
         I: IntoIterator,
         I::IntoIter: ExactSizeIterator + Clone,
@@ -1112,129 +1121,34 @@ impl DisplayListBuilder {
         }
     }
 
-    // Gradients can be defined with stops outside the range of [0, 1]
-    // when this happens the gradient needs to be normalized by adjusting
-    // the gradient stops and gradient line into an equivalent gradient
-    // with stops in the range [0, 1]. this is done by moving the beginning
-    // of the gradient line to where stop[0] and the end of the gradient line
-    // to stop[n-1]. this function adjusts the stops in place, and returns
-    // the amount to adjust the gradient line start and stop
-    fn normalize_stops(stops: &mut Vec<GradientStop>, extend_mode: ExtendMode) -> (f32, f32) {
-        assert!(stops.len() >= 2);
-
-        let first = *stops.first().unwrap();
-        let last = *stops.last().unwrap();
-
-        assert!(first.offset <= last.offset);
-
-        let stops_delta = last.offset - first.offset;
-
-        if stops_delta > 0.000001 {
-            for stop in stops {
-                stop.offset = (stop.offset - first.offset) / stops_delta;
-            }
-
-            (first.offset, last.offset)
-        } else {
-            // We have a degenerate gradient and can't accurately transform the stops
-            // what happens here depends on the repeat behavior, but in any case
-            // we reconstruct the gradient stops to something simpler and equivalent
-            stops.clear();
-
-            match extend_mode {
-                ExtendMode::Clamp => {
-                    // This gradient is two colors split at the offset of the stops,
-                    // so create a gradient with two colors split at 0.5 and adjust
-                    // the gradient line so 0.5 is at the offset of the stops
-                    stops.push(GradientStop { color: first.color, offset: 0.0, });
-                    stops.push(GradientStop { color: first.color, offset: 0.5, });
-                    stops.push(GradientStop { color: last.color, offset: 0.5, });
-                    stops.push(GradientStop { color: last.color, offset: 1.0, });
-
-                    let offset = last.offset;
-
-                    (offset - 0.5, offset + 0.5)
-                }
-                ExtendMode::Repeat => {
-                    // A repeating gradient with stops that are all in the same
-                    // position should just display the last color. I believe the
-                    // spec says that it should be the average color of the gradient,
-                    // but this matches what Gecko and Blink does
-                    stops.push(GradientStop { color: last.color, offset: 0.0, });
-                    stops.push(GradientStop { color: last.color, offset: 1.0, });
-
-                    (0.0, 1.0)
-                }
-            }
-        }
-    }
-
-    // NOTE: gradients must be pushed in the order they're created
-    // because create_gradient stores the stops in anticipation
+    /// NOTE: gradients must be pushed in the order they're created
+    /// because create_gradient stores the stops in anticipation.
     pub fn create_gradient(
         &mut self,
         start_point: LayoutPoint,
         end_point: LayoutPoint,
-        mut stops: Vec<GradientStop>,
+        stops: Vec<GradientStop>,
         extend_mode: ExtendMode,
     ) -> Gradient {
-        let (start_offset, end_offset) =
-            DisplayListBuilder::normalize_stops(&mut stops, extend_mode);
-
-        let start_to_end = end_point - start_point;
-
-        self.push_stops(&stops);
-
-        Gradient {
-            start_point: start_point + start_to_end * start_offset,
-            end_point: start_point + start_to_end * end_offset,
-            extend_mode,
-        }
+        let mut builder = GradientBuilder::with_stops(stops);
+        let gradient = builder.gradient(start_point, end_point, extend_mode);
+        self.push_stops(builder.stops());
+        gradient
     }
 
-    // NOTE: gradients must be pushed in the order they're created
-    // because create_gradient stores the stops in anticipation
+    /// NOTE: gradients must be pushed in the order they're created
+    /// because create_gradient stores the stops in anticipation.
     pub fn create_radial_gradient(
         &mut self,
         center: LayoutPoint,
         radius: LayoutSize,
-        mut stops: Vec<GradientStop>,
+        stops: Vec<GradientStop>,
         extend_mode: ExtendMode,
     ) -> RadialGradient {
-        if radius.width <= 0.0 || radius.height <= 0.0 {
-            // The shader cannot handle a non positive radius. So
-            // reuse the stops vector and construct an equivalent
-            // gradient.
-            let last_color = stops.last().unwrap().color;
-
-            let stops = [
-                GradientStop { offset: 0.0, color: last_color, },
-                GradientStop { offset: 1.0, color: last_color, },
-            ];
-
-            self.push_stops(&stops);
-
-            return RadialGradient {
-                center,
-                radius: LayoutSize::new(1.0, 1.0),
-                start_offset: 0.0,
-                end_offset: 1.0,
-                extend_mode,
-            };
-        }
-
-        let (start_offset, end_offset) =
-            DisplayListBuilder::normalize_stops(&mut stops, extend_mode);
-
-        self.push_stops(&stops);
-
-        RadialGradient {
-            center,
-            radius,
-            start_offset,
-            end_offset,
-            extend_mode,
-        }
+        let mut builder = GradientBuilder::with_stops(stops);
+        let gradient = builder.radial_gradient(center, radius, extend_mode);
+        self.push_stops(builder.stops());
+        gradient
     }
 
     pub fn push_border(

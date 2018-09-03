@@ -177,7 +177,7 @@ Probe.prototype = {
       throw new TypeError();
     }
     return this._impl.compose(stats);
-  }
+  },
 };
 
 // Utility function. Return the position of the last non-0 item in an
@@ -224,7 +224,7 @@ var Probes = {
         totalSystemTime: xpcom.totalSystemTime,
         totalCPUTime: xpcom.totalUserTime + xpcom.totalSystemTime,
         durations,
-        longestDuration: lastNonZero(durations)
+        longestDuration: lastNonZero(durations),
       };
     },
     isEqual(a, b) {
@@ -264,7 +264,7 @@ var Probes = {
         totalSystemTime: 0,
         totalCPUTime: 0,
         durations: [],
-        longestDuration: -1
+        longestDuration: -1,
       };
       for (let stat of stats) {
         result.totalUserTime += stat.totalUserTime;
@@ -276,7 +276,7 @@ var Probes = {
         result.longestDuration = Math.max(result.longestDuration, stat.longestDuration);
       }
       return result;
-    }
+    },
   }),
 
   /**
@@ -296,7 +296,7 @@ var Probes = {
     },
     extract(xpcom) {
       return {
-        totalCPOWTime: xpcom.totalCPOWTime
+        totalCPOWTime: xpcom.totalCPOWTime,
       };
     },
     isEqual(a, b) {
@@ -304,7 +304,7 @@ var Probes = {
     },
     subtract(a, b) {
       return {
-        totalCPOWTime: a.totalCPOWTime - b.totalCPOWTime
+        totalCPOWTime: a.totalCPOWTime - b.totalCPOWTime,
       };
     },
     importChildCompartments() { /* nothing to do */ },
@@ -333,7 +333,7 @@ var Probes = {
     get isActive() { return true; },
     extract(xpcom) {
       return {
-        ticks: xpcom.ticks
+        ticks: xpcom.ticks,
       };
     },
     isEqual(a, b) {
@@ -341,7 +341,7 @@ var Probes = {
     },
     subtract(a, b) {
       return {
-        ticks: a.ticks - b.ticks
+        ticks: a.ticks - b.ticks,
       };
     },
     importChildCompartments() { /* nothing to do */ },
@@ -481,7 +481,7 @@ PerformanceMonitor.prototype = {
         xpcom,
         childProcesses,
         probes,
-        date: Cu.now()
+        date: Cu.now(),
       });
     })();
   },
@@ -503,7 +503,7 @@ PerformanceMonitor.prototype = {
     this._probes = null;
     this._id = null;
     this._finalizer = null;
-  }
+  },
 };
 /**
  * @type {Map<string, Array<string>>} A map from id (as produced by `makeId`)
@@ -571,7 +571,7 @@ var PerformanceStats = {
    */
   getMonitor(probes) {
     return PerformanceMonitor.make(probes);
-  }
+  },
 };
 
 
@@ -656,7 +656,7 @@ PerformanceDataLeaf.prototype = {
    */
   subtract(to = null) {
     return (new PerformanceDiffLeaf(this, to));
-  }
+  },
 };
 
 function PerformanceData(timestamp) {
@@ -717,7 +717,7 @@ PerformanceData.prototype = {
   },
   get title() {
     return this._all[0].title;
-  }
+  },
 };
 
 function PerformanceDiff(current, old = null) {
@@ -776,7 +776,7 @@ PerformanceDiff.prototype = {
   },
   get processes() {
     return this._all.map(item => ({ isChildProcess: item.isChildProcess, processId: item.processId}));
-  }
+  },
 };
 
 /**
@@ -976,5 +976,5 @@ var Process = {
     this.loader.removeMessageListener(TOPIC, observer);
 
     return collected;
-  }
+  },
 };

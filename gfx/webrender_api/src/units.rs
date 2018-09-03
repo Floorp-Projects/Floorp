@@ -44,6 +44,12 @@ pub struct PicturePixel;
 pub type PictureIntRect = TypedRect<i32, PicturePixel>;
 pub type PictureIntPoint = TypedPoint2D<i32, PicturePixel>;
 pub type PictureIntSize = TypedSize2D<i32, PicturePixel>;
+pub type PictureRect = TypedRect<f32, PicturePixel>;
+pub type PicturePoint = TypedPoint2D<f32, PicturePixel>;
+pub type PictureSize = TypedSize2D<f32, PicturePixel>;
+pub type PicturePoint3D = TypedPoint3D<f32, PicturePixel>;
+pub type PictureVector2D = TypedVector2D<f32, PicturePixel>;
+pub type PictureVector3D = TypedVector3D<f32, PicturePixel>;
 
 /// Geometry in a stacking context's local coordinate space (logical pixels).
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Deserialize, Serialize)]
@@ -55,21 +61,6 @@ pub type LayoutPoint3D = TypedPoint3D<f32, LayoutPixel>;
 pub type LayoutVector2D = TypedVector2D<f32, LayoutPixel>;
 pub type LayoutVector3D = TypedVector3D<f32, LayoutPixel>;
 pub type LayoutSize = TypedSize2D<f32, LayoutPixel>;
-
-/// Geometry in a layer's scrollable parent coordinate space (logical pixels).
-///
-/// Some layers are scrollable while some are not. There is a distinction between
-/// a layer's parent layer and a layer's scrollable parent layer (its closest parent
-/// that is scrollable, but not necessarily its immediate parent). Most of the internal
-/// transforms are expressed in terms of the scrollable parent and not the immediate
-/// parent.
-#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct ScrollLayerPixel;
-
-pub type ScrollLayerRect = TypedRect<f32, ScrollLayerPixel>;
-pub type ScrollLayerPoint = TypedPoint2D<f32, ScrollLayerPixel>;
-pub type ScrollLayerVector2D = TypedVector2D<f32, ScrollLayerPixel>;
-pub type ScrollLayerSize = TypedSize2D<f32, ScrollLayerPixel>;
 
 /// Geometry in the document's coordinate space (logical pixels).
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -97,24 +88,16 @@ pub type LayoutToWorldScale = TypedScale<f32, LayoutPixel, WorldPixel>;
 pub type LayoutToDeviceScale = TypedScale<f32, LayoutPixel, DevicePixel>;
 
 pub type LayoutTransform = TypedTransform3D<f32, LayoutPixel, LayoutPixel>;
-pub type LayoutToScrollTransform = TypedTransform3D<f32, LayoutPixel, ScrollLayerPixel>;
-pub type ScrollToLayoutTransform = TypedTransform3D<f32, ScrollLayerPixel, LayoutPixel>;
 pub type LayoutToWorldTransform = TypedTransform3D<f32, LayoutPixel, WorldPixel>;
 pub type WorldToLayoutTransform = TypedTransform3D<f32, WorldPixel, LayoutPixel>;
-pub type ScrollToWorldTransform = TypedTransform3D<f32, ScrollLayerPixel, WorldPixel>;
+
+pub type LayoutToPictureTransform = TypedTransform3D<f32, LayoutPixel, PicturePixel>;
+pub type PictureToLayoutTransform = TypedTransform3D<f32, PicturePixel, LayoutPixel>;
 
 // Fixed position coordinates, to avoid float precision errors.
 pub type LayoutPointAu = TypedPoint2D<Au, LayoutPixel>;
 pub type LayoutRectAu = TypedRect<Au, LayoutPixel>;
 pub type LayoutSizeAu = TypedSize2D<Au, LayoutPixel>;
-
-pub fn as_scroll_parent_rect(rect: &LayoutRect) -> ScrollLayerRect {
-    ScrollLayerRect::from_untyped(&rect.to_untyped())
-}
-
-pub fn as_scroll_parent_vector(vector: &LayoutVector2D) -> ScrollLayerVector2D {
-    ScrollLayerVector2D::from_untyped(&vector.to_untyped())
-}
 
 /// Coordinates in normalized space (between zero and one).
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]

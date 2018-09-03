@@ -63,7 +63,7 @@ var move = {
       return CustomizableUI.removeWidgetFromArea(id);
     }
     return CustomizableUI.addWidgetToArea(id, target, null);
-  }
+  },
 };
 
 function isLast(containerId, defaultPlacements, id) {

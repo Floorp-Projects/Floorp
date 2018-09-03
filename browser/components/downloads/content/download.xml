@@ -111,9 +111,8 @@
   </binding>
 
   <binding id="download-subview-toolbarbutton"
-           extends="chrome://global/content/bindings/button.xml#menu-button-base">
+           extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
       <xul:vbox class="toolbarbutton-text" flex="1">
         <xul:label crop="end" xbl:inherits="value=label,accesskey,crop,wrap"/>

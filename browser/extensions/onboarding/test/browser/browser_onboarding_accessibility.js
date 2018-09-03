@@ -52,7 +52,7 @@ add_task(async function test_onboarding_notification_bar() {
     [
       "onboarding-notification-message-section",
       "onboarding-notification-tour-icon",
-      "onboarding-notification-body"
+      "onboarding-notification-body",
     ].forEach(id =>
       is(doc.getElementById(id).getAttribute("role"), "presentation",
         "Element is only used for presentation"));

@@ -16,8 +16,8 @@ async function run_test() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "0.1",
-      maxVersion: "0.2"
-    }]
+      maxVersion: "0.2",
+    }],
   }, profileDir);
 
   await promiseStartupManager();
@@ -40,8 +40,8 @@ async function run_test_1() {
 
   prepare_test({
     "addon1@tests.mozilla.org": [
-      ["onPropertyChanged", ["appDisabled"]]
-    ]
+      ["onPropertyChanged", ["appDisabled"]],
+    ],
   }, [], run_test_2);
 
   AddonManager.strictCompatibility = true;
@@ -56,8 +56,8 @@ async function run_test_2() {
 
   prepare_test({
     "addon1@tests.mozilla.org": [
-      ["onPropertyChanged", ["appDisabled"]]
-    ]
+      ["onPropertyChanged", ["appDisabled"]],
+    ],
   }, [], callback_soon(do_test_finished));
 
   AddonManager.strictCompatibility = false;

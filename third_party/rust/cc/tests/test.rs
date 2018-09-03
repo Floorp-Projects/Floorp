@@ -1,6 +1,7 @@
 extern crate cc;
 extern crate tempdir;
 
+use std::env;
 use support::Test;
 
 mod support;
@@ -108,6 +109,30 @@ fn gnu_warnings_overridable() {
 
     test.cmd(0)
         .must_have_in_order("-Wall", "-Wno-missing-field-initializers");
+}
+
+#[test]
+fn gnu_no_warnings_if_cflags() {
+    env::set_var("CFLAGS", "-Wflag-does-not-exist");
+    let test = Test::gnu();
+    test.gcc()
+        .file("foo.c")
+        .compile("foo");
+
+    test.cmd(0).must_not_have("-Wall").must_not_have("-Wextra");
+    env::set_var("CFLAGS", "");
+}
+
+#[test]
+fn gnu_no_warnings_if_cxxflags() {
+    env::set_var("CXXFLAGS", "-Wflag-does-not-exist");
+    let test = Test::gnu();
+    test.gcc()
+        .file("foo.c")
+        .compile("foo");
+
+    test.cmd(0).must_not_have("-Wall").must_not_have("-Wextra");
+    env::set_var("CXXFLAGS", "");
 }
 
 #[test]
@@ -230,12 +255,14 @@ fn gnu_flag_if_supported() {
     let test = Test::gnu();
     test.gcc()
         .file("foo.c")
+        .flag("-v")
         .flag_if_supported("-Wall")
         .flag_if_supported("-Wflag-does-not-exist")
         .flag_if_supported("-std=c++11")
         .compile("foo");
 
     test.cmd(0)
+        .must_have("-v")
         .must_have("-Wall")
         .must_not_have("-Wflag-does-not-exist")
         .must_not_have("-std=c++11");

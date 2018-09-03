@@ -39,7 +39,7 @@ const TOUR_LIST_TEST_DATA = [
   { key: "VK_TAB", options: { shiftKey: true }, expected: { tourId: TOUR_IDs[4], focusedId: TOUR_IDs[3] }},
   { key: "VK_TAB", options: { shiftKey: true }, expected: { tourId: TOUR_IDs[4], focusedId: TOUR_IDs[2] }},
   // VK_SPACE does not work well with EventUtils#synthesizeKey use " " instead
-  { key: " ", expected: { tourId: TOUR_IDs[2], focusedId: TOUR_IDs[2] }}
+  { key: " ", expected: { tourId: TOUR_IDs[2], focusedId: TOUR_IDs[2] }},
 ];
 
 const BUTTONS_TEST_DATA = [
@@ -54,7 +54,7 @@ const BUTTONS_TEST_DATA = [
   { key: "VK_TAB", options: { shiftKey: true }, expected: { focusedId: "onboarding-overlay-close-btn", visible: true }},
   { key: "VK_TAB", expected: { focusedId: TOUR_IDs[0], visible: true }},
   { key: "VK_TAB", options: { shiftKey: true }, expected: { focusedId: "onboarding-overlay-close-btn", visible: true }},
-  { key: "VK_RETURN", expected: { focusedId: "onboarding-overlay-button", visible: false }}
+  { key: "VK_RETURN", expected: { focusedId: "onboarding-overlay-button", visible: false }},
 ];
 
 add_task(async function test_tour_list_keyboard_navigation() {

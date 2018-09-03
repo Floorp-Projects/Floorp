@@ -27,7 +27,6 @@
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
 #include "frontend/Parser.h"
-#include "gc/Zone.h"
 #include "js/Vector.h"
 
 #include "jsapi-tests/tests.h"

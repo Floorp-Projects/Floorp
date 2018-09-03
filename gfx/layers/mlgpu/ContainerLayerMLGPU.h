@@ -69,12 +69,15 @@ public:
     mView = aView;
   }
 
+  void ComputeIntermediateSurfaceBounds();
+
 protected:
   bool OnPrepareToRender(FrameBuilder* aBuilder) override;
   void OnLayerManagerChange(LayerManagerMLGPU* aManager) override;
-  Maybe<gfx::IntRect> ComputeIntermediateSurfaceBounds();
 
 private:
+  static Maybe<gfx::IntRect> FindVisibleBounds(Layer* aLayer, const Maybe<RenderTargetIntRect>& aClip);
+
   RefPtr<MLGRenderTarget> mRenderTarget;
 
   // We cache these since occlusion culling can change the visible region.

@@ -38,7 +38,7 @@ let gFirstPartyBasicPage = TEST_URL_PATH + "file_firstPartyBasic.html";
  */
 async function openTabInUserContext(aURL, aUserContextId) {
   let originAttributes =  {
-    userContextId: aUserContextId
+    userContextId: aUserContextId,
   };
   let triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(makeURI(aURL), originAttributes);
   // Open the tab in the correct userContextId.
@@ -109,7 +109,7 @@ async function openTabInFirstParty(aURL, aFirstPartyDomain,
     this.frameWindow = content;
 
     Object.defineProperty(this, "content", {
-      get: () => this.frameWindow
+      get: () => this.frameWindow,
     });
 
     let frameElement;
@@ -179,15 +179,15 @@ this.IsolationTestTools = {
     let testSettings = [
       { mode: TEST_MODE_FIRSTPARTY,
         skip: false,
-        prefs: [["privacy.firstparty.isolate", true]]
+        prefs: [["privacy.firstparty.isolate", true]],
       },
       { mode: TEST_MODE_NO_ISOLATION,
         skip: false,
-        prefs: [["privacy.firstparty.isolate", false]]
+        prefs: [["privacy.firstparty.isolate", false]],
       },
       { mode: TEST_MODE_CONTAINERS,
         skip: false,
-        prefs: [["privacy.userContext.enabled", true]]
+        prefs: [["privacy.userContext.enabled", true]],
       },
     ];
 
@@ -305,10 +305,10 @@ this.IsolationTestTools = {
 
     let tabSettings = aUseHttps ? [
                         { firstPartyDomain: "https://example.com", userContextId: 1},
-                        { firstPartyDomain: "https://example.org", userContextId: 2}
+                        { firstPartyDomain: "https://example.org", userContextId: 2},
                       ] : [
                         { firstPartyDomain: "http://example.com", userContextId: 1},
-                        { firstPartyDomain: "http://example.org", userContextId: 2}
+                        { firstPartyDomain: "http://example.org", userContextId: 2},
                       ];
 
     this._add_task(async function(aMode) {
@@ -366,5 +366,5 @@ this.IsolationTestTools = {
         BrowserTestUtils.removeTab(tabInfoB.tab);
       }
     });
-  }
+  },
 };

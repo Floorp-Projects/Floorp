@@ -11,7 +11,7 @@ ChromeUtils.import("resource://services-sync/constants.js", Weave);
 var lazies = {
   "service.js":           ["Service"],
   "status.js":            ["Status"],
-  "util.js":              ["Utils", "Svc"]
+  "util.js":              ["Utils", "Svc"],
 };
 
 function lazyImport(module, dest, props) {

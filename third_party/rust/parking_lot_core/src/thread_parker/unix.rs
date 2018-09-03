@@ -218,10 +218,8 @@ unsafe fn timeout_to_timespec(timeout: Duration) -> Option<libc::timespec> {
         sec = sec.and_then(|sec| sec.checked_add(1));
     }
 
-    sec.map(|sec| {
-        libc::timespec {
-            tv_nsec: nsec,
-            tv_sec: sec,
-        }
+    sec.map(|sec| libc::timespec {
+        tv_nsec: nsec,
+        tv_sec: sec,
     })
 }

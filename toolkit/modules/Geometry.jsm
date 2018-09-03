@@ -58,7 +58,7 @@ Point.prototype = {
 
   isZero() {
     return this.x == 0 && this.y == 0;
-  }
+  },
 };
 
 (function() {
@@ -342,5 +342,5 @@ Rect.prototype = {
     this.top -= fixed;
     this.bottom += fixed;
     return this;
-  }
+  },
 };

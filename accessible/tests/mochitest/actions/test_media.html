@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
       this.target = aAcc;
       this.getID = function nameChecker_getID() {
         return "name change handling";
-      },
+      };
       this.check = function nameChecker_check(aEvent) {
         is(aEvent.accessible.name, aName,
            "Wrong name of " + prettyName(aEvent.accessible) + " on focus");

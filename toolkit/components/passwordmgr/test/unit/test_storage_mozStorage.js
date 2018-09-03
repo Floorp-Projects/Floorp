@@ -423,7 +423,7 @@ Assert.ok(dbConnection.tableExists("moz_disabledHosts"));
 var disabledHosts = [
   "http://disabled1.example.com",
   "http://大.net",
-  "http://xn--19g.com"
+  "http://xn--19g.com",
 ];
 
 LoginTestUtils.assertDisabledHostsEqual(disabledHosts, getAllDisabledHostsFromMozStorage(dbConnection));

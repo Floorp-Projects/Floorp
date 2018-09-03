@@ -14,6 +14,8 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsString.h"
+#include "nsTArray.h"
+#include "nsWrapperCache.h"
 
 class nsIDocShell;
 
@@ -36,7 +38,8 @@ namespace dom {
 // BrowsingContext tree for a tab, in both the parent and the child
 // process.
 class BrowsingContext
-  : public SupportsWeakPtr<BrowsingContext>
+  : public nsWrapperCache
+  , public SupportsWeakPtr<BrowsingContext>
   , public LinkedListElement<RefPtr<BrowsingContext>>
 {
 public:
@@ -81,16 +84,28 @@ public:
   uint64_t OwnerProcessId() const;
   bool IsOwnedByProcess() const { return mProcessId.isSome(); }
 
-  BrowsingContext* Parent() const { return mParent; }
+  already_AddRefed<BrowsingContext> GetParent()
+  {
+    return do_AddRef(mParent.get());
+  }
+
+  void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
+
+  static void GetRootBrowsingContexts(
+    nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
+
+  nsISupports* GetParentObject() const;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(BrowsingContext)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BrowsingContext)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(BrowsingContext)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(BrowsingContext)
 
   using Children = AutoCleanLinkedList<RefPtr<BrowsingContext>>;
 
 private:
-  ~BrowsingContext();
+  virtual ~BrowsingContext();
 
   const uint64_t mBrowsingContextId;
 

@@ -119,7 +119,7 @@ function terminateFirefox(completion) {
         completion();
       }
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
   };
 
   process.runAsync(args, args.length, processObserver);
@@ -160,7 +160,7 @@ function launchProcess(file, args, env, timeoutMS, handler, attemptCount) {
 
       handler(true);
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
   };
 
   // The timer callback to kill the process if it takes too long.
@@ -180,7 +180,7 @@ function launchProcess(file, args, env, timeoutMS, handler, attemptCount) {
         });
       }
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
   };
 
   info("launching application: " + file.path);
@@ -212,7 +212,7 @@ function run_test() {
     { key: "MOZ_CRASHREPORTER", value: "1" },
     { key: "MOZ_CRASHREPORTER_NO_REPORT", value: "1" },
     { key: "MOZ_CRASHREPORTER_SHUTDOWN", value: "1" },
-    { key: "XPCOM_DEBUG_BREAK", value: "stack-and-abort" }
+    { key: "XPCOM_DEBUG_BREAK", value: "stack-and-abort" },
   ];
 
   let triesStarted = 1;

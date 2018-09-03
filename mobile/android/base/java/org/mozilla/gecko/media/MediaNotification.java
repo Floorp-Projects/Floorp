@@ -8,25 +8,19 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 public final class MediaNotification implements Parcelable {
-    private final boolean onGoing;
     private final int visibility;
     private final int tabId;
     private final String title;
     private final String text;
     private final byte[] bitmapBytes;
 
-    /* package */ MediaNotification(boolean onGoing, int visibility, int tabId,
+    /* package */ MediaNotification(int visibility, int tabId,
                       String title, String content, byte[] bitmapByteArray) {
-        this.onGoing = onGoing;
         this.visibility = visibility;
         this.tabId = tabId;
         this.title = title;
         this.text = content;
         this.bitmapBytes = bitmapByteArray;
-    }
-
-    /* package */ boolean isOnGoing() {
-        return onGoing;
     }
 
     /* package */ int getVisibility() {
@@ -56,7 +50,6 @@ public final class MediaNotification implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeByte((byte) (onGoing ? 1 : 0));
         dest.writeInt(visibility);
         dest.writeInt(tabId);
         dest.writeString(title);
@@ -68,7 +61,6 @@ public final class MediaNotification implements Parcelable {
     public static final Parcelable.Creator<MediaNotification> CREATOR = new Parcelable.Creator<MediaNotification>() {
         @Override
         public MediaNotification createFromParcel(final Parcel source) {
-            final boolean onGoing = source.readByte() != 0;
             final int visibility = source.readInt();
             final int tabId = source.readInt();
             final String title = source.readString();
@@ -77,7 +69,7 @@ public final class MediaNotification implements Parcelable {
             final byte[] bitmapBytes = new byte[arrayLength];
             source.readByteArray(bitmapBytes);
 
-            return new MediaNotification(onGoing, visibility, tabId, title, text, bitmapBytes);
+            return new MediaNotification(visibility, tabId, title, text, bitmapBytes);
         }
 
         @Override

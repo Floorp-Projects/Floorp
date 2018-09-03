@@ -34,7 +34,7 @@ var gTests = [
 
         tab = BrowserTestUtils.addTab(gBrowser, HTTP_PATH + HTTP_ENDPOINT + "?generic");
       });
-    }
+    },
   },
   {
     desc: "WebChannel generic message in a private window.",
@@ -54,7 +54,7 @@ var gTests = [
       await BrowserTestUtils.openNewForegroundTab(privateWindow.gBrowser, url);
       await promiseTestDone;
       await BrowserTestUtils.closeWindow(privateWindow);
-    }
+    },
   },
   {
     desc: "WebChannel two way communication",
@@ -81,7 +81,7 @@ var gTests = [
 
         tab = BrowserTestUtils.addTab(gBrowser, HTTP_PATH + HTTP_ENDPOINT + "?twoway");
       });
-    }
+    },
   },
   {
     desc: "WebChannel two way communication in an iframe",
@@ -109,13 +109,13 @@ var gTests = [
       });
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: HTTP_PATH + HTTP_ENDPOINT + "?iframe"
+        url: HTTP_PATH + HTTP_ENDPOINT + "?iframe",
       }, async function() {
         await promiseTestDone;
         parentChannel.stopListening();
         iframeChannel.stopListening();
       });
-    }
+    },
   },
   {
     desc: "WebChannel response to a redirected iframe",
@@ -173,13 +173,13 @@ var gTests = [
 
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: HTTP_PATH + HTTP_ENDPOINT + "?iframe_pre_redirect"
+        url: HTTP_PATH + HTTP_ENDPOINT + "?iframe_pre_redirect",
       }, async function() {
         await promiseTestDone;
         preRedirectChannel.stopListening();
         postRedirectChannel.stopListening();
       });
-    }
+    },
   },
   {
     desc: "WebChannel multichannel",
@@ -196,7 +196,7 @@ var gTests = [
 
         tab = BrowserTestUtils.addTab(gBrowser, HTTP_PATH + HTTP_ENDPOINT + "?multichannel");
       });
-    }
+    },
   },
   {
     desc: "WebChannel unsolicited send, using system principal",
@@ -217,16 +217,16 @@ var gTests = [
 
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited"
+        url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited",
       }, async function(targetBrowser) {
         channel.send({ command: "unsolicited" }, {
           browser: targetBrowser,
-          principal: Services.scriptSecurityManager.getSystemPrincipal()
+          principal: Services.scriptSecurityManager.getSystemPrincipal(),
         });
         await messagePromise;
         channel.stopListening();
       });
-    }
+    },
   },
   {
     desc: "WebChannel unsolicited send, using target origin's principal",
@@ -248,7 +248,7 @@ var gTests = [
 
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited"
+        url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited",
       }, async function(targetBrowser) {
 
         channel.send({ command: "unsolicited" }, {
@@ -259,7 +259,7 @@ var gTests = [
         await messagePromise;
         channel.stopListening();
       });
-    }
+    },
   },
   {
     desc: "WebChannel unsolicited send with principal mismatch",
@@ -285,7 +285,7 @@ var gTests = [
 
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited"
+        url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited",
       }, async function(targetBrowser) {
 
         let mismatchURI = Services.io.newURI(HTTP_MISMATCH_PATH);
@@ -295,7 +295,7 @@ var gTests = [
         // to content, and should not be echoed back.
         channel.send({ command: "unsolicited_no_response_expected" }, {
           browser: targetBrowser,
-          principal: mismatchPrincipal
+          principal: mismatchPrincipal,
         });
 
         let targetPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(targetURI, {});
@@ -304,13 +304,13 @@ var gTests = [
         // should be echoed back.
         channel.send({ command: "done" }, {
           browser: targetBrowser,
-          principal: targetPrincipal
+          principal: targetPrincipal,
         });
 
         await messagePromise;
         channel.stopListening();
       });
-    }
+    },
   },
   {
     desc: "WebChannel non-window target",
@@ -341,12 +341,12 @@ var gTests = [
 
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: HTTP_PATH + HTTP_ENDPOINT + "?bubbles"
+        url: HTTP_PATH + HTTP_ENDPOINT + "?bubbles",
       }, async function() {
         await testDonePromise;
         channel.stopListening();
       });
-    }
+    },
   },
   {
     desc: "WebChannel disallows non-string message from non-whitelisted origin",
@@ -368,12 +368,12 @@ var gTests = [
       });
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: HTTP_PATH + HTTP_ENDPOINT + "?object"
+        url: HTTP_PATH + HTTP_ENDPOINT + "?object",
       }, async function() {
         await testDonePromise;
         channel.stopListening();
       });
-    }
+    },
   },
   {
     desc: "WebChannel allows both string and non-string message from whitelisted origin",
@@ -409,13 +409,13 @@ var gTests = [
       Services.prefs.setCharPref(webchannelWhitelistPref, newWhitelist);
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: HTTP_PATH + HTTP_ENDPOINT + "?object"
+        url: HTTP_PATH + HTTP_ENDPOINT + "?object",
       }, async function() {
         await testDonePromise;
         Services.prefs.setCharPref(webchannelWhitelistPref, origWhitelist);
         channel.stopListening();
       });
-    }
+    },
   },
   {
     desc: "WebChannel errors handling the message are delivered back to content",
@@ -445,13 +445,13 @@ var gTests = [
       });
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: HTTP_PATH + HTTP_ENDPOINT + "?error_thrown"
+        url: HTTP_PATH + HTTP_ENDPOINT + "?error_thrown",
       }, async function() {
         await testDonePromise;
         channel.stopListening();
         echoChannel.stopListening();
       });
-    }
+    },
   },
   {
     desc: "WebChannel errors due to an invalid channel are delivered back to content",
@@ -471,12 +471,12 @@ var gTests = [
       });
       await BrowserTestUtils.withNewTab({
         gBrowser,
-        url: HTTP_PATH + HTTP_ENDPOINT + "?error_invalid_channel"
+        url: HTTP_PATH + HTTP_ENDPOINT + "?error_invalid_channel",
       }, async function() {
         await testDonePromise;
         echoChannel.stopListening();
       });
-    }
+    },
   },
 ]; // gTests
 

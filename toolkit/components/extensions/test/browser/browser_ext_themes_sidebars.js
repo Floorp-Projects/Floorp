@@ -14,9 +14,12 @@ async function test_sidebar_theme(theme, isBrightText) {
     },
   });
 
+  const sidebarBox = document.getElementById("sidebar-box");
   const content = SidebarUI.browser.contentWindow;
   const root = content.document.documentElement;
 
+  ok(!sidebarBox.hasAttribute("lwt-sidebar"),
+     "Sidebar box should not have lwt-sidebar attribute");
   ok(!root.hasAttribute("lwt-sidebar"),
      "Sidebar should not have lwt-sidebar attribute");
   ok(!root.hasAttribute("lwt-sidebar-brighttext"),
@@ -61,12 +64,20 @@ async function test_sidebar_theme(theme, isBrightText) {
   const isCustomHighlight = !!theme.colors.sidebar_highlight_text;
   const isCustomSidebar = !!theme.colors.sidebar_text;
 
+  is(sidebarBox.hasAttribute("lwt-sidebar"), isCustomSidebar,
+     `Sidebar box should${!isCustomSidebar ? " not" : ""} have lwt-sidebar attribute`);
   is(root.hasAttribute("lwt-sidebar"), isCustomSidebar,
      `Sidebar should${!isCustomSidebar ? " not" : ""} have lwt-sidebar attribute`);
   is(root.hasAttribute("lwt-sidebar-brighttext"), isBrightText,
      `Sidebar should${!isBrightText ? " not" : ""} have lwt-sidebar-brighttext attribute`);
   is(root.hasAttribute("lwt-sidebar-highlight"), isCustomHighlight,
      `Sidebar should${!isCustomHighlight ? " not" : ""} have lwt-sidebar-highlight attribute`);
+
+  if (isCustomSidebar) {
+    const sidebarBoxCS = window.getComputedStyle(sidebarBox);
+    is(sidebarBoxCS.backgroundColor, actualBackground, "Sidebar box background should be set.");
+    is(sidebarBoxCS.color, actualColor, "Sidebar box text color should be set.");
+  }
 
   is(rootCS.backgroundColor, actualBackground, "Sidebar background should be set.");
   is(rootCS.color, actualColor, "Sidebar text color should be set.");
@@ -80,6 +91,8 @@ async function test_sidebar_theme(theme, isBrightText) {
 
   Services.ppmm.sharedData.flush();
 
+  ok(!sidebarBox.hasAttribute("lwt-sidebar"),
+     "Sidebar box should not have lwt-sidebar attribute");
   ok(!root.hasAttribute("lwt-sidebar"),
      "Sidebar should not have lwt-sidebar attribute");
   ok(!root.hasAttribute("lwt-sidebar-brighttext"),

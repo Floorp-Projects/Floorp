@@ -351,7 +351,7 @@ var StarUI = {
       anchor = document.getElementById("PanelUI-menu-button");
     }
     ConfirmationHint.show(anchor, "pageBookmarked");
-  }
+  },
 };
 
 var PlacesCommandHook = {
@@ -435,14 +435,14 @@ var PlacesCommandHook = {
 
     let defaultInsertionPoint = new PlacesInsertionPoint({
       parentId: PlacesUtils.bookmarksMenuFolderId,
-      parentGuid: PlacesUtils.bookmarks.menuGuid
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
     });
     PlacesUIUtils.showBookmarkDialog({ action: "add",
                                        type: "bookmark",
                                        uri: makeURI(url),
                                        title,
                                        defaultInsertionPoint,
-                                       hiddenRows: [ "location", "keyword" ]
+                                       hiddenRows: [ "location", "keyword" ],
                                      }, window.top);
   },
 
@@ -523,7 +523,7 @@ var PlacesCommandHook = {
   async addLiveBookmark(url, feedTitle) {
     let toolbarIP = new PlacesInsertionPoint({
       parentId: PlacesUtils.toolbarFolderId,
-      parentGuid: PlacesUtils.bookmarks.toolbarGuid
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     });
 
     let feedURI = makeURI(url);
@@ -536,7 +536,7 @@ var PlacesCommandHook = {
                                        title,
                                        defaultInsertionPoint: toolbarIP,
                                        hiddenRows: [ "feedLocation",
-                                                     "siteLocation" ]
+                                                     "siteLocation" ],
                                      }, window);
   },
 
@@ -567,10 +567,10 @@ var PlacesCommandHook = {
       gURLBar.inputField.dispatchEvent(new KeyboardEvent("keypress", {
         keyCode: code,
         charCode: code,
-        bubbles: true
+        bubbles: true,
       }));
     }
-  }
+  },
 };
 
 ChromeUtils.defineModuleGetter(this, "RecentlyClosedTabsAndWindowsMenuUtils",
@@ -719,7 +719,7 @@ HistoryMenu.prototype = {
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
     }
-  }
+  },
 };
 
 /**
@@ -857,7 +857,7 @@ var BookmarksEventHandler = {
 
     // Show tooltip.
     return true;
-  }
+  },
 };
 
 // Handles special drag and drop functionality for Places menus that are not
@@ -964,7 +964,7 @@ var PlacesMenuDNDHandler = {
   onDragOver: function PMDH_onDragOver(event) {
     let ip = new PlacesInsertionPoint({
       parentId: PlacesUtils.bookmarksMenuFolderId,
-      parentGuid: PlacesUtils.bookmarks.menuGuid
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
     });
     if (ip && PlacesControllerDragHelper.canDrop(ip, event.dataTransfer))
       event.preventDefault();
@@ -981,12 +981,12 @@ var PlacesMenuDNDHandler = {
     // Put the item at the end of bookmark menu.
     let ip = new PlacesInsertionPoint({
       parentId: PlacesUtils.bookmarksMenuFolderId,
-      parentGuid: PlacesUtils.bookmarks.menuGuid
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
     });
     PlacesControllerDragHelper.onDrop(ip, event.dataTransfer);
     PlacesControllerDragHelper.currentDropTarget = null;
     event.stopPropagation();
-  }
+  },
 };
 
 /**
@@ -1330,9 +1330,9 @@ var BookmarkingUI = {
     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`, {
       extraClasses: {
         entry: "subviewbutton",
-        footer: "panel-subview-footer"
+        footer: "panel-subview-footer",
       },
-      insertionPoint: ".panel-subview-footer"
+      insertionPoint: ".panel-subview-footer",
     });
   },
 
@@ -1787,8 +1787,8 @@ var BookmarkingUI = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsINavBookmarkObserver
-  ])
+    Ci.nsINavBookmarkObserver,
+  ]),
 };
 
 var AutoShowBookmarksToolbar = {
@@ -1811,5 +1811,5 @@ var AutoShowBookmarksToolbar = {
       return;
 
     setToolbarVisibility(toolbar, true);
-  }
+  },
 };

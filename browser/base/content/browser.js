@@ -164,7 +164,7 @@ XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
     },
     getFormattedString(key, array) {
       return gBrowserBundle.formatStringFromName(key, array, array.length);
-    }
+    },
   };
 });
 XPCOMUtils.defineLazyGetter(this, "gTabBrowserBundle", function() {
@@ -330,7 +330,7 @@ var gInitialPages = [
   "about:privatebrowsing",
   "about:welcomeback",
   "about:sessionrestore",
-  "about:welcome"
+  "about:welcome",
 ];
 
 function isInitialPage(url) {
@@ -479,7 +479,7 @@ const gClickAndHoldListenersOnElement = {
 
     aElm.addEventListener("mousedown", this, true);
     aElm.addEventListener("click", this, true);
-  }
+  },
 };
 
 const gSessionHistoryObserver = {
@@ -494,7 +494,7 @@ const gSessionHistoryObserver = {
 
     // Clear undo history of the URL bar
     gURLBar.editor.transactionManager.clear();
-  }
+  },
 };
 
 const gStoragePressureObserver = {
@@ -540,7 +540,7 @@ const gStoragePressureObserver = {
         let learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
         // This is a content URL, loaded from trusted UX.
         gBrowser.selectedTab = gBrowser.addTrustedTab(learnMoreURL);
-      }
+      },
     });
     if (usage < USAGE_THRESHOLD_BYTES) {
       // The firefox-used space < 5GB, then warn user to free some disk space.
@@ -551,7 +551,7 @@ const gStoragePressureObserver = {
       buttons.push({
         label: prefStrBundle.getString("spaceAlert.under5GB.okButton.label"),
         accessKey: prefStrBundle.getString("spaceAlert.under5GB.okButton.accesskey"),
-        callback() {}
+        callback() {},
       });
     } else {
       // The firefox-used space >= 5GB, then guide users to about:preferences
@@ -573,13 +573,13 @@ const gStoragePressureObserver = {
           // be removed by bug 1349689.
           let win = gBrowser.ownerGlobal;
           win.openPreferences("privacy-sitedata", { origin: "storagePressure" });
-        }
+        },
       });
     }
 
     notificationBox.appendNotification(
       msg, NOTIFICATION_VALUE, null, notificationBox.PRIORITY_WARNING_HIGH, buttons, null);
-  }
+  },
 };
 
 var gPopupBlockerObserver = {
@@ -630,7 +630,7 @@ var gPopupBlockerObserver = {
             label: popupButtonText,
             accessKey: popupButtonAccesskey,
             popup: "blockedPopupOptions",
-            callback: null
+            callback: null,
           }];
 
           const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
@@ -817,7 +817,7 @@ var gPopupBlockerObserver = {
     var showMessage = Services.prefs.getBoolPref("privacy.popups.showBrowserMessage");
     Services.prefs.setBoolPref("privacy.popups.showBrowserMessage", !showMessage);
     gBrowser.getNotificationBox().removeCurrentNotification();
-  }
+  },
 };
 
 function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
@@ -916,7 +916,7 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
             Services.prefs.setBoolPref(pref, true);
           }
           openTrustedLinkIn(alternativeURI.spec, "current");
-        }
+        },
       },
       {
         label: gNavigatorBundle.getString("keywordURIFixup.dismiss"),
@@ -924,8 +924,8 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
         callback() {
           let notification = notificationBox.getNotificationWithValue("keyword-uri-fixup");
           notificationBox.removeNotification(notification, true);
-        }
-      }
+        },
+      },
     ];
     let notification =
       notificationBox.appendNotification(message, "keyword-uri-fixup", null,
@@ -1262,7 +1262,7 @@ var gBrowserInit = {
     }
 
     gBrowser.updateBrowserRemoteness(initBrowser, isRemote, {
-      remoteType, sameProcessAsFrameLoader
+      remoteType, sameProcessAsFrameLoader,
     });
 
     BrowserSearch.initPlaceHolder();
@@ -1886,6 +1886,9 @@ var gBrowserInit = {
     if (this._boundDelayedStartup) {
       this._cancelDelayedStartup();
     } else {
+      if (Win7Features) {
+        Win7Features.onCloseWindow();
+      }
       Services.prefs.removeObserver(ctrlTab.prefName, ctrlTab);
       ctrlTab.uninit();
       gBrowserThumbnails.uninit();
@@ -2270,9 +2273,9 @@ function BrowserOpenTab(event) {
     wrappedJSObject: new Promise(resolve => {
       openTrustedLinkIn(BROWSER_NEW_TAB_URL, where, {
         relatedToCurrent,
-        resolveOnNewTabCreated: resolve
+        resolveOnNewTabCreated: resolve,
       });
-    })
+    }),
   }, "browser-open-newtab-start");
 }
 
@@ -2305,7 +2308,7 @@ var gLastOpenDirectory = {
   },
   reset() {
     this._lastDir = null;
-  }
+  },
 };
 
 function BrowserOpenFileWindow() {
@@ -2683,9 +2686,15 @@ function URLBarSetURI(aURI) {
     valid = true;
   }
 
+  let isDifferentValidValue = valid && value != gURLBar.value;
   gURLBar.value = value;
   gURLBar.valueIsTyped = !valid;
   gURLBar.removeAttribute("usertyping");
+  if (isDifferentValidValue) {
+    // The selection is enforced only for new values, to avoid overriding the
+    // cursor position when the user switches windows while typing.
+    gURLBar.selectionStart = gURLBar.selectionEnd = 0;
+  }
 
   SetPageProxyState(valid ? "valid" : "invalid");
 }
@@ -3044,7 +3053,7 @@ var BrowserOnClick = {
             url: location,
             isDomainMismatch: sslStatus.isDomainMismatch,
             isNotValidAtThisTime: sslStatus.isNotValidAtThisTime,
-            frameId
+            frameId,
         });
         break;
 
@@ -3115,7 +3124,7 @@ var BrowserOnClick = {
     let buttons = [{
       label: gNavigatorBundle.getString("safebrowsing.getMeOutOfHereButton.label"),
       accessKey: gNavigatorBundle.getString("safebrowsing.getMeOutOfHereButton.accessKey"),
-      callback() { getMeOutOfHere(); }
+      callback() { getMeOutOfHere(); },
     }];
 
     let title;
@@ -3130,7 +3139,7 @@ var BrowserOnClick = {
           accessKey: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.accessKey"),
           callback() {
             openTrustedLinkIn(reportUrl, "tab");
-          }
+          },
         };
       }
     } else if (reason === "phishing") {
@@ -3144,7 +3153,7 @@ var BrowserOnClick = {
           accessKey: gNavigatorBundle.getString("safebrowsing.notADeceptiveSiteButton.accessKey"),
           callback() {
             openTrustedLinkIn(reportUrl, "tab");
-          }
+          },
         };
       }
     } else if (reason === "unwanted") {
@@ -3489,7 +3498,7 @@ var browserDragAndDrop = {
 
   dropLinks(aEvent, aDisallowInherit) {
     return Services.droppedLinkHandler.dropLinks(aEvent, aDisallowInherit);
-  }
+  },
 };
 
 var homeButtonObserver = {
@@ -3524,7 +3533,7 @@ var homeButtonObserver = {
       aEvent.dropEffect = "link";
     },
   onDragExit(aEvent) {
-    }
+    },
 };
 
 function openHomeDialog(aURL) {
@@ -3582,7 +3591,7 @@ var newTabButtonObserver = {
         });
       }
     }
-  }
+  },
 };
 
 var newWindowButtonObserver = {
@@ -3617,13 +3626,15 @@ var newWindowButtonObserver = {
         });
       }
     }
-  }
+  },
 };
 const DOMEventHandler = {
   init() {
     let mm = window.messageManager;
     mm.addMessageListener("Link:AddFeed", this);
+    mm.addMessageListener("Link:LoadingIcon", this);
     mm.addMessageListener("Link:SetIcon", this);
+    mm.addMessageListener("Link:SetFailedIcon", this);
     mm.addMessageListener("Link:AddSearch", this);
     mm.addMessageListener("Meta:SetPageInfo", this);
   },
@@ -3635,9 +3646,21 @@ const DOMEventHandler = {
         FeedHandler.addFeed(link, aMsg.target);
         break;
 
+      case "Link:LoadingIcon":
+        if (aMsg.data.canUseForTab) {
+          this.setPendingIcon(aMsg.target);
+        }
+        break;
+
       case "Link:SetIcon":
         this.setIconFromLink(aMsg.target, aMsg.data.originalURL, aMsg.data.canUseForTab,
                              aMsg.data.expiration, aMsg.data.iconURL);
+        break;
+
+      case "Link:SetFailedIcon":
+        if (aMsg.data.canUseForTab) {
+          this.clearPendingIcon(aMsg.target);
+        }
         break;
 
       case "Link:AddSearch":
@@ -3656,6 +3679,18 @@ const DOMEventHandler = {
     return true;
   },
 
+  setPendingIcon(aBrowser) {
+    let tab = gBrowser.getTabForBrowser(aBrowser);
+    if (tab.hasAttribute("busy")) {
+      tab.setAttribute("pendingicon", "true");
+    }
+  },
+
+  clearPendingIcon(aBrowser) {
+    let tab = gBrowser.getTabForBrowser(aBrowser);
+    tab.removeAttribute("pendingicon");
+  },
+
   setIconFromLink(aBrowser, aOriginalURL, aCanUseForTab, aExpiration, aIconURL) {
     let tab = gBrowser.getTabForBrowser(aBrowser);
     if (!tab)
@@ -3669,6 +3704,7 @@ const DOMEventHandler = {
     }
 
     if (aCanUseForTab) {
+      this.clearPendingIcon(aBrowser);
       gBrowser.setIcon(tab, aIconURL, aOriginalURL);
     }
     return true;
@@ -3882,7 +3918,7 @@ const BrowserSearch = {
 
     engines.push({ uri: engine.href,
                    title: engine.title,
-                   get icon() { return browser.mIconURL; }
+                   get icon() { return browser.mIconURL; },
                  });
 
     if (hidden)
@@ -4105,7 +4141,7 @@ const BrowserSearch = {
     } catch (ex) {
       Cu.reportError(ex);
     }
-  }
+  },
 };
 
 XPCOMUtils.defineConstant(this, "BrowserSearch", BrowserSearch);
@@ -4937,7 +4973,7 @@ var XULBrowserWindow = {
 
     throw new Error("Trying to navigateAndRestore a browser which was " +
                     "not attached to this tabbrowser is unsupported");
-  }
+  },
 };
 
 var LinkTargetDisplay = {
@@ -4991,7 +5027,7 @@ var LinkTargetDisplay = {
     clearTimeout(this._timer);
 
     StatusPanel.update();
-  }
+  },
 };
 
 var CombinedStopReload = {
@@ -5199,7 +5235,7 @@ var CombinedStopReload = {
       clearTimeout(this._timer);
       this._timer = 0;
     }
-  }
+  },
 };
 
 // This helper only cares about loading the frame
@@ -5237,7 +5273,7 @@ const AccessibilityRefreshBlocker = {
       let mm = window.getGroupMessageManager("browsers");
       mm.loadFrameScript("chrome://browser/content/content-refreshblocker.js", true, true);
     }
-  }
+  },
 };
 
 var TabsProgressListener = {
@@ -5670,9 +5706,9 @@ function setToolbarVisibility(toolbar, isVisible, persist = true) {
 
   let eventParams = {
     detail: {
-      visible: isVisible
+      visible: isVisible,
     },
-    bubbles: true
+    bubbles: true,
   };
   let event = new CustomEvent("toolbarvisibilitychange", eventParams);
   toolbar.dispatchEvent(event);
@@ -6361,7 +6397,7 @@ var gPageStyleMenu = {
       return {
         filteredStyleSheets: [],
         authorStyleDisabled: false,
-        preferredStyleSheetSet: true
+        preferredStyleSheetSet: true,
       };
     }
 
@@ -6428,7 +6464,7 @@ var LanguageDetectionListener = {
     window.messageManager.addMessageListener("Translation:DocumentState", msg => {
       Translation.documentStateReceived(msg.target, msg.data);
     });
-  }
+  },
 };
 
 // Note that this is also called from non-browser windows on OSX, which do
@@ -6497,7 +6533,7 @@ var BrowserOffline = {
       this._uiElement.setAttribute("disabled", "true");
 
     this._uiElement.setAttribute("checked", aOffline);
-  }
+  },
 };
 
 var OfflineApps = {
@@ -6508,7 +6544,7 @@ var OfflineApps = {
     let mainAction = {
       label: gNavigatorBundle.getString("offlineApps.manageUsage"),
       accessKey: gNavigatorBundle.getString("offlineApps.manageUsageAccessKey"),
-      callback: this.manage
+      callback: this.manage,
     };
 
     let warnQuotaKB = Services.prefs.getIntPref("offline-apps.quota.warn");
@@ -6578,7 +6614,7 @@ var OfflineApps = {
 
     if (notification) {
       notification.options.controlledItems.push([
-        Cu.getWeakReference(browser), docId, uri
+        Cu.getWeakReference(browser), docId, uri,
       ]);
     } else {
       let mainAction = {
@@ -6588,7 +6624,7 @@ var OfflineApps = {
           for (let [ciBrowser, ciDocId, ciUri] of notification.options.controlledItems) {
             OfflineApps.allowSite(ciBrowser, ciDocId, ciUri);
           }
-        }
+        },
       };
       let secondaryActions = [{
         label: gNavigatorBundle.getString("offlineApps.dontAllow.label"),
@@ -6597,7 +6633,7 @@ var OfflineApps = {
           for (let [, , ciUri] of notification.options.controlledItems) {
             OfflineApps.disallowSite(ciUri);
           }
-        }
+        },
       }];
       let message = gNavigatorBundle.getFormattedString("offlineApps.available2",
                                                         [host]);
@@ -6605,7 +6641,7 @@ var OfflineApps = {
       let options = {
         persistent: true,
         hideClose: true,
-        controlledItems: [[Cu.getWeakReference(browser), docId, uri]]
+        controlledItems: [[Cu.getWeakReference(browser), docId, uri]],
       };
       notification = PopupNotifications.show(browser, notificationID, message,
                                              anchorID, mainAction,
@@ -6705,7 +6741,7 @@ var IndexedDBPromptHelper = {
       callback() {
         observer.observe(null, responseTopic,
                          Ci.nsIPermissionManager.ALLOW_ACTION);
-      }
+      },
     };
 
     var secondaryActions = [
@@ -6715,8 +6751,8 @@ var IndexedDBPromptHelper = {
         callback() {
           observer.observe(null, responseTopic,
                            Ci.nsIPermissionManager.DENY_ACTION);
-        }
-      }
+        },
+      },
     ];
 
     PopupNotifications.show(
@@ -6725,7 +6761,7 @@ var IndexedDBPromptHelper = {
         persistent: true,
         hideClose: !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton"),
       });
-  }
+  },
 };
 
 var CanvasPermissionPromptHelper = {
@@ -6775,7 +6811,7 @@ var CanvasPermissionPromptHelper = {
       callback(state) {
         setCanvasPermission(uri, Ci.nsIPermissionManager.ALLOW_ACTION,
                             state && state.checkboxChecked);
-      }
+      },
     };
 
     let secondaryActions = [{
@@ -6784,12 +6820,12 @@ var CanvasPermissionPromptHelper = {
       callback(state) {
         setCanvasPermission(uri, Ci.nsIPermissionManager.DENY_ACTION,
                             state && state.checkboxChecked);
-      }
+      },
     }];
 
     let checkbox = {
       // In PB mode, we don't want the "always remember" checkbox
-      show: !PrivateBrowsingUtils.isWindowPrivate(window)
+      show: !PrivateBrowsingUtils.isWindowPrivate(window),
     };
     if (checkbox.show) {
       checkbox.checked = true;
@@ -6803,7 +6839,7 @@ var CanvasPermissionPromptHelper = {
     };
     PopupNotifications.show(browser, aTopic, message, this._notificationIcon,
                             mainAction, secondaryActions, options);
-  }
+  },
 };
 
 var WebAuthnPromptHelper = {
@@ -6858,8 +6894,8 @@ var WebAuthnPromptHelper = {
     let options = {
       learnMoreURL,
       checkbox: {
-        label: gNavigatorBundle.getString("webauthn.anonymize")
-      }
+        label: gNavigatorBundle.getString("webauthn.anonymize"),
+      },
     };
 
     this.show(tid, "register-direct", "webauthn.registerDirectPrompt2",
@@ -6918,7 +6954,7 @@ var WebAuthnPromptHelper = {
       accessKey: gNavigatorBundle.getString("webauthn.proceed.accesskey"),
       callback(state) {
         mgr.resumeRegister(tid, state.checkboxChecked);
-      }
+      },
     };
   },
 
@@ -6928,7 +6964,7 @@ var WebAuthnPromptHelper = {
       accessKey: gNavigatorBundle.getString("webauthn.cancel.accesskey"),
       callback() {
         mgr.cancel(tid);
-      }
+      },
     };
   },
 };
@@ -7081,7 +7117,7 @@ var MailIntegration = {
          .getService(Ci.nsIExternalProtocolService);
     if (extProtocolSvc)
       extProtocolSvc.loadURI(aURL);
-  }
+  },
 };
 
 function BrowserOpenAddonsMgr(aView) {
@@ -7175,7 +7211,7 @@ function AddKeywordForSearchField() {
                                        keyword: "",
                                        postData: bookmarkData.postData,
                                        charSet: bookmarkData.charset,
-                                       hiddenRows: [ "location", "tags" ]
+                                       hiddenRows: [ "location", "tags" ],
                                      }, window);
   };
   mm.addMessageListener("ContextMenu:SearchFieldBookmarkData:Result", onMessage);
@@ -7429,7 +7465,7 @@ const gAccessibilityServiceIndicator = {
     Services.prefs.removeObserver("accessibility.indicator.enabled", this);
     Services.obs.removeObserver(this, "a11y-init-or-shutdown");
     this.update();
-  }
+  },
 };
 
 // Note that this is also called from non-browser windows on OSX, which do
@@ -7486,7 +7522,7 @@ var gPrivateBrowsingUI = {
       urlBarSearchParam += " private-window";
     }
     gURLBar.setAttribute("autocompletesearchparam", urlBarSearchParam);
-  }
+  },
 };
 
 /**
@@ -7655,7 +7691,7 @@ var RestoreLastSessionObserver = {
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference])
+                                          Ci.nsISupportsWeakReference]),
 };
 
 /* Observes menus and adjusts their size for better
@@ -7872,7 +7908,7 @@ var ToolbarIconColor = {
   _windowState: {
     "active": false,
     "fullscreen": false,
-    "tabsintitlebar": false
+    "tabsintitlebar": false,
   },
   init() {
     this._initialized = true;
@@ -7956,7 +7992,7 @@ var ToolbarIconColor = {
         break;
     }
 
-    let toolbarSelector = "#navigator-toolbox > toolbar:not([collapsed=true])";
+    let toolbarSelector = ".browser-toolbar:not([collapsed=true])";
     if (AppConstants.platform == "macosx")
       toolbarSelector += ":not([type=menubar])";
 
@@ -7985,7 +8021,7 @@ var ToolbarIconColor = {
       else
         toolbar.setAttribute("brighttext", "true");
     }
-  }
+  },
 };
 
 var PanicButtonNotifier = {
@@ -8086,7 +8122,7 @@ const SafeBrowsingNotificationBox = {
 
       this._currentURIBaseDomain = null;
     }
-  }
+  },
 };
 
 function TabModalPromptBox(browser) {

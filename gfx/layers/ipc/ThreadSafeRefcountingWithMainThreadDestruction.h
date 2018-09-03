@@ -59,7 +59,7 @@ struct DeleteOnMainThreadTask : public Runnable
 } // namespace layers
 } // namespace mozilla
 
-#define NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(_class) \
+#define NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION_AND_RECORDING(_class, _recording) \
 public:                                                                       \
   NS_METHOD_(MozExternalRefCountType) AddRef(void) {                          \
     MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                                \
@@ -89,9 +89,13 @@ public:                                                                       \
     return count;                                                             \
   }                                                                           \
 protected:                                                                    \
-  ::mozilla::ThreadSafeAutoRefCnt mRefCnt;                                    \
+  ::mozilla::ThreadSafeAutoRefCntWithRecording<_recording> mRefCnt;           \
 private:                                                                      \
   ::mozilla::layers::HelperForMainThreadDestruction mHelperForMainThreadDestruction; \
 public:
+
+#define NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(_class) \
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION_AND_RECORDING \
+    (_class, recordreplay::Behavior::DontPreserve)
 
 #endif

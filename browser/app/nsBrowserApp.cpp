@@ -286,6 +286,10 @@ int main(int argc, char* argv[], char* envp[])
 
     int result = content_process_main(gBootstrap.get(), argc, argv);
 
+#if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
+    DllBlocklist_Shutdown();
+#endif
+
     // InitXPCOMGlue calls NS_LogInit, so we need to balance it here.
     gBootstrap->NS_LogTerm();
 
@@ -311,6 +315,10 @@ int main(int argc, char* argv[], char* envp[])
   int result = do_main(argc, argv, envp);
 
   gBootstrap->NS_LogTerm();
+
+#if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
+  DllBlocklist_Shutdown();
+#endif
 
 #ifdef XP_MACOSX
   // Allow writes again. While we would like to catch writes from static

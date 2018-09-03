@@ -9,7 +9,7 @@ add_task(async function test_vertical_text() {
       let listener = {
         onFindResult() {
           ok(false, "callback wasn't replaced");
-        }
+        },
       };
       finder.addResultListener(listener);
 

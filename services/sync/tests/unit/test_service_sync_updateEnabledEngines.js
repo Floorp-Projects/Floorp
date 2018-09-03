@@ -14,7 +14,7 @@ function QuietStore() {
 QuietStore.prototype = {
   async getAllIDs() {
     return [];
-  }
+  },
 };
 
 function SteamEngine() {
@@ -27,7 +27,7 @@ SteamEngine.prototype = {
 
   _sync: async function _sync() {
     await this._syncStartup();
-  }
+  },
 };
 
 function StirlingEngine() {
@@ -38,7 +38,7 @@ StirlingEngine.prototype = {
   // This engine's enabled state is the same as the SteamEngine's.
   get prefName() {
     return "steam";
-  }
+  },
 };
 
 // Tracking info/collections.
@@ -90,7 +90,7 @@ add_task(async function test_newAccount() {
   let engine = Service.engineManager.get("steam");
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global": new ServerWBO("global", {}).handler(),
-    "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
+    "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler(),
   });
   await setUp(server);
 
@@ -122,7 +122,7 @@ add_task(async function test_enabledLocally() {
                                          engines: {}});
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
-    "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
+    "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler(),
   });
   await setUp(server);
 
@@ -154,13 +154,13 @@ add_task(async function test_disabledLocally() {
   let metaWBO = new ServerWBO("global", {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
-    engines: {steam: {syncID, version: engine.version}}
+    engines: {steam: {syncID, version: engine.version}},
   });
   let steamCollection = new ServerWBO("steam", PAYLOAD);
 
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
-    "/1.1/johndoe/storage/steam": steamCollection.handler()
+    "/1.1/johndoe/storage/steam": steamCollection.handler(),
   });
   await setUp(server);
 
@@ -198,7 +198,7 @@ add_task(async function test_disabledLocally_wipe503() {
   let metaWBO = new ServerWBO("global", {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
-    engines: {steam: {syncID, version: engine.version}}
+    engines: {steam: {syncID, version: engine.version}},
   });
 
   function service_unavailable(request, response) {
@@ -210,7 +210,7 @@ add_task(async function test_disabledLocally_wipe503() {
 
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
-    "/1.1/johndoe/storage/steam": service_unavailable
+    "/1.1/johndoe/storage/steam": service_unavailable,
   });
   await setUp(server);
 
@@ -238,14 +238,14 @@ add_task(async function test_enabledRemotely() {
   let metaWBO = new ServerWBO("global", {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
-    engines: {steam: {syncID, version: engine.version}}
+    engines: {steam: {syncID, version: engine.version}},
   });
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global":
     upd("meta", metaWBO.handler()),
 
     "/1.1/johndoe/storage/steam":
-    upd("steam", new ServerWBO("steam", {}).handler())
+    upd("steam", new ServerWBO("steam", {}).handler()),
   });
   await setUp(server);
 
@@ -288,7 +288,7 @@ add_task(async function test_disabledRemotelyTwoClients() {
     upd("meta", metaWBO.handler()),
 
     "/1.1/johndoe/storage/steam":
-    upd("steam", new ServerWBO("steam", {}).handler())
+    upd("steam", new ServerWBO("steam", {}).handler()),
   });
   await setUp(server);
 
@@ -331,7 +331,7 @@ add_task(async function test_disabledRemotely() {
                                          engines: {}});
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
-    "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
+    "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler(),
   });
   await setUp(server);
 
@@ -366,7 +366,7 @@ add_task(async function test_dependentEnginesEnabledLocally() {
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
     "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler(),
-    "/1.1/johndoe/storage/stirling": new ServerWBO("stirling", {}).handler()
+    "/1.1/johndoe/storage/stirling": new ServerWBO("stirling", {}).handler(),
   });
   await setUp(server);
 
@@ -405,7 +405,7 @@ add_task(async function test_dependentEnginesDisabledLocally() {
     engines: {steam: {syncID: steamSyncID,
                       version: steamEngine.version},
               stirling: {syncID: stirlingSyncID,
-                         version: stirlingEngine.version}}
+                         version: stirlingEngine.version}},
   });
 
   let steamCollection = new ServerWBO("steam", PAYLOAD);
@@ -414,7 +414,7 @@ add_task(async function test_dependentEnginesDisabledLocally() {
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global":     metaWBO.handler(),
     "/1.1/johndoe/storage/steam":           steamCollection.handler(),
-    "/1.1/johndoe/storage/stirling":        stirlingCollection.handler()
+    "/1.1/johndoe/storage/stirling":        stirlingCollection.handler(),
   });
   await setUp(server);
 

@@ -4,7 +4,7 @@
 var stateBackup = ss.getBrowserState();
 
 var statePinned = {windows: [{tabs: [
-  {entries: [{url: "http://example.com#1", triggeringPrincipal_base64}], pinned: true}
+  {entries: [{url: "http://example.com#1", triggeringPrincipal_base64}], pinned: true},
 ]}]};
 
 var state = {windows: [{tabs: [
@@ -92,5 +92,5 @@ var TabsProgressListener = {
     if (this.callback && ss.getInternalObjectState(browser) == TAB_STATE_RESTORING) {
       this.callback.apply(null, countTabs());
     }
-  }
+  },
 };

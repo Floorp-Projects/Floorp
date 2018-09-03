@@ -1889,6 +1889,19 @@ class Marionette(object):
         """
         return self._send_message("WebDriver:GetCookies")
 
+    def save_screenshot(self, fh, element=None, highlights=None,
+                        full=True, scroll=True):
+        """Takes a screenhot of a web element or the current frame and
+        saves it in the filehandle.
+
+        It is a wrapper around screenshot()
+        :param fh: The filehandle to save the screenshot at.
+
+        The rest of the parameters are defined like in screenshot()
+        """
+        data = self.screenshot(element, highlights, "binary", full, scroll)
+        fh.write(data)
+
     def screenshot(self, element=None, highlights=None, format="base64",
                    full=True, scroll=True):
         """Takes a screenshot of a web element or the current frame.

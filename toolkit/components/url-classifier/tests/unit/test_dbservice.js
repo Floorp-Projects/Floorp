@@ -4,7 +4,7 @@ var checkExpect;
 var chunk1Urls = [
   "test.com/aba",
   "test.com/foo/bar",
-  "foo.bar.com/a/b/c"
+  "foo.bar.com/a/b/c",
 ];
 var chunk1 = chunk1Urls.join("\n");
 
@@ -12,7 +12,7 @@ var chunk2Urls = [
   "blah.com/a",
   "baz.com/",
   "255.255.0.1/",
-  "www.foo.com/test2?param=1"
+  "www.foo.com/test2?param=1",
 ];
 var chunk2 = chunk2Urls.join("\n");
 

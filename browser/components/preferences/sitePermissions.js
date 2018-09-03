@@ -389,7 +389,7 @@ var gSitePermissionsManager = {
     }
 
     let comp = new Services.intl.Collator(undefined, {
-      usage: "sort"
+      usage: "sort",
     });
 
     let items = Array.from(frag.querySelectorAll("richlistitem"));

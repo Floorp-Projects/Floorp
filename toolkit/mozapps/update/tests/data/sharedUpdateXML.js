@@ -126,7 +126,7 @@ function getRemoteUpdateString(aUpdateProps, aPatches) {
     displayVersion: null,
     name: "App Update Test",
     promptWaitTime: null,
-    type: "major"
+    type: "major",
   };
 
   for (let name in aUpdateProps) {
@@ -163,7 +163,7 @@ function getRemotePatchString(aPatchProps) {
     set url(val) {
       this._url = val;
     },
-    size: SIZE_SIMPLE_MAR
+    size: SIZE_SIMPLE_MAR,
   };
 
   for (let name in aPatchProps) {
@@ -230,7 +230,7 @@ function getLocalUpdateString(aUpdateProps, aPatches) {
     promptWaitTime: null,
     serviceURL: "http://test_service/",
     statusText: "Install Pending",
-    type: "major"
+    type: "major",
   };
 
   for (let name in aUpdateProps) {
@@ -277,7 +277,7 @@ function getLocalPatchString(aPatchProps) {
     url: gURLData + FILE_SIMPLE_MAR,
     size: SIZE_SIMPLE_MAR,
     selected: "true",
-    state: STATE_SUCCEEDED
+    state: STATE_SUCCEEDED,
   };
 
   for (let name in aPatchProps) {

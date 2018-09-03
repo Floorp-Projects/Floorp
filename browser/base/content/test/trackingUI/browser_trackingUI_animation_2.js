@@ -28,7 +28,7 @@ function waitForSecurityChange(tabbrowser, numChanges = 1) {
           tabbrowser.removeProgressListener(listener);
           resolve();
         }
-      }
+      },
     };
     tabbrowser.addProgressListener(listener);
   });

@@ -14,175 +14,175 @@ var ADDONS = [{
   version: "5",
   start: false,
   appBlocks: false,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_2@tests.mozilla.org",
   name: "Bug 449027 Addon Test 2",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_3@tests.mozilla.org",
   name: "Bug 449027 Addon Test 3",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_4@tests.mozilla.org",
   name: "Bug 449027 Addon Test 4",
   version: "5",
   start: false,
   appBlocks: false,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_5@tests.mozilla.org",
   name: "Bug 449027 Addon Test 5",
   version: "5",
   start: false,
   appBlocks: false,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_6@tests.mozilla.org",
   name: "Bug 449027 Addon Test 6",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_7@tests.mozilla.org",
   name: "Bug 449027 Addon Test 7",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_8@tests.mozilla.org",
   name: "Bug 449027 Addon Test 8",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_9@tests.mozilla.org",
   name: "Bug 449027 Addon Test 9",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_10@tests.mozilla.org",
   name: "Bug 449027 Addon Test 10",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_11@tests.mozilla.org",
   name: "Bug 449027 Addon Test 11",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_12@tests.mozilla.org",
   name: "Bug 449027 Addon Test 12",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_13@tests.mozilla.org",
   name: "Bug 449027 Addon Test 13",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_14@tests.mozilla.org",
   name: "Bug 449027 Addon Test 14",
   version: "5",
   start: false,
   appBlocks: false,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_15@tests.mozilla.org",
   name: "Bug 449027 Addon Test 15",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: true
+  toolkitBlocks: true,
 }, {
   id: "test_bug449027_16@tests.mozilla.org",
   name: "Bug 449027 Addon Test 16",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: true
+  toolkitBlocks: true,
 }, {
   id: "test_bug449027_17@tests.mozilla.org",
   name: "Bug 449027 Addon Test 17",
   version: "5",
   start: false,
   appBlocks: false,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_18@tests.mozilla.org",
   name: "Bug 449027 Addon Test 18",
   version: "5",
   start: false,
   appBlocks: false,
-  toolkitBlocks: false
+  toolkitBlocks: false,
 }, {
   id: "test_bug449027_19@tests.mozilla.org",
   name: "Bug 449027 Addon Test 19",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: true
+  toolkitBlocks: true,
 }, {
   id: "test_bug449027_20@tests.mozilla.org",
   name: "Bug 449027 Addon Test 20",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: true
+  toolkitBlocks: true,
 }, {
   id: "test_bug449027_21@tests.mozilla.org",
   name: "Bug 449027 Addon Test 21",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: true
+  toolkitBlocks: true,
 }, {
   id: "test_bug449027_22@tests.mozilla.org",
   name: "Bug 449027 Addon Test 22",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: true
+  toolkitBlocks: true,
 }, {
   id: "test_bug449027_23@tests.mozilla.org",
   name: "Bug 449027 Addon Test 23",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: true
+  toolkitBlocks: true,
 }, {
   id: "test_bug449027_24@tests.mozilla.org",
   name: "Bug 449027 Addon Test 24",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: true
+  toolkitBlocks: true,
 }, {
   id: "test_bug449027_25@tests.mozilla.org",
   name: "Bug 449027 Addon Test 25",
   version: "5",
   start: false,
   appBlocks: true,
-  toolkitBlocks: true
+  toolkitBlocks: true,
 }];
 
 class MockPlugin extends MockPluginTag {
@@ -219,7 +219,7 @@ var PLUGINS = [
   new MockPlugin("test_bug449027_22", "5", false, true, true),
   new MockPlugin("test_bug449027_23", "5", false, true, true),
   new MockPlugin("test_bug449027_24", "5", false, true, true),
-  new MockPlugin("test_bug449027_25", "5", false, true, true)
+  new MockPlugin("test_bug449027_25", "5", false, true, true),
 ];
 
 var gNewBlocks = [];

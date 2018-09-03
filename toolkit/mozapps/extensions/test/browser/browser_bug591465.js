@@ -22,7 +22,7 @@ var gLWTheme = {
                 homepageURL: "http://mochi.test:8888/data/index.html",
                 headerURL: "http://mochi.test:8888/data/header.png",
                 previewURL: "http://mochi.test:8888/data/preview.png",
-                iconURL: "http://mochi.test:8888/data/icon.png"
+                iconURL: "http://mochi.test:8888/data/icon.png",
               };
 
 
@@ -32,29 +32,29 @@ add_task(async function setup() {
   gProvider.createAddons([{
     id: "addon1@tests.mozilla.org",
     name: "addon 1",
-    version: "1.0"
+    version: "1.0",
   }, {
     id: "addon2@tests.mozilla.org",
     name: "addon 2",
     version: "1.0",
-    _userDisabled: true
+    _userDisabled: true,
   }, {
     id: "theme1@tests.mozilla.org",
     name: "theme 1",
     version: "1.0",
-    type: "theme"
+    type: "theme",
   }, {
     id: "theme2@tests.mozilla.org",
     name: "theme 2",
     version: "1.0",
     type: "theme",
-    _userDisabled: true
+    _userDisabled: true,
    }, {
     id: "theme3@tests.mozilla.org",
     name: "theme 3",
     version: "1.0",
     type: "theme",
-    permissions: 0
+    permissions: 0,
   }]);
 
 

@@ -5,8 +5,8 @@
 add_task(async function setup() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "DisableSafeMode": true
-    }
+      "DisableSafeMode": true,
+    },
   });
 });
 

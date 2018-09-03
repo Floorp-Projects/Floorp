@@ -5,7 +5,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = [
-  "CrashReports"
+  "CrashReports",
 ];
 
 var CrashReports = {
@@ -31,7 +31,7 @@ var CrashReports = {
           let entry = {
             id: leaf.slice(0, -4),
             date: file.lastModifiedTime,
-            pending: false
+            pending: false,
           };
           reports.push(entry);
         }
@@ -49,7 +49,7 @@ var CrashReports = {
           let entry = {
             id,
             date: file.lastModifiedTime,
-            pending: true
+            pending: true,
           };
           reports.push(entry);
         }
@@ -58,7 +58,7 @@ var CrashReports = {
 
     // Sort reports descending by date
     return reports.sort( (a, b) => b.date - a.date);
-  }
+  },
 };
 
 function CrashReports_pendingDir() {

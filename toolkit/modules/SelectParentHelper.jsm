@@ -5,7 +5,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "SelectParentHelper"
+  "SelectParentHelper",
 ];
 
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
@@ -211,7 +211,7 @@ var SelectParentHelper = {
         if (event.target.hasAttribute("value")) {
           currentBrowser.messageManager.sendAsyncMessage("Forms:SelectDropDownItem", {
             value: event.target.value,
-            closedWithEnter
+            closedWithEnter,
           });
         }
         break;

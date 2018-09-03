@@ -39,7 +39,7 @@ const PREF_BRANCH = "extensions.pocket.";
 const PREFS = {
   enabled: true, // bug 1229937, figure out ui tour support
   api: "api.getpocket.com",
-  site: "getpocket.com"
+  site: "getpocket.com",
 };
 
 function setDefaultPrefs() {
@@ -283,7 +283,7 @@ var PocketContextMenu = {
         "id": "context-pocket",
         "label": gPocketBundle.GetStringFromName("saveToPocketCmd.label"),
         "accesskey": gPocketBundle.GetStringFromName("saveToPocketCmd.accesskey"),
-        "oncommand": "Pocket.savePage(gContextMenu.browser, gContextMenu.browser.currentURI.spec, gContextMenu.browser.contentTitle);"
+        "oncommand": "Pocket.savePage(gContextMenu.browser, gContextMenu.browser.currentURI.spec, gContextMenu.browser.contentTitle);",
       });
       let sibling = document.getElementById("context-savepage");
       if (sibling.nextSibling) {
@@ -300,7 +300,7 @@ var PocketContextMenu = {
         "id": "context-savelinktopocket",
         "label": gPocketBundle.GetStringFromName("saveLinkToPocketCmd.label"),
         "accesskey": gPocketBundle.GetStringFromName("saveLinkToPocketCmd.accesskey"),
-        "oncommand": "Pocket.savePage(gContextMenu.browser, gContextMenu.linkURL);"
+        "oncommand": "Pocket.savePage(gContextMenu.browser, gContextMenu.linkURL);",
       });
       let sibling = document.getElementById("context-savelink");
       if (sibling.nextSibling) {
@@ -310,7 +310,7 @@ var PocketContextMenu = {
       }
     }
     menu.hidden = !showSaveLinkToPocket;
-  }
+  },
 };
 
 // PocketReader
@@ -376,7 +376,7 @@ var PocketReader = {
         break;
       }
     }
-  }
+  },
 };
 
 
@@ -391,7 +391,7 @@ function pktUIGetter(prop, window) {
       return window[prop];
     },
     configurable: true,
-    enumerable: true
+    enumerable: true,
   };
 }
 
@@ -475,7 +475,7 @@ var PocketOverlay = {
         "label": gPocketBundle.GetStringFromName("pocketMenuitem.label"),
         "class": "subviewbutton subviewbutton-iconic",
         "oncommand": "Pocket.openList(event)",
-        "hidden": hidden
+        "hidden": hidden,
       });
       sib.parentNode.insertBefore(menu, sib);
     }
@@ -492,7 +492,7 @@ var PocketOverlay = {
   removeStyles(win) {
     let utils = win.windowUtils;
     utils.removeSheet(gPocketStyleURI, this._sheetType);
-  }
+  },
 
 };
 

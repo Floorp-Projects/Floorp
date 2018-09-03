@@ -20,7 +20,7 @@ class PageStyleChild extends ActorChild {
     mm.sendAsyncMessage("PageStyle:StyleSheets", {
       filteredStyleSheets,
       authorStyleDisabled: this.getViewer(content).authorStyleDisabled,
-      preferredStyleSheetSet: content.document.preferredStyleSheetSet
+      preferredStyleSheetSet: content.document.preferredStyleSheetSet,
     });
   }
 

@@ -66,16 +66,16 @@ add_task(async function() {
              r.y1 >= tabStripRect.top && r.y2 <= tabStripRect.bottom &&
              r.x1 >= tabStripRect.left && r.x2 <= tabStripRect.right &&
              // Width of one tab plus tab separator(s)
-             inRange(gBrowser.selectedTab.clientWidth - r.w, 0, 2)
+             inRange(gBrowser.selectedTab.clientWidth - r.w, 0, 2),
           },
           {name: "bug 1446449 - spurious tab switch spinner",
            condition: r =>
              AppConstants.DEBUG &&
              // In the content area
-             r.y1 >= document.getElementById("appcontent").getBoundingClientRect().top
+             r.y1 >= document.getElementById("appcontent").getBoundingClientRect().top,
           },
-        ]
-      }
+        ],
+      },
      });
   is(EXPECTED_REFLOWS.length, 0, "No reflows are expected when closing a tab");
 });

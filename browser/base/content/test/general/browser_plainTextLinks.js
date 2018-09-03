@@ -86,7 +86,7 @@ add_task(async function() {
         mainDiv.innerHTML = "(open-suse.ru)";
         return setSelection(mainDiv, mainDiv, 1, 13);
       },
-      () => setSelection(mainDiv, mainDiv, 1, 14)
+      () => setSelection(mainDiv, mainDiv, 1, 14),
     ];
   });
 
@@ -114,7 +114,7 @@ add_task(async function() {
       testExpected(false, "Link options should show for open-suse.ru");
       testLinkExpected("http://open-suse.ru/", "Linkified text should open the correct link");
     },
-    () => testExpected(true, "Link options should not show for 'open-suse.ru)'")
+    () => testExpected(true, "Link options should not show for 'open-suse.ru)'"),
   ];
 
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");

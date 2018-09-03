@@ -9,11 +9,11 @@ add_task(async function test() {
     windows: [{
       tabs: [{
         entries: [{
-          url: "http://example.org/", triggeringPrincipal_base64
-        }]
+          url: "http://example.org/", triggeringPrincipal_base64,
+        }],
       }],
-      selected: 1
-    }]
+      selected: 1,
+    }],
   });
   is(document.activeElement, gBrowser.selectedBrowser, "content area is focused after restoring");
 });

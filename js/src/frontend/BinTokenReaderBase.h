@@ -124,7 +124,7 @@ class MOZ_STACK_CLASS BinTokenReaderBase
     MOZ_MUST_USE bool matchConst(const char (&value)[N], bool expectNul) {
         MOZ_ASSERT(N > 0);
         MOZ_ASSERT(value[N - 1] == 0);
-        MOZ_ASSERT(!cx_->isExceptionPending());
+        MOZ_ASSERT(!hasRaisedError());
 
         if (current_ + N - 1 > stop_)
             return false;
@@ -140,6 +140,10 @@ class MOZ_STACK_CLASS BinTokenReaderBase
     }
 
     void updateLatestKnownGood();
+
+#ifdef DEBUG
+    bool hasRaisedError() const;
+#endif
 
     JSContext* cx_;
 

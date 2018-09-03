@@ -319,7 +319,7 @@ class BrowserErrorReporter {
         },
         // Sentry throws an auth error without a referrer specified.
         referrer: "https://fake.mozilla.org",
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
       Services.telemetry.scalarAdd(TELEMETRY_ERROR_REPORTED, 1);
       this.logger.debug(`Sent error "${message.errorMessage}" successfully.`);

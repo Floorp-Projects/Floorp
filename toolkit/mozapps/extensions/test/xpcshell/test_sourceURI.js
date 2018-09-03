@@ -19,8 +19,8 @@ var addon = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 const profileDir = gProfD.clone();
@@ -52,11 +52,11 @@ async function run_test() {
           files: [
             {
               platform: "all",
-              url: "http://www.example.com/testaddon.xpi"
+              url: "http://www.example.com/testaddon.xpi",
             },
           ],
         },
-      }
+      },
     ],
   };
   gServer.registerPathHandler("/addons.json", (request, response) => {

@@ -31,7 +31,7 @@ var PKT_SAVED_OVERLAY = function(options) {
     this.justaddedsuggested = false;
     this.fxasignedin = false;
     this.premiumDetailsAdded = false;
-    this.freezeHeight = false;
+    this.ho2 = false;
     this.fillTagContainer = function(tags, container, tagclass) {
         container.children().remove();
         for (var i = 0; i < tags.length; i++) {
@@ -58,7 +58,7 @@ var PKT_SAVED_OVERLAY = function(options) {
 
         thePKT_SAVED.sendMessage("getSuggestedTags",
         {
-            url: myself.savedUrl
+            url: myself.savedUrl,
         }, function(resp) {
             $(".pkt_ext_suggestedtag_detail").removeClass("pkt_ext_suggestedtag_detail_loading");
             if (resp.status == "success") {
@@ -232,13 +232,16 @@ var PKT_SAVED_OVERLAY = function(options) {
                 myself.checkPlaceholderStatus();
             },
             onShowDropdown() {
-                if (!myself.freezeHeight)
+                if (myself.ho2 !== "show_prompt_preview")
                     thePKT_SAVED.sendMessage("expandSavePanel");
             },
             onHideDropdown() {
-                if (!myself.freezeHeight)
+                if (!myself.ho2) {
                     thePKT_SAVED.sendMessage("collapseSavePanel");
-            }
+                } else if (myself.ho2 !== "show_prompt_preview") {
+                    thePKT_SAVED.sendMessage("resizePanel", { width: 350, height: 200 });
+                }
+            },
         });
         $("body").on("keydown", function(e) {
             var key = e.keyCode || e.which;
@@ -289,7 +292,7 @@ var PKT_SAVED_OVERLAY = function(options) {
             thePKT_SAVED.sendMessage("addTags",
             {
                 url: myself.savedUrl,
-                tags: originaltags
+                tags: originaltags,
             }, function(resp) {
                 if (resp.status == "success") {
                     myself.showStateFinalMsg(myself.dictJSON.tagssaved);
@@ -312,7 +315,7 @@ var PKT_SAVED_OVERLAY = function(options) {
 
                 thePKT_SAVED.sendMessage("deleteItem",
                 {
-                    itemId: myself.savedItemId
+                    itemId: myself.savedItemId,
                 }, function(resp) {
                     if (resp.status == "success") {
                         myself.showStateFinalMsg(myself.dictJSON.pageremoved);
@@ -329,7 +332,7 @@ var PKT_SAVED_OVERLAY = function(options) {
             thePKT_SAVED.sendMessage("openTabWithUrl",
             {
                 url: $(this).attr("href"),
-                activate: true
+                activate: true,
             });
             myself.closePopup();
         });
@@ -386,7 +389,7 @@ var PKT_SAVED_OVERLAY = function(options) {
             && !initobj.accountState.has_mobile
             && !myself.savedUrl.includes("getpocket.com")) {
             myself.createSendToMobilePanel(initobj.ho2, initobj.displayName);
-            myself.freezeHeight = true;
+            myself.ho2 = initobj.ho2;
         }
 
         myself.fillUserTags();
@@ -405,7 +408,7 @@ var PKT_SAVED_OVERLAY = function(options) {
             "<": "&lt;",
             ">": "&gt;",
             '"': "&quot;",
-            "'": "&#39;"
+            "'": "&#39;",
         };
         if (typeof s !== "string") {
             return "";
@@ -478,7 +481,7 @@ PKT_SAVED_OVERLAY.prototype = {
             $("body").append(Handlebars.templates.saved_premiumshell(this.dictJSON));
             $(".pkt_ext_initload").append(Handlebars.templates.saved_premiumextras(this.dictJSON));
         }
-    }
+    },
 };
 
 
@@ -550,7 +553,7 @@ PKT_SAVED.prototype = {
             myself.overlay.showStateSaved(resp);
         });
 
-    }
+    },
 };
 
 $(function() {
@@ -566,8 +569,8 @@ $(function() {
     thePKT_SAVED.sendMessage("initL10N", {
             tos: [
                 "https://" + pocketHost + "/tos?s=ffi&t=tos&tv=panel_tryit",
-                "https://" + pocketHost + "/privacy?s=ffi&t=privacypolicy&tv=panel_tryit"
-            ]
+                "https://" + pocketHost + "/privacy?s=ffi&t=privacypolicy&tv=panel_tryit",
+            ],
         }, function(resp) {
         window.pocketStrings = resp.strings;
         window.thePKT_SAVED.create();

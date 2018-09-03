@@ -35,7 +35,7 @@ function clearAllPlacesFavicons() {
           resolve();
           Services.obs.removeObserver(observer, "places-favicons-expired");
         }
-      }
+      },
     };
 
     Services.obs.addObserver(observer, "places-favicons-expired");
@@ -93,7 +93,7 @@ function observeFavicon(aIsPrivate, aExpectedCookie, aPageURI) {
 
         resolve();
         Services.obs.removeObserver(observer, "http-on-modify-request");
-      }
+      },
     };
 
     Services.obs.addObserver(observer, "http-on-modify-request");
@@ -116,14 +116,14 @@ function waitOnFaviconResponse(aFaviconURL) {
 
           let result = {
             topic: aTopic,
-            privateBrowsingId: loadInfo.originAttributes.privateBrowsingId
+            privateBrowsingId: loadInfo.originAttributes.privateBrowsingId,
           };
 
           resolve(result);
           Services.obs.removeObserver(observer, "http-on-examine-response");
           Services.obs.removeObserver(observer, "http-on-examine-cached-response");
         }
-      }
+      },
     };
 
     Services.obs.addObserver(observer, "http-on-examine-response");
@@ -206,7 +206,7 @@ add_task(async function test_favicon_privateBrowsing() {
   // The page must be bookmarked for favicon requests to go through in PB mode.
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: TEST_PAGE
+    url: TEST_PAGE,
   });
 
   // Open a tab for the private window.
@@ -265,7 +265,7 @@ add_task(async function test_favicon_cache_privateBrowsing() {
   // The page must be bookmarked for favicon requests to go through in PB mode.
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: TEST_CACHE_PAGE
+    url: TEST_CACHE_PAGE,
   });
 
   // Open a tab for the private window.

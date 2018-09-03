@@ -15,7 +15,7 @@ add_task(async function test_finish_tour_notifcations_after_total_max_life_time(
   Preferences.set("browser.onboarding.notification.last-time-of-changing-tour-sec", Math.floor((Date.now() - totalMaxTime) / 1000));
   let expectedPrefUpdates = Promise.all([
     promisePrefUpdated("browser.onboarding.notification.finished", true),
-    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK)
+    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK),
   ]);
   await reloadTab(tab);
   await promiseOnboardingOverlayLoaded(tab.linkedBrowser);

@@ -51,7 +51,7 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
   let consoleOptions = {
     maxLogLevelPref: "browser.download.loglevel",
-    prefix: "Downloads"
+    prefix: "Downloads",
   };
   return new ConsoleAPI(consoleOptions);
 });
@@ -66,7 +66,7 @@ const kDownloadsStringsRequiringFormatting = {
 };
 
 const kDownloadsStringsRequiringPluralForm = {
-  otherDownloads3: true
+  otherDownloads3: true,
 };
 
 const kMaxHistoryResultsForLimitedView = 42;
@@ -312,7 +312,7 @@ var DownloadsCommon = {
       // download.
       slowestSpeed: Infinity,
       rawTimeLeft: -1,
-      percentComplete: -1
+      percentComplete: -1,
     };
 
     for (let download of downloads) {
@@ -656,7 +656,7 @@ function DownloadsDataCtor({ isPrivate, isHistory, maxHistoryResults } = {}) {
       // list of public and private downloads.
       return DownloadHistory.getList({
         type: isPrivate ? Downloads.ALL : Downloads.PUBLIC,
-        maxHistoryResults
+        maxHistoryResults,
       });
     });
     return;
@@ -836,7 +836,7 @@ DownloadsDataCtor.prototype = {
     }
     this.panelHasShownBefore = true;
     browserWin.DownloadsPanel.showPanel();
-  }
+  },
 };
 
 XPCOMUtils.defineLazyGetter(this, "HistoryDownloadsData", function() {
@@ -1228,7 +1228,7 @@ DownloadsIndicatorDataCtor.prototype = {
     } else {
       this._percentComplete = -1;
     }
-  }
+  },
 };
 
 XPCOMUtils.defineLazyGetter(this, "PrivateDownloadsIndicatorData", function() {

@@ -16,8 +16,8 @@ add_task(async function() {
 
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.resistFingerprinting", true]
-    ]
+      ["privacy.resistFingerprinting", true],
+    ],
   });
 
   tab3 = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage);

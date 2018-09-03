@@ -24,7 +24,6 @@ billingAddress.init("USA",              // country
                      "",                 // dependent locality
                      "94066",            // postal code
                      "123456",           // sorting code
-                     "en",               // language code
                      "",                 // organization
                      "Bill A. Pacheco",  // recipient
                      "+14344413879"); // phone
@@ -74,6 +73,8 @@ const detailedResponseUI = {
   completePayment: completePaymentResponse,
   updatePayment: function(requestId) {
   },
+  closePayment: function (requestId) {
+  },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
@@ -101,6 +102,8 @@ const simpleResponseUI = {
   abortPayment: abortPaymentResponse,
   completePayment: completePaymentResponse,
   updatePayment: function(requestId) {
+  },
+  closePayment: function(requestId) {
   },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };

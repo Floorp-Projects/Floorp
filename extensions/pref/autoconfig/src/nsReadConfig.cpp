@@ -101,7 +101,7 @@ NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic, c
         if (NS_FAILED(rv)) {
             if (sandboxEnabled) {
                 nsContentUtils::ReportToConsoleNonLocalized(
-                NS_LITERAL_STRING("Autoconfig is sandboxed by default. See https://www.mozilla.org/firefox/enterprise/releasenotes/ for more information."),
+                NS_LITERAL_STRING("Autoconfig is sandboxed by default. See https://support.mozilla.org/products/firefox-enterprise for more information."),
                 nsIScriptError::warningFlag,
                 NS_LITERAL_CSTRING("autoconfig"),
                 nullptr);

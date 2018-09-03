@@ -27,7 +27,7 @@ const TEST_TABLE_DATA_LIST = [
     providerName: "google",
     updateUrl: "http://localhost:4444/safebrowsing/update",
     gethashUrl: "http://localhost:4444/safebrowsing/gethash2",
-  }
+  },
 ];
 
 // These tables have a different update URL (for v4).

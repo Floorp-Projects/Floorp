@@ -13,6 +13,8 @@ import {FakePrefs, GlobalOverrider} from "test/unit/utils";
 import injector from "inject!lib/TelemetryFeed.jsm";
 
 const FAKE_UUID = "{foo-123-foo}";
+const FAKE_ROUTER_MESSAGE_PROVIDER = JSON.stringify([{id: "cfr", enabled: true}]);
+const FAKE_ROUTER_MESSAGE_PROVIDER_COHORT = JSON.stringify([{id: "cfr", enabled: true, cohort: "cohort_group"}]);
 
 describe("TelemetryFeed", () => {
   let globals;
@@ -35,7 +37,8 @@ describe("TelemetryFeed", () => {
     USER_PREFS_ENCODING,
     PREF_IMPRESSION_ID,
     TELEMETRY_PREF,
-    EVENTS_TELEMETRY_PREF
+    EVENTS_TELEMETRY_PREF,
+    ROUTER_MESSAGE_PROVIDER_PREF
   } = injector({
     "common/PerfService.jsm": {perfService},
     "lib/UTEventReporting.jsm": {UTEventReporting}
@@ -49,6 +52,7 @@ describe("TelemetryFeed", () => {
     globals.set("gUUIDGenerator", {generateUUID: () => FAKE_UUID});
     globals.set("PingCentre", PingCentre);
     globals.set("UTEventReporting", UTEventReporting);
+    FakePrefs.prototype.prefs[ROUTER_MESSAGE_PROVIDER_PREF] = FAKE_ROUTER_MESSAGE_PROVIDER;
     instance = new TelemetryFeed();
   });
   afterEach(() => {
@@ -111,6 +115,20 @@ describe("TelemetryFeed", () => {
         instance._prefs.set(EVENTS_TELEMETRY_PREF, true);
 
         assert.propertyVal(instance, "eventTelemetryEnabled", true);
+      });
+    });
+    describe("a-s router message provider cohort changes from false to true", () => {
+      beforeEach(() => {
+        FakePrefs.prototype.prefs = {};
+        instance = new TelemetryFeed();
+
+        assert.ok(!instance.isInCFRCohort);
+      });
+
+      it("should set the _isInCFRCohort property to true", () => {
+        instance._prefs.set(ROUTER_MESSAGE_PROVIDER_PREF, FAKE_ROUTER_MESSAGE_PROVIDER_COHORT);
+
+        assert.ok(instance.isInCFRCohort);
       });
     });
   });
@@ -470,6 +488,75 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "tiles", tiles);
     });
   });
+  describe("#_parseCFRCohort", () => {
+    it("should return true if it is in the CFR cohort", () => {
+      assert.ok(instance._parseCFRCohort(FAKE_ROUTER_MESSAGE_PROVIDER_COHORT));
+    });
+    it("should return false if it is not in the CFR cohort", () => {
+      assert.ok(!instance._parseCFRCohort(FAKE_ROUTER_MESSAGE_PROVIDER));
+    });
+    it("should report an error given an invalid pref", () => {
+      assert.ok(!instance._parseCFRCohort("some in valid json string"));
+      assert.called(global.Cu.reportError);
+    });
+  });
+  describe("#applyCFRPolicy", () => {
+    it("should use client_id and message_id in prerelease", () => {
+      globals.set("AppConstants", {MOZ_UPDATE_CHANNEL: "nightly"});
+      const data = {
+        action: "cfr_user_event",
+        source: "CFR",
+        event: "IMPRESSION",
+        client_id: "some_client_id",
+        impression_id: "some_impression_id",
+        message_id: "cfr_message_01",
+        bucket_id: "cfr_bucket_01"
+      };
+      const ping = instance.applyCFRPolicy(data);
+
+      assert.isUndefined(ping.client_id);
+      assert.propertyVal(ping, "impression_id", "n/a");
+      assert.propertyVal(ping, "message_id", "cfr_message_01");
+      assert.isUndefined(ping.bucket_id);
+    });
+    it("should use impression_id and bucket_id in release", () => {
+      globals.set("AppConstants", {MOZ_UPDATE_CHANNEL: "release"});
+      const data = {
+        action: "cfr_user_event",
+        source: "CFR",
+        event: "IMPRESSION",
+        client_id: "some_client_id",
+        impression_id: "some_impression_id",
+        message_id: "cfr_message_01",
+        bucket_id: "cfr_bucket_01"
+      };
+      const ping = instance.applyCFRPolicy(data);
+
+      assert.propertyVal(ping, "impression_id", FAKE_UUID);
+      assert.propertyVal(ping, "client_id", "n/a");
+      assert.propertyVal(ping, "message_id", "cfr_bucket_01");
+      assert.isUndefined(ping.bucket_id);
+    });
+    it("should use client_id and message_id in the experiment cohort in release", () => {
+      globals.set("AppConstants", {MOZ_UPDATE_CHANNEL: "release"});
+      FakePrefs.prototype.prefs[ROUTER_MESSAGE_PROVIDER_PREF] = FAKE_ROUTER_MESSAGE_PROVIDER_COHORT;
+      const data = {
+        action: "cfr_user_event",
+        source: "CFR",
+        event: "IMPRESSION",
+        client_id: "some_client_id",
+        impression_id: "some_impression_id",
+        message_id: "cfr_message_01",
+        bucket_id: "cfr_bucket_01"
+      };
+      const ping = instance.applyCFRPolicy(data);
+
+      assert.isUndefined(ping.client_id);
+      assert.propertyVal(ping, "impression_id", "n/a");
+      assert.propertyVal(ping, "message_id", "cfr_message_01");
+      assert.isUndefined(ping.bucket_id);
+    });
+  });
   describe("#createASRouterEvent", () => {
     it("should create a valid AS Router event", async () => {
       const data = {
@@ -485,6 +572,35 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "client_id", "n/a");
       assert.propertyVal(ping, "source", "SNIPPETS");
       assert.propertyVal(ping, "event", "CLICK");
+    });
+    it("should drop the default client_id if includeClientID presents", async () => {
+      const data = {
+        action: "snippet_user_event",
+        source: "SNIPPETS",
+        event: "CLICK",
+        message_id: "snippets_message_01",
+        includeClientID: true
+      };
+      const action = ac.ASRouterUserEvent(data);
+      const ping = await instance.createASRouterEvent(action);
+
+      assert.isUndefined(ping.client_id);
+      assert.isUndefined(ping.includeClientID);
+      assert.propertyVal(ping, "impression_id", "n/a");
+    });
+    it("should call applyCFRPolicy if action equals to cfr_user_event", async () => {
+      const data = {
+        action: "cfr_user_event",
+        source: "CFR",
+        event: "IMPRESSION",
+        message_id: "cfr_message_01",
+        includeClientID: true
+      };
+      sandbox.stub(instance, "applyCFRPolicy");
+      const action = ac.ASRouterUserEvent(data);
+      await instance.createASRouterEvent(action);
+
+      assert.calledOnce(instance.applyCFRPolicy);
     });
   });
   describe("#sendEvent", () => {
@@ -633,6 +749,15 @@ describe("TelemetryFeed", () => {
       instance.uninit();
 
       assert.notProperty(instance._prefs.observers, EVENTS_TELEMETRY_PREF);
+    });
+    it("should remove the a-s router message provider listener", () => {
+      instance = new TelemetryFeed();
+
+      assert.property(instance._prefs.observers, ROUTER_MESSAGE_PROVIDER_PREF);
+
+      instance.uninit();
+
+      assert.notProperty(instance._prefs.observers, ROUTER_MESSAGE_PROVIDER_PREF);
     });
     it("should call Cu.reportError if this._prefs.ignore throws", () => {
       globals.sandbox.stub(FakePrefs.prototype, "ignore").throws("Some Error");

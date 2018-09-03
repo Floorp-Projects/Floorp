@@ -26,7 +26,7 @@ const STATE3 = createEntries(JSON.stringify(CRASH_STATE));
 function createEntries(sessionData) {
   return {
     entries: [{url: "about:sessionrestore", triggeringPrincipal_base64}],
-    formdata: {id: {sessionData}, url: "about:sessionrestore"}
+    formdata: {id: {sessionData}, url: "about:sessionrestore"},
   };
 }
 

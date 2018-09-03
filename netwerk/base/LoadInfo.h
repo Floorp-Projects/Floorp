@@ -135,7 +135,8 @@ private:
            bool aForcePreflight,
            bool aIsPreflight,
            bool aLoadTriggeredFromExternal,
-           bool aServiceWorkerTaintingSynthesized);
+           bool aServiceWorkerTaintingSynthesized,
+           bool aDocumentHasUserInteracted);
   LoadInfo(const LoadInfo& rhs);
 
   NS_IMETHOD GetRedirects(JSContext* aCx, JS::MutableHandle<JS::Value> aRedirects,
@@ -211,6 +212,7 @@ private:
 
   bool                             mIsTracker;
   bool                             mIsTrackerBlocked;
+  bool                             mDocumentHasUserInteracted;
 };
 
 } // namespace net

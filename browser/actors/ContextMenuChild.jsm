@@ -497,7 +497,7 @@ class ContextMenuChild extends ActorChild {
       characterSet: charSet,
       baseURI,
       referrer,
-      referrerPolicy
+      referrerPolicy,
     } = doc;
     docLocation = docLocation && docLocation.spec;
     let frameOuterWindowID = WebNavigationFrames.getFrameId(doc.defaultView);
@@ -823,7 +823,7 @@ class ContextMenuChild extends ActorChild {
         currentSrc: context.target.currentSrc,
         width: context.target.width,
         height: context.target.height,
-        imageText: context.target.title || context.target.alt
+        imageText: context.target.title || context.target.alt,
       };
 
       const request = context.target.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);

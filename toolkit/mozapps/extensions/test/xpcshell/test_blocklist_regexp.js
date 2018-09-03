@@ -36,7 +36,7 @@ var WindowWatcher = {
 
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIWindowWatcher"])
+  QueryInterface: ChromeUtils.generateQI(["nsIWindowWatcher"]),
 };
 
 MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1", WindowWatcher);
@@ -75,8 +75,8 @@ async function run_test() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "3"
-    }]
+      maxVersion: "3",
+    }],
   }, profileDir);
 
   await promiseStartupManager();

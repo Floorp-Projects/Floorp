@@ -23,7 +23,7 @@ var ScrollPosition = Object.freeze({
 
   restoreTree(root, data) {
     ScrollPositionInternal.restoreTree(root, data);
-  }
+  },
 });
 
 /**
@@ -100,5 +100,5 @@ var ScrollPositionInternal = {
         this.restoreTree(frames[index], child);
       }
     });
-  }
+  },
 };

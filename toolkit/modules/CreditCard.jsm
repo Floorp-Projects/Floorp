@@ -43,7 +43,7 @@ class CreditCard {
     expirationYear,
     network,
     ccv,
-    encryptedNumber
+    encryptedNumber,
   }) {
     this._name = name;
     this._unmodifiedNumber = number;

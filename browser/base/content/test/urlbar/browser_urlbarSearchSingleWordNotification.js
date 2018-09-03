@@ -54,7 +54,7 @@ async function runURLBarSearchTest({valueToOpen, expectSearch, expectNotificatio
 
   await Promise.all([
     docLoadPromise,
-    promiseNotification(aWindow.gBrowser, "keyword-uri-fixup", expectNotification, valueToOpen)
+    promiseNotification(aWindow.gBrowser, "keyword-uri-fixup", expectNotification, valueToOpen),
   ]);
 }
 
@@ -97,7 +97,7 @@ add_task(async function test_navigate_large_number() {
   await runURLBarSearchTest({
     valueToOpen: "123456789012345",
     expectSearch: true,
-    expectNotification: false
+    expectNotification: false,
   });
   gBrowser.removeTab(tab);
 });
@@ -108,7 +108,7 @@ add_task(async function test_navigate_small_hex_number() {
   await runURLBarSearchTest({
     valueToOpen: "0x1f00ffff",
     expectSearch: true,
-    expectNotification: false
+    expectNotification: false,
   });
   gBrowser.removeTab(tab);
 });
@@ -119,7 +119,7 @@ add_task(async function test_navigate_large_hex_number() {
   await runURLBarSearchTest({
     valueToOpen: "0x7f0000017f000001",
     expectSearch: true,
-    expectNotification: false
+    expectNotification: false,
   });
   gBrowser.removeTab(tab);
 });

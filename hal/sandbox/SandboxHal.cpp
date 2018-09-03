@@ -12,7 +12,6 @@
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/fallback/FallbackScreenConfiguration.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/Observer.h"
@@ -122,7 +121,7 @@ GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 }
 
 bool
-LockScreenOrientation(const dom::ScreenOrientationInternal& aOrientation)
+LockScreenOrientation(const ScreenOrientation& aOrientation)
 {
   bool allowed;
   Hal()->SendLockScreenOrientation(aOrientation, &allowed);
@@ -332,7 +331,7 @@ public:
   }
 
   virtual mozilla::ipc::IPCResult
-  RecvLockScreenOrientation(const dom::ScreenOrientationInternal& aOrientation, bool* aAllowed) override
+  RecvLockScreenOrientation(const ScreenOrientation& aOrientation, bool* aAllowed) override
   {
     // FIXME/bug 777980: unprivileged content may only lock
     // orientation while fullscreen.  We should check whether the

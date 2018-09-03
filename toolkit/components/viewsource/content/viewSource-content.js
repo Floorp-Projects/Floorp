@@ -269,7 +269,6 @@ var ViewSourceContent = {
     docShell.QueryInterface(Ci.nsIWebNavigation)
             .sessionHistory
             .legacySHistory
-            .QueryInterface(Ci.nsISHistoryInternal)
             .addEntry(shEntry, true);
   },
 
@@ -711,7 +710,7 @@ var ViewSourceContent = {
       accesskey: true,
       handler() {
         sendAsyncMessage("ViewSource:PromptAndGoToLine");
-      }
+      },
     },
     {
       id: "wrapLongLines",
@@ -720,7 +719,7 @@ var ViewSourceContent = {
       },
       handler() {
         this.toggleWrapping();
-      }
+      },
     },
     {
       id: "highlightSyntax",
@@ -729,7 +728,7 @@ var ViewSourceContent = {
       },
       handler() {
         this.toggleSyntaxHighlighting();
-      }
+      },
     },
   ],
 

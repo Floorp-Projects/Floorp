@@ -25,7 +25,7 @@ async function checkURLBarValueStays(browser) {
 add_task(async function() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: "http://example.com/browser/browser/base/content/test/urlbar/file_urlbar_edit_dos.html"
+    url: "http://example.com/browser/browser/base/content/test/urlbar/file_urlbar_edit_dos.html",
   }, async function(browser) {
     await ContentTask.spawn(browser, "", function() {
       content.wrappedJSObject.dos_hash();

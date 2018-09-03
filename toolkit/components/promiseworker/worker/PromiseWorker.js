@@ -166,7 +166,7 @@ AbstractWorker.prototype = {
         message: exn.message,
         fileName: exn.moduleName || exn.fileName,
         lineNumber: exn.lineNumber,
-        stack: exn.moduleStack
+        stack: exn.moduleStack,
       };
       this.postMessage({fail: error, id, durationMs});
     } else if ("toMsg" in exn) {
@@ -195,6 +195,6 @@ AbstractWorker.prototype = {
       }
       throw exn;
     }
-  }
+  },
 };
 exports.AbstractWorker = AbstractWorker;

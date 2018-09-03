@@ -668,8 +668,8 @@
 
      exports.OS.Unix = {
        File: {
-         _init: init
-       }
+         _init: init,
+       },
      };
    })(this);
 }

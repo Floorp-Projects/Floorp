@@ -14,7 +14,7 @@ from application_ini import get_application_ini_value
 from mozbuild.util import ensureParentDir
 
 
-def repackage_mar(topsrcdir, package, mar, output):
+def repackage_mar(topsrcdir, package, mar, output, mar_format='lzma'):
     if not zipfile.is_zipfile(package) and not tarfile.is_tarfile(package):
         raise Exception("Package file %s is not a valid .zip or .tar file." % package)
 
@@ -47,6 +47,8 @@ def repackage_mar(topsrcdir, package, mar, output):
         env = os.environ.copy()
         env['MOZ_FULL_PRODUCT_VERSION'] = get_application_ini_value(tmpdir, 'App', 'Version')
         env['MAR'] = mozpath.normpath(mar)
+        if mar_format == 'bz2':
+            env['MAR_OLD_FORMAT'] = '1'
         # The Windows build systems have xz installed but it isn't in the path
         # like it is on Linux and Mac OS X so just use the XZ env var so the mar
         # generation scripts can find it.

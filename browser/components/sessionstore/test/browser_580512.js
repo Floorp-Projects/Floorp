@@ -74,7 +74,7 @@ function openWinWithCb(cb, argURIs, expectedURIs) {
             cb(win);
           });
         }
-      }
+      },
     });
   }, {once: true});
 }

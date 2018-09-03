@@ -263,23 +263,6 @@ public:
   GetEndRangedPtr(const nsAString& aString);
 
   /**
-   * True if 'aCh' is a decimal digit.
-   */
-  static inline bool IsDigit(char16_t aCh)
-  {
-    return aCh >= '0' && aCh <= '9';
-  }
-
- /**
-  * Assuming that 'aCh' is a decimal digit, return its numeric value.
-  */
-  static inline uint32_t DecimalDigitValue(char16_t aCh)
-  {
-    MOZ_ASSERT(IsDigit(aCh), "Digit expected");
-    return aCh - '0';
-  }
-
-  /**
    * Parses the sign (+ or -) of a number and moves aIter to the next
    * character if a sign is found.
    * @param aSignMultiplier [outparam] -1 if the sign is negative otherwise 1

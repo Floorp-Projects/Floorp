@@ -23,7 +23,7 @@ async function calcMaximumAvailSize(aChromeWidth, aChromeHeight) {
     let contentSize = await ContentTask.spawn(tab.linkedBrowser, null, async function() {
       let result = {
         width: content.innerWidth,
-        height: content.innerHeight
+        height: content.innerHeight,
       };
 
       return result;
@@ -83,7 +83,7 @@ async function calcPopUpWindowChromeUISize() {
 
     let res = {
       chromeWidth: win.outerWidth - win.innerWidth,
-      chromeHeight: win.outerHeight - win.innerHeight
+      chromeHeight: win.outerHeight - win.innerHeight,
     };
 
     win.close();
@@ -172,7 +172,7 @@ async function testWindowSizeSetting(aBrowser, aSettingWidth, aSettingHeight,
     settingHeight: aSettingHeight + (aTestOuter ? aPopupChromeUIHeight : 0),
     targetWidth:  aTargetWidth,
     targetHeight: aTargetHeight,
-    testOuter: aTestOuter
+    testOuter: aTestOuter,
   };
 
   await ContentTask.spawn(aBrowser, testParams,
@@ -257,7 +257,7 @@ class RoundedWindowTest {
 
   async setup() {
     await SpecialPowers.pushPrefEnv({"set":
-      [["privacy.resistFingerprinting", true]]
+      [["privacy.resistFingerprinting", true]],
     });
 
     // Calculate the popup window's chrome UI size for tests of outerWidth/Height.

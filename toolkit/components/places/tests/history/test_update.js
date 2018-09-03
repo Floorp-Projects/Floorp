@@ -158,6 +158,11 @@ add_task(async function test_previewImageURL_change_saved() {
   await PlacesUtils.history.update({ url: TEST_URL, guid, previewImageURL });
   previewImageURLInDB = await PlacesTestUtils.fieldInDB(TEST_URL, "preview_image_url");
   Assert.equal(previewImageURL, previewImageURLInDB, "previewImageURL should be updated via GUID as expected");
+
+  previewImageURL = "";
+  await PlacesUtils.history.update({ url: TEST_URL, previewImageURL});
+  previewImageURLInDB = await PlacesTestUtils.fieldInDB(TEST_URL, "preview_image_url");
+  Assert.strictEqual(null, previewImageURLInDB, "an empty previewImageURL should set it to null in the database");
 });
 
 add_task(async function test_change_description_and_preview_saved() {

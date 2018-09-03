@@ -27,7 +27,7 @@ add_task(async function test_DownloadHistory_initialization() {
     let download = {
       source: {
         url: httpUrl(`source${i}`),
-        isPrivate: false
+        isPrivate: false,
       },
       target: { path: targetFile.path },
       endTime: baseDate.getTime() + i,
@@ -49,7 +49,7 @@ add_task(async function test_DownloadHistory_initialization() {
           state: download.state,
           endTime: download.endTime,
           fileSize: download.fileSize,
-        })]
+        })],
       ]),
       url: download.source.url,
     });

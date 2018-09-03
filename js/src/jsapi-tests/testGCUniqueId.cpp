@@ -6,10 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gc/GCInternals.h"
-#include "gc/Zone.h"
 #include "js/GCVector.h"
 
 #include "jsapi-tests/tests.h"
+
+#include "gc/Zone-inl.h"
 
 static void
 MinimizeHeap(JSContext* cx)

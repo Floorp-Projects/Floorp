@@ -21,7 +21,7 @@ function checkUpdates(aId, aUpdateFile) {
         let error = new Error("Update check failed with status " + status);
         error.status = status;
         reject(error);
-      }
+      },
     });
   });
 }
@@ -175,14 +175,14 @@ add_task(async function() {
     maxVersion: 2,
     appID: "xpcshell@tests.mozilla.org",
     appMinVersion: 0.1,
-    appMaxVersion: 0.2
+    appMaxVersion: 0.2,
   }, {
     type: "incompatible",
     minVersion: 2,
     maxVersion: 2,
     appID: "xpcshell@tests.mozilla.org",
     appMinVersion: 1,
-    appMaxVersion: 2
+    appMaxVersion: 2,
   }];
   let update = await AddonUpdateChecker.getNewestCompatibleUpdate(
     updates, null, null, true, false, overrides);

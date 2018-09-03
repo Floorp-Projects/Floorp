@@ -82,7 +82,7 @@ let gContainersPane = {
         {id: "containers-remove-alert-title"},
         {id: "containers-remove-alert-msg", args: { count }},
         {id: "containers-remove-ok-button"},
-        {id: "containers-remove-cancel-button"}
+        {id: "containers-remove-cancel-button"},
       ]);
 
       let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
@@ -113,7 +113,7 @@ let gContainersPane = {
     let identity = {
       name: "",
       icon: defaultContainerIcon,
-      color: defaultContainerColor
+      color: defaultContainerColor,
     };
     if (userContextId) {
       identity = ContextualIdentityService.getPublicIdentityFromId(userContextId);
@@ -123,6 +123,6 @@ let gContainersPane = {
     const params = { userContextId, identity };
     gSubDialog.open("chrome://browser/content/preferences/containers.xul",
                      null, params);
-  }
+  },
 
 };

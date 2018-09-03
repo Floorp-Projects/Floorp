@@ -302,7 +302,7 @@ var TabsInTitlebar = {
     this._menuObserver.disconnect();
     CustomizableUI.removeListener(this);
     gDragSpaceObserver.uninit();
-  }
+  },
 };
 
 function onTitlebarMaxClick() {

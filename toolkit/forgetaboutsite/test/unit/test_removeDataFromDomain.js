@@ -59,7 +59,7 @@ function check_cookie_exists(aDomain, aExists) {
   let cookie = {
     host: aDomain,
     name: COOKIE_NAME,
-    path: COOKIE_PATH
+    path: COOKIE_PATH,
   };
   Assert.equal(aExists, Services.cookies.cookieExists(cookie));
 }
@@ -159,7 +159,7 @@ function add_preference(aURI) {
     let cp = Cc["@mozilla.org/content-pref/service;1"].
                getService(Ci.nsIContentPrefService2);
     cp.set(aURI.spec, PREFERENCE_NAME, "foo", null, {
-      handleCompletion: () => resolve()
+      handleCompletion: () => resolve(),
     });
   });
 }
@@ -177,7 +177,7 @@ function preference_exists(aURI) {
     let exists = false;
     cp.getByDomainAndName(aURI.spec, PREFERENCE_NAME, null, {
       handleResult: () => exists = true,
-      handleCompletion: () => resolve(exists)
+      handleCompletion: () => resolve(exists),
     });
   });
 }
@@ -325,7 +325,7 @@ function waitForPurgeNotification() {
         Services.tm.dispatchToMainThread(function() {
           resolve();
         });
-      }
+      },
     };
     Services.obs.addObserver(observer, "browser:purge-domain-data");
 
@@ -418,7 +418,7 @@ async function test_push_cleared() {
             }));
           },
         });
-      }
+      },
     });
 
     const TEST_URL = "https://www.mozilla.org/scope/";
@@ -459,7 +459,7 @@ async function test_cache_cleared() {
       // Shutdown the download manager.
       Services.obs.notifyObservers(null, "quit-application");
       do_test_finished();
-    }
+    },
   };
   Services.obs.addObserver(observer, "cacheservice:empty-cache");
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");

@@ -27,7 +27,7 @@ var tests = [
       ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback triggered");
       this.notification.remove();
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
-    }
+    },
   },
   // Test that icons appear
   { id: "Test#2",
@@ -50,7 +50,7 @@ var tests = [
       this.notification.remove();
       is(icon.boxObject.width, 0,
          "geo anchor should not be visible after removal");
-    }
+    },
   },
 
   // Test that persistence allows the notification to persist across reloads
@@ -60,7 +60,7 @@ var tests = [
       await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
-        persistence: 2
+        persistence: 2,
       });
       this.notification = showNotification(this.notifyObj);
     },
@@ -77,7 +77,7 @@ var tests = [
       ok(this.notifyObj.removedCallbackTriggered, "removal callback triggered");
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
-    }
+    },
   },
   // Test that a timeout allows the notification to persist across reloads
   { id: "Test#4",
@@ -87,7 +87,7 @@ var tests = [
       this.notifyObj = new BasicNotification(this.id);
       // Set a timeout of 10 minutes that should never be hit
       this.notifyObj.addOptions({
-        timeout: Date.now() + 600000
+        timeout: Date.now() + 600000,
       });
       this.notification = showNotification(this.notifyObj);
     },
@@ -105,7 +105,7 @@ var tests = [
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
-    }
+    },
   },
   // Test that setting persistWhileVisible allows a visible notification to
   // persist across location changes
@@ -115,7 +115,7 @@ var tests = [
       await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
-        persistWhileVisible: true
+        persistWhileVisible: true,
       });
       this.notification = showNotification(this.notifyObj);
     },
@@ -133,7 +133,7 @@ var tests = [
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
-    }
+    },
   },
 
   // Test that nested icon nodes correctly activate popups
@@ -167,7 +167,7 @@ var tests = [
     onHidden(popup) {
       this.notification.remove();
       this.box.remove();
-    }
+    },
   },
   // Test that popupnotifications without popups have anchor icons shown
   { id: "Test#7",
@@ -181,7 +181,7 @@ var tests = [
       isnot(document.getElementById("geo-notification-icon").boxObject.width, 0,
             "geo anchor should be visible");
       goNext();
-    }
+    },
   },
   // Test that autoplay media icon is shown
   { id: "Test#8",
@@ -195,7 +195,7 @@ var tests = [
       isnot(document.getElementById("autoplay-media-notification-icon").boxObject.width, 0,
             "autoplay media icon should be visible");
       goNext();
-    }
+    },
   },
   // Test notification close button
   { id: "Test#9",
@@ -213,7 +213,7 @@ var tests = [
       this.notification.remove();
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
       ok(!this.notifyObj.secondaryActionClicked, "secondary action not clicked");
-    }
+    },
   },
   // Test that notification close button calls secondary action instead of
   // dismissal callback if privacy.permissionPrompts.showCloseButton is set.
@@ -234,7 +234,7 @@ var tests = [
       Services.prefs.clearUserPref("privacy.permissionPrompts.showCloseButton");
       this.notification.remove();
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
-    }
+    },
   },
   // Test notification when chrome is hidden
   { id: "Test#11",
@@ -253,6 +253,6 @@ var tests = [
       this.notification.remove();
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
       window.locationbar.visible = true;
-    }
+    },
   },
 ];

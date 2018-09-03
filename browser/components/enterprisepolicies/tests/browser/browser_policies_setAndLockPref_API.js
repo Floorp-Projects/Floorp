@@ -55,19 +55,19 @@ add_task(async function test_API_through_policies() {
   Policies.bool_policy = {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("policies.test2.boolPref", param);
-    }
+    },
   };
 
   Policies.int_policy = {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("policies.test2.intPref", param);
-    }
+    },
   };
 
   Policies.string_policy = {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("policies.test2.stringPref", param);
-    }
+    },
   };
 
   await setupPolicyEngineWithJson(
@@ -76,25 +76,25 @@ add_task(async function test_API_through_policies() {
       "policies": {
         "bool_policy": true,
         "int_policy": 42,
-        "string_policy": "policies test 2"
-      }
+        "string_policy": "policies test 2",
+      },
     },
 
     // custom schema
     {
       properties: {
         "bool_policy": {
-          "type": "boolean"
+          "type": "boolean",
         },
 
         "int_policy": {
-          "type": "integer"
+          "type": "integer",
         },
 
         "string_policy": {
-          "type": "string"
-        }
-      }
+          "type": "string",
+        },
+      },
     }
   );
 

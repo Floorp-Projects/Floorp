@@ -1663,6 +1663,11 @@ OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex, Value* callee, ValueVe
 
     const FuncType& funcType = env_.types[*funcTypeIndex].funcType();
 
+#ifdef WASM_PRIVATE_REFTYPES
+    if (env_.tables[0].importedOrExported && funcType.exposesRef())
+        return fail("cannot expose reference type");
+#endif
+
     if (!popCallArgs(funcType.args(), argValues))
         return false;
 

@@ -58,23 +58,23 @@ var UrlClassifierTestUtils = {
       {
         pref: ANNOTATION_TABLE_PREF,
         name: ANNOTATION_TABLE_NAME,
-        update: annotationUpdate
+        update: annotationUpdate,
       },
       {
         pref: ANNOTATION_WHITELIST_TABLE_PREF,
         name: ANNOTATION_WHITELIST_TABLE_NAME,
-        update: annotationWhitelistUpdate
+        update: annotationWhitelistUpdate,
       },
       {
         pref: TRACKING_TABLE_PREF,
         name: TRACKING_TABLE_NAME,
-        update: trackingUpdate
+        update: trackingUpdate,
       },
       {
         pref: WHITELIST_TABLE_PREF,
         name: WHITELIST_TABLE_NAME,
-        update: whitelistUpdate
-      }
+        update: whitelistUpdate,
+      },
     ];
 
     let tableIndex = 0;
@@ -132,7 +132,7 @@ var UrlClassifierTestUtils = {
         },
         updateSuccess: requestedTimeout => {
           resolve();
-        }
+        },
       };
 
       try {

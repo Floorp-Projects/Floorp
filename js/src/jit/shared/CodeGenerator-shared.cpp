@@ -282,8 +282,9 @@ CodeGeneratorShared::dumpNativeToBytecodeEntries()
 {
 #ifdef JS_JITSPEW
     InlineScriptTree* topTree = gen->info().inlineScriptTree();
-    JitSpewStart(JitSpew_Profiling, "Native To Bytecode Entries for %s:%u\n",
-                 topTree->script()->filename(), topTree->script()->lineno());
+    JitSpewStart(JitSpew_Profiling, "Native To Bytecode Entries for %s:%u:%u\n",
+                 topTree->script()->filename(), topTree->script()->lineno(),
+                 topTree->script()->column());
     for (unsigned i = 0; i < nativeToBytecodeList_.length(); i++)
         dumpNativeToBytecodeEntry(i);
 #endif
@@ -305,17 +306,18 @@ CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx)
         if (nextRef->tree == ref.tree)
             pcDelta = nextRef->pc - ref.pc;
     }
-    JitSpewStart(JitSpew_Profiling, "    %08zx [+%-6d] => %-6ld [%-4d] {%-10s} (%s:%u",
+    JitSpewStart(JitSpew_Profiling, "    %08zx [+%-6d] => %-6ld [%-4d] {%-10s} (%s:%u:%u",
                  ref.nativeOffset.offset(),
                  nativeDelta,
                  (long) (ref.pc - script->code()),
                  pcDelta,
                  CodeName[JSOp(*ref.pc)],
-                 script->filename(), script->lineno());
+                 script->filename(), script->lineno(), script->column());
 
     for (tree = tree->caller(); tree; tree = tree->caller()) {
-        JitSpewCont(JitSpew_Profiling, " <= %s:%u", tree->script()->filename(),
-                                                    tree->script()->lineno());
+        JitSpewCont(JitSpew_Profiling, " <= %s:%u:%u", tree->script()->filename(),
+                                                       tree->script()->lineno(),
+                                                       tree->script()->column());
     }
     JitSpewCont(JitSpew_Profiling, ")");
     JitSpewFin(JitSpew_Profiling);
@@ -1379,10 +1381,10 @@ CodeGeneratorShared::callVM(const VMFunction& fun, LInstruction* ins, const Regi
     // fill the frame descriptor.
     if (dynStack) {
         masm.addPtr(Imm32(masm.framePushed()), *dynStack);
-        masm.makeFrameDescriptor(*dynStack, JitFrame_IonJS, ExitFrameLayout::Size());
+        masm.makeFrameDescriptor(*dynStack, FrameType::IonJS, ExitFrameLayout::Size());
         masm.Push(*dynStack); // descriptor
     } else {
-        masm.pushStaticFrameDescriptor(JitFrame_IonJS, ExitFrameLayout::Size());
+        masm.pushStaticFrameDescriptor(FrameType::IonJS, ExitFrameLayout::Size());
     }
 
     // Call the wrapper function.  The wrapper is in charge to unwind the stack

@@ -5,6 +5,7 @@
 import bisect
 import gzip
 import json
+import math
 import requests
 
 from datetime import datetime, timedelta
@@ -114,9 +115,20 @@ class Report(object):
                 res.append((f, cost, count, round(cost*count,3)))
         return res
 
-    def get_sorted_report(self):
+    def get_sorted_report(self, format):
         res = self.organize_data()
         res.sort(key=(lambda x: x[3]), reverse=True)
+
+        def ms_to_mins_secs(ms):
+            secs = ms / 1000.0
+            mins = secs / 60
+            secs = secs % 60
+            return '%d:%02d' % (math.trunc(mins), int(round(secs)))
+
+        if format in ('html', 'pretty'):
+            res = [(f, ms_to_mins_secs(cost), count, ms_to_mins_secs(total)) for
+                   (f, cost, count, total) in res]
+
         return res
 
     def cut(self, size, lst):
@@ -128,7 +140,7 @@ class Report(object):
     def generate_output(self, format, limit, dst):
         import tablib
         data = tablib.Dataset(headers=['FILE', 'TIME', 'CHANGES', 'TOTAL'])
-        res = self.get_sorted_report()
+        res = self.get_sorted_report(format)
         if limit is not None:
             res = self.cut(limit, res)
         for x in res: data.append(x)

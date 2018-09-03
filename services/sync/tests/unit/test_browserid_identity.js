@@ -38,7 +38,7 @@ MockFxAccountsClient.prototype = {
   __proto__: FxAccountsClient.prototype,
   accountStatus() {
     return Promise.resolve(true);
-  }
+  },
 };
 
 function MockFxAccounts() {
@@ -49,7 +49,7 @@ function MockFxAccounts() {
       return this._now_is;
     },
 
-    fxAccountsClient: new MockFxAccountsClient()
+    fxAccountsClient: new MockFxAccountsClient(),
   });
   fxa.internal.currentAccountState.getCertificate = function(data, keyPair, mustBeValidUntil) {
     this.cert = {
@@ -110,7 +110,7 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
       accountStatus() {
         accountStatusCalled = true;
         return Promise.resolve(false);
-      }
+      },
     };
 
     let mockFxAClient = new AuthErrorMockFxAClient();
@@ -373,7 +373,7 @@ add_task(async function test_refreshCertificateOn401() {
     __proto__: FxAccountsClient.prototype,
     signCertificate() {
       ++getCertCount;
-    }
+    },
   };
 
   let mockFxAClient = new CheckSignMockFxAClient();
@@ -400,7 +400,7 @@ add_task(async function test_refreshCertificateOn401() {
         api_endpoint: "http://example.com/",
         uid:          "uid",
         duration:     300,
-      })
+      }),
     };
   });
 
@@ -733,7 +733,7 @@ async function initializeIdentityWithHAWKResponseFactory(config, cbGetResponse) 
         this.response = cbGetResponse("get", null, this._uri, this._credentials, this._extra);
       }
       return this.response;
-    }
+    },
   };
 
   // The hawk client.
@@ -794,7 +794,7 @@ function mockTokenServer(func) {
     async get() {
       this.response = func();
       return this.response;
-    }
+    },
   };
   // The mocked TokenServer client which will get the response.
   function MockTSC() { }

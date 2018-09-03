@@ -25,7 +25,6 @@ import android.os.Bundle;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
@@ -53,7 +52,8 @@ public class GeckoMediaControlAgent {
     public static final String ACTION_RESUME          = "action_resume";
     public static final String ACTION_PAUSE           = "action_pause";
     public static final String ACTION_STOP            = "action_stop";
-    /* package */ static final String ACTION_SHUTDOWN = "action_shutdown";
+    /* package */ static final String ACTION_SHUTDOWN        = "action_shutdown";
+    /* package */ static final String ACTION_STOP_FOREGROUND = "action_stop_foreground";
     /* package */ static final String ACTION_RESUME_BY_AUDIO_FOCUS = "action_resume_audio_focus";
     /* package */ static final String ACTION_PAUSE_BY_AUDIO_FOCUS  = "action_pause_audio_focus";
     /* package */ static final String ACTION_START_AUDIO_DUCK      = "action_start_audio_duck";
@@ -276,8 +276,7 @@ public class GeckoMediaControlAgent {
         Log.d(LOGTAG, "onStateChanged, state = " + sMediaState);
 
         if (isNeedToRemoveControlInterface(sMediaState)) {
-            toggleForegroundService(false);
-            NotificationManagerCompat.from(mContext).cancel(R.id.mediaControlNotification);
+            shutdownForegroundService();
             release();
             return;
         }
@@ -385,19 +384,18 @@ public class GeckoMediaControlAgent {
         final boolean isPlaying = isMediaPlaying();
         final int visibility = tab.isPrivate() ? Notification.VISIBILITY_PRIVATE : Notification.VISIBILITY_PUBLIC;
 
-        final MediaNotification mediaNotification = new MediaNotification(isPlaying, visibility, tab.getId(),
+        final MediaNotification mediaNotification = new MediaNotification(visibility, tab.getId(),
                 tab.getTitle(), tab.getURL(), generateCoverArt(tab.getFavicon()));
 
         if (isPlaying) {
-            toggleForegroundService(true, mediaNotification);
+            updateMediaNotification(true, mediaNotification);
         } else {
-            toggleForegroundService(false);
-            NotificationManagerCompat.from(mContext).notify(R.id.mediaControlNotification, createNotification(mediaNotification));
+            updateMediaNotification(false, mediaNotification);
         }
     }
 
     @SuppressLint("NewApi")
-    /* package */ Notification createNotification(MediaNotification mediaNotification) {
+    /* package */ Notification createNotification(@NonNull MediaNotification mediaNotification) {
         final Notification.MediaStyle style = new Notification.MediaStyle();
         style.setShowActionsInCompactView(0);
 
@@ -411,7 +409,6 @@ public class GeckoMediaControlAgent {
                 .setDeleteIntent(createDeleteIntent())
                 .setStyle(style)
                 .addAction(createNotificationAction())
-                .setOngoing(mediaNotification.isOnGoing())
                 .setShowWhen(false)
                 .setWhen(0)
                 .setVisibility(mediaNotification.getVisibility());
@@ -496,21 +493,23 @@ public class GeckoMediaControlAgent {
         return stream.toByteArray();
     }
 
-    private void toggleForegroundService(boolean startService) {
-        toggleForegroundService(startService, null);
+    private void updateMediaNotification(boolean startForeground, MediaNotification mediaNotification) {
+        final Intent intent = new Intent(mContext, MediaControlService.class);
+        if (!startForeground) {
+            intent.setAction(ACTION_STOP_FOREGROUND);
+        }
+        intent.putExtra(GeckoMediaControlAgent.EXTRA_NOTIFICATION_DATA, mediaNotification);
+        notifyForegroundService(intent);
+    }
+
+    private void shutdownForegroundService() {
+        final Intent intent = new Intent(mContext, MediaControlService.class);
+        intent.setAction(GeckoMediaControlAgent.ACTION_SHUTDOWN);
+        notifyForegroundService(intent);
     }
 
     @SuppressLint("NewApi")
-    private void toggleForegroundService(boolean startService, MediaNotification mediaNotification) {
-        Intent intent = new Intent(mContext, MediaControlService.class);
-        if (!startService) {
-            intent.setAction(GeckoMediaControlAgent.ACTION_SHUTDOWN);
-        }
-
-        if (mediaNotification != null) {
-            intent.putExtra(GeckoMediaControlAgent.EXTRA_NOTIFICATION_DATA, mediaNotification);
-        }
-
+    private void notifyForegroundService(Intent intent) {
         if (AppConstants.Versions.preO) {
             mContext.startService(intent);
         } else {

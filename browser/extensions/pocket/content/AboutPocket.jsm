@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
   let consoleOptions = {
     maxLogLevelPref: PREF_LOG_LEVEL,
-    prefix: "Loop"
+    prefix: "Loop",
   };
   return new ConsoleAPI(consoleOptions);
 });
@@ -65,7 +65,7 @@ AboutPage.prototype = {
   unregister() {
     Cm.QueryInterface(Ci.nsIComponentRegistrar).unregisterFactory(
       this.classID, this);
-  }
+  },
 };
 
 /* exported AboutPocket */

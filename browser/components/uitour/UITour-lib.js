@@ -43,8 +43,8 @@ if (typeof Mozilla == "undefined") {
       bubbles: true,
       detail: {
         action,
-        data: data || {}
-      }
+        data: data || {},
+      },
     });
 
     document.dispatchEvent(event);
@@ -184,7 +184,7 @@ if (typeof Mozilla == "undefined") {
    */
   Mozilla.UITour.registerPageID = function(pageID) {
     _sendEvent("registerPageID", {
-      pageID
+      pageID,
     });
   };
 
@@ -216,7 +216,7 @@ if (typeof Mozilla == "undefined") {
   Mozilla.UITour.showHighlight = function(target, effect) {
     _sendEvent("showHighlight", {
       target,
-      effect
+      effect,
     });
   };
 
@@ -276,7 +276,7 @@ if (typeof Mozilla == "undefined") {
           label: buttons[i].label,
           icon: buttons[i].icon,
           style: buttons[i].style,
-          callbackID: _waitForCallback(buttons[i].callback)
+          callbackID: _waitForCallback(buttons[i].callback),
         });
       }
     }
@@ -294,7 +294,7 @@ if (typeof Mozilla == "undefined") {
       icon,
       buttons: buttonData,
       closeButtonCallbackID,
-      targetCallbackID
+      targetCallbackID,
     });
   };
 
@@ -339,7 +339,7 @@ if (typeof Mozilla == "undefined") {
     _stopCyclingThemes();
 
     _sendEvent("previewTheme", {
-      theme: JSON.stringify(theme)
+      theme: JSON.stringify(theme),
     });
   };
 
@@ -378,7 +378,7 @@ if (typeof Mozilla == "undefined") {
 
       _sendEvent("previewTheme", {
         theme: JSON.stringify(theme),
-        state: true
+        state: true,
       });
 
       callback(theme);
@@ -436,7 +436,7 @@ if (typeof Mozilla == "undefined") {
    */
   Mozilla.UITour.hideMenu = function(name) {
     _sendEvent("hideMenu", {
-      name
+      name,
     });
   };
 
@@ -590,7 +590,7 @@ if (typeof Mozilla == "undefined") {
   Mozilla.UITour.showFirefoxAccounts = function(extraURLCampaignParams, email) {
     _sendEvent("showFirefoxAccounts", {
       extraURLCampaignParams: JSON.stringify(extraURLCampaignParams),
-      email
+      email,
     });
   };
 
@@ -617,7 +617,7 @@ if (typeof Mozilla == "undefined") {
    */
   Mozilla.UITour.showConnectAnotherDevice = function(extraURLCampaignParams) {
     _sendEvent("showConnectAnotherDevice", {
-      extraURLCampaignParams: JSON.stringify(extraURLCampaignParams)
+      extraURLCampaignParams: JSON.stringify(extraURLCampaignParams),
     });
   };
 
@@ -679,7 +679,7 @@ if (typeof Mozilla == "undefined") {
   Mozilla.UITour.setTreatmentTag = function(name, value) {
     _sendEvent("setTreatmentTag", {
       name,
-      value
+      value,
     });
   };
 
@@ -698,7 +698,7 @@ if (typeof Mozilla == "undefined") {
   Mozilla.UITour.getTreatmentTag = function(name, callback) {
     _sendEvent("getTreatmentTag", {
       name,
-      callbackID: _waitForCallback(callback)
+      callbackID: _waitForCallback(callback),
     });
   };
 
@@ -712,7 +712,7 @@ if (typeof Mozilla == "undefined") {
    */
   Mozilla.UITour.setSearchTerm = function(term) {
     _sendEvent("setSearchTerm", {
-      term
+      term,
     });
   };
 
@@ -726,7 +726,7 @@ if (typeof Mozilla == "undefined") {
    */
   Mozilla.UITour.openSearchPanel = function(callback) {
     _sendEvent("openSearchPanel", {
-      callbackID: _waitForCallback(callback)
+      callbackID: _waitForCallback(callback),
     });
   };
 
@@ -772,7 +772,7 @@ if (typeof Mozilla == "undefined") {
    */
   Mozilla.UITour.openPreferences = function(pane) {
     _sendEvent("openPreferences", {
-      pane
+      pane,
     });
   };
 

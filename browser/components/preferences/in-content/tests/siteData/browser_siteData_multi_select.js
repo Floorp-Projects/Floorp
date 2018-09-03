@@ -6,37 +6,37 @@ add_task(async function() {
     {
       usage: 1024,
       origin: "https://account.xyz.com",
-      persisted: true
+      persisted: true,
     },
     {
       usage: 1024,
       origin: "https://shopping.xyz.com",
-      persisted: false
+      persisted: false,
     },
     {
       usage: 1024,
       origin: "http://cinema.bar.com",
-      persisted: true
+      persisted: true,
     },
     {
       usage: 1024,
       origin: "http://email.bar.com",
-      persisted: false
+      persisted: false,
     },
     {
       usage: 1024,
       origin: "https://s3-us-west-2.amazonaws.com",
-      persisted: true
+      persisted: true,
     },
     {
       usage: 1024,
       origin: "https://127.0.0.1",
-      persisted: false
+      persisted: false,
     },
     {
       usage: 1024,
       origin: "https://[0:0:0:0:0:0:0:1]",
-      persisted: true
+      persisted: true,
     },
   ]);
   let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);

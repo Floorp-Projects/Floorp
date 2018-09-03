@@ -38,7 +38,7 @@ function run_test() {
           do_test_finished();
         }
       });
-    }
+    },
   };
 
   // Set/Unset the console listener.

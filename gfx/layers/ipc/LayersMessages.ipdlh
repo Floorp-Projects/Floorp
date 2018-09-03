@@ -27,7 +27,7 @@ using class mozilla::TimeDuration from "mozilla/TimeStamp.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using mozilla::ScreenRotation from "mozilla/WidgetUtils.h";
 using nsCSSPropertyID from "nsCSSPropertyID.h";
-using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
+using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::LayerMargin from "Units.h";
 using mozilla::LayerPoint from "Units.h";
@@ -60,7 +60,7 @@ namespace layers {
 struct TargetConfig {
   IntRect naturalBounds;
   ScreenRotation rotation;
-  ScreenOrientationInternal orientation;
+  ScreenOrientation orientation;
   nsIntRegion clearRegion;
 };
 

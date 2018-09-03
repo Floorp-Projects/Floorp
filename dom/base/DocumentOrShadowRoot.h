@@ -15,6 +15,7 @@
 class nsContentList;
 class nsIDocument;
 class nsINode;
+class nsWindowSizes;
 
 namespace mozilla {
 class StyleSheet;
@@ -189,6 +190,11 @@ protected:
   // Returns the reference to the sheet, if found in mStyleSheets.
   already_AddRefed<StyleSheet> RemoveSheet(StyleSheet& aSheet);
   void InsertSheetAt(size_t aIndex, StyleSheet& aSheet);
+
+  void AddSizeOfExcludingThis(nsWindowSizes&) const;
+  void AddSizeOfOwnedSheetArrayExcludingThis(
+      nsWindowSizes&,
+      const nsTArray<RefPtr<StyleSheet>>&) const;
 
   nsIContent* Retarget(nsIContent* aContent) const;
 

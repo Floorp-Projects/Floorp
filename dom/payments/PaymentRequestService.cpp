@@ -177,6 +177,10 @@ PaymentRequestService::LaunchUIAction(const nsAString& aRequestId, uint32_t aAct
       rv = uiService->UpdatePayment(aRequestId);
       break;
     }
+    case nsIPaymentActionRequest::CLOSE_ACTION: {
+      rv = uiService->ClosePayment(aRequestId);
+      break;
+    }
     default : {
       return NS_ERROR_FAILURE;
     }
@@ -382,18 +386,20 @@ PaymentRequestService::RequestPayment(nsIPaymentActionRequest* aRequest)
       }
       break;
     }
-    case nsIPaymentActionRequest::CLEANUP_ACTION: {
+    case nsIPaymentActionRequest::CLOSE_ACTION: {
       nsCOMPtr<nsIPaymentRequest> payment;
       rv = GetPaymentRequestById(requestId, getter_AddRefs(payment));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
+      rv = LaunchUIAction(requestId, type);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       if (mShowingRequest == payment) {
-        // might need to notify the PaymentRequest is cleanup
         mShowingRequest = nullptr;
       }
       mRequestQueue.RemoveElement(payment);
-      //RemoveActionCallback(requestId);
       break;
     }
     default: {
@@ -415,6 +421,10 @@ PaymentRequestService::RespondPayment(nsIPaymentActionResponse* aResponse)
   rv = GetPaymentRequestById(requestId, getter_AddRefs(request));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  if (!request) {
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIPaymentActionCallback> callback;

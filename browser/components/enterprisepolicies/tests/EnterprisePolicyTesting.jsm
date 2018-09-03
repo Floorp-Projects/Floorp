@@ -62,7 +62,7 @@ var EnterprisePolicyTesting = {
   resetRunOnceState: function resetRunOnceState() {
     const runOnceBaseKeys = [
       "browser.policies.runonce.",
-      "browser.policies.runOncePerModification."
+      "browser.policies.runOncePerModification.",
     ];
     for (let base of runOnceBaseKeys) {
       for (let key of Services.prefs.getChildList(base, {})) {

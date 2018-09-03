@@ -55,7 +55,7 @@ let extensionControlledContentIds = {
         "contentBlockingTrackingProtectionExtensionContentLabel" :
         "trackingProtectionExtensionContentLabel",
     };
-  }
+  },
 };
 
 const extensionControlledL10nKeys = {
@@ -63,7 +63,9 @@ const extensionControlledL10nKeys = {
   "newTabURL": "new-tab-url",
   "defaultSearch": "default-search",
   "privacy.containers": "privacy-containers",
-  "websites.trackingProtectionMode": "websites-tracking-protection-mode",
+  "websites.trackingProtectionMode": contentBlockingUiEnabled ?
+                                       "websites-content-blocking-all-trackers" :
+                                       "websites-tracking-protection-mode",
   "proxy.settings": "proxy-config",
 };
 
@@ -163,7 +165,7 @@ function setControllingExtensionDescription(elem, addon, settingName) {
   elem.appendChild(image);
   const l10nId = settingNameToL10nID(settingName);
   document.l10n.setAttributes(elem, l10nId, {
-    name: addon.name
+    name: addon.name,
   });
 }
 

@@ -79,7 +79,7 @@ add_task(async function test_require_interaction() {
 
   await SpecialPowers.pushPrefEnv({"set": [
       [ "dom.webnotifications.requireinteraction.enabled", true ],
-      [ "dom.webnotifications.requireinteraction.count", 2 ]
+      [ "dom.webnotifications.requireinteraction.count", 2 ],
   ]});
 
   var expectedSequence = [
@@ -91,7 +91,7 @@ add_task(async function test_require_interaction() {
     "first finished",
     "third replacement show",
     "second replacement finished",
-    "third replacement finished"
+    "third replacement finished",
   ];
 
   var actualSequence = [];
@@ -133,7 +133,7 @@ add_task(async function test_require_interaction() {
   var testFinishPromise = new Promise((resolve) => { testFinishResolve = resolve; });
 
   xulAlertCreated = await promiseCreateXULAlert(alertService,
-    createAlertListener("third"), "third"),
+    createAlertListener("third"), "third");
   ok(!xulAlertCreated, "XUL alert should not be visible");
 
   // Replace the not-yet-visible third alert.

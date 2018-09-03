@@ -12,7 +12,7 @@ function* runTests() {
     capIfStaleErrorResponseUpdateTest,
     capIfStaleGoodResponseUpdateTest,
     regularCapErrorResponseUpdateTest,
-    regularCapGoodResponseUpdateTest
+    regularCapGoodResponseUpdateTest,
   ];
   for (let test of tests) {
     info("Running subtest " + test.name);

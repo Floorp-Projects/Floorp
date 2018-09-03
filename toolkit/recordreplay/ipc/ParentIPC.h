@@ -66,6 +66,9 @@ void GetArgumentsForChildProcess(base::ProcessId aMiddlemanPid, uint32_t aChanne
                                  const char* aRecordingFile, bool aRecording,
                                  std::vector<std::string>& aExtraArgs);
 
+// Return whether the middleman will be running developer tools server code.
+bool DebuggerRunsInMiddleman();
+
 } // namespace parent
 } // namespace recordreplay
 } // namespace mozilla

@@ -17,12 +17,4 @@ describe("<Topics>", () => {
     assert.lengthOf(topics, 2);
     topics.forEach((topic, i) => assert.equal(topic.props().url, data[i].url));
   });
-  it("should render read more link", () => {
-    const readMoreEndpoint = "http://test-read-more.com";
-    const wrapper = shallow(<Topics topics={[]} read_more_endpoint={readMoreEndpoint} />);
-
-    const readMore = wrapper.find(".topic-read-more");
-    assert.lengthOf(readMore, 1);
-    assert.equal(readMore.props().href, readMoreEndpoint);
-  });
 });

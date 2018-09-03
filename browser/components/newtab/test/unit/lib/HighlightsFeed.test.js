@@ -562,7 +562,7 @@ describe("Highlights Feed", () => {
     it("should not fetch highlights on PREF_CHANGED for other prefs", async () => {
       feed.fetchHighlights = sinon.spy();
 
-      feed.onAction({type: at.PREF_CHANGED, data: {name: "section.topstories.showDisclaimer"}});
+      feed.onAction({type: at.PREF_CHANGED, data: {name: "section.topstories.pocketCta"}});
 
       assert.notCalled(feed.fetchHighlights);
     });

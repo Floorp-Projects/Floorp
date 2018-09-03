@@ -2423,6 +2423,23 @@ HelperThread::threadLoop()
     while (!terminate) {
         MOZ_ASSERT(idle());
 
+        if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+            // Unlock the helper thread state lock before potentially
+            // blocking while the main thread waits for all threads to
+            // become idle. Otherwise we would need to see if we need to
+            // block at every point where a helper thread acquires the
+            // helper thread state lock.
+            {
+                AutoUnlockHelperThreadState unlock(lock);
+                mozilla::recordreplay::MaybeWaitForCheckpointSave();
+            }
+            // Now that we are holding the helper thread state lock again,
+            // notify the record/replay system that we might block soon.
+            // The helper thread state lock may not be released until the
+            // block occurs.
+            mozilla::recordreplay::NotifyUnrecordedWait(WakeupAll);
+        }
+
         // The selectors may depend on the HelperThreadState not changing
         // between task selection and task execution, in particular, on new
         // tasks not being added (because of the lifo structure of the work
@@ -2432,19 +2449,6 @@ HelperThread::threadLoop()
         const TaskSpec* task = findHighestPriorityTask(lock);
         if (!task) {
             AUTO_PROFILER_LABEL("HelperThread::threadLoop::wait", IDLE);
-            if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-                // Unlock the helper thread state lock before potentially
-                // blocking while the main thread waits for all threads to
-                // become idle. Otherwise we would need to see if we need to
-                // block at every point where a helper thread acquires the
-                // helper thread state lock.
-                {
-                    AutoUnlockHelperThreadState unlock(lock);
-                    mozilla::recordreplay::MaybeWaitForCheckpointSave();
-                }
-                mozilla::recordreplay::NotifyUnrecordedWait(WakeupAll);
-            }
-
             HelperThreadState().wait(lock, GlobalHelperThreadState::PRODUCER);
             continue;
         }

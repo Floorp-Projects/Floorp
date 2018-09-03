@@ -9,7 +9,7 @@ add_task(async function test_skip_onboarding_tours() {
   let tourIds = TOUR_IDs;
   let expectedPrefUpdates = [
     promisePrefUpdated("browser.onboarding.notification.finished", true),
-    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK)
+    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK),
   ];
   tourIds.forEach((id, idx) => expectedPrefUpdates.push(promisePrefUpdated(`browser.onboarding.tour.${id}.completed`, true)));
 

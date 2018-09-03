@@ -1,12 +1,4 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
-  fill="context-fill #0b0b0b">
-  <path d="M3.5 8h9v1h-9z"/>
-  <path d="M4 2v12h8v-12h-8
-           m-1 0c0-.55 .45-1 1-1h8c.55 0 1 .45 1 1v12c0 .55-.45 1-1 1
-           h-8c-.55 0-1-.45-1-1z"/>
-  <circle cx="8" cy="11.5" r="1" fill="none" stroke="context-fill"
-    stroke-width="1"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="context-fill #0b0b0b">
+  <path d="M1,4H6A1,1,0,0,1,7,5V15a1,1,0,0,1-1,1H1a1,1,0,0,1-1-1V5A1,1,0,0,1,1,4ZM1,6v8H6V6Z"/>
+  <path d="M10,16H9a1,1,0,0,1,0-2h4V2H5V3H3V1A1,1,0,0,1,4,0H14a1,1,0,0,1,1,1V15a1,1,0,0,1-1,1Z"/>
 </svg>

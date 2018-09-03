@@ -39,8 +39,6 @@ add_task(async function test() {
         },
 
         OnHistoryReload: () => true,
-        OnHistoryGoBack: () => true,
-        OnHistoryGoForward: () => true,
         OnHistoryGotoIndex: () => true,
         OnHistoryPurge: () => true,
         OnHistoryReplaceEntry: () => {

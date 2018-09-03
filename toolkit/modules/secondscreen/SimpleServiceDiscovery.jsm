@@ -202,7 +202,7 @@ var SimpleServiceDiscovery = {
 
       let service = {
         location: fixedDevice.location,
-        target: fixedDevice.target
+        target: fixedDevice.target,
       };
 
       // We don't assume the fixed target is ready. We still need to ping it.

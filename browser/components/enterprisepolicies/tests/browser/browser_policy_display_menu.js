@@ -6,8 +6,8 @@
 add_task(async function setup() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "DisplayMenuBar": true
-    }
+      "DisplayMenuBar": true,
+    },
   });
 });
 

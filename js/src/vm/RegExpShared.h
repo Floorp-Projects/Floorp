@@ -15,7 +15,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "builtin/SelfHostingDefines.h"
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
 #include "gc/Marking.h"
@@ -25,6 +24,7 @@
 #include "js/Vector.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSAtom.h"
+#include "vm/RegExpConstants.h"
 
 namespace js {
 
@@ -37,32 +37,6 @@ class VectorMatchPairs;
 using RootedRegExpShared = JS::Rooted<RegExpShared*>;
 using HandleRegExpShared = JS::Handle<RegExpShared*>;
 using MutableHandleRegExpShared = JS::MutableHandle<RegExpShared*>;
-
-enum RegExpFlag : uint8_t
-{
-    IgnoreCaseFlag  = 0x01,
-    GlobalFlag      = 0x02,
-    MultilineFlag   = 0x04,
-    StickyFlag      = 0x08,
-    UnicodeFlag     = 0x10,
-
-    NoFlags         = 0x00,
-    AllFlags        = 0x1f
-};
-
-static_assert(IgnoreCaseFlag == REGEXP_IGNORECASE_FLAG &&
-              GlobalFlag == REGEXP_GLOBAL_FLAG &&
-              MultilineFlag == REGEXP_MULTILINE_FLAG &&
-              StickyFlag == REGEXP_STICKY_FLAG &&
-              UnicodeFlag == REGEXP_UNICODE_FLAG,
-              "Flag values should be in sync with self-hosted JS");
-
-enum RegExpRunStatus
-{
-    RegExpRunStatus_Error,
-    RegExpRunStatus_Success,
-    RegExpRunStatus_Success_NotFound
-};
 
 /*
  * A RegExpShared is the compiled representation of a regexp. A RegExpShared is

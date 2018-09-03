@@ -28,7 +28,7 @@ class MozEditor extends XULFrameElement {
         return false;
       },
       loadCookie: null,
-      parentContentListener: null
+      parentContentListener: null,
     };
 
     this._finder = null;

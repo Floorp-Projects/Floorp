@@ -382,7 +382,7 @@
           const details = {
             isOneOff: aOneOff,
             isSuggestion: (!aOneOff && telemetrySearchDetails),
-            selection: telemetrySearchDetails
+            selection: telemetrySearchDetails,
           };
           BrowserSearch.recordSearchInTelemetry(engine, "searchbar", details);
           // null parameter below specifies HTML response for search
@@ -407,7 +407,7 @@
         } else if (target.classList.contains("addengine-item")) {
           // Select the installed engine if the installation succeeds
           var installCallback = {
-            onSuccess: engine => this.currentEngine = engine
+            onSuccess: engine => this.currentEngine = engine,
           };
           Services.search.addEngine(target.getAttribute("uri"), null,
                                     target.getAttribute("src"), false,
@@ -790,7 +790,7 @@
             default:
               // do nothing with unrecognized command
           }
-        }
+        },
       })]]></field>
     </implementation>
 
@@ -880,7 +880,7 @@
           if (popupForSearchBar) {
             searchBar.telemetrySearchDetails = {
               index: this.selectedIndex,
-              kind: "mouse"
+              kind: "mouse",
             };
           }
 
@@ -2260,7 +2260,7 @@
               prompt.QueryInterface(Ci.nsIWritablePropertyBag2);
               prompt.setPropertyAsBool("allowTabModal", true);
               prompt.alert(title, text);
-            }
+            },
           };
           Services.search.addEngine(target.getAttribute("uri"), null,
                                     target.getAttribute("image"), false,

@@ -7,13 +7,13 @@ var gTests = [
   {
     name: "normal search (search service)",
     testText: "test search",
-    expectText: "test+search"
+    expectText: "test+search",
   },
   {
     name: "?-prefixed search (search service)",
     testText: "?   foo  ",
-    expectText: "foo"
-  }
+    expectText: "foo",
+  },
 ];
 
 function test() {

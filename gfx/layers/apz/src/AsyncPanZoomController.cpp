@@ -3753,17 +3753,20 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
   {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
 
-    requestAnimationFrame = UpdateAnimation(aSampleTime, &deferredTasks);
-
     { // scope lock
       MutexAutoLock lock(mCheckerboardEventLock);
+      // Update RendertraceProperty before UpdateAnimation() call, since
+      // the UpdateAnimation() updates effective ScrollOffset for next frame
+      // if APZFrameDelay is enabled.
       if (mCheckerboardEvent) {
         mCheckerboardEvent->UpdateRendertraceProperty(
             CheckerboardEvent::UserVisible,
-            CSSRect(Metrics().GetScrollOffset(),
+            CSSRect(GetEffectiveScrollOffset(AsyncPanZoomController::eForCompositing),
                     Metrics().CalculateCompositedSizeInCssPixels()));
       }
     }
+
+    requestAnimationFrame = UpdateAnimation(aSampleTime, &deferredTasks);
   }
 
   // Execute any deferred tasks queued up by mAnimation's Sample() (called by
@@ -4028,7 +4031,7 @@ AsyncPanZoomController::GetCheckerboardMagnitude() const
 {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
 
-  CSSPoint currentScrollOffset = Metrics().GetScrollOffset() + mTestAsyncScrollOffset;
+  CSSPoint currentScrollOffset = GetEffectiveScrollOffset(AsyncPanZoomController::eForCompositing) + mTestAsyncScrollOffset;
   CSSRect painted = mLastContentPaintMetrics.GetDisplayPort() + mLastContentPaintMetrics.GetScrollOffset();
   CSSRect visible = CSSRect(currentScrollOffset, Metrics().CalculateCompositedSizeInCssPixels());
 

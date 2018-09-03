@@ -8,12 +8,10 @@
 #define frontend_BinSourceSupport_h
 
 #include "mozilla/HashFunctions.h"
-#include "mozilla/Maybe.h"
-
-#include "jsapi.h"
 
 #include "frontend/BinToken.h"
 
+#include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/Result.h"
 
@@ -21,9 +19,9 @@ namespace js {
 
 // Support for parsing JS Binary ASTs.
 struct BinaryASTSupport {
-    using BinVariant  = js::frontend::BinVariant;
+    using BinVariant = js::frontend::BinVariant;
     using BinField = js::frontend::BinField;
-    using BinKind  = js::frontend::BinKind;
+    using BinKind = js::frontend::BinKind;
 
     // A structure designed to perform fast char* + length lookup
     // without copies.

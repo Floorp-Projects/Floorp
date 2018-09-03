@@ -23,7 +23,7 @@
       </xul:hbox>
     </content>
 
-    <implementation implements="nsIDOMXULCheckboxElement">
+    <implementation>
       <method name="setChecked">
         <parameter name="aValue"/>
         <body>

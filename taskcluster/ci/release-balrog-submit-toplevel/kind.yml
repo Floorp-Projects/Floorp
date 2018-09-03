@@ -70,6 +70,43 @@ jobs:
          tier: 1
          kind: build
 
+   # FIXME: (Bug 1487172) This task should only run on esr60-like branches
+   firefox-bz2:
+      name: submit-toplevel-firefox-release-to-balrog-bz2
+      description: Submit toplevel Firefox release to balrog
+      shipping-product: firefox
+      worker:
+         product: firefox
+         archive-domain:
+            by-project:
+               mozilla-esr60: archive.mozilla.org
+               default: ftp.stage.mozaws.net
+         download-domain:
+            by-project:
+               mozilla-esr60: download.mozilla.org
+               default: download.mozilla.org
+         channel-names:
+            by-project:
+               mozilla-esr60: ["esr", "esr-localtest", "esr-cdntest"]
+               default: []
+         publish-rules:
+            by-project:
+               mozilla-esr60: [521]
+               default: []
+         rules-to-update:
+            by-project:
+               mozilla-esr60: ["esr52-cdntest", "esr52-localtest"]
+               default: []
+         platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
+         blob-suffix: -bz2
+         complete-mar-filename-pattern: '%s-%s.bz2.complete.mar'
+         complete-mar-bouncer-product-pattern: '%s-%s-complete-bz2'
+      treeherder:
+         platform: firefox-release/opt
+         symbol: Rel(BPFx-bz2)
+         tier: 1
+         kind: build
+
    devedition:
       name: submit-toplevel-devedition-release-to-balrog
       description: submit toplevel Devedition release to balrog

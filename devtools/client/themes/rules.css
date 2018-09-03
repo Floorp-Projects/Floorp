@@ -402,6 +402,10 @@
   display: none;
 }
 
+.ruleview-overridden-item .ruleview-namecontainer {
+  margin-left: 0;
+}
+
 .ruleview-flex,
 .ruleview-grid,
 .ruleview-swatch {

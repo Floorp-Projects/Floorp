@@ -78,7 +78,7 @@
         detail: JSON.stringify({
           id: "fxaccounts_webchannel_response_echo",
           message: e.detail.message,
-        })
+        }),
       });
 
       window.dispatchEvent(event);
@@ -107,7 +107,7 @@
         message: {
           command: "fxaccounts:logout",
           data: {
-            uid: "uid"
+            uid: "uid",
           },
           messageId: 3,
         },
@@ -124,7 +124,7 @@
         message: {
           command: "fxaccounts:delete",
           data: {
-            uid: "uid"
+            uid: "uid",
           },
           messageId: 4,
         },

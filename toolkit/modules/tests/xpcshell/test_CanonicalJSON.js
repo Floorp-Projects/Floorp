@@ -14,7 +14,7 @@ add_task(async function test_canonicalJSON_should_preserve_array_order() {
 add_task(async function test_canonicalJSON_orders_object_keys() {
   const input = [{
     b: ["two", "three"],
-    a: ["zero", "one"]
+    a: ["zero", "one"],
   }];
   Assert.equal(
     CanonicalJSON.stringify(input),
@@ -25,7 +25,7 @@ add_task(async function test_canonicalJSON_orders_object_keys() {
 add_task(async function test_canonicalJSON_orders_nested_object_keys() {
   const input = [{
     b: {d: "d", c: "c"},
-    a: {b: "b", a: "a"}
+    a: {b: "b", a: "a"},
   }];
   Assert.equal(
     CanonicalJSON.stringify(input),
@@ -56,7 +56,7 @@ add_task(async function test_canonicalJSON_escapes_unicode_object_keys() {
 add_task(async function test_canonicalJSON_does_not_alter_input() {
   const records = [
     {"foo": "bar", "last_modified": "12345", "id": "1"},
-    {"bar": "baz", "last_modified": "45678", "id": "2"}
+    {"bar": "baz", "last_modified": "45678", "id": "2"},
   ];
   const serializedJSON = JSON.stringify(records);
   CanonicalJSON.stringify(records);

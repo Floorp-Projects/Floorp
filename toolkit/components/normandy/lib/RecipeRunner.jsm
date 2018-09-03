@@ -57,7 +57,7 @@ function cacheProxy(target) {
         cache.set(prop, target[prop]);
       }
       return cache.get(prop);
-    }
+    },
   });
 }
 
@@ -256,7 +256,7 @@ var RecipeRunner = {
       arguments: recipe.arguments,
     };
     return {
-      normandy: environment
+      normandy: environment,
     };
   },
 

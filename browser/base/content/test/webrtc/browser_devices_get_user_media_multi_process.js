@@ -110,7 +110,7 @@ var gTests = [
 
     ok(!webrtcUI.showGlobalIndicator, "webrtcUI wants the global indicator hidden");
     is(webrtcUI.getActiveStreams(true, true, true).length, 0, "0 active streams");
-  }
+  },
 },
 
 {
@@ -212,7 +212,7 @@ var gTests = [
 
     ok(!webrtcUI.showGlobalIndicator, "webrtcUI wants the global indicator hidden");
     is(webrtcUI.getActiveStreams(true, true, true).length, 0, "0 active streams");
-  }
+  },
 },
 
 {
@@ -317,7 +317,7 @@ var gTests = [
 
     ok(!webrtcUI.showGlobalIndicator, "webrtcUI wants the global indicator hidden");
     is(webrtcUI.getActiveStreams(true, true, true).length, 0, "0 active streams");
-  }
+  },
 },
 
 ];

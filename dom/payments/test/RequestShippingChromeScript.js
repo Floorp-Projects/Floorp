@@ -24,7 +24,6 @@ shippingAddress.init("",  // country
                      "",  // dependent locality
                      "",  // postal code
                      "",  // sorting code
-                     "",  // language code
                      "",  // organization
                      "",  // recipient
                      ""); // phone
@@ -70,6 +69,8 @@ const NormalUIService = {
                       "",                         // payer email
                       "");                        // payer phone
     paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+  },
+  closePayment: function(requestId) {
   },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };

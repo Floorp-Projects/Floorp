@@ -115,7 +115,7 @@ async function testWorkerNavigator() {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", true]]
+    [["privacy.resistFingerprinting", true]],
   });
 
   let appVersion = parseInt(Services.appinfo.version);
@@ -141,7 +141,7 @@ add_task(async function runOverrideTest() {
       ["general.useragent.override", "userAgent overridden"],
       ["general.oscpu.override", "oscpu overridden"],
       ["general.buildID.override", "buildID overridden"],
-    ]
+    ],
   });
 
   await testNavigator();

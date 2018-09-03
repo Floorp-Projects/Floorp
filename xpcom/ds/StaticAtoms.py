@@ -590,7 +590,6 @@ STATIC_ATOMS = [
     Atom("menu", "menu"),
     Atom("menubar", "menubar"),
     Atom("menubutton", "menubutton"),
-    Atom("menuButton", "menu-button"),
     Atom("menucaption", "menucaption"),
     Atom("menugroup", "menugroup"),
     Atom("menuitem", "menuitem"),

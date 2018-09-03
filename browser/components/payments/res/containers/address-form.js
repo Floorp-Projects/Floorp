@@ -95,6 +95,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
       // validity will be updated before our handlers get the event
       this.form.addEventListener("input", this);
       this.form.addEventListener("invalid", this);
+      this.form.addEventListener("change", this);
 
       this.body.appendChild(this.persistCheckbox);
       this.body.appendChild(this.genericErrorText);
@@ -210,6 +211,10 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
 
   handleEvent(event) {
     switch (event.type) {
+      case "change": {
+        this.updateSaveButtonState();
+        break;
+      }
       case "click": {
         this.onClick(event);
         break;

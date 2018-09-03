@@ -34,7 +34,7 @@ class ThumbnailsChild extends ActorChild {
       snapshot.toBlob((aBlob) => {
         this.mm.sendAsyncMessage("Browser:Thumbnail:Response", {
           thumbnail: aBlob,
-          id: message.data.id
+          id: message.data.id,
         });
       });
     } else if (message.name == "Browser:Thumbnail:CheckState") {
@@ -44,7 +44,7 @@ class ThumbnailsChild extends ActorChild {
       Services.tm.idleDispatchToMainThread(() => {
         let result = PageThumbUtils.shouldStoreContentThumbnail(this.content, this.mm.docShell);
         this.mm.sendAsyncMessage("Browser:Thumbnail:CheckState:Response", {
-          result
+          result,
         });
       });
     } else if (message.name == "Browser:Thumbnail:GetOriginalURL") {

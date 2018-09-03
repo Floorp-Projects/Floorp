@@ -25,7 +25,7 @@ add_task(async function test_scroll_background_about_reader_tabs() {
   let browser = tab.linkedBrowser;
   await Promise.all([
     BrowserTestUtils.browserLoaded(browser),
-    BrowserTestUtils.waitForContentEvent(browser, "AboutReaderContentReady")
+    BrowserTestUtils.waitForContentEvent(browser, "AboutReaderContentReady"),
   ]);
 
   // Scroll down a little.
@@ -59,7 +59,7 @@ add_task(async function test_scroll_background_about_reader_tabs() {
   newWin.gBrowser.selectedTab = tab;
   await Promise.all([
     promiseTabRestored(tab),
-    BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "AboutReaderContentReady")
+    BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "AboutReaderContentReady"),
   ]);
 
   await checkScroll(tab, {scroll: SCROLL_READER_MODE_STR}, "scroll is still fine");

@@ -545,6 +545,8 @@ public:
 
   void ReplaceOneCharAtPos(unsigned pos, wchar_t c) { _chars[pos] = c; }
 
+  wchar_t *GetBuf() { return _chars; }
+
   wchar_t *GetBuf(unsigned minLen)
   {
     if (minLen > _limit)
@@ -571,7 +573,7 @@ public:
   }
 
   UString &operator=(wchar_t c);
-  UString &operator=(char c) { return (*this)=((wchar_t)c); }
+  UString &operator=(char c) { return (*this)=((wchar_t)(unsigned char)c); }
   UString &operator=(const wchar_t *s);
   UString &operator=(const UString &s);
   void SetFrom(const wchar_t *s, unsigned len); // no check

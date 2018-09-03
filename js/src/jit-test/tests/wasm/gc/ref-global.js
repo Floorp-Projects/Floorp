@@ -16,7 +16,10 @@ if (!wasmGcEnabled())
           (global $g2 (mut (ref $point)) (ref.null (ref $point)))
           (global $g3 (ref $point) (ref.null (ref $point)))
 
-          (func (export "get") (result (ref $point))
+          ;; Restriction: cannot expose Refs outside the module, not even
+          ;; as a return value.  See ref-restrict.js.
+
+          (func (export "get") (result anyref)
            (get_global $g1))
 
           (func (export "copy")
@@ -43,7 +46,7 @@ if (!wasmGcEnabled())
           (import "m" "g" (global (mut (ref $box)))))`);
 
     assertErrorMessage(() => new WebAssembly.Module(bin), WebAssembly.CompileError,
-                       /unexpected variable type in global import\/export/);
+                       /cannot expose reference type/);
 }
 
 // We can't export a global of a reference type because we can't later import
@@ -57,5 +60,5 @@ if (!wasmGcEnabled())
           (global $boxg (export "box") (mut (ref $box)) (ref.null (ref $box))))`);
 
     assertErrorMessage(() => new WebAssembly.Module(bin), WebAssembly.CompileError,
-                       /unexpected variable type in global import\/export/);
+                       /cannot expose reference type/);
 }

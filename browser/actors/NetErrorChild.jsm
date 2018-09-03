@@ -168,7 +168,7 @@ class NetErrorChild extends ActorChild {
           if (newErrorPagesEnabled) {
             technicalInfo.textContent = "";
             let brandName = gBrandBundle.GetStringFromName("brandShortName");
-            msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix1", [brandName, hostString], 2);
+            msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix1", [brandName, hostString], 2) + " ";
             msgPrefix += gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
           } else {
             msgPrefix = gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
@@ -423,7 +423,7 @@ class NetErrorChild extends ActorChild {
             certRange.notBefore < approximateDate && certRange.notAfter > approximateDate) {
           clockSkew = true;
           let formatter = new Services.intl.DateTimeFormat(undefined, {
-            dateStyle: "short"
+            dateStyle: "short",
           });
           let systemDate = formatter.format(new Date());
           // negative difference means local time is behind server time
@@ -455,7 +455,7 @@ class NetErrorChild extends ActorChild {
           if (buildDate > systemDate && new Date(certRange.notAfter) > buildDate) {
             clockSkew = true;
             let formatter = new Services.intl.DateTimeFormat(undefined, {
-              dateStyle: "short"
+              dateStyle: "short",
             });
 
             doc.getElementById("wrongSystemTimeWithoutReference_URL")
@@ -650,7 +650,7 @@ class NetErrorChild extends ActorChild {
         changedCertPrefs: this.changedCertPrefs(),
         automatic,
         hideAddExceptionButton,
-      })
+      }),
     }));
 
     this.mm.sendAsyncMessage("Browser:SSLErrorReportTelemetry",
@@ -668,7 +668,7 @@ class NetErrorChild extends ActorChild {
 
   onSetAutomatic(evt) {
     this.mm.sendAsyncMessage("Browser:SetSSLErrorReportAuto", {
-      automatic: evt.detail
+      automatic: evt.detail,
     });
 
     // If we're enabling reports, send a report for this failure.

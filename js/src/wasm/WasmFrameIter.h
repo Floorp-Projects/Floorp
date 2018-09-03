@@ -19,7 +19,6 @@
 #ifndef wasm_frame_iter_h
 #define wasm_frame_iter_h
 
-#include "jit/JSJitFrameIter.h"
 #include "js/ProfilingFrameIterator.h"
 #include "js/TypeDecls.h"
 #include "wasm/WasmTypes.h"
@@ -30,6 +29,7 @@ namespace jit {
 class MacroAssembler;
 struct Register;
 class Label;
+enum class FrameType;
 } // namespace jit
 
 namespace wasm {

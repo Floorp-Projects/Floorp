@@ -15,8 +15,8 @@ var addon1 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 const profileDir = gProfD.clone();
@@ -62,8 +62,8 @@ async function run_test_1() {
   prepare_test({
     "addon1@tests.mozilla.org": [
       ["onDisabling", false],
-      "onDisabled"
-    ]
+      "onDisabled",
+    ],
   });
 
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
@@ -89,8 +89,8 @@ async function run_test_2() {
   prepare_test({
     "addon1@tests.mozilla.org": [
       ["onEnabling", false],
-      "onEnabled"
-    ]
+      "onEnabled",
+    ],
   });
 
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");

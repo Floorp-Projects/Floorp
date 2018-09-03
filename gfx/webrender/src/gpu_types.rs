@@ -474,7 +474,7 @@ impl TransformPalette {
         let metadata = &self.metadata[index.0 as usize];
 
         Transform {
-            m: &data.transform,
+            m: data.transform,
             transform_kind: metadata.transform_kind,
             backface_is_visible: data.transform.is_backface_visible(),
         }

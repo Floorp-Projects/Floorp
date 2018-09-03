@@ -5,9 +5,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMStorage;
 interface nsIPrincipal;
 interface mozIDOMWindow;
+
+webidl Storage;
 
 /**
  * General purpose interface that has two implementations, for localStorage
@@ -28,7 +29,7 @@ interface nsIDOMStorageManager : nsISupports
    * existence and kept alive by the timer so that it could be returned if a
    * call to createStorage was made due to a request by the page.)
    */
-  nsIDOMStorage precacheStorage(in nsIPrincipal aPrincipal);
+  Storage precacheStorage(in nsIPrincipal aPrincipal);
 
   /**
    * Returns instance of DOM storage object for given principal.
@@ -44,10 +45,10 @@ interface nsIDOMStorageManager : nsISupports
    * @param aPrivate
    *    Whether the demanding document is running in Private Browsing mode or not.
    */
-  nsIDOMStorage createStorage(in mozIDOMWindow aWindow,
-                              in nsIPrincipal aPrincipal,
-                              in DOMString aDocumentURI,
-                              [optional] in bool aPrivate);
+  Storage createStorage(in mozIDOMWindow aWindow,
+                        in nsIPrincipal aPrincipal,
+                        in DOMString aDocumentURI,
+                        [optional] in bool aPrivate);
   /**
    * Returns instance of DOM storage object for given principal.
    * If there is no storage managed for the scope, then null is returned and
@@ -61,9 +62,9 @@ interface nsIDOMStorageManager : nsISupports
    * @param aPrivate
    *    Whether the demanding document is running in Private Browsing mode or not.
    */
-  nsIDOMStorage getStorage(in mozIDOMWindow aWindow,
-                           in nsIPrincipal aPrincipal,
-                           [optional] in bool aPrivate);
+  Storage getStorage(in mozIDOMWindow aWindow,
+                     in nsIPrincipal aPrincipal,
+                     [optional] in bool aPrivate);
 
   /**
    * Clones given storage into this storage manager.
@@ -74,7 +75,7 @@ interface nsIDOMStorageManager : nsISupports
    *    the moment this method was called.  Modification to this new object will
    *    not affect the original storage content we cloned from and vice versa.
    */
-  void cloneStorage(in nsIDOMStorage aStorageToCloneFrom);
+  void cloneStorage(in Storage aStorageToCloneFrom);
 
   /**
    * Returns true if the storage belongs to the given principal and is managed
@@ -91,5 +92,5 @@ interface nsIDOMStorageManager : nsISupports
    *    false otherwise
    */
   bool checkStorage(in nsIPrincipal aPrincipal,
-                    in nsIDOMStorage aStorage);
+                    in Storage aStorage);
 };

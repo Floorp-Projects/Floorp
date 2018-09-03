@@ -24,7 +24,7 @@ add_task(async function test() {
     },
 
     onCloseWindow() {
-    }
+    },
   };
 
   Services.wm.addListener(listener);

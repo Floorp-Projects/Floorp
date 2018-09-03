@@ -15,6 +15,8 @@ kind-dependencies:
    - repackage-signing-l10n
    - partials-signing
 
+fake-multi-dep: true
+
 only-for-build-platforms:
    - linux-nightly/opt
    - linux64-nightly/opt

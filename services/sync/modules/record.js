@@ -103,7 +103,7 @@ WBORecord.prototype = {
       "ttl: " + this.ttl + "  " +
       "payload: " + JSON.stringify(this.payload) +
       " }";
-  }
+  },
 };
 
 Utils.deferGetSet(WBORecord, "data", ["id", "modified", "sortindex", "payload"]);
@@ -284,7 +284,7 @@ RecordManager.prototype = {
 
   del: function RecordMgr_del(url) {
     delete this._records[url];
-  }
+  },
 };
 
 /**
@@ -380,7 +380,7 @@ CollectionKeyManager.prototype = {
       "default":     defaultBundle ? defaultBundle.keyPairB64 : null,
       "collections": c,
       "collection":  CRYPTO_COLLECTION,
-      "id":          KEYS_WBO
+      "id":          KEYS_WBO,
     };
     return wbo;
   },
@@ -588,7 +588,7 @@ CollectionKeyManager.prototype = {
     let r = this.setContents(payload, storage_keys.modified);
     log.info("Collection keys updated.");
     return r;
-  }
+  },
 };
 
 function Collection(uri, recordObj, service) {

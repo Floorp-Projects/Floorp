@@ -29,6 +29,7 @@ pub enum SceneBuilderRequest {
     },
     WakeUp,
     Flush(MsgSender<()>),
+    SetFrameBuilderConfig(FrameBuilderConfig),
     Stop
 }
 
@@ -214,6 +215,9 @@ impl SceneBuilder {
                 // We don't need to send a WakeUp to api_tx because we only
                 // get the Stop when the RenderBackend loop is exiting.
                 return false;
+            }
+            SceneBuilderRequest::SetFrameBuilderConfig(cfg) => {
+                self.config = cfg;
             }
         }
 

@@ -70,6 +70,7 @@ add_task(async function sidebar_initial_install() {
   ok(document.getElementById("sidebar-box").hidden, "sidebar box is not visible");
   let extension = ExtensionTestUtils.loadExtension(getExtData());
   await extension.startup();
+  await extension.awaitMessage("sidebar");
 
   // Test sidebar is opened on install
   ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible");

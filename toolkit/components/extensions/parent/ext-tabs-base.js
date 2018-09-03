@@ -461,6 +461,17 @@ class TabBase {
   }
 
   /**
+   * @property {boolean} attention
+   *          Returns true if the tab is drawing attention.
+   *          @readonly
+   *          @abstract
+   */
+  get attention() {
+    throw new Error("Not implemented");
+  }
+
+
+  /**
    * @property {boolean} isArticle
    *        Returns true if the document in the tab can be rendered in reader
    *        mode.
@@ -582,6 +593,7 @@ class TabBase {
       windowId: this.windowId,
       highlighted: this.highlighted,
       active: this.active,
+      attention: this.attention,
       pinned: this.pinned,
       status: this.status,
       hidden: this.hidden,

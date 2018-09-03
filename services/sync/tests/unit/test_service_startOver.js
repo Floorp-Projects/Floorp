@@ -15,7 +15,7 @@ BlaEngine.prototype = {
   removed: false,
   async removeClientData() {
     this.removed = true;
-  }
+  },
 
 };
 

@@ -21,41 +21,41 @@ var phases = { "phase1": "profile1",
 var bookmarks_initial = {
   "toolbar": [
     { uri: "http://www.google.com",
-      title: "Google"
+      title: "Google",
     },
     { uri: "http://www.cnn.com",
       title: "CNN",
       changes: {
-        position: "Google"
-      }
+        position: "Google",
+      },
     },
     { uri: "http://www.mozilla.com",
-      title: "Mozilla"
+      title: "Mozilla",
     },
     { uri: "http://www.firefox.com",
       title: "Firefox",
       changes: {
-        position: "Mozilla"
-      }
-    }
-  ]
+        position: "Mozilla",
+      },
+    },
+  ],
 };
 
 var bookmarks_after_move = {
   "toolbar": [
     { uri: "http://www.cnn.com",
-      title: "CNN"
+      title: "CNN",
     },
     { uri: "http://www.google.com",
-      title: "Google"
+      title: "Google",
     },
     { uri: "http://www.firefox.com",
-      title: "Firefox"
+      title: "Firefox",
     },
     { uri: "http://www.mozilla.com",
-      title: "Mozilla"
-    }
-  ]
+      title: "Mozilla",
+    },
+  ],
 };
 
 /*
@@ -66,13 +66,13 @@ var bookmarks_after_move = {
 Phase("phase1", [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
-  [Sync]
+  [Sync],
 ]);
 
 // Sync to profile2 and verify that all four bookmarks are present.
 Phase("phase2", [
   [Sync],
-  [Bookmarks.verify, bookmarks_initial]
+  [Bookmarks.verify, bookmarks_initial],
 ]);
 
 // Change the order of the toolbar bookmarks, and sync.
@@ -88,6 +88,6 @@ Phase("phase3", [
 // as expected.
 Phase("phase4", [
   [Sync],
-  [Bookmarks.verify, bookmarks_after_move]
+  [Bookmarks.verify, bookmarks_after_move],
 ]);
 

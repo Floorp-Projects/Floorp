@@ -25,7 +25,7 @@ Preferences.addAll([
   { id: "pref.browser.homepage.disable_button.current_page", type: "bool" },
   { id: "pref.browser.homepage.disable_button.bookmark_page", type: "bool" },
   { id: "pref.browser.homepage.disable_button.restore_default", type: "bool" },
-  { id: "browser.newtabpage.enabled", type: "bool" }
+  { id: "browser.newtabpage.enabled", type: "bool" },
 ]);
 
 const HOMEPAGE_OVERRIDE_KEY = "homepage_override";
@@ -61,7 +61,7 @@ var gHomePane = {
   watchNewTab() {
     this._handleNewTabOverrides();
     let newTabObserver = {
-      observe: this._handleNewTabOverrides.bind(this)
+      observe: this._handleNewTabOverrides.bind(this),
     };
     Services.obs.addObserver(newTabObserver, "newtab-url-changed");
     window.addEventListener("unload", () => {
@@ -428,5 +428,5 @@ var gHomePane = {
     this.watchHomeTabPrefChange();
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "home-pane-loaded");
-  }
+  },
 };

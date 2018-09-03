@@ -22,7 +22,7 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
             'xptcinvoke_asm_x86_64.asm',
             'xptcstubs_asm_x86_64.asm'
         ]
-else:
+elif CONFIG['CPU_ARCH'] == 'x86':
     if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         SOURCES += [
             'xptcinvoke_x86_gnu.cpp',
@@ -35,6 +35,15 @@ else:
             'xptcstubs.cpp',
         ]
         SOURCES['xptcinvoke_asm_x86_msvc.asm'].flags += ['-safeseh']
+elif CONFIG['CPU_ARCH'] == 'aarch64':
+    SOURCES += [
+        'xptcinvoke_aarch64.cpp',
+        'xptcstubs_aarch64.cpp',
+    ]
+    SOURCES += [
+        'xptcinvoke_asm_aarch64.asm',
+        'xptcstubs_asm_aarch64.asm',
+    ]
 
 FINAL_LIBRARY = 'xul'
 

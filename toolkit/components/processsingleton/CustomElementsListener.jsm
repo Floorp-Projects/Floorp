@@ -18,5 +18,5 @@ Services.obs.addObserver({
       Services.scriptloader.loadSubScript(
         "chrome://global/content/customElements.js", doc.ownerGlobal);
     }
-  }
+  },
 }, "document-element-inserted");

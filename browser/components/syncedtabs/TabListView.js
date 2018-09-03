@@ -15,7 +15,7 @@ let log = ChromeUtils.import("resource://gre/modules/Log.jsm", {})
             .Log.repository.getLogger("Sync.RemoteTabs");
 
 var EXPORTED_SYMBOLS = [
-  "TabListView"
+  "TabListView",
 ];
 
 function getContextMenu(window) {
@@ -604,5 +604,5 @@ TabListView.prototype = {
     const tabs = clientNode.querySelector(".item-tabs-list").children;
     const urls = [...tabs].map(tab => tab.dataset.url);
     this.props.onOpenTabs(urls, where);
-  }
+  },
 };

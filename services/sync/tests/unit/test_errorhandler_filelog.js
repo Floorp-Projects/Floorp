@@ -72,7 +72,7 @@ add_test(function test_logOnSuccess_false() {
 function readFile(file, callback) {
   NetUtil.asyncFetch({
     uri: NetUtil.newURI(file),
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   }, function(inputStream, statusCode, request) {
     let data = NetUtil.readInputStreamToString(inputStream,
                                                inputStream.available());

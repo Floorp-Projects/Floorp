@@ -117,6 +117,6 @@ FakeCryptoService.prototype = {
 
   generateRandomBytes: function generateRandomBytes(byteCount) {
     return "not-so-random-now-are-we-HA-HA-HA! >:)".slice(byteCount);
-  }
+  },
 };
 

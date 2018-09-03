@@ -5,8 +5,8 @@ add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_MULTISELECT_TABS, true],
-      [PREF_WARN_ON_CLOSE, false]
-    ]
+      [PREF_WARN_ON_CLOSE, false],
+    ],
   });
 });
 

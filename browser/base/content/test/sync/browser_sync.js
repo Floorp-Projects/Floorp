@@ -27,14 +27,14 @@ add_task(async function test_ui_state_signedin() {
     displayName: "Foo Bar",
     avatarURL: "https://foo.bar",
     lastSync: new Date(),
-    syncing: false
+    syncing: false,
   };
 
   const origRelativeTimeFormat = gSync.relativeTimeFormat;
   gSync.relativeTimeFormat = {
     formatBestUnit(date) {
       return origRelativeTimeFormat.formatBestUnit(date, {now: relativeDateAnchor});
-    }
+    },
   };
 
   gSync.updateAllUI(state);
@@ -47,7 +47,7 @@ add_task(async function test_ui_state_signedin() {
     fxastatus: "signedin",
     avatarURL: "https://foo.bar",
     syncing: false,
-    syncNowTooltip: lastSyncTooltip
+    syncNowTooltip: lastSyncTooltip,
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-main", false);
   checkMenuBarItem("sync-syncnowitem");
@@ -61,7 +61,7 @@ add_task(async function test_ui_state_syncing() {
     displayName: "Foo Bar",
     avatarURL: "https://foo.bar",
     lastSync: new Date(),
-    syncing: true
+    syncing: true,
   };
 
   gSync.updateAllUI(state);
@@ -74,7 +74,7 @@ add_task(async function test_ui_state_syncing() {
     status: UIState.STATUS_SIGNED_IN,
     email: "foo@bar.com",
     lastSync: new Date(),
-    syncing: false
+    syncing: false,
   });
   // Because we switch from syncing to non-syncing, and there's a timeout involved.
   await promiseObserver("test:browser-sync:activity-stop");
@@ -82,7 +82,7 @@ add_task(async function test_ui_state_syncing() {
 
 add_task(async function test_ui_state_unconfigured() {
   let state = {
-    status: UIState.STATUS_NOT_CONFIGURED
+    status: UIState.STATUS_NOT_CONFIGURED,
   };
 
   gSync.updateAllUI(state);
@@ -91,7 +91,7 @@ add_task(async function test_ui_state_unconfigured() {
   let statusBarTooltip = gSync.appMenuStatus.getAttribute("signedinTooltiptext");
   checkPanelUIStatusBar({
     label: signedOffLabel,
-    tooltip: statusBarTooltip
+    tooltip: statusBarTooltip,
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-setupsync");
   checkMenuBarItem("sync-setup");
@@ -102,7 +102,7 @@ add_task(async function test_ui_state_unverified() {
     status: UIState.STATUS_NOT_VERIFIED,
     email: "foo@bar.com",
     lastSync: new Date(),
-    syncing: false
+    syncing: false,
   };
 
   gSync.updateAllUI(state);
@@ -115,7 +115,7 @@ add_task(async function test_ui_state_unverified() {
     fxastatus: "unverified",
     avatarURL: null,
     syncing: false,
-    syncNowTooltip: tooltipText
+    syncNowTooltip: tooltipText,
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-unverified", false);
   checkMenuBarItem("sync-unverifieditem");
@@ -124,7 +124,7 @@ add_task(async function test_ui_state_unverified() {
 add_task(async function test_ui_state_loginFailed() {
   let state = {
     status: UIState.STATUS_LOGIN_FAILED,
-    email: "foo@bar.com"
+    email: "foo@bar.com",
   };
 
   gSync.updateAllUI(state);
@@ -137,7 +137,7 @@ add_task(async function test_ui_state_loginFailed() {
     fxastatus: "login-failed",
     avatarURL: null,
     syncing: false,
-    syncNowTooltip: tooltipText
+    syncNowTooltip: tooltipText,
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-reauthsync", false);
   checkMenuBarItem("sync-reauthitem");

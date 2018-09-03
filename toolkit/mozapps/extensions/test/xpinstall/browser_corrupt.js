@@ -10,7 +10,7 @@ function test() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "Corrupt XPI": TESTROOT + "corrupt.xpi"
+    "Corrupt XPI": TESTROOT + "corrupt.xpi",
   }));
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);

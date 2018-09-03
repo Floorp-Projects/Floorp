@@ -16,7 +16,7 @@ function test() {
     { type: "text/plain",
       data: value },
     { type: "text/html",
-      data: htmlString }
+      data: htmlString },
   ] ];
   // set the valid attribute so dropping is allowed
   var oldstate = gURLBar.getAttribute("pageproxystate");

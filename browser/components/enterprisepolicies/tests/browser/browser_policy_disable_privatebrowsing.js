@@ -8,8 +8,8 @@ ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 add_task(async function setup() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "DisablePrivateBrowsing": true
-    }
+      "DisablePrivateBrowsing": true,
+    },
   });
 });
 

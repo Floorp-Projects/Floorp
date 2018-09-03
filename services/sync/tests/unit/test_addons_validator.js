@@ -40,7 +40,7 @@ function getDummyServerAndClient() {
         id: "another-plugin",
         type: "plugin",
       },
-    ]
+    ],
   };
 }
 

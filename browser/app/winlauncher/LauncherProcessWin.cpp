@@ -40,7 +40,7 @@ PostCreationSetup(HANDLE aChildProcess, HANDLE aChildMainThread,
 }
 
 #if !defined(PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON)
-# define PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON (0x00000001ui64 << 60)
+# define PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON (0x00000001ULL << 60)
 #endif // !defined(PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON)
 
 #if (_WIN32_WINNT < 0x0602)
@@ -146,25 +146,30 @@ namespace mozilla {
 bool
 RunAsLauncherProcess(int& argc, wchar_t** argv)
 {
+  // NB: We run all tests in this function instead of returning early in order
+  // to ensure that all side effects take place, such as clearing environment
+  // variables.
+  bool result = false;
+
 #if defined(MOZ_LAUNCHER_PROCESS)
   Maybe<bool> isChildOfFirefox = IsSameBinaryAsParentProcess();
-  if (!isChildOfFirefox) {
-    return true;
-  }
-
-  if (!isChildOfFirefox.value()) {
-    return true;
+  if (isChildOfFirefox) {
+    result |= !isChildOfFirefox.value();
+  } else {
+    result = true;
   }
 #endif // defined(MOZ_LAUNCHER_PROCESS)
 
   if (mozilla::EnvHasValue("MOZ_LAUNCHER_PROCESS")) {
     mozilla::SaveToEnv("MOZ_LAUNCHER_PROCESS=");
-    return true;
+    result = true;
   }
 
-  return CheckArg(argc, argv, L"launcher",
-                  static_cast<const wchar_t**>(nullptr),
-                  CheckArgFlag::RemoveArg) == ARG_FOUND;
+  result |= CheckArg(argc, argv, L"launcher",
+                     static_cast<const wchar_t**>(nullptr),
+                     CheckArgFlag::RemoveArg) == ARG_FOUND;
+
+  return result;
 }
 
 int

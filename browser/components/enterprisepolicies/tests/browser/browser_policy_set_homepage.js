@@ -64,9 +64,9 @@ add_task(async function homepage_test_simple() {
   await setupPolicyEngineWithJson({
     "policies": {
       "Homepage": {
-        "URL": "http://example1.com/"
-      }
-    }
+        "URL": "http://example1.com/",
+      },
+    },
   });
   await check_homepage({expectedURL: "http://example1.com/"});
 });
@@ -82,9 +82,9 @@ add_task(async function homepage_test_repeat_same_policy_value() {
   await setupPolicyEngineWithJson({
     "policies": {
       "Homepage": {
-        "URL": "http://example1.com/"
-      }
-    }
+        "URL": "http://example1.com/",
+      },
+    },
   });
   await check_homepage({expectedURL: "http://example2.com/",
                        expectedPageVal: 3});
@@ -96,9 +96,9 @@ add_task(async function homepage_test_different_policy_value() {
   await setupPolicyEngineWithJson({
     "policies": {
       "Homepage": {
-        "URL": "http://example3.com/"
-      }
-    }
+        "URL": "http://example3.com/",
+      },
+    },
   });
   await check_homepage({expectedURL: "http://example3.com/"});
 });
@@ -108,9 +108,9 @@ add_task(async function homepage_test_empty_additional() {
     "policies": {
       "Homepage": {
         "URL": "http://example1.com/",
-        "Additional": []
-      }
-    }
+        "Additional": [],
+      },
+    },
   });
   await check_homepage({expectedURL: "http://example1.com/"});
 });
@@ -120,9 +120,9 @@ add_task(async function homepage_test_single_additional() {
     "policies": {
       "Homepage": {
         "URL": "http://example1.com/",
-        "Additional": ["http://example2.com/"]
-      }
-    }
+        "Additional": ["http://example2.com/"],
+      },
+    },
   });
   await check_homepage({expectedURL: "http://example1.com/|http://example2.com/"});
 });
@@ -133,9 +133,9 @@ add_task(async function homepage_test_multiple_additional() {
       "Homepage": {
         "URL": "http://example1.com/",
         "Additional": ["http://example2.com/",
-                       "http://example3.com/"]
-      }
-    }
+                       "http://example3.com/"],
+      },
+    },
   });
   await check_homepage({expectedURL: "http://example1.com/|http://example2.com/|http://example3.com/"});
 });
@@ -147,9 +147,9 @@ add_task(async function homepage_test_locked() {
         "URL": "http://example4.com/",
         "Additional": ["http://example5.com/",
                        "http://example6.com/"],
-        "Locked": true
-      }
-    }
+        "Locked": true,
+      },
+    },
   });
   await check_homepage({expectedURL: "http://example4.com/|http://example5.com/|http://example6.com/",
                        locked: true});
@@ -159,9 +159,9 @@ add_task(async function homepage_test_anchor_link() {
   await setupPolicyEngineWithJson({
     "policies": {
       "Homepage": {
-        "URL": "http://example1.com/#test"
-      }
-    }
+        "URL": "http://example1.com/#test",
+      },
+    },
   });
   await check_homepage({expectedURL: "http://example1.com/#test"});
 });

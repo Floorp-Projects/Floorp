@@ -2775,18 +2775,18 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   }
 
   nsIntRegion invalid;
-  bool areaOverflowed = false;
   if (props) {
     if (!props->ComputeDifferences(layerManager->GetRoot(), invalid, computeInvalidFunc)) {
-      areaOverflowed = true;
+      invalid = nsIntRect::MaxIntRect();
     }
   } else if (widgetTransaction) {
     LayerProperties::ClearInvalidations(layerManager->GetRoot());
   }
 
   bool shouldInvalidate = layerManager->NeedsWidgetInvalidation();
+
   if (view) {
-    if (props && !areaOverflowed) {
+    if (props) {
       if (!invalid.IsEmpty()) {
         nsIntRect bounds = invalid.GetBounds();
         nsRect rect(presContext->DevPixelsToAppUnits(bounds.x),

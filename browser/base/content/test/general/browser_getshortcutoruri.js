@@ -26,7 +26,7 @@ keyWordData.prototype = {
     this.searchWord = aSearchWord;
 
     this.method = (this.postData ? "POST" : "GET");
-  }
+  },
 };
 
 function bmKeywordData(aKeyWord, aURL, aPostData, aSearchWord) {
@@ -88,7 +88,7 @@ var testData = [
   // getShortcutOrURIAndPostData for non-keywords (setupKeywords only adds keywords for
   // bmKeywordData objects)
   [{keyword: "http://gavinsharp.com"},
-   new keywordResult(null, null, true)]
+   new keywordResult(null, null, true)],
 ];
 
 add_task(async function test_getshortcutoruri() {

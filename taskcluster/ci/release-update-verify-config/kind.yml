@@ -87,8 +87,7 @@ job-defaults:
                   win32: "45.3.0esr"
                   win64: "45.3.0esr"
                   default: null
-            # TODO add bz2 -> lzma watershed when we ship the first ESR 52 -> 60 update
-            mozilla-esr60: "60.0esr"
+            mozilla-esr60: "52.0esr"
             default: null
 
 jobs:

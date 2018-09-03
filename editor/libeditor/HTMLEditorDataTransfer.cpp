@@ -360,7 +360,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     }
 
     // Remember if we are in a link.
-    bool bStartedInLink = IsInLink(pointToInsert.GetContainer());
+    bool bStartedInLink = !!GetLinkElement(pointToInsert.GetContainer());
 
     // Are we in a text node? If so, split it.
     if (pointToInsert.IsInTextNode()) {
@@ -659,15 +659,13 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
       selection->Collapse(selNode, selOffset);
 
       // if we just pasted a link, discontinue link style
-      nsCOMPtr<nsINode> link;
+      nsCOMPtr<nsIContent> linkContent;
       if (!bStartedInLink &&
-          IsInLink(selNode, address_of(link))) {
+          (linkContent = GetLinkElement(selNode))) {
         // so, if we just pasted a link, I split it.  Why do that instead of just
         // nudging selection point beyond it?  Because it might have ended in a BR
         // that is not visible.  If so, the code above just placed selection
         // inside that.  So I split it instead.
-        nsCOMPtr<nsIContent> linkContent = do_QueryInterface(link);
-        NS_ENSURE_STATE(linkContent || !link);
         SplitNodeResult splitLinkResult =
           SplitNodeDeepWithTransaction(
             *linkContent, EditorRawDOMPoint(selNode, selOffset),
@@ -687,25 +685,21 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   return rules->DidDoAction(selection, subActionInfo, rv);
 }
 
-bool
-HTMLEditor::IsInLink(nsINode* aNode,
-                     nsCOMPtr<nsINode>* outLink)
+// static
+Element*
+HTMLEditor::GetLinkElement(nsINode* aNode)
 {
-  NS_ENSURE_TRUE(aNode, false);
-  if (outLink) {
-    *outLink = nullptr;
+  if (NS_WARN_IF(!aNode)) {
+    return nullptr;
   }
   nsINode* node = aNode;
   while (node) {
     if (HTMLEditUtils::IsLink(node)) {
-      if (outLink) {
-        *outLink = node;
-      }
-      return true;
+      return node->AsElement();
     }
     node = node->GetParentNode();
   }
-  return false;
+  return nullptr;
 }
 
 nsresult

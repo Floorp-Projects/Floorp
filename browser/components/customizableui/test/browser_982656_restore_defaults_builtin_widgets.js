@@ -11,7 +11,7 @@ add_task(async function() {
   const kWidgetId = "bug982656-add-on-widget-should-not-restore-to-default-area";
   let widgetSpec = {
     id: kWidgetId,
-    defaultArea: CustomizableUI.AREA_NAVBAR
+    defaultArea: CustomizableUI.AREA_NAVBAR,
   };
   CustomizableUI.createWidget(widgetSpec);
 
@@ -39,7 +39,7 @@ add_task(async function() {
 
   let widgetSpec = {
     id: kWidgetId,
-    defaultArea: kToolbarId
+    defaultArea: kToolbarId,
   };
   CustomizableUI.createWidget(widgetSpec);
 

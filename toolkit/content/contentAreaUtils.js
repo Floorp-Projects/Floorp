@@ -29,7 +29,7 @@ var ContentAreaUtils = {
     delete this.stringBundle;
     return this.stringBundle =
       Services.strings.createBundle("chrome://global/locale/contentAreaCommands.properties");
-  }
+  },
 };
 
 function urlSecurityCheck(aURL, aPrincipal, aFlags) {
@@ -176,7 +176,7 @@ function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0) {
     onError(status) {
       throw new Components.Exception("saveBrowser failed asynchronously in startPersistence",
                                      status, stack);
-    }
+    },
   });
 }
 
@@ -260,7 +260,7 @@ DownloadListener.prototype = {
     }
 
     throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  },
 };
 
 const kSaveAsType_Complete = 0; // Save document with attached objects.
@@ -376,7 +376,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
       contentType: aContentType,
       saveMode,
       saveAsType: kSaveAsType_Complete,
-      file
+      file,
     };
 
     // Find a URI to use for determining last-downloaded-to directory
@@ -770,7 +770,7 @@ function DownloadURL(aURL, aFileName, aInitiatingDocument) {
 
   let filepickerParams = {
     fileInfo,
-    saveMode: SAVEMODE_FILEONLY
+    saveMode: SAVEMODE_FILEONLY,
   };
 
   (async function() {
@@ -781,7 +781,7 @@ function DownloadURL(aURL, aFileName, aInitiatingDocument) {
     let file = filepickerParams.file;
     let download = await Downloads.createDownload({
       source: { url: aURL, isPrivate },
-      target: { path: file.path, partFilePath: file.path + ".part" }
+      target: { path: file.path, partFilePath: file.path + ".part" },
     });
     download.tryToKeepPartialData = true;
 
@@ -1171,7 +1171,7 @@ function openURL(aURL) {
     var recentWindow = Services.wm.getMostRecentWindow("navigator:browser");
     if (recentWindow) {
       recentWindow.openWebLinkIn(uri.spec, "tab", {
-        triggeringPrincipal: recentWindow.document.contentPrincipal
+        triggeringPrincipal: recentWindow.document.contentPrincipal,
       });
       return;
     }
@@ -1205,12 +1205,12 @@ function openURL(aURL) {
         if (iid.equals(Ci.nsILoadGroup))
           return loadgroup;
         throw Cr.NS_ERROR_NO_INTERFACE;
-      }
+      },
     };
 
     var channel = NetUtil.newChannel({
       uri,
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     });
 
     if (channel) {

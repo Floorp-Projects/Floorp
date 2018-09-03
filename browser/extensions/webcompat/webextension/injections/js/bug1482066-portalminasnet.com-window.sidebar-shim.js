@@ -19,5 +19,5 @@ Object.defineProperty(window.wrappedJSObject, "sidebar", {
     return false;
   }, window),
 
-  set: exportFunction(function() {}, window)
+  set: exportFunction(function() {}, window),
 });

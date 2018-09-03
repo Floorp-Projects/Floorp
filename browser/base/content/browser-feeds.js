@@ -32,13 +32,13 @@ const SETTABLE_PREFS = new Set([
   PREF_SELECTED_ACTION,
   PREF_VIDEO_SELECTED_READER,
   PREF_AUDIO_SELECTED_READER,
-  PREF_SELECTED_READER
+  PREF_SELECTED_READER,
 ]);
 
 const EXECUTABLE_PREFS = new Set([
   PREF_SELECTED_APP,
   PREF_VIDEO_SELECTED_APP,
-  PREF_AUDIO_SELECTED_APP
+  PREF_AUDIO_SELECTED_APP,
 ]);
 
 const VALID_ACTIONS = new Set(["ask", "reader", "bookmarks"]);
@@ -450,7 +450,7 @@ var FeedHandler = {
         const response = {
          default: this._getReaderForType(Ci.nsIFeed.TYPE_FEED),
          [Ci.nsIFeed.TYPE_AUDIO]: this._getReaderForType(Ci.nsIFeed.TYPE_AUDIO),
-         [Ci.nsIFeed.TYPE_VIDEO]: this._getReaderForType(Ci.nsIFeed.TYPE_VIDEO)
+         [Ci.nsIFeed.TYPE_VIDEO]: this._getReaderForType(Ci.nsIFeed.TYPE_VIDEO),
         };
         Services.mm.broadcastAsyncMessage("FeedWriter:PreferenceUpdated",
                                           response);

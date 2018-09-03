@@ -839,7 +839,7 @@ ArrayEnumerator.prototype = {
 
   getNext: function ArrayEnumerator_getNext() {
     return this._contents[this._index++];
-  }
+  },
 };
 
 /**
@@ -1199,7 +1199,7 @@ UpdatePatch.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdatePatch,
                                           Ci.nsIPropertyBag,
-                                          Ci.nsIWritablePropertyBag])
+                                          Ci.nsIWritablePropertyBag]),
 };
 
 /**
@@ -1500,7 +1500,7 @@ Update.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdate,
                                           Ci.nsIPropertyBag,
-                                          Ci.nsIWritablePropertyBag])
+                                          Ci.nsIWritablePropertyBag]),
 };
 
 const UpdateServiceFactory = {
@@ -1510,7 +1510,7 @@ const UpdateServiceFactory = {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     return this._instance == null ? this._instance = new UpdateService() :
                                     this._instance;
-  }
+  },
 };
 
 /**
@@ -2474,7 +2474,7 @@ UpdateService.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIApplicationUpdateService,
                                           Ci.nsIUpdateCheckListener,
                                           Ci.nsITimerCallback,
-                                          Ci.nsIObserver])
+                                          Ci.nsIObserver]),
 };
 
 /**
@@ -2552,7 +2552,7 @@ UpdateManager.prototype = {
         value: updates,
         writable: true,
         configurable: true,
-        enumerable: true
+        enumerable: true,
       });
     }
   },
@@ -2627,7 +2627,7 @@ UpdateManager.prototype = {
       value: updates,
       writable: true,
       configurable: true,
-      enumerable: true
+      enumerable: true,
     });
     return this._updates;
   },
@@ -2844,7 +2844,7 @@ UpdateManager.prototype = {
   },
 
   classID: Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateManager, Ci.nsIObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateManager, Ci.nsIObserver]),
 };
 
 /**
@@ -3168,7 +3168,7 @@ Checker.prototype = {
   },
 
   classID: Components.ID("{898CDC9B-E43F-422F-9CC4-2F6291B415A3}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateChecker])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateChecker]),
 };
 
 /**
@@ -3813,7 +3813,7 @@ Downloader.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIRequestObserver,
                                           Ci.nsIProgressEventSink,
-                                          Ci.nsIInterfaceRequestor])
+                                          Ci.nsIInterfaceRequestor]),
 };
 
 /**
@@ -3989,7 +3989,7 @@ UpdatePrompt.prototype = {
             this.service.removeObserver(this, "quit-application");
             break;
         }
-      }
+      },
     };
 
     // bug 534090 - show the UI for update available notifications when the
@@ -4061,7 +4061,7 @@ UpdatePrompt.prototype = {
               Services.obs.removeObserver(this, "quit-application");
               break;
           }
-        }
+        },
       };
       idleService.addIdleObserver(observer, IDLE_TIME);
       Services.obs.addObserver(observer, "quit-application");
@@ -4107,7 +4107,7 @@ UpdatePrompt.prototype = {
   classDescription: "Update Prompt",
   contractID: "@mozilla.org/updates/update-prompt;1",
   classID: Components.ID("{27ABA825-35B5-4018-9FDD-F99250A0E722}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdatePrompt])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdatePrompt]),
 };
 
 var components = [UpdateService, Checker, UpdatePrompt, UpdateManager];

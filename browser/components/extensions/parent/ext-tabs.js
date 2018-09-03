@@ -120,8 +120,9 @@ let tabListener = {
   },
 };
 
-const allAttrs = new Set(["audible", "favIconUrl", "mutedInfo", "sharingState", "title"]);
+const allAttrs = new Set(["attention", "audible", "favIconUrl", "mutedInfo", "sharingState", "title"]);
 const allProperties = new Set([
+  "attention",
   "audible",
   "discarded",
   "favIconUrl",
@@ -226,6 +227,9 @@ class TabsUpdateFilterEventManager extends EventManager {
           }
           if (changed.includes("sharing") && filter.properties.has("sharingState")) {
             needed.push("sharingState");
+          }
+          if (changed.includes("attention") && filter.properties.has("attention")) {
+            needed.push("attention");
           }
         } else if (event.type == "TabPinned") {
           needed.push("pinned");

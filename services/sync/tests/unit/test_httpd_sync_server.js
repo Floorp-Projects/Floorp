@@ -53,7 +53,7 @@ add_test(function test_url_parsing() {
 
   parts = server.storageRE.exec("storage");
   let collection;
-  [all, , collection, ] = parts;
+  [all, , collection ] = parts;
   Assert.equal(all, "storage");
   Assert.equal(collection, undefined);
 
@@ -85,7 +85,7 @@ add_task(async function test_basic_http() {
 
 add_task(async function test_info_collections() {
   let server = new SyncServer({
-    __proto__: SyncServerCallback
+    __proto__: SyncServerCallback,
   });
   function responseHasCorrectHeaders(r) {
     Assert.equal(r.status, 200);
@@ -135,7 +135,7 @@ add_task(async function test_storage_request() {
   server.registerUser("john", "password");
 
   server.createContents("john", {
-    crypto: {foos: {foo: "bar"}}
+    crypto: {foos: {foo: "bar"}},
   });
   let coll = server.user("john").collection("crypto");
   Assert.ok(!!coll);
@@ -240,7 +240,7 @@ add_task(async function test_x_weave_records() {
 
   server.createContents("john", {
     crypto: {foos: {foo: "bar"},
-             bars: {foo: "baz"}}
+             bars: {foo: "baz"}},
   });
   server.start();
 

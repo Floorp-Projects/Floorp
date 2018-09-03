@@ -40,7 +40,7 @@ var tests = [
     },
     success() {
       is(gURLBar.value, testActionURL, "gURLBar.value didn't change when copying");
-    }
+    },
   },
   {
     expected: testURL.substring(0, 10),
@@ -52,7 +52,7 @@ var tests = [
     },
     success() {
       is(gURLBar.value, testActionURL, "gURLBar.value didn't change when copying");
-    }
+    },
   },
   {
     expected: testURL,
@@ -64,7 +64,7 @@ var tests = [
     },
     success() {
       is(gURLBar.value, "", "gURLBar.value is now empty");
-    }
+    },
   },
   {
     expected: testURL.substring(testURL.length - 10, testURL.length),
@@ -83,8 +83,8 @@ var tests = [
     },
     success() {
       is(gURLBar.value, testURL.substring(0, testURL.length - 10), "gURLBar.value has the correct value");
-    }
-  }
+    },
+  },
 ];
 
 function test() {

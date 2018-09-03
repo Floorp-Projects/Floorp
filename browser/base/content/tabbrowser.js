@@ -138,7 +138,7 @@ window._gBrowser = {
     "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
     "purgeSessionHistory", "stopScroll", "startScroll",
     "userTypedValue", "userTypedClear",
-    "didStartLoadSinceLastUserTyping", "audioMuted"
+    "didStartLoadSinceLastUserTyping", "audioMuted",
   ],
 
   _removingTabs: [],
@@ -187,7 +187,7 @@ window._gBrowser = {
         return gBrowser.tabs[name].linkedBrowser;
       }
       return target[name];
-    }
+    },
   }),
 
   /**
@@ -959,6 +959,7 @@ window._gBrowser = {
 
       newTab.removeAttribute("titlechanged");
       newTab.removeAttribute("attention");
+      this._tabAttrModified(newTab, ["attention"]);
 
       // The tab has been selected, it's not unselected anymore.
       // (1) Call the current tab's finishUnselectedTabHoverTimer()
@@ -1000,8 +1001,8 @@ window._gBrowser = {
         bubbles: true,
         cancelable: false,
         detail: {
-          previousTab: oldTab
-        }
+          previousTab: oldTab,
+        },
       });
       newTab.dispatchEvent(event);
 
@@ -1056,7 +1057,7 @@ window._gBrowser = {
 
       let event = new CustomEvent("TabSwitchDone", {
         bubbles: true,
-        cancelable: true
+        cancelable: true,
       });
       this.dispatchEvent(event);
     }
@@ -1177,7 +1178,7 @@ window._gBrowser = {
       cancelable: false,
       detail: {
         changed: aChanged,
-      }
+      },
     });
     aTab.dispatchEvent(event);
   },
@@ -1409,7 +1410,7 @@ window._gBrowser = {
       openerBrowser: aOpenerBrowser,
       nextTabParentId: aNextTabParentId,
       focusUrlBar: aFocusUrlBar,
-      name: aName
+      name: aName,
     });
     if (!bgLoad)
       this.selectedTab = tab;
@@ -2004,7 +2005,7 @@ window._gBrowser = {
         get: getter,
         set: setter,
         configurable: true,
-        enumerable: true
+        enumerable: true,
       });
     }
   },
@@ -2125,7 +2126,7 @@ window._gBrowser = {
     tab._browserParams = {
       uriIsAboutBlank: aBrowser.currentURI.spec == "about:blank",
       remoteType: aBrowser.remoteType,
-      usingPreloadedContent: false
+      usingPreloadedContent: false,
     };
 
     SessionStore.resetBrowserToLazyState(tab);
@@ -3501,7 +3502,7 @@ window._gBrowser = {
    * to a new browser window, unless it is (they are) already the only tab(s)
    * in the current window, in which case this will do nothing.
    */
-  replaceTabsWithWindow(contextTab) {
+  replaceTabsWithWindow(contextTab, aOptions) {
     let tabs;
     if (contextTab.multiselected) {
       tabs = this.selectedTabs;
@@ -3514,7 +3515,7 @@ window._gBrowser = {
     }
 
     if (tabs.length == 1) {
-      return this.replaceTabWithWindow(tabs[0]);
+      return this.replaceTabWithWindow(tabs[0], aOptions);
     }
 
     // The order of the tabs is reserved.
@@ -3552,7 +3553,7 @@ window._gBrowser = {
                                                winVisibleTabs[winTabLength - 1]);
     }, { once: true });
 
-    win = this.replaceTabWithWindow(firstInactiveTab);
+    win = this.replaceTabWithWindow(firstInactiveTab, aOptions);
     return win;
   },
 
@@ -4094,34 +4095,41 @@ window._gBrowser = {
       return;
     }
 
-    let stringWithShortcut = (stringId, keyElemId) => {
+    let stringWithShortcut = (stringId, keyElemId, pluralCount) => {
       let keyElem = document.getElementById(keyElemId);
       let shortcut = ShortcutUtils.prettifyShortcut(keyElem);
-      return gTabBrowserBundle.formatStringFromName(stringId, [shortcut], 1);
+      return PluralForm.get(pluralCount, gTabBrowserBundle.GetStringFromName(stringId))
+                       .replace("%S", shortcut)
+                       .replace("#1", pluralCount);
     };
 
-    var label;
+    let label;
+    const selectedTabs = this.selectedTabs;
+    const contextTabInSelection = selectedTabs.includes(tab);
+    const affectedTabsLength = contextTabInSelection ? selectedTabs.length : 1;
     if (tab.mOverCloseButton) {
       label = tab.selected ?
-        stringWithShortcut("tabs.closeSelectedTab.tooltip", "key_close") :
-        gTabBrowserBundle.GetStringFromName("tabs.closeTab.tooltip");
+        stringWithShortcut("tabs.closeSelectedTabs.tooltip", "key_close", affectedTabsLength) :
+        PluralForm.get(affectedTabsLength, gTabBrowserBundle.GetStringFromName("tabs.closeTabs.tooltip"))
+                  .replace("#1", affectedTabsLength);
     } else if (tab._overPlayingIcon) {
       let stringID;
       if (tab.selected) {
         stringID = tab.linkedBrowser.audioMuted ?
-          "tabs.unmuteAudio.tooltip" :
-          "tabs.muteAudio.tooltip";
-        label = stringWithShortcut(stringID, "key_toggleMute");
+          "tabs.unmuteAudio2.tooltip" :
+          "tabs.muteAudio2.tooltip";
+        label = stringWithShortcut(stringID, "key_toggleMute", affectedTabsLength);
       } else {
         if (tab.hasAttribute("activemedia-blocked")) {
-          stringID = "tabs.unblockAudio.tooltip";
+          stringID = "tabs.unblockAudio2.tooltip";
         } else {
           stringID = tab.linkedBrowser.audioMuted ?
-            "tabs.unmuteAudio.background.tooltip" :
-            "tabs.muteAudio.background.tooltip";
+            "tabs.unmuteAudio2.background.tooltip" :
+            "tabs.muteAudio2.background.tooltip";
         }
 
-        label = gTabBrowserBundle.GetStringFromName(stringID);
+        label = PluralForm.get(affectedTabsLength, gTabBrowserBundle.GetStringFromName(stringID))
+                          .replace("#1", affectedTabsLength);
       }
     } else {
       label = tab._fullLabel || tab.getAttribute("label");
@@ -4283,7 +4291,7 @@ window._gBrowser = {
               if (browser.messageManager) {
                 browser.messageManager.sendAsyncMessage("RefreshBlocker:Refresh", data);
               }
-            }
+            },
           }];
 
           notificationBox.appendNotification(message, "refresh-blocked",
@@ -4432,9 +4440,11 @@ window._gBrowser = {
         // At least one of these should/will be non-null:
         let promptPrincipal = event.detail.promptPrincipal || docPrincipal ||
           tabForEvent.linkedBrowser.contentPrincipal;
+
         // For null principals, we bail immediately and don't show the checkbox:
         if (!promptPrincipal || promptPrincipal.isNullPrincipal) {
           tabForEvent.setAttribute("attention", "true");
+          this._tabAttrModified(tabForEvent, ["attention"]);
           return;
         }
 
@@ -4448,6 +4458,7 @@ window._gBrowser = {
             let tabPrompt = this.getTabModalPromptBox(tabForEvent.linkedBrowser);
             tabPrompt.onNextPromptShowAllowFocusCheckboxFor(promptPrincipal);
             tabForEvent.setAttribute("attention", "true");
+            this._tabAttrModified(tabForEvent, ["attention"]);
             return;
           }
         }
@@ -5159,7 +5170,7 @@ var StatusPanel = {
       top:    panelRect.top,
       bottom: panelRect.bottom,
       left:   alignRight ? containerRect.right - panelRect.width : containerRect.left,
-      right:  alignRight ? containerRect.right : containerRect.left + panelRect.width
+      right:  alignRight ? containerRect.right : containerRect.left + panelRect.width,
     };
   },
 
@@ -5174,7 +5185,7 @@ var StatusPanel = {
       this.panel.setAttribute("sizelimit", "true");
       this._mouseTargetRect = null;
     }
-  }
+  },
 };
 
 var TabBarVisibility = {
@@ -5200,7 +5211,7 @@ var TabBarVisibility = {
       gTabBrowserBundle.GetStringFromName(collapse ? "tabs.close" : "tabs.closeTab"));
 
     TabsInTitlebar.allowedBy("tabs-visible", !collapse);
-  }
+  },
 };
 
 var TabContextMenu = {
@@ -5256,6 +5267,10 @@ var TabContextMenu = {
     contextPinSelectedTabs.hidden = this.contextTab.pinned || !multiselectionContext;
     let contextUnpinSelectedTabs = document.getElementById("context_unpinSelectedTabs");
     contextUnpinSelectedTabs.hidden = !this.contextTab.pinned || !multiselectionContext;
+
+    // Hide the "Duplicate Tab" if there is a selection present
+    let contextDuplicateTab = document.getElementById("context_duplicateTab");
+    contextDuplicateTab.hidden = multiselectionContext;
 
     // Disable "Close Tabs to the Right" if there are no tabs
     // following it.
@@ -5374,6 +5389,6 @@ var TabContextMenu = {
         newTab.toggleMuteAudio(this.contextTab.muteReason);
       }
     }
-  }
+  },
 };
 

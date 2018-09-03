@@ -406,5 +406,5 @@ TokenServerClient.prototype = {
   // override points for testing.
   newRESTRequest(url) {
     return new RESTRequest(url);
-  }
+  },
 };

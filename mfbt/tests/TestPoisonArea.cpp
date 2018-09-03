@@ -157,7 +157,7 @@
 #elif defined __sh__
 #define RETURN_INSTR 0x0b000b00 /* rts; rts */
 
-#elif defined __aarch64__
+#elif defined __aarch64__ || defined _M_ARM64
 #define RETURN_INSTR 0xd65f03c0 /* ret */
 
 #elif defined __ia64

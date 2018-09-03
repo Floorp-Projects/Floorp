@@ -767,7 +767,7 @@ var LoginHelper = {
       dataObject.data = data;
     }
     Services.obs.notifyObservers(dataObject, "passwordmgr-storage-changed", changeType);
-  }
+  },
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(LoginHelper, "showInsecureFieldWarning",

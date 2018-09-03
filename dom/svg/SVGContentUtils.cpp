@@ -16,6 +16,7 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGContextPaint.h"
+#include "mozilla/TextUtils.h"
 #include "nsComputedDOMStyle.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"
@@ -651,13 +652,13 @@ ParseNumber(RangedPtr<const char16_t>& aIter,
   bool gotDot = *aIter == '.';
 
   if (!gotDot) {
-    if (!SVGContentUtils::IsDigit(*aIter)) {
+    if (!mozilla::IsAsciiDigit(*aIter)) {
       return false;
     }
     do {
-      intPart = 10.0 * intPart + SVGContentUtils::DecimalDigitValue(*aIter);
+      intPart = 10.0 * intPart + mozilla::AsciiAlphanumericToNumber(*aIter);
       ++aIter;
-    } while (aIter != aEnd && SVGContentUtils::IsDigit(*aIter));
+    } while (aIter != aEnd && mozilla::IsAsciiDigit(*aIter));
 
     if (aIter != aEnd) {
       gotDot = *aIter == '.';
@@ -669,7 +670,7 @@ ParseNumber(RangedPtr<const char16_t>& aIter,
 
   if (gotDot) {
     ++aIter;
-    if (aIter == aEnd || !SVGContentUtils::IsDigit(*aIter)) {
+    if (aIter == aEnd || !mozilla::IsAsciiDigit(*aIter)) {
       return false;
     }
 
@@ -677,10 +678,10 @@ ParseNumber(RangedPtr<const char16_t>& aIter,
     double divisor = 1.0;
 
     do {
-      fracPart = 10.0 * fracPart + SVGContentUtils::DecimalDigitValue(*aIter);
+      fracPart = 10.0 * fracPart + mozilla::AsciiAlphanumericToNumber(*aIter);
       divisor *= 10.0;
       ++aIter;
-    } while (aIter != aEnd && SVGContentUtils::IsDigit(*aIter));
+    } while (aIter != aEnd && mozilla::IsAsciiDigit(*aIter));
 
     fracPart /= divisor;
   }
@@ -699,7 +700,7 @@ ParseNumber(RangedPtr<const char16_t>& aIter,
       if (*expIter == '-' || *expIter == '+') {
         ++expIter;
       }
-      if (expIter != aEnd && SVGContentUtils::IsDigit(*expIter)) {
+      if (expIter != aEnd && mozilla::IsAsciiDigit(*expIter)) {
         // At this point we're sure this is an exponent
         // and not the start of a unit such as em or ex.
         gotE = true;
@@ -709,9 +710,9 @@ ParseNumber(RangedPtr<const char16_t>& aIter,
     if (gotE) {
       aIter = expIter;
       do {
-        exponent = 10.0 * exponent + SVGContentUtils::DecimalDigitValue(*aIter);
+        exponent = 10.0 * exponent + mozilla::AsciiAlphanumericToNumber(*aIter);
         ++aIter;
-      } while (aIter != aEnd && SVGContentUtils::IsDigit(*aIter));
+      } while (aIter != aEnd && mozilla::IsAsciiDigit(*aIter));
     }
   }
 
@@ -798,7 +799,7 @@ SVGContentUtils::ParseInteger(RangedPtr<const char16_t>& aIter,
     return false;
   }
 
-  if (!IsDigit(*iter)) {
+  if (!mozilla::IsAsciiDigit(*iter)) {
     return false;
   }
 
@@ -806,10 +807,10 @@ SVGContentUtils::ParseInteger(RangedPtr<const char16_t>& aIter,
 
   do {
     if (value <= std::numeric_limits<int32_t>::max()) {
-      value = 10 * value + DecimalDigitValue(*iter);
+      value = 10 * value + mozilla::AsciiAlphanumericToNumber(*iter);
     }
     ++iter;
-  } while (iter != aEnd && IsDigit(*iter));
+  } while (iter != aEnd && mozilla::IsAsciiDigit(*iter));
 
   aIter = iter;
   aValue = int32_t(clamped(sign * value,

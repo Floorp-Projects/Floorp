@@ -65,7 +65,7 @@ function verify_no_change([startFile, startState], [endFile, endState]) {
     await manuallyInstall(do_get_file(DATA + endFile), profileDir, ID);
 
     let events = {
-      [ID]: []
+      [ID]: [],
     };
 
     if (startState != endState)
@@ -115,12 +115,12 @@ function verify_disables([startFile, startState], [endFile, endState]) {
       events[ID] = [
         ["onPropertyChanged", ["appDisabled"]],
         ["onDisabling", false],
-        "onDisabled"
+        "onDisabled",
       ];
     } else {
       events[ID] = [
         ["onPropertyChanged", ["appDisabled"]],
-        "onDisabling"
+        "onDisabling",
       ];
     }
 

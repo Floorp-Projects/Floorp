@@ -205,7 +205,7 @@ this.HawkClient.prototype = {
     let extra = {
       now: this.now(),
       localtimeOffsetMsec: this.localtimeOffsetMsec,
-      headers: extraHeaders
+      headers: extraHeaders,
     };
 
     let request = this.newHAWKAuthenticatedRESTRequest(uri, credentials, extra);

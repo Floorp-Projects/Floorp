@@ -18,8 +18,8 @@ var addon1 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 var addon2 = {
@@ -30,8 +30,8 @@ var addon2 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "2"
-  }]
+    maxVersion: "2",
+  }],
 };
 
 const IDS = ["addon1@tests.mozilla.org",

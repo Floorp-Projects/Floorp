@@ -124,7 +124,7 @@ PluginTag.prototype = {
   getMimeTypes(count) {
     count.value = this.mimeTypes.length;
     return this.mimeTypes;
-  }
+  },
 };
 
 // A container for the plugins handled by the fake plugin host.
@@ -140,7 +140,7 @@ var PluginHost = {
     return gInstalledPlugins.map(plugin => plugin.pluginTag);
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIPluginHost"])
+  QueryInterface: ChromeUtils.generateQI(["nsIPluginHost"]),
 };
 
 function registerFakePluginHost() {
@@ -170,7 +170,7 @@ var SysInfo = {
     return this._genuine.get(name);
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIPropertyBag2"])
+  QueryInterface: ChromeUtils.generateQI(["nsIPropertyBag2"]),
 };
 
 function registerFakeSysInfo() {
@@ -282,7 +282,7 @@ function spoofTheme(aId, aName, aDesc) {
     headerURL: "http://lwttest.invalid/a.png",
     footerURL: "http://lwttest.invalid/b.png",
     textcolor: Math.random().toString(),
-    accentcolor: Math.random().toString()
+    accentcolor: Math.random().toString(),
   };
 }
 
@@ -301,7 +301,7 @@ function spoofProfileReset() {
 
   return profileAccessor.writeTimes({
     created: PROFILE_CREATION_DATE_MS,
-    reset: PROFILE_RESET_DATE_MS
+    reset: PROFILE_RESET_DATE_MS,
   });
 }
 
@@ -1545,7 +1545,7 @@ add_task(async function test_defaultSearchEngine() {
     name: "telemetrySearchIdentifier",
     loadPath: "jar:[other]/searchTest.jar!testsearchplugin/telemetrySearchIdentifier.xml",
     origin: "default",
-    submissionURL: "http://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB?search=&sourceid=Mozilla-search"
+    submissionURL: "http://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB?search=&sourceid=Mozilla-search",
   };
   Assert.deepEqual(data.settings.defaultSearchEngineData, expectedSearchEngineData);
 
@@ -1584,7 +1584,7 @@ add_task(async function test_defaultSearchEngine() {
   const EXPECTED_SEARCH_ENGINE_DATA = {
     name: "telemetry_default",
     loadPath: "[other]addEngineWithDetails",
-    origin: "verified"
+    origin: "verified",
   };
   Assert.deepEqual(data.settings.defaultSearchEngineData, EXPECTED_SEARCH_ENGINE_DATA);
   TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");

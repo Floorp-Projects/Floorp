@@ -23,7 +23,7 @@ function checkUpdates(aId, aUpdateFile) {
         let error = new Error("Update check failed with status " + status);
         error.status = status;
         reject(error);
-      }
+      },
     });
   });
 }

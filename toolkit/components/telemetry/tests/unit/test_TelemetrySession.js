@@ -120,7 +120,7 @@ function getSavedPingFile(basename) {
 
 function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
   const MANDATORY_PING_FIELDS = [
-    "type", "id", "creationDate", "version", "application", "payload"
+    "type", "id", "creationDate", "version", "application", "payload",
   ];
 
   const APPLICATION_TEST_DATA = {
@@ -160,7 +160,7 @@ function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
 
 function checkPayloadInfo(data, reason) {
   const ALLOWED_REASONS = [
-    "environment-change", "shutdown", "daily", "saved-session", "test-ping"
+    "environment-change", "shutdown", "daily", "saved-session", "test-ping",
   ];
   let numberCheck = arg => { return (typeof arg == "number"); };
   let positiveNumberCheck = arg => { return numberCheck(arg) && (arg >= 0); };
@@ -328,7 +328,7 @@ function checkPayload(payload, reason, successfulPings) {
     bucket_count: 3,
     histogram_type: 3,
     values: {0: 1, 1: 0},
-    sum: 0
+    sum: 0,
   };
   let flag = payload.histograms[TELEMETRY_TEST_FLAG];
   Assert.equal(uneval(flag), uneval(expected_flag));
@@ -351,7 +351,7 @@ function checkPayload(payload, reason, successfulPings) {
       bucket_count: 3,
       histogram_type: 2,
       values: {0: 2, 1: successfulPings, 2: 0},
-      sum: successfulPings
+      sum: successfulPings,
     };
     let tc = payload.histograms[TELEMETRY_SUCCESS];
     Assert.equal(uneval(tc), uneval(expected_tc));
@@ -1724,7 +1724,7 @@ add_task(async function test_schedulerNothingDue() {
 add_task(async function test_pingExtendedStats() {
   const EXTENDED_PAYLOAD_FIELDS = [
     "log", "slowSQL", "fileIOReports", "lateWrites",
-    "addonDetails", "webrtc"
+    "addonDetails", "webrtc",
   ];
 
   if (AppConstants.platform == "android") {

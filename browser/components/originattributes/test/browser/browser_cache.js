@@ -47,7 +47,7 @@ function cacheDataForContext(loadContextInfo) {
       onCacheEntryVisitCompleted() {
         resolve(cacheEntries);
       },
-      QueryInterface: ChromeUtils.generateQI(["nsICacheStorageVisitor"])
+      QueryInterface: ChromeUtils.generateQI(["nsICacheStorageVisitor"]),
     };
     // Visiting the disk cache also visits memory storage so we do not
     // need to use Services.cache2.memoryCacheStorage() here.
@@ -72,7 +72,7 @@ function observeChannels(onChannel) {
       onChannel(aChannel);
       // Pass on aProxy unmodified.
       aCallback.onProxyFilterResult(aProxy);
-    }
+    },
   };
   protocolProxyService.registerChannelFilter(proxyFilter, 0);
   // Return the stop() function:

@@ -31,7 +31,7 @@ var Debugging = {
    * Set it to `true` if you need to fake battery values
    * for testing or debugging purposes.
    */
-  fake: false
+  fake: false,
 };
 
 var GetBattery = function() {
@@ -62,6 +62,6 @@ for (let k of ["charging", "chargingTime", "dischargingTime", "level"]) {
         throw new Error("Tried to set fake battery value when battery spoofing was disabled");
       }
       gFakeBattery[prop] = fakeSetting;
-    }
+    },
   });
 }

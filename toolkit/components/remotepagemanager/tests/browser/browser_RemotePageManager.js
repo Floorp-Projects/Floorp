@@ -326,7 +326,7 @@ add_task(async function check_port_properties() {
     "portID",
     "removeMessageListener",
     "sendAsyncMessage",
-    "url"
+    "url",
   ];
   function checkProperties(port, description) {
     const expected = [];
@@ -458,7 +458,7 @@ add_task(async function send_data() {
     integer: 45,
     real: 45.78,
     str: "foobar",
-    array: [1, 2, 3, 5, 27]
+    array: [1, 2, 3, 5, 27],
   };
 
   port.sendAsyncMessage("SendData", data);
@@ -478,7 +478,7 @@ add_task(async function send_data2() {
     integer: 45,
     real: 45.78,
     str: "foobar",
-    array: [1, 2, 3, 5, 27]
+    array: [1, 2, 3, 5, 27],
   };
 
   port.sendAsyncMessage("SendData2", {data});

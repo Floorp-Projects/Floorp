@@ -592,6 +592,7 @@ nsHttpChannel::OnBeforeConnect()
     mConnectionInfo->SetBeConservative((mCaps & NS_HTTP_BE_CONSERVATIVE) || mBeConservative);
     mConnectionInfo->SetTlsFlags(mTlsFlags);
     mConnectionInfo->SetTrrUsed(mTRR);
+    mConnectionInfo->SetTrrDisabled(mCaps & NS_HTTP_DISABLE_TRR);
 
     // notify "http-on-before-connect" observers
     gHttpHandler->OnBeforeConnect(this);
@@ -693,6 +694,7 @@ bool
 nsHttpChannel::CheckFastBlocked()
 {
     LOG(("nsHttpChannel::CheckFastBlocked [this=%p]\n", this));
+    MOZ_ASSERT(mIsThirdPartyTrackingResource);
 
     static bool sFastBlockInited = false;
     static bool sIsFastBlockEnabled = false;
@@ -705,23 +707,28 @@ nsHttpChannel::CheckFastBlocked()
     }
 
     TimeStamp timestamp;
-    if (NS_FAILED(GetNavigationStartTimeStamp(&timestamp))) {
+    if (NS_FAILED(GetNavigationStartTimeStamp(&timestamp)) || !timestamp) {
+        LOG(("FastBlock passed (no timestamp) [this=%p]\n", this));
+
         return false;
     }
 
     if (!StaticPrefs::browser_contentblocking_enabled() ||
         !sIsFastBlockEnabled ||
         IsContentPolicyTypeWhitelistedForFastBlock(mLoadInfo) ||
-        !timestamp) {
+        // If the user has interacted with the document, we disable fastblock.
+        (mLoadInfo && mLoadInfo->GetDocumentHasUserInteracted())) {
+
+        LOG(("FastBlock passed (invalid) [this=%p]\n", this));
+        
         return false;
     }
 
     TimeDuration duration = TimeStamp::NowLoRes() - timestamp;
     bool isFastBlocking = duration.ToMilliseconds() >= sFastBlockTimeout;
 
-    if (mLoadInfo) {
-        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTracker(true));
-        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(isFastBlocking));
+    if (isFastBlocking && mLoadInfo) {
+        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(true));
     }
 
     LOG(("FastBlock %s (%lf) [this=%p]\n",
@@ -740,6 +747,8 @@ nsHttpChannel::ConnectOnTailUnblock()
 
     bool isTrackingResource = mIsThirdPartyTrackingResource; // is atomic
     if (isTrackingResource && CheckFastBlocked()) {
+        AntiTrackingCommon::NotifyRejection(this,
+                                            nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
         Unused << AsyncAbort(NS_ERROR_ABORT);
         CloseCacheEntry(false);
         return NS_OK;
@@ -3897,7 +3906,7 @@ nsHttpChannel::OpenCacheEntryInternal(bool isHttps,
         extension.Append("TRR");
     }
 
-    if (!AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(this, mURI)) {
+    if (!AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(this, mURI, nullptr)) {
         nsCOMPtr<nsIURI> topWindowURI;
         rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
         bool isDocument = false;
@@ -6104,6 +6113,10 @@ nsHttpChannel::CancelInternal(nsresult status)
       !!mTrackingProtectionCancellationPending;
     if (status == NS_ERROR_TRACKING_URI) {
       mTrackingProtectionCancellationPending = 0;
+      if (mLoadInfo) {
+        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTracker(true));
+        MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(true));
+      }
     }
 
     mCanceled = true;

@@ -24,7 +24,7 @@ add_task(async function test_validation_interval() {
       return {
         validate(e) {
           return {};
-        }
+        },
       };
     },
   };
@@ -40,7 +40,7 @@ add_task(async function test_validation_interval() {
     "test-engine": {
       engine,
       maxRecords: 1,
-    }
+    },
   });
   // We haven't advanced the timestamp, so we should not validate again.
   deepEqual(doctor._getEnginesToValidate([engine]), {});
@@ -51,7 +51,7 @@ add_task(async function test_validation_interval() {
     "test-engine": {
       engine,
       maxRecords: 1,
-    }
+    },
   });
 });
 
@@ -66,13 +66,13 @@ add_task(async function test_repairs_start() {
     },
     canValidate() {
       return Promise.resolve(true);
-    }
+    },
   };
   let engine = {
     name: "test-engine",
     getValidator() {
       return validator;
-    }
+    },
   };
   let requestor = {
     async startRepairs(validationInfo, flowID) {
@@ -83,13 +83,13 @@ add_task(async function test_repairs_start() {
     },
     tryServerOnlyRepairs() {
       return false;
-    }
+    },
   };
   let doctor = mockDoctor({
     _getEnginesToValidate(recentlySyncedEngines) {
       deepEqual(recentlySyncedEngines, [engine]);
       return {
-        "test-engine": { engine, maxRecords: -1 }
+        "test-engine": { engine, maxRecords: -1 },
       };
     },
     _getRepairRequestor(engineName) {
@@ -114,7 +114,7 @@ add_task(async function test_repairs_advanced_daily() {
     },
     tryServerOnlyRepairs() {
       return false;
-    }
+    },
   };
   // start now at just after REPAIR_ADVANCE_PERIOD so we do a a first one.
   let now = REPAIR_ADVANCE_PERIOD + 1;
@@ -154,13 +154,13 @@ add_task(async function test_repairs_skip_if_cant_vaidate() {
     },
     validate() {
       ok(false, "Shouldn't validate");
-    }
+    },
   };
   let engine = {
     name: "test-engine",
     getValidator() {
       return validator;
-    }
+    },
   };
   let requestor = {
     async startRepairs(validationInfo, flowID) {
@@ -168,13 +168,13 @@ add_task(async function test_repairs_skip_if_cant_vaidate() {
     },
     tryServerOnlyRepairs() {
       return false;
-    }
+    },
   };
   let doctor = mockDoctor({
     _getEnginesToValidate(recentlySyncedEngines) {
       deepEqual(recentlySyncedEngines, [engine]);
       return {
-        "test-engine": { engine, maxRecords: -1 }
+        "test-engine": { engine, maxRecords: -1 },
       };
     },
     _getRepairRequestor(engineName) {

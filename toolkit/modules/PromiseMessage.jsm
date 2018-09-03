@@ -29,5 +29,5 @@ var PromiseMessage = {
         resolve(reply);
       });
     });
-  }
+  },
 };

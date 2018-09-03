@@ -16,7 +16,7 @@ const ADDONS = {
       "id": "bootstrap1@tests.mozilla.org",
       "name": "Test Bootstrap 1",
     },
-    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   },
 };
 
@@ -117,7 +117,7 @@ add_task(async function detect_touches() {
  * extensions.xpiState preference.
  */
 add_task(async function uninstall_bootstrap() {
-  let [pe, /* pd */] = await promiseAddonsByIDs([
+  let [pe /* pd */] = await promiseAddonsByIDs([
          "packed-enabled@tests.mozilla.org",
          "packed-disabled@tests.mozilla.org",
          ]);

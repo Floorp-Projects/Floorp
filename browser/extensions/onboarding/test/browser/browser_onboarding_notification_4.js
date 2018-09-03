@@ -16,7 +16,7 @@ add_task(async function test_remove_all_tour_notifications_through_close_button(
 
   let expectedPrefUpdates = [
     promisePrefUpdated("browser.onboarding.notification.finished", true),
-    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK)
+    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK),
   ];
   await reloadTab(tab);
   await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
@@ -55,7 +55,7 @@ add_task(async function test_remove_all_tour_notifications_through_action_button
 
   let expectedPrefUpdates = [
     promisePrefUpdated("browser.onboarding.notification.finished", true),
-    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK)
+    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK),
   ];
   await reloadTab(tab);
   await promiseOnboardingOverlayLoaded(tab.linkedBrowser);

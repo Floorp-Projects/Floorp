@@ -737,7 +737,7 @@ protected: // May be called by friends.
                                   const nsAString* aValue,
                                   nsAString* outValue = nullptr);
 
-  bool IsInLink(nsINode* aNode, nsCOMPtr<nsINode>* outLink = nullptr);
+  static dom::Element* GetLinkElement(nsINode* aNode);
 
   /**
    * Small utility routine to test if a break node is visible to user.

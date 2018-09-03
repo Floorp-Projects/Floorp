@@ -8,7 +8,7 @@
 RPMAddMessageListener("Ping", function(message) {
   RPMSendAsyncMessage("Pong", {
     str: message.data.str,
-    counter: message.data.counter + 1
+    counter: message.data.counter + 1,
   });
 });
 
@@ -25,7 +25,7 @@ RPMRemoveMessageListener("Pong3", neverCalled);
 function testData(data) {
   var response = {
     result: true,
-    status: "All data correctly received"
+    status: "All data correctly received",
   };
 
   function compare(prop, expected) {

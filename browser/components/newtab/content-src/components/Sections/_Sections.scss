@@ -65,6 +65,35 @@
   }
 }
 
+.top-stories-bottom-container {
+  color: var(--newtab-section-navigation-text-color);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: $topic-margin-top;
+
+  a {
+    color: var(--newtab-link-secondary-color);
+    font-weight: bold;
+
+    &.more-recommendations {
+      font-weight: normal;
+      font-size: 13px;
+    }
+  }
+
+  @media (min-width: $break-point-large) {
+    line-height: 16px;
+  }
+
+  // This is a clearfix to for the more-recommendations link which is floating and causes
+  // some jank when we set overflow:hidden for the animation.
+  &::after {
+    clear: both;
+    content: '';
+    display: table;
+  }
+}
+
 @media (min-width: $break-point-widest) {
   .sections-list {
     // Compact cards stay the same size but normal cards get bigger.

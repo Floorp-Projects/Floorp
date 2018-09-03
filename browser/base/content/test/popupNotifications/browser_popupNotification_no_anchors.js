@@ -35,7 +35,7 @@ var tests = [
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
-    }
+    },
   },
   // Test that popupnotifications are anchored to the identity icon after
   // navigation to about:blank.
@@ -65,7 +65,7 @@ var tests = [
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
-    }
+    },
   },
   // Test that dismissed popupnotifications cannot be opened on about:blank, but
   // can be opened after navigation.
@@ -100,7 +100,7 @@ var tests = [
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
-    }
+    },
   },
   // Test that popupnotifications are hidden while editing the URL in the
   // location bar, anchored to the identity icon when the focus is moved away
@@ -154,7 +154,7 @@ var tests = [
         await hidden;
       }
       goNext();
-    }
+    },
   },
   // Test that popupnotifications triggered while editing the URL in the
   // location bar are only shown later when the URL is reverted.
@@ -187,7 +187,7 @@ var tests = [
       }
 
       goNext();
-    }
+    },
   },
   // Test that persistent panels are still open after switching to another tab
   // and back, even while editing the URL in the new tab.
@@ -225,6 +225,6 @@ var tests = [
       await hidden;
 
       goNext();
-    }
+    },
   },
 ];

@@ -36,7 +36,7 @@ ResourceCleaner.prototype = {
       }
       this._map.delete(k);
     });
-  }
+  },
 };
 
 /**
@@ -61,7 +61,7 @@ ResourceTester.prototype = {
     trigger_gc();
     cleaner.cleanup();
     this._stop();
-  }
+  },
 };
 
 function structural_check_eq(a, b) {

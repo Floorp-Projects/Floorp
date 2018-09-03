@@ -28,7 +28,7 @@ add_task(async function run_test() {
   let server = httpd_setup({
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
     "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler()),
-    "/1.1/johndoe/info/collections":    login_handling(collectionsHelper.handler)
+    "/1.1/johndoe/info/collections":    login_handling(collectionsHelper.handler),
   });
 
   const GLOBAL_SCORE = 42;

@@ -53,7 +53,7 @@ function toggleDisplay(node) {
   const toggle = {
     "": "block",
     "none": "block",
-    "block": "none"
+    "block": "none",
   };
   return (node.style.display = toggle[node.style.display]);
 }
@@ -270,7 +270,7 @@ function initPage() {
         "SSL_ERROR_PROTOCOL_VERSION_ALERT",
         "SSL_ERROR_UNSUPPORTED_VERSION",
         "SSL_ERROR_NO_CYPHER_OVERLAP",
-        "SSL_ERROR_NO_CIPHERS_SUPPORTED"
+        "SSL_ERROR_NO_CIPHERS_SUPPORTED",
       ].some((substring) => shortDesc.includes(substring));
       // If it looks like an error that is user config based
       if (getErrorCode() == "nssFailure2" && hasPrefStyleError && options && options.changedCertPrefs) {
@@ -336,7 +336,7 @@ function initPageCertError() {
   checkbox.addEventListener("change", function({target: {checked}}) {
     document.dispatchEvent(new CustomEvent("AboutNetErrorSetAutomatic", {
       detail: checked,
-      bubbles: true
+      bubbles: true,
     }));
   });
 

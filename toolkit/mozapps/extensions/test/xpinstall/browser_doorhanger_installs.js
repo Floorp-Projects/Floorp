@@ -183,7 +183,7 @@ async function test_disabledInstall() {
 
   let notificationPromise = waitForNotification("xpinstall-disabled");
   let triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "amosigned.xpi"
+    "XPI": "amosigned.xpi",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
   let panel = await notificationPromise;
@@ -212,7 +212,7 @@ async function test_disabledInstall() {
 async function test_blockedInstall() {
   let notificationPromise = waitForNotification("addon-install-blocked");
   let triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "amosigned.xpi"
+    "XPI": "amosigned.xpi",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
   let panel = await notificationPromise;
@@ -258,7 +258,7 @@ async function test_whitelistedInstall() {
   let progressPromise = waitForProgressNotification();
   let dialogPromise = waitForInstallDialog();
   let triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "amosigned.xpi"
+    "XPI": "amosigned.xpi",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?"
                                                 + triggers).then(newTab => tab = newTab);
@@ -290,7 +290,7 @@ async function test_failedDownload() {
   let progressPromise = waitForProgressNotification();
   let failPromise = waitForNotification("addon-install-failed");
   let triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "missing.xpi"
+    "XPI": "missing.xpi",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
   await progressPromise;
@@ -312,7 +312,7 @@ async function test_corruptFile() {
   let progressPromise = waitForProgressNotification();
   let failPromise = waitForNotification("addon-install-failed");
   let triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "corrupt.xpi"
+    "XPI": "corrupt.xpi",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
   await progressPromise;
@@ -335,7 +335,7 @@ async function test_incompatible() {
   let progressPromise = waitForProgressNotification();
   let failPromise = waitForNotification("addon-install-failed");
   let triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "incompatible.xpi"
+    "XPI": "incompatible.xpi",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
   await progressPromise;
@@ -358,7 +358,7 @@ async function test_restartless() {
   let progressPromise = waitForProgressNotification();
   let dialogPromise = waitForInstallDialog("addon-install-confirmation");
   let triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "restartless.xpi"
+    "XPI": "restartless.xpi",
   }));
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -392,7 +392,7 @@ async function test_sequential() {
   let progressPromise = waitForProgressNotification();
   let dialogPromise = waitForInstallDialog();
   let triggers = encodeURIComponent(JSON.stringify({
-    "Restartless XPI": "restartless.xpi"
+    "Restartless XPI": "restartless.xpi",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
   await progressPromise;
@@ -405,7 +405,7 @@ async function test_sequential() {
 
   progressPromise = waitForProgressNotification(true, 2);
   triggers = encodeURIComponent(JSON.stringify({
-    "Theme XPI": "theme.xpi"
+    "Theme XPI": "theme.xpi",
   }));
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
   await progressPromise;
@@ -467,7 +467,7 @@ async function test_allUnverified() {
   let progressPromise = waitForProgressNotification();
   let dialogPromise = waitForInstallDialog("addon-install-confirmation");
   let triggers = encodeURIComponent(JSON.stringify({
-    "Extension XPI": "restartless-unsigned.xpi"
+    "Extension XPI": "restartless-unsigned.xpi",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
   await progressPromise;
@@ -553,7 +553,7 @@ async function test_tabNavigate() {
   let progressPromise = waitForProgressNotification();
   let dialogPromise = waitForInstallDialog("addon-install-confirmation");
   let triggers = encodeURIComponent(JSON.stringify({
-    "Extension XPI": "restartless.xpi"
+    "Extension XPI": "restartless.xpi",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
   await progressPromise;
@@ -632,7 +632,7 @@ async function test_wrongHost() {
 async function test_renotifyBlocked() {
   let notificationPromise = waitForNotification("addon-install-blocked");
   let triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "amosigned.xpi"
+    "XPI": "amosigned.xpi",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
   let panel = await notificationPromise;
@@ -665,7 +665,7 @@ async function test_cancel() {
 
   let notificationPromise = waitForNotification(PROGRESS_NOTIFICATION);
   let triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "slowinstall.sjs?file=amosigned.xpi"
+    "XPI": "slowinstall.sjs?file=amosigned.xpi",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
   let panel = await notificationPromise;
@@ -689,7 +689,7 @@ async function test_cancel() {
       onDownloadCancelled() {
         install.removeListener(this);
         resolve();
-      }
+      },
     });
   });
   EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
@@ -709,12 +709,12 @@ async function test_cancel() {
 async function test_failedSecurity() {
   Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
   setupRedirect({
-    "Location": TESTROOT + "amosigned.xpi"
+    "Location": TESTROOT + "amosigned.xpi",
   });
 
   let notificationPromise = waitForNotification("addon-install-blocked");
   let triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "redirect.sjs?mode=redirect"
+    "XPI": "redirect.sjs?mode=redirect",
   }));
   BrowserTestUtils.openNewForegroundTab(gBrowser, SECUREROOT + "installtrigger.html?" + triggers);
   let panel = await notificationPromise;
@@ -746,7 +746,7 @@ async function test_failedSecurity() {
 
   Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, true);
   await removeTabAndWaitForNotificationClose();
-}
+},
 ];
 
 var gTestStart = null;
@@ -758,7 +758,7 @@ var XPInstallObserver = {
     installInfo.installs.forEach(function(aInstall) {
       info("Install of " + aInstall.sourceURI.spec + " was in state " + aInstall.state);
     });
-  }
+  },
 };
 
 add_task(async function() {

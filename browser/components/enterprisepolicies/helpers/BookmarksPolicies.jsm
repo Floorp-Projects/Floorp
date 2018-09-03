@@ -87,7 +87,7 @@ this.BookmarksPolicies = {
 
       gFoldersMapPromise.then(map => map.clear());
     });
-  }
+  },
 };
 
 /*
@@ -184,7 +184,7 @@ async function calculateLists(specifiedBookmarks) {
   return {
     add: specifiedBookmarksMap,
     remove: existingBookmarksMap,
-    emptyFolders: foldersToRemove
+    emptyFolders: foldersToRemove,
   };
 }
 
@@ -262,7 +262,7 @@ XPCOMUtils.defineLazyGetter(this, "gFoldersMapPromise", () => {
     let foldersMap = new Map();
     return PlacesUtils.bookmarks.fetch(
       {
-        guidPrefix: BookmarksPolicies.FOLDER_GUID_PREFIX
+        guidPrefix: BookmarksPolicies.FOLDER_GUID_PREFIX,
       },
       (result) => {
         foldersMap.set(`${result.parentGuid}|${result.title}`, result.guid);
@@ -295,7 +295,7 @@ async function getParentGuid(placement, folderTitle) {
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     title: folderTitle,
     guid,
-    parentGuid
+    parentGuid,
   });
 
   foldersMap.set(folderName, guid);

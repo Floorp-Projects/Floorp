@@ -69,7 +69,7 @@ function DateKeeper(props) {
 
       this.setCalendarMonth({
         year: year === undefined ? today.getFullYear() : year,
-        month: month === undefined ? today.getMonth() : month
+        month: month === undefined ? today.getMonth() : month,
       });
     },
 
@@ -144,7 +144,7 @@ function DateKeeper(props) {
       for (let i = 0; i < MONTHS_IN_A_YEAR; i++) {
         months.push({
           value: i,
-          enabled: true
+          enabled: true,
         });
       }
 
@@ -177,7 +177,7 @@ function DateKeeper(props) {
           if (year >= 1 && year <= MAX_YEAR) {
             years.push({
               value: year,
-              enabled: true
+              enabled: true,
             });
           }
         }
@@ -299,7 +299,7 @@ function DateKeeper(props) {
       for (let i = 0; i < DAYS_IN_A_WEEK; i++) {
         headers.push({
           content: dayOfWeek % DAYS_IN_A_WEEK,
-          classNames: weekends.includes(dayOfWeek % DAYS_IN_A_WEEK) ? ["weekend"] : []
+          classNames: weekends.includes(dayOfWeek % DAYS_IN_A_WEEK) ? ["weekend"] : [],
         });
         dayOfWeek++;
       }

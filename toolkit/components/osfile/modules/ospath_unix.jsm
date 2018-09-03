@@ -152,7 +152,7 @@ exports.normalize = normalize;
 var split = function(path) {
   return {
     absolute: path.length && path[0] == "/",
-    components: path.split("/")
+    components: path.split("/"),
   };
 };
 exports.split = split;

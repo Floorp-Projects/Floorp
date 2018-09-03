@@ -6,28 +6,28 @@ add_task(async function() {
     {
       usage: 0,
       origin: "https://account.xyz.com",
-      persisted: true
+      persisted: true,
     },
     {
       usage: 0,
       origin: "https://shopping.xyz.com",
-      persisted: false
+      persisted: false,
     },
     {
       usage: 1024,
       origin: "http://cinema.bar.com",
-      persisted: true
+      persisted: true,
     },
     {
       usage: 1024,
       origin: "http://email.bar.com",
-      persisted: false
+      persisted: false,
     },
     {
       usage: 0,
       origin: "http://cookies.bar.com",
       cookies: 5,
-      persisted: false
+      persisted: false,
     },
   ]);
   let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
@@ -51,25 +51,25 @@ add_task(async function() {
       usage: quotaUsage,
       origin: "https://account.xyz.com^userContextId=1",
       cookies: 2,
-      persisted: true
+      persisted: true,
     },
     {
       usage: quotaUsage,
       origin: "https://account.xyz.com",
       cookies: 1,
-      persisted: false
+      persisted: false,
     },
     {
       usage: quotaUsage,
       origin: "https://account.xyz.com:123",
       cookies: 1,
-      persisted: false
+      persisted: false,
     },
     {
       usage: quotaUsage,
       origin: "http://account.xyz.com",
       cookies: 1,
-      persisted: false
+      persisted: false,
     },
   ]);
 
@@ -94,7 +94,7 @@ add_task(async function() {
   let [value, unit] = DownloadUtils.convertByteUnits(quotaUsage * mockSiteDataManager.fakeSites.length);
   Assert.deepEqual(frameDoc.l10n.getAttributes(columns[2]), {
     id: "site-usage-persistent",
-    args: { value, unit }
+    args: { value, unit },
   }, "Should sum up usages across scheme, port, origin attributes and persistent status");
 
   await mockSiteDataManager.unregister();

@@ -42,7 +42,7 @@ pub trait Automaton<P> {
     /// Returns true if the automaton has no patterns.
     #[inline]
     fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.patterns().is_empty()
     }
 
     /// Returns an iterator of non-overlapping matches in `s`.
@@ -381,7 +381,7 @@ impl<'a, R: io::Read, P, A: Automaton<P>>
             self.buf.consume(consumed);
             let bs = match self.buf.fill_buf() {
                 Err(err) => return Some(Err(err)),
-                Ok(bs) if bs.len() == 0 => break,
+                Ok(bs) if bs.is_empty() => break,
                 Ok(bs) => bs,
             };
             consumed = bs.len(); // is shortened if we find a match
@@ -505,7 +505,7 @@ impl<'a, R: io::Read, P, A: Automaton<P> + ?Sized>
             self.buf.consume(consumed);
             let bs = match self.buf.fill_buf() {
                 Err(err) => return Some(Err(err)),
-                Ok(bs) if bs.len() == 0 => break,
+                Ok(bs) if bs.is_empty() => break,
                 Ok(bs) => bs,
             };
             consumed = bs.len(); // is shortened if we find a match

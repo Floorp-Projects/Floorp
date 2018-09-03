@@ -317,9 +317,9 @@ impl<U: WebDriverExtensionRoute> RequestMatcher<U> {
     pub fn new(method: Method, path: &str, match_type: Route<U>) -> RequestMatcher<U> {
         let path_regexp = RequestMatcher::<U>::compile_path(path);
         RequestMatcher {
-            method: method,
-            path_regexp: path_regexp,
-            match_type: match_type,
+            method,
+            path_regexp,
+            match_type,
         }
     }
 

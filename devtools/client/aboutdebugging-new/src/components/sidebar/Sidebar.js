@@ -8,6 +8,9 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
+
 const { PAGES } = require("../../constants");
 
 const SidebarItem = createFactory(require("./SidebarItem"));
@@ -53,22 +56,28 @@ class Sidebar extends PureComponent {
       },
       dom.ul(
         {},
-        SidebarItem({
-          id: PAGES.THIS_FIREFOX,
-          dispatch,
-          icon: FIREFOX_ICON,
-          isSelected: PAGES.THIS_FIREFOX === selectedPage,
-          name: "This Firefox",
-          selectable: true,
-        }),
-        SidebarItem({
-          id: PAGES.CONNECT,
-          dispatch,
-          icon: CONNECT_ICON,
-          isSelected: PAGES.CONNECT === selectedPage,
-          name: "Connect",
-          selectable: true,
-        }),
+        Localized(
+          { id: "about-debugging-sidebar-this-firefox", attrs: { name: true } },
+          SidebarItem({
+            id: PAGES.THIS_FIREFOX,
+            dispatch,
+            icon: FIREFOX_ICON,
+            isSelected: PAGES.THIS_FIREFOX === selectedPage,
+            name: "This Firefox",
+            selectable: true,
+          })
+        ),
+        Localized(
+          { id: "about-debugging-sidebar-connect", attrs: { name: true } },
+          SidebarItem({
+            id: PAGES.CONNECT,
+            dispatch,
+            icon: CONNECT_ICON,
+            isSelected: PAGES.CONNECT === selectedPage,
+            name: "Connect",
+            selectable: true,
+          })
+        ),
         dom.hr(),
         this.renderDevices()
       )

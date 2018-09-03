@@ -21,12 +21,12 @@ async function rawAddVisit(id, uri, visitPRTime, transitionType) {
       },
       handleCompletion(count) {
         resolve({ results, count });
-      }
+      },
     };
     asyncHistory.updatePlaces([{
       guid: id,
       uri: typeof uri == "string" ? CommonUtils.makeURI(uri) : uri,
-      visits: [{ visitDate: visitPRTime, transitionType }]
+      visits: [{ visitDate: visitPRTime, transitionType }],
     }], handler);
   });
 }
@@ -175,7 +175,7 @@ add_task(async function test_history_visit_roundtrip() {
     // exist.
     cleartext.visits.push({
       date: (Date.now() - oneHourMS / 2) * 1000,
-      type: PlacesUtils.history.TRANSITIONS.LINK
+      type: PlacesUtils.history.TRANSITIONS.LINK,
     });
   }, Date.now() / 1000 + 10);
 
@@ -215,7 +215,7 @@ add_task(async function test_history_visit_dedupe_old() {
   let recentVisits = await PlacesSyncUtils.history.fetchVisitsForURL("https://www.example.com");
   equal(recentVisits.length, 20);
   let {visits: allVisits, guid} = await PlacesUtils.history.fetch("https://www.example.com", {
-    includeVisits: true
+    includeVisits: true,
   });
   equal(allVisits.length, 26);
 
@@ -228,18 +228,18 @@ add_task(async function test_history_visit_dedupe_old() {
       // Add a couple remote visit equivalent to some old visits we have already
       {
         date: Date.UTC(2017, 10, 1) * 1000, // Nov 1, 2017
-        type: PlacesUtils.history.TRANSITIONS.LINK
+        type: PlacesUtils.history.TRANSITIONS.LINK,
       }, {
         date: Date.UTC(2017, 10, 2) * 1000, // Nov 2, 2017
-        type: PlacesUtils.history.TRANSITIONS.LINK
+        type: PlacesUtils.history.TRANSITIONS.LINK,
       },
       // Add a couple new visits to make sure we are still applying them.
       {
         date: Date.UTC(2017, 11, 4) * 1000, // Dec 4, 2017
-        type: PlacesUtils.history.TRANSITIONS.LINK
+        type: PlacesUtils.history.TRANSITIONS.LINK,
       }, {
         date: Date.UTC(2017, 11, 5) * 1000, // Dec 5, 2017
-        type: PlacesUtils.history.TRANSITIONS.LINK
+        type: PlacesUtils.history.TRANSITIONS.LINK,
       }
     );
   }, Date.now() / 1000 + 10);
@@ -248,7 +248,7 @@ add_task(async function test_history_visit_dedupe_old() {
   await sync_engine_and_validate_telem(engine, false);
 
   allVisits = (await PlacesUtils.history.fetch("https://www.example.com", {
-    includeVisits: true
+    includeVisits: true,
   })).visits;
 
   equal(allVisits.length, 28);

@@ -39,7 +39,7 @@ add_task(async function() {
   // Add a typed visit, so it will be autofilled.
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://example.com/"),
-    transition: Ci.nsINavHistoryService.TRANSITION_TYPED
+    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   });
 
   await test_autocomplete({ desc: "DELETE the autofilled part should search",
@@ -47,14 +47,14 @@ add_task(async function() {
                             autofilled: "example.com/",
                             modified: "exam",
                             keys: ["KEY_Delete"],
-                            action: "searchengine"
+                            action: "searchengine",
                           });
   await test_autocomplete({ desc: "DELETE the final slash should visit",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.com",
                             keys: ["KEY_Delete"],
-                            action: "visiturl"
+                            action: "visiturl",
                           });
 
   await test_autocomplete({ desc: "BACK_SPACE the autofilled part should search",
@@ -62,14 +62,14 @@ add_task(async function() {
                             autofilled: "example.com/",
                             modified: "exam",
                             keys: ["KEY_Backspace"],
-                            action: "searchengine"
+                            action: "searchengine",
                           });
   await test_autocomplete({ desc: "BACK_SPACE the final slash should visit",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.com",
                             keys: ["KEY_Backspace"],
-                            action: "visiturl"
+                            action: "visiturl",
                           });
 
   await test_autocomplete({ desc: "DELETE the autofilled part, then BACK_SPACE, should search",
@@ -77,14 +77,14 @@ add_task(async function() {
                             autofilled: "example.com/",
                             modified: "exa",
                             keys: ["KEY_Delete", "KEY_Backspace"],
-                            action: "searchengine"
+                            action: "searchengine",
                           });
   await test_autocomplete({ desc: "DELETE the final slash, then BACK_SPACE, should search",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.co",
                             keys: ["KEY_Delete", "KEY_Backspace"],
-                            action: "visiturl"
+                            action: "visiturl",
                           });
 
   await test_autocomplete({ desc: "BACK_SPACE the autofilled part, then BACK_SPACE, should search",
@@ -92,14 +92,14 @@ add_task(async function() {
                             autofilled: "example.com/",
                             modified: "exa",
                             keys: ["KEY_Backspace", "KEY_Backspace"],
-                            action: "searchengine"
+                            action: "searchengine",
                           });
   await test_autocomplete({ desc: "BACK_SPACE the final slash, then BACK_SPACE, should search",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.co",
                             keys: ["KEY_Backspace", "KEY_Backspace"],
-                            action: "visiturl"
+                            action: "visiturl",
                           });
 
   await test_autocomplete({ desc: "BACK_SPACE after blur should search",
@@ -113,7 +113,7 @@ add_task(async function() {
                               gURLBar.focus();
                               gURLBar.selectionStart = 1;
                               gURLBar.selectionEnd = 12;
-                            }
+                            },
                          });
   await test_autocomplete({ desc: "DELETE after blur should search",
                             typed: "ex",
@@ -126,7 +126,7 @@ add_task(async function() {
                               gURLBar.focus();
                               gURLBar.selectionStart = 1;
                               gURLBar.selectionEnd = 12;
-                            }
+                            },
                           });
   await test_autocomplete({ desc: "double BACK_SPACE after blur should search",
                             typed: "ex",
@@ -139,7 +139,7 @@ add_task(async function() {
                               gURLBar.focus();
                               gURLBar.selectionStart = 2;
                               gURLBar.selectionEnd = 12;
-                            }
+                            },
                          });
 
   await PlacesUtils.history.clear();

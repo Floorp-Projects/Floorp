@@ -73,8 +73,6 @@ std::ostream& operator<<(std::ostream& aStream,
 #undef AC_PROCESS_ENUM_TO_STREAM
 
 /* static */ bool
-AccessibleCaretManager::sSelectionBarEnabled = false;
-/* static */ bool
 AccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent = false;
 /* static */ bool
 AccessibleCaretManager::sCaretsAlwaysTilt = false;
@@ -102,8 +100,6 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
 
   static bool addedPrefs = false;
   if (!addedPrefs) {
-    Preferences::AddBoolVarCache(&sSelectionBarEnabled,
-                                 "layout.accessiblecaret.bar.enabled");
     Preferences::AddBoolVarCache(&sCaretShownWhenLongTappingOnEmptyContent,
       "layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content");
     Preferences::AddBoolVarCache(&sCaretsAlwaysTilt,
@@ -330,7 +326,6 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(const UpdateCaretsHintSet& aHi
       break;
   }
 
-  mFirstCaret->SetSelectionBarEnabled(false);
   mSecondCaret->SetAppearance(Appearance::None);
 
   if (!aHints.contains(UpdateCaretsHint::DispatchNoEvent) &&
@@ -362,7 +357,6 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(const UpdateCaretsHintSet& 
                                     int32_t aOffset) -> PositionChangedResult
   {
     PositionChangedResult result = aCaret->SetPosition(aFrame, aOffset);
-    aCaret->SetSelectionBarEnabled(sSelectionBarEnabled);
 
     switch (result) {
       case PositionChangedResult::NotChanged:

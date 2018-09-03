@@ -250,7 +250,7 @@ add_task(async function test_wipeServer() {
   const PAYLOAD = 42;
   let steamCollection = new ServerWBO("steam", PAYLOAD);
   let steamServer = httpd_setup({
-    "/1.1/foo/storage/steam": steamCollection.handler()
+    "/1.1/foo/storage/steam": steamCollection.handler(),
   });
   await SyncTestingInfrastructure(steamServer);
   do_test_pending();
@@ -258,7 +258,7 @@ add_task(async function test_wipeServer() {
   try {
     // Some data to reset.
     await engine.setLastSync(123.45);
-    engine.toFetch = guidSetOfSize(3),
+    engine.toFetch = guidSetOfSize(3);
 
     _("Wipe server data and reset client.");
     await engine.wipeServer();

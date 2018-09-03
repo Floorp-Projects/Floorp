@@ -41,7 +41,7 @@ var TabStateCache = Object.freeze({
    */
   update(browserOrTab, newData) {
     TabStateCacheInternal.update(browserOrTab, newData);
-  }
+  },
 });
 
 var TabStateCacheInternal = {
@@ -163,5 +163,5 @@ var TabStateCacheInternal = {
     }
 
     this._data.set(browserOrTab.permanentKey, data);
-  }
+  },
 };

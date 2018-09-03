@@ -30,19 +30,24 @@ CDecoder::CDecoder():
     FinishStream(false),
     _propsWereSet(false),
     _outSizeDefined(false),
-    _outStep(1 << 22),
+    _outStep(1 << 20),
     _inBufSize(0),
     _inBufSizeNew(1 << 20)
 {
   _inProcessed = 0;
   _inPos = _inLim = 0;
 
+  /*
+  AlignOffsetAlloc_CreateVTable(&_alloc);
+  _alloc.numAlignBits = 7;
+  _alloc.offset = 0;
+  */
   LzmaDec_Construct(&_state);
 }
 
 CDecoder::~CDecoder()
 {
-  LzmaDec_Free(&_state, &g_Alloc);
+  LzmaDec_Free(&_state, &g_AlignedAlloc); // &_alloc.vt
   MyFree(_inBuf);
 }
 
@@ -66,7 +71,7 @@ HRESULT CDecoder::CreateInputBuffer()
 
 STDMETHODIMP CDecoder::SetDecoderProperties2(const Byte *prop, UInt32 size)
 {
-  RINOK(SResToHRESULT(LzmaDec_Allocate(&_state, prop, size, &g_Alloc)));
+  RINOK(SResToHRESULT(LzmaDec_Allocate(&_state, prop, size, &g_AlignedAlloc))) // &_alloc.vt
   _propsWereSet = true;
   return CreateInputBuffer();
 }

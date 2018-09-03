@@ -865,7 +865,7 @@ TraceThisAndArguments(JSTracer* trc, const JSJitFrameIter& frame, JitFrameLayout
     size_t nformals = 0;
 
     JSFunction* fun = CalleeTokenToFunction(layout->calleeToken());
-    if (frame.type() != JitFrame_JSJitToWasm &&
+    if (frame.type() != FrameType::JSJitToWasm &&
         !frame.isExitFrameLayout<CalledFromJitExitFrameLayout>() &&
         !fun->nonLazyScript()->mayReadFrameArgsDirectly())
     {
@@ -1055,7 +1055,7 @@ TraceBaselineStubFrame(JSTracer* trc, const JSJitFrameIter& frame)
     // Trace the ICStub pointer stored in the stub frame. This is necessary
     // so that we don't destroy the stub code after unlinking the stub.
 
-    MOZ_ASSERT(frame.type() == JitFrame_BaselineStub);
+    MOZ_ASSERT(frame.type() == FrameType::BaselineStub);
     JitStubFrameLayout* layout = (JitStubFrameLayout*)frame.fp();
 
     if (ICStub* stub = layout->maybeStubPtr()) {
@@ -1067,7 +1067,7 @@ TraceBaselineStubFrame(JSTracer* trc, const JSJitFrameIter& frame)
 static void
 TraceIonICCallFrame(JSTracer* trc, const JSJitFrameIter& frame)
 {
-    MOZ_ASSERT(frame.type() == JitFrame_IonICCall);
+    MOZ_ASSERT(frame.type() == FrameType::IonICCall);
     IonICCallFrameLayout* layout = (IonICCallFrameLayout*)frame.fp();
     TraceRoot(trc, layout->stubCode(), "ion-ic-call-code");
 }
@@ -1297,33 +1297,33 @@ TraceJitActivation(JSTracer* trc, JitActivation* activation)
         if (frames.isJSJit()) {
             const JSJitFrameIter& jitFrame = frames.asJSJit();
             switch (jitFrame.type()) {
-              case JitFrame_Exit:
+              case FrameType::Exit:
                 TraceJitExitFrame(trc, jitFrame);
                 break;
-              case JitFrame_BaselineJS:
+              case FrameType::BaselineJS:
                 jitFrame.baselineFrame()->trace(trc, jitFrame);
                 break;
-              case JitFrame_IonJS:
+              case FrameType::IonJS:
                 TraceIonJSFrame(trc, jitFrame);
                 break;
-              case JitFrame_BaselineStub:
+              case FrameType::BaselineStub:
                 TraceBaselineStubFrame(trc, jitFrame);
                 break;
-              case JitFrame_Bailout:
+              case FrameType::Bailout:
                 TraceBailoutFrame(trc, jitFrame);
                 break;
-              case JitFrame_Rectifier:
+              case FrameType::Rectifier:
                 TraceRectifierFrame(trc, jitFrame);
                 break;
-              case JitFrame_IonICCall:
+              case FrameType::IonICCall:
                 TraceIonICCallFrame(trc, jitFrame);
                 break;
-              case JitFrame_WasmToJSJit:
+              case FrameType::WasmToJSJit:
                 // Ignore: this is a special marker used to let the
                 // JitFrameIter know the frame above is a wasm frame, handled
                 // in the next iteration.
                 break;
-              case JitFrame_JSJitToWasm:
+              case FrameType::JSJitToWasm:
                 TraceJSJitToWasmFrame(trc, jitFrame);
                 break;
               default:
@@ -1350,7 +1350,7 @@ UpdateJitActivationsForMinorGC(JSRuntime* rt)
     JSContext* cx = rt->mainContextFromOwnThread();
     for (JitActivationIterator activations(cx); !activations.done(); ++activations) {
         for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter) {
-            if (iter.frame().type() == JitFrame_IonJS)
+            if (iter.frame().type() == FrameType::IonJS)
                 UpdateIonJSFrameForMinorGC(rt, iter.frame());
         }
     }
@@ -2441,7 +2441,7 @@ AssertJitStackInvariants(JSContext* cx)
                 prevFrameSize = frameSize;
                 frameSize = callerFp - calleeFp;
 
-                if (frames.isScripted() && frames.prevType() == JitFrame_Rectifier) {
+                if (frames.isScripted() && frames.prevType() == FrameType::Rectifier) {
                     MOZ_RELEASE_ASSERT(frameSize % JitStackAlignment == 0,
                       "The rectifier frame should keep the alignment");
 
@@ -2482,12 +2482,12 @@ AssertJitStackInvariants(JSContext* cx)
 
                 // The stack is dynamically aligned by baseline stubs before calling
                 // any jitted code.
-                if (frames.prevType() == JitFrame_BaselineStub && isScriptedCallee) {
+                if (frames.prevType() == FrameType::BaselineStub && isScriptedCallee) {
                     MOZ_RELEASE_ASSERT(calleeFp % JitStackAlignment == 0,
                         "The baseline stub restores the stack alignment");
                 }
 
-                isScriptedCallee = frames.isScripted() || frames.type() == JitFrame_Rectifier;
+                isScriptedCallee = frames.isScripted() || frames.type() == FrameType::Rectifier;
             }
 
             MOZ_RELEASE_ASSERT(JSJitFrameIter::isEntry(frames.type()),

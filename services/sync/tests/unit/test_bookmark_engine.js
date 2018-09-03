@@ -453,12 +453,12 @@ async function test_restoreOrImport(engine, { replace }) {
     let expectedFX = {
       id: bookmarkRecordIds.get("http://getfirefox.com/"),
       bmkUri: "http://getfirefox.com/",
-      title: "Get Firefox!"
+      title: "Get Firefox!",
     };
     let expectedTB = {
       id: bookmarkRecordIds.get("http://getthunderbird.com/"),
       bmkUri: "http://getthunderbird.com/",
-      title: "Get Thunderbird!"
+      title: "Get Thunderbird!",
     };
 
     let expectedBookmarks;
@@ -525,7 +525,7 @@ add_task(async function test_mismatched_types() {
     "parentName": "Bookmarks Toolbar",
     "title": "Innerst i Sneglehode",
     "description": null,
-    "parentid": "toolbar"
+    "parentid": "toolbar",
   };
   oldRecord.cleartext = oldRecord;
 
@@ -541,7 +541,7 @@ add_task(async function test_mismatched_types() {
       ["HCRq40Rnxhrd", "YeyWCV1RVsYw", "GCceVZMhvMbP", "sYi2hevdArlF",
        "vjbZlPlSyGY8", "UtjUhVyrpeG6", "rVq8WMG2wfZI", "Lx0tcy43ZKhZ",
        "oT74WwV8_j4P", "IztsItWVSo3-"],
-    "parentid": "toolbar"
+    "parentid": "toolbar",
   };
   newRecord.cleartext = newRecord;
 
@@ -642,7 +642,7 @@ add_task(async function test_bookmark_guidMap_fail() {
 
   deepEqual(ping.engines.find(e => e.name == "bookmarks").failureReason, {
     name: "unexpectederror",
-    error: "Nooo"
+    error: "Nooo",
   });
 
   PlacesUtils.promiseBookmarksTree = pbt;
@@ -688,7 +688,7 @@ add_task(async function test_bookmark_tag_but_no_uri() {
     description: "",
     tags:        ["foo"],
     title:       "Taggy tag",
-    type:        "folder"
+    type:        "folder",
   });
 
   await store.create(record);
@@ -1055,7 +1055,7 @@ add_task(async function test_resume_buffer() {
       type: "folder",
       parentid: "places",
       title: "Bookmarks Toolbar",
-      children
+      children,
     }), timestamp + 10 * children.length);
 
     // Replace applyIncomingBatch with a custom one that calls the original,
@@ -1066,7 +1066,7 @@ add_task(async function test_resume_buffer() {
         // Hacky way to make reading from the batchChunkSize'th record throw.
         delete records[batchChunkSize];
         Object.defineProperty(records, batchChunkSize, {
-          get() { throw new Error("D:"); }
+          get() { throw new Error("D:"); },
         });
       }
       return origApplyIncomingBatch.call(this, records);

@@ -30,7 +30,6 @@
 #include "nsPresContext.h"
 #include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
-#include "mozilla/dom/ScreenOrientation.h"
 #include "nsIDOMWindowUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsPrintfCString.h"
@@ -734,9 +733,9 @@ AndroidBridge::GetScreenOrientation()
     int16_t orientation = GeckoAppShell::GetScreenOrientation();
 
     if (!orientation)
-        return dom::eScreenOrientation_None;
+        return hal::eScreenOrientation_None;
 
-    return static_cast<dom::ScreenOrientationInternal>(orientation);
+    return static_cast<hal::ScreenOrientation>(orientation);
 }
 
 uint16_t

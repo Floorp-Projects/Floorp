@@ -13,11 +13,11 @@ add_task(async function test_deleteClosedWindow() {
       {
         tabs: [
           { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
-          { entries: [{ url: "http://mozilla.org/", triggeringPrincipal_base64, title: "title" }] }
+          { entries: [{ url: "http://mozilla.org/", triggeringPrincipal_base64, title: "title" }] },
         ],
         selected: 2,
         title: FORGET,
-        _closedTabs: []
+        _closedTabs: [],
       },
       // _closedWindows[1]
       {
@@ -28,12 +28,12 @@ add_task(async function test_deleteClosedWindow() {
         ],
         selected: 3,
         title: REMEMBER,
-        _closedTabs: []
+        _closedTabs: [],
       },
       // _closedWindows[2]
       {
         tabs: [
-          { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] }
+          { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
         ],
         selected: 1,
         title: FORGET,
@@ -42,23 +42,23 @@ add_task(async function test_deleteClosedWindow() {
             state: {
               entries: [
                 { url: "http://mozilla.org/", triggeringPrincipal_base64, title: "title" },
-                { url: "http://mozilla.org/again", triggeringPrincipal_base64, title: "title" }
-              ]
+                { url: "http://mozilla.org/again", triggeringPrincipal_base64, title: "title" },
+              ],
             },
             pos: 1,
-            title: "title"
+            title: "title",
           },
           {
             state: {
               entries: [
-                { url: "http://example.com", triggeringPrincipal_base64, title: "title" }
-              ]
+                { url: "http://example.com", triggeringPrincipal_base64, title: "title" },
+              ],
             },
-            title: "title"
-          }
-        ]
-      }
-    ]
+            title: "title",
+          },
+        ],
+      },
+    ],
   };
   let remember_count = 1;
 

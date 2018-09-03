@@ -21,7 +21,7 @@ var CacheFlushObserver = {
     ok(aSubject instanceof Ci.nsIFile);
     equal(aSubject.path, gExpectedFile.path);
     gCacheFlushCount++;
-  }
+  },
 };
 
 const ADDONS = [
@@ -62,7 +62,7 @@ add_task(async function test_flush_restartless_install() {
         gCacheFlushCount = 0;
 
         resolve();
-      }
+      },
     });
 
     install.install();

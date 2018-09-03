@@ -548,7 +548,7 @@ var dataProviders = {
           maxRate: device.maxRate,
           minRate: device.minRate,
           maxLatency: device.maxLatency,
-          minLatency: device.minLatency
+          minLatency: device.minLatency,
         });
       }
       return infos;
@@ -624,7 +624,7 @@ var dataProviders = {
       },
       osPrefs: {
         systemLocales: osPrefs.getSystemLocales(),
-        regionalPrefsLocales: osPrefs.getRegionalPrefsLocales()
+        regionalPrefsLocales: osPrefs.getRegionalPrefsLocales(),
       },
     });
   },

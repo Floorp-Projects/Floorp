@@ -15,7 +15,7 @@ namespace NLzma {
 CEncoder::CEncoder()
 {
   _encoder = NULL;
-  _encoder = LzmaEnc_Create(&g_Alloc);
+  _encoder = LzmaEnc_Create(&g_AlignedAlloc);
   if (!_encoder)
     throw 1;
 }
@@ -23,7 +23,7 @@ CEncoder::CEncoder()
 CEncoder::~CEncoder()
 {
   if (_encoder)
-    LzmaEnc_Destroy(_encoder, &g_Alloc, &g_BigAlloc);
+    LzmaEnc_Destroy(_encoder, &g_AlignedAlloc, &g_BigAlloc);
 }
 
 static inline wchar_t GetUpperChar(wchar_t c)
@@ -168,7 +168,7 @@ STDMETHODIMP CEncoder::Code(ISequentialInStream *inStream, ISequentialOutStream 
   progressWrap.Init(progress);
 
   SRes res = LzmaEnc_Encode(_encoder, &outWrap.vt, &inWrap.vt,
-      progress ? &progressWrap.vt : NULL, &g_Alloc, &g_BigAlloc);
+      progress ? &progressWrap.vt : NULL, &g_AlignedAlloc, &g_BigAlloc);
 
   _inputProcessed = inWrap.Processed;
 

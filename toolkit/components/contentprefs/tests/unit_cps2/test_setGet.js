@@ -182,7 +182,7 @@ add_task(async function get_nameOnly() {
   await getOKEx("getByName", ["foo", undefined], [
     {"domain": "a.com", "name": "foo", "value": 1},
     {"domain": "b.com", "name": "foo", "value": 3},
-    {"domain": null, "name": "foo", "value": 4}
+    {"domain": null, "name": "foo", "value": 4},
   ]);
 
   let context = privateLoadContext;
@@ -191,7 +191,7 @@ add_task(async function get_nameOnly() {
   await getOKEx("getByName", ["foo", context], [
     {"domain": "a.com", "name": "foo", "value": 1},
     {"domain": null, "name": "foo", "value": 4},
-    {"domain": "b.com", "name": "foo", "value": 5}
+    {"domain": "b.com", "name": "foo", "value": 5},
   ]);
   await reset();
 });

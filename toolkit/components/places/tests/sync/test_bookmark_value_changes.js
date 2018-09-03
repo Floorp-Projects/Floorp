@@ -1,6 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+let unfiledFolderId;
+
+add_task(async function setup() {
+  unfiledFolderId =
+    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid);
+});
+
 add_task(async function test_value_combo() {
   let buf = await openMirror("value_combo");
 
@@ -689,7 +696,7 @@ add_task(async function test_keywords_complex() {
   }, {
     name: "onItemAdded",
     params: { itemId: localItemIds.get("bookmarkBBB1"),
-              parentId: PlacesUtils.unfiledBookmarksFolderId, index: 0,
+              parentId: unfiledFolderId, index: 0,
               type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
               urlHref: "http://example.com/b", title: "B",
               guid: "bookmarkBBB1",
@@ -1261,7 +1268,7 @@ add_task(async function test_duplicate_url_rows() {
     params: { itemId: localItemIds.get("bookmarkCCCC"), property: "title",
               isAnnoProperty: false, newValue: "C (remote)",
               type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-              parentId: PlacesUtils.unfiledBookmarksFolderId,
+              parentId: unfiledFolderId,
               guid: "bookmarkCCCC",
               parentGuid: PlacesUtils.bookmarks.unfiledGuid, oldValue: "C",
               source: PlacesUtils.bookmarks.SOURCES.SYNC },

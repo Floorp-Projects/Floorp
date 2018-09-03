@@ -478,7 +478,7 @@ add_task(async function test_bookmark_order() {
       }, {
         guid: id42,
         index: 1,
-      }]
+      }],
     }],
   }, {
     guid: PlacesUtils.bookmarks.mobileGuid,
@@ -519,7 +519,7 @@ add_task(async function test_bookmark_order() {
       }, {
         guid: id41,
         index: 1,
-      }]
+      }],
     }],
   }, {
     guid: PlacesUtils.bookmarks.mobileGuid,
@@ -560,7 +560,7 @@ add_task(async function test_bookmark_order() {
       }, {
         guid: id42,
         index: 1,
-      }]
+      }],
     }],
   }, {
     guid: PlacesUtils.bookmarks.mobileGuid,
@@ -600,7 +600,7 @@ add_task(async function test_bookmark_order() {
       }, {
         guid: id20,
         index: 2,
-      }]
+      }],
     }],
   }, {
     guid: PlacesUtils.bookmarks.mobileGuid,
@@ -642,7 +642,7 @@ add_task(async function test_bookmark_order() {
       }, {
         guid: id20,
         index: 2,
-      }]
+      }],
     }],
   }, {
     guid: PlacesUtils.bookmarks.mobileGuid,
@@ -684,7 +684,7 @@ add_task(async function test_bookmark_order() {
       }, {
         guid: id42,
         index: 1,
-      }]
+      }],
     }],
   }, {
     guid: PlacesUtils.bookmarks.mobileGuid,

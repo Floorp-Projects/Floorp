@@ -9,7 +9,7 @@ include protocol PBrowser;
 
 include "mozilla/GfxMessageUtils.h";
 
-using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
+using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
 using mozilla::hal::SensorType from "mozilla/HalSensor.h";
 using mozilla::hal::WakeLockControl from "mozilla/HalTypes.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
@@ -46,7 +46,7 @@ struct WakeLockInformation {
 
 struct ScreenConfiguration {
   nsIntRect rect;
-  ScreenOrientationInternal orientation;
+  ScreenOrientation orientation;
   uint16_t angle;
   uint32_t colorDepth;
   uint32_t pixelDepth;
@@ -90,7 +90,7 @@ parent:
 
     async EnableScreenConfigurationNotifications();
     async DisableScreenConfigurationNotifications();
-    sync LockScreenOrientation(ScreenOrientationInternal aOrientation)
+    sync LockScreenOrientation(ScreenOrientation aOrientation)
       returns (bool allowed);
     async UnlockScreenOrientation();
 

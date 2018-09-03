@@ -33,7 +33,7 @@ function run_test() {
 
 add_task(async function test_returns_all_without_target() {
   await createRecords([{
-    matchName: "Adobe Flex"
+    matchName: "Adobe Flex",
   }, {
     versionRange: [],
   }, {
@@ -41,13 +41,13 @@ add_task(async function test_returns_all_without_target() {
     versionRange: [{
       severity: 0,
       vulnerabilityStatus: 1,
-      targetApplication: []
-    }]
+      targetApplication: [],
+    }],
   }, {
     matchName: "Java(\\(TM\\))? Plug-in 11\\.(7[6-9]|[8-9]\\d|1([0-6]\\d|70))(\\.\\d+)?([^\\d\\._]|$)",
     versionRange: [{
       severity: 0,
-      vulnerabilityStatus: 1
+      vulnerabilityStatus: 1,
     }],
     matchFilename: "libnpjp2\\.so",
   }, {
@@ -55,8 +55,8 @@ add_task(async function test_returns_all_without_target() {
       targetApplication: [],
       maxVersion: "1",
       minVersion: "0",
-      severity: "1"
-    }]
+      severity: "1",
+    }],
   }]);
 
   const list = await client.get();
@@ -69,29 +69,29 @@ add_task(async function test_returns_without_guid_or_with_matching_guid() {
     willMatch: true,
     versionRange: [{
       targetApplication: [{
-      }]
-    }]
+      }],
+    }],
   }, {
     willMatch: false,
     versionRange: [{
       targetApplication: [{
         guid: "some-guid",
-      }]
-    }]
+      }],
+    }],
   }, {
     willMatch: true,
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
-      }]
-    }]
+      }],
+    }],
   }, {
     willMatch: true,
     versionRange: [{
       targetApplication: [{
         guid: TOOLKIT_ID,
-      }]
-    }]
+      }],
+    }],
   }]);
 
   const list = await client.get();
@@ -106,16 +106,16 @@ add_task(async function test_returns_without_app_version_or_with_matching_versio
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
-      }]
-    }]
+      }],
+    }],
   }, {
     willMatch: true,
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
         minVersion: "0",
-      }]
-    }]
+      }],
+    }],
   }, {
     willMatch: true,
     versionRange: [{
@@ -123,8 +123,8 @@ add_task(async function test_returns_without_app_version_or_with_matching_versio
         guid: APP_ID,
         minVersion: "0",
         maxVersion: "9999",
-      }]
-    }]
+      }],
+    }],
   }, {
     willMatch: false,
     versionRange: [{
@@ -132,16 +132,16 @@ add_task(async function test_returns_without_app_version_or_with_matching_versio
         guid: APP_ID,
         minVersion: "0",
         maxVersion: "1",
-      }]
-    }]
+      }],
+    }],
   }, {
     willMatch: true,
     versionRange: [{
       targetApplication: [{
         guid: TOOLKIT_ID,
         minVersion: "0",
-      }]
-    }]
+      }],
+    }],
   }, {
     willMatch: true,
     versionRange: [{
@@ -149,8 +149,8 @@ add_task(async function test_returns_without_app_version_or_with_matching_versio
         guid: TOOLKIT_ID,
         minVersion: "0",
         maxVersion: "9999",
-      }]
-    }]
+      }],
+    }],
     // We can't test the false case with maxVersion for toolkit, because the toolkit version
     // is 0 in xpcshell.
   }]);
@@ -167,42 +167,42 @@ add_task(async function test_multiple_version_and_target_applications() {
     versionRange: [{
       targetApplication: [{
         guid: "other-guid",
-      }]
+      }],
     }, {
       targetApplication: [{
         guid: APP_ID,
         minVersion: "0",
         maxVersion: "*",
-      }]
-    }]
+      }],
+    }],
   }, {
     willMatch: true,
     versionRange: [{
       targetApplication: [{
         guid: "other-guid",
-      }]
+      }],
     }, {
       targetApplication: [{
         guid: APP_ID,
         minVersion: "0",
-      }]
-    }]
+      }],
+    }],
   }, {
     willMatch: false,
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
-        maxVersion: "57.*"
-      }]
+        maxVersion: "57.*",
+      }],
     }, {
       targetApplication: [{
         guid: APP_ID,
-        maxVersion: "56.*"
+        maxVersion: "56.*",
       }, {
         guid: APP_ID,
-        maxVersion: "57.*"
-      }]
-    }]
+        maxVersion: "57.*",
+      }],
+    }],
   }]);
 
   const list = await client.get();
@@ -217,25 +217,25 @@ add_task(async function test_complex_version() {
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
-        maxVersion: "57.*"
-      }]
-    }]
+        maxVersion: "57.*",
+      }],
+    }],
   }, {
     willMatch: true,
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
-        maxVersion: "9999.*"
-      }]
-    }]
+        maxVersion: "9999.*",
+      }],
+    }],
   }, {
     willMatch: true,
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
-        minVersion: "19.0a1"
-      }]
-    }]
+        minVersion: "19.0a1",
+      }],
+    }],
   }]);
 
   const list = await client.get();

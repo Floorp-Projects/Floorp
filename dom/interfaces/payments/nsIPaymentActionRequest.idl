@@ -29,7 +29,7 @@ interface nsIPaymentActionRequest : nsISupports
   const uint32_t ABORT_ACTION = 4;
   const uint32_t COMPLETE_ACTION = 5;
   const uint32_t UPDATE_ACTION = 6;
-  const uint32_t CLEANUP_ACTION = 7;
+  const uint32_t CLOSE_ACTION = 7;
 
   /*
    *  The payment request identifier.

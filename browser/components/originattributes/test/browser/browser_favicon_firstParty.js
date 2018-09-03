@@ -50,7 +50,7 @@ function clearAllPlacesFavicons() {
           resolve();
           Services.obs.removeObserver(observer, "places-favicons-expired");
         }
-      }
+      },
     };
 
     Services.obs.addObserver(observer, "places-favicons-expired");
@@ -102,7 +102,7 @@ function observeFavicon(aFirstPartyDomain, aExpectedCookie, aPageURI) {
 
         Services.obs.removeObserver(observer, "http-on-modify-request");
         resolve();
-      }
+      },
     };
 
     Services.obs.addObserver(observer, "http-on-modify-request");
@@ -125,14 +125,14 @@ function waitOnFaviconResponse(aFaviconURL) {
 
           let result = {
             topic: aTopic,
-            firstPartyDomain: loadInfo.originAttributes.firstPartyDomain
+            firstPartyDomain: loadInfo.originAttributes.firstPartyDomain,
           };
 
           resolve(result);
           Services.obs.removeObserver(observer, "http-on-examine-response");
           Services.obs.removeObserver(observer, "http-on-examine-cached-response");
         }
-      }
+      },
     };
 
     Services.obs.addObserver(observer, "http-on-examine-response");
@@ -322,7 +322,7 @@ async function doTestForAllTabsFavicon(aTestPage, aExpectedCookies, aIsThirdPart
 add_task(async function setup() {
   // Make sure first party isolation is enabled.
   await SpecialPowers.pushPrefEnv({"set": [
-      ["privacy.firstparty.isolate", true]
+      ["privacy.firstparty.isolate", true],
   ]});
 });
 

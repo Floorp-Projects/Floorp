@@ -163,7 +163,7 @@ function test_collection_operations() {
     let record1 = {id: 1, foo: "bar"};
     let record2 = {id: 2, foo: "baz"};
     let impactedRecords = await adapter.loadDump([
-      record1, record2
+      record1, record2,
     ]);
     Assert.equal(impactedRecords.length, 2);
     let newRecord1 = await adapter.get("1");

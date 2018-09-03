@@ -117,13 +117,3 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-slr-2d.html
 == float-in-rtl-slr-4b.html float-in-rtl-slr-4-ref.html
 == float-in-rtl-slr-4c.html float-in-rtl-slr-4-ref.html
 == float-in-rtl-slr-4d.html float-in-rtl-slr-4-ref.html
-!= float-nowrap-1.html float-nowrap-1-notref.html
-== float-nowrap-2.html float-nowrap-1.html
-== float-nowrap-3.html float-nowrap-3-ref.html
-!= float-nowrap-3.html float-nowrap-4.html
-== float-nowrap-4.html float-nowrap-4-ref.html
-== float-nowrap-5.html float-nowrap-5-ref.html
-== float-nowrap-6.html float-nowrap-5-ref.html
-== float-nowrap-7.html float-nowrap-1.html
-== float-nowrap-8.html float-nowrap-1.html
-== float-nowrap-9.html float-nowrap-3-ref.html

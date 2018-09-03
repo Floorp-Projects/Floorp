@@ -82,7 +82,7 @@ add_task(async function() {
       isSelected: true,
       shouldBeShown: true,
       expectedLabelContents: "This character\uD83D\uDD25" + ellipsis,
-    }
+    },
   ];
 
   for (let test of tests) {

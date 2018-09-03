@@ -30,7 +30,7 @@ EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm, uint32_t argS
     masm.store32(ebx, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
 
     // Push frame descriptor and perform the tail call.
-    masm.makeFrameDescriptor(eax, JitFrame_BaselineJS, ExitFrameLayout::Size());
+    masm.makeFrameDescriptor(eax, FrameType::BaselineJS, ExitFrameLayout::Size());
     masm.push(eax);
     masm.push(ICTailCallReg);
     masm.jump(target);
@@ -45,7 +45,7 @@ EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32
     masm.addl(Imm32(sizeof(void*) * 2), reg);
     masm.subl(BaselineStackReg, reg);
 
-    masm.makeFrameDescriptor(reg, JitFrame_BaselineStub, headerSize);
+    masm.makeFrameDescriptor(reg, FrameType::BaselineStub, headerSize);
 }
 
 inline void
@@ -89,7 +89,7 @@ EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
     masm.Push(Operand(BaselineStackReg, 0));
 
     // Replace the original return address with the frame descriptor.
-    masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS, BaselineStubFrameLayout::Size());
+    masm.makeFrameDescriptor(scratch, FrameType::BaselineJS, BaselineStubFrameLayout::Size());
     masm.storePtr(scratch, Address(BaselineStackReg, sizeof(uintptr_t)));
 
     // Save old frame pointer, stack pointer and stub reg.

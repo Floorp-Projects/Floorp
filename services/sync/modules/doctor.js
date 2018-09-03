@@ -257,5 +257,5 @@ var Doctor = {
 
   _getAllRepairRequestors() {
     return getAllRepairRequestors();
-  }
+  },
 };

@@ -273,7 +273,7 @@ WebContentConverterRegistrar.prototype = {
           let hs = Cc["@mozilla.org/uriloader/handler-service;1"].
                    getService(Ci.nsIHandlerService);
           hs.store(handlerInfo);
-        }
+        },
     };
     let notificationBox = browser.getTabBrowser().getNotificationBox(browser);
     notificationBox.appendNotification(message,
@@ -342,7 +342,7 @@ WebContentConverterRegistrarContent.prototype = {
   /**
    * See nsISupports
    */
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebContentHandlerRegistrar])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebContentHandlerRegistrar]),
 };
 
 this.NSGetFactory =

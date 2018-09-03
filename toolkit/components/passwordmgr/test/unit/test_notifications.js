@@ -45,7 +45,7 @@ var TestObserver = {
 
     expectedNotification = null; // ensure a duplicate is flagged as unexpected.
     expectedData = null;
-  }
+  },
 };
 
 add_task(function test_notifications()

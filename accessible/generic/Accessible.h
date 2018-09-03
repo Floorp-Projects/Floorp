@@ -909,9 +909,10 @@ public:
 
   /**
    * Return true if the accessible state change is processed by handling proper
-   * DOM UI event, if otherwise then false. For example, HTMLCheckboxAccessible
-   * process nsIDocumentObserver::ContentStateChanged instead
-   * 'CheckboxStateChange' event.
+   * DOM UI event, if otherwise then false. For example, CheckboxAccessible
+   * created for HTML:input@type="checkbox" will process
+   * nsIDocumentObserver::ContentStateChanged instead of 'CheckboxStateChange'
+   * event.
    */
   bool NeedsDOMUIEvent() const
     { return !(mStateFlags & eIgnoreDOMUIEvent); }

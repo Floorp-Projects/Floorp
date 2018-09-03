@@ -17,7 +17,7 @@ let loggingEnabled = Services.prefs.getBoolPref("toolkit.dump.emit");
 Services.prefs.addObserver("toolkit.dump.emit", {
   observe: () => {
     loggingEnabled = Services.prefs.getBoolPref("toolkit.dump.emit");
-  }
+  },
 });
 
 /**

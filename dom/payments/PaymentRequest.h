@@ -128,7 +128,6 @@ public:
                                  const nsAString& aDependentLocality,
                                  const nsAString& aPostalCode,
                                  const nsAString& aSortingCode,
-                                 const nsAString& aLanguageCode,
                                  const nsAString& aOrganization,
                                  const nsAString& aRecipient,
                                  const nsAString& aPhone);

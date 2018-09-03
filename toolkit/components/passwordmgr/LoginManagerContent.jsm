@@ -694,7 +694,7 @@ var LoginManagerContent = {
 
       pwFields[pwFields.length] = {
                                     index: i,
-                                    element
+                                    element,
                                   };
     }
 
@@ -1570,7 +1570,7 @@ UserAutoCompleteResult.prototype = {
         Services.logins.removeLogin(removedLogin);
       }
     }
-  }
+  },
 };
 
 /**

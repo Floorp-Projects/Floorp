@@ -41,7 +41,7 @@ function waitForUnregister(host) {
         }
         swm.removeListener(listener);
         resolve(registration);
-      }
+      },
     };
     swm.addListener(listener);
   });
@@ -75,7 +75,7 @@ add_task(async function testWithRange() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.testing.enabled", true]
+    ["dom.serviceWorkers.testing.enabled", true],
   ]});
 
   // The service may have picked up activity from prior tests in this run.

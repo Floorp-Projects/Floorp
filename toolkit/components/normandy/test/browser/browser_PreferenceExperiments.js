@@ -598,7 +598,7 @@ decorate_task(
       [["unenroll", "preference_study", experiments.test.name, {
         didResetValue: "false",
         reason: "test-reason",
-        branch: "fakebranch"
+        branch: "fakebranch",
       }]],
       "stop should send the correct telemetry event"
     );

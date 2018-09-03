@@ -55,12 +55,12 @@ onmessage = async function(msg) {
     }
     postMessage({
       "result": "success",
-      extractedPaths
+      extractedPaths,
     });
   } catch (e) {
     postMessage({
       "result": "fail",
-      "exception": e.message
+      "exception": e.message,
     });
   }
 };

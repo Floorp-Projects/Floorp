@@ -74,7 +74,7 @@ class WebProgressChild {
         isTopLevel: aWebProgress.isTopLevel,
         isLoadingDocument: aWebProgress.isLoadingDocument,
         loadType: aWebProgress.loadType,
-        DOMWindowID: domWindowID
+        DOMWindowID: domWindowID,
       };
     }
 

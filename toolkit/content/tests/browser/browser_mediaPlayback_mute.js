@@ -27,7 +27,7 @@ function test_audio_in_browser() {
   var audio = get_audio_element();
   return {
     computedVolume: audio.computedVolume,
-    computedMuted: audio.computedMuted
+    computedMuted: audio.computedMuted,
   };
 }
 
@@ -76,7 +76,7 @@ async function test_visibility(url, browser) {
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true]
+    ["media.useAudioChannelService.testing", true],
   ]});
 });
 

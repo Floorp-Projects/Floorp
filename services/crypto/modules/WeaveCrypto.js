@@ -41,7 +41,7 @@ WeaveCrypto.prototype = {
             if (topic == "nsPref:changed") {
                 self.debug = self.prefBranch.getBoolPref("cryptoDebug");
             }
-        }
+        },
     },
 
     init() {
@@ -126,7 +126,7 @@ WeaveCrypto.prototype = {
         this.log("generateRandomKey() called");
         let algo = {
             name: CRYPT_ALGO,
-            length: CRYPT_ALGO_LENGTH
+            length: CRYPT_ALGO_LENGTH,
         };
         let key = await crypto.subtle.generateKey(algo, true, []);
         let keyBytes = await crypto.subtle.exportKey("raw", key);

@@ -40,7 +40,7 @@ async function createServerAndConfigureClient() {
   let contents = {
     meta: {global: {engines: {rotary: {version: engine.version, syncID}}}},
     crypto: {},
-    rotary: {}
+    rotary: {},
   };
 
   const USER = "foo";
@@ -88,7 +88,7 @@ add_task(async function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
                                     denomination: "Flying Scotsman"}));
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -131,7 +131,7 @@ add_task(async function test_syncStartup_serverHasNewerVersion() {
 
   let global = new ServerWBO("global", {engines: {rotary: {version: 23456}}});
   let server = httpd_setup({
-      "/1.1/foo/storage/meta/global": global.handler()
+      "/1.1/foo/storage/meta/global": global.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -196,7 +196,7 @@ add_task(async function test_processIncoming_emptyServer() {
 
   let collection = new ServerCollection();
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -234,7 +234,7 @@ add_task(async function test_processIncoming_createFromServer() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler(),
       "/1.1/foo/storage/rotary/flying": collection.wbo("flying").handler(),
-      "/1.1/foo/storage/rotary/scotsman": collection.wbo("scotsman").handler()
+      "/1.1/foo/storage/rotary/scotsman": collection.wbo("scotsman").handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -318,7 +318,7 @@ add_task(async function test_processIncoming_reconcile() {
                                     deleted: true}));
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -633,7 +633,7 @@ add_task(async function test_processIncoming_resume_toFetch() {
   engine.previousFailed = new SerializableSet(["failed0", "failed1", "failed2"]);
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -693,7 +693,7 @@ add_task(async function test_processIncoming_notify_count() {
   }
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -782,7 +782,7 @@ add_task(async function test_processIncoming_previousFailed() {
   }
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -890,7 +890,7 @@ add_task(async function test_processIncoming_failed_records() {
     };
   }
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": recording_handler(collection)
+      "/1.1/foo/storage/rotary": recording_handler(collection),
   });
 
   await SyncTestingInfrastructure(server);
@@ -991,7 +991,7 @@ add_task(async function test_processIncoming_decrypt_failed() {
                          nodecrypt: "Valid ciphertext"};
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -1047,7 +1047,7 @@ add_task(async function test_uploadOutgoing_toEmptyServer() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler(),
       "/1.1/foo/storage/rotary/flying": collection.wbo("flying").handler(),
-      "/1.1/foo/storage/rotary/scotsman": collection.wbo("scotsman").handler()
+      "/1.1/foo/storage/rotary/scotsman": collection.wbo("scotsman").handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -1176,7 +1176,7 @@ add_task(async function test_uploadOutgoing_failed() {
   collection._wbos.flying = new ServerWBO("flying");
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -1233,7 +1233,7 @@ async function createRecordFailTelemetry(allowSkippedRecord) {
   collection._wbos.scotsman = new ServerWBO("scotsman");
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -1334,7 +1334,7 @@ add_task(async function test_uploadOutgoing_largeRecords() {
   meta_global.payload.engines = {rotary: {version: engine.version, syncID}};
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -1369,7 +1369,7 @@ add_task(async function test_syncFinish_deleteByIds() {
                                 denomination: "Rekonstruktionslokomotive"}));
 
   let server = httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
   await SyncTestingInfrastructure(server);
 
@@ -1418,7 +1418,7 @@ add_task(async function test_syncFinish_deleteLotsInBatches() {
   }
 
   let server = httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -1468,11 +1468,11 @@ add_task(async function test_sync_partialUpload() {
 
   let collection = new ServerCollection();
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
   let oldServerConfiguration = Service.serverConfiguration;
   Service.serverConfiguration = {
-    max_post_records: 100
+    max_post_records: 100,
   };
   await SyncTestingInfrastructure(server);
   await generateNewKeys(Service.collectionKeys);
@@ -1552,7 +1552,7 @@ add_task(async function test_canDecrypt_noCryptoKeys() {
                                 denomination: "LNER Class A3 4472"}));
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -1577,7 +1577,7 @@ add_task(async function test_canDecrypt_true() {
                                 denomination: "LNER Class A3 4472"}));
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -1606,7 +1606,7 @@ add_task(async function test_syncapplied_observer() {
   }
 
   let server = httpd_setup({
-    "/1.1/foo/storage/rotary": collection.handler()
+    "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);

@@ -5,7 +5,7 @@ add_task(async function() {
   const PREF = "extensions.langpacks.signatures.required";
 
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF, false]]
+    set: [[PREF, false]],
   });
 
   let provider = new MockProvider();
@@ -78,7 +78,7 @@ add_task(async function() {
   checklist(false);
 
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF, true]]
+    set: [[PREF, true]],
   });
 
   await catUtils.openType("extension");

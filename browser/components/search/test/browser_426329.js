@@ -48,7 +48,7 @@ function countEntries(name, value) {
                           if (!reason) {
                             resolve(count);
                           }
-                        }
+                        },
                       });
   });
 }

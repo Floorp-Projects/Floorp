@@ -12,8 +12,8 @@ add_task(async function test_engine_set_alias() {
   let [engine1] = await addTestEngines([
     {
       name: "bacon",
-      details: ["", "b", "Search Bacon", "GET", "http://www.bacon.test/find"]
-    }
+      details: ["", "b", "Search Bacon", "GET", "http://www.bacon.test/find"],
+    },
   ]);
   Assert.equal(engine1.alias, "b");
   engine1.alias = "a";
@@ -26,8 +26,8 @@ add_task(async function test_engine_set_alias_with_left_space() {
   let [engine2] = await addTestEngines([
     {
       name: "bacon",
-      details: ["", "   a", "Search Bacon", "GET", "http://www.bacon.test/find"]
-    }
+      details: ["", "   a", "Search Bacon", "GET", "http://www.bacon.test/find"],
+    },
   ]);
   Assert.equal(engine2.alias, "a");
   engine2.alias = "    c";
@@ -40,8 +40,8 @@ add_task(async function test_engine_set_alias_with_right_space() {
   let [engine3] = await addTestEngines([
     {
       name: "bacon",
-      details: ["", "c   ", "Search Bacon", "GET", "http://www.bacon.test/find"]
-    }
+      details: ["", "c   ", "Search Bacon", "GET", "http://www.bacon.test/find"],
+    },
   ]);
   Assert.equal(engine3.alias, "c");
   engine3.alias = "o    ";
@@ -54,8 +54,8 @@ add_task(async function test_engine_set_alias_with_right_left_space() {
   let [engine4] = await addTestEngines([
     {
       name: "bacon",
-      details: ["", " o  ", "Search Bacon", "GET", "http://www.bacon.test/find"]
-    }
+      details: ["", " o  ", "Search Bacon", "GET", "http://www.bacon.test/find"],
+    },
   ]);
   Assert.equal(engine4.alias, "o");
   engine4.alias = "  n ";
@@ -68,8 +68,8 @@ add_task(async function test_engine_set_alias_with_space() {
   let [engine5] = await addTestEngines([
     {
       name: "bacon",
-      details: ["", " ", "Search Bacon", "GET", "http://www.bacon.test/find"]
-    }
+      details: ["", " ", "Search Bacon", "GET", "http://www.bacon.test/find"],
+    },
   ]);
   Assert.equal(engine5.alias, null);
   engine5.alias = "b";

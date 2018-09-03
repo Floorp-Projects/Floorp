@@ -46,7 +46,7 @@ function makePostQueue(config, lastModTime, responseGenerator) {
       batch,
       commit,
       payloadBytes,
-      numRecords
+      numRecords,
     };
 
     if (headers.length) {
@@ -85,7 +85,7 @@ function makePostQueue(config, lastModTime, responseGenerator) {
         numRecords: 0,
         didCommit: false,
         batch,
-        serverBatch: false
+        serverBatch: false,
       };
       if (nextResponse.obj && nextResponse.obj.batch) {
         curBatch.batch = nextResponse.obj.batch;
@@ -148,7 +148,7 @@ add_task(async function test_simple() {
     numRecords: 1,
     commit: true, // we don't know if we have batch semantics, so committed.
     headers: [["x-if-unmodified-since", time]],
-    batch: "true"
+    batch: "true",
   }]);
   deepEqual(stats.batches, [{
     posts: 1,
@@ -156,7 +156,7 @@ add_task(async function test_simple() {
     numRecords: 1,
     didCommit: true,
     batch: "true",
-    serverBatch: false
+    serverBatch: false,
   }]);
 });
 
@@ -195,7 +195,7 @@ add_task(async function test_max_request_bytes_no_batch() {
       commit: false, // we know we aren't in a batch, so never commit.
       headers: [["x-if-unmodified-since", time + 100]],
       batch: null,
-    }
+    },
   ]);
   equal(stats.batches.filter(x => x.didCommit).length, 0);
   equal(pq.lastModified, time + 200);
@@ -231,7 +231,7 @@ add_task(async function test_max_record_payload_bytes_no_batch() {
       commit: true, // we know we aren't in a batch, so never commit.
       batch: "true",
       headers: [["x-if-unmodified-since", time]],
-    }
+    },
   ]);
 
   deepEqual(stats.batches, [
@@ -241,8 +241,8 @@ add_task(async function test_max_record_payload_bytes_no_batch() {
       numRecords: 2,
       didCommit: true,
       batch: "true",
-      serverBatch: false
-    }
+      serverBatch: false,
+    },
   ]);
 
   equal(pq.lastModified, time + 100);
@@ -278,7 +278,7 @@ add_task(async function test_single_batch() {
       commit: true, // we don't know if we have batch semantics, so committed.
       batch: "true",
       headers: [["x-if-unmodified-since", time]],
-    }
+    },
   ]);
 
   deepEqual(stats.batches, [{
@@ -287,7 +287,7 @@ add_task(async function test_single_batch() {
     numRecords: 1,
     didCommit: true,
     batch: 1234,
-    serverBatch: true
+    serverBatch: true,
   }]);
 });
 
@@ -335,7 +335,7 @@ add_task(async function test_max_post_bytes_batch() {
       commit: true,
       batch: 1234,
       headers: [["x-if-unmodified-since", time]],
-    }
+    },
   ]);
 
   deepEqual(stats.batches, [{
@@ -344,7 +344,7 @@ add_task(async function test_max_post_bytes_batch() {
     numRecords: 3,
     didCommit: true,
     batch: 1234,
-    serverBatch: true
+    serverBatch: true,
   }]);
 
   equal(pq.lastModified, time + 200);
@@ -396,7 +396,7 @@ add_task(async function test_max_request_bytes_batch() {
       commit: true,
       batch: 1234,
       headers: [["x-if-unmodified-since", time]],
-    }
+    },
   ]);
 
   deepEqual(stats.batches, [{
@@ -405,7 +405,7 @@ add_task(async function test_max_request_bytes_batch() {
     numRecords: 4,
     didCommit: true,
     batch: 1234,
-    serverBatch: true
+    serverBatch: true,
   }]);
 
   equal(pq.lastModified, time + 200);
@@ -493,7 +493,7 @@ add_task(async function test_max_total_bytes_batch() {
       numRecords: 3,
       didCommit: true,
       batch: 1234,
-      serverBatch: true
+      serverBatch: true,
     },
     {
       posts: 2,
@@ -501,8 +501,8 @@ add_task(async function test_max_total_bytes_batch() {
       numRecords: 3,
       didCommit: true,
       batch: 5678,
-      serverBatch: true
-    }
+      serverBatch: true,
+    },
   ]);
 
   equal(pq.lastModified, time1 + 200);
@@ -554,7 +554,7 @@ add_task(async function test_max_post_records_batch() {
       commit: true,
       batch: 1234,
       headers: [["x-if-unmodified-since", time]],
-    }
+    },
   ]);
 
   deepEqual(stats.batches, [{
@@ -717,7 +717,7 @@ add_task(async function test_packed_batch() {
       commit: true,
       batch: 1234,
       headers: [["x-if-unmodified-since", time]],
-    }
+    },
   ]);
 
   deepEqual(stats.batches, [{
@@ -769,7 +769,7 @@ async function test_enqueue_failure_case(failureLimit, config) {
       commit: true,
       batch: "true",
       headers: [["x-if-unmodified-since", time]],
-    }
+    },
   ]);
 
   deepEqual(stats.batches, [{

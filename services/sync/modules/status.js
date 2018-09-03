@@ -107,7 +107,7 @@ var Status = {
     this._sync = SYNC_SUCCEEDED;
     this._engines = {};
     this.partial = false;
-  }
+  },
 };
 
 // Initialize various status values.

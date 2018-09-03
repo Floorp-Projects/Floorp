@@ -7,7 +7,7 @@ add_task(async function test_notificationReplace() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: notificationURL
+    url: notificationURL,
   }, async function dummyTabTask(aBrowser) {
     await ContentTask.spawn(aBrowser, {}, async function() {
       let win = content.window.wrappedJSObject;

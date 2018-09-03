@@ -2,10 +2,10 @@
 
 const WARNING_PATTERN = [{
   key: "INSECURE_FORM_ACTION",
-  msg: 'JavaScript Warning: "Password fields present in a form with an insecure (http://) form action. This is a security risk that allows user login credentials to be stolen."'
+  msg: 'JavaScript Warning: "Password fields present in a form with an insecure (http://) form action. This is a security risk that allows user login credentials to be stolen."',
 }, {
   key: "INSECURE_PAGE",
-  msg: 'JavaScript Warning: "Password fields present on an insecure (http://) page. This is a security risk that allows user login credentials to be stolen."'
+  msg: 'JavaScript Warning: "Password fields present on an insecure (http://) page. This is a security risk that allows user login credentials to be stolen."',
 }];
 
 add_task(async function testInsecurePasswordWarning() {
@@ -78,7 +78,7 @@ add_task(async function testInsecurePasswordWarning() {
 
     await BrowserTestUtils.withNewTab({
       gBrowser,
-      url: testURL
+      url: testURL,
     }, function() {
       if (expectWarnings.length === 0) {
         info("All warnings are shown for URL:" + testURL);

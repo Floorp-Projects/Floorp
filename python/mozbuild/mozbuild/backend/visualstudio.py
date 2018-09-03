@@ -230,7 +230,8 @@ class VisualStudioBackend(CommonBackend):
             debugger=None
             if prefix == 'binary':
                 if item.startswith(self.environment.substs['MOZ_APP_NAME']):
-                    debugger = ('$(TopObjDir)\\dist\\bin\\%s' % item, '-no-remote')
+                    debugger = ('$(TopObjDir)\\dist\\bin\\%s' % item,
+                        '-no-remote -profile $(TopObjDir)\\tmp\\profile-default')
                 else:
                     debugger = ('$(TopObjDir)\\dist\\bin\\%s' % item, '')
 

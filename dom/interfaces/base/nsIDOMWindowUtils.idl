@@ -42,7 +42,6 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
-interface nsIDOMStorage;
 
 webidl Animation;
 webidl DOMRect;
@@ -51,6 +50,7 @@ webidl EventTarget;
 webidl Event;
 webidl Node;
 webidl NodeList;
+webidl Storage;
 
 [scriptable, uuid(4d6732ca-9da7-4176-b8a1-8dde15cd0bf9)]
 interface nsIDOMWindowUtils : nsISupports {
@@ -1901,7 +1901,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aStorage
    *    The storage object to get usage data for.
    */
-  int64_t getStorageUsage(in nsIDOMStorage aStorage);
+  int64_t getStorageUsage(in Storage aStorage);
 
   /**
    * Returns the directionality of a string using the first-strong character

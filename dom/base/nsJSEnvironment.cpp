@@ -1268,6 +1268,34 @@ FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless,
                                                  : "IdleForgetSkippable");
   PRTime startTime = PR_Now();
   TimeStamp startTimeStamp = TimeStamp::Now();
+
+  static uint32_t sForgetSkippableCounter = 0;
+  static TimeStamp sForgetSkippableFrequencyStartTime;
+  static TimeStamp sLastForgetSkippableEndTime;
+  static const TimeDuration minute = TimeDuration::FromSeconds(60.0f);
+
+  if (sForgetSkippableFrequencyStartTime.IsNull()) {
+    sForgetSkippableFrequencyStartTime = startTimeStamp;
+  } else if (startTimeStamp - sForgetSkippableFrequencyStartTime > minute) {
+    TimeStamp startPlusMinute = sForgetSkippableFrequencyStartTime + minute;
+
+    // If we had forget skippables only at the beginning of the interval, we
+    // still want to use the whole time, minute or more, for frequency
+    // calculation. sLastForgetSkippableEndTime is needed if forget skippable
+    // takes enough time to push the interval to be over a minute.
+    TimeStamp endPoint = startPlusMinute > sLastForgetSkippableEndTime ?
+      startPlusMinute : sLastForgetSkippableEndTime;
+
+    // Duration in minutes.
+    double duration =
+      (endPoint - sForgetSkippableFrequencyStartTime).ToSeconds() / 60;
+    uint32_t frequencyPerMinute = uint32_t(sForgetSkippableCounter / duration);
+    Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_FREQUENCY, frequencyPerMinute);
+    sForgetSkippableCounter = 0;
+    sForgetSkippableFrequencyStartTime = startTimeStamp;
+  }
+  ++sForgetSkippableCounter;
+
   FinishAnyIncrementalGC();
   bool earlyForgetSkippable =
     sCleanupsSinceLastGC < NS_MAJOR_FORGET_SKIPPABLE_CALLS;
@@ -1292,6 +1320,8 @@ FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless,
   ++sForgetSkippableBeforeCC;
 
   TimeStamp now = TimeStamp::Now();
+  sLastForgetSkippableEndTime = now;
+
   TimeDuration duration = now - startTimeStamp;
   if (duration.ToSeconds()) {
     TimeDuration idleDuration;

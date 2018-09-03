@@ -1,5 +1,5 @@
 import {INITIAL_STATE, insertPinned, reducers} from "common/Reducers.jsm";
-const {TopSites, App, Snippets, Prefs, Dialog, Sections} = reducers;
+const {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket} = reducers;
 import {actionTypes as at} from "common/Actions.jsm";
 
 describe("Reducers", () => {
@@ -599,6 +599,40 @@ describe("Reducers", () => {
     it("should clear the blocklist on SNIPPETS_BLOCKLIST_CLEARED", () => {
       const state = Snippets({blockList: [1, 2]}, {type: at.SNIPPETS_BLOCKLIST_CLEARED});
       assert.deepEqual(state.blockList, []);
+    });
+  });
+  describe("Pocket", () => {
+    it("should return INITIAL_STATE by default", () => {
+      assert.equal(Pocket(undefined, {type: "some_action"}), INITIAL_STATE.Pocket);
+    });
+    it("should set waitingForSpoc on a POCKET_WAITING_FOR_SPOC action", () => {
+      const state = Pocket(undefined, {type: at.POCKET_WAITING_FOR_SPOC, data: false});
+      assert.isFalse(state.waitingForSpoc);
+    });
+    it("should set isUserLoggedIn to false on a POCKET_LOGGED_IN with null", () => {
+      const state = Pocket(undefined, {type: at.POCKET_LOGGED_IN, data: null});
+      assert.isFalse(state.isUserLoggedIn);
+    });
+    it("should set isUserLoggedIn to false on a POCKET_LOGGED_IN with false", () => {
+      const state = Pocket(undefined, {type: at.POCKET_LOGGED_IN, data: false});
+      assert.isFalse(state.isUserLoggedIn);
+    });
+    it("should set isUserLoggedIn to true on a POCKET_LOGGED_IN with true", () => {
+      const state = Pocket(undefined, {type: at.POCKET_LOGGED_IN, data: true});
+      assert.isTrue(state.isUserLoggedIn);
+    });
+    it("should set pocketCta with correct object on a POCKET_CTA", () => {
+      const data = {
+        cta_button: "cta button",
+        cta_text: "cta text",
+        cta_url: "https://cta-url.com",
+        use_cta: true
+      };
+      const state = Pocket(undefined, {type: at.POCKET_CTA, data});
+      assert.equal(state.pocketCta.ctaButton, data.cta_button);
+      assert.equal(state.pocketCta.ctaText, data.cta_text);
+      assert.equal(state.pocketCta.ctaUrl, data.cta_url);
+      assert.equal(state.pocketCta.useCta, data.use_cta);
     });
   });
 });

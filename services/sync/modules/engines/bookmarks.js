@@ -481,7 +481,7 @@ BaseBookmarksEngine.prototype = {
 
   getValidator() {
     return new BookmarkValidator();
-  }
+  },
 };
 
 /**
@@ -1019,7 +1019,7 @@ BaseBookmarksStore.prototype = {
     // Save a backup before clearing out all bookmarks.
     await PlacesBackups.create(null, true);
     await PlacesSyncUtils.bookmarks.wipe();
-  }
+  },
 };
 
 /**
@@ -1183,7 +1183,7 @@ BookmarksStore.prototype = {
   async wipe() {
     this.clearPendingDeletions();
     await super.wipe();
-  }
+  },
 };
 
 /**
@@ -1350,7 +1350,7 @@ BookmarksTracker.prototype = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavBookmarkObserver,
     Ci.nsINavBookmarkObserver_MOZILLA_1_9_1_ADDITIONS,
-    Ci.nsISupportsWeakReference
+    Ci.nsISupportsWeakReference,
   ]),
 
   /* Every add/remove/change will trigger a sync for MULTI_DEVICE (except in
@@ -1432,7 +1432,7 @@ BookmarksTracker.prototype = {
       this._batchSawScoreIncrement = false;
     }
   },
-  onItemVisited() {}
+  onItemVisited() {},
 };
 
 /**

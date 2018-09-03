@@ -212,8 +212,8 @@ this.AboutPreferences = class AboutPreferences {
         const link = createAppend("label", sponsoredHbox);
         link.classList.add("learn-sponsored");
         link.classList.add("text-link");
-        link.setAttribute("href", sectionData.disclaimer.link.href);
-        link.textContent = formatString("prefs_topstories_sponsored_learn_more");
+        link.setAttribute("href", sectionData.learnMore.link.href);
+        link.textContent = formatString(sectionData.learnMore.link.id);
       }
 
       // Add more details for the section (e.g., description, more prefs)

@@ -46,8 +46,9 @@ namespace jit {
     _(GuardAndGetIndexFromString)         \
     _(GuardIndexIsNonNegative)            \
     _(GuardTagNotEqual)                   \
+    _(GuardXrayExpandoShapeAndDefaultProto)\
     _(GuardNoAllocationMetadataBuilder)   \
-    _(GuardObjectGroupNotPretenured)           \
+    _(GuardObjectGroupNotPretenured)      \
     _(LoadObject)                         \
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \

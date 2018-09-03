@@ -1,7 +1,7 @@
-import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {_CollapsibleSection as CollapsibleSection, Disclaimer} from "content-src/components/CollapsibleSection/CollapsibleSection";
-import {mountWithIntl, shallowWithIntl} from "test/unit/utils";
+import {actionTypes as at} from "common/Actions.jsm";
+import {_CollapsibleSection as CollapsibleSection} from "content-src/components/CollapsibleSection/CollapsibleSection";
 import {ErrorBoundary} from "content-src/components/ErrorBoundary/ErrorBoundary";
+import {mountWithIntl} from "test/unit/utils";
 import React from "react";
 
 const DEFAULT_PROPS = {
@@ -44,16 +44,6 @@ describe("CollapsibleSection", () => {
     assert.ok(wrapper.find(".collapsible-section").first().hasClass("collapsed"));
   });
 
-  it("should render disclaimer if not acknowledged", () => {
-    setup({Prefs: {values: {"section.cool.showDisclaimer": true}}});
-    assert.lengthOf(wrapper.find(".section-disclaimer"), 1);
-  });
-
-  it("should not render disclaimer if acknowledged", () => {
-    setup({Prefs: {values: {"section.cool.showDisclaimer": false}}});
-    assert.lengthOf(wrapper.find(".section-disclaimer"), 0);
-  });
-
   it("should fire a pref change event when section title is clicked", done => {
     function dispatch(a) {
       if (a.type === at.UPDATE_SECTION_PREFS) {
@@ -63,7 +53,19 @@ describe("CollapsibleSection", () => {
       }
     }
     setup({dispatch});
-    wrapper.find(".click-target").simulate("click");
+    wrapper.find(".click-target").at(0).simulate("click");
+  });
+
+  it("should fire a pref change event when section title arrow is clicked", done => {
+    function dispatch(a) {
+      if (a.type === at.UPDATE_SECTION_PREFS) {
+        assert.equal(a.data.id, DEFAULT_PROPS.id);
+        assert.equal(a.data.value.collapsed, true);
+        done();
+      }
+    }
+    setup({dispatch});
+    wrapper.find(".click-target").at(1).simulate("click");
   });
 
   it("should not fire a pref change when section title is clicked if sectionBody is falsy", () => {
@@ -71,7 +73,7 @@ describe("CollapsibleSection", () => {
     setup({dispatch});
     delete wrapper.find(CollapsibleSection).instance().sectionBody;
 
-    wrapper.find(".click-target").simulate("click");
+    wrapper.find(".click-target").at(0).simulate("click");
 
     assert.notCalled(dispatch);
   });
@@ -103,7 +105,7 @@ describe("CollapsibleSection", () => {
     });
 
     it("should not trigger a dispatch when the section title is clicked ", () => {
-      wrapper.find(".click-target").simulate("click");
+      wrapper.find(".click-target").at(0).simulate("click");
 
       assert.notCalled(dispatch);
     });
@@ -152,35 +154,5 @@ describe("CollapsibleSection", () => {
 
       checkHeight("");
     });
-  });
-});
-
-describe("<Disclaimer>", () => {
-  let wrapper;
-  const DISCLAIMER_PROPS = {
-    disclaimer: {text: {id: "text"}, link: {id: "link"}, button: {id: "button"}},
-    disclaimerPref: "section.test.showDisclaimer",
-    eventSource: "test"
-  };
-
-  function setup(props = {}) {
-    const customProps = Object.assign({}, DISCLAIMER_PROPS, props);
-    wrapper = shallowWithIntl(<Disclaimer {...customProps}>foo</Disclaimer>);
-  }
-
-  beforeEach(() => setup());
-
-  it("should render disclaimer", () => {
-    assert.lengthOf(wrapper.find(".section-disclaimer"), 1);
-  });
-
-  it("should send telemetry and set pref to acknowledge disclaimer when button is clicked", () => {
-    const dispatch = sinon.spy();
-    setup({dispatch});
-
-    wrapper.find(".section-disclaimer").childAt(1).simulate("click");
-    assert.calledTwice(dispatch);
-    assert.calledWith(dispatch.firstCall, ac.SetPref("section.test.showDisclaimer", false));
-    assert.calledWith(dispatch.secondCall, ac.UserEvent({event: "DISCLAIMER_ACKED", source: "test"}));
   });
 });

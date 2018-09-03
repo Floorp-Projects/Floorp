@@ -421,6 +421,10 @@ cubeb* GetCubebContextUnlocked()
             ("%s: returning null context due to %s!", __func__, PREF_CUBEB_FORCE_NULL_CONTEXT));
     return nullptr;
   }
+  if (recordreplay::IsRecordingOrReplaying()) {
+    // Media is not supported when recording or replaying. See bug 1304146.
+    return nullptr;
+  }
   if (sCubebState != CubebState::Uninitialized) {
     // If we have already passed the initialization point (below), just return
     // the current context, which may be null (e.g., after error or shutdown.)

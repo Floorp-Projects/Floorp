@@ -493,8 +493,7 @@ XMLHttpRequestMainThread::DetectCharset()
 }
 
 nsresult
-XMLHttpRequestMainThread::AppendToResponseText(const char * aSrcBuffer,
-                                               uint32_t aSrcBufferLen,
+XMLHttpRequestMainThread::AppendToResponseText(Span<const uint8_t> aBuffer,
                                                bool aLast)
 {
   // Call this with an empty buffer to send the decoder the signal
@@ -503,36 +502,41 @@ XMLHttpRequestMainThread::AppendToResponseText(const char * aSrcBuffer,
   NS_ENSURE_STATE(mDecoder);
 
   CheckedInt<size_t> destBufferLen =
-    mDecoder->MaxUTF16BufferLength(aSrcBufferLen);
-  if (!destBufferLen.isValid()) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+    mDecoder->MaxUTF16BufferLength(aBuffer.Length());
 
-  CheckedInt32 size = mResponseText.Length();
-  size += destBufferLen.value();
-  if (!size.isValid()) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  { // scope for holding the mutex that protects mResponseText
+    XMLHttpRequestStringWriterHelper helper(mResponseText);
 
-  XMLHttpRequestStringWriterHelper helper(mResponseText);
+    uint32_t len = helper.Length();
 
-  if (!helper.AddCapacity(destBufferLen.value())) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+    destBufferLen += len;
+    if (!destBufferLen.isValid() || destBufferLen.value() > UINT32_MAX) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-  uint32_t result;
-  size_t read;
-  size_t written;
-  bool hadErrors;
-  Tie(result, read, written, hadErrors) = mDecoder->DecodeToUTF16(
-    AsBytes(MakeSpan(aSrcBuffer, aSrcBufferLen)),
-    MakeSpan(helper.EndOfExistingData(), destBufferLen.value()),
-    aLast);
-  MOZ_ASSERT(result == kInputEmpty);
-  MOZ_ASSERT(read == aSrcBufferLen);
-  MOZ_ASSERT(written <= destBufferLen.value());
-  Unused << hadErrors;
-  helper.AddLength(written);
+    nsresult rv;
+    BulkWriteHandle<char16_t> handle =
+      helper.BulkWrite(destBufferLen.value(), rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    uint32_t result;
+    size_t read;
+    size_t written;
+    bool hadErrors;
+    Tie(result, read, written, hadErrors) = mDecoder->DecodeToUTF16(
+      aBuffer,
+      handle.AsSpan().From(len),
+      aLast);
+    MOZ_ASSERT(result == kInputEmpty);
+    MOZ_ASSERT(read == aBuffer.Length());
+    len += written;
+    MOZ_ASSERT(len <= destBufferLen.value());
+    Unused << hadErrors;
+    handle.Finish(len, false);
+  } // release mutex
+
   if (aLast) {
     // Drop the finished decoder to avoid calling into a decoder
     // that has finished.
@@ -597,8 +601,8 @@ XMLHttpRequestMainThread::GetResponseText(XMLHttpRequestStringSnapshot& aSnapsho
   MOZ_ASSERT(mResponseBodyDecodedPos < mResponseBody.Length() ||
              mState == XMLHttpRequest_Binding::DONE,
              "Unexpected mResponseBodyDecodedPos");
-  aRv = AppendToResponseText(mResponseBody.get() + mResponseBodyDecodedPos,
-                             mResponseBody.Length() - mResponseBodyDecodedPos,
+  Span<const uint8_t> span = mResponseBody;
+  aRv = AppendToResponseText(span.From(mResponseBodyDecodedPos),
                              mState == XMLHttpRequest_Binding::DONE);
   if (aRv.Failed()) {
     return;
@@ -1608,7 +1612,7 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
              xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Json) {
     MOZ_ASSERT(!xmlHttpRequest->mResponseXML,
                "We shouldn't be parsing a doc here");
-    rv = xmlHttpRequest->AppendToResponseText(fromRawSegment, count);
+    rv = xmlHttpRequest->AppendToResponseText(AsBytes(MakeSpan(fromRawSegment, count)));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2099,7 +2103,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
       ((mResponseType == XMLHttpRequestResponseType::Text) ||
         (mResponseType == XMLHttpRequestResponseType::Json) ||
         (mResponseType == XMLHttpRequestResponseType::_empty && !mResponseXML))) {
-    AppendToResponseText(nullptr, 0, true);
+    AppendToResponseText(Span<const uint8_t>(), true);
   }
 
   mWaitingForOnStopRequest = false;

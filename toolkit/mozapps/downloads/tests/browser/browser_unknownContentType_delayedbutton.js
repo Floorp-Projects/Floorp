@@ -32,7 +32,7 @@ let UCTObserver = {
         }
         break;
     }
-  }
+  },
 };
 
 function waitDelay(delay) {

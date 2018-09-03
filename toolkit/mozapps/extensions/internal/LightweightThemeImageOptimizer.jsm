@@ -41,7 +41,7 @@ var LightweightThemeImageOptimizer = {
     try {
       dir.remove(true);
     } catch (e) {}
-  }
+  },
 };
 
 Object.freeze(LightweightThemeImageOptimizer);
@@ -109,7 +109,7 @@ var ImageCropper = {
 
       resetInProgress();
     });
-  }
+  },
 };
 
 var ImageFile = {
@@ -117,7 +117,7 @@ var ImageFile = {
     this._netUtil.asyncFetch({
       uri: aURI,
       loadUsingSystemPrincipal: true,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE,
     }, function(aInputStream, aStatus, aRequest) {
         if (Components.isSuccessCode(aStatus) && aRequest instanceof Ci.nsIChannel) {
           let channel = aRequest.QueryInterface(Ci.nsIChannel);
@@ -142,7 +142,7 @@ var ImageFile = {
 
       aCallback();
     });
-  }
+  },
 };
 
 XPCOMUtils.defineLazyModuleGetter(ImageFile, "_netUtil",
@@ -153,7 +153,7 @@ var ImageTools = {
     let callback = {
       onImageReady(aImage, aStatus) {
         aCallback(aImage);
-      }
+      },
     };
 
     try {
@@ -177,7 +177,7 @@ var ImageTools = {
     } catch (e) {}
 
     return stream;
-  }
+  },
 };
 
 XPCOMUtils.defineLazyServiceGetter(ImageTools, "_imgTools",

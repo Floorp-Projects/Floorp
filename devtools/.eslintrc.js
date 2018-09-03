@@ -238,9 +238,6 @@ module.exports = {
     "brace-style": ["error", "1tbs", {"allowSingleLine": false}],
     // Require camel case names
     "camelcase": "error",
-    // Allow trailing commas for easy list extension.  Having them does not
-    // impair readability, but also not required either.
-    "comma-dangle": "off",
     // Warn about cyclomatic complexity in functions.
     "complexity": ["error", 53],
     // Don't warn for inconsistent naming when capturing this (not so important
@@ -353,8 +350,6 @@ module.exports = {
     "no-return-assign": "error",
     // Allow use of javascript: urls.
     "no-script-url": "off",
-    // Disallow use of comma operator.
-    "no-sequences": "error",
     // Warn about declaration of variables already declared in the outer scope.
     // This isn't an error because it sometimes is useful to use the same name
     // in a small helper function rather than having to come up with another

@@ -11,10 +11,12 @@ const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
 const ComputedProperty = createFactory(require("devtools/client/inspector/layout/components/ComputedProperty"));
 
+const Types = require("../types");
+
 class FlexContainerProperties extends PureComponent {
   static get propTypes() {
     return {
-      properties: PropTypes.object.isRequired,
+      properties: PropTypes.shape(Types.flexContainerProperties).isRequired,
     };
   }
 

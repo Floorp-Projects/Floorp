@@ -15,7 +15,7 @@ function notifyStoragePressure(usage = 100) {
 function openAboutPrefPromise() {
   let promises = [
     BrowserTestUtils.waitForLocationChange(gBrowser, "about:preferences#privacy"),
-    TestUtils.topicObserved("privacy-pane-loaded", () => true)
+    TestUtils.topicObserved("privacy-pane-loaded", () => true),
   ];
   return Promise.all(promises);
 }

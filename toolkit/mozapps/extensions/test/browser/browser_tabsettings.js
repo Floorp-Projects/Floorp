@@ -17,7 +17,7 @@ async function test() {
     name: "Tab Settings",
     version: "1",
     optionsURL: CHROMEROOT + "addon_prefs.xul",
-    optionsType: AddonManager.OPTIONS_TYPE_TAB
+    optionsType: AddonManager.OPTIONS_TYPE_TAB,
   }]);
 
   let aWindow = await open_manager("addons://list/extension");

@@ -62,13 +62,13 @@ add_task(async function run_test() {
     "/1.1/johndoe/storage/clients": upd("clients", clients.handler()),
     "/1.1/johndoe/storage/meta": upd("meta", wasCalledHandler(metaColl)),
     "/1.1/johndoe/storage/meta/global": upd("meta", wasCalledHandler(meta_global)),
-    "/1.1/johndoe/info/collections": collectionsHelper.handler
+    "/1.1/johndoe/info/collections": collectionsHelper.handler,
   };
 
   function mockHandler(path, mock) {
     server.registerPathHandler(path, mock(handlers[path]));
     return {
-      restore() { server.registerPathHandler(path, handlers[path]); }
+      restore() { server.registerPathHandler(path, handlers[path]); },
     };
   }
 
@@ -124,8 +124,8 @@ add_task(async function run_test() {
         obj: {
           crypto: infoResponse.obj.crypto,
           clients: infoResponse.obj.clients,
-          meta: 1
-        }
+          meta: 1,
+        },
       };
     };
 

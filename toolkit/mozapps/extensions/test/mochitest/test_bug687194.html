@@ -65,7 +65,7 @@
         /* eslint no-shadow: 0 */
         onInstallEnded(install, addon) {
           SimpleTest.executeSoon(() => test.next(addon));
-        }
+        },
       }));
       install.install();
 
@@ -82,7 +82,7 @@
             AddonManager.removeAddonListener(listener);
             SimpleTest.executeSoon(() => test.next());
           }
-        }
+        },
       });
       AddonManager.addAddonListener(listener);
       addon.uninstall();
@@ -125,8 +125,8 @@
         "set": [
           ["dom.ipc.browser_frames.oop_by_default", true],
           ["dom.mozBrowserFramesEnabled", true],
-          ["browser.pagethumbnails.capturing_disabled", true]
-        ]
+          ["browser.pagethumbnails.capturing_disabled", true],
+        ],
       }, runTests);
     });
   </script>

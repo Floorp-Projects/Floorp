@@ -44,7 +44,7 @@ add_task(async function run_test() {
                                 didCall = true;
                                 return this.throwy();
                               })();
-    }
+    },
   };
 
   _("Make sure a normal call will call and return");

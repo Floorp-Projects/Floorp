@@ -103,7 +103,7 @@ var gTests = [
        "we start with an empty list of languages to never translate");
     is(getDomainExceptions().length, 0,
        "we start with an empty list of sites to never translate");
-  }
+  },
 },
 
 {
@@ -153,7 +153,7 @@ var gTests = [
     // Cleanup.
     Services.prefs.setCharPref(kLanguagesPref, "");
     notif.close();
-  }
+  },
 },
 
 {
@@ -203,7 +203,7 @@ var gTests = [
     // Cleanup.
     Services.perms.remove(makeURI("http://example.com"), "translate");
     notif.close();
-  }
+  },
 },
 
 {
@@ -257,7 +257,7 @@ var gTests = [
     is(Services.prefs.getCharPref(kLanguagesPref), "", "The pref is empty");
 
     win.close();
-  }
+  },
 },
 
 {
@@ -314,7 +314,7 @@ var gTests = [
     is(getDomainExceptions().length, 0, "No exceptions in the permissions");
 
     win.close();
-  }
-}
+  },
+},
 
 ];

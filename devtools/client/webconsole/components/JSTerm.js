@@ -143,7 +143,7 @@ class JSTerm extends Component {
       onSelect: this.onAutocompleteSelect.bind(this),
       onClick: this.acceptProposedCompletion.bind(this),
       listId: "webConsole_autocompletePopupListBox",
-      position: "top",
+      position: "bottom",
       autoSelect: true
     };
 
@@ -385,7 +385,7 @@ class JSTerm extends Component {
 
     // Update the character and chevron width needed for the popup offset calculations.
     this._inputCharWidth = this._getInputCharWidth();
-    this._chevronWidth = this.editor ? null : this._getChevronWidth();
+    this._paddingInlineStart = this.editor ? null : this._getInputPaddingInlineStart();
 
     this.hud.window.addEventListener("blur", this._blurEventHandler);
     this.lastInputValue && this.setInputValue(this.lastInputValue);
@@ -649,25 +649,27 @@ class JSTerm extends Component {
    * @returns void
    */
   resizeInput() {
-    if (this.props.codeMirrorEnabled) {
+    if (this.props.codeMirrorEnabled || !this.inputNode) {
       return;
     }
 
-    if (!this.inputNode) {
-      return;
-    }
-
-    const inputNode = this.inputNode;
+    const {inputNode, completeNode} = this;
 
     // Reset the height so that scrollHeight will reflect the natural height of
     // the contents of the input field.
     inputNode.style.height = "auto";
+    const minHeightBackup = inputNode.style.minHeight;
+    inputNode.style.minHeight = "unset";
+    completeNode.style.height = "auto";
 
     // Now resize the input field to fit its contents.
     const scrollHeight = inputNode.scrollHeight;
 
     if (scrollHeight > 0) {
-      inputNode.style.height = (scrollHeight + this.inputBorderSize) + "px";
+      const pxHeight = (scrollHeight + this.inputBorderSize) + "px";
+      inputNode.style.height = pxHeight;
+      inputNode.style.minHeight = minHeightBackup;
+      completeNode.style.height = pxHeight;
     }
   }
 
@@ -710,6 +712,7 @@ class JSTerm extends Component {
 
     this.lastInputValue = newValue;
     this.resizeInput();
+
     this.emit("set-input-value");
   }
 
@@ -1203,8 +1206,11 @@ class JSTerm extends Component {
         const offset = inputUntilCursor.length -
           (inputUntilCursor.lastIndexOf("\n") + 1) -
           matchProp.length;
-        xOffset = (offset * this._inputCharWidth) + this._chevronWidth;
-        popupAlignElement = this.inputNode;
+        xOffset = (offset * this._inputCharWidth) + this._paddingInlineStart;
+        // We use completeNode as the popup anchor as its height never exceeds the
+        // content size, whereas it can be the case for inputNode (when there's no message
+        // in the output, it takes the whole height).
+        popupAlignElement = this.completeNode;
       }
 
       if (popupAlignElement) {
@@ -1309,11 +1315,15 @@ class JSTerm extends Component {
 
     // We need to retrieve the cursor before setting the new value.
     const editorCursor = this.editor && this.editor.getCursor();
+
+    const scrollPosition = this.inputNode ? this.inputNode.parentElement.scrollTop : null;
+
     this.setInputValue(prefix + str + suffix);
 
     if (this.inputNode) {
       const newCursor = prefix.length + str.length;
       this.inputNode.selectionStart = this.inputNode.selectionEnd = newCursor;
+      this.inputNode.parentElement.scrollTop = scrollPosition;
     } else if (this.editor) {
       // Set the cursor on the same line it was already at, after the autocompleted text
       this.editor.setCursor({
@@ -1421,7 +1431,7 @@ class JSTerm extends Component {
     WebConsoleUtils.copyTextStyles(this.inputNode, tempLabel);
     tempLabel.textContent = "x";
     doc.documentElement.appendChild(tempLabel);
-    const width = tempLabel.offsetWidth;
+    const width = tempLabel.getBoundingClientRect().width;
     tempLabel.remove();
     return width;
   }
@@ -1432,17 +1442,16 @@ class JSTerm extends Component {
    *
    * @returns {Number|null}: Width of the icon, or null if the input does not exist.
    */
-  _getChevronWidth() {
+  _getInputPaddingInlineStart() {
     if (!this.inputNode) {
       return null;
     }
-
-   // Calculate the width of the chevron placed at the beginning of the input
-    // box. Remove 4 more pixels to accommodate the padding of the popup.
+   // Calculate the width of the chevron placed at the beginning of the input box.
     const doc = this.hud.document;
-    return doc.defaultView
+
+    return new Number(doc.defaultView
       .getComputedStyle(this.inputNode)
-      .paddingLeft.replace(/[^0-9.]/g, "") - 4;
+      .paddingInlineStart.replace(/[^0-9.]/g, ""));
   }
 
   onContextMenu(e) {

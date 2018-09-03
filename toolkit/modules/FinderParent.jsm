@@ -175,13 +175,13 @@ FinderParent.prototype = {
 
   onModalHighlightChange(aUseModalHighlight) {
     this._browser.messageManager.sendAsyncMessage("Finder:ModalHighlightChange", {
-      useModalHighlight: aUseModalHighlight
+      useModalHighlight: aUseModalHighlight,
     });
   },
 
   onHighlightAllChange(aHighlightAll) {
     this._browser.messageManager.sendAsyncMessage("Finder:HighlightAllChange", {
-      highlightAll: aHighlightAll
+      highlightAll: aHighlightAll,
     });
   },
 
@@ -198,5 +198,5 @@ FinderParent.prototype = {
     this._browser.messageManager.sendAsyncMessage("Finder:MatchesCount",
                                                   { searchString: aSearchString,
                                                     linksOnly: aLinksOnly });
-  }
+  },
 };

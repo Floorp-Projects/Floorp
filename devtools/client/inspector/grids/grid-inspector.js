@@ -248,9 +248,15 @@ class GridInspector {
     }
 
     if (!gridFronts.length) {
-      this.store.dispatch(updateGrids([]));
-      this.inspector.emit("grid-panel-updated");
-      return;
+      try {
+        this.store.dispatch(updateGrids([]));
+        this.inspector.emit("grid-panel-updated");
+        return;
+      } catch (e) {
+        // This call might fail if called asynchrously after the toolbox is finished
+        // closing.
+        return;
+      }
     }
 
     const currentUrl = this.inspector.target.url;

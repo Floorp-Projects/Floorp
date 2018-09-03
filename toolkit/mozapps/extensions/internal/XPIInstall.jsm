@@ -261,7 +261,7 @@ class Package {
     if (!shouldVerifySignedState(addon)) {
       return {
         signedState: AddonManager.SIGNEDSTATE_NOT_REQUIRED,
-        cert: null
+        cert: null,
       };
     }
 
@@ -361,9 +361,9 @@ XPIPackage = class XPIPackage extends Package {
             aZipReader.close();
           resolve({
             signedState: getSignedStatus(aRv, aCert, addon.id),
-            cert: aCert
+            cert: aCert,
           });
-        }
+        },
       };
       // This allows the certificate DB to get the raw JS callback object so the
       // test code can pass through objects that XPConnect would reject.
@@ -727,7 +727,7 @@ async function loadManifestFromRDF(aUri, aData, aPackage) {
   for (let targetPlatform of manifest.targetPlatforms || []) {
     let platform = {
       os: null,
-      abi: null
+      abi: null,
     };
 
     let pos = targetPlatform.indexOf("_");
@@ -1275,7 +1275,7 @@ SafeInstallOperation.prototype = {
 
     while (this._createdDirs.length > 0)
       recursiveRemove(this._createdDirs.pop());
-  }
+  },
 };
 
 function getHashStringForCrypto(aCrypto) {
@@ -1327,7 +1327,7 @@ class AddonInstall {
       let hashSplit = options.hash.toLowerCase().split(":");
       this.originalHash = {
         algorithm: hashSplit[0],
-        data: hashSplit[1]
+        data: hashSplit[1],
       };
     }
     this.hash = this.originalHash;
@@ -1737,7 +1737,7 @@ class AddonInstall {
         let file = await this.location.installer.installAddon({
           id: this.addon.id,
           source: stagedAddon,
-          existingAddonID
+          existingAddonID,
         });
 
         // Update the metadata in the database
@@ -1990,7 +1990,7 @@ var LocalAddonInstall = class extends AddonInstall {
             this.state = AddonManager.STATE_DOWNLOADED;
             this._callInstallListeners("onNewInstall");
             resolve();
-          }
+          },
         }, AddonManager.UPDATE_WHEN_ADDON_INSTALLED);
       });
     } else {
@@ -2149,7 +2149,7 @@ var DownloadAddonInstall = class extends AddonInstall {
 
       this.channel = NetUtil.newChannel({
         uri: this.sourceURI,
-        loadUsingSystemPrincipal: true
+        loadUsingSystemPrincipal: true,
       });
       this.channel.notificationCallbacks = this;
       if (this.channel instanceof Ci.nsIHttpChannel) {
@@ -2196,7 +2196,7 @@ var DownloadAddonInstall = class extends AddonInstall {
         let hashSplit = hashStr.toLowerCase().split(":");
         this.hash = {
           algorithm: hashSplit[0],
-          data: hashSplit[1]
+          data: hashSplit[1],
         };
       } catch (e) {
       }
@@ -2713,7 +2713,7 @@ UpdateChecker.prototype = {
       // This will call back to onUpdateCheckError with a CANCELLED error
       parser.cancel();
     }
-  }
+  },
 };
 
 /**
@@ -3254,7 +3254,7 @@ class SystemAddonInstaller extends DirectoryInstaller {
       state = { schema: 1, directory: newDir.leafName, addons: {} };
       for (let addon of aAddons) {
         state.addons[addon.id] = {
-          version: addon.version
+          version: addon.version,
         };
       }
 
@@ -3939,7 +3939,7 @@ var XPIInstall = {
       }
 
       XPIDatabase.setAddonProperties(aAddon, {
-        pendingUninstall: true
+        pendingUninstall: true,
       });
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
       let xpiState = aAddon.location.get(aAddon.id);
@@ -4027,7 +4027,7 @@ var XPIInstall = {
       aAddon.location.installer.cleanStagingDir([aAddon.id]);
 
     XPIDatabase.setAddonProperties(aAddon, {
-      pendingUninstall: false
+      pendingUninstall: false,
     });
 
     if (!aAddon.visible)

@@ -29,7 +29,7 @@ var reference_fetch_file = function reference_fetch_file(path) {
     let file = new FileUtils.File(path);
     NetUtil.asyncFetch({
       uri: NetUtil.newURI(file),
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     }, function(stream, status) {
         if (!Components.isSuccessCode(status)) {
           reject(status);

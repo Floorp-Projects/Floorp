@@ -292,7 +292,7 @@ impl WebDriverError {
         S: Into<Cow<'static, str>>,
     {
         WebDriverError {
-            error: error,
+            error,
             message: message.into(),
             stack: "".into(),
             delete_session: false,
@@ -304,7 +304,7 @@ impl WebDriverError {
         S: Into<Cow<'static, str>>,
     {
         WebDriverError {
-            error: error,
+            error,
             message: message.into(),
             stack: stack.into(),
             delete_session: false,

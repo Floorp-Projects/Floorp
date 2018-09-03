@@ -39,7 +39,7 @@ async function test_cookie_settings({
                                       thirdPartyCookiesEnabled,
                                       cookiesExpireAfterSession,
                                       rejectTrackers,
-                                      cookieSettingsLocked
+                                      cookieSettingsLocked,
                                     }) {
   let firstPartyURI = NetUtil.newURI("http://example.com/");
   let thirdPartyURI = NetUtil.newURI("http://example.org/");
@@ -140,7 +140,7 @@ add_task(async function test_initial_state() {
     cookiesEnabled: true,
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: false
+    cookieSettingsLocked: false,
   });
   restore_prefs();
 });
@@ -151,8 +151,8 @@ add_task(async function test_undefined_unlocked() {
   await setupPolicyEngineWithJson({
     "policies": {
       "Cookies": {
-      }
-    }
+      },
+    },
   });
   is(Services.prefs.getIntPref("network.cookie.cookieBehavior", undefined), 3,
      "An empty cookie policy should not have changed the cookieBehavior preference");
@@ -165,16 +165,16 @@ add_task(async function test_disabled() {
   await setupPolicyEngineWithJson({
     "policies": {
       "Cookies": {
-        "Default": false
-      }
-    }
+        "Default": false,
+      },
+    },
   });
 
   await test_cookie_settings({
     cookiesEnabled: false,
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: false
+    cookieSettingsLocked: false,
   });
   restore_prefs();
 });
@@ -183,16 +183,16 @@ add_task(async function test_third_party_disabled() {
   await setupPolicyEngineWithJson({
     "policies": {
       "Cookies": {
-        "AcceptThirdParty": "never"
-      }
-    }
+        "AcceptThirdParty": "never",
+      },
+    },
   });
 
   await test_cookie_settings({
     cookiesEnabled: true,
     thirdPartyCookiesEnabled: false,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: false
+    cookieSettingsLocked: false,
   });
   restore_prefs();
 });
@@ -202,16 +202,16 @@ add_task(async function test_disabled_and_third_party_disabled() {
     "policies": {
       "Cookies": {
         "Default": false,
-        "AcceptThirdParty": "never"
-      }
-    }
+        "AcceptThirdParty": "never",
+      },
+    },
   });
 
   await test_cookie_settings({
     cookiesEnabled: false,
     thirdPartyCookiesEnabled: false,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: false
+    cookieSettingsLocked: false,
   });
   restore_prefs();
 });
@@ -222,16 +222,16 @@ add_task(async function test_disabled_and_third_party_disabled_locked() {
       "Cookies": {
         "Default": false,
         "AcceptThirdParty": "never",
-        "Locked": true
-      }
-    }
+        "Locked": true,
+      },
+    },
   });
 
   await test_cookie_settings({
     cookiesEnabled: false,
     thirdPartyCookiesEnabled: false,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: true
+    cookieSettingsLocked: true,
   });
   restore_prefs();
 });
@@ -240,16 +240,16 @@ add_task(async function test_undefined_locked() {
   await setupPolicyEngineWithJson({
     "policies": {
       "Cookies": {
-        "Locked": true
-      }
-    }
+        "Locked": true,
+      },
+    },
   });
 
   await test_cookie_settings({
     cookiesEnabled: true,
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: false,
-    cookieSettingsLocked: true
+    cookieSettingsLocked: true,
   });
   restore_prefs();
 });
@@ -258,16 +258,16 @@ add_task(async function test_cookie_expire() {
   await setupPolicyEngineWithJson({
     "policies": {
       "Cookies": {
-        "ExpireAtSessionEnd": true
-      }
-    }
+        "ExpireAtSessionEnd": true,
+      },
+    },
   });
 
   await test_cookie_settings({
     cookiesEnabled: true,
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: true,
-    cookieSettingsLocked: false
+    cookieSettingsLocked: false,
   });
   restore_prefs();
 });
@@ -276,9 +276,9 @@ add_task(async function test_cookie_reject_trackers() {
   await setupPolicyEngineWithJson({
     "policies": {
       "Cookies": {
-        "RejectTracker": true
-      }
-    }
+        "RejectTracker": true,
+      },
+    },
   });
 
   await test_cookie_settings({
@@ -286,7 +286,7 @@ add_task(async function test_cookie_reject_trackers() {
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: false,
     rejectTrackers: true,
-    cookieSettingsLocked: false
+    cookieSettingsLocked: false,
   });
   restore_prefs();
 });
@@ -296,16 +296,16 @@ add_task(async function test_cookie_expire_locked() {
     "policies": {
       "Cookies": {
         "ExpireAtSessionEnd": true,
-        "Locked": true
-      }
-    }
+        "Locked": true,
+      },
+    },
   });
 
   await test_cookie_settings({
     cookiesEnabled: true,
     thirdPartyCookiesEnabled: true,
     cookiesExpireAfterSession: true,
-    cookieSettingsLocked: true
+    cookieSettingsLocked: true,
   });
   restore_prefs();
 });
@@ -317,16 +317,16 @@ add_task(async function test_disabled_cookie_expire_locked() {
         "Default": false,
         "AcceptThirdParty": "never",
         "ExpireAtSessionEnd": true,
-        "Locked": true
-      }
-    }
+        "Locked": true,
+      },
+    },
   });
 
   await test_cookie_settings({
     cookiesEnabled: false,
     thirdPartyCookiesEnabled: false,
     cookiesExpireAfterSession: true,
-    cookieSettingsLocked: true
+    cookieSettingsLocked: true,
   });
   restore_prefs();
 });

@@ -40,19 +40,19 @@
   --theme-selection-color: #ffffff;
 
   /* Border color that splits the toolbars/panels/headers. */
-  --theme-splitter-color: #e0e0e1;
+  --theme-splitter-color: var(--grey-25);
   --theme-emphasized-splitter-color: var(--grey-30);
   --theme-emphasized-splitter-color-hover: var(--grey-40);
 
+  /* Text color */
   --theme-comment: var(--grey-50);
-  --theme-comment-alt: #ccd1d5;
-
+  --theme-comment-alt: var(--grey-40);
   --theme-body-color: var(--grey-60);
-  --theme-body-color-alt: var(--grey-40);
-  --theme-body-color-inactive: #999797;
-  --theme-content-color1: #292e33;
-  --theme-content-color2: #8fa1b2;
-  --theme-content-color3: #667380;
+  --theme-body-color-alt: var(--grey-50);
+  --theme-body-color-inactive: var(--grey-40);
+  --theme-content-color1: var(--grey-80);
+  --theme-content-color2: var(--grey-60);
+  --theme-content-color3: var(--grey-45);
 
   --theme-highlight-green: var(--green-70);
   --theme-highlight-blue: var(--blue-55);
@@ -107,19 +107,19 @@
 
 :root.theme-dark {
   --theme-body-background: var(--grey-80);
-  --theme-sidebar-background: #1B1B1D;
+  --theme-sidebar-background: var(--grey-85);
   --theme-contrast-background: #ffb35b;
 
   /* Toolbar */
   --theme-tab-toolbar-background: var(--grey-90);
-  --theme-toolbar-background: #1B1B1D;
+  --theme-toolbar-background: var(--grey-85);
   --theme-toolbar-color: var(--grey-40);
   --theme-toolbar-photon-icon-color: var(--grey-40);
   --theme-toolbar-selected-color: white;
   --theme-toolbar-checked-color: #75BFFF;
   --theme-toolbar-highlighted-color: var(--green-50);
   --theme-toolbar-background-hover: #20232B;
-  --theme-toolbar-background-alt: #1B1B1D;
+  --theme-toolbar-background-alt: var(--grey-85);
   --theme-toolbar-hover: #252526;
   --theme-toolbar-hover-active: #252526;
 
@@ -135,15 +135,15 @@
   --theme-emphasized-splitter-color: var(--grey-60);
   --theme-emphasized-splitter-color-hover: var(--grey-50);
 
-  --theme-comment: #939393;
-  --theme-comment-alt: #939393;
-
-  --theme-body-color: #909090;
-  --theme-body-color-alt: var(--grey-50);
-  --theme-body-color-inactive: var(--grey-40);
+  /* Text color */
+  --theme-comment: var(--grey-45);
+  --theme-comment-alt: var(--grey-50);
+  --theme-body-color: var(--grey-40);
+  --theme-body-color-alt: var(--grey-45);
+  --theme-body-color-inactive: var(--grey-50);
   --theme-content-color1: var(--grey-30);
   --theme-content-color2: var(--grey-40);
-  --theme-content-color3: #58575c;
+  --theme-content-color3: var(--grey-55);
 
   --theme-highlight-green: #86DE74;
   --theme-highlight-blue: #75BFFF;
@@ -219,7 +219,9 @@
   --theme-console-return-image: url(chrome://devtools/skin/images/webconsole/return.svg);
 
   /* Firefox Colors CSS Variables v1.0.3
-   * Colors are taken from: https://github.com/FirefoxUX/design-tokens */
+   * Colors are taken from: https://github.com/FirefoxUX/design-tokens
+   * Some intermediate colors were added (names ending in '5').
+   */
   --magenta-50: #ff1ad9;
   --magenta-65: #dd00a9;
   --magenta-70: #b5007f;
@@ -248,15 +250,19 @@
 
   --grey-10: #f9f9fa;
   --grey-20: #ededf0;
+  --grey-25: #e0e0e2;
   --grey-30: #d7d7db;
   --grey-30-a40: rgba(215, 215, 219, 0.4);
   --grey-30-a90: rgba(215, 215, 219, 0.9);
   --grey-40: #b1b1b3;
+  --grey-45: #939395;
   --grey-50: #737373;
+  --grey-55: #5c5c5f;
   --grey-60: #4a4a4f;
   --grey-60-a50: rgba(74, 74, 79, 0.5);
   --grey-70: #38383d;
   --grey-80: #2a2a2e;
+  --grey-85: #1b1b1d;
   --grey-90: #0c0c0d;
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --grey-90-a80: rgba(12, 12, 13, 0.8);

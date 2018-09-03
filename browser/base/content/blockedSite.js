@@ -141,8 +141,8 @@ function initPage() {
       bubbles: true,
       detail: {
         url: this.getURL(),
-        err: error
-      }
+        err: error,
+      },
     });
   document.dispatchEvent(event);
 }

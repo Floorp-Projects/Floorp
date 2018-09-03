@@ -442,7 +442,7 @@ var gUpdates = {
     this.update = update;
     if (this.update)
       this.update.QueryInterface(Ci.nsIWritablePropertyBag);
-  }
+  },
 };
 
 /**
@@ -548,7 +548,7 @@ var gCheckingPage = {
      * See nsISupports.idl
      */
     QueryInterface: ChromeUtils.generateQI(["nsIUpdateCheckListener"]),
-  }
+  },
 };
 
 /**
@@ -568,7 +568,7 @@ var gNoUpdatesPage = {
 
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();
-  }
+  },
 };
 
 /**
@@ -584,7 +584,7 @@ var gManualUpdatePage = {
 
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();
-  }
+  },
 };
 
 /**
@@ -601,7 +601,7 @@ var gUnsupportedPage = {
 
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();
-  }
+  },
 };
 
 /**
@@ -649,7 +649,7 @@ var gUpdatesFoundBasicPage = {
 
   onExtra1() {
     gUpdates.wiz.cancel();
-  }
+  },
 };
 
 /**
@@ -1108,7 +1108,7 @@ var gDownloadingPage = {
   /**
    * See nsISupports.idl
    */
-  QueryInterface: ChromeUtils.generateQI(["nsIRequestObserver", "nsIProgressEventSink", "nsIObserver"])
+  QueryInterface: ChromeUtils.generateQI(["nsIRequestObserver", "nsIProgressEventSink", "nsIObserver"]),
 };
 
 /**
@@ -1131,7 +1131,7 @@ var gErrorsPage = {
     var errorLinkLabel = document.getElementById("errorLinkLabel");
     errorLinkLabel.value = manualURL;
     errorLinkLabel.setAttribute("url", manualURL);
-  }
+  },
 };
 
 /**
@@ -1155,7 +1155,7 @@ var gErrorExtraPage = {
     let errorLinkLabel = document.getElementById("errorExtraLinkLabel");
     errorLinkLabel.value = manualURL;
     errorLinkLabel.setAttribute("url", manualURL);
-  }
+  },
 };
 
 /**
@@ -1191,7 +1191,7 @@ var gErrorPatchingPage = {
         gUpdates.wiz.goTo("errors");
         break;
     }
-  }
+  },
 };
 
 /**

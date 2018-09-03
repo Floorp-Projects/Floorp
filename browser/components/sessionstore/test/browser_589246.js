@@ -21,9 +21,9 @@ var afterTestCallback;
 // Set state so we know the closed windows content
 var testState = {
   windows: [
-    { tabs: [{ entries: [{ url: "http://example.org" }] }] }
+    { tabs: [{ entries: [{ url: "http://example.org" }] }] },
   ],
-  _closedWindows: []
+  _closedWindows: [],
 };
 
 // We'll push a set of conditions and callbacks into this array
@@ -60,7 +60,7 @@ tests.push({
   checkWinLin: checkNoWindowsGenerator(1),
   checkOSX(aPreviousState, aCurState) {
     is(aCurState, aPreviousState, "test #1: closed window state is unchanged");
-  }
+  },
 });
 
 // The second test has 1 pinned tab and 0 unpinned tabs.
@@ -69,7 +69,7 @@ tests.push({
   extra: false,
   close: false,
   checkWinLin: checkNoWindowsGenerator(2),
-  checkOSX: checkNoWindowsGenerator(2)
+  checkOSX: checkNoWindowsGenerator(2),
 });
 
 // The third test has 1 pinned tab and 2 unpinned tabs.
@@ -78,7 +78,7 @@ tests.push({
   extra: true,
   close: false,
   checkWinLin: checkNoWindowsGenerator(3),
-  checkOSX: checkOSX34Generator(3)
+  checkOSX: checkOSX34Generator(3),
 });
 
 // The fourth test has 1 pinned tab, 2 unpinned tabs, and closes one unpinned tab.
@@ -87,7 +87,7 @@ tests.push({
   extra: true,
   close: "one",
   checkWinLin: checkNoWindowsGenerator(4),
-  checkOSX: checkOSX34Generator(4)
+  checkOSX: checkOSX34Generator(4),
 });
 
 // The fifth test has 1 pinned tab, 2 unpinned tabs, and closes both unpinned tabs.
@@ -96,7 +96,7 @@ tests.push({
   extra: true,
   close: "both",
   checkWinLin: checkNoWindowsGenerator(5),
-  checkOSX: checkNoWindowsGenerator(5)
+  checkOSX: checkNoWindowsGenerator(5),
 });
 
 

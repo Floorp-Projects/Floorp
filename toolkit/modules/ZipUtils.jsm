@@ -199,6 +199,6 @@ var ZipUtils = {
     } finally {
       zipReader.close();
     }
-  }
+  },
 
 };

@@ -221,7 +221,7 @@ var PointerlockFsWarning = {
       break;
     }
     }
-  }
+  },
 };
 
 var PointerLock = {
@@ -242,7 +242,7 @@ var PointerLock = {
         break;
       }
     }
-  }
+  },
 };
 
 var FullScreen = {
@@ -586,7 +586,7 @@ var FullScreen = {
         top: rect.top + 50,
         bottom: rect.bottom,
         left: rect.left,
-        right: rect.right
+        right: rect.right,
       };
       MousePosTracker.addListener(this);
     }
@@ -666,7 +666,7 @@ var FullScreen = {
       navbar.appendChild(fullscreenctls);
     }
     fullscreenctls.hidden = !aEnterFS;
-  }
+  },
 };
 XPCOMUtils.defineLazyGetter(FullScreen, "useLionFullScreen", function() {
   // We'll only use OS X Lion full screen if we're

@@ -56,5 +56,5 @@ var PrivacyLevel = Object.freeze({
     }
 
     return true;
-  }
+  },
 });

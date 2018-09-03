@@ -60,7 +60,7 @@ function cacheProxy(target) {
         cache.set(prop, target[prop]);
       }
       return cache.get(prop);
-    }
+    },
   });
 }
 
@@ -89,7 +89,7 @@ async function jexlFilterFunc(entry, environment) {
   let result;
   try {
     const context = {
-      environment
+      environment,
     };
     result = await FilterExpressions.eval(filter_expression, context);
   } catch (e) {
@@ -294,7 +294,7 @@ class RemoteSettingsClient {
       options.hooks = {
         "incoming-changes": [(payload, collection) => {
           return this._validateCollectionSignature(remote, payload, collection);
-        }]
+        }],
       };
     }
     return this._kinto.collection(this.collectionName, options);
@@ -512,14 +512,14 @@ class RemoteSettingsClient {
     if (ignoreLocal) {
       toSerialize = {
         last_modified: `${payload.last_modified}`,
-        data: payload.data
+        data: payload.data,
       };
     } else {
       const {data: localRecords} = await collection.list();
       const records = mergeChanges(collection, localRecords, payload.changes);
       toSerialize = {
         last_modified: `${payload.lastModified}`,
-        data: records
+        data: records,
       };
     }
 
@@ -619,7 +619,7 @@ function remoteSettingsFunction() {
     const rsOptions = {
       bucketName: mainBucket,
       signerName: defaultSigner,
-      ...options
+      ...options,
     };
     const { bucketName } = rsOptions;
     const key = `${bucketName}/${collectionName}`;
@@ -639,7 +639,7 @@ function remoteSettingsFunction() {
       const kintoServer = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
       const changesPath = Services.prefs.getCharPref(PREF_SETTINGS_CHANGES_PATH);
       return kintoServer + changesPath;
-    }
+    },
   });
 
   /**
@@ -665,7 +665,7 @@ function remoteSettingsFunction() {
     } else if (bucketName == mainBucket) {
       const [dbExists, localDump] = await Promise.all([
         databaseExists(bucketName, collectionName),
-        hasLocalDump(bucketName, collectionName)
+        hasLocalDump(bucketName, collectionName),
       ]);
       if (dbExists || localDump) {
         return new RemoteSettingsClient(collectionName, { bucketName, signerName: defaultSigner });
@@ -799,7 +799,7 @@ function remoteSettingsFunction() {
         localTimestamp,
         serverTimestamp,
         lastCheck,
-        signerName: client.signerName
+        signerName: client.signerName,
       };
     }));
 
@@ -810,7 +810,7 @@ function remoteSettingsFunction() {
       lastCheck: Services.prefs.getIntPref(PREF_SETTINGS_LAST_UPDATE, 0),
       mainBucket,
       defaultSigner,
-      collections: collections.filter(c => !!c)
+      collections: collections.filter(c => !!c),
     };
   };
 
@@ -841,5 +841,5 @@ var RemoteSettings = remoteSettingsFunction();
 var remoteSettingsBroadcastHandler = {
   async receivedBroadcastMessage(data, broadcastID) {
     return RemoteSettings.pollChanges();
-  }
+  },
 };

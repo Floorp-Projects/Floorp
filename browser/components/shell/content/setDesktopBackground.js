@@ -149,7 +149,7 @@ var gSetBackground = {
         break;
       }
     }
-  }
+  },
 };
 
 if (AppConstants.platform != "macosx") {

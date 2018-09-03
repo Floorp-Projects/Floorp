@@ -24,7 +24,7 @@ using CSSToLayoutDeviceScale from "Units.h";
 using CSSRect from "Units.h";
 using CSSSize from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
-using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
+using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
@@ -100,7 +100,7 @@ struct DimensionInfo
 {
   CSSRect rect;
   CSSSize size;
-  ScreenOrientationInternal orientation;
+  ScreenOrientation orientation;
   LayoutDeviceIntPoint clientOffset;
   LayoutDeviceIntPoint chromeOffset;
 };

@@ -236,16 +236,16 @@ function nsAsyncShutdownService() {
         let wrapped = AsyncShutdown[k]; // May be undefined, if we're on the wrong process.
         let result = wrapped ? new nsAsyncShutdownClient(wrapped) : undefined;
         Object.defineProperty(this, k, {
-          value: result
+          value: result,
         });
         return result;
-      }
+      },
     });
   }
 
   // Hooks for testing purpose
   this.wrappedJSObject = {
-    _propertyBagConverter: PropertyBagConverter
+    _propertyBagConverter: PropertyBagConverter,
   };
 }
 nsAsyncShutdownService.prototype = {

@@ -45,7 +45,7 @@ var gTests = [
 
     // close all streams
     await closeStream();
-  }
+  },
 },
 
 {
@@ -86,7 +86,7 @@ var gTests = [
 
     // close all streams
     await closeStream();
-  }
+  },
 },
 
 {
@@ -126,7 +126,7 @@ var gTests = [
 
     // close all streams
     await closeStream();
-  }
+  },
 },
 
 {
@@ -148,8 +148,8 @@ var gTests = [
     await expectObserverCalled("recording-window-ended");
 
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
-  }
-}
+  },
+},
 
 ];
 

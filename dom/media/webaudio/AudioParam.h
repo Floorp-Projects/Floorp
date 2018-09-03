@@ -51,13 +51,16 @@ public:
                                   ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime)) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      aRv.template ThrowRangeError<
+        MSG_INVALID_AUDIOPARAM_METHOD_START_TIME_ERROR>();
       return this;
     }
     aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
     EventInsertionHelper(aRv, AudioTimelineEvent::SetValueCurve,
-                         aStartTime, 0.0f, 0.0f, aDuration, aValues.Elements(),
+                         aStartTime, 0.0f,
+                         0.0f, aDuration, aValues.Elements(),
                          aValues.Length());
+
     return this;
   }
 
@@ -80,7 +83,8 @@ public:
   AudioParam* SetValueAtTime(float aValue, double aStartTime, ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime)) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      aRv.template ThrowRangeError<
+        MSG_INVALID_AUDIOPARAM_METHOD_START_TIME_ERROR>();
       return this;
     }
     aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
@@ -94,7 +98,8 @@ public:
                                       ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aEndTime)) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      aRv.template ThrowRangeError<
+        MSG_INVALID_AUDIOPARAM_METHOD_END_TIME_ERROR>();
       return this;
     }
     aEndTime = std::max(aEndTime, GetParentObject()->CurrentTime());
@@ -106,7 +111,8 @@ public:
                                            ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aEndTime)) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      aRv.template ThrowRangeError<
+        MSG_INVALID_AUDIOPARAM_METHOD_END_TIME_ERROR>();
       return this;
     }
     aEndTime = std::max(aEndTime, GetParentObject()->CurrentTime());
@@ -120,7 +126,8 @@ public:
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime) ||
         !WebAudioUtils::IsTimeValid(aTimeConstant)) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      aRv.template ThrowRangeError<
+        MSG_INVALID_AUDIOPARAM_METHOD_START_TIME_ERROR>();
       return this;
     }
     aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
@@ -134,7 +141,8 @@ public:
   AudioParam* CancelScheduledValues(double aStartTime, ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime)) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      aRv.template ThrowRangeError<
+        MSG_INVALID_AUDIOPARAM_METHOD_START_TIME_ERROR>();
       return this;
     }
 
@@ -219,7 +227,7 @@ private:
                             AudioTimelineEvent::Type aType,
                             double aTime, float aValue,
                             double aTimeConstant = 0.0,
-                            float aDuration = 0.0,
+                            double aDuration = 0.0,
                             const float* aCurve = nullptr,
                             uint32_t aCurveLength = 0)
   {

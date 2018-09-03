@@ -48,7 +48,7 @@ function clearAllPlacesFavicons() {
           resolve();
           Services.obs.removeObserver(observer, "places-favicons-expired");
         }
-      }
+      },
     };
 
     Services.obs.addObserver(observer, "places-favicons-expired");
@@ -115,7 +115,7 @@ FaviconObserver.prototype = {
 
   get promise() {
     return this._faviconLoaded.promise;
-  }
+  },
 };
 
 function waitOnFaviconLoaded(aFaviconURL) {
@@ -271,7 +271,7 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
 add_task(async function setup() {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({"set": [
-      ["privacy.userContext.enabled", true]
+      ["privacy.userContext.enabled", true],
   ]});
 });
 

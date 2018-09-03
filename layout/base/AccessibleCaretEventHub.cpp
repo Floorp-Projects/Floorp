@@ -39,7 +39,7 @@ namespace mozilla {
   AC_LOGV_BASE("AccessibleCaretEventHub (%p): " message, this, ##__VA_ARGS__);
 
 NS_IMPL_ISUPPORTS(AccessibleCaretEventHub, nsIReflowObserver, nsIScrollObserver,
-                  nsISelectionListener, nsISupportsWeakReference);
+                  nsISupportsWeakReference);
 
 // -----------------------------------------------------------------------------
 // NoActionState
@@ -726,20 +726,22 @@ AccessibleCaretEventHub::ScrollPositionChanged()
   mState->OnScrollPositionChanged(this);
 }
 
-nsresult
-AccessibleCaretEventHub::NotifySelectionChanged(nsIDocument* aDoc,
-                                                dom::Selection* aSel,
-                                                int16_t aReason)
+void
+AccessibleCaretEventHub::OnSelectionChange(nsIDocument* aDoc,
+                                           dom::Selection* aSel,
+                                           int16_t aReason)
 {
   if (!mInitialized) {
-    return NS_OK;
+    return;
   }
 
   MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
 
   AC_LOG("%s, state: %s, reason: %d", __FUNCTION__, mState->Name(), aReason);
+
+  // XXX Here we may be in a hot path.  So, if we could avoid this virtual call,
+  //     we should do so.
   mState->OnSelectionChanged(this, aDoc, aSel, aReason);
-  return NS_OK;
 }
 
 void

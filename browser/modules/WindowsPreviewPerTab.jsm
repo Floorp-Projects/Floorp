@@ -70,7 +70,7 @@ function _imageFromURI(uri, privateMode, callback) {
   let channel = NetUtil.newChannel({
     uri,
     loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE,
   });
 
   try {
@@ -96,7 +96,7 @@ function _imageFromURI(uri, privateMode, callback) {
         }
 
         callback(image);
-      }
+      },
     };
 
     try {
@@ -339,7 +339,7 @@ PreviewController.prototype = {
         this.updateTitleAndTooltip();
         break;
     }
-  }
+  },
 };
 
 // TabWindow
@@ -582,7 +582,7 @@ TabWindow.prototype = {
   },
 
   directRequestProtocols: new Set([
-    "file", "chrome", "resource", "about"
+    "file", "chrome", "resource", "about",
   ]),
   onLinkIconAvailable(aBrowser, aIconURL) {
     let tab = this.win.gBrowser.getTabForBrowser(aBrowser);
@@ -626,7 +626,7 @@ TabWindow.prototype = {
         }
       }
     );
-  }
+  },
 };
 
 // AeroPeek
@@ -829,7 +829,7 @@ var AeroPeek = {
   onPageChanged(uri, changedConst, newValue) {
     if (this.enabled && changedConst == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
       for (let win of this.windows) {
-        for (let [tab, ] of win.previews) {
+        for (let [tab ] of win.previews) {
           if (tab.getAttribute("image") == newValue) {
             win.updateFavicon(tab, newValue);
           }
@@ -841,7 +841,7 @@ var AeroPeek = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsISupportsWeakReference,
     Ci.nsINavHistoryObserver,
-    Ci.nsIObserver
+    Ci.nsIObserver,
   ]),
 };
 

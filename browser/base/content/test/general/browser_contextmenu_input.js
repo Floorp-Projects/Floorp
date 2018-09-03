@@ -179,7 +179,7 @@ add_task(async function test_tel_email_url_number_input() {
       // various text elements even though it is set to type "page". That bug
       // should remove the need for next line.
       maybeScreenshotsPresent: true,
-      skipFocusChange: true
+      skipFocusChange: true,
     });
   }
 });
@@ -209,7 +209,7 @@ add_task(async function test_date_time_color_range_month_week_datetimelocal_inpu
       // various text elements even though it is set to type "page". That bug
       // should remove the need for next line.
       maybeScreenshotsPresent: true,
-      skipFocusChange: true
+      skipFocusChange: true,
     });
   }
 });
@@ -249,7 +249,7 @@ add_task(async function test_text_input_readonly() {
     // various text elements even though it is set to type "page". That bug
     // should remove the need for next line.
     maybeScreenshotsPresent: true,
-    skipFocusChange: true
+    skipFocusChange: true,
   });
 });
 

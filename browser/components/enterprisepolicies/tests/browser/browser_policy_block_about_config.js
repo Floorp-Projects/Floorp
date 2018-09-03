@@ -5,8 +5,8 @@
 add_task(async function test_about_config() {
   await setupPolicyEngineWithJson({
                                     "policies": {
-                                      "BlockAboutConfig": true
-                                    }
+                                      "BlockAboutConfig": true,
+                                    },
                                   });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:config", false);
