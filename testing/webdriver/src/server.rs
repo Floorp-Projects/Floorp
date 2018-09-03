@@ -190,7 +190,6 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
                 // The fact that this locks for basically the whole request doesn't
                 // matter as long as we are only handling one request at a time.
                 match api.lock() {
-
                     Ok(ref api) => api.decode_request(&method, &uri.path(), &body[..]),
                     Err(e) => panic!("Error decoding request: {:?}", e),
                 }
