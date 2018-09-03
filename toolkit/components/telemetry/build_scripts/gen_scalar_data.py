@@ -7,10 +7,10 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-from shared_telemetry_utils import StringTable, static_assert, ParserError
+from parsers.shared_telemetry_utils import StringTable, static_assert, ParserError
+from parsers import parse_scalars
 
 import json
-import parse_scalars
 import sys
 
 # The banner/text at the top of the generated file.
@@ -21,7 +21,7 @@ banner = """/* This file is auto-generated, only for internal use in TelemetrySc
 file_header = """\
 #ifndef mozilla_TelemetryScalarData_h
 #define mozilla_TelemetryScalarData_h
-#include "ScalarInfo.h"
+#include "core/ScalarInfo.h"
 namespace {
 """
 
