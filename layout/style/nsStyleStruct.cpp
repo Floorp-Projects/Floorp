@@ -1320,18 +1320,30 @@ nsStyleSVGReset::FinishStyle(nsPresContext* aPresContext, const nsStyleSVGReset*
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mMask) {
     nsStyleImage& image = mMask.mLayers[i].mImage;
     if (image.GetType() == eStyleImageType_Image) {
-      // If the url of mask resource contains a reference('#'), it should be a
-      // <mask-source>, mostly. For a <mask-source>, there is no need to
-      // resolve this style image, since we do not depend on it to get the
-      // SVG mask resource.
-      if (!image.GetURLValue()->HasRef()) {
-        const nsStyleImage* oldImage =
-          (aOldStyle && aOldStyle->mMask.mLayers.Length() > i)
-          ? &aOldStyle->mMask.mLayers[i].mImage
-          : nullptr;
-
-        image.ResolveImage(aPresContext, oldImage);
+      URLValueData* url = image.GetURLValue();
+      // If the url is a local ref, it must be a <mask-resource>, so we don't
+      // need to resolve the style image.
+      if (url->IsLocalRef()) {
+        continue;
       }
+#if 0
+      // XXX The old style system also checks whether this is a reference to
+      // the current document with reference, but it doesn't seem to be a
+      // behavior mentioned anywhere, so we comment out the code for now.
+      nsIURI* docURI = aPresContext->Document()->GetDocumentURI();
+      if (url->EqualsExceptRef(docURI)) {
+        continue;
+      }
+#endif
+
+      // Otherwise, we may need the image even if it has a reference, in case
+      // the referenced element isn't a valid SVG <mask> element.
+      const nsStyleImage* oldImage =
+        (aOldStyle && aOldStyle->mMask.mLayers.Length() > i)
+        ? &aOldStyle->mMask.mLayers[i].mImage
+        : nullptr;
+
+      image.ResolveImage(aPresContext, oldImage);
     }
   }
 }
