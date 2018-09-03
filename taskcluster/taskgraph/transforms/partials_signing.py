@@ -33,12 +33,34 @@ def generate_upstream_artifacts(job, release_history, platform, locale=None):
     upstream_artifacts = [{
         "taskId": {"task-reference": '<partials>'},
         "taskType": 'partials',
-        "paths": ["{}/{}".format(artifact_prefix, p)
-                  for p in artifacts],
+        "paths": [
+            "{}/{}".format(artifact_prefix, path)
+            for path, version in artifacts
+            # TODO Use mozilla-version to avoid comparing strings. Otherwise Firefox 100 will be
+            # considered smaller than Firefox 56
+            if version is None or version >= '56'
+        ],
         "formats": ["mar_sha384"],
     }]
 
+    old_mar_upstream_artifacts = {
+        "taskId": {"task-reference": '<partials>'},
+        "taskType": 'partials',
+        "paths": [
+            "{}/{}".format(artifact_prefix, path)
+            for path, version in artifacts
+            # TODO Use mozilla-version to avoid comparing strings. Otherwise Firefox 100 will be
+            # considered smaller than Firefox 56
+            if version is not None and version < '56'
+        ],
+        "formats": ["mar"],
+    }
+
+    if old_mar_upstream_artifacts["paths"]:
+        upstream_artifacts.append(old_mar_upstream_artifacts)
+
     return upstream_artifacts
+
 
 
 @transforms.add
@@ -81,7 +103,11 @@ def make_task_description(config, jobs):
         signing_cert_scope = get_signing_cert_scope_per_platform(
             build_platform, is_nightly, config
         )
+
         scopes = [signing_cert_scope, 'project:releng:signing:format:mar_sha384']
+        if any("mar" in upstream_details["formats"] for upstream_details in upstream_artifacts):
+            scopes.append('project:releng:signing:format:mar')
+
         task = {
             'label': label,
             'description': "{} Partials".format(
