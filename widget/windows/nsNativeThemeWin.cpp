@@ -4224,17 +4224,17 @@ GetScrollbarButtonColor(nscolor aTrackColor, EventStates aStates)
   }
   float luminance = RelativeLuminanceUtils::Compute(aTrackColor);
   if (isActive) {
-    if (luminance >= 0.18) {
-      luminance *= 0.134;
+    if (luminance >= 0.18f) {
+      luminance *= 0.134f;
     } else {
-      luminance /= 0.134;
+      luminance /= 0.134f;
       luminance = std::min(luminance, 1.0f);
     }
   } else {
-    if (luminance >= 0.18) {
-      luminance *= 0.805;
+    if (luminance >= 0.18f) {
+      luminance *= 0.805f;
     } else {
-      luminance /= 0.805;
+      luminance /= 0.805f;
     }
   }
   return RelativeLuminanceUtils::Adjust(aTrackColor, luminance);
@@ -4295,16 +4295,16 @@ AdjustScrollbarFaceColor(nscolor aFaceColor, EventStates aStates)
   }
   float luminance = RelativeLuminanceUtils::Compute(aFaceColor);
   if (isActive) {
-    if (luminance >= 0.18) {
-      luminance *= 0.192;
+    if (luminance >= 0.18f) {
+      luminance *= 0.192f;
     } else {
-      luminance /= 0.192;
+      luminance /= 0.192f;
     }
   } else {
-    if (luminance >= 0.18) {
-      luminance *= 0.625;
+    if (luminance >= 0.18f) {
+      luminance *= 0.625f;
     } else {
-      luminance /= 0.625;
+      luminance /= 0.625f;
     }
   }
   return RelativeLuminanceUtils::Adjust(aFaceColor, luminance);
