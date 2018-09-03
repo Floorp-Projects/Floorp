@@ -38,31 +38,5 @@ interface nsIUTF8ConverterService : nsISupports
                                     in string   aCharset,
                                     in boolean  aSkipCheck,
                                     [optional] in boolean aAllowSubstitution);
-
-/* XXX : To-be-added. convertStringFromUTF8 */
-
-  /**
-   * Ensure that |aSpec| (after URL-unescaping it) is encoded in UTF-8.
-   * If not,  convert it to UTF-8, assuming it's encoded in |aCharset|,
-   * and return the result.
-   *
-   * <p>Make sure that all characters outside US-ASCII in your input spec
-   * are url-escaped if  your spec is not in UTF-8 (before url-escaping)
-   * because the presence of non-ASCII characters is <strong>blindly</strong>
-   * regarded as an indication that your input spec is in unescaped UTF-8
-   * and it will be returned without further processing. No valid spec
-   * going around in Mozilla code would break this assumption.
-   *
-   * <p>XXX The above may change in the future depending on the usage pattern.
-   *
-   * @param aSpec an url-escaped URI spec to  ensure its UTF8ness
-   * @param aCharset the charset to convert from if |aSpec| is not in UTF-8
-   * @return the converted spec in UTF-8.
-   * @throws NS_ERROR_UCONV_NOCONV when there is no decoder for aCharset
-   *         or NS_ERROR_UDEC_ILLEGALINPUT in case of conversion failure
-   */
-
-    AUTF8String convertURISpecToUTF8(in ACString aSpec,
-                                     in string   aCharset);
 };
 
