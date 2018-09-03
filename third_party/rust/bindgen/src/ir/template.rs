@@ -99,7 +99,7 @@ use parse::ClangItemParser;
 /// ... |Wtf   | ... | [T]                  |
 /// ... |Qux   | ... | []                   |
 /// ----+------+-----+----------------------+
-pub trait TemplateParameters {
+pub trait TemplateParameters : Sized {
     /// Get the set of `ItemId`s that make up this template declaration's free
     /// template parameters.
     ///
@@ -108,8 +108,7 @@ pub trait TemplateParameters {
     /// parameters. Of course, Rust does not allow generic parameters to be
     /// anything but types, so we must treat them as opaque, and avoid
     /// instantiating them.
-    fn self_template_params(&self, ctx: &BindgenContext)
-        -> Vec<TypeId>;
+    fn self_template_params(&self, ctx: &BindgenContext) -> Vec<TypeId>;
 
     /// Get the number of free template parameters this template declaration
     /// has.

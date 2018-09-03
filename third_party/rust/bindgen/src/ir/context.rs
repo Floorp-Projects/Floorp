@@ -562,7 +562,12 @@ impl BindgenContext {
                 &clang_args,
                 &options.input_unsaved_files,
                 parse_options,
-            ).expect("TranslationUnit::parse failed")
+            ).expect("libclang error; possible causes include:
+- Invalid flag syntax
+- Unrecognized flags
+- Invalid flag arguments
+- File I/O errors
+If you encounter an error missing from this list, please file an issue or a PR!")
         };
 
         let target_info = clang::TargetInfo::new(&translation_unit);
@@ -681,7 +686,8 @@ impl BindgenContext {
         debug_assert!(
             declaration.is_some() || !item.kind().is_type() ||
                 item.kind().expect_type().is_builtin_or_type_param() ||
-                item.kind().expect_type().is_opaque(self, &item),
+                item.kind().expect_type().is_opaque(self, &item) ||
+                item.kind().expect_type().is_unresolved_ref(),
             "Adding a type without declaration?"
         );
 
@@ -2002,7 +2008,12 @@ impl BindgenContext {
             CXType_UChar => TypeKind::Int(IntKind::UChar),
             CXType_Short => TypeKind::Int(IntKind::Short),
             CXType_UShort => TypeKind::Int(IntKind::UShort),
-            CXType_WChar | CXType_Char16 => TypeKind::Int(IntKind::U16),
+            CXType_WChar => {
+                TypeKind::Int(IntKind::WChar {
+                    size: ty.fallible_size().expect("Couldn't compute size of wchar_t?"),
+                })
+            },
+            CXType_Char16 => TypeKind::Int(IntKind::U16),
             CXType_Char32 => TypeKind::Int(IntKind::U32),
             CXType_Long => TypeKind::Int(IntKind::Long),
             CXType_ULong => TypeKind::Int(IntKind::ULong),
@@ -2103,21 +2114,9 @@ impl BindgenContext {
         }
     }
 
-    /// Is the item with the given `name` blacklisted? Or is the item with the given
-    /// `name` and `id` replaced by another type, and effectively blacklisted?
-    pub fn blacklisted_by_name<Id: Into<ItemId>>(&self, path: &[String], id: Id) -> bool {
-        let id = id.into();
-        debug_assert!(
-            self.in_codegen_phase(),
-            "You're not supposed to call this yet"
-        );
-        self.options.blacklisted_types.matches(&path[1..].join("::")) ||
-            self.is_replaced_type(path, id)
-    }
-
     /// Has the item with the given `name` and `id` been replaced by another
     /// type?
-    fn is_replaced_type<Id: Into<ItemId>>(&self, path: &[String], id: Id) -> bool {
+    pub fn is_replaced_type<Id: Into<ItemId>>(&self, path: &[String], id: Id) -> bool {
         let id = id.into();
         match self.replacements.get(path) {
             Some(replaced_by) if *replaced_by != id => true,
