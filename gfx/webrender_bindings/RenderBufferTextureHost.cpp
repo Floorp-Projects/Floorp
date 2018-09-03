@@ -49,7 +49,9 @@ RenderBufferTextureHost::~RenderBufferTextureHost()
 }
 
 wr::WrExternalImage
-RenderBufferTextureHost::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
+RenderBufferTextureHost::Lock(uint8_t aChannelIndex,
+                              gl::GLContext* aGL,
+                              wr::ImageRendering aRendering)
 {
   if (!mLocked) {
     if (!GetBuffer()) {
