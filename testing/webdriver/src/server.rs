@@ -77,7 +77,7 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
                             self.session = Some(Session::new(new_session.session_id.clone()));
                         }
                         Ok(WebDriverResponse::CloseWindow(CloseWindowResponse(ref handles))) => {
-                            if handles.len() == 0 {
+                            if handles.is_empty() {
                                 debug!("Last window was closed, deleting session");
                                 self.delete_session();
                             }

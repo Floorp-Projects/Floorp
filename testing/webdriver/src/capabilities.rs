@@ -393,10 +393,10 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
         browser_capabilities: &mut T,
     ) -> WebDriverResult<Option<Capabilities>> {
         let default = vec![Map::new()];
-        let capabilities_list = if self.firstMatch.len() > 0 {
-            &self.firstMatch
-        } else {
+        let capabilities_list = if self.firstMatch.is_empty() {
             &default
+        } else {
+            &self.firstMatch
         };
 
         let merged_capabilities = capabilities_list
