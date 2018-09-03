@@ -137,6 +137,12 @@ OriginalFunction(size_t aCallId)
 #define OriginalCall(aName, aReturnType, ...)                   \
   OriginalCallABI(aName, aReturnType, DEFAULTABI, ##__VA_ARGS__)
 
+static inline ThreadEvent
+CallIdToThreadEvent(size_t aCallId)
+{
+  return (ThreadEvent)((uint32_t)ThreadEvent::CallStart + aCallId);
+}
+
 // State for a function redirection which performs the standard steps (see the
 // comment at the start of this file). This should not be created directly, but
 // rather through one of the macros below.
@@ -151,19 +157,19 @@ struct AutoRecordReplayFunctionVoid
 protected:
   // Information about the call being recorded.
   size_t mCallId;
-  const char* mCallName;
 
 public:
-  AutoRecordReplayFunctionVoid(size_t aCallId, const char* aCallName)
-    : mThread(AreThreadEventsPassedThrough() ? nullptr : Thread::Current()),
-      mError(0), mCallId(aCallId), mCallName(aCallName)
+  explicit AutoRecordReplayFunctionVoid(size_t aCallId)
+    : mThread(Thread::Current()), mError(0), mCallId(aCallId)
   {
-    if (mThread) {
+    if (mThread && mThread->PassThroughEvents()) {
+      mThread = nullptr;
+    } else if (mThread) {
       // Calling any redirection which performs the standard steps will cause
       // debugger operations that have diverged from the recording to fail.
       EnsureNotDivergedFromRecording();
 
-      MOZ_ASSERT(!AreThreadEventsDisallowed());
+      MOZ_RELEASE_ASSERT(mThread->CanAccessRecording());
 
       // Pass through events in case we are calling the original function.
       mThread->SetPassThrough(true);
@@ -190,9 +196,7 @@ public:
     mThread->SetPassThrough(false);
 
     // Add an event for the thread.
-    RecordReplayAssert("%s", mCallName);
-    ThreadEvent ev = (ThreadEvent)((uint32_t)ThreadEvent::CallStart + mCallId);
-    mThread->Events().RecordOrReplayThreadEvent(ev);
+    mThread->Events().RecordOrReplayThreadEvent(CallIdToThreadEvent(mCallId));
   }
 };
 
@@ -204,8 +208,8 @@ struct AutoRecordReplayFunction : AutoRecordReplayFunctionVoid
   // The value which this function call should return.
   ReturnType mRval;
 
-  AutoRecordReplayFunction(size_t aCallId, const char* aCallName)
-    : AutoRecordReplayFunctionVoid(aCallId, aCallName)
+  explicit AutoRecordReplayFunction(size_t aCallId)
+    : AutoRecordReplayFunctionVoid(aCallId)
   {}
 };
 
@@ -221,7 +225,7 @@ struct AutoRecordReplayFunction : AutoRecordReplayFunctionVoid
 
 // Record/replay a function that returns a value and has a particular ABI.
 #define RecordReplayFunctionABI(aName, aReturnType, aABI, ...)          \
-  AutoRecordReplayFunction<aReturnType> rrf(CallEvent_ ##aName, #aName); \
+  AutoRecordReplayFunction<aReturnType> rrf(CallEvent_ ##aName);        \
   if (!rrf.mThread) {                                                   \
     return OriginalCallABI(aName, aReturnType, aABI, ##__VA_ARGS__);    \
   }                                                                     \
@@ -239,7 +243,7 @@ struct AutoRecordReplayFunction : AutoRecordReplayFunctionVoid
 
 // Record/replay a function that has no return value and has a particular ABI.
 #define RecordReplayFunctionVoidABI(aName, aABI, ...)                   \
-  AutoRecordReplayFunctionVoid rrf(CallEvent_ ##aName, #aName);         \
+  AutoRecordReplayFunctionVoid rrf(CallEvent_ ##aName);                 \
   if (!rrf.mThread) {                                                   \
     OriginalCallABI(aName, void, aABI, ##__VA_ARGS__);                  \
     return;                                                             \

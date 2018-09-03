@@ -47,8 +47,6 @@ namespace recordreplay {
   Macro(InternalEndPassThroughThreadEvents, (), ())             \
   Macro(InternalBeginDisallowThreadEvents, (), ())              \
   Macro(InternalEndDisallowThreadEvents, (), ())                \
-  Macro(InternalBeginCaptureEventStacks, (), ())                \
-  Macro(InternalEndCaptureEventStacks, (), ())                  \
   Macro(InternalRecordReplayBytes,                              \
         (void* aData, size_t aSize), (aData, aSize))            \
   Macro(NotifyUnrecordedWait,                                   \

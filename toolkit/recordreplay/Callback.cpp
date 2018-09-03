@@ -29,8 +29,6 @@ RegisterCallbackData(void* aData)
     return;
   }
 
-  RecordReplayAssert("RegisterCallbackData");
-
   AutoOrderedAtomicAccess at;
   StaticMutexAutoLock lock(gCallbackMutex);
   if (!gCallbackData) {
@@ -72,14 +70,10 @@ EndCallback()
 void
 SaveOrRestoreCallbackData(void** aData)
 {
-  MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
-  MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
-  MOZ_RELEASE_ASSERT(!AreThreadEventsDisallowed());
   MOZ_RELEASE_ASSERT(gCallbackData);
 
   Thread* thread = Thread::Current();
-
-  RecordReplayAssert("RestoreCallbackData");
+  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
 
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::RestoreCallbackData);
 
@@ -107,10 +101,8 @@ RemoveCallbackData(void* aData)
 void
 PassThroughThreadEventsAllowCallbacks(const std::function<void()>& aFn)
 {
-  MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
-  MOZ_RELEASE_ASSERT(!AreThreadEventsDisallowed());
-
   Thread* thread = Thread::Current();
+  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
 
   if (IsRecording()) {
     if (thread->IsMainThread()) {

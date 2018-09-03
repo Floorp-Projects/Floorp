@@ -68,15 +68,13 @@ static ReadWriteSpinLock gLocksLock;
 /* static */ void
 Lock::New(void* aNativeLock)
 {
-  if (AreThreadEventsPassedThrough() || HasDivergedFromRecording()) {
+  Thread* thread = Thread::Current();
+  if (!thread || thread->PassThroughEvents() || HasDivergedFromRecording()) {
     Destroy(aNativeLock); // Clean up any old lock, as below.
     return;
   }
 
-  MOZ_RELEASE_ASSERT(!AreThreadEventsDisallowed());
-  Thread* thread = Thread::Current();
-
-  RecordReplayAssert("CreateLock");
+  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
 
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::CreateLock);
 
@@ -94,7 +92,7 @@ Lock::New(void* aNativeLock)
   }
 
   // Tolerate new locks being created with identical pointers, even if there
-  // was no DestroyLock call for the old one.
+  // was no explicit Destroy() call for the old one.
   Destroy(aNativeLock);
 
   AutoWriteSpinLock ex(gLocksLock);
@@ -153,16 +151,13 @@ Lock::Find(void* aNativeLock)
 void
 Lock::Enter()
 {
-  MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough() && !HasDivergedFromRecording());
-  MOZ_RELEASE_ASSERT(!AreThreadEventsDisallowed());
-
-  RecordReplayAssert("Lock %d", (int) mId);
+  Thread* thread = Thread::Current();
+  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
 
   // Include an event in each thread's record when a lock acquire begins. This
   // is not required by the replay but is used to check that lock acquire order
   // is consistent with the recording and that we will fail explicitly instead
   // of deadlocking.
-  Thread* thread = Thread::Current();
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::Lock);
   thread->Events().CheckInput(mId);
 

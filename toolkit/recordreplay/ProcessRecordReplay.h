@@ -24,51 +24,60 @@ namespace recordreplay {
 // process. The ipc subdirectory contains files used for IPC between a
 // replaying and middleman process, and between a middleman and chrome process.
 
+// Instantiate _Macro for each of the platform independent thread events.
+#define ForEachThreadEvent(_Macro)                             \
+  /* Spawned another thread. */                                \
+  _Macro(CreateThread)                                        \
+                                                               \
+  /* Created a recorded lock. */                               \
+  _Macro(CreateLock)                                           \
+                                                               \
+  /* Acquired a recorded lock. */                              \
+  _Macro(Lock)                                                 \
+                                                               \
+  /* Called RecordReplayValue. */                              \
+  _Macro(Value)                                                \
+                                                               \
+  /* Called RecordReplayBytes. */                              \
+  _Macro(Bytes)                                                \
+                                                               \
+  /* Called RecordReplayAssert or RecordReplayAssertBytes. */  \
+  _Macro(Assert)                                               \
+  _Macro(AssertBytes)                                          \
+                                                               \
+  /* Executed a nested callback (see Callback.h). */           \
+  _Macro(ExecuteCallback)                                      \
+                                                               \
+  /* Finished executing nested callbacks in a library API (see Callback.h). */ \
+  _Macro(CallbacksFinished)                                    \
+                                                               \
+  /* Restoring a data pointer used in a callback (see Callback.h). */ \
+  _Macro(RestoreCallbackData)                                  \
+                                                               \
+  /* Called RegisterTrigger. */                                \
+  _Macro(RegisterTrigger)                                      \
+                                                               \
+  /* Executed a trigger within a call to ExecuteTriggers. */   \
+  _Macro(ExecuteTrigger)                                       \
+                                                               \
+  /* Finished executing triggers within a call to ExecuteTriggers. */ \
+  _Macro(ExecuteTriggersFinished)
+
 // ID of an event in a thread's event stream. Each ID in the stream is followed
-// by data associated with the event (see File::RecordOrReplayThreadEvent).
+// by data associated with the event.
 enum class ThreadEvent : uint32_t
 {
-  // Spawned another thread.
-  CreateThread,
-
-  // Created a recorded lock.
-  CreateLock,
-
-  // Acquired a recorded lock.
-  Lock,
-
-  // Wait for a condition variable with a timeout.
-  WaitForCvarUntil,
-
-  // Called RecordReplayValue.
-  Value,
-
-  // Called RecordReplayBytes.
-  Bytes,
-
-  // Executed a nested callback (see Callback.h).
-  ExecuteCallback,
-
-  // Finished executing nested callbacks in a library API (see Callback.h).
-  CallbacksFinished,
-
-  // Restoring a data pointer used in a callback (see Callback.h).
-  RestoreCallbackData,
-
-  // Executed a trigger within a call to ExecuteTriggers.
-  ExecuteTrigger,
-
-  // Finished executing triggers within a call to ExecuteTriggers.
-  ExecuteTriggersFinished,
-
-  // Encoded information about an argument/rval used by a graphics call.
-  GraphicsArgument,
-  GraphicsRval,
+#define DefineEnum(Kind) Kind,
+  ForEachThreadEvent(DefineEnum)
+#undef DefineEnum
 
   // The start of event IDs for redirected call events. Event IDs after this
   // point are platform specific.
   CallStart
 };
+
+// Get the printable name for a thread event.
+const char* ThreadEventName(ThreadEvent aEvent);
 
 class File;
 
@@ -80,11 +89,6 @@ extern bool gInitialized;
 
 // If we failed to initialize, any associated message.
 extern char* gInitializationFailureMessage;
-
-// Whether record/replay assertions should be performed.
-//#ifdef DEBUG
-#define INCLUDE_RECORD_REPLAY_ASSERTIONS 1
-//#endif
 
 // Flush any new recording data to disk.
 void FlushRecording();
