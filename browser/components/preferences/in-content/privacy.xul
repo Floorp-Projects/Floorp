@@ -395,7 +395,7 @@
           </vbox>
           <vbox class="content-blocking-category-labels" flex="1">
             <hbox>
-              <vbox>
+              <vbox flex="1">
                 <label data-l10n-id="content-blocking-reject-trackers-label"
                        class="content-blocking-category-name"
                        control="contentBlockingBlockCookiesCheckbox"/>
@@ -403,19 +403,13 @@
                   <description id="blockCookiesCBDesc"
                                data-l10n-id="content-blocking-reject-trackers-description"
                                class="content-blocking-category-description"/>
-                  <hbox id="warningAllCookiesBlocked">
-                    <image class="reject-trackers-warning-icon"/>
-                    <description data-l10n-id="content-blocking-reject-trackers-warning-your-settings-prevent-changes"
-                                 class="content-blocking-category-description description-with-side-element"/>
-                  </hbox>
-                  <hbox id="warningFromVisitedCookiesBlocked">
-                    <image class="reject-trackers-warning-icon"/>
-                    <description data-l10n-id="content-blocking-reject-trackers-warning-your-settings-prevent-changes"
-                                 class="content-blocking-category-description description-with-side-element"/>
-                  </hbox>
+                  <description data-l10n-id="content-blocking-reject-trackers-warning-your-settings-prevent-changes"
+                               class="content-blocking-category-description description-with-side-element reject-trackers-warning-icon"/>
+                  <description data-l10n-id="content-blocking-reject-trackers-warning-your-settings-prevent-changes"
+                               class="content-blocking-category-description description-with-side-element reject-trackers-warning-icon"/>
                 </deck>
               </vbox>
-              <hbox align="center">
+              <hbox align="center" pack="end">
                 <vbox align="center">
                   <button id="contentBlockingChangeCookieSettings"
                           class="accessory-button"
