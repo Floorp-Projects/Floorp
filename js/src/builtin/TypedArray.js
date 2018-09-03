@@ -1191,22 +1191,40 @@ function TypedArraySort(comparefn) {
         return obj;
 
     if (comparefn === undefined) {
-        if (IsUint8TypedArray(obj)) {
+        var kind = GetTypedArrayKind(obj);
+        switch (kind) {
+          case TYPEDARRAY_KIND_UINT8:
+          case TYPEDARRAY_KIND_UINT8CLAMPED:
             return CountingSort(obj, len, false /* signed */, TypedArrayCompareInt);
-        } else if (IsInt8TypedArray(obj)) {
+          case TYPEDARRAY_KIND_INT8:
             return CountingSort(obj, len, true /* signed */, TypedArrayCompareInt);
-        } else if (IsUint16TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 2 /* nbytes */, false /* signed */, false /* floating */, TypedArrayCompareInt);
-        } else if (IsInt16TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 2 /* nbytes */, true /* signed */, false /* floating */, TypedArrayCompareInt);
-        } else if (IsUint32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, false /* signed */, false /* floating */, TypedArrayCompareInt);
-        } else if (IsInt32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, false /* floating */, TypedArrayCompareInt);
-        } else if (IsFloat32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, true /* floating */, TypedArrayCompare);
+          case TYPEDARRAY_KIND_UINT16:
+            return RadixSort(obj, len, buffer,
+                             2 /* nbytes */, false /* signed */, false /* floating */,
+                             TypedArrayCompareInt);
+          case TYPEDARRAY_KIND_INT16:
+            return RadixSort(obj, len, buffer,
+                             2 /* nbytes */, true /* signed */, false /* floating */,
+                             TypedArrayCompareInt);
+          case TYPEDARRAY_KIND_UINT32:
+            return RadixSort(obj, len, buffer,
+                             4 /* nbytes */, false /* signed */, false /* floating */,
+                             TypedArrayCompareInt);
+          case TYPEDARRAY_KIND_INT32:
+            return RadixSort(obj, len, buffer,
+                             4 /* nbytes */, true /* signed */, false /* floating */,
+                             TypedArrayCompareInt);
+          case TYPEDARRAY_KIND_FLOAT32:
+            return RadixSort(obj, len, buffer,
+                             4 /* nbytes */, true /* signed */, true /* floating */,
+                             TypedArrayCompare);
+          case TYPEDARRAY_KIND_FLOAT64:
+          default:
+            // Include |default| to ensure Ion marks this call as the
+            // last instruction in the if-statement.
+            assert(kind === TYPEDARRAY_KIND_FLOAT64, "unexpected typed array kind");
+            return QuickSort(obj, len, TypedArrayCompare);
         }
-        return QuickSort(obj, len, TypedArrayCompare);
     }
 
     // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
