@@ -6,7 +6,6 @@
 
 DevToolsModules(
     'panel.js',
-    'scratchpad-commands.js',
     'scratchpad-manager.jsm',
     'scratchpad.js',
 )
