@@ -139,4 +139,14 @@
 
 #define NOT_OBJECT_KIND_DESCRIPTOR 0
 
+#define TYPEDARRAY_KIND_INT8            0
+#define TYPEDARRAY_KIND_UINT8           1
+#define TYPEDARRAY_KIND_INT16           2
+#define TYPEDARRAY_KIND_UINT16          3
+#define TYPEDARRAY_KIND_INT32           4
+#define TYPEDARRAY_KIND_UINT32          5
+#define TYPEDARRAY_KIND_FLOAT32         6
+#define TYPEDARRAY_KIND_FLOAT64         7
+#define TYPEDARRAY_KIND_UINT8CLAMPED    8
+
 #endif

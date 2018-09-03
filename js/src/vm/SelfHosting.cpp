@@ -1019,61 +1019,36 @@ intrinsic_SharedArrayBuffersMemorySame(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-intrinsic_IsSpecificTypedArray(JSContext* cx, unsigned argc, Value* vp, Scalar::Type type)
+intrinsic_GetTypedArrayKind(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isObject());
 
+    static_assert(TYPEDARRAY_KIND_INT8 == Scalar::Type::Int8,
+                  "TYPEDARRAY_KIND_INT8 doesn't match the scalar type");
+    static_assert(TYPEDARRAY_KIND_UINT8 == Scalar::Type::Uint8,
+                  "TYPEDARRAY_KIND_UINT8 doesn't match the scalar type");
+    static_assert(TYPEDARRAY_KIND_INT16 == Scalar::Type::Int16,
+                  "TYPEDARRAY_KIND_INT16 doesn't match the scalar type");
+    static_assert(TYPEDARRAY_KIND_UINT16 == Scalar::Type::Uint16,
+                  "TYPEDARRAY_KIND_UINT16 doesn't match the scalar type");
+    static_assert(TYPEDARRAY_KIND_INT32 == Scalar::Type::Int32,
+                  "TYPEDARRAY_KIND_INT32 doesn't match the scalar type");
+    static_assert(TYPEDARRAY_KIND_UINT32 == Scalar::Type::Uint32,
+                  "TYPEDARRAY_KIND_UINT32 doesn't match the scalar type");
+    static_assert(TYPEDARRAY_KIND_FLOAT32 == Scalar::Type::Float32,
+                  "TYPEDARRAY_KIND_FLOAT32 doesn't match the scalar type");
+    static_assert(TYPEDARRAY_KIND_FLOAT64 == Scalar::Type::Float64,
+                  "TYPEDARRAY_KIND_FLOAT64 doesn't match the scalar type");
+    static_assert(TYPEDARRAY_KIND_UINT8CLAMPED == Scalar::Type::Uint8Clamped,
+                  "TYPEDARRAY_KIND_UINT8CLAMPED doesn't match the scalar type");
+
     JSObject* obj = &args[0].toObject();
+    Scalar::Type type = JS_GetArrayBufferViewType(obj);
 
-    bool isArray = JS_GetArrayBufferViewType(obj) == type;
-
-    args.rval().setBoolean(isArray);
+    args.rval().setInt32(static_cast<int32_t>(type));
     return true;
-}
-
-static bool
-intrinsic_IsUint8TypedArray(JSContext* cx, unsigned argc, Value* vp)
-{
-    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Uint8) ||
-           intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Uint8Clamped);
-}
-
-static bool
-intrinsic_IsInt8TypedArray(JSContext* cx, unsigned argc, Value* vp)
-{
-    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Int8);
-}
-
-static bool
-intrinsic_IsUint16TypedArray(JSContext* cx, unsigned argc, Value* vp)
-{
-    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Uint16);
-}
-
-static bool
-intrinsic_IsInt16TypedArray(JSContext* cx, unsigned argc, Value* vp)
-{
-    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Int16);
-}
-
-static bool
-intrinsic_IsUint32TypedArray(JSContext* cx, unsigned argc, Value* vp)
-{
-    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Uint32);
-}
-
-static bool
-intrinsic_IsInt32TypedArray(JSContext* cx, unsigned argc, Value* vp)
-{
-    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Int32);
-}
-
-static bool
-intrinsic_IsFloat32TypedArray(JSContext* cx, unsigned argc, Value* vp)
-{
-    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Float32);
 }
 
 static bool
@@ -2545,13 +2520,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("SharedArrayBuffersMemorySame",
           intrinsic_SharedArrayBuffersMemorySame,                       2,0),
 
-    JS_FN("IsUint8TypedArray",        intrinsic_IsUint8TypedArray,      1,0),
-    JS_FN("IsInt8TypedArray",         intrinsic_IsInt8TypedArray,       1,0),
-    JS_FN("IsUint16TypedArray",       intrinsic_IsUint16TypedArray,     1,0),
-    JS_FN("IsInt16TypedArray",        intrinsic_IsInt16TypedArray,      1,0),
-    JS_FN("IsUint32TypedArray",       intrinsic_IsUint32TypedArray,     1,0),
-    JS_FN("IsInt32TypedArray",        intrinsic_IsInt32TypedArray,      1,0),
-    JS_FN("IsFloat32TypedArray",      intrinsic_IsFloat32TypedArray,    1,0),
+    JS_FN("GetTypedArrayKind", intrinsic_GetTypedArrayKind,             1,0),
     JS_INLINABLE_FN("IsTypedArray",
                     intrinsic_IsInstanceOfBuiltin<TypedArrayObject>,    1,0,
                     IntrinsicIsTypedArray),
