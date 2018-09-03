@@ -229,73 +229,73 @@ private:
                            uint32_t aChannels);
 
 
+  // Graph thread only.
+  void SetPassThrough(bool aPassThrough);
+  // Graph thread only.
+  uint32_t GetRequestedInputChannelCount(MediaStreamGraphImpl* aGraphImpl);
+  // Graph thread only.
+  void SetRequestedInputChannelCount(uint32_t aRequestedInputChannelCount);
   // This is true when all processing is disabled, we can skip
   // packetization, resampling and other processing passes.
   // Graph thread only.
   bool PassThrough(MediaStreamGraphImpl* aGraphImpl) const;
 
-  // Graph thread only.
-  void SetPassThrough(bool aPassThrough);
-  uint32_t GetRequestedInputChannelCount(MediaStreamGraphImpl* aGraphImpl);
-  void SetRequestedInputChannelCount(uint32_t aRequestedInputChannelCount);
-
-  // mListener is created on the MediaManager thread, and then sent to the MSG
-  // thread. On shutdown, we send this pointer to the MSG thread again, telling
-  // it to clean up.
-  RefPtr<WebRTCAudioDataListener> mListener;
-
-  // Can be shared on any thread.
+  // Set on construction and then immutable, can be used anywhere.
   const RefPtr<AudioDeviceInfo> mDeviceInfo;
-
-  const UniquePtr<webrtc::AudioProcessing> mAudioProcessing;
-
-  // accessed from the GraphDriver thread except for deletion.
-  nsAutoPtr<AudioPacketizer<AudioDataValue, float>> mPacketizerInput;
-  nsAutoPtr<AudioPacketizer<AudioDataValue, float>> mPacketizerOutput;
-
-  // mMutex protects some of our members off the owning thread.
-  Mutex mMutex;
-
-  // We set an allocation in Allocate() and remove it in Deallocate().
-  // Must be set and/or accessed while holding mMutex.
-  UniquePtr<Allocation> mAllocation;
-
-  // Current state of the shared resource for this source. Written on the
-  // owning thread, read on either the owning thread or the MSG thread.
-  Atomic<MediaEngineSourceState> mState;
-
-  bool mDelayAgnostic;
-  bool mExtendedFilter;
-
+  // Those four members are set on construction, on the MediaManager thread.
+  const bool mDelayAgnostic;
+  const bool mExtendedFilter;
   const nsString mDeviceName;
   const nsCString mDeviceUUID;
-
   // The current settings for the underlying device.
-  // Member access is main thread only after construction.
+  // Constructed on the MediaManager thread, and then only ever accessed on the
+  // main thread.
   const nsMainThreadPtrHandle<media::Refcountable<dom::MediaTrackSettings>> mSettings;
-
-  // The number of channels asked for by content, after clamping to the range of
-  // legal channel count for this particular device. This is the number of
-  // channels of the input buffer passed as parameter in NotifyInputData.
-  uint32_t mRequestedInputChannelCount;
-
-  // mSkipProcessing is true if none of the processing passes are enabled,
-  // because of prefs or constraints. This allows simply copying the audio into
-  // the MSG, skipping resampling and the whole webrtc.org code.
-  // This is read and written to only on the MSG thread.
-  bool mSkipProcessing;
-
   // To only update microphone when needed, we keep track of the prefs
   // representing the currently applied settings for this source. This is the
   // net result of the prefs across all allocations.
   // Owning thread only.
   MediaEnginePrefs mNetPrefs;
 
+  // Current state of the shared resource for this source. Written on the
+  // owning thread, read on either the owning thread or the MSG thread.
+  Atomic<MediaEngineSourceState> mState;
+  Mutex mMutex;
+  // We set an allocation in Allocate() and remove it in Deallocate().
+  // Must be set on the MediaManager thread and is then accessed while holding
+  // mMutex on the MSG thread or the MediaManager thread.
+  UniquePtr<Allocation> mAllocation;
+  // mListener is created on the MediaManager thread, and then sent to the MSG
+  // thread. On shutdown, we send this pointer to the MSG thread again, telling
+  // it to clean up.
+  RefPtr<WebRTCAudioDataListener> mListener;
+  // Created on the MediaManager thread, then used on the graph thread for
+  // processing, and on the MediaManager thread when setting parameters (this is
+  // thread safe).
+  const UniquePtr<webrtc::AudioProcessing> mAudioProcessing;
+  // Accessed from the GraphDriver thread except for deletion, at which point
+  // the GraphDriver thread does not touch those values.
+  nsAutoPtr<AudioPacketizer<AudioDataValue, float>> mPacketizerInput;
+  nsAutoPtr<AudioPacketizer<AudioDataValue, float>> mPacketizerOutput;
+  // The number of channels asked for by content, after clamping to the range of
+  // legal channel count for this particular device. This is the number of
+  // channels of the input buffer passed as parameter in NotifyInputData.
+  // Initially set on MediaManger thread in the ctor, then only ever accessed on
+  // the MSG thread.
+  uint32_t mRequestedInputChannelCount;
+  // mSkipProcessing is true if none of the processing passes are enabled,
+  // because of prefs or constraints. This allows simply copying the audio into
+  // the MSG, skipping resampling and the whole webrtc.org code.
+  // This is read and written to only on the MSG thread.
+  bool mSkipProcessing;
+  // All these are only used on the MSG thread.
   // Stores the mixed audio output for the reverse-stream of the AEC.
   AlignedFloatBuffer mOutputBuffer;
-
+  // Stores the microphone audio, to be processed by the APM.
   AlignedFloatBuffer mInputBuffer;
+  // Stores the deinterleaved microphone audio
   AlignedFloatBuffer mDeinterleavedBuffer;
+  // Stores the mixed down input audio
   AlignedFloatBuffer mInputDownmixBuffer;
 };
 
