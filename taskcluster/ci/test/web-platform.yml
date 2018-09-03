@@ -143,6 +143,10 @@ web-platform-tests-wdspec:
             linux64-asan/opt: 2
             linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
+    chunks:
+        by-test-platform:
+            linux64-ccov/.*: 2
+            default: 1
 
 web-platform-tests-wdspec-headless:
     description: "Web platform webdriver-spec headless run"

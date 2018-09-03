@@ -379,7 +379,10 @@
                      data-l10n-id="content-blocking-tracking-protection-option-always"
                      flex="1" />
             </radiogroup>
-            <label id="changeBlockListLink" data-l10n-id="content-blocking-tracking-protection-change-block-list" class="text-link"/>
+            <label id="changeBlockListLink"
+                   data-l10n-id="content-blocking-tracking-protection-change-block-list"
+                   class="text-link"
+                   search-l10n-ids="blocklist-window.title, blocklist-desc, blocklist-button-cancel.label, blocklist-button-ok.label"/>
           </vbox>
         </hbox>
       </vbox>
