@@ -13,7 +13,6 @@
 #include "nsControllerCommandTable.h"
 #include "nsCommandParams.h"
 #include "nsCommandGroup.h"
-#include "nsBaseCommandController.h"
 #include "nsNetCID.h"
 #include "nsEmbedCID.h"
 
@@ -31,7 +30,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserPersist)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsControllerCommandTable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandParams)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsControllerCommandGroup)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBaseCommandController)
 
 #ifdef MOZ_XUL
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock)
@@ -59,7 +57,6 @@ NS_DEFINE_NAMED_CID(NS_WEBBROWSERPERSIST_CID);
 NS_DEFINE_NAMED_CID(NS_CONTROLLERCOMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_COMMAND_PARAMS_CID);
 NS_DEFINE_NAMED_CID(NS_CONTROLLER_COMMAND_GROUP_CID);
-NS_DEFINE_NAMED_CID(NS_BASECOMMANDCONTROLLER_CID);
 
 static const mozilla::Module::CIDEntry kEmbeddingCIDs[] = {
 #ifdef MOZ_XUL
@@ -84,7 +81,6 @@ static const mozilla::Module::CIDEntry kEmbeddingCIDs[] = {
     { &kNS_CONTROLLERCOMMANDTABLE_CID, false, nullptr, nsControllerCommandTableConstructor },
     { &kNS_COMMAND_PARAMS_CID, false, nullptr, nsCommandParamsConstructor },
     { &kNS_CONTROLLER_COMMAND_GROUP_CID, false, nullptr, nsControllerCommandGroupConstructor },
-    { &kNS_BASECOMMANDCONTROLLER_CID, false, nullptr, nsBaseCommandControllerConstructor },
     { nullptr }
 };
 
@@ -103,7 +99,6 @@ static const mozilla::Module::ContractIDEntry kEmbeddingContracts[] = {
     { NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &kNS_CONTROLLERCOMMANDTABLE_CID },
     { NS_COMMAND_PARAMS_CONTRACTID, &kNS_COMMAND_PARAMS_CID },
     { NS_CONTROLLER_COMMAND_GROUP_CONTRACTID, &kNS_CONTROLLER_COMMAND_GROUP_CID },
-    { NS_BASECOMMANDCONTROLLER_CONTRACTID, &kNS_BASECOMMANDCONTROLLER_CID },
     { nullptr }
 };
 
