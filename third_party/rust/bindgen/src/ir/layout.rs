@@ -35,6 +35,17 @@ fn test_layout_for_size() {
 }
 
 impl Layout {
+    /// Gets the integer type name for a given known size.
+    pub fn known_type_for_size(size: usize) -> Option<&'static str> {
+        Some(match size {
+            8 => "u64",
+            4 => "u32",
+            2 => "u16",
+            1 => "u8",
+            _ => return None,
+        })
+    }
+
     /// Construct a new `Layout` with the given `size` and `align`. It is not
     /// packed.
     pub fn new(size: usize, align: usize) -> Self {
@@ -95,13 +106,7 @@ impl Opaque {
     /// Return the known rust type we should use to create a correctly-aligned
     /// field with this layout.
     pub fn known_rust_type_for_array(&self) -> Option<&'static str> {
-        Some(match self.0.align {
-            8 => "u64",
-            4 => "u32",
-            2 => "u16",
-            1 => "u8",
-            _ => return None,
-        })
+        Layout::known_type_for_size(self.0.align)
     }
 
     /// Return the array size that an opaque type for this layout should have if

@@ -216,6 +216,14 @@ impl Type {
         }
     }
 
+    /// Is this an unresolved reference?
+    pub fn is_unresolved_ref(&self) -> bool {
+        match self.kind {
+            TypeKind::UnresolvedTypeRef(_, _, _) => true,
+            _ => false,
+        }
+    }
+
     /// Is this a incomplete array type?
     pub fn is_incomplete_array(&self, ctx: &BindgenContext) -> Option<ItemId> {
         match self.kind {
@@ -320,6 +328,7 @@ impl Type {
         match self.kind {
             TypeKind::TypeParam |
             TypeKind::Array(..) |
+            TypeKind::Vector(..) |
             TypeKind::Comp(..) |
             TypeKind::Opaque |
             TypeKind::Int(..) |
@@ -472,6 +481,7 @@ impl TypeKind {
             TypeKind::Alias(..) => "Alias",
             TypeKind::TemplateAlias(..) => "TemplateAlias",
             TypeKind::Array(..) => "Array",
+            TypeKind::Vector(..) => "Vector",
             TypeKind::Function(..) => "Function",
             TypeKind::Enum(..) => "Enum",
             TypeKind::Pointer(..) => "Pointer",
@@ -565,6 +575,7 @@ impl TemplateParameters for TypeKind {
             TypeKind::Float(_) |
             TypeKind::Complex(_) |
             TypeKind::Array(..) |
+            TypeKind::Vector(..) |
             TypeKind::Function(_) |
             TypeKind::Enum(_) |
             TypeKind::Pointer(_) |
@@ -626,6 +637,9 @@ pub enum TypeKind {
     /// A templated alias, pointing to an inner type, just as `Alias`, but with
     /// template parameters.
     TemplateAlias(TypeId, Vec<TypeId>),
+
+    /// A packed vector type: element type, number of elements
+    Vector(TypeId, usize),
 
     /// An array of a type and a length.
     Array(TypeId, usize),
@@ -1148,12 +1162,15 @@ impl Type {
 
                     TypeKind::Comp(complex)
                 }
-                // FIXME: We stub vectors as arrays since in 99% of the cases the
-                // layout is going to be correct, and there's no way we can generate
-                // vector types properly in Rust for now.
-                //
-                // That being said, that should be fixed eventually.
-                CXType_Vector |
+                CXType_Vector => {
+                    let inner = Item::from_ty(
+                        ty.elem_type().as_ref().unwrap(),
+                        location,
+                        None,
+                        ctx,
+                    ).expect("Not able to resolve vector element?");
+                    TypeKind::Vector(inner, ty.num_elements().unwrap())
+                }
                 CXType_ConstantArray => {
                     let inner = Item::from_ty(
                         ty.elem_type().as_ref().unwrap(),
@@ -1214,6 +1231,7 @@ impl Trace for Type {
             TypeKind::Pointer(inner) |
             TypeKind::Reference(inner) |
             TypeKind::Array(inner, _) |
+            TypeKind::Vector(inner, _) |
             TypeKind::Alias(inner) |
             TypeKind::ResolvedTypeRef(inner) => {
                 tracer.visit_kind(inner.into(), EdgeKind::TypeReference);

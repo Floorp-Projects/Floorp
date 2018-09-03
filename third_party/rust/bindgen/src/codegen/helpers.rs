@@ -3,7 +3,6 @@
 use ir::context::BindgenContext;
 use ir::layout::Layout;
 use quote;
-use std::mem;
 use proc_macro2::{Term, Span};
 
 pub mod attributes {
@@ -92,12 +91,9 @@ pub fn blob(layout: Layout) -> quote::Tokens {
 
 /// Integer type of the same size as the given `Layout`.
 pub fn integer_type(layout: Layout) -> Option<quote::Tokens> {
-    // This guard can be weakened when Rust implements u128.
-    if layout.size > mem::size_of::<u64>() {
-        None
-    } else {
-        Some(blob(layout))
-    }
+    let name = Layout::known_type_for_size(layout.size)?;
+    let name = Term::new(name, Span::call_site());
+    Some(quote! { #name })
 }
 
 /// Generates a bitfield allocation unit type for a type with the given `Layout`.

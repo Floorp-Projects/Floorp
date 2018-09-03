@@ -169,9 +169,10 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.37.4"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cexpr 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "clang-sys 0.23.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -223,7 +224,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "bitflags"
-version = "1.0.1"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -317,7 +318,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "ansi_term 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "atty 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "strsim 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "term_size 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "textwrap 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -360,7 +361,7 @@ name = "core-graphics"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "foreign-types 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -530,7 +531,7 @@ name = "cubeb-core"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cubeb-sys 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -779,7 +780,7 @@ name = "fuchsia-zircon"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "fuchsia-zircon-sys 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -859,7 +860,7 @@ dependencies = [
  "nsstring 0.1.0",
  "num-traits 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "selectors 0.19.0",
+ "selectors 0.20.0",
  "servo_arc 0.1.1",
  "smallvec 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "style 0.0.1",
@@ -1054,7 +1055,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "js"
 version = "0.1.4"
 dependencies = [
- "bindgen 0.37.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bindgen 0.39.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cmake 0.1.29 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "glob 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1201,7 +1202,7 @@ name = "lmdb-rkv"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "lmdb-sys 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1249,7 +1250,7 @@ dependencies = [
  "cssparser 0.24.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hashglobe 0.1.0",
- "selectors 0.19.0",
+ "selectors 0.20.0",
  "servo_arc 0.1.1",
  "smallbitvec 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "smallvec 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1508,7 +1509,7 @@ dependencies = [
 name = "nsstring"
 version = "0.1.0"
 dependencies = [
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_rs 0.8.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1719,7 +1720,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "pulse"
 version = "0.2.0"
 dependencies = [
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "pulse-ffi 0.1.0",
 ]
 
@@ -1943,9 +1944,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "selectors"
-version = "0.19.0"
+version = "0.20.0"
 dependencies = [
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cssparser 0.24.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fxhash 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2109,8 +2110,8 @@ dependencies = [
  "app_units 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "arrayvec 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "atomic_refcell 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "bindgen 0.37.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bindgen 0.39.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "cssparser 0.24.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2137,7 +2138,7 @@ dependencies = [
  "precomputed-hash 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "selectors 0.19.0",
+ "selectors 0.20.0",
  "servo_arc 0.1.1",
  "smallbitvec 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "smallvec 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2168,12 +2169,12 @@ name = "style_traits"
 version = "0.0.1"
 dependencies = [
  "app_units 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cssparser 0.24.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "malloc_size_of 0.0.1",
  "malloc_size_of_derive 0.0.1",
- "selectors 0.19.0",
+ "selectors 0.20.0",
  "servo_arc 0.1.1",
 ]
 
@@ -2191,7 +2192,7 @@ dependencies = [
  "malloc_size_of 0.0.1",
  "num-traits 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "selectors 0.19.0",
+ "selectors 0.20.0",
  "size_of_test 0.0.1",
  "smallvec 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "style 0.0.1",
@@ -2491,7 +2492,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "u2fhid"
 version = "0.2.0"
 dependencies = [
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "boxfnonce 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation-sys 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2646,7 +2647,7 @@ version = "0.57.2"
 dependencies = [
  "app_units 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2676,7 +2677,7 @@ version = "0.57.2"
 dependencies = [
  "app_units 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-graphics 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2776,7 +2777,7 @@ name = "xml-rs"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2842,11 +2843,11 @@ dependencies = [
 "checksum base64 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "96434f987501f0ed4eb336a411e0631ecd1afa11574fe148587adc4ff96143c9"
 "checksum binary-space-partition 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "88ceb0d16c4fd0e42876e298d7d3ce3780dd9ebdcbe4199816a32c77e08597ff"
 "checksum bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bda13183df33055cbb84b847becce220d392df502ebe7a4a78d7021771ed94d0"
-"checksum bindgen 0.37.4 (registry+https://github.com/rust-lang/crates.io-index)" = "1b25ab82877ea8fe6ce1ce1f8ac54361f0218bad900af9eb11803994bf67c221"
+"checksum bindgen 0.39.0 (registry+https://github.com/rust-lang/crates.io-index)" = "eac4ed5f2de9efc3c87cb722468fa49d0763e98f999d539bfc5e452c13d85c91"
 "checksum binjs_meta 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "fd7ca5635f1c6f94aaef7de76cb834c5920578355ce41dbcaf731b7ebe348518"
 "checksum bit-set 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d9bf6104718e80d7b26a68fdbacff3481cfc05df670821affc7e9cbc1884400c"
 "checksum bit-vec 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "02b4ff8b16e6076c3e14220b39fbc1fabb6737522281a388998046859400895f"
-"checksum bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b3c30d3802dfb7281680d6285f2ccdaa8c2d8fee41f93805dba5c4cf50dc23cf"
+"checksum bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "228047a76f468627ca71776ecdebd732a3423081fcf5125585bcd7c49886ce12"
 "checksum bitreader 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "80b13e2ab064ff3aa0bdbf1eff533f9822dc37899821f5f98c67f263eab51707"
 "checksum boxfnonce 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "8380105befe91099e6f69206164072c05bc92427ff6aa8a5171388317346dd75"
 "checksum build_const 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e90dc84f5e62d2ebe7676b83c22d33b6db8bd27340fb6ffbff0a364efa0cb9c9"

@@ -167,6 +167,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveCopy<'ctx> {
             TypeKind::NullPtr |
             TypeKind::Int(..) |
             TypeKind::Float(..) |
+            TypeKind::Vector(..) |
             TypeKind::Complex(..) |
             TypeKind::Function(..) |
             TypeKind::Enum(..) |
