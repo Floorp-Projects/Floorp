@@ -28,7 +28,9 @@ RenderSharedSurfaceTextureHost::~RenderSharedSurfaceTextureHost()
 }
 
 wr::WrExternalImage
-RenderSharedSurfaceTextureHost::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
+RenderSharedSurfaceTextureHost::Lock(uint8_t aChannelIndex,
+                                     gl::GLContext* aGL,
+                                     wr::ImageRendering aRendering)
 {
   if (!mLocked) {
     if (NS_WARN_IF(!mSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE,

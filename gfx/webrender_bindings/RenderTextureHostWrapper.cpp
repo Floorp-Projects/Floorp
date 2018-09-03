@@ -27,7 +27,9 @@ RenderTextureHostWrapper::~RenderTextureHostWrapper()
 }
 
 wr::WrExternalImage
-RenderTextureHostWrapper::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
+RenderTextureHostWrapper::Lock(uint8_t aChannelIndex,
+                               gl::GLContext* aGL,
+                               wr::ImageRendering aRendering)
 {
   if (!mTextureHost) {
     MOZ_ASSERT_UNREACHABLE("unexpected to happen");
@@ -35,7 +37,7 @@ RenderTextureHostWrapper::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
   }
 
   mLocked = true;
-  return mTextureHost->Lock(aChannelIndex, aGL);
+  return mTextureHost->Lock(aChannelIndex, aGL, aRendering);
 }
 
 void
