@@ -12,7 +12,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "TelemetryEventPing",
-                               "resource://gre/modules/TelemetryEventPing.jsm");
+                               "resource://gre/modules/EventPing.jsm");
 
 function checkPingStructure(type, payload, options) {
   Assert.equal(type, TelemetryEventPing.EVENT_PING_TYPE, "Should be an event ping.");
@@ -26,7 +26,7 @@ function checkPingStructure(type, payload, options) {
 }
 
 function fakePolicy(set, clear, send) {
-  let mod = ChromeUtils.import("resource://gre/modules/TelemetryEventPing.jsm", {});
+  let mod = ChromeUtils.import("resource://gre/modules/EventPing.jsm", {});
   mod.Policy.setTimeout = set;
   mod.Policy.clearTimeout = clear;
   mod.Policy.sendPing = send;

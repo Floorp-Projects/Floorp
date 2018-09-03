@@ -59,10 +59,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
   TelemetrySend: "resource://gre/modules/TelemetrySend.jsm",
   TelemetryReportingPolicy: "resource://gre/modules/TelemetryReportingPolicy.jsm",
-  TelemetryModules: "resource://gre/modules/TelemetryModules.jsm",
+  TelemetryModules: "resource://gre/modules/ModulesPing.jsm",
   UpdatePing: "resource://gre/modules/UpdatePing.jsm",
-  TelemetryHealthPing: "resource://gre/modules/TelemetryHealthPing.jsm",
-  TelemetryEventPing: "resource://gre/modules/TelemetryEventPing.jsm",
+  TelemetryHealthPing: "resource://gre/modules/HealthPing.jsm",
+  TelemetryEventPing: "resource://gre/modules/EventPing.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });
 
