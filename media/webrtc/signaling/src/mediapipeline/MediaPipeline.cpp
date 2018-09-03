@@ -2038,6 +2038,10 @@ private:
   }
 
   RefPtr<MediaSessionConduit> mConduit;
+  // This conduit's sampling rate. This is either 16, 32, 44.1 or 48kHz, and
+  // tries to be the same as the graph rate. If the graph rate is higher than
+  // 48kHz, mRate is capped to 48kHz. If mRate does not match the graph rate,
+  // audio is resampled to the graph rate.
   const TrackRate mRate;
   const RefPtr<TaskQueue> mTaskQueue;
 };
