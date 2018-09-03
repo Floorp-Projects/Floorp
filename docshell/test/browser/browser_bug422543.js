@@ -26,7 +26,7 @@ add_task(async function runTests() {
   await whenPageShown(browser, () => browser.gotoIndex(0));
   await checkListeners("gotoindex", "back to the first index");
 
-  // Check nsISHistoryInternal.notifyOnHistoryReload
+  // Check nsISHistory.notifyOnHistoryReload
   info("# part 2");
   ok((await notifyReload()), "reloading has not been canceled");
   await checkListeners("reload", "saw the reload notification");

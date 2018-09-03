@@ -152,6 +152,12 @@ IsMiddlemanWithRecordingChild()
   return false;
 }
 
+bool
+DebuggerRunsInMiddleman()
+{
+  MOZ_CRASH();
+}
+
 } // namespace parent
 
 } // namespace recordreplay

@@ -54,6 +54,10 @@ namespace recordreplay {
   /* Sent at startup. */                                       \
   _Macro(Introduction)                                         \
                                                                \
+  /* Sent to recording processes to indicate that the middleman will be running */ \
+  /* developer tools server-side code instead of the recording process itself. */ \
+  _Macro(SetDebuggerRunsInMiddleman)                           \
+                                                               \
   /* Sent to recording processes when exiting, or to force a hanged replaying */ \
   /* process to crash. */                                      \
   _Macro(Terminate)                                            \
@@ -155,6 +159,14 @@ public:
     }
   }
 
+  // Return whether this is a middleman->child message that can be sent while
+  // the child is unpaused.
+  bool CanBeSentWhileUnpaused() const {
+    return mType == MessageType::CreateCheckpoint
+        || mType == MessageType::SetDebuggerRunsInMiddleman
+        || mType == MessageType::Terminate;
+  }
+
 protected:
   template <typename T, typename Elem>
   Elem* Data() { return (Elem*) (sizeof(T) + (char*) this); }
@@ -225,6 +237,7 @@ struct EmptyMessage : public Message
   {}
 };
 
+typedef EmptyMessage<MessageType::SetDebuggerRunsInMiddleman> SetDebuggerRunsInMiddlemanMessage;
 typedef EmptyMessage<MessageType::Terminate> TerminateMessage;
 typedef EmptyMessage<MessageType::CreateCheckpoint> CreateCheckpointMessage;
 typedef EmptyMessage<MessageType::FlushRecording> FlushRecordingMessage;

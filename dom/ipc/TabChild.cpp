@@ -2302,7 +2302,8 @@ static bool
 LoadScriptInMiddleman(const nsString& aURL)
 {
   return // Middleman processes run devtools server side scripts.
-         StringBeginsWith(aURL, NS_LITERAL_STRING("resource://devtools/"))
+         (StringBeginsWith(aURL, NS_LITERAL_STRING("resource://devtools/")) &&
+          recordreplay::parent::DebuggerRunsInMiddleman())
          // This script includes event listeners needed to propagate document
          // title changes.
       || aURL.EqualsLiteral("chrome://global/content/browser-child.js")
