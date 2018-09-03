@@ -68,7 +68,6 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokovat pouze cookies třetích stran</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ano</string>
   <string name="preference_privacy_secure_mode">Nenápadnost</string>
-  <string name="preference_privacy_stealth_summary">Skrýt webové stránky při přepínání aplikací</string>
   <string name="preference_category_performance">Výkon</string>
   <string name="preference_performance_block_webfonts">Blokovat webové fonty</string>
   <string name="preference_performance_block_webfonts_summary">Některé ikony nebo obrázky se nemusí zobrazovat</string>

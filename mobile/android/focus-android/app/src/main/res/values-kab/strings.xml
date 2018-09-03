@@ -82,7 +82,7 @@
   <string name="preference_security_biometric">Seqdec adsil umḍin akken ad tserḥeḍ i usnas</string>
   <string name="preference_security_biometric_summary">Aḍaḍ-ik izmer ad ikkes asewḥel i %1$s ma URL yeldin yakan deg usnas. Askar uffir ad ittwarmed.</string>
   <string name="preference_privacy_secure_mode">Tusligt</string>
-  <string name="preference_privacy_stealth_summary">Ffer isebtar web ticki tettbeddileḍ gar isnasen</string>
+  <string name="preference_privacy_stealth_summary">Ffer isebtar web ticki tettbeddileḍ gar isnasen sakin sewḥel tuṭṭfa n ugdil.</string>
   <string name="preference_category_security">Taɣellist</string>
   <string name="preference_category_performance">Tamellit</string>
   <string name="preference_performance_block_webfonts">Sewḥel tisefsiyin Web</string>

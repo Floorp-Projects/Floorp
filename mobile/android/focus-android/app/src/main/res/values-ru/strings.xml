@@ -229,4 +229,5 @@
   <string name="tip_autocomplete_url">Автодополнение URL для часто посещаемых сайтов\n Произведите долгое нажатие на любой URL в адресной строке</string>
   <string name="tip_open_in_new_tab">Открывайте ссылки в новых вкладках\n Произведите долгое нажатие на любую ссылку на странице</string>
   <string name="tip_request_desktop">Хотите увидеть полную версию сайта?%1$s Меню &gt; Полная версия сайта</string>
+  <string name="tip_disable_tips">Отключить советы на домашнем экране %1$s</string>
 </resources>

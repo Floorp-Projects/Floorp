@@ -229,4 +229,5 @@
   <string name="tip_autocomplete_url">Autocompletează adrese pentru site-uri frecvent vizitate\n Apasă lung pe orice adreesă din bara de adrese</string>
   <string name="tip_open_in_new_tab">Deschide un link într-o filă nouă\n Apasă lung pe orice link din pagină</string>
   <string name="tip_request_desktop">Vrei să vezi site-ul de desktop?%1$s Meniu &gt; Cere versiune de desktop</string>
+  <string name="tip_disable_tips">Dezactivează indiciile din ecranul de pornire %1$s</string>
 </resources>

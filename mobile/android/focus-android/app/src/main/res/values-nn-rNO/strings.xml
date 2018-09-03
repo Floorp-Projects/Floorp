@@ -98,6 +98,7 @@
   <string name="preference_search_add2">+ Legg til ein annan søkjemotor</string>
   <string name="preference_search_remove_title">Fjern søkjemotorar</string>
   <string name="preference_search_remove">Fjern</string>
+  <string name="preference_homescreen_tips">Vis tips på starskjermen</string>
   <string name="action_option_add_search_engine">Legg til søkjemotor</string>
   <string name="search_add_manually_name_hint">Søkjemotornamn</string>
   <string name="search_add_manually_string">Søkjestreng som skal brukast</string>
@@ -211,4 +212,5 @@
   <string name="enable_search_suggestion_subtitle_learnmore">Les meir</string>
   <string name="enable_search_suggestions_no">Nei</string>
   <string name="enable_search_suggestions_yes">Ja</string>
+  <string name="dismiss_no_suggestions_prompt_button">Ignorer</string>
 </resources>
