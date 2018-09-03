@@ -269,7 +269,6 @@ var ViewSourceContent = {
     docShell.QueryInterface(Ci.nsIWebNavigation)
             .sessionHistory
             .legacySHistory
-            .QueryInterface(Ci.nsISHistoryInternal)
             .addEntry(shEntry, true);
   },
 
