@@ -128,7 +128,6 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   , mMutex("WebRTCMic::Mutex")
   , mDelayAgnostic(aDelayAgnostic)
   , mExtendedFilter(aExtendedFilter)
-  , mStarted(false)
   , mDeviceName(aDeviceName)
   , mDeviceUUID(aDeviceUUID)
   , mSettings(
@@ -1002,13 +1001,6 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraphImpl* aGr
     // It's ok to drop the audio still in the packetizer here.
     mPacketizerInput =
       new AudioPacketizer<AudioDataValue, float>(aRate/100, aChannels);
-  }
-
-  // On initial capture, throw away all far-end data except the most recent
-  // sample since it's already irrelevant and we want to avoid confusing the AEC
-  // far-end input code with "old" audio.
-  if (!mStarted) {
-    mStarted  = true;
   }
 
   // Packetize our input data into 10ms chunks, deinterleave into planar channel
