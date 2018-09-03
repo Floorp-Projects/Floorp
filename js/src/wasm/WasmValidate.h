@@ -45,6 +45,83 @@ struct SectionRange
 
 typedef Maybe<SectionRange> MaybeSectionRange;
 
+// CompilerEnvironment holds any values that will be needed to compute
+// compilation parameters once the module's feature opt-in sections have been
+// parsed.
+//
+// Subsequent to construction a computeParameters() call will compute the final
+// compilation parameters, and the object can then be queried for their values.
+
+struct CompileArgs;
+class Decoder;
+
+struct CompilerEnvironment
+{
+    // The object starts in one of two "initial" states; computeParameters moves
+    // it into the "computed" state.
+    enum State
+    {
+        InitialWithArgs,
+        InitialWithModeTierDebug,
+        Computed
+    };
+
+    State state_;
+    union {
+        // Value if the state_ == InitialWithArgs.
+        const CompileArgs* args_;
+
+        // Value in the other two states.
+        struct {
+            CompileMode    mode_;
+            Tier           tier_;
+            DebugEnabled   debug_;
+            HasGcTypes     gcTypes_;
+        };
+    };
+
+  public:
+    // Retain a reference to the CompileArgs.  A subsequent computeParameters()
+    // will compute all parameters from the CompileArgs and additional values.
+    explicit CompilerEnvironment(const CompileArgs& args);
+
+    // Save the provided values for mode, tier, and debug, and the initial value
+    // for gcTypes.  A subsequent computeParameters() will compute the final
+    // value of gcTypes.
+    CompilerEnvironment(CompileMode mode,
+                        Tier tier,
+                        DebugEnabled debugEnabled,
+                        HasGcTypes gcTypesConfigured);
+
+    // Compute any remaining compilation parameters.
+    void computeParameters(Decoder& d, HasGcTypes gcFeatureOptIn);
+
+    // Compute any remaining compilation parameters.  Only use this method if
+    // the CompilerEnvironment was created with values for mode, tier, and
+    // debug.
+    void computeParameters(HasGcTypes gcFeatureOptIn);
+
+    bool isComputed() const {
+        return state_ == Computed;
+    }
+    CompileMode mode() const {
+        MOZ_ASSERT(isComputed());
+        return mode_;
+    }
+    Tier tier() const {
+        MOZ_ASSERT(isComputed());
+        return tier_;
+    }
+    DebugEnabled debug() const {
+        MOZ_ASSERT(isComputed());
+        return debug_;
+    }
+    HasGcTypes gcTypes() const {
+        MOZ_ASSERT(isComputed());
+        return gcTypes_;
+    }
+};
+
 // ModuleEnvironment contains all the state necessary to validate, process or
 // render functions. It is created by decoding all the sections before the wasm
 // code section and then used immutably during. When compiling a module using a
@@ -56,21 +133,17 @@ typedef Maybe<SectionRange> MaybeSectionRange;
 struct ModuleEnvironment
 {
     // Constant parameters for the entire compilation:
-    const DebugEnabled        debug;
-    const ModuleKind          kind;
-    const CompileMode         mode;
-    const Shareable           sharedMemoryEnabled;
+    const ModuleKind           kind;
+    const Shareable            sharedMemoryEnabled;
     // `gcTypesConfigured` reflects the value of the flags --wasm-gc and
     // javascript.options.wasm_gc.  These flags will disappear eventually, thus
     // allowing the removal of this variable and its replacement everywhere by
     // the value HasGcTypes::True.
     //
-    // For now, the value is used (a) in the value of gcTypesEnabled(), which
-    // controls whether ref types and struct types and associated instructions
-    // are accepted during validation, and (b) to control whether we emit code
-    // to suppress GC while wasm activations are on the stack.
-    const HasGcTypes          gcTypesConfigured;
-    const Tier                tier;
+    // For now, the value is used to control whether we emit code to suppress GC
+    // while wasm activations are on the stack.
+    const HasGcTypes           gcTypesConfigured;
+    CompilerEnvironment* const compilerEnv;
 
     // Module fields decoded from the module environment (or initialized while
     // validating an asm.js module) and immutable during compilation:
@@ -105,18 +178,14 @@ struct ModuleEnvironment
     NameInBytecodeVector      funcNames;
     CustomSectionVector       customSections;
 
-    explicit ModuleEnvironment(CompileMode mode,
-                               Tier tier,
-                               DebugEnabled debug,
-                               HasGcTypes hasGcTypes,
+    explicit ModuleEnvironment(HasGcTypes gcTypesConfigured,
+                               CompilerEnvironment* compilerEnv,
                                Shareable sharedMemoryEnabled,
                                ModuleKind kind = ModuleKind::Wasm)
-      : debug(debug),
-        kind(kind),
-        mode(mode),
+      : kind(kind),
         sharedMemoryEnabled(sharedMemoryEnabled),
-        gcTypesConfigured(hasGcTypes),
-        tier(tier),
+        gcTypesConfigured(gcTypesConfigured),
+        compilerEnv(compilerEnv),
 #ifdef ENABLE_WASM_GC
         gcFeatureOptIn(HasGcTypes::False),
 #endif
@@ -124,6 +193,15 @@ struct ModuleEnvironment
         minMemoryLength(0)
     {}
 
+    Tier tier() const {
+        return compilerEnv->tier();
+    }
+    CompileMode mode() const {
+        return compilerEnv->mode();
+    }
+    DebugEnabled debug() const {
+        return compilerEnv->debug();
+    }
     size_t numTables() const {
         return tables.length();
     }
@@ -140,11 +218,7 @@ struct ModuleEnvironment
         return funcTypes.length() - funcImportGlobalDataOffsets.length();
     }
     HasGcTypes gcTypesEnabled() const {
-#ifdef ENABLE_WASM_GC
-        if (gcTypesConfigured == HasGcTypes::True)
-            return gcFeatureOptIn;
-#endif
-        return HasGcTypes::False;
+        return compilerEnv->gcTypes();
     }
     bool usesMemory() const {
         return memoryUsage != MemoryUsage::None;
@@ -156,7 +230,7 @@ struct ModuleEnvironment
         return kind == ModuleKind::AsmJS;
     }
     bool debugEnabled() const {
-        return debug == DebugEnabled::True;
+        return compilerEnv->debug() == DebugEnabled::True;
     }
     bool funcIsImport(uint32_t funcIndex) const {
         return funcIndex < funcImportGlobalDataOffsets.length();
