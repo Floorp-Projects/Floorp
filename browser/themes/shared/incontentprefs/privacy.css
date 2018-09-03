@@ -157,11 +157,15 @@
 }
 
 .reject-trackers-warning-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/warning.svg);
+  background: url(chrome://browser/skin/controlcenter/warning.svg) no-repeat 0 5px;
   -moz-context-properties: fill, stroke;
   fill: #d7b600;
   stroke: white;
-  padding: 4px;
+  inline-padding-start: 20px;
+}
+
+.reject-trackers-warning-icon:-moz-locale-dir(rtl) {
+  background-position-x: right 0;
 }
 
 #contentBlockingChangeCookieSettings {
