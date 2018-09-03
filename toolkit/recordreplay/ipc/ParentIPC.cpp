@@ -628,9 +628,15 @@ PreferencesLoaded()
     gRewindingEnabled = false;
   }
 
-  // If there is no recording child, we have now initialized enough state
-  // that we can start spawning replaying children.
-  if (!gRecordingChild) {
+  if (gRecordingChild) {
+    // Inform the recording child if we will be running devtools server code in
+    // this process.
+    if (DebuggerRunsInMiddleman()) {
+      gRecordingChild->SendMessage(SetDebuggerRunsInMiddlemanMessage());
+    }
+  } else {
+    // If there is no recording child, we have now initialized enough state
+    // that we can start spawning replaying children.
     if (CanRewind()) {
       SpawnReplayingChildren();
     } else {
@@ -644,6 +650,22 @@ CanRewind()
 {
   MOZ_RELEASE_ASSERT(gPreferencesLoaded);
   return gRewindingEnabled;
+}
+
+bool
+DebuggerRunsInMiddleman()
+{
+  if (IsRecordingOrReplaying()) {
+    // This can be called in recording/replaying processes as well as the
+    // middleman. Fetch the value which the middleman informed us of.
+    return child::DebuggerRunsInMiddleman();
+  }
+
+  // Middleman processes which are recording and can't rewind do not run
+  // developer tools server code. This will run in the recording process
+  // instead.
+  MOZ_RELEASE_ASSERT(IsMiddleman());
+  return !gRecordingChild || CanRewind();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

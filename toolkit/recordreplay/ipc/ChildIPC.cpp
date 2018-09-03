@@ -60,13 +60,14 @@ static FileHandle gCheckpointReadFd;
 // receipt and then processed during InitRecordingOrReplayingProcess.
 static IntroductionMessage* gIntroductionMessage;
 
+// When recording, whether developer tools server code runs in the middleman.
+static bool gDebuggerRunsInMiddleman;
+
 // Processing routine for incoming channel messages.
 static void
 ChannelMessageHandler(Message* aMsg)
 {
-  MOZ_RELEASE_ASSERT(MainThreadShouldPause() ||
-                     aMsg->mType == MessageType::CreateCheckpoint ||
-                     aMsg->mType == MessageType::Terminate);
+  MOZ_RELEASE_ASSERT(MainThreadShouldPause() || aMsg->CanBeSentWhileUnpaused());
 
   switch (aMsg->mType) {
   case MessageType::Introduction: {
@@ -83,6 +84,11 @@ ChannelMessageHandler(Message* aMsg)
       uint8_t data = 0;
       DirectWrite(gCheckpointWriteFd, &data, 1);
     }
+    break;
+  }
+  case MessageType::SetDebuggerRunsInMiddleman: {
+    MOZ_RELEASE_ASSERT(IsRecording());
+    PauseMainThreadAndInvokeCallback([=]() { gDebuggerRunsInMiddleman = true; });
     break;
   }
   case MessageType::Terminate: {
@@ -306,6 +312,12 @@ base::ProcessId
 ParentProcessId()
 {
   return gParentPid;
+}
+
+bool
+DebuggerRunsInMiddleman()
+{
+  return RecordReplayValue(gDebuggerRunsInMiddleman);
 }
 
 void
