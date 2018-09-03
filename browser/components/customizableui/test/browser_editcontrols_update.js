@@ -202,6 +202,11 @@ add_task(async function test_initial_state() {
   let testWindow = await BrowserTestUtils.openNewBrowserWindow();
   await SimpleTest.promiseFocus(testWindow);
 
+  // For focusing the URL bar to have an effect, we need to ensure the URL bar isn't
+  // initially focused:
+  testWindow.gBrowser.selectedTab.focus();
+  await TestUtils.waitForCondition(() => !testWindow.gURLBar.focused);
+
   let overridePromise = expectCommandUpdate(isMac, testWindow);
 
   testWindow.gURLBar.focus();
