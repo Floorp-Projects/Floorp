@@ -733,6 +733,15 @@ public:
                        nsTArray<nsSVGFilterFrame*>* aFilterFrames);
 
   /**
+   * If the given frame is already observing SVG filters, this function gets
+   * those filters.  If the frame is not already observing filters this
+   * function assumes that it doesn't have anything to observe.
+   */
+  static ReferenceState
+  GetFiltersIfObserving(nsIFrame* aFilteredFrame,
+                        nsTArray<nsSVGFilterFrame*>* aFilterFrames);
+
+  /**
    * Starts observing filters for a <canvas> element's CanvasRenderingContext2D.
    *
    * Returns a RAII object that the caller should make sure is released once

@@ -338,16 +338,17 @@ nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
     return nsIntRect();
   }
 
-  // Don't bother calling GetEffectProperties; the filter property should
-  // already have been set up during reflow/ComputeFrameEffectsRect
+  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-  SVGFilterObserverListForCSSProp* observers =
-    SVGObserverUtils::GetFilterObserverList(firstFrame);
 
-  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-
-  if (!observers || !observers->ReferencesValidResources()) {
+  // If we have any filters to observe then we should have started doing that
+  // during reflow/ComputeFrameEffectsRect, so we use GetFiltersIfObserving
+  // here to avoid needless work (or masking bugs by setting up observers at
+  // the wrong time).
+  if (!aFrame->StyleEffects()->HasFilters() ||
+      SVGObserverUtils::GetFiltersIfObserving(firstFrame, nullptr) ==
+        SVGObserverUtils::eHasRefsSomeInvalid) {
     // The frame is either not there or not currently available,
     // perhaps because we're in the middle of tearing stuff down.
     // Be conservative, return our visual overflow rect relative
@@ -380,13 +381,16 @@ nsRect
 nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(nsIFrame* aFrame,
                                                        const nsRect& aDirtyRect)
 {
-  // Don't bother calling GetEffectProperties; the filter property should
-  // already have been set up during reflow/ComputeFrameEffectsRect
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-  SVGFilterObserverListForCSSProp* observers =
-    SVGObserverUtils::GetFilterObserverList(firstFrame);
-  if (!observers || !observers->ReferencesValidResources()) {
+
+  // If we have any filters to observe then we should have started doing that
+  // during reflow/ComputeFrameEffectsRect, so we use GetFiltersIfObserving
+  // here to avoid needless work (or masking bugs by setting up observers at
+  // the wrong time).
+  if (!aFrame->StyleEffects()->HasFilters() ||
+      SVGObserverUtils::GetFiltersIfObserving(firstFrame, nullptr) ==
+        SVGObserverUtils::eHasRefsSomeInvalid) {
     return aDirtyRect;
   }
 
