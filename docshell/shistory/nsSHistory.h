@@ -10,8 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsExpirationTracker.h"
 #include "nsISHistory.h"
-#include "nsISHistoryInternal.h"
-#include "nsIWebNavigation.h"
 #include "nsSHEntryShared.h"
 #include "nsSimpleEnumerator.h"
 #include "nsTObserverArray.h"
@@ -28,8 +26,6 @@ class nsISHTransaction;
 
 class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
                          public nsISHistory,
-                         public nsISHistoryInternal,
-                         public nsIWebNavigation,
                          public nsSupportsWeakReference
 {
 public:
@@ -72,8 +68,10 @@ public:
   nsSHistory();
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHISTORY
-  NS_DECL_NSISHISTORYINTERNAL
-  NS_DECL_NSIWEBNAVIGATION
+
+  nsresult GotoIndex(int32_t aIndex);
+  nsresult Reload(uint32_t aReloadFlags);
+  nsresult GetCurrentURI(nsIURI** aResultURI);
 
   // One time initialization method called upon docshell module construction
   static nsresult Startup();

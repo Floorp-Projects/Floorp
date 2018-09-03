@@ -84,10 +84,9 @@ var SessionHistoryInternal = {
       // Loop over the transactions so we can get the persist property for each
       // one.
       let shistory = history.legacySHistory.QueryInterface(Ci.nsISHistory);
-      let shistoryInternal = history.legacySHistory.QueryInterface(Ci.nsISHistoryInternal);
       let count = shistory.count;
       for ( ; entryCount < count; entryCount++) {
-        let txn = shistoryInternal.GetTransactionAtIndex(entryCount);
+        let txn = shistory.GetTransactionAtIndex(entryCount);
         if (entryCount <= aFromIdx) {
           skippedCount++;
           continue;
@@ -293,7 +292,7 @@ var SessionHistoryInternal = {
    *        The docShell that owns the session history.
    * @param tabData
    *        The tabdata including all history entries.
-   * @return A reference to the docShell's nsISHistoryInternal interface.
+   * @return A reference to the docShell's nsISHistory interface.
    */
   restore(docShell, tabData) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -301,7 +300,6 @@ var SessionHistoryInternal = {
     if (history.count > 0) {
       history.PurgeHistory(history.count);
     }
-    history.QueryInterface(Ci.nsISHistoryInternal);
 
     let idMap = { used: {} };
     let docIdentMap = {};
