@@ -125,7 +125,12 @@ impl MarionetteHandler {
         }
 
         let mut connection = MarionetteConnection::new(port, session_id.clone());
-        connection.connect(&mut self.browser)?;
+        connection.connect(&mut self.browser).or_else(|e| {
+            if let Some(ref mut runner) = self.browser {
+                runner.kill()?;
+            }
+            Err(e)
+        })?;
         self.connection = Mutex::new(Some(connection));
         Ok(capabilities)
     }
@@ -281,7 +286,7 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
             }
             if let Some(capabilities) = capabilities_options {
                 resolved_capabilities =
-                    Some(try!(self.create_connection(&msg.session_id, &capabilities)));
+                    Some(self.create_connection(&msg.session_id, &capabilities)?);
             }
         }
 
@@ -1114,8 +1119,8 @@ impl MarionetteConnection {
         }
 
         let data = self.handshake()?;
-        self.session.protocol = Some(data.protocol);
         self.session.application_type = Some(data.application_type);
+        self.session.protocol = Some(data.protocol);
 
         debug!("Connected to Marionette on {}:{}", DEFAULT_HOST, self.port);
         Ok(())
@@ -1124,6 +1129,16 @@ impl MarionetteConnection {
     fn handshake(&mut self) -> WebDriverResult<MarionetteHandshake> {
         let resp = self.read_resp()?;
         let data = serde_json::from_str::<MarionetteHandshake>(&resp)?;
+
+        if data.application_type != "gecko" {
+            return Err(WebDriverError::new(
+                ErrorStatus::UnknownError,
+                format!(
+                    "Unrecognized application type {}",
+                    data.application_type
+                ),
+            ));
+        }
 
         if data.protocol != 3 {
             return Err(WebDriverError::new(
