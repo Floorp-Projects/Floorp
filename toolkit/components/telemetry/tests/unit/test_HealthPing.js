@@ -14,7 +14,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "TelemetryHealthPing",
-                               "resource://gre/modules/TelemetryHealthPing.jsm");
+                               "resource://gre/modules/HealthPing.jsm");
 
 function checkHealthPingStructure(ping, expectedFailuresDict) {
   let payload = ping.payload;
@@ -26,7 +26,7 @@ function checkHealthPingStructure(ping, expectedFailuresDict) {
 }
 
 function fakeHealthSchedulerTimer(set, clear) {
-  let telemetryHealthPing = ChromeUtils.import("resource://gre/modules/TelemetryHealthPing.jsm", {});
+  let telemetryHealthPing = ChromeUtils.import("resource://gre/modules/HealthPing.jsm", {});
   telemetryHealthPing.Policy.setSchedulerTickTimeout = set;
   telemetryHealthPing.Policy.clearSchedulerTickTimeout = clear;
 }

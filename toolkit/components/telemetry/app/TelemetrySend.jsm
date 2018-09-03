@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",
                                    "nsITelemetry");
 ChromeUtils.defineModuleGetter(this, "TelemetryHealthPing",
-                               "resource://gre/modules/TelemetryHealthPing.jsm");
+                               "resource://gre/modules/HealthPing.jsm");
 
 
 const Utils = TelemetryUtils;

@@ -12,7 +12,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "TelemetryEventPing",
-                               "resource://gre/modules/TelemetryEventPing.jsm");
+                               "resource://gre/modules/EventPing.jsm");
 
 const OPTIN = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
 
