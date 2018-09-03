@@ -82,10 +82,6 @@ Tools.inspector = {
     return l10n("inspector.tooltip2", "Ctrl+Shift+") + l10n("inspector.commandkey");
   },
   inMenu: true,
-  commands: [
-    "devtools/client/responsive.html/commands",
-    "devtools/client/inspector/inspector-commands"
-  ],
 
   preventClosingOnKey: true,
   onkey: function(panel, toolbox) {
@@ -115,7 +111,6 @@ Tools.webConsole = {
     l10n("webconsole.commandkey"));
   },
   inMenu: true,
-  commands: "devtools/client/webconsole/console-commands",
 
   preventClosingOnKey: true,
   onkey: function(panel, toolbox) {
@@ -149,8 +144,6 @@ Tools.jsdebugger = {
     l10n("debugger.commandkey"));
   },
   inMenu: true,
-  commands: "devtools/client/debugger/debugger-commands",
-
   isTargetSupported: function() {
     return true;
   },
@@ -194,8 +187,6 @@ Tools.styleEditor = {
     "Shift+" + functionkey(l10n("styleeditor.commandkey")));
   },
   inMenu: true,
-  commands: "devtools/client/styleeditor/styleeditor-commands",
-
   isTargetSupported: function(target) {
     return target.hasActor("styleSheets");
   },
@@ -394,12 +385,9 @@ Tools.scratchpad = {
   panelLabel: l10n("scratchpad.panelLabel"),
   tooltip: l10n("scratchpad.tooltip"),
   inMenu: false,
-  commands: "devtools/client/scratchpad/scratchpad-commands",
-
   isTargetSupported: function(target) {
     return target.hasActor("console");
   },
-
   build: function(iframeWindow, toolbox) {
     return new ScratchpadPanel(iframeWindow, toolbox);
   }

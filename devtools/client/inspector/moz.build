@@ -20,7 +20,6 @@ DIRS += [
 
 DevToolsModules(
     'breadcrumbs.js',
-    'inspector-commands.js',
     'inspector-search.js',
     'inspector.js',
     'panel.js',
