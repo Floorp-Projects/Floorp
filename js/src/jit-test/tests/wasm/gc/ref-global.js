@@ -7,6 +7,7 @@ if (!wasmGcEnabled())
 {
     let bin = wasmTextToBinary(
         `(module
+          (gc_feature_opt_in 1)
 
           (type $point (struct
                         (field $x f64)
@@ -42,6 +43,7 @@ if (!wasmGcEnabled())
 {
     let bin = wasmTextToBinary(
         `(module
+          (gc_feature_opt_in 1)
           (type $box (struct (field $val i32)))
           (import "m" "g" (global (mut (ref $box)))))`);
 
@@ -56,6 +58,7 @@ if (!wasmGcEnabled())
 {
     let bin = wasmTextToBinary(
         `(module
+          (gc_feature_opt_in 1)
           (type $box (struct (field $val i32)))
           (global $boxg (export "box") (mut (ref $box)) (ref.null (ref $box))))`);
 

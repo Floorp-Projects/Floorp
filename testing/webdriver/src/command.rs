@@ -100,7 +100,7 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
     }
 
     pub fn from_http(
-        match_type: Route<U>,
+        match_type: &Route<U>,
         params: &Captures,
         raw_body: &str,
         requires_body: bool,
@@ -526,23 +526,19 @@ where
         Some(n) => {
             if n < 0.0 || n.fract() != 0.0 {
                 return Err(de::Error::custom(format!(
-                    "'{}' is not a positive Integer",
+                    "{} is not a positive Integer",
                     n
                 )));
             }
             if (n as u64) > MAX_SAFE_INTEGER {
                 return Err(de::Error::custom(format!(
-                    "'{}' is greater than maximum safe integer",
+                    "{} is greater than maximum safe integer",
                     n
                 )));
             }
             Some(n as u64)
         }
-        None => {
-            return Err(de::Error::custom(format!(
-                "'null' is not a positive Integer"
-            )));
-        }
+        None => return Err(de::Error::custom("null is not a positive integer")),
     };
 
     Ok(value)
