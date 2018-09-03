@@ -29,8 +29,6 @@ loader.lazyGetter(this, "ApplicationPanel", () => require("devtools/client/appli
 
 // Other dependencies
 loader.lazyRequireGetter(this, "AccessibilityStartup", "devtools/client/accessibility/accessibility-startup", true);
-loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
-loader.lazyRequireGetter(this, "CommandState", "devtools/shared/gcli/command-state", true);
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 loader.lazyRequireGetter(this, "getScreenshotFront", "resource://devtools/shared/fronts/screenshot", true);
@@ -84,10 +82,6 @@ Tools.inspector = {
     return l10n("inspector.tooltip2", "Ctrl+Shift+") + l10n("inspector.commandkey");
   },
   inMenu: true,
-  commands: [
-    "devtools/client/responsive.html/commands",
-    "devtools/client/inspector/inspector-commands"
-  ],
 
   preventClosingOnKey: true,
   onkey: function(panel, toolbox) {
@@ -117,7 +111,6 @@ Tools.webConsole = {
     l10n("webconsole.commandkey"));
   },
   inMenu: true,
-  commands: "devtools/client/webconsole/console-commands",
 
   preventClosingOnKey: true,
   onkey: function(panel, toolbox) {
@@ -151,8 +144,6 @@ Tools.jsdebugger = {
     l10n("debugger.commandkey"));
   },
   inMenu: true,
-  commands: "devtools/client/debugger/debugger-commands",
-
   isTargetSupported: function() {
     return true;
   },
@@ -196,8 +187,6 @@ Tools.styleEditor = {
     "Shift+" + functionkey(l10n("styleeditor.commandkey")));
   },
   inMenu: true,
-  commands: "devtools/client/styleeditor/styleeditor-commands",
-
   isTargetSupported: function(target) {
     return target.hasActor("styleSheets");
   },
@@ -396,12 +385,9 @@ Tools.scratchpad = {
   panelLabel: l10n("scratchpad.panelLabel"),
   tooltip: l10n("scratchpad.tooltip"),
   inMenu: false,
-  commands: "devtools/client/scratchpad/scratchpad-commands",
-
   isTargetSupported: function(target) {
     return target.hasActor("console");
   },
-
   build: function(iframeWindow, toolbox) {
     return new ScratchpadPanel(iframeWindow, toolbox);
   }
@@ -541,16 +527,10 @@ exports.ToolboxButtons = [
     description: l10n("toolbox.buttons.paintflashing"),
     isTargetSupported: target => target.isLocalTab,
     onClick(event, toolbox) {
-      CommandUtils.executeOnTarget(toolbox.target, "paintflashing toggle");
+      toolbox.togglePaintFlashing();
     },
     isChecked(toolbox) {
-      return CommandState.isEnabledForTarget(toolbox.target, "paintflashing");
-    },
-    setup(toolbox, onChange) {
-      CommandState.on("changed", onChange);
-    },
-    teardown(toolbox, onChange) {
-      CommandState.off("changed", onChange);
+      return toolbox.isPaintFlashing;
     }
   },
   { id: "command-button-scratchpad",
@@ -600,39 +580,32 @@ exports.ToolboxButtons = [
       await screenshotFront.captureAndSave(toolbox.win, args);
     }
   },
-  { id: "command-button-rulers",
-    description: l10n("toolbox.buttons.rulers"),
-    isTargetSupported: target => target.isLocalTab,
-    onClick(event, toolbox) {
-      CommandUtils.executeOnTarget(toolbox.target, "rulers");
-    },
-    isChecked(toolbox) {
-      return CommandState.isEnabledForTarget(toolbox.target, "rulers");
-    },
-    setup(toolbox, onChange) {
-      CommandState.on("changed", onChange);
-    },
-    teardown(toolbox, onChange) {
-      CommandState.off("changed", onChange);
-    }
-  },
-  { id: "command-button-measure",
-    description: l10n("toolbox.buttons.measure"),
-    isTargetSupported: target => target.isLocalTab,
-    onClick(event, toolbox) {
-      CommandUtils.executeOnTarget(toolbox.target, "measure");
-    },
-    isChecked(toolbox) {
-      return CommandState.isEnabledForTarget(toolbox.target, "measure");
-    },
-    setup(toolbox, onChange) {
-      CommandState.on("changed", onChange);
-    },
-    teardown(toolbox, onChange) {
-      CommandState.off("changed", onChange);
-    }
-  },
+  createHighlightButton("RulersHighlighter", "rulers"),
+  createHighlightButton("MeasuringToolHighlighter", "measure"),
 ];
+
+function createHighlightButton(highlighterName, id) {
+  return {
+    id: `command-button-${id}`,
+    description: l10n(`toolbox.buttons.${id}`),
+    isTargetSupported: target => !target.chrome,
+    async onClick(event, toolbox) {
+      const highlighter =
+        await toolbox.highlighterUtils.getOrCreateHighlighterByType(highlighterName);
+      if (highlighter.isShown()) {
+        return highlighter.hide();
+      }
+      // Starting with FF63, higlighter's spec accept a null first argument.
+      // Still pass an empty object to fake a domnode front in order to support old
+      // servers.
+      return highlighter.show({});
+    },
+    isChecked(toolbox) {
+      const highlighter = toolbox.highlighterUtils.getKnownHighlighter(highlighterName);
+      return highlighter && highlighter.isShown();
+    }
+  };
+}
 
 /**
  * Lookup l10n string from a string bundle.

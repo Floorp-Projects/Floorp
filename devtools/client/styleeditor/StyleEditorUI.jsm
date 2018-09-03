@@ -1029,11 +1029,6 @@ StyleEditorUI.prototype = {
   },
 
   destroy: function() {
-    if (this._highlighter) {
-      this._highlighter.finalize();
-      this._highlighter = null;
-    }
-
     this._clearStyleSheetEditors();
 
     this._seenSheets = null;
